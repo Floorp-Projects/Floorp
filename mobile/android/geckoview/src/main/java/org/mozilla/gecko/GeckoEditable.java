@@ -143,6 +143,219 @@ final class GeckoEditable extends JNIObject
     @WrapForJNI(dispatchTo = "proxy")
     private native void onImeRequestCursorUpdates(int requestMode);
 
+    /**
+     * Class that encapsulates asynchronous text editing. There are two copies of the
+     * text, a current copy and a shadow copy. Both can be modified independently through
+     * the current*** and shadow*** methods, respectively. The current copy can only be
+     * modified on the Gecko side and reflects the authoritative version of the text. The
+     * shadow copy can only be modified on the IC side and reflects what we think the
+     * current text is. Periodically, the shadow copy can be synced to the current copy
+     * through syncShadowText, so the shadow copy once again refers to the same text as
+     * the current copy.
+     */
+    private final class AsyncText {
+        // The current text is the update-to-date version of the text, and is only updated
+        // on the Gecko side.
+        private final SpannableStringBuilder mCurrentText = new SpannableStringBuilder();
+        // Track changes on the current side for syncing purposes.
+        // Start of the changed range in current text since last sync.
+        private int mCurrentStart = Integer.MAX_VALUE;
+        // End of the changed range (before the change) in current text since last sync.
+        private int mCurrentOldEnd;
+        // End of the changed range (after the change) in current text since last sync.
+        private int mCurrentNewEnd;
+        // Track selection changes separately.
+        private boolean mCurrentSelectionChanged;
+
+        // The shadow text is what we think the current text is on the Java side, and is
+        // periodically synced with the current text.
+        private final SpannableStringBuilder mShadowText = new SpannableStringBuilder();
+        // Track changes on the shadow side for syncing purposes.
+        // Start of the changed range in shadow text since last sync.
+        private int mShadowStart = Integer.MAX_VALUE;
+        // End of the changed range (before the change) in shadow text since last sync.
+        private int mShadowOldEnd;
+        // End of the changed range (after the change) in shadow text since last sync.
+        private int mShadowNewEnd;
+
+        private void addCurrentChangeLocked(final int start, final int oldEnd, final int newEnd) {
+            // Merge the new change into any existing change.
+            mCurrentStart = Math.min(mCurrentStart, start);
+            mCurrentOldEnd += Math.max(0, oldEnd - mCurrentNewEnd);
+            mCurrentNewEnd = newEnd + Math.max(0, mCurrentNewEnd - oldEnd);
+        }
+
+        public synchronized void currentReplace(final int start, final int end,
+                                                final CharSequence newText) {
+            if (DEBUG) {
+                ThreadUtils.assertOnGeckoThread();
+            }
+            mCurrentText.replace(start, end, newText);
+            addCurrentChangeLocked(start, end, start + newText.length());
+        }
+
+        public synchronized void currentSetSelection(final int start, final int end) {
+            if (DEBUG) {
+                ThreadUtils.assertOnGeckoThread();
+            }
+            Selection.setSelection(mCurrentText, start, end);
+            mCurrentSelectionChanged = true;
+        }
+
+        public synchronized void currentSetSpan(final Object obj, final int start,
+                                                final int end, final int flags) {
+            if (DEBUG) {
+                ThreadUtils.assertOnGeckoThread();
+            }
+            mCurrentText.setSpan(obj, start, end, flags);
+            addCurrentChangeLocked(start, end, end);
+        }
+
+        public synchronized void currentRemoveSpan(final Object obj) {
+            if (DEBUG) {
+                ThreadUtils.assertOnGeckoThread();
+            }
+            if (obj == null) {
+                mCurrentText.clearSpans();
+                addCurrentChangeLocked(0, mCurrentText.length(), mCurrentText.length());
+                return;
+            }
+            final int start = mCurrentText.getSpanStart(obj);
+            final int end = mCurrentText.getSpanEnd(obj);
+            if (start < 0 || end < 0) {
+                return;
+            }
+            mCurrentText.removeSpan(obj);
+            addCurrentChangeLocked(start, end, end);
+        }
+
+        // Return Spanned instead of Editable because the returned object is supposed to
+        // be read-only. Editing should be done through one of the current*** methods.
+        public Spanned getCurrentText() {
+            if (DEBUG) {
+                ThreadUtils.assertOnGeckoThread();
+            }
+            return mCurrentText;
+        }
+
+        private void addShadowChange(final int start, final int oldEnd, final int newEnd) {
+            // Merge the new change into any existing change.
+            mShadowStart = Math.min(mShadowStart, start);
+            mShadowOldEnd += Math.max(0, oldEnd - mShadowNewEnd);
+            mShadowNewEnd = newEnd + Math.max(0, mShadowNewEnd - oldEnd);
+        }
+
+        public void shadowReplace(final int start, final int end,
+                                  final CharSequence newText)
+        {
+            if (DEBUG) {
+                assertOnIcThread();
+            }
+            mShadowText.replace(start, end, newText);
+            addShadowChange(start, end, start + newText.length());
+        }
+
+        public void shadowSetSpan(final Object obj, final int start,
+                                  final int end, final int flags) {
+            if (DEBUG) {
+                assertOnIcThread();
+            }
+            mShadowText.setSpan(obj, start, end, flags);
+            addShadowChange(start, end, end);
+        }
+
+        public void shadowRemoveSpan(final Object obj) {
+            if (DEBUG) {
+                assertOnIcThread();
+            }
+            if (obj == null) {
+                mShadowText.clearSpans();
+                addShadowChange(0, mShadowText.length(), mShadowText.length());
+                return;
+            }
+            final int start = mShadowText.getSpanStart(obj);
+            final int end = mShadowText.getSpanEnd(obj);
+            if (start < 0 || end < 0) {
+                return;
+            }
+            mShadowText.removeSpan(obj);
+            addShadowChange(start, end, end);
+        }
+
+        // Return Spanned instead of Editable because the returned object is supposed to
+        // be read-only. Editing should be done through one of the shadow*** methods.
+        public Spanned getShadowText() {
+            if (DEBUG) {
+                assertOnIcThread();
+            }
+            return mShadowText;
+        }
+
+        public synchronized void syncShadowText(final GeckoEditableListener listener) {
+            if (DEBUG) {
+                assertOnIcThread();
+            }
+
+            if (mCurrentStart > mCurrentOldEnd && mShadowStart > mShadowOldEnd) {
+                // Still check selection changes.
+                if (!mCurrentSelectionChanged) {
+                    return;
+                }
+                final int start = Selection.getSelectionStart(mCurrentText);
+                final int end = Selection.getSelectionEnd(mCurrentText);
+                Selection.setSelection(mShadowText, start, end);
+                mCurrentSelectionChanged = false;
+
+                if (listener != null) {
+                    listener.onSelectionChange();
+                }
+                return;
+            }
+
+            // Copy the portion of the current text that has changed over to the shadow
+            // text, with consideration for any concurrent changes in the shadow text.
+            final int start = Math.min(mShadowStart, mCurrentStart);
+            final int shadowEnd = mShadowNewEnd + Math.max(0, mCurrentOldEnd - mShadowOldEnd);
+            final int currentEnd = mCurrentNewEnd + Math.max(0, mShadowOldEnd - mCurrentOldEnd);
+
+            // Perform replacement in two steps (delete and insert) so that old spans are
+            // properly deleted before identical new spans are inserted. Otherwise the new
+            // spans won't be inserted due to the text already having the old spans.
+            mShadowText.delete(start, shadowEnd);
+            mShadowText.insert(start, mCurrentText, start, currentEnd);
+
+            // SpannableStringBuilder has some internal logic to fix up selections, but we
+            // don't want that, so we always fix up the selection a second time.
+            final int selStart = Selection.getSelectionStart(mCurrentText);
+            final int selEnd = Selection.getSelectionEnd(mCurrentText);
+            Selection.setSelection(mShadowText, selStart, selEnd);
+
+            if (DEBUG && !mShadowText.equals(mCurrentText)) {
+                // Sanity check.
+                throw new IllegalStateException("Failed to sync: " +
+                        mShadowStart + '-' + mShadowOldEnd + '-' + mShadowNewEnd + '/' +
+                        mCurrentStart + '-' + mCurrentOldEnd + '-' + mCurrentNewEnd);
+            }
+
+            if (listener != null) {
+                // Call onTextChange after selection fix-up but before we call
+                // onSelectionChange.
+                listener.onTextChange();
+
+                if (mCurrentSelectionChanged || (mCurrentOldEnd != mCurrentNewEnd &&
+                        (selStart >= mCurrentStart || selEnd >= mCurrentStart))) {
+                    listener.onSelectionChange();
+                }
+            }
+
+            // These values ensure the first change is properly added.
+            mCurrentStart = mShadowStart = Integer.MAX_VALUE;
+            mCurrentOldEnd = mShadowOldEnd = 0;
+            mCurrentNewEnd = mShadowNewEnd = 0;
+            mCurrentSelectionChanged = false;
+        }
+    }
+
     /* An action that alters the Editable
 
        Each action corresponds to a Gecko event. While the Gecko event is being sent to the Gecko
