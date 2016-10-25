@@ -258,8 +258,15 @@ DataThresholdPrefChangedCallback(const char* aPrefName, void* aClosure)
   MOZ_ASSERT(!strcmp(aPrefName, kDataThresholdPref));
   MOZ_ASSERT(!aClosure);
 
-  gDataThresholdBytes =
+  int32_t dataThresholdBytes =
     Preferences::GetInt(aPrefName, kDefaultDataThresholdBytes);
+
+  // The magic -1 is for use only by tests that depend on stable blob file id's.
+  if (dataThresholdBytes == -1) {
+    dataThresholdBytes = INT32_MAX;
+  }
+
+  gDataThresholdBytes = dataThresholdBytes;
 }
 
 } // namespace
