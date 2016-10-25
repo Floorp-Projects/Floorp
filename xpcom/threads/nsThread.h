@@ -201,12 +201,10 @@ protected:
   };
 
   // This lock protects access to mObserver, mEvents, mIdleEvents,
-  // mIdlePeriod and mEventsAreDoomed.  All of those fields are only
-  // modified on the thread itself (never from another thread).  This
-  // means that we can avoid holding the lock while using mObserver
-  // and mEvents on the thread itself.  When calling PutEvent on
-  // mEvents, we have to hold the lock to synchronize with
-  // PopEventQueue.
+  // All of those fields are only modified on the thread itself (never from
+  // another thread).  This means that we can avoid holding the lock while
+  // using mObserver and mEvents on the thread itself.  When calling PutEvent
+  // on mEvents, we have to hold the lock to synchronize with PopEventQueue.
   mozilla::Mutex mLock;
 
   nsCOMPtr<nsIThreadObserver> mObserver;
