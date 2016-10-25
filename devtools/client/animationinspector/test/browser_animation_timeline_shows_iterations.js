@@ -25,9 +25,6 @@ add_task(function* () {
 
   is(iterationCount, 10,
      "The animation timeline contains the right number of iterations");
-  ok(!animation.querySelector(".infinity"),
-     "The summary graph does not have any elements "
-     + " that have infinity class");
 
   info("Selecting another test node with an infinite animation");
   yield selectNodeAndWaitForAnimations(".animated", inspector);
@@ -37,9 +34,7 @@ add_task(function* () {
   iterationCount = getIterationCount(animation);
 
   is(iterationCount, 1,
-     "The animation timeline contains one iteration");
-  ok(animation.querySelector(".infinity"),
-     "The summary graph has an element that has infinity class");
+     "The animation timeline contains just one iteration");
 });
 
 function getIterationCount(timeblockEl) {
