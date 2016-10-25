@@ -75,6 +75,16 @@ struct WorkaroundsD3D
     // and Offset is in range. To work around this, we translatie texelFetchOffset into texelFetch
     // by adding Offset directly to Location before reading the texture.
     bool preAddTexelFetchOffsets = false;
+
+    // On some AMD drivers, 1x1 and 2x2 mips of depth/stencil textures aren't sampled correctly.
+    // We can work around this bug by doing an internal blit to a temporary single-channel texture
+    // before we sample.
+    bool emulateTinyStencilTextures = false;
+
+    // In Intel driver, the data with format DXGI_FORMAT_B5G6R5_UNORM will be parsed incorrectly.
+    // This workaroud will disable B5G6R5 support when it's Intel driver. By default, it will use
+    // R8G8B8A8 format.
+    bool disableB5G6R5Support = false;
 };
 
 }  // namespace rx

@@ -11,6 +11,7 @@
 #include "compiler/translator/EmulatePrecision.h"
 #include "compiler/translator/ExtensionGLSL.h"
 #include "compiler/translator/OutputGLSL.h"
+#include "compiler/translator/RewriteTexelFetchOffset.h"
 #include "compiler/translator/VersionGLSL.h"
 
 TranslatorGLSL::TranslatorGLSL(sh::GLenum type,
@@ -19,18 +20,19 @@ TranslatorGLSL::TranslatorGLSL(sh::GLenum type,
     : TCompiler(type, spec, output) {
 }
 
-void TranslatorGLSL::initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu, int compileOptions)
+void TranslatorGLSL::initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu,
+                                                 ShCompileOptions compileOptions)
 {
-    if (compileOptions & SH_EMULATE_BUILT_IN_FUNCTIONS)
+    if (compileOptions & SH_EMULATE_ABS_INT_FUNCTION)
     {
-        InitBuiltInFunctionEmulatorForGLSLWorkarounds(emu, getShaderType());
+        InitBuiltInAbsFunctionEmulatorForGLSLWorkarounds(emu, getShaderType());
     }
 
     int targetGLSLVersion = ShaderOutputTypeToGLSLVersion(getOutputType());
     InitBuiltInFunctionEmulatorForGLSLMissingFunctions(emu, getShaderType(), targetGLSLVersion);
 }
 
-void TranslatorGLSL::translate(TIntermNode *root, int compileOptions)
+void TranslatorGLSL::translate(TIntermNode *root, ShCompileOptions compileOptions)
 {
     TInfoSinkBase& sink = getInfoSink().obj;
 
@@ -73,6 +75,12 @@ void TranslatorGLSL::translate(TIntermNode *root, int compileOptions)
                 ASSERT(false);
                 break;
         }
+    }
+
+    if ((compileOptions & SH_REWRITE_TEXELFETCHOFFSET_TO_TEXELFETCH) != 0)
+    {
+        sh::RewriteTexelFetchOffset(root, getTemporaryIndex(), getSymbolTable(),
+                                    getShaderVersion());
     }
 
     bool precisionEmulation = getResources().WEBGL_debug_shader_precision && getPragma().debugShaderPrecision;

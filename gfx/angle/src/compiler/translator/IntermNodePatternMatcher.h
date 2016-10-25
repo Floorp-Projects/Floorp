@@ -14,7 +14,7 @@
 class TIntermAggregate;
 class TIntermBinary;
 class TIntermNode;
-class TIntermSelection;
+class TIntermTernary;
 
 class IntermNodePatternMatcher
 {
@@ -42,7 +42,7 @@ class IntermNodePatternMatcher
     bool match(TIntermBinary *node, TIntermNode *parentNode, bool isLValueRequiredHere);
 
     bool match(TIntermAggregate *node, TIntermNode *parentNode);
-    bool match(TIntermSelection *node);
+    bool match(TIntermTernary *node);
 
   private:
     const unsigned int mMask;
