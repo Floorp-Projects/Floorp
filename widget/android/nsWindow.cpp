@@ -3219,8 +3219,6 @@ nsWindow::GeckoViewSupport::OnImeAddCompositionRange(
 void
 nsWindow::GeckoViewSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
 {
-    AutoIMESynchronize as(this);
-
     if (mIMEMaskEventsCount > 0) {
         // Not focused.
         return;
