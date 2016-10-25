@@ -795,7 +795,7 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
       mp4parse_track_video_info video;
       auto rv = mp4parse_get_track_video_info(mRustParser.get(), trackIndex.value(), &video);
       if (rv != MP4PARSE_OK) {
-        MOZ_LOG(sLog, LogLevel::Warning, ("mp4parse_get_track_audio_info returned error %d", rv));
+        MOZ_LOG(sLog, LogLevel::Warning, ("mp4parse_get_track_video_info returned error %d", rv));
         return nullptr;
       }
       auto track = mozilla::MakeUnique<MP4VideoInfo>();
