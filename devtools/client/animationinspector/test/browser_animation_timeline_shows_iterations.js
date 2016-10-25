@@ -17,26 +17,36 @@ add_task(function* () {
   yield selectNodeAndWaitForAnimations(".delayed", inspector);
 
   info("Getting the animation element from the panel");
-  const timelineComponent = panel.animationsTimelineComponent;
-  const timelineEl = timelineComponent.rootWrapperEl;
+  let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
   let animation = timelineEl.querySelector(".time-block");
-  // Get iteration count from summary graph path.
-  let iterationCount = getIterationCount(animation);
+  let iterations = animation.querySelector(".iterations");
+
+  // Iterations are rendered with a repeating linear-gradient, so we need to
+  // calculate how many iterations are represented by looking at the background
+  // size.
+  let iterationCount = getIterationCountFromBackground(iterations);
 
   is(iterationCount, 10,
      "The animation timeline contains the right number of iterations");
+  ok(!iterations.classList.contains("infinite"),
+     "The iteration element doesn't have the infinite class");
 
   info("Selecting another test node with an infinite animation");
   yield selectNodeAndWaitForAnimations(".animated", inspector);
 
   info("Getting the animation element from the panel again");
   animation = timelineEl.querySelector(".time-block");
-  iterationCount = getIterationCount(animation);
+  iterations = animation.querySelector(".iterations");
+
+  iterationCount = getIterationCountFromBackground(iterations);
 
   is(iterationCount, 1,
      "The animation timeline contains just one iteration");
+  ok(iterations.classList.contains("infinite"),
+     "The iteration element has the infinite class");
 });
 
-function getIterationCount(timeblockEl) {
-  return timeblockEl.querySelectorAll(".iteration-path").length;
+function getIterationCountFromBackground(el) {
+  let backgroundSize = parseFloat(el.style.backgroundSize.split(" ")[0]);
+  return Math.round(100 / backgroundSize);
 }
