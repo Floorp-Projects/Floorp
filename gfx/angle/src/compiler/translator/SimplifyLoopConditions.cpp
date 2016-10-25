@@ -36,7 +36,7 @@ class SimplifyLoopConditionsTraverser : public TLValueTrackingTraverser
 
     bool visitBinary(Visit visit, TIntermBinary *node) override;
     bool visitAggregate(Visit visit, TIntermAggregate *node) override;
-    bool visitSelection(Visit visit, TIntermSelection *node) override;
+    bool visitTernary(Visit visit, TIntermTernary *node) override;
 
     void nextIteration();
     bool foundLoopToChange() const { return mFoundLoopToChange; }
@@ -100,14 +100,14 @@ bool SimplifyLoopConditionsTraverser::visitAggregate(Visit visit, TIntermAggrega
     return !mFoundLoopToChange;
 }
 
-bool SimplifyLoopConditionsTraverser::visitSelection(Visit visit, TIntermSelection *node)
+bool SimplifyLoopConditionsTraverser::visitTernary(Visit visit, TIntermTernary *node)
 {
     if (mFoundLoopToChange)
         return false;
 
     // Don't traverse ternary operators outside loop conditions.
     if (!mInsideLoopConditionOrExpression)
-        return !node->usesTernaryOperator();
+        return false;
 
     mFoundLoopToChange = mConditionsToSimplify.match(node);
     return !mFoundLoopToChange;
