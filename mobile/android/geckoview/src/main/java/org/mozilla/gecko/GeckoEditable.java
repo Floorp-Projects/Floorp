@@ -19,7 +19,6 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.mozglue.JNIObject;
-import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
@@ -48,7 +47,7 @@ import android.view.KeyEvent;
 */
 final class GeckoEditable extends JNIObject
         implements InvocationHandler, Editable,
-                   GeckoEditableClient, GeckoEditableListener, GeckoEventListener {
+                   GeckoEditableClient, GeckoEditableListener {
 
     private static final boolean DEBUG = false;
     private static final String LOGTAG = "GeckoEditable";
@@ -73,7 +72,6 @@ final class GeckoEditable extends JNIObject
     private boolean mFocused; // Used by IC thread
     private boolean mGeckoFocused; // Used by Gecko thread
     private boolean mIgnoreSelectionChange; // Used by Gecko thread
-    private volatile boolean mSuppressCompositions;
     private volatile boolean mSuppressKeyUp;
 
     private static final int IME_RANGE_CARETPOSITION = 1;
@@ -934,20 +932,11 @@ final class GeckoEditable extends JNIObject
             }
         });
 
-        // Register/unregister Gecko-side text selection listeners
-        // and update the mGeckoFocused flag.
-        if (type == NOTIFY_IME_OF_BLUR && mGeckoFocused) {
-            // Check for focus here because Gecko may send us a blur before a focus in some
-            // cases, and we don't want to unregister an event that was not registered.
+        // Update the mGeckoFocused flag.
+        if (type == NOTIFY_IME_OF_BLUR) {
             mGeckoFocused = false;
-            mSuppressCompositions = false;
-            GeckoAppShell.getGeckoInterface().getAppEventDispatcher().
-                unregisterGeckoThreadListener(this, "TextSelection:DraggingHandle");
         } else if (type == NOTIFY_IME_OF_FOCUS) {
             mGeckoFocused = true;
-            mSuppressCompositions = false;
-            GeckoAppShell.getGeckoInterface().getAppEventDispatcher().
-                registerGeckoThreadListener(this, "TextSelection:DraggingHandle");
         }
     }
 
@@ -1448,17 +1437,6 @@ final class GeckoEditable extends JNIObject
     @Override
     public String toString() {
         throw new UnsupportedOperationException("method must be called through mProxy");
-    }
-
-    // GeckoEventListener implementation
-
-    @Override
-    public void handleMessage(String event, JSONObject message) {
-        if (!"TextSelection:DraggingHandle".equals(event)) {
-            return;
-        }
-
-        mSuppressCompositions = message.optBoolean("dragging", false);
     }
 }
 
