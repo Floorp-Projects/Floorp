@@ -75,8 +75,6 @@ class GeckoInputConnection
     protected int mBatchEditCount;
     private ExtractedTextRequest mUpdateRequest;
     private final ExtractedText mUpdateExtract = new ExtractedText();
-    private boolean mBatchSelectionChanged;
-    private boolean mBatchTextChanged;
     private final InputConnection mKeyInputConnection;
     private CursorAnchorInfo.Builder mCursorAnchorInfoBuilder;
 
@@ -104,30 +102,26 @@ class GeckoInputConnection
     @Override
     public synchronized boolean beginBatchEdit() {
         mBatchEditCount++;
-        mEditableClient.setBatchMode(true);
+        if (mBatchEditCount == 1) {
+            mEditableClient.setBatchMode(true);
+        }
         return true;
     }
 
     @Override
     public synchronized boolean endBatchEdit() {
-        if (mBatchEditCount > 0) {
-            mBatchEditCount--;
-            if (mBatchEditCount == 0) {
-                if (mBatchTextChanged) {
-                    notifyTextChange();
-                    mBatchTextChanged = false;
-                }
-                if (mBatchSelectionChanged) {
-                    Editable editable = getEditable();
-                    notifySelectionChange(Selection.getSelectionStart(editable),
-                                           Selection.getSelectionEnd(editable));
-                    mBatchSelectionChanged = false;
-                }
-                mEditableClient.setBatchMode(false);
-            }
-        } else {
-            Log.w(LOGTAG, "endBatchEdit() called, but mBatchEditCount == 0?!");
+        if (mBatchEditCount <= 0) {
+            Log.w(LOGTAG, "endBatchEdit() called, but mBatchEditCount <= 0?!");
+            return true;
         }
+
+        mBatchEditCount--;
+        if (mBatchEditCount != 0) {
+            return true;
+        }
+
+        // setBatchMode will call onTextChange and/or onSelectionChange for us.
+        mEditableClient.setBatchMode(false);
         return true;
     }
 
@@ -317,31 +311,18 @@ class GeckoInputConnection
             Log.w(LOGTAG, "resetting with mBatchEditCount = " + mBatchEditCount);
             mBatchEditCount = 0;
         }
-        mBatchSelectionChanged = false;
-        mBatchTextChanged = false;
 
         // Do not reset mIMEState here; see comments in notifyIMEContext
 
         restartInput();
     }
 
-    @Override
+    @Override // GeckoEditableListener
     public void onTextChange() {
 
         if (mUpdateRequest == null) {
-            onSelectionChange();
             return;
         }
-
-        if (mBatchEditCount > 0) {
-            // Delay notification until after the batch edit
-            mBatchTextChanged = true;
-            return;
-        }
-        notifyTextChange();
-    }
-
-    private void notifyTextChange() {
 
         final InputMethodManager imm = getInputMethodManager();
         final View v = getView();
@@ -353,28 +334,19 @@ class GeckoInputConnection
         // Update the entire Editable range
         mUpdateExtract.partialStartOffset = -1;
         mUpdateExtract.partialEndOffset = -1;
-        mUpdateExtract.selectionStart =
-                Selection.getSelectionStart(editable);
-        mUpdateExtract.selectionEnd =
-                Selection.getSelectionEnd(editable);
+        mUpdateExtract.selectionStart = Selection.getSelectionStart(editable);
+        mUpdateExtract.selectionEnd = Selection.getSelectionEnd(editable);
         mUpdateExtract.startOffset = 0;
         if ((mUpdateRequest.flags & GET_TEXT_WITH_STYLES) != 0) {
             mUpdateExtract.text = new SpannableString(editable);
         } else {
             mUpdateExtract.text = editable.toString();
         }
-        imm.updateExtractedText(v, mUpdateRequest.token,
-                                mUpdateExtract);
+        imm.updateExtractedText(v, mUpdateRequest.token, mUpdateExtract);
     }
 
     @Override // GeckoEditableListener
     public void onSelectionChange() {
-
-        if (mBatchEditCount > 0) {
-            // Delay notification until after the batch edit
-            mBatchSelectionChanged = true;
-            return;
-        }
 
         final Editable editable = getEditable();
         if (editable != null) {
