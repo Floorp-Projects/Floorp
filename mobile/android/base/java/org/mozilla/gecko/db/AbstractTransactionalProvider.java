@@ -89,15 +89,6 @@ public abstract class AbstractTransactionalProvider extends ContentProvider {
      */
     final ThreadLocal<Boolean> isInBatchOperation = new ThreadLocal<Boolean>();
 
-    /**
-     * Return true if OS version and database parallelism support indicates
-     * that this provider should bundle writes into transactions.
-     */
-    @SuppressWarnings("static-method")
-    protected boolean shouldUseTransactions() {
-        return true;
-    }
-
     private boolean isInBatch() {
         final Boolean isInBatch = isInBatchOperation.get();
         if (isInBatch == null) {
@@ -116,7 +107,7 @@ public abstract class AbstractTransactionalProvider extends ContentProvider {
             return;
         }
 
-        if (shouldUseTransactions() && !db.inTransaction()) {
+        if (!db.inTransaction()) {
             trace("beginWrite: beginning transaction.");
             db.beginTransaction();
         }
@@ -132,7 +123,7 @@ public abstract class AbstractTransactionalProvider extends ContentProvider {
             return;
         }
 
-        if (shouldUseTransactions() && db.inTransaction()) {
+        if (db.inTransaction()) {
             trace("Marking write transaction successful.");
             db.setTransactionSuccessful();
         }
@@ -150,7 +141,7 @@ public abstract class AbstractTransactionalProvider extends ContentProvider {
             return;
         }
 
-        if (shouldUseTransactions() && db.inTransaction()) {
+        if (db.inTransaction()) {
             trace("endWrite: ending transaction.");
             db.endTransaction();
         }
