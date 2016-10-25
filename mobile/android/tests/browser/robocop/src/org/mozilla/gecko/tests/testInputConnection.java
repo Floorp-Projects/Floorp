@@ -194,11 +194,11 @@ public class testInputConnection extends JavascriptBridgeTest {
             processGeckoEvents();
             assertTextAndSelectionAt("Can re-flush text changes", ic, "good", 4);
             ic.setComposingText("done", 1);
-            assertTextAndSelectionAt("Can update composition after re-flushing", ic, "done", 4);
+            assertTextAndSelectionAt("Can update composition after re-flushing", ic, "gooddone", 8);
             ic.finishComposingText();
-            assertTextAndSelectionAt("Can finish composing text", ic, "done", 4);
+            assertTextAndSelectionAt("Can finish composing text", ic, "gooddone", 8);
 
-            ic.deleteSurroundingText(4, 0);
+            ic.deleteSurroundingText(8, 0);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
 
             // Bug 1241558 - wrong selection due to ignoring selection notification.
