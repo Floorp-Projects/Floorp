@@ -26,6 +26,7 @@ UNIFIED_SOURCES += [
 
 if CONFIG['ACCESSIBILITY']:
     EXPORTS.mozilla.mscom += [
+        'ActivationContext.h',
         'DispatchForwarder.h',
         'Interceptor.h',
         'InterceptorLog.h',
@@ -42,6 +43,7 @@ if CONFIG['ACCESSIBILITY']:
     ]
 
     UNIFIED_SOURCES += [
+        'ActivationContext.cpp',
         'DispatchForwarder.cpp',
         'InterceptorLog.cpp',
         'MainThreadHandoff.cpp',
