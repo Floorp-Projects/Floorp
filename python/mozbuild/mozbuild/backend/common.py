@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import cPickle as pickle
 import itertools
 import json
 import os
@@ -370,19 +371,18 @@ class CommonBackend(BuildBackend):
 
         # Write out a machine-readable file describing every test.
         topobjdir = self.environment.topobjdir
-        with self._write_file(mozpath.join(topobjdir, 'all-tests.json')) as fh:
-            json.dump(self._test_manager.tests_by_path, fh)
+        with self._write_file(mozpath.join(topobjdir, 'all-tests.pkl'), mode='rb') as fh:
+            pickle.dump(dict(self._test_manager.tests_by_path), fh, protocol=2)
 
-        with self._write_file(mozpath.join(topobjdir, 'test-defaults.json')) as fh:
-            json.dump(self._test_manager.manifest_defaults, fh)
+        with self._write_file(mozpath.join(topobjdir, 'test-defaults.pkl'), mode='rb') as fh:
+            pickle.dump(self._test_manager.manifest_defaults, fh, protocol=2)
 
-        path = mozpath.join(self.environment.topobjdir, 'test-installs.json')
-        with self._write_file(path) as fh:
-            json.dump({k: v for k, v in self._test_manager.installs_by_path.items()
-                       if k in self._test_manager.deferred_installs},
-                      fh,
-                      sort_keys=True,
-                      indent=4)
+        path = mozpath.join(self.environment.topobjdir, 'test-installs.pkl')
+        with self._write_file(path, mode='rb') as fh:
+            pickle.dump({k: v for k, v in self._test_manager.installs_by_path.items()
+                         if k in self._test_manager.deferred_installs},
+                        fh,
+                        protocol=2)
 
         # Write out a machine-readable file describing binaries.
         with self._write_file(mozpath.join(topobjdir, 'binaries.json')) as fh:
