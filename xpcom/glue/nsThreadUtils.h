@@ -14,8 +14,6 @@
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 #include "nsICancelableRunnable.h"
-#include "nsIIdlePeriod.h"
-#include "nsIIncrementalRunnable.h"
 #include "nsStringGlue.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -23,7 +21,6 @@
 #include "mozilla/IndexSequence.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Move.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
 
@@ -133,13 +130,6 @@ extern nsresult
 NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent,
                         uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
 
-extern nsresult
-NS_DelayedDispatchToCurrentThread(
-  already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs);
-
-extern nsresult
-NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent);
-
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**
  * Process all pending events for the given thread before returning.  This
@@ -233,23 +223,6 @@ extern nsIThread* NS_GetCurrentThread();
 namespace mozilla {
 
 // This class is designed to be subclassed.
-class IdlePeriod : public nsIIdlePeriod
-{
-public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIIDLEPERIOD
-
-  IdlePeriod() {}
-
-protected:
-  virtual ~IdlePeriod() {}
-private:
-  IdlePeriod(const IdlePeriod&) = delete;
-  IdlePeriod& operator=(const IdlePeriod&) = delete;
-  IdlePeriod& operator=(const IdlePeriod&&) = delete;
-};
-
-// This class is designed to be subclassed.
 class Runnable : public nsIRunnable
 {
 public:
@@ -283,25 +256,6 @@ private:
   CancelableRunnable(const CancelableRunnable&) = delete;
   CancelableRunnable& operator=(const CancelableRunnable&) = delete;
   CancelableRunnable& operator=(const CancelableRunnable&&) = delete;
-};
-
-// This class is designed to be subclassed.
-class IncrementalRunnable : public CancelableRunnable,
-                            public nsIIncrementalRunnable
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  // nsIIncrementalRunnable
-  virtual void SetDeadline(TimeStamp aDeadline) override;
-
-  IncrementalRunnable() {}
-
-protected:
-  virtual ~IncrementalRunnable() {}
-private:
-  IncrementalRunnable(const IncrementalRunnable&) = delete;
-  IncrementalRunnable& operator=(const IncrementalRunnable&) = delete;
-  IncrementalRunnable& operator=(const IncrementalRunnable&&) = delete;
 };
 
 namespace detail {
