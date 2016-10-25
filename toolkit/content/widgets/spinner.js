@@ -15,7 +15,7 @@
 function Spinner(props, context) {
   this.context = context;
   this._init(props);
-};
+}
 
 {
   const debug = 0 ? console.log.bind(console, '[spinner]') : function() {};
