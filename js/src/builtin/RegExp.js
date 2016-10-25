@@ -95,7 +95,7 @@ function AdvanceStringIndex(S, index) {
     return index + 2;
 }
 
-// ES 2016 draft Mar 25, 2016 21.2.5.6.
+// ES 2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e 21.2.5.6.
 function RegExpMatch(string) {
     // Step 1.
     var rx = this;
@@ -107,6 +107,32 @@ function RegExpMatch(string) {
     // Step 3.
     var S = ToString(string);
 
+    // Optimized paths for simple cases.
+    if (IsRegExpMethodOptimizable(rx)) {
+        // Step 4.
+        var flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
+        var global = !!(flags & REGEXP_GLOBAL_FLAG);
+
+        if (global) {
+            // Step 6.a.
+            var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG);
+
+            // Steps 6.b-e.
+            return RegExpGlobalMatchOpt(rx, S, fullUnicode);
+        }
+
+        // Step 5.
+        var sticky = !!(flags & REGEXP_STICKY_FLAG);
+        return RegExpLocalMatchOpt(rx, S, sticky);
+    }
+
+    // Stes 4-6
+    return RegExpMatchSlowPath(rx, S);
+}
+
+// ES 2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e 21.2.5.6
+// steps 4-6.
+function RegExpMatchSlowPath(rx, S) {
     // Steps 4-5.
     if (!rx.global)
         return RegExpExec(rx, S, false);
@@ -147,6 +173,82 @@ function RegExpMatch(string) {
         // Step 6.e.iii.5.
         n++;
     }
+}
+
+// ES 2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e 21.2.5.6.
+// Steps 6.b-e.
+// Optimized path for @@match with global flag.
+function RegExpGlobalMatchOpt(rx, S, fullUnicode) {
+    // Step 6.b.
+    var lastIndex = 0;
+    rx.lastIndex = 0;
+
+    // Step 6.c.
+    var A = [];
+
+    // Step 6.d.
+    var n = 0;
+
+    var lengthS = S.length;
+
+    // Step 6.e.
+    while (true) {
+        // Step 6.e.i.
+        var result = RegExpMatcher(rx, S, lastIndex);
+
+        // Step 6.e.ii.
+        if (result === null)
+            return (n === 0) ? null : A;
+
+        lastIndex = result.index + result[0].length;
+
+        // Step 6.e.iii.1.
+        var matchStr = result[0];
+
+        // Step 6.e.iii.2.
+        _DefineDataProperty(A, n, matchStr);
+
+        // Step 6.e.iii.4.
+        if (matchStr === "") {
+            lastIndex = fullUnicode ? AdvanceStringIndex(S, lastIndex) : lastIndex + 1;
+            if (lastIndex > lengthS)
+                return A;
+        }
+
+        // Step 6.e.iii.5.
+        n++;
+    }
+}
+
+// ES 2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e 21.2.5.6 step 5.
+// Optimized path for @@match without global flag.
+function RegExpLocalMatchOpt(rx, S, sticky) {
+    // Step 4.
+    var lastIndex = ToLength(rx.lastIndex);
+
+    // Step 8.
+    if (!sticky) {
+        lastIndex = 0;
+    } else {
+        if (lastIndex > S.length) {
+            // Steps 12.a.i-ii, 12.c.i.1-2.
+            rx.lastIndex = 0;
+            return null;
+        }
+    }
+
+    // Steps 3, 9-25, except 12.a.i-ii, 12.c.i.1-2, 15.
+    var result = RegExpMatcher(rx, S, lastIndex);
+    if (result === null) {
+        // Steps 12.a.i-ii, 12.c.i.1-2.
+        rx.lastIndex = 0;
+    } else {
+        // Step 15.
+        if (sticky)
+            rx.lastIndex = result.index + result[0].length;
+    }
+
+    return result;
 }
 
 // Checks if following properties and getters are not modified, and accessing
