@@ -1591,6 +1591,24 @@ js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* resul
         return true;
     }
 
+    JSNative ignoreCaseGetter;
+    if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().ignoreCase), &ignoreCaseGetter))
+        return false;
+
+    if (ignoreCaseGetter != regexp_ignoreCase) {
+        *result = false;
+        return true;
+    }
+
+    JSNative multilineGetter;
+    if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().multiline), &multilineGetter))
+        return false;
+
+    if (multilineGetter != regexp_multiline) {
+        *result = false;
+        return true;
+    }
+
     JSNative stickyGetter;
     if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().sticky), &stickyGetter))
         return false;

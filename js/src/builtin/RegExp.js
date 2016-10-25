@@ -152,7 +152,10 @@ function RegExpMatch(string) {
 // Checks if following properties and getters are not modified, and accessing
 // them not observed by content script:
 //   * global
+//   * ignoreCase
+//   * multiline
 //   * sticky
+//   * unicode
 //   * exec
 //   * lastIndex
 function IsRegExpMethodOptimizable(rx) {
