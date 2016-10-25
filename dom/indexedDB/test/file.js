@@ -87,7 +87,7 @@ function getNullFile(name, size)
 
 function verifyBuffers(buffer1, buffer2)
 {
-  ok(compareBuffers(buffer1, buffer2), "Correct blob data");
+  ok(compareBuffers(buffer1, buffer2), "Correct buffer data");
 }
 
 function verifyBlob(blob1, blob2, fileId, blobReadHandler)
@@ -177,9 +177,14 @@ function verifyMutableFile(mutableFile1, file2)
   ok(mutableFile1 instanceof IDBMutableFile, "Instance of IDBMutableFile");
   is(mutableFile1.name, file2.name, "Correct name");
   is(mutableFile1.type, file2.type, "Correct type");
-  executeSoon(function() {
-    testGenerator.next();
-  });
+  continueToNextStep();
+}
+
+function verifyView(view1, view2)
+{
+  is(view1.byteLength, view2.byteLength, "Correct byteLength");
+  verifyBuffers(view1, view2);
+  continueToNextStep();
 }
 
 function grabFileUsageAndContinueHandler(request)
