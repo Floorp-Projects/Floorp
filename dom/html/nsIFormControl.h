@@ -67,6 +67,7 @@ enum InputElementTypes : uint8_t {
   NS_FORM_INPUT_URL,
   NS_FORM_INPUT_RANGE,
   NS_FORM_INPUT_WEEK,
+  NS_FORM_INPUT_DATETIME_LOCAL,
   eInputElementTypesMax
 };
 
@@ -273,6 +274,7 @@ nsIFormControl::IsSingleLineTextControl(bool aExcludePassword, uint32_t aType)
          aType == NS_FORM_INPUT_DATE ||
          aType == NS_FORM_INPUT_MONTH ||
          aType == NS_FORM_INPUT_WEEK ||
+         aType == NS_FORM_INPUT_DATETIME_LOCAL ||
          (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);
 }
 

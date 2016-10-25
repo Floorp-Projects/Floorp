@@ -269,7 +269,6 @@ ToMIRType(ValType vt)
       case ValType::B8x16: return jit::MIRType::Bool8x16;
       case ValType::B16x8: return jit::MIRType::Bool16x8;
       case ValType::B32x4: return jit::MIRType::Bool32x4;
-      case ValType::Limit: break;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
 }
@@ -573,6 +572,18 @@ class GlobalDesc
 };
 
 typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
+
+// DataSegment describes the offset of a data segment in the bytecode that is
+// to be copied at a given offset into linear memory upon instantiation.
+
+struct DataSegment
+{
+    InitExpr offset;
+    uint32_t bytecodeOffset;
+    uint32_t length;
+};
+
+typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 
 // SigIdDesc describes a signature id that can be used by call_indirect and
 // table-entry prologues to structurally compare whether the caller and callee's

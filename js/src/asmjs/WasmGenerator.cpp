@@ -670,9 +670,6 @@ ModuleGenerator::allocateGlobal(GlobalDesc* global)
       case ValType::B32x4:
         width = 16;
         break;
-      case ValType::Limit:
-        MOZ_CRASH("Limit");
-        break;
     }
 
     uint32_t offset;
@@ -858,6 +855,13 @@ ModuleGenerator::addElemSegment(InitExpr offset, Uint32Vector&& elemFuncIndices)
     }
 
     return elemSegments_.emplaceBack(0, offset, Move(elemFuncIndices));
+}
+
+void
+ModuleGenerator::setDataSegments(DataSegmentVector&& segments)
+{
+    MOZ_ASSERT(dataSegments_.empty());
+    dataSegments_ = Move(segments);
 }
 
 bool

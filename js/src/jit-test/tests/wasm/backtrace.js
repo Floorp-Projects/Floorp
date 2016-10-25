@@ -3,7 +3,7 @@ load(libdir + "wasm.js");
 
 var code = `(module
   (import $i "env" "test")
-  (func $t (call_import $i))
+  (func $t (call $i))
   (export "test" $t)
 )`;
 var mod = wasmEvalText(code, {

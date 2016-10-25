@@ -334,6 +334,9 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const override{ return gfx::SurfaceFormat::YUV; }
 
+  // Bug 1305906 fixes YUVColorSpace handling
+  virtual YUVColorSpace GetYUVColorSpace() const override { return YUVColorSpace::BT601; }
+
   virtual bool Lock() override;
 
   virtual void Unlock() override;

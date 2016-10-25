@@ -7,6 +7,7 @@
 #include "vm/TraceLogging.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/ScopeExit.h"
 
 #include <string.h>
 
@@ -361,7 +362,14 @@ TraceLoggerThread::getOrCreateEventPayload(const char* text)
         return p->value();
     }
 
-    AutoTraceLog internal(this, TraceLogger_Internal);
+    TraceLoggerEventPayload* payload = nullptr;
+
+    startEvent(TraceLogger_Internal);
+    auto guardInternalStopEvent = mozilla::MakeScopeExit([&] {
+        stopEvent(TraceLogger_Internal);
+        if (payload)
+            payload->release();
+    });
 
     char* str = js_strdup(text);
     if (!str)
@@ -369,7 +377,7 @@ TraceLoggerThread::getOrCreateEventPayload(const char* text)
 
     uint32_t textId = nextTextId;
 
-    TraceLoggerEventPayload* payload = js_new<TraceLoggerEventPayload>(textId, str);
+    payload = js_new<TraceLoggerEventPayload>(textId, str);
     if (!payload) {
         js_free(str);
         return nullptr;
@@ -377,8 +385,12 @@ TraceLoggerThread::getOrCreateEventPayload(const char* text)
 
     if (!textIdPayloads.putNew(textId, payload)) {
         js_delete(payload);
+        payload = nullptr;
         return nullptr;
     }
+
+    // Temporarily mark the payload as used. To make sure it doesn't get GC'ed.
+    payload->use();
 
     if (graph.get())
         graph->addTextId(textId, str);
@@ -416,7 +428,14 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* f
         }
     }
 
-    AutoTraceLog internal(this, TraceLogger_Internal);
+    TraceLoggerEventPayload* payload = nullptr;
+
+    startEvent(TraceLogger_Internal);
+    auto guardInternalStopEvent = mozilla::MakeScopeExit([&] {
+        stopEvent(TraceLogger_Internal);
+        if (payload)
+            payload->release();
+    });
 
     // Compute the length of the string to create.
     size_t lenFilename = strlen(filename);
@@ -436,7 +455,7 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* f
     MOZ_ASSERT(strlen(str) == len);
 
     uint32_t textId = nextTextId;
-    TraceLoggerEventPayload* payload = js_new<TraceLoggerEventPayload>(textId, str);
+    payload = js_new<TraceLoggerEventPayload>(textId, str);
     if (!payload) {
         js_free(str);
         return nullptr;
@@ -444,8 +463,12 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* f
 
     if (!textIdPayloads.putNew(textId, payload)) {
         js_delete(payload);
+        payload = nullptr;
         return nullptr;
     }
+
+    // Temporarily mark the payload as used. To make sure it doesn't get GC'ed.
+    payload->use();
 
     if (graph.get())
         graph->addTextId(textId, str);

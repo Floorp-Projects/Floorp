@@ -29,6 +29,7 @@
 
 #include "jswrapper.h"
 
+#include "asmjs/WasmBinaryFormat.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmInstance.h"
 #include "asmjs/WasmJS.h"
@@ -4911,7 +4912,7 @@ CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, Type 
     if (!f.m().declareImport(calleeName, Move(sig), ffiIndex, &importIndex))
         return false;
 
-    if (!f.writeCall(callNode, Expr::CallImport))
+    if (!f.writeCall(callNode, Expr::OldCallImport))
         return false;
 
     // Import index
@@ -7577,8 +7578,6 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue imp
             *val = Val(simdConstant.asInt32x4());
             return true;
           }
-          case ValType::Limit:
-            MOZ_CRASH("Limit");
         }
       }
     }

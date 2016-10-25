@@ -819,4 +819,14 @@
     </style>
 
     <style name="TabQueueActivity" parent="android:style/Theme.NoDisplay" />
+
+    <style name="ActivityStreamContextMenuText">
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <!-- We use this style to provide our own divider that has an inset on the left side -->
+    <style name="ActivityStreamContextMenuStyle">
+        <item name="android:listDivider">@drawable/as_contextmenu_divider</item>
+    </style>
+
 </resources>
