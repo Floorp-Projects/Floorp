@@ -23,7 +23,7 @@ namespace indexedDB {
 
 inline
 StructuredCloneFile::StructuredCloneFile()
-  : mMutable(false)
+  : mType(eBlob)
 {
   MOZ_COUNT_CTOR(StructuredCloneFile);
 }
@@ -41,7 +41,7 @@ StructuredCloneFile::operator==(const StructuredCloneFile& aOther) const
   return this->mBlob == aOther.mBlob &&
          this->mMutableFile == aOther.mMutableFile &&
          this->mFileInfo == aOther.mFileInfo &&
-         this->mMutable == aOther.mMutable;
+         this->mType == aOther.mType;
 }
 
 inline
