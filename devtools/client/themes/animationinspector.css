@@ -344,47 +344,16 @@ body {
   cursor: pointer;
 }
 
-/* Animation iterations */
-
-.animation-timeline .animation .iterations {
+/* Animation summary graph */
+.animation-timeline .animation .summary {
   position: absolute;
+  width: 100%;
   height: 100%;
-  box-sizing: border-box;
-
-  /* Iterations of the animation are displayed with a repeating linear-gradient
-     which size is dynamically changed from JS. The gradient only draws 1px
-     borders between each iteration. These borders must have the same color as
-     the border of this element */
-  background-image:
-    linear-gradient(to left,
-                    var(--timeline-border-color) 0,
-                    var(--timeline-border-color) 1px,
-                    transparent 1px,
-                    transparent 2px);
-  border: 1px solid var(--timeline-border-color);
-  /* Border-right is already handled by the gradient */
-  border-width: 1px 0 1px 1px;
-
-  /* The background color is set independently */
-  background-color: var(--timeline-background-color);
 }
 
-.animation-timeline .animation .iterations.infinite::before,
-.animation-timeline .animation .iterations.infinite::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 0;
-  height: 0;
-  border-right: 4px solid var(--theme-body-background);
-  border-top: 4px solid transparent;
-  border-bottom: 4px solid transparent;
-}
-
-.animation-timeline .animation .iterations.infinite::after {
-  bottom: 0;
-  top: unset;
+.animation-timeline .animation .summary path {
+  fill: var(--timeline-background-color);
+  stroke: var(--timeline-border-color);
 }
 
 .animation-timeline .animation .name {
@@ -471,6 +440,17 @@ body {
      animation, so there's already the animation's left border that serves as
      a separation. */
   border-width: 1px;
+}
+
+/* Use for fade mask */
+#animationinspector-fade-gradient stop {
+  /* opaque */
+  stop-color: white;
+}
+
+#animationinspector-fade-gradient stop:nth-child(2) {
+  /* transparent */
+  stop-color: black;
 }
 
 /* Animation target node gutter, contains a preview of the dom node */
