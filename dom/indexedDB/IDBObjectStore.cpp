@@ -553,7 +553,7 @@ public:
                            JS::MutableHandle<JSObject*> aResult)
   {
     MOZ_ASSERT(aCx);
-    MOZ_ASSERT(aFile.mMutable);
+    MOZ_ASSERT(aFile.mType == StructuredCloneFile::eMutableFile);
 
     if (!aFile.mMutableFile || !NS_IsMainThread()) {
       return false;
@@ -585,7 +585,7 @@ public:
     MOZ_ASSERT(aData.tag == SCTAG_DOM_FILE ||
                aData.tag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
                aData.tag == SCTAG_DOM_BLOB);
-    MOZ_ASSERT(!aFile.mMutable);
+    MOZ_ASSERT(aFile.mType == StructuredCloneFile::eBlob);
     MOZ_ASSERT(aFile.mBlob);
 
     // It can happen that this IDB is chrome code, so there is no parent, but
@@ -755,12 +755,12 @@ public:
                            JS::MutableHandle<JSObject*> aResult)
   {
     MOZ_ASSERT(aCx);
-    MOZ_ASSERT(!aFile.mMutable);
+    MOZ_ASSERT(aFile.mType == StructuredCloneFile::eBlob);
 
-    aFile.mMutable = true;
+    aFile.mType = StructuredCloneFile::eMutableFile;
 
     // Just make a dummy object. The file_ids upgrade function is only
-    // interested in the |mMutable| flag.
+    // interested in the |mType| flag.
     JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
 
     if (NS_WARN_IF(!obj)) {
@@ -779,13 +779,13 @@ public:
                           JS::MutableHandle<JSObject*> aResult)
   {
     MOZ_ASSERT(aCx);
-    MOZ_ASSERT(!aFile.mMutable);
+    MOZ_ASSERT(aFile.mType == StructuredCloneFile::eBlob);
     MOZ_ASSERT(aData.tag == SCTAG_DOM_FILE ||
                aData.tag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
                aData.tag == SCTAG_DOM_BLOB);
 
     // Just make a dummy object. The file_ids upgrade function is only interested
-    // in the |mMutable| flag.
+    // in the |mType| flag.
     JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
 
     if (NS_WARN_IF(!obj)) {

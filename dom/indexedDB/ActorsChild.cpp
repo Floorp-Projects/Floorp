@@ -619,7 +619,7 @@ ConvertActorsToBlobs(IDBDatabase* aDatabase,
           StructuredCloneFile* file = aFiles.AppendElement();
           MOZ_ASSERT(file);
 
-          file->mMutable = false;
+          file->mType = StructuredCloneFile::eBlob;
           file->mBlob.swap(blob);
 
           break;
@@ -634,7 +634,7 @@ ConvertActorsToBlobs(IDBDatabase* aDatabase,
               StructuredCloneFile* file = aFiles.AppendElement();
               MOZ_ASSERT(file);
 
-              file->mMutable = true;
+              file->mType = StructuredCloneFile::eMutableFile;
 
               break;
             }
@@ -654,7 +654,7 @@ ConvertActorsToBlobs(IDBDatabase* aDatabase,
               StructuredCloneFile* file = aFiles.AppendElement();
               MOZ_ASSERT(file);
 
-              file->mMutable = true;
+              file->mType = StructuredCloneFile::eMutableFile;
               file->mMutableFile = mutableFile;
 
               actor->ReleaseDOMObject();
