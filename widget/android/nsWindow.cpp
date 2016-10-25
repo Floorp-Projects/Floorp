@@ -3090,6 +3090,8 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
     const auto composition(window.GetIMEComposition());
     MOZ_ASSERT(!composition || !composition->IsEditorHandlingEvent());
 
+    const bool composing = !mIMERanges->IsEmpty();
+
     if (!mIMEKeyEvents.IsEmpty() || !composition ||
         uint32_t(aStart) != composition->NativeOffsetOfStartComposition() ||
         uint32_t(aEnd) != composition->NativeOffsetOfStartComposition() +
@@ -3133,7 +3135,16 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
             return;
         }
 
-        {
+        if (aStart != aEnd) {
+            // Perform a deletion first.
+            WidgetContentCommandEvent event(
+                    true, eContentCommandDelete, &window);
+            window.InitEvent(event, nullptr);
+            window.DispatchEvent(&event);
+        }
+
+        // Start a composition if we're not just performing a deletion.
+        if (composing || !string.IsEmpty()) {
             WidgetCompositionEvent event(true, eCompositionStart, &window);
             window.InitEvent(event, nullptr);
             window.DispatchEvent(&event);
@@ -3150,9 +3161,8 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
         AddIMETextChange(dummyChange);
     }
 
-    const bool composing = !mIMERanges->IsEmpty();
-
-    // Previous events may have destroyed our composition; bail in that case.
+    // Check composition again because previous events may have destroyed our
+    // composition; in which case we should just skip the next event.
     if (window.GetIMEComposition()) {
         WidgetCompositionEvent event(true, eCompositionChange, &window);
         window.InitEvent(event, nullptr);
@@ -3161,15 +3171,8 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
         if (composing) {
             event.mRanges = new TextRangeArray();
             mIMERanges.swap(event.mRanges);
-
-        } else if (event.mData.Length()) {
-            // Include proper text ranges to make the editor happy.
-            TextRange range;
-            range.mStartOffset = 0;
-            range.mEndOffset = event.mData.Length();
-            range.mRangeType = TextRangeType::eRawClause;
-            event.mRanges = new TextRangeArray();
-            event.mRanges->AppendElement(range);
+        } else {
+            event.mMessage = eCompositionCommit;
         }
 
         window.DispatchEvent(&event);
@@ -3177,11 +3180,6 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
     } else if (composing) {
         // Ensure IME ranges are empty.
         mIMERanges->Clear();
-    }
-
-    // Don't end composition when composing text or composition was destroyed.
-    if (!composing) {
-        window.RemoveIMEComposition();
     }
 
     if (mInputContext.mMayBeIMEUnaware) {
