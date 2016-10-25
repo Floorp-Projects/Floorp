@@ -125,9 +125,6 @@ final class GeckoEditable extends JNIObject
     private native void onImeSynchronize();
 
     @WrapForJNI(dispatchTo = "proxy")
-    private native void onImeAcknowledgeFocus();
-
-    @WrapForJNI(dispatchTo = "proxy")
     private native void onImeReplaceText(int start, int end, String text);
 
     @WrapForJNI(dispatchTo = "proxy")
@@ -370,10 +367,8 @@ final class GeckoEditable extends JNIObject
         static final int TYPE_SET_SPAN = 2;
         // For Editable.removeSpan() call; use with onImeSynchronize
         static final int TYPE_REMOVE_SPAN = 3;
-        // For focus events (in notifyIME); use with onImeAcknowledgeFocus
-        static final int TYPE_ACKNOWLEDGE_FOCUS = 4;
         // For switching handler; use with onImeSynchronize
-        static final int TYPE_SET_HANDLER = 5;
+        static final int TYPE_SET_HANDLER = 4;
 
         final int mType;
         int mStart;
@@ -487,10 +482,6 @@ final class GeckoEditable extends JNIObject
             }
             mText.shadowReplace(action.mStart, action.mEnd, action.mSequence);
             onImeReplaceText(action.mStart, action.mEnd, action.mSequence.toString());
-            break;
-
-        case Action.TYPE_ACKNOWLEDGE_FOCUS:
-            onImeAcknowledgeFocus();
             break;
 
         default:
@@ -1014,9 +1005,8 @@ final class GeckoEditable extends JNIObject
         geckoPostToIc(new Runnable() {
             @Override
             public void run() {
-                if (type == GeckoEditableListener.NOTIFY_IME_OF_FOCUS) {
-                    // Unmask events on the Gecko side
-                    icOfferAction(new Action(Action.TYPE_ACKNOWLEDGE_FOCUS));
+                if (type == GeckoEditableListener.NOTIFY_IME_OF_FOCUS && mListener != null) {
+                    mText.syncShadowText(/* listener */ null);
                 }
 
                 if (mListener != null) {
@@ -1125,9 +1115,14 @@ final class GeckoEditable extends JNIObject
         final int newEnd = start + text.length();
         final Action action = mActions.peek();
 
-        if (action != null && action.mType == Action.TYPE_ACKNOWLEDGE_FOCUS) {
-            // Simply replace the text for newly-focused editors.
-            mText.currentReplace(0, currentLength, text);
+        if (start == 0 && unboundedOldEnd > currentLength) {
+            // Simply replace the text for newly-focused editors. Replace in two steps to
+            // properly clear composing spans that span the whole range.
+            mText.currentReplace(0, currentLength, "");
+            mText.currentReplace(0, 0, text);
+
+            // Don't ignore the next selection change because we are re-syncing with Gecko
+            mIgnoreSelectionChange = false;
 
         } else if (action != null &&
                 action.mType == Action.TYPE_REPLACE_TEXT &&
