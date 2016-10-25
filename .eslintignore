@@ -57,6 +57,7 @@ b2g/locales/en-US/b2g-l10n.js
 
 # browser/ exclusions
 browser/app/**
+browser/branding/**/firefox-branding.js
 browser/base/content/browser-social.js
 browser/base/content/nsContextMenu.js
 browser/base/content/sanitizeDialog.js
