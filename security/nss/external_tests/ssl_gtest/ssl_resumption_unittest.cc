@@ -170,13 +170,9 @@ TEST_P(TlsConnectGeneric, ConnectResumeClientNoneServerBoth) {
 }
 
 TEST_P(TlsConnectGenericPre13, ConnectResumeWithHigherVersion) {
-  EnsureTlsSetup();
-  SetExpectedVersion(SSL_LIBRARY_VERSION_TLS_1_1);
   ConfigureSessionCache(RESUME_SESSIONID, RESUME_SESSIONID);
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_1);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_1);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_1);
+  SetExpectedVersion(SSL_LIBRARY_VERSION_TLS_1_1);
   Connect();
 
   Reset();
@@ -219,7 +215,6 @@ TEST_P(TlsConnectGeneric, ServerSNICertSwitch) {
   ScopedCERTCertificate cert1(SSL_PeerCertificate(client_->ssl_fd()));
 
   Reset();
-  EnsureTlsSetup();
   ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
 
   server_->SetSniCallback(SwitchCertificates);
@@ -236,7 +231,6 @@ TEST_P(TlsConnectGeneric, ServerSNICertTypeSwitch) {
   ScopedCERTCertificate cert1(SSL_PeerCertificate(client_->ssl_fd()));
 
   Reset();
-  EnsureTlsSetup();
   ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
 
   // Because we configure an RSA certificate here, it only adds a second, unused
@@ -328,10 +322,51 @@ TEST_P(TlsConnectTls13, TestTls13ResumeDifferentGroup) {
   CheckKeys(ssl_kea_dh, ssl_grp_ffdhe_2048, ssl_auth_rsa_sign, ssl_sig_none);
 }
 
+// We need to enable different cipher suites at different times in the following
+// tests.  Those cipher suites need to be suited to the version.
+static uint16_t ChooseOneCipher(uint16_t version) {
+  if (version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    return TLS_AES_128_GCM_SHA256;
+  }
+  return TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA;
+}
+
+static uint16_t ChooseAnotherCipher(uint16_t version) {
+  if (version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    return TLS_CHACHA20_POLY1305_SHA256;
+  }
+  return TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA;
+}
+
 // Test that we don't resume when we can't negotiate the same cipher.
-TEST_P(TlsConnectTls13, TestTls13ResumeClientDifferentCipher) {
+TEST_P(TlsConnectGeneric, TestResumeClientDifferentCipher) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  client_->EnableSingleCipher(TLS_AES_128_GCM_SHA256);
+  client_->EnableSingleCipher(ChooseOneCipher(version_));
+  Connect();
+  SendReceive();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ExpectResumption(RESUME_NONE);
+  client_->EnableSingleCipher(ChooseAnotherCipher(version_));
+  uint16_t ticket_extension;
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    ticket_extension = ssl_tls13_pre_shared_key_xtn;
+  } else {
+    ticket_extension = ssl_session_ticket_xtn;
+  }
+  auto ticket_capture = new TlsExtensionCapture(ticket_extension);
+  client_->SetPacketFilter(ticket_capture);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  EXPECT_EQ(0U, ticket_capture->extension().len());
+}
+
+// Test that we don't resume when we can't negotiate the same cipher.
+TEST_P(TlsConnectGeneric, TestResumeServerDifferentCipher) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  server_->EnableSingleCipher(ChooseOneCipher(version_));
   Connect();
   SendReceive();  // Need to read so that we absorb the session ticket.
   CheckKeys();
@@ -339,35 +374,137 @@ TEST_P(TlsConnectTls13, TestTls13ResumeClientDifferentCipher) {
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   ExpectResumption(RESUME_NONE);
-  client_->EnableSingleCipher(TLS_AES_256_GCM_SHA384);
+  server_->EnableSingleCipher(ChooseAnotherCipher(version_));
   Connect();
   CheckKeys();
 }
 
-// Test that we don't resume when we can't negotiate the same cipher.
-TEST_P(TlsConnectTls13, TestTls13ResumeServerDifferentCipher) {
+class SelectedCipherSuiteReplacer : public TlsHandshakeFilter {
+ public:
+  SelectedCipherSuiteReplacer(uint16_t suite) : cipher_suite_(suite) {}
+
+ protected:
+  PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                       const DataBuffer& input,
+                                       DataBuffer* output) override {
+    if (header.handshake_type() != kTlsHandshakeServerHello) {
+      return KEEP;
+    }
+
+    *output = input;
+    uint32_t temp = 0;
+    EXPECT_TRUE(input.Read(0, 2, &temp));
+    // Cipher suite is after version(2) and random(32).
+    size_t pos = 34;
+    if (temp < SSL_LIBRARY_VERSION_TLS_1_3) {
+      // In old versions, we have to skip a session_id too.
+      EXPECT_TRUE(input.Read(pos, 1, &temp));
+      pos += 1 + temp;
+    }
+    output->Write(pos, static_cast<uint32_t>(cipher_suite_), 2);
+    return CHANGE;
+  }
+
+ private:
+  uint16_t cipher_suite_;
+};
+
+// Test that the client doesn't tolerate the server picking a different cipher
+// suite for resumption.
+TEST_P(TlsConnectStream, TestResumptionOverrideCipher) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  server_->EnableSingleCipher(TLS_AES_128_GCM_SHA256);
+  server_->EnableSingleCipher(ChooseOneCipher(version_));
   Connect();
-  SendReceive();  // Need to read so that we absorb the session ticket.
-  CheckKeys();
+  SendReceive();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
 
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  ExpectResumption(RESUME_NONE);
-  server_->EnableSingleCipher(TLS_AES_256_GCM_SHA384);
+  server_->SetPacketFilter(
+      new SelectedCipherSuiteReplacer(ChooseAnotherCipher(version_)));
+
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    // The reason this test is stream only: the server is unable to decrypt
+    // the alert that the client sends, see bug 1304603.
+    server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+  } else {
+    server_->CheckErrorCode(SSL_ERROR_HANDSHAKE_FAILURE_ALERT);
+  }
+}
+
+class SelectedVersionReplacer : public TlsHandshakeFilter {
+ public:
+  SelectedVersionReplacer(uint16_t version) : version_(version) {}
+
+ protected:
+  PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                       const DataBuffer& input,
+                                       DataBuffer* output) override {
+    if (header.handshake_type() != kTlsHandshakeServerHello) {
+      return KEEP;
+    }
+
+    *output = input;
+    output->Write(0, static_cast<uint32_t>(version_), 2);
+    return CHANGE;
+  }
+
+ private:
+  uint16_t version_;
+};
+
+// Test how the client handles the case where the server picks a
+// lower version number on resumption.
+TEST_P(TlsConnectGenericPre13, TestResumptionOverrideVersion) {
+  uint16_t override_version = 0;
+  if (mode_ == STREAM) {
+    switch (version_) {
+      case SSL_LIBRARY_VERSION_TLS_1_0:
+        return;  // Skip the test.
+      case SSL_LIBRARY_VERSION_TLS_1_1:
+        override_version = SSL_LIBRARY_VERSION_TLS_1_0;
+        break;
+      case SSL_LIBRARY_VERSION_TLS_1_2:
+        override_version = SSL_LIBRARY_VERSION_TLS_1_1;
+        break;
+      default:
+        ASSERT_TRUE(false) << "unknown version";
+    }
+  } else {
+    if (version_ == SSL_LIBRARY_VERSION_TLS_1_2) {
+      override_version = SSL_LIBRARY_VERSION_DTLS_1_0_WIRE;
+    } else {
+      ASSERT_EQ(SSL_LIBRARY_VERSION_TLS_1_1, version_);
+      return;  // Skip the test.
+    }
+  }
+
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  // Need to use a cipher that is plausible for the lower version.
+  server_->EnableSingleCipher(TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA);
   Connect();
-  CheckKeys();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  // Enable the lower version on the client.
+  client_->SetVersionRange(version_ - 1, version_);
+  server_->EnableSingleCipher(TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA);
+  server_->SetPacketFilter(new SelectedVersionReplacer(override_version));
+
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+  server_->CheckErrorCode(SSL_ERROR_HANDSHAKE_FAILURE_ALERT);
 }
 
 // Test that two TLS resumptions work and produce the same ticket.
 // This will change after bug 1257047 is fixed.
 TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+
   Connect();
   SendReceive();  // Need to read so that we absorb the session ticket.
   CheckKeys();
@@ -376,14 +513,11 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
 
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  ExpectResumption(RESUME_TICKET);
   TlsExtensionCapture* c1 =
       new TlsExtensionCapture(ssl_tls13_pre_shared_key_xtn);
   client_->SetPacketFilter(c1);
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  ExpectResumption(RESUME_TICKET);
   Connect();
   SendReceive();
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_rsa_sign,
@@ -398,13 +532,10 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   Reset();
   ClearStats();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
   TlsExtensionCapture* c2 =
       new TlsExtensionCapture(ssl_tls13_pre_shared_key_xtn);
   client_->SetPacketFilter(c2);
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
   ExpectResumption(RESUME_TICKET);
   Connect();
   SendReceive();
@@ -425,4 +556,5 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
 
   ASSERT_NE(initialTicket, c2->extension());
 }
+
 }  // namespace nss_test

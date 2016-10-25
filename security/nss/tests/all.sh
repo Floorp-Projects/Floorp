@@ -65,7 +65,6 @@
 # Optional environment variables to enable specific NSS features:
 # ---------------------------------------------------------------
 #   NSS_DISABLE_ECC             - disable ECC
-#   NSS_ECC_MORE_THAN_SUITE_B   - enable extended ECC
 #
 # Optional environment variables to select which cycles/suites to test:
 # ---------------------------------------------------------------------

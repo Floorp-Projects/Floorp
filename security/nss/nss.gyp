@@ -124,6 +124,37 @@
         }],
       ],
     },
+    {
+      'target_name': 'nss_sign_shared_libs',
+      'type': 'none',
+      'dependencies': [
+        'cmd/shlibsign/shlibsign.gyp:shlibsign',
+      ],
+      'actions': [
+        {
+          'action_name': 'shlibsign',
+          'inputs': [
+            '<(nss_dist_obj_dir)/lib/<(dll_prefix)freebl3.<(dll_suffix)',
+            '<(nss_dist_obj_dir)/lib/<(dll_prefix)freeblpriv3.<(dll_suffix)',
+            '<(nss_dist_obj_dir)/lib/<(dll_prefix)nssdbm3.<(dll_suffix)',
+            '<(nss_dist_obj_dir)/lib/<(dll_prefix)softokn3.<(dll_suffix)',
+          ],
+          'outputs': [
+            '<(nss_dist_obj_dir)/lib/<(dll_prefix)freebl3.chk',
+            '<(nss_dist_obj_dir)/lib/<(dll_prefix)freeblpriv3.chk',
+            '<(nss_dist_obj_dir)/lib/<(dll_prefix)nssdbm3.chk',
+            '<(nss_dist_obj_dir)/lib/<(dll_prefix)softokn3.chk'
+          ],
+          'conditions': [
+            ['OS!="linux"', {
+              'inputs/': [['exclude', 'freeblpriv']],
+              'outputs/': [['exclude', 'freeblpriv']]
+            }],
+          ],
+          'action': ['<(python)', '<(DEPTH)/coreconf/shlibsign.py', '<@(_inputs)']
+        }
+      ],
+    },
   ],
   'conditions': [
     [ 'disable_tests==0', {

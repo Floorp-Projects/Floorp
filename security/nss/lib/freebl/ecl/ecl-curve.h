@@ -8,10 +8,6 @@
 #ifndef __ecl_curve_h_
 #define __ecl_curve_h_
 
-#ifdef NSS_ECC_MORE_THAN_SUITE_B
-#error This source file is for Basic ECC only .
-#endif
-
 /* copied from certt.h */
 #define KU_DIGITAL_SIGNATURE (0x80) /* bit 0 */
 #define KU_KEY_AGREEMENT (0x08)     /* bit 4 */

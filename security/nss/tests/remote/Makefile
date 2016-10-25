@@ -81,7 +81,6 @@ package_for_testing:
 	echo 'export BUILD_OPT=$(BUILD_OPT)'         >> $(RTSH)
 	echo 'export PKITS_DATA=$(PKITS_DATA)'       >> $(RTSH)
 	echo 'export NSS_DISABLE_ECC=$(NSS_DISABLE_ECC)'                     >> $(RTSH)
-	echo 'export NSS_ECC_MORE_THAN_SUITE_B=$(NSS_ECC_MORE_THAN_SUITE_B)' >> $(RTSH)
 	echo 'export NSPR_LOG_MODULES=$(NSPR_LOG_MODULES)'                   >> $(RTSH)
 ifeq ($(OS_TARGET),Android)
 	# Android doesn't support FIPS tests, because
