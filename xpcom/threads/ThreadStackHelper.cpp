@@ -120,7 +120,7 @@ ThreadStackHelper::ThreadStackHelper()
   , mContextToFill(nullptr)
 #endif
   , mMaxStackSize(Stack::sMaxInlineStorage)
-  , mMaxBufferSize(0)
+  , mMaxBufferSize(512)
 #endif
 {
 #if defined(XP_LINUX)
