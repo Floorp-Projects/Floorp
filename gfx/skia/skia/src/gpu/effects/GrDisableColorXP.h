@@ -10,12 +10,13 @@
 
 #include "GrTypes.h"
 #include "GrXferProcessor.h"
+#include "SkRefCnt.h"
 
 class GrProcOptInfo;
 
 class GrDisableColorXPFactory : public GrXPFactory {
 public:
-    static GrXPFactory* Create() { return new GrDisableColorXPFactory; }
+    static sk_sp<GrXPFactory> Make() { return sk_sp<GrXPFactory>(new GrDisableColorXPFactory); }
 
     void getInvariantBlendedColor(const GrProcOptInfo& colorPOI,
                                   GrXPFactory::InvariantBlendedColor* blendedColor) const override {
@@ -31,9 +32,7 @@ private:
                                            bool hasMixedSamples,
                                            const DstTexture* dstTexture) const override;
 
-    bool onWillReadDstColor(const GrCaps& caps,
-                            const GrPipelineOptimizations& optimizations,
-                            bool hasMixedSamples) const override {
+    bool onWillReadDstColor(const GrCaps&, const GrPipelineOptimizations&) const override {
         return false;
     }
 

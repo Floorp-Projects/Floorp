@@ -18,7 +18,7 @@ void GrGLTextureRenderTarget::dumpMemoryStatistics(
   // texture and a
   // renderbuffer component, dump as skia/gpu_resources/resource_#/texture
   SkString dumpName("skia/gpu_resources/resource_");
-  dumpName.appendS32(this->getUniqueID());
+  dumpName.appendS32(this->uniqueID());
   dumpName.append("/texture");
 
   // Use the texture's gpuMemorySize, not our own, which includes the
@@ -36,4 +36,17 @@ void GrGLTextureRenderTarget::dumpMemoryStatistics(
   texture_id.appendU32(this->textureID());
   traceMemoryDump->setMemoryBacking(dumpName.c_str(), "gl_texture",
                                     texture_id.c_str());
+}
+
+bool GrGLTextureRenderTarget::canAttemptStencilAttachment() const {
+    // The RT FBO of GrGLTextureRenderTarget is never created from a
+    // wrapped FBO.
+    return true;
+}
+
+GrGLTextureRenderTarget* GrGLTextureRenderTarget::CreateWrapped(GrGLGpu* gpu,
+                                                                const GrSurfaceDesc& desc,
+                                                                const GrGLTexture::IDDesc& texIDDesc,
+                                                                const GrGLRenderTarget::IDDesc& rtIDDesc) {
+    return new GrGLTextureRenderTarget(gpu, desc, texIDDesc, rtIDDesc);
 }

@@ -17,6 +17,10 @@ public:
     ~SkPDFCanvas();
 
 protected:
+    void onClipRect(const SkRect&, ClipOp, ClipEdgeStyle) override;
+    void onClipRRect(const SkRRect&, ClipOp, ClipEdgeStyle) override;
+    void onClipPath(const SkPath&, ClipOp, ClipEdgeStyle) override;
+
     void onDrawBitmapNine(const SkBitmap&, const SkIRect&, const SkRect&,
                           const SkPaint*) override;
 
@@ -34,6 +38,19 @@ protected:
                           const SkRect&,
                           const SkPaint*,
                           SkCanvas::SrcRectConstraint) override;
+
+    void onDrawImageLattice(const SkImage*,
+                            const Lattice&,
+                            const SkRect&,
+                            const SkPaint*) override;
+
+    void onDrawBitmapLattice(const SkBitmap&,
+                             const Lattice&,
+                             const SkRect&,
+                             const SkPaint*) override;
+
+private:
+    typedef SkCanvas INHERITED;
 };
 
 #endif  // SkPDFCanvas_DEFINED

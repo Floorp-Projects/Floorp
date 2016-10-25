@@ -33,8 +33,7 @@ public:
     /**
      * Helper that gets the width and height of the surface as a bounding rectangle.
      */
-    void getBoundsRect(SkRect* rect) const { rect->setWH(SkIntToScalar(this->width()),
-                                                         SkIntToScalar(this->height())); }
+    SkRect getBoundsRect() const { return SkRect::MakeIWH(this->width(), this->height()); }
 
     GrSurfaceOrigin origin() const {
         SkASSERT(kTopLeft_GrSurfaceOrigin == fDesc.fOrigin || kBottomLeft_GrSurfaceOrigin == fDesc.fOrigin);
@@ -100,7 +99,7 @@ public:
      *                      packed.
      * @param pixelOpsFlags See the GrContext::PixelOpsFlags enum.
      *
-     * @return true if the read succeeded, false if not. The read can fail because of an
+     * @return true if the write succeeded, false if not. The write can fail because of an
      *              unsupported pixel config.
      */
     bool writePixels(int left, int top, int width, int height,
@@ -114,13 +113,6 @@ public:
      */
     void flushWrites();
 
-
-    /**
-     * After this returns any pending surface IO will be issued to the backend 3D API and
-     * if the surface has MSAA it will be resolved.
-     */
-    void prepareForExternalIO();
-
     /** Access methods that are only to be used within Skia code. */
     inline GrSurfacePriv surfacePriv();
     inline const GrSurfacePriv surfacePriv() const;
@@ -133,11 +125,10 @@ public:
         fReleaseCtx = ctx;
     }
 
-    static size_t WorseCaseSize(const GrSurfaceDesc& desc);
+    static size_t WorstCaseSize(const GrSurfaceDesc& desc);
 
 protected:
     // Methods made available via GrSurfacePriv
-    SkImageInfo info(SkAlphaType) const;
     bool savePixels(const char* filename);
     bool hasPendingRead() const;
     bool hasPendingWrite() const;
@@ -146,8 +137,8 @@ protected:
     // Provides access to methods that should be public within Skia code.
     friend class GrSurfacePriv;
 
-    GrSurface(GrGpu* gpu, LifeCycle lifeCycle, const GrSurfaceDesc& desc)
-        : INHERITED(gpu, lifeCycle)
+    GrSurface(GrGpu* gpu, const GrSurfaceDesc& desc)
+        : INHERITED(gpu)
         , fDesc(desc)
         , fReleaseProc(NULL)
         , fReleaseCtx(NULL)

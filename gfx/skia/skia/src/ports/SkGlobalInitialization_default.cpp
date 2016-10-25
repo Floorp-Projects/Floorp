@@ -6,7 +6,6 @@
  */
 
 #include "SkBitmapSourceDeserializer.h"
-#include "SkBlurImageFilter.h"
 #include "SkDashPathEffect.h"
 #include "SkGradientShader.h"
 #include "SkImageSource.h"
@@ -42,6 +41,5 @@ void SkFlattenable::PrivateInitializer::InitEffects() {
     SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkDashPathEffect)
 
     // ImageFilter
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkBlurImageFilter)
-    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkImageSource)
+    SkImageFilter::InitializeFlattenables();
 }

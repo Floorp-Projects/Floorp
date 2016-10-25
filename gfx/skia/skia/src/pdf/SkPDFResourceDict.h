@@ -8,9 +8,11 @@
 #ifndef SkPDFResourceDict_DEFINED
 #define SkPDFResourceDict_DEFINED
 
-#include "SkPDFTypes.h"
+#include "SkRefCnt.h"
 #include "SkTDArray.h"
-#include "SkTypes.h"
+
+class SkPDFDict;
+class SkPDFObject;
 
 /** \class SkPDFResourceDict
 
@@ -29,6 +31,8 @@ public:
         // currently used by Skia: ColorSpace, Shading, Properties
         kResourceTypeCount
     };
+
+    static char GetResourceTypePrefix(SkPDFResourceDict::SkPDFResourceType type);
 
     /** Create a PDF resource dictionary.
      *  The full set of ProcSet entries is automatically created for backwards

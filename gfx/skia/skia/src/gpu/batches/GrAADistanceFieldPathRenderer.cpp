@@ -20,7 +20,6 @@
 #include "effects/GrDistanceFieldGeoProc.h"
 
 #include "SkDistanceFieldGen.h"
-#include "SkRTConf.h"
 
 #define ATLAS_TEXTURE_WIDTH 2048
 #define ATLAS_TEXTURE_HEIGHT 2048
@@ -31,8 +30,8 @@
 #define NUM_PLOTS_Y   (ATLAS_TEXTURE_HEIGHT / PLOT_HEIGHT)
 
 #ifdef DF_PATH_TRACKING
-static int g_NumCachedPaths = 0;
-static int g_NumFreedPaths = 0;
+static int g_NumCachedShapes = 0;
+static int g_NumFreedShapes = 0;
 #endif
 
 // mip levels
@@ -44,15 +43,15 @@ static const int kLargeMIP = 162;
 void GrAADistanceFieldPathRenderer::HandleEviction(GrBatchAtlas::AtlasID id, void* pr) {
     GrAADistanceFieldPathRenderer* dfpr = (GrAADistanceFieldPathRenderer*)pr;
     // remove any paths that use this plot
-    PathDataList::Iter iter;
-    iter.init(dfpr->fPathList, PathDataList::Iter::kHead_IterStart);
-    PathData* pathData;
-    while ((pathData = iter.get())) {
+    ShapeDataList::Iter iter;
+    iter.init(dfpr->fShapeList, ShapeDataList::Iter::kHead_IterStart);
+    ShapeData* shapeData;
+    while ((shapeData = iter.get())) {
         iter.next();
-        if (id == pathData->fID) {
-            dfpr->fPathCache.remove(pathData->fKey);
-            dfpr->fPathList.remove(pathData);
-            delete pathData;
+        if (id == shapeData->fID) {
+            dfpr->fShapeCache.remove(shapeData->fKey);
+            dfpr->fShapeList.remove(shapeData);
+            delete shapeData;
 #ifdef DF_PATH_TRACKING
             ++g_NumFreedPaths;
 #endif
@@ -64,33 +63,42 @@ void GrAADistanceFieldPathRenderer::HandleEviction(GrBatchAtlas::AtlasID id, voi
 GrAADistanceFieldPathRenderer::GrAADistanceFieldPathRenderer() : fAtlas(nullptr) {}
 
 GrAADistanceFieldPathRenderer::~GrAADistanceFieldPathRenderer() {
-    PathDataList::Iter iter;
-    iter.init(fPathList, PathDataList::Iter::kHead_IterStart);
-    PathData* pathData;
-    while ((pathData = iter.get())) {
+    ShapeDataList::Iter iter;
+    iter.init(fShapeList, ShapeDataList::Iter::kHead_IterStart);
+    ShapeData* shapeData;
+    while ((shapeData = iter.get())) {
         iter.next();
-        fPathList.remove(pathData);
-        delete pathData;
+        delete shapeData;
     }
     delete fAtlas;
 
 #ifdef DF_PATH_TRACKING
-    SkDebugf("Cached paths: %d, freed paths: %d\n", g_NumCachedPaths, g_NumFreedPaths);
+    SkDebugf("Cached shapes: %d, freed shapes: %d\n", g_NumCachedShapes, g_NumFreedShapes);
 #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 bool GrAADistanceFieldPathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
-
-    // TODO: Support inverse fill
-    if (!args.fShaderCaps->shaderDerivativeSupport() || !args.fAntiAlias ||
-        SkStrokeRec::kHairline_Style == args.fStroke->getStyle() ||
-        args.fPath->isInverseFillType() || args.fPath->isVolatile() ||
-        // We don't currently apply the dash or factor it into the DF key. (skbug.com/5082)
-        args.fStroke->isDashed()) {
+    if (!args.fShaderCaps->shaderDerivativeSupport()) {
         return false;
     }
-
+    // If the shape has no key then we won't get any reuse.
+    if (!args.fShape->hasUnstyledKey()) {
+        return false;
+    }
+    // This only supports filled paths, however, the caller may apply the style to make a filled
+    // path and try again.
+    if (!args.fShape->style().isSimpleFill()) {
+        return false;
+    }
+    // This does non-inverse antialiased fills.
+    if (!args.fAntiAlias) {
+        return false;
+    }
+    // TODO: Support inverse fill
+    if (args.fShape->inverseFilled()) {
+        return false;
+    }
     // currently don't support perspective
     if (args.fViewMatrix->hasPerspective()) {
         return false;
@@ -100,16 +108,8 @@ bool GrAADistanceFieldPathRenderer::onCanDrawPath(const CanDrawPathArgs& args) c
     // scaled to have bounds within 2.0f*kLargeMIP by 2.0f*kLargeMIP
     // the goal is to accelerate rendering of lots of small paths that may be scaling
     SkScalar maxScale = args.fViewMatrix->getMaxScale();
-    const SkRect& bounds = args.fPath->getBounds();
+    SkRect bounds = args.fShape->styledBounds();
     SkScalar maxDim = SkMaxScalar(bounds.width(), bounds.height());
-    // Approximate stroked size by adding the maximum of the stroke width or 2x the miter limit
-    if (!args.fStroke->isFillStyle()) {
-        SkScalar extraWidth = args.fStroke->getWidth();
-        if (SkPaint::kMiter_Join == args.fStroke->getJoin()) {
-            extraWidth = SkTMax(extraWidth, 2.0f*args.fStroke->getMiter());
-        }
-        maxDim += extraWidth;
-    }
 
     return maxDim <= kMediumMIP && maxDim * maxScale <= 2.0f*kLargeMIP;
 }
@@ -123,33 +123,29 @@ class AADistanceFieldPathBatch : public GrVertexBatch {
 public:
     DEFINE_BATCH_CLASS_ID
 
-    typedef GrAADistanceFieldPathRenderer::PathData PathData;
-    typedef SkTDynamicHash<PathData, PathData::Key> PathCache;
-    typedef GrAADistanceFieldPathRenderer::PathDataList PathDataList;
+    typedef GrAADistanceFieldPathRenderer::ShapeData ShapeData;
+    typedef SkTDynamicHash<ShapeData, ShapeData::Key> ShapeCache;
+    typedef GrAADistanceFieldPathRenderer::ShapeDataList ShapeDataList;
 
-    struct Geometry {
-        Geometry(const SkStrokeRec& stroke) : fStroke(stroke) {
-            if (!stroke.needToApply()) {
-                // purify unused values to ensure binary equality
-                fStroke.setStrokeParams(SkPaint::kDefault_Cap, SkPaint::kDefault_Join,
-                                        SkIntToScalar(4));
-                if (fStroke.getWidth() < 0) {
-                    fStroke.setStrokeStyle(-1.0f);
-                }
-            }
-        }
-        SkPath fPath;
-        // The unique ID of the path involved in this draw. This may be different than the ID
-        // in fPath since that path may have resulted from a SkStrokeRec::applyToPath call.
-        uint32_t fGenID;
-        SkStrokeRec fStroke;
-        GrColor fColor;
-        bool fAntiAlias;
-    };
+    AADistanceFieldPathBatch(GrColor color,
+                             const GrShape& shape,
+                             bool antiAlias,
+                             const SkMatrix& viewMatrix,
+                             GrBatchAtlas* atlas,
+                             ShapeCache* shapeCache, ShapeDataList* shapeList,
+                             bool gammaCorrect)
+            : INHERITED(ClassID()) {
+        SkASSERT(shape.hasUnstyledKey());
+        fBatch.fViewMatrix = viewMatrix;
+        fGeoData.emplace_back(Geometry{color, shape, antiAlias});
 
-    static GrDrawBatch* Create(const Geometry& geometry, const SkMatrix& viewMatrix,
-                               GrBatchAtlas* atlas, PathCache* pathCache, PathDataList* pathList) {
-        return new AADistanceFieldPathBatch(geometry, viewMatrix, atlas, pathCache, pathList);
+        fAtlas = atlas;
+        fShapeCache = shapeCache;
+        fShapeList = shapeList;
+        fGammaCorrect = gammaCorrect;
+
+        // Compute bounds
+        this->setTransformedBounds(shape.bounds(), viewMatrix, HasAABloat::kYes, IsZeroArea::kNo);
     }
 
     const char* name() const override { return "AADistanceFieldPathBatch"; }
@@ -176,9 +172,9 @@ private:
     }
 
     struct FlushInfo {
-        SkAutoTUnref<const GrBuffer>            fVertexBuffer;
-        SkAutoTUnref<const GrBuffer>            fIndexBuffer;
-        SkAutoTUnref<const GrGeometryProcessor> fGeometryProcessor;
+        SkAutoTUnref<const GrBuffer> fVertexBuffer;
+        SkAutoTUnref<const GrBuffer> fIndexBuffer;
+        sk_sp<GrGeometryProcessor>   fGeometryProcessor;
         int fVertexOffset;
         int fInstancesToFlush;
     };
@@ -196,6 +192,7 @@ private:
         uint32_t flags = 0;
         flags |= ctm.isScaleTranslate() ? kScaleOnly_DistanceFieldEffectFlag : 0;
         flags |= ctm.isSimilarity() ? kSimilarity_DistanceFieldEffectFlag : 0;
+        flags |= fGammaCorrect ? kGammaCorrect_DistanceFieldEffectFlag : 0;
 
         GrTextureParams params(SkShader::kRepeat_TileMode, GrTextureParams::kBilerp_FilterMode);
 
@@ -203,13 +200,12 @@ private:
 
         // Setup GrGeometryProcessor
         GrBatchAtlas* atlas = fAtlas;
-        flushInfo.fGeometryProcessor.reset(
-                GrDistanceFieldPathGeoProc::Create(this->color(),
-                                                   this->viewMatrix(),
-                                                   atlas->getTexture(),
-                                                   params,
-                                                   flags,
-                                                   this->usesLocalCoords()));
+        flushInfo.fGeometryProcessor = GrDistanceFieldPathGeoProc::Make(this->color(),
+                                                                        this->viewMatrix(),
+                                                                        atlas->getTexture(),
+                                                                        params,
+                                                                        flags,
+                                                                        this->usesLocalCoords());
 
         // allocate vertices
         size_t vertexStride = flushInfo.fGeometryProcessor->getVertexStride();
@@ -228,12 +224,14 @@ private:
         }
 
         flushInfo.fInstancesToFlush = 0;
+        // Pointer to the next set of vertices to write.
+        intptr_t offset = reinterpret_cast<intptr_t>(vertices);
         for (int i = 0; i < instanceCount; i++) {
             const Geometry& args = fGeoData[i];
 
             // get mip level
             SkScalar maxScale = this->viewMatrix().getMaxScale();
-            const SkRect& bounds = args.fPath.getBounds();
+            const SkRect& bounds = args.fShape.bounds();
             SkScalar maxDim = SkMaxScalar(bounds.width(), bounds.height());
             SkScalar size = maxScale * maxDim;
             uint32_t desiredDimension;
@@ -246,81 +244,56 @@ private:
             }
 
             // check to see if path is cached
-            PathData::Key key(args.fGenID, desiredDimension, args.fStroke);
-            PathData* pathData = fPathCache->find(key);
-            if (nullptr == pathData || !atlas->hasID(pathData->fID)) {
+            ShapeData::Key key(args.fShape, desiredDimension);
+            ShapeData* shapeData = fShapeCache->find(key);
+            if (nullptr == shapeData || !atlas->hasID(shapeData->fID)) {
                 // Remove the stale cache entry
-                if (pathData) {
-                    fPathCache->remove(pathData->fKey);
-                    fPathList->remove(pathData);
-                    delete pathData;
+                if (shapeData) {
+                    fShapeCache->remove(shapeData->fKey);
+                    fShapeList->remove(shapeData);
+                    delete shapeData;
                 }
                 SkScalar scale = desiredDimension/maxDim;
-                pathData = new PathData;
+                shapeData = new ShapeData;
                 if (!this->addPathToAtlas(target,
                                           &flushInfo,
                                           atlas,
-                                          pathData,
-                                          args.fPath,
-                                          args.fGenID,
-                                          args.fStroke,
+                                          shapeData,
+                                          args.fShape,
                                           args.fAntiAlias,
                                           desiredDimension,
                                           scale)) {
+                    delete shapeData;
                     SkDebugf("Can't rasterize path\n");
-                    return;
+                    continue;
                 }
             }
 
-            atlas->setLastUseToken(pathData->fID, target->nextDrawToken());
+            atlas->setLastUseToken(shapeData->fID, target->nextDrawToken());
 
-            // Now set vertices
-            intptr_t offset = reinterpret_cast<intptr_t>(vertices);
-            offset += i * kVerticesPerQuad * vertexStride;
             this->writePathVertices(target,
                                     atlas,
                                     offset,
                                     args.fColor,
                                     vertexStride,
                                     this->viewMatrix(),
-                                    args.fPath,
-                                    pathData);
+                                    shapeData);
+            offset += kVerticesPerQuad * vertexStride;
             flushInfo.fInstancesToFlush++;
         }
 
         this->flush(target, &flushInfo);
     }
 
-    SkSTArray<1, Geometry, true>* geoData() { return &fGeoData; }
-
-    AADistanceFieldPathBatch(const Geometry& geometry,
-                             const SkMatrix& viewMatrix,
-                             GrBatchAtlas* atlas,
-                             PathCache* pathCache, PathDataList* pathList)
-        : INHERITED(ClassID()) {
-        fBatch.fViewMatrix = viewMatrix;
-        fGeoData.push_back(geometry);
-
-        fAtlas = atlas;
-        fPathCache = pathCache;
-        fPathList = pathList;
-
-        // Compute bounds
-        fBounds = geometry.fPath.getBounds();
-        viewMatrix.mapRect(&fBounds);
-    }
-
     bool addPathToAtlas(GrVertexBatch::Target* target,
                         FlushInfo* flushInfo,
                         GrBatchAtlas* atlas,
-                        PathData* pathData,
-                        const SkPath& path,
-                        uint32_t genID,
-                        const SkStrokeRec& stroke,
+                        ShapeData* shapeData,
+                        const GrShape& shape,
                         bool antiAlias,
                         uint32_t dimension,
                         SkScalar scale) const {
-        const SkRect& bounds = path.getBounds();
+        const SkRect& bounds = shape.bounds();
 
         // generate bounding rect for bitmap draw
         SkRect scaledBounds = bounds;
@@ -374,10 +347,11 @@ private:
         SkRasterClip rasterClip;
         rasterClip.setRect(devPathBounds);
         draw.fRC = &rasterClip;
-        draw.fClip = &rasterClip.bwRgn();
         draw.fMatrix = &drawMatrix;
         draw.fDst = dst;
 
+        SkPath path;
+        shape.asPath(&path);
         draw.drawPathCoverage(path, paint);
 
         // generate signed distance field
@@ -395,21 +369,17 @@ private:
         // add to atlas
         SkIPoint16 atlasLocation;
         GrBatchAtlas::AtlasID id;
-        bool success = atlas->addToAtlas(&id, target, width, height, dfStorage.get(),
-                                         &atlasLocation);
-        if (!success) {
+       if (!atlas->addToAtlas(&id, target, width, height, dfStorage.get(), &atlasLocation)) {
             this->flush(target, flushInfo);
-
-            SkDEBUGCODE(success =) atlas->addToAtlas(&id, target, width, height,
-                                                     dfStorage.get(), &atlasLocation);
-            SkASSERT(success);
-
+            if (!atlas->addToAtlas(&id, target, width, height, dfStorage.get(), &atlasLocation)) {
+                return false;
+            }
         }
 
         // add to cache
-        pathData->fKey = PathData::Key(genID, dimension, stroke);
-        pathData->fScale = scale;
-        pathData->fID = id;
+        shapeData->fKey.set(shape, dimension);
+        shapeData->fScale = scale;
+        shapeData->fID = id;
         // change the scaled rect to match the size of the inset distance field
         scaledBounds.fRight = scaledBounds.fLeft +
             SkIntToScalar(devPathBounds.width() - 2*SK_DistanceFieldInset);
@@ -419,14 +389,14 @@ private:
         // need to also restore the fractional translation
         scaledBounds.offset(-SkIntToScalar(SK_DistanceFieldInset) - kAntiAliasPad + dx,
                             -SkIntToScalar(SK_DistanceFieldInset) - kAntiAliasPad + dy);
-        pathData->fBounds = scaledBounds;
+        shapeData->fBounds = scaledBounds;
         // origin we render from is inset from distance field edge
         atlasLocation.fX += SK_DistanceFieldInset;
         atlasLocation.fY += SK_DistanceFieldInset;
-        pathData->fAtlasLocation = atlasLocation;
+        shapeData->fAtlasLocation = atlasLocation;
 
-        fPathCache->add(pathData);
-        fPathList->addToTail(pathData);
+        fShapeCache->add(shapeData);
+        fShapeList->addToTail(shapeData);
 #ifdef DF_PATH_TRACKING
         ++g_NumCachedPaths;
 #endif
@@ -439,16 +409,15 @@ private:
                            GrColor color,
                            size_t vertexStride,
                            const SkMatrix& viewMatrix,
-                           const SkPath& path,
-                           const PathData* pathData) const {
+                           const ShapeData* shapeData) const {
         GrTexture* texture = atlas->getTexture();
 
-        SkScalar dx = pathData->fBounds.fLeft;
-        SkScalar dy = pathData->fBounds.fTop;
-        SkScalar width = pathData->fBounds.width();
-        SkScalar height = pathData->fBounds.height();
+        SkScalar dx = shapeData->fBounds.fLeft;
+        SkScalar dy = shapeData->fBounds.fTop;
+        SkScalar width = shapeData->fBounds.width();
+        SkScalar height = shapeData->fBounds.height();
 
-        SkScalar invScale = 1.0f / pathData->fScale;
+        SkScalar invScale = 1.0f / shapeData->fScale;
         dx *= invScale;
         dy *= invScale;
         width *= invScale;
@@ -467,28 +436,30 @@ private:
             *colorPtr = color;
         }
 
-        const SkScalar tx = SkIntToScalar(pathData->fAtlasLocation.fX);
-        const SkScalar ty = SkIntToScalar(pathData->fAtlasLocation.fY);
+        const SkScalar tx = SkIntToScalar(shapeData->fAtlasLocation.fX);
+        const SkScalar ty = SkIntToScalar(shapeData->fAtlasLocation.fY);
 
         // vertex texture coords
         SkPoint* textureCoords = (SkPoint*)(offset + sizeof(SkPoint) + sizeof(GrColor));
         textureCoords->setRectFan(tx / texture->width(),
                                   ty / texture->height(),
-                                  (tx + pathData->fBounds.width()) / texture->width(),
-                                  (ty + pathData->fBounds.height())  / texture->height(),
+                                  (tx + shapeData->fBounds.width()) / texture->width(),
+                                  (ty + shapeData->fBounds.height())  / texture->height(),
                                   vertexStride);
     }
 
     void flush(GrVertexBatch::Target* target, FlushInfo* flushInfo) const {
-        GrMesh mesh;
-        int maxInstancesPerDraw =
-            static_cast<int>(flushInfo->fIndexBuffer->gpuMemorySize() / sizeof(uint16_t) / 6);
-        mesh.initInstanced(kTriangles_GrPrimitiveType, flushInfo->fVertexBuffer,
-            flushInfo->fIndexBuffer, flushInfo->fVertexOffset, kVerticesPerQuad,
-            kIndicesPerQuad, flushInfo->fInstancesToFlush, maxInstancesPerDraw);
-        target->draw(flushInfo->fGeometryProcessor, mesh);
-        flushInfo->fVertexOffset += kVerticesPerQuad * flushInfo->fInstancesToFlush;
-        flushInfo->fInstancesToFlush = 0;
+        if (flushInfo->fInstancesToFlush) {
+            GrMesh mesh;
+            int maxInstancesPerDraw =
+                static_cast<int>(flushInfo->fIndexBuffer->gpuMemorySize() / sizeof(uint16_t) / 6);
+            mesh.initInstanced(kTriangles_GrPrimitiveType, flushInfo->fVertexBuffer,
+                flushInfo->fIndexBuffer, flushInfo->fVertexOffset, kVerticesPerQuad,
+                kIndicesPerQuad, flushInfo->fInstancesToFlush, maxInstancesPerDraw);
+            target->draw(flushInfo->fGeometryProcessor.get(), mesh);
+            flushInfo->fVertexOffset += kVerticesPerQuad * flushInfo->fInstancesToFlush;
+            flushInfo->fInstancesToFlush = 0;
+        }
     }
 
     GrColor color() const { return fGeoData[0].fColor; }
@@ -507,8 +478,8 @@ private:
             return false;
         }
 
-        fGeoData.push_back_n(that->geoData()->count(), that->geoData()->begin());
-        this->joinBounds(that->bounds());
+        fGeoData.push_back_n(that->fGeoData.count(), that->fGeoData.begin());
+        this->joinBounds(*that);
         return true;
     }
 
@@ -519,23 +490,31 @@ private:
         bool fCoverageIgnored;
     };
 
+    struct Geometry {
+        GrColor fColor;
+        GrShape fShape;
+        bool fAntiAlias;
+    };
+
     BatchTracker fBatch;
-    SkSTArray<1, Geometry, true> fGeoData;
+    SkSTArray<1, Geometry> fGeoData;
     GrBatchAtlas* fAtlas;
-    PathCache* fPathCache;
-    PathDataList* fPathList;
+    ShapeCache* fShapeCache;
+    ShapeDataList* fShapeList;
+    bool fGammaCorrect;
 
     typedef GrVertexBatch INHERITED;
 };
 
 bool GrAADistanceFieldPathRenderer::onDrawPath(const DrawPathArgs& args) {
-    GR_AUDIT_TRAIL_AUTO_FRAME(args.fTarget->getAuditTrail(),
+    GR_AUDIT_TRAIL_AUTO_FRAME(args.fDrawContext->auditTrail(),
                               "GrAADistanceFieldPathRenderer::onDrawPath");
-    // we've already bailed on inverse filled paths, so this is safe
-    if (args.fPath->isEmpty()) {
-        return true;
-    }
+    SkASSERT(!args.fDrawContext->isUnifiedMultisampled());
+    SkASSERT(args.fShape->style().isSimpleFill());
 
+    // we've already bailed on inverse filled paths, so this is safe
+    SkASSERT(!args.fShape->isEmpty());
+    SkASSERT(args.fShape->hasUnstyledKey());
     if (!fAtlas) {
         fAtlas = args.fResourceProvider->createAtlas(kAlpha_8_GrPixelConfig,
                                                      ATLAS_TEXTURE_WIDTH, ATLAS_TEXTURE_HEIGHT,
@@ -547,23 +526,16 @@ bool GrAADistanceFieldPathRenderer::onDrawPath(const DrawPathArgs& args) {
         }
     }
 
-    AADistanceFieldPathBatch::Geometry geometry(*args.fStroke);
-    if (SkStrokeRec::kFill_Style == args.fStroke->getStyle()) {
-        geometry.fPath = *args.fPath;
-    } else {
-        args.fStroke->applyToPath(&geometry.fPath, *args.fPath);
-    }
-    geometry.fColor = args.fColor;
-    geometry.fAntiAlias = args.fAntiAlias;
-    // Note: this is the generation ID of the _original_ path. When a new path is
-    // generated due to stroking it is important that the original path's id is used
-    // for caching.
-    geometry.fGenID = args.fPath->getGenerationID();
+    SkAutoTUnref<GrDrawBatch> batch(new AADistanceFieldPathBatch(args.fPaint->getColor(),
+                                                                 *args.fShape,
+                                                                 args.fAntiAlias, *args.fViewMatrix,
+                                                                 fAtlas, &fShapeCache, &fShapeList,
+                                                                 args.fGammaCorrect));
 
-    SkAutoTUnref<GrDrawBatch> batch(AADistanceFieldPathBatch::Create(geometry,
-                                                                     *args.fViewMatrix, fAtlas,
-                                                                     &fPathCache, &fPathList));
-    args.fTarget->drawBatch(*args.fPipelineBuilder, batch);
+    GrPipelineBuilder pipelineBuilder(*args.fPaint);
+    pipelineBuilder.setUserStencil(args.fUserStencilSettings);
+
+    args.fDrawContext->drawBatch(pipelineBuilder, *args.fClip, batch);
 
     return true;
 }
@@ -573,45 +545,45 @@ bool GrAADistanceFieldPathRenderer::onDrawPath(const DrawPathArgs& args) {
 #ifdef GR_TEST_UTILS
 
 struct PathTestStruct {
-    typedef GrAADistanceFieldPathRenderer::PathCache PathCache;
-    typedef GrAADistanceFieldPathRenderer::PathData PathData;
-    typedef GrAADistanceFieldPathRenderer::PathDataList PathDataList;
+    typedef GrAADistanceFieldPathRenderer::ShapeCache ShapeCache;
+    typedef GrAADistanceFieldPathRenderer::ShapeData ShapeData;
+    typedef GrAADistanceFieldPathRenderer::ShapeDataList ShapeDataList;
     PathTestStruct() : fContextID(SK_InvalidGenID), fAtlas(nullptr) {}
     ~PathTestStruct() { this->reset(); }
 
     void reset() {
-        PathDataList::Iter iter;
-        iter.init(fPathList, PathDataList::Iter::kHead_IterStart);
-        PathData* pathData;
-        while ((pathData = iter.get())) {
+        ShapeDataList::Iter iter;
+        iter.init(fShapeList, ShapeDataList::Iter::kHead_IterStart);
+        ShapeData* shapeData;
+        while ((shapeData = iter.get())) {
             iter.next();
-            fPathList.remove(pathData);
-            delete pathData;
+            fShapeList.remove(shapeData);
+            delete shapeData;
         }
         delete fAtlas;
-        fPathCache.reset();
+        fShapeCache.reset();
     }
 
     static void HandleEviction(GrBatchAtlas::AtlasID id, void* pr) {
         PathTestStruct* dfpr = (PathTestStruct*)pr;
         // remove any paths that use this plot
-        PathDataList::Iter iter;
-        iter.init(dfpr->fPathList, PathDataList::Iter::kHead_IterStart);
-        PathData* pathData;
-        while ((pathData = iter.get())) {
+        ShapeDataList::Iter iter;
+        iter.init(dfpr->fShapeList, ShapeDataList::Iter::kHead_IterStart);
+        ShapeData* shapeData;
+        while ((shapeData = iter.get())) {
             iter.next();
-            if (id == pathData->fID) {
-                dfpr->fPathCache.remove(pathData->fKey);
-                dfpr->fPathList.remove(pathData);
-                delete pathData;
+            if (id == shapeData->fID) {
+                dfpr->fShapeCache.remove(shapeData->fKey);
+                dfpr->fShapeList.remove(shapeData);
+                delete shapeData;
             }
         }
     }
 
     uint32_t fContextID;
     GrBatchAtlas* fAtlas;
-    PathCache fPathCache;
-    PathDataList fPathList;
+    ShapeCache fShapeCache;
+    ShapeDataList fShapeList;
 };
 
 DRAW_BATCH_TEST_DEFINE(AADistanceFieldPathBatch) {
@@ -630,17 +602,20 @@ DRAW_BATCH_TEST_DEFINE(AADistanceFieldPathBatch) {
 
     SkMatrix viewMatrix = GrTest::TestMatrix(random);
     GrColor color = GrRandomColor(random);
+    bool gammaCorrect = random->nextBool();
 
-    AADistanceFieldPathBatch::Geometry geometry(GrTest::TestStrokeRec(random));
-    geometry.fColor = color;
-    geometry.fPath = GrTest::TestPath(random);
-    geometry.fAntiAlias = random->nextBool();
-    geometry.fGenID = random->nextU();
+    // This path renderer only allows fill styles.
+    GrShape shape(GrTest::TestPath(random), GrStyle::SimpleFill());
+    bool antiAlias = random->nextBool();
 
-    return AADistanceFieldPathBatch::Create(geometry, viewMatrix,
-                                            gTestStruct.fAtlas,
-                                            &gTestStruct.fPathCache,
-                                            &gTestStruct.fPathList);
+    return new AADistanceFieldPathBatch(color,
+                                        shape,
+                                        antiAlias,
+                                        viewMatrix,
+                                        gTestStruct.fAtlas,
+                                        &gTestStruct.fShapeCache,
+                                        &gTestStruct.fShapeList,
+                                        gammaCorrect);
 }
 
 #endif

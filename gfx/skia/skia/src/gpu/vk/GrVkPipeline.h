@@ -37,16 +37,19 @@ public:
 
     static void SetDynamicState(GrVkGpu*, GrVkCommandBuffer*, const GrPipeline&);
 
+#ifdef SK_TRACE_VK_RESOURCES
+    void dumpInfo() const override {
+        SkDebugf("GrVkPipeline: %d (%d refs)\n", fPipeline, this->getRefCnt());
+    }
+#endif
 
-private:
+protected:
     GrVkPipeline(VkPipeline pipeline) : INHERITED(), fPipeline(pipeline) {}
 
-    GrVkPipeline(const GrVkPipeline&);
-    GrVkPipeline& operator=(const GrVkPipeline&);
-
-    void freeGPUData(const GrVkGpu* gpu) const override;
-
     VkPipeline  fPipeline;
+
+private:
+    void freeGPUData(const GrVkGpu* gpu) const override;
 
     typedef GrVkResource INHERITED;
 };

@@ -14,6 +14,22 @@
 #include "SkWriteBuffer.h"
 #include "SkValidationUtils.h"
 
+sk_sp<SkImageFilter> SkMergeImageFilter::Make(sk_sp<SkImageFilter> first,
+                                              sk_sp<SkImageFilter> second,
+                                              SkXfermode::Mode mode,
+                                              const CropRect* cropRect) {
+    sk_sp<SkImageFilter> inputs[2] = { first, second };
+    SkXfermode::Mode modes[2] = { mode, mode };
+    return sk_sp<SkImageFilter>(new SkMergeImageFilter(inputs, 2, modes, cropRect));
+}
+
+sk_sp<SkImageFilter> SkMergeImageFilter::Make(sk_sp<SkImageFilter> filters[],
+                                              int count,
+                                              const SkXfermode::Mode modes[],
+                                              const CropRect* cropRect) {
+    return sk_sp<SkImageFilter>(new SkMergeImageFilter(filters, count, modes, cropRect));
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkMergeImageFilter::initAllocModes() {
@@ -97,10 +113,7 @@ sk_sp<SkSpecialImage> SkMergeImageFilter::onFilterImage(SkSpecialImage* source, 
     const int x0 = bounds.left();
     const int y0 = bounds.top();
 
-    SkImageInfo info = SkImageInfo::MakeN32(bounds.width(), bounds.height(),
-                                            kPremul_SkAlphaType);
-
-    sk_sp<SkSpecialSurface> surf(source->makeSurface(info));
+    sk_sp<SkSpecialSurface> surf(source->makeSurface(ctx.outputProperties(), bounds.size()));
     if (!surf) {
         return nullptr;
     }
@@ -118,7 +131,7 @@ sk_sp<SkSpecialImage> SkMergeImageFilter::onFilterImage(SkSpecialImage* source, 
 
         SkPaint paint;
         if (fModes) {
-            paint.setXfermodeMode((SkXfermode::Mode)fModes[i]);
+            paint.setBlendMode((SkBlendMode)fModes[i]);
         }
 
         inputs[i]->draw(canvas,

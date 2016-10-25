@@ -8,6 +8,7 @@
 #include "GrContext.h"
 #include "GrDrawContext.h"
 #include "GrYUVProvider.h"
+#include "effects/GrGammaEffect.h"
 #include "effects/GrYUVEffect.h"
 
 #include "SkCachedData.h"
@@ -80,7 +81,9 @@ bool YUVScoper::init(GrYUVProvider* provider, SkYUVPlanesCache::Info* yuvInfo, v
     return true;
 }
 
-GrTexture* GrYUVProvider::refAsTexture(GrContext* ctx, const GrSurfaceDesc& desc, bool useCache) {
+sk_sp<GrTexture> GrYUVProvider::refAsTexture(GrContext* ctx,
+                                             const GrSurfaceDesc& desc,
+                                             bool useCache) {
     SkYUVPlanesCache::Info yuvInfo;
     void* planes[3];
     YUVScoper scoper;
@@ -110,39 +113,40 @@ GrTexture* GrYUVProvider::refAsTexture(GrContext* ctx, const GrSurfaceDesc& desc
             }
     }
 
-    GrSurfaceDesc rtDesc = desc;
-    rtDesc.fFlags = rtDesc.fFlags | kRenderTarget_GrSurfaceFlag;
-
-    SkAutoTUnref<GrTexture> result(ctx->textureProvider()->createTexture(rtDesc, SkBudgeted::kYes,
-                                                                         nullptr, 0));
-    if (!result) {
-        return nullptr;
-    }
-
-    GrRenderTarget* renderTarget = result->asRenderTarget();
-    SkASSERT(renderTarget);
-
-    GrPaint paint;
-    // We may be decoding an sRGB image, but the result of our linear math on the YUV planes
-    // is already in sRGB in that case. Don't convert (which will make the image too bright).
-    paint.setDisableOutputConversionToSRGB(true);
-    SkAutoTUnref<const GrFragmentProcessor> yuvToRgbProcessor(
-                                        GrYUVEffect::CreateYUVToRGB(yuvTextures[0],
-                                                                    yuvTextures[1],
-                                                                    yuvTextures[2],
-                                                                    yuvInfo.fSizeInfo.fSizes,
-                                                                    yuvInfo.fColorSpace));
-    paint.addColorFragmentProcessor(yuvToRgbProcessor);
-    paint.setPorterDuffXPFactory(SkXfermode::kSrc_Mode);
-    const SkRect r = SkRect::MakeIWH(yuvInfo.fSizeInfo.fSizes[SkYUVSizeInfo::kY].fWidth,
-            yuvInfo.fSizeInfo.fSizes[SkYUVSizeInfo::kY].fHeight);
-
-    SkAutoTUnref<GrDrawContext> drawContext(ctx->drawContext(renderTarget));
+    // We never want to perform color-space conversion during the decode
+    sk_sp<GrDrawContext> drawContext(ctx->makeDrawContext(SkBackingFit::kExact,
+                                                          desc.fWidth, desc.fHeight,
+                                                          desc.fConfig, nullptr,
+                                                          desc.fSampleCnt));
     if (!drawContext) {
         return nullptr;
     }
 
-    drawContext->drawRect(GrClip::WideOpen(), paint, SkMatrix::I(), r);
+    GrPaint paint;
+    sk_sp<GrFragmentProcessor> yuvToRgbProcessor(
+        GrYUVEffect::MakeYUVToRGB(yuvTextures[0], yuvTextures[1], yuvTextures[2],
+                                  yuvInfo.fSizeInfo.fSizes, yuvInfo.fColorSpace, false));
+    paint.addColorFragmentProcessor(std::move(yuvToRgbProcessor));
 
-    return result.release();
+    // If we're decoding an sRGB image, the result of our linear math on the YUV planes is already
+    // in sRGB. (The encoding is just math on bytes, with no concept of color spaces.) So, we need
+    // to output the results of that math directly to the buffer that we will then consider sRGB.
+    // If we have sRGB write control, we can just tell the HW not to do the Linear -> sRGB step.
+    // Otherwise, we do our shader math to go from YUV -> sRGB, manually convert sRGB -> Linear,
+    // then let the HW convert Linear -> sRGB.
+    if (GrPixelConfigIsSRGB(desc.fConfig)) {
+        if (ctx->caps()->srgbWriteControl()) {
+            paint.setDisableOutputConversionToSRGB(true);
+        } else {
+            paint.addColorFragmentProcessor(GrGammaEffect::Make(2.2f));
+        }
+    }
+
+    paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
+    const SkRect r = SkRect::MakeIWH(yuvInfo.fSizeInfo.fSizes[SkYUVSizeInfo::kY].fWidth,
+            yuvInfo.fSizeInfo.fSizes[SkYUVSizeInfo::kY].fHeight);
+
+    drawContext->drawRect(GrNoClip(), paint, SkMatrix::I(), r);
+
+    return drawContext->asTexture();
 }
