@@ -2180,8 +2180,8 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mMemoryReportCondVar(mMutex, "WorkerPrivateParent Memory Report CondVar"),
   mParent(aParent), mScriptURL(aScriptURL),
   mWorkerName(aWorkerName), mLoadingWorkerScript(false),
-  mBusyCount(0), mParentStatus(Pending), mParentFrozen(false),
-  mParentWindowPaused(false), mIsChromeWorker(aIsChromeWorker),
+  mBusyCount(0), mParentWindowPausedDepth(0), mParentStatus(Pending),
+  mParentFrozen(false), mIsChromeWorker(aIsChromeWorker),
   mMainThreadObjectsForgotten(false), mIsSecureContext(false),
   mWorkerType(aWorkerType),
   mCreationTimeStamp(TimeStamp::Now()),
@@ -2691,10 +2691,8 @@ void
 WorkerPrivateParent<Derived>::ParentWindowPaused()
 {
   AssertIsOnMainThread();
-
-  MOZ_ASSERT(!mParentWindowPaused, "Suspended more than once!");
-
-  mParentWindowPaused = true;
+  MOZ_ASSERT_IF(IsDedicatedWorker(), mParentWindowPausedDepth == 0);
+  mParentWindowPausedDepth += 1;
 }
 
 template <class Derived>
@@ -2703,9 +2701,12 @@ WorkerPrivateParent<Derived>::ParentWindowResumed()
 {
   AssertIsOnMainThread();
 
-  MOZ_ASSERT(mParentWindowPaused, "Resumed more than once!");
-
-  mParentWindowPaused = false;
+  MOZ_ASSERT(mParentWindowPausedDepth > 0);
+  MOZ_ASSERT_IF(IsDedicatedWorker(), mParentWindowPausedDepth == 1);
+  mParentWindowPausedDepth -= 1;
+  if (mParentWindowPausedDepth > 0) {
+    return;
+  }
 
   {
     MutexAutoLock lock(mMutex);
