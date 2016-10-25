@@ -387,8 +387,9 @@ function compareBuffers(buffer1, buffer2)
   if (buffer1.byteLength != buffer2.byteLength) {
     return false;
   }
-  let view1 = new Uint8Array(buffer1);
-  let view2 = new Uint8Array(buffer2);
+
+  let view1 = buffer1 instanceof Uint8Array ? buffer1 : new Uint8Array(buffer1);
+  let view2 = buffer2 instanceof Uint8Array ? buffer2 : new Uint8Array(buffer2);
   for (let i = 0; i < buffer1.byteLength; i++) {
     if (view1[i] != view2[i]) {
       return false;
@@ -461,6 +462,19 @@ function verifyView(view1, view2)
 {
   is(view1.byteLength, view2.byteLength, "Correct byteLength");
   verifyBuffers(view1, view2);
+  continueToNextStep();
+}
+
+function verifyWasmModule(module1, module2)
+{
+  let testingFunctions = Cu.getJSTestingFunctions();
+  let exp1 = testingFunctions.wasmExtractCode(module1);
+  let exp2 = testingFunctions.wasmExtractCode(module2);
+  let code1 = exp1.code;
+  let code2 = exp2.code;
+  ok(code1 instanceof Uint8Array, "Instance of Uint8Array");
+  ok(code1.length == code2.length, "Correct length");
+  verifyBuffers(code1, code2);
   continueToNextStep();
 }
 

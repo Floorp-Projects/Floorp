@@ -686,6 +686,71 @@ DeserializeStructuredCloneFiles(
           break;
         }
 
+        case StructuredCloneFile::eWasmBytecode: {
+          MOZ_ASSERT(blobOrMutableFile.type() ==
+                       BlobOrMutableFile::TPBlobChild);
+
+          auto* actor =
+            static_cast<BlobChild*>(blobOrMutableFile.get_PBlobChild());
+
+          RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
+          MOZ_ASSERT(blobImpl);
+
+          RefPtr<Blob> blob = Blob::Create(aDatabase->GetOwner(), blobImpl);
+
+          aDatabase->NoteReceivedBlob(blob);
+
+          StructuredCloneFile* file = aFiles.AppendElement();
+          MOZ_ASSERT(file);
+
+          file->mType = StructuredCloneFile::eWasmBytecode;
+          file->mBlob.swap(blob);
+
+          break;
+        }
+
+        case StructuredCloneFile::eWasmCompiled: {
+          MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t ||
+                     blobOrMutableFile.type() ==
+                       BlobOrMutableFile::TPBlobChild);
+
+          switch (blobOrMutableFile.type()) {
+            case BlobOrMutableFile::Tnull_t: {
+              StructuredCloneFile* file = aFiles.AppendElement();
+              MOZ_ASSERT(file);
+
+              file->mType = StructuredCloneFile::eWasmCompiled;
+
+              break;
+            }
+
+            case BlobOrMutableFile::TPBlobChild: {
+              auto* actor =
+                static_cast<BlobChild*>(blobOrMutableFile.get_PBlobChild());
+
+              RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
+              MOZ_ASSERT(blobImpl);
+
+              RefPtr<Blob> blob = Blob::Create(aDatabase->GetOwner(), blobImpl);
+
+              aDatabase->NoteReceivedBlob(blob);
+
+              StructuredCloneFile* file = aFiles.AppendElement();
+              MOZ_ASSERT(file);
+
+              file->mType = StructuredCloneFile::eWasmCompiled;
+              file->mBlob.swap(blob);
+
+              break;
+            }
+
+            default:
+              MOZ_CRASH("Should never get here!");
+          }
+
+          break;
+        }
+
         default:
           MOZ_CRASH("Should never get here!");
       }
