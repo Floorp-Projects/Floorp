@@ -206,10 +206,8 @@ TEST_P(TlsConnectStream, ConnectTls10AndClientRenegotiateHigher) {
 }
 
 TEST_F(TlsConnectTest, Tls13RejectsRehandshakeClient) {
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
+  EnsureTlsSetup();
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
   Connect();
   SECStatus rv = SSL_ReHandshake(client_->ssl_fd(), PR_TRUE);
   EXPECT_EQ(SECFailure, rv);
@@ -217,10 +215,8 @@ TEST_F(TlsConnectTest, Tls13RejectsRehandshakeClient) {
 }
 
 TEST_F(TlsConnectTest, Tls13RejectsRehandshakeServer) {
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
+  EnsureTlsSetup();
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
   Connect();
   SECStatus rv = SSL_ReHandshake(server_->ssl_fd(), PR_TRUE);
   EXPECT_EQ(SECFailure, rv);

@@ -30,20 +30,23 @@
           #XXX: gyp breaks if these are empty!
           'nspr_lib_dir%': ' ',
           'nspr_include_dir%': ' ',
+          'nss_dist_obj_dir%': ' ',
+          'nss_dist_dir%': ' ',
           'zlib_libs%': [],
           #TODO
           'moz_debug_flags%': '',
           'dll_prefix': '',
           'dll_suffix': 'dll',
         }, {
-          # On non-windows, default to a system NSPR.
           'nspr_libs%': ['-lplds4', '-lplc4', '-lnspr4'],
-          'nspr_lib_dir%': '<!(<(python) <(DEPTH)/coreconf/nspr_lib_dir.py)',
-          'nspr_include_dir%': '<!(<(python) <(DEPTH)/coreconf/nspr_include_dir.py)',
+          'nspr_lib_dir%': '<!(<(python) <(DEPTH)/coreconf/pkg_config.py . --libs nspr)',
+          'nspr_include_dir%': '<!(<(python) <(DEPTH)/coreconf/pkg_config.py . --cflags nspr)',
+          'nss_dist_obj_dir%': '<!(<(python) <(DEPTH)/coreconf/pkg_config.py ../.. --cflags nspr)',
+          'nss_dist_dir%': '<!(<(python) <(DEPTH)/coreconf/pkg_config.py ../../.. --cflags nspr)',
           'use_system_zlib%': 1,
         }],
         ['OS=="linux" or OS=="android"', {
-          'zlib_libs%': ['<!@(<(python) <(DEPTH)/coreconf/pkg_config.py --libs zlib)'],
+          'zlib_libs%': ['<!@(<(python) <(DEPTH)/coreconf/pkg_config.py raw --libs zlib)'],
           'moz_debug_flags%': '-gdwarf-2',
           'optimize_flags%': '-O2',
           'dll_prefix': 'lib',
@@ -76,30 +79,37 @@
     'nspr_libs%': ['<@(nspr_libs)'],
     'nspr_lib_dir%': '<(nspr_lib_dir)',
     'nspr_include_dir%': '<(nspr_include_dir)',
+    'nss_dist_obj_dir%': '<(nss_dist_obj_dir)',
+    'nss_dist_dir%': '<(nss_dist_dir)',
     'use_system_sqlite%': '<(use_system_sqlite)',
     'sqlite_libs%': ['-lsqlite3'],
     'dll_prefix': '<(dll_prefix)',
     'dll_suffix': '<(dll_suffix)',
     'cc_is_clang%': '<(cc_is_clang)',
+    # Some defaults
     'disable_tests%': 0,
     'disable_chachapoly%': 0,
     'disable_dbm%': 0,
     'disable_libpkix%': 0,
-    'ssl_enable_zlib%': 1,
-    'use_asan%': 0,
+    'disable_werror%': 0,
     'mozilla_client%': 0,
     'moz_fold_libs%': 0,
     'moz_folded_library_name%': '',
+    'ssl_enable_zlib%': 1,
+    'use_asan%': 0,
+    'test_build%': 0,
   },
   'target_defaults': {
     # Settings specific to targets should go here.
     # This is mostly for linking to libraries.
     'variables': {
       'mapfile%': '',
+      'test_build%': 0,
     },
+    'standalone_static_library': 0,
     'include_dirs': [
       '<(nspr_include_dir)',
-      '<(PRODUCT_DIR)/dist/<(module)/private',
+      '<(nss_dist_dir)/private/<(module)',
     ],
     'conditions': [
       [ 'OS=="linux"', {
@@ -111,8 +121,18 @@
       }],
     ],
     'target_conditions': [
+      # If we want to properly export a static library, and copy it to lib,
+      # we need to mark it as a 'standalone_static_library'. Otherwise,
+      # the relative paths in the thin archive will break linking.
+      [ '_type=="shared_library"', {
+        'product_dir': '<(nss_dist_obj_dir)/lib'
+      }, '_type=="executable"', {
+        'product_dir': '<(nss_dist_obj_dir)/bin'
+      }, '_standalone_static_library==1', {
+        'product_dir': '<(nss_dist_obj_dir)/lib'
+      }],
       # mapfile handling
-      [ 'mapfile!=""', {
+      [ 'test_build==0 and mapfile!=""', {
         # Work around a gyp bug. Fixed upstream but not in Ubuntu packages:
         # https://chromium.googlesource.com/external/gyp/+/b85ad3e578da830377dbc1843aa4fbc5af17a192%5E%21/
         'sources': [
@@ -152,6 +172,14 @@
             }],
           }]
         ],
+      }, 'test_build==1 and _type=="shared_library"', {
+        # When linking a shared lib against a static one, XCode doesn't
+        # export the latter's symbols by default. -all_load fixes that.
+        'xcode_settings': {
+          'OTHER_LDFLAGS': [
+            '-all_load',
+          ],
+        },
       }],
       [ '_type=="shared_library" or _type=="executable"', {
         'libraries': [
@@ -213,12 +241,9 @@
             '-fno-common',
             '-pipe',
           ],
-          # TODO:
-          # 'GCC_TREAT_WARNINGS_AS_ERRORS'
-          # 'WARNING_CFLAGS'
         },
         'conditions': [
-          ['OS=="linux" or OS=="android"', {
+          [ 'OS=="linux" or OS=="android"', {
             'defines': [
               'LINUX2_1',
               'LINUX',
@@ -247,6 +272,11 @@
                 'cflags': ['-m64'],
                 'ldflags': ['-m64'],
               }],
+            ],
+          }],
+          [ 'disable_werror==0 and (OS=="linux" or OS=="mac")', {
+            'cflags': [
+              '<!@(<(python) <(DEPTH)/coreconf/werror.py)',
             ],
           }],
           [ 'OS=="android" and mozilla_client==0', {
@@ -285,6 +315,15 @@
             ],
             'cflags': [
               '-W3',
+              '-w44267', # Disable C4267: conversion from 'size_t' to 'type', possible loss of data
+              '-w44244', # Disable C4244: conversion from 'type1' to 'type2', possible loss of data
+              '-w44018', # Disable C4018: 'expression' : signed/unsigned mismatch
+              '-w44312', # Disable C4312: 'type cast': conversion from 'type1' to 'type2' of greater size
+            ],
+            'conditions': [
+              [ 'disable_werror==0', {
+                'cflags': ['-WX']
+              }]
             ],
           }],
           [ 'disable_dbm==1', {

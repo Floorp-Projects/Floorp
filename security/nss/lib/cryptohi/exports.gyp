@@ -23,13 +23,13 @@
             'keythi.h',
             'sechash.h'
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/public'
+          'destination': '<(nss_dist_dir)/public/<(module)'
         },
         {
           'files': [
             'keyi.h',
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/private'
+          'destination': '<(nss_dist_dir)/private/<(module)'
         }
       ]
     }

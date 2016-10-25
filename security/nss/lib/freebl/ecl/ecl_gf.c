@@ -87,62 +87,6 @@ CLEANUP:
     return meth;
 }
 
-/* Construct a generic GFMethod for arithmetic over binary polynomial
- * fields with irreducible irr that has array representation irr_arr (see
- * ecl-priv.h for description of the representation).  If irr_arr is NULL,
- * then it is constructed from the bitstring representation. */
-GFMethod *
-GFMethod_consGF2m(const mp_int *irr, const unsigned int irr_arr[5])
-{
-    mp_err res = MP_OKAY;
-    int ret;
-    GFMethod *meth = NULL;
-
-    meth = GFMethod_new();
-    if (meth == NULL)
-        return NULL;
-
-    MP_CHECKOK(mp_copy(irr, &meth->irr));
-    if (irr_arr != NULL) {
-        /* Irreducible polynomials are either trinomials or pentanomials. */
-        meth->irr_arr[0] = irr_arr[0];
-        meth->irr_arr[1] = irr_arr[1];
-        meth->irr_arr[2] = irr_arr[2];
-        if (irr_arr[2] > 0) {
-            meth->irr_arr[3] = irr_arr[3];
-            meth->irr_arr[4] = irr_arr[4];
-        } else {
-            meth->irr_arr[3] = meth->irr_arr[4] = 0;
-        }
-    } else {
-        ret = mp_bpoly2arr(irr, meth->irr_arr, 5);
-        /* Irreducible polynomials are either trinomials or pentanomials. */
-        if ((ret != 5) && (ret != 3)) {
-            res = MP_UNDEF;
-            goto CLEANUP;
-        }
-    }
-    meth->field_add = &ec_GF2m_add;
-    meth->field_neg = &ec_GF2m_neg;
-    meth->field_sub = &ec_GF2m_add;
-    meth->field_mod = &ec_GF2m_mod;
-    meth->field_mul = &ec_GF2m_mul;
-    meth->field_sqr = &ec_GF2m_sqr;
-    meth->field_div = &ec_GF2m_div;
-    meth->field_enc = NULL;
-    meth->field_dec = NULL;
-    meth->extra1 = NULL;
-    meth->extra2 = NULL;
-    meth->extra_free = NULL;
-
-CLEANUP:
-    if (res != MP_OKAY) {
-        GFMethod_free(meth);
-        return NULL;
-    }
-    return meth;
-}
-
 /* Free the memory allocated (if any) to a GFMethod object. */
 void
 GFMethod_free(GFMethod *meth)

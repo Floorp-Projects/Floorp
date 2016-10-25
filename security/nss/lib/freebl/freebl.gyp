@@ -99,6 +99,11 @@
             'stubs.c',
           ],
           'conditions': [
+            [ 'test_build==1', {
+              'dependencies': [
+                '<(DEPTH)/lib/util/util.gyp:nssutil3',
+              ],
+            }],
             [ 'target_arch=="x64"', {
               'sources': [
                 'arcfour-amd64-gas.s',
@@ -248,6 +253,10 @@
         {
           'target_name': 'freebl3',
           'type': 'shared_library',
+          'defines': [
+            'FREEBL_NO_DEPEND',
+            'FREEBL_LOWHASH',
+          ],
           'sources': [
             'lowhash_vector.c'
           ],
@@ -339,11 +348,13 @@
         ],
       }],
       [ 'OS=="linux"', {
-        'defines': [
-          'FREEBL_NO_DEPEND',
-          'FREEBL_LOWHASH',
-        ],
         'conditions': [
+          [ 'test_build==0', {
+            'defines': [
+              'FREEBL_NO_DEPEND',
+              'FREEBL_LOWHASH',
+            ],
+          }],
           [ 'target_arch=="x64"', {
             'defines': [
               'MP_IS_LITTLE_ENDIAN',
