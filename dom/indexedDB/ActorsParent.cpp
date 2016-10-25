@@ -27,6 +27,8 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/SnappyCompressOutputStream.h"
+#include "mozilla/SnappyUncompressInputStream.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/storage.h"
 #include "mozilla/Unused.h"
@@ -8172,7 +8174,10 @@ private:
   RemoveOldIndexDataValues(DatabaseConnection* aConnection);
 
   nsresult
-  CopyFileData(nsIInputStream* aInputStream, nsIOutputStream* aOutputStream);
+  CopyFileData(nsIInputStream* aInputStream,
+               nsIOutputStream* aOutputStream,
+               char* aBuffer,
+               uint32_t aBufferSize);
 
   virtual bool
   Init(TransactionBase* aTransaction) override;
@@ -19257,7 +19262,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
 
   // Higher and lower 32 bits described
   // in ObjectStoreAddOrPutRequestOp::DoDatabaseWork.
-  uint32_t index = uint32_t(aIntData);
+  uint32_t index = uint32_t(aIntData & 0xFFFFFFFF);
 
   if (index >= aInfo->mFiles.Length()) {
     MOZ_ASSERT(false, "Bad index value!");
@@ -19273,17 +19278,20 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIInputStream> stream;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), nativeFile);
+  nsCOMPtr<nsIInputStream> fileInputStream;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), nativeFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  RefPtr<SnappyUncompressInputStream> snappyInputStream =
+    new SnappyUncompressInputStream(fileInputStream);
 
   do {
     char buffer[kFileCopyBufferSize];
 
     uint32_t numRead;
-    rv = stream->Read(buffer, sizeof(buffer), &numRead);
+    rv = snappyInputStream->Read(buffer, sizeof(buffer), &numRead);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       break;
     }
@@ -25404,7 +25412,9 @@ ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
 
 nsresult
 ObjectStoreAddOrPutRequestOp::CopyFileData(nsIInputStream* aInputStream,
-                                           nsIOutputStream* aOutputStream)
+                                           nsIOutputStream* aOutputStream,
+                                           char* aBuffer,
+                                           uint32_t aBufferSize)
 {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aInputStream);
@@ -25417,10 +25427,8 @@ ObjectStoreAddOrPutRequestOp::CopyFileData(nsIInputStream* aInputStream,
   nsresult rv;
 
   do {
-    char copyBuffer[kFileCopyBufferSize];
-
     uint32_t numRead;
-    rv = aInputStream->Read(copyBuffer, sizeof(copyBuffer), &numRead);
+    rv = aInputStream->Read(aBuffer, aBufferSize, &numRead);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       break;
     }
@@ -25430,7 +25438,7 @@ ObjectStoreAddOrPutRequestOp::CopyFileData(nsIInputStream* aInputStream,
     }
 
     uint32_t numWrite;
-    rv = aOutputStream->Write(copyBuffer, numRead, &numWrite);
+    rv = aOutputStream->Write(aBuffer, numRead, &numWrite);
     if (rv == NS_ERROR_FILE_NO_DEVICE_SPACE) {
       rv = NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
     }
@@ -25721,12 +25729,17 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   key.BindToStatement(stmt, NS_LITERAL_CSTRING("key"));
 
   if (mDataOverThreshold) {
-    // Higher 32 bits reserved for flags like compressed/uncompressed. For now,
-    // we don't compress externally stored structured clone data since snappy
-    // doesn't support streaming yet and we don't want to allocate another
-    // large memory buffer for that.
-    // Lower 32 bits used for storing file_ids index.
-    uint64_t data = uint64_t(mStoredFileInfos.Length() - 1);
+    // The data we store in the SQLite database is a (signed) 64-bit integer.
+    // The flags are left-shifted 32 bits so the max value is 0xFFFFFFFF.
+    // The file_ids index occupies the lower 32 bits and its max is 0xFFFFFFFF.
+    static const uint32_t kCompressedFlag = (1<<0);
+
+    uint32_t flags = 0;
+    flags |= kCompressedFlag;
+
+    uint32_t index = mStoredFileInfos.Length() - 1;
+
+    int64_t data = (uint64_t(flags) << 32) | index;
 
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("data"), data);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -25878,17 +25891,34 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
           }
 
           // Now try to copy the stream.
-          RefPtr<FileOutputStream> outputStream =
+          RefPtr<FileOutputStream> fileOutputStream =
             FileOutputStream::Create(mPersistenceType,
                                      mGroup,
                                      mOrigin,
                                      diskFile);
-          if (NS_WARN_IF(!outputStream)) {
+          if (NS_WARN_IF(!fileOutputStream)) {
             IDB_REPORT_INTERNAL_ERR();
             return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
           }
 
-          rv = CopyFileData(inputStream, outputStream);
+          if (storedFileInfo.mType == StoredFileInfo::eStructuredClone) {
+            RefPtr<SnappyCompressOutputStream> snappyOutputStream =
+              new SnappyCompressOutputStream(fileOutputStream);
+
+            UniquePtr<char[]> buffer(new char[snappyOutputStream->BlockSize()]);
+
+            rv = CopyFileData(inputStream,
+                              snappyOutputStream,
+                              buffer.get(),
+                              kFileCopyBufferSize);
+          } else {
+            char buffer[kFileCopyBufferSize];
+
+            rv = CopyFileData(inputStream,
+                              fileOutputStream,
+                              buffer,
+                              kFileCopyBufferSize);
+          }
           if (NS_FAILED(rv) &&
               NS_ERROR_GET_MODULE(rv) != NS_ERROR_MODULE_DOM_INDEXEDDB) {
             IDB_REPORT_INTERNAL_ERR();
