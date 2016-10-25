@@ -46,7 +46,7 @@ class ManifestParser(object):
     """read .ini manifests"""
 
     def __init__(self, manifests=(), defaults=None, strict=True, rootdir=None,
-                 finder=None):
+                 finder=None, handle_defaults=True):
         """Creates a ManifestParser from the given manifest files.
 
         :param manifests: An iterable of file paths or file objects corresponding
@@ -66,6 +66,10 @@ class ManifestParser(object):
                        interactions. Finder objects are part of the mozpack package,
                        documented at
                        http://gecko.readthedocs.org/en/latest/python/mozpack.html#module-mozpack.files
+        :param handle_defaults: If not set, do not propagate manifest defaults to individual
+                                test objects. Callers are expected to manage per-manifest
+                                defaults themselves via the manifest_defaults member
+                                variable in this case.
         """
         self._defaults = defaults or {}
         self._ancestor_defaults = {}
@@ -75,6 +79,7 @@ class ManifestParser(object):
         self.rootdir = rootdir
         self.relativeRoot = None
         self.finder = finder
+        self._handle_defaults = handle_defaults
         if manifests:
             self.read(*manifests)
 
@@ -139,7 +144,8 @@ class ManifestParser(object):
             rootdir = self.rootdir + os.path.sep
 
         # read the configuration
-        sections = read_ini(fp=fp, variables=defaults, strict=self.strict)
+        sections = read_ini(fp=fp, variables=defaults, strict=self.strict,
+                            handle_defaults=self._handle_defaults)
         self.manifest_defaults[filename] = defaults
 
         parent_section_found = False
