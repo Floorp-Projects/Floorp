@@ -304,7 +304,8 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/docshell/base',
     '/dom/base',
-    '/netwerk/protocol/http'
+    '/netwerk/protocol/http',
+    '/security/pkix/include'
 ]
 
 if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
