@@ -99,7 +99,7 @@ NativeObject::removeDenseElementForSparseIndex(ExclusiveContext* cx,
 {
     MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_NON_PACKED | OBJECT_FLAG_SPARSE_INDEXES);
     if (obj->containsDenseElement(index))
-        obj->setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
+        obj->setDenseElementUnchecked(index, MagicValue(JS_ELEMENTS_HOLE));
 }
 
 inline bool
