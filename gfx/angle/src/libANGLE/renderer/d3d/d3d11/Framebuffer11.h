@@ -28,7 +28,7 @@ class Framebuffer11 : public FramebufferD3D, public angle::SignalReceiver
     gl::Error invalidateSub(size_t count, const GLenum *attachments, const gl::Rectangle &area) override;
 
     // Invalidate the cached swizzles of all bound texture attachments.
-    gl::Error invalidateSwizzles() const;
+    gl::Error markAttachmentsDirty() const;
 
     void syncState(const gl::Framebuffer::DirtyBits &dirtyBits) override;
 

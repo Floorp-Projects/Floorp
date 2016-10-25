@@ -80,6 +80,7 @@ WHICH GENERATES THE GLSL ES PARSER (glslang_tab.cpp AND glslang_tab.h).
             TIntermCase* intermCase;
         };
         union {
+            TTypeSpecifierNonArray typeSpecifierNonArray;
             TPublicType type;
             TPrecision precision;
             TLayoutQualifier layoutQualifier;
@@ -88,6 +89,8 @@ WHICH GENERATES THE GLSL ES PARSER (glslang_tab.cpp AND glslang_tab.h).
             TParameter param;
             TField* field;
             TFieldList* fieldList;
+            TQualifierWrapperBase* qualifierWrapper;
+            TTypeQualifierBuilder* typeQualifierBuilder;
         };
     } interm;
 }
@@ -205,13 +208,18 @@ extern void yyerror(YYLTYPE* yylloc, TParseContext* context, void *scanner, cons
 %type <interm> single_declaration init_declarator_list
 
 %type <interm> parameter_declaration parameter_declarator parameter_type_specifier
-%type <interm.qualifier> parameter_qualifier parameter_type_qualifier
-%type <interm.layoutQualifier> layout_qualifier layout_qualifier_id_list layout_qualifier_id
+%type <interm.layoutQualifier> layout_qualifier_id_list layout_qualifier_id
+
+%type <interm.type> fully_specified_type type_specifier
 
 %type <interm.precision> precision_qualifier
-%type <interm.type> type_qualifier fully_specified_type type_specifier storage_qualifier interpolation_qualifier
-%type <interm.type> type_specifier_no_prec type_specifier_nonarray
-%type <interm.type> struct_specifier
+%type <interm.layoutQualifier> layout_qualifier
+%type <interm.qualifier> storage_qualifier interpolation_qualifier
+%type <interm.qualifierWrapper> single_type_qualifier invariant_qualifier
+%type <interm.typeQualifierBuilder> type_qualifier
+
+%type <interm.typeSpecifierNonArray> type_specifier_nonarray struct_specifier
+%type <interm.type> type_specifier_no_prec
 %type <interm.field> struct_declarator
 %type <interm.fieldList> struct_declarator_list struct_declaration struct_declaration_list
 %type <interm.function> function_header function_declarator function_identifier
@@ -604,31 +612,36 @@ declaration
             context->error(@1, "precision is not supported in fragment shader", "highp");
         }
         if (!context->symbolTable.setDefaultPrecision( $3, $2 )) {
-            context->error(@1, "illegal type argument for default precision qualifier", getBasicString($3.type));
+            context->error(@1, "illegal type argument for default precision qualifier", getBasicString($3.getBasicType()));
         }
         $$ = 0;
     }
     | type_qualifier enter_struct struct_declaration_list RIGHT_BRACE SEMICOLON {
-        ES3_OR_NEWER(getQualifierString($1.qualifier), @1, "interface blocks");
-        $$ = context->addInterfaceBlock($1, @2, *$2.string, $3, NULL, @$, NULL, @$);
+        ES3_OR_NEWER($2.string->c_str(), @1, "interface blocks");
+        $$ = context->addInterfaceBlock(*$1, @2, *$2.string, $3, NULL, @$, NULL, @$);
     }
     | type_qualifier enter_struct struct_declaration_list RIGHT_BRACE IDENTIFIER SEMICOLON {
-        ES3_OR_NEWER(getQualifierString($1.qualifier), @1, "interface blocks");
-        $$ = context->addInterfaceBlock($1, @2, *$2.string, $3, $5.string, @5, NULL, @$);
+        ES3_OR_NEWER($2.string->c_str(), @1, "interface blocks");
+        $$ = context->addInterfaceBlock(*$1, @2, *$2.string, $3, $5.string, @5, NULL, @$);
     }
     | type_qualifier enter_struct struct_declaration_list RIGHT_BRACE IDENTIFIER LEFT_BRACKET constant_expression RIGHT_BRACKET SEMICOLON {
-        ES3_OR_NEWER(getQualifierString($1.qualifier), @1, "interface blocks");
-        $$ = context->addInterfaceBlock($1, @2, *$2.string, $3, $5.string, @5, $7, @6);
+        ES3_OR_NEWER($2.string->c_str(), @1, "interface blocks");
+        $$ = context->addInterfaceBlock(*$1, @2, *$2.string, $3, $5.string, @5, $7, @6);
     }
     | type_qualifier SEMICOLON {
-        context->parseGlobalLayoutQualifier($1);
+        context->parseGlobalLayoutQualifier(*$1);
         $$ = 0;
+    }
+    | type_qualifier IDENTIFIER SEMICOLON // e.g. to qualify an existing variable as invariant
+    {
+        $$ = context->parseInvariantDeclaration(*$1, @2, $2.string, $2.symbol);
     }
     ;
 
 function_prototype
     : function_declarator RIGHT_PAREN  {
         $$.function = context->parseFunctionDeclarator(@2, $1);
+        context->exitFunctionDeclaration();
     }
     ;
 
@@ -675,13 +688,14 @@ function_header
         $$ = context->parseFunctionHeader($1, $2.string, @2);
 
         context->symbolTable.push();
+        context->enterFunctionDeclaration();
     }
     ;
 
 parameter_declarator
     // Type + name
     : type_specifier identifier {
-        if ($1.type == EbtVoid) {
+        if ($1.getBasicType() == EbtVoid) {
             context->error(@2, "illegal use of type 'void'", $2.string->c_str());
         }
         context->checkIsNotReserved(@2, *$2.string);
@@ -713,41 +727,21 @@ parameter_declaration
     //
     // Type + name
     //
-    : parameter_type_qualifier parameter_qualifier parameter_declarator {
-        $$ = $3;
-        context->checkIsParameterQualifierValid(@3, $1, $2, $$.param.type);
-    }
-    | parameter_qualifier parameter_declarator {
+    : type_qualifier parameter_declarator {
         $$ = $2;
-        context->checkOutParameterIsNotSampler(@2, $1, *$2.param.type);
-        context->checkIsParameterQualifierValid(@2, EvqTemporary, $1, $$.param.type);
+        context->checkIsParameterQualifierValid(@2, *$1, $2.param.type);
     }
-    //
-    // Only type
-    //
-    | parameter_type_qualifier parameter_qualifier parameter_type_specifier {
-        $$ = $3;
-        context->checkIsParameterQualifierValid(@3, $1, $2, $$.param.type);
+    | parameter_declarator {
+        $$ = $1;
+        $$.param.type->setQualifier(EvqIn);
     }
-    | parameter_qualifier parameter_type_specifier {
+    | type_qualifier parameter_type_specifier {
         $$ = $2;
-        context->checkOutParameterIsNotSampler(@2, $1, *$2.param.type);
-        context->checkIsParameterQualifierValid(@2, EvqTemporary, $1, $$.param.type);
+        context->checkIsParameterQualifierValid(@2, *$1, $2.param.type);
     }
-    ;
-
-parameter_qualifier
-    : /* empty */ {
-        $$ = EvqIn;
-    }
-    | IN_QUAL {
-        $$ = EvqIn;
-    }
-    | OUT_QUAL {
-        $$ = EvqOut;
-    }
-    | INOUT_QUAL {
-        $$ = EvqInOut;
+    | parameter_type_specifier {
+        $$ = $1;
+        $$.param.type->setQualifier(EvqIn);
     }
     ;
 
@@ -813,10 +807,6 @@ single_declaration
         $$.type = $1;
         $$.intermAggregate = context->parseSingleInitDeclaration($$.type, @2, *$2.string, @3, $4);
     }
-    | INVARIANT IDENTIFIER {
-        // $$.type is not used in invariant declarations.
-        $$.intermAggregate = context->parseInvariantDeclaration(@1, @2, $2.string, $2.symbol);
-    }
     ;
 
 fully_specified_type
@@ -830,124 +820,134 @@ fully_specified_type
             }
         }
     }
-    | type_qualifier type_specifier  {
-        $$ = context->addFullySpecifiedType($1.qualifier, $1.invariant, $1.layoutQualifier, $2);
+    | type_qualifier type_specifier {
+        $$ = context->addFullySpecifiedType(*$1, $2);
     }
     ;
 
 interpolation_qualifier
     : SMOOTH {
-        $$.qualifier = EvqSmooth;
+        $$ = EvqSmooth;
     }
     | FLAT {
-        $$.qualifier = EvqFlat;
-    }
-    ;
-
-parameter_type_qualifier
-    : CONST_QUAL {
-        $$ = EvqConst;
+        $$ = EvqFlat;
     }
     ;
 
 type_qualifier
-    : ATTRIBUTE {
+    : single_type_qualifier {
+        $$ = context->createTypeQualifierBuilder(@1);
+        $$->appendQualifier($1);
+    }
+    | type_qualifier single_type_qualifier {
+        $$ = $1;
+        $$->appendQualifier($2);
+    }
+    ;
+
+invariant_qualifier
+    : INVARIANT {
+        // empty
+    }
+    ;
+
+single_type_qualifier
+    : storage_qualifier {
+        if (!context->declaringFunction() && $1 != EvqConst && !context->symbolTable.atGlobalLevel())
+        {
+            context->error(@1, "Local variables can only use the const storage qualifier.", getQualifierString($1));
+        }
+        $$ = new TStorageQualifierWrapper($1, @1);
+    }
+    | layout_qualifier {
+        context->checkIsAtGlobalLevel(@1, "layout");
+        $$ = new TLayoutQualifierWrapper($1, @1);
+    }
+    | precision_qualifier {
+        $$ = new TPrecisionQualifierWrapper($1, @1);
+    }
+    | interpolation_qualifier {
+        $$ = new TInterpolationQualifierWrapper($1, @1);
+    }
+    | invariant_qualifier {
+        context->checkIsAtGlobalLevel(@1, "invariant");
+        $$ = new TInvariantQualifierWrapper(@1);
+    }
+    ;
+
+
+storage_qualifier
+    :
+    ATTRIBUTE {
         VERTEX_ONLY("attribute", @1);
         ES2_ONLY("attribute", @1);
         context->checkIsAtGlobalLevel(@1, "attribute");
-        $$.setBasic(EbtVoid, EvqAttribute, @1);
+        $$ = EvqAttribute;
     }
     | VARYING {
         ES2_ONLY("varying", @1);
         context->checkIsAtGlobalLevel(@1, "varying");
         if (context->getShaderType() == GL_VERTEX_SHADER)
-            $$.setBasic(EbtVoid, EvqVaryingOut, @1);
+            $$ = EvqVaryingOut;
         else
-            $$.setBasic(EbtVoid, EvqVaryingIn, @1);
+            $$ = EvqVaryingIn;
     }
-    | INVARIANT VARYING {
-        ES2_ONLY("varying", @1);
-        context->checkIsAtGlobalLevel(@1, "invariant varying");
-        if (context->getShaderType() == GL_VERTEX_SHADER)
-            $$.setBasic(EbtVoid, EvqVaryingOut, @1);
-        else
-            $$.setBasic(EbtVoid, EvqVaryingIn, @1);
-        $$.invariant = true;
-    }
-    | storage_qualifier {
-        if ($1.qualifier != EvqConst && !context->symbolTable.atGlobalLevel())
-        {
-            context->error(@1, "Local variables can only use the const storage qualifier.", getQualifierString($1.qualifier));
-        }
-        $$.setBasic(EbtVoid, $1.qualifier, @1);
-    }
-    | interpolation_qualifier storage_qualifier {
-        $$ = context->joinInterpolationQualifiers(@1, $1.qualifier, @2, $2.qualifier);
-    }
-    | interpolation_qualifier {
-        context->error(@1, "interpolation qualifier requires a fragment 'in' or vertex 'out' storage qualifier", getInterpolationString($1.qualifier));
-
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtVoid, qual, @1);
-    }
-    | layout_qualifier {
-        $$.qualifier = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.layoutQualifier = $1;
-    }
-    | layout_qualifier storage_qualifier {
-        $$.setBasic(EbtVoid, $2.qualifier, @2);
-        $$.layoutQualifier = $1;
-    }
-    | INVARIANT storage_qualifier {
-        context->checkInvariantIsOutVariableES3($2.qualifier, @1);
-        $$.setBasic(EbtVoid, $2.qualifier, @2);
-        $$.invariant = true;
-    }
-    | INVARIANT interpolation_qualifier storage_qualifier {
-        context->checkInvariantIsOutVariableES3($3.qualifier, @1);
-        $$ = context->joinInterpolationQualifiers(@2, $2.qualifier, @3, $3.qualifier);
-        $$.invariant = true;
-    }
-    ;
-
-storage_qualifier
-    : CONST_QUAL {
-        $$.qualifier = EvqConst;
+    | CONST_QUAL {
+        $$ = EvqConst;
     }
     | IN_QUAL {
-        if (context->getShaderType() == GL_FRAGMENT_SHADER)
+        if (context->declaringFunction())
+        {
+            $$ = EvqIn;
+        }
+        else if (context->getShaderType() == GL_FRAGMENT_SHADER)
         {
             ES3_OR_NEWER("in", @1, "storage qualifier");
-            $$.qualifier = EvqFragmentIn;
+            $$ = EvqFragmentIn;
         }
         else if (context->getShaderType() == GL_VERTEX_SHADER)
         {
             ES3_OR_NEWER("in", @1, "storage qualifier");
-            $$.qualifier = EvqVertexIn;
+            $$ = EvqVertexIn;
         }
         else
         {
-            $$.qualifier = EvqComputeIn;
+            $$ = EvqComputeIn;
         }
     }
     | OUT_QUAL {
-        ES3_OR_NEWER("out", @1, "storage qualifier");
-        NON_COMPUTE_ONLY("out", @1);
-        $$.qualifier = (context->getShaderType() == GL_FRAGMENT_SHADER) ? EvqFragmentOut : EvqVertexOut;
+        if (context->declaringFunction())
+        {
+            $$ = EvqOut;
+        }
+        else
+        {
+            ES3_OR_NEWER("out", @1, "storage qualifier");
+            NON_COMPUTE_ONLY("out", @1);
+            if (context->getShaderType() == GL_FRAGMENT_SHADER)
+            {
+                $$ = EvqFragmentOut;
+            }
+            else
+            {
+                $$ = EvqVertexOut;
+            }
+        }
     }
-    | CENTROID IN_QUAL {
-        ES3_OR_NEWER("centroid in", @1, "storage qualifier");
-        FRAG_ONLY("centroid in", @1);
-        $$.qualifier = EvqCentroidIn;
+    | INOUT_QUAL {
+        if (!context->declaringFunction())
+        {
+            context->error(@1, "invalid inout qualifier", "'inout' can be only used with function parameters");
+        }
+        $$ = EvqInOut;
     }
-    | CENTROID OUT_QUAL {
-        ES3_OR_NEWER("centroid out", @1, "storage qualifier");
-        VERTEX_ONLY("centroid out", @1);
-        $$.qualifier = EvqCentroidOut;
+    | CENTROID {
+        ES3_OR_NEWER("centroid", @1, "storage qualifier");
+        $$ = EvqCentroid;
     }
     | UNIFORM {
         context->checkIsAtGlobalLevel(@1, "uniform");
-        $$.qualifier = EvqUniform;
+        $$ = EvqUniform;
     }
     ;
 
@@ -956,16 +956,7 @@ type_specifier
         $$ = $1;
 
         if ($$.precision == EbpUndefined) {
-            $$.precision = context->symbolTable.getDefaultPrecision($1.type);
-            context->checkPrecisionSpecified(@1, $$.precision, $1.type);
-        }
-    }
-    | precision_qualifier type_specifier_no_prec {
-        $$ = $2;
-        $$.precision = $1;
-
-        if (!SupportsPrecision($2.type)) {
-            context->error(@1, "illegal type for precision qualifier", getBasicString($2.type));
+            $$.precision = context->symbolTable.getDefaultPrecision($1.getBasicType());
         }
     }
     ;
@@ -1012,17 +1003,16 @@ layout_qualifier_id
 
 type_specifier_no_prec
     : type_specifier_nonarray {
-        $$ = $1;
+        $$.initialize($1, (context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary));
     }
     | type_specifier_nonarray LEFT_BRACKET RIGHT_BRACKET {
         ES3_OR_NEWER("[]", @2, "implicitly sized array");
-        $$ = $1;
+        $$.initialize($1, (context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary));
         $$.setArraySize(0);
     }
     | type_specifier_nonarray LEFT_BRACKET constant_expression RIGHT_BRACKET {
-        $$ = $1;
-
-        if (context->checkIsValidTypeForArray(@2, $1))
+        $$.initialize($1, (context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary));
+        if (context->checkIsValidTypeForArray(@2, $$))
         {
             unsigned int size = context->checkIsValidArraySize(@2, $3);
             $$.setArraySize(size);
@@ -1032,208 +1022,164 @@ type_specifier_no_prec
 
 type_specifier_nonarray
     : VOID_TYPE {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtVoid, qual, @1);
+        $$.initialize(EbtVoid, @1);
     }
     | FLOAT_TYPE {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtFloat, qual, @1);
+        $$.initialize(EbtFloat, @1);
     }
     | INT_TYPE {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtInt, qual, @1);
+        $$.initialize(EbtInt, @1);
     }
     | UINT_TYPE {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtUInt, qual, @1);
+        $$.initialize(EbtUInt, @1);
     }
     | BOOL_TYPE {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtBool, qual, @1);
+        $$.initialize(EbtBool, @1);
     }
     | VEC2 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtFloat, qual, @1);
+        $$.initialize(EbtFloat, @1);
         $$.setAggregate(2);
     }
     | VEC3 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtFloat, qual, @1);
+        $$.initialize(EbtFloat, @1);
         $$.setAggregate(3);
     }
     | VEC4 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtFloat, qual, @1);
+        $$.initialize(EbtFloat, @1);
         $$.setAggregate(4);
     }
     | BVEC2 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtBool, qual, @1);
+        $$.initialize(EbtBool, @1);
         $$.setAggregate(2);
     }
     | BVEC3 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtBool, qual, @1);
+        $$.initialize(EbtBool, @1);
         $$.setAggregate(3);
     }
     | BVEC4 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtBool, qual, @1);
+        $$.initialize(EbtBool, @1);
         $$.setAggregate(4);
     }
     | IVEC2 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtInt, qual, @1);
+        $$.initialize(EbtInt, @1);
         $$.setAggregate(2);
     }
     | IVEC3 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtInt, qual, @1);
+        $$.initialize(EbtInt, @1);
         $$.setAggregate(3);
     }
     | IVEC4 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtInt, qual, @1);
+        $$.initialize(EbtInt, @1);
         $$.setAggregate(4);
     }
     | UVEC2 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtUInt, qual, @1);
+        $$.initialize(EbtUInt, @1);
         $$.setAggregate(2);
     }
     | UVEC3 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtUInt, qual, @1);
+        $$.initialize(EbtUInt, @1);
         $$.setAggregate(3);
     }
     | UVEC4 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtUInt, qual, @1);
+        $$.initialize(EbtUInt, @1);
         $$.setAggregate(4);
     }
     | MATRIX2 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtFloat, qual, @1);
+        $$.initialize(EbtFloat, @1);
         $$.setMatrix(2, 2);
     }
     | MATRIX3 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtFloat, qual, @1);
+        $$.initialize(EbtFloat, @1);
         $$.setMatrix(3, 3);
     }
     | MATRIX4 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtFloat, qual, @1);
+        $$.initialize(EbtFloat, @1);
         $$.setMatrix(4, 4);
     }
     | MATRIX2x3 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtFloat, qual, @1);
+        $$.initialize(EbtFloat, @1);
         $$.setMatrix(2, 3);
     }
     | MATRIX3x2 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtFloat, qual, @1);
+        $$.initialize(EbtFloat, @1);
         $$.setMatrix(3, 2);
     }
     | MATRIX2x4 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtFloat, qual, @1);
+        $$.initialize(EbtFloat, @1);
         $$.setMatrix(2, 4);
     }
     | MATRIX4x2 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtFloat, qual, @1);
+        $$.initialize(EbtFloat, @1);
         $$.setMatrix(4, 2);
     }
     | MATRIX3x4 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtFloat, qual, @1);
+        $$.initialize(EbtFloat, @1);
         $$.setMatrix(3, 4);
     }
     | MATRIX4x3 {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtFloat, qual, @1);
+        $$.initialize(EbtFloat, @1);
         $$.setMatrix(4, 3);
     }
     | SAMPLER2D {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtSampler2D, qual, @1);
+        $$.initialize(EbtSampler2D, @1);
     }
     | SAMPLER3D {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtSampler3D, qual, @1);
+        $$.initialize(EbtSampler3D, @1);
     }
     | SAMPLERCUBE {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtSamplerCube, qual, @1);
+        $$.initialize(EbtSamplerCube, @1);
     }
     | SAMPLER2DARRAY {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtSampler2DArray, qual, @1);
+        $$.initialize(EbtSampler2DArray, @1);
     }
     | ISAMPLER2D {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtISampler2D, qual, @1);
+        $$.initialize(EbtISampler2D, @1);
     }
     | ISAMPLER3D {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtISampler3D, qual, @1);
+        $$.initialize(EbtISampler3D, @1);
     }
     | ISAMPLERCUBE {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtISamplerCube, qual, @1);
+        $$.initialize(EbtISamplerCube, @1);
     }
     | ISAMPLER2DARRAY {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtISampler2DArray, qual, @1);
+        $$.initialize(EbtISampler2DArray, @1);
     }
     | USAMPLER2D {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtUSampler2D, qual, @1);
+        $$.initialize(EbtUSampler2D, @1);
     }
     | USAMPLER3D {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtUSampler3D, qual, @1);
+        $$.initialize(EbtUSampler3D, @1);
     }
     | USAMPLERCUBE {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtUSamplerCube, qual, @1);
+        $$.initialize(EbtUSamplerCube, @1);
     }
     | USAMPLER2DARRAY {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtUSampler2DArray, qual, @1);
+        $$.initialize(EbtUSampler2DArray, @1);
     }
     | SAMPLER2DSHADOW {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtSampler2DShadow, qual, @1);
+        $$.initialize(EbtSampler2DShadow, @1);
     }
     | SAMPLERCUBESHADOW {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtSamplerCubeShadow, qual, @1);
+        $$.initialize(EbtSamplerCubeShadow, @1);
     }
     | SAMPLER2DARRAYSHADOW {
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtSampler2DArrayShadow, qual, @1);
+        $$.initialize(EbtSampler2DArrayShadow, @1);
     }
     | SAMPLER_EXTERNAL_OES {
         if (!context->supportsExtension("GL_OES_EGL_image_external") &&
             !context->supportsExtension("GL_NV_EGL_stream_consumer_external")) {
             context->error(@1, "unsupported type", "samplerExternalOES");
         }
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtSamplerExternalOES, qual, @1);
+        $$.initialize(EbtSamplerExternalOES, @1);
     }
     | SAMPLER2DRECT {
         if (!context->supportsExtension("GL_ARB_texture_rectangle")) {
             context->error(@1, "unsupported type", "sampler2DRect");
         }
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtSampler2DRect, qual, @1);
+        $$.initialize(EbtSampler2DRect, @1);
     }
     | struct_specifier {
         $$ = $1;
-        $$.qualifier = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
     }
     | TYPE_NAME {
         //
@@ -1241,8 +1187,7 @@ type_specifier_nonarray
         // type.
         //
         TType& structure = static_cast<TVariable*>($1.symbol)->getType();
-        TQualifier qual = context->symbolTable.atGlobalLevel() ? EvqGlobal : EvqTemporary;
-        $$.setBasic(EbtStruct, qual, @1);
+        $$.initialize(EbtStruct, @1);
         $$.userDef = &structure;
     }
     ;
@@ -1280,9 +1225,7 @@ struct_declaration
     }
     | type_qualifier type_specifier struct_declarator_list SEMICOLON {
         // ES3 Only, but errors should be handled elsewhere
-        $2.qualifier = $1.qualifier;
-        $2.layoutQualifier = $1.layoutQualifier;
-        $$ = context->addStructDeclaratorList($2, $3);
+        $$ = context->addStructDeclaratorListWithQualifiers(*$1, &$2, $3);
     }
     ;
 
