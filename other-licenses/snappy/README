@@ -6,7 +6,7 @@ Mozilla does not modify the actual snappy source with the exception of the
 Snappy comes from:
   http://code.google.com/p/snappy/
 
-We are currently using revision: 56
+We are currently using revision: 114
 
 To upgrade to a newer version:
   1. Check out the new code using subversion.
@@ -22,4 +22,5 @@ To upgrade to a newer version:
        - 'autogen.sh'
        - 'configure.ac'
        - 'Makefile.am'
+       - 'snappy.pc.in'
   5. Update the revision stamp in this file.

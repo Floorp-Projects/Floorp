@@ -53,6 +53,7 @@ HTMLFormControlsCollection::ShouldBeInElements(nsIFormControl* aFormControl)
   case NS_FORM_INPUT_TIME :
   case NS_FORM_INPUT_MONTH :
   case NS_FORM_INPUT_WEEK :
+  case NS_FORM_INPUT_DATETIME_LOCAL :
   case NS_FORM_SELECT :
   case NS_FORM_TEXTAREA :
   case NS_FORM_FIELDSET :

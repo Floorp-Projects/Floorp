@@ -1,29 +1,38 @@
 // |jit-test| test-also-wasm-baseline
 load(libdir + "wasm.js");
 
-assertEq(wasmEvalText('(module (func (result f32) (f32.const -1)) (export "" 0))').exports[""](), -1);
-assertEq(wasmEvalText('(module (func (result f32) (f32.const 1)) (export "" 0))').exports[""](), 1);
-assertEq(wasmEvalText('(module (func (result f64) (f64.const -2)) (export "" 0))').exports[""](), -2);
-assertEq(wasmEvalText('(module (func (result f64) (f64.const 2)) (export "" 0))').exports[""](), 2);
-assertEq(wasmEvalText('(module (func (result f64) (f64.const 4294967296)) (export "" 0))').exports[""](), 4294967296);
-assertEq(wasmEvalText('(module (func (result f32) (f32.const 1.5)) (export "" 0))').exports[""](), 1.5);
-assertEq(wasmEvalText('(module (func (result f64) (f64.const 2.5)) (export "" 0))').exports[""](), 2.5);
-assertEq(wasmEvalText('(module (func (result f64) (f64.const 10e2)) (export "" 0))').exports[""](), 10e2);
-assertEq(wasmEvalText('(module (func (result f32) (f32.const 10e2)) (export "" 0))').exports[""](), 10e2);
-assertEq(wasmEvalText('(module (func (result f64) (f64.const -0x8000000000000000)) (export "" 0))').exports[""](), -0x8000000000000000);
-assertEq(wasmEvalText('(module (func (result f64) (f64.const -9223372036854775808)) (export "" 0))').exports[""](), -9223372036854775808);
-assertEq(wasmEvalText('(module (func (result f64) (f64.const 1797693134862315708145274e284)) (export "" 0))').exports[""](), 1797693134862315708145274e284);
+wasmFullPass('(module (func (result f32) (f32.const -1)) (export "run" 0))', -1);
+wasmFullPass('(module (func (result f32) (f32.const 1)) (export "run" 0))', 1);
+wasmFullPass('(module (func (result f64) (f64.const -2)) (export "run" 0))', -2);
+wasmFullPass('(module (func (result f64) (f64.const 2)) (export "run" 0))', 2);
+wasmFullPass('(module (func (result f64) (f64.const 4294967296)) (export "run" 0))', 4294967296);
+wasmFullPass('(module (func (result f32) (f32.const 1.5)) (export "run" 0))', 1.5);
+wasmFullPass('(module (func (result f64) (f64.const 2.5)) (export "run" 0))', 2.5);
+wasmFullPass('(module (func (result f64) (f64.const 10e2)) (export "run" 0))', 10e2);
+wasmFullPass('(module (func (result f32) (f32.const 10e2)) (export "run" 0))', 10e2);
+wasmFullPass('(module (func (result f64) (f64.const -0x8000000000000000)) (export "run" 0))', -0x8000000000000000);
+wasmFullPass('(module (func (result f64) (f64.const -9223372036854775808)) (export "run" 0))', -9223372036854775808);
+wasmFullPass('(module (func (result f64) (f64.const 1797693134862315708145274e284)) (export "run" 0))', 1797693134862315708145274e284);
 
 function testUnary(type, opcode, op, expect) {
-  assertEq(wasmEvalText('(module (func (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (get_local 0))) (export "" 0))').exports[""](op), expect);
+    wasmFullPass('(module (func (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (get_local 0))) (export "run" 0))',
+                 expect,
+                 {},
+                 op);
 }
 
 function testBinary(type, opcode, lhs, rhs, expect) {
-  assertEq(wasmEvalText('(module (func (param ' + type + ') (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (get_local 0) (get_local 1))) (export "" 0))').exports[""](lhs, rhs), expect);
+    wasmFullPass('(module (func (param ' + type + ') (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (get_local 0) (get_local 1))) (export "run" 0))',
+                 expect,
+                 {},
+                 lhs, rhs);
 }
 
 function testComparison(type, opcode, lhs, rhs, expect) {
-  assertEq(wasmEvalText('(module (func (param ' + type + ') (param ' + type + ') (result i32) (' + type + '.' + opcode + ' (get_local 0) (get_local 1))) (export "" 0))').exports[""](lhs, rhs), expect);
+    wasmFullPass('(module (func (param ' + type + ') (param ' + type + ') (result i32) (' + type + '.' + opcode + ' (get_local 0) (get_local 1))) (export "run" 0))',
+                 expect,
+                 {},
+                 lhs, rhs);
 }
 
 testUnary('f32', 'abs', -40, 40);

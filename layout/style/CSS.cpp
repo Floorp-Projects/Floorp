@@ -65,11 +65,7 @@ CSS::Supports(const GlobalObject& aGlobal,
   if (info.mStyleBackendType == StyleBackendType::Servo) {
     NS_ConvertUTF16toUTF8 property(aProperty);
     NS_ConvertUTF16toUTF8 value(aValue);
-
-    return Servo_CSSSupports(reinterpret_cast<const uint8_t*>(property.get()),
-                             property.Length(),
-                             reinterpret_cast<const uint8_t*>(value.get()),
-                             value.Length());
+    return Servo_CSSSupports(&property, &value);
   }
 
   nsCSSParser parser;
