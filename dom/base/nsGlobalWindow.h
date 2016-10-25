@@ -86,7 +86,6 @@ class nsIControllers;
 class nsIJSID;
 class nsIScriptContext;
 class nsIScriptTimeoutHandler;
-class nsITimeoutHandler;
 class nsIWebBrowserChrome;
 
 class nsDOMWindowList;
@@ -1441,7 +1440,7 @@ public:
   // Timeout Functions
   // Language agnostic timeout function (all args passed).
   // |interval| is in milliseconds.
-  nsresult SetTimeoutOrInterval(nsITimeoutHandler* aHandler,
+  nsresult SetTimeoutOrInterval(nsIScriptTimeoutHandler* aHandler,
                                 int32_t interval, bool aIsInterval,
                                 int32_t* aReturn);
   int32_t SetTimeoutOrInterval(JSContext* aCx,

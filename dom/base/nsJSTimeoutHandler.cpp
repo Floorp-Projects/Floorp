@@ -60,16 +60,6 @@ public:
     return mFunction;
   }
 
-  virtual const nsTArray<JS::Value>& GetArgs() override
-  {
-    return mArgs;
-  }
-
-  virtual nsresult Call() override
-  {
-    return NS_OK;
-  }
-
   virtual void GetLocation(const char** aFileName, uint32_t* aLineNo,
                            uint32_t* aColumn) override
   {
@@ -78,11 +68,9 @@ public:
     *aColumn = mColumn;
   }
 
-  virtual void MarkForCC() override
+  virtual const nsTArray<JS::Value>& GetArgs() override
   {
-    if (mFunction) {
-      mFunction->MarkForCC();
-    }
+    return mArgs;
   }
 
   void ReleaseJSObjects();
@@ -163,7 +151,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSScriptTimeoutHandler)
   NS_INTERFACE_MAP_ENTRY(nsIScriptTimeoutHandler)
-  NS_INTERFACE_MAP_ENTRY(nsITimeoutHandler)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
