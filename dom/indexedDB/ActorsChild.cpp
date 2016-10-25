@@ -589,23 +589,30 @@ protected:
 };
 
 void
-ConvertActorsToBlobs(IDBDatabase* aDatabase,
-                     const SerializedStructuredCloneReadInfo& aCloneReadInfo,
-                     nsTArray<StructuredCloneFile>& aFiles)
+DeserializeStructuredCloneFiles(
+                        IDBDatabase* aDatabase,
+                        const SerializedStructuredCloneReadInfo& aCloneReadInfo,
+                        nsTArray<StructuredCloneFile>& aFiles)
 {
   MOZ_ASSERT(aFiles.IsEmpty());
 
-  const nsTArray<BlobOrMutableFile>& blobs = aCloneReadInfo.blobs();
+  const nsTArray<SerializedStructuredCloneFile>& serializedFiles =
+    aCloneReadInfo.files();
 
-  if (!blobs.IsEmpty()) {
-    const uint32_t count = blobs.Length();
+  if (!serializedFiles.IsEmpty()) {
+    const uint32_t count = serializedFiles.Length();
     aFiles.SetCapacity(count);
 
     for (uint32_t index = 0; index < count; index++) {
-      const BlobOrMutableFile& blobOrMutableFile = blobs[index];
+      const SerializedStructuredCloneFile& serializedFile =
+        serializedFiles[index];
 
-      switch (blobOrMutableFile.type()) {
-        case BlobOrMutableFile::TPBlobChild: {
+      const BlobOrMutableFile& blobOrMutableFile = serializedFile.file();
+
+      switch (serializedFile.type()) {
+        case StructuredCloneFile::eBlob: {
+          MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::TPBlobChild);
+
           auto* actor =
             static_cast<BlobChild*>(blobOrMutableFile.get_PBlobChild());
 
@@ -625,12 +632,13 @@ ConvertActorsToBlobs(IDBDatabase* aDatabase,
           break;
         }
 
-        case BlobOrMutableFile::TNullableMutableFile: {
-          const NullableMutableFile& nullableMutableFile =
-            blobOrMutableFile.get_NullableMutableFile();
+        case StructuredCloneFile::eMutableFile: {
+          MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t ||
+                     blobOrMutableFile.type() ==
+                       BlobOrMutableFile::TPBackgroundMutableFileChild);
 
-          switch (nullableMutableFile.type()) {
-            case NullableMutableFile::Tnull_t: {
+          switch (blobOrMutableFile.type()) {
+            case BlobOrMutableFile::Tnull_t: {
               StructuredCloneFile* file = aFiles.AppendElement();
               MOZ_ASSERT(file);
 
@@ -639,10 +647,10 @@ ConvertActorsToBlobs(IDBDatabase* aDatabase,
               break;
             }
 
-            case NullableMutableFile::TPBackgroundMutableFileChild: {
+            case BlobOrMutableFile::TPBackgroundMutableFileChild: {
               auto* actor =
                 static_cast<BackgroundMutableFileChild*>(
-                  nullableMutableFile.get_PBackgroundMutableFileChild());
+                  blobOrMutableFile.get_PBackgroundMutableFileChild());
               MOZ_ASSERT(actor);
 
               actor->EnsureDOMObject();
@@ -669,7 +677,7 @@ ConvertActorsToBlobs(IDBDatabase* aDatabase,
           break;
         }
 
-        case BlobOrMutableFile::Tnull_t: {
+        case StructuredCloneFile::eStructuredClone: {
           StructuredCloneFile* file = aFiles.AppendElement();
           MOZ_ASSERT(file);
 
@@ -2381,9 +2389,9 @@ BackgroundRequestChild::HandleResponse(
 
   StructuredCloneReadInfo cloneReadInfo(Move(serializedCloneInfo));
 
-  ConvertActorsToBlobs(mTransaction->Database(),
-                       aResponse,
-                       cloneReadInfo.mFiles);
+  DeserializeStructuredCloneFiles(mTransaction->Database(),
+                                  aResponse,
+                                  cloneReadInfo.mFiles);
 
   ResultHelper helper(mRequest, mTransaction, &cloneReadInfo);
 
@@ -2414,7 +2422,7 @@ BackgroundRequestChild::HandleResponse(
 
       // Get the files
       nsTArray<StructuredCloneFile> files;
-      ConvertActorsToBlobs(database, serializedCloneInfo, files);
+      DeserializeStructuredCloneFiles(database, serializedCloneInfo, files);
 
       // Move relevant data into the cloneReadInfo
       *cloneReadInfo = Move(serializedCloneInfo);
@@ -2752,9 +2760,9 @@ BackgroundCursorChild::HandleResponse(
     StructuredCloneReadInfo cloneReadInfo(Move(response.cloneInfo()));
     cloneReadInfo.mDatabase = mTransaction->Database();
 
-    ConvertActorsToBlobs(mTransaction->Database(),
-                         response.cloneInfo(),
-                         cloneReadInfo.mFiles);
+    DeserializeStructuredCloneFiles(mTransaction->Database(),
+                                    response.cloneInfo(),
+                                    cloneReadInfo.mFiles);
 
     RefPtr<IDBCursor> newCursor;
 
@@ -2815,9 +2823,9 @@ BackgroundCursorChild::HandleResponse(const IndexCursorResponse& aResponse)
   StructuredCloneReadInfo cloneReadInfo(Move(response.cloneInfo()));
   cloneReadInfo.mDatabase = mTransaction->Database();
 
-  ConvertActorsToBlobs(mTransaction->Database(),
-                       aResponse.cloneInfo(),
-                       cloneReadInfo.mFiles);
+  DeserializeStructuredCloneFiles(mTransaction->Database(),
+                                  aResponse.cloneInfo(),
+                                  cloneReadInfo.mFiles);
 
   RefPtr<IDBCursor> newCursor;
 
