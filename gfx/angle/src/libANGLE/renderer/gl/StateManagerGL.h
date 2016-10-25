@@ -124,6 +124,8 @@ class StateManagerGL final : angle::NonCopyable
 
     void setFramebufferSRGBEnabled(bool enabled);
 
+    void setDitherEnabled(bool enabled);
+
     void setMultisamplingStateEnabled(bool enabled);
     void setSampleAlphaToOneStateEnabled(bool enabled);
 
@@ -264,6 +266,7 @@ class StateManagerGL final : angle::NonCopyable
     GLint mClearStencil;
 
     bool mFramebufferSRGBEnabled;
+    bool mDitherEnabled;
     bool mTextureCubemapSeamlessEnabled;
 
     bool mMultisamplingEnabled;

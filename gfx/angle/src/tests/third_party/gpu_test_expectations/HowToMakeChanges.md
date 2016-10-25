@@ -1,4 +1,4 @@
-Because the ```gpu_test_expectations``` directory is based on parts of Chromium's ```gpu/config``
+Because the ```gpu_test_expectations``` directory is based on parts of Chromium's ```gpu/config```
 directory, we want to keep a patch of the changes added to make it compile with ANGLE. This
 will allow us to merge Chromium changes easily in our ```gpu_test_expectations```.
 
