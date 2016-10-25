@@ -14,7 +14,7 @@
 
 class nsGlobalWindow;
 class nsIPrincipal;
-class nsITimeoutHandler;
+class nsIScriptTimeoutHandler;
 class nsITimer;
 
 namespace mozilla {
@@ -22,7 +22,7 @@ namespace dom {
 
 /*
  * Timeout struct that holds information about each script
- * timeout.  Holds a strong reference to an nsITimeoutHandler, which
+ * timeout.  Holds a strong reference to an nsIScriptTimeoutHandler, which
  * abstracts the language specific cruft.
  */
 class Timeout final
@@ -85,7 +85,7 @@ public:
   PopupControlState mPopupState;
 
   // The language-specific information about the callback.
-  nsCOMPtr<nsITimeoutHandler> mScriptHandler;
+  nsCOMPtr<nsIScriptTimeoutHandler> mScriptHandler;
 
 private:
   ~Timeout();

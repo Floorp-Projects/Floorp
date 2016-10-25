@@ -102,7 +102,6 @@ EXPORTS += [
     'nsIScriptObjectPrincipal.h',
     'nsIScriptTimeoutHandler.h',
     'nsIStyleSheetLinkingElement.h',
-    'nsITimeoutHandler.h',
     'nsJSEnvironment.h',
     'nsJSUtils.h',
     'nsLineBreaker.h',
