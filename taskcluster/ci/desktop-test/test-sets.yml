@@ -90,6 +90,7 @@ windows-vm-tests:
 
 ccov-code-coverage-tests:
     - mochitest-browser-chrome
+    - mochitest-devtools-chrome
 
 jsdcov-code-coverage-tests:
     - mochitest-browser-chrome
