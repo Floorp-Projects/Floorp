@@ -1631,10 +1631,6 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
     if (!wasm)
         return nullptr;
 
-    // This property will be removed before the initial WebAssembly release.
-    if (!JS_DefineProperty(cx, wasm, "experimentalVersion", EncodingVersion, JSPROP_RESOLVING))
-        return nullptr;
-
     if (!JS_DefineFunctions(cx, wasm, WebAssembly_static_methods))
         return nullptr;
 
