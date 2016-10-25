@@ -49,53 +49,7 @@ setJitCompilerOption('wasm.test-mode', 1);
 
 // Creates a tree of s-expressions. Ported from Binaryen's SExpressionParser.
 function parseSExpression(text) {
-    var input = 0;
-
-    var commentDepth = 0;
-    function skipBlockComment() {
-        while (true) {
-            if (text[input] === '(' && text[input + 1] === ';') {
-                input += 2;
-                commentDepth++;
-            } else if (text[input] === ';' && text[input + 1] === ')') {
-                input += 2;
-                commentDepth--;
-                if (!commentDepth) {
-                    return;
-                }
-            } else {
-                input++;
-            }
-        }
-    }
-
-    function parseInnerList() {
-        if (text[input] === ';') {
-            // Parse comment.
-            input++;
-            if (text[input] === ';') {
-                while (text[input] != '\n') input++;
-                return null;
-            }
-            assert(false, 'malformed comment');
-        }
-
-        if (text[input] === '(' && text[input + 1] === ';') {
-            skipBlockComment();
-            return null;
-        }
-
-        var start = input;
-        var ret = new Element();
-        while (true) {
-            var curr = parse();
-            if (!curr) {
-                ret.lineno = countLines(text, input);
-                return ret;
-            }
-            ret.list.push(curr);
-        }
-    }
+    var pos = 0;
 
     function isSpace(c) {
         switch (c) {
@@ -111,81 +65,124 @@ function parseSExpression(text) {
         }
     }
 
-    function skipWhitespace() {
+    function skip() {
         while (true) {
-            while (isSpace(text[input]))
-                input++;
+            let prevPos = pos;
 
-            if (text[input] === ';' && text[input + 1] === ';') {
-                while (text.length > input && text[input] != '\n') input++;
-            } else if (text[input] === '(' && text[input + 1] === ';') {
-                skipBlockComment();
-            } else {
-                return;
-            }
-        }
-    }
+            if (pos + 2 < text.length) {
 
-    function parseString() {
-        var dollared = false;
-        var quoted = false;
-        if (text[input] === '$') {
-            input++;
-            dollared = true;
-        }
-
-        var start = input;
-        if (text[input] === '"') {
-            quoted = true;
-            // Parse escaping \", but leave code escaped - we'll handle escaping in memory segments specifically.
-            input++;
-            var str = "";
-            while (true) {
-                if (text[input] === '"') break;
-                if (text[input] === '\\') {
-                    str += text[input];
-                    str += text[input + 1];
-                    input += 2;
-                    continue;
+                // Block comments.
+                if (text[pos] === '(' && text[pos + 1] === ';')
+                {
+                    pos += 2;
+                    let blockDepth = 1;
+                    while (pos + 2 < text.length) {
+                        if (text[pos] === '(' && text[pos + 1] === ';') {
+                            pos += 2;
+                            blockDepth++;
+                        } else if (text[pos] === ';' && text[pos + 1] === ')') {
+                            pos += 2;
+                            if (!--blockDepth)
+                                break;
+                        } else {
+                            pos++;
+                        }
+                    }
                 }
-                str += text[input];
-                input++;
+
+                // Inline comments.
+                if (text[pos] === ';' && text[pos + 1] === ';') {
+                    pos += 2;
+                    while (text[pos] !== '\n')
+                        pos++;
+                }
             }
-            input++;
-            return new Element(str, dollared, quoted);
-        }
 
-        while (text.length > input &&
-               !isSpace(text[input]) &&
-               text[input] != ')' &&
-               text[input] != '(') {
-            input++;
-        }
+            // Whitespaces.
+            while (isSpace(text[pos])) {
+                pos++;
+            }
 
-        return new Element(text.substring(start, input), dollared);
+            if (pos === prevPos)
+                break;
+        }
     }
 
     function parse() {
-        skipWhitespace();
+        skip();
 
-        if (text.length === input || text[input] === ')')
+        if (text.length === pos || text[pos] === ')')
             return null;
 
-        if (text[input] === '(') {
-            input++;
-            var ret = parseInnerList();
-            skipWhitespace();
-            assert(text[input] === ')', 'inner list ends with a )');
-            input++;
+        if (text[pos] === '(') {
+            pos++;
+            var ret = parseInParens();
+            skip();
+            assert(text[pos] === ')', 'inner list ends with a )');
+            pos++;
             return ret;
         }
 
         return parseString();
     }
 
+    function parseInParens() {
+        skip();
+        var start = pos;
+        var ret = new Element();
+        while (true) {
+            var curr = parse();
+            if (!curr) {
+                ret.lineno = countLines(text, pos);
+                return ret;
+            }
+            ret.list.push(curr);
+        }
+    }
+
+    function parseString() {
+        var dollared = false;
+        var quoted = false;
+        if (text[pos] === '$') {
+            pos++;
+            dollared = true;
+        }
+
+        var start = pos;
+        if (text[pos] === '"') {
+            quoted = true;
+            // Parse escaping \", but leave code escaped - we'll handle escaping in memory segments specifically.
+            pos++;
+            var str = "";
+            while (true) {
+                if (text[pos] === '"') break;
+                if (text[pos] === '\\') {
+                    str += text[pos];
+                    str += text[pos + 1];
+                    pos += 2;
+                    continue;
+                }
+                str += text[pos];
+                pos++;
+            }
+            pos++;
+            return new Element(str, dollared, quoted);
+        }
+
+        while (pos < text.length &&
+               !isSpace(text[pos]) &&
+               text[pos] != ';' &&
+               text[pos] != ')' &&
+               text[pos] != '(') {
+            pos++;
+        }
+
+        return new Element(text.substring(start, pos), dollared);
+    }
+
     var root = null;
     while (!root) { // Keep parsing until we pass an initial comment.
-        root = parseInnerList();
+        root = parseInParens();
     }
     return root;
 }
@@ -304,6 +301,31 @@ function exec(e) {
         return;
     }
 
+    if (exprName === "register") {
+        // (register IMPORT_NAME MODULE_NAME?)
+        assert(e.list[1].quoted, "first arg to register is quoted");
+        let importName = e.list[1].str;
+
+        let moduleName = '__last_module__';
+        if (e.list.length > 2) {
+            moduleName = e.list[2].str;
+        }
+
+        if (!moduleCache.has(moduleName)) {
+            throw new Error("can't register an unknown module for imports");
+        }
+
+        let module = moduleCache.get(moduleName);
+
+        imports[importName] = {};
+
+        for (let [k, v] of Object.entries(module)) {
+            imports[importName][k] = v;
+        }
+
+        return;
+    }
+
     if (exprName === "invoke") {
         let [module, field, args] = getModuleAndField(e);
 
@@ -385,7 +407,7 @@ function exec(e) {
         }
         // assert_invalid tests both the decoder *and* the parser itself.
         try {
-            assertEq(WebAssembly.validate(wasmTextToBinary(moduleText)), false);
+            assertEq(WebAssembly.validate(wasmTextToBinary(moduleText)), false, "assert_invalid failed");
         } catch(e) {
             if (/wasm text error/.test(e.toString()))
                 return;
