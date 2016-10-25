@@ -81,20 +81,25 @@ deBool deIsDir(const char *filename)
 #error TODO(jmadill): support other platforms
 #endif
 
-bool FindDataDir(std::string *dataDir)
+bool FindDataDir(std::string *dataDirOut)
 {
     for (auto searchDir : g_dEQPDataSearchDirs)
     {
         if (deIsDir((std::string(searchDir) + "/gles2").c_str()))
         {
-            *dataDir = searchDir;
+            *dataDirOut = searchDir;
             return true;
         }
 
-        std::string directory = angle::GetExecutableDirectory() + "/" + searchDir;
-        if (deIsDir((directory + "/gles2").c_str()))
+        std::stringstream dirStream;
+        dirStream << angle::GetExecutableDirectory() << "/" << searchDir;
+        std::string dataDir = dirStream.str();
+        dirStream << "/gles2";
+        std::string searchPath = dirStream.str();
+
+        if (deIsDir(searchPath.c_str()))
         {
-            *dataDir = directory;
+            *dataDirOut = dataDir;
             return true;
         }
     }
