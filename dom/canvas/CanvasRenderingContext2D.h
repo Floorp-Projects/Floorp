@@ -863,13 +863,24 @@ protected:
     * Returns true if the result of a drawing operation should be
     * drawn with a filter.
     */
-  bool NeedToApplyFilter();
+  bool NeedToApplyFilter()
+  {
+    return EnsureUpdatedFilter().mPrimitives.Length() > 0;
+  }
 
   /**
    * Calls UpdateFilter if the canvas's WriteOnly state has changed between the
    * last call to UpdateFilter and now.
    */
-  const gfx::FilterDescription& EnsureUpdatedFilter();
+  const gfx::FilterDescription& EnsureUpdatedFilter() {
+    const ContextState& state = CurrentState();
+    bool isWriteOnly = mCanvasElement && mCanvasElement->IsWriteOnly();
+    if (state.filterSourceGraphicTainted != isWriteOnly) {
+      UpdateFilter();
+    }
+    MOZ_ASSERT(state.filterSourceGraphicTainted == isWriteOnly);
+    return state.filter;
+  }
 
   bool NeedToCalculateBounds()
   {
@@ -1090,11 +1101,6 @@ protected:
   };
 
   AutoTArray<ContextState, 3> mStyleStack;
-
-  // Temporary instrumentation to help debug bug 1308859
-  static CanvasRenderingContext2D* sThisContext;
-  static bool sThisContextWasDestroyed;
-  static bool sThisContextHadItsFilterUpdated;
 
   inline ContextState& CurrentState() {
     return mStyleStack[mStyleStack.Length() - 1];
