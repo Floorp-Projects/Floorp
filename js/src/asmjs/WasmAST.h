@@ -77,15 +77,13 @@ class AstRef
     uint32_t index_;
 
   public:
-    AstRef()
-      : index_(AstNoIndex)
-    {
+    AstRef() : index_(AstNoIndex) {
         MOZ_ASSERT(isInvalid());
     }
-    AstRef(AstName name, uint32_t index)
-      : name_(name), index_(index)
-    {
-        MOZ_ASSERT(name.empty() ^ (index == AstNoIndex));
+    explicit AstRef(AstName name) : name_(name), index_(AstNoIndex) {
+        MOZ_ASSERT(!isInvalid());
+    }
+    explicit AstRef(uint32_t index) : index_(index) {
         MOZ_ASSERT(!isInvalid());
     }
     bool isInvalid() const {
@@ -749,11 +747,13 @@ class AstStartFunc : public AstNode
 
 struct AstResizable
 {
+    AstName name;
     Limits limits;
     bool imported;
 
-    AstResizable(Limits limits, bool imported)
-      : limits(limits),
+    AstResizable(Limits limits, bool imported, AstName name = AstName())
+      : name(name),
+        limits(limits),
         imported(imported)
     {}
 };
@@ -803,8 +803,8 @@ class AstModule : public AstNode
     bool init() {
         return sigMap_.init();
     }
-    bool addMemory(Limits memory) {
-        return memories_.append(AstResizable(memory, false));
+    bool addMemory(AstName name, Limits memory) {
+        return memories_.append(AstResizable(memory, false, name));
     }
     bool hasMemory() const {
         return !!memories_.length();
@@ -812,8 +812,8 @@ class AstModule : public AstNode
     const AstResizableVector& memories() const {
         return memories_;
     }
-    bool addTable(Limits table) {
-        return tables_.append(AstResizable(table, false));
+    bool addTable(AstName name, Limits table) {
+        return tables_.append(AstResizable(table, false, name));
     }
     bool hasTable() const {
         return !!tables_.length();
