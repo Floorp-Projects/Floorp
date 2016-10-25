@@ -2999,7 +2999,7 @@ PreprocessHelper::Run()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 BackgroundRequestChild::
 PreprocessHelper::Cancel()
 {
