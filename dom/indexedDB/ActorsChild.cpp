@@ -1213,7 +1213,7 @@ class BackgroundRequestChild::PreprocessHelper final
   nsresult mResultCode;
 
 public:
-  PreprocessHelper(BackgroundRequestChild* aActor)
+  explicit PreprocessHelper(BackgroundRequestChild* aActor)
     : mOwningThread(NS_GetCurrentThread())
     , mActor(aActor)
     , mResultCode(NS_OK)
