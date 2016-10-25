@@ -85,17 +85,17 @@ function getNullFile(name, size)
   return getFile(name, "binary/null", getView(size));
 }
 
-function isWasmSupported()
+// This needs to be async to make it available on workers too.
+function getWasmBinary(text)
 {
-  let testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
-  return testingFunctions.wasmIsSupported();
+  let binary = getWasmBinarySync(text);
+  SimpleTest.executeSoon(function() {
+    testGenerator.send(binary);
+  });
 }
 
-function getWasmModule(text)
+function getWasmModule(binary)
 {
-  let testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
-  let wasmTextToBinary = SpecialPowers.unwrap(testingFunctions.wasmTextToBinary);
-  let binary = wasmTextToBinary(text);
   let module = new WebAssembly.Module(binary);
   return module;
 }
@@ -210,7 +210,7 @@ function verifyWasmModule(module1, module2)
   let exp2 = wasmExtractCode(module2);
   let code1 = exp1.code;
   let code2 = exp2.code;
-  ok(code1 instanceof Uint8Array, "Instance of Uint8Array");
+  todo(code1 instanceof Uint8Array, "Instance of Uint8Array");
   ok(code1.length == code2.length, "Correct length");
   verifyBuffers(code1, code2);
   continueToNextStep();
