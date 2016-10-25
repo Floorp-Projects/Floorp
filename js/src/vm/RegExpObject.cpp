@@ -10,14 +10,23 @@
 #include "mozilla/PodOperations.h"
 
 #include "jsstr.h"
+#ifdef DEBUG
+#include "jsutil.h"
+#endif
 
 #include "builtin/RegExp.h"
 #include "frontend/TokenStream.h"
+#ifdef DEBUG
+#include "irregexp/RegExpBytecode.h"
+#endif
 #include "irregexp/RegExpParser.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StringBuffer.h"
 #include "vm/TraceLogging.h"
+#ifdef DEBUG
+#include "vm/Unicode.h"
+#endif
 #include "vm/Xdr.h"
 
 #include "jsobjinlines.h"
@@ -483,6 +492,400 @@ RegExpObject::toString(JSContext* cx) const
 
     return sb.finishString();
 }
+
+#ifdef DEBUG
+bool
+RegExpShared::dumpBytecode(JSContext* cx, bool match_only, HandleLinearString input)
+{
+    CompilationMode mode = match_only ? MatchOnly : Normal;
+    if (!compileIfNecessary(cx, input, mode, ForceByteCode))
+        return false;
+
+    const uint8_t* byteCode = compilation(mode, input->hasLatin1Chars()).byteCode;
+    const uint8_t* pc = byteCode;
+
+    auto Load32Aligned = [](const uint8_t* pc) -> int32_t {
+        MOZ_ASSERT((reinterpret_cast<uintptr_t>(pc) & 3) == 0);
+        return *reinterpret_cast<const int32_t*>(pc);
+    };
+
+    auto Load16Aligned = [](const uint8_t* pc) -> int32_t {
+        MOZ_ASSERT((reinterpret_cast<uintptr_t>(pc) & 1) == 0);
+        return *reinterpret_cast<const uint16_t*>(pc);
+    };
+
+    int32_t numRegisters = Load32Aligned(pc);
+    fprintf(stderr, "numRegisters: %d\n", numRegisters);
+    pc += 4;
+
+    fprintf(stderr, "loc     op\n");
+    fprintf(stderr, "-----   --\n");
+
+    auto DumpLower = [](const char* text) {
+        while (*text) {
+            fprintf(stderr, "%c", unicode::ToLowerCase(*text));
+            text++;
+        }
+    };
+
+#define BYTECODE(NAME) \
+    case irregexp::BC_##NAME: \
+      DumpLower(#NAME);
+#define ADVANCE(NAME) \
+    fprintf(stderr, "\n"); \
+    pc += irregexp::BC_##NAME##_LENGTH; \
+    maxPc = js::Max(maxPc, pc); \
+    break;
+#define STOP(NAME) \
+    fprintf(stderr, "\n"); \
+    pc += irregexp::BC_##NAME##_LENGTH; \
+    break;
+#define JUMP(NAME, OFFSET) \
+    fprintf(stderr, "\n"); \
+    maxPc = js::Max(maxPc, byteCode + OFFSET); \
+    pc += irregexp::BC_##NAME##_LENGTH; \
+    break;
+#define BRANCH(NAME, OFFSET) \
+    fprintf(stderr, "\n"); \
+    pc += irregexp::BC_##NAME##_LENGTH; \
+    maxPc = js::Max(maxPc, js::Max(pc, byteCode + OFFSET)); \
+    break;
+
+    // Bytecode has no end marker, we need to calculate the bytecode length by
+    // tracing jumps and branches.
+    const uint8_t* maxPc = pc;
+    while (pc <= maxPc) {
+        fprintf(stderr, "%05d:  ", int32_t(pc - byteCode));
+        int32_t insn = Load32Aligned(pc);
+        switch (insn & irregexp::BYTECODE_MASK) {
+          BYTECODE(BREAK) {
+            STOP(BREAK);
+          }
+          BYTECODE(PUSH_CP) {
+            ADVANCE(PUSH_CP);
+          }
+          BYTECODE(PUSH_BT) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " %d",
+                    offset);
+            // Pushed value is used by POP_BT for jumping.
+            // Resolve maxPc here.
+            BRANCH(PUSH_BT, offset);
+          }
+          BYTECODE(PUSH_REGISTER) {
+            fprintf(stderr, " reg[%d]",
+                    insn >> irregexp::BYTECODE_SHIFT);
+            ADVANCE(PUSH_REGISTER);
+          }
+          BYTECODE(SET_REGISTER) {
+            fprintf(stderr, " reg[%d], %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    Load32Aligned(pc + 4));
+            ADVANCE(SET_REGISTER);
+          }
+          BYTECODE(ADVANCE_REGISTER) {
+            fprintf(stderr, " reg[%d], %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    Load32Aligned(pc + 4));
+            ADVANCE(ADVANCE_REGISTER);
+          }
+          BYTECODE(SET_REGISTER_TO_CP) {
+            fprintf(stderr, " reg[%d], %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    Load32Aligned(pc + 4));
+            ADVANCE(SET_REGISTER_TO_CP);
+          }
+          BYTECODE(SET_CP_TO_REGISTER) {
+            fprintf(stderr, " reg[%d]",
+                    insn >> irregexp::BYTECODE_SHIFT);
+            ADVANCE(SET_CP_TO_REGISTER);
+          }
+          BYTECODE(SET_REGISTER_TO_SP) {
+            fprintf(stderr, " reg[%d]",
+                    insn >> irregexp::BYTECODE_SHIFT);
+            ADVANCE(SET_REGISTER_TO_SP);
+          }
+          BYTECODE(SET_SP_TO_REGISTER) {
+            fprintf(stderr, " reg[%d]",
+                    insn >> irregexp::BYTECODE_SHIFT);
+            ADVANCE(SET_SP_TO_REGISTER);
+          }
+          BYTECODE(POP_CP) {
+            ADVANCE(POP_CP);
+          }
+          BYTECODE(POP_BT) {
+            // Jump is already resolved in PUSH_BT.
+            STOP(POP_BT);
+          }
+          BYTECODE(POP_REGISTER) {
+            fprintf(stderr, " reg[%d]",
+                    insn >> irregexp::BYTECODE_SHIFT);
+            ADVANCE(POP_REGISTER);
+          }
+          BYTECODE(FAIL) {
+            ADVANCE(FAIL);
+          }
+          BYTECODE(SUCCEED) {
+            ADVANCE(SUCCEED);
+          }
+          BYTECODE(ADVANCE_CP) {
+            fprintf(stderr, " %d",
+                    insn >> irregexp::BYTECODE_SHIFT);
+            ADVANCE(ADVANCE_CP);
+          }
+          BYTECODE(GOTO) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " %d",
+                    offset);
+            JUMP(GOTO, offset);
+          }
+          BYTECODE(ADVANCE_CP_AND_GOTO) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " %d, %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    offset);
+            JUMP(ADVANCE_CP_AND_GOTO, offset);
+          }
+          BYTECODE(CHECK_GREEDY) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " %d",
+                    offset);
+            BRANCH(CHECK_GREEDY, offset);
+          }
+          BYTECODE(LOAD_CURRENT_CHAR) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " %d, %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    offset);
+            BRANCH(LOAD_CURRENT_CHAR, offset);
+          }
+          BYTECODE(LOAD_CURRENT_CHAR_UNCHECKED) {
+            fprintf(stderr, " %d",
+                    insn >> irregexp::BYTECODE_SHIFT);
+            ADVANCE(LOAD_CURRENT_CHAR_UNCHECKED);
+          }
+          BYTECODE(LOAD_2_CURRENT_CHARS) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " %d, %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    offset);
+            BRANCH(LOAD_2_CURRENT_CHARS, offset);
+          }
+          BYTECODE(LOAD_2_CURRENT_CHARS_UNCHECKED) {
+            fprintf(stderr, " %d",
+                    insn >> irregexp::BYTECODE_SHIFT);
+            ADVANCE(LOAD_2_CURRENT_CHARS_UNCHECKED);
+          }
+          BYTECODE(LOAD_4_CURRENT_CHARS) {
+            ADVANCE(LOAD_4_CURRENT_CHARS);
+          }
+          BYTECODE(LOAD_4_CURRENT_CHARS_UNCHECKED) {
+            ADVANCE(LOAD_4_CURRENT_CHARS_UNCHECKED);
+          }
+          BYTECODE(CHECK_4_CHARS) {
+            int32_t offset = Load32Aligned(pc + 8);
+            fprintf(stderr, " %d, %d",
+                    Load32Aligned(pc + 4),
+                    offset);
+            BRANCH(CHECK_4_CHARS, offset);
+          }
+          BYTECODE(CHECK_CHAR) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " %d, %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    offset);
+            BRANCH(CHECK_CHAR, offset);
+          }
+          BYTECODE(CHECK_NOT_4_CHARS) {
+            int32_t offset = Load32Aligned(pc + 8);
+            fprintf(stderr, " %d, %d",
+                    Load32Aligned(pc + 4),
+                    offset);
+            BRANCH(CHECK_NOT_4_CHARS, offset);
+          }
+          BYTECODE(CHECK_NOT_CHAR) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " %d, %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    offset);
+            BRANCH(CHECK_NOT_CHAR, offset);
+          }
+          BYTECODE(AND_CHECK_4_CHARS) {
+            int32_t offset = Load32Aligned(pc + 12);
+            fprintf(stderr, " %d, %d, %d",
+                    Load32Aligned(pc + 4),
+                    Load32Aligned(pc + 8),
+                    offset);
+            BRANCH(AND_CHECK_4_CHARS, offset);
+          }
+          BYTECODE(AND_CHECK_CHAR) {
+            int32_t offset = Load32Aligned(pc + 8);
+            fprintf(stderr, " %d, %d, %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    Load32Aligned(pc + 4),
+                    offset);
+            BRANCH(AND_CHECK_CHAR, offset);
+          }
+          BYTECODE(AND_CHECK_NOT_4_CHARS) {
+            int32_t offset = Load32Aligned(pc + 12);
+            fprintf(stderr, " %d, %d, %d",
+                    Load32Aligned(pc + 4),
+                    Load32Aligned(pc + 8),
+                    offset);
+            BRANCH(AND_CHECK_NOT_4_CHARS, offset);
+          }
+          BYTECODE(AND_CHECK_NOT_CHAR) {
+            int32_t offset = Load32Aligned(pc + 8);
+            fprintf(stderr, " %d, %d, %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    Load32Aligned(pc + 4),
+                    offset);
+            BRANCH(AND_CHECK_NOT_CHAR, offset);
+          }
+          BYTECODE(MINUS_AND_CHECK_NOT_CHAR) {
+            int32_t offset = Load32Aligned(pc + 8);
+            fprintf(stderr, " %d, %d, %d, %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    Load16Aligned(pc + 4),
+                    Load16Aligned(pc + 6),
+                    offset);
+            BRANCH(MINUS_AND_CHECK_NOT_CHAR, offset);
+          }
+          BYTECODE(CHECK_CHAR_IN_RANGE) {
+            int32_t offset = Load32Aligned(pc + 8);
+            fprintf(stderr, " %d, %d, %d",
+                    Load16Aligned(pc + 4),
+                    Load16Aligned(pc + 6),
+                    offset);
+            BRANCH(CHECK_CHAR_IN_RANGE, offset);
+          }
+          BYTECODE(CHECK_CHAR_NOT_IN_RANGE) {
+            int32_t offset = Load32Aligned(pc + 8);
+            fprintf(stderr, " %d, %d, %d",
+                    Load16Aligned(pc + 4),
+                    Load16Aligned(pc + 6),
+                    offset);
+            BRANCH(CHECK_CHAR_NOT_IN_RANGE, offset);
+          }
+          BYTECODE(CHECK_BIT_IN_TABLE) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " %d, "
+                    "%02x %02x %02x %02x %02x %02x %02x %02x "
+                    "%02x %02x %02x %02x %02x %02x %02x %02x",
+                    offset,
+                    pc[8], pc[9], pc[10], pc[11],
+                    pc[12], pc[13], pc[14], pc[15],
+                    pc[16], pc[17], pc[18], pc[19],
+                    pc[20], pc[21], pc[22], pc[23]);
+            BRANCH(CHECK_BIT_IN_TABLE, offset);
+          }
+          BYTECODE(CHECK_LT) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " %d, %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    offset);
+            BRANCH(CHECK_LT, offset);
+          }
+          BYTECODE(CHECK_GT) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " %d, %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    offset);
+            BRANCH(CHECK_GT, offset);
+          }
+          BYTECODE(CHECK_REGISTER_LT) {
+            int32_t offset = Load32Aligned(pc + 8);
+            fprintf(stderr, " reg[%d], %d, %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    Load32Aligned(pc + 4),
+                    offset);
+            BRANCH(CHECK_REGISTER_LT, offset);
+          }
+          BYTECODE(CHECK_REGISTER_GE) {
+            int32_t offset = Load32Aligned(pc + 8);
+            fprintf(stderr, " reg[%d], %d, %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    Load32Aligned(pc + 4),
+                    offset);
+            BRANCH(CHECK_REGISTER_GE, offset);
+          }
+          BYTECODE(CHECK_REGISTER_EQ_POS) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " reg[%d], %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    offset);
+            BRANCH(CHECK_REGISTER_EQ_POS, offset);
+          }
+          BYTECODE(CHECK_NOT_REGS_EQUAL) {
+            int32_t offset = Load32Aligned(pc + 8);
+            fprintf(stderr, " reg[%d], %d, %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    Load32Aligned(pc + 4),
+                    offset);
+            BRANCH(CHECK_NOT_REGS_EQUAL, offset);
+          }
+          BYTECODE(CHECK_NOT_BACK_REF) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " reg[%d], %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    offset);
+            BRANCH(CHECK_NOT_BACK_REF, offset);
+          }
+          BYTECODE(CHECK_NOT_BACK_REF_NO_CASE) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " reg[%d], %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    offset);
+            BRANCH(CHECK_NOT_BACK_REF_NO_CASE, offset);
+          }
+          BYTECODE(CHECK_NOT_BACK_REF_NO_CASE_UNICODE) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " reg[%d], %d",
+                    insn >> irregexp::BYTECODE_SHIFT,
+                    offset);
+            BRANCH(CHECK_NOT_BACK_REF_NO_CASE_UNICODE, offset);
+          }
+          BYTECODE(CHECK_AT_START) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " %d",
+                    offset);
+            BRANCH(CHECK_AT_START, offset);
+          }
+          BYTECODE(CHECK_NOT_AT_START) {
+            int32_t offset = Load32Aligned(pc + 4);
+            fprintf(stderr, " %d",
+                    offset);
+            BRANCH(CHECK_NOT_AT_START, offset);
+          }
+          BYTECODE(SET_CURRENT_POSITION_FROM_END) {
+            fprintf(stderr, " %u",
+                    static_cast<uint32_t>(insn) >> irregexp::BYTECODE_SHIFT);
+            ADVANCE(SET_CURRENT_POSITION_FROM_END);
+          }
+          default:
+            MOZ_CRASH("Bad bytecode");
+        }
+    }
+
+#undef BYTECODE
+#undef ADVANCE
+#undef STOP
+#undef JUMP
+#undef BRANCH
+
+    return true;
+}
+
+bool
+RegExpObject::dumpBytecode(JSContext* cx, bool match_only, HandleLinearString input)
+{
+    RegExpGuard g(cx);
+    if (!getShared(cx, &g))
+        return false;
+
+    return g.re()->dumpBytecode(cx, match_only, input);
+}
+#endif
 
 template <typename CharT>
 static MOZ_ALWAYS_INLINE bool

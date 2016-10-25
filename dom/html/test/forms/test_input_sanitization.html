@@ -74,12 +74,7 @@ var inputTypes =
 [
   "text", "password", "search", "tel", "hidden", "checkbox", "radio",
   "submit", "image", "reset", "button", "email", "url", "number", "date",
-  "time", "range", "color", "month", "week"
-];
-
-var todoTypes =
-[
-  "datetime", "datetime-local",
+  "time", "range", "color", "month", "week",
 ];
 
 var valueModeValue =
@@ -480,19 +475,6 @@ for (type of inputTypes) {
 
   element.style.display = "none";
   checkSanitizing(element, "type=" + type + ", no frame, editor");
-
-  form.removeChild(element);
-}
-
-for (type of todoTypes) {
-  // The only meaning of this is to have a failure when new types are introduced
-  // so we will know we have to write the tests here.
-  var form = document.forms[0];
-  var element = document.createElement("input");
-  element.type = type;
-  form.appendChild(element);
-
-  todo_is(element.type, type, "");
 
   form.removeChild(element);
 }

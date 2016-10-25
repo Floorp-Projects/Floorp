@@ -7,13 +7,15 @@
 // when the page isn't an HTML one.
 
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_xbl.xul";
+const TEST_URL_2 =
+  "data:text/html;charset=utf-8,<h1 style='color:red'>HTML test page</h1>";
 
 add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
 
   info("Check the inspector toolbar");
   let button = inspector.panelDoc.querySelector("#inspector-eyedropper-toggle");
-  ok(!isVisible(button), "The button is hidden in the toolbar");
+  ok(isDisabled(button), "The button is hidden in the toolbar");
 
   info("Check the color picker");
   yield selectNode("#scale", inspector);
@@ -31,11 +33,35 @@ add_task(function* () {
 
   button = cPicker.tooltip.doc.querySelector("#eyedropper-button");
   ok(isDisabled(button), "The button is disabled in the color picker");
-});
 
-function isVisible(button) {
-  return button.getBoxQuads().length !== 0;
-}
+  info("Navigate to a HTML document");
+  let navigated = toolbox.target.once("navigate");
+  let markuploaded = inspector.once("markuploaded");
+  navigateTo(toolbox, TEST_URL_2);
+  yield navigated;
+  yield markuploaded;
+
+  info("Check the inspector toolbar in HTML document");
+  button = inspector.panelDoc.querySelector("#inspector-eyedropper-toggle");
+  ok(!isDisabled(button), "The button is enabled in the toolbar");
+
+  info("Check the color picker in HTML document");
+  // Find the color swatch in the rule-view.
+  yield selectNode("h1", inspector);
+
+  ruleView = inspector.ruleview.view;
+  ruleViewDocument = ruleView.styleDocument;
+  swatchEl = ruleViewDocument.querySelector(".ruleview-colorswatch");
+
+  info("Open the color picker in HTML document");
+  cPicker = ruleView.tooltips.colorPicker;
+  onColorPickerReady = cPicker.once("ready");
+  swatchEl.click();
+  yield onColorPickerReady;
+
+  button = cPicker.tooltip.doc.querySelector("#eyedropper-button");
+  ok(!isDisabled(button), "The button is enabled in the color picker");
+});
 
 function isDisabled(button) {
   return button.disabled;

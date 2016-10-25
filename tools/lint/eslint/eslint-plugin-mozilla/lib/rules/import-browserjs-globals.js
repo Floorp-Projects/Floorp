@@ -28,7 +28,6 @@ const SCRIPTS = [
   "browser/components/downloads/content/downloads.js",
   "browser/components/downloads/content/indicator.js",
   "browser/components/customizableui/content/panelUI.js",
-  "toolkit/obsolete/content/inlineSpellCheckUI.js",
   "toolkit/components/viewsource/content/viewSourceUtils.js",
   "browser/base/content/browser-addons.js",
   "browser/base/content/browser-ctrlTab.js",

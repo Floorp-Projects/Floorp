@@ -94,6 +94,7 @@
 
 #include "mozilla/MathAlgorithms.h"
 
+#include "asmjs/WasmBinaryFormat.h"
 #include "asmjs/WasmBinaryIterator.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmSignalHandlers.h"
@@ -2301,6 +2302,9 @@ class BaseCompiler
     void builtinInstanceMethodCall(SymbolicAddress builtin, const ABIArg& instanceArg,
                                    const FunctionCall& call)
     {
+        // Builtin method calls assumed the TLS register has been set.
+        loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
+
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Symbolic);
         masm.wasmCallBuiltinInstanceMethod(instanceArg, builtin);
     }
@@ -3305,7 +3309,7 @@ class BaseCompiler
     MOZ_MUST_USE
     bool emitCall();
     MOZ_MUST_USE
-    bool emitCallImport();
+    bool emitOldCallImport();
     MOZ_MUST_USE
     bool emitCallIndirect(bool oldStyle);
     MOZ_MUST_USE
@@ -5267,14 +5271,14 @@ BaseCompiler::emitCall()
 }
 
 bool
-BaseCompiler::emitCallImport()
+BaseCompiler::emitOldCallImport()
 {
     MOZ_ASSERT(!mg_.firstFuncDefIndex);
 
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     uint32_t funcImportIndex;
-    if (!iter_.readCallImport(&funcImportIndex))
+    if (!iter_.readCall(&funcImportIndex))
         return false;
 
     return emitCallImportCommon(lineOrBytecode, funcImportIndex);
@@ -6228,23 +6232,23 @@ BaseCompiler::emitGrowMemory()
     if (deadCode_)
         return true;
 
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+    Nothing arg;
+    if (!iter_.readGrowMemory(&arg))
+        return false;
 
     sync();
 
     uint32_t numArgs = 1;
     size_t stackSpace = stackConsumed(numArgs);
 
-    FunctionCall baselineCall(lineOrBytecode);
+    FunctionCall baselineCall(readCallSiteLineOrBytecode());
     beginCall(baselineCall, EscapesSandbox(true), IsBuiltinCall(true));
 
     ABIArg instanceArg = reserveArgument(baselineCall);
 
-    if (!emitCallArgs(SigI_, baselineCall))
-        return false;
+    startCallArgs(baselineCall, stackArgAreaSize(SigI_));
 
-    if (!iter_.readCallReturn(ExprType::I32))
-        return false;
+    passArg(baselineCall, ValType::I32, peek(0));
 
     builtinInstanceMethodCall(SymbolicAddress::GrowMemory, instanceArg, baselineCall);
 
@@ -6264,20 +6268,17 @@ BaseCompiler::emitCurrentMemory()
     if (deadCode_)
         return true;
 
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+    if (!iter_.readCurrentMemory())
+        return false;
 
     sync();
 
-    FunctionCall baselineCall(lineOrBytecode);
+    FunctionCall baselineCall(readCallSiteLineOrBytecode());
     beginCall(baselineCall, EscapesSandbox(true), IsBuiltinCall(true));
 
     ABIArg instanceArg = reserveArgument(baselineCall);
 
-    if (!emitCallArgs(Sig_, baselineCall))
-        return false;
-
-    if (!iter_.readCallReturn(ExprType::I32))
-        return false;
+    startCallArgs(baselineCall, stackArgAreaSize(Sig_));
 
     builtinInstanceMethodCall(SymbolicAddress::CurrentMemory, instanceArg, baselineCall);
 
@@ -6386,8 +6387,8 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitCallIndirect(/* oldStyle = */ false));
           case Expr::OldCallIndirect:
             CHECK_NEXT(emitCallIndirect(/* oldStyle = */ true));
-          case Expr::CallImport:
-            CHECK_NEXT(emitCallImport());
+          case Expr::OldCallImport:
+            CHECK_NEXT(emitOldCallImport());
 
           // Locals and globals
           case Expr::GetLocal:

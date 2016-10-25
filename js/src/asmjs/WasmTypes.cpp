@@ -62,8 +62,6 @@ Val::writePayload(uint8_t* dst) const
       case ValType::B32x4:
         memcpy(dst, &u, jit::Simd128DataSize);
         return;
-      case ValType::Limit:
-        MOZ_CRASH("Bad value type");
     }
 }
 

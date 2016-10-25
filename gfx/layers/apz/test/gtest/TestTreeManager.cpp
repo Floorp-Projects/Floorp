@@ -15,7 +15,7 @@ TEST_F(APZCTreeManagerTester, ScrollablePaintedLayers) {
   // both layers have the same scrollId
   SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID);
   SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID);
-  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+  manager->UpdateHitTestingTree(0, root, false, 0, 0);
 
   TestAsyncPanZoomController* nullAPZC = nullptr;
   // so they should have the same APZC
@@ -26,13 +26,13 @@ TEST_F(APZCTreeManagerTester, ScrollablePaintedLayers) {
 
   // Change the scrollId of layers[1], and verify the APZC changes
   SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1);
-  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+  manager->UpdateHitTestingTree(0, root, false, 0, 0);
   EXPECT_NE(ApzcOf(layers[1]), ApzcOf(layers[2]));
 
   // Change the scrollId of layers[2] to match that of layers[1], ensure we get the same
   // APZC for both again
   SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 1);
-  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+  manager->UpdateHitTestingTree(0, root, false, 0, 0);
   EXPECT_EQ(ApzcOf(layers[1]), ApzcOf(layers[2]));
 }
 
@@ -40,7 +40,7 @@ TEST_F(APZCTreeManagerTester, Bug1068268) {
   CreatePotentiallyLeakingTree();
   ScopedLayerTreeRegistration registration(manager, 0, root, mcc);
 
-  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+  manager->UpdateHitTestingTree(0, root, false, 0, 0);
   RefPtr<HitTestingTreeNode> root = manager->GetRootNode();
   RefPtr<HitTestingTreeNode> node2 = root->GetFirstChild()->GetFirstChild();
   RefPtr<HitTestingTreeNode> node5 = root->GetLastChild()->GetLastChild();
@@ -61,7 +61,7 @@ TEST_F(APZCTreeManagerTester, Bug1068268) {
 TEST_F(APZCTreeManagerTester, Bug1194876) {
   CreateBug1194876Tree();
   ScopedLayerTreeRegistration registration(manager, 0, root, mcc);
-  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+  manager->UpdateHitTestingTree(0, root, false, 0, 0);
 
   uint64_t blockId;
   nsTArray<ScrollableLayerGuid> targets;
@@ -99,7 +99,7 @@ TEST_F(APZCTreeManagerTester, Bug1198900) {
   // crash.
   CreateSimpleDTCScrollingLayer();
   ScopedLayerTreeRegistration registration(manager, 0, root, mcc);
-  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+  manager->UpdateHitTestingTree(0, root, false, 0, 0);
 
   ScreenPoint origin(100, 50);
   ScrollWheelInput swi(MillisecondsSinceStartup(mcc->Time()), mcc->Time(), 0,

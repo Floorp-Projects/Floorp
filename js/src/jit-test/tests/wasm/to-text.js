@@ -162,7 +162,7 @@ runTest(`
   (func $test
     (call $func1
       (call_indirect $type1 (i32.const 2) (i32.const 1))
-      (call_import $import1 (f32.const 1.0))
+      (call $import1 (f32.const 1.0))
     )
   )
   (export "test" $test)

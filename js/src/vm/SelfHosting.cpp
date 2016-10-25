@@ -2567,6 +2567,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),
     JS_FN("regexp_test_no_statics", regexp_test_no_statics, 2,0),
     JS_FN("regexp_construct_no_sticky", regexp_construct_no_sticky, 2,0),
+    JS_FN("regexp_clone", regexp_clone, 1,0),
 
     JS_FN("IsModule", intrinsic_IsInstanceOfBuiltin<ModuleObject>, 1, 0),
     JS_FN("CallModuleMethodIfWrapped",

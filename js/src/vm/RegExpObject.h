@@ -236,6 +236,10 @@ class RegExpShared
     }
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
+
+#ifdef DEBUG
+    bool dumpBytecode(JSContext* cx, bool match_only, HandleLinearString input);
+#endif
 };
 
 /*
@@ -489,6 +493,10 @@ class RegExpObject : public NativeObject
     //       exposed to script, because it requires that the "lastIndex"
     //       property be writable.
     void initAndZeroLastIndex(HandleAtom source, RegExpFlag flags, ExclusiveContext* cx);
+
+#ifdef DEBUG
+    bool dumpBytecode(JSContext* cx, bool match_only, HandleLinearString input);
+#endif
 
   private:
     /*

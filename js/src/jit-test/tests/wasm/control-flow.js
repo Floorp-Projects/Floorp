@@ -22,11 +22,11 @@ assertEq(wasmEvalText('(module (func (result i32) (if i32 (i32.const 0) (i32.con
 // Even if we don't yield, sub expressions types still have to match.
 wasmFailValidateText('(module (func (param f32) (if i32 (i32.const 42) (i32.const 1) (get_local 0))) (export "" 0))', mismatchError('f32', 'i32'));
 wasmFailValidateText('(module (func (if i32 (i32.const 42) (i32.const 1) (i32.const 0))) (export "" 0))', /unused values not explicitly dropped by end of block/);
-assertEq(wasmEvalText('(module (func (drop (if i32 (i32.const 42) (i32.const 1) (i32.const 0)))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (param f32) (if (i32.const 42) (drop (i32.const 1)) (drop (get_local 0)))) (export "" 0))').exports[""](13.37), undefined);
+wasmFullPass('(module (func (drop (if i32 (i32.const 42) (i32.const 1) (i32.const 0)))) (export "run" 0))', undefined);
+wasmFullPass('(module (func (param f32) (if (i32.const 42) (drop (i32.const 1)) (drop (get_local 0)))) (export "run" 0))', undefined, {}, 13.37);
 
 // Sub-expression values are returned
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
     (func
         (result i32)
         (if i32
@@ -46,50 +46,50 @@ assertEq(wasmEvalText(`(module
             (i32.const 0)
         )
     )
-    (export "" 0)
-)`).exports[""](), 2);
+    (export "run" 0)
+)`, 2);
 
 // The if (resp. else) branch is taken iff the condition is true (resp. false)
 counter = 0;
 var imports = { "":{inc() { counter++ }} };
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
     (import "" "inc" (result i32))
     (func
         (result i32)
         (if i32
             (i32.const 42)
             (i32.const 1)
-            (call_import 0)
+            (call 0)
         )
     )
-    (export "" 1)
-)`, imports).exports[""](), 1);
+    (export "run" 1)
+)`, 1, imports);
 assertEq(counter, 0);
 
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
     (import "" "inc" (result i32))
     (func
         (result i32)
         (if i32
             (i32.const 0)
-            (call_import 0)
+            (call 0)
             (i32.const 1)
         )
     )
-    (export "" 1)
-)`, imports).exports[""](), 1);
+    (export "run" 1)
+)`, 1, imports);
 assertEq(counter, 0);
 
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
     (import "" "inc" (result i32))
     (func
         (if
             (i32.const 0)
-            (drop (call_import 0))
+            (drop (call 0))
         )
     )
-    (export "" 1)
-)`, imports).exports[""](), undefined);
+    (export "run" 1)
+)`, undefined, imports);
 assertEq(counter, 0);
 
 assertEq(wasmEvalText(`(module
@@ -97,14 +97,14 @@ assertEq(wasmEvalText(`(module
     (func
         (if
             (i32.const 1)
-            (drop (call_import 0))
+            (drop (call 0))
         )
     )
     (export "" 1)
 )`, imports).exports[""](), undefined);
 assertEq(counter, 1);
 
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
     (func
         (result i32)
         (if i32
@@ -113,24 +113,24 @@ assertEq(wasmEvalText(`(module
             (br 0 (i32.const 1))
         )
     )
-    (export "" 0)
-)`).exports[""](), 1);
+    (export "run" 0)
+)`, 1);
 assertEq(counter, 1);
 
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
     (func
         (if
             (i32.const 1)
             (br 0)
         )
     )
-    (export "" 0)
-)`).exports[""](), undefined);
+    (export "run" 0)
+)`, undefined);
 assertEq(counter, 1);
 
 // One can chain if with if/if
 counter = 0;
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
     (import "" "inc" (result i32))
     (func
         (result i32)
@@ -142,18 +142,18 @@ assertEq(wasmEvalText(`(module
                     (i32.const 3)
                     (if i32
                         (i32.const 0)
-                        (call_import 0)
+                        (call 0)
                         (i32.const 42)
                     )
-                    (call_import 0)
+                    (call 0)
                 )
-                (call_import 0)
+                (call 0)
             )
-            (call_import 0)
+            (call 0)
         )
     )
-    (export "" 1)
-)`, imports).exports[""](), 42);
+    (export "run" 1)
+)`, 42, imports);
 assertEq(counter, 0);
 
 // "if" doesn't return an expression value
@@ -169,11 +169,11 @@ wasmEvalText('(module (func (if (i32.const 1) (drop (i32.const 0)) (if (i32.cons
 // ----------------------------------------------------------------------------
 // return
 
-assertEq(wasmEvalText('(module (func (return)) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (result i32) (return (i32.const 1))) (export "" 0))').exports[""](), 1);
-assertEq(wasmEvalText('(module (func (if (return) (i32.const 0))) (export "" 0))').exports[""](), undefined);
+wasmFullPass('(module (func (return)) (export "run" 0))', undefined);
+wasmFullPass('(module (func (result i32) (return (i32.const 1))) (export "run" 0))', 1);
+wasmFullPass('(module (func (if (return) (i32.const 0))) (export "run" 0))', undefined);
 wasmFailValidateText('(module (func (result i32) (return)) (export "" 0))', /popping value from empty stack/);
-assertEq(wasmEvalText('(module (func (return (i32.const 1))) (export "" 0))').exports[""](), undefined);
+wasmFullPass('(module (func (return (i32.const 1))) (export "run" 0))', undefined);
 wasmFailValidateText('(module (func (result f32) (return (i32.const 1))) (export "" 0))', mismatchError("i32", "f32"));
 wasmFailValidateText('(module (func (result i32) (return)) (export "" 0))', /popping value from empty stack/);
 
@@ -207,27 +207,27 @@ wasmFailValidateText(`(module (func (result i32)
   )
 ) (export "" 0))`, mismatchError("void", "i32"));
 
-assertEq(wasmEvalText(`(module (func (block $out (br_if $out (br 0)))) (export "" 0))`).exports[""](), undefined);
+wasmFullPass(`(module (func (block $out (br_if $out (br 0)))) (export "run" 0))`, undefined);
 
-assertEq(wasmEvalText('(module (func (br 0)) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (block (br 0))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (block $l (br $l))) (export "" 0))').exports[""](), undefined);
+wasmFullPass('(module (func (br 0)) (export "run" 0))', undefined);
+wasmFullPass('(module (func (block (br 0))) (export "run" 0))', undefined);
+wasmFullPass('(module (func (block $l (br $l))) (export "run" 0))', undefined);
 
-assertEq(wasmEvalText('(module (func (block (block (br 1)))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (block $l (block (br $l)))) (export "" 0))').exports[""](), undefined);
+wasmFullPass('(module (func (block (block (br 1)))) (export "run" 0))', undefined);
+wasmFullPass('(module (func (block $l (block (br $l)))) (export "run" 0))', undefined);
 
-assertEq(wasmEvalText('(module (func (block $l (block $m (br $l)))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (block $l (block $m (br $m)))) (export "" 0))').exports[""](), undefined);
+wasmFullPass('(module (func (block $l (block $m (br $l)))) (export "run" 0))', undefined);
+wasmFullPass('(module (func (block $l (block $m (br $m)))) (export "run" 0))', undefined);
 
-assertEq(wasmEvalText(`(module (func (result i32)
+wasmFullPass(`(module (func (result i32)
   (block
     (br 0)
     (return (i32.const 0))
   )
   (return (i32.const 1))
-) (export "" 0))`).exports[""](), 1);
+) (export "run" 0))`, 1);
 
-assertEq(wasmEvalText(`(module (func (result i32)
+wasmFullPass(`(module (func (result i32)
   (block
     (block
       (br 0)
@@ -236,9 +236,9 @@ assertEq(wasmEvalText(`(module (func (result i32)
     (return (i32.const 1))
   )
   (return (i32.const 2))
-) (export "" 0))`).exports[""](), 1);
+) (export "run" 0))`, 1);
 
-assertEq(wasmEvalText(`(module (func (result i32)
+wasmFullPass(`(module (func (result i32)
   (block $outer
     (block $inner
       (br $inner)
@@ -247,7 +247,7 @@ assertEq(wasmEvalText(`(module (func (result i32)
     (return (i32.const 1))
   )
   (return (i32.const 2))
-) (export "" 0))`).exports[""](), 1);
+) (export "run" 0))`, 1);
 
 var notcalled = false;
 var called = false;
@@ -255,20 +255,20 @@ var imports = {"": {
     notcalled() {notcalled = true},
     called() {called = true}
 }};
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
 (import "" "notcalled")
 (import "" "called")
 (func
   (block
     (return (br 0))
-    (call_import 0)
+    (call 0)
   )
-  (call_import 1)
-) (export "" 2))`, imports).exports[""](), undefined);
+  (call 1)
+) (export "run" 2))`, undefined, imports);
 assertEq(notcalled, false);
 assertEq(called, true);
 
-assertEq(wasmEvalText(`(module (func
+wasmFullPass(`(module (func
   (block
     (i32.add
       (i32.const 0)
@@ -276,9 +276,9 @@ assertEq(wasmEvalText(`(module (func
     )
   )
   (return)
-) (export "" 0))`).exports[""](), undefined);
+) (export "run" 0))`, undefined);
 
-assertEq(wasmEvalText(`(module (func (result i32)
+wasmFullPass(`(module (func (result i32)
   (block
     (if
       (i32.const 1)
@@ -287,13 +287,13 @@ assertEq(wasmEvalText(`(module (func (result i32)
     )
   )
   (return (i32.const 1))
-) (export "" 0))`).exports[""](), 1);
+) (export "run" 0))`, 1);
 
-assertEq(wasmEvalText('(module (func (br_if 0 (i32.const 1))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (br_if 0 (i32.const 0))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (block (br_if 0 (i32.const 1)))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (block (br_if 0 (i32.const 0)))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (block $l (br_if $l (i32.const 1)))) (export "" 0))').exports[""](), undefined);
+wasmFullPass('(module (func (br_if 0 (i32.const 1))) (export "run" 0))', undefined);
+wasmFullPass('(module (func (br_if 0 (i32.const 0))) (export "run" 0))', undefined);
+wasmFullPass('(module (func (block (br_if 0 (i32.const 1)))) (export "run" 0))', undefined);
+wasmFullPass('(module (func (block (br_if 0 (i32.const 0)))) (export "run" 0))', undefined);
+wasmFullPass('(module (func (block $l (br_if $l (i32.const 1)))) (export "run" 0))', undefined);
 
 var isNonZero = wasmEvalText(`(module (func (result i32) (param i32)
   (block
@@ -317,8 +317,8 @@ wasmFailValidateText('(module (func (result i32) (block f32 (br 0 (f32.const 42)
 wasmFailValidateText(`(module (func (result i32) (param i32) (block (if i32 (get_local 0) (br 0 (i32.const 42))))) (export "" 0))`, /if without else with a result value/);
 wasmFailValidateText(`(module (func (result i32) (param i32) (block i32 (if (get_local 0) (drop (i32.const 42))) (br 0 (f32.const 42)))) (export "" 0))`, mismatchError("f32", "i32"));
 
-assertEq(wasmEvalText('(module (func (result i32) (br 0 (i32.const 42)) (i32.const 13)) (export "" 0))').exports[""](), 42);
-assertEq(wasmEvalText('(module (func (result i32) (block i32 (br 0 (i32.const 42)) (i32.const 13))) (export "" 0))').exports[""](), 42);
+wasmFullPass('(module (func (result i32) (br 0 (i32.const 42)) (i32.const 13)) (export "run" 0))', 42);
+wasmFullPass('(module (func (result i32) (block i32 (br 0 (i32.const 42)) (i32.const 13))) (export "run" 0))', 42);
 
 wasmFailValidateText('(module (func) (func (block i32 (br 0 (call 0)) (i32.const 13))) (export "" 0))', /popping value from empty stack/);
 wasmFailValidateText('(module (func) (func (block i32 (br_if 0 (call 0) (i32.const 1)) (i32.const 13))) (export "" 0))', /popping value from empty stack/);
@@ -377,11 +377,11 @@ var f = wasmEvalText(`(module (func (param i32) (result i32) (i32.add (i32.const
 assertEq(f(0), 0);
 assertEq(f(1), 100);
 
-assertEq(wasmEvalText(`(module (func (result i32) (block i32 (br 0 (return (i32.const 42))) (i32.const 0))) (export "" 0))`).exports[""](), 42);
-assertEq(wasmEvalText(`(module (func (result i32) (block i32 (return (br 0 (i32.const 42))))) (export "" 0))`).exports[""](), 42);
-assertEq(wasmEvalText(`(module (func (result i32) (block i32 (return (br 0 (i32.const 42))) (i32.const 0))) (export "" 0))`).exports[""](), 42);
+wasmFullPass(`(module (func (result i32) (block i32 (br 0 (return (i32.const 42))) (i32.const 0))) (export "run" 0))`, 42);
+wasmFullPass(`(module (func (result i32) (block i32 (return (br 0 (i32.const 42))))) (export "run" 0))`, 42);
+wasmFullPass(`(module (func (result i32) (block i32 (return (br 0 (i32.const 42))) (i32.const 0))) (export "run" 0))`, 42);
 
-assertEq(wasmEvalText(`(module (func (result f32) (drop (block i32 (br 0 (i32.const 0)))) (block f32 (br 0 (f32.const 42)))) (export "" 0))`).exports[""](), 42);
+wasmFullPass(`(module (func (result f32) (drop (block i32 (br 0 (i32.const 0)))) (block f32 (br 0 (f32.const 42)))) (export "run" 0))`, 42);
 
 var called = 0;
 var imports = {
@@ -398,11 +398,11 @@ var f = wasmEvalText(`(module
   (block $outer
    (if
     (get_local 0)
-    (block (call_import 0 (i32.const 13)) (br $outer))
+    (block (call 0 (i32.const 13)) (br $outer))
    )
    (if
     (i32.eqz (get_local 0))
-    (block (call_import 1 (i32.const 37)) (br $outer))
+    (block (call 1 (i32.const 37)) (br $outer))
    )
   )
   (i32.const 42)
@@ -414,9 +414,9 @@ assertEq(f(1), 42);
 assertEq(called, 0);
 
 // br/br_if and loop
-assertEq(wasmEvalText(`(module (func (param i32) (result i32) (loop $out $in i32 (br $out (get_local 0)))) (export "" 0))`).exports[""](1), 1);
-assertEq(wasmEvalText(`(module (func (param i32) (result i32) (loop $in (br 1 (get_local 0)))) (export "" 0))`).exports[""](1), 1);
-assertEq(wasmEvalText(`(module (func (param i32) (result i32) (block $out i32 (loop $in i32 (br $out (get_local 0))))) (export "" 0))`).exports[""](1), 1);
+wasmFullPass(`(module (func (param i32) (result i32) (loop $out $in i32 (br $out (get_local 0)))) (export "run" 0))`, 1, {}, 1);
+wasmFullPass(`(module (func (param i32) (result i32) (loop $in (br 1 (get_local 0)))) (export "run" 0))`, 1, {}, 1);
+wasmFullPass(`(module (func (param i32) (result i32) (block $out i32 (loop $in i32 (br $out (get_local 0))))) (export "run" 0))`, 1, {}, 1);
 
 wasmFailValidateText(`(module (func (param i32) (result i32)
   (loop $out $in
@@ -428,7 +428,7 @@ wasmFailValidateText(`(module (func (param i32) (result i32)
   )
 ) (export "" 0))`, /unused values not explicitly dropped by end of block/);
 
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
  (func
   (result i32)
   (local i32)
@@ -440,9 +440,9 @@ assertEq(wasmEvalText(`(module
   )
   )
  )
-(export "" 0))`).exports[""](), 7);
+(export "run" 0))`, 7);
 
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
  (func
   (result i32)
   (local i32)
@@ -454,25 +454,25 @@ assertEq(wasmEvalText(`(module
    )
   )
  )
-(export "" 0))`).exports[""](), 7);
+(export "run" 0))`, 7);
 
 // ----------------------------------------------------------------------------
 // loop
 
 wasmFailValidateText('(module (func (loop (br 2))))', DEPTH_OUT_OF_BOUNDS);
 
-assertEq(wasmEvalText('(module (func (loop )) (export "" 0))').exports[""](), undefined);
 wasmFailValidateText('(module (func (result i32) (drop (loop (i32.const 2))) (i32.const 1)) (export "" 0))', /unused values not explicitly dropped by end of block/);
-assertEq(wasmEvalText('(module (func (result i32) (loop (drop (i32.const 2))) (i32.const 1)) (export "" 0))').exports[""](), 1);
+wasmFullPass('(module (func (loop)) (export "run" 0))', undefined);
+wasmFullPass('(module (func (result i32) (loop (drop (i32.const 2))) (i32.const 1)) (export "run" 0))', 1);
 
-assertEq(wasmEvalText('(module (func (loop (br 1))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (loop $a (br 1))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (loop $a (br_if $a (i32.const 0)))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (loop $a $b (br $a))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (block $a (loop $b (br $a)))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (result i32) (loop i32 (i32.const 1))) (export "" 0))').exports[""](), 1);
+wasmFullPass('(module (func (loop (br 1))) (export "run" 0))', undefined);
+wasmFullPass('(module (func (loop $a (br 1))) (export "run" 0))', undefined);
+wasmFullPass('(module (func (loop $a (br_if $a (i32.const 0)))) (export "run" 0))', undefined);
+wasmFullPass('(module (func (loop $a $b (br $a))) (export "run" 0))', undefined);
+wasmFullPass('(module (func (block $a (loop $b (br $a)))) (export "run" 0))', undefined);
+wasmFullPass('(module (func (result i32) (loop i32 (i32.const 1))) (export "run" 0))', 1);
 
-assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+wasmFullPass(`(module (func (result i32) (local i32)
   (loop
     $break $continue
     (if
@@ -483,9 +483,9 @@ assertEq(wasmEvalText(`(module (func (result i32) (local i32)
     (br $continue)
   )
   (return (get_local 0))
-) (export "" 0))`).exports[""](), 6);
+) (export "run" 0))`, 6);
 
-assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+wasmFullPass(`(module (func (result i32) (local i32)
   (block
     $break
     (loop
@@ -499,9 +499,9 @@ assertEq(wasmEvalText(`(module (func (result i32) (local i32)
     )
   )
   (return (get_local 0))
-) (export "" 0))`).exports[""](), 6);
+) (export "run" 0))`, 6);
 
-assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+wasmFullPass(`(module (func (result i32) (local i32)
   (loop
     $break $continue
     (br_if
@@ -512,9 +512,9 @@ assertEq(wasmEvalText(`(module (func (result i32) (local i32)
     (br $continue)
   )
   (return (get_local 0))
-) (export "" 0))`).exports[""](), 6);
+) (export "run" 0))`, 6);
 
-assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+wasmFullPass(`(module (func (result i32) (local i32)
   (block
     $break
     (loop
@@ -528,9 +528,9 @@ assertEq(wasmEvalText(`(module (func (result i32) (local i32)
     )
   )
   (return (get_local 0))
-) (export "" 0))`).exports[""](), 6);
+) (export "run" 0))`, 6);
 
-assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+wasmFullPass(`(module (func (result i32) (local i32)
   (loop
     $break $continue
     (set_local 0 (i32.add (get_local 0) (i32.const 1)))
@@ -540,9 +540,9 @@ assertEq(wasmEvalText(`(module (func (result i32) (local i32)
     )
   )
   (return (get_local 0))
-) (export "" 0))`).exports[""](), 6);
+) (export "run" 0))`, 6);
 
-assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+wasmFullPass(`(module (func (result i32) (local i32)
   (block
     $break
     (loop
@@ -555,9 +555,9 @@ assertEq(wasmEvalText(`(module (func (result i32) (local i32)
     )
   )
   (return (get_local 0))
-) (export "" 0))`).exports[""](), 6);
+) (export "run" 0))`, 6);
 
-assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+wasmFullPass(`(module (func (result i32) (local i32)
   (loop
     $break $continue
     (br_if
@@ -571,9 +571,9 @@ assertEq(wasmEvalText(`(module (func (result i32) (local i32)
     (return (i32.const 42))
   )
   (return (get_local 0))
-) (export "" 0))`).exports[""](), 6);
+) (export "run" 0))`, 6);
 
-assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+wasmFullPass(`(module (func (result i32) (local i32)
   (block
     $break
     (loop
@@ -590,9 +590,9 @@ assertEq(wasmEvalText(`(module (func (result i32) (local i32)
     )
   )
   (return (get_local 0))
-) (export "" 0))`).exports[""](), 6);
+) (export "run" 0))`, 6);
 
-assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+wasmFullPass(`(module (func (result i32) (local i32)
   (loop
     $break $continue
     (set_local 0 (i32.add (get_local 0) (i32.const 1)))
@@ -605,9 +605,9 @@ assertEq(wasmEvalText(`(module (func (result i32) (local i32)
     (br $break)
   )
   (return (get_local 0))
-) (export "" 0))`).exports[""](), 6);
+) (export "run" 0))`, 6);
 
-assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+wasmFullPass(`(module (func (result i32) (local i32)
   (block
     $break
     (loop
@@ -623,7 +623,7 @@ assertEq(wasmEvalText(`(module (func (result i32) (local i32)
     )
   )
   (return (get_local 0))
-) (export "" 0))`).exports[""](), 6);
+) (export "run" 0))`, 6);
 
 // ----------------------------------------------------------------------------
 // br_table
@@ -638,23 +638,23 @@ wasmFailValidateText('(module (func (loop (br_table 2 0 (i32.const 0)))))', DEPT
 wasmFailValidateText('(module (func (loop (br_table 0 2 (i32.const 0)))))', DEPTH_OUT_OF_BOUNDS);
 wasmFailValidateText('(module (func (loop (br_table 0 (f32.const 0)))))', mismatchError("f32", "i32"));
 
-assertEq(wasmEvalText(`(module (func (result i32) (param i32)
+wasmFullPass(`(module (func (result i32) (param i32)
   (block $default
    (br_table $default (get_local 0))
    (return (i32.const 0))
   )
   (return (i32.const 1))
-) (export "" 0))`).exports[""](), 1);
+) (export "run" 0))`, 1);
 
-assertEq(wasmEvalText(`(module (func (result i32) (param i32)
+wasmFullPass(`(module (func (result i32) (param i32)
   (block $default
    (br_table $default (return (i32.const 1)))
    (return (i32.const 0))
   )
   (return (i32.const 2))
-) (export "" 0))`).exports[""](), 1);
+) (export "run" 0))`, 1);
 
-assertEq(wasmEvalText(`(module (func (result i32) (param i32)
+wasmFullPass(`(module (func (result i32) (param i32)
   (block $outer
    (block $inner
     (br_table $inner (get_local 0))
@@ -663,7 +663,7 @@ assertEq(wasmEvalText(`(module (func (result i32) (param i32)
    (return (i32.const 1))
   )
   (return (i32.const 2))
-) (export "" 0))`).exports[""](), 1);
+) (export "run" 0))`, 1);
 
 var f = wasmEvalText(`(module (func (result i32) (param i32)
   (block $0
@@ -703,7 +703,7 @@ wasmFailValidateText(`(module
  )
 (export "" 0))`, mismatchError("i32", "f32"));
 
-assertEq(wasmEvalText(`(module (func (result i32) (block $default i32 (br_table $default (i32.const 42) (i32.const 1)))) (export "" 0))`).exports[""](), 42);
+wasmFullPass(`(module (func (result i32) (block $default i32 (br_table $default (i32.const 42) (i32.const 1)))) (export "run" 0))`, 42);
 
 var f = wasmEvalText(`(module (func (param i32) (result i32)
   (i32.add
