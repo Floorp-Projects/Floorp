@@ -167,6 +167,22 @@ nsFileStreamBase::GetLastModified(int64_t* _retval)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFileStreamBase::GetFileDescriptor(PRFileDesc** _retval)
+{
+    nsresult rv = DoPendingOpen();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!mFD) {
+        return NS_BASE_STREAM_CLOSED;
+    }
+
+    *_retval = mFD;
+    return NS_OK;
+}
+
 nsresult
 nsFileStreamBase::Close()
 {
