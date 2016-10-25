@@ -31,13 +31,9 @@ LazyLogModule gCubebLog("cubeb");
 
 void CubebLogCallback(const char* aFmt, ...)
 {
-  const int cubeLogSize = 256;
-  char buffer[cubeLogSize];
-
   va_list arglist;
   va_start(arglist, aFmt);
-  vsnprintf (buffer, cubeLogSize, aFmt, arglist);
-  MOZ_LOG(gCubebLog, LogLevel::Verbose, ("%s", buffer));
+  MOZ_LOG(gCubebLog, LogLevel::Verbose, (aFmt, arglist));
   va_end(arglist);
 }
 
