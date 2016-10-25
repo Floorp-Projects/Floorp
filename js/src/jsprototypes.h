@@ -92,7 +92,7 @@
     real(RuntimeError,          21,     InitViaClassSpec,       ERROR_CLASP(JSEXN_WASMRUNTIMEERROR)) \
     real(Iterator,              22,     InitLegacyIteratorClass,OCLASP(PropertyIterator)) \
     real(StopIteration,         23,     InitStopIterationClass, OCLASP(StopIteration)) \
-    real(ArrayBuffer,           24,     InitArrayBufferClass,   &js::ArrayBufferObject::protoClass) \
+    real(ArrayBuffer,           24,     InitViaClassSpec,       OCLASP(ArrayBuffer)) \
     real(Int8Array,             25,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Int8)) \
     real(Uint8Array,            26,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8)) \
     real(Int16Array,            27,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Int16)) \
