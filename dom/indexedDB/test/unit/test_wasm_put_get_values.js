@@ -63,6 +63,25 @@ function testSteps()
 
   is(request.result, wasmData.key, "Got correct key");
 
+  info("Getting wasm");
+
+  request = objectStore.get(wasmData.key);
+  request.onsuccess = continueToNextStepSync;
+  yield undefined;
+
+  verifyWasmModule(request.result, wasmData.wasm);
+  yield undefined;
+
+  info("Getting wasm in new transaction");
+
+  request = db.transaction([objectStoreName])
+              .objectStore(objectStoreName).get(wasmData.key);
+  request.onsuccess = continueToNextStepSync;
+  yield undefined;
+
+  verifyWasmModule(request.result, wasmData.wasm);
+  yield undefined;
+
   finishTest();
   yield undefined;
 }
