@@ -33,7 +33,7 @@ TEST_F(APZCSnappingTester, Bug1265510)
   root->SetScrollMetadata(metadata);
 
   UniquePtr<ScopedLayerTreeRegistration> registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+  manager->UpdateHitTestingTree(0, root, false, 0, 0);
 
   TestAsyncPanZoomController* outer = ApzcOf(layers[0]);
   TestAsyncPanZoomController* inner = ApzcOf(layers[1]);

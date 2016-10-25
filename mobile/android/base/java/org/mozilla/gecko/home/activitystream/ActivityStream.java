@@ -64,8 +64,8 @@ public class ActivityStream extends FrameLayout {
         tileMargin = resources.getDimensionPixelSize(R.dimen.activity_stream_base_margin);
     }
 
-    void setOnUrlOpenListener(HomePager.OnUrlOpenListener listener) {
-        adapter.setOnUrlOpenListener(listener);
+    void setOnUrlOpenListeners(HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
+        adapter.setOnUrlOpenListeners(onUrlOpenListener, onUrlOpenInBackgroundListener);
     }
 
     public void load(LoaderManager lm) {

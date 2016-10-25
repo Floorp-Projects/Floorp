@@ -28,14 +28,13 @@
 //
 // Various stubs for the open-source version of Snappy.
 
-#ifndef UTIL_SNAPPY_OPENSOURCE_SNAPPY_STUBS_INTERNAL_H_
-#define UTIL_SNAPPY_OPENSOURCE_SNAPPY_STUBS_INTERNAL_H_
+#ifndef THIRD_PARTY_SNAPPY_OPENSOURCE_SNAPPY_STUBS_INTERNAL_H_
+#define THIRD_PARTY_SNAPPY_OPENSOURCE_SNAPPY_STUBS_INTERNAL_H_
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include <iostream>
 #include <string>
 
 #include <assert.h>
@@ -95,88 +94,9 @@ namespace snappy {
 static const uint32 kuint32max = static_cast<uint32>(0xFFFFFFFF);
 static const int64 kint64max = static_cast<int64>(0x7FFFFFFFFFFFFFFFLL);
 
-// Logging.
-
-#define LOG(level) LogMessage()
-#define VLOG(level) true ? (void)0 : \
-    snappy::LogMessageVoidify() & snappy::LogMessage()
-
-class LogMessage {
- public:
-  LogMessage() { }
-  ~LogMessage() {
-    cerr << endl;
-  }
-
-  LogMessage& operator<<(const std::string& msg) {
-    cerr << msg;
-    return *this;
-  }
-  LogMessage& operator<<(int x) {
-    cerr << x;
-    return *this;
-  }
-};
-
-// Asserts, both versions activated in debug mode only,
-// and ones that are always active.
-
-#define CRASH_UNLESS(condition) \
-    PREDICT_TRUE(condition) ? (void)0 : \
-    snappy::LogMessageVoidify() & snappy::LogMessageCrash()
-
-class LogMessageCrash : public LogMessage {
- public:
-  LogMessageCrash() { }
-  ~LogMessageCrash() {
-    cerr << endl;
-    abort();
-  }
-};
-
-// This class is used to explicitly ignore values in the conditional
-// logging macros.  This avoids compiler warnings like "value computed
-// is not used" and "statement has no effect".
-
-class LogMessageVoidify {
- public:
-  LogMessageVoidify() { }
-  // This has to be an operator with a precedence lower than << but
-  // higher than ?:
-  void operator&(const LogMessage&) { }
-};
-
-#define CHECK(cond) CRASH_UNLESS(cond)
-#define CHECK_LE(a, b) CRASH_UNLESS((a) <= (b))
-#define CHECK_GE(a, b) CRASH_UNLESS((a) >= (b))
-#define CHECK_EQ(a, b) CRASH_UNLESS((a) == (b))
-#define CHECK_NE(a, b) CRASH_UNLESS((a) != (b))
-#define CHECK_LT(a, b) CRASH_UNLESS((a) < (b))
-#define CHECK_GT(a, b) CRASH_UNLESS((a) > (b))
-
-#ifdef NDEBUG
-
-#define DCHECK(cond) CRASH_UNLESS(true)
-#define DCHECK_LE(a, b) CRASH_UNLESS(true)
-#define DCHECK_GE(a, b) CRASH_UNLESS(true)
-#define DCHECK_EQ(a, b) CRASH_UNLESS(true)
-#define DCHECK_NE(a, b) CRASH_UNLESS(true)
-#define DCHECK_LT(a, b) CRASH_UNLESS(true)
-#define DCHECK_GT(a, b) CRASH_UNLESS(true)
-
-#else
-
-#define DCHECK(cond) CHECK(cond)
-#define DCHECK_LE(a, b) CHECK_LE(a, b)
-#define DCHECK_GE(a, b) CHECK_GE(a, b)
-#define DCHECK_EQ(a, b) CHECK_EQ(a, b)
-#define DCHECK_NE(a, b) CHECK_NE(a, b)
-#define DCHECK_LT(a, b) CHECK_LT(a, b)
-#define DCHECK_GT(a, b) CHECK_GT(a, b)
-
-#endif
-
 // Potentially unaligned loads and stores.
+
+// x86 and PowerPC can simply do these loads and stores native.
 
 #if defined(__i386__) || defined(__x86_64__) || defined(__powerpc__)
 
@@ -187,6 +107,86 @@ class LogMessageVoidify {
 #define UNALIGNED_STORE16(_p, _val) (*reinterpret_cast<uint16 *>(_p) = (_val))
 #define UNALIGNED_STORE32(_p, _val) (*reinterpret_cast<uint32 *>(_p) = (_val))
 #define UNALIGNED_STORE64(_p, _val) (*reinterpret_cast<uint64 *>(_p) = (_val))
+
+// ARMv7 and newer support native unaligned accesses, but only of 16-bit
+// and 32-bit values (not 64-bit); older versions either raise a fatal signal,
+// do an unaligned read and rotate the words around a bit, or do the reads very
+// slowly (trip through kernel mode). There's no simple #define that says just
+// “ARMv7 or higher”, so we have to filter away all ARMv5 and ARMv6
+// sub-architectures.
+//
+// This is a mess, but there's not much we can do about it.
+//
+// To further complicate matters, only LDR instructions (single reads) are
+// allowed to be unaligned, not LDRD (two reads) or LDM (many reads). Unless we
+// explicitly tell the compiler that these accesses can be unaligned, it can and
+// will combine accesses. On armcc, the way to signal this is done by accessing
+// through the type (uint32 __packed *), but GCC has no such attribute
+// (it ignores __attribute__((packed)) on individual variables). However,
+// we can tell it that a _struct_ is unaligned, which has the same effect,
+// so we do that.
+
+#elif defined(__arm__) && \
+      !defined(__ARM_ARCH_4__) && \
+      !defined(__ARM_ARCH_4T__) && \
+      !defined(__ARM_ARCH_5__) && \
+      !defined(__ARM_ARCH_5T__) && \
+      !defined(__ARM_ARCH_5TE__) && \
+      !defined(__ARM_ARCH_5TEJ__) && \
+      !defined(__ARM_ARCH_6__) && \
+      !defined(__ARM_ARCH_6J__) && \
+      !defined(__ARM_ARCH_6K__) && \
+      !defined(__ARM_ARCH_6Z__) && \
+      !defined(__ARM_ARCH_6ZK__) && \
+      !defined(__ARM_ARCH_6T2__)
+
+#if __GNUC__
+#define ATTRIBUTE_PACKED __attribute__((__packed__))
+#else
+#define ATTRIBUTE_PACKED
+#endif
+
+namespace base {
+namespace internal {
+
+struct Unaligned16Struct {
+  uint16 value;
+  uint8 dummy;  // To make the size non-power-of-two.
+} ATTRIBUTE_PACKED;
+
+struct Unaligned32Struct {
+  uint32 value;
+  uint8 dummy;  // To make the size non-power-of-two.
+} ATTRIBUTE_PACKED;
+
+}  // namespace internal
+}  // namespace base
+
+#define UNALIGNED_LOAD16(_p) \
+    ((reinterpret_cast<const ::snappy::base::internal::Unaligned16Struct *>(_p))->value)
+#define UNALIGNED_LOAD32(_p) \
+    ((reinterpret_cast<const ::snappy::base::internal::Unaligned32Struct *>(_p))->value)
+
+#define UNALIGNED_STORE16(_p, _val) \
+    ((reinterpret_cast< ::snappy::base::internal::Unaligned16Struct *>(_p))->value = \
+         (_val))
+#define UNALIGNED_STORE32(_p, _val) \
+    ((reinterpret_cast< ::snappy::base::internal::Unaligned32Struct *>(_p))->value = \
+         (_val))
+
+// TODO(user): NEON supports unaligned 64-bit loads and stores.
+// See if that would be more efficient on platforms supporting it,
+// at least for copies.
+
+inline uint64 UNALIGNED_LOAD64(const void *p) {
+  uint64 t;
+  memcpy(&t, p, sizeof t);
+  return t;
+}
+
+inline void UNALIGNED_STORE64(void *p, uint64 v) {
+  memcpy(p, &v, sizeof v);
+}
 
 #else
 
@@ -224,6 +224,20 @@ inline void UNALIGNED_STORE64(void *p, uint64 v) {
 }
 
 #endif
+
+// This can be more efficient than UNALIGNED_LOAD64 + UNALIGNED_STORE64
+// on some platforms, in particular ARM.
+inline void UnalignedCopy64(const void *src, void *dst) {
+  if (sizeof(void *) == 8) {
+    UNALIGNED_STORE64(dst, UNALIGNED_LOAD64(src));
+  } else {
+    const char *src_char = reinterpret_cast<const char *>(src);
+    char *dst_char = reinterpret_cast<char *>(dst);
+
+    UNALIGNED_STORE32(dst_char, UNALIGNED_LOAD32(src_char));
+    UNALIGNED_STORE32(dst_char + 4, UNALIGNED_LOAD32(src_char + 4));
+  }
+}
 
 // The following guarantees declaration of the byte swap functions.
 #ifdef WORDS_BIGENDIAN
@@ -511,4 +525,4 @@ inline char* string_as_array(string* str) {
 
 }  // namespace snappy
 
-#endif  // UTIL_SNAPPY_OPENSOURCE_SNAPPY_STUBS_INTERNAL_H_
+#endif  // THIRD_PARTY_SNAPPY_OPENSOURCE_SNAPPY_STUBS_INTERNAL_H_

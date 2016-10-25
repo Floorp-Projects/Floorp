@@ -2776,6 +2776,13 @@ BacktrackingAllocator::trySplitBeforeFirstRegisterUse(LiveBundle* bundle, LiveBu
     for (LiveRange::BundleLinkIterator iter = bundle->rangesBegin(); iter; iter++) {
         LiveRange* range = LiveRange::get(*iter);
 
+        if (!conflict || range->from() > conflictEnd) {
+            if (range->hasDefinition() && isRegisterDefinition(range)) {
+                firstRegisterFrom = range->from();
+                break;
+            }
+        }
+
         for (UsePositionIterator iter(range->usesBegin()); iter; iter++) {
             LNode* ins = insData[iter->pos];
 
@@ -2786,6 +2793,8 @@ BacktrackingAllocator::trySplitBeforeFirstRegisterUse(LiveBundle* bundle, LiveBu
                 }
             }
         }
+        if (firstRegisterFrom.bits())
+            break;
     }
 
     if (!firstRegisterFrom.bits()) {

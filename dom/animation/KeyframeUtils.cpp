@@ -1008,11 +1008,8 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
     aDocument->GetDocumentURI()->GetSpec(baseString);
 
     RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
-      Servo_ParseProperty(
-        reinterpret_cast<const uint8_t*>(name.get()), name.Length(),
-        reinterpret_cast<const uint8_t*>(value.get()), value.Length(),
-        reinterpret_cast<const uint8_t*>(baseString.get()), baseString.Length(),
-        base, referrer, principal).Consume();
+      Servo_ParseProperty(&name, &value, &baseString,
+                          base, referrer, principal).Consume();
 
     if (servoDeclarationBlock) {
       result.mServoDeclarationBlock = servoDeclarationBlock.forget();

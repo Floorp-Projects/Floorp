@@ -29,7 +29,7 @@ function linearModule(min, max, ops) {
     return res;
   }).join("\n")
 
-  text =
+  let text =
     `(module
        (memory ${min} ${max})
          ` + (min != 0 ? `(data (i32.const 0) "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
@@ -39,14 +39,10 @@ function linearModule(min, max, ops) {
        (func (result i32)
          (drop ` + opsText + `)
          (current_memory)
-       ) (export "" 0))`;
+       ) (export "run" 0))`;
 
-  return wasmEvalText(text);
-}
-
-function assertOOB(lambda) {
-  assertErrorMessage(lambda, Error, /invalid or out-of-range index/);
+  return text;
 }
 
 // Just grow some memory
-assertEq(linearModule(3,5, [["CM", 3]]).exports[""](), 3);
+wasmFullPass(linearModule(3,5, [["CM", 3]]), 3);
