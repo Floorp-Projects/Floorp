@@ -504,9 +504,12 @@ PresentationConnection::DoReceiveMessage(const nsACString& aData, bool aIsBinary
   nsresult rv;
   if (aIsBinary) {
     if (mBinaryType == PresentationConnectionBinaryType::Blob) {
-      rv = nsContentUtils::CreateBlobBuffer(cx, GetOwner(), aData, &jsData);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+      RefPtr<Blob> blob =
+        Blob::CreateStringBlob(GetOwner(), aData, EmptyString());
+      MOZ_ASSERT(blob);
+
+      if (!ToJSValue(cx, blob, &jsData)) {
+        return NS_ERROR_FAILURE;
       }
     } else if (mBinaryType == PresentationConnectionBinaryType::Arraybuffer) {
       JS::Rooted<JSObject*> arrayBuf(cx);
