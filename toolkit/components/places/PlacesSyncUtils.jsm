@@ -128,7 +128,8 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
       return undefined;
     }
     let orderedChildrenGuids = childSyncIds.map(BookmarkSyncUtils.syncIdToGuid);
-    return PlacesUtils.bookmarks.reorder(parentGuid, orderedChildrenGuids);
+    return PlacesUtils.bookmarks.reorder(parentGuid, orderedChildrenGuids,
+                                         { source: SOURCE_SYNC });
   }),
 
   /**
