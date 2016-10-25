@@ -11,6 +11,10 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 
+namespace JS {
+struct WasmModule;
+} // namespace JS
+
 namespace mozilla {
 namespace dom {
 
@@ -36,6 +40,7 @@ struct StructuredCloneFile
 
   RefPtr<Blob> mBlob;
   RefPtr<IDBMutableFile> mMutableFile;
+  RefPtr<JS::WasmModule> mWasmModule;
   RefPtr<FileInfo> mFileInfo;
   FileType mType;
   // This is currently specific to eWasmCompiled files.

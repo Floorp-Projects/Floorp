@@ -50,6 +50,7 @@ if (!this.runTest) {
 
       enableTesting();
       enableExperimental();
+      enableWasm();
     }
 
     Cu.importGlobalProperties(["indexedDB", "Blob", "File", "FileReader"]);
@@ -62,6 +63,7 @@ if (!this.runTest) {
 function finishTest()
 {
   if (SpecialPowers.isMainProcess()) {
+    resetWasm();
     resetExperimental();
     resetTesting();
 
@@ -212,6 +214,11 @@ function resetTesting()
 function enableWasm()
 {
   SpecialPowers.setBoolPref("javascript.options.wasm", true);
+}
+
+function resetWasm()
+{
+  SpecialPowers.clearUserPref("javascript.options.wasm");
 }
 
 function gc()
@@ -374,10 +381,23 @@ function isWasmSupported()
   return testingFunctions.wasmIsSupported();
 }
 
-function getWasmModule(text)
+function getWasmBinarySync(text)
 {
   let testingFunctions = Cu.getJSTestingFunctions();
   let binary = testingFunctions.wasmTextToBinary(text);
+  return binary;
+}
+
+function getWasmBinary(text)
+{
+  let binary = getWasmBinarySync(text);
+  executeSoon(function() {
+    testGenerator.send(binary);
+  });
+}
+
+function getWasmModule(binary)
+{
   let module = new WebAssembly.Module(binary);
   return module;
 }

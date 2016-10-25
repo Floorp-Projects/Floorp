@@ -29,6 +29,10 @@ class nsIEventTarget;
 struct nsID;
 struct PRThread;
 
+namespace JS {
+struct WasmModule;
+} // namespace JS
+
 namespace mozilla {
 namespace ipc {
 
@@ -640,7 +644,11 @@ class BackgroundRequestChild final
   friend class BackgroundVersionChangeTransactionChild;
   friend IDBTransaction;
 
+  class PreprocessHelper;
+
   RefPtr<IDBTransaction> mTransaction;
+  RefPtr<PreprocessHelper> mPreprocessHelper;
+  nsAutoPtr<nsTArray<RefPtr<JS::WasmModule>>> mModules;
 
 private:
   // Only created by IDBTransaction.
@@ -650,6 +658,12 @@ private:
   // Only destroyed by BackgroundTransactionChild or
   // BackgroundVersionChangeTransactionChild.
   ~BackgroundRequestChild();
+
+  void
+  OnPreprocessFinished(const nsTArray<RefPtr<JS::WasmModule>>& aModules);
+
+  void
+  OnPreprocessFailed(nsresult aErrorCode);
 
   void
   HandleResponse(nsresult aResponse);
@@ -678,6 +692,9 @@ private:
 
   virtual bool
   Recv__delete__(const RequestResponse& aResponse) override;
+
+  virtual bool
+  RecvPreprocess(const PreprocessParams& aParams) override;
 };
 
 class BackgroundCursorChild final

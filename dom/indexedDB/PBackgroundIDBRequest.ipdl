@@ -106,12 +106,51 @@ union RequestResponse
   IndexCountResponse;
 };
 
+struct WasmModulePreprocessInfo
+{
+  SerializedStructuredCloneFile[] files;
+};
+
+struct ObjectStoreGetPreprocessParams
+{
+  WasmModulePreprocessInfo preprocessInfo;
+};
+
+union PreprocessParams
+{
+  ObjectStoreGetPreprocessParams;
+};
+
+struct ObjectStoreGetPreprocessResponse
+{
+};
+
+// The nsresult is used if an error occurs for any preprocess request type.
+// The specific response types are sent on success.
+union PreprocessResponse
+{
+  nsresult;
+  ObjectStoreGetPreprocessResponse;
+};
+
 protocol PBackgroundIDBRequest
 {
   manager PBackgroundIDBTransaction or PBackgroundIDBVersionChangeTransaction;
 
+parent:
+  async Continue(PreprocessResponse response);
+
 child:
   async __delete__(RequestResponse response);
+
+  // Preprocess is used in cases where response processing needs to do something
+  // asynchronous off of the child actor's thread before returning the actual
+  // result to user code. This is necessary because RequestResponse processing
+  // occurs in __delete__ and the PBackgroundIDBRequest implementations'
+  // life-cycles are controlled by IPC and are not otherwise reference counted.
+  // By introducing the (optional) Preprocess/Continue steps reference counting
+  // or the introduction of additional runnables are avoided.
+  async Preprocess(PreprocessParams params);
 };
 
 } // namespace indexedDB

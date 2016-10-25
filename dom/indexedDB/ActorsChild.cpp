@@ -34,6 +34,8 @@
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIEventTarget.h"
+#include "nsIFileStreams.h"
+#include "nsNetCID.h"
 #include "nsPIDOMWindow.h"
 #include "nsThreadUtils.h"
 #include "nsTraceRefcnt.h"
@@ -590,22 +592,23 @@ protected:
 
 void
 DeserializeStructuredCloneFiles(
-                        IDBDatabase* aDatabase,
-                        const SerializedStructuredCloneReadInfo& aCloneReadInfo,
-                        nsTArray<StructuredCloneFile>& aFiles)
+                IDBDatabase* aDatabase,
+                const nsTArray<SerializedStructuredCloneFile>& aSerializedFiles,
+                const nsTArray<RefPtr<JS::WasmModule>>* aModules,
+                nsTArray<StructuredCloneFile>& aFiles)
 {
+  MOZ_ASSERT_IF(aModules, !aModules->IsEmpty());
   MOZ_ASSERT(aFiles.IsEmpty());
 
-  const nsTArray<SerializedStructuredCloneFile>& serializedFiles =
-    aCloneReadInfo.files();
+  if (!aSerializedFiles.IsEmpty()) {
+    uint32_t moduleIndex = 0;
 
-  if (!serializedFiles.IsEmpty()) {
-    const uint32_t count = serializedFiles.Length();
+    const uint32_t count = aSerializedFiles.Length();
     aFiles.SetCapacity(count);
 
     for (uint32_t index = 0; index < count; index++) {
       const SerializedStructuredCloneFile& serializedFile =
-        serializedFiles[index];
+        aSerializedFiles[index];
 
       const BlobOrMutableFile& blobOrMutableFile = serializedFile.file();
 
@@ -687,6 +690,20 @@ DeserializeStructuredCloneFiles(
         }
 
         case StructuredCloneFile::eWasmBytecode: {
+          if (aModules) {
+            MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
+
+            StructuredCloneFile* file = aFiles.AppendElement();
+            MOZ_ASSERT(file);
+
+            file->mType = serializedFile.type();
+
+            MOZ_ASSERT(moduleIndex < aModules->Length());
+            file->mWasmModule = aModules->ElementAt(moduleIndex);
+
+            break;
+          }
+
           MOZ_ASSERT(blobOrMutableFile.type() ==
                        BlobOrMutableFile::TPBlobChild);
 
@@ -710,6 +727,20 @@ DeserializeStructuredCloneFiles(
         }
 
         case StructuredCloneFile::eWasmCompiled: {
+          if (aModules) {
+            MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
+
+            StructuredCloneFile* file = aFiles.AppendElement();
+            MOZ_ASSERT(file);
+
+            file->mType = serializedFile.type();
+
+            MOZ_ASSERT(moduleIndex < aModules->Length());
+            file->mWasmModule = aModules->ElementAt(moduleIndex++);
+
+            break;
+          }
+
           MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t ||
                      blobOrMutableFile.type() ==
                        BlobOrMutableFile::TPBlobChild);
@@ -908,6 +939,27 @@ DispatchSuccessEvent(ResultHelper* aResultHelper,
       internalEvent->mFlags.mExceptionWasRaised) {
     transaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
   }
+}
+
+PRFileDesc*
+GetFileDescriptorFromStream(nsIInputStream* aStream)
+{
+  MOZ_ASSERT(aStream);
+
+  nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(aStream);
+  if (NS_WARN_IF(!fileMetadata)) {
+    return nullptr;
+  }
+
+  PRFileDesc* fileDesc;
+  nsresult rv = fileMetadata->GetFileDescriptor(&fileDesc);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(fileDesc);
+
+  return fileDesc;
 }
 
 class WorkerPermissionChallenge;
@@ -1142,6 +1194,79 @@ WorkerPermissionRequestChildProcessActor::Recv__delete__(
 }
 
 } // namespace
+
+/*******************************************************************************
+ * Actor class declarations
+ ******************************************************************************/
+
+// CancelableRunnable is used to make workers happy.
+class BackgroundRequestChild::PreprocessHelper final
+  : public CancelableRunnable
+{
+  typedef std::pair<nsCOMPtr<nsIInputStream>,
+                    nsCOMPtr<nsIInputStream>> StreamPair;
+
+  nsCOMPtr<nsIEventTarget> mOwningThread;
+  nsTArray<StreamPair> mStreamPairs;
+  nsTArray<RefPtr<JS::WasmModule>> mModules;
+  BackgroundRequestChild* mActor;
+  nsresult mResultCode;
+
+public:
+  PreprocessHelper(BackgroundRequestChild* aActor)
+    : mOwningThread(NS_GetCurrentThread())
+    , mActor(aActor)
+    , mResultCode(NS_OK)
+  {
+    AssertIsOnOwningThread();
+    MOZ_ASSERT(aActor);
+    aActor->AssertIsOnOwningThread();
+  }
+
+  bool
+  IsOnOwningThread() const
+  {
+    MOZ_ASSERT(mOwningThread);
+
+    bool current;
+    return NS_SUCCEEDED(mOwningThread->IsOnCurrentThread(&current)) && current;
+  }
+
+  void
+  AssertIsOnOwningThread() const
+  {
+    MOZ_ASSERT(IsOnOwningThread());
+  }
+
+  void
+  ClearActor()
+  {
+    AssertIsOnOwningThread();
+
+    mActor = nullptr;
+  }
+
+  nsresult
+  Init(const nsTArray<StructuredCloneFile>& aFiles);
+
+  nsresult
+  Dispatch();
+
+private:
+  ~PreprocessHelper()
+  { }
+
+  void
+  RunOnOwningThread();
+
+  nsresult
+  RunOnStreamTransportThread();
+
+  NS_DECL_NSIRUNNABLE
+
+  virtual nsresult
+  Cancel() override;
+};
 
 /*******************************************************************************
  * Local class implementations
@@ -2412,6 +2537,36 @@ BackgroundRequestChild::~BackgroundRequestChild()
 }
 
 void
+BackgroundRequestChild::OnPreprocessFinished(
+                               const nsTArray<RefPtr<JS::WasmModule>>& aModules)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!aModules.IsEmpty());
+  MOZ_ASSERT(mPreprocessHelper);
+  MOZ_ASSERT(!mModules);
+
+  mModules = new nsTArray<RefPtr<JS::WasmModule>>;
+  *mModules = Move(aModules);
+
+  MOZ_ALWAYS_TRUE(SendContinue(ObjectStoreGetPreprocessResponse()));
+
+  mPreprocessHelper = nullptr;
+}
+
+void
+BackgroundRequestChild::OnPreprocessFailed(nsresult aErrorCode)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_FAILED(aErrorCode));
+  MOZ_ASSERT(mPreprocessHelper);
+  MOZ_ASSERT(!mModules);
+
+  MOZ_ALWAYS_TRUE(SendContinue(aErrorCode));
+
+  mPreprocessHelper = nullptr;
+}
+
+void
 BackgroundRequestChild::HandleResponse(nsresult aResponse)
 {
   AssertIsOnOwningThread();
@@ -2455,7 +2610,8 @@ BackgroundRequestChild::HandleResponse(
   StructuredCloneReadInfo cloneReadInfo(Move(serializedCloneInfo));
 
   DeserializeStructuredCloneFiles(mTransaction->Database(),
-                                  aResponse,
+                                  aResponse.files(),
+                                  mModules,
                                   cloneReadInfo.mFiles);
 
   ResultHelper helper(mRequest, mTransaction, &cloneReadInfo);
@@ -2487,7 +2643,10 @@ BackgroundRequestChild::HandleResponse(
 
       // Get the files
       nsTArray<StructuredCloneFile> files;
-      DeserializeStructuredCloneFiles(database, serializedCloneInfo, files);
+      DeserializeStructuredCloneFiles(database,
+                                      serializedCloneInfo.files(),
+                                      nullptr,
+                                      files);
 
       // Move relevant data into the cloneReadInfo
       *cloneReadInfo = Move(serializedCloneInfo);
@@ -2528,6 +2687,12 @@ BackgroundRequestChild::ActorDestroy(ActorDestroyReason aWhy)
   AssertIsOnOwningThread();
 
   MaybeCollectGarbageOnIPCMessage();
+
+  if (mPreprocessHelper) {
+    mPreprocessHelper->ClearActor();
+
+    mPreprocessHelper = nullptr;
+  }
 
   if (mTransaction) {
     mTransaction->AssertIsOnOwningThread();
@@ -2627,6 +2792,218 @@ BackgroundRequestChild::Recv__delete__(const RequestResponse& aResponse)
   mTransaction = nullptr;
 
   return true;
+}
+
+bool
+BackgroundRequestChild::RecvPreprocess(const PreprocessParams& aParams)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mTransaction);
+
+  MaybeCollectGarbageOnIPCMessage();
+
+  IDBDatabase* database = mTransaction->Database();
+
+  if (aParams.type() != PreprocessParams::TObjectStoreGetPreprocessParams) {
+    MOZ_ASSERT(false, "Fix me!");
+    return false;
+  }
+
+  ObjectStoreGetPreprocessParams params =
+    aParams.get_ObjectStoreGetPreprocessParams();
+
+  nsTArray<StructuredCloneFile> files;
+  DeserializeStructuredCloneFiles(database,
+                                  params.preprocessInfo().files(),
+                                  nullptr,
+                                  files);
+
+  mPreprocessHelper = new PreprocessHelper(this);
+
+  nsresult rv = mPreprocessHelper->Init(files);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return SendContinue(rv);
+  }
+
+  rv = mPreprocessHelper->Dispatch();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return SendContinue(rv);
+  }
+
+  return true;
+}
+
+nsresult
+BackgroundRequestChild::
+PreprocessHelper::Init(const nsTArray<StructuredCloneFile>& aFiles)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!aFiles.IsEmpty());
+
+  uint32_t count = aFiles.Length();
+
+  // We should receive even number of files.
+  MOZ_ASSERT(count % 2 == 0);
+
+  // Let's process it as pairs.
+  count = count / 2;
+
+  nsTArray<StreamPair> streamPairs;
+  for (uint32_t index = 0; index < count; index++) {
+    uint32_t bytecodeIndex = index * 2;
+    uint32_t compiledIndex = bytecodeIndex + 1;
+
+    const StructuredCloneFile& bytecodeFile = aFiles[bytecodeIndex];
+    const StructuredCloneFile& compiledFile = aFiles[compiledIndex];
+
+    MOZ_ASSERT(bytecodeFile.mType == StructuredCloneFile::eWasmBytecode);
+    MOZ_ASSERT(bytecodeFile.mBlob);
+    MOZ_ASSERT(compiledFile.mType == StructuredCloneFile::eWasmCompiled);
+
+    ErrorResult errorResult;
+
+    nsCOMPtr<nsIInputStream> bytecodeStream;
+    bytecodeFile.mBlob->GetInternalStream(getter_AddRefs(bytecodeStream),
+                                          errorResult);
+    if (NS_WARN_IF(errorResult.Failed())) {
+      return errorResult.StealNSResult();
+    }
+
+    nsCOMPtr<nsIInputStream> compiledStream;
+    if (compiledFile.mBlob) {
+      compiledFile.mBlob->GetInternalStream(getter_AddRefs(compiledStream),
+                                            errorResult);
+      if (NS_WARN_IF(errorResult.Failed())) {
+        return errorResult.StealNSResult();
+      }
+    }
+
+    streamPairs.AppendElement(StreamPair(bytecodeStream, compiledStream));
+  }
+
+  mStreamPairs = Move(streamPairs);
+
+  return NS_OK;
+}
+
+nsresult
+BackgroundRequestChild::
+PreprocessHelper::Dispatch()
+{
+  AssertIsOnOwningThread();
+
+  // The stream transport service is used for asynchronous processing. It has
+  // a threadpool with a high cap of 25 threads. Fortunately, the service can
+  // be used on workers too.
+  nsCOMPtr<nsIEventTarget> target =
+    do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  MOZ_ASSERT(target);
+
+  nsresult rv = target->Dispatch(this, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+void
+BackgroundRequestChild::
+PreprocessHelper::RunOnOwningThread()
+{
+  AssertIsOnOwningThread();
+
+  if (mActor) {
+    if (NS_SUCCEEDED(mResultCode)) {
+      mActor->OnPreprocessFinished(mModules);
+    } else {
+      mActor->OnPreprocessFailed(mResultCode);
+    }
+  }
+}
+
+nsresult
+BackgroundRequestChild::
+PreprocessHelper::RunOnStreamTransportThread()
+{
+  MOZ_ASSERT(!IsOnOwningThread());
+  MOZ_ASSERT(!mStreamPairs.IsEmpty());
+  MOZ_ASSERT(mModules.IsEmpty());
+
+  const uint32_t count = mStreamPairs.Length();
+
+  for (uint32_t index = 0; index < count; index++) {
+    const StreamPair& streamPair = mStreamPairs[index];
+
+    const nsCOMPtr<nsIInputStream>& bytecodeStream = streamPair.first;
+
+    MOZ_ASSERT(bytecodeStream);
+
+    PRFileDesc* bytecodeFileDesc = GetFileDescriptorFromStream(bytecodeStream);
+    if (NS_WARN_IF(!bytecodeFileDesc)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    const nsCOMPtr<nsIInputStream>& compiledStream = streamPair.second;
+
+    PRFileDesc* compiledFileDesc;
+    if (compiledStream) {
+      compiledFileDesc = GetFileDescriptorFromStream(compiledStream);
+      if (NS_WARN_IF(!bytecodeFileDesc)) {
+        return NS_ERROR_FAILURE;
+      }
+    } else {
+      compiledFileDesc = nullptr;
+    }
+
+    JS::BuildIdCharVector buildId;
+    bool ok = GetBuildId(&buildId);
+    if (NS_WARN_IF(!ok)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    RefPtr<JS::WasmModule> module = JS::DeserializeWasmModule(bytecodeFileDesc,
+                                                              compiledFileDesc,
+                                                              Move(buildId),
+                                                              nullptr,
+                                                              0,
+                                                              0);
+    if (NS_WARN_IF(!module)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    mModules.AppendElement(module);
+  }
+
+  mStreamPairs.Clear();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BackgroundRequestChild::
+PreprocessHelper::Run()
+{
+  if (IsOnOwningThread()) {
+    RunOnOwningThread();
+  } else {
+    nsresult rv = RunOnStreamTransportThread();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_ASSERT(mResultCode == NS_OK);
+      mResultCode = rv;
+    }
+
+    MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BackgroundRequestChild::
+PreprocessHelper::Cancel()
+{
+  return NS_OK;
 }
 
 /*******************************************************************************
@@ -2826,7 +3203,8 @@ BackgroundCursorChild::HandleResponse(
     cloneReadInfo.mDatabase = mTransaction->Database();
 
     DeserializeStructuredCloneFiles(mTransaction->Database(),
-                                    response.cloneInfo(),
+                                    response.cloneInfo().files(),
+                                    nullptr,
                                     cloneReadInfo.mFiles);
 
     RefPtr<IDBCursor> newCursor;
@@ -2889,7 +3267,8 @@ BackgroundCursorChild::HandleResponse(const IndexCursorResponse& aResponse)
   cloneReadInfo.mDatabase = mTransaction->Database();
 
   DeserializeStructuredCloneFiles(mTransaction->Database(),
-                                  aResponse.cloneInfo(),
+                                  aResponse.cloneInfo().files(),
+                                  nullptr,
                                   cloneReadInfo.mFiles);
 
   RefPtr<IDBCursor> newCursor;

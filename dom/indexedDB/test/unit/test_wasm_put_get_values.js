@@ -3,8 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var disableWorkerTest = "Need a way to set temporary prefs from a worker";
-
 var testGenerator = testSteps();
 
 function testSteps()
@@ -16,18 +14,15 @@ function testSteps()
 
   const wasmData = { key: 1, wasm: null };
 
-  if (this.window) {
-    SpecialPowers.pushPrefEnv({ "set": [["javascript.options.wasm", true]] },
-                              continueToNextStep);
-    yield undefined;
-  } else {
-    enableWasm();
-  }
-
   if (!isWasmSupported()) {
     finishTest();
     yield undefined;
   }
+
+  getWasmBinary('(module (func (nop)))');
+  let binary = yield undefined;
+
+  wasmData.wasm = getWasmModule(binary);
 
   info("Opening database");
 
@@ -52,8 +47,6 @@ function testSteps()
   db.onerror = errorHandler;
 
   info("Storing wasm");
-
-  wasmData.wasm = getWasmModule('(module (func (nop)))');
 
   let objectStore = db.transaction([objectStoreName], "readwrite")
                       .objectStore(objectStoreName);
