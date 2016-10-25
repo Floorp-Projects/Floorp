@@ -1543,10 +1543,10 @@ pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https:
 // Whether or not the browser should scan for unsubmitted
 // crash reports, and then show a notification for submitting
 // those reports.
-#ifdef RELEASE_OR_BETA
-pref("browser.crashReports.unsubmittedCheck.enabled", false);
-#else
+#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.crashReports.unsubmittedCheck.enabled", true);
+#else
+pref("browser.crashReports.unsubmittedCheck.enabled", false);
 #endif
 
 // chancesUntilSuppress is how many times we'll show the unsubmitted
