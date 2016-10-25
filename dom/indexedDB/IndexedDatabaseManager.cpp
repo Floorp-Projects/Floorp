@@ -133,11 +133,17 @@ NS_DEFINE_IID(kIDBRequestIID, PRIVATE_IDBREQUEST_IID);
 
 const uint32_t kDeleteTimeoutMs = 1000;
 
+// The threshold we use for structured clone data storing.
+// Anything smaller than the threshold is compressed and stored in the database.
+// Anything larger is compressed and stored outside the database.
+const int32_t kDefaultDataThresholdBytes = 1024 * 1024; // 1MB
+
 #define IDB_PREF_BRANCH_ROOT "dom.indexedDB."
 
 const char kTestingPref[] = IDB_PREF_BRANCH_ROOT "testing";
 const char kPrefExperimental[] = IDB_PREF_BRANCH_ROOT "experimental";
 const char kPrefFileHandle[] = "dom.fileHandle.enabled";
+const char kDataThresholdPref[] = IDB_PREF_BRANCH_ROOT "dataThreshold";
 
 #define IDB_PREF_LOGGING_BRANCH_ROOT IDB_PREF_BRANCH_ROOT "logging."
 
@@ -159,6 +165,7 @@ Atomic<bool> gClosed(false);
 Atomic<bool> gTestingMode(false);
 Atomic<bool> gExperimentalFeaturesEnabled(false);
 Atomic<bool> gFileHandleEnabled(false);
+Atomic<int32_t> gDataThresholdBytes(0);
 
 class DeleteFilesRunnable final
   : public nsIRunnable
@@ -242,6 +249,17 @@ AtomicBoolPrefChangedCallback(const char* aPrefName, void* aClosure)
   MOZ_ASSERT(aClosure);
 
   *static_cast<Atomic<bool>*>(aClosure) = Preferences::GetBool(aPrefName);
+}
+
+void
+DataThresholdPrefChangedCallback(const char* aPrefName, void* aClosure)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aPrefName, kDataThresholdPref));
+  MOZ_ASSERT(!aClosure);
+
+  gDataThresholdBytes =
+    Preferences::GetInt(aPrefName, kDefaultDataThresholdBytes);
 }
 
 } // namespace
@@ -381,6 +399,9 @@ IndexedDatabaseManager::Init()
   Preferences::RegisterCallbackAndCall(LoggingModePrefChangedCallback,
                                        kPrefLoggingEnabled);
 
+  Preferences::RegisterCallbackAndCall(DataThresholdPrefChangedCallback,
+                                       kDataThresholdPref);
+
 #ifdef ENABLE_INTL_API
   const nsAdoptingCString& acceptLang =
     Preferences::GetLocalizedCString("intl.accept_languages");
@@ -440,6 +461,9 @@ IndexedDatabaseManager::Destroy()
 #endif
   Preferences::UnregisterCallback(LoggingModePrefChangedCallback,
                                   kPrefLoggingEnabled);
+
+  Preferences::UnregisterCallback(DataThresholdPrefChangedCallback,
+                                  kDataThresholdPref);
 
   delete this;
 }
@@ -740,6 +764,16 @@ IndexedDatabaseManager::IsFileHandleEnabled()
              "initialized!");
 
   return gFileHandleEnabled;
+}
+
+// static
+uint32_t
+IndexedDatabaseManager::DataThreshold()
+{
+  MOZ_ASSERT(gDBManager,
+             "DataThreshold() called before indexedDB has been initialized!");
+
+  return gDataThresholdBytes;
 }
 
 void
