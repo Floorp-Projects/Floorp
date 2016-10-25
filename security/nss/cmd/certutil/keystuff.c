@@ -393,9 +393,6 @@ typedef struct curveNameTagPairStr {
     SECOidTag curveOidTag;
 } CurveNameTagPair;
 
-#define DEFAULT_CURVE_OID_TAG SEC_OID_SECG_EC_SECP192R1
-/* #define DEFAULT_CURVE_OID_TAG  SEC_OID_SECG_EC_SECP160R1 */
-
 static CurveNameTagPair nameTagPair[] =
     {
       { "sect163k1", SEC_OID_SECG_EC_SECT163K1 },

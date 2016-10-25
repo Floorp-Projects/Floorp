@@ -17,7 +17,7 @@
             'pkix_valresult.h',
             'pkix_verifynode.h'
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/private'
+          'destination': '<(nss_dist_dir)/private/<(module)'
         }
       ]
     }
