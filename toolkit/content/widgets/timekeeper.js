@@ -21,7 +21,7 @@
 function TimeKeeper(props) {
   this.props = props;
   this.state = { time: new Date(0), ranges: {} };
-};
+}
 
 {
   const debug = 0 ? console.log.bind(console, '[timekeeper]') : function() {};

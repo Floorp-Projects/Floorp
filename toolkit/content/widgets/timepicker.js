@@ -7,7 +7,7 @@
 function TimePicker(context) {
   this.context = context;
   this._attachEventListeners();
-};
+}
 
 {
   const debug = 0 ? console.log.bind(console, '[timepicker]') : function() {};
@@ -102,12 +102,11 @@ function TimePicker(context) {
           getDisplayString: hour => {
             if (format == "24") {
               return numberFormat(hour);
-            } else {
-              // Hour 0 in 12 hour format is displayed as 12.
-              const hourIn12 = hour % DAY_PERIOD_IN_HOURS;
-              return hourIn12 == 0 ? numberFormat(12)
-                : numberFormat(hourIn12);
             }
+            // Hour 0 in 12 hour format is displayed as 12.
+            const hourIn12 = hour % DAY_PERIOD_IN_HOURS;
+            return hourIn12 == 0 ? numberFormat(12)
+              : numberFormat(hourIn12);
           }
         }, this.context),
         minute: new Spinner({
