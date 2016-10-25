@@ -113,9 +113,6 @@ public:
     virtual bool HasDefaultValue() const = 0;
 
     // Returns the pref value as a discriminated union.
-    virtual void GetLiveValue(GfxPrefValue* aOutValue) const = 0;
-
-    // Returns the pref value as a discriminated union.
     virtual void GetCachedValue(GfxPrefValue* aOutValue) const = 0;
 
     // Change the cached value. GfxPrefValue must be a compatible type.
@@ -230,10 +227,6 @@ private:
     }
     const char *Name() const override {
       return Prefname();
-    }
-    void GetLiveValue(GfxPrefValue* aOutValue) const override {
-      T value = GetLiveValue();
-      CopyPrefValue(&value, aOutValue);
     }
     // When using the Preferences service, the change callback can be triggered
     // *before* our cached value is updated, so we expose a method to grab the
