@@ -16,8 +16,6 @@
 #include <unistd.h>
 #endif
 
-#include "MainThreadIdlePeriod.h"
-
 using namespace mozilla;
 
 static MOZ_THREAD_LOCAL(bool) sTLSIsMainThread;
@@ -99,11 +97,6 @@ nsThreadManager::Init()
   if (NS_FAILED(rv)) {
     mMainThread = nullptr;
     return rv;
-  }
-
-  {
-    nsCOMPtr<nsIIdlePeriod> idlePeriod = new MainThreadIdlePeriod();
-    mMainThread->RegisterIdlePeriod(idlePeriod.forget());
   }
 
   // We need to keep a pointer to the current thread, so we can satisfy
