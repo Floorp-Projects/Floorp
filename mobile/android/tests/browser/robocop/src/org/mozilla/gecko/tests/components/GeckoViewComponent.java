@@ -10,6 +10,7 @@ import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotSame;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertSame;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.helpers.FrameworkHelper;
@@ -118,12 +119,11 @@ public class GeckoViewComponent extends BaseComponent {
          * Processes pending events on the Gecko thread before returning.
          * Must be called on the input connection thread during a test.
          */
-        protected void processGeckoEvents(final InputConnection ic) {
+        protected void processGeckoEvents() {
             fAssertSame("Should be called on input connection thread",
                     Looper.myLooper(), inputConnectionHandler.getLooper());
 
-            fAssertTrue("Should be able to process Gecko events",
-                    ic.performPrivateCommand("process-gecko-events", null));
+            GeckoThread.waitOnGecko();
         }
 
         private static ExtractedText getExtractedText(final InputConnection ic) {
