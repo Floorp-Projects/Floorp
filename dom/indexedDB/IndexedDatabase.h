@@ -29,6 +29,8 @@ struct StructuredCloneFile
     eBlob,
     eMutableFile,
     eStructuredClone,
+    eWasmBytecode,
+    eWasmCompiled,
     eEndGuard
   };
 
