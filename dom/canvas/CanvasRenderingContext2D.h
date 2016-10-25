@@ -696,6 +696,7 @@ protected:
   /**
    * Update CurrentState().filter with the filter description for
    * CurrentState().filterChain.
+   * Flushes the PresShell, so the world can change if you call this function.
    */
   void UpdateFilter();
 
@@ -873,13 +874,12 @@ protected:
    * last call to UpdateFilter and now.
    */
   const gfx::FilterDescription& EnsureUpdatedFilter() {
-    const ContextState& state = CurrentState();
     bool isWriteOnly = mCanvasElement && mCanvasElement->IsWriteOnly();
-    if (state.filterSourceGraphicTainted != isWriteOnly) {
+    if (CurrentState().filterSourceGraphicTainted != isWriteOnly) {
       UpdateFilter();
     }
-    MOZ_ASSERT(state.filterSourceGraphicTainted == isWriteOnly);
-    return state.filter;
+    MOZ_ASSERT(CurrentState().filterSourceGraphicTainted == isWriteOnly);
+    return CurrentState().filter;
   }
 
   bool NeedToCalculateBounds()
