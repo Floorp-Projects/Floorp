@@ -838,7 +838,11 @@ final class GeckoEditable extends JNIObject
             break;
 
         case Action.TYPE_REMOVE_SPAN:
-            mText.removeSpan(action.mSpanObject);
+            if (action.mSpanObject != null) {
+                mText.removeSpan(action.mSpanObject);
+            } else {
+                mText.clearSpans();
+            }
             break;
 
         case Action.TYPE_SET_HANDLER:
@@ -1258,6 +1262,10 @@ final class GeckoEditable extends JNIObject
 
     @Override
     public void removeSpan(Object what) {
+        if (what == null) {
+            return;
+        }
+
         if (what == Selection.SELECTION_START ||
                 what == Selection.SELECTION_END) {
             Log.w(LOGTAG, "selection removed with removeSpan()");
@@ -1318,7 +1326,8 @@ final class GeckoEditable extends JNIObject
         /* XXX this clears the selection spans too,
            but there is no way to clear the corresponding selection in Gecko */
         Log.w(LOGTAG, "selection cleared with clearSpans()");
-        mText.clearSpans();
+        mActionQueue.offer(Action.newRemoveSpan(/* what */ null, /* update */ true));
+        mNeedCompositionUpdate = true;
     }
 
     @Override
