@@ -1205,15 +1205,28 @@ final class GeckoEditable extends JNIObject
                 // replacement in parts. First replace part of text before the sequence.
                 mText.currentReplace(start, action.mStart, text.subSequence(0, indexInText));
 
-                // Then Replace the sequence itself to preserve new spans.
+                // Then replace part of the text after the sequence.
                 final int actionStart = indexInText + start;
-                mText.currentReplace(actionStart, actionStart + action.mEnd - action.mStart,
-                                     action.mSequence);
+                final int actionEnd = actionStart + action.mEnd - action.mStart;
 
-                // Finally replace part of text after the sequence.
-                final int actionEnd = actionStart + action.mSequence.length();
-                mText.currentReplace(actionEnd, actionEnd + oldEnd - action.mEnd,
-                                     text.subSequence(actionEnd - start, text.length()));
+                final Spanned currentText = mText.getCurrentText();
+                final boolean resetSelStart = Selection.getSelectionStart(currentText) == actionEnd;
+                final boolean resetSelEnd = Selection.getSelectionEnd(currentText) == actionEnd;
+
+                mText.currentReplace(actionEnd, oldEnd, text.subSequence(
+                        indexInText + action.mSequence.length(), text.length()));
+
+                // The replacement above may have shifted our selection, if the selection
+                // was at the start of the replacement range. If so, we need to reset
+                // our selection to the previous position.
+                if (resetSelStart || resetSelEnd) {
+                    mText.currentSetSelection(
+                            resetSelStart ? actionEnd : Selection.getSelectionStart(currentText),
+                            resetSelEnd ? actionEnd : Selection.getSelectionEnd(currentText));
+                }
+
+                // Finally replace the sequence itself to preserve new spans.
+                mText.currentReplace(actionStart, actionEnd, action.mSequence);
 
                 // Ignore the next selection change because the selection change is a
                 // side-effect of the replace-text event we sent.
@@ -1229,8 +1242,14 @@ final class GeckoEditable extends JNIObject
             return;
 
         } else {
-            // Gecko side initiated the text change.
-            mText.currentReplace(start, oldEnd, text);
+            // Gecko side initiated the text change. Replace in two steps to properly
+            // clear composing spans that span the whole range.
+            mText.currentReplace(start, oldEnd, "");
+            mText.currentReplace(start, start, text);
+
+            // Don't ignore the next selection change because we are forced to re-sync
+            // with Gecko here.
+            mIgnoreSelectionChange = false;
         }
 
         // onTextChange is always followed by onSelectionChange, so we let
