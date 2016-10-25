@@ -85,6 +85,21 @@ function getNullFile(name, size)
   return getFile(name, "binary/null", getView(size));
 }
 
+function isWasmSupported()
+{
+  let testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
+  return testingFunctions.wasmIsSupported();
+}
+
+function getWasmModule(text)
+{
+  let testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
+  let wasmTextToBinary = SpecialPowers.unwrap(testingFunctions.wasmTextToBinary);
+  let binary = wasmTextToBinary(text);
+  let module = new WebAssembly.Module(binary);
+  return module;
+}
+
 function verifyBuffers(buffer1, buffer2)
 {
   ok(compareBuffers(buffer1, buffer2), "Correct buffer data");

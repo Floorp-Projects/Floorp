@@ -323,6 +323,56 @@ StructuredCloneWriteCallback(JSContext* aCx,
     }
   }
 
+  if (JS::IsWasmModuleObject(aObj)) {
+    RefPtr<JS::WasmModule> module = JS::GetWasmModule(aObj);
+    MOZ_ASSERT(module);
+
+    size_t bytecodeSize;
+    size_t compiledSize;
+    module->serializedSize(&bytecodeSize, &compiledSize);
+
+    UniquePtr<uint8_t[]> bytecode(new uint8_t[bytecodeSize]);
+    MOZ_ASSERT(bytecode);
+
+    UniquePtr<uint8_t[]> compiled(new uint8_t[compiledSize]);
+    MOZ_ASSERT(compiled);
+
+    module->serialize(bytecode.get(),
+                      bytecodeSize,
+                      compiled.get(),
+                      compiledSize);
+
+    RefPtr<BlobImpl> blobImpl =
+      new BlobImplMemory(bytecode.release(), bytecodeSize, EmptyString());
+    RefPtr<Blob> bytecodeBlob = Blob::Create(nullptr, blobImpl);
+
+    blobImpl =
+      new BlobImplMemory(compiled.release(), compiledSize, EmptyString());
+    RefPtr<Blob> compiledBlob = Blob::Create(nullptr, blobImpl);
+
+    if (cloneWriteInfo->mFiles.Length() + 1 > size_t(UINT32_MAX)) {
+      MOZ_ASSERT(false, "Fix the structured clone data to use a bigger type!");
+      return false;
+    }
+
+    const uint32_t index = cloneWriteInfo->mFiles.Length();
+
+    if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_WASM, /* flags */ 0) ||
+        !JS_WriteUint32Pair(aWriter, index, index + 1)) {
+      return false;
+    }
+
+    StructuredCloneFile* newFile = cloneWriteInfo->mFiles.AppendElement();
+    newFile->mBlob = bytecodeBlob;
+    newFile->mType = StructuredCloneFile::eWasmBytecode;
+
+    newFile = cloneWriteInfo->mFiles.AppendElement();
+    newFile->mBlob = compiledBlob;
+    newFile->mType = StructuredCloneFile::eWasmCompiled;
+
+    return true;
+  }
+
   return StructuredCloneHolder::WriteFullySerializableObjects(aCx, aWriter, aObj);
 }
 
@@ -797,7 +847,8 @@ CommonStructuredCloneReadCallback(JSContext* aCx,
   static_assert(SCTAG_DOM_BLOB == 0xffff8001 &&
                 SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE == 0xffff8002 &&
                 SCTAG_DOM_MUTABLEFILE == 0xffff8004 &&
-                SCTAG_DOM_FILE == 0xffff8005,
+                SCTAG_DOM_FILE == 0xffff8005 &&
+                SCTAG_DOM_WASM == 0xffff8006,
                 "You changed our structured clone tag values and just ate "
                 "everyone's IndexedDB data.  I hope you are happy.");
 
@@ -1316,6 +1367,25 @@ IDBObjectStore::AddOrPut(JSContext* aCx,
 
           fileAddInfo->file() = mutableFileActor;
           fileAddInfo->type() = StructuredCloneFile::eMutableFile;
+
+          break;
+        }
+
+        case StructuredCloneFile::eWasmBytecode:
+        case StructuredCloneFile::eWasmCompiled: {
+          MOZ_ASSERT(file.mBlob);
+          MOZ_ASSERT(!file.mMutableFile);
+
+          PBackgroundIDBDatabaseFileChild* fileActor =
+            database->GetOrCreateFileActorForBlob(file.mBlob);
+          if (NS_WARN_IF(!fileActor)) {
+            IDB_REPORT_INTERNAL_ERR();
+            aRv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+            return nullptr;
+          }
+
+          fileAddInfo->file() = fileActor;
+          fileAddInfo->type() = file.mType;
 
           break;
         }
