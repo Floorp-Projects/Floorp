@@ -9,9 +9,6 @@ function* openPanel(extension, win = window) {
     return event.target.location && event.target.location.href.endsWith("popup.html");
   });
 
-  yield new Promise(resolve => setTimeout(resolve, 0));
-  yield new Promise(resolve => setTimeout(resolve, 100));
-
   return target.defaultView
                .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDocShell)
                .chromeEventHandler;
@@ -44,6 +41,8 @@ add_task(function* testBrowserActionPopupResize() {
   });
 
   yield extension.startup();
+
+  clickBrowserAction(extension, window);
 
   let browser = yield openPanel(extension);
   let panelWindow = browser.contentWindow;
