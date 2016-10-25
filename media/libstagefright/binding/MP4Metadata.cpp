@@ -245,7 +245,8 @@ bool MP4Metadata::ShouldPreferRust() const {
     if (!info) {
       return false;
     }
-    if (info->mMimeType.EqualsASCII("audio/opus")) {
+    if (info->mMimeType.EqualsASCII("audio/opus") ||
+        info->mMimeType.EqualsASCII("audio/flac")) {
       return true;
     }
   }
@@ -741,6 +742,7 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
     case MP4PARSE_CODEC_UNKNOWN: codec_string = "unknown"; break;
     case MP4PARSE_CODEC_AAC: codec_string = "aac"; break;
     case MP4PARSE_CODEC_OPUS: codec_string = "opus"; break;
+    case MP4PARSE_CODEC_FLAC: codec_string = "flac"; break;
     case MP4PARSE_CODEC_AVC: codec_string = "h.264"; break;
     case MP4PARSE_CODEC_VP9: codec_string = "vp9"; break;
   }
@@ -774,6 +776,8 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
             mozilla::FramesToUsecs(preskip, 48000).value());
       } else if (info.codec == MP4PARSE_CODEC_AAC) {
         track->mMimeType = MEDIA_MIMETYPE_AUDIO_AAC;
+      } else if (info.codec == MP4PARSE_CODEC_FLAC) {
+        track->mMimeType = MEDIA_MIMETYPE_AUDIO_FLAC;
       }
       track->mCodecSpecificConfig->AppendElements(
           audio.codec_specific_config.data,
