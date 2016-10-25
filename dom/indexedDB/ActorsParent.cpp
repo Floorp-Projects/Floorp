@@ -25489,7 +25489,6 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 
   const bool keyUnset = key.IsUnset();
   const int64_t osid = mParams.objectStoreId();
-  const KeyPath& keyPath = mMetadata->mCommonMetadata.keyPath();
 
   // First delete old index_data_values if we're overwriting something and we
   // have indexes.
@@ -25527,15 +25526,12 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
+  const SerializedStructuredCloneWriteInfo& cloneInfo = mParams.cloneInfo();
+  const JSStructuredCloneData& cloneData = cloneInfo.data().data;
+  size_t cloneDataSize = cloneData.Size();
+
   MOZ_ASSERT(!keyUnset || mMetadata->mCommonMetadata.autoIncrement(),
              "Should have key unless autoIncrement");
-
-  const JSStructuredCloneData& data = mParams.cloneInfo().data().data;
-  size_t cloneDataSize = data.Size();
-  nsCString cloneData;
-  cloneData.SetLength(cloneDataSize);
-  auto iter = data.Iter();
-  data.ReadBytes(iter, cloneData.BeginWriting(), cloneDataSize);
 
   int64_t autoIncrementNum = 0;
 
@@ -25555,7 +25551,7 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
       autoIncrementNum = floor(key.ToFloat());
     }
 
-    if (keyUnset && keyPath.IsValid()) {
+    if (keyUnset && mMetadata->mCommonMetadata.keyPath().IsValid()) {
       const SerializedStructuredCloneWriteInfo& cloneInfo = mParams.cloneInfo();
       MOZ_ASSERT(cloneInfo.offsetToKeyProp());
       MOZ_ASSERT(cloneDataSize > sizeof(uint64_t));
@@ -25565,18 +25561,38 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
       // Special case where someone put an object into an autoIncrement'ing
       // objectStore with no key in its keyPath set. We needed to figure out
       // which row id we would get above before we could set that properly.
-      char* keyPropPointer = cloneData.BeginWriting() + cloneInfo.offsetToKeyProp();
       uint64_t keyPropValue =
         ReinterpretDoubleAsUInt64(static_cast<double>(autoIncrementNum));
 
-      LittleEndian::writeUint64(keyPropPointer, keyPropValue);
+      static const size_t keyPropSize = sizeof(uint64_t);
+
+      char keyPropBuffer[keyPropSize];
+      LittleEndian::writeUint64(keyPropBuffer, keyPropValue);
+
+      auto iter = cloneData.Iter();
+      DebugOnly<bool> result =
+       iter.AdvanceAcrossSegments(cloneData, cloneInfo.offsetToKeyProp());
+      MOZ_ASSERT(result);
+
+      for (uint32_t index = 0; index < keyPropSize; index++) {
+        char* keyPropPointer = iter.Data();
+        *keyPropPointer = keyPropBuffer[index];
+
+        result = iter.AdvanceAcrossSegments(cloneData, 1);
+        MOZ_ASSERT(result);
+      }
     }
   }
 
   key.BindToStatement(stmt, NS_LITERAL_CSTRING("key"));
 
+  nsCString flatCloneData;
+  flatCloneData.SetLength(cloneDataSize);
+  auto iter = cloneData.Iter();
+  cloneData.ReadBytes(iter, flatCloneData.BeginWriting(), cloneDataSize);
+
   // Compress the bytes before adding into the database.
-  const char* uncompressed = cloneData.BeginReading();
+  const char* uncompressed = flatCloneData.BeginReading();
   size_t uncompressedLength = cloneDataSize;
 
   // We don't have a smart pointer class that calls free, so we need to
