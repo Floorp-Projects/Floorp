@@ -190,25 +190,6 @@ GenerateRequest(JSContext* aCx, IDBObjectStore* aObjectStore)
   return request.forget();
 }
 
-PRFileDesc*
-GetFileDescriptorFromStream(nsIInputStream* aStream)
-{
-  nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(aStream);
-  if (NS_WARN_IF(!fileMetadata)) {
-    return nullptr;
-  }
-
-  PRFileDesc* fileDesc;
-  nsresult rv = fileMetadata->GetFileDescriptor(&fileDesc);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(fileDesc);
-
-  return fileDesc;
-}
-
 bool
 StructuredCloneWriteCallback(JSContext* aCx,
                              JSStructuredCloneWriter* aWriter,
@@ -396,6 +377,9 @@ StructuredCloneWriteCallback(JSContext* aCx,
 
     const uint32_t index = cloneWriteInfo->mFiles.Length();
 
+    // The ordering of the bytecode and compiled file is significant and must
+    // never be changed. These two files must always form a pair
+    // [eWasmBytecode, eWasmCompiled]. Everything else depends on it!
     if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_WASM, /* flags */ 0) ||
         !JS_WriteUint32Pair(aWriter, index, index + 1)) {
       return false;
@@ -745,66 +729,16 @@ public:
 
   static bool
   CreateAndWrapWasmModule(JSContext* aCx,
-                          StructuredCloneFile& aBytecodeFile,
-                          StructuredCloneFile& aCompiledFile,
+                          StructuredCloneFile& aFile,
                           const WasmModuleData& aData,
                           JS::MutableHandle<JSObject*> aResult)
   {
     MOZ_ASSERT(aCx);
-    MOZ_ASSERT(aBytecodeFile.mType == StructuredCloneFile::eWasmBytecode);
-    MOZ_ASSERT(aBytecodeFile.mBlob);
-    MOZ_ASSERT(aCompiledFile.mType == StructuredCloneFile::eWasmCompiled);
+    MOZ_ASSERT(aFile.mType == StructuredCloneFile::eWasmCompiled);
+    MOZ_ASSERT(!aFile.mBlob);
+    MOZ_ASSERT(aFile.mWasmModule);
 
-    ErrorResult errorResult;
-
-    nsCOMPtr<nsIInputStream> bytecodeStream;
-    aBytecodeFile.mBlob->GetInternalStream(getter_AddRefs(bytecodeStream),
-                                           errorResult);
-    if (NS_WARN_IF(errorResult.Failed())) {
-      return false;
-    }
-
-    PRFileDesc* bytecodeFileDesc = GetFileDescriptorFromStream(bytecodeStream);
-    if (NS_WARN_IF(!bytecodeFileDesc)) {
-      return false;
-    }
-
-    // The compiled stream must scoped here!
-    nsCOMPtr<nsIInputStream> compiledStream;
-
-    PRFileDesc* compiledFileDesc;
-    if (aCompiledFile.mBlob) {
-      aCompiledFile.mBlob->GetInternalStream(getter_AddRefs(compiledStream),
-                                             errorResult);
-      if (NS_WARN_IF(errorResult.Failed())) {
-        return false;
-      }
-
-      compiledFileDesc = GetFileDescriptorFromStream(compiledStream);
-      if (NS_WARN_IF(!compiledFileDesc)) {
-        return false;
-      }
-    } else {
-      compiledFileDesc = nullptr;
-    }
-
-    JS::BuildIdCharVector buildId;
-    bool ok = GetBuildId(&buildId);
-    if (NS_WARN_IF(!ok)) {
-      return false;
-    }
-
-    RefPtr<JS::WasmModule> module = JS::DeserializeWasmModule(bytecodeFileDesc,
-                                                              compiledFileDesc,
-                                                              Move(buildId),
-                                                              nullptr,
-                                                              0,
-                                                              0);
-    if (NS_WARN_IF(!module)) {
-      return false;
-    }
-
-    JS::Rooted<JSObject*> moduleObj(aCx, module->createObject(aCx));
+    JS::Rooted<JSObject*> moduleObj(aCx, aFile.mWasmModule->createObject(aCx));
     if (NS_WARN_IF(!moduleObj)) {
       return false;
     }
@@ -907,8 +841,7 @@ public:
 
   static bool
   CreateAndWrapWasmModule(JSContext* aCx,
-                          StructuredCloneFile& aBytecodeFile,
-                          StructuredCloneFile& aCompiledFile,
+                          StructuredCloneFile& aFile,
                           const WasmModuleData& aData,
                           JS::MutableHandle<JSObject*> aResult)
   {
@@ -980,14 +913,12 @@ public:
 
   static bool
   CreateAndWrapWasmModule(JSContext* aCx,
-                          StructuredCloneFile& aBytecodeFile,
-                          StructuredCloneFile& aCompiledFile,
+                          StructuredCloneFile& aFile,
                           const WasmModuleData& aData,
                           JS::MutableHandle<JSObject*> aResult)
   {
     MOZ_ASSERT(aCx);
-    MOZ_ASSERT(aBytecodeFile.mType == StructuredCloneFile::eBlob);
-    MOZ_ASSERT(aCompiledFile.mType == StructuredCloneFile::eBlob);
+    MOZ_ASSERT(aFile.mType == StructuredCloneFile::eBlob);
 
     MOZ_ASSERT(false, "This should never be possible!");
 
@@ -1039,14 +970,10 @@ CommonStructuredCloneReadCallback(JSContext* aCx,
         return nullptr;
       }
 
-      StructuredCloneFile& bytecodeFile =
-        cloneReadInfo->mFiles[data.bytecodeIndex];
-      StructuredCloneFile& compiledFile =
-        cloneReadInfo->mFiles[data.compiledIndex];
+      StructuredCloneFile& file = cloneReadInfo->mFiles[data.compiledIndex];
 
       if (NS_WARN_IF(!Traits::CreateAndWrapWasmModule(aCx,
-                                                      bytecodeFile,
-                                                      compiledFile,
+                                                      file,
                                                       data,
                                                       &result))) {
         return nullptr;
