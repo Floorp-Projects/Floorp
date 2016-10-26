@@ -59,20 +59,12 @@ const GUID MFVideoFormat_VP90 =
 };
 #endif
 
-const CLSID CLSID_WebmMfVp8Dec =
+const CLSID CLSID_WebmMfVpxDec =
 {
-  0x451e3cb7,
-  0x2622,
-  0x4ba5,
-  {0x8e, 0x1d, 0x44, 0xb3, 0xc4, 0x1d, 0x09, 0x24}
-};
-
-const CLSID CLSID_WebmMfVp9Dec =
-{
-  0x7ab4bd2,
-  0x1979,
-  0x4fcd,
-  {0xa6, 0x97, 0xdf, 0x9a, 0xd1, 0x5b, 0x34, 0xfe}
+  0xe3aaf548,
+  0xc9a4,
+  0x4c6e,
+  { 0x23, 0x4d, 0x5a, 0xda, 0x37, 0x4b, 0x00, 0x00 }
 };
 
 namespace mozilla {
@@ -147,8 +139,8 @@ WMFVideoMFTManager::GetMFTGUID()
   MOZ_ASSERT(mStreamType != Unknown);
   switch (mStreamType) {
     case H264: return CLSID_CMSH264DecoderMFT;
-    case VP8: return CLSID_WebmMfVp8Dec;
-    case VP9: return CLSID_WebmMfVp9Dec;
+    case VP8: return CLSID_WebmMfVpxDec;
+    case VP9: return CLSID_WebmMfVpxDec;
     default: return GUID_NULL;
   };
 }
@@ -442,8 +434,7 @@ bool
 WMFVideoMFTManager::InitInternal(bool aForceD3D9)
 {
   mUseHwAccel = false; // default value; changed if D3D setup succeeds.
-  bool useDxva = InitializeDXVA(aForceD3D9 ||
-                                mStreamType == VP8 || mStreamType == VP9);
+  bool useDxva = InitializeDXVA(aForceD3D9);
 
   RefPtr<MFTDecoder> decoder(new MFTDecoder());
 
@@ -488,6 +479,10 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
   }
 
   if (!mUseHwAccel) {
+    // Use VP8/9 MFT only if HW acceleration is available
+    if (mStreamType == VP9 || mStreamType == VP8) {
+      return false;
+    }
     Telemetry::Accumulate(Telemetry::MEDIA_DECODER_BACKEND_USED,
                           uint32_t(media::MediaDecoderBackend::WMFSoftware));
   }
@@ -517,6 +512,15 @@ WMFVideoMFTManager::SetDecoderMediaTypes()
 
   hr = inputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_MixedInterlaceOrProgressive);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  // MSFT MFT needs this frame size set for VP9?
+  if (mStreamType == VP9 || mStreamType == VP8) {
+    hr = inputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+    hr = MFSetAttributeSize(inputType, MF_MT_FRAME_SIZE, mVideoInfo.ImageRect().width, mVideoInfo.ImageRect().height);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  }
 
   RefPtr<IMFMediaType> outputType;
   hr = wmf::MFCreateMediaType(getter_AddRefs(outputType));
