@@ -15,7 +15,7 @@
 <div id="target5"></div>
 <script>
         var io = new IntersectionObserver(function (records) {
-                window.parent.postMessage(records[0].rootBounds == null, 'http://mochi.test:8888');
+                parent.postMessage(records[0].rootBounds == null, 'http://mochi.test:8888');
         }, {});
         io.observe(document.getElementById("target5"));
 </script>

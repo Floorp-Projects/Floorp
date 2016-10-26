@@ -30,8 +30,6 @@ limitations under the License.
 <pre id="test">
 <script type="application/javascript">
 
-  SpecialPowers.setIntPref("layout.visibility.min-notify-intersection-observers-interval-ms", 0);
-
   var tests = [];
   var curDescribeMsg = '';
   var curItMsg = '';
@@ -71,7 +69,7 @@ limitations under the License.
     while (i--) {
       var cb = callbacks[i];
       if (+new Date() >= cb.time) {
-        SimpleTest.executeSoon(cb.fn);
+        cb.fn();
         callbacks.splice(i, 1);
       }
     }
@@ -157,19 +155,12 @@ limitations under the License.
 
   var sinon = {
     spy: function () {
-      var callbacks = [];
       var fn = function () {
         fn.callCount++;
         fn.lastCall = { args: arguments };
-        if (callbacks.length) {
-          callbacks.shift()();
-        }
       };
       fn.callCount = 0;
       fn.lastCall = { args: [] };
-      fn.waitForNotification = (fn) => {
-        callbacks.push(fn);
-      };
       return fn;
     }
   };
@@ -209,8 +200,6 @@ limitations under the License.
     afterEach(function() {
       if (io && 'disconnect' in io) io.disconnect();
       io = null;
-
-      window.onmessage = null;
 
       removeStyles();
       removeFixtures();
@@ -340,81 +329,6 @@ limitations under the License.
       });
 
 
-      it('does not trigger if target is not a descendant of the intersection root in the containing block chain',
-          function(done) {
-
-        var spy = sinon.spy();
-        io = new IntersectionObserver(spy, {root: parentEl});
-
-        parentEl.style.position = 'static';
-        io.observe(targetEl2);
-        callDelayed(function() {
-          expect(spy.callCount).to.be(0);
-          done();
-        }, ASYNC_TIMEOUT);
-      });
-
-      it('triggers if target or root becomes invisible',
-          function(done) {
-
-        var spy = sinon.spy();
-        io = new IntersectionObserver(spy, {root: rootEl});
-
-        runSequence([
-          function(done) {
-            io.observe(targetEl1);
-            spy.waitForNotification(function() {
-              expect(spy.callCount).to.be(1);
-              var records = sortRecords(spy.lastCall.args[0]);
-              expect(records.length).to.be(1);
-              expect(records[0].intersectionRatio).to.be(1);
-              done();
-            }, ASYNC_TIMEOUT);
-          },
-          function(done) {
-            targetEl1.style.display = 'none';
-            spy.waitForNotification(function() {
-              expect(spy.callCount).to.be(2);
-              var records = sortRecords(spy.lastCall.args[0]);
-              expect(records.length).to.be(1);
-              expect(records[0].intersectionRatio).to.be(0);
-              done();
-            }, ASYNC_TIMEOUT);
-          },
-          function(done) {
-            targetEl1.style.display = 'block';
-            spy.waitForNotification(function() {
-              expect(spy.callCount).to.be(3);
-              var records = sortRecords(spy.lastCall.args[0]);
-              expect(records.length).to.be(1);
-              expect(records[0].intersectionRatio).to.be(1);
-              done();
-            }, ASYNC_TIMEOUT);
-          },
-          function(done) {
-            rootEl.style.display = 'none';
-            spy.waitForNotification(function() {
-              expect(spy.callCount).to.be(4);
-              var records = sortRecords(spy.lastCall.args[0]);
-              expect(records.length).to.be(1);
-              expect(records[0].intersectionRatio).to.be(0);
-              done();
-            }, ASYNC_TIMEOUT);
-          },
-          function(done) {
-            rootEl.style.display = 'block';
-            spy.waitForNotification(function() {
-              expect(spy.callCount).to.be(5);
-              var records = sortRecords(spy.lastCall.args[0]);
-              expect(records.length).to.be(1);
-              expect(records[0].intersectionRatio).to.be(1);
-              done();
-            }, ASYNC_TIMEOUT);
-          },
-        ], done);
-      });
-
-
       it('handles container elements with non-visible overflow',
           function(done) {
 
@@ -424,7 +338,7 @@ limitations under the License.
         runSequence([
           function(done) {
             io.observe(targetEl1);
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(1);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -434,7 +348,7 @@ limitations under the License.
           },
           function(done) {
             targetEl1.style.left = '-40px';
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(2);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -444,7 +358,7 @@ limitations under the License.
           },
           function(done) {
             parentEl.style.overflow = 'visible';
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(3);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -465,7 +379,7 @@ limitations under the License.
           function(done) {
             targetEl1.style.left = '-5px';
             io.observe(targetEl1);
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(1);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -475,7 +389,7 @@ limitations under the License.
           },
           function(done) {
             targetEl1.style.left = '-15px';
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(2);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -492,7 +406,7 @@ limitations under the License.
           },
           function(done) {
             targetEl1.style.left = '-10px';
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(3);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -525,7 +439,7 @@ limitations under the License.
             io.observe(targetEl1);
             io.observe(targetEl2);
             io.observe(targetEl3);
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(1);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(2);
@@ -543,7 +457,7 @@ limitations under the License.
             targetEl2.style.left = '0px';
             targetEl3.style.top = '0px';
             targetEl3.style.left = '195px';
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(2);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(3);
@@ -563,7 +477,7 @@ limitations under the License.
             targetEl2.style.left = '0px';
             targetEl3.style.top = '0px';
             targetEl3.style.left = '185px';
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(3);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(3);
@@ -583,7 +497,7 @@ limitations under the License.
             targetEl2.style.left = '0px';
             targetEl3.style.top = '0px';
             targetEl3.style.left = '175px';
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(4);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -702,7 +616,7 @@ limitations under the License.
             targetEl2.style.left = '0px';
             io.observe(targetEl1);
             io.observe(targetEl2);
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(1);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -716,7 +630,7 @@ limitations under the License.
             targetEl1.style.left = '-20px';
             targetEl2.style.top = '-21px';
             targetEl2.style.left = '0px';
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(2);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(2);
@@ -732,7 +646,7 @@ limitations under the License.
             targetEl1.style.left = '200px';
             targetEl2.style.top = '200px';
             targetEl2.style.left = '200px';
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(3);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -748,7 +662,7 @@ limitations under the License.
             targetEl4.style.left = '20px';
             io.observe(targetEl3);
             io.observe(targetEl4);
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(4);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(2);
@@ -803,7 +717,7 @@ limitations under the License.
           },
           function(done) {
             parentEl.insertBefore(targetEl1, targetEl2);
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(1);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -814,7 +728,7 @@ limitations under the License.
           },
           function(done) {
             grandParentEl.parentNode.removeChild(grandParentEl);
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(2);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -825,7 +739,7 @@ limitations under the License.
           },
           function(done) {
             rootEl.appendChild(targetEl1);
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(3);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -836,7 +750,7 @@ limitations under the License.
           },
           function(done) {
             rootEl.parentNode.removeChild(rootEl);
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(4);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -882,38 +796,35 @@ limitations under the License.
 
 
       it('uses the viewport when no root is specified', function(done) {
-        window.onmessage = function (e) {
-          expect(e.data).to.be.ok();
-          win.close();
-          done();
-        };
+        io = new IntersectionObserver(function(records) {
+          var viewportWidth =
+              document.documentElement.clientWidth || document.body.clientWidth;
+          var viewportHeight =
+              document.documentElement.clientHeight || document.body.clientHeight;
 
-        var win = window.open("intersectionobserver_window.html");
+          expect(records.length).to.be(1);
+          expect(records[0].rootBounds.top).to.be(0);
+          expect(records[0].rootBounds.left).to.be(0);
+          expect(records[0].rootBounds.right).to.be(viewportWidth + 4);
+          expect(records[0].rootBounds.width).to.be(viewportWidth + 4);
+          expect(records[0].rootBounds.bottom).to.be(viewportHeight + 4);
+          expect(records[0].rootBounds.height).to.be(viewportHeight + 4);
+          done();
+        });
+
+        // Ensures targetEl1 is visible in the viewport before observing.
+        window.scrollTo(0, 0);
+        rootEl.style.position = 'absolute';
+        rootEl.style.top = '0px';
+        rootEl.style.left = '0px';
+
+        io.observe(targetEl1);
       });
 
     });
 
     describe('observe subframe', function () {
       
-      it('should not trigger if target and root are not in the same document',
-          function(done) {
-
-        var spy = sinon.spy();
-        io = new IntersectionObserver(spy, {root: rootEl});
-
-        targetEl4.onload = function () {
-          targetEl5 = targetEl4.contentDocument.getElementById('target5');
-          io.observe(targetEl5);
-          callDelayed(function() {
-            expect(spy.callCount).to.be(0);
-            done();
-          }, ASYNC_TIMEOUT);
-        }
-
-        targetEl4.src = "intersectionobserver_iframe.html";
-      
-      });
-
       it('boundingClientRect matches target.getBoundingClientRect() for an element inside an iframe',
           function(done) {
 
@@ -924,14 +835,14 @@ limitations under the License.
           expect(records[0].boundingClientRect.width, targetEl5.getBoundingClientRect().width);
           expect(records[0].boundingClientRect.height, targetEl5.getBoundingClientRect().height);
           done();
-        }, {threshold: [1]});
+        }, {root: rootEl, threshold: [1]});
 
         targetEl4.onload = function () {
           targetEl5 = targetEl4.contentDocument.getElementById('target5');
           io.observe(targetEl5);
         }
 
-        targetEl4.src = "intersectionobserver_iframe.html";
+        targetEl4.src = "intersectionobserver_subframe.html";
       });
 
       it('rootBounds should is set to null for cross-origin observations', function(done) {
@@ -941,7 +852,7 @@ limitations under the License.
           done();
         };
 
-        targetEl4.src = "http://example.org/tests/dom/base/test/intersectionobserver_iframe.html";
+        targetEl4.src = "http://example.org/tests/dom/base/test/intersectionobserver_subframe.html";
 
       });
     
@@ -985,7 +896,7 @@ limitations under the License.
             targetEl1.style.left = targetEl2.style.left = '0px';
             io.observe(targetEl1);
             io.observe(targetEl2);
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(1);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(2);
@@ -1000,7 +911,7 @@ limitations under the License.
             io.unobserve(targetEl1);
             targetEl1.style.top = targetEl2.style.top = '0px';
             targetEl1.style.left = targetEl2.style.left = '-40px';
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(2);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
@@ -1037,7 +948,7 @@ limitations under the License.
             targetEl1.style.left = targetEl2.style.left = '0px';
             io.observe(targetEl1);
             io.observe(targetEl2);
-            spy.waitForNotification(function() {
+            callDelayed(function() {
               expect(spy.callCount).to.be(1);
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(2);
