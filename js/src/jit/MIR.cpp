@@ -2418,7 +2418,9 @@ MPhi::foldsTernary(TempAllocator& alloc)
 
     // If testArg is an double type we can:
     // - fold testArg ? testArg : 0.0 to MNaNToZero(testArg)
-    if (testArg->type() == MIRType::Double && c->numberToDouble() == 0 && c != trueDef) {
+    if (testArg->type() == MIRType::Double && mozilla::IsPositiveZero(c->numberToDouble()) &&
+        c != trueDef)
+    {
         MNaNToZero* replace = MNaNToZero::New(alloc, testArg);
         test->block()->insertBefore(test, replace);
         return replace;
