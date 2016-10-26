@@ -21,6 +21,10 @@ var RELATION_SUBWINDOW_OF = nsIAccessibleRelation.RELATION_SUBWINDOW_OF;
 var RELATION_CONTAINING_DOCUMENT = nsIAccessibleRelation.RELATION_CONTAINING_DOCUMENT;
 var RELATION_CONTAINING_TAB_PANE = nsIAccessibleRelation.RELATION_CONTAINING_TAB_PANE;
 var RELATION_CONTAINING_APPLICATION = nsIAccessibleRelation.RELATION_CONTAINING_APPLICATION;
+const RELATION_DETAILS = nsIAccessibleRelation.RELATION_DETAILS;
+const RELATION_DETAILS_FOR = nsIAccessibleRelation.RELATION_DETAILS_FOR;
+const RELATION_ERRORMSG = nsIAccessibleRelation.RELATION_ERRORMSG;
+const RELATION_ERRORMSG_FOR = nsIAccessibleRelation.RELATION_ERRORMSG_FOR;
 
 ////////////////////////////////////////////////////////////////////////////////
 // General

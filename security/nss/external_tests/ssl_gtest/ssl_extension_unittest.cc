@@ -118,6 +118,8 @@ class TlsExtensionTestBase : public TlsConnectTestBase {
  protected:
   TlsExtensionTestBase(Mode mode, uint16_t version)
       : TlsConnectTestBase(mode, version) {}
+  TlsExtensionTestBase(const std::string& mode, uint16_t version)
+      : TlsConnectTestBase(mode, version) {}
 
   void ClientHelloErrorTest(PacketFilter* filter,
                             uint8_t alert = kTlsAlertDecodeError) {
@@ -165,9 +167,8 @@ class TlsExtensionTest12Plus
       public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
  public:
   TlsExtensionTest12Plus()
-      : TlsExtensionTestBase(
-            TlsConnectTestBase::ToMode((std::get<0>(GetParam()))),
-            std::get<1>(GetParam())) {}
+      : TlsExtensionTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {
+  }
 };
 
 class TlsExtensionTest12
@@ -175,17 +176,15 @@ class TlsExtensionTest12
       public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
  public:
   TlsExtensionTest12()
-      : TlsExtensionTestBase(
-            TlsConnectTestBase::ToMode((std::get<0>(GetParam()))),
-            std::get<1>(GetParam())) {}
+      : TlsExtensionTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {
+  }
 };
 
 class TlsExtensionTest13 : public TlsExtensionTestBase,
                            public ::testing::WithParamInterface<std::string> {
  public:
   TlsExtensionTest13()
-      : TlsExtensionTestBase(TlsConnectTestBase::ToMode(GetParam()),
-                             SSL_LIBRARY_VERSION_TLS_1_3) {}
+      : TlsExtensionTestBase(GetParam(), SSL_LIBRARY_VERSION_TLS_1_3) {}
 
   void ConnectWithBogusVersionList(const uint8_t* buf, size_t len) {
     DataBuffer versions_buf(buf, len);
@@ -218,9 +217,8 @@ class TlsExtensionTestGeneric
       public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
  public:
   TlsExtensionTestGeneric()
-      : TlsExtensionTestBase(
-            TlsConnectTestBase::ToMode((std::get<0>(GetParam()))),
-            std::get<1>(GetParam())) {}
+      : TlsExtensionTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {
+  }
 };
 
 class TlsExtensionTestPre13
@@ -228,9 +226,8 @@ class TlsExtensionTestPre13
       public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
  public:
   TlsExtensionTestPre13()
-      : TlsExtensionTestBase(
-            TlsConnectTestBase::ToMode((std::get<0>(GetParam()))),
-            std::get<1>(GetParam())) {}
+      : TlsExtensionTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {
+  }
 };
 
 TEST_P(TlsExtensionTestGeneric, DamageSniLength) {
@@ -486,25 +483,24 @@ TEST_P(TlsExtensionTestPre13, RenegotiationInfoExtensionEmpty) {
 // This only works on TLS 1.2, since it relies on static RSA; otherwise libssl
 // picks the wrong cipher suite.
 TEST_P(TlsExtensionTest12, SignatureAlgorithmConfiguration) {
-  const SSLSignatureAndHashAlg algorithms[] = {
-      {ssl_hash_sha512, ssl_sign_rsa}, {ssl_hash_sha384, ssl_sign_ecdsa}};
+  const SSLSignatureScheme schemes[] = {ssl_sig_rsa_pss_sha512,
+                                        ssl_sig_rsa_pss_sha384};
 
   TlsExtensionCapture* capture =
       new TlsExtensionCapture(ssl_signature_algorithms_xtn);
-  client_->SetSignatureAlgorithms(algorithms, PR_ARRAY_SIZE(algorithms));
+  client_->SetSignatureSchemes(schemes, PR_ARRAY_SIZE(schemes));
   client_->SetPacketFilter(capture);
   EnableOnlyStaticRsaCiphers();
   Connect();
 
   const DataBuffer& ext = capture->extension();
-  EXPECT_EQ(2 + PR_ARRAY_SIZE(algorithms) * 2, ext.len());
+  EXPECT_EQ(2 + PR_ARRAY_SIZE(schemes) * 2, ext.len());
   for (size_t i = 0, cursor = 2;
-       i < PR_ARRAY_SIZE(algorithms) && cursor < ext.len(); ++i) {
-    uint32_t v;
-    EXPECT_TRUE(ext.Read(cursor++, 1, &v));
-    EXPECT_EQ(algorithms[i].hashAlg, static_cast<SSLHashType>(v));
-    EXPECT_TRUE(ext.Read(cursor++, 1, &v));
-    EXPECT_EQ(algorithms[i].sigAlg, static_cast<SSLSignType>(v));
+       i < PR_ARRAY_SIZE(schemes) && cursor < ext.len(); ++i) {
+    uint32_t v = 0;
+    EXPECT_TRUE(ext.Read(cursor, 2, &v));
+    cursor += 2;
+    EXPECT_EQ(schemes[i], static_cast<SSLSignatureScheme>(v));
   }
 }
 
@@ -581,7 +577,7 @@ TEST_F(TlsExtensionTest13Stream, NonEmptySignatureAlgorithms) {
   DataBuffer sig_algs;
   size_t index = 0;
   index = sig_algs.Write(index, 2, 2);
-  index = sig_algs.Write(index, kTlsSignatureRsaPssSha256, 2);
+  index = sig_algs.Write(index, ssl_sig_rsa_pss_sha256, 2);
   server_->SetPacketFilter(
       new TlsExtensionReplacer(ssl_signature_algorithms_xtn, sig_algs));
   ConnectExpectFail();

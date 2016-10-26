@@ -470,7 +470,7 @@ ectest_curve_pkcs11(ECCurveName curve, int iterations, int numThreads)
     unsigned char digestData[20];
     unsigned char pubKeyData[256];
     PRLock *lock = NULL;
-    double signRate, deriveRate;
+    double signRate, deriveRate = 0;
     CK_ATTRIBUTE template;
     SECStatus rv;
     CK_RV crv;
@@ -595,7 +595,7 @@ ectest_curve_freebl(ECCurveName curve, int iterations, int numThreads,
     SECItem digest;
     unsigned char sigData[256];
     unsigned char digestData[20];
-    double signRate, deriveRate;
+    double signRate, deriveRate = 0;
     char genenc[3 + 2 * 2 * MAX_ECKEY_LEN];
     SECStatus rv = SECFailure;
     PLArenaPool *arena;
@@ -765,44 +765,11 @@ main(int argv, char **argc)
 
     /* specific arithmetic tests */
     if (nist) {
-#ifdef NSS_ECC_MORE_THAN_SUITE_B
-        ECTEST_NAMED_GFP("SECP-160K1", ECCurve_SECG_PRIME_160K1);
-        ECTEST_NAMED_GFP("NIST-P192", ECCurve_NIST_P192);
-        ECTEST_NAMED_GFP("NIST-P224", ECCurve_NIST_P224);
-#endif
         ECTEST_NAMED_GFP("NIST-P256", ECCurve_NIST_P256);
         ECTEST_NAMED_GFP("NIST-P384", ECCurve_NIST_P384);
         ECTEST_NAMED_GFP("NIST-P521", ECCurve_NIST_P521);
         ECTEST_NAMED_CUSTOM("Curve25519", ECCurve25519);
     }
-#ifdef NSS_ECC_MORE_THAN_SUITE_B
-    if (ansi) {
-        ECTEST_NAMED_GFP("ANSI X9.62 PRIME192v1", ECCurve_X9_62_PRIME_192V1);
-        ECTEST_NAMED_GFP("ANSI X9.62 PRIME192v2", ECCurve_X9_62_PRIME_192V2);
-        ECTEST_NAMED_GFP("ANSI X9.62 PRIME192v3", ECCurve_X9_62_PRIME_192V3);
-        ECTEST_NAMED_GFP("ANSI X9.62 PRIME239v1", ECCurve_X9_62_PRIME_239V1);
-        ECTEST_NAMED_GFP("ANSI X9.62 PRIME239v2", ECCurve_X9_62_PRIME_239V2);
-        ECTEST_NAMED_GFP("ANSI X9.62 PRIME239v3", ECCurve_X9_62_PRIME_239V3);
-        ECTEST_NAMED_GFP("ANSI X9.62 PRIME256v1", ECCurve_X9_62_PRIME_256V1);
-    }
-    if (secp) {
-        ECTEST_NAMED_GFP("SECP-112R1", ECCurve_SECG_PRIME_112R1);
-        ECTEST_NAMED_GFP("SECP-112R2", ECCurve_SECG_PRIME_112R2);
-        ECTEST_NAMED_GFP("SECP-128R1", ECCurve_SECG_PRIME_128R1);
-        ECTEST_NAMED_GFP("SECP-128R2", ECCurve_SECG_PRIME_128R2);
-        ECTEST_NAMED_GFP("SECP-160K1", ECCurve_SECG_PRIME_160K1);
-        ECTEST_NAMED_GFP("SECP-160R1", ECCurve_SECG_PRIME_160R1);
-        ECTEST_NAMED_GFP("SECP-160R2", ECCurve_SECG_PRIME_160R2);
-        ECTEST_NAMED_GFP("SECP-192K1", ECCurve_SECG_PRIME_192K1);
-        ECTEST_NAMED_GFP("SECP-192R1", ECCurve_SECG_PRIME_192R1);
-        ECTEST_NAMED_GFP("SECP-224K1", ECCurve_SECG_PRIME_224K1);
-        ECTEST_NAMED_GFP("SECP-224R1", ECCurve_SECG_PRIME_224R1);
-        ECTEST_NAMED_GFP("SECP-256K1", ECCurve_SECG_PRIME_256K1);
-        ECTEST_NAMED_GFP("SECP-256R1", ECCurve_SECG_PRIME_256R1);
-        ECTEST_NAMED_GFP("SECP-384R1", ECCurve_SECG_PRIME_384R1);
-        ECTEST_NAMED_GFP("SECP-521R1", ECCurve_SECG_PRIME_521R1);
-    }
-#endif
 
 cleanup:
     rv |= SECOID_Shutdown();

@@ -1,7 +1,7 @@
 if (this.document === undefined) {
   importScripts("/resources/testharness.js");
   importScripts("../resources/utils.js");
-  importScripts("../resources/get-host-info.sub.js");
+  importScripts("/common/get-host-info.sub.js");
 }
 
 function cors(desc, origin) {
@@ -13,13 +13,14 @@ function cors(desc, origin) {
       assert_equals(resp.status, 0, "Opaque filter: status is 0");
       assert_equals(resp.statusText, "", "Opaque filter: statusText is \"\"");
       assert_equals(resp.type , "opaque", "Opaque filter: response's type is opaque");
+      return resp.text().then(function(value) {
+        assert_equals(value, "", "Opaque response should have an empty body");
+      });
     });
   }, desc + " [no-cors mode]");
 
   promise_test(function(test) {
-    var testedPromise = fetch(url + RESOURCES_DIR + "top.txt", {"mode": "cors"} ).then(function(resp) {
-      return promise_rejects(test, new TypeError(), testedPromise);
-    });
+    return promise_rejects(test, new TypeError(), fetch(url + RESOURCES_DIR + "top.txt", {"mode": "cors"}));
   }, desc + " [server forbid CORS]");
 
   promise_test(function(test) {

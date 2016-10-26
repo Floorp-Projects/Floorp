@@ -127,8 +127,34 @@ enum class RelationType {
    */
   CONTAINING_APPLICATION = 0x14,
 
-  LAST = CONTAINING_APPLICATION
 
+  /**
+   * The target object provides the detailed, extended description for this
+   * object. It provides more detailed information than would normally be
+   * provided using the DESCRIBED_BY relation. A common use for this relation is
+   * in digital publishing where an extended description needs to be conveyed in
+   * a book that requires structural markup or the embedding of other technology
+   * to provide illustrative content.
+   */
+  DETAILS = 0x15,
+
+  /**
+   * This object provides the detailed, extended description for the target
+   * object. See DETAILS relation.
+   */
+  DETAILS_FOR = 0x16,
+
+  /**
+   * The target object is the error message for this object.
+   */
+  ERRORMSG = 0x17,
+
+  /**
+   * This object is the error message for the target object.
+   */
+  ERRORMSG_FOR = 0x18,
+
+  LAST = ERRORMSG_FOR
 };
 
 } // namespace a11y

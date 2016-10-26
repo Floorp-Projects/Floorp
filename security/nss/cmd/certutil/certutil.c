@@ -1262,8 +1262,8 @@ luG(enum usage_level ul, const char *command)
 #ifndef NSS_DISABLE_ECC
     FPS "%-20s Elliptic curve name (ec only)\n",
         "   -q curve-name");
-    FPS "%-20s One of nistp256, nistp384, nistp521, curve25519\n", "");
-#ifdef NSS_ECC_MORE_THAN_SUITE_B
+    FPS "%-20s One of nistp256, nistp384, nistp521, curve25519.\n", "");
+    FPS "%-20s If a custom token is present, the following curves are also supported:\n", "");
     FPS "%-20s sect163k1, nistk163, sect163r1, sect163r2,\n", "");
     FPS "%-20s nistb163, sect193r1, sect193r2, sect233k1, nistk233,\n", "");
     FPS "%-20s sect233r1, nistb233, sect239k1, sect283k1, nistk283,\n", "");
@@ -1281,7 +1281,6 @@ luG(enum usage_level ul, const char *command)
     FPS "%-20s c2tnb359w1, c2pnb368w1, c2tnb431r1, secp112r1, \n", "");
     FPS "%-20s secp112r2, secp128r1, secp128r2, sect113r1, sect113r2\n", "");
     FPS "%-20s sect131r1, sect131r2\n", "");
-#endif /* NSS_ECC_MORE_THAN_SUITE_B */
 #endif
     FPS "%-20s Key database directory (default is ~/.netscape)\n",
         "   -d keydir");

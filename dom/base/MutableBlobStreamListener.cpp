@@ -1,0 +1,102 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "MutableBlobStreamListener.h"
+#include "MutableBlobStorage.h"
+
+namespace mozilla {
+namespace dom {
+
+MutableBlobStreamListener::MutableBlobStreamListener(MutableBlobStorage::MutableBlobStorageType aStorageType,
+                                                     nsISupports* aParent,
+                                                     const nsACString& aContentType,
+                                                     MutableBlobStorageCallback* aCallback)
+  : mCallback(aCallback)
+  , mParent(aParent)
+  , mStorageType(aStorageType)
+  , mContentType(aContentType)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aCallback);
+}
+
+MutableBlobStreamListener::~MutableBlobStreamListener()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+NS_IMPL_ISUPPORTS(MutableBlobStreamListener,
+                  nsIStreamListener,
+                  nsIRequestObserver)
+
+NS_IMETHODIMP
+MutableBlobStreamListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mStorage);
+
+  mStorage = new MutableBlobStorage(mStorageType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MutableBlobStreamListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+                                         nsresult aStatus)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mStorage);
+
+  // Resetting mStorage to nullptr.
+  RefPtr<MutableBlobStorage> storage;
+  storage.swap(mStorage);
+
+  // Let's propagate the error simulating a failure of the storage.
+  if (NS_FAILED(aStatus)) {
+    mCallback->BlobStoreCompleted(storage, nullptr, aStatus);
+    return NS_OK;
+  }
+
+  storage->GetBlobWhenReady(mParent, mContentType, mCallback);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MutableBlobStreamListener::OnDataAvailable(nsIRequest* aRequest,
+                                           nsISupports* aContext,
+                                           nsIInputStream* aStream,
+                                           uint64_t aSourceOffset,
+                                           uint32_t aCount)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mStorage);
+
+  uint32_t countRead;
+  return aStream->ReadSegments(WriteSegmentFun, this, aCount, &countRead);
+}
+
+nsresult
+MutableBlobStreamListener::WriteSegmentFun(nsIInputStream* aWriterStream,
+                                           void* aClosure,
+                                           const char* aFromSegment,
+                                           uint32_t aToOffset,
+                                           uint32_t aCount,
+                                           uint32_t* aWriteCount)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MutableBlobStreamListener* self = static_cast<MutableBlobStreamListener*>(aClosure);
+  MOZ_ASSERT(self->mStorage);
+
+  nsresult rv = self->mStorage->Append(aFromSegment, aCount);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  *aWriteCount = aCount;
+  return NS_OK;
+}
+
+} // namespace net
+} // namespace mozilla

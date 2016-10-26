@@ -4,12 +4,12 @@
 
 import os
 
-__all__ = ['read_ini']
+__all__ = ['read_ini', 'combine_fields']
 
 
 def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
-             comments=';#', separators=('=', ':'),
-             strict=True):
+             comments=';#', separators=('=', ':'), strict=True,
+             handle_defaults=True):
     """
     read an .ini file and return a list of [(section, values)]
     - fp : file pointer or path to read
@@ -19,6 +19,7 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
     - comments : characters that if they start a line denote a comment
     - separators : strings that denote key, value separation in order
     - strict : whether to be strict about parsing
+    - handle_defaults : whether to incorporate defaults into each section
     """
 
     # variables
@@ -111,21 +112,31 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
     if defaults_only:
         return [(default, variables)]
 
-    # interpret the variables
-    def interpret_variables(global_dict, local_dict):
-        variables = global_dict.copy()
-
-        # These variables are combinable when they appear both in default
-        # and per-entry.
-        for field_name, pattern in (('skip-if', '(%s) || (%s)'),
-                                    ('support-files', '%s %s')):
-            local_value, global_value = local_dict.get(field_name), variables.get(field_name)
-            if local_value and global_value:
-                local_dict[field_name] = pattern % (
-                    global_value.split('#')[0], local_value.split('#')[0])
-        variables.update(local_dict)
-
-        return variables
-
-    sections = [(i, interpret_variables(variables, j)) for i, j in sections]
+    global_vars = variables if handle_defaults else {}
+    sections = [(i, combine_fields(global_vars, j)) for i, j in sections]
     return sections
+
+
+def combine_fields(global_vars, local_vars):
+    """
+    Combine the given manifest entries according to the semantics of specific fields.
+    This is used to combine manifest level defaults with a per-test definition.
+    """
+    if not global_vars:
+        return local_vars
+    if not local_vars:
+        return global_vars
+    field_patterns = {
+        'skip-if': '(%s) || (%s)',
+        'support-files': '%s %s',
+    }
+    final_mapping = global_vars.copy()
+    for field_name, value in local_vars.items():
+        if field_name not in field_patterns or field_name not in global_vars:
+            final_mapping[field_name] = value
+            continue
+        global_value = global_vars[field_name]
+        pattern = field_patterns[field_name]
+        final_mapping[field_name] = pattern % (
+            global_value.split('#')[0], value.split('#')[0])
+    return final_mapping

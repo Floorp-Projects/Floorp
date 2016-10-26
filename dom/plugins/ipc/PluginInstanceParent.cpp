@@ -836,7 +836,7 @@ PluginInstanceParent::RecvShowDirectDXGISurface(const WindowsHandle& handle,
         surface->GetFormat(), surface->GetSize(),
         BackendSelector::Content,
         TextureFlags::NO_FLAGS,
-        TextureAllocationFlags(ALLOC_FOR_OUT_OF_BAND_CONTENT | ALLOC_UPDATE_FROM_SURFACE));
+        ALLOC_FOR_OUT_OF_BAND_CONTENT);
     if (!texture) {
         NS_WARNING("Could not allocate a TextureClient for plugin!");
         return false;

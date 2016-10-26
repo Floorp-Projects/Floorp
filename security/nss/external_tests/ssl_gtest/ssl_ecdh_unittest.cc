@@ -57,10 +57,8 @@ TEST_P(TlsConnectGeneric, ConnectEcdhe) {
 TEST_P(TlsConnectTls12, ConnectEcdheP384) {
   Reset(TlsAgent::kServerEcdsa384);
   ConnectWithCipherSuite(TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256);
-  // This uses SHA-256 because TLS 1.2 doesn't care for the
-  // pairing of curve and hash function like in TLS 1.3.
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp384r1, ssl_auth_ecdsa,
-            ssl_sig_ecdsa_secp256r1_sha256);
+            ssl_sig_ecdsa_secp384r1_sha384);
 }
 
 TEST_P(TlsConnectGeneric, ConnectEcdheP384Client) {
@@ -178,10 +176,6 @@ TEST_P(TlsConnectGenericPre13, P384PriorityOnServer) {
 }
 
 TEST_P(TlsConnectGenericPre13, P384PriorityFromModelSocket) {
-#ifdef NSS_ECC_MORE_THAN_SUITE_B
-  // We can't run this test with a model socket and more than suite B.
-  return;
-#endif
   EnsureModelSockets();
 
   /* Both prefer P384, set on the model socket. */
@@ -213,9 +207,7 @@ TEST_P(TlsConnectTls13, UseLameGroup) {
   server_->ConfigNamedGroups(groups);
   client_->StartConnect();
   client_->Handshake();
-#ifndef NSS_ECC_MORE_THAN_SUITE_B  // TODO: remove this guard
   client_->CheckErrorCode(SSL_ERROR_NO_CIPHERS_SUPPORTED);
-#endif
 }
 
 TEST_P(TlsConnectStreamPre13, ConfiguredGroupsRenegotiate) {
@@ -363,7 +355,7 @@ TEST_P(TlsKeyExchangeTest13, NotEqualPriorityWithIntermediateGroup13) {
 }
 
 TEST_P(TlsKeyExchangeTest13,
-       NotEqualPriorityWithUnsupportedIntermediateGroup13) {
+       NotEqualPriorityWithUnsupportedFFIntermediateGroup13) {
   EnsureKeyShareSetup();
 
   // As in the previous test, the server prefers ffdhe_2048. Thus, even though
@@ -373,6 +365,28 @@ TEST_P(TlsKeyExchangeTest13,
                                                     ssl_grp_ec_secp256r1};
   const std::vector<SSLNamedGroup> server_groups = {
       ssl_grp_ec_secp256r1, ssl_grp_ffdhe_2048, ssl_grp_ec_curve25519};
+  client_->ConfigNamedGroups(client_groups);
+  server_->ConfigNamedGroups(server_groups);
+
+  Connect();
+
+  CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
+            ssl_sig_rsa_pss_sha256);
+  const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519};
+  CheckKEXDetails(client_groups, shares, true);
+}
+
+TEST_P(TlsKeyExchangeTest13,
+       NotEqualPriorityWithUnsupportedECIntermediateGroup13) {
+  EnsureKeyShareSetup();
+
+  // As in the previous test, the server prefers P-384. Thus, even though
+  // the client doesn't support this group, the server must not regard x25519 as
+  // equivalent to P-256. The server sends a HelloRetryRequest.
+  const std::vector<SSLNamedGroup> client_groups = {ssl_grp_ec_curve25519,
+                                                    ssl_grp_ec_secp256r1};
+  const std::vector<SSLNamedGroup> server_groups = {
+      ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1, ssl_grp_ec_curve25519};
   client_->ConfigNamedGroups(client_groups);
   server_->ConfigNamedGroups(server_groups);
 

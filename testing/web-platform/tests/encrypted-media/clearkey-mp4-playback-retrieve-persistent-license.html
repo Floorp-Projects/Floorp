@@ -2,8 +2,7 @@
 <html>
   <head>
     <meta charset=utf-8>
-    <meta name="timeout" content="long">
-    <title>Encrypted Media Extensions: Successful Playback, persistent-license session with Clear Key, mp4, event sequence</title>
+    <title>Encrypted Media Extensions: persistent-license playback, retrieve and playback with Clear Key, mp4</title>
     <link rel="help" href="https://w3c.github.io/encrypted-media/">
 
     <!-- Web Platform Test Harness scripts -->
@@ -45,8 +44,8 @@
                         videoType:          contentitem.video.type,
                         initDataType:       'keyids',
                         initData:           getInitData(contentitem,'keyids'),
-                        duration:           2,
-                        windowscript:       'resources/clearkey-retrieve-persistent-license.html' };
+                        windowscript:       'resources/clearkey-retrieve-persistent-license.html',
+                        testcase:           'playback, retrieve and playback' };
 
         runTest(config);
     </script>

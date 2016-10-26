@@ -83,8 +83,7 @@ class TlsSkipTest
       public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
  protected:
   TlsSkipTest()
-      : TlsConnectTestBase(TlsConnectTestBase::ToMode(std::get<0>(GetParam())),
-                           std::get<1>(GetParam())) {}
+      : TlsConnectTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {}
 
   void ServerSkipTest(PacketFilter* filter,
                       uint8_t alert = kTlsAlertUnexpectedMessage) {

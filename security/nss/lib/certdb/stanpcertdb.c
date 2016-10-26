@@ -158,8 +158,6 @@ CERT_MapStanError()
     int secError;
     int i;
 
-    error = 0;
-
     errorStack = NSS_GetErrorStack();
     if (errorStack == 0) {
         PORT_SetError(0);
@@ -859,7 +857,7 @@ certdb_SaveSingleProfile(CERTCertificate *cert, const char *emailAddr,
 
     if (saveit) {
         if (cc) {
-            if (stanProfile) {
+            if (stanProfile && profileTime && emailProfile) {
                 /* stanProfile is already stored in the crypto context,
                  * overwrite the data
                  */

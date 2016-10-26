@@ -2782,7 +2782,7 @@ cert_CacheCRLByGeneralName(CERTCertDBHandle* dbhandle, SECItem* crl,
     rv = cert_FindCRLByGeneralName(ncc, canonicalizedName, &oldEntry);
     PORT_Assert(SECSuccess == rv);
     if (SECSuccess != rv) {
-        rv = cert_ReleaseNamedCRLCache(ncc);
+        (void)cert_ReleaseNamedCRLCache(ncc);
         SECITEM_ZfreeItem(crl, PR_TRUE);
         return SECFailure;
     }

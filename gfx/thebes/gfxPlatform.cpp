@@ -607,7 +607,9 @@ static uint32_t GetSkiaGlyphCacheSize()
 void
 gfxPlatform::Init()
 {
+    MOZ_RELEASE_ASSERT(!XRE_IsGPUProcess(), "GFX: Not allowed in GPU process.");
     MOZ_RELEASE_ASSERT(NS_IsMainThread(), "GFX: Not in main thread.");
+
     if (gEverInitialized) {
         NS_RUNTIMEABORT("Already started???");
     }

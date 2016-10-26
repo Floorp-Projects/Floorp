@@ -66,12 +66,12 @@ addMessageListener("RemoteLogins:fillForm", function(message) {
 addEventListener("DOMFormHasPassword", function(event) {
   LoginManagerContent.onDOMFormHasPassword(event, content);
   let formLike = LoginFormFactory.createFromForm(event.target);
-  InsecurePasswordUtils.checkForInsecurePasswords(formLike);
+  InsecurePasswordUtils.reportInsecurePasswords(formLike);
 });
 addEventListener("DOMInputPasswordAdded", function(event) {
   LoginManagerContent.onDOMInputPasswordAdded(event, content);
   let formLike = LoginFormFactory.createFromField(event.target);
-  InsecurePasswordUtils.checkForInsecurePasswords(formLike);
+  InsecurePasswordUtils.reportInsecurePasswords(formLike);
 });
 addEventListener("pageshow", function(event) {
   LoginManagerContent.onPageShow(event, content);

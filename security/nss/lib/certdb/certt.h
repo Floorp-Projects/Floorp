@@ -733,7 +733,7 @@ struct CERTVerifyLogStr {
 
 struct CERTOKDomainNameStr {
     CERTOKDomainName *next;
-    char name[1]; /* actual length may be longer. */
+    char *name;
 };
 
 typedef SECStatus(PR_CALLBACK *CERTStatusChecker)(CERTCertDBHandle *handle,

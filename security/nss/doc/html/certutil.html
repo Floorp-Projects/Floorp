@@ -20,26 +20,25 @@ Add one or multiple extensions that certutil cannot encode yet, by loading their
            duplicate nicknames. Giving a key type generates a new key pair; 
            giving the ID of an existing key reuses that key pair (which is 
            required to renew certificates).
-          </p></dd><dt><span class="term">-l </span></dt><dd><p>Display detailed information when validating a certificate with the -V option.</p></dd><dt><span class="term">-m serial-number</span></dt><dd><p>Assign a unique serial number to a certificate being created. This operation should be performed by a CA. If no serial number is provided a default serial number is made from the current time. Serial numbers are limited to integers </p></dd><dt><span class="term">-n nickname</span></dt><dd><p>Specify the nickname of a certificate or key to list, create, add to a database, modify, or validate. Bracket the nickname string with quotation marks if it contains spaces.</p></dd><dt><span class="term">-o output-file</span></dt><dd><p>Specify the output file name for new certificates or binary certificate requests. Bracket the output-file string with quotation marks if it contains spaces. If this argument is not used the output destination defaults to standard output.</p></dd><dt><span class="term">-P dbPrefix</span></dt><dd><p>Specify the prefix used on the certificate and key database file. This argument is provided to support legacy servers. Most applications do not use a database prefix.</p></dd><dt><span class="term">-p phone</span></dt><dd><p>Specify a contact telephone number to include in new certificates or certificate requests. Bracket this string with quotation marks if it contains spaces.</p></dd><dt><span class="term">-q pqgfile or curve-name</span></dt><dd><p>Read an alternate PQG value from the specified file when generating DSA key pairs. If this argument is not used, <span class="command"><strong>certutil</strong></span> generates its own PQG value. PQG files are created with a separate DSA utility.</p><p>Elliptic curve name is one of the ones from SUITE B: nistp256, nistp384, nistp521</p><p>
-           If NSS has been compiled with support curves outside of SUITE B:
-              sect163k1, nistk163, sect163r1, sect163r2,            
-              nistb163,  sect193r1, sect193r2, sect233k1, nistk233,            
-              sect233r1, nistb233, sect239k1, sect283k1, nistk283,            
-              sect283r1, nistb283, sect409k1, nistk409, sect409r1,            
-              nistb409,  sect571k1, nistk571, sect571r1, nistb571,            
-              secp160k1, secp160r1, secp160r2, secp192k1, secp192r1,            
-              nistp192,  secp224k1, secp224r1, nistp224, secp256k1,            
-              secp256r1, secp384r1, secp521r1,       
-              prime192v1, prime192v2, prime192v3,          
-              prime239v1, prime239v2, prime239v3, c2pnb163v1,             
-              c2pnb163v2, c2pnb163v3, c2pnb176v1, c2tnb191v1,             
-              c2tnb191v2, c2tnb191v3,              
-              c2pnb208w1, c2tnb239v1, c2tnb239v2, c2tnb239v3,             
-              c2pnb272w1, c2pnb304w1,             
-              c2tnb359w1, c2pnb368w1, c2tnb431r1, secp112r1,             
-              secp112r2, secp128r1, secp128r2, sect113r1, sect113r2            
-              sect131r1, sect131r2    
-        </p></dd><dt><span class="term">-r </span></dt><dd><p>Display a certificate's binary DER encoding when listing information about that certificate with the -L option.</p></dd><dt><span class="term">-s subject</span></dt><dd><p>Identify a particular certificate owner for new certificates or certificate requests. Bracket this string with quotation marks if it contains spaces. The subject identification format follows RFC #1485.</p></dd><dt><span class="term">-t trustargs</span></dt><dd><p>Specify the trust attributes to modify in an existing certificate or to apply to a certificate when creating it or adding it to a database. There are three available trust categories for each certificate, expressed in the order <span class="emphasis"><em>SSL, email, object signing</em></span> for each trust setting. In each category position, use none, any, or all
+          </p></dd><dt><span class="term">-l </span></dt><dd><p>Display detailed information when validating a certificate with the -V option.</p></dd><dt><span class="term">-m serial-number</span></dt><dd><p>Assign a unique serial number to a certificate being created. This operation should be performed by a CA. If no serial number is provided a default serial number is made from the current time. Serial numbers are limited to integers </p></dd><dt><span class="term">-n nickname</span></dt><dd><p>Specify the nickname of a certificate or key to list, create, add to a database, modify, or validate. Bracket the nickname string with quotation marks if it contains spaces.</p></dd><dt><span class="term">-o output-file</span></dt><dd><p>Specify the output file name for new certificates or binary certificate requests. Bracket the output-file string with quotation marks if it contains spaces. If this argument is not used the output destination defaults to standard output.</p></dd><dt><span class="term">-P dbPrefix</span></dt><dd><p>Specify the prefix used on the certificate and key database file. This argument is provided to support legacy servers. Most applications do not use a database prefix.</p></dd><dt><span class="term">-p phone</span></dt><dd><p>Specify a contact telephone number to include in new certificates or certificate requests. Bracket this string with quotation marks if it contains spaces.</p></dd><dt><span class="term">-q pqgfile or curve-name</span></dt><dd><p>Read an alternate PQG value from the specified file when generating DSA key pairs. If this argument is not used, <span class="command"><strong>certutil</strong></span> generates its own PQG value. PQG files are created with a separate DSA utility.</p><p>Elliptic curve name is one of the ones from nistp256, nistp384, nistp521, curve25519.</p><p>If a token is available that supports more curves, the foolowing curves are supported as well:
+          sect163k1, nistk163, sect163r1, sect163r2,
+          nistb163,  sect193r1, sect193r2, sect233k1, nistk233,
+          sect233r1, nistb233, sect239k1, sect283k1, nistk283,
+          sect283r1, nistb283, sect409k1, nistk409, sect409r1,
+          nistb409,  sect571k1, nistk571, sect571r1, nistb571,
+          secp160k1, secp160r1, secp160r2, secp192k1, secp192r1,
+          nistp192,  secp224k1, secp224r1, nistp224, secp256k1,
+          secp256r1, secp384r1, secp521r1,
+          prime192v1, prime192v2, prime192v3,
+          prime239v1, prime239v2, prime239v3, c2pnb163v1,
+          c2pnb163v2, c2pnb163v3, c2pnb176v1, c2tnb191v1,
+          c2tnb191v2, c2tnb191v3,
+          c2pnb208w1, c2tnb239v1, c2tnb239v2, c2tnb239v3,
+          c2pnb272w1, c2pnb304w1,
+          c2tnb359w1, c2pnb368w1, c2tnb431r1, secp112r1,
+          secp112r2, secp128r1, secp128r2, sect113r1, sect113r2,
+          sect131r1, sect131r2</p>
+          </dd><dt><span class="term">-r </span></dt><dd><p>Display a certificate's binary DER encoding when listing information about that certificate with the -L option.</p></dd><dt><span class="term">-s subject</span></dt><dd><p>Identify a particular certificate owner for new certificates or certificate requests. Bracket this string with quotation marks if it contains spaces. The subject identification format follows RFC #1485.</p></dd><dt><span class="term">-t trustargs</span></dt><dd><p>Specify the trust attributes to modify in an existing certificate or to apply to a certificate when creating it or adding it to a database. There are three available trust categories for each certificate, expressed in the order <span class="emphasis"><em>SSL, email, object signing</em></span> for each trust setting. In each category position, use none, any, or all
 of the attribute codes: 
 	</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>
 		<span class="command"><strong>p</strong></span> - Valid peer

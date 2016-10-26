@@ -50,6 +50,9 @@ public:
   static already_AddRefed<nsIFile>
   GetFileForId(nsIFile* aDirectory, int64_t aId);
 
+  static already_AddRefed<nsIFile>
+  GetCheckedFileForId(nsIFile* aDirectory, int64_t aId);
+
   static nsresult
   InitDirectory(nsIFile* aDirectory,
                 nsIFile* aDatabaseFile,
@@ -118,6 +121,9 @@ public:
 
   already_AddRefed<nsIFile>
   GetDirectory();
+
+  already_AddRefed<nsIFile>
+  GetCheckedDirectory();
 
   already_AddRefed<nsIFile>
   GetJournalDirectory();

@@ -20,10 +20,10 @@ use_system_ffi = depends_if('--with-system-ffi')(lambda _: True)
 system_ffi = pkg_check_modules('MOZ_FFI', 'libffi > 3.0.9',
                                when=use_system_ffi)
 
-building_ffi = depends(system_ffi)(lambda v: not bool(v))
+building_ffi = depends(system_ffi)(lambda v: v is None)
 
-set_config('MOZ_SYSTEM_FFI', system_ffi)
-add_old_configure_assignment('MOZ_SYSTEM_FFI', system_ffi)
+set_config('MOZ_SYSTEM_FFI', depends_if(system_ffi)(lambda _: True))
+add_old_configure_assignment('MOZ_SYSTEM_FFI', depends_if(system_ffi)(lambda _: True))
 
 # Target selection, based on ffi/configure.ac.
 @depends_when(target, when=building_ffi)

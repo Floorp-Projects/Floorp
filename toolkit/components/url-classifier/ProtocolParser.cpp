@@ -860,8 +860,12 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
   PARSER_LOG(("* hasChecksum: %s\n", (aResponse.has_checksum() ? "yes" : "no")));
 
   tuV4->SetFullUpdate(isFullUpdate);
-  ProcessAdditionOrRemoval(*tuV4, aResponse.additions(), true /*aIsAddition*/);
-  ProcessAdditionOrRemoval(*tuV4, aResponse.removals(), false);
+
+  rv = ProcessAdditionOrRemoval(*tuV4, aResponse.additions(), true /*aIsAddition*/);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = ProcessAdditionOrRemoval(*tuV4, aResponse.removals(), false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PARSER_LOG(("\n\n"));
 
   return NS_OK;
@@ -966,12 +970,13 @@ static nsresult
 DoRiceDeltaDecode(const RiceDeltaEncoding& aEncoding,
                   nsTArray<uint32_t>& aDecoded)
 {
-  // Sanity check of the encoding info.
-  if (!aEncoding.has_first_value() ||
-      !aEncoding.has_rice_parameter() ||
-      !aEncoding.has_num_entries() ||
-      !aEncoding.has_encoded_data()) {
+  if (!aEncoding.has_first_value()) {
     PARSER_LOG(("The encoding info is incomplete."));
+    return NS_ERROR_FAILURE;
+  }
+  if (aEncoding.num_entries() > 0 &&
+      (!aEncoding.has_rice_parameter() || !aEncoding.has_encoded_data())) {
+    PARSER_LOG(("Rice parameter or encoded data is missing."));
     return NS_ERROR_FAILURE;
   }
 
@@ -989,13 +994,12 @@ DoRiceDeltaDecode(const RiceDeltaEncoding& aEncoding,
   // Setup the output buffer. The "first value" is included in
   // the output buffer.
   aDecoded.SetLength(aEncoding.num_entries() + 1);
-  aDecoded[0] = aEncoding.first_value();
 
   // Decode!
   bool rv = decoder.Decode(aEncoding.rice_parameter(),
                            aEncoding.first_value(), // first value.
                            aEncoding.num_entries(), // # of entries (first value not included).
-                           &aDecoded[1]);
+                           &aDecoded[0]);
 
   NS_ENSURE_TRUE(rv, NS_ERROR_FAILURE);
 
@@ -1013,7 +1017,10 @@ ProtocolParserProtobuf::ProcessEncodedAddition(TableUpdateV4& aTableUpdate,
 
   nsTArray<uint32_t> decoded;
   nsresult rv = DoRiceDeltaDecode(aAddition.rice_hashes(), decoded);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    PARSER_LOG(("Failed to parse encoded prefixes."));
+    return rv;
+  }
 
   //  Say we have the following raw prefixes
   //                              BE            LE
@@ -1081,7 +1088,10 @@ ProtocolParserProtobuf::ProcessEncodedRemoval(TableUpdateV4& aTableUpdate,
 
   nsTArray<uint32_t> decoded;
   nsresult rv = DoRiceDeltaDecode(aRemoval.rice_indices(), decoded);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    PARSER_LOG(("Failed to decode encoded removal indices."));
+    return rv;
+  }
 
   // The encoded prefixes are always 4 bytes.
   aTableUpdate.NewRemovalIndices(&decoded[0], decoded.Length());

@@ -316,7 +316,6 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mBlobStorage);
-    MOZ_ASSERT(aParent);
     MOZ_ASSERT(aCallback);
   }
 
@@ -373,7 +372,6 @@ MutableBlobStorage::GetBlobWhenReady(nsISupports* aParent,
                                      MutableBlobStorageCallback* aCallback)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aParent);
   MOZ_ASSERT(aCallback);
 
   // GetBlob can be called just once.

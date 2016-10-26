@@ -1,18 +1,6 @@
 {
     "DisabledTests": {
-        "*TLS13*":"Draft version mismatch (NSS=15, BoGo=14)",
         "FallbackSCSV-VersionMatch":"Draft version mismatch (NSS=15, BoGo=14)",
-        "SendEmptyRecords-Pass":"Draft version mismatch (NSS=15, BoGo=14)",
-        "SendSNIWarningAlert":"Draft version mismatch (NSS=15, BoGo=14)",
-        "UnknownCipher":"Draft version mismatch (NSS=15, BoGo=14)",
-        "UnknownCurve":"Draft version mismatch (NSS=15, BoGo=14)",
-        "*TrailingMessageData*":"Draft version mismatch (NSS=15, BoGo=14)",
-        "*Downgrade-TLS12*":"Draft version mismatch (NSS=15, BoGo=14)",
-        "UnknownCurve":"Draft version mismatch (NSS=15, BoGo=14)",
-        "*MissingKeyShare*":"Draft version mismatch (NSS=15, BoGo=14)",
-        "SecondClientHelloWrongCurve":"Draft version mismatch (NSS=15, BoGo=14)",
-        "*HelloRetryRequest*":"Draft version mismatch (NSS=15, BoGo=14)",
-        "*PartialEncryptedExtensionsWithServerHello*":"Draft version mismatch (NSS=15, BoGo=14)",
         "*KeyUpdate*":"KeyUpdate Unimplemented",
         "ClientAuth-NoFallback-TLS13":"Disagreement about alerts. Bug 1294975",
         "ClientAuth-SHA1-Fallback":"Disagreement about alerts. Bug 1294975",

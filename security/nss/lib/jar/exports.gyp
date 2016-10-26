@@ -16,7 +16,7 @@
             'jar.h',
             'jarfile.h'
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/public'
+          'destination': '<(nss_dist_dir)/public/<(module)'
         }
       ]
     }

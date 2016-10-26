@@ -51,30 +51,29 @@ class TestMetadata(object):
     configuration.
     """
 
-    def __init__(self, filename=None):
+    def __init__(self, all_tests, test_defaults=None):
         self._tests_by_path = OrderedDefaultDict(list)
         self._tests_by_flavor = defaultdict(set)
         self._test_dirs = set()
 
-        if filename:
-            with open(filename, 'rt') as fh:
-                test_data, manifest_support_files = json.load(fh)
-
-                for path, tests in test_data.items():
-                    for metadata in tests:
-                        # Many tests inherit their "support-files" from a manifest
-                        # level default, so we store these separately to save
-                        # disk space, and propagate them to each test when
-                        # de-serializing here.
-                        manifest = metadata['manifest']
-                        support_files = manifest_support_files.get(manifest)
-                        if support_files and 'support-files' not in metadata:
-                            metadata['support-files'] = support_files
-                        self._tests_by_path[path].append(metadata)
-                        self._test_dirs.add(os.path.dirname(path))
-
-                        flavor = metadata.get('flavor')
-                        self._tests_by_flavor[flavor].add(path)
+        with open(all_tests, 'rt') as fh:
+            test_data = json.load(fh)
+        defaults = None
+        if test_defaults:
+            with open(test_defaults, 'rt') as fh:
+                defaults = json.load(fh)
+        for path, tests in test_data.items():
+            for metadata in tests:
+                if defaults:
+                    manifest = metadata['manifest']
+                    manifest_defaults = defaults.get(manifest)
+                    if manifest_defaults:
+                        metadata = manifestparser.combine_fields(manifest_defaults,
+                                                                 metadata)
+                self._tests_by_path[path].append(metadata)
+                self._test_dirs.add(os.path.dirname(path))
+                flavor = metadata.get('flavor')
+                self._tests_by_flavor[flavor].add(path)
 
     def tests_with_flavor(self, flavor):
         """Obtain all tests having the specified flavor.
@@ -183,8 +182,11 @@ class TestResolver(MozbuildObject):
         self._run_make(target='run-tests-deps', pass_thru=True,
                        print_directory=False)
 
-        self._tests = TestMetadata(filename=os.path.join(self.topobjdir,
-            'all-tests.json'))
+        self._tests = TestMetadata(os.path.join(self.topobjdir,
+                                                'all-tests.json'),
+                                   test_defaults=os.path.join(self.topobjdir,
+                                                              'test-defaults.json'))
+
         self._test_rewrites = {
             'a11y': os.path.join(self.topobjdir, '_tests', 'testing',
                 'mochitest', 'a11y'),
@@ -503,7 +505,8 @@ def read_manifestparser_manifest(context, manifest_path):
     path = mozpath.normpath(mozpath.join(context.srcdir, manifest_path))
     return manifestparser.TestManifest(manifests=[path], strict=True,
                                        rootdir=context.config.topsrcdir,
-                                       finder=context._finder)
+                                       finder=context._finder,
+                                       handle_defaults=False)
 
 def read_reftest_manifest(context, manifest_path):
     import reftest

@@ -58,7 +58,7 @@ mk_add_options() {
 }
 
 echo "------BEGIN_ENV_BEFORE_SOURCE"
-env
+$3 $4
 echo "------END_ENV_BEFORE_SOURCE"
 
 echo "------BEGIN_BEFORE_SOURCE"
@@ -76,6 +76,5 @@ set
 echo "------END_AFTER_SOURCE"
 
 echo "------BEGIN_ENV_AFTER_SOURCE"
-env
+$3 $4
 echo "------END_ENV_AFTER_SOURCE"
-

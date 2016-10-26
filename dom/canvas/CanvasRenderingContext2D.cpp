@@ -230,11 +230,6 @@ protected:
   Point mEnd;
 };
 
-
-CanvasRenderingContext2D* CanvasRenderingContext2D::sThisContext = nullptr;
-bool CanvasRenderingContext2D::sThisContextWasDestroyed = false;
-bool CanvasRenderingContext2D::sThisContextHadItsFilterUpdated = false;
-
 bool
 CanvasRenderingContext2D::PatternIsOpaque(CanvasRenderingContext2D::Style aStyle) const
 {
@@ -1089,10 +1084,6 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D()
 {
-  if (sThisContext == this) {
-    sThisContextWasDestroyed = true;
-  }
-
   RemoveDrawObserver();
   RemovePostRefreshObserver();
   RemoveShutdownObserver();
@@ -2847,45 +2838,6 @@ private:
   nsPresContext* mPresContext;
 };
 
-bool
-CanvasRenderingContext2D::NeedToApplyFilter()
-{
-  MOZ_RELEASE_ASSERT(mStyleStack.Length() >= 1);
-  MOZ_RELEASE_ASSERT(CurrentState().filter.mPrimitives.Length() < 1000);
-  sThisContext = this;
-  sThisContextWasDestroyed = false;
-  sThisContextHadItsFilterUpdated = false;
-
-  const gfx::FilterDescription& filter = EnsureUpdatedFilter();
-  MOZ_RELEASE_ASSERT(!sThisContextWasDestroyed);
-
-  // Do these checks in different lines so that if we crash, we can tell from
-  // the crashing line whether the filter was updated.
-  // Any well-behaved filters should be less have 1000 primitives. The check
-  // itself is not important, we just need it to access mPrimitives.Length(),
-  // since that's what's crashing.
-  if (sThisContextHadItsFilterUpdated) {
-    MOZ_RELEASE_ASSERT(mStyleStack.Length() >= 1);
-    MOZ_RELEASE_ASSERT(filter.mPrimitives.Length() < 1000);
-  } else {
-    MOZ_RELEASE_ASSERT(mStyleStack.Length() >= 1);
-    MOZ_RELEASE_ASSERT(filter.mPrimitives.Length() < 2000);
-  }
-  return filter.mPrimitives.Length() > 0;
-}
-
-const gfx::FilterDescription&
-CanvasRenderingContext2D::EnsureUpdatedFilter()
-{
-  const ContextState& state = CurrentState();
-  bool isWriteOnly = mCanvasElement && mCanvasElement->IsWriteOnly();
-  if (state.filterSourceGraphicTainted != isWriteOnly) {
-    UpdateFilter();
-  }
-  MOZ_ASSERT(state.filterSourceGraphicTainted == isWriteOnly);
-  return state.filter;
-}
-
 void
 CanvasRenderingContext2D::UpdateFilter()
 {
@@ -2897,10 +2849,6 @@ CanvasRenderingContext2D::UpdateFilter()
     CurrentState().filterSourceGraphicTainted =
       (mCanvasElement && mCanvasElement->IsWriteOnly());
     return;
-  }
-
-  if (sThisContext == this) {
-    sThisContextHadItsFilterUpdated = true;
   }
 
   // The filter might reference an SVG filter that is declared inside this

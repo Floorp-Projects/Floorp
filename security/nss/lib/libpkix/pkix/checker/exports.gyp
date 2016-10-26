@@ -26,7 +26,7 @@
             'pkix_signaturechecker.h',
             'pkix_targetcertchecker.h'
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/private'
+          'destination': '<(nss_dist_dir)/private/<(module)'
         }
       ]
     }

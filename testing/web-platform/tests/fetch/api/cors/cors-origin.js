@@ -2,7 +2,7 @@ if (this.document === undefined) {
   importScripts("/common/utils.js");
   importScripts("/resources/testharness.js");
   importScripts("../resources/utils.js");
-  importScripts("../resources/get-host-info.sub.js")
+  importScripts("/common/get-host-info.sub.js")
 }
 
 /* If origin is undefined, it is set to fetched url's origin*/
@@ -16,7 +16,7 @@ function corsOrigin(desc, baseURL, method, origin, shouldPass) {
   var requestInit = {"mode": "cors", "method": method};
 
   promise_test(function(test) {
-    fetch(RESOURCES_DIR + "clean-stash.py?token=" + uuid_token).then(function(resp) {
+    return fetch(RESOURCES_DIR + "clean-stash.py?token=" + uuid_token).then(function(resp) {
       assert_equals(resp.status, 200, "Clean stash response's status is 200");
       if (shouldPass) {
         return fetch(url + urlParameters, requestInit).then(function(resp) {

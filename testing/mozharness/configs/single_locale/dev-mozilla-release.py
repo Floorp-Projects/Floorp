@@ -18,7 +18,7 @@ config = {
     }, {
         "vcs": "hg",
         "repo": "https://hg.mozilla.org/projects/jamun",
-        "branch": "default",
+        "branch": "%(revision)s",
         "dest": "jamun",
     }],
     # purge options
