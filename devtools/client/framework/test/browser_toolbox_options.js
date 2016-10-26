@@ -11,7 +11,7 @@
 
 var doc = null, toolbox = null, panelWin = null, modifiedPrefs = [];
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
+const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 add_task(function* () {
   const URL = "data:text/html;charset=utf8,test for dynamically registering " +
