@@ -204,13 +204,15 @@ function verifyView(view1, view2)
 
 function verifyWasmModule(module1, module2)
 {
+  let getGlobalForObject = SpecialPowers.Cu.getGlobalForObject;
   let testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
   let wasmExtractCode = SpecialPowers.unwrap(testingFunctions.wasmExtractCode);
   let exp1 = wasmExtractCode(module1);
   let exp2 = wasmExtractCode(module2);
   let code1 = exp1.code;
   let code2 = exp2.code;
-  todo(code1 instanceof Uint8Array, "Instance of Uint8Array");
+  ok(code1 instanceof getGlobalForObject(code1).Uint8Array, "Instance of Uint8Array");
+  ok(code2 instanceof getGlobalForObject(code1).Uint8Array, "Instance of Uint8Array");
   ok(code1.length == code2.length, "Correct length");
   verifyBuffers(code1, code2);
   continueToNextStep();
