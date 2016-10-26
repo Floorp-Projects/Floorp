@@ -784,11 +784,17 @@ ComputeShapeDistance(nsCSSPropertyID aProperty,
       }
       break;
     }
-    case eCSSKeyword_polygon:
-      // TODO: will be fixed in the later patch.
-      MOZ_ASSERT(false);
+    case eCSSKeyword_polygon: {
+      // Don't care about the first element which is the function keyword, and
+      // the second element which is the fill rule.
+      const nsCSSValuePairList* list = func->Item(2).GetPairListValue();
+      do {
+        squareDistance += pixelCalcDistance(ExtractCalcValue(list->mXValue)) +
+                          pixelCalcDistance(ExtractCalcValue(list->mYValue));
+        list = list->mNext;
+      } while (list);
       break;
-
+    }
     case eCSSKeyword_inset:
       // TODO: will be fixed in the later patch.
       MOZ_ASSERT(false);
