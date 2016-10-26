@@ -171,16 +171,9 @@ UseTileTexture(CompositableTextureHostRef& aTexture,
   }
 
   if (!aUpdateRect.IsEmpty()) {
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    aTexture->Updated(nullptr);
-#else
-    // We possibly upload the entire texture contents here. This is a purposeful
-    // decision, as sub-image upload can often be slow and/or unreliable, but
-    // we may want to reevaluate this in the future.
     // For !HasIntermediateBuffer() textures, this is likely a no-op.
     nsIntRegion region = aUpdateRect;
     aTexture->Updated(&region);
-#endif
   }
 
   aTexture->PrepareTextureSource(aTextureSource);

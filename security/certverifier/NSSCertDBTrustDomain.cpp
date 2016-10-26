@@ -17,6 +17,7 @@
 #include "certdb.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "nsNSSCertificate.h"
@@ -32,6 +33,7 @@
 #include "secerr.h"
 
 #include "CNNICHashWhitelist.inc"
+#include "StartComAndWoSignData.inc"
 
 using namespace mozilla;
 using namespace mozilla::pkix;
@@ -729,6 +731,61 @@ private:
   const uint8_t* mTarget;
 };
 
+static bool
+CertIsStartComOrWoSign(const CERTCertificate* cert)
+{
+  for (const DataAndLength& dn : StartComAndWoSignDNs) {
+    if (cert->derSubject.len == dn.len &&
+        PodEqual(cert->derSubject.data, dn.data, dn.len)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// If a certificate in the given chain appears to have been issued by one of
+// seven roots operated by StartCom and WoSign that are not trusted to issue new
+// certificates, verify that the end-entity has a notBefore date before 21
+// October 2016. If the value of notBefore is after this time, the chain is not
+// valid.
+// (NB: While there are seven distinct roots being checked for, two of them
+// share distinguished names, resulting in six distinct distinguished names to
+// actually look for.)
+static Result
+CheckForStartComOrWoSign(const UniqueCERTCertList& certChain)
+{
+  if (CERT_LIST_EMPTY(certChain)) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+  const CERTCertListNode* endEntityNode = CERT_LIST_HEAD(certChain);
+  if (!endEntityNode || !endEntityNode->cert) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+  PRTime notBefore;
+  PRTime notAfter;
+  if (CERT_GetCertTimes(endEntityNode->cert, &notBefore, &notAfter)
+        != SECSuccess) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+  // PRTime is microseconds since the epoch, whereas JS time is milliseconds.
+  // (new Date("2016-10-21T00:00:00Z")).getTime() * 1000
+  static const PRTime OCTOBER_21_2016 = 1477008000000000;
+  if (notBefore <= OCTOBER_21_2016) {
+    return Success;
+  }
+
+  for (const CERTCertListNode* node = CERT_LIST_HEAD(certChain);
+       !CERT_LIST_END(node, certChain); node = CERT_LIST_NEXT(node)) {
+    if (!node || !node->cert) {
+      return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    }
+    if (CertIsStartComOrWoSign(node->cert)) {
+      return Result::ERROR_REVOKED_CERTIFICATE;
+    }
+  }
+  return Success;
+}
+
 Result
 NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
 {
@@ -743,6 +800,11 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
   }
   if (CERT_LIST_EMPTY(certList)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  Result rv = CheckForStartComOrWoSign(certList);
+  if (rv != Success) {
+    return rv;
   }
 
   // If the certificate appears to have been issued by a CNNIC root, only allow
@@ -789,7 +851,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
   }
 
   bool isBuiltInRoot = false;
-  Result rv = IsCertBuiltInRoot(root, isBuiltInRoot);
+  rv = IsCertBuiltInRoot(root, isBuiltInRoot);
   if (rv != Success) {
     return rv;
   }

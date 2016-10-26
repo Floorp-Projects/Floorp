@@ -53,6 +53,7 @@
 #include "mozilla/Hal.h"
 #include "nsISiteSpecificUserAgent.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/SSE.h"
 #include "mozilla/StaticPtr.h"
 #include "Connection.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()

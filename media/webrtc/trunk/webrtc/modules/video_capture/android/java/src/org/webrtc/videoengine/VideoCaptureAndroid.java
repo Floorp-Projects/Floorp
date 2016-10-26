@@ -49,7 +49,6 @@ import org.mozilla.gecko.GeckoAppShell.AppStateListener;
 public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateListener {
   private final static String TAG = "WEBRTC-JC";
 
-  private static SurfaceHolder localPreview;
   // Only non-null while capturing, accessed exclusively from synchronized methods.
   Camera camera;
   private Camera.CameraInfo info;
@@ -81,23 +80,13 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
   private int frameCount;
   private int frameDropRatio;
 
-  // Requests future capturers to send their frames to |localPreview| directly.
-  public static void setLocalPreview(SurfaceHolder localPreview) {
-    // It is a gross hack that this is a class-static.  Doing it right would
-    // mean plumbing this through the C++ API and using it from
-    // webrtc/examples/android/media_demo's MediaEngine class.
-    VideoCaptureAndroid.localPreview = localPreview;
-  }
-
   @WebRTCJNITarget
   public VideoCaptureAndroid(int id, long native_capturer) {
     this.id = id;
     this.native_capturer = native_capturer;
     this.context = GetContext();
-    if(android.os.Build.VERSION.SDK_INT>8) {
-      this.info = new Camera.CameraInfo();
-      Camera.getCameraInfo(id, info);
-    }
+    this.info = new Camera.CameraInfo();
+    Camera.getCameraInfo(id, info);
     mCaptureRotation = GetRotateAmount();
   }
 
@@ -133,21 +122,13 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
       case Surface.ROTATION_180: degrees = 180; break;
       case Surface.ROTATION_270: degrees = 270; break;
     }
-    if(android.os.Build.VERSION.SDK_INT>8) {
-      int result;
-      if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-        result = (info.orientation + degrees) % 360;
-      } else {  // back-facing
-        result = (info.orientation - degrees + 360) % 360;
-      }
-      return result;
-    } else {
-      // Assume 90deg orientation for Froyo devices.
-      // Only back-facing cameras are supported in Froyo.
-      int orientation = 90;
-      int result = (orientation - degrees + 360) % 360;
-      return result;
+    int result;
+    if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+      result = (info.orientation + degrees) % 360;
+    } else {  // back-facing
+      result = (info.orientation - degrees + 360) % 360;
     }
+    return result;
   }
 
   // Return the global application context.
@@ -203,51 +184,34 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
     }
     Throwable error = null;
     try {
-      if(android.os.Build.VERSION.SDK_INT>8) {
-        camera = Camera.open(id);
-      } else {
-        camera = Camera.open();
-      }
+      camera = Camera.open(id);
 
-      localPreview = ViERenderer.GetLocalRenderer();
-      if (localPreview != null) {
-        localPreview.addCallback(this);
-        if (localPreview.getSurface() != null &&
-            localPreview.getSurface().isValid()) {
-          camera.setPreviewDisplay(localPreview);
-        }
-      } else {
-        if(android.os.Build.VERSION.SDK_INT>10) {
-          // No local renderer (we only care about onPreviewFrame() buffers, not a
-          // directly-displayed UI element).  Camera won't capture without
-          // setPreview{Texture,Display}, so we create a SurfaceTexture and hand
-          // it over to Camera, but never listen for frame-ready callbacks,
-          // and never call updateTexImage on it.
-          try {
-            cameraGlTextures = new int[1];
+      // No local renderer (we only care about onPreviewFrame() buffers, not a
+      // directly-displayed UI element).  Camera won't capture without
+      // setPreview{Texture,Display}, so we create a SurfaceTexture and hand
+      // it over to Camera, but never listen for frame-ready callbacks,
+      // and never call updateTexImage on it.
+      try {
+        cameraGlTextures = new int[1];
 
-            // Generate one texture pointer and bind it as an external texture.
-            GLES20.glGenTextures(1, cameraGlTextures, 0);
-            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                                 cameraGlTextures[0]);
-            GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                                   GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
-            GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                                   GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                                   GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                                   GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+        // Generate one texture pointer and bind it as an external texture.
+        GLES20.glGenTextures(1, cameraGlTextures, 0);
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                               cameraGlTextures[0]);
+        GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                               GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                               GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                               GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                               GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
 
-            cameraSurfaceTexture = new SurfaceTexture(cameraGlTextures[0]);
-            cameraSurfaceTexture.setOnFrameAvailableListener(null);
-            camera.setPreviewTexture(cameraSurfaceTexture);
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        } else {
-          throw new RuntimeException("No preview surface for Camera.");
-        }
+        cameraSurfaceTexture = new SurfaceTexture(cameraGlTextures[0]);
+        cameraSurfaceTexture.setOnFrameAvailableListener(null);
+        camera.setPreviewTexture(cameraSurfaceTexture);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
 
       Log.d(TAG, "Camera orientation: " + info.orientation +
@@ -300,11 +264,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
       min_mfps *= frameDropRatio;
       max_mfps *= frameDropRatio;
       Log.d(TAG, "Camera preview mfps range: " + min_mfps + " - " + max_mfps);
-      if (android.os.Build.VERSION.SDK_INT>8) {
-          parameters.setPreviewFpsRange(min_mfps, max_mfps);
-      } else {
-          parameters.setPreviewFrameRate(max_mfps / 1000);
-      }
+      parameters.setPreviewFpsRange(min_mfps, max_mfps);
 
       int format = ImageFormat.NV21;
       parameters.setPreviewFormat(format);
@@ -336,8 +296,6 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
       }
       exchange(result, true);
       return;
-    } catch (IOException e) {
-      error = e;
     } catch (RuntimeException e) {
       error = e;
     }
@@ -401,18 +359,11 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback, AppStateL
     try {
       camera.setPreviewCallbackWithBuffer(null);
       camera.stopPreview();
-      if (localPreview != null) {
-        localPreview.removeCallback(this);
-        camera.setPreviewDisplay(null);
-      } else {
-        if(android.os.Build.VERSION.SDK_INT>10) {
-          camera.setPreviewTexture(null);
-          cameraSurfaceTexture = null;
-          if (cameraGlTextures != null) {
-            GLES20.glDeleteTextures(1, cameraGlTextures, 0);
-            cameraGlTextures = null;
-          }
-        }
+      camera.setPreviewTexture(null);
+      cameraSurfaceTexture = null;
+      if (cameraGlTextures != null) {
+        GLES20.glDeleteTextures(1, cameraGlTextures, 0);
+        cameraGlTextures = null;
       }
       camera.release();
       camera = null;

@@ -7,7 +7,9 @@
 #PopupAutoComplete > richlistbox > richlistitem {
   height: 20px;
   min-height: 20px;
+  border: 0;
   border-radius: 0;
+  padding: 0px 1px 0px 1px;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem > .ac-title {

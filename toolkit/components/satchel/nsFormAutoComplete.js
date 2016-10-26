@@ -450,12 +450,6 @@ FormAutoComplete.prototype = {
         let historyResults = entries.map(entry => entry.text);
         let historyComments = new Array(entries.length).fill("");
 
-        // fill out the comment column for the suggestions
-        // if we have any suggestions, put a label at the top
-        if (values.length) {
-            comments[0] = "separator";
-        }
-
         // now put the history results above the datalist suggestions
         let finalValues = historyResults.concat(values);
         let finalLabels = historyResults.concat(labels);

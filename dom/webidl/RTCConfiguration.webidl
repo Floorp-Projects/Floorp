@@ -21,7 +21,6 @@ dictionary RTCIceServer {
 };
 
 enum RTCIceTransportPolicy {
-    "none",
     "relay",
     "all"
 };
