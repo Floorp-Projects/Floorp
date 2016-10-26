@@ -1,0 +1,67 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+div {
+  /* Element needs geometry to be eligible for layerization */
+  width: 100px;
+  height: 100px;
+  background-color: white;
+}
+</style>
+<body>
+<script>
+'use strict';
+
+function waitForPaints() {
+  return new Promise(function(resolve, reject) {
+    waitForAllPaintsFlushed(resolve);
+  });
+}
+
+promise_test(t => {
+  // This test only applies to compositor animations
+  if (!isOMTAEnabled()) {
+    return;
+  }
+
+  var div = addDiv(t, { style: 'transition: transform 50ms; ' +
+                               'transform: translateX(0px)' });
+  getComputedStyle(div).transform;
+
+  div.style.transform = 'translateX(100px)';
+
+  var timeBeforeStart = window.performance.now();
+  return waitForPaints().then(() => {
+    // If it took over 50ms to paint the transition, we have no luck
+    // to test it.  This situation will happen if GC runs while waiting for the
+    // paint.
+    if (window.performance.now() - timeBeforeStart >= 50) {
+      return;
+    }
+
+    var transform  =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_not_equals(transform, '',
+                      'The transition style is applied on the compositor');
+
+    // Generate artificial busyness on the main thread for 100ms.
+    var timeAtStart = window.performance.now();
+    while (window.performance.now() - timeAtStart < 100) {}
+
+    // Now the transition on the compositor should finish but stay at the final
+    // position because there was no chance to pull the transition back from
+    // the compositor.
+    transform  =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_equals(transform, 'matrix(1, 0, 0, 1, 100, 0)',
+                  'The final transition style is still applied on the ' +
+                  'compositor');
+  });
+}, 'Transition on the compositor keeps the final style while the main thread ' +
+   'is busy even if the transition finished on the compositor');
+
+done();
+</script>
+</body>
