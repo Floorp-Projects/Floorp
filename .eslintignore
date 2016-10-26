@@ -69,7 +69,6 @@ browser/components/feeds/**
 browser/components/privatebrowsing/**
 browser/components/sessionstore/**
 browser/components/tabview/**
-browser/components/translation/**
 # generated files in cld2
 browser/components/translation/cld2/cld-worker.js
 browser/extensions/pdfjs/**
