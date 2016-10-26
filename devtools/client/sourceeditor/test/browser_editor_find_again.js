@@ -6,7 +6,7 @@
 "use strict";
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/locale/sourceeditor.properties");
+const L10N = new LocalizationHelper("devtools/client/locales/sourceeditor.properties");
 
 const { OS } = Services.appinfo;
 

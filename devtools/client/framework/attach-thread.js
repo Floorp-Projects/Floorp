@@ -9,7 +9,7 @@ const Services = require("Services");
 const defer = require("devtools/shared/defer");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
+const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 function handleThreadState(toolbox, event, packet) {
   // Suppress interrupted events by default because the thread is

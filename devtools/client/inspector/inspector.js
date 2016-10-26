@@ -37,8 +37,9 @@ const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
 const {LocalizationHelper, localizeMarkup} = require("devtools/shared/l10n");
-const INSPECTOR_L10N = new LocalizationHelper("devtools/locale/inspector.properties");
-const TOOLBOX_L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
+const INSPECTOR_L10N =
+      new LocalizationHelper("devtools/client/locales/inspector.properties");
+const TOOLBOX_L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 // Sidebar dimensions
 const INITIAL_SIDEBAR_SIZE = 350;
