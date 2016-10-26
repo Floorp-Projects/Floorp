@@ -14,12 +14,15 @@ namespace mozilla {
 nsresult
 GetSelectedCityInfo(nsAString& aCountryCode)
 {
-  NSDictionary* selected_city =
-    [[NSUserDefaults standardUserDefaults]
-      objectForKey:@"com.apple.preferences.timezone.selected_city"];
-  NSString *countryCode = (NSString *)
-    [selected_city objectForKey:@"CountryCode"];
-  const char *countryCodeUTF8 = [countryCode UTF8String];
+  // Can be replaced with [[NSLocale currentLocale] countryCode] once we build
+  // with the 10.12 SDK.
+  id countryCode = [[NSLocale currentLocale] objectForKey:NSLocaleCountryCode];
+
+  if (![countryCode isKindOfClass:[NSString class]]) {
+    return NS_ERROR_FAILURE;
+  }
+
+  const char* countryCodeUTF8 = [(NSString*)countryCode UTF8String];
 
   if (!countryCodeUTF8) {
     return NS_ERROR_FAILURE;
