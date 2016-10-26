@@ -1262,9 +1262,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     }
   } else {
     // |this| is an outer window. Outer windows start out frozen and
-    // remain frozen until they get an inner window, so freeze this
-    // outer window here.
-    Freeze();
+    // remain frozen until they get an inner window.
+    MOZ_ASSERT(NewIsFrozen());
 
     // As an outer window, we may be the root of a constellation. This initial
     // static constellation may be overridden as this window is given a parent
@@ -2302,7 +2301,7 @@ WindowStateHolder::WindowStateHolder(nsGlobalWindow* aWindow)
   NS_PRECONDITION(aWindow, "null window");
   NS_PRECONDITION(aWindow->IsInnerWindow(), "Saving an outer window");
 
-  aWindow->SuspendTimeouts();
+  aWindow->NewSuspend();
 
   // When a global goes into the bfcache, we disable script.
   xpc::Scriptability::Get(mInnerWindowReflector).SetDocShellAllowsScript(false);
@@ -2552,13 +2551,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   // Bail out early if we're in process of closing down the window.
   NS_ENSURE_STATE(!mCleanedUp);
 
-  if (IsFrozen()) {
-    // This outer is now getting its first inner, thaw the outer now
-    // that it's ready and is getting an inner window.
-
-    Thaw();
-  }
-
   NS_ASSERTION(!AsOuter()->GetCurrentInnerWindow() ||
                AsOuter()->GetCurrentInnerWindow()->GetExtantDoc() == mDoc,
                "Uh, mDoc doesn't match the current inner window "
@@ -2649,7 +2641,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   JS::Rooted<JSObject*> newInnerGlobal(cx);
   if (reUseInnerWindow) {
     // We're reusing the current inner window.
-    NS_ASSERTION(!currentInner->IsFrozen(),
+    NS_ASSERTION(!currentInner->NewIsFrozen(),
                  "We should never be reusing a shared inner window");
     newInnerWindow = currentInner;
     newInnerGlobal = currentInner->GetWrapperPreserveColor();
@@ -2702,9 +2694,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         newInnerWindow = nsGlobalWindow::Create(this);
       }
 
-      // Freeze the outer window and null out the inner window so
-      // that initializing classes on the new inner doesn't end up
-      // reaching into the old inner window for classes etc.
+      // The outer window is automatically treated as frozen when we
+      // null out the inner window. As a result, initializing classes
+      // on the new inner won't end up reaching into the old inner
+      // window for classes etc.
       //
       // [This happens with Object.prototype when XPConnect creates
       // a temporary global while initializing classes; the reason
@@ -2714,7 +2707,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
       mInnerWindow = nullptr;
 
-      Freeze();
       mCreatingInnerWindow = true;
       // Every script context we are initialized with must create a
       // new global.
@@ -2729,7 +2721,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
       mCreatingInnerWindow = false;
       createdInnerWindow = true;
-      Thaw();
 
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -2760,7 +2751,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
       // Don't free objects on our current inner window if it's going to be
       // held in the bfcache.
-      if (!currentInner->IsFrozen()) {
+      if (!currentInner->NewIsFrozen()) {
         currentInner->FreeInnerObjects();
       }
     }
@@ -2860,13 +2851,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                  "outer and inner globals should have the same prototype");
 #endif
 
-    nsCOMPtr<Element> frame = AsOuter()->GetFrameElementInternal();
-    if (frame) {
-      nsPIDOMWindowOuter* parentWindow = frame->OwnerDoc()->GetWindow();
-      if (parentWindow && parentWindow->TimeoutSuspendCount()) {
-        SuspendTimeouts(parentWindow->TimeoutSuspendCount());
-      }
-    }
+    mInnerWindow->NewSyncStateFromParentWindow();
   }
 
   // Add an extra ref in case we release mContext during GC.
@@ -8852,7 +8837,7 @@ nsGlobalWindow::RunPendingTimeoutsRecursive(nsGlobalWindow *aTopWindow,
 
   // Return early if we're frozen or have no inner window.
   if (!(inner = aWindow->GetCurrentInnerWindowInternal()) ||
-      inner->IsFrozen()) {
+      inner->NewIsFrozen()) {
     return;
   }
 
@@ -8860,7 +8845,7 @@ nsGlobalWindow::RunPendingTimeoutsRecursive(nsGlobalWindow *aTopWindow,
 
   // Check again if we're frozen since running pending timeouts
   // could've frozen us.
-  if (inner->IsFrozen()) {
+  if (inner->NewIsFrozen()) {
     return;
   }
 
@@ -10321,7 +10306,7 @@ nsGlobalWindow::FireHashchange(const nsAString &aOldURL,
   MOZ_ASSERT(IsInnerWindow());
 
   // Don't do anything if the window is frozen.
-  if (IsFrozen()) {
+  if (NewIsFrozen()) {
     return NS_OK;
   }
 
@@ -10360,7 +10345,7 @@ nsGlobalWindow::DispatchSyncPopState()
   nsresult rv = NS_OK;
 
   // Bail if the window is frozen.
-  if (IsFrozen()) {
+  if (NewIsFrozen()) {
     return NS_OK;
   }
 
@@ -11472,7 +11457,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
                         const char16_t* aData)
 {
   if (!nsCRT::strcmp(aTopic, NS_IOSERVICE_OFFLINE_STATUS_TOPIC)) {
-    if (!IsFrozen()) {
+    if (!NewIsFrozen()) {
         // Fires an offline status event if the offline status has changed
         FireOfflineStatusEventIfChanged();
     }
@@ -11481,7 +11466,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!nsCRT::strcmp(aTopic, OBSERVER_TOPIC_IDLE)) {
     mCurrentlyIdle = true;
-    if (IsFrozen()) {
+    if (NewIsFrozen()) {
       // need to fire only one idle event while the window is frozen.
       mNotifyIdleObserversIdleOnThaw = true;
       mNotifyIdleObserversActiveOnThaw = false;
@@ -11493,7 +11478,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!nsCRT::strcmp(aTopic, OBSERVER_TOPIC_ACTIVE)) {
     mCurrentlyIdle = false;
-    if (IsFrozen()) {
+    if (NewIsFrozen()) {
       mNotifyIdleObserversActiveOnThaw = true;
       mNotifyIdleObserversIdleOnThaw = false;
     } else if (AsInner()->IsCurrentInnerWindow()) {
@@ -11612,7 +11597,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       internalEvent->mFlags.mOnlyChromeDispatch = true;
     }
 
-    if (IsFrozen()) {
+    if (NewIsFrozen()) {
       // This window is frozen, rather than firing the events here,
       // store the domain in which the change happened and fire the
       // events if we're ever thawed.
@@ -12530,12 +12515,22 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
 
   TimeDuration delta = TimeDuration::FromMilliseconds(realInterval);
 
-  if (!IsFrozen() && !mTimeoutsSuspendDepth) {
-    // If we're not currently frozen, then we set timeout->mWhen to be the
-    // actual firing time of the timer (i.e., now + delta). We also actually
-    // create a timer and fire it off.
-
+  if (NewIsFrozen()) {
+    // If we are frozen simply set timeout->mTimeRemaining to be the
+    // "time remaining" in the timeout (i.e., the interval itself).  This
+    // will be used to create a new mWhen time when the window is thawed.
+    // The end effect is that time does not appear to pass for frozen windows.
+    timeout->mTimeRemaining = delta;
+  } else {
+    // Since we are not frozen we must set a precise mWhen target wakeup
+    // time.  Even if we are suspended we want to use this target time so
+    // that it appears time passes while suspended.
     timeout->mWhen = TimeStamp::Now() + delta;
+  }
+
+  // If we're not suspended, then set the timer.
+  if (!NewIsSuspended()) {
+    MOZ_ASSERT(!timeout->mWhen.IsNull());
 
     nsresult rv;
     timeout->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
@@ -12552,14 +12547,6 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
 
     // The timeout is now also held in the timer's closure.
     Unused << copy.forget();
-  } else {
-    // If we are frozen, however, then we instead simply set
-    // timeout->mTimeRemaining to be the "time remaining" in the timeout (i.e.,
-    // the interval itself). We don't create a timer for it, since that will
-    // happen when we are thawed and the timeout will then get a timer and run
-    // to completion.
-
-    timeout->mTimeRemaining = delta;
   }
 
   timeout->mWindow = this;
@@ -12805,7 +12792,7 @@ nsGlobalWindow::RescheduleTimeout(nsTimeout* aTimeout, const TimeStamp& now,
   }
 
   if (!aTimeout->mTimer) {
-    NS_ASSERTION(IsFrozen() || mTimeoutsSuspendDepth,
+    NS_ASSERTION(NewIsFrozen() || NewIsSuspended(),
                  "How'd our timer end up null if we're not frozen or "
                  "suspended?");
 
@@ -12846,12 +12833,12 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 {
   // If a modal dialog is open for this window, return early. Pending
   // timeouts will run when the modal dialog is dismissed.
-  if (IsInModalState() || mTimeoutsSuspendDepth) {
+  if (IsInModalState() || NewIsSuspended()) {
     return;
   }
 
   NS_ASSERTION(IsInnerWindow(), "Timeout running on outer window!");
-  NS_ASSERTION(!IsFrozen(), "Timeout running on a window in the bfcache!");
+  NS_ASSERTION(!NewIsFrozen(), "Timeout running on a window in the bfcache!");
 
   nsTimeout *nextTimeout;
   nsTimeout *last_expired_timeout, *last_insertion_point;
@@ -12927,7 +12914,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   mTimeoutInsertionPoint = dummy_timeout;
 
   for (nsTimeout *timeout = mTimeouts.getFirst();
-       timeout != dummy_timeout && !IsFrozen();
+       timeout != dummy_timeout && !NewIsFrozen();
        timeout = nextTimeout) {
     nextTimeout = timeout->getNext();
 
@@ -12938,7 +12925,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
       continue;
     }
 
-    if (mTimeoutsSuspendDepth) {
+    if (NewIsSuspended()) {
       // Some timer did suspend us. Make sure the
       // rest of the timers get executed later.
       timeout->mFiringDepth = 0;
@@ -13039,7 +13026,7 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
   FORWARD_TO_INNER(ResetTimersForNonBackgroundWindow, (),
                    NS_ERROR_NOT_INITIALIZED);
 
-  if (IsFrozen() || mTimeoutsSuspendDepth) {
+  if (NewIsFrozen() || NewIsSuspended()) {
     return NS_OK;
   }
 
@@ -13178,7 +13165,7 @@ nsGlobalWindow::InsertTimeoutIntoList(nsTimeout *aTimeout)
        prevSibling && prevSibling != mTimeoutInsertionPoint &&
          // This condition needs to match the one in SetTimeoutOrInterval that
          // determines whether to set mWhen or mTimeRemaining.
-         ((IsFrozen() || mTimeoutsSuspendDepth) ?
+         (NewIsFrozen() ?
           prevSibling->mTimeRemaining > aTimeout->mTimeRemaining :
           prevSibling->mWhen > aTimeout->mWhen);
        prevSibling = prevSibling->getPrevious()) {
@@ -13369,7 +13356,7 @@ nsGlobalWindow::SaveWindowState()
   // list that will only run after this window has come out of the bfcache.
   // Also, while we're frozen, we won't dispatch online/offline events
   // to the page.
-  inner->Freeze();
+  inner->NewFreeze();
 
   nsCOMPtr<nsISupports> state = new WindowStateHolder(inner);
 
@@ -13412,7 +13399,7 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
     }
   }
 
-  inner->Thaw();
+  inner->NewThaw();
 
   holder->DidRestoreWindow();
 
@@ -13499,7 +13486,7 @@ nsGlobalWindow::SuspendTimeouts(uint32_t aIncrease,
         win->SuspendTimeouts(aIncrease, aFreezeChildren, aFreezeWorkers);
 
         if (inner && aFreezeChildren) {
-          inner->Freeze();
+          inner->NewFreeze();
         }
       }
     }
@@ -13610,7 +13597,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren, bool aThawWorkers)
         }
 
         if (inner && aThawChildren) {
-          inner->Thaw();
+          inner->NewThaw();
         }
 
         rv = win->ResumeTimeouts(aThawChildren, aThawWorkers);

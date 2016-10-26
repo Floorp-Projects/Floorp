@@ -8764,7 +8764,6 @@ nsDocShell::RestoreFromHistory()
   }
 
   nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
-  uint32_t parentSuspendCount = 0;
   if (document) {
     RefPtr<nsDocShell> parent = GetParentDocshell();
     if (parent) {
@@ -8779,10 +8778,6 @@ nsDocShell::RestoreFromHistory()
         if (d->AnimationsPaused()) {
           document->SuppressEventHandling(nsIDocument::eAnimationsOnly,
                                           d->AnimationsPaused());
-        }
-
-        if (nsCOMPtr<nsPIDOMWindowOuter> parentWindow = d->GetWindow()) {
-          parentSuspendCount = parentWindow->TimeoutSuspendCount();
         }
       }
     }
@@ -8920,16 +8915,16 @@ nsDocShell::RestoreFromHistory()
     }
   }
 
+  nsCOMPtr<nsPIDOMWindowInner> privWinInner = privWin->GetCurrentInnerWindow();
+
   // If parent is suspended, increase suspension count.
   // This can't be done as early as event suppression since this
   // depends on docshell tree.
-  if (parentSuspendCount) {
-    privWin->SuspendTimeouts(parentSuspendCount, false);
-  }
+  privWinInner->NewSyncStateFromParentWindow();
 
   // Now that all of the child docshells have been put into place, we can
   // restart the timers for the window and all of the child frames.
-  privWin->ResumeTimeouts();
+  privWinInner->NewResume();
 
   // Restore the refresh URI list.  The refresh timers will be restarted
   // when EndPageLoad() is called.

@@ -136,7 +136,7 @@ public:
 
   NS_IMETHOD Run() override
   {
-    mWindow->ResumeTimeouts(false);
+    mWindow->NewResume();
     return NS_OK;
   }
 
@@ -2923,7 +2923,7 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
           if (suspendedDoc) {
             suspendedDoc->SuppressEventHandling(nsIDocument::eEvents);
           }
-          topWindow->SuspendTimeouts(1, false);
+          topInner->NewSuspend();
           resumeTimeoutRunnable = new nsResumeTimeoutsEvent(topInner);
         }
       }

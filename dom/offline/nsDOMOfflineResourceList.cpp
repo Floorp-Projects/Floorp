@@ -558,7 +558,7 @@ nsDOMOfflineResourceList::SendEvent(const nsAString &aEventName)
 
   // If the window is frozen or we're still catching up on events that were
   // queued while frozen, save the event for later.
-  if (GetOwner()->IsFrozen() || mPendingEvents.Count() > 0) {
+  if (GetOwner()->NewIsFrozen() || mPendingEvents.Count() > 0) {
     mPendingEvents.AppendObject(event);
     return NS_OK;
   }

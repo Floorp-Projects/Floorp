@@ -8196,8 +8196,13 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
     return false;
   }
 
+  // Do not allow suspended windows to be placed in the
+  // bfcache.  This method is also used to verify a document
+  // coming out of the bfcache is ok to restore, though.  So
+  // we only want to block suspend windows that aren't also
+  // frozen.
   nsPIDOMWindowInner* win = GetInnerWindow();
-  if (win && win->TimeoutSuspendCount()) {
+  if (win && win->NewIsSuspended() && !win->NewIsFrozen()) {
     return false;
   }
 
