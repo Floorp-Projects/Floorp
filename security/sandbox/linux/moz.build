@@ -4,13 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+SharedLibrary('mozsandbox')
+
+# Depend on mozglue if and only if it's a shared library;
+# this needs to match mozglue/build/moz.build:
 if CONFIG['OS_TARGET'] == 'Android':
-    SharedLibrary('mozsandbox')
     USE_LIBS += [
         'mozglue',
     ]
-else:
-    Library('mozsandbox')
 
 EXPORTS.mozilla += [
     'Sandbox.h',
@@ -101,10 +102,6 @@ if CONFIG['OS_TARGET'] != 'Android':
     OS_LIBS += [
         'rt',
     ]
-
-USE_LIBS += [
-    'mfbt',
-]
 
 DIRS += [
     'broker',
