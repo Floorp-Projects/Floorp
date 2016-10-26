@@ -183,16 +183,20 @@ def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
     if os.path.exists(build_dir + "/build.ninja"):
         run_cmake = False
 
+    # cmake doesn't deal well with backslashes in paths.
+    def slashify_path(path):
+        return path.replace('\\', '/')
+
     cmake_args = ["-GNinja",
-                  "-DCMAKE_C_COMPILER=%s" % cc[0],
-                  "-DCMAKE_CXX_COMPILER=%s" % cxx[0],
-                  "-DCMAKE_ASM_COMPILER=%s" % cc[0],
+                  "-DCMAKE_C_COMPILER=%s" % slashify_path(cc[0]),
+                  "-DCMAKE_CXX_COMPILER=%s" % slashify_path(cxx[0]),
+                  "-DCMAKE_ASM_COMPILER=%s" % slashify_path(cc[0]),
                   "-DCMAKE_C_FLAGS=%s" % ' '.join(cc[1:]),
                   "-DCMAKE_CXX_FLAGS=%s" % ' '.join(cxx[1:]),
                   "-DCMAKE_BUILD_TYPE=%s" % build_type,
                   "-DLLVM_TARGETS_TO_BUILD=X86;ARM",
                   "-DLLVM_ENABLE_ASSERTIONS=%s" % ("ON" if assertions else "OFF"),
-                  "-DPYTHON_EXECUTABLE=%s" % python_path,
+                  "-DPYTHON_EXECUTABLE=%s" % slashify_path(python_path),
                   "-DCMAKE_INSTALL_PREFIX=%s" % inst_dir,
                   "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
                   "-DLIBCXX_LIBCPPABI_VERSION=\"\"",
