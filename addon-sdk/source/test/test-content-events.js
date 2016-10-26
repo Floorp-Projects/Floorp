@@ -66,7 +66,12 @@ exports["test dead object errors"] = function(assert, done) {
 
   loader.unload();
 
-  nuke(loader.sharedGlobalSandbox);
+  // in order to get a dead object error on this module, we need to nuke
+  // the relative sandbox; unload the loader is not enough
+  let url = Object.keys(loader.sandboxes).
+    find(url => url.endsWith("/sdk/content/events.js"));
+
+  nuke(loader.sharedGlobalSandbox || loader.sandboxes[url]);
 
   system.on("console-api-log-event", onMessage, true);
 
