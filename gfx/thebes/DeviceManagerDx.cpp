@@ -314,6 +314,14 @@ DeviceManagerDx::CreateCompositorDevice(FeatureState& d3d11)
     return;
   }
 
+  if (XRE_IsGPUProcess() && !D3D11Checks::DoesRemotePresentWork(adapter)) {
+    d3d11.SetFailed(
+      FeatureStatus::Unavailable,
+      "DXGI does not support out-of-process presentation",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_REMOTE_PRESENT"));
+    return;
+  }
+
   RefPtr<ID3D11Device> device;
   if (!CreateCompositorDeviceHelper(d3d11, adapter, true, device)) {
     // Try again without video support and record that it failed.
