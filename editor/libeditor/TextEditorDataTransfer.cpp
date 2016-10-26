@@ -12,7 +12,6 @@
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
-#include "nsCRT.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
@@ -106,15 +105,15 @@ TextEditor::InsertTextFromTransferable(nsITransferable* aTransferable,
                                        bool aDoDeleteSelection)
 {
   nsresult rv = NS_OK;
-  char* bestFlavor = nullptr;
+  nsAutoCString bestFlavor;
   nsCOMPtr<nsISupports> genericDataObj;
   uint32_t len = 0;
   if (NS_SUCCEEDED(
-        aTransferable->GetAnyTransferData(&bestFlavor,
+        aTransferable->GetAnyTransferData(bestFlavor,
                                           getter_AddRefs(genericDataObj),
                                           &len)) &&
-      bestFlavor && (!nsCRT::strcmp(bestFlavor, kUnicodeMime) ||
-                     !nsCRT::strcmp(bestFlavor, kMozTextInternal))) {
+      (bestFlavor.EqualsLiteral(kUnicodeMime) ||
+       bestFlavor.EqualsLiteral(kMozTextInternal))) {
     AutoTransactionsConserveSelection dontSpazMySelection(this);
     nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
     if (textDataObj && len > 0) {
@@ -129,7 +128,6 @@ TextEditor::InsertTextFromTransferable(nsITransferable* aTransferable,
       rv = InsertTextAt(stuffToPaste, aDestinationNode, aDestOffset, aDoDeleteSelection);
     }
   }
-  free(bestFlavor);
 
   // Try to scroll the selection into view if the paste/drop succeeded
 

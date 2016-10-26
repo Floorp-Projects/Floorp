@@ -24,8 +24,7 @@
 #include "mozilla/SelectionState.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
-#include "nsCRT.h"
-#include "nsCRTGlue.h"
+#include "nsCRTGlue.h" // for CRLF
 #include "nsComponentManagerUtils.h"
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
@@ -1058,7 +1057,7 @@ HTMLEditor::BlobReader::OnError(const nsAString& aError)
 }
 
 nsresult
-HTMLEditor::InsertObject(const char* aType,
+HTMLEditor::InsertObject(const nsACString& aType,
                          nsISupports* aObject,
                          bool aIsSafe,
                          nsIDOMDocument* aSourceDoc,
@@ -1150,11 +1149,11 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
                                    bool aDoDeleteSelection)
 {
   nsresult rv = NS_OK;
-  nsXPIDLCString bestFlavor;
+  nsAutoCString bestFlavor;
   nsCOMPtr<nsISupports> genericDataObj;
   uint32_t len = 0;
   if (NS_SUCCEEDED(
-        transferable->GetAnyTransferData(getter_Copies(bestFlavor),
+        transferable->GetAnyTransferData(bestFlavor,
                                          getter_AddRefs(genericDataObj),
                                          &len))) {
     AutoTransactionsConserveSelection dontSpazMySelection(this);
@@ -1163,14 +1162,14 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
     nsAutoString stuffToPaste;
     bool isSafe = IsSafeToInsertData(aSourceDoc);
 
-    if (!nsCRT::strcmp(bestFlavor, kFileMime) ||
-        !nsCRT::strcmp(bestFlavor, kJPEGImageMime) ||
-        !nsCRT::strcmp(bestFlavor, kJPGImageMime) ||
-        !nsCRT::strcmp(bestFlavor, kPNGImageMime) ||
-        !nsCRT::strcmp(bestFlavor, kGIFImageMime)) {
+    if (bestFlavor.EqualsLiteral(kFileMime) ||
+        bestFlavor.EqualsLiteral(kJPEGImageMime) ||
+        bestFlavor.EqualsLiteral(kJPGImageMime) ||
+        bestFlavor.EqualsLiteral(kPNGImageMime) ||
+        bestFlavor.EqualsLiteral(kGIFImageMime)) {
       rv = InsertObject(bestFlavor, genericDataObj, isSafe,
                         aSourceDoc, aDestinationNode, aDestOffset, aDoDeleteSelection);
-    } else if (!nsCRT::strcmp(bestFlavor, kNativeHTMLMime)) {
+    } else if (bestFlavor.EqualsLiteral(kNativeHTMLMime)) {
       // note cf_html uses utf8, hence use length = len, not len/2 as in flavors below
       nsCOMPtr<nsISupportsCString> textDataObj = do_QueryInterface(genericDataObj);
       if (textDataObj && len > 0) {
@@ -1211,9 +1210,9 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
         }
       }
     }
-    if (!nsCRT::strcmp(bestFlavor, kHTMLMime) ||
-        !nsCRT::strcmp(bestFlavor, kUnicodeMime) ||
-        !nsCRT::strcmp(bestFlavor, kMozTextInternal)) {
+    if (bestFlavor.EqualsLiteral(kHTMLMime) ||
+        bestFlavor.EqualsLiteral(kUnicodeMime) ||
+        bestFlavor.EqualsLiteral(kMozTextInternal)) {
       nsCOMPtr<nsISupportsString> textDataObj = do_QueryInterface(genericDataObj);
       if (textDataObj && len > 0) {
         nsAutoString text;
@@ -1232,7 +1231,7 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
 
       if (!stuffToPaste.IsEmpty()) {
         AutoEditBatch beginBatching(this);
-        if (!nsCRT::strcmp(bestFlavor, kHTMLMime)) {
+        if (bestFlavor.EqualsLiteral(kHTMLMime)) {
           rv = DoInsertHTMLWithContext(stuffToPaste,
                                        aContextStr, aInfoStr, flavor,
                                        aSourceDoc,
@@ -1301,7 +1300,7 @@ HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
         if (variant) {
           nsCOMPtr<nsISupports> object;
           variant->GetAsISupports(getter_AddRefs(object));
-          return InsertObject(NS_ConvertUTF16toUTF8(type).get(), object, isSafe,
+          return InsertObject(NS_ConvertUTF16toUTF8(type), object, isSafe,
                               aSourceDoc, aDestinationNode, aDestOffset, aDoDeleteSelection);
         }
       } else if (type.EqualsLiteral(kNativeHTMLMime)) {
@@ -1697,11 +1696,11 @@ HTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType)
   // If it can't support a "text" output of the data the call will fail
   nsCOMPtr<nsISupports> genericDataObj;
   uint32_t len = 0;
-  char* flav = 0;
-  rv = trans->GetAnyTransferData(&flav, getter_AddRefs(genericDataObj), &len);
+  nsAutoCString flav;
+  rv = trans->GetAnyTransferData(flav, getter_AddRefs(genericDataObj), &len);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (flav && !nsCRT::strcmp(flav, kUnicodeMime)) {
+  if (flav.EqualsLiteral(kUnicodeMime)) {
     nsCOMPtr<nsISupportsString> textDataObj = do_QueryInterface(genericDataObj);
     if (textDataObj && len > 0) {
       nsAutoString stuffToPaste;
@@ -1711,7 +1710,6 @@ HTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType)
       rv = InsertAsPlaintextQuotation(stuffToPaste, true, 0);
     }
   }
-  free(flav);
 
   return rv;
 }
