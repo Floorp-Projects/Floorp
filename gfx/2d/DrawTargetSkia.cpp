@@ -1567,6 +1567,10 @@ DrawTargetSkia::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
     // Otherwise, just fall back to a software draw target.
   }
 #endif
+  // Check that our SkCanvas isn't backed by vector storage such as PDF.  If it
+  // is then we want similar storage to avoid losing fidelity.
+  MOZ_ASSERT(mCanvas->imageInfo().colorType() != kUnknown_SkColorType,
+             "Not backed by pixels - we need to handle PDF backed SkCanvas");
   if (!target->Init(aSize, aFormat)) {
     return nullptr;
   }
@@ -1751,6 +1755,30 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
   if (info.isOpaque()) {
     mCanvas->clear(SK_ColorBLACK);
   }
+  return true;
+}
+
+bool
+DrawTargetSkia::Init(SkCanvas* aCanvas)
+{
+  mCanvas = sk_ref_sp(aCanvas);
+
+  SkImageInfo imageInfo = mCanvas->imageInfo();
+
+  // If the canvas is backed by pixels we clear it to be on the safe side.  If
+  // it's not (for example, for PDF output) we don't.
+  bool isBackedByPixels = imageInfo.colorType() != kUnknown_SkColorType;
+  if (isBackedByPixels) {
+    // Note for PDF backed SkCanvas |alphaType == kUnknown_SkAlphaType|.
+    SkColor clearColor = imageInfo.isOpaque() ? SK_ColorBLACK : SK_ColorTRANSPARENT;
+    mCanvas->clear(clearColor);
+  }
+
+  SkISize size = mCanvas->getBaseLayerSize();
+  mSize.width = size.width();
+  mSize.height = size.height();
+  mFormat = SkiaColorTypeToGfxFormat(imageInfo.colorType(),
+                                     imageInfo.alphaType());
   return true;
 }
 
