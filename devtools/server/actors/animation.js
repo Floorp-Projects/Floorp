@@ -424,6 +424,20 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    * Set the current time of the animation player.
    */
   setCurrentTime: function (currentTime) {
+    // The spec is that the progress of animation is changed
+    // if the time of setCurrentTime is during the endDelay.
+    // We should prevent the time
+    // to make the same animation behavior as the original.
+    // Likewise, in case the time is less than 0.
+    const timing = this.player.effect.getComputedTiming();
+    if (timing.delay < 0) {
+      currentTime += timing.delay;
+    }
+    if (currentTime < 0) {
+      currentTime = 0;
+    } else if (currentTime * this.player.playbackRate > timing.endTime) {
+      currentTime = timing.endTime;
+    }
     this.player.currentTime = currentTime * this.player.playbackRate;
   },
 
