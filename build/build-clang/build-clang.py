@@ -13,6 +13,7 @@ import argparse
 import tempfile
 import glob
 import errno
+import re
 from contextlib import contextmanager
 import sys
 import which
@@ -78,7 +79,10 @@ def build_tar_package(tar, name, base, directory):
     # On Windows, we have to convert this into an msys path so that tar can
     # understand it.
     if is_windows():
-        name = name.replace('\\', '/').replace('c:', '/c')
+        name = name.replace('\\', '/')
+        def f(match):
+            return '/' + match.group(1).lower()
+        name = re.sub(r'^([A-Z]):', f, name)
     run_in(base, [tar,
                   "-c",
                   "-%s" % ("J" if ".xz" in name else "j"),
