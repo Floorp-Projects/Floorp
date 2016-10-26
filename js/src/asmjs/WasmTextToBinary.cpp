@@ -2738,11 +2738,15 @@ ParseDataSegment(WasmParseContext& c)
     if (!offset)
         return nullptr;
 
-    WasmToken text;
-    if (!c.ts.getIf(WasmToken::Text, &text))
-        return new(c.lifo) AstDataSegment(offset, AstName());
+    AstNameVector fragments(c.lifo);
 
-    return new(c.lifo) AstDataSegment(offset, text.text());
+    WasmToken text;
+    while (c.ts.getIf(WasmToken::Text, &text)) {
+        if (!fragments.append(text.text()))
+            return nullptr;
+    }
+
+    return new(c.lifo) AstDataSegment(offset, Move(fragments));
 }
 
 static bool
@@ -2800,18 +2804,27 @@ ParseMemory(WasmParseContext& c, WasmToken token, AstModule* module)
         if (!c.ts.match(WasmToken::Data, c.error))
             return false;
 
-        WasmToken text;
+        AstNameVector fragments(c.lifo);
+
+        WasmToken data;
         size_t pages = 0;
-        if (c.ts.getIf(WasmToken::Text, &text)) {
+        size_t totalLength = 0;
+        while (c.ts.getIf(WasmToken::Text, &data)) {
+            if (!fragments.append(data.text()))
+                return false;
+            totalLength += data.text().length();
+        }
+
+        if (fragments.length()) {
             AstExpr* offset = new(c.lifo) AstConst(Val(uint32_t(0)));
             if (!offset)
                 return false;
 
-            AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, text.text());
+            AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, Move(fragments));
             if (!segment || !module->append(segment))
                 return false;
 
-            pages = AlignBytes<size_t>(segment->text().length(), PageSize) / PageSize;
+            pages = AlignBytes<size_t>(totalLength, PageSize) / PageSize;
             if (pages != uint32_t(pages))
                 return false;
         }
@@ -4621,18 +4634,22 @@ EncodeDataSegment(Encoder& e, AstDataSegment& segment)
     if (!e.writeExpr(Expr::End))
         return false;
 
-    AstName text = segment.text();
+    size_t totalLength = 0;
+    for (const AstName& fragment : segment.fragments())
+        totalLength += fragment.length();
 
     Vector<uint8_t, 0, SystemAllocPolicy> bytes;
-    if (!bytes.reserve(text.length()))
+    if (!bytes.reserve(totalLength))
         return false;
 
-    const char16_t* cur = text.begin();
-    const char16_t* end = text.end();
-    while (cur != end) {
-        uint8_t byte;
-        MOZ_ALWAYS_TRUE(ConsumeTextByte(&cur, end, &byte));
-        bytes.infallibleAppend(byte);
+    for (const AstName& fragment : segment.fragments()) {
+        const char16_t* cur = fragment.begin();
+        const char16_t* end = fragment.end();
+        while (cur != end) {
+            uint8_t byte;
+            MOZ_ALWAYS_TRUE(ConsumeTextByte(&cur, end, &byte));
+            bytes.infallibleAppend(byte);
+        }
     }
 
     if (!e.writeBytes(bytes.begin(), bytes.length()))
