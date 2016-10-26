@@ -23,8 +23,6 @@ const SEARCH_VARIABLE_FLAG = "*";
 const SEARCH_AUTOFILL = [SEARCH_GLOBAL_FLAG, SEARCH_FUNCTION_FLAG, SEARCH_TOKEN_FLAG];
 const TOOLBAR_ORDER_POPUP_POSITION = "topcenter bottomleft";
 const RESIZE_REFRESH_RATE = 50; // ms
-const PROMISE_DEBUGGER_URL =
-  "chrome://devtools/content/promisedebugger/promise-debugger.xhtml";
 
 const EventListenersView = require("./content/views/event-listeners-view");
 const SourcesView = require("./content/views/sources-view");
@@ -135,7 +133,6 @@ var DebuggerView = {
     this.WatchExpressions.destroy();
     this.EventListeners.destroy();
     this.GlobalSearch.destroy();
-    this._destroyPromiseDebugger();
     this._destroyPanes();
 
     this.editor.destroy();
@@ -155,7 +152,6 @@ var DebuggerView = {
     this._workersAndSourcesPane = document.getElementById("workers-and-sources-pane");
     this._instrumentsPane = document.getElementById("instruments-pane");
     this._instrumentsPaneToggleButton = document.getElementById("instruments-pane-toggle");
-    this._promisePane = document.getElementById("promise-debugger-pane");
 
     this.showEditor = this.showEditor.bind(this);
     this.showBlackBoxMessage = this.showBlackBoxMessage.bind(this);
@@ -191,7 +187,6 @@ var DebuggerView = {
     this._workersAndSourcesPane = null;
     this._instrumentsPane = null;
     this._instrumentsPaneToggleButton = null;
-    this._promisePane = null;
   },
 
   /**
@@ -236,41 +231,6 @@ var DebuggerView = {
           break;
       }
     });
-  },
-
-  /**
-   * Initialie the Promise Debugger instance.
-   */
-  _initializePromiseDebugger: function () {
-    let iframe = this._promiseDebuggerIframe = document.createElement("iframe");
-    iframe.setAttribute("flex", 1);
-
-    let onLoad = (event) => {
-      iframe.removeEventListener("load", onLoad, true);
-
-      let doc = event.target;
-      let win = doc.defaultView;
-
-      win.setPanel(DebuggerController._toolbox);
-    };
-
-    iframe.addEventListener("load", onLoad, true);
-    iframe.setAttribute("src", PROMISE_DEBUGGER_URL);
-    this._promisePane.appendChild(iframe);
-  },
-
-  /**
-   * Destroy the Promise Debugger instance.
-   */
-  _destroyPromiseDebugger: function () {
-    if (this._promiseDebuggerIframe) {
-      this._promiseDebuggerIframe.contentWindow.destroy();
-
-      this._promiseDebuggerIframe.parentNode.removeChild(
-        this._promiseDebuggerIframe);
-
-      this._promiseDebuggerIframe = null;
-    }
   },
 
   /**
