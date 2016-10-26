@@ -35,6 +35,10 @@ export PATH="${VSWINPATH}/VC/redist/x86/Microsoft.VC140.CRT:${VSWINPATH}/VC/redi
 export INCLUDE="${VSWINPATH}/VC/include:${VSWINPATH}/VC/atlmfc/include:${VSWINPATH}/SDK/Include/10.0.14393.0/ucrt:${VSWINPATH}/SDK/Include/10.0.14393.0/shared:${VSWINPATH}/SDK/Include/10.0.14393.0/um:${VSWINPATH}/SDK/Include/10.0.14393.0/winrt:${VSWINPATH}/DIA SDK/include"
 export LIB="${VSWINPATH}/VC/lib:${VSWINPATH}/VC/atlmfc/lib:${VSWINPATH}/SDK/lib/10.0.14393.0/ucrt/x86:${VSWINPATH}/SDK/lib/10.0.14393.0/um/x86:${VSWINPATH}/DIA SDK/lib"
 
+export PATH="$(cd svn && pwd)/bin:${PATH}"
+export PATH="$(cd cmake && pwd)/bin:${PATH}"
+export PATH="$(cd ninja && pwd)/bin:${PATH}"
+
 # We use |mach python| to set up a virtualenv automatically for us.  We create
 # a dummy mozconfig, because the default machinery for config.guess-choosing
 # of the objdir doesn't work very well.
