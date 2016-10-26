@@ -47,15 +47,13 @@ var gTest = {
     }
     var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
     for (var i = 0; i < 2048; ++i) {
-      var t = i / context.sampleRate;
-      var current = Math.min(99, Math.floor(100 * Math.min(1.0, (t - T0) / this.duration)));
+      step = 1024.0/99.0;
+      var current = Math.floor(i / step);
       var next = current + 1;
       if (next < this.curve.length) {
-        var t0 = current / this.curve.length * this.duration;
-        var t1 = next / this.curve.length * this.duration;
-        expectedBuffer.getChannelData(0)[i] = linearInterpolate(t0, this.curve[current], t1, this.curve[next], t);
+        expectedBuffer.getChannelData(0)[i] = linearInterpolate(current*step, this.curve[current], next*step, this.curve[next], i);
       } else {
-        expectedBuffer.getChannelData(0)[i] = this.curve[current];
+        expectedBuffer.getChannelData(0)[i] = this.curve[99];
       }
     }
     return expectedBuffer;
