@@ -21,7 +21,6 @@
 #include "mozilla/ModuleLoader.h"
 #include "mozilla/Mutex.h"
 #include "nsXULAppAPI.h"
-#include "nsNativeModuleLoader.h"
 #include "nsIFactory.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -193,8 +192,6 @@ public:
 
   static nsTArray<const mozilla::Module*>* sStaticModules;
   static nsTArray<ComponentLocation>* sModuleLocations;
-
-  nsNativeModuleLoader mNativeModuleLoader;
 
   class KnownModule
   {
