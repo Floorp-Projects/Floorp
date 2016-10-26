@@ -373,16 +373,17 @@ nsTransferable::GetTransferData(const char *aFlavor, nsISupports **aData, uint32
 // flavor string.
 //
 NS_IMETHODIMP
-nsTransferable::GetAnyTransferData(char **aFlavor, nsISupports **aData, uint32_t *aDataLen)
+nsTransferable::GetAnyTransferData(nsACString& aFlavor, nsISupports **aData,
+                                   uint32_t *aDataLen)
 {
   MOZ_ASSERT(mInitialized);
 
-  NS_ENSURE_ARG_POINTER(aFlavor && aData && aDataLen);
+  NS_ENSURE_ARG_POINTER(aData && aDataLen);
 
   for (size_t i = 0; i < mDataArray.Length(); ++i) {
     DataStruct& data = mDataArray.ElementAt(i);
     if (data.IsDataAvailable()) {
-      *aFlavor = ToNewCString(data.GetFlavor());
+      aFlavor.Assign(data.GetFlavor());
       data.GetData(aData, aDataLen);
       return NS_OK;
     }
