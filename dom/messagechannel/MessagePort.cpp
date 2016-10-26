@@ -139,12 +139,14 @@ private:
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    Nullable<WindowProxyOrMessagePort> source;
+    source.SetValue().SetAsMessagePort() = mPort;
+
     event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
                             false /* non-bubbling */,
                             false /* cancelable */, value, EmptyString(),
-                            EmptyString(), nullptr, ports);
+                            EmptyString(), source, ports);
     event->SetTrusted(true);
-    event->SetSource(mPort);
 
     bool dummy;
     mPort->DispatchEvent(static_cast<dom::Event*>(event.get()), &dummy);
