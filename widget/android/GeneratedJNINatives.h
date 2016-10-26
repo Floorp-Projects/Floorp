@@ -128,7 +128,7 @@ template<class Impl>
 class GeckoEditable::Natives : public mozilla::jni::NativeImpl<GeckoEditable, Impl>
 {
 public:
-    static const JNINativeMethod methods[8];
+    static const JNINativeMethod methods[7];
 };
 
 template<class Impl>
@@ -137,10 +137,6 @@ const JNINativeMethod GeckoEditable::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<GeckoEditable::DisposeNative_t>(
             mozilla::jni::NativeStub<GeckoEditable::DisposeNative_t, Impl>
             ::template Wrap<&Impl::DisposeNative>),
-
-    mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeAcknowledgeFocus_t>(
-            mozilla::jni::NativeStub<GeckoEditable::OnImeAcknowledgeFocus_t, Impl>
-            ::template Wrap<&Impl::OnImeAcknowledgeFocus>),
 
     mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeAddCompositionRange_t>(
             mozilla::jni::NativeStub<GeckoEditable::OnImeAddCompositionRange_t, Impl>

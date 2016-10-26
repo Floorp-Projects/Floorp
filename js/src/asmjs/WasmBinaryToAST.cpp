@@ -1573,8 +1573,11 @@ AstDecodeTableSection(AstDecodeContext& c)
     if (table.initial > MaxTableElems)
         return c.d.fail("too many table elements");
 
-    if (!c.module().setTable(table))
+    if (c.module().hasTable())
         return c.d.fail("already have a table");
+
+    if (!c.module().addTable(table))
+        return false;
 
     if (!c.d.finishSection(sectionStart, sectionSize, "table"))
         return false;
@@ -1670,6 +1673,9 @@ AstDecodeImport(AstDecodeContext& c, uint32_t importIndex, AstImport** import)
         break;
       }
       case uint32_t(DefinitionKind::Table): {
+        if (c.module().hasTable())
+            return c.d.fail("already have default table");
+
         AstName importName;
         if (!AstDecodeGenerateName(c, AstName(u"table"), importIndex, &importName))
             return false;
@@ -1688,7 +1694,7 @@ AstDecodeImport(AstDecodeContext& c, uint32_t importIndex, AstImport** import)
             return false;
 
         Limits memory;
-        if (!DecodeLimits(c.d, &memory))
+        if (!DecodeMemoryLimits(c.d, c.module().hasMemory(), &memory))
             return false;
 
         *import = new(c.lifo) AstImport(importName, moduleName, fieldName,
@@ -1738,27 +1744,16 @@ AstDecodeImportSection(AstDecodeContext& c)
 static bool
 AstDecodeMemorySection(AstDecodeContext& c)
 {
-    uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(SectionId::Memory, &sectionStart, &sectionSize, "memory"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t numMemories;
-    if (!c.d.readVarU32(&numMemories))
-        return c.d.fail("failed to read number of memories");
-
-    if (numMemories != 1)
-        return c.d.fail("the number of memories must be exactly one");
-
+    bool present;
     Limits memory;
-    if (!DecodeLimits(c.d, &memory))
+    if (!DecodeMemorySection(c.d, c.module().hasMemory(), &memory, &present))
         return false;
 
-    if (!c.d.finishSection(sectionStart, sectionSize, "memory"))
-        return false;
+    if (present) {
+        if (!c.module().addMemory(memory))
+            return false;
+    }
 
-    c.module().setMemory(memory);
     return true;
 }
 
@@ -1843,7 +1838,7 @@ AstDecodeGlobalSection(AstDecodeContext& c)
 }
 
 static bool
-AstDecodeFunctionExport(AstDecodeContext& c, AstExport** export_)
+AstDecodeExport(AstDecodeContext& c, AstExport** export_)
 {
     AstName fieldName;
     if (!AstDecodeName(c, &fieldName))
@@ -1883,7 +1878,7 @@ AstDecodeExportSection(AstDecodeContext& c)
 
     for (uint32_t i = 0; i < numExports; i++) {
         AstExport* export_ = nullptr;
-        if (!AstDecodeFunctionExport(c, &export_))
+        if (!AstDecodeExport(c, &export_))
             return false;
         if (!c.module().append(export_))
             return false;
@@ -2031,7 +2026,10 @@ AstDecodeDataSection(AstDecodeContext &c)
 {
     DataSegmentVector segments;
     bool hasMemory = c.module().hasMemory();
-    uint32_t memByteLength = hasMemory ? c.module().memory().initial * PageSize : 0;
+
+    MOZ_ASSERT(c.module().memories().length() <= 1, "at most one memory in MVP");
+    uint32_t memByteLength = hasMemory ? c.module().memories()[0].limits.initial : 0;
+
     if (!DecodeDataSection(c.d, hasMemory, memByteLength, c.globalDescs(), &segments))
         return false;
 
@@ -2119,7 +2117,11 @@ AstDecodeStartSection(AstDecodeContext &c)
     if (!c.d.readVarU32(&funcIndex))
         return c.d.fail("failed to read start func index");
 
-    c.module().setStartFunc(AstStartFunc(AstRef(AstName(), funcIndex)));
+    AstRef funcRef;
+    if (!AstDecodeGenerateRef(c, AstName(u"func"), funcIndex, &funcRef))
+        return false;
+
+    c.module().setStartFunc(AstStartFunc(funcRef));
 
     if (!c.d.finishSection(sectionStart, sectionSize, "start"))
         return false;

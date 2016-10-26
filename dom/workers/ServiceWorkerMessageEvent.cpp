@@ -46,7 +46,6 @@ ServiceWorkerMessageEvent::ServiceWorkerMessageEvent(EventTarget* aOwner,
                                                      WidgetEvent* aEvent)
   : Event(aOwner, aPresContext, aEvent)
   , mData(JS::UndefinedValue())
-  , mPortsSet(false)
 {
   mozilla::HoldJSObjects(this);
 }
@@ -110,22 +109,16 @@ ServiceWorkerMessageEvent::SetSource(workers::ServiceWorker* aServiceWorker)
 }
 
 void
-ServiceWorkerMessageEvent::GetPorts(Nullable<nsTArray<RefPtr<MessagePort>>>& aPorts)
+ServiceWorkerMessageEvent::GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts)
 {
-  if (!mPortsSet) {
-    aPorts.SetNull();
-    return;
-  }
-
-  aPorts.SetValue(mPorts);
+  aPorts = mPorts;
 }
 
 void
 ServiceWorkerMessageEvent::SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts)
 {
-  MOZ_ASSERT(mPorts.IsEmpty() && !mPortsSet);
+  MOZ_ASSERT(mPorts.IsEmpty());
   mPorts = Move(aPorts);
-  mPortsSet = true;
 }
 
 /* static */ already_AddRefed<ServiceWorkerMessageEvent>
@@ -153,30 +146,18 @@ ServiceWorkerMessageEvent::Constructor(EventTarget* aEventTarget,
   event->SetTrusted(trusted);
 
   event->mData = aParam.mData;
+  event->mOrigin = aParam.mOrigin;
+  event->mLastEventId = aParam.mLastEventId;
 
-  if (aParam.mOrigin.WasPassed()) {
-    event->mOrigin = aParam.mOrigin.Value();
-  }
-
-  if (aParam.mLastEventId.WasPassed()) {
-    event->mLastEventId = aParam.mLastEventId.Value();
-  }
-
-  if (aParam.mSource.WasPassed() && !aParam.mSource.Value().IsNull()) {
-
-    if (aParam.mSource.Value().Value().IsServiceWorker()) {
-      event->mServiceWorker = aParam.mSource.Value().Value().GetAsServiceWorker();
-    } else {
-      event->mMessagePort = aParam.mSource.Value().Value().GetAsMessagePort();
+  if (!aParam.mSource.IsNull()) {
+    if (aParam.mSource.Value().IsServiceWorker()) {
+      event->mServiceWorker = aParam.mSource.Value().GetAsServiceWorker();
+    } else if (aParam.mSource.Value().IsMessagePort()) {
+      event->mMessagePort = aParam.mSource.Value().GetAsMessagePort();
     }
-
-    MOZ_ASSERT(event->mServiceWorker || event->mMessagePort);
   }
 
-  if (aParam.mPorts.WasPassed() && !aParam.mPorts.Value().IsNull()) {
-    event->mPorts.AppendElements(aParam.mPorts.Value().Value());
-    event->mPortsSet = true;
-  }
+  event->mPorts.AppendElements(aParam.mPorts);
 
   return event.forget();
 }

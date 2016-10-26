@@ -15,10 +15,10 @@
 //   * none of above    -- replaceValue is a string without "$"
 
 // ES 2017 draft 03bfda119d060aca4099d2b77cf43f6d4f11cfa2 21.2.5.8
-// steps 8-16.
+// steps 8.b-16.
 // Optimized path for @@replace with the following conditions:
 //   * global flag is true
-function FUNC_NAME(rx, S, lengthS, replaceValue
+function FUNC_NAME(rx, S, lengthS, replaceValue, fullUnicode
 #ifdef SUBSTITUTION
                    , firstDollarIndex
 #endif
@@ -27,9 +27,6 @@ function FUNC_NAME(rx, S, lengthS, replaceValue
 #endif
                   )
 {
-    // Step 8.a.
-    var fullUnicode = !!rx.unicode;
-
     // Step 8.b.
     var lastIndex = 0;
     rx.lastIndex = 0;

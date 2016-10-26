@@ -88,14 +88,13 @@ extern MOZ_MUST_USE bool
 regexp_test_no_statics(JSContext* cx, unsigned argc, Value* vp);
 
 /*
- * Behaves like RegExp(pattern, string).
- * pattern should be a RegExp object, and flags should be a string,
- * and should be called without |new|.
- * Dedicated function for RegExp.prototype.split optimized path.
- * sticky flag is ignored.
+ * Behaves like RegExp(pattern, flags).
+ * |pattern| should be a RegExp object, |flags| should be a raw integer value.
+ * Must be called without |new|.
+ * Dedicated function for RegExp.prototype[@@split] optimized path.
  */
 extern MOZ_MUST_USE bool
-regexp_construct_no_sticky(JSContext* cx, unsigned argc, Value* vp);
+regexp_construct_raw_flags(JSContext* cx, unsigned argc, Value* vp);
 
 /*
  * Clone given RegExp object, inheriting pattern and flags, ignoring other
