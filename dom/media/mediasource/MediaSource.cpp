@@ -121,8 +121,7 @@ MediaSource::IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* a
   }
   if (mimeType.EqualsASCII("audio/webm")) {
     if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
-          Preferences::GetBool("media.mediasource.webm.audio.enabled", true) ||
-          IsWebMForced(aDiagnostics))) {
+          Preferences::GetBool("media.mediasource.webm.audio.enabled", true))) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
     return NS_OK;
