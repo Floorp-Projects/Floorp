@@ -1679,68 +1679,6 @@ nsGenericHTMLElement::IsScrollGrabAllowed(JSContext*, JSObject*)
   return nsContentUtils::IsSystemPrincipal(prin);
 }
 
-nsresult
-nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
-{
-  aResult.Truncate();
-
-  nsAutoString value;
-  if (!GetAttr(kNameSpaceID_None, aAttr, value))
-    return NS_OK;
-
-  nsIDocument* doc = OwnerDoc(); 
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
-
-  nsString::const_iterator end;
-  value.EndReading(end);
-
-  nsAString::const_iterator iter;
-  value.BeginReading(iter);
-
-  while (iter != end) {
-    while (*iter == ' ' && iter != end) {
-      ++iter;
-    }
-
-    if (iter == end) {
-      break;
-    }
-
-    nsAString::const_iterator start = iter;
-
-    while (iter != end && *iter != ' ') {
-      ++iter;
-    }
-
-    if (!aResult.IsEmpty()) {
-      aResult.Append(NS_LITERAL_STRING(" "));
-    }
-
-    const nsSubstring& uriPart = Substring(start, iter);
-    nsCOMPtr<nsIURI> attrURI;
-    nsresult rv =
-      nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
-                                                uriPart, doc, baseURI);
-    if (NS_FAILED(rv)) {
-      aResult.Append(uriPart);
-      continue;
-    }
-
-    MOZ_ASSERT(attrURI);
-
-    nsAutoCString spec;
-    rv = attrURI->GetSpec(spec);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aResult.Append(uriPart);
-      continue;
-    }
-
-    AppendUTF8toUTF16(spec, aResult);
-  }
-
-  return NS_OK;
-}
-
 HTMLMenuElement*
 nsGenericHTMLElement::GetContextMenu() const
 {
