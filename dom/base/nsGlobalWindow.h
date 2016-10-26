@@ -439,13 +439,13 @@ public:
   virtual already_AddRefed<nsISupports> SaveWindowState() override;
   virtual nsresult RestoreWindowState(nsISupports *aState) override;
 
-  virtual void NewSuspend();
-  virtual void NewResume();
-  virtual bool NewIsSuspended() const override;
-  virtual void NewFreeze();
-  virtual void NewThaw();
-  virtual bool NewIsFrozen() const override;
-  virtual void NewSyncStateFromParentWindow();
+  virtual void Suspend();
+  virtual void Resume();
+  virtual bool IsSuspended() const override;
+  virtual void Freeze();
+  virtual void Thaw();
+  virtual bool IsFrozen() const override;
+  virtual void SyncStateFromParentWindow();
 
   virtual nsresult FireDelayedDOMEvents() override;
   virtual bool IsRunningTimeout() override { return mTimeoutFiringDepth > 0; }
@@ -1496,8 +1496,8 @@ private:
   template<typename Method>
   void CallOnChildren(Method aMethod);
 
-  void NewFreezeInternal();
-  void NewThawInternal();
+  void FreezeInternal();
+  void ThawInternal();
 
 public:
   // Timeout Functions

@@ -280,7 +280,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
 
     aTopWindowPaths->Put(aWindow->WindowID(), windowPath);
 
-    windowPath += aWindow->NewIsFrozen() ? NS_LITERAL_CSTRING("/cached/")
+    windowPath += aWindow->IsFrozen() ? NS_LITERAL_CSTRING("/cached/")
                                       : NS_LITERAL_CSTRING("/active/");
   } else {
     if (aGhostWindowIDs->Contains(aWindow->WindowID())) {

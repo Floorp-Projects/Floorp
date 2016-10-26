@@ -2004,7 +2004,7 @@ BackgroundDatabaseChild::RecvVersionChange(const uint64_t& aOldVersion,
   // Handle bfcache'd windows.
   if (nsPIDOMWindowInner* owner = kungFuDeathGrip->GetOwner()) {
     // The database must be closed if the window is already frozen.
-    bool shouldAbortAndClose = owner->NewIsFrozen();
+    bool shouldAbortAndClose = owner->IsFrozen();
 
     // Anything in the bfcache has to be evicted and then we have to close the
     // database also.
