@@ -655,9 +655,6 @@ var Impl = {
   _initialized: false,
   _logger: null,
   _prevValues: {},
-  // Regex that matches histograms we care about during startup.
-  // Keep this in sync with gen-histogram-bucket-ranges.py.
-  _startupHistogramRegex: /SQLITE|HTTP|SPDY|CACHE|DNS/,
   _slowSQLStartup: {},
   _hasWindowRestoredObserver: false,
   _hasXulWindowVisibleObserver: false,
@@ -1229,33 +1226,8 @@ var Impl = {
     h.add(val);
   },
 
-  /**
-   * Return true if we're interested in having a STARTUP_* histogram for
-   * the given histogram name.
-   */
-  isInterestingStartupHistogram: function isInterestingStartupHistogram(name) {
-    return this._startupHistogramRegex.test(name);
-  },
-
   getChildPayloads: function getChildPayloads() {
     return this._childTelemetry.map(child => child.payload);
-  },
-
-  /**
-   * Make a copy of interesting histograms at startup.
-   */
-  gatherStartupHistograms: function gatherStartupHistograms() {
-    this._log.trace("gatherStartupHistograms");
-
-    let info =
-      Telemetry.registeredHistograms(this.getDatasetType(), []);
-    let snapshots = Telemetry.histogramSnapshots;
-    for (let name of info) {
-      // Only duplicate histograms with actual data.
-      if (this.isInterestingStartupHistogram(name) && name in snapshots) {
-        Telemetry.histogramFrom("STARTUP_" + name, name);
-      }
-    }
   },
 
   /**
@@ -1580,8 +1552,6 @@ var Impl = {
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_THREAD_HANGS, this);
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_USS, this);
 
-    this.gatherStartupHistograms();
-
     let delayedTask = new DeferredTask(function* () {
       this._initialized = true;
 
@@ -1803,7 +1773,6 @@ var Impl = {
     // This function returns the current Telemetry payload to the caller.
     // We only gather startup info once.
     if (Object.keys(this._slowSQLStartup).length == 0) {
-      this.gatherStartupHistograms();
       this._slowSQLStartup = Telemetry.slowSQL;
     }
     this.gatherMemory();
@@ -1861,7 +1830,6 @@ var Impl = {
       [this._startupIO.startupSessionRestoreReadBytes,
         this._startupIO.startupSessionRestoreWriteBytes] = counters;
     }
-    this.gatherStartupHistograms();
     this._slowSQLStartup = Telemetry.slowSQL;
   },
 
