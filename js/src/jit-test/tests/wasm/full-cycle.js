@@ -45,12 +45,13 @@ wasmFullPass(`(module
 // Memory.
 wasmFullPass(`(module
     (memory (export "memory") 1 2)
-    (data (i32.const 0) "\\00\\01\\02\\03\\04\\05")
+    (data (i32.const 0) "\\00\\01\\02" "\\03\\04\\05")
+    (data (i32.const 6) "\\06")
     (func (export "run") (result i32)
         i32.const 1
         i32.load offset=2
     )
-)`, 0x050403);
+)`, 0x06050403);
 
 let memory = new WebAssembly.Memory({ initial: 1, maximum: 2 });
 

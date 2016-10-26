@@ -701,15 +701,15 @@ class AstExport : public AstNode
 class AstDataSegment : public AstNode
 {
     AstExpr* offset_;
-    AstName text_;
+    AstNameVector fragments_;
 
   public:
-    AstDataSegment(AstExpr* offset, AstName text)
-      : offset_(offset), text_(text)
+    AstDataSegment(AstExpr* offset, AstNameVector&& fragments)
+      : offset_(offset), fragments_(Move(fragments))
     {}
 
     AstExpr* offset() const { return offset_; }
-    AstName text() const { return text_; }
+    const AstNameVector& fragments() const { return fragments_; }
 };
 
 typedef AstVector<AstDataSegment*> AstDataSegmentVector;
