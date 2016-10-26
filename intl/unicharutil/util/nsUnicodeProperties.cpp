@@ -295,6 +295,11 @@ GetTitlecaseForAll(uint32_t aCh)
     }
     return aCh;
 }
+
+bool IsEastAsianWidthFWH(uint32_t aCh)
+{
+    return GetCharProps2(aCh).mEastAsianWidthFWH;
+}
 #endif
 
 #define DEFINE_BMP_1PLANE_MAPPING_GET_FUNC(prefix_) \
