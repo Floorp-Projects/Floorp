@@ -431,11 +431,25 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
   mAnimations = aAnimations;
   mAnimationData.Clear();
   for (uint32_t i = 0; i < mAnimations.Length(); i++) {
+    Animation& animation = mAnimations[i];
+    // Adjust fill mode to fill forwards so that if the main thread is delayed
+    // in clearing this animation we don't introduce flicker by jumping back to
+    // the old underlying value
+    switch (static_cast<dom::FillMode>(animation.fillMode())) {
+      case dom::FillMode::None:
+        animation.fillMode() = static_cast<uint8_t>(dom::FillMode::Forwards);
+        break;
+      case dom::FillMode::Backwards:
+        animation.fillMode() = static_cast<uint8_t>(dom::FillMode::Both);
+        break;
+      default:
+        break;
+    }
+
     AnimData* data = mAnimationData.AppendElement();
     InfallibleTArray<Maybe<ComputedTimingFunction>>& functions =
       data->mFunctions;
-    const InfallibleTArray<AnimationSegment>& segments =
-      mAnimations.ElementAt(i).segments();
+    const InfallibleTArray<AnimationSegment>& segments = animation.segments();
     for (uint32_t j = 0; j < segments.Length(); j++) {
       TimingFunction tf = segments.ElementAt(j).sampleFn();
 
@@ -448,8 +462,8 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
     // animation.
     InfallibleTArray<StyleAnimationValue>& startValues = data->mStartValues;
     InfallibleTArray<StyleAnimationValue>& endValues = data->mEndValues;
-    for (uint32_t j = 0; j < mAnimations[i].segments().Length(); j++) {
-      const AnimationSegment& segment = mAnimations[i].segments()[j];
+    for (uint32_t j = 0; j < segments.Length(); j++) {
+      const AnimationSegment& segment = segments[j];
       StyleAnimationValue* startValue = startValues.AppendElement();
       StyleAnimationValue* endValue = endValues.AppendElement();
       if (segment.endState().type() == Animatable::TArrayOfTransformFunction) {
