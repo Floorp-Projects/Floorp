@@ -48,6 +48,7 @@ struct IDWriteRenderingParams;
 struct IDWriteFontFace;
 
 class GrContext;
+class SkCanvas;
 struct gfxFontStyle;
 
 struct CGContext;
@@ -1465,6 +1466,10 @@ public:
   static already_AddRefed<DrawTarget> CreateTiledDrawTarget(const TileSet& aTileSet);
 
   static bool DoesBackendSupportDataDrawtarget(BackendType aType);
+
+#ifdef USE_SKIA
+  static already_AddRefed<DrawTarget> CreateDrawTargetWithSkCanvas(SkCanvas* aCanvas);
+#endif
 
 #ifdef XP_DARWIN
   static already_AddRefed<GlyphRenderingOptions>
