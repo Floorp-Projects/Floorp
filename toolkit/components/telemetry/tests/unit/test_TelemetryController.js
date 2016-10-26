@@ -185,6 +185,8 @@ add_task(function* test_disableDataUpload() {
   // |TelemetryController.testReset|.
   Preferences.set(TelemetryController.Constants.PREF_SERVER, "http://localhost:" + PingServer.port);
 
+  // Stop the sending task and then start it again.
+  yield TelemetrySend.shutdown();
   // Reset the controller to spin the ping sending task.
   yield TelemetryController.testReset();
   ping = yield PingServer.promiseNextPing();
