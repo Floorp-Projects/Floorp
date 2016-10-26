@@ -39,7 +39,6 @@
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/Nullable.h"
 #include "Units.h"
-#include "DOMIntersectionObserver.h"
 
 class nsIFrame;
 class nsIDOMMozNamedAttrMap;
@@ -62,7 +61,6 @@ namespace dom {
   struct AnimationFilter;
   struct ScrollIntoViewOptions;
   struct ScrollToOptions;
-  class DOMIntersectionObserver;
   class ElementOrCSSPseudoElement;
   class UnrestrictedDoubleOrKeyframeAnimationOptions;
 } // namespace dom
@@ -1151,10 +1149,6 @@ public:
   // to it.
   void ClearDataset();
 
-  void RegisterIntersectionObserver(DOMIntersectionObserver* aObserver);
-  void UnregisterIntersectionObserver(DOMIntersectionObserver* aObserver);
-  bool UpdateIntersectionObservation(DOMIntersectionObserver* aObserver, int32_t threshold);
-
 protected:
   /*
    * Named-bools for use with SetAttrAndNotify to make call sites easier to
@@ -1367,8 +1361,6 @@ protected:
 
   nsDOMTokenList* GetTokenList(nsIAtom* aAtom,
                                const DOMTokenListSupportedTokenArray aSupportedTokens = nullptr);
-
-  nsTArray<nsDOMSlots::IntersectionObserverRegistration>* RegisteredIntersectionObservers();
 
 private:
   /**
