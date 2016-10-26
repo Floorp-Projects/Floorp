@@ -1752,12 +1752,18 @@ IOServiceProxyCallback::OnProxyAvailable(nsICancelable *request, nsIChannel *cha
     if (!speculativeHandler)
         return NS_OK;
 
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+    nsCOMPtr<nsIPrincipal> principal;
+    if (loadInfo) {
+      principal = loadInfo->LoadingPrincipal();
+    }
+
     nsLoadFlags loadFlags = 0;
     channel->GetLoadFlags(&loadFlags);
     if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
-        speculativeHandler->SpeculativeAnonymousConnect(uri, mCallbacks);
+        speculativeHandler->SpeculativeAnonymousConnect2(uri, principal, mCallbacks);
     } else {
-        speculativeHandler->SpeculativeConnect(uri, mCallbacks);
+        speculativeHandler->SpeculativeConnect2(uri, principal, mCallbacks);
     }
 
     return NS_OK;
