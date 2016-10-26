@@ -382,6 +382,10 @@ VectorImage::Init(const char* aMimeType,
 size_t
 VectorImage::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
+  if (!mSVGDocumentWrapper) {
+    return 0; // No document, so no memory used for the document.
+  }
+
   nsIDocument* doc = mSVGDocumentWrapper->GetDocument();
   if (!doc) {
     return 0; // No document, so no memory used for the document.
