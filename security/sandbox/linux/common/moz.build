@@ -17,7 +17,4 @@ LOCAL_INCLUDES += [
     '/security/sandbox/linux', # SandboxLogging.h
 ]
 
-if CONFIG['OS_TARGET'] == 'Android':
-    FINAL_LIBRARY = 'mozsandbox'
-else:
-    FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = 'mozsandbox'

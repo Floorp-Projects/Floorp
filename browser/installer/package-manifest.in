@@ -751,6 +751,12 @@
 #endif
 #endif
 
+#if defined(MOZ_SANDBOX)
+#if defined(XP_LINUX)
+@BINPATH@/@DLL_PREFIX@mozsandbox@DLL_SUFFIX@
+#endif
+#endif
+
 ; for Solaris SPARC
 #ifdef SOLARIS
 bin/libfreebl_32fpu_3.so
