@@ -69,7 +69,7 @@ __sanitizer_sandbox_on_notify(__sanitizer_sandbox_arguments *args);
 #endif // MOZ_ASAN
 
 // Signal number used to enable seccomp on each thread.
-int gSeccompTsyncBroadcastSignum = 0;
+MOZ_EXPORT int gSeccompTsyncBroadcastSignum = 0;
 
 namespace mozilla {
 
