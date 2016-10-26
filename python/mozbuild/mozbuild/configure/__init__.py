@@ -284,6 +284,10 @@ class ConfigureSandbox(dict):
         self._help_option = self.option_impl('--help',
                                              help='print this message')
         self._seen.add(self._help_option)
+
+        self._always = DependsFunction(self, lambda: True, [])
+        self._never = DependsFunction(self, lambda: False, [])
+
         if self._value_for(self._help_option):
             self._help = HelpFormatter(argv[0])
             self._help.add(self._help_option)
@@ -494,7 +498,11 @@ class ConfigureSandbox(dict):
         return arg
 
     def _normalize_when(self, when, callee_name):
-        if when is not None:
+        if when is True:
+            when = self._always
+        elif when is False:
+            when = self._never
+        elif when is not None:
             when = self._dependency(when, callee_name, 'when')
 
         if self._default_conditions:
@@ -571,9 +579,6 @@ class ConfigureSandbox(dict):
         for its execution. This different global namespace exposes a limited
         set of functions from os.path.
         '''
-        if not args:
-            raise ConfigureError('@depends needs at least one argument')
-
         for k in kwargs:
             if k != 'when':
                 raise TypeError(
@@ -581,6 +586,9 @@ class ConfigureSandbox(dict):
                     % k)
 
         when = self._normalize_when(kwargs.get('when'), '@depends')
+
+        if not when and not args:
+            raise ConfigureError('@depends needs at least one argument')
 
         dependencies = tuple(self._dependency(arg, '@depends') for arg in args)
 

@@ -405,7 +405,7 @@ class TestChecksConfigure(unittest.TestCase):
 
         with self.assertRaises(ConfigureError) as e:
             self.get_result(
-                'foo = depends("--help")(lambda h: ("a", "b"))\n'
+                'foo = depends(when=True)(lambda: ("a", "b"))\n'
                 'check_prog("FOO", ("known-a",), input=foo)'
             )
 
@@ -415,7 +415,7 @@ class TestChecksConfigure(unittest.TestCase):
 
         with self.assertRaises(ConfigureError) as e:
             self.get_result(
-                'foo = depends("--help")(lambda h: {"a": "b"})\n'
+                'foo = depends(when=True)(lambda: {"a": "b"})\n'
                 'check_prog("FOO", ("known-a",), input=foo)'
             )
 
