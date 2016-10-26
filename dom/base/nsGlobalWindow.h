@@ -444,6 +444,15 @@ public:
   virtual nsresult ResumeTimeouts(bool aThawChildren = true,
                                   bool aThawWorkers = true) override;
   virtual uint32_t TimeoutSuspendCount() override;
+
+  virtual void NewSuspend();
+  virtual void NewResume();
+  virtual bool NewIsSuspended() const override;
+  virtual void NewFreeze();
+  virtual void NewThaw();
+  virtual bool NewIsFrozen() const override;
+  virtual void NewSyncStateFromParentWindow();
+
   virtual nsresult FireDelayedDOMEvents() override;
   virtual bool IsFrozen() const override
   {
@@ -1497,6 +1506,12 @@ private:
                         bool aForceNoOpener,
                         nsPIDOMWindowOuter **aReturn);
 
+  template<typename Method>
+  void CallOnChildren(Method aMethod);
+
+  void NewFreezeInternal();
+  void NewThawInternal();
+
 public:
   // Timeout Functions
   // Language agnostic timeout function (all args passed).
@@ -1902,6 +1917,9 @@ protected:
   nsDOMStorageEventArray mPendingStorageEvents;
 
   uint32_t mTimeoutsSuspendDepth;
+
+  uint32_t mSuspendDepth;
+  uint32_t mFreezeDepth;
 
   // the method that was used to focus mFocusedNode
   uint32_t mFocusMethod;

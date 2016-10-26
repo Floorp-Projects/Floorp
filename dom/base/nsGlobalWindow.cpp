@@ -1214,6 +1214,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
     mTimeoutsSuspendDepth(0),
+    mSuspendDepth(0),
+    mFreezeDepth(0),
     mFocusMethod(0),
     mSerial(0),
 #ifdef DEBUG
@@ -3874,6 +3876,36 @@ bool
 nsPIDOMWindowInner::IsSecureContext() const
 {
   return nsGlobalWindow::Cast(this)->IsSecureContext();
+}
+
+void
+nsPIDOMWindowInner::NewSuspend()
+{
+  nsGlobalWindow::Cast(this)->NewSuspend();
+}
+
+void
+nsPIDOMWindowInner::NewResume()
+{
+  nsGlobalWindow::Cast(this)->NewResume();
+}
+
+void
+nsPIDOMWindowInner::NewFreeze()
+{
+  nsGlobalWindow::Cast(this)->NewFreeze();
+}
+
+void
+nsPIDOMWindowInner::NewThaw()
+{
+  nsGlobalWindow::Cast(this)->NewThaw();
+}
+
+void
+nsPIDOMWindowInner::NewSyncStateFromParentWindow()
+{
+  nsGlobalWindow::Cast(this)->NewSyncStateFromParentWindow();
 }
 
 SuspendTypes
@@ -11702,6 +11734,341 @@ nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
 
   RefPtr<StorageEvent> event = StorageEvent::Constructor(this, aType, dict);
   return event.forget();
+}
+
+void
+nsGlobalWindow::NewSuspend()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsInnerWindow());
+
+  // All children are also suspended.  This ensure mSuspendDepth is
+  // set properly and the timers are properly canceled for each child.
+  CallOnChildren(&nsGlobalWindow::NewSuspend);
+
+  mSuspendDepth += 1;
+  if (mSuspendDepth != 1) {
+    return;
+  }
+
+  nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
+  if (ac) {
+    for (uint32_t i = 0; i < mEnabledSensors.Length(); i++)
+      ac->RemoveWindowListener(mEnabledSensors[i], this);
+  }
+  DisableGamepadUpdates();
+  DisableVRUpdates();
+
+  mozilla::dom::workers::SuspendWorkersForWindow(AsInner());
+
+  for (nsTimeout* t = mTimeouts.getFirst(); t; t = t->getNext()) {
+    // Leave the timers with the current time remaining.  This will
+    // cause the timers to potentially fire when the window is
+    // Resume()'d.  Time effectively passes while suspended.
+
+    // Drop the XPCOM timer; we'll reschedule when restoring the state.
+    if (t->mTimer) {
+      t->mTimer->Cancel();
+      t->mTimer = nullptr;
+
+      // Drop the reference that the timer's closure had on this timeout, we'll
+      // add it back in Resume().
+      t->Release();
+    }
+  }
+
+  // Suspend all of the AudioContexts for this window
+  for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
+    ErrorResult dummy;
+    RefPtr<Promise> d = mAudioContexts[i]->Suspend(dummy);
+  }
+}
+
+void
+nsGlobalWindow::NewResume()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsInnerWindow());
+
+  // Resume all children.  This restores timers recursively canceled
+  // in Suspend() and ensures all children have the correct mSuspendDepth.
+  CallOnChildren(&nsGlobalWindow::NewResume);
+
+  MOZ_ASSERT(mSuspendDepth != 0);
+  mSuspendDepth -= 1;
+  if (mSuspendDepth != 0) {
+    return;
+  }
+
+  // We should not be able to resume a frozen window.  It must be Thaw()'d first.
+  MOZ_ASSERT(mFreezeDepth == 0);
+
+  nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
+  if (ac) {
+    for (uint32_t i = 0; i < mEnabledSensors.Length(); i++)
+      ac->AddWindowListener(mEnabledSensors[i], this);
+  }
+  EnableGamepadUpdates();
+  EnableVRUpdates();
+
+  // Resume all of the AudioContexts for this window
+  for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
+    ErrorResult dummy;
+    RefPtr<Promise> d = mAudioContexts[i]->Resume(dummy);
+  }
+
+  TimeStamp now = TimeStamp::Now();
+  DebugOnly<bool> _seenDummyTimeout = false;
+
+  for (nsTimeout* t = mTimeouts.getFirst(); t; t = t->getNext()) {
+    // There's a chance we're being called with RunTimeout on the stack in which
+    // case we have a dummy timeout in the list that *must not* be resumed. It
+    // can be identified by a null mWindow.
+    if (!t->mWindow) {
+      NS_ASSERTION(!_seenDummyTimeout, "More than one dummy timeout?!");
+      _seenDummyTimeout = true;
+      continue;
+    }
+
+    MOZ_ASSERT(!t->mTimer);
+
+    // The timeout mWhen is set to the absolute time when the timer should
+    // fire.  Recalculate the delay from now until that deadline.  If the
+    // the deadline has already passed or falls within our minimum delay
+    // deadline, then clamp the resulting value to the minimum delay.  The
+    // mWhen will remain at its absolute time, but we won't fire the OS
+    // timer until our calculated delay has passed.
+    int32_t remaining = 0;
+    if (t->mWhen > now) {
+      remaining = static_cast<int32_t>((t->mWhen - now).ToMilliseconds());
+    }
+    uint32_t delay = std::max(remaining, DOMMinTimeoutValue());
+
+    t->mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (!t->mTimer) {
+      t->remove();
+      continue;
+    }
+
+    nsresult rv = t->InitTimer(delay);
+    if (NS_FAILED(rv)) {
+      t->mTimer = nullptr;
+      t->remove();
+      continue;
+    }
+
+    // Add a reference for the new timer's closure.
+    t->AddRef();
+  }
+
+  // Resume all of the workers for this window.  We must do this
+  // after timeouts since workers may have queued events that can trigger
+  // a setTimeout().
+  mozilla::dom::workers::ResumeWorkersForWindow(AsInner());
+}
+
+bool
+nsGlobalWindow::NewIsSuspended() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // No inner means we are effectively suspended
+  if (IsOuterWindow()) {
+    if (!mInnerWindow) {
+      return true;
+    }
+    return mInnerWindow->NewIsSuspended();
+  }
+  return mSuspendDepth != 0;
+}
+
+void
+nsGlobalWindow::NewFreeze()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsInnerWindow());
+  NewSuspend();
+  NewFreezeInternal();
+}
+
+void
+nsGlobalWindow::NewFreezeInternal()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(NewIsSuspended());
+
+  CallOnChildren(&nsGlobalWindow::NewFreezeInternal);
+
+  mFreezeDepth += 1;
+  MOZ_ASSERT(mSuspendDepth >= mFreezeDepth);
+  if (mFreezeDepth != 1) {
+    return;
+  }
+
+  mozilla::dom::workers::FreezeWorkersForWindow(AsInner());
+
+  TimeStamp now = TimeStamp::Now();
+  for (nsTimeout *t = mTimeouts.getFirst(); t; t = t->getNext()) {
+    // Save the current remaining time for this timeout.  We will
+    // re-apply it when the window is Thaw()'d.  This effectively
+    // shifts timers to the right as if time does not pass while
+    // the window is frozen.
+    if (t->mWhen > now) {
+      t->mTimeRemaining = t->mWhen - now;
+    } else {
+      t->mTimeRemaining = TimeDuration(0);
+    }
+
+    // Since we are suspended there should be no OS timer set for
+    // this timeout entry.
+    MOZ_ASSERT(!t->mTimer);
+  }
+
+  NotifyDOMWindowFrozen(this);
+}
+
+void
+nsGlobalWindow::NewThaw()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsInnerWindow());
+  NewThawInternal();
+  NewResume();
+}
+
+void
+nsGlobalWindow::NewThawInternal()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(NewIsSuspended());
+
+  CallOnChildren(&nsGlobalWindow::NewThawInternal);
+
+  MOZ_ASSERT(mFreezeDepth != 0);
+  mFreezeDepth -= 1;
+  MOZ_ASSERT(mSuspendDepth >= mFreezeDepth);
+  if (mFreezeDepth != 0) {
+    return;
+  }
+
+  TimeStamp now = TimeStamp::Now();
+  DebugOnly<bool> _seenDummyTimeout = false;
+
+  for (nsTimeout *t = mTimeouts.getFirst(); t; t = t->getNext()) {
+    // There's a chance we're being called with RunTimeout on the stack in which
+    // case we have a dummy timeout in the list that *must not* be resumed. It
+    // can be identified by a null mWindow.
+    if (!t->mWindow) {
+      NS_ASSERTION(!_seenDummyTimeout, "More than one dummy timeout?!");
+      _seenDummyTimeout = true;
+      continue;
+    }
+
+    // Set mWhen back to the time when the timer is supposed to fire.
+    t->mWhen = now + t->mTimeRemaining;
+
+    MOZ_ASSERT(!t->mTimer);
+  }
+
+  mozilla::dom::workers::ThawWorkersForWindow(AsInner());
+
+  NotifyDOMWindowThawed(this);
+}
+
+bool
+nsGlobalWindow::NewIsFrozen() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // No inner means we are effectively frozen
+  if (IsOuterWindow()) {
+    if (!mInnerWindow) {
+      return true;
+    }
+    return mInnerWindow->NewIsFrozen();
+  }
+  bool frozen = mFreezeDepth != 0;
+  MOZ_ASSERT_IF(frozen, NewIsSuspended());
+  return frozen;
+}
+
+void
+nsGlobalWindow::NewSyncStateFromParentWindow()
+{
+  nsPIDOMWindowOuter* outer = GetOuterWindow();
+  if (!outer) {
+    return;
+  }
+
+  nsCOMPtr<Element> frame = outer->GetFrameElementInternal();
+  if (!frame) {
+    return;
+  }
+
+  nsPIDOMWindowOuter* parentOuter = frame->OwnerDoc()->GetWindow();
+  if (!parentOuter) {
+    return;
+  }
+
+  nsGlobalWindow* parentInner =
+    nsGlobalWindow::Cast(parentOuter->GetCurrentInnerWindow());
+  if (!parentInner) {
+    return;
+  }
+
+  uint32_t parentFreezeDepth = parentInner->mFreezeDepth;
+  uint32_t parentSuspendDepth = parentInner->mSuspendDepth;
+
+  // Since every Freeze() calls Suspend(), the suspend count must
+  // be equal or greater to the freeze count.
+  MOZ_ASSERT(parentFreezeDepth <= parentSuspendDepth);
+
+  // First apply the Freeze() calls.
+  for (uint32_t i = 0; i < parentFreezeDepth; ++i) {
+    NewFreeze();
+  }
+
+  // Now apply only the number of Suspend() calls to reach the target
+  // suspend count after applying the Freeze() calls.
+  for (uint32_t i = 0; i < (parentSuspendDepth - parentFreezeDepth); ++i) {
+    NewSuspend();
+  }
+}
+
+template<typename Method>
+void
+nsGlobalWindow::CallOnChildren(Method aMethod)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIDocShell> docShell = GetDocShell();
+  if (!docShell) {
+    return;
+  }
+
+  int32_t childCount = 0;
+  docShell->GetChildCount(&childCount);
+
+  for (int32_t i = 0; i < childCount; ++i) {
+    nsCOMPtr<nsIDocShellTreeItem> childShell;
+    docShell->GetChildAt(i, getter_AddRefs(childShell));
+    NS_ASSERTION(childShell, "null child shell");
+
+    nsCOMPtr<nsPIDOMWindowOuter> pWin = childShell->GetWindow();
+    if (!pWin) {
+      continue;
+    }
+
+    auto* win = nsGlobalWindow::Cast(pWin);
+    nsGlobalWindow* inner = win->GetCurrentInnerWindowInternal();
+
+    // This is a bit hackish. Only freeze/suspend windows which are truly our
+    // subwindows.
+    nsCOMPtr<Element> frame = pWin->GetFrameElementInternal();
+    if (!mDoc || !frame || mDoc != frame->OwnerDoc() || !inner) {
+      continue;
+    }
+
+    (inner->*aMethod)();
+  }
 }
 
 nsresult
