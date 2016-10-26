@@ -1797,7 +1797,6 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
          spanFramePFD->mBounds.BSize(lineWM),
          emptyContinuation ? "yes" : "no");
   if (psd != mRootSpan) {
-    WritingMode frameWM = spanFramePFD->mWritingMode;
     printf(" bp=%d,%d,%d,%d margin=%d,%d,%d,%d",
            spanFramePFD->mBorderPadding.Top(lineWM),
            spanFramePFD->mBorderPadding.Right(lineWM),
@@ -2004,7 +2003,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     uint8_t verticalAlignEnum = frame->VerticalAlignEnum();
 #ifdef NOISY_BLOCKDIR_ALIGN
     printf("  [frame]");
-    nsFrame::ListTag(stdout, mFrame);
+    nsFrame::ListTag(stdout, frame);
     printf(": verticalAlignUnit=%d (enum == %d",
            verticalAlign.GetUnit(),
            ((eStyleUnit_Enumerated == verticalAlign.GetUnit())
@@ -2386,7 +2385,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 #ifdef NOISY_BLOCKDIR_ALIGN
     printf("   [span]adjusting for zeroEffectiveSpanBox\n");
     printf("     Original: minBCoord=%d, maxBCoord=%d, bSize=%d, ascent=%d, logicalBSize=%d, topLeading=%d, bottomLeading=%d\n",
-           minBCoord, maxBCoord, spanFramePFD->mBounds.BSize(frameWM),
+           minBCoord, maxBCoord, spanFramePFD->mBounds.BSize(lineWM),
            spanFramePFD->mAscent,
            psd->mLogicalBSize, psd->mBStartLeading, psd->mBEndLeading);
 #endif
