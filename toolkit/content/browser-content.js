@@ -1640,10 +1640,11 @@ let DateTimePickerListener = {
 
   /**
    * Helper function that returns the rect of the element, which is the position
-   * in "screen" coordinates.
+   * relative to the left/top of the content area.
    */
   getBoundingContentRect: function(aElement) {
-    return BrowserUtils.getElementBoundingScreenRect(aElement);
+    return BrowserUtils.getElementBoundingRect(aElement);
+    // return BrowserUtils.getElementBoundingScreenRect(aElement);
   },
 
   /**

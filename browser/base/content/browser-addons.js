@@ -496,8 +496,27 @@ var LightWeightThemeWebInstaller = {
       return;
     }
 
+    let uri = makeURI(baseURI);
+
+    // A notification bar with the option to undo is normally shown after a
+    // theme is installed.  But the discovery pane served from the url(s)
+    // below has its own toggle switch for quick undos, so don't show the
+    // notification in that case.
+    let notify = uri.prePath != "https://discovery.addons.mozilla.org";
+    if (notify) {
+      try {
+        if (Services.prefs.getBoolPref("extensions.webapi.testing")
+            && (uri.prePath == "https://discovery.addons.allizom.org"
+                || uri.prePath == "https://discovery.addons-dev.allizom.org")) {
+          notify = false;
+        }
+      } catch (e) {
+        // getBoolPref() throws if the testing pref isn't set.  ignore it.
+      }
+    }
+
     if (this._isAllowed(baseURI)) {
-      this._install(data);
+      this._install(data, notify);
       return;
     }
 
@@ -507,12 +526,12 @@ var LightWeightThemeWebInstaller = {
       gNavigatorBundle.getString("lwthemeInstallRequest.allowButton.accesskey");
     let message =
       gNavigatorBundle.getFormattedString("lwthemeInstallRequest.message",
-                                          [makeURI(baseURI).host]);
+                                          [uri.host]);
     let buttons = [{
       label: allowButtonText,
       accessKey: allowButtonAccesskey,
       callback: function () {
-        LightWeightThemeWebInstaller._install(data);
+        LightWeightThemeWebInstaller._install(data, notify);
       }
     }];
 
@@ -526,7 +545,7 @@ var LightWeightThemeWebInstaller = {
     notificationBar.persistence = 1;
   },
 
-  _install: function (newLWTheme) {
+  _install: function (newLWTheme, notify) {
     let previousLWTheme = this._manager.currentTheme;
 
     let listener = {
@@ -556,7 +575,9 @@ var LightWeightThemeWebInstaller = {
       },
 
       onEnabled: function(aAddon) {
-        LightWeightThemeWebInstaller._postInstallNotification(newLWTheme, previousLWTheme);
+        if (notify) {
+          LightWeightThemeWebInstaller._postInstallNotification(newLWTheme, previousLWTheme);
+        }
       }
     };
 

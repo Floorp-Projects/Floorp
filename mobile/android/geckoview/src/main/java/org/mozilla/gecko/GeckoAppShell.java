@@ -1715,11 +1715,10 @@ public class GeckoAppShell
         public void setFullScreen(boolean fullscreen);
         public void addPluginView(View view);
         public void removePluginView(final View view);
-        public void enableCameraView();
-        public void disableCameraView();
+        public void enableOrientationListener();
+        public void disableOrientationListener();
         public void addAppStateListener(AppStateListener listener);
         public void removeAppStateListener(AppStateListener listener);
-        public View getCameraView();
         public void notifyWakeLockChanged(String topic, String state);
         public boolean areTabsShown();
         public AbsoluteLayout getPluginContainer();
@@ -1829,7 +1828,7 @@ public class GeckoAppShell
                 public void run() {
                     try {
                         if (getGeckoInterface() != null)
-                            getGeckoInterface().enableCameraView();
+                            getGeckoInterface().enableOrientationListener();
                     } catch (Exception e) { }
                 }
             });
@@ -1879,19 +1878,6 @@ public class GeckoAppShell
                 }
             }
 
-            try {
-                if (getGeckoInterface() != null) {
-                    View cameraView = getGeckoInterface().getCameraView();
-                    if (cameraView instanceof SurfaceView) {
-                        sCamera.setPreviewDisplay(((SurfaceView)cameraView).getHolder());
-                    } else if (cameraView instanceof TextureView) {
-                        sCamera.setPreviewTexture(((TextureView)cameraView).getSurfaceTexture());
-                    }
-                }
-            } catch (IOException | RuntimeException e) {
-                Log.w(LOGTAG, "Error setPreviewXXX:", e);
-            }
-
             sCamera.setParameters(params);
             sCameraBuffer = new byte[(bufferSize * 12) / 8];
             sCamera.addCallbackBuffer(sCameraBuffer);
@@ -1916,7 +1902,7 @@ public class GeckoAppShell
                 public void run() {
                     try {
                         if (getGeckoInterface() != null)
-                            getGeckoInterface().disableCameraView();
+                            getGeckoInterface().disableOrientationListener();
                     } catch (Exception e) { }
                 }
             });

@@ -11,10 +11,9 @@
 #include "nsNSSDialogs.h"
 
 #include "mozIDOMWindow.h"
-#include "mozilla/Assertions.h"
-#include "mozilla/Casting.h"
 #include "nsArray.h"
 #include "nsEmbedCID.h"
+#include "nsHashPropertyBag.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -26,6 +25,7 @@
 #include "nsIX509Cert.h"
 #include "nsNSSDialogHelper.h"
 #include "nsString.h"
+#include "nsVariant.h"
 
 #define PIPSTRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties"
 
@@ -165,86 +165,90 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor* ctx,
 
   *certificateChosen = false;
 
-  nsCOMPtr<nsIDialogParamBlock> block =
-    do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
-  if (!block) {
+  nsCOMPtr<nsIMutableArray> argArray = nsArrayBase::Create();
+  if (!argArray) {
     return NS_ERROR_FAILURE;
   }
 
-  // SetObjects() expects an nsIMutableArray, which is why we can't directly use
-  // |certList| and have to add an extra layer of indirection.
-  nsCOMPtr<nsIMutableArray> paramBlockArray = nsArrayBase::Create();
-  if (!paramBlockArray) {
-    return NS_ERROR_FAILURE;
-  }
-  nsresult rv = paramBlockArray->AppendElement(certList, false);
+  nsCOMPtr<nsIWritableVariant> hostnameVariant = new nsVariant();
+  nsresult rv = hostnameVariant->SetAsAUTF8String(hostname);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = block->SetObjects(paramBlockArray);
+  rv = argArray->AppendElement(hostnameVariant, false);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = block->SetNumberStrings(3);
+  nsCOMPtr<nsIWritableVariant> organizationVariant = new nsVariant();
+  rv = organizationVariant->SetAsAUTF8String(organization);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = argArray->AppendElement(organizationVariant, false);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = block->SetString(0, NS_ConvertUTF8toUTF16(hostname).get());
+  nsCOMPtr<nsIWritableVariant> issuerOrgVariant = new nsVariant();
+  rv = issuerOrgVariant->SetAsAUTF8String(issuerOrg);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = block->SetString(1, NS_ConvertUTF8toUTF16(organization).get());
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = block->SetString(2, NS_ConvertUTF8toUTF16(issuerOrg).get());
+  rv = argArray->AppendElement(issuerOrgVariant, false);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = block->SetInt(0, port);
+  nsCOMPtr<nsIWritableVariant> portVariant = new nsVariant();
+  rv = portVariant->SetAsInt32(port);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = argArray->AppendElement(portVariant, false);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = argArray->AppendElement(certList, false);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIWritablePropertyBag2> retVals = new nsHashPropertyBag();
+  rv = argArray->AppendElement(retVals, false);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   rv = nsNSSDialogHelper::openDialog(nullptr,
                                      "chrome://pippki/content/clientauthask.xul",
-                                     block);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  int32_t status;
-  rv = block->GetInt(0, &status);
+                                     argArray);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   nsCOMPtr<nsIClientAuthUserDecision> extraResult = do_QueryInterface(ctx);
   if (extraResult) {
-    int32_t rememberSelection;
-    rv = block->GetInt(2, &rememberSelection);
+    bool rememberSelection = false;
+    rv = retVals->GetPropertyAsBool(NS_LITERAL_STRING("rememberSelection"),
+                                    &rememberSelection);
     if (NS_SUCCEEDED(rv)) {
-      extraResult->SetRememberClientAuthCertificate(rememberSelection!=0);
+      extraResult->SetRememberClientAuthCertificate(rememberSelection);
     }
   }
 
-  *certificateChosen = (status != 0);
+  rv = retVals->GetPropertyAsBool(NS_LITERAL_STRING("certChosen"),
+                                  certificateChosen);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   if (*certificateChosen) {
-    int32_t index = 0;
-    rv = block->GetInt(1, &index);
+    rv = retVals->GetPropertyAsUint32(NS_LITERAL_STRING("selectedIndex"),
+                                      selectedIndex);
     if (NS_FAILED(rv)) {
       return rv;
     }
-
-    if (index < 0) {
-      MOZ_ASSERT_UNREACHABLE("Selected index should never be negative");
-      return NS_ERROR_FAILURE;
-    }
-
-    *selectedIndex = mozilla::AssertedCast<uint32_t>(index);
   }
 
   return NS_OK;

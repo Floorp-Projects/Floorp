@@ -21,6 +21,7 @@ toolkit.jar:
   skin/classic/global/aboutSupport.css                     (../../shared/aboutSupport.css)
   skin/classic/global/appPicker.css                        (../../shared/appPicker.css)
   skin/classic/global/config.css                           (../../shared/config.css)
+  skin/classic/global/timepicker.css                       (../../shared/timepicker.css)
   skin/classic/global/icons/find-arrows.svg                (../../shared/icons/find-arrows.svg)
   skin/classic/global/icons/info.svg                       (../../shared/incontent-icons/info.svg)
   skin/classic/global/icons/input-clear.svg                (../../shared/icons/input-clear.svg)
