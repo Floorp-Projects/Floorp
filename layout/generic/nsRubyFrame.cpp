@@ -90,6 +90,19 @@ nsRubyFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
   aData->mLineIsEmpty = false;
 }
 
+static nsRubyBaseContainerFrame*
+FindRubyBaseContainerAncestor(nsIFrame* aFrame)
+{
+  for (nsIFrame* ancestor = aFrame->GetParent();
+       ancestor && ancestor->IsFrameOfType(nsIFrame::eLineParticipant);
+       ancestor = ancestor->GetParent()) {
+    if (ancestor->GetType() == nsGkAtoms::rubyBaseContainerFrame) {
+      return static_cast<nsRubyBaseContainerFrame*>(ancestor);
+    }
+  }
+  return nullptr;
+}
+
 /* virtual */ void
 nsRubyFrame::Reflow(nsPresContext* aPresContext,
                     ReflowOutput& aDesiredSize,
@@ -160,6 +173,11 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   }
   if (boxDecorationBreakClone || NS_FRAME_IS_COMPLETE(aStatus)) {
     aDesiredSize.ISize(lineWM) += borderPadding.IEnd(frameWM);
+  }
+
+  // Update descendant leadings of ancestor ruby base container.
+  if (nsRubyBaseContainerFrame* rbc = FindRubyBaseContainerAncestor(this)) {
+    rbc->UpdateDescendantLeadings(mLeadings);
   }
 
   nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize,
@@ -268,6 +286,9 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
   baseRect.BStart(lineWM) = 0;
   // The rect for offsets of text containers.
   LogicalRect offsetRect = baseRect;
+  RubyBlockLeadings descLeadings = aBaseContainer->GetDescendantLeadings();
+  offsetRect.BStart(lineWM) -= descLeadings.mStart;
+  offsetRect.BSize(lineWM) += descLeadings.mStart + descLeadings.mEnd;
   for (uint32_t i = 0; i < rtcCount; i++) {
     nsRubyTextContainerFrame* textContainer = textContainers[i];
     WritingMode rtcWM = textContainer->GetWritingMode();

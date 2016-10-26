@@ -10,6 +10,7 @@
 #define nsRubyBaseContainerFrame_h___
 
 #include "nsContainerFrame.h"
+#include "RubyUtils.h"
 
 /**
  * Factory function.
@@ -17,10 +18,6 @@
  */
 nsContainerFrame* NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
-
-namespace mozilla {
-struct RubyColumn;
-} // namespace mozilla
 
 class nsRubyBaseContainerFrame final : public nsContainerFrame
 {
@@ -58,6 +55,13 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
+  void UpdateDescendantLeadings(const mozilla::RubyBlockLeadings& aLeadings) {
+    mDescendantLeadings.Update(aLeadings);
+  }
+  mozilla::RubyBlockLeadings GetDescendantLeadings() const {
+    return mDescendantLeadings;
+  }
+
 protected:
   friend nsContainerFrame*
     NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
@@ -83,6 +87,9 @@ protected:
                      bool& aIsComplete);
 
   nscoord mBaseline;
+
+  // Leading produced by descendant ruby annotations.
+  mozilla::RubyBlockLeadings mDescendantLeadings;
 };
 
 #endif /* nsRubyBaseContainerFrame_h___ */
