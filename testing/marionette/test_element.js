@@ -42,3 +42,14 @@ add_test(function test_coordinates() {
 
   run_next_test();
 });
+
+add_test(function test_isWebElementReference() {
+  strictEqual(element.isWebElementReference({[element.Key]: "some_id"}), true);
+  strictEqual(element.isWebElementReference({[element.LegacyKey]: "some_id"}), true);
+  strictEqual(element.isWebElementReference(
+      {[element.LegacyKey]: "some_id", [element.Key]: "2"}), true);
+  strictEqual(element.isWebElementReference({}), false);
+  strictEqual(element.isWebElementReference({"key": "blah"}), false);
+
+  run_next_test();
+});

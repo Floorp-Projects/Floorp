@@ -639,6 +639,19 @@ element.makeWebElement = function(uuid) {
   };
 };
 
+/**
+ * Checks if |ref| has either |element.Key| or |element.LegacyKey| as properties.
+ *
+ * @param {?} ref
+ *     Object that represents a web element reference.
+ * @return {boolean}
+ *     True if |ref| has either expected property.
+ */
+element.isWebElementReference = function(ref) {
+  let properties = Object.getOwnPropertyNames(ref);
+  return properties.includes(element.Key) || properties.includes(element.LegacyKey);
+};
+
 element.generateUUID = function() {
   let uuid = uuidGen.generateUUID().toString();
   return uuid.substring(1, uuid.length - 1);
