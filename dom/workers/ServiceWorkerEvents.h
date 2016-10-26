@@ -308,10 +308,6 @@ public:
   }
 
   void GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts);
-
-  void SetSource(ServiceWorkerClient* aClient);
-
-  void SetSource(ServiceWorker* aServiceWorker);
 };
 
 END_WORKERS_NAMESPACE

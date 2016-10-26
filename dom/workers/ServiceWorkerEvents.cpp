@@ -1252,18 +1252,6 @@ ExtendableMessageEvent::GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts)
   aPorts = mPorts;
 }
 
-void
-ExtendableMessageEvent::SetSource(ServiceWorkerClient* aClient)
-{
-  mClient = aClient;
-}
-
-void
-ExtendableMessageEvent::SetSource(ServiceWorker* aServiceWorker)
-{
-  mServiceWorker = aServiceWorker;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(ExtendableMessageEvent)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ExtendableMessageEvent, Event)
