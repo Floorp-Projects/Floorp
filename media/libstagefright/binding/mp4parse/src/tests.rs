@@ -442,6 +442,102 @@ fn read_hdlr_zero_length_name() {
     assert_eq!(parsed.handler_type, 0x76696465); // vide
 }
 
+fn flac_streaminfo() -> Vec<u8> {
+    vec![
+        0x10, 0x00, 0x10, 0x00, 0x00, 0x0a, 0x11, 0x00,
+        0x38, 0x32, 0x0a, 0xc4, 0x42, 0xf0, 0x00, 0xc9,
+        0xdf, 0xae, 0xb5, 0x66, 0xfc, 0x02, 0x15, 0xa3,
+        0xb1, 0x54, 0x61, 0x47, 0x0f, 0xfb, 0x05, 0x00,
+        0x33, 0xad,
+    ]
+}
+
+#[test]
+fn read_flac() {
+    let mut stream = make_box(BoxSize::Auto, b"fLaC", |s| {
+        s.append_repeated(0, 6) // reserved
+         .B16(1) // data reference index
+         .B32(0) // reserved
+         .B32(0) // reserved
+         .B16(2) // channel count
+         .B16(16) // bits per sample
+         .B16(0) // pre_defined
+         .B16(0) // reserved
+         .B32(44100 << 16) // Sample rate
+         .append_bytes(&make_dfla(FlacBlockType::StreamInfo, true,
+                                  &flac_streaminfo(), FlacBlockLength::Correct)
+         .into_inner())
+    });
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+    let mut track = super::Track::new(0);
+    let r = super::read_audio_sample_entry(&mut stream, &mut track);
+    r.unwrap();
+}
+
+#[derive(Clone, Copy)]
+enum FlacBlockType {
+    StreamInfo = 0,
+    _Padding = 1,
+    _Application = 2,
+    _Seektable = 3,
+    _Comment = 4,
+    _Cuesheet = 5,
+    _Picture = 6,
+    _Reserved,
+    _Invalid = 127,
+}
+
+enum FlacBlockLength {
+    Correct,
+    Incorrect(usize),
+}
+
+fn make_dfla(block_type: FlacBlockType, last: bool, data: &Vec<u8>,
+             data_length: FlacBlockLength) -> Cursor<Vec<u8>> {
+    assert!(data.len() < 1<<24);
+    make_fullbox(BoxSize::Auto, b"dfLa", 0, |s| {
+        let flag = match last {
+            true => 1,
+            false => 0,
+        };
+        let size = match data_length {
+            FlacBlockLength::Correct => (data.len() as u32) & 0xffffff,
+            FlacBlockLength::Incorrect(size) => {
+                assert!(size < 1<<24);
+                (size as u32) & 0xffffff
+            }
+        };
+        let block_type = (block_type as u32) & 0x7f;
+        s.B32(flag << 31 | block_type << 24 | size)
+         .append_bytes(data)
+    })
+}
+
+#[test]
+fn read_dfla() {
+    let mut stream = make_dfla(FlacBlockType::StreamInfo, true,
+                               &flac_streaminfo(), FlacBlockLength::Correct);
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+    assert_eq!(stream.head.name, BoxType::FLACSpecificBox);
+    let dfla = super::read_dfla(&mut stream).unwrap();
+    assert_eq!(dfla.version, 0);
+}
+
+#[test]
+fn long_flac_metadata() {
+    let streaminfo = flac_streaminfo();
+    let mut stream = make_dfla(FlacBlockType::StreamInfo, true,
+                               &streaminfo,
+                               FlacBlockLength::Incorrect(streaminfo.len() + 4));
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+    assert_eq!(stream.head.name, BoxType::FLACSpecificBox);
+    let r = super::read_dfla(&mut stream);
+    assert!(r.is_err());
+}
+
 #[test]
 fn read_opus() {
     let mut stream = make_box(BoxSize::Auto, b"Opus", |s| {
@@ -459,7 +555,7 @@ fn read_opus() {
     let mut iter = super::BoxIter::new(&mut stream);
     let mut stream = iter.next_box().unwrap().unwrap();
     let mut track = super::Track::new(0);
-    let r = super::read_audio_desc(&mut stream, &mut track);
+    let r = super::read_audio_sample_entry(&mut stream, &mut track);
     assert!(r.is_ok());
 }
 
@@ -547,7 +643,7 @@ fn avcc_limit() {
     let mut iter = super::BoxIter::new(&mut stream);
     let mut stream = iter.next_box().unwrap().unwrap();
     let mut track = super::Track::new(0);
-    match super::read_video_desc(&mut stream, &mut track) {
+    match super::read_video_sample_entry(&mut stream, &mut track) {
         Err(Error::InvalidData(s)) => assert_eq!(s, "avcC box exceeds BUF_SIZE_LIMIT"),
         Ok(_) => assert!(false, "expected an error result"),
         _ => assert!(false, "expected a different error result"),
@@ -573,7 +669,7 @@ fn esds_limit() {
     let mut iter = super::BoxIter::new(&mut stream);
     let mut stream = iter.next_box().unwrap().unwrap();
     let mut track = super::Track::new(0);
-    match super::read_audio_desc(&mut stream, &mut track) {
+    match super::read_audio_sample_entry(&mut stream, &mut track) {
         Err(Error::InvalidData(s)) => assert_eq!(s, "esds box exceeds BUF_SIZE_LIMIT"),
         Ok(_) => assert!(false, "expected an error result"),
         _ => assert!(false, "expected a different error result"),
@@ -599,7 +695,7 @@ fn esds_limit_2() {
     let mut iter = super::BoxIter::new(&mut stream);
     let mut stream = iter.next_box().unwrap().unwrap();
     let mut track = super::Track::new(0);
-    match super::read_audio_desc(&mut stream, &mut track) {
+    match super::read_audio_sample_entry(&mut stream, &mut track) {
         Err(Error::UnexpectedEOF) => (),
         Ok(_) => assert!(false, "expected an error result"),
         _ => assert!(false, "expected a different error result"),
@@ -660,4 +756,105 @@ fn invalid_pascal_string() {
     // returned string must be no longer than 31 bytes.
     let s = super::read_fixed_length_pascal_string(&mut stream, 32).unwrap();
     assert_eq!(s.len(), 31);
+}
+
+#[test]
+fn skip_padding_in_boxes() {
+    // Padding data could be added in the end of these boxes. Parser needs to skip
+    // them instead of returning error.
+    let box_names = vec![b"stts", b"stsc", b"stsz", b"stco", b"co64", b"stss"];
+
+    for name in box_names {
+        let mut stream = make_fullbox(BoxSize::Auto, name, 1, |s| {
+            s.append_repeated(0, 100) // add padding data
+        });
+        let mut iter = super::BoxIter::new(&mut stream);
+        let mut stream = iter.next_box().unwrap().unwrap();
+        match name {
+            b"stts" => {
+                super::read_stts(&mut stream).expect("fail to skip padding: stts");
+            },
+            b"stsc" => {
+                super::read_stsc(&mut stream).expect("fail to skip padding: stsc");
+            },
+            b"stsz" => {
+                super::read_stsz(&mut stream).expect("fail to skip padding: stsz");
+            },
+            b"stco" => {
+                super::read_stco(&mut stream).expect("fail to skip padding: stco");
+            },
+            b"co64" => {
+                super::read_co64(&mut stream).expect("fail to skip padding: co64");
+            },
+            b"stss" => {
+                super::read_stss(&mut stream).expect("fail to skip padding: stss");
+            },
+            _ => (),
+        }
+    }
+}
+
+#[test]
+fn skip_padding_in_stsd() {
+    // Padding data could be added in the end of stsd boxes. Parser needs to skip
+    // them instead of returning error.
+    let avc = make_box(BoxSize::Auto, b"avc1", |s| {
+        s.append_repeated(0, 6)
+         .B16(1)
+         .append_repeated(0, 16)
+         .B16(320)
+         .B16(240)
+         .append_repeated(0, 14)
+         .append_repeated(0, 32)
+         .append_repeated(0, 4)
+         .B32(0xffffffff)
+         .append_bytes(b"avcC")
+         .append_repeated(0, 100)
+    }).into_inner();
+    let mut stream = make_fullbox(BoxSize::Auto, b"stsd", 0, |s| {
+        s.B32(1)
+         .append_bytes(avc.as_slice())
+         .append_repeated(0, 100) // add padding data
+    });
+
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+    super::read_stsd(&mut stream, &mut super::Track::new(0))
+          .expect("fail to skip padding: stsd");
+}
+
+#[test]
+fn read_qt_wave_atom() {
+    let esds = make_fullbox(BoxSize::Auto, b"esds", 0, |s| {
+        s.B8(0x03)  // elementary stream descriptor tag
+         .B8(0x0b)  // esds length
+         .append_repeated(0, 2)
+         .B8(0x00)  // flags
+         .B8(0x04)  // decoder config descriptor tag
+         .B8(0x0d)  // dcds length
+         .B8(0x6b)  // mp3
+         .append_repeated(0, 12)
+    }).into_inner();
+    let wave = make_box(BoxSize::Auto, b"wave", |s| {
+        s.append_bytes(esds.as_slice())
+    }).into_inner();
+    let mut stream = make_box(BoxSize::Auto, b"mp4a", |s| {
+        s.append_repeated(0, 6)
+         .B16(1)    // data_reference_count
+         .B16(1)    // verion: qt -> 1
+         .append_repeated(0, 6)
+         .B16(2)
+         .B16(16)
+         .append_repeated(0, 4)
+         .B32(48000 << 16)
+         .append_repeated(0, 16)
+         .append_bytes(wave.as_slice())
+    });
+
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+    let mut track = super::Track::new(0);
+    super::read_audio_sample_entry(&mut stream, &mut track)
+          .expect("fail to read qt wave atom");
+    assert_eq!(track.codec_type, super::CodecType::MP3);
 }
