@@ -230,7 +230,15 @@ if __name__ == "__main__":
     # cleans it up automatically.
     base_dir = "/builds/slave/moz-toolchain"
     if is_windows():
-        base_dir = "c:%s" % base_dir
+        # TODO: Because Windows taskcluster builds are run with distinct
+        # user IDs for each job, we can't store things in some globally
+        # accessible directory: one job will run, checkout LLVM to that
+        # directory, and then if another job runs, the new user won't be
+        # able to access the previously-checked out code--or be able to
+        # delete it.  So on Windows, we build in the task-specific home
+        # directory; we will eventually add -fdebug-prefix-map options
+        # to the LLVM build to bring back reproducibility.
+        base_dir = os.path.join(os.getcwd(), 'llvm-sources')
 
     source_dir = base_dir + "/src"
     build_dir = base_dir + "/build"
