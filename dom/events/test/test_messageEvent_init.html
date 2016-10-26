@@ -9,7 +9,7 @@
 
 var a = new MessageEvent("message")
 ok(!!a, "We have a MessageEvent");
-is(a.ports, null, "By default MessageEvent.ports is null");
+is(a.ports.length, 0, "By default MessageEvent.ports is an empty array");
 
 a.initMessageEvent("message", true, false, {}, window.location.href, "", null, []);
 ok(Array.isArray(a.ports), "After InitMessageEvent() we have an array");
@@ -19,9 +19,6 @@ var mc = new MessageChannel();
 a.initMessageEvent("message", true, false, {}, window.location.href, "", null, [mc.port1]);
 ok(Array.isArray(a.ports), "After InitMessageEvent() we have an array");
 is(a.ports.length, 1, "Length is 1");
-
-a.initMessageEvent("message", true, false, {}, window.location.href, "", null, null);
-is(a.ports, null, "By default MessageEvent.ports is null");
 
   </script>
 </body>

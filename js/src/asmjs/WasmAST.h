@@ -649,15 +649,15 @@ class AstImport : public AstNode
     DefinitionKind kind_;
 
     AstRef funcSig_;
-    Limits resizable_;
+    Limits limits_;
     AstGlobal global_;
 
   public:
     AstImport(AstName name, AstName module, AstName field, AstRef funcSig)
       : name_(name), module_(module), field_(field), kind_(DefinitionKind::Function), funcSig_(funcSig)
     {}
-    AstImport(AstName name, AstName module, AstName field, DefinitionKind kind, Limits resizable)
-      : name_(name), module_(module), field_(field), kind_(kind), resizable_(resizable)
+    AstImport(AstName name, AstName module, AstName field, DefinitionKind kind, Limits limits)
+      : name_(name), module_(module), field_(field), kind_(kind), limits_(limits)
     {}
     AstImport(AstName name, AstName module, AstName field, AstGlobal global)
       : name_(name), module_(module), field_(field), kind_(DefinitionKind::Global), global_(global)
@@ -672,9 +672,9 @@ class AstImport : public AstNode
         MOZ_ASSERT(kind_ == DefinitionKind::Function);
         return funcSig_;
     }
-    Limits resizable() const {
+    Limits limits() const {
         MOZ_ASSERT(kind_ == DefinitionKind::Memory || kind_ == DefinitionKind::Table);
-        return resizable_;
+        return limits_;
     }
     const AstGlobal& global() const {
         MOZ_ASSERT(kind_ == DefinitionKind::Global);
@@ -697,10 +697,7 @@ class AstExport : public AstNode
     {}
     AstName name() const { return name_; }
     DefinitionKind kind() const { return kind_; }
-    AstRef& ref() {
-        MOZ_ASSERT(kind_ == DefinitionKind::Function || kind_ == DefinitionKind::Global);
-        return ref_;
-    }
+    AstRef& ref() { return ref_; }
 };
 
 class AstDataSegment : public AstNode
@@ -750,6 +747,17 @@ class AstStartFunc : public AstNode
     }
 };
 
+struct AstResizable
+{
+    Limits limits;
+    bool imported;
+
+    AstResizable(Limits limits, bool imported)
+      : limits(limits),
+        imported(imported)
+    {}
+};
+
 class AstModule : public AstNode
 {
   public:
@@ -758,6 +766,7 @@ class AstModule : public AstNode
     typedef AstVector<AstExport*> ExportVector;
     typedef AstVector<AstSig*> SigVector;
     typedef AstVector<AstName> NameVector;
+    typedef AstVector<AstResizable> AstResizableVector;
 
   private:
     typedef AstHashMap<AstSig*, uint32_t, AstSig> SigMap;
@@ -767,8 +776,8 @@ class AstModule : public AstNode
     SigMap               sigMap_;
     ImportVector         imports_;
     NameVector           funcImportNames_;
-    Maybe<Limits>        table_;
-    Maybe<Limits>        memory_;
+    AstResizableVector   tables_;
+    AstResizableVector   memories_;
     ExportVector         exports_;
     Maybe<AstStartFunc>  startFunc_;
     FuncVector           funcs_;
@@ -783,6 +792,8 @@ class AstModule : public AstNode
         sigMap_(lifo),
         imports_(lifo),
         funcImportNames_(lifo),
+        tables_(lifo),
+        memories_(lifo),
         exports_(lifo),
         funcs_(lifo),
         dataSegments_(lifo),
@@ -792,29 +803,23 @@ class AstModule : public AstNode
     bool init() {
         return sigMap_.init();
     }
-    bool setMemory(Limits memory) {
-        if (memory_)
-            return false;
-        memory_.emplace(memory);
-        return true;
+    bool addMemory(Limits memory) {
+        return memories_.append(AstResizable(memory, false));
     }
     bool hasMemory() const {
-        return !!memory_;
+        return !!memories_.length();
     }
-    const Limits& memory() const {
-        return *memory_;
+    const AstResizableVector& memories() const {
+        return memories_;
     }
-    bool setTable(Limits table) {
-        if (table_)
-            return false;
-        table_.emplace(table);
-        return true;
+    bool addTable(Limits table) {
+        return tables_.append(AstResizable(table, false));
     }
     bool hasTable() const {
-        return !!table_;
+        return !!tables_.length();
     }
-    const Limits& table() const {
-        return *table_;
+    const AstResizableVector& tables() const {
+        return tables_;
     }
     bool append(AstDataSegment* seg) {
         return dataSegments_.append(seg);
@@ -869,9 +874,21 @@ class AstModule : public AstNode
         return funcs_;
     }
     bool append(AstImport* imp) {
-        if (imp->kind() == DefinitionKind::Function) {
+        switch (imp->kind()) {
+          case DefinitionKind::Function:
             if (!funcImportNames_.append(imp->name()))
                 return false;
+            break;
+          case DefinitionKind::Table:
+            if (!tables_.append(AstResizable(imp->limits(), true)))
+                return false;
+            break;
+          case DefinitionKind::Memory:
+            if (!memories_.append(AstResizable(imp->limits(), true)))
+                return false;
+            break;
+          case DefinitionKind::Global:
+            break;
         }
 
         return imports_.append(imp);

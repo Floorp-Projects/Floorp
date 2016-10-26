@@ -65,8 +65,8 @@
       is(e.persisted, true, "test page should have been persisted in pageshow");
 
       var promise = new Promise((resolve, reject) => {
-        info("Waiting 2 seconds...");
-        setTimeout(resolve, 2000);
+        info("Waiting a few seconds...");
+        setTimeout(resolve, 5000);
       });
 
       promise.then(function() {

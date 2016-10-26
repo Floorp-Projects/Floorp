@@ -357,6 +357,7 @@ class MOZ_STACK_CLASS TokenStream
     bool isEOF() const { return flags.isEOF; }
     bool sawOctalEscape() const { return flags.sawOctalEscape; }
     bool hadError() const { return flags.hadError; }
+    void clearSawOctalEscape() { flags.sawOctalEscape = false; }
 
     // TokenStream-specific error reporters.
     bool reportError(unsigned errorNumber, ...);

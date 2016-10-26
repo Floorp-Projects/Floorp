@@ -21,7 +21,7 @@ interface nsIDOMDocument;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(d0391e86-1ad7-4ab0-bb7c-14d6d9967369)]
+[scriptable, builtinclass, uuid(3da7b133-f1a0-4de9-a2bc-5c49014c1077)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -177,21 +177,6 @@ interface nsIPrincipal : nsISerializable
     readonly attribute AString cspJSON;
 
     /**
-     * Returns the jar prefix of the principal.
-     * The jar prefix is a string that can be used to isolate data or
-     * permissions between different principals while taking into account
-     * parameters like the app id or the fact that the principal is embedded in
-     * a mozbrowser.
-     * Some principals will return an empty string.
-     * Some principals will assert if you try to access the jarPrefix.
-     *
-     * The jarPrefix is intended to be an opaque identifier. It is currently
-     * "human-readable" but no callers should assume it will stay as is and
-     * it might be crypto-hashed at some point.
-     */
-    readonly attribute AUTF8String jarPrefix;
-
-    /**
      * A dictionary of the non-default origin attributes associated with this
      * nsIPrincipal.
      *
@@ -234,9 +219,6 @@ interface nsIPrincipal : nsISerializable
      * The value of .originSuffix is automatically serialized into .origin, so any
      * consumers using that are automatically origin-attribute-aware. Consumers with
      * special requirements must inspect and compare .originSuffix manually.
-     *
-     * originsuffix are intended to be a replacement for jarPrefix, which will
-     * eventually be removed.
      */
     readonly attribute AUTF8String originSuffix;
 

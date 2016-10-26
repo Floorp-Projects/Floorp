@@ -1757,23 +1757,29 @@ PrintCodeSection(WasmPrintContext& c, const AstModule::FuncVector& funcs, const 
    return true;
 }
 
-
 static bool
 PrintDataSection(WasmPrintContext& c, const AstModule& module)
 {
     if (!module.hasMemory())
         return true;
 
+    MOZ_ASSERT(module.memories().length() == 1, "NYI: several memories");
+
     if (!PrintIndent(c))
         return false;
     if (!c.buffer.append("memory "))
         return false;
-    if (!PrintInt32(c, module.memory().initial))
+
+    const Limits& memory = module.memories()[0].limits;
+    MOZ_ASSERT(memory.initial % PageSize == 0);
+    if (!PrintInt32(c, memory.initial / PageSize))
        return false;
-    if (module.memory().maximum) {
+
+    if (memory.maximum) {
+        MOZ_ASSERT(*memory.maximum % PageSize == 0);
         if (!c.buffer.append(", "))
             return false;
-        if (!PrintInt32(c, *module.memory().maximum))
+        if (!PrintInt32(c, *memory.maximum / PageSize))
             return false;
     }
 

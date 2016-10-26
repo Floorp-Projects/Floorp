@@ -37,6 +37,7 @@
 #include "vm/ArrayBufferObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/PIC.h"
 #include "vm/SelfHosting.h"
 #include "vm/TypedArrayCommon.h"
 #include "vm/WrapperObject.h"
@@ -1241,20 +1242,114 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
     return obj;
 }
 
-// FIXME: This is not compatible with TypedArrayFrom in the spec
-// (ES 2016 draft Mar 25, 2016 22.2.4.4 and 22.2.2.1.1)
-// We should handle iterator protocol (bug 1232266).
+static MOZ_ALWAYS_INLINE bool
+IsOptimizableInit(JSContext* cx, HandleObject iterable, bool* optimized)
+{
+    MOZ_ASSERT(!*optimized);
+
+    if (!IsPackedArray(iterable))
+        return true;
+
+    ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx);
+    if (!stubChain)
+        return false;
+
+    return stubChain->tryOptimizeArray(cx, iterable.as<ArrayObject>(), optimized);
+}
+
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.4.4 TypedArray ( object )
 template<typename T>
 /* static */ JSObject*
 TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, HandleObject newTarget)
 {
+    // Steps 1-2 (Already performed in caller).
+
+    // Steps 3-4 (Allocation deferred until later).
     RootedObject proto(cx);
-    Rooted<ArrayBufferObject*> buffer(cx);
-    uint32_t len;
-    if (!GetLengthProperty(cx, other, &len))
-        return nullptr;
     if (!GetPrototypeForInstance(cx, newTarget, &proto))
         return nullptr;
+
+    bool optimized = false;
+    if (!IsOptimizableInit(cx, other, &optimized))
+        return nullptr;
+
+    // Fast path when iterable is a packed array using the default iterator.
+    if (optimized) {
+        // Step 6.a (We don't need to call IterableToList for the fast path).
+        RootedArrayObject array(cx, &other->as<ArrayObject>());
+
+        // Step 6.b.
+        uint32_t len = array->getDenseInitializedLength();
+
+        // Step 6.c.
+        Rooted<ArrayBufferObject*> buffer(cx);
+        if (!maybeCreateArrayBuffer(cx, len, BYTES_PER_ELEMENT, nullptr, &buffer))
+            return nullptr;
+
+        Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, 0, len, proto));
+        if (!obj)
+            return nullptr;
+
+        // Steps 6.d-e.
+        if (!TypedArrayMethods<TypedArrayObject>::initFromIterablePackedArray(cx, obj, array))
+            return nullptr;
+
+        // Step 6.f (The assertion isn't applicable for the fast path).
+
+        // Step 6.g.
+        return obj;
+    }
+
+    // Step 5.
+    RootedValue callee(cx);
+    RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
+    if (!GetProperty(cx, other, other, iteratorId, &callee))
+        return nullptr;
+
+    // Steps 6-8.
+    RootedObject arrayLike(cx);
+    if (!callee.isNullOrUndefined()) {
+        // Throw if other[Symbol.iterator] isn't callable.
+        if (!callee.isObject() || !callee.toObject().isCallable()) {
+            RootedValue otherVal(cx, ObjectValue(*other));
+            UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, otherVal, nullptr);
+            if (!bytes)
+                return nullptr;
+            JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_ITERABLE,
+                                       bytes.get());
+            return nullptr;
+        }
+
+        FixedInvokeArgs<2> args2(cx);
+        args2[0].setObject(*other);
+        args2[1].set(callee);
+
+        // Step 6.a.
+        RootedValue rval(cx);
+        if (!CallSelfHostedFunction(cx, cx->names().IterableToList, UndefinedHandleValue, args2,
+                                    &rval))
+        {
+            return nullptr;
+        }
+
+        // Steps 6.b-g (Implemented in steps 9-13 below).
+        arrayLike = &rval.toObject();
+    } else {
+        // Step 7 is an assertion: object is not an Iterator. Testing this is
+        // literally the very last thing we did, so we don't assert here.
+
+        // Step 8.
+        arrayLike = other;
+    }
+
+    // Step 9.
+    uint32_t len;
+    if (!GetLengthProperty(cx, arrayLike, &len))
+        return nullptr;
+
+    // Step 10.
+    Rooted<ArrayBufferObject*> buffer(cx);
     if (!maybeCreateArrayBuffer(cx, len, BYTES_PER_ELEMENT, nullptr, &buffer))
         return nullptr;
 
@@ -1262,8 +1357,11 @@ TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, Handl
     if (!obj)
         return nullptr;
 
-    if (!TypedArrayMethods<TypedArrayObject>::setFromNonTypedArray(cx, obj, other, len))
+    // Steps 11-12.
+    if (!TypedArrayMethods<TypedArrayObject>::setFromNonTypedArray(cx, obj, arrayLike, len))
         return nullptr;
+
+    // Step 13.
     return obj;
 }
 
