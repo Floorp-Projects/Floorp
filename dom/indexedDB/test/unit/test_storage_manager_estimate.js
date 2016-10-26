@@ -54,3 +54,10 @@ function testSteps()
   finishTest();
   yield undefined;
 }
+
+function setup()
+{
+  SpecialPowers.pushPrefEnv({
+    "set": [["dom.storageManager.enabled", true]]
+  },  runTest);
+}
