@@ -34,7 +34,8 @@ class LintSandbox(ConfigureSandbox):
         if isinstance(obj, CombinedDependsFunction):
             return False
         if isinstance(obj, DependsFunction):
-            if self._help_option in obj.dependencies:
+            if (self._help_option in obj.dependencies or
+                obj in (self._always, self._never)):
                 return False
             func = self._wrapped[obj.func]
             # We allow missing --help dependencies for functions that:
