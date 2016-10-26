@@ -189,6 +189,16 @@ Blob::Create(nsISupports* aParent, const nsAString& aContentType,
 }
 
 /* static */ already_AddRefed<Blob>
+Blob::CreateStringBlob(nsISupports* aParent, const nsACString& aData,
+                       const nsAString& aContentType)
+{
+  RefPtr<Blob> blob = Blob::Create(aParent,
+    new BlobImplString(aData, aContentType));
+  MOZ_ASSERT(!blob->mImpl->IsFile());
+  return blob.forget();
+}
+
+/* static */ already_AddRefed<Blob>
 Blob::CreateMemoryBlob(nsISupports* aParent, void* aMemoryBuffer,
                        uint64_t aLength, const nsAString& aContentType)
 {
@@ -1036,6 +1046,28 @@ EmptyBlobImpl::GetInternalStream(nsIInputStream** aStream,
     aRv.Throw(rv);
     return;
   }
+}
+
+////////////////////////////////////////////////////////////////////////////
+// BlobImplString implementation
+
+NS_IMPL_ISUPPORTS_INHERITED0(BlobImplString, BlobImpl)
+
+already_AddRefed<BlobImpl>
+BlobImplString::CreateSlice(uint64_t aStart, uint64_t aLength,
+                            const nsAString& aContentType,
+                            ErrorResult& aRv)
+{
+  RefPtr<BlobImpl> impl =
+    new BlobImplString(Substring(mData, aStart, aLength),
+                       aContentType);
+  return impl.forget();
+}
+
+void
+BlobImplString::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
+{
+  aRv = NS_NewCStringInputStream(aStream, mData);
 }
 
 ////////////////////////////////////////////////////////////////////////////

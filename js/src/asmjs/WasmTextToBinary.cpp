@@ -2735,7 +2735,7 @@ ParseDataSegment(WasmParseContext& c)
 }
 
 static bool
-ParseLimits(WasmParseContext& c, Limits* resizable)
+ParseLimits(WasmParseContext& c, Limits* limits)
 {
     WasmToken initial;
     if (!c.ts.match(WasmToken::Index, &initial, c.error))
@@ -2747,7 +2747,7 @@ ParseLimits(WasmParseContext& c, Limits* resizable)
         maximum.emplace(token.index());
 
     Limits r = { initial.index(), maximum };
-    *resizable = r;
+    *limits = r;
     return true;
 }
 
@@ -2805,7 +2805,7 @@ ParseMemory(WasmParseContext& c, WasmToken token, AstModule* module)
         }
 
         Limits memory = { uint32_t(pages), Some(uint32_t(pages)) };
-        if (!module->setMemory(memory))
+        if (!module->addMemory(memory))
             return false;
 
         if (!c.ts.match(WasmToken::CloseParen, c.error))
@@ -2818,12 +2818,7 @@ ParseMemory(WasmParseContext& c, WasmToken token, AstModule* module)
     if (!ParseLimits(c, &memory))
         return false;
 
-    if (!module->setMemory(memory)) {
-        c.ts.generateError(token, c.error);
-        return false;
-    }
-
-    return true;
+    return module->addMemory(memory);
 }
 
 static bool
@@ -3084,11 +3079,7 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
         Limits table;
         if (!ParseTableSig(c, &table))
             return false;
-        if (!module->setTable(table)) {
-            c.ts.generateError(token, c.error);
-            return false;
-        }
-        return true;
+        return module->addTable(table);
     }
 
     // Or: anyfunc (elem 1 2 ...)
@@ -3116,10 +3107,8 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
         return false;
 
     Limits r = { numElements, Some(numElements) };
-    if (!module->setTable(r)) {
-        c.ts.generateError(token, c.error);
+    if (!module->addTable(r))
         return false;
-    }
 
     auto* zero = new(c.lifo) AstConst(Val(uint32_t(0)));
     if (!zero)
@@ -4371,11 +4360,11 @@ EncodeImport(Encoder& e, AstImport& imp)
             return false;
         break;
       case DefinitionKind::Table:
-        if (!EncodeTableLimits(e, imp.resizable()))
+        if (!EncodeTableLimits(e, imp.limits()))
             return false;
         break;
       case DefinitionKind::Memory:
-        if (!EncodeLimits(e, imp.resizable()))
+        if (!EncodeLimits(e, imp.limits()))
             return false;
         break;
     }
@@ -4408,21 +4397,28 @@ EncodeImportSection(Encoder& e, AstModule& module)
 static bool
 EncodeMemorySection(Encoder& e, AstModule& module)
 {
-    if (!module.hasMemory())
+    size_t numOwnMemories = 0;
+    for (const AstResizable& memory : module.memories()) {
+        if (!memory.imported)
+            numOwnMemories++;
+    }
+
+    if (!numOwnMemories)
         return true;
 
     size_t offset;
     if (!e.startSection(SectionId::Memory, &offset))
         return false;
 
-    uint32_t numMemories = 1;
-    if (!e.writeVarU32(numMemories))
+    if (!e.writeVarU32(numOwnMemories))
         return false;
 
-    const Limits& memory = module.memory();
-
-    if (!EncodeLimits(e, memory))
-        return false;
+    for (const AstResizable& memory : module.memories()) {
+        if (memory.imported)
+            continue;
+        if (!EncodeLimits(e, memory.limits))
+            return false;
+    }
 
     e.finishSection(offset);
     return true;
@@ -4505,20 +4501,28 @@ EncodeExportSection(Encoder& e, AstModule& module)
 static bool
 EncodeTableSection(Encoder& e, AstModule& module)
 {
-    if (!module.hasTable())
+    size_t numOwnTables = 0;
+    for (const AstResizable& table : module.tables()) {
+        if (!table.imported)
+            numOwnTables++;
+    }
+
+    if (!numOwnTables)
         return true;
 
     size_t offset;
     if (!e.startSection(SectionId::Table, &offset))
         return false;
 
-    uint32_t numTables = 1;
-    if (!e.writeVarU32(numTables))
+    if (!e.writeVarU32(numOwnTables))
         return false;
 
-    const Limits& table = module.table();
-    if (!EncodeTableLimits(e, table))
-        return false;
+    for (const AstResizable& table : module.tables()) {
+        if (table.imported)
+            continue;
+        if (!EncodeTableLimits(e, table.limits))
+            return false;
+    }
 
     e.finishSection(offset);
     return true;

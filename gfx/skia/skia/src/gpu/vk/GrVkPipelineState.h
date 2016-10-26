@@ -9,8 +9,10 @@
 #ifndef GrVkPipelineState_DEFINED
 #define GrVkPipelineState_DEFINED
 
+#include "GrProgramDesc.h"
+#include "GrStencilSettings.h"
+#include "GrVkDescriptorSetManager.h"
 #include "GrVkImage.h"
-#include "GrVkProgramDesc.h"
 #include "GrVkPipelineStateDataManager.h"
 #include "glsl/GrGLSLProgramBuilder.h"
 
@@ -19,6 +21,7 @@
 class GrPipeline;
 class GrVkCommandBuffer;
 class GrVkDescriptorPool;
+class GrVkDescriptorSet;
 class GrVkGpu;
 class GrVkImageView;
 class GrVkPipeline;
@@ -53,90 +56,28 @@ public:
 
     void abandonGPUResources();
 
-    // The key is composed of two parts:
-    // 1. uint32_t for total key length
-    // 2. Pipeline state data
-    enum StateKeyOffsets {
-        // Part 1.
-        kLength_StateKeyOffset = 0,
-        // Part 2.
-        kData_StateKeyOffset = kLength_StateKeyOffset + sizeof(uint32_t),
-    };
-    static void BuildStateKey(const GrPipeline&, GrPrimitiveType primitiveType,
-                               SkTArray<unsigned char, true>* key);
-
     /**
      * For Vulkan we want to cache the entire VkPipeline for reuse of draws. The Desc here holds all
      * the information needed to differentiate one pipeline from another.
      *
-     * The GrVkProgramDesc contains all the information need to create the actual shaders for the
+     * The GrProgramDesc contains all the information need to create the actual shaders for the
      * pipeline.
      *
-     * The fStateKey is used to store all the inputs for the rest of the state stored on the
-     * pipeline. This includes stencil settings, blending information, render pass format, draw face
+     * For Vulkan we need to add to the GrProgramDesc to include the rest of the state on the
+     * pipline. This includes stencil settings, blending information, render pass format, draw face
      * information, and primitive type. Note that some state is set dynamically on the pipeline for
      * each draw  and thus is not included in this descriptor. This includes the viewport, scissor,
      * and blend constant.
-     *
-     * A checksum which includes the fProgramDesc and fStateKey is included at the top of the Desc
-     * for caching purposes and faster equality checks.
      */
-    struct Desc {
-        uint32_t                fChecksum;
-        GrVkProgramDesc         fProgramDesc;
-
-        enum {
-            kRenderPassKeyAlloc = 12, // This is typical color attachment with no stencil or msaa
-            kStencilKeyAlloc = sizeof(GrStencilSettings),
-            kDrawFaceKeyAlloc = 4,
-            kBlendingKeyAlloc = 4,
-            kPrimitiveTypeKeyAlloc = 4,
-            kPreAllocSize = kData_StateKeyOffset + kRenderPassKeyAlloc + kStencilKeyAlloc +
-                            kDrawFaceKeyAlloc + kBlendingKeyAlloc + kPrimitiveTypeKeyAlloc,
-        };
-        SkSTArray<kPreAllocSize, uint8_t, true> fStateKey;
-
-        bool operator== (const Desc& that) const {
-            if (fChecksum != that.fChecksum || fProgramDesc != that.fProgramDesc) {
-                return false;
-            }
-            // We store the keyLength at the start of fVkKey. Thus we don't have to worry about
-            // different length keys since we will fail on the comparison immediately. Therefore we
-            // just use this PipelineDesc to get the length to iterate over.
-            int keyLength = fStateKey.count();
-            SkASSERT(SkIsAlign4(keyLength));
-            int l = keyLength >> 2;
-            const uint32_t* aKey = reinterpret_cast<const uint32_t*>(fStateKey.begin());
-            const uint32_t* bKey = reinterpret_cast<const uint32_t*>(that.fStateKey.begin());
-            for (int i = 0; i < l; ++i) {
-                if (aKey[i] != bKey[i]) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        static bool Less(const Desc& a, const Desc& b) {
-            if (a.fChecksum != b.fChecksum) {
-                return a.fChecksum < b.fChecksum ? true : false;
-            }
-            bool progDescLess = GrProgramDesc::Less(a.fProgramDesc, b.fProgramDesc);
-            if (progDescLess || a.fProgramDesc != b.fProgramDesc) {
-                return progDescLess;
-            }
-
-            int keyLength = a.fStateKey.count();
-            SkASSERT(SkIsAlign4(keyLength));
-            int l = keyLength >> 2;
-            const uint32_t* aKey = reinterpret_cast<const uint32_t*>(a.fStateKey.begin());
-            const uint32_t* bKey = reinterpret_cast<const uint32_t*>(b.fStateKey.begin());
-            for (int i = 0; i < l; ++i) {
-                if (aKey[i] != bKey[i]) {
-                    return aKey[i] < bKey[i] ? true : false;
-                }
-            }
-            return false;
-        }
+    class Desc : public GrProgramDesc {
+    public:
+        static bool Build(Desc*,
+                          const GrPrimitiveProcessor&,
+                          const GrPipeline&,
+                          GrPrimitiveType primitiveType,
+                          const GrGLSLCaps&);
+    private:
+        typedef GrProgramDesc INHERITED;
     };
 
     const Desc& getDesc() { return fDesc; }
@@ -149,7 +90,7 @@ private:
                       const GrVkPipelineState::Desc&,
                       GrVkPipeline* pipeline,
                       VkPipelineLayout layout,
-                      VkDescriptorSetLayout dsLayout[2],
+                      const GrVkDescriptorSetManager::Handle& samplerDSHandle,
                       const BuiltinUniformHandles& builtinUniformHandles,
                       const UniformInfoArray& uniforms,
                       uint32_t vertexUniformSize,
@@ -166,10 +107,11 @@ private:
                               uint32_t descCount, GrVkGpu* gpu)
             : fDescLayout(layout)
             , fDescType(type)
-            , fCurrentDescriptorSet(0)
+            , fDescCountPerSet(descCount)
+            , fCurrentDescriptorCount(0)
             , fPool(nullptr) {
-            SkASSERT(descCount < (kMaxDescSetLimit >> 2));
-            fMaxDescriptorSets = descCount << 2;
+            SkASSERT(descCount < kMaxDescLimit >> 2);
+            fMaxDescriptors = fDescCountPerSet << 2;
             this->getNewPool(gpu);
         }
 
@@ -185,19 +127,21 @@ private:
 
         VkDescriptorSetLayout  fDescLayout;
         VkDescriptorType       fDescType;
-        uint32_t               fMaxDescriptorSets;
-        uint32_t               fCurrentDescriptorSet;
+        uint32_t               fDescCountPerSet;
+        uint32_t               fMaxDescriptors;
+        uint32_t               fCurrentDescriptorCount;
         GrVkDescriptorPool*    fPool;
 
     private:
-        static const uint32_t kMaxDescSetLimit = 1 << 10;
+        static const uint32_t kMaxDescLimit = 1 << 10;
 
         void getNewPool(GrVkGpu* gpu);
     };
 
     void writeUniformBuffers(const GrVkGpu* gpu);
 
-    void writeSamplers(GrVkGpu* gpu, const SkTArray<const GrTextureAccess*>& textureBindings);
+    void writeSamplers(GrVkGpu* gpu, const SkTArray<const GrTextureAccess*>& textureBindings,
+                       bool allowSRGBInputs);
 
     /**
     * We use the RT's size and origin to adjust from Skia device space to vulkan normalized device
@@ -252,6 +196,13 @@ private:
     // GrVkPipelineState since we update the descriptor sets and bind them at separate times;
     VkDescriptorSet fDescriptorSets[2];
 
+    // Once we move samplers over to use the resource provider for descriptor sets we will not need
+    // the above array and instead just use GrVkDescriptorSet like the uniform one here.
+    const GrVkDescriptorSet* fUniformDescriptorSet;
+    const GrVkDescriptorSet* fSamplerDescriptorSet;
+
+    const GrVkDescriptorSetManager::Handle fSamplerDSHandle;
+
     // Meta data so we know which descriptor sets we are using and need to bind.
     int fStartDS;
     int fDSCount;
@@ -262,7 +213,7 @@ private:
     // GrVkResources used for sampling textures
     SkTDArray<GrVkSampler*> fSamplers;
     SkTDArray<const GrVkImageView*> fTextureViews;
-    SkTDArray<const GrVkImage::Resource*> fTextures;
+    SkTDArray<const GrVkResource*> fTextures;
 
     // Tracks the current render target uniforms stored in the vertex buffer.
     RenderTargetState fRenderTargetState;
@@ -276,9 +227,6 @@ private:
     Desc fDesc;
 
     GrVkPipelineStateDataManager fDataManager;
-
-    DescriptorPoolManager fSamplerPoolManager;
-    DescriptorPoolManager fUniformPoolManager;
 
     int fNumSamplers;
 

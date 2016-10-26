@@ -96,8 +96,15 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
 }
 
 nsXMLContentSink::nsXMLContentSink()
-  : mPrettyPrintXML(true)
+  : mTextLength(0)
+  , mNotifyLevel(0)
+  , mPrettyPrintXML(true)
+  , mPrettyPrintHasSpecialRoot(0)
+  , mPrettyPrintHasFactoredElements(0)
+  , mPrettyPrinting(0)
+  , mPreventScriptExecution(0)
 {
+  PodArrayZero(mText);
 }
 
 nsXMLContentSink::~nsXMLContentSink()

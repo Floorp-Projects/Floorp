@@ -150,11 +150,10 @@ public:
 
     /**
      *  Create a typeface from the specified font data.
-     *  Takes ownership of the font data, so the caller should not reference it again.
      *  Will return NULL if the typeface could not be created.
      *  The caller must call unref() on the returned object if it is not null.
      */
-    SkTypeface* createFromFontData(SkFontData*) const;
+    SkTypeface* createFromFontData(std::unique_ptr<SkFontData>) const;
 
     /**
      *  Create a typeface for the specified fileName and TTC index
@@ -164,8 +163,7 @@ public:
      */
     SkTypeface* createFromFile(const char path[], int ttcIndex = 0) const;
 
-    SkTypeface* legacyCreateTypeface(const char familyName[],
-                                     unsigned typefaceStyleBits) const;
+    SkTypeface* legacyCreateTypeface(const char familyName[], SkFontStyle style) const;
 
     /**
      *  Return a ref to the default fontmgr. The caller must call unref() on
@@ -193,14 +191,13 @@ protected:
     virtual SkTypeface* onCreateFromStream(SkStreamAsset*, int ttcIndex) const = 0;
     // TODO: make pure virtual.
     virtual SkTypeface* onCreateFromStream(SkStreamAsset*, const FontParameters&) const;
-    virtual SkTypeface* onCreateFromFontData(SkFontData*) const;
+    virtual SkTypeface* onCreateFromFontData(std::unique_ptr<SkFontData>) const;
     virtual SkTypeface* onCreateFromFile(const char path[], int ttcIndex) const = 0;
 
-    virtual SkTypeface* onLegacyCreateTypeface(const char familyName[],
-                                               unsigned styleBits) const = 0;
+    virtual SkTypeface* onLegacyCreateTypeface(const char familyName[], SkFontStyle) const = 0;
+
 private:
     static SkFontMgr* Factory();    // implemented by porting layer
-    friend SkFontMgr* sk_fontmgr_create_default();
 
     typedef SkRefCnt INHERITED;
 };

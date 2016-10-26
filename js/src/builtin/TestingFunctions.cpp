@@ -2251,7 +2251,37 @@ Serialize(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     JSAutoStructuredCloneBuffer clonebuf(JS::StructuredCloneScope::SameProcessSameThread, nullptr, nullptr);
-    if (!clonebuf.write(cx, args.get(0), args.get(1)))
+    JS::CloneDataPolicy policy;
+
+    if (!args.get(2).isUndefined()) {
+        RootedObject opts(cx, ToObject(cx, args.get(2)));
+        if (!opts)
+            return false;
+
+        RootedValue v(cx);
+        if (!JS_GetProperty(cx, opts, "SharedArrayBuffer", &v))
+            return false;
+
+        if (!v.isUndefined()) {
+            JSString* str = JS::ToString(cx, v);
+            if (!str)
+                return false;
+            JSAutoByteString poli(cx, str);
+            if (!poli)
+                return false;
+
+            if (strcmp(poli.ptr(), "allow") == 0) {
+                // default
+            } else if (strcmp(poli.ptr(), "deny") == 0) {
+                policy.denySharedArrayBuffer();
+            } else {
+                JS_ReportErrorASCII(cx, "Invalid policy value for 'SharedArrayBuffer'");
+                return false;
+            }
+        }
+    }
+
+    if (!clonebuf.write(cx, args.get(0), args.get(1), policy))
         return false;
 
     RootedObject obj(cx, CloneBufferObject::Create(cx, &clonebuf));
@@ -4297,9 +4327,13 @@ gc::ZealModeHelpText),
 "  (asm.js) programs."),
 
     JS_FN_HELP("serialize", Serialize, 1, 0,
-"serialize(data, [transferables])",
+"serialize(data, [transferables, [policy]])",
 "  Serialize 'data' using JS_WriteStructuredClone. Returns a structured\n"
-"  clone buffer object."),
+"  clone buffer object. 'policy' must be an object. The following keys'\n"
+"  string values will be used to determine whether the corresponding types\n"
+"  may be serialized (value 'allow', the default) or not (value 'deny').\n"
+"  If denied types are encountered a TypeError will be thrown during cloning.\n"
+"  Valid keys: 'SharedArrayBuffer'."),
 
     JS_FN_HELP("deserialize", Deserialize, 1, 0,
 "deserialize(clonebuffer)",

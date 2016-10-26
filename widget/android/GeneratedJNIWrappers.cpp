@@ -697,9 +697,6 @@ auto GeckoEditable::OnDefaultKeyEvent(mozilla::jni::Object::Param a0) const -> v
     return mozilla::jni::Method<OnDefaultKeyEvent_t>::Call(GeckoEditable::mCtx, nullptr, a0);
 }
 
-constexpr char GeckoEditable::OnImeAcknowledgeFocus_t::name[];
-constexpr char GeckoEditable::OnImeAcknowledgeFocus_t::signature[];
-
 constexpr char GeckoEditable::OnImeAddCompositionRange_t::name[];
 constexpr char GeckoEditable::OnImeAddCompositionRange_t::signature[];
 

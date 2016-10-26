@@ -92,14 +92,17 @@ enum StructuredDataType : uint32_t {
     SCTAG_MAP_OBJECT,
     SCTAG_SET_OBJECT,
     SCTAG_END_OF_KEYS,
-    SCTAG_SHARED_TYPED_ARRAY_OBJECT,
+    SCTAG_DO_NOT_USE_3, // Required for backwards compatibility
     SCTAG_DATA_VIEW_OBJECT,
     SCTAG_SAVED_FRAME_OBJECT,
 
+    // No new tags before principals.
     SCTAG_JSPRINCIPALS,
     SCTAG_NULL_JSPRINCIPALS,
     SCTAG_RECONSTRUCTED_SAVED_FRAME_PRINCIPALS_IS_SYSTEM,
     SCTAG_RECONSTRUCTED_SAVED_FRAME_PRINCIPALS_IS_NOT_SYSTEM,
+
+    SCTAG_SHARED_ARRAY_BUFFER_OBJECT,
 
     SCTAG_TYPED_ARRAY_V1_MIN = 0xFFFF0100,
     SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Int8,
@@ -121,7 +124,6 @@ enum StructuredDataType : uint32_t {
     SCTAG_TRANSFER_MAP_HEADER = 0xFFFF0200,
     SCTAG_TRANSFER_MAP_PENDING_ENTRY,
     SCTAG_TRANSFER_MAP_ARRAY_BUFFER,
-    SCTAG_TRANSFER_MAP_SHARED_BUFFER,
     SCTAG_TRANSFER_MAP_END_OF_BUILTIN_TYPES,
 
     SCTAG_END_OF_BUILTIN_TYPES
@@ -308,6 +310,7 @@ struct JSStructuredCloneReader {
                         bool v1Read = false);
     bool readDataView(uint32_t byteLength, MutableHandleValue vp);
     bool readArrayBuffer(uint32_t nbytes, MutableHandleValue vp);
+    bool readSharedArrayBuffer(uint32_t nbytes, MutableHandleValue vp);
     bool readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, MutableHandleValue vp);
     JSObject* readSavedFrame(uint32_t principalsTag);
     bool startRead(MutableHandleValue vp);
@@ -335,6 +338,7 @@ struct JSStructuredCloneWriter {
   public:
     explicit JSStructuredCloneWriter(JSContext* cx,
                                      JS::StructuredCloneScope scope,
+                                     JS::CloneDataPolicy cloneDataPolicy,
                                      const JSStructuredCloneCallbacks* cb,
                                      void* cbClosure,
                                      const Value& tVal)
@@ -342,7 +346,8 @@ struct JSStructuredCloneWriter {
           counts(out.context()), entries(out.context()),
           memory(out.context()), callbacks(cb),
           closure(cbClosure), transferable(out.context(), tVal),
-          transferableObjects(out.context(), GCHashSet<JSObject*>(cx))
+          transferableObjects(out.context(), GCHashSet<JSObject*>(cx)),
+          cloneDataPolicy(cloneDataPolicy)
     {}
 
     ~JSStructuredCloneWriter();
@@ -438,6 +443,8 @@ struct JSStructuredCloneWriter {
     RootedValue transferable;
     Rooted<GCHashSet<JSObject*>> transferableObjects;
 
+    const JS::CloneDataPolicy cloneDataPolicy;
+
     friend bool JS_WriteString(JSStructuredCloneWriter* w, HandleString str);
     friend bool JS_WriteTypedArray(JSStructuredCloneWriter* w, HandleValue v);
     friend bool JS_ObjectNotWritten(JSStructuredCloneWriter* w, HandleObject obj);
@@ -486,10 +493,11 @@ ReportDataCloneError(JSContext* cx,
 bool
 WriteStructuredClone(JSContext* cx, HandleValue v, JSStructuredCloneData* bufp,
                      JS::StructuredCloneScope scope,
+                     JS::CloneDataPolicy cloneDataPolicy,
                      const JSStructuredCloneCallbacks* cb, void* cbClosure,
                      const Value& transferable)
 {
-    JSStructuredCloneWriter w(cx, scope, cb, cbClosure, transferable);
+    JSStructuredCloneWriter w(cx, scope, cloneDataPolicy, cb, cbClosure, transferable);
     return w.init() && w.write(v) && w.extractBuffer(bufp);
 }
 
@@ -568,10 +576,6 @@ DiscardTransferables(mozilla::BufferList<AllocPolicy>& buffer,
             js_free(content);
         } else if (ownership == JS::SCTAG_TMO_MAPPED_DATA) {
             JS_ReleaseMappedArrayBufferContents(content, extraData);
-        } else if (ownership == JS::SCTAG_TMO_SHARED_BUFFER) {
-            SharedArrayRawBuffer* raw = static_cast<SharedArrayRawBuffer*>(content);
-            if (raw)
-                raw->dropReference();
         } else if (cb && cb->freeTransfer) {
             cb->freeTransfer(tag, JS::TransferableOwnership(ownership), content, extraData, cbClosure);
         } else {
@@ -965,6 +969,13 @@ JSStructuredCloneWriter::parseTransferable()
             return reportDataCloneError(JS_SCERR_TRANSFERABLE);
         tObj = &v.toObject();
 
+        // Backward compatibility, see bug 1302036 and bug 1302037.
+        if (tObj->is<SharedArrayBufferObject>()) {
+            JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage,
+                                              nullptr, JSMSG_SC_SAB_TRANSFER);
+            continue;
+        }
+
         // No duplicates allowed
         auto p = transferableObjects.lookupForAdd(tObj);
         if (p)
@@ -1093,8 +1104,22 @@ JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj)
 bool
 JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj)
 {
-    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_SHMEM_MUST_TRANSFER);
-    return false;
+    if (!cloneDataPolicy.isSharedArrayBufferAllowed()) {
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_NOT_CLONABLE,
+                                  "SharedArrayBuffer");
+        return false;
+    }
+
+    Rooted<SharedArrayBufferObject*> sharedArrayBuffer(context(), &CheckedUnwrap(obj)->as<SharedArrayBufferObject>());
+    SharedArrayRawBuffer* rawbuf = sharedArrayBuffer->rawBufferObject();
+
+    // Avoids a race condition where the parent thread frees the buffer
+    // before the child has accepted the transferable.
+    rawbuf->addReference();
+
+    intptr_t p = reinterpret_cast<intptr_t>(rawbuf);
+    return out.writePair(SCTAG_SHARED_ARRAY_BUFFER_OBJECT, static_cast<uint32_t>(sizeof(p))) &&
+           out.writeBytes(&p, sizeof(p));
 }
 
 bool
@@ -1421,7 +1446,7 @@ JSStructuredCloneWriter::writeTransferMap()
         // (and, if necessary, detaching this object if it's an ArrayBuffer).
         if (!out.writePair(SCTAG_TRANSFER_MAP_PENDING_ENTRY, JS::SCTAG_TMO_UNFILLED))
             return false;
-        if (!out.writePtr(nullptr)) // Pointer to ArrayBuffer contents or to SharedArrayRawBuffer.
+        if (!out.writePtr(nullptr)) // Pointer to ArrayBuffer contents.
             return false;
         if (!out.write(0)) // extraData
             return false;
@@ -1494,18 +1519,6 @@ JSStructuredCloneWriter::transferOwnership()
             else
                 ownership = JS::SCTAG_TMO_ALLOC_DATA;
             extraData = nbytes;
-        } else if (cls == ESClass::SharedArrayBuffer) {
-            Rooted<SharedArrayBufferObject*> sharedArrayBuffer(context(), &CheckedUnwrap(obj)->as<SharedArrayBufferObject>());
-            SharedArrayRawBuffer* rawbuf = sharedArrayBuffer->rawBufferObject();
-
-            // Avoids a race condition where the parent thread frees the buffer
-            // before the child has accepted the transferable.
-            rawbuf->addReference();
-
-            tag = SCTAG_TRANSFER_MAP_SHARED_BUFFER;
-            ownership = JS::SCTAG_TMO_SHARED_BUFFER;
-            content = rawbuf;
-            extraData = 0;
         } else {
             if (!callbacks || !callbacks->writeTransfer)
                 return reportDataCloneError(JS_SCERR_TRANSFERABLE);
@@ -1791,6 +1804,36 @@ JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes, MutableHandleValue vp)
     return in.readArray(buffer.dataPointer(), nbytes);
 }
 
+bool
+JSStructuredCloneReader::readSharedArrayBuffer(uint32_t nbytes, MutableHandleValue vp)
+{
+    intptr_t p;
+    in.readBytes(&p, sizeof(p));
+
+    SharedArrayRawBuffer* rawbuf = reinterpret_cast<SharedArrayRawBuffer*>(p);
+
+    // There's no guarantee that the receiving agent has enabled shared memory
+    // even if the transmitting agent has done so.  Ideally we'd check at the
+    // transmission point, but that's tricky, and it will be a very rare problem
+    // in any case.  Just fail at the receiving end if we can't handle it.
+
+    if (!context()->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
+        // The sending side performed a reference increment before sending.
+        // Account for that here before leaving.
+        if (rawbuf)
+            rawbuf->dropReference();
+
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_SAB_DISABLED);
+        return false;
+    }
+
+    // The constructor absorbs the reference count increment performed by the sender.
+    JSObject* obj = SharedArrayBufferObject::New(context(), rawbuf);
+
+    vp.setObject(*obj);
+    return true;
+}
+
 /*
  * Read in the data for a structured clone version 1 ArrayBuffer, performing
  * endianness-conversion while reading.
@@ -1967,6 +2010,11 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
             return false;
         break;
 
+      case SCTAG_SHARED_ARRAY_BUFFER_OBJECT:
+        if (!readSharedArrayBuffer(data, vp))
+            return false;
+        break;
+
       case SCTAG_TYPED_ARRAY_OBJECT: {
         // readTypedArray adds the array to allObjs.
         uint64_t arrayType;
@@ -2104,19 +2152,6 @@ JSStructuredCloneReader::readTransferMap()
                 obj = JS_NewArrayBufferWithContents(cx, nbytes, content);
             else if (data == JS::SCTAG_TMO_MAPPED_DATA)
                 obj = JS_NewMappedArrayBufferWithContents(cx, nbytes, content);
-        } else if (tag == SCTAG_TRANSFER_MAP_SHARED_BUFFER) {
-            MOZ_ASSERT(data == JS::SCTAG_TMO_SHARED_BUFFER);
-            // There's no guarantee that the receiving agent has enabled
-            // shared memory even if the transmitting agent has done so.
-            // Ideally we'd check at the transmission point, but that's
-            // tricky, and it will be a very rare problem in any case.
-            // Just fail at the receiving end if we can't handle it.
-            if (!context()->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
-                JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                                          JSMSG_SC_NOT_TRANSFERABLE);
-                return false;
-            }
-            obj = SharedArrayBufferObject::New(context(), (SharedArrayRawBuffer*)content);
         } else {
             if (!callbacks || !callbacks->readTransfer) {
                 ReportDataCloneError(cx, callbacks, JS_SCERR_TRANSFERABLE);
@@ -2364,6 +2399,7 @@ JS_ReadStructuredClone(JSContext* cx, JSStructuredCloneData& buf,
 JS_PUBLIC_API(bool)
 JS_WriteStructuredClone(JSContext* cx, HandleValue value, JSStructuredCloneData* bufp,
                         JS::StructuredCloneScope scope,
+                        JS::CloneDataPolicy cloneDataPolicy,
                         const JSStructuredCloneCallbacks* optionalCallbacks,
                         void* closure, HandleValue transferable)
 {
@@ -2372,7 +2408,8 @@ JS_WriteStructuredClone(JSContext* cx, HandleValue value, JSStructuredCloneData*
     assertSameCompartment(cx, value);
 
     const JSStructuredCloneCallbacks* callbacks = optionalCallbacks;
-    return WriteStructuredClone(cx, value, bufp, scope, callbacks, closure, transferable);
+    return WriteStructuredClone(cx, value, bufp, scope, cloneDataPolicy, callbacks, closure,
+                                transferable);
 }
 
 JS_PUBLIC_API(bool)
@@ -2524,18 +2561,18 @@ JSAutoStructuredCloneBuffer::write(JSContext* cx, HandleValue value,
                                    void* closure)
 {
     HandleValue transferable = UndefinedHandleValue;
-    return write(cx, value, transferable, optionalCallbacks, closure);
+    return write(cx, value, transferable, JS::CloneDataPolicy().denySharedArrayBuffer(), optionalCallbacks, closure);
 }
 
 bool
 JSAutoStructuredCloneBuffer::write(JSContext* cx, HandleValue value,
-                                   HandleValue transferable,
+                                   HandleValue transferable, JS::CloneDataPolicy cloneDataPolicy,
                                    const JSStructuredCloneCallbacks* optionalCallbacks,
                                    void* closure)
 {
     clear();
     bool ok = JS_WriteStructuredClone(cx, value, &data_,
-                                      scope_,
+                                      scope_, cloneDataPolicy,
                                       optionalCallbacks, closure,
                                       transferable);
 

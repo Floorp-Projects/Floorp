@@ -15,28 +15,16 @@ function triggerSave(aWindow, aCallback) {
   // This page sets a cookie if and only if a cookie does not exist yet
   let testURI = "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517-2.html";
   testBrowser.loadURI(testURI);
-  testBrowser.addEventListener("pageshow", function pageShown(event) {
-    info("got pageshow with " + event.target.location);
-    if (event.target.location != testURI) {
-      info("try again!");
-      testBrowser.loadURI(testURI);
-      return;
-    }
-    info("found our page!");
-    testBrowser.removeEventListener("pageshow", pageShown, false);
-
+  BrowserTestUtils.browserLoaded(testBrowser, false, testURI)
+                  .then(() => {
     waitForFocus(function () {
       info("register to handle popupshown");
       aWindow.document.addEventListener("popupshown", contextMenuOpened, false);
 
-      var link = testBrowser.contentDocument.getElementById("fff");
-      info("link: " + link);
-      EventUtils.synthesizeMouseAtCenter(link,
-                                         { type: "contextmenu", button: 2 },
-                                         testBrowser.contentWindow);
+      BrowserTestUtils.synthesizeMouseAtCenter("#fff", {type: "contextmenu", button: 2}, testBrowser);
       info("right clicked!");
-    }, testBrowser);
-  }, false);
+    }, aWindow);
+  });
 
   function contextMenuOpened(event) {
     info("contextMenuOpened");

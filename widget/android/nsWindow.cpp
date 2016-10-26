@@ -400,7 +400,7 @@ private:
     AutoTArray<IMETextChange, 4> mIMETextChanges;
     InputContext mInputContext;
     RefPtr<mozilla::TextRangeArray> mIMERanges;
-    int32_t mIMEMaskEventsCount; // Mask events when > 0
+    int32_t mIMEMaskEventsCount; // Mask events when > 0.
     bool mIMEUpdatingContext;
     bool mIMESelectionChanged;
     bool mIMETextChangedDuringFlush;
@@ -415,6 +415,7 @@ private:
     };
     void PostFlushIMEChanges();
     void FlushIMEChanges(FlushChangesFlag aFlags = FLUSH_FLAG_NONE);
+    void FlushIMEText();
     void AsyncNotifyIME(int32_t aNotification);
     void UpdateCompositionRects();
 
@@ -442,9 +443,6 @@ public:
 
     // Synchronize Gecko thread with the InputConnection thread.
     void OnImeSynchronize();
-
-    // Acknowledge focus change and send new text and selection.
-    void OnImeAcknowledgeFocus();
 
     // Replace a range of text with new text.
     void OnImeReplaceText(int32_t aStart, int32_t aEnd,
@@ -2590,7 +2588,7 @@ nsWindow::GetIMEComposition()
     Remove the composition but leave the text content as-is
 */
 void
-nsWindow::RemoveIMEComposition()
+nsWindow::RemoveIMEComposition(RemoveIMECompositionFlag aFlag)
 {
     // Remove composition on Gecko side
     const RefPtr<mozilla::TextComposition> composition(GetIMEComposition());
@@ -2600,13 +2598,11 @@ nsWindow::RemoveIMEComposition()
 
     RefPtr<nsWindow> kungFuDeathGrip(this);
 
-    // We have to use eCompositionCommit instead of eCompositionCommitAsIs
-    // because TextComposition has a workaround for eCompositionCommitAsIs
-    // that prevents compositions containing a single ideographic space
-    // character from working (see bug 1209465)..
     WidgetCompositionEvent compositionCommitEvent(
             true, eCompositionCommit, this);
-    compositionCommitEvent.mData = composition->String();
+    if (aFlag == COMMIT_IME_COMPOSITION) {
+        compositionCommitEvent.mMessage = eCompositionCommitAsIs;
+    }
     InitEvent(compositionCommitEvent, nullptr);
     DispatchEvent(&compositionCommitEvent);
 }
@@ -2824,6 +2820,25 @@ nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
     }
 }
 
+void
+nsWindow::GeckoViewSupport::FlushIMEText()
+{
+    // Notify Java of the newly focused content
+    mIMETextChanges.Clear();
+    mIMESelectionChanged = true;
+
+    // Use 'INT32_MAX / 2' here because subsequent text changes might combine
+    // with this text change, and overflow might occur if we just use
+    // INT32_MAX.
+    IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
+    notification.mTextChangeData.mStartOffset = 0;
+    notification.mTextChangeData.mRemovedEndOffset = INT32_MAX / 2;
+    notification.mTextChangeData.mAddedEndOffset = INT32_MAX / 2;
+    NotifyIME(notification);
+
+    FlushIMEChanges();
+}
+
 static jni::ObjectArray::LocalRef
 ConvertRectArrayToJavaRectFArray(JNIEnv* aJNIEnv, const nsTArray<LayoutDeviceIntRect>& aRects, const LayoutDeviceIntPoint& aOffset, const CSSToLayoutDeviceScale aScale)
 {
@@ -2897,16 +2912,8 @@ nsWindow::GeckoViewSupport::NotifyIME(const IMENotification& aIMENotification)
 
         case REQUEST_TO_CANCEL_COMPOSITION: {
             ALOGIME("IME: REQUEST_TO_CANCEL_COMPOSITION");
-            RefPtr<nsWindow> kungFuDeathGrip(&window);
 
-            // Cancel composition on Gecko side
-            if (window.GetIMEComposition()) {
-                WidgetCompositionEvent compositionCommitEvent(
-                        true, eCompositionCommit, &window);
-                window.InitEvent(compositionCommitEvent, nullptr);
-                // Dispatch it with empty mData value for canceling composition.
-                window.DispatchEvent(&compositionCommitEvent);
-            }
+            window.RemoveIMEComposition(CANCEL_IME_COMPOSITION);
 
             AsyncNotifyIME(GeckoEditableListener::
                            NOTIFY_IME_TO_CANCEL_COMPOSITION);
@@ -2915,22 +2922,39 @@ nsWindow::GeckoViewSupport::NotifyIME(const IMENotification& aIMENotification)
 
         case NOTIFY_IME_OF_FOCUS: {
             ALOGIME("IME: NOTIFY_IME_OF_FOCUS");
-            // IME will call requestCursorUpdates after getting context.
-            // So reset cursor update mode before getting context.
-            mIMEMonitorCursor = false;
-            mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_OF_FOCUS);
+            // Keep a strong reference to the window to keep 'this' alive.
+            RefPtr<nsWindow> window(&this->window);
+
+            // Post an event because we have to flush the text before sending a
+            // focus event, and we may not be able to flush text during the
+            // NotifyIME call.
+            nsAppShell::PostEvent([this, window] {
+                --mIMEMaskEventsCount;
+                if (mIMEMaskEventsCount || window->Destroyed()) {
+                    return;
+                }
+
+                FlushIMEText();
+
+                // IME will call requestCursorUpdates after getting context.
+                // So reset cursor update mode before getting context.
+                mIMEMonitorCursor = false;
+
+                MOZ_ASSERT(mEditable);
+                mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_OF_FOCUS);
+            });
             return true;
         }
 
         case NOTIFY_IME_OF_BLUR: {
             ALOGIME("IME: NOTIFY_IME_OF_BLUR");
 
-            // Mask events because we lost focus. On the next focus event,
-            // Gecko will notify Java, and Java will send an acknowledge focus
-            // event back to Gecko. That is where we unmask event handling
-            mIMEMaskEventsCount++;
+            if (!mIMEMaskEventsCount) {
+                mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_OF_BLUR);
+            }
 
-            mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_OF_BLUR);
+            // Mask events because we lost focus. Unmask on the next focus.
+            mIMEMaskEventsCount++;
             return true;
         }
 
@@ -3047,33 +3071,6 @@ nsWindow::GeckoViewSupport::OnImeSynchronize()
 }
 
 void
-nsWindow::GeckoViewSupport::OnImeAcknowledgeFocus()
-{
-    MOZ_ASSERT(mIMEMaskEventsCount > 0);
-
-    AutoIMESynchronize as(this);
-
-    if (--mIMEMaskEventsCount > 0) {
-        // Still not focused; reply to events, but don't do anything else.
-        return;
-    }
-
-    // The focusing handshake sequence is complete, and Java is waiting
-    // on Gecko. Now we can notify Java of the newly focused content
-    mIMETextChanges.Clear();
-    mIMESelectionChanged = false;
-    // NotifyIMEOfTextChange also notifies selection
-    // Use 'INT32_MAX / 2' here because subsequent text changes might
-    // combine with this text change, and overflow might occur if
-    // we just use INT32_MAX
-    IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
-    notification.mTextChangeData.mStartOffset = 0;
-    notification.mTextChangeData.mRemovedEndOffset =
-        notification.mTextChangeData.mAddedEndOffset = INT32_MAX / 2;
-    NotifyIME(notification);
-}
-
-void
 nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
                                              jni::String::Param aText)
 {
@@ -3092,6 +3089,8 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
 
     const auto composition(window.GetIMEComposition());
     MOZ_ASSERT(!composition || !composition->IsEditorHandlingEvent());
+
+    const bool composing = !mIMERanges->IsEmpty();
 
     if (!mIMEKeyEvents.IsEmpty() || !composition ||
         uint32_t(aStart) != composition->NativeOffsetOfStartComposition() ||
@@ -3136,7 +3135,16 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
             return;
         }
 
-        {
+        if (aStart != aEnd) {
+            // Perform a deletion first.
+            WidgetContentCommandEvent event(
+                    true, eContentCommandDelete, &window);
+            window.InitEvent(event, nullptr);
+            window.DispatchEvent(&event);
+        }
+
+        // Start a composition if we're not just performing a deletion.
+        if (composing || !string.IsEmpty()) {
             WidgetCompositionEvent event(true, eCompositionStart, &window);
             window.InitEvent(event, nullptr);
             window.DispatchEvent(&event);
@@ -3153,9 +3161,8 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
         AddIMETextChange(dummyChange);
     }
 
-    const bool composing = !mIMERanges->IsEmpty();
-
-    // Previous events may have destroyed our composition; bail in that case.
+    // Check composition again because previous events may have destroyed our
+    // composition; in which case we should just skip the next event.
     if (window.GetIMEComposition()) {
         WidgetCompositionEvent event(true, eCompositionChange, &window);
         window.InitEvent(event, nullptr);
@@ -3164,15 +3171,8 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
         if (composing) {
             event.mRanges = new TextRangeArray();
             mIMERanges.swap(event.mRanges);
-
-        } else if (event.mData.Length()) {
-            // Include proper text ranges to make the editor happy.
-            TextRange range;
-            range.mStartOffset = 0;
-            range.mEndOffset = event.mData.Length();
-            range.mRangeType = TextRangeType::eRawClause;
-            event.mRanges = new TextRangeArray();
-            event.mRanges->AppendElement(range);
+        } else {
+            event.mMessage = eCompositionCommit;
         }
 
         window.DispatchEvent(&event);
@@ -3180,11 +3180,6 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
     } else if (composing) {
         // Ensure IME ranges are empty.
         mIMERanges->Clear();
-    }
-
-    // Don't end composition when composing text or composition was destroyed.
-    if (!composing) {
-        window.RemoveIMEComposition();
     }
 
     if (mInputContext.mMayBeIMEUnaware) {
@@ -3222,8 +3217,6 @@ nsWindow::GeckoViewSupport::OnImeAddCompositionRange(
 void
 nsWindow::GeckoViewSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
 {
-    AutoIMESynchronize as(this);
-
     if (mIMEMaskEventsCount > 0) {
         // Not focused.
         return;

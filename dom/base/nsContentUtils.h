@@ -1863,11 +1863,6 @@ public:
   static nsresult CreateArrayBuffer(JSContext *aCx, const nsACString& aData,
                                     JSObject** aResult);
 
-  static nsresult CreateBlobBuffer(JSContext* aCx,
-                                   nsISupports* aParent,
-                                   const nsACString& aData,
-                                   JS::MutableHandle<JS::Value> aBlob);
-
   static void StripNullChars(const nsAString& aInStr, nsAString& aOutStr);
 
   /**

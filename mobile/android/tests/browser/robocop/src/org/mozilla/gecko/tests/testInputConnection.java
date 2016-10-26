@@ -5,12 +5,6 @@
 package org.mozilla.gecko.tests;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertEquals;
-import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertSelection;
-import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertSelectionAt;
-import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertText;
-import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertTextAndSelection;
-import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertTextAndSelectionAt;
-import static org.mozilla.gecko.tests.helpers.TextInputHelper.getText;
 import static org.mozilla.gecko.tests.helpers.WaitHelper.waitFor;
 
 import org.mozilla.gecko.tests.components.GeckoViewComponent.InputConnectionTest;
@@ -197,14 +191,14 @@ public class testInputConnection extends JavascriptBridgeTest {
             assertTextAndSelectionAt("Can set the composing text", ic, "bad", 3);
             getJS().asyncCall("test_reflush_changes");
             // Wait for text change notifications to come in.
-            processGeckoEvents(ic);
+            processGeckoEvents();
             assertTextAndSelectionAt("Can re-flush text changes", ic, "good", 4);
             ic.setComposingText("done", 1);
-            assertTextAndSelectionAt("Can update composition after re-flushing", ic, "done", 4);
+            assertTextAndSelectionAt("Can update composition after re-flushing", ic, "gooddone", 8);
             ic.finishComposingText();
-            assertTextAndSelectionAt("Can finish composing text", ic, "done", 4);
+            assertTextAndSelectionAt("Can finish composing text", ic, "gooddone", 8);
 
-            ic.deleteSurroundingText(4, 0);
+            ic.deleteSurroundingText(8, 0);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
 
             // Bug 1241558 - wrong selection due to ignoring selection notification.
@@ -212,7 +206,7 @@ public class testInputConnection extends JavascriptBridgeTest {
             assertTextAndSelectionAt("Can set the composing text", ic, "foobar", 6);
             getJS().asyncCall("test_set_selection");
             // Wait for text change notifications to come in.
-            processGeckoEvents(ic);
+            processGeckoEvents();
             assertTextAndSelectionAt("Can select after committing", ic, "foobar", 3);
             ic.setComposingText("barfoo", 1);
             assertTextAndSelectionAt("Can compose after selecting", ic, "barfoo", 6);
@@ -250,7 +244,7 @@ public class testInputConnection extends JavascriptBridgeTest {
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
 
             // Make sure we don't leave behind stale events for the following test.
-            processGeckoEvents(ic);
+            processGeckoEvents();
             processInputConnectionEvents();
         }
     }
@@ -281,21 +275,21 @@ public class testInputConnection extends JavascriptBridgeTest {
             // and the input connection thread. Therefore, to ensure these events are
             // issued and to ensure the bug appears, we have to process all Gecko events,
             // then all input connection events, and finally all Gecko events again.
-            processGeckoEvents(ic);
+            processGeckoEvents();
             processInputConnectionEvents();
-            processGeckoEvents(ic);
+            processGeckoEvents();
             assertTextAndSelectionAt("Can set composing region (resetting)", ic, "foo", 3);
 
             ic.setComposingText("foobar", 1);
-            processGeckoEvents(ic);
+            processGeckoEvents();
             processInputConnectionEvents();
-            processGeckoEvents(ic);
+            processGeckoEvents();
             assertTextAndSelectionAt("Can change composing text (resetting)", ic, "foobar", 6);
 
             ic.setComposingText("baz", 1);
-            processGeckoEvents(ic);
+            processGeckoEvents();
             processInputConnectionEvents();
-            processGeckoEvents(ic);
+            processGeckoEvents();
             assertTextAndSelectionAt("Can reset composing text (resetting)", ic, "baz", 3);
 
             ic.finishComposingText();
@@ -305,7 +299,7 @@ public class testInputConnection extends JavascriptBridgeTest {
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
 
             // Make sure we don't leave behind stale events for the following test.
-            processGeckoEvents(ic);
+            processGeckoEvents();
             processInputConnectionEvents();
         }
     }
@@ -335,7 +329,7 @@ public class testInputConnection extends JavascriptBridgeTest {
             assertTextAndSelectionAt("Can handle hiding input", ic, "foo", 3);
 
             // Make sure we don't leave behind stale events for the following test.
-            processGeckoEvents(ic);
+            processGeckoEvents();
             processInputConnectionEvents();
         }
     }

@@ -312,6 +312,7 @@ MSG_DEF(JSMSG_SEMI_BEFORE_STMNT,       0, JSEXN_SYNTAXERR, "missing ; before sta
 MSG_DEF(JSMSG_SOURCE_TOO_LONG,         0, JSEXN_RANGEERR, "source is too long")
 MSG_DEF(JSMSG_STMT_AFTER_RETURN,       0, JSEXN_WARN, "unreachable code after return statement")
 MSG_DEF(JSMSG_STRICT_CODE_WITH,        0, JSEXN_SYNTAXERR, "strict mode code may not contain 'with' statements")
+MSG_DEF(JSMSG_STRICT_NON_SIMPLE_PARAMS, 1, JSEXN_SYNTAXERR, "\"use strict\" not allowed in function with {0} parameter")
 MSG_DEF(JSMSG_TEMPLSTR_UNTERM_EXPR,    0, JSEXN_SYNTAXERR, "missing } in template string")
 MSG_DEF(JSMSG_SIMD_NOT_A_VECTOR,       2, JSEXN_TYPEERR, "expecting a SIMD {0} object as argument {1}")
 MSG_DEF(JSMSG_TOO_MANY_CASES,          0, JSEXN_INTERNALERR, "too many switch cases")
@@ -416,7 +417,9 @@ MSG_DEF(JSMSG_SC_BAD_SERIALIZED_DATA,  1, JSEXN_INTERNALERR, "bad serialized str
 MSG_DEF(JSMSG_SC_DUP_TRANSFERABLE,     0, JSEXN_TYPEERR, "duplicate transferable for structured clone")
 MSG_DEF(JSMSG_SC_NOT_TRANSFERABLE,     0, JSEXN_TYPEERR, "invalid transferable array for structured clone")
 MSG_DEF(JSMSG_SC_UNSUPPORTED_TYPE,     0, JSEXN_TYPEERR, "unsupported type for structured data")
-MSG_DEF(JSMSG_SC_SHMEM_MUST_TRANSFER,  0, JSEXN_TYPEERR, "SharedArrayBuffer must be explicitly transfered during structured cloning")
+MSG_DEF(JSMSG_SC_NOT_CLONABLE,         1, JSEXN_TYPEERR, "{0} cannot be cloned in this context")
+MSG_DEF(JSMSG_SC_SAB_TRANSFER,         0, JSEXN_WARN, "SharedArrayBuffer must not be in the transfer list")
+MSG_DEF(JSMSG_SC_SAB_DISABLED,         0, JSEXN_TYPEERR, "SharedArrayBuffer not cloned - shared memory disabled in receiver")
 
 // Debugger
 MSG_DEF(JSMSG_ASSIGN_FUNCTION_OR_NULL, 1, JSEXN_TYPEERR, "value assigned to {0} must be a function or null")

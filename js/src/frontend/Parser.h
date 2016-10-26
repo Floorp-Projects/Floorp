@@ -1325,10 +1325,13 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     bool checkStrictAssignment(Node lhs);
     bool checkStrictBinding(PropertyName* name, TokenPos pos);
 
+    bool hasValidSimpleStrictParameterNames();
+
+    bool isValidStrictBinding(PropertyName* name);
+
     void reportRedeclaration(HandlePropertyName name, DeclarationKind kind, TokenPos pos);
     bool notePositionalFormalParameter(Node fn, HandlePropertyName name,
-                                       bool disallowDuplicateParams = false,
-                                       bool* duplicatedParam = nullptr);
+                                       bool disallowDuplicateParams, bool* duplicatedParam);
     bool noteDestructuredPositionalFormalParameter(Node fn, Node destruct);
     mozilla::Maybe<DeclarationKind> isVarRedeclaredInEval(HandlePropertyName name,
                                                           DeclarationKind kind);

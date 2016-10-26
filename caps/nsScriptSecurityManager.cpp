@@ -1518,46 +1518,6 @@ nsScriptSecurityManager::InitPrefs()
     return NS_OK;
 }
 
-namespace mozilla {
-
-void
-GetJarPrefix(uint32_t aAppId, bool aInIsolatedMozBrowser, nsACString& aJarPrefix)
-{
-  MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
-
-  if (aAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
-    aAppId = nsIScriptSecurityManager::NO_APP_ID;
-  }
-
-  aJarPrefix.Truncate();
-
-  // Fallback.
-  if (aAppId == nsIScriptSecurityManager::NO_APP_ID && !aInIsolatedMozBrowser) {
-    return;
-  }
-
-  // aJarPrefix = appId + "+" + { 't', 'f' } + "+";
-  aJarPrefix.AppendInt(aAppId);
-  aJarPrefix.Append('+');
-  aJarPrefix.Append(aInIsolatedMozBrowser ? 't' : 'f');
-  aJarPrefix.Append('+');
-
-  return;
-}
-
-} // namespace mozilla
-
-NS_IMETHODIMP
-nsScriptSecurityManager::GetJarPrefix(uint32_t aAppId,
-                                      bool aInIsolatedMozBrowser,
-                                      nsACString& aJarPrefix)
-{
-  MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
-
-  mozilla::GetJarPrefix(aAppId, aInIsolatedMozBrowser, aJarPrefix);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsScriptSecurityManager::GetDomainPolicyActive(bool *aRv)
 {

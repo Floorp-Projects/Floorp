@@ -12,6 +12,10 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
+#ifdef SK_BUILD_FOR_UNIX
+#include <unistd.h>
+#endif
+
 #ifdef _WIN32
 #include <direct.h>
 #include <io.h>
@@ -27,20 +31,23 @@ static FILE* ios_open_from_bundle(const char path[], const char* perm) {
     // Get a reference to the file's URL
     CFStringRef pathRef = CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
     CFURLRef imageURL = CFBundleCopyResourceURL(mainBundle, pathRef, NULL, NULL);
+    CFRelease(pathRef);
     if (!imageURL) {
         return nullptr;
     }
 
     // Convert the URL reference into a string reference
     CFStringRef imagePath = CFURLCopyFileSystemPath(imageURL, kCFURLPOSIXPathStyle);
+    CFRelease(imageURL);
 
     // Get the system encoding method
     CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
 
     // Convert the string reference into a C string
     const char *finalPath = CFStringGetCStringPtr(imagePath, encodingMethod);
-
-    return fopen(finalPath, perm);
+    FILE* fileHandle = fopen(finalPath, perm);
+    CFRelease(imagePath);
+    return fileHandle;
 }
 #endif
 

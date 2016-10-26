@@ -24,7 +24,6 @@ import android.content.res.Configuration;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.media.AudioManager;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -66,6 +65,7 @@ class GeckoInputConnection
     private String mIMETypeHint = "";
     private String mIMEModeHint = "";
     private String mIMEActionHint = "";
+    private boolean mFocused;
 
     private String mCurrentInputMethod = "";
 
@@ -74,8 +74,6 @@ class GeckoInputConnection
     protected int mBatchEditCount;
     private ExtractedTextRequest mUpdateRequest;
     private final ExtractedText mUpdateExtract = new ExtractedText();
-    private boolean mBatchSelectionChanged;
-    private boolean mBatchTextChanged;
     private final InputConnection mKeyInputConnection;
     private CursorAnchorInfo.Builder mCursorAnchorInfoBuilder;
 
@@ -103,30 +101,26 @@ class GeckoInputConnection
     @Override
     public synchronized boolean beginBatchEdit() {
         mBatchEditCount++;
-        mEditableClient.setBatchMode(true);
+        if (mBatchEditCount == 1) {
+            mEditableClient.setBatchMode(true);
+        }
         return true;
     }
 
     @Override
     public synchronized boolean endBatchEdit() {
-        if (mBatchEditCount > 0) {
-            mBatchEditCount--;
-            if (mBatchEditCount == 0) {
-                if (mBatchTextChanged) {
-                    notifyTextChange();
-                    mBatchTextChanged = false;
-                }
-                if (mBatchSelectionChanged) {
-                    Editable editable = getEditable();
-                    notifySelectionChange(Selection.getSelectionStart(editable),
-                                           Selection.getSelectionEnd(editable));
-                    mBatchSelectionChanged = false;
-                }
-                mEditableClient.setBatchMode(false);
-            }
-        } else {
-            Log.w(LOGTAG, "endBatchEdit() called, but mBatchEditCount == 0?!");
+        if (mBatchEditCount <= 0) {
+            Log.w(LOGTAG, "endBatchEdit() called, but mBatchEditCount <= 0?!");
+            return true;
         }
+
+        mBatchEditCount--;
+        if (mBatchEditCount != 0) {
+            return true;
+        }
+
+        // setBatchMode will call onTextChange and/or onSelectionChange for us.
+        mEditableClient.setBatchMode(false);
         return true;
     }
 
@@ -175,29 +169,6 @@ class GeckoInputConnection
                 break;
         }
         return true;
-    }
-
-    @Override
-    public boolean performPrivateCommand(final String action, final Bundle data) {
-        switch (action) {
-            case "process-gecko-events":
-                // Process all currently pending Gecko thread events before returning.
-
-                final Editable editable = getEditable();
-                if (editable == null) {
-                    return false;
-                }
-
-                // Removing an invalid span is essentially a no-op, but it does force the
-                // current thread to wait for the Gecko thread when we call length(), in order
-                // to process the removeSpan event. Once Gecko thread processes the removeSpan
-                // event, all previous events in the Gecko event queue would have been
-                // processed as well.
-                editable.removeSpan(null);
-                editable.length();
-                return true;
-        }
-        return false;
     }
 
     @Override
@@ -316,35 +287,18 @@ class GeckoInputConnection
             Log.w(LOGTAG, "resetting with mBatchEditCount = " + mBatchEditCount);
             mBatchEditCount = 0;
         }
-        mBatchSelectionChanged = false;
-        mBatchTextChanged = false;
 
         // Do not reset mIMEState here; see comments in notifyIMEContext
+
+        restartInput();
     }
 
-    @Override
-    public void onTextChange(CharSequence text, int start, int oldEnd, int newEnd) {
+    @Override // GeckoEditableListener
+    public void onTextChange() {
 
         if (mUpdateRequest == null) {
-            // Android always expects selection updates when not in extracted mode;
-            // in extracted mode, the selection is reported through updateExtractedText
-            final Editable editable = getEditable();
-            if (editable != null) {
-                onSelectionChange(Selection.getSelectionStart(editable),
-                                  Selection.getSelectionEnd(editable));
-            }
             return;
         }
-
-        if (mBatchEditCount > 0) {
-            // Delay notification until after the batch edit
-            mBatchTextChanged = true;
-            return;
-        }
-        notifyTextChange();
-    }
-
-    private void notifyTextChange() {
 
         final InputMethodManager imm = getInputMethodManager();
         final View v = getView();
@@ -356,28 +310,19 @@ class GeckoInputConnection
         // Update the entire Editable range
         mUpdateExtract.partialStartOffset = -1;
         mUpdateExtract.partialEndOffset = -1;
-        mUpdateExtract.selectionStart =
-                Selection.getSelectionStart(editable);
-        mUpdateExtract.selectionEnd =
-                Selection.getSelectionEnd(editable);
+        mUpdateExtract.selectionStart = Selection.getSelectionStart(editable);
+        mUpdateExtract.selectionEnd = Selection.getSelectionEnd(editable);
         mUpdateExtract.startOffset = 0;
         if ((mUpdateRequest.flags & GET_TEXT_WITH_STYLES) != 0) {
             mUpdateExtract.text = new SpannableString(editable);
         } else {
             mUpdateExtract.text = editable.toString();
         }
-        imm.updateExtractedText(v, mUpdateRequest.token,
-                                mUpdateExtract);
+        imm.updateExtractedText(v, mUpdateRequest.token, mUpdateExtract);
     }
 
-    @Override
-    public void onSelectionChange(int start, int end) {
-
-        if (mBatchEditCount > 0) {
-            // Delay notification until after the batch edit
-            mBatchSelectionChanged = true;
-            return;
-        }
+    @Override // GeckoEditableListener
+    public void onSelectionChange() {
 
         final Editable editable = getEditable();
         if (editable != null) {
@@ -969,9 +914,14 @@ class GeckoInputConnection
         switch (type) {
 
             case NOTIFY_IME_OF_FOCUS:
+                // Showing/hiding vkb is done in notifyIMEContext
+                mFocused = true;
+                resetInputConnection();
+                break;
+
             case NOTIFY_IME_OF_BLUR:
                 // Showing/hiding vkb is done in notifyIMEContext
-                resetInputConnection();
+                mFocused = false;
                 break;
 
             case NOTIFY_IME_OPEN_VKB:
@@ -1027,7 +977,15 @@ class GeckoInputConnection
             // the keyboard.
             return;
         }
-        restartInput();
+
+        // On focus, the notifyIMEContext call comes *before* the
+        // notifyIME(NOTIFY_IME_OF_FOCUS) call, but we need to call restartInput during
+        // notifyIME, so we skip restartInput here. On blur, the notifyIMEContext call
+        // comes *after* the notifyIME(NOTIFY_IME_OF_BLUR) call, and we need to call
+        // restartInput here.
+        if (mIMEState == IME_STATE_DISABLED || mFocused) {
+            restartInput();
+        }
     }
 }
 

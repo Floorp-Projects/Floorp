@@ -172,20 +172,24 @@ bool
 StructuredCloneHolderBase::Write(JSContext* aCx,
                                  JS::Handle<JS::Value> aValue)
 {
-  return Write(aCx, aValue, JS::UndefinedHandleValue);
+  return Write(aCx, aValue, JS::UndefinedHandleValue,
+               JS::CloneDataPolicy().denySharedArrayBuffer());
 }
 
 bool
 StructuredCloneHolderBase::Write(JSContext* aCx,
                                  JS::Handle<JS::Value> aValue,
-                                 JS::Handle<JS::Value> aTransfer)
+                                 JS::Handle<JS::Value> aTransfer,
+                                 JS::CloneDataPolicy cloneDataPolicy)
 {
   MOZ_ASSERT(!mBuffer, "Double Write is not allowed");
   MOZ_ASSERT(!mClearCalled, "This method cannot be called after Clear.");
 
   mBuffer = MakeUnique<JSAutoStructuredCloneBuffer>(mStructuredCloneScope, &StructuredCloneHolder::sCallbacks, this);
 
-  if (!mBuffer->write(aCx, aValue, aTransfer, &StructuredCloneHolder::sCallbacks, this)) {
+  if (!mBuffer->write(aCx, aValue, aTransfer, cloneDataPolicy,
+                      &StructuredCloneHolder::sCallbacks, this))
+  {
     mBuffer = nullptr;
     return false;
   }
@@ -262,19 +266,21 @@ StructuredCloneHolder::Write(JSContext* aCx,
                              JS::Handle<JS::Value> aValue,
                              ErrorResult& aRv)
 {
-  Write(aCx, aValue, JS::UndefinedHandleValue, aRv);
+  Write(aCx, aValue, JS::UndefinedHandleValue,
+        JS::CloneDataPolicy().denySharedArrayBuffer(), aRv);
 }
 
 void
 StructuredCloneHolder::Write(JSContext* aCx,
                              JS::Handle<JS::Value> aValue,
                              JS::Handle<JS::Value> aTransfer,
+                             JS::CloneDataPolicy cloneDataPolicy,
                              ErrorResult& aRv)
 {
   MOZ_ASSERT_IF(mStructuredCloneScope == StructuredCloneScope::SameProcessSameThread,
                 mCreationThread == NS_GetCurrentThread());
 
-  if (!StructuredCloneHolderBase::Write(aCx, aValue, aTransfer)) {
+  if (!StructuredCloneHolderBase::Write(aCx, aValue, aTransfer, cloneDataPolicy)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }

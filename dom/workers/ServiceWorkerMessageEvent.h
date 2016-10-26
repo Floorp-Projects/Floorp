@@ -46,7 +46,7 @@ public:
 
   void GetSource(Nullable<OwningServiceWorkerOrMessagePort>& aValue) const;
 
-  void GetPorts(Nullable<nsTArray<RefPtr<MessagePort>>>& aPorts);
+  void GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts);
 
   void SetSource(mozilla::dom::MessagePort* aPort);
 
@@ -75,9 +75,7 @@ private:
   nsString mLastEventId;
   RefPtr<workers::ServiceWorker> mServiceWorker;
   RefPtr<MessagePort> mMessagePort;
-
   nsTArray<RefPtr<MessagePort>> mPorts;
-  bool mPortsSet;
 };
 
 } // namespace dom

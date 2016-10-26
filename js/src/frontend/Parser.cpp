@@ -454,6 +454,7 @@ FunctionBox::FunctionBox(ExclusiveContext* cx, LifoAlloc& alloc, ObjectBox* trac
     hasDestructuringArgs(false),
     hasParameterExprs(false),
     hasDirectEvalInParameterExpr(false),
+    hasDuplicateParameters(false),
     useAsm(false),
     insideUseAsm(false),
     isAnnexB(false),
@@ -843,10 +844,23 @@ Parser<ParseHandler>::reportBadReturn(Node pn, ParseReportKind kind,
 }
 
 /*
- * Check that it is permitted to introduce a binding for atom.  Strict mode
- * forbids introducing new definitions for 'eval', 'arguments', or for any
- * strict mode reserved keyword.  Use pn for reporting error locations, or use
- * pc's token stream if pn is nullptr.
+ * Strict mode forbids introducing new definitions for 'eval', 'arguments', or
+ * for any strict mode reserved keyword.
+ */
+template <typename ParseHandler>
+bool
+Parser<ParseHandler>::isValidStrictBinding(PropertyName* name)
+{
+    return name != context->names().eval &&
+           name != context->names().arguments &&
+           name != context->names().let &&
+           name != context->names().static_ &&
+           !IsKeyword(name);
+}
+
+/*
+ * Check that it is permitted to introduce a binding for |name|. Use |pos| for
+ * reporting error locations.
  */
 template <typename ParseHandler>
 bool
@@ -855,12 +869,7 @@ Parser<ParseHandler>::checkStrictBinding(PropertyName* name, TokenPos pos)
     if (!pc->sc()->needStrictChecks())
         return true;
 
-    if (name == context->names().eval ||
-        name == context->names().arguments ||
-        name == context->names().let ||
-        name == context->names().static_ ||
-        IsKeyword(name))
-    {
+    if (!isValidStrictBinding(name)) {
         JSAutoByteString bytes;
         if (!AtomToPrintableString(context, name, &bytes))
             return false;
@@ -868,6 +877,28 @@ Parser<ParseHandler>::checkStrictBinding(PropertyName* name, TokenPos pos)
                                 JSMSG_BAD_BINDING, bytes.ptr());
     }
 
+    return true;
+}
+
+/*
+ * Returns true if all parameter names are valid strict mode binding names and
+ * no duplicate parameter names are present.
+ */
+template <typename ParseHandler>
+bool
+Parser<ParseHandler>::hasValidSimpleStrictParameterNames()
+{
+    MOZ_ASSERT(pc->isFunctionBox() && pc->functionBox()->hasSimpleParameterList());
+
+    if (pc->functionBox()->hasDuplicateParameters)
+        return false;
+
+    for (size_t i = 0; i < pc->positionalFormalParameterNames().length(); i++) {
+        JSAtom* name = pc->positionalFormalParameterNames()[i];
+        MOZ_ASSERT(name);
+        if (!isValidStrictBinding(name->asPropertyName()))
+            return false;
+    }
     return true;
 }
 
@@ -919,8 +950,7 @@ Parser<ParseHandler>::notePositionalFormalParameter(Node fn, HandlePropertyName 
             }
         }
 
-        if (duplicatedParam)
-            *duplicatedParam = true;
+        *duplicatedParam = true;
     } else {
         DeclarationKind kind = DeclarationKind::PositionalFormalParameter;
         if (!pc->functionScope().addDeclaredName(pc, p, name, kind))
@@ -2221,10 +2251,12 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun,
         return null();
     }
 
+    bool duplicatedParam = false;
     for (uint32_t i = 0; i < formals.length(); i++) {
-        if (!notePositionalFormalParameter(fn, formals[i]))
+        if (!notePositionalFormalParameter(fn, formals[i], false, &duplicatedParam))
             return null();
     }
+    funbox->hasDuplicateParameters = duplicatedParam;
 
     YieldHandling yieldHandling = generatorKind != NotGenerator ? YieldIsKeyword : YieldIsName;
     ParseNode* pn = functionBody(InAllowed, yieldHandling, Statement, StatementListBody);
@@ -2342,9 +2374,23 @@ Parser<ParseHandler>::functionBody(InHandling inHandling, YieldHandling yieldHan
 
     Node pn;
     if (type == StatementListBody) {
+        bool inheritedStrict = pc->sc()->strict();
         pn = statementList(yieldHandling);
         if (!pn)
             return null();
+
+        // When we transitioned from non-strict to strict mode, we need to
+        // validate that all parameter names are valid strict mode names.
+        if (!inheritedStrict && pc->sc()->strict()) {
+            MOZ_ASSERT(pc->sc()->hasExplicitUseStrict(),
+                       "strict mode should only change when a 'use strict' directive is present");
+            if (!hasValidSimpleStrictParameterNames()) {
+                // Request that this function be reparsed as strict to report
+                // the invalid parameter name at the correct source location.
+                pc->newDirectives->setStrict();
+                return null();
+            }
+        }
     } else {
         MOZ_ASSERT(type == ExpressionBody);
 
@@ -2700,6 +2746,8 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                 {
                     return false;
                 }
+                if (duplicatedParam)
+                    funbox->hasDuplicateParameters = true;
 
                 break;
               }
@@ -3603,18 +3651,30 @@ Parser<ParseHandler>::maybeParseDirective(Node list, Node pn, bool* cont)
         handler.setPrologue(pn);
 
         if (directive == context->names().useStrict) {
+            // Functions with non-simple parameter lists (destructuring,
+            // default or rest parameters) must not contain a "use strict"
+            // directive.
+            if (pc->isFunctionBox()) {
+                FunctionBox* funbox = pc->functionBox();
+                if (!funbox->hasSimpleParameterList()) {
+                    const char* parameterKind = funbox->hasDestructuringArgs
+                                                ? "destructuring"
+                                                : funbox->hasParameterExprs
+                                                ? "default"
+                                                : "rest";
+                    reportWithOffset(ParseError, false, directivePos.begin,
+                                     JSMSG_STRICT_NON_SIMPLE_PARAMS, parameterKind);
+                    return false;
+                }
+            }
+
             // We're going to be in strict mode. Note that this scope explicitly
             // had "use strict";
             pc->sc()->setExplicitUseStrict();
             if (!pc->sc()->strict()) {
-                if (pc->isFunctionBox()) {
-                    // Request that this function be reparsed as strict.
-                    pc->newDirectives->setStrict();
-                    return false;
-                }
-                // We don't reparse global scopes, so we keep track of the one
-                // possible strict violation that could occur in the directive
-                // prologue -- octal escapes -- and complain now.
+                // We keep track of the one possible strict violation that could
+                // occur in the directive prologue -- octal escapes -- and
+                // complain now.
                 if (tokenStream.sawOctalEscape()) {
                     report(ParseError, false, null(), JSMSG_DEPRECATED_OCTAL);
                     return false;
@@ -3641,6 +3701,8 @@ Parser<ParseHandler>::statementList(YieldHandling yieldHandling)
         return null();
 
     bool canHaveDirectives = pc->atBodyLevel();
+    if (canHaveDirectives)
+        tokenStream.clearSawOctalEscape();
     bool afterReturn = false;
     bool warnedAboutStatementsAfterReturn = false;
     uint32_t statementBegin = 0;
