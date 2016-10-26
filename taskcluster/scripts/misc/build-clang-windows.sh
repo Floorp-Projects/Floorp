@@ -16,7 +16,7 @@ if [ ! -e ${TOOLTOOL_AUTH_FILE} ]; then
     exit 1
 fi
 
-TOOLTOOL_MANIFEST=build/src/browser/config/tooltool-manifests/win32/releng.manifest
+TOOLTOOL_MANIFEST=build/src/browser/config/tooltool-manifests/win32/build-clang-cl.manifest
 ./tooltool.py --authentication-file="${TOOLTOOL_AUTH_FILE}" -m "${TOOLTOOL_MANIFEST}" fetch
 
 # Set up all the Visual Studio paths.
