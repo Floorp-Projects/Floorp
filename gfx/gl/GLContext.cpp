@@ -825,6 +825,7 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
         "Mali-450 MP",
         "PowerVR SGX 530",
         "PowerVR SGX 540",
+        "PowerVR SGX 544MP",
         "NVIDIA Tegra",
         "Android Emulator",
         "Gallium 0.4 on llvmpipe",
@@ -1800,6 +1801,17 @@ GLContext::InitExtensions()
             // Bug 980048
             MarkExtensionUnsupported(OES_EGL_sync);
         }
+
+#ifdef MOZ_WIDGET_ANDROID
+        if (Vendor() == GLVendor::Imagination &&
+            Renderer() == GLRenderer::SGX544MP &&
+            AndroidBridge::Bridge()->GetAPIVersion() < 21)
+        {
+            // Bug 1026404
+            MarkExtensionUnsupported(OES_EGL_image);
+            MarkExtensionUnsupported(OES_EGL_image_external);
+        }
+#endif
 
         if (Vendor() == GLVendor::ARM &&
             (Renderer() == GLRenderer::Mali400MP ||
