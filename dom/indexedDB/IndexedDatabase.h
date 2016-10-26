@@ -64,6 +64,7 @@ struct StructuredCloneReadInfo
   JSStructuredCloneData mData;
   nsTArray<StructuredCloneFile> mFiles;
   IDBDatabase* mDatabase;
+  bool mHasPreprocessInfo;
 
   // In IndexedDatabaseInlines.h
   inline
