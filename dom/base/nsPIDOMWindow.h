@@ -215,17 +215,6 @@ public:
   // Restore the window state from aState.
   virtual nsresult RestoreWindowState(nsISupports *aState) = 0;
 
-  // Suspend timeouts in this window and in child windows.
-  virtual void SuspendTimeouts(uint32_t aIncrease = 1,
-                               bool aFreezeChildren = true,
-                               bool aFreezeWorkers = true) = 0;
-
-  // Resume suspended timeouts in this window and in child windows.
-  virtual nsresult ResumeTimeouts(bool aThawChildren = true,
-                                  bool aThawWorkers = true) = 0;
-
-  virtual uint32_t TimeoutSuspendCount() = 0;
-
   // Determine if the window is suspended or frozen.  Outer windows
   // will forward this call to the inner window for convenience.  If
   // there is no inner window then the outer window is considered
@@ -236,8 +225,6 @@ public:
   // Fire any DOM notification events related to things that happened while
   // the window was frozen.
   virtual nsresult FireDelayedDOMEvents() = 0;
-
-  virtual bool IsFrozen() const = 0;
 
   nsPIDOMWindowOuter* GetOuterWindow()
   {
