@@ -137,7 +137,8 @@ private:
     event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
                             false /* non-bubbling */,
                             false /* cancelable */, value, EmptyString(),
-                            EmptyString(), nullptr, nullptr);
+                            EmptyString(), nullptr,
+                            Sequence<OwningNonNull<MessagePort>>());
     event->SetTrusted(true);
     event->SetSource(mPort);
 
@@ -439,7 +440,8 @@ MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
       MarkerTracingType::START);
   }
 
-  data->Write(aCx, aMessage, transferable, aRv);
+  data->Write(aCx, aMessage, transferable,
+              JS::CloneDataPolicy().denySharedArrayBuffer(), aRv);
 
   if (isTimelineRecording) {
     end = MakeUnique<MessagePortTimelineMarker>(

@@ -438,6 +438,21 @@ assertEq(tbl.get(4)(), 4);
 for (var i = 5; i < 10; i++)
     assertEq(tbl.get(i), null);
 
+var m = new Module(wasmTextToBinary(`
+    (module
+        (func $their (import "" "func"))
+        (table (import "" "table") 3 anyfunc)
+        (func $my)
+        (elem (i32.const 1) $my)
+        (elem (i32.const 2) $their)
+    )
+`));
+var tbl = new Table({initial:3, element:"anyfunc"});
+assertErrorMessage(() => new Instance(m, { "": { table: tbl, func: () => {}} }), TypeError, /can only assign WebAssembly exported functions to Table/);
+for (var i = 0; i < 3; i++) {
+    assertEq(tbl.get(i), null);
+}
+
 // Cross-instance calls
 
 var i1 = new Instance(new Module(wasmTextToBinary(`(module (func) (func (param i32) (result i32) (i32.add (get_local 0) (i32.const 1))) (func) (export "f" 1))`)));

@@ -45,21 +45,48 @@ enum TransferableOwnership {
     /** Data is a pointer that can be freed */
     SCTAG_TMO_ALLOC_DATA = 2,
 
-    /** Data is a SharedArrayBufferObject's buffer */
-    SCTAG_TMO_SHARED_BUFFER = 3,
-
     /** Data is a memory mapped pointer */
-    SCTAG_TMO_MAPPED_DATA = 4,
+    SCTAG_TMO_MAPPED_DATA = 3,
 
     /**
      * Data is embedding-specific. The engine can free it by calling the
      * freeTransfer op. The embedding can also use SCTAG_TMO_USER_MIN and
      * greater, up to 32 bits, to distinguish specific ownership variants.
      */
-    SCTAG_TMO_CUSTOM = 5,
+    SCTAG_TMO_CUSTOM = 4,
 
     SCTAG_TMO_USER_MIN
 };
+
+class CloneDataPolicy
+{
+    bool sharedArrayBuffer_;
+
+  public:
+    // The default is to allow all policy-controlled aspects.
+
+    CloneDataPolicy() :
+      sharedArrayBuffer_(true)
+    {}
+
+    // In the JS engine, SharedArrayBuffers can only be cloned intra-process
+    // because the shared memory areas are allocated in process-private memory.
+    // Clients should therefore deny SharedArrayBuffers when cloning data that
+    // are to be transmitted inter-process.
+    //
+    // Clients should also deny SharedArrayBuffers when cloning data that are to
+    // be transmitted intra-process if policy needs dictate such denial.
+
+    CloneDataPolicy& denySharedArrayBuffer() {
+        sharedArrayBuffer_ = false;
+        return *this;
+    }
+
+    bool isSharedArrayBufferAllowed() const {
+        return sharedArrayBuffer_;
+    }
+};
+
 } /* namespace JS */
 
 /**
@@ -144,7 +171,7 @@ typedef void (*FreeTransferStructuredCloneOp)(uint32_t tag, JS::TransferableOwne
 // Increment this when anything at all changes in the serialization format.
 // (Note that this does not need to be bumped for Transferable-only changes,
 // since they are never saved to persistent storage.)
-#define JS_STRUCTURED_CLONE_VERSION 7
+#define JS_STRUCTURED_CLONE_VERSION 8
 
 struct JSStructuredCloneCallbacks {
     ReadStructuredCloneOp read;
@@ -215,6 +242,7 @@ JS_ReadStructuredClone(JSContext* cx, JSStructuredCloneData& data, uint32_t vers
 JS_PUBLIC_API(bool)
 JS_WriteStructuredClone(JSContext* cx, JS::HandleValue v, JSStructuredCloneData* data,
                         JS::StructuredCloneScope scope,
+                        JS::CloneDataPolicy cloneDataPolicy,
                         const JSStructuredCloneCallbacks* optionalCallbacks,
                         void* closure, JS::HandleValue transferable);
 
@@ -282,6 +310,7 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
                const JSStructuredCloneCallbacks* optionalCallbacks=nullptr, void* closure=nullptr);
 
     bool write(JSContext* cx, JS::HandleValue v, JS::HandleValue transferable,
+               JS::CloneDataPolicy cloneDataPolicy,
                const JSStructuredCloneCallbacks* optionalCallbacks=nullptr, void* closure=nullptr);
 
   private:

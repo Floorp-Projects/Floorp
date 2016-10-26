@@ -71,6 +71,10 @@ public:
   Create(nsISupports* aParent, const nsAString& aContentType, uint64_t aStart,
          uint64_t aLength);
 
+  static already_AddRefed<Blob>
+  CreateStringBlob(nsISupports* aParent, const nsACString& aData,
+                   const nsAString& aContentType);
+
   // The returned Blob takes ownership of aMemoryBuffer. aMemoryBuffer will be
   // freed by free so it must be allocated by malloc or something
   // compatible with it.
@@ -520,6 +524,28 @@ protected:
   const uint64_t mSerialNumber;
 };
 
+class BlobImplString final : public BlobImplBase
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  BlobImplString(const nsACString& aData, const nsAString& aContentType)
+    : BlobImplBase(aContentType, aData.Length())
+    , mData(aData)
+  {}
+
+  virtual void GetInternalStream(nsIInputStream** aStream,
+                                 ErrorResult& aRv) override;
+
+  virtual already_AddRefed<BlobImpl>
+  CreateSlice(uint64_t aStart, uint64_t aLength,
+              const nsAString& aContentType, ErrorResult& aRv) override;
+
+private:
+  ~BlobImplString() {}
+
+  nsCString mData;
+};
 /**
  * This class may be used off the main thread, and in particular, its
  * constructor and destructor may not run on the same thread.  Be careful!

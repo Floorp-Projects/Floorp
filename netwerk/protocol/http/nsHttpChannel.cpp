@@ -6621,18 +6621,28 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         // keep the connection around after the transaction is finished.
         //
         RefPtr<nsAHttpConnection> conn;
-        if (authRetry && (mCaps & NS_HTTP_STICKY_CONNECTION)) {
+        LOG(("  authRetry=%d, sticky conn cap=%d", authRetry, mCaps & NS_HTTP_STICKY_CONNECTION));
+        // We must check caps for stickinness also on the transaction because it
+        // might have been updated by the transaction itself during inspection of
+        // the reposnse headers yet on the socket thread (found connection based
+        // auth schema).
+        if (authRetry && (mCaps & NS_HTTP_STICKY_CONNECTION ||
+                          mTransaction->Caps() & NS_HTTP_STICKY_CONNECTION)) {
             conn = mTransaction->GetConnectionReference();
+            LOG(("  transaction %p provides connection %p", mTransaction.get(), conn.get()));
             // This is so far a workaround to fix leak when reusing unpersistent
             // connection for authentication retry. See bug 459620 comment 4
             // for details.
-            if (conn && !conn->IsPersistent())
+            if (conn && !conn->IsPersistent()) {
+                LOG(("  connection is not persistent, not reusing it"));
                 conn = nullptr;
+            }
         }
 
         RefPtr<nsAHttpConnection> stickyConn;
-        if (mCaps & NS_HTTP_STICKY_CONNECTION)
+        if (mCaps & NS_HTTP_STICKY_CONNECTION) {
             stickyConn = mTransaction->GetConnectionReference();
+        }
 
         mTransferSize = mTransaction->GetTransferSize();
 

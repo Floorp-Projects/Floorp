@@ -10,7 +10,6 @@
 
 #include "GrResourceKey.h"
 #include "GrTypesPriv.h"
-#include "SkData.h"
 
 class GrContext;
 class GrGpu;
@@ -140,34 +139,6 @@ private:
 class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
 public:
 
-
-    enum LifeCycle {
-        /**
-         * The resource is cached and owned by Skia. Resources with this status may be kept alive
-         * by the cache as either scratch or unique resources even when there are no refs to them.
-         * The cache may release them whenever there are no refs.
-         */
-        kCached_LifeCycle,
-
-        /**
-         * The resource is uncached. As soon as there are no more refs to it, it is released. Under
-         * the hood the cache may opaquely recycle it as a cached resource.
-         */
-        kUncached_LifeCycle,
-
-        /**
-         * Similar to uncached, but Skia does not manage the lifetime of the underlying backend
-         * 3D API object(s). The client is responsible for freeing those. Used to inject client-
-         * created GPU resources into Skia (e.g. to render to a client-created texture).
-         */
-        kBorrowed_LifeCycle,
-
-        /**
-         * An external resource with ownership transfered into Skia. Skia will free the resource.
-         */
-        kAdopted_LifeCycle,
-    };
-
     /**
      * Tests whether a object has been abandoned or released. All objects will
      * be in this state after their creating GrContext is destroyed or has
@@ -209,25 +180,11 @@ public:
      * not change when the content of the GrGpuResource object changes. This will never return
      * 0.
      */
-    uint32_t getUniqueID() const { return fUniqueID; }
+    uint32_t uniqueID() const { return fUniqueID; }
 
     /** Returns the current unique key for the resource. It will be invalid if the resource has no
         associated unique key. */
     const GrUniqueKey& getUniqueKey() const { return fUniqueKey; }
-
-    /**
-     * Attach a custom data object to this resource. The data will remain attached
-     * for the lifetime of this resource (until it is abandoned or released).
-     * Takes a ref on data. Previously attached data, if any, is unrefed.
-     * Returns the data argument, for convenience.
-     */
-    const SkData* setCustomData(const SkData* data);
-
-    /**
-     * Returns the custom data object that was attached to this resource by
-     * calling setCustomData.
-     */
-    const SkData* getCustomData() const { return fData.get(); }
 
     /**
      * Internal-only helper class used for manipulations of the resource by the cache.
@@ -260,12 +217,19 @@ public:
      **/
     virtual void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const;
 
-protected:
-    // This must be called by every GrGpuObject. It should be called once the object is fully
-    // initialized (i.e. not in a base class constructor).
-    void registerWithCache();
+    static uint32_t CreateUniqueID();
 
-    GrGpuResource(GrGpu*, LifeCycle);
+protected:
+    // This must be called by every non-wrapped GrGpuObject. It should be called once the object is
+    // fully initialized (i.e. only from the constructors of the final class).
+    void registerWithCache(SkBudgeted);
+
+    // This must be called by every GrGpuObject that references any wrapped backend objects. It
+    // should be called once the object is fully initialized (i.e. only from the constructors of the
+    // final class).
+    void registerWithCacheWrapped();
+
+    GrGpuResource(GrGpu*);
     virtual ~GrGpuResource();
 
     GrGpu* getGpu() const { return fGpu; }
@@ -277,24 +241,11 @@ protected:
         backend API calls should be made. */
     virtual void onAbandon() { }
 
-    bool shouldFreeResources() const { return fLifeCycle != kBorrowed_LifeCycle; }
-
-    bool isExternal() const {
-        return GrGpuResource::kAdopted_LifeCycle == fLifeCycle ||
-               GrGpuResource::kBorrowed_LifeCycle == fLifeCycle;
-    }
-
     /**
      * This entry point should be called whenever gpuMemorySize() should report a different size.
      * The cache will call gpuMemorySize() to update the current size of the resource.
      */
     void didChangeGpuMemorySize() const;
-
-    /**
-     * Optionally called by the GrGpuResource subclass if the resource can be used as scratch.
-     * By default resources are not usable as scratch. This should only be called once.
-     **/
-    void setScratchKey(const GrScratchKey& scratchKey);
 
     /**
      * Allows subclasses to add additional backing information to the SkTraceMemoryDump. Called by
@@ -303,6 +254,14 @@ protected:
     virtual void setMemoryBacking(SkTraceMemoryDump*, const SkString&) const {}
 
 private:
+    /**
+     * Called by the registerWithCache if the resource is available to be used as scratch.
+     * Resource subclasses should override this if the instances should be recycled as scratch
+     * resources and populate the scratchKey with the key.
+     * By default resources are not recycled as scratch.
+     **/
+    virtual void computeScratchKey(GrScratchKey*) const { }
+
     /**
      * Frees the object in the underlying 3D API. Called by CacheAccess.
      */
@@ -322,15 +281,13 @@ private:
 #ifdef SK_DEBUG
     friend class GrGpu; // for assert in GrGpu to access getGpu
 #endif
-
-    static uint32_t CreateUniqueID();
-
     // An index into a heap when this resource is purgeable or an array when not. This is maintained
     // by the cache.
     int                         fCacheArrayIndex;
     // This value reflects how recently this resource was accessed in the cache. This is maintained
     // by the cache.
     uint32_t                    fTimestamp;
+    uint32_t                    fExternalFlushCntWhenBecamePurgeable;
 
     static const size_t kInvalidGpuMemorySize = ~static_cast<size_t>(0);
     GrScratchKey                fScratchKey;
@@ -341,10 +298,9 @@ private:
     GrGpu*                      fGpu;
     mutable size_t              fGpuMemorySize;
 
-    LifeCycle                   fLifeCycle;
+    SkBudgeted                  fBudgeted;
+    bool                        fRefsWrappedObjects;
     const uint32_t              fUniqueID;
-
-    SkAutoTUnref<const SkData>  fData;
 
     typedef GrIORef<GrGpuResource> INHERITED;
     friend class GrIORef<GrGpuResource>; // to access notifyAllCntsAreZero and notifyRefCntIsZero.

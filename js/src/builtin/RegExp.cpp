@@ -14,6 +14,7 @@
 #include "irregexp/RegExpParser.h"
 #include "jit/InlinableNatives.h"
 #include "vm/RegExpStatics.h"
+#include "vm/SelfHosting.h"
 #include "vm/StringBuffer.h"
 #include "vm/Unicode.h"
 
@@ -522,10 +523,9 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
 /*
  * ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad 21.2.3.1
  * steps 4, 7-8.
- * Ignore sticky flag of flags argument, for optimized path in @@split.
  */
 bool
-js::regexp_construct_no_sticky(JSContext* cx, unsigned argc, Value* vp)
+js::regexp_construct_raw_flags(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
@@ -537,13 +537,7 @@ js::regexp_construct_no_sticky(JSContext* cx, unsigned argc, Value* vp)
     RootedAtom sourceAtom(cx, rx->getSource());
 
     // Step 4.c.
-    RootedString flagStr(cx, args[1].toString());
-    RegExpFlag flags = RegExpFlag(0);
-    if (!ParseRegExpFlags(cx, flagStr, &flags))
-        return false;
-
-    // Ignore sticky flag.
-    flags = RegExpFlag(flags & ~StickyFlag);
+    int32_t flags = int32_t(args[1].toNumber());
 
     // Step 7.
     Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx));
@@ -551,7 +545,7 @@ js::regexp_construct_no_sticky(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // Step 8.
-    regexp->initAndZeroLastIndex(sourceAtom, flags, cx);
+    regexp->initAndZeroLastIndex(sourceAtom, RegExpFlag(flags), cx);
     args.rval().setObject(*regexp);
     return true;
 }
@@ -1582,11 +1576,38 @@ js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* resul
         return true;
     }
 
+    JSFunction* flagsGetter;
+    if (!GetGetterPure(cx, proto, NameToId(cx->names().flags), &flagsGetter))
+        return false;
+
+    if (!IsSelfHostedFunctionWithName(flagsGetter, cx->names().RegExpFlagsGetter)) {
+        *result = false;
+        return true;
+    }
+
     JSNative globalGetter;
     if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().global), &globalGetter))
         return false;
 
     if (globalGetter != regexp_global) {
+        *result = false;
+        return true;
+    }
+
+    JSNative ignoreCaseGetter;
+    if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().ignoreCase), &ignoreCaseGetter))
+        return false;
+
+    if (ignoreCaseGetter != regexp_ignoreCase) {
+        *result = false;
+        return true;
+    }
+
+    JSNative multilineGetter;
+    if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().multiline), &multilineGetter))
+        return false;
+
+    if (multilineGetter != regexp_multiline) {
         *result = false;
         return true;
     }

@@ -85,6 +85,12 @@ class StringBuffer
         cb.construct<Latin1CharBuffer>(cx);
     }
 
+    void clear() {
+        if (isLatin1())
+            latin1Chars().clear();
+        else
+            twoByteChars().clear();
+    }
     MOZ_MUST_USE bool reserve(size_t len) {
         if (len > reserved_)
             reserved_ = len;

@@ -22,40 +22,32 @@ class GrTextureProvider;
 // profile that is just rotated about the origin of the circle.
 class GrCircleBlurFragmentProcessor : public GrFragmentProcessor {
 public:
-    ~GrCircleBlurFragmentProcessor() override {};
+    ~GrCircleBlurFragmentProcessor() override {}
 
     const char* name() const override { return "CircleBlur"; }
 
     SkString dumpInfo() const override {
         SkString str;
-        str.appendf("Rect [L: %.2f, T: %.2f, R: %.2f, B: %.2f], Sigma %.2f, Offset: %.2f",
+        str.appendf("Rect [L: %.2f, T: %.2f, R: %.2f, B: %.2f], solidR: %.2f, textureR: %.2f",
                     fCircle.fLeft, fCircle.fTop, fCircle.fRight, fCircle.fBottom,
-                    fSigma, fOffset);
+                    fSolidRadius, fTextureRadius);
         return str;
     }
 
-    static const GrFragmentProcessor* Create(GrTextureProvider*textureProvider,
-                                             const SkRect& circle, float sigma) {
-        float offset;
-
-        SkAutoTUnref<GrTexture> blurProfile(CreateCircleBlurProfileTexture(textureProvider,
-                                                                           circle,
-                                                                           sigma,
-                                                                           &offset));
-        if (!blurProfile) {
-           return nullptr;
-        }
-        return new GrCircleBlurFragmentProcessor(circle, sigma, offset, blurProfile);
-    }
-
-    const SkRect& circle() const { return fCircle; }
-    float sigma() const { return fSigma; }
-    float offset() const { return fOffset; }
-    int profileSize() const { return fBlurProfileAccess.getTexture()->width(); }
+    static sk_sp<GrFragmentProcessor> Make(GrTextureProvider*textureProvider,
+                                           const SkRect& circle, float sigma);
 
 private:
-    GrCircleBlurFragmentProcessor(const SkRect& circle, float sigma,
-                                  float offset, GrTexture* blurProfile);
+    // This nested GLSL processor implementation is defined in the cpp file.
+    class GLSLProcessor;
+
+    /**
+     * Creates a profile texture for the circle and sigma. The texture will have a height of 1.
+     * The x texture coord should map from 0 to 1 across the radius range of solidRadius to
+     * solidRadius + textureRadius.
+     */
+    GrCircleBlurFragmentProcessor(const SkRect& circle, float textureRadius, float innerRadius,
+                                  GrTexture* blurProfile);
 
     GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
@@ -63,19 +55,15 @@ private:
 
     bool onIsEqual(const GrFragmentProcessor& other) const override {
         const GrCircleBlurFragmentProcessor& cbfp = other.cast<GrCircleBlurFragmentProcessor>();
-        // fOffset is computed from the circle width and the sigma
-        return this->circle() == cbfp.circle() && fSigma == cbfp.fSigma;
+        return fCircle == cbfp.fCircle && fSolidRadius == cbfp.fSolidRadius &&
+               fTextureRadius == cbfp.fTextureRadius;
     }
 
     void onComputeInvariantOutput(GrInvariantOutput* inout) const override;
 
-    static GrTexture* CreateCircleBlurProfileTexture(GrTextureProvider*,
-                                                     const SkRect& circle,
-                                                     float sigma, float* offset);
-
     SkRect              fCircle;
-    float               fSigma;
-    float               fOffset;
+    SkScalar            fSolidRadius;
+    float               fTextureRadius;
     GrTextureAccess     fBlurProfileAccess;
 
     GR_DECLARE_FRAGMENT_PROCESSOR_TEST;

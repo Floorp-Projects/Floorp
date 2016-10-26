@@ -247,8 +247,14 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
     return NS_OK;
   }
 
+  AutoTArray<nsRuleNode*, 16> ruleNodes;
+  while (!ruleNode->IsRoot()) {
+    ruleNodes.AppendElement(ruleNode);
+    ruleNode = ruleNode->GetParent();
+  }
+
   nsCOMPtr<nsIMutableArray> rules = nsArray::Create();
-  for ( ; !ruleNode->IsRoot(); ruleNode = ruleNode->GetParent()) {
+  for (nsRuleNode* ruleNode : Reversed(ruleNodes)) {
     RefPtr<Declaration> decl = do_QueryObject(ruleNode->GetRule());
     if (decl) {
       RefPtr<mozilla::css::StyleRule> styleRule =
@@ -256,7 +262,7 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
       if (styleRule) {
         nsCOMPtr<nsIDOMCSSRule> domRule = styleRule->GetDOMRule();
         if (domRule) {
-          rules->InsertElementAt(domRule, 0, /*weak =*/ false);
+          rules->AppendElement(domRule, /*weak =*/ false);
         }
       }
     }

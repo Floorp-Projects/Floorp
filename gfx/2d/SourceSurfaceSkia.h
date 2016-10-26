@@ -9,7 +9,7 @@
 #include "2D.h"
 #include <vector>
 #include "skia/include/core/SkCanvas.h"
-#include "skia/include/core/SkBitmap.h"
+#include "skia/include/core/SkImage.h"
 
 namespace mozilla {
 
@@ -28,30 +28,18 @@ public:
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const;
 
-  SkBitmap& GetBitmap() { return mBitmap; }
+  sk_sp<SkImage>& GetImage() { return mImage; }
 
   bool InitFromData(unsigned char* aData,
                     const IntSize &aSize,
                     int32_t aStride,
                     SurfaceFormat aFormat);
 
-  bool InitFromCanvas(SkCanvas* aCanvas,
-                      SurfaceFormat aFormat,
-                      DrawTargetSkia* aOwner);
+  bool InitFromImage(sk_sp<SkImage> aImage,
+                     SurfaceFormat aFormat = SurfaceFormat::UNKNOWN,
+                     DrawTargetSkia* aOwner = nullptr);
 
-  void InitFromBitmap(const SkBitmap& aBitmap);
-
-#ifdef USE_SKIA_GPU
-  /**
-   * NOTE: While wrapping a Texture for SkiaGL, the texture *must* be created
-   *       with the same GLcontext of DrawTargetSkia
-   */
-  bool InitFromGrTexture(GrTexture* aTexture,
-                         const IntSize &aSize,
-                         SurfaceFormat aFormat);
-#endif
-
-  virtual unsigned char *GetData();
+  virtual uint8_t* GetData();
 
   virtual int32_t Stride() { return mStride; }
 
@@ -59,14 +47,12 @@ private:
   friend class DrawTargetSkia;
 
   void DrawTargetWillChange();
-  void MaybeUnlock();
 
-  SkBitmap mBitmap;
+  sk_sp<SkImage> mImage;
   SurfaceFormat mFormat;
   IntSize mSize;
   int32_t mStride;
   RefPtr<DrawTargetSkia> mDrawTarget;
-  bool mLocked;
 };
 
 } // namespace gfx

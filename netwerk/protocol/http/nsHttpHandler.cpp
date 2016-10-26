@@ -242,6 +242,7 @@ nsHttpHandler::nsHttpHandler()
     , mEnforceH1Framing(FRAMECHECK_BARELY)
     , mKeepEmptyResponseHeadersAsEmtpyString(false)
     , mDefaultHpackBuffer(4096)
+    , mMaxHttpResponseHeaderSize(393216)
 {
     LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
@@ -1468,6 +1469,13 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         if (NS_SUCCEEDED(rv) && cVar) {
             if (mConnMgr)
                 mConnMgr->PrintDiagnostics();
+        }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("max_response_header_size"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("max_response_header_size"), &val);
+        if (NS_SUCCEEDED(rv)) {
+            mMaxHttpResponseHeaderSize = val;
         }
     }
     //

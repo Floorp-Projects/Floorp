@@ -215,7 +215,7 @@ struct SkConic {
      *  be used.
      */
     void evalAt(SkScalar t, SkPoint* pos, SkVector* tangent = nullptr) const;
-    void chopAt(SkScalar t, SkConic dst[2]) const;
+    bool SK_WARN_UNUSED_RESULT chopAt(SkScalar t, SkConic dst[2]) const;
     void chopAt(SkScalar t1, SkScalar t2, SkConic* dst) const;
     void chop(SkConic dst[2]) const;
 
@@ -235,7 +235,7 @@ struct SkConic {
      *  Chop this conic into N quads, stored continguously in pts[], where
      *  N = 1 << pow2. The amount of storage needed is (1 + 2 * N)
      */
-    int chopIntoQuadsPOW2(SkPoint pts[], int pow2) const;
+    int SK_WARN_UNUSED_RESULT chopIntoQuadsPOW2(SkPoint pts[], int pow2) const;
 
     bool findXExtrema(SkScalar* t) const;
     bool findYExtrema(SkScalar* t) const;
@@ -384,7 +384,7 @@ public:
         int pow2 = conic.computeQuadPOW2(tol);
         fQuadCount = 1 << pow2;
         SkPoint* pts = fStorage.reset(1 + 2 * fQuadCount);
-        conic.chopIntoQuadsPOW2(pts, pow2);
+        fQuadCount = conic.chopIntoQuadsPOW2(pts, pow2);
         return pts;
     }
 

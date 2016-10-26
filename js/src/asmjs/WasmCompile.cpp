@@ -18,8 +18,6 @@
 
 #include "asmjs/WasmCompile.h"
 
-#include "mozilla/CheckedInt.h"
-
 #include "jsprf.h"
 
 #include "asmjs/WasmBinaryFormat.h"
@@ -31,7 +29,6 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
-using mozilla::CheckedInt;
 using mozilla::IsNaN;
 
 namespace {
@@ -569,33 +566,15 @@ DecodeName(Decoder& d)
 }
 
 static bool
-DecodeResizableMemory(Decoder& d, ModuleGeneratorData* init)
+DecodeMemoryLimits(Decoder& d, ModuleGeneratorData* init)
 {
-    if (UsesMemory(init->memoryUsage))
-        return d.fail("already have default memory");
-
-    Limits limits;
-    if (!DecodeLimits(d, &limits))
+    Limits memory;
+    if (!DecodeMemoryLimits(d, UsesMemory(init->memoryUsage), &memory))
         return false;
 
     init->memoryUsage = MemoryUsage::Unshared;
-
-    CheckedInt<uint32_t> initialBytes = limits.initial;
-    initialBytes *= PageSize;
-    if (!initialBytes.isValid() || initialBytes.value() > uint32_t(INT32_MAX))
-        return d.fail("initial memory size too big");
-
-    init->minMemoryLength = initialBytes.value();
-
-    if (limits.maximum) {
-        CheckedInt<uint32_t> maximumBytes = *limits.maximum;
-        maximumBytes *= PageSize;
-        if (!maximumBytes.isValid())
-            return d.fail("maximum memory size too big");
-
-        init->maxMemoryLength = Some(maximumBytes.value());
-    }
-
+    init->minMemoryLength = memory.initial;
+    init->maxMemoryLength = memory.maximum;
     return true;
 }
 
@@ -671,7 +650,7 @@ DecodeImport(Decoder& d, ModuleGeneratorData* init, ImportVector* imports)
         break;
       }
       case DefinitionKind::Memory: {
-        if (!DecodeResizableMemory(d, init))
+        if (!DecodeMemoryLimits(d, init))
             return false;
         break;
       }
@@ -746,26 +725,18 @@ DecodeTableSection(Decoder& d, ModuleGeneratorData* init, Uint32Vector* oldElems
 }
 
 static bool
-DecodeMemorySection(Decoder& d, ModuleGeneratorData* init, bool* exported)
+DecodeMemorySection(Decoder& d, ModuleGeneratorData* init)
 {
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Memory, &sectionStart, &sectionSize, "memory"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t numMemories;
-    if (!d.readVarU32(&numMemories))
-        return d.fail("failed to read number of memories");
-
-    if (numMemories != 1)
-        return d.fail("the number of memories must be exactly one");
-
-    if (!DecodeResizableMemory(d, init))
+    bool present;
+    Limits memory;
+    if (!DecodeMemorySection(d, UsesMemory(init->memoryUsage), &memory, &present))
         return false;
 
-    if (!d.finishSection(sectionStart, sectionSize, "memory"))
-        return false;
+    if (present) {
+        init->memoryUsage = MemoryUsage::Unshared;
+        init->minMemoryLength = memory.initial;
+        init->maxMemoryLength = memory.maximum;
+    }
 
     return true;
 }
@@ -893,7 +864,7 @@ DecodeExport(Decoder& d, ModuleGenerator& mg, CStringSet* dupSet)
 }
 
 static bool
-DecodeExportSection(Decoder& d, bool memoryExported, ModuleGenerator& mg)
+DecodeExportSection(Decoder& d, ModuleGenerator& mg)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(SectionId::Export, &sectionStart, &sectionSize, "export"))
@@ -1213,8 +1184,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!DecodeTableSection(d, init.get(), &oldElems))
         return nullptr;
 
-    bool memoryExported = false;
-    if (!DecodeMemorySection(d, init.get(), &memoryExported))
+    if (!::DecodeMemorySection(d, init.get()))
         return nullptr;
 
     if (!DecodeGlobalSection(d, init.get()))
@@ -1224,7 +1194,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!mg.init(Move(init), args))
         return nullptr;
 
-    if (!DecodeExportSection(d, memoryExported, mg))
+    if (!DecodeExportSection(d, mg))
         return nullptr;
 
     if (!DecodeStartSection(d, mg))
