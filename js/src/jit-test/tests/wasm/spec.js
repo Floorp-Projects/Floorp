@@ -416,6 +416,23 @@ function exec(e) {
         return;
     }
 
+    if (exprName === "assert_soft_invalid") {
+        let moduleText = e.list[1].toString();
+        let errMsg = e.list[2];
+        if (errMsg) {
+            assert(errMsg.quoted, "assert_soft_invalid second argument must be a string");
+            errMsg.quoted = false;
+        }
+
+        try {
+            new WebAssembly.Module(wasmTextToBinary(moduleText));
+        } catch(e) {
+            debug('assert_soft_invalid caught:\nExpected:', errMsg, '\nActual:', e.toString());
+        }
+
+        return;
+    }
+
     if (exprName === 'assert_trap') {
         let caught = false;
         let errMsg = e.list[2];
