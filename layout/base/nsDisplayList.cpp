@@ -6798,8 +6798,8 @@ nsDisplaySVGEffects::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                                const nsDisplayItemGeometry* aGeometry,
                                                nsRegion* aInvalidRegion)
 {
-  const nsDisplayMaskGeometry* geometry =
-    static_cast<const nsDisplayMaskGeometry*>(aGeometry);
+  const nsDisplaySVGEffectGeometry* geometry =
+    static_cast<const nsDisplaySVGEffectGeometry*>(aGeometry);
   bool snap;
   nsRect bounds = GetBounds(aBuilder, &snap);
   if (geometry->mFrameOffsetToReferenceFrame != ToReferenceFrame() ||
