@@ -134,16 +134,17 @@ private:
     RefPtr<MessageEvent> event =
       new MessageEvent(eventTarget, nullptr, nullptr);
 
+    Sequence<OwningNonNull<MessagePort>> ports;
+    if (!mData->TakeTransferredPortsAsSequence(ports)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
                             false /* non-bubbling */,
                             false /* cancelable */, value, EmptyString(),
-                            EmptyString(), nullptr,
-                            Sequence<OwningNonNull<MessagePort>>());
+                            EmptyString(), nullptr, ports);
     event->SetTrusted(true);
     event->SetSource(mPort);
-
-    nsTArray<RefPtr<MessagePort>> ports = mData->TakeTransferredPorts();
-    event->SetPorts(Move(ports));
 
     bool dummy;
     mPort->DispatchEvent(static_cast<dom::Event*>(event.get()), &dummy);
