@@ -177,7 +177,8 @@
   (import "spectest" "global" (global $x i32))
   (global $y (import "spectest" "global") i32)
 
-  (import "spectest" "global" (global i64))
+  ;; limitation of the spidermonkey testing mode (an imported global can't be both a number and i64).
+  ;;(import "spectest" "global" (global i64))
   (import "spectest" "global" (global f32))
   (import "spectest" "global" (global f64))
 
