@@ -1621,6 +1621,12 @@ toolbar#nav-bar {
             options.extraPrefs.append(
                 "testing.browserTestHarness.timeout=%d" %
                 options.timeout)
+        # browser-chrome tests use a fairly short default timeout of 45 seconds;
+        # this is sometimes too short on asan, where we expect reduced performance.
+        if mozinfo.info["asan"] and options.flavor == 'browser' and options.timeout is None:
+            self.log.info("Increasing default timeout to 90 seconds on ASAN")
+            options.extraPrefs.append("testing.browserTestHarness.timeout=90")
+
         options.extraPrefs.append(
             "browser.tabs.remote.autostart=%s" %
             ('true' if options.e10s else 'false'))
