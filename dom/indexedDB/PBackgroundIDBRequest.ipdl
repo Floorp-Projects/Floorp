@@ -116,12 +116,22 @@ struct ObjectStoreGetPreprocessParams
   WasmModulePreprocessInfo preprocessInfo;
 };
 
+struct ObjectStoreGetAllPreprocessParams
+{
+  WasmModulePreprocessInfo[] preprocessInfos;
+};
+
 union PreprocessParams
 {
   ObjectStoreGetPreprocessParams;
+  ObjectStoreGetAllPreprocessParams;
 };
 
 struct ObjectStoreGetPreprocessResponse
+{
+};
+
+struct ObjectStoreGetAllPreprocessResponse
 {
 };
 
@@ -131,6 +141,7 @@ union PreprocessResponse
 {
   nsresult;
   ObjectStoreGetPreprocessResponse;
+  ObjectStoreGetAllPreprocessResponse;
 };
 
 protocol PBackgroundIDBRequest

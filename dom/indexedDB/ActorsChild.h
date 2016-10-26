@@ -647,8 +647,12 @@ class BackgroundRequestChild final
   class PreprocessHelper;
 
   RefPtr<IDBTransaction> mTransaction;
-  RefPtr<PreprocessHelper> mPreprocessHelper;
-  nsAutoPtr<nsTArray<RefPtr<JS::WasmModule>>> mModules;
+  nsTArray<RefPtr<PreprocessHelper>> mPreprocessHelpers;
+  nsTArray<nsTArray<RefPtr<JS::WasmModule>>> mModuleSets;
+  uint32_t mRunningPreprocessHelpers;
+  uint32_t mCurrentModuleSetIndex;
+  nsresult mPreprocessResultCode;
+  bool mGetAll;
 
 private:
   // Only created by IDBTransaction.
@@ -660,10 +664,17 @@ private:
   ~BackgroundRequestChild();
 
   void
-  OnPreprocessFinished(const nsTArray<RefPtr<JS::WasmModule>>& aModules);
+  MaybeSendContinue();
 
   void
-  OnPreprocessFailed(nsresult aErrorCode);
+  OnPreprocessFinished(uint32_t aModuleSetIndex,
+                       nsTArray<RefPtr<JS::WasmModule>>& aModuleSet);
+
+  void
+  OnPreprocessFailed(uint32_t aModuleSetIndex, nsresult aErrorCode);
+
+  const nsTArray<RefPtr<JS::WasmModule>>*
+  GetNextModuleSet(const StructuredCloneReadInfo& aInfo);
 
   void
   HandleResponse(nsresult aResponse);
@@ -685,6 +696,12 @@ private:
 
   void
   HandleResponse(uint64_t aResponse);
+
+  nsresult
+  HandlePreprocess(const WasmModulePreprocessInfo& aPreprocessInfo);
+
+  nsresult
+  HandlePreprocess(const nsTArray<WasmModulePreprocessInfo>& aPreprocessInfos);
 
   // IPDL methods are only called by IPDL.
   virtual void
