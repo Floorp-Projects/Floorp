@@ -13,7 +13,7 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
+const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 /**
  * Register generic keys to control zoom level of the given document.

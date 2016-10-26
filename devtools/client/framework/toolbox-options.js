@@ -12,7 +12,7 @@ const {Task} = require("devtools/shared/task");
 const {gDevTools} = require("devtools/client/framework/devtools");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
+const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 exports.OptionsPanel = OptionsPanel;
 

@@ -8,7 +8,7 @@
 var toolbox;
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
+const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 function test() {
   addTab("about:blank").then(openToolbox);

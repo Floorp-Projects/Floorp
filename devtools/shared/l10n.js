@@ -212,7 +212,7 @@ function localizeMarkup(root) {
   }
 }
 
-const sharedL10N = new LocalizationHelper("devtools-shared/locale/shared.properties");
+const sharedL10N = new LocalizationHelper("devtools/shared/locales/shared.properties");
 
 /**
  * A helper for having the same interface as LocalizationHelper, but for more
