@@ -1367,15 +1367,15 @@ TextEditor::PasteAsQuotation(int32_t aSelectionType)
     // If it can't support a "text" output of the data the call will fail
     nsCOMPtr<nsISupports> genericDataObj;
     uint32_t len;
-    char* flav = nullptr;
-    rv = trans->GetAnyTransferData(&flav, getter_AddRefs(genericDataObj),
+    nsAutoCString flav;
+    rv = trans->GetAnyTransferData(flav, getter_AddRefs(genericDataObj),
                                    &len);
-    if (NS_FAILED(rv) || !flav) {
+    if (NS_FAILED(rv)) {
       return rv;
     }
 
-    if (!nsCRT::strcmp(flav, kUnicodeMime) ||
-        !nsCRT::strcmp(flav, kMozTextInternal)) {
+    if (flav.EqualsLiteral(kUnicodeMime) ||
+        flav.EqualsLiteral(kMozTextInternal)) {
       nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0) {
         nsAutoString stuffToPaste;
@@ -1384,7 +1384,6 @@ TextEditor::PasteAsQuotation(int32_t aSelectionType)
         rv = InsertAsQuotation(stuffToPaste, 0);
       }
     }
-    free(flav);
   }
 
   return rv;
