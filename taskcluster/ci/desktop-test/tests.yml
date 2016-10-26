@@ -313,6 +313,7 @@ mochitest-jetpack:
                     - mozharness/configs/remove_executables.py
         extra-options:
             - --mochitest-suite=jetpack-package
+            - --mochitest-suite=jetpack-addon
 
 mochitest-media:
     description: "Mochitest media run"
