@@ -26,7 +26,7 @@ jobs:
             kind: build
             tier: 2
             symbol: tc(Deps)
-        worker-type: aws-provisioner-v1/android-api-15
+        worker-type: aws-provisioner-v1/gecko-{level}-b-android
         worker:
             implementation: docker-worker
             docker-image: {in-tree: android-gradle-build}
@@ -77,7 +77,7 @@ jobs:
             kind: build
             tier: 2
             symbol: tc(test)
-        worker-type: aws-provisioner-v1/android-api-15
+        worker-type: aws-provisioner-v1/gecko-{level}-b-android
         worker:
             implementation: docker-worker
             docker-image: {in-tree: desktop-build}
@@ -128,7 +128,7 @@ jobs:
             kind: build
             tier: 2
             symbol: tc(lint)
-        worker-type: aws-provisioner-v1/android-api-15
+        worker-type: aws-provisioner-v1/gecko-{level}-b-android
         worker:
             implementation: docker-worker
             docker-image: {in-tree: desktop-build}
@@ -190,7 +190,7 @@ jobs:
             kind: build
             tier: 2
             symbol: tc(checkstyle)
-        worker-type: aws-provisioner-v1/android-api-15
+        worker-type: aws-provisioner-v1/gecko-{level}-b-android
         worker:
             implementation: docker-worker
             docker-image: {in-tree: desktop-build}
