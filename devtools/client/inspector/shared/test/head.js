@@ -22,7 +22,7 @@ const TEST_URL_ROOT_SSL =
 const ROOT_TEST_DIR = getRootDirectory(gTestPath);
 const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
 const STYLE_INSPECTOR_L10N =
-      new LocalizationHelper("devtools-shared/locale/styleinspector.properties");
+      new LocalizationHelper("devtools/shared/locales/styleinspector.properties");
 
 // Clean-up all prefs that might have been changed during a test run
 // (safer here because if the test fails, then the pref is never reverted)
