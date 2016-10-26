@@ -61,12 +61,12 @@ private:
   void ProcessFlush();
   void ProcessShutdown();
   void SubmitSample(MediaRawData* aSample);
-  nsresult DecodeSample(MediaRawData* aSample);
-  nsresult GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
-                                    const nsTArray<uint8_t>& aExtraData);
+  MediaResult DecodeSample(MediaRawData* aSample);
+  MediaResult GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
+                                       const nsTArray<uint8_t>& aExtraData);
   // Setup AudioConverter once all information required has been gathered.
   // Will return NS_ERROR_NOT_INITIALIZED if more data is required.
-  nsresult SetupDecoder(MediaRawData* aSample);
+  MediaResult SetupDecoder(MediaRawData* aSample);
   nsresult GetImplicitAACMagicCookie(const MediaRawData* aSample);
   nsresult SetupChannelLayout();
   uint32_t mParsedFramesForAACMagicCookie;
