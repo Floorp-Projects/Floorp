@@ -303,7 +303,7 @@ CERT_EncodeGeneralName(CERTGeneralName *genName, SECItem *dest,
     const SEC_ASN1Template *template;
 
     PORT_Assert(arena);
-    if (arena == NULL) {
+    if (arena == NULL || !genName) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return NULL;
     }
@@ -376,16 +376,17 @@ cert_EncodeGeneralNames(PLArenaPool *arena, CERTGeneralName *names)
 {
     CERTGeneralName *current_name;
     SECItem **items = NULL;
-    int count = 0;
+    int count = 1;
     int i;
     PRCList *head;
+
+    if (!names) {
+        return NULL;
+    }
 
     PORT_Assert(arena);
     /* TODO: mark arena */
     current_name = names;
-    if (names != NULL) {
-        count = 1;
-    }
     head = &(names->l);
     while (current_name->l.next != head) {
         current_name = CERT_GetNextGeneralName(current_name);
@@ -710,8 +711,10 @@ cert_DecodeNameConstraintSubTree(PLArenaPool *arena, SECItem **subTree,
         last = current;
         i++;
     }
-    first->l.prev = &(last->l);
-    last->l.next = &(first->l);
+    if (first && last) {
+        first->l.prev = &(last->l);
+        last->l.next = &(first->l);
+    }
     /* TODO: unmark arena */
     return first;
 loser:
@@ -1069,7 +1072,7 @@ cert_ExtractDNEmailAddrs(CERTGeneralName *name, PLArenaPool *arena)
         }     /* loop over AVAs */
     }         /* loop over RDNs */
     /* combine new names with old one. */
-    name = cert_CombineNamesLists(name, nameList);
+    (void)cert_CombineNamesLists(name, nameList);
     /* TODO: unmark arena */
     return SECSuccess;
 

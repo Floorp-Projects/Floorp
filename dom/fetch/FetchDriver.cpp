@@ -31,6 +31,7 @@
 
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/workers/Workers.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/Unused.h"
 
 #include "Fetch.h"
@@ -54,6 +55,8 @@ FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
   , mFetchCalled(false)
 #endif
 {
+  MOZ_ASSERT(aRequest);
+  MOZ_ASSERT(aPrincipal);
 }
 
 FetchDriver::~FetchDriver()
@@ -82,6 +85,14 @@ FetchDriver::Fetch(FetchDriverObserver* aObserver)
   MOZ_RELEASE_ASSERT(!mRequest->IsSynchronous(),
                      "Synchronous fetch not supported");
 
+
+  UniquePtr<mozilla::ipc::PrincipalInfo> principalInfo(new mozilla::ipc::PrincipalInfo());
+  nsresult rv = PrincipalToPrincipalInfo(mPrincipal, principalInfo.get());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mRequest->SetPrincipalInfo(Move(principalInfo));
   if (NS_FAILED(HttpFetch())) {
     FailWithNetworkError();
   }

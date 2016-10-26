@@ -24,9 +24,6 @@ and point multiplication operations. Used by higher level algorithms
 ecl-priv.h - Data structures and functions for internal use within the
 library.
 
-ec2.h - Internal header file that contains all functions for point
-arithmetic over binary polynomial fields.
-
 ecp.h - Internal header file that contains all functions for point
 arithmetic over prime fields.
 

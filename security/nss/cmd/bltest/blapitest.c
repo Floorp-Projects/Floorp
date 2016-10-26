@@ -145,23 +145,7 @@ Usage()
     PRINTUSAGE("", "-k", "file which contains key");
 #ifndef NSS_DISABLE_ECC
     PRINTUSAGE("", "-n", "name of curve for EC key generation; one of:");
-    PRINTUSAGE("", "", "  sect163k1, nistk163, sect163r1, sect163r2,");
-    PRINTUSAGE("", "", "  nistb163, sect193r1, sect193r2, sect233k1, nistk233,");
-    PRINTUSAGE("", "", "  sect233r1, nistb233, sect239k1, sect283k1, nistk283,");
-    PRINTUSAGE("", "", "  sect283r1, nistb283, sect409k1, nistk409, sect409r1,");
-    PRINTUSAGE("", "", "  nistb409, sect571k1, nistk571, sect571r1, nistb571,");
-    PRINTUSAGE("", "", "  secp160k1, secp160r1, secp160r2, secp192k1, secp192r1,");
-    PRINTUSAGE("", "", "  nistp192, secp224k1, secp224r1, nistp224, secp256k1,");
-    PRINTUSAGE("", "", "  secp256r1, nistp256, secp384r1, nistp384, secp521r1,");
-    PRINTUSAGE("", "", "  nistp521, prime192v1, prime192v2, prime192v3,");
-    PRINTUSAGE("", "", "  prime239v1, prime239v2, prime239v3, c2pnb163v1,");
-    PRINTUSAGE("", "", "  c2pnb163v2, c2pnb163v3, c2pnb176v1, c2tnb191v1,");
-    PRINTUSAGE("", "", "  c2tnb191v2, c2tnb191v3, c2onb191v4, c2onb191v5,");
-    PRINTUSAGE("", "", "  c2pnb208w1, c2tnb239v1, c2tnb239v2, c2tnb239v3,");
-    PRINTUSAGE("", "", "  c2onb239v4, c2onb239v5, c2pnb272w1, c2pnb304w1,");
-    PRINTUSAGE("", "", "  c2tnb359w1, c2pnb368w1, c2tnb431r1, secp112r1,");
-    PRINTUSAGE("", "", "  secp112r2, secp128r1, secp128r2, sect113r1, sect113r2,");
-    PRINTUSAGE("", "", "  sect131r1, sect131r2, curve25519");
+    PRINTUSAGE("", "", "  nistp256, nistp384, nistp521");
 #endif
     PRINTUSAGE("", "-p", "do performance test");
     PRINTUSAGE("", "-4", "run test in multithread mode. th_num number of parallel threads");
@@ -414,9 +398,6 @@ typedef struct curveNameTagPairStr {
     char *curveName;
     SECOidTag curveOidTag;
 } CurveNameTagPair;
-
-#define DEFAULT_CURVE_OID_TAG SEC_OID_SECG_EC_SECP192R1
-/* #define DEFAULT_CURVE_OID_TAG  SEC_OID_SECG_EC_SECP160R1 */
 
 static CurveNameTagPair nameTagPair[] =
     {
@@ -1863,7 +1844,7 @@ bltest_ecdsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
         cipherInfo->cipher.pubkeyCipher = ecdsa_signDigest;
     } else {
         /* Have to convert private key to public key.  Memory
-     * is freed with private key's arena  */
+         * is freed with private key's arena  */
         ECPublicKey *pubkey;
         ECPrivateKey *key = (ECPrivateKey *)asymk->privKey;
         pubkey = (ECPublicKey *)PORT_ArenaZAlloc(key->ecParams.arena,

@@ -2,8 +2,7 @@
 <html>
   <head>
     <meta charset=utf-8>
-    <meta name="timeout" content="long">
-    <title>Encrypted Media Extensions: Successful Playback, persistent-usage-record session with Clear Key, mp4, event sequence</title>
+    <title>Encrypted Media Extensions: persistent-usage-record, playback and retrieve record in new window, Clear Key, mp4</title>
     <link rel="help" href="https://w3c.github.io/encrypted-media/">
 
     <!-- Web Platform Test Harness scripts -->
@@ -45,7 +44,6 @@
                         videoType:          contentitem.video.type,
                         initDataType:       'keyids',
                         initData:           getInitData(contentitem,'keyids'),
-                        duration:           2,
                         windowscript:       'resources/retrieve-persistent-usage-record.html' };
 
         runTest(config);

@@ -648,7 +648,8 @@ protected:
                                         bool aAddCites,
                                         nsIDOMNode** aNodeInserted);
 
-  nsresult InsertObject(const char* aType, nsISupports* aObject, bool aIsSafe,
+  nsresult InsertObject(const nsACString& aType, nsISupports* aObject,
+                        bool aIsSafe,
                         nsIDOMDocument* aSourceDoc,
                         nsIDOMNode* aDestinationNode,
                         int32_t aDestOffset,

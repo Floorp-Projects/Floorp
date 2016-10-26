@@ -204,11 +204,9 @@ TEST_P(SSLv2ClientHelloTest, Connect) {
 
 // Test negotiating TLS 1.3.
 TEST_F(SSLv2ClientHelloTestF, Connect13) {
+  EnsureTlsSetup();
   SetExpectedVersion(SSL_LIBRARY_VERSION_TLS_1_3);
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
-                           SSL_LIBRARY_VERSION_TLS_1_3);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
 
   std::vector<uint16_t> cipher_suites = {TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256};
   SetAvailableCipherSuites(cipher_suites);
@@ -317,11 +315,9 @@ TEST_P(SSLv2ClientHelloTest, RequireSafeRenegotiationWithSCSV) {
 // a higher version. As the server doesn't support anything higher than TLS 1.1
 // it must accept the connection.
 TEST_F(SSLv2ClientHelloTestF, FallbackSCSV) {
+  EnsureTlsSetup();
   SetExpectedVersion(SSL_LIBRARY_VERSION_TLS_1_1);
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_1);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_1);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_1);
 
   std::vector<uint16_t> cipher_suites = {TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
                                          TLS_FALLBACK_SCSV};

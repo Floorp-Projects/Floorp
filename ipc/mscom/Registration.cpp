@@ -9,6 +9,7 @@
 // anything else that could possibly pull in Windows header files.
 #define CINTERFACE
 
+#include "mozilla/mscom/ActivationContext.h"
 #include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/mscom/Utils.h"
@@ -21,6 +22,7 @@
 #include "mozilla/Pair.h"
 #include "mozilla/StaticPtr.h"
 #include "nsTArray.h"
+#include "nsWindowsHelpers.h"
 
 #include <oaidl.h>
 #include <objidl.h>
@@ -86,22 +88,21 @@ RegisterProxy(const wchar_t* aLeafName, RegistrationFlags aFlags)
     return nullptr;
   }
 
-  HMODULE proxyDll = LoadLibrary(modulePathBuf);
-  if (!proxyDll) {
+  nsModuleHandle proxyDll(LoadLibrary(modulePathBuf));
+  if (!proxyDll.get()) {
     return nullptr;
   }
 
-  auto DllGetClassObjectFn = reinterpret_cast<LPFNGETCLASSOBJECT>(
-      GetProcAddress(proxyDll, "DllGetClassObject"));
-  if (!DllGetClassObjectFn) {
-    FreeLibrary(proxyDll);
+  // Instantiate an activation context so that CoGetClassObject will use any
+  // COM metadata embedded in proxyDll's manifest to resolve CLSIDs.
+  ActivationContext actCtx(proxyDll);
+  if (!actCtx) {
     return nullptr;
   }
 
   auto GetProxyDllInfoFn = reinterpret_cast<GetProxyDllInfoFnPtr>(
       GetProcAddress(proxyDll, "GetProxyDllInfo"));
   if (!GetProxyDllInfoFn) {
-    FreeLibrary(proxyDll);
     return nullptr;
   }
 
@@ -109,15 +110,15 @@ RegisterProxy(const wchar_t* aLeafName, RegistrationFlags aFlags)
   const CLSID* proxyClsid = nullptr;
   GetProxyDllInfoFn(&proxyInfo, &proxyClsid);
   if (!proxyInfo || !proxyClsid) {
-    FreeLibrary(proxyDll);
     return nullptr;
   }
 
+  // We call CoGetClassObject instead of DllGetClassObject because it forces
+  // the COM runtime to manage the lifetime of the DLL.
   IUnknown* classObject = nullptr;
-  HRESULT hr = DllGetClassObjectFn(*proxyClsid, IID_IUnknown,
-                                   (void**) &classObject);
+  HRESULT hr = CoGetClassObject(*proxyClsid, CLSCTX_INPROC_SERVER, nullptr,
+                                IID_IUnknown, (void**) &classObject);
   if (FAILED(hr)) {
-    FreeLibrary(proxyDll);
     return nullptr;
   }
 
@@ -126,7 +127,6 @@ RegisterProxy(const wchar_t* aLeafName, RegistrationFlags aFlags)
                              REGCLS_MULTIPLEUSE, &regCookie);
   if (FAILED(hr)) {
     classObject->lpVtbl->Release(classObject);
-    FreeLibrary(proxyDll);
     return nullptr;
   }
 
@@ -136,13 +136,12 @@ RegisterProxy(const wchar_t* aLeafName, RegistrationFlags aFlags)
   if (FAILED(hr)) {
     CoRevokeClassObject(regCookie);
     classObject->lpVtbl->Release(classObject);
-    FreeLibrary(proxyDll);
     return nullptr;
   }
 
   // RegisteredProxy takes ownership of proxyDll, classObject, and typeLib
   // references
-  auto result(MakeUnique<RegisteredProxy>(reinterpret_cast<uintptr_t>(proxyDll),
+  auto result(MakeUnique<RegisteredProxy>(reinterpret_cast<uintptr_t>(proxyDll.disown()),
                                           classObject, regCookie, typeLib));
 
   while (*proxyInfo) {

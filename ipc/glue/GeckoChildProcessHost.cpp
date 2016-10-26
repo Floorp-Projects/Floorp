@@ -120,7 +120,7 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
 
   MOZ_COUNT_DTOR(GeckoChildProcessHost);
 
-  if (mChildProcessHandle > 0) {
+  if (mChildProcessHandle != 0) {
 #if defined(MOZ_WIDGET_COCOA)
     SharedMemoryBasic::CleanupForPid(mChildProcessHandle);
 #endif

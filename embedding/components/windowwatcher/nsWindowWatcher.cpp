@@ -52,7 +52,6 @@
 #include "nsIContentViewer.h"
 #include "nsIWindowProvider.h"
 #include "nsIMutableArray.h"
-#include "nsISupportsArray.h"
 #include "nsIDOMStorageManager.h"
 #include "nsIWidget.h"
 #include "nsFocusManager.h"
@@ -300,8 +299,8 @@ nsWindowWatcher::Init()
  *  - If aArguments is nullptr, return nullptr.
  *  - If aArguments is an nsArray, return nullptr if it's empty, or otherwise
  *    return the array.
- *  - If aArguments is an nsISupportsArray, return nullptr if it's empty, or
- *    otherwise add its elements to an nsArray and return the new array.
+ *  - If aArguments is an nsIArray, return nullptr if it's empty, or
+ *    otherwise just return the array.
  *  - Otherwise, return an nsIArray with one element: aArguments.
  */
 static already_AddRefed<nsIArray>
@@ -320,28 +319,6 @@ ConvertArgsToArray(nsISupports* aArguments)
     }
 
     return array.forget();
-  }
-
-  nsCOMPtr<nsISupportsArray> supArray = do_QueryInterface(aArguments);
-  if (supArray) {
-    uint32_t argc = 0;
-    supArray->Count(&argc);
-    if (argc == 0) {
-      return nullptr;
-    }
-
-    nsCOMPtr<nsIMutableArray> mutableArray =
-      do_CreateInstance(NS_ARRAY_CONTRACTID);
-    NS_ENSURE_TRUE(mutableArray, nullptr);
-
-    for (uint32_t i = 0; i < argc; i++) {
-      nsCOMPtr<nsISupports> elt;
-      supArray->GetElementAt(i, getter_AddRefs(elt));
-      nsresult rv = mutableArray->AppendElement(elt, /* aWeak = */ false);
-      NS_ENSURE_SUCCESS(rv, nullptr);
-    }
-
-    return mutableArray.forget();
   }
 
   nsCOMPtr<nsIMutableArray> singletonArray =

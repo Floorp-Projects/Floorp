@@ -260,6 +260,7 @@ early_options = early_options()
 @depends(mozconfig, '--help')
 # This gives access to the sandbox. Don't copy this blindly.
 @imports('__sandbox__')
+@imports('os')
 def mozconfig_options(mozconfig, help):
     if mozconfig['path']:
         helper = __sandbox__._helper
@@ -279,8 +280,10 @@ def mozconfig_options(mozconfig, help):
 
         for key, value in mozconfig['env']['added'].iteritems():
             add(key, value)
+            os.environ[key] = value
         for key, (_, value) in mozconfig['env']['modified'].iteritems():
             add(key, value)
+            os.environ[key] = value
         for key, value in mozconfig['vars']['added'].iteritems():
             # mozconfig_loader adds _IS_SET variables that are irrelevant
             if not key.endswith('_IS_SET'):

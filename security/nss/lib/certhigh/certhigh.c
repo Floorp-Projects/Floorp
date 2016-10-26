@@ -55,12 +55,12 @@ CERT_MatchNickname(char *name1, char *name2)
 /*
  * Find all user certificates that match the given criteria.
  *
- *	"handle" - database to search
- *	"usage" - certificate usage to match
- *	"oneCertPerName" - if set then only return the "best" cert per
- *			name
- *	"validOnly" - only return certs that are curently valid
- *	"proto_win" - window handle passed to pkcs11
+ *      "handle" - database to search
+ *      "usage" - certificate usage to match
+ *      "oneCertPerName" - if set then only return the "best" cert per
+ *                      name
+ *      "validOnly" - only return certs that are curently valid
+ *      "proto_win" - window handle passed to pkcs11
  */
 CERTCertList *
 CERT_FindUserCertsByUsage(CERTCertDBHandle *handle,
@@ -95,20 +95,20 @@ CERT_FindUserCertsByUsage(CERTCertDBHandle *handle,
     while (nn > 0) {
         cert = NULL;
         /* use the pk11 call so that we pick up any certs on tokens,
-	 * which may require login
-	 */
+         * which may require login
+         */
         if (proto_win != NULL) {
             cert = PK11_FindCertFromNickname(*nnptr, proto_win);
         }
 
         /* Sigh, It turns out if the cert is already in the temp db, because
-	 * it's in the perm db, then the nickname lookup doesn't work.
-	 * since we already have the cert here, though, than we can just call
-	 * CERT_CreateSubjectCertList directly. For those cases where we didn't
-	 * find the cert in pkcs #11 (because we didn't have a password arg,
-	 * or because the nickname is for a peer, server, or CA cert, then we
-	 * go look the cert up.
-	 */
+         * it's in the perm db, then the nickname lookup doesn't work.
+         * since we already have the cert here, though, than we can just call
+         * CERT_CreateSubjectCertList directly. For those cases where we didn't
+         * find the cert in pkcs #11 (because we didn't have a password arg,
+         * or because the nickname is for a peer, server, or CA cert, then we
+         * go look the cert up.
+         */
         if (cert == NULL) {
             cert = CERT_FindCertByNickname(handle, *nnptr);
         }
@@ -142,6 +142,10 @@ CERT_FindUserCertsByUsage(CERTCertDBHandle *handle,
         nn = nicknames->numnicknames;
         nnptr = nicknames->nicknames;
 
+        if (!certList) {
+            goto loser;
+        }
+
         flags = (PRBool *)PORT_ZAlloc(sizeof(PRBool) * nn);
         if (flags == NULL) {
             goto loser;
@@ -156,21 +160,21 @@ CERT_FindUserCertsByUsage(CERTCertDBHandle *handle,
             for (n = 0; n < nn; n++) {
                 if (CERT_MatchNickname(nnptr[n], node->cert->nickname)) {
                     /* We found a match.  If this is the first one, then
-		     * set the flag and move on to the next cert.  If this
-		     * is not the first one then delete it from the list.
-		     */
+                     * set the flag and move on to the next cert.  If this
+                     * is not the first one then delete it from the list.
+                     */
                     if (flags[n]) {
                         /* We have already seen a cert with this nickname,
-			 * so delete this one.
-			 */
+                         * so delete this one.
+                         */
                         freenode = node;
                         node = CERT_LIST_NEXT(node);
                         CERT_RemoveCertListNode(freenode);
                     } else {
                         /* keep the first cert for each nickname, but set the
-			 * flag so we know to delete any others with the same
-			 * nickname.
-			 */
+                         * flag so we know to delete any others with the same
+                         * nickname.
+                         */
                         flags[n] = PR_TRUE;
                         node = CERT_LIST_NEXT(node);
                     }
@@ -179,8 +183,8 @@ CERT_FindUserCertsByUsage(CERTCertDBHandle *handle,
             }
             if (n == nn) {
                 /* if we get here it means that we didn't find a matching
-		 * nickname, which should not happen.
-		 */
+                 * nickname, which should not happen.
+                 */
                 PORT_Assert(0);
                 node = CERT_LIST_NEXT(node);
             }
@@ -207,11 +211,11 @@ done:
 /*
  * Find a user certificate that matchs the given criteria.
  *
- *	"handle" - database to search
- *	"nickname" - nickname to match
- *	"usage" - certificate usage to match
- *	"validOnly" - only return certs that are curently valid
- *	"proto_win" - window handle passed to pkcs11
+ *      "handle" - database to search
+ *      "nickname" - nickname to match
+ *      "usage" - certificate usage to match
+ *      "validOnly" - only return certs that are curently valid
+ *      "proto_win" - window handle passed to pkcs11
  */
 CERTCertificate *
 CERT_FindUserCertByUsage(CERTCertDBHandle *handle,
@@ -402,7 +406,7 @@ CollectNicknames(NSSCertificate *c, void *data)
     if (saveit) {
         nickname = STAN_GetCERTCertificateName(NULL, c);
         /* nickname can only be NULL here if we are having memory
-	 * alloc problems */
+         * alloc problems */
         if (nickname == NULL) {
             return PR_FAILURE;
         }
@@ -893,9 +897,9 @@ cert_ImportCAChain(SECItem *certs, int numcerts, SECCertUsage certUsage, PRBool 
         /* does it have the CA extension */
 
         /*
-	 * Make sure that if this is an intermediate CA in the chain that
-	 * it was given permission by its signer to be a CA.
-	 */
+         * Make sure that if this is an intermediate CA in the chain that
+         * it was given permission by its signer to be a CA.
+         */
         isca = CERT_IsCACert(newcert, &certtype);
 
         if (!isca) {
@@ -1080,8 +1084,8 @@ CERT_CertChainFromCert(CERTCertificate *cert, SECCertUsage usage,
         stanCert = stanChain[++i];
         if (!stanCert && !cCert->isRoot) {
             /* reached the end of the chain, but the final cert is
-	     * not a root.  Don't discard it.
-	     */
+             * not a root.  Don't discard it.
+             */
             includeRoot = PR_TRUE;
         }
         CERT_DestroyCertificate(cCert);

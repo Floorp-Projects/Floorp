@@ -27,6 +27,10 @@ enum StructuredCloneTags {
   SCTAG_DOM_MUTABLEFILE,
   SCTAG_DOM_FILE,
 
+  SCTAG_DOM_WASM,
+
+  // New IDB tags go here!
+
   // These tags are used for both main thread and workers.
   SCTAG_DOM_IMAGEDATA,
   SCTAG_DOM_MAP_MESSAGEPORT,
@@ -55,6 +59,12 @@ enum StructuredCloneTags {
 
   // This tag is used by both main thread and workers.
   SCTAG_DOM_URLSEARCHPARAMS,
+
+  // When adding a new tag for IDB, please don't add it to the end of the list!
+  // Tags that are supported by IDB must not ever change. See the static assert
+  // in IDBObjectStore.cpp, method CommonStructuredCloneReadCallback.
+  // Adding to the end of the list would make removing of other tags harder in
+  // future.
 
   SCTAG_DOM_MAX
 };

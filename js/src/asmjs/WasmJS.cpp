@@ -1548,14 +1548,6 @@ WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (error) {
-        if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                               JSMSG_WASM_COMPILE_ERROR, error.get()))
-        {
-            return false;
-        }
-    }
-
     callArgs.rval().setBoolean(validated);
     return true;
 }
@@ -1637,10 +1629,6 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
 
     RootedObject wasm(cx, NewObjectWithGivenProto(cx, &WebAssemblyClass, proto, SingletonObject));
     if (!wasm)
-        return nullptr;
-
-    // This property will be removed before the initial WebAssembly release.
-    if (!JS_DefineProperty(cx, wasm, "experimentalVersion", EncodingVersion, JSPROP_RESOLVING))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, wasm, WebAssembly_static_methods))

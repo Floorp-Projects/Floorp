@@ -423,6 +423,10 @@ for i in range(len(tests)):
 
     notes = '<p class="notes">%s' % test['notes'] if 'notes' in test else ''
 
+    scripts = ''
+    for s in test.get('scripts', []):
+        scripts += '<script src="%s"></script>\n' % (s)
+
     images = ''
     for i in test.get('images', []):
         id = i.split('/')[-1]
@@ -453,7 +457,7 @@ for i in range(len(tests)):
         'desc':desc, 'escaped_desc':escaped_desc,
         'prev':prev, 'next':next, 'refs':refs, 'notes':notes, 'images':images,
         'fonts':fonts, 'fonthack':fonthack,
-        'canvas':canvas, 'expected':expectation_html, 'code':code,
+        'canvas':canvas, 'expected':expectation_html, 'code':code, 'scripts':scripts,
         'mochi_name':mochi_name, 'mochi_desc':mochi_desc, 'mochi_code':mochi_code,
         'mochi_setup':mochi_setup, 'mochi_footer':mochi_footer, 'mochi_images':mochi_images,
         'fallback':fallback

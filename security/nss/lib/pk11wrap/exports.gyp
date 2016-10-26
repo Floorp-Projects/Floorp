@@ -21,14 +21,14 @@
             'secmodt.h',
             'secpkcs5.h'
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/public'
+          'destination': '<(nss_dist_dir)/public/<(module)'
         },
         {
           'files': [
             'dev3hack.h',
             'secmodi.h'
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/private'
+          'destination': '<(nss_dist_dir)/private/<(module)'
         }
       ]
     }

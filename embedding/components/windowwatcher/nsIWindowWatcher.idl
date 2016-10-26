@@ -51,7 +51,7 @@ interface nsIWindowWatcher : nsISupports {
              aUrl in it (if aUrl is not null) and return it.
       @param aFeatures window features from JS window.open. can be null.
       @param aArguments extra argument(s) to the new window, to be attached
-             as the |arguments| property. An nsISupportsArray will be
+             as the |arguments| property. An nsIArray will be
              unwound into multiple arguments (but not recursively!).
              can be null.
       @return the new window

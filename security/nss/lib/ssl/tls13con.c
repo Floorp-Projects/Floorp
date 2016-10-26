@@ -1107,6 +1107,12 @@ tls13_NegotiateKeyExchange(sslSocket *ss, TLS13KeyShareEntry **clientShare)
     for (index = 0; index < SSL_NAMED_GROUP_COUNT; ++index) {
         /* Continue to the next group if this one is not enabled. */
         if (!ss->namedGroupPreferences[index]) {
+            /* There's a gap in the preferred groups list. Assume this is a group
+             * that's not supported by the client but preferred by the server. */
+            if (preferredGroup) {
+                entry = NULL;
+                break;
+            }
             continue;
         }
 
@@ -1136,12 +1142,12 @@ tls13_NegotiateKeyExchange(sslSocket *ss, TLS13KeyShareEntry **clientShare)
         }
     }
 
-    SSL_TRC(3, ("%d: TLS13[%d]: group = %d", preferredGroup->name));
-
     if (!preferredGroup) {
         FATAL_ERROR(ss, SSL_ERROR_NO_CYPHER_OVERLAP, handshake_failure);
         return SECFailure;
     }
+
+    SSL_TRC(3, ("%d: TLS13[%d]: group = %d", preferredGroup->name));
 
     if (!entry) {
         return tls13_SendHelloRetryRequest(ss, preferredGroup);
@@ -1981,6 +1987,12 @@ tls13_HandleServerHelloPart2(sslSocket *ss)
         if (ssl3_ExtensionNegotiated(ss, ssl_signature_algorithms_xtn)) {
             FATAL_ERROR(ss, SSL_ERROR_RX_UNEXPECTED_EXTENSION,
                         unexpected_message);
+            return SECFailure;
+        }
+
+        if (ss->ssl3.hs.cipher_suite != sid->u.ssl3.cipherSuite) {
+            FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_SERVER_HELLO,
+                        illegal_parameter);
             return SECFailure;
         }
     } else {
@@ -3804,9 +3816,10 @@ tls13_ExtensionAllowed(PRUint16 extension, SSL3HandshakeType message)
             break;
     }
     if (i == PR_ARRAY_SIZE(KnownExtensions)) {
-        /* We have never heard of this extension which is OK on
-         * the server but not the client. */
-        return message == client_hello;
+        /* We have never heard of this extension which is OK
+         * in client_hello and new_session_ticket. */
+        return (message == client_hello) ||
+               (message == new_session_ticket);
     }
 
     switch (KnownExtensions[i].status) {

@@ -696,6 +696,7 @@ protected:
   /**
    * Update CurrentState().filter with the filter description for
    * CurrentState().filterChain.
+   * Flushes the PresShell, so the world can change if you call this function.
    */
   void UpdateFilter();
 
@@ -863,13 +864,23 @@ protected:
     * Returns true if the result of a drawing operation should be
     * drawn with a filter.
     */
-  bool NeedToApplyFilter();
+  bool NeedToApplyFilter()
+  {
+    return EnsureUpdatedFilter().mPrimitives.Length() > 0;
+  }
 
   /**
    * Calls UpdateFilter if the canvas's WriteOnly state has changed between the
    * last call to UpdateFilter and now.
    */
-  const gfx::FilterDescription& EnsureUpdatedFilter();
+  const gfx::FilterDescription& EnsureUpdatedFilter() {
+    bool isWriteOnly = mCanvasElement && mCanvasElement->IsWriteOnly();
+    if (CurrentState().filterSourceGraphicTainted != isWriteOnly) {
+      UpdateFilter();
+    }
+    MOZ_ASSERT(CurrentState().filterSourceGraphicTainted == isWriteOnly);
+    return CurrentState().filter;
+  }
 
   bool NeedToCalculateBounds()
   {
@@ -1090,11 +1101,6 @@ protected:
   };
 
   AutoTArray<ContextState, 3> mStyleStack;
-
-  // Temporary instrumentation to help debug bug 1308859
-  static CanvasRenderingContext2D* sThisContext;
-  static bool sThisContextWasDestroyed;
-  static bool sThisContextHadItsFilterUpdated;
 
   inline ContextState& CurrentState() {
     return mStyleStack[mStyleStack.Length() - 1];
