@@ -7,7 +7,7 @@
 const React = require("devtools/client/shared/vendor/react");
 const Immutable = require("devtools/client/shared/vendor/immutable");
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const l10n = new LocalizationHelper("devtools/locale/components.properties");
+const l10n = new LocalizationHelper("devtools/client/locales/components.properties");
 
 // Shortcuts
 const { PropTypes, createClass, DOM } = React;

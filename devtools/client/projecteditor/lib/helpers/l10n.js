@@ -11,7 +11,7 @@
  */
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const ITCHPAD_STRINGS_URI = "devtools/locale/projecteditor.properties";
+const ITCHPAD_STRINGS_URI = "devtools/client/locales/projecteditor.properties";
 const L10N = new LocalizationHelper(ITCHPAD_STRINGS_URI);
 
 function getLocalizedString(name) {
