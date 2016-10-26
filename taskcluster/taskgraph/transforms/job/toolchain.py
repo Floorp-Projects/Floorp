@@ -65,3 +65,45 @@ def docker_worker_toolchain(config, job, taskdesc):
         "./workspace/build/src/taskcluster/scripts/misc/" + run['script'],
     ])
     worker['command'] = ["/bin/bash", "-c", command]
+
+
+@run_job_using("generic-worker", "toolchain-script", schema=toolchain_run_schema)
+def windows_toolchain(config, job, taskdesc):
+    run = job['run']
+
+    worker = taskdesc['worker']
+
+    worker['artifacts'] = [{
+        'path': r'public\build',
+        'type': 'directory',
+    }]
+
+    docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
+
+    # We fetch LLVM SVN into this.
+    svn_cache = 'level-{}-toolchain-clang-cl-build-svn'.format(config.params['level'])
+    worker['mounts'] = [{
+        'cache-name': svn_cache,
+        'path': r'llvm-sources',
+    }]
+    taskdesc['scopes'].extend([
+        'generic-worker:cache:' + svn_cache,
+    ])
+
+    env = worker['env']
+    env.update({
+        'MOZ_BUILD_DATE': time.strftime("%Y%m%d%H%M%S", time.gmtime(config.params['pushdate'])),
+        'MOZ_SCM_LEVEL': config.params['level'],
+        'TOOLTOOL_REPO': 'https://github.com/mozilla/build-tooltool',
+        'TOOLTOOL_REV': 'master',
+    })
+
+    hg = r'c:\Program Files\Mercurial\hg.exe'
+    bash = r'c:\mozilla-build\msys\bin\bash'
+    worker['command'] = [
+        r'mkdir .\build\src',
+        r'"{}" share c:\builds\hg-shared\mozilla-central .\build\src'.format(hg),
+        r'"{}" pull -u -R .\build\src --rev %GECKO_HEAD_REV% %GECKO_HEAD_REPOSITORY%'.format(hg),
+        # do something intelligent.
+        r'{} -c ./build/src/taskcluster/scripts/misc/{}'.format(bash, run['script'])
+    ]
