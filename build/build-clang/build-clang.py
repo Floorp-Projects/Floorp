@@ -15,6 +15,7 @@ import glob
 import errno
 from contextlib import contextmanager
 import sys
+import which
 
 DEBUG = os.getenv("DEBUG")
 
@@ -201,6 +202,22 @@ def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
         install_libgcc(gcc_dir, inst_dir)
 
 
+def get_compiler(config, key):
+    if key not in config:
+        raise ValueError("Config file needs to set %s" % key)
+
+    f = config[key]
+    if os.path.isabs(f):
+        if not os.path.exists(f):
+            raise ValueError("%s must point to an existing path" % key)
+        return f
+
+    # Assume that we have the name of some program that should be on PATH.
+    try:
+        return which.which(f)
+    except which.WhichError:
+        raise ValueError("%s not found on PATH" % f)
+
 if __name__ == "__main__":
     # The directories end up in the debug info, so the easy way of getting
     # a reproducible build is to run it in a know absolute directory.
@@ -284,20 +301,8 @@ if __name__ == "__main__":
             raise ValueError("gcc_dir must point to an existing path")
     if is_linux() and gcc_dir is None:
         raise ValueError("Config file needs to set gcc_dir")
-    cc = None
-    if "cc" in config:
-        cc = config["cc"]
-        if not os.path.exists(cc):
-            raise ValueError("cc must point to an existing path")
-    else:
-        raise ValueError("Config file needs to set cc")
-    cxx = None
-    if "cxx" in config:
-        cxx = config["cxx"]
-        if not os.path.exists(cxx):
-            raise ValueError("cxx must point to an existing path")
-    else:
-        raise ValueError("Config file needs to set cxx")
+    cc = get_compiler(config, "cc")
+    cxx = get_compiler(config, "cxx")
 
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
