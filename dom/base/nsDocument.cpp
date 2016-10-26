@@ -8202,7 +8202,7 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
   // we only want to block suspend windows that aren't also
   // frozen.
   nsPIDOMWindowInner* win = GetInnerWindow();
-  if (win && win->NewIsSuspended() && !win->NewIsFrozen()) {
+  if (win && win->IsSuspended() && !win->IsFrozen()) {
     return false;
   }
 

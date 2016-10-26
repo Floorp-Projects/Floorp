@@ -2256,11 +2256,11 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
 
     // Our parent can get suspended after it initiates the async creation
     // of a new worker thread.  In this case suspend the new worker as well.
-    if (mLoadInfo.mWindow && mLoadInfo.mWindow->NewIsSuspended()) {
+    if (mLoadInfo.mWindow && mLoadInfo.mWindow->IsSuspended()) {
       ParentWindowPaused();
     }
 
-    if (mLoadInfo.mWindow && mLoadInfo.mWindow->NewIsFrozen()) {
+    if (mLoadInfo.mWindow && mLoadInfo.mWindow->IsFrozen()) {
       Freeze(mLoadInfo.mWindow);
     }
   }
