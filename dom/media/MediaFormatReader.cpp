@@ -306,6 +306,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
       for (const MetadataTag& tag : videoInfo->mTags) {
         tags->Put(tag.mKey, tag.mValue);
       }
+      mVideo.mOriginalInfo = Move(videoInfo);
       mVideo.mCallback = new DecoderCallback(this, TrackInfo::kVideoTrack);
       mVideo.mTimeRanges = mVideo.mTrackDemuxer->GetBuffered();
       mTrackDemuxersMayBlock |= mVideo.mTrackDemuxer->GetSamplesMayBlock();
@@ -334,6 +335,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
       for (const MetadataTag& tag : audioInfo->mTags) {
         tags->Put(tag.mKey, tag.mValue);
       }
+      mAudio.mOriginalInfo = Move(audioInfo);
       mAudio.mCallback = new DecoderCallback(this, TrackInfo::kAudioTrack);
       mAudio.mTimeRanges = mAudio.mTrackDemuxer->GetBuffered();
       mTrackDemuxersMayBlock |= mAudio.mTrackDemuxer->GetSamplesMayBlock();
@@ -425,7 +427,9 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
   switch (aTrack) {
     case TrackType::kAudioTrack: {
       decoder.mDecoder = mPlatform->CreateDecoder({
-        decoder.mInfo ? *decoder.mInfo->GetAsAudioInfo() : mInfo.mAudio,
+        decoder.mInfo
+        ? *decoder.mInfo->GetAsAudioInfo()
+        : *decoder.mOriginalInfo->GetAsAudioInfo(),
         decoder.mTaskQueue,
         decoder.mCallback.get(),
         mCrashHelper
@@ -437,7 +441,9 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
       // Decoders use the layers backend to decide if they can use hardware decoding,
       // so specify LAYERS_NONE if we want to forcibly disable it.
       decoder.mDecoder = mPlatform->CreateDecoder({
-        mVideo.mInfo ? *mVideo.mInfo->GetAsVideoInfo() : mInfo.mVideo,
+        decoder.mInfo
+        ? *decoder.mInfo->GetAsVideoInfo()
+        : *decoder.mOriginalInfo->GetAsVideoInfo(),
         decoder.mTaskQueue,
         decoder.mCallback.get(),
         mLayersBackendType,
