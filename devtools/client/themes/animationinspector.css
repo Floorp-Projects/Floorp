@@ -375,8 +375,11 @@ body {
 
 .animation-timeline .animation .name {
   position: absolute;
-  color: var(--theme-selection-color);
+  color: var(--theme-selection-color3);
+  top: 0px;
+  left: 0px;
   height: 100%;
+  width: 100%;
   display: flex;
   align-items: center;
   padding: 0 2px;
@@ -390,6 +393,8 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  background-color: rgba(255, 255, 255, 0.7);
+  max-width: 50%;
 }
 
 .animation-timeline .fast-track .name div {
@@ -409,7 +414,7 @@ body {
 }
 
 .animation-timeline .all-properties .name::after {
-  background-color: white;
+  background-color: var(--theme-content-color3);
   clip-path: url(images/animation-fast-track.svg#thunderbolt);
   background-repeat: no-repeat;
   background-position: center;
