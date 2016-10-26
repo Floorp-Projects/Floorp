@@ -97,7 +97,7 @@ jobs:
         treeherder:
             platform: android-4-0-armv7-api15/opt
             symbol: tc(L10n)
-        worker-type: aws-provisioner-v1/android-api-15
+        worker-type: aws-provisioner-v1/gecko-{level}-b-android
         worker:
             max-run-time: 18000
         run:
