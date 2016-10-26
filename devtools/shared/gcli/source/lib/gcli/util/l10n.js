@@ -17,7 +17,7 @@
 "use strict";
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools-shared/locale/gcli.properties");
+const L10N = new LocalizationHelper("devtools/shared/locales/gcli.properties");
 
 /*
  * Not supported when embedded - we"re doing things the Mozilla way not the
