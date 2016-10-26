@@ -2732,7 +2732,7 @@ void
 HandlePrerenderingViolation(nsPIDOMWindowInner* aWindow)
 {
   // Suspend the window and its workers, and its children too.
-  aWindow->SuspendTimeouts();
+  aWindow->NewFreeze();
 
   // Suspend event handling on the document
   nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();

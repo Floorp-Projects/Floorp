@@ -1489,13 +1489,13 @@ nsFocusManager::AdjustWindowFocus(nsPIDOMWindowOuter* aWindow,
 bool
 nsFocusManager::IsWindowVisible(nsPIDOMWindowOuter* aWindow)
 {
-  if (!aWindow || aWindow->IsFrozen())
+  if (!aWindow || aWindow->NewIsFrozen())
     return false;
 
   // Check if the inner window is frozen as well. This can happen when a focus change
   // occurs while restoring a previous page.
   nsPIDOMWindowInner* innerWindow = aWindow->GetCurrentInnerWindow();
-  if (!innerWindow || innerWindow->IsFrozen())
+  if (!innerWindow || innerWindow->NewIsFrozen())
     return false;
 
   nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
