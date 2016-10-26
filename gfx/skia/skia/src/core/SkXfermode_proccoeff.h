@@ -45,13 +45,15 @@ public:
     bool isOpaque(SkXfermode::SrcColorOpacity opacityType) const override;
 
 #if SK_SUPPORT_GPU
-    const GrFragmentProcessor* getFragmentProcessorForImageFilter(
-                                                        const GrFragmentProcessor*) const override;
-    GrXPFactory* asXPFactory() const override;
+    sk_sp<GrFragmentProcessor> makeFragmentProcessorForImageFilter(
+                                                        sk_sp<GrFragmentProcessor>) const override;
+    sk_sp<GrXPFactory> asXPFactory() const override;
 #endif
 
     SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkProcCoeffXfermode)
+
+    bool onAppendStages(SkRasterPipeline*) const override;
 
 protected:
     void flatten(SkWriteBuffer& buffer) const override;

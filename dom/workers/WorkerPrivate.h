@@ -198,9 +198,11 @@ private:
   nsTArray<RefPtr<SharedWorker>> mSharedWorkers;
 
   uint64_t mBusyCount;
+  // SharedWorkers may have multiple windows paused, so this must be
+  // a count instead of just a boolean.
+  uint32_t mParentWindowPausedDepth;
   Status mParentStatus;
   bool mParentFrozen;
-  bool mParentWindowPaused;
   bool mIsChromeWorker;
   bool mMainThreadObjectsForgotten;
   // mIsSecureContext is set once in our constructor; after that it can be read
@@ -441,7 +443,7 @@ public:
   IsParentWindowPaused() const
   {
     AssertIsOnParentThread();
-    return mParentWindowPaused;
+    return mParentWindowPausedDepth > 0;
   }
 
   bool

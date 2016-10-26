@@ -10,6 +10,20 @@
 #include "SkSpecialImage.h"
 #include "SkString.h"
 
+sk_sp<SkImageFilter> SkLocalMatrixImageFilter::Make(const SkMatrix& localM,
+                                                    sk_sp<SkImageFilter> input) {
+    if (!input) {
+        return nullptr;
+    }
+    if (localM.getType() & (SkMatrix::kAffine_Mask | SkMatrix::kPerspective_Mask)) {
+        return nullptr;
+    }
+    if (localM.isIdentity()) {
+        return input;
+    }
+    return sk_sp<SkImageFilter>(new SkLocalMatrixImageFilter(localM, input));
+}
+
 SkLocalMatrixImageFilter::SkLocalMatrixImageFilter(const SkMatrix& localM,
                                                    sk_sp<SkImageFilter> input)
     : INHERITED(&input, 1, nullptr)
@@ -31,7 +45,8 @@ void SkLocalMatrixImageFilter::flatten(SkWriteBuffer& buffer) const {
 sk_sp<SkSpecialImage> SkLocalMatrixImageFilter::onFilterImage(SkSpecialImage* source,
                                                               const Context& ctx,
                                                               SkIPoint* offset) const {
-    Context localCtx(SkMatrix::Concat(ctx.ctm(), fLocalM), ctx.clipBounds(), ctx.cache());
+    Context localCtx(SkMatrix::Concat(ctx.ctm(), fLocalM), ctx.clipBounds(), ctx.cache(),
+                     ctx.outputProperties());
     return this->filterInput(0, source, localCtx, offset);
 }
 

@@ -349,6 +349,18 @@ def generic_worker_setup(config, test, taskdesc):
         else:
             mh_command.extend(['--download-symbols', 'true'])
 
+    # TODO: remove the need for run['chunked']
+    if mozharness.get('chunked') or test['chunks'] > 1:
+        # Implement mozharness['chunking-args'], modifying command in place
+        if mozharness['chunking-args'] == 'this-chunk':
+            mh_command.append('--total-chunk={}'.format(test['chunks']))
+            mh_command.append('--this-chunk={}'.format(test['this-chunk']))
+        elif mozharness['chunking-args'] == 'test-suite-suffix':
+            suffix = mozharness['chunk-suffix'].replace('<CHUNK>', str(test['this-chunk']))
+            for i, c in enumerate(mh_command):
+                if isinstance(c, basestring) and c.startswith('--test-suite'):
+                    mh_command[i] += suffix
+
     worker['command'] = [
         'mkdir {} {}'.format(env['APPDATA'], env['TMP']),
         {'task-reference': 'c:\\mozilla-build\\wget\\wget.exe {}'.format(mozharness_url)},

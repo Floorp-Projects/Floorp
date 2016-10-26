@@ -265,11 +265,6 @@ protected:
     mDeflectedCount = sPerfDeflectCount;
   }
 
-private:
-  // People shouldn't be allocating this class directly.  All subclasses should
-  // be allocated using a zeroing operator new.
-  void* operator new(size_t sz) CPP_THROW_NEW;  // Not to be implemented
-
 protected:
 
   nsCOMPtr<nsIDocument>         mDocument;

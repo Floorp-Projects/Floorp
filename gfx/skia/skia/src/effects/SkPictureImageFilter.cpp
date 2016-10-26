@@ -6,12 +6,34 @@
  */
 
 #include "SkPictureImageFilter.h"
-#include "SkDevice.h"
+
 #include "SkCanvas.h"
 #include "SkReadBuffer.h"
-#include "SkSurfaceProps.h"
+#include "SkSpecialImage.h"
+#include "SkSpecialSurface.h"
 #include "SkWriteBuffer.h"
 #include "SkValidationUtils.h"
+
+sk_sp<SkImageFilter> SkPictureImageFilter::Make(sk_sp<SkPicture> picture) {
+    return sk_sp<SkImageFilter>(new SkPictureImageFilter(std::move(picture)));
+}
+
+sk_sp<SkImageFilter> SkPictureImageFilter::Make(sk_sp<SkPicture> picture,
+                                                const SkRect& cropRect) {
+    return sk_sp<SkImageFilter>(new SkPictureImageFilter(std::move(picture), 
+                                                         cropRect,
+                                                         kDeviceSpace_PictureResolution,
+                                                         kLow_SkFilterQuality));
+}
+
+sk_sp<SkImageFilter> SkPictureImageFilter::MakeForLocalSpace(sk_sp<SkPicture> picture,
+                                                             const SkRect& cropRect,
+                                                             SkFilterQuality filterQuality) {
+    return sk_sp<SkImageFilter>(new SkPictureImageFilter(std::move(picture),
+                                                         cropRect,
+                                                         kLocalSpace_PictureResolution,
+                                                         filterQuality));
+}
 
 SkPictureImageFilter::SkPictureImageFilter(sk_sp<SkPicture> picture)
     : INHERITED(nullptr, 0, nullptr)
@@ -80,55 +102,54 @@ void SkPictureImageFilter::flatten(SkWriteBuffer& buffer) const {
     }
 }
 
-bool SkPictureImageFilter::onFilterImageDeprecated(Proxy* proxy, const SkBitmap&,
-                                                   const Context& ctx,
-                                                   SkBitmap* result, SkIPoint* offset) const {
+sk_sp<SkSpecialImage> SkPictureImageFilter::onFilterImage(SkSpecialImage* source,
+                                                          const Context& ctx,
+                                                          SkIPoint* offset) const {
     if (!fPicture) {
-        offset->fX = offset->fY = 0;
-        return true;
+        return nullptr;
     }
 
     SkRect floatBounds;
     ctx.ctm().mapRect(&floatBounds, fCropRect);
     SkIRect bounds = floatBounds.roundOut();
     if (!bounds.intersect(ctx.clipBounds())) {
-        return false;
+        return nullptr;
     }
 
-    if (bounds.isEmpty()) {
-        offset->fX = offset->fY = 0;
-        return true;
+    SkASSERT(!bounds.isEmpty());
+
+    sk_sp<SkSpecialSurface> surf(source->makeSurface(ctx.outputProperties(), bounds.size()));
+    if (!surf) {
+        return nullptr;
     }
 
-    SkAutoTUnref<SkBaseDevice> device(proxy->createDevice(bounds.width(), bounds.height()));
-    if (nullptr == device.get()) {
-        return false;
-    }
+    SkCanvas* canvas = surf->getCanvas();
+    SkASSERT(canvas);
+
+    canvas->clear(0x0);
 
     if (kDeviceSpace_PictureResolution == fPictureResolution ||
         0 == (ctx.ctm().getType() & ~SkMatrix::kTranslate_Mask)) {
-        this->drawPictureAtDeviceResolution(device.get(), bounds, ctx);
+        this->drawPictureAtDeviceResolution(canvas, bounds, ctx);
     } else {
-        this->drawPictureAtLocalResolution(proxy, device.get(), bounds, ctx);
+        this->drawPictureAtLocalResolution(source, canvas, bounds, ctx);
     }
 
-    *result = device.get()->accessBitmap(false);
     offset->fX = bounds.fLeft;
     offset->fY = bounds.fTop;
-    return true;
+    return surf->makeImageSnapshot();
 }
 
-void SkPictureImageFilter::drawPictureAtDeviceResolution(SkBaseDevice* device,
+void SkPictureImageFilter::drawPictureAtDeviceResolution(SkCanvas* canvas,
                                                          const SkIRect& deviceBounds,
                                                          const Context& ctx) const {
-    SkCanvas canvas(device);
-
-    canvas.translate(-SkIntToScalar(deviceBounds.fLeft), -SkIntToScalar(deviceBounds.fTop));
-    canvas.concat(ctx.ctm());
-    canvas.drawPicture(fPicture);
+    canvas->translate(-SkIntToScalar(deviceBounds.fLeft), -SkIntToScalar(deviceBounds.fTop));
+    canvas->concat(ctx.ctm());
+    canvas->drawPicture(fPicture);
 }
 
-void SkPictureImageFilter::drawPictureAtLocalResolution(Proxy* proxy, SkBaseDevice* device,
+void SkPictureImageFilter::drawPictureAtLocalResolution(SkSpecialImage* source,
+                                                        SkCanvas* canvas,
                                                         const SkIRect& deviceBounds,
                                                         const Context& ctx) const {
     SkMatrix inverseCtm;
@@ -142,20 +163,39 @@ void SkPictureImageFilter::drawPictureAtLocalResolution(Proxy* proxy, SkBaseDevi
         return;
     }
     SkIRect localIBounds = localBounds.roundOut();
-    SkAutoTUnref<SkBaseDevice> localDevice(proxy->createDevice(localIBounds.width(), localIBounds.height()));
 
-    SkCanvas localCanvas(localDevice);
-    localCanvas.translate(-SkIntToScalar(localIBounds.fLeft), -SkIntToScalar(localIBounds.fTop));
-    localCanvas.drawPicture(fPicture);
+    sk_sp<SkSpecialImage> localImg;
+    {                                                            
+        sk_sp<SkSpecialSurface> localSurface(source->makeSurface(ctx.outputProperties(),
+                                                                 localIBounds.size()));
+        if (!localSurface) {
+            return;
+        }
 
-    SkCanvas canvas(device);
+        SkCanvas* localCanvas = localSurface->getCanvas();
+        SkASSERT(localCanvas);
+        
+        localCanvas->clear(0x0);
 
-    canvas.translate(-SkIntToScalar(deviceBounds.fLeft), -SkIntToScalar(deviceBounds.fTop));
-    canvas.concat(ctx.ctm());
-    SkPaint paint;
-    paint.setFilterQuality(fFilterQuality);
-    canvas.drawBitmap(localDevice.get()->accessBitmap(false), SkIntToScalar(localIBounds.fLeft),
-                      SkIntToScalar(localIBounds.fTop), &paint);
+        localCanvas->translate(-SkIntToScalar(localIBounds.fLeft),
+                               -SkIntToScalar(localIBounds.fTop));
+        localCanvas->drawPicture(fPicture);
+
+        localImg = localSurface->makeImageSnapshot();
+        SkASSERT(localImg);
+    }
+
+    {
+        canvas->translate(-SkIntToScalar(deviceBounds.fLeft), -SkIntToScalar(deviceBounds.fTop));
+        canvas->concat(ctx.ctm());
+        SkPaint paint;
+        paint.setFilterQuality(fFilterQuality);
+
+        localImg->draw(canvas,
+                       SkIntToScalar(localIBounds.fLeft),
+                       SkIntToScalar(localIBounds.fTop),
+                       &paint);
+    }
 }
 
 #ifndef SK_IGNORE_TO_STRING

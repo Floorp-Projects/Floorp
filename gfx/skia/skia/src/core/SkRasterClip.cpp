@@ -24,6 +24,14 @@ SkRasterClip::SkRasterClip(const SkRasterClip& src) {
     SkDEBUGCODE(this->validate();)
 }
 
+SkRasterClip::SkRasterClip(const SkRegion& rgn) : fBW(rgn) {
+    fForceConservativeRects = false;
+    fIsBW = true;
+    fIsEmpty = this->computeIsEmpty();  // bounds might be empty, so compute
+    fIsRect = !fIsEmpty;
+    SkDEBUGCODE(this->validate();)
+}
+
 SkRasterClip::SkRasterClip(const SkIRect& bounds, bool forceConservativeRects) : fBW(bounds) {
     fForceConservativeRects = forceConservativeRects;
     fIsBW = true;
@@ -42,6 +50,22 @@ SkRasterClip::SkRasterClip(bool forceConservativeRects) {
 
 SkRasterClip::~SkRasterClip() {
     SkDEBUGCODE(this->validate();)
+}
+
+bool SkRasterClip::operator==(const SkRasterClip& other) const {
+    // This impl doesn't care if fForceConservativeRects is the same in both, only the current state
+
+    if (fIsBW != other.fIsBW) {
+        return false;
+    }
+    bool isEqual = fIsBW ? fBW == other.fBW : fAA == other.fAA;
+#ifdef SK_DEBUG
+    if (isEqual) {
+        SkASSERT(fIsEmpty == other.fIsEmpty);
+        SkASSERT(fIsRect == other.fIsRect);
+    }
+#endif
+    return isEqual;
 }
 
 bool SkRasterClip::isComplex() const {
@@ -161,18 +185,20 @@ bool SkRasterClip::setPath(const SkPath& path, const SkRegion& clip, bool doAA) 
     return this->updateCacheAndReturnNonEmpty();
 }
 
-bool SkRasterClip::op(const SkRRect& rrect, const SkIRect& bounds, SkRegion::Op op, bool doAA) {
+bool SkRasterClip::op(const SkRRect& rrect, const SkMatrix& matrix, const SkIRect& bounds,
+                      SkRegion::Op op, bool doAA) {
     if (fForceConservativeRects) {
-        return this->op(rrect.getBounds(), bounds, op, doAA);
+        return this->op(rrect.getBounds(), matrix, bounds, op, doAA);
     }
 
     SkPath path;
     path.addRRect(rrect);
 
-    return this->op(path, bounds, op, doAA);
+    return this->op(path, matrix, bounds, op, doAA);
 }
 
-bool SkRasterClip::op(const SkPath& path, const SkIRect& bounds, SkRegion::Op op, bool doAA) {
+bool SkRasterClip::op(const SkPath& path, const SkMatrix& matrix, const SkIRect& bounds,
+                      SkRegion::Op op, bool doAA) {
     AUTO_RASTERCLIP_VALIDATE(*this);
 
     if (fForceConservativeRects) {
@@ -183,9 +209,12 @@ bool SkRasterClip::op(const SkPath& path, const SkIRect& bounds, SkRegion::Op op
             case kReplaceClippedAgainstGlobalBounds_MutateResult:
                 ir = bounds;
                 break;
-            case kContinue_MutateResult:
-                ir = path.getBounds().roundOut();
+            case kContinue_MutateResult: {
+                SkRect bounds = path.getBounds();
+                matrix.mapRect(&bounds);
+                ir = bounds.roundOut();
                 break;
+            }
         }
         return this->op(ir, op);
     }
@@ -194,6 +223,13 @@ bool SkRasterClip::op(const SkPath& path, const SkIRect& bounds, SkRegion::Op op
     // region that results from scan converting devPath.
     SkRegion base;
 
+    SkPath devPath;
+    if (matrix.isIdentity()) {
+        devPath = path;
+    } else {
+        path.transform(matrix, &devPath);
+        devPath.setIsVolatile(true);
+    }
     if (SkRegion::kIntersect_Op == op) {
         // since we are intersect, we can do better (tighter) with currRgn's
         // bounds, than just using the device. However, if currRgn is complex,
@@ -202,21 +238,21 @@ bool SkRasterClip::op(const SkPath& path, const SkIRect& bounds, SkRegion::Op op
             // FIXME: we should also be able to do this when this->isBW(),
             // but relaxing the test above triggers GM asserts in
             // SkRgnBuilder::blitH(). We need to investigate what's going on.
-            return this->setPath(path, this->bwRgn(), doAA);
+            return this->setPath(devPath, this->bwRgn(), doAA);
         } else {
             base.setRect(this->getBounds());
             SkRasterClip clip(fForceConservativeRects);
-            clip.setPath(path, base, doAA);
+            clip.setPath(devPath, base, doAA);
             return this->op(clip, op);
         }
     } else {
         base.setRect(bounds);
 
         if (SkRegion::kReplace_Op == op) {
-            return this->setPath(path, base, doAA);
+            return this->setPath(devPath, base, doAA);
         } else {
             SkRasterClip clip(fForceConservativeRects);
-            clip.setPath(path, base, doAA);
+            clip.setPath(devPath, base, doAA);
             return this->op(clip, op);
         }
     }
@@ -285,8 +321,10 @@ static bool nearly_integral(SkScalar x) {
     return x - SkScalarFloorToScalar(x) < domain;
 }
 
-bool SkRasterClip::op(const SkRect& r, const SkIRect& bounds, SkRegion::Op op, bool doAA) {
+bool SkRasterClip::op(const SkRect& localRect, const SkMatrix& matrix, const SkIRect& bounds,
+                      SkRegion::Op op, bool doAA) {
     AUTO_RASTERCLIP_VALIDATE(*this);
+    SkRect devRect;
 
     if (fForceConservativeRects) {
         SkIRect ir;
@@ -297,30 +335,40 @@ bool SkRasterClip::op(const SkRect& r, const SkIRect& bounds, SkRegion::Op op, b
                 ir = bounds;
                 break;
             case kContinue_MutateResult:
-                ir = r.roundOut();
+                matrix.mapRect(&devRect, localRect);
+                ir = devRect.roundOut();
                 break;
         }
         return this->op(ir, op);
     }
+    const bool isScaleTrans = matrix.isScaleTranslate();
+    if (!isScaleTrans) {
+        SkPath path;
+        path.addRect(localRect);
+        path.setIsVolatile(true);
+        return this->op(path, matrix, bounds, op, doAA);
+    }
+
+    matrix.mapRect(&devRect, localRect);
 
     if (fIsBW && doAA) {
         // check that the rect really needs aa, or is it close enought to
         // integer boundaries that we can just treat it as a BW rect?
-        if (nearly_integral(r.fLeft) && nearly_integral(r.fTop) &&
-            nearly_integral(r.fRight) && nearly_integral(r.fBottom)) {
+        if (nearly_integral(devRect.fLeft) && nearly_integral(devRect.fTop) &&
+            nearly_integral(devRect.fRight) && nearly_integral(devRect.fBottom)) {
             doAA = false;
         }
     }
 
     if (fIsBW && !doAA) {
         SkIRect ir;
-        r.round(&ir);
+        devRect.round(&ir);
         (void)fBW.op(ir, op);
     } else {
         if (fIsBW) {
             this->convertToAA();
         }
-        (void)fAA.op(r, op, doAA);
+        (void)fAA.op(devRect, op, doAA);
     }
     return this->updateCacheAndReturnNonEmpty();
 }

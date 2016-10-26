@@ -1126,23 +1126,23 @@ function TypedArraySort(comparefn) {
     }
 
     if (comparefn === undefined) {
-        comparefn = TypedArrayCompare;
-        // CountingSort doesn't invoke the comparefn
+        // CountingSort doesn't invoke the comparator function.
         if (IsUint8TypedArray(obj)) {
             return CountingSort(obj, len, false /* signed */);
         } else if (IsInt8TypedArray(obj)) {
             return CountingSort(obj, len, true /* signed */);
         } else if (IsUint16TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 2 /* nbytes */, false /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 2 /* nbytes */, false /* signed */, false /* floating */, TypedArrayCompare);
         } else if (IsInt16TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 2 /* nbytes */, true /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 2 /* nbytes */, true /* signed */, false /* floating */, TypedArrayCompare);
         } else if (IsUint32TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 4 /* nbytes */, false /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 4 /* nbytes */, false /* signed */, false /* floating */, TypedArrayCompare);
         } else if (IsInt32TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, false /* floating */, TypedArrayCompare);
         } else if (IsFloat32TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, true /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, true /* floating */, TypedArrayCompare);
         }
+        return QuickSort(obj, len, TypedArrayCompare);
     }
 
     // To satisfy step 2 from TypedArray SortCompare described in 22.2.3.26
@@ -1520,6 +1520,33 @@ function TypedArrayToStringTag() {
     return _NameForTypedArray(O);
 }
 _SetCanonicalName(TypedArrayToStringTag, "get [Symbol.toStringTag]");
+
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.2.1.1 Runtime Semantics: IterableToList( items, method )
+function IterableToList(items, method) {
+    // Step 1.
+    var iterator = GetIterator(items, method);
+
+    // Step 2.
+    var values = [];
+
+    // Steps 3-4.
+    var i = 0;
+    while (true) {
+        // Step 4.a.
+        var next = callContentFunction(iterator.next, iterator);
+        if (!IsObject(next))
+            ThrowTypeError(JSMSG_NEXT_RETURNED_PRIMITIVE);
+
+        // Step 4.b.
+        if (next.done)
+            break;
+        _DefineDataProperty(values, i++, next.value);
+    }
+
+    // Step 5.
+    return values;
+}
 
 // ES 2016 draft Mar 25, 2016 24.1.4.3.
 function ArrayBufferSlice(start, end) {

@@ -171,7 +171,7 @@ bool TestTransferObject()
     JS::RootedValue transferable(cx, JS::ObjectValue(*obj));
 
     JSAutoStructuredCloneBuffer cloned_buffer(JS::StructuredCloneScope::SameProcessSameThread, nullptr, nullptr);
-    CHECK(cloned_buffer.write(cx, v1, transferable, nullptr, nullptr));
+    CHECK(cloned_buffer.write(cx, v1, transferable, JS::CloneDataPolicy().denySharedArrayBuffer(), nullptr, nullptr));
     JS::RootedValue v2(cx);
     CHECK(cloned_buffer.read(cx, &v2, nullptr, nullptr));
     JS::RootedObject obj2(cx, v2.toObjectOrNull());

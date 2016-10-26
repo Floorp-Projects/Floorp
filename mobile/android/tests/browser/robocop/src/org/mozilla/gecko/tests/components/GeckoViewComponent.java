@@ -4,11 +4,13 @@
 
 package org.mozilla.gecko.tests.components;
 
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertEquals;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotNull;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotSame;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertSame;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.helpers.FrameworkHelper;
@@ -22,6 +24,8 @@ import android.os.Message;
 import android.os.MessageQueue;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.ExtractedText;
+import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 
@@ -115,12 +119,80 @@ public class GeckoViewComponent extends BaseComponent {
          * Processes pending events on the Gecko thread before returning.
          * Must be called on the input connection thread during a test.
          */
-        protected void processGeckoEvents(final InputConnection ic) {
+        protected void processGeckoEvents() {
             fAssertSame("Should be called on input connection thread",
                     Looper.myLooper(), inputConnectionHandler.getLooper());
 
-            fAssertTrue("Should be able to process Gecko events",
-                    ic.performPrivateCommand("process-gecko-events", null));
+            GeckoThread.waitOnGecko();
+        }
+
+        private static ExtractedText getExtractedText(final InputConnection ic) {
+            final ExtractedTextRequest req = new ExtractedTextRequest();
+            return ic.getExtractedText(req, 0);
+        }
+
+        protected String getText(final InputConnection ic) {
+            return getExtractedText(ic).text.toString();
+        }
+
+        private static void assertText(final String message,
+                                       final String expected,
+                                       final String actual) {
+            // In an HTML editor, Gecko may insert an additional element that show up as a
+            // return character at the end. Deal with that here.
+            int end = actual.length();
+            if (end > 0 && actual.charAt(end - 1) == '\n') {
+                end--;
+            }
+            fAssertEquals(message, expected, actual.substring(0, end));
+        }
+
+        protected void assertText(final String message,
+                                  final InputConnection ic,
+                                  final String text) {
+            processGeckoEvents();
+            processInputConnectionEvents();
+
+            assertText(message, text, getText(ic));
+        }
+
+        protected void assertSelection(final String message,
+                                       final InputConnection ic,
+                                       final int start,
+                                       final int end) {
+            processGeckoEvents();
+            processInputConnectionEvents();
+
+            final ExtractedText extract = getExtractedText(ic);
+            fAssertEquals(message, start, extract.selectionStart);
+            fAssertEquals(message, end, extract.selectionEnd);
+        }
+
+        protected void assertSelectionAt(final String message,
+                                         final InputConnection ic,
+                                         final int value) {
+            assertSelection(message, ic, value, value);
+        }
+
+        protected void assertTextAndSelection(final String message,
+                                              final InputConnection ic,
+                                              final String text,
+                                              final int start,
+                                              final int end) {
+            processGeckoEvents();
+            processInputConnectionEvents();
+
+            final ExtractedText extract = getExtractedText(ic);
+            assertText(message, text, extract.text.toString());
+            fAssertEquals(message, start, extract.selectionStart);
+            fAssertEquals(message, end, extract.selectionEnd);
+        }
+
+        protected void assertTextAndSelectionAt(final String message,
+                                                final InputConnection ic,
+                                                final String text,
+                                                final int selection) {
+            assertTextAndSelection(message, ic, text, selection, selection);
         }
 
         public abstract void test(InputConnection ic, EditorInfo info);
