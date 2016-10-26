@@ -156,22 +156,6 @@ GetTitlecaseForAll(uint32_t aCh) // maps both UC and LC to titlecase
   return u_totitle(aCh);
 }
 
-inline bool
-IsEastAsianWidthFWH(uint32_t aCh)
-{
-  switch (u_getIntPropertyValue(aCh, UCHAR_EAST_ASIAN_WIDTH)) {
-    case U_EA_FULLWIDTH:
-    case U_EA_WIDE:
-    case U_EA_HALFWIDTH:
-      return true;
-    case U_EA_AMBIGUOUS:
-    case U_EA_NARROW:
-    case U_EA_NEUTRAL:
-      return false;
-  }
-  return false;
-}
-
 #else // not ENABLE_INTL_API
 
 // Return whether the char has a mirrored-pair counterpart.
@@ -207,9 +191,6 @@ uint32_t GetUppercase(uint32_t aCh);
 uint32_t GetLowercase(uint32_t aCh);
 uint32_t GetTitlecaseForLower(uint32_t aCh); // maps LC to titlecase, UC unchanged
 uint32_t GetTitlecaseForAll(uint32_t aCh); // maps both UC and LC to titlecase
-
-// Return whether the char has EastAsianWidth class F or W or H.
-bool IsEastAsianWidthFWH(uint32_t aCh);
 
 #endif // !ENABLE_INTL_API
 

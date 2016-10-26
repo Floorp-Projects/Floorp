@@ -61,7 +61,6 @@ GetCharProps2(uint32_t aCh)
 #else
         uint8_t(Script::UNKNOWN),
         PAIRED_BRACKET_TYPE_NONE,
-        0, // EastAsianWidthFWH
         HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED,
         eCharType_LeftToRight,
         XIDMOD_NOT_CHARS,
@@ -295,11 +294,6 @@ GetTitlecaseForAll(uint32_t aCh)
         return GetTitlecaseForLower(aCh ^ (mapValue & kCaseMapCharMask));
     }
     return aCh;
-}
-
-bool IsEastAsianWidthFWH(uint32_t aCh)
-{
-    return GetCharProps2(aCh).mEastAsianWidthFWH;
 }
 #endif
 

@@ -338,4 +338,3 @@ HTTP(..) == space-font-1.html space-font-1-ref.html
 
 # handling of highly negative letter-spacing and intrinsic width
 == negative-letter-spacing-1.html negative-letter-spacing-1-ref.html
-== segment-break-transformation-1.html segment-break-transformation-1-ref.html
