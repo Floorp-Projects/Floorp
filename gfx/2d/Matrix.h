@@ -463,6 +463,11 @@ public:
     , _41(a41), _42(a42), _43(a43), _44(a44)
   {}
 
+  explicit Matrix4x4Typed(const Float aArray[16])
+  {
+    memcpy(components, aArray, sizeof(components));
+  }
+
   Matrix4x4Typed(const Matrix4x4Typed& aOther)
   {
     memcpy(this, &aOther, sizeof(*this));

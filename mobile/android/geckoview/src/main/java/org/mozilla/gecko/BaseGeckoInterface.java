@@ -80,13 +80,11 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     @Override
     public void removePluginView(final View view) {}
 
-    // Bug 908783: Implement this
     @Override
-    public void enableCameraView() {}
+    public void enableOrientationListener() {}
 
-    // Bug 908785: Implement this
     @Override
-    public void disableCameraView() {}
+    public void disableOrientationListener() {}
 
     // Bug 908786: Implement this
     @Override
@@ -95,12 +93,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     // Bug 908787: Implement this
     @Override
     public void removeAppStateListener(GeckoAppShell.AppStateListener listener) {}
-
-    // Bug 908788: Implement this
-    @Override
-    public View getCameraView() {
-        return null;
-    }
 
     // Bug 908789: Implement this
     @Override

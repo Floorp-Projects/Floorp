@@ -8,14 +8,12 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource:///modules/experiments/Experiments.jsm");
 
-var gProfileDir = null;
 var gHttpServer = null;
 var gHttpRoot   = null;
 var gPolicy     = new Experiments.Policy();
 
 function run_test() {
   loadAddonManager();
-  gProfileDir = do_get_profile();
 
   gHttpServer = new HttpServer();
   gHttpServer.start(-1);
@@ -68,4 +66,3 @@ add_task(function* test_fetchInvalid() {
 
   yield promiseRestartManager();
 });
-
