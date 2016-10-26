@@ -185,6 +185,10 @@ this.LightweightThemeManager = {
     }
 
     this._builtInThemes.set(theme.id, theme);
+
+    if (_prefs.getCharPref("selectedThemeID") == theme.id) {
+      this.currentTheme = theme;
+    }
   },
 
   forgetBuiltInTheme: function(id) {
@@ -696,7 +700,7 @@ function _setCurrentTheme(aData, aLocal) {
     _updateUsedThemes(usedThemes);
 
     if (isInstall)
-       AddonManagerPrivate.callAddonListeners("onInstalled", wrapper);
+      AddonManagerPrivate.callAddonListeners("onInstalled", wrapper);
   }
 
   if (cancel.data)
