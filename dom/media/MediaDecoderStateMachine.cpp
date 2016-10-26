@@ -223,6 +223,10 @@ public:
 
   virtual void DumpDebugInfo() {}
 
+private:
+  template <class S, typename R, typename... As>
+  auto ReturnTypeHelper(R(S::*)(As...)) -> R;
+
 protected:
   using Master = MediaDecoderStateMachine;
   explicit StateObject(Master* aPtr) : mMaster(aPtr) {}
@@ -243,7 +247,7 @@ protected:
   // Don't access members to avoid UAF after this call.
   template <class S, typename... Ts>
   auto SetState(Ts... aArgs)
-    -> decltype(DeclVal<S>().Enter(Move(aArgs)...))
+    -> decltype(ReturnTypeHelper(&S::Enter))
   {
     // keep mMaster in a local object because mMaster will become invalid after
     // the current state object is deleted.
