@@ -219,8 +219,8 @@ public:
   // will forward this call to the inner window for convenience.  If
   // there is no inner window then the outer window is considered
   // suspended and frozen by default.
-  virtual bool NewIsSuspended() const = 0;
-  virtual bool NewIsFrozen() const = 0;
+  virtual bool IsSuspended() const = 0;
+  virtual bool IsFrozen() const = 0;
 
   // Fire any DOM notification events related to things that happened while
   // the window was frozen.
@@ -823,8 +823,8 @@ public:
   // continue to perform computations in the background.  A window
   // can have Suspend() called multiple times and will only resume after
   // a matching number of Resume() calls.
-  void NewSuspend();
-  void NewResume();
+  void Suspend();
+  void Resume();
 
   // Calling Freeze() on a window will automatically Suspend() it.  In
   // addition, the window and its children are further treated as no longer
@@ -833,12 +833,12 @@ public:
   // bringing them to a complete stop.  A window can have Freeze() called
   // multiple times and will only thaw after a matching number of Thaw()
   // calls.
-  void NewFreeze();
-  void NewThaw();
+  void Freeze();
+  void Thaw();
 
   // Apply the parent window's suspend, freeze, and modal state to the current
   // window.
-  void NewSyncStateFromParentWindow();
+  void SyncStateFromParentWindow();
 
 protected:
   void CreatePerformanceObjectIfNeeded();

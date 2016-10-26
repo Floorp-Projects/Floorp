@@ -8920,11 +8920,11 @@ nsDocShell::RestoreFromHistory()
   // If parent is suspended, increase suspension count.
   // This can't be done as early as event suppression since this
   // depends on docshell tree.
-  privWinInner->NewSyncStateFromParentWindow();
+  privWinInner->SyncStateFromParentWindow();
 
   // Now that all of the child docshells have been put into place, we can
   // restart the timers for the window and all of the child frames.
-  privWinInner->NewResume();
+  privWinInner->Resume();
 
   // Restore the refresh URI list.  The refresh timers will be restarted
   // when EndPageLoad() is called.

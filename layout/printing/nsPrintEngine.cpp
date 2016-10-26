@@ -3393,7 +3393,7 @@ nsPrintEngine::TurnScriptingOn(bool aDoTurnOn)
           if (go && go->GetGlobalJSObject()) {
             xpc::Scriptability::Get(go->GetGlobalJSObject()).Unblock();
           }
-          window->NewResume();
+          window->Resume();
         }
       } else {
         // Have to be careful, because people call us over and over again with
@@ -3407,7 +3407,7 @@ nsPrintEngine::TurnScriptingOn(bool aDoTurnOn)
           if (go && go->GetGlobalJSObject()) {
             xpc::Scriptability::Get(go->GetGlobalJSObject()).Block();
           }
-          window->NewSuspend();
+          window->Suspend();
         }
       }
     }
