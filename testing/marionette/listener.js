@@ -13,7 +13,7 @@ var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Ci.mozIJSSubScriptLoader);
 
 Cu.import("chrome://marionette/content/accessibility.js");
-Cu.import("chrome://marionette/content/action.js");
+Cu.import("chrome://marionette/content/legacyaction.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cookies.js");
