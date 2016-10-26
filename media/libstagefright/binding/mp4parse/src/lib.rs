@@ -11,6 +11,7 @@ extern crate afl;
 extern crate byteorder;
 use byteorder::ReadBytesExt;
 use std::io::{Read, Take};
+use std::io::Cursor;
 use std::cmp;
 
 mod boxes;
@@ -205,8 +206,17 @@ pub enum SampleEntry {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
+pub struct ES_Descriptor {
+    pub audio_codec: CodecType,
+    pub audio_sample_rate: Option<u32>,
+    pub codec_specific_config: Vec<u8>,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone)]
 pub enum AudioCodecSpecific {
-    ES_Descriptor(Vec<u8>),
+    ES_Descriptor(ES_Descriptor),
+    FLACSpecificBox(FLACSpecificBox),
     OpusSpecificBox(OpusSpecificBox),
 }
 
@@ -244,6 +254,19 @@ pub struct VPxConfigBox {
     transfer_function: u8,
     video_full_range: bool,
     pub codec_init: Vec<u8>, // Empty for vp8/vp9.
+}
+
+#[derive(Debug, Clone)]
+pub struct FLACMetadataBlock {
+    pub block_type: u8,
+    pub data: Vec<u8>,
+}
+
+/// Represet a FLACSpecificBox 'dfLa'
+#[derive(Debug, Clone)]
+pub struct FLACSpecificBox {
+    version: u8,
+    pub blocks: Vec<FLACMetadataBlock>,
 }
 
 #[derive(Debug, Clone)]
@@ -285,7 +308,7 @@ impl MediaContext {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum TrackType {
     Audio,
     Video,
@@ -296,10 +319,12 @@ impl Default for TrackType {
     fn default() -> Self { TrackType::Unknown }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CodecType {
     Unknown,
+    MP3,
     AAC,
+    FLAC,
     Opus,
     H264,
     VP9,
@@ -467,6 +492,17 @@ fn skip_box_content<T: Read>(src: &mut BMFFBox<T>) -> Result<()> {
     };
     assert!(to_skip == src.bytes_left());
     skip(src, to_skip)
+}
+
+/// Skip over the remain data of a box.
+fn skip_box_remain<T: Read>(src: &mut BMFFBox<T>) -> Result<()> {
+    let remain = {
+        let header = src.get_header();
+        let len = src.bytes_left();
+        log!("remain {} (skipped) in {:?}", len, header);
+        len
+    };
+    skip(src, remain)
 }
 
 macro_rules! check_parser_state {
@@ -921,6 +957,9 @@ fn read_stco<T: Read>(src: &mut BMFFBox<T>) -> Result<ChunkOffsetBox> {
         offsets.push(try!(be_u32(src)) as u64);
     }
 
+    // Padding could be added in some contents.
+    try!(skip_box_remain(src));
+
     Ok(ChunkOffsetBox {
         offsets: offsets,
     })
@@ -935,6 +974,9 @@ fn read_co64<T: Read>(src: &mut BMFFBox<T>) -> Result<ChunkOffsetBox> {
         offsets.push(try!(be_u64(src)));
     }
 
+    // Padding could be added in some contents.
+    try!(skip_box_remain(src));
+
     Ok(ChunkOffsetBox {
         offsets: offsets,
     })
@@ -948,6 +990,9 @@ fn read_stss<T: Read>(src: &mut BMFFBox<T>) -> Result<SyncSampleBox> {
     for _ in 0..sample_count {
         samples.push(try!(be_u32(src)));
     }
+
+    // Padding could be added in some contents.
+    try!(skip_box_remain(src));
 
     Ok(SyncSampleBox {
         samples: samples,
@@ -970,6 +1015,9 @@ fn read_stsc<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleToChunkBox> {
         });
     }
 
+    // Padding could be added in some contents.
+    try!(skip_box_remain(src));
+
     Ok(SampleToChunkBox {
         samples: samples,
     })
@@ -986,6 +1034,9 @@ fn read_stsz<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleSizeBox> {
             sample_sizes.push(try!(be_u32(src)));
         }
     }
+
+    // Padding could be added in some contents.
+    try!(skip_box_remain(src));
 
     Ok(SampleSizeBox {
         sample_size: sample_size,
@@ -1006,6 +1057,9 @@ fn read_stts<T: Read>(src: &mut BMFFBox<T>) -> Result<TimeToSampleBox> {
             sample_delta: sample_delta,
         });
     }
+
+    // Padding could be added in some contents.
+    try!(skip_box_remain(src));
 
     Ok(TimeToSampleBox {
         samples: samples,
@@ -1046,11 +1100,177 @@ fn read_vpcc<T: Read>(src: &mut BMFFBox<T>) -> Result<VPxConfigBox> {
     })
 }
 
+fn read_flac_metadata<T: Read>(src: &mut BMFFBox<T>) -> Result<FLACMetadataBlock> {
+    let temp = try!(src.read_u8());
+    let block_type = temp & 0x7f;
+    let length = try!(be_u24(src));
+    if length as usize > src.bytes_left() {
+        return Err(Error::InvalidData(
+                "FLACMetadataBlock larger than parent box"));
+    }
+    let data = try!(read_buf(src, length as usize));
+    Ok(FLACMetadataBlock {
+        block_type: block_type,
+        data: data,
+    })
+}
+
+fn read_esds<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
+    // Tags for elementary stream description
+    const ESDESCR_TAG: u8          = 0x03;
+    const DECODER_CONFIG_TAG: u8   = 0x04;
+    const DECODER_SPECIFIC_TAG: u8 = 0x05;
+
+    let frequency_table =
+        vec![(0x1, 96000), (0x1, 88200), (0x2, 64000), (0x3, 48000),
+             (0x4, 44100), (0x5, 32000), (0x6, 24000), (0x7, 22050),
+             (0x8, 16000), (0x9, 12000), (0xa, 11025), (0xb, 8000),
+             (0xc, 7350)];
+
+    let (_, _) = try!(read_fullbox_extra(src));
+
+    let esds_size = src.head.size - src.head.offset - 4;
+    if esds_size > BUF_SIZE_LIMIT {
+        return Err(Error::InvalidData("esds box exceeds BUF_SIZE_LIMIT"));
+    }
+    let esds_array = try!(read_buf(src, esds_size as usize));
+
+    // Parsing DecoderConfig descriptor to get the object_profile_indicator
+    // for correct codec type and audio sample rate.
+    let (object_profile_indicator, sample_frequency) = {
+        let mut object_profile: u8 = 0;
+        let mut sample_frequency = None;
+
+        // clone a esds cursor for parsing.
+        let esds = &mut Cursor::new(&esds_array);
+        let next_tag = try!(esds.read_u8());
+
+        if next_tag != ESDESCR_TAG {
+            return Err(Error::Unsupported("fail to parse ES descriptor"));
+        }
+
+        let esds_extend = try!(esds.read_u8());
+        // extension tag start from 0x80.
+        let esds_end = if esds_extend >= 0x80 {
+            // skip remaining extension.
+            try!(skip(esds, 2));
+            esds.position() + try!(esds.read_u8()) as u64
+        } else {
+            esds.position() + esds_extend as u64
+        };
+        try!(skip(esds, 2));
+
+        let esds_flags = try!(esds.read_u8());
+
+        // Stream dependency flag, first bit from left most.
+        if esds_flags & 0x80 > 0 {
+            // Skip uninteresting fields.
+            try!(skip(esds, 2));
+        }
+
+        // Url flag, second bit from left most.
+        if esds_flags & 0x40 > 0 {
+            // Skip uninteresting fields.
+            let skip_es_len: usize = try!(esds.read_u8()) as usize + 2;
+            try!(skip(esds, skip_es_len));
+        }
+
+        // find DecoderConfig descriptor (tag = DECODER_CONFIG_TAG)
+        if esds_end > esds.position() {
+            let next_tag = try!(esds.read_u8());
+            if next_tag == DECODER_CONFIG_TAG {
+                let dcds_extend = try!(esds.read_u8());
+                // extension tag start from 0x80.
+                if dcds_extend >= 0x80 {
+                    // skip remains extension and length.
+                    try!(skip(esds, 3));
+                }
+
+                object_profile = try!(esds.read_u8());
+
+                // Skip uninteresting fields.
+                try!(skip(esds, 12));
+            }
+        }
+
+
+        // find DecoderSpecific descriptor (tag = DECODER_SPECIFIC_TAG)
+        if esds_end > esds.position() {
+            let next_tag = try!(esds.read_u8());
+            if next_tag == DECODER_SPECIFIC_TAG {
+                let dsds_extend = try!(esds.read_u8());
+                // extension tag start from 0x80.
+                if dsds_extend >= 0x80 {
+                    // skip remains extension and length.
+                    try!(skip(esds, 3));
+                }
+
+                let audio_specific_config = try!(be_u16(esds));
+
+                let sample_index = (audio_specific_config & 0x07FF) >> 7;
+
+                sample_frequency =
+                    frequency_table.iter().find(|item| item.0 == sample_index).map(|x| x.1);
+            }
+        }
+
+        (object_profile, sample_frequency)
+    };
+
+    let codec = match object_profile_indicator {
+        0x40 | 0x41 => CodecType::AAC,
+        0x6B => CodecType::MP3,
+        _ => CodecType::Unknown,
+    };
+
+    if codec == CodecType::Unknown {
+        return Err(Error::Unsupported("unknown audio codec"));
+    }
+
+    Ok(ES_Descriptor {
+        audio_codec: codec,
+        audio_sample_rate: sample_frequency,
+        codec_specific_config: esds_array,
+    })
+}
+
+/// Parse `FLACSpecificBox`.
+fn read_dfla<T: Read>(src: &mut BMFFBox<T>) -> Result<FLACSpecificBox> {
+    let (version, flags) = try!(read_fullbox_extra(src));
+    if version != 0 {
+        return Err(Error::Unsupported("unknown dfLa (FLAC) version"));
+    }
+    if flags != 0 {
+        return Err(Error::InvalidData("no-zero dfLa (FLAC) flags"));
+    }
+    let mut blocks = Vec::new();
+    while src.bytes_left() > 0 {
+        let block = try!(read_flac_metadata(src));
+        blocks.push(block);
+    }
+    // The box must have at least one meta block, and the first block
+    // must be the METADATA_BLOCK_STREAMINFO
+    if blocks.is_empty() {
+        return Err(Error::InvalidData("FLACSpecificBox missing metadata"));
+    } else if blocks[0].block_type != 0 {
+        println!("flac metadata block:\n  {:?}", blocks[0]);
+        return Err(Error::InvalidData(
+                "FLACSpecificBox must have STREAMINFO metadata first"));
+    } else if blocks[0].data.len() != 34 {
+        return Err(Error::InvalidData(
+                "FLACSpecificBox STREAMINFO block is the wrong size"));
+    }
+    Ok(FLACSpecificBox {
+        version: version,
+        blocks: blocks,
+    })
+}
+
 /// Parse `OpusSpecificBox`.
 fn read_dops<T: Read>(src: &mut BMFFBox<T>) -> Result<OpusSpecificBox> {
     let version = try!(src.read_u8());
     if version != 0 {
-        return Err(Error::Unsupported("unknown dOps version"));
+        return Err(Error::Unsupported("unknown dOps (Opus) version"));
     }
 
     let output_channel_count = try!(src.read_u8());
@@ -1149,7 +1369,7 @@ fn read_hdlr<T: Read>(src: &mut BMFFBox<T>) -> Result<HandlerBox> {
 }
 
 /// Parse an video description inside an stsd box.
-fn read_video_desc<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleEntry> {
+fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleEntry> {
     let name = src.get_header().name;
     track.codec_type = match name {
         BoxType::AVCSampleEntry | BoxType::AVC3SampleEntry => CodecType::H264,
@@ -1222,12 +1442,29 @@ fn read_video_desc<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<S
         .ok_or_else(|| Error::InvalidData("malformed video sample entry"))
 }
 
+fn read_qt_wave_atom<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
+    let mut codec_specific = None;
+    let mut iter = src.box_iter();
+    while let Some(mut b) = try!(iter.next_box()) {
+        match b.head.name {
+            BoxType::ESDBox => {
+                let esds = try!(read_esds(&mut b));
+                codec_specific = Some(esds);
+            },
+            _ => try!(skip_box_content(&mut b)),
+        }
+    }
+
+    codec_specific.ok_or_else(|| Error::InvalidData("malformed audio sample entry"))
+}
+
 /// Parse an audio description inside an stsd box.
-fn read_audio_desc<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleEntry> {
+fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleEntry> {
     let name = src.get_header().name;
     track.codec_type = match name {
         // TODO(kinetik): stagefright inspects ESDS to detect MP3 (audio/mpeg).
         BoxType::MP4AudioSampleEntry => CodecType::AAC,
+        BoxType::FLACSampleEntry => CodecType::FLAC,
         BoxType::OpusSampleEntry => CodecType::Opus,
         BoxType::ProtectedAudioSampleEntry => CodecType::EncryptedAudio,
         _ => CodecType::Unknown,
@@ -1257,6 +1494,11 @@ fn read_audio_desc<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<S
 
     match version {
         0 => (),
+        1 => {
+            // Quicktime sound sample description version 1.
+            // Skip uninteresting fields.
+            try!(skip(src, 16));
+        },
         _ => return Err(Error::Unsupported("unsupported non-isom audio sample entry")),
     }
 
@@ -1270,15 +1512,20 @@ fn read_audio_desc<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<S
                     name != BoxType::ProtectedAudioSampleEntry) ||
                     codec_specific.is_some() {
                         return Err(Error::InvalidData("malformed audio sample entry"));
-                    }
-                let (_, _) = try!(read_fullbox_extra(&mut b.content));
-                let esds_size = b.head.size - b.head.offset - 4;
-                if esds_size > BUF_SIZE_LIMIT {
-                    return Err(Error::InvalidData("esds box exceeds BUF_SIZE_LIMIT"));
                 }
-                let esds = try!(read_buf(&mut b.content, esds_size as usize));
-                // TODO(kinetik): Parse esds box?  For now we just stash the data.
+
+                let esds = try!(read_esds(&mut b));
+                track.codec_type = esds.audio_codec;
                 codec_specific = Some(AudioCodecSpecific::ES_Descriptor(esds));
+            }
+            BoxType::FLACSpecificBox => {
+                if name != BoxType::FLACSampleEntry ||
+                    codec_specific.is_some() {
+                    return Err(Error::InvalidData("malformed audio sample entry"));
+                }
+                let dfla = try!(read_dfla(&mut b));
+                track.codec_type = CodecType::FLAC;
+                codec_specific = Some(AudioCodecSpecific::FLACSpecificBox(dfla));
             }
             BoxType::OpusSpecificBox => {
                 if name != BoxType::OpusSampleEntry ||
@@ -1286,7 +1533,13 @@ fn read_audio_desc<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<S
                     return Err(Error::InvalidData("malformed audio sample entry"));
                 }
                 let dops = try!(read_dops(&mut b));
+                track.codec_type = CodecType::Opus;
                 codec_specific = Some(AudioCodecSpecific::OpusSpecificBox(dops));
+            }
+            BoxType::QTWaveAtom => {
+                let qt_esds = try!(read_qt_wave_atom(&mut b));
+                track.codec_type = qt_esds.audio_codec;
+                codec_specific = Some(AudioCodecSpecific::ES_Descriptor(qt_esds));
             }
             _ => try!(skip_box_content(&mut b)),
         }
@@ -1311,37 +1564,42 @@ fn read_stsd<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleD
     let description_count = try!(be_u32(src));
     let mut descriptions = Vec::new();
 
-    // TODO(kinetik): check if/when more than one desc per track? do we need to support?
-    let mut iter = src.box_iter();
-    while let Some(mut b) = try!(iter.next_box()) {
-        let description = match track.track_type {
-            TrackType::Video => read_video_desc(&mut b, track),
-            TrackType::Audio => read_audio_desc(&mut b, track),
-            TrackType::Unknown => Err(Error::Unsupported("unknown track type")),
-        };
-        let description = match description {
-            Ok(desc) => desc,
-            Err(Error::Unsupported(_)) => {
-                // read_{audio,video}_desc may have returned Unsupported
-                // after partially reading the box content, so we can't
-                // simply use skip_box_content here.
-                let to_skip = b.bytes_left();
-                try!(skip(&mut b, to_skip));
-                SampleEntry::Unknown
+    {
+        // TODO(kinetik): check if/when more than one desc per track? do we need to support?
+        let mut iter = src.box_iter();
+        while let Some(mut b) = try!(iter.next_box()) {
+            let description = match track.track_type {
+                TrackType::Video => read_video_sample_entry(&mut b, track),
+                TrackType::Audio => read_audio_sample_entry(&mut b, track),
+                TrackType::Unknown => Err(Error::Unsupported("unknown track type")),
+            };
+            let description = match description {
+                Ok(desc) => desc,
+                Err(Error::Unsupported(_)) => {
+                    // read_{audio,video}_desc may have returned Unsupported
+                    // after partially reading the box content, so we can't
+                    // simply use skip_box_content here.
+                    let to_skip = b.bytes_left();
+                    try!(skip(&mut b, to_skip));
+                    SampleEntry::Unknown
+                }
+                Err(e) => return Err(e),
+            };
+            if track.data.is_none() {
+                track.data = Some(description.clone());
+            } else {
+                log!("** don't know how to handle multiple descriptions **");
             }
-            Err(e) => return Err(e),
-        };
-        if track.data.is_none() {
-            track.data = Some(description.clone());
-        } else {
-            log!("** don't know how to handle multiple descriptions **");
-        }
-        descriptions.push(description);
-        check_parser_state!(b.content);
-        if descriptions.len() == description_count as usize {
-            break;
+            descriptions.push(description);
+            check_parser_state!(b.content);
+            if descriptions.len() == description_count as usize {
+                break;
+            }
         }
     }
+
+    // Padding could be added in some contents.
+    try!(skip_box_remain(src));
 
     Ok(SampleDescriptionBox {
         descriptions: descriptions,
@@ -1422,6 +1680,12 @@ fn be_i64<T: ReadBytesExt>(src: &mut T) -> Result<i64> {
 
 fn be_u16<T: ReadBytesExt>(src: &mut T) -> Result<u16> {
     src.read_u16::<byteorder::BigEndian>().map_err(From::from)
+}
+
+fn be_u24<T: ReadBytesExt>(src: &mut T) -> Result<u32> {
+    src.read_uint::<byteorder::BigEndian>(3)
+        .map(|v| v as u32)
+        .map_err(From::from)
 }
 
 fn be_u32<T: ReadBytesExt>(src: &mut T) -> Result<u32> {
