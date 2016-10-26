@@ -5926,15 +5926,13 @@ protected:
                                           uint32_t aDataIndex,
                                           uint32_t aFileIdsIndex,
                                           FileManager* aFileManager,
-                                          StructuredCloneReadInfo* aInfo,
-                                          bool* aHasWasm)
+                                          StructuredCloneReadInfo* aInfo)
   {
     return GetStructuredCloneReadInfoFromSource(aStatement,
                                                 aDataIndex,
                                                 aFileIdsIndex,
                                                 aFileManager,
-                                                aInfo,
-                                                aHasWasm);
+                                                aInfo);
   }
 
   static nsresult
@@ -5944,13 +5942,11 @@ protected:
                                            FileManager* aFileManager,
                                            StructuredCloneReadInfo* aInfo)
   {
-    bool dummy;
     return GetStructuredCloneReadInfoFromSource(aValues,
                                                 aDataIndex,
                                                 aFileIdsIndex,
                                                 aFileManager,
-                                                aInfo,
-                                                &dummy);
+                                                aInfo);
   }
 
   static nsresult
@@ -6014,23 +6010,20 @@ private:
                                        uint32_t aDataIndex,
                                        uint32_t aFileIdsIndex,
                                        FileManager* aFileManager,
-                                       StructuredCloneReadInfo* aInfo,
-                                       bool* aHasWasm);
+                                       StructuredCloneReadInfo* aInfo);
 
   static nsresult
   GetStructuredCloneReadInfoFromBlob(const uint8_t* aBlobData,
                                      uint32_t aBlobDataLength,
                                      FileManager* aFileManager,
                                      const nsAString& aFileIds,
-                                     StructuredCloneReadInfo* aInfo,
-                                     bool* aHasWasm);
+                                     StructuredCloneReadInfo* aInfo);
 
   static nsresult
   GetStructuredCloneReadInfoFromExternalBlob(uint64_t aIntData,
                                              FileManager* aFileManager,
                                              const nsAString& aFileIds,
-                                             StructuredCloneReadInfo* aInfo,
-                                             bool* aHasWasm);
+                                             StructuredCloneReadInfo* aInfo);
 
   // Not to be overridden by subclasses.
   NS_DECL_MOZISTORAGEPROGRESSHANDLER
@@ -8347,9 +8340,9 @@ class ObjectStoreGetRequestOp final
   const OptionalKeyRange mOptionalKeyRange;
   AutoTArray<StructuredCloneReadInfo, 1> mResponse;
   PBackgroundParent* mBackgroundParent;
+  uint32_t mPreprocessInfoCount;
   const uint32_t mLimit;
   const bool mGetAll;
-  bool mHasWasm;
 
 private:
   // Only created by TransactionBase.
@@ -8360,9 +8353,9 @@ private:
   ~ObjectStoreGetRequestOp()
   { }
 
+  template <bool aForPreprocess, typename T>
   nsresult
-  ConvertResponse(uint32_t aIndex,
-                  SerializedStructuredCloneReadInfo& aSerializedInfo);
+  ConvertResponse(StructuredCloneReadInfo& aInfo, T& aResult);
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -9713,10 +9706,10 @@ nsresult
 DeserializeStructuredCloneFiles(FileManager* aFileManager,
                                 const nsAString& aText,
                                 nsTArray<StructuredCloneFile>& aResult,
-                                bool* aHasWasm)
+                                bool* aHasPreprocessInfo)
 {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aHasWasm);
+  MOZ_ASSERT(aHasPreprocessInfo);
 
   nsCharSeparatedTokenizerTemplate<TokenizerIgnoreNothing>
     tokenizer(aText, ' ');
@@ -9738,7 +9731,7 @@ DeserializeStructuredCloneFiles(FileManager* aFileManager,
     if (file->mType == StructuredCloneFile::eWasmBytecode) {
       MOZ_ASSERT(file->mValid);
 
-      *aHasWasm = true;
+      *aHasPreprocessInfo = true;
     }
     else if (file->mType == StructuredCloneFile::eWasmCompiled) {
       if (!directory) {
@@ -9773,7 +9766,7 @@ DeserializeStructuredCloneFiles(FileManager* aFileManager,
       file->mValid = JS::CompiledWasmModuleAssumptionsMatch(fileDesc,
                                                             Move(buildId));
 
-      *aHasWasm = true;
+      *aHasPreprocessInfo = true;
     }
   }
 
@@ -19351,8 +19344,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromSource(
                                                  uint32_t aDataIndex,
                                                  uint32_t aFileIdsIndex,
                                                  FileManager* aFileManager,
-                                                 StructuredCloneReadInfo* aInfo,
-                                                 bool* aHasWasm)
+                                                 StructuredCloneReadInfo* aInfo)
 {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aSource);
@@ -19395,8 +19387,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromSource(
     rv = GetStructuredCloneReadInfoFromExternalBlob(intData,
                                                     aFileManager,
                                                     fileIds,
-                                                    aInfo,
-                                                    aHasWasm);
+                                                    aInfo);
   } else {
     const uint8_t* blobData;
     uint32_t blobDataLength;
@@ -19410,8 +19401,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromSource(
                                             blobDataLength,
                                             aFileManager,
                                             fileIds,
-                                            aInfo,
-                                            aHasWasm);
+                                            aInfo);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -19427,8 +19417,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
                                                  uint32_t aBlobDataLength,
                                                  FileManager* aFileManager,
                                                  const nsAString& aFileIds,
-                                                 StructuredCloneReadInfo* aInfo,
-                                                 bool* aHasWasm)
+                                                 StructuredCloneReadInfo* aInfo)
 {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aFileManager);
@@ -19467,7 +19456,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
     nsresult rv = DeserializeStructuredCloneFiles(aFileManager,
                                                   aFileIds,
                                                   aInfo->mFiles,
-                                                  aHasWasm);
+                                                  &aInfo->mHasPreprocessInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -19482,8 +19471,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
                                                  uint64_t aIntData,
                                                  FileManager* aFileManager,
                                                  const nsAString& aFileIds,
-                                                 StructuredCloneReadInfo* aInfo,
-                                                 bool* aHasWasm)
+                                                 StructuredCloneReadInfo* aInfo)
 {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aFileManager);
@@ -19500,7 +19488,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
     rv = DeserializeStructuredCloneFiles(aFileManager,
                                          aFileIds,
                                          aInfo->mFiles,
-                                         aHasWasm);
+                                         &aInfo->mHasPreprocessInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -25729,6 +25717,9 @@ NormalTransactionOp::RecvContinue(const PreprocessResponse& aResponse)
     case PreprocessResponse::TObjectStoreGetPreprocessResponse:
       break;
 
+    case PreprocessResponse::TObjectStoreGetAllPreprocessResponse:
+      break;
+
     default:
       MOZ_CRASH("Should never get here!");
   }
@@ -26599,9 +26590,9 @@ ObjectStoreGetRequestOp::ObjectStoreGetRequestOp(TransactionBase* aTransaction,
                         OptionalKeyRange(aParams.get_ObjectStoreGetParams()
                                                 .keyRange()))
   , mBackgroundParent(aTransaction->GetBackgroundParent())
+  , mPreprocessInfoCount(0)
   , mLimit(aGetAll ? aParams.get_ObjectStoreGetAllParams().limit() : 1)
   , mGetAll(aGetAll)
-  , mHasWasm(false)
 {
   MOZ_ASSERT(aParams.type() == RequestParams::TObjectStoreGetParams ||
              aParams.type() == RequestParams::TObjectStoreGetAllParams);
@@ -26613,30 +26604,46 @@ ObjectStoreGetRequestOp::ObjectStoreGetRequestOp(TransactionBase* aTransaction,
   MOZ_ASSERT(mBackgroundParent);
 }
 
-nsresult
-ObjectStoreGetRequestOp::ConvertResponse(
-                             uint32_t aIndex,
-                             SerializedStructuredCloneReadInfo& aSerializedInfo)
+template <typename T>
+void MoveData(StructuredCloneReadInfo& aInfo, T& aResult);
+
+template <>
+void
+MoveData<SerializedStructuredCloneReadInfo>(
+                                     StructuredCloneReadInfo& aInfo,
+                                     SerializedStructuredCloneReadInfo& aResult)
 {
-  MOZ_ASSERT(aIndex < mResponse.Length());
+  aResult.data().data = Move(aInfo.mData);
+  aResult.hasPreprocessInfo() = aInfo.mHasPreprocessInfo;
+}
 
-  StructuredCloneReadInfo& info = mResponse[aIndex];
+template <>
+void
+MoveData<WasmModulePreprocessInfo>(StructuredCloneReadInfo& aInfo,
+                                   WasmModulePreprocessInfo& aResult)
+{
+}
 
-  aSerializedInfo.data().data = Move(info.mData);
+template <bool aForPreprocess, typename T>
+nsresult
+ObjectStoreGetRequestOp::ConvertResponse(StructuredCloneReadInfo& aInfo,
+                                         T& aResult)
+{
+  MoveData(aInfo, aResult);
 
   FallibleTArray<SerializedStructuredCloneFile> serializedFiles;
   nsresult rv = SerializeStructuredCloneFiles(mBackgroundParent,
                                               mDatabase,
-                                              info.mFiles,
-                                              /* aForPreprocess */ false,
+                                              aInfo.mFiles,
+                                              aForPreprocess,
                                               serializedFiles);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  MOZ_ASSERT(aSerializedInfo.files().IsEmpty());
+  MOZ_ASSERT(aResult.files().IsEmpty());
 
-  aSerializedInfo.files().SwapElements(serializedFiles);
+  aResult.files().SwapElements(serializedFiles);
 
   return NS_OK;
 }
@@ -26707,10 +26714,13 @@ ObjectStoreGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 
     rv = GetStructuredCloneReadInfoFromStatement(stmt, 1, 0,
                                                  mDatabase->GetFileManager(),
-                                                 cloneInfo,
-                                                 &mHasWasm);
+                                                 cloneInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    if (cloneInfo->mHasPreprocessInfo) {
+      mPreprocessInfoCount++;
     }
   }
 
@@ -26726,7 +26736,7 @@ ObjectStoreGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 bool
 ObjectStoreGetRequestOp::HasPreprocessInfo()
 {
-  return mHasWasm;
+  return mPreprocessInfoCount > 0;
 }
 
 nsresult
@@ -26736,30 +26746,46 @@ ObjectStoreGetRequestOp::GetPreprocessParams(PreprocessParams& aParams)
   MOZ_ASSERT(!mResponse.IsEmpty());
 
   if (mGetAll) {
-    MOZ_ASSERT(false, "Fix me!");
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    aParams = ObjectStoreGetAllPreprocessParams();
+
+    FallibleTArray<WasmModulePreprocessInfo> falliblePreprocessInfos;
+    if (NS_WARN_IF(!falliblePreprocessInfos.SetLength(mPreprocessInfoCount,
+                                                      fallible))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    uint32_t fallibleIndex = 0;
+    for (uint32_t count = mResponse.Length(), index = 0;
+         index < count;
+         index++) {
+      StructuredCloneReadInfo& info = mResponse[index];
+
+      if (info.mHasPreprocessInfo) {
+        nsresult rv =
+          ConvertResponse<true>(info, falliblePreprocessInfos[fallibleIndex++]);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+      }
+    }
+
+    nsTArray<WasmModulePreprocessInfo>& preprocessInfos =
+      aParams.get_ObjectStoreGetAllPreprocessParams().preprocessInfos();
+
+    falliblePreprocessInfos.SwapElements(preprocessInfos);
+
+    return NS_OK;
   }
 
-  StructuredCloneReadInfo& cloneInfo = mResponse[0];
+  aParams = ObjectStoreGetPreprocessParams();
 
-  FallibleTArray<SerializedStructuredCloneFile> serializedFiles;
-  nsresult rv = SerializeStructuredCloneFiles(mBackgroundParent,
-                                              mDatabase,
-                                              cloneInfo.mFiles,
-                                              /* aForPreprocess */ true,
-                                              serializedFiles);
+  WasmModulePreprocessInfo& preprocessInfo =
+    aParams.get_ObjectStoreGetPreprocessParams().preprocessInfo();
+
+  nsresult rv = ConvertResponse<true>(mResponse[0], preprocessInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
-  WasmModulePreprocessInfo preprocessInfo;
-
-  MOZ_ASSERT(preprocessInfo.files().IsEmpty());
-
-  preprocessInfo.files().SwapElements(serializedFiles);
-
-  aParams = ObjectStoreGetPreprocessParams(preprocessInfo);
 
   return NS_OK;
 }
@@ -26783,7 +26809,8 @@ ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse)
       for (uint32_t count = mResponse.Length(), index = 0;
            index < count;
            index++) {
-        nsresult rv = ConvertResponse(index, fallibleCloneInfos[index]);
+        nsresult rv =
+          ConvertResponse<false>(mResponse[index], fallibleCloneInfos[index]);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           aResponse = rv;
           return;
@@ -26805,7 +26832,7 @@ ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse)
     SerializedStructuredCloneReadInfo& serializedInfo =
       aResponse.get_ObjectStoreGetResponse().cloneInfo();
 
-    nsresult rv = ConvertResponse(0, serializedInfo);
+    nsresult rv = ConvertResponse<false>(mResponse[0], serializedInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aResponse = rv;
     }
@@ -27347,11 +27374,9 @@ IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    bool dummy;
     rv = GetStructuredCloneReadInfoFromStatement(stmt, 1, 0,
                                                  mDatabase->GetFileManager(),
-                                                 cloneInfo,
-                                                 &dummy);
+                                                 cloneInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -27722,13 +27747,11 @@ CursorOpBase::PopulateResponseFromStatement(
   switch (mCursor->mType) {
     case OpenCursorParams::TObjectStoreOpenCursorParams: {
       StructuredCloneReadInfo cloneInfo;
-      bool dummy;
       rv = GetStructuredCloneReadInfoFromStatement(aStmt,
                                                    2,
                                                    1,
                                                    mCursor->mFileManager,
-                                                   &cloneInfo,
-                                                   &dummy);
+                                                   &cloneInfo);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -27767,13 +27790,11 @@ CursorOpBase::PopulateResponseFromStatement(
       }
 
       StructuredCloneReadInfo cloneInfo;
-      bool dummy;
       rv = GetStructuredCloneReadInfoFromStatement(aStmt,
                                                    4,
                                                    3,
                                                    mCursor->mFileManager,
-                                                   &cloneInfo,
-                                                   &dummy);
+                                                   &cloneInfo);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }

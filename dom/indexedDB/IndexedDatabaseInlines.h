@@ -49,6 +49,7 @@ StructuredCloneFile::operator==(const StructuredCloneFile& aOther) const
 inline
 StructuredCloneReadInfo::StructuredCloneReadInfo()
   : mDatabase(nullptr)
+  , mHasPreprocessInfo(false)
 {
   MOZ_COUNT_CTOR(StructuredCloneReadInfo);
 }
@@ -65,6 +66,8 @@ StructuredCloneReadInfo::StructuredCloneReadInfo(
   mFiles.SwapElements(aCloneReadInfo.mFiles);
   mDatabase = aCloneReadInfo.mDatabase;
   aCloneReadInfo.mDatabase = nullptr;
+  mHasPreprocessInfo = aCloneReadInfo.mHasPreprocessInfo;
+  aCloneReadInfo.mHasPreprocessInfo = false;
 }
 
 inline
@@ -72,6 +75,7 @@ StructuredCloneReadInfo::StructuredCloneReadInfo(
                              SerializedStructuredCloneReadInfo&& aCloneReadInfo)
   : mData(Move(aCloneReadInfo.data().data))
   , mDatabase(nullptr)
+  , mHasPreprocessInfo(aCloneReadInfo.hasPreprocessInfo())
 {
   MOZ_COUNT_CTOR(StructuredCloneReadInfo);
 }
@@ -92,6 +96,8 @@ StructuredCloneReadInfo::operator=(StructuredCloneReadInfo&& aCloneReadInfo)
   mFiles.SwapElements(aCloneReadInfo.mFiles);
   mDatabase = aCloneReadInfo.mDatabase;
   aCloneReadInfo.mDatabase = nullptr;
+  mHasPreprocessInfo = aCloneReadInfo.mHasPreprocessInfo;
+  aCloneReadInfo.mHasPreprocessInfo = false;
   return *this;
 }
 
