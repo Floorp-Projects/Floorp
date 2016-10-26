@@ -366,13 +366,8 @@ class TestConfigure(unittest.TestCase):
 
     def test_os_path(self):
         config = self.get_config(['--with-imports=%s' % __file__])
-        self.assertIn('IS_FILE', config)
-        self.assertEquals(config['IS_FILE'], True)
-
-        config = self.get_config(['--with-imports=%s.no-exist' % __file__])
-        self.assertIn('IS_FILE', config)
-        self.assertEquals(config['IS_FILE'], False)
-
+        self.assertIn('HAS_ABSPATH', config)
+        self.assertEquals(config['HAS_ABSPATH'], True)
         self.assertIn('HAS_GETATIME', config)
         self.assertEquals(config['HAS_GETATIME'], True)
         self.assertIn('HAS_GETATIME2', config)

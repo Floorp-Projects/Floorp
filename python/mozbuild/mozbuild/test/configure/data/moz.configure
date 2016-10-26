@@ -152,9 +152,9 @@ option('--with-imports', nargs='?', help='Imports')
 @depends('--with-imports')
 def with_imports(value):
     if len(value):
-        return os.path.isfile(value[0])
+        return hasattr(os.path, 'abspath')
 
-set_config('IS_FILE', with_imports)
+set_config('HAS_ABSPATH', with_imports)
 
 # It is still possible to import the full set from os.path.
 # It is also possible to cherry-pick builtins.
