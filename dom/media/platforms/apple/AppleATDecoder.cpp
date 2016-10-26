@@ -209,12 +209,11 @@ AppleATDecoder::SubmitSample(MediaRawData* aSample)
     return;
   }
 
-  nsresult rv = NS_OK;
+  MediaResult rv = NS_OK;
   if (!mConverter) {
     rv = SetupDecoder(aSample);
     if (rv != NS_OK && rv != NS_ERROR_NOT_INITIALIZED) {
-      mCallback->Error(
-        MediaResult(rv, RESULT_DETAIL("Unable to create decoder")));
+      mCallback->Error(rv);
       return;
     }
   }
@@ -226,8 +225,7 @@ AppleATDecoder::SubmitSample(MediaRawData* aSample)
       rv = DecodeSample(mQueuedSamples[i]);
       if (NS_FAILED(rv)) {
         mErrored = true;
-        mCallback->Error(MediaResult(
-          rv, RESULT_DETAIL("Unable to decode sample %lld", aSample->mTime)));
+        mCallback->Error(rv);
         return;
       }
     }
@@ -236,7 +234,7 @@ AppleATDecoder::SubmitSample(MediaRawData* aSample)
   mCallback->InputExhausted();
 }
 
-nsresult
+MediaResult
 AppleATDecoder::DecodeSample(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
@@ -283,8 +281,10 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
                                                   packets.get());
 
     if (rv && rv != kNoMoreDataErr) {
-      LOG("Error decoding audio stream: %d\n", rv);
-      return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+      LOG("Error decoding audio sample: %d\n", rv);
+      return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                         RESULT_DETAIL("Error decoding audio sample: %d @ %lld",
+                                       rv, aSample->mTime));
     }
 
     if (numFrames) {
@@ -305,7 +305,11 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
   media::TimeUnit duration = FramesToTimeUnit(numFrames, rate);
   if (!duration.IsValid()) {
     NS_WARNING("Invalid count of accumulated audio samples");
-    return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
+    return MediaResult(
+      NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+      RESULT_DETAIL(
+        "Invalid count of accumulated audio samples: num:%llu rate:%d",
+        uint64_t(numFrames), rate));
   }
 
 #ifdef LOG_SAMPLE_DECODE
@@ -322,7 +326,8 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
     AudioConfig in(*mChannelLayout.get(), rate);
     AudioConfig out(channels, rate);
     if (!in.IsValid() || !out.IsValid()) {
-      return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+      return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                         RESULT_DETAIL("Invalid audio config"));
     }
     mAudioConverter = MakeUnique<AudioConverter>(in, out);
   }
@@ -342,7 +347,7 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
   return NS_OK;
 }
 
-nsresult
+MediaResult
 AppleATDecoder::GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
                                          const nsTArray<uint8_t>& aExtraData)
 {
@@ -373,7 +378,9 @@ AppleATDecoder::GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
                                        &inputFormatSize,
                                        &aDesc);
   if (NS_WARN_IF(rv)) {
-    return NS_ERROR_FAILURE;
+    return MediaResult(
+      NS_ERROR_FAILURE,
+      RESULT_DETAIL("Unable to get format info:%lld", int64_t(rv)));
   }
 
   // If any of the methods below fail, we will return the default format as
@@ -549,7 +556,7 @@ AppleATDecoder::SetupChannelLayout()
   return NS_OK;
 }
 
-nsresult
+MediaResult
 AppleATDecoder::SetupDecoder(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
@@ -574,7 +581,7 @@ AppleATDecoder::SetupDecoder(MediaRawData* aSample)
 
   AudioStreamBasicDescription inputFormat;
   PodZero(&inputFormat);
-  nsresult rv =
+  MediaResult rv =
     GetInputAudioDescription(inputFormat,
                              mMagicCookie.Length() ?
                                  mMagicCookie : *mConfig.mExtraData);
@@ -606,7 +613,9 @@ AppleATDecoder::SetupDecoder(MediaRawData* aSample)
   if (status) {
     LOG("Error %d constructing AudioConverter", status);
     mConverter = nullptr;
-    return NS_ERROR_FAILURE;
+    return MediaResult(
+      NS_ERROR_FAILURE,
+      RESULT_DETAIL("Error constructing AudioConverter:%lld", int64_t(status)));
   }
 
   if (NS_FAILED(SetupChannelLayout())) {
