@@ -7803,6 +7803,17 @@
     "n_values": 16,
     "description": "How often do we get back an HSTS priming result which upgrades the connection to HTTPS? 0=cached (no upgrade), 1=cached (do upgrade), 2=cached (blocked), 3=already upgraded, 4=priming succeeded, 5=priming succeeded (block due to pref), 6=priming succeeded (no upgrade due to pref), 7=priming failed (block), 8=priming failed (accept)"
   },
+  "HSTS_PRIMING_REQUEST_DURATION": {
+    "alert_emails": ["seceng-telemetry@mozilla.org"],
+    "bug_numbers": [1311893],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "low": 100,
+    "high": 30000,
+    "n_buckets": 100,
+    "keyed": true,
+    "description": "The amount of time required for HSTS priming requests (ms), keyed by success or failure of the priming request. (success, failure)"
+  },
   "MIXED_CONTENT_OBJECT_SUBREQUEST": {
     "alert_emails": ["seceng@mozilla.org"],
     "bug_numbers": [1244116],
