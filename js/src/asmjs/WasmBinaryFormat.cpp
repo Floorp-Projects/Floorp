@@ -191,10 +191,8 @@ wasm::DecodeLimits(Decoder& d, Limits* limits)
     if (!d.readVarU32(&flags))
         return d.fail("expected flags");
 
-    // TODO (bug 1310149): tighten this check (s/3/1) when the AngryBots demo
-    // gets updated.
-    if (flags & ~uint32_t(0x3))
-        return d.fail("unexpected bits set in flags: %" PRIu32, (flags & ~uint32_t(0x3)));
+    if (flags & ~uint32_t(0x1))
+        return d.fail("unexpected bits set in flags: %" PRIu32, (flags & ~uint32_t(0x1)));
 
     if (!d.readVarU32(&limits->initial))
         return d.fail("expected initial length");
