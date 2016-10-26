@@ -66,6 +66,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_TARGET'] in ('Linux', 'Android'):
     USE_LIBS += [
         'mozsandbox',
+        'mozsandbox_interpose',
     ]
 
     # gcc lto likes to put the top level asm in syscall.cc in a different partition
