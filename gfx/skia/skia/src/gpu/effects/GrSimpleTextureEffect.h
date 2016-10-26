@@ -14,32 +14,35 @@ class GrInvariantOutput;
 
 /**
  * The output color of this effect is a modulation of the input color and a sample from a texture.
- * It allows explicit specification of the filtering and wrap modes (GrTextureParams). It can use
- * local coords or device space coords as input texture coords. The input coords may be transformed
- * by a matrix.
+ * It allows explicit specification of the filtering and wrap modes (GrTextureParams) and accepts
+ * a matrix that is used to compute texture coordinates from local coordinates.
  */
 class GrSimpleTextureEffect : public GrSingleTextureEffect {
 public:
     /* unfiltered, clamp mode */
-    static const GrFragmentProcessor* Create(GrTexture* tex,
-                                             const SkMatrix& matrix,
-                                             GrCoordSet coordSet = kLocal_GrCoordSet) {
-        return new GrSimpleTextureEffect(tex, matrix, GrTextureParams::kNone_FilterMode, coordSet);
+    static sk_sp<GrFragmentProcessor> Make(GrTexture* tex,
+                                           sk_sp<GrColorSpaceXform> colorSpaceXform,
+                                           const SkMatrix& matrix) {
+        return sk_sp<GrFragmentProcessor>(
+            new GrSimpleTextureEffect(tex, std::move(colorSpaceXform), matrix,
+                                      GrTextureParams::kNone_FilterMode));
     }
 
     /* clamp mode */
-    static GrFragmentProcessor* Create(GrTexture* tex,
-                                       const SkMatrix& matrix,
-                                       GrTextureParams::FilterMode filterMode,
-                                       GrCoordSet coordSet = kLocal_GrCoordSet) {
-        return new GrSimpleTextureEffect(tex, matrix, filterMode, coordSet);
+    static sk_sp<GrFragmentProcessor> Make(GrTexture* tex,
+                                           sk_sp<GrColorSpaceXform> colorSpaceXform,
+                                            const SkMatrix& matrix,
+                                            GrTextureParams::FilterMode filterMode) {
+        return sk_sp<GrFragmentProcessor>(
+            new GrSimpleTextureEffect(tex, std::move(colorSpaceXform), matrix, filterMode));
     }
 
-    static GrFragmentProcessor* Create(GrTexture* tex,
-                                       const SkMatrix& matrix,
-                                       const GrTextureParams& p,
-                                       GrCoordSet coordSet = kLocal_GrCoordSet) {
-        return new GrSimpleTextureEffect(tex, matrix, p, coordSet);
+    static sk_sp<GrFragmentProcessor> Make(GrTexture* tex,
+                                           sk_sp<GrColorSpaceXform> colorSpaceXform,
+                                           const SkMatrix& matrix,
+                                           const GrTextureParams& p) {
+        return sk_sp<GrFragmentProcessor>(new GrSimpleTextureEffect(tex, std::move(colorSpaceXform),
+                                                                    matrix, p));
     }
 
     virtual ~GrSimpleTextureEffect() {}
@@ -48,18 +51,18 @@ public:
 
 private:
     GrSimpleTextureEffect(GrTexture* texture,
+                          sk_sp<GrColorSpaceXform> colorSpaceXform,
                           const SkMatrix& matrix,
-                          GrTextureParams::FilterMode filterMode,
-                          GrCoordSet coordSet)
-        : GrSingleTextureEffect(texture, matrix, filterMode, coordSet) {
+                          GrTextureParams::FilterMode filterMode)
+        : GrSingleTextureEffect(texture, std::move(colorSpaceXform), matrix, filterMode) {
         this->initClassID<GrSimpleTextureEffect>();
     }
 
     GrSimpleTextureEffect(GrTexture* texture,
+                          sk_sp<GrColorSpaceXform> colorSpaceXform,
                           const SkMatrix& matrix,
-                          const GrTextureParams& params,
-                          GrCoordSet coordSet)
-        : GrSingleTextureEffect(texture, matrix, params, coordSet) {
+                          const GrTextureParams& params)
+        : GrSingleTextureEffect(texture, std::move(colorSpaceXform), matrix, params) {
         this->initClassID<GrSimpleTextureEffect>();
     }
 

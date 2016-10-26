@@ -6,6 +6,7 @@
  */
 
 #include "SkFontDescriptor.h"
+#include "SkMakeUnique.h"
 #include "SkStream.h"
 #include "SkData.h"
 
@@ -23,7 +24,7 @@ enum {
     kSentinel       = 0xFF,
 };
 
-SkFontDescriptor::SkFontDescriptor(SkTypeface::Style style) : fStyle(style) { }
+SkFontDescriptor::SkFontDescriptor() { }
 
 static void read_string(SkStream* stream, SkString* string) {
     const uint32_t length = SkToU32(stream->readPackedUInt());
@@ -59,7 +60,15 @@ static void write_uint(SkWStream* stream, size_t n, uint32_t id) {
 }
 
 bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
-    result->fStyle = (SkTypeface::Style)stream->readPackedUInt();
+    size_t styleBits = stream->readPackedUInt();
+    if (styleBits <= 2) {
+        // Remove this branch when MIN_PICTURE_VERSION > 45
+        result->fStyle = SkFontStyle::FromOldStyle(styleBits);
+    } else {
+        result->fStyle = SkFontStyle((styleBits >> 16) & 0xFFFF,
+                                     (styleBits >> 8 ) & 0xFF,
+                                     static_cast<SkFontStyle::Slant>(styleBits & 0xFF));
+    }
 
     SkAutoSTMalloc<4, SkFixed> axis;
     size_t axisCount = 0;
@@ -98,8 +107,8 @@ bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
     if (length > 0) {
         sk_sp<SkData> data(SkData::MakeUninitialized(length));
         if (stream->read(data->writable_data(), length) == length) {
-            result->fFontData.reset(new SkFontData(new SkMemoryStream(data),
-                                                   index, axis, axisCount));
+            result->fFontData = skstd::make_unique<SkFontData>(
+                skstd::make_unique<SkMemoryStream>(data), index, axis, axisCount);
         } else {
             SkDEBUGFAIL("Could not read font data");
             return false;
@@ -109,7 +118,8 @@ bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
 }
 
 void SkFontDescriptor::serialize(SkWStream* stream) {
-    stream->writePackedUInt(fStyle);
+    uint32_t styleBits = (fStyle.weight() << 16) | (fStyle.width() << 8) | (fStyle.slant());
+    stream->writePackedUInt(styleBits);
 
     write_string(stream, fFamilyName, kFontFamilyName);
     write_string(stream, fFullName, kFullName);
@@ -129,10 +139,10 @@ void SkFontDescriptor::serialize(SkWStream* stream) {
     stream->writePackedUInt(kSentinel);
 
     if (fFontData.get() && fFontData->hasStream()) {
-        SkAutoTDelete<SkStreamAsset> fontData(fFontData->detachStream());
-        size_t length = fontData->getLength();
+        std::unique_ptr<SkStreamAsset> fontStream = fFontData->detachStream();
+        size_t length = fontStream->getLength();
         stream->writePackedUInt(length);
-        stream->writeStream(fontData, length);
+        stream->writeStream(fontStream.get(), length);
     } else {
         stream->writePackedUInt(0);
     }

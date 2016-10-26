@@ -89,7 +89,11 @@ class WasmPrintBuffer
     uint32_t column_;
 
   public:
-    explicit WasmPrintBuffer(StringBuffer& stringBuffer) : stringBuffer_(stringBuffer), lineno_(1), column_(1) {}
+    explicit WasmPrintBuffer(StringBuffer& stringBuffer)
+      : stringBuffer_(stringBuffer),
+        lineno_(1),
+        column_(1)
+    {}
     inline char processChar(char ch) {
         if (ch == '\n') {
             lineno_++; column_ = 1;

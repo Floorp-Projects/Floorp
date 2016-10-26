@@ -22,6 +22,7 @@
 #include "js/Conversions.h"
 #include "js/Value.h"
 
+#include "vm/NativeObject.h"
 #include "vm/TypedArrayObject.h"
 
 namespace js {
@@ -423,6 +424,64 @@ class ElementSpecific
         return true;
     }
 
+    /*
+     * Copy |source| into the typed array |target|.
+     */
+    static bool
+    initFromIterablePackedArray(JSContext* cx, Handle<SomeTypedArray*> target,
+                                HandleArrayObject source)
+    {
+        MOZ_ASSERT(target->type() == SpecificArray::ArrayTypeID(),
+                   "target type and NativeType must match");
+        MOZ_ASSERT(IsPackedArray(source), "source array must be packed");
+        MOZ_ASSERT(source->getDenseInitializedLength() <= target->length());
+
+        uint32_t len = source->getDenseInitializedLength();
+        uint32_t i = 0;
+
+        // Attempt fast-path infallible conversion of dense elements up to the
+        // first potentially side-effectful conversion.
+
+        SharedMem<T*> dest =
+            target->template as<TypedArrayObject>().viewDataEither().template cast<T*>();
+
+        const Value* srcValues = source->getDenseElements();
+        for (; i < len; i++) {
+            if (!canConvertInfallibly(srcValues[i]))
+                break;
+            Ops::store(dest + i, infallibleValueToNative(srcValues[i]));
+        }
+        if (i == len)
+            return true;
+
+        // Convert any remaining elements by first collecting them into a
+        // temporary list, and then copying them into the typed array.
+        AutoValueVector values(cx);
+        if (!values.append(srcValues + i, len - i))
+            return false;
+
+        RootedValue v(cx);
+        for (uint32_t j = 0; j < values.length(); i++, j++) {
+            v = values[j];
+
+            T n;
+            if (!valueToNative(cx, v, &n))
+                return false;
+
+            // |target| is a newly allocated typed array and not yet visible to
+            // content script, so valueToNative can't detach the underlying
+            // buffer.
+            MOZ_ASSERT(i < target->length());
+
+            // Compute every iteration in case GC moves the data.
+            SharedMem<T*> newDest =
+                target->template as<TypedArrayObject>().viewDataEither().template cast<T*>();
+            Ops::store(newDest + i, n);
+        }
+
+        return true;
+    }
+
   private:
     static bool
     setFromOverlappingTypedArray(JSContext* cx,
@@ -757,6 +816,60 @@ class TypedArrayMethods
             if (isShared)
                 return ElementSpecific<Uint8ClampedArrayType, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
             return ElementSpecific<Uint8ClampedArrayType, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
+          case Scalar::Int64:
+          case Scalar::Float32x4:
+          case Scalar::Int8x16:
+          case Scalar::Int16x8:
+          case Scalar::Int32x4:
+          case Scalar::MaxTypedArrayViewType:
+            break;
+        }
+        MOZ_CRASH("bad target array type");
+    }
+
+    static bool
+    initFromIterablePackedArray(JSContext* cx, Handle<SomeTypedArray*> target,
+                                HandleArrayObject source)
+    {
+        bool isShared = target->isSharedMemory();
+
+        switch (target->type()) {
+          case Scalar::Int8:
+            if (isShared)
+                return ElementSpecific<Int8ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Int8ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Uint8:
+            if (isShared)
+                return ElementSpecific<Uint8ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Uint8ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Int16:
+            if (isShared)
+                return ElementSpecific<Int16ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Int16ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Uint16:
+            if (isShared)
+                return ElementSpecific<Uint16ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Uint16ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Int32:
+            if (isShared)
+                return ElementSpecific<Int32ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Int32ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Uint32:
+            if (isShared)
+                return ElementSpecific<Uint32ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Uint32ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Float32:
+            if (isShared)
+                return ElementSpecific<Float32ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Float32ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Float64:
+            if (isShared)
+                return ElementSpecific<Float64ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Float64ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Uint8Clamped:
+            if (isShared)
+                return ElementSpecific<Uint8ClampedArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Uint8ClampedArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
           case Scalar::Int64:
           case Scalar::Float32x4:
           case Scalar::Int8x16:
