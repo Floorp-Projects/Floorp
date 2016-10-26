@@ -18,8 +18,12 @@ elif CONFIG['GNU_CXX']:
         '-Wno-unused-local-typedefs',
         '-Wno-shadow',
     ]
-    if CONFIG['CLANG_CXX']:
-        CXXFLAGS += ['-Wno-implicit-fallthrough']
+
+if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+    CXXFLAGS += [
+        '-Wno-implicit-fallthrough',
+        '-Wno-c++11-narrowing',
+    ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     DEFINES['ELFSIZE'] = 32
