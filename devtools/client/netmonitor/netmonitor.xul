@@ -18,7 +18,7 @@
   <deck id="body"
         class="theme-sidebar"
         flex="1"
-        data-localization-bundle="devtools/locale/netmonitor.properties">
+        data-localization-bundle="devtools/client/locales/netmonitor.properties">
 
     <vbox id="network-inspector-view" flex="1">
       <hbox id="netmonitor-toolbar" class="devtools-toolbar">

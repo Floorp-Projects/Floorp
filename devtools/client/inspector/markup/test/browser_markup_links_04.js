@@ -9,7 +9,7 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
-const TOOLBOX_L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
+const TOOLBOX_L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 // The test case array contains objects with the following properties:
 // - selector: css selector for the node to select in the inspector

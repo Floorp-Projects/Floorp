@@ -15,7 +15,7 @@ var {Toolbox} = require("devtools/client/framework/toolbox");
 var {DebuggerClient} = require("devtools/shared/client/main");
 var {Task} = require("devtools/shared/task");
 var {LocalizationHelper} = require("devtools/shared/l10n");
-var L10N = new LocalizationHelper("devtools/locale/connection-screen.properties");
+var L10N = new LocalizationHelper("devtools/client/locales/connection-screen.properties");
 
 var gClient;
 var gConnectionTimeout;

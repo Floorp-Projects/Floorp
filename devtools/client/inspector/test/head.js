@@ -35,7 +35,8 @@ Services.scriptloader.loadSubScript(
   this);
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const INSPECTOR_L10N = new LocalizationHelper("devtools/locale/inspector.properties");
+const INSPECTOR_L10N =
+      new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 flags.testing = true;
 registerCleanupFunction(() => {

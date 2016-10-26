@@ -8,7 +8,7 @@ const { getJSON } = require("devtools/client/shared/getjson");
 
 const DEVICES_URL = "devtools.devices.url";
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/locale/device.properties");
+const L10N = new LocalizationHelper("devtools/client/locales/device.properties");
 
 /* This is a catalog of common web-enabled devices and their properties,
  * intended for (mobile) device emulation.
