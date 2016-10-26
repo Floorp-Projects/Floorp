@@ -4,7 +4,7 @@
 'use strict';
 
 var {
-  Loader, main, unload, parseStack, generateMap, resolve, nodeResolve
+  Loader, main, unload, parseStack, resolve, nodeResolve
 } = require('toolkit/loader');
 var { readURI } = require('sdk/net/url');
 var { all } = require('sdk/core/promise');
@@ -69,19 +69,6 @@ exports['test bundle'] = function (assert, done) {
   loadAddon('/native-addons/native-addon-test/')
 };
 */
-
-exports['test generateMap()'] = function (assert, done) {
-  getJSON('/fixtures/native-addon-test/expectedmap.json').then(expected => {
-    generateMap({
-      rootURI: root + '/fixtures/native-addon-test/'
-    }, map => {
-      assert.deepEqual(map, expected, 'generateMap returns expected mappings');
-      assert.equal(map['./index.js']['./dir/a'], './dir/a.js',
-        'sanity check on correct mappings');
-      done();
-    });
-  }).then(null, (reason) => console.error(reason));
-};
 
 exports['test JSM loading'] = function (assert, done) {
   getJSON('/fixtures/jsm-package/package.json').then(manifest => {
