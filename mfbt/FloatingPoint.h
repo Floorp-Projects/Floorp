@@ -186,6 +186,18 @@ IsNegativeZero(T aValue)
   return bits == Traits::kSignBit;
 }
 
+/** Determines wether a float/double represents +0. */
+template<typename T>
+static MOZ_ALWAYS_INLINE bool
+IsPositiveZero(T aValue)
+{
+  /* All bits are zero if the value is +0. */
+  typedef FloatingPoint<T> Traits;
+  typedef typename Traits::Bits Bits;
+  Bits bits = BitwiseCast<Bits>(aValue);
+  return bits == 0;
+}
+
 /**
  * Returns 0 if a float/double is NaN or infinite;
  * otherwise, the float/double is returned.
