@@ -51,7 +51,6 @@ module.exports = { // eslint-disable-line no-undef
     "findAccessibleChildByID": true
   },
   "rules": {
-    "mozilla/mark-test-function-used": 1,
     "mozilla/no-aArgs": 1,
     "mozilla/no-cpows-in-tests": 1,
     "mozilla/reject-importGlobalProperties": 1,
