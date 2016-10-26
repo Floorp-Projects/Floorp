@@ -13,8 +13,6 @@ module.exports = {
     // from head.js files.
     "no-undef": 0,
     "block-scoped-var": 0,
-    // Allow run_test to be unused in xpcshell
-    "no-unused-vars": [2, { "varsIgnorePattern": "run_test" }],
     // Tests can always import anything.
     "mozilla/reject-some-requires": 0,
   }
