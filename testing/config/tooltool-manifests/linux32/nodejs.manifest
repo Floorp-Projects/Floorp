@@ -1,0 +1,10 @@
+[
+{
+"size": 13426698,
+"visibility": "internal",
+"digest": "d2b45d3e2fab867152e2063785af48ead3f4d34b4dd614c1e0867f3eeef0c8088a4ffe811400234827293ff8b75f34f45b45eca991e4eed7de37934a7400a9ac",
+"algorithm": "sha512",
+"filename": "node-linux-x86.tar.gz",
+"unpack": true
+}
+]
