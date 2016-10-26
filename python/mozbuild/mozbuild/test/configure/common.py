@@ -86,11 +86,13 @@ class ConfigureTestSandbox(ConfigureSandbox):
 
         vfs = ConfigureTestVFS(paths)
 
-        self.OS = ReadOnlyNamespace(path=ReadOnlyNamespace(**{
-            k: v if k not in ('exists', 'isfile')
-            else getattr(vfs, k)
-            for k, v in ConfigureSandbox.OS.path.__dict__.iteritems()
-        }))
+        os_path = {
+            k: getattr(vfs, k) for k in dir(vfs) if not k.startswith('_')
+        }
+
+        os_path.update(self.OS.path.__dict__)
+
+        self.imported_os = ReadOnlyNamespace(path=ReadOnlyNamespace(**os_path))
 
         super(ConfigureTestSandbox, self).__init__(config, environ, *args,
                                                    **kwargs)
@@ -171,7 +173,7 @@ class ConfigureTestSandbox(ConfigureSandbox):
         for parent in (path or self._search_path):
             c = mozpath.abspath(mozpath.join(parent, command))
             for candidate in (c, ensure_exe_extension(c)):
-                if self.OS.path.exists(candidate):
+                if self.imported_os.path.exists(candidate):
                     return candidate
         raise WhichError()
 
