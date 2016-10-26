@@ -64,9 +64,7 @@ function ensureElementRemoval(aElement) {
 
 SimpleTest.waitForExplicitFinish();
 
-const OMTAPrefKey = 'layers.offmainthreadcomposition.async-animations';
-var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
-                  SpecialPowers.getBoolPref(OMTAPrefKey);
+var omtaEnabled = isOMTAEnabled();
 
 var isAndroid = !!navigator.userAgent.includes("Android");
 

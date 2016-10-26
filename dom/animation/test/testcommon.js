@@ -206,3 +206,11 @@ function setupSynchronousObserver(t, target, subtree) {
   return observer;
 }
 
+/**
+ * Returns true if off-main-thread animations.
+ */
+function isOMTAEnabled() {
+  const OMTAPrefKey = 'layers.offmainthreadcomposition.async-animations';
+  return SpecialPowers.DOMWindowUtils.layerManagerRemote &&
+         SpecialPowers.getBoolPref(OMTAPrefKey);
+}
