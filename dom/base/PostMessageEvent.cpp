@@ -144,14 +144,15 @@ PostMessageEvent::Run()
   Nullable<WindowProxyOrMessagePort> source;
   source.SetValue().SetAsWindowProxy() = mSource ? mSource->AsOuter() : nullptr;
 
+  Sequence<OwningNonNull<MessagePort>> ports;
+  if (!TakeTransferredPortsAsSequence(ports)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"),
                           false /*non-bubbling */, false /*cancelable */,
                           messageData, mCallerOrigin,
-                          EmptyString(), source,
-                          Sequence<OwningNonNull<MessagePort>>());
-
-  nsTArray<RefPtr<MessagePort>> ports = TakeTransferredPorts();
-  event->SetPorts(Move(ports));
+                          EmptyString(), source, ports);
 
   // We can't simply call dispatchEvent on the window because doing so ends
   // up flipping the trusted bit on the event, and we don't want that to

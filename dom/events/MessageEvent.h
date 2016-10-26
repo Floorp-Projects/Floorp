@@ -49,8 +49,6 @@ public:
 
   void GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts);
 
-  void SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts);
-
   // Non WebIDL methods
   void SetSource(mozilla::dom::MessagePort* aPort);
 

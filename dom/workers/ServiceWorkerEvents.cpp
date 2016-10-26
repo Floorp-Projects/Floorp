@@ -1253,13 +1253,6 @@ ExtendableMessageEvent::GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts)
 }
 
 void
-ExtendableMessageEvent::SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts)
-{
-  MOZ_ASSERT(mPorts.IsEmpty());
-  mPorts = Move(aPorts);
-}
-
-void
 ExtendableMessageEvent::SetSource(ServiceWorkerClient* aClient)
 {
   mClient = aClient;

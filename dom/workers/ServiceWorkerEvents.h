@@ -309,8 +309,6 @@ public:
 
   void GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts);
 
-  void SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts);
-
   void SetSource(ServiceWorkerClient* aClient);
 
   void SetSource(ServiceWorker* aServiceWorker);

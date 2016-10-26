@@ -165,12 +165,14 @@ private:
       init.mSource.SetValue().SetAsServiceWorker() = serviceWorker;
     }
 
+    if (!TakeTransferredPortsAsSequence(init.mPorts)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     RefPtr<ServiceWorkerMessageEvent> event =
       ServiceWorkerMessageEvent::Constructor(aTargetContainer,
-                                             NS_LITERAL_STRING("message"), init, rv);
-
-    nsTArray<RefPtr<MessagePort>> ports = TakeTransferredPorts();
-    event->SetPorts(Move(ports));
+                                             NS_LITERAL_STRING("message"),
+                                             init);
 
     event->SetTrusted(true);
     bool status = false;
