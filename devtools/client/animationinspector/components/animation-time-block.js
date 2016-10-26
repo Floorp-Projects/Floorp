@@ -23,12 +23,11 @@ const L10N = new LocalizationHelper("devtools/locale/animationinspector.properti
 const DURATION_RESOLUTION = 4;
 // MIN_PROGRESS_THRESHOLD shoud be between more than 0 to 1.
 const MIN_PROGRESS_THRESHOLD = 0.1;
+// Show max 10 iterations for infinite animations
+// to give users a clue that the animation does repeat.
+const MAX_INFINITE_ANIMATIONS_ITERATIONS = 10;
 // SVG namespace
 const SVG_NS = "http://www.w3.org/2000/svg";
-// ID of mask for fade effect.
-const FADE_MASK_ID = "animationinspector-fade-mask";
-// ID of gradient element.
-const FADE_GRADIENT_ID = "animationinspector-fade-gradient";
 
 /**
  * UI component responsible for displaying a single animation timeline, which
@@ -75,14 +74,37 @@ AnimationTimeBlock.prototype = {
     // background properties for .iterations element
     let backgroundIterations = TimeScale.getIterationsBackgroundData(animation);
 
-    // Displayed total duration
-    const totalDuration = TimeScale.getDuration() * state.playbackRate;
+    // Animation summary graph element.
+    const summaryEl = createNode({
+      parent: this.containerEl,
+      namespace: "http://www.w3.org/2000/svg",
+      nodeType: "svg",
+      attributes: {
+        "class": "summary",
+        "preserveAspectRatio": "none",
+        "style": `left: ${ x - (state.delay > 0 ? delayW : 0) }%`
+      }
+    });
+
+    // Total displayed duration
+    const totalDisplayedDuration = state.playbackRate * TimeScale.getDuration();
+
+    // Calculate stroke height in viewBox to display stroke of path.
+    const strokeHeightForViewBox = 0.5 / this.containerEl.clientHeight;
+
+    // Set viewBox
+    summaryEl.setAttribute("viewBox",
+                           `${ state.delay < 0 ? state.delay : 0 }
+                            -${ 1 + strokeHeightForViewBox }
+                            ${ totalDisplayedDuration }
+                            ${ 1 + strokeHeightForViewBox * 2 }`);
 
     // Get a helper function that returns the path segment of timing-function.
     const segmentHelperFn = getSegmentHelper(state, this.win);
 
     // Minimum segment duration is the duration of one pixel.
-    const minSegmentDuration = totalDuration / this.containerEl.clientWidth;
+    const minSegmentDuration =
+      totalDisplayedDuration / this.containerEl.clientWidth;
     // Minimum progress threshold.
     let minProgressThreshold = MIN_PROGRESS_THRESHOLD;
     // If the easing is step function,
@@ -92,70 +114,81 @@ AnimationTimeBlock.prototype = {
       minProgressThreshold = 1 / (parseInt(stepFunction[1], 10) + 1);
     }
 
-    // Calculate stroke height in viewBox to display stroke of path.
-    const strokeHeightForViewBox = 0.5 / this.containerEl.clientHeight;
-
-    // Animation summary graph element.
-    const summaryEl = createNode({
-      parent: this.containerEl,
-      namespace: SVG_NS,
-      nodeType: "svg",
-      attributes: {
-        "class": "summary",
-        "viewBox": `${ state.delay < 0 ? state.delay : 0 }
-                    -${ 1 + strokeHeightForViewBox }
-                    ${ totalDuration }
-                    ${ 1 + strokeHeightForViewBox * 2 }`,
-        "preserveAspectRatio": "none",
-        "style": `left: ${ x - (state.delay > 0 ? delayW : 0) }%;`,
-      }
-    });
-
-    // Iteration count
-    const iterationCount = state.iterationCount ? state.iterationCount : 1;
-
-    // Append forwards fill-mode.
-    if (state.fill === "both" || state.fill === "forwards") {
-      renderForwardsFill(summaryEl, state, iterationCount,
-                         totalDuration, segmentHelperFn);
-    }
+    // Starting time of main iteration.
+    let mainIterationStartTime = 0;
+    let iterationStart = state.iterationStart;
+    let iterationCount = state.iterationCount ? state.iterationCount : Infinity;
 
     // Append delay.
     if (state.delay > 0) {
       renderDelay(summaryEl, state, segmentHelperFn);
+      mainIterationStartTime = state.delay;
+    } else {
+      const negativeDelayCount = -state.delay / state.duration;
+      // Move to forward the starting point for negative delay.
+      iterationStart += negativeDelayCount;
+      // Consume iteration count by negative delay.
+      if (iterationCount !== Infinity) {
+        iterationCount -= negativeDelayCount;
+      }
     }
 
     // Append 1st section of iterations,
-    // if this animation has decimal iterationStart.
+    // This section is only useful in cases where iterationStart has decimals.
+    // e.g.
+    // if { iterationStart: 0.25, iterations: 3 }, firstSectionCount is 0.75.
     const firstSectionCount =
-      state.iterationStart % 1 === 0
-      ? 0 : Math.min(iterationCount, 1) - state.iterationStart % 1;
+      iterationStart % 1 === 0
+      ? 0 : Math.min(iterationCount, 1) - iterationStart % 1;
     if (firstSectionCount) {
-      renderFirstIteration(summaryEl, state, firstSectionCount,
-                           minSegmentDuration, minProgressThreshold,
-                           segmentHelperFn);
-    }
-
-    // Append middle section of iterations.
-    const middleSectionCount =
-      Math.floor(state.iterationCount - firstSectionCount);
-    renderMiddleIterations(summaryEl, state, firstSectionCount,
-                           middleSectionCount, minSegmentDuration,
+      renderFirstIteration(summaryEl, state, mainIterationStartTime,
+                           firstSectionCount, minSegmentDuration,
                            minProgressThreshold, segmentHelperFn);
-
-    // Append last section of iterations, if there is remaining iteration.
-    const lastSectionCount =
-      iterationCount - middleSectionCount - firstSectionCount;
-    if (lastSectionCount) {
-      renderLastIteration(summaryEl, state, firstSectionCount,
-                          middleSectionCount, lastSectionCount,
-                          minSegmentDuration, minProgressThreshold,
-                          segmentHelperFn);
     }
 
-    // Append endDelay.
-    if (state.endDelay > 0) {
-      renderEndDelay(summaryEl, state, iterationCount, segmentHelperFn);
+    if (iterationCount === Infinity) {
+      // If the animation repeats infinitely,
+      // we fill the remaining area with iteration paths.
+      renderInfinity(summaryEl, state, mainIterationStartTime,
+                     firstSectionCount, totalDisplayedDuration,
+                     minSegmentDuration, minProgressThreshold, segmentHelperFn);
+    } else {
+      // Otherwise, we show remaining iterations, endDelay and fill.
+
+      // Append forwards fill-mode.
+      if (state.fill === "both" || state.fill === "forwards") {
+        renderForwardsFill(summaryEl, state, mainIterationStartTime,
+                           iterationCount, totalDisplayedDuration,
+                           segmentHelperFn);
+      }
+
+      // Append middle section of iterations.
+      // e.g.
+      // if { iterationStart: 0.25, iterations: 3 }, middleSectionCount is 2.
+      const middleSectionCount =
+        Math.floor(iterationCount - firstSectionCount);
+      renderMiddleIterations(summaryEl, state, mainIterationStartTime,
+                             firstSectionCount, middleSectionCount,
+                             minSegmentDuration, minProgressThreshold,
+                             segmentHelperFn);
+
+      // Append last section of iterations, if there is remaining iteration.
+      // e.g.
+      // if { iterationStart: 0.25, iterations: 3 }, lastSectionCount is 0.25.
+      const lastSectionCount =
+        iterationCount - middleSectionCount - firstSectionCount;
+      if (lastSectionCount) {
+        renderLastIteration(summaryEl, state, mainIterationStartTime,
+                            firstSectionCount, middleSectionCount,
+                            lastSectionCount, minSegmentDuration,
+                            minProgressThreshold, segmentHelperFn);
+      }
+
+      // Append endDelay.
+      if (state.endDelay > 0) {
+        renderEndDelay(summaryEl, state,
+                       mainIterationStartTime, iterationCount, segmentHelperFn);
+      }
     }
 
     // The animation name is displayed over the iterations.
@@ -320,15 +353,16 @@ function renderDelay(parentEl, state, getSegment) {
  * Render first iteration section.
  * @param {Element} parentEl - Parent element of this appended path element.
  * @param {Object} state - State of animation.
+ * @param {Number} mainIterationStartTime - Starting time of main iteration.
  * @param {Number} firstSectionCount - Iteration count of first section.
  * @param {Number} minSegmentDuration - Minimum segment duration.
  * @param {Number} minProgressThreshold - Minimum progress threshold.
  * @param {function} getSegment - The function of getSegmentHelper.
  */
-function renderFirstIteration(parentEl, state, firstSectionCount,
-                              minSegmentDuration, minProgressThreshold,
-                              getSegment) {
-  const startTime = state.delay;
+function renderFirstIteration(parentEl, state, mainIterationStartTime,
+                              firstSectionCount, minSegmentDuration,
+                              minProgressThreshold, getSegment) {
+  const startTime = mainIterationStartTime;
   const endTime = startTime + firstSectionCount * state.duration;
   const segments =
     createPathSegments(startTime, endTime, minSegmentDuration,
@@ -340,16 +374,18 @@ function renderFirstIteration(parentEl, state, firstSectionCount,
  * Render middle iterations section.
  * @param {Element} parentEl - Parent element of this appended path element.
  * @param {Object} state - State of animation.
+ * @param {Number} mainIterationStartTime - Starting time of main iteration.
  * @param {Number} firstSectionCount - Iteration count of first section.
  * @param {Number} middleSectionCount - Iteration count of middle section.
  * @param {Number} minSegmentDuration - Minimum segment duration.
  * @param {Number} minProgressThreshold - Minimum progress threshold.
  * @param {function} getSegment - The function of getSegmentHelper.
  */
-function renderMiddleIterations(parentEl, state, firstSectionCount,
-                                middleSectionCount, minSegmentDuration,
-                                minProgressThreshold, getSegment) {
-  const offset = state.delay + firstSectionCount * state.duration;
+function renderMiddleIterations(parentEl, state, mainIterationStartTime,
+                                firstSectionCount, middleSectionCount,
+                                minSegmentDuration, minProgressThreshold,
+                                getSegment) {
+  const offset = mainIterationStartTime + firstSectionCount * state.duration;
   for (let i = 0; i < middleSectionCount; i++) {
     // Get the path segments of each iteration.
     const startTime = offset + i * state.duration;
@@ -365,6 +401,7 @@ function renderMiddleIterations(parentEl, state, firstSectionCount,
  * Render last iteration section.
  * @param {Element} parentEl - Parent element of this appended path element.
  * @param {Object} state - State of animation.
+ * @param {Number} mainIterationStartTime - Starting time of main iteration.
  * @param {Number} firstSectionCount - Iteration count of first section.
  * @param {Number} middleSectionCount - Iteration count of middle section.
  * @param {Number} lastSectionCount - Iteration count of last section.
@@ -372,12 +409,12 @@ function renderMiddleIterations(parentEl, state, firstSectionCount,
  * @param {Number} minProgressThreshold - Minimum progress threshold.
  * @param {function} getSegment - The function of getSegmentHelper.
  */
-function renderLastIteration(parentEl, state, firstSectionCount,
-                             middleSectionCount, lastSectionCount,
-                             minSegmentDuration, minProgressThreshold,
-                             getSegment) {
-  const startTime = state.delay + firstSectionCount * state.duration
-                    + middleSectionCount * state.duration;
+function renderLastIteration(parentEl, state, mainIterationStartTime,
+                             firstSectionCount, middleSectionCount,
+                             lastSectionCount, minSegmentDuration,
+                             minProgressThreshold, getSegment) {
+  const startTime = mainIterationStartTime +
+                      (firstSectionCount + middleSectionCount) * state.duration;
   const endTime = startTime + lastSectionCount * state.duration;
   const segments =
     createPathSegments(startTime, endTime, minSegmentDuration,
@@ -386,14 +423,71 @@ function renderLastIteration(parentEl, state, firstSectionCount,
 }
 
 /**
+ * Render Infinity iterations.
+ * @param {Element} parentEl - Parent element of this appended path element.
+ * @param {Object} state - State of animation.
+ * @param {Number} mainIterationStartTime - Starting time of main iteration.
+ * @param {Number} firstSectionCount - Iteration count of first section.
+ * @param {Number} totalDuration - Displayed max duration.
+ * @param {Number} minSegmentDuration - Minimum segment duration.
+ * @param {Number} minProgressThreshold - Minimum progress threshold.
+ * @param {function} getSegment - The function of getSegmentHelper.
+ */
+function renderInfinity(parentEl, state, mainIterationStartTime,
+                        firstSectionCount, totalDuration, minSegmentDuration,
+                        minProgressThreshold, getSegment) {
+  // Calculate the number of iterations to display,
+  // with a maximum of MAX_INFINITE_ANIMATIONS_ITERATIONS
+  let uncappedInfinityIterationCount =
+    (totalDuration - firstSectionCount * state.duration) / state.duration;
+  // If there is a small floating point error resulting in, e.g. 1.0000001
+  // ceil will give us 2 so round first.
+  uncappedInfinityIterationCount =
+    parseFloat(uncappedInfinityIterationCount.toPrecision(6));
+  const infinityIterationCount =
+    Math.min(MAX_INFINITE_ANIMATIONS_ITERATIONS,
+             Math.ceil(uncappedInfinityIterationCount));
+
+  // Append first full iteration path.
+  const firstStartTime =
+    mainIterationStartTime + firstSectionCount * state.duration;
+  const firstEndTime = firstStartTime + state.duration;
+  const firstSegments =
+    createPathSegments(firstStartTime, firstEndTime, minSegmentDuration,
+                       minProgressThreshold, getSegment);
+  appendPathElement(parentEl, firstSegments, "iteration-path infinity");
+
+  // Append other iterations. We can copy first segments.
+  const isAlternate = state.direction.match(/alternate/);
+  for (let i = 1; i < infinityIterationCount; i++) {
+    const startTime = firstStartTime + i * state.duration;
+    let segments;
+    if (isAlternate && i % 2) {
+      // Copy as reverse.
+      segments = firstSegments.map(segment => {
+        return { x: firstEndTime - segment.x + startTime, y: segment.y };
+      });
+    } else {
+      // Copy as is.
+      segments = firstSegments.map(segment => {
+        return { x: segment.x - firstStartTime + startTime, y: segment.y };
+      });
+    }
+    appendPathElement(parentEl, segments, "iteration-path infinity copied");
+  }
+}
+
+/**
  * Render endDelay section.
  * @param {Element} parentEl - Parent element of this appended path element.
  * @param {Object} state - State of animation.
+ * @param {Number} mainIterationStartTime - Starting time of main iteration.
  * @param {Number} iterationCount - Whole iteration count.
  * @param {function} getSegment - The function of getSegmentHelper.
  */
-function renderEndDelay(parentEl, state, iterationCount, getSegment) {
-  const startTime = state.delay + iterationCount * state.duration;
+function renderEndDelay(parentEl, state,
+                        mainIterationStartTime, iterationCount, getSegment) {
+  const startTime = mainIterationStartTime + iterationCount * state.duration;
   const startSegment = getSegment(startTime);
   const endSegment = { x: startTime + state.endDelay, y: startSegment.y };
   appendPathElement(parentEl, [startSegment, endSegment], "enddelay-path");
@@ -403,19 +497,18 @@ function renderEndDelay(parentEl, state, iterationCount, getSegment) {
  * Render forwards fill section.
  * @param {Element} parentEl - Parent element of this appended path element.
  * @param {Object} state - State of animation.
+ * @param {Number} mainIterationStartTime - Starting time of main iteration.
  * @param {Number} iterationCount - Whole iteration count.
  * @param {Number} totalDuration - Displayed max duration.
  * @param {function} getSegment - The function of getSegmentHelper.
  */
-function renderForwardsFill(parentEl, state, iterationCount,
-                            totalDuration, getSegment) {
-  const startTime = state.delay + iterationCount * state.duration +
-                    (state.endDelay > 0 ? state.endDelay : 0);
+function renderForwardsFill(parentEl, state, mainIterationStartTime,
+                            iterationCount, totalDuration, getSegment) {
+  const startTime = mainIterationStartTime + iterationCount * state.duration +
+                      (state.endDelay > 0 ? state.endDelay : 0);
   const startSegment = getSegment(startTime);
   const endSegment = { x: totalDuration, y: startSegment.y };
-  const pathEl = appendPathElement(parentEl, [startSegment, endSegment],
-                                   "fill-forwards-path");
-  appendFadeEffect(parentEl, pathEl);
+  appendPathElement(parentEl, [startSegment, endSegment], "fill-forwards-path");
 }
 
 /**
@@ -428,7 +521,7 @@ function getSegmentHelper(state, win) {
   // Create a dummy Animation timing data as the
   // state object we're being passed in.
   const timing = Object.assign({}, state, {
-    iterations: state.iterationCount ? state.iterationCount : 1
+    iterations: state.iterationCount ? state.iterationCount : Infinity
   });
   // Create a dummy Animation with the given timing.
   const dummyAnimation =
@@ -526,68 +619,4 @@ function appendPathElement(parentEl, pathSegments, cls) {
       "transform": "scale(1, -1)"
     }
   });
-}
-
-/**
- * Append fade effect.
- * @param {Element} parentEl - Parent element of this appended element.
- * @param {Element} el - Append fade effect to this element.
- */
-function appendFadeEffect(parentEl, el) {
-  // We can re-use mask element for fade.
-  // Keep the defs element in SVG element of given parentEl.
-  if (!parentEl.ownerDocument.body.querySelector(`#${ FADE_MASK_ID }`)) {
-    const svgEl = parentEl.closest(".summary");
-    const defsEl = createNode({
-      parent: svgEl,
-      namespace: SVG_NS,
-      nodeType: "defs"
-    });
-    const gradientEl = createNode({
-      parent: defsEl,
-      namespace: SVG_NS,
-      nodeType: "linearGradient",
-      attributes: {
-        "id": FADE_GRADIENT_ID
-      }
-    });
-    createNode({
-      parent: gradientEl,
-      namespace: SVG_NS,
-      nodeType: "stop",
-      attributes: {
-        "offset": 0
-      }
-    });
-    createNode({
-      parent: gradientEl,
-      namespace: SVG_NS,
-      nodeType: "stop",
-      attributes: {
-        "offset": 1
-      }
-    });
-
-    const maskEl = createNode({
-      parent: defsEl,
-      namespace: SVG_NS,
-      nodeType: "mask",
-      attributes: {
-        "id": FADE_MASK_ID,
-        "maskContentUnits": "objectBoundingBox",
-      }
-    });
-    createNode({
-      parent: maskEl,
-      namespace: SVG_NS,
-      nodeType: "rect",
-      attributes: {
-        "y": `${ 1 + svgEl.viewBox.animVal.y }`,
-        "width": "1",
-        "height": `${ svgEl.viewBox.animVal.height }`,
-        "fill": `url(#${ FADE_GRADIENT_ID })`
-      }
-    });
-  }
-  el.setAttribute("mask", `url(#${ FADE_MASK_ID })`);
 }
