@@ -1630,11 +1630,25 @@ RenderDataSection(WasmRenderContext& c, const AstModule& module)
             return false;
         if (!RenderInlineExpr(c, *seg->offset()))
             return false;
-        if (!c.buffer.append(" \""))
+        if (!c.buffer.append("\n"))
             return false;
-        if (!RenderEscapedString(c, seg->text()))
+
+        c.indent++;
+        for (const AstName& fragment : seg->fragments()) {
+            if (!RenderIndent(c))
+                return false;
+            if (!c.buffer.append("\""))
+                return false;
+            if (!RenderEscapedString(c, fragment))
+                return false;
+            if (!c.buffer.append("\"\n"))
+                return false;
+        }
+        c.indent--;
+
+        if (!RenderIndent(c))
             return false;
-        if (!c.buffer.append("\")\n"))
+        if (!c.buffer.append(")\n"))
             return false;
     }
 

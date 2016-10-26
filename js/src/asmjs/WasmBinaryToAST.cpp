@@ -2027,6 +2027,9 @@ AstDecodeCodeSection(AstDecodeContext &c)
     return true;
 }
 
+// Number of bytes to display in a single fragment of a data section (per line).
+static const size_t WRAP_DATA_BYTES = 30;
+
 static bool
 AstDecodeDataSection(AstDecodeContext &c)
 {
@@ -2049,8 +2052,14 @@ AstDecodeDataSection(AstDecodeContext &c)
         if (!offset)
             return false;
 
-        AstName name(buffer, s.length);
-        AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, name);
+        AstNameVector fragments(c.lifo);
+        for (size_t start = 0; start < s.length; start += WRAP_DATA_BYTES) {
+            AstName name(buffer + start, Min(WRAP_DATA_BYTES, s.length - start));
+            if (!fragments.append(name))
+                return false;
+        }
+
+        AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, Move(fragments));
         if (!segment || !c.module().append(segment))
             return false;
     }
