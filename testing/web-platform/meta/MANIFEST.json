@@ -38463,6 +38463,20 @@
         ]
       },
       "testharness": {
+        "IndexedDB/idbindex-rename.html": [
+          {
+            "path": "IndexedDB/idbindex-rename.html",
+            "timeout": "long",
+            "url": "/IndexedDB/idbindex-rename.html"
+          }
+        ],
+        "IndexedDB/idbobjectstore-rename-store.html": [
+          {
+            "path": "IndexedDB/idbobjectstore-rename-store.html",
+            "timeout": "long",
+            "url": "/IndexedDB/idbobjectstore-rename-store.html"
+          }
+        ],
         "WebCryptoAPI/generateKey/failures_AES-CBC.worker.js": [
           {
             "path": "WebCryptoAPI/generateKey/failures_AES-CBC.worker.js",
