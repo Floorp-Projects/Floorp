@@ -16,6 +16,7 @@
 #include "nsCSSKeywords.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "gfxMatrix.h"
+#include "gfxQuaternion.h"
 
 #include <limits>
 
@@ -176,7 +177,7 @@ ProcessTranslatePart(const nsCSSValue& aValue,
                                               nsPresContext::AppUnitsPerCSSPixel());
   // We want to avoid calling aDimensionGetter if there's no percentage to be
   // resolved (for performance reasons - see TransformReferenceBox).
-  if (percent != 0.0f && aRefBox) {
+  if (percent != 0.0f && aRefBox && !aRefBox->IsEmpty()) {
     translation += percent *
                      NSAppUnitsToFloatPixels((aRefBox->*aDimensionGetter)(),
                                              nsPresContext::AppUnitsPerCSSPixel());
@@ -224,7 +225,7 @@ ProcessMatrix(Matrix4x4& aMatrix,
   aMatrix = result * aMatrix;
 }
 
-static void 
+static void
 ProcessMatrix3D(Matrix4x4& aMatrix,
                 const nsCSSValue::Array* aData,
                 nsStyleContext* aContext,
@@ -335,7 +336,7 @@ ProcessTranslateY(Matrix4x4& aMatrix,
   aMatrix.PreTranslate(temp);
 }
 
-static void 
+static void
 ProcessTranslateZ(Matrix4x4& aMatrix,
                   const nsCSSValue::Array* aData,
                   nsStyleContext* aContext,
@@ -408,8 +409,8 @@ ProcessTranslate3D(Matrix4x4& aMatrix,
 /* Helper function to set up a scale matrix. */
 static void
 ProcessScaleHelper(Matrix4x4& aMatrix,
-                   float aXScale, 
-                   float aYScale, 
+                   float aXScale,
+                   float aYScale,
                    float aZScale)
 {
   aMatrix.PreScale(aXScale, aYScale, aZScale);
@@ -460,7 +461,7 @@ ProcessScale(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
   const nsCSSValue& scaleY = (aData->Count() == 2 ? scaleX :
                               aData->Item(2));
 
-  ProcessScaleHelper(aMatrix, 
+  ProcessScaleHelper(aMatrix,
                      scaleX.GetFloatValue(),
                      scaleY.GetFloatValue(),
                      1.0f);
@@ -545,7 +546,7 @@ ProcessRotate3D(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
   aMatrix = temp * aMatrix;
 }
 
-static void 
+static void
 ProcessPerspective(Matrix4x4& aMatrix,
                    const nsCSSValue::Array* aData,
                    nsStyleContext *aContext,
@@ -666,7 +667,7 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
     break;
   case eCSSKeyword_perspective:
     *aContains3dTransform = true;
-    ProcessPerspective(aMatrix, aData, aContext, aPresContext, 
+    ProcessPerspective(aMatrix, aData, aContext, aPresContext,
                        aConditions);
     break;
   default:
@@ -683,6 +684,32 @@ TransformFunctionOf(const nsCSSValue::Array* aData)
 {
   MOZ_ASSERT(aData->Item(0).GetUnit() == eCSSUnit_Enumerated);
   return aData->Item(0).GetKeywordValue();
+}
+
+void
+SetIdentityMatrix(nsCSSValue::Array* aMatrix)
+{
+  MOZ_ASSERT(aMatrix, "aMatrix should be non-null");
+
+  nsCSSKeyword tfunc = TransformFunctionOf(aMatrix);
+  MOZ_ASSERT(tfunc == eCSSKeyword_matrix ||
+             tfunc == eCSSKeyword_matrix3d,
+             "Only accept matrix and matrix3d");
+
+  if (tfunc == eCSSKeyword_matrix) {
+    MOZ_ASSERT(aMatrix->Count() == 7, "Invalid matrix");
+    Matrix m;
+    for (size_t i = 0; i < 6; ++i) {
+      aMatrix->Item(i + 1).SetFloatValue(m.components[i], eCSSUnit_Number);
+    }
+    return;
+  }
+
+  MOZ_ASSERT(aMatrix->Count() == 17, "Invalid matrix3d");
+  Matrix4x4 m;
+  for (size_t i = 0; i < 16; ++i) {
+    aMatrix->Item(i + 1).SetFloatValue(m.components[i], eCSSUnit_Number);
+  }
 }
 
 Matrix4x4
@@ -719,6 +746,320 @@ ReadTransforms(const nsCSSValueList* aList,
   result.PostScale(scale, scale, scale);
 
   return result;
+}
+
+/*
+ * The relevant section of the transitions specification:
+ * http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
+ * defers all of the details to the 2-D and 3-D transforms specifications.
+ * For the 2-D transforms specification (all that's relevant for us, right
+ * now), the relevant section is:
+ * http://dev.w3.org/csswg/css3-2d-transforms/#animation
+ * This, in turn, refers to the unmatrix program in Graphics Gems,
+ * available from http://tog.acm.org/resources/GraphicsGems/ , and in
+ * particular as the file GraphicsGems/gemsii/unmatrix.c
+ * in http://tog.acm.org/resources/GraphicsGems/AllGems.tar.gz
+ *
+ * The unmatrix reference is for general 3-D transform matrices (any of the
+ * 16 components can have any value).
+ *
+ * For CSS 2-D transforms, we have a 2-D matrix with the bottom row constant:
+ *
+ * [ A C E ]
+ * [ B D F ]
+ * [ 0 0 1 ]
+ *
+ * For that case, I believe the algorithm in unmatrix reduces to:
+ *
+ *  (1) If A * D - B * C == 0, the matrix is singular.  Fail.
+ *
+ *  (2) Set translation components (Tx and Ty) to the translation parts of
+ *      the matrix (E and F) and then ignore them for the rest of the time.
+ *      (For us, E and F each actually consist of three constants:  a
+ *      length, a multiplier for the width, and a multiplier for the
+ *      height.  This actually requires its own decomposition, but I'll
+ *      keep that separate.)
+ *
+ *  (3) Let the X scale (Sx) be sqrt(A^2 + B^2).  Then divide both A and B
+ *      by it.
+ *
+ *  (4) Let the XY shear (K) be A * C + B * D.  From C, subtract A times
+ *      the XY shear.  From D, subtract B times the XY shear.
+ *
+ *  (5) Let the Y scale (Sy) be sqrt(C^2 + D^2).  Divide C, D, and the XY
+ *      shear (K) by it.
+ *
+ *  (6) At this point, A * D - B * C is either 1 or -1.  If it is -1,
+ *      negate the XY shear (K), the X scale (Sx), and A, B, C, and D.
+ *      (Alternatively, we could negate the XY shear (K) and the Y scale
+ *      (Sy).)
+ *
+ *  (7) Let the rotation be R = atan2(B, A).
+ *
+ * Then the resulting decomposed transformation is:
+ *
+ *   translate(Tx, Ty) rotate(R) skewX(atan(K)) scale(Sx, Sy)
+ *
+ * An interesting result of this is that all of the simple transform
+ * functions (i.e., all functions other than matrix()), in isolation,
+ * decompose back to themselves except for:
+ *   'skewY(φ)', which is 'matrix(1, tan(φ), 0, 1, 0, 0)', which decomposes
+ *   to 'rotate(φ) skewX(φ) scale(sec(φ), cos(φ))' since (ignoring the
+ *   alternate sign possibilities that would get fixed in step 6):
+ *     In step 3, the X scale factor is sqrt(1+tan²(φ)) = sqrt(sec²(φ)) = sec(φ).
+ *     Thus, after step 3, A = 1/sec(φ) = cos(φ) and B = tan(φ) / sec(φ) = sin(φ).
+ *     In step 4, the XY shear is sin(φ).
+ *     Thus, after step 4, C = -cos(φ)sin(φ) and D = 1 - sin²(φ) = cos²(φ).
+ *     Thus, in step 5, the Y scale is sqrt(cos²(φ)(sin²(φ) + cos²(φ)) = cos(φ).
+ *     Thus, after step 5, C = -sin(φ), D = cos(φ), and the XY shear is tan(φ).
+ *     Thus, in step 6, A * D - B * C = cos²(φ) + sin²(φ) = 1.
+ *     In step 7, the rotation is thus φ.
+ *
+ *   skew(θ, φ), which is matrix(1, tan(φ), tan(θ), 1, 0, 0), which decomposes
+ *   to 'rotate(φ) skewX(θ + φ) scale(sec(φ), cos(φ))' since (ignoring
+ *   the alternate sign possibilities that would get fixed in step 6):
+ *     In step 3, the X scale factor is sqrt(1+tan²(φ)) = sqrt(sec²(φ)) = sec(φ).
+ *     Thus, after step 3, A = 1/sec(φ) = cos(φ) and B = tan(φ) / sec(φ) = sin(φ).
+ *     In step 4, the XY shear is cos(φ)tan(θ) + sin(φ).
+ *     Thus, after step 4,
+ *     C = tan(θ) - cos(φ)(cos(φ)tan(θ) + sin(φ)) = tan(θ)sin²(φ) - cos(φ)sin(φ)
+ *     D = 1 - sin(φ)(cos(φ)tan(θ) + sin(φ)) = cos²(φ) - sin(φ)cos(φ)tan(θ)
+ *     Thus, in step 5, the Y scale is sqrt(C² + D²) =
+ *     sqrt(tan²(θ)(sin⁴(φ) + sin²(φ)cos²(φ)) -
+ *          2 tan(θ)(sin³(φ)cos(φ) + sin(φ)cos³(φ)) +
+ *          (sin²(φ)cos²(φ) + cos⁴(φ))) =
+ *     sqrt(tan²(θ)sin²(φ) - 2 tan(θ)sin(φ)cos(φ) + cos²(φ)) =
+ *     cos(φ) - tan(θ)sin(φ) (taking the negative of the obvious solution so
+ *     we avoid flipping in step 6).
+ *     After step 5, C = -sin(φ) and D = cos(φ), and the XY shear is
+ *     (cos(φ)tan(θ) + sin(φ)) / (cos(φ) - tan(θ)sin(φ)) =
+ *     (dividing both numerator and denominator by cos(φ))
+ *     (tan(θ) + tan(φ)) / (1 - tan(θ)tan(φ)) = tan(θ + φ).
+ *     (See http://en.wikipedia.org/wiki/List_of_trigonometric_identities .)
+ *     Thus, in step 6, A * D - B * C = cos²(φ) + sin²(φ) = 1.
+ *     In step 7, the rotation is thus φ.
+ *
+ *     To check this result, we can multiply things back together:
+ *
+ *     [ cos(φ) -sin(φ) ] [ 1 tan(θ + φ) ] [ sec(φ)    0   ]
+ *     [ sin(φ)  cos(φ) ] [ 0      1     ] [   0    cos(φ) ]
+ *
+ *     [ cos(φ)      cos(φ)tan(θ + φ) - sin(φ) ] [ sec(φ)    0   ]
+ *     [ sin(φ)      sin(φ)tan(θ + φ) + cos(φ) ] [   0    cos(φ) ]
+ *
+ *     but since tan(θ + φ) = (tan(θ) + tan(φ)) / (1 - tan(θ)tan(φ)),
+ *     cos(φ)tan(θ + φ) - sin(φ)
+ *      = cos(φ)(tan(θ) + tan(φ)) - sin(φ) + sin(φ)tan(θ)tan(φ)
+ *      = cos(φ)tan(θ) + sin(φ) - sin(φ) + sin(φ)tan(θ)tan(φ)
+ *      = cos(φ)tan(θ) + sin(φ)tan(θ)tan(φ)
+ *      = tan(θ) (cos(φ) + sin(φ)tan(φ))
+ *      = tan(θ) sec(φ) (cos²(φ) + sin²(φ))
+ *      = tan(θ) sec(φ)
+ *     and
+ *     sin(φ)tan(θ + φ) + cos(φ)
+ *      = sin(φ)(tan(θ) + tan(φ)) + cos(φ) - cos(φ)tan(θ)tan(φ)
+ *      = tan(θ) (sin(φ) - sin(φ)) + sin(φ)tan(φ) + cos(φ)
+ *      = sec(φ) (sin²(φ) + cos²(φ))
+ *      = sec(φ)
+ *     so the above is:
+ *     [ cos(φ)  tan(θ) sec(φ) ] [ sec(φ)    0   ]
+ *     [ sin(φ)     sec(φ)     ] [   0    cos(φ) ]
+ *
+ *     [    1   tan(θ) ]
+ *     [ tan(φ)    1   ]
+ */
+
+/*
+ * Decompose2DMatrix implements the above decomposition algorithm.
+ */
+
+bool
+Decompose2DMatrix(const Matrix& aMatrix,
+                  Point3D& aScale,
+                  ShearArray& aShear,
+                  gfxQuaternion& aRotate,
+                  Point3D& aTranslate)
+{
+  float A = aMatrix._11,
+        B = aMatrix._12,
+        C = aMatrix._21,
+        D = aMatrix._22;
+  if (A * D == B * C) {
+    // singular matrix
+    return false;
+  }
+
+  float scaleX = sqrt(A * A + B * B);
+  A /= scaleX;
+  B /= scaleX;
+
+  float XYshear = A * C + B * D;
+  C -= A * XYshear;
+  D -= B * XYshear;
+
+  float scaleY = sqrt(C * C + D * D);
+  C /= scaleY;
+  D /= scaleY;
+  XYshear /= scaleY;
+
+  // A*D - B*C should now be 1 or -1
+  NS_ASSERTION(0.99 < Abs(A*D - B*C) && Abs(A*D - B*C) < 1.01,
+               "determinant should now be 1 or -1");
+  if (A * D < B * C) {
+    A = -A;
+    B = -B;
+    C = -C;
+    D = -D;
+    XYshear = -XYshear;
+    scaleX = -scaleX;
+  }
+
+  float rotate = atan2f(B, A);
+  aRotate = gfxQuaternion(0, 0, sin(rotate/2), cos(rotate/2));
+  aShear[ShearType::XYSHEAR] = XYshear;
+  aScale.x = scaleX;
+  aScale.y = scaleY;
+  aTranslate.x = aMatrix._31;
+  aTranslate.y = aMatrix._32;
+  return true;
+}
+
+/**
+ * Implementation of the unmatrix algorithm, specified by:
+ *
+ * http://dev.w3.org/csswg/css3-2d-transforms/#unmatrix
+ *
+ * This, in turn, refers to the unmatrix program in Graphics Gems,
+ * available from http://tog.acm.org/resources/GraphicsGems/ , and in
+ * particular as the file GraphicsGems/gemsii/unmatrix.c
+ * in http://tog.acm.org/resources/GraphicsGems/AllGems.tar.gz
+ */
+bool
+Decompose3DMatrix(const Matrix4x4& aMatrix,
+                  Point3D& aScale,
+                  ShearArray& aShear,
+                  gfxQuaternion& aRotate,
+                  Point3D& aTranslate,
+                  Point4D& aPerspective)
+{
+  Matrix4x4 local = aMatrix;
+
+  if (local[3][3] == 0) {
+    return false;
+  }
+  /* Normalize the matrix */
+  local.Normalize();
+
+  /**
+   * perspective is used to solve for perspective, but it also provides
+   * an easy way to test for singularity of the upper 3x3 component.
+   */
+  Matrix4x4 perspective = local;
+  Point4D empty(0, 0, 0, 1);
+  perspective.SetTransposedVector(3, empty);
+
+  if (perspective.Determinant() == 0.0) {
+    return false;
+  }
+
+  /* First, isolate perspective. */
+  if (local[0][3] != 0 || local[1][3] != 0 ||
+      local[2][3] != 0) {
+    /* aPerspective is the right hand side of the equation. */
+    aPerspective = local.TransposedVector(3);
+
+    /**
+     * Solve the equation by inverting perspective and multiplying
+     * aPerspective by the inverse.
+     */
+    perspective.Invert();
+    aPerspective = perspective.TransposeTransform4D(aPerspective);
+
+    /* Clear the perspective partition */
+    local.SetTransposedVector(3, empty);
+  } else {
+    aPerspective = Point4D(0, 0, 0, 1);
+  }
+
+  /* Next take care of translation */
+  for (int i = 0; i < 3; i++) {
+    aTranslate[i] = local[3][i];
+    local[3][i] = 0;
+  }
+
+  /* Now get scale and shear. */
+
+  /* Compute X scale factor and normalize first row. */
+  aScale.x = local[0].Length();
+  local[0] /= aScale.x;
+
+  /* Compute XY shear factor and make 2nd local orthogonal to 1st. */
+  aShear[ShearType::XYSHEAR] = local[0].DotProduct(local[1]);
+  local[1] -= local[0] * aShear[ShearType::XYSHEAR];
+
+  /* Now, compute Y scale and normalize 2nd local. */
+  aScale.y = local[1].Length();
+  local[1] /= aScale.y;
+  aShear[ShearType::XYSHEAR] /= aScale.y;
+
+  /* Compute XZ and YZ shears, make 3rd local orthogonal */
+  aShear[ShearType::XZSHEAR] = local[0].DotProduct(local[2]);
+  local[2] -= local[0] * aShear[ShearType::XZSHEAR];
+  aShear[ShearType::YZSHEAR] = local[1].DotProduct(local[2]);
+  local[2] -= local[1] * aShear[ShearType::YZSHEAR];
+
+  /* Next, get Z scale and normalize 3rd local. */
+  aScale.z = local[2].Length();
+  local[2] /= aScale.z;
+
+  aShear[ShearType::XZSHEAR] /= aScale.z;
+  aShear[ShearType::YZSHEAR] /= aScale.z;
+
+  /**
+   * At this point, the matrix (in locals) is orthonormal.
+   * Check for a coordinate system flip.  If the determinant
+   * is -1, then negate the matrix and the scaling factors.
+   */
+  if (local[0].DotProduct(local[1].CrossProduct(local[2])) < 0) {
+    aScale *= -1;
+    for (int i = 0; i < 3; i++) {
+      local[i] *= -1;
+    }
+  }
+
+  /* Now, get the rotations out */
+  aRotate = gfxQuaternion(local);
+
+  return true;
+}
+
+Matrix
+CSSValueArrayTo2DMatrix(nsCSSValue::Array* aArray)
+{
+  MOZ_ASSERT(aArray &&
+             TransformFunctionOf(aArray) == eCSSKeyword_matrix &&
+             aArray->Count() == 7);
+  Matrix m(aArray->Item(1).GetFloatValue(),
+           aArray->Item(2).GetFloatValue(),
+           aArray->Item(3).GetFloatValue(),
+           aArray->Item(4).GetFloatValue(),
+           aArray->Item(5).GetFloatValue(),
+           aArray->Item(6).GetFloatValue());
+  return m;
+}
+
+Matrix4x4
+CSSValueArrayTo3DMatrix(nsCSSValue::Array* aArray)
+{
+  MOZ_ASSERT(aArray &&
+             TransformFunctionOf(aArray) == eCSSKeyword_matrix3d &&
+             aArray->Count() == 17);
+  gfx::Float array[16];
+  for (size_t i = 0; i < 16; ++i) {
+    array[i] = aArray->Item(i+1).GetFloatValue();
+  }
+  Matrix4x4 m(array);
+  return m;
 }
 
 } // namespace nsStyleTransformMatrix

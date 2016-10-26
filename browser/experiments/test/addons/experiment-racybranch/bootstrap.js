@@ -1,3 +1,5 @@
+/* exported startup, shutdown, install, uninstall */
+
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource:///modules/experiments/Experiments.jsm");

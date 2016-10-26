@@ -30,7 +30,7 @@ private:
   void destructorSafeDestroyNSSReference();
 
   enum { JPAKENotStarted, JPAKEBeforeRound2, JPAKEAfterRound2 } round;
-  ScopedPK11SymKey key;
+  UniquePK11SymKey key;
 };
 
 NS_IMPL_ISUPPORTS(nsSyncJPAKE, nsISyncJPAKE)

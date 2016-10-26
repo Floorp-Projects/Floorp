@@ -356,43 +356,16 @@ UploadImageDataToTexture(GLContext* gl,
                          int32_t aStride,
                          SurfaceFormat aFormat,
                          const nsIntRegion& aDstRegion,
-                         GLuint& aTexture,
+                         GLuint aTexture,
+                         const gfx::IntSize& aSize,
                          size_t* aOutUploadSize,
                          bool aNeedInit,
-                         bool aPixelBuffer,
                          GLenum aTextureUnit,
                          GLenum aTextureTarget)
 {
-    bool textureInited = aNeedInit ? false : true;
     gl->MakeCurrent();
     gl->fActiveTexture(aTextureUnit);
-
-    if (!aTexture) {
-        gl->fGenTextures(1, &aTexture);
-        gl->fBindTexture(aTextureTarget, aTexture);
-        gl->fTexParameteri(aTextureTarget,
-                           LOCAL_GL_TEXTURE_MIN_FILTER,
-                           LOCAL_GL_LINEAR);
-        gl->fTexParameteri(aTextureTarget,
-                           LOCAL_GL_TEXTURE_MAG_FILTER,
-                           LOCAL_GL_LINEAR);
-        gl->fTexParameteri(aTextureTarget,
-                           LOCAL_GL_TEXTURE_WRAP_S,
-                           LOCAL_GL_CLAMP_TO_EDGE);
-        gl->fTexParameteri(aTextureTarget,
-                           LOCAL_GL_TEXTURE_WRAP_T,
-                           LOCAL_GL_CLAMP_TO_EDGE);
-        textureInited = false;
-    } else {
-        gl->fBindTexture(aTextureTarget, aTexture);
-    }
-
-    nsIntRegion paintRegion;
-    if (!textureInited) {
-        paintRegion = nsIntRegion(aDstRegion.GetBounds());
-    } else {
-        paintRegion = aDstRegion;
-    }
+    gl->fBindTexture(aTextureTarget, aTexture);
 
     GLenum format = 0;
     GLenum internalFormat = 0;
@@ -473,26 +446,39 @@ UploadImageDataToTexture(GLContext* gl,
             NS_ASSERTION(false, "Unhandled image surface format!");
     }
 
-
-    // Top left point of the region's bounding rectangle.
-    IntPoint topLeft = paintRegion.GetBounds().TopLeft();
-
     if (aOutUploadSize) {
         *aOutUploadSize = 0;
     }
 
-    for (auto iter = paintRegion.RectIter(); !iter.Done(); iter.Next()) {
-        const IntRect& rect = iter.Get();
-        // The inital data pointer is at the top left point of the region's
-        // bounding rectangle. We need to find the offset of this rect
-        // within the region and adjust the data pointer accordingly.
-        unsigned char* rectData =
-            aData + DataOffset(rect.TopLeft() - topLeft, aStride, aFormat);
+    if (aNeedInit || !CanUploadSubTextures(gl)) {
+        // If the texture needs initialized, or we are unable to
+        // upload sub textures, then initialize and upload the entire
+        // texture.
+        TexImage2DHelper(gl,
+                         aTextureTarget,
+                         0,
+                         internalFormat,
+                         aSize.width,
+                         aSize.height,
+                         aStride,
+                         pixelSize,
+                         0,
+                         format,
+                         type,
+                         aData);
 
-        NS_ASSERTION(textureInited || (rect.x == 0 && rect.y == 0),
-                     "Must be uploading to the origin when we don't have an existing texture");
+        if (aOutUploadSize && aNeedInit) {
+            uint32_t texelSize = GetBytesPerTexel(internalFormat, type);
+            size_t numTexels = size_t(aSize.width) * size_t(aSize.height);
+            *aOutUploadSize += texelSize * numTexels;
+        }
+    } else {
+        // Upload each rect in the region to the texture
+        for (auto iter = aDstRegion.RectIter(); !iter.Done(); iter.Next()) {
+            const IntRect& rect = iter.Get();
+            const unsigned char* rectData =
+                aData + DataOffset(rect.TopLeft(), aStride, aFormat);
 
-        if (textureInited && CanUploadSubTextures(gl)) {
             TexSubImage2DHelper(gl,
                                 aTextureTarget,
                                 0,
@@ -505,25 +491,6 @@ UploadImageDataToTexture(GLContext* gl,
                                 format,
                                 type,
                                 rectData);
-        } else {
-            TexImage2DHelper(gl,
-                             aTextureTarget,
-                             0,
-                             internalFormat,
-                             rect.width,
-                             rect.height,
-                             aStride,
-                             pixelSize,
-                             0,
-                             format,
-                             type,
-                             rectData);
-        }
-
-        if (aOutUploadSize && !textureInited) {
-            uint32_t texelSize = GetBytesPerTexel(internalFormat, type);
-            size_t numTexels = size_t(rect.width) * size_t(rect.height);
-            *aOutUploadSize += texelSize * numTexels;
         }
     }
 
@@ -534,22 +501,24 @@ SurfaceFormat
 UploadSurfaceToTexture(GLContext* gl,
                        DataSourceSurface* aSurface,
                        const nsIntRegion& aDstRegion,
-                       GLuint& aTexture,
+                       GLuint aTexture,
+                       const gfx::IntSize& aSize,
                        size_t* aOutUploadSize,
                        bool aNeedInit,
                        const gfx::IntPoint& aSrcPoint,
-                       bool aPixelBuffer,
                        GLenum aTextureUnit,
                        GLenum aTextureTarget)
 {
-    unsigned char* data = aPixelBuffer ? nullptr : aSurface->GetData();
+
     int32_t stride = aSurface->Stride();
     SurfaceFormat format = aSurface->GetFormat();
-    data += DataOffset(aSrcPoint, stride, format);
+    unsigned char* data = aSurface->GetData() +
+        DataOffset(aSrcPoint, stride, format);
+
     return UploadImageDataToTexture(gl, data, stride, format,
-                                    aDstRegion, aTexture, aOutUploadSize,
-                                    aNeedInit, aPixelBuffer, aTextureUnit,
-                                    aTextureTarget);
+                                    aDstRegion, aTexture, aSize,
+                                    aOutUploadSize, aNeedInit,
+                                    aTextureUnit, aTextureTarget);
 }
 
 bool

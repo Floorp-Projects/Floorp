@@ -19,6 +19,7 @@ import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /* package */ final class Codec extends ICodec.Stub implements IBinder.DeathRecipient {
     private static final String LOGTAG = "GeckoRemoteCodec";
@@ -188,12 +189,13 @@ import java.util.Queue;
             mAvailableInputBuffers.clear();
         }
    }
+
     private volatile ICodecCallbacks mCallbacks;
     private AsyncCodec mCodec;
     private InputProcessor mInputProcessor;
     private volatile boolean mFlushing = false;
     private SamplePool mSamplePool;
-    private Queue<Sample> mSentOutputs = new LinkedList<>();
+    private Queue<Sample> mSentOutputs = new ConcurrentLinkedQueue<>();
 
     public synchronized void setCallbacks(ICodecCallbacks callbacks) throws RemoteException {
         mCallbacks = callbacks;
@@ -345,8 +347,9 @@ import java.util.Queue;
     public synchronized void releaseOutput(Sample sample) {
         try {
             mSamplePool.recycleOutput(mSentOutputs.remove());
-        } catch (NoSuchElementException e) {
-            Log.e(LOGTAG, "releaseOutput not found: " + sample + "sent: " + mSentOutputs);
+        } catch (Exception e) {
+            Log.e(LOGTAG, "failed to release output:" + sample);
+            e.printStackTrace();
         }
         sample.dispose();
     }

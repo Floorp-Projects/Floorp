@@ -403,7 +403,7 @@ void TestSetTargetZeroTimeConstant()
   ErrorResultMock rv;
 
   timeline.SetTargetAtTime(20.0f, 1.0, 0.0, rv);
-  is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
+  is(timeline.GetValueAtTime(1.0), 20.0f, "Should get the correct value when t0 == t1");
 }
 
 void TestExponentialInvalidPreviousZeroValue()

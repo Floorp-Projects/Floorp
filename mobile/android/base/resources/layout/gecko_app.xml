@@ -42,13 +42,6 @@
                                                android:layout_height="match_parent"
                                                android:visibility="gone"/>
 
-            <FrameLayout android:id="@+id/camera_layout"
-                         android:layout_height="wrap_content"
-                         android:layout_width="wrap_content"
-                         android:layout_alignParentRight="true"
-                         android:layout_alignParentBottom="true">
-            </FrameLayout>
-
             <view class="org.mozilla.gecko.media.VideoPlayer" android:id="@+id/video_player"
                          android:layout_height="match_parent"
                          android:layout_width="match_parent">

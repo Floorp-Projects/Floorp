@@ -93,11 +93,11 @@ TypeInState::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
       nsCOMPtr<nsIDOMNode> selNode;
       int32_t selOffset = 0;
 
-      nsresult result =
+      nsresult rv =
         EditorBase::GetStartNodeAndOffset(selection, getter_AddRefs(selNode),
                                           &selOffset);
 
-      NS_ENSURE_SUCCESS(result, result);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       if (selNode &&
           selNode == mLastSelectionContainer &&

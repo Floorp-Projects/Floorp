@@ -8,14 +8,12 @@ Cu.import("resource://gre/modules/TelemetryLog.jsm");
 var bsp = Cu.import("resource:///modules/experiments/Experiments.jsm");
 
 
-const FILE_MANIFEST            = "experiments.manifest";
 const MANIFEST_HANDLER         = "manifests/handler";
 
 const SEC_IN_ONE_DAY  = 24 * 60 * 60;
 const MS_IN_ONE_DAY   = SEC_IN_ONE_DAY * 1000;
 
 
-var gProfileDir          = null;
 var gHttpServer          = null;
 var gHttpRoot            = null;
 var gDataRoot            = null;
@@ -48,7 +46,6 @@ function run_test() {
 
 add_task(function* test_setup() {
   loadAddonManager();
-  gProfileDir = do_get_profile();
 
   gHttpServer = new HttpServer();
   gHttpServer.start(-1);
@@ -87,8 +84,6 @@ add_task(function* test_telemetryBasics() {
   // Check TelemetryLog instead of TelemetrySession.getPayload().log because
   // TelemetrySession gets Experiments.instance() and side-effects log entries.
 
-  const OBSERVER_TOPIC = "experiments-changed";
-  let observerFireCount = 0;
   let expectedLogLength = 0;
 
   // Dates the following tests are based on.
@@ -126,21 +121,6 @@ add_task(function* test_telemetryBasics() {
       },
     ],
   };
-
-  // Data to compare the result of Experiments.getExperiments() against.
-
-  let experimentListData = [
-    {
-      id: EXPERIMENT2_ID,
-      name: "Test experiment 2",
-      description: "And yet another experiment that experiments experimentally.",
-    },
-    {
-      id: EXPERIMENT1_ID,
-      name: EXPERIMENT1_NAME,
-      description: "Yet another experiment that experiments experimentally.",
-    },
-  ];
 
   let experiments = new Experiments.Experiments(gPolicy);
 
