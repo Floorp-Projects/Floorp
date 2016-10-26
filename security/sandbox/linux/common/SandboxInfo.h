@@ -68,7 +68,7 @@ public:
   // child process is early enough to be single-threaded.  If not,
   // kUnexpectedThreads is set and affected flags (user namespaces;
   // possibly others in the future) are cleared.
-  static void ThreadingCheck();
+  static MOZ_EXPORT void ThreadingCheck();
 private:
   enum Flags mFlags;
   // This should be const, but has to allow for ThreadingCheck.

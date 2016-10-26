@@ -73,9 +73,8 @@ MOZ_EXPORT int gSeccompTsyncBroadcastSignum = 0;
 
 namespace mozilla {
 
-#ifdef ANDROID
+// This is initialized by SandboxSetCrashFunc().
 SandboxCrashFunc gSandboxCrashFunc;
-#endif
 
 #ifdef MOZ_GMP_SANDBOX
 // For media plugins, we can start the sandbox before we dlopen the
