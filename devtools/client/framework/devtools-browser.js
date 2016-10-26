@@ -31,7 +31,7 @@ loader.lazyImporter(this, "CustomizableUI", "resource:///modules/CustomizableUI.
 loader.lazyImporter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
+const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 const TABS_OPEN_PEAK_HISTOGRAM = "DEVTOOLS_TABS_OPEN_PEAK_LINEAR";
 const TABS_OPEN_AVG_HISTOGRAM = "DEVTOOLS_TABS_OPEN_AVERAGE_LINEAR";

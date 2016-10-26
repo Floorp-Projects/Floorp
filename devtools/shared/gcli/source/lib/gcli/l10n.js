@@ -23,7 +23,7 @@ var prefSvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefServ
 var prefBranch = prefSvc.getBranch(null).QueryInterface(Ci.nsIPrefBranch);
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools-shared/locale/gclicommands.properties");
+const L10N = new LocalizationHelper("devtools/shared/locales/gclicommands.properties");
 
 /**
  * Lookup a string in the GCLI string bundle
