@@ -141,7 +141,12 @@
     <tooltip id="remoteBrowserTooltip"/>
 
     <!-- for search and content formfill/pw manager -->
-    <panel type="autocomplete-richlistbox" id="PopupAutoComplete" noautofocus="true" hidden="true"/>
+
+    <panel type="autocomplete-richlistbox"
+           id="PopupAutoComplete"
+           noautofocus="true"
+           hidden="true"
+           norolluponanchor="true" />
 
     <!-- for search with one-off buttons -->
     <panel type="autocomplete" id="PopupSearchAutoComplete" noautofocus="true" hidden="true"/>
@@ -155,10 +160,14 @@
            level="parent"/>
 
     <panel id="DateTimePickerPanel"
+           type="arrow"
            hidden="true"
+           orient="vertical"
            noautofocus="true"
            consumeoutsideclicks="false"
-           level="parent"/>
+           level="parent">
+      <iframe id="dateTimePopupFrame"/>
+    </panel>
 
     <!-- for select dropdowns. The menupopup is what shows the list of options,
          and the popuponly menulist makes things like the menuactive attributes

@@ -42,8 +42,6 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const gfx::IntRec
                                            TextureImage *aDst, const gfx::IntRect& aDstRect)
 {
     GLContext *gl = mCompositor->gl();
-    NS_ASSERTION(!aSrc->InUpdate(), "Source texture is in update!");
-    NS_ASSERTION(!aDst->InUpdate(), "Destination texture is in update!");
 
     if (!aSrc || !aDst || aSrcRect.IsEmpty() || aDstRect.IsEmpty())
         return;

@@ -3,18 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSyncJPAKE.h"
+
+#include "base64.h"
+#include "keyhi.h"
 #include "mozilla/ModuleUtils.h"
-#include <pk11pub.h>
-#include <keyhi.h>
-#include <pkcs11.h>
-#include <nscore.h>
-#include <secmodt.h>
-#include <secport.h>
-#include <secerr.h>
-#include <nsDebug.h>
-#include <nsError.h>
-#include <base64.h>
-#include <nsString.h>
+#include "mozilla/Move.h"
+#include "nsDebug.h"
+#include "nsError.h"
+#include "nsString.h"
+#include "nscore.h"
+#include "pk11pub.h"
+#include "pkcs11.h"
+#include "secerr.h"
+#include "secmodt.h"
+#include "secport.h"
 
 using mozilla::fallible;
 
@@ -146,7 +148,7 @@ NS_IMETHODIMP nsSyncJPAKE::Round1(const nsACString & aSignerID,
     CKM_NSS_JPAKE_FINAL_SHA256
   };
 
-  ScopedPK11SlotInfo slot(PK11_GetBestSlotMultiple(mechanisms,
+  UniquePK11SlotInfo slot(PK11_GetBestSlotMultiple(mechanisms,
                                                    NUM_ELEM(mechanisms),
                                                    nullptr));
   NS_ENSURE_STATE(slot != nullptr);
@@ -181,10 +183,10 @@ NS_IMETHODIMP nsSyncJPAKE::Round1(const nsACString & aSignerID,
   SECItem paramsItem;
   paramsItem.data = (unsigned char *) &rp;
   paramsItem.len = sizeof rp;
-  key = PK11_KeyGenWithTemplate(slot, CKM_NSS_JPAKE_ROUND1_SHA256,
-                                CKM_NSS_JPAKE_ROUND1_SHA256,
-                                &paramsItem, keyTemplate,
-                                NUM_ELEM(keyTemplate), nullptr);
+  key = UniquePK11SymKey(
+    PK11_KeyGenWithTemplate(slot.get(), CKM_NSS_JPAKE_ROUND1_SHA256,
+                            CKM_NSS_JPAKE_ROUND1_SHA256, &paramsItem,
+                            keyTemplate, NUM_ELEM(keyTemplate), nullptr));
   nsresult rv = key != nullptr
               ? NS_OK
               : mapErrno();
@@ -277,7 +279,7 @@ NS_IMETHODIMP nsSyncJPAKE::Round2(const nsACString & aPeerID,
     { CKA_NSS_JPAKE_PEERID, (CK_BYTE *) aPeerID.Data(), aPeerID.Length(), },
     { CKA_KEY_TYPE, &keyType, sizeof keyType }
   };
-  ScopedPK11SymKey newKey(PK11_DeriveWithTemplate(key,
+  UniquePK11SymKey newKey(PK11_DeriveWithTemplate(key.get(),
                                                   CKM_NSS_JPAKE_ROUND2_SHA256,
                                                   &paramsItem,
                                                   CKM_NSS_JPAKE_FINAL_SHA256,
@@ -290,7 +292,7 @@ NS_IMETHODIMP nsSyncJPAKE::Round2(const nsACString & aPeerID,
         toHexString(rp.A.pGV, rp.A.ulGVLen, aGVA) &&
         toHexString(rp.A.pR, rp.A.ulRLen, aRA)) {
       round = JPAKEAfterRound2;
-      key = newKey.forget();
+      key = Move(newKey);
       return NS_OK;
     } else {
       rv = NS_ERROR_OUT_OF_MEMORY;
@@ -339,14 +341,14 @@ base64KeyValue(PK11SymKey * key, nsACString & keyString)
 }
 
 static nsresult
-extractBase64KeyValue(PK11SymKey * keyBlock, CK_ULONG bitPosition,
+extractBase64KeyValue(UniquePK11SymKey & keyBlock, CK_ULONG bitPosition,
                       CK_MECHANISM_TYPE destMech, int keySize,
                       nsACString & keyString)
 {
   SECItem paramsItem;
   paramsItem.data = (CK_BYTE *) &bitPosition;
   paramsItem.len = sizeof bitPosition;
-  PK11SymKey * key = PK11_Derive(keyBlock, CKM_EXTRACT_KEY_FROM_KEY,
+  PK11SymKey * key = PK11_Derive(keyBlock.get(), CKM_EXTRACT_KEY_FROM_KEY,
                                  &paramsItem, destMech,
                                  CKA_SIGN, keySize);
   if (key == nullptr)
@@ -391,10 +393,10 @@ NS_IMETHODIMP nsSyncJPAKE::Final(const nsACString & aB,
   SECItem paramsItem;
   paramsItem.data = (unsigned char *) &rp;
   paramsItem.len = sizeof rp;
-  ScopedPK11SymKey keyMaterial(PK11_Derive(key, CKM_NSS_JPAKE_FINAL_SHA256,
+  UniquePK11SymKey keyMaterial(PK11_Derive(key.get(), CKM_NSS_JPAKE_FINAL_SHA256,
                                            &paramsItem, CKM_NSS_HKDF_SHA256,
                                            CKA_DERIVE, 0));
-  ScopedPK11SymKey keyBlock;
+  UniquePK11SymKey keyBlock;
 
   if (keyMaterial == nullptr)
     rv = mapErrno();
@@ -409,9 +411,10 @@ NS_IMETHODIMP nsSyncJPAKE::Final(const nsACString & aB,
     hkdfParams.ulInfoLen = aHKDFInfo.Length();
     paramsItem.data = (unsigned char *) &hkdfParams;
     paramsItem.len = sizeof hkdfParams;
-    keyBlock = PK11_Derive(keyMaterial, CKM_NSS_HKDF_SHA256,
-                           &paramsItem, CKM_EXTRACT_KEY_FROM_KEY,
-                           CKA_DERIVE, AES256_KEY_SIZE + HMAC_SHA256_KEY_SIZE);
+    keyBlock = UniquePK11SymKey(
+      PK11_Derive(keyMaterial.get(), CKM_NSS_HKDF_SHA256, &paramsItem,
+                  CKM_EXTRACT_KEY_FROM_KEY, CKA_DERIVE,
+                  AES256_KEY_SIZE + HMAC_SHA256_KEY_SIZE));
     if (keyBlock == nullptr)
       rv = mapErrno();
   }
@@ -426,9 +429,9 @@ NS_IMETHODIMP nsSyncJPAKE::Final(const nsACString & aB,
   }
 
   if (rv == NS_OK) {
-    SECStatus srv = PK11_ExtractKeyValue(keyMaterial);
+    SECStatus srv = PK11_ExtractKeyValue(keyMaterial.get());
     NS_ENSURE_TRUE(srv == SECSuccess, NS_ERROR_UNEXPECTED);
-    SECItem * keyMaterialBytes = PK11_GetKeyData(keyMaterial);
+    SECItem * keyMaterialBytes = PK11_GetKeyData(keyMaterial.get());
     NS_ENSURE_TRUE(keyMaterialBytes != nullptr, NS_ERROR_UNEXPECTED);
   }
 
@@ -459,7 +462,7 @@ nsSyncJPAKE::virtualDestroyNSSReference()
 void
 nsSyncJPAKE::destructorSafeDestroyNSSReference()
 {
-  key.dispose();
+  key = nullptr;
 }
 
 static const mozilla::Module::CIDEntry kServicesCryptoCIDs[] = {

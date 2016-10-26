@@ -1372,15 +1372,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <body><![CDATA[
           this._oneOffSearchesEnabled = enable;
           if (enable) {
+            this.oneOffSearchButtons.telemetryOrigin = "urlbar";
             this.oneOffSearchButtons.style.display = "-moz-box";
             this.oneOffSearchButtons.popup = this;
             this.oneOffSearchButtons.textbox = this.input;
-            this.oneOffSearchButtons.telemetryOrigin = "urlbar";
           } else {
+            this.oneOffSearchButtons.telemetryOrigin = null;
             this.oneOffSearchButtons.style.display = "none";
             this.oneOffSearchButtons.popup = null;
             this.oneOffSearchButtons.textbox = null;
-            this.oneOffSearchButtons.telemetryOrigin = null;
           }
         ]]></body>
       </method>

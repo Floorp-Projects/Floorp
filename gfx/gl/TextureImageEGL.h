@@ -26,12 +26,6 @@ public:
 
     virtual ~TextureImageEGL();
 
-    virtual void GetUpdateRegion(nsIntRegion& aForRegion);
-
-    virtual gfx::DrawTarget* BeginUpdate(nsIntRegion& aRegion);
-
-    virtual void EndUpdate();
-
     virtual bool DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom = gfx::IntPoint(0,0));
 
     virtual void BindTexture(GLenum aTextureUnit);
@@ -44,8 +38,6 @@ public:
         }
         return mTexture;
     };
-
-    virtual bool InUpdate() const { return !!mUpdateDrawTarget; }
 
     virtual void Resize(const gfx::IntSize& aSize);
 
@@ -65,9 +57,7 @@ protected:
 
     GLContext* mGLContext;
 
-    gfx::IntRect mUpdateRect;
     gfx::SurfaceFormat mUpdateFormat;
-    RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
     EGLImage mEGLImage;
     GLuint mTexture;
     EGLSurface mSurface;
