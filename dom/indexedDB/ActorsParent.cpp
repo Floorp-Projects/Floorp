@@ -26363,7 +26363,7 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
             rv = CopyFileData(inputStream,
                               snappyOutputStream,
                               buffer.get(),
-                              kFileCopyBufferSize);
+                              snappyOutputStream->BlockSize());
           } else {
             char buffer[kFileCopyBufferSize];
 
