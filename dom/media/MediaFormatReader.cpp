@@ -977,13 +977,13 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
       LOG("%s stream id has changed from:%d to:%d, recreating decoder.",
           TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
           info->GetID());
-      decoder.mInfo = info;
       decoder.mLastStreamSourceID = info->GetID();
       decoder.mNextStreamSourceID.reset();
       // Reset will clear our array of queued samples. So make a copy now.
       nsTArray<RefPtr<MediaRawData>> samples{decoder.mQueuedSamples};
       Reset(aTrack);
       decoder.ShutdownDecoder();
+      decoder.mInfo = info;
       if (sample->mKeyframe) {
         decoder.mQueuedSamples.AppendElements(Move(samples));
         ScheduleUpdate(aTrack);
