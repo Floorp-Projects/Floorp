@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Tue Sep 27 12:56:07 2016 from UCD data files with version info:
+ * Created on Tue Oct 25 10:05:43 2016 from UCD data files with version info:
  *
 
 # Date: 2015-06-16, 20:24:00 GMT [KW]
@@ -80,7 +80,8 @@ struct nsCharProps1 {
 #if ENABLE_INTL_API
 
 struct nsCharProps2 {
-  unsigned char mPairedBracketType:2;
+  // Currently only 6 bits are defined here, so 2 more could be added without
+  // affecting the storage requirements for this struct.
   unsigned char mVertOrient:2;
   unsigned char mXidmod:4;
 };

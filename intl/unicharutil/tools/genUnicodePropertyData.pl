@@ -702,16 +702,17 @@ struct nsCharProps1 {
 sub sprintCharProps2_short
 {
   my $usv = shift;
-  return sprintf("{%d,%d,%d},",
-                 $pairedBracketType[$usv], $verticalOrientation[$usv], $xidmod[$usv]);
+  return sprintf("{%d,%d},",
+                 $verticalOrientation[$usv], $xidmod[$usv]);
 }
-$type = q/
+$type = q|
 struct nsCharProps2 {
-  unsigned char mPairedBracketType:2;
+  // Currently only 6 bits are defined here, so 2 more could be added without
+  // affecting the storage requirements for this struct.
   unsigned char mVertOrient:2;
   unsigned char mXidmod:4;
 };
-/;
+|;
 &genTables("#if ENABLE_INTL_API", "#endif",
            "CharProp2", $type, "nsCharProps2", 9, 7, \&sprintCharProps2_short, 16, 1, 1);
 
