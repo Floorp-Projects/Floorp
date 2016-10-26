@@ -78,3 +78,6 @@ HB_DEFINE_VALUE_TYPE (glyph_info)
 HB_DEFINE_VALUE_TYPE (glyph_position)
 HB_DEFINE_VALUE_TYPE (segment_properties)
 HB_DEFINE_VALUE_TYPE (user_data_key)
+
+HB_DEFINE_VALUE_TYPE (ot_math_glyph_variant)
+HB_DEFINE_VALUE_TYPE (ot_math_glyph_part)
