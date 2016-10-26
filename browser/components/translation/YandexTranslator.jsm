@@ -293,7 +293,7 @@ YandexRequest.prototype = {
    * Initiates the request
    */
   fireRequest: function() {
-    return Task.spawn(function *(){
+    return Task.spawn(function *() {
       // Prepare URL.
       let url = getUrlParam("https://translate.yandex.net/api/v1.5/tr.json/translate",
                             "browser.translation.yandex.translateURLOverride");

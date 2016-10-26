@@ -103,7 +103,7 @@ add_task(function* test_handling_out_of_valid_key_error() {
  *
  * @param filename  Name of a fixture file.
  */
-function constructFixtureURL(filename){
+function constructFixtureURL(filename) {
   // Deduce the Mochitest server address in use from a pref that was pre-processed.
   let server = Services.prefs.getCharPref("browser.translation.bing.authURL")
                              .replace("http://", "");
