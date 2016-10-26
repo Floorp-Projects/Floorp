@@ -26,11 +26,11 @@ const propertiesMap = {};
 // file.  In the webpack case this results in just the locale property
 // files being included in the pack; and in the devtools case this is
 // a wordy no-op.
-const reqShared = require.context("raw!devtools-shared/locale/",
+const reqShared = require.context("raw!devtools/shared/locales/",
                                   true, /^.*\.properties$/);
-const reqClient = require.context("raw!devtools/locale/",
+const reqClient = require.context("raw!devtools/client/locales/",
                                   true, /^.*\.properties$/);
-const reqGlobal = require.context("raw!global/locale/",
+const reqGlobal = require.context("raw!toolkit/locales/",
                                   true, /^.*\.properties$/);
 
 /**
@@ -44,17 +44,17 @@ const reqGlobal = require.context("raw!global/locale/",
 function getProperties(url) {
   if (!propertiesMap[url]) {
     // See the comment above about webpack and require contexts.  Here
-    // we take an input like "devtools-shared/locale/debugger.properties"
+    // we take an input like "devtools/shared/locales/debugger.properties"
     // and decide which context require function to use.  Despite the
     // string processing here, in the end a string identical to |url|
     // ends up being passed to "require".
     let index = url.lastIndexOf("/");
-    // Turn "mumble/locale/resource.properties" => "./resource.properties".
+    // Turn "mumble/locales/resource.properties" => "./resource.properties".
     let baseName = "." + url.substr(index);
     let reqFn;
-    if (/^global/.test(url)) {
+    if (/^toolkit/.test(url)) {
       reqFn = reqGlobal;
-    } else if (/^devtools-shared/.test(url)) {
+    } else if (/^devtools\/shared/.test(url)) {
       reqFn = reqShared;
     } else {
       reqFn = reqClient;
@@ -212,7 +212,7 @@ function localizeMarkup(root) {
   }
 }
 
-const sharedL10N = new LocalizationHelper("devtools-shared/locale/shared.properties");
+const sharedL10N = new LocalizationHelper("devtools/shared/locales/shared.properties");
 
 /**
  * A helper for having the same interface as LocalizationHelper, but for more

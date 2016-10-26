@@ -19,7 +19,7 @@ loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/main", tr
 const { extend } = require("sdk/core/heritage");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const STRINGS_URI = "devtools/locale/webconsole.properties";
+const STRINGS_URI = "devtools/client/locales/webconsole.properties";
 
 const WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
 const { getSourceNames } = require("devtools/client/shared/source-utils");

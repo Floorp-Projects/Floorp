@@ -4,7 +4,7 @@
 "use strict";
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const STRINGS_URI = "devtools/locale/jit-optimizations.properties";
+const STRINGS_URI = "devtools/client/locales/jit-optimizations.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
 const { assert } = require("devtools/shared/DevToolsUtils");

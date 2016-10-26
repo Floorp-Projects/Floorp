@@ -14,7 +14,7 @@ const { Cc, Ci } = require("chrome");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const STRINGS_URI = "devtools/locale/filterwidget.properties";
+const STRINGS_URI = "devtools/client/locales/filterwidget.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
 const {cssTokenizer} = require("devtools/shared/css/parsing-utils");

@@ -12,7 +12,7 @@ const { TargetFactory } = require("devtools/client/framework/target");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
+const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
