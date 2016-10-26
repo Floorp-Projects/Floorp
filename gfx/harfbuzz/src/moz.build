@@ -13,6 +13,7 @@ EXPORTS.harfbuzz += [
     'hb-font.h',
     'hb-ot-font.h',
     'hb-ot-layout.h',
+    'hb-ot-math.h',
     'hb-ot-shape.h',
     'hb-ot-tag.h',
     'hb-ot.h',
