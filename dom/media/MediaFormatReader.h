@@ -424,6 +424,8 @@ private:
     Maybe<uint32_t> mNextStreamSourceID;
     media::TimeIntervals mTimeRanges;
     Maybe<media::TimeUnit> mLastTimeRangesEnd;
+    // TrackInfo as first discovered during ReadMetadata.
+    UniquePtr<TrackInfo> mOriginalInfo;
     RefPtr<SharedTrackInfo> mInfo;
     Maybe<media::TimeUnit> mFirstDemuxedSampleTime;
     // Use BlankDecoderModule or not.
