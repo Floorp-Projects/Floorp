@@ -132,6 +132,7 @@ public:
 
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
   bool Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat, bool aUninitialized = false);
+  bool Init(SkCanvas* aCanvas);
 
 #ifdef USE_SKIA_GPU
   bool InitWithGrContext(GrContext* aGrContext,
