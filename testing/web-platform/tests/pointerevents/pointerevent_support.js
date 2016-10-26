@@ -12,10 +12,21 @@ var All_Pointer_Events = [
 
 // Check for conformance to PointerEvent interface
 // TA: 1.1, 1.2, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13
-function check_PointerEvent(event) {
-    var pointerTestName = event.pointerType + ' ' + event.type;
+function check_PointerEvent(event, testNamePrefix) {
+    if (testNamePrefix === undefined)
+        testNamePrefix = "";
+
+    // Use expectedPointerType if set otherwise just use the incoming event pointerType in the test name.
+    var pointerTestName = testNamePrefix + ' ' + (expectedPointerType == null ? event.pointerType : expectedPointerType) + ' ' + event.type;
+
+    if (expectedPointerType != null) {
+        test(function () {
+            assert_equals(event.pointerType, expectedPointerType, "pointerType should be the same as the requested device.");
+        }, pointerTestName + " event pointerType is correct.");
+    }
+
     test(function () {
-        assert_true(event instanceof PointerEvent, "event is a PointerEvent event");
+        assert_true(event instanceof event.target.ownerDocument.defaultView.PointerEvent, "event is a PointerEvent event");
     }, pointerTestName + " event is a PointerEvent event");
 
 
@@ -79,6 +90,9 @@ function check_PointerEvent(event) {
         assert_greater_than_equal(event.pressure, 0, "pressure is greater than or equal to 0");
         assert_less_than_equal(event.pressure, 1, "pressure is less than or equal to 1");
 
+        if (event.type === "pointerup") {
+            assert_equals(event.pressure, 0, "pressure is 0 during pointerup");
+        }
 
         // TA: 1.7, 1.8
         if (event.pointerType === "mouse") {
@@ -90,11 +104,12 @@ function check_PointerEvent(event) {
         }
     }, pointerTestName + ".pressure value is valid");
 
-
     // Check mouse-specific properties
     if (event.pointerType === "mouse") {
         // TA: 1.9, 1.10, 1.13
         test(function () {
+            assert_equals(event.width, 1, "width of mouse should be 1");
+            assert_equals(event.height, 1, "height of mouse should be 1");
             assert_equals(event.tiltX, 0, event.type + ".tiltX is 0 for mouse");
             assert_equals(event.tiltY, 0, event.type + ".tiltY is 0 for mouse");
             assert_true(event.isPrimary, event.type + ".isPrimary is true for mouse");
@@ -182,4 +197,48 @@ function rPointerCapture(e) {
     }
     catch(e) {
     }
+}
+
+var globalPointerEventTest = null;
+var expectedPointerType = null;
+const HOVERABLE_POINTERS = ['mouse', 'pen'];
+const NOHOVER_POINTERS = ['touch'];
+
+function MultiPointerTypeTest(testName, types) {
+    this.testName = testName;
+    this.types = types;
+    this.currentTypeIndex = 0;
+    this.currentTest = null;
+    this.createNextTest();
+}
+
+MultiPointerTypeTest.prototype.skip = function() {
+    var prevTest = this.currentTest;
+    this.createNextTest();
+    prevTest.timeout();
+}
+
+MultiPointerTypeTest.prototype.done = function() {
+    var prevTest = this.currentTest;
+    this.createNextTest();
+    if (prevTest != null)
+        prevTest.done();
+}
+
+MultiPointerTypeTest.prototype.createNextTest = function() {
+    if (this.currentTypeIndex < this.types.length) {
+        var pointerTypeDescription = document.getElementById('pointerTypeDescription');
+        document.getElementById('pointerTypeDescription').innerHTML = "Follow the test instructions with <span style='color: red'>" + this.types[this.currentTypeIndex] + "</span>. If you don't have the device <a href='javascript:;' onclick='globalPointerEventTest.skip()'>skip it</a>.";
+        this.currentTest = async_test(this.types[this.currentTypeIndex] + ' ' + this.testName);
+        expectedPointerType = this.types[this.currentTypeIndex];
+        this.currentTypeIndex++;
+    } else {
+        document.getElementById('pointerTypeDescription').innerHTML = "";
+    }
+    resetTestState();
+}
+
+
+function setup_pointerevent_test(testName, supportedPointerTypes) {
+   return globalPointerEventTest = new MultiPointerTypeTest(testName, supportedPointerTypes);
 }

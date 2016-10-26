@@ -17,13 +17,13 @@
             'cmst.h',
             'smime.h'
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/public'
+          'destination': '<(nss_dist_dir)/public/<(module)'
         },
         {
           'files': [
             'cmslocal.h'
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/private'
+          'destination': '<(nss_dist_dir)/private/<(module)'
         }
       ]
     }

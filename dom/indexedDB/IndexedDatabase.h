@@ -11,6 +11,10 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 
+namespace JS {
+struct WasmModule;
+} // namespace JS
+
 namespace mozilla {
 namespace dom {
 
@@ -25,10 +29,22 @@ class SerializedStructuredCloneReadInfo;
 
 struct StructuredCloneFile
 {
+  enum FileType {
+    eBlob,
+    eMutableFile,
+    eStructuredClone,
+    eWasmBytecode,
+    eWasmCompiled,
+    eEndGuard
+  };
+
   RefPtr<Blob> mBlob;
   RefPtr<IDBMutableFile> mMutableFile;
+  RefPtr<JS::WasmModule> mWasmModule;
   RefPtr<FileInfo> mFileInfo;
-  bool mMutable;
+  FileType mType;
+  // This is currently specific to eWasmCompiled files.
+  bool mValid;
 
   // In IndexedDatabaseInlines.h
   inline
@@ -48,6 +64,7 @@ struct StructuredCloneReadInfo
   JSStructuredCloneData mData;
   nsTArray<StructuredCloneFile> mFiles;
   IDBDatabase* mDatabase;
+  bool mHasPreprocessInfo;
 
   // In IndexedDatabaseInlines.h
   inline

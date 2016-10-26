@@ -528,7 +528,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertTrue(os.path.exists(all_tests_path))
 
         with open(all_tests_path, 'rt') as fh:
-            o, _ = json.load(fh)
+            o = json.load(fh)
 
             self.assertIn('xpcshell.js', o)
             self.assertIn('dir1/test_bar.js', o)
@@ -854,8 +854,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertTrue(os.path.exists(all_tests_path))
 
         with open(all_tests_path, 'rt') as fh:
-            o, _ = json.load(fh)
-
+            o = json.load(fh)
             self.assertIn('mochitest.js', o)
             self.assertIn('not_packaged.java', o)
 

@@ -642,11 +642,6 @@ class TestManifest(ContextDerived):
         # If this manifest is a duplicate of another one, this is the
         # manifestparser.TestManifest of the other one.
         'dupe_manifest',
-
-        # The support files appearing in the DEFAULT section of this
-        # manifest. This enables a space optimization in all-tests.json,
-        # see the comment in mozbuild/backend/common.py.
-        'default_support_files',
     )
 
     def __init__(self, context, path, manifest, flavor=None,
@@ -668,7 +663,6 @@ class TestManifest(ContextDerived):
         self.tests = []
         self.external_installs = set()
         self.deferred_installs = set()
-        self.default_support_files = None
 
 
 class LocalInclude(ContextDerived):

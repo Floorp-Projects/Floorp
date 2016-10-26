@@ -99,8 +99,7 @@ TEST_P(TlsConnectTls12, ServerAuthCheckSigAlg) {
   EXPECT_TRUE(buffer.Read(1, 2, &tmp)) << "read NamedCurve";
   EXPECT_EQ(ssl_grp_ec_curve25519, tmp);
   EXPECT_TRUE(buffer.Read(3, 1, &tmp)) << " read ECPoint";
-  CheckSigScheme(capture_ske, 4 + tmp, client_, kTlsSigSchemeRsaPssSha256,
-                 1024);
+  CheckSigScheme(capture_ske, 4 + tmp, client_, ssl_sig_rsa_pss_sha256, 1024);
 }
 
 TEST_P(TlsConnectTls12, ClientAuthCheckSigAlg) {
@@ -113,8 +112,7 @@ TEST_P(TlsConnectTls12, ClientAuthCheckSigAlg) {
   Connect();
   CheckKeys();
 
-  CheckSigScheme(capture_cert_verify, 0, server_, kTlsSigSchemeRsaPkcs1Sha1,
-                 1024);
+  CheckSigScheme(capture_cert_verify, 0, server_, ssl_sig_rsa_pkcs1_sha1, 1024);
 }
 
 TEST_P(TlsConnectTls12, ClientAuthBigRsaCheckSigAlg) {
@@ -126,18 +124,17 @@ TEST_P(TlsConnectTls12, ClientAuthBigRsaCheckSigAlg) {
   server_->RequestClientAuth(true);
   Connect();
   CheckKeys();
-  CheckSigScheme(capture_cert_verify, 0, server_, kTlsSigSchemeRsaPssSha256,
-                 2048);
+  CheckSigScheme(capture_cert_verify, 0, server_, ssl_sig_rsa_pss_sha256, 2048);
 }
 
-static const SSLSignatureAndHashAlg SignatureEcdsaSha384[] = {
-    {ssl_hash_sha384, ssl_sign_ecdsa}};
-static const SSLSignatureAndHashAlg SignatureEcdsaSha256[] = {
-    {ssl_hash_sha256, ssl_sign_ecdsa}};
-static const SSLSignatureAndHashAlg SignatureRsaSha384[] = {
-    {ssl_hash_sha384, ssl_sign_rsa}};
-static const SSLSignatureAndHashAlg SignatureRsaSha256[] = {
-    {ssl_hash_sha256, ssl_sign_rsa}};
+static const SSLSignatureScheme SignatureSchemeEcdsaSha384[] = {
+    ssl_sig_ecdsa_secp384r1_sha384};
+static const SSLSignatureScheme SignatureSchemeEcdsaSha256[] = {
+    ssl_sig_ecdsa_secp256r1_sha256};
+static const SSLSignatureScheme SignatureSchemeRsaSha384[] = {
+    ssl_sig_rsa_pkcs1_sha384};
+static const SSLSignatureScheme SignatureSchemeRsaSha256[] = {
+    ssl_sig_rsa_pkcs1_sha256};
 
 static SSLNamedGroup NamedGroupForEcdsa384(uint16_t version) {
   // NSS tries to match the group size to the symmetric cipher. In TLS 1.1 and
@@ -153,10 +150,10 @@ static SSLNamedGroup NamedGroupForEcdsa384(uint16_t version) {
 // for TLS 1.1 and 1.0, where they should be ignored.
 TEST_P(TlsConnectGeneric, SignatureAlgorithmServerAuth) {
   Reset(TlsAgent::kServerEcdsa384);
-  client_->SetSignatureAlgorithms(SignatureEcdsaSha384,
-                                  PR_ARRAY_SIZE(SignatureEcdsaSha384));
-  server_->SetSignatureAlgorithms(SignatureEcdsaSha384,
-                                  PR_ARRAY_SIZE(SignatureEcdsaSha384));
+  client_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
+  server_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
   Connect();
   CheckKeys(ssl_kea_ecdh, NamedGroupForEcdsa384(version_), ssl_auth_ecdsa,
             ssl_sig_ecdsa_secp384r1_sha384);
@@ -171,8 +168,11 @@ TEST_P(TlsConnectGeneric, SignatureAlgorithmClientOnly) {
       {ssl_hash_md5, ssl_sign_ecdsa}    // unsupported and ignored
   };
   Reset(TlsAgent::kServerEcdsa384);
-  client_->SetSignatureAlgorithms(clientAlgorithms,
-                                  PR_ARRAY_SIZE(clientAlgorithms));
+  EnsureTlsSetup();
+  // Use the old API for this function.
+  EXPECT_EQ(SECSuccess,
+            SSL_SignaturePrefSet(client_->ssl_fd(), clientAlgorithms,
+                                 PR_ARRAY_SIZE(clientAlgorithms)));
   Connect();
   CheckKeys(ssl_kea_ecdh, NamedGroupForEcdsa384(version_), ssl_auth_ecdsa,
             ssl_sig_ecdsa_secp384r1_sha384);
@@ -182,52 +182,38 @@ TEST_P(TlsConnectGeneric, SignatureAlgorithmClientOnly) {
 // Defaults on the client include the provided option.
 TEST_P(TlsConnectGeneric, SignatureAlgorithmServerOnly) {
   Reset(TlsAgent::kServerEcdsa384);
-  server_->SetSignatureAlgorithms(SignatureEcdsaSha384,
-                                  PR_ARRAY_SIZE(SignatureEcdsaSha384));
+  server_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
   Connect();
   CheckKeys(ssl_kea_ecdh, NamedGroupForEcdsa384(version_), ssl_auth_ecdsa,
             ssl_sig_ecdsa_secp384r1_sha384);
 }
 
-// In TlS 1.2, a P-256 cert can be used with SHA-384.
-TEST_P(TlsConnectTls12, SignatureSchemeCurveMismatch12) {
+TEST_P(TlsConnectTls12Plus, SignatureSchemeCurveMismatch) {
   Reset(TlsAgent::kServerEcdsa256);
-  client_->SetSignatureAlgorithms(SignatureEcdsaSha384,
-                                  PR_ARRAY_SIZE(SignatureEcdsaSha384));
-  Connect();
-  // The scheme is reported as using secp384r1, but this is just the generic
-  // ECDSA + SHA-384 codepoint as defined in TLS 1.2.
-  CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_ecdsa,
-            ssl_sig_ecdsa_secp384r1_sha384);
-}
-
-#ifndef NSS_DISABLE_TLS_1_3
-TEST_P(TlsConnectTls13, SignatureAlgorithmServerUnsupported) {
-  Reset(TlsAgent::kServerEcdsa256);  // P-256 cert
-  server_->SetSignatureAlgorithms(SignatureEcdsaSha384,
-                                  PR_ARRAY_SIZE(SignatureEcdsaSha384));
+  client_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
   ConnectExpectFail();
   server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
   client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
 }
 
-TEST_P(TlsConnectTls13, SignatureAlgorithmClientUnsupported) {
-  Reset(TlsAgent::kServerEcdsa256);  // P-256 cert
-  client_->SetSignatureAlgorithms(SignatureEcdsaSha384,
-                                  PR_ARRAY_SIZE(SignatureEcdsaSha384));
+TEST_P(TlsConnectTls12Plus, SignatureSchemeBadConfig) {
+  Reset(TlsAgent::kServerEcdsa256);  // P-256 cert can't be used.
+  server_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
   ConnectExpectFail();
   server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
   client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
 }
-#endif
 
 // Where there is no overlap on signature schemes, we still connect successfully
 // if we aren't going to use a signature.
 TEST_P(TlsConnectGenericPre13, SignatureAlgorithmNoOverlapStaticRsa) {
-  client_->SetSignatureAlgorithms(SignatureRsaSha384,
-                                  PR_ARRAY_SIZE(SignatureRsaSha384));
-  server_->SetSignatureAlgorithms(SignatureRsaSha256,
-                                  PR_ARRAY_SIZE(SignatureRsaSha256));
+  client_->SetSignatureSchemes(SignatureSchemeRsaSha384,
+                               PR_ARRAY_SIZE(SignatureSchemeRsaSha384));
+  server_->SetSignatureSchemes(SignatureSchemeRsaSha256,
+                               PR_ARRAY_SIZE(SignatureSchemeRsaSha256));
   EnableOnlyStaticRsaCiphers();
   Connect();
   CheckKeys(ssl_kea_rsa, ssl_auth_rsa_decrypt);
@@ -235,10 +221,10 @@ TEST_P(TlsConnectGenericPre13, SignatureAlgorithmNoOverlapStaticRsa) {
 
 TEST_P(TlsConnectTls12Plus, SignatureAlgorithmNoOverlapEcdsa) {
   Reset(TlsAgent::kServerEcdsa256);
-  client_->SetSignatureAlgorithms(SignatureEcdsaSha384,
-                                  PR_ARRAY_SIZE(SignatureEcdsaSha384));
-  server_->SetSignatureAlgorithms(SignatureEcdsaSha256,
-                                  PR_ARRAY_SIZE(SignatureEcdsaSha256));
+  client_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
+  server_->SetSignatureSchemes(SignatureSchemeEcdsaSha256,
+                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha256));
   ConnectExpectFail();
   client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
   server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
@@ -247,10 +233,10 @@ TEST_P(TlsConnectTls12Plus, SignatureAlgorithmNoOverlapEcdsa) {
 // Pre 1.2, a mismatch on signature algorithms shouldn't affect anything.
 TEST_P(TlsConnectPre12, SignatureAlgorithmNoOverlapEcdsa) {
   Reset(TlsAgent::kServerEcdsa256);
-  client_->SetSignatureAlgorithms(SignatureEcdsaSha384,
-                                  PR_ARRAY_SIZE(SignatureEcdsaSha384));
-  server_->SetSignatureAlgorithms(SignatureEcdsaSha256,
-                                  PR_ARRAY_SIZE(SignatureEcdsaSha256));
+  client_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
+  server_->SetSignatureSchemes(SignatureSchemeEcdsaSha256,
+                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha256));
   Connect();
 }
 
@@ -274,8 +260,8 @@ TEST_P(TlsConnectTls12, SignatureAlgorithmDrop) {
 }
 
 TEST_P(TlsConnectTls12Plus, RequestClientAuthWithSha384) {
-  server_->SetSignatureAlgorithms(SignatureRsaSha384,
-                                  PR_ARRAY_SIZE(SignatureRsaSha384));
+  server_->SetSignatureSchemes(SignatureSchemeRsaSha384,
+                               PR_ARRAY_SIZE(SignatureSchemeRsaSha384));
   server_->RequestClientAuth(false);
   Connect();
 }
@@ -625,4 +611,117 @@ TEST_F(TlsAgentStreamTestServer, ConfigureCertRsaPss) {
   EXPECT_TRUE(agent_->ConfigServerCert(TlsAgent::kServerRsaPss, false,
                                        &ServerCertDataRsaPss));
 }
+
+// mode, version, certificate, auth type, signature scheme
+typedef std::tuple<std::string, uint16_t, std::string, SSLAuthType,
+                   SSLSignatureScheme>
+    SignatureSchemeProfile;
+
+class TlsSignatureSchemeConfiguration
+    : public TlsConnectTestBase,
+      public ::testing::WithParamInterface<SignatureSchemeProfile> {
+ public:
+  TlsSignatureSchemeConfiguration()
+      : TlsConnectTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())),
+        certificate_(std::get<2>(GetParam())),
+        auth_type_(std::get<3>(GetParam())),
+        signature_scheme_(std::get<4>(GetParam())) {}
+
+ protected:
+  void TestSignatureSchemeConfig(TlsAgent* configPeer) {
+    EnsureTlsSetup();
+    configPeer->SetSignatureSchemes(&signature_scheme_, 1);
+    Connect();
+    CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, auth_type_,
+              signature_scheme_);
+  }
+
+  std::string certificate_;
+  SSLAuthType auth_type_;
+  SSLSignatureScheme signature_scheme_;
+};
+
+TEST_P(TlsSignatureSchemeConfiguration, SignatureSchemeConfigServer) {
+  Reset(certificate_);
+  TestSignatureSchemeConfig(server_);
+}
+
+TEST_P(TlsSignatureSchemeConfiguration, SignatureSchemeConfigClient) {
+  Reset(certificate_);
+  TlsExtensionCapture* capture =
+      new TlsExtensionCapture(ssl_signature_algorithms_xtn);
+  client_->SetPacketFilter(capture);
+  TestSignatureSchemeConfig(client_);
+
+  const DataBuffer& ext = capture->extension();
+  ASSERT_EQ(2U + 2U, ext.len());
+  uint32_t v = 0;
+  ASSERT_TRUE(ext.Read(0, 2, &v));
+  EXPECT_EQ(2U, v);
+  ASSERT_TRUE(ext.Read(2, 2, &v));
+  EXPECT_EQ(signature_scheme_, static_cast<SSLSignatureScheme>(v));
+}
+
+TEST_P(TlsSignatureSchemeConfiguration, SignatureSchemeConfigBoth) {
+  Reset(certificate_);
+  EnsureTlsSetup();
+  client_->SetSignatureSchemes(&signature_scheme_, 1);
+  server_->SetSignatureSchemes(&signature_scheme_, 1);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, auth_type_, signature_scheme_);
+}
+
+INSTANTIATE_TEST_CASE_P(
+    SignatureSchemeRsa, TlsSignatureSchemeConfiguration,
+    ::testing::Combine(
+        TlsConnectTestBase::kTlsModesAll, TlsConnectTestBase::kTlsV12Plus,
+        ::testing::Values(TlsAgent::kServerRsaSign),
+        ::testing::Values(ssl_auth_rsa_sign),
+        ::testing::Values(ssl_sig_rsa_pkcs1_sha256, ssl_sig_rsa_pkcs1_sha384,
+                          ssl_sig_rsa_pkcs1_sha512, ssl_sig_rsa_pss_sha256,
+                          ssl_sig_rsa_pss_sha384)));
+// PSS with SHA-512 needs a bigger key to work.
+INSTANTIATE_TEST_CASE_P(
+    SignatureSchemeBigRsa, TlsSignatureSchemeConfiguration,
+    ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                       TlsConnectTestBase::kTlsV12Plus,
+                       ::testing::Values(TlsAgent::kRsa2048),
+                       ::testing::Values(ssl_auth_rsa_sign),
+                       ::testing::Values(ssl_sig_rsa_pss_sha512)));
+INSTANTIATE_TEST_CASE_P(
+    SignatureSchemeRsaSha1, TlsSignatureSchemeConfiguration,
+    ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                       TlsConnectTestBase::kTlsV12,
+                       ::testing::Values(TlsAgent::kServerRsa),
+                       ::testing::Values(ssl_auth_rsa_sign),
+                       ::testing::Values(ssl_sig_rsa_pkcs1_sha1)));
+INSTANTIATE_TEST_CASE_P(
+    SignatureSchemeEcdsaP256, TlsSignatureSchemeConfiguration,
+    ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                       TlsConnectTestBase::kTlsV12Plus,
+                       ::testing::Values(TlsAgent::kServerEcdsa256),
+                       ::testing::Values(ssl_auth_ecdsa),
+                       ::testing::Values(ssl_sig_ecdsa_secp256r1_sha256)));
+INSTANTIATE_TEST_CASE_P(
+    SignatureSchemeEcdsaP384, TlsSignatureSchemeConfiguration,
+    ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                       TlsConnectTestBase::kTlsV12Plus,
+                       ::testing::Values(TlsAgent::kServerEcdsa384),
+                       ::testing::Values(ssl_auth_ecdsa),
+                       ::testing::Values(ssl_sig_ecdsa_secp384r1_sha384)));
+INSTANTIATE_TEST_CASE_P(
+    SignatureSchemeEcdsaP521, TlsSignatureSchemeConfiguration,
+    ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                       TlsConnectTestBase::kTlsV12Plus,
+                       ::testing::Values(TlsAgent::kServerEcdsa521),
+                       ::testing::Values(ssl_auth_ecdsa),
+                       ::testing::Values(ssl_sig_ecdsa_secp521r1_sha512)));
+INSTANTIATE_TEST_CASE_P(
+    SignatureSchemeEcdsaSha1, TlsSignatureSchemeConfiguration,
+    ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                       TlsConnectTestBase::kTlsV12,
+                       ::testing::Values(TlsAgent::kServerEcdsa256,
+                                         TlsAgent::kServerEcdsa384),
+                       ::testing::Values(ssl_auth_ecdsa),
+                       ::testing::Values(ssl_sig_ecdsa_sha1)));
 }

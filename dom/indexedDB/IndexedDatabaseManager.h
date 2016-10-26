@@ -131,6 +131,9 @@ public:
   static bool
   IsFileHandleEnabled();
 
+  static uint32_t
+  DataThreshold();
+
   void
   ClearBackgroundActor();
 

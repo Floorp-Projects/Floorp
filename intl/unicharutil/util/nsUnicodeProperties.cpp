@@ -55,7 +55,6 @@ GetCharProps2(uint32_t aCh)
     using namespace mozilla::unicode;
     static const nsCharProps2 undefined = {
 #if ENABLE_INTL_API
-        PAIRED_BRACKET_TYPE_NONE,
         VERTICAL_ORIENTATION_R,
         XIDMOD_NOT_CHARS
 #else

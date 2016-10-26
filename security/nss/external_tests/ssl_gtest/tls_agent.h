@@ -64,6 +64,7 @@ class TlsAgent : public PollTarget {
   static const std::string kServerRsaDecrypt;
   static const std::string kServerEcdsa256;
   static const std::string kServerEcdsa384;
+  static const std::string kServerEcdsa521;
   static const std::string kServerEcdhEcdsa;
   static const std::string kServerEcdhRsa;
   static const std::string kServerDsa;
@@ -127,8 +128,7 @@ class TlsAgent : public PollTarget {
   void ExpectReadWriteError();
   void EnableFalseStart();
   void ExpectResumption();
-  void SetSignatureAlgorithms(const SSLSignatureAndHashAlg* algorithms,
-                              size_t count);
+  void SetSignatureSchemes(const SSLSignatureScheme* schemes, size_t count);
   void EnableAlpn(const uint8_t* val, size_t len);
   void CheckAlpn(SSLNextProtoState expected_state,
                  const std::string& expected = "") const;

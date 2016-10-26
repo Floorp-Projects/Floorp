@@ -23,6 +23,10 @@
 
     const fileData = { key: 1, file: getRandomFile("random.bin", 100000) };
 
+    SpecialPowers.pushPrefEnv({ set: [["dom.indexedDB.dataThreshold", -1]] },
+                              continueToNextStep);
+    yield undefined;
+
     let databases = [];
     for (let info of databaseInfo) {
       let request = indexedDB.open(info.name, 1);

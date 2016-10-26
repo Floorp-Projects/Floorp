@@ -1442,7 +1442,7 @@ SSL_DHEGroupPrefSet(PRFileDesc *fd, const SSLDHEGroupType *groups,
     sslSocket *ss;
     const SSLDHEGroupType *list;
     unsigned int count;
-    int i, k;
+    int i, k, j;
     const sslNamedGroupDef *enabled[SSL_NAMED_GROUP_COUNT] = { 0 };
     static const SSLDHEGroupType default_dhe_groups[] = {
         ssl_ff_dhe_2048_group
@@ -1509,9 +1509,9 @@ SSL_DHEGroupPrefSet(PRFileDesc *fd, const SSLDHEGroupType *groups,
             ss->ssl3.dhePreferredGroup = groupDef;
         }
         PORT_Assert(k < SSL_NAMED_GROUP_COUNT);
-        for (i = 0; i < k; ++i) {
+        for (j = 0; j < k; ++j) {
             /* skip duplicates */
-            if (enabled[i] == groupDef) {
+            if (enabled[j] == groupDef) {
                 duplicate = PR_TRUE;
                 break;
             }

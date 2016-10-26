@@ -1747,11 +1747,23 @@ Accessible::RelationByType(RelationType aType)
           }
         }
       }
-      return  Relation();
+      return Relation();
     }
 
     case RelationType::CONTAINING_APPLICATION:
       return Relation(ApplicationAcc());
+
+    case RelationType::DETAILS:
+      return Relation(new IDRefsIterator(mDoc, mContent, nsGkAtoms::aria_details));
+
+    case RelationType::DETAILS_FOR:
+      return Relation(new RelatedAccIterator(mDoc, mContent, nsGkAtoms::aria_details));
+
+    case RelationType::ERRORMSG:
+      return Relation(new IDRefsIterator(mDoc, mContent, nsGkAtoms::aria_errormessage));
+
+    case RelationType::ERRORMSG_FOR:
+      return Relation(new RelatedAccIterator(mDoc, mContent, nsGkAtoms::aria_errormessage));
 
     default:
       return Relation();

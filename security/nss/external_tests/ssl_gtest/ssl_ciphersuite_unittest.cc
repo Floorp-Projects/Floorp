@@ -24,15 +24,15 @@ namespace nss_test {
 
 // mode, version, cipher suite
 typedef std::tuple<std::string, uint16_t, uint16_t, SSLNamedGroup,
-                   TlsSignatureScheme>
+                   SSLSignatureScheme>
     CipherSuiteProfile;
 
 class TlsCipherSuiteTestBase : public TlsConnectTestBase {
  public:
-  TlsCipherSuiteTestBase(std::string mode, uint16_t version,
+  TlsCipherSuiteTestBase(const std::string &mode, uint16_t version,
                          uint16_t cipher_suite, SSLNamedGroup group,
-                         TlsSignatureScheme signature_scheme)
-      : TlsConnectTestBase(TlsConnectTestBase::ToMode(mode), version),
+                         SSLSignatureScheme signature_scheme)
+      : TlsConnectTestBase(mode, version),
         cipher_suite_(cipher_suite),
         group_(group),
         signature_scheme_(signature_scheme),
@@ -60,38 +60,35 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
       server_->ConfigNamedGroups(groups);
       kea_type_ = SSLInt_GetKEAType(group_);
 
-      SSLSignatureAndHashAlg signature_scheme = {
-          static_cast<SSLHashType>(signature_scheme_ >> 8),
-          static_cast<SSLSignType>(signature_scheme_ & 0xff)};
-      client_->SetSignatureAlgorithms(&signature_scheme, 1);
-      server_->SetSignatureAlgorithms(&signature_scheme, 1);
+      client_->SetSignatureSchemes(&signature_scheme_, 1);
+      server_->SetSignatureSchemes(&signature_scheme_, 1);
     }
   }
 
   virtual void SetupCertificate() {
     if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
       switch (signature_scheme_) {
-        case kTlsSignatureRsaPkcs1Sha256:
-        case kTlsSignatureRsaPkcs1Sha384:
-        case kTlsSignatureRsaPkcs1Sha512:
+        case ssl_sig_rsa_pkcs1_sha256:
+        case ssl_sig_rsa_pkcs1_sha384:
+        case ssl_sig_rsa_pkcs1_sha512:
           Reset(TlsAgent::kServerRsaSign);
           auth_type_ = ssl_auth_rsa_sign;
           break;
-        case kTlsSignatureRsaPssSha256:
-        case kTlsSignatureRsaPssSha384:
+        case ssl_sig_rsa_pss_sha256:
+        case ssl_sig_rsa_pss_sha384:
           Reset(TlsAgent::kServerRsaSign);
           auth_type_ = ssl_auth_rsa_sign;
           break;
-        case kTlsSignatureRsaPssSha512:
+        case ssl_sig_rsa_pss_sha512:
           // You can't fit SHA-512 PSS in a 1024-bit key.
           Reset(TlsAgent::kRsa2048);
           auth_type_ = ssl_auth_rsa_sign;
           break;
-        case kTlsSignatureEcdsaSecp256r1Sha256:
+        case ssl_sig_ecdsa_secp256r1_sha256:
           Reset(TlsAgent::kServerEcdsa256);
           auth_type_ = ssl_auth_ecdsa;
           break;
-        case kTlsSignatureEcdsaSecp384r1Sha384:
+        case ssl_sig_ecdsa_secp384r1_sha384:
           Reset(TlsAgent::kServerEcdsa384);
           auth_type_ = ssl_auth_ecdsa;
           break;
@@ -184,7 +181,7 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
   SSLAuthType auth_type_;
   SSLKEAType kea_type_;
   SSLNamedGroup group_;
-  TlsSignatureScheme signature_scheme_;
+  SSLSignatureScheme signature_scheme_;
   SSLCipherSuiteInfo csinfo_;
 };
 
@@ -294,20 +291,16 @@ TEST_P(TlsCipherSuiteTest, WriteLimit) {
                          TlsConnectTestBase::kTls##versions, k##name##Ciphers, \
                          groups, sigalgs));
 
-static const SSLNamedGroup kDummyNamedGroupParamsArr[] = {ssl_grp_none};
-static const auto kDummyNamedGroupParams =
-    ::testing::ValuesIn(kDummyNamedGroupParamsArr);
-static const TlsSignatureScheme kDummySignatureSchemesParamsArr[] = {
-    kTlsSignatureNone};
+static const auto kDummyNamedGroupParams = ::testing::Values(ssl_grp_none);
 static const auto kDummySignatureSchemesParams =
-    ::testing::ValuesIn(kDummySignatureSchemesParamsArr);
+    ::testing::Values(ssl_sig_none);
 
 #ifndef NSS_DISABLE_TLS_1_3
-static TlsSignatureScheme kSignatureSchemesParamsArr[] = {
-    kTlsSignatureRsaPkcs1Sha256,       kTlsSignatureRsaPkcs1Sha384,
-    kTlsSignatureRsaPkcs1Sha512,       kTlsSignatureEcdsaSecp256r1Sha256,
-    kTlsSignatureEcdsaSecp384r1Sha384, kTlsSignatureRsaPssSha256,
-    kTlsSignatureRsaPssSha384,         kTlsSignatureRsaPssSha512,
+static SSLSignatureScheme kSignatureSchemesParamsArr[] = {
+    ssl_sig_rsa_pkcs1_sha256,       ssl_sig_rsa_pkcs1_sha384,
+    ssl_sig_rsa_pkcs1_sha512,       ssl_sig_ecdsa_secp256r1_sha256,
+    ssl_sig_ecdsa_secp384r1_sha384, ssl_sig_rsa_pss_sha256,
+    ssl_sig_rsa_pss_sha384,         ssl_sig_rsa_pss_sha512,
 };
 #endif
 
@@ -372,7 +365,7 @@ INSTANTIATE_CIPHER_TEST_P(TLS13, All, V13,
                           TLS_AES_256_GCM_SHA384);
 INSTANTIATE_CIPHER_TEST_P(TLS13AllGroups, All, V13,
                           ::testing::ValuesIn(kAllDHEGroups),
-                          ::testing::Values(kTlsSignatureEcdsaSecp384r1Sha384),
+                          ::testing::Values(ssl_sig_ecdsa_secp384r1_sha384),
                           TLS_AES_256_GCM_SHA384);
 #endif
 
@@ -405,7 +398,7 @@ class SecurityStatusTest
   SecurityStatusTest()
       : TlsCipherSuiteTestBase("TLS", GetParam().version,
                                GetParam().cipher_suite, ssl_grp_none,
-                               kTlsSignatureNone) {}
+                               ssl_sig_none) {}
 };
 
 // SSL_SecurityStatus produces fairly useless output when compared to

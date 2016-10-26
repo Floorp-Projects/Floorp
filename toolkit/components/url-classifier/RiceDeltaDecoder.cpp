@@ -98,7 +98,7 @@ RiceDeltaDecoder::Decode(uint32_t aRiceParameter,
   // r = remainder
   // k = RICE parameter
   const uint32_t k = aRiceParameter;
-  uint32_t previous = aFirstValue;
+  aDecodedData[0] = aFirstValue;
   for (uint32_t i = 0; i < aNumEntries; i++) {
     // Read the quotient of N.
     uint32_t q;
@@ -120,8 +120,10 @@ RiceDeltaDecoder::Decode(uint32_t aRiceParameter,
     }
 
     // Caculate N from q,r,k.
-    aDecodedData[i] = ((q << k) + r) + previous;
-    previous = aDecodedData[i];
+    uint32_t N = (q << k) + r;
+
+    // We start filling aDecodedData from [1].
+    aDecodedData[i + 1] = N + aDecodedData[i];
   }
 
   return true;

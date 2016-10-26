@@ -15,14 +15,14 @@
             'nssbase.h',
             'nssbaset.h'
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/public'
+          'destination': '<(nss_dist_dir)/public/<(module)'
         },
         {
           'files': [
             'base.h',
             'baset.h'
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/private'
+          'destination': '<(nss_dist_dir)/private/<(module)'
         }
       ]
     }

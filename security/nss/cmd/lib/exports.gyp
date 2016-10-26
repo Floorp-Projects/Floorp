@@ -16,7 +16,7 @@
             'pk11table.h',
             'secutil.h'
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/private'
+          'destination': '<(nss_dist_dir)/private/<(module)'
         }
       ]
     }

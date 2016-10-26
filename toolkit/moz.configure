@@ -274,6 +274,68 @@ def fc_freetype(value, toolkit):
 
 add_old_configure_assignment('USE_FC_FREETYPE', fc_freetype)
 
+# Pango
+# ==============================================================
+pkg_check_modules('MOZ_PANGO',
+                  'pango >= 1.22.0 pangoft2 >= 1.22.0 pangocairo >= 1.22.0',
+                  when=toolkit_gtk)
+
+# Fontconfig
+# ==============================================================
+fontconfig_info = pkg_check_modules('_FONTCONFIG', 'fontconfig >= 2.7.0',
+                                    when=fc_freetype)
+
+@depends(fc_freetype)
+def check_for_freetype2(fc_freetype):
+    if fc_freetype:
+        return True
+
+# Check for freetype2. Flags are combined with fontconfig flags.
+freetype2_info = pkg_check_modules('_FT2', 'freetype2 >= 6.1.0',
+                                   when=check_for_freetype2)
+
+@depends(fontconfig_info, freetype2_info)
+def freetype2_combined_info(fontconfig_info, freetype2_info):
+    if not freetype2_info:
+        return
+    if not fontconfig_info:
+        return freetype2_info
+    return namespace(
+        cflags=freetype2_info.cflags + fontconfig_info.cflags,
+        libs=freetype2_info.libs + fontconfig_info.libs,
+    )
+
+add_old_configure_assignment('_HAVE_FREETYPE2',
+                             depends_if(freetype2_info)(lambda _: True))
+
+# Build Freetype in the tree
+# ==============================================================
+@depends(target)
+def tree_freetype(target):
+    if target.os == 'Android':
+        return True
+
+set_define('MOZ_TREE_FREETYPE', tree_freetype)
+set_config('MOZ_TREE_FREETYPE', tree_freetype)
+add_old_configure_assignment('MOZ_TREE_FREETYPE', tree_freetype)
+
+set_define('HAVE_FT_BITMAP_SIZE_Y_PPEM', tree_freetype)
+set_define('HAVE_FT_GLYPHSLOT_EMBOLDEN', tree_freetype)
+set_define('HAVE_FT_LOAD_SFNT_TABLE', tree_freetype)
+
+@depends(freetype2_combined_info, tree_freetype, check_build_environment)
+def ft2_info(freetype2_combined_info, tree_freetype, build_env):
+    if tree_freetype:
+        return namespace(cflags=('-I%s/modules/freetype2/include' % build_env.topsrcdir,),
+                         libs=())
+    if freetype2_combined_info:
+        return freetype2_combined_info
+
+set_config('FT2_LIBS', delayed_getattr(ft2_info, 'libs'))
+add_old_configure_assignment('FT2_LIBS',
+                             delayed_getattr(ft2_info, 'libs'))
+add_old_configure_assignment('FT2_CFLAGS',
+                             delayed_getattr(ft2_info, 'cflags'))
 
 # Apple platform decoder support
 # ==============================================================
@@ -473,7 +535,7 @@ def gpsd(value):
 system_gpsd = pkg_check_modules('MOZ_GPSD', 'libgps >= 3.11',
                                 when=gpsd)
 
-set_config('MOZ_GPSD', system_gpsd)
+set_config('MOZ_GPSD', depends_if(system_gpsd)(lambda _: True))
 
 # Miscellaneous programs
 # ==============================================================

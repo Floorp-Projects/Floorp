@@ -119,6 +119,10 @@ TlsConnectTestBase::TlsConnectTestBase(Mode mode, uint16_t version)
   std::cerr << "Version: " << mode_ << " " << v << std::endl;
 }
 
+TlsConnectTestBase::TlsConnectTestBase(const std::string& mode,
+                                       uint16_t version)
+    : TlsConnectTestBase(TlsConnectTestBase::ToMode(mode), version) {}
+
 TlsConnectTestBase::~TlsConnectTestBase() {}
 
 // Check the group of each of the supported groups
@@ -195,8 +199,7 @@ void TlsConnectTestBase::Init() {
   server_->SetPeer(client_);
 
   if (version_) {
-    client_->SetVersionRange(version_, version_);
-    server_->SetVersionRange(version_, version_);
+    ConfigureVersion(version_);
   }
 }
 
@@ -368,6 +371,11 @@ void TlsConnectTestBase::ConnectExpectFail() {
   Handshake();
   ASSERT_EQ(TlsAgent::STATE_ERROR, client_->state());
   ASSERT_EQ(TlsAgent::STATE_ERROR, server_->state());
+}
+
+void TlsConnectTestBase::ConfigureVersion(uint16_t version) {
+  client_->SetVersionRange(version, version);
+  server_->SetVersionRange(version, version);
 }
 
 void TlsConnectTestBase::SetExpectedVersion(uint16_t version) {
@@ -588,24 +596,19 @@ void TlsConnectTestBase::CheckEarlyDataAccepted() {
 }
 
 TlsConnectGeneric::TlsConnectGeneric()
-    : TlsConnectTestBase(TlsConnectTestBase::ToMode(std::get<0>(GetParam())),
-                         std::get<1>(GetParam())) {}
+    : TlsConnectTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {}
 
 TlsConnectPre12::TlsConnectPre12()
-    : TlsConnectTestBase(TlsConnectTestBase::ToMode(std::get<0>(GetParam())),
-                         std::get<1>(GetParam())) {}
+    : TlsConnectTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {}
 
 TlsConnectTls12::TlsConnectTls12()
-    : TlsConnectTestBase(TlsConnectTestBase::ToMode(GetParam()),
-                         SSL_LIBRARY_VERSION_TLS_1_2) {}
+    : TlsConnectTestBase(GetParam(), SSL_LIBRARY_VERSION_TLS_1_2) {}
 
 TlsConnectTls12Plus::TlsConnectTls12Plus()
-    : TlsConnectTestBase(TlsConnectTestBase::ToMode(std::get<0>(GetParam())),
-                         std::get<1>(GetParam())) {}
+    : TlsConnectTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {}
 
 TlsConnectTls13::TlsConnectTls13()
-    : TlsConnectTestBase(TlsConnectTestBase::ToMode(GetParam()),
-                         SSL_LIBRARY_VERSION_TLS_1_3) {}
+    : TlsConnectTestBase(GetParam(), SSL_LIBRARY_VERSION_TLS_1_3) {}
 
 void TlsKeyExchangeTest::EnsureKeyShareSetup() {
   EnsureTlsSetup();

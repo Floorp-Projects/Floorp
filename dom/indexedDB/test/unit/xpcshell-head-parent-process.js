@@ -50,6 +50,7 @@ if (!this.runTest) {
 
       enableTesting();
       enableExperimental();
+      enableWasm();
     }
 
     Cu.importGlobalProperties(["indexedDB", "Blob", "File", "FileReader"]);
@@ -62,6 +63,7 @@ if (!this.runTest) {
 function finishTest()
 {
   if (SpecialPowers.isMainProcess()) {
+    resetWasm();
     resetExperimental();
     resetTesting();
 
@@ -207,6 +209,16 @@ function enableTesting()
 function resetTesting()
 {
   SpecialPowers.clearUserPref("dom.indexedDB.testing");
+}
+
+function enableWasm()
+{
+  SpecialPowers.setBoolPref("javascript.options.wasm", true);
+}
+
+function resetWasm()
+{
+  SpecialPowers.clearUserPref("javascript.options.wasm");
 }
 
 function gc()
@@ -363,13 +375,41 @@ function getFile(name, type, str)
   return new File([str], name, {type: type});
 }
 
+function isWasmSupported()
+{
+  let testingFunctions = Cu.getJSTestingFunctions();
+  return testingFunctions.wasmIsSupported();
+}
+
+function getWasmBinarySync(text)
+{
+  let testingFunctions = Cu.getJSTestingFunctions();
+  let binary = testingFunctions.wasmTextToBinary(text);
+  return binary;
+}
+
+function getWasmBinary(text)
+{
+  let binary = getWasmBinarySync(text);
+  executeSoon(function() {
+    testGenerator.send(binary);
+  });
+}
+
+function getWasmModule(binary)
+{
+  let module = new WebAssembly.Module(binary);
+  return module;
+}
+
 function compareBuffers(buffer1, buffer2)
 {
   if (buffer1.byteLength != buffer2.byteLength) {
     return false;
   }
-  let view1 = new Uint8Array(buffer1);
-  let view2 = new Uint8Array(buffer2);
+
+  let view1 = buffer1 instanceof Uint8Array ? buffer1 : new Uint8Array(buffer1);
+  let view2 = buffer2 instanceof Uint8Array ? buffer2 : new Uint8Array(buffer2);
   for (let i = 0; i < buffer1.byteLength; i++) {
     if (view1[i] != view2[i]) {
       return false;
@@ -380,7 +420,7 @@ function compareBuffers(buffer1, buffer2)
 
 function verifyBuffers(buffer1, buffer2)
 {
-  ok(compareBuffers(buffer1, buffer2), "Correct blob data");
+  ok(compareBuffers(buffer1, buffer2), "Correct buffer data");
 }
 
 function verifyBlob(blob1, blob2)
@@ -435,9 +475,41 @@ function verifyMutableFile(mutableFile1, file2)
      "Instance of IDBMutableFile");
   is(mutableFile1.name, file2.name, "Correct name");
   is(mutableFile1.type, file2.type, "Correct type");
-  executeSoon(function() {
-    testGenerator.next();
-  });
+  continueToNextStep();
+}
+
+function verifyView(view1, view2)
+{
+  is(view1.byteLength, view2.byteLength, "Correct byteLength");
+  verifyBuffers(view1, view2);
+  continueToNextStep();
+}
+
+function verifyWasmModule(module1, module2)
+{
+  let testingFunctions = Cu.getJSTestingFunctions();
+  let exp1 = testingFunctions.wasmExtractCode(module1);
+  let exp2 = testingFunctions.wasmExtractCode(module2);
+  let code1 = exp1.code;
+  let code2 = exp2.code;
+  ok(code1 instanceof Uint8Array, "Instance of Uint8Array");
+  ok(code1.length == code2.length, "Correct length");
+  verifyBuffers(code1, code2);
+  continueToNextStep();
+}
+
+function grabFileUsageAndContinueHandler(request)
+{
+  testGenerator.send(request.fileUsage);
+}
+
+function getUsage(usageHandler)
+{
+  let qms = Cc["@mozilla.org/dom/quota-manager-service;1"]
+              .getService(Ci.nsIQuotaManagerService);
+  let principal = Cc["@mozilla.org/systemprincipal;1"]
+                    .createInstance(Ci.nsIPrincipal);
+  qms.getUsageForPrincipal(principal, usageHandler);
 }
 
 function setTemporaryStorageLimit(limit)
@@ -450,6 +522,12 @@ function setTemporaryStorageLimit(limit)
     info("Removing temporary storage limit");
     SpecialPowers.clearUserPref(pref);
   }
+}
+
+function setDataThreshold(threshold)
+{
+  info("Setting data threshold to " + threshold);
+  SpecialPowers.setIntPref("dom.indexedDB.dataThreshold", threshold);
 }
 
 function getPrincipal(url)

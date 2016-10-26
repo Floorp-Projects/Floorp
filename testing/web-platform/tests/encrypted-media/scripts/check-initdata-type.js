@@ -1,4 +1,4 @@
- function runTest( config )
+ function runTest( config, qualifier )
  {
     function checkInitDataType(initDataType)
     {
@@ -21,15 +21,15 @@
     promise_test(function()
     {
         return checkInitDataType('webm');
-    }, config.keysystem + ' support for "webm".');
+    }, testnamePrefix( qualifier, config.keysystem )  + ' support for "webm".');
 
     promise_test(function()
     {
         return checkInitDataType('cenc');
-    }, config.keysystem + ' support for "cenc".');
+    }, testnamePrefix( qualifier, config.keysystem ) + ' support for "cenc".');
 
     promise_test(function()
     {
         return checkInitDataType('keyids');
-    }, config.keysystem + ' support for "keyids".');
+    }, testnamePrefix( qualifier, config.keysystem ) + ' support for "keyids".');
 }

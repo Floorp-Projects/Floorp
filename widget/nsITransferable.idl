@@ -142,7 +142,8 @@ interface nsITransferable : nsISupports
     * @param  aData the data. Some variant of class in nsISupportsPrimitives.idl
     * @param  aDataLen the length of the data
     */
-  void getAnyTransferData ( out string aFlavor, out nsISupports aData, out unsigned long aDataLen ) ;
+  void getAnyTransferData ( out ACString aFlavor, out nsISupports aData,
+                            out unsigned long aDataLen ) ;
 
   /**
     * Returns true if the data is large.

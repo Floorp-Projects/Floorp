@@ -25,7 +25,7 @@
             'pkix_pl_pk11certstore.h',
             'pkix_pl_socket.h'
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/private'
+          'destination': '<(nss_dist_dir)/private/<(module)'
         }
       ]
     }
