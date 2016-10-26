@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+
+<script src="http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_WebRequest_permission_original.js"></script>
+<script>
+"use strict";
+
+window.parent.postMessage({
+  page: "original",
+  script: window.testScript,
+}, "*");
+</script>
+</body>
+</html>
+
