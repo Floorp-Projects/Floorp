@@ -116,8 +116,12 @@ struct hb_font_t {
 
 
   /* Convert from font-space to user-space */
-  inline hb_position_t em_scale_x (int16_t v) { return em_scale (v, this->x_scale); }
-  inline hb_position_t em_scale_y (int16_t v) { return em_scale (v, this->y_scale); }
+  inline int dir_scale (hb_direction_t direction)
+  { return HB_DIRECTION_IS_VERTICAL(direction) ? y_scale : x_scale; }
+  inline hb_position_t em_scale_x (int16_t v) { return em_scale (v, x_scale); }
+  inline hb_position_t em_scale_y (int16_t v) { return em_scale (v, y_scale); }
+  inline hb_position_t em_scale_dir (int16_t v, hb_direction_t direction)
+  { return em_scale (v, dir_scale (direction)); }
 
   /* Convert from parent-font user-space to our user-space */
   inline hb_position_t parent_scale_x_distance (hb_position_t v) {
@@ -504,7 +508,6 @@ struct hb_font_t {
     return false;
   }
 
-  private:
   inline hb_position_t em_scale (int16_t v, int scale)
   {
     int upem = face->get_upem ();
