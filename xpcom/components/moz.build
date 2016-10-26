@@ -36,7 +36,6 @@ SOURCES += [
 
 UNIFIED_SOURCES += [
     'ManifestParser.cpp',
-    'nsNativeModuleLoader.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
