@@ -217,7 +217,6 @@ def generate_separated_sources(platform_sources):
     'opts_check_x86',
     'third_party',
     # unused in skia/src/utils
-    'SkBitSet',
     'SkBoundaryPatch',
     'SkCamera',
     'SkCanvasStack',
@@ -289,6 +288,7 @@ def generate_separated_sources(platform_sources):
       'skia/src/opts/SkOpts_neon.cpp',
     },
     'none': set(),
+    'pdf': set(),
     'gpu': set()
   })
 
@@ -317,6 +317,14 @@ def generate_separated_sources(platform_sources):
         key = 'common'
 
       separated[key].add(value)
+
+  if os.system("cd skia && GYP_GENERATORS=dump_mozbuild ./gyp_skia -D OS=linux -D host_os=linux -R pdf gyp/pdf.gyp") != 0:
+    print 'Failed to generate sources for Skia PDF'
+  else:
+    f = open('skia/sources.json');
+    separated['pdf'].add('skia/src/core/SkMD5.cpp');
+    separated['pdf'].update(filter(lambda x: 'pdf' in x, set(v.replace('../', 'skia/') for v in json.load(f))));
+    f.close()
 
   return separated
 
@@ -373,6 +381,7 @@ unified_blacklist = [
   'SkBlitter_Sprite.cpp',
   'SkScan_Antihair.cpp',
   'SkParse.cpp',
+  'SkPDFFont.cpp',
   'SkPictureData.cpp',
   'GrDrawContext',
   'GrResourceCache',
@@ -439,6 +448,9 @@ def write_mozbuild(sources):
 
   write_sources(f, sources['common'], 0)
   write_cflags(f, sources['common'], opt_whitelist, 'skia_opt_flags', 0)
+
+  f.write("if CONFIG['MOZ_ENABLE_SKIA_PDF']:\n")
+  write_sources(f, sources['pdf'], 4)
 
   f.write("if CONFIG['MOZ_ENABLE_SKIA_GPU']:\n")
   write_sources(f, sources['gpu'], 4)
