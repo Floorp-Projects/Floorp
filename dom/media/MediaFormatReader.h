@@ -306,11 +306,10 @@ private:
     bool mDecoderInitialized;
     bool mOutputRequested;
     // Set to true once the MediaDataDecoder has been fed a compressed sample.
-    // No more sample will be passed to the decoder while true.
+    // No more samples will be passed to the decoder while true.
     // mDecodePending is reset when:
-    // 1- The decoder returns a sample
-    // 2- The decoder calls InputExhausted
-    // 3- The decoder is Flushed or Reset.
+    // 1- The decoder calls InputExhausted
+    // 2- The decoder is Flushed or Reset.
     bool mDecodePending;
     bool mNeedDraining;
     bool mDraining;
