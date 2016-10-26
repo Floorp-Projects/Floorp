@@ -8822,72 +8822,14 @@ nsGlobalWindow::EnterModalState()
     if (topDoc) {
       topDoc->SuppressEventHandling(nsIDocument::eAnimationsOnly);
     }
+
+    nsGlobalWindow* inner = topWin->GetCurrentInnerWindowInternal();
+    if (inner) {
+      topWin->GetCurrentInnerWindowInternal()->NewSuspend();
+    }
   }
   topWin->mModalStateDepth++;
 }
-
-// static
-void
-nsGlobalWindow::RunPendingTimeoutsRecursive(nsGlobalWindow *aTopWindow,
-                                            nsGlobalWindow *aWindow)
-{
-  nsGlobalWindow *inner;
-
-  // Return early if we're frozen or have no inner window.
-  if (!(inner = aWindow->GetCurrentInnerWindowInternal()) ||
-      inner->NewIsFrozen()) {
-    return;
-  }
-
-  inner->RunTimeout(nullptr);
-
-  // Check again if we're frozen since running pending timeouts
-  // could've frozen us.
-  if (inner->NewIsFrozen()) {
-    return;
-  }
-
-  nsCOMPtr<nsIDOMWindowCollection> frames = aWindow->GetFrames();
-  if (!frames) {
-    return;
-  }
-
-  uint32_t length = 0;
-  frames->GetLength(&length);
-
-  for (uint32_t i = 0; i < length && aTopWindow->mModalStateDepth == 0; i++) {
-    nsCOMPtr<mozIDOMWindowProxy> child;
-    frames->Item(i, getter_AddRefs(child));
-
-    if (!child) {
-      return;
-    }
-
-    auto* childWin = nsGlobalWindow::Cast(child);
-
-    RunPendingTimeoutsRecursive(aTopWindow, childWin);
-  }
-}
-
-class nsPendingTimeoutRunner : public Runnable
-{
-public:
-  explicit nsPendingTimeoutRunner(nsGlobalWindow* aWindow)
-    : mWindow(aWindow)
-  {
-    NS_ASSERTION(mWindow, "mWindow is null.");
-  }
-
-  NS_IMETHOD Run() override
-  {
-    nsGlobalWindow::RunPendingTimeoutsRecursive(mWindow, mWindow);
-
-    return NS_OK;
-  }
-
-private:
-  RefPtr<nsGlobalWindow> mWindow;
-};
 
 void
 nsGlobalWindow::LeaveModalState()
@@ -8901,12 +8843,17 @@ nsGlobalWindow::LeaveModalState()
     return;
   }
 
+  MOZ_ASSERT(topWin->mModalStateDepth != 0);
+  MOZ_ASSERT(NewIsSuspended());
+  MOZ_ASSERT(topWin->NewIsSuspended());
   topWin->mModalStateDepth--;
 
+  nsGlobalWindow* inner = topWin->GetCurrentInnerWindowInternal();
+
   if (topWin->mModalStateDepth == 0) {
-    nsCOMPtr<nsIRunnable> runner = new nsPendingTimeoutRunner(topWin);
-    if (NS_FAILED(NS_DispatchToCurrentThread(runner)))
-      NS_WARNING("failed to dispatch pending timeout runnable");
+    if (inner) {
+      inner->NewResume();
+    }
 
     if (topWin->mSuspendedDoc) {
       nsCOMPtr<nsIDocument> currentDoc = topWin->GetExtantDoc();
@@ -8917,9 +8864,9 @@ nsGlobalWindow::LeaveModalState()
   }
 
   // Remember the time of the last dialog quit.
-  nsGlobalWindow *inner = topWin->GetCurrentInnerWindowInternal();
-  if (inner)
+  if (inner) {
     inner->mLastDialogQuitTime = TimeStamp::Now();
+  }
 
   if (topWin->mModalStateDepth == 0) {
     RefPtr<Event> event = NS_NewDOMEvent(inner, nullptr, nullptr);
@@ -11976,29 +11923,30 @@ nsGlobalWindow::NewIsFrozen() const
 void
 nsGlobalWindow::NewSyncStateFromParentWindow()
 {
+  // This method should only be called on an inner window that has been
+  // assigned to an outer window already.
+  MOZ_ASSERT(IsInnerWindow());
   nsPIDOMWindowOuter* outer = GetOuterWindow();
-  if (!outer) {
-    return;
-  }
+  MOZ_ASSERT(outer);
 
+  // Attempt to find our parent windows.
   nsCOMPtr<Element> frame = outer->GetFrameElementInternal();
-  if (!frame) {
-    return;
-  }
-
-  nsPIDOMWindowOuter* parentOuter = frame->OwnerDoc()->GetWindow();
-  if (!parentOuter) {
-    return;
-  }
-
+  nsPIDOMWindowOuter* parentOuter = frame ? frame->OwnerDoc()->GetWindow()
+                                          : nullptr;
   nsGlobalWindow* parentInner =
-    nsGlobalWindow::Cast(parentOuter->GetCurrentInnerWindow());
-  if (!parentInner) {
-    return;
+    parentOuter ? nsGlobalWindow::Cast(parentOuter->GetCurrentInnerWindow())
+                : nullptr;
+
+  // If our outer is in a modal state, but our parent is not in a modal
+  // state, then we must apply the suspend directly.  If our parent is
+  // in a modal state then we should get the suspend automatically
+  // via the parentSuspendDepth application below.
+  if ((!parentInner || !parentInner->IsInModalState()) && IsInModalState()) {
+    NewSuspend();
   }
 
-  uint32_t parentFreezeDepth = parentInner->mFreezeDepth;
-  uint32_t parentSuspendDepth = parentInner->mSuspendDepth;
+  uint32_t parentFreezeDepth = parentInner ? parentInner->mFreezeDepth : 0;
+  uint32_t parentSuspendDepth = parentInner ? parentInner->mSuspendDepth : 0;
 
   // Since every Freeze() calls Suspend(), the suspend count must
   // be equal or greater to the freeze count.
@@ -12829,9 +12777,7 @@ nsGlobalWindow::RescheduleTimeout(nsTimeout* aTimeout, const TimeStamp& now,
 void
 nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 {
-  // If a modal dialog is open for this window, return early. Pending
-  // timeouts will run when the modal dialog is dismissed.
-  if (IsInModalState() || NewIsSuspended()) {
+  if (NewIsSuspended()) {
     return;
   }
 
