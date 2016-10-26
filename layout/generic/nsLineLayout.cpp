@@ -304,8 +304,8 @@ nsLineLayout::UpdateBand(WritingMode aWM,
                                                     ContainerSize());
 #ifdef REALLY_NOISY_REFLOW
   printf("nsLL::UpdateBand %d, %d, %d, %d, (converted to %d, %d, %d, %d); frame=%p\n  will set mImpacted to true\n",
-         aNewAvailSpace.x, aNewAvailSpace.y,
-         aNewAvailSpace.width, aNewAvailSpace.height,
+         aNewAvailSpace.IStart(aWM), aNewAvailSpace.BStart(aWM),
+         aNewAvailSpace.ISize(aWM), aNewAvailSpace.BSize(aWM),
          availSpace.IStart(lineWM), availSpace.BStart(lineWM),
          availSpace.ISize(lineWM), availSpace.BSize(lineWM),
          aFloatFrame);
