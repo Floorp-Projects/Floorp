@@ -134,11 +134,11 @@ def install_libgcc(gcc_dir, clang_dir):
 
 
 def svn_co(source_dir, url, directory, revision):
-    run_in(source_dir, ["svn", "co", "-r", revision, url, directory])
+    run_in(source_dir, ["svn", "co", "-q", "-r", revision, url, directory])
 
 
 def svn_update(directory, revision):
-    run_in(directory, ["svn", "update", "-r", revision])
+    run_in(directory, ["svn", "update", "-q", "-r", revision])
 
 
 def get_platform():
