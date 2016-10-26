@@ -1423,7 +1423,11 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
     NS_LITERAL_CSTRING("ContentSandboxEnabled"),
     sandboxEnabled? NS_LITERAL_CSTRING("1") : NS_LITERAL_CSTRING("0"));
 #if defined(XP_LINUX) && !defined(OS_ANDROID)
-  SandboxInfo::Get().AnnotateCrashReport();
+  nsAutoCString flagsString;
+  flagsString.AppendInt(SandboxInfo::Get().AsInteger());
+
+  CrashReporter::AnnotateCrashReport(
+    NS_LITERAL_CSTRING("ContentSandboxCapabilities"), flagsString);
 #endif /* XP_LINUX && !OS_ANDROID */
 #endif /* MOZ_CRASHREPORTER */
 #endif /* MOZ_CONTENT_SANDBOX */
