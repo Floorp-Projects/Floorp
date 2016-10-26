@@ -81,10 +81,7 @@ async_test(function(t) {
 // us through a different code path.
 async_test(function(t) {
   // This test only applies to compositor animations
-  const OMTAPrefKey = 'layers.offmainthreadcomposition.async-animations';
-  var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
-                    opener.SpecialPowers.getBoolPref(OMTAPrefKey);
-  if (!omtaEnabled) {
+  if (!isOMTAEnabled()) {
     t.done();
     return;
   }
