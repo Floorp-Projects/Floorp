@@ -100,7 +100,7 @@ AnimationTimeBlock.prototype = {
                             ${ 1 + strokeHeightForViewBox * 2 }`);
 
     // Get a helper function that returns the path segment of timing-function.
-    const segmentHelperFn = getSegmentHelper(state, this.win);
+    const segmentHelper = getSegmentHelper(state, this.win);
 
     // Minimum segment duration is the duration of one pixel.
     const minSegmentDuration =
@@ -121,7 +121,7 @@ AnimationTimeBlock.prototype = {
 
     // Append delay.
     if (state.delay > 0) {
-      renderDelay(summaryEl, state, segmentHelperFn);
+      renderDelay(summaryEl, state, segmentHelper);
       mainIterationStartTime = state.delay;
     } else {
       const negativeDelayCount = -state.delay / state.duration;
@@ -143,7 +143,7 @@ AnimationTimeBlock.prototype = {
     if (firstSectionCount) {
       renderFirstIteration(summaryEl, state, mainIterationStartTime,
                            firstSectionCount, minSegmentDuration,
-                           minProgressThreshold, segmentHelperFn);
+                           minProgressThreshold, segmentHelper);
     }
 
     if (iterationCount === Infinity) {
@@ -151,7 +151,7 @@ AnimationTimeBlock.prototype = {
       // we fill the remaining area with iteration paths.
       renderInfinity(summaryEl, state, mainIterationStartTime,
                      firstSectionCount, totalDisplayedDuration,
-                     minSegmentDuration, minProgressThreshold, segmentHelperFn);
+                     minSegmentDuration, minProgressThreshold, segmentHelper);
     } else {
       // Otherwise, we show remaining iterations, endDelay and fill.
 
@@ -159,7 +159,7 @@ AnimationTimeBlock.prototype = {
       if (state.fill === "both" || state.fill === "forwards") {
         renderForwardsFill(summaryEl, state, mainIterationStartTime,
                            iterationCount, totalDisplayedDuration,
-                           segmentHelperFn);
+                           segmentHelper);
       }
 
       // Append middle section of iterations.
@@ -170,7 +170,7 @@ AnimationTimeBlock.prototype = {
       renderMiddleIterations(summaryEl, state, mainIterationStartTime,
                              firstSectionCount, middleSectionCount,
                              minSegmentDuration, minProgressThreshold,
-                             segmentHelperFn);
+                             segmentHelper);
 
       // Append last section of iterations, if there is remaining iteration.
       // e.g.
@@ -181,14 +181,33 @@ AnimationTimeBlock.prototype = {
         renderLastIteration(summaryEl, state, mainIterationStartTime,
                             firstSectionCount, middleSectionCount,
                             lastSectionCount, minSegmentDuration,
-                            minProgressThreshold, segmentHelperFn);
+                            minProgressThreshold, segmentHelper);
       }
 
       // Append endDelay.
       if (state.endDelay > 0) {
         renderEndDelay(summaryEl, state,
-                       mainIterationStartTime, iterationCount, segmentHelperFn);
+                       mainIterationStartTime, iterationCount, segmentHelper);
       }
+    }
+
+    // Append negative delay (which overlap the animation).
+    if (state.delay < 0) {
+      segmentHelper.animation.effect.timing.fill = "both";
+      segmentHelper.asOriginalBehavior = false;
+      renderNegativeDelayHiddenProgress(summaryEl, state, minSegmentDuration,
+                                        minProgressThreshold, segmentHelper);
+    }
+    // Append negative endDelay (which overlap the animation).
+    if (state.iterationCount && state.endDelay < 0) {
+      if (segmentHelper.asOriginalBehavior) {
+        segmentHelper.animation.effect.timing.fill = "both";
+        segmentHelper.asOriginalBehavior = false;
+      }
+      renderNegativeEndDelayHiddenProgress(summaryEl, state,
+                                           minSegmentDuration,
+                                           minProgressThreshold,
+                                           segmentHelper);
     }
 
     // The animation name is displayed over the iterations.
@@ -215,18 +234,24 @@ AnimationTimeBlock.prototype = {
       createNode({
         parent: this.containerEl,
         attributes: {
-          "class": "delay" + (state.delay < 0 ? " negative" : ""),
+          "class": "delay"
+                   + (state.delay < 0 ? " negative" : " positive")
+                   + (state.fill === "both" ||
+                      state.fill === "backwards" ? " fill" : ""),
           "style": `left:${ delayX }%; width:${ delayW }%;`
         }
       });
     }
 
     // endDelay
-    if (state.endDelay) {
+    if (state.iterationCount && state.endDelay) {
       createNode({
         parent: this.containerEl,
         attributes: {
-          "class": "end-delay" + (state.endDelay < 0 ? " negative" : ""),
+          "class": "end-delay"
+                   + (state.endDelay < 0 ? " negative" : " positive")
+                   + (state.fill === "both" ||
+                      state.fill === "forwards" ? " fill" : ""),
           "style": `left:${ endDelayX }%; width:${ endDelayW }%;`
         }
       });
@@ -341,10 +366,10 @@ function getFormattedAnimationTitle({state}) {
  * Render delay section.
  * @param {Element} parentEl - Parent element of this appended path element.
  * @param {Object} state - State of animation.
- * @param {function} getSegment - The function of getSegmentHelper.
+ * @param {Object} segmentHelper - The object returned by getSegmentHelper.
  */
-function renderDelay(parentEl, state, getSegment) {
-  const startSegment = getSegment(0);
+function renderDelay(parentEl, state, segmentHelper) {
+  const startSegment = segmentHelper.getSegment(0);
   const endSegment = { x: state.delay, y: startSegment.y };
   appendPathElement(parentEl, [startSegment, endSegment], "delay-path");
 }
@@ -357,16 +382,16 @@ function renderDelay(parentEl, state, getSegment) {
  * @param {Number} firstSectionCount - Iteration count of first section.
  * @param {Number} minSegmentDuration - Minimum segment duration.
  * @param {Number} minProgressThreshold - Minimum progress threshold.
- * @param {function} getSegment - The function of getSegmentHelper.
+ * @param {Object} segmentHelper - The object returned by getSegmentHelper.
  */
 function renderFirstIteration(parentEl, state, mainIterationStartTime,
                               firstSectionCount, minSegmentDuration,
-                              minProgressThreshold, getSegment) {
+                              minProgressThreshold, segmentHelper) {
   const startTime = mainIterationStartTime;
   const endTime = startTime + firstSectionCount * state.duration;
   const segments =
     createPathSegments(startTime, endTime, minSegmentDuration,
-                       minProgressThreshold, getSegment);
+                       minProgressThreshold, segmentHelper);
   appendPathElement(parentEl, segments, "iteration-path");
 }
 
@@ -379,12 +404,12 @@ function renderFirstIteration(parentEl, state, mainIterationStartTime,
  * @param {Number} middleSectionCount - Iteration count of middle section.
  * @param {Number} minSegmentDuration - Minimum segment duration.
  * @param {Number} minProgressThreshold - Minimum progress threshold.
- * @param {function} getSegment - The function of getSegmentHelper.
+ * @param {Object} segmentHelper - The object returned by getSegmentHelper.
  */
 function renderMiddleIterations(parentEl, state, mainIterationStartTime,
                                 firstSectionCount, middleSectionCount,
                                 minSegmentDuration, minProgressThreshold,
-                                getSegment) {
+                                segmentHelper) {
   const offset = mainIterationStartTime + firstSectionCount * state.duration;
   for (let i = 0; i < middleSectionCount; i++) {
     // Get the path segments of each iteration.
@@ -392,7 +417,7 @@ function renderMiddleIterations(parentEl, state, mainIterationStartTime,
     const endTime = startTime + state.duration;
     const segments =
       createPathSegments(startTime, endTime, minSegmentDuration,
-                         minProgressThreshold, getSegment);
+                         minProgressThreshold, segmentHelper);
     appendPathElement(parentEl, segments, "iteration-path");
   }
 }
@@ -407,18 +432,18 @@ function renderMiddleIterations(parentEl, state, mainIterationStartTime,
  * @param {Number} lastSectionCount - Iteration count of last section.
  * @param {Number} minSegmentDuration - Minimum segment duration.
  * @param {Number} minProgressThreshold - Minimum progress threshold.
- * @param {function} getSegment - The function of getSegmentHelper.
+ * @param {Object} segmentHelper - The object returned by getSegmentHelper.
  */
 function renderLastIteration(parentEl, state, mainIterationStartTime,
                              firstSectionCount, middleSectionCount,
                              lastSectionCount, minSegmentDuration,
-                             minProgressThreshold, getSegment) {
+                             minProgressThreshold, segmentHelper) {
   const startTime = mainIterationStartTime +
                       (firstSectionCount + middleSectionCount) * state.duration;
   const endTime = startTime + lastSectionCount * state.duration;
   const segments =
     createPathSegments(startTime, endTime, minSegmentDuration,
-                       minProgressThreshold, getSegment);
+                       minProgressThreshold, segmentHelper);
   appendPathElement(parentEl, segments, "iteration-path");
 }
 
@@ -431,11 +456,11 @@ function renderLastIteration(parentEl, state, mainIterationStartTime,
  * @param {Number} totalDuration - Displayed max duration.
  * @param {Number} minSegmentDuration - Minimum segment duration.
  * @param {Number} minProgressThreshold - Minimum progress threshold.
- * @param {function} getSegment - The function of getSegmentHelper.
+ * @param {Object} segmentHelper - The object returned by getSegmentHelper.
  */
 function renderInfinity(parentEl, state, mainIterationStartTime,
                         firstSectionCount, totalDuration, minSegmentDuration,
-                        minProgressThreshold, getSegment) {
+                        minProgressThreshold, segmentHelper) {
   // Calculate the number of iterations to display,
   // with a maximum of MAX_INFINITE_ANIMATIONS_ITERATIONS
   let uncappedInfinityIterationCount =
@@ -454,7 +479,7 @@ function renderInfinity(parentEl, state, mainIterationStartTime,
   const firstEndTime = firstStartTime + state.duration;
   const firstSegments =
     createPathSegments(firstStartTime, firstEndTime, minSegmentDuration,
-                       minProgressThreshold, getSegment);
+                       minProgressThreshold, segmentHelper);
   appendPathElement(parentEl, firstSegments, "iteration-path infinity");
 
   // Append other iterations. We can copy first segments.
@@ -483,12 +508,12 @@ function renderInfinity(parentEl, state, mainIterationStartTime,
  * @param {Object} state - State of animation.
  * @param {Number} mainIterationStartTime - Starting time of main iteration.
  * @param {Number} iterationCount - Whole iteration count.
- * @param {function} getSegment - The function of getSegmentHelper.
+ * @param {Object} segmentHelper - The object returned by getSegmentHelper.
  */
 function renderEndDelay(parentEl, state,
-                        mainIterationStartTime, iterationCount, getSegment) {
+                        mainIterationStartTime, iterationCount, segmentHelper) {
   const startTime = mainIterationStartTime + iterationCount * state.duration;
-  const startSegment = getSegment(startTime);
+  const startSegment = segmentHelper.getSegment(startTime);
   const endSegment = { x: startTime + state.endDelay, y: startSegment.y };
   appendPathElement(parentEl, [startSegment, endSegment], "enddelay-path");
 }
@@ -500,22 +525,70 @@ function renderEndDelay(parentEl, state,
  * @param {Number} mainIterationStartTime - Starting time of main iteration.
  * @param {Number} iterationCount - Whole iteration count.
  * @param {Number} totalDuration - Displayed max duration.
- * @param {function} getSegment - The function of getSegmentHelper.
+ * @param {Object} segmentHelper - The object returned by getSegmentHelper.
  */
 function renderForwardsFill(parentEl, state, mainIterationStartTime,
-                            iterationCount, totalDuration, getSegment) {
+                            iterationCount, totalDuration, segmentHelper) {
   const startTime = mainIterationStartTime + iterationCount * state.duration +
                       (state.endDelay > 0 ? state.endDelay : 0);
-  const startSegment = getSegment(startTime);
+  const startSegment = segmentHelper.getSegment(startTime);
   const endSegment = { x: totalDuration, y: startSegment.y };
   appendPathElement(parentEl, [startSegment, endSegment], "fill-forwards-path");
+}
+
+/**
+ * Render hidden progress of negative delay.
+ * @param {Element} parentEl - Parent element of this appended path element.
+ * @param {Object} state - State of animation.
+ * @param {Number} minSegmentDuration - Minimum segment duration.
+ * @param {Number} minProgressThreshold - Minimum progress threshold.
+ * @param {Object} segmentHelper - The object returned by getSegmentHelper.
+ */
+function renderNegativeDelayHiddenProgress(parentEl, state, minSegmentDuration,
+                                           minProgressThreshold,
+                                           segmentHelper) {
+  const startTime = state.delay;
+  const endTime = 0;
+  const segments =
+    createPathSegments(startTime, endTime, minSegmentDuration,
+                       minProgressThreshold, segmentHelper);
+  appendPathElement(parentEl, segments, "delay-path negative");
+}
+
+/**
+ * Render hidden progress of negative endDelay.
+ * @param {Element} parentEl - Parent element of this appended path element.
+ * @param {Object} state - State of animation.
+ * @param {Number} minSegmentDuration - Minimum segment duration.
+ * @param {Number} minProgressThreshold - Minimum progress threshold.
+ * @param {Object} segmentHelper - The object returned by getSegmentHelper.
+ */
+function renderNegativeEndDelayHiddenProgress(parentEl, state,
+                                              minSegmentDuration,
+                                              minProgressThreshold,
+                                              segmentHelper) {
+  const endTime = state.delay + state.iterationCount * state.duration;
+  const startTime = endTime + state.endDelay;
+  const segments =
+    createPathSegments(startTime, endTime, minSegmentDuration,
+                       minProgressThreshold, segmentHelper);
+  appendPathElement(parentEl, segments, "enddelay-path negative");
 }
 
 /**
  * Get a helper function which returns the segment coord from given time.
  * @param {Object} state - animation state
  * @param {Object} win - window object
- * @return {function} getSegmentHelper
+ * @return {Object} A segmentHelper object that has the following properties:
+ * - animation: The script animation used to get the progress
+ * - endTime: The end time of the animation
+ * - asOriginalBehavior: The spec is that the progress of animation is changed
+ *                       if the time of setCurrentTime is during the endDelay.
+ *                       Likewise, in case the time is less than 0.
+ *                       If this flag is true, we prevent the time
+ *                       to make the same animation behavior as the original.
+ * - getSegment: Helper function that, given a time,
+ *               will calculate the progress through the dummy animation.
  */
 function getSegmentHelper(state, win) {
   // Create a dummy Animation timing data as the
@@ -523,21 +596,30 @@ function getSegmentHelper(state, win) {
   const timing = Object.assign({}, state, {
     iterations: state.iterationCount ? state.iterationCount : Infinity
   });
+
   // Create a dummy Animation with the given timing.
   const dummyAnimation =
     new win.Animation(new win.KeyframeEffect(null, null, timing), null);
-  const endTime = dummyAnimation.effect.getComputedTiming().endTime;
-  // Return a helper function that, given a time,
-  // will calculate the progress through the dummy animation.
-  return time => {
-    // If the given time is less than 0, returned progress is 0.
-    if (time < 0) {
-      return { x: time, y: 0 };
+
+  // Returns segment helper object.
+  return {
+    animation: dummyAnimation,
+    endTime: dummyAnimation.effect.getComputedTiming().endTime,
+    asOriginalBehavior: true,
+    getSegment: function (time) {
+      if (this.asOriginalBehavior) {
+        // If the given time is less than 0, returned progress is 0.
+        if (time < 0) {
+          return { x: time, y: 0 };
+        }
+        // Avoid to apply over endTime.
+        this.animation.currentTime = time < this.endTime ? time : this.endTime;
+      } else {
+        this.animation.currentTime = time;
+      }
+      const progress = this.animation.effect.getComputedTiming().progress;
+      return { x: time, y: Math.max(progress, 0) };
     }
-    dummyAnimation.currentTime =
-      time < endTime ? time : endTime;
-    const progress = dummyAnimation.effect.getComputedTiming().progress;
-    return { x: time, y: Math.max(progress, 0) };
   };
 }
 
@@ -547,22 +629,23 @@ function getSegmentHelper(state, win) {
  * @param {Number} endTime - Ending time of animation.
  * @param {Number} minSegmentDuration - Minimum segment duration.
  * @param {Number} minProgressThreshold - Minimum progress threshold.
- * @param {function} getSegment - The function of getSegmentHelper.
+ * @param {Object} segmentHelper - The object of getSegmentHelper.
  * @return {Array} path segments -
  *                 [{x: {Number} time, y: {Number} progress}, ...]
  */
 function createPathSegments(startTime, endTime, minSegmentDuration,
-                            minProgressThreshold, getSegment) {
+                            minProgressThreshold, segmentHelper) {
   // If the duration is too short, early return.
   if (endTime - startTime < minSegmentDuration) {
-    return [getSegment(startTime), getSegment(endTime)];
+    return [segmentHelper.getSegment(startTime),
+            segmentHelper.getSegment(endTime)];
   }
 
   // Otherwise, start creating segments.
   let pathSegments = [];
 
   // Append the segment for the startTime position.
-  const startTimeSegment = getSegment(startTime);
+  const startTimeSegment = segmentHelper.getSegment(startTime);
   pathSegments.push(startTimeSegment);
   let previousSegment = startTimeSegment;
 
@@ -571,7 +654,8 @@ function createPathSegments(startTime, endTime, minSegmentDuration,
   const interval = (endTime - startTime) / DURATION_RESOLUTION;
   for (let index = 1; index <= DURATION_RESOLUTION; index++) {
     // Create a segment for this interval.
-    const currentSegment = getSegment(startTime + index * interval);
+    const currentSegment =
+      segmentHelper.getSegment(startTime + index * interval);
 
     // If the distance between the Y coordinate (the animation's progress) of
     // the previous segment and the Y coordinate of the current segment is too
@@ -583,7 +667,7 @@ function createPathSegments(startTime, endTime, minSegmentDuration,
       pathSegments = pathSegments.concat(
         createPathSegments(previousSegment.x + 1, currentSegment.x - 1,
                            minSegmentDuration, minProgressThreshold,
-                           getSegment));
+                           segmentHelper));
     }
 
     pathSegments.push(currentSegment);
