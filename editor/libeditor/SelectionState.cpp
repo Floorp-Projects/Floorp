@@ -346,8 +346,8 @@ RangeUpdater::SelAdjSplitNode(nsIContent& aOldRightNode,
   int32_t offset = parent ? parent->IndexOf(&aOldRightNode) : -1;
 
   // first part is same as inserting aNewLeftnode
-  nsresult result = SelAdjInsertNode(parent, offset - 1);
-  NS_ENSURE_SUCCESS(result, result);
+  nsresult rv = SelAdjInsertNode(parent, offset - 1);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // next step is to check for range enpoints inside aOldRightNode
   for (size_t i = 0; i < count; i++) {

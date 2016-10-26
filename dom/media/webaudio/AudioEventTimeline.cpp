@@ -20,7 +20,11 @@ static float ExponentialInterpolate(double t0, float v0, double t1, float v1, do
 
 static float ExponentialApproach(double t0, double v0, float v1, double timeConstant, double t)
 {
-  return v1 + (v0 - v1) * expf(-(t - t0) / timeConstant);
+  if (!mozilla::dom::WebAudioUtils::FuzzyEqual(timeConstant, 0.0)) {
+    return v1 + (v0 - v1) * expf(-(t - t0) / timeConstant);
+  } else {
+    return v1;
+  }
 }
 
 static float ExtractValueFromCurve(double startTime, float* aCurve, uint32_t aCurveLength, double duration, double t)
@@ -33,7 +37,15 @@ static float ExtractValueFromCurve(double startTime, float* aCurve, uint32_t aCu
   if (ratio >= 1.0) {
     return aCurve[aCurveLength - 1];
   }
-  return aCurve[uint32_t(aCurveLength * ratio)];
+  uint32_t current = uint32_t(aCurveLength * ratio);
+  uint32_t next = current + 1;
+  if (next < aCurveLength) {
+    double t0 = double(current) / double(aCurveLength) * duration ;
+    double t1 = double(next) / double(aCurveLength) * duration ;
+    return LinearInterpolate(t0, aCurve[current], t1, aCurve[next], t - startTime);
+  } else {
+    return aCurve[current];
+  }
 }
 
 namespace mozilla {
@@ -67,12 +79,6 @@ AudioEventTimeline::ValidateEvent(AudioTimelineEvent& aEvent,
         return false;
       }
     }
-  }
-
-  if (aEvent.mType == AudioTimelineEvent::SetTarget &&
-      WebAudioUtils::FuzzyEqual(aEvent.mTimeConstant, 0.0)) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return false;
   }
 
   bool timeAndValueValid = IsValid(aEvent.mValue) &&

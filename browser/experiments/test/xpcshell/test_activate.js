@@ -6,11 +6,9 @@
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource:///modules/experiments/Experiments.jsm");
 
-const FILE_MANIFEST            = "experiments.manifest";
 const SEC_IN_ONE_DAY  = 24 * 60 * 60;
 const MS_IN_ONE_DAY   = SEC_IN_ONE_DAY * 1000;
 
-var gProfileDir = null;
 var gHttpServer = null;
 var gHttpRoot   = null;
 var gPolicy     = null;
@@ -32,7 +30,6 @@ function run_test() {
 
 add_task(function* test_setup() {
   loadAddonManager();
-  gProfileDir = do_get_profile();
   gPolicy = new Experiments.Policy();
 
   gHttpServer = new HttpServer();
@@ -49,8 +46,6 @@ add_task(function* test_setup() {
   Services.prefs.setBoolPref(PREF_EXPERIMENTS_ENABLED, true);
   Services.prefs.setIntPref(PREF_LOGGING_LEVEL, 0);
   Services.prefs.setBoolPref(PREF_LOGGING_DUMP, true);
-
-  let experiments = new Experiments.Experiments();
 });
 
 function isApplicable(experiment) {

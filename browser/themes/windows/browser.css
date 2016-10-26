@@ -1534,6 +1534,10 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 
 %include ../shared/autocomplete.inc.css
 
+#PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
+  border-top: 1px solid ThreeDShadow;
+}
+
 #treecolAutoCompleteImage {
   max-width: 36px;
 }

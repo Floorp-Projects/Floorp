@@ -1,0 +1,88 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --font-size: 1.2rem;
+  --spinner-item-height: 2rem;
+  --spinner-width: 5rem;
+  --spinner-height: 10rem;
+  --scroller-width: 1.5rem;
+  --disabled-color: #ccc;
+  --selected-color: #fff;
+  --selected-bgcolor: #83BFFC;
+  --hover-bgcolor: #aaa;
+  --hover-outline: #999;
+}
+
+body {
+  margin: 0;
+  font-size: var(--font-size);
+}
+
+#time-picker {
+  display: flex;
+  flex-direction: row;
+}
+
+.spinner-container {
+  font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  width: var(--spinner-width);
+}
+
+.spinner-container button {
+  -moz-appearance: none;
+  border: none;
+  background: none;
+  height: var(--spinner-item-height);
+}
+
+.spinner-container .stack {
+  position: relative;
+  height: var(--spinner-height);
+}
+
+.spinner-container .spinner {
+  position: absolute;
+  height: var(--spinner-height);
+  width: 100%;
+  cursor: default;
+  overflow-y: scroll;
+  scroll-snap-type: mandatory;
+  scroll-snap-points-y: repeat(100%);
+}
+
+.spinner-container .spinner > div {
+  position: relative;
+  text-align: center;
+  padding: calc(var(--spinner-item-height) / 4) 0;
+  height: calc(var(--spinner-item-height) / 2);
+  -moz-user-select: none;
+  scroll-snap-coordinate: 0 0;
+}
+
+.spinner-container .spinner > div:last-child {
+  margin-bottom: calc(var(--spinner-item-height) * 2);
+}
+
+.spinner-container .spinner > div.selection {
+  color: var(--selected-color);
+}
+
+.spinner-container .spinner > div.selection::before {
+  content: "";
+  background: var(--selected-bgcolor);
+  position: absolute;
+  top: 5%;
+  bottom: 5%;
+  left: 10%;
+  right: 10%;
+  border-radius: 5%;
+  z-index: -10;
+}
+
+.spinner-container .spinner > div.disabled {
+  color: var(--disabled-color);
+}

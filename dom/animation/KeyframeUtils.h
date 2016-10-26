@@ -98,11 +98,14 @@ public:
    *   GetComputedKeyframeValues. Only used when |aSpacingMode| is
    *   SpacingMode::paced. In all other cases this parameter is unused and may
    *   be any value including an empty array.
+   * @param aStyleContext The style context used for calculating paced spacing
+   *                      on transform.
    */
   static void ApplySpacing(nsTArray<Keyframe>& aKeyframes,
                            SpacingMode aSpacingMode,
                            nsCSSPropertyID aProperty,
-                           nsTArray<ComputedKeyframeValues>& aComputedValues);
+                           nsTArray<ComputedKeyframeValues>& aComputedValues,
+                           nsStyleContext* aStyleContext);
 
   /**
    * Wrapper for ApplySpacing to simplify using distribute spacing.

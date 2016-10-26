@@ -5,7 +5,6 @@
 
 #include "GLContextProvider.h"
 #include "GLContextCGL.h"
-#include "TextureImageCGL.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include <OpenGL/gl.h>

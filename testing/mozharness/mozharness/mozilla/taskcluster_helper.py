@@ -93,7 +93,10 @@ class Taskcluster(LogMixin):
 
     @property
     def expiration(self):
-        return datetime.utcnow() + timedelta(weeks=52)
+        weeks = 52
+        if self.buildbot == 'buildbot-try':
+            weeks = 3
+        return datetime.utcnow() + timedelta(weeks=weeks)
 
     def create_artifact(self, task, filename):
         mime_type = self.get_mime_type(os.path.splitext(filename)[1])
