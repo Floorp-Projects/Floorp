@@ -380,8 +380,11 @@ if __name__ == "__main__":
     elif is_windows():
         extra_cflags = []
         extra_cxxflags = []
+        # clang-cl would like to figure out what it's supposed to be emulating
+        # by looking at an MSVC install, but we don't really have that here.
+        # Force things on.
         extra_cflags2 = []
-        extra_cxxflags2 = []
+        extra_cxxflags2 = ['-fms-compatibility-version=19.00.23918', '-Xclang', '-std=c++14']
 
     build_one_stage(
         [cc] + extra_cflags,
