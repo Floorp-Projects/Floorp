@@ -16,7 +16,6 @@ SOURCES = [
 
 LOCAL_INCLUDES += [
     '/security/sandbox/linux',
-    '/security/sandbox/linux/common',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

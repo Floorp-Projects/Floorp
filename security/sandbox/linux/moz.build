@@ -15,6 +15,7 @@ if CONFIG['OS_TARGET'] == 'Android':
 
 EXPORTS.mozilla += [
     'Sandbox.h',
+    'SandboxInfo.h',
 ]
 
 SOURCES += [
@@ -63,6 +64,7 @@ SOURCES += [
     'SandboxChroot.cpp',
     'SandboxFilter.cpp',
     'SandboxFilterUtil.cpp',
+    'SandboxInfo.cpp',
     'SandboxLogging.cpp',
     'SandboxUtil.cpp',
 ]
@@ -91,7 +93,7 @@ if '-flto' in CONFIG['OS_CXXFLAGS'] and not CONFIG['CLANG_CXX']:
 DEFINES['NS_NO_XPCOM'] = True
 DISABLE_STL_WRAPPING = True
 
-LOCAL_INCLUDES += ['/security/sandbox/linux/common']
+LOCAL_INCLUDES += ['/security/sandbox/linux']
 LOCAL_INCLUDES += ['/security/sandbox/chromium-shim']
 LOCAL_INCLUDES += ['/security/sandbox/chromium']
 LOCAL_INCLUDES += ['/nsprpub']
@@ -105,7 +107,6 @@ if CONFIG['OS_TARGET'] != 'Android':
 
 DIRS += [
     'broker',
-    'common',
     'glue',
     'interpose',
 ]
