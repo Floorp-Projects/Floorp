@@ -2387,6 +2387,14 @@ MacroAssembler::icRestoreLive(LiveRegisterSet& liveRegs, AfterICSaveLive& aic)
     PopRegsInMask(liveRegs);
 }
 
+#ifndef JS_CODEGEN_ARM64
+void
+MacroAssembler::subFromStackPtr(Register reg)
+{
+    subPtr(reg, getStackPointer());
+}
+#endif // JS_CODEGEN_ARM64
+
 //{{{ check_macroassembler_style
 // ===============================================================
 // Stack manipulation functions.

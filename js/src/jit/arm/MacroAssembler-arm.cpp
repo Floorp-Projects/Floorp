@@ -4772,6 +4772,14 @@ MacroAssemblerARMCompat::asMasm() const
     return *static_cast<const MacroAssembler*>(this);
 }
 
+void
+MacroAssembler::subFromStackPtr(Imm32 imm32)
+{
+    ScratchRegisterScope scratch(*this);
+    if (imm32.value)
+        ma_sub(imm32, sp, scratch);
+}
+
 //{{{ check_macroassembler_style
 // ===============================================================
 // MacroAssembler high-level usage.
@@ -4924,15 +4932,6 @@ MacroAssembler::Pop(const ValueOperand& val)
 {
     popValue(val);
     adjustFrame(-sizeof(Value));
-}
-
-void
-MacroAssembler::reserveStack(uint32_t amount)
-{
-    ScratchRegisterScope scratch(*this);
-    if (amount)
-        ma_sub(Imm32(amount), sp, scratch);
-    adjustFrame(amount);
 }
 
 // ===============================================================
