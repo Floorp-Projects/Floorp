@@ -7,7 +7,8 @@
   overflow: hidden;
 }
 
-#react-clear-button-hook {
+#react-clear-button-hook,
+#react-details-pane-toggle-hook {
   display: flex;
 }
 
@@ -568,14 +569,14 @@
 
 /* Network request details */
 
-#details-pane-toggle:-moz-locale-dir(ltr),
-#details-pane-toggle.pane-collapsed:-moz-locale-dir(rtl) {
-  list-style-image: var(--theme-pane-collapse-image);
+#details-pane-toggle:-moz-locale-dir(ltr)::before,
+#details-pane-toggle.pane-collapsed:-moz-locale-dir(rtl)::before {
+  background-image: var(--theme-pane-collapse-image);
 }
 
-#details-pane-toggle.pane-collapsed:-moz-locale-dir(ltr),
-#details-pane-toggle:-moz-locale-dir(rtl) {
-  list-style-image: var(--theme-pane-expand-image);
+#details-pane-toggle.pane-collapsed:-moz-locale-dir(ltr)::before,
+#details-pane-toggle:-moz-locale-dir(rtl)::before {
+  background-image: var(--theme-pane-expand-image);
 }
 
 /* Network request details tabpanels */

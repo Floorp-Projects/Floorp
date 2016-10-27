@@ -36,11 +36,8 @@
                  type="search"
                  required="true"
                  data-localization="placeholder=netmonitor.toolbar.filterFreetext.label"/>
-        <toolbarbutton id="details-pane-toggle"
-                       class="devtools-toolbarbutton"
-                       data-localization="tooltiptext=netmonitor.panesButton.tooltip"
-                       disabled="true"
-                       tabindex="0"/>
+        <html:div xmlns="http://www.w3.org/1999/xhtml"
+                  id="react-details-pane-toggle-hook"/>
       </hbox>
       <hbox id="network-table-and-sidebar"
             class="devtools-responsive-container"
