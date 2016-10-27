@@ -4943,7 +4943,7 @@ nsBrowserAccess.prototype = {
     return browser;
   },
 
-  openURI: function (aURI, aOpener, aWhere, aContext) {
+  openURI: function (aURI, aOpener, aWhere, aFlags) {
     // This function should only ever be called if we're opening a URI
     // from a non-remote browser window (via nsContentTreeOwner).
     if (aOpener && Cu.isCrossProcessWrapper(aOpener)) {
@@ -4953,7 +4953,7 @@ nsBrowserAccess.prototype = {
     }
 
     var newWindow = null;
-    var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+    var isExternal = !!(aFlags & Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
 
     if (aOpener && isExternal) {
       Cu.reportError("nsBrowserAccess.openURI did not expect an opener to be " +
@@ -5007,10 +5007,11 @@ nsBrowserAccess.prototype = {
         let userContextId = aOpener && aOpener.document
                               ? aOpener.document.nodePrincipal.originAttributes.userContextId
                               : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
+        let openerWindow = (aFlags & Ci.nsIBrowserDOMWindow.OPEN_NO_OPENER) ? null : aOpener;
         let browser = this._openURIInNewTab(aURI, referrer, referrerPolicy,
                                             isPrivate, isExternal,
                                             forceNotRemote, userContextId,
-                                            aOpener);
+                                            openerWindow);
         if (browser)
           newWindow = browser.contentWindow;
         break;
@@ -5032,13 +5033,13 @@ nsBrowserAccess.prototype = {
     return newWindow;
   },
 
-  openURIInFrame: function browser_openURIInFrame(aURI, aParams, aWhere, aContext) {
+  openURIInFrame: function browser_openURIInFrame(aURI, aParams, aWhere, aFlags) {
     if (aWhere != Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
       dump("Error: openURIInFrame can only open in new tabs");
       return null;
     }
 
-    var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+    var isExternal = !!(aFlags & Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
 
     var userContextId = aParams.openerOriginAttributes &&
                         ("userContextId" in aParams.openerOriginAttributes)
