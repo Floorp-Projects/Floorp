@@ -409,10 +409,10 @@ def post_old_configure(raw_config):
 # them. We only do so for options that haven't been declared so far,
 # which should be a proxy for the options that old-configure handles
 # and that we don't know anything about.
-@dependable
+@depends('--help')
 @imports('__sandbox__')
 @imports(_from='mozbuild.configure.options', _import='Option')
-def remaining_mozconfig_options():
+def remaining_mozconfig_options(_):
     helper = __sandbox__._helper
     for arg in helper:
         if helper._origins[arg] != 'mozconfig':
