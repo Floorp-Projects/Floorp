@@ -31,7 +31,7 @@ function test() {
     { "#input1" : "value31", "/xhtml:html/xhtml:body/xhtml:input[@name='input2']" : "value32", xpath: { "/xhtml:html/xhtml:body/xhtml:input[@name='input2']" : "value33" } }
   ]
   let expectedValues = [
-    [ "" , "" ],
+    [ "", "" ],
     // old format
     [ "value0", "" ],
     [ "value1", "value2" ],

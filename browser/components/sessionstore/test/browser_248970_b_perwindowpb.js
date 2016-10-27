@@ -35,7 +35,7 @@ function test() {
   function test(aLambda) {
     try {
       return aLambda() || true;
-    } catch(ex) { }
+    } catch (ex) { }
     return false;
   }
 

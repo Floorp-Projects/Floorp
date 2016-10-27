@@ -142,7 +142,7 @@ add_task(function*() {
   info("Check in the state that we have not stored this history");
   let state = ss.getBrowserState();
   info(JSON.stringify(JSON.parse(state), null, "\t"));
-  is(state.indexOf("c1.html"), -1, "History entry was not stored in the session state");;
+  is(state.indexOf("c1.html"), -1, "History entry was not stored in the session state");
   gBrowser.removeTab(tab);
 });
 
