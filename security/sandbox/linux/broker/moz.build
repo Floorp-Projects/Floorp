@@ -21,8 +21,7 @@ if CONFIG['OS_TARGET'] == 'Android':
         DEFINES['HAVE_ANDROID_OS'] = True
 
 LOCAL_INCLUDES += [
-    '/security/sandbox/linux', # SandboxLogging.h
-    '/security/sandbox/linux/common', # SandboxInfo.h
+    '/security/sandbox/linux', # SandboxLogging.h, SandboxInfo.h
 ]
 
 # Need this for mozilla::ipc::FileDescriptor etc.
