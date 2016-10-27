@@ -166,25 +166,34 @@ DecoderAllocPolicy::operator=(std::nullptr_t)
 class MediaFormatReader::DecoderFactory
 {
   using InitPromise = MediaDataDecoder::InitPromise;
+  using TokenPromise = DecoderAllocPolicy::Promise;
+  using Token = DecoderAllocPolicy::Token;
 
 public:
   explicit DecoderFactory(MediaFormatReader* aOwner) : mOwner(aOwner) {}
   void CreateDecoder(TrackType aTrack);
 
 private:
+  class Wrapper;
+
   enum class Stage : int8_t
   {
     None,
+    WaitForToken,
+    CreateDecoder,
     WaitForInit
   };
 
   struct Data
   {
     Stage mStage = Stage::None;
+    RefPtr<Token> mToken;
     RefPtr<MediaDataDecoder> mDecoder;
+    MozPromiseRequestHolder<TokenPromise> mTokenPromise;
     MozPromiseRequestHolder<InitPromise> mInitPromise;
     ~Data()
     {
+      mTokenPromise.DisconnectIfExists();
       mInitPromise.DisconnectIfExists();
       if (mDecoder) {
         mDecoder->Shutdown();
@@ -207,6 +216,43 @@ MediaFormatReader::DecoderFactory::CreateDecoder(TrackType aTrack)
   RunStage(aTrack);
 }
 
+class MediaFormatReader::DecoderFactory::Wrapper : public MediaDataDecoder
+{
+  using Token = DecoderAllocPolicy::Token;
+
+public:
+  Wrapper(already_AddRefed<MediaDataDecoder> aDecoder,
+          already_AddRefed<Token> aToken)
+    : mDecoder(aDecoder), mToken(aToken) {}
+
+  RefPtr<InitPromise> Init() override { return mDecoder->Init(); }
+  void Input(MediaRawData* aSample) override { mDecoder->Input(aSample); }
+  void Flush() override { mDecoder->Flush(); }
+  void Drain() override { mDecoder->Drain(); }
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const override
+  {
+    return mDecoder->IsHardwareAccelerated(aFailureReason);
+  }
+  const char* GetDescriptionName() const override
+  {
+    return mDecoder->GetDescriptionName();
+  }
+  void SetSeekThreshold(const media::TimeUnit& aTime) override
+  {
+    mDecoder->SetSeekThreshold(aTime);
+  }
+  void Shutdown() override
+  {
+    mDecoder->Shutdown();
+    mDecoder = nullptr;
+    mToken = nullptr;
+  }
+
+private:
+  RefPtr<MediaDataDecoder> mDecoder;
+  RefPtr<Token> mToken;
+};
+
 void
 MediaFormatReader::DecoderFactory::RunStage(TrackType aTrack)
 {
@@ -214,17 +260,44 @@ MediaFormatReader::DecoderFactory::RunStage(TrackType aTrack)
 
   switch (data.mStage) {
     case Stage::None: {
+      MOZ_ASSERT(!data.mToken);
+      data.mTokenPromise.Begin(DecoderAllocPolicy::Instance().Alloc(aTrack)->Then(
+        mOwner->OwnerThread(), __func__,
+        [this, &data, aTrack] (Token* aToken) {
+          data.mTokenPromise.Complete();
+          data.mToken = aToken;
+          data.mStage = Stage::CreateDecoder;
+          RunStage(aTrack);
+        },
+        [&data] () {
+          data.mTokenPromise.Complete();
+          data.mStage = Stage::None;
+        }));
+      data.mStage = Stage::WaitForToken;
+      break;
+    }
+
+    case Stage::WaitForToken: {
+      MOZ_ASSERT(!data.mToken);
+      MOZ_ASSERT(data.mTokenPromise.Exists());
+      break;
+    }
+
+    case Stage::CreateDecoder: {
+      MOZ_ASSERT(data.mToken);
       MOZ_ASSERT(!data.mDecoder);
       MOZ_ASSERT(!data.mInitPromise.Exists());
 
       MediaResult rv = DoCreateDecoder(aTrack);
       if (NS_FAILED(rv)) {
         NS_WARNING("Error constructing decoders");
+        data.mToken = nullptr;
         data.mStage = Stage::None;
         mOwner->NotifyError(aTrack, rv);
         return;
       }
 
+      data.mDecoder = new Wrapper(data.mDecoder.forget(), data.mToken.forget());
       DoInitDecoder(aTrack);
       data.mStage = Stage::WaitForInit;
       break;
