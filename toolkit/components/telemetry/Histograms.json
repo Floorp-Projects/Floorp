@@ -3822,6 +3822,13 @@
     "bug_numbers": [1283007],
     "description": "Time spent fallocating Variable-Length PrefixSet (ms)"
   },
+  "URLCLASSIFIER_VLPS_LOAD_CORRUPT": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "58",
+    "kind": "boolean",
+    "bug_numbers": [1305581],
+    "description": "Whether or not a variable-length prefix set loaded from disk is corrupted (true = file corrupted)."
+  },
   "URLCLASSIFIER_LC_PREFIXES": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
@@ -3867,7 +3874,7 @@
     "kind": "enumerated",
     "n_values": 10,
     "bug_numbers": [1305801],
-    "description": "An error was encountered while parsing a partial update returned by a Safe Browsing V4 server (0 = addition of an already existing prefix, 1 = parser got into an infinite loop, 2 = removal index out of bounds)"
+    "description": "An error was encountered while parsing a partial update returned by a Safe Browsing V4 server (0 = addition of an already existing prefix, 1 = parser got into an infinite loop, 2 = removal index out of bounds, 3 = checksum mismatch, 4 = missing checksum)"
   },
   "CSP_DOCUMENTS_COUNT": {
     "alert_emails": ["seceng@mozilla.com"],
