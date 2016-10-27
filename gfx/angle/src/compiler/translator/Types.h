@@ -103,7 +103,13 @@ class TStructure : public TFieldListCollection
 {
   public:
     POOL_ALLOCATOR_NEW_DELETE();
-    TStructure(const TString *name, TFieldList *fields);
+    TStructure(const TString *name, TFieldList *fields)
+        : TFieldListCollection(name, fields),
+          mDeepestNesting(0),
+          mUniqueId(0),
+          mAtGlobalScope(false)
+    {
+    }
 
     int deepestNesting() const
     {
@@ -588,46 +594,6 @@ class TType
     mutable TString mangled;
 };
 
-// TTypeSpecifierNonArray stores all of the necessary fields for type_specifier_nonarray from the
-// grammar
-struct TTypeSpecifierNonArray
-{
-    TBasicType type;
-    unsigned char primarySize;          // size of vector or cols of matrix
-    unsigned char secondarySize;        // rows of matrix
-    TType *userDef;
-    TSourceLoc line;
-
-    // true if the type was defined by a struct specifier rather than a reference to a type name.
-    bool isStructSpecifier;
-
-    void initialize(TBasicType bt, const TSourceLoc &ln)
-    {
-        type = bt;
-        primarySize = 1;
-        secondarySize = 1;
-        userDef           = nullptr;
-        line = ln;
-        isStructSpecifier = false;
-    }
-
-    void setAggregate(unsigned char size)
-    {
-        primarySize = size;
-    }
-
-    void setMatrix(unsigned char columns, unsigned char rows)
-    {
-        ASSERT(columns > 1 && rows > 1 && columns <= 4 && rows <= 4);
-        primarySize   = columns;
-        secondarySize = rows;
-    }
-
-    bool isMatrix() const { return primarySize > 1 && secondarySize > 1; }
-
-    bool isVector() const { return primarySize > 1 && secondarySize == 1; }
-};
-
 //
 // This is a workaround for a problem with the yacc stack,  It can't have
 // types that it thinks have non-trivial constructors.  It should
@@ -639,76 +605,114 @@ struct TTypeSpecifierNonArray
 //
 struct TPublicType
 {
-    TTypeSpecifierNonArray typeSpecifierNonArray;
+    TBasicType type;
     TLayoutQualifier layoutQualifier;
     TQualifier qualifier;
     bool invariant;
     TPrecision precision;
+    unsigned char primarySize;          // size of vector or cols of matrix
+    unsigned char secondarySize;        // rows of matrix
     bool array;
     int arraySize;
+    TType *userDef;
+    TSourceLoc line;
 
-    void initialize(const TTypeSpecifierNonArray &typeSpecifier, TQualifier q)
+    // true if the type was defined by a struct specifier rather than a reference to a type name.
+    bool isStructSpecifier;
+
+    void setBasic(TBasicType bt, TQualifier q, const TSourceLoc &ln)
     {
-        typeSpecifierNonArray = typeSpecifier;
-        layoutQualifier       = TLayoutQualifier::create();
-        qualifier             = q;
-        invariant             = false;
-        precision             = EbpUndefined;
-        array                 = false;
-        arraySize             = 0;
+        type = bt;
+        layoutQualifier = TLayoutQualifier::create();
+        qualifier = q;
+        invariant = false;
+        precision = EbpUndefined;
+        primarySize = 1;
+        secondarySize = 1;
+        array = false;
+        arraySize = 0;
+        userDef = 0;
+        line = ln;
+        isStructSpecifier = false;
     }
 
-    TBasicType getBasicType() const { return typeSpecifierNonArray.type; }
-    void setBasicType(TBasicType basicType) { typeSpecifierNonArray.type = basicType; }
-
-    unsigned char getPrimarySize() const { return typeSpecifierNonArray.primarySize; }
-    unsigned char getSecondarySize() const { return typeSpecifierNonArray.secondarySize; }
-    void initializeSizeForScalarTypes()
+    void setAggregate(unsigned char size)
     {
-        typeSpecifierNonArray.primarySize   = 1;
-        typeSpecifierNonArray.secondarySize = 1;
+        primarySize = size;
     }
 
-    const TType *getUserDef() const { return typeSpecifierNonArray.userDef; }
-    const TSourceLoc &getLine() const { return typeSpecifierNonArray.line; }
-
-    bool isStructSpecifier() const { return typeSpecifierNonArray.isStructSpecifier; }
-
-    bool isStructureContainingArrays() const
+    void setMatrix(unsigned char c, unsigned char r)
     {
-        if (!typeSpecifierNonArray.userDef)
-        {
-            return false;
-        }
-
-        return typeSpecifierNonArray.userDef->isStructureContainingArrays();
+        ASSERT(c > 1 && r > 1 && c <= 4 && r <= 4);
+        primarySize = c;
+        secondarySize = r;
     }
 
-    bool isStructureContainingType(TBasicType t) const
+    bool isUnsizedArray() const
     {
-        if (!typeSpecifierNonArray.userDef)
-        {
-            return false;
-        }
-
-        return typeSpecifierNonArray.userDef->isStructureContainingType(t);
+        return array && arraySize == 0;
     }
-
-    bool isUnsizedArray() const { return array && arraySize == 0; }
     void setArraySize(int s)
     {
-        array     = true;
+        array = true;
         arraySize = s;
     }
     void clearArrayness()
     {
-        array     = false;
+        array = false;
         arraySize = 0;
+    }
+
+    bool isStructureContainingArrays() const
+    {
+        if (!userDef)
+        {
+            return false;
+        }
+
+        return userDef->isStructureContainingArrays();
+    }
+
+    bool isStructureContainingType(TBasicType t) const
+    {
+        if (!userDef)
+        {
+            return false;
+        }
+
+        return userDef->isStructureContainingType(t);
+    }
+
+    bool isMatrix() const
+    {
+        return primarySize > 1 && secondarySize > 1;
+    }
+
+    bool isVector() const
+    {
+        return primarySize > 1 && secondarySize == 1;
+    }
+
+    int getCols() const
+    {
+        ASSERT(isMatrix());
+        return primarySize;
+    }
+
+    int getRows() const
+    {
+        ASSERT(isMatrix());
+        return secondarySize;
+    }
+
+    int getNominalSize() const
+    {
+        return primarySize;
     }
 
     bool isAggregate() const
     {
-        return array || typeSpecifierNonArray.isMatrix() || typeSpecifierNonArray.isVector();
+        return array || isMatrix() || isVector();
     }
 };
 

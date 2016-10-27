@@ -16,21 +16,20 @@ struct TVectorFields
 };
 
 //
-// Set of helper functions to help build the tree.
+// Set of helper functions to help parse and build the tree.
 //
+class TInfoSink;
 class TIntermediate
 {
   public:
     POOL_ALLOCATOR_NEW_DELETE();
-    TIntermediate() {}
+    TIntermediate(TInfoSink &i)
+        : mInfoSink(i) { }
 
     TIntermSymbol *addSymbol(
         int id, const TString &, const TType &, const TSourceLoc &);
-    TIntermTyped *addIndex(TOperator op,
-                           TIntermTyped *base,
-                           TIntermTyped *index,
-                           const TSourceLoc &line,
-                           TDiagnostics *diagnostics);
+    TIntermTyped *addIndex(
+        TOperator op, TIntermTyped *base, TIntermTyped *index, const TSourceLoc &);
     TIntermTyped *addUnaryMath(
         TOperator op, TIntermTyped *child, const TSourceLoc &line, const TType *funcReturnType);
     TIntermAggregate *growAggregate(
@@ -38,11 +37,9 @@ class TIntermediate
     TIntermAggregate *makeAggregate(TIntermNode *node, const TSourceLoc &);
     TIntermAggregate *ensureSequence(TIntermNode *node);
     TIntermAggregate *setAggregateOperator(TIntermNode *, TOperator, const TSourceLoc &);
-    TIntermNode *addSelection(TIntermTyped *cond, TIntermNodePair code, const TSourceLoc &line);
-    static TIntermTyped *AddTernarySelection(TIntermTyped *cond,
-                                             TIntermTyped *trueExpression,
-                                             TIntermTyped *falseExpression,
-                                             const TSourceLoc &line);
+    TIntermNode *addSelection(TIntermTyped *cond, TIntermNodePair code, const TSourceLoc &);
+    TIntermTyped *addSelection(TIntermTyped *cond, TIntermTyped *trueBlock, TIntermTyped *falseBlock,
+                               const TSourceLoc &line);
     TIntermSwitch *addSwitch(
         TIntermTyped *init, TIntermAggregate *statementList, const TSourceLoc &line);
     TIntermCase *addCase(
@@ -59,14 +56,16 @@ class TIntermediate
     TIntermBranch *addBranch(TOperator, const TSourceLoc &);
     TIntermBranch *addBranch(TOperator, TIntermTyped *, const TSourceLoc &);
     TIntermTyped *addSwizzle(TVectorFields &, const TSourceLoc &);
-    static TIntermAggregate *PostProcess(TIntermNode *root);
+    TIntermAggregate *postProcess(TIntermNode *root);
 
     static void outputTree(TIntermNode *, TInfoSinkBase &);
 
-    TIntermTyped *foldAggregateBuiltIn(TIntermAggregate *aggregate, TDiagnostics *diagnostics);
+    TIntermTyped *foldAggregateBuiltIn(TIntermAggregate *aggregate);
 
   private:
     void operator=(TIntermediate &); // prevent assignments
+
+    TInfoSink & mInfoSink;
 };
 
 #endif  // COMPILER_TRANSLATOR_INTERMEDIATE_H_

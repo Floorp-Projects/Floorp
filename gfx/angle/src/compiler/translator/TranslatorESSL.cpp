@@ -6,6 +6,7 @@
 
 #include "compiler/translator/TranslatorESSL.h"
 
+#include "compiler/translator/BuiltInFunctionEmulatorGLSL.h"
 #include "compiler/translator/EmulatePrecision.h"
 #include "compiler/translator/RecordConstantPrecision.h"
 #include "compiler/translator/OutputESSL.h"
@@ -16,7 +17,15 @@ TranslatorESSL::TranslatorESSL(sh::GLenum type, ShShaderSpec spec)
 {
 }
 
-void TranslatorESSL::translate(TIntermNode *root, ShCompileOptions compileOptions)
+void TranslatorESSL::initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu, int compileOptions)
+{
+    if (compileOptions & SH_EMULATE_BUILT_IN_FUNCTIONS)
+    {
+        InitBuiltInFunctionEmulatorForGLSLWorkarounds(emu, getShaderType());
+    }
+}
+
+void TranslatorESSL::translate(TIntermNode *root, int compileOptions)
 {
     TInfoSinkBase& sink = getInfoSink().obj;
 

@@ -274,93 +274,6 @@ void CopyDepthStencil(const gl::Box &sourceArea,
     }
 }
 
-void Depth32FStencil8ToDepth32F(const float *source, float *dest)
-{
-    *dest = *source;
-}
-
-void Depth24Stencil8ToDepth32F(const uint32_t *source, float *dest)
-{
-    uint32_t normDepth = source[0] & 0x00FFFFFF;
-    float floatDepth   = gl::normalizedToFloat<24>(normDepth);
-    *dest              = floatDepth;
-}
-
-void BlitD24S8ToD32F(const gl::Box &sourceArea,
-                     const gl::Box &destArea,
-                     const gl::Rectangle &clippedDestArea,
-                     const gl::Extents &sourceSize,
-                     unsigned int sourceRowPitch,
-                     unsigned int destRowPitch,
-                     ptrdiff_t readOffset,
-                     ptrdiff_t writeOffset,
-                     size_t copySize,
-                     size_t srcPixelStride,
-                     size_t destPixelStride,
-                     const uint8_t *sourceData,
-                     uint8_t *destData)
-{
-    // No stretching or subregions are supported, only full blits.
-    ASSERT(sourceArea == destArea);
-    ASSERT(sourceSize.width == sourceArea.width && sourceSize.height == sourceArea.height &&
-           sourceSize.depth == 1);
-    ASSERT(clippedDestArea.width == sourceSize.width &&
-           clippedDestArea.height == sourceSize.height);
-    ASSERT(readOffset == 0 && writeOffset == 0);
-    ASSERT(destArea.x == 0 && destArea.y == 0);
-
-    for (int row = 0; row < destArea.height; ++row)
-    {
-        for (int column = 0; column < destArea.width; ++column)
-        {
-            ptrdiff_t offset            = row * sourceRowPitch + column * srcPixelStride;
-            const uint32_t *sourcePixel = reinterpret_cast<const uint32_t *>(sourceData + offset);
-
-            float *destPixel =
-                reinterpret_cast<float *>(destData + row * destRowPitch + column * destPixelStride);
-
-            Depth24Stencil8ToDepth32F(sourcePixel, destPixel);
-        }
-    }
-}
-
-void BlitD32FS8ToD32F(const gl::Box &sourceArea,
-                      const gl::Box &destArea,
-                      const gl::Rectangle &clippedDestArea,
-                      const gl::Extents &sourceSize,
-                      unsigned int sourceRowPitch,
-                      unsigned int destRowPitch,
-                      ptrdiff_t readOffset,
-                      ptrdiff_t writeOffset,
-                      size_t copySize,
-                      size_t srcPixelStride,
-                      size_t destPixelStride,
-                      const uint8_t *sourceData,
-                      uint8_t *destData)
-{
-    // No stretching or subregions are supported, only full blits.
-    ASSERT(sourceArea == destArea);
-    ASSERT(sourceSize.width == sourceArea.width && sourceSize.height == sourceArea.height &&
-           sourceSize.depth == 1);
-    ASSERT(clippedDestArea.width == sourceSize.width &&
-           clippedDestArea.height == sourceSize.height);
-    ASSERT(readOffset == 0 && writeOffset == 0);
-    ASSERT(destArea.x == 0 && destArea.y == 0);
-
-    for (int row = 0; row < destArea.height; ++row)
-    {
-        for (int column = 0; column < destArea.width; ++column)
-        {
-            ptrdiff_t offset         = row * sourceRowPitch + column * srcPixelStride;
-            const float *sourcePixel = reinterpret_cast<const float *>(sourceData + offset);
-            float *destPixel =
-                reinterpret_cast<float *>(destData + row * destRowPitch + column * destPixelStride);
-
-            Depth32FStencil8ToDepth32F(sourcePixel, destPixel);
-        }
-    }
-}
-
 Blit11::BlitConvertFunction *GetCopyDepthStencilFunction(GLenum internalFormat)
 {
     switch (internalFormat)
@@ -1468,7 +1381,7 @@ gl::Error Blit11::copyDepthStencilImpl(const TextureHelper11 &source,
     const auto &destSizeInfo   = d3d11::GetDXGIFormatSizeInfo(destFormat);
     unsigned int destPixelSize = destSizeInfo.pixelBytes;
 
-    ASSERT(srcFormat == destFormat || destFormat == DXGI_FORMAT_R32_TYPELESS);
+    ASSERT(srcFormat == destFormat);
 
     if (stencilOnly)
     {
@@ -1485,22 +1398,6 @@ gl::Error Blit11::copyDepthStencilImpl(const TextureHelper11 &source,
 
         // Stencil is assumed to be 8-bit - currently this is true for all possible formats.
         copySize = 1;
-    }
-
-    if (srcFormat != destFormat)
-    {
-        if (srcFormat == DXGI_FORMAT_R24G8_TYPELESS)
-        {
-            ASSERT(sourceArea == destArea && sourceSize == destSize && scissor == nullptr);
-            return copyAndConvert(source, sourceSubresource, sourceArea, sourceSize, dest,
-                                  destSubresource, destArea, destSize, scissor, copyOffset,
-                                  copyOffset, copySize, srcPixelSize, destPixelSize,
-                                  BlitD24S8ToD32F);
-        }
-        ASSERT(srcFormat == DXGI_FORMAT_R32G8X24_TYPELESS);
-        return copyAndConvert(source, sourceSubresource, sourceArea, sourceSize, dest,
-                              destSubresource, destArea, destSize, scissor, copyOffset, copyOffset,
-                              copySize, srcPixelSize, destPixelSize, BlitD32FS8ToD32F);
     }
 
     return copyAndConvert(source, sourceSubresource, sourceArea, sourceSize, dest, destSubresource,
