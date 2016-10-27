@@ -1,6 +1,6 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.25 - September 1, 2016
+ libpng version 1.6.26 - October 20, 2016
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2016 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.25 - September 1, 2016
+ libpng versions 0.97, January 1998, through 1.6.26 - October 20, 2016
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2016 Glenn Randers-Pehrson
 
@@ -467,8 +467,9 @@ the default, use
 
 The values for png_set_crc_action() say how libpng is to handle CRC errors in
 ancillary and critical chunks, and whether to use the data contained
-therein.  Note that it is impossible to "discard" data in a critical
-chunk.
+therein. Starting with libpng-1.6.26, this also governs how an ADLER32 error
+is handled while reading the IDAT chunk. Note that it is impossible to
+"discard" data in a critical chunk.
 
 Choices for (int) crit_action are
    PNG_CRC_DEFAULT      0  error/quit
@@ -484,6 +485,9 @@ Choices for (int) ancil_action are
    PNG_CRC_WARN_USE     3  warn/use data
    PNG_CRC_QUIET_USE    4  quiet/use data
    PNG_CRC_NO_CHANGE    5  use the current value
+
+When the setting for crit_action is PNG_CRC_QUIET_USE, the CRC and ADLER32
+checksums are not only ignored, but they are not evaluated.
 
 Setting up callback code
 
@@ -5335,8 +5339,9 @@ with an even number of lower-case hex digits, and to make them unsigned
 We prefer to use underscores rather than camelCase in names, except
 for a few type names that we inherit from zlib.h.
 
-We prefer "if (something != 0)" and "if (something == 0)"
-over "if (something)" and if "(!something)", respectively.
+We prefer "if (something != 0)" and "if (something == 0)" over
+"if (something)" and if "(!something)", respectively, and for pointers
+we prefer "if (some_pointer != NULL)" or "if (some_pointer == NULL)". 
 
 We do not use the TAB character for indentation in the C sources.
 
@@ -5350,7 +5355,7 @@ Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.25 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.26 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer

@@ -217,6 +217,15 @@ task_description_schema = Schema({
             'path': basestring,
         }],
 
+        # directories and/or files to be mounted
+        Optional('mounts'): [{
+            # a unique name for the cache volume
+            'cache-name': basestring,
+
+            # task image path for the cache
+            'path': basestring,
+        }],
+
         # environment variables
         Required('env', default={}): {basestring: taskref_or_string},
 
@@ -400,10 +409,19 @@ def build_generic_worker_payload(config, task, task_def):
             'expires': task_def['expires'],  # always expire with the task
         })
 
+    mounts = []
+
+    for mount in worker.get('mounts', []):
+        mounts.append({
+            'cacheName': mount['cache-name'],
+            'directory': mount['path']
+        })
+
     task_def['payload'] = {
         'command': worker['command'],
         'artifacts': artifacts,
         'env': worker.get('env', {}),
+        'mounts': mounts,
         'maxRunTime': worker['max-run-time'],
         'osGroups': worker.get('os-groups', []),
     }
