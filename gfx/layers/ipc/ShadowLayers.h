@@ -254,10 +254,6 @@ public:
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                              TextureClient* aTexture) override;
 
-  virtual void RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aAsyncTransactionTracker,
-                                                  CompositableClient* aCompositable,
-                                                  TextureClient* aTexture) override;
-
   /**
    * Communicate to the compositor that aRegion in the texture identified by aLayer
    * and aIdentifier has been updated to aThebesBuffer.

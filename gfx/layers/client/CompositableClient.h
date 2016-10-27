@@ -12,7 +12,6 @@
 #include "mozilla/Assertions.h"         // for MOZ_CRASH
 #include "mozilla/RefPtr.h"             // for already_AddRefed, RefCounted
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
-#include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend, TextureDumpMode
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
@@ -28,55 +27,6 @@ class CompositableForwarder;
 class CompositableChild;
 class PCompositableChild;
 class TextureClientRecycleAllocator;
-
-/**
- * Handle RemoveTextureFromCompositableAsync() transaction.
- */
-class RemoveTextureFromCompositableTracker : public AsyncTransactionTracker {
-public:
-  explicit RemoveTextureFromCompositableTracker(AsyncTransactionWaiter* aWaiter = nullptr)
-    : AsyncTransactionTracker(aWaiter)
-  {
-    MOZ_COUNT_CTOR(RemoveTextureFromCompositableTracker);
-  }
-
-protected:
-  ~RemoveTextureFromCompositableTracker()
-  {
-    MOZ_COUNT_DTOR(RemoveTextureFromCompositableTracker);
-    ReleaseTextureClient();
-  }
-
-public:
-  virtual void Complete() override
-  {
-    ReleaseTextureClient();
-  }
-
-  virtual void Cancel() override
-  {
-    ReleaseTextureClient();
-  }
-
-  virtual void SetTextureClient(TextureClient* aTextureClient) override
-  {
-    ReleaseTextureClient();
-    mTextureClient = aTextureClient;
-  }
-
-  virtual void SetReleaseFenceHandle(FenceHandle& aReleaseFenceHandle) override
-  {
-    if (mTextureClient) {
-      mTextureClient->SetReleaseFenceHandle(aReleaseFenceHandle);
-    }
-  }
-
-protected:
-  void ReleaseTextureClient();
-
-private:
-  RefPtr<TextureClient> mTextureClient;
-};
 
 /**
  * CompositableClient manages the texture-specific logic for composite layers,

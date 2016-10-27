@@ -464,7 +464,6 @@ void
 ImageBridgeChild::MarkShutDown()
 {
   mTexturesWaitingRecycled.Clear();
-  mTrackersHolder.DestroyAsyncTransactionTrackersHolder();
 
   mCanSend = false;
 }
@@ -649,11 +648,8 @@ ImageBridgeChild::UpdateAsyncCanvasRendererNow(AsyncCanvasRenderer* aWrapper)
 void
 ImageBridgeChild::FlushAllImagesSync(SynchronousTask* aTask,
                                      ImageClient* aClient,
-                                     ImageContainer* aContainer,
-                                     RefPtr<AsyncTransactionWaiter> aWaiter)
+                                     ImageContainer* aContainer)
 {
-  MOZ_ASSERT(!aWaiter);
-
   AutoCompleteTask complete(aTask);
 
   if (!CanSend()) {
@@ -665,7 +661,7 @@ ImageBridgeChild::FlushAllImagesSync(SynchronousTask* aTask,
   if (aContainer) {
     aContainer->ClearImagesFromImageBridge();
   }
-  aClient->FlushAllImages(aWaiter);
+  aClient->FlushAllImages();
   EndTransaction();
 }
 
@@ -682,16 +678,13 @@ ImageBridgeChild::FlushAllImages(ImageClient* aClient, ImageContainer* aContaine
 
   SynchronousTask task("FlushAllImages Lock");
 
-  RefPtr<AsyncTransactionWaiter> waiter;
-
   // RefPtrs on arguments are not needed since this dispatches synchronously.
   RefPtr<Runnable> runnable = WrapRunnable(
     RefPtr<ImageBridgeChild>(this),
     &ImageBridgeChild::FlushAllImagesSync,
     &task,
     aClient,
-    aContainer,
-    waiter);
+    aContainer);
   GetMessageLoop()->PostTask(runnable.forget());
 
   task.Wait();
@@ -1240,13 +1233,6 @@ ImageBridgeChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageDat
         NotifyNotUsedToNonRecycle(op.TextureId(), op.fwdTransactionId());
         break;
       }
-      case AsyncParentMessageData::TOpReplyRemoveTexture: {
-        const OpReplyRemoveTexture& op = message.get_OpReplyRemoveTexture();
-
-        MOZ_ASSERT(mTrackersHolder.GetId() == op.holderId());
-        mTrackersHolder.TransactionCompleteted(op.transactionId());
-        break;
-      }
       default:
         NS_ERROR("unknown AsyncParentMessageData type");
         return false;
@@ -1328,32 +1314,6 @@ ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositabl
   } else {
     mTxn->AddNoSwapEdit(op);
   }
-}
-
-void
-ImageBridgeChild::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aAsyncTransactionTracker,
-                                                     CompositableClient* aCompositable,
-                                                     TextureClient* aTexture)
-{
-  MOZ_ASSERT(CanSend());
-  MOZ_ASSERT(aTexture);
-  MOZ_ASSERT(aTexture->IsSharedWithCompositor());
-  MOZ_ASSERT(aCompositable->IsConnected());
-  if (!aTexture || !aTexture->IsSharedWithCompositor() || !aCompositable->IsConnected()) {
-    return;
-  }
-
-  CompositableOperation op(
-    nullptr, aCompositable->GetIPDLActor(),
-    OpRemoveTextureAsync(
-      mTrackersHolder.GetId(),
-      aAsyncTransactionTracker->GetId(),
-      nullptr, aCompositable->GetIPDLActor(),
-      nullptr, aTexture->GetIPDLActor()));
-
-  mTxn->AddNoSwapEdit(op);
-  // Hold AsyncTransactionTracker until receving reply
-  mTrackersHolder.HoldUntilComplete(aAsyncTransactionTracker);
 }
 
 bool ImageBridgeChild::IsSameProcess() const
