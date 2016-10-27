@@ -8,7 +8,8 @@
  *
  */
 
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker),
+ Func="mozilla::dom::StorageManager::PrefEnabled"]
 interface StorageManager {
   // [Throws]
   // Promise<boolean> persisted();

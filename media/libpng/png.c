@@ -1,7 +1,7 @@
 
 /* png.c - location for general purpose libpng functions
  *
- * Last changed in libpng 1.6.25 [September 1, 2016]
+ * Last changed in libpng 1.6.26 [October 20, 2016]
  * Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -14,7 +14,7 @@
 #include "pngpriv.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef png_libpng_version_1_6_25 Your_png_h_is_not_version_1_6_25;
+typedef png_libpng_version_1_6_26 Your_png_h_is_not_version_1_6_26;
 
 /* Tells libpng that we have already handled the first "num_bytes" bytes
  * of the PNG file signature.  If the PNG data is embedded into another
@@ -458,7 +458,7 @@ png_free_data(png_const_structrp png_ptr, png_inforp info_ptr, png_uint_32 mask,
 
 #ifdef PNG_TEXT_SUPPORTED
    /* Free text item num or (if num == -1) all text items */
-   if (info_ptr->text != 0 &&
+   if (info_ptr->text != NULL &&
        ((mask & PNG_FREE_TEXT) & info_ptr->free_me) != 0)
    {
       if (num != -1)
@@ -541,7 +541,7 @@ png_free_data(png_const_structrp png_ptr, png_inforp info_ptr, png_uint_32 mask,
 
 #ifdef PNG_sPLT_SUPPORTED
    /* Free a given sPLT entry, or (if num == -1) all sPLT entries */
-   if (info_ptr->splt_palettes != 0 &&
+   if (info_ptr->splt_palettes != NULL &&
        ((mask & PNG_FREE_SPLT) & info_ptr->free_me) != 0)
    {
       if (num != -1)
@@ -571,7 +571,7 @@ png_free_data(png_const_structrp png_ptr, png_inforp info_ptr, png_uint_32 mask,
 #endif
 
 #ifdef PNG_STORE_UNKNOWN_CHUNKS_SUPPORTED
-   if (info_ptr->unknown_chunks != 0 &&
+   if (info_ptr->unknown_chunks != NULL &&
        ((mask & PNG_FREE_UNKN) & info_ptr->free_me) != 0)
    {
       if (num != -1)
@@ -617,7 +617,7 @@ png_free_data(png_const_structrp png_ptr, png_inforp info_ptr, png_uint_32 mask,
    /* Free any image bits attached to the info structure */
    if (((mask & PNG_FREE_ROWS) & info_ptr->free_me) != 0)
    {
-      if (info_ptr->row_pointers != 0)
+      if (info_ptr->row_pointers != NULL)
       {
          png_uint_32 row;
          for (row = 0; row < info_ptr->height; row++)
@@ -684,7 +684,7 @@ png_init_io(png_structrp png_ptr, png_FILE_p fp)
 void PNGAPI
 png_save_int_32(png_bytep buf, png_int_32 i)
 {
-   png_save_uint_32(buf, i);
+   png_save_uint_32(buf, (png_uint_32)i);
 }
 #  endif
 
@@ -775,7 +775,7 @@ png_get_copyright(png_const_structrp png_ptr)
 #else
 #  ifdef __STDC__
    return PNG_STRING_NEWLINE \
-      "libpng version 1.6.25+apng - September 1, 2016" PNG_STRING_NEWLINE \
+      "libpng version 1.6.26+apng - October 20, 2016" PNG_STRING_NEWLINE \
       "Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson" \
       PNG_STRING_NEWLINE \
       "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
@@ -784,7 +784,7 @@ png_get_copyright(png_const_structrp png_ptr)
       "Portions Copyright (c) 2006-2007 Andrew Smith" PNG_STRING_NEWLINE \
       "Portions Copyright (c) 2008-2016 Max Stepin" PNG_STRING_NEWLINE ;
 #  else
-   return "libpng version 1.6.25+apng - September 1, 2016\
+   return "libpng version 1.6.26+apng - October 20, 2016\
       Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson\
       Copyright (c) 1996-1997 Andreas Dilger\
       Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.\
@@ -2533,7 +2533,7 @@ png_check_IHDR(png_const_structrp png_ptr,
       error = 1;
    }
 
-   if (png_gt(((width + 7) & (~7)),
+   if (png_gt(((width + 7) & (~7U)),
        ((PNG_SIZE_MAX
            - 48        /* big_row_buf hack */
            - 1)        /* filter byte */
@@ -2944,7 +2944,7 @@ png_ascii_from_fp(png_const_structrp png_ptr, png_charp ascii, png_size_t size,
              */
             if (exp_b10 < 0 && exp_b10 > -3) /* PLUS 3 TOTAL 4 */
             {
-               czero = -exp_b10; /* PLUS 2 digits: TOTAL 3 */
+               czero = (unsigned int)(-exp_b10); /* PLUS 2 digits: TOTAL 3 */
                exp_b10 = 0;      /* Dot added below before first output. */
             }
             else
@@ -3122,11 +3122,11 @@ png_ascii_from_fp(png_const_structrp png_ptr, png_charp ascii, png_size_t size,
                if (exp_b10 < 0)
                {
                   *ascii++ = 45, --size; /* '-': PLUS 1 TOTAL 3+precision */
-                  uexp_b10 = -exp_b10;
+                  uexp_b10 = (unsigned int)(-exp_b10);
                }
 
                else
-                  uexp_b10 = exp_b10;
+                  uexp_b10 = (unsigned int)exp_b10;
 
                cdigits = 0;
 
@@ -3188,9 +3188,9 @@ png_ascii_from_fixed(png_const_structrp png_ptr, png_charp ascii,
 
       /* Avoid overflow here on the minimum integer. */
       if (fp < 0)
-         *ascii++ = 45, num = -fp;
+         *ascii++ = 45, num = (png_uint_32)(-fp);
       else
-         num = fp;
+         num = (png_uint_32)fp;
 
       if (num <= 0x80000000) /* else overflowed */
       {
