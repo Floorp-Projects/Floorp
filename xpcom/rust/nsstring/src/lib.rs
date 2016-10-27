@@ -313,6 +313,18 @@ macro_rules! define_string_types {
             }
         }
 
+        impl<'a> From<&'a String> for $String<'a> {
+            fn from(s: &'a String) -> $String<'a> {
+                $String::from(&s[..])
+            }
+        }
+
+        impl<'a> From<&'a Vec<$char_t>> for $String<'a> {
+            fn from(s: &'a Vec<$char_t>) -> $String<'a> {
+                $String::from(&s[..])
+            }
+        }
+
         impl<'a> From<&'a [$char_t]> for $String<'a> {
             fn from(s: &'a [$char_t]) -> $String<'a> {
                 assert!(s.len() < (u32::MAX as usize));
