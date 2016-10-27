@@ -44,7 +44,6 @@ class Compositor;
 class CompositableParentManager;
 class ReadLockDescriptor;
 class CompositorBridgeParent;
-class GrallocTextureHostOGL;
 class SurfaceDescriptor;
 class HostIPCAllocator;
 class ISurfaceAllocator;
@@ -621,8 +620,6 @@ public:
   virtual Compositor* GetCompositor() = 0;
 
   virtual BufferTextureHost* AsBufferTextureHost() { return nullptr; }
-
-  virtual GrallocTextureHostOGL* AsGrallocTextureHostOGL() { return nullptr; }
 
 protected:
   void ReadUnlock();

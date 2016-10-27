@@ -683,10 +683,6 @@ protected:
 
   bool mIsDestroyed;
 
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-  FenceHandle mReleaseFenceHandle;
-#endif
-
   gfx::Color mClearColor;
   gfx::Color mDefaultClearColor;
 

@@ -67,7 +67,6 @@ class PJavaScriptParent;
 } // namespace jsipc
 
 namespace layers {
-class PSharedBufferManagerParent;
 struct TextureFactoryIdentifier;
 } // namespace layers
 
@@ -701,10 +700,6 @@ private:
   PGMPServiceParent*
   AllocPGMPServiceParent(mozilla::ipc::Transport* aTransport,
                          base::ProcessId aOtherProcess) override;
-
-  PSharedBufferManagerParent*
-  AllocPSharedBufferManagerParent(mozilla::ipc::Transport* aTranport,
-                                   base::ProcessId aOtherProcess) override;
 
   PBackgroundParent*
   AllocPBackgroundParent(Transport* aTransport, ProcessId aOtherProcess)

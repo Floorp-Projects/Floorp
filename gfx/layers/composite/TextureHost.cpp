@@ -35,11 +35,6 @@
 #include "../d3d11/CompositorD3D11.h"
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-#include "../opengl/GrallocTextureClient.h"
-#include "../opengl/GrallocTextureHost.h"
-#endif
-
 #ifdef MOZ_X11
 #include "mozilla/layers/X11TextureHost.h"
 #endif
@@ -241,7 +236,6 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
     case SurfaceDescriptor::TSurfaceDescriptorSharedGLTexture:
       return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
 
-    case SurfaceDescriptor::TSurfaceDescriptorGralloc:
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface:
       if (aBackend == LayersBackend::LAYERS_OPENGL) {
         return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
@@ -386,9 +380,8 @@ TextureHost::NotifyNotUsed()
   }
 
   // Do not need to call NotifyNotUsed() if TextureHost does not have
-  // TextureFlags::RECYCLE flag and TextureHost is not GrallocTextureHostOGL.
-  if (!(GetFlags() & TextureFlags::RECYCLE) &&
-      !AsGrallocTextureHostOGL()) {
+  // TextureFlags::RECYCLE flag.
+  if (!(GetFlags() & TextureFlags::RECYCLE)) {
     return;
   }
 
@@ -397,13 +390,11 @@ TextureHost::NotifyNotUsed()
   // - TextureHost does not have Compositor.
   // - Compositor is BasicCompositor.
   // - TextureHost has intermediate buffer.
-  // - TextureHost is GrallocTextureHostOGL. Fence object is used to detect
   //   end of buffer usage.
   if (!compositor ||
       compositor->IsDestroyed() ||
       compositor->AsBasicCompositor() ||
-      HasIntermediateBuffer() ||
-      AsGrallocTextureHostOGL()) {
+      HasIntermediateBuffer()) {
     static_cast<TextureParent*>(mActor)->NotifyNotUsed(mFwdTransactionId);
     return;
   }

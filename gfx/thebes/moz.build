@@ -74,23 +74,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'gfxFT2Utils.cpp',
         'PrintTargetPDF.cpp',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    EXPORTS += [
-        'gfxAndroidPlatform.h',
-        'gfxFT2FontBase.h',
-        'gfxFT2Fonts.h',
-    ]
-    EXPORTS.mozilla.gfx += [
-        'PrintTargetPDF.h',
-    ]
-    SOURCES += [
-        'gfxAndroidPlatform.cpp',
-        'gfxFT2FontBase.cpp',
-        'gfxFT2FontList.cpp',
-        'gfxFT2Fonts.cpp',
-        'gfxFT2Utils.cpp',
-        'PrintTargetPDF.cpp',
-    ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS += [
         'gfxPlatformMac.h',
@@ -261,10 +244,7 @@ LOCAL_INCLUDES += [
     '/dom/xml',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-  LOCAL_INCLUDES += ['/widget/gonk']
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3'):
     DEFINES['MOZ_ENABLE_FREETYPE'] = True
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
@@ -277,7 +257,7 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 CFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 CFLAGS += CONFIG['TK_CFLAGS']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android'):
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):

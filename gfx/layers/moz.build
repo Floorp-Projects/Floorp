@@ -26,7 +26,6 @@ EXPORTS += [
     'FrameMetrics.h',
     'GLImages.h',
     'GPUVideoImage.h',
-    'GrallocImages.h',
     'ImageContainer.h',
     'ImageLayers.h',
     'ImageTypes.h',
@@ -186,8 +185,6 @@ EXPORTS.mozilla.layers += [
     'ipc/RemoteContentController.h',
     'ipc/ShadowLayerChild.h',
     'ipc/ShadowLayers.h',
-    'ipc/SharedBufferManagerChild.h',
-    'ipc/SharedBufferManagerParent.h',
     'ipc/SharedPlanarYCbCrImage.h',
     'ipc/SharedRGBImage.h',
     'ipc/TextureForwarder.h',
@@ -197,8 +194,6 @@ EXPORTS.mozilla.layers += [
     'LayersTypes.h',
     'opengl/CompositingRenderTargetOGL.h',
     'opengl/CompositorOGL.h',
-    'opengl/GrallocTextureClient.h',
-    'opengl/GrallocTextureHost.h',
     'opengl/MacIOSurfaceTextureClientOGL.h',
     'opengl/MacIOSurfaceTextureHostOGL.h',
     'opengl/TextureClientOGL.h',
@@ -241,34 +236,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'ipc/ShadowLayerUtilsMac.cpp',
         'MacIOSurfaceHelpers.cpp',
         'MacIOSurfaceImage.cpp',
-    ]
-
-# NB: Gralloc is available on other platforms that use the android GL
-# libraries, but only Gonk is able to use it reliably because Gecko
-# has full system permissions there.
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    EXPORTS.mozilla.layers += [
-        'basic/GrallocTextureHostBasic.h',
-        'ipc/ShadowLayerUtilsGralloc.h',
-    ]
-    UNIFIED_SOURCES += [
-        'basic/GrallocTextureHostBasic.cpp',
-        'GrallocImages.cpp',
-        'opengl/EGLImageHelpers.cpp',
-        'opengl/GrallocTextureClient.cpp',
-        'opengl/GrallocTextureHost.cpp',
-    ]
-    LOCAL_INCLUDES += ['/widget/gonk']
-    if CONFIG['ANDROID_VERSION'] >= '21':
-        LOCAL_INCLUDES += [
-             '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
-                 'system/core/libsync/include'
-             ]
-        ]
-    SOURCES += [
-        'ipc/GonkNativeHandle.cpp',
-        'ipc/GonkNativeHandleUtils.cpp',
-        'ipc/ShadowLayerUtilsGralloc.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
@@ -386,8 +353,6 @@ UNIFIED_SOURCES += [
     'ipc/ShadowLayerChild.cpp',
     'ipc/ShadowLayerParent.cpp',
     'ipc/ShadowLayers.cpp',
-    'ipc/SharedBufferManagerChild.cpp',
-    'ipc/SharedBufferManagerParent.cpp',
     'ipc/SharedPlanarYCbCrImage.cpp',
     'ipc/SharedRGBImage.cpp',
     'ipc/VideoBridgeChild.cpp',
@@ -447,7 +412,6 @@ IPDL_SOURCES = [
     'ipc/PImageContainer.ipdl',
     'ipc/PLayer.ipdl',
     'ipc/PLayerTransaction.ipdl',
-    'ipc/PSharedBufferManager.ipdl',
     'ipc/PTexture.ipdl',
     'ipc/PVideoBridge.ipdl',
 ]
@@ -468,22 +432,6 @@ if CONFIG['MOZ_DEBUG']:
 
 if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
     DEFINES['MOZ_ENABLE_D3D10_LAYER'] = True
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    if CONFIG['ANDROID_VERSION'] >= '17':
-        includes = [
-            'frameworks/av/include/media/stagefright',
-            'frameworks/native/include/media/openmax',
-        ]
-    else:
-        includes = [
-            'frameworks/base/include/media/stagefright',
-            'frameworks/base/include/media/stagefright/openmax',
-        ]
-
-    LOCAL_INCLUDES += [
-        '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in includes
-    ]
 
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['apz/test/gtest']

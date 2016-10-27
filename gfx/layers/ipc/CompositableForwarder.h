@@ -72,12 +72,6 @@ public:
                                    const ThebesBufferData& aThebesBufferData,
                                    const nsIntRegion& aUpdatedRegion) = 0;
 
-#ifdef MOZ_WIDGET_GONK
-  virtual void UseOverlaySource(CompositableClient* aCompositabl,
-                                const OverlaySource& aOverlay,
-                                const gfx::IntRect& aPictureRect) = 0;
-#endif
-
   virtual void Destroy(CompositableChild* aCompositable);
 
   virtual bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) = 0;

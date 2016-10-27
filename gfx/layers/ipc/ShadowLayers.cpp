@@ -29,7 +29,6 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_LOG
 #include "mozilla/layers/LayerTransactionChild.h"
-#include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/PCompositableChild.h"
 #include "mozilla/layers/PTextureChild.h"
 #include "ShadowLayerUtils.h"
@@ -357,24 +356,6 @@ ShadowLayerForwarder::UseTiledLayerBuffer(CompositableClient* aCompositable,
 {
   MOZ_ASSERT(aCompositable && aCompositable->IsConnected());
 
-#ifdef MOZ_WIDGET_GONK
-  // GrallocTextureData alwasys requests fence delivery if ANDROID_VERSION >= 17.
-  const InfallibleTArray<TileDescriptor>& tileDescriptors = aTileLayerDescriptor.tiles();
-  for (size_t i = 0; i < tileDescriptors.Length(); i++) {
-    const TileDescriptor& tileDesc = tileDescriptors[i];
-    if (tileDesc.type() != TileDescriptor::TTexturedTileDescriptor) {
-      continue;
-    }
-    const TexturedTileDescriptor& texturedDesc = tileDesc.get_TexturedTileDescriptor();
-    RefPtr<TextureClient> texture = TextureClient::AsTextureClient(texturedDesc.textureChild());
-    mClientLayerManager->GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(texture);
-    if (texturedDesc.textureOnWhite().type() == MaybeTexture::TPTextureChild) {
-      texture = TextureClient::AsTextureClient(texturedDesc.textureOnWhite().get_PTextureChild());
-      mClientLayerManager->GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(texture);
-    }
-  }
-#endif
-
   mTxn->AddNoSwapPaint(CompositableOperation(nullptr, aCompositable->GetIPDLActor(),
                                              OpUseTiledLayerBuffer(aTileLayerDescriptor)));
 }
@@ -462,20 +443,6 @@ ShadowLayerForwarder::UseComponentAlphaTextures(CompositableClient* aCompositabl
       )
     );
 }
-
-#ifdef MOZ_WIDGET_GONK
-void
-ShadowLayerForwarder::UseOverlaySource(CompositableClient* aCompositable,
-                                       const OverlaySource& aOverlay,
-                                       const nsIntRect& aPictureRect)
-{
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aCompositable->IsConnected());
-
-  mTxn->AddEdit(CompositableOperation(nullptr, aCompositable->GetIPDLActor(),
-                                      OpUseOverlaySource(aOverlay, aPictureRect)));
-}
-#endif
 
 static bool
 AddOpDestroy(Transaction* aTxn, const OpDestroy& op, bool synchronously)
