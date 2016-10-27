@@ -103,4 +103,3 @@ MSG_DEF(MSG_TOKENLIST_NO_SUPPORTED_TOKENS, 2, JSEXN_TYPEERR, "{0} attribute of <
 MSG_DEF(MSG_CACHE_STREAM_CLOSED, 0, JSEXN_TYPEERR, "Response body is a cache file stream that has already been closed.")
 MSG_DEF(MSG_TIME_VALUE_OUT_OF_RANGE, 1, JSEXN_TYPEERR, "{0} is outside the supported range for time values.")
 MSG_DEF(MSG_ONLY_IF_CACHED_WITHOUT_SAME_ORIGIN, 1, JSEXN_TYPEERR, "Request mode '{0}' was used, but request cache mode 'only-if-cached' can only be used with request mode 'same-origin'.")
-MSG_DEF(MSG_THRESHOLD_RANGE_ERROR, 0, JSEXN_RANGEERR, "Threshold values must all be in the range [0, 1].")
