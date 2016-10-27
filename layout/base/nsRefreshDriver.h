@@ -368,6 +368,7 @@ private:
   static double GetThrottledTimerInterval();
 
   static mozilla::TimeDuration GetMinRecomputeVisibilityInterval();
+  static mozilla::TimeDuration GetMinNotifyIntersectionObserversInterval();
 
   bool HaveFrameRequestCallbacks() const {
     return mFrameRequestCallbackDocs.Length() != 0;
@@ -403,6 +404,8 @@ private:
   // flush since the last time we did it.
   const mozilla::TimeDuration mMinRecomputeVisibilityInterval;
 
+  const mozilla::TimeDuration mMinNotifyIntersectionObserversInterval;
+
   bool mThrottled;
   bool mNeedToRecomputeVisibility;
   bool mTestControllingRefreshes;
@@ -433,6 +436,7 @@ private:
   mozilla::TimeStamp mTickStart;
   mozilla::TimeStamp mNextThrottledFrameRequestTick;
   mozilla::TimeStamp mNextRecomputeVisibilityTick;
+  mozilla::TimeStamp mNextNotifyIntersectionObserversTick;
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[3];

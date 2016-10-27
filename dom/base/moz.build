@@ -165,6 +165,7 @@ EXPORTS.mozilla.dom += [
     'DOMError.h',
     'DOMException.h',
     'DOMImplementation.h',
+    'DOMIntersectionObserver.h',
     'DOMMatrix.h',
     'DOMParser.h',
     'DOMPoint.h',
@@ -358,6 +359,8 @@ if CONFIG['MOZ_WEBRTC']:
 
 # these files couldn't be in UNIFIED_SOURCES for now for reasons given below:
 SOURCES += [
+    # Several conflicts with other bindings.
+    'DOMIntersectionObserver.cpp',
     # Because of OS X headers.
     'nsContentUtils.cpp',
     # this file doesn't like windows.h
