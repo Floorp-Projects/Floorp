@@ -34,6 +34,7 @@ struct GMPDomExceptionValidator {
       case kGMPAbortError:
       case kGMPQuotaExceededError:
       case kGMPTimeoutError:
+      case kGMPTypeError:
         return true;
       default:
         return false;
