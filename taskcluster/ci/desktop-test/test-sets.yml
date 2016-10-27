@@ -46,6 +46,7 @@ asan-tests:
     - jsreftest
     - marionette
     - mochitest
+    - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-clipboard
