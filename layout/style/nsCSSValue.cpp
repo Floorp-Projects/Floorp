@@ -1218,7 +1218,8 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
   // eCSSProperty_UNKNOWN gets used for some recursive calls below.
   MOZ_ASSERT((0 <= aProperty &&
               aProperty <= eCSSProperty_COUNT_no_shorthands) ||
-             aProperty == eCSSProperty_UNKNOWN,
+             aProperty == eCSSProperty_UNKNOWN ||
+             aProperty == eCSSProperty_DOM,
              "property ID out of range");
 
   nsCSSUnit unit = GetUnit();
@@ -2429,7 +2430,8 @@ nsCSSRect::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
 
   if (eCSSProperty_border_image_slice == aProperty ||
       eCSSProperty_border_image_width == aProperty ||
-      eCSSProperty_border_image_outset == aProperty) {
+      eCSSProperty_border_image_outset == aProperty ||
+      eCSSProperty_DOM == aProperty) {
     NS_NAMED_LITERAL_STRING(space, " ");
 
     mTop.AppendToString(aProperty, aResult, aSerialization);
