@@ -19,8 +19,6 @@ elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
         gl_provider = 'GLX'
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     gl_provider = 'EGL'
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    gl_provider = 'EGL'
 
 if CONFIG['MOZ_GL_PROVIDER']:
     gl_provider = CONFIG['MOZ_GL_PROVIDER']
@@ -83,12 +81,6 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
     if CONFIG['CLANG_CXX']:
         # Suppress warnings from Skia header files.
         SOURCES['SkiaGLGlue.cpp'].flags += ['-Wno-implicit-fallthrough']
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    UNIFIED_SOURCES += ['SharedSurfaceGralloc.cpp']
-    EXPORTS += ['SharedSurfaceGralloc.h']
-    LOCAL_INCLUDES += ['/widget/gonk']
-    LOCAL_INCLUDES += ['%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], 'hardware/libhardware/include')]
 
 if gl_provider == 'CGL':
     # These files include Mac headers that are unfriendly to unified builds

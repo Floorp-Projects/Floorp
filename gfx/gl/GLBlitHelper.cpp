@@ -15,11 +15,6 @@
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/UniquePtr.h"
 
-#ifdef MOZ_WIDGET_GONK
-#include "GrallocImages.h"
-#include "GLLibraryEGL.h"
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidSurfaceTexture.h"
 #include "GLImages.h"
@@ -152,7 +147,7 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
                                          vTexCoord * uTexCoordMult);  \n\
         }                                                             \n\
     ";
-#ifdef ANDROID /* MOZ_WIDGET_ANDROID || MOZ_WIDGET_GONK */
+#ifdef ANDROID /* MOZ_WIDGET_ANDROID */
     const char kTexExternalBlit_FragShaderSource[] = "\
         #version 100                                                    \n\
         #extension GL_OES_EGL_image_external : require                  \n\
@@ -684,38 +679,6 @@ GLBlitHelper::BindAndUploadEGLImage(EGLImage image, GLuint target)
     mGL->fEGLImageTargetTexture2D(target, image);
 }
 
-#ifdef MOZ_WIDGET_GONK
-
-bool
-GLBlitHelper::BlitGrallocImage(layers::GrallocImage* grallocImage)
-{
-    ScopedBindTextureUnit boundTU(mGL, LOCAL_GL_TEXTURE0);
-    mGL->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
-
-    EGLint attrs[] = {
-        LOCAL_EGL_IMAGE_PRESERVED, LOCAL_EGL_TRUE,
-        LOCAL_EGL_NONE, LOCAL_EGL_NONE
-    };
-    EGLImage image = sEGLLibrary.fCreateImage(sEGLLibrary.Display(),
-                                              EGL_NO_CONTEXT,
-                                              LOCAL_EGL_NATIVE_BUFFER_ANDROID,
-                                              grallocImage->GetNativeBuffer(), attrs);
-    if (image == EGL_NO_IMAGE)
-        return false;
-
-    int oldBinding = 0;
-    mGL->fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_EXTERNAL_OES, &oldBinding);
-
-    BindAndUploadEGLImage(image, LOCAL_GL_TEXTURE_EXTERNAL_OES);
-
-    mGL->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
-
-    sEGLLibrary.fDestroyImage(sEGLLibrary.Display(), image);
-    mGL->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL_OES, oldBinding);
-    return true;
-}
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
 
 #define ATTACH_WAIT_MS 50
@@ -873,13 +836,6 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
         srcOrigin = OriginPos::TopLeft;
         break;
 
-#ifdef MOZ_WIDGET_GONK
-    case ImageFormat::GRALLOC_PLANAR_YCBCR:
-        type = ConvertGralloc;
-        srcOrigin = OriginPos::TopLeft;
-        break;
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
     case ImageFormat::SURFACE_TEXTURE:
         type = ConvertSurfaceTexture;
@@ -915,11 +871,6 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
     mGL->fViewport(0, 0, destSize.width, destSize.height);
 
     switch (type) {
-#ifdef MOZ_WIDGET_GONK
-    case ConvertGralloc:
-        return BlitGrallocImage(static_cast<layers::GrallocImage*>(srcImage));
-#endif
-
     case ConvertPlanarYCbCr: {
             const auto saved = mGL->GetIntAs<GLint>(LOCAL_GL_UNPACK_ALIGNMENT);
             mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
