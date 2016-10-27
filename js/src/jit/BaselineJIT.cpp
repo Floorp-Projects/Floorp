@@ -117,8 +117,8 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
     // Assert we don't GC before entering JIT code. A GC could discard JIT code
     // or move the function stored in the CalleeToken (it won't be traced at
     // this point). We use Maybe<> here so we can call reset() to call the
-    // AutoAssertOnGC destructor before we enter JIT code.
-    mozilla::Maybe<JS::AutoAssertOnGC> nogc;
+    // AutoAssertNoGC destructor before we enter JIT code.
+    mozilla::Maybe<JS::AutoAssertNoGC> nogc;
     nogc.emplace(cx);
 #endif
 

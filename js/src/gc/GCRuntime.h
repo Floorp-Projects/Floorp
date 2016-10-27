@@ -739,7 +739,7 @@ class GCRuntime
 
     void verifyIsSafeToGC() {
         MOZ_DIAGNOSTIC_ASSERT(!isInsideUnsafeRegion(),
-                              "[AutoAssertOnGC] possible GC in GC-unsafe region");
+                              "[AutoAssertNoGC] possible GC in GC-unsafe region");
     }
 
     void setAlwaysPreserveCode() { alwaysPreserveCode = true; }
