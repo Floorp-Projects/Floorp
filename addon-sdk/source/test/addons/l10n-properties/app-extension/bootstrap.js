@@ -280,7 +280,7 @@ function loadSandbox(uri) {
 }
 
 function unloadSandbox(sandbox) {
-  if ("nukeSandbox" in Cu)
+  if (Cu.getClassName(sandbox, true) == "Sandbox")
     Cu.nukeSandbox(sandbox);
 }
 
