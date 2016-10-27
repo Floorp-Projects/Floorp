@@ -32,7 +32,6 @@ public:
   already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(
     TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
   bool IsSeekable() const override;
-  bool ShouldComputeStartTime() const override { return false; }
 
 private:
   bool InitInternal();
