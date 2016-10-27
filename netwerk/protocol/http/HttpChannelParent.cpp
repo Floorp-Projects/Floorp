@@ -631,7 +631,8 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
                                        const OptionalURIParams& aAPIRedirectURI,
                                        const OptionalCorsPreflightArgs& aCorsPreflightArgs,
                                        const bool& aForceHSTSPriming,
-                                       const bool& aMixedContentWouldBlock)
+                                       const bool& aMixedContentWouldBlock,
+                                       const bool& aChooseAppcache)
 {
   LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%x]\n",
        this, result));
@@ -676,6 +677,12 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
         if (NS_SUCCEEDED(rv) && newLoadInfo) {
           newLoadInfo->SetHSTSPriming(aMixedContentWouldBlock);
         }
+      }
+
+      nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
+        do_QueryInterface(newHttpChannel);
+      if (appCacheChannel) {
+        appCacheChannel->SetChooseApplicationCache(aChooseAppcache);
       }
     }
   }
