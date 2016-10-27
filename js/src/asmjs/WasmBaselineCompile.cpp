@@ -951,35 +951,13 @@ class BaseCompiler
 #endif
     }
 
-    RegI64 widenI32(RegI32 r) {
+    RegI64 fromI32(RegI32 r) {
         MOZ_ASSERT(!isAvailable(r.reg));
 #ifdef JS_PUNBOX64
         return RegI64(Register64(r.reg));
 #else
         RegI32 high = needI32();
         return RegI64(Register64(high.reg, r.reg));
-#endif
-    }
-
-    Register lowPart(RegI64 r) {
-#ifdef JS_PUNBOX64
-        return r.reg.reg;
-#else
-        return r.reg.low;
-#endif
-    }
-
-    Register maybeHighPart(RegI64 r) {
-#ifdef JS_PUNBOX64
-        return Register::Invalid();
-#else
-        return r.reg.high;
-#endif
-    }
-
-    void maybeClearHighPart(RegI64 r) {
-#ifdef JS_NUNBOX32
-        masm.move32(Imm32(0), r.reg.high);
 #endif
     }
 
@@ -2485,27 +2463,23 @@ class BaseCompiler
         masm.jump(&returnLabel_);
     }
 
-    void pop2xI32ForIntMulDiv(RegI32* r0, RegI32* r1) {
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        // srcDest must be eax, and edx will be clobbered.
-        need2xI32(specific_eax, specific_edx);
-        *r1 = popI32();
-        *r0 = popI32ToSpecific(specific_eax);
-        freeI32(specific_edx);
+    void subtractI64(RegI64 rhs, RegI64 srcDest) {
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.sub64(rhs.reg, srcDest.reg);
 #else
-        pop2xI32(r0, r1);
+        MOZ_CRASH("BaseCompiler platform hook: subtractI64");
 #endif
     }
 
-    void pop2xI64ForIntDiv(RegI64* r0, RegI64* r1) {
-#ifdef JS_CODEGEN_X64
-        // srcDest must be rax, and rdx will be clobbered.
-        need2xI64(specific_rax, specific_rdx);
-        *r1 = popI64();
-        *r0 = popI64ToSpecific(specific_rax);
-        freeI64(specific_rdx);
+    void multiplyI64(RegI64 rhs, RegI64 srcDest, RegI32 temp) {
+#if defined(JS_CODEGEN_X64)
+        MOZ_ASSERT(srcDest.reg.reg == rax);
+        MOZ_ASSERT(isAvailable(rdx));
+        masm.mul64(rhs.reg, srcDest.reg, temp.reg);
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.mul64(rhs.reg, srcDest.reg, temp.reg);
 #else
-        pop2xI64(r0, r1);
+        MOZ_CRASH("BaseCompiler platform hook: multiplyI64");
 #endif
     }
 
@@ -2625,29 +2599,115 @@ class BaseCompiler
     }
 #endif
 
-    void pop2xI32ForShiftOrRotate(RegI32* r0, RegI32* r1) {
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        *r1 = popI32(specific_ecx);
-        *r0 = popI32();
+    void orI64(RegI64 rhs, RegI64 srcDest) {
+        masm.or64(rhs.reg, srcDest.reg);
+    }
+
+    void andI64(RegI64 rhs, RegI64 srcDest) {
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.and64(rhs.reg, srcDest.reg);
 #else
-        pop2xI32(r0, r1);
+        MOZ_CRASH("BaseCompiler platform hook: andI64");
 #endif
     }
 
-    void pop2xI64ForShiftOrRotate(RegI64* r0, RegI64* r1) {
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        needI32(specific_ecx);
-        *r1 = widenI32(specific_ecx);
-        *r1 = popI64ToSpecific(*r1);
-        *r0 = popI64();
-#else
-        pop2xI64(r0, r1);
-#endif
+    void xorI64(RegI64 rhs, RegI64 srcDest) {
+        masm.xor64(rhs.reg, srcDest.reg);
     }
 
-    void maskShiftCount32(RegI32 r) {
+    // Note, may destroy RHS too.
+    void lshiftI32(RegI32 rhs, RegI32 srcDest) {
 #if defined(JS_CODEGEN_ARM)
-        masm.and32(Imm32(31), r.reg);
+        masm.and32(Imm32(31), rhs.reg);
+#endif
+        masm.lshift32(rhs.reg, srcDest.reg);
+    }
+
+    void lshiftI64(RegI64 shift, RegI64 srcDest) {
+#if defined(JS_CODEGEN_X64)
+        masm.lshift64(shift.reg.reg, srcDest.reg);
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.lshift64(shift.reg.low, srcDest.reg);
+#else
+        MOZ_CRASH("BaseCompiler platform hook: lshiftI64");
+#endif
+    }
+
+    // Note, may destroy RHS too.
+    void rshiftI32(RegI32 rhs, RegI32 srcDest) {
+#if defined(JS_CODEGEN_ARM)
+        masm.and32(Imm32(31), rhs.reg);
+#endif
+        masm.rshift32Arithmetic(rhs.reg, srcDest.reg);
+    }
+
+    // Note, may destroy RHS too.
+    void rshiftIU32(RegI32 rhs, RegI32 srcDest) {
+#if defined(JS_CODEGEN_ARM)
+        masm.and32(Imm32(31), rhs.reg);
+#endif
+        masm.rshift32(rhs.reg, srcDest.reg);
+    }
+
+    void rshiftI64(RegI64 shift, RegI64 srcDest) {
+#if defined(JS_CODEGEN_X64)
+        masm.rshift64Arithmetic(shift.reg.reg, srcDest.reg);
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.rshift64Arithmetic(shift.reg.low, srcDest.reg);
+#else
+        MOZ_CRASH("BaseCompiler platform hook: rshiftI64");
+#endif
+    }
+
+    void rshiftU64(RegI64 shift, RegI64 srcDest) {
+#if defined(JS_CODEGEN_X64)
+        masm.rshift64(shift.reg.reg, srcDest.reg);
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.rshift64(shift.reg.low, srcDest.reg);
+#else
+        MOZ_CRASH("BaseCompiler platform hook: rshiftU64");
+#endif
+    }
+
+    void rotateRightI64(RegI64 shift, RegI64 srcDest) {
+#if defined(JS_CODEGEN_X64)
+        masm.rotateRight64(shift.reg.reg, srcDest.reg, srcDest.reg, Register::Invalid());
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.rotateRight64(shift.reg.low, srcDest.reg, srcDest.reg, shift.reg.high);
+#else
+        MOZ_CRASH("BaseCompiler platform hook: rotateRightI64");
+#endif
+    }
+
+    void rotateLeftI64(RegI64 shift, RegI64 srcDest) {
+#if defined(JS_CODEGEN_X64)
+        masm.rotateLeft64(shift.reg.reg, srcDest.reg, srcDest.reg, Register::Invalid());
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.rotateLeft64(shift.reg.low, srcDest.reg, srcDest.reg, shift.reg.high);
+#else
+        MOZ_CRASH("BaseCompiler platform hook: rotateLeftI64");
+#endif
+    }
+
+    void clzI64(RegI64 srcDest) {
+#if defined(JS_CODEGEN_X64)
+        masm.clz64(srcDest.reg, srcDest.reg.reg);
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.clz64(srcDest.reg, srcDest.reg.low);
+        masm.move32(Imm32(0), srcDest.reg.high);
+#else
+        MOZ_CRASH("BaseCompiler platform hook: clzI64");
+#endif
+    }
+
+    void ctzI64(RegI64 srcDest) {
+#if defined(JS_CODEGEN_X64)
+        masm.ctz64(srcDest.reg, srcDest.reg.reg);
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.ctz64(srcDest.reg, srcDest.reg.low);
+        masm.move32(Imm32(0), srcDest.reg.high);
+#else
+        MOZ_CRASH("BaseCompiler platform hook: ctzI64");
 #endif
     }
 
@@ -2661,6 +2721,14 @@ class BaseCompiler
 #endif
     }
 
+    void popcntI32(RegI32 srcDest, RegI32 tmp) {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
+        masm.popcnt32(srcDest.reg, srcDest.reg, tmp.reg);
+#else
+        MOZ_CRASH("BaseCompiler platform hook: popcntI32");
+#endif
+    }
+
     bool popcnt64NeedsTemp() const {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
         return !AssemblerX86Shared::HasPOPCNT();
@@ -2668,6 +2736,14 @@ class BaseCompiler
         return true;
 #else
         MOZ_CRASH("BaseCompiler platform hook: popcnt64NeedsTemp");
+#endif
+    }
+
+    void popcntI64(RegI64 srcDest, RegI32 tmp) {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
+        masm.popcnt64(srcDest.reg, srcDest.reg, tmp.reg);
+#else
+        MOZ_CRASH("BaseCompiler platform hook: popcntI64");
 #endif
     }
 
@@ -3792,7 +3868,7 @@ BaseCompiler::emitSubtractI64()
 {
     RegI64 r0, r1;
     pop2xI64(&r0, &r1);
-    masm.sub64(r1.reg, r0.reg);
+    subtractI64(r1, r0);
     freeI64(r1);
     pushI64(r0);
 }
@@ -3822,7 +3898,15 @@ BaseCompiler::emitMultiplyI32()
 {
     // TODO / OPTIMIZE: Multiplication by constant is common (bug 1275442)
     RegI32 r0, r1;
-    pop2xI32ForIntMulDiv(&r0, &r1);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    // srcDest must be eax, and edx will be clobbered.
+    need2xI32(specific_eax, specific_edx);
+    r1 = popI32();
+    r0 = popI32ToSpecific(specific_eax);
+    freeI32(specific_edx);
+#else
+    pop2xI32(&r0, &r1);
+#endif
     masm.mul32(r1.reg, r0.reg);
     freeI32(r1);
     pushI32(r0);
@@ -3849,7 +3933,7 @@ BaseCompiler::emitMultiplyI64()
     pop2xI64(&r0, &r1);
     temp = needI32();
 #endif
-    masm.mul64(r1.reg, r0.reg, temp.reg);
+    multiplyI64(r1, r0, temp);
     if (temp.reg != Register::Invalid())
         freeI32(temp);
     freeI64(r1);
@@ -3881,7 +3965,15 @@ BaseCompiler::emitQuotientI32()
 {
     // TODO / OPTIMIZE: Fast case if lhs >= 0 and rhs is power of two.
     RegI32 r0, r1;
-    pop2xI32ForIntMulDiv(&r0, &r1);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    // srcDest must be eax, and edx will be clobbered.
+    need2xI32(specific_eax, specific_edx);
+    r1 = popI32();
+    r0 = popI32ToSpecific(specific_eax);
+    freeI32(specific_edx);
+#else
+    pop2xI32(&r0, &r1);
+#endif
 
     Label done;
     checkDivideByZeroI32(r1, r0, &done);
@@ -3898,7 +3990,15 @@ BaseCompiler::emitQuotientU32()
 {
     // TODO / OPTIMIZE: Fast case if lhs >= 0 and rhs is power of two.
     RegI32 r0, r1;
-    pop2xI32ForIntMulDiv(&r0, &r1);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    // srcDest must be eax, and edx will be clobbered.
+    need2xI32(specific_eax, specific_edx);
+    r1 = popI32();
+    r0 = popI32ToSpecific(specific_eax);
+    freeI32(specific_edx);
+#else
+    pop2xI32(&r0, &r1);
+#endif
 
     Label done;
     checkDivideByZeroI32(r1, r0, &done);
@@ -3915,7 +4015,15 @@ BaseCompiler::emitQuotientI64()
 {
 # ifdef JS_PUNBOX64
     RegI64 r0, r1;
-    pop2xI64ForIntDiv(&r0, &r1);
+#  ifdef JS_CODEGEN_X64
+    // srcDest must be rax, and rdx will be clobbered.
+    need2xI64(specific_rax, specific_rdx);
+    r1 = popI64();
+    r0 = popI64ToSpecific(specific_rax);
+    freeI64(specific_rdx);
+#  else
+    pop2xI64(&r0, &r1);
+#  endif
     quotientI64(r1, r0, IsUnsigned(false));
     freeI64(r1);
     pushI64(r0);
@@ -3929,7 +4037,15 @@ BaseCompiler::emitQuotientU64()
 {
 # ifdef JS_PUNBOX64
     RegI64 r0, r1;
-    pop2xI64ForIntDiv(&r0, &r1);
+#  ifdef JS_CODEGEN_X64
+    // srcDest must be rax, and rdx will be clobbered.
+    need2xI64(specific_rax, specific_rdx);
+    r1 = popI64();
+    r0 = popI64ToSpecific(specific_rax);
+    freeI64(specific_rdx);
+#  else
+    pop2xI64(&r0, &r1);
+#  endif
     quotientI64(r1, r0, IsUnsigned(true));
     freeI64(r1);
     pushI64(r0);
@@ -3944,7 +4060,15 @@ BaseCompiler::emitRemainderI32()
 {
     // TODO / OPTIMIZE: Fast case if lhs >= 0 and rhs is power of two.
     RegI32 r0, r1;
-    pop2xI32ForIntMulDiv(&r0, &r1);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    // srcDest must be eax, and edx will be clobbered.
+    need2xI32(specific_eax, specific_edx);
+    r1 = popI32();
+    r0 = popI32ToSpecific(specific_eax);
+    freeI32(specific_edx);
+#else
+    pop2xI32(&r0, &r1);
+#endif
 
     Label done;
     checkDivideByZeroI32(r1, r0, &done);
@@ -3961,7 +4085,15 @@ BaseCompiler::emitRemainderU32()
 {
     // TODO / OPTIMIZE: Fast case if lhs >= 0 and rhs is power of two.
     RegI32 r0, r1;
-    pop2xI32ForIntMulDiv(&r0, &r1);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    // srcDest must be eax, and edx will be clobbered.
+    need2xI32(specific_eax, specific_edx);
+    r1 = popI32();
+    r0 = popI32ToSpecific(specific_eax);
+    freeI32(specific_edx);
+#else
+    pop2xI32(&r0, &r1);
+#endif
 
     Label done;
     checkDivideByZeroI32(r1, r0, &done);
@@ -3978,7 +4110,14 @@ BaseCompiler::emitRemainderI64()
 {
 # ifdef JS_PUNBOX64
     RegI64 r0, r1;
-    pop2xI64ForIntDiv(&r0, &r1);
+#  ifdef JS_CODEGEN_X64
+    need2xI64(specific_rax, specific_rdx);
+    r1 = popI64();
+    r0 = popI64ToSpecific(specific_rax);
+    freeI64(specific_rdx);
+#  else
+    pop2xI64(&r0, &r1);
+#  endif
     remainderI64(r1, r0, IsUnsigned(false));
     freeI64(r1);
     pushI64(r0);
@@ -3992,7 +4131,14 @@ BaseCompiler::emitRemainderU64()
 {
 # ifdef JS_PUNBOX64
     RegI64 r0, r1;
-    pop2xI64ForIntDiv(&r0, &r1);
+#  ifdef JS_CODEGEN_X64
+    need2xI64(specific_rax, specific_rdx);
+    r1 = popI64();
+    r0 = popI64ToSpecific(specific_rax);
+    freeI64(specific_rdx);
+#  else
+    pop2xI64(&r0, &r1);
+#  endif
     remainderI64(r1, r0, IsUnsigned(true));
     freeI64(r1);
     pushI64(r0);
@@ -4174,7 +4320,7 @@ BaseCompiler::emitOrI64()
 {
     RegI64 r0, r1;
     pop2xI64(&r0, &r1);
-    masm.or64(r1.reg, r0.reg);
+    orI64(r1, r0);
     freeI64(r1);
     pushI64(r0);
 }
@@ -4194,7 +4340,7 @@ BaseCompiler::emitAndI64()
 {
     RegI64 r0, r1;
     pop2xI64(&r0, &r1);
-    masm.and64(r1.reg, r0.reg);
+    andI64(r1, r0);
     freeI64(r1);
     pushI64(r0);
 }
@@ -4214,7 +4360,7 @@ BaseCompiler::emitXorI64()
 {
     RegI64 r0, r1;
     pop2xI64(&r0, &r1);
-    masm.xor64(r1.reg, r0.reg);
+    xorI64(r1, r0);
     freeI64(r1);
     pushI64(r0);
 }
@@ -4229,9 +4375,13 @@ BaseCompiler::emitShlI32()
         pushI32(r);
     } else {
         RegI32 r0, r1;
-        pop2xI32ForShiftOrRotate(&r0, &r1);
-        maskShiftCount32(r1);
-        masm.lshift32(r1.reg, r0.reg);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+        r1 = popI32(specific_ecx);
+        r0 = popI32();
+#else
+        pop2xI32(&r0, &r1);
+#endif
+        lshiftI32(r1, r0);
         freeI32(r1);
         pushI32(r0);
     }
@@ -4242,8 +4392,15 @@ BaseCompiler::emitShlI64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-    pop2xI64ForShiftOrRotate(&r0, &r1);
-    masm.lshift64(lowPart(r1), r0.reg);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
+    r0 = popI64();
+#else
+    pop2xI64(&r0, &r1);
+#endif
+    lshiftI64(r1, r0);
     freeI64(r1);
     pushI64(r0);
 }
@@ -4258,9 +4415,13 @@ BaseCompiler::emitShrI32()
         pushI32(r);
     } else {
         RegI32 r0, r1;
-        pop2xI32ForShiftOrRotate(&r0, &r1);
-        maskShiftCount32(r1);
-        masm.rshift32Arithmetic(r1.reg, r0.reg);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+        r1 = popI32(specific_ecx);
+        r0 = popI32();
+#else
+        pop2xI32(&r0, &r1);
+#endif
+        rshiftI32(r1, r0);
         freeI32(r1);
         pushI32(r0);
     }
@@ -4271,8 +4432,15 @@ BaseCompiler::emitShrI64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-    pop2xI64ForShiftOrRotate(&r0, &r1);
-    masm.rshift64Arithmetic(lowPart(r1), r0.reg);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
+    r0 = popI64();
+#else
+    pop2xI64(&r0, &r1);
+#endif
+    rshiftI64(r1, r0);
     freeI64(r1);
     pushI64(r0);
 }
@@ -4287,9 +4455,13 @@ BaseCompiler::emitShrU32()
         pushI32(r);
     } else {
         RegI32 r0, r1;
-        pop2xI32ForShiftOrRotate(&r0, &r1);
-        maskShiftCount32(r1);
-        masm.rshift32(r1.reg, r0.reg);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+        r1 = popI32(specific_ecx);
+        r0 = popI32();
+#else
+        pop2xI32(&r0, &r1);
+#endif
+        rshiftIU32(r1, r0);
         freeI32(r1);
         pushI32(r0);
     }
@@ -4300,8 +4472,15 @@ BaseCompiler::emitShrU64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-    pop2xI64ForShiftOrRotate(&r0, &r1);
-    masm.rshift64(lowPart(r1), r0.reg);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
+    r0 = popI64();
+#else
+    pop2xI64(&r0, &r1);
+#endif
+    rshiftU64(r1, r0);
     freeI64(r1);
     pushI64(r0);
 }
@@ -4311,7 +4490,12 @@ BaseCompiler::emitRotrI32()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI32 r0, r1;
-    pop2xI32ForShiftOrRotate(&r0, &r1);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    r1 = popI32(specific_ecx);
+    r0 = popI32();
+#else
+    pop2xI32(&r0, &r1);
+#endif
     masm.rotateRight(r1.reg, r0.reg, r0.reg);
     freeI32(r1);
     pushI32(r0);
@@ -4322,8 +4506,15 @@ BaseCompiler::emitRotrI64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-    pop2xI64ForShiftOrRotate(&r0, &r1);
-    masm.rotateRight64(lowPart(r1), r0.reg, r0.reg, maybeHighPart(r1));
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
+    r0 = popI64();
+#else
+    pop2xI64(&r0, &r1);
+#endif
+    rotateRightI64(r1, r0);
     freeI64(r1);
     pushI64(r0);
 }
@@ -4333,7 +4524,12 @@ BaseCompiler::emitRotlI32()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI32 r0, r1;
-    pop2xI32ForShiftOrRotate(&r0, &r1);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    r1 = popI32(specific_ecx);
+    r0 = popI32();
+#else
+    pop2xI32(&r0, &r1);
+#endif
     masm.rotateLeft(r1.reg, r0.reg, r0.reg);
     freeI32(r1);
     pushI32(r0);
@@ -4344,8 +4540,15 @@ BaseCompiler::emitRotlI64()
 {
     // TODO / OPTIMIZE: Constant rhs
     RegI64 r0, r1;
-    pop2xI64ForShiftOrRotate(&r0, &r1);
-    masm.rotateLeft64(lowPart(r1), r0.reg, r0.reg, maybeHighPart(r1));
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    needI32(specific_ecx);
+    r1 = fromI32(specific_ecx);
+    r1 = popI64ToSpecific(r1);
+    r0 = popI64();
+#else
+    pop2xI64(&r0, &r1);
+#endif
+    rotateLeftI64(r1, r0);
     freeI64(r1);
     pushI64(r0);
 }
@@ -4386,8 +4589,7 @@ void
 BaseCompiler::emitClzI64()
 {
     RegI64 r0 = popI64();
-    masm.clz64(r0.reg, lowPart(r0));
-    maybeClearHighPart(r0);
+    clzI64(r0);
     pushI64(r0);
 }
 
@@ -4403,8 +4605,7 @@ void
 BaseCompiler::emitCtzI64()
 {
     RegI64 r0 = popI64();
-    masm.ctz64(r0.reg, lowPart(r0));
-    maybeClearHighPart(r0);
+    ctzI64(r0);
     pushI64(r0);
 }
 
@@ -4414,10 +4615,10 @@ BaseCompiler::emitPopcntI32()
     RegI32 r0 = popI32();
     if (popcnt32NeedsTemp()) {
         RegI32 tmp = needI32();
-        masm.popcnt32(r0.reg, r0.reg, tmp.reg);
+        popcntI32(r0, tmp);
         freeI32(tmp);
     } else {
-        masm.popcnt32(r0.reg, r0.reg, invalidI32().reg);
+        popcntI32(r0, invalidI32());
     }
     pushI32(r0);
 }
@@ -4428,10 +4629,10 @@ BaseCompiler::emitPopcntI64()
     RegI64 r0 = popI64();
     if (popcnt64NeedsTemp()) {
         RegI32 tmp = needI32();
-        masm.popcnt64(r0.reg, r0.reg, tmp.reg);
+        popcntI64(r0, tmp);
         freeI32(tmp);
     } else {
-        masm.popcnt64(r0.reg, r0.reg, invalidI32().reg);
+        popcntI64(r0, invalidI32());
     }
     pushI64(r0);
 }
@@ -4599,7 +4800,7 @@ BaseCompiler::emitExtendI32ToI64()
     RegI64 x0 = RegI64(Register64(specific_edx.reg, specific_eax.reg));
 #else
     RegI32 r0 = popI32();
-    RegI64 x0 = widenI32(r0);
+    RegI64 x0 = fromI32(r0);
 #endif
     extendI32ToI64(r0, x0);
     pushI64(x0);
@@ -4610,7 +4811,7 @@ void
 BaseCompiler::emitExtendU32ToI64()
 {
     RegI32 r0 = popI32();
-    RegI64 x0 = widenI32(r0);
+    RegI64 x0 = fromI32(r0);
     extendU32ToI64(r0, x0);
     pushI64(x0);
     // Note: no need to free r0, since it is part of x0
