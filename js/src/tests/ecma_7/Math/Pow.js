@@ -9,8 +9,6 @@ var summary = "Implement the exponentiation operator";
 
 print(BUGNUMBER + ": " + summary);
 
-var test = `
-
 // Constant folding
 assertEq(2 ** 2 ** 3, 256);
 assertEq(1 ** 1 ** 4, 1);
@@ -114,27 +112,6 @@ assertEq(parseTree.body[0].expression.left.name, "a");
 assertEq(parseTree.body[0].expression.right.operator, "**");
 assertEq(parseTree.body[0].expression.right.left.name, "b");
 assertEq(parseTree.body[0].expression.right.right.name, "c");
-
-
-function assertTrue(v) {
-    assertEq(v, true);
-}
-
-function assertFalse(v) {
-    assertEq(v, false);
-}
-`;
-
-function exponentiationEnabled() {
-    try {
-        Function("1 ** 1");
-        return true;
-    } catch (e if e instanceof SyntaxError) { }
-    return false;
-}
-
-if (exponentiationEnabled())
-    eval(test);
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);
