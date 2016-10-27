@@ -416,16 +416,6 @@ union MaybeRegion {
   null_t;
 };
 
-struct OpDeliverFence {
-  uint64_t TextureId;
-  FenceHandle fence;
-};
-
-struct OpDeliverFenceToNonRecycle {
-  uint64_t TextureId;
-  FenceHandle fence;
-};
-
 struct OpNotifyNotUsed {
   uint64_t TextureId;
   uint64_t fwdTransactionId;
@@ -514,8 +504,6 @@ union EditReply {
 };
 
 union AsyncParentMessageData {
-  OpDeliverFence;
-  OpDeliverFenceToNonRecycle;
   OpNotifyNotUsed;
   OpNotifyNotUsedToNonRecycle;
 };

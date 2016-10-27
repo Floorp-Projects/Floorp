@@ -408,34 +408,6 @@ bool ImageBridgeParent::IsSameProcess() const
 }
 
 void
-ImageBridgeParent::SendFenceHandleToNonRecycle(PTextureParent* aTexture)
-{
-  RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
-  if (!texture) {
-    return;
-  }
-
-  if (!(texture->GetFlags() & TextureFlags::RECYCLE) &&
-     !texture->NeedsFenceHandle()) {
-    return;
-  }
-
-  uint64_t textureId = TextureHost::GetTextureSerial(aTexture);
-
-  // Send a ReleaseFence of CompositorOGL.
-  FenceHandle fence = texture->GetCompositorReleaseFence();
-  if (fence.IsValid()) {
-    mPendingAsyncMessage.push_back(OpDeliverFenceToNonRecycle(textureId, fence));
-  }
-
-  // Send a ReleaseFence that is set to TextureHost by HwcComposer2D.
-  fence = texture->GetAndResetReleaseFenceHandle();
-  if (fence.IsValid()) {
-    mPendingAsyncMessage.push_back(OpDeliverFenceToNonRecycle(textureId, fence));
-  }
-}
-
-void
 ImageBridgeParent::NotifyNotUsedToNonRecycle(PTextureParent* aTexture,
                                              uint64_t aTransactionId)
 {
@@ -448,8 +420,6 @@ ImageBridgeParent::NotifyNotUsedToNonRecycle(PTextureParent* aTexture,
      !texture->NeedsFenceHandle()) {
     return;
   }
-
-  SendFenceHandleToNonRecycle(aTexture);
 
   uint64_t textureId = TextureHost::GetTextureSerial(aTexture);
   mPendingAsyncMessage.push_back(
@@ -502,7 +472,6 @@ ImageBridgeParent::NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransaction
     return;
   }
 
-  SendFenceHandleIfPresent(aTexture);
   uint64_t textureId = TextureHost::GetTextureSerial(aTexture);
   mPendingAsyncMessage.push_back(
     OpNotifyNotUsed(textureId, aTransactionId));
