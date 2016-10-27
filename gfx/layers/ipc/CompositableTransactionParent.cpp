@@ -158,21 +158,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       compositable->RemoveTextureHost(tex);
       break;
     }
-    case CompositableOperationDetail::TOpRemoveTextureAsync: {
-      const OpRemoveTextureAsync& op = aEdit.detail().get_OpRemoveTextureAsync();
-      RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
-
-      MOZ_ASSERT(tex.get());
-      compositable->RemoveTextureHost(tex);
-
-      // Only ImageBridge child sends it.
-      MOZ_ASSERT(UsesImageBridge());
-      if (UsesImageBridge()) {
-        ReplyRemoveTexture(OpReplyRemoveTexture(op.holderId(),
-                                                op.transactionId()));
-      }
-      break;
-    }
     case CompositableOperationDetail::TOpUseTexture: {
       const OpUseTexture& op = aEdit.detail().get_OpUseTexture();
 

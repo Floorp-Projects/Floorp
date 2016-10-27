@@ -113,8 +113,6 @@ public:
 
   virtual bool IsSameProcess() const override;
 
-  virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) override;
-
   void SendFenceHandleToNonRecycle(PTextureParent* aTexture);
 
   void NotifyNotUsedToNonRecycle(PTextureParent* aTexture,
