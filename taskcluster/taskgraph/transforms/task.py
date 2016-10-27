@@ -536,7 +536,7 @@ def build_task(config, tasks):
             ])
 
         if 'expires-after' not in task:
-            task['expires-after'] = '14 days' if config.params['project'] == 'try' else '1 year'
+            task['expires-after'] = '28 days' if config.params['project'] == 'try' else '1 year'
 
         if 'deadline-after' not in task:
             task['deadline-after'] = '1 day'

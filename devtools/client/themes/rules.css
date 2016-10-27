@@ -309,7 +309,7 @@
 }
 
 .ruleview-overridden-rule-filter {
-  background-image: url(images/filter.svg#filterinput);
+  background-image: url(chrome://devtools/skin/images/filter.svg#filterinput);
   background-size: 11px 11px;
   margin-inline-start: 5px;
   display: inline-block;

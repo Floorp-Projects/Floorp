@@ -57,19 +57,19 @@ static nsresult
 nsComposeTxtSrvFilterConstructor(nsISupports *aOuter, REFNSIID aIID,
                                  void **aResult, bool aIsForMail)
 {
-    *aResult = nullptr;
-    if (aOuter) {
-        return NS_ERROR_NO_AGGREGATION;
-    }
-    nsComposeTxtSrvFilter * inst = new nsComposeTxtSrvFilter();
-    if (!inst) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(inst);
-	  inst->Init(aIsForMail);
-    nsresult rv = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
-    return rv;
+  *aResult = nullptr;
+  if (aOuter) {
+      return NS_ERROR_NO_AGGREGATION;
+  }
+  nsComposeTxtSrvFilter * inst = new nsComposeTxtSrvFilter();
+  if (!inst) {
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(inst);
+  inst->Init(aIsForMail);
+  nsresult rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+  return rv;
 }
 
 static nsresult
@@ -77,7 +77,7 @@ nsComposeTxtSrvFilterConstructorForComposer(nsISupports *aOuter,
                                             REFNSIID aIID,
                                             void **aResult)
 {
-    return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, false);
+  return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, false);
 }
 
 static nsresult
@@ -85,7 +85,7 @@ nsComposeTxtSrvFilterConstructorForMail(nsISupports *aOuter,
                                         REFNSIID aIID,
                                         void **aResult)
 {
-    return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, true);
+  return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, true);
 }
 
 

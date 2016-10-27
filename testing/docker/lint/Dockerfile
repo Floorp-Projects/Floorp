@@ -14,6 +14,8 @@ ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mer
 # %include testing/docker/recipes/install-mercurial.sh
 ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /build/install-mercurial.sh
 ADD system-setup.sh /tmp/system-setup.sh
+# %include tools/lint/flake8/flake8_requirements.txt
+ADD topsrcdir/tools/lint/flake8/flake8_requirements.txt /tmp/flake8_requirements.txt
 RUN bash /tmp/system-setup.sh
 
 # %include testing/docker/recipes/run-task

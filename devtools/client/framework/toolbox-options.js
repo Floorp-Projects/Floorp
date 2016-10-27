@@ -256,7 +256,10 @@ OptionsPanel.prototype = {
 
   setupThemeList: function () {
     let themeBox = this.panelDoc.getElementById("devtools-theme-box");
-    themeBox.innerHTML = "";
+    let themeLabels = themeBox.querySelectorAll("label");
+    for (let label of themeLabels) {
+      label.remove();
+    }
 
     let createThemeOption = theme => {
       let inputLabel = this.panelDoc.createElement("label");

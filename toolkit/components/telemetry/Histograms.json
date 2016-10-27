@@ -10347,5 +10347,25 @@
     "high": 100,
     "n_buckets": 10,
     "description": "Percentage of time taken by phases in expensive content paints."
+  },
+  "NARRATE_CONTENT_BY_LANGUAGE": {
+    "alert_emails": ["eisaacson@mozilla.com"],
+    "bug_numbers": [1308030],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "56",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 4,
+    "description": "Number of Narrate initialization attempts and successes broken up by content's language (ISO 639-1 code) (0 = initialization attempt, 1 = successfully initialized)"
+  },
+  "NARRATE_CONTENT_SPEAKTIME_MS": {
+    "alert_emails": ["eisaacson@mozilla.com"],
+    "bug_numbers": [1308030],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "56",
+    "kind": "linear",
+    "high": 300000,
+    "n_buckets": 30,
+    "description": "Time in MS that content is narrated in 10 second increments up to 5 minutes"
   }
 }
