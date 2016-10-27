@@ -441,11 +441,39 @@ MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t
   Telemetry::Accumulate(Telemetry::VIDEO_CDM_CREATED, ToCDMTypeTelemetryEnum(mKeySystem));
 }
 
+static bool
+IsSessionTypeSupported(const MediaKeySessionType aSessionType,
+                       const MediaKeySystemConfiguration& aConfig)
+{
+  if (aSessionType == MediaKeySessionType::Temporary) {
+    // Temporary is always supported.
+    return true;
+  }
+  if (!aConfig.mSessionTypes.WasPassed()) {
+    // No other session types supported.
+    return false;
+  }
+  using MediaKeySessionTypeValues::strings;
+  const char* sessionType = strings[static_cast<uint32_t>(aSessionType)].value;
+  for (const nsString& s : aConfig.mSessionTypes.Value()) {
+    if (s.EqualsASCII(sessionType)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 already_AddRefed<MediaKeySession>
 MediaKeys::CreateSession(JSContext* aCx,
                          MediaKeySessionType aSessionType,
                          ErrorResult& aRv)
 {
+  if (!IsSessionTypeSupported(aSessionType, mConfig)) {
+    EME_LOG("MediaKeys[%p,'%s'] CreateSession() failed, unsupported session type", this);
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
   if (!mProxy) {
     NS_WARNING("Tried to use a MediaKeys which lost its CDM");
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
