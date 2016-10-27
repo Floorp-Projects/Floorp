@@ -5,7 +5,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from StringIO import StringIO
-from . import ConfigureSandbox
+from . import (
+    ConfigureError,
+    ConfigureSandbox,
+    DependsFunction,
+)
+from mozbuild.util import memoize
 
 
 class LintSandbox(ConfigureSandbox):
@@ -21,3 +26,20 @@ class LintSandbox(ConfigureSandbox):
     def run(self, path=None):
         if path:
             self.include_file(path)
+
+    @memoize
+    def _value_for_depends(self, obj, need_help_dependency=False):
+        with_help = self._help_option in obj.dependencies
+        if with_help:
+            for arg in obj.dependencies:
+                if isinstance(arg, DependsFunction):
+                    if self._help_option not in arg.dependencies:
+                        raise ConfigureError(
+                            "`%s` depends on '--help' and `%s`. "
+                            "`%s` must depend on '--help'"
+                            % (obj.name, arg.name, arg.name))
+        elif self._help or need_help_dependency:
+            raise ConfigureError("Missing @depends for `%s`: '--help'" %
+                                 obj.name)
+        return super(LintSandbox, self)._value_for_depends(
+            obj, need_help_dependency)

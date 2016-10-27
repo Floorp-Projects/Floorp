@@ -1064,23 +1064,6 @@ class TestConfigure(unittest.TestCase):
         self.assertEquals(e.exception.message,
                           "Cannot decorate generator functions with @depends")
 
-        with self.assertRaises(ConfigureError) as e:
-            with self.moz_configure('''
-                option('--foo', help='foo')
-                @depends('--foo')
-                def foo(value):
-                    return value
-
-                @depends('--help', foo)
-                def bar(help, foo):
-                    return
-            '''):
-                self.get_config()
-
-        self.assertEquals(e.exception.message,
-                          "`bar` depends on '--help' and `foo`. "
-                          "`foo` must depend on '--help'")
-
         with self.assertRaises(TypeError) as e:
             with self.moz_configure('''
                 depends('--help')(42)
@@ -1089,20 +1072,6 @@ class TestConfigure(unittest.TestCase):
 
         self.assertEquals(e.exception.message,
                           "Unexpected type: 'int'")
-
-        with self.assertRaises(ConfigureError) as e:
-            with self.moz_configure('''
-                option('--foo', help='foo')
-                @depends('--foo')
-                def foo(value):
-                    return value
-
-                include(foo)
-            '''):
-                self.get_config()
-
-        self.assertEquals(e.exception.message,
-                          "Missing @depends for `foo`: '--help'")
 
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure('''
