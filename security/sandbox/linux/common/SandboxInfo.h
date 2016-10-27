@@ -57,11 +57,10 @@ public:
     return !Test(kEnabledForMedia) || Test(kHasSeccompBPF);
   }
 
-#ifdef MOZ_CRASHREPORTER
-  MOZ_EXPORT void AnnotateCrashReport() const;
-#endif
-
-  static void SubmitTelemetry();
+  // For telemetry / crash annotation uses.
+  uint32_t AsInteger() const {
+    return mFlags;
+  }
 
   // For bug 1222500 or anything else like it: On desktop, this is
   // called in the parent process at a point when it should still be
@@ -69,7 +68,7 @@ public:
   // child process is early enough to be single-threaded.  If not,
   // kUnexpectedThreads is set and affected flags (user namespaces;
   // possibly others in the future) are cleared.
-  static void ThreadingCheck();
+  static MOZ_EXPORT void ThreadingCheck();
 private:
   enum Flags mFlags;
   // This should be const, but has to allow for ThreadingCheck.

@@ -2868,7 +2868,7 @@ nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
 MOZ_NEVER_INLINE void
 nsCycleCollector::MarkRoots(SliceBudget& aBudget)
 {
-  JS::AutoAssertOnGC nogc;
+  JS::AutoAssertNoGC nogc;
   TimeLog timeLog;
   AutoRestore<bool> ar(mScanInProgress);
   MOZ_ASSERT(!mScanInProgress);
@@ -3190,7 +3190,7 @@ nsCycleCollector::ScanBlackNodes()
 void
 nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
 {
-  JS::AutoAssertOnGC nogc;
+  JS::AutoAssertNoGC nogc;
   AutoRestore<bool> ar(mScanInProgress);
   MOZ_ASSERT(!mScanInProgress);
   mScanInProgress = true;
@@ -3281,7 +3281,7 @@ nsCycleCollector::CollectWhite()
   uint32_t numWhiteJSZones = 0;
 
   {
-    JS::AutoAssertOnGC nogc;
+    JS::AutoAssertNoGC nogc;
     bool hasJSContext = !!mJSContext;
     nsCycleCollectionParticipant* zoneParticipant =
       hasJSContext ? mJSContext->ZoneParticipant() : nullptr;
@@ -3338,7 +3338,7 @@ nsCycleCollector::CollectWhite()
   }
   timeLog.Checkpoint("CollectWhite::Unlink");
 
-  JS::AutoAssertOnGC nogc;
+  JS::AutoAssertNoGC nogc;
   for (auto iter = whiteNodes.Iter(); !iter.Done(); iter.Next()) {
     PtrInfo* pinfo = iter.Get();
     MOZ_ASSERT(pinfo->mParticipant,
@@ -3836,7 +3836,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
   timeLog.Checkpoint("Post-FreeSnowWhite finish IGC");
 
   // Set up the data structures for building the graph.
-  JS::AutoAssertOnGC nogc;
+  JS::AutoAssertNoGC nogc;
   JS::AutoEnterCycleCollection autocc(mJSContext->Context());
   mGraph.Init();
   mResults.Init();

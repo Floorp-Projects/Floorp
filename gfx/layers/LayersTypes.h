@@ -8,11 +8,6 @@
 
 #include <stdint.h>                     // for uint32_t
 
-#ifdef MOZ_WIDGET_GONK
-#include <utils/RefBase.h>
-#include "mozilla/layers/GonkNativeHandle.h"
-#endif
-
 #include "Units.h"
 #include "mozilla/gfx/Point.h"          // for IntPoint
 #include "mozilla/TypedEnumBits.h"
@@ -86,8 +81,6 @@ enum class LayerRenderStateFlags : int8_t {
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LayerRenderStateFlags)
 
-// The 'ifdef MOZ_WIDGET_GONK' sadness here is because we don't want to include
-// android::sp unless we have to.
 struct LayerRenderState {
   // Constructors and destructor are defined in LayersTypes.cpp so we don't
   // have to pull in a definition for GraphicBuffer.h here. In KK at least,
@@ -96,36 +89,6 @@ struct LayerRenderState {
   LayerRenderState();
   LayerRenderState(const LayerRenderState& aOther);
   ~LayerRenderState();
-
-#ifdef MOZ_WIDGET_GONK
-  LayerRenderState(android::GraphicBuffer* aSurface,
-                   const gfx::IntSize& aSize,
-                   LayerRenderStateFlags aFlags,
-                   TextureHost* aTexture);
-
-  bool OriginBottomLeft() const
-  { return bool(mFlags & LayerRenderStateFlags::ORIGIN_BOTTOM_LEFT); }
-
-  bool BufferRotated() const
-  { return bool(mFlags & LayerRenderStateFlags::BUFFER_ROTATION); }
-
-  bool FormatRBSwapped() const
-  { return bool(mFlags & LayerRenderStateFlags::FORMAT_RB_SWAP); }
-
-  void SetOverlayId(const int32_t& aId)
-  { mOverlayId = aId; }
-
-  void SetSidebandStream(const GonkNativeHandle& aStream)
-  {
-    mSidebandStream = aStream;
-  }
-
-  android::GraphicBuffer* GetGrallocBuffer() const
-  { return mSurface.get(); }
-
-  const GonkNativeHandle& GetSidebandStream()
-  { return mSidebandStream; }
-#endif
 
   void SetOffset(const nsIntPoint& aOffset)
   {
@@ -139,17 +102,6 @@ struct LayerRenderState {
   bool mHasOwnOffset;
   // the location of the layer's origin on mSurface
   nsIntPoint mOffset;
-  // The 'ifdef MOZ_WIDGET_GONK' sadness here is because we don't want to include
-  // android::sp unless we have to.
-#ifdef MOZ_WIDGET_GONK
-  // surface to render
-  android::sp<android::GraphicBuffer> mSurface;
-  int32_t mOverlayId;
-  // size of mSurface
-  gfx::IntSize mSize;
-  TextureHost* mTexture;
-  GonkNativeHandle mSidebandStream;
-#endif
 };
 
 enum class ScaleMode : int8_t {

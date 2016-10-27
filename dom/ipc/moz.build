@@ -119,6 +119,11 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_TARGET'] == 'Darwin':
         'mozsandbox',
     ]
 
+if CONFIG['MOZ_CONTENT_SANDBOX'] and CONFIG['OS_ARCH'] == 'Linux':
+    USE_LIBS += [
+        'mozsandbox',
+    ]
+
 LOCAL_INCLUDES += [
     '/caps',
     '/chrome',

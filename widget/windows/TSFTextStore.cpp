@@ -4793,7 +4793,17 @@ TSFTextStore::CreateAndSetFocus(nsWindowBase* aFocusedWidget,
       MarkContextAsKeyboardDisabled(topContext);
     }
   }
-  HRESULT hr = sThreadMgr->SetFocus(textStore->mDocumentMgr);
+
+  HRESULT hr;
+  {
+    // Windows 10's softwware keyboard requires that SetSelection must be
+    // always successful into SetFocus.  If returning error, it might crash
+    // into TextInputFramework.dll.
+    AutoSetTemporarySelection setSelection(textStore->SelectionForTSFRef());
+
+    hr = sThreadMgr->SetFocus(textStore->mDocumentMgr);
+  }
+
   if (NS_WARN_IF(FAILED(hr))) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
       ("  TSFTextStore::CreateAndSetFocus() FAILED due to "

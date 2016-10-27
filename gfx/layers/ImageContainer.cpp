@@ -24,9 +24,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "nsISupportsUtils.h"           // for NS_IF_ADDREF
 #include "YCbCrUtils.h"                 // for YCbCr conversions
-#ifdef MOZ_WIDGET_GONK
-#include "GrallocImages.h"
-#endif
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/2D.h"
 
@@ -177,18 +174,6 @@ ImageContainer::CreateSharedRGBImage()
   }
   return new SharedRGBImage(mImageClient);
 }
-
-#ifdef MOZ_WIDGET_GONK
-RefPtr<OverlayImage>
-ImageContainer::CreateOverlayImage()
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  if (!mImageClient || !mImageClient->AsImageClientSingle()) {
-    return nullptr;
-  }
-  return new OverlayImage();
-}
-#endif
 
 void
 ImageContainer::SetCurrentImageInternal(const nsTArray<NonOwningImage>& aImages)

@@ -5,11 +5,12 @@
 
 #include "nsTextFrameUtils.h"
 
-#include "nsUnicharUtils.h"
 #include "nsBidiUtils.h"
+#include "nsCharTraits.h"
 #include "nsIContent.h"
 #include "nsStyleStruct.h"
 #include "nsTextFragment.h"
+#include "nsUnicharUtils.h"
 #include <algorithm>
 
 static bool IsDiscardable(char16_t ch, uint32_t* aFlags)
@@ -51,7 +52,7 @@ nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
     // Skip discardables.
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      char16_t ch = *aText++;
+      char16_t ch = aText[i];
       if (IsDiscardable(ch, &flags)) {
         aSkipChars->SkipChar();
       } else {
@@ -82,17 +83,38 @@ nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
     bool inWhitespace = (*aIncomingFlags & INCOMING_WHITESPACE) != 0;
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      char16_t ch = *aText++;
+      char16_t ch = aText[i];
       bool nowInWhitespace;
       if (ch == ' ' &&
           (i + 1 >= aLength ||
-           !IsSpaceCombiningSequenceTail(aText, aLength - (i + 1)))) {
+           !IsSpaceCombiningSequenceTail(&aText[i + 1], aLength - (i + 1)))) {
         nowInWhitespace = true;
       } else if (ch == '\n' && aCompression == COMPRESS_WHITESPACE_NEWLINE) {
-        if (i > 0 && IS_CJ_CHAR(aText[-1]) &&
-            i + 1 < aLength && IS_CJ_CHAR(aText[1])) {
-          // Discard newlines between CJK chars.
-          // XXX this really requires more context to get right!
+        if ((i > 0 && IS_ZERO_WIDTH_SPACE(aText[i - 1])) ||
+            (i + 1 < aLength && IS_ZERO_WIDTH_SPACE(aText[i + 1]))) {
+          aSkipChars->SkipChar();
+          continue;
+        }
+        uint32_t ucs4before;
+        uint32_t ucs4after;
+        if (i > 1 &&
+            NS_IS_LOW_SURROGATE(aText[i - 1]) &&
+            NS_IS_HIGH_SURROGATE(aText[i - 2])) {
+          ucs4before = SURROGATE_TO_UCS4(aText[i - 2], aText[i - 1]);
+        } else if (i > 0) {
+          ucs4before = aText[i - 1];
+        }
+        if (i + 2 < aLength &&
+            NS_IS_HIGH_SURROGATE(aText[i + 1]) &&
+            NS_IS_LOW_SURROGATE(aText[i + 2])) {
+          ucs4after = SURROGATE_TO_UCS4(aText[i + 1], aText[i + 2]);
+        } else if (i + 1 < aLength) {
+          ucs4after = aText[i + 1];
+        }
+        if (i > 0 && IsSegmentBreakSkipChar(ucs4before) &&
+            i + 1 < aLength && IsSegmentBreakSkipChar(ucs4after)) {
+          // Discard newlines between characters that have F, W, or H
+          // EastAsianWidth property and neither side is Hangul.
           aSkipChars->SkipChar();
           continue;
         }
@@ -158,7 +180,7 @@ nsTextFrameUtils::TransformText(const uint8_t* aText, uint32_t aLength,
     // Skip discardables.
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      uint8_t ch = *aText++;
+      uint8_t ch = aText[i];
       if (IsDiscardable(ch, &flags)) {
         aSkipChars->SkipChar();
       } else {
@@ -182,7 +204,7 @@ nsTextFrameUtils::TransformText(const uint8_t* aText, uint32_t aLength,
     bool inWhitespace = (*aIncomingFlags & INCOMING_WHITESPACE) != 0;
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      uint8_t ch = *aText++;
+      uint8_t ch = aText[i];
       bool nowInWhitespace = ch == ' ' || ch == '\t' ||
         (ch == '\n' && aCompression == COMPRESS_WHITESPACE_NEWLINE);
       if (!nowInWhitespace) {
