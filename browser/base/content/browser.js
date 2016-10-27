@@ -1077,11 +1077,11 @@ var gBrowserInit = {
 
     let uriToLoad = this._getUriToLoad();
     if (uriToLoad && uriToLoad != "about:blank") {
-      if (uriToLoad instanceof Ci.nsISupportsArray) {
-        let count = uriToLoad.Count();
+      if (uriToLoad instanceof Ci.nsIArray) {
+        let count = uriToLoad.length;
         let specs = [];
         for (let i = 0; i < count; i++) {
-          let urisstring = uriToLoad.GetElementAt(i).QueryInterface(Ci.nsISupportsString);
+          let urisstring = uriToLoad.queryElementAt(i, Ci.nsISupportsString);
           specs.push(urisstring.data);
         }
 
@@ -1413,7 +1413,7 @@ var gBrowserInit = {
 
   // Returns the URI(s) to load at startup.
   _getUriToLoad: function () {
-    // window.arguments[0]: URI to load (string), or an nsISupportsArray of
+    // window.arguments[0]: URI to load (string), or an nsIArray of
     //                      nsISupportsStrings to load, or a xul:tab of
     //                      a tabbrowser, which will be replaced by this
     //                      window (for this case, all other arguments are
