@@ -11,7 +11,7 @@
 #include "nsXULAppAPI.h"
 
 // This defines the entry points for a content process to start
-// sandboxing itself.  See also common/SandboxInfo.h for what parts of
+// sandboxing itself.  See also SandboxInfo.h for what parts of
 // sandboxing are enabled/supported.
 
 namespace mozilla {
