@@ -17,18 +17,6 @@
 #include "mozilla/layers/LayersMessages.h" // for ShmemSection
 #include "LayersTypes.h"
 
-/*
- * FIXME [bjacob] *** PURE CRAZYNESS WARNING ***
- * (I think that this doesn't apply anymore.)
- *
- * This #define is actually needed here, because subclasses of ISurfaceAllocator,
- * namely ShadowLayerForwarder, will or will not override AllocGrallocBuffer
- * depending on whether MOZ_HAVE_SURFACEDESCRIPTORGRALLOC is defined.
- */
-#ifdef MOZ_WIDGET_GONK
-#define MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-#endif
-
 namespace mozilla {
 namespace ipc {
 class Shmem;
@@ -147,8 +135,6 @@ public:
   virtual void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) = 0;
 
   virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) = 0;
-
-  void SendFenceHandleIfPresent(PTextureParent* aTexture);
 
   virtual void SendPendingAsyncMessages();
 

@@ -238,7 +238,7 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   //
   // Desktop does not support async zoom yet, so we ignore this for those
   // platforms.
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_UIKIT)
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_UIKIT)
   if (mWidget && mWidget->GetOwningTabChild()) {
     mCompositorMightResample = AsyncPanZoomEnabled();
   }

@@ -10,7 +10,6 @@
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "mozilla/Atomics.h"
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
-#include "mozilla/layers/AsyncTransactionTracker.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -51,11 +50,6 @@
 
 #ifdef XP_MACOSX
 #include "mozilla/layers/MacIOSurfaceTextureClientOGL.h"
-#endif
-
-#ifdef MOZ_WIDGET_GONK
-#include <cutils/properties.h>
-#include "mozilla/layers/GrallocTextureClient.h"
 #endif
 
 #if 0
@@ -422,7 +416,6 @@ void TextureClient::Destroy(bool aForceSync)
   mBorrowedDrawTarget = nullptr;
   mReadLock = nullptr;
 
-  CancelWaitFenceHandleOnImageBridge();
   RefPtr<TextureChild> actor = mActor;
   mActor = nullptr;
 
@@ -497,10 +490,6 @@ TextureClient::Lock(OpenMode aMode)
     return mOpenMode == aMode;
   }
 
-  if (!!mFenceHandleWaiter && (aMode & OpenMode::OPEN_WRITE)) {
-    mFenceHandleWaiter->WaitComplete();
-  }
-
   if (aMode & OpenMode::OPEN_WRITE && IsReadLocked()) {
     NS_WARNING("Attempt to Lock a texture that is being read by the compositor!");
     return false;
@@ -508,8 +497,7 @@ TextureClient::Lock(OpenMode aMode)
 
   LockActor();
 
-  FenceHandle* fence = (mReleaseFenceHandle.IsValid() && (aMode & OpenMode::OPEN_WRITE)) ? &mReleaseFenceHandle : nullptr;
-  mIsLocked = mData->Lock(aMode, fence);
+  mIsLocked = mData->Lock(aMode);
   mOpenMode = aMode;
 
   auto format = GetFormat();
@@ -720,21 +708,6 @@ TextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
   return mData ? mData->Serialize(aOutDescriptor) : false;
 }
 
-void
-TextureClient::WaitForBufferOwnership(bool aWaitReleaseFence)
-{
-  if (mFenceHandleWaiter) {
-    mFenceHandleWaiter->WaitComplete();
-  }
-
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION < 21
-  if (aWaitReleaseFence && mReleaseFenceHandle.IsValid()) {
-    mData->WaitForFence(&mReleaseFenceHandle);
-    mReleaseFenceHandle = FenceHandle();
-  }
-#endif
-}
-
 // static
 PTextureChild*
 TextureClient::CreateIPDLActor()
@@ -829,46 +802,6 @@ TextureClient::SetAddedToCompositableClient()
   }
 }
 
-void
-TextureClient::WaitFenceHandleOnImageBridge(Mutex& aMutex)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  aMutex.AssertCurrentThreadOwns();
-
-  if (!mFenceHandleWaiter) {
-    mFenceHandleWaiter = new AsyncTransactionWaiter();
-  }
-  MOZ_ASSERT(mFenceHandleWaiter->GetWaitCount() <= 1);
-  if (mFenceHandleWaiter->GetWaitCount() > 0) {
-    return;
-  }
-  mFenceHandleWaiter->IncrementWaitCount();
-}
-
-void
-TextureClient::ClearWaitFenceHandleOnImageBridge(Mutex& aMutex)
-{
-  aMutex.AssertCurrentThreadOwns();
-
-  if (!mFenceHandleWaiter) {
-    return;
-  }
-  MOZ_ASSERT(mFenceHandleWaiter->GetWaitCount() <= 1);
-  if (mFenceHandleWaiter->GetWaitCount() == 0) {
-    return;
-  }
-  mFenceHandleWaiter->DecrementWaitCount();
-}
-
-void
-TextureClient::CancelWaitFenceHandleOnImageBridge()
-{
-  if (!NeedsFenceHandle() || GetFlags() & TextureFlags::RECYCLE) {
-    return;
-  }
-  ImageBridgeChild::GetSingleton()->CancelWaitFenceHandle(this);
-}
-
 void CancelTextureClientRecycle(uint64_t aTextureId, LayersIPCChannel* aAllocator)
 {
   if (!aAllocator) {
@@ -894,7 +827,6 @@ TextureClient::CancelWaitForRecycle()
     CancelTextureClientRecycle(mSerial, GetAllocator());
     return;
   }
-  CancelWaitFenceHandleOnImageBridge();
 }
 
 /* static */ void
@@ -1129,13 +1061,6 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
     data = X11TextureData::Create(aSize, aFormat, aTextureFlags, aAllocator);
   }
 #endif
-#endif
-
-#ifdef MOZ_WIDGET_GONK
-  if (!data && aSize.width <= aMaxTextureSize && aSize.height <= aMaxTextureSize) {
-    data = GrallocTextureData::CreateForDrawing(aSize, aFormat, moz2DBackend,
-                                                aAllocator);
-  }
 #endif
 
 #ifdef XP_MACOSX

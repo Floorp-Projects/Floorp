@@ -1279,5 +1279,20 @@ StructuredCloneHolder::CustomFreeTransferHandler(uint32_t aTag,
   }
 }
 
+bool
+StructuredCloneHolder::TakeTransferredPortsAsSequence(Sequence<OwningNonNull<mozilla::dom::MessagePort>>& aPorts)
+{
+  nsTArray<RefPtr<MessagePort>> ports = TakeTransferredPorts();
+
+  aPorts.Clear();
+  for (uint32_t i = 0, len = ports.Length(); i < len; ++i) {
+    if (!aPorts.AppendElement(ports[i].forget(), fallible)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 } // dom namespace
 } // mozilla namespace

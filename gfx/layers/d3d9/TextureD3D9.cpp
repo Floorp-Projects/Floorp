@@ -610,7 +610,7 @@ D3D9TextureData::FillInfo(TextureData::Info& aInfo) const
 }
 
 bool
-D3D9TextureData::Lock(OpenMode aMode, FenceHandle*)
+D3D9TextureData::Lock(OpenMode aMode)
 {
   if (!DeviceManagerD3D9::GetDevice()) {
     // If the device has failed then we should not lock the surface,
