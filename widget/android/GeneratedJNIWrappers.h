@@ -1452,25 +1452,6 @@ public:
 
     static auto OpenUriExternal(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) -> bool;
 
-    struct OpenWindowForNotification_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "openWindowForNotification";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto OpenWindowForNotification() -> void;
-
     struct PerformHapticFeedback_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
