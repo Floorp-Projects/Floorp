@@ -33,7 +33,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     private static final String LOGTAG = "MediaControlService";
 
     public static final String ACTION_INIT           = "action_init";
-    public static final String ACTION_START          = "action_start";
     public static final String ACTION_RESUME         = "action_resume";
     public static final String ACTION_PAUSE          = "action_pause";
     public static final String ACTION_STOP           = "action_stop";
@@ -184,9 +183,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 // the actual operation would be executed via control interface's
                 // pending intent.
                 break;
-            case ACTION_START :
-                mController.getTransportControls().sendCustomAction(ACTION_START, null);
-                break;
             case ACTION_RESUME :
                 mController.getTransportControls().play();
                 break;
@@ -244,10 +240,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         mSession.setCallback(new MediaSession.Callback() {
             @Override
             public void onCustomAction(String action, Bundle extras) {
-                if (action.equals(ACTION_START)) {
-                    Log.d(LOGTAG, "Controller, onStart");
-                    notifyControlInterfaceChanged(ACTION_PAUSE);
-                } else if (action.equals(ACTION_PAUSE_BY_AUDIO_FOCUS)) {
+                if (action.equals(ACTION_PAUSE_BY_AUDIO_FOCUS)) {
                     Log.d(LOGTAG, "Controller, pause by audio focus changed");
                     notifyControlInterfaceChanged(ACTION_RESUME);
                 } else if (action.equals(ACTION_RESUME_BY_AUDIO_FOCUS)) {
