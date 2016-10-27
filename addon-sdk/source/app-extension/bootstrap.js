@@ -298,11 +298,8 @@ function loadSandbox(uri) {
 }
 
 function unloadSandbox(sandbox) {
-  if ("nukeSandbox" in Cu) {
-    try {
-      Cu.nukeSandbox(sandbox);
-    } catch (e) {}
-  }
+  if (Cu.getClassName(sandbox, true) == "Sandbox")
+    Cu.nukeSandbox(sandbox);
 }
 
 function setTimeout(callback, delay) {
