@@ -28,15 +28,8 @@
 
 #define OFFSET_NOT_SET -1
 
-// Print Options
-#include "nsIPrintOptions.h"
-
 using namespace mozilla;
 using namespace mozilla::dom;
-
-static const char sPrintOptionsContractID[] = "@mozilla.org/gfx/printsettings-service;1";
-
-//
 
 #include "mozilla/Logging.h"
 mozilla::LazyLogModule gLayoutPrintingLog("printing-layout");
@@ -68,9 +61,6 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
     *PresContext()->GetDefaultFont(kGenericFont_serif,
                                    aContext->StyleFont()->mLanguage);
   mPageData->mHeadFootFont.size = nsPresContext::CSSPointsToAppUnits(10);
-
-  nsresult rv;
-  mPageData->mPrintOptions = do_GetService(sPrintOptionsContractID, &rv);
 
   // Doing this here so we only have to go get these formats once
   SetPageNumberFormat("pagenumber",  "%1$d", true);

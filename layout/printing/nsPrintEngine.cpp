@@ -26,7 +26,6 @@
 // Print Options
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsService.h"
-#include "nsIPrintOptions.h"
 #include "nsIPrintSession.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"

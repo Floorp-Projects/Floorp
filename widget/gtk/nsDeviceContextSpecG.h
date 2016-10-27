@@ -8,7 +8,7 @@
 
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintSettings.h"
-#include "nsIPrintOptions.h" 
+#include "nsIPrinterEnumerator.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
