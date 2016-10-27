@@ -301,8 +301,8 @@ ClearKeySessionManager::CloseSession(uint32_t aPromiseId,
   assert(session);
 
   ClearInMemorySessionData(session);
-  mCallback->ResolvePromise(aPromiseId);
   mCallback->SessionClosed(aSessionId, aSessionIdLength);
+  mCallback->ResolvePromise(aPromiseId);
 }
 
 void

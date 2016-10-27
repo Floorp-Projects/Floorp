@@ -582,8 +582,13 @@ public class Tabs implements GeckoEventListener {
                 tab.setIsAudioPlaying(message.getBoolean("isAudioPlaying"));
                 notifyListeners(tab, TabEvents.AUDIO_PLAYING_CHANGE);
             } else if (event.equals("Tab:MediaPlaybackChange")) {
-                tab.setIsMediaPlaying(message.getBoolean("active"));
-                notifyListeners(tab, TabEvents.MEDIA_PLAYING_CHANGE);
+                final String status = message.getString("status");
+                if (status.equals("resume")) {
+                    notifyListeners(tab, TabEvents.MEDIA_PLAYING_RESUME);
+                } else {
+                    tab.setIsMediaPlaying(status.equals("start"));
+                    notifyListeners(tab, TabEvents.MEDIA_PLAYING_CHANGE);
+                }
             }
 
         } catch (Exception e) {
@@ -644,6 +649,7 @@ public class Tabs implements GeckoEventListener {
         AUDIO_PLAYING_CHANGE,
         OPENED_FROM_TABS_TRAY,
         MEDIA_PLAYING_CHANGE,
+        MEDIA_PLAYING_RESUME
     }
 
     public void notifyListeners(Tab tab, TabEvents msg) {
