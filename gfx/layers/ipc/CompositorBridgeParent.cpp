@@ -118,7 +118,6 @@ CompositorBridgeParentBase::NotifyNotUsed(PTextureParent* aTexture, uint64_t aTr
   }
 
   if (texture->GetFlags() & TextureFlags::RECYCLE) {
-    SendFenceHandleIfPresent(aTexture);
     uint64_t textureId = TextureHost::GetTextureSerial(aTexture);
     mPendingAsyncMessage.push_back(
       OpNotifyNotUsed(textureId, aTransactionId));
