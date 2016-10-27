@@ -244,34 +244,6 @@ ImageBridgeChild::NotifyNotUsed(uint64_t aTextureId, uint64_t aFwdTransactionId)
 }
 
 void
-ImageBridgeChild::HoldUntilFenceHandleDelivery(TextureClient* aClient, uint64_t aTransactionId)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  // XXX Re-enable fence handling
-  return;
-
-  NS_RUNTIMEABORT("not reached");
-}
-
-void
-ImageBridgeChild::NotifyNotUsedToNonRecycle(uint64_t aTextureId, uint64_t aTransactionId)
-{
-  // XXX Re-enable fence handling
-  return;
-
-  NS_RUNTIMEABORT("not reached");
-}
-
-void
-ImageBridgeChild::CancelWaitFenceHandle(TextureClient* aClient)
-{
-  // XXX Re-enable fence handling
-  return;
-
-  NS_RUNTIMEABORT("not reached");
-}
-
-void
 ImageBridgeChild::CancelWaitForRecycle(uint64_t aTextureId)
 {
   MOZ_ASSERT(InImageBridgeChildThread());
@@ -1183,16 +1155,6 @@ ImageBridgeChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageDat
       case AsyncParentMessageData::TOpNotifyNotUsed: {
         const OpNotifyNotUsed& op = message.get_OpNotifyNotUsed();
         NotifyNotUsed(op.TextureId(), op.fwdTransactionId());
-        break;
-      }
-      case AsyncParentMessageData::TOpNotifyNotUsedToNonRecycle: {
-        // Notify ReleaseCompositableRef to a TextureClient that belongs to
-        // LayerTransactionChild. It is used only on gonk to deliver fence to
-        // a TextureClient that does not have TextureFlags::RECYCLE.
-        // In this case, LayerTransactionChild's ipc could not be used to deliver fence.
-
-        const OpNotifyNotUsedToNonRecycle& op = message.get_OpNotifyNotUsedToNonRecycle();
-        NotifyNotUsedToNonRecycle(op.TextureId(), op.fwdTransactionId());
         break;
       }
       default:

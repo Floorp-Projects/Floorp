@@ -291,12 +291,6 @@ public:
    */
   void NotifyNotUsed(uint64_t aTextureId, uint64_t aFwdTransactionId);
 
-  void HoldUntilFenceHandleDelivery(TextureClient* aClient, uint64_t aTransactionId);
-
-  void NotifyNotUsedToNonRecycle(uint64_t aTextureId, uint64_t aTransactionId);
-
-  void CancelWaitFenceHandle(TextureClient* aClient);
-
   virtual void CancelWaitForRecycle(uint64_t aTextureId) override;
 
   virtual bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) override;
