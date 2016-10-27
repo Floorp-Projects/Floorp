@@ -683,7 +683,10 @@ public:
       return false;
     }
 
-    nsTArray<RefPtr<MessagePort>> ports = TakeTransferredPorts();
+    Sequence<OwningNonNull<MessagePort>> ports;
+    if (!TakeTransferredPortsAsSequence(ports)) {
+      return false;
+    }
 
     nsCOMPtr<nsIDOMEvent> domEvent;
     RefPtr<ExtendableMessageEvent> extendableEvent;
@@ -699,6 +702,8 @@ public:
       init.mCancelable = false;
 
       init.mData = messageData;
+      init.mPorts = ports;
+      init.mSource.SetValue().SetAsClient() = client;
 
       ErrorResult rv;
       extendableEvent = ExtendableMessageEvent::Constructor(
@@ -707,8 +712,6 @@ public:
         rv.SuppressException();
         return false;
       }
-      extendableEvent->SetSource(client);
-      extendableEvent->SetPorts(Move(ports));
 
       domEvent = do_QueryObject(extendableEvent);
     } else {
@@ -721,8 +724,7 @@ public:
                               EmptyString(),
                               EmptyString(),
                               nullptr,
-                              Sequence<OwningNonNull<MessagePort>>());
-      event->SetPorts(Move(ports));
+                              ports);
       domEvent = do_QueryObject(event);
     }
 
@@ -6489,17 +6491,15 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx,
   init.mBubbles = false;
   init.mCancelable = false;
   init.mSource.SetValue().SetAsMessagePort() = port;
+  if (!init.mPorts.AppendElement(port.forget(), fallible)) {
+    return false;
+  }
 
   RefPtr<MessageEvent> event =
     MessageEvent::Constructor(globalObject,
                               NS_LITERAL_STRING("connect"), init, rv);
 
   event->SetTrusted(true);
-
-  nsTArray<RefPtr<MessagePort>> ports;
-  ports.AppendElement(port);
-
-  event->SetPorts(Move(ports));
 
   nsCOMPtr<nsIDOMEvent> domEvent = do_QueryObject(event);
 

@@ -171,10 +171,8 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
     ReadLockDescriptor readLock;
     t.mTextureClient->SerializeReadLock(readLock);
 
-    FenceHandle fence = t.mTextureClient->GetAcquireFenceHandle();
     textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
                                         readLock,
-                                        fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
                                         t.mTimeStamp, t.mPictureRect,
                                         t.mFrameID, t.mProducerID));
 
@@ -219,24 +217,6 @@ ImageBridgeChild::UseComponentAlphaTextures(CompositableClient* aCompositable,
   );
 }
 
-#ifdef MOZ_WIDGET_GONK
-void
-ImageBridgeChild::UseOverlaySource(CompositableClient* aCompositable,
-                                   const OverlaySource& aOverlay,
-                                   const nsIntRect& aPictureRect)
-{
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aCompositable->IsConnected());
-
-  CompositableOperation op(
-    nullptr,
-    aCompositable->GetIPDLActor(),
-    OpUseOverlaySource(aOverlay, aPictureRect));
-
-  mTxn->AddEdit(op);
-}
-#endif
-
 void
 ImageBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(TextureClient* aClient)
 {
@@ -261,102 +241,6 @@ ImageBridgeChild::NotifyNotUsed(uint64_t aTextureId, uint64_t aFwdTransactionId)
     return;
   }
   mTexturesWaitingRecycled.Remove(aTextureId);
-}
-
-void
-ImageBridgeChild::DeliverFence(uint64_t aTextureId, FenceHandle& aReleaseFenceHandle)
-{
-  RefPtr<TextureClient> client = mTexturesWaitingRecycled.Get(aTextureId);
-  if (!client) {
-    return;
-  }
-  client->SetReleaseFenceHandle(aReleaseFenceHandle);
-}
-
-void
-ImageBridgeChild::HoldUntilFenceHandleDelivery(TextureClient* aClient, uint64_t aTransactionId)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  // XXX Re-enable fence handling
-  return;
-
-#ifdef MOZ_WIDGET_GONK
-  if (!aClient) {
-    return;
-  }
-  MutexAutoLock lock(mWaitingFenceHandleMutex);
-  aClient->SetLastFwdTransactionId(aTransactionId);
-  aClient->WaitFenceHandleOnImageBridge(mWaitingFenceHandleMutex);
-  mTexturesWaitingFenceHandle.Put(aClient->GetSerial(), aClient);
-#else
-  NS_RUNTIMEABORT("not reached");
-#endif
-}
-
-void
-ImageBridgeChild::DeliverFenceToNonRecycle(uint64_t aTextureId, FenceHandle& aReleaseFenceHandle)
-{
-  // XXX Re-enable fence handling
-  return;
-
-#ifdef MOZ_WIDGET_GONK
-  MutexAutoLock lock(mWaitingFenceHandleMutex);
-  TextureClient* client = mTexturesWaitingFenceHandle.Get(aTextureId).get();
-  if (!client) {
-    return;
-  }
-  MOZ_ASSERT(aTextureId == client->GetSerial());
-  client->SetReleaseFenceHandle(aReleaseFenceHandle);
-#else
-  NS_RUNTIMEABORT("not reached");
-#endif
-}
-
-void
-ImageBridgeChild::NotifyNotUsedToNonRecycle(uint64_t aTextureId, uint64_t aTransactionId)
-{
-  // XXX Re-enable fence handling
-  return;
-
-#ifdef MOZ_WIDGET_GONK
-  MutexAutoLock lock(mWaitingFenceHandleMutex);
-
-  RefPtr<TextureClient> client = mTexturesWaitingFenceHandle.Get(aTextureId);
-  if (!client) {
-    return;
-  }
-  if (aTransactionId < client->GetLastFwdTransactionId()) {
-    return;
-  }
-
-  MOZ_ASSERT(aTextureId == client->GetSerial());
-  client->ClearWaitFenceHandleOnImageBridge(mWaitingFenceHandleMutex);
-  mTexturesWaitingFenceHandle.Remove(aTextureId);
-
-  // Release TextureClient on allocator's message loop.
-  RefPtr<TextureClientReleaseTask> task =
-    MakeAndAddRef<TextureClientReleaseTask>(client);
-  RefPtr<LayersIPCChannel> allocator = client->GetAllocator();
-  client = nullptr;
-  allocator->GetMessageLoop()->PostTask(task.forget());
-#else
-  NS_RUNTIMEABORT("not reached");
-#endif
-}
-
-void
-ImageBridgeChild::CancelWaitFenceHandle(TextureClient* aClient)
-{
-  // XXX Re-enable fence handling
-  return;
-
-#ifdef MOZ_WIDGET_GONK
-  MutexAutoLock lock(mWaitingFenceHandleMutex);
-  aClient->ClearWaitFenceHandleOnImageBridge(mWaitingFenceHandleMutex);
-  mTexturesWaitingFenceHandle.Remove(aClient->GetSerial());
-#else
-  NS_RUNTIMEABORT("not reached");
-#endif
 }
 
 void
@@ -516,9 +400,6 @@ ImageBridgeChild::ImageBridgeChild()
   : mCanSend(false)
   , mCalledClose(false)
   , mFwdTransactionId(0)
-#ifdef MOZ_WIDGET_GONK
-  , mWaitingFenceHandleMutex("ImageBridgeChild::mWaitingFenceHandleMutex")
-#endif
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -534,7 +415,6 @@ void
 ImageBridgeChild::MarkShutDown()
 {
   mTexturesWaitingRecycled.Clear();
-  mTrackersHolder.DestroyAsyncTransactionTrackersHolder();
 
   mCanSend = false;
 }
@@ -719,21 +599,11 @@ ImageBridgeChild::UpdateAsyncCanvasRendererNow(AsyncCanvasRenderer* aWrapper)
 void
 ImageBridgeChild::FlushAllImagesSync(SynchronousTask* aTask,
                                      ImageClient* aClient,
-                                     ImageContainer* aContainer,
-                                     RefPtr<AsyncTransactionWaiter> aWaiter)
+                                     ImageContainer* aContainer)
 {
-#ifdef MOZ_WIDGET_GONK
-  MOZ_ASSERT(aWaiter);
-#else
-  MOZ_ASSERT(!aWaiter);
-#endif
-
   AutoCompleteTask complete(aTask);
 
   if (!CanSend()) {
-#ifdef MOZ_WIDGET_GONK
-    aWaiter->DecrementWaitCount();
-#endif
     return;
   }
 
@@ -742,15 +612,8 @@ ImageBridgeChild::FlushAllImagesSync(SynchronousTask* aTask,
   if (aContainer) {
     aContainer->ClearImagesFromImageBridge();
   }
-  aClient->FlushAllImages(aWaiter);
+  aClient->FlushAllImages();
   EndTransaction();
-  // This decrement is balanced by the increment in FlushAllImages.
-  // If any AsyncTransactionTrackers were created by FlushAllImages and attached
-  // to aWaiter, aWaiter will not complete until those trackers all complete.
-  // Otherwise, aWaiter will be ready to complete now.
-#ifdef MOZ_WIDGET_GONK
-  aWaiter->DecrementWaitCount();
-#endif
 }
 
 void
@@ -766,28 +629,16 @@ ImageBridgeChild::FlushAllImages(ImageClient* aClient, ImageContainer* aContaine
 
   SynchronousTask task("FlushAllImages Lock");
 
-  RefPtr<AsyncTransactionWaiter> waiter;
-#ifdef MOZ_WIDGET_GONK
-  waiter = new AsyncTransactionWaiter();
-  // This increment is balanced by the decrement in FlushAllImagesSync
-  waiter->IncrementWaitCount();
-#endif
-
   // RefPtrs on arguments are not needed since this dispatches synchronously.
   RefPtr<Runnable> runnable = WrapRunnable(
     RefPtr<ImageBridgeChild>(this),
     &ImageBridgeChild::FlushAllImagesSync,
     &task,
     aClient,
-    aContainer,
-    waiter);
+    aContainer);
   GetMessageLoop()->PostTask(runnable.forget());
 
   task.Wait();
-
-#ifdef MOZ_WIDGET_GONK
-  waiter->WaitComplete();
-#endif
 }
 
 void
@@ -844,9 +695,6 @@ ImageBridgeChild::EndTransaction()
 void
 ImageBridgeChild::SendImageBridgeThreadId()
 {
-#ifdef MOZ_WIDGET_GONK
-  PImageBridgeChild::SendImageBridgeThreadId(gettid());
-#endif
 }
 
 bool
@@ -1304,43 +1152,9 @@ ImageBridgeChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageDat
     const AsyncParentMessageData& message = aMessages[i];
 
     switch (message.type()) {
-      case AsyncParentMessageData::TOpDeliverFence: {
-        const OpDeliverFence& op = message.get_OpDeliverFence();
-        FenceHandle fence = op.fence();
-        DeliverFence(op.TextureId(), fence);
-        break;
-      }
-      case AsyncParentMessageData::TOpDeliverFenceToNonRecycle: {
-        // Notify ReleaseCompositableRef to a TextureClient that belongs to
-        // LayerTransactionChild. It is used only on gonk to deliver fence to
-        // a TextureClient that does not have TextureFlags::RECYCLE.
-        // In this case, LayerTransactionChild's ipc could not be used to deliver fence.
-
-        const OpDeliverFenceToNonRecycle& op = message.get_OpDeliverFenceToNonRecycle();
-        FenceHandle fence = op.fence();
-        DeliverFenceToNonRecycle(op.TextureId(), fence);
-        break;
-      }
       case AsyncParentMessageData::TOpNotifyNotUsed: {
         const OpNotifyNotUsed& op = message.get_OpNotifyNotUsed();
         NotifyNotUsed(op.TextureId(), op.fwdTransactionId());
-        break;
-      }
-      case AsyncParentMessageData::TOpNotifyNotUsedToNonRecycle: {
-        // Notify ReleaseCompositableRef to a TextureClient that belongs to
-        // LayerTransactionChild. It is used only on gonk to deliver fence to
-        // a TextureClient that does not have TextureFlags::RECYCLE.
-        // In this case, LayerTransactionChild's ipc could not be used to deliver fence.
-
-        const OpNotifyNotUsedToNonRecycle& op = message.get_OpNotifyNotUsedToNonRecycle();
-        NotifyNotUsedToNonRecycle(op.TextureId(), op.fwdTransactionId());
-        break;
-      }
-      case AsyncParentMessageData::TOpReplyRemoveTexture: {
-        const OpReplyRemoveTexture& op = message.get_OpReplyRemoveTexture();
-
-        MOZ_ASSERT(mTrackersHolder.GetId() == op.holderId());
-        mTrackersHolder.TransactionCompleteted(op.transactionId());
         break;
       }
       default:
@@ -1424,32 +1238,6 @@ ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositabl
   } else {
     mTxn->AddNoSwapEdit(op);
   }
-}
-
-void
-ImageBridgeChild::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aAsyncTransactionTracker,
-                                                     CompositableClient* aCompositable,
-                                                     TextureClient* aTexture)
-{
-  MOZ_ASSERT(CanSend());
-  MOZ_ASSERT(aTexture);
-  MOZ_ASSERT(aTexture->IsSharedWithCompositor());
-  MOZ_ASSERT(aCompositable->IsConnected());
-  if (!aTexture || !aTexture->IsSharedWithCompositor() || !aCompositable->IsConnected()) {
-    return;
-  }
-
-  CompositableOperation op(
-    nullptr, aCompositable->GetIPDLActor(),
-    OpRemoveTextureAsync(
-      mTrackersHolder.GetId(),
-      aAsyncTransactionTracker->GetId(),
-      nullptr, aCompositable->GetIPDLActor(),
-      nullptr, aTexture->GetIPDLActor()));
-
-  mTxn->AddNoSwapEdit(op);
-  // Hold AsyncTransactionTracker until receving reply
-  mTrackersHolder.HoldUntilComplete(aAsyncTransactionTracker);
 }
 
 bool ImageBridgeChild::IsSameProcess() const

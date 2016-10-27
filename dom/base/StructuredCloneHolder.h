@@ -9,6 +9,7 @@
 #include "js/StructuredClone.h"
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "nsISupports.h"
 #include "nsTArray.h"
 
@@ -206,6 +207,11 @@ public:
     MOZ_ASSERT(mSupportsTransferring);
     return Move(mTransferredPorts);
   }
+
+  // This method uses TakeTransferredPorts() to populate a sequence of
+  // MessagePorts for WebIDL binding classes.
+  bool
+  TakeTransferredPortsAsSequence(Sequence<OwningNonNull<mozilla::dom::MessagePort>>& aPorts);
 
   nsTArray<MessagePortIdentifier>& PortIdentifiers() const
   {

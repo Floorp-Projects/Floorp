@@ -175,18 +175,5 @@ MessageEvent::GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts)
   aPorts = mPorts;
 }
 
-void
-MessageEvent::SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts)
-{
-  MOZ_ASSERT(mPorts.IsEmpty());
-  mPorts = Move(aPorts);
-}
-
-void
-MessageEvent::SetSource(mozilla::dom::MessagePort* aPort)
-{
-  mPortSource = aPort;
-}
-
 } // namespace dom
 } // namespace mozilla

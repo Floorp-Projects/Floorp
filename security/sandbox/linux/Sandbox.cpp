@@ -69,13 +69,12 @@ __sanitizer_sandbox_on_notify(__sanitizer_sandbox_arguments *args);
 #endif // MOZ_ASAN
 
 // Signal number used to enable seccomp on each thread.
-int gSeccompTsyncBroadcastSignum = 0;
+MOZ_EXPORT int gSeccompTsyncBroadcastSignum = 0;
 
 namespace mozilla {
 
-#ifdef ANDROID
+// This is initialized by SandboxSetCrashFunc().
 SandboxCrashFunc gSandboxCrashFunc;
-#endif
 
 #ifdef MOZ_GMP_SANDBOX
 // For media plugins, we can start the sandbox before we dlopen the

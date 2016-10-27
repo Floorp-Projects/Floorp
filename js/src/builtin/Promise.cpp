@@ -368,12 +368,12 @@ CreateResolvingFunctions(JSContext* cx, HandleValue promise,
 {
     RootedAtom funName(cx, cx->names().empty);
     RootedFunction resolve(cx, NewNativeFunction(cx, ResolvePromiseFunction, 1, funName,
-                                                 gc::AllocKind::FUNCTION_EXTENDED));
+                                                 gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
     if (!resolve)
         return false;
 
     RootedFunction reject(cx, NewNativeFunction(cx, RejectPromiseFunction, 1, funName,
-                                                 gc::AllocKind::FUNCTION_EXTENDED));
+                                                 gc::AllocKind::FUNCTION_EXTENDED, GenericObject));
     if (!reject)
         return false;
 

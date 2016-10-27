@@ -51,7 +51,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
@@ -1212,13 +1211,6 @@ ContentChild::RecvReinitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor
   return true;
 }
 
-PSharedBufferManagerChild*
-ContentChild::AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,
-                                              base::ProcessId aOtherProcess)
-{
-  return SharedBufferManagerChild::StartUpInChildProcess(aTransport, aOtherProcess);
-}
-
 PBackgroundChild*
 ContentChild::AllocPBackgroundChild(Transport* aTransport,
                                     ProcessId aOtherProcess)
@@ -1421,7 +1413,11 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
     NS_LITERAL_CSTRING("ContentSandboxEnabled"),
     sandboxEnabled? NS_LITERAL_CSTRING("1") : NS_LITERAL_CSTRING("0"));
 #if defined(XP_LINUX) && !defined(OS_ANDROID)
-  SandboxInfo::Get().AnnotateCrashReport();
+  nsAutoCString flagsString;
+  flagsString.AppendInt(SandboxInfo::Get().AsInteger());
+
+  CrashReporter::AnnotateCrashReport(
+    NS_LITERAL_CSTRING("ContentSandboxCapabilities"), flagsString);
 #endif /* XP_LINUX && !OS_ANDROID */
 #endif /* MOZ_CRASHREPORTER */
 #endif /* MOZ_CONTENT_SANDBOX */

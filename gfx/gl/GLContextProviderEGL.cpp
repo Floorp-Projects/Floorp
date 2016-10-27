@@ -16,12 +16,6 @@
 #endif
 
 #if defined(XP_UNIX)
-    #ifdef MOZ_WIDGET_GONK
-        #include "libdisplay/GonkDisplay.h"
-        #include "nsWindow.h"
-        #include "nsScreenManagerGonk.h"
-    #endif
-
     #ifdef MOZ_WIDGET_ANDROID
         #include <android/native_window.h>
         #include <android/native_window_jni.h>
@@ -30,13 +24,6 @@
     #ifdef ANDROID
         #include <android/log.h>
         #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
-
-        #ifdef MOZ_WIDGET_GONK
-            #include "cutils/properties.h"
-            #include <ui/GraphicBuffer.h>
-
-            using namespace android;
-        #endif
     #endif
 
     #define GLES2_LIB "libGLESv2.so"
@@ -237,17 +224,6 @@ GLContextEGL::~GLContextEGL()
     sEGLLibrary.fDestroyContext(EGL_DISPLAY(), mContext);
     sEGLLibrary.UnsetCachedCurrentContext();
 
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION < 17
-    if (!mIsOffscreen) {
-      // In ICS, SurfaceFlinger's DisplayHardware::fini() does not destroy the EGLSurface associated with the
-      // native framebuffer. Destroying it causes crashes in the ICS emulator
-      // EGL implementation, specifically because the egl_window_surface_t dtor
-      // calls nativeWindow->cancelBuffer and FramebufferNativeWindow does not initialize
-      // the cancelBuffer function pointer, see bug 986836
-      return;
-    }
-#endif
-
     mozilla::gl::DestroySurface(mSurface);
 }
 
@@ -437,12 +413,6 @@ GLContextEGL::SwapBuffers()
                           ? mSurfaceOverride
                           : mSurface;
     if (surface) {
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION < 17
-        if (!mIsOffscreen) {
-            // eglSwapBuffers() is called by hwcomposer.
-            return true;
-        }
-#endif
         return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), surface);
     } else {
         return false;
@@ -633,9 +603,6 @@ static const EGLint kEGLConfigAttribsRGBA32[] = {
     LOCAL_EGL_GREEN_SIZE,      8,
     LOCAL_EGL_BLUE_SIZE,       8,
     LOCAL_EGL_ALPHA_SIZE,      8,
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-    LOCAL_EGL_FRAMEBUFFER_TARGET_ANDROID, LOCAL_EGL_TRUE,
-#endif
     EGL_ATTRIBS_LIST_SAFE_TERMINATION_WORKING_AROUND_BUGS
 };
 
@@ -666,29 +633,6 @@ CreateConfig(EGLConfig* aConfig, int32_t depth, nsIWidget* aWidget)
         ncfg < 1) {
         return false;
     }
-
-#ifdef MOZ_WIDGET_GONK
-    // On gonk, it's important to select a configuration with the
-    // the correct order as well as bits per channel.
-    // EGL_NATIVE_VISUAL_ID gives us the Android pixel format which
-    // is an enum that tells us both order and bits per channel.
-    // For example -
-    //  HAL_PIXEL_FORMAT_RGBX_8888
-    //  HAL_PIXEL_FORMAT_BGRA_8888
-    //  HAL_PIXEL_FORMAT_RGB_565
-    nsWindow* window = static_cast<nsWindow*>(aWidget);
-    for (int j = 0; j < ncfg; ++j) {
-        EGLConfig config = configs[j];
-        EGLint format;
-        if (sEGLLibrary.fGetConfigAttrib(EGL_DISPLAY(), config,
-                                         LOCAL_EGL_NATIVE_VISUAL_ID, &format) &&
-            format == window->GetScreen()->GetSurfaceFormat())
-        {
-            *aConfig = config;
-            return true;
-        }
-    }
-#endif
 
     for (int j = 0; j < ncfg; ++j) {
         EGLConfig config = configs[j];

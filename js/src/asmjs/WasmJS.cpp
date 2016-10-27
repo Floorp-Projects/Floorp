@@ -773,7 +773,7 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
 
     unsigned numArgs = instance.metadata().lookupFuncDefExport(funcDefIndex).sig().args().length();
     fun.set(NewNativeConstructor(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED,
-                                 GenericObject, JSFunction::ASMJS_CTOR));
+                                 SingletonObject, JSFunction::ASMJS_CTOR));
     if (!fun)
         return false;
 
