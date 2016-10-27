@@ -28,6 +28,7 @@ window.onload = Task.async(function* () {
     yield testMultilineOpen();
     yield testMultilineLimit();
     yield testUseQuotes();
+    yield testNonPritableCharacters();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -51,16 +52,22 @@ window.onload = Task.async(function* () {
 
   function testUseQuotes(){
      const renderedComponent = renderComponent(StringRep.rep, { object: getGripStub("testUseQuotes"), useQuotes: false });
-     is(renderedComponent.textContent, "abc","String rep was expected to omit quotes");
+     is(renderedComponent.textContent, "abc", "String rep was expected to omit quotes");
+  }
+
+  function testNonPritableCharacters(){
+     const renderedComponent = renderComponent(StringRep.rep, { object: getGripStub("testNonPritableCharacters"), useQuotes: false });
+     is(renderedComponent.textContent, "a\ufffdb", "String rep was expected to omit non printable characters");
   }
 
   function getGripStub(name) {
     switch (name) {
       case "testMultiline":
-      	 return "aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n";
-	 break;
+        return "aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n";
       case "testUseQuotes":
-	 return "abc";
+        return "abc";
+      case "testNonPritableCharacters":
+        return "a\x01b";
     }
   }
 });
