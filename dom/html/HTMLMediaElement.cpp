@@ -37,6 +37,8 @@
 #include "nsContentUtils.h"
 #include "nsIRequest.h"
 #include "nsQueryObject.h"
+#include "nsIObserverService.h"
+#include "nsISupportsPrimitives.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
@@ -5945,6 +5947,7 @@ HTMLMediaElement::SetAudioChannelSuspended(SuspendTypes aSuspend)
     return;
   }
 
+  MaybeNotifyMediaResumed(aSuspend);
   mAudioChannelSuspended = aSuspend;
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
          ("HTMLMediaElement, SetAudioChannelSuspended, this = %p, "
@@ -6425,6 +6428,37 @@ HTMLMediaElement::IsAudible() const
   }
 
   return true;
+}
+
+void
+HTMLMediaElement::MaybeNotifyMediaResumed(SuspendTypes aSuspend)
+{
+  // In fennec, we should send the notification when media is resumed from the
+  // pause-disposable which was called by media control.
+  if (mAudioChannelSuspended != nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE &&
+      aSuspend != nsISuspendedTypes::NONE_SUSPENDED) {
+    return;
+  }
+
+  uint64_t windowID = mAudioChannelAgent->WindowID();
+  NS_DispatchToMainThread(NS_NewRunnableFunction([windowID]() -> void {
+    nsCOMPtr<nsIObserverService> observerService =
+      services::GetObserverService();
+    if (NS_WARN_IF(!observerService)) {
+      return;
+    }
+
+    nsCOMPtr<nsISupportsPRUint64> wrapper =
+      do_CreateInstance(NS_SUPPORTS_PRUINT64_CONTRACTID);
+    if (NS_WARN_IF(!wrapper)) {
+       return;
+    }
+
+    wrapper->SetData(windowID);
+    observerService->NotifyObservers(wrapper,
+                                     "media-playback-resumed",
+                                     u"active");
+  }));
 }
 
 bool

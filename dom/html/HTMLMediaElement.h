@@ -1268,6 +1268,10 @@ protected:
 
   void OpenUnsupportedMediaWithExtenalAppIfNeeded();
 
+  // It's used for fennec only, send the notification when the user resumes the
+  // media which was paused by media control.
+  void MaybeNotifyMediaResumed(SuspendTypes aSuspend);
+
   class nsAsyncEventRunner;
   using nsGenericHTMLElement::DispatchEvent;
   // For nsAsyncEventRunner.
