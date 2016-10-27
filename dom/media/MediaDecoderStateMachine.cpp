@@ -1469,14 +1469,11 @@ DecodingState::MaybeStartBuffering()
     return;
   }
 
-  // No more data to download. No need to enter buffering.
-  if (!Resource()->IsExpectingMoreData()) {
-    return;
-  }
-
   bool shouldBuffer;
   if (Reader()->UseBufferingHeuristics()) {
-    shouldBuffer = mMaster->HasLowDecodedData() && mMaster->HasLowBufferedData();
+    shouldBuffer = Resource()->IsExpectingMoreData() &&
+                   mMaster->HasLowDecodedData() &&
+                   mMaster->HasLowBufferedData();
   } else {
     MOZ_ASSERT(Reader()->IsWaitForDataSupported());
     shouldBuffer =
