@@ -157,19 +157,6 @@ TextureHost::GetIPDLActor()
 }
 
 void
-TextureHost::SetAcquireFenceHandle(const FenceHandle& aAcquireFenceHandle)
-{
-  mAcquireFenceHandle = aAcquireFenceHandle;
-}
-
-FenceHandle
-TextureHost::GetAndResetAcquireFenceHandle()
-{
-  RefPtr<FenceHandle::FdObj> fdObj = mAcquireFenceHandle.GetAndResetFdObj();
-  return FenceHandle(fdObj);
-}
-
-void
 TextureHost::SetLastFwdTransactionId(uint64_t aTransactionId)
 {
   MOZ_ASSERT(mFwdTransactionId <= aTransactionId);

@@ -171,10 +171,8 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
     ReadLockDescriptor readLock;
     t.mTextureClient->SerializeReadLock(readLock);
 
-    FenceHandle fence = t.mTextureClient->GetAcquireFenceHandle();
     textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
                                         readLock,
-                                        fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
                                         t.mTimeStamp, t.mPictureRect,
                                         t.mFrameID, t.mProducerID));
 

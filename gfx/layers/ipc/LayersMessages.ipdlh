@@ -43,7 +43,6 @@ using mozilla::layers::EventRegionsOverride from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::ScrollMetadata from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
-using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::MaybeLayerClip from "FrameMetrics.h";
 
@@ -375,15 +374,9 @@ struct OpRemoveTexture {
   PTexture texture;
 };
 
-union MaybeFence {
-  FenceHandle;
-  null_t;
-};
-
 struct TimedTexture {
   PTexture texture;
   ReadLockDescriptor sharedLock;
-  MaybeFence fence;
   TimeStamp timeStamp;
   IntRect picture;
   uint32_t frameID;
