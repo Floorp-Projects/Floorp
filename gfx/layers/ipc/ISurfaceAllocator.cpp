@@ -25,34 +25,6 @@ mozilla::ipc::SharedMemory::SharedMemoryType OptimalShmemType()
 }
 
 void
-HostIPCAllocator::SendFenceHandleIfPresent(PTextureParent* aTexture)
-{
-  RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
-  if (!texture) {
-    return;
-  }
-
-  if (!(texture->GetFlags() & TextureFlags::RECYCLE) &&
-     !texture->NeedsFenceHandle()) {
-    return;
-  }
-
-  uint64_t textureId = TextureHost::GetTextureSerial(aTexture);
-
-  // Send a ReleaseFence of CompositorOGL.
-  FenceHandle fence = texture->GetCompositorReleaseFence();
-  if (fence.IsValid()) {
-    mPendingAsyncMessage.push_back(OpDeliverFence(textureId, fence));
-  }
-
-  // Send a ReleaseFence that is set to TextureHost by HwcComposer2D.
-  fence = texture->GetAndResetReleaseFenceHandle();
-  if (fence.IsValid()) {
-    mPendingAsyncMessage.push_back(OpDeliverFence(textureId, fence));
-  }
-}
-
-void
 HostIPCAllocator::SendPendingAsyncMessages()
 {
   if (mPendingAsyncMessage.empty()) {

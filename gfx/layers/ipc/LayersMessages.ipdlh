@@ -43,7 +43,6 @@ using mozilla::layers::EventRegionsOverride from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::ScrollMetadata from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
-using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::MaybeLayerClip from "FrameMetrics.h";
 
@@ -375,27 +374,9 @@ struct OpRemoveTexture {
   PTexture texture;
 };
 
-struct OpRemoveTextureAsync {
-  uint64_t holderId;
-  uint64_t transactionId;
-  PCompositable compositable;
-  PTexture texture;
-};
-
-struct OpReplyRemoveTexture {
-  uint64_t holderId;
-  uint64_t transactionId;
-};
-
-union MaybeFence {
-  FenceHandle;
-  null_t;
-};
-
 struct TimedTexture {
   PTexture texture;
   ReadLockDescriptor sharedLock;
-  MaybeFence fence;
   TimeStamp timeStamp;
   IntRect picture;
   uint32_t frameID;
@@ -428,22 +409,7 @@ union MaybeRegion {
   null_t;
 };
 
-struct OpDeliverFence {
-  uint64_t TextureId;
-  FenceHandle fence;
-};
-
-struct OpDeliverFenceToNonRecycle {
-  uint64_t TextureId;
-  FenceHandle fence;
-};
-
 struct OpNotifyNotUsed {
-  uint64_t TextureId;
-  uint64_t fwdTransactionId;
-};
-
-struct OpNotifyNotUsedToNonRecycle {
   uint64_t TextureId;
   uint64_t fwdTransactionId;
 };
@@ -454,7 +420,6 @@ union CompositableOperationDetail {
   OpUseTiledLayerBuffer;
 
   OpRemoveTexture;
-  OpRemoveTextureAsync;
 
   OpUseTexture;
   OpUseComponentAlphaTextures;
@@ -527,11 +492,7 @@ union EditReply {
 };
 
 union AsyncParentMessageData {
-  OpDeliverFence;
-  OpDeliverFenceToNonRecycle;
   OpNotifyNotUsed;
-  OpNotifyNotUsedToNonRecycle;
-  OpReplyRemoveTexture;
 };
 
 } // namespace

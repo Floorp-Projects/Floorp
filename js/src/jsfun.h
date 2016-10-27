@@ -601,17 +601,19 @@ Function(JSContext* cx, unsigned argc, Value* vp);
 extern bool
 Generator(JSContext* cx, unsigned argc, Value* vp);
 
-// Allocate a new function backed by a JSNative.
+// Allocate a new function backed by a JSNative.  Note that by default this
+// creates a singleton object.
 extern JSFunction*
 NewNativeFunction(ExclusiveContext* cx, JSNative native, unsigned nargs, HandleAtom atom,
                   gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
-                  NewObjectKind newKind = GenericObject);
+                  NewObjectKind newKind = SingletonObject);
 
-// Allocate a new constructor backed by a JSNative.
+// Allocate a new constructor backed by a JSNative.  Note that by default this
+// creates a singleton object.
 extern JSFunction*
 NewNativeConstructor(ExclusiveContext* cx, JSNative native, unsigned nargs, HandleAtom atom,
                      gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
-                     NewObjectKind newKind = GenericObject,
+                     NewObjectKind newKind = SingletonObject,
                      JSFunction::Flags flags = JSFunction::NATIVE_CTOR);
 
 // Allocate a new scripted function.  If enclosingEnv is null, the

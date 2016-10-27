@@ -28,10 +28,6 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nscore.h"                     // for nsACString
 
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-#include <ui/Fence.h>
-#endif
-
 namespace mozilla {
 
 namespace layers {

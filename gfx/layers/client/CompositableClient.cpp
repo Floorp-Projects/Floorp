@@ -28,22 +28,6 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
-RemoveTextureFromCompositableTracker::ReleaseTextureClient()
-{
-  if (mTextureClient &&
-      mTextureClient->GetAllocator() &&
-      !mTextureClient->GetAllocator()->UsesImageBridge())
-  {
-    RefPtr<TextureClientReleaseTask> task = new TextureClientReleaseTask(mTextureClient);
-    RefPtr<LayersIPCChannel> allocator = mTextureClient->GetAllocator();
-    mTextureClient = nullptr;
-    allocator->GetMessageLoop()->PostTask(task.forget());
-  } else {
-    mTextureClient = nullptr;
-  }
-}
-
-void
 CompositableClient::InitIPDLActor(PCompositableChild* aActor, uint64_t aAsyncID)
 {
   MOZ_ASSERT(aActor);

@@ -32,11 +32,11 @@ END_TEST(testGCExactRooting)
 
 BEGIN_TEST(testGCSuppressions)
 {
-    JS::AutoAssertOnGC nogc;
+    JS::AutoAssertNoGC nogc;
     JS::AutoCheckCannotGC checkgc;
     JS::AutoSuppressGCAnalysis noanalysis;
 
-    JS::AutoAssertOnGC nogcCx(cx);
+    JS::AutoAssertNoGC nogcCx(cx);
     JS::AutoCheckCannotGC checkgcCx(cx);
     JS::AutoSuppressGCAnalysis noanalysisCx(cx);
 

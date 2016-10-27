@@ -24,11 +24,6 @@
 #include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-#include "SharedSurfaceGralloc.h"
-#include "nsXULAppAPI.h"
-#endif
-
 #ifdef XP_MACOSX
 #include "SharedSurfaceIO.h"
 #endif
@@ -89,8 +84,6 @@ GLScreenBuffer::CreateFactory(GLContext* gl,
             case mozilla::layers::LayersBackend::LAYERS_OPENGL: {
 #if defined(XP_MACOSX)
                 factory = SurfaceFactory_IOSurface::Create(gl, caps, ipcChannel, flags);
-#elif defined(MOZ_WIDGET_GONK)
-                factory = MakeUnique<SurfaceFactory_Gralloc>(gl, caps, ipcChannel, flags);
 #elif defined(GL_PROVIDER_GLX)
                 if (sGLXLibrary.UseTextureFromPixmap())
                   factory = SurfaceFactory_GLXDrawable::Create(gl, caps, ipcChannel, flags);

@@ -21,7 +21,7 @@ public:
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual bool Lock(OpenMode aMode, FenceHandle*) override;
+  virtual bool Lock(OpenMode aMode) override;
 
   virtual void Unlock() override;
 

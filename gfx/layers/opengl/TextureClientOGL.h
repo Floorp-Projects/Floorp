@@ -37,7 +37,7 @@ public:
   virtual void Forget(LayersIPCChannel*) override { mImage = nullptr; }
 
   // Unused functions.
-  virtual bool Lock(OpenMode, FenceHandle*) override { return true; }
+  virtual bool Lock(OpenMode) override { return true; }
 
   virtual void Unlock() override {}
 
@@ -67,7 +67,7 @@ public:
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
   // Useless functions.
-  virtual bool Lock(OpenMode, FenceHandle*) override { return true; }
+  virtual bool Lock(OpenMode) override { return true; }
 
   virtual void Unlock() override {}
 

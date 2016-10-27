@@ -4434,9 +4434,25 @@ XREMain::XRE_mainRun()
 #if defined(MOZ_SANDBOX) && defined(XP_LINUX) && !defined(MOZ_WIDGET_GONK)
   // If we're on Linux, we now have information about the OS capabilities
   // available to us.
-  SandboxInfo::SubmitTelemetry();
+  SandboxInfo sandboxInfo = SandboxInfo::Get();
+  Telemetry::Accumulate(Telemetry::SANDBOX_HAS_SECCOMP_BPF,
+                        sandboxInfo.Test(SandboxInfo::kHasSeccompBPF));
+  Telemetry::Accumulate(Telemetry::SANDBOX_HAS_SECCOMP_TSYNC,
+                        sandboxInfo.Test(SandboxInfo::kHasSeccompTSync));
+  Telemetry::Accumulate(Telemetry::SANDBOX_HAS_USER_NAMESPACES_PRIVILEGED,
+                        sandboxInfo.Test(SandboxInfo::kHasPrivilegedUserNamespaces));
+  Telemetry::Accumulate(Telemetry::SANDBOX_HAS_USER_NAMESPACES,
+                        sandboxInfo.Test(SandboxInfo::kHasUserNamespaces));
+  Telemetry::Accumulate(Telemetry::SANDBOX_CONTENT_ENABLED,
+                        sandboxInfo.Test(SandboxInfo::kEnabledForContent));
+  Telemetry::Accumulate(Telemetry::SANDBOX_MEDIA_ENABLED,
+                        sandboxInfo.Test(SandboxInfo::kEnabledForMedia));
 #if defined(MOZ_CRASHREPORTER)
-  SandboxInfo::Get().AnnotateCrashReport();
+  nsAutoCString flagsString;
+  flagsString.AppendInt(sandboxInfo.AsInteger());
+
+  CrashReporter::AnnotateCrashReport(
+    NS_LITERAL_CSTRING("ContentSandboxCapabilities"), flagsString);
 #endif /* MOZ_CRASHREPORTER */
 #endif /* MOZ_SANDBOX && XP_LINUX && !MOZ_WIDGET_GONK */
 
