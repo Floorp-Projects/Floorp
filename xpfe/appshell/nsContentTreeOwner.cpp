@@ -781,6 +781,7 @@ nsContentTreeOwner::ProvideWindow(mozIDOMWindowProxy* aParent,
                                   nsIURI* aURI,
                                   const nsAString& aName,
                                   const nsACString& aFeatures,
+                                  bool aForceNoOpener,
                                   bool* aWindowIsNew,
                                   mozIDOMWindowProxy** aReturn)
 {
@@ -814,7 +815,7 @@ nsContentTreeOwner::ProvideWindow(mozIDOMWindowProxy* aParent,
 
     BrowserElementParent::OpenWindowResult opened =
       BrowserElementParent::OpenWindowInProcess(parent, aURI, aName,
-                                                aFeatures, aReturn);
+                                                aFeatures, aForceNoOpener, aReturn);
 
     // If OpenWindowInProcess handled the open (by opening it or blocking the
     // popup), tell our caller not to proceed trying to create a new window
@@ -873,13 +874,19 @@ nsContentTreeOwner::ProvideWindow(mozIDOMWindowProxy* aParent,
   {
     dom::AutoNoJSAPI nojsapi;
 
+    uint32_t flags = nsIBrowserDOMWindow::OPEN_NEW;
+    if (aForceNoOpener) {
+      flags |= nsIBrowserDOMWindow::OPEN_NO_OPENER;
+    }
+
     // Get a new rendering area from the browserDOMWin.  We don't want
     // to be starting any loads here, so get it with a null URI.
     //
     // This method handles setting the opener for us, so we don't need to set it
     // ourselves.
-    return browserDOMWin->OpenURI(nullptr, aParent, openLocation,
-                                  nsIBrowserDOMWindow::OPEN_NEW, aReturn);
+    return browserDOMWin->OpenURI(nullptr, aParent,
+                                  openLocation,
+                                  flags, aReturn);
   }
 }
 

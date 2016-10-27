@@ -662,13 +662,14 @@ ContentChild::ProvideWindow(mozIDOMWindowProxy* aParent,
                             nsIURI* aURI,
                             const nsAString& aName,
                             const nsACString& aFeatures,
+                            bool aForceNoOpener,
                             bool* aWindowIsNew,
                             mozIDOMWindowProxy** aReturn)
 {
   return ProvideWindowCommon(nullptr, aParent, false, aChromeFlags,
                              aCalledFromJS, aPositionSpecified,
                              aSizeSpecified, aURI, aName, aFeatures,
-                             aWindowIsNew, aReturn);
+                             aForceNoOpener, aWindowIsNew, aReturn);
 }
 
 nsresult
@@ -682,6 +683,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                                   nsIURI* aURI,
                                   const nsAString& aName,
                                   const nsACString& aFeatures,
+                                  bool aForceNoOpener,
                                   bool* aWindowIsNew,
                                   mozIDOMWindowProxy** aReturn)
 {
@@ -831,7 +833,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   // they can poke at the document and cause the nsDocument to be created before
   // the openerwindow
   nsCOMPtr<mozIDOMWindowProxy> windowProxy = do_GetInterface(newChild->WebNavigation());
-  if (windowProxy && aParent) {
+  if (!aForceNoOpener && windowProxy && aParent) {
     nsPIDOMWindowOuter* outer = nsPIDOMWindowOuter::From(windowProxy);
     nsPIDOMWindowOuter* parent = nsPIDOMWindowOuter::From(aParent);
     outer->SetOpenerWindow(parent, *aWindowIsNew);

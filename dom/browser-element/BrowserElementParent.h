@@ -118,6 +118,7 @@ public:
                       nsIURI* aURI,
                       const nsAString& aName,
                       const nsACString& aFeatures,
+                      bool aForceNoOpener,
                       mozIDOMWindowProxy** aReturnWindow);
 
 private:
