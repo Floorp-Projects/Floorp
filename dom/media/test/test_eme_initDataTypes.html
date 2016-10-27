@@ -59,6 +59,13 @@ var tests = [
     expectPass: false,
   },
   {
+    name: "SessionType in license doesn't match MediaKeySession's sessionType",
+    initDataType: 'keyids',
+    initData: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A"]}',
+    sessionType: 'persistent-license',
+    expectPass: false,
+  },
+  {
     name: "Invalid initData",
     initDataType: 'keyids',
     initData: 'invalid initData',
