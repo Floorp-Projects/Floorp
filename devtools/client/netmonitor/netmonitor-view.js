@@ -116,10 +116,6 @@ var NetMonitorView = {
 
     this._body = $("#body");
     this._detailsPane = $("#details-pane");
-    this._detailsPaneToggleButton = $("#details-pane-toggle");
-
-    this._collapsePaneString = L10N.getStr("collapseDetailsPane");
-    this._expandPaneString = L10N.getStr("expandDetailsPane");
 
     this._detailsPane.setAttribute("width", Prefs.networkDetailsWidth);
     this._detailsPane.setAttribute("height", Prefs.networkDetailsHeight);
@@ -143,7 +139,6 @@ var NetMonitorView = {
     Prefs.networkDetailsHeight = this._detailsPane.getAttribute("height");
 
     this._detailsPane = null;
-    this._detailsPaneToggleButton = null;
 
     for (let p of this._editorPromises.values()) {
       let editor = yield p;
@@ -172,19 +167,14 @@ var NetMonitorView = {
    *        The index of the intended selected tab in the details pane.
    */
   toggleDetailsPane: function (flags, tabIndex) {
-    let pane = this._detailsPane;
-    let button = this._detailsPaneToggleButton;
-
-    ViewHelpers.togglePane(flags, pane);
+    ViewHelpers.togglePane(flags, this._detailsPane);
 
     if (flags.visible) {
       this._body.classList.remove("pane-collapsed");
-      button.classList.remove("pane-collapsed");
-      button.setAttribute("tooltiptext", this._collapsePaneString);
+      gStore.dispatch(Actions.showSidebar(true));
     } else {
       this._body.classList.add("pane-collapsed");
-      button.classList.add("pane-collapsed");
-      button.setAttribute("tooltiptext", this._expandPaneString);
+      gStore.dispatch(Actions.showSidebar(false));
     }
 
     if (tabIndex !== undefined) {
@@ -289,9 +279,6 @@ var NetMonitorView = {
 
   _body: null,
   _detailsPane: null,
-  _detailsPaneToggleButton: null,
-  _collapsePaneString: "",
-  _expandPaneString: "",
   _editorPromises: new Map()
 };
 
