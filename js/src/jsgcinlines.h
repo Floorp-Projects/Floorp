@@ -202,7 +202,7 @@ template <>
 class ZoneCellIter<TenuredCell> {
     ArenaIter arenaIter;
     ArenaCellIterImpl cellIter;
-    JS::AutoAssertNoAlloc noAlloc;
+    mozilla::Maybe<JS::AutoAssertNoGC> nogc;
 
   protected:
     // For use when a subclass wants to insert some setup before init().
@@ -221,7 +221,7 @@ class ZoneCellIter<TenuredCell> {
         // that allows us to iterate.
         if (!rt->isHeapBusy()) {
             // Assert that no GCs can occur while a ZoneCellIter is live.
-            noAlloc.disallowAlloc(rt);
+            nogc.emplace(rt);
         }
 
         // We have a single-threaded runtime, so there's no need to protect
