@@ -100,6 +100,8 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         final Tab playingTab = mTabReference.get();
         switch (msg) {
             case MEDIA_PLAYING_CHANGE:
+                // The 'MEDIA_PLAYING_CHANGE' would only be received when the
+                // media starts or ends.
                 if (playingTab != tab && tab.isMediaPlaying()) {
                     mTabReference = new WeakReference<>(tab);
                     mController.getTransportControls().sendCustomAction(ACTION_START, null);
@@ -107,7 +109,13 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                     mController.getTransportControls().stop();
                 }
                 break;
-
+            case MEDIA_PLAYING_RESUME:
+                // user resume the paused-by-control media from page so that we
+                // should make the control interface consistent.
+                if (playingTab == tab && !isMediaPlaying()) {
+                    mController.getTransportControls().play();
+                }
+                break;
             case CLOSED:
                 if (playingTab == null || playingTab == tab) {
                     // Remove the controls when the playing tab disappeared or was closed.
