@@ -123,16 +123,39 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 }
 
 .search-panel-current-engine {
-  border-top: none !important;
   -moz-box-align: center;
 }
 
+/**
+ * The borders of the various elements are specified as follows.
+ *
+ * The current engine always has a bottom border.
+ * The search results never have a border.
+ *
+ * When the search results are not collapsed:
+ * - The elements underneath the search results all have a top border.
+ *
+ * When the search results are collapsed:
+ * - The elements underneath the search results all have a bottom border, except
+ *   the lowest one: search-setting-button.
+ */
+
 .search-panel-current-engine {
-  border-bottom: none;
+  border-top: none !important;
+  border-bottom: 1px solid var(--panel-separator-color) !important;
 }
 
-.search-panel-tree {
-  border-top: 1px solid var(--panel-separator-color) !important;
+.search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-header,
+.search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-one-offs,
+.search-panel-tree[collapsed=true] + .search-one-offs > vbox > .addengine-item:first-of-type {
+  border-top: none !important;
+}
+
+.search-panel-tree[collapsed=true] + .search-one-offs > .searchbar-engine-one-off-item,
+.search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-current-input,
+.search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-one-offs,
+.search-panel-tree[collapsed=true] + .search-one-offs > vbox > .addengine-item:last-of-type {
+  border-bottom: 1px solid var(--panel-separator-color) !important;
 }
 
 .search-panel-header {
