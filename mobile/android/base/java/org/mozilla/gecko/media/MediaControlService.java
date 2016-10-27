@@ -248,7 +248,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 if (action.equals(ACTION_START)) {
                     Log.d(LOGTAG, "Controller, onStart");
                     notifyControlInterfaceChanged(ACTION_PAUSE);
-                    mActionState = ACTION_RESUME;
                 } else if (action.equals(ACTION_PAUSE_BY_AUDIO_FOCUS)) {
                     Log.d(LOGTAG, "Controller, pause by audio focus changed");
                     notifyControlInterfaceChanged(ACTION_RESUME);
@@ -266,7 +265,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 super.onPlay();
                 notifyControlInterfaceChanged(ACTION_PAUSE);
                 notifyObservers("MediaControl", "resumeMedia");
-                mActionState = ACTION_RESUME;
                 // To make sure we always own audio focus during playing.
                 AudioFocusAgent.notifyStartedPlaying();
             }
@@ -277,7 +275,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 super.onPause();
                 notifyControlInterfaceChanged(ACTION_RESUME);
                 notifyObservers("MediaControl", "mediaControlPaused");
-                mActionState = ACTION_PAUSE;
                 AudioFocusAgent.notifyStoppedPlaying();
             }
 
@@ -287,7 +284,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 super.onStop();
                 notifyControlInterfaceChanged(ACTION_STOP);
                 notifyObservers("MediaControl", "mediaControlStopped");
-                mActionState = ACTION_STOP;
                 mTabReference = new WeakReference<>(null);
             }
         });
@@ -301,16 +297,17 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         return action.equals(ACTION_STOP);
     }
 
-    private void notifyControlInterfaceChanged(final String action) {
+    private void notifyControlInterfaceChanged(final String uiAction) {
         if (!mInitialize) {
             return;
         }
 
-        Log.d(LOGTAG, "notifyControlInterfaceChanged, action = " + action);
+        Log.d(LOGTAG, "notifyControlInterfaceChanged, action = " + uiAction);
 
-        if (isNeedToRemoveControlInterface(action)) {
+        if (isNeedToRemoveControlInterface(uiAction)) {
             stopForeground(false);
             NotificationManagerCompat.from(this).cancel(MEDIA_CONTROL_ID);
+            setActionState(uiAction);
             return;
         }
 
@@ -330,12 +327,28 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
             return;
         }
 
+        setActionState(uiAction);
+
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                updateNotification(tab, action);
+                updateNotification(tab, uiAction);
             }
         });
+    }
+
+    private void setActionState(final String uiAction) {
+        switch (uiAction) {
+            case ACTION_PAUSE:
+                mActionState = ACTION_RESUME;
+                break;
+            case ACTION_RESUME:
+                mActionState = ACTION_PAUSE;
+                break;
+            case ACTION_STOP:
+                mActionState = ACTION_STOP;
+                break;
+        }
     }
 
     private void updateNotification(Tab tab, String action) {
