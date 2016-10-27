@@ -68,7 +68,6 @@
 #include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/FlyWebPublishedServerIPC.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
-#include "mozilla/dom/telephony/TelephonyParent.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "mozilla/embedding/printingui/PrintingParent.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -290,7 +289,6 @@ using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::icc;
 using namespace mozilla::dom::power;
 using namespace mozilla::dom::mobileconnection;
-using namespace mozilla::dom::telephony;
 using namespace mozilla::media;
 using namespace mozilla::embedding;
 using namespace mozilla::gfx;
@@ -3415,25 +3413,6 @@ bool
 ContentParent::DeallocPHandlerServiceParent(PHandlerServiceParent* aHandlerServiceParent)
 {
   static_cast<HandlerServiceParent*>(aHandlerServiceParent)->Release();
-  return true;
-}
-
-PTelephonyParent*
-ContentParent::AllocPTelephonyParent()
-{
-  if (!AssertAppProcessPermission(this, "telephony")) {
-    return nullptr;
-  }
-
-  TelephonyParent* actor = new TelephonyParent();
-  NS_ADDREF(actor);
-  return actor;
-}
-
-bool
-ContentParent::DeallocPTelephonyParent(PTelephonyParent* aActor)
-{
-  static_cast<TelephonyParent*>(aActor)->Release();
   return true;
 }
 

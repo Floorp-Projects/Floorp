@@ -331,10 +331,6 @@ public:
 
   virtual bool DeallocPHandlerServiceChild(PHandlerServiceChild*) override;
 
-  virtual PTelephonyChild* AllocPTelephonyChild() override;
-
-  virtual bool DeallocPTelephonyChild(PTelephonyChild*) override;
-
   virtual PMediaChild* AllocPMediaChild() override;
 
   virtual bool DeallocPMediaChild(PMediaChild* aActor) override;

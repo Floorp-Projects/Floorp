@@ -4,12 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .theme-dark {
-  --sidemenu-selected-arrow: url(images/itemArrow-dark-ltr.svg);
-  --sidemenu-selected-arrow-rtl: url(images/itemArrow-dark-rtl.svg);
+  --sidemenu-selected-arrow: url(images/item-arrow-dark-ltr.svg);
+  --sidemenu-selected-arrow-rtl: url(images/item-arrow-dark-rtl.svg);
 }
 .theme-light {
-  --sidemenu-selected-arrow: url(images/itemArrow-ltr.svg);
-  --sidemenu-selected-arrow-rtl: url(images/itemArrow-rtl.svg);
+  --sidemenu-selected-arrow: url(images/item-arrow-ltr.svg);
+  --sidemenu-selected-arrow-rtl: url(images/item-arrow-rtl.svg);
 }
 
 .splitview-nav-container .devtools-throbber {

@@ -84,7 +84,7 @@ function getHost(host) {
 
 function resizeToolboxWindow(panel, host) {
   let sizeOption = host.split(":")[1];
-  let win = panel._toolbox._host._window;
+  let win = panel._toolbox.win.parent;
 
   // should be the same value as BREAKPOINT_SMALL_WINDOW_WIDTH in debugger-view.js
   let breakpoint = 850;
@@ -101,7 +101,7 @@ function resizeToolboxWindow(panel, host) {
 function resizeAndWaitForLayoutChange(panel, width) {
     info("Updating toolbox window width to " + width);
 
-    let win = panel._toolbox._host._window;
+    let win = panel._toolbox.win.parent;
     let gDebugger = panel.panelWin;
 
     win.resizeTo(width, window.screen.availHeight);

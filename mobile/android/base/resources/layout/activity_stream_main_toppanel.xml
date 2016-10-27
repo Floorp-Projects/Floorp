@@ -38,11 +38,12 @@
 
     <TextView
         android:id="@+id/title_highlights"
-        android:layout_marginLeft="@dimen/tab_strip_content_start"
-        android:layout_marginStart="@dimen/tab_strip_content_start"
-        android:layout_marginTop="8dp"
-        android:layout_marginRight="4dp"
-        android:layout_marginEnd="4dp"
+        android:layout_marginLeft="@dimen/activity_stream_base_margin"
+        android:layout_marginStart="@dimen/activity_stream_base_margin"
+        android:layout_marginTop="@dimen/activity_stream_base_margin"
+        android:layout_marginBottom="@dimen/activity_stream_base_margin"
+        android:layout_marginRight="@dimen/activity_stream_base_margin"
+        android:layout_marginEnd="@dimen/activity_stream_base_margin"
         android:text="@string/activity_stream_highlights"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -51,7 +52,6 @@
         android:textColor="#FF858585"
         android:layout_below="@+id/divider"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="6dp" />
+        android:layout_alignParentStart="true" />
 
 </RelativeLayout>

@@ -26,13 +26,13 @@ class TestSafeBrowsingNotificationBar(FirefoxTestCase):
             # Phishing URL info
             {
                 'button_property': 'safebrowsing.notADeceptiveSiteButton.label',
-                'report_page': 'www.google.com/safebrowsing/report_error',
+                'report_page': 'google.com/safebrowsing/report_error',
                 'unsafe_page': 'https://www.itisatrap.org/firefox/its-a-trap.html'
             },
             # Malware URL object
             {
                 'button_property': 'safebrowsing.notAnAttackButton.label',
-                'report_page': 'www.stopbadware.org',
+                'report_page': 'stopbadware.org',
                 'unsafe_page': 'https://www.itisatrap.org/firefox/its-an-attack.html'
             }
         ]
@@ -93,7 +93,9 @@ class TestSafeBrowsingNotificationBar(FirefoxTestCase):
         button.click()
 
         Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
-            expected.element_present(By.ID, 'main-feature'))
+            expected.element_present(By.ID, 'main-feature'),
+            message='Expected target element "#main-feature" has not been found',
+        )
         self.assertEquals(self.marionette.get_url(), self.browser.get_final_url(unsafe_page))
 
         # Clean up here since the permission gets set in this function
@@ -110,7 +112,10 @@ class TestSafeBrowsingNotificationBar(FirefoxTestCase):
             self.browser.tabbar.open_tab(lambda _: button.click())
 
         Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
-            lambda mn: report_page in mn.get_url())
+            lambda mn: report_page in mn.get_url(),
+            message='The expected safe-browsing report page has not been opened',
+        )
+
         with self.marionette.using_context('chrome'):
             self.browser.tabbar.close_tab()
 
@@ -123,7 +128,9 @@ class TestSafeBrowsingNotificationBar(FirefoxTestCase):
             button.click()
 
         Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
-            lambda mn: self.browser.default_homepage in mn.get_url())
+            lambda mn: self.browser.default_homepage in mn.get_url(),
+            message='The default home page has not been loaded',
+        )
 
     def check_x_button(self):
         with self.marionette.using_context('chrome'):
@@ -135,4 +142,6 @@ class TestSafeBrowsingNotificationBar(FirefoxTestCase):
             button.click()
 
             Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
-                expected.element_stale(button))
+                expected.element_stale(button),
+                message='The notification bar has not been closed',
+            )

@@ -16,7 +16,6 @@ DevToolsModules(
     'breadcrumbs.js',
     'inspector-commands.js',
     'inspector-search.js',
-    'inspector.xhtml',
     'panel.js',
     'toolsidebar.js',
 )

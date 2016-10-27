@@ -51,6 +51,7 @@ if CONFIG['ACCESSIBILITY']:
     ]
 
 LOCAL_INCLUDES += [
+    '/xpcom/base',
     '/xpcom/build',
 ]
 

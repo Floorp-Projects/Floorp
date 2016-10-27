@@ -43,7 +43,6 @@ include protocol PRenderFrame;
 include protocol PScreenManager;
 include protocol PSpeechSynthesis;
 include protocol PStorage;
-include protocol PTelephony;
 include protocol PTestShell;
 include protocol PJavaScript;
 include protocol PRemoteSpellcheckEngine;
@@ -370,7 +369,6 @@ nested(upto inside_cpow) sync protocol PContent
     manages PScreenManager;
     manages PSpeechSynthesis;
     manages PStorage;
-    manages PTelephony;
     manages PTestShell;
     manages PJavaScript;
     manages PRemoteSpellcheckEngine;
@@ -816,8 +814,6 @@ parent:
     async PSpeechSynthesis();
 
     nested(inside_cpow) async PStorage();
-
-    async PTelephony();
 
     async PMedia();
 

@@ -417,6 +417,7 @@
           <label id="security-technical-shortform" class="fieldValue"/>
           <description id="security-technical-longform1" class="fieldLabel"/>
           <description id="security-technical-longform2" class="fieldLabel"/>
+          <description id="security-technical-certificate-transparency" class="fieldLabel"/>
         </vbox>
       </groupbox>
       <hbox pack="end">
