@@ -54,6 +54,10 @@ public class PresentationMediaPlayerManager extends MediaPlayerManager {
             return;
         }
 
+        if (isPresentationMode) {
+            return;
+        }
+
         MediaRouter.RouteInfo route = mediaRouter.getSelectedRoute();
         Display display = route != null ? route.getPresentationDisplay() : null;
 
