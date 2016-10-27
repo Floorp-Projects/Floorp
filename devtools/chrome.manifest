@@ -2,6 +2,7 @@ content devtools client/
 skin devtools classic/1.0 client/themes/
 resource devtools .
 locale devtools en-US client/locales/en-US/
+locale devtools-shared en-US shared/locales/en-US/
 
 content webide client/webide/content/
 skin webide classic/1.0 client/webide/themes/
