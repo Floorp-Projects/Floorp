@@ -173,14 +173,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         t->mProducerID = timedTexture.producerID();
         t->mTexture->DeserializeReadLock(timedTexture.sharedLock(), this);
         MOZ_ASSERT(ValidatePictureRect(t->mTexture->GetSize(), t->mPictureRect));
-
-        MaybeFence maybeFence = timedTexture.fence();
-        if (maybeFence.type() == MaybeFence::TFenceHandle) {
-          FenceHandle fence = maybeFence.get_FenceHandle();
-          if (fence.IsValid()) {
-            t->mTexture->SetAcquireFenceHandle(fence);
-          }
-        }
       }
       if (textures.Length() > 0) {
         compositable->UseTextureHost(textures);

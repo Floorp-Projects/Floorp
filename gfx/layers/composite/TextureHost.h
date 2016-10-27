@@ -586,15 +586,6 @@ public:
 
   int NumCompositableRefs() const { return mCompositableCount; }
 
-  void SetAcquireFenceHandle(const FenceHandle& aAcquireFenceHandle);
-
-  /**
-   * Return a acquireFence's Fence and clear a reference to the Fence.
-   */
-  FenceHandle GetAndResetAcquireFenceHandle();
-
-  virtual void WaitAcquireFenceHandleSyncComplete() {};
-
   void SetLastFwdTransactionId(uint64_t aTransactionId);
 
   virtual bool NeedsFenceHandle() { return false; }
@@ -610,8 +601,6 @@ public:
 
 protected:
   void ReadUnlock();
-
-  FenceHandle mAcquireFenceHandle;
 
   void RecycleTexture(TextureFlags aFlags);
 
