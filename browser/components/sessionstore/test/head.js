@@ -283,8 +283,8 @@ var promiseForEachSessionRestoreFile = Task.async(function*(cb) {
   }
 });
 
-function promiseBrowserLoaded(aBrowser, ignoreSubFrames = true, wantLoad = null) {
-  return BrowserTestUtils.browserLoaded(aBrowser, !ignoreSubFrames, wantLoad);
+function promiseBrowserLoaded(aBrowser, ignoreSubFrames = true) {
+  return BrowserTestUtils.browserLoaded(aBrowser, !ignoreSubFrames);
 }
 
 function whenWindowLoaded(aWindow, aCallback = next) {
