@@ -5645,6 +5645,9 @@ BaseCompiler::emitOldCallImport()
     if (!iter_.readCall(&funcImportIndex))
         return false;
 
+    if (deadCode_)
+        return true;
+
     return emitCallImportCommon(lineOrBytecode, funcImportIndex);
 }
 
@@ -5752,10 +5755,10 @@ BaseCompiler::emitCommonMathCall(uint32_t lineOrBytecode, SymbolicAddress callee
 bool
 BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandType)
 {
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
     if (deadCode_)
         return true;
-
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     return emitCommonMathCall(lineOrBytecode, callee,
                               operandType == ValType::F32 ? SigF_ : SigD_,
@@ -5767,15 +5770,15 @@ BaseCompiler::emitBinaryMathBuiltinCall(SymbolicAddress callee, ValType operandT
 {
     MOZ_ASSERT(operandType == ValType::F64);
 
-    if (deadCode_)
-        return true;
-
     uint32_t lineOrBytecode = 0;
     if (callee == SymbolicAddress::ModD) {
         // Not actually a call in the binary representation
     } else {
         lineOrBytecode = readCallSiteLineOrBytecode();
     }
+
+    if (deadCode_)
+        return true;
 
     return emitCommonMathCall(lineOrBytecode, callee, SigDD_, ExprType::F64);
 }
@@ -6703,19 +6706,21 @@ BaseCompiler::emitTeeStoreWithCoercion(ValType resultType, Scalar::Type viewType
 bool
 BaseCompiler::emitGrowMemory()
 {
-    if (deadCode_)
-        return true;
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     Nothing arg;
     if (!iter_.readGrowMemory(&arg))
         return false;
+
+    if (deadCode_)
+        return true;
 
     sync();
 
     uint32_t numArgs = 1;
     size_t stackSpace = stackConsumed(numArgs);
 
-    FunctionCall baselineCall(readCallSiteLineOrBytecode());
+    FunctionCall baselineCall(lineOrBytecode);
     beginCall(baselineCall, UseABI::System, InterModule::True);
 
     ABIArg instanceArg = reservePointerArgument(baselineCall);
@@ -6736,15 +6741,17 @@ BaseCompiler::emitGrowMemory()
 bool
 BaseCompiler::emitCurrentMemory()
 {
-    if (deadCode_)
-        return true;
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     if (!iter_.readCurrentMemory())
         return false;
 
+    if (deadCode_)
+        return true;
+
     sync();
 
-    FunctionCall baselineCall(readCallSiteLineOrBytecode());
+    FunctionCall baselineCall(lineOrBytecode);
     beginCall(baselineCall, UseABI::System, InterModule::False);
 
     ABIArg instanceArg = reservePointerArgument(baselineCall);

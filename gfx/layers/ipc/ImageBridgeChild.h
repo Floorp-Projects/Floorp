@@ -12,7 +12,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/RefPtr.h"             // for already_AddRefed
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
-#include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTrackerHolder
 #include "mozilla/layers/CanvasClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/CompositorTypes.h"
@@ -37,7 +36,6 @@ class Shmem;
 namespace layers {
 
 class AsyncCanvasRenderer;
-class AsyncTransactionTracker;
 class ImageClient;
 class ImageContainer;
 class ImageContainerChild;
@@ -257,8 +255,7 @@ private:
   void FlushAllImagesSync(
     SynchronousTask* aTask,
     ImageClient* aClient,
-    ImageContainer* aContainer,
-    RefPtr<AsyncTransactionWaiter> aWaiter);
+    ImageContainer* aContainer);
 
   void ProxyAllocShmemNow(SynchronousTask* aTask, AllocShmemParams* aParams);
   void ProxyDeallocShmemNow(SynchronousTask* aTask, Shmem* aShmem);
@@ -279,11 +276,6 @@ public:
   virtual void UseComponentAlphaTextures(CompositableClient* aCompositable,
                                          TextureClient* aClientOnBlack,
                                          TextureClient* aClientOnWhite) override;
-#ifdef MOZ_WIDGET_GONK
-  virtual void UseOverlaySource(CompositableClient* aCompositable,
-                                const OverlaySource& aOverlay,
-                                const nsIntRect& aPictureRect) override;
-#endif
 
   void Destroy(CompositableChild* aCompositable) override;
 
@@ -299,16 +291,6 @@ public:
    */
   void NotifyNotUsed(uint64_t aTextureId, uint64_t aFwdTransactionId);
 
-  void DeliverFence(uint64_t aTextureId, FenceHandle& aReleaseFenceHandle);
-
-  void HoldUntilFenceHandleDelivery(TextureClient* aClient, uint64_t aTransactionId);
-
-  void DeliverFenceToNonRecycle(uint64_t aTextureId, FenceHandle& aReleaseFenceHandle);
-
-  void NotifyNotUsedToNonRecycle(uint64_t aTextureId, uint64_t aTransactionId);
-
-  void CancelWaitFenceHandle(TextureClient* aClient);
-
   virtual void CancelWaitForRecycle(uint64_t aTextureId) override;
 
   virtual bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) override;
@@ -316,10 +298,6 @@ public:
 
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                              TextureClient* aTexture) override;
-
-  virtual void RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aAsyncTransactionTracker,
-                                                  CompositableClient* aCompositable,
-                                                  TextureClient* aTexture) override;
 
   virtual void UseTiledLayerBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptorTiles& aTileLayerDescriptor) override
@@ -413,13 +391,6 @@ private:
    * It defer calling of TextureClient recycle callback.
    */
   nsDataHashtable<nsUint64HashKey, RefPtr<TextureClient> > mTexturesWaitingRecycled;
-
-  AsyncTransactionTrackersHolder mTrackersHolder;
-
-#ifdef MOZ_WIDGET_GONK
-  Mutex mWaitingFenceHandleMutex;
-  nsDataHashtable<nsUint64HashKey, RefPtr<TextureClient> > mTexturesWaitingFenceHandle;
-#endif
 };
 
 } // namespace layers

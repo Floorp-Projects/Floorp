@@ -1933,8 +1933,9 @@ JSFunction::needsNamedLambdaEnvironment() const
 JSFunction*
 js::NewNativeFunction(ExclusiveContext* cx, Native native, unsigned nargs, HandleAtom atom,
                       gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
-                      NewObjectKind newKind /* = GenericObject */)
+                      NewObjectKind newKind /* = SingletonObject */)
 {
+    MOZ_ASSERT(native);
     return NewFunctionWithProto(cx, native, nargs, JSFunction::NATIVE_FUN,
                                 nullptr, atom, nullptr, allocKind, newKind);
 }
@@ -1942,9 +1943,10 @@ js::NewNativeFunction(ExclusiveContext* cx, Native native, unsigned nargs, Handl
 JSFunction*
 js::NewNativeConstructor(ExclusiveContext* cx, Native native, unsigned nargs, HandleAtom atom,
                          gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
-                         NewObjectKind newKind /* = GenericObject */,
+                         NewObjectKind newKind /* = SingletonObject */,
                          JSFunction::Flags flags /* = JSFunction::NATIVE_CTOR */)
 {
+    MOZ_ASSERT(native);
     MOZ_ASSERT(flags & JSFunction::NATIVE_CTOR);
     return NewFunctionWithProto(cx, native, nargs, flags, nullptr, atom,
                                 nullptr, allocKind, newKind);
@@ -1992,12 +1994,6 @@ js::NewFunctionWithProto(ExclusiveContext* cx, Native native,
     MOZ_ASSERT(NewFunctionEnvironmentIsWellFormed(cx, enclosingEnv));
 
     RootedObject funobj(cx);
-    // Don't mark asm.js module functions as singleton since they are
-    // cloned (via CloneFunctionObjectIfNotSingleton) which assumes that
-    // isSingleton implies isInterpreted.
-    if (native && !IsAsmJSModuleNative(native))
-        newKind = SingletonObject;
-
     if (protoHandling == NewFunctionClassProto) {
         funobj = NewObjectWithClassProto(cx, &JSFunction::class_, proto, allocKind,
                                          newKind);

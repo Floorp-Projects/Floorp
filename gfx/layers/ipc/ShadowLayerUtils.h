@@ -28,21 +28,6 @@ struct SurfaceDescriptorX11 {
 } // namespace mozilla
 #endif
 
-#if defined(MOZ_WIDGET_GONK)
-# include "mozilla/layers/ShadowLayerUtilsGralloc.h"
-#else
-namespace mozilla { namespace layers {
-struct MagicGrallocBufferHandle {
-  bool operator==(const MagicGrallocBufferHandle&) const { return false; }
-};
-
-struct GrallocBufferRef {
-  bool operator==(const GrallocBufferRef&) const { return false; }
-};
-} // namespace layers
-} // namespace mozilla
-#endif
-
 namespace IPC {
 
 #if !defined(MOZ_HAVE_SURFACEDESCRIPTORX11)
@@ -53,22 +38,6 @@ struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
   static bool Read(const Message*, PickleIterator*, paramType*) { return false; }
 };
 #endif  // !defined(MOZ_HAVE_XSURFACEDESCRIPTORX11)
-
-#if !defined(MOZ_HAVE_SURFACEDESCRIPTORGRALLOC)
-template <>
-struct ParamTraits<mozilla::layers::MagicGrallocBufferHandle> {
-  typedef mozilla::layers::MagicGrallocBufferHandle paramType;
-  static void Write(Message*, const paramType&) {}
-  static bool Read(const Message*, PickleIterator*, paramType*) { return false; }
-};
-
-template <>
-struct ParamTraits<mozilla::layers::GrallocBufferRef> {
-  typedef mozilla::layers::GrallocBufferRef paramType;
-  static void Write(Message*, const paramType&) {}
-  static bool Read(const Message*, PickleIterator*, paramType*) { return false; }
-};
-#endif  // !defined(MOZ_HAVE_XSURFACEDESCRIPTORGRALLOC)
 
 template <>
 struct ParamTraits<mozilla::ScreenRotation>

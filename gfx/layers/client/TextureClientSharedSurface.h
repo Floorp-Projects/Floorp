@@ -40,7 +40,7 @@ public:
 
   ~SharedSurfaceTextureData();
 
-  virtual bool Lock(OpenMode, FenceHandle*) override { return false; }
+  virtual bool Lock(OpenMode) override { return false; }
 
   virtual void Unlock() override {}
 
@@ -65,14 +65,6 @@ public:
   static already_AddRefed<SharedSurfaceTextureClient>
   Create(UniquePtr<gl::SharedSurface> surf, gl::SurfaceFactory* factory,
          LayersIPCChannel* aAllocator, TextureFlags aFlags);
-
-  virtual void SetReleaseFenceHandle(const FenceHandle& aReleaseFenceHandle) override;
-
-  virtual FenceHandle GetAndResetReleaseFenceHandle() override;
-
-  virtual void SetAcquireFenceHandle(const FenceHandle& aAcquireFenceHandle) override;
-
-  virtual const FenceHandle& GetAcquireFenceHandle() const override;
 
   gl::SharedSurface* Surf() const {
     return static_cast<const SharedSurfaceTextureData*>(GetInternalData())->Surf();

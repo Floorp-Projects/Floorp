@@ -593,6 +593,30 @@ protected:
    */
   Selection& SelectionForTSFRef();
 
+  class MOZ_STACK_CLASS AutoSetTemporarySelection final
+  {
+  public:
+    AutoSetTemporarySelection(Selection& aSelection)
+      : mSelection(aSelection)
+    {
+      mDirty = mSelection.IsDirty();
+      if (mDirty) {
+        mSelection.CollapseAt(0);
+      }
+    }
+
+    ~AutoSetTemporarySelection()
+    {
+      if (mDirty) {
+        mSelection.MarkDirty();
+      }
+    }
+
+ private:
+    Selection& mSelection;
+    bool mDirty;
+  };
+
   struct PendingAction final
   {
     enum ActionType : uint8_t

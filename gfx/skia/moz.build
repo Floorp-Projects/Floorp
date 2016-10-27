@@ -492,7 +492,7 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
         'skia/src/gpu/GrResourceCache.cpp',
         'skia/src/image/SkImage_Gpu.cpp',
     ]
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android'):
     UNIFIED_SOURCES += [
         'skia/src/ports/SkDebug_android.cpp',
         'skia/src/ports/SkOSFile_posix.cpp',
@@ -650,7 +650,7 @@ LOCAL_INCLUDES += [
     'skia/src/utils/win',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android'):
     DEFINES['SK_FONTHOST_CAIRO_STANDALONE'] = 0
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in {
@@ -659,7 +659,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in {
     'gtk2',
     'gtk3',
     'uikit',
-    'gonk',
   }:
     DEFINES['SK_FONTHOST_DOES_NOT_USE_FONTMGR'] = 1
 
@@ -730,7 +729,7 @@ if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
         '-Wno-unused-private-field',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'android', 'gonk'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'android'):
     CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
