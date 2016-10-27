@@ -14,8 +14,9 @@ wasmFailValidateText(`(module (table 10 anyfunc) (elem (i32.const 0) 0))`, /tabl
 wasmFailValidateText(`(module (table 10 anyfunc) (func) (elem (i32.const 0) 0 1))`, /table element out of range/);
 wasmFailValidateText(`(module (table 10 anyfunc) (func) (elem (f32.const 0) 0) ${callee(0)})`, /type mismatch/);
 
-wasmFailValidateText(`(module (table 10 anyfunc) (elem (i32.const 10) $f0) ${callee(0)})`, /element segment does not fit/);
-wasmFailValidateText(`(module (table 10 anyfunc) (elem (i32.const 8) $f0 $f0 $f0) ${callee(0)})`, /element segment does not fit/);
+assertErrorMessage(() => wasmEvalText(`(module (table 10 anyfunc) (elem (i32.const 10) $f0) ${callee(0)})`), RangeError, /elem segment does not fit/);
+assertErrorMessage(() => wasmEvalText(`(module (table 10 anyfunc) (elem (i32.const 8) $f0 $f0 $f0) ${callee(0)})`), RangeError, /elem segment does not fit/);
+wasmEvalText(`(module (table 0 anyfunc) (func) (elem (i32.const 0x10001)))`);
 
 assertErrorMessage(() => wasmEvalText(`(module (table 10 anyfunc) (import "globals" "a" (global i32)) (elem (get_global 0) $f0) ${callee(0)})`, {globals:{a:10}}), RangeError, /elem segment does not fit/);
 assertErrorMessage(() => wasmEvalText(`(module (table 10 anyfunc) (import "globals" "a" (global i32)) (elem (get_global 0) $f0 $f0 $f0) ${callee(0)})`, {globals:{a:8}}), RangeError, /elem segment does not fit/);
