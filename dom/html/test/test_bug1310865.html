@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<title>Test for Bug 1310865</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<input value="a
+b" type="hidden">
+<input type="hidden" value="a
+b">
+<script>
+var input1 = document.querySelector("input");
+var input2 = document.querySelector("input + input");
+var clone1 = input1.cloneNode(false);
+var clone2 = input2.cloneNode(false);
+// Newlines must not be stripped
+is(clone1.value, "a\nb");
+is(clone2.value, "a\nb");
+</script>
