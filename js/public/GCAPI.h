@@ -510,6 +510,7 @@ class JS_PUBLIC_API(AutoAssertNoGC) : public AutoRequireNoGC
 
   public:
     AutoAssertNoGC();
+    explicit AutoAssertNoGC(JSRuntime* rt);
     explicit AutoAssertNoGC(JSContext* cx);
     ~AutoAssertNoGC();
 };
