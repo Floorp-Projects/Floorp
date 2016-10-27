@@ -104,9 +104,10 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 // media starts or ends.
                 if (playingTab != tab && tab.isMediaPlaying()) {
                     mTabReference = new WeakReference<>(tab);
-                    mController.getTransportControls().sendCustomAction(ACTION_START, null);
+                    notifyControlInterfaceChanged(ACTION_PAUSE);
                 } else if (playingTab == tab && !tab.isMediaPlaying()) {
-                    mController.getTransportControls().stop();
+                    notifyControlInterfaceChanged(ACTION_STOP);
+                    mTabReference = new WeakReference<>(null);
                 }
                 break;
             case MEDIA_PLAYING_RESUME:
@@ -119,7 +120,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
             case CLOSED:
                 if (playingTab == null || playingTab == tab) {
                     // Remove the controls when the playing tab disappeared or was closed.
-                    mController.getTransportControls().stop();
+                    notifyControlInterfaceChanged(ACTION_STOP);
                 }
                 break;
             case FAVICON:
@@ -181,7 +182,8 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         switch (intent.getAction()) {
             case ACTION_INIT :
                 // This action is used to create a service and do the initialization,
-                // the actual operation would be executed via tab events.
+                // the actual operation would be executed via control interface's
+                // pending intent.
                 break;
             case ACTION_START :
                 mController.getTransportControls().sendCustomAction(ACTION_START, null);
