@@ -920,7 +920,7 @@ WebContentConverterRegistrarContent.prototype = {
       let branch = ps.getBranch(PREF_CONTENTHANDLERS_BRANCH + num + ".");
       try {
         this._registerContentHandlerHavingBranch(branch);
-      } catch(ex) {
+      } catch (ex) {
         // do nothing, the next branch might have values
       }
     }

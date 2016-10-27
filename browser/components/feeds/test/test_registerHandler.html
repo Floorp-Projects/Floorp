@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=402788
       else
         navigator.registerContentHandler(aTxt, aUri, aTitle);
     }
-    catch(e) {
+    catch (e) {
       return false;
     }
 
@@ -61,10 +61,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=402788
   // ftp should not work
   is(testRegisterHandler(true, "foo", "ftp://mochi.test:8888/%s", "Foo handler"), false, "registering a foo protocol handler with ftp scheme should not work");
   is(testRegisterHandler(false, "application/rss+xml", "ftp://mochi.test:8888/%s", "Foo handler"), false, "registering a foo content handler with ftp scheme should not work");
-  // chrome should not work 
+  // chrome should not work
   is(testRegisterHandler(true, "foo", "chrome://mochi.test:8888/%s", "Foo handler"), false, "registering a foo protocol handler with chrome scheme should not work");
   is(testRegisterHandler(false, "application/rss+xml", "chrome://mochi.test:8888/%s", "Foo handler"), false, "registering a foo content handler with chrome scheme should not work");
-  // foo should not work 
+  // foo should not work
   is(testRegisterHandler(true, "foo", "foo://mochi.test:8888/%s", "Foo handler"), false, "registering a foo protocol handler with foo scheme should not work");
   is(testRegisterHandler(false, "application/rss+xml", "foo://mochi.test:8888/%s", "Foo handler"), false, "registering a foo content handler with foo scheme should not work");
 
