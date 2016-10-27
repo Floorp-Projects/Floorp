@@ -249,12 +249,6 @@ wasm::DecodeDataSection(Decoder& d, bool usesMemory, uint32_t minMemoryByteLengt
         if (!d.readVarU32(&seg.length))
             return d.fail("expected segment size");
 
-        if (seg.offset.isVal()) {
-            uint32_t off = seg.offset.val().i32();
-            if (off > minMemoryByteLength || minMemoryByteLength - off < seg.length)
-                return d.fail("data segment does not fit");
-        }
-
         seg.bytecodeOffset = d.currentOffset();
 
         if (!d.readBytes(seg.length))
