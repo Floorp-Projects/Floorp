@@ -408,12 +408,6 @@ bool ImageBridgeParent::IsSameProcess() const
 }
 
 void
-ImageBridgeParent::ReplyRemoveTexture(const OpReplyRemoveTexture& aReply)
-{
-  mPendingAsyncMessage.push_back(aReply);
-}
-
-void
 ImageBridgeParent::SendFenceHandleToNonRecycle(PTextureParent* aTexture)
 {
   RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);

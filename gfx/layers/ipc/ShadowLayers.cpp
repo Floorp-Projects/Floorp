@@ -494,14 +494,6 @@ ShadowLayerForwarder::RemoveTextureFromCompositable(CompositableClient* aComposi
   }
 }
 
-void
-ShadowLayerForwarder::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aAsyncTransactionTracker,
-                                                         CompositableClient* aCompositable,
-                                                         TextureClient* aTexture)
-{
-  NS_RUNTIMEABORT("not reached");
-}
-
 bool
 ShadowLayerForwarder::InWorkerThread()
 {

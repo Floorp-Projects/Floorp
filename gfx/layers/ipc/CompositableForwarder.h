@@ -26,7 +26,6 @@ namespace mozilla {
 namespace layers {
 
 class CompositableClient;
-class AsyncTransactionTracker;
 class ImageContainer;
 class SurfaceDescriptor;
 class SurfaceDescriptorTiles;
@@ -87,19 +86,6 @@ public:
    */
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                              TextureClient* aTexture) = 0;
-
-  /**
-   * Tell the CompositableHost on the compositor side to remove the texture
-   * from the CompositableHost. The compositor side sends back transaction
-   * complete message.
-   * This function does not delete the TextureHost corresponding to the
-   * TextureClient passed in parameter.
-   * It is used when the TextureClient recycled.
-   * Only ImageBridge implements it.
-   */
-  virtual void RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aAsyncTransactionTracker,
-                                                  CompositableClient* aCompositable,
-                                                  TextureClient* aTexture) {}
 
   struct TimedTextureClient {
     TimedTextureClient()

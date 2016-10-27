@@ -12,7 +12,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/RefPtr.h"             // for already_AddRefed
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
-#include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTrackerHolder
 #include "mozilla/layers/CanvasClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/CompositorTypes.h"
@@ -37,7 +36,6 @@ class Shmem;
 namespace layers {
 
 class AsyncCanvasRenderer;
-class AsyncTransactionTracker;
 class ImageClient;
 class ImageContainer;
 class ImageContainerChild;
@@ -257,8 +255,7 @@ private:
   void FlushAllImagesSync(
     SynchronousTask* aTask,
     ImageClient* aClient,
-    ImageContainer* aContainer,
-    RefPtr<AsyncTransactionWaiter> aWaiter);
+    ImageContainer* aContainer);
 
   void ProxyAllocShmemNow(SynchronousTask* aTask, AllocShmemParams* aParams);
   void ProxyDeallocShmemNow(SynchronousTask* aTask, Shmem* aShmem);
@@ -311,10 +308,6 @@ public:
 
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                              TextureClient* aTexture) override;
-
-  virtual void RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aAsyncTransactionTracker,
-                                                  CompositableClient* aCompositable,
-                                                  TextureClient* aTexture) override;
 
   virtual void UseTiledLayerBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptorTiles& aTileLayerDescriptor) override
@@ -408,8 +401,6 @@ private:
    * It defer calling of TextureClient recycle callback.
    */
   nsDataHashtable<nsUint64HashKey, RefPtr<TextureClient> > mTexturesWaitingRecycled;
-
-  AsyncTransactionTrackersHolder mTrackersHolder;
 };
 
 } // namespace layers

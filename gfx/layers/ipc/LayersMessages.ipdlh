@@ -375,18 +375,6 @@ struct OpRemoveTexture {
   PTexture texture;
 };
 
-struct OpRemoveTextureAsync {
-  uint64_t holderId;
-  uint64_t transactionId;
-  PCompositable compositable;
-  PTexture texture;
-};
-
-struct OpReplyRemoveTexture {
-  uint64_t holderId;
-  uint64_t transactionId;
-};
-
 union MaybeFence {
   FenceHandle;
   null_t;
@@ -454,7 +442,6 @@ union CompositableOperationDetail {
   OpUseTiledLayerBuffer;
 
   OpRemoveTexture;
-  OpRemoveTextureAsync;
 
   OpUseTexture;
   OpUseComponentAlphaTextures;
@@ -531,7 +518,6 @@ union AsyncParentMessageData {
   OpDeliverFenceToNonRecycle;
   OpNotifyNotUsed;
   OpNotifyNotUsedToNonRecycle;
-  OpReplyRemoveTexture;
 };
 
 } // namespace

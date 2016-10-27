@@ -329,10 +329,6 @@ GonkBufferData::GetPlatformMediaData()
   mTextureClientRecycleHandler->WaitforRecycle()
     ->Then(mGonkPlatformLayer->GetTaskQueue(), __func__,
            [self] () {
-             // Waiting for texture to be freed.
-             if (self->mTextureClientRecycleHandler) {
-               self->mTextureClientRecycleHandler->GetTextureClient()->WaitForBufferOwnership();
-             }
              self->mPromise.ResolveIfExists(self, __func__);
            },
            [self] () {
