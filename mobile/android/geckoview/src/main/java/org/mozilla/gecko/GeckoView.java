@@ -48,8 +48,9 @@ public class GeckoView extends LayerView
 
     private InputConnectionListener mInputConnectionListener;
 
-    private boolean onAttachedToWindowCalled;
-    private int screenId = 0; // default to the primary screen
+    protected boolean onAttachedToWindowCalled;
+    protected String chromeURI = getGeckoInterface().getDefaultChromeURI();
+    protected int screenId = 0; // default to the primary screen
 
     @Override
     public void handleMessage(final String event, final JSONObject message) {
@@ -111,7 +112,7 @@ public class GeckoView extends LayerView
     }
 
     @WrapForJNI(dispatchTo = "proxy")
-    private static final class Window extends JNIObject {
+    protected static final class Window extends JNIObject {
         @WrapForJNI(skip = true)
         /* package */ Window() {}
 
@@ -168,7 +169,7 @@ public class GeckoView extends LayerView
             };
     }
 
-    private Window window;
+    protected Window window;
     private boolean stateSaved;
 
     public GeckoView(Context context) {
@@ -226,8 +227,7 @@ public class GeckoView extends LayerView
         super.onRestoreInstanceState(stateBinder.superState);
     }
 
-    private void openWindow() {
-        final String chromeURI = getGeckoInterface().getDefaultChromeURI();
+    protected void openWindow() {
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             Window.open(window, this, getCompositor(),
@@ -239,7 +239,7 @@ public class GeckoView extends LayerView
         }
     }
 
-    private void reattachWindow() {
+    protected void reattachWindow() {
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             window.reattach(this, getCompositor());
         } else {
