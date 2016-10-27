@@ -5,7 +5,9 @@
 
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
 const filters = require("./filters");
+const sidebar = require("./sidebar");
 
 module.exports = combineReducers({
   filters,
+  sidebar,
 });
