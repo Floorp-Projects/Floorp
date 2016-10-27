@@ -1,7 +1,7 @@
 
 /* pngget.c - retrieval of values from info struct
  *
- * Last changed in libpng 1.6.24 [August 4, 2016]
+ * Last changed in libpng 1.6.26 [October 20, 2016]
  * Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -338,7 +338,7 @@ ppi_from_ppm(png_uint_32 ppm)
    png_fixed_point result;
    if (ppm <= PNG_UINT_31_MAX && png_muldiv(&result, (png_int_32)ppm, 127,
        5000) != 0)
-      return result;
+      return (png_uint_32)result;
 
    /* Overflow. */
    return 0;

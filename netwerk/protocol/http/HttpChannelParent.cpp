@@ -12,6 +12,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/net/NeckoParent.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "HttpChannelParentListener.h"
 #include "nsHttpHandler.h"
@@ -34,6 +35,7 @@
 #include "nsQueryObject.h"
 #include "mozilla/BasePrincipal.h"
 #include "nsCORSListenerProxy.h"
+#include "nsIIPCSerializableInputStream.h"
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDocument.h"
@@ -121,7 +123,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.redirectionLimit(), a.allowPipelining(), a.allowSTS(),
                        a.thirdPartyFlags(), a.resumeAt(), a.startPos(),
                        a.entityID(), a.chooseApplicationCache(),
-                       a.appCacheClientID(), a.allowSpdy(), a.allowAltSvc(), a.fds(),
+                       a.appCacheClientID(), a.allowSpdy(), a.allowAltSvc(),
                        a.loadInfo(), a.synthesizedResponseHead(),
                        a.synthesizedSecurityInfoSerialization(),
                        a.cacheKey(), a.requestContextID(), a.preflightArgs(),
@@ -222,6 +224,71 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
 // HttpChannelParent::PHttpChannelParent
 //-----------------------------------------------------------------------------
 
+void
+HttpChannelParent::InvokeAsyncOpen(nsresult rv)
+{
+  if (NS_FAILED(rv)) {
+    Unused << SendFailedAsyncOpen(rv);
+    return;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  rv = mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+  if (NS_FAILED(rv)) {
+    Unused << SendFailedAsyncOpen(rv);
+    return;
+  }
+  if (loadInfo && loadInfo->GetEnforceSecurity()) {
+    rv = mChannel->AsyncOpen2(mParentListener);
+  }
+  else {
+    rv = mChannel->AsyncOpen(mParentListener, nullptr);
+  }
+  if (NS_FAILED(rv)) {
+    Unused << SendFailedAsyncOpen(rv);
+  }
+}
+
+namespace {
+class InvokeAsyncOpen : public Runnable
+{
+  nsMainThreadPtrHandle<nsIInterfaceRequestor> mChannel;
+  nsresult mStatus;
+public:
+  InvokeAsyncOpen(const nsMainThreadPtrHandle<nsIInterfaceRequestor>& aChannel,
+                  nsresult aStatus)
+  : mChannel(aChannel)
+  , mStatus(aStatus)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    RefPtr<HttpChannelParent> channel = do_QueryObject(mChannel.get());
+    channel->InvokeAsyncOpen(mStatus);
+    return NS_OK;
+  }
+};
+
+struct UploadStreamClosure {
+  nsMainThreadPtrHandle<nsIInterfaceRequestor> mChannel;
+
+  explicit UploadStreamClosure(const nsMainThreadPtrHandle<nsIInterfaceRequestor>& aChannel)
+  : mChannel(aChannel)
+  {
+  }
+};
+
+void
+UploadCopyComplete(void* aClosure, nsresult aStatus) {
+  // Called on the Stream Transport Service thread by NS_AsyncCopy
+  MOZ_ASSERT(!NS_IsMainThread());
+  UniquePtr<UploadStreamClosure> closure(static_cast<UploadStreamClosure*>(aClosure));
+  nsCOMPtr<nsIRunnable> event = new InvokeAsyncOpen(closure->mChannel, aStatus);
+  NS_DispatchToMainThread(event);
+}
+} // anonymous namespace
+
 bool
 HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const OptionalURIParams&   aOriginalURI,
@@ -233,7 +300,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const uint32_t&            aLoadFlags,
                                  const RequestHeaderTuples& requestHeaders,
                                  const nsCString&           requestMethod,
-                                 const OptionalInputStreamParams& uploadStream,
+                                 const OptionalIPCStream&   uploadStream,
                                  const bool&                uploadStreamHasHeaders,
                                  const uint16_t&            priority,
                                  const uint32_t&            classOfService,
@@ -248,7 +315,6 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const nsCString&           appCacheClientID,
                                  const bool&                allowSpdy,
                                  const bool&                allowAltSvc,
-                                 const OptionalFileDescriptorSet& aFds,
                                  const OptionalLoadInfoArgs& aLoadInfoArgs,
                                  const OptionalHttpResponseHead& aSynthesizedResponseHead,
                                  const nsCString&           aSecurityInfoSerialization,
@@ -347,29 +413,68 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
 
   mChannel->SetRequestMethod(nsDependentCString(requestMethod.get()));
 
-  nsTArray<mozilla::ipc::FileDescriptor> fds;
-  if (aFds.type() == OptionalFileDescriptorSet::TPFileDescriptorSetParent) {
-    FileDescriptorSetParent* fdSetActor =
-      static_cast<FileDescriptorSetParent*>(aFds.get_PFileDescriptorSetParent());
-    MOZ_ASSERT(fdSetActor);
-
-    fdSetActor->ForgetFileDescriptors(fds);
-    MOZ_ASSERT(!fds.IsEmpty());
-
-    Unused << fdSetActor->Send__delete__(fdSetActor);
-  } else if (aFds.type() == OptionalFileDescriptorSet::TArrayOfFileDescriptor) {
-    const_cast<OptionalFileDescriptorSet&>(aFds).
-      get_ArrayOfFileDescriptor().SwapElements(fds);
-  }
-
   if (aCorsPreflightArgs.type() == OptionalCorsPreflightArgs::TCorsPreflightArgs) {
     const CorsPreflightArgs& args = aCorsPreflightArgs.get_CorsPreflightArgs();
     mChannel->SetCorsPreflightParameters(args.unsafeHeaders());
   }
 
-  nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(uploadStream, fds);
+  bool delayAsyncOpen = false;
+  nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(uploadStream);
   if (stream) {
-    mChannel->InternalSetUploadStream(stream);
+    // FIXME: The fast path of using the existing stream currently only applies to streams
+    //   that have had their entire contents serialized from the child at this point.
+    //   Once bug 1294446 and bug 1294450 are fixed it is worth revisiting this heuristic.
+    nsCOMPtr<nsIIPCSerializableInputStream> completeStream = do_QueryInterface(stream);
+    if (!completeStream) {
+      delayAsyncOpen = true;
+
+      // buffer size matches PSendStream transfer size.
+      const uint32_t kBufferSize = 32768;
+
+      nsCOMPtr<nsIStorageStream> storageStream;
+      nsresult rv = NS_NewStorageStream(kBufferSize, UINT32_MAX,
+                                        getter_AddRefs(storageStream));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return SendFailedAsyncOpen(rv);
+      }
+
+      nsCOMPtr<nsIInputStream> newUploadStream;
+      rv = storageStream->NewInputStream(0, getter_AddRefs(newUploadStream));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return SendFailedAsyncOpen(rv);
+      }
+
+      nsCOMPtr<nsIOutputStream> sink;
+      rv = storageStream->GetOutputStream(0, getter_AddRefs(sink));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return SendFailedAsyncOpen(rv);
+      }
+
+      nsCOMPtr<nsIEventTarget> target =
+          do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+      if (NS_FAILED(rv) || !target) {
+        return SendFailedAsyncOpen(rv);
+      }
+
+      nsCOMPtr<nsIInterfaceRequestor> iir = static_cast<nsIInterfaceRequestor*>(this);
+      nsMainThreadPtrHandle<nsIInterfaceRequestor> handle =
+          nsMainThreadPtrHandle<nsIInterfaceRequestor>(
+              new nsMainThreadPtrHolder<nsIInterfaceRequestor>(iir));
+      UniquePtr<UploadStreamClosure> closure(new UploadStreamClosure(handle));
+
+      // Accumulate the stream contents as the child sends it. We will continue with
+      // the AsyncOpen process once the full stream has been received.
+      rv = NS_AsyncCopy(stream, sink, target, NS_ASYNCCOPY_VIA_READSEGMENTS,
+                        kBufferSize, // copy segment size
+                        UploadCopyComplete, closure.release());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return SendFailedAsyncOpen(rv);
+      }
+
+      mChannel->InternalSetUploadStream(newUploadStream);
+    } else {
+      mChannel->InternalSetUploadStream(stream);
+    }
     mChannel->SetUploadStreamHasHeaders(uploadStreamHasHeaders);
   }
 
@@ -468,14 +573,9 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
 
   mSuspendAfterSynthesizeResponse = aSuspendAfterSynthesizeResponse;
 
-  if (loadInfo && loadInfo->GetEnforceSecurity()) {
-    rv = mChannel->AsyncOpen2(mParentListener);
+  if (!delayAsyncOpen) {
+    InvokeAsyncOpen(NS_OK);
   }
-  else {
-    rv = mChannel->AsyncOpen(mParentListener, nullptr);
-  }
-  if (NS_FAILED(rv))
-    return SendFailedAsyncOpen(rv);
 
   return true;
 }

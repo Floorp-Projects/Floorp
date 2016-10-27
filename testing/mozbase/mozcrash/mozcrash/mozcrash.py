@@ -321,21 +321,32 @@ class CrashInfo(object):
                              os.path.join(self.dump_save_path, os.path.basename(extra)))
 
 
-def check_for_java_exception(logcat, quiet=False):
+def check_for_java_exception(logcat, test_name=None, quiet=False):
     """
     Print a summary of a fatal Java exception, if present in the provided
     logcat output.
 
     Example:
-    PROCESS-CRASH | java-exception | java.lang.NullPointerException at org.mozilla.gecko.GeckoApp$21.run(GeckoApp.java:1833) # noqa
+    PROCESS-CRASH | <test-name> | java-exception java.lang.NullPointerException at org.mozilla.gecko.GeckoApp$21.run(GeckoApp.java:1833) # noqa
 
     `logcat` should be a list of strings.
+
+    If `test_name` is set it will be used as the test name in log output. If not set the
+    filename of the calling function will be used.
 
     If `quiet` is set, no PROCESS-CRASH message will be printed to stdout if a
     crash is detected.
 
     Returns True if a fatal Java exception was found, False otherwise.
     """
+
+    # try to get the caller's filename if no test name is given
+    if test_name is None:
+        try:
+            test_name = os.path.basename(sys._getframe(1).f_code.co_filename)
+        except:
+            test_name = "unknown"
+
     found_exception = False
 
     for i, line in enumerate(logcat):
@@ -358,8 +369,9 @@ def check_for_java_exception(logcat, quiet=False):
                 if m and m.group(1):
                     exception_location = m.group(1)
                 if not quiet:
-                    print "PROCESS-CRASH | java-exception | %s %s" % (exception_type,
-                                                                      exception_location)
+                    print "PROCESS-CRASH | %s | java-exception %s %s" % (test_name,
+                                                                         exception_type,
+                                                                         exception_location)
             else:
                 print "Automation Error: java exception in logcat at line " \
                     "%d of %d: %s" % (i, len(logcat), line)

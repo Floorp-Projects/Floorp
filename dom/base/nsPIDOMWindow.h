@@ -215,22 +215,16 @@ public:
   // Restore the window state from aState.
   virtual nsresult RestoreWindowState(nsISupports *aState) = 0;
 
-  // Suspend timeouts in this window and in child windows.
-  virtual void SuspendTimeouts(uint32_t aIncrease = 1,
-                               bool aFreezeChildren = true,
-                               bool aFreezeWorkers = true) = 0;
-
-  // Resume suspended timeouts in this window and in child windows.
-  virtual nsresult ResumeTimeouts(bool aThawChildren = true,
-                                  bool aThawWorkers = true) = 0;
-
-  virtual uint32_t TimeoutSuspendCount() = 0;
+  // Determine if the window is suspended or frozen.  Outer windows
+  // will forward this call to the inner window for convenience.  If
+  // there is no inner window then the outer window is considered
+  // suspended and frozen by default.
+  virtual bool IsSuspended() const = 0;
+  virtual bool IsFrozen() const = 0;
 
   // Fire any DOM notification events related to things that happened while
   // the window was frozen.
   virtual nsresult FireDelayedDOMEvents() = 0;
-
-  virtual bool IsFrozen() const = 0;
 
   nsPIDOMWindowOuter* GetOuterWindow()
   {
@@ -821,6 +815,30 @@ public:
    * Check whether this window is a secure context.
    */
   bool IsSecureContext() const;
+
+  // Calling suspend should prevent any asynchronous tasks from
+  // executing javascript for this window.  This means setTimeout,
+  // requestAnimationFrame, and events should not be fired. Suspending
+  // a window also suspends its children and workers.  Workers may
+  // continue to perform computations in the background.  A window
+  // can have Suspend() called multiple times and will only resume after
+  // a matching number of Resume() calls.
+  void Suspend();
+  void Resume();
+
+  // Calling Freeze() on a window will automatically Suspend() it.  In
+  // addition, the window and its children are further treated as no longer
+  // suitable for interaction with the user.  For example, it may be marked
+  // non-visible, cannot be focused, etc.  All worker threads are also frozen
+  // bringing them to a complete stop.  A window can have Freeze() called
+  // multiple times and will only thaw after a matching number of Thaw()
+  // calls.
+  void Freeze();
+  void Thaw();
+
+  // Apply the parent window's suspend, freeze, and modal state to the current
+  // window.
+  void SyncStateFromParentWindow();
 
 protected:
   void CreatePerformanceObjectIfNeeded();

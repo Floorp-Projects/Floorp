@@ -211,7 +211,7 @@ class RemoteAutomation(Automation):
 
         logcat = self._devicemanager.getLogcat(filterOutRegexps=fennecLogcatFilters)
 
-        javaException = mozcrash.check_for_java_exception(logcat)
+        javaException = mozcrash.check_for_java_exception(logcat, test_name=self.lastTestSeen)
         if javaException:
             return True
 

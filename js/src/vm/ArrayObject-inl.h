@@ -23,6 +23,7 @@ inline void
 ArrayObject::setLength(ExclusiveContext* cx, uint32_t length)
 {
     MOZ_ASSERT(lengthIsWritable());
+    MOZ_ASSERT_IF(length != getElementsHeader()->length, !denseElementsAreFrozen());
 
     if (length > INT32_MAX) {
         /* Track objects with overflowing lengths in type information. */
