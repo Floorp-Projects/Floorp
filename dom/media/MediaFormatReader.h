@@ -575,6 +575,15 @@ private:
 
   class DecoderFactory;
   UniquePtr<DecoderFactory> mDecoderFactory;
+
+  void OnFirstDemuxCompleted(TrackInfo::TrackType aType,
+                             RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
+
+  void OnFirstDemuxFailed(TrackInfo::TrackType aType, const MediaResult& aError);
+
+  void MaybeResolveMetadataPromise();
+
+  UniquePtr<MetadataTags> mTags;
 };
 
 } // namespace mozilla
