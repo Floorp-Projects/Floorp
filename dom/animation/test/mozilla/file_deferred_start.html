@@ -28,7 +28,7 @@ function waitForDocLoad() {
   });
 }
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t);
   var cs = window.getComputedStyle(div);
 
@@ -48,30 +48,26 @@ async_test(function(t) {
   // As a result, it's better to wait until we have a more stable state before
   // continuing.
   var promiseCallbackDone = false;
-  waitForDocLoad().then(function() {
+  return waitForDocLoad().then(function() {
     div.style.animation = 'empty 1000s';
     var animation = div.getAnimations()[0];
 
-    animation.ready.then(function() {
+    return animation.ready.then(function() {
       promiseCallbackDone = true;
     }).catch(function() {
       assert_unreached('ready promise was rejected');
     });
-
-  // We need to wait for up to three frames. This is because in some
-  // cases it can take up to two frames for the initial layout
-  // to take place. Even after that happens we don't actually resolve the
-  // ready promise until the following tick.
-  })
-  .then(waitForFrame)
-  .then(waitForFrame)
-  .then(waitForFrame)
-  .then(t.step_func(function() {
+  }).then(function() {
+    // We need to wait for up to three frames. This is because in some
+    // cases it can take up to two frames for the initial layout
+    // to take place. Even after that happens we don't actually resolve the
+    // ready promise until the following tick.
+    return waitForAnimationFrames(3);
+  }).then(function() {
     assert_true(promiseCallbackDone,
                 'ready promise for an empty animation was resolved'
                 + ' within three animation frames');
-    t.done();
-  }));
+  });
 }, 'Animation.ready is resolved for an empty animation');
 
 // Test that compositor animations with delays get synced correctly
@@ -79,10 +75,9 @@ async_test(function(t) {
 // NOTE: It is important that we DON'T use
 // SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh here since that takes
 // us through a different code path.
-async_test(function(t) {
+promise_test(function(t) {
   // This test only applies to compositor animations
   if (!isOMTAEnabled()) {
-    t.done();
     return;
   }
 
@@ -92,7 +87,7 @@ async_test(function(t) {
   div.style.animation = 'animTransform 100s -50s forwards';
   var animation = div.getAnimations()[0];
 
-  animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     var transformStr =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
 
@@ -111,8 +106,7 @@ async_test(function(t) {
     assert_true(matrixComponents[4] >= 50,
                 'Animation is at least half-way through on the compositor'
                 + ' (got translation of ' + matrixComponents[4] + ')');
-    t.done();
-  }));
+  });
 }, 'Starting an animation with a delay starts from the correct point');
 
 done();
