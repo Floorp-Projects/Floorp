@@ -52,6 +52,20 @@ PrintTargetThebes::MakeDrawTarget(const IntSize& aSize,
   return dt.forget();
 }
 
+already_AddRefed<DrawTarget>
+PrintTargetThebes::GetReferenceDrawTarget()
+{
+  if (!mRefDT) {
+    RefPtr<gfx::DrawTarget> dt =
+      gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mGfxSurface, mSize);
+    if (!dt || !dt->IsValid()) {
+      return nullptr;
+    }
+    mRefDT = dt->CreateSimilarDrawTarget(IntSize(1,1), dt->GetFormat());
+  }
+  return do_AddRef(mRefDT);
+}
+
 nsresult
 PrintTargetThebes::BeginPrinting(const nsAString& aTitle,
                                  const nsAString& aPrintToFileName)

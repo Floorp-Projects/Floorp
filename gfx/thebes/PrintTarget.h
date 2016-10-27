@@ -111,6 +111,14 @@ public:
   MakeDrawTarget(const IntSize& aSize,
                  DrawEventRecorder* aRecorder = nullptr);
 
+  /**
+   * Returns a reference DrawTarget. Unlike MakeDrawTarget, this method is not
+   * restricted to being called between BeginPage()/EndPage() calls, and the
+   * returned DrawTarget it is still valid to use after EndPage() has been
+   * called.
+   */
+  virtual already_AddRefed<DrawTarget> GetReferenceDrawTarget();
+
 protected:
 
   // Only created via subclass's constructors
@@ -124,6 +132,7 @@ protected:
                             DrawTarget* aDrawTarget);
 
   cairo_surface_t* mCairoSurface;
+  RefPtr<DrawTarget> mRefDT; // reference DT
   IntSize mSize;
   bool mIsFinished;
 };
