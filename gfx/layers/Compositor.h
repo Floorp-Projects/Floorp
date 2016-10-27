@@ -17,7 +17,6 @@
 #include "mozilla/gfx/Types.h"          // for Float
 #include "mozilla/gfx/Triangle.h"       // for Triangle, TexturedTriangle
 #include "mozilla/layers/CompositorTypes.h"  // for DiagnosticTypes, etc
-#include "mozilla/layers/FenceUtils.h"  // for FenceHandle
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend
 #include "mozilla/widget/CompositorWidget.h"
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
@@ -434,8 +433,6 @@ public:
   virtual void EndFrame();
 
   virtual void SetDispAcquireFence(Layer* aLayer);
-
-  virtual FenceHandle GetReleaseFence();
 
   /**
    * Post-rendering stuff if the rendering is done outside of this Compositor
