@@ -76,7 +76,7 @@ MacIOSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const
 }
 
 bool
-MacIOSurfaceTextureData::Lock(OpenMode, FenceHandle*)
+MacIOSurfaceTextureData::Lock(OpenMode)
 {
   mSurface->Lock(false);
   return true;

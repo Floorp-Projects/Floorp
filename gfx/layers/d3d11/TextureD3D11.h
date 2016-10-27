@@ -65,7 +65,7 @@ public:
 
   virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
-  virtual bool Lock(OpenMode aMode, FenceHandle*) override;
+  virtual bool Lock(OpenMode aMode) override;
 
   virtual void Unlock() override;
 
@@ -77,7 +77,6 @@ public:
                 TextureFlags aFlags,
                 TextureAllocationFlags aAllocFlags) const override;
 
-  // TODO - merge this with the FenceHandle API!
   virtual void SyncWithObject(SyncObject* aSync) override;
 
   ID3D11Texture2D* GetD3D11Texture() { return mTexture; }
@@ -136,7 +135,7 @@ public:
          const gfx::IntSize& aSizeY,
          const gfx::IntSize& aSizeCbCr);
 
-  virtual bool Lock(OpenMode, FenceHandle*) override { return true; }
+  virtual bool Lock(OpenMode) override { return true; }
 
   virtual void Unlock() override {}
 

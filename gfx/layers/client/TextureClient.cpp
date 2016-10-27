@@ -498,8 +498,7 @@ TextureClient::Lock(OpenMode aMode)
 
   LockActor();
 
-  FenceHandle* fence = (mReleaseFenceHandle.IsValid() && (aMode & OpenMode::OPEN_WRITE)) ? &mReleaseFenceHandle : nullptr;
-  mIsLocked = mData->Lock(aMode, fence);
+  mIsLocked = mData->Lock(aMode);
   mOpenMode = aMode;
 
   auto format = GetFormat();
