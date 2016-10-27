@@ -332,6 +332,18 @@ nsDeviceContext::Init(nsIWidget *aWidget)
 already_AddRefed<gfxContext>
 nsDeviceContext::CreateRenderingContext()
 {
+  return CreateRenderingContextCommon(/* not a reference context */ false);
+}
+
+already_AddRefed<gfxContext>
+nsDeviceContext::CreateReferenceRenderingContext()
+{
+  return CreateRenderingContextCommon(/* a reference context */ true);
+}
+
+already_AddRefed<gfxContext>
+nsDeviceContext::CreateRenderingContextCommon(bool aWantReferenceContext)
+{
     MOZ_ASSERT(IsPrinterContext());
     MOZ_ASSERT(mWidth > 0 && mHeight > 0);
 
@@ -352,8 +364,13 @@ nsDeviceContext::CreateRenderingContext()
     RefPtr<DrawEventRecorder> recorder;
     mDeviceContextSpec->GetDrawEventRecorder(getter_AddRefs(recorder));
 
-    RefPtr<gfx::DrawTarget> dt =
-      printingTarget->MakeDrawTarget(gfx::IntSize(mWidth, mHeight), recorder);
+    RefPtr<gfx::DrawTarget> dt;
+    if (aWantReferenceContext) {
+      dt = printingTarget->GetReferenceDrawTarget();
+    } else {
+      dt = printingTarget->MakeDrawTarget(gfx::IntSize(mWidth, mHeight), recorder);
+    }
+
     if (!dt || !dt->IsValid()) {
       gfxCriticalNote
         << "Failed to create draw target in device context sized "
