@@ -3628,7 +3628,7 @@ GetUserMediaCallbackMediaStreamListener::NotifyChromeOfTrackStops()
              "If there's a pending stop for video, there must be a video device");
 
   if ((stopAudio || mAudioStopped || !mAudioDevice) &&
-      (stopAudio || mVideoStopped || !mVideoDevice)) {
+      (stopVideo || mVideoStopped || !mVideoDevice)) {
     // All tracks stopped.
     Stop();
     return;

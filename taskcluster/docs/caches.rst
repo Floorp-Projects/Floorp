@@ -10,13 +10,16 @@ document them and their appropriate use.
 Version Control Caches
 ======================
 
-``level-{{level}}-checkouts``
+``level-{{level}}-checkouts-{{version}}``
    This cache holds version control checkouts, each in a subdirectory named
    after the repo (e.g., ``gecko``).
 
    Checkouts should be read-only. If a task needs to create new files from
    content of a checkout, this content should be written in a separate
    directory/cache (like a workspace).
+
+   A ``version`` parameter appears in the cache name to allow
+   backwards-incompatible changes to the cache's behavior.
 
 ``level-{{level}}-{{project}}-tc-vcs`` (deprecated)
     This cache is used internally by ``tc-vcs``.  This tool is deprecated and

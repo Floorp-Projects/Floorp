@@ -25,12 +25,10 @@ class TestProfileManagement(MarionetteTestCase):
         self.assertTrue(self.marionette.get_pref("marionette.test.bool"))
 
         self.marionette.enforce_gecko_prefs({"marionette.test.bool": False})
-        self.marionette.set_context('chrome')
 
         self.assertFalse(self.marionette.get_pref("marionette.test.bool"))
 
     def test_clean_profile(self):
         self.marionette.restart(clean=True)
-        self.marionette.set_context('chrome')
 
         self.assertEqual(self.marionette.get_pref("marionette.test.bool"), None)

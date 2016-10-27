@@ -188,7 +188,6 @@
 #include "nsDeviceStorage.h"
 #include "DomainPolicy.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
-#include "mozilla/dom/telephony/PTelephonyChild.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "mozilla/net/NeckoMessageUtils.h"
 #include "mozilla/widget/PuppetBidiKeyboard.h"
@@ -206,7 +205,6 @@ using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::icc;
 using namespace mozilla::dom::ipc;
 using namespace mozilla::dom::mobileconnection;
-using namespace mozilla::dom::telephony;
 using namespace mozilla::dom::workers;
 using namespace mozilla::media;
 using namespace mozilla::embedding;
@@ -1972,19 +1970,6 @@ ContentChild::AllocPHandlerServiceChild()
 bool ContentChild::DeallocPHandlerServiceChild(PHandlerServiceChild* aHandlerServiceChild)
 {
   static_cast<HandlerServiceChild*>(aHandlerServiceChild)->Release();
-  return true;
-}
-
-PTelephonyChild*
-ContentChild::AllocPTelephonyChild()
-{
-  MOZ_CRASH("No one should be allocating PTelephonyChild actors");
-}
-
-bool
-ContentChild::DeallocPTelephonyChild(PTelephonyChild* aActor)
-{
-  delete aActor;
   return true;
 }
 

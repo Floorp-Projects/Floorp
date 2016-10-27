@@ -47,7 +47,6 @@
 #include "mozilla/dom/ServiceWorkerContainer.h"
 #include "mozilla/dom/StorageManager.h"
 #include "mozilla/dom/TCPSocket.h"
-#include "mozilla/dom/Telephony.h"
 #include "mozilla/dom/VRDisplay.h"
 #include "mozilla/dom/workers/RuntimeService.h"
 #include "mozilla/Hal.h"
@@ -216,7 +215,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryPromise)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPowerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIccManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTelephony)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInputPortManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStorageManager)
@@ -289,10 +287,6 @@ Navigator::Invalidate()
   if (mIccManager) {
     mIccManager->Shutdown();
     mIccManager = nullptr;
-  }
-
-  if (mTelephony) {
-    mTelephony = nullptr;
   }
 
   if (mInputPortManager) {
@@ -1622,20 +1616,6 @@ Navigator::RequestWakeLock(const nsAString &aTopic, ErrorResult& aRv)
   }
 
   return pmService->NewWakeLock(aTopic, mWindow, aRv);
-}
-
-Telephony*
-Navigator::GetMozTelephony(ErrorResult& aRv)
-{
-  if (!mTelephony) {
-    if (!mWindow) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-    mTelephony = Telephony::Create(mWindow, aRv);
-  }
-
-  return mTelephony;
 }
 
 InputPortManager*

@@ -28,28 +28,35 @@ function test() {
       .then(() => toolbox.selectTool(TOOL_ID_1))
 
     // undock toolbox and check title
-      .then(() => toolbox.switchHost(Toolbox.HostType.WINDOW))
+      .then(() => {
+        // We have to first switch the host in order to spawn the new top level window
+        // on which we are going to listen from title change event
+        return toolbox.switchHost(Toolbox.HostType.WINDOW)
+          .then(() => waitForTitleChange(toolbox));
+      })
       .then(checkTitle.bind(null, NAME_1, URL_1, "toolbox undocked"))
 
     // switch to different tool and check title
-      .then(() => toolbox.selectTool(TOOL_ID_2))
+      .then(() => {
+        let onTitleChanged = waitForTitleChange(toolbox);
+        toolbox.selectTool(TOOL_ID_2);
+        return onTitleChanged;
+      })
       .then(checkTitle.bind(null, NAME_1, URL_1, "tool changed"))
 
     // navigate to different local url and check title
       .then(function () {
-        let deferred = defer();
-        target.once("navigate", () => deferred.resolve());
+        let onTitleChanged = waitForTitleChange(toolbox);
         gBrowser.loadURI(URL_2);
-        return deferred.promise;
+        return onTitleChanged;
       })
       .then(checkTitle.bind(null, NAME_2, URL_2, "url changed"))
 
     // navigate to a real url and check title
       .then(() => {
-        let deferred = defer();
-        target.once("navigate", () => deferred.resolve());
+        let onTitleChanged = waitForTitleChange(toolbox);
         gBrowser.loadURI(URL_3);
-        return deferred.promise;
+        return onTitleChanged;
       })
       .then(checkTitle.bind(null, NAME_3, URL_3, "url changed"))
 
@@ -66,7 +73,11 @@ function test() {
               return gDevTools.showToolbox(target, null, Toolbox.HostType.WINDOW);
             })
             .then(function (aToolbox) { toolbox = aToolbox; })
-            .then(() => toolbox.selectTool(TOOL_ID_1))
+            .then(() => {
+              let onTitleChanged = waitForTitleChange(toolbox);
+              toolbox.selectTool(TOOL_ID_1);
+              return onTitleChanged;
+            })
             .then(checkTitle.bind(null, NAME_3, URL_3,
                                   "toolbox destroyed and recreated"))
 

@@ -52,6 +52,7 @@ use mp4parse::MediaScaledTime;
 use mp4parse::TrackTimeScale;
 use mp4parse::TrackScaledTime;
 use mp4parse::serialize_opus_header;
+use mp4parse::CodecType;
 
 // rusty-cheddar's C enum generation doesn't namespace enum members by
 // prefixing them, so we're forced to do it in our member names until
@@ -84,9 +85,11 @@ pub enum mp4parse_track_type {
 pub enum mp4parse_codec {
     MP4PARSE_CODEC_UNKNOWN,
     MP4PARSE_CODEC_AAC,
+    MP4PARSE_CODEC_FLAC,
     MP4PARSE_CODEC_OPUS,
     MP4PARSE_CODEC_AVC,
     MP4PARSE_CODEC_VP9,
+    MP4PARSE_CODEC_MP3,
 }
 
 #[repr(C)]
@@ -342,8 +345,14 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut mp4parse_parser, track
         Some(SampleEntry::Audio(ref audio)) => match audio.codec_specific {
             AudioCodecSpecific::OpusSpecificBox(_) =>
                 mp4parse_codec::MP4PARSE_CODEC_OPUS,
-            AudioCodecSpecific::ES_Descriptor(_) =>
+            AudioCodecSpecific::FLACSpecificBox(_) =>
+                mp4parse_codec::MP4PARSE_CODEC_FLAC,
+            AudioCodecSpecific::ES_Descriptor(ref esds) if esds.audio_codec == CodecType::AAC =>
                 mp4parse_codec::MP4PARSE_CODEC_AAC,
+            AudioCodecSpecific::ES_Descriptor(ref esds) if esds.audio_codec == CodecType::MP3 =>
+                mp4parse_codec::MP4PARSE_CODEC_MP3,
+            AudioCodecSpecific::ES_Descriptor(_) =>
+                mp4parse_codec::MP4PARSE_CODEC_UNKNOWN,
         },
         Some(SampleEntry::Video(ref video)) => match video.codec_specific {
             VideoCodecSpecific::VPxConfig(_) =>
@@ -357,10 +366,8 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut mp4parse_parser, track
     let track = &context.tracks[track_index];
 
     if let (Some(track_timescale),
-            Some(context_timescale),
-            Some(track_duration)) = (track.timescale,
-                                     context.timescale,
-                                     track.duration) {
+            Some(context_timescale)) = (track.timescale,
+                                        context.timescale) {
         let media_time =
             match track.media_time.map_or(Some(0), |media_time| {
                     track_time_to_us(media_time, track_timescale) }) {
@@ -375,9 +382,14 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut mp4parse_parser, track
             };
         info.media_time = media_time - empty_duration;
 
-        match track_time_to_us(track_duration, track_timescale) {
-            Some(duration) => info.duration = duration,
-            None => return MP4PARSE_ERROR_INVALID,
+        if let Some(track_duration) = track.duration {
+            match track_time_to_us(track_duration, track_timescale) {
+                Some(duration) => info.duration = duration,
+                None => return MP4PARSE_ERROR_INVALID,
+            }
+        } else {
+            // Duration unknown; stagefright returns 0 for this.
+            info.duration = 0
         }
     } else {
         return MP4PARSE_ERROR_INVALID
@@ -427,11 +439,23 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
 
     match audio.codec_specific {
         AudioCodecSpecific::ES_Descriptor(ref v) => {
-            if v.len() > std::u32::MAX as usize {
+            if v.codec_specific_config.len() > std::u32::MAX as usize {
                 return MP4PARSE_ERROR_INVALID;
             }
-            (*info).codec_specific_config.length = v.len() as u32;
-            (*info).codec_specific_config.data = v.as_ptr();
+            (*info).codec_specific_config.length = v.codec_specific_config.len() as u32;
+            (*info).codec_specific_config.data = v.codec_specific_config.as_ptr();
+            if let Some(rate) = v.audio_sample_rate {
+                (*info).sample_rate = rate;
+            }
+        }
+        AudioCodecSpecific::FLACSpecificBox(ref flac) => {
+            // Return the STREAMINFO metadata block in the codec_specific.
+            let streaminfo = &flac.blocks[0];
+            if streaminfo.block_type != 0 || streaminfo.data.len() != 34 {
+                return MP4PARSE_ERROR_INVALID;
+            }
+            (*info).codec_specific_config.length = streaminfo.data.len() as u32;
+            (*info).codec_specific_config.data = streaminfo.data.as_ptr();
         }
         AudioCodecSpecific::OpusSpecificBox(ref opus) => {
             let mut v = Vec::new();
@@ -445,6 +469,9 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
                     match header.get(&track_index) {
                         None => {}
                         Some(v) => {
+                            if v.len() > std::u32::MAX as usize {
+                                return MP4PARSE_ERROR_INVALID;
+                            }
                             (*info).codec_specific_config.length = v.len() as u32;
                             (*info).codec_specific_config.data = v.as_ptr();
                         }

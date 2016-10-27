@@ -44,7 +44,7 @@
 
 .side-menu-widget-item-checkbox .checkbox-check {
   -moz-appearance: none;
-  background-image: url(images/itemToggle.svg);
+  background-image: url(images/item-toggle.svg);
   background-color: transparent;
   width: 16px;
   height: 16px;

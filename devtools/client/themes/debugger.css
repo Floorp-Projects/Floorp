@@ -95,7 +95,7 @@
 }
 
 #black-box {
-  list-style-image: url(images/debugger-blackbox.svg);
+  list-style-image: url(images/item-toggle.svg);
 }
 
 .theme-firebug #black-box {
@@ -103,7 +103,7 @@
 }
 
 #pretty-print {
-  list-style-image: url(images/debugger-prettyprint.svg);
+  list-style-image: url(images/tool-styleeditor.svg);
 }
 
 .theme-firebug #pretty-print {
@@ -150,7 +150,7 @@
 #black-boxed-message-button > .button-box > .button-icon {
   width: 16px;
   height: 16px;
-  background-image: url(images/debugger-blackbox.svg);
+  background-image: url(images/item-toggle.svg);
   background-position: 0 0;
   background-size: cover;
 }

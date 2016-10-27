@@ -288,6 +288,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
       for (const MetadataTag& tag : videoInfo->mTags) {
         tags->Put(tag.mKey, tag.mValue);
       }
+      mVideo.mOriginalInfo = Move(videoInfo);
       mVideo.mCallback = new DecoderCallback(this, TrackInfo::kVideoTrack);
       mVideo.mTimeRanges = mVideo.mTrackDemuxer->GetBuffered();
       mTrackDemuxersMayBlock |= mVideo.mTrackDemuxer->GetSamplesMayBlock();
@@ -316,6 +317,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
       for (const MetadataTag& tag : audioInfo->mTags) {
         tags->Put(tag.mKey, tag.mValue);
       }
+      mAudio.mOriginalInfo = Move(audioInfo);
       mAudio.mCallback = new DecoderCallback(this, TrackInfo::kAudioTrack);
       mAudio.mTimeRanges = mAudio.mTrackDemuxer->GetBuffered();
       mTrackDemuxersMayBlock |= mAudio.mTrackDemuxer->GetSamplesMayBlock();
@@ -403,7 +405,9 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
   switch (aTrack) {
     case TrackType::kAudioTrack: {
       decoder.mDecoder = mPlatform->CreateDecoder({
-        decoder.mInfo ? *decoder.mInfo->GetAsAudioInfo() : mInfo.mAudio,
+        decoder.mInfo
+        ? *decoder.mInfo->GetAsAudioInfo()
+        : *decoder.mOriginalInfo->GetAsAudioInfo(),
         decoder.mTaskQueue,
         decoder.mCallback.get(),
         mCrashHelper,
@@ -417,7 +421,9 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
       // Decoders use the layers backend to decide if they can use hardware decoding,
       // so specify LAYERS_NONE if we want to forcibly disable it.
       decoder.mDecoder = mPlatform->CreateDecoder({
-        mVideo.mInfo ? *mVideo.mInfo->GetAsVideoInfo() : mInfo.mVideo,
+        decoder.mInfo
+        ? *decoder.mInfo->GetAsVideoInfo()
+        : *decoder.mOriginalInfo->GetAsVideoInfo(),
         decoder.mTaskQueue,
         decoder.mCallback.get(),
         mKnowsCompositor,
@@ -971,13 +977,13 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
       LOG("%s stream id has changed from:%d to:%d, recreating decoder.",
           TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
           info->GetID());
-      decoder.mInfo = info;
       decoder.mLastStreamSourceID = info->GetID();
       decoder.mNextStreamSourceID.reset();
       // Reset will clear our array of queued samples. So make a copy now.
       nsTArray<RefPtr<MediaRawData>> samples{decoder.mQueuedSamples};
       Reset(aTrack);
       decoder.ShutdownDecoder();
+      decoder.mInfo = info;
       if (sample->mKeyframe) {
         decoder.mQueuedSamples.AppendElements(Move(samples));
         ScheduleUpdate(aTrack);
@@ -1255,6 +1261,8 @@ MediaFormatReader::Update(TrackType aTrack)
         NS_SUCCEEDED(decoder.mTrackDemuxer->GetNextRandomAccessPoint(&nextKeyframe))) {
       SkipVideoDemuxToNextKeyFrame(decoder.mLastSampleTime.refOr(TimeInterval()).Length());
       return;
+    } else if (aTrack == TrackType::kAudioTrack) {
+      decoder.Flush();
     }
   }
 

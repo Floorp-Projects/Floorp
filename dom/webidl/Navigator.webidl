@@ -281,11 +281,6 @@ partial interface Navigator {
    UnsafeInPrerendering]
   readonly attribute MozIccManager? mozIccManager;
 };
-
-partial interface Navigator {
-  [Throws, Pref="dom.telephony.enabled", ChromeOnly, UnsafeInPrerendering]
-  readonly attribute Telephony? mozTelephony;
-};
 #endif // MOZ_B2G_RIL
 
 #ifdef MOZ_GAMEPAD

@@ -22,9 +22,8 @@
 
     <vbox id="network-inspector-view" flex="1">
       <hbox id="netmonitor-toolbar" class="devtools-toolbar">
-        <toolbarbutton id="requests-menu-clear-button"
-                       class="devtools-toolbarbutton devtools-clear-icon"
-                       data-localization="tooltiptext=netmonitor.toolbar.clear"/>
+        <html:div xmlns="http://www.w3.org/1999/xhtml"
+                  id="react-clear-button-hook"/>
         <html:div xmlns="http://www.w3.org/1999/xhtml"
                   id="react-filter-buttons-hook"/>
         <spacer id="requests-menu-spacer"

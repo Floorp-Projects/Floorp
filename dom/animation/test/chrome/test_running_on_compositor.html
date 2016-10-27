@@ -50,9 +50,7 @@ div {
 /** Test for bug 1045994 - Add a chrome-only property to inspect if an
     animation is running on the compositor or not **/
 
-const OMTAPrefKey = 'layers.offmainthreadcomposition.async-animations';
-var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
-                  SpecialPowers.getBoolPref(OMTAPrefKey);
+var omtaEnabled = isOMTAEnabled();
 
 function assert_animation_is_running_on_compositor(animation, desc) {
   assert_equals(animation.isRunningOnCompositor, omtaEnabled,
