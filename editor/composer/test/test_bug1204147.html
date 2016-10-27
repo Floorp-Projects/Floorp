@@ -5,8 +5,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1204147
 -->
 <head>
   <title>Test for Bug 1204147</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1204147">Mozilla Bug 1204147</a>
@@ -27,32 +27,29 @@ var content = document.getElementById('content');
 // we got "en-GB" from the content preference.
 
 var firstLoad = true;
-var script;
+var en_GB;
+var hunspell;
 
 var loadListener = function(evt) {
+  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
+
   if (firstLoad) {
-    script = SpecialPowers.loadChromeScript(function() {
-      var dir = Components.classes["@mozilla.org/file/directory_service;1"]
-                          .getService(Components.interfaces.nsIProperties)
-                          .get("CurWorkD", Components.interfaces.nsIFile);
-      dir.append("tests");
-      dir.append("editor");
-      dir.append("composer");
-      dir.append("test");
+    var dir = Components.classes["@mozilla.org/file/directory_service;1"]
+                        .getService(Components.interfaces.nsIProperties)
+                        .get("CurWorkD", Components.interfaces.nsIFile);
+    dir.append("tests");
+    dir.append("editor");
+    dir.append("composer");
+    dir.append("test");
 
-      var hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
-                               .getService(Components.interfaces.mozISpellCheckingEngine);
+    hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
+                         .getService(Components.interfaces.mozISpellCheckingEngine);
 
-      // Install en-GB dictionary.
-      en_GB = dir.clone();
-      en_GB.append("en-GB");
-      hunspell.addDirectory(en_GB);
-
-      addMessageListener("en_GB-exists", () => en_GB.exists());
-      addMessageListener("destroy", () => hunspell.removeDirectory(en_GB));
-    });
-    is(script.sendSyncMessage("en_GB-exists")[0][0], true,
-       "true expected (en-GB directory should exist)");
+    // Install en-GB dictionary.
+    en_GB = dir.clone();
+    en_GB.append("en-GB");
+    is(en_GB.exists(), true, "true expected (en-GB directory should exist)");
+    hunspell.addDirectory(en_GB);
   }
 
   var doc = evt.target.contentDocument;
@@ -63,12 +60,11 @@ var loadListener = function(evt) {
     elem = doc.getElementById('en-US');
   }
 
-  var editor = SpecialPowers.wrap(elem).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
+  var editor = elem.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
   editor.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor.getInlineSpellChecker(true);
 
-  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(elem, function () {
+  onSpellCheck(elem, function () {
     var spellchecker = inlineSpellChecker.spellChecker;
     try {
       var currentDictonary = spellchecker.GetCurrentDictionary();
@@ -94,7 +90,7 @@ var loadListener = function(evt) {
       content.removeEventListener('load', loadListener, false);
 
       // Remove the fake en-GB dictionary again, since it's otherwise picked up by later tests.
-      script.sendSyncMessage("destroy");
+      hunspell.removeDirectory(en_GB);
 
       // Reset the preference, so the last value we set doesn't collide with the next test.
       SimpleTest.finish();
