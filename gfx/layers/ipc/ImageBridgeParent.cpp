@@ -407,38 +407,6 @@ bool ImageBridgeParent::IsSameProcess() const
   return OtherPid() == base::GetCurrentProcId();
 }
 
-void
-ImageBridgeParent::NotifyNotUsedToNonRecycle(PTextureParent* aTexture,
-                                             uint64_t aTransactionId)
-{
-  RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
-  if (!texture) {
-    return;
-  }
-
-  if (!(texture->GetFlags() & TextureFlags::RECYCLE) &&
-     !texture->NeedsFenceHandle()) {
-    return;
-  }
-
-  uint64_t textureId = TextureHost::GetTextureSerial(aTexture);
-  mPendingAsyncMessage.push_back(
-    OpNotifyNotUsedToNonRecycle(textureId, aTransactionId));
-
-}
-
-/*static*/ void
-ImageBridgeParent::NotifyNotUsedToNonRecycle(base::ProcessId aChildProcessId,
-                                             PTextureParent* aTexture,
-                                             uint64_t aTransactionId)
-{
-  ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(aChildProcessId);
-  if (!imageBridge) {
-    return;
-  }
-  imageBridge->NotifyNotUsedToNonRecycle(aTexture, aTransactionId);
-}
-
 /*static*/ void
 ImageBridgeParent::SetAboutToSendAsyncMessages(base::ProcessId aChildProcessId)
 {
@@ -467,8 +435,7 @@ ImageBridgeParent::NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransaction
     return;
   }
 
-  if (!(texture->GetFlags() & TextureFlags::RECYCLE) &&
-     !texture->NeedsFenceHandle()) {
+  if (!(texture->GetFlags() & TextureFlags::RECYCLE)) {
     return;
   }
 

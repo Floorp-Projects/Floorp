@@ -588,8 +588,6 @@ public:
 
   void SetLastFwdTransactionId(uint64_t aTransactionId);
 
-  virtual bool NeedsFenceHandle() { return false; }
-
   void DeserializeReadLock(const ReadLockDescriptor& aDesc,
                            ISurfaceAllocator* aAllocator);
 
