@@ -3284,6 +3284,13 @@ ContentChild::RecvBlobURLUnregistration(const nsCString& aURI)
   return true;
 }
 
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+bool
+ContentChild::SendGetA11yContentId()
+{
+  return PContentChild::SendGetA11yContentId(&mMsaaID);
+}
+#endif // defined(XP_WIN) && defined(ACCESSIBILITY)
 
 void
 ContentChild::CreateGetFilesRequest(const nsAString& aDirectoryPath,

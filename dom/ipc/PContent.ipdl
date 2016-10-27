@@ -1178,6 +1178,8 @@ parent:
     async AccumulateChildHistogram(Accumulation[] accumulations);
     async AccumulateChildKeyedHistogram(KeyedAccumulation[] accumulations);
 
+    sync GetA11yContentId() returns (uint32_t aContentId);
+
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);

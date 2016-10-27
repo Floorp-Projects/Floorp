@@ -5146,6 +5146,18 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aUR
   return true;
 }
 
+bool
+ContentParent::RecvGetA11yContentId(uint32_t* aContentId)
+{
+#if defined(XP_WIN32) && defined(ACCESSIBILITY)
+  *aContentId = a11y::AccessibleWrap::GetContentProcessIdFor(ChildID());
+  MOZ_ASSERT(*aContentId);
+  return true;
+#else
+  return false;
+#endif
+}
+
 } // namespace dom
 } // namespace mozilla
 
