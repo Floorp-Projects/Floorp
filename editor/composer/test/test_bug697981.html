@@ -5,8 +5,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=697981
 -->
 <head>
   <title>Test for Bug 697981</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=697981">Mozilla Bug 697981</a>
@@ -20,49 +20,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=697981
 <script class="testbody" type="text/javascript">
 
 function getMisspelledWords(editor) {
-  return editor.selectionController.getSelection(SpecialPowers.Ci.nsISelectionController.SELECTION_SPELLCHECK).toString();
+  return editor.selectionController.getSelection(Components.interfaces.nsISelectionController.SELECTION_SPELLCHECK).toString();
 }
 
 var elem_de;
 var editor_de;
-var script;
-
-var onSpellCheck =
-  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm")
-               .onSpellCheck;
+var de_DE;
+var hunspell;
 
 /** Test for Bug 697981 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  script = SpecialPowers.loadChromeScript(function() {
-    var dir = Components.classes["@mozilla.org/file/directory_service;1"]
-                        .getService(Components.interfaces.nsIProperties)
-                        .get("CurWorkD", Components.interfaces.nsIFile);
-    dir.append("tests");
-    dir.append("editor");
-    dir.append("composer");
-    dir.append("test");
+  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
 
-    var hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
-                             .getService(Components.interfaces.mozISpellCheckingEngine);
+  var dir = Components.classes["@mozilla.org/file/directory_service;1"]
+                      .getService(Components.interfaces.nsIProperties)
+                      .get("CurWorkD", Components.interfaces.nsIFile);
+  dir.append("tests");
+  dir.append("editor");
+  dir.append("composer");
+  dir.append("test");
 
-    // Install de-DE dictionary.
-    var de_DE = dir.clone();
-    de_DE.append("de-DE");
-    hunspell.addDirectory(de_DE);
+  hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
+                       .getService(Components.interfaces.mozISpellCheckingEngine);
 
-    addMessageListener("de_DE-exists", () => de_DE.exists());
-    addMessageListener("destroy", () => hunspell.removeDirectory(de_DE));
-  });
-  is(script.sendSyncMessage("de_DE-exists")[0][0], true,
-     "true expected (de_DE directory should exist)");
+  // Install de-DE dictionary.
+  de_DE = dir.clone();
+  de_DE.append("de-DE");
+  is(de_DE.exists(), true, "true expected (de_DE directory should exist)");
+  hunspell.addDirectory(de_DE);
 
   document.getElementById('de-DE').focus();
 });
 
 function deFocus() {
   elem_de = document.getElementById('de-DE');
-  editor_de = SpecialPowers.wrap(elem_de).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
+  editor_de = elem_de.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
   editor_de.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor_de.getInlineSpellChecker(true);
 
@@ -83,7 +76,7 @@ function deFocus() {
 
 function enFocus() {
   var elem_en = document.getElementById('en-US');
-  var editor_en = SpecialPowers.wrap(elem_en).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
+  var editor_en = elem_en.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
   editor_en.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor_en.getInlineSpellChecker(true);
 
@@ -103,7 +96,7 @@ function enFocus() {
     is(getMisspelledWords(editor_de), "German", "one misspelled word expected: German");
 
     // Remove the fake de_DE dictionary again.
-    script.sendSyncMessage("destroy");
+    hunspell.removeDirectory(de_DE);
 
     // Focus again, so the spelling gets updated, but before we need to kill the focus handler.
     elem_de.onfocus = null;
