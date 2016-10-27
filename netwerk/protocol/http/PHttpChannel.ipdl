@@ -47,7 +47,8 @@ parent:
   async Redirect2Verify(nsresult result, RequestHeaderTuples changedHeaders,
                         uint32_t loadFlags, OptionalURIParams apiRedirectTo,
                         OptionalCorsPreflightArgs corsPreflightArgs,
-                        bool forceHSTSPriming, bool mixedContentWouldBlock);
+                        bool forceHSTSPriming, bool mixedContentWouldBlock,
+                        bool chooseAppcache);
 
   // For document loads we keep this protocol open after child's
   // OnStopRequest, and send this msg (instead of __delete__) to allow
