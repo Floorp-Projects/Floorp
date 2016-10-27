@@ -127,6 +127,7 @@ class DocumentFragment;
 class DocumentTimeline;
 class DocumentType;
 class DOMImplementation;
+class DOMIntersectionObserver;
 class DOMStringList;
 class Element;
 struct ElementCreationOptions;
@@ -2843,6 +2844,15 @@ public:
   {
     return mHasScrollLinkedEffect;
   }
+
+  virtual void AddIntersectionObserver(
+    mozilla::dom::DOMIntersectionObserver* aObserver) = 0;
+  virtual void RemoveIntersectionObserver(
+    mozilla::dom::DOMIntersectionObserver* aObserver) = 0;
+  
+  virtual void UpdateIntersectionObservations() = 0;
+  virtual void ScheduleIntersectionObserverNotification() = 0;
+  virtual void NotifyIntersectionObservers() = 0;
 
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
