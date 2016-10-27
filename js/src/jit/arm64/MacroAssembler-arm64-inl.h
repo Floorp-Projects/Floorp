@@ -120,6 +120,12 @@ MacroAssembler::and64(Imm64 imm, Register64 dest)
 }
 
 void
+MacroAssembler::and64(Register64 src, Register64 dest)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
 MacroAssembler::or64(Imm64 imm, Register64 dest)
 {
     vixl::UseScratchRegisterScope temps(this);
@@ -370,6 +376,12 @@ MacroAssembler::subPtr(const Address& addr, Register dest)
 }
 
 void
+MacroAssembler::sub64(Register64 src, Register64 dest)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
 MacroAssembler::subDouble(FloatRegister src, FloatRegister dest)
 {
     fsub(ARMFPRegister(dest, 64), ARMFPRegister(dest, 64), ARMFPRegister(src, 64));
@@ -410,6 +422,12 @@ MacroAssembler::mul64(Imm64 imm, const Register64& dest)
     MOZ_ASSERT(dest.reg != scratch64.asUnsized());
     mov(ImmWord(imm.value), scratch64.asUnsized());
     Mul(ARMRegister(dest.reg, 64), ARMRegister(dest.reg, 64), scratch64);
+}
+
+void
+MacroAssembler::mul64(const Register64& src, const Register64& dest, const Register temp)
+{
+    MOZ_CRASH("NYI");
 }
 
 void
@@ -629,6 +647,66 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 {
     MOZ_ASSERT(0 <= imm.value && imm.value < 64);
     rshiftPtr(imm, dest.reg);
+}
+
+void
+MacroAssembler::rshift64Arithmetic(Imm32 imm, Register64 dest)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::lshift64(Register shift, Register64 srcDest)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::rshift64(Register shift, Register64 srcDest)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::rshift64Arithmetic(Register shift, Register64 srcDest)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::clz64(Register64 src, Register dest)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::ctz64(Register64 src, Register dest)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::popcnt32(Register src, Register dest, Register temp)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::popcnt64(Register64 src, Register64 dest, Register temp)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::rotateLeft64(Register count, Register64 input, Register64 dest, Register temp)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::rotateRight64(Register count, Register64 input, Register64 dest, Register temp)
+{
+    MOZ_CRASH("NYI");
 }
 
 // ===============================================================
