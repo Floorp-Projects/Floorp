@@ -605,11 +605,5 @@ Compositor::SetDispAcquireFence(Layer* aLayer)
 {
 }
 
-FenceHandle
-Compositor::GetReleaseFence()
-{
-  return FenceHandle();
-}
-
 } // namespace layers
 } // namespace mozilla

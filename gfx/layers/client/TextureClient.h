@@ -17,7 +17,6 @@
 #include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
-#include "mozilla/layers/FenceUtils.h"  // for FenceHandle
 #include "mozilla/ipc/Shmem.h"          // for Shmem
 #include "mozilla/layers/AtomicRefCountedWithFinalize.h"
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
@@ -286,10 +285,6 @@ public:
   virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) { return false; };
 
   virtual bool ReadBack(TextureReadbackSink* aReadbackSink) { return false; }
-
-  /// Ideally this should not be exposed and users of TextureClient would use Lock/Unlock
-  /// preoperly but that requires a few changes to SharedSurface and maybe gonk video.
-  virtual void WaitForFence(FenceHandle* aFence) {};
 
   virtual void SyncWithObject(SyncObject* aFence) {};
 
