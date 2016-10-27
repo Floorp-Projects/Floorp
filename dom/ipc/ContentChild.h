@@ -645,6 +645,11 @@ public:
   virtual bool
   RecvBlobURLUnregistration(const nsCString& aURI) override;
 
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+  bool
+  SendGetA11yContentId();
+#endif // defined(XP_WIN) && defined(ACCESSIBILITY)
+
   /**
    * Helper function for protocols that use the GPU process when available.
    * Overrides FatalError to just be a warning when communicating with the

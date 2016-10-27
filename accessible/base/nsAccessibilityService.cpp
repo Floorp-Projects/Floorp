@@ -44,6 +44,7 @@
 
 #ifdef XP_WIN
 #include "mozilla/a11y/Compatibility.h"
+#include "mozilla/dom/ContentChild.h"
 #include "HTMLWin32ObjectAccessible.h"
 #include "mozilla/StaticPtr.h"
 #endif
@@ -1264,10 +1265,23 @@ nsAccessibilityService::Init()
   gAccessibilityService = this;
   NS_ADDREF(gAccessibilityService); // will release in Shutdown()
 
-  if (XRE_IsParentProcess())
+  if (XRE_IsParentProcess()) {
     gApplicationAccessible = new ApplicationAccessibleWrap();
-  else
+  } else {
+#if defined(XP_WIN)
+    dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+    MOZ_ASSERT(contentChild);
+    // If we were instantiated by the chrome process, GetMsaaID() will return
+    // a non-zero value and we may safely continue with initialization.
+    if (!contentChild->GetMsaaID()) {
+      // Since we were not instantiated by chrome, we need to synchronously
+      // obtain a MSAA content process id.
+      contentChild->SendGetA11yContentId();
+    }
+#endif // defined(XP_WIN)
+
     gApplicationAccessible = new ApplicationAccessible();
+  }
 
   NS_ADDREF(gApplicationAccessible); // will release in Shutdown()
   gApplicationAccessible->Init();
