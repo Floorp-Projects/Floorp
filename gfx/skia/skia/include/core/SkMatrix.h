@@ -704,6 +704,11 @@ public:
         this->setTypeMask(kUnknown_Mask);
     }
 
+    /**
+     *  Are all elements of the matrix finite?
+     */
+    bool isFinite() const { return SkScalarsAreFinite(fMat, 9); }
+
 private:
     enum {
         /** Set if the matrix will map a rectangle to another rectangle. This
@@ -735,10 +740,6 @@ private:
 
     SkScalar         fMat[9];
     mutable uint32_t fTypeMask;
-
-    /** Are all elements of the matrix finite?
-     */
-    bool isFinite() const { return SkScalarsAreFinite(fMat, 9); }
 
     static void ComputeInv(SkScalar dst[9], const SkScalar src[9], double invDet, bool isPersp);
 
