@@ -48,6 +48,13 @@ define(function (require, exports, module) {
     // Make sure it's a string.
     text = text + "";
 
+    // Replace all non-printable characters, except of
+    // (horizontal) tab (HT: \x09) and newline (LF: \x0A, CR: \x0D),
+    // with unicode replacement character (u+fffd).
+    // eslint-disable-next-line no-control-regex
+    let re = new RegExp("[\x00-\x08\x0B\x0C\x0E-\x1F\x80-\x9F]", "g");
+    text = text.replace(re, "\ufffd");
+
     // Crop the string only if a limit is actually specified.
     if (!limit || limit <= 0) {
       return text;
