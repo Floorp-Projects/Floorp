@@ -16,6 +16,7 @@
 #include "nsRefPtrHashtable.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/MediaKeysBinding.h"
+#include "mozilla/dom/MediaKeySystemAccessBinding.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/DetailedPromise.h"
 #include "mozilla/WeakPtr.h"
@@ -52,8 +53,7 @@ public:
   MediaKeys(nsPIDOMWindowInner* aParentWindow,
             const nsAString& aKeySystem,
             const nsAString& aCDMVersion,
-            bool aDistinctiveIdentifierRequired,
-            bool aPersistentStateRequired);
+            const MediaKeySystemConfiguration& aConfig);
 
   already_AddRefed<DetailedPromise> Init(ErrorResult& aRv);
 
@@ -157,8 +157,7 @@ private:
   RefPtr<nsIPrincipal> mPrincipal;
   RefPtr<nsIPrincipal> mTopLevelPrincipal;
 
-  const bool mDistinctiveIdentifierRequired;
-  const bool mPersistentStateRequired;
+  const MediaKeySystemConfiguration mConfig;
 
   PendingPromiseIdTokenHashMap mPromiseIdToken;
 };
