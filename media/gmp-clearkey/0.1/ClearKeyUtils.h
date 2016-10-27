@@ -62,7 +62,8 @@ public:
 
   static bool ParseKeyIdsInitData(const uint8_t* aInitData,
                                   uint32_t aInitDataSize,
-                                  std::vector<KeyId>& aOutKeyIds);
+                                  std::vector<KeyId>& aOutKeyIds,
+                                  std::string& aOutSessionType);
 
   static void MakeKeyRequest(const std::vector<KeyId>& aKeyIds,
                              std::string& aOutRequest,
