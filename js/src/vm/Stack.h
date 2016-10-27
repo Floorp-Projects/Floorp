@@ -297,7 +297,7 @@ class InterpreterFrame
         DEBUGGEE               =       0x40,  /* Execution is being observed by Debugger */
 
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
-        HAS_PUSHED_SPS_FRAME   =       0x80,  /* SPS was notified of enty */
+        HAS_PUSHED_SPS_FRAME   =       0x80,  /* SPS was notified of entry */
 
         /*
          * If set, we entered one of the JITs and ScriptFrameIter should skip
