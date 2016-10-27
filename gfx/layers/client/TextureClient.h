@@ -613,13 +613,6 @@ public:
 
   uint64_t GetSerial() const { return mSerial; }
 
-  bool NeedsFenceHandle()
-  {
-    return false;
-  }
-
-  void CancelWaitFenceHandleOnImageBridge();
-
   void CancelWaitForRecycle();
 
   /**

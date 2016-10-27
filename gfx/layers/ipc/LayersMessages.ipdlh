@@ -414,11 +414,6 @@ struct OpNotifyNotUsed {
   uint64_t fwdTransactionId;
 };
 
-struct OpNotifyNotUsedToNonRecycle {
-  uint64_t TextureId;
-  uint64_t fwdTransactionId;
-};
-
 union CompositableOperationDetail {
   OpPaintTextureRegion;
 
@@ -498,7 +493,6 @@ union EditReply {
 
 union AsyncParentMessageData {
   OpNotifyNotUsed;
-  OpNotifyNotUsedToNonRecycle;
 };
 
 } // namespace

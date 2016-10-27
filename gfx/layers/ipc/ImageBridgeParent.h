@@ -113,13 +113,6 @@ public:
 
   virtual bool IsSameProcess() const override;
 
-  void NotifyNotUsedToNonRecycle(PTextureParent* aTexture,
-                                 uint64_t aTransactionId);
-
-  static void NotifyNotUsedToNonRecycle(base::ProcessId aChildProcessId,
-                                        PTextureParent* aTexture,
-                                        uint64_t aTransactionId);
-
   using CompositableParentManager::SetAboutToSendAsyncMessages;
   static void SetAboutToSendAsyncMessages(base::ProcessId aChildProcessId);
 
