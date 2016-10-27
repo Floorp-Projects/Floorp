@@ -65,7 +65,6 @@ browser/base/content/test/general/file_csp_block_all_mixedcontent.html
 browser/base/content/test/urlbar/file_blank_but_not_blank.html
 browser/base/content/newtab/**
 browser/components/downloads/**
-browser/components/feeds/**
 browser/components/privatebrowsing/**
 browser/components/sessionstore/**
 browser/components/tabview/**
