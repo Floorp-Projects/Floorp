@@ -11,7 +11,7 @@
 // Interfaces
 #include "nsDeviceContext.h"
 #include "nsIPrintProgressParams.h"
-#include "nsIPrintOptions.h"
+#include "nsIPrintSettings.h"
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 
