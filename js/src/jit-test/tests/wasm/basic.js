@@ -172,9 +172,6 @@ var buf = wasmEvalText('(module (memory 1) (data (i32.const 65535) "c") (export 
 assertEq(new Uint8Array(buf)[0], 0);
 assertEq(new Uint8Array(buf)[65535], 'c'.charCodeAt(0));
 
-wasmFailValidateText('(module (memory 1) (data (i32.const 65536) "a") (export "memory" memory))', /data segment does not fit/);
-wasmFailValidateText('(module (memory 1) (data (i32.const 65535) "ab") (export "memory" memory))', /data segment does not fit/);
-
 // ----------------------------------------------------------------------------
 // locals
 
