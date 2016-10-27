@@ -57,7 +57,7 @@ void nr_ice_component_consent_schedule_consent_timer(nr_ice_component *comp);
 void nr_ice_component_consent_destroy(nr_ice_component *comp);
 
 /* This function takes ownership of the contents of req (but not req itself) */
-static int nr_ice_pre_answer_request_create(nr_socket *sock, nr_stun_server_request *req, nr_ice_pre_answer_request **parp)
+static int nr_ice_pre_answer_request_create(nr_transport_addr *dst, nr_stun_server_request *req, nr_ice_pre_answer_request **parp)
   {
     int r, _status;
     nr_ice_pre_answer_request *par = 0;
@@ -69,7 +69,7 @@ static int nr_ice_pre_answer_request_create(nr_socket *sock, nr_stun_server_requ
     par->req = *req; /* Struct assignment */
     memset(req, 0, sizeof(*req)); /* Zero contents to avoid confusion */
 
-    if (r=nr_socket_getaddr(sock, &par->local_addr))
+    if (r=nr_transport_addr_copy(&par->local_addr, dst))
       ABORT(r);
     if (!nr_stun_message_has_attribute(par->req.request, NR_STUN_ATTR_USERNAME, &attr))
       ABORT(R_INTERNAL);
@@ -1141,6 +1141,41 @@ int nr_ice_component_pair_candidates(nr_ice_peer_ctx *pctx, nr_ice_component *lc
     return(_status);
   }
 
+int nr_ice_pre_answer_enqueue(nr_ice_component *comp, nr_socket *sock, nr_stun_server_request *req, int *dont_free)
+  {
+    int r = 0;
+    int _status;
+    nr_ice_pre_answer_request *r1, *r2;
+    nr_transport_addr dst_addr;
+    nr_ice_pre_answer_request *par = 0;
+
+    if (r=nr_socket_getaddr(sock, &dst_addr))
+      ABORT(r);
+
+    STAILQ_FOREACH_SAFE(r1, &comp->pre_answer_reqs, entry, r2) {
+      if (!nr_transport_addr_cmp(&r1->local_addr, &dst_addr,
+                                 NR_TRANSPORT_ADDR_CMP_MODE_ALL) &&
+          !nr_transport_addr_cmp(&r1->req.src_addr, &req->src_addr,
+                                 NR_TRANSPORT_ADDR_CMP_MODE_ALL)) {
+        return(0);
+      }
+    }
+
+    if (r=nr_ice_pre_answer_request_create(&dst_addr, req, &par))
+      ABORT(r);
+
+    r_log(LOG_ICE,LOG_DEBUG, "ICE(%s)/STREAM(%s)/COMP(%d): Enqueuing STUN request pre-answer from %s",
+          comp->ctx->label, comp->stream->label, comp->component_id,
+          req->src_addr.as_string);
+
+    *dont_free = 1;
+    STAILQ_INSERT_TAIL(&comp->pre_answer_reqs, par, entry);
+
+    _status=0;
+abort:
+    return(_status);
+  }
+
 /* Fires when we have an incoming candidate that doesn't correspond to an existing
    remote peer. This is either pre-answer or just spurious. Store it in the
    component for use when we see the actual answer, at which point we need
@@ -1150,15 +1185,17 @@ static int nr_ice_component_stun_server_default_cb(void *cb_arg,nr_stun_server_c
   {
     int r, _status;
     nr_ice_component *comp = (nr_ice_component *)cb_arg;
-    nr_ice_pre_answer_request *par = 0;
+
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/STREAM(%s)/COMP(%d): Received STUN request pre-answer from %s",
-          comp->ctx->label, comp->stream->label, comp->component_id, req->src_addr.as_string);
+          comp->ctx->label, comp->stream->label, comp->component_id,
+          req->src_addr.as_string);
 
-    if (r=nr_ice_pre_answer_request_create(sock, req, &par))
+    if (r=nr_ice_pre_answer_enqueue(comp, sock, req, dont_free)) {
+      r_log(LOG_ICE,LOG_ERR,"ICE(%s)/STREAM(%s)/COMP(%d): Failed (%d) to enque pre-answer request from %s",
+          comp->ctx->label, comp->stream->label, comp->component_id, r,
+          req->src_addr.as_string);
       ABORT(r);
-
-    *dont_free = 1;
-    STAILQ_INSERT_TAIL(&comp->pre_answer_reqs, par, entry);
+    }
 
     _status=0;
  abort:
