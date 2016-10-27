@@ -66,12 +66,12 @@ public:
 
   // Start reading data from the nsIAsyncInputStream used to create the actor.
   // This must be called after the actor is passed to the parent.  If you
-  // use AutoIPCStreamChild this is handled automatically.
+  // use AutoIPCStream this is handled automatically.
   virtual void
   Start() = 0;
 
   // Start cleaning up the actor.  This must be called if the actor is never
-  // sent to the parent.  If you use AutoIPCStreamChild this is handled
+  // sent to the parent.  If you use AutoIPCStream this is handled
   // automatically.
   virtual void
   StartDestroy() = 0;

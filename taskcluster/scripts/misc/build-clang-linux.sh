@@ -20,7 +20,8 @@ $HOME_DIR/tooltool.py -m browser/config/tooltool-manifests/linux64/releng.manife
 set +x
 
 cd build/build-clang
-./build-clang.py -c clang-static-analysis-linux64.json
+# |mach python| sets up a virtualenv for us!
+../../mach python ./build-clang.py -c clang-static-analysis-linux64.json
 
 set -x
 

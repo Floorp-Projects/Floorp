@@ -40,8 +40,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
                                   "resource://gre/modules/WindowsRegistry.jsm");
 
-const CHANGE_THROTTLE_INTERVAL_MS = 5 * 60 * 1000;
-
 // The maximum length of a string (e.g. description) in the addons section.
 const MAX_ADDON_STRING_LENGTH = 100;
 // The maximum length of a string value in the settings.attribution object.
@@ -757,9 +755,6 @@ function EnvironmentCache() {
   // A map of listeners that will be called on environment changes.
   this._changeListeners = new Map();
 
-  // The last change date for the environment, used to throttle environment changes.
-  this._lastEnvironmentChangeDate = null;
-
   // A map of watched preferences which trigger an Environment change when
   // modified. Every entry contains a recording policy (RECORD_PREF_*).
   this._watchedPrefs = DEFAULT_ENVIRONMENT_PREFS;
@@ -1443,24 +1438,11 @@ EnvironmentCache.prototype = {
 
   _onEnvironmentChange: function (what, oldEnvironment) {
     this._log.trace("_onEnvironmentChange for " + what);
+
+    // We are already skipping change events in _checkChanges if there is a pending change task running.
     if (this._shutdown) {
       this._log.trace("_onEnvironmentChange - Already shut down.");
       return;
-    }
-
-    // We are already skipping change events in _checkChanges if there is a pending change task running.
-    let now = Policy.now();
-    if (this._lastEnvironmentChangeDate &&
-        this._delayedInitFinished &&
-        (CHANGE_THROTTLE_INTERVAL_MS >=
-         (now.getTime() - this._lastEnvironmentChangeDate.getTime()))) {
-      this._log.trace("_onEnvironmentChange - throttling changes, now: " + now +
-                      ", last change: " + this._lastEnvironmentChangeDate);
-      return;
-    }
-
-    if (this._delayedInitFinished) {
-      this._lastEnvironmentChangeDate = now;
     }
 
     for (let [name, listener] of this._changeListeners) {

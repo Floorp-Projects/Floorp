@@ -28,7 +28,7 @@
 
         var testElem = createMediaElement('video', 'testAddTrackAudioVideo');
         var playback = new LocalMediaStreamPlayback(testElem, stream);
-        return playback.playMediaWithMediaStreamTracksStop(false);
+        return playback.playMedia(false);
     }))
     .then(() => getUserMedia({video: true})).then(stream =>
       getUserMedia({video: true}).then(otherStream => {
@@ -44,7 +44,7 @@
 
         var test = createMediaElement('video', 'testAddTrackDoubleVideo');
         var playback = new LocalMediaStreamPlayback(test, stream);
-        return playback.playMediaWithMediaStreamTracksStop(false);
+        return playback.playMedia(false);
     }))
     .then(() => getUserMedia({video: true})).then(stream =>
       getUserMedia({video: true}).then(otherStream => {
@@ -81,7 +81,7 @@
           stream.addTrack(track);
           checkMediaStreamContains(stream, [track], "Re-added added-then-removed track");
           var playback = new LocalMediaStreamPlayback(elem, stream);
-          return playback.playMediaWithMediaStreamTracksStop(false);
+          return playback.playMedia(false);
         })
         .then(() => otherTrack.stop());
     }))
@@ -99,7 +99,7 @@
 
         var elem = createMediaElement('video', 'testAddRemoveOriginalTrackVideo');
         var playback = new LocalMediaStreamPlayback(elem, audioStream);
-        return playback.playMediaWithMediaStreamTracksStop(false);
+        return playback.playMedia(false);
       }))
     .then(() => {
       var ac = new AudioContext();

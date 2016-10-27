@@ -989,7 +989,16 @@ nsHttpTransaction::Close(nsresult reason)
     // sent any data.  for this reason, mSendData == FALSE does not imply
     // mReceivedData == FALSE.  (see bug 203057 for more info.)
     //
-    if (reason == NS_ERROR_NET_RESET || reason == NS_OK) {
+    // Never restart transactions that are marked as sticky to their conenction.
+    // We use that capability to identify transactions bound to connection based
+    // authentication.  Reissuing them on a different connections will break
+    // this bondage.  Major issue may arise when there is an NTLM message auth
+    // header on the transaction and we send it to a different NTLM authenticated
+    // connection.  It will break that connection and also confuse the channel's
+    // auth provider, beliving the cached credentials are wrong and asking for
+    // the password mistakenly again from the user.
+    if ((reason == NS_ERROR_NET_RESET || reason == NS_OK) &&
+        !(mCaps & NS_HTTP_STICKY_CONNECTION)) {
 
         if (mForceRestart && NS_SUCCEEDED(Restart())) {
             if (mResponseHead) {
@@ -1222,6 +1231,10 @@ nsHttpTransaction::RestartInProgress()
     // they are eligible.
     if (!mHaveAllHeaders)
         return NS_ERROR_NET_RESET;
+
+    if (mCaps & NS_HTTP_STICKY_CONNECTION) {
+        return NS_ERROR_NET_RESET;
+    }
 
     // don't try and restart 0.9 or non 200/Get HTTP/1
     if (!mRestartInProgressVerifier.IsSetup())
