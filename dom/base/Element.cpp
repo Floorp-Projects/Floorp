@@ -149,7 +149,6 @@
 #include "mozilla/Preferences.h"
 #include "nsComputedDOMStyle.h"
 #include "nsDOMStringMap.h"
-#include "DOMIntersectionObserver.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3887,44 +3886,3 @@ Element::ClearDataset()
   slots->mDataset = nullptr;
 }
 
-nsTArray<Element::nsDOMSlots::IntersectionObserverRegistration>*
-Element::RegisteredIntersectionObservers()
-{
-  nsDOMSlots* slots = DOMSlots();
-  return &slots->mRegisteredIntersectionObservers;
-}
-
-void
-Element::RegisterIntersectionObserver(DOMIntersectionObserver* aObserver)
-{
-  RegisteredIntersectionObservers()->AppendElement(
-    nsDOMSlots::IntersectionObserverRegistration { aObserver, -1 });
-}
-
-void
-Element::UnregisterIntersectionObserver(DOMIntersectionObserver* aObserver)
-{
-  nsTArray<nsDOMSlots::IntersectionObserverRegistration>* observers =
-    RegisteredIntersectionObservers();
-  for (uint32_t i = 0; i < observers->Length(); ++i) {
-    nsDOMSlots::IntersectionObserverRegistration reg = observers->ElementAt(i);
-    if (reg.observer == aObserver) {
-      observers->RemoveElementAt(i);
-      break;
-    }
-  }
-}
-
-bool
-Element::UpdateIntersectionObservation(DOMIntersectionObserver* aObserver, int32_t aThreshold)
-{
-  nsTArray<nsDOMSlots::IntersectionObserverRegistration>* observers =
-    RegisteredIntersectionObservers();
-  for (auto& reg : *observers) {
-    if (reg.observer == aObserver && reg.previousThreshold != aThreshold) {
-      reg.previousThreshold = aThreshold;
-      return true;
-    }
-  }
-  return false;
-}
