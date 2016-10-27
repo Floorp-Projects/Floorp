@@ -2019,7 +2019,7 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
   result += nsPrintfCString("audio frames decoded: %lld\n",
                             mAudio.mNumSamplesOutputTotal);
   if (HasAudio()) {
-    result += nsPrintfCString("audio state: ni=%d no=%d ie=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%llu out:%llu qs=%u pending:%u waiting:%d sid:%u\n",
+    result += nsPrintfCString("audio state: ni=%d no=%d ie=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%llu out:%llu qs=%u pending:%u waiting:%d wfk:%d sid:%u\n",
                               NeedInput(mAudio), mAudio.HasPromise(),
                               mAudio.mDecodePending,
                               mAudio.mDemuxRequest.Exists(),
@@ -2033,7 +2033,8 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
                               mAudio.mNumSamplesInput, mAudio.mNumSamplesOutput,
                               unsigned(size_t(mAudio.mSizeOfQueue)),
                               unsigned(mAudio.mOutput.Length()),
-                              mAudio.mWaitingForData, mAudio.mLastStreamSourceID);
+                              mAudio.mWaitingForData, mAudio.mWaitingForKey,
+                              mAudio.mLastStreamSourceID);
   }
   result += nsPrintfCString("video decoder: %s\n", videoName);
   result += nsPrintfCString("hardware video decoding: %s\n",
@@ -2042,7 +2043,7 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
                             mVideo.mNumSamplesOutputTotal,
                             mVideo.mNumSamplesSkippedTotal);
   if (HasVideo()) {
-    result += nsPrintfCString("video state: ni=%d no=%d ie=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%llu out:%llu qs=%u pending:%u waiting:%d sid:%u\n",
+    result += nsPrintfCString("video state: ni=%d no=%d ie=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%llu out:%llu qs=%u pending:%u waiting:%d wfk:%d, sid:%u\n",
                               NeedInput(mVideo), mVideo.HasPromise(),
                               mVideo.mDecodePending,
                               mVideo.mDemuxRequest.Exists(),
@@ -2056,7 +2057,8 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
                               mVideo.mNumSamplesInput, mVideo.mNumSamplesOutput,
                               unsigned(size_t(mVideo.mSizeOfQueue)),
                               unsigned(mVideo.mOutput.Length()),
-                              mVideo.mWaitingForData, mVideo.mLastStreamSourceID);
+                              mVideo.mWaitingForData, mVideo.mWaitingForKey,
+                              mVideo.mLastStreamSourceID);
   }
   aString += NS_ConvertUTF8toUTF16(result);
 }
