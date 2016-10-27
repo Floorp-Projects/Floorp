@@ -291,11 +291,7 @@ public:
    */
   void NotifyNotUsed(uint64_t aTextureId, uint64_t aFwdTransactionId);
 
-  void DeliverFence(uint64_t aTextureId, FenceHandle& aReleaseFenceHandle);
-
   void HoldUntilFenceHandleDelivery(TextureClient* aClient, uint64_t aTransactionId);
-
-  void DeliverFenceToNonRecycle(uint64_t aTextureId, FenceHandle& aReleaseFenceHandle);
 
   void NotifyNotUsedToNonRecycle(uint64_t aTextureId, uint64_t aTransactionId);
 

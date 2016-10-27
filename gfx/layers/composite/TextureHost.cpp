@@ -156,28 +156,6 @@ TextureHost::GetIPDLActor()
   return mActor;
 }
 
-bool
-TextureHost::SetReleaseFenceHandle(const FenceHandle& aReleaseFenceHandle)
-{
-  if (!aReleaseFenceHandle.IsValid()) {
-    // HWC might not provide Fence.
-    // In this case, HWC implicitly handles buffer's fence.
-    return false;
-  }
-
-  mReleaseFenceHandle.Merge(aReleaseFenceHandle);
-
-  return true;
-}
-
-FenceHandle
-TextureHost::GetAndResetReleaseFenceHandle()
-{
-  FenceHandle fence;
-  mReleaseFenceHandle.TransferToAnotherFenceHandle(fence);
-  return fence;
-}
-
 void
 TextureHost::SetAcquireFenceHandle(const FenceHandle& aAcquireFenceHandle)
 {
