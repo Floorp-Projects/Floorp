@@ -173,35 +173,30 @@ SessionStartup.prototype = {
         // If the previous session finished writing the final state, we'll
         // assume there was no crash.
         this._previousSessionCrashed = !checkpoints["sessionstore-final-state-write-complete"];
-
-      } else {
+      } else if (noFilesFound) {
         // If the Crash Monitor could not load a checkpoints file it will
         // provide null. This could occur on the first run after updating to
         // a version including the Crash Monitor, or if the checkpoints file
         // was removed, or on first startup with this profile, or after Firefox Reset.
 
-        if (noFilesFound) {
-          // There was no checkpoints file and no sessionstore.js or its backups
-          // so we will assume that this was a fresh profile.
-          this._previousSessionCrashed = false;
+        // There was no checkpoints file and no sessionstore.js or its backups
+        // so we will assume that this was a fresh profile.
+        this._previousSessionCrashed = false;
+      } else {
+        // If this is the first run after an update, sessionstore.js should
+        // still contain the session.state flag to indicate if the session
+        // crashed. If it is not present, we will assume this was not the first
+        // run after update and the checkpoints file was somehow corrupted or
+        // removed by a crash.
+        //
+        // If the session.state flag is present, we will fallback to using it
+        // for crash detection - If the last write of sessionstore.js had it
+        // set to "running", we crashed.
+        let stateFlagPresent = (this._initialState.session &&
+                                this._initialState.session.state);
 
-        } else {
-          // If this is the first run after an update, sessionstore.js should
-          // still contain the session.state flag to indicate if the session
-          // crashed. If it is not present, we will assume this was not the first
-          // run after update and the checkpoints file was somehow corrupted or
-          // removed by a crash.
-          //
-          // If the session.state flag is present, we will fallback to using it
-          // for crash detection - If the last write of sessionstore.js had it
-          // set to "running", we crashed.
-          let stateFlagPresent = (this._initialState.session &&
-                                  this._initialState.session.state);
-
-
-          this._previousSessionCrashed = !stateFlagPresent ||
-            (this._initialState.session.state == STATE_RUNNING_STR);
-        }
+        this._previousSessionCrashed = !stateFlagPresent ||
+          (this._initialState.session.state == STATE_RUNNING_STR);
       }
 
       // Report shutdown success via telemetry. Shortcoming here are

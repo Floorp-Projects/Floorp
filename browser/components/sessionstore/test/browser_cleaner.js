@@ -28,7 +28,7 @@ function promiseCleanup () {
   info("Cleaning up browser");
 
   return promiseBrowserState(getClosedState());
-};
+}
 
 function getClosedState() {
   return Cu.cloneInto(CLOSED_STATE, {});

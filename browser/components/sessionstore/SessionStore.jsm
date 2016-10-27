@@ -958,7 +958,7 @@ var SessionStoreInternal = {
    *        value to be recorded for that ID,
    */
   recordTelemetry: function (telemetry) {
-    for (let histogramId in telemetry){
+    for (let histogramId in telemetry) {
       Telemetry.getHistogramById(histogramId).add(telemetry[histogramId]);
     }
   },
@@ -1651,7 +1651,7 @@ var SessionStoreInternal = {
       yield promise;
       this._collectWindowData(win);
       progress.current++;
-    };
+    }
 
     // We must cache this because _getMostRecentBrowserWindow will always
     // return null by the time quit-application occurs.
@@ -2858,6 +2858,7 @@ var SessionStoreInternal = {
       let tabState = TabState.collect(tab);
       return { index: tabState.index - 1, entries: tabState.entries }
     }
+    return null;
   },
 
   /**

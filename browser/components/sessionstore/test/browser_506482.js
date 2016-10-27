@@ -19,10 +19,10 @@ function test() {
   }
   function getSessionstorejsModificationTime() {
     let file = getSessionstoreFile();
-    if (file.exists())
+    if (file.exists()) {
       return file.lastModifiedTime;
-    else
-      return -1;
+    }
+    return -1;
   }
 
   // delete existing sessionstore.js, to make sure we're not reading

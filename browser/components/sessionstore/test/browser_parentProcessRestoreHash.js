@@ -66,7 +66,7 @@ add_task(function* () {
       // Ignore about:blank loads.
       let docStop = Ci.nsIWebProgressListener.STATE_STOP |
                     Ci.nsIWebProgressListener.STATE_IS_NETWORK;
-      if (location.spec == "about:blank" || (state & docStop == docStop)) {
+      if (location.spec == "about:blank" || (state & docStop) != docStop) {
         return;
       }
       is(location.spec, TESTURL, "Got the expected URL");

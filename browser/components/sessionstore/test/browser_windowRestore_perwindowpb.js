@@ -10,7 +10,7 @@ function test() {
   // Purging the list of closed windows
   forgetClosedWindows();
 
-  // Load a private window, then close it 
+  // Load a private window, then close it
   // and verify it doesn't get remembered for restoring
   whenNewWindowLoaded({private: true}, function (win) {
     info("The private window got loaded");

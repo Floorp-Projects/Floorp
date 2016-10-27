@@ -8,7 +8,7 @@ function observeOneRestore(callback) {
     Services.obs.removeObserver(onRestore, topic);
     callback();
   }, topic, false);
-};
+}
 
 function test() {
   waitForExplicitFinish();

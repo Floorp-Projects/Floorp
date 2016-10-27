@@ -832,13 +832,15 @@ var MessageQueue = {
         isFinal: options.isFinal || false,
         epoch: gCurrentEpoch
       });
-    } catch (ex if ex && ex.result == Cr.NS_ERROR_OUT_OF_MEMORY) {
-      let telemetry = {
-        FX_SESSION_RESTORE_SEND_UPDATE_CAUSED_OOM: 1
-      };
-      sendAsyncMessage("SessionStore:error", {
-        telemetry
-      });
+    } catch (ex) {
+        if (ex && ex.result == Cr.NS_ERROR_OUT_OF_MEMORY) {
+          let telemetry = {
+            FX_SESSION_RESTORE_SEND_UPDATE_CAUSED_OOM: 1
+          };
+          sendAsyncMessage("SessionStore:error", {
+            telemetry
+          });
+        }
     }
   },
 };
