@@ -163,11 +163,15 @@ nsUnknownContentTypeDialog.prototype = {
   // activate the OK button.  So we wait a bit before doing opening it.
   reallyShow: function() {
     try {
-      var ir = this.mContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-      var dwi = ir.getInterface(Components.interfaces.nsIDOMWindow);
-      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+      let ir = this.mContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+      let docShell = ir.getInterface(Components.interfaces.nsIDocShell);
+      let rootWin = docShell.QueryInterface(Ci.nsIDocShellTreeItem)
+                                 .rootTreeItem
+                                 .QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindow);
+      let ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                          .getService(Components.interfaces.nsIWindowWatcher);
-      this.mDialog = ww.openWindow(dwi,
+      this.mDialog = ww.openWindow(rootWin,
                                    "chrome://mozapps/content/downloads/unknownContentType.xul",
                                    null,
                                    "chrome,centerscreen,titlebar,dialog=yes,dependent",
