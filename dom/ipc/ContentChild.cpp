@@ -51,7 +51,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
@@ -1212,13 +1211,6 @@ ContentChild::RecvReinitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor
     }
   }
   return true;
-}
-
-PSharedBufferManagerChild*
-ContentChild::AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,
-                                              base::ProcessId aOtherProcess)
-{
-  return SharedBufferManagerChild::StartUpInChildProcess(aTransport, aOtherProcess);
 }
 
 PBackgroundChild*

@@ -6,7 +6,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -97,10 +96,6 @@
 #include "TexturePoolOGL.h"
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-#include "mozilla/layers/GrallocTextureHost.h"
-#endif
-
 #ifdef USE_SKIA
 # ifdef __GNUC__
 #  pragma GCC diagnostic push
@@ -147,9 +142,6 @@ class mozilla::gl::SkiaGLGlue : public GenericAtomicRefCounted {
 
 namespace mozilla {
 namespace layers {
-#ifdef MOZ_WIDGET_GONK
-void InitGralloc();
-#endif
 void ShutdownTileCache();
 } // namespace layers
 } // namespace mozilla
@@ -753,10 +745,6 @@ gfxPlatform::Init()
     TexturePoolOGL::Init();
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-    mozilla::layers::InitGralloc();
-#endif
-
     Preferences::RegisterCallbackAndCall(RecordingPrefChanged, "gfx.2d.recording", nullptr);
 
     CreateCMSOutputProfile();
@@ -919,9 +907,6 @@ gfxPlatform::InitLayersIPC()
     if (XRE_IsParentProcess())
     {
         layers::CompositorThreadHolder::Start();
-#ifdef MOZ_WIDGET_GONK
-        SharedBufferManagerChild::StartUp();
-#endif
     }
 }
 
@@ -944,10 +929,6 @@ gfxPlatform::ShutdownLayersIPC()
         gfx::VRManagerChild::ShutDown();
         layers::CompositorBridgeChild::ShutDown();
         layers::ImageBridgeChild::ShutDown();
-
-#ifdef MOZ_WIDGET_GONK
-        layers::SharedBufferManagerChild::ShutDown();
-#endif
 
         // This has to happen after shutting down the child protocols.
         layers::CompositorThreadHolder::Shutdown();
@@ -1216,18 +1197,6 @@ gfxPlatform::ComputeTileSize()
       // but I think everything should at least support 1024
       w = h = clamped(int32_t(RoundUpPow2(screenSize.width)) / 4, 256, 1024);
     }
-
-#ifdef MOZ_WIDGET_GONK
-    android::sp<android::GraphicBuffer> alloc =
-          new android::GraphicBuffer(w, h, android::PIXEL_FORMAT_RGBA_8888,
-                                     android::GraphicBuffer::USAGE_SW_READ_OFTEN |
-                                     android::GraphicBuffer::USAGE_SW_WRITE_OFTEN |
-                                     android::GraphicBuffer::USAGE_HW_TEXTURE);
-
-    if (alloc.get()) {
-      w = alloc->getStride(); // We want the tiles to be gralloc stride aligned.
-    }
-#endif
   }
 
   // Don't allow changing the tile size after we've set it.
@@ -1393,11 +1362,6 @@ gfxPlatform::PurgeSkiaGPUCache()
 bool
 gfxPlatform::HasEnoughTotalSystemMemoryForSkiaGL()
 {
-#ifdef MOZ_WIDGET_GONK
-  if (mTotalSystemMemory < 250*1024*1024) {
-    return false;
-  }
-#endif
   return true;
 }
 

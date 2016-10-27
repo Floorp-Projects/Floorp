@@ -461,101 +461,6 @@ protected:
     int64_t mFrameStamp;
 };
 
-#ifdef MOZ_WIDGET_GONK
-// B2G optimization.
-class DebugGLGraphicBuffer final: public DebugGLData {
-public:
-    DebugGLGraphicBuffer(void *layerRef,
-                         GLenum target,
-                         GLuint name,
-                         const LayerRenderState &aState,
-                         bool aIsMask,
-                         UniquePtr<Packet> aPacket)
-        : DebugGLData(Packet::TEXTURE),
-          mLayerRef(reinterpret_cast<uint64_t>(layerRef)),
-          mTarget(target),
-          mName(name),
-          mState(aState),
-          mIsMask(aIsMask),
-          mPacket(Move(aPacket))
-    {
-    }
-
-    virtual bool Write() override {
-        return WriteToStream(*mPacket);
-    }
-
-    bool TryPack(bool packData) {
-        android::sp<android::GraphicBuffer> buffer = mState.mSurface;
-        MOZ_ASSERT(buffer.get());
-
-        mPacket->set_type(mDataType);
-        TexturePacket* tp = mPacket->mutable_texture();
-        tp->set_layerref(mLayerRef);
-        tp->set_name(mName);
-        tp->set_target(mTarget);
-        tp->set_ismask(mIsMask);
-
-        int pFormat = buffer->getPixelFormat();
-        if (HAL_PIXEL_FORMAT_RGBA_8888 != pFormat &&
-            HAL_PIXEL_FORMAT_RGBX_8888 != pFormat) {
-            return false;
-        }
-
-        int32_t stride = buffer->getStride() * 4;
-        int32_t height = buffer->getHeight();
-        int32_t width = buffer->getWidth();
-        int32_t sourceSize = stride * height;
-        if (sourceSize <= 0) {
-            return false;
-        }
-
-        uint32_t dFormat = mState.FormatRBSwapped() ?
-                           LOCAL_GL_BGRA : LOCAL_GL_RGBA;
-        tp->set_dataformat(dFormat);
-        tp->set_dataformat((1 << 16 | tp->dataformat()));
-        tp->set_width(width);
-        tp->set_height(height);
-        tp->set_stride(stride);
-
-        if (packData) {
-            uint8_t* grallocData = nullptr;
-            if (BAD_VALUE == buffer->lock(GRALLOC_USAGE_SW_READ_OFTEN |
-                                           GRALLOC_USAGE_SW_WRITE_NEVER,
-                                           reinterpret_cast<void**>(&grallocData)))
-            {
-                return false;
-            }
-            // Do not return before buffer->unlock();
-            auto compressedData =
-                 MakeUnique<char[]>(LZ4::maxCompressedSize(sourceSize));
-            int compressedSize = LZ4::compress((char*)grallocData,
-                                               sourceSize,
-                                               compressedData.get());
-
-            if (compressedSize > 0) {
-                tp->set_data(compressedData.get(), compressedSize);
-            } else {
-                buffer->unlock();
-                return false;
-             }
-
-            buffer->unlock();
-        }
-
-        return true;
-    }
-
-private:
-    uint64_t mLayerRef;
-    GLenum mTarget;
-    GLuint mName;
-    const LayerRenderState &mState;
-    bool mIsMask;
-    UniquePtr<Packet> mPacket;
-};
-#endif
-
 class DebugGLTextureData final: public DebugGLData {
 public:
     DebugGLTextureData(GLContext* cx,
@@ -947,13 +852,6 @@ private:
                                   bool aFlipY,
                                   bool aIsMask,
                                   UniquePtr<Packet> aPacket);
-#ifdef MOZ_WIDGET_GONK
-    static bool SendGraphicBuffer(GLContext* aGLContext,
-                                  void* aLayerRef,
-                                  TextureSourceOGL* aSource,
-                                  const TexturedEffect* aEffect,
-                                  bool aIsMask);
-#endif
     static void SetAndSendTexture(GLContext* aGLContext,
                                   void* aLayerRef,
                                   TextureSourceOGL* aSource,
@@ -1110,51 +1008,6 @@ SenderHelper::SendTextureSource(GLContext* aGLContext,
 
 }
 
-#ifdef MOZ_WIDGET_GONK
-bool
-SenderHelper::SendGraphicBuffer(GLContext* aGLContext,
-                                void* aLayerRef,
-                                TextureSourceOGL* aSource,
-                                const TexturedEffect* aEffect,
-                                bool aIsMask) {
-    GLuint texID = GetTextureID(aGLContext, aSource);
-    if (HasTextureIdBeenSent(texID)) {
-        return false;
-    }
-    if (!aEffect->mState.mSurface.get()) {
-        return false;
-    }
-
-    // Expose packet creation here, so we could dump primary texture effect attributes.
-    auto packet = MakeUnique<layerscope::Packet>();
-    layerscope::TexturePacket* texturePacket = packet->mutable_texture();
-    texturePacket->set_mpremultiplied(aEffect->mPremultiplied);
-    DumpFilter(texturePacket, aEffect->mSamplingFilter);
-    DumpRect(texturePacket->mutable_mtexturecoords(), aEffect->mTextureCoords);
-
-    GLenum target = aSource->GetTextureTarget();
-    mozilla::UniquePtr<DebugGLGraphicBuffer> package =
-        MakeUnique<DebugGLGraphicBuffer>(aLayerRef, target, texID, aEffect->mState, aIsMask, Move(packet));
-
-    // The texure content in this TexureHost is not altered,
-    // we don't need to send it again.
-    bool changed = gLayerScopeManager.GetContentMonitor()->IsChangedOrNew(
-        aEffect->mState.mTexture);
-    if (!package->TryPack(changed)) {
-        return false;
-    }
-
-    // Transfer ownership to SocketManager.
-    gLayerScopeManager.GetSocketManager()->AppendDebugData(package.release());
-    sSentTextureIds.push_back(texID);
-
-    gLayerScopeManager.CurrentSession().mTexIDs.push_back(texID);
-
-    gLayerScopeManager.GetContentMonitor()->ClearChangedHost(aEffect->mState.mTexture);
-    return true;
-}
-#endif
-
 void
 SenderHelper::SetAndSendTexture(GLContext* aGLContext,
                                 void* aLayerRef,
@@ -1179,12 +1032,6 @@ SenderHelper::SendTexturedEffect(GLContext* aGLContext,
     if (!source) {
         return;
     }
-
-#ifdef MOZ_WIDGET_GONK
-    if (SendGraphicBuffer(aGLContext, aLayerRef, source, aEffect, false)) {
-        return;
-    }
-#endif
 
     // Fallback texture sending path.
     SetAndSendTexture(aGLContext, aLayerRef, source, aEffect);

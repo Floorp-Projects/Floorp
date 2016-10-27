@@ -41,7 +41,6 @@ include protocol PSendStream;
 include protocol POfflineCacheUpdate;
 include protocol PRenderFrame;
 include protocol PScreenManager;
-include protocol PSharedBufferManager;
 include protocol PSpeechSynthesis;
 include protocol PStorage;
 include protocol PTelephony;
@@ -344,7 +343,6 @@ nested(upto inside_cpow) sync protocol PContent
     parent spawns PPluginModule;
 
     parent opens PProcessHangMonitor;
-    parent opens PSharedBufferManager;
     parent opens PGMPService;
     child opens PBackground;
 

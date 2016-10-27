@@ -366,8 +366,6 @@ AppendToString(std::stringstream& aStream, ImageFormat format,
     aStream << "ImageFormat::PLANAR_YCBCR"; break;
   case ImageFormat::GRALLOC_PLANAR_YCBCR:
     aStream << "ImageFormat::GRALLOC_PLANAR_YCBCR"; break;
-  case ImageFormat::GONK_CAMERA_IMAGE:
-    aStream << "ImageFormat::GONK_CAMERA_IMAGE"; break;
   case ImageFormat::SHARED_RGB:
     aStream << "ImageFormat::SHARED_RGB"; break;
   case ImageFormat::CAIRO_SURFACE:

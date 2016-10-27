@@ -279,11 +279,6 @@ public:
   virtual void UseComponentAlphaTextures(CompositableClient* aCompositable,
                                          TextureClient* aClientOnBlack,
                                          TextureClient* aClientOnWhite) override;
-#ifdef MOZ_WIDGET_GONK
-  virtual void UseOverlaySource(CompositableClient* aCompositable,
-                                const OverlaySource& aOverlay,
-                                const nsIntRect& aPictureRect) override;
-#endif
 
   void Destroy(CompositableChild* aCompositable) override;
 
@@ -415,11 +410,6 @@ private:
   nsDataHashtable<nsUint64HashKey, RefPtr<TextureClient> > mTexturesWaitingRecycled;
 
   AsyncTransactionTrackersHolder mTrackersHolder;
-
-#ifdef MOZ_WIDGET_GONK
-  Mutex mWaitingFenceHandleMutex;
-  nsDataHashtable<nsUint64HashKey, RefPtr<TextureClient> > mTexturesWaitingFenceHandle;
-#endif
 };
 
 } // namespace layers

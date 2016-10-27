@@ -53,11 +53,6 @@
 #include "mozilla/layers/MacIOSurfaceTextureClientOGL.h"
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-#include <cutils/properties.h>
-#include "mozilla/layers/GrallocTextureClient.h"
-#endif
-
 #if 0
 #define RECYCLE_LOG(...) printf_stderr(__VA_ARGS__)
 #else
@@ -726,13 +721,6 @@ TextureClient::WaitForBufferOwnership(bool aWaitReleaseFence)
   if (mFenceHandleWaiter) {
     mFenceHandleWaiter->WaitComplete();
   }
-
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION < 21
-  if (aWaitReleaseFence && mReleaseFenceHandle.IsValid()) {
-    mData->WaitForFence(&mReleaseFenceHandle);
-    mReleaseFenceHandle = FenceHandle();
-  }
-#endif
 }
 
 // static
@@ -1129,13 +1117,6 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
     data = X11TextureData::Create(aSize, aFormat, aTextureFlags, aAllocator);
   }
 #endif
-#endif
-
-#ifdef MOZ_WIDGET_GONK
-  if (!data && aSize.width <= aMaxTextureSize && aSize.height <= aMaxTextureSize) {
-    data = GrallocTextureData::CreateForDrawing(aSize, aFormat, moz2DBackend,
-                                                aAllocator);
-  }
 #endif
 
 #ifdef XP_MACOSX

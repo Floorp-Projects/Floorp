@@ -132,9 +132,6 @@ ImageBridgeParent::RecvImageBridgeThreadId(const PlatformThreadId& aThreadId)
     return false;
   }
   mSetChildThreadPriority = true;
-#ifdef MOZ_WIDGET_GONK
-  hal::SetThreadPriority(aThreadId, hal::THREAD_PRIORITY_COMPOSITOR);
-#endif
   return true;
 }
 
