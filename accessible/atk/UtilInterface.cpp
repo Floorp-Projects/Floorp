@@ -261,8 +261,14 @@ mai_util_add_key_event_listener(AtkKeySnoopFunc listener, gpointer data)
 
   if (!sKey_listener_list) {
     sKey_listener_list = g_hash_table_new(nullptr, nullptr);
+  }
+
+  // If we have no registered event listeners then we need to (re)install the
+  // key event snooper.
+  if (g_hash_table_size(sKey_listener_list) == 0) {
     sKey_snooper_id = gtk_key_snooper_install(mai_key_snooper, data);
   }
+
   AtkKeySnoopFuncPointer atkKeySnoop;
   atkKeySnoop.func_ptr = listener;
   key++;
