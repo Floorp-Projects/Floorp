@@ -346,6 +346,18 @@ MediaEngineCameraVideoSource::SetName(nsString aName)
     facingMode = VideoFacingModeEnum::User;
   }
 #endif
+#ifdef XP_WIN
+  // The cameras' name of Surface book are "Microsoft Camera Front" and
+  // "Microsoft Camera Rear" respectively.
+
+  if (aName.Find(NS_LITERAL_STRING("Front")) != kNotFound) {
+    hasFacingMode = true;
+    facingMode = VideoFacingModeEnum::User;
+  } else if (aName.Find(NS_LITERAL_STRING("Rear")) != kNotFound) {
+    hasFacingMode = true;
+    facingMode = VideoFacingModeEnum::Environment;
+  }
+#endif // WINDOWS
   if (hasFacingMode) {
     mFacingMode.Assign(NS_ConvertUTF8toUTF16(
         VideoFacingModeEnumValues::strings[uint32_t(facingMode)].value));
