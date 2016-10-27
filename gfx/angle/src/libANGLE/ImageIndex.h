@@ -68,7 +68,6 @@ class ImageIndexIterator
                        const Range<GLint> &layerRange, const GLsizei *layerCounts);
 
     GLint maxLayer() const;
-    void done();
 
     GLenum mType;
     Range<GLint> mMipRange;

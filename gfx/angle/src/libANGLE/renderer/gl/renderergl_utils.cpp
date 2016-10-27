@@ -881,10 +881,6 @@ void GenerateWorkarounds(const FunctionsGL *functions, WorkaroundsGL *workaround
     workarounds->rgba4IsNotSupportedForColorRendering =
         functions->standard == STANDARD_GL_DESKTOP && vendor == VENDOR_ID_INTEL;
 
-    workarounds->emulateAbsIntFunction = vendor == VENDOR_ID_INTEL;
-
-    workarounds->addAndTrueToLoopCondition = vendor == VENDOR_ID_INTEL;
-
     workarounds->doesSRGBClearsOnLinearFramebufferAttachments =
         functions->standard == STANDARD_GL_DESKTOP &&
         (vendor == VENDOR_ID_INTEL || vendor == VENDOR_ID_AMD);
@@ -900,8 +896,6 @@ void GenerateWorkarounds(const FunctionsGL *functions, WorkaroundsGL *workaround
     workarounds->alwaysCallUseProgramAfterLink = true;
 
     workarounds->unpackOverlappingRowsSeparatelyUnpackBuffer = vendor == VENDOR_ID_NVIDIA;
-
-    workarounds->initializeCurrentVertexAttributes = vendor == VENDOR_ID_NVIDIA;
 }
 
 }

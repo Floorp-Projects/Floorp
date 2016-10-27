@@ -30,14 +30,11 @@ typedef std::map<TString, TIntermSymbol*> ReferencedSymbols;
 class OutputHLSL : public TIntermTraverser
 {
   public:
-    OutputHLSL(sh::GLenum shaderType,
-               int shaderVersion,
-               const TExtensionBehavior &extensionBehavior,
-               const char *sourcePath,
-               ShShaderOutput outputType,
-               int numRenderTargets,
-               const std::vector<Uniform> &uniforms,
-               ShCompileOptions compileOptions);
+    OutputHLSL(sh::GLenum shaderType, int shaderVersion,
+        const TExtensionBehavior &extensionBehavior,
+        const char *sourcePath, ShShaderOutput outputType,
+        int numRenderTargets, const std::vector<Uniform> &uniforms,
+        int compileOptions);
 
     ~OutputHLSL();
 
@@ -61,7 +58,6 @@ class OutputHLSL : public TIntermTraverser
     void visitConstantUnion(TIntermConstantUnion*);
     bool visitBinary(Visit visit, TIntermBinary*);
     bool visitUnary(Visit visit, TIntermUnary*);
-    bool visitTernary(Visit visit, TIntermTernary *);
     bool visitSelection(Visit visit, TIntermSelection*);
     bool visitSwitch(Visit visit, TIntermSwitch *);
     bool visitCase(Visit visit, TIntermCase *);
@@ -121,7 +117,7 @@ class OutputHLSL : public TIntermTraverser
     const TExtensionBehavior &mExtensionBehavior;
     const char *mSourcePath;
     const ShShaderOutput mOutputType;
-    ShCompileOptions mCompileOptions;
+    int mCompileOptions;
 
     bool mInsideFunction;
 

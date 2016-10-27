@@ -23,7 +23,7 @@ class UnfoldShortCircuitTraverser : public TIntermTraverser
     UnfoldShortCircuitTraverser();
 
     bool visitBinary(Visit visit, TIntermBinary *node) override;
-    bool visitTernary(Visit visit, TIntermTernary *node) override;
+    bool visitSelection(Visit visit, TIntermSelection *node) override;
 
     void nextIteration();
     bool foundShortCircuit() const { return mFoundShortCircuit; }
@@ -79,7 +79,8 @@ bool UnfoldShortCircuitTraverser::visitBinary(Visit visit, TIntermBinary *node)
           ASSERT(node->getRight()->getType() == boolType);
           assignRightBlock->getSequence()->push_back(createTempAssignment(node->getRight()));
 
-          TIntermUnary *notTempSymbol = new TIntermUnary(EOpLogicalNot, createTempSymbol(boolType));
+          TIntermUnary *notTempSymbol = new TIntermUnary(EOpLogicalNot, boolType);
+          notTempSymbol->setOperand(createTempSymbol(boolType));
           TIntermSelection *ifNode = new TIntermSelection(notTempSymbol, assignRightBlock, nullptr);
           insertions.push_back(ifNode);
 
@@ -118,7 +119,7 @@ bool UnfoldShortCircuitTraverser::visitBinary(Visit visit, TIntermBinary *node)
     }
 }
 
-bool UnfoldShortCircuitTraverser::visitTernary(Visit visit, TIntermTernary *node)
+bool UnfoldShortCircuitTraverser::visitSelection(Visit visit, TIntermSelection *node)
 {
     if (mFoundShortCircuit)
         return false;
@@ -131,6 +132,8 @@ bool UnfoldShortCircuitTraverser::visitTernary(Visit visit, TIntermTernary *node
 
     mFoundShortCircuit = true;
 
+    ASSERT(node->usesTernaryOperator());
+
     // Unfold "b ? x : y" into "type s; if(b) s = x; else s = y;"
     TIntermSequence insertions;
 
@@ -140,11 +143,11 @@ bool UnfoldShortCircuitTraverser::visitTernary(Visit visit, TIntermTernary *node
     insertions.push_back(tempDeclaration);
 
     TIntermAggregate *trueBlock   = new TIntermAggregate(EOpSequence);
-    TIntermBinary *trueAssignment = createTempAssignment(node->getTrueExpression());
+    TIntermBinary *trueAssignment = createTempAssignment(node->getTrueBlock()->getAsTyped());
     trueBlock->getSequence()->push_back(trueAssignment);
 
     TIntermAggregate *falseBlock   = new TIntermAggregate(EOpSequence);
-    TIntermBinary *falseAssignment = createTempAssignment(node->getFalseExpression());
+    TIntermBinary *falseAssignment = createTempAssignment(node->getFalseBlock()->getAsTyped());
     falseBlock->getSequence()->push_back(falseAssignment);
 
     TIntermSelection *ifNode =

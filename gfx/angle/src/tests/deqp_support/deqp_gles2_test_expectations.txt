@@ -35,7 +35,7 @@
 998 WIN LINUX MAC : dEQP-GLES2.stress.* = SKIP
 
 // Tests that we fail because they're not in line with the WebGL spec
-1335 WIN LINUX MAC ANDROID : dEQP-GLES2.functional.shaders.preprocessor.conditional_inclusion.basic_2* = FAIL
+1335 WIN LINUX MAC : dEQP-GLES2.functional.shaders.preprocessor.conditional_inclusion.basic_2* = FAIL
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -69,6 +69,7 @@
 1027 WIN : dEQP-GLES2.functional.fbo.render.recreate_colorbuffer.no_rebind_tex2d_rgb_stencil_index8 = FAIL
 1027 WIN : dEQP-GLES2.functional.fbo.render.recreate_colorbuffer.no_rebind_tex2d_rgba_stencil_index8 = FAIL
 1033 WIN : dEQP-GLES2.functional.polygon_offset.fixed16_render_with_units = FAIL
+1017 WIN : dEQP-GLES2.functional.shaders.loops.for_constant_iterations.nested_sequence_* = FAIL
 1017 WIN : dEQP-GLES2.functional.shaders.loops.for_constant_iterations.nested_tricky_dataflow_* = FAIL
 1017 WIN : dEQP-GLES2.functional.shaders.loops.while_constant_iterations.nested_tricky_dataflow_* = FAIL
 1017 WIN : dEQP-GLES2.functional.shaders.loops.do_while_constant_iterations.nested_tricky_dataflow_* = FAIL
@@ -151,47 +152,6 @@
 1143 MAC : dEQP-GLES2.functional.texture.size.cube.512x512_rgba4444 = FAIL
 1143 MAC : dEQP-GLES2.functional.texture.mipmap.cube.projected.linear_linear = FAIL
 1143 MAC : dEQP-GLES2.functional.texture.specification.basic_copyteximage2d.cube_* = FAIL
-
-// Android only failures
-1484 ANDROID : dEQP-GLES2.functional.vertex_arrays.* = SKIP
-1485 ANDROID : dEQP-GLES2.functional.clipping.triangle_vertex.clip_three.clip_neg_x_neg_z_and_pos_x_pos_z_and_neg_x_neg_y_pos_z = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.none_none_none_tex = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.none_none_rbo_tex = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.none_none_tex_none = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.none_none_tex_rbo = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.none_none_tex_tex = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.rbo_none_none_tex = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.rbo_none_rbo_tex = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.rbo_none_tex_none = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.rbo_none_tex_rbo = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.rbo_none_tex_tex = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.tex_none_none_tex = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.tex_none_rbo_tex = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.tex_none_tex_none = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.tex_none_tex_rbo = FAIL
-1486 ANDROID : dEQP-GLES2.functional.fbo.completeness.attachment_combinations.tex_none_tex_tex = FAIL
-1487 ANDROID : dEQP-GLES2.functional.fbo.completeness.renderable.texture.color0.depth_stencil_unsigned_int_24_8 = FAIL
-1487 ANDROID : dEQP-GLES2.functional.fbo.completeness.renderable.texture.color0.srgb8 = FAIL
-1487 ANDROID : dEQP-GLES2.functional.fbo.completeness.renderable.texture.stencil.depth_stencil_unsigned_int_24_8 = FAIL
-1487 ANDROID : dEQP-GLES2.functional.fbo.completeness.renderable.texture.stencil.srgb8 = FAIL
-1487 ANDROID : dEQP-GLES2.functional.fbo.completeness.renderable.texture.depth.depth_stencil_unsigned_int_24_8 = FAIL
-1487 ANDROID : dEQP-GLES2.functional.fbo.completeness.renderable.texture.depth.srgb8 = FAIL
-1488 ANDROID : dEQP-GLES2.functional.shaders.return.conditional_return_always_vertex = FAIL
-1488 ANDROID : dEQP-GLES2.functional.shaders.return.conditional_return_always_fragment = FAIL
-1488 ANDROID : dEQP-GLES2.functional.shaders.return.output_write_always_vertex = FAIL
-1488 ANDROID : dEQP-GLES2.functional.shaders.return.output_write_always_fragment = FAIL
-1489 ANDROID : dEQP-GLES2.functional.texture.mipmap.2d.generate.a8_fastest = FAIL
-1489 ANDROID : dEQP-GLES2.functional.texture.mipmap.2d.generate.a8_nicest = FAIL
-1489 ANDROID : dEQP-GLES2.functional.texture.mipmap.2d.generate.l8_fastest = FAIL
-1489 ANDROID : dEQP-GLES2.functional.texture.mipmap.2d.generate.l8_nicest = FAIL
-1489 ANDROID : dEQP-GLES2.functional.texture.mipmap.2d.generate.la88_fastest = FAIL
-1489 ANDROID : dEQP-GLES2.functional.texture.mipmap.2d.generate.la88_nicest = FAIL
-1489 ANDROID : dEQP-GLES2.functional.texture.mipmap.cube.generate.a8_fastest = FAIL
-1489 ANDROID : dEQP-GLES2.functional.texture.mipmap.cube.generate.a8_nicest = FAIL
-1489 ANDROID : dEQP-GLES2.functional.texture.mipmap.cube.generate.l8_fastest = FAIL
-1489 ANDROID : dEQP-GLES2.functional.texture.mipmap.cube.generate.l8_nicest = FAIL
-1489 ANDROID : dEQP-GLES2.functional.texture.mipmap.cube.generate.la88_fastest = FAIL
-1489 ANDROID : dEQP-GLES2.functional.texture.mipmap.cube.generate.la88_nicest = FAIL
 
 // Windows and Linux failures
 1020 WIN LINUX : dEQP-GLES2.functional.texture.mipmap.cube.projected.linear_linear = FAIL

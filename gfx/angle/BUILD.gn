@@ -497,7 +497,7 @@ config("angle_util_config") {
   }
 }
 
-shared_library("angle_util") {
+static_library("angle_util") {
   sources = rebase_path(util_gypi.util_sources, ".", "util")
 
   if (is_win) {
@@ -514,10 +514,6 @@ shared_library("angle_util") {
 
   if (is_mac) {
     sources += rebase_path(util_gypi.util_osx_sources, ".", "util")
-    libs = [
-      "AppKit.framework",
-      "QuartzCore.framework",
-    ]
   }
 
   if (use_x11) {
@@ -542,7 +538,6 @@ shared_library("angle_util") {
   defines = [
     "GL_GLEXT_PROTOTYPES",
     "EGL_EGLEXT_PROTOTYPES",
-    "LIBANGLE_UTIL_IMPLEMENTATION",
   ]
 
   configs += [
@@ -554,13 +549,6 @@ shared_library("angle_util") {
     ":angle_util_config",
     ":internal_config",
   ]
-  if (is_mac && !is_component_build) {
-    ldflags = [
-      "-install_name",
-      "@rpath/lib${target_name}.dylib",
-    ]
-    public_configs += [ ":shared_library_public_config" ]
-  }
 
   deps = [
     ":angle_common",
