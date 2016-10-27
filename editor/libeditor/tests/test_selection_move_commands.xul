@@ -221,7 +221,7 @@ addLoadEvent(runTest);
 </script>
 
 <body  id="html_body" xmlns="http://www.w3.org/1999/xhtml">
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=454004">Mozilla Bug 454004</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=372685">Mozilla Bug 372685</a>
 <p id="display"></p>
 
 <pre id="test">
