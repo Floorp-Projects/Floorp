@@ -147,7 +147,7 @@
                   <box id="requests-menu-waterfall-label-wrapper">
                     <label id="requests-menu-waterfall-label"
                            class="plain requests-menu-waterfall"
-                           data-localization="label=netmonitor.toolbar.waterfall"/>
+                           data-localization="value=netmonitor.toolbar.waterfall"/>
                   </box>
                 </button>
               </hbox>
