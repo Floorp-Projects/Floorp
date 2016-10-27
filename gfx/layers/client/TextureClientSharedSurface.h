@@ -40,7 +40,7 @@ public:
 
   ~SharedSurfaceTextureData();
 
-  virtual bool Lock(OpenMode, FenceHandle*) override { return false; }
+  virtual bool Lock(OpenMode) override { return false; }
 
   virtual void Unlock() override {}
 
