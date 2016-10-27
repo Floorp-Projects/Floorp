@@ -1,6 +1,7 @@
 <!doctype html>
 <meta charset=utf-8>
 <script src="../testcommon.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
 <style>
 @keyframes empty { }
 @keyframes animTransform {
@@ -25,6 +26,12 @@ function waitForDocLoad() {
     } else {
       window.addEventListener('load', resolve);
     }
+  });
+}
+
+function waitForPaints() {
+  return new Promise(function(resolve, reject) {
+    waitForAllPaintsFlushed(resolve);
   });
 }
 
@@ -87,7 +94,7 @@ promise_test(function(t) {
   div.style.animation = 'animTransform 100s -50s forwards';
   var animation = div.getAnimations()[0];
 
-  return animation.ready.then(function() {
+  return waitForPaints(function() {
     var transformStr =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
 
