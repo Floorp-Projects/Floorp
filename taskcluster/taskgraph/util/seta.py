@@ -64,6 +64,10 @@ class SETA(object):
         except exceptions.RequestException as error:
             logger.warning(error)
 
+        # When we get invalid JSON (i.e. 500 error), it results in a ValueError (bug 1313426)
+        except ValueError as error:
+            logger.warning("Invalid JSON, possible server error: {}".format(error))
+
         return low_value_tasks
 
     def is_low_value_task(self, label, project):
