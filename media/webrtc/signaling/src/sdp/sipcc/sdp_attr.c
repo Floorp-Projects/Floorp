@@ -1328,8 +1328,9 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                     strtoul_result = strtoul(temp, &strtoul_end, 10);
 
                     if (errno ||
-                        temp == strtoul_end || strtoul_result > USHRT_MAX) {
-                        continue;
+                       temp == strtoul_end || strtoul_result > USHRT_MAX) {
+                      temp = NULL;
+                      continue;
                     }
                     fmtp_p->redundant_encodings[iter++] =
                         (uint8_t)strtoul_result;
