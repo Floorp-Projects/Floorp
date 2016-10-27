@@ -321,7 +321,12 @@ ToGMPDOMException(cdm::Error aError)
   switch (aError) {
     case kNotSupportedError: return kGMPNotSupportedError;
     case kInvalidStateError: return kGMPInvalidStateError;
-    case kInvalidAccessError: return kGMPInvalidAccessError;
+    case kInvalidAccessError:
+      // Note: Chrome converts kInvalidAccessError to TypeError, since the
+      // Chromium CDM API doesn't have a type error enum value. The EME spec
+      // requires TypeError in some places, so we do the same conversion.
+      // See bug 1313202.
+      return kGMPTypeError;
     case kQuotaExceededError: return kGMPQuotaExceededError;
     case kUnknownError: return kGMPInvalidModificationError; // Note: Unique placeholder.
     case kClientError: return kGMPAbortError; // Note: Unique placeholder.

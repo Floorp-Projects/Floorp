@@ -79,7 +79,8 @@ enum GMPDOMException {
   kGMPSecurityError = 18,
   kGMPAbortError = 20,
   kGMPQuotaExceededError = 22,
-  kGMPTimeoutError = 23
+  kGMPTimeoutError = 23,
+  kGMPTypeError = 52
 };
 
 enum GMPSessionMessageType {
