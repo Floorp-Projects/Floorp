@@ -78,7 +78,7 @@ ClearKeySession::Init(uint32_t aCreateSessionToken,
 
   if (!mKeyIds.size()) {
     const char message[] = "Couldn't parse init data";
-    mCallback->RejectPromise(aPromiseId, kGMPInvalidAccessError, message, strlen(message));
+    mCallback->RejectPromise(aPromiseId, kGMPTypeError, message, strlen(message));
     return;
   }
 
