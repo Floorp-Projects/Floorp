@@ -740,6 +740,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/CropImageView.java',
     'widget/DateTimePicker.java',
     'widget/DefaultDoorHanger.java',
+    'widget/DefaultItemAnimatorBase.java',
     'widget/DoorHanger.java',
     'widget/DoorhangerConfig.java',
     'widget/EllipsisTextView.java',
