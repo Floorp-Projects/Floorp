@@ -455,7 +455,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Move the stack pointer based on the requested amount.
     void adjustStack(int amount);
-    void reserveStack(uint32_t amount) PER_ARCH;
     void freeStack(uint32_t amount);
 
     // Warning: This method does not update the framePushed() counter.
@@ -1723,8 +1722,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename T> inline void addToStackPtr(T t);
     template <typename T> inline void addStackPtrTo(T t);
 
-    template <typename T>
-    void subFromStackPtr(T t) { subPtr(t, getStackPointer()); }
+    void subFromStackPtr(Imm32 imm32) DEFINED_ON(mips32, mips64, arm, x86, x64);
+    void subFromStackPtr(Register reg);
+
     template <typename T>
     void subStackPtrFrom(T t) { subPtr(getStackPointer(), t); }
 
@@ -1752,7 +1752,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchStackPtr(Condition cond, T rhs, Label* label);
     template <typename T>
     inline void branchStackPtrRhs(Condition cond, T lhs, Label* label);
-#endif // !JS_CODEGEN_ARM64
+
+    // Move the stack pointer based on the requested amount.
+    inline void reserveStack(uint32_t amount);
+#else // !JS_CODEGEN_ARM64
+    void reserveStack(uint32_t amount);
+#endif
 
   public:
     void enableProfilingInstrumentation() {
