@@ -134,8 +134,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     }
 
     private boolean isMediaPlaying() {
-        return mActionState.equals(ACTION_RESUME) ||
-               mActionState.equals(ACTION_RESUME_BY_AUDIO_FOCUS);
+        return mActionState.equals(ACTION_RESUME);
     }
 
     private void initialize() {
@@ -251,11 +250,9 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 } else if (action.equals(ACTION_PAUSE_BY_AUDIO_FOCUS)) {
                     Log.d(LOGTAG, "Controller, pause by audio focus changed");
                     notifyControlInterfaceChanged(ACTION_RESUME);
-                    mActionState = ACTION_PAUSE_BY_AUDIO_FOCUS;
                 } else if (action.equals(ACTION_RESUME_BY_AUDIO_FOCUS)) {
                     Log.d(LOGTAG, "Controller, resume by audio focus changed");
                     notifyControlInterfaceChanged(ACTION_PAUSE);
-                    mActionState = ACTION_RESUME_BY_AUDIO_FOCUS;
                 }
             }
 
