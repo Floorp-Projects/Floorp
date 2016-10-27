@@ -410,18 +410,6 @@ class ConfigureSandbox(dict):
     @memoize
     def _value_for_depends(self, obj, need_help_dependency=False):
         assert not inspect.isgeneratorfunction(obj.func)
-        with_help = self._help_option in obj.dependencies
-        if with_help:
-            for arg in obj.dependencies:
-                if isinstance(arg, DependsFunction):
-                    if self._help_option not in arg.dependencies:
-                        raise ConfigureError(
-                            "`%s` depends on '--help' and `%s`. "
-                            "`%s` must depend on '--help'"
-                            % (obj.name, arg.name, arg.name))
-        elif self._help or need_help_dependency:
-            raise ConfigureError("Missing @depends for `%s`: '--help'" %
-                                 obj.name)
         return obj.result
 
     @memoize
