@@ -95,8 +95,7 @@ MediaKeySystemAccess::CreateMediaKeys(ErrorResult& aRv)
   RefPtr<MediaKeys> keys(new MediaKeys(mParent,
                                        mKeySystem,
                                        mCDMVersion,
-                                       mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-                                       mConfig.mPersistentState == MediaKeysRequirement::Required));
+                                       mConfig));
   return keys->Init(aRv);
 }
 

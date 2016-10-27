@@ -50,14 +50,12 @@ NS_INTERFACE_MAP_END
 MediaKeys::MediaKeys(nsPIDOMWindowInner* aParent,
                      const nsAString& aKeySystem,
                      const nsAString& aCDMVersion,
-                     bool aDistinctiveIdentifierRequired,
-                     bool aPersistentStateRequired)
+                     const MediaKeySystemConfiguration& aConfig)
   : mParent(aParent)
   , mKeySystem(aKeySystem)
   , mCDMVersion(aCDMVersion)
   , mCreatePromiseId(0)
-  , mDistinctiveIdentifierRequired(aDistinctiveIdentifierRequired)
-  , mPersistentStateRequired(aPersistentStateRequired)
+  , mConfig(aConfig)
 {
   EME_LOG("MediaKeys[%p] constructed keySystem=%s",
           this, NS_ConvertUTF16toUTF8(mKeySystem).get());
@@ -341,8 +339,8 @@ MediaKeys::Init(ErrorResult& aRv)
   mProxy = new GMPCDMProxy(this,
                            mKeySystem,
                            new MediaKeysGMPCrashHelper(this),
-                           mDistinctiveIdentifierRequired,
-                           mPersistentStateRequired);
+                           mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
+                           mConfig.mPersistentState == MediaKeysRequirement::Required);
 
   // Determine principal (at creation time) of the MediaKeys object.
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(GetParentObject());
