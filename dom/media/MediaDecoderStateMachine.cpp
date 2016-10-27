@@ -1719,7 +1719,6 @@ ShutdownState::Enter()
 
   // Disconnect canonicals and mirrors before shutting down our task queue.
   master->mBuffered.DisconnectIfConnected();
-  master->mIsReaderSuspended.DisconnectIfConnected();
   master->mEstimatedDuration.DisconnectIfConnected();
   master->mExplicitDuration.DisconnectIfConnected();
   master->mPlayState.DisconnectIfConnected();
@@ -1793,7 +1792,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mResource(aDecoder->GetResource()),
   mAudioOffloading(false),
   INIT_MIRROR(mBuffered, TimeIntervals()),
-  INIT_MIRROR(mIsReaderSuspended, true),
   INIT_MIRROR(mEstimatedDuration, NullableTimeUnit()),
   INIT_MIRROR(mExplicitDuration, Maybe<double>()),
   INIT_MIRROR(mPlayState, MediaDecoder::PLAY_STATE_LOADING),
@@ -1851,7 +1849,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
 
   // Connect mirrors.
   mBuffered.Connect(mReader->CanonicalBuffered());
-  mIsReaderSuspended.Connect(mReader->CanonicalIsSuspended());
   mEstimatedDuration.Connect(aDecoder->CanonicalEstimatedDuration());
   mExplicitDuration.Connect(aDecoder->CanonicalExplicitDuration());
   mPlayState.Connect(aDecoder->CanonicalPlayState());
@@ -1868,7 +1865,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
 
   // Initialize watchers.
   mWatchManager.Watch(mBuffered, &MediaDecoderStateMachine::BufferedRangeUpdated);
-  mWatchManager.Watch(mIsReaderSuspended, &MediaDecoderStateMachine::ReaderSuspendedChanged);
   mWatchManager.Watch(mState, &MediaDecoderStateMachine::UpdateNextFrameStatus);
   mWatchManager.Watch(mAudioCompleted, &MediaDecoderStateMachine::UpdateNextFrameStatus);
   mWatchManager.Watch(mVideoCompleted, &MediaDecoderStateMachine::UpdateNextFrameStatus);
@@ -2498,9 +2494,8 @@ void MediaDecoderStateMachine::PlayStateChanged()
 void MediaDecoderStateMachine::VisibilityChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
-  DECODER_LOG("VisibilityChanged: mIsVisible=%d, "
-              "mVideoDecodeSuspended=%c, mIsReaderSuspended=%d",
-              mIsVisible.Ref(), mVideoDecodeSuspended ? 'T' : 'F', mIsReaderSuspended.Ref());
+  DECODER_LOG("VisibilityChanged: mIsVisible=%d, mVideoDecodeSuspended=%c",
+              mIsVisible.Ref(), mVideoDecodeSuspended ? 'T' : 'F');
 
   // Start timer to trigger suspended decoding state when going invisible.
   if (!mIsVisible) {
@@ -2539,13 +2534,6 @@ void MediaDecoderStateMachine::BufferedRangeUpdated()
       mObservedDuration = std::max(mObservedDuration.Ref(), end);
     }
   }
-}
-
-void MediaDecoderStateMachine::ReaderSuspendedChanged()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  DECODER_LOG("ReaderSuspendedChanged: %d", mIsReaderSuspended.Ref());
-  SetDormant(mIsReaderSuspended);
 }
 
 RefPtr<MediaDecoder::SeekPromise>
