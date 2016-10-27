@@ -243,11 +243,6 @@ nsresult NrIceTurnServer::ToNicerTurnStruct(nr_ice_turn_server *server) const {
   if (NS_FAILED(rv))
     return rv;
 
-  if (username_.empty())
-    return NS_ERROR_INVALID_ARG;
-  if (password_.empty())
-    return NS_ERROR_INVALID_ARG;
-
   if (!(server->username=r_strdup(username_.c_str())))
     return NS_ERROR_OUT_OF_MEMORY;
 
