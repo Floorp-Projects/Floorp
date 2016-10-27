@@ -63,10 +63,8 @@ parent:
 
   // For now we'll add the command to send the proxy here. This might move to
   // PDocAccessible constructor in PBrowser.
-  sync COMProxy(int32_t aMsaaID, IAccessibleHolder aDocCOMProxy)
+  sync COMProxy(IAccessibleHolder aDocCOMProxy)
     returns(IAccessibleHolder aParentCOMProxy);
-
-  async MsaaID(int32_t aMsaaID);
 
 child:
   async __delete__();
