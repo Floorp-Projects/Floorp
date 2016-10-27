@@ -16,6 +16,10 @@ PrintTarget::PrintTarget(cairo_surface_t* aCairoSurface, const IntSize& aSize)
   : mCairoSurface(aCairoSurface)
   , mSize(aSize)
   , mIsFinished(false)
+#ifdef DEBUG
+  , mHasActivePage(false)
+#endif
+
 {
 #if 0
   // aCairoSurface is null when our PrintTargetThebes subclass's ctor calls us.
@@ -51,6 +55,10 @@ PrintTarget::MakeDrawTarget(const IntSize& aSize,
 {
   MOZ_ASSERT(mCairoSurface,
              "We shouldn't have been constructed without a cairo surface");
+
+  // This should not be called outside of BeginPage()/EndPage() calls since
+  // some backends can only provide a valid DrawTarget at that time.
+  MOZ_ASSERT(mHasActivePage, "We can't guarantee a valid DrawTarget");
 
   if (cairo_surface_status(mCairoSurface)) {
     return nullptr;
