@@ -341,10 +341,13 @@ this.PushServiceWebSocket = {
 
   _shutdownWS: function(shouldCancelPending = true) {
     console.debug("shutdownWS()");
+
+    if (this._currentState == STATE_READY) {
+      prefs.ignore("userAgentID", this);
+    }
+
     this._currentState = STATE_SHUT_DOWN;
     this._skipReconnect = false;
-
-    prefs.ignore("userAgentID", this);
 
     if (this._wsListener) {
       this._wsListener._pushService = null;
