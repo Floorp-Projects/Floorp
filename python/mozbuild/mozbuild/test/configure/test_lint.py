@@ -36,10 +36,23 @@ class TestLint(unittest.TestCase):
         })
 
     def test_depends_failures(self):
+        with self.moz_configure('''
+            option('--foo', help='foo')
+            @depends('--foo')
+            def foo(value):
+                return value
+
+            @depends('--help', foo)
+            def bar(help, foo):
+                return
+        '''):
+            self.lint_test()
+
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure('''
                 option('--foo', help='foo')
                 @depends('--foo')
+                @imports('os')
                 def foo(value):
                     return value
 
@@ -55,10 +68,87 @@ class TestLint(unittest.TestCase):
 
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure('''
+                @template
+                def tmpl():
+                    qux = 42
+
+                    option('--foo', help='foo')
+                    @depends('--foo')
+                    def foo(value):
+                        qux
+                        return value
+
+                    @depends('--help', foo)
+                    def bar(help, foo):
+                        return
+                tmpl()
+            '''):
+                self.lint_test()
+
+        self.assertEquals(e.exception.message,
+                          "`bar` depends on '--help' and `foo`. "
+                          "`foo` must depend on '--help'")
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                @template
+                @imports('os')
+                def tmpl():
+                    option('--foo', help='foo')
+                    @depends('--foo')
+                    def foo(value):
+                        os
+                        return value
+
+                    @depends('--help', foo)
+                    def bar(help, foo):
+                        return
+                tmpl()
+            '''):
+                self.lint_test()
+
+        self.assertEquals(e.exception.message,
+                          "`bar` depends on '--help' and `foo`. "
+                          "`foo` must depend on '--help'")
+
+        with self.moz_configure('''
+            option('--foo', help='foo')
+            @depends('--foo')
+            def foo(value):
+                return value
+
+            include(foo)
+        '''):
+            self.lint_test()
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
                 option('--foo', help='foo')
                 @depends('--foo')
+                @imports('os')
                 def foo(value):
                     return value
+
+                include(foo)
+            '''):
+                self.lint_test()
+
+        self.assertEquals(e.exception.message,
+                          "Missing @depends for `foo`: '--help'")
+
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                @template
+                @imports('os')
+                def tmpl():
+                    option('--foo', help='foo')
+                    @depends('--foo')
+                    def foo(value):
+                        os
+                        return value
+                    return foo
+
+                foo = tmpl()
 
                 include(foo)
             '''):
