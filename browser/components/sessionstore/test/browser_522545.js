@@ -194,7 +194,7 @@ function test() {
       let inputText = "example.org";
       gURLBar.focus();
       gURLBar.value = inputText.slice(0, -1);
-      EventUtils.synthesizeKey(inputText.slice(-1) , {});
+      EventUtils.synthesizeKey(inputText.slice(-1), {});
 
       executeSoon(function () {
         is(browser.userTypedValue, "example.org",

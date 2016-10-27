@@ -63,4 +63,5 @@ function shouldThrow(f) {
   } catch (e) {
     return true;
   }
+  return null;
 }

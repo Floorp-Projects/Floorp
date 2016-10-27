@@ -241,9 +241,15 @@ function toggleRowChecked(aIx) {
     }
   }
   else {
-    // update the window's checkmark as well (0 means "partially checked")
-    item.parent.checked = item.parent.tabs.every(isChecked) ? true :
-                          item.parent.tabs.some(isChecked) ? 0 : false;
+    // Update the window's checkmark as well (0 means "partially checked").
+    let state = false;
+    if (item.parent.tabs.every(isChecked)) {
+      state = true;
+    } else if (item.parent.tabs.some(isChecked)) {
+      state = 0;
+    }
+    item.parent.checked = state;
+
     treeView.treeBox.invalidateRow(gTreeData.indexOf(item.parent));
   }
 
@@ -281,7 +287,7 @@ var treeView = {
   setTree: function(treeBox)         { this.treeBox = treeBox; },
   getCellText: function(idx, column) { return gTreeData[idx].label; },
   isContainer: function(idx)         { return "open" in gTreeData[idx]; },
-  getCellValue: function(idx, column){ return gTreeData[idx].checked; },
+  getCellValue: function(idx, column) { return gTreeData[idx].checked; },
   isContainerOpen: function(idx)     { return gTreeData[idx].open; },
   isContainerEmpty: function(idx)    { return false; },
   isSeparator: function(idx)         { return false; },

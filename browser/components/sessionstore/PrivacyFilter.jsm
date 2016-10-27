@@ -51,7 +51,7 @@ this.PrivacyFilter = Object.freeze({
     // allowed to store data for, bail out. We explicitly discard data for any
     // children as well even if storing data for those frames would be allowed.
     if (data.url && !PrivacyLevel.check(data.url)) {
-      return;
+      return null;
     }
 
     let retval = {};
