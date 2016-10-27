@@ -15,7 +15,6 @@ interface ServiceWorkerMessageEvent : Event {
   /**
    * Custom data associated with this event.
    */
-  [GetterThrows]
   readonly attribute any data;
 
   /**

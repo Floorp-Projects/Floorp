@@ -249,7 +249,7 @@ D3D11TextureData::~D3D11TextureData()
   // when it calls EndDraw. This EndDraw should not execute anything so it
   // shouldn't -really- need the lock but the debug layer chokes on this.
   if (mDrawTarget) {
-    Lock(OpenMode::OPEN_NONE, nullptr);
+    Lock(OpenMode::OPEN_NONE);
     mDrawTarget = nullptr;
     Unlock();
   }
@@ -257,7 +257,7 @@ D3D11TextureData::~D3D11TextureData()
 }
 
 bool
-D3D11TextureData::Lock(OpenMode aMode, FenceHandle*)
+D3D11TextureData::Lock(OpenMode aMode)
 {
   if (!LockD3DTexture(mTexture.get())) {
     return false;

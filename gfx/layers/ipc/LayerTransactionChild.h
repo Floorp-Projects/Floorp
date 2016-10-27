@@ -11,7 +11,6 @@
 #include <stdint.h>                     // for uint32_t
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
 #include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/RefPtr.h"
 

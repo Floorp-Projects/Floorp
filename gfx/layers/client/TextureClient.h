@@ -17,7 +17,6 @@
 #include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
-#include "mozilla/layers/FenceUtils.h"  // for FenceHandle
 #include "mozilla/ipc/Shmem.h"          // for Shmem
 #include "mozilla/layers/AtomicRefCountedWithFinalize.h"
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
@@ -42,17 +41,12 @@ namespace mozilla {
 #define GFX_DEBUG_TRACK_CLIENTS_IN_POOL 1
 #endif
 
-namespace gl {
-class SharedSurface_Gralloc;
-}
-
 namespace layers {
 
 class AsyncTransactionWaiter;
 class BufferTextureData;
 class CompositableForwarder;
 class KnowsCompositor;
-class GrallocTextureData;
 class LayersIPCChannel;
 class CompositableClient;
 struct PlanarYCbCrData;
@@ -265,7 +259,7 @@ public:
 
   virtual void FillInfo(TextureData::Info& aInfo) const = 0;
 
-  virtual bool Lock(OpenMode aMode, FenceHandle* aFence) = 0;
+  virtual bool Lock(OpenMode aMode) = 0;
 
   virtual void Unlock() = 0;
 
@@ -292,10 +286,6 @@ public:
 
   virtual bool ReadBack(TextureReadbackSink* aReadbackSink) { return false; }
 
-  /// Ideally this should not be exposed and users of TextureClient would use Lock/Unlock
-  /// preoperly but that requires a few changes to SharedSurface and maybe gonk video.
-  virtual void WaitForFence(FenceHandle* aFence) {};
-
   virtual void SyncWithObject(SyncObject* aFence) {};
 
   virtual TextureFlags GetTextureFlags() const { return TextureFlags::NO_FLAGS; }
@@ -305,8 +295,6 @@ public:
     return nullptr;
   }
 #endif
-
-  virtual GrallocTextureData* AsGrallocTextureData() { return nullptr; }
 
   virtual BufferTextureData* AsBufferTextureData() { return nullptr; }
 };
@@ -590,36 +578,6 @@ public:
    */
   void Destroy(bool sync = false);
 
-  virtual void SetReleaseFenceHandle(const FenceHandle& aReleaseFenceHandle)
-  {
-    mReleaseFenceHandle.Merge(aReleaseFenceHandle);
-  }
-
-  virtual FenceHandle GetAndResetReleaseFenceHandle()
-  {
-    FenceHandle fence;
-    mReleaseFenceHandle.TransferToAnotherFenceHandle(fence);
-    return fence;
-  }
-
-  virtual void SetAcquireFenceHandle(const FenceHandle& aAcquireFenceHandle)
-  {
-    mAcquireFenceHandle = aAcquireFenceHandle;
-  }
-
-  virtual const FenceHandle& GetAcquireFenceHandle() const
-  {
-    return mAcquireFenceHandle;
-  }
-
-  /**
-   * This function waits until the buffer is no longer being used.
-   *
-   * XXX - Ideally we shouldn't need this method because Lock the right
-   * thing already.
-   */
-  virtual void WaitForBufferOwnership(bool aWaitReleaseFence = true);
-
   /**
    * Track how much of this texture is wasted.
    * For example we might allocate a 256x256 tile but only use 10x10.
@@ -649,22 +607,6 @@ public:
   const TextureData* GetInternalData() const { return mData; }
 
   uint64_t GetSerial() const { return mSerial; }
-
-  bool NeedsFenceHandle()
-  {
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-    if (!mData) {
-      return false;
-    }
-    return !!mData->AsGrallocTextureData();
-#else
-    return false;
-#endif
-  }
-
-  void WaitFenceHandleOnImageBridge(Mutex& aMutex);
-  void ClearWaitFenceHandleOnImageBridge(Mutex& aMutex);
-  void CancelWaitFenceHandleOnImageBridge();
 
   void CancelWaitForRecycle();
 
@@ -731,7 +673,6 @@ private:
   void Finalize() {}
 
   friend class AtomicRefCountedWithFinalize<TextureClient>;
-  friend class gl::SharedSurface_Gralloc;
 protected:
   /**
    * Should only be called *once* per texture, in TextureClient::InitIPDLActor.
@@ -757,9 +698,6 @@ protected:
   RefPtr<gfx::DrawTarget> mBorrowedDrawTarget;
 
   TextureFlags mFlags;
-  FenceHandle mReleaseFenceHandle;
-  FenceHandle mAcquireFenceHandle;
-  RefPtr<AsyncTransactionWaiter> mFenceHandleWaiter;
 
   gl::GfxTextureWasteTracker mWasteTracker;
 
@@ -789,7 +727,6 @@ protected:
   static mozilla::Atomic<uint64_t> sSerialCounter;
 
   friend class TextureChild;
-  friend class RemoveTextureFromCompositableTracker;
   friend void TestTextureClientSurface(TextureClient*, gfxImageSurface*);
   friend void TestTextureClientYCbCr(TextureClient*, PlanarYCbCrData&);
 

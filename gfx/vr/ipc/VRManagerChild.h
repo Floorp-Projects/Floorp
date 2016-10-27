@@ -144,8 +144,6 @@ private:
   void FireDOMVRDisplayConnectEventInternal();
   void FireDOMVRDisplayDisconnectEventInternal();
   void FireDOMVRDisplayPresentChangeEventInternal();
-
-  void DeliverFence(uint64_t aTextureId, FenceHandle& aReleaseFenceHandle);
   /**
   * Notify id of Texture When host side end its use. Transaction id is used to
   * make sure if there is no newer usage.
