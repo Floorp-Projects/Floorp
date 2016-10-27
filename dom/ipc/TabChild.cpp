@@ -2170,7 +2170,8 @@ TabChild::RecvPasteTransferable(const IPCDataTransfer& aDataTransfer,
 
 
 a11y::PDocAccessibleChild*
-TabChild::AllocPDocAccessibleChild(PDocAccessibleChild*, const uint64_t&)
+TabChild::AllocPDocAccessibleChild(PDocAccessibleChild*, const uint64_t&,
+                                   const uint32_t&)
 {
   MOZ_ASSERT(false, "should never call this!");
   return nullptr;

@@ -101,6 +101,10 @@
 #include <algorithm>
 #include "mozilla/WebBrowserPersistDocumentParent.h"
 
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+#include "mozilla/a11y/AccessibleWrap.h"
+#endif
+
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
@@ -1090,7 +1094,7 @@ TabParent::SetDocShell(nsIDocShell *aDocShell)
 
   a11y::PDocAccessibleParent*
 TabParent::AllocPDocAccessibleParent(PDocAccessibleParent* aParent,
-                                     const uint64_t&)
+                                     const uint64_t&, const uint32_t&)
 {
 #ifdef ACCESSIBILITY
   return new a11y::DocAccessibleParent();
@@ -1111,7 +1115,8 @@ TabParent::DeallocPDocAccessibleParent(PDocAccessibleParent* aParent)
 bool
 TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
                                          PDocAccessibleParent* aParentDoc,
-                                         const uint64_t& aParentID)
+                                         const uint64_t& aParentID,
+                                         const uint32_t& aMsaaID)
 {
 #ifdef ACCESSIBILITY
   auto doc = static_cast<a11y::DocAccessibleParent*>(aDoc);
@@ -1125,7 +1130,11 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
     }
 
     auto parentDoc = static_cast<a11y::DocAccessibleParent*>(aParentDoc);
-    return parentDoc->AddChildDoc(doc, aParentID);
+    bool added = parentDoc->AddChildDoc(doc, aParentID);
+#ifdef XP_WIN
+    a11y::WrapperFor(doc)->SetID(aMsaaID);
+#endif
+    return added;
   } else {
     // null aParentDoc means this document is at the top level in the child
     // process.  That means it makes no sense to get an id for an accessible
@@ -1137,6 +1146,9 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
 
     doc->SetTopLevel();
     a11y::DocManager::RemoteDocAdded(doc);
+#ifdef XP_WIN
+    a11y::WrapperFor(doc)->SetID(aMsaaID);
+#endif
   }
 #endif
   return true;
