@@ -9,10 +9,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483651
 
 <head>
   <title>Test for Bug 483651</title>
-  <script src="/MochiKit/packed.js"></script>
-  <script src="/tests/SimpleTest/EventUtils.js"></script>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 </head>
 
 <body onload="doTest();">
@@ -30,7 +33,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483651
 
       function doTest() {
         var t1 = $("t1");
-        var editor = SpecialPowers.wrap(t1).editor;
+        var editor = null;
+
+        if (t1 instanceof Components.interfaces.nsIDOMNSEditableElement)
+          editor = t1.editor;
 
         ok(editor, "able to get editor for the element");
         t1.focus();

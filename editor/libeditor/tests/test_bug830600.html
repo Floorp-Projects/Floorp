@@ -8,9 +8,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830600
 -->
 <head>
   <title>Test for Bug 830600</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="/tests/SimpleTest/EventUtils.js"></script>
-  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 </head>
 
 <body>
@@ -25,20 +27,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830600
       /** Test for Bug 830600 **/
       SimpleTest.waitForExplicitFinish();
       SimpleTest.waitForFocus(function() {
-        const Ci = SpecialPowers.Ci;
+        const Ci = Components.interfaces;
         function test(str, expected, callback) {
           var t = document.getElementById("t1");
-          SpecialPowers.wrap(t).QueryInterface(Ci.nsIDOMNSEditableElement);
+          t.QueryInterface(Ci.nsIDOMNSEditableElement);
           t.focus();
           t.value = "";
-          var editor = SpecialPowers.wrap(t).editor;
-          editor.QueryInterface(Ci.nsIPlaintextEditor);
-          var origNewlineHandling = editor.newlineHandling;
-          editor.newlineHandling = Ci.nsIPlaintextEditor.eNewlinesStripSurroundingWhitespace
+          t.editor.QueryInterface(Ci.nsIPlaintextEditor);
+          var origNewlineHandling = t.editor.newlineHandling;
+          t.editor.newlineHandling = Ci.nsIPlaintextEditor.eNewlinesStripSurroundingWhitespace
           SimpleTest.waitForClipboard(str,
             function() {
-              SpecialPowers.Cc["@mozilla.org/widget/clipboardhelper;1"]
-                        .getService(Ci.nsIClipboardHelper)
+              Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+                        .getService(Components.interfaces.nsIClipboardHelper)
                         .copyString(str);
             },
             function() {
