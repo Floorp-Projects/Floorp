@@ -33,7 +33,7 @@ WIN_LIBS=                                       \
 #include "nsReadableUtils.h"
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsWin.h"
-#include "nsIPrintOptions.h"
+#include "nsIPrinterEnumerator.h"
 
 #include "nsRect.h"
 

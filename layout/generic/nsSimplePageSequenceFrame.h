@@ -9,7 +9,6 @@
 #include "nsIPageSequenceFrame.h"
 #include "nsContainerFrame.h"
 #include "nsIPrintSettings.h"
-#include "nsIPrintOptions.h"
 
 class nsIDateTimeFormat;
 
@@ -46,7 +45,6 @@ public:
   nsMargin    mEdgePaperMargin;
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
-  nsCOMPtr<nsIPrintOptions> mPrintOptions;
 
   // The scaling ratio we need to apply to make all pages fit horizontally.  It's
   // the minimum "ComputedWidth / OverflowWidth" ratio of all page content frames
