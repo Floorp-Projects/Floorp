@@ -2731,8 +2731,8 @@ IsNonExposedGlobal(JSContext* aCx, JSObject* aGlobal,
 void
 HandlePrerenderingViolation(nsPIDOMWindowInner* aWindow)
 {
-  // Suspend the window and its workers, and its children too.
-  aWindow->SuspendTimeouts();
+  // Freeze the window and its workers, and its children too.
+  aWindow->Freeze();
 
   // Suspend event handling on the document
   nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();

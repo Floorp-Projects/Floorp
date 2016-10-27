@@ -23,6 +23,7 @@ include protocol PBlob; //FIXME: bug #792908
 include protocol PFileDescriptorSet;
 include protocol PDataChannel;
 include protocol PTransportProvider;
+include protocol PSendStream;
 
 include protocol PRtspController;
 include protocol PRtspChannel;

@@ -263,7 +263,7 @@ struct png_struct_def
                               /* pixel depth used for the row buffers */
    png_byte transformed_pixel_depth;
                               /* pixel depth after read/write transforms */
-#if PNG_ZLIB_VERNUM >= 0x1240
+#if ZLIB_VERNUM >= 0x1240
    png_byte zstream_start;    /* at start of an input zlib stream */
 #endif /* Zlib >= 1.2.4 */
 #if defined(PNG_READ_FILLER_SUPPORTED) || defined(PNG_WRITE_FILLER_SUPPORTED)

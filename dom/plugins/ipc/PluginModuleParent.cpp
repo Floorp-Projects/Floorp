@@ -2702,8 +2702,13 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
     if (mIsFlashPlugin) {
         parentInstance->InitMetadata(strPluginType, srcAttribute);
 #ifdef XP_WIN
-        bool supportsAsyncRender = false;
-        CallModuleSupportsAsyncRender(&supportsAsyncRender);
+        bool supportsAsyncRender =
+          Preferences::GetBool("dom.ipc.plugins.asyncdrawing.enabled", false);
+        if (supportsAsyncRender) {
+          // Prefs indicates we want async plugin rendering, make sure
+          // the flash module has support.
+          CallModuleSupportsAsyncRender(&supportsAsyncRender);
+        }
 #ifdef _WIN64
         // For 64-bit builds force windowless if the flash library doesn't support
         // async rendering regardless of sandbox level.

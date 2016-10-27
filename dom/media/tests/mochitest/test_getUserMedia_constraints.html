@@ -102,53 +102,50 @@ var mustFailWith = (msg, reason, constraint, f) =>
  * test by verifying that the right resolution and rejection is fired.
  */
 
-runTest(function() {
+runTest(() => Promise.resolve()
+  .then(() => {
+    // Check supported constraints first.
+    var dict = navigator.mediaDevices.getSupportedConstraints();
+    var supported = Object.keys(dict);
 
-  // Check supported constraints first.
-  var dict = navigator.mediaDevices.getSupportedConstraints();
-  var supported = Object.keys(dict);
+    mustSupport.forEach(key => ok(supported.indexOf(key) != -1 && dict[key],
+                                  "Supports " + key));
 
-  mustSupport.forEach(key => ok(supported.indexOf(key) != -1 && dict[key],
-                                "Supports " + key));
-
-  var unexpected = supported.filter(key => mustSupport.indexOf(key) == -1);
-  is(unexpected.length, 0,
-     "Unanticipated support (please update test): " + unexpected);
-
-  // Run constraint tests
-
-  var p = new Promise(resolve => SpecialPowers.pushPrefEnv({
-      set : [ ['media.getusermedia.browser.enabled', false],
-              ['media.getusermedia.screensharing.enabled', false] ]
-    }, resolve));
-
-  return tests.reduce((p, test) =>
-    p.then(() => navigator.mediaDevices.getUserMedia(test.constraints))
-    .then(() => is(null, test.error, test.message), e => {
+    var unexpected = supported.filter(key => mustSupport.indexOf(key) == -1);
+    is(unexpected.length, 0,
+       "Unanticipated support (please update test): " + unexpected);
+  })
+  .then(() => pushPrefs(["media.getusermedia.browser.enabled", false],
+                        ["media.getusermedia.screensharing.enabled", false]))
+  .then(() => tests.reduce((p, test) => p.then(() => getUserMedia(test.constraints))
+    .then(stream => {
+      is(null, test.error, test.message);
+      stream.getTracks().forEach(t => t.stop());
+    }, e => {
       is(e.name, test.error, test.message + ": " + e.message);
       if (test.constraint) {
         is(e.constraint, test.constraint,
            test.message + " w/correct constraint.");
       }
-    }), p)
-    .then(() => navigator.mediaDevices.getUserMedia({video: true, audio: true}))
-    .then(stream => stream.getVideoTracks()[0].applyConstraints({ width: 320 })
-      .then(() => stream.getAudioTracks()[0].applyConstraints({ })))
-    .then(() => ok(true, "applyConstraints code exercised"))
-    // TODO: Test outcome once fake devices support constraints (Bug 1088621)
-    .then(() => mustFailWith("applyConstraints fails on non-Gum tracks",
-                             "OverconstrainedError", "",
-                             () => (new AudioContext())
-                                 .createMediaStreamDestination().stream
-                                 .getAudioTracks()[0].applyConstraints()))
-    .then(() => mustFailWith(
-        "getUserMedia with unsatisfied required constraint",
-        "OverconstrainedError", "deviceId",
-        () => navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: { deviceId: { exact: "unheardof" } },
-        })));
-});
+    }), Promise.resolve()))
+  .then(() => getUserMedia({video: true, audio: true}))
+  .then(stream => stream.getVideoTracks()[0].applyConstraints({ width: 320 })
+    .then(() => stream.getAudioTracks()[0].applyConstraints({ }))
+    .then(() => {
+      stream.getTracks().forEach(track => track.stop());
+      ok(true, "applyConstraints code exercised");
+    }))
+  // TODO: Test outcome once fake devices support constraints (Bug 1088621)
+  .then(() => mustFailWith("applyConstraints fails on non-Gum tracks",
+                           "OverconstrainedError", "",
+                           () => (new AudioContext())
+                               .createMediaStreamDestination().stream
+                               .getAudioTracks()[0].applyConstraints()))
+  .then(() => mustFailWith(
+      "getUserMedia with unsatisfied required constraint",
+      "OverconstrainedError", "deviceId",
+      () => getUserMedia({ audio: true,
+                           video: { deviceId: { exact: "unheardof" } } }))));
 
 </script>
 </pre>
