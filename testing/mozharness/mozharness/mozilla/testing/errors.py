@@ -106,6 +106,11 @@ TestPassed = [
     {'regex': re.compile('''(TEST-INFO|TEST-KNOWN-FAIL|TEST-PASS|INFO \| )'''), 'level': INFO},
 ]
 
+HarnessErrorList = [
+    {'substr': 'TEST-UNEXPECTED', 'level': ERROR, },
+    {'substr': 'PROCESS-CRASH', 'level': ERROR, },
+]
+
 LogcatErrorList = [
     {'substr': 'Fatal signal 11 (SIGSEGV)', 'level': ERROR, 'explanation': 'This usually indicates the B2G process has crashed'},
     {'substr': 'Fatal signal 7 (SIGBUS)', 'level': ERROR, 'explanation': 'This usually indicates the B2G process has crashed'},
