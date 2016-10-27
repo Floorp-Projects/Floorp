@@ -795,11 +795,24 @@ ComputeShapeDistance(nsCSSPropertyID aProperty,
       } while (list);
       break;
     }
-    case eCSSKeyword_inset:
-      // TODO: will be fixed in the later patch.
-      MOZ_ASSERT(false);
+    case eCSSKeyword_inset: {
+      // Items 1-4 are respectively the top, right, bottom and left offsets
+      // from the reference box.
+      for (size_t i = 1; i <= 4; ++i) {
+        const nsCSSValue& value = func->Item(i);
+        squareDistance += pixelCalcDistance(ExtractCalcValue(value));
+      }
+      // Item 5 contains the radii of the rounded corners for the inset
+      // rectangle.
+      const nsCSSValue::Array* array = func->Item(5).GetArrayValue();
+      const size_t len = array->Count();
+      for (size_t i = 0; i < len; ++i) {
+        const nsCSSValuePair& pair = array->Item(i).GetPairValue();
+        squareDistance += pixelCalcDistance(ExtractCalcValue(pair.mXValue)) +
+                          pixelCalcDistance(ExtractCalcValue(pair.mYValue));
+      }
       break;
-
+    }
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown shape type");
   }
