@@ -430,41 +430,33 @@ bool GPUTestBotConfig::Matches(const std::string& config_data) const {
   return Matches(config);
 }
 
-bool GPUTestBotConfig::LoadCurrentConfig(const GPUInfo *gpu_info)
-{
-    bool rt;
-    if (gpu_info == NULL)
-    {
-        GPUInfo my_gpu_info;
-        CollectInfoResult result =
-            CollectGpuID(&my_gpu_info.gpu.vendor_id, &my_gpu_info.gpu.device_id);
-        if (result != kCollectInfoSuccess)
-        {
-            LOG(ERROR) << "Fail to identify GPU\n";
-            DisableGPUInfoValidation();
-            rt = true;
-        }
-        else
-        {
-            rt = SetGPUInfo(my_gpu_info);
-        }
+bool GPUTestBotConfig::LoadCurrentConfig(const GPUInfo* gpu_info) {
+  bool rt;
+  if (gpu_info == NULL) {
+    GPUInfo my_gpu_info;
+    CollectInfoResult result = CollectGpuID(
+        &my_gpu_info.gpu.vendor_id, &my_gpu_info.gpu.device_id);
+    if (result != kCollectInfoSuccess) {
+      LOG(ERROR) << "Fail to identify GPU";
+      DisableGPUInfoValidation();
+      rt = true;
+    } else {
+      rt = SetGPUInfo(my_gpu_info);
     }
-    else
-    {
-        rt = SetGPUInfo(*gpu_info);
-    }
-    set_os(GetCurrentOS());
-    if (os() == kOsUnknown)
-    {
-        LOG(ERROR) << "Unknown OS\n";
-        rt = false;
-    }
+  } else {
+    rt = SetGPUInfo(*gpu_info);
+  }
+  set_os(GetCurrentOS());
+  if (os() == kOsUnknown) {
+    LOG(ERROR) << "Unknown OS";
+    rt = false;
+  }
 #if defined(NDEBUG)
-    set_build_type(kBuildTypeRelease);
+  set_build_type(kBuildTypeRelease);
 #else
-    set_build_type(kBuildTypeDebug);
+  set_build_type(kBuildTypeDebug);
 #endif
-    return rt;
+  return rt;
 }
 
 // static
