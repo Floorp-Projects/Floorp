@@ -119,6 +119,8 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_VP9_HW_DECODE = 18;
   /* Whether NV_dx_interop2 is supported, starting in 50. */
   const long FEATURE_DX_INTEROP2 = 19;
+  /* Whether the GPU process is supported, starting in 52. */
+  const long FEATURE_GPU_PROCESS = 20;
 
   /*
    * A set of return values from GetFeatureStatus
