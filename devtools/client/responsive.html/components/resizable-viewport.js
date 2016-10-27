@@ -107,6 +107,8 @@ module.exports = createClass({
     // Update the viewport store with the new width and height.
     this.props.onResizeViewport(width, height);
     // Change the device selector back to an unselected device
+    // TODO: Bug 1313140: We should avoid calling this for every resize event, since it
+    // triggers RDP calls each time.
     this.props.onChangeViewportDevice({ name: "" });
 
     this.setState({

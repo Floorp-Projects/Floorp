@@ -3519,6 +3519,7 @@ Tab.prototype = {
 
     Services.obs.addObserver(this, "before-first-paint", false);
     Services.obs.addObserver(this, "media-playback", false);
+    Services.obs.addObserver(this, "media-playback-resumed", false);
 
     // Always intialise new tabs with basic session store data to avoid
     // problems with functions that always expect it to be present
@@ -3629,6 +3630,7 @@ Tab.prototype = {
 
     Services.obs.removeObserver(this, "before-first-paint");
     Services.obs.removeObserver(this, "media-playback", false);
+    Services.obs.removeObserver(this, "media-playback-resumed", false);
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are removed.
@@ -4395,16 +4397,24 @@ Tab.prototype = {
         break;
 
       case "media-playback":
+      case "media-playback-resumed":
         if (!aSubject) {
           return;
         }
 
         let winId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
         if (this.browser.outerWindowID == winId) {
+          let status;
+          if (aTopic == "media-playback") {
+            status = aData === "active" ? "start" : "end";
+          } else if (aTopic == "media-playback-resumed") {
+            status = "resume";
+          }
+
           Messaging.sendRequest({
             type: "Tab:MediaPlaybackChange",
             tabID: this.id,
-            active: aData === "active"
+            status: status
           });
         }
         break;

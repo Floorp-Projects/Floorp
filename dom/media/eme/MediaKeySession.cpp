@@ -477,26 +477,42 @@ MediaKeySession::Close(ErrorResult& aRv)
   if (aRv.Failed()) {
     return nullptr;
   }
-  if (!IsCallable()) {
-    // If this object's callable value is false, return a promise rejected
-    // with a new DOMException whose name is InvalidStateError.
-    EME_LOG("MediaKeySession[%p,''] Close() called before sessionId set by CDM", this);
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-      NS_LITERAL_CSTRING("MediaKeySession.Close() called before sessionId set by CDM"));
-    return promise.forget();
-  }
-  if (IsClosed() || !mKeys->GetCDMProxy()) {
+  // 1. Let session be the associated MediaKeySession object.
+  // 2. If session is closed, return a resolved promise.
+  if (IsClosed()) {
     EME_LOG("MediaKeySession[%p,'%s'] Close() already closed",
             this, NS_ConvertUTF16toUTF8(mSessionId).get());
     promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
+  // 3. If session's callable value is false, return a promise rejected
+  // with an InvalidStateError.
+  if (!IsCallable()) {
+    EME_LOG("MediaKeySession[%p,''] Close() called before sessionId set by CDM", this);
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+      NS_LITERAL_CSTRING("MediaKeySession.Close() called before sessionId set by CDM"));
+    return promise.forget();
+  }
+  if (!mKeys->GetCDMProxy()) {
+    EME_LOG("MediaKeySession[%p,'%s'] Close() null CDMProxy",
+            this, NS_ConvertUTF16toUTF8(mSessionId).get());
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+      NS_LITERAL_CSTRING("MediaKeySession.Close() lost reference to CDM"));
+    return promise.forget();
+  }
+  // 4. Let promise be a new promise.
   PromiseId pid = mKeys->StorePromise(promise);
+  // 5. Run the following steps in parallel:
+  // 5.1 Let cdm be the CDM instance represented by session's cdm instance value.
+  // 5.2 Use cdm to close the session associated with session.
   mKeys->GetCDMProxy()->CloseSession(mSessionId, pid);
 
   EME_LOG("MediaKeySession[%p,'%s'] Close() sent to CDM, promiseId=%d",
           this, NS_ConvertUTF16toUTF8(mSessionId).get(), pid);
 
+  // Session Closed algorithm is run when CDM causes us to run OnSessionClosed().
+
+  // 6. Return promise.
   return promise.forget();
 }
 
