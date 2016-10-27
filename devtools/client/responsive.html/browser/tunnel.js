@@ -430,6 +430,8 @@ MessageManagerTunnel.prototype = {
     "InlineSpellChecker:",
     // Messages sent from pageinfo.js
     "PageInfo:",
+    // Messsage sent from printUtils.js
+    "Printing:",
     // Messages sent from browser-social.js
     "Social:",
     "PageMetadata:",
@@ -448,6 +450,8 @@ MessageManagerTunnel.prototype = {
     "Finder:",
     // Messages sent to pageinfo.js
     "PageInfo:",
+    // Messsage sent from printUtils.js
+    "Printing:",
     // Messages sent to browser-social.js
     "Social:",
     "PageMetadata:",
