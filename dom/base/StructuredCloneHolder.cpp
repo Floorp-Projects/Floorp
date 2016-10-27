@@ -997,6 +997,41 @@ WriteFormData(JSStructuredCloneWriter* aWriter,
   return aFormData->ForEach(Closure::Write, &closure);
 }
 
+JSObject*
+ReadWasmModule(JSContext* aCx,
+               uint32_t aIndex,
+               StructuredCloneHolder* aHolder)
+{
+  MOZ_ASSERT(aHolder);
+  MOZ_ASSERT(aIndex < aHolder->WasmModules().Length());
+  MOZ_ASSERT(aHolder->CloneScope() == StructuredCloneHolder::StructuredCloneScope::SameProcessSameThread ||
+             aHolder->CloneScope() == StructuredCloneHolder::StructuredCloneScope::SameProcessDifferentThread);
+
+  RefPtr<JS::WasmModule> wasmModule = aHolder->WasmModules()[aIndex];
+  return wasmModule->createObject(aCx);
+}
+
+bool
+WriteWasmModule(JSStructuredCloneWriter* aWriter,
+                JS::WasmModule* aWasmModule,
+                StructuredCloneHolder* aHolder)
+{
+  MOZ_ASSERT(aWriter);
+  MOZ_ASSERT(aWasmModule);
+  MOZ_ASSERT(aHolder);
+  MOZ_ASSERT(aHolder->CloneScope() == StructuredCloneHolder::StructuredCloneScope::SameProcessSameThread ||
+             aHolder->CloneScope() == StructuredCloneHolder::StructuredCloneScope::SameProcessDifferentThread);
+
+  // We store the position of the wasmModule in the array as index.
+  if (JS_WriteUint32Pair(aWriter, SCTAG_DOM_WASM,
+                         aHolder->WasmModules().Length())) {
+    aHolder->WasmModules().AppendElement(aWasmModule);
+    return true;
+  }
+
+  return false;
+}
+
 } // anonymous namespace
 
 JSObject*
@@ -1033,7 +1068,11 @@ StructuredCloneHolder::CustomReadHandler(JSContext* aCx,
     // aIndex is the index of the cloned image.
     return ImageBitmap::ReadStructuredClone(aCx, aReader,
                                             parent, GetSurfaces(), aIndex);
-   }
+  }
+
+  if (aTag == SCTAG_DOM_WASM) {
+    return ReadWasmModule(aCx, aIndex, this);
+  }
 
   return ReadFullySerializableObjects(aCx, aReader, aTag);
 }
@@ -1093,6 +1132,16 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
                                                GetSurfaces(),
                                                imageBitmap);
     }
+  }
+
+  // See if this is a WasmModule.
+  if ((mStructuredCloneScope == StructuredCloneScope::SameProcessSameThread ||
+       mStructuredCloneScope == StructuredCloneScope::SameProcessDifferentThread) &&
+      JS::IsWasmModuleObject(aObj)) {
+    RefPtr<JS::WasmModule> module = JS::GetWasmModule(aObj);
+    MOZ_ASSERT(module);
+
+    return WriteWasmModule(aWriter, module, this);
   }
 
   return WriteFullySerializableObjects(aCx, aWriter, aObj);
