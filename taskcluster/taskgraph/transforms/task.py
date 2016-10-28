@@ -157,7 +157,7 @@ task_description_schema = Schema({
 
         # worker features that should be enabled
         Required('relengapi-proxy', default=False): bool,
-        Required('chainOfTrust', default=False): bool,
+        Required('chain-of-trust', default=False): bool,
         Required('taskcluster-proxy', default=False): bool,
         Required('allow-ptrace', default=False): bool,
         Required('loopback-video', default=False): bool,
@@ -342,7 +342,7 @@ def build_docker_worker_payload(config, task, task_def):
         features['allowPtrace'] = True
         task_def['scopes'].append('docker-worker:feature:allowPtrace')
 
-    if worker.get('chainOfTrust'):
+    if worker.get('chain-of-trust'):
         features['chainOfTrust'] = True
 
     capabilities = {}
