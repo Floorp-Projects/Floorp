@@ -19,6 +19,15 @@ private:
   static bool IsValidSite(nsIURI* uri);
 };
 
+namespace dom {
+
+class AddonManagerPermissions {
+public:
+  static bool IsHostPermitted(const GlobalObject&, const nsAString& host);
+};
+
+} // namespace mozilla::dom
+
 } // namespace mozilla
 
 #endif // addonmanagerwebapi_h_
