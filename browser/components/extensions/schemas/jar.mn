@@ -10,6 +10,5 @@ browser.jar:
     content/browser/schemas/context_menus_internal.json
     content/browser/schemas/history.json
     content/browser/schemas/page_action.json
-    content/browser/schemas/sessions.json
     content/browser/schemas/tabs.json
     content/browser/schemas/windows.json
