@@ -28,10 +28,25 @@ function* portalDetectedNoBrowserWindow() {
 
 function* openWindowAndWaitForPortalTabAndNotification() {
   let win = yield BrowserTestUtils.openNewBrowserWindow();
-  let [notification, tab] = yield Promise.all([
-    BrowserTestUtils.waitForGlobalNotificationBar(win, PORTAL_NOTIFICATION_VALUE),
-    BrowserTestUtils.waitForNewTab(win.gBrowser, CANONICAL_URL)
-  ]);
+  // Thanks to things being async, at this point we now have a new browser window
+  // but the portal notification and tab may or may not have opened. So first we
+  // check if there's already a portal notification, and if not, wait.
+  let notification = win.document.getElementById("high-priority-global-notificationbox")
+                        .getNotificationWithValue(PORTAL_NOTIFICATION_VALUE);
+  if (!notification) {
+    notification =
+      yield BrowserTestUtils.waitForGlobalNotificationBar(win, PORTAL_NOTIFICATION_VALUE);
+  }
+  // Then we see if there's already a portal tab. If it's open, it'll be the second one.
+  let tab = win.gBrowser.tabs[1];
+  if (!tab || tab.linkedBrowser.currentURI.spec != CANONICAL_URL) {
+    // The tab either hasn't been opened yet or it hasn't loaded the portal URL.
+    // Waiting for a location change in the tabbrowser covers both cases.
+    yield BrowserTestUtils.waitForLocationChange(win.gBrowser, CANONICAL_URL);
+    // At this point the portal tab should be the second tab. If there is still
+    // no second tab, something is wrong, and the selectedTab test below will fail.
+    tab = win.gBrowser.tabs[1];
+  }
   is(win.gBrowser.selectedTab, tab,
     "The captive portal tab should be open and selected in the new window.");
   testShowLoginPageButtonVisibility(notification, "hidden");
