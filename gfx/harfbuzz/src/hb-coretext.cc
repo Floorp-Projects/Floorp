@@ -149,9 +149,17 @@ create_ct_font (CGFontRef cg_font, CGFloat font_size)
   /* crbug.com/576941 and crbug.com/625902 and the investigation in the latter
    * bug indicate that the cascade list reconfiguration occasionally causes
    * crashes in CoreText on OS X 10.9, thus let's skip this step on older
-   * operating system versions. */
-  if (&CTGetCoreTextVersion != NULL && CTGetCoreTextVersion() <= kCTVersionNumber10_9)
-    return ct_font;
+   * operating system versions. Except for the emoji font, where _not_
+   * reconfiguring the cascade list causes CoreText crashes. For details, see
+   * crbug.com/549610 */
+  // 0x00070000 stands for "kCTVersionNumber10_10", see CoreText.h
+  if (&CTGetCoreTextVersion != NULL && CTGetCoreTextVersion() < 0x00070000) {
+    CFStringRef fontName = CTFontCopyPostScriptName (ct_font);
+    bool isEmojiFont = CFStringCompare (fontName, CFSTR("AppleColorEmoji"), 0) == kCFCompareEqualTo;
+    CFRelease (fontName);
+    if (!isEmojiFont)
+      return ct_font;
+  }
 
   CFURLRef original_url = (CFURLRef)CTFontCopyAttribute(ct_font, kCTFontURLAttribute);
 

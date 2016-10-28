@@ -289,9 +289,10 @@ hb_shape_plan_execute (hb_shape_plan_t    *shape_plan,
 		       unsigned int        num_features)
 {
   DEBUG_MSG_FUNC (SHAPE_PLAN, shape_plan,
-		  "num_features=%d shaper_func=%p",
+		  "num_features=%d shaper_func=%p, shaper_name=%s",
 		  num_features,
-		  shape_plan->shaper_func);
+		  shape_plan->shaper_func,
+		  shape_plan->shaper_name);
 
   if (unlikely (!buffer->len))
     return true;
