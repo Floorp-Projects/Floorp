@@ -116,11 +116,12 @@ public:
     template<typename T>
     void CompressedTexImage3D(GLenum target, GLint level, GLenum internalFormat,
                               GLsizei width, GLsizei height, GLsizei depth, GLint border,
-                              const T& anySrc, GLuint viewElemOffset = 0)
+                              const T& anySrc, GLuint viewElemOffset = 0,
+                              GLuint viewElemLengthOverride = 0)
     {
         const char funcName[] = "compressedTexImage3D";
         const uint8_t funcDims = 3;
-        const TexImageSourceAdapter src(anySrc, viewElemOffset);
+        const TexImageSourceAdapter src(anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
                            height, depth, border, src);
     }
@@ -129,11 +130,12 @@ public:
     void CompressedTexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                                  GLint zOffset, GLsizei width, GLsizei height,
                                  GLsizei depth, GLenum unpackFormat, const T& anySrc,
-                                 GLuint viewElemOffset = 0)
+                                 GLuint viewElemOffset = 0,
+                                 GLuint viewElemLengthOverride = 0)
     {
         const char funcName[] = "compressedTexSubImage3D";
         const uint8_t funcDims = 3;
-        const TexImageSourceAdapter src(anySrc, viewElemOffset);
+        const TexImageSourceAdapter src(anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
                               zOffset, width, height, depth, unpackFormat, src);
     }
