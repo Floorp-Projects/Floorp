@@ -121,6 +121,7 @@
     macro(frame, frame, "frame") \
     macro(from, from, "from") \
     macro(fulfilled, fulfilled, "fulfilled") \
+    macro(fulfillHandler, fulfillHandler, "fulfillHandler") \
     macro(futexNotEqual, futexNotEqual, "not-equal") \
     macro(futexOK, futexOK, "ok") \
     macro(futexTimedOut, futexTimedOut, "timed-out") \
@@ -253,6 +254,7 @@
     macro(Reify, Reify, "Reify") \
     macro(reject, reject, "reject") \
     macro(rejected, rejected, "rejected") \
+    macro(rejectHandler, rejectHandler, "rejectHandler") \
     macro(RequireObjectCoercible, RequireObjectCoercible, "RequireObjectCoercible") \
     macro(resolve, resolve, "resolve") \
     macro(resumeGenerator, resumeGenerator, "resumeGenerator") \
