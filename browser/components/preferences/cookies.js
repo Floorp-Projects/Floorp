@@ -127,10 +127,10 @@ var gCookiesWindow = {
     var rowIndex = 0;
     var cookieItem = null;
     if (!this._view._filtered) {
-      for (let host of this._hostsOrder) { // (var host in this._hosts) {
+      for (let host of this._hostOrder) {
         ++rowIndex;
         var hostItem = this._hosts[host];
-        if (this._hostOrder[i] == strippedHost) { // host == strippedHost) {
+        if (host == strippedHost) {
           // Host matches, look for the cookie within this Host collection
           // and update its data
           for (let currCookie of hostItem.cookies) {
@@ -888,7 +888,7 @@ var gCookiesWindow = {
 
     // Save open states
     this._openIndices = [];
-    for (i = 0; i < this._view.rowCount; ++i) {
+    for (let i = 0; i < this._view.rowCount; ++i) {
       var item = this._view._getItemAtIndex(i);
       if (item && item.container && item.open)
         this._openIndices.push(i);
