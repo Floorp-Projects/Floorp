@@ -1726,6 +1726,24 @@ HttpChannelParent::DoSendDeleteSelf()
   return rv;
 }
 
+bool
+HttpChannelParent::RecvDeletingChannel()
+{
+  // We need to ensure that the parent channel will not be sending any more IPC
+  // messages after this, as the child is going away. DoSendDeleteSelf will
+  // set mIPCClosed = true;
+  return DoSendDeleteSelf();
+}
+
+bool
+HttpChannelParent::RecvFinishInterceptedRedirect()
+{
+  // We make sure not to send any more messages until the IPC channel is torn
+  // down by the child.
+  mIPCClosed = true;
+  return SendFinishInterceptedRedirect();
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelSecurityWarningReporter
 //-----------------------------------------------------------------------------

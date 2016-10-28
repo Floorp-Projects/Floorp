@@ -86,6 +86,10 @@ parent:
   async RemoveCorsPreflightCacheEntry(URIParams uri,
                                       PrincipalInfo requestingPrincipal);
 
+  // After receiving this message, the parent calls SendDeleteSelf, and makes
+  // sure not to send any more messages after that.
+  async DeletingChannel();
+
   async __delete__();
 
 child:
@@ -160,6 +164,13 @@ child:
 
   // Tell the child to issue a deprecation warning.
   async IssueDeprecationWarning(uint32_t warning, bool asError);
+
+both:
+  // After receiving this message, the parent also calls
+  // SendFinishInterceptedRedirect, and makes sure not to send any more messages
+  // after that. When receiving this message, the child will call
+  // Send__delete__() and complete the steps required to finish the redirect.
+  async FinishInterceptedRedirect();
 };
 
 
