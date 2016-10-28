@@ -44,10 +44,10 @@ function toASCIIUpperCase(s) {
     // since we only care about ASCII characters here, that's OK).
     var result = "";
     for (var i = 0; i < s.length; i++) {
-        var c = callFunction(std_String_charCodeAt, s, i);
-        result += (0x61 <= c && c <= 0x7A)
-                  ? callFunction(std_String_fromCharCode, null, c & ~0x20)
-                  : s[i];
+        var c = s[i];
+        if ("a" <= c && c <= "z")
+            c = callFunction(std_String_toUpperCase, c);
+        result += c;
     }
     return result;
 }
@@ -622,133 +622,6 @@ function IsWellFormedCurrencyCode(currency) {
     if (normalized.length !== 3)
         return false;
     return !regexp_test_no_statics(getIsWellFormedCurrencyCodeRE(), normalized);
-}
-
-
-var timeZoneCache = {
-    icuDefaultTimeZone: undefined,
-    defaultTimeZone: undefined,
-    timeZones: undefined,
-};
-
-
-/**
- * 6.4.1 IsValidTimeZoneName ( timeZone )
- *
- * Verifies that the given string is a valid time zone name. If it is a valid
- * time zone name, its IANA time zone name is returned. Otherwise returns null.
- *
- * ES2017 Intl draft rev 4a23f407336d382ed5e3471200c690c9b020b5f3
- */
-function IsValidTimeZoneName(timeZone) {
-    assert(typeof timeZone === "string", "IsValidTimeZoneName");
-
-    var timeZones = timeZoneCache.timeZones;
-    if (timeZones === undefined) {
-        timeZones = intl_availableTimeZones();
-        timeZoneCache.timeZones = timeZones;
-    }
-
-    // Return |null| if time zone not found or non-IANA time zone.
-    var tz = timeZones[toASCIIUpperCase(timeZone)];
-    return (tz === undefined || tz in legacyICUTimeZones) ? null : tz;
-}
-
-
-/**
- * 6.4.2 CanonicalizeTimeZoneName ( timeZone )
- *
- * Canonicalizes the given IANA time zone name.
- *
- * ES2017 Intl draft rev 4a23f407336d382ed5e3471200c690c9b020b5f3
- */
-function CanonicalizeTimeZoneName(timeZone) {
-    assert(typeof timeZone === "string", "CanonicalizeTimeZoneName");
-
-    // Step 1. (Not applicable, the input is already a valid IANA time zone.)
-    assert(timeZone !== "Etc/Unknown", "Invalid time zone");
-    assert(timeZone === IsValidTimeZoneName(timeZone), "Time zone name not normalized");
-
-    // Step 2.
-    var ianaTimeZone = intl_canonicalizeTimeZone(timeZone);
-    assert(ianaTimeZone !== "Etc/Unknown", "Invalid canonical time zone");
-    assert(ianaTimeZone === IsValidTimeZoneName(ianaTimeZone), "Unsupported canonical time zone");
-
-    // Step 3.
-    if (ianaTimeZone === "Etc/UTC" || ianaTimeZone === "Etc/GMT") {
-        // ICU/CLDR canonicalizes Etc/UCT to Etc/GMT, but following IANA and
-        // ECMA-402 to the letter means Etc/UCT is a separate time zone.
-        if (timeZone === "Etc/UCT" || timeZone === "UCT")
-            ianaTimeZone = "Etc/UCT";
-        else
-            ianaTimeZone = "UTC";
-    } else {
-        // ICU/CLDR doesn't map all names to their new IANA time zone names.
-        // http://bugs.icu-project.org/trac/ticket/12044
-        if (timeZone in tzLinkNamesNonICU) {
-            // Case 1: ICU/CLDR maps the time zone to another time zone, e.g.
-            // America/Virgin is mapped to America/St_Thomas, whereas IANA maps
-            // America/Virgin to America/Port_of_Spain.
-            // Only perform the update when ICU supports the new time zone.
-            if (IsValidTimeZoneName(tzLinkNamesNonICU[timeZone]) !== null) {
-                ianaTimeZone = tzLinkNamesNonICU[timeZone];
-            }
-        } else if (timeZone in tzZoneNamesNonICU) {
-            // Case 2: ICU/CLDR maps the time zone to its old name, e.g.
-            // Asia/Kathmandu is mapped to Asia/Katmandu.
-            ianaTimeZone = timeZone;
-        }
-    }
-
-    // Step 4.
-    return ianaTimeZone;
-}
-
-
-/**
- * 6.4.3 DefaultTimeZone ()
- *
- * Returns the IANA time zone name for the host environment's current time zone.
- *
- * ES2017 Intl draft rev 4a23f407336d382ed5e3471200c690c9b020b5f3
- */
-function DefaultTimeZone() {
-    const icuDefaultTimeZone = intl_defaultTimeZone();
-    if (timeZoneCache.icuDefaultTimeZone === icuDefaultTimeZone)
-        return timeZoneCache.defaultTimeZone;
-
-    // Verify that the current ICU time zone is a valid ECMA-402 time zone.
-    var timeZone = IsValidTimeZoneName(icuDefaultTimeZone);
-    if (timeZone === null) {
-        // Before defaulting to "UTC", try to represent the default time zone
-        // using the Etc/GMT + offset format. This format only accepts full
-        // hour offsets.
-        const msPerHour = 60 * 60 * 1000;
-        var offset = intl_defaultTimeZoneOffset();
-        assert(offset === (offsetVal | 0),
-               "milliseconds offset shouldn't be able to exceed int32_t range");
-        var offsetHours = offset / msPerHour, offsetHoursFraction = offset % msPerHour;
-        if (offsetHoursFraction === 0) {
-            // Etc/GMT + offset uses POSIX-style signs, i.e. a positive offset
-            // means a location west of GMT.
-            timeZone = "Etc/GMT" + (offsetHours < 0 ? "+" : "-") + std_Math_abs(offsetHours);
-
-            // Check if the fallback is valid.
-            timeZone = IsValidTimeZoneName(timeZone);
-        }
-
-        // Fallback to "UTC" if everything else fails.
-        if (timeZone === null)
-            timeZone = "UTC";
-    }
-
-    // Canonicalize the ICU time zone, e.g. change Etc/UTC to UTC.
-    var defaultTimeZone = CanonicalizeTimeZoneName(timeZone);
-
-    timeZoneCache.defaultTimeZone = defaultTimeZone;
-    timeZoneCache.icuDefaultTimeZone = icuDefaultTimeZone;
-
-    return defaultTimeZone;
 }
 
 
@@ -2223,7 +2096,7 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
     //         hour12: true / false,  // optional
     //       }
     //
-    //     timeZone: IANA time zone name,
+    //     timeZone: undefined / "UTC",
     //
     //     formatOpt: // *second* opt computed in InitializeDateTimeFormat
     //       {
@@ -2355,7 +2228,7 @@ function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
     //         localeMatcher: "lookup" / "best fit",
     //       }
     //
-    //     timeZone: IANA time zone name,
+    //     timeZone: undefined / "UTC",
     //
     //     formatOpt: // *second* opt computed in InitializeDateTimeFormat
     //       {
@@ -2394,19 +2267,9 @@ function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
     // Steps 15-17.
     var tz = options.timeZone;
     if (tz !== undefined) {
-        // Step 15.a.
-        tz = ToString(tz);
-
-        // Step 15.b.
-        var timeZone = IsValidTimeZoneName(tz);
-        if (timeZone === null)
+        tz = toASCIIUpperCase(ToString(tz));
+        if (tz !== "UTC")
             ThrowRangeError(JSMSG_INVALID_TIME_ZONE, tz);
-
-        // Step 15.c.
-        tz = CanonicalizeTimeZoneName(timeZone);
-    } else {
-        // Step 16.
-        tz = DefaultTimeZone();
     }
     lazyDateTimeFormatData.timeZone = tz;
 
@@ -2429,7 +2292,7 @@ function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
     // For some reason (ICU not exposing enough interface?) we drop the
     // requested format matcher on the floor after this.  In any case, even if
     // doing so is justified, we have to do this work here in case it triggers
-    // getters or similar. (bug 852837)
+    // getters or similar.
     var formatMatcher =
         GetOption(options, "formatMatcher", "string", ["basic", "best fit"],
                   "best fit");
