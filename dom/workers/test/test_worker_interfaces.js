@@ -180,7 +180,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "ServiceWorkerRegistration", b2g: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "StorageManager",
+    {name: "StorageManager", nightly: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "SubtleCrypto",
 // IMPORTANT: Do not change this list without review from a DOM peer!
