@@ -178,10 +178,18 @@ mochitest:
     suite: mochitest/plain-chunked
     treeherder-symbol: tc-M()
     loopback-video: true
+    run-on-projects:
+        by-test-platform:
+            linux64-ccov/opt: []
+            default: ['all']
     chunks:
         by-test-platform:
             win.*: 5
             default: 10
+    e10s:
+        by-test-platform:
+            linux64-ccov/opt: false
+            default: both
     max-run-time: 5400
     mozharness:
         script: desktop_unittest.py
@@ -195,7 +203,12 @@ mochitest:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
-            - --mochitest-suite=plain-chunked
+            by-test-platform:
+                linux64-ccov/opt:
+                    - --mochitest-suite=plain-chunked
+                    - --code-coverage
+                default:
+                    - --mochitest-suite=plain-chunked
     # Bug 1281241: migrating to m3.large instances
     instance-size: legacy
     allow-software-gl-layers: false
