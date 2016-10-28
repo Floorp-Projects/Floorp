@@ -653,7 +653,7 @@ gfxPlatform::Init()
       ScopedGfxFeatureReporter::AppNote(forcedPrefs);
     }
 
-    InitMoz2D();
+    InitMoz2DLogging();
 
     gGfxPlatformPrefsLock = new Mutex("gfxPlatform::gGfxPlatformPrefsLock");
 
@@ -793,7 +793,7 @@ gfxPlatform::Init()
 }
 
 /* static */ void
-gfxPlatform::InitMoz2D()
+gfxPlatform::InitMoz2DLogging()
 {
     auto fwd = new CrashStatsLogForwarder("GraphicsCriticalError");
     fwd->SetCircularBufferSize(gfxPrefs::GfxLoggingCrashLength());
@@ -802,7 +802,6 @@ gfxPlatform::InitMoz2D()
     cfg.mLogForwarder = fwd;
     cfg.mMaxTextureSize = gfxPrefs::MaxTextureSize();
     cfg.mMaxAllocSize = gfxPrefs::MaxAllocSize();
-    cfg.mDefaultSoftwareBackend = gPlatform->GetSoftwareBackend();
 
     gfx::Factory::Init(cfg);
 }
@@ -1633,7 +1632,6 @@ gfxPlatform::InitBackendPrefs(uint32_t aCanvasBitmask, BackendType aCanvasDefaul
           GetCanvasBackendPref(aCanvasBitmask & ~BackendTypeBit(mPreferredCanvasBackend));
     }
 
-
     mContentBackendBitmask = aContentBitmask;
     mContentBackend = GetContentBackendPref(mContentBackendBitmask);
     if (mContentBackend == BackendType::NONE) {
@@ -1643,10 +1641,6 @@ gfxPlatform::InitBackendPrefs(uint32_t aCanvasBitmask, BackendType aCanvasDefaul
         // overriding the prefs.
         mContentBackendBitmask |= BackendTypeBit(aContentDefault);
     }
-
-    uint32_t swBackendBits = BackendTypeBit(BackendType::SKIA) |
-                             BackendTypeBit(BackendType::CAIRO);
-    mSoftwareBackend = GetContentBackendPref(swBackendBits);
 
     if (XRE_IsParentProcess()) {
         gfxVars::SetContentBackend(mContentBackend);
