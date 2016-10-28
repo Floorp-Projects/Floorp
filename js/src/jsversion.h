@@ -37,11 +37,4 @@
  */
 #define JS_OLD_GETTER_SETTER_METHODS    1
 
-#ifdef NIGHTLY_BUILD
-
-/* Support for ES7 Exponentiation proposal. */
-#define JS_HAS_EXPONENTIATION 1
-
-#endif // NIGHTLY_BUILD
-
 #endif /* jsversion_h */

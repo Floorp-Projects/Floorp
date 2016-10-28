@@ -171,8 +171,11 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
             files = [f for p, f in l10n_finder.find(path)]
             if not len(files):
                 if base not in non_chrome:
+                    finderBase = ""
+                    if hasattr(l10n_finder, 'base'):
+                        finderBase = l10n_finder.base
                     errors.error("Missing file: %s" %
-                                 os.path.join(l10n_finder.base, path))
+                                 os.path.join(finderBase, path))
             else:
                 packager.add(path, files[0])
         else:

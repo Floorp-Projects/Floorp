@@ -2,32 +2,27 @@
 
 NULL =
 
-SUBDIRS = src util test
+ACLOCAL_AMFLAGS = -I m4
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = harfbuzz.pc
+SUBDIRS = src util test docs win32
 
 EXTRA_DIST = \
 	autogen.sh \
 	harfbuzz.doap \
+	Android.mk \
+	README.python \
+	BUILD.md \
 	$(NULL)
 
 MAINTAINERCLEANFILES = \
+	$(GITIGNORE_MAINTAINERCLEANFILES_TOPLEVEL) \
+	$(GITIGNORE_MAINTAINERCLEANFILES_M4_LIBTOOL) \
+	$(GITIGNORE_MAINTAINERCLEANFILES_MAKEFILE_IN) \
 	$(srcdir)/INSTALL \
-	$(srcdir)/aclocal.m4 \
-	$(srcdir)/autoscan.log \
-	$(srcdir)/compile \
-	$(srcdir)/config.guess \
-	$(srcdir)/config.h.in \
-	$(srcdir)/config.sub \
-	$(srcdir)/configure.scan \
-	$(srcdir)/depcomp \
-	$(srcdir)/install-sh \
-	$(srcdir)/ltmain.sh \
-	$(srcdir)/missing \
-	$(srcdir)/mkinstalldirs \
 	$(srcdir)/ChangeLog \
-	`find "$(srcdir)" -type f -name Makefile.in -print`
+	$(srcdir)/gtk-doc.make \
+	$(srcdir)/m4/gtk-doc.m4 \
+	$(NULL)
 
 
 #
@@ -36,28 +31,37 @@ MAINTAINERCLEANFILES = \
 CHANGELOG_RANGE =
 ChangeLog: $(srcdir)/ChangeLog
 $(srcdir)/ChangeLog:
-	$(AM_V_GEN) if test -d "$(srcdir)/.git"; then \
-	  (GIT_DIR=$(top_srcdir)/.git ./missing --run \
-	   git log $(CHANGELOG_RANGE) --stat) | fmt --split-only > $@.tmp \
-	  && mv -f $@.tmp $@ \
+	$(AM_V_GEN) if test -d "$(top_srcdir)/.git"; then \
+	  (GIT_DIR=$(top_srcdir)/.git \
+	   $(GIT) log $(CHANGELOG_RANGE) --stat) | fmt --split-only > $@.tmp \
+	  && mv -f $@.tmp "$(srcdir)/ChangeLog" \
 	  || ($(RM) $@.tmp; \
 	      echo Failed to generate ChangeLog, your ChangeLog may be outdated >&2; \
-	      (test -f $@ || echo git-log is required to generate this file >> $@)); \
+	      (test -f $@ || echo git-log is required to generate this file >> "$(srcdir)/$@")); \
 	else \
 	  test -f $@ || \
 	  (echo A git checkout and git-log is required to generate ChangeLog >&2 && \
-	  echo A git checkout and git-log is required to generate this file >> $@); \
+	  echo A git checkout and git-log is required to generate this file >> "$(srcdir)/$@"); \
 	fi
-.PHONY: $(srcdir)/ChangeLog
+.PHONY: ChangeLog $(srcdir)/ChangeLog
 
 
 #
 # Release engineering
 #
 
+DISTCHECK_CONFIGURE_FLAGS = \
+	--enable-gtk-doc \
+	--disable-doc-cross-references \
+	--with-gobject \
+	--enable-introspection \
+	$(NULL)
+
 # TODO: Copy infrastructure from cairo
 
+# TAR_OPTIONS is not set as env var for 'make dist'.  How to fix that?
 TAR_OPTIONS = --owner=0 --group=0
+
 dist-hook: dist-clear-sticky-bits
 # Clean up any sticky bits we may inherit from parent dir
 dist-clear-sticky-bits:
