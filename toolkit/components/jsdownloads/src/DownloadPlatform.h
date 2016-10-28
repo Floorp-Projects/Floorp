@@ -8,6 +8,7 @@
 #include "mozIDownloadPlatform.h"
 
 #include "nsCOMPtr.h"
+class nsIURI;
 
 class DownloadPlatform : public mozIDownloadPlatform
 {
@@ -25,6 +26,9 @@ public:
   static DownloadPlatform *gDownloadPlatformService;
 
   static DownloadPlatform* GetDownloadPlatform();
+
+private:
+  static bool IsURLPossiblyFromWeb(nsIURI* aURI);
 };
 
 #endif

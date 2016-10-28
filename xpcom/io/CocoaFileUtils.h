@@ -26,7 +26,8 @@ void     AddOriginMetadataToFile(const CFStringRef filePath,
                                  const CFURLRef referrerURL);
 void     AddQuarantineMetadataToFile(const CFStringRef filePath,
                                      const CFURLRef sourceURL,
-                                     const CFURLRef referrerURL);
+                                     const CFURLRef referrerURL,
+                                     const bool isFromWeb);
 
 } // namespace CocoaFileUtils
 
