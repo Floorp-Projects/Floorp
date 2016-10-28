@@ -79,11 +79,6 @@
 
 #include "mozilla/dom/Link.h"
 
-// Undo the windows.h damage
-#if defined(XP_WIN) && defined(LoadImage)
-#undef LoadImage
-#endif
-
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
