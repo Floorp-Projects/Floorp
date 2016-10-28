@@ -5,10 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CocoaFileUtils.h"
+#include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include <Cocoa/Cocoa.h>
 #include "nsObjCExceptions.h"
 #include "nsDebug.h"
+
+// Need to cope with us using old versions of the SDK and needing this on 10.10+
+#if !defined(MAC_OS_X_VERSION_10_10) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_10)
+const CFStringRef kCFURLQuarantinePropertiesKey = CFSTR("NSURLQuarantinePropertiesKey");
+#endif
 
 namespace CocoaFileUtils {
 
@@ -187,15 +193,23 @@ void AddOriginMetadataToFile(const CFStringRef filePath,
 
 void AddQuarantineMetadataToFile(const CFStringRef filePath,
                                  const CFURLRef sourceURL,
-                                 const CFURLRef referrerURL) {
+                                 const CFURLRef referrerURL,
+                                 const bool isFromWeb) {
   CFURLRef fileURL = ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault,
                                                      filePath,
                                                      kCFURLPOSIXPathStyle,
                                                      false);
 
+  // The properties key changed in 10.10:
+  CFStringRef quarantinePropKey;
+  if (nsCocoaFeatures::OnYosemiteOrLater()) {
+    quarantinePropKey = kCFURLQuarantinePropertiesKey;
+  } else {
+    quarantinePropKey = kLSItemQuarantineProperties;
+  }
   CFDictionaryRef quarantineProps = NULL;
   Boolean success = ::CFURLCopyResourcePropertyForKey(fileURL,
-                                                      kLSItemQuarantineProperties,
+                                                      quarantinePropKey,
                                                       &quarantineProps,
                                                       NULL);
 
@@ -221,29 +235,21 @@ void AddQuarantineMetadataToFile(const CFStringRef filePath,
   // Add metadata that the OS couldn't infer.
 
   if (!::CFDictionaryGetValue(mutQuarantineProps, kLSQuarantineTypeKey)) {
-    CFStringRef type = kLSQuarantineTypeOtherDownload;
-
-    CFStringRef scheme = ::CFURLCopyScheme(sourceURL);
-    if (::CFStringCompare(scheme, CFSTR("http"), kCFCompareCaseInsensitive) == kCFCompareEqualTo ||
-        ::CFStringCompare(scheme, CFSTR("http"), kCFCompareCaseInsensitive) == kCFCompareEqualTo) {
-      type = kLSQuarantineTypeWebDownload;
-    }
-    ::CFRelease(scheme);
-
+    CFStringRef type = isFromWeb ? kLSQuarantineTypeWebDownload : kLSQuarantineTypeOtherDownload;
     ::CFDictionarySetValue(mutQuarantineProps, kLSQuarantineTypeKey, type);
   }
 
-  if (!::CFDictionaryGetValue(mutQuarantineProps, kLSQuarantineOriginURLKey)) {
+  if (!::CFDictionaryGetValue(mutQuarantineProps, kLSQuarantineOriginURLKey) && referrerURL) {
     ::CFDictionarySetValue(mutQuarantineProps, kLSQuarantineOriginURLKey, referrerURL);
   }
 
-  if (!::CFDictionaryGetValue(mutQuarantineProps, kLSQuarantineDataURLKey)) {
+  if (!::CFDictionaryGetValue(mutQuarantineProps, kLSQuarantineDataURLKey) && sourceURL) {
     ::CFDictionarySetValue(mutQuarantineProps, kLSQuarantineDataURLKey, sourceURL);
   }
 
   // Set quarantine properties on file.
   ::CFURLSetResourcePropertyForKey(fileURL,
-                                   kLSItemQuarantineProperties,
+                                   quarantinePropKey,
                                    mutQuarantineProps,
                                    NULL);
 
