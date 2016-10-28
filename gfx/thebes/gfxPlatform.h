@@ -178,7 +178,7 @@ public:
      */
     static void InitNullMetadata();
 
-    static void InitMoz2DLogging();
+    static void InitMoz2D();
 
     /**
      * Create an offscreen surface of the given dimensions
