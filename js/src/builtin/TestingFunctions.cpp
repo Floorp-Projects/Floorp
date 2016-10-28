@@ -1451,39 +1451,12 @@ SettlePromiseNow(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedNativeObject promise(cx, &args[0].toObject().as<NativeObject>());
-    int32_t flags = promise->getFixedSlot(PromiseSlot_Flags).toInt32();
-    promise->setFixedSlot(PromiseSlot_Flags,
+    int32_t flags = promise->getFixedSlot(PROMISE_FLAGS_SLOT).toInt32();
+    promise->setFixedSlot(PROMISE_FLAGS_SLOT,
                           Int32Value(flags | PROMISE_FLAG_RESOLVED | PROMISE_FLAG_FULFILLED));
-    promise->setFixedSlot(PromiseSlot_ReactionsOrResult, UndefinedValue());
+    promise->setFixedSlot(PROMISE_REACTIONS_OR_RESULT_SLOT, UndefinedValue());
 
     JS::dbg::onPromiseSettled(cx, promise);
-    return true;
-}
-
-static bool
-GetWaitForAllPromise(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.requireAtLeast(cx, "getWaitForAllPromise", 1))
-        return false;
-    if (!args[0].isObject() || !IsPackedArray(&args[0].toObject())) {
-        JS_ReportErrorASCII(cx, "first argument must be a dense Array of Promise objects");
-        return false;
-    }
-    RootedNativeObject list(cx, &args[0].toObject().as<NativeObject>());
-    AutoObjectVector promises(cx);
-    uint32_t count = list->getDenseInitializedLength();
-    if (!promises.resize(count))
-        return false;
-
-    for (uint32_t i = 0; i < count; i++)
-        promises[i].set(&list->getDenseElement(i).toObject());
-
-    RootedObject resultPromise(cx, JS::GetWaitForAllPromise(cx, promises));
-    if (!resultPromise)
-        return false;
-
-    args.rval().set(ObjectValue(*resultPromise));
     return true;
 }
 
@@ -4138,10 +4111,6 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  with a value of `undefined` and causes the firing of any onPromiseSettled\n"
 "  hooks set on Debugger instances that are observing the given promise's\n"
 "  global as a debuggee."),
-    JS_FN_HELP("getWaitForAllPromise", GetWaitForAllPromise, 1, 0,
-"getWaitForAllPromise(densePromisesArray)",
-"  Calls the 'GetWaitForAllPromise' JSAPI function and returns the result\n"
-"  Promise."),
 #else
     JS_FN_HELP("makeFakePromise", MakeFakePromise, 0, 0,
 "makeFakePromise()",

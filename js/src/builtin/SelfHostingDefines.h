@@ -78,6 +78,33 @@
 #define ITEM_KIND_VALUE 1
 #define ITEM_KIND_KEY_AND_VALUE 2
 
+#define PROMISE_FLAGS_SLOT               0
+#define PROMISE_REACTIONS_OR_RESULT_SLOT 1
+#define PROMISE_RESOLVE_FUNCTION_SLOT    2
+#define PROMISE_ALLOCATION_SITE_SLOT     3
+#define PROMISE_RESOLUTION_SITE_SLOT     4
+#define PROMISE_ALLOCATION_TIME_SLOT     5
+#define PROMISE_RESOLUTION_TIME_SLOT     6
+#define PROMISE_ID_SLOT                  7
+
+#define PROMISE_STATE_PENDING   0
+#define PROMISE_STATE_FULFILLED 1
+#define PROMISE_STATE_REJECTED  2
+
+#define PROMISE_FLAG_RESOLVED  0x1
+#define PROMISE_FLAG_FULFILLED 0x2
+#define PROMISE_FLAG_HANDLED   0x4
+#define PROMISE_FLAG_REPORTED  0x8
+
+#define PROMISE_HANDLER_IDENTITY 0
+#define PROMISE_HANDLER_THROWER  1
+
+#define PROMISE_REJECTION_TRACKER_OPERATION_REJECT false
+#define PROMISE_REJECTION_TRACKER_OPERATION_HANDLE true
+
+#define PROMISE_JOB_TYPE_FULFILL "fulfillHandler"
+#define PROMISE_JOB_TYPE_REJECT  "rejectHandler"
+
 // NB: keep these in sync with the copy in jsfriendapi.h.
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */

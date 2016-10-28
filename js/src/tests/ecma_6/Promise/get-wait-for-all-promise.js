@@ -5,6 +5,8 @@ if (!this.Promise) {
     quit(0);
 }
 
+let GetWaitForAllPromise = getSelfHostedValue('GetWaitForAllPromise');
+
 function onResolved(val) {
     result = 'resolved with ' + val;
 }
@@ -13,18 +15,18 @@ function onRejected(val) {
     result = 'rejected with ' + val;
 }
 
-// Replacing `Promise#then` shouldn't affect getWaitForAllPromise.
+// Replacing `Promise#then` shouldn't affect GetWaitForAllPromise.
 let originalThen = Promise.prototype.then;
 Promise.prototype.then = 1;
 
-// Replacing Promise[@@species] shouldn't affect getWaitForAllPromise.
+// Replacing Promise[@@species] shouldn't affect GetWaitForAllPromise.
 Promise[Symbol.species] = function(){};
 
-// Replacing `Promise` shouldn't affect getWaitForAllPromise.
+// Replacing `Promise` shouldn't affect GetWaitForAllPromise.
 let PromiseCtor = Promise;
 Promise = {};
 
-// Replacing Array[@@iterator] shouldn't affect getWaitForAllPromise.
+// Replacing Array[@@iterator] shouldn't affect GetWaitForAllPromise.
 Array.prototype[Symbol.iterator] = function(){};
 
 let resolveFunctions = [];
@@ -38,7 +40,7 @@ for (let i = 0; i < 3; i++) {
     promises.push(p);
 }
 
-let allPromise = getWaitForAllPromise(promises);
+let allPromise = GetWaitForAllPromise(promises);
 let then = originalThen.call(allPromise, onResolved, onRejected);
 
 resolveFunctions.forEach((fun, i)=>fun(i));
@@ -48,14 +50,14 @@ assertEq(result, 'resolved with 0,1,2');
 
 // Empty lists result in a promise resolved with an empty array.
 result = undefined;
-originalThen.call(getWaitForAllPromise([]), v=>(result = v));
+originalThen.call(GetWaitForAllPromise([]), v=>(result = v));
 drainJobQueue();
 assertEq(result instanceof Array, true);
 assertEq(result.length, 0);
 
 //Empty lists result in a promise resolved with an empty array.
 result = undefined;
-originalThen.call(getWaitForAllPromise([]), v=>(result = v));
+originalThen.call(GetWaitForAllPromise([]), v=>(result = v));
 
 drainJobQueue();
 
