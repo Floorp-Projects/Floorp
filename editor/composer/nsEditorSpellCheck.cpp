@@ -922,7 +922,7 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
     if (packageRegistry) {
       nsAutoCString utf8DictName;
       rv2 = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global"),
-                                               utf8DictName);
+                                               false, utf8DictName);
       dictName.Assign(EmptyString());
       AppendUTF8toUTF16(utf8DictName, dictName);
 #ifdef DEBUG_DICT
