@@ -82,8 +82,25 @@ add_task(function* () {
                    .then((tabs) => {
                      browser.test.assertTrue(tabs.length >= 1, "Tab found!");
                      testTab(data, tabs[0]);
-                     return browser.tabs.remove(tab.id);
+                     return tab;
                    });
+          }
+        })
+
+        .then((tab) => {
+          if (tab) {
+            return browser.cookies.getAllCookieStores()
+                   .then(stores => {
+                     let store = stores.find(store => store.id === tab.cookieStoreId);
+                     browser.test.assertTrue(!!store, "We have a store for this tab.");
+                     return tab;
+                   });
+          }
+        })
+
+        .then((tab) => {
+          if (tab) {
+            return browser.tabs.remove(tab.id);
           }
         })
 

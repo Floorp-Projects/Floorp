@@ -416,24 +416,20 @@ extensions.registerSchemaAPI("cookies", "addon_parent", context => {
       },
 
       getAllCookieStores: function() {
-        let defaultTabs = [];
-        let privateTabs = [];
+        let data = {};
         for (let window of WindowListManager.browserWindows()) {
           let tabs = TabManager.for(extension).getTabs(window);
           for (let tab of tabs) {
-            if (tab.incognito) {
-              privateTabs.push(tab.id);
-            } else {
-              defaultTabs.push(tab.id);
+            if (!(tab.cookieStoreId in data)) {
+              data[tab.cookieStoreId] = [];
             }
+            data[tab.cookieStoreId].push(tab);
           }
         }
+
         let result = [];
-        if (defaultTabs.length > 0) {
-          result.push({id: DEFAULT_STORE, tabIds: defaultTabs});
-        }
-        if (privateTabs.length > 0) {
-          result.push({id: PRIVATE_STORE, tabIds: privateTabs});
+        for (let key in data) {
+          result.push({id: key, tabIds: data[key], incognito: key == PRIVATE_STORE});
         }
         return Promise.resolve(result);
       },
