@@ -79,6 +79,16 @@ VRControllerManager::AddGamepad(const char* aID,
 }
 
 void
+VRControllerManager::RemoveGamepad(uint32_t aIndex)
+{
+  dom::GamepadRemoved a(aIndex, dom::GamepadServiceType::VR);
+
+  VRManager* vm = VRManager::Get();
+  MOZ_ASSERT(vm);
+  vm->NotifyGamepadChange<dom::GamepadRemoved>(a);
+}
+
+void
 VRControllerManager::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
                                     bool aPressed)
 {
