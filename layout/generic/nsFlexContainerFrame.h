@@ -79,6 +79,11 @@ public:
 
   nscoord GetLogicalBaseline(mozilla::WritingMode aWM) const override;
 
+  // nsContainerFrame overrides
+  uint16_t CSSAlignmentForAbsPosChild(
+            const ReflowInput& aChildRI,
+            mozilla::LogicalAxis aLogicalAxis) const override;
+
   // Flexbox-specific public methods
   bool IsHorizontal();
 
@@ -278,8 +283,6 @@ protected:
    * we defer to nsAbsoluteContainingBlock to determine the OOF's actual static
    * position (using this origin, the OOF's size, and the CSS Align
    * properties).
-   *
-   * XXXdholbert The nsAbsoluteContainingBlock stuff is coming in bug 1269046.
    *
    * @param aPresContext       The presentation context being used in reflow.
    * @param aReflowInput       The flex container's reflow input.
