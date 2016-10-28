@@ -262,11 +262,20 @@ FeedWriter.prototype = {
     if (!dateObj.getTime())
       return false;
 
-    let dateService = Cc["@mozilla.org/intl/scriptabledateformat;1"].
-                      getService(Ci.nsIScriptableDateFormat);
-    return dateService.FormatDateTime("", dateService.dateFormatLong, dateService.timeFormatNoSeconds,
-                                      dateObj.getFullYear(), dateObj.getMonth()+1, dateObj.getDate(),
-                                      dateObj.getHours(), dateObj.getMinutes(), dateObj.getSeconds());
+    return this._dateFormatter.format(dateObj);
+  },
+
+  __dateFormatter: null,
+  get _dateFormatter() {
+    if (!this.__dateFormatter) {
+      const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                     .getService(Ci.nsIXULChromeRegistry)
+                     .getSelectedLocale("global", true);
+      const dtOptions = { year: 'numeric', month: 'long', day: 'numeric',
+                          hour: 'numeric', minute: 'numeric' };
+      this.__dateFormatter = new Intl.DateTimeFormat(locale, dtOptions);
+    }
+    return this.__dateFormatter;
   },
 
   /**
