@@ -1407,6 +1407,10 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </setter>
       </property>
 
+      <property name="overflowPadding"
+                onget="return Number(this.getAttribute('overflowpadding'))"
+                readonly="true" />
+
       <method name="selectBy">
         <parameter name="aReverse"/>
         <parameter name="aPage"/>
@@ -2275,14 +2279,15 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             separatorRect.width + Math.max(urlRect.width, actionRect.width);
 
           // Total width for the title and URL/action is the width of the item
-          // minus the start of the title text minus a little extra padding.
+          // minus the start of the title text minus a little optional extra padding.
           // This extra padding amount is basically arbitrary but keeps the text
           // from getting too close to the popup's edge.
-          let extraPadding = 30;
           let dir = this.getAttribute("dir");
           let titleStart = dir == "rtl" ? itemRect.right - titleRect.right
                                         : titleRect.left - itemRect.left;
-          let itemWidth = itemRect.width - titleStart - extraPadding;
+
+          let popup = this.parentNode.parentNode;
+          let itemWidth = itemRect.width - titleStart - popup.overflowPadding;
 
           if (this._tags.hasAttribute("empty")) {
             // The tags box is not displayed in this case.
