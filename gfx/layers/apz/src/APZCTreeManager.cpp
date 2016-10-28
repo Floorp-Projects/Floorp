@@ -56,7 +56,7 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
 float APZCTreeManager::sDPI = 160.0;
 
 struct APZCTreeManager::TreeBuildingState {
-  TreeBuildingState(const CompositorBridgeParent::LayerTreeState* aLayerTreeState,
+  TreeBuildingState(const CompositorBridgeParent::LayerTreeState* const aLayerTreeState,
                     bool aIsFirstPaint, uint64_t aOriginatingLayersId,
                     APZTestData* aTestData, uint32_t aPaintSequence)
     : mLayerTreeState(aLayerTreeState)
@@ -67,7 +67,7 @@ struct APZCTreeManager::TreeBuildingState {
   }
 
   // State that doesn't change as we recurse in the tree building
-  const CompositorBridgeParent::LayerTreeState* mLayerTreeState;
+  const CompositorBridgeParent::LayerTreeState* const mLayerTreeState;
   const bool mIsFirstPaint;
   const uint64_t mOriginatingLayersId;
   const APZPaintLogHelper mPaintLogger;
