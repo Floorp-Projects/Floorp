@@ -256,6 +256,26 @@ NegativeInfinity()
   return BitwiseCast<T>(Traits::kSignBit | Traits::kExponentBits);
 }
 
+/**
+ * Computes the bit pattern for a NaN with the specified sign bit and
+ * significand bits.
+ */
+template<typename T,
+         int SignBit,
+         typename FloatingPoint<T>::Bits Significand>
+struct SpecificNaNBits
+{
+  using Traits = FloatingPoint<T>;
+
+  static_assert(SignBit == 0 || SignBit == 1, "bad sign bit");
+  static_assert((Significand & ~Traits::kSignificandBits) == 0,
+                "significand must only have significand bits set");
+  static_assert(Significand & Traits::kSignificandBits,
+                "significand must be nonzero");
+
+  static constexpr typename Traits::Bits value =
+    (SignBit * Traits::kSignBit) | Traits::kExponentBits | Significand;
+};
 
 /**
  * Constructs a NaN value with the specified sign bit and significand bits.
