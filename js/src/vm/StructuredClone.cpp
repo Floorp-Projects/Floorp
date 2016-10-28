@@ -1617,9 +1617,7 @@ JSStructuredCloneWriter::write(HandleValue v)
 bool
 JSStructuredCloneReader::checkDouble(double d)
 {
-    JS::Value v;
-    v.setDoubleNoCheck(d);
-    if (!v.isDouble()) {
+    if (!JS::IsCanonicalized(d)) {
         JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
                                   "unrecognized NaN");
         return false;
