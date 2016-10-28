@@ -173,7 +173,6 @@
 #include "mozilla/dom/icc/IccChild.h"
 #include "mozilla/dom/mobileconnection/MobileConnectionChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
-#include "mozilla/dom/bluetooth/PBluetoothChild.h"
 #include "mozilla/dom/PPresentationChild.h"
 #include "mozilla/dom/PresentationIPCService.h"
 #include "mozilla/ipc/InputStreamUtils.h"
@@ -201,7 +200,6 @@
 
 using namespace mozilla;
 using namespace mozilla::docshell;
-using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::icc;
 using namespace mozilla::dom::ipc;
@@ -2015,27 +2013,6 @@ ContentChild::DeallocPStorageChild(PStorageChild* aActor)
   DOMStorageDBChild* child = static_cast<DOMStorageDBChild*>(aActor);
   child->ReleaseIPDLReference();
   return true;
-}
-
-PBluetoothChild*
-ContentChild::AllocPBluetoothChild()
-{
-#ifdef MOZ_B2G_BT
-  MOZ_CRASH("No one should be allocating PBluetoothChild actors");
-#else
-  MOZ_CRASH("No support for bluetooth on this platform!");
-#endif
-}
-
-bool
-ContentChild::DeallocPBluetoothChild(PBluetoothChild* aActor)
-{
-#ifdef MOZ_B2G_BT
-  delete aActor;
-  return true;
-#else
-  MOZ_CRASH("No support for bluetooth on this platform!");
-#endif
 }
 
 PSpeechSynthesisChild*

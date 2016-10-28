@@ -844,12 +844,6 @@ private:
 
   virtual bool DeallocPStorageParent(PStorageParent* aActor) override;
 
-  virtual PBluetoothParent* AllocPBluetoothParent() override;
-
-  virtual bool DeallocPBluetoothParent(PBluetoothParent* aActor) override;
-
-  virtual bool RecvPBluetoothConstructor(PBluetoothParent* aActor) override;
-
   virtual PPresentationParent* AllocPPresentationParent() override;
 
   virtual bool DeallocPPresentationParent(PPresentationParent* aActor) override;
