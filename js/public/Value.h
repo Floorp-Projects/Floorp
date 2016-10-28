@@ -10,6 +10,7 @@
 #define js_Value_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 
@@ -340,14 +341,10 @@ class MOZ_NON_PARAM alignas(8) Value
     }
 
     void setDouble(double d) {
-        setDoubleNoCheck(d);
-        MOZ_ASSERT(isDouble());
-    }
-
-    void setDoubleNoCheck(double d) {
         // Don't assign to data.asDouble to fix a miscompilation with
         // GCC 5.2.1 and 5.3.1. See bug 1312488.
         data = layout(d);
+        MOZ_ASSERT(isDouble());
     }
 
     void setNaN() {
@@ -1023,6 +1020,17 @@ CanonicalizedDoubleValue(double d)
     return MOZ_UNLIKELY(mozilla::IsNaN(d))
            ? Value::fromRawBits(detail::CanonicalizedNaNBits)
            : Value::fromDouble(d);
+}
+
+static inline bool
+IsCanonicalized(double d)
+{
+  if (mozilla::IsInfinite(d) || mozilla::IsFinite(d))
+      return true;
+
+  uint64_t bits;
+  mozilla::BitwiseCast<uint64_t>(d, &bits);
+  return (bits & ~mozilla::DoubleTypeTraits::kSignBit) == detail::CanonicalizedNaNBits;
 }
 
 static inline Value
