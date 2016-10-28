@@ -382,7 +382,6 @@ hb_glib_get_unicode_funcs (void)
   return const_cast<hb_unicode_funcs_t *> (&_hb_glib_unicode_funcs);
 }
 
-#if GLIB_CHECK_VERSION(2,31,10)
 /**
  * hb_glib_blob_create:
  *
@@ -399,4 +398,3 @@ hb_glib_blob_create (GBytes *gbytes)
 			 g_bytes_ref (gbytes),
 			 (hb_destroy_func_t) g_bytes_unref);
 }
-#endif

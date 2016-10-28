@@ -31,6 +31,7 @@ const TAB_OPEN_EVENT_COUNT_SCALAR_NAME = "browser.engagement.tab_open_event_coun
 const WINDOW_OPEN_EVENT_COUNT_SCALAR_NAME = "browser.engagement.window_open_event_count";
 const UNIQUE_DOMAINS_COUNT_SCALAR_NAME = "browser.engagement.unique_domains_count";
 const TOTAL_URI_COUNT_SCALAR_NAME = "browser.engagement.total_uri_count";
+const UNFILTERED_URI_COUNT_SCALAR_NAME = "browser.engagement.unfiltered_uri_count";
 
 // A list of known search origins.
 const KNOWN_SEARCH_SOURCES = [
@@ -78,13 +79,13 @@ let URICountListener = {
   // A map to keep track of the URIs loaded from the restored tabs.
   _restoredURIsMap: new WeakMap(),
 
-  isValidURI(uri) {
+  isHttpURI(uri) {
     // Only consider http(s) schemas.
     return uri.schemeIs("http") || uri.schemeIs("https");
   },
 
   addRestoredURI(browser, uri) {
-    if (!this.isValidURI(uri)) {
+    if (!this.isHttpURI(uri)) {
       return;
     }
 
@@ -102,10 +103,6 @@ let URICountListener = {
       return;
     }
 
-    if (!this.isValidURI(uri)) {
-      return;
-    }
-
     // The SessionStore sets the URI of a tab first, firing onLocationChange the
     // first time, then manages content loading using its scheduler. Once content
     // loads, we will hit onLocationChange again.
@@ -116,11 +113,38 @@ let URICountListener = {
       return;
     }
 
+    // Track URI loads, even if they're not http(s).
+    let uriSpec = null;
+    try {
+      uriSpec = uri.spec;
+    } catch (e) {
+      // If we have troubles parsing the spec, still count this as
+      // an unfiltered URI.
+      Services.telemetry.scalarAdd(UNFILTERED_URI_COUNT_SCALAR_NAME, 1);
+      return;
+    }
+
+
+    // Don't count about:blank and similar pages, as they would artificially
+    // inflate the counts.
+    if (browser.ownerDocument.defaultView.gInitialPages.includes(uriSpec)) {
+      return;
+    }
+
     // If the URI we're loading is in the _restoredURIsMap, then it comes from a
     // restored tab. If so, let's skip it and remove it from the map as we want to
     // count page refreshes.
-    if (this._restoredURIsMap.get(browser) === uri.spec) {
+    if (this._restoredURIsMap.get(browser) === uriSpec) {
       this._restoredURIsMap.delete(browser);
+      return;
+    }
+
+    // The URI wasn't from a restored tab. Count it among the unfiltered URIs.
+    // If this is an http(s) URI, this also gets counted by the "total_uri_count"
+    // probe.
+    Services.telemetry.scalarAdd(UNFILTERED_URI_COUNT_SCALAR_NAME, 1);
+
+    if (!this.isHttpURI(uri)) {
       return;
     }
 

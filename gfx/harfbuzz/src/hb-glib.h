@@ -46,10 +46,9 @@ hb_glib_script_from_script (hb_script_t script);
 HB_EXTERN hb_unicode_funcs_t *
 hb_glib_get_unicode_funcs (void);
 
-#if GLIB_CHECK_VERSION(2,31,10)
 HB_EXTERN hb_blob_t *
 hb_glib_blob_create (GBytes *gbytes);
-#endif
+
 
 HB_END_DECLS
 
