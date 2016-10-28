@@ -337,7 +337,7 @@ typedef enum _iJIT_CodeType
 {
     iJIT_CT_UNKNOWN = 0,
     iJIT_CT_CODE,             // executable code
-    iJIT_CT_DATA,             // this kind of “update” will be excluded from the function’s body.
+    iJIT_CT_DATA,             // this kind of "update" will be excluded from the function's body.
     iJIT_CT_EOF
 } iJIT_CodeType;
 
