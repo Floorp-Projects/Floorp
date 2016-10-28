@@ -164,13 +164,15 @@ ValidateUnpackInfo(WebGLContext* webgl, const char* funcName,
 static UniquePtr<webgl::TexUnpackBytes>
 FromView(WebGLContext* webgl, const char* funcName, TexImageTarget target,
          uint32_t width, uint32_t height, uint32_t depth,
-         const dom::ArrayBufferView* view, GLuint viewElemOffset)
+         const dom::ArrayBufferView* view, GLuint viewElemOffset,
+         GLuint viewElemLengthOverride)
 {
     const bool isClientData = true;
     const uint8_t* bytes = nullptr;
     size_t availByteCount = 0;
     if (view) {
-        if (!webgl->ValidateArrayBufferView(funcName, *view, viewElemOffset, 0,
+        if (!webgl->ValidateArrayBufferView(funcName, *view, viewElemOffset,
+                                            viewElemLengthOverride,
                                             const_cast<uint8_t**>(&bytes),
                                             &availByteCount))
         {
@@ -397,7 +399,7 @@ WebGLContext::From(const char* funcName, TexImageTarget target, GLsizei rawWidth
     }
 
     return FromView(this, funcName, target, width, height, depth, src.mView,
-                    src.mViewElemOffset);
+                    src.mViewElemOffset, src.mViewElemLengthOverride);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1385,7 +1387,7 @@ WebGLContext::FromCompressed(const char* funcName, TexImageTarget target,
     }
 
     return FromView(this, funcName, target, width, height, depth, src.mView,
-                    src.mViewElemOffset);
+                    src.mViewElemOffset, src.mViewElemLengthOverride);
 }
 
 void
