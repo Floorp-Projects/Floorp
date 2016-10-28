@@ -122,7 +122,7 @@
       {
         "id": "OnInstalledReason",
         "type": "string",
-        "enum": ["install", "update", "browser_update"],
+        "enum": ["install", "update", "chrome_update", "shared_module_update"],
         "allowedContexts": ["content"],
         "description": "The reason that this event is being dispatched."
       },
@@ -459,6 +459,7 @@
       },
       {
         "name": "onInstalled",
+        "unsupported": true,
         "type": "function",
         "description": "Fired when the extension is first installed, when the extension is updated to a new version, and when the browser is updated to a new version.",
         "parameters": [
@@ -473,13 +474,11 @@
               "previousVersion": {
                 "type": "string",
                 "optional": true,
-                "unsupported": true,
                 "description": "Indicates the previous version of the extension, which has just been updated. This is present only if 'reason' is 'update'."
               },
               "id": {
                 "type": "string",
                 "optional": true,
-                "unsupported": true,
                 "description": "Indicates the ID of the imported shared module extension which updated. This is present only if 'reason' is 'shared_module_update'."
               }
             }
