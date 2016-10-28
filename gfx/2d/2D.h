@@ -1296,11 +1296,13 @@ struct Config {
   LogForwarder* mLogForwarder;
   int32_t mMaxTextureSize;
   int32_t mMaxAllocSize;
+  BackendType mDefaultSoftwareBackend;
 
   Config()
   : mLogForwarder(nullptr)
   , mMaxTextureSize(8192)
   , mMaxAllocSize(52000000)
+  , mDefaultSoftwareBackend(BackendType::CAIRO)
   {}
 };
 
@@ -1437,6 +1439,8 @@ public:
   static void SetGlobalEventRecorder(DrawEventRecorder *aRecorder);
 
   static uint32_t GetMaxSurfaceSize(BackendType aType);
+
+  static BackendType GetDefaultSoftwareBackend();
 
   static LogForwarder* GetLogForwarder() { return sConfig ? sConfig->mLogForwarder : nullptr; }
 

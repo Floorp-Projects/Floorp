@@ -653,7 +653,7 @@ gfxPlatform::Init()
       ScopedGfxFeatureReporter::AppNote(forcedPrefs);
     }
 
-    InitMoz2DLogging();
+    InitMoz2D();
 
     gGfxPlatformPrefsLock = new Mutex("gfxPlatform::gGfxPlatformPrefsLock");
 
@@ -793,7 +793,7 @@ gfxPlatform::Init()
 }
 
 /* static */ void
-gfxPlatform::InitMoz2DLogging()
+gfxPlatform::InitMoz2D()
 {
     auto fwd = new CrashStatsLogForwarder("GraphicsCriticalError");
     fwd->SetCircularBufferSize(gfxPrefs::GfxLoggingCrashLength());
@@ -802,6 +802,7 @@ gfxPlatform::InitMoz2DLogging()
     cfg.mLogForwarder = fwd;
     cfg.mMaxTextureSize = gfxPrefs::MaxTextureSize();
     cfg.mMaxAllocSize = gfxPrefs::MaxAllocSize();
+    cfg.mDefaultSoftwareBackend = gPlatform->GetSoftwareBackend();
 
     gfx::Factory::Init(cfg);
 }
