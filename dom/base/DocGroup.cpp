@@ -51,5 +51,13 @@ DocGroup::~DocGroup()
 
 NS_IMPL_ISUPPORTS(DocGroup, nsISupports)
 
+nsresult
+DocGroup::Dispatch(const char* aName,
+                   TaskCategory aCategory,
+                   already_AddRefed<nsIRunnable>&& aRunnable)
+{
+  return NS_DispatchToMainThread(Move(aRunnable));
+}
+
 }
 }

@@ -14,6 +14,7 @@
 #include "nsPIDOMWindow.h"
 
 class nsGlobalWindow;
+class nsIEventTarget;
 class nsIPrincipal;
 class nsITimeoutHandler;
 class nsITimer;
