@@ -117,7 +117,7 @@ struct FloatingPoint : public SelectTrait<T>
 
 /** Determines whether a float/double is NaN. */
 template<typename T>
-static MOZ_ALWAYS_INLINE constexpr bool
+static MOZ_ALWAYS_INLINE bool
 IsNaN(T aValue)
 {
   /*
