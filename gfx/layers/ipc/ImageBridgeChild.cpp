@@ -936,8 +936,10 @@ ImageBridgeChild::CreateImageClientNow(CompositableType aType,
   }
 
   if (aImageContainer) {
-    SendPImageContainerConstructor(aContainerChild);
     aContainerChild->RegisterWithIPDL();
+    if (!SendPImageContainerConstructor(aContainerChild)) {
+      return nullptr;
+    }
   }
 
   RefPtr<ImageClient> client = ImageClient::CreateImageClient(aType, this, TextureFlags::NO_FLAGS);
