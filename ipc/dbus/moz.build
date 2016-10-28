@@ -22,11 +22,6 @@ SOURCES += [
     'RawDBusConnection.cpp',
 ]
 
-if CONFIG['MOZ_B2G_BT_BLUEZ']:
-    LOCAL_INCLUDES += [
-        '%' + '%s/external/dbus' % CONFIG['ANDROID_SOURCE']
-    ]
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
