@@ -352,7 +352,8 @@ class WriteBarrieredBase : public BarrieredBase<T>
     explicit WriteBarrieredBase(const T& v) : BarrieredBase<T>(v) {}
 
   public:
-    DECLARE_POINTER_COMPARISON_OPS(T);
+    using ElementType = T;
+
     DECLARE_POINTER_CONSTREF_OPS(T);
 
     // Use this if the automatic coercion to T isn't working.
@@ -603,14 +604,13 @@ class ReadBarriered : public ReadBarrieredBase<T>
         return *this;
     }
 
-    const T get() const {
-        if (!InternalBarrierMethods<T>::isMarkable(this->value))
-            return JS::GCPolicy<T>::initial();
-        this->read();
+    const T& get() const {
+        if (InternalBarrierMethods<T>::isMarkable(this->value))
+            this->read();
         return this->value;
     }
 
-    const T unbarrieredGet() const {
+    const T& unbarrieredGet() const {
         return this->value;
     }
 
@@ -618,9 +618,9 @@ class ReadBarriered : public ReadBarrieredBase<T>
         return bool(this->value);
     }
 
-    operator const T() const { return get(); }
+    operator const T&() const { return get(); }
 
-    const T operator->() const { return get(); }
+    const T& operator->() const { return get(); }
 
     T* unsafeGet() { return &this->value; }
     T const* unsafeGet() const { return &this->value; }
@@ -950,6 +950,35 @@ typedef ReadBarriered<WasmInstanceObject*> ReadBarrieredWasmInstanceObject;
 typedef ReadBarriered<WasmTableObject*> ReadBarrieredWasmTableObject;
 
 typedef ReadBarriered<Value> ReadBarrieredValue;
+
+namespace detail {
+
+template <typename T>
+struct DefineComparisonOps<PreBarriered<T>> : mozilla::TrueType {
+    static const T& get(const PreBarriered<T>& v) { return v.get(); }
+};
+
+template <typename T>
+struct DefineComparisonOps<GCPtr<T>> : mozilla::TrueType {
+    static const T& get(const GCPtr<T>& v) { return v.get(); }
+};
+
+template <typename T>
+struct DefineComparisonOps<HeapPtr<T>> : mozilla::TrueType {
+    static const T& get(const HeapPtr<T>& v) { return v.get(); }
+};
+
+template <typename T>
+struct DefineComparisonOps<ReadBarriered<T>> : mozilla::TrueType {
+    static const T& get(const ReadBarriered<T>& v) { return v.unbarrieredGet(); }
+};
+
+template <>
+struct DefineComparisonOps<HeapSlot> : mozilla::TrueType {
+    static const Value& get(const HeapSlot& v) { return v.get(); }
+};
+
+} /* namespace detail */
 
 } /* namespace js */
 
