@@ -98,4 +98,11 @@ interface nsISHistoryListener : nsISupports
   *                       replaced
    */
    void OnHistoryReplaceEntry(in long aIndex);
+
+   /**
+    * Called when nsISHistory::count has been updated. Unlike OnHistoryNewEntry
+    * and OnHistoryPurge which happen before the modifications are actually done
+    * and maybe cancellable, this function is called after these modifications.
+    */
+   void OnLengthChange(in long aCount);
 };

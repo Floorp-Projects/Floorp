@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import cPickle as pickle
 import os
 import shutil
 import tempfile
@@ -21,8 +22,7 @@ from mozbuild.testing import (
 )
 
 
-ALL_TESTS_JSON = b'''
-{
+ALL_TESTS = {
     "accessible/tests/mochitest/actions/test_anchors.html": [
         {
             "dir_relpath": "accessible/tests/mochitest/actions",
@@ -154,11 +154,11 @@ ALL_TESTS_JSON = b'''
             "tags": "devtools"
         }
    ]
-}'''.strip()
+}
 
-TEST_DEFAULTS = b'''{
-    "/Users/gps/src/firefox/toolkit/mozapps/update/test/unit/xpcshell_updater.ini": {"support-files": "\\ndata/**\\nxpcshell_updater.ini"}
-}'''
+TEST_DEFAULTS = {
+    "/Users/gps/src/firefox/toolkit/mozapps/update/test/unit/xpcshell_updater.ini": {"support-files": "\ndata/**\nxpcshell_updater.ini"}
+}
 
 
 class Base(unittest.TestCase):
@@ -172,13 +172,13 @@ class Base(unittest.TestCase):
         self._temp_files = []
 
     def _get_test_metadata(self):
-        all_tests = NamedTemporaryFile()
-        all_tests.write(ALL_TESTS_JSON)
+        all_tests = NamedTemporaryFile(mode='wb')
+        pickle.dump(ALL_TESTS, all_tests)
         all_tests.flush()
         self._temp_files.append(all_tests)
 
-        test_defaults = NamedTemporaryFile()
-        test_defaults.write(TEST_DEFAULTS)
+        test_defaults = NamedTemporaryFile(mode='wb')
+        pickle.dump(TEST_DEFAULTS, test_defaults)
         test_defaults.flush()
         self._temp_files.append(test_defaults)
 
@@ -251,10 +251,10 @@ class TestTestResolver(Base):
         topobjdir = tempfile.mkdtemp()
         self._temp_dirs.append(topobjdir)
 
-        with open(os.path.join(topobjdir, 'all-tests.json'), 'wt') as fh:
-            fh.write(ALL_TESTS_JSON)
-        with open(os.path.join(topobjdir, 'test-defaults.json'), 'wt') as fh:
-            fh.write(TEST_DEFAULTS)
+        with open(os.path.join(topobjdir, 'all-tests.pkl'), 'wb') as fh:
+            pickle.dump(ALL_TESTS, fh)
+        with open(os.path.join(topobjdir, 'test-defaults.pkl'), 'wb') as fh:
+            pickle.dump(TEST_DEFAULTS, fh)
 
         o = MozbuildObject(self.FAKE_TOPSRCDIR, None, None, topobjdir=topobjdir)
 

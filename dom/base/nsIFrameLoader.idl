@@ -18,6 +18,8 @@ interface nsITabParent;
 interface nsILoadContext;
 interface nsIPrintSettings;
 interface nsIWebProgressListener;
+interface nsIGroupedSHistory;
+interface nsIPartialSHistory;
 
 [scriptable, builtinclass, uuid(1645af04-1bc7-4363-8f2c-eb9679220ab1)]
 interface nsIFrameLoader : nsISupports
@@ -70,6 +72,17 @@ interface nsIFrameLoader : nsISupports
    * Make the prerendered frameloader being active (and clear isPrerendered flag).
    */
   void makePrerenderedLoaderActive();
+
+  /**
+   * Append partial session history from another frame loader.
+   */
+  void appendPartialSessionHistoryAndSwap(in nsIFrameLoader aOther);
+
+  /**
+   * If grouped session history is applied, use this function to navigate to
+   * an entry of session history object of another frameloader.
+   */
+  void requestGroupedHistoryNavigation(in unsigned long aGlobalIndex);
 
   /**
    * Destroy the frame loader and everything inside it. This will
@@ -137,6 +150,11 @@ interface nsIFrameLoader : nsISupports
    * to the window.
    */
   void requestNotifyAfterRemotePaint();
+
+  /**
+   * Close the window through the ownerElement.
+   */
+  void requestFrameLoaderClose();
 
   /**
    * Print the current document.
@@ -228,6 +246,17 @@ interface nsIFrameLoader : nsISupports
    * to be up-to-date when received.
    */
   readonly attribute unsigned long lazyHeight;
+
+  /**
+   * The partial session history.
+   */
+  readonly attribute nsIPartialSHistory partialSessionHistory;
+
+  /**
+   * The grouped session history composed of multiple session history objects
+   * across root docshells.
+   */
+  readonly attribute nsIGroupedSHistory groupedSessionHistory;
 };
 
 %{C++

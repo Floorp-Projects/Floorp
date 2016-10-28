@@ -7259,7 +7259,7 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
 
   // background-repeat: enum, inherit, initial [pair list]
   nsStyleImageLayers::Repeat initialRepeat;
-  initialRepeat.SetInitialValues(nsStyleImageLayers::LayerType::Background);
+  initialRepeat.SetInitialValues();
   SetImageLayerPairList(aContext, *aRuleData->ValueForBackgroundRepeat(),
                         bg->mImage.mLayers,
                         parentBG->mImage.mLayers,
@@ -7308,9 +7308,7 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
 
   // background-position-x/y: enum, length, percent (flags), inherit [list]
   Position::Coord initialPositionCoord;
-  initialPositionCoord.mPercent =
-    nsStyleImageLayers::GetInitialPositionForLayerType(
-      nsStyleImageLayers::LayerType::Background);
+  initialPositionCoord.mPercent = 0.0f;
   initialPositionCoord.mLength = 0;
   initialPositionCoord.mHasPercent = true;
 
@@ -9960,7 +9958,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
 
   // mask-repeat: enum, inherit, initial [pair list]
   nsStyleImageLayers::Repeat initialRepeat;
-  initialRepeat.SetInitialValues(nsStyleImageLayers::LayerType::Mask);
+  initialRepeat.SetInitialValues();
   SetImageLayerPairList(aContext, *aRuleData->ValueForMaskRepeat(),
                         svgReset->mMask.mLayers,
                         parentSVGReset->mMask.mLayers,
@@ -9991,9 +9989,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
 
   // mask-position-x/y: enum, length, percent (flags), inherit [list]
   Position::Coord initialPositionCoord;
-  initialPositionCoord.mPercent =
-    nsStyleImageLayers::GetInitialPositionForLayerType(
-      nsStyleImageLayers::LayerType::Mask);
+  initialPositionCoord.mPercent = 0.0f;
   initialPositionCoord.mLength = 0;
   initialPositionCoord.mHasPercent = true;
 

@@ -226,6 +226,9 @@ nsSHistory::nsSHistory()
   : mIndex(-1)
   , mLength(0)
   , mRequestedIndex(-1)
+  , mIsPartial(false)
+  , mGlobalIndexOffset(0)
+  , mEntriesInFollowingPartialHistories(0)
   , mRootDocShell(nullptr)
 {
   // Add this new SHistory object to the list
@@ -419,6 +422,11 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
   // what the length was before, it should always be set back to the current and
   // lop off the forward.
   mLength = (++mIndex + 1);
+  NOTIFY_LISTENERS(OnLengthChange, (mLength));
+
+  // Much like how mLength works above, when changing our entries, all following
+  // partial histories should be purged, so we just reset the number to zero.
+  mEntriesInFollowingPartialHistories = 0;
 
   // If this is the very first transaction, initialize the list
   if (!mListRoot) {
@@ -434,12 +442,72 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSHistory::GetIsPartial(bool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mIsPartial;
+  return NS_OK;
+}
+
 /* Get size of the history list */
 NS_IMETHODIMP
 nsSHistory::GetCount(int32_t* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = mLength;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHistory::GetGlobalCount(int32_t* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mGlobalIndexOffset + mLength + mEntriesInFollowingPartialHistories;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHistory::GetGlobalIndexOffset(int32_t* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mGlobalIndexOffset;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHistory::OnPartialSessionHistoryActive(int32_t aGlobalLength, int32_t aTargetIndex)
+{
+  NS_ENSURE_TRUE(mIsPartial, NS_ERROR_UNEXPECTED);
+
+  int32_t extraLength = aGlobalLength - mLength - mGlobalIndexOffset;
+  NS_ENSURE_TRUE(extraLength >= 0, NS_ERROR_UNEXPECTED);
+
+  if (extraLength != mEntriesInFollowingPartialHistories) {
+    mEntriesInFollowingPartialHistories = extraLength;
+  }
+
+  if (mIndex == aTargetIndex) {
+    // TODO When we finish OnPartialSessionHistoryDeactive, we'll need to active
+    // the suspended document here.
+
+    // Fire location change to update canGoBack / canGoForward.
+    NS_DispatchToCurrentThread(NewRunnableMethod(static_cast<nsDocShell*>(mRootDocShell),
+                                                 &nsDocShell::FireDummyOnLocationChange));
+    return NS_OK;
+  }
+
+  return LoadEntry(aTargetIndex, nsIDocShellLoadInfo::loadHistory,
+                   HIST_CMD_GOTOINDEX);
+}
+
+NS_IMETHODIMP
+nsSHistory::OnPartialSessionHistoryDeactive()
+{
+  NS_ENSURE_TRUE(mIsPartial, NS_ERROR_UNEXPECTED);
+
+  // TODO We need to suspend current document first. Much like what happens when
+  // loading a new page. Move the ownership of the document to nsISHEntry or so.
   return NS_OK;
 }
 
@@ -701,6 +769,10 @@ nsSHistory::PurgeHistory(int32_t aEntries)
   }
   mLength -= cnt;
   mIndex -= cnt;
+  NOTIFY_LISTENERS(OnLengthChange, (mLength));
+
+  // All following partial histories will be deleted in this case.
+  mEntriesInFollowingPartialHistories = 0;
 
   // Now if we were not at the end of the history, mIndex could have
   // become far too negative.  If so, just set it to -1.
@@ -739,6 +811,13 @@ nsSHistory::RemoveSHistoryListener(nsISHistoryListener* aListener)
   // one we have in store.
   nsWeakPtr listener = do_GetWeakReference(aListener);
   mListeners.RemoveElement(listener);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHistory::SetPartialSHistoryListener(nsIPartialSHistoryListener* aListener)
+{
+  mPartialHistoryListener = do_GetWeakReference(aListener);
   return NS_OK;
 }
 
@@ -808,14 +887,20 @@ NS_IMETHODIMP
 nsSHistory::GetCanGoBack(bool* aCanGoBack)
 {
   NS_ENSURE_ARG_POINTER(aCanGoBack);
-  *aCanGoBack = false;
+
+  if (mGlobalIndexOffset) {
+    *aCanGoBack = true;
+    return NS_OK;
+  }
 
   int32_t index = -1;
   NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
   if (index > 0) {
     *aCanGoBack = true;
+    return NS_OK;
   }
 
+  *aCanGoBack = false;
   return NS_OK;
 }
 
@@ -823,18 +908,22 @@ NS_IMETHODIMP
 nsSHistory::GetCanGoForward(bool* aCanGoForward)
 {
   NS_ENSURE_ARG_POINTER(aCanGoForward);
-  *aCanGoForward = false;
+
+  if (mEntriesInFollowingPartialHistories) {
+    *aCanGoForward = true;
+    return NS_OK;
+  }
 
   int32_t index = -1;
   int32_t count = -1;
-
   NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(GetCount(&count), NS_ERROR_FAILURE);
-
   if (index >= 0 && index < (count - 1)) {
     *aCanGoForward = true;
+    return NS_OK;
   }
 
+  *aCanGoForward = false;
   return NS_OK;
 }
 
@@ -1358,6 +1447,8 @@ nsSHistory::RemoveDuplicate(int32_t aIndex, bool aKeepNext)
       mRequestedIndex = mRequestedIndex - 1;
     }
     --mLength;
+    mEntriesInFollowingPartialHistories = 0;
+    NOTIFY_LISTENERS(OnLengthChange, (mLength));
     return true;
   }
   return false;
@@ -1513,9 +1604,11 @@ nsSHistory::LoadURI(const char16_t* aURI,
 }
 
 NS_IMETHODIMP
-nsSHistory::GotoIndex(int32_t aIndex)
+nsSHistory::GotoIndex(int32_t aGlobalIndex)
 {
-  return LoadEntry(aIndex, nsIDocShellLoadInfo::loadHistory,
+  // We provide abstraction of grouped session history for nsIWebNavigation
+  // functions, so the index passed in here is global index.
+  return LoadEntry(aGlobalIndex - mGlobalIndexOffset, nsIDocShellLoadInfo::loadHistory,
                    HIST_CMD_GOTOINDEX);
 }
 
@@ -1538,6 +1631,26 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
 {
   if (!mRootDocShell) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (aIndex < 0 || aIndex >= mLength) {
+    if (aIndex + mGlobalIndexOffset < 0) {
+      // The global index is negative.
+      return NS_ERROR_FAILURE;
+    }
+
+    if (aIndex - mLength >= mEntriesInFollowingPartialHistories) {
+      // The global index exceeds max possible value.
+      return NS_ERROR_FAILURE;
+    }
+
+    // The global index is valid. trigger cross browser navigation.
+    nsCOMPtr<nsIPartialSHistoryListener> listener =
+      do_QueryReferent(mPartialHistoryListener);
+    if (!listener) {
+      return NS_ERROR_FAILURE;
+    }
+    return listener->OnRequestCrossBrowserNavigation(aIndex + mGlobalIndexOffset);
   }
 
   // Keep note of requested history index in mRequestedIndex.
@@ -1753,6 +1866,26 @@ nsSHistory::GetSHistoryEnumerator(nsISimpleEnumerator** aEnumerator)
   RefPtr<nsSHEnumerator> iterator = new nsSHEnumerator(this);
   iterator.forget(aEnumerator);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHistory::OnAttachGroupedSessionHistory(int32_t aOffset)
+{
+  NS_ENSURE_TRUE(!mIsPartial, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(aOffset >= 0, NS_ERROR_ILLEGAL_VALUE);
+
+  mIsPartial = true;
+  mGlobalIndexOffset = aOffset;
+
+  // The last attached history is always at the end of the group.
+  mEntriesInFollowingPartialHistories = 0;
+
+  // Setting grouped history info may change canGoBack / canGoForward.
+  // Send a location change to update these values.
+  NS_DispatchToCurrentThread(NewRunnableMethod(static_cast<nsDocShell*>(mRootDocShell),
+                                               &nsDocShell::FireDummyOnLocationChange));
+  return NS_OK;
+
 }
 
 nsSHEnumerator::nsSHEnumerator(nsSHistory* aSHistory) : mIndex(-1)
