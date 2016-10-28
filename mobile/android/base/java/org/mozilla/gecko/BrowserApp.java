@@ -2041,7 +2041,7 @@ public class BrowserApp extends GeckoApp
                                 Log.i(LOGTAG, "Found tag " + tag);
                                 final Fragment frag = getSupportFragmentManager().findFragmentByTag(tag);
                                 if (frag == null) {
-                                    final Method getInstance = mediaManagerClass.getMethod("newInstance", (Class[]) null);
+                                    final Method getInstance = mediaManagerClass.getMethod("getInstance", (Class[]) null);
                                     final Fragment mpm = (Fragment) getInstance.invoke(null);
                                     getSupportFragmentManager().beginTransaction().disallowAddToBackStack().add(mpm, tag).commit();
                                 }
