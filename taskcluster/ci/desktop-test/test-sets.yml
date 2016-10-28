@@ -89,6 +89,7 @@ windows-vm-tests:
 #    - mochitest-other
 
 ccov-code-coverage-tests:
+    - mochitest
     - mochitest-browser-chrome
     - mochitest-devtools-chrome
     - xpcshell
