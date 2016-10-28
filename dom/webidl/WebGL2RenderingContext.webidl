@@ -506,19 +506,20 @@ interface WebGL2RenderingContext : WebGLRenderingContext
                               GLsizei height, GLint border, GLintptr offset);
     void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
                               GLsizei height, GLint border, ArrayBufferView srcData,
-                              optional GLuint srcOffset = 0);
+                              optional GLuint srcOffset = 0, optional GLuint srcLength = 0);
 
     void compressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
                               GLsizei height, GLsizei depth, GLint border, GLintptr offset);
     void compressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
                               GLsizei height, GLsizei depth, GLint border, ArrayBufferView srcData,
-                              optional GLuint srcOffset = 0);
+                              optional GLuint srcOffset = 0, optional GLuint srcLength = 0);
 
     void compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                  GLsizei width, GLsizei height, GLenum format, GLintptr offset);
     void compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                  GLsizei width, GLsizei height, GLenum format,
-                                 ArrayBufferView srcData, optional GLuint srcOffset = 0);
+                                 ArrayBufferView srcData, optional GLuint srcOffset = 0,
+                                 optional GLuint srcLength = 0);
 
     void compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                  GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
@@ -526,7 +527,7 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     void compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                  GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
                                  GLenum format, ArrayBufferView srcData,
-                                 optional GLuint srcOffset = 0);
+                                 optional GLuint srcOffset = 0, optional GLuint srcLength = 0);
 
     /* Programs and shaders */
     [WebGLHandlesContextLoss] GLint getFragDataLocation(WebGLProgram? program, DOMString name);
