@@ -217,12 +217,6 @@ Factory::HasSSE2()
 #endif
 }
 
-BackendType
-Factory::GetDefaultSoftwareBackend()
-{
-  return sConfig ? sConfig->mDefaultSoftwareBackend : BackendType::CAIRO;
-}
-
 // If the size is "reasonable", we want gfxCriticalError to assert, so
 // this is the option set up for it.
 inline int LoggerOptionsBasedOnSize(const IntSize& aSize)
