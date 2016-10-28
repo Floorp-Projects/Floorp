@@ -2900,6 +2900,15 @@ nsIDocument::Dispatch(const char* aName,
   return DispatcherTrait::Dispatch(aName, aCategory, Move(aRunnable));
 }
 
+already_AddRefed<nsIEventTarget>
+nsIDocument::CreateEventTarget(const char* aName, TaskCategory aCategory)
+{
+  if (mDocGroup) {
+    return mDocGroup->CreateEventTarget(aName, aCategory);
+  }
+  return DispatcherTrait::CreateEventTarget(aName, aCategory);
+}
+
 NS_IMETHODIMP
 nsDocument::GetApplicationCache(nsIApplicationCache **aApplicationCache)
 {

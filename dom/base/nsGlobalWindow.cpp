@@ -14945,6 +14945,17 @@ nsGlobalWindow::Dispatch(const char* aName,
   return DispatcherTrait::Dispatch(aName, aCategory, Move(aRunnable));
 }
 
+already_AddRefed<nsIEventTarget>
+nsGlobalWindow::CreateEventTarget(const char* aName,
+                                  TaskCategory aCategory)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (GetDocGroup()) {
+    return GetDocGroup()->CreateEventTarget(aName, aCategory);
+  }
+  return DispatcherTrait::CreateEventTarget(aName, aCategory);
+}
+
 nsGlobalWindow::TemporarilyDisableDialogs::TemporarilyDisableDialogs(
   nsGlobalWindow* aWindow MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {

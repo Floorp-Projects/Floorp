@@ -2872,6 +2872,10 @@ public:
                             mozilla::dom::TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable) override;
 
+  virtual already_AddRefed<nsIEventTarget>
+  CreateEventTarget(const char* aName,
+                    mozilla::dom::TaskCategory aCategory) override;
+
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
