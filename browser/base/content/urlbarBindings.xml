@@ -1367,6 +1367,19 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 onget="return this._overrideValue;"
                 onset="this._overrideValue = val; return val;"/>
 
+      <method name="onPopupClick">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.button == 2) {
+            // Ignore right-clicks.
+            return;
+          }
+          // Otherwise "call super" -- do what autocomplete-base-popup does.
+          let controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
+          controller.handleEnter(true, aEvent);
+        ]]></body>
+      </method>
+
       <method name="enableOneOffSearches">
         <parameter name="enable"/>
         <body><![CDATA[
