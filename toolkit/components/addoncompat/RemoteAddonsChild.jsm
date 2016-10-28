@@ -49,8 +49,7 @@ var NotificationTracker = {
     let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                .getService(Ci.nsISyncMessageSender);
     cpmm.addMessageListener("Addons:ChangeNotification", this);
-    let [paths] = cpmm.sendSyncMessage("Addons:GetNotifications");
-    this._paths = paths;
+    this._paths = cpmm.initialProcessData.remoteAddonsNotificationPaths;
     this._registered = new Map();
     this._watchers = {};
   },
