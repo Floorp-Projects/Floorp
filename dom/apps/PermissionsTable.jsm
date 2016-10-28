@@ -136,11 +136,6 @@ this.PermissionsTable =  { geolocation: {
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
-                           bluetooth: {
-                             app: DENY_ACTION,
-                             privileged: DENY_ACTION,
-                             certified: ALLOW_ACTION
-                           },
                            mobileconnection: {
                              app: DENY_ACTION,
                              privileged: DENY_ACTION,

@@ -66,10 +66,5 @@ LOCAL_INCLUDES += [
     '/xpcom/reflect/xptinfo',
 ]
 
-if CONFIG['MOZ_B2G_BT']:
-    LOCAL_INCLUDES += [
-        '/dom/bluetooth/common',
-    ]
-
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-shadow', '-Werror=format']

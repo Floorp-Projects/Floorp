@@ -340,10 +340,6 @@ public:
 
   virtual bool DeallocPStorageChild(PStorageChild* aActor) override;
 
-  virtual PBluetoothChild* AllocPBluetoothChild() override;
-
-  virtual bool DeallocPBluetoothChild(PBluetoothChild* aActor) override;
-
   virtual PPresentationChild* AllocPPresentationChild() override;
 
   virtual bool DeallocPPresentationChild(PPresentationChild* aActor) override;

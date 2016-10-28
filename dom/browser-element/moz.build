@@ -35,7 +35,6 @@ EXTRA_JS_MODULES += [
 ]
 
 LOCAL_INCLUDES += [
-    '../bluetooth',
     '/dom/html',
 ]
 

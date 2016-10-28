@@ -6,7 +6,6 @@
 
 include protocol PBackground;
 include protocol PBlob;
-include protocol PBluetooth;
 include protocol PBrowser;
 include protocol PCompositorBridge;
 include protocol PContentBridge;
@@ -346,7 +345,6 @@ nested(upto inside_cpow) sync protocol PContent
     child opens PBackground;
 
     manages PBlob;
-    manages PBluetooth;
     manages PBrowser;
     manages PContentPermissionRequest;
     manages PCrashReporter;
@@ -819,8 +817,6 @@ parent:
     nested(inside_cpow) async PStorage();
 
     async PMedia();
-
-    async PBluetooth();
 
     async PWebrtcGlobal();
 

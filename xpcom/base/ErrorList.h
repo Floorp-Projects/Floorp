@@ -937,23 +937,6 @@
 #undef MODULE
 
   /* ======================================================================= */
-  /* 37: NS_ERROR_MODULE_DOM_BLUETOOTH */
-  /* ======================================================================= */
-#define MODULE NS_ERROR_MODULE_DOM_BLUETOOTH
-  ERROR(NS_ERROR_DOM_BLUETOOTH_FAIL,                      FAILURE(1)),
-  ERROR(NS_ERROR_DOM_BLUETOOTH_NOT_READY,                 FAILURE(2)),
-  ERROR(NS_ERROR_DOM_BLUETOOTH_NOMEM,                     FAILURE(3)),
-  ERROR(NS_ERROR_DOM_BLUETOOTH_BUSY,                      FAILURE(4)),
-  ERROR(NS_ERROR_DOM_BLUETOOTH_DONE,                      FAILURE(5)),
-  ERROR(NS_ERROR_DOM_BLUETOOTH_UNSUPPORTED,               FAILURE(6)),
-  ERROR(NS_ERROR_DOM_BLUETOOTH_PARM_INVALID,              FAILURE(7)),
-  ERROR(NS_ERROR_DOM_BLUETOOTH_UNHANDLED,                 FAILURE(8)),
-  ERROR(NS_ERROR_DOM_BLUETOOTH_AUTH_FAILURE,              FAILURE(9)),
-  ERROR(NS_ERROR_DOM_BLUETOOTH_RMT_DEV_DOWN,              FAILURE(10)),
-  ERROR(NS_ERROR_DOM_BLUETOOTH_AUTH_REJECTED,             FAILURE(11)),
-#undef MODULE
-
-  /* ======================================================================= */
   /* 38: NS_ERROR_MODULE_SIGNED_APP */
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_SIGNED_APP
