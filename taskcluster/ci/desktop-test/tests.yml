@@ -555,10 +555,6 @@ xpcshell:
     description: "xpcshell test run"
     suite: xpcshell
     treeherder-symbol: tc-X()
-    run-on-projects:
-        by-test-platform:
-            linux64-ccov/opt: []
-            default: ['all']
     chunks:
         by-test-platform:
             # win.*: 1
@@ -577,12 +573,7 @@ xpcshell:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
-            by-test-platform:
-                linux64-ccov/opt:
-                    - --xpcshell-suite=xpcshell
-                    - --code-coverage
-                default:
-                    - -xpcshell-suite=xpcshell
+            - --xpcshell-suite=xpcshell
     # Bug 1281241: migrating to m3.large instances
     instance-size: legacy
     allow-software-gl-layers: false
