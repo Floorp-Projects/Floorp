@@ -41,10 +41,13 @@ CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe,
       aAlignment = MOZ_LIKELY(aSameSide) ? NS_STYLE_ALIGN_END
                                          : NS_STYLE_ALIGN_START;
       break;
-    case NS_STYLE_ALIGN_FLEX_START: // same as 'start' for Grid
+    // flex-start/flex-end are the same as start/end, in most contexts.
+    // (They have special behavior in flex containers, so flex containers
+    // should map them to some other value before calling this method.)
+    case NS_STYLE_ALIGN_FLEX_START:
       aAlignment = NS_STYLE_ALIGN_START;
       break;
-    case NS_STYLE_ALIGN_FLEX_END: // same as 'end' for Grid
+    case NS_STYLE_ALIGN_FLEX_END:
       aAlignment = NS_STYLE_ALIGN_END;
       break;
   }
