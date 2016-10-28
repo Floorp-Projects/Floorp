@@ -41,9 +41,7 @@ config = {
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': True,
     'enable_ccache': False,
-    'vcs_share_base': os.path.join(
-        os.environ['SystemDrive'], os.sep, 'builds', 'hg-shared'
-    ),
+    'vcs_share_base': os.path.join('y:', os.sep, 'hg-shared'),
     'objdir': 'obj-firefox',
     'tooltool_script': [
       sys.executable,
@@ -65,9 +63,7 @@ config = {
         'BINSCOPE': os.path.join(
             os.environ['ProgramFiles(x86)'], 'Microsoft', 'SDL BinScope', 'BinScope.exe'
         ),
-        'HG_SHARE_BASE_DIR': os.path.join(
-            os.environ['SystemDrive'], os.sep, 'builds', 'hg-shared'
-        ),
+        'HG_SHARE_BASE_DIR': os.path.join('y:', os.sep, 'hg-shared'),
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'MOZ_AUTOMATION': '1',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
