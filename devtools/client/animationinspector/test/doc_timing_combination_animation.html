@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    div {
+      display: inline-block;
+      width: 100px;
+      height: 100px;
+      background-color: lime;
+    }
+    </style>
+  </head>
+  <body>
+    <script>
+    "use strict";
+
+    const delayList = [0, 50000, -50000];
+    const endDelayList = [0, 50000, -50000];
+
+    delayList.forEach(delay => {
+      endDelayList.forEach(endDelay => {
+        const el = document.createElement("div");
+        document.body.appendChild(el);
+        el.animate({ opacity: [0, 1] },
+                   { duration: 200000,
+                     iterations: 1,
+                     fill: "both",
+                     delay: delay,
+                     endDelay: endDelay });
+      });
+    });
+    </script>
+  </body>
+</html>

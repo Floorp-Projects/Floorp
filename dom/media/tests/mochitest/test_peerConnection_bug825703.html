@@ -66,6 +66,8 @@ runNetworkTest(() => {
     { urls: ["stun:127.0.0.1", "stun:localhost"] },
     { urls:"stuns:localhost", foo:"" },
     { urls:"turn:[::1]:3478", username:"p", credential:"p" },
+    { urls:"turn:[::1]:3478", username:"", credential:"" },
+    { urls:"turns:[::1]:3478", username:"", credential:"" },
     { urls:"turn:localhost:3478?transport=udp", username:"p", credential:"p" },
     { urls: ["turn:[::1]:3478", "turn:localhost"], username:"p", credential:"p" },
     { urls:"turns:localhost:3478?transport=udp", username:"p", credential:"p" },

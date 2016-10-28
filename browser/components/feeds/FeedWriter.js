@@ -611,7 +611,7 @@ FeedWriter.prototype = {
         if (Services.prefs.getCharPref(getPrefActionForType(feedType)) != "ask")
           alwaysUse = true;
       }
-      catch(ex) { }
+      catch (ex) { }
       this._setCheckboxCheckedState(checkbox, alwaysUse);
     }
   },
@@ -949,7 +949,7 @@ FeedWriter.prototype = {
   },
 
   receiveMessage(msg) {
-    switch(msg.name) {
+    switch (msg.name) {
       case "FeedWriter:SetApplicationLauncherMenuItem":
         let menuItem = null;
 

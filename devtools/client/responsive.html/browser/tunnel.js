@@ -109,6 +109,17 @@ function tunnelToInnerBrowser(outer, inner) {
         enumerable: true,
       });
 
+      // The `outerWindowID` of the content is used by browser actions like view source
+      // and print.  They send the ID down to the client to find the right content frame
+      // to act on.
+      Object.defineProperty(outer, "outerWindowID", {
+        get() {
+          return inner.outerWindowID;
+        },
+        configurable: true,
+        enumerable: true,
+      });
+
       // The `permanentKey` property on a <xul:browser> is used to index into various maps
       // held by the session store.  When you swap content around with
       // `_swapBrowserDocShells`, these keys are also swapped so they follow the content.
@@ -274,6 +285,7 @@ function tunnelToInnerBrowser(outer, inner) {
       // are on the prototype.
       delete outer.frameLoader;
       delete outer[FRAME_LOADER];
+      delete outer.outerWindowID;
 
       // Invalidate outer's permanentKey so that SessionStore stops associating
       // things that happen to the outer browser with the content inside in the
@@ -406,21 +418,45 @@ MessageManagerTunnel.prototype = {
   ],
 
   OUTER_TO_INNER_MESSAGE_PREFIXES: [
+    // Messages sent from nsContextMenu.js
+    "ContextMenu:",
     // Messages sent from DevTools
     "debug:",
     // Messages sent from findbar.xml
     "Findbar:",
     // Messages sent from RemoteFinder.jsm
     "Finder:",
+    // Messages sent from InlineSpellChecker.jsm
+    "InlineSpellChecker:",
+    // Messages sent from pageinfo.js
+    "PageInfo:",
+    // Messsage sent from printUtils.js
+    "Printing:",
+    // Messages sent from browser-social.js
+    "Social:",
+    "PageMetadata:",
+    // Messages sent from viewSourceUtils.js
+    "ViewSource:",
   ],
 
   INNER_TO_OUTER_MESSAGE_PREFIXES: [
+    // Messages sent to nsContextMenu.js
+    "ContextMenu:",
     // Messages sent to DevTools
     "debug:",
     // Messages sent to findbar.xml
     "Findbar:",
     // Messages sent to RemoteFinder.jsm
     "Finder:",
+    // Messages sent to pageinfo.js
+    "PageInfo:",
+    // Messsage sent from printUtils.js
+    "Printing:",
+    // Messages sent to browser-social.js
+    "Social:",
+    "PageMetadata:",
+    // Messages sent to viewSourceUtils.js
+    "ViewSource:",
   ],
 
   OUTER_TO_INNER_FRAME_SCRIPTS: [
