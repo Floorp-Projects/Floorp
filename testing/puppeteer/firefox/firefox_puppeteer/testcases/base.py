@@ -71,10 +71,7 @@ class BaseFirefoxTestCase(unittest.TestCase, Puppeteer):
 
         :param flags: Specific restart flags for Firefox
         """
-        if kwargs.get('clean'):
-            self.marionette.restart(clean=True)
-        else:
-            self.marionette.restart(in_app=True)
+        self.marionette.restart(in_app=not kwargs.get('clean'), **kwargs)
 
         # Ensure that we always have a valid browser instance available
         self.browser = self.windows.switch_to(lambda win: type(win) is BrowserWindow)
