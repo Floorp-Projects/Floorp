@@ -356,9 +356,9 @@ let gDecoderDoctorHandler = {
   },
 }
 
-window.messageManager.addMessageListener("DecoderDoctor:Notification", gDecoderDoctorHandler);
-window.messageManager.addMessageListener("EMEVideo:ContentMediaKeysRequest", gEMEHandler);
+window.getGroupMessageManager("browsers").addMessageListener("DecoderDoctor:Notification", gDecoderDoctorHandler);
+window.getGroupMessageManager("browsers").addMessageListener("EMEVideo:ContentMediaKeysRequest", gEMEHandler);
 window.addEventListener("unload", function() {
-  window.messageManager.removeMessageListener("EMEVideo:ContentMediaKeysRequest", gEMEHandler);
-  window.messageManager.removeMessageListener("DecoderDoctor:Notification", gDecoderDoctorHandler);
+  window.getGroupMessageManager("browsers").removeMessageListener("EMEVideo:ContentMediaKeysRequest", gEMEHandler);
+  window.getGroupMessageManager("browsers").removeMessageListener("DecoderDoctor:Notification", gDecoderDoctorHandler);
 }, false);
