@@ -369,7 +369,7 @@ function test_windowToIframeURL(url) {
   ifr.onload = function() {
     runTests({
       clonableObjectsEveryWhere: true,
-      clonableObjectsSameProcess: false,
+      clonableObjectsSameProcess: true,
       transferableObjects: true,
       send: function(what, ports) {
         return new Promise(function(r, rr) {
