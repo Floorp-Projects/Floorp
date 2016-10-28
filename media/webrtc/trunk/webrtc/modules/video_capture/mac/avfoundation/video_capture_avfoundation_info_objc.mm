@@ -162,7 +162,14 @@ using namespace videocapturemodule;
 
     *width = videoDimensions.width;
     *height = videoDimensions.height;
-    *maxFPS = maxFrameRateRange.maxFrameRate;
+
+    // This is to fix setCaptureHeight() which fails for some webcams supporting non-integer framerates.
+    // In setCaptureHeight(), we match the best framerate range by searching a range whose max framerate
+    // is most close to (but smaller than or equal to) the target. Since maxFPS of capability is integer,
+    // we fill in the capability maxFPS with the floor value (e.g., 29) of the real supported fps
+    // (e.g., 29.97). If the target is set to 29, we failed to match the best format with max framerate
+    // 29.97 since it is over the target. Therefore, we need to return a ceiling value as the maxFPS here.
+    *maxFPS = static_cast<int32_t>(ceil(maxFrameRateRange.maxFrameRate));
     *rawType = [VideoCaptureMacAVFoundationUtility fourCCToRawVideoType:CMFormatDescriptionGetMediaSubType(format.formatDescription)];
 
     return [NSNumber numberWithInt:0];

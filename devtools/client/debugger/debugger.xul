@@ -341,11 +341,6 @@
                                class="devtools-toolbarbutton"
                                tooltiptext="&debuggerUI.sources.toggleBreakpoints;"
                                command="toggleBreakpointsCommand"/>
-                <toolbarbutton id="toggle-promise-debugger"
-                               class="devtools-toolbarbutton"
-                               tooltiptext="&debuggerUI.sources.togglePromiseDebugger;"
-                               command="togglePromiseDebuggerCommand"
-                               hidden="true"/>
               </toolbar>
             </tabpanel>
             <tabpanel id="callstack-tabpanel">
@@ -403,12 +398,6 @@
             </tabpanels>
           </tabbox>
         </hbox>
-        <splitter id="editor-and-promise-splitter"
-                class="devtools-horizontal-splitter"/>
-        <vbox id="promise-debugger-pane"
-              flex="1"
-              hidden="true">
-        </vbox>
       </vbox>
       <splitter id="vertical-layout-splitter"
                 class="devtools-horizontal-splitter"/>

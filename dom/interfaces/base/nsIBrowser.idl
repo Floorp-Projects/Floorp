@@ -24,4 +24,23 @@ interface nsIBrowser : nsISupports
    */
   void dropLinks(in unsigned long linksCount,
                  [array, size_is(linksCount)] in wstring links);
+
+  /**
+   * Swapping of frameloaders are usually initiated from a frameloader owner
+   * or other components operating on frameloader owners. This is done by calling
+   * swapFrameLoaders at MozFrameLoaderOwner webidl interface.
+   *
+   * This function aimed to provide the other way around -
+   * if the swapping is initiated from frameloader itself or other platform level
+   * components, it uses this interface to delegate the swapping request to
+   * frameloader owners and ask them to re-initiate frameloader swapping, so that
+   * frameloader owners such as <xul:browser> can setup their properties and /
+   * or listeners properly on swapping.
+   */
+  void swapBrowsers(in nsIBrowser aOtherBrowser);
+
+  /**
+   * Close the browser (usually means to remove a tab).
+   */
+  void closeBrowser();
 };

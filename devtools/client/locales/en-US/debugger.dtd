@@ -50,10 +50,6 @@
   -  button that toggles all breakpoints for all sources. -->
 <!ENTITY debuggerUI.sources.toggleBreakpoints "Enable/disable all breakpoints">
 
-<!-- LOCALIZATION NOTE (debuggerUI.sources.togglePromiseDebugger): This is the
-  -  tooltip for the button that toggles the promise debugger. -->
-<!ENTITY debuggerUI.sources.togglePromiseDebugger "Toggle Promise Debugger">
-
 <!-- LOCALIZATION NOTE (debuggerUI.clearButton): This is the label for
   -  the button that clears the collected tracing data in the tracing tab. -->
 <!ENTITY debuggerUI.clearButton "Clear">

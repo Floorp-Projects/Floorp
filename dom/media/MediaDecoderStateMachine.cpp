@@ -219,6 +219,8 @@ public:
 
   virtual void HandleResumeVideoDecoding();
 
+  virtual void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) {}
+
   virtual void DumpDebugInfo() {}
 
 protected:
@@ -627,6 +629,14 @@ public:
       mMaster->mVideoDecodeSuspended = true;
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
       Reader()->SetVideoBlankDecode(true);
+    }
+  }
+
+  void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) override
+  {
+    if (aPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
+      // Schedule Step() to check if we can start playback.
+      mMaster->ScheduleStateMachine();
     }
   }
 
@@ -1049,6 +1059,14 @@ public:
   void HandleVideoSuspendTimeout() override
   {
     // Do nothing since no decoding is going on.
+  }
+
+  void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) override
+  {
+    if (aPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
+      // Schedule Step() to check if we can start playback.
+      mMaster->ScheduleStateMachine();
+    }
   }
 
 private:
@@ -2457,34 +2475,15 @@ void MediaDecoderStateMachine::PlayStateChanged()
 
   if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
     mVideoDecodeSuspendTimer.Reset();
-    return;
-  }
-
-  // Once we start playing, we don't want to minimize our prerolling, as we
-  // assume the user is likely to want to keep playing in future. This needs to
-  // happen before we invoke StartDecoding().
-  if (mMinimizePreroll) {
+  } else if (mMinimizePreroll) {
+    // Once we start playing, we don't want to minimize our prerolling, as we
+    // assume the user is likely to want to keep playing in future. This needs to
+    // happen before we invoke StartDecoding().
     mMinimizePreroll = false;
     DispatchDecodeTasksIfNeeded();
   }
 
-  // Some state transitions still happen synchronously on the main thread. So
-  // if the main thread invokes Play() and then Seek(), the seek will initiate
-  // synchronously on the main thread, and the asynchronous PlayInternal task
-  // will arrive when it's no longer valid. The proper thing to do is to move
-  // all state transitions to the state machine task queue, but for now we just
-  // make sure that none of the possible main-thread state transitions (Seek(),
-  // SetDormant(), and Shutdown()) have not occurred.
-  if (mState != DECODER_STATE_DECODING &&
-      mState != DECODER_STATE_DECODING_FIRSTFRAME &&
-      mState != DECODER_STATE_BUFFERING &&
-      mState != DECODER_STATE_COMPLETED)
-  {
-    DECODER_LOG("Unexpected state - Bailing out of PlayInternal()");
-    return;
-  }
-
-  ScheduleStateMachine();
+  mStateObj->HandlePlayStateChanged(mPlayState);
 }
 
 void MediaDecoderStateMachine::VisibilityChanged()

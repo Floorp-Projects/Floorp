@@ -166,7 +166,7 @@ this.TranslationDocument.prototype = {
         item.original.push(objInMap);
         str += this.generateTextForItem(objInMap);
         wasLastItemPlaceholder = false;
-      } else {
+      } else if (!wasLastItemPlaceholder) {
         // Otherwise, if this node doesn't contain any useful content,
         // or if it is a root itself, we can replace it with a placeholder node.
         // We can't simply eliminate this node from our string representation
@@ -174,11 +174,9 @@ this.TranslationDocument.prototype = {
         // probably merge two separate text nodes).
         // It's not necessary to add more than one placeholder in sequence;
         // we can optimize them away.
-        if (!wasLastItemPlaceholder) {
-          item.original.push(TranslationItem_NodePlaceholder);
-          str += '<br>';
-          wasLastItemPlaceholder = true;
-        }
+        item.original.push(TranslationItem_NodePlaceholder);
+        str += '<br>';
+        wasLastItemPlaceholder = true;
       }
     }
 
@@ -277,9 +275,15 @@ TranslationItem.prototype = {
   isSimpleRoot: false,
 
   toString: function() {
-    let rootType = this.isRoot
-                   ? (this.isSimpleRoot ? ' (simple root)' : ' (non simple root)')
-                   : '';
+    let rootType = "";
+    if (this.isRoot) {
+      if (this.isSimpleRoot) {
+        rootType = " (simple root)";
+      }
+      else {
+        rootType = " (non simple root)";
+      }
+    }
     return "[object TranslationItem: <" + this.nodeRef.localName + ">"
            + rootType + "]";
   },
