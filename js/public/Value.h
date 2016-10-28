@@ -224,6 +224,18 @@ namespace JS {
 static inline constexpr JS::Value UndefinedValue();
 static inline JS::Value PoisonedObjectValue(JSObject* obj);
 
+namespace detail {
+
+constexpr int CanonicalizedNaNSignBit = 0;
+constexpr uint64_t CanonicalizedNaNSignificand = 0x8000000000000ULL;
+
+constexpr uint64_t CanonicalizedNaNBits =
+    mozilla::SpecificNaNBits<double,
+                             detail::CanonicalizedNaNSignBit,
+                             detail::CanonicalizedNaNSignificand>::value;
+
+} // namespace detail
+
 /**
  * Returns a generic quiet NaN value, with all payload bits set to zero.
  *
@@ -233,7 +245,8 @@ static inline JS::Value PoisonedObjectValue(JSObject* obj);
 static MOZ_ALWAYS_INLINE double
 GenericNaN()
 {
-  return mozilla::SpecificNaN<double>(0, 0x8000000000000ULL);
+  return mozilla::SpecificNaN<double>(detail::CanonicalizedNaNSignBit,
+                                      detail::CanonicalizedNaNSignificand);
 }
 
 /* MSVC with PGO miscompiles this function. */
@@ -1004,11 +1017,11 @@ DoubleValue(double dbl)
     return v;
 }
 
-static inline constexpr Value
+static inline Value
 CanonicalizedDoubleValue(double d)
 {
     return MOZ_UNLIKELY(mozilla::IsNaN(d))
-           ? Value::fromRawBits(0x7FF8000000000000ULL)
+           ? Value::fromRawBits(detail::CanonicalizedNaNBits)
            : Value::fromDouble(d);
 }
 
