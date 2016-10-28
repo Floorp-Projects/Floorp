@@ -234,10 +234,12 @@ enum class StyleWindowDragging : uint8_t {
 };
 
 // orient
-#define NS_STYLE_ORIENT_INLINE     0
-#define NS_STYLE_ORIENT_BLOCK      1
-#define NS_STYLE_ORIENT_HORIZONTAL 2
-#define NS_STYLE_ORIENT_VERTICAL   3
+enum class StyleOrient : uint8_t {
+  Inline,
+  Block,
+  Horizontal,
+  Vertical,
+};
 
 #define NS_RADIUS_FARTHEST_SIDE 0
 #define NS_RADIUS_CLOSEST_SIDE  1
