@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/CDMProxy.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -15,6 +16,7 @@
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "MediaFormatReader.h"
+#include "MediaPrefs.h"
 #include "MediaResource.h"
 #include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
@@ -22,6 +24,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 
 #include <algorithm>
+#include <queue>
 
 using namespace mozilla::media;
 
@@ -36,6 +39,129 @@ mozilla::LazyLogModule gMediaDemuxerLog("MediaDemuxer");
 #define LOGV(arg, ...) MOZ_LOG(sFormatDecoderLog, mozilla::LogLevel::Verbose, ("MediaFormatReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
+
+/**
+ * This is a singleton which controls the number of decoders that can be
+ * created concurrently. Before calling PDMFactory::CreateDecoder(), Alloc()
+ * must be called to get a token object as a permission to create a decoder.
+ * The token should stay alive until Shutdown() is called on the decoder.
+ * The destructor of the token will restore the decoder count so it is available
+ * for next calls of Alloc().
+ */
+class DecoderAllocPolicy
+{
+  using TrackType = TrackInfo::TrackType;
+
+public:
+  class Token
+  {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Token)
+  protected:
+    virtual ~Token() {}
+  };
+
+  using Promise = MozPromise<RefPtr<Token>, bool, true>;
+
+  // Acquire a token for decoder creation. Thread-safe.
+  auto Alloc(TrackType aTrack) -> RefPtr<Promise>;
+
+  // Called by ClearOnShutdown() to delete the singleton.
+  void operator=(decltype(nullptr));
+
+  // Get the singleton. Thread-safe.
+  static DecoderAllocPolicy& Instance();
+
+private:
+  class AutoDeallocToken;
+  using PromisePrivate = Promise::Private;
+  DecoderAllocPolicy();
+  ~DecoderAllocPolicy();
+  // Called by the destructor of TokenImpl to restore the decoder limit.
+  void Dealloc();
+  // Decrement the decoder limit and resolve a promise if available.
+  void ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock);
+
+  ReentrantMonitor mMonitor;
+  // The number of decoders available for creation.
+  int mDecoderLimit;
+  // Requests to acquire tokens.
+  std::queue<RefPtr<PromisePrivate>> mPromises;
+};
+
+class DecoderAllocPolicy::AutoDeallocToken : public Token
+{
+private:
+  ~AutoDeallocToken() { DecoderAllocPolicy::Instance().Dealloc(); }
+};
+
+DecoderAllocPolicy::DecoderAllocPolicy()
+  : mMonitor("DecoderAllocPolicy::mMonitor")
+  , mDecoderLimit(MediaPrefs::MediaDecoderLimit())
+{
+  AbstractThread::MainThread()->Dispatch(NS_NewRunnableFunction([this] () {
+    ClearOnShutdown(this, ShutdownPhase::ShutdownThreads);
+  }));
+}
+
+DecoderAllocPolicy::~DecoderAllocPolicy()
+{
+  while (!mPromises.empty()) {
+    RefPtr<PromisePrivate> p = mPromises.front().forget();
+    mPromises.pop();
+    p->Reject(true, __func__);
+  }
+}
+
+DecoderAllocPolicy&
+DecoderAllocPolicy::Instance()
+{
+  // Note: Function-static initialization is not thread-safe in VS 2013.
+  // Don't uplift this code to 45esr.
+  static auto sPolicy = new DecoderAllocPolicy();
+  return *sPolicy;
+}
+
+auto
+DecoderAllocPolicy::Alloc(TrackType aTrack) -> RefPtr<Promise>
+{
+  // No limit for audio decoders or a negative number.
+  if (aTrack == TrackInfo::kAudioTrack || mDecoderLimit < 0) {
+    return Promise::CreateAndResolve(new Token(), __func__);
+  }
+
+  ReentrantMonitorAutoEnter mon(mMonitor);
+  RefPtr<PromisePrivate> p = new PromisePrivate(__func__);
+  mPromises.push(p);
+  ResolvePromise(mon);
+  return p.forget();
+}
+
+void
+DecoderAllocPolicy::Dealloc()
+{
+  ReentrantMonitorAutoEnter mon(mMonitor);
+  ++mDecoderLimit;
+  ResolvePromise(mon);
+}
+
+void
+DecoderAllocPolicy::ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock)
+{
+  MOZ_ASSERT(mDecoderLimit >= 0);
+
+  if (mDecoderLimit > 0 && !mPromises.empty()) {
+    --mDecoderLimit;
+    RefPtr<PromisePrivate> p = mPromises.front().forget();
+    mPromises.pop();
+    p->Resolve(new AutoDeallocToken(), __func__);
+  }
+}
+
+void
+DecoderAllocPolicy::operator=(std::nullptr_t)
+{
+  delete this;
+}
 
 class MediaFormatReader::DecoderFactory
 {
