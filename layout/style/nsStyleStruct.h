@@ -2820,7 +2820,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   uint8_t mOverflowY;           // [reset] see nsStyleConsts.h
   uint8_t mOverflowClipBox;     // [reset] see nsStyleConsts.h
   uint8_t mResize;              // [reset] see nsStyleConsts.h
-  uint8_t mOrient;              // [reset] see nsStyleConsts.h
+  mozilla::StyleOrient mOrient; // [reset] see nsStyleConsts.h
   uint8_t mIsolation;           // [reset] see nsStyleConsts.h
   uint8_t mTopLayer;            // [reset] see nsStyleConsts.h
   uint8_t mWillChangeBitField;  // [reset] see nsStyleConsts.h. Stores a

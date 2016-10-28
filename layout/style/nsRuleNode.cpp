@@ -1420,6 +1420,7 @@ struct SetEnumValueHelper
   DEFINE_ENUM_CLASS_SETTER(StyleUserInput, None, Auto)
   DEFINE_ENUM_CLASS_SETTER(StyleUserModify, ReadOnly, WriteOnly)
   DEFINE_ENUM_CLASS_SETTER(StyleWindowDragging, Default, NoDrag)
+  DEFINE_ENUM_CLASS_SETTER(StyleOrient, Inline, Vertical)
 #ifdef MOZ_XUL
   DEFINE_ENUM_CLASS_SETTER(StyleDisplay, None, Popup)
 #else
@@ -6454,7 +6455,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
            display->mOrient, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentDisplay->mOrient,
-           NS_STYLE_ORIENT_INLINE);
+           StyleOrient::Inline);
 
   // shape-outside: none | [ <basic-shape> || <shape-box> ] | <image>
   const nsCSSValue* shapeOutsideValue = aRuleData->ValueForShapeOutside();

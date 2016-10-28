@@ -1786,10 +1786,10 @@ const KTableEntry nsCSSProps::kObjectFitKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kOrientKTable[] = {
-  { eCSSKeyword_inline,     NS_STYLE_ORIENT_INLINE },
-  { eCSSKeyword_block,      NS_STYLE_ORIENT_BLOCK },
-  { eCSSKeyword_horizontal, NS_STYLE_ORIENT_HORIZONTAL },
-  { eCSSKeyword_vertical,   NS_STYLE_ORIENT_VERTICAL },
+  { eCSSKeyword_inline,     StyleOrient::Inline },
+  { eCSSKeyword_block,      StyleOrient::Block },
+  { eCSSKeyword_horizontal, StyleOrient::Horizontal },
+  { eCSSKeyword_vertical,   StyleOrient::Vertical },
   { eCSSKeyword_UNKNOWN,    -1 }
 };
 

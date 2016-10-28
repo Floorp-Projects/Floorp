@@ -564,13 +564,13 @@ nsNativeTheme::IsVerticalMeter(nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "You have to pass a non-null aFrame");
   switch (aFrame->StyleDisplay()->mOrient) {
-    case NS_STYLE_ORIENT_HORIZONTAL:
+    case StyleOrient::Horizontal:
       return false;
-    case NS_STYLE_ORIENT_VERTICAL:
+    case StyleOrient::Vertical:
       return true;
-    case NS_STYLE_ORIENT_INLINE:
+    case StyleOrient::Inline:
       return aFrame->GetWritingMode().IsVertical();
-    case NS_STYLE_ORIENT_BLOCK:
+    case StyleOrient::Block:
       return !aFrame->GetWritingMode().IsVertical();
   }
   NS_NOTREACHED("unexpected -moz-orient value");
