@@ -198,6 +198,11 @@ public:
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
               ErrorResult& aRv);
 
+  static already_AddRefed<KeyframeEffectReadOnly>
+  Constructor(const GlobalObject& aGlobal,
+              KeyframeEffectReadOnly& aSource,
+              ErrorResult& aRv);
+
   void GetTarget(Nullable<OwningElementOrCSSPseudoElement>& aRv) const;
   Maybe<NonOwningAnimationTarget> GetTarget() const
   {
