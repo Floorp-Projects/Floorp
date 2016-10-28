@@ -77,8 +77,8 @@
       (loop i32
         (br 1 (i32.const 18))
         (br 1 (i32.const 19))
-        (br_if 1 (i32.const 20) (i32.const 0))
-        (br_if 1 (i32.const 20) (i32.const 1))
+        (drop (br_if 1 (i32.const 20) (i32.const 0)))
+        (drop (br_if 1 (i32.const 20) (i32.const 1)))
         (br 1 (i32.const 21))
         (br_table 1 (i32.const 22) (i32.const 0))
         (br_table 1 1 1 (i32.const 23) (i32.const 1))
@@ -240,19 +240,6 @@
 )
 
 (assert_invalid
-  (module (func $type-binary (result i64)
-    (loop i64 i64 (i64.const 1) (i64.const 2)) (i64.add)
-  ))
-  "invalid result arity"
-)
-(assert_invalid
-  (module (func $type-binary-with-nop (result i32)
-    (loop i32 i32 (nop) (i32.const 7) (nop) (i32.const 8)) i32.add
-  ))
-  "invalid result arity"
-)
-
-(assert_invalid
   (module (func $type-value-void-vs-num (result i32)
     (loop (nop))
   ))
@@ -265,39 +252,3 @@
   "type mismatch"
 )
 
-(; TODO(stack): soft failure
-(assert_invalid
-  (module (func $type-value-void-vs-num-after-break (result i32)
-    (loop (br 1 (i32.const 1)) (nop))
-  ))
-  "type mismatch"
-)
-(assert_invalid
-  (module (func $type-value-num-vs-num-after-break (result i32)
-    (loop (br 1 (i32.const 1)) (f32.const 0))
-  ))
-  "type mismatch"
-)
-;)
-
-;; TODO: bug in the test: https://github.com/WebAssembly/spec/issues/338
-;;(assert_invalid
-;;  (module (func $type-cont-last-void-vs-empty (result i32)
-;;    (loop (br 0 (nop)))
-;;  ))
-;;  "type mismatch"
-;;)
-;;(assert_invalid
-;;  (module (func $type-cont-last-num-vs-empty (result i32)
-;;    (loop (br 0 (i32.const 0)))
-;;  ))
-;;  "type mismatch"
-;;)
-
-;; TODO(stack): move these elsewhere
-(module (func $type-cont-num-vs-void
-  (loop (i32.const 0) (br 0))
-))
-(module (func $type-cont-nested-num-vs-void
-  (block (loop (i32.const 1) (loop (i32.const 1) (br 2)) (br 1)))
-))
