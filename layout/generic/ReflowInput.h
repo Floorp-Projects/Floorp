@@ -218,24 +218,6 @@ public:
     uint32_t mShrinkWrap:1; // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
     uint32_t mUseAutoBSize:1; // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
     uint32_t mStaticPosIsCBOrigin:1; // the STATIC_POS_IS_CB_ORIGIN ctor flag
-
-    // If set, the following two flags indicate that:
-    // (1) this frame is absolutely-positioned (or fixed-positioned).
-    // (2) this frame's static position depends on the CSS Box Alignment.
-    // (3) we do need to compute the static position, because the frame's
-    //     {Inline and/or Block} offsets actually depend on it.
-    // When these bits are set, the offset values (IStart/IEnd, BStart/BEnd)
-    // represent the "start" edge of the frame's CSS Box Alignment container
-    // area, in that axis -- and these offsets need to be further-resolved
-    // (with CSS Box Alignment) after we know the OOF frame's size.
-    // NOTE: The "I" and "B" (for "Inline" and "Block") refer the axes of the
-    // *containing block's writing-mode*, NOT mFrame's own writing-mode. This
-    // is purely for convenience, since that's the writing-mode we're dealing
-    // with when we set & react to these bits.
-    // XXXdholbert These new bits will probably make the "mStaticPosIsCBOrigin"
-    // bit obsolete -- consider removing it in bug 1269017.
-    uint32_t mIOffsetsNeedCSSAlign:1;
-    uint32_t mBOffsetsNeedCSSAlign:1;
   };
 
 #ifdef DEBUG
