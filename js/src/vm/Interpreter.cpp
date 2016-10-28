@@ -1483,7 +1483,7 @@ SetObjectElementOperation(JSContext* cx, HandleObject obj, HandleId id, HandleVa
         int32_t i = JSID_TO_INT(id);
         if ((uint32_t)i >= length) {
             // Annotate script if provided with information (e.g. baseline)
-            if (script && script->hasBaselineScript() && *pc == JSOP_SETELEM)
+            if (script && script->hasBaselineScript() && IsSetElemPC(pc))
                 script->baselineScript()->noteArrayWriteHole(script->pcToOffset(pc));
         }
     }
