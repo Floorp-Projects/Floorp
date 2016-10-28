@@ -83,3 +83,9 @@ interface AddonManager : EventTarget {
   [ChromeOnly]
   void eventListenerWasRemoved(DOMString type);
 };
+
+[ChromeOnly,Exposed=System,HeaderFile="mozilla/AddonManagerWebAPI.h"]
+interface AddonManagerPermissions {
+  static boolean isHostPermitted(DOMString host);
+};
+
