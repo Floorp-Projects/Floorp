@@ -20,11 +20,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "Management", () => {
-  const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
-  return Management;
-});
-
 /* exported ExtensionTestUtils */
 
 let BASE_MANIFEST = Object.freeze({
@@ -55,8 +50,6 @@ class ExtensionWrapper {
 
     this.messageQueue = new Set();
 
-    this.attachListeners();
-
     this.testScope.do_register_cleanup(() => {
       if (this.messageQueue.size) {
         let names = Array.from(this.messageQueue, ([msg]) => msg);
@@ -68,6 +61,32 @@ class ExtensionWrapper {
       }
     });
 
+    /* eslint-disable mozilla/balanced-listeners */
+    extension.on("test-eq", (kind, pass, msg, expected, actual) => {
+      this.testScope.ok(pass, `${msg} - Expected: ${expected}, Actual: ${actual}`);
+    });
+    extension.on("test-log", (kind, pass, msg) => {
+      this.testScope.do_print(msg);
+    });
+    extension.on("test-result", (kind, pass, msg) => {
+      this.testScope.ok(pass, msg);
+    });
+    extension.on("test-done", (kind, pass, msg, expected, actual) => {
+      this.testScope.ok(pass, msg);
+      this.testResolve(msg);
+    });
+
+    extension.on("test-message", (kind, msg, ...args) => {
+      let handler = this.messageHandler.get(msg);
+      if (handler) {
+        handler(...args);
+      } else {
+        this.messageQueue.add([msg, ...args]);
+        this.checkMessages();
+      }
+    });
+    /* eslint-enable mozilla/balanced-listeners */
+
     this.testScope.do_register_cleanup(() => {
       if (this.state == "pending" || this.state == "running") {
         this.testScope.equal(this.state, "unloaded", "Extension left running at test shutdown");
@@ -78,34 +97,6 @@ class ExtensionWrapper {
     });
 
     this.testScope.do_print(`Extension loaded`);
-  }
-
-  attachListeners() {
-    /* eslint-disable mozilla/balanced-listeners */
-    this.extension.on("test-eq", (kind, pass, msg, expected, actual) => {
-      this.testScope.ok(pass, `${msg} - Expected: ${expected}, Actual: ${actual}`);
-    });
-    this.extension.on("test-log", (kind, pass, msg) => {
-      this.testScope.do_print(msg);
-    });
-    this.extension.on("test-result", (kind, pass, msg) => {
-      this.testScope.ok(pass, msg);
-    });
-    this.extension.on("test-done", (kind, pass, msg, expected, actual) => {
-      this.testScope.ok(pass, msg);
-      this.testResolve(msg);
-    });
-
-    this.extension.on("test-message", (kind, msg, ...args) => {
-      let handler = this.messageHandler.get(msg);
-      if (handler) {
-        handler(...args);
-      } else {
-        this.messageQueue.add([msg, ...args]);
-        this.checkMessages();
-      }
-    });
-    /* eslint-enable mozilla/balanced-listeners */
   }
 
   startup() {
@@ -209,6 +200,8 @@ var ExtensionTestUtils = {
   BASE_MANIFEST,
 
   normalizeManifest: Task.async(function* (manifest, baseManifest = BASE_MANIFEST) {
+    const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
+
     yield Management.lazyInit();
 
     let errors = [];

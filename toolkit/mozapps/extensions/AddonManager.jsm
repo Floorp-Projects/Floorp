@@ -85,8 +85,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
                                   "resource://gre/modules/addons/AddonRepository.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Extension",
-                                  "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 
@@ -851,8 +849,6 @@ var AddonManagerInternal = {
         appChanged = Services.appinfo.version != oldAppVersion;
       }
       catch (e) { }
-
-      Extension.browserUpdated = appChanged;
 
       let oldPlatformVersion = null;
       try {

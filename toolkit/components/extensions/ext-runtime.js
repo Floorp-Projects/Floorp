@@ -8,43 +8,27 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Extension",
-                                  "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
                                   "resource://gre/modules/ExtensionManagement.jsm");
 
 var {
-  ignoreEvent,
+  EventManager,
   SingletonEventManager,
+  ignoreEvent,
 } = ExtensionUtils;
 
 extensions.registerSchemaAPI("runtime", "addon_parent", context => {
   let {extension} = context;
   return {
     runtime: {
-      onStartup: ignoreEvent(context, "runtime.onStartup"),
-
-      onInstalled: new SingletonEventManager(context, "runtime.onInstalled", fire => {
-        let listener = () => {
-          switch (extension.startupReason) {
-            case "APP_STARTUP":
-              if (Extension.browserUpdated) {
-                fire({reason: "browser_update"});
-              }
-              break;
-            case "ADDON_INSTALL":
-              fire({reason: "install"});
-              break;
-            case "ADDON_UPGRADE":
-              fire({reason: "update"});
-              break;
-          }
-        };
-        extension.on("startup", listener);
+      onStartup: new EventManager(context, "runtime.onStartup", fire => {
+        extension.onStartup = fire;
         return () => {
-          extension.off("startup", listener);
+          extension.onStartup = null;
         };
       }).api(),
+
+      onInstalled: ignoreEvent(context, "runtime.onInstalled"),
 
       onUpdateAvailable: new SingletonEventManager(context, "runtime.onUpdateAvailable", fire => {
         let instanceID = extension.addonData.instanceID;
