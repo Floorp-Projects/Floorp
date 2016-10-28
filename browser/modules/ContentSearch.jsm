@@ -255,7 +255,7 @@ this.ContentSearch = {
       win.openUILinkIn(submission.uri.spec, where, params);
     }
     win.BrowserSearch.recordSearchInTelemetry(engine, data.healthReportKey,
-                                              data.selection || null);
+                                              { selection: data.selection });
     return;
   },
 
