@@ -644,7 +644,7 @@ ExtensionTabManager.prototype = {
       mutedInfo,
     };
     if (this.extension.hasPermission("cookies")) {
-      result.cookieStoreId = getCookieStoreIdForTab(result);
+      result.cookieStoreId = getCookieStoreIdForTab(result, tab);
     }
 
     if (this.hasTabPermission(tab)) {

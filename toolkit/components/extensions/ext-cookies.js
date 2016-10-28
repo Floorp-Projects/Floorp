@@ -5,15 +5,58 @@ const {interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
+                                  "resource://gre/modules/ContextualIdentityService.jsm");
+
 var {
   EventManager,
 } = ExtensionUtils;
 
 var DEFAULT_STORE = "firefox-default";
 var PRIVATE_STORE = "firefox-private";
+var CONTAINER_STORE = "firefox-container-";
 
-global.getCookieStoreIdForTab = function(tab) {
-  return tab.incognito ? PRIVATE_STORE : DEFAULT_STORE;
+global.getCookieStoreIdForTab = function(data, tab) {
+  if (data.incognito) {
+    return PRIVATE_STORE;
+  }
+
+  if (tab.userContextId) {
+    return CONTAINER_STORE + tab.userContextId;
+  }
+
+  return DEFAULT_STORE;
+};
+
+global.isPrivateCookieStoreId = function(storeId) {
+  return storeId == PRIVATE_STORE;
+};
+
+global.isDefaultCookieStoreId = function(storeId) {
+  return storeId == DEFAULT_STORE;
+};
+
+global.isContainerCookieStoreId = function(storeId) {
+  return storeId !== null && storeId.startsWith(CONTAINER_STORE);
+};
+
+global.getContainerForCookieStoreId = function(storeId) {
+  if (!global.isContainerCookieStoreId(storeId)) {
+    return null;
+  }
+
+  let containerId = storeId.substring(CONTAINER_STORE.length);
+  if (ContextualIdentityService.getIdentityFromId(containerId)) {
+    return parseInt(containerId, 10);
+  }
+
+  return null;
+};
+
+global.isValidCookieStoreId = function(storeId) {
+  return global.isDefaultCookieStoreId(storeId) ||
+         global.isPrivateCookieStoreId(storeId) ||
+         global.isContainerCookieStoreId(storeId);
 };
 
 function convert({cookie, isPrivate}) {
@@ -26,11 +69,18 @@ function convert({cookie, isPrivate}) {
     secure: cookie.isSecure,
     httpOnly: cookie.isHttpOnly,
     session: cookie.isSession,
-    storeId: isPrivate ? PRIVATE_STORE : DEFAULT_STORE,
   };
 
   if (!cookie.isSession) {
     result.expirationDate = cookie.expiry;
+  }
+
+  if (cookie.originAttributes.userContextId) {
+    result.storeId = CONTAINER_STORE + cookie.originAttributes.userContextId;
+  } else if (cookie.originAttributes.privateBrowsingId || isPrivate) {
+    result.storeId = PRIVATE_STORE;
+  } else {
+    result.storeId = DEFAULT_STORE;
   }
 
   return result;

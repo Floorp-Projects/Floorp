@@ -8,6 +8,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
 
 XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
@@ -523,8 +525,37 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             }
           }
 
+          if (createProperties.cookieStoreId && !extension.hasPermission("cookies")) {
+            return Promise.reject({message: `No permission for cookieStoreId: ${createProperties.cookieStoreId}`});
+          }
+
+          let options = {};
+          if (createProperties.cookieStoreId) {
+            if (!global.isValidCookieStoreId(createProperties.cookieStoreId)) {
+              return Promise.reject({message: `Illegal cookieStoreId: ${createProperties.cookieStoreId}`});
+            }
+
+            let privateWindow = PrivateBrowsingUtils.isBrowserPrivate(window.gBrowser);
+            if (privateWindow && !global.isPrivateCookieStoreId(createProperties.cookieStoreId)) {
+              return Promise.reject({message: `Illegal to set non-private cookieStorageId in a private window`});
+            }
+
+            if (!privateWindow && global.isPrivateCookieStoreId(createProperties.cookieStoreId)) {
+              return Promise.reject({message: `Illegal to set private cookieStorageId in a non-private window`});
+            }
+
+            if (global.isContainerCookieStoreId(createProperties.cookieStoreId)) {
+              let containerId = global.getContainerForCookieStoreId(createProperties.cookieStoreId);
+              if (!containerId) {
+                return Promise.reject({message: `No cookie store exists with ID ${createProperties.cookieStoreId}`});
+              }
+
+              options.userContextId = containerId;
+            }
+          }
+
           tabListener.initTabReady();
-          let tab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL);
+          let tab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL, options);
 
           let active = true;
           if (createProperties.active !== null) {
@@ -691,6 +722,11 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             if (queryInfo.currentWindow != eq) {
               return false;
             }
+          }
+
+          if (queryInfo.cookieStoreId !== null &&
+              tab.cookieStoreId != queryInfo.cookieStoreId) {
+            return false;
           }
 
           if (pattern && !pattern.matches(Services.io.newURI(tab.url, null, null))) {
