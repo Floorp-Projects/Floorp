@@ -879,17 +879,20 @@ TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
     return false;
   }
 
-  mActor = static_cast<TextureChild*>(aForwarder->GetTextureForwarder()->CreateTexture(desc,
-                                                                                      aForwarder->GetCompositorBackendType(),
-                                                                                      GetFlags(),
-                                                                                      mSerial));
-  if (!mActor) {
-    gfxCriticalError() << static_cast<int32_t>(desc.type()) << ", "
-                       << static_cast<int32_t>(aForwarder->GetCompositorBackendType()) << ", "
-                       << static_cast<uint32_t>(GetFlags())
-                       << ", " << mSerial;
-    MOZ_CRASH("GFX: Invalid actor");
+  PTextureChild* actor = aForwarder->GetTextureForwarder()->CreateTexture(
+    desc,
+    aForwarder->GetCompositorBackendType(),
+    GetFlags(),
+    mSerial);
+  if (!actor) {
+    gfxCriticalNote << static_cast<int32_t>(desc.type()) << ", "
+                    << static_cast<int32_t>(aForwarder->GetCompositorBackendType()) << ", "
+                    << static_cast<uint32_t>(GetFlags())
+                    << ", " << mSerial;
+    return false;
   }
+
+  mActor = static_cast<TextureChild*>(actor);
   mActor->mCompositableForwarder = aForwarder;
   mActor->mTextureForwarder = aForwarder->GetTextureForwarder();
   mActor->mTextureClient = this;
