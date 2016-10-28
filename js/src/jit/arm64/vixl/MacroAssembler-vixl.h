@@ -2307,7 +2307,7 @@ class MacroAssembler : public js::jit::Assembler {
       UseScratchRegisterScope* scratch_scope);
 
   bool LabelIsOutOfRange(Label* label, ImmBranchType branch_type) {
-    return !Instruction::IsValidImmPCOffset(branch_type, nextOffset().diffB<int32_t>(label));
+    return !Instruction::IsValidImmPCOffset(branch_type, nextOffset().getOffset() - label->offset());
   }
 
   // The register to use as a stack pointer for stack operations.
