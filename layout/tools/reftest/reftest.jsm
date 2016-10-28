@@ -50,6 +50,7 @@ var gTotalChunks = 0;
 var gThisChunk = 0;
 var gContainingWindow = null;
 var gURLFilterRegex = {};
+var gContentGfxInfo = null;
 const FOCUS_FILTER_ALL_TESTS = "all";
 const FOCUS_FILTER_NEEDS_FOCUS_TESTS = "needs-focus";
 const FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS = "non-needs-focus";
@@ -640,22 +641,34 @@ function BuildConditionSandbox(aURL) {
     }
 
     var gfxInfo = (NS_GFXINFO_CONTRACTID in CC) && CC[NS_GFXINFO_CONTRACTID].getService(CI.nsIGfxInfo);
+    let readGfxInfo = function (obj, key) {
+      if (gContentGfxInfo && (key in gContentGfxInfo)) {
+        return gContentGfxInfo[key];
+      }
+      return obj[key];
+    }
+
     try {
-      sandbox.d2d = gfxInfo.D2DEnabled;
-      sandbox.dwrite = gfxInfo.DWriteEnabled;
+      sandbox.d2d = readGfxInfo(gfxInfo, "D2DEnabled");
+      sandbox.dwrite = readGfxInfo(gfxInfo, "DWriteEnabled");
     } catch (e) {
       sandbox.d2d = false;
       sandbox.dwrite = false;
     }
+
     var info = gfxInfo.getInfo();
-    sandbox.azureCairo = info.AzureCanvasBackend == "cairo";
-    sandbox.azureQuartz = info.AzureCanvasBackend == "quartz";
-    sandbox.azureSkia = info.AzureCanvasBackend == "skia";
-    sandbox.skiaContent = info.AzureContentBackend == "skia";
-    sandbox.azureSkiaGL = info.AzureCanvasAccelerated; // FIXME: assumes GL right now
+    var canvasBackend = readGfxInfo(info, "AzureCanvasBackend");
+    var contentBackend = readGfxInfo(info, "AzureContentBackend");
+    var canvasAccelerated = readGfxInfo(info, "AzureCanvasAccelerated");
+
+    sandbox.azureCairo = canvasBackend == "cairo";
+    sandbox.azureQuartz = canvasBackend == "quartz";
+    sandbox.azureSkia = canvasBackend == "skia";
+    sandbox.skiaContent = contentBackend == "skia";
+    sandbox.azureSkiaGL = canvasAccelerated; // FIXME: assumes GL right now
     // true if we are using the same Azure backend for rendering canvas and content
-    sandbox.contentSameGfxBackendAsCanvas = info.AzureContentBackend == info.AzureCanvasBackend
-                                            || (info.AzureContentBackend == "none" && info.AzureCanvasBackend == "cairo");
+    sandbox.contentSameGfxBackendAsCanvas = contentBackend == canvasBackend
+                                            || (contentBackend == "none" && canvasBackend == "cairo");
 
     sandbox.layersGPUAccelerated =
       gWindowUtils.layerManagerType != "Basic";
@@ -1905,7 +1918,7 @@ function RegisterMessageListenersAndLoadContentScript()
     );
     gBrowserMessageManager.addMessageListener(
         "reftest:ContentReady",
-        function (m) { return RecvContentReady() }
+        function (m) { return RecvContentReady(m.data); }
     );
     gBrowserMessageManager.addMessageListener(
         "reftest:Exception",
@@ -1964,8 +1977,9 @@ function RecvAssertionCount(count)
     DoAssertionCheck(count);
 }
 
-function RecvContentReady()
+function RecvContentReady(info)
 {
+    gContentGfxInfo = info.gfx;
     InitAndStartRefTests();
     return { remote: gBrowserIsRemote };
 }
