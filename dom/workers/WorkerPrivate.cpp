@@ -1510,6 +1510,76 @@ StartsWithExplicit(nsACString& s)
 }
 #endif
 
+class MOZ_STACK_CLASS WorkerJSContextStats final : public JS::RuntimeStats
+{
+  const nsACString& mRtPath;
+
+public:
+  explicit WorkerJSContextStats(const nsACString& aRtPath)
+  : JS::RuntimeStats(JsWorkerMallocSizeOf), mRtPath(aRtPath)
+  { }
+
+  ~WorkerJSContextStats()
+  {
+    for (size_t i = 0; i != zoneStatsVector.length(); i++) {
+      delete static_cast<xpc::ZoneStatsExtras*>(zoneStatsVector[i].extra);
+    }
+
+    for (size_t i = 0; i != compartmentStatsVector.length(); i++) {
+      delete static_cast<xpc::CompartmentStatsExtras*>(compartmentStatsVector[i].extra);
+    }
+  }
+
+  virtual void
+  initExtraZoneStats(JS::Zone* aZone,
+                     JS::ZoneStats* aZoneStats)
+                     override
+  {
+    MOZ_ASSERT(!aZoneStats->extra);
+
+    // ReportJSRuntimeExplicitTreeStats expects that
+    // aZoneStats->extra is a xpc::ZoneStatsExtras pointer.
+    xpc::ZoneStatsExtras* extras = new xpc::ZoneStatsExtras;
+    extras->pathPrefix = mRtPath;
+    extras->pathPrefix += nsPrintfCString("zone(0x%p)/", (void *)aZone);
+
+    MOZ_ASSERT(StartsWithExplicit(extras->pathPrefix));
+
+    aZoneStats->extra = extras;
+  }
+
+  virtual void
+  initExtraCompartmentStats(JSCompartment* aCompartment,
+                            JS::CompartmentStats* aCompartmentStats)
+                            override
+  {
+    MOZ_ASSERT(!aCompartmentStats->extra);
+
+    // ReportJSRuntimeExplicitTreeStats expects that
+    // aCompartmentStats->extra is a xpc::CompartmentStatsExtras pointer.
+    xpc::CompartmentStatsExtras* extras = new xpc::CompartmentStatsExtras;
+
+    // This is the |jsPathPrefix|.  Each worker has exactly two compartments:
+    // one for atoms, and one for everything else.
+    extras->jsPathPrefix.Assign(mRtPath);
+    extras->jsPathPrefix += nsPrintfCString("zone(0x%p)/",
+                                            (void *)js::GetCompartmentZone(aCompartment));
+    extras->jsPathPrefix += js::IsAtomsCompartment(aCompartment)
+                            ? NS_LITERAL_CSTRING("compartment(web-worker-atoms)/")
+                            : NS_LITERAL_CSTRING("compartment(web-worker)/");
+
+    // This should never be used when reporting with workers (hence the "?!").
+    extras->domPathPrefix.AssignLiteral("explicit/workers/?!/");
+
+    MOZ_ASSERT(StartsWithExplicit(extras->jsPathPrefix));
+    MOZ_ASSERT(StartsWithExplicit(extras->domPathPrefix));
+
+    extras->location = nullptr;
+
+    aCompartmentStats->extra = extras;
+  }
+};
+
 class MessagePortRunnable final : public WorkerRunnable
 {
   MessagePortIdentifier mPortIdentifier;
@@ -1933,81 +2003,6 @@ struct WorkerPrivate::TimeoutInfo
   bool mCanceled;
 };
 
-class WorkerJSContextStats final : public JS::RuntimeStats
-{
-  const nsCString mRtPath;
-
-public:
-  explicit WorkerJSContextStats(const nsACString& aRtPath)
-  : JS::RuntimeStats(JsWorkerMallocSizeOf), mRtPath(aRtPath)
-  { }
-
-  ~WorkerJSContextStats()
-  {
-    for (size_t i = 0; i != zoneStatsVector.length(); i++) {
-      delete static_cast<xpc::ZoneStatsExtras*>(zoneStatsVector[i].extra);
-    }
-
-    for (size_t i = 0; i != compartmentStatsVector.length(); i++) {
-      delete static_cast<xpc::CompartmentStatsExtras*>(compartmentStatsVector[i].extra);
-    }
-  }
-
-  const nsCString& Path() const
-  {
-    return mRtPath;
-  }
-
-  virtual void
-  initExtraZoneStats(JS::Zone* aZone,
-                     JS::ZoneStats* aZoneStats)
-                     override
-  {
-    MOZ_ASSERT(!aZoneStats->extra);
-
-    // ReportJSRuntimeExplicitTreeStats expects that
-    // aZoneStats->extra is a xpc::ZoneStatsExtras pointer.
-    xpc::ZoneStatsExtras* extras = new xpc::ZoneStatsExtras;
-    extras->pathPrefix = mRtPath;
-    extras->pathPrefix += nsPrintfCString("zone(0x%p)/", (void *)aZone);
-
-    MOZ_ASSERT(StartsWithExplicit(extras->pathPrefix));
-
-    aZoneStats->extra = extras;
-  }
-
-  virtual void
-  initExtraCompartmentStats(JSCompartment* aCompartment,
-                            JS::CompartmentStats* aCompartmentStats)
-                            override
-  {
-    MOZ_ASSERT(!aCompartmentStats->extra);
-
-    // ReportJSRuntimeExplicitTreeStats expects that
-    // aCompartmentStats->extra is a xpc::CompartmentStatsExtras pointer.
-    xpc::CompartmentStatsExtras* extras = new xpc::CompartmentStatsExtras;
-
-    // This is the |jsPathPrefix|.  Each worker has exactly two compartments:
-    // one for atoms, and one for everything else.
-    extras->jsPathPrefix.Assign(mRtPath);
-    extras->jsPathPrefix += nsPrintfCString("zone(0x%p)/",
-                                            (void *)js::GetCompartmentZone(aCompartment));
-    extras->jsPathPrefix += js::IsAtomsCompartment(aCompartment)
-                            ? NS_LITERAL_CSTRING("compartment(web-worker-atoms)/")
-                            : NS_LITERAL_CSTRING("compartment(web-worker)/");
-
-    // This should never be used when reporting with workers (hence the "?!").
-    extras->domPathPrefix.AssignLiteral("explicit/workers/?!/");
-
-    MOZ_ASSERT(StartsWithExplicit(extras->jsPathPrefix));
-    MOZ_ASSERT(StartsWithExplicit(extras->domPathPrefix));
-
-    extras->location = nullptr;
-
-    aCompartmentStats->extra = extras;
-  }
-};
-
 class WorkerPrivate::MemoryReporter final : public nsIMemoryReporter
 {
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -2024,71 +2019,62 @@ public:
     mAlreadyMappedToAddon(false)
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
+
   }
 
   NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport,
-                 nsISupports* aData, bool aAnonymize) override;
+                 nsISupports* aData, bool aAnonymize) override
+  {
+    AssertIsOnMainThread();
+
+    // Assumes that WorkerJSContextStats will hold a reference to |path|, and
+    // not a copy, as TryToMapAddon() may later modify it.
+    nsCString path;
+    WorkerJSContextStats cxStats(path);
+
+    {
+      MutexAutoLock lock(mMutex);
+
+      if (!mWorkerPrivate) {
+        // Returning NS_OK here will effectively report 0 memory.
+        return NS_OK;
+      }
+
+      path.AppendLiteral("explicit/workers/workers(");
+      if (aAnonymize && !mWorkerPrivate->Domain().IsEmpty()) {
+        path.AppendLiteral("<anonymized-domain>)/worker(<anonymized-url>");
+      } else {
+        nsCString escapedDomain(mWorkerPrivate->Domain());
+        if (escapedDomain.IsEmpty()) {
+          escapedDomain += "chrome";
+        } else {
+          escapedDomain.ReplaceChar('/', '\\');
+        }
+        path.Append(escapedDomain);
+        path.AppendLiteral(")/worker(");
+        NS_ConvertUTF16toUTF8 escapedURL(mWorkerPrivate->ScriptURL());
+        escapedURL.ReplaceChar('/', '\\');
+        path.Append(escapedURL);
+      }
+      path.AppendPrintf(", 0x%p)/", static_cast<void*>(mWorkerPrivate));
+
+      TryToMapAddon(path);
+
+      if (!mWorkerPrivate->BlockAndCollectRuntimeStats(&cxStats, aAnonymize)) {
+        // Returning NS_OK here will effectively report 0 memory.
+        return NS_OK;
+      }
+    }
+
+    xpc::ReportJSRuntimeExplicitTreeStats(cxStats, path, aHandleReport, aData,
+                                          aAnonymize);
+    return NS_OK;
+  }
 
 private:
-  class FinishCollectRunnable;
-
-  class CollectReportsRunnable final : public MainThreadWorkerControlRunnable
-  {
-    RefPtr<FinishCollectRunnable> mFinshCollectRunnable;
-    bool mAnonymize;
-
-  public:
-    CollectReportsRunnable(
-      WorkerPrivate* aWorkerPrivate,
-      nsIHandleReportCallback* aHandleReport,
-      nsISupports* aHandlerData,
-      bool aAnonymize,
-      const nsCString& aPath);
-
-  private:
-    bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
-
-    ~CollectReportsRunnable()
-    {
-      NS_DispatchToMainThread(mFinshCollectRunnable.forget());
-    }
-  };
-
-  class FinishCollectRunnable final : public Runnable
-  {
-    nsCOMPtr<nsIHandleReportCallback> mHandleReport;
-    nsCOMPtr<nsISupports> mHandlerData;
-    bool mAnonymize;
-    bool mSuccess;
-
-  public:
-    WorkerJSContextStats mCxStats;
-
-    explicit FinishCollectRunnable(
-      nsIHandleReportCallback* aHandleReport,
-      nsISupports* aHandlerData,
-      bool aAnonymize,
-      const nsCString& aPath);
-
-    NS_IMETHOD Run() override;
-
-    void SetSuccess(bool success)
-    {
-      mSuccess = success;
-    }
-
-  private:
-    ~FinishCollectRunnable()
-    {
-      // mHandleReport and mHandlerData are released on the main thread.
-      AssertIsOnMainThread();
-    }
-  };
-
   ~MemoryReporter()
-  {
-  }
+  { }
 
   void
   Disable()
@@ -2102,157 +2088,47 @@ private:
 
   // Only call this from the main thread and under mMutex lock.
   void
-  TryToMapAddon(nsACString &path);
+  TryToMapAddon(nsACString &path)
+  {
+    AssertIsOnMainThread();
+    mMutex.AssertCurrentThreadOwns();
+
+    if (mAlreadyMappedToAddon || !mWorkerPrivate) {
+      return;
+    }
+
+    nsCOMPtr<nsIURI> scriptURI;
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(scriptURI),
+                            mWorkerPrivate->ScriptURL()))) {
+      return;
+    }
+
+    mAlreadyMappedToAddon = true;
+
+    if (!XRE_IsParentProcess()) {
+      // Only try to access the service from the main process.
+      return;
+    }
+
+    nsAutoCString addonId;
+    bool ok;
+    nsCOMPtr<amIAddonManager> addonManager =
+      do_GetService("@mozilla.org/addons/integration;1");
+
+    if (!addonManager ||
+        NS_FAILED(addonManager->MapURIToAddonID(scriptURI, addonId, &ok)) ||
+        !ok) {
+      return;
+    }
+
+    static const size_t explicitLength = strlen("explicit/");
+    addonId.Insert(NS_LITERAL_CSTRING("add-ons/"), 0);
+    addonId += "/";
+    path.Insert(addonId, explicitLength);
+  }
 };
 
 NS_IMPL_ISUPPORTS(WorkerPrivate::MemoryReporter, nsIMemoryReporter)
-
-NS_IMETHODIMP
-WorkerPrivate::MemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                              nsISupports* aData,
-                                              bool aAnonymize)
-{
-  AssertIsOnMainThread();
-
-  RefPtr<CollectReportsRunnable> runnable;
-
-  {
-    MutexAutoLock lock(mMutex);
-
-    if (!mWorkerPrivate) {
-      // Returning NS_OK here will effectively report 0 memory.
-      return NS_OK;
-    }
-
-    nsCString path;
-    path.AppendLiteral("explicit/workers/workers(");
-    if (aAnonymize && !mWorkerPrivate->Domain().IsEmpty()) {
-      path.AppendLiteral("<anonymized-domain>)/worker(<anonymized-url>");
-    } else {
-      nsCString escapedDomain(mWorkerPrivate->Domain());
-      if (escapedDomain.IsEmpty()) {
-        escapedDomain += "chrome";
-      } else {
-        escapedDomain.ReplaceChar('/', '\\');
-      }
-      path.Append(escapedDomain);
-      path.AppendLiteral(")/worker(");
-      NS_ConvertUTF16toUTF8 escapedURL(mWorkerPrivate->ScriptURL());
-      escapedURL.ReplaceChar('/', '\\');
-      path.Append(escapedURL);
-    }
-    path.AppendPrintf(", 0x%p)/", static_cast<void*>(mWorkerPrivate));
-
-    TryToMapAddon(path);
-
-    runnable =
-      new CollectReportsRunnable(mWorkerPrivate, aHandleReport, aData, aAnonymize, path);
-  }
-
-  if (!runnable->Dispatch()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return NS_OK;
-}
-
-void
-WorkerPrivate::MemoryReporter::TryToMapAddon(nsACString &path)
-{
-  AssertIsOnMainThread();
-  mMutex.AssertCurrentThreadOwns();
-
-  if (mAlreadyMappedToAddon || !mWorkerPrivate) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> scriptURI;
-  if (NS_FAILED(NS_NewURI(getter_AddRefs(scriptURI),
-                          mWorkerPrivate->ScriptURL()))) {
-    return;
-  }
-
-  mAlreadyMappedToAddon = true;
-
-  if (!XRE_IsParentProcess()) {
-    // Only try to access the service from the main process.
-    return;
-  }
-
-  nsAutoCString addonId;
-  bool ok;
-  nsCOMPtr<amIAddonManager> addonManager =
-    do_GetService("@mozilla.org/addons/integration;1");
-
-  if (!addonManager ||
-      NS_FAILED(addonManager->MapURIToAddonID(scriptURI, addonId, &ok)) ||
-      !ok) {
-    return;
-  }
-
-  static const size_t explicitLength = strlen("explicit/");
-  addonId.Insert(NS_LITERAL_CSTRING("add-ons/"), 0);
-  addonId += "/";
-  path.Insert(addonId, explicitLength);
-}
-
-WorkerPrivate::MemoryReporter::CollectReportsRunnable::CollectReportsRunnable(
-  WorkerPrivate* aWorkerPrivate,
-  nsIHandleReportCallback* aHandleReport,
-  nsISupports* aHandlerData,
-  bool aAnonymize,
-  const nsCString& aPath)
-  : MainThreadWorkerControlRunnable(aWorkerPrivate),
-    mFinshCollectRunnable(
-      new FinishCollectRunnable(aHandleReport, aHandlerData, aAnonymize, aPath)),
-    mAnonymize(aAnonymize)
-{ }
-
-bool
-WorkerPrivate::MemoryReporter::CollectReportsRunnable::WorkerRun(JSContext* aCx,
-                                                                 WorkerPrivate* aWorkerPrivate)
-{
-  aWorkerPrivate->AssertIsOnWorkerThread();
-
-  mFinshCollectRunnable->SetSuccess(
-    aWorkerPrivate->CollectRuntimeStats(&mFinshCollectRunnable->mCxStats, mAnonymize));
-
-  return true;
-}
-
-WorkerPrivate::MemoryReporter::FinishCollectRunnable::FinishCollectRunnable(
-  nsIHandleReportCallback* aHandleReport,
-  nsISupports* aHandlerData,
-  bool aAnonymize,
-  const nsCString& aPath)
-  : mHandleReport(aHandleReport),
-    mHandlerData(aHandlerData),
-    mAnonymize(aAnonymize),
-    mSuccess(false),
-    mCxStats(aPath)
-{ }
-
-NS_IMETHODIMP
-WorkerPrivate::MemoryReporter::FinishCollectRunnable::Run()
-{
-  AssertIsOnMainThread();
-
-  nsCOMPtr<nsIMemoryReporterManager> manager =
-    do_GetService("@mozilla.org/memory-reporter-manager;1");
-
-  if (!manager)
-    return NS_OK;
-
-  if (mSuccess) {
-    xpc::ReportJSRuntimeExplicitTreeStats(mCxStats, mCxStats.Path(),
-                                          mHandleReport, mHandlerData,
-                                          mAnonymize);
-  }
-
-  manager->EndReport();
-
-  return NS_OK;
-}
 
 WorkerPrivate::SyncLoopInfo::SyncLoopInfo(EventTarget* aEventTarget)
 : mEventTarget(aEventTarget), mCompleted(false), mResult(false)
@@ -2301,6 +2177,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
                                            WorkerLoadInfo& aLoadInfo)
 : mMutex("WorkerPrivateParent Mutex"),
   mCondVar(mMutex, "WorkerPrivateParent CondVar"),
+  mMemoryReportCondVar(mMutex, "WorkerPrivateParent Memory Report CondVar"),
   mParent(aParent), mScriptURL(aScriptURL),
   mWorkerName(aWorkerName), mLoadingWorkerScript(false),
   mBusyCount(0), mParentWindowPausedDepth(0), mParentStatus(Pending),
@@ -4083,6 +3960,8 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mTimerRunning(false)
   , mRunningExpiredTimeouts(false)
   , mPendingEventQueueClearing(false)
+  , mMemoryReporterRunning(false)
+  , mBlockedForMemoryReporter(false)
   , mCancelAllPendingRunnables(false)
   , mPeriodicGCTimerRunning(false)
   , mIdleGCTimerRunning(false)
@@ -5015,14 +4894,52 @@ WorkerPrivate::ScheduleDeletion(WorkerRanOrNot aRanOrNot)
 }
 
 bool
-WorkerPrivate::CollectRuntimeStats(JS::RuntimeStats* aRtStats,
-                                   bool aAnonymize)
+WorkerPrivate::BlockAndCollectRuntimeStats(JS::RuntimeStats* aRtStats,
+                                           bool aAnonymize)
 {
-  AssertIsOnWorkerThread();
+  AssertIsOnMainThread();
+  mMutex.AssertCurrentThreadOwns();
   NS_ASSERTION(aRtStats, "Null RuntimeStats!");
+
+  NS_ASSERTION(!mMemoryReporterRunning, "How can we get reentered here?!");
+
+  // This signals the worker that it should block itself as soon as possible.
+  mMemoryReporterRunning = true;
+
   NS_ASSERTION(mJSContext, "This must never be null!");
 
-  return JS::CollectRuntimeStats(mJSContext, aRtStats, nullptr, aAnonymize);
+  // If the worker is not already blocked (e.g. waiting for a worker event or
+  // currently in a ctypes call) then we need to trigger the interrupt
+  // callback to trap the worker.
+  if (!mBlockedForMemoryReporter) {
+    JS_RequestInterruptCallback(mJSContext);
+
+    // Wait until the worker actually blocks.
+    while (!mBlockedForMemoryReporter) {
+      mMemoryReportCondVar.Wait();
+    }
+  }
+
+  bool succeeded = false;
+
+  // If mMemoryReporter is still set then we can do the actual report. Otherwise
+  // we're trying to shut down and we don't want to do anything but clean up.
+  if (mMemoryReporter) {
+    // Don't hold the lock while doing the actual report.
+    MutexAutoUnlock unlock(mMutex);
+    succeeded = JS::CollectRuntimeStats(mJSContext, aRtStats, nullptr, aAnonymize);
+  }
+
+  NS_ASSERTION(mMemoryReporterRunning, "This isn't possible!");
+  NS_ASSERTION(mBlockedForMemoryReporter, "Somehow we got unblocked!");
+
+  // Tell the worker that it can now continue its execution.
+  mMemoryReporterRunning = false;
+
+  // The worker may be waiting so we must notify.
+  mMemoryReportCondVar.Notify();
+
+  return succeeded;
 }
 
 void
@@ -5035,7 +4952,7 @@ WorkerPrivate::EnableMemoryReporter()
   // successfully registered the reporter.
   mMemoryReporter = new MemoryReporter(this);
 
-  if (NS_FAILED(RegisterWeakAsyncMemoryReporter(mMemoryReporter))) {
+  if (NS_FAILED(RegisterWeakMemoryReporter(mMemoryReporter))) {
     NS_WARNING("Failed to register memory reporter!");
     // No need to lock here since a failed registration means our memory
     // reporter can't start running. Just clean up.
@@ -5050,8 +4967,6 @@ WorkerPrivate::DisableMemoryReporter()
 
   RefPtr<MemoryReporter> memoryReporter;
   {
-    // Mutex protectes MemoryReporter::mWorkerPrivate which is cleared by
-    // MemoryReporter::Disable() below.
     MutexAutoLock lock(mMutex);
 
     // There is nothing to do here if the memory reporter was never successfully
@@ -5067,6 +4982,26 @@ WorkerPrivate::DisableMemoryReporter()
     // Next disable the memory reporter so that the main thread stops trying to
     // signal us.
     memoryReporter->Disable();
+
+    // If the memory reporter is waiting to start then we need to wait for it to
+    // finish.
+    if (mMemoryReporterRunning) {
+      NS_ASSERTION(!mBlockedForMemoryReporter,
+                   "Can't be blocked in more than one place at the same time!");
+      mBlockedForMemoryReporter = true;
+
+      // Tell the main thread that we're blocked.
+      mMemoryReportCondVar.Notify();
+
+      // Wait for it the main thread to finish. Since we swapped out
+      // mMemoryReporter above the main thread should respond quickly.
+      while (mMemoryReporterRunning) {
+        mMemoryReportCondVar.Wait();
+      }
+
+      NS_ASSERTION(mBlockedForMemoryReporter, "Somehow we got unblocked!");
+      mBlockedForMemoryReporter = false;
+    }
   }
 
   // Finally unregister the memory reporter.
@@ -5081,8 +5016,29 @@ WorkerPrivate::WaitForWorkerEvents(PRIntervalTime aInterval)
   AssertIsOnWorkerThread();
   mMutex.AssertCurrentThreadOwns();
 
-  // Wait for a worker event.
+  NS_ASSERTION(!mBlockedForMemoryReporter,
+                "Can't be blocked in more than one place at the same time!");
+
+  // Let the main thread know that the worker is blocked and that memory
+  // reporting may proceed.
+  mBlockedForMemoryReporter = true;
+
+  // The main thread may be waiting so we must notify.
+  mMemoryReportCondVar.Notify();
+
+  // Now wait for an actual worker event.
   mCondVar.Wait(aInterval);
+
+  // We've gotten some kind of signal but we can't continue until the memory
+  // reporter has finished. Wait again.
+  while (mMemoryReporterRunning) {
+    mMemoryReportCondVar.Wait();
+  }
+
+  NS_ASSERTION(mBlockedForMemoryReporter, "Somehow we got unblocked!");
+
+  // No need to notify here as the main thread isn't watching for this state.
+  mBlockedForMemoryReporter = false;
 }
 
 WorkerPrivate::ProcessAllControlRunnablesResult
@@ -5094,6 +5050,29 @@ WorkerPrivate::ProcessAllControlRunnablesLocked()
   auto result = ProcessAllControlRunnablesResult::Nothing;
 
   for (;;) {
+    // Block here if the memory reporter is trying to run.
+    if (mMemoryReporterRunning) {
+      MOZ_ASSERT(!mBlockedForMemoryReporter);
+
+      // Let the main thread know that we've received the block request and
+      // that memory reporting may proceed.
+      mBlockedForMemoryReporter = true;
+
+      // The main thread is almost certainly waiting so we must notify here.
+      mMemoryReportCondVar.Notify();
+
+      // Wait for the memory report to finish.
+      while (mMemoryReporterRunning) {
+        mMemoryReportCondVar.Wait();
+      }
+
+      MOZ_ASSERT(mBlockedForMemoryReporter);
+
+      // No need to notify here as the main thread isn't watching for this
+      // state.
+      mBlockedForMemoryReporter = false;
+    }
+
     WorkerControlRunnable* event;
     if (!mControlQueue.Pop(event)) {
       break;
@@ -6442,12 +6421,42 @@ WorkerPrivate::BeginCTypesCall()
 
   // Don't try to GC while we're blocked in a ctypes call.
   SetGCTimerMode(NoTimer);
+
+  MutexAutoLock lock(mMutex);
+
+  NS_ASSERTION(!mBlockedForMemoryReporter,
+               "Can't be blocked in more than one place at the same time!");
+
+  // Let the main thread know that the worker is effectively blocked while in
+  // this ctypes call. It isn't technically true (obviously the call could do
+  // non-blocking things), but we're assuming that ctypes can't call back into
+  // JSAPI here and therefore any work the ctypes call does will not alter the
+  // data structures of this JS runtime.
+  mBlockedForMemoryReporter = true;
+
+  // The main thread may be waiting on us so it must be notified.
+  mMemoryReportCondVar.Notify();
 }
 
 void
 WorkerPrivate::EndCTypesCall()
 {
   AssertIsOnWorkerThread();
+
+  {
+    MutexAutoLock lock(mMutex);
+
+    NS_ASSERTION(mBlockedForMemoryReporter, "Somehow we got unblocked!");
+
+    // Don't continue until the memory reporter has finished.
+    while (mMemoryReporterRunning) {
+      mMemoryReportCondVar.Wait();
+    }
+
+    // No need to notify the main thread here as it shouldn't be waiting to see
+    // this state.
+    mBlockedForMemoryReporter = false;
+  }
 
   // Make sure the periodic timer is running before we start running JS again.
   SetGCTimerMode(PeriodicTimer);
