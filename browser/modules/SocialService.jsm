@@ -510,7 +510,7 @@ this.SocialService = {
     }
     // force/fixup origin
     let URI = Services.io.newURI(installOrigin, null, null);
-    principal = Services.scriptSecurityManager.createCodebasePrincipal(URI, {});
+    let principal = Services.scriptSecurityManager.createCodebasePrincipal(URI, {});
     data.origin = principal.origin;
 
     // iconURL and name are required

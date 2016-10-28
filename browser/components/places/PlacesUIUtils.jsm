@@ -980,7 +980,7 @@ this.PlacesUIUtils = {
 
     PlacesUtils.livemarks.getLivemark({id: aNode.itemId})
       .then(aLivemark => {
-        urlsToOpen = [];
+        let urlsToOpen = [];
 
         let nodes = aLivemark.getNodesForContainer(aNode);
         for (let node of nodes) {
