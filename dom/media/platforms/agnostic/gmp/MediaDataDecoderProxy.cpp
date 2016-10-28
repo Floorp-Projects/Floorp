@@ -24,8 +24,6 @@ MediaDataDecoderCallbackProxy::FlushComplete()
 RefPtr<MediaDataDecoder::InitPromise>
 MediaDataDecoderProxy::InternalInit()
 {
-  MOZ_ASSERT(!mIsShutdown);
-
   return mProxyDecoder->Init();
 }
 
