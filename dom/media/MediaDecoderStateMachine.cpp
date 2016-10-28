@@ -194,8 +194,6 @@ public:
 
   // Event handlers for various events.
   // Return true if the event is handled by this state object.
-  bool HandleDormant(bool aDormant);
-
   virtual bool HandleCDMProxyReady() { return false; }
 
   virtual bool HandleAudioDecoded(MediaData* aAudio) { return false; }
@@ -318,12 +316,6 @@ public:
     return DECODER_STATE_DECODING_METADATA;
   }
 
-  bool HandleDormant(bool aDormant)
-  {
-    mPendingDormant = aDormant;
-    return true;
-  }
-
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
   {
     MOZ_DIAGNOSTIC_ASSERT(false, "Can't seek while decoding metadata.");
@@ -390,8 +382,6 @@ public:
     return DECODER_STATE_WAIT_FOR_CDM;
   }
 
-  bool HandleDormant(bool aDormant);
-
   bool HandleCDMProxyReady() override;
 
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
@@ -443,8 +433,8 @@ public:
 
   void Exit() override
   {
-    // mPendingSeek is either moved in HandleDormant() or should be rejected
-    // here before transition to SHUTDOWN.
+    // mPendingSeek is either moved when exiting dormant or
+    // should be rejected here before transition to SHUTDOWN.
     mPendingSeek.RejectIfExists(__func__);
   }
 
@@ -521,8 +511,6 @@ public:
   }
 
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override;
-
-  bool HandleDormant(bool aDormant);
 
   void HandleVideoSuspendTimeout() override
   {
@@ -877,8 +865,6 @@ public:
     return DECODER_STATE_SEEKING;
   }
 
-  bool HandleDormant(bool aDormant);
-
   bool HandleAudioDecoded(MediaData* aAudio) override
   {
     MOZ_ASSERT(false);
@@ -1159,11 +1145,6 @@ public:
     return DECODER_STATE_SHUTDOWN;
   }
 
-  bool HandleDormant(bool aDormant)
-  {
-    return true;
-  }
-
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
   {
     MOZ_DIAGNOSTIC_ASSERT(false, "Can't seek in shutdown state.");
@@ -1186,27 +1167,6 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(false, "Already shutting down.");
   }
 };
-
-bool
-MediaDecoderStateMachine::
-StateObject::HandleDormant(bool aDormant)
-{
-  if (!aDormant) {
-    return true;
-  }
-  SeekJob seekJob;
-  int64_t seekTargetTime = mMaster->mMediaSink->IsStarted()
-                           ? mMaster->GetClock() : mMaster->GetMediaTime();
-
-  seekJob.mTarget = SeekTarget(seekTargetTime,
-                               SeekTarget::Accurate,
-                               MediaDecoderEventVisibility::Suppressed);
-  // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
-  // need to create the promise even it is not used at all.
-  RefPtr<MediaDecoder::SeekPromise> unused = seekJob.mPromise.Ensure(__func__);
-  SetState<DormantState>(Move(seekJob));
-  return true;
-}
 
 RefPtr<ShutdownPromise>
 MediaDecoderStateMachine::
@@ -1350,14 +1310,6 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
   }
 }
 
-bool
-MediaDecoderStateMachine::
-WaitForCDMState::HandleDormant(bool aDormant)
-{
-  mPendingDormant = aDormant;
-  return true;
-}
-
 RefPtr<MediaDecoder::SeekPromise>
 MediaDecoderStateMachine::
 DormantState::HandleSeek(SeekTarget aTarget)
@@ -1441,16 +1393,6 @@ DecodingFirstFrameState::HandleSeek(SeekTarget aTarget)
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
   return SetState<SeekingState>(Move(seekJob));
-}
-
-bool
-MediaDecoderStateMachine::
-DecodingFirstFrameState::HandleDormant(bool aDormant)
-{
-  if (aDormant) {
-    SetState<DormantState>(Move(mPendingSeek));
-  }
-  return true;
 }
 
 void
@@ -1561,26 +1503,6 @@ DecodingState::MaybeStartBuffering()
   if (shouldBuffer) {
     SetState<BufferingState>();
   }
-}
-
-bool
-MediaDecoderStateMachine::
-SeekingState::HandleDormant(bool aDormant)
-{
-  if (!aDormant) {
-    return true;
-  }
-  MOZ_ASSERT(mSeekJob.Exists());
-  // Because both audio and video decoders are going to be reset in this
-  // method later, we treat a VideoOnly seek task as a normal Accurate
-  // seek task so that while it is resumed, both audio and video playback
-  // are handled.
-  if (mSeekJob.mTarget.IsVideoOnly()) {
-    mSeekJob.mTarget.SetType(SeekTarget::Accurate);
-    mSeekJob.mTarget.SetVideoOnly(false);
-  }
-  SetState<DormantState>(Move(mSeekJob));
-  return true;
 }
 
 RefPtr<MediaDecoder::SeekPromise>
