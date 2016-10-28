@@ -344,11 +344,6 @@ private:
   }
 
   MozPromiseRequestHolder<MediaDecoderReader::MetadataPromise> mMetadataRequest;
-
-  // True if we need to enter dormant state after reading metadata. Note that
-  // we can't enter dormant state until reading metadata is done for some
-  // limitations of the reader.
-  bool mPendingDormant = false;
 };
 
 /**
@@ -364,10 +359,9 @@ class MediaDecoderStateMachine::WaitForCDMState
 public:
   explicit WaitForCDMState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter(bool aPendingDormant)
+  void Enter()
   {
     MOZ_ASSERT(!mMaster->mVideoDecodeSuspended);
-    mPendingDormant = aPendingDormant;
   }
 
   void Exit() override
@@ -404,7 +398,6 @@ public:
   }
 
 private:
-  bool mPendingDormant = false;
   SeekJob mPendingSeek;
 };
 
@@ -1302,9 +1295,7 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
   if (waitingForCDM) {
     // Metadata parsing was successful but we're still waiting for CDM caps
     // to become available so that we can build the correct decryptor/decoder.
-    SetState<WaitForCDMState>(mPendingDormant);
-  } else if (mPendingDormant) {
-    SetState<DormantState>(SeekJob{});
+    SetState<WaitForCDMState>();
   } else {
     SetState<DecodingFirstFrameState>(SeekJob{});
   }
@@ -1336,11 +1327,7 @@ bool
 MediaDecoderStateMachine::
 WaitForCDMState::HandleCDMProxyReady()
 {
-  if (mPendingDormant) {
-    SetState<DormantState>(Move(mPendingSeek));
-  } else {
-    SetState<DecodingFirstFrameState>(Move(mPendingSeek));
-  }
+  SetState<DecodingFirstFrameState>(Move(mPendingSeek));
   return true;
 }
 
