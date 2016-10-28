@@ -1723,6 +1723,9 @@ public:
                             mozilla::dom::TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable) override;
 
+  virtual already_AddRefed<nsIEventTarget>
+  CreateEventTarget(const char* aName, mozilla::dom::TaskCategory aCategory) override;
+
 protected:
   // These members are only used on outer window objects. Make sure
   // you never set any of these on an inner object!
