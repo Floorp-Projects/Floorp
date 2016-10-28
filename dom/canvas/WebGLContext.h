@@ -201,6 +201,7 @@ struct TexImageSource
 {
     const dom::ArrayBufferView* mView;
     GLuint mViewElemOffset;
+    GLuint mViewElemLengthOverride;
 
     const WebGLsizeiptr* mPboOffset;
 
@@ -231,13 +232,19 @@ struct TexImageSourceAdapter final : public TexImageSource
         mView = &view;
     }
 
-    TexImageSourceAdapter(const dom::ArrayBufferView& view, GLuint viewElemOffset) {
+    TexImageSourceAdapter(const dom::ArrayBufferView& view, GLuint viewElemOffset,
+                          GLuint viewElemLengthOverride = 0)
+    {
         mView = &view;
         mViewElemOffset = viewElemOffset;
+        mViewElemLengthOverride = viewElemLengthOverride;
     }
 
-    template<typename ignoredT>
-    TexImageSourceAdapter(WebGLsizeiptr pboOffset, ignoredT) {
+    TexImageSourceAdapter(WebGLsizeiptr pboOffset, GLuint ignored1, GLuint ignored2 = 0) {
+        mPboOffset = &pboOffset;
+    }
+
+    TexImageSourceAdapter(WebGLsizeiptr pboOffset, ErrorResult* ignored) {
         mPboOffset = &pboOffset;
     }
 
@@ -1000,12 +1007,13 @@ public:
     template<typename T>
     void CompressedTexImage2D(GLenum target, GLint level, GLenum internalFormat,
                               GLsizei width, GLsizei height, GLint border,
-                              const T& anySrc, GLuint viewElemOffset = 0)
+                              const T& anySrc, GLuint viewElemOffset = 0,
+                              GLuint viewElemLengthOverride = 0)
     {
         const char funcName[] = "compressedTexImage2D";
         const uint8_t funcDims = 2;
         const GLsizei depth = 1;
-        const TexImageSourceAdapter src(anySrc, viewElemOffset);
+        const TexImageSourceAdapter src(anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
                            height, depth, border, src);
     }
@@ -1013,13 +1021,14 @@ public:
     template<typename T>
     void CompressedTexSubImage2D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                                  GLsizei width, GLsizei height, GLenum unpackFormat,
-                                 const T& anySrc, GLuint viewElemOffset = 0)
+                                 const T& anySrc, GLuint viewElemOffset = 0,
+                                 GLuint viewElemLengthOverride = 0)
     {
         const char funcName[] = "compressedTexSubImage2D";
         const uint8_t funcDims = 2;
         const GLint zOffset = 0;
         const GLsizei depth = 1;
-        const TexImageSourceAdapter src(anySrc, viewElemOffset);
+        const TexImageSourceAdapter src(anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
                               zOffset, width, height, depth, unpackFormat, src);
     }
