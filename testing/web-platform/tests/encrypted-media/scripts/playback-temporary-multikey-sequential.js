@@ -19,7 +19,10 @@ function runTest(config,qualifier) {
             _mediaKeys,
             _mediaKeySessions = [],
             _mediaSource,
-            _playbackStarted = false;
+            _waitingForKey = false,
+            _playingCount = 0,
+            _canplayCount = 0,
+            _timeupdateWhileWaitingCount = 0;
 
         function startNewSession() {
             assert_less_than(_mediaKeySessions.length, config.initData.length);
@@ -35,25 +38,62 @@ function runTest(config,qualifier) {
         }
 
         function onMessage(event) {
+            var firstMessage = !_video.src;
             config.messagehandler(event.messageType, event.message, {variantId: event.target.variantId}).then(function(response) {
                 return event.target.update(response);
+            }).then(function(){
+                if (firstMessage) {
+                    _video.src = URL.createObjectURL(_mediaSource);
+                    return _mediaSource.done;
+                } else if (event.target.keyStatuses.size > 0){
+                    _waitingForKey = false;
+                    return Promise.resolve();
+                }
+            }).then(function(){
+                if (firstMessage) {
+                    _video.play();
+                }
             }).catch(onFailure);
         }
 
         function onWaitingForKey(event) {
+            _waitingForKey = true;
             if (config.checkReadyState) {
-                assert_equals(_video.readyState, _video.HAVE_METADATA, "Video readyState should be HAVE_METADATA on watingforkey event");
+                // This test does not start playing until the first license has been provided,
+                // so this event should occur when transitioning between keys.
+                // Thus, the frame at the current playback position is available and readyState
+                // should be HAVE_CURRENT_DATA.
+                assert_equals(_video.readyState, _video.HAVE_CURRENT_DATA, "Video readyState should be HAVE_CURRENT_DATA on watingforkey event");
             }
             startNewSession();
         }
 
         function onPlaying(event) {
-            assert_equals(_mediaKeySessions.length, 1, "Playback should start with a single key / session");
+            _playingCount++;
+            assert_equals(_mediaKeySessions.length, _playingCount, "Should get one 'playing' event per key / session added");
+            assert_less_than_equal(_playingCount, 2, "Should not get more than two 'playing' events.");
+        }
+
+        function onCanPlay(event) {
+            _canplayCount++;
+            assert_equals(_mediaKeySessions.length, _canplayCount, "Should get one 'canplay' event per key / session added");
+            assert_less_than_equal(_canplayCount, 2, "Should not get more than two 'canplay' events.");
         }
 
         function onTimeupdate(event) {
+            // We should not receive 'timeupdate' events due to playing while waiting for a key, except
+            // when we first start waiting for key we should change the readyState to HAVE_CURRENT_DATA
+            // which will trigger the "If the previous ready state was HAVE_FUTURE_DATA or more, and
+            // the new ready state is HAVE_CURRENT_DATA or less" case of the readyState change
+            // algorithm which requires a "timeupdate" event be fired.
+             if (_waitingForKey) {
+                assert_equals(++_timeupdateWhileWaitingCount, 1, "Should only receive one timeupdate while waiting for key");
+                assert_equals(_video.readyState, _video.HAVE_CURRENT_DATA, "Video readyState should be HAVE_CURRENT_DATA while wating for key");
+            }
+
             if (_video.currentTime > config.duration) {
                 assert_equals(_mediaKeySessions.length, config.initData.length, "It should require all keys to reach end of content");
+                assert_equals(_timeupdateWhileWaitingCount, 1, "Should have only received exactly one timeupdate while waiting for key");
                 _video.pause();
                 test.done();
             }
@@ -71,14 +111,12 @@ function runTest(config,qualifier) {
 
             waitForEventAndRunStep('waitingforkey', _video, onWaitingForKey, test);
             waitForEventAndRunStep('playing', _video, onPlaying, test);
-
-            startNewSession();
+            waitForEventAndRunStep('canplay', _video, onCanPlay, test);
 
             return testmediasource(config);
         }).then(function(source) {
             _mediaSource = source;
-            _video.src = URL.createObjectURL(_mediaSource);
-            _video.play();
+            startNewSession();
         }).catch(onFailure);
     }, testname);
 }
