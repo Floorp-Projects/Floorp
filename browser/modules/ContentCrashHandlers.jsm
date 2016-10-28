@@ -746,7 +746,10 @@ this.UnsubmittedCrashHandler = {
    * @returns String
    */
   dateString(someDate = new Date()) {
-    return someDate.toLocaleFormat("%Y%m%d");
+    let year = String(someDate.getFullYear()).padStart(4, "0");
+    let month = String(someDate.getMonth() + 1).padStart(2, "0");
+    let day = String(someDate.getDate()).padStart(2, "0");
+    return year + month + day;
   },
 
   /**
