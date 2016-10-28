@@ -9,14 +9,9 @@ const URL_1 = "data:text/plain;charset=UTF-8,abcde";
 const URL_2 = "data:text/plain;charset=UTF-8,12345";
 
 add_task(function* () {
-  let { toolbox } = yield openInspectorForURL(URL_1);
+  let { inspector, toolbox } = yield openInspectorForURL(URL_1);
 
-  info("Navigating to different URL.");
-  let navigated = toolbox.target.once("navigate");
-  navigateTo(toolbox, URL_2);
-
-  info("Waiting for 'navigate' event from toolbox target.");
-  yield navigated;
+  yield navigateTo(inspector, URL_2);
 
   info("Destroying toolbox");
   try {

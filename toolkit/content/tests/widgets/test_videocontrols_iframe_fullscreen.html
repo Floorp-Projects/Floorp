@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test - iframe</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+<iframe id="ifr1"></iframe>
+<iframe id="ifr2" allowfullscreen></iframe>
+</div>
+
+<pre id="test">
+<script clas="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  const domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
+    getService(SpecialPowers.Ci.inIDOMUtils);
+  const iframe1 = SpecialPowers.wrap(document.getElementById("ifr1"));
+  const iframe2 = SpecialPowers.wrap(document.getElementById("ifr2"));
+  const testCases = [];
+
+  function checkIframeFullscreenAvailable(ifr) {
+    const available = ifr.hasAttribute("allowfullscreen");
+    let video;
+
+    return () => new Promise(resolve => {
+      ifr.srcdoc = `<video id="video" controls preload="auto"></video>`;
+      ifr.addEventListener("load", resolve, false);
+    }).then(() => new Promise(resolve => {
+      video = ifr.contentDocument.getElementById("video");
+      video.src = "seek_with_sound.ogg";
+      video.addEventListener("loadedmetadata", resolve, false);
+    })).then(() => new Promise(resolve => {
+      const videoControl = domUtils.getChildrenForNode(video, true)[1];
+      const controlBar = video.ownerDocument.getAnonymousElementByAttribute(
+        videoControl, "class", "controlBar");
+
+      is(controlBar.getAttribute("fullscreen-unavailable") == "true", !available, "The controlbar should have an attribute marking whether fullscreen is available that corresponds to if the iframe has the allowfullscreen attribute.");
+      resolve();
+    }));
+  }
+
+  function start() {
+    testCases.reduce((promise, task) => promise.then(task), Promise.resolve());
+  }
+
+  function load() {
+    SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, start);
+  }
+
+  testCases.push(checkIframeFullscreenAvailable(iframe1));
+  testCases.push(checkIframeFullscreenAvailable(iframe2));
+  testCases.push(SimpleTest.finish);
+
+  window.addEventListener("load", load, false);
+</script>
+</pre>
+</body>
+</html>

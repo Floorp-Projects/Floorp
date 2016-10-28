@@ -21,7 +21,7 @@ add_task(function* () {
     let {containerEl, animation: {state}} = timeBlockComponents[i];
 
     checkAnimationTooltip(containerEl, state);
-    checkIterationBackground(containerEl, state);
+    checkProgressAtStartingTime(containerEl, state);
 
     // Get the first set of keyframes (there's only one animated property
     // anyway), and the first frame element from there, we're only interested in
@@ -48,27 +48,14 @@ function checkAnimationTooltip(el, {iterationStart, duration}) {
   ok(title.match(regex), "The tooltip shows the expected iteration start");
 }
 
-function checkIterationBackground(el, {iterationCount, iterationStart}) {
-  info("Check the background-image used to display iterations is offset " +
-       "correctly to represent the iterationStart");
-
-  let iterationsEl = el.querySelector(".iterations");
-  let start = getIterationStartFromBackground(iterationsEl, iterationCount);
-  is(start, iterationStart % 1,
-     "The right background-position for iteration start");
-}
-
-function getIterationStartFromBackground(el, iterationCount) {
-  if (iterationCount == 1) {
-    let size = parseFloat(/([.\d]+)%/.exec(el.style.backgroundSize)[1]);
-    return 1 - size / 100;
-  }
-
-  let size = parseFloat(/([.\d]+)%/.exec(el.style.backgroundSize)[1]);
-  let position = parseFloat(/([-\d]+)%/.exec(el.style.backgroundPosition)[1]);
-  let iterationStartW = -position / size * (100 - size);
-  let rounded = Math.round(iterationStartW * 100);
-  return rounded / 10000;
+function checkProgressAtStartingTime(el, { iterationStart }) {
+  info("Check the progress of starting time");
+  const pathEl = el.querySelector(".iteration-path");
+  const pathSegList = pathEl.pathSegList;
+  const pathSeg = pathSegList.getItem(1);
+  const progress = pathSeg.y;
+  is(progress, iterationStart % 1,
+     `The progress at starting point should be ${ iterationStart % 1 }`);
 }
 
 function checkKeyframeOffset(timeBlockEl, frameEl, {iterationStart}) {

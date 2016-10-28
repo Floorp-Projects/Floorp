@@ -519,8 +519,19 @@ NativeObject::sparsifyDenseElement(ExclusiveContext* cx, HandleNativeObject obj,
     removeDenseElementForSparseIndex(cx, obj, index);
 
     uint32_t slot = obj->slotSpan();
-    if (!obj->addDataProperty(cx, INT_TO_JSID(index), slot, JSPROP_ENUMERATE)) {
-        obj->setDenseElement(index, value);
+
+    RootedId id(cx, INT_TO_JSID(index));
+
+    ShapeTable::Entry* entry = nullptr;
+    if (obj->inDictionaryMode())
+        entry = &obj->lastProperty()->table().search<MaybeAdding::Adding>(id);
+
+    // NOTE: We don't use addDataProperty because we don't want the
+    // extensibility check if we're, for example, sparsifying frozen objects..
+    if (!addPropertyInternal(cx, obj, id, nullptr, nullptr, slot,
+                             obj->getElementsHeader()->elementAttributes(),
+                             0, entry, true)) {
+        obj->setDenseElementUnchecked(index, value);
         return false;
     }
 
@@ -548,7 +559,7 @@ NativeObject::sparsifyDenseElements(js::ExclusiveContext* cx, HandleNativeObject
     }
 
     if (initialized)
-        obj->setDenseInitializedLength(0);
+        obj->setDenseInitializedLengthUnchecked(0);
 
     /*
      * Reduce storage for dense elements which are now holes. Explicitly mark
@@ -1008,7 +1019,7 @@ NativeObject::addDataProperty(ExclusiveContext* cx, jsid idArg, uint32_t slot, u
 
 Shape*
 NativeObject::addDataProperty(ExclusiveContext* cx, HandlePropertyName name,
-                          uint32_t slot, unsigned attrs)
+                              uint32_t slot, unsigned attrs)
 {
     MOZ_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     RootedNativeObject self(cx, this);

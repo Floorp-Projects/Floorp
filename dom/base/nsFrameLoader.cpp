@@ -58,6 +58,8 @@
 #include "nsPIWindowRoot.h"
 #include "nsLayoutUtils.h"
 #include "nsView.h"
+#include "GroupedSHistory.h"
+#include "PartialSHistory.h"
 
 #include "nsIURI.h"
 #include "nsIURL.h"
@@ -134,7 +136,13 @@ typedef FrameMetrics::ViewID ViewID;
 // we'd need to re-institute a fixed version of bug 98158.
 #define MAX_DEPTH_CONTENT_FRAMES 10
 
-NS_IMPL_CYCLE_COLLECTION(nsFrameLoader, mDocShell, mMessageManager, mChildMessageManager, mOpener)
+NS_IMPL_CYCLE_COLLECTION(nsFrameLoader,
+                         mDocShell,
+                         mMessageManager,
+                         mChildMessageManager,
+                         mOpener,
+                         mPartialSessionHistory,
+                         mGroupedSessionHistory)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
 
@@ -368,6 +376,117 @@ nsFrameLoader::MakePrerenderedLoaderActive()
     nsresult rv = mDocShell->SetIsActive(true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetPartialSessionHistory(nsIPartialSHistory** aResult)
+{
+  if (mRemoteBrowser && !mPartialSessionHistory) {
+    // For remote case we can lazy initialize PartialSHistory since
+    // it doens't need to be registered as a listener to nsISHistory directly.
+    mPartialSessionHistory = new PartialSHistory(this);
+  }
+
+  nsCOMPtr<nsIPartialSHistory> partialHistory(mPartialSessionHistory);
+  partialHistory.forget(aResult);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsFrameLoader::GetGroupedSessionHistory(nsIGroupedSHistory** aResult)
+{
+  nsCOMPtr<nsIGroupedSHistory> groupedHistory(mGroupedSessionHistory);
+  groupedHistory.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::AppendPartialSessionHistoryAndSwap(nsIFrameLoader* aOther)
+{
+  if (!aOther) {
+    return NS_ERROR_INVALID_POINTER;
+  }
+
+  nsCOMPtr<nsIGroupedSHistory> otherGroupedHistory;
+  aOther->GetGroupedSessionHistory(getter_AddRefs(otherGroupedHistory));
+  MOZ_ASSERT(!otherGroupedHistory,
+             "Cannot append a GroupedSHistory owner to another.");
+  if (otherGroupedHistory) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Append ourselves.
+  nsresult rv;
+  if (!mGroupedSessionHistory) {
+    mGroupedSessionHistory = new GroupedSHistory();
+    rv = mGroupedSessionHistory->AppendPartialSessionHistory(mPartialSessionHistory);
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  if (aOther == this) {
+    return NS_OK;
+  }
+
+  // Append the other.
+  RefPtr<nsFrameLoader> otherLoader = static_cast<nsFrameLoader*>(aOther);
+  rv = mGroupedSessionHistory->
+         AppendPartialSessionHistory(otherLoader->mPartialSessionHistory);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Swap loaders through our owner, so the owner's listeners will be correctly
+  // setup.
+  nsCOMPtr<nsIBrowser> ourBrowser = do_QueryInterface(mOwnerContent);
+  nsCOMPtr<nsIBrowser> otherBrowser = do_QueryInterface(otherLoader->mOwnerContent);
+  if (!ourBrowser || !otherBrowser) {
+    return NS_ERROR_FAILURE;
+  }
+  if (NS_FAILED(ourBrowser->SwapBrowsers(otherBrowser))) {
+    return NS_ERROR_FAILURE;
+  }
+  mGroupedSessionHistory.swap(otherLoader->mGroupedSessionHistory);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::RequestGroupedHistoryNavigation(uint32_t aGlobalIndex)
+{
+  if (!mGroupedSessionHistory) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIFrameLoader> targetLoader;
+  nsresult rv = mGroupedSessionHistory->
+                  GotoIndex(aGlobalIndex, getter_AddRefs(targetLoader));
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<nsFrameLoader> otherLoader = static_cast<nsFrameLoader*>(targetLoader.get());
+  if (!targetLoader) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (targetLoader == this) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIBrowser> ourBrowser = do_QueryInterface(mOwnerContent);
+  nsCOMPtr<nsIBrowser> otherBrowser = do_QueryInterface(otherLoader->mOwnerContent);
+  if (!ourBrowser || !otherBrowser) {
+    return NS_ERROR_FAILURE;
+  }
+  if (NS_FAILED(ourBrowser->SwapBrowsers(otherBrowser))) {
+    return NS_ERROR_FAILURE;
+  }
+  mGroupedSessionHistory.swap(otherLoader->mGroupedSessionHistory);
 
   return NS_OK;
 }
@@ -2062,6 +2181,15 @@ nsFrameLoader::MaybeCreateDocShell()
 
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     webNav->SetSessionHistory(sessionHistory);
+
+
+    if (GroupedSHistory::GroupedHistoryEnabled()) {
+      mPartialSessionHistory = new PartialSHistory(this);
+      nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mPartialSessionHistory));
+      nsCOMPtr<nsIPartialSHistoryListener> partialListener(do_QueryInterface(mPartialSessionHistory));
+      sessionHistory->AddSHistoryListener(listener);
+      sessionHistory->SetPartialSHistoryListener(partialListener);
+    }
   }
 
   DocShellOriginAttributes attrs;
@@ -3122,6 +3250,18 @@ nsFrameLoader::RequestNotifyAfterRemotePaint()
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::RequestFrameLoaderClose()
+{
+  nsCOMPtr<nsIBrowser> browser = do_QueryInterface(mOwnerContent);
+  if (NS_WARN_IF(!browser)) {
+    // OwnerElement other than nsIBrowser is not supported yet.
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return browser->CloseBrowser();
 }
 
 NS_IMETHODIMP

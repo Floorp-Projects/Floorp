@@ -5,6 +5,8 @@
 
 #include "LookupCacheV4.h"
 #include "HashStore.h"
+#include "mozilla/Unused.h"
+#include <string>
 
 // MOZ_LOG=UrlClassifierDbService:5
 extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
@@ -114,7 +116,22 @@ LookupCacheV4::StoreToFile(nsIFile* aFile)
 nsresult
 LookupCacheV4::LoadFromFile(nsIFile* aFile)
 {
-  return mVLPrefixSet->LoadFromFile(aFile);
+  nsresult rv = mVLPrefixSet->LoadFromFile(aFile);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCString state, checksum;
+  rv = LoadMetadata(state, checksum);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = VerifyChecksum(checksum);
+  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_VLPS_LOAD_CORRUPT,
+                        rv == NS_ERROR_FILE_CORRUPTED);
+
+  return rv;
 }
 
 size_t
@@ -137,11 +154,17 @@ AppendPrefixToMap(PrefixStringMap& prefixes, nsDependentCSubstring& prefix)
 // Please see https://bug1287058.bmoattachments.org/attachment.cgi?id=8795366
 // for detail about partial update algorithm.
 nsresult
-LookupCacheV4::ApplyPartialUpdate(TableUpdateV4* aTableUpdate,
-                                  PrefixStringMap& aInputMap,
-                                  PrefixStringMap& aOutputMap)
+LookupCacheV4::ApplyUpdate(TableUpdateV4* aTableUpdate,
+                           PrefixStringMap& aInputMap,
+                           PrefixStringMap& aOutputMap)
 {
   MOZ_ASSERT(aOutputMap.IsEmpty());
+
+  nsCOMPtr<nsICryptoHash> crypto;
+  nsresult rv = InitCrypto(crypto);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // oldPSet contains prefixes we already have or we just merged last round.
   // addPSet contains prefixes stored in tableUpdate which should be merged with oldPSet.
@@ -159,40 +182,47 @@ LookupCacheV4::ApplyPartialUpdate(TableUpdateV4* aTableUpdate,
   nsDependentCSubstring smallestOldPrefix;
   nsDependentCSubstring smallestAddPrefix;
 
+  bool isOldMapEmpty = false, isAddMapEmpty = false;
+
   // This is used to avoid infinite loop for partial update algorithm.
   // The maximum loops will be the number of old prefixes plus the number of add prefixes.
-  uint32_t index = oldPSet.Count() + addPSet.Count() + 1;
+  int32_t index = oldPSet.Count() + addPSet.Count() + 1;
   for(;index > 0; index--) {
     // Get smallest prefix from the old prefix set if we don't have one
-    if (smallestOldPrefix.IsEmpty()) {
-      // If prefixes from the old prefix set are all merged,
-      // then we can merge the entire add prefix set directly.
-      if (!oldPSet.GetSmallestPrefix(smallestOldPrefix)) {
-        AppendPrefixToMap(aOutputMap, smallestAddPrefix);
-        addPSet.Merge(aOutputMap);
-        break;
-      }
+    if (smallestOldPrefix.IsEmpty() && !isOldMapEmpty) {
+      isOldMapEmpty = !oldPSet.GetSmallestPrefix(smallestOldPrefix);
     }
 
     // Get smallest prefix from add prefix set if we don't have one
-    if (smallestAddPrefix.IsEmpty()) {
-      // If add prefixes are all merged and there is no removalIndices left,
-      // then merge the entire old prefix set directly. If there are still
-      // removalIndices left, we should still merge prefixes one by one
-      // to know which prefix from old prefix set should be removed.
-      if (!addPSet.GetSmallestPrefix(smallestAddPrefix) &&
-        removalIndex >= removalArray.Length()) {
-        AppendPrefixToMap(aOutputMap, smallestOldPrefix);
-        oldPSet.Merge(aOutputMap);
-        break;
-      }
+    if (smallestAddPrefix.IsEmpty() && !isAddMapEmpty) {
+      isAddMapEmpty = !addPSet.GetSmallestPrefix(smallestAddPrefix);
     }
 
-    // Compare the smallest string in old prefix set and add prefix set, merge the
-    // smaller one into new map to ensure merged string still follows
-    // lexigraphic order.
-    if (smallestOldPrefix < smallestAddPrefix ||
-        smallestAddPrefix.IsEmpty()) {
+    bool pickOld;
+
+    // If both prefix sets are not empty, then compare to find the smaller one.
+    if (!isOldMapEmpty && !isAddMapEmpty) {
+      if (smallestOldPrefix == smallestAddPrefix) {
+        LOG(("Add prefix should not exist in the original prefix set."));
+        Telemetry::Accumulate(Telemetry::URLCLASSIFIER_UPDATE_ERROR_TYPE,
+                              DUPLICATE_PREFIX);
+        return NS_ERROR_FAILURE;
+      }
+
+      // Compare the smallest string in old prefix set and add prefix set,
+      // merge the smaller one into new map to ensure merged string still
+      // follows lexigraphic order.
+      pickOld = smallestOldPrefix < smallestAddPrefix;
+    } else if (!isOldMapEmpty && isAddMapEmpty) {
+      pickOld = true;
+    } else if (isOldMapEmpty && !isAddMapEmpty) {
+      pickOld = false;
+    // If both maps are empty, then partial update is complete.
+    } else {
+      break;
+    }
+
+    if (pickOld) {
       numOldPrefixPicked++;
 
       // If the number of picks from old map matches the removalIndex, then this prefix
@@ -202,34 +232,106 @@ LookupCacheV4::ApplyPartialUpdate(TableUpdateV4* aTableUpdate,
         removalIndex++;
       } else {
         AppendPrefixToMap(aOutputMap, smallestOldPrefix);
+
+        crypto->Update(reinterpret_cast<uint8_t*>(const_cast<char*>(
+                       smallestOldPrefix.BeginReading())),
+                       smallestOldPrefix.Length());
       }
       smallestOldPrefix.SetLength(0);
-    } else if (smallestOldPrefix > smallestAddPrefix ||
-               smallestOldPrefix.IsEmpty()){
-      AppendPrefixToMap(aOutputMap, smallestAddPrefix);
-      smallestAddPrefix.SetLength(0);
     } else {
-      NS_WARNING("Add prefix should not exist in the original prefix set.");
-      Telemetry::Accumulate(Telemetry::URLCLASSIFIER_UPDATE_ERROR_TYPE,
-                            DUPLICATE_PREFIX);
-      return NS_ERROR_FAILURE;
+      AppendPrefixToMap(aOutputMap, smallestAddPrefix);
+
+      crypto->Update(reinterpret_cast<uint8_t*>(const_cast<char*>(
+                     smallestAddPrefix.BeginReading())),
+                     smallestAddPrefix.Length());
+
+      smallestAddPrefix.SetLength(0);
     }
   }
 
   // We expect index will be greater to 0 because max number of runs will be
   // the number of original prefix plus add prefix.
   if (index <= 0) {
-    NS_WARNING("There are still prefixes remaining after reaching maximum runs.");
+    LOG(("There are still prefixes remaining after reaching maximum runs."));
     Telemetry::Accumulate(Telemetry::URLCLASSIFIER_UPDATE_ERROR_TYPE,
                           INFINITE_LOOP);
     return NS_ERROR_FAILURE;
   }
 
   if (removalIndex < removalArray.Length()) {
-    NS_WARNING("There are still prefixes to remove after exhausting the old PrefixSet.");
+    LOG(("There are still prefixes to remove after exhausting the old PrefixSet."));
     Telemetry::Accumulate(Telemetry::URLCLASSIFIER_UPDATE_ERROR_TYPE,
                           WRONG_REMOVAL_INDICES);
     return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString checksum;
+  crypto->Finish(false, checksum);
+  if (aTableUpdate->Checksum().IsEmpty()) {
+    LOG(("Update checksum missing."));
+    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_UPDATE_ERROR_TYPE,
+                          MISSING_CHECKSUM);
+
+    // Generate our own checksum to tableUpdate to ensure there is always
+    // checksum in .metadata
+    std::string stdChecksum(checksum.BeginReading(), checksum.Length());
+    aTableUpdate->NewChecksum(stdChecksum);
+
+  } else if (aTableUpdate->Checksum() != checksum){
+    LOG(("Checksum mismatch after applying partial update"));
+    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_UPDATE_ERROR_TYPE,
+                          CHECKSUM_MISMATCH);
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+LookupCacheV4::InitCrypto(nsCOMPtr<nsICryptoHash>& aCrypto)
+{
+  nsresult rv;
+  aCrypto = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aCrypto->Init(nsICryptoHash::SHA256);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  return rv;
+}
+
+nsresult
+LookupCacheV4::VerifyChecksum(const nsACString& aChecksum)
+{
+  nsCOMPtr<nsICryptoHash> crypto;
+  nsresult rv = InitCrypto(crypto);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  PrefixStringMap map;
+  mVLPrefixSet->GetPrefixes(map);
+
+  VLPrefixSet loadPSet(map);
+  uint32_t index = loadPSet.Count() + 1;
+  for(;index > 0; index--) {
+    nsDependentCSubstring prefix;
+    if (!loadPSet.GetSmallestPrefix(prefix)) {
+      break;
+    }
+    crypto->Update(reinterpret_cast<uint8_t*>(const_cast<char*>(
+                   prefix.BeginReading())),
+                   prefix.Length());
+  }
+
+  nsAutoCString checksum;
+  crypto->Finish(false, checksum);
+
+  if (checksum != aChecksum) {
+    LOG(("Checksum mismatch when loading prefixes from file."));
+    return NS_ERROR_FILE_CORRUPTED;
   }
 
   return NS_OK;

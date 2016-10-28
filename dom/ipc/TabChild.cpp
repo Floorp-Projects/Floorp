@@ -116,6 +116,9 @@
 #include "FrameLayerBuilder.h"
 #include "VRManagerChild.h"
 #include "nsICommandParams.h"
+#include "nsISHistory.h"
+#include "nsQueryObject.h"
+#include "GroupedSHistory.h"
 
 #ifdef NS_PRINTING
 #include "nsIPrintSession.h"
@@ -143,6 +146,10 @@ using namespace mozilla::jsipc;
 using mozilla::layers::GeckoContentController;
 
 NS_IMPL_ISUPPORTS(ContentListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(TabChildSHistoryListener,
+                  nsISHistoryListener,
+                  nsIPartialSHistoryListener,
+                  nsISupportsWeakReference)
 
 static const CSSSize kDefaultViewportSize(980, 480);
 
@@ -830,6 +837,20 @@ TabChild::Init()
 
   mIPCOpen = true;
 
+  if (GroupedSHistory::GroupedHistoryEnabled()) {
+    // Set session history listener.
+    nsCOMPtr<nsISHistory> shistory;
+    mWebNav->GetSessionHistory(getter_AddRefs(shistory));
+    if (!shistory) {
+      return NS_ERROR_FAILURE;
+    }
+    mHistoryListener = new TabChildSHistoryListener(this);
+    nsCOMPtr<nsISHistoryListener> listener(do_QueryObject(mHistoryListener));
+    shistory->AddSHistoryListener(listener);
+    nsCOMPtr<nsIPartialSHistoryListener> partialListener(do_QueryObject(mHistoryListener));
+    shistory->SetPartialSHistoryListener(partialListener);
+  }
+
   return NS_OK;
 }
 
@@ -1292,12 +1313,16 @@ TabChild::ActorDestroy(ActorDestroyReason why)
 
 TabChild::~TabChild()
 {
-    DestroyWindow();
+  DestroyWindow();
 
-    nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(WebNavigation());
-    if (webBrowser) {
-      webBrowser->SetContainerWindow(nullptr);
-    }
+  nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(WebNavigation());
+  if (webBrowser) {
+    webBrowser->SetContainerWindow(nullptr);
+  }
+
+  if (mHistoryListener) {
+    mHistoryListener->ClearTabChild();
+  }
 }
 
 void
@@ -1839,6 +1864,48 @@ TabChild::RecvMenuKeyboardListenerInstalled(const bool& aInstalled)
 {
   IMEStateManager::OnInstalledMenuKeyboardListener(aInstalled);
   return true;
+}
+
+bool
+TabChild::RecvNotifyAttachGroupedSessionHistory(const uint32_t& aOffset)
+{
+  // nsISHistory uses int32_t
+  if (NS_WARN_IF(aOffset > INT32_MAX)) {
+    return false;
+  }
+
+  nsCOMPtr<nsISHistory> shistory;
+  mWebNav->GetSessionHistory(getter_AddRefs(shistory));
+  NS_ENSURE_TRUE(shistory, false);
+
+  return NS_SUCCEEDED(shistory->OnAttachGroupedSessionHistory(aOffset));
+}
+
+bool
+TabChild::RecvNotifyPartialSessionHistoryActive(const uint32_t& aGlobalLength,
+                                                const uint32_t& aTargetLocalIndex)
+{
+  // nsISHistory uses int32_t
+  if (NS_WARN_IF(aGlobalLength > INT32_MAX || aTargetLocalIndex > INT32_MAX)) {
+    return false;
+  }
+
+  nsCOMPtr<nsISHistory> shistory;
+  mWebNav->GetSessionHistory(getter_AddRefs(shistory));
+  NS_ENSURE_TRUE(shistory, false);
+
+  return NS_SUCCEEDED(shistory->OnPartialSessionHistoryActive(aGlobalLength,
+                                                              aTargetLocalIndex));
+}
+
+bool
+TabChild::RecvNotifyPartialSessionHistoryDeactive()
+{
+  nsCOMPtr<nsISHistory> shistory;
+  mWebNav->GetSessionHistory(getter_AddRefs(shistory));
+  NS_ENSURE_TRUE(shistory, false);
+
+  return NS_SUCCEEDED(shistory->OnPartialSessionHistoryDeactive());
 }
 
 bool
@@ -3343,6 +3410,80 @@ TabChild::ForcePaint(uint64_t aLayerObserverEpoch)
 
   nsAutoScriptBlocker scriptBlocker;
   RecvSetDocShellIsActive(true, false, aLayerObserverEpoch);
+}
+
+/*******************************************************************************
+ * nsISHistoryListener
+ ******************************************************************************/
+
+NS_IMETHODIMP
+TabChildSHistoryListener::OnHistoryNewEntry(nsIURI *aNewURI, int32_t aOldIndex)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChildSHistoryListener::OnHistoryGoBack(nsIURI *aBackURI, bool *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChildSHistoryListener::OnHistoryGoForward(nsIURI *aForwardURI, bool *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChildSHistoryListener::OnHistoryReload(nsIURI *aReloadURI, uint32_t aReloadFlags, bool *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChildSHistoryListener::OnHistoryGotoIndex(int32_t aIndex, nsIURI *aGotoURI, bool *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChildSHistoryListener::OnHistoryPurge(int32_t aNumEntries, bool *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChildSHistoryListener::OnHistoryReplaceEntry(int32_t aIndex)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TabChildSHistoryListener::OnLengthChange(int32_t aCount)
+{
+  RefPtr<TabChild> tabChild(mTabChild);
+  if (!tabChild) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aCount < 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return tabChild->SendNotifySessionHistoryChange(aCount) ?
+           NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+TabChildSHistoryListener::OnRequestCrossBrowserNavigation(uint32_t aIndex)
+{
+  RefPtr<TabChild> tabChild(mTabChild);
+  if (!tabChild) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return tabChild->SendRequestCrossBrowserNavigation(aIndex) ?
+           NS_OK : NS_ERROR_FAILURE;
 }
 
 TabChildGlobal::TabChildGlobal(TabChildBase* aTabChild)
