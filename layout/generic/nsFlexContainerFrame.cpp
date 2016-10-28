@@ -236,11 +236,24 @@ PhysicalCoordFromFlexRelativeCoord(nscoord aFlexRelativeCoord,
   wm_.IsOrthogonalTo(axisTracker_.GetWritingMode()) != \
     (axisTracker_).IsRowOriented() ? (bsize_) : (isize_)
 
+// Flags to customize behavior of the FlexboxAxisTracker constructor:
+enum AxisTrackerFlags {
+  eNoFlags = 0x0,
+
+  // Normally, FlexboxAxisTracker may attempt to reverse axes & iteration order
+  // to avoid bottom-to-top child ordering, for saner pagination. This flag
+  // suppresses that behavior (so that we allow bottom-to-top child ordering).
+  // (This may be helpful e.g. when we're only dealing with a single child.)
+  eAllowBottomToTopChildOrdering = 0x1
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AxisTrackerFlags)
+
 // Encapsulates our flex container's main & cross axes.
 class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
 public:
   FlexboxAxisTracker(const nsFlexContainerFrame* aFlexContainer,
-                     const WritingMode& aWM);
+                     const WritingMode& aWM,
+                     AxisTrackerFlags aFlags = eNoFlags);
 
   // Accessors:
   // XXXdholbert [BEGIN DEPRECATED]
@@ -3240,7 +3253,8 @@ BlockDirToAxisOrientation(WritingMode::BlockDir aBlockDir)
 
 FlexboxAxisTracker::FlexboxAxisTracker(
   const nsFlexContainerFrame* aFlexContainer,
-  const WritingMode& aWM)
+  const WritingMode& aWM,
+  AxisTrackerFlags aFlags)
   : mWM(aWM),
     mAreAxesInternallyReversed(false)
 {
@@ -3256,7 +3270,10 @@ FlexboxAxisTracker::FlexboxAxisTracker(
   // this special-case code path to be compared against the normal code path.)
   static bool sPreventBottomToTopChildOrdering = true;
 
-  if (sPreventBottomToTopChildOrdering) {
+  // Note: if the eAllowBottomToTopChildOrdering flag is set, that overrides
+  // the static boolean and makes us skip this special case.
+  if (!(aFlags & AxisTrackerFlags::eAllowBottomToTopChildOrdering) &&
+      sPreventBottomToTopChildOrdering) {
     // If either axis is bottom-to-top, we flip both axes (and set a flag
     // so that we can flip some logic to make the reversal transparent).
     if (eAxis_BT == mMainAxis || eAxis_BT == mCrossAxis) {
