@@ -8813,8 +8813,18 @@ CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue,
       !aValue.IsLengthPercentCalcUnit()) {
     result = CSSParseResult::Error;
   }
-  if (result == CSSParseResult::Ok ||
-      result == CSSParseResult::Error) {
+  if (result == CSSParseResult::Error) {
+    return result;
+  }
+  if (result == CSSParseResult::Ok) {
+    if (aValue.GetUnit() == eCSSUnit_FlexFraction) {
+      // Single value <flex> is represented internally as minmax(auto, <flex>).
+      nsCSSValue minmax;
+      nsCSSValue::Array* func = minmax.InitFunction(eCSSKeyword_minmax, 2);
+      func->Item(1).SetAutoValue();
+      func->Item(2) = aValue;
+      aValue = minmax;
+    }
     return result;
   }
 
@@ -8850,7 +8860,7 @@ CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue,
         !func->Item(2).IsLengthPercentCalcUnit()) {
       return CSSParseResult::Error;
     }
-    // Reject 'fr' min-sizing.
+    // Reject <flex> min-sizing.
     if (func->Item(1).GetUnit() == eCSSUnit_FlexFraction) {
       return CSSParseResult::Error;
     }
