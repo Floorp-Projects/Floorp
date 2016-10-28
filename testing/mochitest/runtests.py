@@ -90,6 +90,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 # Try run will then put a download link for all log files
 # on tbpl.mozilla.org.
 
+#MOZ_LOG = "signaling:3,mtransport:4,DataChannel:4,jsep:4,MediaPipelineFactory:4"
 MOZ_LOG = ""
 
 #####################
