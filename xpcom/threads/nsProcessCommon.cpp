@@ -23,6 +23,7 @@
 #include "nsCRT.h"
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
+#include "nsXULAppAPI.h"
 #include "mozilla/Services.h"
 
 #include <stdlib.h>
@@ -430,6 +431,9 @@ nsresult
 nsProcess::RunProcess(bool aBlocking, char** aMyArgv, nsIObserver* aObserver,
                       bool aHoldWeak, bool aArgsUTF8)
 {
+  NS_WARNING_ASSERTION(!XRE_IsContentProcess(),
+                       "No launching of new processes in the content process");
+
   if (NS_WARN_IF(!mExecutable)) {
     return NS_ERROR_NOT_INITIALIZED;
   }

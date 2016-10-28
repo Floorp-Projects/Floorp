@@ -332,7 +332,9 @@ class MOZ_NON_PARAM alignas(8) Value
     }
 
     void setDoubleNoCheck(double d) {
-        data.asDouble = d;
+        // Don't assign to data.asDouble to fix a miscompilation with
+        // GCC 5.2.1 and 5.3.1. See bug 1312488.
+        data = layout(d);
     }
 
     void setNaN() {
