@@ -53,6 +53,7 @@ class DrawEventRecorder;
 class VsyncSource;
 class ContentDeviceData;
 class GPUDeviceData;
+class FeatureState;
 
 inline uint32_t
 BackendTypeBit(BackendType b)
@@ -803,6 +804,7 @@ private:
     void PopulateScreenInfo();
 
     void InitCompositorAccelerationPrefs();
+    void InitGPUProcessPrefs();
 
     RefPtr<gfxASurface> mScreenReferenceSurface;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
