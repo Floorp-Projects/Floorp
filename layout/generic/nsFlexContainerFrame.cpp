@@ -4512,6 +4512,10 @@ nsFlexContainerFrame::ReflowPlaceholders(nsPresContext* aPresContext,
                       childDesiredSize, &childReflowInput,
                       outerWM, aContentBoxOrigin, aContainerSize, 0);
 
+    // Mark the placeholder frame to indicate that it's not actually at the
+    // element's static position, because we need to apply CSS Alignment after
+    // we determine the OOF's size:
+    placeholder->AddStateBits(PLACEHOLDER_STATICPOS_NEEDS_CSSALIGN);
   }
 }
 
