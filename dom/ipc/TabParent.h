@@ -33,6 +33,7 @@
 #include "nsWeakReference.h"
 #include "Units.h"
 #include "nsIWidget.h"
+#include "nsIPartialSHistory.h"
 
 class nsFrameLoader;
 class nsIFrameLoader;
@@ -631,6 +632,10 @@ protected:
 
   virtual bool RecvAudioChannelActivityNotification(const uint32_t& aAudioChannel,
                                                     const bool& aActive) override;
+
+  virtual bool RecvNotifySessionHistoryChange(const uint32_t& aCount) override;
+
+  virtual bool RecvRequestCrossBrowserNavigation(const uint32_t& aGlobalIndex) override;
 
   ContentCacheInParent mContentCache;
 

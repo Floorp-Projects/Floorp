@@ -559,11 +559,11 @@ RTCPeerConnection.prototype = {
       server.urls.forEach(urlStr => {
         let url = nicerNewURI(urlStr);
         if (url.scheme in { turn:1, turns:1 }) {
-          if (!server.username) {
+          if (server.username == undefined) {
             throw new this._win.DOMException(msg + " - missing username: " + urlStr,
                                              "InvalidAccessError");
           }
-          if (!server.credential) {
+          if (server.credential == undefined) {
             throw new this._win.DOMException(msg + " - missing credential: " + urlStr,
                                              "InvalidAccessError");
           }

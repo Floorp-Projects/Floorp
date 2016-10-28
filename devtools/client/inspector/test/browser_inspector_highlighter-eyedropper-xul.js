@@ -11,7 +11,7 @@ const TEST_URL_2 =
   "data:text/html;charset=utf-8,<h1 style='color:red'>HTML test page</h1>";
 
 add_task(function* () {
-  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Check the inspector toolbar");
   let button = inspector.panelDoc.querySelector("#inspector-eyedropper-toggle");
@@ -35,11 +35,7 @@ add_task(function* () {
   ok(isDisabled(button), "The button is disabled in the color picker");
 
   info("Navigate to a HTML document");
-  let navigated = toolbox.target.once("navigate");
-  let markuploaded = inspector.once("markuploaded");
-  navigateTo(toolbox, TEST_URL_2);
-  yield navigated;
-  yield markuploaded;
+  yield navigateTo(inspector, TEST_URL_2);
 
   info("Check the inspector toolbar in HTML document");
   button = inspector.panelDoc.querySelector("#inspector-eyedropper-toggle");

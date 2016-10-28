@@ -222,6 +222,7 @@ if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
         '-Wno-type-limits',
         '-Wno-missing-field-initializers',
         '-Wno-conversion',
+        '-Wno-unused-but-set-variable',
     ]
 if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
     CFLAGS += [

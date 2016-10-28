@@ -670,10 +670,6 @@ struct nsStyleImageLayers {
 
   static bool IsInitialPositionForLayerType(mozilla::Position aPosition, LayerType aType);
 
-  static float GetInitialPositionForLayerType(LayerType aType) {
-    return (aType == LayerType::Background) ? 0.0f : 0.5f;
-  }
-
   struct Size;
   friend struct Size;
   struct Size {
@@ -745,7 +741,10 @@ struct nsStyleImageLayers {
     // Initialize nothing
     Repeat() {}
 
-    bool IsInitialValue(LayerType aType) const;
+    bool IsInitialValue() const {
+      return mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT &&
+             mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
+    }
 
     bool DependsOnPositioningAreaSize() const {
       return mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_SPACE ||
@@ -753,7 +752,10 @@ struct nsStyleImageLayers {
     }
 
     // Initialize to initial values
-    void SetInitialValues(LayerType aType);
+    void SetInitialValues() {
+      mXRepeat = NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
+      mYRepeat = NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
+    }
 
     bool operator==(const Repeat& aOther) const {
       return mXRepeat == aOther.mXRepeat &&

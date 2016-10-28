@@ -35,6 +35,15 @@ add_task(function* () {
     } else {
       ok(!title.match(/Repeats: /), "The tooltip doesn't show the iterations");
     }
+    if (controller.animationPlayers[i].state.easing) {
+      ok(title.match(/Easing: /), "The tooltip shows the easing");
+    }
+    if (controller.animationPlayers[i].state.fill) {
+      ok(title.match(/Fill: /), "The tooltip shows the fill");
+    }
+    if (controller.animationPlayers[i].state.direction) {
+      ok(title.match(/Direction: /), "The tooltip shows the direction");
+    }
     ok(!title.match(/Iteration start:/),
       "The tooltip doesn't show the iteration start");
   });

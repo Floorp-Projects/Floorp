@@ -12246,20 +12246,12 @@ CSSParserImpl::ParseImageLayersItem(
   if (eCSSProperty_mask == aTable[nsStyleImageLayers::shorthand]) {
     aState.mOrigin->mValue.SetIntValue(NS_STYLE_IMAGELAYER_ORIGIN_BORDER,
                                        eCSSUnit_Enumerated);
-    aState.mRepeat->mXValue.SetIntValue(NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT,
-                                        eCSSUnit_Enumerated);
-
-    positionXArr->Item(1).SetPercentValue(0.5f);
-    positionYArr->Item(1).SetPercentValue(0.5f);
   } else {
     aState.mOrigin->mValue.SetIntValue(NS_STYLE_IMAGELAYER_ORIGIN_PADDING,
                                        eCSSUnit_Enumerated);
-    aState.mRepeat->mXValue.SetIntValue(NS_STYLE_IMAGELAYER_REPEAT_REPEAT,
-                                        eCSSUnit_Enumerated);
-
-    positionXArr->Item(1).SetPercentValue(0.0f);
-    positionYArr->Item(1).SetPercentValue(0.0f);
   }
+  positionXArr->Item(1).SetPercentValue(0.0f);
+  positionYArr->Item(1).SetPercentValue(0.0f);
 
   aState.mSize->mXValue.SetAutoValue();
   aState.mSize->mYValue.SetAutoValue();
