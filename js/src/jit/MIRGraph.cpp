@@ -1588,6 +1588,102 @@ MBasicBlock::immediateDominatorBranch(BranchDirection* pdirection)
     return nullptr;
 }
 
+MBasicBlock::BackupPoint::BackupPoint(MBasicBlock* current)
+  : current_(current),
+    lastBlock_(nullptr),
+    lastIns_(current->hasAnyIns() ? *current->rbegin() : nullptr),
+    stackPosition_(current->stackDepth()),
+    slots_()
+#ifdef DEBUG
+  , lastPhi_(!current->phisEmpty() ? *current->phis_.rbegin() : nullptr),
+    predecessorsCheckSum_(computePredecessorsCheckSum(current)),
+    instructionsCheckSum_(computeInstructionsCheckSum(current)),
+    id_(current->id()),
+    callerResumePoint_(current->callerResumePoint()),
+    entryResumePoint_(current->entryResumePoint())
+#endif
+{
+    // The block is not yet jumping into a block of an inlined function yet.
+    MOZ_ASSERT(current->outerResumePoint_ == nullptr);
+
+    // The CFG reconstruction might add blocks and move them around.
+    uint32_t lastBlockId = 0;
+    PostorderIterator e = current->graph().poEnd();
+    for (PostorderIterator b = current->graph().poBegin(); b != e; ++b) {
+        if (lastBlockId <= b->id()) {
+            lastBlock_ = *b;
+            lastBlockId = b->id();
+        }
+    }
+    MOZ_ASSERT(lastBlock_);
+}
+
+bool
+MBasicBlock::BackupPoint::init(TempAllocator& alloc)
+{
+    if (!slots_.init(alloc, stackPosition_))
+        return false;
+    for (size_t i = 0, e = stackPosition_; i < e; ++i)
+        slots_[i] = current_->slots_[i];
+    return true;
+}
+
+#ifdef DEBUG
+uintptr_t
+MBasicBlock::BackupPoint::computePredecessorsCheckSum(MBasicBlock* block)
+{
+    uintptr_t hash = 0;
+    for (size_t i = 0; i < block->numPredecessors(); i++) {
+        MBasicBlock* pred = block->getPredecessor(i);
+        uintptr_t data = reinterpret_cast<uintptr_t>(pred);
+        hash = data + (hash << 6) + (hash << 16) - hash;
+    }
+    return hash;
+}
+
+HashNumber
+MBasicBlock::BackupPoint::computeInstructionsCheckSum(MBasicBlock* block)
+{
+    HashNumber h = 0;
+    MOZ_ASSERT_IF(lastIns_, lastIns_->block() == block);
+    for (MInstructionIterator ins = block->begin(); ins != block->end(); ++ins) {
+        h += ins->valueHash();
+        h += h << 10;
+        h ^= h >> 6;
+    }
+    return h;
+}
+#endif
+
+MBasicBlock*
+MBasicBlock::BackupPoint::restore()
+{
+    // No extra Phi got added.
+    MOZ_ASSERT((!current_->phisEmpty() ? *current_->phis_.rbegin() : nullptr) == lastPhi_);
+
+    MOZ_ASSERT_IF(lastIns_, lastIns_->block() == current_);
+    MOZ_ASSERT_IF(lastIns_, !lastIns_->isDiscarded());
+    MInstructionIterator lastIns(lastIns_ ? ++(current_->begin(lastIns_)) : current_->begin());
+    current_->discardAllInstructionsStartingAt(lastIns);
+    current_->clearOuterResumePoint();
+
+    MOZ_ASSERT(current_->slots_.length() >= stackPosition_);
+    if (current_->stackPosition_ != stackPosition_)
+        current_->setStackDepth(stackPosition_);
+    for (size_t i = 0, e = stackPosition_; i < e; ++i)
+        current_->slots_[i] = slots_[i];
+
+    MOZ_ASSERT(current_->id() == id_);
+    MOZ_ASSERT(predecessorsCheckSum_ == computePredecessorsCheckSum(current_));
+    MOZ_ASSERT(instructionsCheckSum_ == computeInstructionsCheckSum(current_));
+    MOZ_ASSERT(current_->callerResumePoint() == callerResumePoint_);
+    MOZ_ASSERT(current_->entryResumePoint() == entryResumePoint_);
+
+    current_->graph().removeBlocksAfter(lastBlock_);
+
+    return current_;
+}
+
 void
 MBasicBlock::dumpStack(GenericPrinter& out)
 {
