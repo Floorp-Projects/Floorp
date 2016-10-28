@@ -3775,8 +3775,7 @@ nsDocShell::DoFindItemWithName(const nsAString& aName,
   // give up on finding it in our tree, and start looking in our TabGroup.
   nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
   if (window) {
-    RefPtr<mozilla::dom::TabGroup> tabGroup =
-      nsGlobalWindow::Cast(window)->TabGroup();
+    RefPtr<mozilla::dom::TabGroup> tabGroup = window->TabGroup();
     // We don't want to make the request to our TabGroup if they are the ones
     // which made a request to us.
     if (tabGroup != aRequestor) {

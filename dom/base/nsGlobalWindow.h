@@ -1745,12 +1745,13 @@ private:
   // IsSecureContext() for the inner window that corresponds to aDocument.
   bool ComputeIsSecureContext(nsIDocument* aDocument);
 
+  // nsPIDOMWindow<T> should be able to see these helper methods.
+  friend class nsPIDOMWindow<mozIDOMWindowProxy>;
+  friend class nsPIDOMWindow<mozIDOMWindow>;
+  friend class nsPIDOMWindow<nsISupports>;
+
   mozilla::dom::TabGroup* TabGroupInner();
   mozilla::dom::TabGroup* TabGroupOuter();
-
-public:
-  mozilla::dom::TabGroup* TabGroup();
-  mozilla::dom::DocGroup* GetDocGroup();
 
 protected:
   // These members are only used on outer window objects. Make sure
@@ -1955,7 +1956,6 @@ protected:
   RefPtr<mozilla::dom::SpeechSynthesis> mSpeechSynthesis;
 #endif
 
-  RefPtr<mozilla::dom::TabGroup> mTabGroup; // Outer window only
 #ifdef DEBUG
   // This member is used in the debug only assertions in TabGroup()
   // to catch cyclic parent/opener trees and not overflow the stack.
