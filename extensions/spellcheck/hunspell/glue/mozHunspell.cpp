@@ -12,14 +12,14 @@
  * License.
  *
  * The Initial Developers of the Original Code are Kevin Hendricks (MySpell)
- * and László Németh (Hunspell). Portions created by the Initial Developers
+ * and LÃ¡szlÃ³ NÃ©meth (Hunspell). Portions created by the Initial Developers
  * are Copyright (C) 2002-2005 the Initial Developers. All Rights Reserved.
  *
  * Contributor(s): Kevin Hendricks (kevin.hendricks@sympatico.ca)
  *                 David Einstein (deinst@world.std.com)
  *                 Michiel van Leeuwen (mvl@exedo.nl)
  *                 Caolan McNamara (cmc@openoffice.org)
- *                 László Németh (nemethl@gyorsposta.hu)
+ *                 LÃ¡szlÃ³ NÃ©meth (nemethl@gyorsposta.hu)
  *                 Davide Prina
  *                 Giuseppe Modugno
  *                 Gianluca Turconi
