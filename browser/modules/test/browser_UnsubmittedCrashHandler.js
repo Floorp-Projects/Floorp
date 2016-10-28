@@ -446,7 +446,7 @@ add_task(function* test_last_shown_date() {
     yield UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
   Assert.ok(notification, "There should be a notification");
 
-  let today = new Date().toLocaleFormat("%Y%m%d");
+  let today = UnsubmittedCrashHandler.dateString(new Date());
   let lastShownDate =
     UnsubmittedCrashHandler.prefs.getCharPref("lastShownDate");
   Assert.equal(today, lastShownDate,
@@ -541,7 +541,7 @@ add_task(function* test_dont_decrement_chances_on_same_day() {
             "We should have noticed that we uninitted while showing " +
             "the notification.");
 
-  let today = new Date().toLocaleFormat("%Y%m%d");
+  let today = UnsubmittedCrashHandler.dateString(new Date());
   let lastShownDate =
     UnsubmittedCrashHandler.prefs.getCharPref("lastShownDate");
   Assert.equal(today, lastShownDate,
@@ -590,7 +590,7 @@ add_task(function* test_decrement_chances_on_other_day() {
             "the notification.");
 
   // Now pretend that the notification was shown yesterday.
-  let yesterday = new Date(Date.now() - DAY).toLocaleFormat("%Y%m%d");
+  let yesterday = UnsubmittedCrashHandler.dateString(new Date(Date.now() - DAY));
   UnsubmittedCrashHandler.prefs.setCharPref("lastShownDate", yesterday);
 
   UnsubmittedCrashHandler.init();
@@ -618,7 +618,7 @@ add_task(function* test_decrement_chances_on_other_day() {
  */
 add_task(function* test_can_suppress_after_chances() {
   // Pretend that a notification was shown yesterday.
-  let yesterday = new Date(Date.now() - DAY).toLocaleFormat("%Y%m%d");
+  let yesterday = UnsubmittedCrashHandler.dateString(new Date(Date.now() - DAY));
   UnsubmittedCrashHandler.prefs.setCharPref("lastShownDate", yesterday);
   UnsubmittedCrashHandler.prefs.setBoolPref("shutdownWhileShowing", true);
   UnsubmittedCrashHandler.prefs.setIntPref("chancesUntilSuppress", 0);
@@ -633,7 +633,7 @@ add_task(function* test_can_suppress_after_chances() {
   let suppressUntilDate =
     UnsubmittedCrashHandler.prefs.getCharPref("suppressUntilDate");
 
-  let today = new Date().toLocaleFormat("%Y%m%d");
+  let today = UnsubmittedCrashHandler.dateString(new Date());
   Assert.ok(suppressUntilDate > today,
             "We should be suppressing until some days into the future.");
 
@@ -648,7 +648,7 @@ add_task(function* test_can_suppress_after_chances() {
  * will be shown even if there are pending crash reports.
  */
 add_task(function* test_suppression() {
-  let future = new Date(Date.now() + (DAY * 5)).toLocaleFormat("%Y%m%d");
+  let future = UnsubmittedCrashHandler.dateString(new Date(Date.now() + (DAY * 5)));
   UnsubmittedCrashHandler.prefs.setCharPref("suppressUntilDate", future);
   UnsubmittedCrashHandler.uninit();
   UnsubmittedCrashHandler.init();
@@ -666,7 +666,7 @@ add_task(function* test_suppression() {
  * it, then we can show the notification again.
  */
 add_task(function* test_end_suppression() {
-  let yesterday = new Date(Date.now() - DAY).toLocaleFormat("%Y%m%d");
+  let yesterday = UnsubmittedCrashHandler.dateString(new Date(Date.now() - DAY));
   UnsubmittedCrashHandler.prefs.setCharPref("suppressUntilDate", yesterday);
   UnsubmittedCrashHandler.uninit();
   UnsubmittedCrashHandler.init();
