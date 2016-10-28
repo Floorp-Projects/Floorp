@@ -1974,47 +1974,6 @@ js::IsStandardPrototype(JSObject* obj, JSProtoKey key)
     return v.isObject() && obj == &v.toObject();
 }
 
-
-/**
- * Returns the original Object.prototype from the embedding-provided incumbent
- * global.
- *
- * Really, we want the incumbent global itself so we can pass it to other
- * embedding hooks which need it. Specifically, the enqueue promise hook
- * takes an incumbent global so it can set that on the PromiseCallbackJob
- * it creates.
- *
- * The reason for not just returning the global itself is that we'd need to
- * wrap it into the current compartment, and later unwrap it. Unwrapping
- * globals is tricky, though: we might accidentally unwrap through an inner
- * to its outer window and end up with the wrong global. Plain objects don't
- * have this problem, so we use the global's Object.prototype. The code using
- * it - e.g. EnqueuePromiseReactionJob - can then unwrap the object and get
- * its global without fear of unwrapping too far.
- */
-bool
-js::GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj)
-{
-    RootedObject globalObj(cx, cx->runtime()->getIncumbentGlobal(cx));
-    if (!globalObj) {
-        obj.set(nullptr);
-        return true;
-    }
-
-    {
-        AutoCompartment ac(cx, globalObj);
-        obj.set(globalObj->as<GlobalObject>().getOrCreateObjectPrototype(cx));
-        if (!obj)
-            return false;
-    }
-
-    // The object might be from a different compartment, so wrap it.
-    if (obj && !cx->compartment()->wrap(cx, obj))
-        return false;
-
-    return true;
-}
-
 JSProtoKey
 JS::IdentifyStandardInstance(JSObject* obj)
 {
@@ -3941,16 +3900,6 @@ js::SpeciesConstructor(JSContext* cx, HandleObject obj, HandleValue defaultCtor,
 
     pctor.set(args.rval());
     return true;
-}
-
-bool
-js::SpeciesConstructor(JSContext* cx, HandleObject obj, JSProtoKey ctorKey,
-                       MutableHandleValue pctor)
-{
-    if (!GlobalObject::ensureConstructor(cx, cx->global(), ctorKey))
-        return false;
-    RootedValue defaultCtor(cx, cx->global()->getConstructor(ctorKey));
-    return SpeciesConstructor(cx, obj, defaultCtor, pctor);
 }
 
 bool
