@@ -22,7 +22,6 @@ DIRS += [
     'performance',
     'preferences',
     'projecteditor',
-    'promisedebugger',
     'responsive.html',
     'responsivedesign',
     'scratchpad',

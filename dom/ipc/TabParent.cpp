@@ -100,6 +100,8 @@
 #include "UnitTransforms.h"
 #include <algorithm>
 #include "mozilla/WebBrowserPersistDocumentParent.h"
+#include "nsIGroupedSHistory.h"
+#include "PartialSHistory.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -3449,6 +3451,40 @@ TabParent::RecvLookUpDictionary(const nsString& aText,
   widget->LookUpDictionary(aText, aFontRangeArray, aIsVertical,
                            aPoint - GetChildProcessOffset());
   return true;
+}
+
+bool
+TabParent::RecvNotifySessionHistoryChange(const uint32_t& aCount)
+{
+  RefPtr<nsFrameLoader> frameLoader(GetFrameLoader());
+  if (!frameLoader) {
+    // FrameLoader can be nullptr if the it is destroying.
+    // In this case session history change can simply be ignored.
+    return true;
+  }
+
+  nsCOMPtr<nsIPartialSHistory> partialHistory;
+  frameLoader->GetPartialSessionHistory(getter_AddRefs(partialHistory));
+  if (!partialHistory) {
+    // PartialSHistory is not enabled
+    return true;
+  }
+
+  partialHistory->OnSessionHistoryChange(aCount);
+  return true;
+}
+
+bool
+TabParent::RecvRequestCrossBrowserNavigation(const uint32_t& aGlobalIndex)
+{
+  RefPtr<nsFrameLoader> frameLoader(GetFrameLoader());
+  if (!frameLoader) {
+    // FrameLoader can be nullptr if the it is destroying.
+    // In this case we can ignore the request.
+    return true;
+  }
+
+  return NS_SUCCEEDED(frameLoader->RequestGroupedHistoryNavigation(aGlobalIndex));
 }
 
 NS_IMETHODIMP

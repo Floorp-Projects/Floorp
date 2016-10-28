@@ -196,7 +196,9 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
    * Hide the box model highlighting if it was shown before
    */
   hideBoxModel: function () {
-    this._highlighter.hide();
+    if (this._highlighter) {
+      this._highlighter.hide();
+    }
   },
 
   /**

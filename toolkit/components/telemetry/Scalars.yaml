@@ -67,6 +67,20 @@ browser.engagement:
       - rweiss@mozilla.com
     release_channel_collection: opt-out
 
+  unfiltered_uri_count:
+    bug_numbers:
+      - 1304647
+    description: >
+      The count of the total non-unique URIs visited in a subsession, not restricted to
+      a specific protocol, including page reloads and about:* pages (other than initial
+      pages such as about:blank, ...), after the session has been restored. This does
+      not include background page requests and URIs from embedded pages or private browsing.
+    expires: "55"
+    kind: uint
+    notification_emails:
+      - bcolloran@mozilla.com
+    release_channel_collection: opt-out
+
   unique_domains_count:
     bug_numbers:
       - 1271310

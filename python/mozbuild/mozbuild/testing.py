@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
-import json
+import cPickle as pickle
 import os
 import sys
 
@@ -56,12 +56,12 @@ class TestMetadata(object):
         self._tests_by_flavor = defaultdict(set)
         self._test_dirs = set()
 
-        with open(all_tests, 'rt') as fh:
-            test_data = json.load(fh)
+        with open(all_tests, 'rb') as fh:
+            test_data = pickle.load(fh)
         defaults = None
         if test_defaults:
-            with open(test_defaults, 'rt') as fh:
-                defaults = json.load(fh)
+            with open(test_defaults, 'rb') as fh:
+                defaults = pickle.load(fh)
         for path, tests in test_data.items():
             for metadata in tests:
                 if defaults:
@@ -178,14 +178,14 @@ class TestResolver(MozbuildObject):
 
         # If installing tests is going to result in re-generating the build
         # backend, we need to do this here, so that the updated contents of
-        # all-tests.json make it to the set of tests to run.
+        # all-tests.pkl make it to the set of tests to run.
         self._run_make(target='run-tests-deps', pass_thru=True,
                        print_directory=False)
 
         self._tests = TestMetadata(os.path.join(self.topobjdir,
-                                                'all-tests.json'),
+                                                'all-tests.pkl'),
                                    test_defaults=os.path.join(self.topobjdir,
-                                                              'test-defaults.json'))
+                                                              'test-defaults.pkl'))
 
         self._test_rewrites = {
             'a11y': os.path.join(self.topobjdir, '_tests', 'testing',
@@ -417,9 +417,9 @@ def _resolve_installs(paths, topobjdir, manifest):
     by the build backend corresponding to those keys, and add them
     to the given manifest.
     """
-    filename = os.path.join(topobjdir, 'test-installs.json')
-    with open(filename, 'r') as fh:
-        resolved_installs = json.load(fh)
+    filename = os.path.join(topobjdir, 'test-installs.pkl')
+    with open(filename, 'rb') as fh:
+        resolved_installs = pickle.load(fh)
 
     for path in paths:
         path = path[2:]

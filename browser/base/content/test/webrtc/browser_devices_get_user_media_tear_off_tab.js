@@ -49,10 +49,12 @@ var gTests = [
     // We need to load the content script in the first window so that we can
     // catch the notifications fired globally when closing the second window.
     gBrowser.selectedBrowser.messageManager.loadFrameScript(CONTENT_SCRIPT_HELPER, true);
-    yield BrowserTestUtils.closeWindow(win);
 
-    yield expectObserverCalled("recording-window-ended");
-    yield expectObserverCalled("recording-device-events");
+    let promises = [promiseObserverCalled("recording-device-events"),
+                    promiseObserverCalled("recording-window-ended")];
+    yield BrowserTestUtils.closeWindow(win);
+    yield Promise.all(promises);
+
     yield expectNoObserverCalled();
     yield checkNotSharing();
   }

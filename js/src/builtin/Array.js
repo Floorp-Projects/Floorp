@@ -203,6 +203,9 @@ function ArraySort(comparefn) {
     /* Step 2. */
     var len = ToLength(O.length);
 
+    if (len <= 1)
+      return this;
+
     /* 22.1.3.25.1 Runtime Semantics: SortCompare( x, y ) */
     var wrappedCompareFn = comparefn;
     comparefn = function(x, y) {

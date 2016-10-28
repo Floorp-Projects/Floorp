@@ -6,6 +6,7 @@
 
 XPIDL_SOURCES += [
     'domstubs.idl',
+    'nsIBrowser.idl',
     'nsIBrowserDOMWindow.idl',
     'nsIContentPermissionPrompt.idl',
     'nsIContentPrefService.idl',

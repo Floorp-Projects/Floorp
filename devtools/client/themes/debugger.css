@@ -129,10 +129,6 @@
   filter: none;
 }
 
-#toggle-promise-debugger {
-  /* TODO Bug 1186119: Add a toggle promise debugger image */
-}
-
 #sources .black-boxed {
   color: rgba(128,128,128,0.4);
 }

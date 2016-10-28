@@ -1451,11 +1451,19 @@ Toolbox.prototype = {
     }
 
     if (this.currentToolId == id) {
-      // re-focus tool to get key events again
-      this.focusTool(id);
+      let panel = this._toolPanels.get(id);
+      if (panel) {
+        // We have a panel instance, so the tool is already fully loaded.
 
-      // Return the existing panel in order to have a consistent return value.
-      return promise.resolve(this._toolPanels.get(id));
+        // re-focus tool to get key events again
+        this.focusTool(id);
+
+        // Return the existing panel in order to have a consistent return value.
+        return promise.resolve(panel);
+      }
+      // Otherwise, if there is no panel instance, it is still loading,
+      // so we are racing another call to selectTool with the same id.
+      return this.once("select").then(() => promise.resolve(this._toolPanels.get(id)));
     }
 
     if (!this.isReady) {
