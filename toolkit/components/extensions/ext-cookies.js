@@ -194,13 +194,31 @@ function* query(detailsIn, props, context) {
     details.domain = details.domain.toLowerCase().replace(/^\./, "");
   }
 
+  let userContextId = 0;
   let isPrivate = context.incognito;
-  if (details.storeId == DEFAULT_STORE) {
-    isPrivate = false;
-  } else if (details.storeId == PRIVATE_STORE) {
-    isPrivate = true;
+  if (details.storeId) {
+    if (!global.isValidCookieStoreId(details.storeId)) {
+      return;
+    }
+
+    if (global.isDefaultCookieStoreId(details.storeId)) {
+      isPrivate = false;
+    } else if (global.isPrivateCookieStoreId(details.storeId)) {
+      isPrivate = true;
+    } else if (global.isContainerCookieStoreId(details.storeId)) {
+      isPrivate = false;
+      userContextId = global.getContainerForCookieStoreId(details.storeId);
+      if (!userContextId) {
+        return;
+      }
+    }
+  }
+
+  let storeId = DEFAULT_STORE;
+  if (isPrivate) {
+    storeId = PRIVATE_STORE;
   } else if ("storeId" in details) {
-    return;
+    storeId = details.storeId;
   }
 
   // We can use getCookiesFromHost for faster searching.
@@ -210,7 +228,7 @@ function* query(detailsIn, props, context) {
     try {
       uri = NetUtil.newURI(details.url).QueryInterface(Ci.nsIURL);
       Services.cookies.usePrivateMode(isPrivate, () => {
-        enumerator = Services.cookies.getCookiesFromHost(uri.host, {});
+        enumerator = Services.cookies.getCookiesFromHost(uri.host, {userContextId});
       });
     } catch (ex) {
       // This often happens for about: URLs
@@ -218,7 +236,7 @@ function* query(detailsIn, props, context) {
     }
   } else if ("domain" in details) {
     Services.cookies.usePrivateMode(isPrivate, () => {
-      enumerator = Services.cookies.getCookiesFromHost(details.domain, {});
+      enumerator = Services.cookies.getCookiesFromHost(details.domain, {userContextId});
     });
   } else {
     Services.cookies.usePrivateMode(isPrivate, () => {
@@ -269,6 +287,10 @@ function* query(detailsIn, props, context) {
       return false;
     }
 
+    if (userContextId != cookie.originAttributes.userContextId) {
+      return false;
+    }
+
     // "Restricts the retrieved cookies to those whose domains match or are subdomains of this one."
     if ("domain" in details && !isSubdomain(cookie.rawHost, details.domain)) {
       return false;
@@ -298,7 +320,7 @@ function* query(detailsIn, props, context) {
   while (enumerator.hasMoreElements()) {
     let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
     if (matches(cookie)) {
-      yield {cookie, isPrivate};
+      yield {cookie, isPrivate, storeId};
     }
   }
 }
@@ -345,10 +367,18 @@ extensions.registerSchemaAPI("cookies", "addon_parent", context => {
         let isSession = details.expirationDate === null;
         let expiry = isSession ? Number.MAX_SAFE_INTEGER : details.expirationDate;
         let isPrivate = context.incognito;
-        if (details.storeId == DEFAULT_STORE) {
+        let userContextId = 0;
+        if (global.isDefaultCookieStoreId(details.storeId)) {
           isPrivate = false;
-        } else if (details.storeId == PRIVATE_STORE) {
+        } else if (global.isPrivateCookieStoreId(details.storeId)) {
           isPrivate = true;
+        } else if (global.isContainerCookieStoreId(details.storeId)) {
+          let containerId = global.getContainerForCookieStoreId(details.storeId);
+          if (containerId === null) {
+            return Promise.reject({message: `Illegal storeId: ${details.storeId}`});
+          }
+          isPrivate = false;
+          userContextId = containerId;
         } else if (details.storeId !== null) {
           return Promise.reject({message: "Unknown storeId"});
         }
@@ -362,22 +392,23 @@ extensions.registerSchemaAPI("cookies", "addon_parent", context => {
         // the new value instead.
         Services.cookies.usePrivateMode(isPrivate, () => {
           Services.cookies.add(cookieAttrs.host, path, name, value,
-                               secure, httpOnly, isSession, expiry, {});
+                               secure, httpOnly, isSession, expiry, {userContextId});
         });
 
         return self.cookies.get(details);
       },
 
       remove: function(details) {
-        for (let {cookie, isPrivate} of query(details, ["url", "name", "storeId"], context)) {
+        for (let {cookie, isPrivate, storeId} of query(details, ["url", "name", "storeId"], context)) {
           Services.cookies.usePrivateMode(isPrivate, () => {
             Services.cookies.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
           });
+
           // Todo: could there be multiple per subdomain?
           return Promise.resolve({
             url: details.url,
             name: details.name,
-            storeId: isPrivate ? PRIVATE_STORE : DEFAULT_STORE,
+            storeId,
           });
         }
 
