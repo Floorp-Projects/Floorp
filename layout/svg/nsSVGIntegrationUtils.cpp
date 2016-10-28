@@ -837,7 +837,8 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
    * we can just do normal painting and get it clipped appropriately.
    */
   if (shouldApplyClipPath || shouldApplyBasicShape) {
-    context.Save();
+    gfxContextMatrixAutoSaveRestore matSR(&context);
+
     SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
                        offsetToUserSpace, false);
 
@@ -859,7 +860,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
   basic->SetTarget(oldCtx);
 
   if (shouldApplyClipPath || shouldApplyBasicShape) {
-    context.Restore();
+    context.PopClip();
   }
 
   if (shouldGenerateMask) {
