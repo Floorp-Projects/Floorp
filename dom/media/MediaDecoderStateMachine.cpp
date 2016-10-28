@@ -197,8 +197,7 @@ public:
   virtual void HandleAudioDecoded(MediaData* aAudio) {}
   virtual void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) {}
   virtual void HandleEndOfStream() {}
-
-  virtual bool HandleWaitingForData() { return false; }
+  virtual void HandleWaitingForData() {}
 
   virtual RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) = 0;
 
@@ -587,10 +586,9 @@ public:
 
   void HandleEndOfStream() override;
 
-  bool HandleWaitingForData() override
+  void HandleWaitingForData() override
   {
     MaybeStopPrerolling();
-    return true;
   }
 
   bool HandleAudioCaptured() override
