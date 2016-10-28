@@ -4002,7 +4002,7 @@ Channel::InsertInbandDtmfTone()
             _inbandDtmfGenerator.ResetTone();
         }
 
-        int16_t toneBuffer[320];
+        int16_t toneBuffer[MAX_DTMF_SAMPLERATE/100];
         uint16_t toneSamples(0);
         // Get 10ms tone segment and set time since last tone to zero
         if (_inbandDtmfGenerator.Get10msTone(toneBuffer, toneSamples) == -1)
