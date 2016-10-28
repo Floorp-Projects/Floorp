@@ -715,19 +715,13 @@ ComputeTransform2DMatrixDistance(const Matrix& aMatrix1,
   Point3D scale1(1, 1, 1);
   Point3D translate1;
   gfxQuaternion rotate1;
-  nsStyleTransformMatrix::ShearArray shear1;
-  for (auto&& s : shear1) {
-    s = 0.0f;
-  }
+  nsStyleTransformMatrix::ShearArray shear1{0.0f, 0.0f, 0.0f};
   Decompose2DMatrix(aMatrix1, scale1, shear1, rotate1, translate1);
 
   Point3D scale2(1, 1, 1);
   Point3D translate2;
   gfxQuaternion rotate2;
-  nsStyleTransformMatrix::ShearArray shear2;
-  for (auto&& s : shear2) {
-    s = 0.0f;
-  }
+  nsStyleTransformMatrix::ShearArray shear2{0.0f, 0.0f, 0.0f};
   Decompose2DMatrix(aMatrix2, scale2, shear2, rotate2, translate2);
 
   // Note:
@@ -772,10 +766,7 @@ ComputeTransform3DMatrixDistance(const Matrix4x4& aMatrix1,
   Point3D translate1;
   Point4D perspective1(0, 0, 0, 1);
   gfxQuaternion rotate1;
-  nsStyleTransformMatrix::ShearArray shear1;
-  for (auto&& s : shear1) {
-    s = 0.0f;
-  }
+  nsStyleTransformMatrix::ShearArray shear1{0.0f, 0.0f, 0.0f};
   Decompose3DMatrix(aMatrix1, scale1, shear1, rotate1, translate1,
                     perspective1);
 
@@ -783,10 +774,7 @@ ComputeTransform3DMatrixDistance(const Matrix4x4& aMatrix1,
   Point3D translate2;
   Point4D perspective2(0, 0, 0, 1);
   gfxQuaternion rotate2;
-  nsStyleTransformMatrix::ShearArray shear2;
-  for (auto&& s : shear2) {
-    s = 0.0f;
-  }
+  nsStyleTransformMatrix::ShearArray shear2{0.0f, 0.0f, 0.0f};
   Decompose3DMatrix(aMatrix2, scale2, shear2, rotate2, translate2,
                     perspective2);
 
@@ -1792,18 +1780,12 @@ StyleAnimationValue::InterpolateTransformMatrix(const Matrix4x4 &aMatrix1,
   Point3D scale1(1, 1, 1), translate1;
   Point4D perspective1(0, 0, 0, 1);
   gfxQuaternion rotate1;
-  nsStyleTransformMatrix::ShearArray shear1;
-  for (auto&& s : shear1) {
-    s = 0.0f;
-  }
+  nsStyleTransformMatrix::ShearArray shear1{0.0f, 0.0f, 0.0f};
 
   Point3D scale2(1, 1, 1), translate2;
   Point4D perspective2(0, 0, 0, 1);
   gfxQuaternion rotate2;
-  nsStyleTransformMatrix::ShearArray shear2;
-  for (auto&& s : shear2) {
-    s = 0.0f;
-  }
+  nsStyleTransformMatrix::ShearArray shear2{0.0f, 0.0f, 0.0f};
 
   Matrix matrix2d1, matrix2d2;
   if (aMatrix1.Is2D(&matrix2d1) && aMatrix2.Is2D(&matrix2d2)) {
