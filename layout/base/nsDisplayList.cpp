@@ -7071,8 +7071,8 @@ bool nsDisplayMask::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayMask::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                               const nsDisplayItemGeometry* aGeometry,
-                                               nsRegion* aInvalidRegion)
+                                         const nsDisplayItemGeometry* aGeometry,
+                                         nsRegion* aInvalidRegion)
 {
   nsDisplaySVGEffects::ComputeInvalidationRegion(aBuilder, aGeometry,
                                                  aInvalidRegion);
@@ -7272,6 +7272,25 @@ bool nsDisplayFilter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   nsRect r = dirtyRect.Intersect(mList.GetBounds(aBuilder));
   mList.ComputeVisibilityForSublist(aBuilder, &childrenVisible, r);
   return true;
+}
+
+void
+nsDisplayFilter::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                           const nsDisplayItemGeometry* aGeometry,
+                                           nsRegion* aInvalidRegion)
+{
+  nsDisplaySVGEffects::ComputeInvalidationRegion(aBuilder, aGeometry,
+                                                 aInvalidRegion);
+
+  const nsDisplayFilterGeometry* geometry =
+    static_cast<const nsDisplayFilterGeometry*>(aGeometry);
+
+  if (aBuilder->ShouldSyncDecodeImages() &&
+      geometry->ShouldInvalidateToSyncDecodeImages()) {
+    bool snap;
+    nsRect bounds = GetBounds(aBuilder, &snap);
+    aInvalidRegion->Or(*aInvalidRegion, bounds);
+  }
 }
 
 void
