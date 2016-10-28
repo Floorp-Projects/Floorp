@@ -62,14 +62,13 @@ public:
 // with an appropriate reason before any runnable is dispatched to the worker.
 // If the event is extendable then the runnable should inherit
 // ExtendableEventWorkerRunnable.
-class ServiceWorkerPrivate final : public nsIObserver
+class ServiceWorkerPrivate final : public nsISupports
 {
   friend class KeepAliveToken;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(ServiceWorkerPrivate)
-  NS_DECL_NSIOBSERVER
 
   explicit ServiceWorkerPrivate(ServiceWorkerInfo* aInfo);
 
@@ -150,9 +149,6 @@ public:
   bool
   IsIdle() const;
 
-  void
-  AddPendingWindow(Runnable* aPendingWindow);
-
 private:
   enum WakeUpReason {
     FetchEvent = 0,
@@ -225,8 +221,6 @@ private:
   // Array of function event worker runnables that are pending due to
   // the worker activating.  Main thread only.
   nsTArray<RefPtr<WorkerRunnable>> mPendingFunctionalEvents;
-
-  nsTArray<Runnable*> pendingWindows;
 };
 
 } // namespace workers

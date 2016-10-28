@@ -319,15 +319,6 @@ public class GeckoAppShell
         CRASH_HANDLER.uncaughtException(null, e);
     }
 
-    @WrapForJNI
-    public static void openWindowForNotification() {
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
-
-        getApplicationContext().startActivity(intent);
-    }
-
     private static float getLocationAccuracy(Location location) {
         float radius = location.getAccuracy();
         return (location.hasAccuracy() && radius > 0) ? radius : 1001;
