@@ -40,7 +40,7 @@ import urllib2
 import urlparse
 from contextlib import closing
 from functools import partial
-from itertools import chain, ifilter, ifilterfalse, tee
+from itertools import chain, ifilter, ifilterfalse, imap, tee
 from operator import attrgetter, itemgetter
 
 def readRegistryRecord(registry):
@@ -583,7 +583,7 @@ def updateTzdata(args):
         elif os.path.isdir(f):
             processTimeZones(TzDataDir(f), icuDir, icuTzDir, version, out)
         else:
-            raise RuntimeError("unknown format")
+            raise RuntimError("unknown format")
 
     if tzDir is None:
         print("Downloading tzdata file...")
