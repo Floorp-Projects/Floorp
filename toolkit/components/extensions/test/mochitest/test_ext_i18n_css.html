@@ -39,7 +39,7 @@ add_task(function* test_i18n_css() {
     },
 
     manifest: {
-      "web_accessible_resources": ["foo.css", "foo.txt", "locale.css"],
+      "web_accessible_resources": ["foo.css", "foo.txt"],
 
       "content_scripts": [{
         "matches": ["http://mochi.test/*/file_sample.html"],
@@ -60,7 +60,6 @@ add_task(function* test_i18n_css() {
       "foo.css": "body { __MSG_foo__; }",
       "bar.CsS": "body { __MSG_foo__; }",
       "foo.txt": "body { __MSG_foo__; }",
-      "locale.css": '* { content: "__MSG_@@ui_locale__ __MSG_@@bidi_dir__ __MSG_@@bidi_reversed_dir__ __MSG_@@bidi_start_edge__ __MSG_@@bidi_end_edge__" }',
     },
   });
 
@@ -87,25 +86,6 @@ add_task(function* test_i18n_css() {
   let style = win.getComputedStyle(win.document.body);
   is(style.maxWidth, "42px", "stylesheet correctly applied");
   win.close();
-
-  cssURL = cssURL.replace(/foo.css$/, "locale.css");
-
-  css = yield fetch(cssURL);
-  is(css, '* { content: "en_US ltr rtl left right" }', "CSS file localized in mochitest scope");
-
-  const LOCALE = "general.useragent.locale";
-  const DIR = "intl.uidirection.en";
-
-  // We don't wind up actually switching the chrome registry locale, since we
-  // don't have a chrome package for Hebrew. So just override it.
-  SpecialPowers.setCharPref(LOCALE, "he");
-  SpecialPowers.setCharPref(DIR, "rtl");
-
-  css = yield fetch(cssURL);
-  is(css, '* { content: "he rtl ltr right left" }', "CSS file localized in mochitest scope");
-
-  SpecialPowers.clearUserPref(LOCALE);
-  SpecialPowers.clearUserPref(DIR);
 
   yield extension.awaitFinish("i18n-css");
   yield extension.unload();
