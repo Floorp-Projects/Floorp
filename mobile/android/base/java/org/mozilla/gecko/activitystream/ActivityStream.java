@@ -9,7 +9,10 @@ import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import com.keepsafe.switchboard.SwitchBoard;
+
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.StringUtils;
@@ -45,12 +48,34 @@ public class ActivityStream {
     );
 
     public static boolean isEnabled(Context context) {
-        if (!AppConstants.MOZ_ANDROID_ACTIVITY_STREAM) {
+        if (!isUserEligible(context)) {
+            // If the user is not eligible then disable activity stream. Even if it has been
+            //  enabled before.
             return false;
         }
 
         return GeckoSharedPrefs.forApp(context)
                 .getBoolean(GeckoPreferences.PREFS_ACTIVITY_STREAM, false);
+    }
+
+    /**
+     * Is the user eligible to use activity stream or should we hide it from settings etc.?
+     */
+    public static boolean isUserEligible(Context context) {
+        if (AppConstants.MOZ_ANDROID_ACTIVITY_STREAM) {
+            // If the build flag is enabled then just show the option to the user.
+            return true;
+        }
+
+        if (AppConstants.NIGHTLY_BUILD && SwitchBoard.isInExperiment(context, Experiments.ACTIVITY_STREAM)) {
+            // If this is a nightly build and the user is part of the activity stream experiment then
+            // the option should be visible too. The experiment is limited to Nightly too but I want
+            // to make really sure that this isn't riding the trains accidentally.
+            return true;
+        }
+
+        // For everyone else activity stream is not available yet.
+        return false;
     }
 
     /**
