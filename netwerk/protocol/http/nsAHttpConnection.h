@@ -228,22 +228,25 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
     }                                      \
     bool IsProxyConnectInProgress() override                \
     {                                                       \
-        return (fwdObject)->IsProxyConnectInProgress();     \
+        return (!fwdObject) ? false :                       \
+               (fwdObject)->IsProxyConnectInProgress();     \
     }                                                       \
     bool LastTransactionExpectedNoContent() override        \
     {                                                       \
-        return (fwdObject)->LastTransactionExpectedNoContent(); \
+        return (!fwdObject) ? false :                       \
+        (fwdObject)->LastTransactionExpectedNoContent();    \
     }                                                       \
     void SetLastTransactionExpectedNoContent(bool val)      \
       override                                              \
     {                                                       \
-        return (fwdObject)->SetLastTransactionExpectedNoContent(val); \
+      if (fwdObject)                                        \
+        (fwdObject)->SetLastTransactionExpectedNoContent(val); \
     }                                                       \
     void Classify(nsAHttpTransaction::Classifier newclass)  \
       override                                              \
     {                                                       \
     if (fwdObject)                                          \
-        return (fwdObject)->Classify(newclass);             \
+        (fwdObject)->Classify(newclass);                    \
     }                                                       \
     int64_t BytesWritten() override                         \
     {     return fwdObject ? (fwdObject)->BytesWritten() : 0; } \
