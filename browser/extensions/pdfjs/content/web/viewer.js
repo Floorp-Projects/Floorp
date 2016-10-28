@@ -959,10 +959,12 @@ var pdfjsWebLibs;
               });
               return;
             }
-            var linkService = this.linkService;
-            element.href = linkService.getDestinationHash(item.dest);
-            element.onclick = function goToDestination(e) {
-              linkService.navigateTo(item.dest);
+            var self = this, destination = item.dest;
+            element.href = self.linkService.getDestinationHash(destination);
+            element.onclick = function () {
+              if (destination) {
+                self.linkService.navigateTo(destination);
+              }
               return false;
             };
           },
@@ -4184,10 +4186,19 @@ var pdfjsWebLibs;
             var self = this;
             var goToDestination = function (destRef) {
               // dest array looks like that: <page-ref> </XYZ|/FitXXX> <args..>
-              var pageNumber = destRef instanceof Object ? self._pagesRefCache[destRef.num + ' ' + destRef.gen + ' R'] : destRef + 1;
+              var pageNumber;
+              if (destRef instanceof Object) {
+                pageNumber = self._cachedPageNumber(destRef);
+              } else if ((destRef | 0) === destRef) {
+                // Integer
+                pageNumber = destRef + 1;
+              } else {
+                console.error('PDFLinkService_navigateTo: "' + destRef + '" is not a valid destination reference.');
+                return;
+              }
               if (pageNumber) {
-                if (pageNumber > self.pagesCount) {
-                  console.error('PDFLinkService_navigateTo: ' + 'Trying to navigate to a non-existent page.');
+                if (pageNumber < 1 || pageNumber > self.pagesCount) {
+                  console.error('PDFLinkService_navigateTo: "' + pageNumber + '" is a non-existent page number.');
                   return;
                 }
                 self.pdfViewer.scrollPageIntoView({
@@ -4204,10 +4215,11 @@ var pdfjsWebLibs;
                 }
               } else {
                 self.pdfDocument.getPageIndex(destRef).then(function (pageIndex) {
-                  var pageNum = pageIndex + 1;
-                  var cacheKey = destRef.num + ' ' + destRef.gen + ' R';
-                  self._pagesRefCache[cacheKey] = pageNum;
+                  self.cachePageRef(pageIndex + 1, destRef);
                   goToDestination(destRef);
+                }).catch(function () {
+                  console.error('PDFLinkService_navigateTo: "' + destRef + '" is not a valid page reference.');
+                  return;
                 });
               }
             };
@@ -4221,9 +4233,9 @@ var pdfjsWebLibs;
             destinationPromise.then(function (destination) {
               dest = destination;
               if (!(destination instanceof Array)) {
+                console.error('PDFLinkService_navigateTo: "' + destination + '" is not a valid destination array.');
                 return;
               }
-              // invalid destination
               goToDestination(destination[0]);
             });
           },
@@ -4340,14 +4352,15 @@ var pdfjsWebLibs;
                   mode: params.pagemode
                 });
               }
-            } else if (isPageNumber(hash)) {
-              // Page number.
-              this.page = hash | 0;
             } else {
-              // Named (or explicit) destination.
               dest = unescape(hash);
               try {
                 dest = JSON.parse(dest);
+                if (!(dest instanceof Array)) {
+                  // Avoid incorrectly rejecting a valid named destination, such as
+                  // e.g. "4.3" or "true", because `JSON.parse` converted its type.
+                  dest = dest.toString();
+                }
               } catch (ex) {
               }
               if (typeof dest === 'string' || isValidExplicitDestination(dest)) {
@@ -4408,6 +4421,10 @@ var pdfjsWebLibs;
           cachePageRef: function PDFLinkService_cachePageRef(pageNum, pageRef) {
             var refStr = pageRef.num + ' ' + pageRef.gen + ' R';
             this._pagesRefCache[refStr] = pageNum;
+          },
+          _cachedPageNumber: function PDFLinkService_cachedPageNumber(pageRef) {
+            var refStr = pageRef.num + ' ' + pageRef.gen + ' R';
+            return this._pagesRefCache && this._pagesRefCache[refStr] || null;
           }
         };
         function isValidExplicitDestination(dest) {
