@@ -73,7 +73,8 @@
           "incognito": {"type": "boolean", "description": "Whether the tab is in an incognito window."},
           "width": {"type": "integer", "optional": true, "description": "The width of the tab in pixels."},
           "height": {"type": "integer", "optional": true, "description": "The height of the tab in pixels."},
-          "sessionId": {"unsupported": true, "type": "string", "optional": true, "description": "The session ID used to uniquely identify a Tab obtained from the $(ref:sessions) API."}
+          "sessionId": {"unsupported": true, "type": "string", "optional": true, "description": "The session ID used to uniquely identify a Tab obtained from the $(ref:sessions) API."},
+          "cookieStoreId": {"type": "string", "description": "The CookieStoreId used for the tab."}
         }
       },
       {
@@ -391,6 +392,11 @@
                 "minimum": 0,
                 "optional": true,
                 "description": "The ID of the tab that opened this tab. If specified, the opener tab must be in the same window as the newly created tab."
+              },
+              "cookieStoreId": {
+                "type": "string",
+                "optional": true,
+                "description": "The CookieStoreId for the tab that opened this tab."
               }
             }
           },
@@ -514,6 +520,11 @@
                 "optional": true,
                 "minimum": 0,
                 "description": "The position of the tabs within their windows."
+              },
+              "cookieStoreId": {
+                "type": "string",
+                "optional": true,
+                "description": "The CookieStoreId used for the tab."
               }
             }
           },
