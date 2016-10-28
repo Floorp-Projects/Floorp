@@ -281,8 +281,6 @@ private:
   // constructor immediately after the task queue is created.
   void InitializationTask(MediaDecoder* aDecoder);
 
-  void SetDormant(bool aDormant);
-
   void SetAudioCaptured(bool aCaptured);
 
   RefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget);
