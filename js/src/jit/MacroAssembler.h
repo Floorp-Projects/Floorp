@@ -733,7 +733,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void orPtr(Register src, Register dest) PER_ARCH;
     inline void orPtr(Imm32 imm, Register dest) PER_ARCH;
 
-    inline void and64(Register64 src, Register64 dest) DEFINED_ON(x86, x64, arm, mips32, mips64);
+    inline void and64(Register64 src, Register64 dest) PER_ARCH;
     inline void or64(Register64 src, Register64 dest) PER_ARCH;
     inline void xor64(Register64 src, Register64 dest) PER_ARCH;
 
@@ -785,7 +785,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void subPtr(ImmWord imm, Register dest) DEFINED_ON(x64);
     inline void subPtr(const Address& addr, Register dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
 
-    inline void sub64(Register64 src, Register64 dest) DEFINED_ON(x86, x64, arm, mips32, mips64);
+    inline void sub64(Register64 src, Register64 dest) PER_ARCH;
     inline void sub64(Imm64 imm, Register64 dest) DEFINED_ON(x86, x64, arm, mips32, mips64);
     inline void sub64(const Operand& src, Register64 dest) DEFINED_ON(x64, mips64);
 
@@ -805,7 +805,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void mul64(Imm64 imm, const Register64& dest, const Register temp)
         DEFINED_ON(x86, x64, arm, mips32, mips64);
     inline void mul64(const Register64& src, const Register64& dest, const Register temp)
-        DEFINED_ON(x86, x64, arm, mips32, mips64);
+        PER_ARCH;
 
     inline void mulBy3(Register src, Register dest) PER_ARCH;
 
@@ -880,20 +880,16 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void lshift64(Imm32 imm, Register64 dest) PER_ARCH;
     inline void rshift64(Imm32 imm, Register64 dest) PER_ARCH;
-    inline void rshift64Arithmetic(Imm32 imm, Register64 dest)
-        DEFINED_ON(x86, x64, arm, mips32, mips64);
+    inline void rshift64Arithmetic(Imm32 imm, Register64 dest) PER_ARCH;
 
     // On x86_shared these have the constraint that shift must be in CL.
     inline void lshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
     inline void rshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
     inline void rshift32Arithmetic(Register shift, Register srcDest) PER_SHARED_ARCH;
 
-    inline void lshift64(Register shift, Register64 srcDest)
-        DEFINED_ON(x86, x64, arm, mips32, mips64);
-    inline void rshift64(Register shift, Register64 srcDest)
-        DEFINED_ON(x86, x64, arm, mips32, mips64);
-    inline void rshift64Arithmetic(Register shift, Register64 srcDest)
-        DEFINED_ON(x86, x64, arm, mips32, mips64);
+    inline void lshift64(Register shift, Register64 srcDest) PER_ARCH;
+    inline void rshift64(Register shift, Register64 srcDest) PER_ARCH;
+    inline void rshift64Arithmetic(Register shift, Register64 srcDest) PER_ARCH;
 
     // ===============================================================
     // Rotation functions
@@ -907,7 +903,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void rotateLeft64(Imm32 count, Register64 input, Register64 dest, Register temp)
         DEFINED_ON(x86, x64, arm, mips32, mips64);
     inline void rotateLeft64(Register count, Register64 input, Register64 dest, Register temp)
-        DEFINED_ON(x86, x64, arm, mips32, mips64);
+        PER_ARCH;
 
     inline void rotateRight(Imm32 count, Register input, Register dest) PER_SHARED_ARCH;
     inline void rotateRight(Register count, Register input, Register dest) PER_SHARED_ARCH;
@@ -916,7 +912,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void rotateRight64(Imm32 count, Register64 input, Register64 dest, Register temp)
         DEFINED_ON(x86, x64, arm, mips32, mips64);
     inline void rotateRight64(Register count, Register64 input, Register64 dest, Register temp)
-        DEFINED_ON(x86, x64, arm, mips32, mips64);
+        PER_ARCH;
 
     // ===============================================================
     // Bit counting functions
@@ -925,17 +921,15 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void clz32(Register src, Register dest, bool knownNotZero) PER_SHARED_ARCH;
     inline void ctz32(Register src, Register dest, bool knownNotZero) PER_SHARED_ARCH;
 
-    inline void clz64(Register64 src, Register dest) DEFINED_ON(x86, x64, arm, mips32, mips64);
-    inline void ctz64(Register64 src, Register dest) DEFINED_ON(x86, x64, arm, mips32, mips64);
+    inline void clz64(Register64 src, Register dest) PER_ARCH;
+    inline void ctz64(Register64 src, Register dest) PER_ARCH;
 
     // On x86_shared, temp may be Invalid only if the chip has the POPCNT instruction.
     // On ARM, temp may never be Invalid.
-    inline void popcnt32(Register src, Register dest, Register temp)
-        DEFINED_ON(arm, x86_shared, mips_shared);
+    inline void popcnt32(Register src, Register dest, Register temp) PER_SHARED_ARCH;
 
     // temp may be invalid only if the chip has the POPCNT instruction.
-    inline void popcnt64(Register64 src, Register64 dest, Register temp)
-        DEFINED_ON(x86, x64, arm, mips32, mips64);
+    inline void popcnt64(Register64 src, Register64 dest, Register temp) PER_ARCH;
 
     // ===============================================================
     // Branch functions
