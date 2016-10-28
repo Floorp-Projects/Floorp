@@ -113,7 +113,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 // user resume the paused-by-control media from page so that we
                 // should make the control interface consistent.
                 if (playingTab == tab && !isMediaPlaying()) {
-                    mController.getTransportControls().play();
+                    notifyControlInterfaceChanged(ACTION_PAUSE);
                 }
                 break;
             case CLOSED:
