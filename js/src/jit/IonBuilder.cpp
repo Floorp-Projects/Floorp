@@ -8065,8 +8065,10 @@ IonBuilder::resume(MInstruction* ins, jsbytecode* pc, MResumePoint::Mode mode)
 
     MResumePoint* resumePoint = MResumePoint::New(alloc(), ins->block(), pc,
                                                   mode);
-    if (!resumePoint)
+    if (!resumePoint) {
+        abortReason_ = AbortReason_Alloc;
         return false;
+    }
     ins->setResumePoint(resumePoint);
     return true;
 }
