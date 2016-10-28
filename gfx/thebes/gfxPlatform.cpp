@@ -1632,6 +1632,7 @@ gfxPlatform::InitBackendPrefs(uint32_t aCanvasBitmask, BackendType aCanvasDefaul
           GetCanvasBackendPref(aCanvasBitmask & ~BackendTypeBit(mPreferredCanvasBackend));
     }
 
+
     mContentBackendBitmask = aContentBitmask;
     mContentBackend = GetContentBackendPref(mContentBackendBitmask);
     if (mContentBackend == BackendType::NONE) {
@@ -1641,6 +1642,10 @@ gfxPlatform::InitBackendPrefs(uint32_t aCanvasBitmask, BackendType aCanvasDefaul
         // overriding the prefs.
         mContentBackendBitmask |= BackendTypeBit(aContentDefault);
     }
+
+    uint32_t swBackendBits = BackendTypeBit(BackendType::SKIA) |
+                             BackendTypeBit(BackendType::CAIRO);
+    mSoftwareBackend = GetContentBackendPref(swBackendBits);
 
     if (XRE_IsParentProcess()) {
         gfxVars::SetContentBackend(mContentBackend);
