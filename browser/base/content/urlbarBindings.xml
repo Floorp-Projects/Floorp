@@ -1539,7 +1539,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           let showNotification = aInput.shouldShowSearchSuggestionsNotification;
           if (showNotification) {
             let prefs = aInput._prefs;
-            let date = parseInt((new Date()).toLocaleFormat("%Y%m%d"));
+            let now = new Date();
+            let date = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
             let previousDate = prefs.getIntPref("lastSuggestionsPromptDate");
             if (previousDate < date) {
               let remainingDays =
