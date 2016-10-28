@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 
 #include "js/RootingAPI.h"
@@ -151,3 +152,111 @@ TestHeapPostBarrierInitFailure()
 }
 
 END_TEST(testGCHeapPostBarriers)
+
+BEGIN_TEST(testUnbarrieredEquality)
+{
+    // Use ArrayBuffers because they have finalizers, which allows using them
+    // in ObjectPtr without awkward conversations about nursery allocatability.
+    JS::RootedObject robj(cx, JS_NewArrayBuffer(cx, 20));
+    JS::RootedObject robj2(cx, JS_NewArrayBuffer(cx, 30));
+    cx->gc.evictNursery(); // Need tenured objects
+
+    // Need some bare pointers to compare against.
+    JSObject* obj = robj;
+    JSObject* obj2 = robj2;
+    const JSObject* constobj = robj;
+    const JSObject* constobj2 = robj2;
+
+    // Make them gray. We will make sure they stay gray. (For most reads, the
+    // barrier will unmark gray.)
+    using namespace js::gc;
+    TenuredCell* cell = &obj->asTenured();
+    TenuredCell* cell2 = &obj2->asTenured();
+    cell->markIfUnmarked(GRAY);
+    cell2->markIfUnmarked(GRAY);
+    MOZ_ASSERT(cell->isMarked(GRAY));
+    MOZ_ASSERT(cell2->isMarked(GRAY));
+
+    {
+        JS::Heap<JSObject*> heap(obj);
+        JS::Heap<JSObject*> heap2(obj2);
+        CHECK(TestWrapper(obj, obj2, heap, heap2));
+        CHECK(TestWrapper(constobj, constobj2, heap, heap2));
+    }
+
+    {
+        JS::TenuredHeap<JSObject*> heap(obj);
+        JS::TenuredHeap<JSObject*> heap2(obj2);
+        CHECK(TestWrapper(obj, obj2, heap, heap2));
+        CHECK(TestWrapper(constobj, constobj2, heap, heap2));
+    }
+
+    {
+        JS::ObjectPtr objptr(obj);
+        JS::ObjectPtr objptr2(obj2);
+        CHECK(TestWrapper(obj, obj2, objptr, objptr2));
+        CHECK(TestWrapper(constobj, constobj2, objptr, objptr2));
+        objptr.finalize(cx);
+        objptr2.finalize(cx);
+    }
+
+    // Sanity check that the barriers normally mark things black.
+    {
+        JS::Heap<JSObject*> heap(obj);
+        JS::Heap<JSObject*> heap2(obj2);
+        heap.get();
+        heap2.get();
+        CHECK(cell->isMarked(BLACK));
+        CHECK(cell2->isMarked(BLACK));
+    }
+
+    return true;
+}
+
+template <typename ObjectT, typename WrapperT>
+bool
+TestWrapper(ObjectT obj, ObjectT obj2, WrapperT& wrapper, WrapperT& wrapper2)
+{
+    using namespace js::gc;
+
+    const TenuredCell& cell = obj->asTenured();
+    const TenuredCell& cell2 = obj2->asTenured();
+
+    int x = 0;
+
+    CHECK(cell.isMarked(GRAY));
+    CHECK(cell2.isMarked(GRAY));
+    x += obj == obj2;
+    CHECK(cell.isMarked(GRAY));
+    CHECK(cell2.isMarked(GRAY));
+    x += obj == wrapper2;
+    CHECK(cell.isMarked(GRAY));
+    CHECK(cell2.isMarked(GRAY));
+    x += wrapper == obj2;
+    CHECK(cell.isMarked(GRAY));
+    CHECK(cell2.isMarked(GRAY));
+    x += wrapper == wrapper2;
+    CHECK(cell.isMarked(GRAY));
+    CHECK(cell2.isMarked(GRAY));
+
+    CHECK(x == 0);
+
+    x += obj != obj2;
+    CHECK(cell.isMarked(GRAY));
+    CHECK(cell2.isMarked(GRAY));
+    x += obj != wrapper2;
+    CHECK(cell.isMarked(GRAY));
+    CHECK(cell2.isMarked(GRAY));
+    x += wrapper != obj2;
+    CHECK(cell.isMarked(GRAY));
+    CHECK(cell2.isMarked(GRAY));
+    x += wrapper != wrapper2;
+    CHECK(cell.isMarked(GRAY));
+    CHECK(cell2.isMarked(GRAY));
+
+    CHECK(x == 4);
+
+    return true;
+}
+
+END_TEST(testUnbarrieredEquality)
