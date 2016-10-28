@@ -101,10 +101,11 @@ public:
 
   void UpdateRenderBounds(const gfx::IntRect& aRect);
 
-  virtual void BeginTransaction() override;
-  virtual void BeginTransactionWithTarget(gfxContext* aTarget) override
+  virtual bool BeginTransaction() override;
+  virtual bool BeginTransactionWithTarget(gfxContext* aTarget) override
   {
     MOZ_CRASH("GFX: Use BeginTransactionWithDrawTarget");
+    return false;
   }
   void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget,
                                       const gfx::IntRect& aRect);
