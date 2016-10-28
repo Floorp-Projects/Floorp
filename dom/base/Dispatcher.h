@@ -10,6 +10,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "nsISupports.h"
 
+class nsIEventTarget;
 class nsIRunnable;
 
 namespace mozilla {
@@ -46,6 +47,12 @@ public:
   virtual nsresult Dispatch(const char* aName,
                             TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable);
+
+  // This method may or may not be safe off of the main thread. For nsIDocument
+  // it is safe. For nsIGlobalWindow it is not safe. The nsIEventTarget can
+  // always be used off the main thread.
+  virtual already_AddRefed<nsIEventTarget>
+  CreateEventTarget(const char* aName, TaskCategory aCategory);
 };
 
 // Base class for DocGroup and TabGroup.
@@ -55,6 +62,11 @@ public:
   virtual nsresult Dispatch(const char* aName,
                             TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable) = 0;
+
+  // This method is always safe to call off the main thread. The nsIEventTarget
+  // can always be used off the main thread.
+  virtual already_AddRefed<nsIEventTarget>
+  CreateEventTarget(const char* aName, TaskCategory aCategory);
 };
 
 } // namespace dom
