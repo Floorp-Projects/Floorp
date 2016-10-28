@@ -101,7 +101,11 @@ BackgroundPage.prototype = {
                   .then(addon => addon.setDebugGlobal(window));
     }
 
-    this.extension.emit("startup");
+    // TODO(robwu): This implementation of onStartup is wrong, see
+    // https://bugzil.la/1247435#c1
+    if (this.extension.onStartup) {
+      this.extension.onStartup();
+    }
   }),
 
   shutdown() {
