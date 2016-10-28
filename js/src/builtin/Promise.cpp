@@ -199,7 +199,7 @@ class PromiseReactionRecord : public NativeObject
         MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
         return getFixedSlot(ReactionRecordSlot_HandlerArg);
     }
-    void setHandlerArg(Value arg) {
+    void setHandlerArg(Value& arg) {
         MOZ_ASSERT(targetState() == JS::PromiseState::Pending);
         setFixedSlot(ReactionRecordSlot_HandlerArg, arg);
     }
@@ -456,7 +456,7 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
     MOZ_ASSERT(reaction->targetState() == JS::PromiseState::Pending);
 
     assertSameCompartment(cx, handlerArg);
-    reaction->setHandlerArg(handlerArg);
+    reaction->setHandlerArg(handlerArg.get());
 
     RootedValue reactionVal(cx, ObjectValue(*reaction));
 
