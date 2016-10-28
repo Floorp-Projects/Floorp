@@ -198,10 +198,9 @@ public:
   virtual void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) {}
   virtual void HandleEndOfStream() {}
   virtual void HandleWaitingForData() {}
+  virtual void HandleAudioCaptured() {}
 
   virtual RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) = 0;
-
-  virtual bool HandleAudioCaptured() { return false; }
 
   virtual RefPtr<ShutdownPromise> HandleShutdown();
 
@@ -591,12 +590,11 @@ public:
     MaybeStopPrerolling();
   }
 
-  bool HandleAudioCaptured() override
+  void HandleAudioCaptured() override
   {
     MaybeStopPrerolling();
     // MediaSink is changed. Schedule Step() to check if we can start playback.
     mMaster->ScheduleStateMachine();
-    return true;
   }
 
   void HandleVideoSuspendTimeout() override
@@ -1063,11 +1061,10 @@ public:
 
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override;
 
-  bool HandleAudioCaptured() override
+  void HandleAudioCaptured() override
   {
     // MediaSink is changed. Schedule Step() to check if we can start playback.
     mMaster->ScheduleStateMachine();
-    return true;
   }
 
   void HandleVideoSuspendTimeout() override
