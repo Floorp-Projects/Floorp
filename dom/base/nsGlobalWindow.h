@@ -1717,6 +1717,12 @@ private:
   mozilla::dom::TabGroup* TabGroupInner();
   mozilla::dom::TabGroup* TabGroupOuter();
 
+public:
+  // Dispatch a runnable related to the global.
+  virtual nsresult Dispatch(const char* aName,
+                            mozilla::dom::TaskCategory aCategory,
+                            already_AddRefed<nsIRunnable>&& aRunnable) override;
+
 protected:
   // These members are only used on outer window objects. Make sure
   // you never set any of these on an inner object!

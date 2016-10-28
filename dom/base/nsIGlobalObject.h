@@ -7,6 +7,7 @@
 #ifndef nsIGlobalObject_h__
 #define nsIGlobalObject_h__
 
+#include "mozilla/dom/Dispatcher.h"
 #include "nsISupports.h"
 #include "nsTArray.h"
 #include "js/TypeDecls.h"
@@ -20,7 +21,8 @@ class nsCString;
 class nsCycleCollectionTraversalCallback;
 class nsIPrincipal;
 
-class nsIGlobalObject : public nsISupports
+class nsIGlobalObject : public nsISupports,
+                        public mozilla::dom::DispatcherTrait
 {
   nsTArray<nsCString> mHostObjectURIs;
   bool mIsDying;
