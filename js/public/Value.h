@@ -1172,7 +1172,7 @@ NumberValue(uint32_t i)
 {
     return i <= JSVAL_INT_MAX
            ? Int32Value(int32_t(i))
-           : CanonicalizedDoubleValue(double(i));
+           : Value::fromDouble(double(i));
 }
 
 namespace detail {
