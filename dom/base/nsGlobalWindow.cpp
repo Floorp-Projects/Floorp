@@ -14933,6 +14933,18 @@ nsPIDOMWindow<T>::GetDocGroup()
   return nullptr;
 }
 
+nsresult
+nsGlobalWindow::Dispatch(const char* aName,
+                         TaskCategory aCategory,
+                         already_AddRefed<nsIRunnable>&& aRunnable)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (GetDocGroup()) {
+    return GetDocGroup()->Dispatch(aName, aCategory, Move(aRunnable));
+  }
+  return DispatcherTrait::Dispatch(aName, aCategory, Move(aRunnable));
+}
+
 nsGlobalWindow::TemporarilyDisableDialogs::TemporarilyDisableDialogs(
   nsGlobalWindow* aWindow MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {

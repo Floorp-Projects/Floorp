@@ -13,6 +13,7 @@
 #include "nsTHashtable.h"
 #include "nsString.h"
 
+#include "mozilla/dom/Dispatcher.h"
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {
@@ -35,7 +36,7 @@ namespace dom {
 
 class TabGroup;
 
-class DocGroup final : public nsISupports
+class DocGroup final : public Dispatcher
 {
 public:
   typedef nsTArray<nsIDocument*>::iterator Iterator;
@@ -63,6 +64,10 @@ public:
   {
     return mDocuments.end();
   }
+
+  virtual nsresult Dispatch(const char* aName,
+                            TaskCategory aCategory,
+                            already_AddRefed<nsIRunnable>&& aRunnable) override;
 
 private:
   DocGroup(TabGroup* aTabGroup, const nsACString& aKey);
