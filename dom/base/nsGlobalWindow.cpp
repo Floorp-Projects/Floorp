@@ -14641,8 +14641,8 @@ nsGlobalWindow::TabGroupOuter()
     // because that way we dodge the LegacyIsCallerChromeOrNativeCode() call
     // which we want to return false.
     nsCOMPtr<nsPIDOMWindowOuter> piOpener = do_QueryReferent(mOpener);
-    nsGlobalWindow* opener = Cast(GetSanitizedOpener(piOpener));
-    nsGlobalWindow* parent = Cast(GetScriptableParentOrNull());
+    nsPIDOMWindowOuter* opener = GetSanitizedOpener(piOpener);
+    nsPIDOMWindowOuter* parent = GetScriptableParentOrNull();
     MOZ_ASSERT(!parent || !opener, "Only one of parent and opener may be provided");
 
     mozilla::dom::TabGroup* toJoin = nullptr;
@@ -14667,10 +14667,10 @@ nsGlobalWindow::TabGroupOuter()
     } else {
       // Sanity check that our tabgroup matches our opener or parent.
       RefPtr<nsPIDOMWindowOuter> parent = GetScriptableParentOrNull();
-      MOZ_ASSERT_IF(parent, Cast(parent)->TabGroup() == mTabGroup);
+      MOZ_ASSERT_IF(parent, parent->TabGroup() == mTabGroup);
       nsCOMPtr<nsPIDOMWindowOuter> piOpener = do_QueryReferent(mOpener);
-      nsGlobalWindow* opener = Cast(GetSanitizedOpener(piOpener));
-      MOZ_ASSERT_IF(opener && opener != this, opener->TabGroup() == mTabGroup);
+      nsPIDOMWindowOuter* opener = GetSanitizedOpener(piOpener);
+      MOZ_ASSERT_IF(opener && Cast(opener) != this, opener->TabGroup() == mTabGroup);
     }
     mIsValidatingTabGroup = false;
   }
@@ -14709,17 +14709,23 @@ nsGlobalWindow::TabGroupInner()
   return mTabGroup;
 }
 
+template<typename T>
 mozilla::dom::TabGroup*
-nsGlobalWindow::TabGroup()
+nsPIDOMWindow<T>::TabGroup()
 {
+  nsGlobalWindow* globalWindow =
+    static_cast<nsGlobalWindow*>(
+        reinterpret_cast<nsPIDOMWindow<nsISupports>*>(this));
+
   if (IsInnerWindow()) {
-    return TabGroupInner();
+    return globalWindow->TabGroupInner();
   }
-  return TabGroupOuter();
+  return globalWindow->TabGroupOuter();
 }
 
+template<typename T>
 mozilla::dom::DocGroup*
-nsGlobalWindow::GetDocGroup()
+nsPIDOMWindow<T>::GetDocGroup()
 {
   nsIDocument* doc = GetExtantDoc();
   if (doc) {

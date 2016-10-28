@@ -4289,7 +4289,7 @@ nsDocument::SetScopeObject(nsIGlobalObject* aGlobal)
     if (window) {
       // We want to get the tabgroup unconditionally, such that we can make
       // certain that it is cached in the inner window early enough.
-      mozilla::dom::TabGroup* tabgroup = nsGlobalWindow::Cast(window)->TabGroup();
+      mozilla::dom::TabGroup* tabgroup = window->TabGroup();
       // We should already have the principal, and now that we have been added to a
       // window, we should be able to join a DocGroup!
       nsAutoCString docGroupKey;

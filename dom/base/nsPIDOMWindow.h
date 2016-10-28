@@ -43,6 +43,8 @@ typedef uint32_t SuspendTypes;
 namespace mozilla {
 namespace dom {
 class AudioContext;
+class DocGroup;
+class TabGroup;
 class Element;
 class Performance;
 class ServiceWorkerRegistration;
@@ -575,6 +577,10 @@ public:
   virtual nsresult MoveBy(int32_t aXDif, int32_t aYDif) = 0;
   virtual nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) = 0;
 
+  mozilla::dom::TabGroup* TabGroup();
+
+  mozilla::dom::DocGroup* GetDocGroup();
+
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
   // be null if and only if the created window itself is an outer
@@ -685,6 +691,9 @@ protected:
 
   // The AudioContexts created for the current document, if any.
   nsTArray<mozilla::dom::AudioContext*> mAudioContexts; // Weak
+
+  // This is present both on outer and inner windows.
+  RefPtr<mozilla::dom::TabGroup> mTabGroup;
 
   // A unique (as long as our 64-bit counter doesn't roll over) id for
   // this window.

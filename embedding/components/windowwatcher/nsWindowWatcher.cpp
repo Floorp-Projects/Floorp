@@ -2146,8 +2146,7 @@ nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem* aOpenedItem,
     if (!aForceNoOpener) {
       piOpenedWindow->SetOpenerWindow(aParent, aWindowIsNew); // damnit
     } else if (aParent && aParent != piOpenedWindow) {
-      MOZ_ASSERT(nsGlobalWindow::Cast(piOpenedWindow)->TabGroup() !=
-                 nsGlobalWindow::Cast(aParent)->TabGroup(),
+      MOZ_ASSERT(piOpenedWindow->TabGroup() != aParent->TabGroup(),
                  "If we're forcing no opener, they should be in different tab groups");
     }
 
