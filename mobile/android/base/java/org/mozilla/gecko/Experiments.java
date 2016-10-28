@@ -53,6 +53,9 @@ public class Experiments {
     // Show name of organization (EV cert) instead of full URL in URL bar (Bug 1249594).
     public static final String URLBAR_SHOW_EV_CERT_OWNER = "urlbar-show-ev-cert-owner";
 
+    // Play HLS videos in a VideoView (Bug 1313391)
+    public static final String HLS_VIDEO_PLAYBACK = "hls-video-playback";
+
     /**
      * Returns if a user is in certain local experiment.
      * @param experiment Name of experiment to look up
