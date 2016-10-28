@@ -453,8 +453,6 @@ public:
     return DECODER_STATE_DORMANT;
   }
 
-  bool HandleDormant(bool aDormant);
-
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override;
 
   void HandleVideoSuspendTimeout() override
@@ -467,13 +465,7 @@ public:
     // Do nothing since we won't resume decoding until exiting dormant.
   }
 
-  void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) override
-  {
-    if (aPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
-      // Exit dormant when the user wants to play.
-      HandleDormant(false);
-    }
-  }
+  void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) override;
 
 private:
   SeekJob mPendingSeek;
@@ -1366,17 +1358,6 @@ WaitForCDMState::HandleDormant(bool aDormant)
   return true;
 }
 
-bool
-MediaDecoderStateMachine::
-DormantState::HandleDormant(bool aDormant)
-{
-  if (!aDormant) {
-    MOZ_ASSERT(!Info().IsEncrypted() || mMaster->mCDMProxy);
-    SetState<DecodingFirstFrameState>(Move(mPendingSeek));
-  }
-  return true;
-}
-
 RefPtr<MediaDecoder::SeekPromise>
 MediaDecoderStateMachine::
 DormantState::HandleSeek(SeekTarget aTarget)
@@ -1386,6 +1367,17 @@ DormantState::HandleSeek(SeekTarget aTarget)
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
   return SetState<SeekingState>(Move(seekJob));
+}
+
+void
+MediaDecoderStateMachine::
+DormantState::HandlePlayStateChanged(MediaDecoder::PlayState aPlayState)
+{
+  if (aPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
+    // Exit dormant when the user wants to play.
+    MOZ_ASSERT(!Info().IsEncrypted() || mMaster->mCDMProxy);
+    SetState<DecodingFirstFrameState>(Move(mPendingSeek));
+  }
 }
 
 bool
