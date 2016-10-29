@@ -72,12 +72,7 @@ namespace network {
 class Connection;
 } // namespace network
 
-#ifdef MOZ_B2G_RIL
-class MobileConnectionArray;
-#endif
-
 class PowerManager;
-class IccManager;
 class InputPortManager;
 class DeviceStorageAreaListener;
 class Presentation;
@@ -214,15 +209,11 @@ public:
                                 ErrorResult& aRv);
 
   DesktopNotificationCenter* GetMozNotification(ErrorResult& aRv);
-  IccManager* GetMozIccManager(ErrorResult& aRv);
   InputPortManager* GetInputPortManager(ErrorResult& aRv);
   already_AddRefed<LegacyMozTCPSocket> MozTCPSocket();
   network::Connection* GetConnection(ErrorResult& aRv);
   MediaDevices* GetMediaDevices(ErrorResult& aRv);
 
-#ifdef MOZ_B2G_RIL
-  MobileConnectionArray* GetMozMobileConnections(ErrorResult& aRv);
-#endif // MOZ_B2G_RIL
 #ifdef MOZ_GAMEPAD
   void GetGamepads(nsTArray<RefPtr<Gamepad> >& aGamepads, ErrorResult& aRv);
   GamepadServiceTest* RequestGamepadServiceTest();
@@ -311,12 +302,8 @@ private:
   RefPtr<battery::BatteryManager> mBatteryManager;
   RefPtr<Promise> mBatteryPromise;
   RefPtr<PowerManager> mPowerManager;
-  RefPtr<IccManager> mIccManager;
   RefPtr<InputPortManager> mInputPortManager;
   RefPtr<network::Connection> mConnection;
-#ifdef MOZ_B2G_RIL
-  RefPtr<MobileConnectionArray> mMobileConnections;
-#endif
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
   RefPtr<system::AudioChannelManager> mAudioChannelManager;
 #endif

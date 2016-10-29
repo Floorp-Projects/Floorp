@@ -186,8 +186,6 @@ static void Shutdown();
 #include "mozilla/dom/nsContentSecurityManager.h"
 #include "mozilla/dom/nsCSPService.h"
 #include "mozilla/dom/nsCSPContext.h"
-#include "nsIIccService.h"
-#include "nsIMobileConnectionService.h"
 #include "nsIPowerManagerService.h"
 #include "nsIMediaManager.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
@@ -321,7 +319,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHapticFeedback)
 #endif
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIIccService, NS_CreateIccService)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIPowerManagerService,
                                          PowerManagerService::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITimeService,
@@ -341,8 +338,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsVolumeService,
 #endif
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIMediaManagerService,
                                          MediaManager::GetInstance)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIMobileConnectionService,
-                                         NS_CreateMobileConnectionService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(PresentationDeviceManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TextInputProcessor)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(FakeInputPortService,
@@ -773,8 +768,6 @@ NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
 NS_DEFINE_NAMED_CID(GONK_GPS_GEOLOCATION_PROVIDER_CID);
 #endif
 #endif
-NS_DEFINE_NAMED_CID(NS_MOBILE_CONNECTION_SERVICE_CID);
-NS_DEFINE_NAMED_CID(ICC_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_POWERMANAGERSERVICE_CID);
 NS_DEFINE_NAMED_CID(OSFILECONSTANTSSERVICE_CID);
 NS_DEFINE_NAMED_CID(UDPSOCKETCHILD_CID);
@@ -1064,7 +1057,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #endif
   { &kTHIRDPARTYUTIL_CID, false, nullptr, ThirdPartyUtilConstructor },
   { &kNS_STRUCTUREDCLONECONTAINER_CID, false, nullptr, nsStructuredCloneContainerConstructor },
-  { &kICC_SERVICE_CID, false, nullptr, nsIIccServiceConstructor },
   { &kNS_POWERMANAGERSERVICE_CID, false, nullptr, nsIPowerManagerServiceConstructor, Module::ALLOW_IN_GPU_PROCESS },
   { &kOSFILECONSTANTSSERVICE_CID, true, nullptr, OSFileConstantsServiceConstructor },
   { &kUDPSOCKETCHILD_CID, false, nullptr, UDPSocketChildConstructor },
@@ -1078,7 +1070,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #ifdef ACCESSIBILITY
   { &kNS_ACCESSIBILITY_SERVICE_CID, false, nullptr, CreateA11yService },
 #endif
-  { &kNS_MOBILE_CONNECTION_SERVICE_CID, false, NULL, nsIMobileConnectionServiceConstructor },
   { &kPRESENTATION_SERVICE_CID, false, nullptr, nsIPresentationServiceConstructor },
   { &kPRESENTATION_DEVICE_MANAGER_CID, false, nullptr, PresentationDeviceManagerConstructor },
   { &kPRESENTATION_TCP_SESSION_TRANSPORT_CID, false, nullptr, PresentationTCPSessionTransportConstructor },
@@ -1214,7 +1205,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #endif
   { THIRDPARTYUTIL_CONTRACTID, &kTHIRDPARTYUTIL_CID },
   { NS_STRUCTUREDCLONECONTAINER_CONTRACTID, &kNS_STRUCTUREDCLONECONTAINER_CID },
-  { ICC_SERVICE_CONTRACTID, &kICC_SERVICE_CID },
   { POWERMANAGERSERVICE_CONTRACTID, &kNS_POWERMANAGERSERVICE_CID, Module::ALLOW_IN_GPU_PROCESS },
   { OSFILECONSTANTSSERVICE_CONTRACTID, &kOSFILECONSTANTSSERVICE_CID },
   { "@mozilla.org/udp-socket-child;1", &kUDPSOCKETCHILD_CID },
@@ -1229,7 +1219,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/accessibleRetrieval;1", &kNS_ACCESSIBILITY_SERVICE_CID },
 #endif
   { "@mozilla.org/gecko-media-plugin-service;1",  &kGECKO_MEDIA_PLUGIN_SERVICE_CID },
-  { NS_MOBILE_CONNECTION_SERVICE_CONTRACTID, &kNS_MOBILE_CONNECTION_SERVICE_CID },
   { PRESENTATION_SERVICE_CONTRACTID, &kPRESENTATION_SERVICE_CID },
   { PRESENTATION_DEVICE_MANAGER_CONTRACTID, &kPRESENTATION_DEVICE_MANAGER_CID },
   { PRESENTATION_TCP_SESSION_TRANSPORT_CONTRACTID, &kPRESENTATION_TCP_SESSION_TRANSPORT_CID },

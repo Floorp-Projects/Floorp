@@ -5028,13 +5028,6 @@ pref("dom.icc.enabled", true);
 pref("dom.icc.enabled", false);
 #endif
 
-// Mobile Connection API
-#ifdef MOZ_B2G_RIL
-pref("dom.mobileconnection.enabled", true);
-#else
-pref("dom.mobileconnection.enabled", false);
-#endif
-
 // Enable mapped array buffer by default.
 pref("dom.mapped_arraybuffer.enabled", true);
 
