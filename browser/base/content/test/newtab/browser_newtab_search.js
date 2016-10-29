@@ -178,6 +178,29 @@ add_task(function* () {
       "Search suggestion table hidden");
   });
 
+  // Remove the search bar from toolbar
+  CustomizableUI.removeWidgetFromArea("search-container");
+  // Focus a different element than the search input from the page.
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#newtab-customize-button", { }, gBrowser.selectedBrowser);
+
+  yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
+    let input = content.document.getElementById("newtab-search-text");
+    Assert.notEqual(input, content.document.activeElement, "Search input should not be focused");
+  });
+
+  // Test that Ctrl/Cmd + K will focus the input field from the page.
+  let focusPromise = promiseSearchEvents(["FocusInput"]);
+  EventUtils.synthesizeKey("k", { accelKey: true });
+  yield focusPromise;
+
+  yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
+    let input = content.document.getElementById("newtab-search-text");
+    Assert.equal(input, content.document.activeElement, "Search input should be focused");
+  });
+
+  // Reset changes made to toolbar
+  CustomizableUI.reset();
+
   // Test that Ctrl/Cmd + K will focus the search bar from toolbar.
   EventUtils.synthesizeKey("k", { accelKey: true });
   let searchBar = document.getElementById("searchbar");
