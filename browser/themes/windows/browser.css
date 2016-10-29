@@ -187,8 +187,8 @@ toolbar:-moz-lwtheme {
   transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
 }
 
-@media not all and (-moz-windows-compositor),
-       not all and (-moz-windows-default-theme) {
+@media (-moz-windows-compositor: 0),
+       (-moz-windows-default-theme: 0) {
   /* Please keep the menu text colors in this media block in sync with
    * devedition.css, minus the :not(:-moz-lwtheme) condition - see Bug 1165718.
    */
@@ -203,7 +203,7 @@ toolbar:-moz-lwtheme {
   }
 }
 
-@media not all and (-moz-windows-compositor) {
+@media (-moz-windows-compositor: 0) {
   #main-window[tabsintitlebar] #titlebar:-moz-lwtheme {
     visibility: hidden;
   }
@@ -383,7 +383,7 @@ toolbar:-moz-lwtheme {
   border-top: 1px solid @toolbarShadowColor@ !important;
   box-shadow: 0 1px 0 @toolbarHighlight@ inset;
 }
-@media not all and (-moz-windows-compositor) {
+@media (-moz-windows-compositor: 0) {
   #TabsToolbar[collapsed="true"] + #nav-bar {
     border-top-style: none !important;
   }
@@ -1614,7 +1614,7 @@ html|span.ac-emphasize-text-url {
   font-weight: 600;
 }
 
-@media not all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme: 0) {
   .autocomplete-richlistitem[selected=true] {
     background-color: Highlight;
   }
@@ -2560,7 +2560,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
    * window caption buttons, and therefore needs to be special-cased.
    */
   @media (-moz-windows-default-theme) {
-    @media not all and (-moz-windows-compositor) {
+    @media (-moz-windows-compositor: 0) {
       #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
         background-image: url("chrome://browser/skin/privatebrowsing-mask-titlebar-XPVista7-tall.png");
         height: 28px;
