@@ -1784,28 +1784,6 @@ MessageChannel::MaybeUndeferIncall()
 }
 
 void
-MessageChannel::FlushPendingInterruptQueue()
-{
-    AssertWorkerThread();
-    mMonitor->AssertNotCurrentThreadOwns();
-
-    {
-        MonitorAutoLock lock(*mMonitor);
-
-        if (mDeferred.empty()) {
-            if (mPending.empty())
-                return;
-
-            const Message& last = mPending.back();
-            if (!last.is_interrupt() || last.is_reply())
-                return;
-        }
-    }
-
-    while (OnMaybeDequeueOne());
-}
-
-void
 MessageChannel::ExitedCxxStack()
 {
     mListener->OnExitedCxxStack();
