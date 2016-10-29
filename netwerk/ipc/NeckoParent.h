@@ -167,10 +167,6 @@ protected:
     AllocPWebSocketEventListenerParent(const uint64_t& aInnerWindowID) override;
   virtual bool DeallocPWebSocketEventListenerParent(PWebSocketEventListenerParent*) override;
 
-  virtual mozilla::ipc::IProtocol*
-  CloneProtocol(Channel* aChannel,
-                mozilla::ipc::ProtocolCloneContext* aCtx) override;
-
   virtual PDataChannelParent*
     AllocPDataChannelParent(const uint32_t& channelId) override;
   virtual bool DeallocPDataChannelParent(PDataChannelParent* parent) override;

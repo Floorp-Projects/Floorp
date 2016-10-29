@@ -152,18 +152,6 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
   return true;
 }
 
-mozilla::ipc::IProtocol*
-CookieServiceParent::CloneProtocol(Channel* aChannel,
-                                   mozilla::ipc::ProtocolCloneContext* aCtx)
-{
-  NeckoParent* manager = aCtx->GetNeckoParent();
-  nsAutoPtr<PCookieServiceParent> actor(manager->AllocPCookieServiceParent());
-  if (!actor || !manager->RecvPCookieServiceConstructor(actor)) {
-    return nullptr;
-  }
-  return actor.forget();
-}
-
 } // namespace net
 } // namespace mozilla
 
