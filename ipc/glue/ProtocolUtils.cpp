@@ -53,18 +53,6 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPSecurityDescriptor, \
 
 namespace ipc {
 
-ProtocolCloneContext::ProtocolCloneContext()
-  : mNeckoParent(nullptr)
-{}
-
-ProtocolCloneContext::~ProtocolCloneContext()
-{}
-
-void ProtocolCloneContext::SetContentParent(ContentParent* aContentParent)
-{
-  mContentParent = aContentParent;
-}
-
 IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId)
  : mProtocolId(aProtoId)
 {

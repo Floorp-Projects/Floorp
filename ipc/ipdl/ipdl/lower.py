@@ -1169,9 +1169,6 @@ class Protocol(ipdl.ast.Protocol):
             fn = ExprSelect(actorThis, '->', fn.name)
         return ExprCall(fn)
 
-    def cloneProtocol(self):
-        return ExprVar('CloneProtocol')
-
     def processingErrorVar(self):
         assert self.decl.type.isToplevel()
         return ExprVar('ProcessingError')
@@ -2636,8 +2633,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Typedef(Type('mozilla::ipc::MessageChannel'), 'MessageChannel'),
             Typedef(Type('mozilla::ipc::SharedMemory'), 'SharedMemory'),
             Typedef(Type('mozilla::ipc::Trigger'), 'Trigger'),
-            Typedef(Type('mozilla::ipc::ProtocolCloneContext'),
-                    'ProtocolCloneContext')
         ]
 
 
@@ -3641,8 +3636,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ivar = ExprVar('i')
         kidsvar = ExprVar('kids')
         ithkid = ExprIndex(kidsvar, ivar)
-        clonecontexttype = Type('ProtocolCloneContext', ptr=1)
-        clonecontextvar = ExprVar('aCtx')
 
         register = MethodDefn(MethodDecl(
             p.registerMethod().name,
@@ -3696,13 +3689,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         getchannel = MethodDefn(MethodDecl(
             p.getChannelMethod().name,
             ret=Type('MessageChannel', ptr=1),
-            virtual=1))
-
-        cloneprotocol = MethodDefn(MethodDecl(
-            p.cloneProtocol().name,
-            params=[ Decl(Type('Channel', ptr=True), 'aChannel'),
-                     Decl(clonecontexttype, clonecontextvar.name) ],
-            ret=Type(p.fqBaseClass(), ptr=1),
             virtual=1))
 
         if p.decl.type.isToplevel():
@@ -3893,11 +3879,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 p.callOtherPid(p.managerVar())))
             getchannel.addstmt(StmtReturn(p.channelVar()))
 
-        cloneprotocol.addstmts([
-            _fatalError('Clone() has not yet been implemented'),
-            StmtReturn(ExprLiteral.NULL)
-        ])
-
         othervar = ExprVar('other')
         managertype = Type(_actorName(p.name, self.side), ptr=1)
 
@@ -3967,7 +3948,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                  destroyshmem,
                  otherpid,
                  getchannel,
-                 cloneprotocol,
                  Whitespace.NL ]
 
     def makeShmemIface(self):
