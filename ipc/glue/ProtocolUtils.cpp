@@ -365,5 +365,38 @@ TableToArray(const nsTHashtable<nsPtrHashKey<void>>& aTable,
   }
 }
 
+Maybe<IProtocol*>
+IProtocol::ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool aNullable,
+                     const char* aActorDescription, int32_t aProtocolTypeId)
+{
+    int32_t id;
+    if (!IPC::ReadParam(aMessage, aIter, &id)) {
+        ActorIdReadError(aActorDescription);
+        return Nothing();
+    }
+
+    if (id == 1 || (id == 0 && !aNullable)) {
+        BadActorIdError(aActorDescription);
+        return Nothing();
+    }
+
+    if (id == 0) {
+        return Some(static_cast<IProtocol*>(nullptr));
+    }
+
+    IProtocol* listener = this->Lookup(id);
+    if (!listener) {
+        ActorLookupError(aActorDescription);
+        return Nothing();
+    }
+
+    if (listener->GetProtocolTypeId() != aProtocolTypeId) {
+        MismatchedActorTypeError(aActorDescription);
+        return Nothing();
+    }
+
+    return Some(listener);
+}
+
 } // namespace ipc
 } // namespace mozilla

@@ -130,8 +130,7 @@ struct Trigger
     uint32_t mMessage : 31;
 };
 
-template<class ListenerT>
-class IProtocolManager
+class IProtocol : public MessageListener
 {
 public:
     enum ActorDestroyReason {
@@ -144,11 +143,11 @@ public:
 
     typedef base::ProcessId ProcessId;
 
-    virtual int32_t Register(ListenerT*) = 0;
-    virtual int32_t RegisterID(ListenerT*, int32_t) = 0;
-    virtual ListenerT* Lookup(int32_t) = 0;
+    virtual int32_t Register(IProtocol*) = 0;
+    virtual int32_t RegisterID(IProtocol*, int32_t) = 0;
+    virtual IProtocol* Lookup(int32_t) = 0;
     virtual void Unregister(int32_t) = 0;
-    virtual void RemoveManagee(int32_t, ListenerT*) = 0;
+    virtual void RemoveManagee(int32_t, IProtocol*) = 0;
 
     virtual Shmem::SharedMemory* CreateSharedMemory(
         size_t, SharedMemory::SharedMemoryType, bool, int32_t*) = 0;
@@ -162,18 +161,11 @@ public:
 
     virtual void FatalError(const char* const aProtocolName, const char* const aErrorMsg) const = 0;
 
-    Maybe<ListenerT*> ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool aNullable,
+    Maybe<IProtocol*> ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool aNullable,
                                 const char* aActorDescription, int32_t aProtocolTypeId);
 };
 
 typedef IPCMessageStart ProtocolId;
-
-/**
- * All RPC protocols should implement this interface.
- */
-class IProtocol : public MessageListener
-{
-};
 
 template<class PFooSide>
 class Endpoint;
@@ -318,40 +310,6 @@ bool
 UnpackChannelOpened(const PrivateIPDLInterface&,
                     const IPC::Message&,
                     TransportDescriptor*, base::ProcessId*, ProtocolId*);
-
-template<typename ListenerT>
-Maybe<ListenerT*>
-IProtocolManager<ListenerT>::ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool aNullable,
-                                       const char* aActorDescription, int32_t aProtocolTypeId)
-{
-    int32_t id;
-    if (!IPC::ReadParam(aMessage, aIter, &id)) {
-        ActorIdReadError(aActorDescription);
-        return Nothing();
-    }
-
-    if (id == 1 || (id == 0 && !aNullable)) {
-        BadActorIdError(aActorDescription);
-        return Nothing();
-    }
-
-    if (id == 0) {
-        return Some(static_cast<ListenerT*>(nullptr));
-    }
-
-    ListenerT* listener = this->Lookup(id);
-    if (!listener) {
-        ActorLookupError(aActorDescription);
-        return Nothing();
-    }
-
-    if (static_cast<MessageListener*>(listener)->GetProtocolTypeId() != aProtocolTypeId) {
-        MismatchedActorTypeError(aActorDescription);
-        return Nothing();
-    }
-
-    return Some(listener);
-}
 
 #if defined(XP_WIN)
 // This is a restricted version of Windows' DuplicateHandle() function
