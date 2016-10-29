@@ -127,8 +127,6 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
     static const uint8_t RESERVED_SLOTS = 1;
 
     static const Class class_;
-    static const Class protoClass;
-    static const JSFunctionSpec jsfuncs[];
 
     static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
 
