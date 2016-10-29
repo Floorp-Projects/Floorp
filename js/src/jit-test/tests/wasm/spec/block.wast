@@ -75,8 +75,8 @@
     (block i32
       (br 0 (i32.const 18))
       (br 0 (i32.const 19))
-      (br_if 0 (i32.const 20) (i32.const 0))
-      (br_if 0 (i32.const 20) (i32.const 1))
+      (drop (br_if 0 (i32.const 20) (i32.const 0)))
+      (drop (br_if 0 (i32.const 20) (i32.const 1)))
       (br 0 (i32.const 21))
       (br_table 0 (i32.const 22) (i32.const 4))
       (br_table 0 0 0 (i32.const 23) (i32.const 1))
@@ -147,19 +147,6 @@
 )
 
 (assert_invalid
-  (module (func $type-binary (result i64)
-    (block i64 i64 (i64.const 1) (i64.const 2)) i64.add
-  ))
-  "invalid result arity"
-)
-(assert_invalid
-  (module (func $type-binary-with-nop (result i32)
-    (block i32 i32 (nop) (i32.const 7) (nop) (i32.const 8)) i32.add
-  ))
-  "invalid result arity"
-)
-
-(assert_invalid
   (module (func $type-value-num-vs-void
     (block (i32.const 1))
   ))
@@ -177,44 +164,6 @@
   ))
   "type mismatch"
 )
-
-(; TODO(stack): soft failure
-(assert_invalid
-  (module (func $type-value-num-vs-void-after-break
-    (block (br 0) (i32.const 1))
-  ))
-  "type mismatch"
-)
-(assert_invalid
-  (module (func $type-value-void-vs-num-after-break (result i32)
-    (block (i32.const 1) (br 0) (nop))
-  ))
-  "type mismatch"
-)
-(assert_invalid
-  (module (func $type-value-num-vs-num-after-break (result i32)
-    (block (i32.const 1) (br 0) (f32.const 0))
-  ))
-  "type mismatch"
-)
-(assert_invalid
-  (module (func $type-break-second-void-vs-num (result i32)
-    (block i32 (br 0 (i32.const 1)) (br 0 (nop)))
-  ))
-  "type mismatch"
-)
-(assert_invalid
-  (module (func $type-break-second-num-vs-num (result i32)
-    (block i32 (br 0 (i32.const 1)) (br 0 (f64.const 1)))
-  ))
-  "type mismatch"
-)
-;)
-
-;; TODO(stack): move this elsewhere
-(module (func $type-break-num-vs-void
-  (block (i32.const 66) (br 0))
-))
 
 (assert_invalid
   (module (func $type-break-last-void-vs-num (result i32)

@@ -16,8 +16,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
 var gCookiesWindow = {
   _cm               : Components.classes["@mozilla.org/cookiemanager;1"]
                                 .getService(Components.interfaces.nsICookieManager),
-  _ds               : Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
-                                .getService(Components.interfaces.nsIScriptableDateFormat),
   _hosts            : {},
   _hostOrder        : [],
   _tree             : null,
@@ -513,14 +511,12 @@ var gCookiesWindow = {
   formatExpiresString: function (aExpires) {
     if (aExpires) {
       var date = new Date(1000 * aExpires);
-      return this._ds.FormatDateTime("", this._ds.dateFormatLong,
-                                     this._ds.timeFormatSeconds,
-                                     date.getFullYear(),
-                                     date.getMonth() + 1,
-                                     date.getDate(),
-                                     date.getHours(),
-                                     date.getMinutes(),
-                                     date.getSeconds());
+      const locale = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                     .getService(Components.interfaces.nsIXULChromeRegistry)
+                     .getSelectedLocale("global", true);
+      const dtOptions = { year: 'numeric', month: 'long', day: 'numeric',
+                          hour: 'numeric', minute: 'numeric', second: 'numeric' };
+      return date.toLocaleString(locale, dtOptions);
     }
     return this._bundle.getString("expireAtEndOfSession");
   },

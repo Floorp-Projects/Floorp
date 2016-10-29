@@ -273,7 +273,7 @@ already_AddRefed<SourceSurface>
 DrawTargetSkia::Snapshot()
 {
   RefPtr<SourceSurfaceSkia> snapshot = mSnapshot;
-  if (!snapshot) {
+  if (mSurface && !snapshot) {
     snapshot = new SourceSurfaceSkia();
     sk_sp<SkImage> image;
     // If the surface is raster, making a snapshot may trigger a pixel copy.
@@ -1567,6 +1567,10 @@ DrawTargetSkia::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
     // Otherwise, just fall back to a software draw target.
   }
 #endif
+  // Check that our SkCanvas isn't backed by vector storage such as PDF.  If it
+  // is then we want similar storage to avoid losing fidelity.
+  MOZ_ASSERT(mCanvas->imageInfo().colorType() != kUnknown_SkColorType,
+             "Not backed by pixels - we need to handle PDF backed SkCanvas");
   if (!target->Init(aSize, aFormat)) {
     return nullptr;
   }
@@ -1754,6 +1758,30 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
   return true;
 }
 
+bool
+DrawTargetSkia::Init(SkCanvas* aCanvas)
+{
+  mCanvas = sk_ref_sp(aCanvas);
+
+  SkImageInfo imageInfo = mCanvas->imageInfo();
+
+  // If the canvas is backed by pixels we clear it to be on the safe side.  If
+  // it's not (for example, for PDF output) we don't.
+  bool isBackedByPixels = imageInfo.colorType() != kUnknown_SkColorType;
+  if (isBackedByPixels) {
+    // Note for PDF backed SkCanvas |alphaType == kUnknown_SkAlphaType|.
+    SkColor clearColor = imageInfo.isOpaque() ? SK_ColorBLACK : SK_ColorTRANSPARENT;
+    mCanvas->clear(clearColor);
+  }
+
+  SkISize size = mCanvas->getBaseLayerSize();
+  mSize.width = size.width();
+  mSize.height = size.height();
+  mFormat = SkiaColorTypeToGfxFormat(imageInfo.colorType(),
+                                     imageInfo.alphaType());
+  return true;
+}
+
 #ifdef USE_SKIA_GPU
 /** Indicating a DT should be cached means that space will be reserved in Skia's cache
  * for the render target at creation time, with any unused resources exceeding the cache
@@ -1835,7 +1863,7 @@ void*
 DrawTargetSkia::GetNativeSurface(NativeSurfaceType aType)
 {
 #ifdef USE_SKIA_GPU
-  if (aType == NativeSurfaceType::OPENGL_TEXTURE) {
+  if (aType == NativeSurfaceType::OPENGL_TEXTURE && mSurface) {
     GrBackendObject handle = mSurface->getTextureHandle(SkSurface::kFlushRead_BackendHandleAccess);
     if (handle) {
       return (void*)(uintptr_t)reinterpret_cast<GrGLTextureInfo *>(handle)->fID;
@@ -2086,7 +2114,9 @@ DrawTargetSkia::MarkChanged()
     mSnapshot = nullptr;
 
     // Handle copying of any image snapshots bound to the surface.
-    mSurface->notifyContentWillChange(SkSurface::kRetain_ContentChangeMode);
+    if (mSurface) {
+      mSurface->notifyContentWillChange(SkSurface::kRetain_ContentChangeMode);
+    }
   }
 }
 

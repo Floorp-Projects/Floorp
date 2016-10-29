@@ -1190,8 +1190,8 @@ TabChild::ProvideWindow(mozIDOMWindowProxy* aParent,
                         bool aCalledFromJS,
                         bool aPositionSpecified, bool aSizeSpecified,
                         nsIURI* aURI, const nsAString& aName,
-                        const nsACString& aFeatures, bool* aWindowIsNew,
-                        mozIDOMWindowProxy** aReturn)
+                        const nsACString& aFeatures, bool aForceNoOpener,
+                        bool* aWindowIsNew, mozIDOMWindowProxy** aReturn)
 {
     *aReturn = nullptr;
 
@@ -1233,6 +1233,7 @@ TabChild::ProvideWindow(mozIDOMWindowProxy* aParent,
                                    aURI,
                                    aName,
                                    aFeatures,
+                                   aForceNoOpener,
                                    aWindowIsNew,
                                    aReturn);
 }
@@ -2237,7 +2238,8 @@ TabChild::RecvPasteTransferable(const IPCDataTransfer& aDataTransfer,
 
 
 a11y::PDocAccessibleChild*
-TabChild::AllocPDocAccessibleChild(PDocAccessibleChild*, const uint64_t&)
+TabChild::AllocPDocAccessibleChild(PDocAccessibleChild*, const uint64_t&,
+                                   const uint32_t&)
 {
   MOZ_ASSERT(false, "should never call this!");
   return nullptr;

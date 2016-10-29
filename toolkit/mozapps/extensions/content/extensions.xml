@@ -1165,14 +1165,11 @@
       <method name="_updateDates">
         <body><![CDATA[
           function formatDate(aDate) {
-            return Cc["@mozilla.org/intl/scriptabledateformat;1"]
-                     .getService(Ci.nsIScriptableDateFormat)
-                     .FormatDate("",
-                                 Ci.nsIScriptableDateFormat.dateFormatLong,
-                                 aDate.getFullYear(),
-                                 aDate.getMonth() + 1,
-                                 aDate.getDate()
-                                 );
+            const locale = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                           .getService(Components.interfaces.nsIXULChromeRegistry)
+                           .getSelectedLocale("global", true);
+            const dtOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+            return aDate.toLocaleDateString(locale, dtOptions);
           }
 
           if (this.mAddon.updateDate)

@@ -126,6 +126,9 @@ interface MozFrameLoaderOwner {
   void setIsPrerendered();
 
   [ChromeOnly, Throws]
+  void presetOpenerWindow(WindowProxy? window);
+
+  [ChromeOnly, Throws]
   void swapFrameLoaders(XULElement aOtherLoaderOwner);
 
   [ChromeOnly, Throws]

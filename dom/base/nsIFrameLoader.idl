@@ -284,4 +284,14 @@ interface nsIFrameLoaderOwner : nsISupports
    * Puts the FrameLoaderOwner in prerendering mode.
    */
   void setIsPrerendered();
+
+  /**
+   * This method is used internally by SwapFrameLoaders to set the frame loader
+   * on the target nsFrameLoader.
+   *
+   * Avoid using this method outside of that context, and instead prefer using
+   * SwapFrameLoaders.
+   */
+  [noscript, notxpcom] void
+  internalSetFrameLoader(in nsIFrameLoader aNewFrameLoader);
 };

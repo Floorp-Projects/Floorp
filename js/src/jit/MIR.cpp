@@ -2418,7 +2418,9 @@ MPhi::foldsTernary(TempAllocator& alloc)
 
     // If testArg is an double type we can:
     // - fold testArg ? testArg : 0.0 to MNaNToZero(testArg)
-    if (testArg->type() == MIRType::Double && c->numberToDouble() == 0 && c != trueDef) {
+    if (testArg->type() == MIRType::Double && mozilla::IsPositiveZero(c->numberToDouble()) &&
+        c != trueDef)
+    {
         MNaNToZero* replace = MNaNToZero::New(alloc, testArg);
         test->block()->insertBefore(test, replace);
         return replace;
@@ -3970,8 +3972,10 @@ MResumePoint::New(TempAllocator& alloc, MBasicBlock* block, jsbytecode* pc,
                   Mode mode)
 {
     MResumePoint* resume = new(alloc) MResumePoint(block, pc, mode);
-    if (!resume->init(alloc))
+    if (!resume->init(alloc)) {
+        block->discardPreAllocatedResumePoint(resume);
         return nullptr;
+    }
     resume->inherit(block);
     return resume;
 }
@@ -3985,8 +3989,10 @@ MResumePoint::New(TempAllocator& alloc, MBasicBlock* block, MResumePoint* model,
     // Allocate the same number of operands as the original resume point, and
     // copy operands from the operands vector and not the not from the current
     // block stack.
-    if (!resume->operands_.init(alloc, model->numAllocatedOperands()))
+    if (!resume->operands_.init(alloc, model->numAllocatedOperands())) {
+        block->discardPreAllocatedResumePoint(resume);
         return nullptr;
+    }
 
     // Copy the operands.
     for (size_t i = 0; i < operands.length(); i++)
@@ -4002,8 +4008,10 @@ MResumePoint::Copy(TempAllocator& alloc, MResumePoint* src)
                                                    src->mode());
     // Copy the operands from the original resume point, and not from the
     // current block stack.
-    if (!resume->operands_.init(alloc, src->numAllocatedOperands()))
+    if (!resume->operands_.init(alloc, src->numAllocatedOperands())) {
+        src->block()->discardPreAllocatedResumePoint(resume);
         return nullptr;
+    }
 
     // Copy the operands.
     for (size_t i = 0; i < resume->numOperands(); i++)

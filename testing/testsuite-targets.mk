@@ -285,10 +285,6 @@ stage-gtest: make-stage-dir
 	cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/gtest
 
 stage-android: make-stage-dir
-ifdef MOZ_ENABLE_SZIP
-# Tinderbox scripts are not unzipping everything, so the file needs to be in a directory it unzips
-	$(NSINSTALL) $(DIST)/host/bin/szip $(PKG_STAGE)/bin/host
-endif
 	$(NSINSTALL) $(topsrcdir)/mobile/android/fonts $(DEPTH)/_tests/reftest
 	$(NSINSTALL) $(topsrcdir)/mobile/android/fonts $(DEPTH)/_tests/testing/mochitest
 

@@ -3230,8 +3230,8 @@ function nsBrowserAccess() {
 nsBrowserAccess.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow]),
 
-  _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aContext) {
-    let isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+  _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aFlags) {
+    let isExternal = !!(aFlags & Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
     if (isExternal && aURI && aURI.schemeIs("chrome"))
       return null;
 
@@ -3239,12 +3239,10 @@ nsBrowserAccess.prototype = {
                       Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                       Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
     if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
-      switch (aContext) {
-        case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL:
-          aWhere = Services.prefs.getIntPref("browser.link.open_external");
-          break;
-        default: // OPEN_NEW or an illegal value
-          aWhere = Services.prefs.getIntPref("browser.link.open_newwindow");
+      if (isExternal) {
+        aWhere = Services.prefs.getIntPref("browser.link.open_external");
+      } else {
+        aWhere = Services.prefs.getIntPref("browser.link.open_newwindow");
       }
     }
 
@@ -3292,11 +3290,13 @@ nsBrowserAccess.prototype = {
         }
       }
 
+      let openerWindow = (aFlags & Ci.nsIBrowserDOMWindow.OPEN_NO_OPENER) ? null : aOpener;
       // BrowserApp.addTab calls loadURIWithFlags with the appropriate params
       let tab = BrowserApp.addTab(aURI ? aURI.spec : "about:blank", { flags: loadflags,
                                                                       referrerURI: referrer,
                                                                       external: isExternal,
                                                                       parentId: parentId,
+                                                                      opener: openerWindow,
                                                                       selected: true,
                                                                       isPrivate: isPrivate,
                                                                       pinned: pinned });
@@ -3313,13 +3313,13 @@ nsBrowserAccess.prototype = {
     return browser;
   },
 
-  openURI: function browser_openURI(aURI, aOpener, aWhere, aContext) {
-    let browser = this._getBrowser(aURI, aOpener, aWhere, aContext);
+  openURI: function browser_openURI(aURI, aOpener, aWhere, aFlags) {
+    let browser = this._getBrowser(aURI, aOpener, aWhere, aFlags);
     return browser ? browser.contentWindow : null;
   },
 
-  openURIInFrame: function browser_openURIInFrame(aURI, aParams, aWhere, aContext) {
-    let browser = this._getBrowser(aURI, null, aWhere, aContext);
+  openURIInFrame: function browser_openURIInFrame(aURI, aParams, aWhere, aFlags) {
+    let browser = this._getBrowser(aURI, null, aWhere, aFlags);
     return browser ? browser.QueryInterface(Ci.nsIFrameLoaderOwner) : null;
   },
 
@@ -3403,6 +3403,11 @@ Tab.prototype = {
     }
 
     this.browser.permanentKey = {};
+
+    // Check if we have a "parent" window which we need to set as our opener
+    if ("opener" in aParams) {
+      this.browser.presetOpenerWindow(aParams.opener);
+    }
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are added.

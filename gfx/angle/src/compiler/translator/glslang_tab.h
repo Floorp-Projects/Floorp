@@ -208,6 +208,7 @@ union YYSTYPE
             TIntermCase* intermCase;
         };
         union {
+            TTypeSpecifierNonArray typeSpecifierNonArray;
             TPublicType type;
             TPrecision precision;
             TLayoutQualifier layoutQualifier;
@@ -216,6 +217,8 @@ union YYSTYPE
             TParameter param;
             TField* field;
             TFieldList* fieldList;
+            TQualifierWrapperBase *qualifierWrapper;
+            TTypeQualifierBuilder *typeQualifierBuilder;
         };
     } interm;
 

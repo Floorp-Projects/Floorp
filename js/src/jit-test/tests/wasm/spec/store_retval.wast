@@ -1,5 +1,3 @@
-(module)
-
 (assert_invalid
   (module (func (param i32) (result i32) (set_local 0 (i32.const 1))))
   "type mismatch"

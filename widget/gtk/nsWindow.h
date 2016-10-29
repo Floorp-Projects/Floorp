@@ -346,6 +346,9 @@ public:
                                                 nsIObserver* aObserver) override;
 #endif
 
+#ifdef MOZ_X11
+    Display* XDisplay() { return mXDisplay; }
+#endif
     virtual void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData) override;
 
     // HiDPI scale conversion

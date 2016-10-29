@@ -1046,13 +1046,6 @@ DecodeElemSection(Decoder& d, Uint32Vector&& oldElems, ModuleGenerator& mg)
         if (!d.readVarU32(&numElems))
             return d.fail("expected segment size");
 
-        uint32_t tableLength = mg.tables()[tableIndex].limits.initial;
-        if (offset.isVal()) {
-            uint32_t off = offset.val().i32();
-            if (off > tableLength || tableLength - off < numElems)
-                return d.fail("element segment does not fit");
-        }
-
         Uint32Vector elemFuncIndices;
         if (!elemFuncIndices.resize(numElems))
             return false;

@@ -837,6 +837,20 @@ public:
     return mItems.getFirst();
   }
 
+  FlexItem* GetLastItem()
+  {
+    MOZ_ASSERT(mItems.isEmpty() == (mNumItems == 0),
+               "mNumItems bookkeeping is off");
+    return mItems.getLast();
+  }
+
+  const FlexItem* GetLastItem() const
+  {
+    MOZ_ASSERT(mItems.isEmpty() == (mNumItems == 0),
+               "mNumItems bookkeeping is off");
+    return mItems.getLast();
+  }
+
   bool IsEmpty() const
   {
     MOZ_ASSERT(mItems.isEmpty() == (mNumItems == 0),
@@ -1645,14 +1659,7 @@ nsFlexContainerFrame::
                     0, 0, flags);
 
   aFlexItem.SetHadMeasuringReflow();
-
-  // If this is the first child, save its ascent, since it may be what
-  // establishes the container's baseline. Also save the ascent if this child
-  // needs to be baseline-aligned. (Else, we don't care about ascent/baseline.)
-  if (aFlexItem.Frame() == mFrames.FirstChild() ||
-      aFlexItem.GetAlignSelf() == NS_STYLE_ALIGN_BASELINE) {
-    aFlexItem.SetAscent(childDesiredSize.BlockStartAscent());
-  }
+  aFlexItem.SetAscent(childDesiredSize.BlockStartAscent());
 
   // Subtract border/padding in vertical axis, to get _just_
   // the effective computed value of the "height" property.
@@ -3782,13 +3789,7 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
     aItem.SetCrossSize(childDesiredSize.Height() - crossAxisBorderPadding);
   }
 
-  // If this is the first child, save its ascent, since it may be what
-  // establishes the container's baseline. Also save the ascent if this child
-  // needs to be baseline-aligned. (Else, we don't care about baseline/ascent.)
-  if (aItem.Frame() == mFrames.FirstChild() ||
-      aItem.GetAlignSelf() == NS_STYLE_ALIGN_BASELINE) {
-    aItem.SetAscent(childDesiredSize.BlockStartAscent());
-  }
+  aItem.SetAscent(childDesiredSize.BlockStartAscent());
 }
 
 void
@@ -4193,6 +4194,14 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   logSize += aReflowInput.ComputedLogicalBorderPadding().Size(flexWM);
   nsSize containerSize = logSize.GetPhysicalSize(flexWM);
 
+  // If the flex container has no baseline-aligned items, it will use this item
+  // (the first item, discounting any under-the-hood reversing that we've done)
+  // to determine its baseline:
+  const FlexItem* const firstItem =
+    aAxisTracker.AreAxesInternallyReversed()
+    ? lines.getLast()->GetLastItem()
+    : lines.getFirst()->GetFirstItem();
+
   // FINAL REFLOW: Give each child frame another chance to reflow, now that
   // we know its final size and position.
   for (const FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
@@ -4243,10 +4252,10 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                        *item, framePos, containerSize);
       }
 
-      // If this is our first child and we haven't established a baseline for
+      // If this is our first item and we haven't established a baseline for
       // the container yet (i.e. if we don't have 'align-self: baseline' on any
       // children), then use this child's baseline as the container's baseline.
-      if (item->Frame() == mFrames.FirstChild() &&
+      if (item == firstItem &&
           flexContainerAscent == nscoord_MIN) {
         flexContainerAscent = itemNormalBPos + item->ResolvedAscent();
       }
@@ -4451,10 +4460,7 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
                     childDesiredSize, &childReflowInput,
                     outerWM, aFramePos, aContainerSize, 0);
 
-  // Save the first child's ascent; it may establish container's baseline.
-  if (aItem.Frame() == mFrames.FirstChild()) {
-    aItem.SetAscent(childDesiredSize.BlockStartAscent());
-  }
+  aItem.SetAscent(childDesiredSize.BlockStartAscent());
 }
 
 /* virtual */ nscoord

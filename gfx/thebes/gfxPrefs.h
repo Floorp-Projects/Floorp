@@ -486,6 +486,7 @@ private:
   DECL_GFX_PREF(Once, "layers.force-shmem-tiles",              ForceShmemTiles, bool, false);
   DECL_GFX_PREF(Live, "layers.frame-counter",                  DrawFrameCounter, bool, false);
   DECL_GFX_PREF(Once, "layers.gpu-process.dev.enabled",        GPUProcessDevEnabled, bool, false);
+  DECL_GFX_PREF(Once, "layers.gpu-process.dev.force-enabled",  GPUProcessDevForceEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.gpu-process.dev.timeout_ms",     GPUProcessDevTimeoutMs, int32_t, 5000);
   DECL_GFX_PREF(Live, "layers.gpu-process.dev.max_restarts",   GPUProcessDevMaxRestarts, int32_t, 0);
   DECL_GFX_PREF(Once, "layers.gralloc.disable",                DisableGralloc, bool, false);

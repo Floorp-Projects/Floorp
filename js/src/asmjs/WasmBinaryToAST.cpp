@@ -251,7 +251,7 @@ AstDecodeGenerateRef(AstDecodeContext& c, const AstName& prefix, uint32_t index,
     MOZ_ASSERT(index != AstNoIndex);
 
     if (!c.generateNames) {
-        *ref = AstRef(AstName(), index);
+        *ref = AstRef(index);
         return true;
     }
 
@@ -260,7 +260,7 @@ AstDecodeGenerateRef(AstDecodeContext& c, const AstName& prefix, uint32_t index,
         return false;
     MOZ_ASSERT(!name.empty());
 
-    *ref = AstRef(name, AstNoIndex);
+    *ref = AstRef(name);
     ref->setIndex(index);
     return true;
 }
@@ -334,7 +334,7 @@ AstDecodeCall(AstDecodeContext& c)
     if (calleeIndex < c.module().funcImportNames().length()) {
         AstImport* import = c.module().imports()[calleeIndex];
         sigIndex = import->funcSig().index();
-        funcRef = AstRef(import->name(), AstNoIndex);
+        funcRef = AstRef(import->name());
     } else {
         uint32_t funcDefIndex = calleeIndex - c.module().funcImportNames().length();
         if (funcDefIndex >= c.funcSigs().length())
@@ -416,7 +416,7 @@ AstDecodeGetBlockRef(AstDecodeContext& c, uint32_t depth, AstRef* ref)
 {
     if (!c.generateNames || depth >= c.blockLabels().length()) {
         // Also ignoring if it's a function body label.
-        *ref = AstRef(AstName(), depth);
+        *ref = AstRef(depth);
         return true;
     }
 
@@ -425,7 +425,7 @@ AstDecodeGetBlockRef(AstDecodeContext& c, uint32_t depth, AstRef* ref)
         if (!AstDecodeGenerateName(c, AstName(u"label"), c.nextLabelIndex(), &c.blockLabels()[index]))
             return false;
     }
-    *ref = AstRef(c.blockLabels()[index], AstNoIndex);
+    *ref = AstRef(c.blockLabels()[index]);
     ref->setIndex(depth);
     return true;
 }
@@ -1576,7 +1576,11 @@ AstDecodeTableSection(AstDecodeContext& c)
     if (c.module().hasTable())
         return c.d.fail("already have a table");
 
-    if (!c.module().addTable(table))
+    AstName name;
+    if (!AstDecodeGenerateName(c, AstName(u"table"), c.module().tables().length(), &name))
+        return false;
+
+    if (!c.module().addTable(name, table))
         return false;
 
     if (!c.d.finishSection(sectionStart, sectionSize, "table"))
@@ -1750,7 +1754,10 @@ AstDecodeMemorySection(AstDecodeContext& c)
         return false;
 
     if (present) {
-        if (!c.module().addMemory(memory))
+        AstName name;
+        if (!AstDecodeGenerateName(c, AstName(u"memory"), c.module().memories().length(), &name))
+            return false;
+        if (!c.module().addMemory(name, memory))
             return false;
     }
 
@@ -1852,8 +1859,7 @@ AstDecodeExport(AstDecodeContext& c, AstExport** export_)
     if (!c.d.readVarU32(&index))
         return c.d.fail("expected export internal index");
 
-    *export_ = new(c.lifo) AstExport(fieldName, DefinitionKind(kindValue),
-                                     AstRef(AstName(), index));
+    *export_ = new(c.lifo) AstExport(fieldName, DefinitionKind(kindValue), AstRef(index));
     if (!*export_)
         return false;
 
@@ -2021,6 +2027,9 @@ AstDecodeCodeSection(AstDecodeContext &c)
     return true;
 }
 
+// Number of bytes to display in a single fragment of a data section (per line).
+static const size_t WRAP_DATA_BYTES = 30;
+
 static bool
 AstDecodeDataSection(AstDecodeContext &c)
 {
@@ -2043,8 +2052,14 @@ AstDecodeDataSection(AstDecodeContext &c)
         if (!offset)
             return false;
 
-        AstName name(buffer, s.length);
-        AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, name);
+        AstNameVector fragments(c.lifo);
+        for (size_t start = 0; start < s.length; start += WRAP_DATA_BYTES) {
+            AstName name(buffer + start, Min(WRAP_DATA_BYTES, s.length - start));
+            if (!fragments.append(name))
+                return false;
+        }
+
+        AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, Move(fragments));
         if (!segment || !c.module().append(segment))
             return false;
     }
@@ -2090,7 +2105,7 @@ AstDecodeElemSection(AstDecodeContext &c)
             if (!c.d.readVarU32(&index))
                 return c.d.fail("expected element index");
 
-            elems[i] = AstRef(AstName(), index);
+            elems[i] = AstRef(index);
         }
 
         AstElemSegment* segment = new(c.lifo) AstElemSegment(offset, Move(elems));

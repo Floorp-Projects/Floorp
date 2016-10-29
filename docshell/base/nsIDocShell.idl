@@ -190,7 +190,7 @@ interface nsIDocShell : nsIDocShellTreeItem
                               in nsIPrincipal aTriggeringPrincipal,
                               in nsIPrincipal aPrincipalToInherit,
                               in uint32_t aFlags,
-                              in wstring aWindowTarget,
+                              in AString aWindowTarget,
                               in string aTypeHint,
                               in AString aFileName,
                               in nsIInputStream aPostDataStream,

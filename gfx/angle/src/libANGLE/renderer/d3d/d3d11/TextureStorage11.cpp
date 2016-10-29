@@ -31,15 +31,15 @@
 namespace rx
 {
 
-TextureStorage11::SRVKey::SRVKey(int baseLevel, int mipLevels, bool swizzle)
-    : baseLevel(baseLevel), mipLevels(mipLevels), swizzle(swizzle)
+TextureStorage11::SRVKey::SRVKey(int baseLevel, int mipLevels, bool swizzle, bool dropStencil)
+    : baseLevel(baseLevel), mipLevels(mipLevels), swizzle(swizzle), dropStencil(dropStencil)
 {
 }
 
 bool TextureStorage11::SRVKey::operator<(const SRVKey &rhs) const
 {
-    return std::tie(baseLevel, mipLevels, swizzle) <
-           std::tie(rhs.baseLevel, rhs.mipLevels, rhs.swizzle);
+    return std::tie(baseLevel, mipLevels, swizzle, dropStencil) <
+           std::tie(rhs.baseLevel, rhs.mipLevels, rhs.swizzle, rhs.dropStencil);
 }
 
 TextureStorage11::TextureStorage11(Renderer11 *renderer,
@@ -53,6 +53,7 @@ TextureStorage11::TextureStorage11(Renderer11 *renderer,
       mTextureWidth(0),
       mTextureHeight(0),
       mTextureDepth(0),
+      mDropStencilTexture(nullptr),
       mBindFlags(bindFlags),
       mMiscFlags(miscFlags)
 {
@@ -73,6 +74,7 @@ TextureStorage11::~TextureStorage11()
         SafeRelease(i->second);
     }
     mSrvCache.clear();
+    SafeRelease(mDropStencilTexture);
 }
 
 DWORD TextureStorage11::GetTextureBindFlags(GLenum internalFormat,
@@ -203,11 +205,7 @@ gl::Error TextureStorage11::getSRV(const gl::TextureState &textureState,
     if (mRenderer->getWorkarounds().zeroMaxLodWorkaround)
     {
         // We must ensure that the level zero texture is in sync with mipped texture.
-        gl::Error error = useLevelZeroWorkaroundTexture(mipLevels == 1);
-        if (error.isError())
-        {
-            return error;
-        }
+        ANGLE_TRY(useLevelZeroWorkaroundTexture(mipLevels == 1));
     }
 
     if (swizzleRequired)
@@ -215,7 +213,22 @@ gl::Error TextureStorage11::getSRV(const gl::TextureState &textureState,
         verifySwizzleExists(textureState.getSwizzleState());
     }
 
-    SRVKey key(effectiveBaseLevel, mipLevels, swizzleRequired);
+    // We drop the stencil when sampling from the SRV if three conditions hold:
+    // 1. the drop stencil workaround is enabled.
+    bool workaround = mRenderer->getWorkarounds().emulateTinyStencilTextures;
+    // 2. this is a stencil texture.
+    bool hasStencil = (d3d11::GetDXGIFormatInfo(mFormatInfo.dsvFormat).stencilBits > 0);
+    // 3. the texture has a 1x1 or 2x2 mip.
+    bool hasSmallMips = (getLevelWidth(mMipLevels - 1) <= 2 || getLevelHeight(mMipLevels - 1) <= 2);
+
+    bool useDropStencil = (workaround && hasStencil && hasSmallMips);
+    if (useDropStencil)
+    {
+        // Ensure drop texture gets re-created, if SRV is cached.
+        ANGLE_TRY(createDropStencilTexture());
+    }
+
+    SRVKey key(effectiveBaseLevel, mipLevels, swizzleRequired, useDropStencil);
     ANGLE_TRY(getCachedOrCreateSRV(key, outSRV));
 
     return gl::NoError();
@@ -232,17 +245,29 @@ gl::Error TextureStorage11::getCachedOrCreateSRV(const SRVKey &key,
     }
 
     ID3D11Resource *texture = nullptr;
+    DXGI_FORMAT format      = DXGI_FORMAT_UNKNOWN;
+
     if (key.swizzle)
     {
+        ASSERT(!key.dropStencil ||
+               d3d11::GetDXGIFormatInfo(mFormatInfo.swizzle.dsvFormat).stencilBits == 0);
         ANGLE_TRY(getSwizzleTexture(&texture));
+        format = mFormatInfo.swizzle.srvFormat;
+    }
+    else if (key.dropStencil)
+    {
+        ASSERT(mDropStencilTexture);
+        texture = mDropStencilTexture;
+        format  = DXGI_FORMAT_R32_FLOAT;
     }
     else
     {
         ANGLE_TRY(getResource(&texture));
+        format = mFormatInfo.srvFormat;
     }
 
     ID3D11ShaderResourceView *srv = nullptr;
-    DXGI_FORMAT format = (key.swizzle ? mFormatInfo.swizzle.srvFormat : mFormatInfo.srvFormat);
+
     ANGLE_TRY(createSRV(key.baseLevel, key.mipLevels, format, texture, &srv));
 
     mSrvCache.insert(std::make_pair(key, srv));
@@ -271,25 +296,17 @@ gl::Error TextureStorage11::getSRVLevel(int mipLevel,
         else
         {
             ID3D11Resource *resource = nullptr;
-            gl::Error error = getResource(&resource);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(getResource(&resource));
 
             DXGI_FORMAT resourceFormat =
                 blitSRV ? mFormatInfo.blitSRVFormat : mFormatInfo.srvFormat;
-            error = createSRV(mipLevel, 1, resourceFormat, resource, &levelSRVs[mipLevel]);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(createSRV(mipLevel, 1, resourceFormat, resource, &levelSRVs[mipLevel]));
         }
     }
 
     *outSRV = levelSRVs[mipLevel];
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error TextureStorage11::getSRVLevels(GLint baseLevel,
@@ -310,14 +327,12 @@ gl::Error TextureStorage11::getSRVLevels(GLint baseLevel,
     if (mRenderer->getWorkarounds().zeroMaxLodWorkaround)
     {
         // We must ensure that the level zero texture is in sync with mipped texture.
-        gl::Error error = useLevelZeroWorkaroundTexture(mipLevels == 1);
-        if (error.isError())
-        {
-            return error;
-        }
+        ANGLE_TRY(useLevelZeroWorkaroundTexture(mipLevels == 1));
     }
 
-    SRVKey key(baseLevel, mipLevels, false);
+    // TODO(jmadill): Assert we don't need to drop stencil.
+
+    SRVKey key(baseLevel, mipLevels, false, false);
     ANGLE_TRY(getCachedOrCreateSRV(key, outSRV));
 
     return gl::NoError();
@@ -337,38 +352,25 @@ gl::Error TextureStorage11::generateSwizzles(const gl::SwizzleState &swizzleTarg
         {
             // Need to re-render the swizzle for this level
             ID3D11ShaderResourceView *sourceSRV = nullptr;
-            gl::Error error                     = getSRVLevel(level, true, &sourceSRV);
-
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(getSRVLevel(level, true, &sourceSRV));
 
             ID3D11RenderTargetView *destRTV = nullptr;
-            error = getSwizzleRenderTarget(level, &destRTV);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(getSwizzleRenderTarget(level, &destRTV));
 
             gl::Extents size(getLevelWidth(level), getLevelHeight(level), getLevelDepth(level));
 
             Blit11 *blitter = mRenderer->getBlitter();
 
-            error = blitter->swizzleTexture(sourceSRV, destRTV, size, swizzleTarget);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(blitter->swizzleTexture(sourceSRV, destRTV, size, swizzleTarget));
 
             mSwizzleCache[level] = swizzleTarget;
         }
     }
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
-void TextureStorage11::invalidateSwizzleCacheLevel(int mipLevel)
+void TextureStorage11::markLevelDirty(int mipLevel)
 {
     if (mipLevel >= 0 && static_cast<unsigned int>(mipLevel) < ArraySize(mSwizzleCache))
     {
@@ -376,13 +378,15 @@ void TextureStorage11::invalidateSwizzleCacheLevel(int mipLevel)
         // not a valid swizzle combination
         mSwizzleCache[mipLevel] = gl::SwizzleState();
     }
+
+    SafeRelease(mDropStencilTexture);
 }
 
-void TextureStorage11::invalidateSwizzleCache()
+void TextureStorage11::markDirty()
 {
     for (unsigned int mipLevel = 0; mipLevel < ArraySize(mSwizzleCache); mipLevel++)
     {
-        invalidateSwizzleCacheLevel(mipLevel);
+        markLevelDirty(mipLevel);
     }
 }
 
@@ -395,7 +399,7 @@ gl::Error TextureStorage11::updateSubresourceLevel(ID3D11Resource *srcTexture,
 
     const GLint level = index.mipIndex;
 
-    invalidateSwizzleCacheLevel(level);
+    markLevelDirty(level);
 
     gl::Extents texSize(getLevelWidth(level), getLevelHeight(level), getLevelDepth(level));
 
@@ -457,22 +461,16 @@ gl::Error TextureStorage11::copySubresourceLevel(ID3D11Resource *dstTexture,
     ASSERT(dstTexture);
 
     ID3D11Resource *srcTexture = nullptr;
-    gl::Error error(GL_NO_ERROR);
 
     // If the zero-LOD workaround is active and we want to update a level greater than zero, then we
     // should update the mipmapped texture, even if mapmaps are currently disabled.
     if (index.mipIndex > 0 && mRenderer->getWorkarounds().zeroMaxLodWorkaround)
     {
-        error = getMippedResource(&srcTexture);
+        ANGLE_TRY(getMippedResource(&srcTexture));
     }
     else
     {
-        error = getResource(&srcTexture);
-    }
-
-    if (error.isError())
-    {
-        return error;
+        ANGLE_TRY(getResource(&srcTexture));
     }
 
     ASSERT(srcTexture);
@@ -511,21 +509,13 @@ gl::Error TextureStorage11::generateMipmap(const gl::ImageIndex &sourceIndex,
 {
     ASSERT(sourceIndex.layerIndex == destIndex.layerIndex);
 
-    invalidateSwizzleCacheLevel(destIndex.mipIndex);
+    markLevelDirty(destIndex.mipIndex);
 
     RenderTargetD3D *source = nullptr;
-    gl::Error error = getRenderTarget(sourceIndex, &source);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(getRenderTarget(sourceIndex, &source));
 
     RenderTargetD3D *dest = nullptr;
-    error = getRenderTarget(destIndex, &dest);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(getRenderTarget(destIndex, &dest));
 
     ID3D11ShaderResourceView *sourceSRV =
         GetAs<RenderTarget11>(source)->getBlitShaderResourceView();
@@ -554,7 +544,7 @@ void TextureStorage11::verifySwizzleExists(const gl::SwizzleState &swizzleState)
 
 void TextureStorage11::clearSRVCache()
 {
-    invalidateSwizzleCache();
+    markDirty();
 
     auto iter = mSrvCache.begin();
     while (iter != mSrvCache.end())
@@ -582,26 +572,18 @@ gl::Error TextureStorage11::copyToStorage(TextureStorage *destStorage)
     ASSERT(destStorage);
 
     ID3D11Resource *sourceResouce = nullptr;
-    gl::Error error = getResource(&sourceResouce);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(getResource(&sourceResouce));
 
     TextureStorage11 *dest11     = GetAs<TextureStorage11>(destStorage);
     ID3D11Resource *destResource = nullptr;
-    error = dest11->getResource(&destResource);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(dest11->getResource(&destResource));
 
     ID3D11DeviceContext *immediateContext = mRenderer->getDeviceContext();
     immediateContext->CopyResource(destResource, sourceResouce);
 
-    dest11->invalidateSwizzleCache();
+    dest11->markDirty();
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error TextureStorage11::setData(const gl::ImageIndex &index,
@@ -612,6 +594,8 @@ gl::Error TextureStorage11::setData(const gl::ImageIndex &index,
                                     const uint8_t *pixelData)
 {
     ASSERT(!image->isDirty());
+
+    markLevelDirty(index.mipIndex);
 
     ID3D11Resource *resource = nullptr;
     ANGLE_TRY(getResource(&resource));
@@ -704,6 +688,12 @@ gl::Error TextureStorage11::setData(const gl::ImageIndex &index,
     }
 
     return gl::NoError();
+}
+
+gl::Error TextureStorage11::createDropStencilTexture()
+{
+    UNIMPLEMENTED();
+    return gl::Error(GL_INVALID_OPERATION, "Drop stencil texture not implemented.");
 }
 
 TextureStorage11_2D::TextureStorage11_2D(Renderer11 *renderer, SwapChain11 *swapchain)
@@ -829,63 +819,37 @@ gl::Error TextureStorage11_2D::copyToStorage(TextureStorage *destStorage)
         // corresponding textures in destStorage.
         if (mTexture)
         {
-            gl::Error error = dest11->useLevelZeroWorkaroundTexture(false);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(dest11->useLevelZeroWorkaroundTexture(false));
 
             ID3D11Resource *destResource = nullptr;
-            error = dest11->getResource(&destResource);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(dest11->getResource(&destResource));
 
             immediateContext->CopyResource(destResource, mTexture);
         }
 
         if (mLevelZeroTexture)
         {
-            gl::Error error = dest11->useLevelZeroWorkaroundTexture(true);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(dest11->useLevelZeroWorkaroundTexture(true));
 
             ID3D11Resource *destResource = nullptr;
-            error = dest11->getResource(&destResource);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(dest11->getResource(&destResource));
 
             immediateContext->CopyResource(destResource, mLevelZeroTexture);
         }
 
-        return gl::Error(GL_NO_ERROR);
-    }
-    else
-    {
-        ID3D11Resource *sourceResouce = nullptr;
-        gl::Error error = getResource(&sourceResouce);
-        if (error.isError())
-        {
-            return error;
-        }
-
-        ID3D11Resource *destResource = nullptr;
-        error = dest11->getResource(&destResource);
-        if (error.isError())
-        {
-            return error;
-        }
-
-        immediateContext->CopyResource(destResource, sourceResouce);
-        dest11->invalidateSwizzleCache();
+        return gl::NoError();
     }
 
-    return gl::Error(GL_NO_ERROR);
+    ID3D11Resource *sourceResouce = nullptr;
+    ANGLE_TRY(getResource(&sourceResouce));
+
+    ID3D11Resource *destResource = nullptr;
+    ANGLE_TRY(dest11->getResource(&destResource));
+
+    immediateContext->CopyResource(destResource, sourceResouce);
+    dest11->markDirty();
+
+    return gl::NoError();
 }
 
 gl::Error TextureStorage11_2D::useLevelZeroWorkaroundTexture(bool useLevelZeroTexture)
@@ -896,11 +860,7 @@ gl::Error TextureStorage11_2D::useLevelZeroWorkaroundTexture(bool useLevelZeroTe
     {
         if (!mUseLevelZeroTexture && mTexture)
         {
-            gl::Error error = ensureTextureExists(1);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(ensureTextureExists(1));
 
             // Pull data back from the mipped texture if necessary.
             ASSERT(mLevelZeroTexture);
@@ -914,11 +874,7 @@ gl::Error TextureStorage11_2D::useLevelZeroWorkaroundTexture(bool useLevelZeroTe
     {
         if (mUseLevelZeroTexture && mLevelZeroTexture)
         {
-            gl::Error error = ensureTextureExists(mMipLevels);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(ensureTextureExists(mMipLevels));
 
             // Pull data back from the level zero texture if necessary.
             ASSERT(mTexture);
@@ -945,7 +901,7 @@ gl::Error TextureStorage11_2D::useLevelZeroWorkaroundTexture(bool useLevelZeroTe
         }
     }
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 void TextureStorage11_2D::associateImage(Image11 *image, const gl::ImageIndex &index)
@@ -1027,33 +983,23 @@ gl::Error TextureStorage11_2D::releaseAssociatedImage(const gl::ImageIndex &inde
         }
     }
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error TextureStorage11_2D::getResource(ID3D11Resource **outResource)
 {
     if (mUseLevelZeroTexture && mMipLevels > 1)
     {
-        gl::Error error = ensureTextureExists(1);
-        if (error.isError())
-        {
-            return error;
-        }
+        ANGLE_TRY(ensureTextureExists(1));
 
         *outResource = mLevelZeroTexture;
-        return gl::Error(GL_NO_ERROR);
+        return gl::NoError();
     }
-    else
-    {
-        gl::Error error = ensureTextureExists(mMipLevels);
-        if (error.isError())
-        {
-            return error;
-        }
 
-        *outResource = mTexture;
-        return gl::Error(GL_NO_ERROR);
-    }
+    ANGLE_TRY(ensureTextureExists(mMipLevels));
+
+    *outResource = mTexture;
+    return gl::NoError();
 }
 
 gl::Error TextureStorage11_2D::getMippedResource(ID3D11Resource **outResource)
@@ -1061,14 +1007,10 @@ gl::Error TextureStorage11_2D::getMippedResource(ID3D11Resource **outResource)
     // This shouldn't be called unless the zero max LOD workaround is active.
     ASSERT(mRenderer->getWorkarounds().zeroMaxLodWorkaround);
 
-    gl::Error error = ensureTextureExists(mMipLevels);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(ensureTextureExists(mMipLevels));
 
     *outResource = mTexture;
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error TextureStorage11_2D::ensureTextureExists(int mipLevels)
@@ -1142,29 +1084,17 @@ gl::Error TextureStorage11_2D::getRenderTarget(const gl::ImageIndex &index, Rend
     if (mRenderTarget[level])
     {
         *outRT = mRenderTarget[level];
-        return gl::Error(GL_NO_ERROR);
+        return gl::NoError();
     }
 
     ID3D11Resource *texture = nullptr;
-    gl::Error error = getResource(&texture);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(getResource(&texture));
 
     ID3D11ShaderResourceView *srv = nullptr;
-    error = getSRVLevel(level, false, &srv);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(getSRVLevel(level, false, &srv));
 
     ID3D11ShaderResourceView *blitSRV = nullptr;
-    error = getSRVLevel(level, true, &blitSRV);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(getSRVLevel(level, true, &blitSRV));
 
     ID3D11Device *device = mRenderer->getDevice();
 
@@ -1198,7 +1128,7 @@ gl::Error TextureStorage11_2D::getRenderTarget(const gl::ImageIndex &index, Rend
         }
 
         *outRT = mLevelZeroRenderTarget;
-        return gl::Error(GL_NO_ERROR);
+        return gl::NoError();
     }
 
     if (mFormatInfo.rtvFormat != DXGI_FORMAT_UNKNOWN)
@@ -1259,7 +1189,7 @@ gl::Error TextureStorage11_2D::getRenderTarget(const gl::ImageIndex &index, Rend
     SafeRelease(dsv);
 
     *outRT = mRenderTarget[level];
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error TextureStorage11_2D::createSRV(int baseLevel,
@@ -1385,7 +1315,41 @@ gl::Error TextureStorage11_2D::getSwizzleRenderTarget(int mipLevel, ID3D11Render
     }
 
     *outRTV = mSwizzleRenderTargets[mipLevel];
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
+}
+
+gl::Error TextureStorage11_2D::createDropStencilTexture()
+{
+    if (mDropStencilTexture)
+    {
+        return gl::NoError();
+    }
+
+    D3D11_TEXTURE2D_DESC dropDesc = {};
+    dropDesc.ArraySize            = 1;
+    dropDesc.BindFlags            = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
+    dropDesc.CPUAccessFlags       = 0;
+    dropDesc.Format               = DXGI_FORMAT_R32_TYPELESS;
+    dropDesc.Height               = mTextureHeight;
+    dropDesc.MipLevels            = mMipLevels;
+    dropDesc.MiscFlags            = 0;
+    dropDesc.SampleDesc.Count     = 1;
+    dropDesc.SampleDesc.Quality   = 0;
+    dropDesc.Usage                = D3D11_USAGE_DEFAULT;
+    dropDesc.Width                = mTextureWidth;
+
+    ID3D11Device *device = mRenderer->getDevice();
+
+    HRESULT hr = device->CreateTexture2D(&dropDesc, nullptr, &mDropStencilTexture);
+    if (FAILED(hr))
+    {
+        return gl::Error(GL_INVALID_OPERATION, "Error creating drop stencil texture.");
+    }
+    d3d11::SetDebugName(mDropStencilTexture, "TexStorage2D.DropStencil");
+
+    ANGLE_TRY(initDropStencilTexture(gl::ImageIndexIterator::Make2D(0, mMipLevels)));
+
+    return gl::NoError();
 }
 
 TextureStorage11_External::TextureStorage11_External(
@@ -1626,7 +1590,7 @@ gl::Error TextureStorage11_EGLImage::copyToStorage(TextureStorage *destStorage)
     ID3D11DeviceContext *immediateContext = mRenderer->getDeviceContext();
     immediateContext->CopyResource(destResource, sourceResouce);
 
-    dest11->invalidateSwizzleCache();
+    dest11->markDirty();
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -1979,7 +1943,7 @@ gl::Error TextureStorage11_Cube::copyToStorage(TextureStorage *destStorage)
         immediateContext->CopyResource(destResource, sourceResouce);
     }
 
-    dest11->invalidateSwizzleCache();
+    dest11->markDirty();
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -2573,6 +2537,66 @@ gl::Error TextureStorage11_Cube::getSwizzleRenderTarget(int mipLevel,
     return gl::Error(GL_NO_ERROR);
 }
 
+gl::Error TextureStorage11::initDropStencilTexture(const gl::ImageIndexIterator &it)
+{
+    ID3D11Resource *resource = nullptr;
+    ANGLE_TRY(getResource(&resource));
+    TextureHelper11 sourceTexture = TextureHelper11::MakeAndReference(resource, mFormatInfo);
+    TextureHelper11 destTexture   = TextureHelper11::MakeAndReference(
+        mDropStencilTexture,
+        d3d11::Format::Get(GL_DEPTH_COMPONENT32F, mRenderer->getRenderer11DeviceCaps()));
+
+    gl::ImageIndexIterator itCopy = it;
+
+    while (itCopy.hasNext())
+    {
+        gl::ImageIndex index = itCopy.next();
+        gl::Box wholeArea(0, 0, 0, getLevelWidth(index.mipIndex), getLevelHeight(index.mipIndex),
+                          1);
+        gl::Extents wholeSize(wholeArea.width, wholeArea.height, 1);
+        UINT subresource = getSubresourceIndex(index);
+        ANGLE_TRY(mRenderer->getBlitter()->copyDepthStencil(sourceTexture, subresource, wholeArea,
+                                                            wholeSize, destTexture, subresource,
+                                                            wholeArea, wholeSize, nullptr));
+    }
+
+    return gl::NoError();
+}
+
+gl::Error TextureStorage11_Cube::createDropStencilTexture()
+{
+    if (mDropStencilTexture)
+    {
+        return gl::NoError();
+    }
+
+    D3D11_TEXTURE2D_DESC dropDesc = {};
+    dropDesc.ArraySize            = 6;
+    dropDesc.BindFlags            = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
+    dropDesc.CPUAccessFlags       = 0;
+    dropDesc.Format               = DXGI_FORMAT_R32_TYPELESS;
+    dropDesc.Height               = mTextureHeight;
+    dropDesc.MipLevels            = mMipLevels;
+    dropDesc.MiscFlags            = D3D11_RESOURCE_MISC_TEXTURECUBE;
+    dropDesc.SampleDesc.Count     = 1;
+    dropDesc.SampleDesc.Quality   = 0;
+    dropDesc.Usage                = D3D11_USAGE_DEFAULT;
+    dropDesc.Width                = mTextureWidth;
+
+    ID3D11Device *device = mRenderer->getDevice();
+
+    HRESULT hr = device->CreateTexture2D(&dropDesc, nullptr, &mDropStencilTexture);
+    if (FAILED(hr))
+    {
+        return gl::Error(GL_INVALID_OPERATION, "Error creating drop stencil texture.");
+    }
+    d3d11::SetDebugName(mDropStencilTexture, "TexStorageCube.DropStencil");
+
+    ANGLE_TRY(initDropStencilTexture(gl::ImageIndexIterator::MakeCube(0, mMipLevels)));
+
+    return gl::NoError();
+}
+
 TextureStorage11_3D::TextureStorage11_3D(Renderer11 *renderer,
                                          GLenum internalformat,
                                          bool renderTarget,
@@ -2810,25 +2834,13 @@ gl::Error TextureStorage11_3D::getRenderTarget(const gl::ImageIndex &index, Rend
         if (!mLevelRenderTargets[mipLevel])
         {
             ID3D11Resource *texture = nullptr;
-            gl::Error error = getResource(&texture);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(getResource(&texture));
 
             ID3D11ShaderResourceView *srv = nullptr;
-            error = getSRVLevel(mipLevel, false, &srv);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(getSRVLevel(mipLevel, false, &srv));
 
             ID3D11ShaderResourceView *blitSRV = nullptr;
-            error = getSRVLevel(mipLevel, true, &blitSRV);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(getSRVLevel(mipLevel, true, &blitSRV));
 
             ID3D11Device *device = mRenderer->getDevice();
 
@@ -2969,11 +2981,7 @@ gl::Error TextureStorage11_3D::getSwizzleRenderTarget(int mipLevel, ID3D11Render
     if (!mSwizzleRenderTargets[mipLevel])
     {
         ID3D11Resource *swizzleTexture = nullptr;
-        gl::Error error = getSwizzleTexture(&swizzleTexture);
-        if (error.isError())
-        {
-            return error;
-        }
+        ANGLE_TRY(getSwizzleTexture(&swizzleTexture));
 
         ID3D11Device *device = mRenderer->getDevice();
 
@@ -3273,21 +3281,14 @@ gl::Error TextureStorage11_2DArray::getRenderTarget(const gl::ImageIndex &index,
         HRESULT result;
 
         ID3D11Resource *texture = nullptr;
-        gl::Error error = getResource(&texture);
-        if (error.isError())
-        {
-            return error;
-        }
+        ANGLE_TRY(getResource(&texture));
         ID3D11ShaderResourceView *srv;
-        error = createRenderTargetSRV(texture, index, mFormatInfo.srvFormat, &srv);
-        if (error.isError())
-        {
-            return error;
-        }
+        ANGLE_TRY(createRenderTargetSRV(texture, index, mFormatInfo.srvFormat, &srv));
         ID3D11ShaderResourceView *blitSRV;
         if (mFormatInfo.blitSRVFormat != mFormatInfo.srvFormat)
         {
-            error = createRenderTargetSRV(texture, index, mFormatInfo.blitSRVFormat, &blitSRV);
+            gl::Error error =
+                createRenderTargetSRV(texture, index, mFormatInfo.blitSRVFormat, &blitSRV);
             if (error.isError())
             {
                 SafeRelease(srv);
@@ -3375,7 +3376,7 @@ gl::Error TextureStorage11_2DArray::getRenderTarget(const gl::ImageIndex &index,
 
     ASSERT(outRT);
     *outRT = mRenderTargets[key];
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error TextureStorage11_2DArray::getSwizzleTexture(ID3D11Resource **outTexture)
@@ -3452,4 +3453,42 @@ gl::Error TextureStorage11_2DArray::getSwizzleRenderTarget(int mipLevel,
     *outRTV = mSwizzleRenderTargets[mipLevel];
     return gl::Error(GL_NO_ERROR);
 }
+
+gl::Error TextureStorage11_2DArray::createDropStencilTexture()
+{
+    if (mDropStencilTexture)
+    {
+        return gl::NoError();
+    }
+
+    D3D11_TEXTURE2D_DESC dropDesc = {};
+    dropDesc.ArraySize            = mTextureDepth;
+    dropDesc.BindFlags            = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
+    dropDesc.CPUAccessFlags       = 0;
+    dropDesc.Format               = DXGI_FORMAT_R32_TYPELESS;
+    dropDesc.Height               = mTextureHeight;
+    dropDesc.MipLevels            = mMipLevels;
+    dropDesc.MiscFlags            = 0;
+    dropDesc.SampleDesc.Count     = 1;
+    dropDesc.SampleDesc.Quality   = 0;
+    dropDesc.Usage                = D3D11_USAGE_DEFAULT;
+    dropDesc.Width                = mTextureWidth;
+
+    ID3D11Device *device = mRenderer->getDevice();
+
+    HRESULT hr = device->CreateTexture2D(&dropDesc, nullptr, &mDropStencilTexture);
+    if (FAILED(hr))
+    {
+        return gl::Error(GL_INVALID_OPERATION, "Error creating drop stencil texture.");
+    }
+    d3d11::SetDebugName(mDropStencilTexture, "TexStorage2DArray.DropStencil");
+
+    std::vector<GLsizei> layerCounts(mMipLevels, mTextureDepth);
+
+    ANGLE_TRY(initDropStencilTexture(
+        gl::ImageIndexIterator::Make2DArray(0, mMipLevels, layerCounts.data())));
+
+    return gl::NoError();
+}
+
 }  // namespace rx

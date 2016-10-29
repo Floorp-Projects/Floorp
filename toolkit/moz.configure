@@ -790,6 +790,21 @@ def skia_gpu(value, skia, target):
 set_config('MOZ_ENABLE_SKIA_GPU', skia_gpu)
 set_define('USE_SKIA_GPU', skia_gpu)
 
+option('--enable-skia-pdf', help='Enable Skia PDF')
+
+@depends('--enable-skia-pdf', skia, target)
+def skia_pdf(value, skia, target):
+    if value.origin == 'default':
+        if not skia:
+            return None
+    elif value and not skia:
+        die('Cannot enable Skia PDF without enabling Skia')
+    if skia and value:
+        return True
+
+set_config('MOZ_ENABLE_SKIA_PDF', skia_pdf)
+set_define('MOZ_ENABLE_SKIA_PDF', skia_pdf)
+
 @depends(skia, skia_gpu)
 def skia_includes(skia, skia_gpu):
     includes = []

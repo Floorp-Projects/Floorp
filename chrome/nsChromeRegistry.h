@@ -101,6 +101,8 @@ protected:
 
   bool GetDirectionForLocale(const nsACString& aLocale);
 
+  void SanitizeForBCP47(nsACString& aLocale);
+
 public:
   static already_AddRefed<nsChromeRegistry> GetSingleton();
 

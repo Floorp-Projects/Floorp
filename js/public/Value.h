@@ -10,6 +10,7 @@
 #define js_Value_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 
@@ -224,6 +225,18 @@ namespace JS {
 static inline constexpr JS::Value UndefinedValue();
 static inline JS::Value PoisonedObjectValue(JSObject* obj);
 
+namespace detail {
+
+constexpr int CanonicalizedNaNSignBit = 0;
+constexpr uint64_t CanonicalizedNaNSignificand = 0x8000000000000ULL;
+
+constexpr uint64_t CanonicalizedNaNBits =
+    mozilla::SpecificNaNBits<double,
+                             detail::CanonicalizedNaNSignBit,
+                             detail::CanonicalizedNaNSignificand>::value;
+
+} // namespace detail
+
 /**
  * Returns a generic quiet NaN value, with all payload bits set to zero.
  *
@@ -233,7 +246,8 @@ static inline JS::Value PoisonedObjectValue(JSObject* obj);
 static MOZ_ALWAYS_INLINE double
 GenericNaN()
 {
-  return mozilla::SpecificNaN<double>(0, 0x8000000000000ULL);
+  return mozilla::SpecificNaN<double>(detail::CanonicalizedNaNSignBit,
+                                      detail::CanonicalizedNaNSignificand);
 }
 
 /* MSVC with PGO miscompiles this function. */
@@ -327,14 +341,10 @@ class MOZ_NON_PARAM alignas(8) Value
     }
 
     void setDouble(double d) {
-        setDoubleNoCheck(d);
-        MOZ_ASSERT(isDouble());
-    }
-
-    void setDoubleNoCheck(double d) {
         // Don't assign to data.asDouble to fix a miscompilation with
         // GCC 5.2.1 and 5.3.1. See bug 1312488.
         data = layout(d);
+        MOZ_ASSERT(isDouble());
     }
 
     void setNaN() {
@@ -1004,12 +1014,23 @@ DoubleValue(double dbl)
     return v;
 }
 
-static inline constexpr Value
+static inline Value
 CanonicalizedDoubleValue(double d)
 {
     return MOZ_UNLIKELY(mozilla::IsNaN(d))
-           ? Value::fromRawBits(0x7FF8000000000000ULL)
+           ? Value::fromRawBits(detail::CanonicalizedNaNBits)
            : Value::fromDouble(d);
+}
+
+static inline bool
+IsCanonicalized(double d)
+{
+  if (mozilla::IsInfinite(d) || mozilla::IsFinite(d))
+      return true;
+
+  uint64_t bits;
+  mozilla::BitwiseCast<uint64_t>(d, &bits);
+  return (bits & ~mozilla::DoubleTypeTraits::kSignBit) == detail::CanonicalizedNaNBits;
 }
 
 static inline Value
@@ -1151,7 +1172,7 @@ NumberValue(uint32_t i)
 {
     return i <= JSVAL_INT_MAX
            ? Int32Value(int32_t(i))
-           : CanonicalizedDoubleValue(double(i));
+           : Value::fromDouble(double(i));
 }
 
 namespace detail {

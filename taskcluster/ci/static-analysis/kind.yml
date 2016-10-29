@@ -28,7 +28,7 @@ jobs:
             job-name: macosx64-st-an-opt
         treeherder:
             platform: osx-10-7/opt
-        worker-type: aws-provisioner-v1/opt-macosx64
+        worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
         run:
             using: mozharness
             actions: [get-secrets build generate-build-stats update]

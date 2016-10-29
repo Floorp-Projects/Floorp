@@ -214,7 +214,7 @@
                       "<iframe src='data:text/html," +
                         "<html><head><title>test7-nested1</title></head>" +
                         "<body>test7-nested1<br/>" +
-                        "<a href=\"data:text/plain,aaa\" target=\"_main\">" +
+                        "<a href=\"data:text/plain,aaa\" target=\"_top\">" +
                           "Click me, hit back, click me again</a>" +
                         "</body></html>'>" +
                       "</iframe>" +

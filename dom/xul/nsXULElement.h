@@ -412,6 +412,7 @@ public:
 
     nsresult GetFrameLoaderXPCOM(nsIFrameLoader** aFrameLoader);
     nsresult GetParentApplication(mozIApplication** aApplication);
+    void PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv);
     nsresult SetIsPrerendered();
 
     virtual void RecompileScriptEventListeners() override;
@@ -574,11 +575,12 @@ public:
                                mozilla::ErrorResult& rv);
     // Style() inherited from nsStyledElement
     already_AddRefed<nsFrameLoader> GetFrameLoader();
+    void InternalSetFrameLoader(nsIFrameLoader* aNewFrameLoader);
     void SwapFrameLoaders(mozilla::dom::HTMLIFrameElement& aOtherLoaderOwner,
                           mozilla::ErrorResult& rv);
     void SwapFrameLoaders(nsXULElement& aOtherLoaderOwner,
                           mozilla::ErrorResult& rv);
-    void SwapFrameLoaders(RefPtr<nsFrameLoader>& aOtherLoader,
+    void SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoaderOwner,
                           mozilla::ErrorResult& rv);
 
     nsINode* GetScopeChainParent() const override
@@ -615,7 +617,7 @@ protected:
 
         void Traverse(nsCycleCollectionTraversalCallback &cb);
 
-        RefPtr<nsFrameLoader> mFrameLoader;
+        nsCOMPtr<nsISupports> mFrameLoaderOrOpener;
     };
 
     virtual nsINode::nsSlots* CreateSlots() override;

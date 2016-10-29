@@ -80,8 +80,11 @@ public:
   void SwapFrameLoaders(nsXULElement& aOtherLoaderOwner,
                         mozilla::ErrorResult& aError);
 
-  void SwapFrameLoaders(RefPtr<nsFrameLoader>& aOtherLoader,
+  void SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoaderOwner,
                         mozilla::ErrorResult& rv);
+
+  void PresetOpenerWindow(mozIDOMWindowProxy* aOpenerWindow,
+                          mozilla::ErrorResult& aRv);
 
   static bool BrowserFramesEnabled();
 
@@ -107,6 +110,7 @@ protected:
   already_AddRefed<nsPIDOMWindowOuter> GetContentWindow();
 
   RefPtr<nsFrameLoader> mFrameLoader;
+  nsCOMPtr<nsPIDOMWindowOuter> mOpenerWindow;
 
   /**
    * True when the element is created by the parser using the

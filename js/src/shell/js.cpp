@@ -1847,7 +1847,7 @@ js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr)
     }
 
     UniqueTwoByteChars ucbuf(
-        JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(buf.get(), len), &len).get()
+        JS::LossyUTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(buf.get(), len), &len).get()
     );
     if (!ucbuf) {
         pathname.clear();

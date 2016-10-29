@@ -62,17 +62,29 @@ interface nsIBrowserDOMWindow : nsISupports
   const short OPEN_SWITCHTAB     = 4;
 
   /**
-   * Values for openURI's aContext parameter.  These affect the behavior of
-   * OPEN_DEFAULTWINDOW.
+   * Values for openURI's aFlags parameter. This is a bitflags field.
+   *
+   * The 0x1 bit decides the behavior of OPEN_DEFAULTWINDOW, and the 0x4 bit
+   * controls whether or not to set the window.opener property on the newly
+   * opened window.
+   *
+   * NOTE: The 0x2 bit is ignored for backwards compatibility with addons, as
+   * OPEN_NEW used to have the value 2. The values 0 and 2 are treated
+   * the same way internally.
    */
-  /**
-   * external link (load request from another application, xremote, etc).
-   */
-  const short OPEN_EXTERNAL      = 1;
   /**
    * internal open new window
    */
-  const short OPEN_NEW           = 2; 
+  const long OPEN_NEW           = 0x0;
+  /**
+   * external link (load request from another application, xremote, etc).
+   */
+  const long OPEN_EXTERNAL      = 0x1;
+
+  /**
+   * Don't set the window.opener property on the window which is being opened
+   */
+  const long OPEN_NO_OPENER     = 0x4;
 
   /**
    * Load a URI
@@ -82,13 +94,14 @@ interface nsIBrowserDOMWindow : nsISupports
    *             happened in will be returned.
    * @param aWhere see possible values described above.
    * @param aOpener window requesting the open (can be null).
-   * @param aContext the context in which the URI is being opened. This
-   *                 is used only when aWhere == OPEN_DEFAULTWINDOW.
+   * @param aFlags flags which control the behavior of the load. The
+   *               OPEN_EXTERNAL/OPEN_NEW flag is only used when
+   *               aWhere == OPEN_DEFAULTWINDOW.
    * @return the window into which the URI was opened.
   */
   mozIDOMWindowProxy
   openURI(in nsIURI aURI, in mozIDOMWindowProxy aOpener,
-          in short aWhere, in short aContext);
+          in short aWhere, in long aFlags);
 
   /**
    * As above, but return the nsIFrameLoaderOwner for the new window.
@@ -96,7 +109,7 @@ interface nsIBrowserDOMWindow : nsISupports
    // See bug 537428
    */
   nsIFrameLoaderOwner openURIInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
-                                     in short aWhere, in short aContext);
+                                     in short aWhere, in long aFlags);
 
   /**
    * @param  aWindow the window to test.

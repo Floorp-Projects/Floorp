@@ -53,9 +53,6 @@
     function runTest() {
       SimpleTest.waitForExplicitFinish();
 
-      let ds = Cc["@mozilla.org/intl/scriptabledateformat;1"].
-               getService(Ci.nsIScriptableDateFormat);
-
       function uri(spec) {
         return Services.io.newURI(spec, null, null);
       }
@@ -107,6 +104,9 @@
         ok(rc >= 3, "Rows found");
         let columns = tree.columns;
         ok(columns.count > 0, "Columns found");
+        const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                       .getService(Ci.nsIXULChromeRegistry)
+                       .getSelectedLocale("global", true);
         for (let r = 0; r < rc; r++) {
           let node = treeView.nodeForTreeIndex(r);
           ok(node, "Places node found");
@@ -127,23 +127,18 @@
               case "date":
                 let timeObj = new Date(node.time / 1000);
                 // Default is short date format.
-                let dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
+                let dtOptions = { year: '2-digit', month: 'numeric', day: 'numeric',
+                                  hour: 'numeric', minute: 'numeric' };
                 // For today's visits we don't show date portion.
                 if (node.uri == "http://at.midnight.com/" ||
-                    node.uri == "http://after.midnight.com/")
-                  dateFormat = Ci.nsIScriptableDateFormat.dateFormatNone;
-                else if (node.uri == "http://before.midnight.com/")
-                  dateFormat = Ci.nsIScriptableDateFormat.dateFormatShort;
-                else {
+                    node.uri == "http://after.midnight.com/") {
+                  dtOptions = { hour: 'numeric', minute: 'numeric' };
+                } else if (node.uri != "http://before.midnight.com/") {
                   // Avoid to test spurious uris, due to how the test works
                   // a redirecting uri could be put in the tree while we test.
                   break;
                 }
-                let timeStr = ds.FormatDateTime("", dateFormat,
-                      Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
-                      timeObj.getFullYear(), timeObj.getMonth() + 1,
-                      timeObj.getDate(), timeObj.getHours(),
-                      timeObj.getMinutes(), timeObj.getSeconds())
+                let timeStr = timeObj.toLocaleString(locale, dtOptions);
 
                 is(text, timeStr, "Date format is correct");
                 break;
