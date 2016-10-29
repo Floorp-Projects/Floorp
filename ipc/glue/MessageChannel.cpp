@@ -1628,7 +1628,14 @@ MessageChannel::MessageTask::Post()
     mScheduled = true;
 
     RefPtr<MessageTask> self = this;
-    mChannel->mWorkerLoop->PostTask(self.forget());
+    nsCOMPtr<nsIEventTarget> eventTarget =
+        mChannel->mListener->GetMessageEventTarget(mMessage);
+
+    if (eventTarget) {
+        eventTarget->Dispatch(self.forget(), NS_DISPATCH_NORMAL);
+    } else {
+        mChannel->mWorkerLoop->PostTask(self.forget());
+    }
 }
 
 void
