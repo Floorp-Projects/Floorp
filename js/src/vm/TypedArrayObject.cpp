@@ -794,7 +794,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                 return nullptr;
             }
 
-            if (!IsArrayBuffer(wrapped) && !IsSharedArrayBuffer(wrapped)) {
+            if (!IsAnyArrayBuffer(wrapped)) {
                 JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
                 return nullptr; // must be arrayBuffer
             }
@@ -837,7 +837,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return &rval.toObject();
         }
 
-        if (!IsArrayBuffer(bufobj) && !IsSharedArrayBuffer(bufobj)) {
+        if (!IsAnyArrayBuffer(bufobj)) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return nullptr; // must be arrayBuffer
         }
@@ -1540,7 +1540,7 @@ bool
 ArrayBufferObject::createTypedArrayFromBufferImpl(JSContext* cx, const CallArgs& args)
 {
     typedef TypedArrayObjectTemplate<T> ArrayType;
-    MOZ_ASSERT(IsArrayBuffer(args.thisv()));
+    MOZ_ASSERT(IsAnyArrayBuffer(args.thisv()));
     MOZ_ASSERT(args.length() == 3);
 
     Rooted<JSObject*> buffer(cx, &args.thisv().toObject());
@@ -1564,7 +1564,7 @@ bool
 ArrayBufferObject::createTypedArrayFromBuffer(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsArrayBuffer, createTypedArrayFromBufferImpl<T> >(cx, args);
+    return CallNonGenericMethod<IsAnyArrayBuffer, createTypedArrayFromBufferImpl<T> >(cx, args);
 }
 
 // this default implementation is only valid for integer types
