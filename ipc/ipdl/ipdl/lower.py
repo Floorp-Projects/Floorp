@@ -1093,13 +1093,8 @@ class Protocol(ipdl.ast.Protocol):
     def fqListenerName(self):
       return 'mozilla::ipc::MessageListener'
 
-    def fqBaseClass(self):
-        return 'mozilla::ipc::IProtocol'
-
     def managerInterfaceType(self, ptr=0):
-        return Type('mozilla::ipc::IProtocolManager',
-                    ptr=ptr,
-                    T=Type(self.fqBaseClass()))
+        return Type('mozilla::ipc::IProtocol', ptr=ptr)
 
     def openedProtocolInterfaceType(self, ptr=0):
         return Type('mozilla::ipc::IToplevelProtocol',
@@ -2625,7 +2620,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def standardTypedefs(self):
         return [
-            Typedef(Type(self.protocol.fqBaseClass()), 'ProtocolBase'),
+            Typedef(Type('mozilla::ipc::IProtocol'), 'ProtocolBase'),
             Typedef(Type('IPC::Message'), 'Message'),
             Typedef(Type(self.protocol.channelName()), 'Channel'),
             Typedef(Type(self.protocol.fqListenerName()), 'ChannelListener'),
@@ -2826,8 +2821,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         self.cls = Class(
             self.clsname,
-            inherits=[ Inherit(Type(p.fqBaseClass()), viz='public'),
-                       Inherit(p.managerInterfaceType(), viz='protected') ] +
+            inherits=[ Inherit(p.managerInterfaceType(), viz='public') ] +
             optinherits,
             abstract=True)
 
