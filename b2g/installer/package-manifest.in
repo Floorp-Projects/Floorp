@@ -157,11 +157,7 @@
 @RESPATH@/components/dom_wifi.xpt
 @RESPATH@/components/dom_system_gonk.xpt
 #endif
-#ifdef MOZ_B2G_RIL
-@RESPATH@/components/dom_mobileconnection.xpt
-#endif
 @RESPATH@/components/dom_canvas.xpt
-@RESPATH@/components/dom_contacts.xpt
 @RESPATH@/components/dom_core.xpt
 @RESPATH@/components/dom_css.xpt
 @RESPATH@/components/dom_events.xpt
@@ -337,8 +333,6 @@
 @RESPATH@/components/BrowserElementParent.js
 @RESPATH@/components/BrowserElementProxy.manifest
 @RESPATH@/components/BrowserElementProxy.js
-@RESPATH@/components/ContactManager.js
-@RESPATH@/components/ContactManager.manifest
 @RESPATH@/components/PhoneNumberService.js
 @RESPATH@/components/PhoneNumberService.manifest
 @RESPATH@/components/NotificationStorage.js
@@ -450,8 +444,6 @@
 #ifndef DISABLE_MOZ_RIL_GEOLOC
 @RESPATH@/components/DataCallInterfaceService.js
 @RESPATH@/components/DataCallInterfaceService.manifest
-@RESPATH@/components/MobileConnectionService.js
-@RESPATH@/components/MobileConnectionService.manifest
 @RESPATH@/components/RadioInterfaceLayer.js
 @RESPATH@/components/RadioInterfaceLayer.manifest
 @RESPATH@/components/SmsService.js

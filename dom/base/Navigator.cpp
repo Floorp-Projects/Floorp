@@ -40,7 +40,6 @@
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/FlyWebPublishedServer.h"
 #include "mozilla/dom/FlyWebService.h"
-#include "mozilla/dom/IccManager.h"
 #include "mozilla/dom/InputPortManager.h"
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/Presentation.h"
@@ -57,9 +56,6 @@
 #include "Connection.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "nsGlobalWindow.h"
-#ifdef MOZ_B2G_RIL
-#include "mozilla/dom/MobileConnectionArray.h"
-#endif
 #include "nsIIdleObserver.h"
 #include "nsIPermissionManager.h"
 #include "nsMimeTypes.h"
@@ -211,13 +207,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryPromise)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPowerManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIccManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInputPortManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStorageManager)
-#ifdef MOZ_B2G_RIL
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileConnections)
-#endif
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioChannelManager)
 #endif
@@ -278,11 +270,6 @@ Navigator::Invalidate()
     mPowerManager = nullptr;
   }
 
-  if (mIccManager) {
-    mIccManager->Shutdown();
-    mIccManager = nullptr;
-  }
-
   if (mInputPortManager) {
     mInputPortManager = nullptr;
   }
@@ -291,12 +278,6 @@ Navigator::Invalidate()
     mConnection->Shutdown();
     mConnection = nullptr;
   }
-
-#ifdef MOZ_B2G_RIL
-  if (mMobileConnections) {
-    mMobileConnections = nullptr;
-  }
-#endif
 
   mMediaDevices = nullptr;
 
@@ -1624,40 +1605,6 @@ Navigator::MozTCPSocket()
 {
   RefPtr<LegacyMozTCPSocket> socket = new LegacyMozTCPSocket(GetWindow());
   return socket.forget();
-}
-
-#ifdef MOZ_B2G_RIL
-
-MobileConnectionArray*
-Navigator::GetMozMobileConnections(ErrorResult& aRv)
-{
-  if (!mMobileConnections) {
-    if (!mWindow) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-    mMobileConnections = new MobileConnectionArray(mWindow);
-  }
-
-  return mMobileConnections;
-}
-
-#endif // MOZ_B2G_RIL
-
-IccManager*
-Navigator::GetMozIccManager(ErrorResult& aRv)
-{
-  if (!mIccManager) {
-    if (!mWindow) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
-
-    mIccManager = new IccManager(mWindow);
-  }
-
-  return mIccManager;
 }
 
 #ifdef MOZ_GAMEPAD
