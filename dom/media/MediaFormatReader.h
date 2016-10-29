@@ -549,6 +549,7 @@ private:
 
   // Seeking objects.
   void SetSeekTarget(const SeekTarget& aTarget);
+  media::TimeUnit DemuxStartTime();
   bool IsSeeking() const { return mPendingSeekTime.isSome(); }
   bool IsVideoSeeking() const
   {
@@ -580,15 +581,6 @@ private:
   RefPtr<GMPCrashHelper> mCrashHelper;
 
   void SetBlankDecode(TrackType aTrack, bool aIsBlankDecode);
-
-  void OnFirstDemuxCompleted(TrackInfo::TrackType aType,
-                             RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
-
-  void OnFirstDemuxFailed(TrackInfo::TrackType aType, const MediaResult& aError);
-
-  void MaybeResolveMetadataPromise();
-
-  UniquePtr<MetadataTags> mTags;
 };
 
 } // namespace mozilla
