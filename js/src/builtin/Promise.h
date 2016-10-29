@@ -40,7 +40,7 @@ class PromiseObject : public NativeObject
     static const Class class_;
     static const Class protoClass_;
     static PromiseObject* create(JSContext* cx, HandleObject executor,
-                                 HandleObject proto = nullptr);
+                                 HandleObject proto = nullptr, bool needsWrapping = false);
 
     static JSObject* unforgeableResolve(JSContext* cx, HandleValue value);
     static JSObject* unforgeableReject(JSContext* cx, HandleValue value);

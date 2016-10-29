@@ -1190,11 +1190,11 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedObject proto(cx);
-    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+    if (!GetPrototypeFromConstructor(cx, needsWrapping ? newTarget : originalNewTarget, &proto))
         return false;
     if (needsWrapping && !cx->compartment()->wrap(cx, &proto))
         return false;
-    Rooted<PromiseObject*> promise(cx, PromiseObject::create(cx, executor, proto));
+    Rooted<PromiseObject*> promise(cx, PromiseObject::create(cx, executor, proto, needsWrapping));
     if (!promise)
         return false;
 
@@ -1207,18 +1207,18 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
 
 // ES2016, 25.4.3.1. steps 3-11.
 /* static */ PromiseObject*
-PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /* = nullptr */)
+PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /* = nullptr */,
+                      bool needsWrapping /* = false */)
 {
     MOZ_ASSERT(executor->isCallable());
 
     RootedObject usedProto(cx, proto);
-    bool wrappedProto = false;
     // If the proto is wrapped, that means the current function is running
     // with a different compartment active from the one the Promise instance
     // is to be created in.
     // See the comment in PromiseConstructor for details.
-    if (proto && IsWrapper(proto)) {
-        wrappedProto = true;
+    if (needsWrapping) {
+        MOZ_ASSERT(proto);
         usedProto = CheckedUnwrap(proto);
         if (!usedProto)
             return nullptr;
@@ -1226,13 +1226,13 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
 
 
     // Steps 3-7.
-    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectInternal(cx, usedProto, wrappedProto,
+    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectInternal(cx, usedProto, needsWrapping,
                                                                    false));
     if (!promise)
         return nullptr;
 
     RootedValue promiseVal(cx, ObjectValue(*promise));
-    if (wrappedProto && !cx->compartment()->wrap(cx, &promiseVal))
+    if (needsWrapping && !cx->compartment()->wrap(cx, &promiseVal))
         return nullptr;
 
     // Step 8.
@@ -1245,7 +1245,7 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
         return nullptr;
 
     // Need to wrap the resolution functions before storing them on the Promise.
-    if (wrappedProto) {
+    if (needsWrapping) {
         AutoCompartment ac(cx, promise);
         RootedValue wrappedRejectVal(cx, rejectVal);
         if (!cx->compartment()->wrap(cx, &wrappedRejectVal))
