@@ -194,11 +194,6 @@ function testCopy(copyVal, targetValue, cb) {
 }
 
 function loadURL(aURL, aCB) {
-  gBrowser.selectedBrowser.addEventListener("load", function () {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-    is(gBrowser.currentURI.spec, aURL, "loaded expected URL");
-    aCB();
-  }, true);
-
-  gBrowser.loadURI(aURL);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, aURL);
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, aURL).then(aCB);
 }
