@@ -54,6 +54,9 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
     def install_browser_packages(self):
         pass
 
+    def install_browser_artifact_mode_packages(self):
+        pass
+
     def install_mobile_android_packages(self):
         pass
 
