@@ -176,7 +176,7 @@ class Endpoint;
  * IToplevelProtocol tracks all top-level protocol actors created from
  * this protocol actor.
  */
-class IToplevelProtocol
+class IToplevelProtocol : public IProtocol
 {
     template<class PFooSide> friend class Endpoint;
 
