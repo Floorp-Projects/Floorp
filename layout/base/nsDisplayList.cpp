@@ -7104,6 +7104,20 @@ bool nsDisplayMask::ShouldPaintOnMaskLayer(LayerManager* aManager)
     return false;
   }
 
+  // XXX temporary disable drawing SVG mask onto mask layer before bug 1313877
+  // been fixed.
+  nsIFrame* firstFrame =
+    nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
+  nsSVGEffects::EffectProperties effectProperties =
+    nsSVGEffects::GetEffectProperties(firstFrame);
+  nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
+  for (size_t i = 0; i < maskFrames.Length() ; i++) {
+    nsSVGMaskFrame *maskFrame = maskFrames[i];
+    if (maskFrame) {
+      return false; // Found SVG mask.
+    }
+  }
+
   return true;
 }
 
