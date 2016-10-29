@@ -453,17 +453,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   // Replace the engine with the selected one-off engine.
                   action.params.engineName = selectedOneOff.engine.name;
                 }
-                const actionDetails = {
-                  isSuggestion: !!action.params.searchSuggestion,
-                  isAlias: !!action.params.alias
-                };
                 [url, postData] = this._recordSearchEngineLoad(
                   action.params.engineName,
                   action.params.searchSuggestion || action.params.searchQuery,
                   event,
                   where,
-                  openUILinkParams,
-                  actionDetails
+                  openUILinkParams
                 );
                 break;
             }
@@ -594,27 +589,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <parameter name="event"/>
         <parameter name="openUILinkWhere"/>
         <parameter name="openUILinkParams"/>
-        <parameter name="searchActionDetails"/>
         <body><![CDATA[
           let engine =
             typeof(engineOrEngineName) == "string" ?
               Services.search.getEngineByName(engineOrEngineName) :
               engineOrEngineName;
-          let isOneOff = this.popup.oneOffSearchButtons
+          BrowserSearch.recordSearchInTelemetry(engine, "urlbar");
+          this.popup.oneOffSearchButtons
               .maybeRecordTelemetry(event, openUILinkWhere, openUILinkParams);
-          // Infer the type of the even which triggered the search.
-          let eventType = "unknown";
-          if (event instanceof KeyboardEvent) {
-            eventType = "key";
-          } else if (event instanceof MouseEvent) {
-            eventType = "mouse";
-          }
-          // Augment the search action details object.
-          let details = searchActionDetails || {};
-          details.isOneOff = isOneOff;
-          details.type = eventType;
-
-          BrowserSearch.recordSearchInTelemetry(engine, "urlbar", details);
           let submission = engine.getSubmission(query, null, "keyword");
           return [submission.uri.spec, submission.postData];
         ]]></body>
