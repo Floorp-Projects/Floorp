@@ -3322,11 +3322,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset
            nsChangeHint_ClearAncestorIntrinsics;
   }
 
-  mozilla::StyleUserSelect mUserSelect;   // [reset] (selection-style)
-  uint8_t   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)
-  uint8_t   mIMEMode;         // [reset]
-  uint8_t   mWindowDragging;  // [reset]
-  uint8_t   mWindowShadow;    // [reset]
+  mozilla::StyleUserSelect     mUserSelect;     // [reset](selection-style)
+  uint8_t mForceBrokenImageIcon; // [reset] (0 if not forcing, otherwise forcing)
+  uint8_t                      mIMEMode;        // [reset]
+  mozilla::StyleWindowDragging mWindowDragging; // [reset]
+  uint8_t                      mWindowShadow;   // [reset]
 };
 
 struct nsCursorImage
