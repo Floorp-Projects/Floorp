@@ -1252,10 +1252,19 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
   if (Info().mMetadataDuration.isSome()) {
     mMaster->RecomputeDuration();
   } else if (Info().mUnadjustedMetadataEndTime.isSome()) {
-    const TimeUnit unadjusted = Info().mUnadjustedMetadataEndTime.ref();
-    const TimeUnit adjustment = Info().mStartTime;
-    mMaster->mInfo->mMetadataDuration.emplace(unadjusted - adjustment);
-    mMaster->RecomputeDuration();
+    RefPtr<Master> master = mMaster;
+    Reader()->AwaitStartTime()->Then(OwnerThread(), __func__,
+      [master] () {
+        NS_ENSURE_TRUE_VOID(!master->IsShutdown());
+        auto& info = master->mInfo.ref();
+        TimeUnit unadjusted = info.mUnadjustedMetadataEndTime.ref();
+        TimeUnit adjustment = master->mReader->StartTime();
+        info.mMetadataDuration.emplace(unadjusted - adjustment);
+        master->RecomputeDuration();
+      }, [master, this] () {
+        SWARN("Adjusting metadata end time failed");
+      }
+    );
   }
 
   if (mMaster->HasVideo()) {
@@ -1265,11 +1274,22 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
          mMaster->GetAmpleVideoFrames());
   }
 
-  MOZ_ASSERT(mMaster->mDuration.Ref().isSome());
+  // In general, we wait until we know the duration before notifying the decoder.
+  // However, we notify  unconditionally in this case without waiting for the start
+  // time, since the caller might be waiting on metadataloaded to be fired before
+  // feeding in the CDM, which we need to decode the first frame (and
+  // thus get the metadata). We could fix this if we could compute the start
+  // time by demuxing without necessaring decoding.
+  bool waitingForCDM = Info().IsEncrypted() && !mMaster->mCDMProxy;
 
-  mMaster->EnqueueLoadedMetadataEvent();
+  mMaster->mNotifyMetadataBeforeFirstFrame =
+    mMaster->mDuration.Ref().isSome() || waitingForCDM;
 
-  if (Info().IsEncrypted() && !mMaster->mCDMProxy) {
+  if (mMaster->mNotifyMetadataBeforeFirstFrame) {
+    mMaster->EnqueueLoadedMetadataEvent();
+  }
+
+  if (waitingForCDM) {
     // Metadata parsing was successful but we're still waiting for CDM caps
     // to become available so that we can build the correct decryptor/decoder.
     SetState<WaitForCDMState>(mPendingDormant);
@@ -1512,25 +1532,30 @@ MediaDecoderStateMachine::
 SeekingState::SeekCompleted()
 {
   int64_t seekTime = mSeekTask->GetSeekTarget().GetTime().ToMicroseconds();
-  int64_t newCurrentTime;
+  int64_t newCurrentTime = seekTime;
 
-  // For the accurate seek, we always set the newCurrentTime = seekTime so that
-  // the updated HTMLMediaElement.currentTime will always be the seek target;
-  // we rely on the MediaSink to handles the gap between the newCurrentTime and
-  // the real decoded samples' start time.
-  // For the other seek types, we update the newCurrentTime with the decoded
-  // samples, set it to be the smallest start time of decoded samples.
-  if (mSeekTask->GetSeekTarget().IsAccurate()) {
+  // Setup timestamp state.
+  RefPtr<MediaData> video = mMaster->VideoQueue().PeekFront();
+  if (seekTime == mMaster->Duration().ToMicroseconds()) {
     newCurrentTime = seekTime;
-  } else {
+  } else if (mMaster->HasAudio()) {
     RefPtr<MediaData> audio = mMaster->AudioQueue().PeekFront();
-    RefPtr<MediaData> video = mMaster->VideoQueue().PeekFront();
-    const int64_t audioStart = audio ? audio->mTime : INT64_MAX;
-    const int64_t videoStart = video ? video->mTime : INT64_MAX;
-    newCurrentTime = std::min(audioStart, videoStart);
-    if (newCurrentTime == INT64_MAX) {
-      newCurrentTime = seekTime;
+    // Though we adjust the newCurrentTime in audio-based, and supplemented
+    // by video. For better UX, should NOT bind the slide position to
+    // the first audio data timestamp directly.
+    // While seeking to a position where there's only either audio or video, or
+    // seeking to a position lies before audio or video, we need to check if
+    // seekTime is bounded in suitable duration. See Bug 1112438.
+    int64_t audioStart = audio ? audio->mTime : seekTime;
+    // We only pin the seek time to the video start time if the video frame
+    // contains the seek time.
+    if (video && video->mTime <= seekTime && video->GetEndTime() > seekTime) {
+      newCurrentTime = std::min(audioStart, video->mTime);
+    } else {
+      newCurrentTime = audioStart;
     }
+  } else {
+    newCurrentTime = video ? video->mTime : seekTime;
   }
 
   // Change state to DECODING or COMPLETED now.
@@ -1570,7 +1595,7 @@ SeekingState::SeekCompleted()
   // Try to decode another frame to detect if we're at the end...
   SLOG("Seek completed, mCurrentPosition=%lld", mMaster->mCurrentPosition.Ref());
 
-  if (mMaster->VideoQueue().PeekFront()) {
+  if (video) {
     mMaster->mMediaSink->Redraw(Info().mVideo);
     mMaster->mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
   }
@@ -1758,6 +1783,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mAudioCaptured(false),
   INIT_WATCHABLE(mAudioCompleted, false),
   INIT_WATCHABLE(mVideoCompleted, false),
+  mNotifyMetadataBeforeFirstFrame(false),
   mMinimizePreroll(false),
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
@@ -2411,10 +2437,7 @@ void MediaDecoderStateMachine::RecomputeDuration()
     duration = TimeUnit::FromSeconds(d);
   } else if (mEstimatedDuration.Ref().isSome()) {
     duration = mEstimatedDuration.Ref().ref();
-  } else if (mInfo.isSome() && Info().mMetadataDuration.isSome()) {
-    // We need to check mInfo.isSome() because that this method might be invoked
-    // while mObservedDuration is changed which might before the metadata been
-    // read.
+  } else if (Info().mMetadataDuration.isSome()) {
     duration = Info().mMetadataDuration.ref();
   } else {
     return;
@@ -2909,6 +2932,11 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
 
   // Get potentially updated metadata
   mReader->ReadUpdatedMetadata(mInfo.ptr());
+
+  if (!mNotifyMetadataBeforeFirstFrame) {
+    // If we didn't have duration and/or start time before, we should now.
+    EnqueueLoadedMetadataEvent();
+  }
 
   EnqueueFirstFrameLoadedEvent();
 }

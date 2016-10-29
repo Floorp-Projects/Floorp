@@ -9,6 +9,135 @@
 
 namespace mozilla {
 
+extern LazyLogModule gMediaDecoderLog;
+
+#undef LOG
+#define LOG(...) \
+  MOZ_LOG(gMediaDecoderLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+
+// StartTimeRendezvous is a helper class that quarantines the first sample
+// until it gets a sample from both channels, such that we can be guaranteed
+// to know the start time by the time On{Audio,Video}Decoded is called on MDSM.
+class StartTimeRendezvous {
+  typedef MediaDecoderReader::MediaDataPromise MediaDataPromise;
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StartTimeRendezvous);
+
+public:
+  StartTimeRendezvous(AbstractThread* aOwnerThread,
+                      bool aHasAudio,
+                      bool aHasVideo,
+                      bool aForceZeroStartTime)
+    : mOwnerThread(aOwnerThread)
+  {
+    if (aForceZeroStartTime) {
+      mAudioStartTime.emplace(0);
+      mVideoStartTime.emplace(0);
+      return;
+    }
+    if (!aHasAudio) {
+      mAudioStartTime.emplace(INT64_MAX);
+    }
+    if (!aHasVideo) {
+      mVideoStartTime.emplace(INT64_MAX);
+    }
+  }
+
+  void Destroy()
+  {
+    mAudioStartTime = Some(mAudioStartTime.refOr(INT64_MAX));
+    mVideoStartTime = Some(mVideoStartTime.refOr(INT64_MAX));
+    mHaveStartTimePromise.RejectIfExists(false, __func__);
+  }
+
+  RefPtr<HaveStartTimePromise> AwaitStartTime()
+  {
+    if (HaveStartTime()) {
+      return HaveStartTimePromise::CreateAndResolve(true, __func__);
+    }
+    return mHaveStartTimePromise.Ensure(__func__);
+  }
+
+  template<MediaData::Type SampleType>
+  RefPtr<MediaDataPromise>
+  ProcessFirstSample(MediaData* aData)
+  {
+    typedef typename MediaDataPromise::Private PromisePrivate;
+    MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+
+    MaybeSetChannelStartTime<SampleType>(aData->mTime);
+
+    RefPtr<PromisePrivate> p = new PromisePrivate(__func__);
+    RefPtr<MediaData> data = aData;
+    RefPtr<StartTimeRendezvous> self = this;
+    AwaitStartTime()->Then(
+      mOwnerThread, __func__,
+      [p, data, self] () {
+        MOZ_ASSERT(self->mOwnerThread->IsCurrentThreadIn());
+        p->Resolve(data, __func__);
+      },
+      [p] () {
+        p->Reject(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+      });
+
+    return p.forget();
+  }
+
+  template<MediaData::Type SampleType>
+  void FirstSampleRejected(const MediaResult& aError)
+  {
+    MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+    if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+      LOG("StartTimeRendezvous=%p SampleType(%d) Has no samples.",
+           this, SampleType);
+      MaybeSetChannelStartTime<SampleType>(INT64_MAX);
+    } else if (aError != NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
+      mHaveStartTimePromise.RejectIfExists(false, __func__);
+    }
+  }
+
+  bool HaveStartTime() const
+  {
+    return mAudioStartTime.isSome() && mVideoStartTime.isSome();
+  }
+
+  int64_t StartTime() const
+  {
+    int64_t time = std::min(mAudioStartTime.ref(), mVideoStartTime.ref());
+    return time == INT64_MAX ? 0 : time;
+  }
+
+private:
+  ~StartTimeRendezvous() {}
+
+  template<MediaData::Type SampleType>
+  void MaybeSetChannelStartTime(int64_t aStartTime)
+  {
+    if (ChannelStartTime(SampleType).isSome()) {
+      // If we're initialized with aForceZeroStartTime=true, the channel start
+      // times are already set.
+      return;
+    }
+
+    LOG("StartTimeRendezvous=%p Setting SampleType(%d) start time to %lld",
+        this, SampleType, aStartTime);
+
+    ChannelStartTime(SampleType).emplace(aStartTime);
+    if (HaveStartTime()) {
+      mHaveStartTimePromise.ResolveIfExists(true, __func__);
+    }
+  }
+
+  Maybe<int64_t>& ChannelStartTime(MediaData::Type aType)
+  {
+    return aType == MediaData::AUDIO_DATA ? mAudioStartTime : mVideoStartTime;
+  }
+
+  MozPromiseHolder<HaveStartTimePromise> mHaveStartTimePromise;
+  RefPtr<AbstractThread> mOwnerThread;
+  Maybe<int64_t> mAudioStartTime;
+  Maybe<int64_t> mVideoStartTime;
+};
+
 MediaDecoderReaderWrapper::MediaDecoderReaderWrapper(AbstractThread* aOwnerThread,
                                                      MediaDecoderReader* aReader)
   : mForceZeroStartTime(aReader->ForceZeroStartTime())
@@ -24,7 +153,7 @@ MediaDecoderReaderWrapper::StartTime() const
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
-  return mStartTime.ref();
+  return media::TimeUnit::FromMicroseconds(mStartTimeRendezvous->StartTime());
 }
 
 RefPtr<MediaDecoderReaderWrapper::MetadataPromise>
@@ -40,6 +169,14 @@ MediaDecoderReaderWrapper::ReadMetadata()
          ->CompletionPromise();
 }
 
+RefPtr<HaveStartTimePromise>
+MediaDecoderReaderWrapper::AwaitStartTime()
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  MOZ_ASSERT(!mShutdown);
+  return mStartTimeRendezvous->AwaitStartTime();
+}
+
 void
 MediaDecoderReaderWrapper::RequestAudioData()
 {
@@ -48,6 +185,13 @@ MediaDecoderReaderWrapper::RequestAudioData()
 
   auto p = InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
                        &MediaDecoderReader::RequestAudioData);
+
+  if (!mStartTimeRendezvous->HaveStartTime()) {
+    p = p->Then(mOwnerThread, __func__, mStartTimeRendezvous.get(),
+                &StartTimeRendezvous::ProcessFirstSample<MediaData::AUDIO_DATA>,
+                &StartTimeRendezvous::FirstSampleRejected<MediaData::AUDIO_DATA>)
+         ->CompletionPromise();
+  }
 
   RefPtr<MediaDecoderReaderWrapper> self = this;
   mAudioDataRequest.Begin(p->Then(mOwnerThread, __func__,
@@ -73,13 +217,21 @@ MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
   // a TimeStamp as its second parameter.
   TimeStamp videoDecodeStartTime = TimeStamp::Now();
 
-  if (aTimeThreshold.ToMicroseconds() > 0) {
+  if (aTimeThreshold.ToMicroseconds() > 0 &&
+      mStartTimeRendezvous->HaveStartTime()) {
     aTimeThreshold += StartTime();
   }
 
   auto p = InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
                        &MediaDecoderReader::RequestVideoData,
                        aSkipToNextKeyframe, aTimeThreshold.ToMicroseconds());
+
+  if (!mStartTimeRendezvous->HaveStartTime()) {
+    p = p->Then(mOwnerThread, __func__, mStartTimeRendezvous.get(),
+                &StartTimeRendezvous::ProcessFirstSample<MediaData::VIDEO_DATA>,
+                &StartTimeRendezvous::FirstSampleRejected<MediaData::VIDEO_DATA>)
+         ->CompletionPromise();
+  }
 
   RefPtr<MediaDecoderReaderWrapper> self = this;
   mVideoDataRequest.Begin(p->Then(mOwnerThread, __func__,
@@ -222,6 +374,10 @@ MediaDecoderReaderWrapper::Shutdown()
   MOZ_ASSERT(!mVideoDataRequest.Exists());
 
   mShutdown = true;
+  if (mStartTimeRendezvous) {
+    mStartTimeRendezvous->Destroy();
+    mStartTimeRendezvous = nullptr;
+  }
   return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
                      &MediaDecoderReader::Shutdown);
 }
@@ -233,13 +389,23 @@ MediaDecoderReaderWrapper::OnMetadataRead(MetadataHolder* aMetadata)
   if (mShutdown) {
     return;
   }
+  // Set up the start time rendezvous if it doesn't already exist (which is
+  // generally the case, unless we're coming out of dormant mode).
+  if (!mStartTimeRendezvous) {
+    mStartTimeRendezvous = new StartTimeRendezvous(
+      mOwnerThread, aMetadata->mInfo.HasAudio(),
+      aMetadata->mInfo.HasVideo(), mForceZeroStartTime);
 
-  if (mStartTime.isNothing()) {
-    mStartTime.emplace(aMetadata->mInfo.mStartTime);
-    // Note: MFR should be able to setup its start time by itself without going
-    // through here. MediaDecoderReader::DispatchSetStartTime() will be removed
-    // once we remove all the legacy readers' code in the following bugs.
-    mReader->DispatchSetStartTime(StartTime().ToMicroseconds());
+    RefPtr<MediaDecoderReaderWrapper> self = this;
+    mStartTimeRendezvous->AwaitStartTime()->Then(
+      mOwnerThread, __func__,
+      [self] ()  {
+        NS_ENSURE_TRUE_VOID(!self->mShutdown);
+        self->mReader->DispatchSetStartTime(self->StartTime().ToMicroseconds());
+      },
+      [] () {
+        NS_WARNING("Setting start time on reader failed");
+      });
   }
 }
 
