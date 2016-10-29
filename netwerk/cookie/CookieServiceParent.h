@@ -36,10 +36,6 @@ protected:
                                    const bool& aFromHttp,
                                    const NeckoOriginAttributes& aAttrs) override;
 
-  virtual mozilla::ipc::IProtocol*
-  CloneProtocol(Channel* aChannel,
-                mozilla::ipc::ProtocolCloneContext* aCtx) override;
-
   RefPtr<nsCookieService> mCookieService;
 };
 
