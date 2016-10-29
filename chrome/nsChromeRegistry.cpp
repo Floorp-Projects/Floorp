@@ -650,11 +650,6 @@ nsChromeRegistry::MustLoadURLRemotely(nsIURI *aURI, bool *aResult)
 bool
 nsChromeRegistry::GetDirectionForLocale(const nsACString& aLocale)
 {
-#ifdef ENABLE_INTL_API
-  nsAutoCString locale(aLocale);
-  SanitizeForBCP47(locale);
-  return uloc_isRightToLeft(locale.get());
-#else
   // first check the intl.uidirection.<locale> preference, and if that is not
   // set, check the same preference but with just the first two characters of
   // the locale. If that isn't set, default to left-to-right.
@@ -675,7 +670,6 @@ nsChromeRegistry::GetDirectionForLocale(const nsACString& aLocale)
   }
 
   return dir.EqualsLiteral("rtl");
-#endif
 }
 
 NS_IMETHODIMP_(bool)
