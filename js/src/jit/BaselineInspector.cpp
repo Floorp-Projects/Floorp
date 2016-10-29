@@ -113,7 +113,7 @@ GetCacheIRReceiverForNativeReadSlot(ICCacheIR_Monitored* stub, ReceiverGuard* re
     //
     //   GuardIsObject 0
     //   GuardShape 0
-    //   LoadFixedSlotResult or LoadDynamicSlotResult
+    //   LoadFixedSlotResult 0 or LoadDynamicSlotResult 0
     //
     // or
     //
@@ -121,8 +121,7 @@ GetCacheIRReceiverForNativeReadSlot(ICCacheIR_Monitored* stub, ReceiverGuard* re
     //   GuardGroup 0
     //   1: GuardAndLoadUnboxedExpando 0
     //   GuardShape 1
-    //   LoadUnboxedExpando 0
-    //   LoadFixedSlotResult or LoadDynamicSlotResult
+    //   LoadFixedSlotResult 1 or LoadDynamicSlotResult 1
 
     *receiver = ReceiverGuard();
     CacheIRReader reader(stub->stubInfo());
@@ -141,13 +140,6 @@ GetCacheIRReceiverForNativeReadSlot(ICCacheIR_Monitored* stub, ReceiverGuard* re
 
     if (reader.matchOp(CacheOp::GuardShape, objId)) {
         receiver->shape = stub->stubInfo()->getStubField<Shape*>(stub, reader.stubOffset());
-
-        // Skip LoadUnboxedExpando. Note that this op is redundant with the
-        // previous GuardAndLoadUnboxedExpando op, but for now we match the
-        // Ion IC codegen.
-        if (reader.matchOp(CacheOp::LoadUnboxedExpando, ObjOperandId(0)))
-            objId = reader.objOperandId();
-
         return reader.matchOpEither(CacheOp::LoadFixedSlotResult, CacheOp::LoadDynamicSlotResult);
     }
 

@@ -11,32 +11,14 @@
 #include "compiler/translator/SymbolTable.h"
 #include "compiler/translator/VersionGLSL.h"
 
-void InitBuiltInFunctionEmulatorForGLSLWorkarounds(BuiltInFunctionEmulator *emu, sh::GLenum shaderType)
+void InitBuiltInAbsFunctionEmulatorForGLSLWorkarounds(BuiltInFunctionEmulator *emu,
+                                                      sh::GLenum shaderType)
 {
-    // we use macros here instead of function definitions to work around more GLSL
-    // compiler bugs, in particular on NVIDIA hardware on Mac OSX. Macros are
-    // problematic because if the argument has side-effects they will be repeatedly
-    // evaluated. This is unlikely to show up in real shaders, but is something to
-    // consider.
-
-    const TType *float1 = TCache::getType(EbtFloat);
-    const TType *float2 = TCache::getType(EbtFloat, 2);
-    const TType *float3 = TCache::getType(EbtFloat, 3);
-    const TType *float4 = TCache::getType(EbtFloat, 4);
-
-    if (shaderType == GL_FRAGMENT_SHADER)
+    if (shaderType == GL_VERTEX_SHADER)
     {
-        emu->addEmulatedFunction(EOpCos, float1, "webgl_emu_precision float webgl_cos_emu(webgl_emu_precision float a) { return cos(a); }");
-        emu->addEmulatedFunction(EOpCos, float2, "webgl_emu_precision vec2 webgl_cos_emu(webgl_emu_precision vec2 a) { return cos(a); }");
-        emu->addEmulatedFunction(EOpCos, float3, "webgl_emu_precision vec3 webgl_cos_emu(webgl_emu_precision vec3 a) { return cos(a); }");
-        emu->addEmulatedFunction(EOpCos, float4, "webgl_emu_precision vec4 webgl_cos_emu(webgl_emu_precision vec4 a) { return cos(a); }");
+        const TType *int1 = TCache::getType(EbtInt);
+        emu->addEmulatedFunction(EOpAbs, int1, "int webgl_abs_emu(int x) { return x * sign(x); }");
     }
-    emu->addEmulatedFunction(EOpDistance, float1, float1, "#define webgl_distance_emu(x, y) ((x) >= (y) ? (x) - (y) : (y) - (x))");
-    emu->addEmulatedFunction(EOpDot, float1, float1, "#define webgl_dot_emu(x, y) ((x) * (y))");
-    emu->addEmulatedFunction(EOpLength, float1, "#define webgl_length_emu(x) ((x) >= 0.0 ? (x) : -(x))");
-    emu->addEmulatedFunction(EOpNormalize, float1, "#define webgl_normalize_emu(x) ((x) == 0.0 ? 0.0 : ((x) > 0.0 ? 1.0 : -1.0))");
-    emu->addEmulatedFunction(EOpReflect, float1, float1, "#define webgl_reflect_emu(I, N) ((I) - 2.0 * (N) * (I) * (N))");
-    emu->addEmulatedFunction(EOpFaceForward, float1, float1, float1, "#define webgl_faceforward_emu(N, I, Nref) (((Nref) * (I) < 0.0) ? (N) : -(N))");
 }
 
 // Emulate built-in functions missing from GLSL 1.30 and higher
@@ -181,7 +163,9 @@ void InitBuiltInFunctionEmulatorForGLSLMissingFunctions(BuiltInFunctionEmulator 
             "            float scale;\n"
             "            if(exponent < 0)\n"
             "            {\n"
-            "                scale = 1.0 / (1 << -exponent);\n"
+            "                // The negative unary operator is buggy on OSX.\n"
+            "                // Work around this by using abs instead.\n"
+            "                scale = 1.0 / (1 << abs(exponent));\n"
             "            }\n"
             "            else\n"
             "            {\n"

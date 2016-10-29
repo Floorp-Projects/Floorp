@@ -65,7 +65,7 @@ public:
   }
   virtual void GetBackendName(nsAString& aName) {}
   virtual LayersBackend GetBackendType() { return LayersBackend::LAYERS_BASIC; }
-  virtual void BeginTransaction() {}
+  virtual bool BeginTransaction() { return true; }
   virtual already_AddRefed<ImageLayer> CreateImageLayer() {
     NS_RUNTIMEABORT("Not implemented.");
     return nullptr;
@@ -79,7 +79,7 @@ public:
     return nullptr;
   }
   virtual void SetRoot(Layer* aLayer) {}
-  virtual void BeginTransactionWithTarget(gfxContext* aTarget) {}
+  virtual bool BeginTransactionWithTarget(gfxContext* aTarget) { return true; }
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() {
     NS_RUNTIMEABORT("Not implemented.");
     return nullptr;

@@ -34,6 +34,11 @@ skip script test262/intl402/ch12/12.2/12.2.2_L15.js
 skip script test262/ch13/13.2/13.2-15-1.js
 skip script test262/ch11/11.4/11.4.1/11.4.1-5-a-28-s.js
 
+# ECMA-402 1st ed. required |timeZoneName: undefined|, but newer versions have
+# changed it to being the default time zone, cf. the NOTE in
+# Intl.DateTimeFormat.prototype.resolvedOptions().
+skip script test262/intl402/ch12/12.3/12.3.3.js
+
 #######################################################################
 # Tests disabled due to jstest limitations wrt imported test262 tests #
 #######################################################################

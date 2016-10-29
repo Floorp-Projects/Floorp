@@ -49,12 +49,16 @@ class BufferOffset
     // inserted between the branch and its destination.
     template <class BOffImm>
     BOffImm diffB(BufferOffset other) const {
+        if (!BOffImm::IsInRange(offset - other.offset))
+            return BOffImm();
         return BOffImm(offset - other.offset);
     }
 
     template <class BOffImm>
     BOffImm diffB(Label* other) const {
         MOZ_ASSERT(other->bound());
+        if (!BOffImm::IsInRange(offset - other->offset()))
+            return BOffImm();
         return BOffImm(offset - other->offset());
     }
 };

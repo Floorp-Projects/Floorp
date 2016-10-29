@@ -1777,9 +1777,13 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
 
   if (doBeginTransaction) {
     if (aCtx) {
-      layerManager->BeginTransactionWithTarget(aCtx->ThebesContext());
+      if (!layerManager->BeginTransactionWithTarget(aCtx->ThebesContext())) {
+        return nullptr;
+      }
     } else {
-      layerManager->BeginTransaction();
+      if (!layerManager->BeginTransaction()) {
+        return nullptr;
+      }
     }
   }
 

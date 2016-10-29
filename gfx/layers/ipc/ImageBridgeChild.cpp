@@ -436,7 +436,9 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
   PCompositableChild* child =
     SendPCompositableConstructor(aCompositable->GetTextureInfo(),
                                  imageContainerChild, &id);
-  MOZ_ASSERT(child);
+  if (!child) {
+    return;
+  }
   aCompositable->InitIPDLActor(child, id);
 }
 
@@ -929,10 +931,15 @@ ImageBridgeChild::CreateImageClientNow(CompositableType aType,
                                        ImageContainerChild* aContainerChild)
 {
   MOZ_ASSERT(InImageBridgeChildThread());
+  if (!CanSend()) {
+    return nullptr;
+  }
 
   if (aImageContainer) {
-    SendPImageContainerConstructor(aContainerChild);
     aContainerChild->RegisterWithIPDL();
+    if (!SendPImageContainerConstructor(aContainerChild)) {
+      return nullptr;
+    }
   }
 
   RefPtr<ImageClient> client = ImageClient::CreateImageClient(aType, this, TextureFlags::NO_FLAGS);

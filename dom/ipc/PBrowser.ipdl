@@ -139,9 +139,11 @@ parent:
      * Tell the parent process a new accessible document has been created.
      * aParentDoc is the accessible document it was created in if any, and
      * aParentAcc is the id of the accessible in that document the new document
-     * is a child of.
+     * is a child of. aMsaaID is the MSAA id for this content process, and
+     * is only valid on Windows. Set to 0 on other platforms.
      */
-    async PDocAccessible(nullable PDocAccessible aParentDoc, uint64_t aParentAcc);
+    async PDocAccessible(nullable PDocAccessible aParentDoc, uint64_t aParentAcc,
+                         uint32_t aMsaaID);
 
     /*
      * Creates a new remoted nsIWidget connection for windowed plugins

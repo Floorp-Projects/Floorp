@@ -79,6 +79,22 @@
   list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
 }
 
+.sidebar-placesTreechildren:-moz-locale-dir(rtl)::-moz-tree-twisty {
+  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-rtl");
+}
+
+.sidebar-placesTreechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(selected) {
+  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted-rtl");
+}
+
+.sidebar-placesTreechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(open) {
+  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded");
+}
+
+.sidebar-placesTreechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(open, selected) {
+  list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
+}
+
 @media (-moz-mac-yosemite-theme) {
   .sidebar-placesTreechildren::-moz-tree-cell-text(selected) {
     color: -moz-dialogtext;
@@ -102,6 +118,22 @@
   }
 
   .sidebar-placesTreechildren::-moz-tree-twisty(open, selected, focus) {
+    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
+  }
+
+  .sidebar-placesTreechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(selected) {
+    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-rtl");
+  }
+
+  .sidebar-placesTreechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(selected, focus) {
+    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted-rtl")
+  }
+
+  .sidebar-placesTreechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(open, selected) {
+    list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded");
+  }
+
+  .sidebar-placesTreechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(open, selected, focus) {
     list-style-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
   }
 }

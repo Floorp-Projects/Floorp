@@ -502,6 +502,9 @@ ContentChild* ContentChild::sSingleton;
 
 ContentChild::ContentChild()
  : mID(uint64_t(-1))
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+ , mMsaaID(0)
+#endif
  , mCanOverrideProcessName(true)
  , mIsAlive(true)
  , mShuttingDown(false)
@@ -659,13 +662,14 @@ ContentChild::ProvideWindow(mozIDOMWindowProxy* aParent,
                             nsIURI* aURI,
                             const nsAString& aName,
                             const nsACString& aFeatures,
+                            bool aForceNoOpener,
                             bool* aWindowIsNew,
                             mozIDOMWindowProxy** aReturn)
 {
   return ProvideWindowCommon(nullptr, aParent, false, aChromeFlags,
                              aCalledFromJS, aPositionSpecified,
                              aSizeSpecified, aURI, aName, aFeatures,
-                             aWindowIsNew, aReturn);
+                             aForceNoOpener, aWindowIsNew, aReturn);
 }
 
 nsresult
@@ -679,6 +683,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                                   nsIURI* aURI,
                                   const nsAString& aName,
                                   const nsACString& aFeatures,
+                                  bool aForceNoOpener,
                                   bool* aWindowIsNew,
                                   mozIDOMWindowProxy** aReturn)
 {
@@ -821,6 +826,17 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                         context->UsePrivateBrowsing(), true, false,
                         aTabOpener->mDPI, aTabOpener->mRounding,
                         aTabOpener->mDefaultScale);
+  }
+
+  // Set the opener window for this window before we start loading the document
+  // inside of it. We have to do this before loading the remote scripts, because
+  // they can poke at the document and cause the nsDocument to be created before
+  // the openerwindow
+  nsCOMPtr<mozIDOMWindowProxy> windowProxy = do_GetInterface(newChild->WebNavigation());
+  if (!aForceNoOpener && windowProxy && aParent) {
+    nsPIDOMWindowOuter* outer = nsPIDOMWindowOuter::From(windowProxy);
+    nsPIDOMWindowOuter* parent = nsPIDOMWindowOuter::From(aParent);
+    outer->SetOpenerWindow(parent, *aWindowIsNew);
   }
 
   // Unfortunately we don't get a window unless we've shown the frame.  That's
@@ -2415,13 +2431,18 @@ ContentChild::RecvFlushMemory(const nsString& reason)
 }
 
 bool
-ContentChild::RecvActivateA11y()
+ContentChild::RecvActivateA11y(const uint32_t& aMsaaID)
 {
 #ifdef ACCESSIBILITY
+#ifdef XP_WIN
+  MOZ_ASSERT(aMsaaID != 0);
+  mMsaaID = aMsaaID;
+#endif // XP_WIN
+
   // Start accessibility in content process if it's running in chrome
   // process.
   GetOrCreateAccService(nsAccessibilityService::eMainProcess);
-#endif
+#endif // ACCESSIBILITY
   return true;
 }
 
@@ -3276,6 +3297,13 @@ ContentChild::RecvBlobURLUnregistration(const nsCString& aURI)
   return true;
 }
 
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+bool
+ContentChild::SendGetA11yContentId()
+{
+  return PContentChild::SendGetA11yContentId(&mMsaaID);
+}
+#endif // defined(XP_WIN) && defined(ACCESSIBILITY)
 
 void
 ContentChild::CreateGetFilesRequest(const nsAString& aDirectoryPath,

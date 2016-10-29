@@ -224,7 +224,7 @@ nsChromeRegistryChrome::IsLocaleRTL(const nsACString& package, bool *aResult)
   *aResult = false;
 
   nsAutoCString locale;
-  GetSelectedLocale(package, locale);
+  GetSelectedLocale(package, false, locale);
   if (locale.Length() < 2)
     return NS_OK;
 
@@ -234,6 +234,7 @@ nsChromeRegistryChrome::IsLocaleRTL(const nsACString& package, bool *aResult)
 
 nsresult
 nsChromeRegistryChrome::GetSelectedLocale(const nsACString& aPackage,
+                                          bool aAsBCP47,
                                           nsACString& aLocale)
 {
   nsCString realpackage;
@@ -247,6 +248,10 @@ nsChromeRegistryChrome::GetSelectedLocale(const nsACString& aPackage,
   aLocale = entry->locales.GetSelected(mSelectedLocale, nsProviderArray::LOCALE);
   if (aLocale.IsEmpty())
     return NS_ERROR_FAILURE;
+
+  if (aAsBCP47) {
+    SanitizeForBCP47(aLocale);
+  }
 
   return NS_OK;
 }

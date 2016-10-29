@@ -306,6 +306,16 @@ bool ValidateCopySubTextureCHROMIUM(Context *context,
                                     GLboolean unpackUnmultiplyAlpha);
 
 bool ValidateCreateShader(Context *context, GLenum type);
+bool ValidateBufferData(ValidationContext *context,
+                        GLenum target,
+                        GLsizeiptr size,
+                        const GLvoid *data,
+                        GLenum usage);
+bool ValidateBufferSubData(ValidationContext *context,
+                           GLenum target,
+                           GLintptr offset,
+                           GLsizeiptr size,
+                           const GLvoid *data);
 
 }  // namespace gl
 

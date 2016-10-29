@@ -39,6 +39,8 @@ GPUProcessHost::Launch()
   MOZ_ASSERT(!mGPUChild);
 
   mLaunchPhase = LaunchPhase::Waiting;
+  mLaunchTime = TimeStamp::Now();
+
   if (!GeckoChildProcessHost::AsyncLaunch()) {
     mLaunchPhase = LaunchPhase::Complete;
     return false;

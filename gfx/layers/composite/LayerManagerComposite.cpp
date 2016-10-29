@@ -165,16 +165,17 @@ LayerManagerComposite::AreComponentAlphaLayersEnabled()
          LayerManager::AreComponentAlphaLayersEnabled();
 }
 
-void
+bool
 LayerManagerComposite::BeginTransaction()
 {
   mInTransaction = true;
 
   if (!mCompositor->Ready()) {
-    return;
+    return false;
   }
 
   mIsCompositorReady = true;
+  return true;
 }
 
 void

@@ -1584,9 +1584,10 @@ MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
 {
     BufferOffset call(callerOffset - 7 * sizeof(uint32_t));
 
-    if (BOffImm16::IsInRange(BufferOffset(calleeOffset).diffB<int>(call))) {
+    BOffImm16 offset = BufferOffset(calleeOffset).diffB<BOffImm16>(call);
+    if (!offset.isInvalid()) {
         InstImm* bal = (InstImm*)editSrc(call);
-        bal->setBOffImm16(BufferOffset(calleeOffset).diffB<BOffImm16>(call));
+        bal->setBOffImm16(offset);
     } else {
         uint32_t u32Offset = callerOffset - 5 * sizeof(uint32_t);
         uint32_t* u32 = reinterpret_cast<uint32_t*>(editSrc(BufferOffset(u32Offset)));

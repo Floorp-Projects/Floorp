@@ -254,7 +254,7 @@ public:
     /**
      * True if this device context was created for printing.
      */
-    bool IsPrinterSurface();
+    bool IsPrinterContext();
 
     mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale();
 
@@ -287,6 +287,9 @@ private:
     RefPtr<PrintTarget>            mPrintTarget;
 #ifdef XP_MACOSX
     RefPtr<PrintTarget>            mCachedPrintTarget;
+#endif
+#ifdef DEBUG
+    bool mIsInitialized;
 #endif
 };
 

@@ -15,6 +15,7 @@ const DEBUG_CONTRACTID = "@mozilla.org/xpcom/debug;1";
 const PRINTSETTINGS_CONTRACTID = "@mozilla.org/gfx/printsettings-service;1";
 const ENVIRONMENT_CONTRACTID = "@mozilla.org/process/environment;1";
 const NS_OBSERVER_SERVICE_CONTRACTID = "@mozilla.org/observer-service;1";
+const NS_GFXINFO_CONTRACTID = "@mozilla.org/gfx/info;1";
 
 // "<!--CLEAR-->"
 const BLANK_URL_FOR_CLEARING = "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2D%2D%3E";
@@ -1028,7 +1029,17 @@ function SendAssertionCount(numAssertions)
 
 function SendContentReady()
 {
-    return sendSyncMessage("reftest:ContentReady")[0];
+    let gfxInfo = (NS_GFXINFO_CONTRACTID in CC) && CC[NS_GFXINFO_CONTRACTID].getService(CI.nsIGfxInfo);
+    let info = gfxInfo.getInfo();
+    try {
+        info.D2DEnabled = gfxInfo.D2DEnabled;
+        info.DWriteEnabled = gfxInfo.DWriteEnabled;
+    } catch (e) {
+        info.D2DEnabled = false;
+        info.DWriteEnabled = false;
+    }
+
+    return sendSyncMessage("reftest:ContentReady", { 'gfx': info })[0];
 }
 
 function SendException(what)

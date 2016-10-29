@@ -181,6 +181,7 @@ add_task(function* setup() {
       [ "media.mediasource.enabled", true ],
       [ "media.eme.apiVisible", true ],
       [ "media.mediasource.webm.enabled", true ],
+      [ "media.clearkey.persistent-license.enabled", true ],
   ]});
 });
 

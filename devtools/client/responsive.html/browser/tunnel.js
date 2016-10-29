@@ -242,8 +242,8 @@ function tunnelToInnerBrowser(outer, inner) {
       // that support openers, window features, etc. didn't seem callable from JS and / or
       // this event doesn't give enough info to use them.
       browserWindow.browserDOMWindow
-                   .openURI(uri, null, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
-                            Ci.nsIBrowserDOMWindow.OPEN_NEWTAB);
+        .openURI(uri, null, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+                 Ci.nsIBrowserDOMWindow.OPEN_NEW);
     },
 
     stop() {

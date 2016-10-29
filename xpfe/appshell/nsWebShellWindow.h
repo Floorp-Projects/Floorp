@@ -39,6 +39,7 @@ public:
                       int32_t aInitialWidth, int32_t aInitialHeight,
                       bool aIsHiddenWindow,
                       nsITabParent *aOpeningTab,
+                      mozIDOMWindowProxy *aOpenerWIndow,
                       nsWidgetInitData& widgetInitData);
 
   nsresult Toolbar();

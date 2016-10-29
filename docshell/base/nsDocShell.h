@@ -1037,7 +1037,7 @@ private:
 
   // Separate function to do the actual name (i.e. not _top, _self etc.)
   // searching for FindItemWithName.
-  nsresult DoFindItemWithName(const char16_t* aName,
+  nsresult DoFindItemWithName(const nsAString& aName,
                               nsISupports* aRequestor,
                               nsIDocShellTreeItem* aOriginalRequestor,
                               nsIDocShellTreeItem** aResult);
