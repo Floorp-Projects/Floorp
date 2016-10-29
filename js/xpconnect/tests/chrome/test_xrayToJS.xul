@@ -257,6 +257,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   gConstructorProperties['ArrayBuffer'] =
     constructorProps(["isView", "slice", Symbol.species]);
 
+  if (!isReleaseOrBeta) {
+    gPrototypeProperties['SharedArrayBuffer'] = ["constructor", "byteLength"];
+    gConstructorProperties['SharedArrayBuffer'] = constructorProps([]);
+  } else {
+    is(typeof SharedArrayBuffer, "undefined", "Enable tests!");
+  }
+
   // Sort an array that may contain symbols as well as strings.
   function sortProperties(arr) {
     function sortKey(prop) {
@@ -893,33 +900,46 @@ for (var prop of props) {
   }
 
   function testArrayBuffer() {
-    testXray('ArrayBuffer', new iwin.ArrayBuffer(0), new iwin.ArrayBuffer(12));
+    let constructors = ['ArrayBuffer'];
 
-    var t = new iwin.ArrayBuffer(12);
-    is(t.byteLength, 12, "ArrayBuffer byteLength is correct");
-    is(t.slice(4).byteLength, 8, "ArrayBuffer byteLength is correct after slicing");
-    is(Cu.getGlobalForObject(t.slice(4)), iwin, "Slice results lives in the target compartment");
-    is(Object.getPrototypeOf(t.slice(4)), iwin.ArrayBuffer.prototype, "Slice results proto lives in target compartment")
-    is(ArrayBuffer.slice(t, 4).byteLength, 8, "ArrayBuffer.slice (deprecated) works");
+    if (!isReleaseOrBeta) {
+      constructors.push('SharedArrayBuffer');
+      // If this fails enable the test a bit below.
+      is(typeof SharedArrayBuffer.prototype.slice, "undefined", "SharedArrayBuffer doesn't have slice");
+    }
 
-    var i32Array = new Int32Array(t);
-    // i32Array is going to be created in the buffer's target compartment,
-    // but usually this is unobservable, because the proto is set to
-    // the current compartment's prototype.
-    // However Xrays ignore the object's proto and claim its proto is
-    // the default proto for that class in the relevant compartment,
-    // so see through this proto hack.
-    todo_is(Object.getPrototypeOf(i32Array), Int32Array.prototype, "Int32Array has correct proto");
-    is(i32Array.length, 3, "Int32Array created from Xray ArrayBuffer has the correct length");
-    is(i32Array.buffer, t, "Int32Array has the correct buffer that we passed in");
+    for (const c of constructors) {
+      testXray(c, new iwin[c](0), new iwin[c](12));
 
-    i32Array = new iwin.Int32Array(t);
-    is(Object.getPrototypeOf(i32Array), iwin.Int32Array.prototype, "Xray Int32Array has correct proto");
-    is(i32Array.length, 3, "Xray Int32Array created from Xray ArrayBuffer has the correct length");
-    is(i32Array.buffer, t, "Xray Int32Array has the correct buffer that we passed in");
+      var t = new iwin[c](12);
+      is(t.byteLength, 12, `${c} byteLength is correct`);
 
-    t = (new iwin.Int32Array(2)).buffer;
-    is(t.byteLength, 8, "Can access ArrayBuffer returned by buffer property");
+      if (c === 'ArrayBuffer') {
+        is(t.slice(4).byteLength, 8, `${c} byteLength is correct after slicing`);
+        is(Cu.getGlobalForObject(t.slice(4)), iwin, "Slice results lives in the target compartment");
+        is(Object.getPrototypeOf(t.slice(4)), iwin[c].prototype, "Slice results proto lives in target compartment")
+        is(ArrayBuffer.slice(t, 4).byteLength, 8, `${c}.slice (deprecated) works`);
+      }
+
+      var i32Array = new Int32Array(t);
+      // i32Array is going to be created in the buffer's target compartment,
+      // but usually this is unobservable, because the proto is set to
+      // the current compartment's prototype.
+      // However Xrays ignore the object's proto and claim its proto is
+      // the default proto for that class in the relevant compartment,
+      // so see through this proto hack.
+      todo_is(Object.getPrototypeOf(i32Array), Int32Array.prototype, "Int32Array has correct proto");
+      is(i32Array.length, 3, `Int32Array created from Xray ${c} has the correct length`);
+      is(i32Array.buffer, t, "Int32Array has the correct buffer that we passed in");
+
+      i32Array = new iwin.Int32Array(t);
+      is(Object.getPrototypeOf(i32Array), iwin.Int32Array.prototype, "Xray Int32Array has correct proto");
+      is(i32Array.length, 3, `Xray Int32Array created from Xray ${c} has the correct length`);
+      is(i32Array.buffer, t, "Xray Int32Array has the correct buffer that we passed in");
+
+      t = (new iwin.Int32Array(2)).buffer;
+      is(t.byteLength, 8, `Can access ${c} returned by buffer property`);
+    }
   }
 
   ]]>
