@@ -251,30 +251,6 @@ public:
   }
 
   /*
-   * Remove this element from the list containing it.  Returns a pointer to the
-   * element that follows this element (before it was removed).  This method
-   * asserts if the element does not belong to a list.
-   */
-  ClientType removeAndGetNext()
-  {
-    ClientType r = getNext();
-    remove();
-    return r;
-  }
-
-  /*
-   * Remove this element from the list containing it.  Returns a pointer to the
-   * previous element in the containing list (before the removal).  This method
-   * asserts if the element does not belong to a list.
-   */
-  ClientType removeAndGetPrevious()
-  {
-    ClientType r = getPrevious();
-    remove();
-    return r;
-  }
-
-  /*
    * Identical to remove(), but also asserts in debug builds that this element
    * is in aList.
    */

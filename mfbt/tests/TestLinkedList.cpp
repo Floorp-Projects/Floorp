@@ -156,24 +156,6 @@ TestMove()
   list3.clear();
 }
 
-static void
-TestRemoveAndGet()
-{
-  LinkedList<SomeClass> list;
-
-  SomeClass one(1), two(2), three(3);
-  list.insertBack(&one);
-  list.insertBack(&two);
-  list.insertBack(&three);
-  { unsigned int check[] { 1, 2, 3 }; CheckListValues(list, check); }
-
-  MOZ_RELEASE_ASSERT(two.removeAndGetNext() == &three);
-  { unsigned int check[] { 1, 3 }; CheckListValues(list, check); }
-
-  MOZ_RELEASE_ASSERT(three.removeAndGetPrevious() == &one);
-  { unsigned int check[] { 1 }; CheckListValues(list, check); }
-}
-
 struct PrivateClass : private LinkedListElement<PrivateClass> {
   friend class mozilla::LinkedList<PrivateClass>;
   friend class mozilla::LinkedListElement<PrivateClass>;
@@ -262,7 +244,6 @@ main()
   TestList();
   TestPrivate();
   TestMove();
-  TestRemoveAndGet();
   TestRefPtrList();
   return 0;
 }
