@@ -130,7 +130,7 @@ def _actorChannel(actor):
     return ExprSelect(actor, '->', 'mChannel')
 
 def _actorManager(actor):
-    return ExprSelect(actor, '->', 'mManager')
+    return ExprCall(ExprSelect(actor, '->', 'Manager'), args=[])
 
 def _actorState(actor):
     return ExprSelect(actor, '->', 'mState')
@@ -1105,12 +1105,6 @@ class Protocol(ipdl.ast.Protocol):
         return Type(_actorName(self._ipdlmgrtype().name(), side),
                     ptr=ptr)
 
-    def managerMethod(self, actorThis=None):
-        _ = self._ipdlmgrtype()
-        if actorThis is not None:
-            return ExprSelect(actorThis, '->', 'Manager')
-        return ExprVar('Manager');
-
     def stateMethod(self):
         return ExprVar('state');
 
@@ -1253,9 +1247,9 @@ class Protocol(ipdl.ast.Protocol):
 
     def managerVar(self, thisexpr=None):
         assert thisexpr is not None or not self.decl.type.isToplevel()
-        mvar = ExprVar('mManager')
+        mvar = ExprCall(ExprVar('Manager'), args=[])
         if thisexpr is not None:
-            mvar = ExprSelect(thisexpr, '->', mvar.name)
+            mvar = ExprCall(ExprSelect(thisexpr, '->', 'Manager'), args=[])
         return mvar
 
     def otherPidVar(self):
@@ -1278,13 +1272,6 @@ class Protocol(ipdl.ast.Protocol):
         assert self.decl.type.isManagerOf(actortype)
         return _cxxManagedContainerType(Type(_actorName(actortype.name(), side)),
                                         const=const, ref=ref)
-
-    def managerArrayExpr(self, thisvar, side):
-        """The member var my manager keeps of actors of my type."""
-        assert self.decl.type.isManaged()
-        return ExprSelect(
-            ExprCall(self.managerMethod(thisvar)),
-            '->', 'mManaged'+ _actorName(self.decl.type.name(), side))
 
     # shmem stuff
     def shmemMapType(self):
@@ -3081,9 +3068,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ## manager() const
                 managertype = p.managerActorType(self.side, ptr=1)
                 managermeth = MethodDefn(MethodDecl(
-                    p.managerMethod().name, ret=managertype, const=1))
+                    'Manager', ret=managertype, const=1))
+                managerexp = ExprCall(ExprVar('IProtocol::Manager'), args=[])
                 managermeth.addstmt(StmtReturn(
-                    ExprCast(p.managerVar(), managertype, static=1)))
+                    ExprCast(managerexp, managertype, static=1)))
 
                 self.cls.addstmts([ managermeth, Whitespace.NL ])
 
@@ -3597,8 +3585,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ])
         elif ptype.isManaged():
             self.cls.addstmts([
-                StmtDecl(Decl(p.managerInterfaceType(ptr=1),
-                              p.managerVar().name)),
                 StmtDecl(Decl(_actorIdType(), p.idVar().name))
             ])
         if p.decl.type.isToplevel():
@@ -4813,7 +4799,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return [
             self.failIfNullActor(actorvar, errfn, msg="Error constructing actor %s" % actortype.name() + self.side.capitalize()),
             StmtExpr(ExprAssn(_actorId(actorvar), idexpr)),
-            StmtExpr(ExprAssn(_actorManager(actorvar), ExprVar.THIS)),
+            StmtExpr(ExprCall(ExprSelect(actorvar, '->', 'SetManager'), args=[ExprVar.THIS])),
             StmtExpr(ExprAssn(_actorChannel(actorvar),
                               self.protocol.channelForSubactor())),
             StmtExpr(_callInsertManagedActor(
