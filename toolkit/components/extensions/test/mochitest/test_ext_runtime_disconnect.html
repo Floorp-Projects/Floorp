@@ -17,6 +17,7 @@ function background() {
   browser.runtime.onConnect.addListener(port => {
     browser.test.assertEq(port.name, "ernie", "port name correct");
     port.onDisconnect.addListener(() => {
+      browser.test.assertEq(null, port.error, "The port is implicitly closed without errors when the other context unloads");
       // Closing an already-disconnected port is a no-op.
       port.disconnect();
       port.disconnect();

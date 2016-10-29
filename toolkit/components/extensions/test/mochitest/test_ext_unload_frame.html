@@ -46,6 +46,7 @@ function connect_background() {
       browser.test.assertFalse(disconnected, "onDisconnect should fire once");
       disconnected = true;
       browser.test.assertTrue(hasMessage, "Expected onMessage before onDisconnect");
+      browser.test.assertEq(null, port.error, "The port is implicitly closed without errors when the other context unloads");
       delayedNotifyPass("Received onDisconnect from closing frame");
     });
     port.onMessage.addListener(msg => {

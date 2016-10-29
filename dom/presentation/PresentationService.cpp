@@ -642,7 +642,7 @@ PresentationService::StartSession(
     nsCOMPtr<nsIPresentationDevicePrompt> prompt =
       do_GetService(PRESENTATION_DEVICE_PROMPT_CONTRACTID);
     if (NS_WARN_IF(!prompt)) {
-      return aCallback->NotifyError(NS_ERROR_DOM_OPERATION_ERR);
+      return aCallback->NotifyError(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     }
 
     nsresult rv = prompt->PromptDeviceSelection(request);
@@ -796,7 +796,7 @@ PresentationService::CloseSession(const nsAString& aSessionId,
 
   if (aClosedReason == nsIPresentationService::CLOSED_REASON_WENTAWAY) {
     // Remove nsIPresentationSessionListener since we don't want to dispatch
-    // PresentationConnectionClosedEvent if the page is went away.
+    // PresentationConnectionCloseEvent if the page is went away.
     info->SetListener(nullptr);
   }
 

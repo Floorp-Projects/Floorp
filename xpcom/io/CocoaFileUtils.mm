@@ -239,11 +239,11 @@ void AddQuarantineMetadataToFile(const CFStringRef filePath,
     ::CFDictionarySetValue(mutQuarantineProps, kLSQuarantineTypeKey, type);
   }
 
-  if (!::CFDictionaryGetValue(mutQuarantineProps, kLSQuarantineOriginURLKey)) {
+  if (!::CFDictionaryGetValue(mutQuarantineProps, kLSQuarantineOriginURLKey) && referrerURL) {
     ::CFDictionarySetValue(mutQuarantineProps, kLSQuarantineOriginURLKey, referrerURL);
   }
 
-  if (!::CFDictionaryGetValue(mutQuarantineProps, kLSQuarantineDataURLKey)) {
+  if (!::CFDictionaryGetValue(mutQuarantineProps, kLSQuarantineDataURLKey) && sourceURL) {
     ::CFDictionarySetValue(mutQuarantineProps, kLSQuarantineDataURLKey, sourceURL);
   }
 

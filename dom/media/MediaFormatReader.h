@@ -165,6 +165,7 @@ private:
   void NotifyDrainComplete(TrackType aTrack);
   void NotifyError(TrackType aTrack, const MediaResult& aError);
   void NotifyWaitingForData(TrackType aTrack);
+  void NotifyWaitingForKey(TrackType aTrack);
   void NotifyEndOfStream(TrackType aTrack);
 
   void ExtractCryptoInitData(nsTArray<uint8_t>& aInitData);
@@ -235,6 +236,7 @@ private:
       , mUpdateScheduled(false)
       , mDemuxEOS(false)
       , mWaitingForData(false)
+      , mWaitingForKey(false)
       , mReceivedNewData(false)
       , mDecoderInitialized(false)
       , mOutputRequested(false)
@@ -284,6 +286,7 @@ private:
     bool mUpdateScheduled;
     bool mDemuxEOS;
     bool mWaitingForData;
+    bool mWaitingForKey;
     bool mReceivedNewData;
 
     // Pending seek.
@@ -292,11 +295,18 @@ private:
     // Queued demux samples waiting to be decoded.
     nsTArray<RefPtr<MediaRawData>> mQueuedSamples;
     MozPromiseRequestHolder<MediaTrackDemuxer::SamplesPromise> mDemuxRequest;
+    // A WaitingPromise is pending if the demuxer is waiting for data or
+    // if the decoder is waiting for a key.
     MozPromiseHolder<WaitForDataPromise> mWaitingPromise;
-    bool HasWaitingPromise()
+    bool HasWaitingPromise() const
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
       return !mWaitingPromise.IsEmpty();
+    }
+    bool IsWaiting() const
+    {
+      MOZ_ASSERT(mOwner->OnTaskQueue());
+      return mWaitingForData || mWaitingForKey;
     }
 
     // MediaDataDecoder handler's variables.
@@ -306,11 +316,10 @@ private:
     bool mDecoderInitialized;
     bool mOutputRequested;
     // Set to true once the MediaDataDecoder has been fed a compressed sample.
-    // No more sample will be passed to the decoder while true.
+    // No more samples will be passed to the decoder while true.
     // mDecodePending is reset when:
-    // 1- The decoder returns a sample
-    // 2- The decoder calls InputExhausted
-    // 3- The decoder is Flushed or Reset.
+    // 1- The decoder calls InputExhausted
+    // 2- The decoder is Flushed or Reset.
     bool mDecodePending;
     bool mNeedDraining;
     bool mDraining;
@@ -392,6 +401,7 @@ private:
       MOZ_ASSERT(mOwner->OnTaskQueue());
       mDemuxEOS = false;
       mWaitingForData = false;
+      mWaitingForKey = false;
       mQueuedSamples.Clear();
       mOutputRequested = false;
       mNeedDraining = false;

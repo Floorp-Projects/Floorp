@@ -1438,8 +1438,12 @@
         "url": "/presentation-api/controlling-ua/reconnectToPresentation_success-manual.html"
       },
       {
-        "path": "presentation-api/controlling-ua/startNewPresentation_error-manual.html",
-        "url": "/presentation-api/controlling-ua/startNewPresentation_error-manual.html"
+        "path": "presentation-api/controlling-ua/startNewPresentation_mixedcontent-manual.https.html",
+        "url": "/presentation-api/controlling-ua/startNewPresentation_mixedcontent-manual.https.html"
+      },
+      {
+        "path": "presentation-api/controlling-ua/startNewPresentation_mixedcontent_multiple-manual.https.html",
+        "url": "/presentation-api/controlling-ua/startNewPresentation_mixedcontent_multiple-manual.https.html"
       },
       {
         "path": "presentation-api/controlling-ua/startNewPresentation_sandboxing_error-manual.html",
@@ -24664,14 +24668,6 @@
         "url": "/presentation-api/controlling-ua/startNewPresentation_error.html"
       },
       {
-        "path": "presentation-api/controlling-ua/startNewPresentation_mixedcontent-manual.https.html",
-        "url": "/presentation-api/controlling-ua/startNewPresentation_mixedcontent-manual.https.html"
-      },
-      {
-        "path": "presentation-api/controlling-ua/startNewPresentation_mixedcontent_multiple-manual.https.html",
-        "url": "/presentation-api/controlling-ua/startNewPresentation_mixedcontent_multiple-manual.https.html"
-      },
-      {
         "path": "presentation-api/receiving-ua/idlharness.html",
         "url": "/presentation-api/receiving-ua/idlharness.html"
       },
@@ -38449,18 +38445,6 @@
           {
             "path": "mediacapture-streams/MediaStream-id-manual.https.html",
             "url": "/mediacapture-streams/MediaStream-id-manual.https.html"
-          }
-        ],
-        "presentation-api/controlling-ua/startNewPresentation_mixedcontent-manual.https.html": [
-          {
-            "path": "presentation-api/controlling-ua/startNewPresentation_mixedcontent-manual.https.html",
-            "url": "/presentation-api/controlling-ua/startNewPresentation_mixedcontent-manual.https.html"
-          }
-        ],
-        "presentation-api/controlling-ua/startNewPresentation_mixedcontent_multiple-manual.https.html": [
-          {
-            "path": "presentation-api/controlling-ua/startNewPresentation_mixedcontent_multiple-manual.https.html",
-            "url": "/presentation-api/controlling-ua/startNewPresentation_mixedcontent_multiple-manual.https.html"
           }
         ]
       },

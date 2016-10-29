@@ -43,6 +43,7 @@ const {TimelineFront} = require("devtools/shared/fronts/timeline");
 const {Task} = require("devtools/shared/task");
 const {Prefs} = require("./prefs");
 const {EVENTS} = require("./events");
+const Actions = require("./actions/index");
 
 XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 XPCOMUtils.defineConstant(this, "ACTIVITY_TYPE", ACTIVITY_TYPE);

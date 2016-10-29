@@ -7805,6 +7805,17 @@
     "n_values": 16,
     "description": "How often do we get back an HSTS priming result which upgrades the connection to HTTPS? 0=cached (no upgrade), 1=cached (do upgrade), 2=cached (blocked), 3=already upgraded, 4=priming succeeded, 5=priming succeeded (block due to pref), 6=priming succeeded (no upgrade due to pref), 7=priming failed (block), 8=priming failed (accept)"
   },
+  "HSTS_PRIMING_REQUEST_DURATION": {
+    "alert_emails": ["seceng-telemetry@mozilla.org"],
+    "bug_numbers": [1311893],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "low": 100,
+    "high": 30000,
+    "n_buckets": 100,
+    "keyed": true,
+    "description": "The amount of time required for HSTS priming requests (ms), keyed by success or failure of the priming request. (success, failure)"
+  },
   "MIXED_CONTENT_OBJECT_SUBREQUEST": {
     "alert_emails": ["seceng@mozilla.org"],
     "bug_numbers": [1244116],
@@ -10376,5 +10387,23 @@
     "high": 300000,
     "n_buckets": 30,
     "description": "Time in MS that content is narrated in 10 second increments up to 5 minutes"
+  },
+  "HANDLE_UNLOAD_MS": {
+    "alert_emails": ["kchen@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "bug_numbers": [1301346],
+    "description": "The time spent handling unload event in milliseconds. It measures all documents and subframes separately. If there are multiple handlers for the unload event in a document, this will record a single value across all handlers in the document."
+  },
+  "HANDLE_BEFOREUNLOAD_MS": {
+    "alert_emails": ["kchen@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "bug_numbers": [1301346],
+    "description": "The time spent handling beforeunload event in milliseconds. It measures all documents and subframes separately. If there are multiple handlers for the unload event in a document, this will record a single value across all handlers in the document."
   }
 }

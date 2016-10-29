@@ -23,6 +23,7 @@ DevToolsModules(
     'object-with-text.js',
     'object-with-url.js',
     'object.js',
+    'promise.js',
     'prop-rep.js',
     'regexp.js',
     'rep-utils.js',
