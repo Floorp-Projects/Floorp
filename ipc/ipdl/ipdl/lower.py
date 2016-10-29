@@ -3334,9 +3334,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             onstack.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.channelVar(), '.', p.onCxxStackVar().name))))
 
+            # void ProcessIncomingRacingInterruptCall
+            processincoming = MethodDefn(
+                MethodDecl('FlushPendingInterruptQueue', ret=Type.VOID))
+            processincoming.addstmt(StmtExpr(ExprCall(ExprSelect(_actorChannel(ExprVar.THIS), '.', 'FlushPendingInterruptQueue'))))
+
             self.cls.addstmts([ onentered, onexited,
                                 onenteredcall, onexitedcall,
-                                onstack, Whitespace.NL ])
+                                onstack, processincoming, Whitespace.NL ])
 
         # OnChannelClose()
         onclose = MethodDefn(MethodDecl('OnChannelClose'))
