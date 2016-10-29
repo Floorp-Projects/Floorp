@@ -27,31 +27,31 @@ add_task(function* () {
       text: "message for level log",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
-      source: { url: "test-file-location.js", line: 6 },
+      source: { url: "test-file-location.js", line: 8 },
     },
     {
       text: "message for level info",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_INFO,
-      source: { url: "test-file-location.js", line: 7 },
+      source: { url: "test-file-location.js", line: 9 },
     },
     {
       text: "message for level warn",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_WARNING,
-      source: { url: "test-file-location.js", line: 8 },
+      source: { url: "test-file-location.js", line: 10 },
     },
     {
       text: "message for level error",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_ERROR,
-      source: { url: "test-file-location.js", line: 9 },
+      source: { url: "test-file-location.js", line: 11 },
     },
     {
       text: "message for level debug",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
-      source: { url: "test-file-location.js", line: 10 },
+      source: { url: "test-file-location.js", line: 12 },
     }],
   });
 });
