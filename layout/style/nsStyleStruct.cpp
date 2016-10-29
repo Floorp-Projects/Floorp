@@ -4084,7 +4084,7 @@ nsStyleUIReset::nsStyleUIReset(StyleStructContext aContext)
   : mUserSelect(StyleUserSelect::Auto)
   , mForceBrokenImageIcon(0)
   , mIMEMode(NS_STYLE_IME_MODE_AUTO)
-  , mWindowDragging(NS_STYLE_WINDOW_DRAGGING_DEFAULT)
+  , mWindowDragging(StyleWindowDragging::Default)
   , mWindowShadow(NS_STYLE_WINDOW_SHADOW_DEFAULT)
 {
   MOZ_COUNT_CTOR(nsStyleUIReset);

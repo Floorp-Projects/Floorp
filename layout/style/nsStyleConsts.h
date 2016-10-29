@@ -227,9 +227,11 @@ enum class StyleUserModify : uint8_t {
 };
 
 // -moz-window-dragging
-#define NS_STYLE_WINDOW_DRAGGING_DEFAULT 0
-#define NS_STYLE_WINDOW_DRAGGING_DRAG    1
-#define NS_STYLE_WINDOW_DRAGGING_NO_DRAG 2
+enum class StyleWindowDragging : uint8_t {
+  Default,
+  Drag,
+  NoDrag,
+};
 
 // orient
 #define NS_STYLE_ORIENT_INLINE     0
