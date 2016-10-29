@@ -130,31 +130,6 @@ struct Trigger
     uint32_t mMessage : 31;
 };
 
-class ProtocolCloneContext
-{
-  typedef mozilla::dom::ContentParent ContentParent;
-  typedef mozilla::net::NeckoParent NeckoParent;
-
-  RefPtr<ContentParent> mContentParent;
-  NeckoParent* mNeckoParent;
-
-public:
-  ProtocolCloneContext();
-
-  ~ProtocolCloneContext();
-
-  void SetContentParent(ContentParent* aContentParent);
-
-  ContentParent* GetContentParent() { return mContentParent; }
-
-  void SetNeckoParent(NeckoParent* aNeckoParent)
-  {
-    mNeckoParent = aNeckoParent;
-  }
-
-  NeckoParent* GetNeckoParent() { return mNeckoParent; }
-};
-
 template<class ListenerT>
 class IProtocolManager
 {
@@ -198,15 +173,6 @@ typedef IPCMessageStart ProtocolId;
  */
 class IProtocol : public MessageListener
 {
-public:
-    /**
-     * This function is used to clone this protocol actor.
-     *
-     * see IProtocol::CloneProtocol()
-     */
-    virtual IProtocol*
-    CloneProtocol(MessageChannel* aChannel,
-                  ProtocolCloneContext* aCtx) = 0;
 };
 
 template<class PFooSide>
