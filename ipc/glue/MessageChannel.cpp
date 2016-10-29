@@ -512,8 +512,8 @@ MessageChannel::MessageChannel(MessageListener *aListener)
         NewNonOwningCancelableRunnableMethod(this, &MessageChannel::OnMaybeDequeueOne);
     mDequeueOneTask = new RefCountedTask(runnable.forget());
 
-    mOnChannelConnectedTask =
-        NewNonOwningCancelableRunnableMethod(this, &MessageChannel::DispatchOnChannelConnected);
+    runnable = NewNonOwningCancelableRunnableMethod(this, &MessageChannel::DispatchOnChannelConnected);
+    mOnChannelConnectedTask = new RefCountedTask(runnable.forget());
 
 #ifdef OS_WIN
     mEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
@@ -1943,7 +1943,7 @@ MessageChannel::OnChannelConnected(int32_t peer_id)
     MOZ_RELEASE_ASSERT(!mPeerPidSet);
     mPeerPidSet = true;
     mPeerPid = peer_id;
-    RefPtr<CancelableRunnable> task = mOnChannelConnectedTask;
+    RefPtr<DequeueTask> task = new DequeueTask(mOnChannelConnectedTask);
     mWorkerLoop->PostTask(task.forget());
 }
 
