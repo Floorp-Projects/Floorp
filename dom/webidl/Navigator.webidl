@@ -127,7 +127,8 @@ Navigator implements NavigatorGeolocation;
 
 // http://www.w3.org/TR/battery-status/#navigatorbattery-interface
 partial interface Navigator {
-  [Throws, Pref="dom.battery.enabled"]
+  // ChromeOnly to prevent web content from fingerprinting users' batteries.
+  [Throws, ChromeOnly, Pref="dom.battery.enabled"]
   Promise<BatteryManager> getBattery();
 };
 
