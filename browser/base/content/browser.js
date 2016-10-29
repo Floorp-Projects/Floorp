@@ -3644,17 +3644,9 @@ const BrowserSearch = {
       return;
     }
 
-    let openSearchPageIfFieldIsNotActive = function(aSearchBar) {
+    let focusUrlBarIfSearchFieldIsNotActive = function(aSearchBar) {
       if (!aSearchBar || document.activeElement != aSearchBar.textbox.inputField) {
-        let url = gBrowser.currentURI.spec.toLowerCase();
-        let mm = gBrowser.selectedBrowser.messageManager;
-        let newTabRemoted = Services.prefs.getBoolPref("browser.newtabpage.remote");
-        let localNewTabEnabled = url === "about:newtab" && !newTabRemoted && NewTabUtils.allPages.enabled;
-        if (url === "about:home" || localNewTabEnabled) {
-          ContentSearch.focusInput(mm);
-        } else {
-          openUILinkIn("about:home", "current");
-        }
+      	 focusAndSelectUrlBar();
       }
     };
 
@@ -3663,7 +3655,7 @@ const BrowserSearch = {
     let focusSearchBar = () => {
       searchBar = this.searchBar;
       searchBar.select();
-      openSearchPageIfFieldIsNotActive(searchBar);
+      focusUrlBarIfSearchFieldIsNotActive(searchBar);
     };
     if (placement && placement.area == CustomizableUI.AREA_PANEL) {
       // The panel is not constructed until the first time it is shown.
@@ -3683,7 +3675,7 @@ const BrowserSearch = {
         FullScreen.showNavToolbox();
       searchBar.select();
     }
-    openSearchPageIfFieldIsNotActive(searchBar);
+    focusUrlBarIfSearchFieldIsNotActive(searchBar);
   },
 
   /**
