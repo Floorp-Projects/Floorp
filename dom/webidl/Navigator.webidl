@@ -271,19 +271,6 @@ partial interface Navigator {
   readonly attribute NetworkInformation connection;
 };
 
-#ifdef MOZ_B2G_RIL
-partial interface Navigator {
-  [Throws, Pref="dom.mobileconnection.enabled", ChromeOnly, UnsafeInPrerendering]
-  readonly attribute MozMobileConnectionArray mozMobileConnections;
-};
-
-partial interface Navigator {
-  [Throws, Pref="dom.icc.enabled", ChromeOnly,
-   UnsafeInPrerendering]
-  readonly attribute MozIccManager? mozIccManager;
-};
-#endif // MOZ_B2G_RIL
-
 #ifdef MOZ_GAMEPAD
 // https://dvcs.w3.org/hg/gamepad/raw-file/default/gamepad.html#navigator-interface-extension
 partial interface Navigator {
