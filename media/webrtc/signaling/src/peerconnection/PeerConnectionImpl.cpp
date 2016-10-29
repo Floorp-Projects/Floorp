@@ -3292,10 +3292,16 @@ toDomIceConnectionState(NrIceCtx::ConnectionState state) {
       return PCImplIceConnectionState::New;
     case NrIceCtx::ICE_CTX_CHECKING:
       return PCImplIceConnectionState::Checking;
-    case NrIceCtx::ICE_CTX_OPEN:
+    case NrIceCtx::ICE_CTX_CONNECTED:
       return PCImplIceConnectionState::Connected;
+    case NrIceCtx::ICE_CTX_COMPLETED:
+      return PCImplIceConnectionState::Completed;
     case NrIceCtx::ICE_CTX_FAILED:
       return PCImplIceConnectionState::Failed;
+    case NrIceCtx::ICE_CTX_DISCONNECTED:
+      return PCImplIceConnectionState::Disconnected;
+    case NrIceCtx::ICE_CTX_CLOSED:
+      return PCImplIceConnectionState::Closed;
   }
   MOZ_CRASH();
 }
@@ -3400,8 +3406,7 @@ static bool isSucceeded(PCImplIceConnectionState state) {
 }
 
 static bool isFailed(PCImplIceConnectionState state) {
-  return state == PCImplIceConnectionState::Failed ||
-         state == PCImplIceConnectionState::Disconnected;
+  return state == PCImplIceConnectionState::Failed;
 }
 #endif
 
