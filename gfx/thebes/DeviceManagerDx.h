@@ -80,6 +80,10 @@ public:
   // a failure.
   bool GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason);
 
+  // Test whether we can acquire a DXGI 1.2-compatible adapter. This should
+  // only be called on startup before devices are initialized.
+  bool CheckRemotePresentSupport();
+
 private:
   IDXGIAdapter1 *GetDXGIAdapter();
 

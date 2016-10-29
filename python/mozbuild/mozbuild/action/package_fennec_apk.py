@@ -28,7 +28,6 @@ def package_fennec_apk(inputs=[], omni_ja=None, classes_dex=None,
                        lib_dirs=[],
                        assets_dirs=[],
                        features_dirs=[],
-                       szip_assets_libs_with=None,
                        root_files=[],
                        verbose=False):
     jarrer = Jarrer(optimize=False)
@@ -65,17 +64,30 @@ def package_fennec_apk(inputs=[], omni_ja=None, classes_dex=None,
             compress = None  # Take default from Jarrer.
             if p.endswith('.so'):
                 # Asset libraries are special.
-                if szip_assets_libs_with:
-                    # We need to szip libraries before packing.  The file
-                    # returned by the finder is not yet opened.  When it is
-                    # opened, it will "see" the content updated by szip.
-                    subprocess.check_output([szip_assets_libs_with,
-                                             mozpath.join(finder.base, p)])
-
-                if f.open().read(4) == 'SeZz':
-                    # We need to store (rather than deflate) szipped libraries
-                    # (even if we don't szip them ourselves).
+                if f.open().read(5)[1:] == '7zXZ':
+                    print('%s is already compressed' % p)
+                    # We need to store (rather than deflate) compressed libraries
+                    # (even if we don't compress them ourselves).
                     compress = False
+                elif buildconfig.substs.get('XZ'):
+                    cmd = [buildconfig.substs.get('XZ'), '-zkf',
+                           mozpath.join(finder.base, p)]
+
+                    bcj = None
+                    if buildconfig.substs.get('MOZ_THUMB2'):
+                        bcj = '--armthumb'
+                    elif buildconfig.substs.get('CPU_ARCH') == 'arm':
+                        bcj = '--arm'
+                    elif buildconfig.substs.get('CPU_ARCH') == 'x86':
+                        bcj = '--x86'
+
+                    if bcj:
+                        cmd.extend([bcj, '--lzma2'])
+                    print('xz-compressing %s with %s' % (p, ' '.join(cmd)))
+                    subprocess.check_output(cmd)
+                    os.rename(f.path + '.xz', f.path)
+                    compress = False
+
             add(mozpath.join('assets', p), f, compress=compress)
 
     for lib_dir in lib_dirs:
@@ -113,9 +125,6 @@ def main(args):
                         help='Optional assets/ dirs to pack into APK file.')
     parser.add_argument('--features-dirs', nargs='*', default=[],
                         help='Optional features/ dirs to pack into APK file.')
-    parser.add_argument('--szip-assets-libs-with', default=None,
-                        help='IN PLACE szip assets/**/*.so BEFORE packing '
-                        'into APK file using the given szip executable.')
     parser.add_argument('--root-files', nargs='*', default=[],
                         help='Optional files to pack into APK file root.')
     args = parser.parse_args(args)
@@ -130,7 +139,6 @@ def main(args):
                                 lib_dirs=args.lib_dirs,
                                 assets_dirs=args.assets_dirs,
                                 features_dirs=args.features_dirs,
-                                szip_assets_libs_with=args.szip_assets_libs_with,
                                 root_files=args.root_files,
                                 verbose=args.verbose)
     jarrer.copy(args.output)

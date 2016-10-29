@@ -78,8 +78,14 @@ function populateReportList() {
     return;
   }
 
-  var formatter = Cc["@mozilla.org/intl/scriptabledateformat;1"].
-                  createInstance(Ci.nsIScriptableDateFormat);
+  const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                 .getService(Ci.nsIXULChromeRegistry)
+                 .getSelectedLocale("global", true);
+  var dateFormatter = new Intl.DateTimeFormat(locale, { year: '2-digit',
+                                                        month: 'numeric',
+                                                        day: 'numeric' });
+  var timeFormatter = new Intl.DateTimeFormat(locale, { hour: 'numeric',
+                                                        minute: 'numeric' });
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
   var reportURI = ios.newURI(reportURL, null, null);
@@ -105,20 +111,10 @@ function populateReportList() {
 
     var date = new Date(reports[i].date);
     cell = document.createElement("td");
-    var datestr = formatter.FormatDate("",
-                                       Ci.nsIScriptableDateFormat.dateFormatShort,
-                                       date.getFullYear(),
-                                       date.getMonth() + 1,
-                                       date.getDate());
-    cell.appendChild(document.createTextNode(datestr));
+    cell.appendChild(document.createTextNode(dateFormatter.format(date)));
     row.appendChild(cell);
     cell = document.createElement("td");
-    var timestr = formatter.FormatTime("",
-                                       Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
-                                       date.getHours(),
-                                       date.getMinutes(),
-                                       date.getSeconds());
-    cell.appendChild(document.createTextNode(timestr));
+    cell.appendChild(document.createTextNode(timeFormatter.format(date)));
     row.appendChild(cell);
     if (reports[i].pending) {
       document.getElementById("unsubmitted").appendChild(row);

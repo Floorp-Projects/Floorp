@@ -704,6 +704,18 @@ Factory::CreateDrawTargetSkiaWithGrContext(GrContext* aGrContext,
 
 #endif // USE_SKIA_GPU
 
+#ifdef USE_SKIA
+already_AddRefed<DrawTarget>
+Factory::CreateDrawTargetWithSkCanvas(SkCanvas* aCanvas)
+{
+  RefPtr<DrawTargetSkia> newTarget = new DrawTargetSkia();
+  if (!newTarget->Init(aCanvas)) {
+    return nullptr;
+  }
+  return newTarget.forget();
+}
+#endif
+
 void
 Factory::PurgeAllCaches()
 {

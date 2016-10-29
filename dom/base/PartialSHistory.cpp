@@ -6,6 +6,8 @@
 
 #include "PartialSHistory.h"
 
+#include "nsIWebNavigation.h"
+
 namespace mozilla {
 namespace dom {
 

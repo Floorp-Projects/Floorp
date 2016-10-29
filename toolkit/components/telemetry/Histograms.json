@@ -130,14 +130,6 @@
     "n_values": 21,
     "description": "Maximum number of concurrent threads reached during a given download session"
   },
-  "BATTERY_STATUS_COUNT": {
-    "alert_emails": ["cpeterson@mozilla.com"],
-    "bug_numbers": [1259335],
-    "expires_in_version": "52",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Number of pages that use the Battery Status API: 0=navigator.battery, 1=navigator.getBattery()"
-  },
   "BLOCKLIST_SYNC_FILE_LOAD": {
     "alert_emails": ["rvitillo@mozilla.com"],
     "expires_in_version": "35",
@@ -951,6 +943,16 @@
     "kind": "boolean",
     "bug_numbers": [1255198],
     "description": "This metric is recorded every time a navigator.geolocation.watchPosition() request gets allowed/fulfilled. A false value is recorded if the owner is not visible according to document.isVisible."
+  },
+  "GPU_PROCESS_LAUNCH_TIME_MS" : {
+    "alert_emails": ["george@mozilla.com", "danderson@mozilla.com"],
+    "expires_in_version": "never",
+    "bug_numbers": [1297790],
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "description": "GPU process launch time in milliseconds"
   },
   "JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT": {
     "alert_emails": ["jdemooij@mozilla.com"],

@@ -75,6 +75,7 @@ class nsFrameLoader final : public nsIFrameLoader,
 
 public:
   static nsFrameLoader* Create(mozilla::dom::Element* aOwner,
+                               nsPIDOMWindowOuter* aOpener,
                                bool aNetworkCreated);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -131,12 +132,12 @@ public:
   // frame loader owner needs to call this, and pass in the two references to
   // nsRefPtrs for frame loaders that need to be swapped.
   nsresult SwapWithOtherLoader(nsFrameLoader* aOther,
-                               RefPtr<nsFrameLoader>& aFirstToSwap,
-                               RefPtr<nsFrameLoader>& aSecondToSwap);
+                               nsIFrameLoaderOwner* aThisOwner,
+                               nsIFrameLoaderOwner* aOtherOwner);
 
   nsresult SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
-                                     RefPtr<nsFrameLoader>& aFirstToSwap,
-                                     RefPtr<nsFrameLoader>& aSecondToSwap);
+                                     nsIFrameLoaderOwner* aThisOwner,
+                                     nsIFrameLoaderOwner* aOtherOwner);
 
   /**
    * Return the primary frame for our owning content, or null if it
@@ -229,7 +230,9 @@ public:
   nsCOMPtr<nsIInProcessContentFrameMessageManager> mChildMessageManager;
 
 private:
-  nsFrameLoader(mozilla::dom::Element* aOwner, bool aNetworkCreated);
+  nsFrameLoader(mozilla::dom::Element* aOwner,
+                nsPIDOMWindowOuter* aOpener,
+                bool aNetworkCreated);
   ~nsFrameLoader();
 
   void SetOwnerContent(mozilla::dom::Element* aContent);
@@ -354,6 +357,9 @@ private:
   // enables us to detect whether the frame has moved documents during
   // a reframe, so that we know not to restore the presentation.
   nsCOMPtr<nsIDocument> mContainerDocWhileDetached;
+
+  // An opener window which should be used when the docshell is created.
+  nsCOMPtr<nsPIDOMWindowOuter> mOpener;
 
   TabParent* mRemoteBrowser;
   uint64_t mChildID;

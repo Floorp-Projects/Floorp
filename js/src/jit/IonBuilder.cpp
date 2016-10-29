@@ -5157,11 +5157,15 @@ class AutoAccumulateReturns
     }
 };
 
-bool
+IonBuilder::InliningStatus
 IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
 {
     MOZ_ASSERT(target->hasScript());
     MOZ_ASSERT(IsIonInlinablePC(pc));
+
+    MBasicBlock::BackupPoint backup(current);
+    if (!backup.init(alloc()))
+        return InliningStatus_Error;
 
     callInfo.setImplicitlyUsedUnchecked();
 
@@ -5169,14 +5173,14 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
     uint32_t depth = current->stackDepth() + callInfo.numFormals();
     if (depth > current->nslots()) {
         if (!current->increaseSlots(depth - current->nslots()))
-            return false;
+            return InliningStatus_Error;
     }
 
     // Create new |this| on the caller-side for inlined constructors.
     if (callInfo.constructing()) {
         MDefinition* thisDefn = createThis(target, callInfo.fun(), callInfo.getNewTarget());
         if (!thisDefn)
-            return false;
+            return InliningStatus_Error;
         callInfo.setThis(thisDefn);
     }
 
@@ -5186,7 +5190,7 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
     MResumePoint* outerResumePoint =
         MResumePoint::New(alloc(), current, pc, MResumePoint::Outer);
     if (!outerResumePoint)
-        return false;
+        return InliningStatus_Error;
     current->setOuterResumePoint(outerResumePoint);
 
     // Pop formals again, except leave |fun| on stack for duration of call.
@@ -5204,7 +5208,7 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
         if (types && !types->unknown()) {
             TemporaryTypeSet* clonedTypes = types->clone(alloc_->lifoAlloc());
             if (!clonedTypes)
-                return false;
+                return InliningStatus_Error;
             MTypeBarrier* barrier = MTypeBarrier::New(alloc(), callInfo.thisArg(), clonedTypes);
             current->add(barrier);
             if (barrier->type() == MIRType::Undefined)
@@ -5221,14 +5225,14 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
     InlineScriptTree* inlineScriptTree =
         info().inlineScriptTree()->addCallee(alloc_, pc, calleeScript);
     if (!inlineScriptTree)
-        return false;
+        return InliningStatus_Error;
     CompileInfo* info = lifoAlloc->new_<CompileInfo>(calleeScript, target,
                                                      (jsbytecode*)nullptr,
                                                      this->info().analysisMode(),
                                                      /* needsArgsObj = */ false,
                                                      inlineScriptTree);
     if (!info)
-        return false;
+        return InliningStatus_Error;
 
     MIRGraphReturns returns(alloc());
     AutoAccumulateReturns aar(graph(), returns);
@@ -5241,16 +5245,15 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
         if (analysisContext && analysisContext->isExceptionPending()) {
             JitSpew(JitSpew_IonAbort, "Inline builder raised exception.");
             abortReason_ = AbortReason_Error;
-            return false;
+            return InliningStatus_Error;
         }
 
         // Inlining the callee failed. Mark the callee as uninlineable only if
         // the inlining was aborted for a non-exception reason.
         if (inlineBuilder.abortReason_ == AbortReason_Disable) {
             calleeScript->setUninlineable();
-            abortReason_ = AbortReason_Inlining;
-        } else if (inlineBuilder.abortReason_ == AbortReason_Inlining) {
-            abortReason_ = AbortReason_Inlining;
+            current = backup.restore();
+            return InliningStatus_NotInlined;
         } else if (inlineBuilder.abortReason_ == AbortReason_Alloc) {
             abortReason_ = AbortReason_Alloc;
         } else if (inlineBuilder.abortReason_ == AbortReason_PreliminaryObjects) {
@@ -5261,14 +5264,14 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
             abortReason_ = AbortReason_PreliminaryObjects;
         }
 
-        return false;
+        return InliningStatus_Error;
     }
 
     // Create return block.
     jsbytecode* postCall = GetNextPc(pc);
     MBasicBlock* returnBlock = newBlock(nullptr, postCall);
     if (!returnBlock)
-        return false;
+        return InliningStatus_Error;
     returnBlock->setCallerResumePoint(callerResumePoint_);
 
     // Inherit the slots from current and pop |fun|.
@@ -5279,19 +5282,22 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
     if (returns.empty()) {
         // Inlining of functions that have no exit is not supported.
         calleeScript->setUninlineable();
-        abortReason_ = AbortReason_Inlining;
-        return false;
+        current = backup.restore();
+        return InliningStatus_NotInlined;
     }
     MDefinition* retvalDefn = patchInlinedReturns(callInfo, returns, returnBlock);
     if (!retvalDefn)
-        return false;
+        return InliningStatus_Error;
     returnBlock->push(retvalDefn);
 
     // Initialize entry slots now that the stack has been fixed up.
     if (!returnBlock->initEntrySlots(alloc()))
-        return false;
+        return InliningStatus_Error;
 
-    return setCurrentAndSpecializePhis(returnBlock);
+    if (!setCurrentAndSpecializePhis(returnBlock))
+        return InliningStatus_Error;
+
+    return InliningStatus_Inlined;
 }
 
 MDefinition*
@@ -5745,9 +5751,7 @@ IonBuilder::inlineSingleCall(CallInfo& callInfo, JSObject* targetArg)
     // Track success now, as inlining a scripted call makes a new return block
     // which has a different pc than the current call pc.
     trackInlineSuccess();
-    if (!inlineScriptedCall(callInfo, target))
-        return InliningStatus_Error;
-    return InliningStatus_Inlined;
+    return inlineScriptedCall(callInfo, target);
 }
 
 IonBuilder::InliningStatus
@@ -6071,7 +6075,6 @@ IonBuilder::inlineCalls(CallInfo& callInfo, const ObjectVector& targets, BoolVec
 
         // Natives may veto inlining.
         if (status == InliningStatus_NotInlined) {
-            MOZ_ASSERT(target->isNative());
             MOZ_ASSERT(current == inlineBlock);
             graph().removeBlock(inlineBlock);
             choiceSet[i] = false;
@@ -6526,8 +6529,13 @@ IonBuilder::jsop_funcall(uint32_t argc)
           case InliningDecision_WarmUpCountTooLow:
             break;
           case InliningDecision_Inline:
-            if (target->isInterpreted())
-                return inlineScriptedCall(callInfo, target);
+            if (target->isInterpreted()) {
+                InliningStatus status = inlineScriptedCall(callInfo, target);
+                if (status == InliningStatus_Inlined)
+                    return true;
+                if (status == InliningStatus_Error)
+                    return false;
+            }
             break;
         }
     }
@@ -6715,8 +6723,13 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
       case InliningDecision_WarmUpCountTooLow:
         break;
       case InliningDecision_Inline:
-        if (target->isInterpreted())
-            return inlineScriptedCall(callInfo, target);
+        if (target->isInterpreted()) {
+            InliningStatus status = inlineScriptedCall(callInfo, target);
+            if (status == InliningStatus_Inlined)
+                return true;
+            if (status == InliningStatus_Error)
+                return false;
+        }
     }
 
     return makeCall(target, callInfo);
@@ -8052,8 +8065,10 @@ IonBuilder::resume(MInstruction* ins, jsbytecode* pc, MResumePoint::Mode mode)
 
     MResumePoint* resumePoint = MResumePoint::New(alloc(), ins->block(), pc,
                                                   mode);
-    if (!resumePoint)
+    if (!resumePoint) {
+        abortReason_ = AbortReason_Alloc;
         return false;
+    }
     ins->setResumePoint(resumePoint);
     return true;
 }
@@ -12238,11 +12253,16 @@ IonBuilder::getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName
           case InliningDecision_DontInline:
           case InliningDecision_WarmUpCountTooLow:
             break;
-          case InliningDecision_Inline:
-            if (!inlineScriptedCall(callInfo, commonGetter))
+          case InliningDecision_Inline: {
+            InliningStatus status = inlineScriptedCall(callInfo, commonGetter);
+            if (status == InliningStatus_Inlined) {
+                *emitted = true;
+                return true;
+            }
+            if (status == InliningStatus_Error)
                 return false;
-            *emitted = true;
-            return true;
+            break;
+          }
         }
     }
 
@@ -12768,11 +12788,15 @@ IonBuilder::setPropTryCommonSetter(bool* emitted, MDefinition* obj,
           case InliningDecision_DontInline:
           case InliningDecision_WarmUpCountTooLow:
             break;
-          case InliningDecision_Inline:
-            if (!inlineScriptedCall(callInfo, commonSetter))
+          case InliningDecision_Inline: {
+            InliningStatus status = inlineScriptedCall(callInfo, commonSetter);
+            if (status == InliningStatus_Inlined) {
+                *emitted = true;
+                return true;
+            }
+            if (status == InliningStatus_Error)
                 return false;
-            *emitted = true;
-            return true;
+          }
         }
     }
 

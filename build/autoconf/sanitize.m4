@@ -14,8 +14,12 @@ MOZ_ARG_ENABLE_BOOL(address-sanitizer,
 if test -n "$MOZ_ASAN"; then
     MOZ_LLVM_HACKS=1
     if test -n "$CLANG_CL"; then
-        # Look for clang_rt.asan_dynamic-i386.dll
-        MOZ_CLANG_RT_ASAN_LIB=clang_rt.asan_dynamic-i386.dll
+        # Look for the ASan runtime binary
+        if test "$CPU_ARCH" = "x86_64"; then
+          MOZ_CLANG_RT_ASAN_LIB=clang_rt.asan_dynamic-x86_64.dll
+        else
+          MOZ_CLANG_RT_ASAN_LIB=clang_rt.asan_dynamic-i386.dll
+        fi
         # We use MOZ_PATH_PROG in order to get a Windows style path.
         MOZ_PATH_PROG(MOZ_CLANG_RT_ASAN_LIB_PATH, $MOZ_CLANG_RT_ASAN_LIB)
         if test -z "$MOZ_CLANG_RT_ASAN_LIB_PATH"; then

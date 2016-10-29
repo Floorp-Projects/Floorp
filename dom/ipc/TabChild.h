@@ -445,7 +445,8 @@ public:
   RecvSwappedWithOtherRemoteLoader(const IPCTabContext& aContext) override;
 
   virtual PDocAccessibleChild*
-  AllocPDocAccessibleChild(PDocAccessibleChild*, const uint64_t&) override;
+  AllocPDocAccessibleChild(PDocAccessibleChild*, const uint64_t&,
+                           const uint32_t&) override;
 
   virtual bool DeallocPDocAccessibleChild(PDocAccessibleChild*) override;
 

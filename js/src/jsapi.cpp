@@ -6682,13 +6682,17 @@ JS::SetAsmJSCacheOps(JSContext* cx, const JS::AsmJSCacheOps* ops)
 bool
 JS::IsWasmModuleObject(HandleObject obj)
 {
-    return obj->is<WasmModuleObject>();
+    JSObject* unwrapped = CheckedUnwrap(obj);
+    if (!unwrapped)
+        return false;
+    return unwrapped->is<WasmModuleObject>();
 }
 
 JS_PUBLIC_API(RefPtr<JS::WasmModule>)
 JS::GetWasmModule(HandleObject obj)
 {
-    return &obj->as<WasmModuleObject>().module();
+    MOZ_ASSERT(JS::IsWasmModuleObject(obj));
+    return &CheckedUnwrap(obj)->as<WasmModuleObject>().module();
 }
 
 JS_PUBLIC_API(bool)

@@ -803,13 +803,16 @@ txMozillaXMLOutput::createResultDocument(const nsSubstring& aName, int32_t aNsID
     nsIScriptGlobalObject* sgo =
       source->GetScriptHandlingObject(hasHadScriptObject);
     NS_ENSURE_STATE(sgo || !hasHadScriptObject);
-    mDocument->SetScriptHandlingObject(sgo);
 
     mCurrentNode = mDocument;
     mNodeInfoManager = mDocument->NodeInfoManager();
 
     // Reset and set up the document
     URIUtils::ResetWithSource(mDocument, aSourceDocument);
+
+    // Make sure we set the script handling object after resetting with the
+    // source, so that we have the right principal.
+    mDocument->SetScriptHandlingObject(sgo);
 
     // Set the charset
     if (!mOutputFormat.mEncoding.IsEmpty()) {

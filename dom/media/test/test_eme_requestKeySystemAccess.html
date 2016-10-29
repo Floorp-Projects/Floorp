@@ -238,57 +238,17 @@ var tests = [
     shouldPass: true,
   },
   {
-    name: 'Persistent sessions; persistence required',
-    options: [
-      {
-        label: SUPPORTED_LABEL,
-        initDataTypes: ['cenc'],
-        videoCapabilities: [{contentType: 'video/mp4'}],
-        sessionTypes: ['temporary','persistent-license'],
-        persistentState: 'required',
-      }
-    ],
-    expectedConfig: {
-      label: SUPPORTED_LABEL,
-      initDataTypes: ['cenc'],
-      videoCapabilities: [{contentType: 'video/mp4'}],
-      sessionTypes: ['temporary','persistent-license'],
-      persistentState: 'required',
-    },
-    shouldPass: true,
-  },
-  {
-    name: 'Persistent sessions not allowed when persistentState prohibited',
+    name: 'Persistent-license should not be supported by ClearKey',
     options: [
       {
         initDataTypes: ['cenc'],
         videoCapabilities: [{contentType: 'video/mp4'}],
-        sessionTypes: ['temporary','persistent-license'],
-        persistentState: 'not-allowed',
-      }
-    ],
-    shouldPass: false,
-  },
-  {
-    name: 'Persistent sessions; should bump optional persistState to required',
-    options: [
-      {
-        label: SUPPORTED_LABEL,
-        initDataTypes: ['cenc'],
-        videoCapabilities: [{contentType: 'video/mp4'}],
-        sessionTypes: ['temporary','persistent-license'],
+        sessionTypes: ['persistent-license'],
         persistentState: 'optional',
       }
     ],
-    expectedConfig: {
-      label: SUPPORTED_LABEL,
-      initDataTypes: ['cenc'],
-      videoCapabilities: [{contentType: 'video/mp4'}],
-      sessionTypes: ['temporary','persistent-license'],
-      persistentState: 'required',
-    },
-    shouldPass: true,
-  },
+    shouldPass: false,
+  },  
   {
     name: 'Persistent-usage-record should not be supported by ClearKey',
     options: [
@@ -296,11 +256,11 @@ var tests = [
         initDataTypes: ['cenc'],
         videoCapabilities: [{contentType: 'video/mp4'}],
         sessionTypes: ['persistent-usage-record'],
-        persistentState: 'required',
+        persistentState: 'optional',
       }
     ],
     shouldPass: false,
-  },  
+  },
   {
     name: 'MP4 audio container',
     options: [

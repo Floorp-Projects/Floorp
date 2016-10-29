@@ -1,5 +1,4 @@
 // |jit-test| test-also-wasm-baseline
-// TODO: maximum memory size too big
-// TODO: spec still requires initializers be disjoint and ordered
+// TODO initializer expression can reference global module-defined variables?
 quit();
 var importedArgs = ['memory.wast']; load(scriptdir + '../spec.js');

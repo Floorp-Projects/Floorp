@@ -111,8 +111,9 @@ ImageContainer::EnsureImageClient(bool aCreate)
   if (imageBridge) {
     mIPDLChild = new ImageContainerChild(this);
     mImageClient = imageBridge->CreateImageClient(CompositableType::IMAGE, this, mIPDLChild);
-    MOZ_ASSERT(mImageClient);
-    mAsyncContainerID = mImageClient->GetAsyncID();
+    if (mImageClient) {
+      mAsyncContainerID = mImageClient->GetAsyncID();
+    }
   }
 }
 

@@ -36,6 +36,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericHTMLFrameElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGenericHTMLFrameElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameLoader)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOpenerWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserElementAPI)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserElementAudioChannels)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -47,6 +48,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGenericHTMLFrameElement,
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameLoader)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOpenerWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowserElementAPI)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowserElementAudioChannels)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -149,7 +151,9 @@ nsGenericHTMLFrameElement::EnsureFrameLoader()
 
   // Strangely enough, this method doesn't actually ensure that the
   // frameloader exists.  It's more of a best-effort kind of thing.
-  mFrameLoader = nsFrameLoader::Create(this, mNetworkCreated);
+  mFrameLoader = nsFrameLoader::Create(this,
+                                       nsPIDOMWindowOuter::From(mOpenerWindow),
+                                       mNetworkCreated);
   if (mIsPrerendered) {
     mFrameLoader->SetIsPrerendered();
   }
@@ -213,6 +217,19 @@ nsGenericHTMLFrameElement::GetParentApplication(mozIApplication** aApplication)
 }
 
 void
+nsGenericHTMLFrameElement::PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv)
+{
+  MOZ_ASSERT(!mFrameLoader);
+  mOpenerWindow = nsPIDOMWindowOuter::From(aWindow);
+}
+
+void
+nsGenericHTMLFrameElement::InternalSetFrameLoader(nsIFrameLoader* aNewFrameLoader)
+{
+  mFrameLoader = static_cast<nsFrameLoader*>(aNewFrameLoader);
+}
+
+void
 nsGenericHTMLFrameElement::SwapFrameLoaders(HTMLIFrameElement& aOtherLoaderOwner,
                                             ErrorResult& rv)
 {
@@ -221,28 +238,28 @@ nsGenericHTMLFrameElement::SwapFrameLoaders(HTMLIFrameElement& aOtherLoaderOwner
     return;
   }
 
-  SwapFrameLoaders(aOtherLoaderOwner.mFrameLoader, rv);
+  aOtherLoaderOwner.SwapFrameLoaders(this, rv);
 }
 
 void
 nsGenericHTMLFrameElement::SwapFrameLoaders(nsXULElement& aOtherLoaderOwner,
                                             ErrorResult& rv)
 {
-  aOtherLoaderOwner.SwapFrameLoaders(mFrameLoader, rv);
+  aOtherLoaderOwner.SwapFrameLoaders(this, rv);
 }
 
 void
-nsGenericHTMLFrameElement::SwapFrameLoaders(RefPtr<nsFrameLoader>& aOtherLoader,
+nsGenericHTMLFrameElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoaderOwner,
                                             mozilla::ErrorResult& rv)
 {
-  if (!mFrameLoader || !aOtherLoader) {
+  RefPtr<nsFrameLoader> loader = GetFrameLoader();
+  RefPtr<nsFrameLoader> otherLoader = aOtherLoaderOwner->GetFrameLoader();
+  if (!loader || !otherLoader) {
     rv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return;
   }
 
-  rv = mFrameLoader->SwapWithOtherLoader(aOtherLoader,
-                                         mFrameLoader,
-                                         aOtherLoader);
+  rv = loader->SwapWithOtherLoader(otherLoader, this, aOtherLoaderOwner);
 }
 
 NS_IMETHODIMP
@@ -436,7 +453,7 @@ nsGenericHTMLFrameElement::CopyInnerTo(Element* aDest)
   if (doc->IsStaticDocument() && mFrameLoader) {
     nsGenericHTMLFrameElement* dest =
       static_cast<nsGenericHTMLFrameElement*>(aDest);
-    nsFrameLoader* fl = nsFrameLoader::Create(dest, false);
+    nsFrameLoader* fl = nsFrameLoader::Create(dest, nullptr, false);
     NS_ENSURE_STATE(fl);
     dest->mFrameLoader = fl;
     static_cast<nsFrameLoader*>(mFrameLoader.get())->CreateStaticClone(fl);

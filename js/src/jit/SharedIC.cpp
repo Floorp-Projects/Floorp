@@ -3993,10 +3993,14 @@ static void
 MaybeWorkAroundAmdBug(MacroAssembler& masm)
 {
     // Attempt to work around an AMD bug (see bug 1034706 and bug 1281759), by
-    // inserting a 4-byte NOP.
+    // inserting 32-bytes of NOPs.
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-    if (CPUInfo::NeedAmdBugWorkaround())
-        masm.nop(4);
+    if (CPUInfo::NeedAmdBugWorkaround()) {
+        masm.nop(9);
+        masm.nop(9);
+        masm.nop(9);
+        masm.nop(5);
+    }
 #endif
 }
 

@@ -267,7 +267,6 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
   }
   // http://dev.w3.org/csswg/css-grid/#algo-init
   switch (minSizeUnit) {
-    case eStyleUnit_FlexFraction:
     case eStyleUnit_Auto:
       mState |= eAutoMinSizing;
       break;
@@ -276,6 +275,8 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
                                         : eMaxContentMinSizing;
       break;
     default:
+      MOZ_ASSERT(minSizeUnit != eStyleUnit_FlexFraction,
+                 "<flex> min-sizing is invalid as a track size");
       mBase = ::ResolveToDefiniteSize(aMinCoord, aPercentageBasis);
   }
   switch (maxSizeUnit) {
@@ -4671,13 +4672,15 @@ nsGridContainerFrame::Tracks::FindUsedFlexFraction(
   }
 
   // The used flex fraction is the maximum of:
-  // ... each flexible track's base size divided by its flex factor
+  // ... each flexible track's base size divided by its flex factor (which is
+  // floored at 1).
   float fr = 0.0f;
   for (uint32_t track : aFlexTracks) {
     float flexFactor = aFunctions.MaxSizingFor(track).GetFlexFractionValue();
-    if (flexFactor > 0.0f) {
-      fr = std::max(fr, mSizes[track].mBase / flexFactor);
-    }
+    float possiblyDividedBaseSize = (flexFactor > 1.0f)
+      ? mSizes[track].mBase / flexFactor
+      : mSizes[track].mBase;
+    fr = std::max(fr, possiblyDividedBaseSize);
   }
   WritingMode wm = aState.mWM;
   nsRenderingContext* rc = &aState.mRenderingContext;

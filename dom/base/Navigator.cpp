@@ -1531,10 +1531,6 @@ Navigator::GetBattery(ErrorResult& aRv)
   }
   mBatteryPromise = batteryPromise;
 
-  // We just initialized mBatteryPromise, so we know this is the first time
-  // this page has accessed navigator.getBattery(). 1 = navigator.getBattery()
-  Telemetry::Accumulate(Telemetry::BATTERY_STATUS_COUNT, 1);
-
   if (!mBatteryManager) {
     mBatteryManager = new battery::BatteryManager(mWindow);
     mBatteryManager->Init();

@@ -504,14 +504,11 @@ function get_string(aName, ...aArgs) {
 }
 
 function formatDate(aDate) {
-  return Cc["@mozilla.org/intl/scriptabledateformat;1"]
-           .getService(Ci.nsIScriptableDateFormat)
-           .FormatDate("",
-                       Ci.nsIScriptableDateFormat.dateFormatLong,
-                       aDate.getFullYear(),
-                       aDate.getMonth() + 1,
-                       aDate.getDate()
-                       );
+  const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                 .getService(Ci.nsIXULChromeRegistry)
+                 .getSelectedLocale("global", true);
+  const dtOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+  return aDate.toLocaleDateString(locale, dtOptions);
 }
 
 function is_hidden(aElement) {

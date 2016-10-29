@@ -2270,6 +2270,13 @@ MacroAssemblerMIPS64Compat::profilerExitFrame()
     branch(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
 }
 
+void
+MacroAssembler::subFromStackPtr(Imm32 imm32)
+{
+    if (imm32.value)
+        asMasm().subPtr(imm32, StackPointer);
+}
+
 //{{{ check_macroassembler_style
 // ===============================================================
 // Stack manipulation functions.
@@ -2312,14 +2319,6 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
     }
     MOZ_ASSERT(diff == 0);
     freeStack(reserved);
-}
-
-void
-MacroAssembler::reserveStack(uint32_t amount)
-{
-    if (amount)
-        asMasm().subPtr(Imm32(amount), StackPointer);
-    adjustFrame(amount);
 }
 
 // ===============================================================

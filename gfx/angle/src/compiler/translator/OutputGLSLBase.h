@@ -44,6 +44,7 @@ class TOutputGLSLBase : public TIntermTraverser
     void visitConstantUnion(TIntermConstantUnion *node) override;
     bool visitBinary(Visit visit, TIntermBinary *node) override;
     bool visitUnary(Visit visit, TIntermUnary *node) override;
+    bool visitTernary(Visit visit, TIntermTernary *node) override;
     bool visitSelection(Visit visit, TIntermSelection *node) override;
     bool visitSwitch(Visit visit, TIntermSwitch *node) override;
     bool visitCase(Visit visit, TIntermCase *node) override;

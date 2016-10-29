@@ -1773,7 +1773,7 @@ PrintDataSection(WasmPrintContext& c, const AstModule& module)
     const Limits& memory = module.memories()[0].limits;
     MOZ_ASSERT(memory.initial % PageSize == 0);
     if (!PrintInt32(c, memory.initial / PageSize))
-       return false;
+        return false;
 
     if (memory.maximum) {
         MOZ_ASSERT(*memory.maximum % PageSize == 0);
@@ -1787,29 +1787,41 @@ PrintDataSection(WasmPrintContext& c, const AstModule& module)
 
     uint32_t numSegments = module.dataSegments().length();
     if (!numSegments) {
-      if (!c.buffer.append(" {}\n\n"))
-          return false;
-      return true;
+        if (!c.buffer.append(" {}\n\n"))
+            return false;
+        return true;
     }
     if (!c.buffer.append(" {\n"))
         return false;
 
     for (uint32_t i = 0; i < numSegments; i++) {
         const AstDataSegment* segment = module.dataSegments()[i];
-
         if (!PrintIndent(c))
             return false;
         if (!c.buffer.append("segment "))
-           return false;
+            return false;
         if (!PrintInt32(c, segment->offset()->as<AstConst>().val().i32()))
-           return false;
-        if (!c.buffer.append(" \""))
-           return false;
+            return false;
+        if (!c.buffer.append("\n"))
+            return false;
 
-        PrintEscapedString(c, segment->text());
+        c.indent++;
+        for (const AstName& fragment : segment->fragments()) {
+            if (!PrintIndent(c))
+                return false;
+            if (!c.buffer.append("\""))
+                return false;
+            if (!PrintEscapedString(c, fragment))
+                return false;
+            if (!c.buffer.append("\"\n"))
+                return false;
+        }
+        c.indent--;
 
-        if (!c.buffer.append("\";\n"))
-           return false;
+        if (!PrintIndent(c))
+            return false;
+        if (!c.buffer.append(";\n"))
+            return false;
     }
 
     c.indent--;

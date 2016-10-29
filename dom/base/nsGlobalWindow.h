@@ -86,6 +86,7 @@ class nsIJSID;
 class nsIScriptContext;
 class nsIScriptTimeoutHandler;
 class nsIWebBrowserChrome;
+class mozIDOMWindowProxy;
 
 class nsDOMWindowList;
 class nsScreen;
@@ -106,6 +107,7 @@ struct ChannelPixelLayout;
 class Console;
 class Crypto;
 class CustomElementRegistry;
+class DocGroup;
 class External;
 class Function;
 class Gamepad;
@@ -121,6 +123,7 @@ struct RequestInit;
 class RequestOrUSVString;
 class Selection;
 class SpeechSynthesis;
+class TabGroup;
 class U2F;
 class VRDisplay;
 class VREventObserver;
@@ -920,6 +923,9 @@ protected:
   // Initializes the mWasOffline member variable
   void InitWasOffline();
 public:
+  nsPIDOMWindowOuter*
+  GetSanitizedOpener(nsPIDOMWindowOuter* aOpener);
+
   nsPIDOMWindowOuter* GetOpenerWindow(mozilla::ErrorResult& aError);
   void GetOpener(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval,
                  mozilla::ErrorResult& aError);
@@ -1739,9 +1745,13 @@ private:
   // IsSecureContext() for the inner window that corresponds to aDocument.
   bool ComputeIsSecureContext(nsIDocument* aDocument);
 
-public:
+  // nsPIDOMWindow<T> should be able to see these helper methods.
+  friend class nsPIDOMWindow<mozIDOMWindowProxy>;
+  friend class nsPIDOMWindow<mozIDOMWindow>;
+  friend class nsPIDOMWindow<nsISupports>;
 
-  void GetConstellation(nsACString& aConstellation);
+  mozilla::dom::TabGroup* TabGroupInner();
+  mozilla::dom::TabGroup* TabGroupOuter();
 
 protected:
   // These members are only used on outer window objects. Make sure
@@ -1946,6 +1956,12 @@ protected:
   RefPtr<mozilla::dom::SpeechSynthesis> mSpeechSynthesis;
 #endif
 
+#ifdef DEBUG
+  // This member is used in the debug only assertions in TabGroup()
+  // to catch cyclic parent/opener trees and not overflow the stack.
+  bool mIsValidatingTabGroup;
+#endif
+
   // This is the CC generation the last time we called CanSkip.
   uint32_t mCanSkipCCGeneration;
 
@@ -1953,9 +1969,6 @@ protected:
   nsTArray<RefPtr<mozilla::dom::VRDisplay>> mVRDisplays;
 
   nsAutoPtr<mozilla::dom::VREventObserver> mVREventObserver;
-
-  uint64_t mStaticConstellation; // Only used on outer windows
-  nsCString mConstellation; // Only used on inner windows
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
@@ -2053,6 +2066,7 @@ public:
   // The pointer being set indicates we've set the IsInFullscreenChange
   // flag on this pres shell.
   nsWeakPtr mFullscreenPresShell;
+  nsCOMPtr<mozIDOMWindowProxy> mOpenerForInitialContentBrowser;
 };
 
 /*

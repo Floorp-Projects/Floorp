@@ -113,6 +113,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                                       int32_t aInitialHeight,
                                       bool aIsHiddenWindow,
                                       nsITabParent *aOpeningTab,
+                                      mozIDOMWindowProxy *aOpenerWindow,
                                       nsWidgetInitData& widgetInitData)
 {
   nsresult rv;
@@ -207,6 +208,12 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mDocShell, &rv));
   if (webProgress) {
     webProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_NETWORK);
+  }
+
+  if (aOpenerWindow) {
+    nsPIDOMWindowOuter* window = mDocShell->GetWindow();
+    MOZ_ASSERT(window);
+    window->SetOpenerWindow(nsPIDOMWindowOuter::From(aOpenerWindow), true);
   }
 
   // Eagerly create an about:blank content viewer with the right principal here,

@@ -27,6 +27,7 @@
 #undef GetBinaryType
 #undef RemoveDirectory
 #undef LoadIcon
+#undef LoadImage
 #undef GetObject
 #endif
 

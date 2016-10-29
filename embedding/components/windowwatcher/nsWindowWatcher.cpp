@@ -65,8 +65,10 @@
 #include "mozilla/dom/DOMStorage.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/DocGroup.h"
 #include "nsIXULWindow.h"
 #include "nsIXULBrowserWindow.h"
+#include "nsGlobalWindow.h"
 
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
@@ -483,6 +485,7 @@ nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
                                     uint32_t aChromeFlags,
                                     uint32_t aContextFlags,
                                     nsITabParent* aOpeningTabParent,
+                                    mozIDOMWindowProxy* aOpener,
                                     nsIWebBrowserChrome** aResult)
 {
   nsCOMPtr<nsIWindowCreator2> windowCreator2(do_QueryInterface(mWindowCreator));
@@ -501,7 +504,7 @@ nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
   nsresult rv =
     windowCreator2->CreateChromeWindow2(aParentChrome, aChromeFlags, aContextFlags,
-                                        aOpeningTabParent, &cancel,
+                                        aOpeningTabParent, aOpener, &cancel,
                                         getter_AddRefs(newWindowChrome));
 
   if (NS_SUCCEEDED(rv) && cancel) {
@@ -621,7 +624,7 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
 
   CreateChromeWindow(aFeatures, parentChrome, chromeFlags, contextFlags,
-                     aOpeningTabParent, getter_AddRefs(newWindowChrome));
+                     aOpeningTabParent, nullptr, getter_AddRefs(newWindowChrome));
 
   if (NS_WARN_IF(!newWindowChrome)) {
     return NS_ERROR_UNEXPECTED;
@@ -880,8 +883,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
         rv = provider->ProvideWindow(aParent, chromeFlags, aCalledFromJS,
                                      sizeSpec.PositionSpecified(),
                                      sizeSpec.SizeSpecified(),
-                                     uriToLoad, name, features, &windowIsNew,
-                                     getter_AddRefs(newWindow));
+                                     uriToLoad, name, features, aForceNoOpener,
+                                     &windowIsNew, getter_AddRefs(newWindow));
 
         if (NS_SUCCEEDED(rv)) {
           GetWindowTreeItem(newWindow, getter_AddRefs(newDocShellItem));
@@ -995,8 +998,9 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
             nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
         }
 
+        mozIDOMWindowProxy* openerWindow = aForceNoOpener ? nullptr : aParent;
         rv = CreateChromeWindow(features, parentChrome, chromeFlags, contextFlags,
-                                nullptr, getter_AddRefs(newChrome));
+                                nullptr, openerWindow, getter_AddRefs(newChrome));
 
       } else {
         rv = mWindowCreator->CreateChromeWindow(parentChrome, chromeFlags,
@@ -1009,7 +1013,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
           nsCOMPtr<nsIXULBrowserWindow> xulBrowserWin;
           xulWin->GetXULBrowserWindow(getter_AddRefs(xulBrowserWin));
           if (xulBrowserWin) {
-            xulBrowserWin->ForceInitialBrowserNonRemote();
+            nsPIDOMWindowOuter* openerWindow = aForceNoOpener ? nullptr : parentWindow.get();
+            xulBrowserWin->ForceInitialBrowserNonRemote(openerWindow);
           }
         }
         /* It might be a chrome nsXULWindow, in which case it won't have
@@ -1634,7 +1639,7 @@ nsWindowWatcher::GetChromeForWindow(mozIDOMWindowProxy* aWindow,
 }
 
 NS_IMETHODIMP
-nsWindowWatcher::GetWindowByName(const char16_t* aTargetName,
+nsWindowWatcher::GetWindowByName(const nsAString& aTargetName,
                                  mozIDOMWindowProxy* aCurrentWindow,
                                  mozIDOMWindowProxy** aResult)
 {
@@ -2051,71 +2056,29 @@ nsWindowWatcher::WinHasOption(const nsACString& aOptions, const char* aName,
    necessarily return a failure method value. check aFoundItem.
 */
 NS_IMETHODIMP
-nsWindowWatcher::FindItemWithName(const char16_t* aName,
+nsWindowWatcher::FindItemWithName(const nsAString& aName,
                                   nsIDocShellTreeItem* aRequestor,
                                   nsIDocShellTreeItem* aOriginalRequestor,
                                   nsIDocShellTreeItem** aFoundItem)
 {
-  *aFoundItem = 0;
-
-  /* special cases */
-  if (!aName || !*aName) {
+  *aFoundItem = nullptr;
+  if (aName.IsEmpty()) {
     return NS_OK;
   }
 
-  nsDependentString name(aName);
-
-  nsCOMPtr<nsISimpleEnumerator> windows;
-  GetWindowEnumerator(getter_AddRefs(windows));
-  if (!windows) {
-    return NS_ERROR_FAILURE;
+  if (aName.LowerCaseEqualsLiteral("_blank") ||
+      aName.LowerCaseEqualsLiteral("_top") ||
+      aName.LowerCaseEqualsLiteral("_parent") ||
+      aName.LowerCaseEqualsLiteral("_self")) {
+    return NS_OK;
   }
 
-  bool more;
-  nsresult rv = NS_OK;
-
-  do {
-    windows->HasMoreElements(&more);
-    if (!more) {
-      break;
-    }
-    nsCOMPtr<nsISupports> nextSupWindow;
-    windows->GetNext(getter_AddRefs(nextSupWindow));
-    nsCOMPtr<mozIDOMWindowProxy> nextWindow(do_QueryInterface(nextSupWindow));
-    if (nextWindow) {
-      nsCOMPtr<nsIDocShellTreeItem> treeItem;
-      GetWindowTreeItem(nextWindow, getter_AddRefs(treeItem));
-      if (treeItem) {
-        // Get the root tree item of same type, since roots are the only
-        // things that call into the treeowner to look for named items.
-        nsCOMPtr<nsIDocShellTreeItem> root;
-        treeItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
-        NS_ASSERTION(root, "Must have root tree item of same type");
-        // Make sure not to call back into aRequestor
-        if (root != aRequestor) {
-          // Get the tree owner so we can pass it in as the requestor so
-          // the child knows not to call back up, since we're walking
-          // all windows already.
-          nsCOMPtr<nsIDocShellTreeOwner> rootOwner;
-          // Note: if we have no aRequestor, then we want to also look for
-          // "special" window names, so pass a null requestor.  This will mean
-          // that the treeitem calls back up to us, effectively (with a
-          // non-null aRequestor), so break the loop immediately after the
-          // call in that case.
-          if (aRequestor) {
-            root->GetTreeOwner(getter_AddRefs(rootOwner));
-          }
-          rv = root->FindItemWithName(aName, rootOwner, aOriginalRequestor,
-                                      aFoundItem);
-          if (NS_FAILED(rv) || *aFoundItem || !aRequestor) {
-            break;
-          }
-        }
-      }
-    }
-  } while (1);
-
-  return rv;
+  // If we are looking for an item and we don't have a docshell we are checking
+  // on, let's just look in the chrome tab group!
+  return TabGroup::GetChromeTabGroup()->FindItemWithName(aName,
+                                                         aRequestor,
+                                                         aOriginalRequestor,
+                                                         aFoundItem);
 }
 
 already_AddRefed<nsIDocShellTreeItem>
@@ -2149,14 +2112,12 @@ nsWindowWatcher::SafeGetWindowByName(const nsAString& aName,
 
   nsCOMPtr<nsIDocShellTreeItem> callerItem = GetCallerTreeItem(startItem);
 
-  const nsAFlatString& flatName = PromiseFlatString(aName);
-
   nsCOMPtr<nsIDocShellTreeItem> foundItem;
   if (startItem) {
-    startItem->FindItemWithName(flatName.get(), nullptr, callerItem,
+    startItem->FindItemWithName(aName, nullptr, callerItem,
                                 getter_AddRefs(foundItem));
   } else {
-    FindItemWithName(flatName.get(), nullptr, callerItem,
+    FindItemWithName(aName, nullptr, callerItem,
                      getter_AddRefs(foundItem));
   }
 
@@ -2182,28 +2143,29 @@ nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem* aOpenedItem,
   *aOpenedWindow = 0;
   nsCOMPtr<nsPIDOMWindowOuter> piOpenedWindow = aOpenedItem->GetWindow();
   if (piOpenedWindow) {
-    if (aParent) {
-      if (!aForceNoOpener) {
-        piOpenedWindow->SetOpenerWindow(aParent, aWindowIsNew); // damnit
-      }
+    if (!aForceNoOpener) {
+      piOpenedWindow->SetOpenerWindow(aParent, aWindowIsNew); // damnit
+    } else if (aParent && aParent != piOpenedWindow) {
+      MOZ_ASSERT(piOpenedWindow->TabGroup() != aParent->TabGroup(),
+                 "If we're forcing no opener, they should be in different tab groups");
+    }
 
-      if (aWindowIsNew) {
+    if (aWindowIsNew) {
 #ifdef DEBUG
-        // Assert that we're not loading things right now.  If we are, when
-        // that load completes it will clobber whatever principals we set up
-        // on this new window!
-        nsCOMPtr<nsIDocumentLoader> docloader = do_QueryInterface(aOpenedItem);
-        NS_ASSERTION(docloader, "How can we not have a docloader here?");
+      // Assert that we're not loading things right now.  If we are, when
+      // that load completes it will clobber whatever principals we set up
+      // on this new window!
+      nsCOMPtr<nsIDocumentLoader> docloader = do_QueryInterface(aOpenedItem);
+      NS_ASSERTION(docloader, "How can we not have a docloader here?");
 
-        nsCOMPtr<nsIChannel> chan;
-        docloader->GetDocumentChannel(getter_AddRefs(chan));
-        NS_ASSERTION(!chan, "Why is there a document channel?");
+      nsCOMPtr<nsIChannel> chan;
+      docloader->GetDocumentChannel(getter_AddRefs(chan));
+      NS_ASSERTION(!chan, "Why is there a document channel?");
 #endif
 
-        nsCOMPtr<nsIDocument> doc = piOpenedWindow->GetExtantDoc();
-        if (doc) {
-          doc->SetIsInitialDocument(true);
-        }
+      nsCOMPtr<nsIDocument> doc = piOpenedWindow->GetExtantDoc();
+      if (doc) {
+        doc->SetIsInitialDocument(true);
       }
     }
     rv = CallQueryInterface(piOpenedWindow, aOpenedWindow);

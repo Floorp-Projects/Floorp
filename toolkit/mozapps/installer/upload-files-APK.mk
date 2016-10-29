@@ -100,7 +100,6 @@ INNER_FENNEC_PACKAGE = \
     --lib-dirs $(STAGEPATH)$(MOZ_PKG_DIR)/lib \
     --assets-dirs $(STAGEPATH)$(MOZ_PKG_DIR)/assets \
     --features-dirs $(STAGEPATH)$(MOZ_PKG_DIR)/features \
-    $(if $(COMPILE_ENVIRONMENT),$(if $(MOZ_ENABLE_SZIP),--szip-assets-libs-with $(ABS_DIST)/host/bin/szip)) \
     --root-files $(foreach f,$(ROOT_FILES),$(STAGEPATH)$(MOZ_PKG_DIR)/$(f)) \
     --output $(PACKAGE:.apk=-unsigned-unaligned.apk) && \
   $(call RELEASE_SIGN_ANDROID_APK,$(PACKAGE:.apk=-unsigned-unaligned.apk),$(PACKAGE))

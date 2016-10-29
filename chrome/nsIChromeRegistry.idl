@@ -50,8 +50,13 @@ interface nsIXULChromeRegistry : nsIChromeRegistry
 {
   /* Should be called when locales change to reload all chrome (including XUL). */
   void reloadChrome();
-  
-  ACString getSelectedLocale(in ACString packageName);
+
+  // If the optional asBCP47 parameter is true, the locale code will be
+  // converted to a BCP47 language tag; in particular, this means that
+  // "ja-JP-mac" will be returned as "ja-JP-x-lvariant-mac", which can be
+  // passed to ECMA402 Intl API methods without throwing a RangeError.
+  ACString getSelectedLocale(in ACString packageName,
+                             [optional] in boolean asBCP47);
   
   // Get the direction of the locale via the intl.uidirection.<locale> pref
   boolean isLocaleRTL(in ACString package);

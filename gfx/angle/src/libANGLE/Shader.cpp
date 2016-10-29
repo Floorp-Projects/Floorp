@@ -243,9 +243,9 @@ void Shader::compile(Compiler *compiler)
     std::stringstream sourceStream;
 
     std::string sourcePath;
-    int additionalOptions =
+    ShCompileOptions additionalOptions =
         mImplementation->prepareSourceAndReturnOptions(&sourceStream, &sourcePath);
-    int compileOptions    = (SH_OBJECT_CODE | SH_VARIABLES | additionalOptions);
+    ShCompileOptions compileOptions = (SH_OBJECT_CODE | SH_VARIABLES | additionalOptions);
 
     // Some targets (eg D3D11 Feature Level 9_3 and below) do not support non-constant loop indexes
     // in fragment shaders. Shader compilation will fail. To provide a better error message we can

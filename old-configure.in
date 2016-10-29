@@ -1294,6 +1294,7 @@ AC_SUBST(MOZ_LINKER)
 if test -n "$MOZ_LINKER"; then
   AC_DEFINE(MOZ_LINKER)
   MOZ_LINKER_EXTRACT=1
+  AC_CHECK_PROGS(XZ, xz)
 fi
 
 dnl Only one oddball right now (QNX), but this gives us flexibility
@@ -2446,6 +2447,9 @@ fi
 if test -n "$MOZ_RUST"; then
     if test -n "$MOZ_RUST_MP4PARSE"; then
         AC_DEFINE(MOZ_RUST_MP4PARSE)
+    fi
+    if test -n "$MOZ_RUST_URLPARSE"; then
+        AC_DEFINE(MOZ_RUST_URLPARSE)
     fi
 fi
 
@@ -5742,9 +5746,6 @@ AC_SUBST(MOZ_PACKAGE_JSSHELL)
 AC_SUBST(MOZ_FOLD_LIBS)
 AC_SUBST(MOZ_FOLD_LIBS_FLAGS)
 AC_SUBST(SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE)
-
-AC_SUBST(MOZ_ENABLE_SZIP)
-AC_SUBST(MOZ_SZIP_FLAGS)
 
 AC_SUBST(DMG_TOOL)
 

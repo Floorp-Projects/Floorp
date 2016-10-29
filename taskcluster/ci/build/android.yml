@@ -8,7 +8,7 @@ android-api-15/debug:
     treeherder:
         platform: android-4-0-armv7-api15/debug
         symbol: tc(B)
-    worker-type: aws-provisioner-v1/android-api-15
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         implementation: docker-worker
         max-run-time: 7200
@@ -32,7 +32,7 @@ android-x86/opt:
         platform: android-4-2-x86/opt
         symbol: tc(B)
         tier: 1
-    worker-type: aws-provisioner-v1/android-api-15
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         implementation: docker-worker
         max-run-time: 7200
@@ -56,7 +56,7 @@ android-api-15/opt:
         platform: android-4-0-armv7-api15/opt
         symbol: tc(B)
         tier: 2
-    worker-type: aws-provisioner-v1/android-api-15
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         implementation: docker-worker
         max-run-time: 7200
@@ -82,7 +82,7 @@ android-api-15-nightly/opt:
         platform: android-4-0-armv7-api15/opt
         symbol: tc(N)
         tier: 2
-    worker-type: aws-provisioner-v1/android-api-15
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         implementation: docker-worker
         max-run-time: 7200
@@ -108,7 +108,7 @@ android-api-15-gradle/opt:
         platform: android-4-0-armv7-api15/opt
         symbol: tc(Bg)
         tier: 2
-    worker-type: aws-provisioner-v1/android-api-15
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         implementation: docker-worker
         max-run-time: 7200
