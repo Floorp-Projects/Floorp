@@ -295,7 +295,7 @@ public:
 
 private:
   friend class LinkedList<T>;
-  friend struct detail::LinkedListElementTraits<T>;
+  friend class detail::LinkedListElementTraits<T>;
 
   enum class NodeKind {
     Normal,
