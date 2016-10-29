@@ -22,9 +22,9 @@ enum PresentationConnectionClosedReason
 };
 
 [Constructor(DOMString type,
-             PresentationConnectionClosedEventInit eventInitDict),
+             PresentationConnectionCloseEventInit eventInitDict),
  Pref="dom.presentation.enabled"]
-interface PresentationConnectionClosedEvent : Event
+interface PresentationConnectionCloseEvent : Event
 {
   readonly attribute PresentationConnectionClosedReason reason;
 
@@ -34,7 +34,7 @@ interface PresentationConnectionClosedEvent : Event
   readonly attribute DOMString message;
 };
 
-dictionary PresentationConnectionClosedEventInit : EventInit
+dictionary PresentationConnectionCloseEventInit : EventInit
 {
   required PresentationConnectionClosedReason reason;
   DOMString message = "";

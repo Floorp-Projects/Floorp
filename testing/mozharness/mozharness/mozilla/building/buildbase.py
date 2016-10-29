@@ -364,6 +364,7 @@ class BuildOptionParser(object):
         'android-lint': 'builds/releng_sub_%s_configs/%s_lint.py',
         'valgrind' : 'builds/releng_sub_%s_configs/%s_valgrind.py',
         'artifact': 'builds/releng_sub_%s_configs/%s_artifact.py',
+        'debug-artifact': 'builds/releng_sub_%s_configs/%s_debug_artifact.py',
     }
     build_pool_cfg_file = 'builds/build_pool_specifics.py'
     branch_cfg_file = 'builds/branch_specifics.py'

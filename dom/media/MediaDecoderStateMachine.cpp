@@ -223,6 +223,10 @@ public:
 
   virtual void DumpDebugInfo() {}
 
+private:
+  template <class S, typename R, typename... As>
+  auto ReturnTypeHelper(R(S::*)(As...)) -> R;
+
 protected:
   using Master = MediaDecoderStateMachine;
   explicit StateObject(Master* aPtr) : mMaster(aPtr) {}
@@ -230,12 +234,20 @@ protected:
   MediaResource* Resource() const { return mMaster->mResource; }
   MediaDecoderReaderWrapper* Reader() const { return mMaster->mReader; }
   const MediaInfo& Info() const { return mMaster->Info(); }
+  bool IsExpectingMoreData() const
+  {
+    // We are expecting more data if either the resource states so, or if we
+    // have a waiting promise pending (such as with non-MSE EME).
+    return Resource()->IsExpectingMoreData() ||
+           (Reader()->IsWaitForDataSupported() &&
+            (Reader()->IsWaitingAudioData() || Reader()->IsWaitingVideoData()));
+  }
 
   // Note this function will delete the current state object.
   // Don't access members to avoid UAF after this call.
   template <class S, typename... Ts>
   auto SetState(Ts... aArgs)
-    -> decltype(DeclVal<S>().Enter(Move(aArgs)...))
+    -> decltype(ReturnTypeHelper(&S::Enter))
   {
     // keep mMaster in a local object because mMaster will become invalid after
     // the current state object is deleted.
@@ -1469,14 +1481,11 @@ DecodingState::MaybeStartBuffering()
     return;
   }
 
-  // No more data to download. No need to enter buffering.
-  if (!Resource()->IsExpectingMoreData()) {
-    return;
-  }
-
   bool shouldBuffer;
   if (Reader()->UseBufferingHeuristics()) {
-    shouldBuffer = mMaster->HasLowDecodedData() && mMaster->HasLowBufferedData();
+    shouldBuffer = IsExpectingMoreData() &&
+                   mMaster->HasLowDecodedData() &&
+                   mMaster->HasLowBufferedData();
   } else {
     MOZ_ASSERT(Reader()->IsWaitForDataSupported());
     shouldBuffer =
@@ -1614,7 +1623,7 @@ BufferingState::Step()
     if ((isLiveStream || !mMaster->CanPlayThrough()) &&
         elapsed < TimeDuration::FromSeconds(mBufferingWait * mMaster->mPlaybackRate) &&
         mMaster->HasLowBufferedData(mBufferingWait * USECS_PER_S) &&
-        Resource()->IsExpectingMoreData()) {
+        IsExpectingMoreData()) {
       SLOG("Buffering: wait %ds, timeout in %.3lfs",
            mBufferingWait, mBufferingWait - elapsed.ToSeconds());
       mMaster->ScheduleStateMachineIn(USECS_PER_S);

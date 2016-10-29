@@ -1,4 +1,6 @@
 "use strict";
+XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
+                                  "resource://gre/modules/NativeMessaging.jsm");
 
 function runtimeApiFactory(context) {
   let {extension} = context;
@@ -53,6 +55,29 @@ function runtimeApiFactory(context) {
         let recipient = {extensionId};
 
         return context.messenger.sendMessage(context.messageManager, message, recipient, responseCallback);
+      },
+
+      connectNative(application) {
+        let recipient = {
+          childId: context.childManager.id,
+          toNativeApp: application,
+        };
+        let rawPort = context.messenger.connectGetRawPort(context.messageManager, "", recipient);
+        let port = rawPort.api();
+        port.postMessage = message => {
+          message = NativeApp.encodeMessage(context, message);
+          rawPort.postMessage(message);
+        };
+        return port;
+      },
+
+      sendNativeMessage(application, message) {
+        let recipient = {
+          childId: context.childManager.id,
+          toNativeApp: application,
+        };
+        message = NativeApp.encodeMessage(context, message);
+        return context.messenger.sendMessage(context.messageManager, message, recipient);
       },
 
       get lastError() {

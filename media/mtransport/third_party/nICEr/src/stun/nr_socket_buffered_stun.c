@@ -285,51 +285,50 @@ static int nr_socket_buffered_stun_recvfrom(void *obj,void * restrict buf,
     ABORT(R_FAILED);
   }
 
-reread:
-  /* Read all the expected bytes */
-  assert(sock->bytes_needed <= sock->buffer_size - sock->bytes_read);
+  while (sock->bytes_needed) {
+    /* Read all the expected bytes */
+    assert(sock->bytes_needed <= sock->buffer_size - sock->bytes_read);
 
-  if(r=nr_socket_read(sock->inner,
-                      sock->buffer + sock->bytes_read,
-                      sock->bytes_needed, &bytes_read, 0))
-    ABORT(r);
+    if(r=nr_socket_read(sock->inner,
+                        sock->buffer + sock->bytes_read,
+                        sock->bytes_needed, &bytes_read, 0))
+      ABORT(r);
 
-  assert(bytes_read <= sock->bytes_needed);
-  sock->bytes_needed -= bytes_read;
-  sock->bytes_read += bytes_read;
+    assert(bytes_read <= sock->bytes_needed);
+    sock->bytes_needed -= bytes_read;
+    sock->bytes_read += bytes_read;
 
-  /* Unfinished */
-  if (sock->bytes_needed)
-    ABORT(R_WOULDBLOCK);
+    /* Unfinished */
+    if (sock->bytes_needed)
+      ABORT(R_WOULDBLOCK);
 
-  /* No more bytes expected */
-  if (sock->read_state == NR_ICE_SOCKET_READ_NONE) {
-    size_t remaining_length;
-    if (sock->framing_type == ICE_TCP_FRAMING) {
-      if (sock->bytes_read < sizeof(nr_frame_header))
+    /* No more bytes expected */
+    if (sock->read_state == NR_ICE_SOCKET_READ_NONE) {
+      size_t remaining_length;
+      if (sock->framing_type == ICE_TCP_FRAMING) {
+        if (sock->bytes_read < sizeof(nr_frame_header))
+          ABORT(R_BAD_DATA);
+        remaining_length = ntohs(frame->frame_length);
+      } else {
+        int tmp_length;
+
+        /* Parse the header */
+        if (r = nr_stun_message_length(sock->buffer, sock->bytes_read, &tmp_length))
+          ABORT(r);
+        assert(tmp_length >= 0);
+        if (tmp_length < 0)
+          ABORT(R_BAD_DATA);
+        remaining_length = tmp_length;
+
+      }
+      /* Check to see if we have enough room */
+      if ((sock->buffer_size - sock->bytes_read) < remaining_length)
         ABORT(R_BAD_DATA);
-      remaining_length = ntohs(frame->frame_length);
-    } else {
-      int tmp_length;
 
-      /* Parse the header */
-      if (r = nr_stun_message_length(sock->buffer, sock->bytes_read, &tmp_length))
-        ABORT(r);
-      assert(tmp_length >= 0);
-      if (tmp_length < 0)
-        ABORT(R_BAD_DATA);
-      remaining_length = tmp_length;
-
+      sock->read_state = NR_ICE_SOCKET_READ_HDR;
+      /* Set ourselves up to read the rest of the data */
+      sock->bytes_needed = remaining_length;
     }
-    /* Check to see if we have enough room */
-    if ((sock->buffer_size - sock->bytes_read) < remaining_length)
-      ABORT(R_BAD_DATA);
-
-    /* Set ourselves up to read the rest of the data */
-    sock->bytes_needed = remaining_length;
-
-    sock->read_state = NR_ICE_SOCKET_READ_HDR;
-    goto reread;
   }
 
   assert(skip_hdr_size <= sock->bytes_read);

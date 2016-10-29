@@ -76,18 +76,18 @@ VideoDecoderParent::RecvInit(const VideoInfo& aInfo, const layers::TextureFactor
 {
   mKnowsCompositor->IdentifyTextureHost(aIdentifier);
 
-  CreateDecoderParams params(aInfo);
-  params.mTaskQueue = mDecodeTaskQueue;
-  params.mCallback = this;
-  params.mKnowsCompositor = mKnowsCompositor;
-  params.mImageContainer = new layers::ImageContainer();
-
 #ifdef XP_WIN
   // TODO: Ideally we wouldn't hardcode the WMF PDM, and we'd use the normal PDM
   // factory logic for picking a decoder.
   WMFDecoderModule::Init();
   RefPtr<WMFDecoderModule> pdm(new WMFDecoderModule());
   pdm->Startup();
+
+  CreateDecoderParams params(aInfo);
+  params.mTaskQueue = mDecodeTaskQueue;
+  params.mCallback = this;
+  params.mKnowsCompositor = mKnowsCompositor;
+  params.mImageContainer = new layers::ImageContainer();
 
   mDecoder = pdm->CreateVideoDecoder(params);
   if (!mDecoder) {

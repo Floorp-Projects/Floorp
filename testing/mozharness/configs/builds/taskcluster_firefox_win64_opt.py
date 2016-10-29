@@ -41,9 +41,7 @@ config = {
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': True,
     'enable_ccache': False,
-    'vcs_share_base': os.path.join(
-        os.environ['SystemDrive'], os.sep, 'builds', 'hg-shared'
-    ),
+    'vcs_share_base': os.path.join('y:', os.sep, 'hg-shared'),
     'objdir': 'obj-firefox',
     'tooltool_script': [
       sys.executable,
@@ -62,9 +60,7 @@ config = {
     'stage_platform': 'win64',
     'publish_nightly_en_US_routes': True,
     'env': {
-        'HG_SHARE_BASE_DIR': os.path.join(
-            os.environ['SystemDrive'], os.sep, 'builds', 'hg-shared'
-        ),
+        'HG_SHARE_BASE_DIR': os.path.join('y:', os.sep, 'hg-shared'),
         'MOZ_AUTOMATION': '1',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
         'MOZ_OBJDIR': 'obj-firefox',
