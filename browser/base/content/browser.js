@@ -3646,7 +3646,7 @@ const BrowserSearch = {
 
     let focusUrlBarIfSearchFieldIsNotActive = function(aSearchBar) {
       if (!aSearchBar || document.activeElement != aSearchBar.textbox.inputField) {
-         focusAndSelectUrlBar();
+        focusAndSelectUrlBar();
       }
     };
 
