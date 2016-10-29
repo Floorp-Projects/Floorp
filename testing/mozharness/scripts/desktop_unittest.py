@@ -29,6 +29,7 @@ from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_op
 from mozharness.mozilla.buildbot import TBPL_EXCEPTION
 from mozharness.mozilla.mozbase import MozbaseMixin
 from mozharness.mozilla.structuredlog import StructuredOutputParser
+from mozharness.mozilla.testing.errors import HarnessErrorList
 from mozharness.mozilla.testing.unittest import DesktopUnittestOutputParser
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
@@ -676,10 +677,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
 
                 suite_name = suite_category + '-' + suite
                 tbpl_status, log_level = None, None
-                error_list = BaseErrorList + [{
-                    'regex': re.compile(r'''PROCESS-CRASH.*application crashed'''),
-                    'level': ERROR,
-                }]
+                error_list = BaseErrorList + HarnessErrorList
                 parser = self.get_test_output_parser(suite_category,
                                                      flavor=flavor,
                                                      config=self.config,

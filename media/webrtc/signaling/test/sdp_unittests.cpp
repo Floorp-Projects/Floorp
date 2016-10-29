@@ -441,6 +441,20 @@ TEST_F(SdpTest, parseRtcpFbFooBarBaz) {
   ParseSdp(kVideoSdp + "a=rtcp-fb:120 foo bar baz\r\n");
 }
 
+static const std::string kVideoSdpWithUnknonwBrokenFtmp =
+  "v=0\r\n"
+  "o=- 4294967296 2 IN IP4 127.0.0.1\r\n"
+  "s=SIP Call\r\n"
+  "c=IN IP4 198.51.100.7\r\n"
+  "t=0 0\r\n"
+  "m=video 56436 RTP/SAVPF 120\r\n"
+  "a=rtpmap:120 VP8/90000\r\n"
+  "a=fmtp:122 unknown=10\n"
+  "a=rtpmap:122 red/90000\r\n";
+
+TEST_F(SdpTest, parseUnknownBrokenFtmp) {
+  ParseSdp(kVideoSdpWithUnknonwBrokenFtmp);
+}
 
 TEST_F(SdpTest, parseRtcpFbKitchenSink) {
   ParseSdp(kVideoSdp +
@@ -823,17 +837,632 @@ TEST_F(SdpTest, parseExtMap) {
 
 }
 
+TEST_F(SdpTest, parseFmtpBitrate) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 bitrate=400\r\n");
+  ASSERT_EQ(400, sdp_attr_get_fmtp_bitrate_type(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpBitrateWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 bitrate=0\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_bitrate_type(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpBitrateWith32001) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 bitrate=32001\r\n");
+  ASSERT_EQ(32001, sdp_attr_get_fmtp_bitrate_type(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpBitrateWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 bitrate=4294967296\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_bitrate_type(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpMode) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 mode=200\r\n");
+  ASSERT_EQ(200U, sdp_attr_get_fmtp_mode_for_payload_type(sdp_ptr_, 1, 0, 120));
+}
+
+TEST_F(SdpTest, parseFmtpModeWith4294967295) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 mode=4294967295\r\n");
+  ASSERT_EQ(4294967295, sdp_attr_get_fmtp_mode_for_payload_type(sdp_ptr_, 1, 0, 120));
+}
+
+TEST_F(SdpTest, parseFmtpModeWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 mode=4294967296\r\n");
+  // returns 0 if not found
+  ASSERT_EQ(0U, sdp_attr_get_fmtp_mode_for_payload_type(sdp_ptr_, 1, 0, 120));
+}
+
+TEST_F(SdpTest, parseFmtpQcif) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 qcif=20\r\n");
+  ASSERT_EQ(20, sdp_attr_get_fmtp_qcif(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpQcifWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 qcif=0\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_qcif(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpQcifWith33) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 qcif=33\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_qcif(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpCif) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 cif=11\r\n");
+  ASSERT_EQ(11, sdp_attr_get_fmtp_cif(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpCifWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 cif=0\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_cif(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpCifWith33) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 cif=33\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_cif(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpMaxbr) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 maxbr=21\r\n");
+  ASSERT_EQ(21, sdp_attr_get_fmtp_maxbr(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpMaxbrWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 maxbr=0\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_maxbr(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpMaxbrWith65536) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 maxbr=65536\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_maxbr(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpSqcif) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sqcif=6\r\n");
+  ASSERT_EQ(6, sdp_attr_get_fmtp_sqcif(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpSqcifWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sqcif=0\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_sqcif(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpSqcifWith33) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sqcif=33\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_sqcif(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpCif4) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 cif4=11\r\n");
+  ASSERT_EQ(11, sdp_attr_get_fmtp_cif4(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpCif4With0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 cif4=0\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_cif4(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpCif4With33) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 cif4=33\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_cif4(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpCif16) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 cif16=11\r\n");
+  ASSERT_EQ(11, sdp_attr_get_fmtp_cif16(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpCif16With0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 cif16=0\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_cif16(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpCif16With33) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 cif16=33\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_cif16(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpBpp) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 bpp=7\r\n");
+  ASSERT_EQ(7, sdp_attr_get_fmtp_bpp(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpBppWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 bpp=0\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_bpp(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpBppWith65536) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 bpp=65536\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_bpp(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpHrd) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 hrd=800\r\n");
+  ASSERT_EQ(800, sdp_attr_get_fmtp_hrd(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpHrdWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 hrd=0\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_hrd(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpHrdWith65536) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 hrd=65536\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_hrd(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpProfile) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 profile=4\r\n");
+  ASSERT_EQ(4, sdp_attr_get_fmtp_profile(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpProfileWith11) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 profile=11\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_profile(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpLevel) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 level=56\r\n");
+  ASSERT_EQ(56, sdp_attr_get_fmtp_level(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpLevelWith101) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 level=101\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_level(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpPacketizationMode) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 packetization-mode=1\r\n");
+  uint16_t packetizationMode;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_pack_mode(sdp_ptr_, 1, 0, 1, &packetizationMode));
+  ASSERT_EQ(1, packetizationMode);
+}
+
+TEST_F(SdpTest, parseFmtpPacketizationModeWith3) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 packetization-mode=3\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_pack_mode(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpInterleavingDepth) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sprop-interleaving-depth=566\r\n");
+  uint16_t interleavingDepth;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_interleaving_depth(sdp_ptr_, 1, 0, 1, &interleavingDepth));
+  ASSERT_EQ(566, interleavingDepth);
+}
+
+TEST_F(SdpTest, parseFmtpInterleavingDepthWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sprop-interleaving-depth=0\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_interleaving_depth(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpInterleavingDepthWith65536) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sprop-interleaving-depth=65536\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_interleaving_depth(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpDeintBuf) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sprop-deint-buf-req=4294967295\r\n");
+  uint32_t deintBuf;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_deint_buf_req(sdp_ptr_, 1, 0, 1, &deintBuf));
+  ASSERT_EQ(4294967295, deintBuf);
+}
+
+TEST_F(SdpTest, parseFmtpDeintBufWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sprop-deint-buf-req=0\r\n");
+  uint32_t deintBuf;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_deint_buf_req(sdp_ptr_, 1, 0, 1, &deintBuf));
+  ASSERT_EQ(0U, deintBuf);
+}
+
+TEST_F(SdpTest, parseFmtpDeintBufWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sprop-deint-buf-req=4294967296\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_deint_buf_req(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxDonDiff) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sprop-max-don-diff=5678\r\n");
+  uint32_t maxDonDiff;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_max_don_diff(sdp_ptr_, 1, 0, 1, &maxDonDiff));
+  ASSERT_EQ(5678U, maxDonDiff);
+}
+
+TEST_F(SdpTest, parseFmtpMaxDonDiffWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sprop-max-don-diff=0\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_don_diff(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxDonDiffWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sprop-max-don-diff=4294967296\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_don_diff(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpInitBufTime) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sprop-init-buf-time=4294967295\r\n");
+  uint32_t initBufTime;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_init_buf_time(sdp_ptr_, 1, 0, 1, &initBufTime));
+  ASSERT_EQ(4294967295, initBufTime);
+}
+
+TEST_F(SdpTest, parseFmtpInitBufTimeWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sprop-init-buf-time=0\r\n");
+  uint32_t initBufTime;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_init_buf_time(sdp_ptr_, 1, 0, 1, &initBufTime));
+  ASSERT_EQ(0U, initBufTime);
+}
+
+TEST_F(SdpTest, parseFmtpInitBufTimeWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 sprop-init-buf-time=4294967296\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_init_buf_time(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxMbps) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-mbps=46789\r\n");
+  uint32_t maxMpbs;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_max_mbps(sdp_ptr_, 1, 0, 1, &maxMpbs));
+  ASSERT_EQ(46789U, maxMpbs);
+}
+
+TEST_F(SdpTest, parseFmtpMaxMbpsWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-mbps=0\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_mbps(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxMbpsWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-mbps=4294967296\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_mbps(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxCpb) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-cpb=47891\r\n");
+  uint32_t maxCpb;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_max_cpb(sdp_ptr_, 1, 0, 1, &maxCpb));
+  ASSERT_EQ(47891U, maxCpb);
+}
+
+TEST_F(SdpTest, parseFmtpMaxCpbWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-cpb=0\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_cpb(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxCpbWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-cpb=4294967296\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_cpb(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxDpb) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-dpb=47892\r\n");
+  uint32_t maxDpb;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_max_dpb(sdp_ptr_, 1, 0, 1, &maxDpb));
+  ASSERT_EQ(47892U, maxDpb);
+}
+
+TEST_F(SdpTest, parseFmtpMaxDpbWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-dpb=0\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_dpb(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxDpbWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-dpb=4294967296\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_dpb(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxBr) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-br=47893\r\n");
+  uint32_t maxBr;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_max_br(sdp_ptr_, 1, 0, 1, &maxBr));
+  ASSERT_EQ(47893U, maxBr);
+}
+
+TEST_F(SdpTest, parseFmtpMaxBrWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-br=0\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_br(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxBrWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-br=4294967296\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_br(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpRedundantPicCap) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 redundant-pic-cap=1\r\n");
+  ASSERT_EQ(1, sdp_attr_fmtp_is_redundant_pic_cap(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpRedundantPicCapWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 redundant-pic-cap=0\r\n");
+  ASSERT_EQ(0, sdp_attr_fmtp_is_redundant_pic_cap(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpRedundantPicCapWith2) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 redundant-pic-cap=2\r\n");
+  ASSERT_EQ(0, sdp_attr_fmtp_is_redundant_pic_cap(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpDeintBufCap) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 deint-buf-cap=4294967295\r\n");
+  uint32_t deintBufCap;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_deint_buf_cap(sdp_ptr_, 1, 0, 1, &deintBufCap));
+  ASSERT_EQ(4294967295, deintBufCap);
+}
+
+TEST_F(SdpTest, parseFmtpDeintBufCapWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 deint-buf-cap=0\r\n");
+  uint32_t deintBufCap;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_deint_buf_cap(sdp_ptr_, 1, 0, 1, &deintBufCap));
+  ASSERT_EQ(0U, deintBufCap);
+}
+
+TEST_F(SdpTest, parseFmtpDeintBufCapWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 deint-buf-cap=4294967296\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_deint_buf_cap(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxRcmdNaluSize) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-rcmd-nalu-size=4294967295\r\n");
+  uint32_t maxRcmdNaluSize;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_max_rcmd_nalu_size(sdp_ptr_, 1, 0, 1, &maxRcmdNaluSize));
+  ASSERT_EQ(4294967295, maxRcmdNaluSize);
+}
+
+TEST_F(SdpTest, parseFmtpMaxRcmdNaluSizeWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-rcmd-nalu-size=0\r\n");
+  uint32_t maxRcmdNaluSize;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_max_rcmd_nalu_size(sdp_ptr_, 1, 0, 1, &maxRcmdNaluSize));
+  ASSERT_EQ(0U, maxRcmdNaluSize);
+}
+
+TEST_F(SdpTest, parseFmtpMaxRcmdNaluSizeWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-rcmd-nalu-size=4294967296\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_rcmd_nalu_size(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpParameterAdd) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 parameter-add=1\r\n");
+  ASSERT_EQ(1, sdp_attr_fmtp_is_parameter_add(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpParameterAddWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 parameter-add=0\r\n");
+  ASSERT_EQ(0, sdp_attr_fmtp_is_parameter_add(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpParameterAddWith2) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 parameter-add=2\r\n");
+  ASSERT_EQ(0, sdp_attr_fmtp_is_parameter_add(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpAnnexK) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 K=566\r\n");
+  ASSERT_EQ(566, sdp_attr_get_fmtp_annex_k_val(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpAnnexKWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 K=0\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_annex_k_val(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpAnnexKWith65536) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 K=65536\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_annex_k_val(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpAnnexN) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 N=4567\r\n");
+  ASSERT_EQ(4567, sdp_attr_get_fmtp_annex_n_val(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpAnnexNWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 N=0\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_annex_n_val(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpAnnexNWith65536) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 N=65536\r\n");
+  ASSERT_EQ(SDP_INVALID_VALUE, sdp_attr_get_fmtp_annex_n_val(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpAnnexP) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 P=5678,2\r\n");
+  ASSERT_EQ(5678, sdp_attr_get_fmtp_annex_p_picture_resize(sdp_ptr_, 1, 0, 1));
+  ASSERT_EQ(2, sdp_attr_get_fmtp_annex_p_warp(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpAnnexPWithResize0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 P=0,3\r\n");
+  ASSERT_EQ(0, sdp_attr_get_fmtp_annex_p_picture_resize(sdp_ptr_, 1, 0, 1));
+  ASSERT_EQ(3, sdp_attr_get_fmtp_annex_p_warp(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpAnnexPWithResize65536) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 P=65536,4\r\n");
+  ASSERT_EQ(0, sdp_attr_get_fmtp_annex_p_picture_resize(sdp_ptr_, 1, 0, 1));
+  // if the first fails, the second will too.  Both default to 0 on failure.
+  ASSERT_EQ(0, sdp_attr_get_fmtp_annex_p_warp(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpAnnexPWithWarp65536) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 P=346,65536\r\n");
+  ASSERT_EQ(346, sdp_attr_get_fmtp_annex_p_picture_resize(sdp_ptr_, 1, 0, 1));
+  ASSERT_EQ(0, sdp_attr_get_fmtp_annex_p_warp(sdp_ptr_, 1, 0, 1));
+}
+
+TEST_F(SdpTest, parseFmtpLevelAsymmetryAllowed) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 level-asymmetry-allowed=1\r\n");
+
+  uint16_t levelAsymmetryAllowed;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_level_asymmetry_allowed(sdp_ptr_, 1, 0, 1, &levelAsymmetryAllowed));
+  ASSERT_EQ(1U, levelAsymmetryAllowed);
+}
+
+TEST_F(SdpTest, parseFmtpLevelAsymmetryAllowedWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 level-asymmetry-allowed=0\r\n");
+  uint16_t levelAsymmetryAllowed;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_level_asymmetry_allowed(sdp_ptr_, 1, 0, 1, &levelAsymmetryAllowed));
+  ASSERT_EQ(0U, levelAsymmetryAllowed);
+}
+
+TEST_F(SdpTest, parseFmtpLevelAsymmetryAllowedWith2) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 level-asymmetry-allowed=2\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_level_asymmetry_allowed(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxAverageBitrate) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 maxaveragebitrate=47893\r\n");
+  uint32_t maxAverageBitrate;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_max_average_bitrate(sdp_ptr_, 1, 0, 1, &maxAverageBitrate));
+  ASSERT_EQ(47893U, maxAverageBitrate);
+}
+
+TEST_F(SdpTest, parseFmtpMaxAverageBitrateWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 maxaveragebitrate=0\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_average_bitrate(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxAverageBitrateWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 maxaveragebitrate=4294967296\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_average_bitrate(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpUsedTx) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 usedtx=1\r\n");
+  tinybool usedTx;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_usedtx(sdp_ptr_, 1, 0, 1, &usedTx));
+  ASSERT_EQ(1, usedTx);
+}
+
+TEST_F(SdpTest, parseFmtpUsedTxWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 usedtx=0\r\n");
+  tinybool usedTx;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_usedtx(sdp_ptr_, 1, 0, 1, &usedTx));
+  ASSERT_EQ(0, usedTx);
+}
+
+TEST_F(SdpTest, parseFmtpUsedTxWith2) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 usedtx=2\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_usedtx(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpStereo) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 stereo=1\r\n");
+  tinybool stereo;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_stereo(sdp_ptr_, 1, 0, 1, &stereo));
+  ASSERT_EQ(1, stereo);
+}
+
+TEST_F(SdpTest, parseFmtpStereoWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 stereo=0\r\n");
+  tinybool stereo;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_stereo(sdp_ptr_, 1, 0, 1, &stereo));
+  ASSERT_EQ(0, stereo);
+}
+
+TEST_F(SdpTest, parseFmtpStereoWith2) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 stereo=2\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_stereo(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpUseInBandFec) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 useinbandfec=1\r\n");
+  tinybool useInbandFec;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_useinbandfec(sdp_ptr_, 1, 0, 1, &useInbandFec));
+  ASSERT_EQ(1, useInbandFec);
+}
+
+TEST_F(SdpTest, parseFmtpUseInBandWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 useinbandfec=0\r\n");
+  tinybool useInbandFec;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_useinbandfec(sdp_ptr_, 1, 0, 1, &useInbandFec));
+  ASSERT_EQ(0, useInbandFec);
+}
+
+TEST_F(SdpTest, parseFmtpUseInBandWith2) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 useinbandfec=2\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_useinbandfec(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxCodedAudioBandwidth) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 maxcodedaudiobandwidth=abcdefg\r\n");
+  char* maxCodedAudioBandwith = sdp_attr_get_fmtp_maxcodedaudiobandwidth(sdp_ptr_, 1, 0, 1);
+  ASSERT_EQ(0, strcmp("abcdefg", maxCodedAudioBandwith));
+}
+
+TEST_F(SdpTest, parseFmtpMaxCodedAudioBandwidthBad) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 maxcodedaudiobandwidth=\r\n");
+  char* maxCodedAudioBandwith = sdp_attr_get_fmtp_maxcodedaudiobandwidth(sdp_ptr_, 1, 0, 1);
+  ASSERT_EQ(0, *maxCodedAudioBandwith);
+}
+
+TEST_F(SdpTest, parseFmtpCbr) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 cbr=1\r\n");
+  tinybool cbr;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_cbr(sdp_ptr_, 1, 0, 1, &cbr));
+  ASSERT_EQ(1, cbr);
+}
+
+TEST_F(SdpTest, parseFmtpCbrWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 cbr=0\r\n");
+  tinybool cbr;
+  ASSERT_EQ(SDP_SUCCESS, sdp_attr_get_fmtp_cbr(sdp_ptr_, 1, 0, 1, &cbr));
+  ASSERT_EQ(0, cbr);
+}
+
+TEST_F(SdpTest, parseFmtpCbrWith2) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 cbr=2\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_cbr(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxPlaybackRate) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 maxplaybackrate=47900\r\n");
+  sdp_attr_t *attr_p = sdp_find_attr(sdp_ptr_, 1, 0, SDP_ATTR_FMTP, 1);
+  ASSERT_NE(NULL, attr_p);
+  ASSERT_EQ(47900U, attr_p->attr.fmtp.maxplaybackrate);
+}
+
+TEST_F(SdpTest, parseFmtpMaxPlaybackRateWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 maxplaybackrate=0\r\n");
+  sdp_attr_t *attr_p = sdp_find_attr(sdp_ptr_, 1, 0, SDP_ATTR_FMTP, 1);
+  ASSERT_EQ(NULL, attr_p);
+}
+
+TEST_F(SdpTest, parseFmtpMaxPlaybackRateWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 maxplaybackrate=4294967296\r\n");
+  sdp_attr_t *attr_p = sdp_find_attr(sdp_ptr_, 1, 0, SDP_ATTR_FMTP, 1);
+  ASSERT_EQ(NULL, attr_p);
+}
+
 TEST_F(SdpTest, parseFmtpMaxFs) {
   uint32_t val = 0;
   ParseSdp(kVideoSdp + "a=fmtp:120 max-fs=300;max-fr=30\r\n");
   ASSERT_EQ(sdp_attr_get_fmtp_max_fs(sdp_ptr_, 1, 0, 1, &val), SDP_SUCCESS);
   ASSERT_EQ(val, 300U);
 }
+TEST_F(SdpTest, parseFmtpMaxFsWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-fs=0\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_fs(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxFsWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-fs=4294967296\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_fs(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
 TEST_F(SdpTest, parseFmtpMaxFr) {
   uint32_t val = 0;
   ParseSdp(kVideoSdp + "a=fmtp:120 max-fs=300;max-fr=30\r\n");
   ASSERT_EQ(sdp_attr_get_fmtp_max_fr(sdp_ptr_, 1, 0, 1, &val), SDP_SUCCESS);
   ASSERT_EQ(val, 30U);
+}
+
+TEST_F(SdpTest, parseFmtpMaxFrWith0) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-fr=0\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_fr(sdp_ptr_, 1, 0, 1, nullptr));
+}
+
+TEST_F(SdpTest, parseFmtpMaxFrWith4294967296) {
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-fr=4294967296\r\n");
+  ASSERT_EQ(SDP_INVALID_PARAMETER, sdp_attr_get_fmtp_max_fr(sdp_ptr_, 1, 0, 1, nullptr));
 }
 
 TEST_F(SdpTest, addFmtpMaxFs) {

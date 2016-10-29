@@ -15,7 +15,9 @@
 #include "dtlsidentity.h"
 #include "keyhi.h"
 #include "logging.h"
+#include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -489,24 +491,24 @@ bool TransportLayerDtls::Setup() {
     transport_layer_identity = PR_GetUniqueIdentity("nssstreamadapter");
   }
 
-  ScopedPRFileDesc pr_fd(PR_CreateIOLayerStub(transport_layer_identity,
+  UniquePRFileDesc pr_fd(PR_CreateIOLayerStub(transport_layer_identity,
                                               &TransportLayerMethods));
   MOZ_ASSERT(pr_fd != nullptr);
   if (!pr_fd)
     return false;
   pr_fd->secret = reinterpret_cast<PRFilePrivate *>(nspr_io_adapter_.get());
 
-  ScopedPRFileDesc ssl_fd(DTLS_ImportFD(nullptr, pr_fd));
+  UniquePRFileDesc ssl_fd(DTLS_ImportFD(nullptr, pr_fd.get()));
   MOZ_ASSERT(ssl_fd != nullptr);  // This should never happen
   if (!ssl_fd) {
     return false;
   }
 
-  pr_fd.forget(); // ownership transfered to ssl_fd;
+  Unused << pr_fd.release(); // ownership transfered to ssl_fd;
 
   if (role_ == CLIENT) {
     MOZ_MTLOG(ML_INFO, "Setting up DTLS as client");
-    rv = SSL_GetClientAuthDataHook(ssl_fd, GetClientAuthDataHook,
+    rv = SSL_GetClientAuthDataHook(ssl_fd.get(), GetClientAuthDataHook,
                                    this);
     if (rv != SECSuccess) {
       MOZ_MTLOG(ML_ERROR, "Couldn't set identity");
@@ -515,7 +517,7 @@ bool TransportLayerDtls::Setup() {
   } else {
     MOZ_MTLOG(ML_INFO, "Setting up DTLS as server");
     // Server side
-    rv = SSL_ConfigSecureServer(ssl_fd, identity_->cert(),
+    rv = SSL_ConfigSecureServer(ssl_fd.get(), identity_->cert().get(),
                                 identity_->privkey(),
                                 identity_->auth_type());
     if (rv != SECSuccess) {
@@ -524,13 +526,13 @@ bool TransportLayerDtls::Setup() {
     }
 
     // Insist on a certificate from the client
-    rv = SSL_OptionSet(ssl_fd, SSL_REQUEST_CERTIFICATE, PR_TRUE);
+    rv = SSL_OptionSet(ssl_fd.get(), SSL_REQUEST_CERTIFICATE, PR_TRUE);
     if (rv != SECSuccess) {
       MOZ_MTLOG(ML_ERROR, "Couldn't request certificate");
       return false;
     }
 
-    rv = SSL_OptionSet(ssl_fd, SSL_REQUIRE_CERTIFICATE, PR_TRUE);
+    rv = SSL_OptionSet(ssl_fd.get(), SSL_REQUIRE_CERTIFICATE, PR_TRUE);
     if (rv != SECSuccess) {
       MOZ_MTLOG(ML_ERROR, "Couldn't require certificate");
       return false;
@@ -544,49 +546,50 @@ bool TransportLayerDtls::Setup() {
     SSL_LIBRARY_VERSION_TLS_1_2
   };
 
-  rv = SSL_VersionRangeSet(ssl_fd, &version_range);
+  rv = SSL_VersionRangeSet(ssl_fd.get(), &version_range);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Can't disable SSLv3");
     return false;
   }
 
-  rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_SESSION_TICKETS, PR_FALSE);
+  rv = SSL_OptionSet(ssl_fd.get(), SSL_ENABLE_SESSION_TICKETS, PR_FALSE);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't disable session tickets");
     return false;
   }
 
-  rv = SSL_OptionSet(ssl_fd, SSL_NO_CACHE, PR_TRUE);
+  rv = SSL_OptionSet(ssl_fd.get(), SSL_NO_CACHE, PR_TRUE);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't disable session caching");
     return false;
   }
 
-  rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_DEFLATE, PR_FALSE);
+  rv = SSL_OptionSet(ssl_fd.get(), SSL_ENABLE_DEFLATE, PR_FALSE);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't disable deflate");
     return false;
   }
 
-  rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_RENEGOTIATION, SSL_RENEGOTIATE_NEVER);
+  rv = SSL_OptionSet(ssl_fd.get(), SSL_ENABLE_RENEGOTIATION,
+                     SSL_RENEGOTIATE_NEVER);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't disable renegotiation");
     return false;
   }
 
-  rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_FALSE_START, PR_FALSE);
+  rv = SSL_OptionSet(ssl_fd.get(), SSL_ENABLE_FALSE_START, PR_FALSE);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't disable false start");
     return false;
   }
 
-  rv = SSL_OptionSet(ssl_fd, SSL_NO_LOCKS, PR_TRUE);
+  rv = SSL_OptionSet(ssl_fd.get(), SSL_NO_LOCKS, PR_TRUE);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't disable locks");
     return false;
   }
 
-  rv = SSL_OptionSet(ssl_fd, SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
+  rv = SSL_OptionSet(ssl_fd.get(), SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't disable ECDHE key reuse");
     return false;
@@ -596,7 +599,7 @@ bool TransportLayerDtls::Setup() {
     return false;
   }
 
-  rv = SSL_NamedGroupConfig(ssl_fd, NamedGroupPreferences,
+  rv = SSL_NamedGroupConfig(ssl_fd.get(), NamedGroupPreferences,
                             mozilla::ArrayLength(NamedGroupPreferences));
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't set named groups");
@@ -604,7 +607,7 @@ bool TransportLayerDtls::Setup() {
   }
 
   // Certificate validation
-  rv = SSL_AuthCertificateHook(ssl_fd, AuthCertificateHook,
+  rv = SSL_AuthCertificateHook(ssl_fd.get(), AuthCertificateHook,
                                reinterpret_cast<void *>(this));
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't set certificate validation hook");
@@ -616,12 +619,12 @@ bool TransportLayerDtls::Setup() {
   }
 
   // Now start the handshake
-  rv = SSL_ResetHandshake(ssl_fd, role_ == SERVER ? PR_TRUE : PR_FALSE);
+  rv = SSL_ResetHandshake(ssl_fd.get(), role_ == SERVER ? PR_TRUE : PR_FALSE);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't reset handshake");
     return false;
   }
-  ssl_fd_ = ssl_fd.forget();
+  ssl_fd_ = Move(ssl_fd);
 
   // Finally, get ready to receive data
   downward_->SignalStateChange.connect(this, &TransportLayerDtls::StateChange);
@@ -635,18 +638,18 @@ bool TransportLayerDtls::Setup() {
   return true;
 }
 
-bool TransportLayerDtls::SetupAlpn(PRFileDesc* ssl_fd) const {
+bool TransportLayerDtls::SetupAlpn(UniquePRFileDesc& ssl_fd) const {
   if (alpn_allowed_.empty()) {
     return true;
   }
 
-  SECStatus rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_NPN, PR_FALSE);
+  SECStatus rv = SSL_OptionSet(ssl_fd.get(), SSL_ENABLE_NPN, PR_FALSE);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't disable NPN");
     return false;
   }
 
-  rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_ALPN, PR_TRUE);
+  rv = SSL_OptionSet(ssl_fd.get(), SSL_ENABLE_ALPN, PR_TRUE);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't enable ALPN");
     return false;
@@ -664,7 +667,7 @@ bool TransportLayerDtls::SetupAlpn(PRFileDesc* ssl_fd) const {
     memcpy(buf + offset, tag->c_str(), tag->length());
     offset += tag->length();
   }
-  rv = SSL_SetNextProtoNego(ssl_fd, buf, offset);
+  rv = SSL_SetNextProtoNego(ssl_fd.get(), buf, offset);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't set ALPN string");
     return false;
@@ -741,14 +744,14 @@ static const uint32_t DisabledCiphers[] = {
   TLS_RSA_WITH_NULL_MD5,
 };
 
-bool TransportLayerDtls::SetupCipherSuites(PRFileDesc* ssl_fd) const {
+bool TransportLayerDtls::SetupCipherSuites(UniquePRFileDesc& ssl_fd) const {
   SECStatus rv;
 
   // Set the SRTP ciphers
   if (!srtp_ciphers_.empty()) {
     // Note: std::vector is guaranteed to contiguous
-    rv = SSL_SetSRTPCiphers(ssl_fd, &srtp_ciphers_[0], srtp_ciphers_.size());
-
+    rv = SSL_SetSRTPCiphers(ssl_fd.get(), &srtp_ciphers_[0],
+                            srtp_ciphers_.size());
     if (rv != SECSuccess) {
       MOZ_MTLOG(ML_ERROR, "Couldn't set SRTP cipher suite");
       return false;
@@ -757,7 +760,7 @@ bool TransportLayerDtls::SetupCipherSuites(PRFileDesc* ssl_fd) const {
 
   for (const auto& cipher : EnabledCiphers) {
     MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Enabling: " << cipher);
-    rv = SSL_CipherPrefSet(ssl_fd, cipher, PR_TRUE);
+    rv = SSL_CipherPrefSet(ssl_fd.get(), cipher, PR_TRUE);
     if (rv != SECSuccess) {
       MOZ_MTLOG(ML_ERROR, LAYER_INFO <<
                 "Unable to enable suite: " << cipher);
@@ -769,14 +772,14 @@ bool TransportLayerDtls::SetupCipherSuites(PRFileDesc* ssl_fd) const {
     MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Disabling: " << cipher);
 
     PRBool enabled = false;
-    rv = SSL_CipherPrefGet(ssl_fd, cipher, &enabled);
+    rv = SSL_CipherPrefGet(ssl_fd.get(), cipher, &enabled);
     if (rv != SECSuccess) {
       MOZ_MTLOG(ML_NOTICE, LAYER_INFO <<
                 "Unable to check if suite is enabled: " << cipher);
       return false;
     }
     if (enabled) {
-      rv = SSL_CipherPrefSet(ssl_fd, cipher, PR_FALSE);
+      rv = SSL_CipherPrefSet(ssl_fd.get(), cipher, PR_FALSE);
       if (rv != SECSuccess) {
         MOZ_MTLOG(ML_NOTICE, LAYER_INFO <<
                   "Unable to disable suite: " << cipher);
@@ -798,7 +801,7 @@ nsresult TransportLayerDtls::GetCipherSuite(uint16_t* cipherSuite) const {
     return NS_ERROR_NOT_AVAILABLE;
   }
   SSLChannelInfo info;
-  SECStatus rv = SSL_GetChannelInfo(ssl_fd_, &info, sizeof(info));
+  SECStatus rv = SSL_GetChannelInfo(ssl_fd_.get(), &info, sizeof(info));
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "GetCipherSuite can't get channel info");
     return NS_ERROR_FAILURE;
@@ -859,7 +862,7 @@ void TransportLayerDtls::Handshake() {
   // Clear the retransmit timer
   timer_->Cancel();
 
-  SECStatus rv = SSL_ForceHandshake(ssl_fd_);
+  SECStatus rv = SSL_ForceHandshake(ssl_fd_.get());
 
   if (rv == SECSuccess) {
     MOZ_MTLOG(ML_NOTICE,
@@ -890,7 +893,7 @@ void TransportLayerDtls::Handshake() {
       case PR_WOULD_BLOCK_ERROR:
         MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "Handshake would have blocked");
         PRIntervalTime timeout;
-        rv = DTLS_GetHandshakeTimeout(ssl_fd_, &timeout);
+        rv = DTLS_GetHandshakeTimeout(ssl_fd_.get(), &timeout);
         if (rv == SECSuccess) {
           uint32_t timeout_ms = PR_IntervalToMilliseconds(timeout);
 
@@ -923,7 +926,7 @@ bool TransportLayerDtls::CheckAlpn() {
   SSLNextProtoState alpnState;
   char chosenAlpn[MAX_ALPN_LENGTH];
   unsigned int chosenAlpnLen;
-  SECStatus rv = SSL_GetNextProto(ssl_fd_, &alpnState,
+  SECStatus rv = SSL_GetNextProto(ssl_fd_.get(), &alpnState,
                                   reinterpret_cast<unsigned char*>(chosenAlpn),
                                   &chosenAlpnLen, sizeof(chosenAlpn));
   if (rv != SECSuccess) {
@@ -1002,7 +1005,7 @@ void TransportLayerDtls::PacketReceived(TransportLayer* layer,
     int32_t rv;
     // One packet might contain several DTLS packets
     do {
-      rv = PR_Recv(ssl_fd_, buf, sizeof(buf), 0, PR_INTERVAL_NO_WAIT);
+      rv = PR_Recv(ssl_fd_.get(), buf, sizeof(buf), 0, PR_INTERVAL_NO_WAIT);
       if (rv > 0) {
         // We have data
         MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Read " << rv << " bytes from NSS");
@@ -1033,7 +1036,7 @@ TransportResult TransportLayerDtls::SendPacket(const unsigned char *data,
     return TE_ERROR;
   }
 
-  int32_t rv = PR_Send(ssl_fd_, data, len, 0, PR_INTERVAL_NO_WAIT);
+  int32_t rv = PR_Send(ssl_fd_.get(), data, len, 0, PR_INTERVAL_NO_WAIT);
 
   if (rv > 0) {
     // We have data
@@ -1074,7 +1077,7 @@ SECStatus TransportLayerDtls::GetClientAuthDataHook(void *arg, PRFileDesc *fd,
     return SECFailure;
   }
 
-  *pRetCert = CERT_DupCertificate(stream->identity_->cert());
+  *pRetCert = CERT_DupCertificate(stream->identity_->cert().get());
   if (!*pRetCert) {
     PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
     return SECFailure;
@@ -1103,7 +1106,7 @@ nsresult TransportLayerDtls::GetSrtpCipher(uint16_t *cipher) const {
   if (state_ != TS_OPEN) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  SECStatus rv = SSL_GetSRTPCipher(ssl_fd_, cipher);
+  SECStatus rv = SSL_GetSRTPCipher(ssl_fd_.get(), cipher);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_DEBUG, "No SRTP cipher negotiated");
     return NS_ERROR_FAILURE;
@@ -1122,7 +1125,7 @@ nsresult TransportLayerDtls::ExportKeyingMaterial(const std::string& label,
     MOZ_ASSERT(false, "Transport must be open for ExportKeyingMaterial");
     return NS_ERROR_NOT_AVAILABLE;
   }
-  SECStatus rv = SSL_ExportKeyingMaterial(ssl_fd_,
+  SECStatus rv = SSL_ExportKeyingMaterial(ssl_fd_.get(),
                                           label.c_str(),
                                           label.size(),
                                           use_context,
@@ -1149,9 +1152,8 @@ SECStatus TransportLayerDtls::AuthCertificateHook(void *arg,
 }
 
 SECStatus
-TransportLayerDtls::CheckDigest(const RefPtr<VerificationDigest>&
-                                digest,
-                                CERTCertificate *peer_cert) {
+TransportLayerDtls::CheckDigest(const RefPtr<VerificationDigest>& digest,
+                                UniqueCERTCertificate& peer_cert) const {
   unsigned char computed_digest[kMaxDigestLength];
   size_t computed_digest_len;
 
@@ -1193,9 +1195,7 @@ SECStatus TransportLayerDtls::AuthCertificateHook(PRFileDesc *fd,
                                                   PRBool checksig,
                                                   PRBool isServer) {
   CheckThread();
-  ScopedCERTCertificate peer_cert;
-  peer_cert = SSL_PeerCertificate(fd);
-
+  UniqueCERTCertificate peer_cert(SSL_PeerCertificate(fd));
 
   // We are not set up to take this being called multiple
   // times. Change this if we ever add renegotiation.
@@ -1207,7 +1207,6 @@ SECStatus TransportLayerDtls::AuthCertificateHook(PRFileDesc *fd,
   auth_hook_called_ = true;
 
   MOZ_ASSERT(verification_mode_ != VERIFY_UNSET);
-  MOZ_ASSERT(peer_cert_ == nullptr);
 
   switch (verification_mode_) {
     case VERIFY_UNSET:
@@ -1216,7 +1215,6 @@ SECStatus TransportLayerDtls::AuthCertificateHook(PRFileDesc *fd,
       break;
 
     case VERIFY_ALLOW_ALL:
-      peer_cert_ = peer_cert.forget();
       cert_ok_ = true;
       return SECSuccess;
 
@@ -1234,7 +1232,6 @@ SECStatus TransportLayerDtls::AuthCertificateHook(PRFileDesc *fd,
           // Matches a digest, we are good to go
           if (rv == SECSuccess) {
             cert_ok_ = true;
-            peer_cert = peer_cert.forget();
             return SECSuccess;
           }
         }

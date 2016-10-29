@@ -2409,7 +2409,7 @@ sdp_result_e sdp_attr_copy_fmtp_ranges (sdp_t *src_sdp_p, sdp_t *dst_sdp_p,
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              payload_type payload type.
- * Returns:     mode value
+ * Returns:     mode value or zero if mode attribute not found
  */
 uint32_t sdp_attr_get_fmtp_mode_for_payload_type (sdp_t *sdp_p, uint16_t level,
                                              uint8_t cap_num, uint32_t payload_type)

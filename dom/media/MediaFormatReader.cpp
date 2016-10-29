@@ -740,6 +740,21 @@ MediaFormatReader::NotifyWaitingForData(TrackType aTrack)
 }
 
 void
+MediaFormatReader::NotifyWaitingForKey(TrackType aTrack)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  auto& decoder = GetDecoderData(aTrack);
+  if (mDecoder) {
+    mDecoder->NotifyWaitingForKey();
+  }
+  if (!decoder.mDecodePending) {
+    LOGV("WaitingForKey received while no pending decode. Ignoring");
+  }
+  decoder.mWaitingForKey = true;
+  ScheduleUpdate(aTrack);
+}
+
+void
 MediaFormatReader::NotifyEndOfStream(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -866,7 +881,7 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
       LOG("Attempting Internal Seek");
       InternalSeek(aTrack, decoder.mTimeThreshold.ref());
     }
-    if (decoder.HasWaitingPromise()) {
+    if (decoder.HasWaitingPromise() && !decoder.IsWaiting()) {
       MOZ_ASSERT(!decoder.HasPromise());
       LOG("We have new data. Resolving WaitingPromise");
       decoder.mWaitingPromise.Resolve(decoder.mType, __func__);
@@ -1239,6 +1254,10 @@ MediaFormatReader::Update(TrackType aTrack)
       // EOS state. We can immediately reject the data promise.
       LOG("Rejecting %s promise: EOS", TrackTypeToStr(aTrack));
       decoder.RejectPromise(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
+    } else if (decoder.mWaitingForKey) {
+      LOG("Rejecting %s promise: WAITING_FOR_DATA due to waiting for key",
+          TrackTypeToStr(aTrack));
+      decoder.RejectPromise(NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA, __func__);
     }
   }
 
@@ -1268,17 +1287,28 @@ MediaFormatReader::Update(TrackType aTrack)
 
   bool needInput = NeedInput(decoder);
 
-  LOGV("Update(%s) ni=%d no=%d ie=%d, in:%llu out:%llu qs=%u pending:%u waiting:%d promise:%d sid:%u",
+  LOGV("Update(%s) ni=%d no=%d ie=%d, in:%llu out:%llu qs=%u pending:%u waiting:%d promise:%d wfk:%d sid:%u",
        TrackTypeToStr(aTrack), needInput, needOutput, decoder.mDecodePending,
        decoder.mNumSamplesInput, decoder.mNumSamplesOutput,
        uint32_t(size_t(decoder.mSizeOfQueue)), uint32_t(decoder.mOutput.Length()),
-       decoder.mWaitingForData, decoder.HasPromise(), decoder.mLastStreamSourceID);
+       decoder.mWaitingForData, decoder.HasPromise(),
+       decoder.mWaitingForKey, decoder.mLastStreamSourceID);
 
-  if (decoder.mWaitingForData &&
-      (!decoder.mTimeThreshold || decoder.mTimeThreshold.ref().mWaiting)) {
+  if ((decoder.mWaitingForData &&
+       (!decoder.mTimeThreshold || decoder.mTimeThreshold.ref().mWaiting)) ||
+      (decoder.mWaitingForKey && decoder.mDecodePending)) {
     // Nothing more we can do at present.
-    LOGV("Still waiting for data.");
+    LOGV("Still waiting for data or key.");
     return;
+  }
+
+  if (decoder.mWaitingForKey) {
+    decoder.mWaitingForKey = false;
+    if (decoder.HasWaitingPromise() && !decoder.IsWaiting()) {
+      LOGV("No longer waiting for key. Resolving waiting promise");
+      decoder.mWaitingPromise.Resolve(decoder.mType, __func__);
+      return;
+    }
   }
 
   if (!needInput) {
@@ -1356,8 +1386,8 @@ MediaFormatReader::WaitForData(MediaData::Type aType)
   TrackType trackType = aType == MediaData::VIDEO_DATA ?
     TrackType::kVideoTrack : TrackType::kAudioTrack;
   auto& decoder = GetDecoderData(trackType);
-  if (!decoder.mWaitingForData) {
-    // We aren't waiting for data any longer.
+  if (!decoder.IsWaiting()) {
+    // We aren't waiting for anything.
     return WaitForDataPromise::CreateAndResolve(decoder.mType, __func__);
   }
   RefPtr<WaitForDataPromise> p = decoder.mWaitingPromise.Ensure(__func__);
@@ -1456,6 +1486,15 @@ MediaFormatReader::Error(TrackType aTrack, const MediaResult& aError)
 }
 
 void
+MediaFormatReader::WaitingForKey(TrackType aTrack)
+{
+  RefPtr<nsIRunnable> task =
+    NewRunnableMethod<TrackType>(
+      this, &MediaFormatReader::NotifyWaitingForKey, aTrack);
+  OwnerThread()->Dispatch(task.forget());
+}
+
+void
 MediaFormatReader::Reset(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -1487,14 +1526,6 @@ MediaFormatReader::DropDecodedSamples(TrackType aTrack)
   decoder.mSizeOfQueue -= lengthDecodedQueue;
   if (aTrack == TrackInfo::kVideoTrack && mDecoder) {
     mDecoder->NotifyDecodedFrames({ 0, 0, lengthDecodedQueue });
-  }
-}
-
-void
-MediaFormatReader::WaitingForKey(TrackType aTrack)
-{
-  if (mDecoder) {
-    mDecoder->NotifyWaitingForKey();
   }
 }
 
@@ -1988,7 +2019,7 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
   result += nsPrintfCString("audio frames decoded: %lld\n",
                             mAudio.mNumSamplesOutputTotal);
   if (HasAudio()) {
-    result += nsPrintfCString("audio state: ni=%d no=%d ie=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%llu out:%llu qs=%u pending:%u waiting:%d sid:%u\n",
+    result += nsPrintfCString("audio state: ni=%d no=%d ie=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%llu out:%llu qs=%u pending:%u waiting:%d wfk:%d sid:%u\n",
                               NeedInput(mAudio), mAudio.HasPromise(),
                               mAudio.mDecodePending,
                               mAudio.mDemuxRequest.Exists(),
@@ -2002,7 +2033,8 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
                               mAudio.mNumSamplesInput, mAudio.mNumSamplesOutput,
                               unsigned(size_t(mAudio.mSizeOfQueue)),
                               unsigned(mAudio.mOutput.Length()),
-                              mAudio.mWaitingForData, mAudio.mLastStreamSourceID);
+                              mAudio.mWaitingForData, mAudio.mWaitingForKey,
+                              mAudio.mLastStreamSourceID);
   }
   result += nsPrintfCString("video decoder: %s\n", videoName);
   result += nsPrintfCString("hardware video decoding: %s\n",
@@ -2011,7 +2043,7 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
                             mVideo.mNumSamplesOutputTotal,
                             mVideo.mNumSamplesSkippedTotal);
   if (HasVideo()) {
-    result += nsPrintfCString("video state: ni=%d no=%d ie=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%llu out:%llu qs=%u pending:%u waiting:%d sid:%u\n",
+    result += nsPrintfCString("video state: ni=%d no=%d ie=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%llu out:%llu qs=%u pending:%u waiting:%d wfk:%d, sid:%u\n",
                               NeedInput(mVideo), mVideo.HasPromise(),
                               mVideo.mDecodePending,
                               mVideo.mDemuxRequest.Exists(),
@@ -2025,7 +2057,8 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
                               mVideo.mNumSamplesInput, mVideo.mNumSamplesOutput,
                               unsigned(size_t(mVideo.mSizeOfQueue)),
                               unsigned(mVideo.mOutput.Length()),
-                              mVideo.mWaitingForData, mVideo.mLastStreamSourceID);
+                              mVideo.mWaitingForData, mVideo.mWaitingForKey,
+                              mVideo.mLastStreamSourceID);
   }
   aString += NS_ConvertUTF8toUTF16(result);
 }

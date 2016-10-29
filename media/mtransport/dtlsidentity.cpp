@@ -18,12 +18,6 @@
 
 namespace mozilla {
 
-DtlsIdentity::~DtlsIdentity() {
-  if (cert_) {
-    CERT_DestroyCertificate(cert_);
-  }
-}
-
 RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
   if (!slot) {
@@ -164,13 +158,13 @@ nsresult DtlsIdentity::ComputeFingerprint(const std::string algorithm,
                                           uint8_t *digest,
                                           size_t size,
                                           size_t *digest_length) const {
-  const CERTCertificate* c = cert();
+  const UniqueCERTCertificate& c = cert();
   MOZ_ASSERT(c);
 
   return ComputeFingerprint(c, algorithm, digest, size, digest_length);
 }
 
-nsresult DtlsIdentity::ComputeFingerprint(const CERTCertificate *cert,
+nsresult DtlsIdentity::ComputeFingerprint(const UniqueCERTCertificate& cert,
                                           const std::string algorithm,
                                           uint8_t *digest,
                                           size_t size,

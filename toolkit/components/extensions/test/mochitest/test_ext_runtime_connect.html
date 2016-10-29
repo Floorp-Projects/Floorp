@@ -31,6 +31,7 @@ function background() {
       }
     });
     port.onDisconnect.addListener(() => {
+      browser.test.assertEq(null, port.error, "No error because port is closed by disconnect() at other end");
       browser.test.assertEq(expected, "disconnect", "got disconnection at right time");
     });
   });

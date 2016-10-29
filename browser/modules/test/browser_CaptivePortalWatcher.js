@@ -5,6 +5,7 @@ Components.utils.import("resource:///modules/RecentWindow.jsm");
 const CANONICAL_CONTENT = "success";
 const CANONICAL_URL = "data:text/plain;charset=utf-8," + CANONICAL_CONTENT;
 const CANONICAL_URL_REDIRECTED = "data:text/plain;charset=utf-8,redirected";
+const PORTAL_NOTIFICATION_VALUE = "captive-portal-detected";
 
 add_task(function* setup() {
   yield SpecialPowers.pushPrefEnv({
@@ -25,17 +26,74 @@ function* portalDetectedNoBrowserWindow() {
   RecentWindow.getMostRecentBrowserWindow = getMostRecentBrowserWindow;
 }
 
-function* openWindowAndWaitForPortalTab() {
+function* openWindowAndWaitForPortalTabAndNotification() {
   let win = yield BrowserTestUtils.openNewBrowserWindow();
-  let tab = yield BrowserTestUtils.waitForNewTab(win.gBrowser, CANONICAL_URL);
+  // Thanks to things being async, at this point we now have a new browser window
+  // but the portal notification and tab may or may not have opened. So first we
+  // check if there's already a portal notification, and if not, wait.
+  let notification = win.document.getElementById("high-priority-global-notificationbox")
+                        .getNotificationWithValue(PORTAL_NOTIFICATION_VALUE);
+  if (!notification) {
+    notification =
+      yield BrowserTestUtils.waitForGlobalNotificationBar(win, PORTAL_NOTIFICATION_VALUE);
+  }
+  // Then we see if there's already a portal tab. If it's open, it'll be the second one.
+  let tab = win.gBrowser.tabs[1];
+  if (!tab || tab.linkedBrowser.currentURI.spec != CANONICAL_URL) {
+    // The tab either hasn't been opened yet or it hasn't loaded the portal URL.
+    // Waiting for a location change in the tabbrowser covers both cases.
+    yield BrowserTestUtils.waitForLocationChange(win.gBrowser, CANONICAL_URL);
+    // At this point the portal tab should be the second tab. If there is still
+    // no second tab, something is wrong, and the selectedTab test below will fail.
+    tab = win.gBrowser.tabs[1];
+  }
   is(win.gBrowser.selectedTab, tab,
     "The captive portal tab should be open and selected in the new window.");
+  testShowLoginPageButtonVisibility(notification, "hidden");
   return win;
 }
 
 function freePortal(aSuccess) {
   Services.obs.notifyObservers(null,
     "captive-portal-login-" + (aSuccess ? "success" : "abort"), null);
+}
+
+function ensurePortalTab(win) {
+  // For the tests that call this function, it's enough to ensure there
+  // are two tabs in the window - the default tab and the portal tab.
+  is(win.gBrowser.tabs.length, 2,
+    "There should be a captive portal tab in the window.");
+}
+
+function ensurePortalNotification(win) {
+  let notificationBox =
+    win.document.getElementById("high-priority-global-notificationbox");
+  let notification = notificationBox.getNotificationWithValue(PORTAL_NOTIFICATION_VALUE)
+  isnot(notification, null,
+    "There should be a captive portal notification in the window.");
+  return notification;
+}
+
+// Helper to test whether the "Show Login Page" is visible in the captive portal
+// notification (it should be hidden when the portal tab is selected).
+function testShowLoginPageButtonVisibility(notification, visibility) {
+  let showLoginPageButton = notification.querySelector("button.notification-button");
+  // If the visibility property was never changed from default, it will be
+  // an empty string, so we pretend it's "visible" (effectively the same).
+  is(showLoginPageButton.style.visibility || "visible", visibility,
+    "The \"Show Login Page\" button should be " + visibility + ".");
+}
+
+function ensureNoPortalTab(win) {
+  is(win.gBrowser.tabs.length, 1,
+    "There should be no captive portal tab in the window.");
+}
+
+function ensureNoPortalNotification(win) {
+  let notificationBox =
+    win.document.getElementById("high-priority-global-notificationbox");
+  is(notificationBox.getNotificationWithValue(PORTAL_NOTIFICATION_VALUE), null,
+    "There should be no captive portal notification in the window.");
 }
 
 // Each of the test cases below is run twice: once for login-success and once
@@ -49,10 +107,10 @@ let testCasesForBothSuccessAndAbort = [
    */
   function* test_detectedWithNoBrowserWindow_Open(aSuccess) {
     yield portalDetectedNoBrowserWindow();
-    let win = yield openWindowAndWaitForPortalTab();
+    let win = yield openWindowAndWaitForPortalTabAndNotification();
     freePortal(aSuccess);
-    is(win.gBrowser.tabs.length, 1,
-      "The captive portal tab should have been closed.");
+    ensureNoPortalTab(win);
+    ensureNoPortalNotification(win);
     yield BrowserTestUtils.closeWindow(win);
   },
 
@@ -69,8 +127,8 @@ let testCasesForBothSuccessAndAbort = [
     yield new Promise(resolve => {
       setTimeout(resolve, 1000);
     });
-    is(win.gBrowser.tabs.length, 1,
-      "No captive portal tab should have been opened.");
+    ensureNoPortalTab(win);
+    ensureNoPortalNotification(win);
     yield BrowserTestUtils.closeWindow(win);
   },
 
@@ -84,11 +142,13 @@ let testCasesForBothSuccessAndAbort = [
     let p = BrowserTestUtils.waitForNewTab(win.gBrowser, CANONICAL_URL);
     Services.obs.notifyObservers(null, "captive-portal-login", null);
     let tab = yield p;
+    ensurePortalTab(win);
+    ensurePortalNotification(win);
     isnot(win.gBrowser.selectedTab, tab,
       "The captive portal tab should be open in the background in the current window.");
     freePortal(aSuccess);
-    is(win.gBrowser.tabs.length, 1,
-      "The portal tab should have been closed.");
+    ensureNoPortalTab(win);
+    ensureNoPortalNotification(win);
   },
 
   /**
@@ -101,12 +161,14 @@ let testCasesForBothSuccessAndAbort = [
     let p = BrowserTestUtils.waitForNewTab(win.gBrowser, CANONICAL_URL);
     Services.obs.notifyObservers(null, "captive-portal-login", null);
     let tab = yield p;
+    ensurePortalTab(win);
+    ensurePortalNotification(win);
     isnot(win.gBrowser.selectedTab, tab,
       "The captive portal tab should be open in the background in the current window.");
     win.gBrowser.selectedTab = tab;
     freePortal(aSuccess);
-    is(win.gBrowser.tabs.length, 1,
-      "The portal tab should have been closed.");
+    ensureNoPortalTab(win);
+    ensureNoPortalNotification(win);
   },
 ];
 
@@ -120,15 +182,15 @@ let singleRunTestCases = [
    */
   function* test_detectedWithNoBrowserWindow_Redirect() {
     yield portalDetectedNoBrowserWindow();
-    let win = yield openWindowAndWaitForPortalTab();
+    let win = yield openWindowAndWaitForPortalTabAndNotification();
     let browser = win.gBrowser.selectedTab.linkedBrowser;
     let loadPromise =
       BrowserTestUtils.browserLoaded(browser, false, CANONICAL_URL_REDIRECTED);
     BrowserTestUtils.loadURI(browser, CANONICAL_URL_REDIRECTED);
     yield loadPromise;
     freePortal(true);
-    is(win.gBrowser.tabs.length, 2,
-      "The captive portal tab should not have been closed.");
+    ensurePortalTab(win);
+    ensureNoPortalNotification(win);
     yield BrowserTestUtils.closeWindow(win);
   },
 
@@ -143,6 +205,8 @@ let singleRunTestCases = [
     let p = BrowserTestUtils.waitForNewTab(win.gBrowser, CANONICAL_URL);
     Services.obs.notifyObservers(null, "captive-portal-login", null);
     let tab = yield p;
+    ensurePortalTab(win);
+    ensurePortalNotification(win);
     isnot(win.gBrowser.selectedTab, tab,
       "The captive portal tab should be open in the background in the current window.");
     let browser = tab.linkedBrowser;
@@ -151,8 +215,8 @@ let singleRunTestCases = [
     BrowserTestUtils.loadURI(browser, CANONICAL_URL_REDIRECTED);
     yield loadPromise;
     freePortal(true);
-    is(win.gBrowser.tabs.length, 1,
-      "The portal tab should have been closed.");
+    ensureNoPortalTab(win);
+    ensureNoPortalNotification(win);
   },
 
   /**
@@ -166,6 +230,7 @@ let singleRunTestCases = [
     let p = BrowserTestUtils.waitForNewTab(win.gBrowser, CANONICAL_URL);
     Services.obs.notifyObservers(null, "captive-portal-login", null);
     let tab = yield p;
+    ensurePortalNotification(win);
     isnot(win.gBrowser.selectedTab, tab,
       "The captive portal tab should be open in the background in the current window.");
     win.gBrowser.selectedTab = tab;
@@ -175,9 +240,81 @@ let singleRunTestCases = [
     BrowserTestUtils.loadURI(browser, CANONICAL_URL_REDIRECTED);
     yield loadPromise;
     freePortal(true);
-    is(win.gBrowser.tabs.length, 2,
-      "The portal tab should not have been closed.");
+    ensurePortalTab(win);
+    ensureNoPortalNotification(win);
     yield BrowserTestUtils.removeTab(tab);
+  },
+
+  /**
+   * Test the various expected behaviors of the "Show Login Page" button
+   * in the captive portal notification. The button should be visible for
+   * all tabs except the captive portal tab, and when clicked, should
+   * ensure a captive portal tab is open and select it.
+   */
+  function* test_showLoginPageButton() {
+    let win = RecentWindow.getMostRecentBrowserWindow();
+    let p = BrowserTestUtils.waitForNewTab(win.gBrowser, CANONICAL_URL);
+    Services.obs.notifyObservers(null, "captive-portal-login", null);
+    let tab = yield p;
+    let notification = ensurePortalNotification(win);
+    isnot(win.gBrowser.selectedTab, tab,
+      "The captive portal tab should be open in the background in the current window.");
+    testShowLoginPageButtonVisibility(notification, "visible");
+
+    function testPortalTabSelectedAndButtonNotVisible() {
+      is(win.gBrowser.selectedTab, tab, "The captive portal tab should be selected.");
+      testShowLoginPageButtonVisibility(notification, "hidden");
+    }
+
+    // Select the captive portal tab. The button should hide.
+    let otherTab = win.gBrowser.selectedTab;
+    win.gBrowser.selectedTab = tab;
+    testShowLoginPageButtonVisibility(notification, "hidden");
+
+    // Select the other tab. The button should become visible.
+    win.gBrowser.selectedTab = otherTab;
+    testShowLoginPageButtonVisibility(notification, "visible");
+
+    // Simulate clicking the button. The portal tab should be selected and
+    // the button should hide.
+    let button = notification.querySelector("button.notification-button");
+    button.click();
+    testPortalTabSelectedAndButtonNotVisible();
+
+    // Close the tab. The button should become visible.
+    yield BrowserTestUtils.removeTab(tab);
+    ensureNoPortalTab(win);
+    testShowLoginPageButtonVisibility(notification, "visible");
+
+    function* clickButtonAndExpectNewPortalTab() {
+      p = BrowserTestUtils.waitForNewTab(win.gBrowser, CANONICAL_URL);
+      button.click();
+      tab = yield p;
+      is(win.gBrowser.selectedTab, tab, "The captive portal tab should be selected.");
+    }
+
+    // When the button is clicked, a new portal tab should be opened and
+    // selected.
+    yield clickButtonAndExpectNewPortalTab();
+
+    // Open another arbitrary tab. The button should become visible. When it's clicked,
+    // the portal tab should be selected.
+    let anotherTab = yield BrowserTestUtils.openNewForegroundTab(win.gBrowser);
+    testShowLoginPageButtonVisibility(notification, "visible");
+    button.click();
+    is(win.gBrowser.selectedTab, tab, "The captive portal tab should be selected.");
+
+    // Close the portal tab and select the arbitrary tab. The button should become
+    // visible and when it's clicked, a new portal tab should be opened.
+    yield BrowserTestUtils.removeTab(tab);
+    win.gBrowser.selectedTab = anotherTab;
+    testShowLoginPageButtonVisibility(notification, "visible");
+    yield clickButtonAndExpectNewPortalTab();
+
+    yield BrowserTestUtils.removeTab(anotherTab);
+    freePortal(true);
+    ensureNoPortalTab(win);
+    ensureNoPortalNotification(win);
   },
 ];
 
