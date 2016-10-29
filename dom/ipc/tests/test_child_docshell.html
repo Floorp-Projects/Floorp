@@ -74,17 +74,9 @@ SpecialPowers.pushPrefEnv({'set':[
       });
     });
 
-    function go() {
-      let i = content.document.createElement("iframe");
-      i.setAttribute("src", "data:text/html,foo");
-      content.document.documentElement.appendChild(i);
-    }
-
-    if (content.document.readyState == "complete") {
-      go();
-    } else {
-      addEventListener("load", go, true);
-    }
+    let i = content.document.createElement("iframe");
+    i.setAttribute("src", "data:text/html,foo");
+    content.document.documentElement.appendChild(i);
   }, false);
 });
 
