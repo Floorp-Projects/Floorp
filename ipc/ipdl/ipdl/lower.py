@@ -2809,10 +2809,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             CppDirective('include', '"'+ p.channelHeaderFile() +'"'),
             Whitespace.NL ])
 
-        optinherits = []
+        inherits = []
         if ptype.isToplevel():
-            optinherits.append(Inherit(p.openedProtocolInterfaceType(),
-                                      viz='public'))
+            inherits.append(Inherit(p.openedProtocolInterfaceType(),
+                                    viz='public'))
+        else:
+            inherits.append(Inherit(p.managerInterfaceType(), viz='public'))
+
         if ptype.isToplevel() and self.side is 'parent':
             self.hdrfile.addthings([
                     _makeForwardDeclForQClass('nsIFile', []),
@@ -2821,8 +2824,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         self.cls = Class(
             self.clsname,
-            inherits=[ Inherit(p.managerInterfaceType(), viz='public') ] +
-            optinherits,
+            inherits=inherits,
             abstract=True)
 
         bridgeActorsCreated = ProcessGraph.bridgeEndpointsOf(ptype, self.side)
