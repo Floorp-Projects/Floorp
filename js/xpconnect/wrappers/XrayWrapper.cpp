@@ -88,6 +88,7 @@ IsJSXraySupported(JSProtoKey key)
       case JSProto_RegExp:
       case JSProto_Promise:
       case JSProto_ArrayBuffer:
+      case JSProto_SharedArrayBuffer:
         return true;
       default:
         return false;
