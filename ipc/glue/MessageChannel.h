@@ -462,7 +462,7 @@ class MessageChannel : HasResultCodes
         {}
 
         NS_IMETHOD Run() override;
-        nsresult Cancel() override;
+        NS_IMETHOD Cancel() override;
         void Post();
         void Clear();
 
