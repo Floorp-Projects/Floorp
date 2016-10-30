@@ -55,6 +55,8 @@ DragEvent::InitDragEvent(const nsAString& aType,
                          EventTarget* aRelatedTarget,
                          DataTransfer* aDataTransfer)
 {
+  NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
+
   MouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable,
                              aView, aDetail, aScreenX, aScreenY,
                              aClientX, aClientY, aCtrlKey, aAltKey,

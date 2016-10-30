@@ -53,6 +53,8 @@ ClipboardEvent::InitClipboardEvent(const nsAString& aType, bool aCanBubble,
                                    bool aCancelable,
                                    DataTransfer* aClipboardData)
 {
+  NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
+
   Event::InitEvent(aType, aCanBubble, aCancelable);
   mEvent->AsClipboardEvent()->mClipboardData = aClipboardData;
 }

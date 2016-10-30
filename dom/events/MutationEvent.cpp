@@ -96,6 +96,8 @@ MutationEvent::InitMutationEvent(const nsAString& aTypeArg,
                                  const nsAString& aAttrNameArg,
                                  uint16_t aAttrChangeArg)
 {
+  NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
+
   Event::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
 
   InternalMutationEvent* mutation = mEvent->AsMutationEvent();

@@ -39,6 +39,8 @@ ScrollAreaEvent::InitScrollAreaEvent(const nsAString& aEventType,
                                      float aWidth,
                                      float aHeight)
 {
+  NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
+
   UIEvent::InitUIEvent(aEventType, aCanBubble, aCancelable, aView, aDetail);
   mClientArea->SetRect(aX, aY, aWidth, aHeight);
 }
