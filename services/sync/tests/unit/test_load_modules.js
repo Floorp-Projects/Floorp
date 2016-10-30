@@ -9,7 +9,6 @@ const modules = [
   "engines/addons.js",
   "engines/bookmarks.js",
   "engines/clients.js",
-  "engines/extension-storage.js",
   "engines/forms.js",
   "engines/history.js",
   "engines/passwords.js",

@@ -4,8 +4,6 @@ var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
                                   "resource://gre/modules/ExtensionStorage.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorageSync",
-                                  "resource://gre/modules/ExtensionStorageSync.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
@@ -17,48 +15,28 @@ function storageApiFactory(context) {
   return {
     storage: {
       local: {
-        get: function(spec) {
-          return ExtensionStorage.get(extension.id, spec);
+        get: function(keys) {
+          return ExtensionStorage.get(extension.id, keys);
         },
         set: function(items) {
           return ExtensionStorage.set(extension.id, items, context);
         },
-        remove: function(keys) {
-          return ExtensionStorage.remove(extension.id, keys);
+        remove: function(items) {
+          return ExtensionStorage.remove(extension.id, items);
         },
         clear: function() {
           return ExtensionStorage.clear(extension.id);
         },
       },
 
-      sync: {
-        get: function(spec) {
-          return ExtensionStorageSync.get(extension, spec, context);
-        },
-        set: function(items) {
-          return ExtensionStorageSync.set(extension, items, context);
-        },
-        remove: function(keys) {
-          return ExtensionStorageSync.remove(extension, keys, context);
-        },
-        clear: function() {
-          return ExtensionStorageSync.clear(extension, context);
-        },
-      },
-
-      onChanged: new EventManager(context, "storage.onChanged", fire => {
-        let listenerLocal = changes => {
+      onChanged: new EventManager(context, "storage.local.onChanged", fire => {
+        let listener = changes => {
           fire(changes, "local");
         };
-        let listenerSync = changes => {
-          fire(changes, "sync");
-        };
 
-        ExtensionStorage.addOnChangedListener(extension.id, listenerLocal);
-        ExtensionStorageSync.addOnChangedListener(extension, listenerSync, context);
+        ExtensionStorage.addOnChangedListener(extension.id, listener);
         return () => {
-          ExtensionStorage.removeOnChangedListener(extension.id, listenerLocal);
-          ExtensionStorageSync.removeOnChangedListener(extension, listenerSync);
+          ExtensionStorage.removeOnChangedListener(extension.id, listener);
         };
       }).api(),
     },
