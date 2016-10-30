@@ -2981,7 +2981,7 @@ PresShell::CreateReferenceRenderingContext()
     // We assume the devCtx has positive width and height for this call.
     // However, width and height, may be outside of the reasonable range
     // so rc may still be null.
-    rc = devCtx->CreateRenderingContext();
+    rc = devCtx->CreateReferenceRenderingContext();
   }
 
   return rc ? rc.forget() : nullptr;

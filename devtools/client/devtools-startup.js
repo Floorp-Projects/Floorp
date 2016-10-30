@@ -198,13 +198,14 @@ DevToolsStartup.prototype = {
     }
   },
 
+  /* eslint-disable max-len */
   helpInfo: "  --jsconsole        Open the Browser Console.\n" +
             "  --jsdebugger       Open the Browser Toolbox.\n" +
             "  --devtools         Open DevTools on initial load.\n" +
-            "  --start-debugger-server [ws:][ <port> | <path> ] " +
-            "Start the debugger server on a TCP port or " +
-            "Unix domain socket path.  Defaults to TCP port 6000. " +
-            "Use WebSocket protocol if ws: prefix is specified.\n",
+            "  --start-debugger-server [ws:][ <port> | <path> ] Start the debugger server on\n" +
+            "                     a TCP port or Unix domain socket path. Defaults to TCP port\n" +
+            "                     6000. Use WebSocket protocol if ws: prefix is specified.\n",
+  /* eslint-disable max-len */
 
   classID: Components.ID("{9e9a9283-0ce9-4e4a-8f1c-ba129a032c32}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),

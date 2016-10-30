@@ -22,13 +22,25 @@ SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
 
 function beginTest() {
   var threw;
-  try {
-    is(false, navigator.sendBeacon("ftp://example.com", "0"));
-    threw = false;
-  } catch (ex) {
-    threw = true;
+  for(let scheme of ["bad", "ftp", "data"]) {
+    try {
+      is(false, navigator.sendBeacon(`${scheme}://example.com`, "0"));
+      threw = false;
+    } catch (ex) {
+      threw = true;
+    }
+    ok(threw, `sendBeacon not supported for ${scheme} scheme.`);
   }
-  ok(threw, "sendBeacon not supported for non ftp calls.");
+
+  for(let scheme of ["http", "https"]) {
+    try {
+      is(false, navigator.sendBeacon(`${scheme}://invalid:URL`, "0"));
+      threw = false;
+    } catch (ex) {
+      threw = true;
+    }
+    ok(threw, `sendBeacon not supported for invalid ${scheme} URLs.`);
+  }
 
   try {
     is(false, navigator.sendBeacon());

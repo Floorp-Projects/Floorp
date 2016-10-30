@@ -1274,15 +1274,15 @@ Navigator::SendBeacon(const nsAString& aUrl,
                   doc,
                   doc->GetDocBaseURI());
   if (NS_FAILED(rv)) {
-    aRv.Throw(NS_ERROR_DOM_URL_MISMATCH_ERR);
+    aRv.ThrowTypeError<MSG_INVALID_URL>(aUrl);
     return false;
   }
 
-  // Explicitly disallow loading data: URIs
-  bool isDataScheme = false;
-  rv = uri->SchemeIs("data", &isDataScheme);
-  if (NS_FAILED(rv) || isDataScheme) {
-    aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
+  // Spec disallows any schemes save for HTTP/HTTPs
+  bool isValidScheme;
+  if (!(NS_SUCCEEDED(uri->SchemeIs("http", &isValidScheme)) && isValidScheme) &&
+      !(NS_SUCCEEDED(uri->SchemeIs("https", &isValidScheme)) && isValidScheme)) {
+    aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>( NS_LITERAL_STRING("Beacon"), aUrl);
     return false;
   }
 

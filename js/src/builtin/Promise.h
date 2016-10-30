@@ -12,12 +12,31 @@
 
 namespace js {
 
+enum PromiseSlots {
+    PromiseSlot_Flags = 0,
+    PromiseSlot_ReactionsOrResult,
+    PromiseSlot_RejectFunction,
+    PromiseSlot_AllocationSite,
+    PromiseSlot_ResolutionSite,
+    PromiseSlot_AllocationTime,
+    PromiseSlot_ResolutionTime,
+    PromiseSlot_Id,
+    PromiseSlots,
+};
+
+#define PROMISE_FLAG_RESOLVED  0x1
+#define PROMISE_FLAG_FULFILLED 0x2
+#define PROMISE_FLAG_HANDLED   0x4
+#define PROMISE_FLAG_REPORTED  0x8
+#define PROMISE_FLAG_DEFAULT_RESOLVE_FUNCTION 0x10
+#define PROMISE_FLAG_DEFAULT_REJECT_FUNCTION  0x20
+
 class AutoSetNewObjectMetadata;
 
 class PromiseObject : public NativeObject
 {
   public:
-    static const unsigned RESERVED_SLOTS = 8;
+    static const unsigned RESERVED_SLOTS = PromiseSlots;
     static const Class class_;
     static const Class protoClass_;
     static PromiseObject* create(JSContext* cx, HandleObject executor,
@@ -27,7 +46,7 @@ class PromiseObject : public NativeObject
     static JSObject* unforgeableReject(JSContext* cx, HandleValue value);
 
     JS::PromiseState state() {
-        int32_t flags = getFixedSlot(PROMISE_FLAGS_SLOT).toInt32();
+        int32_t flags = getFixedSlot(PromiseSlot_Flags).toInt32();
         if (!(flags & PROMISE_FLAG_RESOLVED)) {
             MOZ_ASSERT(!(flags & PROMISE_FLAG_FULFILLED));
             return JS::PromiseState::Pending;
@@ -38,11 +57,11 @@ class PromiseObject : public NativeObject
     }
     Value value()  {
         MOZ_ASSERT(state() == JS::PromiseState::Fulfilled);
-        return getFixedSlot(PROMISE_REACTIONS_OR_RESULT_SLOT);
+        return getFixedSlot(PromiseSlot_ReactionsOrResult);
     }
     Value reason() {
         MOZ_ASSERT(state() == JS::PromiseState::Rejected);
-        return getFixedSlot(PROMISE_REACTIONS_OR_RESULT_SLOT);
+        return getFixedSlot(PromiseSlot_ReactionsOrResult);
     }
 
     MOZ_MUST_USE bool resolve(JSContext* cx, HandleValue resolutionValue);
@@ -50,13 +69,13 @@ class PromiseObject : public NativeObject
 
     void onSettled(JSContext* cx);
 
-    double allocationTime() { return getFixedSlot(PROMISE_ALLOCATION_TIME_SLOT).toNumber(); }
-    double resolutionTime() { return getFixedSlot(PROMISE_RESOLUTION_TIME_SLOT).toNumber(); }
+    double allocationTime() { return getFixedSlot(PromiseSlot_AllocationTime).toNumber(); }
+    double resolutionTime() { return getFixedSlot(PromiseSlot_ResolutionTime).toNumber(); }
     JSObject* allocationSite() {
-        return getFixedSlot(PROMISE_ALLOCATION_SITE_SLOT).toObjectOrNull();
+        return getFixedSlot(PromiseSlot_AllocationSite).toObjectOrNull();
     }
     JSObject* resolutionSite() {
-        return getFixedSlot(PROMISE_RESOLUTION_SITE_SLOT).toObjectOrNull();
+        return getFixedSlot(PromiseSlot_ResolutionSite).toObjectOrNull();
     }
     double lifetime();
     double timeToResolution() {
@@ -67,45 +86,36 @@ class PromiseObject : public NativeObject
     uint64_t getID();
     bool isUnhandled() {
         MOZ_ASSERT(state() == JS::PromiseState::Rejected);
-        return !(getFixedSlot(PROMISE_FLAGS_SLOT).toInt32() & PROMISE_FLAG_HANDLED);
+        return !(getFixedSlot(PromiseSlot_Flags).toInt32() & PROMISE_FLAG_HANDLED);
     }
     void markAsReported() {
         MOZ_ASSERT(isUnhandled());
-        int32_t flags = getFixedSlot(PROMISE_FLAGS_SLOT).toInt32();
-        setFixedSlot(PROMISE_FLAGS_SLOT, Int32Value(flags | PROMISE_FLAG_REPORTED));
+        int32_t flags = getFixedSlot(PromiseSlot_Flags).toInt32();
+        setFixedSlot(PromiseSlot_Flags, Int32Value(flags | PROMISE_FLAG_REPORTED));
     }
 };
 
 /**
- * Tells the embedding to enqueue a Promise reaction job, based on six
- * parameters:
- * reaction handler - The callback to invoke for this job.
-   argument - The first and only argument to pass to the handler.
-   resolve - The Promise cabability's resolve hook, called upon normal
-             completion of the handler.
-   reject -  The Promise cabability's reject hook, called if the handler
-             throws.
-   promise - The associated Promise, or null for some internal uses.
-   objectFromIncumbentGlobal - An object from the global that was the
-                               incumbent global when the Promise reaction job
-                               was created (not enqueued). Not the global
-                               itself because unwrapping that might unwrap an
-                               inner to an outer window, which we never want
-                               to happen.
+ * Enqueues resolve/reject reactions in the given Promise's reactions lists
+ * in a content-invisible way.
+ *
+ * Used internally to implement DOM functionality.
+ *
+ * Note: the reactions pushed using this function contain a `promise` field
+ * that can contain null. That field is only ever used by devtools, which have
+ * to treat these reactions specially.
  */
-bool EnqueuePromiseReactionJob(JSContext* cx, HandleValue handler, HandleValue handlerArg,
-                               HandleObject resolve, HandleObject reject,
-                               HandleObject promise, HandleObject objectFromIncumbentGlobal);
+MOZ_MUST_USE bool
+EnqueuePromiseReactions(JSContext* cx, Handle<PromiseObject*> promise,
+                        HandleObject dependentPromise,
+                        HandleValue onFulfilled, HandleValue onRejected);
 
-/**
- * Tells the embedding to enqueue a Promise resolve thenable job, based on six
- * parameters:
- * promiseToResolve - The promise to resolve, obviously.
- * thenable - The thenable to resolve the Promise with.
- * then - The `then` function to invoke with the `thenable` as the receiver.
- */
-bool EnqueuePromiseResolveThenableJob(JSContext* cx, HandleValue promiseToResolve,
-                                      HandleValue thenable, HandleValue then);
+MOZ_MUST_USE JSObject*
+GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises);
+
+MOZ_MUST_USE JSObject*
+OriginalPromiseThen(JSContext* cx, Handle<PromiseObject*> promise, HandleValue onFulfilled,
+                    HandleValue onRejected);
 
 /**
  * A PromiseTask represents a task that can be dispatched to a helper thread

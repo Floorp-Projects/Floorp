@@ -108,7 +108,7 @@
     real(Set,                   37,     InitSetClass,           OCLASP(Set)) \
     real(DataView,              38,     InitDataViewClass,      OCLASP(DataView)) \
     real(Symbol,                39,     InitSymbolClass,        OCLASP(Symbol)) \
-IF_SAB(real,imaginary)(SharedArrayBuffer,       40,     InitSharedArrayBufferClass, &js::SharedArrayBufferObject::protoClass) \
+IF_SAB(real,imaginary)(SharedArrayBuffer,       40,     InitViaClassSpec, OCLASP(SharedArrayBuffer)) \
 IF_INTL(real,imaginary) (Intl,                  41,     InitIntlClass,          CLASP(Intl)) \
 IF_BDATA(real,imaginary)(TypedObject,           42,     InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
     real(Reflect,               43,     InitReflect,            nullptr) \

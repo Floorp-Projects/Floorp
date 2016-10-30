@@ -20,7 +20,7 @@ namespace layout {
 PrintTranslator::PrintTranslator(nsDeviceContext* aDeviceContext)
   : mDeviceContext(aDeviceContext)
 {
-  RefPtr<gfxContext> context = mDeviceContext->CreateRenderingContext();
+  RefPtr<gfxContext> context = mDeviceContext->CreateReferenceRenderingContext();
   mBaseDT = context->GetDrawTarget();
 }
 
