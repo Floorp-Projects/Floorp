@@ -8,41 +8,37 @@ module.metadata = {
 };
 
 var getPrototypeOf = Object.getPrototypeOf;
-var getNames = x => [...Object.getOwnPropertyNames(x),
-                     ...Object.getOwnPropertySymbols(x)];
+function* getNames(x) {
+  yield* Object.getOwnPropertyNames(x);
+  yield* Object.getOwnPropertySymbols(x);
+}
 var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-var create = Object.create;
 var freeze = Object.freeze;
-var unbind = Function.call.bind(Function.bind, Function.call);
 
 // This shortcut makes sure that we do perform desired operations, even if
 // associated methods have being overridden on the used object.
-var owns = unbind(Object.prototype.hasOwnProperty);
-var apply = unbind(Function.prototype.apply);
-var slice = Array.slice || unbind(Array.prototype.slice);
-var reduce = Array.reduce || unbind(Array.prototype.reduce);
-var map = Array.map || unbind(Array.prototype.map);
-var concat = Array.concat || unbind(Array.prototype.concat);
+var hasOwnProperty = Function.call.bind(Object.prototype.hasOwnProperty);
 
 // Utility function to get own properties descriptor map.
-function getOwnPropertyDescriptors(object) {
-  return reduce(getNames(object), function(descriptor, name) {
-    descriptor[name] = getOwnPropertyDescriptor(object, name);
-    return descriptor;
-  }, {});
+function getOwnPropertyDescriptors(...objects) {
+  let descriptors = {};
+  for (let object of objects)
+    for (let name of getNames(object))
+      descriptors[name] = getOwnPropertyDescriptor(object, name);
+  return descriptors;
 }
 
 function isDataProperty(property) {
-  var value = property.value;
   var type = typeof(property.value);
   return "value" in property &&
-         (type !== "object" || value === null) &&
-         type !== "function";
+         type !== "function" &&
+         (type !== "object" || property.value === null);
 }
 
 function getDataProperties(object) {
   var properties = getOwnPropertyDescriptors(object);
-  return getNames(properties).reduce(function(result, name) {
+  let result = {};
+  for (let name of getNames(properties)) {
     var property = properties[name];
     if (isDataProperty(property)) {
       result[name] = {
@@ -52,22 +48,22 @@ function getDataProperties(object) {
         enumerable: false
       };
     }
-    return result;
-  }, {})
+  }
+  return result;
 }
 
 /**
  * Takes `source` object as an argument and returns identical object
  * with the difference that all own properties will be non-enumerable
  */
-function obscure(source) {
-  var descriptor = reduce(getNames(source), function(descriptor, name) {
-    var property = getOwnPropertyDescriptor(source, name);
+function obscure(source, prototype = getPrototypeOf(source)) {
+  let descriptors = {};
+  for (let name of getNames(source)) {
+    let property = getOwnPropertyDescriptor(source, name);
     property.enumerable = false;
-    descriptor[name] = property;
-    return descriptor;
-  }, {});
-  return create(getPrototypeOf(source), descriptor);
+    descriptors[name] = property;
+  }
+  return Object.create(prototype, descriptors);
 }
 exports.obscure = obscure;
 
@@ -79,15 +75,9 @@ exports.obscure = obscure;
  * precedence from right to left, implying, that properties of the object on
  * the left are overridden by a same named property of the object on the right.
  */
-var mix = function(source) {
-  var descriptor = reduce(slice(arguments), function(descriptor, source) {
-    return reduce(getNames(source), function(descriptor, name) {
-      descriptor[name] = getOwnPropertyDescriptor(source, name);
-      return descriptor;
-    }, descriptor);
-  }, {});
-
-  return create(getPrototypeOf(source), descriptor);
+var mix = function(...sources) {
+  return Object.create(getPrototypeOf(sources[0]),
+                       getOwnPropertyDescriptors(...sources));
 };
 exports.mix = mix;
 
@@ -96,9 +86,14 @@ exports.mix = mix;
  * implements all own properties of the given `properties` object.
  */
 function extend(prototype, properties) {
-  return create(prototype, getOwnPropertyDescriptors(properties));
+  return Object.create(prototype,
+                       getOwnPropertyDescriptors(properties));
 }
 exports.extend = extend;
+
+function prototypeOf(input) {
+  return typeof(input) === 'function' ? input.prototype : input;
+}
 
 /**
  * Returns a constructor function with a proper `prototype` setup. Returned
@@ -111,62 +106,56 @@ exports.extend = extend;
  * Also `options.implements` may contain functions or objects, in case of
  * functions their prototypes are used for mixing.
  */
-var Class = new function() {
-  function prototypeOf(input) {
-    return typeof(input) === 'function' ? input.prototype : input;
-  }
-  var none = freeze([]);
+function Class(options) {
+  // Create descriptor with normalized `options.extends` and
+  // `options.implements`.
+  var descriptor = {
+    // Normalize extends property of `options.extends` to a prototype object
+    // in case it's constructor. If property is missing that fallback to
+    // `Type.prototype`.
+    extends: hasOwnProperty(options, 'extends') ?
+             prototypeOf(options.extends) : Class.prototype,
 
-  return function Class(options) {
-    // Create descriptor with normalized `options.extends` and
-    // `options.implements`.
-    var descriptor = {
-      // Normalize extends property of `options.extends` to a prototype object
-      // in case it's constructor. If property is missing that fallback to
-      // `Type.prototype`.
-      extends: owns(options, 'extends') ?
-               prototypeOf(options.extends) : Class.prototype,
-      // Normalize `options.implements` to make sure that it's array of
-      // prototype objects instead of constructor functions.
-      implements: owns(options, 'implements') ?
-                  freeze(map(options.implements, prototypeOf)) : none
-    };
-
-    // Create array of property descriptors who's properties will be defined
-    // on the resulting prototype. Note: Using reflection `concat` instead of
-    // method as it may be overridden.
-    var descriptors = concat(descriptor.implements, options, descriptor, {
-      constructor: constructor
-    });
-
-    // Note: we use reflection `apply` in the constructor instead of method
-    // call since later may be overridden.
-    function constructor() {
-      var instance = create(prototype, attributes);
-      if (initialize) apply(initialize, instance, arguments);
-      return instance;
-    }
-    // Create `prototype` that inherits from given ancestor passed as
-    // `options.extends`, falling back to `Type.prototype`, implementing all
-    // properties of given `options.implements` and `options` itself.
-    var prototype = extend(descriptor.extends, mix.apply(mix, descriptors));
-    var initialize = prototype.initialize;
-
-    // Combine ancestor attributes with prototype's attributes so that
-    // ancestors attributes also become initializeable.
-    var attributes = mix(descriptor.extends.constructor.attributes || {},
-                         getDataProperties(prototype));
-
-    constructor.attributes = attributes;
-    Object.defineProperty(constructor, 'prototype', {
-      configurable: false,
-      writable: false,
-      value: prototype
-    });
-    return constructor;
+    // Normalize `options.implements` to make sure that it's array of
+    // prototype objects instead of constructor functions.
+    implements: freeze(hasOwnProperty(options, 'implements') ?
+                       options.implements.map(prototypeOf) : []),
   };
+
+  // Create array of property descriptors who's properties will be defined
+  // on the resulting prototype.
+  var descriptors = [].concat(descriptor.implements, options, descriptor,
+                              { constructor });
+
+  // Note: we use reflection `apply` in the constructor instead of method
+  // call since later may be overridden.
+  function constructor() {
+    var instance = Object.create(prototype, attributes);
+    if (initialize)
+      Reflect.apply(initialize, instance, arguments);
+    return instance;
+  }
+  // Create `prototype` that inherits from given ancestor passed as
+  // `options.extends`, falling back to `Type.prototype`, implementing all
+  // properties of given `options.implements` and `options` itself.
+  var prototype = Object.create(descriptor.extends,
+                                getOwnPropertyDescriptors(...descriptors));
+  var initialize = prototype.initialize;
+
+  // Combine ancestor attributes with prototype's attributes so that
+  // ancestors attributes also become initializeable.
+  var attributes = mix(descriptor.extends.constructor.attributes || {},
+                       getDataProperties(prototype));
+
+  constructor.attributes = attributes;
+  Object.defineProperty(constructor, 'prototype', {
+    configurable: false,
+    writable: false,
+    value: prototype
+  });
+  return constructor;
 }
-Class.prototype = extend(null, obscure({
+Class.prototype = obscure({
   constructor: function constructor() {
     this.initialize.apply(this, arguments);
     return this;
@@ -180,5 +169,5 @@ Class.prototype = extend(null, obscure({
   toSource: Object.prototype.toSource,
   valueOf: Object.prototype.valueOf,
   isPrototypeOf: Object.prototype.isPrototypeOf
-}));
+}, null);
 exports.Class = freeze(Class);
