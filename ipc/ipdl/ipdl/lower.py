@@ -1090,9 +1090,6 @@ class Protocol(ipdl.ast.Protocol):
     def channelHeaderFile(self):
         return '/'.join(_semsToChannelParts(self.sendSems())) +'.h'
 
-    def fqListenerName(self):
-      return 'mozilla::ipc::MessageListener'
-
     def managerInterfaceType(self, ptr=0):
         return Type('mozilla::ipc::IProtocol', ptr=ptr)
 
@@ -2623,7 +2620,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Typedef(Type('mozilla::ipc::IProtocol'), 'ProtocolBase'),
             Typedef(Type('IPC::Message'), 'Message'),
             Typedef(Type(self.protocol.channelName()), 'Channel'),
-            Typedef(Type(self.protocol.fqListenerName()), 'ChannelListener'),
+            Typedef(Type('mozilla::ipc::IProtocol'), 'ChannelListener'),
             Typedef(Type('base::ProcessHandle'), 'ProcessHandle'),
             Typedef(Type('mozilla::ipc::MessageChannel'), 'MessageChannel'),
             Typedef(Type('mozilla::ipc::SharedMemory'), 'SharedMemory'),

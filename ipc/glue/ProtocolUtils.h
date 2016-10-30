@@ -130,7 +130,14 @@ struct Trigger
     uint32_t mMessage : 31;
 };
 
-class IProtocol : public MessageListener
+// What happens if Interrupt calls race?
+enum RacyInterruptPolicy {
+    RIPError,
+    RIPChildWins,
+    RIPParentWins
+};
+
+class IProtocol : public HasResultCodes
 {
 public:
     enum ActorDestroyReason {
@@ -142,6 +149,8 @@ public:
     };
 
     typedef base::ProcessId ProcessId;
+    typedef IPC::Message Message;
+    typedef IPC::MessageInfo MessageInfo;
 
     virtual int32_t Register(IProtocol*) = 0;
     virtual int32_t RegisterID(IProtocol*, int32_t) = 0;
@@ -163,6 +172,12 @@ public:
 
     Maybe<IProtocol*> ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool aNullable,
                                 const char* aActorDescription, int32_t aProtocolTypeId);
+
+    virtual Result OnMessageReceived(const Message& aMessage) = 0;
+    virtual Result OnMessageReceived(const Message& aMessage, Message *& aReply) = 0;
+    virtual Result OnCallReceived(const Message& aMessage, Message *& aReply) = 0;
+
+    virtual int32_t GetProtocolTypeId() = 0;
 };
 
 typedef IPCMessageStart ProtocolId;
@@ -195,6 +210,78 @@ public:
     ProtocolId GetProtocolId() const { return mProtocolId; }
 
     virtual MessageChannel* GetIPCChannel() = 0;
+
+    virtual void OnChannelClose() = 0;
+    virtual void OnChannelError() = 0;
+    virtual void OnProcessingError(Result aError, const char* aMsgName) = 0;
+    virtual void OnChannelConnected(int32_t peer_pid) {}
+    virtual bool OnReplyTimeout() {
+        return false;
+    }
+
+    // WARNING: This function is called with the MessageChannel monitor held.
+    virtual void IntentionalCrash() {
+        MOZ_CRASH("Intentional IPDL crash");
+    }
+
+    // The code here is only useful for fuzzing. It should not be used for any
+    // other purpose.
+#ifdef DEBUG
+    // Returns true if we should simulate a timeout.
+    // WARNING: This is a testing-only function that is called with the
+    // MessageChannel monitor held. Don't do anything fancy here or we could
+    // deadlock.
+    virtual bool ArtificialTimeout() {
+        return false;
+    }
+
+    // Returns true if we want to cause the worker thread to sleep with the
+    // monitor unlocked.
+    virtual bool NeedArtificialSleep() {
+        return false;
+    }
+
+    // This function should be implemented to sleep for some amount of time on
+    // the worker thread. Will only be called if NeedArtificialSleep() returns
+    // true.
+    virtual void ArtificialSleep() {}
+#else
+    bool ArtificialTimeout() { return false; }
+    bool NeedArtificialSleep() { return false; }
+    void ArtificialSleep() {}
+#endif
+
+    virtual void OnEnteredCxxStack() {
+        NS_RUNTIMEABORT("default impl shouldn't be invoked");
+    }
+    virtual void OnExitedCxxStack() {
+        NS_RUNTIMEABORT("default impl shouldn't be invoked");
+    }
+    virtual void OnEnteredCall() {
+        NS_RUNTIMEABORT("default impl shouldn't be invoked");
+    }
+    virtual void OnExitedCall() {
+        NS_RUNTIMEABORT("default impl shouldn't be invoked");
+    }
+    virtual RacyInterruptPolicy MediateInterruptRace(const MessageInfo& parent,
+                                                     const MessageInfo& child)
+    {
+        return RIPChildWins;
+    }
+
+    /**
+     * Return true if windows messages can be handled while waiting for a reply
+     * to a sync IPDL message.
+     */
+    virtual bool HandleWindowsMessages(const Message& aMsg) const { return true; }
+
+    virtual void OnEnteredSyncSend() {
+    }
+    virtual void OnExitedSyncSend() {
+    }
+
+    virtual void ProcessRemoteNativeEventsInInterruptCall() {
+    }
 
 private:
     ProtocolId mProtocolId;
