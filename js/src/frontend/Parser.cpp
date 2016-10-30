@@ -8767,7 +8767,7 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
         TokenKind tt;
         if (!tokenStream.getToken(&tt, TokenStream::KeywordIsName))
             return null();
-        if (tt != TOK_LP && tt != TOK_COLON) {
+        if (tt != TOK_LP && tt != TOK_COLON && tt != TOK_RC && tt != TOK_ASSIGN) {
             isAsync = true;
             ltok = tt;
         } else {
