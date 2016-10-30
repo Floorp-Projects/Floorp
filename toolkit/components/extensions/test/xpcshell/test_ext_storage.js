@@ -155,7 +155,7 @@ add_task(function* test_backgroundScript() {
   function backgroundScript(checkGet) {
     let globalChanges, gResolve;
     function clearGlobalChanges() {
-      globalChanges = new Promise(resolve => gResolve = resolve);
+      globalChanges = new Promise(resolve => { gResolve = resolve; });
     }
     clearGlobalChanges();
     let expectedAreaName;
