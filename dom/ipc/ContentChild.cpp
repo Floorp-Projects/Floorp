@@ -83,6 +83,7 @@
 #include "nsDocShell.h"
 #include "nsIConsoleListener.h"
 #include "nsICycleCollectorListener.h"
+#include "nsIIdlePeriod.h"
 #include "nsIDragService.h"
 #include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsIInterfaceRequestorUtils.h"

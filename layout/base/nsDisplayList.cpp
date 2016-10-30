@@ -1307,7 +1307,7 @@ nsDisplayListBuilder::AdjustWindowDraggingRegion(nsIFrame* aFrame)
   }
 
   const nsStyleUIReset* styleUI = aFrame->StyleUIReset();
-  if (styleUI->mWindowDragging == NS_STYLE_WINDOW_DRAGGING_DEFAULT) {
+  if (styleUI->mWindowDragging == StyleWindowDragging::Default) {
     // This frame has the default value and doesn't influence the window
     // dragging region.
     return;
@@ -1362,7 +1362,7 @@ nsDisplayListBuilder::AdjustWindowDraggingRegion(nsIFrame* aFrame)
     transformedDevPixelBorderBox.Round();
     LayoutDeviceIntRect transformedDevPixelBorderBoxInt;
     if (transformedDevPixelBorderBox.ToIntRect(&transformedDevPixelBorderBoxInt)) {
-      if (styleUI->mWindowDragging == NS_STYLE_WINDOW_DRAGGING_DRAG) {
+      if (styleUI->mWindowDragging == StyleWindowDragging::Drag) {
         mWindowDraggingRegion.OrWith(transformedDevPixelBorderBoxInt);
       } else {
         mWindowNoDraggingRegion.OrWith(transformedDevPixelBorderBoxInt);

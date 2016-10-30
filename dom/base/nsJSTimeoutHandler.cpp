@@ -4,21 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
+
+#include "mozilla/Attributes.h"
+#include "mozilla/Function.h"
+#include "mozilla/Likely.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/dom/FunctionBinding.h"
+#include "nsAXPCNativeCallContext.h"
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
-#include "nsIScriptTimeoutHandler.h"
-#include "nsIXPConnect.h"
-#include "nsJSUtils.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsGlobalWindow.h"
 #include "nsIContentSecurityPolicy.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/Likely.h"
-#include <algorithm>
-#include "mozilla/dom/FunctionBinding.h"
+#include "nsIDocument.h"
+#include "nsIScriptTimeoutHandler.h"
+#include "nsIXPConnect.h"
+#include "nsJSUtils.h"
 #include "WorkerPrivate.h"
-#include "nsAXPCNativeCallContext.h"
 
 static const char kSetIntervalStr[] = "setInterval";
 static const char kSetTimeoutStr[] = "setTimeout";
@@ -37,11 +40,11 @@ public:
 
   nsJSScriptTimeoutHandler();
   // This will call SwapElements on aArguments with an empty array.
-  nsJSScriptTimeoutHandler(JSContext* aCx, nsGlobalWindow *aWindow,
+  nsJSScriptTimeoutHandler(JSContext* aCx, nsGlobalWindow* aWindow,
                            Function& aFunction,
                            nsTArray<JS::Heap<JS::Value>>&& aArguments,
                            ErrorResult& aError);
-  nsJSScriptTimeoutHandler(JSContext* aCx, nsGlobalWindow *aWindow,
+  nsJSScriptTimeoutHandler(JSContext* aCx, nsGlobalWindow* aWindow,
                            const nsAString& aExpression, bool* aAllowEval,
                            ErrorResult& aError);
   nsJSScriptTimeoutHandler(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
@@ -51,10 +54,22 @@ public:
                            const nsAString& aExpression);
 
   virtual const nsAString& GetHandlerText() override;
+
   virtual Function* GetCallback() override
   {
     return mFunction;
   }
+
+  virtual const nsTArray<JS::Value>& GetArgs() override
+  {
+    return mArgs;
+  }
+
+  virtual nsresult Call() override
+  {
+    return NS_OK;
+  }
+
   virtual void GetLocation(const char** aFileName, uint32_t* aLineNo,
                            uint32_t* aColumn) override
   {
@@ -63,9 +78,11 @@ public:
     *aColumn = mColumn;
   }
 
-  virtual const nsTArray<JS::Value>& GetArgs() override
+  virtual void MarkForCC() override
   {
-    return mArgs;
+    if (mFunction) {
+      mFunction->MarkForCC();
+    }
   }
 
   void ReleaseJSObjects();
@@ -146,6 +163,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSScriptTimeoutHandler)
   NS_INTERFACE_MAP_ENTRY(nsIScriptTimeoutHandler)
+  NS_INTERFACE_MAP_ENTRY(nsITimeoutHandler)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
