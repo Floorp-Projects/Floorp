@@ -22,9 +22,6 @@
 
 namespace js {
 
-extern JSObject*
-InitSharedArrayBufferClass(JSContext* cx, HandleObject obj);
-
 class Debugger;
 class TypedObjectModuleObject;
 class LexicalEnvironmentObject;

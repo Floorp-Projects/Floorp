@@ -206,6 +206,18 @@ public:
                         bool               aSuppressErrors = false);
 
   /**
+   * Parse aBuffer into a nsCSSValue |aValue|. Will return false
+   * if aBuffer is not a valid CSS margin specification.
+   * One can use nsRuleNode::GetRectValue to compute an nsCSSRect from
+   * the returned nsCSSValue.
+   */
+  bool ParseMarginString(const nsSubstring& aBuffer,
+                         nsIURI*            aURL,
+                         uint32_t           aLineNumber,
+                         nsCSSValue&        aValue,
+                         bool               aSuppressErrors = false);
+
+  /**
    * Parse aBuffer into a selector list.  On success, caller must
    * delete *aSelectorList when done with it.
    */

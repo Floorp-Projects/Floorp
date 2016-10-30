@@ -1375,6 +1375,12 @@ TestIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level, bool* 
 extern bool
 SpeciesConstructor(JSContext* cx, HandleObject obj, HandleValue defaultCtor, MutableHandleValue pctor);
 
+extern bool
+SpeciesConstructor(JSContext* cx, HandleObject obj, JSProtoKey ctorKey, MutableHandleValue pctor);
+
+extern bool
+GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj);
+
 }  /* namespace js */
 
 #endif /* jsobj_h */

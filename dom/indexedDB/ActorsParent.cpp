@@ -19733,7 +19733,7 @@ DatabaseOperationBase::IndexDataValuesFromUpdateInfos(
     const Key& key = updateInfo.value();
     const Key& sortKey = updateInfo.localizedValue();
 
-    bool unique;
+    bool unique = false;
     MOZ_ALWAYS_TRUE(aUniqueIndexTable.Get(indexId, &unique));
 
     IndexDataValue idv(indexId, unique, key, sortKey);
