@@ -149,4 +149,7 @@ testDefault(function* () {}().__proto__.__proto__, "Generator");
 // ES6 25.4.5.4 Promise.prototype [ @@toStringTag ]
 testDefault(Promise.prototype, "Promise");
 
+// AsyncFunction.prototype [ @@toStringTag ]
+testDefault(async function() {}.constructor.prototype, "AsyncFunction");
+
 reportCompare(true, true);
