@@ -76,6 +76,8 @@ CustomEvent::InitCustomEvent(const nsAString& aType,
                              bool aCancelable,
                              nsIVariant* aDetail)
 {
+  NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
+
   AutoJSAPI jsapi;
   NS_ENSURE_STATE(jsapi.Init(GetParentObject()));
   JSContext* cx = jsapi.cx();
@@ -102,6 +104,8 @@ CustomEvent::InitCustomEvent(JSContext* aCx,
                              JS::Handle<JS::Value> aDetail,
                              ErrorResult& aRv)
 {
+  NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
+
   Event::InitEvent(aType, aCanBubble, aCancelable);
   mDetail = aDetail;
 }
