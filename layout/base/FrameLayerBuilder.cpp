@@ -3940,6 +3940,23 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
     return;
   }
 
+  RefPtr<gfxContext> maskCtx = gfxContext::CreateOrNull(dt);
+  gfxPoint offset = nsLayoutUtils::PointToGfxPoint(bounds.TopLeft(), A2D);
+  maskCtx->SetMatrix(gfxMatrix::Translation(-offset));
+
+  if (!aMaskItem->PaintMask(mBuilder, maskCtx)) {
+    // Mostly because of mask resource is not ready.
+    return;
+  }
+
+  // Setup mask layer offset.
+  Matrix4x4 matrix;
+  matrix.PreTranslate(offset.x, offset.y, 0);
+  matrix.PreTranslate(mParameters.mOffset.x, mParameters.mOffset.y, 0);
+  matrix.PreScale(mParameters.mXScale, mParameters.mYScale, 1.0);
+
+  maskLayer->SetBaseTransform(matrix);
+
   RefPtr<ImageContainer> imgContainer =
     imageData.CreateImageAndImageContainer();
   if (!imgContainer) {
@@ -4354,6 +4371,9 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
             SetupMaskLayer(ownLayer, layerClip);
           }
         }
+      } else if (item->GetType() == nsDisplayItem::TYPE_MASK) {
+        nsDisplayMask* maskItem = static_cast<nsDisplayMask*>(item);
+        SetupMaskLayerForCSSMask(ownLayer, maskItem);
       }
 
       ContainerLayer* oldContainer = ownLayer->GetParent();
