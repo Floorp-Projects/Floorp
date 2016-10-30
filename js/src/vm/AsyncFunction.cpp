@@ -25,6 +25,9 @@ GlobalObject::initAsyncFunction(JSContext* cx, Handle<GlobalObject*> global)
     if (!asyncFunctionProto)
         return false;
 
+    if (!DefineToStringTag(cx, asyncFunctionProto, cx->names().AsyncFunction))
+        return false;
+
     RootedValue function(cx, global->getConstructor(JSProto_Function));
     if (!function.toObjectOrNull())
         return false;
