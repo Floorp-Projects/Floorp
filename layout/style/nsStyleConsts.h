@@ -220,20 +220,26 @@ enum class StyleUserInput : uint8_t {
 };
 
 // user-modify
-#define NS_STYLE_USER_MODIFY_READ_ONLY   0
-#define NS_STYLE_USER_MODIFY_READ_WRITE  1
-#define NS_STYLE_USER_MODIFY_WRITE_ONLY  2
+enum class StyleUserModify : uint8_t {
+  ReadOnly,
+  ReadWrite,
+  WriteOnly,
+};
 
 // -moz-window-dragging
-#define NS_STYLE_WINDOW_DRAGGING_DEFAULT 0
-#define NS_STYLE_WINDOW_DRAGGING_DRAG    1
-#define NS_STYLE_WINDOW_DRAGGING_NO_DRAG 2
+enum class StyleWindowDragging : uint8_t {
+  Default,
+  Drag,
+  NoDrag,
+};
 
 // orient
-#define NS_STYLE_ORIENT_INLINE     0
-#define NS_STYLE_ORIENT_BLOCK      1
-#define NS_STYLE_ORIENT_HORIZONTAL 2
-#define NS_STYLE_ORIENT_VERTICAL   3
+enum class StyleOrient : uint8_t {
+  Inline,
+  Block,
+  Horizontal,
+  Vertical,
+};
 
 #define NS_RADIUS_FARTHEST_SIDE 0
 #define NS_RADIUS_CLOSEST_SIDE  1

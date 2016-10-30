@@ -3,7 +3,6 @@
 /* global XPCOMUtils, PlacesUtils, PlacesTestUtils, PlacesProvider, NetUtil */
 /* global do_get_profile, run_next_test, add_task */
 /* global equal, ok */
-/* exported run_test */
 
 const {
   utils: Cu,

@@ -1,8 +1,9 @@
 // Parent config file for all browser-chrome files.
 module.exports = {
   "rules": {
-    "mozilla/import-headjs-globals": 2,
-    "mozilla/import-browserjs-globals": 2,
+    "mozilla/import-headjs-globals": 1,
+    "mozilla/import-browserjs-globals": 1,
+    "mozilla/mark-test-function-used": 1,
   },
 
   "env": {

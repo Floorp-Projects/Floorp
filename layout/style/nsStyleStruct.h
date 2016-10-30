@@ -2820,7 +2820,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   uint8_t mOverflowY;           // [reset] see nsStyleConsts.h
   uint8_t mOverflowClipBox;     // [reset] see nsStyleConsts.h
   uint8_t mResize;              // [reset] see nsStyleConsts.h
-  uint8_t mOrient;              // [reset] see nsStyleConsts.h
+  mozilla::StyleOrient mOrient; // [reset] see nsStyleConsts.h
   uint8_t mIsolation;           // [reset] see nsStyleConsts.h
   uint8_t mTopLayer;            // [reset] see nsStyleConsts.h
   uint8_t mWillChangeBitField;  // [reset] see nsStyleConsts.h. Stores a
@@ -3322,11 +3322,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset
            nsChangeHint_ClearAncestorIntrinsics;
   }
 
-  mozilla::StyleUserSelect mUserSelect;   // [reset] (selection-style)
-  uint8_t   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)
-  uint8_t   mIMEMode;         // [reset]
-  uint8_t   mWindowDragging;  // [reset]
-  uint8_t   mWindowShadow;    // [reset]
+  mozilla::StyleUserSelect     mUserSelect;     // [reset](selection-style)
+  uint8_t mForceBrokenImageIcon; // [reset] (0 if not forcing, otherwise forcing)
+  uint8_t                      mIMEMode;        // [reset]
+  mozilla::StyleWindowDragging mWindowDragging; // [reset]
+  uint8_t                      mWindowShadow;   // [reset]
 };
 
 struct nsCursorImage
@@ -3398,7 +3398,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUserInterface
   }
 
   mozilla::StyleUserInput   mUserInput;       // [inherited]
-  uint8_t                   mUserModify;      // [inherited] (modify-content)
+  mozilla::StyleUserModify  mUserModify;      // [inherited] (modify-content)
   mozilla::StyleUserFocus   mUserFocus;       // [inherited] (auto-select)
   uint8_t                   mPointerEvents;   // [inherited] see nsStyleConsts.h
 

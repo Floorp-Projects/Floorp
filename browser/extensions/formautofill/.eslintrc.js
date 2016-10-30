@@ -13,7 +13,6 @@ module.exports = { // eslint-disable-line no-undef
   "rules": {
     // Rules from the mozilla plugin
     "mozilla/balanced-listeners": 2,
-    "mozilla/mark-test-function-used": 1,
     "mozilla/no-aArgs": 1,
     "mozilla/no-cpows-in-tests": 1,
     "mozilla/var-only-at-top-level": 1,

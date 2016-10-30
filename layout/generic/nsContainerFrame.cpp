@@ -1783,15 +1783,15 @@ nsContainerFrame::PullNextInFlowChild(ContinuationTraversingState& aState)
 bool
 nsContainerFrame::ResolvedOrientationIsVertical()
 {
-  uint8_t orient = StyleDisplay()->mOrient;
+  StyleOrient orient = StyleDisplay()->mOrient;
   switch (orient) {
-    case NS_STYLE_ORIENT_HORIZONTAL:
+    case StyleOrient::Horizontal:
       return false;
-    case NS_STYLE_ORIENT_VERTICAL:
+    case StyleOrient::Vertical:
       return true;
-    case NS_STYLE_ORIENT_INLINE:
+    case StyleOrient::Inline:
       return GetWritingMode().IsVertical();
-    case NS_STYLE_ORIENT_BLOCK:
+    case StyleOrient::Block:
       return !GetWritingMode().IsVertical();
   }
   NS_NOTREACHED("unexpected -moz-orient value");
