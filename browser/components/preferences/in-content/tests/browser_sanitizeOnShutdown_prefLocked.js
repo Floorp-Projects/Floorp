@@ -16,12 +16,14 @@ function testPrefStateMatchesLockedState() {
   let preference = doc.getElementById("privacy.sanitize.sanitizeOnShutdown");
   is(checkbox.disabled, preference.locked, "Always Clear checkbox should be enabled when preference is not locked.");
 
+  Services.prefs.clearUserPref("privacy.history.custom");
   gBrowser.removeCurrentTab();
 }
 
 add_task(function setup() {
   registerCleanupFunction(function resetPreferences() {
     Services.prefs.unlockPref("privacy.sanitize.sanitizeOnShutdown");
+    Services.prefs.clearUserPref("privacy.history.custom");
   });
 });
 
