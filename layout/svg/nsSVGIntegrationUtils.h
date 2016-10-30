@@ -177,6 +177,12 @@ public:
   DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity, MaskUsage& aUsage);
 
   /**
+   * Return true if all the mask resource of aFrame are ready.
+   */
+  static bool
+  IsMaskResourceReady(nsIFrame* aFrame);
+
+  /**
    * Paint non-SVG frame with filter and opacity effect.
    */
   static DrawResult
