@@ -73,6 +73,7 @@ let expectedBackgroundApis = [
   "runtime.getBackgroundPage",
   "runtime.getBrowserInfo",
   "runtime.getPlatformInfo",
+  "runtime.onInstalled",
   "runtime.onUpdateAvailable",
   "runtime.openOptionsPage",
   "runtime.reload",

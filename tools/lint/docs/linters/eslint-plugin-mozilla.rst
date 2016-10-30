@@ -72,8 +72,9 @@ The following patterns are supported:
 mark-test-function-used
 -----------------------
 
-Simply marks test (the test method) as used. This avoids ESLint telling
-us that the function is never called.
+Simply marks `test` (the test method) or `run_test` as used when in mochitests
+or xpcshell tests respectively. This avoids ESLint telling us that the function
+is never called.
 
 
 no-aArgs
