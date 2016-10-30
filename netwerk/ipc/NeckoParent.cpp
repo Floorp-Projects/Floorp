@@ -114,16 +114,32 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
                                  PContentParent* aContent,
                                  DocShellOriginAttributes& aAttrs)
 {
-  if (UsingNeckoIPCSecurity()) {
-    if (!aSerialized.IsNotNull()) {
+  if (!aSerialized.IsNotNull()) {
+    if (UsingNeckoIPCSecurity()) {
       CrashWithReason("GetValidatedAppInfo | SerializedLoadContext from child is null");
       return "SerializedLoadContext from child is null";
     }
+
+    // If serialized is null, we cannot validate anything. We have to assume
+    // that this requests comes from a SystemPrincipal.
+    aAttrs = DocShellOriginAttributes(NECKO_NO_APP_ID, false);
+    return nullptr;
+  }
+
+  nsTArray<TabContext> contextArray =
+    static_cast<ContentParent*>(aContent)->GetManagedTabContext();
+  if (contextArray.IsEmpty()) {
+    if (UsingNeckoIPCSecurity()) {
+      CrashWithReason("GetValidatedAppInfo | ContentParent does not have any PBrowsers");
+      return "ContentParent does not have any PBrowsers";
+    }
+
+    // We are running xpcshell tests
+    aAttrs = aSerialized.mOriginAttributes;
+    return nullptr;
   }
 
   nsAutoCString debugString;
-  nsTArray<TabContext> contextArray =
-    static_cast<ContentParent*>(aContent)->GetManagedTabContext();
   for (uint32_t i = 0; i < contextArray.Length(); i++) {
     TabContext tabContext = contextArray[i];
     uint32_t appId = tabContext.OwnOrContainingAppId();
@@ -166,31 +182,16 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
     return nullptr;
   }
 
-  if (contextArray.Length() != 0) {
-    nsAutoCString errorString;
-    errorString.Append("GetValidatedAppInfo | App does not have permission -");
-    errorString.Append(debugString);
+  nsAutoCString errorString;
+  errorString.Append("GetValidatedAppInfo | App does not have permission -");
+  errorString.Append(debugString);
 
-    // Leak the buffer on the heap to make sure that it lives long enough, as
-    // MOZ_CRASH_ANNOTATE expects the pointer passed to it to live to the end of
-    // the program.
-    char * error = strdup(errorString.BeginReading());
-    CrashWithReason(error);
-    return "App does not have permission";
-  }
-
-  if (!UsingNeckoIPCSecurity()) {
-    // We are running xpcshell tests
-    if (aSerialized.IsNotNull()) {
-      aAttrs = aSerialized.mOriginAttributes;
-    } else {
-      aAttrs = DocShellOriginAttributes(NECKO_NO_APP_ID, false);
-    }
-    return nullptr;
-  }
-
-  CrashWithReason("GetValidatedAppInfo | ContentParent does not have any PBrowsers");
-  return "ContentParent does not have any PBrowsers";
+  // Leak the buffer on the heap to make sure that it lives long enough, as
+  // MOZ_CRASH_ANNOTATE expects the pointer passed to it to live to the end of
+  // the program.
+  char * error = strdup(errorString.BeginReading());
+  CrashWithReason(error);
+  return "App does not have permission";
 }
 
 const char *

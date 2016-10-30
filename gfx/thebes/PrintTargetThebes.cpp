@@ -36,6 +36,10 @@ already_AddRefed<DrawTarget>
 PrintTargetThebes::MakeDrawTarget(const IntSize& aSize,
                                   DrawEventRecorder* aRecorder)
 {
+  // This should not be called outside of BeginPage()/EndPage() calls since
+  // some backends can only provide a valid DrawTarget at that time.
+  MOZ_ASSERT(mHasActivePage, "We can't guarantee a valid DrawTarget");
+
   RefPtr<gfx::DrawTarget> dt =
     gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mGfxSurface, aSize);
   if (!dt || !dt->IsValid()) {
@@ -50,6 +54,20 @@ PrintTargetThebes::MakeDrawTarget(const IntSize& aSize,
   }
 
   return dt.forget();
+}
+
+already_AddRefed<DrawTarget>
+PrintTargetThebes::GetReferenceDrawTarget()
+{
+  if (!mRefDT) {
+    RefPtr<gfx::DrawTarget> dt =
+      gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mGfxSurface, mSize);
+    if (!dt || !dt->IsValid()) {
+      return nullptr;
+    }
+    mRefDT = dt->CreateSimilarDrawTarget(IntSize(1,1), dt->GetFormat());
+  }
+  return do_AddRef(mRefDT);
 }
 
 nsresult
