@@ -44,7 +44,6 @@ const ENGINE_MODULES = {
   Password: "passwords.js",
   Prefs: "prefs.js",
   Tab: "tabs.js",
-  ExtensionStorage: "extension-storage.js",
 };
 
 const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
