@@ -1,7 +1,6 @@
 "use strict";
 
 /* global XPCOMUtils, NewTabSearchProvider, run_next_test, ok, equal, do_check_true, do_get_profile, Services */
-/* exported run_test */
 /* jscs:disable requireCamelCaseOrUpperCaseIdentifiers */
 
 const Cu = Components.utils;
@@ -81,4 +80,3 @@ add_task(function* test_search() {
   equal(expectedEngineName, actualEngineName, `emitter set the correct engine ${expectedEngineName}`);
   NewTabSearchProvider.search.uninit();
 });
-

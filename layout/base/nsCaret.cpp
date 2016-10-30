@@ -514,7 +514,7 @@ nsCaret::GetPaintGeometry(nsRect* aRect)
   // now we have a frame, check whether it's appropriate to show the caret here
   const nsStyleUserInterface* userinterface = frame->StyleUserInterface();
   if ((!mIgnoreUserModify &&
-       userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
+       userinterface->mUserModify == StyleUserModify::ReadOnly) ||
       userinterface->mUserInput == StyleUserInput::None ||
       userinterface->mUserInput == StyleUserInput::Disabled) {
     return nullptr;

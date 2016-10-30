@@ -56,6 +56,7 @@
 #include "nsSize.h"
 #include "nsCheapSets.h"
 #include "mozilla/dom/ImageBitmapSource.h"
+#include "mozilla/dom/Timeout.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -85,6 +86,7 @@ class nsIControllers;
 class nsIJSID;
 class nsIScriptContext;
 class nsIScriptTimeoutHandler;
+class nsITimeoutHandler;
 class nsIWebBrowserChrome;
 class mozIDOMWindowProxy;
 
@@ -112,6 +114,8 @@ class External;
 class Function;
 class Gamepad;
 enum class ImageBitmapFormat : uint32_t;
+class IdleRequest;
+class IdleRequestCallback;
 class Location;
 class MediaQueryList;
 class MozSelfSupport;
@@ -124,6 +128,7 @@ class RequestOrUSVString;
 class Selection;
 class SpeechSynthesis;
 class TabGroup;
+class Timeout;
 class U2F;
 class VRDisplay;
 class VREventObserver;
@@ -150,69 +155,6 @@ NS_CreateJSTimeoutHandler(JSContext* aCx, nsGlobalWindow *aWindow,
                           mozilla::ErrorResult& aError);
 
 extern const js::Class OuterWindowProxyClass;
-
-/*
- * Timeout struct that holds information about each script
- * timeout.  Holds a strong reference to an nsIScriptTimeoutHandler, which
- * abstracts the language specific cruft.
- */
-struct nsTimeout final
-  : mozilla::LinkedListElement<nsTimeout>
-{
-private:
-  ~nsTimeout();
-
-public:
-  nsTimeout();
-
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTimeout)
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsTimeout)
-
-  nsresult InitTimer(uint32_t aDelay);
-
-  bool HasRefCntOne();
-
-  // Window for which this timeout fires
-  RefPtr<nsGlobalWindow> mWindow;
-
-  // The actual timer object
-  nsCOMPtr<nsITimer> mTimer;
-
-  // True if the timeout was cleared
-  bool mCleared;
-
-  // True if this is one of the timeouts that are currently running
-  bool mRunning;
-
-  // True if this is a repeating/interval timer
-  bool mIsInterval;
-
-  // Returned as value of setTimeout()
-  uint32_t mPublicId;
-
-  // Interval in milliseconds
-  uint32_t mInterval;
-
-  // mWhen and mTimeRemaining can't be in a union, sadly, because they
-  // have constructors.
-  // Nominal time to run this timeout.  Use only when timeouts are not
-  // suspended.
-  mozilla::TimeStamp mWhen;
-  // Remaining time to wait.  Used only when timeouts are suspended.
-  mozilla::TimeDuration mTimeRemaining;
-
-  // stack depth at which timeout is firing
-  uint32_t mFiringDepth;
-
-  uint32_t mNestingLevel;
-
-  // The popup state at timeout creation time if not created from
-  // another timeout
-  PopupControlState mPopupState;
-
-  // The language-specific information about the callback.
-  nsCOMPtr<nsIScriptTimeoutHandler> mScriptHandler;
-};
 
 struct IdleObserverHolder
 {
@@ -811,6 +753,7 @@ public:
 
   // Update the VR displays for this window
   bool UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDisplays);
+
   // Inner windows only.
   // Called to inform that the set of active VR displays has changed.
   void NotifyActiveVRDisplaysChanged();
@@ -1127,6 +1070,14 @@ public:
   int32_t RequestAnimationFrame(mozilla::dom::FrameRequestCallback& aCallback,
                                 mozilla::ErrorResult& aError);
   void CancelAnimationFrame(int32_t aHandle, mozilla::ErrorResult& aError);
+
+  uint32_t RequestIdleCallback(JSContext* aCx,
+                               mozilla::dom::IdleRequestCallback& aCallback,
+                               const mozilla::dom::IdleRequestOptions& aOptions,
+                               mozilla::ErrorResult& aError);
+  void CancelIdleCallback(uint32_t aHandle);
+
+
 #ifdef MOZ_WEBSPEECH
   mozilla::dom::SpeechSynthesis*
     GetSpeechSynthesis(mozilla::ErrorResult& aError);
@@ -1298,7 +1249,6 @@ public:
   already_AddRefed<nsWindowRoot> GetWindowRoot(mozilla::ErrorResult& aError);
 
   mozilla::dom::Performance* GetPerformance();
-
 protected:
   // Web IDL helpers
 
@@ -1509,9 +1459,10 @@ public:
   // Timeout Functions
   // Language agnostic timeout function (all args passed).
   // |interval| is in milliseconds.
-  nsresult SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
-                                int32_t interval,
-                                bool aIsInterval, int32_t* aReturn);
+  nsresult SetTimeoutOrInterval(nsITimeoutHandler* aHandler,
+                                int32_t interval, bool aIsInterval,
+                                mozilla::dom::Timeout::Reason aReason,
+                                int32_t* aReturn);
   int32_t SetTimeoutOrInterval(JSContext* aCx,
                                mozilla::dom::Function& aFunction,
                                int32_t aTimeout,
@@ -1520,27 +1471,27 @@ public:
   int32_t SetTimeoutOrInterval(JSContext* aCx, const nsAString& aHandler,
                                int32_t aTimeout, bool aIsInterval,
                                mozilla::ErrorResult& aError);
-  void ClearTimeoutOrInterval(int32_t aTimerID);
+  void ClearTimeoutOrInterval(int32_t aTimerId,
+                              mozilla::dom::Timeout::Reason aReason);
 
   // JS specific timeout functions (JS args grabbed from context).
   nsresult ResetTimersForNonBackgroundWindow();
 
   // The timeout implementation functions.
-  void RunTimeout(nsTimeout *aTimeout);
+  void RunTimeout(mozilla::dom::Timeout* aTimeout);
   void RunTimeout() { RunTimeout(nullptr); }
   // Return true if |aTimeout| was cleared while its handler ran.
-  bool RunTimeoutHandler(nsTimeout* aTimeout, nsIScriptContext* aScx);
+  bool RunTimeoutHandler(mozilla::dom::Timeout* aTimeout, nsIScriptContext* aScx);
   // Return true if |aTimeout| needs to be reinserted into the timeout list.
-  bool RescheduleTimeout(nsTimeout* aTimeout, const TimeStamp& now,
+  bool RescheduleTimeout(mozilla::dom::Timeout* aTimeout, const TimeStamp& now,
                          bool aRunningPendingTimeouts);
 
   void ClearAllTimeouts();
   // Insert aTimeout into the list, before all timeouts that would
   // fire after it, but no earlier than mTimeoutInsertionPoint, if any.
-  void InsertTimeoutIntoList(nsTimeout *aTimeout);
+  void InsertTimeoutIntoList(mozilla::dom::Timeout* aTimeout);
   static void TimerCallback(nsITimer *aTimer, void *aClosure);
-  static void TimerNameCallback(nsITimer* aTimer, void* aClosure, char* aBuf,
-                                size_t aLen);
+  uint32_t GetTimeoutId(mozilla::dom::Timeout::Reason aReason);
 
   // Helper Functions
   already_AddRefed<nsIDocShellTreeOwner> GetTreeOwner();
@@ -1850,7 +1801,7 @@ protected:
   RefPtr<mozilla::dom::BarProp> mPersonalbar;
   RefPtr<mozilla::dom::BarProp> mStatusbar;
   RefPtr<mozilla::dom::BarProp> mScrollbars;
-  RefPtr<nsDOMWindowUtils>    mWindowUtils;
+  RefPtr<nsDOMWindowUtils>      mWindowUtils;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
   RefPtr<nsGlobalWindowObserver> mObserver; // Inner windows only.
@@ -1875,13 +1826,13 @@ protected:
   // non-null.  In that case, the dummy timeout pointed to by
   // mTimeoutInsertionPoint may have a later mWhen than some of the timeouts
   // that come after it.
-  mozilla::LinkedList<nsTimeout> mTimeouts;
+  mozilla::LinkedList<mozilla::dom::Timeout> mTimeouts;
   // If mTimeoutInsertionPoint is non-null, insertions should happen after it.
   // This is a dummy timeout at the moment; if that ever changes, the logic in
   // ResetTimersForNonBackgroundWindow needs to change.
-  nsTimeout*                    mTimeoutInsertionPoint;
-  uint32_t                      mTimeoutPublicIdCounter;
-  uint32_t                      mTimeoutFiringDepth;
+  mozilla::dom::Timeout*      mTimeoutInsertionPoint;
+  uint32_t                    mTimeoutIdCounter;
+  uint32_t                    mTimeoutFiringDepth;
   RefPtr<mozilla::dom::Location> mLocation;
   RefPtr<nsHistory>           mHistory;
   RefPtr<mozilla::dom::CustomElementRegistry> mCustomElements;
@@ -1899,6 +1850,22 @@ protected:
   uint32_t mFocusMethod;
 
   uint32_t mSerial;
+
+  void DisableIdleCallbackRequests();
+  void UnthrottleIdleCallbackRequests();
+
+  void PostThrottledIdleCallback();
+
+  typedef mozilla::LinkedList<mozilla::dom::IdleRequest> IdleRequests;
+  static void InsertIdleCallbackIntoList(mozilla::dom::IdleRequest* aRequest,
+                                         IdleRequests& aList);
+
+   // The current idle request callback timeout handle
+  uint32_t mIdleCallbackTimeoutCounter;
+  // The current idle request callback handle
+  uint32_t mIdleRequestCallbackCounter;
+  IdleRequests mIdleRequestCallbacks;
+  IdleRequests mThrottledIdleRequestCallbacks;
 
 #ifdef DEBUG
   bool mSetOpenerWindowCalled;

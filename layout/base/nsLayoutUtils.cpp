@@ -151,6 +151,13 @@ using namespace mozilla::gfx;
 #define FLOAT_LOGICAL_VALUES_ENABLED_PREF_NAME "layout.css.float-logical-values.enabled"
 #define BG_CLIP_TEXT_ENABLED_PREF_NAME "layout.css.background-clip-text.enabled"
 
+// The time in number of frames that we estimate for a refresh driver
+// to be quiescent
+#define DEFAULT_QUIESCENT_FRAMES 2
+// The time (milliseconds) we estimate is needed between the end of an
+// idle time and the next Tick.
+#define DEFAULT_IDLE_PERIOD_TIME_LIMIT 3.0f
+
 #ifdef DEBUG
 // TODO: remove, see bug 598468.
 bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
@@ -174,6 +181,8 @@ typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 #ifdef MOZ_STYLO
 /* static */ bool nsLayoutUtils::sStyloEnabled;
 #endif
+/* static */ uint32_t nsLayoutUtils::sIdlePeriodDeadlineLimit;
+/* static */ uint32_t nsLayoutUtils::sQuiescentFramesBeforeIdlePeriod;
 
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
 
@@ -7871,6 +7880,12 @@ nsLayoutUtils::Initialize()
   Preferences::AddBoolVarCache(&sStyloEnabled,
                                "layout.css.servo.enabled");
 #endif
+  Preferences::AddUintVarCache(&sIdlePeriodDeadlineLimit,
+                               "layout.idle_period.time_limit",
+                               DEFAULT_IDLE_PERIOD_TIME_LIMIT);
+  Preferences::AddUintVarCache(&sQuiescentFramesBeforeIdlePeriod,
+                               "layout.idle_period.required_quiescent_frames",
+                               DEFAULT_QUIESCENT_FRAMES);
 
   for (auto& callback : kPrefCallbacks) {
     Preferences::RegisterCallbackAndCall(callback.func, callback.name);

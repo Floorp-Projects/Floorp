@@ -121,8 +121,11 @@ public:
   using nsIConstraintValidation::Validity;
   using nsGenericHTMLFormElementWithState::GetForm;
 
+  enum class FromClone { no, yes };
+
   HTMLInputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
-                   mozilla::dom::FromParser aFromParser);
+                   mozilla::dom::FromParser aFromParser,
+                   FromClone aFromClone = FromClone::no);
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLInputElement, input)
 
@@ -1558,7 +1561,7 @@ protected:
   bool                     mChecked             : 1;
   bool                     mHandlingSelectEvent : 1;
   bool                     mShouldInitChecked   : 1;
-  bool                     mParserCreating      : 1;
+  bool                     mDoneCreating        : 1;
   bool                     mInInternalActivate  : 1;
   bool                     mCheckedIsToggled    : 1;
   bool                     mIndeterminate       : 1;

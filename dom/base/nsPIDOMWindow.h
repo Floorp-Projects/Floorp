@@ -36,7 +36,6 @@ class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;
 class nsPIWindowRoot;
 class nsXBLPrototypeHandler;
-struct nsTimeout;
 
 typedef uint32_t SuspendTypes;
 
@@ -48,6 +47,7 @@ class TabGroup;
 class Element;
 class Performance;
 class ServiceWorkerRegistration;
+class Timeout;
 class CustomElementRegistry;
 } // namespace dom
 } // namespace mozilla
@@ -627,7 +627,7 @@ protected:
   uint32_t               mModalStateDepth;
 
   // These variables are only used on inner windows.
-  nsTimeout             *mRunningTimeout;
+  mozilla::dom::Timeout *mRunningTimeout;
 
   uint32_t               mMutationBits;
 
