@@ -3878,6 +3878,9 @@ protected:
  */
 class nsDisplayMask : public nsDisplaySVGEffects {
 public:
+  typedef mozilla::layers::ImageLayer ImageLayer;
+  typedef class mozilla::gfx::DrawTarget DrawTarget;
+
   nsDisplayMask(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 nsDisplayList* aList, bool aHandleOpacity,
                 const DisplayItemScrollClip* aScrollClip);
@@ -3912,6 +3915,11 @@ public:
   void PaintAsLayer(nsDisplayListBuilder* aBuilder,
                     nsRenderingContext* aCtx,
                     LayerManager* aManager);
+
+  /*
+   * Paint mask onto aMaskContext in mFrame's coordinate space.
+   */
+  bool PaintMask(nsDisplayListBuilder* aBuilder, gfxContext* aMaskContext);
 
   const nsTArray<nsRect>& GetDestRects()
   {
