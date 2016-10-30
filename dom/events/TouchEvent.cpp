@@ -94,6 +94,8 @@ TouchEvent::InitTouchEvent(const nsAString& aType,
                            TouchList* aTargetTouches,
                            TouchList* aChangedTouches)
 {
+  NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
+
   UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, aDetail);
   mEvent->AsInputEvent()->InitBasicModifiers(aCtrlKey, aAltKey,
                                              aShiftKey, aMetaKey);
