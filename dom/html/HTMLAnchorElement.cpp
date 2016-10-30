@@ -347,11 +347,10 @@ HTMLAnchorElement::ToString(nsAString& aSource)
   return GetHref(aSource);
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP    
 HTMLAnchorElement::GetPing(nsAString& aValue)
 {
-  GetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue);
-  return NS_OK;
+  return GetURIListAttr(nsGkAtoms::ping, aValue);
 }
 
 NS_IMETHODIMP
