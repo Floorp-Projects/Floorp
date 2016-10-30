@@ -41,21 +41,6 @@ function storageApiFactory(context) {
           ]);
         },
       },
-
-      sync: {
-        get: function(keys) {
-          keys = sanitize(keys);
-          return context.childManager.callParentAsyncFunction("storage.sync.get", [
-            keys,
-          ]);
-        },
-        set: function(items) {
-          items = sanitize(items);
-          return context.childManager.callParentAsyncFunction("storage.sync.set", [
-            items,
-          ]);
-        },
-      },
     },
   };
 }
