@@ -91,61 +91,77 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
   return rv;
 }
 
-NS_IMETHODIMP 
-nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx, 
-                                    nsIX509Cert *cert,
-                                    uint32_t *_trust,
-                                    bool *_retval)
+NS_IMETHODIMP
+nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor* ctx,
+                                    nsIX509Cert* cert,
+                            /*out*/ uint32_t* trust,
+                            /*out*/ bool* importConfirmed)
 {
-  nsresult rv;
+  // |ctx| is allowed to be null.
+  NS_ENSURE_ARG(cert);
+  NS_ENSURE_ARG(trust);
+  NS_ENSURE_ARG(importConfirmed);
 
-  nsCOMPtr<nsIMutableArray> dlgArray = nsArrayBase::Create();
-  if (!dlgArray) {
+  nsCOMPtr<nsIMutableArray> argArray = nsArrayBase::Create();
+  if (!argArray) {
     return NS_ERROR_FAILURE;
   }
-  rv = dlgArray->AppendElement(cert, false);
+
+  nsresult rv = argArray->AppendElement(cert, false);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsCOMPtr<nsIDialogParamBlock> dlgParamBlock(
-    do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID));
-  if (!dlgParamBlock) {
-    return NS_ERROR_FAILURE;
-  }
-  rv = dlgParamBlock->SetObjects(dlgArray);
+
+  nsCOMPtr<nsIWritablePropertyBag2> retVals = new nsHashPropertyBag();
+  rv = argArray->AppendElement(retVals, false);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   // Get the parent window for the dialog
   nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
-  rv = nsNSSDialogHelper::openDialog(parent, 
+  rv = nsNSSDialogHelper::openDialog(parent,
                                      "chrome://pippki/content/downloadcert.xul",
-                                     dlgParamBlock);
+                                     argArray);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  int32_t status;
-  int32_t ssl, email, objsign;
+  rv = retVals->GetPropertyAsBool(NS_LITERAL_STRING("importConfirmed"),
+                                  importConfirmed);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  rv = dlgParamBlock->GetInt(1, &status);
-  if (NS_FAILED(rv)) return rv;
-  rv = dlgParamBlock->GetInt(2, &ssl);
-  if (NS_FAILED(rv)) return rv;
-  rv = dlgParamBlock->GetInt(3, &email);
-  if (NS_FAILED(rv)) return rv;
-  rv = dlgParamBlock->GetInt(4, &objsign);
-  if (NS_FAILED(rv)) return rv;
- 
-  *_trust = nsIX509CertDB::UNTRUSTED;
-  *_trust |= (ssl) ? nsIX509CertDB::TRUSTED_SSL : 0;
-  *_trust |= (email) ? nsIX509CertDB::TRUSTED_EMAIL : 0;
-  *_trust |= (objsign) ? nsIX509CertDB::TRUSTED_OBJSIGN : 0;
+  *trust = nsIX509CertDB::UNTRUSTED;
+  if (!*importConfirmed) {
+    return NS_OK;
+  }
 
-  *_retval = (status != 0);
+  bool trustForSSL = false;
+  rv = retVals->GetPropertyAsBool(NS_LITERAL_STRING("trustForSSL"),
+                                  &trustForSSL);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  bool trustForEmail = false;
+  rv = retVals->GetPropertyAsBool(NS_LITERAL_STRING("trustForEmail"),
+                                  &trustForEmail);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  bool trustForObjSign = false;
+  rv = retVals->GetPropertyAsBool(NS_LITERAL_STRING("trustForObjSign"),
+                                  &trustForObjSign);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  return rv;
+  *trust |= trustForSSL ? nsIX509CertDB::TRUSTED_SSL : 0;
+  *trust |= trustForEmail ? nsIX509CertDB::TRUSTED_EMAIL : 0;
+  *trust |= trustForObjSign ? nsIX509CertDB::TRUSTED_OBJSIGN : 0;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

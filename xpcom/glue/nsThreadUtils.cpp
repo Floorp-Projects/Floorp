@@ -7,6 +7,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
+#include "mozilla/TimeStamp.h"
 #include "LeakRefPtr.h"
 
 #ifdef MOZILLA_INTERNAL_API
@@ -32,6 +33,15 @@ using namespace mozilla;
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 
+NS_IMPL_ISUPPORTS(IdlePeriod, nsIIdlePeriod)
+
+NS_IMETHODIMP
+IdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline)
+{
+  *aIdleDeadline = TimeStamp();
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(Runnable, nsIRunnable)
 
 NS_IMETHODIMP
@@ -49,6 +59,15 @@ CancelableRunnable::Cancel()
 {
   // Do nothing
   return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS_INHERITED(IncrementalRunnable, CancelableRunnable,
+                            nsIIncrementalRunnable)
+
+void
+IncrementalRunnable::SetDeadline(TimeStamp aDeadline)
+{
+  // Do nothing
 }
 
 #endif  // XPCOM_GLUE_AVOID_NSPR
@@ -200,6 +219,58 @@ NS_DispatchToMainThread(nsIRunnable* aEvent, uint32_t aDispatchFlags)
 {
   nsCOMPtr<nsIRunnable> event(aEvent);
   return NS_DispatchToMainThread(event.forget(), aDispatchFlags);
+}
+
+nsresult
+NS_DelayedDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs)
+{
+  nsCOMPtr<nsIRunnable> event(aEvent);
+#ifdef MOZILLA_INTERNAL_API
+  nsIThread* thread = NS_GetCurrentThread();
+  if (!thread) {
+    return NS_ERROR_UNEXPECTED;
+  }
+#else
+  nsresult rv;
+  nsCOMPtr<nsIThread> thread;
+  rv = NS_GetCurrentThread(getter_AddRefs(thread));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+#endif
+
+  return thread->DelayedDispatch(event.forget(), aDelayMs);
+}
+
+nsresult
+NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
+{
+  nsresult rv;
+  nsCOMPtr<nsIRunnable> event(aEvent);
+#ifdef MOZILLA_INTERNAL_API
+  nsIThread* thread = NS_GetCurrentThread();
+  if (!thread) {
+    return NS_ERROR_UNEXPECTED;
+  }
+#else
+  nsCOMPtr<nsIThread> thread;
+  rv = NS_GetCurrentThread(getter_AddRefs(thread));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+#endif
+  // To keep us from leaking the runnable if dispatch method fails,
+  // we grab the reference on failures and release it.
+  nsIRunnable* temp = event.get();
+  rv = thread->IdleDispatch(event.forget());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // Dispatch() leaked the reference to the event, but due to caller's
+    // assumptions, we shouldn't leak here. And given we are on the same
+    // thread as the dispatch target, it's mostly safe to do it here.
+    NS_RELEASE(temp);
+  }
+
+  return rv;
 }
 
 #ifndef XPCOM_GLUE_AVOID_NSPR

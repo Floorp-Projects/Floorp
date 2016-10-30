@@ -1364,7 +1364,7 @@ _cairo_dwrite_show_glyphs_on_surface(void			*surface,
     fontArea.bottom = (INT32)(largestY + scaled_font->font_matrix.yy * 2);
     if (fontArea.left < 0)
 	fontArea.left = 0;
-    if (fontArea.top > 0)
+    if (fontArea.top < 0)
 	fontArea.top = 0;
     if (fontArea.bottom > dst->extents.height) {
 	fontArea.bottom = dst->extents.height;
