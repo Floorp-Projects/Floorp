@@ -398,5 +398,62 @@ IProtocol::ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool a
     return Some(listener);
 }
 
+int32_t
+IProtocol::Register(IProtocol* aRouted)
+{
+  return Manager()->Register(aRouted);
+}
+
+int32_t
+IProtocol::RegisterID(IProtocol* aRouted, int32_t aId)
+{
+  return Manager()->RegisterID(aRouted, aId);
+}
+
+IProtocol*
+IProtocol::Lookup(int32_t aId)
+{
+  return Manager()->Lookup(aId);
+}
+
+void
+IProtocol::Unregister(int32_t aId)
+{
+  Manager()->Unregister(aId);
+}
+
+Shmem::SharedMemory*
+IProtocol::CreateSharedMemory(size_t aSize,
+                              SharedMemory::SharedMemoryType aType,
+                              bool aUnsafe,
+                              int32_t* aId)
+{
+  return Manager()->CreateSharedMemory(aSize, aType, aUnsafe, aId);
+}
+
+Shmem::SharedMemory*
+IProtocol::LookupSharedMemory(int32_t aId)
+{
+  return Manager()->LookupSharedMemory(aId);
+}
+
+bool
+IProtocol::IsTrackingSharedMemory(Shmem::SharedMemory* aSegment)
+{
+  return Manager()->IsTrackingSharedMemory(aSegment);
+}
+
+bool
+IProtocol::DestroySharedMemory(Shmem& aShmem)
+{
+  return Manager()->DestroySharedMemory(aShmem);
+}
+
+ProcessId
+IProtocol::OtherPid() const
+{
+  return Manager()->OtherPid();
+}
+
 } // namespace ipc
 } // namespace mozilla
