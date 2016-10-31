@@ -484,6 +484,26 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   display: none;
 }
 
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {
+  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-richlistitem-insecure-field");
+  height: auto;
+  background-color: #F6F6F6;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-site-icon {
+  display: initial;
+  list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg#icon);
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-title > .ac-text-overflow-container > .ac-title-text {
+  text-overflow: initial;
+  white-space: initial;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-title > label {
+  margin-inline-start: 0;
+}
+
 #PopupSearchAutoComplete {
   -moz-binding: url("chrome://browser/content/search/search.xml#browser-search-autocomplete-result-popup");
 }
