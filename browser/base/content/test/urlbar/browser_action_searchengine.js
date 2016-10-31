@@ -5,8 +5,7 @@ add_task(function* () {
   let originalEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla", {animate: false});
-  yield promiseTabLoaded(gBrowser.selectedTab);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
 
   registerCleanupFunction(() => {
     Services.search.currentEngine = originalEngine;
@@ -29,7 +28,7 @@ add_task(function* () {
      "Result should be a moz-action: for the correct search engine");
   is(result.hasAttribute("image"), false, "Result shouldn't have an image attribute");
 
-  let tabPromise = promiseTabLoaded(gBrowser.selectedTab);
+  let tabPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   result.click();
   yield tabPromise;
 

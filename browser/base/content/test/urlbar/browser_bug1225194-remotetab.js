@@ -7,10 +7,8 @@ add_task(function* test_remotetab_opens() {
     gURLBar.focus();
 
     // The URL is going to open in the current tab as it is currently about:blank
-    let promiseTabLoaded = promiseTabLoadEvent(gBrowser.selectedTab);
-
+    let promiseTabLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     EventUtils.synthesizeKey("VK_RETURN", {});
-
     yield promiseTabLoaded;
 
     Assert.equal(gBrowser.selectedTab.linkedBrowser.currentURI.spec, url, "correct URL loaded");
