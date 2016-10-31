@@ -224,6 +224,12 @@ DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess)
 }
 
 void
+GPUProcessHost::KillProcess()
+{
+  KillHard("DiagnosticKill");
+}
+
+void
 GPUProcessHost::DestroyProcess()
 {
   // Cancel all tasks. We don't want anything triggering after our caller
