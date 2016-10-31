@@ -209,7 +209,7 @@ function spinEventLoop() {
 }
 
 add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", false]]});
+  yield SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", true]]});
   listenForUnexpectedPopupShown();
 });
 
@@ -220,6 +220,24 @@ add_task(function* test_form1_initial_empty() {
   checkACForm("", "");
   let popupState = yield getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
+});
+
+add_task(function* test_form1_warning_entry() {
+  yield SimpleTest.promiseFocus(window);
+  // Trigger autocomplete popup
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  let popupState = yield getPopupState();
+  is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
+
+  doKey("down"); // select insecure warning
+  checkACForm("", ""); // value shouldn't update just by selecting
+  doKey("return"); // not "enter"!
+  yield spinEventLoop(); // let focus happen
+  checkACForm("", "");
 });
 
 add_task(function* test_form1_first_entry() {
@@ -233,6 +251,7 @@ add_task(function* test_form1_first_entry() {
   let popupState = yield getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
 
+  doKey("down"); // skip insecure warning
   doKey("down"); // first
   checkACForm("", ""); // value shouldn't update just by selecting
   doKey("return"); // not "enter"!
@@ -247,6 +266,7 @@ add_task(function* test_form1_second_entry() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   doKey("down"); // first
   doKey("down"); // second
   doKey("return"); // not "enter"!
@@ -261,6 +281,7 @@ add_task(function* test_form1_third_entry() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   doKey("down"); // first
   doKey("down"); // second
   doKey("down"); // third
@@ -276,6 +297,7 @@ add_task(function* test_form1_fourth_entry() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   doKey("down"); // first
   doKey("down"); // second
   doKey("down"); // third
@@ -293,11 +315,13 @@ add_task(function* test_form1_wraparound_first_entry() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   doKey("down"); // first
   doKey("down"); // second
   doKey("down"); // third
   doKey("down"); // fourth
   doKey("down"); // deselects
+  doKey("down"); // skip insecure warning
   doKey("down"); // first
   doKey("return");
   yield promiseFormsProcessed();
@@ -343,6 +367,7 @@ add_task(function* test_form1_wraparound_up_last() {
   doKey("up"); // last entry
   doKey("up");
   doKey("up");
+  doKey("up"); // skip insecure warning
   doKey("up"); // first entry
   doKey("up"); // deselects
   doKey("up"); // last entry
@@ -358,6 +383,7 @@ add_task(function* test_form1_fill_username_without_autofill_right() {
   yield shownPromise;
 
   // Set first entry w/o triggering autocomplete
+  doKey("down"); // skip insecure warning
   doKey("down"); // first
   doKey("right");
   yield spinEventLoop();
@@ -371,6 +397,7 @@ add_task(function* test_form1_fill_username_without_autofill_left() {
   yield shownPromise;
 
   // Set first entry w/o triggering autocomplete
+  doKey("down"); // skip insecure warning
   doKey("down"); // first
   doKey("left");
   checkACForm("tempuser1", ""); // empty password
@@ -386,6 +413,7 @@ add_task(function* test_form1_pageup_first() {
   doKey("down"); // first
   doKey("down"); // second
   doKey("page_up"); // first
+  doKey("down"); // skip insecure warning
   doKey("return");
   yield promiseFormsProcessed();
   checkACForm("tempuser1", "temppass1");
@@ -397,7 +425,7 @@ add_task(function* test_form1_pagedown_last() {
   doKey("down"); // open
   yield shownPromise;
 
-  /* test 13 */
+  // test 13
   // Check last entry (page down)
   doKey("down"); // first
   doKey("page_down"); // last
@@ -429,13 +457,14 @@ add_task(function* test_form1_delete() {
   // Setting uname.value didn't seem to work either. This works with a human
   // driver, so I'm not sure what's up.
 
+  doKey("down"); // skip insecure warning
   // Delete the first entry (of 4), "tempuser1"
   doKey("down");
   var numLogins;
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 5, "Correct number of logins before deleting one");
 
-  let countChangedPromise = notifyMenuChanged(3);
+  let countChangedPromise = notifyMenuChanged(4);
   var deletionPromise = promiseStorageChanged(["removeLogin"]);
   // On OS X, shift-backspace and shift-delete work, just delete does not.
   // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
@@ -457,6 +486,7 @@ add_task(function* test_form1_first_after_deletion() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   // Check the new first entry (of 3)
   doKey("down");
   doKey("return");
@@ -470,6 +500,7 @@ add_task(function* test_form1_delete_second() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   // Delete the second entry (of 3), "testuser3"
   doKey("down");
   doKey("down");
@@ -488,6 +519,7 @@ add_task(function* test_form1_first_after_deletion2() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   // Check the new first entry (of 2)
   doKey("down");
   doKey("return");
@@ -501,7 +533,8 @@ add_task(function* test_form1_delete_last() {
   doKey("down"); // open
   yield shownPromise;
 
-  /* test 54 */
+  doKey("down"); // skip insecure warning
+  // test 54
   // Delete the last entry (of 2), "zzzuser4"
   doKey("down");
   doKey("down");
@@ -520,6 +553,7 @@ add_task(function* test_form1_first_after_3_deletions() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   // Check the only remaining entry
   doKey("down");
   doKey("return");
@@ -533,7 +567,8 @@ add_task(function* test_form1_check_only_entry_remaining() {
   doKey("down"); // open
   yield shownPromise;
 
-  /* test 56 */
+  doKey("down"); // skip insecure warning
+  // test 56
   // Delete the only remaining entry, "testuser2"
   doKey("down");
   doKey("delete", shiftModifier);
@@ -545,7 +580,7 @@ add_task(function* test_form1_check_only_entry_remaining() {
   setupScript.sendSyncMessage("removeLogin", "login0");
 });
 
-/* Tests for single-user forms for ignoring autocomplete=off */
+// Tests for single-user forms for ignoring autocomplete=off
 add_task(function* test_form2() {
   // Turn our attention to form2
   uname = $_(2, "uname");
@@ -557,6 +592,7 @@ add_task(function* test_form2() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   // Check first entry
   doKey("down");
   checkACForm("", ""); // value shouldn't update
@@ -574,6 +610,7 @@ add_task(function* test_form3() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   // Check first entry
   doKey("down");
   checkACForm("", ""); // value shouldn't update
@@ -591,6 +628,7 @@ add_task(function* test_form4() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   // Check first entry
   doKey("down");
   checkACForm("", ""); // value shouldn't update
@@ -608,6 +646,7 @@ add_task(function* test_form5() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   // Check first entry
   doKey("down");
   checkACForm("", ""); // value shouldn't update
@@ -663,6 +702,7 @@ add_task(function* test_form7_2() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   // Check first entry
   doKey("down");
   checkACForm("", ""); // value shouldn't update
@@ -718,7 +758,9 @@ add_task(function* test_form9_filtering() {
   let results = yield shownPromise;
 
   checkACForm("form9userAAB", "");
-  checkArrayValues(results, ["form9userAAB"], "Check dropdown is updated after inserting 'A'");
+  checkArrayValues(results, ["This connection is not secure. Logins entered here could be compromised.", "form9userAAB"],
+                            "Check dropdown is updated after inserting 'A'");
+  doKey("down"); // skip insecure warning
   doKey("down");
   doKey("return");
   yield promiseFormsProcessed();
@@ -731,18 +773,20 @@ add_task(function* test_form9_autocomplete_cache() {
   // autocomplete results.
   setupScript.sendSyncMessage("addLogin", "login8C");
   uname.focus();
-  let promise0 = notifyMenuChanged(0);
+  let promise0 = notifyMenuChanged(1);
+  let shownPromise = promiseACShown();
   sendChar("z");
   yield promise0;
+  yield shownPromise;
   let popupState = yield getPopupState();
-  is(popupState.open, false, "Check popup shouldn't open");
+  is(popupState.open, true, "Check popup should open");
 
   // check that empty results are cached - bug 496466
-  promise0 = notifyMenuChanged(0);
+  promise0 = notifyMenuChanged(1);
   sendChar("z");
   yield promise0;
   popupState = yield getPopupState();
-  is(popupState.open, false, "Check popup stays closed due to cached empty result");
+  is(popupState.open, true, "Check popup stays opened due to cached empty result");
 });
 
 add_task(function* test_form11_recipes() {
@@ -767,6 +811,7 @@ add_task(function* test_form11_recipes() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   doKey("down");
   checkACForm("", ""); // value shouldn't update
   doKey("return"); // not "enter"!
@@ -794,6 +839,7 @@ add_task(function* test_form12_formless() {
   doKey("down"); // open
   yield shownPromise;
 
+  doKey("down"); // skip insecure warning
   // Trigger autocomplete
   doKey("down");
   checkACForm("", ""); // value shouldn't update
