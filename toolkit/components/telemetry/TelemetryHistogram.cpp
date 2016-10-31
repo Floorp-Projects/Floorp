@@ -16,6 +16,8 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/gfx/GPUParent.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticMutex.h"
@@ -100,6 +102,7 @@ using mozilla::Telemetry::KeyedAccumulation;
 #define SUBSESSION_HISTOGRAM_PREFIX "sub#"
 #define KEYED_HISTOGRAM_NAME_SEPARATOR "#"
 #define CONTENT_HISTOGRAM_SUFFIX "#content"
+#define GPU_HISTOGRAM_SUFFIX "#gpu"
 
 namespace {
 
@@ -453,14 +456,10 @@ GetProcessFromName(const nsACString& aString)
   if (StringEndsWith(aString, NS_LITERAL_CSTRING(CONTENT_HISTOGRAM_SUFFIX))) {
     return GeckoProcessType_Content;
   }
+  if (StringEndsWith(aString, NS_LITERAL_CSTRING(GPU_HISTOGRAM_SUFFIX))) {
+    return GeckoProcessType_GPU;
+  }
   return GeckoProcessType_Default;
-}
-
-GeckoProcessType
-GetProcessFromName(const std::string& aString)
-{
-  nsDependentCString string(aString.c_str(), aString.length());
-  return GetProcessFromName(string);
 }
 
 const char*
@@ -471,6 +470,8 @@ SuffixForProcessType(GeckoProcessType aProcessType)
       return nullptr;
     case GeckoProcessType_Content:
       return CONTENT_HISTOGRAM_SUFFIX;
+    case GeckoProcessType_GPU:
+      return GPU_HISTOGRAM_SUFFIX;
     default:
       MOZ_ASSERT_UNREACHABLE("unknown process type");
       return nullptr;
@@ -512,6 +513,7 @@ internal_GetHistogramByEnumId(mozilla::Telemetry::ID id, Histogram **ret, GeckoP
 {
   static Histogram* knownHistograms[mozilla::Telemetry::HistogramCount] = {0};
   static Histogram* knownContentHistograms[mozilla::Telemetry::HistogramCount] = {0};
+  static Histogram* knownGPUHistograms[mozilla::Telemetry::HistogramCount] = {0};
 
   Histogram** knownList = nullptr;
 
@@ -521,6 +523,9 @@ internal_GetHistogramByEnumId(mozilla::Telemetry::ID id, Histogram **ret, GeckoP
     break;
   case GeckoProcessType_Content:
     knownList = knownContentHistograms;
+    break;
+  case GeckoProcessType_GPU:
+    knownList = knownGPUHistograms;
     break;
   default:
     MOZ_ASSERT_UNREACHABLE("unknown process type");
@@ -639,6 +644,13 @@ internal_CloneHistogram(const nsACString& newName,
 
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
 
+GeckoProcessType
+GetProcessFromName(const std::string& aString)
+{
+  nsDependentCString string(aString.c_str(), aString.length());
+  return GetProcessFromName(string);
+}
+
 Histogram*
 internal_GetSubsessionHistogram(Histogram& existing)
 {
@@ -651,6 +663,7 @@ internal_GetSubsessionHistogram(Histogram& existing)
 
   static Histogram* subsession[mozilla::Telemetry::HistogramCount] = {};
   static Histogram* subsessionContent[mozilla::Telemetry::HistogramCount] = {};
+  static Histogram* subsessionGPU[mozilla::Telemetry::HistogramCount] = {};
 
   Histogram** cache = nullptr;
 
@@ -661,6 +674,9 @@ internal_GetSubsessionHistogram(Histogram& existing)
     break;
   case GeckoProcessType_Content:
     cache = subsessionContent;
+    break;
+  case GeckoProcessType_GPU:
+    cache = subsessionGPU;
     break;
   default:
     MOZ_ASSERT_UNREACHABLE("unknown process type");
@@ -2084,6 +2100,13 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
       gKeyedHistograms.Put(contentId,
                            new KeyedHistogram(id, expiration, h.histogramType,
                                               h.min, h.max, h.bucketCount, h.dataset));
+
+
+      nsCString gpuId(id);
+      gpuId.AppendLiteral(GPU_HISTOGRAM_SUFFIX);
+      gKeyedHistograms.Put(gpuId,
+                           new KeyedHistogram(id, expiration, h.histogramType,
+                                              h.min, h.max, h.bucketCount, h.dataset));
     }
   }
 
@@ -2381,6 +2404,13 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
     return NS_ERROR_FAILURE;
   ret.setObject(*root_obj);
 
+  // Include the GPU process in histogram snapshots only if we actually tried
+  // to launch a process for it.
+  bool includeGPUProcess = false;
+  if (auto gpm = mozilla::gfx::GPUProcessManager::Get()) {
+    includeGPUProcess = gpm->AttemptedGPUProcess();
+  }
+
   // Ensure that all the HISTOGRAM_FLAG & HISTOGRAM_COUNT histograms have
   // been created, so that their values are snapshotted.
   for (size_t i = 0; i < mozilla::Telemetry::HistogramCount; ++i) {
@@ -2399,6 +2429,11 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
 
       rv = internal_GetHistogramByEnumId(id, &h, GeckoProcessType_Content);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+      if (includeGPUProcess) {
+        rv = internal_GetHistogramByEnumId(id, &h, GeckoProcessType_GPU);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+      }
     }
   }
 
@@ -2687,17 +2722,36 @@ TelemetryHistogram::IPCTimerFired(nsITimer* aTimer, void* aClosure)
     }
   }
 
-  mozilla::dom::ContentChild* contentChild = mozilla::dom::ContentChild::GetSingleton();
-  mozilla::Unused << NS_WARN_IF(!contentChild);
-  if (contentChild) {
-    if (accumulationsToSend.Length()) {
-      mozilla::Unused <<
-        NS_WARN_IF(!contentChild->SendAccumulateChildHistogram(accumulationsToSend));
+  switch (XRE_GetProcessType()) {
+    case GeckoProcessType_Content: {
+      mozilla::dom::ContentChild* contentChild = mozilla::dom::ContentChild::GetSingleton();
+      mozilla::Unused << NS_WARN_IF(!contentChild);
+      if (contentChild) {
+        if (accumulationsToSend.Length()) {
+          mozilla::Unused <<
+            NS_WARN_IF(!contentChild->SendAccumulateChildHistogram(accumulationsToSend));
+        }
+        if (keyedAccumulationsToSend.Length()) {
+          mozilla::Unused <<
+            NS_WARN_IF(!contentChild->SendAccumulateChildKeyedHistogram(keyedAccumulationsToSend));
+        }
+      }
+      break;
     }
-    if (keyedAccumulationsToSend.Length()) {
-      mozilla::Unused <<
-        NS_WARN_IF(!contentChild->SendAccumulateChildKeyedHistogram(keyedAccumulationsToSend));
+    case GeckoProcessType_GPU: {
+      if (mozilla::gfx::GPUParent* gpu = mozilla::gfx::GPUParent::GetSingleton()) {
+        if (accumulationsToSend.Length()) {
+          mozilla::Unused << gpu->SendAccumulateChildHistogram(accumulationsToSend);
+        }
+        if (keyedAccumulationsToSend.Length()) {
+          mozilla::Unused << gpu->SendAccumulateChildKeyedHistogram(keyedAccumulationsToSend);
+        }
+      }
+      break;
     }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported process type");
+      break;
   }
 
   gIPCTimerArmed = false;
