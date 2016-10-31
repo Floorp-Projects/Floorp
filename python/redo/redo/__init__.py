@@ -53,24 +53,36 @@ def retrier(attempts=5, sleeptime=10, max_sleeptime=300, sleepscale=1.5, jitter=
         ...         break
         ...     n += 1
         ... else:
-        ...     print "max tries hit"
+        ...     print("max tries hit")
         max tries hit
     """
+    jitter = jitter or 0  # py35 barfs on the next line if jitter is None
+    if jitter > sleeptime:
+        # To prevent negative sleep times
+        raise Exception('jitter ({}) must be less than sleep time ({})'.format(jitter, sleeptime))
+
+    sleeptime_real = sleeptime
     for _ in range(attempts):
         log.debug("attempt %i/%i", _ + 1, attempts)
-        yield
-        if jitter:
-            sleeptime += random.randint(-jitter, jitter)
-            sleeptime = max(sleeptime, 0)
 
-        if _ == attempts - 1:
-            # Don't need to sleep the last time
-            break
-        log.debug("sleeping for %.2fs (attempt %i/%i)", sleeptime, _ + 1, attempts)
-        time.sleep(sleeptime)
+        yield sleeptime_real
+
+        if jitter:
+            sleeptime_real = sleeptime + random.randint(-jitter, jitter)
+            # our jitter should scale along with the sleeptime
+            jitter = int(jitter * sleepscale)
+        else:
+            sleeptime_real = sleeptime
+
         sleeptime *= sleepscale
-        if sleeptime > max_sleeptime:
-            sleeptime = max_sleeptime
+
+        if sleeptime_real > max_sleeptime:
+            sleeptime_real = max_sleeptime
+
+        # Don't need to sleep the last time
+        if _ < attempts - 1:
+            log.debug("sleeping for %.2fs (attempt %i/%i)", sleeptime_real, _ + 1, attempts)
+            time.sleep(sleeptime_real)
 
 
 def retry(action, attempts=5, sleeptime=60, max_sleeptime=5 * 60,
@@ -100,7 +112,7 @@ def retry(action, attempts=5, sleeptime=60, max_sleeptime=5 * 60,
                             consider using functools.partial or a lambda
                             function.
         args (tuple): positional arguments to call `action` with
-        hwargs (dict): keyword arguments to call `action` with
+        kwargs (dict): keyword arguments to call `action` with
 
     Returns:
         Whatever action(*args, **kwargs) returns
@@ -114,7 +126,7 @@ def retry(action, attempts=5, sleeptime=60, max_sleeptime=5 * 60,
         >>> def foo():
         ...     global count
         ...     count += 1
-        ...     print count
+        ...     print(count)
         ...     if count < 3:
         ...         raise ValueError("count is too small!")
         ...     return "success!"
@@ -126,6 +138,16 @@ def retry(action, attempts=5, sleeptime=60, max_sleeptime=5 * 60,
     """
     assert callable(action)
     assert not cleanup or callable(cleanup)
+
+    action_name = getattr(action, '__name__', action)
+    if args or kwargs:
+        log_attempt_format = ("retry: calling %s with args: %s,"
+                              " kwargs: %s, attempt #%%d"
+                              % (action_name, args, kwargs))
+    else:
+        log_attempt_format = ("retry: calling %s, attempt #%%d"
+                              % action_name)
+
     if max_sleeptime < sleeptime:
         log.debug("max_sleeptime %d less than sleeptime %d" % (
             max_sleeptime, sleeptime))
@@ -135,15 +157,15 @@ def retry(action, attempts=5, sleeptime=60, max_sleeptime=5 * 60,
                      max_sleeptime=max_sleeptime, sleepscale=sleepscale,
                      jitter=jitter):
         try:
-            log.info("retry: Calling %s with args: %s, kwargs: %s, "
-                     "attempt #%d" % (action, str(args), str(kwargs), n))
+            logfn = log.info if n != 1 else log.debug
+            logfn(log_attempt_format, n)
             return action(*args, **kwargs)
         except retry_exceptions:
             log.debug("retry: Caught exception: ", exc_info=True)
             if cleanup:
                 cleanup()
             if n == attempts:
-                log.info("retry: Giving up on %s" % action)
+                log.info("retry: Giving up on %s" % action_name)
                 raise
             continue
         finally:
@@ -168,7 +190,7 @@ def retriable(*retry_args, **retry_kwargs):
         ... def foo():
         ...     global count
         ...     count += 1
-        ...     print count
+        ...     print(count)
         ...     if count < 3:
         ...         raise ValueError("count too small")
         ...     return "success!"
@@ -204,7 +226,7 @@ def retrying(func, *retry_args, **retry_kwargs):
         >>> def foo():
         ...     global count
         ...     count += 1
-        ...     print count
+        ...     print(count)
         ...     if count < 3:
         ...         raise ValueError("count too small")
         ...     return "success!"
