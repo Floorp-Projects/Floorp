@@ -55,14 +55,13 @@ external-media-tests:
     tier: 2
     max-run-time: 5400
     mozharness:
-        script: firefox_media_tests_buildbot.py
-        no-read-buildbot-config: true
+        script: firefox_media_tests_taskcluster.py
         config:
             by-test-platform:
                 win.*:
                     - mediatests/taskcluster_windows_config.py
                 default:
-                    - mediatests/buildbot_posix_config.py
+                    - mediatests/taskcluster_posix_config.py
                     - remove_executables.py
 
 firefox-ui-functional-local:
