@@ -147,9 +147,9 @@ public final class NotificationClient implements NotificationListener {
                 .setContentIntent(contentIntent)
                 .setDeleteIntent(deleteIntent)
                 .setAutoCancel(true)
-                .setStyle(new NotificationCompat.InboxStyle()
-                          .addLine(alertText)
-                          .setSummaryText(host));
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText(alertText)
+                        .setSummaryText(host));
 
         // Fetch icon.
         if (!imageUrl.isEmpty()) {
