@@ -149,7 +149,6 @@
 @RESPATH@/components/dom.xpt
 @RESPATH@/components/dom_activities.xpt
 @RESPATH@/components/dom_apps.xpt
-@RESPATH@/components/dom_newapps.xpt
 @RESPATH@/components/dom_audiochannel.xpt
 @RESPATH@/components/dom_base.xpt
 @RESPATH@/components/dom_system.xpt
@@ -613,10 +612,6 @@
 ; Security Reports
 @RESPATH@/components/SecurityReporter.manifest
 @RESPATH@/components/SecurityReporter.js
-
-; Signed Packaged Content
-@RESPATH@/components/InstallPackagedWebapp.manifest
-@RESPATH@/components/InstallPackagedWebapp.js
 
 ; ANGLE on Win32
 #ifdef XP_WIN32
