@@ -392,7 +392,10 @@ struct Zone : public JS::shadow::Zone,
     // Set of all unowned base shapes in the Zone.
     JS::WeakCache<js::BaseShapeSet> baseShapes;
 
-    // Set of initial shapes in the Zone.
+    // Set of initial shapes in the Zone. For certain prototypes -- namely,
+    // those of various builtin classes -- there are two entries: one for a
+    // lookup via TaggedProto, and one for a lookup via JSProtoKey. See
+    // InitialShapeProto.
     JS::WeakCache<js::InitialShapeSet> initialShapes;
 
 #ifdef JSGC_HASH_TABLE_CHECKS
