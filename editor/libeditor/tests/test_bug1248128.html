@@ -6,8 +6,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1248128
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 1248128</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
   SimpleTest.waitForExplicitFinish();
@@ -22,22 +23,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1248128
     var scroll = outer.scrollTop;
     ok(scroll > 0, "element has scrolled: new value " + scroll);
 
-    const kMoveLeft = "cmd_moveLeft";
-    var controller =
-      top.document.commandDispatcher.getControllerForCommand(kMoveLeft);
-    ok((controller && controller.isCommandEnabled(kMoveLeft)),
-       "have " + kMoveLeft + " command");
-
     try {
-      controller.doCommand(kMoveLeft);
-	  ok(false, "should not be able to do kMoveLeft");
+      SpecialPowers.doCommand(window, "cmd_moveLeft");
+      ok(false, "should not be able to do kMoveLeft");
+    } catch (e) {
+      ok(true, "unable to perform kMoveLeft");
     }
-	catch (e) {
-	  ok(true, "unable to perform kMoveLeft");
-	}
 
     ok(outer.scrollTop == scroll,
        "scroll is unchanged: got " + outer.scrollTop + ", expected " + scroll);
+
+    // Make sure cmd_moveLeft isn't failing for some unrelated reason
+    synthesizeKey("a", {});
+    is(input.selectionStart, 1, "selectionStart after typing");
+    SpecialPowers.doCommand(window, "cmd_moveLeft");
+    is(input.selectionStart, 0, "selectionStart after move left");
 
     SimpleTest.finish();
   });
