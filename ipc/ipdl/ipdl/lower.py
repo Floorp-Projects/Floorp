@@ -3299,9 +3299,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ])
             self.cls.addstmts([ onerror, Whitespace.NL ])
 
-        # User-facing shmem methods
-        self.cls.addstmts(self.makeShmemIface())
-
         if (ptype.isToplevel() and ptype.isInterrupt()):
 
             processnative = MethodDefn(
@@ -3835,103 +3832,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             removemanagee.addstmt(switchontype)
 
         return methods + [removemanagee, Whitespace.NL]
-
-    def makeShmemIface(self):
-        p = self.protocol
-        idvar = ExprVar('id')
-        sizevar = ExprVar('aSize')
-        typevar = ExprVar('aType')
-        memvar = ExprVar('aMem')
-        outmemvar = ExprVar('aOutMem')
-        rawvar = ExprVar('rawmem')
-
-        def allocShmemMethod(name, unsafe):
-            # bool Alloc*Shmem(size_t aSize, Type aType, Shmem* aOutMem):
-            #   id_t id;
-            #   SharedMemory* rawmem(CreateSharedMemory(aSize, aType, false, &id));
-            #   if (!rawmem)
-            #     return false;
-            #   *aOutMem = Shmem(rawmem, id)
-            #   return true;
-            method = MethodDefn(MethodDecl(
-                name,
-                params=[ Decl(Type.SIZE, sizevar.name),
-                         Decl(_shmemTypeType(), typevar.name),
-                         Decl(_shmemType(ptr=1), outmemvar.name) ],
-                ret=Type.BOOL))
-
-            ifallocfails = StmtIf(ExprNot(rawvar))
-            ifallocfails.addifstmt(StmtReturn.FALSE)
-
-            if unsafe:
-                unsafe = ExprLiteral.TRUE
-            else:
-                unsafe = ExprLiteral.FALSE
-            method.addstmts([
-                StmtDecl(Decl(_shmemIdType(), idvar.name)),
-                StmtDecl(Decl(_rawShmemType(ptr=1), rawvar.name),
-                         initargs=[ ExprCall(p.createSharedMemory(),
-                                         args=[ sizevar,
-                                                typevar,
-                                                unsafe,
-                                                ExprAddrOf(idvar) ]) ]),
-                ifallocfails,
-                Whitespace.NL,
-                StmtExpr(ExprAssn(
-                    ExprDeref(outmemvar), _shmemCtor(rawvar, idvar))),
-                StmtReturn.TRUE
-            ])
-            return method
-
-        # bool AllocShmem(size_t size, Type type, Shmem* outmem):
-        allocShmem = allocShmemMethod('AllocShmem', False)
-
-        # bool AllocUnsafeShmem(size_t size, Type type, Shmem* outmem):
-        allocUnsafeShmem = allocShmemMethod('AllocUnsafeShmem', True)
-
-        # bool DeallocShmem(Shmem& mem):
-        #   bool ok = DestroySharedMemory(mem);
-        ##ifdef DEBUG
-        #   if (!ok) {
-        #     NS_WARNING("bad Shmem"); // or NS_RUNTIMEABORT on child side
-        #     return false;
-        #   }
-        ##endif // DEBUG
-        #   mem.forget();
-        #   return ok;
-        deallocShmem = MethodDefn(MethodDecl(
-            'DeallocShmem',
-            params=[ Decl(_shmemType(ref=1), memvar.name) ],
-            ret=Type.BOOL))
-        okvar = ExprVar('ok')
-
-        ifbad = StmtIf(ExprNot(okvar))
-        badShmemActions = []
-        if (self.side == 'child'):
-            badShmemActions.append(_fatalError('bad Shmem'));
-        else:
-            badShmemActions.append(_printWarningMessage('bad Shmem'));
-        badShmemActions.append(StmtReturn.FALSE);
-        ifbad.addifstmts(badShmemActions)
-
-        deallocShmem.addstmts([
-            StmtDecl(Decl(Type.BOOL, okvar.name),
-                     init=ExprCall(p.destroySharedMemory(),
-                                   args=[ memvar ])),
-            CppDirective('ifdef', 'DEBUG'),
-            ifbad,
-            CppDirective('endif', '// DEBUG'),
-            StmtExpr(_shmemForget(memvar)),
-            StmtReturn(okvar)
-        ])
-
-        return [ Whitespace('// Methods for managing shmem\n', indent=1),
-                 allocShmem,
-                 Whitespace.NL,
-                 allocUnsafeShmem,
-                 Whitespace.NL,
-                 deallocShmem,
-                 Whitespace.NL ]
 
     def genShmemCreatedHandler(self):
         p = self.protocol
