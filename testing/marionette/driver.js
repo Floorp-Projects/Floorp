@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyServiceGetter(
     this, "cookieManager", "@mozilla.org/cookiemanager;1", "nsICookieManager2");
 
 Cu.import("chrome://marionette/content/accessibility.js");
+Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/browser.js");
 Cu.import("chrome://marionette/content/element.js");
@@ -648,51 +649,51 @@ GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
 GeckoDriver.prototype.setUpProxy = function(proxy) {
   logger.config("User-provided proxy settings: " + JSON.stringify(proxy));
 
-  if (typeof proxy == "object" && proxy.hasOwnProperty("proxyType")) {
-    switch (proxy.proxyType.toUpperCase()) {
-      case "MANUAL":
-        Preferences.set("network.proxy.type", 1);
-        if (proxy.httpProxy && proxy.httpProxyPort){
-          Preferences.set("network.proxy.http", proxy.httpProxy);
-          Preferences.set("network.proxy.http_port", proxy.httpProxyPort);
+  assert.object(proxy);
+  if (!proxy.hasOwnProperty("proxyType")) {
+    throw new InvalidArgumentError();
+  }
+  switch (proxy.proxyType.toUpperCase()) {
+    case "MANUAL":
+      Preferences.set("network.proxy.type", 1);
+      if (proxy.httpProxy && proxy.httpProxyPort){
+        Preferences.set("network.proxy.http", proxy.httpProxy);
+        Preferences.set("network.proxy.http_port", proxy.httpProxyPort);
+      }
+      if (proxy.sslProxy && proxy.sslProxyPort){
+        Preferences.set("network.proxy.ssl", proxy.sslProxy);
+        Preferences.set("network.proxy.ssl_port", proxy.sslProxyPort);
+      }
+      if (proxy.ftpProxy && proxy.ftpProxyPort) {
+        Preferences.set("network.proxy.ftp", proxy.ftpProxy);
+        Preferences.set("network.proxy.ftp_port", proxy.ftpProxyPort);
+      }
+      if (proxy.socksProxy) {
+        Preferences.set("network.proxy.socks", proxy.socksProxy);
+        Preferences.set("network.proxy.socks_port", proxy.socksProxyPort);
+        if (proxy.socksVersion) {
+          Preferences.set("network.proxy.socks_version", proxy.socksVersion);
         }
-        if (proxy.sslProxy && proxy.sslProxyPort){
-          Preferences.set("network.proxy.ssl", proxy.sslProxy);
-          Preferences.set("network.proxy.ssl_port", proxy.sslProxyPort);
-        }
-        if (proxy.ftpProxy && proxy.ftpProxyPort) {
-          Preferences.set("network.proxy.ftp", proxy.ftpProxy);
-          Preferences.set("network.proxy.ftp_port", proxy.ftpProxyPort);
-        }
-        if (proxy.socksProxy) {
-          Preferences.set("network.proxy.socks", proxy.socksProxy);
-          Preferences.set("network.proxy.socks_port", proxy.socksProxyPort);
-          if (proxy.socksVersion) {
-            Preferences.set("network.proxy.socks_version", proxy.socksVersion);
-          }
-        }
-        break;
+      }
+      break;
 
-      case "PAC":
-        Preferences.set("network.proxy.type", 2);
-        Preferences.set("network.proxy.autoconfig_url", proxy.proxyAutoconfigUrl);
-        break;
+    case "PAC":
+      Preferences.set("network.proxy.type", 2);
+      Preferences.set("network.proxy.autoconfig_url", proxy.proxyAutoconfigUrl);
+      break;
 
-      case "AUTODETECT":
-        Preferences.set("network.proxy.type", 4);
-        break;
+    case "AUTODETECT":
+      Preferences.set("network.proxy.type", 4);
+      break;
 
-      case "SYSTEM":
-        Preferences.set("network.proxy.type", 5);
-        break;
+    case "SYSTEM":
+      Preferences.set("network.proxy.type", 5);
+      break;
 
-      case "NOPROXY":
-      default:
-        Preferences.set("network.proxy.type", 0);
-        break;
-    }
-  } else {
-    throw new InvalidArgumentError("Value of 'proxy' should be an object");
+    case "NOPROXY":
+    default:
+      Preferences.set("network.proxy.type", 0);
+      break;
   }
 };
 
@@ -1265,10 +1266,8 @@ GeckoDriver.prototype.setWindowPosition = function(cmd, resp) {
   }
 
   let {x, y} = cmd.parameters;
-  if (!Number.isInteger(x) || !Number.isInteger(y) ||
-      x < 0 || y < 0) {
-    throw new InvalidArgumentError();
-  }
+  assert.positiveInteger(x);
+  assert.positiveInteger(y);
 
   let win = this.getCurrentWindow();
   win.moveTo(x, y);
@@ -1570,9 +1569,7 @@ GeckoDriver.prototype.timeouts = function(cmd, resp) {
   }
 
   for (let [typ, ms] of Object.entries(timeouts)) {
-    if (!Number.isInteger(ms)) {
-      throw new InvalidArgumentError();
-    }
+    assert.positiveInteger(ms);
 
     switch (typ) {
       case "implicit":
@@ -2011,10 +2008,7 @@ GeckoDriver.prototype.getElementRect = function*(cmd, resp) {
  */
 GeckoDriver.prototype.sendKeysToElement = function*(cmd, resp) {
   let {id, value} = cmd.parameters;
-
-  if (!value) {
-    throw new InvalidArgumentError(`Expected character sequence: ${value}`);
-  }
+  assert.defined(value, `Expected character sequence: ${value}`);
 
   switch (this.context) {
     case Context.CHROME:
@@ -2436,19 +2430,18 @@ GeckoDriver.prototype.getScreenOrientation = function(cmd, resp) {
  * and "portrait-secondary" as well as "landscape-secondary".
  */
 GeckoDriver.prototype.setScreenOrientation = function(cmd, resp) {
-  if (this.appName == "Firefox") {
-    throw new UnsupportedOperationError();
-  }
+  assert.fennec();
 
   const ors = [
     "portrait", "landscape",
     "portrait-primary", "landscape-primary",
-    "portrait-secondary", "landscape-secondary"
+    "portrait-secondary", "landscape-secondary",
   ];
 
   let or = String(cmd.parameters.orientation);
+  assert.string(or);
   let mozOr = or.toLowerCase();
-  if (ors.indexOf(mozOr) < 0) {
+  if (!ors.include(mozOr)) {
     throw new InvalidArgumentError(`Unknown screen orientation: ${or}`);
   }
 
@@ -2586,10 +2579,7 @@ GeckoDriver.prototype._checkIfAlertIsPresent = function() {
  *     True if the server should accept new socket connections.
  */
 GeckoDriver.prototype.acceptConnections = function(cmd, resp) {
-  if (typeof cmd.parameters.value != "boolean") {
-    throw InvalidArgumentError("Value has to be of type 'boolean'");
-  }
-
+  assert.boolean(cmd.parameters.value);
   this._server.acceptConnections = cmd.parameters.value;
 }
 
