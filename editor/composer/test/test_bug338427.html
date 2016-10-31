@@ -5,8 +5,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338427
 -->
 <head>
   <title>Test for Bug 338427</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=338427">Mozilla Bug 338427</a>
@@ -20,10 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338427
 
 /** Test for Bug 338427 **/
 function init() {
-    Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
-
+    var onSpellCheck =
+      SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm")
+                   .onSpellCheck;
     var textarea = document.getElementById("editor");
-    var editor = textarea.editor;
+    var editor = SpecialPowers.wrap(textarea).editor;
     var spellchecker = editor.getInlineSpellChecker(true);
     spellchecker.enableRealTimeSpell = true;
     textarea.focus();
