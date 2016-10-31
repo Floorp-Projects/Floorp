@@ -48,7 +48,7 @@ public class testActivityStreamContextMenu extends BaseTest {
      * the correct state.
      */
     private void testMenuForUrl(final String url, final boolean isBookmarked, final boolean isVisited) {
-        final ActivityStreamContextMenu menu = ActivityStreamContextMenu.show(getActivity(), "foobar", url, null, null, 100, 100);
+        final ActivityStreamContextMenu menu = ActivityStreamContextMenu.show(getActivity(), ActivityStreamContextMenu.MenuMode.HIGHLIGHT, "foobar", url, null, null, 100, 100);
 
         waitForContextMenu(menu);
 
