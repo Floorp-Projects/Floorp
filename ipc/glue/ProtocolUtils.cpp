@@ -473,5 +473,53 @@ IProtocol::HandleFatalError(const char* aProtocolName, const char* aErrorMsg) co
   mozilla::ipc::FatalError(aProtocolName, aErrorMsg, mSide == ParentSide);
 }
 
+bool
+IProtocol::AllocShmem(size_t aSize,
+                      Shmem::SharedMemory::SharedMemoryType aType,
+                      Shmem* aOutMem)
+{
+  Shmem::id_t id;
+  Shmem::SharedMemory* rawmem(CreateSharedMemory(aSize, aType, false, &id));
+  if (!rawmem) {
+    return false;
+  }
+
+  *aOutMem = Shmem(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), rawmem, id);
+  return true;
+}
+
+bool
+IProtocol::AllocUnsafeShmem(size_t aSize,
+                            Shmem::SharedMemory::SharedMemoryType aType,
+                            Shmem* aOutMem)
+{
+  Shmem::id_t id;
+  Shmem::SharedMemory* rawmem(CreateSharedMemory(aSize, aType, true, &id));
+  if (!rawmem) {
+    return false;
+  }
+
+  *aOutMem = Shmem(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), rawmem, id);
+  return true;
+}
+
+bool
+IProtocol::DeallocShmem(Shmem& aMem)
+{
+  bool ok = DestroySharedMemory(aMem);
+#ifdef DEBUG
+  if (!ok) {
+    if (mSide == ChildSide) {
+      FatalError("bad Shmem");
+    } else {
+      NS_WARNING("bad Shmem");
+    }
+    return false;
+  }
+#endif // DEBUG
+  aMem.forget(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead());
+  return ok;
+}
+
 } // namespace ipc
 } // namespace mozilla
