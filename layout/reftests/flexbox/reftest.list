@@ -73,12 +73,12 @@ fails == flexbox-paint-ordering-3.html  flexbox-paint-ordering-3-ref.html # bug 
 
 # Tests for handling of absolutely/fixed/relatively-positioned flex items.
 == flexbox-position-absolute-1.xhtml  flexbox-position-absolute-1-ref.xhtml
-== flexbox-position-absolute-2.xhtml  flexbox-position-absolute-2-ref.xhtml
+fails == flexbox-position-absolute-2.xhtml  flexbox-position-absolute-2-ref.xhtml # bug 1269046
 == flexbox-position-absolute-3.xhtml  flexbox-position-absolute-3-ref.xhtml
 == flexbox-position-absolute-4.xhtml  flexbox-position-absolute-4-ref.xhtml
 == flexbox-position-fixed-3.xhtml     flexbox-position-fixed-3-ref.xhtml
 fuzzy-if(Android,16,400) == flexbox-position-fixed-1.xhtml     flexbox-position-fixed-1-ref.xhtml
-fuzzy-if(Android,16,400) == flexbox-position-fixed-2.xhtml     flexbox-position-fixed-2-ref.xhtml
+fuzzy-if(Android,16,400) fails == flexbox-position-fixed-2.xhtml     flexbox-position-fixed-2-ref.xhtml # bug 1269046
 == flexbox-position-fixed-3.xhtml     flexbox-position-fixed-3-ref.xhtml
 == flexbox-position-fixed-4.xhtml     flexbox-position-fixed-4-ref.xhtml
 
