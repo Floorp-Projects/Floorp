@@ -1054,11 +1054,7 @@ PopupNotifications.prototype = {
   },
 
   _isActiveBrowser: function (browser) {
-    // Note: This helper only exists, because in e10s builds,
-    // we can't access the docShell of a browser from chrome.
-    return browser.docShell
-      ? browser.docShell.isActive
-      : (this.window.gBrowser.selectedBrowser == browser);
+    return this.tabbrowser.selectedBrowser == browser;
   },
 
   _onIconBoxCommand: function PopupNotifications_onIconBoxCommand(event) {
