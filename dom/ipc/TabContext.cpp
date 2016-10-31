@@ -25,7 +25,6 @@ TabContext::TabContext()
   , mInitialized(false)
   , mIsMozBrowserElement(false)
   , mContainingAppId(NO_APP_ID)
-  , mOriginAttributes()
   , mShowAccelerators(UIStateChangeType_NoChange)
   , mShowFocusRings(UIStateChangeType_NoChange)
 {
