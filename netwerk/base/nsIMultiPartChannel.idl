@@ -32,15 +32,4 @@ interface nsIMultiPartChannel : nsISupports
      * whether more data can be expected.
      */
     readonly attribute boolean isLastPart;
-
-    /**
-     * ASCII-encoding content prior to the first resource. Only valid for
-     * content-type=application/package.
-     */
-    readonly attribute ACString preamble;
-
-    /**
-     * The original http response header in each part.
-     */
-    readonly attribute ACString originalResponseHeader;
 };

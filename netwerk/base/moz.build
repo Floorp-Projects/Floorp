@@ -95,7 +95,6 @@ XPIDL_SOURCES += [
     'nsIRequestContext.idl',
     'nsIRequestObserver.idl',
     'nsIRequestObserverProxy.idl',
-    'nsIResponseHeadProvider.idl',
     'nsIResumableChannel.idl',
     'nsISecCheckWrapChannel.idl',
     'nsISecureBrowserUI.idl',
