@@ -227,7 +227,7 @@ var LoginManagerParent = {
 
   doAutocompleteSearch: function({ formOrigin, actionOrigin,
                                    searchString, previousResult,
-                                   rect, requestId, remote }, target) {
+                                   rect, requestId, isSecure, remote }, target) {
     // Note: previousResult is a regular object, not an
     // nsIAutoCompleteResult.
 
@@ -270,7 +270,7 @@ var LoginManagerParent = {
     // for showing the autocomplete popup (via the regular
     // nsAutoCompleteController).
     if (remote) {
-      let results = new UserAutoCompleteResult(searchString, matchingLogins);
+      let results = new UserAutoCompleteResult(searchString, matchingLogins, {isSecure});
       AutoCompletePopup.showPopupWithResults({ browser: target.ownerDocument.defaultView, rect, results });
     }
 

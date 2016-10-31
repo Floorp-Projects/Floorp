@@ -10,21 +10,24 @@ this.EXPORTED_SYMBOLS = [ "LoginManagerContent",
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
+const PREF_INSECURE_FIELD_WARNING_ENABLED = "security.insecure_field_warning.contextual.enabled";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/InsecurePasswordUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormLikeFactory",
                                   "resource://gre/modules/FormLikeFactory.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginRecipesContent",
                                   "resource://gre/modules/LoginRecipes.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
                                   "resource://gre/modules/LoginHelper.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "InsecurePasswordUtils",
+                                  "resource://gre/modules/InsecurePasswordUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gNetUtil",
                                    "@mozilla.org/network/util;1",
@@ -309,6 +312,7 @@ var LoginManagerContent = {
                         searchString: aSearchString,
                         previousResult: previousResult,
                         rect: aRect,
+                        isSecure: InsecurePasswordUtils.isFormSecure(form),
                         remote: remote };
 
     return this._sendRequest(messageManager, requestData,
@@ -1213,7 +1217,7 @@ var LoginUtils = {
 };
 
 // nsIAutoCompleteResult implementation
-function UserAutoCompleteResult (aSearchString, matchingLogins, messageManager) {
+function UserAutoCompleteResult (aSearchString, matchingLogins, {isSecure, messageManager}) {
   function loginSort(a, b) {
     var userA = a.username.toLowerCase();
     var userB = b.username.toLowerCase();
@@ -1227,10 +1231,15 @@ function UserAutoCompleteResult (aSearchString, matchingLogins, messageManager) 
     return 0;
   }
 
+  let prefShowInsecureFieldWarning =
+    Preferences.get(PREF_INSECURE_FIELD_WARNING_ENABLED, false);
+
+  this._showInsecureFieldWarning = (!isSecure && prefShowInsecureFieldWarning) ? 1 : 0;
   this.searchString = aSearchString;
   this.logins = matchingLogins.sort(loginSort);
-  this.matchCount = matchingLogins.length;
+  this.matchCount = matchingLogins.length + this._showInsecureFieldWarning;
   this._messageManager = messageManager;
+  this._stringBundle = Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
 
   if (this.matchCount > 0) {
     this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
@@ -1259,14 +1268,25 @@ UserAutoCompleteResult.prototype = {
   matchCount : 0,
 
   getValueAt(index) {
-    if (index < 0 || index >= this.logins.length)
+    if (index < 0 || index >= this.matchCount)
       throw new Error("Index out of range.");
 
-    return this.logins[index].username;
+    if (this._showInsecureFieldWarning && index === 0) {
+      return "";
+    }
+
+    return this.logins[index - this._showInsecureFieldWarning].username;
   },
 
   getLabelAt(index) {
-    return this.getValueAt(index);
+    if (index < 0 || index >= this.matchCount)
+      throw new Error("Index out of range.");
+
+    if (this._showInsecureFieldWarning && index === 0) {
+      return this._stringBundle.GetStringFromName("insecureFieldWarningDescription");
+    }
+
+    return this.logins[index - this._showInsecureFieldWarning].username;
   },
 
   getCommentAt(index) {
@@ -1274,6 +1294,9 @@ UserAutoCompleteResult.prototype = {
   },
 
   getStyleAt(index) {
+    if (index == 0 && this._showInsecureFieldWarning) {
+      return "insecureWarning";
+    }
     return "";
   },
 
@@ -1286,8 +1309,16 @@ UserAutoCompleteResult.prototype = {
   },
 
   removeValueAt(index, removeFromDB) {
-    if (index < 0 || index >= this.logins.length)
+    if (index < 0 || index >= this.matchCount)
         throw new Error("Index out of range.");
+
+    if (this._showInsecureFieldWarning && index === 0) {
+      // Ignore the warning message item.
+      return;
+    }
+    if (this._showInsecureFieldWarning) {
+      index--;
+    }
 
     var [removedLogin] = this.logins.splice(index, 1);
 
