@@ -814,7 +814,7 @@ BL_Unload(void)
     char *disableUnload = NULL;
     vector = NULL;
     disableUnload = PR_GetEnvSecure("NSS_DISABLE_UNLOAD");
-    if (blLib && !disableUnload) {
+    if (!disableUnload) {
 #ifdef DEBUG
         PRStatus status = PR_UnloadLibrary(blLib);
         PORT_Assert(PR_SUCCESS == status);

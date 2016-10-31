@@ -140,7 +140,7 @@ SHA1_Update(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len)
 /*
  *  SHA: Generate hash value from context
  */
-void NO_SANITIZE_ALIGNMENT
+void
 SHA1_End(SHA1Context *ctx, unsigned char *hashout,
          unsigned int *pDigestLen, unsigned int maxDigestLen)
 {

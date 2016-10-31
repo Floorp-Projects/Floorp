@@ -98,6 +98,7 @@ nss_makeFlags(PRBool readOnly, PRBool noCertDB,
         if (!first)
             PORT_Strcat(flags, ",");
         PORT_Strcat(flags, "optimizeSpace");
+        first = PR_FALSE;
     }
     return flags;
 }
@@ -662,21 +663,6 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
             configName = initParams->libraryDescription;
             passwordRequired = initParams->passwordRequired;
         }
-
-        /* If we're NSS_ContextInit, we're probably a library. It could be
-         * possible that the application initialized NSS then forked(). The
-         * library would have no knowledge of that. If we call 
-         * SECMOD_RestartModules() here, we will be able to continue on with
-         * NSS as normal. SECMOD_RestartModules() does have the side affect
-         * of losing all our PKCS #11 objects in the new process, but only if
-         * the module needs to be reinited. If it needs to be reinit those
-         * objects are inaccessible anyway, it's always save to call
-         * SECMOD_RestartModules(PR_FALSE).
-         */
-        /* NOTE: We could call SECMOD_Init() here, but if we aren't already
-         * inited, then there's no modules to restart, so SECMOD_RestartModules
-         * will return immediately */
-        SECMOD_RestartModules(PR_FALSE);
     } else {
         configStrings = pk11_config_strings;
         configName = pk11_config_name;

@@ -52,11 +52,6 @@
           'dll_prefix': 'lib',
           'dll_suffix': 'so',
         }],
-        ['OS=="linux"', {
-          'freebl_name': 'freeblpriv3',
-        }, {
-          'freebl_name': 'freebl3',
-        }],
         ['OS=="mac"', {
           'zlib_libs%': ['-lz'],
           'use_system_sqlite%': 1,
@@ -90,7 +85,6 @@
     'sqlite_libs%': ['-lsqlite3'],
     'dll_prefix': '<(dll_prefix)',
     'dll_suffix': '<(dll_suffix)',
-    'freebl_name': '<(freebl_name)',
     'cc_is_clang%': '<(cc_is_clang)',
     # Some defaults
     'disable_tests%': 0,
@@ -104,7 +98,6 @@
     'ssl_enable_zlib%': 1,
     'use_asan%': 0,
     'test_build%': 0,
-    'fuzz%': 0,
   },
   'target_defaults': {
     # Settings specific to targets should go here.
@@ -285,9 +278,6 @@
             'cflags': [
               '<!@(<(python) <(DEPTH)/coreconf/werror.py)',
             ],
-          }],
-          [ 'fuzz==1', {
-            'cflags': ['-Wno-unused-function']
           }],
           [ 'OS=="android" and mozilla_client==0', {
             'defines': [

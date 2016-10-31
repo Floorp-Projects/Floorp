@@ -315,6 +315,8 @@ seckey_UpdateCertPQGChain(CERTCertificate *subjectCert, int count)
     CERTSubjectPublicKeyInfo *issuerSpki = NULL;
     CERTCertificate *issuerCert = NULL;
 
+    rv = SECSuccess;
+
     /* increment cert chain length counter*/
     count++;
 
@@ -647,6 +649,7 @@ seckey_ExtractPublicKey(const CERTSubjectPublicKeyInfo *spki)
 
             default:
                 PORT_SetError(SEC_ERROR_UNSUPPORTED_KEYALG);
+                rv = SECFailure;
                 break;
         }
 

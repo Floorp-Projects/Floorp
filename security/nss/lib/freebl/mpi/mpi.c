@@ -19,6 +19,10 @@
 #undef MP_ASSEMBLY_SQUARE
 #endif
 
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define inline __inline
+#endif
+
 #if MP_LOGTAB
 /*
   A table of the logs of 2 for various bases (the 0 and 1 entries of
@@ -2757,7 +2761,7 @@ s_mp_pad(mp_int *mp, mp_size min)
 /* {{{ s_mp_setz(dp, count) */
 
 /* Set 'count' digits pointed to by dp to be zeroes                       */
-void
+inline void
 s_mp_setz(mp_digit *dp, mp_size count)
 {
 #if MP_MEMSET == 0
@@ -2776,7 +2780,7 @@ s_mp_setz(mp_digit *dp, mp_size count)
 /* {{{ s_mp_copy(sp, dp, count) */
 
 /* Copy 'count' digits from sp to dp                                      */
-void
+inline void
 s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count)
 {
 #if MP_MEMCPY == 0
@@ -2794,7 +2798,7 @@ s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count)
 /* {{{ s_mp_alloc(nb, ni) */
 
 /* Allocate ni records of nb bytes each, and return a pointer to that     */
-void *
+inline void *
 s_mp_alloc(size_t nb, size_t ni)
 {
     return calloc(nb, ni);
@@ -2806,7 +2810,7 @@ s_mp_alloc(size_t nb, size_t ni)
 /* {{{ s_mp_free(ptr) */
 
 /* Free the memory pointed to by ptr                                      */
-void
+inline void
 s_mp_free(void *ptr)
 {
     if (ptr) {
@@ -2819,7 +2823,7 @@ s_mp_free(void *ptr)
 /* {{{ s_mp_clamp(mp) */
 
 /* Remove leading zeroes from the given value                             */
-void
+inline void
 s_mp_clamp(mp_int *mp)
 {
     mp_size used = MP_USED(mp);

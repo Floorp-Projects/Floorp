@@ -17,11 +17,6 @@
           '-lstdc++',
         ],
       }],
-      [ 'fuzz==1', {
-        'defines': [
-          'UNSAFE_FUZZER_MODE',
-        ],
-      }],
     ],
     'msvs_settings': {
       'VCCLCompilerTool': {

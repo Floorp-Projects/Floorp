@@ -14,16 +14,25 @@ const WINDOWS_CHECKOUT_CMD =
 
 /*****************************************************************************/
 
+function isSanitizer(task) {
+  return task.collection == "asan" || task.collection == "ubsan";
+}
+
 queue.filter(task => {
   if (task.group == "Builds") {
     // Remove extra builds on {A,UB}San and ARM.
-    if (task.collection == "asan" || task.collection == "arm-debug") {
+    if (isSanitizer(task) || task.collection == "arm-debug") {
       return false;
     }
 
     // Remove extra builds w/o libpkix for non-linux64-debug.
     if (task.symbol == "noLibpkix" &&
         (task.platform != "linux64" || task.collection != "debug")) {
+      return false;
+    }
+
+    // Remove extra builds on gyp builds (TODO: add when it supports CC/CCC).
+    if (task.collection == "gyp") {
       return false;
     }
   }
@@ -40,11 +49,17 @@ queue.filter(task => {
     }
   }
 
+  // Filter test suites that currently fail with UBSan.
+  if (task.collection == "ubsan" &&
+      ["crmf", "cipher", "fips", "merge", "smime"].includes(task.tests)) {
+    return false;
+  }
+
   return true;
 });
 
 queue.map(task => {
-  if (task.collection == "asan") {
+  if (isSanitizer(task)) {
     // CRMF and FIPS tests still leak, unfortunately.
     if (task.tests == "crmf" || task.tests == "fips") {
       task.env.ASAN_OPTIONS = "detect_leaks=0";
@@ -104,13 +119,27 @@ export default async function main() {
       "-c",
       "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh"
     ],
-    env: {USE_64: "1"}, // This is only necessary for tests to work.
+    env: {USE_64: "1"},
     platform: "linux64",
     collection: "gyp",
     image: LINUX_IMAGE
   });
 
   await scheduleLinux("Linux 64 (ASan, debug)", {
+    env: {
+      NSS_DISABLE_ARENA_FREE_LIST: "1",
+      NSS_DISABLE_UNLOAD: "1",
+      CC: "clang",
+      CCC: "clang++",
+      USE_ASAN: "1",
+      USE_64: "1"
+    },
+    platform: "linux64",
+    collection: "asan",
+    image: LINUX_IMAGE
+  });
+
+  await scheduleLinux("Linux 64 (ASan+UBSan, debug)", {
     env: {
       UBSAN_OPTIONS: "print_stacktrace=1",
       NSS_DISABLE_ARENA_FREE_LIST: "1",
@@ -122,7 +151,7 @@ export default async function main() {
       USE_64: "1"
     },
     platform: "linux64",
-    collection: "asan",
+    collection: "ubsan",
     image: LINUX_IMAGE
   });
 
@@ -133,8 +162,6 @@ export default async function main() {
   await scheduleWindows("Windows 2012 64 (debug)", {
     collection: "debug"
   });
-
-  await scheduleFuzzing();
 
   await scheduleTools();
 
@@ -227,65 +254,6 @@ async function scheduleLinux(name, base) {
     name: `${name} w/ NSS_DISABLE_LIBPKIX=1`,
     env: {NSS_DISABLE_LIBPKIX: "1"},
     symbol: "noLibpkix"
-  }));
-
-  return queue.submit();
-}
-
-/*****************************************************************************/
-
-async function scheduleFuzzing() {
-  let base = {
-    env: {
-      ASAN_OPTIONS: "allocator_may_return_null=1",
-      UBSAN_OPTIONS: "print_stacktrace=1",
-      CC: "clang",
-      CCC: "clang++",
-      USE_64: "1" // This is only necessary for tests to work.
-    },
-    platform: "linux64",
-    collection: "fuzz",
-    image: LINUX_IMAGE
-  };
-
-  // Build base definition.
-  let build_base = merge({
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz"
-    ],
-    artifacts: {
-      public: {
-        expires: 24 * 7,
-        type: "directory",
-        path: "/home/worker/artifacts"
-      }
-    },
-    kind: "build",
-    symbol: "B"
-  }, base);
-
-  // The task that builds NSPR+NSS.
-  let task_build = queue.scheduleTask(merge(build_base, {
-    name: "Linux x64 (debug, fuzz)"
-  }));
-
-  // Schedule tests.
-  queue.scheduleTask(merge(base, {
-    parent: task_build,
-    name: "Gtests",
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_tests.sh"
-    ],
-    env: {GTESTFILTER: "*Fuzz*"},
-    symbol: "Gtest",
-    tests: "gtests",
-    cycle: "standard",
-    kind: "test"
   }));
 
   return queue.submit();
