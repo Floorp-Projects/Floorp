@@ -7,6 +7,7 @@
 import os
 import unittest
 from manifestparser import ManifestParser
+from manifestparser import combine_fields
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -92,6 +93,23 @@ class TestOmitDefaults(unittest.TestCase):
             for key, value in defaults.items():
                 self.assertIn(key, actual_defaults)
                 self.assertEqual(value, actual_defaults[key])
+
+
+class TestSubsuiteDefaults(unittest.TestCase):
+    """Test that subsuites are handled correctly when managing defaults
+    outside of the manifest parser."""
+    def test_subsuite_defaults(self):
+        manifest = os.path.join(here, 'default-subsuite.ini')
+        parser = ManifestParser(manifests=(manifest,), handle_defaults=False)
+        expected_subsuites = {
+            'test1': 'baz',
+            'test2': 'foo',
+        }
+        defaults = parser.manifest_defaults[manifest]
+        for test in parser.tests:
+            value = combine_fields(defaults, test)
+            self.assertEqual(expected_subsuites[value['name']],
+                             value['subsuite'])
 
 if __name__ == '__main__':
     unittest.main()
