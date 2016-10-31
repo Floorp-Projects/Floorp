@@ -441,6 +441,20 @@ TEST_F(SdpTest, parseRtcpFbFooBarBaz) {
   ParseSdp(kVideoSdp + "a=rtcp-fb:120 foo bar baz\r\n");
 }
 
+static const std::string kVideoSdpWithUnknonwBrokenFtmp =
+  "v=0\r\n"
+  "o=- 4294967296 2 IN IP4 127.0.0.1\r\n"
+  "s=SIP Call\r\n"
+  "c=IN IP4 198.51.100.7\r\n"
+  "t=0 0\r\n"
+  "m=video 56436 RTP/SAVPF 120\r\n"
+  "a=rtpmap:120 VP8/90000\r\n"
+  "a=fmtp:122 unknown=10\n"
+  "a=rtpmap:122 red/90000\r\n";
+
+TEST_F(SdpTest, parseUnknownBrokenFtmp) {
+  ParseSdp(kVideoSdpWithUnknonwBrokenFtmp);
+}
 
 TEST_F(SdpTest, parseRtcpFbKitchenSink) {
   ParseSdp(kVideoSdp +
