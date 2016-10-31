@@ -143,7 +143,7 @@ class subsuite(InstanceFilter):
                 if not test.get('subsuite'):
                     yield test
             else:
-                if test.get('subsuite') == self.name:
+                if test.get('subsuite', '') == self.name:
                     yield test
 
 
