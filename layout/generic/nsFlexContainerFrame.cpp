@@ -1081,8 +1081,6 @@ IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
              "this method only intended for comparing flex items");
   MOZ_ASSERT(aFrame1->GetParent() == aFrame2->GetParent(),
              "this method only intended for comparing siblings");
-  bool isInLegacyBox = nsFlexContainerFrame::IsLegacyBox(aFrame1->GetParent());
-
   if (aFrame1 == aFrame2) {
     // Anything is trivially LEQ itself, so we return "true" here... but it's
     // probably bad if we end up actually needing this, so let's assert.
@@ -1090,17 +1088,21 @@ IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
     return true;
   }
 
-  // If we've got a placeholder frame, use its out-of-flow frame's 'order' val.
-  {
-    nsIFrame* aRealFrame1 = nsPlaceholderFrame::GetRealFrameFor(aFrame1);
-    nsIFrame* aRealFrame2 = nsPlaceholderFrame::GetRealFrameFor(aFrame2);
+  if (aFrame1->GetType() == nsGkAtoms::placeholderFrame ||
+      aFrame2->GetType() == nsGkAtoms::placeholderFrame) {
+    // Treat placeholders (for abspos/fixedpos frames) as LEQ everything.  This
+    // ensures we don't reorder them w.r.t. one another, which is sufficient to
+    // prevent them from noticeably participating in "order" reordering.
+    return true;
+  }
 
-    int32_t order1 = GetOrderOrBoxOrdinalGroup(aRealFrame1, isInLegacyBox);
-    int32_t order2 = GetOrderOrBoxOrdinalGroup(aRealFrame2, isInLegacyBox);
+  bool isInLegacyBox = nsFlexContainerFrame::IsLegacyBox(aFrame1->GetParent());
 
-    if (order1 != order2) {
-      return order1 < order2;
-    }
+  int32_t order1 = GetOrderOrBoxOrdinalGroup(aFrame1, isInLegacyBox);
+  int32_t order2 = GetOrderOrBoxOrdinalGroup(aFrame2, isInLegacyBox);
+
+  if (order1 != order2) {
+    return order1 < order2;
   }
 
   // The "order" values are equal, so we need to fall back on DOM comparison.
@@ -1165,14 +1167,19 @@ IsOrderLEQ(nsIFrame* aFrame1,
              "this method only intended for comparing flex items");
   MOZ_ASSERT(aFrame1->GetParent() == aFrame2->GetParent(),
              "this method only intended for comparing siblings");
+
+  if (aFrame1->GetType() == nsGkAtoms::placeholderFrame ||
+      aFrame2->GetType() == nsGkAtoms::placeholderFrame) {
+    // Treat placeholders (for abspos/fixedpos frames) as LEQ everything.  This
+    // ensures we don't reorder them w.r.t. one another, which is sufficient to
+    // prevent them from noticeably participating in "order" reordering.
+    return true;
+  }
+
   bool isInLegacyBox = nsFlexContainerFrame::IsLegacyBox(aFrame1->GetParent());
 
-  // If we've got a placeholder frame, use its out-of-flow frame's 'order' val.
-  nsIFrame* aRealFrame1 = nsPlaceholderFrame::GetRealFrameFor(aFrame1);
-  nsIFrame* aRealFrame2 = nsPlaceholderFrame::GetRealFrameFor(aFrame2);
-
-  int32_t order1 = GetOrderOrBoxOrdinalGroup(aRealFrame1, isInLegacyBox);
-  int32_t order2 = GetOrderOrBoxOrdinalGroup(aRealFrame2, isInLegacyBox);
+  int32_t order1 = GetOrderOrBoxOrdinalGroup(aFrame1, isInLegacyBox);
+  int32_t order2 = GetOrderOrBoxOrdinalGroup(aFrame2, isInLegacyBox);
 
   return order1 <= order2;
 }
