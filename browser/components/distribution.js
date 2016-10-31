@@ -463,7 +463,7 @@ DistributionCustomizer.prototype = {
       try {
         var showMenubar = Services.prefs.getBoolPref("browser.showMenubar");
         if (showMenubar) {
-          xulStore.setValue(BROWSER_DOCURL, "toolbar-menubar", "collapsed", "false");
+          xulStore.setValue(BROWSER_DOCURL, "toolbar-menubar", "autohide", "false");
         }
       } catch (e) {}
     }
