@@ -1,5 +1,4 @@
 import os
-import sys
 import mozharness
 
 external_tools_path = os.path.join(
@@ -8,24 +7,22 @@ external_tools_path = os.path.join(
 )
 
 config = {
-    "virtualenv_python_dll": os.path.join(os.path.dirname(sys.executable), 'python27.dll'),
+    # Python env
     "virtualenv_path": 'venv',
     "exes": {
-        'python': sys.executable,
-        'virtualenv': [
-            sys.executable,
-            os.path.join(os.path.dirname(sys.executable), 'Lib', 'site-packages', 'virtualenv.py')
-        ],
-        'mozinstall': ['build/venv/scripts/python', 'build/venv/scripts/mozinstall-script.py'],
-        'tooltool.py': [sys.executable, os.path.join(os.environ['MOZILLABUILD'], 'tooltool.py')],
-        'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg')
+        'python': '/tools/buildbot/bin/python',
+        'virtualenv': ['/tools/buildbot/bin/python', '/tools/misc-python/virtualenv.py'],
+        'tooltool.py': "/tools/tooltool.py",
     },
+
+    # PIP
     "find_links": [
         "http://pypi.pvt.build.mozilla.org/pub",
         "http://pypi.pub.build.mozilla.org/pub",
     ],
     "pip_index": False,
 
+    #mozcrash support
     "download_minidump_stackwalk": True,
     "download_symbols": "ondemand",
 
