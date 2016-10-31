@@ -757,42 +757,96 @@ TokenStream::reportAsmJSError(uint32_t offset, unsigned errorNumber, ...)
 }
 
 // We have encountered a '\': check for a Unicode escape sequence after it.
-// Return 'true' and the character code point (by value) if we found a
-// Unicode escape sequence.  Otherwise, return 'false'.  In both cases, do not
-// advance along the buffer.
-bool
+// Return the length of the escape sequence and the character code point (by
+// value) if we found a Unicode escape sequence.  Otherwise, return 0.  In both
+// cases, do not advance along the buffer.
+uint32_t
 TokenStream::peekUnicodeEscape(uint32_t* codePoint)
 {
-    char16_t cp[5];
-
-    if (peekChars(5, cp) && cp[0] == 'u' &&
-        JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]) &&
-        JS7_ISHEX(cp[3]) && JS7_ISHEX(cp[4]))
-    {
-        *codePoint = (((((JS7_UNHEX(cp[1]) << 4)
-                + JS7_UNHEX(cp[2])) << 4)
-              + JS7_UNHEX(cp[3])) << 4)
-            + JS7_UNHEX(cp[4]);
-        return true;
+    int32_t c = getCharIgnoreEOL();
+    if (c != 'u') {
+        ungetCharIgnoreEOL(c);
+        return 0;
     }
-    return false;
+
+    char16_t cp[3];
+    uint32_t length;
+    c = getCharIgnoreEOL();
+    if (JS7_ISHEX(c) && peekChars(3, cp) &&
+        JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]))
+    {
+        *codePoint = (JS7_UNHEX(c) << 12) |
+                     (JS7_UNHEX(cp[0]) << 8) |
+                     (JS7_UNHEX(cp[1]) << 4) |
+                     JS7_UNHEX(cp[2]);
+        length = 5;
+    } else if (c == '{') {
+        length = peekExtendedUnicodeEscape(codePoint);
+    } else {
+        length = 0;
+    }
+
+    ungetCharIgnoreEOL(c);
+    ungetCharIgnoreEOL('u');
+    return length;
 }
 
-bool
+uint32_t
+TokenStream::peekExtendedUnicodeEscape(uint32_t* codePoint)
+{
+    // The opening brace character was already read.
+    int32_t c = getCharIgnoreEOL();
+
+    // Skip leading zeros.
+    uint32_t leadingZeros = 0;
+    while (c == '0') {
+        leadingZeros++;
+        c = getCharIgnoreEOL();
+    }
+
+    char16_t cp[6];
+    size_t i = 0;
+    uint32_t code = 0;
+    while (JS7_ISHEX(c) && i < 6) {
+        cp[i++] = c;
+        code = code << 4 | JS7_UNHEX(c);
+        c = getCharIgnoreEOL();
+    }
+
+    uint32_t length;
+    if (c == '}' && (leadingZeros > 0 || i > 0) && code <= unicode::NonBMPMax) {
+        *codePoint = code;
+        length = leadingZeros + i + 3;
+    } else {
+        length = 0;
+    }
+
+    ungetCharIgnoreEOL(c);
+    while (i--)
+        ungetCharIgnoreEOL(cp[i]);
+    while (leadingZeros--)
+        ungetCharIgnoreEOL('0');
+
+    return length;
+}
+
+uint32_t
 TokenStream::matchUnicodeEscapeIdStart(uint32_t* codePoint)
 {
-    if (peekUnicodeEscape(codePoint) && unicode::IsIdentifierStart(*codePoint)) {
-        skipChars(5);
-        return true;
+    uint32_t length = peekUnicodeEscape(codePoint);
+    if (length > 0 && unicode::IsIdentifierStart(*codePoint)) {
+        skipChars(length);
+        return length;
     }
-    return false;
+    return 0;
 }
 
 bool
 TokenStream::matchUnicodeEscapeIdent(uint32_t* codePoint)
 {
-    if (peekUnicodeEscape(codePoint) && unicode::IsIdentifierPart(*codePoint)) {
-        skipChars(5);
+    uint32_t length = peekUnicodeEscape(codePoint);
+    if (length > 0 && unicode::IsIdentifierPart(*codePoint)) {
+        skipChars(length);
         return true;
     }
     return false;
@@ -1424,13 +1478,15 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
             tp->type = matchChar('=') ? TOK_ADDASSIGN : TOK_ADD;
         goto out;
 
-      case '\\':
-        hadUnicodeEscape = matchUnicodeEscapeIdStart(&qc);
-        if (hadUnicodeEscape) {
-            identStart = userbuf.addressOfNextRawChar() - 6;
+      case '\\': {
+        uint32_t escapeLength = matchUnicodeEscapeIdStart(&qc);
+        if (escapeLength > 0) {
+            identStart = userbuf.addressOfNextRawChar() - escapeLength - 1;
+            hadUnicodeEscape = true;
             goto identifier;
         }
         goto badchar;
+      }
 
       case '|':
         if (matchChar('|'))
