@@ -627,8 +627,19 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   WritingMode outerWM = aReflowInput.GetWritingMode();
   const LogicalMargin border(outerWM,
                              aReflowInput.mStyleBorder->GetComputedBorder());
-  const LogicalMargin margin =
+  LogicalMargin margin =
     kidReflowInput.ComputedLogicalMargin().ConvertTo(outerWM, wm);
+
+  // If we're doing CSS Box Alignment in either axis, that will apply the
+  // margin for us in that axis (since the thing that's aligned is the margin
+  // box).  So, we clear out the margin here to avoid applying it twice.
+  if (kidReflowInput.mFlags.mIOffsetsNeedCSSAlign) {
+    margin.IStart(outerWM) = margin.IEnd(outerWM) = 0;
+  }
+  if (kidReflowInput.mFlags.mBOffsetsNeedCSSAlign) {
+    margin.BStart(outerWM) = margin.BEnd(outerWM) = 0;
+  }
+
   bool constrainBSize = (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE)
     && (aFlags & AbsPosReflowFlags::eConstrainHeight)
        // Don't split if told not to (e.g. for fixed frames)
