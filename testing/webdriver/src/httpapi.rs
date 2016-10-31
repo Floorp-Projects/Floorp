@@ -61,6 +61,7 @@ fn standard_routes<U:WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Ro
                 (Get, "/session/{sessionId}/alert/text", Route::GetAlertText),
                 (Post, "/session/{sessionId}/alert/text", Route::SendAlertText),
                 (Get, "/session/{sessionId}/screenshot", Route::TakeScreenshot),
+                (Get, "/session/{sessionId}/element/{elementId}/screenshot", Route::TakeElementScreenshot),
                 // TODO Remove this when > v0.5 is released. There for compatibility reasons with existing
                 //      Webdriver implementations.
                 (Get, "/session/{sessionId}/alert_text", Route::GetAlertText),
@@ -129,6 +130,7 @@ pub enum Route<U:WebDriverExtensionRoute> {
     GetAlertText,
     SendAlertText,
     TakeScreenshot,
+    TakeElementScreenshot,
     Status,
     Extension(U)
 }
