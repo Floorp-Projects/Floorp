@@ -15,6 +15,18 @@ namespace mozilla {
 class CSSAlignUtils {
 public:
   /**
+   * Flags to customize the behavior of AlignJustifySelf:
+   */
+  enum class AlignJustifyFlags {
+    eNoFlags           = 0,
+    // Indicates that we have <overflow-position> = safe.
+    eOverflowSafe      = 1 << 0,
+    // Indicates that the container's start side in aAxis is the same
+    // as the child's start side in the child's parallel axis.
+    eSameSide          = 1 << 1,
+  };
+
+  /**
    * This computes the aligned offset of a CSS-aligned child within its
    * alignment container. The returned offset is distance between the
    * logical "start" edge of the alignment container & the logical "start" edge
@@ -25,22 +37,20 @@ public:
    *                   NS_STYLE_ALIGN_{AUTO,LEFT,RIGHT} must *not* be
    *                   passed here; this method expects the caller to have
    *                   already resolved those to 'start', 'end', or 'stretch'.
-   * @param aOverflowSafe Indicates whether we have <overflow-position> = safe.
    * @param aAxis The container's axis in which we're doing alignment.
-   * @param aSameSide Indicates whether the container's start side in aAxis is
-   *                  the same as the child's start side, in the child's
-   *                  parallel axis.
    * @param aBaselineAdjust The amount to offset baseline-aligned children.
    * @param aCBSize The size of the alignment container, in its aAxis.
    * @param aRI A ReflowInput for the child.
    * @param aChildSize The child's LogicalSize (in its own writing mode).
    */
-  static nscoord AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe,
-                                  LogicalAxis aAxis, bool aSameSide,
+  static nscoord AlignJustifySelf(uint8_t aAlignment, LogicalAxis aAxis,
+                                  AlignJustifyFlags aFlags,
                                   nscoord aBaselineAdjust, nscoord aCBSize,
                                   const ReflowInput& aRI,
                                   const LogicalSize& aChildSize);
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CSSAlignUtils::AlignJustifyFlags)
 
 } // namespace mozilla
 

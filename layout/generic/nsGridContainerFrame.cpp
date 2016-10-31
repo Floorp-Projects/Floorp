@@ -35,12 +35,14 @@
 #endif
 
 using namespace mozilla;
+
 typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 typedef nsGridContainerFrame::TrackSize TrackSize;
 const uint32_t nsGridContainerFrame::kTranslatedMaxLine =
   uint32_t(nsStyleGridLine::kMaxLine - nsStyleGridLine::kMinLine);
 const uint32_t nsGridContainerFrame::kAutoLine = kTranslatedMaxLine + 3457U;
 typedef nsTHashtable< nsPtrHashKey<nsIFrame> > FrameHashtable;
+typedef mozilla::CSSAlignUtils::AlignJustifyFlags AlignJustifyFlags;
 
 // https://drafts.csswg.org/css-sizing/#constraints
 enum class SizingConstraint
@@ -2586,8 +2588,9 @@ GetDisplayFlagsForGridItem(nsIFrame* aFrame)
 
 // Align an item's margin box in its aAxis inside aCBSize.
 static void
-AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
-                 bool aSameSide, nscoord aBaselineAdjust, nscoord aCBSize,
+AlignJustifySelf(uint8_t aAlignment, LogicalAxis aAxis,
+                 AlignJustifyFlags aFlags,
+                 nscoord aBaselineAdjust, nscoord aCBSize,
                  const ReflowInput& aRI, const LogicalSize& aChildSize,
                  LogicalPoint* aPos)
 {
@@ -2596,15 +2599,15 @@ AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
 
   // NOTE: this is the resulting frame offset (border box).
   nscoord offset =
-    CSSAlignUtils::AlignJustifySelf(aAlignment, aOverflowSafe, aAxis,
-                                    aSameSide, aBaselineAdjust, aCBSize,
+    CSSAlignUtils::AlignJustifySelf(aAlignment, aAxis, aFlags,
+                                    aBaselineAdjust, aCBSize,
                                     aRI, aChildSize);
 
   // Set the position (aPos) for the requested alignment.
   if (offset != 0) {
     WritingMode wm = aRI.GetWritingMode();
     nscoord& pos = aAxis == eLogicalAxisBlock ? aPos->B(wm) : aPos->I(wm);
-    pos += MOZ_LIKELY(aSameSide) ? offset : -offset;
+    pos += MOZ_LIKELY(aFlags & AlignJustifyFlags::eSameSide) ? offset : -offset;
   }
 }
 
@@ -2615,8 +2618,18 @@ AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
           LogicalPoint* aPos)
 {
   auto alignSelf = aAlignSelf;
-  bool overflowSafe = alignSelf & NS_STYLE_ALIGN_SAFE;
+
+  AlignJustifyFlags flags = AlignJustifyFlags::eNoFlags;
+  if (alignSelf & NS_STYLE_ALIGN_SAFE) {
+    flags |= AlignJustifyFlags::eOverflowSafe;
+  }
   alignSelf &= ~NS_STYLE_ALIGN_FLAG_BITS;
+
+  WritingMode childWM = aRI.GetWritingMode();
+  if (aCBWM.ParallelAxisStartsOnSameSide(eLogicalAxisBlock, childWM)) {
+    flags |= AlignJustifyFlags::eSameSide;
+  }
+
   // Grid's 'align-self' axis is never parallel to the container's inline axis.
   if (alignSelf == NS_STYLE_ALIGN_LEFT || alignSelf == NS_STYLE_ALIGN_RIGHT) {
     alignSelf = NS_STYLE_ALIGN_START;
@@ -2624,11 +2637,7 @@ AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
   if (MOZ_LIKELY(alignSelf == NS_STYLE_ALIGN_NORMAL)) {
     alignSelf = NS_STYLE_ALIGN_STRETCH;
   }
-  WritingMode childWM = aRI.GetWritingMode();
-  // |sameSide| is true if the container's start side in this axis is the same
-  // as the child's start side, in the child's parallel axis.
-  bool sameSide = aCBWM.ParallelAxisStartsOnSameSide(eLogicalAxisBlock,
-                                                     childWM);
+
   nscoord baselineAdjust = 0;
   if (alignSelf == NS_STYLE_ALIGN_BASELINE ||
       alignSelf == NS_STYLE_ALIGN_LAST_BASELINE) {
@@ -2638,7 +2647,7 @@ AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
 
   bool isOrthogonal = aCBWM.IsOrthogonalTo(childWM);
   LogicalAxis axis = isOrthogonal ? eLogicalAxisInline : eLogicalAxisBlock;
-  AlignJustifySelf(alignSelf, overflowSafe, axis, sameSide, baselineAdjust,
+  AlignJustifySelf(alignSelf, axis, flags, baselineAdjust,
                    aCBSize, aRI, aSize, aPos);
 }
 
@@ -2649,16 +2658,22 @@ JustifySelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
             LogicalPoint* aPos)
 {
   auto justifySelf = aJustifySelf;
-  bool overflowSafe = justifySelf & NS_STYLE_JUSTIFY_SAFE;
+
+  AlignJustifyFlags flags = AlignJustifyFlags::eNoFlags;
+  if (justifySelf & NS_STYLE_JUSTIFY_SAFE) {
+    flags |= AlignJustifyFlags::eOverflowSafe;
+  }
   justifySelf &= ~NS_STYLE_JUSTIFY_FLAG_BITS;
+
+  WritingMode childWM = aRI.GetWritingMode();
+  if (aCBWM.ParallelAxisStartsOnSameSide(eLogicalAxisInline, childWM)) {
+    flags |= AlignJustifyFlags::eSameSide;
+  }
+
   if (MOZ_LIKELY(justifySelf == NS_STYLE_ALIGN_NORMAL)) {
     justifySelf = NS_STYLE_ALIGN_STRETCH;
   }
-  WritingMode childWM = aRI.GetWritingMode();
-  // |sameSide| is true if the container's start side in this axis is the same
-  // as the child's start side, in the child's parallel axis.
-  bool sameSide = aCBWM.ParallelAxisStartsOnSameSide(eLogicalAxisInline,
-                                                     childWM);
+
   nscoord baselineAdjust = 0;
   // Grid's 'justify-self' axis is always parallel to the container's inline
   // axis, so justify-self:left|right always applies.
@@ -2680,7 +2695,7 @@ JustifySelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
 
   bool isOrthogonal = aCBWM.IsOrthogonalTo(childWM);
   LogicalAxis axis = isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline;
-  AlignJustifySelf(justifySelf, overflowSafe, axis, sameSide, baselineAdjust,
+  AlignJustifySelf(justifySelf, axis, flags, baselineAdjust,
                    aCBSize, aRI, aSize, aPos);
 }
 
