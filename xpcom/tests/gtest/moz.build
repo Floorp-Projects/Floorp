@@ -42,6 +42,7 @@ UNIFIED_SOURCES += [
 SOURCES += [
     'TestAllocReplacement.cpp',
     'TestCOMPtr.cpp', # Redefines IFoo and IBar
+    'TestHashtables.cpp', # Redefines IFoo
 ]
 
 LOCAL_INCLUDES += [
