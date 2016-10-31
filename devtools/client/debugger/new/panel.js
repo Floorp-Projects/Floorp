@@ -4,9 +4,14 @@
 "use strict";
 
 const { Task } = require("devtools/shared/task");
+var {LocalizationHelper} = require("devtools/shared/l10n");
+
+const DBG_STRINGS_URI = "devtools/locale/debugger.properties";
+var L10N = new LocalizationHelper(DBG_STRINGS_URI);
 
 function DebuggerPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
+  this.panelWin.L10N = L10N;
   this.toolbox = toolbox;
 }
 
