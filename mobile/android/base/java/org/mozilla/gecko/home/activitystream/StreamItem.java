@@ -7,14 +7,10 @@ package org.mozilla.gecko.home.activitystream;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.util.DisplayMetrics;
-import android.util.TypedValue;
-import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -30,6 +26,7 @@ import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.util.DrawableUtil;
+import org.mozilla.gecko.util.TouchTargetUtil;
 import org.mozilla.gecko.widget.FaviconView;
 
 import java.util.concurrent.Future;
@@ -106,26 +103,7 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             menuButton.setImageDrawable(
                     DrawableUtil.tintDrawable(menuButton.getContext(), R.drawable.menu, Color.LTGRAY));
 
-            itemView.post(new Runnable() {
-                @Override
-                public void run() {
-                    Rect delegateArea = new Rect();
-                    menuButton.getHitRect(delegateArea);
-
-                    final int targetHitArea = itemView.getContext().getResources().getDimensionPixelSize(R.dimen.touch_target_size);
-
-                    final int widthDelta = (targetHitArea - delegateArea.width()) / 2;
-                    delegateArea.right += widthDelta;
-                    delegateArea.left -= widthDelta;
-
-                    final int heightDelta = (targetHitArea - delegateArea.height()) / 2;
-                    delegateArea.bottom += heightDelta;
-                    delegateArea.top -= heightDelta;
-
-                    TouchDelegate touchDelegate = new TouchDelegate(delegateArea, menuButton);
-                    itemView.setTouchDelegate(touchDelegate);
-                }
-            });
+            TouchTargetUtil.ensureTargetHitArea(menuButton, itemView);
 
             menuButton.setOnClickListener(new View.OnClickListener() {
                 @Override
