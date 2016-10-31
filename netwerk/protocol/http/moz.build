@@ -39,8 +39,6 @@ EXPORTS.mozilla.net += [
     'HttpChannelParent.h',
     'HttpInfo.h',
     'NullHttpChannel.h',
-    'PackagedAppService.h',
-    'PackagedAppVerifier.h',
     'PHttpChannelParams.h',
     'PSpdyPush.h',
     'TimingStruct.h',
@@ -90,8 +88,6 @@ UNIFIED_SOURCES += [
     'nsHttpTransaction.cpp',
     'NullHttpChannel.cpp',
     'NullHttpTransaction.cpp',
-    'PackagedAppService.cpp',
-    'PackagedAppVerifier.cpp',
     'TunnelUtils.cpp',
 ]
 
@@ -120,8 +116,6 @@ LOCAL_INCLUDES += [
 ]
 
 EXTRA_COMPONENTS += [
-    'PackagedAppUtils.js',
-    'PackagedAppUtils.manifest',
     'WellKnownOpportunisticUtils.js',
     'WellKnownOpportunisticUtils.manifest',
 ]
