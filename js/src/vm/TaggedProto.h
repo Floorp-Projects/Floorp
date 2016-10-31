@@ -20,6 +20,7 @@ class TaggedProto
     static JSObject * const LazyProto;
 
     TaggedProto() : proto(nullptr) {}
+    TaggedProto(const TaggedProto& other) : proto(other.proto) {}
     explicit TaggedProto(JSObject* proto) : proto(proto) {}
 
     uintptr_t toWord() const { return uintptr_t(proto); }
