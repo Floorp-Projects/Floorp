@@ -1981,6 +1981,20 @@ nsContainerFrame::RenumberChildFrames(int32_t* aOrdinal,
   return renumbered;
 }
 
+uint16_t
+nsContainerFrame::CSSAlignmentForAbsPosChild(const ReflowInput& aChildRI,
+                                             LogicalAxis aLogicalAxis) const
+{
+  MOZ_ASSERT(aChildRI.mFrame->IsAbsolutelyPositioned(),
+             "This method should only be called for abspos children");
+  NS_ERROR("Child classes that use css box alignment for abspos children "
+           "should provide their own implementation of this method!");
+
+  // In the unexpected/unlikely event that this implementation gets invoked,
+  // just use "start" alignment.
+  return NS_STYLE_ALIGN_START;
+}
+
 nsresult
 nsContainerFrame::AttributeChanged(int32_t         aNameSpaceID,
                                    nsIAtom*        aAttribute,
