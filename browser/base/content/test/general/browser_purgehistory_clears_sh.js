@@ -4,7 +4,7 @@
 const url = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 
 add_task(function* purgeHistoryTest() {
-  let tab = yield BrowserTestUtils.withNewTab({
+  yield BrowserTestUtils.withNewTab({
     gBrowser,
     url,
   }, function* purgeHistoryTestInner(browser) {

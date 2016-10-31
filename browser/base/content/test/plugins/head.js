@@ -15,8 +15,8 @@ function promiseInitContentBlocklistSvc(aBrowser)
 {
   return ContentTask.spawn(aBrowser, {}, function* () {
     try {
-      let bls = Cc["@mozilla.org/extensions/blocklist;1"]
-                          .getService(Ci.nsIBlocklistService);
+      Cc["@mozilla.org/extensions/blocklist;1"]
+        .getService(Ci.nsIBlocklistService);
     } catch (ex) {
       return ex.message;
     }
@@ -208,7 +208,6 @@ function promiseCrashObject(aId, aBrowser) {
   let browser = aBrowser || gTestBrowser;
   return ContentTask.spawn(browser, aId, function* (aId) {
     let plugin = content.document.getElementById(aId);
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     Components.utils.waiveXrays(plugin).crash();
   });
 }

@@ -88,7 +88,6 @@ function* drop(dragData, expectedTabOpenCount=0) {
   };
   EventUtils.synthesizeDrop(gBrowser.selectedTab, gBrowser.selectedTab, dragData, "link", window, undefined, event);
   let tabsOpened = false;
-  let tabOpened = false;
   if (awaitTabOpen) {
     yield awaitTabOpen;
     info("Got TabOpen event");
