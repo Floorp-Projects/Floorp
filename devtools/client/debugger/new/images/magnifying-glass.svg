@@ -1,7 +1,4 @@
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="14px" height="14px" viewBox="488 384 14 14" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <path d="M495.5,391.5 L500.200877,396.200877" id="Line" stroke="#4A90E2" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
-  <ellipse id="Oval-6" stroke="#4A90E2" stroke-width="1.25" fill="#FFFFFF" fill-rule="evenodd" cx="493.5" cy="389.5" rx="4.5" ry="4.5"></ellipse>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <path class="st0" d="M9 9.3l3.6 3.6"/>
+  <ellipse fill="transparent" cx="5.9" cy="6.2" rx="4.5" ry="4.5"/>
 </svg>

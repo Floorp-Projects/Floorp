@@ -1,0 +1,7 @@
+Follow these steps when adding/upgrading the reselect.js module:
+
+1. git clone https://github.com/reactjs/reselect - clone the repo
+2. npm install - compile the sources to a compiled JS module file
+3. cp dist/reselect.js $DEST_DIR - copy the compiled file to Firefox source tree
+
+The package version used it currently 2.5.4 (last update in bug 1310573)
