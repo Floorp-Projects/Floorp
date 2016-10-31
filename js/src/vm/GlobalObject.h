@@ -97,6 +97,8 @@ class GlobalObject : public NativeObject
         STAR_GENERATOR_OBJECT_PROTO,
         STAR_GENERATOR_FUNCTION_PROTO,
         STAR_GENERATOR_FUNCTION,
+        ASYNC_FUNCTION_PROTO,
+        ASYNC_FUNCTION,
         MAP_ITERATOR_PROTO,
         SET_ITERATOR_PROTO,
         COLLATOR_PROTO,
@@ -576,6 +578,19 @@ class GlobalObject : public NativeObject
         return global->getOrCreateObject(cx, STAR_GENERATOR_FUNCTION, initStarGenerators);
     }
 
+    static NativeObject* getOrCreateAsyncFunctionPrototype(JSContext* cx,
+                                                           Handle<GlobalObject*> global)
+    {
+        return MaybeNativeObject(global->getOrCreateObject(cx, ASYNC_FUNCTION_PROTO,
+                                                           initAsyncFunction));
+    }
+
+    static JSObject* getOrCreateAsyncFunction(JSContext* cx,
+                                              Handle<GlobalObject*> global)
+    {
+        return global->getOrCreateObject(cx, ASYNC_FUNCTION, initAsyncFunction);
+    }
+
     static JSObject* getOrCreateMapIteratorPrototype(JSContext* cx,
                                                      Handle<GlobalObject*> global)
     {
@@ -724,6 +739,8 @@ class GlobalObject : public NativeObject
     // Implemented in vm/GeneratorObject.cpp.
     static bool initLegacyGeneratorProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initStarGenerators(JSContext* cx, Handle<GlobalObject*> global);
+
+    static bool initAsyncFunction(JSContext* cx, Handle<GlobalObject*> global);
 
     // Implemented in builtin/MapObject.cpp.
     static bool initMapIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
@@ -984,6 +1001,9 @@ StandardProtoKeyOrNull(const JSObject* obj)
         return GetExceptionProtoKey(obj->as<ErrorObject>().type());
     return key;
 }
+
+JSObject*
+NewSingletonObjectWithFunctionPrototype(JSContext* cx, Handle<GlobalObject*> global);
 
 } // namespace js
 

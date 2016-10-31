@@ -17,7 +17,6 @@
 
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
-using namespace mozilla::psm;
 
 template <size_t N>
 inline Input
@@ -46,7 +45,7 @@ protected:
 };
 
 static void
-PutAndGet(OCSPCache& cache, const CertID& certID, Result result,
+PutAndGet(mozilla::psm::OCSPCache& cache, const CertID& certID, Result result,
           Time time, const char* firstPartyDomain = nullptr)
 {
   // The first time is thisUpdate. The second is validUntil.
