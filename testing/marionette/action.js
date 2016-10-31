@@ -248,14 +248,16 @@ action.Action = class {
 
       case action.PointerDown:
       case action.PointerUp:
-        assertPositiveInteger(actionItem.button, "button");
+        assert.positiveInteger(actionItem.button,
+            error.pprint`Expected 'button' (${actionItem.button}) to be >= 0`);
         item.button = actionItem.button;
         break;
 
       case action.PointerMove:
         item.duration = actionItem.duration;
         if (typeof item.duration != "undefined"){
-          assertPositiveInteger(item.duration, "duration");
+          assert.positiveInteger(item.duration,
+              error.pprint`Expected 'duration' (${item.duration}) to be >= 0`);
         }
         if (typeof actionItem.element != "undefined" &&
             !element.isWebElementReference(actionItem.element)) {
@@ -267,11 +269,11 @@ action.Action = class {
 
         item.x = actionItem.x;
         if (typeof item.x != "undefined") {
-          assertPositiveInteger(item.x, "x");
+          assert.positiveInteger(item.x, error.pprint`Expected 'x' (${item.x}) to be >= 0`);
         }
         item.y = actionItem.y;
         if (typeof item.y != "undefined") {
-          assertPositiveInteger(item.y, "y");
+          assert.positiveInteger(item.y, error.pprint`Expected 'y' (${item.y}) to be >= 0`);
         }
         break;
 
@@ -282,7 +284,8 @@ action.Action = class {
       case action.Pause:
         item.duration = actionItem.duration;
         if (typeof item.duration != "undefined") {
-          assertPositiveInteger(item.duration, "duration");
+          assert.positiveInteger(item.duration,
+              error.pprint`Expected 'duration' (${item.duration}) to be >= 0`);
         }
         break;
     }
@@ -390,7 +393,7 @@ action.Sequence = class extends Array {
 action.PointerParameters = class {
   constructor(pointerType = "mouse", primary = true) {
     this.pointerType = action.PointerType.get(pointerType);
-    assertBoolean(primary, "primary");
+    assert.boolean(primary);
     this.primary = primary;
   };
 
@@ -441,20 +444,6 @@ action.processPointerAction = function processPointerAction(id, pointerParams, a
 };
 
 // helpers
-function assertPositiveInteger(value, name = undefined) {
-  let suffix = name ? ` (${name})` : '';
-  if (!Number.isInteger(value) || value < 0) {
-    throw new InvalidArgumentError(`Expected integer >= 0${suffix}, got: ${value}`);
-  }
-}
-
-function assertBoolean(value, name = undefined) {
-  let suffix = name ? ` (${name})` : '';
-  if (typeof(value) != "boolean") {
-    throw new InvalidArgumentError(`Expected boolean${suffix}, got: ${value}`);
-  }
-}
-
 function capitalize(str) {
   if (typeof str != "string") {
     throw new InvalidArgumentError(`Expected string, got: ${str}`);
