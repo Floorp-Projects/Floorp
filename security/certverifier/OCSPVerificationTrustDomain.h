@@ -12,6 +12,8 @@
 
 namespace mozilla { namespace psm {
 
+typedef mozilla::pkix::Result Result;
+
 class OCSPVerificationTrustDomain : public mozilla::pkix::TrustDomain
 {
 public:

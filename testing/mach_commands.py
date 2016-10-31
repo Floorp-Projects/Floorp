@@ -320,7 +320,7 @@ class Test(MachCommandBase):
 
         buckets = {}
         for test in run_tests:
-            key = (test['flavor'], test.get('subsuite', ''))
+            key = (test['flavor'], test['subsuite'])
             buckets.setdefault(key, []).append(test)
 
         for (flavor, subsuite), tests in sorted(buckets.items()):

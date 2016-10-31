@@ -63,7 +63,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
     JSScript* compileEvalScript(HandleObject environment, HandleScope enclosingScope);
     ModuleObject* compileModule();
     bool compileFunctionBody(MutableHandleFunction fun, Handle<PropertyNameVector> formals,
-                             GeneratorKind generatorKind);
+                             GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
     ScriptSourceObject* sourceObjectPtr() const;
 
@@ -435,7 +435,8 @@ BytecodeCompiler::compileModule()
 bool
 BytecodeCompiler::compileFunctionBody(MutableHandleFunction fun,
                                       Handle<PropertyNameVector> formals,
-                                      GeneratorKind generatorKind)
+                                      GeneratorKind generatorKind,
+                                      FunctionAsyncKind asyncKind)
 {
     MOZ_ASSERT(fun);
     MOZ_ASSERT(fun->isTenured());
@@ -453,7 +454,7 @@ BytecodeCompiler::compileFunctionBody(MutableHandleFunction fun,
     ParseNode* fn;
     do {
         Directives newDirectives = directives;
-        fn = parser->standaloneFunctionBody(fun, enclosingScope, formals, generatorKind,
+        fn = parser->standaloneFunctionBody(fun, enclosingScope, formals, generatorKind, asyncKind,
                                             directives, &newDirectives);
         if (!fn && !handleParseFailure(newDirectives))
             return false;
@@ -646,7 +647,8 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
 
     Rooted<JSFunction*> fun(cx, lazy->functionNonDelazifying());
     MOZ_ASSERT(!lazy->isLegacyGenerator());
-    ParseNode* pn = parser.standaloneLazyFunction(fun, lazy->strict(), lazy->generatorKind());
+    ParseNode* pn = parser.standaloneLazyFunction(fun, lazy->strict(), lazy->generatorKind(),
+                                                  lazy->asyncKind());
     if (!pn)
         return false;
 
@@ -679,7 +681,8 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
 static bool
 CompileFunctionBody(JSContext* cx, MutableHandleFunction fun, const ReadOnlyCompileOptions& options,
                     Handle<PropertyNameVector> formals, SourceBufferHolder& srcBuf,
-                    HandleScope enclosingScope, GeneratorKind generatorKind)
+                    HandleScope enclosingScope, GeneratorKind generatorKind,
+                    FunctionAsyncKind asyncKind)
 {
     MOZ_ASSERT(!options.isRunOnce);
 
@@ -689,7 +692,7 @@ CompileFunctionBody(JSContext* cx, MutableHandleFunction fun, const ReadOnlyComp
     BytecodeCompiler compiler(cx, cx->tempLifoAlloc(), options, srcBuf, enclosingScope,
                               TraceLogger_ParserCompileFunction);
     compiler.setSourceArgumentsNotIncluded();
-    return compiler.compileFunctionBody(fun, formals, generatorKind);
+    return compiler.compileFunctionBody(fun, formals, generatorKind, asyncKind);
 }
 
 bool
@@ -698,7 +701,8 @@ frontend::CompileFunctionBody(JSContext* cx, MutableHandleFunction fun,
                               Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf,
                               HandleScope enclosingScope)
 {
-    return CompileFunctionBody(cx, fun, options, formals, srcBuf, enclosingScope, NotGenerator);
+    return CompileFunctionBody(cx, fun, options, formals, srcBuf, enclosingScope, NotGenerator,
+                               SyncFunction);
 }
 
 bool
@@ -708,9 +712,8 @@ frontend::CompileFunctionBody(JSContext* cx, MutableHandleFunction fun,
 {
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
     return CompileFunctionBody(cx, fun, options, formals, srcBuf, emptyGlobalScope,
-                               NotGenerator);
+                               NotGenerator, SyncFunction);
 }
-
 
 bool
 frontend::CompileStarGeneratorBody(JSContext* cx, MutableHandleFunction fun,
@@ -720,5 +723,16 @@ frontend::CompileStarGeneratorBody(JSContext* cx, MutableHandleFunction fun,
 {
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
     return CompileFunctionBody(cx, fun, options, formals, srcBuf, emptyGlobalScope,
-                               StarGenerator);
+                               StarGenerator, SyncFunction);
+}
+
+bool
+frontend::CompileAsyncFunctionBody(JSContext* cx, MutableHandleFunction fun,
+                                   const ReadOnlyCompileOptions& options,
+                                   Handle<PropertyNameVector> formals,
+                                   JS::SourceBufferHolder& srcBuf)
+{
+    RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
+    return CompileFunctionBody(cx, fun, options, formals, srcBuf, emptyGlobalScope,
+                               StarGenerator, AsyncFunction);
 }

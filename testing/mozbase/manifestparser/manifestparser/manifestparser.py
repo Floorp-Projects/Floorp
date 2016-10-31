@@ -152,6 +152,10 @@ class ManifestParser(object):
 
         # get the tests
         for section, data in sections:
+            subsuite = ''
+            if 'subsuite' in data:
+                subsuite = data['subsuite']
+
             # In case of defaults only, no other section than parent: has to
             # be processed.
             if defaults_only and not section.startswith('parent:'):
@@ -217,6 +221,7 @@ class ManifestParser(object):
                 else:
                     _relpath = relpath(path, rootdir)
 
+            test['subsuite'] = subsuite
             test['path'] = path
             test['relpath'] = _relpath
 

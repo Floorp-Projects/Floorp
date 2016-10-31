@@ -260,8 +260,8 @@ NewSingletonObjectWithObjectPrototype(JSContext* cx, Handle<GlobalObject*> globa
     return NewObjectWithGivenProto<PlainObject>(cx, proto, SingletonObject);
 }
 
-static JSObject*
-NewSingletonObjectWithFunctionPrototype(JSContext* cx, Handle<GlobalObject*> global)
+JSObject*
+js::NewSingletonObjectWithFunctionPrototype(JSContext* cx, Handle<GlobalObject*> global)
 {
     RootedObject proto(cx, global->getOrCreateFunctionPrototype(cx));
     if (!proto)

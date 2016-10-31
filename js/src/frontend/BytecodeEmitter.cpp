@@ -2465,6 +2465,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
 
       case PNK_YIELD_STAR:
       case PNK_YIELD:
+      case PNK_AWAIT:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         *answer = true;
         return true;
@@ -6928,6 +6929,11 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
     if (!pn->functionIsHoisted()) {
         /* JSOP_LAMBDA_ARROW is always preceded by a new.target */
         MOZ_ASSERT(fun->isArrow() == (pn->getOp() == JSOP_LAMBDA_ARROW));
+        if (funbox->isAsync()) {
+            MOZ_ASSERT(!needsProto);
+            return emitAsyncWrapper(index, funbox->needsHomeObject(), fun->isArrow());
+        }
+
         if (fun->isArrow()) {
             if (sc->allowNewTarget()) {
                 if (!emit1(JSOP_NEWTARGET))
@@ -6942,6 +6948,13 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             MOZ_ASSERT(pn->getOp() == JSOP_FUNWITHPROTO || pn->getOp() == JSOP_LAMBDA);
             pn->setOp(JSOP_FUNWITHPROTO);
         }
+
+        if (pn->getOp() == JSOP_DEFFUN) {
+            if (!emitIndex32(JSOP_LAMBDA, index))
+                return false;
+            return emit1(JSOP_DEFFUN);
+        }
+
         return emitIndex32(pn->getOp(), index);
     }
 
@@ -6972,7 +6985,14 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             MOZ_ASSERT(sc->isGlobalContext() || sc->isEvalContext());
             MOZ_ASSERT(pn->getOp() == JSOP_NOP);
             switchToPrologue();
-            if (!emitIndex32(JSOP_DEFFUN, index))
+            if (funbox->isAsync()) {
+                if (!emitAsyncWrapper(index, fun->isMethod(), fun->isArrow()))
+                    return false;
+            } else {
+                if (!emitIndex32(JSOP_LAMBDA, index))
+                    return false;
+            }
+            if (!emit1(JSOP_DEFFUN))
                 return false;
             if (!updateSourceCoordNotes(pn->pn_pos.begin))
                 return false;
@@ -6982,7 +7002,12 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
         // For functions nested within functions and blocks, make a lambda and
         // initialize the binding name of the function in the current scope.
 
-        auto emitLambda = [index](BytecodeEmitter* bce, const NameLocation&, bool) {
+        bool isAsync = funbox->isAsync();
+        auto emitLambda = [index, isAsync](BytecodeEmitter* bce, const NameLocation&, bool) {
+            if (isAsync) {
+                return bce->emitAsyncWrapper(index, /* needsHomeObject = */ false,
+                                             /* isArrow = */ false);
+            }
             return bce->emitIndexOp(JSOP_LAMBDA, index);
         };
 
@@ -6992,6 +7017,74 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             return false;
     }
 
+    return true;
+}
+
+bool
+BytecodeEmitter::emitAsyncWrapperLambda(unsigned index, bool isArrow) {
+    if (isArrow) {
+        if (sc->allowNewTarget()) {
+            if (!emit1(JSOP_NEWTARGET))
+                return false;
+        } else {
+            if (!emit1(JSOP_NULL))
+                return false;
+        }
+        if (!emitIndex32(JSOP_LAMBDA_ARROW, index))
+            return false;
+    } else {
+        if (!emitIndex32(JSOP_LAMBDA, index))
+            return false;
+    }
+
+    return true;
+}
+
+bool
+BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject, bool isArrow) {
+    // needsHomeObject can be true for propertyList for extended class.
+    // In that case push both unwrapped and wrapped function, in order to
+    // initialize home object of unwrapped function, and set wrapped function
+    // as a property.
+    //
+    //   lambda       // unwrapped
+    //   getintrinsic // unwrapped AsyncFunction_wrap
+    //   undefined    // unwrapped AsyncFunction_wrap undefined
+    //   dupat 2      // unwrapped AsyncFunction_wrap undefined unwrapped
+    //   call 1       // unwrapped wrapped
+    //
+    // Emitted code is surrounded by the following code.
+    //
+    //                    // classObj classCtor classProto
+    //   (emitted code)   // classObj classCtor classProto unwrapped wrapped
+    //   swap             // classObj classCtor classProto wrapped unwrapped
+    //   inithomeobject 1 // classObj classCtor classProto wrapped unwrapped
+    //                    //   initialize the home object of unwrapped
+    //                    //   with classProto here
+    //   pop              // classObj classCtor classProto wrapped
+    //   inithiddenprop   // classObj classCtor classProto wrapped
+    //                    //   initialize the property of the classProto
+    //                    //   with wrapped function here
+    //   pop              // classObj classCtor classProto
+    //
+    // needsHomeObject is false for other cases, push wrapped function only.
+    if (needsHomeObject) {
+        if (!emitAsyncWrapperLambda(index, isArrow))
+            return false;
+    }
+    if (!emitAtomOp(cx->names().AsyncFunction_wrap, JSOP_GETINTRINSIC))
+        return false;
+    if (!emit1(JSOP_UNDEFINED))
+        return false;
+    if (needsHomeObject) {
+        if (!emitDupAt(2))
+            return false;
+    } else {
+        if (!emitAsyncWrapperLambda(index, isArrow))
+            return false;
+    }
+    if (!emitCall(JSOP_CALL, 1))
+        return false;
     return true;
 }
 
@@ -8376,8 +8469,17 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
             propdef->pn_right->pn_funbox->needsHomeObject())
         {
             MOZ_ASSERT(propdef->pn_right->pn_funbox->function()->allowSuperProperty());
-            if (!emit2(JSOP_INITHOMEOBJECT, isIndex))
+            bool isAsync = propdef->pn_right->pn_funbox->isAsync();
+            if (isAsync) {
+                if (!emit1(JSOP_SWAP))
+                    return false;
+            }
+            if (!emit2(JSOP_INITHOMEOBJECT, isIndex + isAsync))
                 return false;
+            if (isAsync) {
+                if (!emit1(JSOP_POP))
+                    return false;
+            }
         }
 
         // Class methods are not enumerable.
@@ -9243,6 +9345,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
         break;
 
       case PNK_YIELD:
+      case PNK_AWAIT:
         if (!emitYield(pn))
             return false;
         break;

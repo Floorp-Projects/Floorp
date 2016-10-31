@@ -643,7 +643,8 @@ VerifyCertificate(CERTCertificate* signerCert, void* voidContext, void* pinArg)
     return MapSECStatus(SECFailure);
   }
   Input certDER;
-  Result rv = certDER.Init(signerCert->derCert.data, signerCert->derCert.len);
+  mozilla::pkix::Result rv = certDER.Init(signerCert->derCert.data,
+                                          signerCert->derCert.len);
   if (rv != Success) {
     return mozilla::psm::GetXPCOMFromNSSError(MapResultToPRErrorCode(rv));
   }
@@ -654,7 +655,7 @@ VerifyCertificate(CERTCertificate* signerCert, void* voidContext, void* pinArg)
                       KeyPurposeId::id_kp_codeSigning,
                       CertPolicyId::anyPolicy,
                       nullptr/*stapledOCSPResponse*/);
-  if (rv == Result::ERROR_EXPIRED_CERTIFICATE) {
+  if (rv == mozilla::pkix::Result::ERROR_EXPIRED_CERTIFICATE) {
     // For code-signing you normally need trusted 3rd-party timestamps to
     // handle expiration properly. The signer could always mess with their
     // system clock so you can't trust the certificate was un-expired when

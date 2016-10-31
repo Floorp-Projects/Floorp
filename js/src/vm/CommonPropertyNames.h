@@ -29,6 +29,11 @@
     macro(ArrayValuesAt, ArrayValuesAt, "ArrayValuesAt") \
     macro(as, as, "as") \
     macro(Async, Async, "Async") \
+    macro(AsyncFunction, AsyncFunction, "AsyncFunction") \
+    macro(AsyncFunction_wrap, AsyncFunction_wrap, "AsyncFunction_wrap") \
+    macro(AsyncWrapped, AsyncWrapped, "AsyncWrapped") \
+    macro(async, async, "async") \
+    macro(await, await, "await") \
     macro(Bool8x16, Bool8x16, "Bool8x16") \
     macro(Bool16x8, Bool16x8, "Bool16x8") \
     macro(Bool32x4, Bool32x4, "Bool32x4") \
