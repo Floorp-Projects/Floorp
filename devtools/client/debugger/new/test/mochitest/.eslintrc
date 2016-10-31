@@ -1,6 +1,4 @@
-"use strict";
-
-module.exports = {
+{
   "globals": {
     "add_task": false,
     "Assert": false,
@@ -66,10 +64,11 @@ module.exports = {
     "removeBreakpoint": false,
     "addBreakpoint": false,
     "toggleCallStack": false,
+    "toggleScopes": false,
     "isVisibleWithin": false,
     "clickElement": false,
     "togglePauseOnExceptions": false,
     "pressKey": false,
     "EXAMPLE_URL": false
   }
-};
+}
