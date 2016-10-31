@@ -1891,19 +1891,16 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
   }
 #endif // DEBUG
 
-  // If the flex item's inline axis is the same as the cross axis, then
-  // 'align-self:baseline' is identical to 'flex-start'. If that's the case, we
-  // just directly convert our align-self value here, so that we don't have to
-  // handle this with special cases elsewhere.
-  // Moreover: for the time being (until we support writing-modes),
-  // all inline axes are horizontal -- so we can just check if the cross axis
-  // is horizontal.
-  // FIXME: Once we support writing-mode (vertical text), this
-  // IsCrossAxisHorizontal check won't be sufficient anymore -- we'll actually
-  // need to compare our inline axis vs. the cross axis.
-  if (mAlignSelf == NS_STYLE_ALIGN_BASELINE &&
-      aAxisTracker.IsCrossAxisHorizontal()) {
-    mAlignSelf = NS_STYLE_ALIGN_FLEX_START;
+  // Map align-self 'baseline' value to 'start' when baseline alignment
+  // is not possible because the FlexItem's writing mode is orthogonal to
+  // the main axis of the container. If that's the case, we just directly
+  // convert our align-self value here, so that we don't have to handle this
+  // with special cases elsewhere.
+  if (aAxisTracker.IsRowOriented() ==
+      aAxisTracker.GetWritingMode().IsOrthogonalTo(mWM)) {
+    if (mAlignSelf == NS_STYLE_ALIGN_BASELINE) {
+      mAlignSelf = NS_STYLE_ALIGN_FLEX_START;
+    }
   }
 }
 
