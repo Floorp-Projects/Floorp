@@ -23,7 +23,6 @@ add_task(function*() {
   });
 
   yield PlacesTestUtils.clearHistory();
-  let tabCount = gBrowser.tabs.length;
 
   gMaxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
 

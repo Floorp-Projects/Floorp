@@ -195,7 +195,6 @@ var gPluginHandler = {
     }
 
     let browser = aNotification.browser;
-    let contentWindow = browser.contentWindow;
     if (aNewState != "continue") {
       let principal = aNotification.options.principal;
       Services.perms.addFromPrincipal(principal, aPluginInfo.permissionString,

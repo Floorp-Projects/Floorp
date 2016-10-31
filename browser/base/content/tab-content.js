@@ -272,7 +272,6 @@ var AboutReaderListener = {
   receiveMessage: function(message) {
     switch (message.name) {
       case "Reader:ToggleReaderMode":
-        let url = content.document.location.href;
         if (!this.isAboutReader) {
           this._articlePromise = ReaderMode.parseDocument(content.document).catch(Cu.reportError);
           ReaderMode.enterReaderMode(docShell, content);

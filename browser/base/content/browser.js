@@ -621,7 +621,7 @@ var gPopupBlockerObserver = {
 
   showAllBlockedPopups: function (aBrowser)
   {
-    let popups = aBrowser.retrieveListOfBlockedPopups().then(popups => {
+    aBrowser.retrieveListOfBlockedPopups().then(popups => {
       for (let i = 0; i < popups.length; i++) {
         if (popups[i].popupWindowURIspec)
           aBrowser.unblockPopup(i);
@@ -796,7 +796,6 @@ function _loadURIWithFlags(browser, uri, params) {
   let referrer = params.referrerURI;
   let referrerPolicy = ('referrerPolicy' in params ? params.referrerPolicy :
                         Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT);
-  let charset = params.charset;
   let postData = params.postData;
 
   let wasRemote = browser.isRemoteBrowser;
@@ -3104,7 +3103,6 @@ function populateMirrorTabMenu(popup) {
   if (!Services.prefs.getBoolPref("browser.casting.enabled")) {
     return;
   }
-  let videoEl = this.target;
   let doc = popup.ownerDocument;
   let services = CastingApps.getServicesForMirroring();
   services.forEach(service => {
@@ -5643,7 +5641,7 @@ function handleDroppedLink(event, urlOrLinks, name)
   // inBackground should be false, as it's loading into current browser.
   let inBackground = false;
   if (event) {
-    let inBackground = Services.prefs.getBoolPref("browser.tabs.loadInBackground");
+    inBackground = Services.prefs.getBoolPref("browser.tabs.loadInBackground");
     if (event.shiftKey)
       inBackground = !inBackground;
   }
