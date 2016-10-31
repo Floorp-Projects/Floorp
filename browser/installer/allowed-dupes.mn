@@ -220,3 +220,7 @@ res/table-remove-column.gif
 res/table-remove-row-active.gif
 res/table-remove-row-hover.gif
 res/table-remove-row.gif
+# Aurora branding
+browser/chrome/browser/content/browser/defaultthemes/devedition.icon.png
+browser/chrome/browser/content/branding/icon64.png
+browser/chrome/devtools/content/framework/dev-edition-promo/dev-edition-logo.png
