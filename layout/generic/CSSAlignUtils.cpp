@@ -19,8 +19,8 @@ SpaceToFill(WritingMode aWM, const LogicalSize& aSize, nscoord aMargin,
 }
 
 nscoord
-CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe,
-                                LogicalAxis aAxis, bool aSameSide,
+CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, LogicalAxis aAxis,
+                                AlignJustifyFlags aFlags,
                                 nscoord aBaselineAdjust, nscoord aCBSize,
                                 const ReflowInput& aRI,
                                 const LogicalSize& aChildSize)
@@ -31,15 +31,19 @@ CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe,
              aAlignment != NS_STYLE_ALIGN_RIGHT,
              "caller should map that to the corresponding START/END");
 
+  // Promote aFlags to convenience bools:
+  const bool isOverflowSafe = !!(aFlags & AlignJustifyFlags::eOverflowSafe);
+  const bool isSameSide = !!(aFlags & AlignJustifyFlags::eSameSide);
+
   // Map some alignment values to 'start' / 'end'.
   switch (aAlignment) {
     case NS_STYLE_ALIGN_SELF_START: // align/justify-self: self-start
-      aAlignment = MOZ_LIKELY(aSameSide) ? NS_STYLE_ALIGN_START
-                                         : NS_STYLE_ALIGN_END;
+      aAlignment = MOZ_LIKELY(isSameSide) ? NS_STYLE_ALIGN_START
+                                          : NS_STYLE_ALIGN_END;
       break;
     case NS_STYLE_ALIGN_SELF_END: // align/justify-self: self-end
-      aAlignment = MOZ_LIKELY(aSameSide) ? NS_STYLE_ALIGN_END
-                                         : NS_STYLE_ALIGN_START;
+      aAlignment = MOZ_LIKELY(isSameSide) ? NS_STYLE_ALIGN_END
+                                          : NS_STYLE_ALIGN_START;
       break;
     // flex-start/flex-end are the same as start/end, in most contexts.
     // (They have special behavior in flex containers, so flex containers
@@ -60,7 +64,7 @@ CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe,
   WritingMode wm = aRI.GetWritingMode();
   nscoord marginStart, marginEnd;
   if (aAxis == eLogicalAxisBlock) {
-    if (MOZ_LIKELY(aSameSide)) {
+    if (MOZ_LIKELY(isSameSide)) {
       marginStart = margin.BStart(wm);
       marginEnd = margin.BEnd(wm);
     } else {
@@ -68,7 +72,7 @@ CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe,
       marginEnd = margin.BStart(wm);
     }
   } else {
-    if (MOZ_LIKELY(aSameSide)) {
+    if (MOZ_LIKELY(isSameSide)) {
       marginStart = margin.IStart(wm);
       marginEnd = margin.IEnd(wm);
     } else {
@@ -91,7 +95,7 @@ CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe,
   // https://drafts.csswg.org/css-align-3/#overflow-values
   // This implements <overflow-position> = 'safe'.
   // And auto-margins: https://drafts.csswg.org/css-grid/#auto-margins
-  if ((MOZ_UNLIKELY(aOverflowSafe) && aAlignment != NS_STYLE_ALIGN_START) ||
+  if ((MOZ_UNLIKELY(isOverflowSafe) && aAlignment != NS_STYLE_ALIGN_START) ||
       hasAutoMarginStart || hasAutoMarginEnd) {
     nscoord space = SpaceToFill(wm, aChildSize, marginStart + marginEnd,
                                 aAxis, aCBSize);
@@ -103,10 +107,10 @@ CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe,
       aAlignment = NS_STYLE_ALIGN_START;
     } else if (hasAutoMarginEnd) {
       aAlignment = hasAutoMarginStart ? NS_STYLE_ALIGN_CENTER
-                                      : (aSameSide ? NS_STYLE_ALIGN_START
-                                                   : NS_STYLE_ALIGN_END);
+                                      : (isSameSide ? NS_STYLE_ALIGN_START
+                                                    : NS_STYLE_ALIGN_END);
     } else if (hasAutoMarginStart) {
-      aAlignment = aSameSide ? NS_STYLE_ALIGN_END : NS_STYLE_ALIGN_START;
+      aAlignment = isSameSide ? NS_STYLE_ALIGN_END : NS_STYLE_ALIGN_START;
     }
   }
 
@@ -116,7 +120,7 @@ CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe,
   switch (aAlignment) {
     case NS_STYLE_ALIGN_BASELINE:
     case NS_STYLE_ALIGN_LAST_BASELINE:
-      if (MOZ_LIKELY(aSameSide == (aAlignment == NS_STYLE_ALIGN_BASELINE))) {
+      if (MOZ_LIKELY(isSameSide == (aAlignment == NS_STYLE_ALIGN_BASELINE))) {
         offset = marginStart + aBaselineAdjust;
       } else {
         nscoord size = aAxis == eLogicalAxisBlock ? aChildSize.BSize(wm)
