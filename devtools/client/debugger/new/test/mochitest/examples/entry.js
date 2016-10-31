@@ -11,6 +11,6 @@ if(opts.extra) {
 
 window.keepMeAlive = function() {
   // This function exists to make sure this script is never garbage
-  // collected.
-  return 1;
+  // collected. It is also callable from tests.
+  return times2(4);
 }
