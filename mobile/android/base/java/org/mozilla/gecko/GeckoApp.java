@@ -1636,6 +1636,9 @@ public abstract class GeckoApp
 
             if (GeckoThread.isRunning()) {
                 geckoConnected();
+                if (mLayerView != null) {
+                    mLayerView.setPaintState(LayerView.PAINT_BEFORE_FIRST);
+                }
             }
         }
     }
