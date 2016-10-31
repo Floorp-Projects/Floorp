@@ -1054,11 +1054,22 @@ PopupNotifications.prototype = {
   },
 
   _isActiveBrowser: function (browser) {
-    // Note: This helper only exists, because in e10s builds,
-    // we can't access the docShell of a browser from chrome.
-    return browser.docShell
-      ? browser.docShell.isActive
-      : (this.window.gBrowser.selectedBrowser == browser);
+    // We compare on frameLoader instead of just comparing the
+    // selectedBrowser and browser directly because browser tabs in
+    // Responsive Design Mode put the actual web content into a
+    // mozbrowser iframe and proxy property read/write and method
+    // calls from the tab to that iframe. This is so that attempts
+    // to reload the tab end up reloading the content in
+    // Responsive Design Mode, and not the Responsive Design Mode
+    // viewer itself.
+    //
+    // This means that PopupNotifications can come up from a browser
+    // in Responsive Design Mode, but the selectedBrowser will not match
+    // the browser being passed into this function, despite the browser
+    // actually being within the selected tab. We workaround this by
+    // comparing frameLoader instead, which is proxied from the outer
+    // <xul:browser> to the inner mozbrowser <iframe>.
+    return this.tabbrowser.selectedBrowser.frameLoader == browser.frameLoader;
   },
 
   _onIconBoxCommand: function PopupNotifications_onIconBoxCommand(event) {
