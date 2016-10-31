@@ -152,7 +152,7 @@ public:
     typedef IPC::Message Message;
     typedef IPC::MessageInfo MessageInfo;
 
-    IProtocol() : mManager(nullptr) {}
+    IProtocol() : mManager(nullptr), mChannel(nullptr) {}
 
     virtual int32_t Register(IProtocol*);
     virtual int32_t RegisterID(IProtocol*, int32_t);
@@ -168,7 +168,6 @@ public:
 
     // XXX odd ducks, acknowledged
     virtual ProcessId OtherPid() const;
-    virtual MessageChannel* GetIPCChannel() = 0;
 
     virtual void FatalError(const char* const aProtocolName, const char* const aErrorMsg) const = 0;
 
@@ -182,12 +181,16 @@ public:
     virtual int32_t GetProtocolTypeId() = 0;
 
     IProtocol* Manager() const { return mManager; }
+    virtual const MessageChannel* GetIPCChannel() const { return mChannel; }
+    virtual MessageChannel* GetIPCChannel() { return mChannel; }
 
 protected:
     void SetManager(IProtocol* aManager) { mManager = aManager; }
+    void SetIPCChannel(MessageChannel* aChannel) { mChannel = aChannel; }
 
 private:
     IProtocol* mManager;
+    MessageChannel* mChannel;
 };
 
 typedef IPCMessageStart ProtocolId;
@@ -218,8 +221,6 @@ public:
     Transport* GetTransport() const { return mTrans.get(); }
 
     ProtocolId GetProtocolId() const { return mProtocolId; }
-
-    virtual MessageChannel* GetIPCChannel() = 0;
 
     virtual void OnChannelClose() = 0;
     virtual void OnChannelError() = 0;
