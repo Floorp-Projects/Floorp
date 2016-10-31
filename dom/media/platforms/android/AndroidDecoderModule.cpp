@@ -151,6 +151,13 @@ AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType,
     return false;
   }
 
+  // Prefer the gecko decoder for opus; stagefright crashes
+  // on content demuxed from mp4.
+  if (aMimeType.EqualsLiteral("audio/opus")) {
+    LOG("Rejecting audio of type %s", aMimeType.Data());
+    return false;
+  }
+
   return java::HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType(
       nsCString(TranslateMimeType(aMimeType)));
 }
