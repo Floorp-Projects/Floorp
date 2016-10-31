@@ -948,8 +948,9 @@ class MOZ_STACK_CLASS TokenStream
     void ungetChar(int32_t c);
     void ungetCharIgnoreEOL(int32_t c);
     Token* newToken(ptrdiff_t adjust);
-    bool peekUnicodeEscape(uint32_t* codePoint);
-    bool matchUnicodeEscapeIdStart(uint32_t* codePoint);
+    uint32_t peekUnicodeEscape(uint32_t* codePoint);
+    uint32_t peekExtendedUnicodeEscape(uint32_t* codePoint);
+    uint32_t matchUnicodeEscapeIdStart(uint32_t* codePoint);
     bool matchUnicodeEscapeIdent(uint32_t* codePoint);
     bool peekChars(int n, char16_t* cp);
 
