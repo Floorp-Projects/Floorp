@@ -55,10 +55,10 @@ PresentationRequesterCallback::NotifySuccess(const nsAString& aUrl)
     PresentationConnection::Create(mRequest->GetOwner(), mSessionId, aUrl,
                                    nsIPresentationService::ROLE_CONTROLLER);
   if (NS_WARN_IF(!connection)) {
-    mPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
-    return NS_OK;
+    return NotifyError(NS_ERROR_DOM_OPERATION_ERR);
   }
 
+  mRequest->NotifyPromiseSettled();
   mPromise->MaybeResolve(connection);
 
   return mRequest->DispatchConnectionAvailableEvent(connection);
@@ -69,6 +69,7 @@ PresentationRequesterCallback::NotifyError(nsresult aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  mRequest->NotifyPromiseSettled();
   mPromise->MaybeReject(aError);
   return NS_OK;
 }

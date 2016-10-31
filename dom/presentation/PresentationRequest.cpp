@@ -9,6 +9,7 @@
 #include "AvailabilityCollection.h"
 #include "ControllerConnectionCollection.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/PresentationRequestBinding.h"
 #include "mozilla/dom/PresentationConnectionAvailableEvent.h"
 #include "mozilla/dom/Promise.h"
@@ -16,6 +17,7 @@
 #include "mozIThirdPartyUtil.h"
 #include "nsContentSecurityManager.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 #include "nsIPresentationService.h"
 #include "nsIURI.h"
@@ -23,6 +25,7 @@
 #include "nsNetUtil.h"
 #include "nsSandboxFlags.h"
 #include "nsServiceManagerUtils.h"
+#include "Presentation.h"
 #include "PresentationAvailability.h"
 #include "PresentationCallbacks.h"
 #include "PresentationLog.h"
@@ -178,6 +181,22 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
     return promise.forget();
   }
 
+  RefPtr<Navigator> navigator =
+    nsGlobalWindow::Cast(GetOwner())->GetNavigator(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<Presentation> presentation = navigator->GetPresentation(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  if (presentation->IsStartSessionUnsettled()) {
+    promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    return promise.forget();
+  }
+
   // Generate a session ID.
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
     do_GetService("@mozilla.org/uuid-generator;1");
@@ -199,6 +218,8 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
     return promise.forget();
   }
+
+  presentation->SetStartSessionUnsettled(true);
 
   // Get xul:browser element in parent process or nsWindowRoot object in child
   // process. If it's in child process, the corresponding xul:browser element
@@ -222,6 +243,7 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
                              constructor);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    NotifyPromiseSettled();
   }
 
   return promise.forget();
@@ -435,6 +457,29 @@ PresentationRequest::DispatchConnectionAvailableEvent(PresentationConnection* aC
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, event);
   return asyncDispatcher->PostDOMEvent();
+}
+
+void
+PresentationRequest::NotifyPromiseSettled()
+{
+  PRES_DEBUG("%s\n", __func__);
+
+  if (!GetOwner()) {
+    return;
+  }
+
+  ErrorResult rv;
+  RefPtr<Navigator> navigator =
+    nsGlobalWindow::Cast(GetOwner())->GetNavigator(rv);
+  if (!navigator) {
+    return;
+  }
+
+  RefPtr<Presentation> presentation = navigator->GetPresentation(rv);
+
+  if (presentation) {
+    presentation->SetStartSessionUnsettled(false);
+  }
 }
 
 bool
