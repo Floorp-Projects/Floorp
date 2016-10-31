@@ -129,6 +129,32 @@ error.stringify = function(err) {
 };
 
 /**
+ * Pretty-print values passed to template strings.
+ *
+ * Usage:
+ *
+ *     let input = {value: true};
+ *     error.pprint`Expected boolean, got ${input}`;
+ *     => "Expected boolean, got [object Object] {"value": true}"
+ */
+error.pprint = function(strings, ...values) {
+  let res = [];
+  for (let i = 0; i < strings.length; i++) {
+    res.push(strings[i]);
+    if (i < values.length) {
+      let val = values[i];
+      res.push(Object.prototype.toString.call(val));
+      let s = JSON.stringify(val);
+      if (s && s.length > 0) {
+        res.push(" ");
+        res.push(s);
+      }
+    }
+  }
+  return res.join("");
+};
+
+/**
  * Marshal a WebDriverError prototype to a JSON dictionary.
  *
  * @param {WebDriverError} err
