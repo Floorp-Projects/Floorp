@@ -62,6 +62,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     GetAlertText,
     SendAlertText(SendKeysParameters),
     TakeScreenshot,
+    TakeElementScreenshot(WebElement),
     Status,
     Extension(T)
 }
@@ -320,6 +321,13 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 WebDriverCommand::SendAlertText(parameters)
             },
             Route::TakeScreenshot => WebDriverCommand::TakeScreenshot,
+            Route::TakeElementScreenshot =>  {
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
+                WebDriverCommand::TakeElementScreenshot(element)
+            },
             Route::Status => WebDriverCommand::Status,
             Route::Extension(ref extension) => {
                 try!(extension.command(params, &body_data))
@@ -372,6 +380,7 @@ impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
             WebDriverCommand::ElementTap(_) |
             WebDriverCommand::ElementClear(_) |
             WebDriverCommand::TakeScreenshot |
+            WebDriverCommand::TakeElementScreenshot(_) |
             WebDriverCommand::Status => {
                 None
             },
