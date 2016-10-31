@@ -53,8 +53,9 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPSecurityDescriptor, \
 
 namespace ipc {
 
-IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId)
- : mProtocolId(aProtoId)
+IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId, Side aSide)
+ : IProtocol(aSide),
+   mProtocolId(aProtoId)
 {
 }
 
