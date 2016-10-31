@@ -423,7 +423,7 @@ OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
     ? alignAreaSize.ISize(pcWM)
     : alignAreaSize.BSize(pcWM);
 
-  AlignJustifyFlags flags = AlignJustifyFlags::eNoFlags;
+  AlignJustifyFlags flags = AlignJustifyFlags::eIgnoreAutoMargins;
   uint16_t alignConst =
     aPlaceholderContainer->CSSAlignmentForAbsPosChild(aKidReflowInput, pcAxis);
   // XXXdholbert: Handle <overflow-position> in bug 1311892 (by conditionally

@@ -84,10 +84,14 @@ CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, LogicalAxis aAxis,
   const auto& styleMargin = aRI.mStyleMargin->mMargin;
   bool hasAutoMarginStart;
   bool hasAutoMarginEnd;
-  if (aAxis == eLogicalAxisBlock) {
+  if (aFlags & AlignJustifyFlags::eIgnoreAutoMargins) {
+    // (Note: ReflowInput will have treated "auto" margins as 0, so we
+    // don't need to do anything special to avoid expanding them.)
+    hasAutoMarginStart = hasAutoMarginEnd = false;
+  } else if (aAxis == eLogicalAxisBlock) {
     hasAutoMarginStart = styleMargin.GetBStartUnit(wm) == eStyleUnit_Auto;
     hasAutoMarginEnd = styleMargin.GetBEndUnit(wm) == eStyleUnit_Auto;
-  } else {
+  } else { /* aAxis == eLogicalAxisInline */
     hasAutoMarginStart = styleMargin.GetIStartUnit(wm) == eStyleUnit_Auto;
     hasAutoMarginEnd = styleMargin.GetIEndUnit(wm) == eStyleUnit_Auto;
   }
