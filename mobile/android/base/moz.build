@@ -728,6 +728,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'updater/PostUpdateHandler.java',
     'updater/UpdateService.java',
     'updater/UpdateServiceHelper.java',
+    'util/TouchTargetUtil.java',
     'widget/ActivityChooserModel.java',
     'widget/AllCapsTextView.java',
     'widget/AnchoredPopup.java',
