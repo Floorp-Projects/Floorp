@@ -3,8 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-"use strict";
-
 /**
  * The Mochitest API documentation
  * @module mochitest
@@ -43,7 +41,7 @@ Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", true);
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
   delete window.resumeTest;
-})
+});
 
 // Wait until an action of `type` is dispatched. This is different
 // then `_afterDispatchDone` because it doesn't wait for async actions
@@ -163,20 +161,20 @@ function waitForState(dbg, predicate) {
  * @static
  */
 function waitForSources(dbg, ...sources) {
-  if(sources.length === 0) {
+  if (sources.length === 0) {
     return Promise.resolve();
   }
 
   info("Waiting on sources: " + sources.join(", "));
-  const {selectors: {getSources}, store} = dbg;
+  const { selectors: { getSources }, store } = dbg;
   return Promise.all(sources.map(url => {
     function sourceExists(state) {
       return getSources(state).some(s => {
-        return s.get("url").includes(url)
+        return s.get("url").includes(url);
       });
     }
 
-    if(!sourceExists(store.getState())) {
+    if (!sourceExists(store.getState())) {
       return waitForState(dbg, sourceExists);
     }
   }));
@@ -261,7 +259,7 @@ function waitForPaused(dbg) {
     yield waitForState(dbg, state => {
       const pause = dbg.selectors.getPause(state);
       // Make sure we have the paused state.
-      if(!pause) {
+      if (!pause) {
         return false;
       }
       // Make sure the source text is completely loaded for the
@@ -271,7 +269,7 @@ function waitForPaused(dbg) {
       return sourceText && !sourceText.get("loading");
     });
   });
-};
+}
 
 function createDebuggerContext(toolbox) {
   const win = toolbox.getPanel("jsdebugger").panelWin;
@@ -302,7 +300,7 @@ function initDebugger(url, ...sources) {
     const toolbox = yield openNewTabAndToolbox(EXAMPLE_URL + url, "jsdebugger");
     return createDebuggerContext(toolbox);
   });
-};
+}
 
 window.resumeTest = undefined;
 /**
@@ -328,7 +326,7 @@ function pauseTest() {
  * @static
  */
 function findSource(dbg, url) {
-  if(typeof url !== "string") {
+  if (typeof url !== "string") {
     // Support passing in a source object itelf all APIs that use this
     // function support both styles
     const source = url;
@@ -338,7 +336,7 @@ function findSource(dbg, url) {
   const sources = dbg.selectors.getSources(dbg.getState());
   const source = sources.find(s => s.get("url").includes(url));
 
-  if(!source) {
+  if (!source) {
     throw new Error("Unable to find source: " + url);
   }
 
@@ -361,7 +359,7 @@ function selectSource(dbg, url, line) {
   const hasText = !!dbg.selectors.getSourceText(dbg.getState(), source.id);
   dbg.actions.selectSource(source.id, { line });
 
-  if(!hasText) {
+  if (!hasText) {
     return waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
   }
 }
@@ -447,7 +445,7 @@ function reload(dbg, ...sources) {
  */
 function navigate(dbg, url, ...sources) {
   dbg.client.navigate(url);
-  return waitForSources(dbg, ...sources)
+  return waitForSources(dbg, ...sources);
 }
 
 /**
@@ -464,7 +462,8 @@ function navigate(dbg, url, ...sources) {
 function addBreakpoint(dbg, source, line, col) {
   source = findSource(dbg, source);
   const sourceId = source.id;
-  return dbg.actions.addBreakpoint({ sourceId, line, col });
+  dbg.actions.addBreakpoint({ sourceId, line, col });
+  return waitForDispatch(dbg, "ADD_BREAKPOINT");
 }
 
 /**
@@ -494,7 +493,6 @@ function removeBreakpoint(dbg, sourceId, line, col) {
  */
 function togglePauseOnExceptions(dbg,
   pauseOnExceptions, ignoreCaughtExceptions) {
-
   const command = dbg.actions.pauseOnExceptions(
     pauseOnExceptions,
     ignoreCaughtExceptions
@@ -529,8 +527,8 @@ const keyMappings = {
   pauseKey: { code: "VK_F8" },
   resumeKey: { code: "VK_F8" },
   stepOverKey: { code: "VK_F10" },
-  stepInKey: { code: "VK_F11", modifiers: { ctrlKey: isLinux } },
-  stepOutKey: { code: "VK_F11", modifiers: { ctrlKey: isLinux, shiftKey: true } }
+  stepInKey: { code: "VK_F11", modifiers: { ctrlKey: isLinux }},
+  stepOutKey: { code: "VK_F11", modifiers: { ctrlKey: isLinux, shiftKey: true }}
 };
 
 /**
@@ -561,6 +559,9 @@ function isVisibleWithin(outerEl, innerEl) {
 
 const selectors = {
   callStackHeader: ".call-stack-pane ._header",
+  scopesHeader: ".scopes-pane ._header",
+  breakpointItem: i => `.breakpoints-list .breakpoint:nth-child(${i})`,
+  scopeNode: i => `.scopes-list .tree-node:nth-child(${i}) .object-label`,
   frame: index => `.frames ul li:nth-child(${index})`,
   gutter: i => `.CodeMirror-code *:nth-child(${i}) .CodeMirror-linenumber`,
   pauseOnExceptions: ".pause-exceptions",
@@ -570,7 +571,10 @@ const selectors = {
   resume: ".resume.active",
   stepOver: ".stepOver.active",
   stepOut: ".stepOut.active",
-  stepIn: ".stepIn.active"
+  stepIn: ".stepIn.active",
+  toggleBreakpoints: ".toggleBreakpoints",
+  prettyPrintButton: ".prettyPrint",
+  sourceFooter: ".source-footer"
 };
 
 function getSelector(elementName, ...args) {
@@ -580,7 +584,7 @@ function getSelector(elementName, ...args) {
   }
 
   if (typeof selector == "function") {
-    selector = selector(...args)
+    selector = selector(...args);
   }
 
   return selector;
@@ -625,5 +629,9 @@ function clickElement(dbg, elementName, ...args) {
  * @static
  */
 function toggleCallStack(dbg) {
-  return findElement(dbg, "callStackHeader").click()
+  return findElement(dbg, "callStackHeader").click();
+}
+
+function toggleScopes(dbg) {
+  return findElement(dbg, "scopesHeader").click();
 }

@@ -1,3 +1,45 @@
+:root.theme-light,
+:root .theme-light {
+  --theme-search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+#mount {
+  display: flex;
+  height: 100%;
+}
+
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 8px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: rgba(113,113,113,0.5);
+}
+
+:root.theme-dark .CodeMirror-scrollbar-filler {
+  background: transparent;
+}
 .landing-page {
   flex: 1;
   display: flex;
@@ -165,6 +207,7 @@ body {
   position: relative;
   flex: 1;
   background-color: var(--theme-tab-toolbar-background);
+  overflow: hidden;
 }
 
 .editor-container {
@@ -300,488 +343,6 @@ body {
 .split-box.dragging > .controlled,
 .split-box.dragging > .uncontrolled {
   pointer-events: none;
-}
-.tree {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
-  user-select: none;
-
-  flex: 1;
-  white-space: nowrap;
-  overflow: auto;
-}
-
-.tree button {
-  display: block;
-}
-
-.tree .node {
-  padding: 2px 5px;
-  position: relative;
-}
-
-.tree .node.focused {
-  color: white;
-  background-color: var(--theme-selection-background);
-}
-
-.tree .node > div {
-  margin-left: 10px;
-}
-
-.tree .node.focused svg {
-  fill: white;
-}
-
-.tree-node button {
-  position: fixed;
-}
-.sources-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.sources-panel * {
-  -moz-user-select: none;
-  user-select: none;
-}
-
-.sources-header {
-  height: 30px;
-  border-bottom: 1px solid var(--theme-splitter-color);
-  padding: 0 10px;
-  line-height: 30px;
-  font-size: 1.2em;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  -moz-user-select: none;
-  user-select: none;
-}
-
-.sources-header-info {
-  font-size: 12px;
-  color: var(--theme-comment-alt);
-  font-weight: lighter;
-  white-space: nowrap;
-}
-
-.sources-list {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-}
-
-ul.sources-list {
-  list-style: none;
-  margin: 20px 0;
-  padding: 0;
-  padding-left: 10px;
-  flex: 1;
-  white-space: nowrap;
-}
-
-.sources-list ul {
-  list-style: none;
-  margin: 0.5em 0;
-  padding: 0;
-}
-
-.sources-list .source-item {
-  list-style: none;
-  white-space: nowrap;
-}
-
-.sources-list .label {
-  font-size: 1em;
-  padding-left: 10px;
-  color: var(--theme-comment);
-}
-
-.sources-list .source-item.selected {
-  background-color: var(--theme-selection-background);
-}
-
-.sources-list .source-item.selected .label {
-  color: var(--theme-selection-color);
-}
-
-.arrow,
-.folder,
-.domain,
-.file,
-.worker {
-  fill: var(--theme-splitter-color);
-}
-
-.domain,
-.file,
-.worker {
-  position: relative;
-  top: 1px;
-}
-
-.worker,
-.folder {
-  position: relative;
-  top: 2px;
-}
-
-.domain svg,
-.folder svg,
-.worker svg {
-  width: 15px;
-  margin-right: 5px;
-}
-
-.file svg {
-  width: 13px;
-  margin-right: 5px;
-}
-
-.tree {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
-  user-select: none;
-
-  flex: 1;
-  white-space: nowrap;
-  overflow: auto;
-}
-
-.tree button {
-  display: block;
-}
-
-.tree .node {
-  padding: 2px 5px;
-  position: relative;
-  cursor: pointer;
-}
-
-.tree .node:hover {
-  background: var(--theme-tab-toolbar-background);
-}
-
-.tree .node.focused {
-  color: white;
-  background-color: var(--theme-selection-background);
-}
-
-.tree .node > div {
-  margin-left: 10px;
-}
-
-.tree .node.focused svg {
-  fill: white;
-}
-
-.sources-list .tree-node button {
-  position: fixed;
-}
-
-.source-footer {
-  background: var(--theme-body-background);
-  border-top: 1px solid var(--theme-splitter-color);
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 1px;
-  opacity: 1;
-  z-index: 100;
-  -moz-user-select: none;
-  user-select: none;
-}
-
-.source-footer .command-bar {
-  float: right;
-}
-
-.source-footer .command-bar * {
-  -moz-user-select: none;
-  user-select: none;
-}
-
-.command-bar > span {
-  cursor: pointer;
-  margin-right: 0.7em;
-  width: 1em;
-  height: 1.1em;
-  display: inline-block;
-  text-align: center;
-  transition: opacity 200ms;
-}
-
-.source-footer .prettyPrint.pretty {
-  stroke: var(--theme-highlight-blue);
-}
-
-.source-footer input:focus {
-  border-color: var(--theme-highlight-blue);
-  outline: none;
-}
-
-.source-footer input {
-  line-height: 16px;
-  margin: 7px;
-  border-radius: 2px;
-  border: 1px solid var(--theme-splitter-color);
-  padding-left: 4px;
-  font-size: 10px;
-}
-.search-bar {
-  width: calc(100% - 1px);
-  height: 40px;
-  background: white;
-  border-bottom: 1px solid var(--theme-splitter-color);
-  display: flex;
-}
-
-.search-bar svg {
-  width: 16px;
-}
-
-.search-bar i {
-  display: block;
-  padding: 13px 0 0 13px;
-}
-
-.search-bar input {
-  border: none;
-  line-height: 30px;
-  font-size: 14px;
-  color: var(--theme-comment);
-  width: calc(100% - 38px);
-  padding-left: 10px;
-  display: flex;
-  padding-right: 100px;
-  flex: 1;
-}
-
-.search-bar input::placeholder {
-  color: var(--theme-body-color-inactive);
-}
-
-.search-bar input:focus {
-  outline-width: 0;
-}
-
-.search-bar input.empty {
-  color: var(--theme-highlight-orange);
-}
-
-.search-bar .summary {
-  line-height: 40px;
-  padding-right: 10px;
-  color: var(--theme-body-color-inactive);
-}
-/* vim:set ts=2 sw=2 sts=2 et: */
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/**
- * There's a known codemirror flex issue with chrome that this addresses.
- * BUG https://github.com/devtools-html/debugger.html/issues/63
- */
-.editor-wrapper {
-  position: absolute;
-  height: calc(100% - 31px);
-  width: 100%;
-  top: 30px;
-  left: 0px;
-}
-
-.editor-wrapper .breakpoints {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.editor.new-breakpoint svg {
-  fill: var(--theme-selection-background);
-  width: 60px;
-  height: 14px;
-  position: absolute;
-  top: 0px;
-  right: -4px;
-}
-
-.editor.new-breakpoint.breakpoint-disabled svg {
-  opacity: 0.3;
-}
-
-.search-bar ~ .editor-mount {
-  height: calc(100% - 58px);
-}
-
-.editor-mount,
-.CodeMirror {
-  width: 100%;
-  height: 100%;
-  background-color: var(--theme-body-background);
-}
-
-.CodeMirror-linenumber {
-  font-size: 11px;
-  line-height: 14px;
-}
-
-/* set the linenumber white when there is a breakpoint */
-.new-breakpoint .CodeMirror-linenumber {
-  color: white;
-}
-
-/* move the breakpoint below the linenumber */
-.new-breakpoint .CodeMirror-gutter-elt:last-child {
-  z-index: 0;
-}
-
-.editor-wrapper .CodeMirror-line {
-  font-size: 11px;
-  line-height: 14px;
-}
-
-.debug-line .CodeMirror-line {
-  background-color: var(--breakpoint-active-color) !important;
-}
-
-/* Don't display the highlight color since the debug line
-   is already highlighted */
-.debug-line .CodeMirror-activeline-background {
-  display: none;
-}
-
-.highlight-line .CodeMirror-line {
-  animation: fade-highlight-out 1.5s normal forwards;
-}
-
-@keyframes fade-highlight-out {
-  0% { background-color: var(--theme-highlight-gray); }
-  100% { background-color: transparent; }
-}
-
-.welcomebox {
-  width: calc(100% - 1px);
-
-  /* Offsetting it by 30px for the sources-header area */
-  height: calc(100% - 30px);
-  position: absolute;
-  top: 30px;
-  left: 0;
-  padding: 50px 0;
-  text-align: center;
-  font-size: 1.25em;
-  color: var(--theme-comment-alt);
-  background-color: var(--theme-tab-toolbar-background);
-  font-weight: lighter;
-  z-index: 100;
-  -moz-user-select: none;
-  user-select: none;
-}
-.close-btn path {
-  fill: var(--theme-body-color);
-}
-
-.close-btn .close {
-  width: 12px;
-  height: 12px;
-  padding: 2px;
-  text-align: center;
-  margin-top: 2px;
-  line-height: 5px;
-  transition: all 0.25s easeinout;
-}
-
-.close-btn .close svg {
-  width: 6px;
-}
-
-.close-btn .close:hover {
-  background: var(--theme-selection-background);
-  border-radius: 2px;
-}
-
-.close-btn .close:hover path {
-  fill: white;
-}
-.breakpoints-list * {
-  -moz-user-select: none;
-  user-select: none;
-}
-
-.breakpoints-list .breakpoint {
-  font-size: 12px;
-  color: var(--theme-content-color1);
-  padding: 0.5em 1px;
-  line-height: 1em;
-  position: relative;
-  border-left: 4px solid transparent;
-
-}
-
-.breakpoints-list .breakpoint:last-of-type {
-  padding-bottom: 0.45em;
-}
-
-.breakpoints-list .breakpoint.paused {
-  background-color: var(--theme-toolbar-background-alt);
-  border-color: var(--breakpoint-active-color);
-}
-
-.breakpoints-list .breakpoint.disabled .breakpoint-label {
-  color: var(--theme-content-color3);
-  transition: color 0.5s linear;
-}
-
-.breakpoints-list .breakpoint:hover {
-  cursor: pointer;
-  background-color: var(--theme-toolbar-background);
-}
-
-.breakpoints-list .breakpoint.paused:hover {
-  border-color: var(--breakpoint-active-color-hover);
-}
-
-.breakpoints-list .breakpoint-checkbox {
-  margin-left: 0;
-}
-
-.breakpoints-list .breakpoint-label {
-  display: inline-block;
-  padding-left: 2px;
-  padding-bottom: 4px;
-}
-
-.breakpoints-list .pause-indicator {
-  flex: 0 1 content;
-  order: 3;
-}
-
-.breakpoint-snippet {
-  color: var(--theme-comment);
-  padding-left: 18px;
-}
-
-.breakpoint .close-btn {
-  position: absolute;
-  right: 6px;
-  top: 6px;
-}
-
-.breakpoint .close {
-  display: none;
-}
-
-.breakpoint:hover .close {
-  display: block;
 }
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -964,6 +525,671 @@ ul.sources-list {
 .theme-light .caption {
   font-weight: normal;
 }
+/* vim:set ts=2 sw=2 sts=2 et: */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.search-container {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  width: calc(100% - 1px);
+  height: calc(100% - 31px);
+  display: flex;
+  z-index: 200;
+  background-color: var(--theme-body-background);
+}
+
+.search-container .autocomplete {
+  flex: 1;
+}
+
+.autocomplete {
+  width: 100%;
+}
+
+.autocomplete .results * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.autocomplete ul {
+  list-style: none;
+  width: 100%;
+  max-height: calc(100% - 32px);
+  margin: 0px;
+  padding: 0px;
+  overflow: auto;
+}
+
+.autocomplete li {
+  border: 2px solid var(--theme-splitter-color);
+  background-color: var(--theme-tab-toolbar-background);
+  padding: 10px;
+  margin: 10px;
+}
+
+.autocomplete li:hover {
+  background: var(--theme-tab-toolbar-background);
+  cursor: pointer;
+}
+
+.autocomplete li.selected {
+  border: 2px solid var(--theme-selection-background);
+}
+
+.autocomplete li .title {
+  line-height: 1.5em;
+}
+
+.autocomplete li .subtitle {
+  line-height: 1.5em;
+  color: grey;
+}
+
+.autocomplete input {
+  width: 100%;
+  border: none;
+  background-color: var(--theme-body-background);
+  color: var(--theme-comment);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  outline: none;
+  line-height: 30px;
+  font-size: 14px;
+  height: 40px;
+  padding-left: 30px;
+}
+
+.autocomplete input::placeholder {
+  color: var(--theme-body-color-inactive);
+}
+
+.autocomplete .magnifying-glass svg {
+  width: 16px;
+  position: absolute;
+  top: 12px;
+  left: 10px;
+}
+
+.autocomplete .close-btn {
+  position: absolute;
+  top: 12px;
+  right: 10px;
+}
+
+.autocomplete .close-btn .close svg {
+  width: 12px;
+}
+
+.autocomplete .close-btn .close path {
+  fill: var(--theme-splitter-color);
+}
+
+.autocomplete.focused .magnifying-glass path,
+.autocomplete.focused .magnifying-glass ellipse {
+  stroke: var(--theme-highlight-blue);
+}
+
+.autocomplete .magnifying-glass path,
+.autocomplete .magnifying-glass ellipse {
+  stroke: var(--theme-splitter-color);
+}
+
+.autocomplete .no-result-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--theme-graphs-full-red);
+  font-size: 24px;
+}
+
+.autocomplete .no-result-msg .sad-face {
+  width: 24px;
+  margin-right: 4px;
+  line-height: 0;
+}
+
+.autocomplete .no-result-msg .sad-face svg {
+  fill: var(--theme-graphs-full-red);
+}
+.close-btn path {
+  fill: var(--theme-body-color);
+}
+
+.close-btn .close {
+  width: 12px;
+  height: 12px;
+  padding: 2px;
+  text-align: center;
+  margin-top: 2px;
+  line-height: 5px;
+  transition: all 0.25s easeinout;
+}
+
+.close-btn .close svg {
+  width: 6px;
+}
+
+.close-btn .close:hover {
+  background: var(--theme-selection-background);
+  border-radius: 2px;
+}
+
+.close-btn .close:hover path {
+  fill: white;
+}
+.tree {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+
+  flex: 1;
+  white-space: nowrap;
+  overflow: auto;
+}
+
+.tree button {
+  display: block;
+}
+
+.tree .node {
+  padding: 2px 5px;
+  position: relative;
+}
+
+.tree .node.focused {
+  color: white;
+  background-color: var(--theme-selection-background);
+}
+
+html:not([dir="rtl"]) .tree .node > div {
+  margin-left: 10px;
+}
+
+html[dir="rtl"] .tree .node > div {
+  margin-right: 10px;
+}
+
+.tree .node.focused svg {
+  fill: white;
+}
+
+.tree-node button {
+  position: fixed;
+}
+.sources-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sources-panel * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.sources-header {
+  height: 30px;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding-top: 0px;
+  padding-bottom: 0px;
+  line-height: 30px;
+  font-size: 1.2em;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+html:not([dir="rtl"]) .sources-header {
+  padding-left: 10px;
+}
+
+html[dir="rtl"] .sources-header {
+  padding-right: 10px;
+}
+
+.sources-header-info {
+  font-size: 12px;
+  color: var(--theme-comment-alt);
+  font-weight: lighter;
+  white-space: nowrap;
+}
+
+html:not([dir="rtl"]) .sources-header-info {
+  padding-right: 10px;
+  float: right;
+}
+
+html[dir="rtl"] .sources-header-info {
+  padding-left: 10px;
+  float: left;
+}
+
+.sources-list {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.arrow,
+.folder,
+.domain,
+.file,
+.worker {
+  fill: var(--theme-splitter-color);
+}
+
+.domain,
+.file,
+.worker {
+  position: relative;
+  top: 1px;
+}
+
+.worker,
+.folder {
+  position: relative;
+  top: 2px;
+}
+
+.domain svg,
+.folder svg,
+.worker svg {
+  width: 15px;
+}
+
+.file svg {
+  width: 13px;
+}
+
+html:not([dir="rtl"]) .file svg,
+html:not([dir="rtl"]) .domain svg,
+html:not([dir="rtl"]) .folder svg,
+html:not([dir="rtl"]) .worker svg {
+  margin-right: 5px;
+}
+
+html[dir="rtl"] .file svg,
+html[dir="rtl"] .domain svg,
+html[dir="rtl"] .folder svg,
+html[dir="rtl"] .worker svg {
+  margin-left: 5px;
+}
+
+.tree {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+
+  flex: 1;
+  white-space: nowrap;
+  overflow: auto;
+}
+
+.tree button {
+  display: block;
+}
+
+.tree .node {
+  padding: 2px 5px;
+  position: relative;
+  cursor: pointer;
+}
+
+.tree .node:hover {
+  background: var(--theme-tab-toolbar-background);
+}
+
+.tree .node.focused {
+  color: white;
+  background-color: var(--theme-selection-background);
+}
+
+.tree .node > div {
+  margin-left: 10px;
+}
+
+.tree .node.focused svg {
+  fill: white;
+}
+
+.sources-list .tree-node button {
+  position: fixed;
+}
+
+.source-footer {
+  background: var(--theme-body-background);
+  border-top: 1px solid var(--theme-splitter-color);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 1px;
+  opacity: 1;
+  z-index: 100;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+html:not([dir="rtl"]) .source-footer .command-bar {
+  float: right;
+}
+
+html[dir="rtl"] .source-footer .command-bar {
+  float: left;
+}
+
+.source-footer .command-bar * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.command-bar > span {
+  cursor: pointer;
+  width: 1em;
+  height: 1.1em;
+  display: inline-block;
+  text-align: center;
+  transition: opacity 200ms;
+}
+
+html:not([dir="rtl"]) .command-bar > span {
+  margin-right: 0.7em;
+}
+
+html[dir="rtl"] .command-bar > span {
+  margin-left: 0.7em;
+}
+
+.source-footer .prettyPrint.pretty {
+  stroke: var(--theme-highlight-blue);
+}
+
+.source-footer input:focus {
+  border-color: var(--theme-highlight-blue);
+  outline: none;
+}
+
+.source-footer input {
+  line-height: 16px;
+  margin: 7px;
+  border-radius: 2px;
+  border: 1px solid var(--theme-splitter-color);
+  padding-left: 4px;
+  font-size: 10px;
+}
+.search-bar {
+  width: calc(100% - 1px);
+  height: 40px;
+  background: white;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  display: flex;
+}
+
+.search-bar svg {
+  width: 16px;
+}
+
+.search-bar i {
+  display: block;
+  padding: 13px 0 0 13px;
+}
+
+.search-bar input {
+  border: none;
+  line-height: 30px;
+  font-size: 14px;
+  background-color: var(--theme-body-background);
+  color: var(--theme-comment);
+  width: calc(100% - 38px);
+  padding-left: 10px;
+  display: flex;
+  padding-right: 100px;
+  flex: 1;
+}
+
+.search-bar .magnifying-glass {
+  background-color: var(--theme-body-background);
+}
+
+.search-bar input::placeholder {
+  color: var(--theme-body-color-inactive);
+}
+
+.search-bar input:focus {
+  outline-width: 0;
+}
+
+.search-bar input.empty {
+  color: var(--theme-highlight-orange);
+}
+
+.search-bar .summary {
+  line-height: 40px;
+  padding-right: 10px;
+  color: var(--theme-body-color-inactive);
+}
+/* vim:set ts=2 sw=2 sts=2 et: */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * There's a known codemirror flex issue with chrome that this addresses.
+ * BUG https://github.com/devtools-html/debugger.html/issues/63
+ */
+.editor-wrapper {
+  position: absolute;
+  height: calc(100% - 31px);
+  width: 100%;
+  top: 30px;
+  left: 0px;
+}
+
+html[dir="rtl"] .editor-mount {
+  direction: ltr;
+}
+
+.editor-wrapper .breakpoints {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.editor.new-breakpoint svg {
+  fill: var(--theme-selection-background);
+  width: 60px;
+  height: 14px;
+  position: absolute;
+  top: 0px;
+  right: -4px;
+}
+
+.new-breakpoint.has-condition svg {
+  fill: var(--theme-graphs-yellow);
+}
+
+.editor.new-breakpoint.breakpoint-disabled svg {
+  opacity: 0.3;
+}
+
+.CodeMirror {
+  width: 100%;
+  height: 100%;
+}
+
+.editor-wrapper .editor-mount {
+  width: 100%;
+  height: calc(100% - 32px);
+  background-color: var(--theme-body-background);
+}
+
+.search-bar ~ .editor-mount {
+  height: calc(100% - 72px);
+}
+
+.CodeMirror-linenumber {
+  font-size: 11px;
+  line-height: 14px;
+}
+
+/* set the linenumber white when there is a breakpoint */
+.new-breakpoint .CodeMirror-gutter-wrapper .CodeMirror-linenumber {
+  color: white;
+}
+
+/* move the breakpoint below the linenumber */
+.new-breakpoint .CodeMirror-gutter-elt:last-child {
+  z-index: 0;
+}
+
+.editor-wrapper .CodeMirror-line {
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.debug-line .CodeMirror-line {
+  background-color: var(--breakpoint-active-color) !important;
+}
+
+/* Don't display the highlight color since the debug line
+   is already highlighted */
+.debug-line .CodeMirror-activeline-background {
+  display: none;
+}
+
+.highlight-line .CodeMirror-line {
+  animation: fade-highlight-out 1.5s normal forwards;
+}
+
+@keyframes fade-highlight-out {
+  0% { background-color: var(--theme-highlight-gray); }
+  100% { background-color: transparent; }
+}
+
+.welcomebox {
+  width: calc(100% - 1px);
+
+  /* Offsetting it by 30px for the sources-header area */
+  height: calc(100% - 30px);
+  position: absolute;
+  top: 30px;
+  left: 0;
+  padding: 50px 0;
+  text-align: center;
+  font-size: 1.25em;
+  color: var(--theme-comment-alt);
+  background-color: var(--theme-tab-toolbar-background);
+  font-weight: lighter;
+  z-index: 100;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.conditional-breakpoint-panel {
+  cursor: initial;
+  margin: 1em 0;
+  position: relative;
+  background: var(--theme-toolbar-background);
+  border-top: 1px solid var(--theme-splitter-color);
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.conditional-breakpoint-panel input {
+  margin: 5px 10px;
+  width: calc(100% - 2em);
+  border: none;
+  background: var(--theme-toolbar-background);
+  font-size: 14px;
+  color: var(--theme-comment);
+  line-height: 30px;
+}
+
+.conditional-breakpoint-panel input:focus {
+  outline-width: 0;
+}
+.breakpoints-list * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.breakpoints-list .breakpoint {
+  font-size: 12px;
+  color: var(--theme-content-color1);
+  padding: 0.5em 1px;
+  line-height: 1em;
+  position: relative;
+  border-left: 4px solid transparent;
+  transition: all 0.25s ease;
+}
+
+.breakpoints-list .breakpoint:last-of-type {
+  padding-bottom: 0.45em;
+}
+
+.breakpoints-list .breakpoint.paused {
+  background-color: var(--theme-toolbar-background-alt);
+  border-color: var(--breakpoint-active-color);
+}
+
+.breakpoints-list .breakpoint.disabled .breakpoint-label {
+  color: var(--theme-content-color3);
+  transition: color 0.5s linear;
+}
+
+.breakpoints-list .breakpoint:hover {
+  cursor: pointer;
+  background-color: var(--theme-search-overlays-semitransparent);
+}
+
+.breakpoints-list .breakpoint.paused:hover {
+  border-color: var(--breakpoint-active-color-hover);
+}
+
+.breakpoints-list .breakpoint-checkbox {
+  margin-left: 0;
+}
+
+.breakpoints-list .breakpoint-label {
+  display: inline-block;
+  padding-left: 2px;
+  padding-bottom: 4px;
+}
+
+.breakpoints-list .pause-indicator {
+  flex: 0 1 content;
+  order: 3;
+}
+
+.breakpoint-snippet {
+  color: var(--theme-comment);
+  padding-left: 18px;
+}
+
+.breakpoint .close-btn {
+  position: absolute;
+  right: 6px;
+  top: 12px;
+}
+
+.breakpoint .close {
+  display: none;
+}
+
+.breakpoint:hover .close {
+  display: block;
+}
 .input-expression {
   width: 100%;
   padding: 5px;
@@ -1001,14 +1227,23 @@ ul.sources-list {
 }
 .arrow svg {
   fill: var(--theme-splitter-color);
-  margin-right: 5px;
   margin-top: 3px;
-  transform: rotate(-90deg);
   transition: transform 0.25s ease;
   width: 10px;
 }
 
-.arrow.expanded svg {
+html:not([dir="rtl"]) .arrow svg {
+  margin-right: 5px;
+  transform: rotate(-90deg);
+}
+
+html[dir="rtl"] .arrow svg {
+  margin-left: 5px;
+  transform: rotate(90deg);
+}
+
+/* TODO (Amit): html is just for specificity. keep it like this? */
+html .arrow.expanded svg {
   transform: rotate(0deg);
 }
 
@@ -1078,6 +1313,18 @@ ul.sources-list {
   background-color: var(--theme-selection-background);
   color: var(--theme-body-background);
 }
+
+.show-more {
+  cursor: pointer;
+  text-align: center;
+  padding: 8px 0px;
+  border-top: 1px solid var(--theme-splitter-color);
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.show-more:hover {
+  background-color: var(--theme-selection-color);
+}
 .accordion {
   background-color: var(--theme-body-background);
   width: 100%;
@@ -1134,17 +1381,39 @@ ul.sources-list {
 
 .command-bar {
   height: 30px;
+}
+
+html:not([dir="rtl"]) .command-bar {
   padding: 8px 5px 10px 1px;
+}
+
+html[dir="rtl"] .command-bar {
+  padding: 8px 1px 10px 5px;
 }
 
 .command-bar > span {
   cursor: pointer;
-  margin-right: 0.7em;
   width: 16px;
   height: 17px;
   display: inline-block;
   text-align: center;
-  transition: opacity 200ms;
+  transition: all 0.25s ease;
+}
+
+:root.theme-dark .command-bar > span {
+  fill: var(--theme-body-color);
+}
+
+:root.theme-dark .command-bar > span:hover {
+  fill: var(--theme-selection-color);
+}
+
+html:not([dir="rtl"]) .command-bar > span {
+  margin-right: 0.7em;
+}
+
+html[dir="rtl"] .command-bar > span {
+  margin-left: 0.7em;
 }
 
 .command-bar > span.disabled {
@@ -1152,8 +1421,12 @@ ul.sources-list {
   cursor: default;
 }
 
-.command-bar .stepOut {
+html:not([dir="rtl"]) .command-bar .stepOut {
   margin-right: 2em;
+}
+
+html[dir="rtl"] .command-bar .stepOut {
+  margin-left: 2em;
 }
 
 .command-bar .subSettings {
@@ -1170,7 +1443,7 @@ ul.sources-list {
   padding: 0.5em;
 }
 
-.disableBreakpoints.breakpoints-disabled path {
+.toggleBreakpoints.breakpoints-disabled path {
   stroke: var(--theme-highlight-blue);
 }
 
@@ -1193,8 +1466,27 @@ span.pause-exceptions.all {
 }
 
 .source-tabs {
-  width: calc(100% - 30px);
+  min-width: 50px;
+  max-width: calc(100% - 60px);
   overflow: hidden;
+  float: left;
+}
+
+.source-header .new-tab-btn {
+  width: 16px;
+  display: inline-block;
+  position: relative;
+  top: 4px;
+  margin: 4px;
+  line-height: 0;
+}
+
+.source-header .new-tab-btn path {
+  fill: var(--theme-splitter-color);
+}
+
+.source-header .new-tab-btn:hover path {
+  fill: var(--theme-comment);
 }
 
 .source-tab {
@@ -1203,14 +1495,24 @@ span.pause-exceptions.all {
   border: 1px solid var(--theme-splitter-color);
   border-top-left-radius: 2px;
   border-top-right-radius: 2px;
-  padding: 2px 20px 2px 12px;
   height: 23px;
   line-height: 20px;
-  margin: 6px 0 0 8px;
   display: inline-block;
   border-bottom: none;
   position: relative;
   transition: all 0.25s ease;
+  min-width: 40px;
+  overflow: hidden;
+}
+
+html:not([dir="rtl"]) .source-tab {
+  padding: 2px 20px 2px 12px;
+  margin: 6px 0 0 8px;
+}
+
+html[dir="rtl"] .source-tab {
+  padding: 2px 12px 2px 20px;
+  margin: 6px 8px 0 0;
 }
 
 .source-tab:hover {
@@ -1221,7 +1523,6 @@ span.pause-exceptions.all {
 .source-tab.active {
   color: var(--theme-body-color);
   background-color: var(--theme-body-background);
-  height: 24px;
 }
 
 .source-tab path {
@@ -1234,8 +1535,20 @@ span.pause-exceptions.all {
 
 .source-tab .close-btn {
   position: absolute;
-  right: 4px;
   top: 3px;
+}
+
+.source-tab .filename {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+html:not([dir="rtl"]) .source-tab .close-btn {
+  right: 4px;
+}
+
+html[dir="rtl"] .source-tab .close-btn {
+  left: 4px;
 }
 
 .source-tab .close {
@@ -1248,122 +1561,53 @@ span.pause-exceptions.all {
 
 .source-header .subsettings {
   position: absolute;
-  right: 3px;
-  top: 9px;
-}
-
-.sources-dropdown {
-  position: absolute;
-  top: 35px;
-  right: 0px;
+  right: 12px;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  color: var(--theme-body-color);
 }
 .dropdown {
-  background: white;
+  background: var(--theme-body-background);
   border: 1px solid var(--theme-splitter-color);
-  width: 150px;
+  box-shadow: 0 4px 4px 0 var(--theme-search-overlays-semitransparent);
   max-height: 300px;
+  position: absolute;
+  right: 8px;
+  top: 35px;
+  width: 150px;
   z-index: 1000;
 }
 
 .dropdown li {
-  padding-left: 10px;
+  transition: all 0.25s ease;
+  padding: 2px 10px 10px 5px;
+  overflow: hidden;
+  height: 30px;
+  text-overflow: ellipsis;
 }
 
 .dropdown li:hover {
-  background: var(--theme-tab-toolbar-background);
+  background-color: var(--theme-search-overlays-semitransparent);
   cursor: pointer;
 }
 
 .dropdown ul {
   list-style: none;
   line-height: 2em;
-  font-size: 0.8em;
+  font-size: 1em;
   margin: 0;
   padding: 0;
 }
 
-.autocomplete {
+.dropdown-mask {
+  position: fixed;
   width: 100%;
-  padding: 20px;
-}
-
-.autocomplete .results * {
-  -moz-user-select: none;
-  user-select: none;
-}
-
-.autocomplete ul {
-  list-style: none;
-  width: 100%;
-  max-height: calc(100% - 32px);
-  margin: 0px;
-  padding: 0px;
-  overflow: auto;
-  border-left: 2px solid var(--theme-splitter-color);
-  border-right: 2px solid var(--theme-splitter-color);
-}
-
-.autocomplete ul:not(:empty) {
-  border-bottom: 2px solid var(--theme-splitter-color);
-}
-
-.autocomplete li:nth-child(1) {
-  border-top: none;
-}
-
-.autocomplete li {
-  border-top: 2px solid var(--theme-splitter-color);
-  background-color: var(--theme-tab-toolbar-background);
-  padding: 10px;
-}
-
-.autocomplete li:hover {
-  background: var(--theme-tab-toolbar-background);
-  cursor: pointer;
-}
-
-.autocomplete li.selected {
-  background: var(--theme-selection-background);
-  color: white;
-}
-
-.autocomplete li.selected .subtitle {
-  color: white;
-}
-
-.autocomplete li .title {
-  line-height: 1.5em;
-}
-
-.autocomplete li .subtitle {
-  line-height: 1.5em;
-  color: grey;
-}
-
-.autocomplete input {
-  width: 100%;
-  border: 2px solid var(--theme-splitter-color);
-  outline: none;
-  line-height: 2.5em;
-  height: 2.5em;
-  padding-left: 25px;
-}
-
-.autocomplete svg {
-  width: 16px;
-  position: absolute;
-  top: 25px;
-  left: 27px;
-}
-
-.autocomplete.focused path,
-.autocomplete.focused ellipse {
-  stroke: var(--theme-highlight-blue);
-}
-
-.autocomplete path,
-.autocomplete ellipse {
-  stroke: var(--theme-splitter-color);
+  height: 100%;
+  background: transparent;
+  z-index: 999;
+  left: 0;
+  top: 0;
 }
 
 /*# sourceMappingURL=styles.css.map*/
