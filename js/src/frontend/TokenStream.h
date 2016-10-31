@@ -948,9 +948,9 @@ class MOZ_STACK_CLASS TokenStream
     void ungetChar(int32_t c);
     void ungetCharIgnoreEOL(int32_t c);
     Token* newToken(ptrdiff_t adjust);
-    bool peekUnicodeEscape(int32_t* c);
-    bool matchUnicodeEscapeIdStart(int32_t* c);
-    bool matchUnicodeEscapeIdent(int32_t* c);
+    bool peekUnicodeEscape(uint32_t* codePoint);
+    bool matchUnicodeEscapeIdStart(uint32_t* codePoint);
+    bool matchUnicodeEscapeIdent(uint32_t* codePoint);
     bool peekChars(int n, char16_t* cp);
 
     MOZ_MUST_USE bool getDirectives(bool isMultiline, bool shouldWarnDeprecated);
