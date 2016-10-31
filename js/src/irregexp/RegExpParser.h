@@ -196,13 +196,13 @@ class RegExpParser
 
     // Checks whether the following is a length-digit hexadecimal number,
     // and sets the value if it is.
-    bool ParseHexEscape(int length, size_t* value);
+    bool ParseHexEscape(int length, widechar* value);
 
-    bool ParseBracedHexEscape(size_t* value);
-    bool ParseTrailSurrogate(size_t* value);
+    bool ParseBracedHexEscape(widechar* value);
+    bool ParseTrailSurrogate(widechar* value);
     bool ParseRawSurrogatePair(char16_t* lead, char16_t* trail);
 
-    size_t ParseOctalLiteral();
+    widechar ParseOctalLiteral();
 
     // Tries to parse the input as a back reference.  If successful it
     // stores the result in the output parameter and returns true.  If
