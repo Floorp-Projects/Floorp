@@ -137,6 +137,20 @@ GPUChild::RecvNotifyUiObservers(const nsCString& aTopic)
   return true;
 }
 
+bool
+GPUChild::RecvAccumulateChildHistogram(InfallibleTArray<Accumulation>&& aAccumulations)
+{
+  Telemetry::AccumulateChild(GeckoProcessType_GPU, aAccumulations);
+  return true;
+}
+
+bool
+GPUChild::RecvAccumulateChildKeyedHistogram(InfallibleTArray<KeyedAccumulation>&& aAccumulations)
+{
+  Telemetry::AccumulateChildKeyed(GeckoProcessType_GPU, aAccumulations);
+  return true;
+}
+
 void
 GPUChild::ActorDestroy(ActorDestroyReason aWhy)
 {

@@ -507,6 +507,7 @@ class NameResolver
             break;
 
           case PNK_YIELD:
+          case PNK_AWAIT:
             MOZ_ASSERT(cur->isArity(PN_BINARY));
             if (cur->pn_left) {
                 if (!resolve(cur->pn_left, prefix))

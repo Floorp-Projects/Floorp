@@ -802,6 +802,7 @@ NS_InitMinimalXPCOM()
 
   AbstractThread::InitStatics();
   SharedThreadPool::InitStatics();
+  mozilla::Telemetry::Init();
   mozilla::HangMonitor::Startup();
   mozilla::BackgroundHangMonitor::Startup();
 

@@ -14,6 +14,8 @@ using base::ProcessId from "base/process.h";
 using mozilla::TimeDuration from "mozilla/TimeStamp.h";
 using mozilla::CSSToLayoutDeviceScale from "Units.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
+using mozilla::Telemetry::Accumulation from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::KeyedAccumulation from "mozilla/TelemetryComms.h";
 
 namespace mozilla {
 namespace gfx {
@@ -88,6 +90,10 @@ child:
   // Have a message be broadcasted to the UI process by the UI process
   // observer service.
   async NotifyUiObservers(nsCString aTopic);
+
+  // Messages for reporting telemetry to the UI process.
+  async AccumulateChildHistogram(Accumulation[] accumulations);
+  async AccumulateChildKeyedHistogram(KeyedAccumulation[] accumulations);
 };
 
 } // namespace gfx

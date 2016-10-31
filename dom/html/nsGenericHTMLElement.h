@@ -1063,20 +1063,6 @@ protected:
   }
 
   /**
-   * This method works like GetURIAttr, except that it supports multiple
-   * URIs separated by whitespace (one or more U+0020 SPACE characters).
-   *
-   * Gets the absolute URI values of an attribute, by resolving any relative
-   * URIs in the attribute against the baseuri of the element. If a substring
-   * isn't a relative URI, the substring is returned as is. Only works for
-   * attributes in null namespace.
-   *
-   * @param aAttr    name of attribute.
-   * @param aResult  result value [out]
-   */
-  nsresult GetURIListAttr(nsIAtom* aAttr, nsAString& aResult);
-
-  /**
    * Locates the nsIEditor associated with this node.  In general this is
    * equivalent to GetEditorInternal(), but for designmode or contenteditable,
    * this may need to get an editor that's not actually on this element's

@@ -9,6 +9,8 @@
 using namespace mozilla;
 using namespace mozilla::pkix;
 
+namespace mozilla { namespace psm {
+
 OCSPVerificationTrustDomain::OCSPVerificationTrustDomain(
   NSSCertDBTrustDomain& certDBTrustDomain)
   : mCertDBTrustDomain(certDBTrustDomain)
@@ -122,3 +124,5 @@ OCSPVerificationTrustDomain::DigestBuf(
 {
   return mCertDBTrustDomain.DigestBuf(item, digestAlg, digestBuf, digestBufLen);
 }
+
+} } // namespace mozilla::psm
