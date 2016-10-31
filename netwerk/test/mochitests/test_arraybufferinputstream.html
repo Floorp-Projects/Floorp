@@ -19,6 +19,7 @@ function test()
   var ab = new ArrayBuffer(4000);
   var ta = new Uint8Array(ab);
   ta[0] = 'a'.charCodeAt(0);
+  ta[1] = 'b'.charCodeAt(0);
 
   const Cc = SpecialPowers.Cc, Ci = SpecialPowers.Ci, Cr = SpecialPowers.Cr;
   var abis = Cc["@mozilla.org/io/arraybuffer-input-stream;1"]
@@ -41,13 +42,11 @@ function test()
 
   try
   {
-    sis.read(1);
-    ok(false, "reading from stream shouldn't have worked");
+    is(sis.read(1), "b", "should read 'b' after detaching buffer");
   }
   catch (e)
   {
-    ok(e.result === Cr.NS_BASE_STREAM_CLOSED,
-       "detaching underneath an input stream should close it");
+    ok(false, "reading from stream should have worked");
   }
 
   // A regression test for bug 1265076.  Previously, overflowing
