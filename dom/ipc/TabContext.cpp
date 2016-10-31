@@ -268,9 +268,7 @@ TabContext::SetTabContext(bool aIsMozBrowserElement,
 IPCTabContext
 TabContext::AsIPCTabContext() const
 {
-  nsAutoCString originSuffix;
-  mOriginAttributes.CreateSuffix(originSuffix);
-  return IPCTabContext(FrameIPCTabContext(originSuffix,
+  return IPCTabContext(FrameIPCTabContext(mOriginAttributes,
                                           mContainingAppId,
                                           mSignedPkgOriginNoSuffix,
                                           mIsMozBrowserElement,
@@ -299,7 +297,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   bool isPrerendered = false;
   uint32_t containingAppId = NO_APP_ID;
   DocShellOriginAttributes originAttributes;
-  nsAutoCString originSuffix;
   nsAutoCString signedPkgOriginNoSuffix;
   nsAutoString presentationURL;
   UIStateChangeType showAccelerators = UIStateChangeType_NoChange;
@@ -368,11 +365,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       presentationURL = ipcContext.presentationURL();
       showAccelerators = ipcContext.showAccelerators();
       showFocusRings = ipcContext.showFocusRings();
-      originSuffix = ipcContext.originSuffix();
-      if (!originAttributes.PopulateFromSuffix(originSuffix)) {
-        mInvalidReason = "Populate originAttributes from originSuffix failed.";
-        return;
-      }
+      originAttributes = ipcContext.originAttributes();
       break;
     }
     case IPCTabContext::TUnsafeIPCTabContext: {
