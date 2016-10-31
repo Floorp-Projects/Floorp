@@ -704,7 +704,7 @@ ObjectDefineProperties(JSContext* cx, HandleObject obj, HandleValue properties)
         // Step 5.b.
         if (desc.object() && desc.enumerable()) {
             if (!GetProperty(cx, props, props, nextKey, &descObj) ||
-                !ToPropertyDescriptor(cx, descObj, false, &desc) ||
+                !ToPropertyDescriptor(cx, descObj, true, &desc) ||
                 !descriptors.append(desc) ||
                 !descriptorKeys.append(nextKey))
             {

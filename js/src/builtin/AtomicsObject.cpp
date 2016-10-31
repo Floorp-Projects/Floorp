@@ -966,6 +966,7 @@ js::FutexRuntime::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
     // See explanation below.
 
     if (state_ == WaitingInterrupted) {
+        UnlockGuard<Mutex> unlock(locked);
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ATOMICS_WAIT_NOT_ALLOWED);
         return false;
     }

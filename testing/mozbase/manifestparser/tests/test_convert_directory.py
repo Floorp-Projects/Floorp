@@ -60,12 +60,16 @@ class TestDirectoryConversion(unittest.TestCase):
             # Make a manifest for it
             manifest = convert([stub])
             out_tmpl = """[%(stub)s/bar]
+subsuite = 
 
 [%(stub)s/fleem]
+subsuite = 
 
 [%(stub)s/foo]
+subsuite = 
 
 [%(stub)s/subdir/subfile]
+subsuite = 
 
 """  # noqa
             self.assertEqual(str(manifest), out_tmpl % dict(stub=stub))

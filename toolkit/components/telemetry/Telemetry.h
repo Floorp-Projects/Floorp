@@ -11,6 +11,7 @@
 #include "mozilla/StartupTimeline.h"
 #include "nsTArray.h"
 #include "nsStringGlue.h"
+#include "nsXULAppAPI.h"
 
 #include "mozilla/TelemetryHistogramEnums.h"
 #include "mozilla/TelemetryScalarEnums.h"
@@ -129,18 +130,18 @@ void AccumulateCategorical(ID id, const nsCString& label);
 void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
 
 /**
- * Accumulate child data into child histograms
+ * Accumulate child process data into histograms for the given process type.
  *
  * @param aAccumulations - accumulation actions to perform
  */
-void AccumulateChild(const nsTArray<Accumulation>& aAccumulations);
+void AccumulateChild(GeckoProcessType aProcessType, const nsTArray<Accumulation>& aAccumulations);
 
 /**
- * Accumulate child data into child keyed histograms
+ * Accumulate child process data into keyed histograms for the given process type.
  *
  * @param aAccumulations - accumulation actions to perform
  */
-void AccumulateChildKeyed(const nsTArray<KeyedAccumulation>& aAccumulations);
+void AccumulateChildKeyed(GeckoProcessType aProcessType, const nsTArray<KeyedAccumulation>& aAccumulations);
 
 /**
  * Enable/disable recording for this histogram at runtime.

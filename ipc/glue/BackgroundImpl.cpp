@@ -1737,10 +1737,6 @@ ChildImpl::CloseForCurrentThread()
   threadLocalInfo->mClosed = true;
 #endif
 
-  if (threadLocalInfo->mActor) {
-    threadLocalInfo->mActor->FlushPendingInterruptQueue();
-  }
-
   // Clearing the thread local will synchronously close the actor.
   DebugOnly<PRStatus> status = PR_SetThreadPrivate(sThreadLocalIndex, nullptr);
   MOZ_ASSERT(status == PR_SUCCESS);
