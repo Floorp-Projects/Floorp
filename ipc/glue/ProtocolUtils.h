@@ -152,7 +152,7 @@ public:
     typedef IPC::Message Message;
     typedef IPC::MessageInfo MessageInfo;
 
-    IProtocol() : mManager(nullptr), mChannel(nullptr) {}
+    IProtocol(Side aSide) : mSide(aSide), mManager(nullptr), mChannel(nullptr) {}
 
     virtual int32_t Register(IProtocol*);
     virtual int32_t RegisterID(IProtocol*, int32_t);
@@ -189,6 +189,7 @@ protected:
     void SetIPCChannel(MessageChannel* aChannel) { mChannel = aChannel; }
 
 private:
+    Side mSide;
     IProtocol* mManager;
     MessageChannel* mChannel;
 };
@@ -209,7 +210,7 @@ class IToplevelProtocol : public IProtocol
     template<class PFooSide> friend class Endpoint;
 
 protected:
-    explicit IToplevelProtocol(ProtocolId aProtoId);
+    explicit IToplevelProtocol(ProtocolId aProtoId, Side aSide);
     ~IToplevelProtocol();
 
 public:

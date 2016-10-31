@@ -2946,8 +2946,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.cls.addstmt(Label.PUBLIC)
         # Actor()
         ctor = ConstructorDefn(ConstructorDecl(self.clsname))
+        side = ExprVar('mozilla::ipc::' + self.side.title() + 'Side')
         if ptype.isToplevel():
             ctor.memberinits = [
+                ExprMemberInit(ExprVar('mozilla::ipc::IToplevelProtocol'),
+                               [_protocolId(ptype), side]),
                 ExprMemberInit(p.channelVar(), [
                     ExprCall(ExprVar('ALLOW_THIS_IN_INITIALIZER_LIST'),
                              [ ExprVar.THIS ]) ]),
@@ -2960,12 +2963,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprMemberInit(p.stateVar(),
                                [ p.startState() ])
             ]
-            if ptype.isToplevel():
-                ctor.memberinits = [ExprMemberInit(
-                    p.openedProtocolInterfaceType(),
-                    [ _protocolId(ptype) ])] + ctor.memberinits
         else:
             ctor.memberinits = [
+                ExprMemberInit(ExprVar('mozilla::ipc::IProtocol'), [side]),
                 ExprMemberInit(p.idVar(), [ ExprLiteral.ZERO ]),
                 ExprMemberInit(p.stateVar(),
                                [ p.deadState() ])
