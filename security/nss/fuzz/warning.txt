@@ -1,0 +1,15 @@
+
+##############################################
+##                                          ##
+##  WARNING: You're building with -Dfuzz=1  ##
+##                                          ##
+##  This means:                             ##
+##                                          ##
+##   * Your PRNG is DETERMINISTIC.          ##
+##   * TLS transcripts are PLAINTEXT.       ##
+##   * TLS signature checks are DISABLED.   ##
+##                                          ##
+##  Thank you for fuzzing!                  ##
+##                                          ##
+##############################################
+
