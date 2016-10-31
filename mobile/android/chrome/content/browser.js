@@ -353,6 +353,7 @@ var BrowserApp = {
   startup: function startup() {
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
     dump("zerdatime " + Date.now() + " - browser chrome startup finished.");
+    Services.obs.notifyObservers(this.browser, "BrowserChrome:Ready", null);
 
     this.deck = document.getElementById("browsers");
 
