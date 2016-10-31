@@ -257,11 +257,12 @@ VerifyCertificate(CERTCertificate* cert, void* voidContext, void* pinArg)
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
-  Result result = certVerifier->VerifyCert(cert,
-                                           certificateUsageObjectSigner,
-                                           Now(), pinArg,
-                                           nullptr, // hostname
-                                           context->builtChain);
+  mozilla::pkix::Result result =
+    certVerifier->VerifyCert(cert,
+                             certificateUsageObjectSigner,
+                             Now(), pinArg,
+                             nullptr, // hostname
+                             context->builtChain);
   if (result != Success) {
     return GetXPCOMFromNSSError(MapResultToPRErrorCode(result));
   }
