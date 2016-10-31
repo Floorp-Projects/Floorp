@@ -87,7 +87,9 @@ class TopSitesCard extends RecyclerView.ViewHolder
         if (clickedView == itemView) {
             onUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(HomePager.OnUrlOpenListener.Flags.class));
         } else if (clickedView == menuButton) {
-            ActivityStreamContextMenu.show(clickedView.getContext(), title.getText().toString(), url,
+            ActivityStreamContextMenu.show(clickedView.getContext(),
+                    ActivityStreamContextMenu.MenuMode.TOPSITE,
+                    title.getText().toString(), url,
                     onUrlOpenListener, onUrlOpenInBackgroundListener,
                     faviconView.getWidth(), faviconView.getHeight());
         }
