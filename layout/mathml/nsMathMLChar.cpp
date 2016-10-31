@@ -443,20 +443,20 @@ public:
   // to the caller.
   static nsOpenTypeTable* Create(gfxFont* aFont)
   {
-    if (!aFont->GetFontEntry()->TryGetMathTable()) {
+    if (!aFont->TryGetMathTable()) {
       return nullptr;
     }
-    return new nsOpenTypeTable(aFont->GetFontEntry());
+    return new nsOpenTypeTable(aFont);
   }
 
 private:
-  RefPtr<gfxFontEntry> mFontEntry;
+  RefPtr<gfxFont> mFont;
   FontFamilyName mFontFamilyName;
   uint32_t mGlyphID;
 
-  explicit nsOpenTypeTable(gfxFontEntry* aFontEntry)
-    : mFontEntry(aFontEntry),
-      mFontFamilyName(aFontEntry->FamilyName(), eUnquotedName) {
+  explicit nsOpenTypeTable(gfxFont* aFont)
+    : mFont(aFont),
+    mFontFamilyName(aFont->GetFontEntry()->FamilyName(), eUnquotedName) {
     MOZ_COUNT_CTOR(nsOpenTypeTable);
   }
 
@@ -499,7 +499,7 @@ nsOpenTypeTable::ElementAt(DrawTarget*   aDrawTarget,
   UpdateCache(aDrawTarget, aAppUnitsPerDevPixel, aFontGroup, aChar);
 
   uint32_t parts[4];
-  if (!mFontEntry->GetMathVariantsParts(mGlyphID, aVertical, parts)) {
+  if (!mFont->MathTable()->VariantsParts(mGlyphID, aVertical, parts)) {
     return kNullGlyph;
   }
 
@@ -525,7 +525,7 @@ nsOpenTypeTable::BigOf(DrawTarget*   aDrawTarget,
   UpdateCache(aDrawTarget, aAppUnitsPerDevPixel, aFontGroup, aChar);
 
   uint32_t glyphID =
-    mFontEntry->GetMathVariantsSize(mGlyphID, aVertical, aSize);
+    mFont->MathTable()->VariantsSize(mGlyphID, aVertical, aSize);
   if (!glyphID) {
     return kNullGlyph;
   }
@@ -547,7 +547,7 @@ nsOpenTypeTable::HasPartsOf(DrawTarget*   aDrawTarget,
   UpdateCache(aDrawTarget, aAppUnitsPerDevPixel, aFontGroup, aChar);
 
   uint32_t parts[4];
-  if (!mFontEntry->GetMathVariantsParts(mGlyphID, aVertical, parts)) {
+  if (!mFont->MathTable()->VariantsParts(mGlyphID, aVertical, parts)) {
     return false;
   }
 
@@ -1133,9 +1133,8 @@ StretchEnumContext::TryVariants(nsGlyphTable* aGlyphTable,
       // to select the right size variant. Note that the value is sometimes too
       // small so we use kLargeOpFactor/kIntegralFactor as a minimum value.
       if (mathFont) {
-        displayOperatorMinHeight =
-          mathFont->GetMathConstant(gfxFontEntry::DisplayOperatorMinHeight,
-                                    oneDevPixel);
+        displayOperatorMinHeight = mathFont->MathTable()->
+          Constant(gfxMathTable::DisplayOperatorMinHeight, oneDevPixel);
         RefPtr<gfxTextRun> textRun =
           aGlyphTable->MakeTextRun(mDrawTarget, oneDevPixel, *aFontGroup, ch);
         nsBoundingMetrics bm = MeasureTextRun(mDrawTarget, textRun.get());
@@ -1179,12 +1178,11 @@ StretchEnumContext::TryVariants(nsGlyphTable* aGlyphTable,
         // Note that STIX-Word does not provide italic corrections but its
         // advance widths do not match right bearings.
         // (http://sourceforge.net/p/stixfonts/tracking/50/)
-        gfxFloat italicCorrection;
-        if (mathFont->GetFontEntry()->
-            GetMathItalicsCorrection(ch.glyphID, &italicCorrection)) {
+        gfxFloat italicCorrection =
+          mathFont->MathTable()->ItalicsCorrection(ch.glyphID);
+        if (italicCorrection) {
           bm.width -=
-            NSToCoordRound(italicCorrection *
-                           mathFont->GetAdjustedSize() * oneDevPixel);
+            NSToCoordRound(italicCorrection * oneDevPixel);
           if (bm.width < 0) {
             bm.width = 0;
           }
