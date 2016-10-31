@@ -147,6 +147,10 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
     static void addSizeOfExcludingThis(JSObject* obj, mozilla::MallocSizeOf mallocSizeOf,
                                        JS::ClassInfo* info);
 
+    static void copyData(Handle<SharedArrayBufferObject*> toBuffer,
+                         Handle<SharedArrayBufferObject*> fromBuffer,
+                         uint32_t fromIndex, uint32_t count);
+
     SharedArrayRawBuffer* rawBufferObject() const;
 
     // Invariant: This method does not cause GC and can be called
