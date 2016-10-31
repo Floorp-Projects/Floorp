@@ -39,6 +39,12 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
 public class ActivityStreamContextMenu
     extends BottomSheetDialog
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    public enum MenuMode {
+        HIGHLIGHT,
+        TOPSITE
+    }
+
     final Context context;
 
     final String title;
@@ -49,7 +55,9 @@ public class ActivityStreamContextMenu
 
     boolean isAlreadyBookmarked = false;
 
-    private ActivityStreamContextMenu(final Context context, final String title, @NonNull final String url,
+    private ActivityStreamContextMenu(final Context context,
+                                      final MenuMode mode,
+                                      final String title, @NonNull final String url,
                                       HomePager.OnUrlOpenListener onUrlOpenListener,
                                       HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener,
                                       final int tilesWidth, final int tilesHeight) {
@@ -91,6 +99,14 @@ public class ActivityStreamContextMenu
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.menu);
         navigationView.setNavigationItemSelectedListener(this);
+
+        // Disable "dismiss" for topsites until we have decided on its behaviour for topsites
+        // (currently "dismiss" adds the URL to a highlights-specific blocklist, which the topsites
+        // query has no knowledge of).
+        if (mode == MenuMode.TOPSITE) {
+            final MenuItem dismissItem = navigationView.getMenu().findItem(R.id.dismiss);
+            dismissItem.setVisible(false);
+        }
 
         // Disable the bookmark item until we know its bookmark state
         final MenuItem bookmarkItem = navigationView.getMenu().findItem(R.id.bookmark);
@@ -149,11 +165,15 @@ public class ActivityStreamContextMenu
         bsBehaviour.setPeekHeight(context.getResources().getDimensionPixelSize(R.dimen.activity_stream_contextmenu_peek_height));
     }
 
-    public static ActivityStreamContextMenu show(Context context, final String title, @NonNull  final String url,
+    public static ActivityStreamContextMenu show(Context context,
+                            final MenuMode menuMode,
+                            final String title, @NonNull  final String url,
                             HomePager.OnUrlOpenListener onUrlOpenListener,
                             HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener,
                             final int tilesWidth, final int tilesHeight) {
-        final ActivityStreamContextMenu menu = new ActivityStreamContextMenu(context, title, url,
+        final ActivityStreamContextMenu menu = new ActivityStreamContextMenu(context,
+                menuMode,
+                title, url,
                 onUrlOpenListener, onUrlOpenInBackgroundListener,
                 tilesWidth, tilesHeight);
         menu.show();

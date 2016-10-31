@@ -108,7 +108,9 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             menuButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ActivityStreamContextMenu.show(v.getContext(), title, url, onUrlOpenListener, onUrlOpenInBackgroundListener, vIconView.getWidth(), vIconView.getHeight());
+                    ActivityStreamContextMenu.show(v.getContext(), ActivityStreamContextMenu.MenuMode.HIGHLIGHT,
+                            title, url, onUrlOpenListener, onUrlOpenInBackgroundListener,
+                            vIconView.getWidth(), vIconView.getHeight());
                 }
             });
         }
