@@ -154,20 +154,20 @@ public:
 
     IProtocol() : mManager(nullptr) {}
 
-    virtual int32_t Register(IProtocol*) = 0;
-    virtual int32_t RegisterID(IProtocol*, int32_t) = 0;
-    virtual IProtocol* Lookup(int32_t) = 0;
-    virtual void Unregister(int32_t) = 0;
+    virtual int32_t Register(IProtocol*);
+    virtual int32_t RegisterID(IProtocol*, int32_t);
+    virtual IProtocol* Lookup(int32_t);
+    virtual void Unregister(int32_t);
     virtual void RemoveManagee(int32_t, IProtocol*) = 0;
 
     virtual Shmem::SharedMemory* CreateSharedMemory(
-        size_t, SharedMemory::SharedMemoryType, bool, int32_t*) = 0;
-    virtual Shmem::SharedMemory* LookupSharedMemory(int32_t) = 0;
-    virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*) = 0;
-    virtual bool DestroySharedMemory(Shmem&) = 0;
+        size_t, SharedMemory::SharedMemoryType, bool, int32_t*);
+    virtual Shmem::SharedMemory* LookupSharedMemory(int32_t);
+    virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*);
+    virtual bool DestroySharedMemory(Shmem&);
 
     // XXX odd ducks, acknowledged
-    virtual ProcessId OtherPid() const = 0;
+    virtual ProcessId OtherPid() const;
     virtual MessageChannel* GetIPCChannel() = 0;
 
     virtual void FatalError(const char* const aProtocolName, const char* const aErrorMsg) const = 0;

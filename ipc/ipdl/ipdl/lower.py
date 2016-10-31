@@ -3616,54 +3616,67 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         kidsvar = ExprVar('kids')
         ithkid = ExprIndex(kidsvar, ivar)
 
-        register = MethodDefn(MethodDecl(
-            p.registerMethod().name,
-            params=[ Decl(protocolbase, routedvar.name) ],
-            ret=_actorIdType(), virtual=1))
-        registerid = MethodDefn(MethodDecl(
-            p.registerIDMethod().name,
-            params=[ Decl(protocolbase, routedvar.name),
-                     Decl(_actorIdType(), idvar.name) ],
-            ret=_actorIdType(),
-            virtual=1))
-        lookup = MethodDefn(MethodDecl(
-            p.lookupIDMethod().name,
-            params=[ Decl(_actorIdType(), idvar.name) ],
-            ret=protocolbase, virtual=1))
-        unregister = MethodDefn(MethodDecl(
-            p.unregisterMethod().name,
-            params=[ Decl(_actorIdType(), idvar.name) ],
-            virtual=1))
+        methods = []
 
-        createshmem = MethodDefn(MethodDecl(
-            p.createSharedMemory().name,
-            ret=_rawShmemType(ptr=1),
-            params=[ Decl(Type.SIZE, sizevar.name),
-                     Decl(_shmemTypeType(), typevar.name),
-                     Decl(Type.BOOL, unsafevar.name),
-                     Decl(_shmemIdType(ptr=1), idvar.name) ],
-            virtual=1))
-        lookupshmem = MethodDefn(MethodDecl(
-            p.lookupSharedMemory().name,
-            ret=_rawShmemType(ptr=1),
-            params=[ Decl(_shmemIdType(), idvar.name) ],
-            virtual=1))
-        destroyshmem = MethodDefn(MethodDecl(
-            p.destroySharedMemory().name,
-            ret=Type.BOOL,
-            params=[ Decl(_shmemType(ref=1), shmemvar.name) ],
-            virtual=1))
-        istracking = MethodDefn(MethodDecl(
-            p.isTrackingSharedMemory().name,
-            ret=Type.BOOL,
-            params=[ Decl(_rawShmemType(ptr=1), rawvar.name) ],
-            virtual=1))
+        if p.decl.type.isToplevel():
+            register = MethodDefn(MethodDecl(
+                p.registerMethod().name,
+                params=[ Decl(protocolbase, routedvar.name) ],
+                ret=_actorIdType(), virtual=1))
+            registerid = MethodDefn(MethodDecl(
+                p.registerIDMethod().name,
+                params=[ Decl(protocolbase, routedvar.name),
+                         Decl(_actorIdType(), idvar.name) ],
+                ret=_actorIdType(),
+                virtual=1))
+            lookup = MethodDefn(MethodDecl(
+                p.lookupIDMethod().name,
+                params=[ Decl(_actorIdType(), idvar.name) ],
+                ret=protocolbase, virtual=1))
+            unregister = MethodDefn(MethodDecl(
+                p.unregisterMethod().name,
+                params=[ Decl(_actorIdType(), idvar.name) ],
+                virtual=1))
 
-        otherpid = MethodDefn(MethodDecl(
-            p.otherPidMethod().name,
-            ret=Type('base::ProcessId'),
-            const=1,
-            virtual=1))
+            createshmem = MethodDefn(MethodDecl(
+                p.createSharedMemory().name,
+                ret=_rawShmemType(ptr=1),
+                params=[ Decl(Type.SIZE, sizevar.name),
+                         Decl(_shmemTypeType(), typevar.name),
+                         Decl(Type.BOOL, unsafevar.name),
+                         Decl(_shmemIdType(ptr=1), idvar.name) ],
+                virtual=1))
+            lookupshmem = MethodDefn(MethodDecl(
+                p.lookupSharedMemory().name,
+                ret=_rawShmemType(ptr=1),
+                params=[ Decl(_shmemIdType(), idvar.name) ],
+                virtual=1))
+            destroyshmem = MethodDefn(MethodDecl(
+                p.destroySharedMemory().name,
+                ret=Type.BOOL,
+                params=[ Decl(_shmemType(ref=1), shmemvar.name) ],
+                virtual=1))
+            istracking = MethodDefn(MethodDecl(
+                p.isTrackingSharedMemory().name,
+                ret=Type.BOOL,
+                params=[ Decl(_rawShmemType(ptr=1), rawvar.name) ],
+                virtual=1))
+
+            otherpid = MethodDefn(MethodDecl(
+                p.otherPidMethod().name,
+                ret=Type('base::ProcessId'),
+                const=1,
+                virtual=1))
+
+            methods += [ register,
+                         registerid,
+                         lookup,
+                         unregister,
+                         createshmem,
+                         lookupshmem,
+                         istracking,
+                         destroyshmem,
+                         otherpid ]
 
         getchannel = MethodDefn(MethodDecl(
             p.getChannelMethod().name,
@@ -3828,34 +3841,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             otherpid.addstmt(StmtReturn(p.otherPidVar()))
             getchannel.addstmt(StmtReturn(ExprAddrOf(p.channelVar())))
         else:
-            # delegate registration to manager
-            register.addstmt(StmtReturn(ExprCall(
-                ExprSelect(p.managerVar(), '->', p.registerMethod().name),
-                [ routedvar ])))
-            registerid.addstmt(StmtReturn(ExprCall(
-                ExprSelect(p.managerVar(), '->', p.registerIDMethod().name),
-                [ routedvar, idvar ])))
-            lookup.addstmt(StmtReturn(ExprCall(
-                ExprSelect(p.managerVar(), '->', p.lookupIDMethod().name),
-                [ idvar ])))
-            unregister.addstmt(StmtReturn(ExprCall(
-                ExprSelect(p.managerVar(), '->', p.unregisterMethod().name),
-                [ idvar ])))
-            createshmem.addstmt(StmtReturn(ExprCall(
-                ExprSelect(p.managerVar(), '->', p.createSharedMemory().name),
-                [ sizevar, typevar, unsafevar, idvar ])))
-            lookupshmem.addstmt(StmtReturn(ExprCall(
-                ExprSelect(p.managerVar(), '->', p.lookupSharedMemory().name),
-                [ idvar ])))
-            istracking.addstmt(StmtReturn(ExprCall(
-                ExprSelect(p.managerVar(), '->',
-                           p.isTrackingSharedMemory().name),
-                [ rawvar ])))
-            destroyshmem.addstmt(StmtReturn(ExprCall(
-                ExprSelect(p.managerVar(), '->', p.destroySharedMemory().name),
-                [ shmemvar ])))
-            otherpid.addstmt(StmtReturn(
-                p.callOtherPid(p.managerVar())))
             getchannel.addstmt(StmtReturn(p.channelVar()))
 
         othervar = ExprVar('other')
@@ -3916,18 +3901,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             switchontype.addcase(DefaultLabel(), default)
             removemanagee.addstmt(switchontype)
 
-        return [ register,
-                 registerid,
-                 lookup,
-                 unregister,
-                 removemanagee,
-                 createshmem,
-                 lookupshmem,
-                 istracking,
-                 destroyshmem,
-                 otherpid,
-                 getchannel,
-                 Whitespace.NL ]
+        return methods + [removemanagee, getchannel, Whitespace.NL]
 
     def makeShmemIface(self):
         p = self.protocol
