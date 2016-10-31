@@ -164,7 +164,7 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
   SECItem* certSecItem = &node->cert->derCert;
 
   Input certDER;
-  Result result =
+  mozilla::pkix::Result result =
     certDER.Init(BitwiseCast<uint8_t*, unsigned char*>(certSecItem->data),
                  certSecItem->len);
   if (result != Success) {

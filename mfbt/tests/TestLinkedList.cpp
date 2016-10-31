@@ -156,6 +156,24 @@ TestMove()
   list3.clear();
 }
 
+static void
+TestRemoveAndGet()
+{
+  LinkedList<SomeClass> list;
+
+  SomeClass one(1), two(2), three(3);
+  list.insertBack(&one);
+  list.insertBack(&two);
+  list.insertBack(&three);
+  { unsigned int check[] { 1, 2, 3 }; CheckListValues(list, check); }
+
+  MOZ_RELEASE_ASSERT(two.removeAndGetNext() == &three);
+  { unsigned int check[] { 1, 3 }; CheckListValues(list, check); }
+
+  MOZ_RELEASE_ASSERT(three.removeAndGetPrevious() == &one);
+  { unsigned int check[] { 1 }; CheckListValues(list, check); }
+}
+
 struct PrivateClass : private LinkedListElement<PrivateClass> {
   friend class mozilla::LinkedList<PrivateClass>;
   friend class mozilla::LinkedListElement<PrivateClass>;
@@ -177,11 +195,74 @@ TestPrivate()
   MOZ_RELEASE_ASSERT(count == 2);
 }
 
+struct CountedClass : public LinkedListElement<RefPtr<CountedClass>>
+{
+  int mCount;
+  void AddRef() { mCount++; }
+  void Release() { mCount--; }
+
+  CountedClass() : mCount(0) {}
+  ~CountedClass() { MOZ_RELEASE_ASSERT(mCount == 0); }
+};
+
+static void
+TestRefPtrList()
+{
+  LinkedList<RefPtr<CountedClass>> list;
+  CountedClass* elt1 = new CountedClass;
+  CountedClass* elt2 = new CountedClass;
+
+  list.insertBack(elt1);
+  list.insertBack(elt2);
+
+  MOZ_RELEASE_ASSERT(elt1->mCount == 1);
+  MOZ_RELEASE_ASSERT(elt2->mCount == 1);
+
+  for (RefPtr<CountedClass> p : list) {
+    MOZ_RELEASE_ASSERT(p->mCount == 2);
+  }
+
+  RefPtr<CountedClass> ptr = list.getFirst();
+  while (ptr) {
+    MOZ_RELEASE_ASSERT(ptr->mCount == 2);
+    RefPtr<CountedClass> next = ptr->getNext();
+    ptr->remove();
+    ptr = Move(next);
+  }
+  ptr = nullptr;
+
+  MOZ_RELEASE_ASSERT(elt1->mCount == 0);
+  MOZ_RELEASE_ASSERT(elt2->mCount == 0);
+
+  list.insertBack(elt1);
+  elt1->setNext(elt2);
+
+  MOZ_RELEASE_ASSERT(elt1->mCount == 1);
+  MOZ_RELEASE_ASSERT(elt2->mCount == 1);
+
+  RefPtr<CountedClass> first = list.popFirst();
+
+  MOZ_RELEASE_ASSERT(elt1->mCount == 1);
+  MOZ_RELEASE_ASSERT(elt2->mCount == 1);
+
+  RefPtr<CountedClass> second = list.popFirst();
+
+  MOZ_RELEASE_ASSERT(elt1->mCount == 1);
+  MOZ_RELEASE_ASSERT(elt2->mCount == 1);
+
+  first = second = nullptr;
+
+  delete elt1;
+  delete elt2;
+}
+
 int
 main()
 {
   TestList();
   TestPrivate();
   TestMove();
+  TestRemoveAndGet();
+  TestRefPtrList();
   return 0;
 }

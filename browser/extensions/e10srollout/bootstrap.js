@@ -9,9 +9,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/TelemetryArchive.jsm");
-Cu.import("resource://gre/modules/TelemetryController.jsm");
 
  // The amount of people to be part of e10s
 const TEST_THRESHOLD = {
@@ -21,7 +18,7 @@ const TEST_THRESHOLD = {
 
 const ADDON_ROLLOUT_POLICY = {
   "beta"    : "50allmpc", // Any WebExtension or addon with mpc = true
-  "release" : "49a", // 10 tested add-ons + any WebExtension
+  "release" : "50allmpc", // Any WebExtension or addon with mpc = true
 };
 
 const PREF_COHORT_SAMPLE       = "e10s.rollout.cohortSample";
@@ -33,9 +30,6 @@ const PREF_TOGGLE_E10S         = "browser.tabs.remote.autostart.2";
 const PREF_E10S_ADDON_POLICY   = "extensions.e10s.rollout.policy";
 const PREF_E10S_ADDON_BLOCKLIST = "extensions.e10s.rollout.blocklist";
 const PREF_E10S_HAS_NONEXEMPT_ADDON = "extensions.e10s.rollout.hasAddon";
-const PREF_DISABLED_FOR_SPINNERS = "e10s.rollout.disabledByLongSpinners";
-
-const LONG_SPINNER_HISTOGRAM   = "FX_TAB_SWITCH_SPINNER_VISIBLE_LONG_MS";
 
 function startup() {
   // In theory we only need to run this once (on install()), but
@@ -47,8 +41,6 @@ function startup() {
   // to take effect, so we keep the data based on how it was when
   // the session started.
   defineCohort();
-
-  setUpSpinnerCheck();
 }
 
 function install() {
@@ -178,10 +170,6 @@ function optedOut() {
  * string must be returned.
  */
 function getTemporaryDisqualification() {
-  if (Preferences.isSet(PREF_DISABLED_FOR_SPINNERS)) {
-    return "longspinner";
-  }
-
   let applicationLanguage =
     Cc["@mozilla.org/chrome/chrome-registry;1"]
       .getService(Ci.nsIXULChromeRegistry)
@@ -193,85 +181,4 @@ function getTemporaryDisqualification() {
   }
 
   return "";
-}
-
-let performLongSpinnerCheck = Task.async(function*() {
-  if (!Services.appinfo.browserTabsRemoteAutostart) {
-    return;
-  }
-
-  const DAYS_OLD = 3;
-  let thresholdDate = new Date(Date.now() - (1000 * 60 * 60 * 24 * DAYS_OLD));
-
-  let allPingsInfo = yield TelemetryArchive.promiseArchivedPingList();
-
-  let recentPingsInfo = allPingsInfo.filter(ping => {
-    let pingDate = new Date(ping.timestampCreated);
-    return pingDate > thresholdDate;
-  });
-
-  let pingList = [];
-
-  for (let pingInfo of recentPingsInfo) {
-    pingList.push(yield TelemetryArchive.promiseArchivedPingById(pingInfo.id));
-  }
-
-  pingList.push(TelemetryController.getCurrentPingData(/* subsession = */ true));
-
-  let totalSessionTime = 0;
-  let totalSpinnerTime = 0;
-
-  for (let ping of pingList) {
-    try {
-      if (ping.type != "main") {
-        continue;
-      }
-
-      if (!ping.environment.settings.e10sEnabled) {
-        continue;
-      }
-
-      totalSessionTime = ping.payload.info.subsessionLength;
-
-      if (!(LONG_SPINNER_HISTOGRAM in ping.payload.histograms)) {
-        // The Histogram might not be defined in this ping if no data was recorded for it.
-        // In this case, we still add the session length because that was a valid session
-        // without a long spinner.
-        continue;
-      }
-
-      let histogram = ping.payload.histograms[LONG_SPINNER_HISTOGRAM];
-
-      for (let spinnerTime of Object.keys(histogram.values)) {
-        // Only consider spinners that took more than 2 seconds.
-        // Note: the first bucket size that fits this criteria is
-        // 2297ms. And the largest bucket is 64000ms, meaning that
-        // any pause larger than that is only counted as a 64s pause.
-        // For reference, the bucket sizes are:
-        // 0, 1000, 2297, 5277, 12124, 27856, 64000
-        if (spinnerTime >= 2000) {
-          totalSpinnerTime += spinnerTime * histogram.values[spinnerTime];
-        }
-      }
-    } catch (e) { /* just in case there's a malformed ping, ignore it silently */ }
-  }
-
-  totalSpinnerTime /= 1000; // session time is in seconds, but spinner time in ms
-
-  const ACCEPTABLE_THRESHOLD = 20 / 3600; // 20 seconds per hour, per bug 1301131
-
-  if ((totalSpinnerTime / totalSessionTime) > ACCEPTABLE_THRESHOLD) {
-    Preferences.set(PREF_DISABLED_FOR_SPINNERS, true);
-  } else {
-    Preferences.reset(PREF_DISABLED_FOR_SPINNERS);
-  }
-});
-
-function setUpSpinnerCheck() {
-  let {setTimeout, setInterval} = Cu.import("resource://gre/modules/Timer.jsm");
-
-  // Perform an initial check after 5min (which should give good clearance from
-  // the startup process), and then a subsequent check every hour.
-  setTimeout(performLongSpinnerCheck, 1000 * 60 * 5);
-  setInterval(performLongSpinnerCheck, 1000 * 60 * 60);
 }

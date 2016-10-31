@@ -38,6 +38,8 @@ using namespace mozilla::pkix;
 
 namespace mozilla { namespace psm {
 
+typedef mozilla::pkix::Result Result;
+
 static SECStatus
 DigestLength(UniquePK11Context& context, uint32_t length)
 {
