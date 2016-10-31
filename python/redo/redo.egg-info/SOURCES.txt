@@ -1,4 +1,4 @@
-README
+setup.cfg
 setup.py
 redo/__init__.py
 redo/cmd.py
@@ -6,4 +6,5 @@ redo.egg-info/PKG-INFO
 redo.egg-info/SOURCES.txt
 redo.egg-info/dependency_links.txt
 redo.egg-info/entry_points.txt
+redo.egg-info/pbr.json
 redo.egg-info/top_level.txt
