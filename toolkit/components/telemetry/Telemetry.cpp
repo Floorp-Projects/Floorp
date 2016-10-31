@@ -1908,10 +1908,16 @@ TelemetryImpl::CreateTelemetryInstance()
 {
   MOZ_ASSERT(sTelemetry == nullptr, "CreateTelemetryInstance may only be called once, via GetService()");
 
+  bool useTelemetry = false;
+  if (XRE_IsParentProcess() ||
+      XRE_IsContentProcess() ||
+      XRE_IsGPUProcess())
+  {
+    useTelemetry = true;
+  }
+
   // First, initialize the TelemetryHistogram and TelemetryScalar global states.
-  TelemetryHistogram::InitializeGlobalState(
-                        XRE_IsParentProcess() || XRE_IsContentProcess(),
-                        XRE_IsParentProcess() || XRE_IsContentProcess());
+  TelemetryHistogram::InitializeGlobalState(useTelemetry, useTelemetry);
 
   // Only record scalars from the parent process.
   TelemetryScalar::InitializeGlobalState(XRE_IsParentProcess(), XRE_IsParentProcess());
@@ -2263,12 +2269,12 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelemetry, TelemetryImpl::CreateTele
 NS_DEFINE_NAMED_CID(NS_TELEMETRY_CID);
 
 const Module::CIDEntry kTelemetryCIDs[] = {
-  { &kNS_TELEMETRY_CID, false, nullptr, nsITelemetryConstructor },
+  { &kNS_TELEMETRY_CID, false, nullptr, nsITelemetryConstructor, Module::ALLOW_IN_GPU_PROCESS },
   { nullptr }
 };
 
 const Module::ContractIDEntry kTelemetryContracts[] = {
-  { "@mozilla.org/base/telemetry;1", &kNS_TELEMETRY_CID },
+  { "@mozilla.org/base/telemetry;1", &kNS_TELEMETRY_CID, Module::ALLOW_IN_GPU_PROCESS },
   { nullptr }
 };
 
@@ -2279,7 +2285,8 @@ const Module kTelemetryModule = {
   nullptr,
   nullptr,
   nullptr,
-  TelemetryImpl::ShutdownTelemetry
+  TelemetryImpl::ShutdownTelemetry,
+  Module::ALLOW_IN_GPU_PROCESS
 };
 
 NS_IMETHODIMP
