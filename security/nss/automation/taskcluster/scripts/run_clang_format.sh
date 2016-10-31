@@ -19,7 +19,6 @@ else
     top=$(dirname $0)/../../..
     dirs=( \
          "$top/cmd" \
-         "$top/fuzz" \
          "$top/lib/base" \
          "$top/lib/certdb" \
          "$top/lib/certhigh" \
@@ -29,22 +28,16 @@ else
          "$top/lib/dbm" \
          "$top/lib/dev" \
          "$top/lib/freebl" \
-         "$top/lib/jar" \
          "$top/lib/nss" \
-         "$top/lib/pk11wrap" \
-         "$top/lib/pkcs7" \
-         "$top/lib/pkcs12" \
-         "$top/lib/pki" \
-         "$top/lib/smime" \
          "$top/lib/softoken" \
          "$top/lib/ssl" \
-         "$top/lib/sysinit" \
          "$top/lib/util" \
-         "$top/gtests/common" \
-         "$top/gtests/der_gtest" \
-         "$top/gtests/pk11_gtest" \
-         "$top/gtests/ssl_gtest" \
-         "$top/gtests/util_gtest" \
+         "$top/lib/sysinit" \
+         "$top/external_tests/common" \
+         "$top/external_tests/der_gtest" \
+         "$top/external_tests/pk11_gtest" \
+         "$top/external_tests/ssl_gtest" \
+         "$top/external_tests/util_gtest" \
     )
 fi
 

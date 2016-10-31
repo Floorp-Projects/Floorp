@@ -15,4 +15,4 @@ class NSSDatabase {
   ~NSSDatabase() { NSS_Shutdown(); }
 };
 
-#endif  // shared_h__
+#endif // shared_h__

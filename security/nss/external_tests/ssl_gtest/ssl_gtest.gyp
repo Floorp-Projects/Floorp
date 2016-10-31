@@ -43,7 +43,7 @@
         '<(DEPTH)/exports.gyp:nss_exports',
         '<(DEPTH)/lib/util/util.gyp:nssutil3',
         '<(DEPTH)/lib/sqlite/sqlite.gyp:sqlite3',
-        '<(DEPTH)/gtests/google_test/google_test.gyp:gtest',
+        '<(DEPTH)/external_tests/google_test/google_test.gyp:gtest',
         '<(DEPTH)/lib/softoken/softoken.gyp:softokn',
         '<(DEPTH)/lib/smime/smime.gyp:smime',
         '<(DEPTH)/lib/ssl/ssl.gyp:ssl',
@@ -91,8 +91,8 @@
   ],
   'target_defaults': {
     'include_dirs': [
-      '../../gtests/google_test/gtest/include',
-      '../../gtests/common',
+      '../../external_tests/google_test/gtest/include',
+      '../../external_tests/common',
       '../../lib/ssl'
     ],
     'defines': [

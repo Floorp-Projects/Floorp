@@ -1011,7 +1011,7 @@ sdb_SetAttributeValue(SDB *sdb, CK_OBJECT_HANDLE object_id,
             sqlerr = sqlite3_bind_blob(stmt, i + 1, template[i].pValue,
                                        template[i].ulValueLen, SQLITE_STATIC);
         } else {
-            sqlerr = sqlite3_bind_blob(stmt, i + 1, SQLITE_EXPLICIT_NULL,
+            sqlerr = sqlite3_bind_blob(stmt, i + 2, SQLITE_EXPLICIT_NULL,
                                        SQLITE_EXPLICIT_NULL_LEN, SQLITE_STATIC);
         }
         if (sqlerr != SQLITE_OK)

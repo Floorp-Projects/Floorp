@@ -8,13 +8,13 @@
 #define registry_h__
 
 #include <map>
-#include "FuzzerInternal.h"
 #include "nss.h"
+#include "FuzzerInternal.h"
 
 class Registry {
  public:
-  static void Add(std::string name, fuzzer::UserCallback func, uint16_t max_len,
-                  std::string desc) {
+  static void Add(std::string name, fuzzer::UserCallback func,
+                  uint16_t max_len, std::string desc) {
     assert(!Has(name));
     GetInstance().targets_[name] = TargetData(func, max_len, desc);
   }
@@ -40,7 +40,7 @@ class Registry {
 
   static std::vector<std::string> Names() {
     std::vector<std::string> names;
-    for (auto& it : GetInstance().targets_) {
+    for (auto &it : GetInstance().targets_) {
       names.push_back(it.first);
     }
     return names;
@@ -63,9 +63,9 @@ class Registry {
   std::map<std::string, TargetData> targets_;
 };
 
-#define REGISTER_FUZZING_TARGET(name, func, max_len, desc)           \
-  static void __attribute__((constructor)) RegisterFuzzingTarget() { \
-    Registry::Add(name, func, max_len, desc);                        \
+#define REGISTER_FUZZING_TARGET(name, func, max_len, desc)            \
+  static void __attribute__ ((constructor)) RegisterFuzzingTarget() { \
+    Registry::Add(name, func, max_len, desc);                         \
   }
 
-#endif  // registry_h__
+#endif // registry_h__

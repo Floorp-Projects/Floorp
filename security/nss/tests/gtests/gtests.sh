@@ -55,8 +55,7 @@ gtest_start()
     GTESTREPORT="$GTESTDIR/report.xml"
     PARSED_REPORT="$GTESTDIR/report.parsed"
     echo "executing $i"
-    ${BINDIR}/$i -d "$GTESTDIR" --gtest_output=xml:"${GTESTREPORT}" \
-                                --gtest_filter="${GTESTFILTER-*}"
+    ${BINDIR}/$i -d "$GTESTDIR" --gtest_output=xml:"${GTESTREPORT}"
     html_msg $? 0 "$i run successfully"
     echo "test output dir: ${GTESTREPORT}"
     echo "executing sed to parse the xml report"

@@ -54,8 +54,7 @@ ssl_CreateStaticECDHEKeyPair(void *arg)
 
     PORT_Assert(group->keaType == ssl_kea_ecdh);
     PORT_Assert(i < SSL_NAMED_GROUP_COUNT);
-    rv = ssl_CreateECDHEphemeralKeyPair(NULL, group,
-                                        &gECDHEKeyPairs[i].keyPair);
+    rv = ssl_CreateECDHEphemeralKeyPair(group, &gECDHEKeyPairs[i].keyPair);
     if (rv != SECSuccess) {
         gECDHEKeyPairs[i].keyPair = NULL;
         SSL_TRC(5, ("%d: SSL[-]: disabling group %d",
