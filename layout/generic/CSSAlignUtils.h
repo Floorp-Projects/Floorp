@@ -24,6 +24,10 @@ public:
     // Indicates that the container's start side in aAxis is the same
     // as the child's start side in the child's parallel axis.
     eSameSide          = 1 << 1,
+    // Indicates that AlignJustifySelf() shouldn't expand "auto" margins.
+    // (By default, AlignJustifySelf() *will* expand such margins, to fill the
+    // available space before any alignment is done.)
+    eIgnoreAutoMargins = 1 << 2,
   };
 
   /**
