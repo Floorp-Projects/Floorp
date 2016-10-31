@@ -555,11 +555,6 @@ private:
     // consumers set this to true to use cache pinning, this has effect
     // only when the channel is in an app context (load context has an appid)
     uint32_t                          mPinCacheContent : 1;
-    // Whether fetching the content is meant to be handled by the
-    // packaged app service, which behaves like a caching layer.
-    // Upon successfully fetching the package, the resource will be placed in
-    // the cache, and served by calling OnCacheEntryAvailable.
-    uint32_t                          mIsPackagedAppResource : 1;
     // True if CORS preflight has been performed
     uint32_t                          mIsCorsPreflightDone : 1;
 

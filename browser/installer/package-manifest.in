@@ -350,8 +350,6 @@
 @RESPATH@/components/BrowserElementProxy.js
 @RESPATH@/components/FeedProcessor.manifest
 @RESPATH@/components/FeedProcessor.js
-@RESPATH@/components/PackagedAppUtils.js
-@RESPATH@/components/PackagedAppUtils.manifest
 @RESPATH@/components/WellKnownOpportunisticUtils.js
 @RESPATH@/components/WellKnownOpportunisticUtils.manifest
 #ifndef XP_MACOSX
