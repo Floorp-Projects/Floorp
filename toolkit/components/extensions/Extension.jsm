@@ -380,19 +380,6 @@ class ExtensionChildProxyContext extends ProxyContext {
 
 function findPathInObject(obj, path, printErrors = true) {
   for (let elt of path.split(".")) {
-    // If we get a null object before reaching the requested path
-    // (e.g. the API object is returned only on particular kind of contexts instead
-    // of based on WebExtensions permissions, like it happens for the devtools APIs),
-    // stop searching and return undefined.
-    // TODO(robwu): This should never be reached. If an API is not available for
-    // a context, it should be declared as such in the schema and enforced by
-    // `shouldInject`, for instance using the same logic that is used to opt-in
-    // to APIs in content scripts.
-    // If this check is kept, then there is a discrepancy between APIs depending
-    // on whether it is generated locally or remotely: Non-existing local APIs
-    // are excluded in `shouldInject` by this check, but remote APIs do not have
-    // this information and will therefore cause the schema API generator to
-    // create an API that proxies to a non-existing API implementation.
     if (!obj || !(elt in obj)) {
       if (printErrors) {
         Cu.reportError(`WebExtension API ${path} not found (it may be unimplemented by Firefox).`);
