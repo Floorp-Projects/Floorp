@@ -2042,16 +2042,14 @@ class SchemaAPIManager extends EventEmitter {
       wantXrays: false,
       sandboxName: `Namespace of ext-*.js scripts for ${this.processType}`,
     });
-    Object.defineProperty(global, "console", {get() { return console; }});
-    global.extensions = this;
-    global.global = global;
-    global.Cc = Cc;
-    global.Ci = Ci;
-    global.Cu = Cu;
-    global.Cr = Cr;
+
+    Object.assign(global, {global, Cc, Ci, Cu, Cr, XPCOMUtils, extensions: this});
+
+    XPCOMUtils.defineLazyGetter(global, "console", getConsole);
+
     XPCOMUtils.defineLazyModuleGetter(global, "require",
                                       "resource://devtools/shared/Loader.jsm");
-    global.XPCOMUtils = XPCOMUtils;
+
     return global;
   }
 
