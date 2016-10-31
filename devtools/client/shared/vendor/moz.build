@@ -20,6 +20,7 @@ modules += [
     'react-redux.js',
     'react.js',
     'redux.js',
+    'reselect.js',
     'seamless-immutable.js',
 ]
 
