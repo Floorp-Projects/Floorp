@@ -46,6 +46,7 @@
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StringBuffer.h"
+#include "vm/Unicode.h"
 
 #include "vm/Interpreter-inl.h"
 #include "vm/String-inl.h"
@@ -54,7 +55,6 @@
 
 using namespace js;
 using namespace js::gc;
-using namespace js::unicode;
 
 using JS::Symbol;
 using JS::SymbolCode;
@@ -2762,35 +2762,6 @@ js::str_fromCharCode_one_arg(JSContext* cx, HandleValue code, MutableHandleValue
     return CodeUnitToString(cx, ucode, rval);
 }
 
-static inline bool
-IsSupplementary(uint32_t codePoint)
-{
-    return codePoint > 0xFFFF;
-}
-
-static inline char16_t
-LeadSurrogate(uint32_t codePoint)
-{
-    return char16_t((codePoint >> 10) + 0xD7C0);
-}
-
-static inline char16_t
-TrailSurrogate(uint32_t codePoint)
-{
-    return char16_t((codePoint & 0x3FF) | 0xDC00);
-}
-
-static inline void
-UTF16Encode(uint32_t codePoint, char16_t* elements, unsigned* index)
-{
-    if (!IsSupplementary(codePoint)) {
-        elements[(*index)++] = char16_t(codePoint);
-    } else {
-        elements[(*index)++] = LeadSurrogate(codePoint);
-        elements[(*index)++] = TrailSurrogate(codePoint);
-    }
-}
-
 static MOZ_ALWAYS_INLINE bool
 ToCodePoint(JSContext* cx, HandleValue code, uint32_t* codePoint)
 {
@@ -2800,7 +2771,7 @@ ToCodePoint(JSContext* cx, HandleValue code, uint32_t* codePoint)
         return false;
 
     // String.fromCodePoint, Steps 5.c-d.
-    if (JS::ToInteger(nextCP) != nextCP || nextCP < 0 || nextCP > 0x10FFFF) {
+    if (JS::ToInteger(nextCP) != nextCP || nextCP < 0 || nextCP > unicode::NonBMPMax) {
         ToCStringBuf cbuf;
         if (char* numStr = NumberToCString(cx, &cbuf, nextCP))
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_A_CODEPOINT, numStr);
@@ -2822,10 +2793,10 @@ js::str_fromCodePoint_one_arg(JSContext* cx, HandleValue code, MutableHandleValu
         return false;
 
     // Steps 5.e, 6.
-    if (!IsSupplementary(codePoint))
+    if (!unicode::IsSupplementary(codePoint))
         return CodeUnitToString(cx, uint16_t(codePoint), rval);
 
-    char16_t chars[] = { LeadSurrogate(codePoint), TrailSurrogate(codePoint) };
+    char16_t chars[] = { unicode::LeadSurrogate(codePoint), unicode::TrailSurrogate(codePoint) };
     JSString* str = NewStringCopyNDontDeflate<CanGC>(cx, chars, 2);
     if (!str)
         return false;
@@ -2853,7 +2824,7 @@ str_fromCodePoint_few_args(JSContext* cx, const CallArgs& args)
             return false;
 
         // Step 5.e.
-        UTF16Encode(codePoint, elements, &length);
+        unicode::UTF16Encode(codePoint, elements, &length);
     }
 
     // Step 6.
@@ -2904,7 +2875,7 @@ js::str_fromCodePoint(JSContext* cx, unsigned argc, Value* vp)
         }
 
         // Step 5.e.
-        UTF16Encode(codePoint, elements, &length);
+        unicode::UTF16Encode(codePoint, elements, &length);
     }
     elements[length] = 0;
 
@@ -3613,11 +3584,11 @@ Encode(StringBuffer& sb, const CharT* chars, size_t length,
             if (!sb.append(c))
                 return Encode_Failure;
         } else {
-            if (c >= 0xDC00 && c <= 0xDFFF)
+            if (unicode::IsTrailSurrogate(c))
                 return Encode_BadUri;
 
             uint32_t v;
-            if (c < 0xD800 || c > 0xDBFF) {
+            if (!unicode::IsLeadSurrogate(c)) {
                 v = c;
             } else {
                 k++;
@@ -3625,10 +3596,10 @@ Encode(StringBuffer& sb, const CharT* chars, size_t length,
                     return Encode_BadUri;
 
                 char16_t c2 = chars[k];
-                if (c2 < 0xDC00 || c2 > 0xDFFF)
+                if (!unicode::IsTrailSurrogate(c2))
                     return Encode_BadUri;
 
-                v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
+                v = unicode::UTF16Decode(c, c2);
             }
             uint8_t utf8buf[4];
             size_t L = OneUcs4ToUtf8Char(utf8buf, v);
@@ -3728,15 +3699,14 @@ Decode(StringBuffer& sb, const CharT* chars, size_t length, const bool* reserved
                     octets[j] = char(B);
                 }
                 uint32_t v = JS::Utf8ToOneUcs4Char(octets, n);
-                if (v >= 0x10000) {
-                    v -= 0x10000;
-                    if (v > 0xFFFFF)
+                if (v >= unicode::NonBMPMin) {
+                    if (v > unicode::NonBMPMax)
                         return Decode_BadUri;
 
-                    c = char16_t((v & 0x3FF) + 0xDC00);
-                    char16_t H = char16_t((v >> 10) + 0xD800);
+                    char16_t H = unicode::LeadSurrogate(v);
                     if (!sb.append(H))
                         return Decode_Failure;
+                    c = unicode::TrailSurrogate(v);
                 } else {
                     c = char16_t(v);
                 }
@@ -3840,7 +3810,7 @@ str_encodeURI_Component(JSContext* cx, unsigned argc, Value* vp)
 uint32_t
 js::OneUcs4ToUtf8Char(uint8_t* utf8Buffer, uint32_t ucs4Char)
 {
-    MOZ_ASSERT(ucs4Char <= 0x10FFFF);
+    MOZ_ASSERT(ucs4Char <= unicode::NonBMPMax);
 
     if (ucs4Char < 0x80) {
         utf8Buffer[0] = uint8_t(ucs4Char);
