@@ -1023,13 +1023,21 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <field name="_noActionKeys"><![CDATA[
-        [
-          KeyEvent.DOM_VK_ALT,
-          KeyEvent.DOM_VK_SHIFT,
-          KeyEvent.DOM_VK_META,
-        ]
-      ]]></field>
+      <property name="_noActionKeys" readonly="true">
+        <getter><![CDATA[
+          if (!this.__noActionKeys) {
+            this.__noActionKeys = new Set([
+              KeyEvent.DOM_VK_ALT,
+              KeyEvent.DOM_VK_SHIFT,
+            ]);
+            let modifier = this.AppConstants.platform == "macosx" ?
+                           KeyEvent.DOM_VK_META :
+                           KeyEvent.DOM_VK_CONTROL;
+            this.__noActionKeys.add(modifier);
+          }
+          return this.__noActionKeys;
+        ]]></getter>
+      </property>
 
       <field name="_pressedNoActionKeys"><![CDATA[
         new Set()
@@ -1145,7 +1153,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
     <handlers>
       <handler event="keydown"><![CDATA[
-        if (this._noActionKeys.includes(event.keyCode) &&
+        if (this._noActionKeys.has(event.keyCode) &&
             this.popup.selectedIndex >= 0 &&
             !this._pressedNoActionKeys.has(event.keyCode)) {
           if (this._pressedNoActionKeys.size == 0) {
@@ -1157,7 +1165,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       ]]></handler>
 
       <handler event="keyup"><![CDATA[
-        if (this._noActionKeys.includes(event.keyCode) &&
+        if (this._noActionKeys.has(event.keyCode) &&
             this._pressedNoActionKeys.has(event.keyCode)) {
           this._pressedNoActionKeys.delete(event.keyCode);
           if (this._pressedNoActionKeys.size == 0)
