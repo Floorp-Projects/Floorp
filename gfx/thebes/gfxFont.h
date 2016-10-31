@@ -46,6 +46,7 @@ class gfxGlyphExtents;
 class gfxShapedText;
 class gfxShapedWord;
 class gfxSkipChars;
+class gfxMathTable;
 
 #define FONT_MAX_SIZE                  2000.0
 
@@ -1844,22 +1845,13 @@ public:
         delete sDefaultFeatures;
     }
 
-    // Get a font dimension from the MATH table, scaled to appUnits;
-    // may only be called if mFontEntry->TryGetMathTable has succeeded
-    // (i.e. the font is known to be a valid OpenType math font).
-    nscoord GetMathConstant(gfxFontEntry::MathConstant aConstant,
-                            uint32_t aAppUnitsPerDevPixel)
-    {
-        return NSToCoordRound(mFontEntry->GetMathConstant(aConstant) *
-                              GetAdjustedSize() * aAppUnitsPerDevPixel);
-    }
-
-    // Get a dimensionless math constant (e.g. a percentage);
-    // may only be called if mFontEntry->TryGetMathTable has succeeded
-    // (i.e. the font is known to be a valid OpenType math font).
-    float GetMathConstant(gfxFontEntry::MathConstant aConstant)
-    {
-        return mFontEntry->GetMathConstant(aConstant);
+    // Call TryGetMathTable() to try and load the Open Type MATH table.
+    // If (and ONLY if) TryGetMathTable() has returned true, the MathTable()
+    // method may be called to access the gfxMathTable data.
+    bool          TryGetMathTable();
+    gfxMathTable* MathTable() {
+        MOZ_RELEASE_ASSERT(mMathTable, "A successful call to TryGetMathTable() must be performed before calling this function");
+        return mMathTable.get();
     }
 
     // return a cloned font resized and offset to simulate sub/superscript glyphs
@@ -2096,6 +2088,8 @@ protected:
     bool                       mKerningSet;     // kerning explicitly set?
     bool                       mKerningEnabled; // if set, on or off?
 
+    bool                       mMathInitialized; // TryGetMathTable() called?
+
     nsExpirationState          mExpirationState;
     gfxFontStyle               mStyle;
     nsTArray<mozilla::UniquePtr<gfxGlyphExtents>> mGlyphExtentsArray;
@@ -2130,6 +2124,9 @@ protected:
 
     // For vertical metrics, created on demand.
     mozilla::UniquePtr<const Metrics> mVerticalMetrics;
+
+    // Table used for MathML layout.
+    mozilla::UniquePtr<gfxMathTable> mMathTable;
 
     // Helper for subclasses that want to initialize standard metrics from the
     // tables of sfnt (TrueType/OpenType) fonts.
