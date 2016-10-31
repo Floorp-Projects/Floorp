@@ -40,6 +40,8 @@ static void PrettyUC(nscoord aSize, char* aBuf, int aBufSize)
 
 using namespace mozilla;
 
+typedef mozilla::CSSAlignUtils::AlignJustifyFlags AlignJustifyFlags;
+
 void
 nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
                                                ChildListID     aListID,
@@ -420,21 +422,24 @@ OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
   nscoord alignAreaSizeInAxis = (pcAxis == eLogicalAxisInline)
     ? alignAreaSize.ISize(pcWM)
     : alignAreaSize.BSize(pcWM);
-  // XXXdholbert: Handle <overflow-position> in bug 1311892.  For now, behave
+
+  AlignJustifyFlags flags = AlignJustifyFlags::eNoFlags;
+  uint16_t alignConst =
+    aPlaceholderContainer->CSSAlignmentForAbsPosChild(aKidReflowInput, pcAxis);
+  // XXXdholbert: Handle <overflow-position> in bug 1311892 (by conditionally
+  // setting AlignJustifyFlags::eOverflowSafe in |flags|.)  For now, we behave
   // as if "unsafe" was the specified value (which is basically equivalent to
   // the default behavior, when no value is specified -- though the default
   // behavior also has some [at-risk] extra nuance about scroll containers...)
-  const bool overflowSafe = false;
-
-  uint16_t alignConst =
-    aPlaceholderContainer->CSSAlignmentForAbsPosChild(aKidReflowInput, pcAxis);
-  // XXX strip off <overflow-position> bits until we implement it (bug 1311892)
+  // For now we ignore & strip off <overflow-position> bits, until bug 1311892.
   alignConst &= ~NS_STYLE_ALIGN_FLAG_BITS;
 
   // Find out if placeholder-container & the OOF child have the same start-sides
   // in the placeholder-container's pcAxis.
   WritingMode kidWM = aKidReflowInput.GetWritingMode();
-  bool sameSidePCAndKid = pcWM.ParallelAxisStartsOnSameSide(pcAxis, kidWM);
+  if (pcWM.ParallelAxisStartsOnSameSide(pcAxis, kidWM)) {
+    flags |= AlignJustifyFlags::eSameSide;
+  }
 
   // (baselineAdjust is unused. CSSAlignmentForAbsPosChild() should've
   // converted 'baseline'/'last-baseline' enums to their fallback values.)
@@ -449,10 +454,9 @@ OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
                          : aAbsPosCBAxis);
 
   nscoord offset =
-    CSSAlignUtils::AlignJustifySelf(alignConst, overflowSafe,
-                                    kidAxis, sameSidePCAndKid, baselineAdjust,
-                                    alignAreaSizeInAxis, aKidReflowInput,
-                                    kidSizeInOwnWM);
+    CSSAlignUtils::AlignJustifySelf(alignConst, kidAxis, flags,
+                                    baselineAdjust, alignAreaSizeInAxis,
+                                    aKidReflowInput, kidSizeInOwnWM);
 
   // "offset" is in terms of the CSS Box Alignment container (i.e. it's in
   // terms of pcWM). But our return value needs to in terms of the containing
