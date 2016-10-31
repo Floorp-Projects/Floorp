@@ -186,6 +186,10 @@ public:
     virtual const MessageChannel* GetIPCChannel() const { return mChannel; }
     virtual MessageChannel* GetIPCChannel() { return mChannel; }
 
+    bool AllocShmem(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aOutMem);
+    bool AllocUnsafeShmem(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aOutMem);
+    bool DeallocShmem(Shmem& aMem);
+
 protected:
     void SetManager(IProtocol* aManager) { mManager = aManager; }
     void SetIPCChannel(MessageChannel* aChannel) { mChannel = aChannel; }
