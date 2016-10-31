@@ -102,7 +102,6 @@ DIRS += [
     'xul',
     'manifest',
     'vr',
-    'newapps',
     'u2f',
     'console',
     'performance',
