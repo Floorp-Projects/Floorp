@@ -1399,11 +1399,6 @@ internal_RemoteAccumulate(mozilla::Telemetry::ID aId, uint32_t aSample)
   if (XRE_IsParentProcess()) {
     return false;
   }
-  Histogram *h;
-  nsresult rv = internal_GetHistogramByEnumId(aId, &h);
-  if (NS_SUCCEEDED(rv) && !h->IsRecordingEnabled()) {
-    return true;
-  }
   if (!gAccumulations) {
     gAccumulations = new nsTArray<Accumulation>();
   }
@@ -1422,13 +1417,6 @@ internal_RemoteAccumulate(mozilla::Telemetry::ID aId,
                     const nsCString& aKey, uint32_t aSample)
 {
   if (XRE_IsParentProcess()) {
-    return false;
-  }
-  const HistogramInfo& th = gHistograms[aId];
-  KeyedHistogram* keyed
-     = internal_GetKeyedHistogramById(nsDependentCString(th.id()));
-  MOZ_ASSERT(keyed);
-  if (!keyed->IsRecordingEnabled()) {
     return false;
   }
   if (!gKeyedAccumulations) {
