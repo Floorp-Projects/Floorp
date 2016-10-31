@@ -489,10 +489,7 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mTransactionStack(nullptr),
     mTimedOutMessageSeqno(0),
     mTimedOutMessageNestedLevel(0),
-#if defined(MOZ_CRASHREPORTER) && defined(OS_WIN)
-    mPending(AnnotateAllocator<Message>(*this)),
-#endif
-    mRemoteStackDepthGuess(false),
+    mRemoteStackDepthGuess(0),
     mSawInterruptOutMsg(false),
     mIsWaitingForIncoming(false),
     mAbortOnError(false),
@@ -508,12 +505,8 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mIsSyncWaitingOnNonMainThread = false;
 #endif
 
-    RefPtr<CancelableRunnable> runnable =
-        NewNonOwningCancelableRunnableMethod(this, &MessageChannel::OnMaybeDequeueOne);
-    mDequeueOneTask = new RefCountedTask(runnable.forget());
-
-    runnable = NewNonOwningCancelableRunnableMethod(this, &MessageChannel::DispatchOnChannelConnected);
-    mOnChannelConnectedTask = new RefCountedTask(runnable.forget());
+    mOnChannelConnectedTask =
+        NewNonOwningCancelableRunnableMethod(this, &MessageChannel::DispatchOnChannelConnected);
 
 #ifdef OS_WIN
     mEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
@@ -635,8 +628,6 @@ MessageChannel::Clear()
         gParentProcessBlocker = nullptr;
     }
 
-    mDequeueOneTask->Cancel();
-
     mWorkerLoop = nullptr;
     delete mLink;
     mLink = nullptr;
@@ -649,7 +640,11 @@ MessageChannel::Clear()
     }
 
     // Free up any memory used by pending messages.
+    for (RefPtr<MessageTask> task : mPending) {
+        task->Clear();
+    }
     mPending.clear();
+
     mOutOfTurnReplies.clear();
     while (!mDeferred.empty()) {
         mDeferred.pop();
@@ -879,19 +874,6 @@ MessageChannel::ShouldDeferMessage(const Message& aMsg)
     return mSide == ParentSide && aMsg.transaction_id() != CurrentNestedInsideSyncTransaction();
 }
 
-// Predicate that is true for messages that should be consolidated if 'compress' is set.
-class MatchingKinds {
-    typedef IPC::Message Message;
-    Message::msgid_t mType;
-    int32_t mRoutingId;
-public:
-    MatchingKinds(Message::msgid_t aType, int32_t aRoutingId) :
-        mType(aType), mRoutingId(aRoutingId) {}
-    bool operator()(const Message &msg) {
-        return msg.type() == mType && msg.routing_id() == mRoutingId;
-    }
-};
-
 void
 MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
 {
@@ -925,31 +907,34 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
     MOZ_RELEASE_ASSERT(aMsg.compress_type() == IPC::Message::COMPRESSION_NONE ||
                        aMsg.nested_level() == IPC::Message::NOT_NESTED);
 
-    bool compress = false;
+    bool reuseTask = false;
     if (aMsg.compress_type() == IPC::Message::COMPRESSION_ENABLED) {
-        compress = (!mPending.empty() &&
-                    mPending.back().type() == aMsg.type() &&
-                    mPending.back().routing_id() == aMsg.routing_id());
+        bool compress = (!mPending.isEmpty() &&
+                         mPending.getLast()->Msg().type() == aMsg.type() &&
+                         mPending.getLast()->Msg().routing_id() == aMsg.routing_id());
         if (compress) {
             // This message type has compression enabled, and the back of the
             // queue was the same message type and routed to the same destination.
             // Replace it with the newer message.
-            MOZ_RELEASE_ASSERT(mPending.back().compress_type() ==
-                                  IPC::Message::COMPRESSION_ENABLED);
-            mPending.pop_back();
+            MOZ_RELEASE_ASSERT(mPending.getLast()->Msg().compress_type() ==
+                               IPC::Message::COMPRESSION_ENABLED);
+            mPending.getLast()->Msg() = Move(aMsg);
+
+            reuseTask = true;
         }
-    } else if (aMsg.compress_type() == IPC::Message::COMPRESSION_ALL) {
-        // Check the message queue for another message with this type/destination.
-        auto it = std::find_if(mPending.rbegin(), mPending.rend(),
-                               MatchingKinds(aMsg.type(), aMsg.routing_id()));
-        if (it != mPending.rend()) {
-            // This message type has compression enabled, and the queue holds
-            // a message with the same message type and routed to the same destination.
-            // Erase it.  Note that, since we always compress these redundancies, There Can
-            // Be Only One.
-            compress = true;
-            MOZ_RELEASE_ASSERT((*it).compress_type() == IPC::Message::COMPRESSION_ALL);
-            mPending.erase((++it).base());
+    } else if (aMsg.compress_type() == IPC::Message::COMPRESSION_ALL && !mPending.isEmpty()) {
+        for (RefPtr<MessageTask> p = mPending.getLast(); p; p = p->getPrevious()) {
+            if (p->Msg().type() == aMsg.type() &&
+                p->Msg().routing_id() == aMsg.routing_id())
+            {
+                // This message type has compression enabled, and the queue
+                // holds a message with the same message type and routed to the
+                // same destination. Erase it. Note that, since we always
+                // compress these redundancies, There Can Be Only One.
+                MOZ_RELEASE_ASSERT(p->Msg().compress_type() == IPC::Message::COMPRESSION_ALL);
+                p->remove();
+                break;
+            }
         }
     }
 
@@ -959,7 +944,7 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
                         wakeUpSyncSend ||
                         AwaitingIncomingMessage();
 
-    // Although we usually don't need to post an OnMaybeDequeueOne task if
+    // Although we usually don't need to post a message task if
     // shouldWakeUp is true, it's easier to post anyway than to have to
     // guarantee that every Send call processes everything it's supposed to
     // before returning.
@@ -967,6 +952,10 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
 
     IPC_LOG("Receive on link thread; seqno=%d, xid=%d, shouldWakeUp=%d",
             aMsg.seqno(), aMsg.transaction_id(), shouldWakeUp);
+
+    if (reuseTask) {
+        return;
+    }
 
     // There are three cases we're concerned about, relating to the state of the
     // main thread:
@@ -990,29 +979,26 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
     // blocked. This is okay, since we always check for pending events before
     // blocking again.
 
-    mPending.push_back(Move(aMsg));
+    RefPtr<MessageTask> task = new MessageTask(this, Move(aMsg));
+    mPending.insertBack(task);
 
     if (shouldWakeUp) {
         NotifyWorkerThread();
     }
 
     if (shouldPostTask) {
-        if (!compress) {
-            // If we compressed away the previous message, we'll re-use
-            // its pending task.
-            RefPtr<DequeueTask> task = new DequeueTask(mDequeueOneTask);
-            mWorkerLoop->PostTask(task.forget());
-        }
+        task->Post();
     }
 }
 
 void
 MessageChannel::PeekMessages(mozilla::function<bool(const Message& aMsg)> aInvoke)
 {
+    // FIXME: We shouldn't be holding the lock for aInvoke!
     MonitorAutoLock lock(*mMonitor);
 
-    for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); it++) {
-        Message &msg = *it;
+    for (RefPtr<MessageTask> it : mPending) {
+        const Message &msg = it->Msg();
         if (!aInvoke(msg)) {
             break;
         }
@@ -1022,6 +1008,8 @@ MessageChannel::PeekMessages(mozilla::function<bool(const Message& aMsg)> aInvok
 void
 MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
 {
+    mMonitor->AssertCurrentThreadOwns();
+
     IPC_LOG("ProcessPendingRequests for seqno=%d, xid=%d",
             aTransaction.SequenceNumber(), aTransaction.TransactionID());
 
@@ -1038,8 +1026,8 @@ MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
 
         mozilla::Vector<Message> toProcess;
 
-        for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); ) {
-            Message &msg = *it;
+        for (RefPtr<MessageTask> p = mPending.getFirst(); p; ) {
+            Message &msg = p->Msg();
 
             MOZ_RELEASE_ASSERT(!aTransaction.IsCanceled(),
                                "Calling ShouldDeferMessage when cancelled");
@@ -1053,10 +1041,11 @@ MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
             if (!defer) {
                 if (!toProcess.append(Move(msg)))
                     MOZ_CRASH();
-                it = mPending.erase(it);
+
+                p = p->removeAndGetNext();
                 continue;
             }
-            it++;
+            p = p->getNext();
         }
 
         if (toProcess.empty()) {
@@ -1358,9 +1347,9 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
         {
             recvd = Move(it->second);
             mOutOfTurnReplies.erase(it);
-        } else if (!mPending.empty()) {
-            recvd = Move(mPending.front());
-            mPending.pop_front();
+        } else if (!mPending.isEmpty()) {
+            RefPtr<MessageTask> task = mPending.popFirst();
+            recvd = Move(task->Msg());
         } else {
             // because of subtleties with nested event loops, it's possible
             // that we got here and nothing happened.  or, we might have a
@@ -1449,18 +1438,19 @@ MessageChannel::WaitForIncomingMessage()
     NeuteredWindowRegion neuteredRgn(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION);
 #endif
 
-    { // Scope for lock
-        MonitorAutoLock lock(*mMonitor);
-        AutoEnterWaitForIncoming waitingForIncoming(*this);
-        if (mChannelState != ChannelConnected) {
-            return false;
-        }
-        if (!HasPendingEvents()) {
-            return WaitForInterruptNotify();
-        }
+    MonitorAutoLock lock(*mMonitor);
+    AutoEnterWaitForIncoming waitingForIncoming(*this);
+    if (mChannelState != ChannelConnected) {
+        return false;
+    }
+    if (!HasPendingEvents()) {
+        return WaitForInterruptNotify();
     }
 
-    return OnMaybeDequeueOne();
+    MOZ_RELEASE_ASSERT(!mPending.isEmpty());
+    RefPtr<MessageTask> task = mPending.getFirst();
+    RunMessage(*task);
+    return true;
 }
 
 bool
@@ -1468,7 +1458,7 @@ MessageChannel::HasPendingEvents()
 {
     AssertWorkerThread();
     mMonitor->AssertCurrentThreadOwns();
-    return Connected() && !mPending.empty();
+    return Connected() && !mPending.isEmpty();
 }
 
 bool
@@ -1479,7 +1469,7 @@ MessageChannel::InterruptEventOccurred()
     IPC_ASSERT(InterruptStackDepth() > 0, "not in wait loop");
 
     return (!Connected() ||
-            !mPending.empty() ||
+            !mPending.isEmpty() ||
             (!mOutOfTurnReplies.empty() &&
              mOutOfTurnReplies.find(mInterruptStack.top().seqno()) !=
              mOutOfTurnReplies.end()));
@@ -1503,18 +1493,11 @@ MessageChannel::ProcessPendingRequest(Message &&aUrgent)
 }
 
 bool
-MessageChannel::DequeueOne(Message *recvd)
+MessageChannel::ShouldRunMessage(const Message& aMsg)
 {
-    AssertWorkerThread();
-    mMonitor->AssertCurrentThreadOwns();
-
-    if (!Connected()) {
-        ReportConnectionError("OnMaybeDequeueOne");
-        return false;
+    if (!mTimedOutMessageSeqno) {
+        return true;
     }
-
-    if (!mDeferred.empty())
-        MaybeUndeferIncall();
 
     // If we've timed out a message and we're awaiting the reply to the timed
     // out message, we have to be careful what messages we process. Here's what
@@ -1532,56 +1515,131 @@ MessageChannel::DequeueOne(Message *recvd)
     // message unless the child would need the response to that message in order
     // to process M. Those messages are the ones that have a higher nested level
     // than M or that are part of the same transaction as M.
-    if (mTimedOutMessageSeqno) {
-        for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); it++) {
-            Message &msg = *it;
-            if (msg.nested_level() > mTimedOutMessageNestedLevel ||
-                (msg.nested_level() == mTimedOutMessageNestedLevel
-                 && msg.transaction_id() == mTimedOutMessageSeqno))
-            {
-                *recvd = Move(msg);
-                mPending.erase(it);
-                return true;
-            }
-        }
+    if (aMsg.nested_level() < mTimedOutMessageNestedLevel ||
+        (aMsg.nested_level() == mTimedOutMessageNestedLevel
+         && aMsg.transaction_id() != mTimedOutMessageSeqno))
+    {
         return false;
     }
-
-    if (mPending.empty())
-        return false;
-
-    *recvd = Move(mPending.front());
-    mPending.pop_front();
-    return true;
-}
-
-bool
-MessageChannel::OnMaybeDequeueOne()
-{
-    AssertWorkerThread();
-    mMonitor->AssertNotCurrentThreadOwns();
-
-    Message recvd;
-
-    MonitorAutoLock lock(*mMonitor);
-    if (!DequeueOne(&recvd))
-        return false;
-
-    if (IsOnCxxStack() && recvd.is_interrupt() && recvd.is_reply()) {
-        // We probably just received a reply in a nested loop for an
-        // Interrupt call sent before entering that loop.
-        mOutOfTurnReplies[recvd.seqno()] = Move(recvd);
-        return false;
-    }
-
-    DispatchMessage(Move(recvd));
 
     return true;
 }
 
 void
+MessageChannel::RunMessage(MessageTask& aTask)
+{
+    AssertWorkerThread();
+    mMonitor->AssertCurrentThreadOwns();
+
+    Message& msg = aTask.Msg();
+
+    if (!Connected()) {
+        ReportConnectionError("RunMessage");
+        return;
+    }
+
+    // Check that we're going to run the first message that's valid to run.
+#ifdef DEBUG
+    for (RefPtr<MessageTask> task : mPending) {
+        if (task == &aTask) {
+            break;
+        }
+        MOZ_ASSERT(!ShouldRunMessage(task->Msg()));
+    }
+#endif
+
+    if (!mDeferred.empty()) {
+        MaybeUndeferIncall();
+    }
+
+    if (!ShouldRunMessage(msg)) {
+        return;
+    }
+
+    MOZ_RELEASE_ASSERT(aTask.isInList());
+    aTask.remove();
+
+    if (IsOnCxxStack() && msg.is_interrupt() && msg.is_reply()) {
+        // We probably just received a reply in a nested loop for an
+        // Interrupt call sent before entering that loop.
+        mOutOfTurnReplies[msg.seqno()] = Move(msg);
+        return;
+    }
+
+    DispatchMessage(Move(msg));
+}
+
+nsresult
+MessageChannel::MessageTask::Run()
+{
+    if (!mChannel) {
+        return NS_OK;
+    }
+
+    mChannel->AssertWorkerThread();
+    mChannel->mMonitor->AssertNotCurrentThreadOwns();
+
+    MonitorAutoLock lock(*mChannel->mMonitor);
+
+    // In case we choose not to run this message, we may need to be able to Post
+    // it again.
+    mScheduled = false;
+
+    if (!isInList()) {
+        return NS_OK;
+    }
+
+    mChannel->RunMessage(*this);
+    return NS_OK;
+}
+
+// Warning: This method removes the receiver from whatever list it might be in.
+nsresult
+MessageChannel::MessageTask::Cancel()
+{
+    if (!mChannel) {
+        return NS_OK;
+    }
+
+    mChannel->AssertWorkerThread();
+    mChannel->mMonitor->AssertNotCurrentThreadOwns();
+
+    MonitorAutoLock lock(*mChannel->mMonitor);
+
+    if (!isInList()) {
+        return NS_OK;
+    }
+    remove();
+
+    return NS_OK;
+}
+
+void
+MessageChannel::MessageTask::Post()
+{
+    MOZ_RELEASE_ASSERT(!mScheduled);
+    MOZ_RELEASE_ASSERT(isInList());
+
+    mScheduled = true;
+
+    RefPtr<MessageTask> self = this;
+    mChannel->mWorkerLoop->PostTask(self.forget());
+}
+
+void
+MessageChannel::MessageTask::Clear()
+{
+    mChannel->AssertWorkerThread();
+
+    mChannel = nullptr;
+}
+
+void
 MessageChannel::DispatchMessage(Message &&aMsg)
 {
+    AssertWorkerThread();
+    mMonitor->AssertCurrentThreadOwns();
+
     Maybe<AutoNoJSAPI> nojsapi;
     if (ScriptSettingsInitialized() && NS_IsMainThread())
         nojsapi.emplace();
@@ -1780,29 +1838,9 @@ MessageChannel::MaybeUndeferIncall()
     --mRemoteStackDepthGuess;
 
     MOZ_RELEASE_ASSERT(call.nested_level() == IPC::Message::NOT_NESTED);
-    mPending.push_back(Move(call));
-}
-
-void
-MessageChannel::FlushPendingInterruptQueue()
-{
-    AssertWorkerThread();
-    mMonitor->AssertNotCurrentThreadOwns();
-
-    {
-        MonitorAutoLock lock(*mMonitor);
-
-        if (mDeferred.empty()) {
-            if (mPending.empty())
-                return;
-
-            const Message& last = mPending.back();
-            if (!last.is_interrupt() || last.is_reply())
-                return;
-        }
-    }
-
-    while (OnMaybeDequeueOne());
+    RefPtr<MessageTask> task = new MessageTask(this, Move(call));
+    mPending.insertBack(task);
+    task->Post();
 }
 
 void
@@ -1825,18 +1863,10 @@ MessageChannel::EnqueuePendingMessages()
 
     MaybeUndeferIncall();
 
-    for (size_t i = 0; i < mDeferred.size(); ++i) {
-        RefPtr<DequeueTask> task = new DequeueTask(mDequeueOneTask);
-        mWorkerLoop->PostTask(task.forget());
-    }
-
     // XXX performance tuning knob: could process all or k pending
     // messages here, rather than enqueuing for later processing
 
-    for (size_t i = 0; i < mPending.size(); ++i) {
-        RefPtr<DequeueTask> task = new DequeueTask(mDequeueOneTask);
-        mWorkerLoop->PostTask(task.forget());
-    }
+    RepostAllMessages();
 }
 
 static inline bool
@@ -1943,7 +1973,7 @@ MessageChannel::OnChannelConnected(int32_t peer_id)
     MOZ_RELEASE_ASSERT(!mPeerPidSet);
     mPeerPidSet = true;
     mPeerPid = peer_id;
-    RefPtr<DequeueTask> task = new DequeueTask(mOnChannelConnectedTask);
+    RefPtr<CancelableRunnable> task = mOnChannelConnectedTask;
     mWorkerLoop->PostTask(task.forget());
 }
 
@@ -2291,16 +2321,14 @@ MessageChannel::DebugAbort(const char* file, int line, const char* cond,
                   mDeferred.size());
     printf_stderr("  out-of-turn Interrupt replies stack size: %" PRIuSIZE "\n",
                   mOutOfTurnReplies.size());
-    printf_stderr("  Pending queue size: %" PRIuSIZE ", front to back:\n",
-                  mPending.size());
 
     MessageQueue pending = Move(mPending);
-    while (!pending.empty()) {
+    while (!pending.isEmpty()) {
         printf_stderr("    [ %s%s ]\n",
-                      pending.front().is_interrupt() ? "intr" :
-                      (pending.front().is_sync() ? "sync" : "async"),
-                      pending.front().is_reply() ? "reply" : "");
-        pending.pop_front();
+                      pending.getFirst()->Msg().is_interrupt() ? "intr" :
+                      (pending.getFirst()->Msg().is_sync() ? "sync" : "async"),
+                      pending.getFirst()->Msg().is_reply() ? "reply" : "");
+        pending.popFirst();
     }
 
     NS_RUNTIMEABORT(why);
@@ -2348,13 +2376,33 @@ MessageChannel::EndTimeout()
     mTimedOutMessageSeqno = 0;
     mTimedOutMessageNestedLevel = 0;
 
-    for (size_t i = 0; i < mPending.size(); i++) {
-        // There may be messages in the queue that we expected to process from
-        // OnMaybeDequeueOne. But during the timeout, that function will skip
-        // some messages. Now they're ready to be processed, so we enqueue more
-        // tasks.
-        RefPtr<DequeueTask> task = new DequeueTask(mDequeueOneTask);
-        mWorkerLoop->PostTask(task.forget());
+    RepostAllMessages();
+}
+
+void
+MessageChannel::RepostAllMessages()
+{
+    bool needRepost = false;
+    for (RefPtr<MessageTask> task : mPending) {
+        if (!task->IsScheduled()) {
+            needRepost = true;
+        }
+    }
+    if (!needRepost) {
+        // If everything is already scheduled to run, do nothing.
+        return;
+    }
+
+    // In some cases we may have deferred dispatch of some messages in the
+    // queue. Now we want to run them again. However, we can't just re-post
+    // those messages since the messages after them in mPending would then be
+    // before them in the event queue. So instead we cancel everything and
+    // re-post all messages in the correct order.
+    MessageQueue queue = Move(mPending);
+    while (RefPtr<MessageTask> task = queue.popFirst()) {
+        RefPtr<MessageTask> newTask = new MessageTask(this, Move(task->Msg()));
+        mPending.insertBack(newTask);
+        newTask->Post();
     }
 }
 
@@ -2397,8 +2445,8 @@ MessageChannel::CancelTransaction(int transaction)
     }
 
     bool foundSync = false;
-    for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); ) {
-        Message &msg = *it;
+    for (RefPtr<MessageTask> p = mPending.getFirst(); p; ) {
+        Message &msg = p->Msg();
 
         // If there was a race between the parent and the child, then we may
         // have a queued sync message. We want to drop this message from the
@@ -2409,11 +2457,11 @@ MessageChannel::CancelTransaction(int transaction)
             MOZ_RELEASE_ASSERT(msg.transaction_id() != transaction);
             IPC_LOG("Removing msg from queue seqno=%d xid=%d", msg.seqno(), msg.transaction_id());
             foundSync = true;
-            it = mPending.erase(it);
+            p = p->removeAndGetNext();
             continue;
         }
 
-        it++;
+        p = p->getNext();
     }
 }
 

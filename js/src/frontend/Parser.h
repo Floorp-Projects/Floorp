@@ -315,6 +315,11 @@ class ParseContext : public Nestable<ParseContext>
     static const uint32_t NoYieldOffset = UINT32_MAX;
     uint32_t lastYieldOffset;
 
+    // lastAwaitOffset stores the offset of the last await that was parsed.
+    // NoAwaitOffset is its initial value.
+    static const uint32_t NoAwaitOffset = UINT32_MAX;
+    uint32_t         lastAwaitOffset;
+
     // All inner functions in this context. Only used when syntax parsing.
     Rooted<GCVector<JSFunction*, 8>> innerFunctionsForLazy;
 
@@ -358,6 +363,7 @@ class ParseContext : public Nestable<ParseContext>
         isStandaloneFunctionBody_(false),
         superScopeNeedsHomeObject_(false),
         lastYieldOffset(NoYieldOffset),
+        lastAwaitOffset(NoAwaitOffset),
         innerFunctionsForLazy(prs->context, GCVector<JSFunction*, 8>(prs->context)),
         newDirectives(newDirectives),
         funHasReturnExpr(false),
@@ -498,6 +504,14 @@ class ParseContext : public Nestable<ParseContext>
         return generatorKind() == StarGenerator;
     }
 
+    bool isAsync() const {
+        return sc_->isFunctionBox() && sc_->asFunctionBox()->isAsync();
+    }
+
+    FunctionAsyncKind asyncKind() const {
+        return isAsync() ? AsyncFunction : SyncFunction;
+    }
+
     bool isArrowFunction() const {
         return sc_->isFunctionBox() && sc_->asFunctionBox()->function()->isArrow();
     }
@@ -553,6 +567,7 @@ enum class PropertyType {
     SetterNoExpressionClosure,
     Method,
     GeneratorMethod,
+    AsyncMethod,
     Constructor,
     DerivedConstructor
 };
@@ -940,13 +955,15 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
      */
     ObjectBox* newObjectBox(JSObject* obj);
     FunctionBox* newFunctionBox(Node fn, JSFunction* fun, Directives directives,
-                                GeneratorKind generatorKind, bool tryAnnexB);
+                                GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+                                bool tryAnnexB);
 
     /*
      * Create a new function object given a name (which is optional if this is
      * a function expression).
      */
-    JSFunction* newFunction(HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind,
+    JSFunction* newFunction(HandleAtom atom, FunctionSyntaxKind kind,
+                            GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                             HandleObject proto);
 
     void trace(JSTracer* trc);
@@ -979,6 +996,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     inline Node newName(PropertyName* name);
     inline Node newName(PropertyName* name, TokenPos pos);
     inline Node newYieldExpression(uint32_t begin, Node expr, bool isYieldStar = false);
+    inline Node newAwaitExpression(uint32_t begin, Node expr);
 
     inline bool abortIfSyntaxParser();
 
@@ -1005,12 +1023,14 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     // Parse a function, given only its body. Used for the Function and
     // Generator constructors.
     Node standaloneFunctionBody(HandleFunction fun, HandleScope enclosingScope,
-                                Handle<PropertyNameVector> formals, GeneratorKind generatorKind,
+                                Handle<PropertyNameVector> formals,
+                                GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                                 Directives inheritedDirectives, Directives* newDirectives);
 
     // Parse a function, given only its arguments and body. Used for lazily
     // parsed functions.
-    Node standaloneLazyFunction(HandleFunction fun, bool strict, GeneratorKind generatorKind);
+    Node standaloneLazyFunction(HandleFunction fun, bool strict,
+                                GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
     // Parse an inner function given an enclosing ParseContext and a
     // FunctionBox for the inner function.
@@ -1027,7 +1047,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     // whether it's prohibited due to strictness, JS version, or occurrence
     // inside a star generator.
     bool yieldExpressionsSupported() {
-        return versionNumber() >= JSVERSION_1_7 || pc->isGenerator();
+        return (versionNumber() >= JSVERSION_1_7 || pc->isGenerator()) && !pc->isAsync();
     }
 
     // Match the current token against the BindingIdentifier production with
@@ -1066,8 +1086,10 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
      * Some parsers have two versions:  an always-inlined version (with an 'i'
      * suffix) and a never-inlined version (with an 'n' suffix).
      */
-    Node functionStmt(YieldHandling yieldHandling, DefaultHandling defaultHandling);
-    Node functionExpr(InvokedPrediction invoked = PredictUninvoked);
+    Node functionStmt(YieldHandling yieldHandling, DefaultHandling defaultHandling,
+                      FunctionAsyncKind asyncKind = SyncFunction);
+    Node functionExpr(InvokedPrediction invoked = PredictUninvoked,
+                      FunctionAsyncKind asyncKind = SyncFunction);
 
     Node statementList(YieldHandling yieldHandling);
 
@@ -1172,7 +1194,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     Node assignExpr(InHandling inHandling, YieldHandling yieldHandling,
                     TripledotHandling tripledotHandling, PossibleError* possibleError = nullptr,
                     InvokedPrediction invoked = PredictUninvoked);
-    Node assignExprWithoutYield(YieldHandling yieldHandling, unsigned err);
+    Node assignExprWithoutYieldOrAwait(YieldHandling yieldHandling);
     Node yieldExpression(InHandling inHandling);
     Node condExpr1(InHandling inHandling, YieldHandling yieldHandling,
                    TripledotHandling tripledotHandling,
@@ -1207,7 +1229,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                            Node funcpn);
 
     Node functionDefinition(InHandling inHandling, YieldHandling yieldHandling, HandleAtom name,
-                            FunctionSyntaxKind kind, GeneratorKind generatorKind,
+                            FunctionSyntaxKind kind,
+                            GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                             InvokedPrediction invoked = PredictUninvoked);
 
     // Parse a function body.  Pass StatementListBody if the body is a list of
@@ -1232,8 +1255,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     bool argumentList(YieldHandling yieldHandling, Node listNode, bool* isSpread);
     Node destructuringDeclaration(DeclarationKind kind, YieldHandling yieldHandling,
                                   TokenKind tt);
-    Node destructuringDeclarationWithoutYield(DeclarationKind kind, YieldHandling yieldHandling,
-                                              TokenKind tt, unsigned msg);
+    Node destructuringDeclarationWithoutYieldOrAwait(DeclarationKind kind, YieldHandling yieldHandling,
+                                                     TokenKind tt);
 
     bool namedImportsOrNamespaceImport(TokenKind tt, Node importSpecSet);
     bool checkExportedName(JSAtom* exportName);
@@ -1298,11 +1321,13 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     bool skipLazyInnerFunction(Node pn, FunctionSyntaxKind kind, bool tryAnnexB);
     bool innerFunction(Node pn, ParseContext* outerpc, HandleFunction fun,
                        InHandling inHandling, YieldHandling yieldHandling,
-                       FunctionSyntaxKind kind, GeneratorKind generatorKind, bool tryAnnexB,
+                       FunctionSyntaxKind kind,
+                       GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
                        Directives inheritedDirectives, Directives* newDirectives);
     bool trySyntaxParseInnerFunction(Node pn, HandleFunction fun, InHandling inHandling,
                                      YieldHandling yieldHandling, FunctionSyntaxKind kind,
-                                     GeneratorKind generatorKind, bool tryAnnexB,
+                                     GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+                                     bool tryAnnexB,
                                      Directives inheritedDirectives, Directives* newDirectives);
     bool finishFunctionScopes();
     bool finishFunction();

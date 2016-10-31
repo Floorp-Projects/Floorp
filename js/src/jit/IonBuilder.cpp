@@ -13442,13 +13442,9 @@ IonBuilder::jsop_deflexical(uint32_t index)
 bool
 IonBuilder::jsop_deffun(uint32_t index)
 {
-    JSFunction* fun = script()->getFunction(index);
-    if (IsAsmJSModule(fun))
-        return abort("asm.js module function");
-
     MOZ_ASSERT(analysis().usesEnvironmentChain());
 
-    MDefFun* deffun = MDefFun::New(alloc(), fun, current->environmentChain());
+    MDefFun* deffun = MDefFun::New(alloc(), current->pop(), current->environmentChain());
     current->add(deffun);
 
     return resumeAfter(deffun);
