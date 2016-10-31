@@ -12,7 +12,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/MediaEncryptedEvent.h"
-#include "mozilla/EMEUtils.h"
 
 #include "base/basictypes.h"
 #include "nsIDOMHTMLMediaElement.h"
@@ -5250,23 +5249,16 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
       ReportTelemetry();
       ReportEMETelemetry();
 
-      // For EME content, we may force destruction of the CDM client (and CDM
+      // For EME content, force destruction of the CDM client (and CDM
       // instance if this is the last client for that CDM instance) and
       // the CDM's decoder. This ensures the CDM gets reliable and prompt
       // shutdown notifications, as it may have book-keeping it needs
       // to do on shutdown.
       if (mMediaKeys) {
-        nsAutoString keySystem;
-        mMediaKeys->GetKeySystem(keySystem);
-        // If we're using Primetime we need to shutdown the key system and
-        // decoder to preserve secure stop like behavior, other CDMs don't
-        // implement this so we don't need to worry with them.
-        if (IsPrimetimeKeySystem(keySystem)) {
-          mMediaKeys->Shutdown();
-          mMediaKeys = nullptr;
-          if (mDecoder) {
-            ShutdownDecoder();
-          }
+        mMediaKeys->Shutdown();
+        mMediaKeys = nullptr;
+        if (mDecoder) {
+          ShutdownDecoder();
         }
       }
       if (mDecoder) {
@@ -5275,6 +5267,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
       }
       mEventDeliveryPaused = aSuspendEvents;
     } else {
+      MOZ_ASSERT(!mMediaKeys);
       if (mDecoder) {
         mDecoder->Resume();
         if (!mPaused && !mDecoder->IsEnded()) {
