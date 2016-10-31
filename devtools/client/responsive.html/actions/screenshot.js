@@ -16,7 +16,7 @@ const { getToplevelWindow } = require("sdk/window/utils");
 const { Task: { spawn } } = require("devtools/shared/task");
 const e10s = require("../utils/e10s");
 
-const audioCamera = new window.Audio("resource://devtools/client/themes/audio/shutter.wav");
+const CAMERA_AUDIO_URL = "resource://devtools/client/themes/audio/shutter.wav";
 
 const animationFrame = () => new Promise(resolve => {
   window.requestAnimationFrame(resolve);
@@ -54,7 +54,8 @@ function saveToFile(data, filename) {
 }
 
 function simulateCameraEffects(node) {
-  audioCamera.play();
+  let cameraAudio = new window.Audio(CAMERA_AUDIO_URL);
+  cameraAudio.play();
   node.animate({ opacity: [ 0, 1 ] }, 500);
 }
 
