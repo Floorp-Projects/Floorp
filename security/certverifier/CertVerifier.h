@@ -26,6 +26,8 @@ class MultiLogCTVerifier;
 
 namespace mozilla { namespace psm {
 
+typedef mozilla::pkix::Result Result;
+
 // These values correspond to the CERT_CHAIN_KEY_SIZE_STATUS telemetry.
 enum class KeySizeStatus {
   NeverChecked = 0,
