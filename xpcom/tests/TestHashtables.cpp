@@ -317,8 +317,8 @@ CreateIFoo( IFoo** result )
 
 using namespace TestHashtables;
 
-int
-main(void) {
+void THashtable()
+{
   // check an nsTHashtable
   printf("Initializing nsTHashtable...");
   nsTHashtable<EntityToUnicodeEntry> EntityToUnicode(ENTITY_COUNT);
@@ -357,7 +357,10 @@ main(void) {
     exit (9);
   }
   printf("OK\n");
+}
 
+void DataHashtable()
+{
   //
   // now check a data-hashtable
   //
@@ -368,8 +371,7 @@ main(void) {
 
   printf("Filling hash with %u entries.\n", ENTITY_COUNT);
 
-  uint32_t i;
-  for (i = 0; i < ENTITY_COUNT; ++i) {
+  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Putting entry %u...", gEntities[i].mUnicode);
     UniToEntity.Put(gEntities[i].mUnicode, gEntities[i].mStr);
     printf("OK...\n");
@@ -378,7 +380,7 @@ main(void) {
   printf("Testing Get:\n");
   const char* str;
 
-  for (i = 0; i < ENTITY_COUNT; ++i) {
+  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Getting entry %u...", gEntities[i].mUnicode);
     if (!UniToEntity.Get(gEntities[i].mUnicode, &str)) {
       printf("FAILED\n");
@@ -398,7 +400,7 @@ main(void) {
 
   printf("Enumerating:\n");
 
-  count = 0;
+  uint32_t count = 0;
   for (auto iter = UniToEntity.Iter(); !iter.Done(); iter.Next()) {
     printf("  enumerated %u = \"%s\"\n", iter.Key(), iter.UserData());
     count++;
@@ -424,7 +426,10 @@ main(void) {
   }
 
   printf("OK\n");
+}
 
+void ClassHashtable()
+{
   //
   // now check a class-hashtable
   //
@@ -435,7 +440,7 @@ main(void) {
 
   printf("Filling hash with %u entries.\n", ENTITY_COUNT);
 
-  for (i = 0; i < ENTITY_COUNT; ++i) {
+  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Putting entry %u...", gEntities[i].mUnicode);
     TestUniChar* temp = new TestUniChar(gEntities[i].mUnicode);
 
@@ -446,7 +451,7 @@ main(void) {
   printf("Testing Get:\n");
   TestUniChar* myChar;
 
-  for (i = 0; i < ENTITY_COUNT; ++i) {
+  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Getting entry %s...", gEntities[i].mStr);
     if (!EntToUniClass.Get(nsDependentCString(gEntities[i].mStr), &myChar)) {
       printf("FAILED\n");
@@ -466,7 +471,7 @@ main(void) {
 
   printf("Enumerating:\n");
 
-  count = 0;
+  uint32_t count = 0;
   for (auto iter = EntToUniClass.Iter(); !iter.Done(); iter.Next()) {
     printf("  enumerated \"%s\" = %c\n",
            PromiseFlatCString(iter.Key()).get(), iter.UserData()->GetChar());
@@ -494,7 +499,10 @@ main(void) {
   }
 
   printf("OK\n");
+}
 
+void DataHashtableWithInterfaceKey()
+{
   //
   // now check a data-hashtable with an interface key
   //
@@ -507,7 +515,7 @@ main(void) {
 
   nsCOMArray<IFoo> fooArray;
 
-  for (i = 0; i < ENTITY_COUNT; ++i) {
+  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Putting entry %u...", gEntities[i].mUnicode);
     nsCOMPtr<IFoo> foo;
     CreateIFoo(getter_AddRefs(foo));
@@ -522,7 +530,7 @@ main(void) {
   printf("Testing Get:\n");
   uint32_t myChar2;
 
-  for (i = 0; i < ENTITY_COUNT; ++i) {
+  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Getting entry %s...", gEntities[i].mStr);
 
     if (!EntToUniClass2.Get(fooArray[i], &myChar2)) {
@@ -543,7 +551,7 @@ main(void) {
 
   printf("Enumerating:\n");
 
-  count = 0;
+  uint32_t count = 0;
   for (auto iter = EntToUniClass2.Iter(); !iter.Done(); iter.Next()) {
     nsAutoCString s;
     nsCOMPtr<IFoo> foo = do_QueryInterface(iter.Key());
@@ -575,7 +583,10 @@ main(void) {
   }
 
   printf("OK\n");
+}
 
+void InterfaceHashtable()
+{
   //
   // now check an interface-hashtable with an uint32_t key
   //
@@ -586,7 +597,7 @@ main(void) {
 
   printf("Filling hash with %u entries.\n", ENTITY_COUNT);
 
-  for (i = 0; i < ENTITY_COUNT; ++i) {
+  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Putting entry %u...", gEntities[i].mUnicode);
     nsCOMPtr<IFoo> foo;
     CreateIFoo(getter_AddRefs(foo));
@@ -598,7 +609,7 @@ main(void) {
 
   printf("Testing Get:\n");
 
-  for (i = 0; i < ENTITY_COUNT; ++i) {
+  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Getting entry %s...", gEntities[i].mStr);
 
     nsCOMPtr<IFoo> myEnt;
@@ -623,7 +634,7 @@ main(void) {
 
   printf("Enumerating:\n");
 
-  count = 0;
+  uint32_t count = 0;
   for (auto iter = UniToEntClass2.Iter(); !iter.Done(); iter.Next()) {
     nsAutoCString s;
     iter.UserData()->GetString(s);
@@ -653,6 +664,15 @@ main(void) {
   }
 
   printf("OK\n");
+}
+
+int
+main(void) {
+  THashtable();
+  DataHashtable();
+  ClassHashtable();
+  DataHashtableWithInterfaceKey();
+  InterfaceHashtable();
 
   return 0;
 }
