@@ -3241,20 +3241,17 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         deallocshmemvar = ExprVar('DeallocShmems')
         deallocselfvar = ExprVar('Dealloc' + _actorName(ptype.name(), self.side))
 
-        # OnProcesingError(code)
-        codevar = ExprVar('aCode')
-        reasonvar = ExprVar('aReason')
-        onprocessingerror = MethodDefn(
-            MethodDecl('OnProcessingError',
-                       params=[ Param(_Result.Type(), codevar.name),
-                                Param(Type('char', const=1, ptr=1), reasonvar.name) ]))
         if ptype.isToplevel():
+            # OnProcesingError(code)
+            codevar = ExprVar('aCode')
+            reasonvar = ExprVar('aReason')
+            onprocessingerror = MethodDefn(
+                MethodDecl('OnProcessingError',
+                           params=[ Param(_Result.Type(), codevar.name),
+                                    Param(Type('char', const=1, ptr=1), reasonvar.name) ]))
             onprocessingerror.addstmt(StmtReturn(
                 ExprCall(p.processingErrorVar(), args=[ codevar, reasonvar ])))
-        else:
-            onprocessingerror.addstmt(
-                _fatalError("`OnProcessingError' called on non-toplevel actor"))
-        self.cls.addstmts([ onprocessingerror, Whitespace.NL ])
+            self.cls.addstmts([ onprocessingerror, Whitespace.NL ])
 
         # int32_t GetProtocolTypeId() { return PFoo; }
         gettypetag = MethodDefn(
@@ -3262,21 +3259,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         gettypetag.addstmt(StmtReturn(_protocolId(ptype)))
         self.cls.addstmts([ gettypetag, Whitespace.NL ])
 
-        # OnReplyTimeout()
-        if toplevel.isSync() or toplevel.isInterrupt():
-            ontimeout = MethodDefn(
-                MethodDecl('OnReplyTimeout', ret=Type.BOOL))
-
-            if ptype.isToplevel():
+        if ptype.isToplevel():
+            # OnReplyTimeout()
+            if toplevel.isSync() or toplevel.isInterrupt():
+                ontimeout = MethodDefn(
+                    MethodDecl('OnReplyTimeout', ret=Type.BOOL))
                 ontimeout.addstmt(StmtReturn(
                     ExprCall(p.shouldContinueFromTimeoutVar())))
-            else:
-                ontimeout.addstmts([
-                    _fatalError("`OnReplyTimeout' called on non-toplevel actor"),
-                    StmtReturn.FALSE
-                ])
-
-            self.cls.addstmts([ ontimeout, Whitespace.NL ])
+                self.cls.addstmts([ ontimeout, Whitespace.NL ])
 
         # C++-stack-related methods
         if ptype.isToplevel():
@@ -3306,9 +3296,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                 onenteredcall, onexitedcall,
                                 onstack, Whitespace.NL ])
 
-        # OnChannelClose()
-        onclose = MethodDefn(MethodDecl('OnChannelClose'))
         if ptype.isToplevel():
+            # OnChannelClose()
+            onclose = MethodDefn(MethodDecl('OnChannelClose'))
             onclose.addstmts([
                 StmtExpr(ExprCall(destroysubtreevar,
                                   args=[ _DestroyReason.NormalShutdown ])),
@@ -3316,14 +3306,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtExpr(ExprCall(deallocshmemvar)),
                 StmtExpr(ExprCall(deallocselfvar))
             ])
-        else:
-            onclose.addstmt(
-                _fatalError("`OnClose' called on non-toplevel actor"))
-        self.cls.addstmts([ onclose, Whitespace.NL ])
+            self.cls.addstmts([ onclose, Whitespace.NL ])
 
-        # OnChannelError()
-        onerror = MethodDefn(MethodDecl('OnChannelError'))
-        if ptype.isToplevel():
+            # OnChannelError()
+            onerror = MethodDefn(MethodDecl('OnChannelError'))
             onerror.addstmts([
                 StmtExpr(ExprCall(destroysubtreevar,
                                   args=[ _DestroyReason.AbnormalShutdown ])),
@@ -3331,19 +3317,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtExpr(ExprCall(deallocshmemvar)),
                 StmtExpr(ExprCall(deallocselfvar))
             ])
-        else:
-            onerror.addstmt(
-                _fatalError("`OnError' called on non-toplevel actor"))
-        self.cls.addstmts([ onerror, Whitespace.NL ])
-
-        # OnChannelConnected()
-        onconnected = MethodDefn(MethodDecl('OnChannelConnected',
-                                            params=[ Decl(Type.INT32, 'aPid') ]))
-        if not ptype.isToplevel():
-            onconnected.addstmt(
-                _fatalError("'OnConnected' called on non-toplevel actor"))
-
-        self.cls.addstmts([ onconnected, Whitespace.NL ])
+            self.cls.addstmts([ onerror, Whitespace.NL ])
 
         # User-facing shmem methods
         self.cls.addstmts(self.makeShmemIface())
