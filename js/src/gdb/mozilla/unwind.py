@@ -525,6 +525,12 @@ class SpiderMonkeyUnwinder(Unwinder):
         self.enabled = False
         gdb.write("SpiderMonkey unwinder is disabled by default, to enable it type:\n" +
                   "\tenable unwinder .* SpiderMonkey\n")
+        # Some versions of gdb did not flush the internal frame cache
+        # when enabling or disabling an unwinder.  This was fixed in
+        # the same release of gdb that added the breakpoint_created
+        # event.
+        if not hasattr(gdb.events, "breakpoint_created"):
+            gdb.write("\tflushregs\n")
 
         # We need to invalidate the unwinder state whenever the
         # inferior starts executing.  This avoids having a stale
