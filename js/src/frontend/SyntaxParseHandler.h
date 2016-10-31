@@ -289,6 +289,7 @@ class SyntaxParseHandler
     MOZ_MUST_USE bool addClassMethodDefinition(Node literal, Node name, Node fn, JSOp op, bool isStatic) { return true; }
     Node newYieldExpression(uint32_t begin, Node value, Node gen) { return NodeGeneric; }
     Node newYieldStarExpression(uint32_t begin, Node value, Node gen) { return NodeGeneric; }
+    Node newAwaitExpression(uint32_t begin, Node value, Node gen) { return NodeGeneric; }
 
     // Statements
 

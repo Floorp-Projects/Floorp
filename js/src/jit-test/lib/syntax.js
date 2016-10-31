@@ -1181,7 +1181,7 @@ function test_syntax(postfixes, check_error, ignore_opts) {
   test("for each (let x in y ");
   test("for each (let x in y) ");
 
-  // asm.js
+  // ==== asm.js ====
 
   test("(function() { 'use asm'; ");
   test("(function() { 'use asm'; var ");
@@ -1208,4 +1208,149 @@ function test_syntax(postfixes, check_error, ignore_opts) {
   test("(function() { 'use asm'; var a = 1; function f() { } var tbl = [f]; return f; } ");
   test("(function() { 'use asm'; var a = 1; function f() { } var tbl = [f]; return f; }) ");
   test("(function() { 'use asm'; var a = 1; function f() { } var tbl = [f]; return f; }); ");
+
+  // ==== async/await ====
+
+  // async/await function decralation
+
+  test("async ");
+  test("async function ");
+  test("async function A ");
+  test("async function A( ");
+  test("async function A() ");
+  test("async function A(a ");
+  test("async function A(a) ");
+  test("async function A(a) { ");
+  test("async function A(a) {} ");
+  test("async function A(a) { await ");
+  test("async function A(a) { await X ");
+  test("async function A(a) { await X; ");
+  test("async function A(a) { await X; } ");
+  test("async function A(a) { await await ");
+  test("async function A(a) { await await await ");
+  test("async function A(a) { await await await X ");
+  test("async function A(a) { await await await X; ");
+  test("async function A(a) { await await await X; } ");
+
+  opts = { no_fun: true, no_eval: true, module: true };
+  test("export default async ", opts);
+  test("export default async function ", opts);
+  test("export default async function ( ", opts);
+  test("export default async function () ", opts);
+  test("export default async function (a ", opts);
+  test("export default async function (a) ", opts);
+  test("export default async function (a) { ", opts);
+  test("export default async function (a) {} ", opts);
+  test("export default async function (a) { await ", opts);
+  test("export default async function (a) { await X ", opts);
+  test("export default async function (a) { await X; ", opts);
+  test("export default async function (a) { await X; } ", opts);
+
+  // async/await function expression
+
+  test("(async ");
+  test("(async function ");
+  test("(async function A ");
+  test("(async function A( ");
+  test("(async function A() ");
+  test("(async function A(a ");
+  test("(async function A(a) ");
+  test("(async function A(a) { ");
+  test("(async function A(a) {} ");
+  test("(async function A(a) { await ");
+  test("(async function A(a) { await X ");
+  test("(async function A(a) { await X; ");
+  test("(async function A(a) { await X; } ");
+  test("(async function A(a) { await X; }) ");
+
+  test("(async function ( ");
+  test("(async function () ");
+  test("(async function (a ");
+  test("(async function (a) ");
+  test("(async function (a) { ");
+  test("(async function (a) {} ");
+  test("(async function (a) { await ");
+  test("(async function (a) { await X ");
+  test("(async function (a) { await X; ");
+  test("(async function (a) { await X; } ");
+  test("(async function (a) { await X; }) ");
+
+  // async/await method
+
+  test("({ async ");
+  test("({ async m ");
+  test("({ async m( ");
+  test("({ async m() ");
+  test("({ async m() { ");
+  test("({ async m() {} ");
+  test("({ async m() {}, ");
+
+  test("class X { async ");
+  test("class X { async m ");
+  test("class X { async m( ");
+  test("class X { async m() ");
+  test("class X { async m() { ");
+  test("class X { async m() {} ");
+
+  test("class X { static async ");
+  test("class X { static async m ");
+  test("class X { static async m( ");
+  test("class X { static async m() ");
+  test("class X { static async m() { ");
+  test("class X { static async m() {} ");
+
+  // async/await arrow
+
+  test("(async a ");
+  test("(async a => ");
+  test("(async a => b ");
+  test("(async a => b) ");
+
+  test("(async a => { ");
+  test("(async a => { b ");
+  test("(async a => { b } ");
+  test("(async a => { b }) ");
+
+  test("(async ( ");
+  test("(async (a ");
+  test("(async (a) ");
+  test("(async (a) => ");
+  test("(async (a) => b ");
+  test("(async (a) => b) ");
+  test("(async (a, ");
+  test("(async (a, b ");
+  test("(async (a, b) ");
+  test("(async (a, b) => ");
+  test("(async (a, b) => b ");
+  test("(async (a, b) => b) ");
+
+  test("(async ([ ");
+  test("(async ([a ");
+  test("(async ([a] ");
+  test("(async ([a]) ");
+  test("(async ([a]) => ");
+  test("(async ([a]) => b ");
+  test("(async ([a]) => b) ");
+  test("(async ([a, ");
+  test("(async ([a, b ");
+  test("(async ([a, b] ");
+  test("(async ([a, b]) ");
+  test("(async ([a, b]) => ");
+  test("(async ([a, b]) => b ");
+  test("(async ([a, b]) => b) ");
+
+  test("(async ({ ");
+  test("(async ({a ");
+  test("(async ({a} ");
+  test("(async ({a}) ");
+  test("(async ({a}) => ");
+  test("(async ({a}) => b ");
+  test("(async ({a}) => b) ");
+  test("(async ({a, ");
+  test("(async ({a, b ");
+  test("(async ({a, b} ");
+  test("(async ({a, b}) ");
+  test("(async ({a, b}) => ");
+  test("(async ({a, b}) => b ");
+  test("(async ({a, b}) => b) ");
 }

@@ -2434,7 +2434,8 @@ CodeGenerator::visitLambda(LLambda* lir)
     emitLambdaInit(output, envChain, info);
 
     if (info.flags & JSFunction::EXTENDED) {
-        MOZ_ASSERT(info.fun->allowSuperProperty() || info.fun->isSelfHostedBuiltin());
+        MOZ_ASSERT(info.fun->allowSuperProperty() || info.fun->isSelfHostedBuiltin() ||
+                   info.fun->isAsync());
         static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2, "All slots must be initialized");
         masm.storeValue(UndefinedValue(), Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
         masm.storeValue(UndefinedValue(), Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
@@ -4694,7 +4695,8 @@ CodeGenerator::visitDefFun(LDefFun* lir)
 {
     Register envChain = ToRegister(lir->environmentChain());
 
-    pushArg(ImmGCPtr(lir->mir()->fun()));
+    Register fun = ToRegister(lir->fun());
+    pushArg(fun);
     pushArg(envChain);
     pushArg(ImmGCPtr(current->mir()->info().script()));
 
