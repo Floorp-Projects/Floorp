@@ -6,10 +6,7 @@ add_task(function* test_switchtab_override() {
   let testURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
 
   info("Opening first tab");
-  let tab = gBrowser.addTab(testURL);
-  let deferred = Promise.defer();
-  whenTabLoaded(tab, deferred.resolve);
-  yield deferred.promise;
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, testURL);
 
   info("Opening and selecting second tab");
   let secondTab = gBrowser.selectedTab = gBrowser.addTab();
@@ -21,7 +18,7 @@ add_task(function* test_switchtab_override() {
   });
 
   info("Wait for autocomplete")
-  deferred = Promise.defer();
+  let deferred = Promise.defer();
   let onSearchComplete = gURLBar.onSearchComplete;
   registerCleanupFunction(() => {
     gURLBar.onSearchComplete = onSearchComplete;
@@ -52,7 +49,7 @@ add_task(function* test_switchtab_override() {
     gBrowser.tabContainer.removeEventListener("TabSelect", onTabSelect, false);
   });
   // Otherwise it would load the page.
-  whenTabLoaded(secondTab, deferred.resolve);
+  BrowserTestUtils.browserLoaded(secondTab.linkedBrowser).then(deferred.resolve);
 
   EventUtils.synthesizeKey("VK_SHIFT", { type: "keydown" });
   EventUtils.synthesizeKey("VK_RETURN", { });

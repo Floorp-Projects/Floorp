@@ -25,8 +25,7 @@ add_task(function*() {
   let uri = NetUtil.newURI("http://s.example.com/search?q=foo&client=1");
   yield PlacesTestUtils.addVisits({ uri: uri, title: "Foo - SearchEngine Search" });
 
-  gBrowser.selectedTab = gBrowser.addTab("about:mozilla", {animate: false});
-  yield promiseTabLoaded(gBrowser.selectedTab);
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
 
   // The first autocomplete result has the action searchengine, while
   // the second result is the "search favicon" element.
