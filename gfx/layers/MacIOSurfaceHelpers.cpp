@@ -89,7 +89,7 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface)
     libyuv::ConvertToARGB((uint8_t*)aSurface->GetBaseAddress(), 0 /* not used */,
                           mappedSurface.mData, mappedSurface.mStride,
                           0, 0,
-                          ALIGNED_32(size.width), size.height,
+                          size.width, size.height,
                           size.width, size.height,
                           libyuv::kRotate0, libyuv::FOURCC_UYVY);
   } else {
