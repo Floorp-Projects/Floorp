@@ -202,7 +202,8 @@ tls13_SetHsState(sslSocket *ss, SSL3WaitState ws,
         tls13_HandshakeState(ws);
 
     SSL_TRC(3, ("%d: TLS13[%d]: %s state change from %s->%s in %s (%s:%d)",
-                SSL_GETPID(), ss->fd, SSL_ROLE(ss),
+                SSL_GETPID(), ss->fd,
+                ss->sec.isServer ? "server" : "client",
                 tls13_HandshakeState(TLS13_BASE_WAIT_STATE(ss->ssl3.hs.ws)),
                 new_state_name,
                 func, file, line));
@@ -331,7 +332,7 @@ tls13_CreateKeyShare(sslSocket *ss, const sslNamedGroupDef *groupDef)
     PORT_Assert(groupDef);
     switch (groupDef->keaType) {
         case ssl_kea_ecdh:
-            rv = ssl_CreateECDHEphemeralKeyPair(ss, groupDef, &keyPair);
+            rv = ssl_CreateECDHEphemeralKeyPair(groupDef, &keyPair);
             if (rv != SECSuccess) {
                 return SECFailure;
             }
@@ -588,7 +589,8 @@ tls13_RecoverWrappedSharedSecret(sslSocket *ss, sslSessionID *sid)
     SECStatus rv;
 
     SSL_TRC(3, ("%d: TLS13[%d]: recovering static secret (%s)",
-                SSL_GETPID(), ss->fd, SSL_ROLE(ss)));
+                SSL_GETPID(), ss->fd,
+                ss->sec.isServer ? "server" : "client"));
     if (!sid->u.ssl3.keys.msIsWrapped) {
         PORT_Assert(0); /* I think this can't happen. */
         return SECFailure;
@@ -747,9 +749,6 @@ tls13_ComputeEarlySecrets(sslSocket *ss, PRBool setup0Rtt)
     PRUint8 hash[HASH_LENGTH_MAX];
     unsigned int len;
 
-    SSL_TRC(5, ("%d: TLS13[%d]: compute early secrets (%s)",
-                SSL_GETPID(), ss->fd, SSL_ROLE(ss)));
-
     /* Extract off the resumptionPsk (if present), else pass the NULL
      * resumptionPsk which will be internally translated to zeroes. */
     PORT_Assert(!ss->ssl3.hs.currentSecret);
@@ -824,9 +823,6 @@ tls13_ComputeHandshakeSecrets(sslSocket *ss)
     SECStatus rv;
     PK11SymKey *newSecret = NULL;
 
-    SSL_TRC(5, ("%d: TLS13[%d]: compute handshake secrets (%s)",
-                SSL_GETPID(), ss->fd, SSL_ROLE(ss)));
-
     /* First update |currentSecret| to add |dheSecret|, if any. */
     PORT_Assert(ss->ssl3.hs.currentSecret);
     PORT_Assert(ss->ssl3.hs.dheSecret);
@@ -858,9 +854,6 @@ tls13_ComputeHandshakeSecrets(sslSocket *ss)
         LOG_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE);
         return rv;
     }
-
-    SSL_TRC(5, ("%d: TLS13[%d]: compute master secret (%s)",
-                SSL_GETPID(), ss->fd, SSL_ROLE(ss)));
 
     /* Crank HKDF forward to make master secret, which we
      * stuff in current secret. */
@@ -1153,8 +1146,6 @@ tls13_NegotiateKeyExchange(sslSocket *ss, TLS13KeyShareEntry **clientShare)
         FATAL_ERROR(ss, SSL_ERROR_NO_CYPHER_OVERLAP, handshake_failure);
         return SECFailure;
     }
-    SSL_TRC(3, ("%d: TLS13[%d]: group = %d", SSL_GETPID(), ss->fd,
-                preferredGroup->name));
 
     SSL_TRC(3, ("%d: TLS13[%d]: group = %d", preferredGroup->name));
 
@@ -2448,9 +2439,8 @@ tls13_DeriveTrafficKeys(sslSocket *ss, ssl3CipherSpec *spec,
     PORT_Assert(prkp != NULL);
     prk = *prkp;
 
-    SSL_TRC(3, ("%d: TLS13[%d]: deriving %s traffic keys phase='%s'",
-                SSL_GETPID(), ss->fd,
-                (direction == CipherSpecWrite) ? "write" : "read", phase));
+    SSL_TRC(3, ("%d: TLS13[%d]: deriving traffic keys phase='%s'",
+                SSL_GETPID(), ss->fd, phase));
     PORT_Assert(phase);
     spec->phase = phase;
 
@@ -2584,7 +2574,8 @@ tls13_SetCipherSpec(sslSocket *ss, TrafficKeyType type,
     ssl_ReleaseSpecWriteLock(ss);
 
     SSL_TRC(3, ("%d: TLS13[%d]: %s installed key for phase='%s'.%d dir=%s",
-                SSL_GETPID(), ss->fd, SSL_ROLE(ss),
+                SSL_GETPID(), ss->fd,
+                ss->sec.isServer ? "server" : "client",
                 spec->phase, spec->epoch,
                 direction == CipherSpecRead ? "read" : "write"));
 

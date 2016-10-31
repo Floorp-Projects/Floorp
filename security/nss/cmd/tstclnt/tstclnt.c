@@ -1471,7 +1471,7 @@ main(int argc, char **argv)
     if (requireDHNamedGroups) {
         rv = SSL_OptionSet(s, SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE);
         if (rv != SECSuccess) {
-            SECU_PrintError(progName, "error in requiring the use of fixed finite-field DH groups");
+            SECU_PrintError(progName, "error enabling extended master secret");
             error = 1;
             goto done;
         }

@@ -195,7 +195,7 @@ ssl3_SendECDHClientKeyExchange(sslSocket *ss, SECKEYPublicKey *svrPubKey)
         goto loser;
     }
     ss->sec.keaGroup = groupDef;
-    rv = ssl_CreateECDHEphemeralKeyPair(ss, groupDef, &keyPair);
+    rv = ssl_CreateECDHEphemeralKeyPair(groupDef, &keyPair);
     if (rv != SECSuccess) {
         ssl_MapLowLevelError(SEC_ERROR_KEYGEN_FAIL);
         goto loser;
@@ -473,8 +473,7 @@ ssl_GetECGroupForServerSocket(sslSocket *ss)
 
 /* Create an ECDHE key pair for a given curve */
 SECStatus
-ssl_CreateECDHEphemeralKeyPair(const sslSocket *ss,
-                               const sslNamedGroupDef *ecGroup,
+ssl_CreateECDHEphemeralKeyPair(const sslNamedGroupDef *ecGroup,
                                sslEphemeralKeyPair **keyPair)
 {
     SECKEYPrivateKey *privKey = NULL;
@@ -501,23 +500,6 @@ ssl_CreateECDHEphemeralKeyPair(const sslSocket *ss,
     }
 
     *keyPair = pair;
-    SSL_TRC(50, ("%d: SSL[%d]: Create ECDH ephemeral key %d",
-                 SSL_GETPID(), ss ? ss->fd : NULL, ecGroup->name));
-    PRINT_BUF(50, (ss, "Public Key", pubKey->u.ec.publicValue.data,
-                   pubKey->u.ec.publicValue.len));
-#ifdef TRACE
-    if (ssl_trace >= 50) {
-        SECItem d = { siBuffer, NULL, 0 };
-        SECStatus rv = PK11_ReadRawAttribute(PK11_TypePrivKey, privKey,
-                                             CKA_VALUE, &d);
-        if (rv == SECSuccess) {
-            PRINT_BUF(50, (ss, "Private Key", d.data, d.len));
-            SECITEM_FreeItem(&d, PR_FALSE);
-        } else {
-            SSL_TRC(50, ("Error extracting private key"));
-        }
-    }
-#endif
     return SECSuccess;
 }
 
@@ -705,7 +687,7 @@ ssl3_SendECDHServerKeyExchange(sslSocket *ss)
         }
         keyPair = (sslEphemeralKeyPair *)PR_NEXT_LINK(&ss->ephemeralKeyPairs);
     } else {
-        rv = ssl_CreateECDHEphemeralKeyPair(ss, ecGroup, &keyPair);
+        rv = ssl_CreateECDHEphemeralKeyPair(ecGroup, &keyPair);
         if (rv != SECSuccess) {
             goto loser;
         }

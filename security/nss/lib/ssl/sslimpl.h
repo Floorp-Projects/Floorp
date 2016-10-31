@@ -1141,9 +1141,6 @@ struct sslConnectInfoStr {
  * protected by firstHandshakeLock AND ssl3HandshakeLock.
  */
 struct sslSecurityInfoStr {
-
-#define SSL_ROLE(ss) (ss->sec.isServer ? "server" : "client")
-
     PRBool isServer;
     sslBuffer writeBuf; /*xmitBufLock*/
 
@@ -1403,9 +1400,8 @@ extern SECStatus ssl_CopySecurityInfo(sslSocket *ss, sslSocket *os);
 extern void ssl_ResetSecurityInfo(sslSecurityInfo *sec, PRBool doMemset);
 extern void ssl_DestroySecurityInfo(sslSecurityInfo *sec);
 
-extern void ssl_PrintBuf(const sslSocket *ss, const char *msg, const void *cp,
-                         int len);
-extern void ssl_PrintKey(const sslSocket *ss, const char *msg, PK11SymKey *key);
+extern void ssl_PrintBuf(sslSocket *ss, const char *msg, const void *cp, int len);
+extern void ssl_PrintKey(sslSocket *ss, const char *msg, PK11SymKey *key);
 
 extern int ssl_SendSavedWriteData(sslSocket *ss);
 extern SECStatus ssl_SaveWriteData(sslSocket *ss,
@@ -1957,8 +1953,7 @@ SECStatus ssl3_ComputeHandshakeHashes(sslSocket *ss,
                                       PRUint32 sender);
 PRInt32 tls13_ServerSendKeyShareXtn(sslSocket *ss, PRBool append,
                                     PRUint32 maxBytes);
-SECStatus ssl_CreateECDHEphemeralKeyPair(const sslSocket *ss,
-                                         const sslNamedGroupDef *ecGroup,
+SECStatus ssl_CreateECDHEphemeralKeyPair(const sslNamedGroupDef *ecGroup,
                                          sslEphemeralKeyPair **keyPair);
 SECStatus ssl_CreateStaticECDHEKey(sslSocket *ss,
                                    const sslNamedGroupDef *ecGroup);

@@ -10,8 +10,8 @@ CPPSRCS = \
       gtests.cc \
       $(NULL)
 
-INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
-            -I$(CORE_DEPTH)/gtests/common
+INCLUDES += -I$(CORE_DEPTH)/external_tests/google_test/gtest/include \
+            -I$(CORE_DEPTH)/external_tests/common
 
 REQUIRES = gtest
 

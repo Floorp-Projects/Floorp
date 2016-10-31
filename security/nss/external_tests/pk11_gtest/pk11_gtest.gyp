@@ -4,14 +4,19 @@
 {
   'includes': [
     '../../coreconf/config.gypi',
-    'gtest.gypi',
+    '../common/gtest.gypi',
   ],
   'targets': [
     {
-      'target_name': 'gtests',
+      'target_name': 'pk11_gtest',
       'type': 'executable',
       'sources': [
-        'gtests.cc'
+        'pk11_aeskeywrap_unittest.cc',
+        'pk11_chacha20poly1305_unittest.cc',
+        'pk11_pbkdf2_unittest.cc',
+        'pk11_prf_unittest.cc',
+        'pk11_rsapss_unittest.cc',
+        '<(DEPTH)/external_tests/common/gtests.cc'
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
@@ -19,16 +24,16 @@
         '<(DEPTH)/lib/util/util.gyp:nssutil3',
         '<(DEPTH)/lib/smime/smime.gyp:smime3',
         '<(DEPTH)/lib/ssl/ssl.gyp:ssl3',
-        '<(DEPTH)/gtests/google_test/google_test.gyp:gtest',
+        '<(DEPTH)/external_tests/google_test/google_test.gyp:gtest',
         '<(DEPTH)/cmd/lib/lib.gyp:sectool'
       ]
     }
   ],
   'target_defaults': {
     'include_dirs': [
-      '../../gtests/google_test/gtest/include',
-      '../../gtests/common'
-    ],
+      '../../external_tests/google_test/gtest/include',
+      '../../external_tests/common'
+    ]
   },
   'variables': {
     'module': 'nss'
