@@ -37,7 +37,7 @@ MainThreadIdlePeriod::GetLongIdlePeriod()
   static float sLongIdlePeriod = DEFAULT_LONG_IDLE_PERIOD;
   static bool sInitialized = false;
 
-  if (!sInitialized) {
+  if (!sInitialized && Preferences::IsServiceAvailable()) {
     sInitialized = true;
     Preferences::AddFloatVarCache(&sLongIdlePeriod, "idle_queue.long_period",
                                   DEFAULT_LONG_IDLE_PERIOD);
