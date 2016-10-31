@@ -65,7 +65,6 @@ function onExtra1() {
 }
 
 function onLoad() {
-  let dialog = document.documentElement;
   if (appStartup.automaticSafeModeNecessary) {
     document.getElementById("autoSafeMode").hidden = false;
     document.getElementById("safeMode").hidden = true;

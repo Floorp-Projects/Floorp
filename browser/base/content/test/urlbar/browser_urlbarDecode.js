@@ -50,7 +50,7 @@ add_task(function* actionURILosslessDecode() {
     gURLBar.controller.handleKeyNavigation(KeyEvent.DOM_VK_DOWN);
   } while (gURLBar.popup.selectedIndex != 0);
 
-  let [, type, params] = gURLBar.value.match(/^moz-action:([^,]+),(.*)$/);
+  let [, type, ] = gURLBar.value.match(/^moz-action:([^,]+),(.*)$/);
   Assert.equal(type, "visiturl",
                "visiturl action URI should be in the urlbar");
 

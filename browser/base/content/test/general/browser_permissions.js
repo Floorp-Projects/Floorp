@@ -32,7 +32,6 @@ function* closeIdentityPopup() {
 }
 
 add_task(function* testMainViewVisible() {
-  let {gIdentityHandler} = gBrowser.ownerGlobal;
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   yield promiseTabLoadEvent(tab, PERMISSIONS_PAGE);
 
@@ -102,7 +101,6 @@ add_task(function* testIdentityIcon() {
 });
 
 add_task(function* testCancelPermission() {
-  let {gIdentityHandler} = gBrowser.ownerGlobal;
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   yield promiseTabLoadEvent(tab, PERMISSIONS_PAGE);
 
@@ -130,7 +128,6 @@ add_task(function* testCancelPermission() {
 });
 
 add_task(function* testPermissionHints() {
-  let {gIdentityHandler} = gBrowser.ownerGlobal;
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   yield promiseTabLoadEvent(tab, PERMISSIONS_PAGE);
 

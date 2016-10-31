@@ -21,9 +21,6 @@ var security = {
   },
 
   _getSecurityInfo : function() {
-    const nsIX509Cert = Components.interfaces.nsIX509Cert;
-    const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
-    const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
     const nsISSLStatusProvider = Components.interfaces.nsISSLStatusProvider;
     const nsISSLStatus = Components.interfaces.nsISSLStatus;
 

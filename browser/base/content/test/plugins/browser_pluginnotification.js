@@ -287,8 +287,6 @@ add_task(function* () {
      "Test 19e, Doorhanger should start out dismissed");
 
   yield ContentTask.spawn(gTestBrowser, null, function* () {
-    let doc = content.document;
-    let plugin = doc.getElementById("test");
     let utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                        .getInterface(Components.interfaces.nsIDOMWindowUtils);
     utils.sendMouseEvent("mousedown", 50, 50, 0, 1, 0, false, 0, 0);

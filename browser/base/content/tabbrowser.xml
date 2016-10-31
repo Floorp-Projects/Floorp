@@ -1755,7 +1755,7 @@
             // Include the true final argument to indicate that this event is
             // simulated (instead of being observed by the webProgressListener).
             this._callProgressListeners(aBrowser, "onSecurityChange",
-                                        [aBrowser.webProgress, null, securityUI.state, true],
+                                        [aBrowser.webProgress, null, state, true],
                                         true, false);
 
             if (aShouldBeRemote) {
@@ -3761,7 +3761,7 @@
               this.assert(this.tabbrowser._switcher);
               this.assert(this.tabbrowser._switcher === this);
 
-              for (let [tab, state] of this.tabState) {
+              for (let [tab, ] of this.tabState) {
                 if (!tab.linkedBrowser) {
                   this.tabState.delete(tab);
                 }
@@ -4720,7 +4720,6 @@
 
       <constructor>
         <![CDATA[
-          let browserStack = document.getAnonymousElementByAttribute(this, "anonid", "browserStack");
           this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
           this.mCurrentBrowser.permanentKey = {};
 
@@ -5567,7 +5566,6 @@
           if (screenX == draggedTab._dragData.animLastScreenX)
             return;
 
-          let draggingRight = screenX > draggedTab._dragData.animLastScreenX;
           draggedTab._dragData.animLastScreenX = screenX;
 
           let rtl = (window.getComputedStyle(this).direction == "rtl");
@@ -7132,8 +7130,6 @@
             return val;
 
           let toTab = this.getRelatedElement(this.childNodes[val]);
-          let fromTab = this._selectedPanel ? this.getRelatedElement(this._selectedPanel)
-                                            : null;
 
           gBrowser._getSwitcher().requestTab(toTab);
 
