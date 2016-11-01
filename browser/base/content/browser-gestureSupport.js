@@ -854,7 +854,6 @@ var gHistorySwipeAnimation = {
     catch (ex) {
       return false;
     }
-    return true;
   },
 
   /**

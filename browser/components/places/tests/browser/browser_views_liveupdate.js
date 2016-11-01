@@ -467,13 +467,10 @@ function getViewsForFolder(aFolderId) {
   switch (rootId) {
     case PlacesUtils.toolbarFolderId:
       return ["toolbar", "sidebar"]
-      break;
     case PlacesUtils.bookmarksMenuFolderId:
       return ["menu", "sidebar"]
-      break;
     case PlacesUtils.unfiledBookmarksFolderId:
       return ["sidebar"]
-      break;
   }
   return new Array();
 }

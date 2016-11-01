@@ -901,8 +901,8 @@ function promiseAddFormEntryWithMinutesAgo(aMinutesAgo) {
   return new Promise((resolve, reject) =>
     FormHistory.update({ op: "add", fieldname: name, value: "dummy", firstUsed: timestamp },
                        { handleError: function (error) {
-                           throw new Error("Error occurred updating form history: " + error);
                            reject();
+                           throw new Error("Error occurred updating form history: " + error);
                          },
                          handleCompletion: function (reason) {
                            resolve(name);
@@ -921,8 +921,8 @@ function formNameExists(name)
     FormHistory.count({ fieldname: name },
                       { handleResult: result => count = result,
                         handleError: function (error) {
-                          throw new Error("Error occurred searching form history: " + error);
                           reject(error);
+                          throw new Error("Error occurred searching form history: " + error);
                         },
                         handleCompletion: function (reason) {
                           if (!reason) {
@@ -952,8 +952,8 @@ function* blankSlate() {
         }
       },
       handleError(error) {
-        throw new Error("Error occurred updating form history: " + error);
         reject(error);
+        throw new Error("Error occurred updating form history: " + error);
       }
     });
   });

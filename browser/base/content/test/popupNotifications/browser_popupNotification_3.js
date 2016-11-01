@@ -278,9 +278,6 @@ var tests = [
         info("notifyObj1.options.eventCallback: " + eventName);
         if (eventName == "dismissed") {
           throw new Error("Oops 1!");
-          if (++callbackCount == 2) {
-            goNext();
-          }
         }
       };
 
@@ -291,9 +288,6 @@ var tests = [
         info("notifyObj2.options.eventCallback: " + eventName);
         if (eventName == "dismissed") {
           throw new Error("Oops 2!");
-          if (++callbackCount == 2) {
-            goNext();
-          }
         }
       };
       this.notification2 = showNotification(this.testNotif2);
