@@ -667,6 +667,10 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   }
 
   nsStyleBorder newStyleBorder(*styleBorder);
+  // We could do something fancy to avoid the TrackImage/UntrackImage
+  // work, but it doesn't seem worth it.  (We need to call TrackImage
+  // since we're not going through nsRuleNode::ComputeBorderData.)
+  newStyleBorder.TrackImage(aPresContext);
 
   NS_FOR_CSS_SIDES(side) {
     nscolor color = aStyleContext->GetVisitedDependentColor(
@@ -677,6 +681,11 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
     PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
                                aDirtyRect, aBorderArea, newStyleBorder,
                                aStyleContext, aFlags, aSkipSides);
+
+  // We could do something fancy to avoid the TrackImage/UntrackImage
+  // work, but it doesn't seem worth it.  (We need to call UntrackImage
+  // since we're not going through nsStyleBorder::Destroy.)
+  newStyleBorder.UntrackImage(aPresContext);
 
   return result;
 }
@@ -5023,13 +5032,8 @@ ShouldTreatAsCompleteDueToSyncDecode(const nsStyleImage* aImage,
     return false;
   }
 
-  imgRequestProxy* req = aImage->GetImageData();
-  if (!req) {
-    return false;
-  }
-
   uint32_t status = 0;
-  if (NS_FAILED(req->GetImageStatus(&status))) {
+  if (NS_FAILED(aImage->GetImageData()->GetImageStatus(&status))) {
     return false;
   }
 
@@ -5037,7 +5041,7 @@ ShouldTreatAsCompleteDueToSyncDecode(const nsStyleImage* aImage,
     // The image is "complete" since it's a corrupt image. If we created an
     // imgIContainer at all, return true.
     nsCOMPtr<imgIContainer> image;
-    req->GetImage(getter_AddRefs(image));
+    aImage->GetImageData()->GetImage(getter_AddRefs(image));
     return bool(image);
   }
 
@@ -5074,9 +5078,8 @@ nsImageRenderer::PrepareImage()
   }
 
   switch (mType) {
-    case eStyleImageType_Image: {
-      MOZ_ASSERT(mImage->GetImageData(),
-                 "must have image data, since we checked IsEmpty above");
+    case eStyleImageType_Image:
+    {
       nsCOMPtr<imgIContainer> srcImage;
       DebugOnly<nsresult> rv =
         mImage->GetImageData()->GetImage(getter_AddRefs(srcImage));
