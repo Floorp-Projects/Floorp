@@ -1,0 +1,70 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(3ba11a90-34e0-11e4-8c21-0800200c9a66)]
+interface nsIIccInfo : nsISupports
+{
+  /**
+   * Integrated Circuit Card Type.
+   *
+   * Possible values: null(unknown), "sim", "usim", "csim", ruim".
+   */
+  readonly attribute DOMString iccType;
+
+  /**
+   * Integrated Circuit Card Identifier.
+   */
+  readonly attribute DOMString iccid;
+
+  /**
+   * Mobile Country Code (MCC) of the subscriber's home network.
+   */
+  readonly attribute DOMString mcc;
+
+  /**
+   * Mobile Network Code (MNC) of the subscriber's home network.
+   */
+  readonly attribute DOMString mnc;
+
+  /**
+   * Service Provider Name (SPN) of the subscriber's home network.
+   */
+  readonly attribute DOMString spn;
+
+  /**
+   * Network name must be a part of displayed carrier name.
+   */
+  readonly attribute boolean isDisplayNetworkNameRequired;
+
+  /**
+   * Service provider name must be a part of displayed carrier name.
+   */
+  readonly attribute boolean isDisplaySpnRequired;
+};
+
+[scriptable, uuid(6c9c78b0-34e0-11e4-8c21-0800200c9a66)]
+interface nsIGsmIccInfo : nsIIccInfo
+{
+  /**
+   * Mobile Station ISDN Number (MSISDN) of the subscriber, aka
+   * his phone number.
+   */
+  readonly attribute DOMString msisdn;
+};
+
+[scriptable, uuid(7452f570-34e0-11e4-8c21-0800200c9a66)]
+interface nsICdmaIccInfo : nsIIccInfo
+{
+  /**
+   * Mobile Directory Number (MDN) of the subscriber, aka his phone number.
+   */
+  readonly attribute DOMString mdn;
+
+  /**
+   * Preferred Roaming List (PRL) version of the subscriber.
+   */
+  readonly attribute long prlVersion;
+};

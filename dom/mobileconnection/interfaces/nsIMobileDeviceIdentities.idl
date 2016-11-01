@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(3fc79ece-8399-11e5-beff-6b8209cb93f6)]
+interface nsIMobileDeviceIdentities : nsISupports
+{
+  /**
+   * Device IMEI, including check digit.
+   *
+   * Valid if GSM subscription is available.
+   *
+   * Note: The value might be dummy like "000..." from modem if invalid.
+   */
+  readonly attribute DOMString imei;
+
+  /**
+   * Device IMEISV.
+   *
+   * Valid if GSM subscription is available.
+   *
+   * Note: IMEISV is presented in 2-decimal digits.
+   *       The value might be dummy like "00" from modem if invalid.
+   */
+  readonly attribute DOMString imeisv;
+
+  /**
+   * Device ESN.
+   *
+   * Valid if CDMA subscription is available.
+   *
+   * Note: The value might be dummy like "000..." from modem if invalid.
+   */
+  readonly attribute DOMString esn;
+
+  /**
+   * Device MEID.
+   *
+   * Valid if CDMA subscription is available.
+   *
+   * Note: The value might be dummy like "000..." from modem if invalid.
+   */
+  readonly attribute DOMString meid;
+};

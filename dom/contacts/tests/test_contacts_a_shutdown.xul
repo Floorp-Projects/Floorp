@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<window title="Mozilla Bug 945948"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript;version=1.7">
+  <![CDATA[
+  "use strict";
+  const { 'utils': Cu } = Components;
+  Cu.import("resource://gre/modules/ContactService.jsm", window);
+
+  //
+  // Mock message manager
+  //
+  function MockMessageManager() { }
+  MockMessageManager.prototype.assertPermission = function() { return true; };
+  MockMessageManager.prototype.sendAsyncMessage = function(name, data) { };
+
+  //
+  // Mock ContactDB
+  //
+  function MockContactDB() { }
+  MockContactDB.prototype.getAll = function(cb) {
+    cb([]);
+  };
+  MockContactDB.prototype.clearDispatcher = function() { }
+  MockContactDB.prototype.close = function() { }
+
+  let realContactDB = ContactService._db;
+
+  function before() {
+    ok(true, "Install mock ContactDB object");
+    ContactService._db = new MockContactDB();
+  }
+
+  function after() {
+    ok(true, "Restore real ContactDB object");
+    ContactService._db = realContactDB;
+  }
+
+  function steps() {
+    let mm1 = new MockMessageManager();
+    let mm2 = new MockMessageManager();
+
+    is(ContactService._cursors.size, 0, "Verify clean contact init");
+
+    ContactService.receiveMessage({
+      target: mm1,
+      name: "Contacts:GetAll",
+      data: { cursorId: 1 },
+      findOptions: {}
+    });
+    is(ContactService._cursors.size, 1, "Add contact cursor 1");
+
+    ContactService.receiveMessage({
+      target: mm2,
+      name: "Contacts:GetAll",
+      data: { cursorId: 2 },
+      findOptions: {}
+    });
+    is(ContactService._cursors.size, 2, "Add contact cursor 2");
+
+    ContactService.receiveMessage({
+      target: mm1,
+      name: "child-process-shutdown"
+    });
+    is(ContactService._cursors.size, 1, "Shutdown contact cursor 1");
+
+    ContactService.receiveMessage({
+      target: mm2,
+      name: "child-process-shutdown"
+    });
+    is(ContactService._cursors.size, 0, "Shutdown contact cursor 2");
+  }
+
+  function runTests() {
+    SimpleTest.waitForExplicitFinish();
+    try {
+      before();
+      steps();
+    } finally {
+      after();
+      SimpleTest.finish();
+    }
+  }
+
+  runTests();
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=945948"
+     target="_blank">Mozilla Bug 945948</a>
+  </body>
+</window>

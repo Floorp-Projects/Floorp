@@ -786,6 +786,10 @@ private:
   virtual bool
   DeallocPHeapSnapshotTempFileHelperParent(PHeapSnapshotTempFileHelperParent*) override;
 
+  virtual PIccParent* AllocPIccParent(const uint32_t& aServiceId) override;
+
+  virtual bool DeallocPIccParent(PIccParent* aActor) override;
+
   virtual PMemoryReportRequestParent*
   AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
                                   const bool &aAnonymize,
@@ -806,6 +810,10 @@ private:
   virtual PTestShellParent* AllocPTestShellParent() override;
 
   virtual bool DeallocPTestShellParent(PTestShellParent* shell) override;
+
+  virtual PMobileConnectionParent* AllocPMobileConnectionParent(const uint32_t& aClientId) override;
+
+  virtual bool DeallocPMobileConnectionParent(PMobileConnectionParent* aActor) override;
 
   virtual bool DeallocPNeckoParent(PNeckoParent* necko) override;
 

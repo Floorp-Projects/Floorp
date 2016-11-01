@@ -1,0 +1,199 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(b9ec941e-8504-11e4-810e-7b62c60e8261)]
+interface nsIMobileConnectionMessenger : nsISupports
+{
+  /**
+   * 'cdma-info-rec-received' system message with Display Info
+   *
+   * @param aServiceId
+   *        The ID of Service where this info is notified from.
+   * @param aDisplay
+   *        The text to be displayed.
+   */
+  void notifyCdmaInfoRecDisplay(in unsigned long aServiceId,
+                                in DOMString aDisplay);
+
+  /**
+   * 'cdma-info-rec-received' system message with Called Party Number Info
+   *
+   * @param aServiceId
+   *        The ID of Service where this info is notified from.
+   * @param aTtype
+   *        The type of number. (3-bit binary)
+   *        See Table 2.7.1.3.2.4-2 in 3GPP2 C.S0005-F.
+   * @param aPlan
+   *        The numbering plan. (4-bit binary)
+   *        See Table 2.7.1.3.2.4-3 in 3GPP2 C.S0005-F.
+   * @param aNumber
+   *        The string presentation of the number.
+   * @param aPi (2-bit binary)
+   *        The Presentation indicator of the number.
+   *        See Table 2.7.4.4-1 in 3GPP2 C.S0005-F.
+   * @param aSi (2-bit binary)
+   *        The Screening Indicator of the number.
+   *        See Table 2.7.4.4-2 in 3GPP2 C.S0005-F.
+   */
+  void notifyCdmaInfoRecCalledPartyNumber(in unsigned long aServiceId,
+                                          in unsigned short aType,
+                                          in unsigned short aPlan,
+                                          in DOMString aNumber,
+                                          in unsigned short aPi,
+                                          in unsigned short aSi);
+
+  /**
+   * 'cdma-info-rec-received' system message with Calling Party Number Info
+   *
+   * @param aServiceId
+   *        The ID of Service where this info is notified from.
+   * @param aTtype
+   *        The type of number. (3-bit binary)
+   *        See Table 2.7.1.3.2.4-2 in 3GPP2 C.S0005-F.
+   * @param aPlan
+   *        The numbering plan. (4-bit binary)
+   *        See Table 2.7.1.3.2.4-3 in 3GPP2 C.S0005-F.
+   * @param aNumber
+   *        The string presentation of the number.
+   * @param aPi (2-bit binary)
+   *        The Presentation indicator of the number.
+   *        See Table 2.7.4.4-1 in 3GPP2 C.S0005-F.
+   * @param aSi (2-bit binary)
+   *        The Screening Indicator of the number.
+   *        See Table 2.7.4.4-2 in 3GPP2 C.S0005-F.
+   */
+  void notifyCdmaInfoRecCallingPartyNumber(in unsigned long aServiceId,
+                                           in unsigned short aType,
+                                           in unsigned short aPlan,
+                                           in DOMString aNumber,
+                                           in unsigned short aPi,
+                                           in unsigned short aSi);
+
+  /**
+   * 'cdma-info-rec-received' system message with Connected Party Number Info
+   *
+   * @param aServiceId
+   *        The ID of Service where this info is notified from.
+   * @param aTtype
+   *        The type of number. (3-bit binary)
+   *        See Table 2.7.1.3.2.4-2 in 3GPP2 C.S0005-F.
+   * @param aPlan
+   *        The numbering plan. (4-bit binary)
+   *        See Table 2.7.1.3.2.4-3 in 3GPP2 C.S0005-F.
+   * @param aNumber
+   *        The string presentation of the number.
+   * @param aPi (2-bit binary)
+   *        The Presentation indicator of the number.
+   *        See Table 2.7.4.4-1 in 3GPP2 C.S0005-F.
+   * @param aSi (2-bit binary)
+   *        The Screening Indicator of the number.
+   *        See Table 2.7.4.4-2 in 3GPP2 C.S0005-F.
+   */
+  void notifyCdmaInfoRecConnectedPartyNumber(in unsigned long aServiceId,
+                                             in unsigned short aType,
+                                             in unsigned short aPlan,
+                                             in DOMString aNumber,
+                                             in unsigned short aPi,
+                                             in unsigned short aSi);
+
+  /**
+   * 'cdma-info-rec-received' system message with Signal Info
+   *
+   * @param aServiceId
+   *        The ID of Service where this info is notified from.
+   * @param aType
+   *        The signal type. (2-bit binary)
+   *        See Table 3.7.5.5-1 in 3GPP2 C.S0005-F.
+   * @param aAlertPitch
+   *        The pitch of the alerting signal. (2-bit binary)
+   *        See Table 3.7.5.5-2 in 3GPP2 C.S0005-F.
+   * @param aSignal
+   *        The signal code. (6-bit binary)
+   *        See Table 3.7.5.5-3, 3.7.5.5-4, 3.7.5.5-5 in 3GPP2 C.S0005-F.
+   */
+  void notifyCdmaInfoRecSignal(in unsigned long aServiceId,
+                               in unsigned short aType,
+                               in unsigned short aAlertPitch,
+                               in unsigned short aSignal);
+
+  /**
+   * 'cdma-info-rec-received' system message with Redirecting Number Info
+   *
+   * @param aServiceId
+   *        The ID of Service where this info is notified from.
+   * @param aTtype
+   *        The type of number. (3-bit binary)
+   *        See Table 2.7.1.3.2.4-2 in 3GPP2 C.S0005-F.
+   * @param aPlan
+   *        The numbering plan. (4-bit binary)
+   *        See Table 2.7.1.3.2.4-3 in 3GPP2 C.S0005-F.
+   * @param aNumber
+   *        The string presentation of the number.
+   * @param aPi (2-bit binary)
+   *        The Presentation indicator of the number.
+   *        See Table 2.7.4.4-1 in 3GPP2 C.S0005-F.
+   * @param aSi (2-bit binary)
+   *        The Screening Indicator of the number.
+   *        See Table 2.7.4.4-2 in 3GPP2 C.S0005-F.
+   * @param aReason (4-bit binary)
+   *        The redirection reason.
+   *        See Table 3.7.5.11-1 in 3GPP2 C.S0005-F.
+   */
+  void notifyCdmaInfoRecRedirectingNumber(in unsigned long aServiceId,
+                                          in unsigned short aType,
+                                          in unsigned short aPlan,
+                                          in DOMString aNumber,
+                                          in unsigned short aPi,
+                                          in unsigned short aSi,
+                                          in unsigned short aReason);
+
+  /**
+   * 'cdma-info-rec-received' system message with Line Control Info
+   *
+   * @param aServiceId
+   *        The ID of Service where this info is notified from.
+   * @param aPolarityIncluded (1-bit)
+   *        Polarity parameter included.
+   * @param aToggle (1-bit)
+   *        Toggle mode.
+   * @param aReverse (1-bit)
+   *        Reverse polarity.
+   * @param aPowerDenial (8-bit)
+   *        Power denial timeout.
+   */
+  void notifyCdmaInfoRecLineControl(in unsigned long aServiceId,
+                                    in unsigned short aPolarityIncluded,
+                                    in unsigned short aToggle,
+                                    in unsigned short aReverse,
+                                    in unsigned short aPowerDenial);
+
+  /**
+   * 'cdma-info-rec-received' system message with CLIR Info
+   *
+   * @param aServiceId
+   *        The ID of Service where this info is notified from.
+   * @param aCause
+   *        Reason code. (8-bit binary)
+   *        See Table A 1.1-1 in T53.
+   *
+   * See 'ANNEX 1 Country-Specific Record Type for Japan' in T53.
+   * http://www.arib.or.jp/english/html/overview/doc/T53v6_5_pdf/5_ANNEX_v6_5.pdf
+   */
+  void notifyCdmaInfoRecClir(in unsigned long aServiceId,
+                             in unsigned short aCause);
+
+  /**
+   * 'cdma-info-rec-received' system message with Audio Control Info
+   *
+   * @param aServiceId
+   *        The ID of Service where this info is notified from.
+   * @param aUpLink
+   * @param aDownLink
+   */
+  void notifyCdmaInfoRecAudioControl(in unsigned long aServiceId,
+                                     in short aUpLink,
+                                     in short aDownLink);
+};
