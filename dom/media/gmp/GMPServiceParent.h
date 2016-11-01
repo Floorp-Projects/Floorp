@@ -72,6 +72,8 @@ public:
   void ServiceUserCreated();
   void ServiceUserDestroyed();
 
+  void UpdateContentProcessGMPCapabilities();
+
 private:
   friend class GMPServiceParent;
 

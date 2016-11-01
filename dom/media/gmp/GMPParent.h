@@ -160,6 +160,8 @@ public:
 
   bool Bridge(GMPServiceParent* aGMPServiceParent);
 
+  const nsTArray<GMPCapability>& GetCapabilities() const { return mCapabilities; }
+
 private:
   ~GMPParent();
 

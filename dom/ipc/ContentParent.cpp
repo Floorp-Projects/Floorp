@@ -1408,6 +1408,9 @@ ContentParent::Init()
     StartProfiler(currentProfilerParams);
   }
 #endif
+
+  RefPtr<GeckoMediaPluginServiceParent> gmps(GeckoMediaPluginServiceParent::GetSingleton());
+  gmps->UpdateContentProcessGMPCapabilities();
 }
 
 void

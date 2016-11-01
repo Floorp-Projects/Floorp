@@ -8,6 +8,7 @@
 #include "prio.h"
 #include "base/task.h"
 #include "mozilla/Logging.h"
+#include "mozilla/dom/ContentParent.h"
 #include "GMPParent.h"
 #include "GMPVideoDecoderParent.h"
 #include "nsAutoPtr.h"
@@ -834,6 +835,9 @@ GeckoMediaPluginServiceParent::PathRunnable::Run()
   mService->RemoveOnGMPThread(mPath,
                               mOperation == REMOVE_AND_DELETE_FROM_DISK,
                               mDefer);
+
+  mService->UpdateContentProcessGMPCapabilities();
+
 #ifndef MOZ_WIDGET_GONK // Bug 1214967: disabled on B2G due to inscrutable test failures.
   // For e10s, we must fire a notification so that all ContentParents notify
   // their children to update the codecs that the GMPDecoderModule can use.
@@ -847,6 +851,52 @@ GeckoMediaPluginServiceParent::PathRunnable::Run()
   return NS_OK;
 }
 
+void
+GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities()
+{
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIRunnable> task =
+      NewRunnableMethod(this, &GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities);
+    NS_DispatchToMainThread(task);
+    return;
+  }
+
+  typedef mozilla::dom::GMPCapabilityData GMPCapabilityData;
+  typedef mozilla::dom::GMPAPITags GMPAPITags;
+  typedef mozilla::dom::ContentParent ContentParent;
+
+  nsTArray<GMPCapabilityData> caps;
+  {
+    MutexAutoLock lock(mMutex);
+    for (const RefPtr<GMPParent>& gmp : mPlugins) {
+      // We have multiple instances of a GMPParent for a given GMP in the
+      // list, one per origin. So filter the list so that we don't include
+      // the same GMP's capabilities twice.
+      NS_ConvertUTF16toUTF8 name(gmp->GetPluginBaseName());
+      bool found = false;
+      for (const GMPCapabilityData& cap : caps) {
+        if (cap.name().Equals(name)) {
+          found = true;
+          break;
+        }
+      }
+      if (found) {
+        continue;
+      }
+      GMPCapabilityData x;
+      x.name() = name;
+      x.version() = gmp->GetVersion();
+      for (const GMPCapability& tag : gmp->GetCapabilities()) {
+        x.capabilities().AppendElement(GMPAPITags(tag.mAPIName, tag.mAPITags));
+      }
+      caps.AppendElement(Move(x));
+    }
+  }
+  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+    Unused << cp->SendGMPsChanged(caps);
+  }
+}
+
 RefPtr<GenericPromise>
 GeckoMediaPluginServiceParent::AsyncAddPluginDirectory(const nsAString& aDirectory)
 {
@@ -856,9 +906,10 @@ GeckoMediaPluginServiceParent::AsyncAddPluginDirectory(const nsAString& aDirecto
   }
 
   nsString dir(aDirectory);
+  RefPtr<GeckoMediaPluginServiceParent> self = this;
   return InvokeAsync(thread, this, __func__, &GeckoMediaPluginServiceParent::AddOnGMPThread, dir)
     ->Then(AbstractThread::MainThread(), __func__,
-      [dir]() -> void {
+      [dir, self]() -> void {
         LOGD(("GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s succeeded",
               NS_ConvertUTF16toUTF8(dir).get()));
         MOZ_ASSERT(NS_IsMainThread());
@@ -869,6 +920,7 @@ GeckoMediaPluginServiceParent::AsyncAddPluginDirectory(const nsAString& aDirecto
         if (obsService) {
           obsService->NotifyObservers(nullptr, "gmp-changed", nullptr);
         }
+        self->UpdateContentProcessGMPCapabilities();
         // For non-e10s, and for decoding in the chrome process, must update GMP
         // PDM's codecs list directly.
         GMPDecoderModule::UpdateUsableCodecs();

@@ -61,6 +61,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/WebBrowserPersistDocumentChild.h"
 #include "imgLoader.h"
+#include "GMPServiceChild.h"
 
 #if defined(MOZ_CONTENT_SANDBOX)
 #if defined(XP_WIN)
@@ -1173,6 +1174,13 @@ ContentChild::AllocPGMPServiceChild(mozilla::ipc::Transport* aTransport,
                                     base::ProcessId aOtherProcess)
 {
   return GMPServiceChild::Create(aTransport, aOtherProcess);
+}
+
+bool
+ContentChild::RecvGMPsChanged(nsTArray<GMPCapabilityData>&& capabilities)
+{
+  GeckoMediaPluginServiceChild::UpdateGMPCapabilities(Move(capabilities));
+  return true;
 }
 
 bool
