@@ -980,19 +980,12 @@ GeckoMediaPluginServiceParent::GetPluginVersionForAPI(const nsACString& aAPI,
     MutexAutoLock lock(mMutex);
     nsCString api(aAPI);
     size_t index = 0;
-
-    // We must parse the version number into a float for comparison. Yuck.
-    double maxParsedVersion = -1.;
-
-    *aHasPlugin = false;
-    while (RefPtr<GMPParent> gmp = FindPluginForAPIFrom(index, api, *aTags, &index)) {
+    RefPtr<GMPParent> gmp = FindPluginForAPIFrom(index, api, *aTags, &index);
+    if (gmp) {
       *aHasPlugin = true;
-      double parsedVersion = atof(gmp->GetVersion().get());
-      if (maxParsedVersion < 0 || parsedVersion > maxParsedVersion) {
-        maxParsedVersion = parsedVersion;
-        aOutVersion = gmp->GetVersion();
-      }
-      index++;
+      aOutVersion = gmp->GetVersion();
+    } else {
+      *aHasPlugin = false;
     }
   }
 
