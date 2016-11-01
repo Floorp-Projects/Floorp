@@ -59,29 +59,12 @@ function checkTestModuleExists() {
 }
 
 function run_test() {
-  let libraryFile = Services.dirsvc.get("CurWorkD", Ci.nsILocalFile);
-  libraryFile.append("pkcs11testmodule");
-  libraryFile.append(ctypes.libraryName("pkcs11testmodule"));
-  ok(libraryFile.exists(), "The pkcs11testmodule file should exist");
-
   // Check that if we have never added the test module, that we don't find it
   // in the module list.
   checkTestModuleNotPresent();
 
   // Check that adding the test module makes it appear in the module list.
-  let pkcs11 = Cc["@mozilla.org/security/pkcs11;1"].getService(Ci.nsIPKCS11);
-  do_register_cleanup(() => {
-    try {
-      pkcs11.deleteModule("PKCS11 Test Module");
-    } catch (e) {
-      // deleteModule() throws if the module we tell it to delete is missing,
-      // or if some other thing went wrong. Since we're just cleaning up,
-      // there's nothing to do even if the call fails. In addition, we delete
-      // the test module during a normal run of this test file, so we need to
-      // catch the exception that is raised to not have the test fail.
-    }
-  });
-  pkcs11.addModule("PKCS11 Test Module", libraryFile.path, 0, 0);
+  loadPKCS11TestModule(true);
   let testModule = checkTestModuleExists();
 
   // Check that listing the slots for the test module works.
@@ -124,6 +107,7 @@ function run_test() {
          "Non-present 'slot' should not be findable by name via the module DB");
 
   // Check that deleting the test module makes it disappear from the module list.
+  let pkcs11 = Cc["@mozilla.org/security/pkcs11;1"].getService(Ci.nsIPKCS11);
   pkcs11.deleteModule("PKCS11 Test Module");
   checkTestModuleNotPresent();
 
