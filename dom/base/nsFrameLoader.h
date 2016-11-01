@@ -397,6 +397,7 @@ private:
   // whether this frameloader's <iframe mozbrowser> is setVisible(true)'ed, and
   // doesn't necessarily correlate with docshell/document visibility.
   bool mVisible : 1;
+  bool mFreshProcess : 1;
 };
 
 #endif

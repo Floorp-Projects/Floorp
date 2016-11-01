@@ -35,7 +35,7 @@ parent:
                float systemDefaultScale,
                bool success);
 
-    nested(inside_sync) sync ScreenRefresh(uint32_t aId)
+    nested(inside_cpow) sync ScreenRefresh(uint32_t aId)
       returns (ScreenDetails screen,
                bool success);
 

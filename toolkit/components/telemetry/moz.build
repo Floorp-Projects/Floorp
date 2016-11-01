@@ -7,6 +7,7 @@
 HAS_MISC_RULE = True
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
 XPIDL_SOURCES += [
     'nsITelemetry.idl',
@@ -37,6 +38,7 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'GCTelemetry.jsm',
     'TelemetryArchive.jsm',
     'TelemetryController.jsm',
     'TelemetryEnvironment.jsm',

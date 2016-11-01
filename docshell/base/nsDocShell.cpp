@@ -32,6 +32,7 @@
 #include "Navigator.h"
 #include "URIUtils.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/TabGroup.h"
 
 #include "nsIContent.h"
 #include "nsIContentInlines.h"

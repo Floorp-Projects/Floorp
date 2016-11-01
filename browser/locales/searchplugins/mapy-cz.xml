@@ -1,0 +1,15 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Mapy.cz</ShortName>
+<Description>Vyhledávání na Mapy.cz</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAFqSURBVHjajJM9KIVRGMffe11fhdwM7mBQkpIwsPiaFIPFxCYzyWIxKiXDXSxmBimDbrJZiUEhkxADi6/7+lbX9Tv6v2+n05vrqV/vc855z/88H+fEHlqbPSwGLTALF7AOx14BSx6degn5eSiGUY1HoA9uIvaV6MBPM4hbC3fwLr8OJiM2m/8nYAFqXYG85ZfCgL62tcMYTMOyK1AmAquHYWd9HNo07nAFksrtC04gC0NaK4cpJy2TcljEImiS/6QQU5CGThiEOSedrC1gvt2WwJ6K9A37iuwafLXb2Iudgmlhjwp5qG7k4EybfVU/bUXwZgtUQ4MmNy3RlPw12IJXVyChExpV5UvYtnLMSGReczmlZQ7+CATiaokJfxee9fM9zOiA4I6YtUeokViYQr8mViJun33BbhVl8H5+BSqhC85hp8D7uVI3QgGTQi9UwGIQ1h/m66VWwUEgYIq0BKve/2xDm00tvB8BBgA9FU3+lToaKQAAAABJRU5ErkJggg==</Image>
+<Url type="text/html" method="GET" template="http://www.mapy.cz/" resultdomain="mapy.cz">
+	<Param name="query" value="{searchTerms}"/>
+	<Param name="sourceid" value="Searchmodule_3"/>
+</Url>
+<SearchForm>http://www.mapy.cz/</SearchForm>
+</SearchPlugin>
