@@ -398,7 +398,7 @@ COMPILER ERROR
 
     MakeHashKey(mHashKey, mHttps ? NS_LITERAL_CSTRING("https") : NS_LITERAL_CSTRING("http"),
                 mOriginHost, mOriginPort, mPrivate);
-  } while (0);
+  } while (false);
 }
 
 // This is the asynchronous null transaction used to validate

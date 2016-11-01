@@ -272,7 +272,7 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
   const char *end = currDomain + aHostname.Length();
   // Default value of *eTLD is currDomain as set in the while loop below
   const char *eTLD = nullptr;
-  while (1) {
+  while (true) {
     // sanity check the string we're about to look up: it should not begin with
     // a '.'; this would mean the hostname began with a '.' or had an
     // embedded '..' sequence.
@@ -328,7 +328,7 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
     begin = aHostname.get();
     iter = eTLD;
 
-    while (1) {
+    while (true) {
       if (iter == begin)
         break;
 
