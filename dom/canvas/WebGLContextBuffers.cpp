@@ -304,6 +304,21 @@ WebGLContext::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
 ////////////////////////////////////////
 
 void
+WebGLContext::BufferDataImpl(GLenum target, size_t dataLen, const uint8_t* data,
+                             GLenum usage)
+{
+    const char funcName[] = "bufferData";
+
+    const auto& buffer = ValidateBufferSelection(funcName, target);
+    if (!buffer)
+        return;
+
+    buffer->BufferData(target, dataLen, data, usage);
+}
+
+////
+
+void
 WebGLContext::BufferData(GLenum target, WebGLsizeiptr size, GLenum usage)
 {
     const char funcName[] = "bufferData";
@@ -313,96 +328,68 @@ WebGLContext::BufferData(GLenum target, WebGLsizeiptr size, GLenum usage)
     if (!ValidateNonNegative(funcName, "size", size))
         return;
 
-    // careful: WebGLsizeiptr is always 64-bit, but GLsizeiptr is like intptr_t.
-    if (!CheckedInt<GLsizeiptr>(size).isValid())
-        return ErrorOutOfMemory("%s: bad size", funcName);
-
-    const auto& buffer = ValidateBufferSelection(funcName, target);
-    if (!buffer)
-        return;
-
     ////
 
-    UniquePtr<uint8_t> zeroBuffer((uint8_t*)calloc(size, 1));
+    const UniqueBuffer zeroBuffer(calloc(size, 1));
     if (!zeroBuffer)
         return ErrorOutOfMemory("%s: Failed to allocate zeros.", funcName);
 
-    buffer->BufferData(target, size_t(size), zeroBuffer.get(), usage);
+    BufferDataImpl(target, size_t(size), (const uint8_t*)zeroBuffer.get(), usage);
 }
 
-// BufferT may be one of
-// const dom::ArrayBuffer&
-// const dom::SharedArrayBuffer&
-// const dom::ArrayBufferView&
-template<typename BufferT>
 void
-WebGLContext::BufferDataT(GLenum target,
-                          const BufferT& data,
-                          GLenum usage)
+WebGLContext::BufferData(GLenum target, const dom::SharedArrayBuffer& src, GLenum usage)
+{
+    if (IsContextLost())
+        return;
+
+    src.ComputeLengthAndData();
+    BufferDataImpl(target, src.LengthAllowShared(), src.DataAllowShared(), usage);
+}
+
+void
+WebGLContext::BufferData(GLenum target, const dom::Nullable<dom::ArrayBuffer>& maybeSrc,
+                         GLenum usage)
+{
+    if (IsContextLost())
+        return;
+
+    if (maybeSrc.IsNull())
+        return ErrorInvalidValue("bufferData: null object passed");
+    auto& src = maybeSrc.Value();
+
+    src.ComputeLengthAndData();
+    BufferDataImpl(target, src.LengthAllowShared(), src.DataAllowShared(), usage);
+}
+
+void
+WebGLContext::BufferData(GLenum target, const dom::ArrayBufferView& src, GLenum usage,
+                         GLuint srcElemOffset, GLuint srcElemCountOverride)
 {
     const char funcName[] = "bufferData";
     if (IsContextLost())
         return;
 
-    data.ComputeLengthAndData();
-
-    // Careful: data.Length() could conceivably be any uint32_t, but GLsizeiptr
-    // is like intptr_t.
-    if (!CheckedInt<GLsizeiptr>(data.LengthAllowShared()).isValid())
-        return ErrorOutOfMemory("bufferData: bad size");
-
-    const auto& buffer = ValidateBufferSelection(funcName, target);
-    if (!buffer)
+    uint8_t* bytes;
+    size_t byteLen;
+    if (!ValidateArrayBufferView(funcName, src, srcElemOffset, srcElemCountOverride,
+                                 &bytes, &byteLen))
+    {
         return;
-
-    // Warning: Possibly shared memory.  See bug 1225033.
-    buffer->BufferData(target, data.LengthAllowShared(), data.DataAllowShared(), usage);
-}
-
-void
-WebGLContext::BufferData(GLenum target,
-                         const dom::SharedArrayBuffer& data,
-                         GLenum usage)
-{
-    BufferDataT(target, data, usage);
-}
-
-void
-WebGLContext::BufferData(GLenum target,
-                         const dom::Nullable<dom::ArrayBuffer>& maybeData,
-                         GLenum usage)
-{
-    if (maybeData.IsNull()) {
-        // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
-        return ErrorInvalidValue("bufferData: null object passed");
     }
-    BufferDataT(target, maybeData.Value(), usage);
-}
 
-void
-WebGLContext::BufferData(GLenum target, const dom::ArrayBufferView& data,
-                         GLenum usage)
-{
-    BufferDataT(target, data, usage);
+    BufferDataImpl(target, byteLen, bytes, usage);
 }
 
 ////////////////////////////////////////
 
-// BufferT may be one of
-// const dom::ArrayBuffer&
-// const dom::SharedArrayBuffer&
-// const dom::ArrayBufferView&
-template<typename BufferT>
 void
-WebGLContext::BufferSubDataT(GLenum target,
-                             WebGLsizeiptr byteOffset,
-                             const BufferT& data)
+WebGLContext::BufferSubDataImpl(GLenum target, WebGLsizeiptr dstByteOffset,
+                                size_t dataLen, const uint8_t* data)
 {
     const char funcName[] = "bufferSubData";
-    if (IsContextLost())
-        return;
 
-    if (!ValidateNonNegative(funcName, "byteOffset", byteOffset))
+    if (!ValidateNonNegative(funcName, "byteOffset", dstByteOffset))
         return;
 
     const auto& buffer = ValidateBufferSelection(funcName, target);
@@ -416,60 +403,73 @@ WebGLContext::BufferSubDataT(GLenum target,
         return;
     }
 
-    data.ComputeLengthAndData();
+    if (!buffer->ValidateRange(funcName, dstByteOffset, dataLen))
+        return;
 
-    const auto checked_neededByteLength =
-        CheckedInt<size_t>(byteOffset) + data.LengthAllowShared();
-
-    if (!checked_neededByteLength.isValid()) {
-        ErrorInvalidValue("bufferSubData: Integer overflow computing the needed"
-                          " byte length.");
+    if (!CheckedInt<GLintptr>(dataLen).isValid()) {
+        ErrorOutOfMemory("%s: Size too large.", funcName);
         return;
     }
+    const GLintptr glDataLen(dataLen);
 
-    if (checked_neededByteLength.value() > buffer->ByteLength()) {
-        ErrorInvalidValue("bufferSubData: Not enough data. Operation requires"
-                          " %d bytes, but buffer only has %d bytes.",
-                          checked_neededByteLength.value(),
-                          buffer->ByteLength());
-        return;
-    }
+    ////
 
     MakeContextCurrent();
     const ScopedLazyBind lazyBind(gl, target, buffer);
 
     // Warning: Possibly shared memory.  See bug 1225033.
-    gl->fBufferSubData(target, byteOffset, data.LengthAllowShared(),
-                       data.DataAllowShared());
+    gl->fBufferSubData(target, dstByteOffset, glDataLen, data);
 
     // Warning: Possibly shared memory.  See bug 1225033.
-    buffer->ElementArrayCacheBufferSubData(byteOffset, data.DataAllowShared(),
-                                           data.LengthAllowShared());
+    buffer->ElementArrayCacheBufferSubData(dstByteOffset, data, size_t(glDataLen));
 }
 
 void
-WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
-                            const dom::Nullable<dom::ArrayBuffer>& maybeData)
+WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
+                            const dom::Nullable<dom::ArrayBuffer>& maybeSrc)
 {
-    if (maybeData.IsNull()) {
-        ErrorInvalidValue("BufferSubData: returnedData is null.");
+    if (IsContextLost())
+        return;
+
+    if (maybeSrc.IsNull())
+        return ErrorInvalidValue("BufferSubData: returnedData is null.");
+    auto& src = maybeSrc.Value();
+
+    src.ComputeLengthAndData();
+    BufferSubDataImpl(target, dstByteOffset, src.LengthAllowShared(),
+                      src.DataAllowShared());
+}
+
+void
+WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
+                            const dom::SharedArrayBuffer& src)
+{
+    if (IsContextLost())
+        return;
+
+    src.ComputeLengthAndData();
+    BufferSubDataImpl(target, dstByteOffset, src.LengthAllowShared(),
+                      src.DataAllowShared());
+}
+
+void
+WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
+                            const dom::ArrayBufferView& src, GLuint srcElemOffset,
+                            GLuint srcElemCountOverride)
+{
+    const char funcName[] = "bufferSubData";
+    if (IsContextLost())
+        return;
+
+    uint8_t* bytes;
+    size_t byteLen;
+    if (!ValidateArrayBufferView(funcName, src, srcElemOffset, srcElemCountOverride,
+                                 &bytes, &byteLen))
+    {
         return;
     }
-    BufferSubDataT(target, byteOffset, maybeData.Value());
-}
 
-void
-WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
-                            const dom::SharedArrayBuffer& data)
-{
-    BufferSubDataT(target, byteOffset, data);
-}
-
-void
-WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
-                            const dom::ArrayBufferView& data)
-{
-    BufferSubDataT(target, byteOffset, data);
+    BufferSubDataImpl(target, dstByteOffset, byteLen, bytes);
 }
 
 ////////////////////////////////////////

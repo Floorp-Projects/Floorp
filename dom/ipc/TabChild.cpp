@@ -117,6 +117,8 @@
 #include "nsISHistory.h"
 #include "nsQueryObject.h"
 #include "GroupedSHistory.h"
+#include "nsIHttpChannel.h"
+#include "mozilla/dom/DocGroup.h"
 
 #ifdef NS_PRINTING
 #include "nsIPrintSession.h"
@@ -460,6 +462,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mParentIsActive(false)
   , mDidSetRealShowInfo(false)
   , mDidLoadURLInit(false)
+  , mIsFreshProcess(false)
   , mLayerObserverEpoch(0)
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   , mNativeWindowHandle(0)
@@ -3075,6 +3078,13 @@ TabChild::RecvThemeChanged(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache)
       presContext->ThemeChanged();
     }
   }
+  return true;
+}
+
+bool
+TabChild::RecvSetFreshProcess()
+{
+  mIsFreshProcess = true;
   return true;
 }
 

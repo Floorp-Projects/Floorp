@@ -1,0 +1,15 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Yahoo!奇摩拍賣</ShortName>
+<Description>Yahoo!奇摩拍賣</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/gif;base64,R0lGODlhEAAQAMQfAP+7Q4aWvf2QBaKtx//MS+6OLI1MMf/XYv+sKkpalEZNepyUa4KOo2ttjpx4Tdh1ALdrI9lSAHhaVWNSa+Z7Ge9zAPdrALVaIR4/ie9rAOZrELXB0Gtzc/9zCJg+Hf///yH5BAEAAB8ALAAAAAAQABAAAAWM4CeO3xAEA6mKw3IQDrOSAUEAiBPMpXsciIdk1XAUfkCBwKBiAG4IAED5UKg4iGxFWfFgNk0lF+KJWBqribgCwUgKlsRok0hMHvj2YNKJfzYMBxcXE4UTEQkbChlxDT9SBZEUGogBiwkSBFE4khoGcgEJAw0GEBSRBRQUF580CQawsbAJO64Kt7i0KiEAOw==</Image>
+<Url type="text/html" method="GET" template="http://tw.search.bid.yahoo.com/search/ac" resultdomain="bid.yahoo.com">
+  <Param name="p" value="{searchTerms}"/>
+  <Param name="ei" value="UTF-8"/>
+</Url>
+<SearchForm>http://tw.search.bid.yahoo.com/search/ac</SearchForm>
+</SearchPlugin>

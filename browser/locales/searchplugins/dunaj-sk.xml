@@ -1,0 +1,18 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Dunaj</ShortName>
+<Description>Dunaj.sk - zelena vasim nakupom</Description>
+<InputEncoding>WINDOWS-1250</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACOUlEQVQ4jb2ST0iTcRzGn/e3952b29vLfJtuvrp0zaEzjXA2qCHV0MBTlJ4iCIqKDp28dOpS0C0i+nOIOnQKolAqEKJ/BhmWEuuQdggbvmtm5u/9ve/e7XXv1sUshMAKeu6f5/v9wAP8Y7i/BYONkb3Hjx09zP8BIwCwAZQB+Jy14XPqItXWTSeSqZPb4okBAPymeN9EonfwCYDqdSt09w2+MIu27OLL0wLPO1+O3jkAwPydgmPlXQBAMBhsy9FiFzNMlySK0VL29Q4AJgCQXyASCkdTkdbWvpWC1dSHYwOU5V0cR8CMPBGVzquBQKj9xyWEQuFkQyxxWawiWYMydfuu3iFFUTYbRVMzGdP9Ld03i9ay0OAT7oNmznyYGjur6/QTgAofjcVSy1J0mC99PsKWlnJN8dRIak9SfjT68MZXVb3klmWlQtWL9H36Xq5AP651JaruPBX0VaffTozf1qrqLhzc3y+ndsZhFO36aFvHvsAGWdEWMk8lSawFIK0t4MKdySsFQTpkZafizU0tPZYYujbQv5uIXg+oxlCyy3A4CB4/uHv6+aux62AsD6/XA13/AgCcLMuKsqVn+Jtpd4R9lfOMLs5Q3Qps9PubRY/XkZ3PaQW2NFkw6azPF2wXBCJMv5seyecXVODnlMXI1sRQ2V13wuN2GrbJJt1Obs7hICWqGW6bIzWSKLpg0tE3489uAdBXFdYo1TQ2R+KhpkiXYZVqCEjFsvK5+bnZ9LyaGQew/un+t3wHzZ7XlmdRXP0AAAAASUVORK5CYII=</Image>
+<Url type="text/html" method="GET" template="http://www.dunaj.sk/default.asp" resultdomain="dunaj.sk">
+  <Param name="bShowGoodsList" value="True"/>
+  <Param name="bShowSearchForm" value="True"/>
+  <Param name="sSearchBasic" value="{searchTerms}"/>
+  <Param name="nDepartmentID" value="10000"/>
+  <Param name="sourceid" value="firefox"/>
+</Url>
+<SearchForm>http://www.dunaj.sk/</SearchForm>
+</SearchPlugin>
