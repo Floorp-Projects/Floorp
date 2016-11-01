@@ -20,6 +20,13 @@ public final class MediaManager extends Service {
         public ICodec createCodec() throws RemoteException {
             return new Codec();
         }
+
+        @Override
+        public IMediaDrmBridge createRemoteMediaDrmBridge(String keySystem,
+                                                          String stubId)
+            throws RemoteException {
+            return null;
+        }
     };
 
     @Override
