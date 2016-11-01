@@ -1859,13 +1859,13 @@ MessageChannel::MaybeUndeferIncall()
 void
 MessageChannel::EnteredCxxStack()
 {
-    mListener->OnEnteredCxxStack();
+    mListener->EnteredCxxStack();
 }
 
 void
 MessageChannel::ExitedCxxStack()
 {
-    mListener->OnExitedCxxStack();
+    mListener->ExitedCxxStack();
     if (mSawInterruptOutMsg) {
         MonitorAutoLock lock(*mMonitor);
         // see long comment in OnMaybeDequeueOne()
@@ -1877,13 +1877,13 @@ MessageChannel::ExitedCxxStack()
 void
 MessageChannel::EnteredCall()
 {
-    mListener->OnEnteredCall();
+    mListener->EnteredCall();
 }
 
 void
 MessageChannel::ExitedCall()
 {
-    mListener->OnExitedCall();
+    mListener->ExitedCall();
 }
 
 void
@@ -1983,7 +1983,7 @@ MessageChannel::ShouldContinueFromTimeout()
     bool cont;
     {
         MonitorAutoUnlock unlock(*mMonitor);
-        cont = mListener->OnReplyTimeout();
+        cont = mListener->ShouldContinueFromReplyTimeout();
         mListener->ArtificialSleep();
     }
 
@@ -2032,7 +2032,7 @@ void
 MessageChannel::ReportMessageRouteError(const char* channelName) const
 {
     PrintErrorMessage(mSide, channelName, "Need a route");
-    mListener->OnProcessingError(MsgRouteError, "MsgRouteError");
+    mListener->ProcessingError(MsgRouteError, "MsgRouteError");
 }
 
 void
@@ -2074,7 +2074,7 @@ MessageChannel::ReportConnectionError(const char* aChannelName, Message* aMsg) c
     }
 
     MonitorAutoUnlock unlock(*mMonitor);
-    mListener->OnProcessingError(MsgDropped, errorMsg);
+    mListener->ProcessingError(MsgDropped, errorMsg);
 }
 
 bool
@@ -2119,7 +2119,7 @@ MessageChannel::MaybeHandleError(Result code, const Message& aMsg, const char* c
 
     PrintErrorMessage(mSide, channelName, reason);
 
-    mListener->OnProcessingError(code, reason);
+    mListener->ProcessingError(code, reason);
 
     return false;
 }
