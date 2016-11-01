@@ -12,8 +12,6 @@ var estraverse = require("estraverse");
 var path = require("path");
 var fs = require("fs");
 
-var modules = null;
-
 var definitions = [
   /^loader\.lazyGetter\(this, "(\w+)"/,
   /^loader\.lazyImporter\(this, "(\w+)"/,
@@ -32,7 +30,7 @@ var definitions = [
 ];
 
 var imports = [
-  /^(?:Cu|Components\.utils)\.import\(".*\/((.*?)\.jsm?)"(?:, this)?\)/,
+  /^(?:Cu|Components\.utils)\.import\(".*\/(.*?)\.jsm?"(?:, this)?\)/,
 ];
 
 module.exports = {
@@ -154,29 +152,23 @@ module.exports = {
   },
 
   /**
-   * Attempts to convert an ExpressionStatement to likely global variable
-   * definitions.
+   * Attempts to convert an ExpressionStatement to a likely global variable
+   * definition.
    *
    * @param  {Object} node
    *         The AST node to convert.
    * @param  {boolean} isGlobal
-   *         True if the current node is in the global scope.
-   * @param  {String} repository
-   *         The root of the repository.
+   *         True if the current node is in the global scope
    *
-   * @return {Array}
-   *         An array of variable names defined.
+   * @return {String or null}
+   *         The variable name defined.
    */
-  convertExpressionToGlobals: function(node, isGlobal, repository) {
-    if (!modules) {
-      modules = require(path.join(repository, "tools", "lint", "eslint", "modules.json"));
-    }
-
+  convertExpressionToGlobal: function(node, isGlobal) {
     try {
       var source = this.getASTSource(node);
     }
     catch (e) {
-      return [];
+      return null;
     }
 
     for (var reg of definitions) {
@@ -184,10 +176,10 @@ module.exports = {
       if (match) {
         // Must be in the global scope
         if (!isGlobal) {
-          return [];
+          return null;
         }
 
-        return [match[1]];
+        return match[1];
       }
     }
 
@@ -196,18 +188,14 @@ module.exports = {
       if (match) {
         // The two argument form is only acceptable in the global scope
         if (node.expression.arguments.length > 1 && !isGlobal) {
-          return [];
+          return null;
         }
 
-        if (match[1] in modules) {
-          return modules[match[1]];
-        }
-
-        return [match[2]];
+        return match[1];
       }
     }
 
-    return [];
+    return null;
   },
 
   /**
@@ -369,12 +357,13 @@ module.exports = {
   /**
    * Gets the root directory of the repository by walking up directories until
    * a .eslintignore file is found.
-   * @param {String} fileName
-   *        The absolute path of a file in the repository
+   * @param {ASTContext} context
+   *        The current context.
    *
    * @return {String} The absolute path of the repository directory
    */
-  getRootDir: function(fileName) {
+  getRootDir: function(context) {
+    var fileName = this.getAbsoluteFilePath(context);
     var dirName = path.dirname(fileName);
 
     while (dirName && !fs.existsSync(path.join(dirName, ".eslintignore"))) {
