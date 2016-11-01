@@ -7,6 +7,7 @@
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
 EXTRA_COMPONENTS += [
+    'nsSearchService.js',
     'nsSearchSuggestions.js',
 ]
 
@@ -21,18 +22,12 @@ EXTRA_JS_MODULES += [
 ]
 
 EXTRA_PP_COMPONENTS += [
-    'nsSearchService.js',
     'toolkitsearch.manifest',
 ]
 
 EXTRA_JS_MODULES += [
     'SearchStaticData.jsm',
 ]
-
-DEFINES['MOZ_DISTRIBUTION_ID'] = CONFIG['MOZ_DISTRIBUTION_ID']
-
-if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
-    DEFINES['MOZ_FENNEC'] = True
 
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Search')

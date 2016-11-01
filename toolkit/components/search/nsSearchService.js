@@ -1,15 +1,17 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/debug.js");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
   "resource://gre/modules/AsyncShutdown.jsm");
@@ -141,12 +143,7 @@ const LOCALE_PREF = "general.useragent.locale";
 const USER_DEFINED = "{searchTerms}";
 
 // Custom search parameters
-#ifdef MOZ_OFFICIAL_BRANDING
-const MOZ_OFFICIAL = "official";
-#else
-const MOZ_OFFICIAL = "unofficial";
-#endif
-#expand const MOZ_DISTRIBUTION_ID = __MOZ_DISTRIBUTION_ID__;
+const MOZ_OFFICIAL = AppConstants.MOZ_OFFICIAL_BRANDING ? "official" : "unofficial";
 
 const MOZ_PARAM_LOCALE         = /\{moz:locale\}/g;
 const MOZ_PARAM_DIST_ID        = /\{moz:distributionID\}/g;
@@ -229,26 +226,21 @@ function DO_LOG(aText) {
   Services.console.logStringMessage(aText);
 }
 
-#ifdef DEBUG
 /**
  * In debug builds, use a live, pref-based (browser.search.log) LOG function
- * to allow enabling/disabling without a restart.
- */
-function PREF_LOG(aText) {
-  if (getBoolPref(BROWSER_SEARCH_PREF + "log", false))
-    DO_LOG(aText);
-}
-var LOG = PREF_LOG;
-
-#else
-
-/**
- * Otherwise, don't log at all by default. This can be overridden at startup
- * by the pref, see SearchService's _init method.
+ * to allow enabling/disabling without a restart. Otherwise, don't log at all by
+ * default. This can be overridden at startup by the pref, see SearchService's
+ * _init method.
  */
 var LOG = function(){};
 
-#endif
+if (AppConstants.DEBUG) {
+  LOG = function (aText) {
+    if (getBoolPref(BROWSER_SEARCH_PREF + "log", false)) {
+      DO_LOG(aText);
+    }
+  };
+}
 
 /**
  * Presents an assertion dialog in non-release builds and throws.
@@ -1020,7 +1012,7 @@ function QueryParameter(aName, aValue, aPurpose) {
 function ParamSubstitution(aParamValue, aSearchTerms, aEngine) {
   var value = aParamValue;
 
-  var distributionID = MOZ_DISTRIBUTION_ID;
+  var distributionID = Services.appinfo.distributionID;
   try {
     distributionID = Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "distributionID");
   }
@@ -2235,23 +2227,23 @@ Engine.prototype = {
         uri = gChromeReg.convertChromeURL(uri);
       }
 
-#ifdef ANDROID
-      // On Android the omni.ja file isn't at the same path as the binary
-      // used to start the process. We tweak the path here so that the code
-      // shared with Desktop will correctly identify files from the omni.ja
-      // file as coming from the [app] folder.
-      let appPath = Services.io.getProtocolHandler("resource")
-                            .QueryInterface(Ci.nsIResProtocolHandler)
-                            .getSubstitution("android");
-      if (appPath) {
-        appPath = appPath.spec;
-        let spec = uri.spec;
-        if (spec.includes(appPath)) {
-          let appURI = Services.io.newFileURI(getDir(knownDirs["app"]));
-          uri = NetUtil.newURI(spec.replace(appPath, appURI.spec));
+      if (AppConstants.platform == "android") {
+        // On Android the omni.ja file isn't at the same path as the binary
+        // used to start the process. We tweak the path here so that the code
+        // shared with Desktop will correctly identify files from the omni.ja
+        // file as coming from the [app] folder.
+        let appPath = Services.io.getProtocolHandler("resource")
+                              .QueryInterface(Ci.nsIResProtocolHandler)
+                              .getSubstitution("android");
+        if (appPath) {
+          appPath = appPath.spec;
+          let spec = uri.spec;
+          if (spec.includes(appPath)) {
+            let appURI = Services.io.newFileURI(getDir(knownDirs["app"]));
+            uri = NetUtil.newURI(spec.replace(appPath, appURI.spec));
+          }
         }
       }
-#endif
 
       if (uri instanceof Ci.nsINestedURI) {
         prefix = "jar:";
@@ -2391,7 +2383,6 @@ Engine.prototype = {
     url.addParam(aName, aValue);
   },
 
-#ifdef ANDROID
   get _defaultMobileResponseType() {
     let type = URLTYPE_SEARCH_HTML;
 
@@ -2408,7 +2399,6 @@ Engine.prototype = {
     delete this._defaultMobileResponseType;
     return this._defaultMobileResponseType = type;
   },
-#endif
 
   get _isWhiteListed() {
     let url = this._getURLOfType(URLTYPE_SEARCH_HTML).template;
@@ -2427,13 +2417,9 @@ Engine.prototype = {
 
   // from nsISearchEngine
   getSubmission: function SRCH_ENG_getSubmission(aData, aResponseType, aPurpose) {
-#ifdef ANDROID
     if (!aResponseType) {
-      aResponseType = this._defaultMobileResponseType;
-    }
-#endif
-    if (!aResponseType) {
-      aResponseType = URLTYPE_SEARCH_HTML;
+      aResponseType = AppConstants.platform == "android" ? this._defaultMobileResponseType :
+                                                           URLTYPE_SEARCH_HTML;
     }
 
     if (aResponseType == URLTYPE_SEARCH_HTML &&
@@ -2484,13 +2470,9 @@ Engine.prototype = {
 
   // from nsISearchEngine
   getResultDomain: function SRCH_ENG_getResultDomain(aResponseType) {
-#ifdef ANDROID
     if (!aResponseType) {
-      aResponseType = this._defaultMobileResponseType;
-    }
-#endif
-    if (!aResponseType) {
-      aResponseType = URLTYPE_SEARCH_HTML;
+      aResponseType = AppConstants.platform == "android" ? this._defaultMobileResponseType :
+                                                           URLTYPE_SEARCH_HTML;
     }
 
     LOG("getResultDomain: responseType: \"" + aResponseType + "\"");
@@ -2505,11 +2487,8 @@ Engine.prototype = {
    * Returns URL parsing properties used by _buildParseSubmissionMap.
    */
   getURLParsingInfo: function () {
-#ifdef ANDROID
-    let responseType = this._defaultMobileResponseType;
-#else
-    let responseType = URLTYPE_SEARCH_HTML;
-#endif
+    let responseType = AppConstants.platform == "android" ? this._defaultMobileResponseType :
+                                                            URLTYPE_SEARCH_HTML;
 
     LOG("getURLParsingInfo: responseType: \"" + responseType + "\"");
 
@@ -4703,9 +4682,9 @@ SearchService.prototype = {
     Services.obs.addObserver(this, SEARCH_ENGINE_TOPIC, false);
     Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC, false);
 
-#ifdef MOZ_FENNEC
-    Services.prefs.addObserver(LOCALE_PREF, this, false);
-#endif
+    if (AppConstants.MOZ_BUILD_APP == "mobile/android") {
+      Services.prefs.addObserver(LOCALE_PREF, this, false);
+    }
 
     // The current stage of shutdown. Used to help analyze crash
     // signatures in case of shutdown timeout.
@@ -4748,9 +4727,9 @@ SearchService.prototype = {
     Services.obs.removeObserver(this, SEARCH_ENGINE_TOPIC);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
 
-#ifdef MOZ_FENNEC
-    Services.prefs.removeObserver(LOCALE_PREF, this);
-#endif
+    if (AppConstants.MOZ_BUILD_APP == "mobile/android") {
+      Services.prefs.removeObserver(LOCALE_PREF, this);
+    }
   },
 
   QueryInterface: function SRCH_SVC_QI(aIID) {
@@ -4817,5 +4796,3 @@ var engineUpdateService = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SearchService]);
-
-#include ../../../toolkit/modules/debug.js
