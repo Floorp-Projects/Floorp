@@ -6430,7 +6430,9 @@ HTMLMediaElement::SetAudibleState(bool aAudible)
 void
 HTMLMediaElement::NotifyAudioPlaybackChanged(AudibleChangedReasons aReason)
 {
-  if (!mAudioChannelAgent) {
+  MOZ_ASSERT(mAudioChannelAgent);
+
+  if (!mAudioChannelAgent->IsPlayingStarted()) {
     return;
   }
 
@@ -6554,13 +6556,14 @@ HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo)
 void
 HTMLMediaElement::AudioCaptureStreamChangeIfNeeded()
 {
-  // Window audio capturing only happens after creating audio channel agent.
-  if (!mAudioChannelAgent) {
-    return;
-  }
+  MOZ_ASSERT(mAudioChannelAgent);
 
   // No need to capture a silence media element.
   if (!HasAudio()) {
+    return;
+  }
+
+  if (!mAudioChannelAgent->IsPlayingStarted()) {
     return;
   }
 
