@@ -25,7 +25,7 @@ public final class MediaManager extends Service {
         public IMediaDrmBridge createRemoteMediaDrmBridge(String keySystem,
                                                           String stubId)
             throws RemoteException {
-            return null;
+            return new RemoteMediaDrmBridgeStub(keySystem, stubId);
         }
     };
 
