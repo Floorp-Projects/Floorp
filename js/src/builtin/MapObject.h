@@ -178,8 +178,8 @@ class MapIteratorObject : public NativeObject
                                      MapObject::IteratorKind kind);
     static void finalize(FreeOp* fop, JSObject* obj);
 
-    static MOZ_MUST_USE bool next(JSContext* cx, Handle<MapIteratorObject*> mapIterator,
-                                  HandleArrayObject resultPairObj);
+    static MOZ_MUST_USE bool next(Handle<MapIteratorObject*> mapIterator,
+                                  HandleArrayObject resultPairObj, JSContext* cx);
 
     static JSObject* createResultPair(JSContext* cx);
 
@@ -189,7 +189,16 @@ class MapIteratorObject : public NativeObject
 
 class SetObject : public NativeObject {
   public:
-    enum IteratorKind { Values, Entries };
+    enum IteratorKind { Keys, Values, Entries };
+
+    static_assert(Keys == ITEM_KIND_KEY,
+                  "IteratorKind Keys must match self-hosting define for item kind key.");
+    static_assert(Values == ITEM_KIND_VALUE,
+                  "IteratorKind Values must match self-hosting define for item kind value.");
+    static_assert(Entries == ITEM_KIND_KEY_AND_VALUE,
+                  "IteratorKind Entries must match self-hosting define for item kind "
+                  "key-and-value.");
+
     static JSObject* initClass(JSContext* cx, JSObject* obj);
     static const Class class_;
 
@@ -254,22 +263,28 @@ class SetIteratorObject : public NativeObject
   public:
     static const Class class_;
 
-    enum { TargetSlot, KindSlot, RangeSlot, SlotCount };
+    enum { TargetSlot, RangeSlot, KindSlot, SlotCount };
+
+    static_assert(TargetSlot == ITERATOR_SLOT_TARGET,
+                  "TargetSlot must match self-hosting define for iterated object slot.");
+    static_assert(RangeSlot == ITERATOR_SLOT_RANGE,
+                  "RangeSlot must match self-hosting define for range or index slot.");
+    static_assert(KindSlot == ITERATOR_SLOT_ITEM_KIND,
+                  "KindSlot must match self-hosting define for item kind slot.");
+
     static const JSFunctionSpec methods[];
     static SetIteratorObject* create(JSContext* cx, HandleObject setobj, ValueSet* data,
                                      SetObject::IteratorKind kind);
-    static bool next(JSContext* cx, unsigned argc, Value* vp);
     static void finalize(FreeOp* fop, JSObject* obj);
 
-  private:
-    static inline bool is(HandleValue v);
-    inline ValueSet::Range* range();
-    inline SetObject::IteratorKind kind() const;
-    static MOZ_MUST_USE bool next_impl(JSContext* cx, const CallArgs& args);
-};
+    static MOZ_MUST_USE bool next(Handle<SetIteratorObject*> setIterator,
+                                  HandleArrayObject resultObj, JSContext* cx);
 
-extern bool
-InitSelfHostingCollectionIteratorFunctions(JSContext* cx, js::HandleObject obj);
+    static JSObject* createResult(JSContext* cx);
+
+  private:
+    inline SetObject::IteratorKind kind() const;
+};
 
 using SetInitGetPrototypeOp = NativeObject* (*)(JSContext*, Handle<GlobalObject*>);
 using SetInitIsBuiltinOp = bool (*)(HandleValue, JSContext*);
@@ -278,6 +293,8 @@ template <SetInitGetPrototypeOp getPrototypeOp, SetInitIsBuiltinOp isBuiltinOp>
 static MOZ_MUST_USE bool
 IsOptimizableInitForSet(JSContext* cx, HandleObject setObject, HandleValue iterable, bool* optimized)
 {
+    MOZ_ASSERT(!*optimized);
+
     if (!iterable.isObject())
         return true;
 
