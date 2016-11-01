@@ -7,7 +7,12 @@ if (typeof parseModule === "function") {
     parseModule("async function f() { await 3; }");
     parseModule("async function f() { await 3; }");
     assertThrows(() => parseModule("var await = 5;"), SyntaxError);
+    assertThrows(() => parseModule("await;"), SyntaxError);
+    assertThrows(() => parseModule("await 5;"), SyntaxError);
+    assertThrows(() => parseModule("function f() { await 5; }"), SyntaxError);
+    assertThrows(() => parseModule("() => { await 5; }"), SyntaxError);
     assertThrows(() => parseModule("export var await;"), SyntaxError);
+    assertThrows(() => parseModule("await => 1;"), SyntaxError);
     assertThrows(() => parseModule("async function f() { function g() { await 3; } }"), SyntaxError);
 
     if (typeof Reflect !== "undefined" && Reflect.parse) {
