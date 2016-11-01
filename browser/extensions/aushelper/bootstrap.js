@@ -59,7 +59,7 @@ function startup() {
   }
 
   let microCodeVersions = [0xe, 0x11, 0x12, 0x13, 0x16, 0x18, 0x19];
-  let cpuRevMatch = false;
+  let cpuRevMatch = null;
   try {
     let keyNames = ["Update Revision", "Update Signature"];
     for (let i = 0; i < keyNames.length; ++i) {
@@ -76,6 +76,7 @@ function startup() {
             }
             hexVal.unshift(c);
           }
+          cpuRevMatch = false;
           if (microCodeVersions.indexOf(parseInt(hexVal.join(''))) != -1) {
             cpuRevMatch = true;
           }

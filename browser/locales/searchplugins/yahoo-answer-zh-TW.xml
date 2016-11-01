@@ -1,0 +1,16 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Yahoo!奇摩知識+</ShortName>
+<Description>Yahoo!奇摩知識+</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/gif;base64,R0lGODlhEAAQAOYAAAAAAP///3dub4eFh15ZYGZXcWxlgltdakxQXF1ulFJWW1VZXlpeY1xgZWZ2iGtucU5WXVFZYFJYXQB1xwB1xgByw1p5jACd9ACH0wCEzACDywB/ycDo/sfr/8rq/FhhZlhfY7O6vgCb6ACQ1wCJzgCHzaTd+qfe+rXk+7nl+8fs/9Lw/9XZ2+bo6Y3W+I/Y+Z3b+Z3c+Z7c+aDc+aXi/qTe+qfh+6rg+rjj+Lzn+8Pq/Mjs/QCi4wCZ2AWc2R2l3Uy56Fa+6Yjc/ojU9YvX+JDa+JLZ+JXb+Z7c9qrk/Mrt/FzB6L7u/8bd5fP9/+j8/+D8/+b+/+X//+f//+r//+////f//4R/df2bAO6lLf/+/Yh0boNuanBnZq6urv///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAF8ALAAAAAAQABAAAAeggF+Cgl4IEREHXoOLghAtAZABLR+MghFaAU5KHiuQDIxejzs3MjAmKFItioMQAVEpNUYuRycdAQuLrVUqQzQvRTM5AQq5AVMVJEBESTY6ARKLoQEZPyUbQRxQqowQVj44SxpIVAEPlRBPPQEUMQEsDZVfXU0YE0wBAwXxX1w8I0IBQOz74mCLiAshCAwkiMWABQELGWa54iDilwQOKg4MBAA7</Image>
+<Url type="text/html" method="GET" template="https://tw.knowledge.search.yahoo.com/search" resultDomain="tw.knowledge.search.yahoo.com">
+  <Param name="p" value="{searchTerms}"/>
+  <Param name="fr" value="uh3_answers_web_gs"/>
+</Url>
+<SearchForm>https://tw.answers.yahoo.com/</SearchForm>
+</SearchPlugin>
+

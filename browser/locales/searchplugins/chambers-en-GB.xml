@@ -1,0 +1,16 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Chambers (UK)</ShortName>
+<Description>Chambers 21st Century Dictionary Search</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAARVBMVEV8grz///8cJoz8AgS8CiQ8QpxMUqQsMpRMDly8wtw8EmSMksS8RmT8iozsBgzM0uR8DkScosxscrSkLlzUGizs7vQsEmwP6BukAAAAYUlEQVR4XpXMNxLEIBBE0ekxgLzf+x9VmEKFlO3P+gVN/CmDI9pbWJCyBzqAHF2uggFR2XwFAph/IcTRh77CKhJBRQv4F3hgSGAVeAO6UeRUnQvwAEySy5ByR/ORW/+FthvNOwN3ZVtbCQAAAABJRU5ErkJggg==</Image>
+<Url type="text/html" method="GET" template="http://www.chambers.co.uk/search.php" resultdomain="chambers.co.uk">
+  <Param name="query" value="{searchTerms}"/>
+  <Param name="title" value="21st"/>
+  <Param name="sourceid" value="Mozilla-search"/>
+</Url>
+<SearchForm>http://www.chambers.co.uk/search.php</SearchForm>
+</SearchPlugin>
