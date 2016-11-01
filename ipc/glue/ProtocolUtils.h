@@ -169,7 +169,9 @@ public:
     // XXX odd ducks, acknowledged
     virtual ProcessId OtherPid() const;
 
-    virtual void FatalError(const char* const aProtocolName, const char* const aErrorMsg) const = 0;
+    virtual const char* ProtocolName() const = 0;
+    void FatalError(const char* const aErrorMsg) const;
+    virtual void HandleFatalError(const char* aProtocolName, const char* aErrorMsg) const;
 
     Maybe<IProtocol*> ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool aNullable,
                                 const char* aActorDescription, int32_t aProtocolTypeId);
