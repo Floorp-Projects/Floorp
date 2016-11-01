@@ -70,7 +70,6 @@ const globalCache = new Map();
  */
 function GlobalsForNode(path) {
   this.path = path;
-  this.root = helpers.getRootDir(path);
 }
 
 GlobalsForNode.prototype = {
@@ -93,8 +92,8 @@ GlobalsForNode.prototype = {
 
   ExpressionStatement(node, parents) {
     let isGlobal = helpers.getIsGlobalScope(parents);
-    let names = helpers.convertExpressionToGlobals(node, isGlobal, this.root);
-    return names.map(name => { return { name, writable: true }});
+    let name = helpers.convertExpressionToGlobal(node, isGlobal);
+    return name ? [{ name, writable: true}] : [];
   },
 };
 
