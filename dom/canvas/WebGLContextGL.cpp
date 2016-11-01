@@ -87,31 +87,31 @@ WebGLContext::ActiveTexture(GLenum texture)
 }
 
 void
-WebGLContext::AttachShader(WebGLProgram* program, WebGLShader* shader)
+WebGLContext::AttachShader(WebGLProgram& program, WebGLShader& shader)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("attachShader: program", program) ||
-        !ValidateObject("attachShader: shader", shader))
+    if (!ValidateObjectRef("attachShader: program", program) ||
+        !ValidateObjectRef("attachShader: shader", shader))
     {
         return;
     }
 
-    program->AttachShader(shader);
+    program.AttachShader(&shader);
 }
 
 void
-WebGLContext::BindAttribLocation(WebGLProgram* prog, GLuint location,
+WebGLContext::BindAttribLocation(WebGLProgram& prog, GLuint location,
                                  const nsAString& name)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("bindAttribLocation: program", prog))
+    if (!ValidateObjectRef("bindAttribLocation: program", prog))
         return;
 
-    prog->BindAttribLocation(location, name);
+    prog.BindAttribLocation(location, name);
 }
 
 void
@@ -436,20 +436,20 @@ WebGLContext::DeleteShader(WebGLShader* shader)
 }
 
 void
-WebGLContext::DetachShader(WebGLProgram* program, WebGLShader* shader)
+WebGLContext::DetachShader(WebGLProgram& program, const WebGLShader& shader)
 {
     if (IsContextLost())
         return;
 
     // It's valid to attempt to detach a deleted shader, since it's still a
     // shader.
-    if (!ValidateObject("detachShader: program", program) ||
-        !ValidateObjectAllowDeleted("detashShader: shader", shader))
+    if (!ValidateObjectRef("detachShader: program", program) ||
+        !ValidateObjectAllowDeleted("detachShader: shader", &shader))
     {
         return;
     }
 
-    program->DetachShader(shader);
+    program.DetachShader(&shader);
 }
 
 void
@@ -564,58 +564,53 @@ WebGLContext::FrontFace(GLenum mode)
 }
 
 already_AddRefed<WebGLActiveInfo>
-WebGLContext::GetActiveAttrib(WebGLProgram* prog, GLuint index)
+WebGLContext::GetActiveAttrib(const WebGLProgram& prog, GLuint index)
 {
     if (IsContextLost())
         return nullptr;
 
-    if (!ValidateObject("getActiveAttrib: program", prog))
+    if (!ValidateObjectRef("getActiveAttrib: program", prog))
         return nullptr;
 
-    return prog->GetActiveAttrib(index);
+    return prog.GetActiveAttrib(index);
 }
 
 already_AddRefed<WebGLActiveInfo>
-WebGLContext::GetActiveUniform(WebGLProgram* prog, GLuint index)
+WebGLContext::GetActiveUniform(const WebGLProgram& prog, GLuint index)
 {
     if (IsContextLost())
         return nullptr;
 
-    if (!ValidateObject("getActiveUniform: program", prog))
+    if (!ValidateObjectRef("getActiveUniform: program", prog))
         return nullptr;
 
-    return prog->GetActiveUniform(index);
+    return prog.GetActiveUniform(index);
 }
 
 void
-WebGLContext::GetAttachedShaders(WebGLProgram* prog,
+WebGLContext::GetAttachedShaders(const WebGLProgram& prog,
                                  dom::Nullable<nsTArray<RefPtr<WebGLShader>>>& retval)
 {
     retval.SetNull();
     if (IsContextLost())
         return;
 
-    if (!prog) {
-        ErrorInvalidValue("getAttachedShaders: Invalid program.");
-        return;
-    }
-
-    if (!ValidateObject("getAttachedShaders", prog))
+    if (!ValidateObjectRef("getAttachedShaders", prog))
         return;
 
-    prog->GetAttachedShaders(&retval.SetValue());
+    prog.GetAttachedShaders(&retval.SetValue());
 }
 
 GLint
-WebGLContext::GetAttribLocation(WebGLProgram* prog, const nsAString& name)
+WebGLContext::GetAttribLocation(const WebGLProgram& prog, const nsAString& name)
 {
     if (IsContextLost())
         return -1;
 
-    if (!ValidateObject("getAttribLocation: program", prog))
+    if (!ValidateObjectRef("getAttribLocation: program", prog))
         return -1;
 
-    return prog->GetAttribLocation(name);
+    return prog.GetAttribLocation(name);
 }
 
 JS::Value
@@ -910,62 +905,60 @@ WebGLContext::GetError()
 }
 
 JS::Value
-WebGLContext::GetProgramParameter(WebGLProgram* prog, GLenum pname)
+WebGLContext::GetProgramParameter(const WebGLProgram& prog, GLenum pname)
 {
     if (IsContextLost())
         return JS::NullValue();
 
-    if (!ValidateObjectAllowDeleted("getProgramParameter: program", prog))
+    if (!ValidateObjectAllowDeleted("getProgramParameter: program", &prog))
         return JS::NullValue();
 
-    return prog->GetProgramParameter(pname);
+    return prog.GetProgramParameter(pname);
 }
 
 void
-WebGLContext::GetProgramInfoLog(WebGLProgram* prog, nsAString& retval)
+WebGLContext::GetProgramInfoLog(const WebGLProgram& prog, nsAString& retval)
 {
     retval.SetIsVoid(true);
 
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("getProgramInfoLog: program", prog))
+    if (!ValidateObjectRef("getProgramInfoLog: program", prog))
         return;
 
-    prog->GetProgramInfoLog(&retval);
-
-    retval.SetIsVoid(false);
+    prog.GetProgramInfoLog(&retval);
 }
 
 JS::Value
-WebGLContext::GetUniform(JSContext* js, WebGLProgram* prog,
-                         WebGLUniformLocation* loc)
+WebGLContext::GetUniform(JSContext* js, const WebGLProgram& prog,
+                         const WebGLUniformLocation& loc)
 {
     if (IsContextLost())
         return JS::NullValue();
 
-    if (!ValidateObject("getUniform: `program`", prog))
+    if (!ValidateObjectRef("getUniform: `program`", prog))
         return JS::NullValue();
 
-    if (!ValidateObject("getUniform: `location`", loc))
+    if (!ValidateObjectRef("getUniform: `location`", loc))
         return JS::NullValue();
 
-    if (!loc->ValidateForProgram(prog, "getUniform"))
+    if (!loc.ValidateForProgram(&prog, "getUniform"))
         return JS::NullValue();
 
-    return loc->GetUniform(js);
+    return loc.GetUniform(js);
 }
 
 already_AddRefed<WebGLUniformLocation>
-WebGLContext::GetUniformLocation(WebGLProgram* prog, const nsAString& name)
+WebGLContext::GetUniformLocation(const WebGLProgram& prog, const nsAString& name)
 {
     if (IsContextLost())
         return nullptr;
 
-    if (!ValidateObject("getUniformLocation: program", prog))
+    if (!ValidateObjectRef("getUniformLocation: program", prog))
         return nullptr;
 
-    return prog->GetUniformLocation(name);
+    return prog.GetUniformLocation(name);
 }
 
 void
@@ -1060,29 +1053,29 @@ WebGLContext::IsShader(WebGLShader* shader)
 }
 
 void
-WebGLContext::LinkProgram(WebGLProgram* prog)
+WebGLContext::LinkProgram(WebGLProgram& prog)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("linkProgram", prog))
+    if (!ValidateObjectRef("linkProgram", prog))
         return;
 
-    prog->LinkProgram();
+    prog.LinkProgram();
 
-    if (!prog->IsLinked()) {
+    if (!prog.IsLinked()) {
         // If we failed to link, but `prog == mCurrentProgram`, we are *not* supposed to
         // null out mActiveProgramLinkInfo.
         return;
     }
 
-    if (prog == mCurrentProgram) {
-        mActiveProgramLinkInfo = prog->LinkInfo();
+    if (&prog == mCurrentProgram) {
+        mActiveProgramLinkInfo = prog.LinkInfo();
 
         if (gl->WorkAroundDriverBugs() &&
             gl->Vendor() == gl::GLVendor::NVIDIA)
         {
-            gl->fUseProgram(prog->mGLName);
+            gl->fUseProgram(prog.mGLName);
         }
     }
 }
@@ -2212,15 +2205,15 @@ WebGLContext::UseProgram(WebGLProgram* prog)
 }
 
 void
-WebGLContext::ValidateProgram(WebGLProgram* prog)
+WebGLContext::ValidateProgram(const WebGLProgram& prog)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("validateProgram", prog))
+    if (!ValidateObjectRef("validateProgram", prog))
         return;
 
-    prog->ValidateProgram();
+    prog.ValidateProgram();
 }
 
 already_AddRefed<WebGLFramebuffer>
@@ -2267,43 +2260,41 @@ WebGLContext::Viewport(GLint x, GLint y, GLsizei width, GLsizei height)
 }
 
 void
-WebGLContext::CompileShader(WebGLShader* shader)
+WebGLContext::CompileShader(WebGLShader& shader)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("compileShader", shader))
+    if (!ValidateObjectRef("compileShader", shader))
         return;
 
-    shader->CompileShader();
+    shader.CompileShader();
 }
 
 JS::Value
-WebGLContext::GetShaderParameter(WebGLShader* shader, GLenum pname)
+WebGLContext::GetShaderParameter(const WebGLShader& shader, GLenum pname)
 {
     if (IsContextLost())
         return JS::NullValue();
 
-    if (!ValidateObject("getShaderParameter: shader", shader))
+    if (!ValidateObjectRef("getShaderParameter: shader", shader))
         return JS::NullValue();
 
-    return shader->GetShaderParameter(pname);
+    return shader.GetShaderParameter(pname);
 }
 
 void
-WebGLContext::GetShaderInfoLog(WebGLShader* shader, nsAString& retval)
+WebGLContext::GetShaderInfoLog(const WebGLShader& shader, nsAString& retval)
 {
     retval.SetIsVoid(true);
 
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("getShaderInfoLog: shader", shader))
+    if (!ValidateObjectRef("getShaderInfoLog: shader", shader))
         return;
 
-    shader->GetShaderInfoLog(&retval);
-
-    retval.SetIsVoid(false);
+    shader.GetShaderInfoLog(&retval);
 }
 
 already_AddRefed<WebGLShaderPrecisionFormat>
@@ -2355,43 +2346,29 @@ WebGLContext::GetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype)
 }
 
 void
-WebGLContext::GetShaderSource(WebGLShader* shader, nsAString& retval)
+WebGLContext::GetShaderSource(const WebGLShader& shader, nsAString& retval)
 {
     retval.SetIsVoid(true);
 
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("getShaderSource: shader", shader))
+    if (!ValidateObjectRef("getShaderSource: shader", shader))
         return;
 
-    shader->GetShaderSource(&retval);
+    shader.GetShaderSource(&retval);
 }
 
 void
-WebGLContext::ShaderSource(WebGLShader* shader, const nsAString& source)
+WebGLContext::ShaderSource(WebGLShader& shader, const nsAString& source)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateObject("shaderSource: shader", shader))
+    if (!ValidateObjectRef("shaderSource: shader", shader))
         return;
 
-    shader->ShaderSource(source);
-}
-
-void
-WebGLContext::GetShaderTranslatedSource(WebGLShader* shader, nsAString& retval)
-{
-    retval.SetIsVoid(true);
-
-    if (IsContextLost())
-        return;
-
-    if (!ValidateObject("getShaderTranslatedSource: shader", shader))
-        return;
-
-    shader->GetShaderTranslatedSource(&retval);
+    shader.ShaderSource(source);
 }
 
 void
