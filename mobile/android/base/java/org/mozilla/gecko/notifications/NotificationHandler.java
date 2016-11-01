@@ -65,9 +65,9 @@ public class NotificationHandler {
                 .setContentIntent(contentIntent)
                 .setDeleteIntent(deleteIntent)
                 .setAutoCancel(true)
-                .setStyle(new NotificationCompat.InboxStyle()
-                          .addLine(aAlertText)
-                          .setSummaryText(aHost));
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText(aAlertText)
+                        .setSummaryText(aHost));
 
         // Fetch icon.
         if (!aImageUrl.isEmpty()) {
