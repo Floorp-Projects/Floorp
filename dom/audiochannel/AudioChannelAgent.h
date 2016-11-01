@@ -49,6 +49,7 @@ public:
   uint64_t InnerWindowID() const;
 
   bool IsPlayingStarted() const;
+  bool ShouldBlockMedia() const;
 
 private:
   virtual ~AudioChannelAgent();
