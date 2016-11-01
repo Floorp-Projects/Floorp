@@ -98,6 +98,7 @@ add_task(function* panel_shown_once_for_slow_doubleclick_on_new_bookmark_star_an
               "browser-places.js for this.");
   return;
 
+  /*
   yield test_bookmarks_popup({
     isNewBookmark: true,
     *popupShowFn() {
@@ -108,6 +109,7 @@ add_task(function* panel_shown_once_for_slow_doubleclick_on_new_bookmark_star_an
     shouldAutoClose: true,
     isBookmarkRemoved: false,
   });
+  */
 });
 
 add_task(function* panel_shown_for_keyboardshortcut_on_new_bookmark_star_and_autocloses() {

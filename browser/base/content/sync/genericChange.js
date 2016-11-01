@@ -141,10 +141,8 @@ var Change = {
       case "UpdatePassphrase":
       case "ResetPassphrase":
         return this.doChangePassphrase();
-        break;
       case "ChangePassword":
         return this.doChangePassword();
-        break;
     }
     return undefined;
   },

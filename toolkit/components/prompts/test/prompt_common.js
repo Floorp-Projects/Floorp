@@ -132,7 +132,6 @@ function PrompterProxy(chromeScript) {
           }
           default: {
             throw new Error("Unknown nsIAuthPrompt method");
-            break;
           }
         }
 
