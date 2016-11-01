@@ -1302,6 +1302,11 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
     mMaster->RecomputeDuration();
   }
 
+  // If we don't know the duration by this point, we assume infinity, per spec.
+  if (mMaster->mDuration.Ref().isNothing()) {
+    mMaster->mDuration = Some(TimeUnit::FromInfinity());
+  }
+
   if (mMaster->HasVideo()) {
     SLOG("Video decode isAsync=%d HWAccel=%d videoQueueSize=%d",
          Reader()->IsAsync(),
@@ -2937,11 +2942,6 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
   DECODER_LOG("FinishDecodeFirstFrame");
 
   mMediaSink->Redraw(Info().mVideo);
-
-  // If we don't know the duration by this point, we assume infinity, per spec.
-  if (mDuration.Ref().isNothing()) {
-    mDuration = Some(TimeUnit::FromInfinity());
-  }
 
   DECODER_LOG("Media duration %lld, "
               "transportSeekable=%d, mediaSeekable=%d",
