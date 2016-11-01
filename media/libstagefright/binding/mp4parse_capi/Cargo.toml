@@ -1,9 +1,10 @@
 [package]
 name = "mp4parse_capi"
-version = "0.5.1"
+version = "0.6.0"
 authors = [
   "Ralph Giles <giles@mozilla.com>",
   "Matthew Gregan <kinetik@flim.org>",
+  "Alfredo Yang <ayang@mozilla.com>",
 ]
 
 description = "Parser for ISO base media file format (mp4)"
@@ -18,7 +19,7 @@ exclude = [
 ]
 
 [dependencies]
-"mp4parse" = {version = "0.5.1", path = "../mp4parse"}
+"mp4parse" = {version = "0.6.0", path = "../mp4parse"}
 
 # Somewhat heavy-handed, but we want at least -Z force-overflow-checks=on.
 [profile.release]
