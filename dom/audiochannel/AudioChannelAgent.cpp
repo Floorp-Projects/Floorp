@@ -354,3 +354,10 @@ AudioChannelAgent::WindowAudioCaptureChanged(uint64_t aInnerWindowID,
 
   callback->WindowAudioCaptureChanged(aCapture);
 }
+
+bool
+AudioChannelAgent::IsPlayingStarted() const
+{
+  return mIsRegToService;
+}
+
