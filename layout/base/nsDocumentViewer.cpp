@@ -419,19 +419,18 @@ class AutoPrintEventDispatcher
 public:
   explicit AutoPrintEventDispatcher(nsIDocument* aTop) : mTop(aTop)
   {
-    DispatchEventToWindowTree(mTop, NS_LITERAL_STRING("beforeprint"));
+    DispatchEventToWindowTree(NS_LITERAL_STRING("beforeprint"));
   }
   ~AutoPrintEventDispatcher()
   {
-    DispatchEventToWindowTree(mTop, NS_LITERAL_STRING("afterprint"));
+    DispatchEventToWindowTree(NS_LITERAL_STRING("afterprint"));
   }
 
 private:
-  static void DispatchEventToWindowTree(nsIDocument* aDoc,
-                                        const nsAString& aEvent)
+  void DispatchEventToWindowTree(const nsAString& aEvent)
   {
     nsCOMArray<nsIDocument> targets;
-    CollectDocuments(aDoc, &targets);
+    CollectDocuments(mTop, &targets);
     for (int32_t i = 0; i < targets.Count(); ++i) {
       nsIDocument* d = targets[i];
       nsContentUtils::DispatchTrustedEvent(d, d->GetWindow(),
