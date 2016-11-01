@@ -14,7 +14,13 @@
 #include "nsIX509Cert.h"
 #include "nsISerializable.h"
 #include "nsIClassInfo.h"
-#include "nsNSSCertificate.h" // For EVStatus
+
+class nsNSSCertificate;
+
+enum class EVStatus {
+  NotEV = 0,
+  EV = 1,
+};
 
 class nsSSLStatus final
   : public nsISSLStatus
@@ -31,8 +37,7 @@ public:
 
   nsSSLStatus();
 
-  void SetServerCert(nsNSSCertificate* aServerCert,
-                     nsNSSCertificate::EVStatus aEVStatus);
+  void SetServerCert(nsNSSCertificate* aServerCert, EVStatus aEVStatus);
 
   bool HasServerCert() {
     return mServerCert != nullptr;
