@@ -792,9 +792,8 @@ AddAndRemoveImageAssociations(nsFrame* aFrame,
           continue;
         }
 
-        if (imgRequestProxy* req = oldImage.GetImageData()) {
-          imageLoader->DisassociateRequestFromFrame(req, aFrame);
-        }
+        imageLoader->DisassociateRequestFromFrame(oldImage.GetImageData(),
+                                                   aFrame);
       }
     }
   }
@@ -809,9 +808,7 @@ AddAndRemoveImageAssociations(nsFrame* aFrame,
         continue;
       }
 
-      if (imgRequestProxy* req = newImage.GetImageData()) {
-        imageLoader->AssociateRequestToFrame(req, aFrame);
-      }
+      imageLoader->AssociateRequestToFrame(newImage.GetImageData(), aFrame);
     }
   }
 }
@@ -4303,11 +4300,7 @@ nsIFrame::AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext
     return;
   }
 
-  imgRequestProxy* req = aImage.GetImageData();
-  if (!req) {
-    return;
-  }
-
+  imgIRequest *req = aImage.GetImageData();
   mozilla::css::ImageLoader* loader =
     aPresContext->Document()->StyleImageLoader();
 
