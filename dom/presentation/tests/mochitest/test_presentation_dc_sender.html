@@ -240,15 +240,16 @@ function teardown() {
 
 function testConstructRequestError() {
   return Promise.all([
-    new Promise(function(aResolve, aReject) {
-      try {
-        request = new PresentationRequest("\\\\\\");
-      }
-      catch(e) {
-        is(e.name, "SyntaxError", "Expect to get SyntaxError.");
-        aResolve();
-      }
-    }),
+    // XXX: Bug 1305204 - uncomment when bug 1275746 is fixed again.
+    // new Promise(function(aResolve, aReject) {
+    //   try {
+    //     request = new PresentationRequest("\\\\\\");
+    //   }
+    //   catch(e) {
+    //     is(e.name, "SyntaxError", "Expect to get SyntaxError.");
+    //     aResolve();
+    //   }
+    // }),
     new Promise(function(aResolve, aReject) {
       try {
         request = new PresentationRequest([]);

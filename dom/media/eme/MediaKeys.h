@@ -16,6 +16,7 @@
 #include "nsRefPtrHashtable.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/MediaKeysBinding.h"
+#include "mozilla/dom/MediaKeySystemAccessBinding.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/DetailedPromise.h"
 #include "mozilla/WeakPtr.h"
@@ -33,6 +34,7 @@ class HTMLMediaElement;
 typedef nsRefPtrHashtable<nsStringHashKey, MediaKeySession> KeySessionHashMap;
 typedef nsRefPtrHashtable<nsUint32HashKey, dom::DetailedPromise> PromiseHashMap;
 typedef nsRefPtrHashtable<nsUint32HashKey, MediaKeySession> PendingKeySessionsHashMap;
+typedef nsDataHashtable<nsUint32HashKey, uint32_t> PendingPromiseIdTokenHashMap;
 typedef uint32_t PromiseId;
 
 // This class is used on the main thread only.
@@ -51,8 +53,7 @@ public:
   MediaKeys(nsPIDOMWindowInner* aParentWindow,
             const nsAString& aKeySystem,
             const nsAString& aCDMVersion,
-            bool aDistinctiveIdentifierRequired,
-            bool aPersistentStateRequired);
+            const MediaKeySystemConfiguration& aConfig);
 
   already_AddRefed<DetailedPromise> Init(ErrorResult& aRv);
 
@@ -107,6 +108,13 @@ public:
   // promises to be resolved.
   PromiseId StorePromise(DetailedPromise* aPromise);
 
+  // Stores a map from promise id to pending session token. Using this
+  // mapping, when a promise is rejected via its ID, we can check if the
+  // promise corresponds to a pending session and retrieve that session
+  // via the mapped-to token, and remove the pending session from the
+  // list of sessions awaiting a session id.
+  void ConnectPendingPromiseIdWithToken(PromiseId aId, uint32_t aToken);
+
   // Reject promise with DOMException corresponding to aExceptionCode.
   void RejectPromise(PromiseId aId, nsresult aExceptionCode,
                      const nsCString& aReason);
@@ -149,8 +157,9 @@ private:
   RefPtr<nsIPrincipal> mPrincipal;
   RefPtr<nsIPrincipal> mTopLevelPrincipal;
 
-  const bool mDistinctiveIdentifierRequired;
-  const bool mPersistentStateRequired;
+  const MediaKeySystemConfiguration mConfig;
+
+  PendingPromiseIdTokenHashMap mPromiseIdToken;
 };
 
 } // namespace dom

@@ -28,7 +28,7 @@
 #include "jsstr.h"
 
 #include "asmjs/WasmAST.h"
-#include "asmjs/WasmBinary.h"
+#include "asmjs/WasmBinaryFormat.h"
 #include "asmjs/WasmTypes.h"
 #include "ds/LifoAlloc.h"
 #include "js/CharacterEncoding.h"
@@ -73,12 +73,12 @@ class WasmToken
         BrIf,
         BrTable,
         Call,
-        CallImport,
         CallIndirect,
         CloseParen,
         ComparisonOpcode,
         Const,
         ConversionOpcode,
+        CurrentMemory,
         Data,
         Drop,
         Elem,
@@ -93,6 +93,7 @@ class WasmToken
         GetGlobal,
         GetLocal,
         Global,
+        GrowMemory,
         If,
         Import,
         Index,
@@ -110,7 +111,6 @@ class WasmToken
         Param,
         Result,
         Return,
-        Segment,
         SetGlobal,
         SetLocal,
         SignedInteger,
@@ -122,7 +122,6 @@ class WasmToken
         Text,
         Then,
         Type,
-        NullaryOpcode,
         UnaryOpcode,
         Unreachable,
         UnsignedInteger,
@@ -205,7 +204,7 @@ class WasmToken
         MOZ_ASSERT(begin != end);
         MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == TernaryOpcode ||
                    kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
-                   kind_ == Load || kind_ == Store || kind_ == NullaryOpcode);
+                   kind_ == Load || kind_ == Store);
         u.expr_ = expr;
     }
     explicit WasmToken(const char16_t* begin)
@@ -256,7 +255,7 @@ class WasmToken
     Expr expr() const {
         MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == TernaryOpcode ||
                    kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
-                   kind_ == Load || kind_ == Store || kind_ == NullaryOpcode);
+                   kind_ == Load || kind_ == Store);
         return u.expr_;
     }
     bool isOpcode() const {
@@ -267,14 +266,15 @@ class WasmToken
           case BrIf:
           case BrTable:
           case Call:
-          case CallImport:
           case CallIndirect:
           case ComparisonOpcode:
           case Const:
           case ConversionOpcode:
+          case CurrentMemory:
           case Drop:
           case GetGlobal:
           case GetLocal:
+          case GrowMemory:
           case If:
           case Load:
           case Loop:
@@ -285,7 +285,6 @@ class WasmToken
           case Store:
           case TeeLocal:
           case TernaryOpcode:
-          case NullaryOpcode:
           case UnaryOpcode:
           case Unreachable:
             return true;
@@ -315,7 +314,6 @@ class WasmToken
           case OpenParen:
           case Param:
           case Result:
-          case Segment:
           case SignedInteger:
           case Start:
           case Table:
@@ -641,10 +639,10 @@ class WasmTokenStream
         WasmToken token = get();
         switch (token.kind()) {
           case WasmToken::Name:
-            *ref = AstRef(token.name(), AstNoIndex);
+            *ref = AstRef(token.name());
             break;
           case WasmToken::Index:
-            *ref = AstRef(AstName(), token.index());
+            *ref = AstRef(token.index());
             break;
           default:
             generateError(token, error);
@@ -855,12 +853,10 @@ WasmTokenStream::next()
         if (consume(u"call")) {
             if (consume(u"_indirect"))
                 return WasmToken(WasmToken::CallIndirect, begin, cur_);
-            if (consume(u"_import"))
-                return WasmToken(WasmToken::CallImport, begin, cur_);
             return WasmToken(WasmToken::Call, begin, cur_);
         }
         if (consume(u"current_memory"))
-            return WasmToken(WasmToken::NullaryOpcode, Expr::CurrentMemory, begin, cur_);
+            return WasmToken(WasmToken::CurrentMemory, begin, cur_);
         break;
 
       case 'd':
@@ -1097,7 +1093,7 @@ WasmTokenStream::next()
         if (consume(u"global"))
             return WasmToken(WasmToken::Global, begin, cur_);
         if (consume(u"grow_memory"))
-            return WasmToken(WasmToken::UnaryOpcode, Expr::GrowMemory, begin, cur_);
+            return WasmToken(WasmToken::GrowMemory, begin, cur_);
         break;
 
       case 'i':
@@ -1412,7 +1408,7 @@ WasmTokenStream::next()
         if (consume(u"nan"))
             return nan(begin);
         if (consume(u"nop"))
-            return WasmToken(WasmToken::NullaryOpcode, Expr::Nop, begin, cur_);
+            return WasmToken(WasmToken::Nop, begin, cur_);
         break;
 
       case 'o':
@@ -1439,8 +1435,6 @@ WasmTokenStream::next()
             return WasmToken(WasmToken::SetGlobal, begin, cur_);
         if (consume(u"set_local"))
             return WasmToken(WasmToken::SetLocal, begin, cur_);
-        if (consume(u"segment"))
-            return WasmToken(WasmToken::Segment, begin, cur_);
         if (consume(u"start"))
             return WasmToken(WasmToken::Start, begin, cur_);
         break;
@@ -1488,7 +1482,7 @@ struct WasmParseContext
     {}
 
     bool fail(const char* message) {
-        error->reset(JS_smprintf(message));
+        error->reset(js_strdup(message));
         return false;
     }
     ~WasmParseContext() {
@@ -1507,11 +1501,17 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens);
 static AstExpr*
 ParseExpr(WasmParseContext& c, bool inParens)
 {
-    if (!inParens)
+    WasmToken openParen;
+    if (!inParens || !c.ts.getIf(WasmToken::OpenParen, &openParen))
         return new(c.lifo) AstPop();
 
-    if (!c.ts.match(WasmToken::OpenParen, c.error))
-        return nullptr;
+    // Special case: If we have an open paren, but it's a "(then ...", then
+    // we don't have an expresion following us, so we pop here too. This
+    // handles "(if (then ...))" which pops the condition.
+    if (c.ts.peek().kind() == WasmToken::Then) {
+        c.ts.unget(openParen);
+        return new(c.lifo) AstPop();
+    }
 
     AstExpr* expr = ParseExprInsideParens(c);
     if (!expr)
@@ -1625,17 +1625,12 @@ ParseBranch(WasmParseContext& c, Expr expr, bool inParens)
 
     AstExpr* cond = nullptr;
     if (expr == Expr::BrIf) {
-        if (inParens) {
-            if (c.ts.getIf(WasmToken::OpenParen)) {
-                cond = ParseExprInsideParens(c);
-                if (!cond)
-                    return nullptr;
-                if (!c.ts.match(WasmToken::CloseParen, c.error))
-                    return nullptr;
-            } else {
-                cond = value;
-                value = nullptr;
-            }
+        if (inParens && c.ts.getIf(WasmToken::OpenParen)) {
+            cond = ParseExprInsideParens(c);
+            if (!cond)
+                return nullptr;
+            if (!c.ts.match(WasmToken::CloseParen, c.error))
+                return nullptr;
         } else {
             cond = new(c.lifo) AstPop();
             if (!cond)
@@ -1661,10 +1656,8 @@ ParseArgs(WasmParseContext& c, AstExprVector* args)
 }
 
 static AstCall*
-ParseCall(WasmParseContext& c, Expr expr, bool inParens)
+ParseCall(WasmParseContext& c, bool inParens)
 {
-    MOZ_ASSERT(expr == Expr::Call || expr == Expr::CallImport);
-
     AstRef func;
     if (!c.ts.matchRef(&func, c.error))
         return nullptr;
@@ -1675,7 +1668,7 @@ ParseCall(WasmParseContext& c, Expr expr, bool inParens)
             return nullptr;
     }
 
-    return new(c.lifo) AstCall(expr, ExprType::Void, func, Move(args));
+    return new(c.lifo) AstCall(Expr::Call, ExprType::Void, func, Move(args));
 }
 
 static AstCallIndirect*
@@ -2098,12 +2091,6 @@ ParseUnaryOperator(WasmParseContext& c, Expr expr, bool inParens)
     return new(c.lifo) AstUnaryOperator(expr, op);
 }
 
-static AstNullaryOperator*
-ParseNullaryOperator(WasmParseContext& c, Expr expr)
-{
-    return new(c.lifo) AstNullaryOperator(expr);
-}
-
 static AstBinaryOperator*
 ParseBinaryOperator(WasmParseContext& c, Expr expr, bool inParens)
 {
@@ -2216,7 +2203,7 @@ ParseIf(WasmParseContext& c, bool inParens)
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return nullptr;
         } else {
-            if (!c.ts.getIf(WasmToken::End))
+            if (!c.ts.match(WasmToken::End, c.error))
                 return nullptr;
         }
     }
@@ -2391,6 +2378,16 @@ ParseBranchTable(WasmParseContext& c, WasmToken brTable, bool inParens)
     return new(c.lifo) AstBranchTable(*index, def, Move(table), value);
 }
 
+static AstGrowMemory*
+ParseGrowMemory(WasmParseContext& c, bool inParens)
+{
+    AstExpr* op = ParseExpr(c, inParens);
+    if (!op)
+        return nullptr;
+
+    return new(c.lifo) AstGrowMemory(op);
+}
+
 static AstExpr*
 ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
 {
@@ -2408,9 +2405,7 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
       case WasmToken::BrTable:
         return ParseBranchTable(c, token, inParens);
       case WasmToken::Call:
-        return ParseCall(c, Expr::Call, inParens);
-      case WasmToken::CallImport:
-        return ParseCall(c, Expr::Call, inParens);
+        return ParseCall(c, inParens);
       case WasmToken::CallIndirect:
         return ParseCallIndirect(c, inParens);
       case WasmToken::ComparisonOpcode:
@@ -2445,8 +2440,12 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
         return ParseTernaryOperator(c, token.expr(), inParens);
       case WasmToken::UnaryOpcode:
         return ParseUnaryOperator(c, token.expr(), inParens);
-      case WasmToken::NullaryOpcode:
-        return ParseNullaryOperator(c, token.expr());
+      case WasmToken::Nop:
+        return new(c.lifo) AstNop();
+      case WasmToken::CurrentMemory:
+        return new(c.lifo) AstCurrentMemory();
+      case WasmToken::GrowMemory:
+        return ParseGrowMemory(c, inParens);
       default:
         c.ts.generateError(token, c.error);
         return nullptr;
@@ -2509,19 +2508,13 @@ ParseInlineImport(WasmParseContext& c, InlineImport* import)
 }
 
 static bool
-ParseInlineExport(WasmParseContext& c, DefinitionKind kind, AstModule* module,
-                  AstRef ref = AstRef())
+ParseInlineExport(WasmParseContext& c, DefinitionKind kind, AstModule* module, AstRef ref)
 {
     WasmToken name;
     if (!c.ts.match(WasmToken::Text, &name, c.error))
         return false;
 
-    AstExport* exp = nullptr;
-    if (!ref.isInvalid())
-        exp = new(c.lifo) AstExport(name.text(), kind, ref);
-    else
-        exp = new(c.lifo) AstExport(name.text(), kind);
-
+    AstExport* exp = new(c.lifo) AstExport(name.text(), kind, ref);
     return exp && module->append(exp);
 }
 
@@ -2624,8 +2617,8 @@ ParseFunc(WasmParseContext& c, AstModule* module)
 
         if (c.ts.getIf(WasmToken::Export)) {
             AstRef ref = funcName.empty()
-                         ? AstRef(AstName(), module->funcImportNames().length() + module->funcs().length())
-                         : AstRef(funcName, AstNoIndex);
+                         ? AstRef(module->funcImportNames().length() + module->funcs().length())
+                         : AstRef(funcName);
             if (!ParseInlineExport(c, DefinitionKind::Function, module, ref))
                 return false;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
@@ -2719,25 +2712,45 @@ MaybeParseOwnerIndex(WasmParseContext& c)
     return true;
 }
 
+static AstExpr*
+ParseInitializerExpression(WasmParseContext& c)
+{
+    if (!c.ts.match(WasmToken::OpenParen, c.error))
+        return nullptr;
+
+    AstExpr* initExpr = ParseExprInsideParens(c);
+    if (!initExpr)
+        return nullptr;
+
+    if (!c.ts.match(WasmToken::CloseParen, c.error))
+        return nullptr;
+
+    return initExpr;
+}
+
 static AstDataSegment*
 ParseDataSegment(WasmParseContext& c)
 {
     if (!MaybeParseOwnerIndex(c))
         return nullptr;
 
-    AstExpr* offset = ParseExpr(c, true);
+    AstExpr* offset = ParseInitializerExpression(c);
     if (!offset)
         return nullptr;
 
-    WasmToken text;
-    if (!c.ts.getIf(WasmToken::Text, &text))
-        return new(c.lifo) AstDataSegment(offset, AstName());
+    AstNameVector fragments(c.lifo);
 
-    return new(c.lifo) AstDataSegment(offset, text.text());
+    WasmToken text;
+    while (c.ts.getIf(WasmToken::Text, &text)) {
+        if (!fragments.append(text.text()))
+            return nullptr;
+    }
+
+    return new(c.lifo) AstDataSegment(offset, Move(fragments));
 }
 
 static bool
-ParseLimits(WasmParseContext& c, Limits* resizable)
+ParseLimits(WasmParseContext& c, Limits* limits)
 {
     WasmToken initial;
     if (!c.ts.match(WasmToken::Index, &initial, c.error))
@@ -2749,7 +2762,7 @@ ParseLimits(WasmParseContext& c, Limits* resizable)
         maximum.emplace(token.index());
 
     Limits r = { initial.index(), maximum };
-    *resizable = r;
+    *limits = r;
     return true;
 }
 
@@ -2777,7 +2790,8 @@ ParseMemory(WasmParseContext& c, WasmToken token, AstModule* module)
         }
 
         if (c.ts.getIf(WasmToken::Export)) {
-            if (!ParseInlineExport(c, DefinitionKind::Memory, module))
+            AstRef ref = name.empty() ? AstRef(module->memories().length()) : AstRef(name);
+            if (!ParseInlineExport(c, DefinitionKind::Memory, module, ref))
                 return false;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return false;
@@ -2790,24 +2804,33 @@ ParseMemory(WasmParseContext& c, WasmToken token, AstModule* module)
         if (!c.ts.match(WasmToken::Data, c.error))
             return false;
 
-        WasmToken text;
+        AstNameVector fragments(c.lifo);
+
+        WasmToken data;
         size_t pages = 0;
-        if (c.ts.getIf(WasmToken::Text, &text)) {
+        size_t totalLength = 0;
+        while (c.ts.getIf(WasmToken::Text, &data)) {
+            if (!fragments.append(data.text()))
+                return false;
+            totalLength += data.text().length();
+        }
+
+        if (fragments.length()) {
             AstExpr* offset = new(c.lifo) AstConst(Val(uint32_t(0)));
             if (!offset)
                 return false;
 
-            AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, text.text());
+            AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, Move(fragments));
             if (!segment || !module->append(segment))
                 return false;
 
-            pages = AlignBytes<size_t>(segment->text().length(), PageSize) / PageSize;
+            pages = AlignBytes<size_t>(totalLength, PageSize) / PageSize;
             if (pages != uint32_t(pages))
                 return false;
         }
 
         Limits memory = { uint32_t(pages), Some(uint32_t(pages)) };
-        if (!module->setMemory(memory))
+        if (!module->addMemory(name, memory))
             return false;
 
         if (!c.ts.match(WasmToken::CloseParen, c.error))
@@ -2820,12 +2843,7 @@ ParseMemory(WasmParseContext& c, WasmToken token, AstModule* module)
     if (!ParseLimits(c, &memory))
         return false;
 
-    if (!module->setMemory(memory)) {
-        c.ts.generateError(token, c.error);
-        return false;
-    }
-
-    return true;
+    return module->addMemory(name, memory);
 }
 
 static bool
@@ -2844,12 +2862,14 @@ ParseStartFunc(WasmParseContext& c, WasmToken token, AstModule* module)
 }
 
 static bool
-ParseGlobalType(WasmParseContext& c, WasmToken* typeToken, uint32_t* flags)
+ParseGlobalType(WasmParseContext& c, WasmToken* typeToken, bool* isMutable)
 {
+    *isMutable = false;
+
     // Either (mut i32) or i32.
     if (c.ts.getIf(WasmToken::OpenParen)) {
         // Immutable by default.
-        *flags = c.ts.getIf(WasmToken::Mutable) ? 0x1 : 0x0;
+        *isMutable = c.ts.getIf(WasmToken::Mutable);
         if (!c.ts.match(WasmToken::ValueType, typeToken, c.error))
             return false;
         if (!c.ts.match(WasmToken::CloseParen, c.error))
@@ -2919,14 +2939,14 @@ ParseImport(WasmParseContext& c, AstModule* module)
                 name = c.ts.getIfName();
 
             WasmToken typeToken;
-            uint32_t flags = 0;
-            if (!ParseGlobalType(c, &typeToken, &flags))
+            bool isMutable;
+            if (!ParseGlobalType(c, &typeToken, &isMutable))
                 return nullptr;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return nullptr;
 
             return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(),
-                                         AstGlobal(AstName(), typeToken.valueType(), flags));
+                                         AstGlobal(AstName(), typeToken.valueType(), isMutable));
         }
         if (c.ts.getIf(WasmToken::Func)) {
             if (name.empty())
@@ -2975,15 +2995,21 @@ ParseExport(WasmParseContext& c)
     WasmToken exportee = c.ts.get();
     switch (exportee.kind()) {
       case WasmToken::Index:
-        return new(c.lifo) AstExport(name.text(), DefinitionKind::Function,
-                                     AstRef(AstName(), exportee.index()));
+        return new(c.lifo) AstExport(name.text(), DefinitionKind::Function, AstRef(exportee.index()));
       case WasmToken::Name:
-        return new(c.lifo) AstExport(name.text(), DefinitionKind::Function,
-                                     AstRef(exportee.name(), AstNoIndex));
-      case WasmToken::Table:
-        return new(c.lifo) AstExport(name.text(), DefinitionKind::Table);
-      case WasmToken::Memory:
-        return new(c.lifo) AstExport(name.text(), DefinitionKind::Memory);
+        return new(c.lifo) AstExport(name.text(), DefinitionKind::Function, AstRef(exportee.name()));
+      case WasmToken::Table: {
+        AstRef ref;
+        if (!c.ts.getIfRef(&ref))
+            ref = AstRef(0);
+        return new(c.lifo) AstExport(name.text(), DefinitionKind::Table, ref);
+      }
+      case WasmToken::Memory: {
+        AstRef ref;
+        if (!c.ts.getIfRef(&ref))
+            ref = AstRef(0);
+        return new(c.lifo) AstExport(name.text(), DefinitionKind::Memory, ref);
+      }
       case WasmToken::Global: {
         AstRef ref;
         if (!c.ts.matchRef(&ref, c.error))
@@ -2992,49 +3018,33 @@ ParseExport(WasmParseContext& c)
       }
       case WasmToken::OpenParen: {
         exportee = c.ts.get();
+
+        DefinitionKind kind;
         switch (exportee.kind()) {
-          case WasmToken::Func: {
-            exportee = c.ts.get();
-            switch (exportee.kind()) {
-              case WasmToken::Index:
-                if (!c.ts.match(WasmToken::CloseParen, c.error))
-                    return nullptr;
-                return new(c.lifo) AstExport(name.text(), DefinitionKind::Function,
-                                             AstRef(AstName(), exportee.index()));
-              case WasmToken::Name:
-                if (!c.ts.match(WasmToken::CloseParen, c.error))
-                    return nullptr;
-                return new(c.lifo) AstExport(name.text(), DefinitionKind::Function,
-                                             AstRef(exportee.name(), AstNoIndex));
-              default:
-                break;
-            }
+          case WasmToken::Func:
+            kind = DefinitionKind::Function;
             break;
-          }
           case WasmToken::Table:
-            if (!MaybeParseOwnerIndex(c))
-                return nullptr;
-            if (!c.ts.match(WasmToken::CloseParen, c.error))
-                return nullptr;
-            return new(c.lifo) AstExport(name.text(), DefinitionKind::Table);
-          case WasmToken::Memory:
-            if (!MaybeParseOwnerIndex(c))
-                return nullptr;
-            if (!c.ts.match(WasmToken::CloseParen, c.error))
-                return nullptr;
-            return new(c.lifo) AstExport(name.text(), DefinitionKind::Memory);
-          case WasmToken::Global: {
-            AstRef ref;
-            if (!c.ts.matchRef(&ref, c.error))
-                return nullptr;
-            if (!c.ts.match(WasmToken::CloseParen, c.error))
-                return nullptr;
-            return new(c.lifo) AstExport(name.text(), DefinitionKind::Global, ref);
-          }
-          default:
+            kind = DefinitionKind::Table;
             break;
+          case WasmToken::Memory:
+            kind = DefinitionKind::Memory;
+            break;
+          case WasmToken::Global:
+            kind = DefinitionKind::Global;
+            break;
+          default:
+            c.ts.generateError(exportee, c.error);
+            return nullptr;
         }
-        break;
+
+        AstRef ref;
+        if (!c.ts.matchRef(&ref, c.error))
+            return nullptr;
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return nullptr;
+
+        return new(c.lifo) AstExport(name.text(), kind, ref);
       }
       default:
         break;
@@ -3073,7 +3083,8 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
             return false;
         }
 
-        if (!ParseInlineExport(c, DefinitionKind::Table, module))
+        AstRef ref = name.empty() ? AstRef(module->tables().length()) : AstRef(name);
+        if (!ParseInlineExport(c, DefinitionKind::Table, module, ref))
             return false;
         if (!c.ts.match(WasmToken::CloseParen, c.error))
             return false;
@@ -3084,11 +3095,7 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
         Limits table;
         if (!ParseTableSig(c, &table))
             return false;
-        if (!module->setTable(table)) {
-            c.ts.generateError(token, c.error);
-            return false;
-        }
-        return true;
+        return module->addTable(name, table);
     }
 
     // Or: anyfunc (elem 1 2 ...)
@@ -3116,10 +3123,8 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
         return false;
 
     Limits r = { numElements, Some(numElements) };
-    if (!module->setTable(r)) {
-        c.ts.generateError(token, c.error);
+    if (!module->addTable(name, r))
         return false;
-    }
 
     auto* zero = new(c.lifo) AstConst(Val(uint32_t(0)));
     if (!zero)
@@ -3135,7 +3140,7 @@ ParseElemSegment(WasmParseContext& c)
     if (!MaybeParseOwnerIndex(c))
         return nullptr;
 
-    AstExpr* offset = ParseExpr(c, true);
+    AstExpr* offset = ParseInitializerExpression(c);
     if (!offset)
         return nullptr;
 
@@ -3156,7 +3161,7 @@ ParseGlobal(WasmParseContext& c, AstModule* module)
     AstName name = c.ts.getIfName();
 
     WasmToken typeToken;
-    uint32_t flags = 0;
+    bool isMutable;
 
     WasmToken openParen;
     if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
@@ -3172,18 +3177,17 @@ ParseGlobal(WasmParseContext& c, AstModule* module)
             if (!c.ts.match(WasmToken::CloseParen, c.error))
                 return false;
 
-            if (!ParseGlobalType(c, &typeToken, &flags))
+            if (!ParseGlobalType(c, &typeToken, &isMutable))
                 return false;
 
             auto* imp = new(c.lifo) AstImport(name, names.module.text(), names.field.text(),
-                                              AstGlobal(AstName(), typeToken.valueType(), flags));
+                                              AstGlobal(AstName(), typeToken.valueType(),
+                                                        isMutable));
             return imp && module->append(imp);
         }
 
         if (c.ts.getIf(WasmToken::Export)) {
-            AstRef ref = name.empty()
-                         ? AstRef(AstName(), module->globals().length())
-                         : AstRef(name, AstNoIndex);
+            AstRef ref = name.empty() ? AstRef(module->globals().length()) : AstRef(name);
             if (!ParseInlineExport(c, DefinitionKind::Global, module, ref))
                 return false;
             if (!c.ts.match(WasmToken::CloseParen, c.error))
@@ -3193,14 +3197,14 @@ ParseGlobal(WasmParseContext& c, AstModule* module)
         }
     }
 
-    if (!ParseGlobalType(c, &typeToken, &flags))
+    if (!ParseGlobalType(c, &typeToken, &isMutable))
         return false;
 
-    AstExpr* init = ParseExpr(c, true);
+    AstExpr* init = ParseInitializerExpression(c);
     if (!init)
         return false;
 
-    auto* glob = new(c.lifo) AstGlobal(name, typeToken.valueType(), flags, Some(init));
+    auto* glob = new(c.lifo) AstGlobal(name, typeToken.valueType(), isMutable, Some(init));
     return glob && module->append(glob);
 }
 
@@ -3307,6 +3311,8 @@ class Resolver
     AstNameMap sigMap_;
     AstNameMap funcMap_;
     AstNameMap importMap_;
+    AstNameMap tableMap_;
+    AstNameMap memoryMap_;
     AstNameVector targetStack_;
 
     bool registerName(AstNameMap& map, AstName name, size_t index) {
@@ -3336,12 +3342,9 @@ class Resolver
         return false;
     }
     bool failResolveLabel(const char* kind, AstName name) {
-        Vector<char16_t, 0, SystemAllocPolicy> nameWithNull;
-        if (!nameWithNull.append(name.begin(), name.length()))
-            return false;
-        if (!nameWithNull.append(0))
-            return false;
-        error_->reset(JS_smprintf("%s label '%hs' not found", kind, nameWithNull.begin()));
+        TwoByteChars chars(name.begin(), name.length());
+        UniqueChars utf8Chars(CharsToNewUTF8CharsZ(nullptr, chars).c_str());
+        error_->reset(JS_smprintf("%s label '%s' not found", kind, utf8Chars.get()));
         return false;
     }
 
@@ -3353,12 +3356,16 @@ class Resolver
         sigMap_(lifo),
         funcMap_(lifo),
         importMap_(lifo),
+        tableMap_(lifo),
+        memoryMap_(lifo),
         targetStack_(lifo)
     {}
     bool init() {
         return sigMap_.init() &&
                funcMap_.init() &&
                importMap_.init() &&
+               tableMap_.init() &&
+               memoryMap_.init() &&
                varMap_.init() &&
                globalMap_.init();
     }
@@ -3366,21 +3373,22 @@ class Resolver
         varMap_.clear();
         MOZ_ASSERT(targetStack_.empty());
     }
-    bool registerSigName(AstName name, size_t index) {
-        return name.empty() || registerName(sigMap_, name, index);
+
+#define REGISTER(what, map)                                    \
+    bool register##what##Name(AstName name, size_t index) {    \
+        return name.empty() || registerName(map, name, index); \
     }
-    bool registerFuncName(AstName name, size_t index) {
-        return name.empty() || registerName(funcMap_, name, index);
-    }
-    bool registerImportName(AstName name, size_t index) {
-        return name.empty() || registerName(importMap_, name, index);
-    }
-    bool registerVarName(AstName name, size_t index) {
-        return name.empty() || registerName(varMap_, name, index);
-    }
-    bool registerGlobalName(AstName name, size_t index) {
-        return name.empty() || registerName(globalMap_, name, index);
-    }
+
+    REGISTER(Sig, sigMap_)
+    REGISTER(Func, funcMap_)
+    REGISTER(Import, importMap_)
+    REGISTER(Var, varMap_)
+    REGISTER(Global, globalMap_)
+    REGISTER(Table, tableMap_)
+    REGISTER(Memory, memoryMap_)
+
+#undef REGISTER
+
     bool pushTarget(AstName name) {
         return targetStack_.append(name);
     }
@@ -3389,31 +3397,24 @@ class Resolver
         targetStack_.popBack();
     }
 
-    bool resolveSignature(AstRef& ref) {
-        if (!ref.name().empty() && !resolveRef(sigMap_, ref))
-            return failResolveLabel("signature", ref.name());
-        return true;
+#define RESOLVE(map, label)                               \
+    bool resolve##label(AstRef& ref) {                    \
+        MOZ_ASSERT(!ref.isInvalid());                     \
+        if (!ref.name().empty() && !resolveRef(map, ref)) \
+            return failResolveLabel(#label, ref.name());  \
+        return true;                                      \
     }
-    bool resolveFunction(AstRef& ref) {
-        if (!ref.name().empty() && !resolveRef(funcMap_, ref))
-            return failResolveLabel("function", ref.name());
-        return true;
-    }
-    bool resolveImport(AstRef& ref) {
-        if (!ref.name().empty() && !resolveRef(importMap_, ref))
-            return failResolveLabel("import", ref.name());
-        return true;
-    }
-    bool resolveLocal(AstRef& ref) {
-        if (!ref.name().empty() && !resolveRef(varMap_, ref))
-            return failResolveLabel("local", ref.name());
-        return true;
-    }
-    bool resolveGlobal(AstRef& ref) {
-        if (!ref.name().empty() && !resolveRef(globalMap_, ref))
-            return failResolveLabel("global", ref.name());
-        return true;
-    }
+
+    RESOLVE(sigMap_, Signature)
+    RESOLVE(funcMap_, Function)
+    RESOLVE(importMap_, Import)
+    RESOLVE(varMap_, Local)
+    RESOLVE(globalMap_, Global)
+    RESOLVE(tableMap_, Table)
+    RESOLVE(memoryMap_, Memory)
+
+#undef RESOLVE
+
     bool resolveBranchTarget(AstRef& ref) {
         if (ref.name().empty())
             return true;
@@ -3497,17 +3498,13 @@ ResolveArgs(Resolver& r, const AstExprVector& args)
 static bool
 ResolveCall(Resolver& r, AstCall& c)
 {
+    MOZ_ASSERT(c.expr() == Expr::Call);
+
     if (!ResolveArgs(r, c.args()))
         return false;
 
-    if (c.expr() == Expr::Call) {
-        if (!r.resolveFunction(c.func()))
-            return false;
-    } else {
-        MOZ_ASSERT(c.expr() == Expr::CallImport);
-        if (!r.resolveImport(c.func()))
-            return false;
-    }
+    if (!r.resolveFunction(c.func()))
+        return false;
 
     return true;
 }
@@ -3585,6 +3582,12 @@ static bool
 ResolveUnaryOperator(Resolver& r, AstUnaryOperator& b)
 {
     return ResolveExpr(r, *b.op());
+}
+
+static bool
+ResolveGrowMemory(Resolver& r, AstGrowMemory& gm)
+{
+    return ResolveExpr(r, *gm.op());
 }
 
 static bool
@@ -3680,8 +3683,8 @@ ResolveExpr(Resolver& r, AstExpr& expr)
     switch (expr.kind()) {
       case AstExprKind::Nop:
       case AstExprKind::Pop:
-      case AstExprKind::NullaryOperator:
       case AstExprKind::Unreachable:
+      case AstExprKind::CurrentMemory:
         return true;
       case AstExprKind::Drop:
         return ResolveDropOperator(r, expr.as<AstDrop>());
@@ -3727,6 +3730,8 @@ ResolveExpr(Resolver& r, AstExpr& expr)
         return ResolveTernaryOperator(r, expr.as<AstTernaryOperator>());
       case AstExprKind::UnaryOperator:
         return ResolveUnaryOperator(r, expr.as<AstUnaryOperator>());
+      case AstExprKind::GrowMemory:
+        return ResolveGrowMemory(r, expr.as<AstGrowMemory>());
     }
     MOZ_CRASH("Bad expr kind");
 }
@@ -3765,6 +3770,8 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
 
     size_t lastFuncIndex = 0;
     size_t lastGlobalIndex = 0;
+    size_t lastMemoryIndex = 0;
+    size_t lastTableIndex = 0;
     for (AstImport* imp : module->imports()) {
         switch (imp->kind()) {
           case DefinitionKind::Function:
@@ -3778,7 +3785,12 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
                 return r.fail("duplicate import");
             break;
           case DefinitionKind::Memory:
+            if (!r.registerMemoryName(imp->name(), lastMemoryIndex++))
+                return r.fail("duplicate import");
+            break;
           case DefinitionKind::Table:
+            if (!r.registerTableName(imp->name(), lastTableIndex++))
+                return r.fail("duplicate import");
             break;
         }
     }
@@ -3790,12 +3802,25 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
             return r.fail("duplicate function");
     }
 
-    const AstGlobalVector& globals = module->globals();
-    for (const AstGlobal* global : globals) {
+    for (const AstGlobal* global : module->globals()) {
         if (!r.registerGlobalName(global->name(), lastGlobalIndex++))
             return r.fail("duplicate import");
         if (global->hasInit() && !ResolveExpr(r, global->init()))
             return false;
+    }
+
+    for (const AstResizable& table : module->tables()) {
+        if (table.imported)
+            continue;
+        if (!r.registerTableName(table.name, lastTableIndex++))
+            return r.fail("duplicate import");
+    }
+
+    for (const AstResizable& memory : module->memories()) {
+        if (memory.imported)
+            continue;
+        if (!r.registerMemoryName(memory.name, lastMemoryIndex++))
+            return r.fail("duplicate import");
     }
 
     for (AstExport* export_ : module->exports()) {
@@ -3809,7 +3834,12 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
                 return false;
             break;
           case DefinitionKind::Table:
+            if (!r.resolveTable(export_->ref()))
+                return false;
+            break;
           case DefinitionKind::Memory:
+            if (!r.resolveMemory(export_->ref()))
+                return false;
             break;
         }
     }
@@ -3863,7 +3893,7 @@ EncodeBlock(Encoder& e, AstBlock& b)
     if (!e.writeExpr(b.expr()))
         return false;
 
-    if (!e.writeExprType(b.type()))
+    if (!e.writeBlockType(b.type()))
         return false;
 
     if (!EncodeExprList(e, b.exprs()))
@@ -3946,6 +3976,9 @@ EncodeCallIndirect(Encoder& e, AstCallIndirect& c)
     if (!e.writeVarU32(c.sig().index()))
         return false;
 
+    if (!e.writeVarU32(uint32_t(MemoryTableFlags::Default)))
+        return false;
+
     return true;
 }
 
@@ -4024,12 +4057,6 @@ EncodeUnaryOperator(Encoder& e, AstUnaryOperator& b)
 }
 
 static bool
-EncodeNullaryOperator(Encoder& e, AstNullaryOperator& b)
-{
-    return e.writeExpr(b.expr());
-}
-
-static bool
 EncodeBinaryOperator(Encoder& e, AstBinaryOperator& b)
 {
     return EncodeExpr(e, *b.lhs()) &&
@@ -4067,7 +4094,7 @@ EncodeIf(Encoder& e, AstIf& i)
     if (!EncodeExpr(e, i.cond()) || !e.writeExpr(Expr::If))
         return false;
 
-    if (!e.writeExprType(i.type()))
+    if (!e.writeBlockType(i.type()))
         return false;
 
     if (!EncodeExprList(e, i.thenExprs()))
@@ -4156,6 +4183,33 @@ EncodeBranchTable(Encoder& e, AstBranchTable& bt)
 }
 
 static bool
+EncodeCurrentMemory(Encoder& e, AstCurrentMemory& cm)
+{
+    if (!e.writeExpr(Expr::CurrentMemory))
+        return false;
+
+    if (!e.writeVarU32(uint32_t(MemoryTableFlags::Default)))
+        return false;
+
+    return true;
+}
+
+static bool
+EncodeGrowMemory(Encoder& e, AstGrowMemory& gm)
+{
+    if (!EncodeExpr(e, *gm.op()))
+        return false;
+
+    if (!e.writeExpr(Expr::GrowMemory))
+        return false;
+
+    if (!e.writeVarU32(uint32_t(MemoryTableFlags::Default)))
+        return false;
+
+    return true;
+}
+
+static bool
 EncodeExpr(Encoder& e, AstExpr& expr)
 {
     switch (expr.kind()) {
@@ -4209,8 +4263,10 @@ EncodeExpr(Encoder& e, AstExpr& expr)
         return EncodeTernaryOperator(e, expr.as<AstTernaryOperator>());
       case AstExprKind::UnaryOperator:
         return EncodeUnaryOperator(e, expr.as<AstUnaryOperator>());
-      case AstExprKind::NullaryOperator:
-        return EncodeNullaryOperator(e, expr.as<AstNullaryOperator>());
+      case AstExprKind::CurrentMemory:
+        return EncodeCurrentMemory(e, expr.as<AstCurrentMemory>());
+      case AstExprKind::GrowMemory:
+        return EncodeGrowMemory(e, expr.as<AstGrowMemory>());
     }
     MOZ_CRASH("Bad expr kind");
 }
@@ -4232,7 +4288,7 @@ EncodeTypeSection(Encoder& e, AstModule& module)
         return false;
 
     for (AstSig* sig : module.sigs()) {
-        if (!e.writeVarU32(uint32_t(TypeConstructor::Function)))
+        if (!e.writeVarU32(uint32_t(TypeCode::Func)))
             return false;
 
         if (!e.writeVarU32(sig->args().length()))
@@ -4307,10 +4363,17 @@ EncodeLimits(Encoder& e, const Limits& limits)
 static bool
 EncodeTableLimits(Encoder& e, const Limits& limits)
 {
-    if (!e.writeVarU32(uint32_t(TypeConstructor::AnyFunc)))
+    if (!e.writeVarU32(uint32_t(TypeCode::AnyFunc)))
         return false;
 
     return EncodeLimits(e, limits);
+}
+
+static bool
+EncodeGlobalType(Encoder& e, const AstGlobal* global)
+{
+    return e.writeValType(global->type()) &&
+           e.writeVarU32(global->isMutable() ? uint32_t(GlobalFlags::IsMutable) : 0);
 }
 
 static bool
@@ -4332,17 +4395,15 @@ EncodeImport(Encoder& e, AstImport& imp)
         break;
       case DefinitionKind::Global:
         MOZ_ASSERT(!imp.global().hasInit());
-        if (!e.writeValType(imp.global().type()))
-            return false;
-        if (!e.writeVarU32(imp.global().flags()))
+        if (!EncodeGlobalType(e, &imp.global()))
             return false;
         break;
       case DefinitionKind::Table:
-        if (!EncodeTableLimits(e, imp.resizable()))
+        if (!EncodeTableLimits(e, imp.limits()))
             return false;
         break;
       case DefinitionKind::Memory:
-        if (!EncodeLimits(e, imp.resizable()))
+        if (!EncodeLimits(e, imp.limits()))
             return false;
         break;
     }
@@ -4375,21 +4436,28 @@ EncodeImportSection(Encoder& e, AstModule& module)
 static bool
 EncodeMemorySection(Encoder& e, AstModule& module)
 {
-    if (!module.hasMemory())
+    size_t numOwnMemories = 0;
+    for (const AstResizable& memory : module.memories()) {
+        if (!memory.imported)
+            numOwnMemories++;
+    }
+
+    if (!numOwnMemories)
         return true;
 
     size_t offset;
     if (!e.startSection(SectionId::Memory, &offset))
         return false;
 
-    uint32_t numMemories = 1;
-    if (!e.writeVarU32(numMemories))
+    if (!e.writeVarU32(numOwnMemories))
         return false;
 
-    const Limits& memory = module.memory();
-
-    if (!EncodeLimits(e, memory))
-        return false;
+    for (const AstResizable& memory : module.memories()) {
+        if (memory.imported)
+            continue;
+        if (!EncodeLimits(e, memory.limits))
+            return false;
+    }
 
     e.finishSection(offset);
     return true;
@@ -4409,9 +4477,7 @@ EncodeGlobalSection(Encoder& e, AstModule& module)
 
     for (const AstGlobal* global : globals) {
         MOZ_ASSERT(global->hasInit());
-        if (!e.writeValType(global->type()))
-            return false;
-        if (!e.writeVarU32(global->flags()))
+        if (!EncodeGlobalType(e, global))
             return false;
         if (!EncodeExpr(e, global->init()))
             return false;
@@ -4432,18 +4498,8 @@ EncodeExport(Encoder& e, AstExport& exp)
     if (!e.writeVarU32(uint32_t(exp.kind())))
         return false;
 
-    switch (exp.kind()) {
-      case DefinitionKind::Function:
-      case DefinitionKind::Global:
-        if (!e.writeVarU32(exp.ref().index()))
-            return false;
-        break;
-      case DefinitionKind::Table:
-      case DefinitionKind::Memory:
-        if (!e.writeVarU32(0))
-            return false;
-        break;
-    }
+    if (!e.writeVarU32(exp.ref().index()))
+        return false;
 
     return true;
 }
@@ -4474,20 +4530,28 @@ EncodeExportSection(Encoder& e, AstModule& module)
 static bool
 EncodeTableSection(Encoder& e, AstModule& module)
 {
-    if (!module.hasTable())
+    size_t numOwnTables = 0;
+    for (const AstResizable& table : module.tables()) {
+        if (!table.imported)
+            numOwnTables++;
+    }
+
+    if (!numOwnTables)
         return true;
 
     size_t offset;
     if (!e.startSection(SectionId::Table, &offset))
         return false;
 
-    uint32_t numTables = 1;
-    if (!e.writeVarU32(numTables))
+    if (!e.writeVarU32(numOwnTables))
         return false;
 
-    const Limits& table = module.table();
-    if (!EncodeTableLimits(e, table))
-        return false;
+    for (const AstResizable& table : module.tables()) {
+        if (table.imported)
+            continue;
+        if (!EncodeTableLimits(e, table.limits))
+            return false;
+    }
 
     e.finishSection(offset);
     return true;
@@ -4570,18 +4634,22 @@ EncodeDataSegment(Encoder& e, AstDataSegment& segment)
     if (!e.writeExpr(Expr::End))
         return false;
 
-    AstName text = segment.text();
+    size_t totalLength = 0;
+    for (const AstName& fragment : segment.fragments())
+        totalLength += fragment.length();
 
     Vector<uint8_t, 0, SystemAllocPolicy> bytes;
-    if (!bytes.reserve(text.length()))
+    if (!bytes.reserve(totalLength))
         return false;
 
-    const char16_t* cur = text.begin();
-    const char16_t* end = text.end();
-    while (cur != end) {
-        uint8_t byte;
-        MOZ_ALWAYS_TRUE(ConsumeTextByte(&cur, end, &byte));
-        bytes.infallibleAppend(byte);
+    for (const AstName& fragment : segment.fragments()) {
+        const char16_t* cur = fragment.begin();
+        const char16_t* end = fragment.end();
+        while (cur != end) {
+            uint8_t byte;
+            MOZ_ALWAYS_TRUE(ConsumeTextByte(&cur, end, &byte));
+            bytes.infallibleAppend(byte);
+        }
     }
 
     if (!e.writeBytes(bytes.begin(), bytes.length()))

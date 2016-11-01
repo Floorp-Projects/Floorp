@@ -238,7 +238,7 @@ var gTranslationExceptions = {
       this.onSiteDeleted();
   },
 
-  onLanguageKeyPress: function() {
+  onLanguageKeyPress: function(aEvent) {
     if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE)
       this.onLanguageDeleted();
   },

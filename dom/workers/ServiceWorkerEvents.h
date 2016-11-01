@@ -260,7 +260,6 @@ class ExtendableMessageEvent final : public ExtendableEvent
   RefPtr<ServiceWorker> mServiceWorker;
   RefPtr<MessagePort> mMessagePort;
   nsTArray<RefPtr<MessagePort>> mPorts;
-  bool mPortsSet;
 
 protected:
   explicit ExtendableMessageEvent(EventTarget* aOwner);
@@ -308,13 +307,7 @@ public:
     return NS_OK;
   }
 
-  void GetPorts(Nullable<nsTArray<RefPtr<MessagePort>>>& aPorts);
-
-  void SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts);
-
-  void SetSource(ServiceWorkerClient* aClient);
-
-  void SetSource(ServiceWorker* aServiceWorker);
+  void GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts);
 };
 
 END_WORKERS_NAMESPACE

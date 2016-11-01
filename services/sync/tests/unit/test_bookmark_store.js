@@ -21,7 +21,7 @@ tracker.persistChangedIDs = false;
 var fxuri = Utils.makeURI("http://getfirefox.com/");
 var tburi = Utils.makeURI("http://getthunderbird.com/");
 
-add_test(function test_ignore_specials() {
+add_task(function* test_ignore_specials() {
   _("Ensure that we can't delete bookmark roots.");
 
   // Belt...
@@ -30,6 +30,7 @@ add_test(function test_ignore_specials() {
   do_check_neq(null, store.idForGUID("toolbar"));
 
   store.applyIncoming(record);
+  yield store.deletePending();
 
   // Ensure that the toolbar exists.
   do_check_neq(null, store.idForGUID("toolbar"));
@@ -39,11 +40,11 @@ add_test(function test_ignore_specials() {
 
   // Braces...
   store.remove(record);
+  yield store.deletePending();
   do_check_neq(null, store.idForGUID("toolbar"));
   engine._buildGUIDMap();
 
   store.wipe();
-  run_next_test();
 });
 
 add_test(function test_bookmark_create() {
@@ -243,7 +244,7 @@ add_test(function test_folder_createRecord() {
   }
 });
 
-add_test(function test_deleted() {
+add_task(function* test_deleted() {
   try {
     _("Create a bookmark that will be deleted.");
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
@@ -255,7 +256,7 @@ add_test(function test_deleted() {
     let record = new PlacesItem("bookmarks", bmk1_guid);
     record.deleted = true;
     store.applyIncoming(record);
-
+    yield store.deletePending();
     _("Ensure it has been deleted.");
     let error;
     try {
@@ -271,7 +272,6 @@ add_test(function test_deleted() {
   } finally {
     _("Clean up.");
     store.wipe();
-    run_next_test();
   }
 });
 
@@ -427,6 +427,106 @@ add_test(function test_empty_query_doesnt_die() {
   
   run_next_test();
 });
+
+function assertDeleted(id) {
+  let error;
+  try {
+    PlacesUtils.bookmarks.getItemType(id);
+  } catch (e) {
+    error = e;
+  }
+  equal(error.result, Cr.NS_ERROR_ILLEGAL_VALUE)
+}
+
+add_task(function* test_delete_buffering() {
+  store.wipe();
+  try {
+    _("Create a folder with two bookmarks.");
+    let folder = new BookmarkFolder("bookmarks", "testfolder-1");
+    folder.parentName = "Bookmarks Toolbar";
+    folder.parentid = "toolbar";
+    folder.title = "Test Folder";
+    store.applyIncoming(folder);
+
+
+    let fxRecord = new Bookmark("bookmarks", "get-firefox1");
+    fxRecord.bmkUri        = fxuri.spec;
+    fxRecord.title         = "Get Firefox!";
+    fxRecord.parentName    = "Test Folder";
+    fxRecord.parentid      = "testfolder-1";
+
+    let tbRecord = new Bookmark("bookmarks", "get-tndrbrd1");
+    tbRecord.bmkUri        = tburi.spec;
+    tbRecord.title         = "Get Thunderbird!";
+    tbRecord.parentName    = "Test Folder";
+    tbRecord.parentid      = "testfolder-1";
+
+    store.applyIncoming(fxRecord);
+    store.applyIncoming(tbRecord);
+
+    let folderId = store.idForGUID(folder.id);
+    let fxRecordId = store.idForGUID(fxRecord.id);
+    let tbRecordId = store.idForGUID(tbRecord.id);
+
+    _("Check everything was created correctly.");
+
+    equal(PlacesUtils.bookmarks.getItemType(fxRecordId),
+          PlacesUtils.bookmarks.TYPE_BOOKMARK);
+    equal(PlacesUtils.bookmarks.getItemType(tbRecordId),
+          PlacesUtils.bookmarks.TYPE_BOOKMARK);
+    equal(PlacesUtils.bookmarks.getItemType(folderId),
+          PlacesUtils.bookmarks.TYPE_FOLDER);
+
+    equal(PlacesUtils.bookmarks.getFolderIdForItem(fxRecordId), folderId);
+    equal(PlacesUtils.bookmarks.getFolderIdForItem(tbRecordId), folderId);
+    equal(PlacesUtils.bookmarks.getFolderIdForItem(folderId),
+          PlacesUtils.bookmarks.toolbarFolder);
+
+    _("Delete the folder and one bookmark.");
+
+    let deleteFolder = new PlacesItem("bookmarks", "testfolder-1");
+    deleteFolder.deleted = true;
+
+    let deleteFxRecord = new PlacesItem("bookmarks", "get-firefox1");
+    deleteFxRecord.deleted = true;
+
+    store.applyIncoming(deleteFolder);
+    store.applyIncoming(deleteFxRecord);
+
+    _("Check that we haven't deleted them yet, but that the deletions are queued");
+    // these will throw if we've deleted them
+    equal(PlacesUtils.bookmarks.getItemType(fxRecordId),
+           PlacesUtils.bookmarks.TYPE_BOOKMARK);
+
+    equal(PlacesUtils.bookmarks.getItemType(folderId),
+           PlacesUtils.bookmarks.TYPE_FOLDER);
+
+    equal(PlacesUtils.bookmarks.getFolderIdForItem(fxRecordId), folderId);
+
+    ok(store._foldersToDelete.has(folder.id));
+    ok(store._atomsToDelete.has(fxRecord.id));
+    ok(!store._atomsToDelete.has(tbRecord.id));
+
+    _("Process pending deletions and ensure that the right things are deleted.");
+    let updatedGuids = yield store.deletePending();
+
+    deepEqual(updatedGuids.sort(), ["get-tndrbrd1", "toolbar"]);
+
+    assertDeleted(fxRecordId);
+    assertDeleted(folderId);
+
+    ok(!store._foldersToDelete.has(folder.id));
+    ok(!store._atomsToDelete.has(fxRecord.id));
+
+    equal(PlacesUtils.bookmarks.getFolderIdForItem(tbRecordId),
+          PlacesUtils.bookmarks.toolbarFolder);
+
+  } finally {
+    _("Clean up.");
+    store.wipe();
+  }
+});
+
 
 function run_test() {
   initTestLogging('Trace');

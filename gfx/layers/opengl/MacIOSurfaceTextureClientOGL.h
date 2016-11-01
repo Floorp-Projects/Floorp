@@ -27,7 +27,7 @@ public:
 
   virtual void FillInfo(TextureData::Info& aInfo) const override;
 
-  virtual bool Lock(OpenMode, FenceHandle*) override;
+  virtual bool Lock(OpenMode) override;
 
   virtual void Unlock() override;
 

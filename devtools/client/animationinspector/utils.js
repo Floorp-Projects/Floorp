@@ -27,6 +27,7 @@ const MILLIS_TIME_FORMAT_MAX_DURATION = 4000;
  *   {attrName1:value1, attrName2: value2, ...}
  * - parent {DOMNode} Mandatory node to append the newly created node to.
  * - textContent {String} Optional text for the node.
+ * - namespace {String} Optional namespace
  * @return {DOMNode} The newly created node.
  */
 function createNode(options) {
@@ -35,7 +36,10 @@ function createNode(options) {
   }
 
   let type = options.nodeType || "div";
-  let node = options.parent.ownerDocument.createElement(type);
+  let node =
+    options.namespace
+    ? options.parent.ownerDocument.createElementNS(options.namespace, type)
+    : options.parent.ownerDocument.createElement(type);
 
   for (let name in options.attributes || {}) {
     let value = options.attributes[name];
@@ -264,31 +268,6 @@ var TimeScale = {
 
     return {x, w, iterationW, delayX, delayW, negativeDelayW,
             endDelayX, endDelayW};
-  },
-
-  /**
-   * Given an animation, get the background data for .iterations element.
-   * This background represents iterationCount and iterationStart.
-   * Returns three properties.
-   * 1. size: x of background-size (%)
-   * 2. position: x of background-position (%)
-   * 3. repeat: background-repeat (string)
-   */
-  getIterationsBackgroundData: function ({state}) {
-    let iterationCount = state.iterationCount || 1;
-    let iterationStartW = state.iterationStart % 1 * 100;
-    let background = {};
-    if (iterationCount == 1) {
-      background.size = 100 - iterationStartW;
-      background.position = 0;
-      background.repeat = "no-repeat";
-    } else {
-      background.size = 1 / iterationCount * 100;
-      background.position = -iterationStartW * background.size /
-                              (100 - background.size);
-      background.repeat = "repeat-x";
-    }
-    return background;
   }
 };
 

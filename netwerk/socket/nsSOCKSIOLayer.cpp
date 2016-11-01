@@ -19,9 +19,8 @@
 #include "nsIDNSListener.h"
 #include "nsICancelable.h"
 #include "nsThreadUtils.h"
-#include "nsIURL.h"
 #include "nsIFile.h"
-#include "nsNetUtil.h"
+#include "nsIFileProtocolHandler.h"
 #include "mozilla/Logging.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/Unused.h"
@@ -133,9 +132,21 @@ private:
         nsresult rv;
         MOZ_ASSERT(aProxyAddr);
 
+        nsCOMPtr<nsIProtocolHandler> protocolHandler(
+            do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "file", &rv));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
+
+        nsCOMPtr<nsIFileProtocolHandler> fileHandler(
+            do_QueryInterface(protocolHandler, &rv));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
+
         nsCOMPtr<nsIFile> socketFile;
-        rv = NS_GetFileFromURLSpec(aDomainSocketPath,
-                                   getter_AddRefs(socketFile));
+        rv = fileHandler->GetFileFromURLSpec(aDomainSocketPath,
+                                             getter_AddRefs(socketFile));
         if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
         }
@@ -513,9 +524,15 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
         status = fd->lower->methods->connect(fd->lower, &prProxy, mTimeout);
         if (status != PR_SUCCESS) {
             PRErrorCode c = PR_GetError();
+
             // If EINPROGRESS, return now and check back later after polling
             if (c == PR_WOULD_BLOCK_ERROR || c == PR_IN_PROGRESS_ERROR) {
                 mState = SOCKS_CONNECTING_TO_PROXY;
+                return status;
+            } else if (IsHostDomainSocket()) {
+                LOGERROR(("socks: connect to domain socket failed (%d)", c));
+                PR_SetError(PR_CONNECT_REFUSED_ERROR, 0);
+                mState = SOCKS_FAILED;
                 return status;
             }
         }

@@ -128,7 +128,7 @@ template<class Impl>
 class GeckoEditable::Natives : public mozilla::jni::NativeImpl<GeckoEditable, Impl>
 {
 public:
-    static const JNINativeMethod methods[8];
+    static const JNINativeMethod methods[7];
 };
 
 template<class Impl>
@@ -137,10 +137,6 @@ const JNINativeMethod GeckoEditable::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<GeckoEditable::DisposeNative_t>(
             mozilla::jni::NativeStub<GeckoEditable::DisposeNative_t, Impl>
             ::template Wrap<&Impl::DisposeNative>),
-
-    mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeAcknowledgeFocus_t>(
-            mozilla::jni::NativeStub<GeckoEditable::OnImeAcknowledgeFocus_t, Impl>
-            ::template Wrap<&Impl::OnImeAcknowledgeFocus>),
 
     mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeAddCompositionRange_t>(
             mozilla::jni::NativeStub<GeckoEditable::OnImeAddCompositionRange_t, Impl>
@@ -199,73 +195,6 @@ const JNINativeMethod GeckoScreenOrientation::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<GeckoScreenOrientation::OnOrientationChange_t>(
             mozilla::jni::NativeStub<GeckoScreenOrientation::OnOrientationChange_t, Impl>
             ::template Wrap<&Impl::OnOrientationChange>)
-};
-
-template<class Impl>
-class GeckoSmsManager::Natives : public mozilla::jni::NativeImpl<GeckoSmsManager, Impl>
-{
-public:
-    static const JNINativeMethod methods[14];
-};
-
-template<class Impl>
-const JNINativeMethod GeckoSmsManager::Natives<Impl>::methods[] = {
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifyCursorDone_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifyCursorDone_t, Impl>
-            ::template Wrap<&Impl::NotifyCursorDone>),
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifyCursorError_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifyCursorError_t, Impl>
-            ::template Wrap<&Impl::NotifyCursorError>),
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifyGetSms_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifyGetSms_t, Impl>
-            ::template Wrap<&Impl::NotifyGetSms>),
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifyGetSmsFailed_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifyGetSmsFailed_t, Impl>
-            ::template Wrap<&Impl::NotifyGetSmsFailed>),
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifyMessageCursorResult_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifyMessageCursorResult_t, Impl>
-            ::template Wrap<&Impl::NotifyMessageCursorResult>),
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsDeleteFailed_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsDeleteFailed_t, Impl>
-            ::template Wrap<&Impl::NotifySmsDeleteFailed>),
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsDeleted_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsDeleted_t, Impl>
-            ::template Wrap<&Impl::NotifySmsDeleted>),
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsDelivery_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsDelivery_t, Impl>
-            ::template Wrap<&Impl::NotifySmsDelivery>),
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsMarkAsReadFailed_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsMarkAsReadFailed_t, Impl>
-            ::template Wrap<&Impl::NotifySmsMarkAsReadFailed>),
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsMarkedAsRead_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsMarkedAsRead_t, Impl>
-            ::template Wrap<&Impl::NotifySmsMarkedAsRead>),
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsReceived_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsReceived_t, Impl>
-            ::template Wrap<&Impl::NotifySmsReceived>),
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsSendFailed_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsSendFailed_t, Impl>
-            ::template Wrap<&Impl::NotifySmsSendFailed>),
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsSent_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsSent_t, Impl>
-            ::template Wrap<&Impl::NotifySmsSent>),
-
-    mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifyThreadCursorResult_t>(
-            mozilla::jni::NativeStub<GeckoSmsManager::NotifyThreadCursorResult_t, Impl>
-            ::template Wrap<&Impl::NotifyThreadCursorResult>)
 };
 
 template<class Impl>

@@ -74,8 +74,7 @@ ia2AccessibleHyperlink::get_anchor(long aIndex, VARIANT* aAnchor)
   if (FAILED(result))
     return result;
 
-  IUnknown* unknownPtr = static_cast<IUnknown*>(instancePtr);
-  aAnchor->ppunkVal = &unknownPtr;
+  aAnchor->punkVal = static_cast<IUnknown*>(instancePtr);
   aAnchor->vt = VT_UNKNOWN;
   return S_OK;
 

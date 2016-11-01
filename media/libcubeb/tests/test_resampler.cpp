@@ -4,12 +4,12 @@
  * This program is made available under an ISC-style license.  See the
  * accompanying file LICENSE for details.
  */
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif // NOMINMAX
 
 #ifdef NDEBUG
 #undef NDEBUG
-#endif
-#ifndef CUBEB_GECKO_BUILD
-#include "config.h"
 #endif
 #include "cubeb_resampler_internal.h"
 #include <assert.h>

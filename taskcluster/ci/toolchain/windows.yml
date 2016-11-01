@@ -1,0 +1,22 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+win32-clang-cl/opt:
+    description: "Clang-cl toolchain build"
+    treeherder:
+        kind: build
+        platform: windows-2012-32/opt
+        symbol: Cc(ClangCL)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        implementation: generic-worker
+        max-run-time: 36000
+    run:
+        using: toolchain-script
+        script: build-clang-windows.sh
+    when:
+        files-changed:
+            - 'build/build-clang/**'
+            - 'taskcluster/scripts/misc/build-clang-windows.sh'

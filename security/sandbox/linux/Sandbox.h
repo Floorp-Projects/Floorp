@@ -14,32 +14,24 @@
 // sandboxing itself.  See also common/SandboxInfo.h for what parts of
 // sandboxing are enabled/supported.
 
-#ifdef ANDROID
-// Defined in libmozsandbox and referenced by linking against it.
-#define MOZ_SANDBOX_EXPORT MOZ_EXPORT
-#else
-// Defined in plugin-container and referenced by libraries it loads.
-#define MOZ_SANDBOX_EXPORT MOZ_EXPORT __attribute__((weak))
-#endif
-
 namespace mozilla {
 
 // This must be called early, while the process is still single-threaded.
-MOZ_SANDBOX_EXPORT void SandboxEarlyInit(GeckoProcessType aType);
+MOZ_EXPORT void SandboxEarlyInit(GeckoProcessType aType);
 
 #ifdef MOZ_CONTENT_SANDBOX
 // Call only if SandboxInfo::CanSandboxContent() returns true.
 // (No-op if MOZ_DISABLE_CONTENT_SANDBOX is set.)
 // aBrokerFd is the filesystem broker client file descriptor,
 // or -1 to allow direct filesystem access.
-MOZ_SANDBOX_EXPORT bool SetContentProcessSandbox(int aBrokerFd);
+MOZ_EXPORT bool SetContentProcessSandbox(int aBrokerFd);
 #endif
 
 #ifdef MOZ_GMP_SANDBOX
 // Call only if SandboxInfo::CanSandboxMedia() returns true.
 // (No-op if MOZ_DISABLE_GMP_SANDBOX is set.)
 // aFilePath is the path to the plugin file.
-MOZ_SANDBOX_EXPORT void SetMediaPluginSandbox(const char *aFilePath);
+MOZ_EXPORT void SetMediaPluginSandbox(const char *aFilePath);
 #endif
 
 } // namespace mozilla

@@ -319,6 +319,15 @@ public class GeckoAppShell
         CRASH_HANDLER.uncaughtException(null, e);
     }
 
+    @WrapForJNI
+    public static void openWindowForNotification() {
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+
+        getApplicationContext().startActivity(intent);
+    }
+
     private static float getLocationAccuracy(Location location) {
         float radius = location.getAccuracy();
         return (location.hasAccuracy() && radius > 0) ? radius : 1001;
@@ -1715,11 +1724,10 @@ public class GeckoAppShell
         public void setFullScreen(boolean fullscreen);
         public void addPluginView(View view);
         public void removePluginView(final View view);
-        public void enableCameraView();
-        public void disableCameraView();
+        public void enableOrientationListener();
+        public void disableOrientationListener();
         public void addAppStateListener(AppStateListener listener);
         public void removeAppStateListener(AppStateListener listener);
-        public View getCameraView();
         public void notifyWakeLockChanged(String topic, String state);
         public boolean areTabsShown();
         public AbsoluteLayout getPluginContainer();
@@ -1829,7 +1837,7 @@ public class GeckoAppShell
                 public void run() {
                     try {
                         if (getGeckoInterface() != null)
-                            getGeckoInterface().enableCameraView();
+                            getGeckoInterface().enableOrientationListener();
                     } catch (Exception e) { }
                 }
             });
@@ -1879,19 +1887,6 @@ public class GeckoAppShell
                 }
             }
 
-            try {
-                if (getGeckoInterface() != null) {
-                    View cameraView = getGeckoInterface().getCameraView();
-                    if (cameraView instanceof SurfaceView) {
-                        sCamera.setPreviewDisplay(((SurfaceView)cameraView).getHolder());
-                    } else if (cameraView instanceof TextureView) {
-                        sCamera.setPreviewTexture(((TextureView)cameraView).getSurfaceTexture());
-                    }
-                }
-            } catch (IOException | RuntimeException e) {
-                Log.w(LOGTAG, "Error setPreviewXXX:", e);
-            }
-
             sCamera.setParameters(params);
             sCameraBuffer = new byte[(bufferSize * 12) / 8];
             sCamera.addCallbackBuffer(sCameraBuffer);
@@ -1916,7 +1911,7 @@ public class GeckoAppShell
                 public void run() {
                     try {
                         if (getGeckoInterface() != null)
-                            getGeckoInterface().disableCameraView();
+                            getGeckoInterface().disableOrientationListener();
                     } catch (Exception e) { }
                 }
             });
@@ -1993,87 +1988,6 @@ public class GeckoAppShell
     @WrapForJNI(calledFrom = "gecko")
     private static void hideProgressDialog() {
         // unused stub
-    }
-
-    /*
-     * WebSMS related methods.
-     */
-    public static void sendMessage(String aNumber, String aMessage, int aRequestId, boolean aShouldNotify) {
-        if (!SmsManager.isEnabled()) {
-            return;
-        }
-
-        SmsManager.getInstance().send(aNumber, aMessage, aRequestId, aShouldNotify);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void sendMessage(String aNumber, String aMessage, int aRequestId) {
-        sendMessage(aNumber, aMessage, aRequestId, /* shouldNotify */ true);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void getMessage(int aMessageId, int aRequestId) {
-        if (!SmsManager.isEnabled()) {
-            return;
-        }
-
-        SmsManager.getInstance().getMessage(aMessageId, aRequestId);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void deleteMessage(int aMessageId, int aRequestId) {
-        if (!SmsManager.isEnabled()) {
-            return;
-        }
-
-        SmsManager.getInstance().deleteMessage(aMessageId, aRequestId);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void markMessageRead(int aMessageId, boolean aValue, boolean aSendReadReport, int aRequestId) {
-        if (!SmsManager.isEnabled()) {
-            return;
-        }
-
-        SmsManager.getInstance().markMessageRead(aMessageId, aValue, aSendReadReport, aRequestId);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void createMessageCursor(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, boolean aHasThreadId, long aThreadId, boolean aReverse, int aRequestId) {
-        if (!SmsManager.isEnabled()) {
-            return;
-        }
-
-        SmsManager.getInstance().createMessageCursor(aStartDate, aEndDate, aNumbers, aNumbersCount, aDelivery, aHasRead, aRead, aHasThreadId, aThreadId, aReverse, aRequestId);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void getNextMessage(int aRequestId) {
-        if (!SmsManager.isEnabled()) {
-            return;
-        }
-
-        SmsManager.getInstance().getNextMessage(aRequestId);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void createThreadCursor(int aRequestId) {
-        Log.i("GeckoAppShell", "CreateThreadCursorWrapper!");
-
-        if (!SmsManager.isEnabled()) {
-            return;
-        }
-
-        SmsManager.getInstance().createThreadCursor(aRequestId);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void getNextThread(int aRequestId) {
-        if (!SmsManager.isEnabled()) {
-            return;
-        }
-
-        SmsManager.getInstance().getNextThread(aRequestId);
     }
 
     /* Called by JNI from AndroidBridge, and by reflection from tests/BaseTest.java.in */

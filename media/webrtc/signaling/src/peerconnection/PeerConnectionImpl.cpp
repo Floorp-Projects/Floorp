@@ -479,9 +479,6 @@ PeerConnectionConfiguration::Init(const RTCConfiguration& aSrc)
   }
 
   switch (aSrc.mIceTransportPolicy) {
-    case dom::RTCIceTransportPolicy::None:
-      setIceTransportPolicy(NrIceCtx::ICE_POLICY_NONE);
-      break;
     case dom::RTCIceTransportPolicy::Relay:
       setIceTransportPolicy(NrIceCtx::ICE_POLICY_RELAY);
       break;
@@ -2841,13 +2838,12 @@ PeerConnectionImpl::CalculateFingerprint(
     std::vector<uint8_t>* fingerprint) const {
   uint8_t buf[DtlsIdentity::HASH_ALGORITHM_MAX_LENGTH];
   size_t len = 0;
-  CERTCertificate* cert;
 
   MOZ_ASSERT(fingerprint);
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  cert = mCertificate->Certificate();
+  const UniqueCERTCertificate& cert = mCertificate->Certificate();
 #else
-  cert = mIdentity->cert();
+  const UniqueCERTCertificate& cert = mIdentity->cert();
 #endif
   nsresult rv = DtlsIdentity::ComputeFingerprint(cert, algorithm,
                                                  &buf[0], sizeof(buf),

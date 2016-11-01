@@ -1169,7 +1169,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                 rv = provider->NewSocket(mNetAddr.raw.family,
                                          mHttpsProxy ? mProxyHost.get() : host,
                                          mHttpsProxy ? mProxyPort : port,
-                                         proxyInfo,
+                                         proxyInfo, mFirstPartyDomain,
                                          controlFlags, &fd,
                                          getter_AddRefs(secinfo));
 
@@ -1184,9 +1184,10 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                 // to the stack (such as pushing an io layer)
                 rv = provider->AddToSocket(mNetAddr.raw.family,
                                            host, port, proxyInfo,
-                                           controlFlags, fd,
+                                           mFirstPartyDomain, controlFlags, fd,
                                            getter_AddRefs(secinfo));
             }
+
             // controlFlags = 0; not used below this point...
             if (NS_FAILED(rv))
                 break;
@@ -2386,6 +2387,23 @@ nsSocketTransport::SetNetworkInterfaceId(const nsACString_internal &aNetworkInte
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     mNetworkInterfaceId = aNetworkInterfaceId;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetFirstPartyDomain(nsACString &value)
+{
+    value = mFirstPartyDomain;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetFirstPartyDomain(const nsACString &value)
+{
+    MutexAutoLock lock(mLock);
+    NS_ENSURE_FALSE(mFD.IsInitialized(), NS_ERROR_FAILURE);
+
+    mFirstPartyDomain = value;
     return NS_OK;
 }
 

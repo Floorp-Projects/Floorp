@@ -91,7 +91,6 @@ class ObjOperandId : public OperandId
     _(GuardAndLoadUnboxedExpando)         \
     _(LoadObject)                         \
     _(LoadProto)                          \
-    _(LoadUnboxedExpando)                 \
     _(LoadFixedSlotResult)                \
     _(LoadDynamicSlotResult)              \
     _(LoadUnboxedPropertyResult)          \
@@ -296,12 +295,6 @@ class MOZ_RAII CacheIRWriter
     ObjOperandId loadProto(ObjOperandId obj) {
         ObjOperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::LoadProto, obj);
-        writeOperandId(res);
-        return res;
-    }
-    ObjOperandId loadUnboxedExpando(ObjOperandId obj) {
-        ObjOperandId res(nextOperandId_++);
-        writeOpWithOperandId(CacheOp::LoadUnboxedExpando, obj);
         writeOperandId(res);
         return res;
     }

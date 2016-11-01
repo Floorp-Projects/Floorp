@@ -596,9 +596,6 @@ private:
            mNextPlayState == MediaDecoder::PLAY_STATE_PLAYING;
   }
 
-  // Queued seek - moves to mCurrentSeek when DecodeFirstFrame completes.
-  SeekJob mQueuedSeek;
-
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
   int64_t mFragmentEndTime;
 

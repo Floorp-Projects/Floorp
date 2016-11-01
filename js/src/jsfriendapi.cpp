@@ -763,11 +763,16 @@ FormatValue(JSContext* cx, const Value& vArg, JSAutoByteString& bytes)
 
 // Wrapper for JS_sprintf_append() that reports allocation failure to the
 // context.
-template <typename... Args>
 static char*
-sprintf_append(JSContext* cx, char* buf, Args&&... args)
+MOZ_FORMAT_PRINTF(3, 4)
+sprintf_append(JSContext* cx, char* buf, const char* fmt, ...)
 {
-    char* result = JS_sprintf_append(buf, mozilla::Forward<Args>(args)...);
+    va_list ap;
+
+    va_start(ap, fmt);
+    char* result = JS_vsprintf_append(buf, fmt, ap);
+    va_end(ap);
+
     if (!result) {
         ReportOutOfMemory(cx);
         return nullptr;

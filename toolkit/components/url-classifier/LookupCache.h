@@ -126,6 +126,8 @@ public:
   virtual nsresult Has(const Completion& aCompletion,
                        bool* aHas, bool* aComplete) = 0;
 
+  virtual void ClearAll();
+
   template<typename T>
   static T* Cast(LookupCache* aThat) {
     return ((aThat && T::VER == aThat->Ver()) ? reinterpret_cast<T*>(aThat) : nullptr);
@@ -142,8 +144,6 @@ private:
   virtual int Ver() const = 0;
 
 protected:
-  virtual void ClearAll();
-
   bool mPrimed;
   nsCString mTableName;
   nsCOMPtr<nsIFile> mRootStoreDirectory;

@@ -5,21 +5,26 @@
 
 DIRS += [
     'actions',
+    'components',
     'har',
     'reducers',
     'selectors'
 ]
 
 DevToolsModules(
+    'constants.js',
+    'custom-request-view.js',
     'events.js',
     'filter-predicates.js',
     'l10n.js',
     'panel.js',
+    'performance-statistics-view.js',
     'prefs.js',
     'request-utils.js',
     'requests-menu-view.js',
     'sort-predicates.js',
-    'store.js'
+    'store.js',
+    'toolbar-view.js',
 )
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

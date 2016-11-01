@@ -44,7 +44,6 @@ const MANIFEST_VERSION          = 1;
 const CACHE_VERSION             = 1;
 
 const KEEP_HISTORY_N_DAYS       = 180;
-const MIN_EXPERIMENT_ACTIVE_SECONDS = 60;
 
 const PREF_BRANCH               = "experiments.";
 const PREF_ENABLED              = "enabled"; // experiments.enabled
@@ -1217,7 +1216,6 @@ Experiments.Experiments.prototype = {
 
     let activeExperiment = this._getActiveExperiment();
     let activeChanged = false;
-    let now = this._policy.now();
 
     if (!activeExperiment) {
       // Avoid this pref staying out of sync if there were e.g. crashes.
@@ -1277,7 +1275,6 @@ Experiments.Experiments.prototype = {
 
         if (!applicable && reason && reason[0] != "was-active") {
           // Report this from here to avoid over-reporting.
-          let desc = TELEMETRY_LOG.ACTIVATION;
           let data = [TELEMETRY_LOG.ACTIVATION.REJECTED, id];
           data = data.concat(reason);
           const key = TELEMETRY_LOG.ACTIVATION_KEY;
@@ -1343,7 +1340,7 @@ Experiments.Experiments.prototype = {
       time = now + 1000 * CACHE_WRITE_RETRY_DELAY_SEC;
     }
 
-    for (let [id, experiment] of this._experiments) {
+    for (let [, experiment] of this._experiments) {
       let scheduleTime = experiment.getScheduleTime();
       if (scheduleTime > now) {
         if (time !== null) {
@@ -1644,7 +1641,6 @@ Experiments.ExperimentEntry.prototype = {
     let data = this._manifestData;
 
     let now = this._policy.now() / 1000; // The manifest times are in seconds.
-    let minActive = MIN_EXPERIMENT_ACTIVE_SECONDS;
     let maxActive = data.maxActiveSeconds || 0;
     let startSec = (this.startDate || 0) / 1000;
 
@@ -2069,10 +2065,6 @@ Experiments.ExperimentEntry.prototype = {
       throw new Error("shouldStop must not be called on disabled experiments.");
     }
 
-    let data = this._manifestData;
-    let now = this._policy.now() / 1000; // The manifest times are in seconds.
-    let maxActiveSec = data.maxActiveSeconds || 0;
-
     let deferred = Promise.defer();
     this.isApplicable().then(
       () => deferred.resolve({shouldStop: false}),
@@ -2097,7 +2089,6 @@ Experiments.ExperimentEntry.prototype = {
    */
   getScheduleTime: function () {
     if (this._enabled) {
-      let now = this._policy.now();
       let startTime = this._startDate.getTime();
       let maxActiveTime = startTime + 1000 * this._manifestData.maxActiveSeconds;
       return Math.min(1000 * this._manifestData.endTime,  maxActiveTime);
@@ -2228,7 +2219,7 @@ this.Experiments.PreviousExperimentProvider.prototype = Object.freeze({
       for (let id of removed) {
         this._log.trace("updateExperimentList() - removing " + id);
         let wrapper = new PreviousExperimentAddon(oldMap.get(id));
-        AddonManagerPrivate.callAddonListeners("onUninstalling", plugin, false);
+        AddonManagerPrivate.callAddonListeners("onUninstalling", wrapper, false);
       }
 
       this._experimentList = list;

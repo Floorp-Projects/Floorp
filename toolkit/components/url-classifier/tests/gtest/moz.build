@@ -9,8 +9,11 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
+    'Common.cpp',
     'TestChunkSet.cpp',
+    'TestFailUpdate.cpp',
     'TestPerProviderDirectory.cpp',
+    'TestProtocolParser.cpp',
     'TestRiceDeltaDecoder.cpp',
     'TestSafebrowsingHash.cpp',
     'TestSafeBrowsingProtobuf.cpp',

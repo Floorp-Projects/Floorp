@@ -127,7 +127,8 @@ function transformPacket(packet) {
         parameters,
         messageText,
         stacktrace: message.stacktrace ? message.stacktrace : null,
-        frame
+        frame,
+        userProvidedStyles: message.styles,
       });
     }
 

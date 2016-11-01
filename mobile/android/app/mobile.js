@@ -624,6 +624,8 @@ pref("media.android-remote-codec.enabled", false);
 // Enable MSE
 pref("media.mediasource.enabled", true);
 
+pref("media.mediadrm-widevinecdm.visible", true);
+
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);
 

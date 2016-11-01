@@ -130,14 +130,6 @@
     "n_values": 21,
     "description": "Maximum number of concurrent threads reached during a given download session"
   },
-  "BATTERY_STATUS_COUNT": {
-    "alert_emails": ["cpeterson@mozilla.com"],
-    "bug_numbers": [1259335],
-    "expires_in_version": "52",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Number of pages that use the Battery Status API: 0=navigator.battery, 1=navigator.getBattery()"
-  },
   "BLOCKLIST_SYNC_FILE_LOAD": {
     "alert_emails": ["rvitillo@mozilla.com"],
     "expires_in_version": "35",
@@ -951,6 +943,16 @@
     "kind": "boolean",
     "bug_numbers": [1255198],
     "description": "This metric is recorded every time a navigator.geolocation.watchPosition() request gets allowed/fulfilled. A false value is recorded if the owner is not visible according to document.isVisible."
+  },
+  "GPU_PROCESS_LAUNCH_TIME_MS" : {
+    "alert_emails": ["george@mozilla.com", "danderson@mozilla.com"],
+    "expires_in_version": "never",
+    "bug_numbers": [1297790],
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "description": "GPU process launch time in milliseconds"
   },
   "JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT": {
     "alert_emails": ["jdemooij@mozilla.com"],
@@ -3822,6 +3824,13 @@
     "bug_numbers": [1283007],
     "description": "Time spent fallocating Variable-Length PrefixSet (ms)"
   },
+  "URLCLASSIFIER_VLPS_LOAD_CORRUPT": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "58",
+    "kind": "boolean",
+    "bug_numbers": [1305581],
+    "description": "Whether or not a variable-length prefix set loaded from disk is corrupted (true = file corrupted)."
+  },
   "URLCLASSIFIER_LC_PREFIXES": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
@@ -3867,7 +3876,7 @@
     "kind": "enumerated",
     "n_values": 10,
     "bug_numbers": [1305801],
-    "description": "An error was encountered while parsing a partial update returned by a Safe Browsing V4 server (0 = addition of an already existing prefix, 1 = parser got into an infinite loop, 2 = removal index out of bounds)"
+    "description": "An error was encountered while parsing a partial update returned by a Safe Browsing V4 server (0 = addition of an already existing prefix, 1 = parser got into an infinite loop, 2 = removal index out of bounds, 3 = checksum mismatch, 4 = missing checksum)"
   },
   "CSP_DOCUMENTS_COUNT": {
     "alert_emails": ["seceng@mozilla.com"],
@@ -7796,6 +7805,17 @@
     "n_values": 16,
     "description": "How often do we get back an HSTS priming result which upgrades the connection to HTTPS? 0=cached (no upgrade), 1=cached (do upgrade), 2=cached (blocked), 3=already upgraded, 4=priming succeeded, 5=priming succeeded (block due to pref), 6=priming succeeded (no upgrade due to pref), 7=priming failed (block), 8=priming failed (accept)"
   },
+  "HSTS_PRIMING_REQUEST_DURATION": {
+    "alert_emails": ["seceng-telemetry@mozilla.org"],
+    "bug_numbers": [1311893],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "low": 100,
+    "high": 30000,
+    "n_buckets": 100,
+    "keyed": true,
+    "description": "The amount of time required for HSTS priming requests (ms), keyed by success or failure of the priming request. (success, failure)"
+  },
   "MIXED_CONTENT_OBJECT_SUBREQUEST": {
     "alert_emails": ["seceng@mozilla.org"],
     "bug_numbers": [1244116],
@@ -10347,5 +10367,43 @@
     "high": 100,
     "n_buckets": 10,
     "description": "Percentage of time taken by phases in expensive content paints."
+  },
+  "NARRATE_CONTENT_BY_LANGUAGE": {
+    "alert_emails": ["eisaacson@mozilla.com"],
+    "bug_numbers": [1308030],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "56",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 4,
+    "description": "Number of Narrate initialization attempts and successes broken up by content's language (ISO 639-1 code) (0 = initialization attempt, 1 = successfully initialized)"
+  },
+  "NARRATE_CONTENT_SPEAKTIME_MS": {
+    "alert_emails": ["eisaacson@mozilla.com"],
+    "bug_numbers": [1308030],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "56",
+    "kind": "linear",
+    "high": 300000,
+    "n_buckets": 30,
+    "description": "Time in MS that content is narrated in 10 second increments up to 5 minutes"
+  },
+  "HANDLE_UNLOAD_MS": {
+    "alert_emails": ["kchen@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "bug_numbers": [1301346],
+    "description": "The time spent handling unload event in milliseconds. It measures all documents and subframes separately. If there are multiple handlers for the unload event in a document, this will record a single value across all handlers in the document."
+  },
+  "HANDLE_BEFOREUNLOAD_MS": {
+    "alert_emails": ["kchen@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "bug_numbers": [1301346],
+    "description": "The time spent handling beforeunload event in milliseconds. It measures all documents and subframes separately. If there are multiple handlers for the unload event in a document, this will record a single value across all handlers in the document."
   }
 }

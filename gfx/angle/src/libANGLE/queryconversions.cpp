@@ -86,17 +86,6 @@ QueryT CastStateValue(GLenum pname, NativeT value)
 
 }  // anonymous namespace
 
-template <>
-GLenum GLTypeToGLenum<GLint>::value = GL_INT;
-template <>
-GLenum GLTypeToGLenum<GLuint>::value = GL_UNSIGNED_INT;
-template <>
-GLenum GLTypeToGLenum<GLboolean>::value = GL_BOOL;
-template <>
-GLenum GLTypeToGLenum<GLint64>::value = GL_INT_64_ANGLEX;
-template <>
-GLenum GLTypeToGLenum<GLfloat>::value = GL_FLOAT;
-
 template <typename QueryT>
 void CastStateValues(Context *context, GLenum nativeType, GLenum pname,
                      unsigned int numParams, QueryT *outParams)

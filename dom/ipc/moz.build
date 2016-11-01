@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIBrowser.idl',
     'nsIHangReport.idl',
 ]
 
@@ -120,6 +119,11 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_TARGET'] == 'Darwin':
         'mozsandbox',
     ]
 
+if CONFIG['MOZ_CONTENT_SANDBOX'] and CONFIG['OS_ARCH'] == 'Linux':
+    USE_LIBS += [
+        'mozsandbox',
+    ]
+
 LOCAL_INCLUDES += [
     '/caps',
     '/chrome',
@@ -132,7 +136,6 @@ LOCAL_INCLUDES += [
     '/dom/filesystem',
     '/dom/geolocation',
     '/dom/media/webspeech/synth/ipc',
-    '/dom/mobilemessage/ipc',
     '/dom/security',
     '/dom/storage',
     '/dom/workers',

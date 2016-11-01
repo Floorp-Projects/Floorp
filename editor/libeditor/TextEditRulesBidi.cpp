@@ -40,8 +40,9 @@ TextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
   nsPresContext *context = shell->GetPresContext();
   NS_ENSURE_TRUE(context, NS_ERROR_NULL_POINTER);
 
-  if (!context->BidiEnabled())
+  if (!context->BidiEnabled()) {
     return NS_OK;
+  }
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aSelNode);
   NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
@@ -65,19 +66,17 @@ TextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
     (nsIEditor::eNext==aAction || nsIEditor::eNextWord==aAction) ?
     levelAfter : levelBefore;
 
-  if (currentCaretLevel == levelOfDeletion)
-    ; // perform the deletion
-  else
-  {
-    if (mDeleteBidiImmediately || levelBefore == levelAfter)
-      ; // perform the deletion
-    else
-      *aCancel = true;
-
-    // Set the bidi level of the caret to that of the
-    // character that will be (or would have been) deleted
-    frameSelection->SetCaretBidiLevel(levelOfDeletion);
+  if (currentCaretLevel == levelOfDeletion) {
+    return NS_OK; // perform the deletion
   }
+
+  if (!mDeleteBidiImmediately && levelBefore != levelAfter) {
+    *aCancel = true;
+  }
+
+  // Set the bidi level of the caret to that of the
+  // character that will be (or would have been) deleted
+  frameSelection->SetCaretBidiLevel(levelOfDeletion);
   return NS_OK;
 }
 

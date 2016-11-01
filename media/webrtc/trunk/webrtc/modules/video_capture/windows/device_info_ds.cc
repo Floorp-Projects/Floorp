@@ -45,14 +45,23 @@ const DelayValues WindowsCaptureDelays[NoWindowsCaptureDelays] = {
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (uiMsg == WM_DEVICECHANGE)
+    DeviceInfoDS* pParent;
+    if (uiMsg == WM_CREATE)
     {
-        DeviceInfoDS* dsInfo = DeviceInfoDSSingleton::GetInfo();
-        if (dsInfo != NULL)
+        pParent = (DeviceInfoDS*)((LPCREATESTRUCT)lParam)->lpCreateParams;
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pParent);
+    }
+    else if (uiMsg == WM_DESTROY)
+    {
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, NULL);
+    }
+    else if (uiMsg == WM_DEVICECHANGE)
+    {
+        pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+        if (pParent)
         {
-            dsInfo->DeviceChange();
+            pParent->DeviceChange();
         }
-        return 0;
     }
     return DefWindowProc(hWnd, uiMsg, wParam, lParam);
 }
@@ -76,16 +85,13 @@ void _FreeMediaType(AM_MEDIA_TYPE& mt)
 // static
 DeviceInfoDS* DeviceInfoDS::Create(const int32_t id)
 {
-    if (!DeviceInfoDSSingleton::GetInfo()) {
-        DeviceInfoDS* dsInfo = new DeviceInfoDS(id);
-        if (!dsInfo || dsInfo->Init() != 0)
-        {
-            delete dsInfo;
-            dsInfo = NULL;
-        }
-        DeviceInfoDSSingleton::GetInfo() = dsInfo;
+    DeviceInfoDS* dsInfo = new DeviceInfoDS(id);
+    if (!dsInfo || dsInfo->Init() != 0)
+    {
+        delete dsInfo;
+        dsInfo = NULL;
     }
-    return DeviceInfoDSSingleton::GetInfo();
+    return dsInfo;
 }
 
 DeviceInfoDS::DeviceInfoDS(const int32_t id)
@@ -140,7 +146,7 @@ DeviceInfoDS::DeviceInfoDS(const int32_t id)
     if (RegisterClass(&_wndClass))
     {
         _hwnd = CreateWindow(_wndClass.lpszClassName, NULL, 0, CW_USEDEFAULT,
-            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, _hInstance, NULL);
+            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, _hInstance, this);
     }
 }
 
@@ -156,7 +162,6 @@ DeviceInfoDS::~DeviceInfoDS()
         DestroyWindow(_hwnd);
     }
     UnregisterClass(_wndClass.lpszClassName, _hInstance);
-    DeviceInfoDSSingleton::GetInfo() = NULL;
 }
 
 int32_t DeviceInfoDS::Init()

@@ -496,18 +496,23 @@ class JS_PUBLIC_API(AutoRequireNoGC)
 };
 
 /**
- * Release assert if a GC occurs while this class is live. This class does
- * not disable the static rooting hazard analysis.
+ * Diagnostic assert (see MOZ_DIAGNOSTIC_ASSERT) that GC cannot occur while this
+ * class is live. This class does not disable the static rooting hazard
+ * analysis.
+ *
+ * This works by entering a GC unsafe region, which is checked on allocation and
+ * on GC.
  */
-class JS_PUBLIC_API(AutoAssertOnGC) : public AutoRequireNoGC
+class JS_PUBLIC_API(AutoAssertNoGC) : public AutoRequireNoGC
 {
     js::gc::GCRuntime* gc;
     size_t gcNumber;
 
   public:
-    AutoAssertOnGC();
-    explicit AutoAssertOnGC(JSContext* cx);
-    ~AutoAssertOnGC();
+    AutoAssertNoGC();
+    explicit AutoAssertNoGC(JSRuntime* rt);
+    explicit AutoAssertNoGC(JSContext* cx);
+    ~AutoAssertNoGC();
 };
 
 /**
@@ -583,7 +588,7 @@ class JS_PUBLIC_API(AutoAssertGCCallback) : public AutoSuppressGCAnalysis
 
 /**
  * Place AutoCheckCannotGC in scopes that you believe can never GC. These
- * annotations will be verified both dynamically via AutoAssertOnGC, and
+ * annotations will be verified both dynamically via AutoAssertNoGC, and
  * statically with the rooting hazard analysis (implemented by making the
  * analysis consider AutoCheckCannotGC to be a GC pointer, and therefore
  * complain if it is live across a GC call.) It is useful when dealing with
@@ -594,11 +599,11 @@ class JS_PUBLIC_API(AutoAssertGCCallback) : public AutoSuppressGCAnalysis
  * We only do the assertion checking in DEBUG builds.
  */
 #ifdef DEBUG
-class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoAssertOnGC
+class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoAssertNoGC
 {
   public:
-    AutoCheckCannotGC() : AutoAssertOnGC() {}
-    explicit AutoCheckCannotGC(JSContext* cx) : AutoAssertOnGC(cx) {}
+    AutoCheckCannotGC() : AutoAssertNoGC() {}
+    explicit AutoCheckCannotGC(JSContext* cx) : AutoAssertNoGC(cx) {}
 } JS_HAZ_GC_INVALIDATED;
 #else
 class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoRequireNoGC

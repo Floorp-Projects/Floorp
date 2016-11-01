@@ -7,6 +7,7 @@
 #define mozilla_gfx_thebes_D3D11Checks_h
 
 struct ID3D11Device;
+struct IDXGIAdapter;
 struct DXGI_ADAPTER_DESC;
 
 namespace mozilla {
@@ -20,6 +21,7 @@ struct D3D11Checks
   static bool DoesAlphaTextureSharingWork(ID3D11Device *device);
   static void WarnOnAdapterMismatch(ID3D11Device* device);
   static bool GetDxgiDesc(ID3D11Device* device, DXGI_ADAPTER_DESC* out);
+  static bool DoesRemotePresentWork(IDXGIAdapter* adapter);
 };
 
 } // namespace gfx

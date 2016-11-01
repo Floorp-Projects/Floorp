@@ -12,8 +12,10 @@
 //     selection of a default locale.  See RuntimeDefaultLocale(), whose
 //     value controls the value returned by DefaultLocale() that's what's
 //     *actually* used.
-//   localTZA:
-//     The local time zone's adjustment from UTC.  See LocalTZA().
+//   icuDefaultTimeZone:
+//     Time zone information provided by ICU. See intl_defaultTimeZone(),
+//     whose value controls the value returned by DefaultTimeZone() that's
+//     what's *actually* used.
 //   formatters:
 //     A Record storing formatters consistent with the above
 //     runtimeDefaultLocale/localTZA values, for use with the appropriate
@@ -27,8 +29,9 @@
 //   dateFormat: for Date's toLocaleDateString operation
 //   timeFormat: for Date's toLocaleTimeString operation
 //
-// Using this cache, then, requires 1) verifying the current
-// runtimeDefaultLocale/localTZA are consistent with cached values, then
+// Using this cache, then, requires
+// 1) verifying the current runtimeDefaultLocale/icuDefaultTimeZone are
+//    consistent with cached values, then
 // 2) seeing if the desired formatter is cached and returning it if so, or else
 // 3) create the desired formatter and store and return it.
 var dateTimeFormatCache = new Record();
@@ -50,15 +53,15 @@ function GetCachedFormat(format, required, defaults) {
            "dateTimeFormatCache");
 
     var runtimeDefaultLocale = RuntimeDefaultLocale();
-    var localTZA = LocalTZA();
+    var icuDefaultTimeZone = intl_defaultTimeZone();
 
     var formatters;
     if (dateTimeFormatCache.runtimeDefaultLocale !== runtimeDefaultLocale ||
-        dateTimeFormatCache.localTZA !== localTZA)
+        dateTimeFormatCache.icuDefaultTimeZone !== icuDefaultTimeZone)
     {
         formatters = dateTimeFormatCache.formatters = new Record();
         dateTimeFormatCache.runtimeDefaultLocale = runtimeDefaultLocale;
-        dateTimeFormatCache.localTZA = localTZA;
+        dateTimeFormatCache.icuDefaultTimeZone = icuDefaultTimeZone;
     } else {
         formatters = dateTimeFormatCache.formatters;
     }

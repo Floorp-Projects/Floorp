@@ -171,7 +171,6 @@ public abstract class GeckoApp
     protected RelativeLayout mMainLayout;
 
     protected RelativeLayout mGeckoLayout;
-    private View mCameraView;
     private OrientationEventListener mCameraOrientationEventListener;
     public List<GeckoAppShell.AppStateListener> mAppStateListeners = new LinkedList<GeckoAppShell.AppStateListener>();
     protected MenuPanel mMenuPanel;
@@ -331,11 +330,6 @@ public abstract class GeckoApp
     @Override
     public Activity getActivity() {
         return this;
-    }
-
-    @Override
-    public View getCameraView() {
-        return mCameraView;
     }
 
     @Override
@@ -1609,10 +1603,6 @@ public abstract class GeckoApp
         //app state callbacks
         mAppStateListeners = new LinkedList<GeckoAppShell.AppStateListener>();
 
-        if (SmsManager.isEnabled()) {
-            SmsManager.getInstance().start();
-        }
-
         mPromptService = new PromptService(this);
 
         // Trigger the completion of the telemetry timer that wraps activity startup,
@@ -1851,7 +1841,7 @@ public abstract class GeckoApp
     }
 
     @Override
-    public void enableCameraView() {
+    public void enableOrientationListener() {
         // Start listening for orientation events
         mCameraOrientationEventListener = new OrientationEventListener(this) {
             @Override
@@ -1864,26 +1854,13 @@ public abstract class GeckoApp
             }
         };
         mCameraOrientationEventListener.enable();
-
-        // Try to make it fully transparent.
-        if (mCameraView instanceof SurfaceView) {
-            mCameraView.setAlpha(0.0f);
-            ViewGroup mCameraLayout = (ViewGroup) findViewById(R.id.camera_layout);
-            // Some phones (eg. nexus S) need at least a 8x16 preview size
-            mCameraLayout.addView(mCameraView,
-                                  new AbsoluteLayout.LayoutParams(8, 16, 0, 0));
-        }
     }
 
     @Override
-    public void disableCameraView() {
+    public void disableOrientationListener() {
         if (mCameraOrientationEventListener != null) {
             mCameraOrientationEventListener.disable();
             mCameraOrientationEventListener = null;
-        }
-        if (mCameraView != null) {
-          ViewGroup mCameraLayout = (ViewGroup) findViewById(R.id.camera_layout);
-          mCameraLayout.removeView(mCameraView);
         }
     }
 

@@ -23,7 +23,13 @@ LDFLAGS += $(SANITIZER_LDFLAGS)
 # frame pointers even with this option.)
 SANITIZER_CFLAGS += -fno-omit-frame-pointer -fno-optimize-sibling-calls
 
+ifdef BUILD_OPT
 # You probably want to be able to get debug info for failures, even with an
 # optimized build.
 OPTIMIZER += -g
+else
+# Try maintaining reasonable performance, ASan and UBSan slow things down.
+OPTIMIZER += -O1
+endif
+
 endif

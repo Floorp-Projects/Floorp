@@ -267,6 +267,7 @@ private:
     void InitializeD3D11();
     void InitializeD2D();
     bool InitDWriteSupport();
+    bool InitGPUProcessSupport();
 
     void DisableD2D(mozilla::gfx::FeatureStatus aStatus, const char* aMessage,
                     const nsACString& aFailureId);

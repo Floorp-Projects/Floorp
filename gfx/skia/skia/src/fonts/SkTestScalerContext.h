@@ -41,7 +41,7 @@ public:
     mutable unsigned char fDebugBits[16];
     mutable SkUnichar fDebugOverage[8];
     const char* fDebugName;
-    SkTypeface::Style fDebugStyle;
+    SkFontStyle fDebugStyle;
     const char* debugFontName() const { return fName; }
 #endif
 private:
@@ -67,7 +67,8 @@ public:
     void getMetrics(SkGlyph* glyph);
     void getPath(const SkGlyph& glyph, SkPath* path);
 protected:
-    SkScalerContext* onCreateScalerContext(const SkDescriptor* desc) const override;
+    SkScalerContext* onCreateScalerContext(const SkScalerContextEffects&,
+                                           const SkDescriptor* desc) const override;
     void onFilterRec(SkScalerContextRec* rec) const override;
     SkAdvancedTypefaceMetrics* onGetAdvancedTypefaceMetrics(
         PerGlyphInfo,

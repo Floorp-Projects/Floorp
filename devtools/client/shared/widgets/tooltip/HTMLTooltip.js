@@ -229,6 +229,7 @@ function HTMLTooltip(toolboxDoc, {
   this._position = null;
 
   this._onClick = this._onClick.bind(this);
+  this._onXulPanelHidden = this._onXulPanelHidden.bind(this);
 
   this._toggle = new TooltipToggle(this);
   this.startTogglingOnHover = this._toggle.start.bind(this._toggle);
@@ -539,6 +540,12 @@ HTMLTooltip.prototype = {
     return false;
   },
 
+  _onXulPanelHidden: function () {
+    if (this.isVisible()) {
+      this.hide();
+    }
+  },
+
   /**
    * If the tootlip is configured to autofocus and a focusable element can be found,
    * focus it.
@@ -572,7 +579,6 @@ HTMLTooltip.prototype = {
     panel.setAttribute("animate", false);
     panel.setAttribute("consumeoutsideclicks", false);
     panel.setAttribute("noautofocus", true);
-    panel.setAttribute("noautohide", true);
     panel.setAttribute("ignorekeys", true);
     panel.setAttribute("tooltip", "aHTMLTooltip");
 
@@ -586,12 +592,20 @@ HTMLTooltip.prototype = {
   },
 
   _showXulWrapperAt: function (left, top) {
+    this.xulPanelWrapper.addEventListener("popuphidden", this._onXulPanelHidden);
     let onPanelShown = listenOnce(this.xulPanelWrapper, "popupshown");
     this.xulPanelWrapper.openPopupAtScreen(left, top, false);
     return onPanelShown;
   },
 
   _hideXulWrapper: function () {
+    this.xulPanelWrapper.removeEventListener("popuphidden", this._onXulPanelHidden);
+
+    if (this.xulPanelWrapper.state === "closed") {
+      // XUL panel is already closed, resolve immediately.
+      return Promise.resolve();
+    }
+
     let onPanelHidden = listenOnce(this.xulPanelWrapper, "popuphidden");
     this.xulPanelWrapper.hidePopup();
     return onPanelHidden;

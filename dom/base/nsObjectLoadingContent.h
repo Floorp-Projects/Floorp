@@ -256,6 +256,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       return mRewrittenYoutubeEmbed;
     }
 
+    void PresetOpenerWindow(mozIDOMWindowProxy* aOpenerWindow, mozilla::ErrorResult& aRv);
+
   protected:
     /**
      * Begins loading the object when called

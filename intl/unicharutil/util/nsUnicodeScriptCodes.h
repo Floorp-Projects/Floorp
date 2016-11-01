@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Tue Sep 27 12:56:07 2016 from UCD data files with version info:
+ * Created on Wed Oct 26 09:12:45 2016 from UCD data files with version info:
  *
 
 # Date: 2015-06-16, 20:24:00 GMT [KW]
@@ -47,6 +47,9 @@ Standard.
 # LineBreak-8.0.0.txt
 # Date: 2015-02-13, 09:15:00 GMT [KW, LI]
 
+# EastAsianWidth-8.0.0.txt
+# Date: 2015-02-10, 21:00:00 GMT [KW, LI]
+
 # File: xidmodifications.txt
 # Version: 8.0.0
 # Generated: 2015-05-17, 03:09:04 GMT
@@ -80,7 +83,8 @@ struct nsCharProps1 {
 #if ENABLE_INTL_API
 
 struct nsCharProps2 {
-  unsigned char mPairedBracketType:2;
+  // Currently only 6 bits are defined here, so 2 more could be added without
+  // affecting the storage requirements for this struct.
   unsigned char mVertOrient:2;
   unsigned char mXidmod:4;
 };
@@ -91,7 +95,8 @@ struct nsCharProps2 {
 
 struct nsCharProps2 {
   unsigned char mScriptCode:8;
-  unsigned char mPairedBracketType:3; // only 2 bits actually needed
+  unsigned char mPairedBracketType:2;
+  unsigned char mEastAsianWidthFWH:1;
   unsigned char mCategory:5;
   unsigned char mBidiCategory:5;
   unsigned char mXidmod:4;

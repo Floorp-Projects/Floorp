@@ -14,6 +14,7 @@
  * https://dvcs.w3.org/hg/webcrypto-api/raw-file/tip/spec/Overview.html
  * http://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html
  * https://w3c.github.io/webappsec-secure-contexts/#monkey-patching-global-object
+ * https://w3c.github.io/requestidlecallback/
  */
 
 interface ApplicationCache;
@@ -60,11 +61,8 @@ typedef any Transferable;
   //[Throws] readonly attribute WindowProxy parent;
   [Replaceable, Throws, CrossOriginReadable] readonly attribute WindowProxy? parent;
   [Throws, NeedsSubjectPrincipal] readonly attribute Element? frameElement;
-  //[Throws] WindowProxy open(optional DOMString url = "about:blank", optional DOMString target = "_blank", [TreatNullAs=EmptyString] optional DOMString features = "", optional boolean replace = false);
+  //[Throws] WindowProxy? open(optional USVString url = "about:blank", optional DOMString target = "_blank", [TreatNullAs=EmptyString] optional DOMString features = "");
   [Throws, UnsafeInPrerendering] WindowProxy? open(optional DOMString url = "", optional DOMString target = "", [TreatNullAs=EmptyString] optional DOMString features = "");
-  // We think the indexed getter is a bug in the spec, it actually needs to live
-  // on the WindowProxy
-  //getter WindowProxy (unsigned long index);
   getter object (DOMString name);
 
   // the user agent
@@ -493,3 +491,17 @@ partial interface Window {
 
 Window implements ChromeWindow;
 Window implements WindowOrWorkerGlobalScope;
+
+partial interface Window {
+  [Throws, Pref="dom.requestIdleCallback.enabled"]
+  unsigned long requestIdleCallback(IdleRequestCallback callback,
+                                    optional IdleRequestOptions options);
+  [Pref="dom.requestIdleCallback.enabled"]
+  void          cancelIdleCallback(unsigned long handle);
+};
+
+dictionary IdleRequestOptions {
+  unsigned long timeout;
+};
+
+callback IdleRequestCallback = void (IdleDeadline deadline);

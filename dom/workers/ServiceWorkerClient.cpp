@@ -158,25 +158,21 @@ private:
     if (principal && !isNullPrincipal && !isSystemPrincipal) {
       principal->GetOrigin(origin);
     }
-    init.mOrigin.Construct(NS_ConvertUTF8toUTF16(origin));
-    init.mLastEventId.Construct(EmptyString());
-    init.mPorts.Construct();
-    init.mPorts.Value().SetNull();
+    init.mOrigin = NS_ConvertUTF8toUTF16(origin);
 
     RefPtr<ServiceWorker> serviceWorker = aTargetContainer->GetController();
-    init.mSource.Construct();
     if (serviceWorker) {
-      init.mSource.Value().SetValue().SetAsServiceWorker() = serviceWorker;
-    } else {
-      init.mSource.Value().SetNull();
+      init.mSource.SetValue().SetAsServiceWorker() = serviceWorker;
+    }
+
+    if (!TakeTransferredPortsAsSequence(init.mPorts)) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
 
     RefPtr<ServiceWorkerMessageEvent> event =
       ServiceWorkerMessageEvent::Constructor(aTargetContainer,
-                                             NS_LITERAL_STRING("message"), init, rv);
-
-    nsTArray<RefPtr<MessagePort>> ports = TakeTransferredPorts();
-    event->SetPorts(Move(ports));
+                                             NS_LITERAL_STRING("message"),
+                                             init);
 
     event->SetTrusted(true);
     bool status = false;
@@ -222,7 +218,8 @@ ServiceWorkerClient::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   RefPtr<ServiceWorkerClientPostMessageRunnable> runnable =
     new ServiceWorkerClientPostMessageRunnable(mWindowId);
 
-  runnable->Write(aCx, aMessage, transferable, aRv);
+  runnable->Write(aCx, aMessage, transferable, JS::CloneDataPolicy().denySharedArrayBuffer(),
+                  aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

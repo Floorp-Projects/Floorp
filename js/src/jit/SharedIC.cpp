@@ -2132,7 +2132,7 @@ UpdateExistingGenerationalDOMProxyStub(ICGetProp_Fallback* stub,
                 // Update generation
                 uint64_t generation = expandoAndGeneration->generation;
                 JitSpew(JitSpew_BaselineIC,
-                        "  Updating existing stub with generation, old value: %i, "
+                        "  Updating existing stub with generation, old value: %" PRIu64 ", "
                         "new value: %" PRIu64 "", updateStub->generation(),
                         generation);
                 updateStub->setGeneration(generation);
@@ -3993,10 +3993,14 @@ static void
 MaybeWorkAroundAmdBug(MacroAssembler& masm)
 {
     // Attempt to work around an AMD bug (see bug 1034706 and bug 1281759), by
-    // inserting a 4-byte NOP.
+    // inserting 32-bytes of NOPs.
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-    if (CPUInfo::NeedAmdBugWorkaround())
-        masm.nop(4);
+    if (CPUInfo::NeedAmdBugWorkaround()) {
+        masm.nop(9);
+        masm.nop(9);
+        masm.nop(9);
+        masm.nop(5);
+    }
 #endif
 }
 

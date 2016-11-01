@@ -83,6 +83,44 @@ public:
     static void AddGenIDChangeListener(const SkPath& path, SkPathRef::GenIDChangeListener* listener) {
         path.fPathRef->addGenIDChangeListener(listener);
     }
+
+    /**
+     * This returns true for a rect that begins and ends at the same corner and has either a move
+     * followed by four lines or a move followed by 3 lines and a close. None of the parameters are
+     * optional. This does not permit degenerate line or point rectangles.
+     */
+    static bool IsSimpleClosedRect(const SkPath& path, SkRect* rect, SkPath::Direction* direction,
+                                   unsigned* start);
+
+    /**
+     * Creates a path from arc params using the semantics of SkCanvas::drawArc. This function
+     * assumes empty ovals and zero sweeps have already been filtered out.
+     */
+    static void CreateDrawArcPath(SkPath* path, const SkRect& oval, SkScalar startAngle,
+                                  SkScalar sweepAngle, bool useCenter, bool isFillNoPathEffect);
+
+    /**
+     * Returns a pointer to the verb data. Note that the verbs are stored backwards in memory and
+     * thus the returned pointer is the last verb.
+     */
+    static const uint8_t* VerbData(const SkPath& path) {
+        return path.fPathRef->verbsMemBegin();
+    }
+
+    /** Returns a raw pointer to the path points */
+    static const SkPoint* PointData(const SkPath& path) {
+        return path.fPathRef->points();
+    }
+
+    /** Returns the number of conic weights in the path */
+    static int ConicWeightCnt(const SkPath& path) {
+        return path.fPathRef->countWeights();
+    }
+
+    /** Returns a raw pointer to the path conic weights. */
+    static const SkScalar* ConicWeightData(const SkPath& path) {
+        return path.fPathRef->conicWeights();
+    }
 };
 
 #endif

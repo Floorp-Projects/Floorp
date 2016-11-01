@@ -32,9 +32,15 @@ public:
   void Reset();
 
   /**
-   * Clear In-Memory & On-Disk data for specific tables
+   * Clear data for specific tables.
+   * If ClearType is Clear_Cache, this function will only clear cache in lookup
+   * cache, otherwise, it will clear data in lookup cache and data stored on disk.
    */
-  void ResetTables(const nsTArray<nsCString>& aTables);
+  enum ClearType {
+    Clear_Cache,
+    Clear_All,
+  };
+  void ResetTables(ClearType aType, const nsTArray<nsCString>& aTables);
 
   /**
    * Get the list of active tables and their chunks in a format
@@ -66,11 +72,6 @@ public:
    */
   nsresult ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates);
 
-  /**
-   * Failed update. Spoil the entries so we don't block hosts
-   * unnecessarily
-   */
-  nsresult MarkSpoiled(const nsTArray<nsCString>& aTables);
   void SetLastUpdateTime(const nsACString& aTableName, uint64_t updateTime);
   int64_t GetLastUpdateTime(const nsACString& aTableName);
   nsresult CacheCompletions(const CacheResultArray& aResults);
@@ -101,7 +102,8 @@ public:
 
 private:
   void DropStores();
-  void DeleteTables(const nsTArray<nsCString>& aTables);
+  void DeleteTables(nsIFile* aDirectory, const nsTArray<nsCString>& aTables);
+  void AbortUpdateAndReset(const nsCString& aTable);
 
   nsresult CreateStoreDirectory();
   nsresult SetupPathNames();

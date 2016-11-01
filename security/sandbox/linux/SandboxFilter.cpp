@@ -719,6 +719,9 @@ public:
     case __NR_umask:
     case __NR_kill:
     case __NR_wait4:
+#ifdef __NR_waitpid
+    case __NR_waitpid:
+#endif
 #ifdef __NR_arch_prctl
     case __NR_arch_prctl:
 #endif

@@ -14,7 +14,7 @@ const RuntimeError = WebAssembly.RuntimeError;
 // Test for stale heap pointers after resize
 
 // Grow directly from builtin call:
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
     (memory 1)
     (func $test (result i32)
         (i32.store (i32.const 0) (i32.const 1))
@@ -26,10 +26,10 @@ assertEq(wasmEvalText(`(module
             (i32.add
                 (i32.load (i32.const 65532))
                 (i32.load (i32.const 6553596)))))
-    (export "test" $test)
-)`).exports.test(), 111);
+    (export "run" $test)
+)`, 111);
 
-// Grow during call_import:
+// Grow during import call:
 var exports = wasmEvalText(`(module
     (import $imp "" "imp")
     (memory 1)
@@ -119,13 +119,22 @@ assertEq(exp2.load(3*64*1024), 99);
 assertEq(mem.buffer.byteLength, 4*64*1024);
 assertEq(new Int32Array(mem.buffer)[3*64*1024/4], 99);
 
+// Fail at maximum
+
+var mem = new Memory({initial:1, maximum:2});
+assertEq(mem.buffer.byteLength, 1 * 64*1024);
+assertEq(mem.grow(1), 1);
+assertEq(mem.buffer.byteLength, 2 * 64*1024);
+assertErrorMessage(() => mem.grow(1), RangeError, /failed to grow memory/);
+assertEq(mem.buffer.byteLength, 2 * 64*1024);
+
 // ======
 // TABLE
 // ======
 
 // Test for stale table base pointers after resize
 
-// Grow during call_import:
+// Grow during import call:
 var exports = wasmEvalText(`(module
     (type $v2i (func (result i32)))
     (import $grow "" "grow")
@@ -214,3 +223,12 @@ assertEq(exp2.call_indirect(0), 1);
 assertEq(exp2.call_indirect(1), 2);
 assertErrorMessage(() => exp2.call_indirect(2), Error, /indirect call to null/);
 assertErrorMessage(() => exp2.call_indirect(3), Error, /indirect call to null/);
+
+// Fail at maximum
+
+var tbl = new Table({initial:1, maximum:2, element:"anyfunc"});
+assertEq(tbl.length, 1);
+assertEq(tbl.grow(1), 1);
+assertEq(tbl.length, 2);
+assertErrorMessage(() => tbl.grow(1), RangeError, /failed to grow table/);
+assertEq(tbl.length, 2);

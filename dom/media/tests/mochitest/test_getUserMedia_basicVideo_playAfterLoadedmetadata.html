@@ -31,7 +31,8 @@
           ok(video.videoHeight > 0, "Expected nonzero video width");
           resolve();
         });
-      });
+      })
+      .then(() => stream.getTracks().forEach(t => t.stop()));
     });
   });
 

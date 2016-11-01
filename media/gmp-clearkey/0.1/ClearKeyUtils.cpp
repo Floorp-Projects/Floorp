@@ -464,11 +464,8 @@ ParseKeyIds(ParserContext& aCtx, vector<KeyId>& aOutKeyIds)
 /* static */ bool
 ClearKeyUtils::ParseKeyIdsInitData(const uint8_t* aInitData,
                                    uint32_t aInitDataSize,
-                                   vector<KeyId>& aOutKeyIds,
-                                   string& aOutSessionType)
+                                   vector<KeyId>& aOutKeyIds)
 {
-  aOutSessionType = "temporary";
-
   ParserContext ctx;
   ctx.mIter = aInitData;
   ctx.mEnd = aInitData + aInitDataSize;
@@ -488,9 +485,6 @@ ClearKeyUtils::ParseKeyIdsInitData(const uint8_t* aInitData,
           aOutKeyIds.empty()) {
         return false;
       }
-    } else if (label == "type") {
-      // Consume type string.
-      if (!GetNextLabel(ctx, aOutSessionType)) return false;
     } else {
       SkipToken(ctx);
     }

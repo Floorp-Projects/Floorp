@@ -27,7 +27,7 @@ WebGL2Context::ValidateUniformMatrixTranspose(bool /*transpose*/, const char* /*
 // Uniforms
 
 void
-WebGL2Context::Uniform1ui(WebGLUniformLocation* loc, GLuint v0)
+WebGLContext::Uniform1ui(WebGLUniformLocation* loc, GLuint v0)
 {
     if (!ValidateUniformSetter(loc, 1, LOCAL_GL_UNSIGNED_INT, "uniform1ui"))
         return;
@@ -37,7 +37,7 @@ WebGL2Context::Uniform1ui(WebGLUniformLocation* loc, GLuint v0)
 }
 
 void
-WebGL2Context::Uniform2ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1)
+WebGLContext::Uniform2ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1)
 {
     if (!ValidateUniformSetter(loc, 2, LOCAL_GL_UNSIGNED_INT, "uniform2ui"))
         return;
@@ -47,7 +47,7 @@ WebGL2Context::Uniform2ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1)
 }
 
 void
-WebGL2Context::Uniform3ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2)
+WebGLContext::Uniform3ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2)
 {
     if (!ValidateUniformSetter(loc, 3, LOCAL_GL_UNSIGNED_INT, "uniform3ui"))
         return;
@@ -57,8 +57,8 @@ WebGL2Context::Uniform3ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuin
 }
 
 void
-WebGL2Context::Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2,
-                          GLuint v3)
+WebGLContext::Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2,
+                         GLuint v3)
 {
     if (!ValidateUniformSetter(loc, 4, LOCAL_GL_UNSIGNED_INT, "uniform4ui"))
         return;
@@ -67,16 +67,15 @@ WebGL2Context::Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuin
     gl->fUniform4ui(loc->mLoc, v0, v1, v2, v3);
 }
 
-
 // -------------------------------------------------------------------------
 // Uniform Buffer Objects and Transform Feedback Buffers
 
 void
-WebGL2Context::GetIndexedParameter(GLenum target, GLuint index,
-                                   dom::Nullable<dom::OwningWebGLBufferOrLongLong>& retval)
+WebGL2Context::GetIndexedParameter(JSContext* cx, GLenum target, GLuint index,
+                                   JS::MutableHandleValue retval, ErrorResult& out_error)
 {
     const char funcName[] = "getIndexedParameter";
-    retval.SetNull();
+    retval.set(JS::NullValue());
     if (IsContextLost())
         return;
 
@@ -106,24 +105,28 @@ WebGL2Context::GetIndexedParameter(GLenum target, GLuint index,
     }
     const auto& binding = (*bindings)[index];
 
+    JS::Value ret = JS::NullValue();
+
     switch (target) {
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
     case LOCAL_GL_UNIFORM_BUFFER_BINDING:
         if (binding.mBufferBinding) {
-            retval.SetValue().SetAsWebGLBuffer() = binding.mBufferBinding;
+            ret = WebGLObjectAsJSValue(cx, binding.mBufferBinding.get(), out_error);
         }
         break;
 
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_START:
     case LOCAL_GL_UNIFORM_BUFFER_START:
-        retval.SetValue().SetAsLongLong() = binding.mRangeStart;
+        ret = JS::NumberValue(binding.mRangeStart);
         break;
 
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
     case LOCAL_GL_UNIFORM_BUFFER_SIZE:
-        retval.SetValue().SetAsLongLong() = binding.mRangeSize;
+        ret = JS::NumberValue(binding.mRangeSize);
         break;
     }
+
+    retval.set(ret);
 }
 
 void
@@ -247,10 +250,10 @@ WebGL2Context::GetUniformBlockIndex(WebGLProgram* program,
 void
 WebGL2Context::GetActiveUniformBlockParameter(JSContext* cx, WebGLProgram* program,
                                               GLuint uniformBlockIndex, GLenum pname,
-                                              dom::Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval,
-                                              ErrorResult& rv)
+                                              JS::MutableHandleValue out_retval,
+                                              ErrorResult& out_error)
 {
-    retval.SetNull();
+    out_retval.set(JS::NullValue());
     if (IsContextLost())
         return;
 
@@ -265,11 +268,12 @@ WebGL2Context::GetActiveUniformBlockParameter(JSContext* cx, WebGLProgram* progr
     case LOCAL_GL_UNIFORM_BLOCK_BINDING:
     case LOCAL_GL_UNIFORM_BLOCK_DATA_SIZE:
     case LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS:
-        program->GetActiveUniformBlockParam(uniformBlockIndex, pname, retval);
+        out_retval.set(program->GetActiveUniformBlockParam(uniformBlockIndex, pname));
         return;
 
     case LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES:
-        program->GetActiveUniformBlockActiveUniforms(cx, uniformBlockIndex, retval, rv);
+        out_retval.set(program->GetActiveUniformBlockActiveUniforms(cx, uniformBlockIndex,
+                                                                    &out_error));
         return;
     }
 

@@ -594,6 +594,71 @@ protected:
 
 #endif
 
+  enum ePrefixGroupBits
+  {
+    eNoPrefixes = 0,
+    ePrefixGroup1 = (1 << 0),
+    ePrefixGroup2 = (1 << 1),
+    ePrefixGroup3 = (1 << 2),
+    ePrefixGroup4 = (1 << 3)
+  };
+
+  int CountPrefixBytes(byteptr_t aBytes, const int aBytesIndex,
+                       unsigned char* aOutGroupBits)
+  {
+    unsigned char& groupBits = *aOutGroupBits;
+    groupBits = eNoPrefixes;
+    int index = aBytesIndex;
+    while (true) {
+      switch (aBytes[index]) {
+        // Group 1
+        case 0xF0: // LOCK
+        case 0xF2: // REPNZ
+        case 0xF3: // REP / REPZ
+          if (groupBits & ePrefixGroup1) {
+            return -1;
+          }
+          groupBits |= ePrefixGroup1;
+          ++index;
+          break;
+
+        // Group 2
+        case 0x2E: // CS override / branch not taken
+        case 0x36: // SS override
+        case 0x3E: // DS override / branch taken
+        case 0x64: // FS override
+        case 0x65: // GS override
+          if (groupBits & ePrefixGroup2) {
+            return -1;
+          }
+          groupBits |= ePrefixGroup2;
+          ++index;
+          break;
+
+        // Group 3
+        case 0x66: // operand size override
+          if (groupBits & ePrefixGroup3) {
+            return -1;
+          }
+          groupBits |= ePrefixGroup3;
+          ++index;
+          break;
+
+        // Group 4
+        case 0x67: // Address size override
+          if (groupBits & ePrefixGroup4) {
+            return -1;
+          }
+          groupBits |= ePrefixGroup4;
+          ++index;
+          break;
+
+        default:
+          return index - aBytesIndex;
+      }
+    }
+  }
+
   void CreateTrampoline(void* aOrigFunction, intptr_t aDest, void** aOutTramp)
   {
     *aOutTramp = nullptr;
@@ -615,26 +680,25 @@ protected:
       //
       // Note!  If we ever need to understand jump instructions, we'll
       // need to rewrite the displacement argument.
+      unsigned char prefixGroups;
+      int numPrefixBytes = CountPrefixBytes(origBytes, nBytes, &prefixGroups);
+      if (numPrefixBytes < 0 || (prefixGroups & (ePrefixGroup3 | ePrefixGroup4))) {
+        // Either the prefix sequence was bad, or there are prefixes that
+        // we don't currently support (groups 3 and 4)
+        return;
+      }
+      nBytes += numPrefixBytes;
       if (origBytes[nBytes] >= 0x88 && origBytes[nBytes] <= 0x8B) {
         // various MOVs
-        unsigned char b = origBytes[nBytes + 1];
-        if (((b & 0xc0) == 0xc0) ||
-            (((b & 0xc0) == 0x00) &&
-             ((b & 0x07) != 0x04) && ((b & 0x07) != 0x05))) {
-          // REG=r, R/M=r or REG=r, R/M=[r]
-          nBytes += 2;
-        } else if ((b & 0xc0) == 0x40) {
-          if ((b & 0x07) == 0x04) {
-            // REG=r, R/M=[SIB + disp8]
-            nBytes += 4;
-          } else {
-            // REG=r, R/M=[r + disp8]
-            nBytes += 3;
-          }
-        } else {
-          // complex MOV, bail
+        ++nBytes;
+        int len = CountModRmSib(origBytes + nBytes);
+        if (len < 0) {
           return;
         }
+        nBytes += len;
+      } else if (origBytes[nBytes] == 0xA1) {
+        // MOV eax, [seg:offset]
+        nBytes += 5;
       } else if (origBytes[nBytes] == 0xB8) {
         // MOV 0xB8: http://ref.x86asm.net/coder32.html#xB8
         nBytes += 5;
@@ -756,25 +820,13 @@ protected:
             return;
           }
         } else if ((origBytes[nBytes] & 0xfd) == 0x89) {
+          ++nBytes;
           // MOV r/m64, r64 | MOV r64, r/m64
-          if ((origBytes[nBytes + 1] & 0xc0) == 0x40) {
-            if ((origBytes[nBytes + 1] & 0x7) == 0x04) {
-              // R/M=[SIB+disp8], REG=r64
-              nBytes += 4;
-            } else {
-              // R/M=[r64+disp8], REG=r64
-              nBytes += 3;
-            }
-          } else if (((origBytes[nBytes + 1] & 0xc0) == 0xc0) ||
-                     (((origBytes[nBytes + 1] & 0xc0) == 0x00) &&
-                      ((origBytes[nBytes + 1] & 0x07) != 0x04) &&
-                      ((origBytes[nBytes + 1] & 0x07) != 0x05))) {
-            // REG=r64, R/M=r64 or REG=r64, R/M=[r64]
-            nBytes += 2;
-          } else {
-            // complex MOV
+          int len = CountModRmSib(origBytes + nBytes);
+          if (len < 0) {
             return;
           }
+          nBytes += len;
         } else if (origBytes[nBytes] == 0xc7) {
           // MOV r/m64, imm32
           if (origBytes[nBytes + 1] == 0x44) {

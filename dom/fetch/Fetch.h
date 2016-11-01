@@ -28,6 +28,7 @@ namespace mozilla {
 namespace dom {
 
 class ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams;
+class BlobImpl;
 class InternalRequest;
 class OwningArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams;
 class RequestOrUSVString;
@@ -140,6 +141,9 @@ public:
 
   void
   ContinueConsumeBody(nsresult aStatus, uint32_t aLength, uint8_t* aResult);
+
+  void
+  ContinueConsumeBlobBody(BlobImpl* aBlobImpl);
 
   void
   CancelPump();

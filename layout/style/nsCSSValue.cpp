@@ -1206,7 +1206,8 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
   // eCSSProperty_UNKNOWN gets used for some recursive calls below.
   MOZ_ASSERT((0 <= aProperty &&
               aProperty <= eCSSProperty_COUNT_no_shorthands) ||
-             aProperty == eCSSProperty_UNKNOWN,
+             aProperty == eCSSProperty_UNKNOWN ||
+             aProperty == eCSSProperty_DOM,
              "property ID out of range");
 
   nsCSSUnit unit = GetUnit();
@@ -1298,10 +1299,24 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
     const nsCSSValue& functionName = array->Item(0);
     MOZ_ASSERT(functionName.GetUnit() == eCSSUnit_Enumerated,
                "Functions must have an enumerated name.");
-
-    /* Append the function name. */
     // The first argument is always of nsCSSKeyword type.
     const nsCSSKeyword functionId = functionName.GetKeywordValue();
+
+    // minmax(auto, <flex>) is equivalent to (and is our internal representation
+    // of) <flex>, and both are serialized as <flex>
+    if (functionId == eCSSKeyword_minmax &&
+        array->Count() == 3 &&
+        array->Item(1).GetUnit() == eCSSUnit_Auto &&
+        array->Item(2).GetUnit() == eCSSUnit_FlexFraction) {
+      array->Item(2).AppendToString(aProperty, aResult, aSerialization);
+      MOZ_ASSERT(aProperty == eCSSProperty_grid_template_columns ||
+                 aProperty == eCSSProperty_grid_template_rows ||
+                 aProperty == eCSSProperty_grid_auto_columns ||
+                 aProperty == eCSSProperty_grid_auto_rows);
+      return;
+    }
+
+    /* Append the function name. */
     NS_ConvertASCIItoUTF16 ident(nsCSSKeywords::GetStringValue(functionId));
     // Bug 721136: Normalize the identifier to lowercase, except that things
     // like scaleX should have the last character capitalized.  This matches
@@ -2417,7 +2432,8 @@ nsCSSRect::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
 
   if (eCSSProperty_border_image_slice == aProperty ||
       eCSSProperty_border_image_width == aProperty ||
-      eCSSProperty_border_image_outset == aProperty) {
+      eCSSProperty_border_image_outset == aProperty ||
+      eCSSProperty_DOM == aProperty) {
     NS_NAMED_LITERAL_STRING(space, " ");
 
     mTop.AppendToString(aProperty, aResult, aSerialization);

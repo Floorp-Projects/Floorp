@@ -131,8 +131,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     static bool byteLengthGetterImpl(JSContext* cx, const CallArgs& args);
     static bool fun_slice_impl(JSContext* cx, const CallArgs& args);
 
-    static const ClassOps classOps_;
-
   public:
     static const uint8_t DATA_SLOT = 0;
     static const uint8_t BYTE_LENGTH_SLOT = 1;
@@ -231,11 +229,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     };
 
     static const Class class_;
-
-    static const Class protoClass;
-    static const JSFunctionSpec jsfuncs[];
-    static const JSFunctionSpec jsstaticfuncs[];
-    static const JSPropertySpec jsstaticprops[];
 
     static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
 
@@ -634,9 +627,6 @@ class WeakCacheBase<InnerViewTable>
         return table().sizeOfExcludingThis(mallocSizeOf);
     }
 };
-
-extern JSObject*
-InitArrayBufferClass(JSContext* cx, HandleObject obj);
 
 } // namespace js
 

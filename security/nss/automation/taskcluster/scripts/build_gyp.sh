@@ -11,11 +11,8 @@ fi
 hg_clone https://hg.mozilla.org/projects/nspr nspr default
 
 # Build.
-cd nss && NSS_GYP_GEN=1 ./build.sh
-if [ $? != 0 ]; then
-    exit 1
-fi
+nss/build.sh -g -v
 
 # Package.
-cd .. && mkdir artifacts
+mkdir artifacts
 tar cvfjh artifacts/dist.tar.bz2 dist

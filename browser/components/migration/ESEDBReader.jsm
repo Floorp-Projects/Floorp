@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ESEDBReader"];
+this.EXPORTED_SYMBOLS = ["ESEDBReader"]; /* exported ESEDBReader */
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
@@ -389,7 +389,7 @@ ESEDB.prototype = {
           rowContents[column.name] = this._convertResult(column, buffer, err);
         }
         yield rowContents;
-      } while (0 === ESE.ManualMove(this._sessionId, tableId, 1 /* JET_MoveNext */, 0));
+      } while (ESE.ManualMove(this._sessionId, tableId, 1 /* JET_MoveNext */, 0) === 0);
     } catch (ex) {
       if (tableOpened) {
         this._closeTable(tableId);
@@ -440,7 +440,7 @@ ESEDB.prototype = {
       return buffer ? buffer.readString() : "";
     }
     if (column.type == "boolean") {
-      return buffer ? (255 == buffer.value) : false;
+      return buffer ? (buffer.value == 255) : false;
     }
     if (column.type == "guid") {
       if (buffer.length != 16) {

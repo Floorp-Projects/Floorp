@@ -59,9 +59,6 @@ MapSECStatus(SECStatus rv)
 
 // Alphabetical order by NSS type
 // Deprecated: use the equivalent UniquePtr templates instead.
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc,
-                                          PRFileDesc,
-                                          PR_Close)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTCertificate,
                                           CERTCertificate,
                                           CERT_DestroyCertificate)

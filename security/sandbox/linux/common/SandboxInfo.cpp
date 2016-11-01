@@ -19,17 +19,8 @@
 #include "base/posix/eintr_wrapper.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Telemetry.h"
 #include "sandbox/linux/system_headers/linux_seccomp.h"
 #include "sandbox/linux/system_headers/linux_syscalls.h"
-
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#include "nsICrashReporter.h"
-#define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
-#include "nsIPrefService.h"
-#include "nsIMemoryInfoDumper.h"
-#endif
 
 #ifdef MOZ_VALGRIND
 #include <valgrind/valgrind.h>
@@ -277,35 +268,5 @@ SandboxInfo::ThreadingCheck()
   flags &= ~(kHasUserNamespaces | kHasPrivilegedUserNamespaces);
   sSingleton.mFlags = static_cast<Flags>(flags);
 }
-
-/* static */ void
-SandboxInfo::SubmitTelemetry()
-{
-  SandboxInfo sandboxInfo = Get();
-  Telemetry::Accumulate(Telemetry::SANDBOX_HAS_SECCOMP_BPF,
-                        sandboxInfo.Test(SandboxInfo::kHasSeccompBPF));
-  Telemetry::Accumulate(Telemetry::SANDBOX_HAS_SECCOMP_TSYNC,
-                        sandboxInfo.Test(SandboxInfo::kHasSeccompTSync));
-  Telemetry::Accumulate(Telemetry::SANDBOX_HAS_USER_NAMESPACES_PRIVILEGED,
-                        sandboxInfo.Test(SandboxInfo::kHasPrivilegedUserNamespaces));
-  Telemetry::Accumulate(Telemetry::SANDBOX_HAS_USER_NAMESPACES,
-                        sandboxInfo.Test(SandboxInfo::kHasUserNamespaces));
-  Telemetry::Accumulate(Telemetry::SANDBOX_CONTENT_ENABLED,
-                        sandboxInfo.Test(SandboxInfo::kEnabledForContent));
-  Telemetry::Accumulate(Telemetry::SANDBOX_MEDIA_ENABLED,
-                        sandboxInfo.Test(SandboxInfo::kEnabledForMedia));
-}
-
-#ifdef MOZ_CRASHREPORTER
-void
-SandboxInfo::AnnotateCrashReport() const
-{
-  nsAutoCString flagsString;
-  flagsString.AppendInt(mFlags);
-
-  CrashReporter::AnnotateCrashReport(
-    NS_LITERAL_CSTRING("ContentSandboxCapabilities"), flagsString);
-}
-#endif
 
 } // namespace mozilla

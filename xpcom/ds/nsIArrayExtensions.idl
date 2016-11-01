@@ -1,0 +1,51 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIArray.idl"
+
+/**
+ * Helper interface for allowing scripts to treat nsIArray instances as if
+ * they were nsISupportsArray instances while iterating.
+ *
+ * nsISupportsArray is convenient to iterate over in JavaScript:
+ *
+ * for (let i = 0; i < array.Count(); ++i) {
+ *   let elem = array.GetElementAt(i);
+ *   ...
+ * }
+ *
+ * but doing the same with nsIArray is somewhat less convenient, since
+ * queryElementAt is not nearly so nice to use from JavaScript.  So we provide
+ * this extension interface so interfaces that currently return
+ * nsISupportsArray can start returning nsIArrayExtensions and all JavaScript
+ * should Just Work. Eventually we'll roll this interface into nsIArray
+ * itself, possibly getting rid of the Count() method, as it duplicates
+ * nsIArray functionality.
+ */
+[scriptable, uuid(261d442e-050c-453d-8aaa-b3f23bcc528b)]
+interface nsIArrayExtensions : nsIArray
+{
+  /**
+   * Count()
+   *
+   * Retrieves the length of the array. This is an alias for the
+   * |nsIArray.length| attribute.
+   */
+  uint32_t Count();
+
+  /**
+   * GetElementAt()
+   *
+   * Retrieve a specific element of the array. null is a valid result for
+   * this method.
+   *
+   * Note: If the index is out of bounds null will be returned.
+   *       This differs from the behavior of nsIArray.queryElementAt() which
+   *       will throw if an invalid index is specified.
+   *
+   * @param index position of element
+   */
+  nsISupports GetElementAt(in uint32_t index);
+};

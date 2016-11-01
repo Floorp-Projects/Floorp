@@ -42,18 +42,17 @@
 #include "mozilla/dom/FlyWebService.h"
 #include "mozilla/dom/IccManager.h"
 #include "mozilla/dom/InputPortManager.h"
-#include "mozilla/dom/MobileMessageManager.h"
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/Presentation.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
 #include "mozilla/dom/StorageManager.h"
 #include "mozilla/dom/TCPSocket.h"
-#include "mozilla/dom/Telephony.h"
 #include "mozilla/dom/VRDisplay.h"
 #include "mozilla/dom/workers/RuntimeService.h"
 #include "mozilla/Hal.h"
 #include "nsISiteSpecificUserAgent.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/SSE.h"
 #include "mozilla/StaticPtr.h"
 #include "Connection.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
@@ -216,8 +215,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryPromise)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPowerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIccManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileMessageManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTelephony)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInputPortManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStorageManager)
@@ -290,15 +287,6 @@ Navigator::Invalidate()
   if (mIccManager) {
     mIccManager->Shutdown();
     mIccManager = nullptr;
-  }
-
-  if (mMobileMessageManager) {
-    mMobileMessageManager->Shutdown();
-    mMobileMessageManager = nullptr;
-  }
-
-  if (mTelephony) {
-    mTelephony = nullptr;
   }
 
   if (mInputPortManager) {
@@ -773,6 +761,12 @@ Navigator::HardwareConcurrency()
   }
 
   return rts->ClampedHardwareConcurrency();
+}
+
+bool
+Navigator::CpuHasSSE2()
+{
+  return mozilla::supports_sse2();
 }
 
 void
@@ -1280,15 +1274,15 @@ Navigator::SendBeacon(const nsAString& aUrl,
                   doc,
                   doc->GetDocBaseURI());
   if (NS_FAILED(rv)) {
-    aRv.Throw(NS_ERROR_DOM_URL_MISMATCH_ERR);
+    aRv.ThrowTypeError<MSG_INVALID_URL>(aUrl);
     return false;
   }
 
-  // Explicitly disallow loading data: URIs
-  bool isDataScheme = false;
-  rv = uri->SchemeIs("data", &isDataScheme);
-  if (NS_FAILED(rv) || isDataScheme) {
-    aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
+  // Spec disallows any schemes save for HTTP/HTTPs
+  bool isValidScheme;
+  if (!(NS_SUCCEEDED(uri->SchemeIs("http", &isValidScheme)) && isValidScheme) &&
+      !(NS_SUCCEEDED(uri->SchemeIs("https", &isValidScheme)) && isValidScheme)) {
+    aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>( NS_LITERAL_STRING("Beacon"), aUrl);
     return false;
   }
 
@@ -1537,10 +1531,6 @@ Navigator::GetBattery(ErrorResult& aRv)
   }
   mBatteryPromise = batteryPromise;
 
-  // We just initialized mBatteryPromise, so we know this is the first time
-  // this page has accessed navigator.getBattery(). 1 = navigator.getBattery()
-  Telemetry::Accumulate(Telemetry::BATTERY_STATUS_COUNT, 1);
-
   if (!mBatteryManager) {
     mBatteryManager = new battery::BatteryManager(mWindow);
     mBatteryManager->Init();
@@ -1622,35 +1612,6 @@ Navigator::RequestWakeLock(const nsAString &aTopic, ErrorResult& aRv)
   }
 
   return pmService->NewWakeLock(aTopic, mWindow, aRv);
-}
-
-MobileMessageManager*
-Navigator::GetMozMobileMessage()
-{
-  if (!mMobileMessageManager) {
-    // Check that our window has not gone away
-    NS_ENSURE_TRUE(mWindow, nullptr);
-    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
-
-    mMobileMessageManager = new MobileMessageManager(mWindow);
-    mMobileMessageManager->Init();
-  }
-
-  return mMobileMessageManager;
-}
-
-Telephony*
-Navigator::GetMozTelephony(ErrorResult& aRv)
-{
-  if (!mTelephony) {
-    if (!mWindow) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-    mTelephony = Telephony::Create(mWindow, aRv);
-  }
-
-  return mTelephony;
 }
 
 InputPortManager*
@@ -1985,19 +1946,6 @@ Navigator::HasWifiManagerSupport(JSContext* /* unused */,
 
   return permission == nsIPermissionManager::ALLOW_ACTION;
 }
-
-#ifdef MOZ_NFC
-/* static */
-bool
-Navigator::HasNFCSupport(JSContext* /* unused */, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindowInner> win = GetWindowFromGlobal(aGlobal);
-
-  // Do not support NFC if NFC content helper does not exist.
-  nsCOMPtr<nsISupports> contentHelper = do_GetService("@mozilla.org/nfc/content-helper;1");
-  return !!contentHelper;
-}
-#endif // MOZ_NFC
 
 /* static */
 bool

@@ -110,7 +110,7 @@
                    movetoclick="true"
                    flex="100"/>
             <textbox id="calls-searchbox"
-                     class="devtools-searchinput"
+                     class="devtools-filterinput"
                      placeholder="&canvasDebuggerUI.searchboxPlaceholder;"
                      type="search"
                      flex="1"/>

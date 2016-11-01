@@ -83,21 +83,21 @@ public:
   NS_DECL_QUERYFRAME_TARGET(nsBlockFrame)
   NS_DECL_FRAMEARENA_HELPERS
 
-  typedef nsLineList::iterator                  line_iterator;
-  typedef nsLineList::const_iterator            const_line_iterator;
-  typedef nsLineList::reverse_iterator          reverse_line_iterator;
-  typedef nsLineList::const_reverse_iterator    const_reverse_line_iterator;
+  typedef nsLineList::iterator LineIterator;
+  typedef nsLineList::const_iterator ConstLineIterator;
+  typedef nsLineList::reverse_iterator ReverseLineIterator;
+  typedef nsLineList::const_reverse_iterator ConstReverseLineIterator;
 
-  line_iterator begin_lines() { return mLines.begin(); }
-  line_iterator end_lines() { return mLines.end(); }
-  const_line_iterator begin_lines() const { return mLines.begin(); }
-  const_line_iterator end_lines() const { return mLines.end(); }
-  reverse_line_iterator rbegin_lines() { return mLines.rbegin(); }
-  reverse_line_iterator rend_lines() { return mLines.rend(); }
-  const_reverse_line_iterator rbegin_lines() const { return mLines.rbegin(); }
-  const_reverse_line_iterator rend_lines() const { return mLines.rend(); }
-  line_iterator line(nsLineBox* aList) { return mLines.begin(aList); }
-  reverse_line_iterator rline(nsLineBox* aList) { return mLines.rbegin(aList); }
+  LineIterator LinesBegin() { return mLines.begin(); }
+  LineIterator LinesEnd() { return mLines.end(); }
+  ConstLineIterator LinesBegin() const { return mLines.begin(); }
+  ConstLineIterator LinesEnd() const { return mLines.end(); }
+  ReverseLineIterator LinesRBegin() { return mLines.rbegin(); }
+  ReverseLineIterator LinesREnd() { return mLines.rend(); }
+  ConstReverseLineIterator LinesRBegin() const { return mLines.rbegin(); }
+  ConstReverseLineIterator LinesREnd() const { return mLines.rend(); }
+  LineIterator LinesBeginFrom(nsLineBox* aList) { return mLines.begin(aList); }
+  ReverseLineIterator LinesRBeginFrom(nsLineBox* aList) { return mLines.rbegin(aList); }
 
   friend nsBlockFrame* NS_NewBlockFrame(nsIPresShell* aPresShell,
                                         nsStyleContext* aContext);
@@ -106,18 +106,18 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIFrame
-  virtual void Init(nsIContent*       aContent,
+  virtual void Init(nsIContent* aContent,
                     nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
-  virtual void SetInitialChildList(ChildListID     aListID,
-                                   nsFrameList&    aChildList) override;
-  virtual void AppendFrames(ChildListID     aListID,
-                            nsFrameList&    aFrameList) override;
-  virtual void InsertFrames(ChildListID     aListID,
-                            nsIFrame*       aPrevFrame,
-                            nsFrameList&    aFrameList) override;
-  virtual void RemoveFrame(ChildListID     aListID,
-                           nsIFrame*       aOldFrame) override;
+                    nsIFrame* aPrevInFlow) override;
+  virtual void SetInitialChildList(ChildListID aListID,
+                                   nsFrameList& aChildList) override;
+  virtual void AppendFrames(ChildListID aListID,
+                            nsFrameList& aFrameList) override;
+  virtual void InsertFrames(ChildListID aListID,
+                            nsIFrame* aPrevFrame,
+                            nsFrameList& aFrameList) override;
+  virtual void RemoveFrame(ChildListID aListID,
+                           nsIFrame* aOldFrame) override;
   virtual const nsFrameList& GetChildList(ChildListID aListID) const override;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const override;
   virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
@@ -125,8 +125,8 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual nsSplittableType GetSplittableType() const override;
   virtual bool IsFloatContainingBlock() const override;
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                const nsRect& aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
   virtual nsIAtom* GetType() const override;
   virtual bool IsFrameOfType(uint32_t aFlags) const override
@@ -153,8 +153,12 @@ public:
   virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
 
-  // line cursor methods to speed up searching for the line(s)
-  // containing a point. The basic idea is that we set the cursor
+  // Line cursor methods to speed up line searching in which one query
+  // result is expected to be close to the next in general. This is
+  // mainly for searching line(s) containing a point. It is also used
+  // as a cache for local computation. Use AutoLineCursorSetup for the
+  // latter case so that it wouldn't interact unexpectedly with the
+  // former. The basic idea for the former is that we set the cursor
   // property if the lines' overflowArea.VisualOverflow().ys and
   // overflowArea.VisualOverflow().yMosts are non-decreasing
   // (considering only non-empty overflowArea.VisualOverflow()s; empty
@@ -178,6 +182,36 @@ public:
   // yMosts are non-decreasing, or the line cursor is cleared before
   // building the display list of this frame.
   void SetupLineCursor();
+
+  /**
+   * Helper RAII class for automatically set and clear line cursor for
+   * temporary use. If the frame already has line cursor, this would be
+   * a no-op.
+   */
+  class MOZ_STACK_CLASS AutoLineCursorSetup
+  {
+  public:
+    explicit AutoLineCursorSetup(nsBlockFrame* aFrame)
+      : mFrame(aFrame)
+      , mOrigCursor(aFrame->GetLineCursor())
+    {
+      if (!mOrigCursor) {
+        mFrame->SetupLineCursor();
+      }
+    }
+    ~AutoLineCursorSetup()
+    {
+      if (mOrigCursor) {
+        mFrame->Properties().Set(LineCursorProperty(), mOrigCursor);
+      } else {
+        mFrame->ClearLineCursor();
+      }
+    }
+
+  private:
+    nsBlockFrame* mFrame;
+    nsLineBox* mOrigCursor;
+  };
 
   virtual void ChildIsDirty(nsIFrame* aChild) override;
   virtual bool IsVisibleInSelection(nsISelection* aSelection) override;
@@ -255,21 +289,21 @@ public:
    * @param aFinalSize Out parameter for final block-size.
    * @param aConsumed The block-size already consumed by our previous-in-flows.
    */
-  void ComputeFinalBSize(const ReflowInput&      aReflowInput,
-                         nsReflowStatus*               aStatus,
-                         nscoord                       aContentBSize,
+  void ComputeFinalBSize(const ReflowInput& aReflowInput,
+                         nsReflowStatus* aStatus,
+                         nscoord aContentBSize,
                          const mozilla::LogicalMargin& aBorderPadding,
-                         mozilla::LogicalSize&         aFinalSize,
-                         nscoord                       aConsumed);
+                         mozilla::LogicalSize& aFinalSize,
+                         nscoord aConsumed);
 
-  virtual void Reflow(nsPresContext*           aPresContext,
-                      ReflowOutput&     aDesiredSize,
+  virtual void Reflow(nsPresContext* aPresContext,
+                      ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus) override;
+                      nsReflowStatus& aStatus) override;
 
-  virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                    nsIAtom*        aAttribute,
-                                    int32_t         aModType) override;
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID,
+                                    nsIAtom* aAttribute,
+                                    int32_t aModType) override;
 
   /**
    * Move any frames on our overflow list to the end of our principal list.
@@ -280,7 +314,7 @@ public:
   virtual nsresult StealFrame(nsIFrame* aChild) override;
 
   virtual void DeleteNextInFlowChild(nsIFrame* aNextInFlow,
-                                     bool      aDeletingEmptyFrames) override;
+                                     bool aDeletingEmptyFrames) override;
 
   /**
     * This is a special method that allows a child class of nsBlockFrame to
@@ -334,18 +368,17 @@ public:
    * Also updates aState.mReflowStatus to include the float's incompleteness.
    * Must only be called while this block frame is in reflow.
    * aFloatStatus must be the float's true, unmodified reflow status.
-   * 
    */
   nsresult SplitFloat(BlockReflowInput& aState,
-                      nsIFrame*           aFloat,
-                      nsReflowStatus      aFloatStatus);
+                      nsIFrame* aFloat,
+                      nsReflowStatus aFloatStatus);
 
   /**
    * Walks up the frame tree, starting with aCandidate, and returns the first
    * block frame that it encounters.
    */
   static nsBlockFrame* GetNearestAncestorBlock(nsIFrame* aCandidate);
-  
+
   struct FrameLines {
     nsLineList mLines;
     nsFrameList mFrames;
@@ -368,9 +401,9 @@ protected:
 #endif
 
   NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(LineCursorProperty, nsLineBox)
+  bool HasLineCursor() { return GetStateBits() & NS_BLOCK_HAS_LINE_CURSOR; }
   nsLineBox* GetLineCursor() {
-    return (GetStateBits() & NS_BLOCK_HAS_LINE_CURSOR) ?
-      Properties().Get(LineCursorProperty()) : nullptr;
+    return HasLineCursor() ? Properties().Get(LineCursorProperty()) : nullptr;
   }
 
   nsLineBox* NewLineBox(nsIFrame* aFrame, bool aIsBlock) {
@@ -394,7 +427,7 @@ protected:
   void TryAllLines(nsLineList::iterator* aIterator,
                    nsLineList::iterator* aStartIterator,
                    nsLineList::iterator* aEndIterator,
-                   bool*        aInOverflowLines,
+                   bool* aInOverflowLines,
                    FrameLines** aOverflowLines);
 
   /** move the frames contained by aLine by aDeltaBCoord
@@ -410,14 +443,14 @@ protected:
   void MoveChildFramesOfLine(nsLineBox* aLine, nscoord aDeltaBCoord);
 
   void ComputeFinalSize(const ReflowInput& aReflowInput,
-                        BlockReflowInput&      aState,
-                        ReflowOutput&     aMetrics,
-                        nscoord*                 aBottomEdgeOfChildren);
+                        BlockReflowInput& aState,
+                        ReflowOutput& aMetrics,
+                        nscoord* aBottomEdgeOfChildren);
 
-  void ComputeOverflowAreas(const nsRect&         aBounds,
+  void ComputeOverflowAreas(const nsRect& aBounds,
                             const nsStyleDisplay* aDisplay,
-                            nscoord               aBottomEdgeOfChildren,
-                            nsOverflowAreas&      aOverflowAreas);
+                            nscoord aBottomEdgeOfChildren,
+                            nsOverflowAreas& aOverflowAreas);
 
   /**
    * Add the frames in aFrameList to this block after aPrevSibling.
@@ -466,7 +499,7 @@ public:
    */
   enum {
     REMOVE_FIXED_CONTINUATIONS = 0x02,
-    FRAMES_ARE_EMPTY           = 0x04
+    FRAMES_ARE_EMPTY = 0x04
   };
   void DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags);
 
@@ -482,10 +515,10 @@ public:
    *  assumes float manager is in aFrame's parent's coord system.
    *  Safe to call on non-blocks (does nothing).
    */
-  static void RecoverFloatsFor(nsIFrame*            aFrame,
-                               nsFloatManager&      aFloatManager,
+  static void RecoverFloatsFor(nsIFrame* aFrame,
+                               nsFloatManager& aFloatManager,
                                mozilla::WritingMode aWM,
-                               const nsSize&        aContainerSize);
+                               const nsSize& aContainerSize);
 
   /**
    * Determine if we have any pushed floats from a previous continuation.
@@ -559,15 +592,15 @@ protected:
   /** Load all our floats into the float manager (without reflowing them).
    *  Assumes float manager is in our own coordinate system.
    */
-  void RecoverFloats(nsFloatManager&      aFloatManager,
+  void RecoverFloats(nsFloatManager& aFloatManager,
                      mozilla::WritingMode aWM,
-                     const nsSize&        aContainerSize);
+                     const nsSize& aContainerSize);
 
   /** Reflow pushed floats
    */
   void ReflowPushedFloats(BlockReflowInput& aState,
-                          nsOverflowAreas&    aOverflowAreas,
-                          nsReflowStatus&     aStatus);
+                          nsOverflowAreas& aOverflowAreas,
+                          nsReflowStatus& aStatus);
 
   /** Find any trailing BR clear from the last line of the block (or its PIFs)
    */
@@ -595,7 +628,7 @@ protected:
   static void DoRemoveOutOfFlowFrame(nsIFrame* aFrame);
 
   /** set up the conditions necessary for an resize reflow
-    * the primary task is to mark the minimumly sufficient lines dirty. 
+    * the primary task is to mark the minimumly sufficient lines dirty.
     */
   void PrepareResizeReflow(BlockReflowInput& aState);
 
@@ -608,26 +641,26 @@ protected:
   //----------------------------------------
   // Methods for line reflow
   /**
-   * Reflow a line.  
+   * Reflow a line.
    * @param aState           the current reflow state
    * @param aLine            the line to reflow.  can contain a single block frame
    *                         or contain 1 or more inline frames.
    * @param aKeepReflowGoing [OUT] indicates whether the caller should continue to reflow more lines
    */
   void ReflowLine(BlockReflowInput& aState,
-                  line_iterator aLine,
+                  LineIterator aLine,
                   bool* aKeepReflowGoing);
 
   // Return false if it needs another reflow because of reduced space
   // between floats that are next to it (but not next to its top), and
   // return true otherwise.
-  bool PlaceLine(BlockReflowInput&           aState,
-                   nsLineLayout&               aLineLayout,
-                   line_iterator               aLine,
-                   nsFloatManager::SavedState* aFloatStateBeforeLine,
-                   mozilla::LogicalRect&       aFloatAvailableSpace, //in-out
-                   nscoord&                    aAvailableSpaceHeight, // in-out
-                   bool*                       aKeepReflowGoing);
+  bool PlaceLine(BlockReflowInput& aState,
+                 nsLineLayout& aLineLayout,
+                 LineIterator aLine,
+                 nsFloatManager::SavedState* aFloatStateBeforeLine,
+                 mozilla::LogicalRect& aFloatAvailableSpace, //in-out
+                 nscoord& aAvailableSpaceHeight, // in-out
+                 bool* aKeepReflowGoing);
 
   /**
     * If NS_BLOCK_LOOK_FOR_DIRTY_FRAMES is set, call MarkLineDirty
@@ -643,11 +676,11 @@ protected:
    * @param aLine the line to mark dirty
    * @param aLineList the line list containing that line
    */
-  void MarkLineDirty(line_iterator aLine, const nsLineList* aLineList);
+  void MarkLineDirty(LineIterator aLine, const nsLineList* aLineList);
 
   // XXX where to go
   bool IsLastLine(BlockReflowInput& aState,
-                  line_iterator aLine);
+                  LineIterator aLine);
 
   void DeleteLine(BlockReflowInput& aState,
                   nsLineList::iterator aLine,
@@ -661,16 +694,16 @@ protected:
                                nsIFrame* aChildFrame);
 
   void ReflowBlockFrame(BlockReflowInput& aState,
-                        line_iterator aLine,
+                        LineIterator aLine,
                         bool* aKeepGoing);
 
   void ReflowInlineFrames(BlockReflowInput& aState,
-                          line_iterator aLine,
+                          LineIterator aLine,
                           bool* aKeepLineGoing);
 
   void DoReflowInlineFrames(BlockReflowInput& aState,
                             nsLineLayout& aLineLayout,
-                            line_iterator aLine,
+                            LineIterator aLine,
                             nsFlowAreaRect& aFloatAvailableSpace,
                             nscoord& aAvailableSpaceHeight,
                             nsFloatManager::SavedState*
@@ -681,33 +714,33 @@ protected:
 
   void ReflowInlineFrame(BlockReflowInput& aState,
                          nsLineLayout& aLineLayout,
-                         line_iterator aLine,
+                         LineIterator aLine,
                          nsIFrame* aFrame,
                          LineReflowStatus* aLineReflowStatus);
 
   // Compute the available inline size for a float.
   mozilla::LogicalRect AdjustFloatAvailableSpace(
-                         BlockReflowInput&         aState,
+                         BlockReflowInput& aState,
                          const mozilla::LogicalRect& aFloatAvailableSpace,
-                         nsIFrame*                   aFloatFrame);
+                         nsIFrame* aFloatFrame);
   // Computes the border-box inline size of the float
-  nscoord ComputeFloatISize(BlockReflowInput&         aState,
+  nscoord ComputeFloatISize(BlockReflowInput& aState,
                             const mozilla::LogicalRect& aFloatAvailableSpace,
-                            nsIFrame*                   aFloat);
+                            nsIFrame* aFloat);
   // An incomplete aReflowStatus indicates the float should be split
   // but only if the available height is constrained.
   // aAdjustedAvailableSpace is the result of calling
   // nsBlockFrame::AdjustFloatAvailableSpace.
-  void ReflowFloat(BlockReflowInput&         aState,
+  void ReflowFloat(BlockReflowInput& aState,
                    const mozilla::LogicalRect& aAdjustedAvailableSpace,
-                   nsIFrame*                   aFloat,
-                   mozilla::LogicalMargin&     aFloatMargin,
-                   mozilla::LogicalMargin&     aFloatOffsets,
+                   nsIFrame* aFloat,
+                   mozilla::LogicalMargin& aFloatMargin,
+                   mozilla::LogicalMargin& aFloatOffsets,
                    // Whether the float's position
                    // (aAdjustedAvailableSpace) has been pushed down
                    // due to the presence of other floats.
-                   bool                        aFloatPushedDown,
-                   nsReflowStatus&             aReflowStatus);
+                   bool aFloatPushedDown,
+                   nsReflowStatus& aReflowStatus);
 
   //----------------------------------------
   // Methods for pushing/pulling lines/frames
@@ -721,8 +754,8 @@ protected:
    * @return true if a new frame was created, false if not
    */
   bool CreateContinuationFor(BlockReflowInput& aState,
-                             nsLineBox*          aLine,
-                             nsIFrame*           aFrame);
+                             nsLineBox* aLine,
+                             nsIFrame* aFrame);
 
   /**
    * Push aLine (and any after it), since it cannot be placed on this
@@ -730,12 +763,12 @@ protected:
    * flag aState.mReflowStatus as incomplete.
    */
   void PushTruncatedLine(BlockReflowInput& aState,
-                         line_iterator       aLine,
-                         bool*               aKeepReflowGoing);
+                         LineIterator aLine,
+                         bool* aKeepReflowGoing);
 
   void SplitLine(BlockReflowInput& aState,
                  nsLineLayout& aLineLayout,
-                 line_iterator aLine,
+                 LineIterator aLine,
                  nsIFrame* aFrame,
                  LineReflowStatus* aLineReflowStatus);
 
@@ -745,7 +778,7 @@ protected:
    * @return the pulled frame or nullptr
    */
   nsIFrame* PullFrame(BlockReflowInput& aState,
-                      line_iterator       aLine);
+                      LineIterator aLine);
 
   /**
    * Try to pull a frame out of a line pointed at by aFromLine.
@@ -759,13 +792,13 @@ protected:
    *
    * @return the pulled frame or nullptr
    */
-  nsIFrame* PullFrameFrom(nsLineBox*           aLine,
-                          nsBlockFrame*        aFromContainer,
+  nsIFrame* PullFrameFrom(nsLineBox* aLine,
+                          nsBlockFrame* aFromContainer,
                           nsLineList::iterator aFromLine);
 
   /**
    * Push the line after aLineBefore to the overflow line list.
-   * @param aLineBefore a line in 'mLines' (or begin_lines() when
+   * @param aLineBefore a line in 'mLines' (or LinesBegin() when
    *        pushing the first line)
    */
   void PushLines(BlockReflowInput& aState,
@@ -921,12 +954,12 @@ private:
  */
 class nsBlockInFlowLineIterator {
 public:
-  typedef nsBlockFrame::line_iterator line_iterator;
+  typedef nsBlockFrame::LineIterator LineIterator;
   /**
    * Set up the iterator to point to aLine which must be a normal line
    * in aFrame (not an overflow line).
    */
-  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, line_iterator aLine);
+  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, LineIterator aLine);
   /**
    * Set up the iterator to point to the first line found starting from
    * aFrame. Sets aFoundValidLine to false if there is no such line.
@@ -945,7 +978,7 @@ public:
   nsBlockInFlowLineIterator(nsBlockFrame* aFrame, nsIFrame* aFindFrame,
                             bool* aFoundValidLine);
 
-  line_iterator GetLine() { return mLine; }
+  LineIterator GetLine() { return mLine; }
   bool IsLastLineInList();
   nsBlockFrame* GetContainer() { return mFrame; }
   bool GetInOverflow() { return mLineList != &mFrame->mLines; }
@@ -959,7 +992,7 @@ public:
   /**
    * Returns the end-iterator of whatever line list we're in.
    */
-  line_iterator End();
+  LineIterator End();
 
   /**
    * Returns false if there are no more lines. After this has returned false,
@@ -975,11 +1008,11 @@ public:
 private:
   friend class nsBlockFrame;
   // XXX nsBlockFrame uses this internally in one place.  Try to remove it.
-  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, line_iterator aLine, bool aInOverflow);
+  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, LineIterator aLine, bool aInOverflow);
 
   nsBlockFrame* mFrame;
-  line_iterator mLine;
-  nsLineList*   mLineList;  // the line list mLine is in
+  LineIterator mLine;
+  nsLineList* mLineList;  // the line list mLine is in
 
   /**
    * Moves iterator to next valid line reachable from the current block.

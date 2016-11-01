@@ -159,15 +159,20 @@ js_option('--with-toolchain-prefix', env='TOOLCHAIN_PREFIX', nargs=1,
 @depends('--with-toolchain-prefix', target, host, cross_compiling)
 def toolchain_prefix(value, target, host, cross_compiling):
     if value:
-        return value[0]
-    # Special case x86-64 <-> x86 cross compiling until we have the right tests
-    # in moz.configure land.
-    if cross_compiling and not all(i.cpu in ('x86_64', 'x86')
-                                   for i in (target, host)):
-        return '%s-' % target.toolchain
+        return tuple(value)
+    if cross_compiling:
+        return ('%s-' % target.toolchain, '%s-' % target.alias)
 
-set_config('TOOLCHAIN_PREFIX', toolchain_prefix)
-add_old_configure_assignment('TOOLCHAIN_PREFIX', toolchain_prefix)
+@depends(toolchain_prefix, target)
+def first_toolchain_prefix(toolchain_prefix, target):
+    # Pass TOOLCHAIN_PREFIX down to the build system if it was given from the
+    # command line/environment (in which case there's only one value in the tuple),
+    # or when cross-compiling for Android.
+    if toolchain_prefix and (target.os == 'Android' or len(toolchain_prefix) == 1):
+        return toolchain_prefix[0]
+
+set_config('TOOLCHAIN_PREFIX', first_toolchain_prefix)
+add_old_configure_assignment('TOOLCHAIN_PREFIX', first_toolchain_prefix)
 
 
 # Compilers
@@ -463,15 +468,17 @@ def default_c_compilers(host_or_target):
     '''
     assert host_or_target in (host, target)
 
-    @depends(host_or_target, host, toolchain_prefix)
-    def default_c_compilers(host_or_target, host, toolchain_prefix):
+    @depends(host_or_target, target, toolchain_prefix)
+    def default_c_compilers(host_or_target, target, toolchain_prefix):
+        gcc = ('gcc',)
+        if toolchain_prefix and host_or_target is target:
+            gcc = tuple('%sgcc' % p for p in toolchain_prefix) + gcc
+
         if host_or_target.kernel == 'WINNT':
-            return ('cl', 'clang-cl', 'gcc', 'clang')
+            return ('cl', 'clang-cl') + gcc + ('clang',)
         if host_or_target.kernel == 'Darwin':
             return ('clang',)
-        if host_or_target != host:  # cross compilation
-            return ('%sgcc' % toolchain_prefix, 'gcc', 'clang')
-        return ('gcc', 'clang')
+        return gcc + ('clang',)
 
     return default_c_compilers
 

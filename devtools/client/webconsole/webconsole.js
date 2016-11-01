@@ -577,7 +577,7 @@ WebConsoleFrame.prototype = {
       // in JSTerm is still necessary.
 
       this.newConsoleOutput = new this.window.NewConsoleOutput(
-        this.experimentalOutputNode, this.jsterm, toolbox, this.owner);
+        this.experimentalOutputNode, this.jsterm, toolbox, this.owner, this.document);
 
       let filterToolbar = this.document.querySelector(".hud-console-filter-toolbar");
       filterToolbar.hidden = true;

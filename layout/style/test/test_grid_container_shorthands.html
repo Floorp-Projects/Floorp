@@ -37,6 +37,11 @@ var grid_template_test_cases = [
         gridTemplateColumns: "100px",
     },
     {
+        specified: "minmax(auto,1fr) / minmax(auto,1fr)",
+        gridTemplateRows: "1fr",
+        gridTemplateColumns: "1fr",
+    },
+    {
         specified: "[foo] 40px [bar] / [baz] 100px [fizz]",
         gridTemplateRows: "[foo] 40px [bar]",
         gridTemplateColumns: "[baz] 100px [fizz]",
@@ -203,6 +208,11 @@ grid_test_cases = grid_template_test_cases.concat([
         gridTemplateColumns: "0px",
     },
     {
+        specified: "auto-flow minmax(auto,1fr) / none",
+        gridAutoFlow: "row",
+        gridAutoRows: "1fr",
+    },
+    {
         specified: "auto-flow 40px / none",
         gridAutoFlow: "row",
         gridAutoRows: "40px",
@@ -212,6 +222,12 @@ grid_test_cases = grid_template_test_cases.concat([
         gridAutoFlow: "column",
         gridAutoRows: "auto",
         gridAutoColumns: "40px",
+    },
+    {
+        specified: "none / auto-flow minmax(auto,1fr)",
+        gridAutoFlow: "column",
+        gridAutoRows: "auto",
+        gridAutoColumns: "1fr",
     },
     {
         specified: "0 / auto-flow dense auto",

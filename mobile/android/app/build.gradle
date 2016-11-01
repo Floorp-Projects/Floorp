@@ -105,8 +105,10 @@ android {
                 }
 
                 if (!mozconfig.substs.MOZ_NATIVE_DEVICES) {
-                    exclude 'org/mozilla/gecko/ChromeCast.java'
+                    exclude 'org/mozilla/gecko/ChromeCastDisplay.java'
+                    exclude 'org/mozilla/gecko/ChromeCastPlayer.java'
                     exclude 'org/mozilla/gecko/GeckoMediaPlayer.java'
+                    exclude 'org/mozilla/gecko/GeckoPresentationDisplay.java'
                     exclude 'org/mozilla/gecko/MediaPlayerManager.java'
                 }
 

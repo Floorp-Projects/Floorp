@@ -111,8 +111,7 @@ PlaceholderTransaction::Merge(nsITransaction* aTransaction,
   // set out param default value
   *aDidMerge=false;
 
-  if (mForwarding)
-  {
+  if (mForwarding) {
     NS_NOTREACHED("tried to merge into a placeholder that was in forwarding mode!");
     return NS_ERROR_FAILURE;
   }
@@ -165,10 +164,9 @@ PlaceholderTransaction::Merge(nsITransaction* aTransaction,
 //  we can remeber the selection then.
   } else {
     // merge typing or IME or deletion transactions if the selection matches
-    if (((mName.get() == nsGkAtoms::TypingTxnName) ||
-         (mName.get() == nsGkAtoms::IMETxnName)    ||
-         (mName.get() == nsGkAtoms::DeleteTxnName))
-         && !mCommitted) {
+    if ((mName.get() == nsGkAtoms::TypingTxnName ||
+         mName.get() == nsGkAtoms::IMETxnName    ||
+         mName.get() == nsGkAtoms::DeleteTxnName) && !mCommitted) {
       if (absorbingTransaction) {
         nsCOMPtr<nsIAtom> atom;
         absorbingTransaction->GetTxnName(getter_AddRefs(atom));
@@ -200,8 +198,7 @@ PlaceholderTransaction::GetTxnDescription(nsAString& aString)
 {
   aString.AssignLiteral("PlaceholderTransaction: ");
 
-  if (mName)
-  {
+  if (mName) {
     nsAutoString name;
     mName->ToString(name);
     aString += name;
@@ -223,8 +220,7 @@ PlaceholderTransaction::StartSelectionEquals(SelectionState* aSelState,
   // determine if starting selection matches the given selection state.
   // note that we only care about collapsed selections.
   NS_ENSURE_TRUE(aResult && aSelState, NS_ERROR_NULL_POINTER);
-  if (!mStartSel->IsCollapsed() || !aSelState->IsCollapsed())
-  {
+  if (!mStartSel->IsCollapsed() || !aSelState->IsCollapsed()) {
     *aResult = false;
     return NS_OK;
   }
@@ -237,12 +233,12 @@ PlaceholderTransaction::EndPlaceHolderBatch()
 {
   mAbsorb = false;
 
-  if (mForwarding)
-  {
+  if (mForwarding) {
     nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryReferent(mForwarding);
-    if (plcTxn) plcTxn->EndPlaceHolderBatch();
+    if (plcTxn) {
+      plcTxn->EndPlaceHolderBatch();
+    }
   }
-
   // remember our selection state.
   return RememberEndingSelection();
 }

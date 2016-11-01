@@ -1,0 +1,20 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>&lt;META&gt;</ShortName>
+<Description>Українська пошукова система.</Description>
+<InputEncoding>windows-1251</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAABgUExURUJicNDy9Oz19AJ2thGF1YvN9Cqa87bm9Eax9C2Uzv/eH2u36wBsqwJ/xHjG812686WGCjSi9ESi26je9MadABqN4JyyxBiAunV2VA5ZmP/1hCeDwCNmj3Ogwhd/vP///4N3QeoAAAAgdFJOU/////////////////////////////////////////8AXFwb7QAAAKZJREFUeNpEj+sWgyAMgykKFE3FG5ub23j/t1zRedZfzXcgaUypA8wo55hD72R7/AF6a4mlCPADROQ4i6WIE3yWkNhHCi7D6MOhb5g5D2FgFiP6n8LdbK9F9QQTLYUlGfscuepiEFTz1nXr7nNNQRq4jbdx3aybW9GUxstsyb3VK3FNKXgsuqqXUxccd9S8JiW+QFNX71H1eelUAbQzrrYQuep/BRgAuVcP4GB+AzgAAAAASUVORK5CYII=</Image>
+<SearchForm>http://search.meta.ua/</SearchForm>
+<Url type="text/html" method="GET" template="http://meta.ua/search.asp" resultdomain="meta.ua">
+    <Param name="q" value="{searchTerms}"/>
+    <Param name="sourceid" value="Mozilla-search"/>
+</Url>
+<Url type="application/x-suggestions+json" method="GET" template="http://meta.ua/suggestions/">
+    <Param name="output" value="fxjson"/>
+    <Param name="q" value="{searchTerms}"/>
+    <Param name="sourceid" value="Mozilla-suggestqueries"/>
+</Url>
+</SearchPlugin>

@@ -25,8 +25,8 @@ public:
                               const GrGLSLCaps&,
                               GrProcessorKeyBuilder*);
 
-    void setData(const GrGLSLProgramDataManager& pdman,
-                 const GrPrimitiveProcessor& primProc) override {
+    void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
+                 FPCoordTransformIter&& transformIter) override {
         const GrConicEffect& ce = primProc.cast<GrConicEffect>();
 
         if (!ce.viewMatrix().isIdentity() && !fViewMatrix.cheapEqualTo(ce.viewMatrix())) {
@@ -47,13 +47,7 @@ public:
             pdman.set1f(fCoverageScaleUniform, GrNormalizeByteToFloat(ce.coverageScale()));
             fCoverageScale = ce.coverageScale();
         }
-    }
-
-    void setTransformData(const GrPrimitiveProcessor& primProc,
-                          const GrGLSLProgramDataManager& pdman,
-                          int index,
-                          const SkTArray<const GrCoordTransform*, true>& transforms) override {
-        this->setTransformDataHelper<GrConicEffect>(primProc, pdman, index, transforms);
+        this->setTransformDataHelper(ce.localMatrix(), pdman, &transformIter);
     }
 
 private:
@@ -108,8 +102,7 @@ void GrGLConicEffect::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
                          gpArgs->fPositionVar,
                          gp.inPosition()->fName,
                          gp.localMatrix(),
-                         args.fTransformsIn,
-                         args.fTransformsOut);
+                         args.fFPCoordTransformHandler);
 
     // TODO: this precision check should actually be a check on the number of bits
     // high and medium provide and the selection of the lowest level that suffices.
@@ -262,25 +255,24 @@ GrConicEffect::GrConicEffect(GrColor color, const SkMatrix& viewMatrix, uint8_t 
     , fCoverageScale(coverage)
     , fEdgeType(edgeType) {
     this->initClassID<GrConicEffect>();
-    fInPosition = &this->addVertexAttrib(Attribute("inPosition", kVec2f_GrVertexAttribType,
-                                                   kHigh_GrSLPrecision));
-    fInConicCoeffs = &this->addVertexAttrib(Attribute("inConicCoeffs",
-                                                      kVec4f_GrVertexAttribType));
+    fInPosition = &this->addVertexAttrib("inPosition", kVec2f_GrVertexAttribType,
+                                         kHigh_GrSLPrecision);
+    fInConicCoeffs = &this->addVertexAttrib("inConicCoeffs", kVec4f_GrVertexAttribType);
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
 GR_DEFINE_GEOMETRY_PROCESSOR_TEST(GrConicEffect);
 
-const GrGeometryProcessor* GrConicEffect::TestCreate(GrProcessorTestData* d) {
-    GrGeometryProcessor* gp;
+sk_sp<GrGeometryProcessor> GrConicEffect::TestCreate(GrProcessorTestData* d) {
+    sk_sp<GrGeometryProcessor> gp;
     do {
         GrPrimitiveEdgeType edgeType =
                 static_cast<GrPrimitiveEdgeType>(
                         d->fRandom->nextULessThan(kGrProcessorEdgeTypeCnt));
-        gp = GrConicEffect::Create(GrRandomColor(d->fRandom), GrTest::TestMatrix(d->fRandom),
-                                   edgeType, *d->fCaps,
-                                   GrTest::TestMatrix(d->fRandom), d->fRandom->nextBool());
+        gp = GrConicEffect::Make(GrRandomColor(d->fRandom), GrTest::TestMatrix(d->fRandom),
+                                 edgeType, *d->fCaps,
+                                 GrTest::TestMatrix(d->fRandom), d->fRandom->nextBool());
     } while (nullptr == gp);
     return gp;
 }
@@ -299,8 +291,8 @@ public:
                               const GrGLSLCaps&,
                               GrProcessorKeyBuilder*);
 
-    void setData(const GrGLSLProgramDataManager& pdman,
-                 const GrPrimitiveProcessor& primProc) override {
+    void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
+                 FPCoordTransformIter&& transformIter) override {
         const GrQuadEffect& qe = primProc.cast<GrQuadEffect>();
 
         if (!qe.viewMatrix().isIdentity() && !fViewMatrix.cheapEqualTo(qe.viewMatrix())) {
@@ -321,13 +313,7 @@ public:
             pdman.set1f(fCoverageScaleUniform, GrNormalizeByteToFloat(qe.coverageScale()));
             fCoverageScale = qe.coverageScale();
         }
-    }
-
-    void setTransformData(const GrPrimitiveProcessor& primProc,
-                          const GrGLSLProgramDataManager& pdman,
-                          int index,
-                          const SkTArray<const GrCoordTransform*, true>& transforms) override {
-        this->setTransformDataHelper<GrQuadEffect>(primProc, pdman, index, transforms);
+        this->setTransformDataHelper(qe.localMatrix(), pdman, &transformIter);
     }
 
 private:
@@ -382,8 +368,7 @@ void GrGLQuadEffect::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
                          gpArgs->fPositionVar,
                          gp.inPosition()->fName,
                          gp.localMatrix(),
-                         args.fTransformsIn,
-                         args.fTransformsOut);
+                         args.fFPCoordTransformHandler);
 
     fragBuilder->codeAppendf("float edgeAlpha;");
 
@@ -478,26 +463,25 @@ GrQuadEffect::GrQuadEffect(GrColor color, const SkMatrix& viewMatrix, uint8_t co
     , fCoverageScale(coverage)
     , fEdgeType(edgeType) {
     this->initClassID<GrQuadEffect>();
-    fInPosition = &this->addVertexAttrib(Attribute("inPosition", kVec2f_GrVertexAttribType,
-                                                   kHigh_GrSLPrecision));
-    fInHairQuadEdge = &this->addVertexAttrib(Attribute("inHairQuadEdge",
-                                                        kVec4f_GrVertexAttribType));
+    fInPosition = &this->addVertexAttrib("inPosition", kVec2f_GrVertexAttribType,
+                                                   kHigh_GrSLPrecision);
+    fInHairQuadEdge = &this->addVertexAttrib("inHairQuadEdge", kVec4f_GrVertexAttribType);
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
 GR_DEFINE_GEOMETRY_PROCESSOR_TEST(GrQuadEffect);
 
-const GrGeometryProcessor* GrQuadEffect::TestCreate(GrProcessorTestData* d) {
-    GrGeometryProcessor* gp;
+sk_sp<GrGeometryProcessor> GrQuadEffect::TestCreate(GrProcessorTestData* d) {
+    sk_sp<GrGeometryProcessor> gp;
     do {
         GrPrimitiveEdgeType edgeType = static_cast<GrPrimitiveEdgeType>(
                 d->fRandom->nextULessThan(kGrProcessorEdgeTypeCnt));
-        gp = GrQuadEffect::Create(GrRandomColor(d->fRandom),
-                                  GrTest::TestMatrix(d->fRandom),
-                                  edgeType, *d->fCaps,
-                                  GrTest::TestMatrix(d->fRandom),
-                                  d->fRandom->nextBool());
+        gp = GrQuadEffect::Make(GrRandomColor(d->fRandom),
+                                GrTest::TestMatrix(d->fRandom),
+                                edgeType, *d->fCaps,
+                                GrTest::TestMatrix(d->fRandom),
+                                d->fRandom->nextBool());
     } while (nullptr == gp);
     return gp;
 }
@@ -516,8 +500,8 @@ public:
                               const GrGLSLCaps&,
                               GrProcessorKeyBuilder*);
 
-    void setData(const GrGLSLProgramDataManager& pdman,
-                 const GrPrimitiveProcessor& primProc) override {
+    void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
+                 FPCoordTransformIter&& transformIter) override {
         const GrCubicEffect& ce = primProc.cast<GrCubicEffect>();
 
         if (!ce.viewMatrix().isIdentity() && !fViewMatrix.cheapEqualTo(ce.viewMatrix())) {
@@ -533,6 +517,7 @@ public:
             pdman.set4fv(fColorUniform, 1, c);
             fColor = ce.color();
         }
+        this->setTransformDataHelper(SkMatrix::I(), pdman, &transformIter);
     }
 
 private:
@@ -584,8 +569,7 @@ void GrGLCubicEffect::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
                          uniformHandler,
                          gpArgs->fPositionVar,
                          gp.inPosition()->fName,
-                         args.fTransformsIn,
-                         args.fTransformsOut);
+                         args.fFPCoordTransformHandler);
 
 
     GrGLSLShaderVar edgeAlpha("edgeAlpha", kFloat_GrSLType, 0, kHigh_GrSLPrecision);
@@ -706,24 +690,23 @@ GrCubicEffect::GrCubicEffect(GrColor color, const SkMatrix& viewMatrix,
     , fViewMatrix(viewMatrix)
     , fEdgeType(edgeType) {
     this->initClassID<GrCubicEffect>();
-    fInPosition = &this->addVertexAttrib(Attribute("inPosition", kVec2f_GrVertexAttribType,
-                                                   kHigh_GrSLPrecision));
-    fInCubicCoeffs = &this->addVertexAttrib(Attribute("inCubicCoeffs",
-                                                        kVec4f_GrVertexAttribType));
+    fInPosition = &this->addVertexAttrib("inPosition", kVec2f_GrVertexAttribType,
+                                         kHigh_GrSLPrecision);
+    fInCubicCoeffs = &this->addVertexAttrib("inCubicCoeffs", kVec4f_GrVertexAttribType);
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
 GR_DEFINE_GEOMETRY_PROCESSOR_TEST(GrCubicEffect);
 
-const GrGeometryProcessor* GrCubicEffect::TestCreate(GrProcessorTestData* d) {
-    GrGeometryProcessor* gp;
+sk_sp<GrGeometryProcessor> GrCubicEffect::TestCreate(GrProcessorTestData* d) {
+    sk_sp<GrGeometryProcessor> gp;
     do {
         GrPrimitiveEdgeType edgeType =
                 static_cast<GrPrimitiveEdgeType>(
                         d->fRandom->nextULessThan(kGrProcessorEdgeTypeCnt));
-        gp = GrCubicEffect::Create(GrRandomColor(d->fRandom),
-                                   GrTest::TestMatrix(d->fRandom), edgeType, *d->fCaps);
+        gp = GrCubicEffect::Make(GrRandomColor(d->fRandom),
+                                 GrTest::TestMatrix(d->fRandom), edgeType, *d->fCaps);
     } while (nullptr == gp);
     return gp;
 }

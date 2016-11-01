@@ -317,7 +317,7 @@ assertEq(e1.tbl.get(1) === e2.tbl.get(1), false);
 
 var code1 = wasmTextToBinary('(module (func $exp (param i64) (result i64) (i64.add (get_local 0) (i64.const 10))) (export "exp" $exp))');
 var e1 = new Instance(new Module(code1)).exports;
-var code2 = wasmTextToBinary('(module (import $i "a" "b" (param i64) (result i64)) (func $f (result i32) (i32.wrap/i64 (call_import $i (i64.const 42)))) (export "f" $f))');
+var code2 = wasmTextToBinary('(module (import $i "a" "b" (param i64) (result i64)) (func $f (result i32) (i32.wrap/i64 (call $i (i64.const 42)))) (export "f" $f))');
 var e2 = new Instance(new Module(code2), {a:{b:e1.exp}}).exports;
 assertEq(e2.f(), 52);
 
@@ -374,6 +374,20 @@ assertEq(new Instance(m, {glob:{a:0}}) instanceof Instance, true);
 assertEq(new Instance(m, {glob:{a:(64*1024 - 2)}}) instanceof Instance, true);
 assertErrorMessage(() => new Instance(m, {glob:{a:(64*1024 - 1)}}), RangeError, /data segment does not fit/);
 assertErrorMessage(() => new Instance(m, {glob:{a:64*1024}}), RangeError, /data segment does not fit/);
+
+var m = new Module(wasmTextToBinary(`
+    (module
+        (memory 1)
+        (data (i32.const 0x10001) "\\0a\\0b"))
+`));
+assertErrorMessage(() => new Instance(m), RangeError, /data segment does not fit/);
+
+var m = new Module(wasmTextToBinary(`
+    (module
+        (memory 0)
+        (data (i32.const 0x10001) ""))
+`));
+assertEq(new Instance(m) instanceof Instance, true);
 
 // Errors during segment initialization do not have observable effects
 // and are checked against the actual memory/table length, not the declared
@@ -437,6 +451,21 @@ assertEq(tbl.get(3)(), 3);
 assertEq(tbl.get(4)(), 4);
 for (var i = 5; i < 10; i++)
     assertEq(tbl.get(i), null);
+
+var m = new Module(wasmTextToBinary(`
+    (module
+        (func $their (import "" "func"))
+        (table (import "" "table") 3 anyfunc)
+        (func $my)
+        (elem (i32.const 1) $my)
+        (elem (i32.const 2) $their)
+    )
+`));
+var tbl = new Table({initial:3, element:"anyfunc"});
+assertErrorMessage(() => new Instance(m, { "": { table: tbl, func: () => {}} }), TypeError, /can only assign WebAssembly exported functions to Table/);
+for (var i = 0; i < 3; i++) {
+    assertEq(tbl.get(i), null);
+}
 
 // Cross-instance calls
 

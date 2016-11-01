@@ -21,6 +21,7 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "asmjs/WasmBaselineCompile.h"
+#include "asmjs/WasmBinaryFormat.h"
 #include "asmjs/WasmBinaryIterator.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmSignalHandlers.h"
@@ -57,12 +58,23 @@ typedef ExprIter<IonCompilePolicy> IonExprIter;
 
 class FunctionCompiler;
 
+// TlsUsage describes how the TLS register is used during a function call.
+
+enum class TlsUsage {
+    Unused,     // No particular action is taken with respect to the TLS register.
+    Need,       // The TLS register must be reloaded just before the call.
+    CallerSaved // Same, plus space must be allocated to save/restore the TLS
+                // register.
+};
+
+static bool
+NeedsTls(TlsUsage usage) {
+    return usage == TlsUsage::Need || usage == TlsUsage::CallerSaved;
+}
+
 // CallCompileState describes a call that is being compiled. Due to expression
 // nesting, multiple calls can be in the middle of compilation at the same time
 // and these are tracked in a stack by FunctionCompiler.
-
-enum class PassTls { False = false, True = true };
-enum class InterModule { False = false, True = true };
 
 class CallCompileState
 {
@@ -263,8 +275,6 @@ class FunctionCompiler
                 // Bool32x4 uses the same data layout as Int32x4.
                 ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0), MIRType::Bool32x4);
                 break;
-              case ValType::Limit:
-                MOZ_CRASH("Limit");
             }
 
             curBlock_->add(ins);
@@ -944,7 +954,7 @@ class FunctionCompiler
             outer->childClobbers_ = true;
     }
 
-    bool finishCall(CallCompileState* call, PassTls passTls, InterModule interModule)
+    bool finishCall(CallCompileState* call, TlsUsage tls)
     {
         MOZ_ALWAYS_TRUE(callStack_.popCopy() == call);
 
@@ -953,7 +963,7 @@ class FunctionCompiler
             return true;
         }
 
-        if (passTls == PassTls::True) {
+        if (NeedsTls(tls)) {
             if (!call->regArgs_.append(MWasmCall::Arg(AnyRegister(WasmTlsReg), tlsPointer_)))
                 return false;
         }
@@ -964,7 +974,7 @@ class FunctionCompiler
         // stack space to save/restore the caller's WasmTlsReg during the call.
         // Record the stack offset before including spIncrement since MWasmCall
         // will use this offset after having bumped the stack pointer.
-        if (interModule == InterModule::True) {
+        if (tls == TlsUsage::CallerSaved) {
             call->tlsStackOffset_ = stackBytes;
             stackBytes += sizeof(void*);
         }
@@ -1866,8 +1876,10 @@ EmitReturn(FunctionCompiler& f)
 }
 
 static bool
-EmitCallArgs(FunctionCompiler& f, const Sig& sig, InterModule interModule, CallCompileState* call)
+EmitCallArgs(FunctionCompiler& f, const Sig& sig, TlsUsage tls, CallCompileState* call)
 {
+    MOZ_ASSERT(NeedsTls(tls));
+
     if (!f.startCall(call))
         return false;
 
@@ -1885,7 +1897,7 @@ EmitCallArgs(FunctionCompiler& f, const Sig& sig, InterModule interModule, CallC
     if (!f.iter().readCallArgsEnd(numArgs))
         return false;
 
-    return f.finishCall(call, PassTls::True, interModule);
+    return f.finishCall(call, tls);
 }
 
 static bool
@@ -1895,7 +1907,7 @@ EmitCallImportCommon(FunctionCompiler& f, uint32_t lineOrBytecode, uint32_t func
     const Sig& sig = *funcImport.sig;
 
     CallCompileState call(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, InterModule::True, &call))
+    if (!EmitCallArgs(f, sig, TlsUsage::CallerSaved, &call))
         return false;
 
     if (!f.iter().readCallReturn(sig.ret()))
@@ -1934,7 +1946,7 @@ EmitCall(FunctionCompiler& f)
     const Sig& sig = *f.mg().funcDefSigs[funcDefIndex];
 
     CallCompileState call(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, InterModule::False, &call))
+    if (!EmitCallArgs(f, sig, TlsUsage::Need, &call))
         return false;
 
     if (!f.iter().readCallReturn(sig.ret()))
@@ -1952,14 +1964,14 @@ EmitCall(FunctionCompiler& f)
 }
 
 static bool
-EmitCallImport(FunctionCompiler& f)
+EmitOldCallImport(FunctionCompiler& f)
 {
     MOZ_ASSERT(!f.mg().firstFuncDefIndex);
 
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
     uint32_t funcImportIndex;
-    if (!f.iter().readCallImport(&funcImportIndex))
+    if (!f.iter().readCall(&funcImportIndex))
         return false;
 
     if (f.inDeadCode())
@@ -1988,10 +2000,12 @@ EmitCallIndirect(FunctionCompiler& f, bool oldStyle)
 
     const Sig& sig = f.mg().sigs[sigIndex];
 
-    InterModule interModule = InterModule(!f.mg().isAsmJS() && f.mg().tables[0].external);
+    TlsUsage tls = !f.mg().isAsmJS() && f.mg().tables[0].external
+                   ? TlsUsage::CallerSaved
+                   : TlsUsage::Need;
 
     CallCompileState call(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, interModule, &call))
+    if (!EmitCallArgs(f, sig, tls, &call))
         return false;
 
     if (oldStyle) {
@@ -2462,7 +2476,7 @@ EmitUnaryMathBuiltinCall(FunctionCompiler& f, SymbolicAddress callee, ValType op
     if (!f.passArg(input, operandType, &call))
         return false;
 
-    if (!f.finishCall(&call, PassTls::False, InterModule::False))
+    if (!f.finishCall(&call, TlsUsage::Unused))
         return false;
 
     MDefinition* def;
@@ -2493,7 +2507,7 @@ EmitBinaryMathBuiltinCall(FunctionCompiler& f, SymbolicAddress callee, ValType o
     if (!f.passArg(rhs, operandType, &call))
         return false;
 
-    if (!f.finishCall(&call, PassTls::False, InterModule::False))
+    if (!f.finishCall(&call, TlsUsage::Unused))
         return false;
 
     MDefinition* def;
@@ -2684,7 +2698,7 @@ SimdToLaneType(ValType type)
       case ValType::I64:
       case ValType::F32:
       case ValType::F64:
-      case ValType::Limit:;
+        break;
     }
     MOZ_CRASH("bad simd type");
 }
@@ -2970,7 +2984,6 @@ EmitSimdCtor(FunctionCompiler& f, ValType type)
       case ValType::I64:
       case ValType::F32:
       case ValType::F64:
-      case ValType::Limit:
         break;
     }
     MOZ_CRASH("unexpected SIMD type");
@@ -3082,7 +3095,7 @@ EmitGrowMemory(FunctionCompiler& f)
         return false;
 
     MDefinition* delta;
-    if (!f.iter().readUnary(ValType::I32, &delta))
+    if (!f.iter().readGrowMemory(&delta))
         return false;
 
     if (!f.passArg(delta, ValType::I32, &args))
@@ -3091,7 +3104,7 @@ EmitGrowMemory(FunctionCompiler& f)
     // As a short-cut, pretend this is an inter-module call so that any pinned
     // heap pointer will be reloaded after the call. This hack will go away once
     // we can stop pinning registers.
-    f.finishCall(&args, PassTls::True, InterModule::True);
+    f.finishCall(&args, TlsUsage::CallerSaved);
 
     MDefinition* ret;
     if (!f.builtinInstanceMethodCall(SymbolicAddress::GrowMemory, args, ValType::I32, &ret))
@@ -3108,7 +3121,7 @@ EmitCurrentMemory(FunctionCompiler& f)
 
     CallCompileState args(f, lineOrBytecode);
 
-    if (!f.iter().readNullary(ValType::I32))
+    if (!f.iter().readCurrentMemory())
         return false;
 
     if (!f.startCall(&args))
@@ -3117,7 +3130,7 @@ EmitCurrentMemory(FunctionCompiler& f)
     if (!f.passInstance(&args))
         return false;
 
-    f.finishCall(&args, PassTls::False, InterModule::False);
+    f.finishCall(&args, TlsUsage::Unused);
 
     MDefinition* ret;
     if (!f.builtinInstanceMethodCall(SymbolicAddress::CurrentMemory, args, ValType::I32, &ret))
@@ -3174,8 +3187,8 @@ EmitExpr(FunctionCompiler& f)
         return EmitCallIndirect(f, /* oldStyle = */ false);
       case Expr::OldCallIndirect:
         return EmitCallIndirect(f, /* oldStyle = */ true);
-      case Expr::CallImport:
-        return EmitCallImport(f);
+      case Expr::OldCallImport:
+        return EmitOldCallImport(f);
 
       // Locals and globals
       case Expr::GetLocal:

@@ -12,14 +12,12 @@ const MANIFEST_HANDLER         = "manifests/handler";
 const SEC_IN_ONE_DAY  = 24 * 60 * 60;
 const MS_IN_ONE_DAY   = SEC_IN_ONE_DAY * 1000;
 
-var gProfileDir          = null;
 var gHttpServer          = null;
 var gHttpRoot            = null;
 var gDataRoot            = null;
 var gPolicy              = null;
 var gManifestObject      = null;
 var gManifestHandlerURI  = null;
-var gTimerScheduleOffset = -1;
 
 function run_test() {
   run_next_test();
@@ -27,7 +25,6 @@ function run_test() {
 
 add_task(function* test_setup() {
   loadAddonManager();
-  gProfileDir = do_get_profile();
   yield removeCacheFile();
 
   gHttpServer = new HttpServer();
@@ -54,7 +51,7 @@ add_task(function* test_setup() {
   gPolicy = new Experiments.Policy();
   patchPolicy(gPolicy, {
     updatechannel: () => "nightly",
-    oneshotTimer: (callback, timeout, thisObj, name) => gTimerScheduleOffset = timeout,
+    oneshotTimer: (callback, timeout, thisObj, name) => {},
   });
 });
 

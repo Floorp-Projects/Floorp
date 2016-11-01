@@ -2,6 +2,7 @@
 module.exports = {
   rules: {
     "mozilla/import-headjs-globals": 1,
+    "mozilla/mark-test-function-used": 1,
   },
 
   // All globals made available in the test environment.
@@ -12,6 +13,7 @@ module.exports = {
     "deepEqual": false,
     "do_check_eq": false,
     "do_check_false": false,
+    "do_check_matches": false,
     "do_check_neq": false,
     "do_check_null": false,
     "do_check_true": false,
@@ -20,6 +22,8 @@ module.exports = {
     "do_get_file": false,
     "do_get_idle": false,
     "do_get_profile": false,
+    "do_get_tempdir": false,
+    "do_load_manifest": false,
     "do_load_module": false,
     "do_parse_document": false,
     "do_print": false,

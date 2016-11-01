@@ -99,11 +99,11 @@ class WebPlatformTestsUpdater(MozbuildObject):
 
         try:
             update.run_update(logger, **kwargs)
-        except:
+        except Exception:
             import pdb
             import traceback
             traceback.print_exc()
-            pdb.post_mortem()
+#            pdb.post_mortem()
 
 class WebPlatformTestsReduce(WebPlatformTestsRunner):
 

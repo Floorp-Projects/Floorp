@@ -10,11 +10,11 @@ var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/osfile.jsm"); /* globals OS */
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/MigrationUtils.jsm");
+Cu.import("resource:///modules/MigrationUtils.jsm"); /* globals MigratorPrototype */
 
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
@@ -132,10 +132,10 @@ Bookmarks.prototype = {
         // They are imported under their own folder, created either under the
         // bookmarks menu (in the case of startup migration).
         folderGuid = (yield PlacesUtils.bookmarks.insert({
-            parentGuid: PlacesUtils.bookmarks.menuGuid,
-            type: PlacesUtils.bookmarks.TYPE_FOLDER,
-            title: MigrationUtils.getLocalizedString("importedSafariReadingList"),
-          })).guid;
+          parentGuid: PlacesUtils.bookmarks.menuGuid,
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          title: MigrationUtils.getLocalizedString("importedSafariReadingList"),
+        })).guid;
         break;
       }
       default:
@@ -225,7 +225,7 @@ History.prototype = {
             catch (ex) {
               // Safari's History file may contain malformed URIs which
               // will be ignored.
-              Cu.reportError(ex)
+              Cu.reportError(ex);
             }
           }
         }
@@ -348,7 +348,6 @@ Preferences.prototype = {
 
         this._migrateFontSettings();
         yield this._migrateDownloadsFolder();
-
       }.bind(this)).then(() => aCallback(true), ex => {
         Cu.reportError(ex);
         aCallback(false);
@@ -376,7 +375,7 @@ Preferences.prototype = {
       let safariVal = this._dict.get(aSafariKey);
       let mozVal = aConvertFunction !== undefined ?
                    aConvertFunction(safariVal) : safariVal;
-      switch (typeof(mozVal)) {
+      switch (typeof mozVal) {
         case "string":
           Services.prefs.setCharPref(aMozPref, mozVal);
           break;
@@ -389,7 +388,7 @@ Preferences.prototype = {
         case "undefined":
           return false;
         default:
-          throw new Error("Unexpected value type: " + typeof(mozVal));
+          throw new Error("Unexpected value type: " + (typeof mozVal));
       }
     }
     return true;
@@ -423,7 +422,7 @@ Preferences.prototype = {
     // languages.
     if (this._dict.has("WebKitMinimumFontSize")) {
       let minimumSize = this._dict.get("WebKitMinimumFontSize");
-      if (typeof(minimumSize) == "number") {
+      if (typeof minimumSize == "number") {
         let prefs = Services.prefs.getChildList("font.minimum-size");
         for (let pref of prefs) {
           Services.prefs.setIntPref(pref, minimumSize);
@@ -588,8 +587,6 @@ SafariProfileMigrator.prototype.getResources = function SM_getResources() {
   // Apple may fix this at some point.
   pushProfileFileResource("ReadingList.plist", Bookmarks);
 
-  let prefsDir = FileUtils.getDir("UsrPrfs", [], false);
-
   let prefs = this.mainPreferencesPropertyList;
   if (prefs) {
     resources.push(new Preferences(prefs));
@@ -607,7 +604,7 @@ SafariProfileMigrator.prototype.getLastUsedDate = function SM_getLastUsedDate() 
   let profileDir = FileUtils.getDir("ULibDir", ["Safari"], false);
   let datePromises = ["Bookmarks.plist", "History.plist"].map(file => {
     let path = OS.Path.join(profileDir.path, file);
-    return OS.File.stat(path).catch(_ => null).then(info => {
+    return OS.File.stat(path).catch(() => null).then(info => {
       return info ? info.lastModificationDate : 0;
     });
   });
@@ -623,11 +620,13 @@ Object.defineProperty(SafariProfileMigrator.prototype, "mainPreferencesPropertyL
       if (file.exists()) {
         file.append("com.apple.Safari.plist");
         if (file.exists()) {
-          return this._mainPreferencesPropertyList =
+          this._mainPreferencesPropertyList =
             new MainPreferencesPropertyList(file);
+          return this._mainPreferencesPropertyList;
         }
       }
-      return this._mainPreferencesPropertyList = null;
+      this._mainPreferencesPropertyList = null;
+      return this._mainPreferencesPropertyList;
     }
     return this._mainPreferencesPropertyList;
   }

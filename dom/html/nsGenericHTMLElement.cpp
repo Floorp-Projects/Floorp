@@ -1264,11 +1264,11 @@ nsGenericHTMLElement::MapCommonAttributesIntoExceptHidden(const nsMappedAttribut
       if (value) {
         if (value->Equals(nsGkAtoms::_empty, eCaseMatters) ||
             value->Equals(nsGkAtoms::_true, eIgnoreCase)) {
-          userModify->SetIntValue(NS_STYLE_USER_MODIFY_READ_WRITE,
+          userModify->SetIntValue(StyleUserModify::ReadWrite,
                                   eCSSUnit_Enumerated);
         }
         else if (value->Equals(nsGkAtoms::_false, eIgnoreCase)) {
-            userModify->SetIntValue(NS_STYLE_USER_MODIFY_READ_ONLY,
+            userModify->SetIntValue(StyleUserModify::ReadOnly,
                                     eCSSUnit_Enumerated);
         }
       }
@@ -1677,68 +1677,6 @@ nsGenericHTMLElement::IsScrollGrabAllowed(JSContext*, JSObject*)
   // Only allow scroll grabbing in chrome
   nsIPrincipal* prin = nsContentUtils::SubjectPrincipal();
   return nsContentUtils::IsSystemPrincipal(prin);
-}
-
-nsresult
-nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
-{
-  aResult.Truncate();
-
-  nsAutoString value;
-  if (!GetAttr(kNameSpaceID_None, aAttr, value))
-    return NS_OK;
-
-  nsIDocument* doc = OwnerDoc(); 
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
-
-  nsString::const_iterator end;
-  value.EndReading(end);
-
-  nsAString::const_iterator iter;
-  value.BeginReading(iter);
-
-  while (iter != end) {
-    while (*iter == ' ' && iter != end) {
-      ++iter;
-    }
-
-    if (iter == end) {
-      break;
-    }
-
-    nsAString::const_iterator start = iter;
-
-    while (iter != end && *iter != ' ') {
-      ++iter;
-    }
-
-    if (!aResult.IsEmpty()) {
-      aResult.Append(NS_LITERAL_STRING(" "));
-    }
-
-    const nsSubstring& uriPart = Substring(start, iter);
-    nsCOMPtr<nsIURI> attrURI;
-    nsresult rv =
-      nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
-                                                uriPart, doc, baseURI);
-    if (NS_FAILED(rv)) {
-      aResult.Append(uriPart);
-      continue;
-    }
-
-    MOZ_ASSERT(attrURI);
-
-    nsAutoCString spec;
-    rv = attrURI->GetSpec(spec);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aResult.Append(uriPart);
-      continue;
-    }
-
-    AppendUTF8toUTF16(spec, aResult);
-  }
-
-  return NS_OK;
 }
 
 HTMLMenuElement*
@@ -2339,8 +2277,8 @@ nsGenericHTMLFormElement::IsElementDisabledForEvents(EventMessage aMessage,
   bool disabled = IsDisabled();
   if (!disabled && aFrame) {
     const nsStyleUserInterface* uiStyle = aFrame->StyleUserInterface();
-    disabled = uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
-      uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED;
+    disabled = uiStyle->mUserInput == StyleUserInput::None ||
+               uiStyle->mUserInput == StyleUserInput::Disabled;
 
   }
   return disabled;

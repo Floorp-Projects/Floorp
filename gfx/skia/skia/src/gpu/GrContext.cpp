@@ -6,10 +6,10 @@
  */
 
 #include "GrContext.h"
+#include "GrContextPriv.h"
 #include "GrContextOptions.h"
 #include "GrDrawingManager.h"
 #include "GrDrawContext.h"
-#include "GrLayerCache.h"
 #include "GrResourceCache.h"
 #include "GrResourceProvider.h"
 #include "GrSoftwarePathRenderer.h"
@@ -20,14 +20,17 @@
 
 #include "batches/GrCopySurfaceBatch.h"
 #include "effects/GrConfigConversionEffect.h"
+#include "effects/GrGammaEffect.h"
 #include "text/GrTextBlobCache.h"
 
 #define ASSERT_OWNED_RESOURCE(R) SkASSERT(!(R) || (R)->getContext() == this)
 #define ASSERT_SINGLE_OWNER \
     SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(&fSingleOwner);)
-#define RETURN_IF_ABANDONED if (fDrawingManager->abandoned()) { return; }
-#define RETURN_FALSE_IF_ABANDONED if (fDrawingManager->abandoned()) { return false; }
-#define RETURN_NULL_IF_ABANDONED if (fDrawingManager->abandoned()) { return nullptr; }
+#define ASSERT_SINGLE_OWNER_PRIV \
+    SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(&fContext->fSingleOwner);)
+#define RETURN_IF_ABANDONED if (fDrawingManager->wasAbandoned()) { return; }
+#define RETURN_FALSE_IF_ABANDONED if (fDrawingManager->wasAbandoned()) { return false; }
+#define RETURN_NULL_IF_ABANDONED if (fDrawingManager->wasAbandoned()) { return nullptr; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +66,6 @@ GrContext::GrContext() : fUniqueID(next_id()) {
     fResourceCache = nullptr;
     fResourceProvider = nullptr;
     fBatchFontCache = nullptr;
-    fFlushToReduceCacheSize = false;
 }
 
 bool GrContext::init(GrBackend backend, GrBackendContext backendContext,
@@ -84,10 +86,7 @@ void GrContext::initCommon(const GrContextOptions& options) {
 
     fCaps = SkRef(fGpu->caps());
     fResourceCache = new GrResourceCache(fCaps);
-    fResourceCache->setOverBudgetCallback(OverBudgetCB, this);
     fResourceProvider = new GrResourceProvider(fGpu, fResourceCache, &fSingleOwner);
-
-    fLayerCache.reset(new GrLayerCache(this));
 
     fDidTestPMConversions = false;
 
@@ -96,7 +95,12 @@ void GrContext::initCommon(const GrContextOptions& options) {
     dtOptions.fDrawBatchBounds = options.fDrawBatchBounds;
     dtOptions.fMaxBatchLookback = options.fMaxBatchLookback;
     dtOptions.fMaxBatchLookahead = options.fMaxBatchLookahead;
-    fDrawingManager.reset(new GrDrawingManager(this, dtOptions, &fSingleOwner));
+    GrPathRendererChain::Options prcOptions;
+    prcOptions.fDisableDistanceFieldRenderer = options.fDisableDistanceFieldPaths;
+    prcOptions.fAllowPathMaskCaching = options.fAllowPathMaskCaching;
+    prcOptions.fDisableAllPathRenderers = options.fForceSWPathMasks;
+    fDrawingManager.reset(new GrDrawingManager(this, dtOptions, prcOptions, options.fImmediateMode,
+                                               &fSingleOwner));
 
     // GrBatchFontCache will eventually replace GrFontCache
     fBatchFontCache = new GrBatchFontCache(this);
@@ -151,7 +155,6 @@ void GrContext::abandonContext() {
     fGpu->disconnect(GrGpu::DisconnectType::kAbandon);
 
     fBatchFontCache->freeAll();
-    fLayerCache->freeAll();
     fTextBlobCache->freeAll();
 }
 
@@ -170,7 +173,6 @@ void GrContext::releaseResourcesAndAbandonContext() {
     fGpu->disconnect(GrGpu::DisconnectType::kCleanup);
 
     fBatchFontCache->freeAll();
-    fLayerCache->freeAll();
     fTextBlobCache->freeAll();
 }
 
@@ -185,7 +187,6 @@ void GrContext::freeGpuResources() {
     this->flush();
 
     fBatchFontCache->freeAll();
-    fLayerCache->freeAll();
 
     fDrawingManager->freeGpuResources();
 
@@ -205,45 +206,27 @@ void GrContext::getResourceCacheUsage(int* resourceCount, size_t* resourceBytes)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GrContext::OverBudgetCB(void* data) {
-    SkASSERT(data);
-
-    GrContext* context = reinterpret_cast<GrContext*>(data);
-
-    // Flush the GrBufferedDrawTarget to possibly free up some textures
-    context->fFlushToReduceCacheSize = true;
-}
-
 void GrContext::TextBlobCacheOverBudgetCB(void* data) {
     SkASSERT(data);
-
-    // Unlike the GrResourceCache, TextBlobs are drawn at the SkGpuDevice level, therefore they
-    // cannot use fFlushTorReduceCacheSize because it uses AutoCheckFlush.  The solution is to move
-    // drawText calls to below the GrContext level, but this is not trivial because they call
-    // drawPath on SkGpuDevice
+    // TextBlobs are drawn at the SkGpuDevice level, therefore they cannot rely on GrDrawContext
+    // to perform a necessary flush.  The solution is to move drawText calls to below the GrContext
+    // level, but this is not trivial because they call drawPath on SkGpuDevice.
     GrContext* context = reinterpret_cast<GrContext*>(data);
     context->flush();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GrContext::flush(int flagsBitfield) {
+void GrContext::flush() {
     ASSERT_SINGLE_OWNER
     RETURN_IF_ABANDONED
-
-    if (kDiscard_FlushBit & flagsBitfield) {
-        fDrawingManager->reset();
-    } else {
-        fDrawingManager->flush();
-    }
-    fResourceCache->notifyFlushOccurred();
-    fFlushToReduceCacheSize = false;
+    fDrawingManager->flush();
 }
 
 bool sw_convert_to_premul(GrPixelConfig srcConfig, int width, int height, size_t inRowBytes,
                           const void* inPixels, size_t outRowBytes, void* outPixels) {
     SkSrcPixelInfo srcPI;
-    if (!GrPixelConfig2ColorAndProfileType(srcConfig, &srcPI.fColorType, nullptr)) {
+    if (!GrPixelConfigToColorType(srcConfig, &srcPI.fColorType)) {
         return false;
     }
     srcPI.fAlphaType = kUnpremul_SkAlphaType;
@@ -316,12 +299,11 @@ bool GrContext::writeSurfacePixels(GrSurface* surface,
     // temp buffer for doing sw premul conversion, if needed.
     SkAutoSTMalloc<128 * 128, uint32_t> tmpPixels(0);
     if (tempTexture) {
-        SkAutoTUnref<const GrFragmentProcessor> fp;
+        sk_sp<GrFragmentProcessor> fp;
         SkMatrix textureMatrix;
         textureMatrix.setIDiv(tempTexture->width(), tempTexture->height());
         if (applyPremulToSrc) {
-            fp.reset(this->createUPMToPMEffect(tempTexture, tempDrawInfo.fSwizzle,
-                                               textureMatrix));
+            fp = this->createUPMToPMEffect(tempTexture, tempDrawInfo.fSwizzle, textureMatrix);
             // If premultiplying was the only reason for the draw, fall back to a straight write.
             if (!fp) {
                 if (GrGpu::kCallerPrefersDraw_DrawPreference == drawPreference) {
@@ -333,8 +315,9 @@ bool GrContext::writeSurfacePixels(GrSurface* surface,
         }
         if (tempTexture) {
             if (!fp) {
-                fp.reset(GrConfigConversionEffect::Create(tempTexture, tempDrawInfo.fSwizzle,
-                    GrConfigConversionEffect::kNone_PMConversion, textureMatrix));
+                fp = GrConfigConversionEffect::Make(tempTexture, tempDrawInfo.fSwizzle,
+                                                    GrConfigConversionEffect::kNone_PMConversion,
+                                                    textureMatrix);
                 if (!fp) {
                     return false;
                 }
@@ -362,17 +345,21 @@ bool GrContext::writeSurfacePixels(GrSurface* surface,
             }
             SkMatrix matrix;
             matrix.setTranslate(SkIntToScalar(left), SkIntToScalar(top));
-            SkAutoTUnref<GrDrawContext> drawContext(this->drawContext(renderTarget));
+            // TODO: Need to decide the semantics of this function for color spaces. Do we support
+            // conversion from a passed-in color space? For now, specifying nullptr means that this
+            // path will do no conversion, so it will match the behavior of the non-draw path.
+            sk_sp<GrDrawContext> drawContext(this->contextPriv().makeWrappedDrawContext(
+                                                                        sk_ref_sp(renderTarget),
+                                                                        nullptr));
             if (!drawContext) {
                 return false;
             }
-            // SRGBTODO: AllowSRGBInputs? (We could force it on here, so we don't need the
-            // per-texture override in config conversion effect?)
             GrPaint paint;
-            paint.addColorFragmentProcessor(fp);
-            paint.setPorterDuffXPFactory(SkXfermode::kSrc_Mode);
+            paint.addColorFragmentProcessor(std::move(fp));
+            paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
+            paint.setAllowSRGBInputs(true);
             SkRect rect = SkRect::MakeWH(SkIntToScalar(width), SkIntToScalar(height));
-            drawContext->drawRect(GrClip::WideOpen(), paint, matrix, rect, nullptr);
+            drawContext->drawRect(GrNoClip(), paint, matrix, rect, nullptr);
 
             if (kFlushWrites_PixelOp & pixelOpsFlags) {
                 this->flushSurfaceWrites(surface);
@@ -443,50 +430,52 @@ bool GrContext::readSurfacePixels(GrSurface* src,
     SkAutoTUnref<GrSurface> surfaceToRead(SkRef(src));
     bool didTempDraw = false;
     if (GrGpu::kNoDraw_DrawPreference != drawPreference) {
-        if (tempDrawInfo.fUseExactScratch) {
+        if (SkBackingFit::kExact == tempDrawInfo.fTempSurfaceFit) {
             // We only respect this when the entire src is being read. Otherwise we can trigger too
             // many odd ball texture sizes and trash the cache.
             if (width != src->width() || height != src->height()) {
-                tempDrawInfo.fUseExactScratch = false;
+                tempDrawInfo.fTempSurfaceFit= SkBackingFit::kApprox;
             }
         }
-        SkAutoTUnref<GrTexture> temp;
-        if (tempDrawInfo.fUseExactScratch) {
-            temp.reset(this->textureProvider()->createTexture(tempDrawInfo.fTempSurfaceDesc,
-                                                              SkBudgeted::kYes));
-        } else {
-            temp.reset(this->textureProvider()->createApproxTexture(tempDrawInfo.fTempSurfaceDesc));
-        }
-        if (temp) {
+        // TODO: Need to decide the semantics of this function for color spaces. Do we support
+        // conversion to a passed-in color space? For now, specifying nullptr means that this
+        // path will do no conversion, so it will match the behavior of the non-draw path.
+        sk_sp<GrDrawContext> tempDC = this->makeDrawContext(tempDrawInfo.fTempSurfaceFit,
+                                                           tempDrawInfo.fTempSurfaceDesc.fWidth,
+                                                           tempDrawInfo.fTempSurfaceDesc.fHeight,
+                                                           tempDrawInfo.fTempSurfaceDesc.fConfig,
+                                                           nullptr,
+                                                           tempDrawInfo.fTempSurfaceDesc.fSampleCnt,
+                                                           tempDrawInfo.fTempSurfaceDesc.fOrigin);
+        if (tempDC) {
             SkMatrix textureMatrix;
             textureMatrix.setTranslate(SkIntToScalar(left), SkIntToScalar(top));
             textureMatrix.postIDiv(src->width(), src->height());
-            SkAutoTUnref<const GrFragmentProcessor> fp;
+            sk_sp<GrFragmentProcessor> fp;
             if (unpremul) {
-                fp.reset(this->createPMToUPMEffect(src->asTexture(), tempDrawInfo.fSwizzle,
-                    textureMatrix));
+                fp = this->createPMToUPMEffect(src->asTexture(), tempDrawInfo.fSwizzle,
+                                               textureMatrix);
                 if (fp) {
                     unpremul = false; // we no longer need to do this on CPU after the read back.
                 } else if (GrGpu::kCallerPrefersDraw_DrawPreference == drawPreference) {
                     // We only wanted to do the draw in order to perform the unpremul so don't
                     // bother.
-                    temp.reset(nullptr);
+                    tempDC.reset(nullptr);
                 }
             }
-            if (!fp && temp) {
-                fp.reset(GrConfigConversionEffect::Create(src->asTexture(), tempDrawInfo.fSwizzle,
-                    GrConfigConversionEffect::kNone_PMConversion, textureMatrix));
+            if (!fp && tempDC) {
+                fp = GrConfigConversionEffect::Make(src->asTexture(), tempDrawInfo.fSwizzle,
+                                                    GrConfigConversionEffect::kNone_PMConversion,
+                                                    textureMatrix);
             }
             if (fp) {
-                // SRGBTODO: AllowSRGBInputs? (We could force it on here, so we don't need the
-                // per-texture override in config conversion effect?)
                 GrPaint paint;
-                paint.addColorFragmentProcessor(fp);
-                paint.setPorterDuffXPFactory(SkXfermode::kSrc_Mode);
+                paint.addColorFragmentProcessor(std::move(fp));
+                paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
+                paint.setAllowSRGBInputs(true);
                 SkRect rect = SkRect::MakeWH(SkIntToScalar(width), SkIntToScalar(height));
-                SkAutoTUnref<GrDrawContext> drawContext(this->drawContext(temp->asRenderTarget()));
-                drawContext->drawRect(GrClip::WideOpen(), paint, SkMatrix::I(), rect, nullptr);
-                surfaceToRead.reset(SkRef(temp.get()));
+                tempDC->drawRect(GrNoClip(), paint, SkMatrix::I(), rect, nullptr);
+                surfaceToRead.reset(tempDC->asTexture().release());
                 left = 0;
                 top = 0;
                 didTempDraw = true;
@@ -510,7 +499,7 @@ bool GrContext::readSurfacePixels(GrSurface* src,
     // Perform umpremul conversion if we weren't able to perform it as a draw.
     if (unpremul) {
         SkDstPixelInfo dstPI;
-        if (!GrPixelConfig2ColorAndProfileType(dstConfig, &dstPI.fColorType, nullptr)) {
+        if (!GrPixelConfigToColorType(dstConfig, &dstPI.fColorType)) {
             return false;
         }
         dstPI.fAlphaType = kUnpremul_SkAlphaType;
@@ -533,13 +522,7 @@ void GrContext::prepareSurfaceForExternalIO(GrSurface* surface) {
     RETURN_IF_ABANDONED
     SkASSERT(surface);
     ASSERT_OWNED_RESOURCE(surface);
-    if (surface->surfacePriv().hasPendingIO()) {
-        this->flush();
-    }
-    GrRenderTarget* rt = surface->asRenderTarget();
-    if (fGpu && rt) {
-        fGpu->resolveRenderTarget(rt);
-    }
+    fDrawingManager->prepareSurfaceForExternalIO(surface);
 }
 
 bool GrContext::copySurface(GrSurface* dst, GrSurface* src, const SkIRect& srcRect,
@@ -569,7 +552,9 @@ bool GrContext::copySurface(GrSurface* dst, GrSurface* src, const SkIRect& srcRe
         src->flushWrites();
         return fGpu->copySurface(dst, src, clippedSrcRect, clippedDstPoint);
     }
-    SkAutoTUnref<GrDrawContext> drawContext(this->drawContext(dst->asRenderTarget()));
+    sk_sp<GrDrawContext> drawContext(this->contextPriv().makeWrappedDrawContext(
+                                                                sk_ref_sp(dst->asRenderTarget()),
+                                                                nullptr));
     if (!drawContext) {
         return false;
     }
@@ -584,6 +569,14 @@ void GrContext::flushSurfaceWrites(GrSurface* surface) {
     ASSERT_SINGLE_OWNER
     RETURN_IF_ABANDONED
     if (surface->surfacePriv().hasPendingWrite()) {
+        this->flush();
+    }
+}
+
+void GrContext::flushSurfaceIO(GrSurface* surface) {
+    ASSERT_SINGLE_OWNER
+    RETURN_IF_ABANDONED
+    if (surface->surfacePriv().hasPendingIO()) {
         this->flush();
     }
 }
@@ -607,15 +600,163 @@ int GrContext::getRecommendedSampleCount(GrPixelConfig config,
     return chosenSampleCount <= fGpu->caps()->maxSampleCount() ? chosenSampleCount : 0;
 }
 
+sk_sp<GrDrawContext> GrContextPriv::makeWrappedDrawContext(sk_sp<GrRenderTarget> rt,
+                                                           sk_sp<SkColorSpace> colorSpace,
+                                                           const SkSurfaceProps* surfaceProps) {
+    ASSERT_SINGLE_OWNER_PRIV
+    return this->drawingManager()->makeDrawContext(std::move(rt),
+                                                   std::move(colorSpace),
+                                                   surfaceProps);
+}
 
-GrDrawContext* GrContext::drawContext(GrRenderTarget* rt, const SkSurfaceProps* surfaceProps) {
-    ASSERT_SINGLE_OWNER
-    return fDrawingManager->drawContext(rt, surfaceProps);
+sk_sp<GrDrawContext> GrContextPriv::makeBackendTextureDrawContext(const GrBackendTextureDesc& desc, 
+                                                                  sk_sp<SkColorSpace> colorSpace,
+                                                                  const SkSurfaceProps* props,
+                                                                  GrWrapOwnership ownership) {
+    ASSERT_SINGLE_OWNER_PRIV
+    SkASSERT(desc.fFlags & kRenderTarget_GrBackendTextureFlag);
+
+    sk_sp<GrSurface> surface(fContext->textureProvider()->wrapBackendTexture(desc, ownership));
+    if (!surface) {
+        return nullptr;
+    }
+
+    return this->drawingManager()->makeDrawContext(sk_ref_sp(surface->asRenderTarget()),
+                                                   std::move(colorSpace), props);
+}
+
+sk_sp<GrDrawContext> GrContextPriv::makeBackendRenderTargetDrawContext(
+                                                const GrBackendRenderTargetDesc& desc,
+                                                sk_sp<SkColorSpace> colorSpace,
+                                                const SkSurfaceProps* surfaceProps) {
+    ASSERT_SINGLE_OWNER_PRIV
+
+    sk_sp<GrRenderTarget> rt(fContext->textureProvider()->wrapBackendRenderTarget(desc));
+    if (!rt) {
+        return nullptr;
+    }
+
+    return this->drawingManager()->makeDrawContext(std::move(rt),
+                                                   std::move(colorSpace),
+                                                   surfaceProps);
+}
+
+sk_sp<GrDrawContext> GrContextPriv::makeBackendTextureAsRenderTargetDrawContext(
+                                                     const GrBackendTextureDesc& desc,
+                                                     sk_sp<SkColorSpace> colorSpace,
+                                                     const SkSurfaceProps* surfaceProps) {
+    ASSERT_SINGLE_OWNER_PRIV
+    SkASSERT(desc.fFlags & kRenderTarget_GrBackendTextureFlag);
+
+    sk_sp<GrSurface> surface(fContext->resourceProvider()->wrapBackendTextureAsRenderTarget(desc));
+    if (!surface) {
+        return nullptr;
+    }
+
+    return this->drawingManager()->makeDrawContext(sk_ref_sp(surface->asRenderTarget()),
+                                                   std::move(colorSpace),
+                                                   surfaceProps);
+}
+
+static inline GrPixelConfig GrPixelConfigFallback(GrPixelConfig config) {
+    static const GrPixelConfig kFallback[] = {
+        kUnknown_GrPixelConfig,        // kUnknown_GrPixelConfig
+        kRGBA_8888_GrPixelConfig,      // kAlpha_8_GrPixelConfig
+        kUnknown_GrPixelConfig,        // kIndex_8_GrPixelConfig
+        kRGBA_8888_GrPixelConfig,      // kRGB_565_GrPixelConfig
+        kRGBA_8888_GrPixelConfig,      // kRGBA_4444_GrPixelConfig
+        kUnknown_GrPixelConfig,        // kRGBA_8888_GrPixelConfig
+        kRGBA_8888_GrPixelConfig,      // kBGRA_8888_GrPixelConfig
+        kUnknown_GrPixelConfig,        // kSRGBA_8888_GrPixelConfig
+        kSRGBA_8888_GrPixelConfig,     // kSBGRA_8888_GrPixelConfig
+        kUnknown_GrPixelConfig,        // kETC1_GrPixelConfig
+        kUnknown_GrPixelConfig,        // kLATC_GrPixelConfig
+        kUnknown_GrPixelConfig,        // kR11_EAC_GrPixelConfig
+        kUnknown_GrPixelConfig,        // kASTC_12x12_GrPixelConfig
+        kUnknown_GrPixelConfig,        // kRGBA_float_GrPixelConfig
+        kRGBA_half_GrPixelConfig,      // kAlpha_half_GrPixelConfig
+        kUnknown_GrPixelConfig,        // kRGBA_half_GrPixelConfig
+    };
+    return kFallback[config];
+
+    GR_STATIC_ASSERT(0  == kUnknown_GrPixelConfig);
+    GR_STATIC_ASSERT(1  == kAlpha_8_GrPixelConfig);
+    GR_STATIC_ASSERT(2  == kIndex_8_GrPixelConfig);
+    GR_STATIC_ASSERT(3  == kRGB_565_GrPixelConfig);
+    GR_STATIC_ASSERT(4  == kRGBA_4444_GrPixelConfig);
+    GR_STATIC_ASSERT(5  == kRGBA_8888_GrPixelConfig);
+    GR_STATIC_ASSERT(6  == kBGRA_8888_GrPixelConfig);
+    GR_STATIC_ASSERT(7  == kSRGBA_8888_GrPixelConfig);
+    GR_STATIC_ASSERT(8  == kSBGRA_8888_GrPixelConfig);
+    GR_STATIC_ASSERT(9  == kETC1_GrPixelConfig);
+    GR_STATIC_ASSERT(10  == kLATC_GrPixelConfig);
+    GR_STATIC_ASSERT(11  == kR11_EAC_GrPixelConfig);
+    GR_STATIC_ASSERT(12 == kASTC_12x12_GrPixelConfig);
+    GR_STATIC_ASSERT(13 == kRGBA_float_GrPixelConfig);
+    GR_STATIC_ASSERT(14 == kAlpha_half_GrPixelConfig);
+    GR_STATIC_ASSERT(15 == kRGBA_half_GrPixelConfig);
+    GR_STATIC_ASSERT(SK_ARRAY_COUNT(kFallback) == kGrPixelConfigCnt);
+}
+
+sk_sp<GrDrawContext> GrContext::makeDrawContextWithFallback(SkBackingFit fit,
+                                                            int width, int height,
+                                                            GrPixelConfig config,
+                                                            sk_sp<SkColorSpace> colorSpace,
+                                                            int sampleCnt,
+                                                            GrSurfaceOrigin origin,
+                                                            const SkSurfaceProps* surfaceProps,
+                                                            SkBudgeted budgeted) {
+    if (!this->caps()->isConfigRenderable(config, sampleCnt > 0)) {
+        config = GrPixelConfigFallback(config);
+    }
+
+    return this->makeDrawContext(fit, width, height, config, std::move(colorSpace),
+                                 sampleCnt, origin, surfaceProps, budgeted);
+}
+
+sk_sp<GrDrawContext> GrContext::makeDrawContext(SkBackingFit fit,
+                                                int width, int height,
+                                                GrPixelConfig config,
+                                                sk_sp<SkColorSpace> colorSpace,
+                                                int sampleCnt,
+                                                GrSurfaceOrigin origin,
+                                                const SkSurfaceProps* surfaceProps,
+                                                SkBudgeted budgeted) {
+    if (!this->caps()->isConfigRenderable(config, sampleCnt > 0)) {
+        return nullptr;
+    }
+
+    GrSurfaceDesc desc;
+    desc.fFlags = kRenderTarget_GrSurfaceFlag;
+    desc.fOrigin = origin;
+    desc.fWidth = width;
+    desc.fHeight = height;
+    desc.fConfig = config;
+    desc.fSampleCnt = sampleCnt;
+
+    sk_sp<GrTexture> tex;
+    if (SkBackingFit::kExact == fit) {
+        tex.reset(this->textureProvider()->createTexture(desc, budgeted));
+    } else {
+        tex.reset(this->textureProvider()->createApproxTexture(desc));
+    }
+    if (!tex) {
+        return nullptr;
+    }
+
+    sk_sp<GrDrawContext> drawContext(this->contextPriv().makeWrappedDrawContext(
+                                                           sk_ref_sp(tex->asRenderTarget()),
+                                                           std::move(colorSpace), surfaceProps));
+    if (!drawContext) {
+        return nullptr;
+    }
+
+    return drawContext;
 }
 
 bool GrContext::abandoned() const {
     ASSERT_SINGLE_OWNER
-    return fDrawingManager->abandoned();
+    return fDrawingManager->wasAbandoned();
 }
 
 namespace {
@@ -639,7 +780,7 @@ void GrContext::testPMConversionsIfNecessary(uint32_t flags) {
     }
 }
 
-const GrFragmentProcessor* GrContext::createPMToUPMEffect(GrTexture* texture,
+sk_sp<GrFragmentProcessor> GrContext::createPMToUPMEffect(GrTexture* texture,
                                                           const GrSwizzle& swizzle,
                                                           const SkMatrix& matrix) const {
     ASSERT_SINGLE_OWNER
@@ -648,13 +789,13 @@ const GrFragmentProcessor* GrContext::createPMToUPMEffect(GrTexture* texture,
     GrConfigConversionEffect::PMConversion pmToUPM =
         static_cast<GrConfigConversionEffect::PMConversion>(fPMToUPMConversion);
     if (GrConfigConversionEffect::kNone_PMConversion != pmToUPM) {
-        return GrConfigConversionEffect::Create(texture, swizzle, pmToUPM, matrix);
+        return GrConfigConversionEffect::Make(texture, swizzle, pmToUPM, matrix);
     } else {
         return nullptr;
     }
 }
 
-const GrFragmentProcessor* GrContext::createUPMToPMEffect(GrTexture* texture,
+sk_sp<GrFragmentProcessor> GrContext::createUPMToPMEffect(GrTexture* texture,
                                                           const GrSwizzle& swizzle,
                                                           const SkMatrix& matrix) const {
     ASSERT_SINGLE_OWNER
@@ -663,7 +804,7 @@ const GrFragmentProcessor* GrContext::createUPMToPMEffect(GrTexture* texture,
     GrConfigConversionEffect::PMConversion upmToPM =
         static_cast<GrConfigConversionEffect::PMConversion>(fUPMToPMConversion);
     if (GrConfigConversionEffect::kNone_PMConversion != upmToPM) {
-        return GrConfigConversionEffect::Create(texture, swizzle, upmToPM, matrix);
+        return GrConfigConversionEffect::Make(texture, swizzle, upmToPM, matrix);
     } else {
         return nullptr;
     }

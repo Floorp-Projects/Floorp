@@ -97,9 +97,11 @@ GPUParent::Init(base::ProcessId aParentPid,
   DeviceManagerDx::Init();
   DeviceManagerD3D9::Init();
 #endif
+
   if (NS_FAILED(NS_InitMinimalXPCOM())) {
     return false;
   }
+
   CompositorThreadHolder::Start();
   APZThreadUtils::SetControllerThread(CompositorThreadHolder::Loop());
   APZCTreeManager::InitializeGlobalState();

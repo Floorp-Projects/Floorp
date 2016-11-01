@@ -111,7 +111,6 @@ if CONFIG['MOZ_ENABLE_SKIA']:
         SOURCES['SourceSurfaceSkia.cpp'].flags += ['-Wno-implicit-fallthrough']
     EXPORTS.mozilla.gfx += [
         'HelpersSkia.h',
-        'RefPtrSkia.h',
     ]
 
 # Are we targeting x86 or x64?  If so, build SSE2 files.
@@ -208,12 +207,24 @@ FINAL_LIBRARY = 'xul'
 for var in ('USE_CAIRO', 'MOZ2D_HAS_MOZ_CAIRO'):
     DEFINES[var] = True
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3'):
     DEFINES['MOZ_ENABLE_FREETYPE'] = True
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3'):
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
+
+if CONFIG['MOZ_ENABLE_SKIA']:
+    LOCAL_INCLUDES += [
+        '/gfx/skia/skia/include/private',
+        '/gfx/skia/skia/src/core',
+        '/gfx/skia/skia/src/image',
+    ]
+if CONFIG['MOZ_ENABLE_SKIA_GPU']:
+    LOCAL_INCLUDES += [
+        '/gfx/skia/skia/src/gpu',
+    ]
+

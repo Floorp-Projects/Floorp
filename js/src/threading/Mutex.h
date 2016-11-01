@@ -10,45 +10,52 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
+#include "mozilla/ThreadLocal.h"
+#include "mozilla/Vector.h"
 
 #include <new>
 #include <string.h>
 
 namespace js {
 
-class Mutex
+class ConditionVariable;
+
+namespace detail {
+
+class MutexImpl
 {
 public:
   struct PlatformData;
 
-  Mutex();
-  ~Mutex();
+  MutexImpl();
+  ~MutexImpl();
 
-  void lock();
-  void unlock();
-
-  Mutex(Mutex&& rhs)
+  MutexImpl(MutexImpl&& rhs)
     : platformData_(rhs.platformData_)
   {
     MOZ_ASSERT(this != &rhs, "self move disallowed!");
     rhs.platformData_ = nullptr;
   }
 
-  Mutex& operator=(Mutex&& rhs) {
-    this->~Mutex();
-    new (this) Mutex(mozilla::Move(rhs));
+  MutexImpl& operator=(MutexImpl&& rhs) {
+    this->~MutexImpl();
+    new (this) MutexImpl(mozilla::Move(rhs));
     return *this;
   }
 
-  bool operator==(const Mutex& rhs) {
+  bool operator==(const MutexImpl& rhs) {
     return platformData_ == rhs.platformData_;
   }
 
-private:
-  Mutex(const Mutex&) = delete;
-  void operator=(const Mutex&) = delete;
+protected:
+  void lock();
+  void unlock();
 
-  friend class ConditionVariable;
+private:
+  MutexImpl(const MutexImpl&) = delete;
+  void operator=(const MutexImpl&) = delete;
+
+  friend class js::ConditionVariable;
   PlatformData* platformData() {
     MOZ_ASSERT(platformData_);
     return platformData_;
@@ -56,6 +63,65 @@ private:
 
   PlatformData* platformData_;
 };
+
+} // namespace detail
+
+// A MutexId secifies the name and mutex order for a mutex.
+//
+// The mutex order defines the allowed order of mutex acqusition on a single
+// thread. Mutexes must be acquired in strictly increasing order. Mutexes with
+// the same order may not be held at the same time by that thread.
+struct MutexId
+{
+  const char* name;
+  uint32_t order;
+};
+
+#ifndef DEBUG
+
+class Mutex : public detail::MutexImpl
+{
+public:
+  static bool Init() { return true; }
+  static void ShutDown() {}
+
+  explicit Mutex(const MutexId& id) {}
+
+  using MutexImpl::lock;
+  using MutexImpl::unlock;
+};
+
+#else
+
+// In debug builds, js::Mutex is a wrapper over MutexImpl that checks correct
+// locking order is observed.
+//
+// The class maintains a per-thread stack of currently-held mutexes to enable it
+// to check this.
+class Mutex : public detail::MutexImpl
+{
+public:
+  static bool Init();
+  static void ShutDown();
+
+  explicit Mutex(const MutexId& id)
+   : id_(id)
+  {
+    MOZ_ASSERT(id_.order != 0);
+  }
+
+  void lock();
+  void unlock();
+
+private:
+  const MutexId id_;
+
+  using MutexVector = mozilla::Vector<const Mutex*>;
+  static MOZ_THREAD_LOCAL(MutexVector*) HeldMutexStack;
+  static MutexVector& heldMutexStack();
+};
+
+#endif
 
 } // namespace js
 

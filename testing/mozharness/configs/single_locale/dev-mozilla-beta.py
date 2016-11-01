@@ -20,7 +20,7 @@ config = {
     }, {
         "vcs": "hg",
         "repo": "https://hg.mozilla.org/projects/date",
-        "branch": "default",
+        "branch": "%(revision)s",
         "dest": "date",
     }],
     # purge options

@@ -46,6 +46,7 @@ StructuredCloneData::Copy(const StructuredCloneData& aData)
   BlobImpls().AppendElements(aData.BlobImpls());
 
   MOZ_ASSERT(GetSurfaces().IsEmpty());
+  MOZ_ASSERT(WasmModules().IsEmpty());
 
   mInitialized = true;
 
@@ -81,7 +82,8 @@ StructuredCloneData::Write(JSContext* aCx,
 {
   MOZ_ASSERT(!mInitialized);
 
-  StructuredCloneHolder::Write(aCx, aValue, aTransfer, aRv);
+  StructuredCloneHolder::Write(aCx, aValue, aTransfer,
+                               JS::CloneDataPolicy().denySharedArrayBuffer(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

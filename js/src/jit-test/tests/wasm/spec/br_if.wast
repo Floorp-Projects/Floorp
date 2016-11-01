@@ -14,10 +14,10 @@
     (block (call $dummy) (call $dummy) (br_if 0 (get_local 0)))
   )
   (func (export "as-block-first-value") (param i32) (result i32)
-    (block i32 (br_if 0 (i32.const 10) (get_local 0)) (return (i32.const 11)))
+    (block i32 (drop (br_if 0 (i32.const 10) (get_local 0))) (return (i32.const 11)))
   )
   (func (export "as-block-mid-value") (param i32) (result i32)
-    (block i32 (call $dummy) (br_if 0 (i32.const 20) (get_local 0)) (return (i32.const 21)))
+    (block i32 (call $dummy) (drop (br_if 0 (i32.const 20) (get_local 0))) (return (i32.const 21)))
   )
   (func (export "as-block-last-value") (param i32) (result i32)
     (block i32
@@ -226,21 +226,6 @@
   "type mismatch"
 )
 
-(; TODO(stack): soft failure
-(assert_invalid
-  (module (func $type-false-arg-poly-vs-empty
-    (block (br_if 0 (unreachable) (i32.const 0)))
-  ))
-  "type mismatch"
-)
-(assert_invalid
-  (module (func $type-true-arg-poly-vs-empty
-    (block (br_if 0 (unreachable) (i32.const 1)))
-  ))
-  "type mismatch"
-)
-;)
-
 (assert_invalid
   (module (func $type-false-arg-void-vs-num (result i32)
     (block i32 (br_if 0 (nop) (i32.const 0)) (i32.const 1))
@@ -289,21 +274,6 @@
     (block i32 (br_if 0 (i32.const 0) (i64.const 0)) (i32.const 1))
   ))
   "type mismatch"
-)
-
-(assert_invalid
-  (module (func $type-binary (result i64)
-    (block i64 i64 (i64.const 1) (i64.const 2) (i64.const 3) (br_if 0))
-    (i64.add)
-  ))
-  "invalid result arity"
-)
-(assert_invalid
-  (module (func $type-binary-with-nop (result i32)
-    (block i32 i32 (nop) (i32.const 7) (nop) (i32.const 8) (i64.const 3) (br_if 0))
-    (i32.add)
-  ))
-  "invalid result arity"
 )
 
 (assert_invalid

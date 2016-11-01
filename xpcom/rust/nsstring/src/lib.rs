@@ -140,6 +140,7 @@ use std::ptr;
 use std::mem;
 use std::fmt;
 use std::cmp;
+use std::str;
 use std::u32;
 
 //////////////////////////////////
@@ -309,6 +310,18 @@ macro_rules! define_string_types {
         impl<'a> DerefMut for $String<'a> {
             fn deref_mut(&mut self) -> &mut $AString {
                 &mut self.hdr
+            }
+        }
+
+        impl<'a> From<&'a String> for $String<'a> {
+            fn from(s: &'a String) -> $String<'a> {
+                $String::from(&s[..])
+            }
+        }
+
+        impl<'a> From<&'a Vec<$char_t>> for $String<'a> {
+            fn from(s: &'a Vec<$char_t>) -> $String<'a> {
+                $String::from(&s[..])
             }
         }
 
@@ -562,6 +575,10 @@ impl nsACString {
         unsafe {
             Gecko_AppendUTF16toCString(self as *mut _, other as *const _);
         }
+    }
+
+    pub unsafe fn as_str_unchecked(&self) -> &str {
+        str::from_utf8_unchecked(self)
     }
 }
 

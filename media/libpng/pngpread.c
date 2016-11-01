@@ -841,7 +841,12 @@ png_process_IDAT_data(png_structrp png_ptr, png_bytep buffer,
             png_warning(png_ptr, "Truncated compressed data in IDAT");
 
          else
-            png_error(png_ptr, "Decompression error in IDAT");
+         {
+            if (ret == Z_DATA_ERROR)
+               png_benign_error(png_ptr, "IDAT: ADLER32 checksum mismatch");
+            else
+               png_error(png_ptr, "Decompression error in IDAT");
+         }
 
          /* Skip the check on unprocessed input */
          return;

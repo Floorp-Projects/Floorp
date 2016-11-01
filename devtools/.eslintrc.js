@@ -37,7 +37,6 @@ module.exports = {
     // devtools coding style.
 
     // Rules from the mozilla plugin
-    "mozilla/mark-test-function-used": 1,
     "mozilla/no-aArgs": 1,
     "mozilla/no-cpows-in-tests": 2,
     "mozilla/no-single-arg-cu-import": 2,

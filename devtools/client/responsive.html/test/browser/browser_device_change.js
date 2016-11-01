@@ -50,8 +50,10 @@ addRDMTask(TEST_URL, function* ({ ui, manager }) {
   yield testTouchEventsOverride(ui, true);
 
   // Test resetting device when resizing viewport
+  let deviceChanged = once(ui, "viewport-device-changed");
   yield testViewportResize(ui, ".viewport-vertical-resize-handle",
     [-10, -10], [testDevice.width, testDevice.height - 10], [0, -10], ui);
+  yield deviceChanged;
   yield testUserAgent(ui, DEFAULT_UA);
   yield testDevicePixelRatio(ui, DEFAULT_DPPX);
   yield testTouchEventsOverride(ui, false);

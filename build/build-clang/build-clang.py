@@ -13,8 +13,10 @@ import argparse
 import tempfile
 import glob
 import errno
+import re
 from contextlib import contextmanager
 import sys
+import which
 
 DEBUG = os.getenv("DEBUG")
 
@@ -77,7 +79,10 @@ def build_tar_package(tar, name, base, directory):
     # On Windows, we have to convert this into an msys path so that tar can
     # understand it.
     if is_windows():
-        name = name.replace('\\', '/').replace('c:', '/c')
+        name = name.replace('\\', '/')
+        def f(match):
+            return '/' + match.group(1).lower()
+        name = re.sub(r'^([A-Z]):', f, name)
     run_in(base, [tar,
                   "-c",
                   "-%s" % ("J" if ".xz" in name else "j"),
@@ -133,11 +138,11 @@ def install_libgcc(gcc_dir, clang_dir):
 
 
 def svn_co(source_dir, url, directory, revision):
-    run_in(source_dir, ["svn", "co", "-r", revision, url, directory])
+    run_in(source_dir, ["svn", "co", "-q", "-r", revision, url, directory])
 
 
 def svn_update(directory, revision):
-    run_in(directory, ["svn", "update", "-r", revision])
+    run_in(directory, ["svn", "update", "-q", "-r", revision])
 
 
 def get_platform():
@@ -182,15 +187,20 @@ def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
     if os.path.exists(build_dir + "/build.ninja"):
         run_cmake = False
 
+    # cmake doesn't deal well with backslashes in paths.
+    def slashify_path(path):
+        return path.replace('\\', '/')
+
     cmake_args = ["-GNinja",
-                  "-DCMAKE_C_COMPILER=%s" % cc[0],
-                  "-DCMAKE_CXX_COMPILER=%s" % cxx[0],
+                  "-DCMAKE_C_COMPILER=%s" % slashify_path(cc[0]),
+                  "-DCMAKE_CXX_COMPILER=%s" % slashify_path(cxx[0]),
+                  "-DCMAKE_ASM_COMPILER=%s" % slashify_path(cc[0]),
                   "-DCMAKE_C_FLAGS=%s" % ' '.join(cc[1:]),
                   "-DCMAKE_CXX_FLAGS=%s" % ' '.join(cxx[1:]),
                   "-DCMAKE_BUILD_TYPE=%s" % build_type,
                   "-DLLVM_TARGETS_TO_BUILD=X86;ARM",
                   "-DLLVM_ENABLE_ASSERTIONS=%s" % ("ON" if assertions else "OFF"),
-                  "-DPYTHON_EXECUTABLE=%s" % python_path,
+                  "-DPYTHON_EXECUTABLE=%s" % slashify_path(python_path),
                   "-DCMAKE_INSTALL_PREFIX=%s" % inst_dir,
                   "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
                   "-DLIBCXX_LIBCPPABI_VERSION=\"\"",
@@ -201,6 +211,22 @@ def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
         install_libgcc(gcc_dir, inst_dir)
 
 
+def get_compiler(config, key):
+    if key not in config:
+        raise ValueError("Config file needs to set %s" % key)
+
+    f = config[key]
+    if os.path.isabs(f):
+        if not os.path.exists(f):
+            raise ValueError("%s must point to an existing path" % key)
+        return f
+
+    # Assume that we have the name of some program that should be on PATH.
+    try:
+        return which.which(f)
+    except which.WhichError:
+        raise ValueError("%s not found on PATH" % f)
+
 if __name__ == "__main__":
     # The directories end up in the debug info, so the easy way of getting
     # a reproducible build is to run it in a know absolute directory.
@@ -208,7 +234,15 @@ if __name__ == "__main__":
     # cleans it up automatically.
     base_dir = "/builds/slave/moz-toolchain"
     if is_windows():
-        base_dir = "c:%s" % base_dir
+        # TODO: Because Windows taskcluster builds are run with distinct
+        # user IDs for each job, we can't store things in some globally
+        # accessible directory: one job will run, checkout LLVM to that
+        # directory, and then if another job runs, the new user won't be
+        # able to access the previously-checked out code--or be able to
+        # delete it.  So on Windows, we build in the task-specific home
+        # directory; we will eventually add -fdebug-prefix-map options
+        # to the LLVM build to bring back reproducibility.
+        base_dir = os.path.join(os.getcwd(), 'llvm-sources')
 
     source_dir = base_dir + "/src"
     build_dir = base_dir + "/build"
@@ -284,20 +318,8 @@ if __name__ == "__main__":
             raise ValueError("gcc_dir must point to an existing path")
     if is_linux() and gcc_dir is None:
         raise ValueError("Config file needs to set gcc_dir")
-    cc = None
-    if "cc" in config:
-        cc = config["cc"]
-        if not os.path.exists(cc):
-            raise ValueError("cc must point to an existing path")
-    else:
-        raise ValueError("Config file needs to set cc")
-    cxx = None
-    if "cxx" in config:
-        cxx = config["cxx"]
-        if not os.path.exists(cxx):
-            raise ValueError("cxx must point to an existing path")
-    else:
-        raise ValueError("Config file needs to set cxx")
+    cc = get_compiler(config, "cc")
+    cxx = get_compiler(config, "cxx")
 
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
@@ -362,8 +384,11 @@ if __name__ == "__main__":
     elif is_windows():
         extra_cflags = []
         extra_cxxflags = []
+        # clang-cl would like to figure out what it's supposed to be emulating
+        # by looking at an MSVC install, but we don't really have that here.
+        # Force things on.
         extra_cflags2 = []
-        extra_cxxflags2 = []
+        extra_cxxflags2 = ['-fms-compatibility-version=19.00.23918', '-Xclang', '-std=c++14']
 
     build_one_stage(
         [cc] + extra_cflags,

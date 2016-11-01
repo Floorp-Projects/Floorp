@@ -10,6 +10,7 @@
 
 #include "../private/SkTLogic.h"
 #include <limits>
+#include <type_traits>
 
 namespace sktfitsin {
 namespace Private {

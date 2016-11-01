@@ -146,10 +146,21 @@ function testConnectionTerminate() {
       gScript.removeMessageListener('sender-terminate',
                                     senderTerminateHandler);
 
-      receiverIframe.addEventListener('mozbrowserclose', function() {
-        ok(true, 'observe receiver page closing');
-        aResolve();
-      });
+      Promise.all([
+        new Promise((resolve) => {
+          gScript.addMessageListener('device-disconnected', function deviceDisconnectedHandler() {
+            gScript.removeMessageListener('device-disconnected', deviceDisconnectedHandler);
+            ok(true, 'observe device disconnect');
+            resolve();
+          });
+        }),
+        new Promise((resolve) => {
+          receiverIframe.addEventListener('mozbrowserclose', function() {
+            ok(true, 'observe receiver page closing');
+            resolve();
+          });
+        }),
+      ]).then(aResolve);
 
       gScript.sendAsyncMessage('trigger-on-terminate-request');
     });

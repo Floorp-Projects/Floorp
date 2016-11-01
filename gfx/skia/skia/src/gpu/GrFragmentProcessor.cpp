@@ -8,6 +8,7 @@
 #include "GrFragmentProcessor.h"
 #include "GrCoordTransform.h"
 #include "GrInvariantOutput.h"
+#include "GrPipeline.h"
 #include "GrProcOptInfo.h"
 #include "glsl/GrGLSLFragmentProcessor.h"
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
@@ -24,17 +25,12 @@ GrFragmentProcessor::~GrFragmentProcessor() {
     }
 }
 
-bool GrFragmentProcessor::isEqual(const GrFragmentProcessor& that,
-                                  bool ignoreCoordTransforms) const {
+bool GrFragmentProcessor::isEqual(const GrFragmentProcessor& that) const {
     if (this->classID() != that.classID() ||
-        !this->hasSameTextureAccesses(that)) {
+        !this->hasSameSamplers(that)) {
         return false;
     }
-    if (ignoreCoordTransforms) {
-        if (this->numTransforms() != that.numTransforms()) {
-            return false;
-        }
-    } else if (!this->hasSameTransforms(that)) {
+    if (!this->hasSameTransforms(that)) {
         return false;
     }
     if (!this->onIsEqual(that)) {
@@ -44,7 +40,7 @@ bool GrFragmentProcessor::isEqual(const GrFragmentProcessor& that,
         return false;
     }
     for (int i = 0; i < this->numChildProcessors(); ++i) {
-        if (!this->childProcessor(i).isEqual(that.childProcessor(i), ignoreCoordTransforms)) {
+        if (!this->childProcessor(i).isEqual(that.childProcessor(i))) {
             return false;
         }
     }
@@ -61,45 +57,31 @@ GrGLSLFragmentProcessor* GrFragmentProcessor::createGLSLInstance() const {
 }
 
 void GrFragmentProcessor::addTextureAccess(const GrTextureAccess* textureAccess) {
-    // Can't add texture accesses after registering any children since their texture accesses have
-    // already been bubbled up into our fTextureAccesses array
-    SkASSERT(fChildProcessors.empty());
-
     INHERITED::addTextureAccess(textureAccess);
-    fNumTexturesExclChildren++;
+}
+
+void GrFragmentProcessor::addBufferAccess(const GrBufferAccess* bufferAccess) {
+    INHERITED::addBufferAccess(bufferAccess);
 }
 
 void GrFragmentProcessor::addCoordTransform(const GrCoordTransform* transform) {
-    // Can't add transforms after registering any children since their transforms have already been
-    // bubbled up into our fCoordTransforms array
-    SkASSERT(fChildProcessors.empty());
-
     fCoordTransforms.push_back(transform);
-    fUsesLocalCoords = fUsesLocalCoords || transform->sourceCoords() == kLocal_GrCoordSet;
+    fUsesLocalCoords = true;
     SkDEBUGCODE(transform->setInProcessor();)
-    fNumTransformsExclChildren++;
 }
 
-int GrFragmentProcessor::registerChildProcessor(const GrFragmentProcessor* child) {
-    // Append the child's transforms to our transforms array and the child's textures array to our
-    // textures array
-    if (!child->fCoordTransforms.empty()) {
-        fCoordTransforms.push_back_n(child->fCoordTransforms.count(),
-                                     child->fCoordTransforms.begin());
-    }
-    if (!child->fTextureAccesses.empty()) {
-        fTextureAccesses.push_back_n(child->fTextureAccesses.count(),
-                                     child->fTextureAccesses.begin());
-    }
-
-    int index = fChildProcessors.count();
-    fChildProcessors.push_back(SkRef(child));
-
+int GrFragmentProcessor::registerChildProcessor(sk_sp<GrFragmentProcessor> child) {
     this->combineRequiredFeatures(*child);
 
     if (child->usesLocalCoords()) {
         fUsesLocalCoords = true;
     }
+    if (child->usesDistanceVectorField()) {
+        fUsesDistanceVectorField = true;
+    }
+
+    int index = fChildProcessors.count();
+    fChildProcessors.push_back(child.release());
 
     return index;
 }
@@ -113,10 +95,10 @@ void GrFragmentProcessor::notifyRefCntIsZero() const {
 }
 
 bool GrFragmentProcessor::hasSameTransforms(const GrFragmentProcessor& that) const {
-    if (this->numTransforms() != that.numTransforms()) {
+    if (this->numCoordTransforms() != that.numCoordTransforms()) {
         return false;
     }
-    int count = this->numTransforms();
+    int count = this->numCoordTransforms();
     for (int i = 0; i < count; ++i) {
         if (this->coordTransform(i) != that.coordTransform(i)) {
             return false;
@@ -125,20 +107,61 @@ bool GrFragmentProcessor::hasSameTransforms(const GrFragmentProcessor& that) con
     return true;
 }
 
-const GrFragmentProcessor* GrFragmentProcessor::MulOutputByInputAlpha(
-    const GrFragmentProcessor* fp) {
+sk_sp<GrFragmentProcessor> GrFragmentProcessor::MulOutputByInputAlpha(
+    sk_sp<GrFragmentProcessor> fp) {
     if (!fp) {
         return nullptr;
     }
-    return GrXfermodeFragmentProcessor::CreateFromDstProcessor(fp, SkXfermode::kDstIn_Mode);
+    return GrXfermodeFragmentProcessor::MakeFromDstProcessor(std::move(fp),
+                                                             SkXfermode::kDstIn_Mode);
 }
 
-const GrFragmentProcessor* GrFragmentProcessor::MulOutputByInputUnpremulColor(
-    const GrFragmentProcessor* fp) {
+sk_sp<GrFragmentProcessor> GrFragmentProcessor::PremulInput(sk_sp<GrFragmentProcessor> fp) {
+
+    class PremulInputFragmentProcessor : public GrFragmentProcessor {
+    public:
+        PremulInputFragmentProcessor() {
+            this->initClassID<PremulInputFragmentProcessor>();
+        }
+
+        const char* name() const override { return "PremultiplyInput"; }
+
+    private:
+        GrGLSLFragmentProcessor* onCreateGLSLInstance() const override {
+            class GLFP : public GrGLSLFragmentProcessor {
+            public:
+                void emitCode(EmitArgs& args) override {
+                    GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
+
+                    fragBuilder->codeAppendf("%s = %s;", args.fOutputColor, args.fInputColor);
+                    fragBuilder->codeAppendf("%s.rgb *= %s.a;",
+                                             args.fOutputColor, args.fInputColor);
+                }
+            };
+            return new GLFP;
+        }
+
+        void onGetGLSLProcessorKey(const GrGLSLCaps&, GrProcessorKeyBuilder*) const override {}
+
+        bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
+
+        void onComputeInvariantOutput(GrInvariantOutput* inout) const override {
+            inout->premulFourChannelColor();
+        }
+    };
+    if (!fp) {
+        return nullptr;
+    }
+    sk_sp<GrFragmentProcessor> fpPipeline[] = { sk_make_sp<PremulInputFragmentProcessor>(), fp};
+    return GrFragmentProcessor::RunInSeries(fpPipeline, 2);
+}
+
+sk_sp<GrFragmentProcessor> GrFragmentProcessor::MulOutputByInputUnpremulColor(
+    sk_sp<GrFragmentProcessor> fp) {
 
     class PremulFragmentProcessor : public GrFragmentProcessor {
     public:
-        PremulFragmentProcessor(const GrFragmentProcessor* processor) {
+        PremulFragmentProcessor(sk_sp<GrFragmentProcessor> processor) {
             this->initClassID<PremulFragmentProcessor>();
             this->registerChildProcessor(processor);
         }
@@ -200,19 +223,19 @@ const GrFragmentProcessor* GrFragmentProcessor::MulOutputByInputUnpremulColor(
     if (!fp) {
         return nullptr;
     }
-    return new PremulFragmentProcessor(fp);
+    return sk_sp<GrFragmentProcessor>(new PremulFragmentProcessor(std::move(fp)));
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-const GrFragmentProcessor* GrFragmentProcessor::OverrideInput(const GrFragmentProcessor* fp,
-                                                              GrColor color) {
+sk_sp<GrFragmentProcessor> GrFragmentProcessor::OverrideInput(sk_sp<GrFragmentProcessor> fp,
+                                                              GrColor4f color) {
     class ReplaceInputFragmentProcessor : public GrFragmentProcessor {
     public:
-        ReplaceInputFragmentProcessor(const GrFragmentProcessor* child, GrColor color)
+        ReplaceInputFragmentProcessor(sk_sp<GrFragmentProcessor> child, GrColor4f color)
             : fColor(color) {
             this->initClassID<ReplaceInputFragmentProcessor>();
-            this->registerChildProcessor(child);
+            this->registerChildProcessor(std::move(child));
         }
 
         const char* name() const override { return "Replace Color"; }
@@ -233,24 +256,17 @@ const GrFragmentProcessor* GrFragmentProcessor::OverrideInput(const GrFragmentPr
             private:
                 void onSetData(const GrGLSLProgramDataManager& pdman,
                                const GrProcessor& fp) override {
-                    GrColor color = fp.cast<ReplaceInputFragmentProcessor>().fColor;
+                    GrColor4f color = fp.cast<ReplaceInputFragmentProcessor>().fColor;
                     if (!fHaveSetColor || color != fPreviousColor) {
-                        static const float scale = 1.f / 255.f;
-                        float floatColor[4] = {
-                            GrColorUnpackR(color) * scale,
-                            GrColorUnpackG(color) * scale,
-                            GrColorUnpackB(color) * scale,
-                            GrColorUnpackA(color) * scale,
-                        };
-                        pdman.set4fv(fColorUni, 1, floatColor);
+                        pdman.set4fv(fColorUni, 1, color.fRGBA);
                         fPreviousColor = color;
                         fHaveSetColor = true;
                     }
                 }
 
                 GrGLSLProgramDataManager::UniformHandle fColorUni;
-                bool    fHaveSetColor;
-                GrColor fPreviousColor;
+                bool      fHaveSetColor;
+                GrColor4f fPreviousColor;
             };
 
             return new GLFP;
@@ -265,32 +281,32 @@ const GrFragmentProcessor* GrFragmentProcessor::OverrideInput(const GrFragmentPr
         }
 
         void onComputeInvariantOutput(GrInvariantOutput* inout) const override {
-            inout->setToOther(kRGBA_GrColorComponentFlags, fColor,
+            inout->setToOther(kRGBA_GrColorComponentFlags, fColor.toGrColor(),
                               GrInvariantOutput::kWillNot_ReadInput);
             this->childProcessor(0).computeInvariantOutput(inout);
         }
 
-        GrColor fColor;
+        GrColor4f fColor;
     };
 
     GrInvariantOutput childOut(0x0, kNone_GrColorComponentFlags, false);
     fp->computeInvariantOutput(&childOut);
     if (childOut.willUseInputColor()) {
-        return new ReplaceInputFragmentProcessor(fp, color);
+        return sk_sp<GrFragmentProcessor>(new ReplaceInputFragmentProcessor(std::move(fp), color));
     } else {
-        return SkRef(fp);
+        return fp;
     }
 }
 
-const GrFragmentProcessor* GrFragmentProcessor::RunInSeries(const GrFragmentProcessor* series[],
+sk_sp<GrFragmentProcessor> GrFragmentProcessor::RunInSeries(sk_sp<GrFragmentProcessor>* series,
                                                             int cnt) {
     class SeriesFragmentProcessor : public GrFragmentProcessor {
     public:
-        SeriesFragmentProcessor(const GrFragmentProcessor* children[], int cnt){
+        SeriesFragmentProcessor(sk_sp<GrFragmentProcessor>* children, int cnt){
             SkASSERT(cnt > 1);
             this->initClassID<SeriesFragmentProcessor>();
             for (int i = 0; i < cnt; ++i) {
-                this->registerChildProcessor(children[i]);
+                this->registerChildProcessor(std::move(children[i]));
             }
         }
 
@@ -300,9 +316,11 @@ const GrFragmentProcessor* GrFragmentProcessor::RunInSeries(const GrFragmentProc
             class GLFP : public GrGLSLFragmentProcessor {
             public:
                 void emitCode(EmitArgs& args) override {
-                    SkString input(args.fInputColor);
-                    for (int i = 0; i < this->numChildProcessors() - 1; ++i) {
-                        SkString temp;
+                    // First guy's input might be nil.
+                    SkString temp("out0");
+                    this->emitChild(0, args.fInputColor, &temp, args);
+                    SkString input = temp;
+                    for (int i = 1; i < this->numChildProcessors() - 1; ++i) {
                         temp.printf("out%d", i);
                         this->emitChild(i, input.c_str(), &temp, args);
                         input = temp;
@@ -321,13 +339,8 @@ const GrFragmentProcessor* GrFragmentProcessor::RunInSeries(const GrFragmentProc
 
         void onComputeInvariantOutput(GrInvariantOutput* inout) const override {
             GrProcOptInfo info;
-            SkTDArray<const GrFragmentProcessor*> children;
-            children.setCount(this->numChildProcessors());
-            for (int i = 0; i < children.count(); ++i) {
-                children[i] = &this->childProcessor(i);
-            }
-            info.calcWithInitialValues(children.begin(), children.count(), inout->color(),
-                                       inout->validFlags(), false, false);
+            info.calcWithInitialValues(fChildProcessors.begin(), fChildProcessors.count(),
+                                       inout->color(), inout->validFlags(), false, false);
             for (int i = 0; i < this->numChildProcessors(); ++i) {
                 this->childProcessor(i).computeInvariantOutput(inout);
             }
@@ -339,36 +352,55 @@ const GrFragmentProcessor* GrFragmentProcessor::RunInSeries(const GrFragmentProc
     }
 
     // Run the through the series, do the invariant output processing, and look for eliminations.
-    SkTDArray<const GrFragmentProcessor*> replacementSeries;
-    SkAutoTUnref<const GrFragmentProcessor> colorFP;
     GrProcOptInfo info;
-
-    info.calcWithInitialValues(series, cnt, 0x0, kNone_GrColorComponentFlags, false, false);
+    info.calcWithInitialValues(sk_sp_address_as_pointer_address(series), cnt,
+                               0x0, kNone_GrColorComponentFlags, false, false);
     if (kRGBA_GrColorComponentFlags == info.validFlags()) {
-        return GrConstColorProcessor::Create(info.color(),
-                                             GrConstColorProcessor::kIgnore_InputMode);
-    } else {
-        int firstIdx = info.firstEffectiveProcessorIndex();
-        cnt -= firstIdx;
-        if (firstIdx > 0 && info.inputColorIsUsed()) {
-            colorFP.reset(GrConstColorProcessor::Create(info.inputColorToFirstEffectiveProccesor(),
-                                                        GrConstColorProcessor::kIgnore_InputMode));
-            cnt += 1;
-            replacementSeries.setCount(cnt);
-            replacementSeries[0] = colorFP;
-            for (int i = 0; i < cnt - 1; ++i) {
-                replacementSeries[i + 1] = series[firstIdx + i];
-            }
-            series = replacementSeries.begin();
-        } else {
-            series += firstIdx;
-            cnt -= firstIdx;
+        return GrConstColorProcessor::Make(info.color(), GrConstColorProcessor::kIgnore_InputMode);
+    }
+
+    SkTArray<sk_sp<GrFragmentProcessor>> replacementSeries;
+
+    int firstIdx = info.firstEffectiveProcessorIndex();
+    cnt -= firstIdx;
+    if (firstIdx > 0 && info.inputColorIsUsed()) {
+        sk_sp<GrFragmentProcessor> colorFP(GrConstColorProcessor::Make(
+            info.inputColorToFirstEffectiveProccesor(), GrConstColorProcessor::kIgnore_InputMode));
+        cnt += 1;
+        replacementSeries.reserve(cnt);
+        replacementSeries.emplace_back(std::move(colorFP));
+        for (int i = 0; i < cnt - 1; ++i) {
+            replacementSeries.emplace_back(std::move(series[firstIdx + i]));
         }
+        series = replacementSeries.begin();
+    } else {
+        series += firstIdx;
+        cnt -= firstIdx;
     }
 
     if (1 == cnt) {
-        return SkRef(series[0]);
-    } else {
-        return new SeriesFragmentProcessor(series, cnt);
+        return series[0];
+    }
+    return sk_sp<GrFragmentProcessor>(new SeriesFragmentProcessor(series, cnt));
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+GrFragmentProcessor::Iter::Iter(const GrPipeline& pipeline) {
+    for (int i = pipeline.numFragmentProcessors() - 1; i >= 0; --i) {
+        fFPStack.push_back(&pipeline.getFragmentProcessor(i));
     }
 }
+
+const GrFragmentProcessor* GrFragmentProcessor::Iter::next() {
+    if (fFPStack.empty()) {
+        return nullptr;
+    }
+    const GrFragmentProcessor* back = fFPStack.back();
+    fFPStack.pop_back();
+    for (int i = back->numChildProcessors() - 1; i >= 0; --i) {
+        fFPStack.push_back(&back->childProcessor(i));
+    }
+    return back;
+}
+

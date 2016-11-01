@@ -56,5 +56,6 @@ int nr_local_addr_fmt_info_string(nr_local_addr *addr, char *buf, int len)
 
     snprintf(buf, len, "%s%s, estimated speed: %d kbps",
              vpn, type, addr->interface.estimated_speed);
+    buf[len - 1] = '\0';
     return (0);
   }

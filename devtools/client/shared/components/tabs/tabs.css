@@ -42,22 +42,14 @@
 .tabs .all-tabs-menu  {
   position: absolute;
   top: 0;
-  right: 0;
+  offset-inline-end: 0;
   width: 15px;
   height: 100%;
-  border-style: solid;
-  border-width: 0;
-  border-inline-start-width: 1px;
-  border-color: var(--theme-splitter-color);
+  border-inline-start: 1px solid var(--theme-splitter-color);
   background: url("chrome://devtools/skin/images/dropmarker.svg");
   background-repeat: no-repeat;
   background-position: center;
   background-color: var(--theme-tab-toolbar-background);
-}
-
-.tabs .all-tabs-menu:-moz-locale-dir(rtl) {
-  right: unset;
-  left: 0;
 }
 
 /* Light Theme */

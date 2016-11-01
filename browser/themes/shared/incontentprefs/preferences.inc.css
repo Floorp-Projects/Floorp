@@ -369,7 +369,6 @@ description > html|a {
 #dialogFrame {
   -moz-box-flex: 1;
   /* Default dialog dimensions */
-  height: 20em;
   width: 66ch;
 }
 

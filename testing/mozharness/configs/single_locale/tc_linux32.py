@@ -3,7 +3,7 @@ import os
 config = {
     "locales_file": "src/browser/locales/all-locales",
     "tools_repo": "https://hg.mozilla.org/build/tools",
-    "mozconfig": "src/browser/config/mozconfigs/linux64/l10n-mozconfig",
+    "mozconfig": "src/browser/config/mozconfigs/linux32/l10n-mozconfig",
     "bootstrap_env": {
         "NO_MERCURIAL_SETUP_CHECK": "1",
         "MOZ_OBJDIR": "obj-l10n",

@@ -109,9 +109,8 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   }),
 
   /**
-   * Reorders a folder's children, based on their order in the array of GUIDs.
-   * This method is similar to `Bookmarks.reorder`, but leaves missing entries
-   * in place instead of moving them to the end of the folder.
+   * Reorders a folder's children, based on their order in the array of sync
+   * IDs.
    *
    * Sync uses this method to reorder all synced children after applying all
    * incoming records.
@@ -120,61 +119,40 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   order: Task.async(function* (parentSyncId, childSyncIds) {
     PlacesUtils.SYNC_BOOKMARK_VALIDATORS.syncId(parentSyncId);
     if (!childSyncIds.length) {
-      return;
-    }
-    for (let syncId of childSyncIds) {
-      PlacesUtils.SYNC_BOOKMARK_VALIDATORS.syncId(syncId);
+      return undefined;
     }
     let parentGuid = BookmarkSyncUtils.syncIdToGuid(parentSyncId);
-
     if (parentGuid == PlacesUtils.bookmarks.rootGuid) {
       // Reordering roots doesn't make sense, but Sync will do this on the
       // first sync.
-      return;
+      return undefined;
     }
-    yield PlacesUtils.withConnectionWrapper("BookmarkSyncUtils: order",
-      Task.async(function* (db) {
-        let children = yield fetchAllChildren(db, parentGuid);
-        if (!children.length) {
-          return;
-        }
-
-        // Reorder the list, ignoring missing children.
-        let delta = 0;
-        for (let i = 0; i < childSyncIds.length; ++i) {
-          let guid = BookmarkSyncUtils.syncIdToGuid(childSyncIds[i]);
-          let child = findChildByGuid(children, guid);
-          if (!child) {
-            delta++;
-            BookmarkSyncLog.trace(`order: Ignoring missing child ${
-              childSyncIds[i]}`);
-            continue;
-          }
-          let newIndex = i - delta;
-          updateChildIndex(children, child, newIndex);
-        }
-        children.sort((a, b) => a.index - b.index);
-
-        // Update positions.
-        let orderedChildrenGuids = children.map(({ guid }) => guid);
-        yield PlacesUtils.bookmarks.reorder(parentGuid, orderedChildrenGuids);
-      })
-    );
+    let orderedChildrenGuids = childSyncIds.map(BookmarkSyncUtils.syncIdToGuid);
+    return PlacesUtils.bookmarks.reorder(parentGuid, orderedChildrenGuids,
+                                         { source: SOURCE_SYNC });
   }),
 
   /**
-   * Removes an item from the database.
+   * Removes an item from the database. Options are passed through to
+   * PlacesUtils.bookmarks.remove.
    */
-  remove: Task.async(function* (syncId) {
+  remove: Task.async(function* (syncId, options = {}) {
     let guid = BookmarkSyncUtils.syncIdToGuid(syncId);
     if (guid in ROOT_GUID_TO_SYNC_ID) {
       BookmarkSyncLog.warn(`remove: Refusing to remove root ${syncId}`);
       return null;
     }
-    return PlacesUtils.bookmarks.remove(guid, {
+    return PlacesUtils.bookmarks.remove(guid, Object.assign({}, options, {
       source: SOURCE_SYNC,
-    });
+    }));
   }),
+
+  /**
+   * Returns true for sync IDs that are considered roots.
+   */
+  isRootSyncID(syncID) {
+    return ROOT_SYNC_ID_TO_GUID.hasOwnProperty(syncID);
+  },
 
   /**
    * Changes the GUID of an existing item. This method only allows Places GUIDs
@@ -341,6 +319,30 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
 
     return item;
   }),
+
+  /**
+   * Get the sync record kind for the record with provided sync id.
+   *
+   * @param syncId
+   *        Sync ID for the item in question
+   *
+   * @returns {Promise} A promise that resolves with the sync record kind (e.g.
+   *                    something under `PlacesSyncUtils.bookmarks.KIND`), or
+   *                    with `null` if no item with that guid exists.
+   * @throws if `guid` is invalid.
+   */
+  getKindForSyncId(syncId) {
+    PlacesUtils.SYNC_BOOKMARK_VALIDATORS.syncId(syncId);
+    let guid = BookmarkSyncUtils.syncIdToGuid(syncId);
+    return PlacesUtils.bookmarks.fetch(guid)
+    .then(item => {
+      if (!item) {
+        return null;
+      }
+      return getKindForItem(item)
+    });
+  },
+
 });
 
 XPCOMUtils.defineLazyGetter(this, "BookmarkSyncLog", () => {
@@ -372,31 +374,6 @@ var fetchAllChildren = Task.async(function* (db, parentGuid) {
     guid: row.getResultByName("guid"),
   }));
 });
-
-function findChildByGuid(children, guid) {
-  return children.find(child => child.guid == guid);
-}
-
-function findChildByIndex(children, index) {
-  return children.find(child => child.index == index);
-}
-
-// Sets a child record's index and updates its sibling's indices.
-function updateChildIndex(children, child, newIndex) {
-  let siblings = [];
-  let lowIndex = Math.min(child.index, newIndex);
-  let highIndex = Math.max(child.index, newIndex);
-  for (; lowIndex < highIndex; ++lowIndex) {
-    let sibling = findChildByIndex(children, lowIndex);
-    siblings.push(sibling);
-  }
-
-  let sign = newIndex < child.index ? +1 : -1;
-  for (let sibling of siblings) {
-    sibling.index += sign;
-  }
-  child.index = newIndex;
-}
 
 // A helper for whenever we want to know if a GUID doesn't exist in the places
 // database. Primarily used to detect orphans on incoming records.
@@ -452,12 +429,8 @@ var reparentOrphans = Task.async(function* (item) {
   if (item.kind != BookmarkSyncUtils.KINDS.FOLDER) {
     return;
   }
-  let orphanIds = findAnnoItems(BookmarkSyncUtils.SYNC_PARENT_ANNO, item.syncId);
-  // The annotations API returns item IDs, but the asynchronous bookmarks
-  // API uses GUIDs. We can remove the `promiseItemGuid` calls and parallel
-  // arrays once we implement a GUID-aware annotations API.
-  let orphanGuids = yield Promise.all(orphanIds.map(id =>
-    PlacesUtils.promiseItemGuid(id)));
+  let orphanGuids = yield fetchGuidsWithAnno(BookmarkSyncUtils.SYNC_PARENT_ANNO,
+                                             item.syncId);
   let folderGuid = BookmarkSyncUtils.syncIdToGuid(item.syncId);
   BookmarkSyncLog.debug(`reparentOrphans: Reparenting ${
     JSON.stringify(orphanGuids)} to ${item.syncId}`);
@@ -481,7 +454,8 @@ var reparentOrphans = Task.async(function* (item) {
     }
     if (isReparented) {
       // Remove the annotation once we've reparented the item.
-      PlacesUtils.annotations.removeItemAnnotation(orphanIds[i],
+      let orphanId = yield PlacesUtils.promiseItemId(orphanGuids[i]);
+      PlacesUtils.annotations.removeItemAnnotation(orphanId,
         BookmarkSyncUtils.SYNC_PARENT_ANNO, SOURCE_SYNC);
     }
   }
@@ -541,9 +515,8 @@ var insertSyncLivemark = Task.async(function* (insertInfo) {
     return null;
   }
   let livemarkInfo = syncBookmarkToPlacesBookmark(insertInfo);
-  let parentId = yield PlacesUtils.promiseItemId(livemarkInfo.parentGuid);
-  let parentIsLivemark = PlacesUtils.annotations.itemHasAnnotation(parentId,
-    PlacesUtils.LMANNO_FEEDURI);
+  let parentIsLivemark = yield getAnno(livemarkInfo.parentGuid,
+                                       PlacesUtils.LMANNO_FEEDURI);
   if (parentIsLivemark) {
     // A livemark can't be a descendant of another livemark.
     BookmarkSyncLog.debug(`insertSyncLivemark: Invalid parent ${
@@ -610,9 +583,8 @@ var insertBookmarkMetadata = Task.async(function* (bookmarkItem, insertInfo) {
 var getKindForItem = Task.async(function* (item) {
   switch (item.type) {
     case PlacesUtils.bookmarks.TYPE_FOLDER: {
-      let itemId = yield PlacesUtils.promiseItemId(item.guid);
-      let isLivemark = PlacesUtils.annotations.itemHasAnnotation(itemId,
-        PlacesUtils.LMANNO_FEEDURI);
+      let isLivemark = yield getAnno(item.guid,
+                                     PlacesUtils.LMANNO_FEEDURI);
       return isLivemark ? BookmarkSyncUtils.KINDS.LIVEMARK :
                           BookmarkSyncUtils.KINDS.FOLDER;
     }
@@ -849,13 +821,6 @@ var updateBookmarkMetadata = Task.async(function* (oldBookmarkItem,
   return newItem;
 });
 
-var setGuid = Task.async(function* (db, itemId, newGuid) {
-  yield db.executeCached(`UPDATE moz_bookmarks SET guid = :newGuid
-    WHERE id = :itemId`, { newGuid, itemId });
-  PlacesUtils.invalidateCachedGuidFor(itemId);
-  return newGuid;
-});
-
 function validateNewBookmark(info) {
   let insertInfo = validateSyncBookmarkObject(info,
     { kind: { required: true }
@@ -895,11 +860,31 @@ function validateNewBookmark(info) {
   return insertInfo;
 }
 
-function findAnnoItems(anno, val) {
-  let annos = PlacesUtils.annotations;
-  return annos.getItemsWithAnnotation(anno, {}).filter(id =>
-    annos.getItemAnnotation(id, anno) == val);
-}
+// Returns an array of GUIDs for items that have an `anno` with the given `val`.
+var fetchGuidsWithAnno = Task.async(function* (anno, val) {
+  let db = yield PlacesUtils.promiseDBConnection();
+  let rows = yield db.executeCached(`
+    SELECT b.guid FROM moz_items_annos a
+    JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
+    JOIN moz_bookmarks b ON b.id = a.item_id
+    WHERE n.name = :anno AND
+          a.content = :val`,
+    { anno, val });
+  return rows.map(row => row.getResultByName("guid"));
+});
+
+// Returns the value of an item's annotation, or `null` if it's not set.
+var getAnno = Task.async(function* (guid, anno) {
+  let db = yield PlacesUtils.promiseDBConnection();
+  let rows = yield db.executeCached(`
+    SELECT a.content FROM moz_items_annos a
+    JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
+    JOIN moz_bookmarks b ON b.id = a.item_id
+    WHERE b.guid = :guid AND
+          n.name = :anno`,
+    { guid, anno });
+  return rows.length ? rows[0].getResultByName("content") : null;
+});
 
 var tagItem = Task.async(function (item, tags) {
   if (!item.url) {
@@ -948,6 +933,7 @@ var getOrCreateTagFolder = Task.async(function* (tag) {
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: PlacesUtils.bookmarks.tagsGuid,
     title: tag,
+    source: SOURCE_SYNC,
   });
   return PlacesUtils.promiseItemId(item.guid);
 });
@@ -1053,7 +1039,6 @@ function syncBookmarkToPlacesBookmark(info) {
 // Creates and returns a Sync bookmark object containing the bookmark's
 // tags, keyword, description, and whether it loads in the sidebar.
 var fetchBookmarkItem = Task.async(function* (bookmarkItem) {
-  let itemId = yield PlacesUtils.promiseItemId(bookmarkItem.guid);
   let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
 
   item.tags = PlacesUtils.tagging.getTagsForURI(
@@ -1066,13 +1051,14 @@ var fetchBookmarkItem = Task.async(function* (bookmarkItem) {
     item.keyword = keywordEntry.keyword;
   }
 
-  let description = getItemDescription(itemId);
+  let description = yield getAnno(bookmarkItem.guid,
+                                  BookmarkSyncUtils.DESCRIPTION_ANNO);
   if (description) {
     item.description = description;
   }
 
-  item.loadInSidebar = PlacesUtils.annotations.itemHasAnnotation(itemId,
-    BookmarkSyncUtils.SIDEBAR_ANNO);
+  item.loadInSidebar = !!(yield getAnno(bookmarkItem.guid,
+                                        BookmarkSyncUtils.SIDEBAR_ANNO));
 
   return item;
 });
@@ -1080,10 +1066,10 @@ var fetchBookmarkItem = Task.async(function* (bookmarkItem) {
 // Creates and returns a Sync bookmark object containing the folder's
 // description and children.
 var fetchFolderItem = Task.async(function* (bookmarkItem) {
-  let itemId = yield PlacesUtils.promiseItemId(bookmarkItem.guid);
   let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
 
-  let description = getItemDescription(itemId);
+  let description = yield getAnno(bookmarkItem.guid,
+                                  BookmarkSyncUtils.DESCRIPTION_ANNO);
   if (description) {
     item.description = description;
   }
@@ -1100,24 +1086,19 @@ var fetchFolderItem = Task.async(function* (bookmarkItem) {
 // Creates and returns a Sync bookmark object containing the livemark's
 // description, children (none), feed URI, and site URI.
 var fetchLivemarkItem = Task.async(function* (bookmarkItem) {
-  let itemId = yield PlacesUtils.promiseItemId(bookmarkItem.guid);
   let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
 
-  let description = getItemDescription(itemId);
+  let description = yield getAnno(bookmarkItem.guid,
+                                  BookmarkSyncUtils.DESCRIPTION_ANNO);
   if (description) {
     item.description = description;
   }
 
-  let feedAnno = PlacesUtils.annotations.getItemAnnotation(itemId,
-    PlacesUtils.LMANNO_FEEDURI);
+  let feedAnno = yield getAnno(bookmarkItem.guid, PlacesUtils.LMANNO_FEEDURI);
   item.feed = new URL(feedAnno);
 
-  let siteAnno = null;
-  try {
-    siteAnno = PlacesUtils.annotations.getItemAnnotation(itemId,
-      PlacesUtils.LMANNO_SITEURI);
-  } catch (ex) {}
-  if (siteAnno != null) {
+  let siteAnno = yield getAnno(bookmarkItem.guid, PlacesUtils.LMANNO_SITEURI);
+  if (siteAnno) {
     item.site = new URL(siteAnno);
   }
 
@@ -1127,10 +1108,10 @@ var fetchLivemarkItem = Task.async(function* (bookmarkItem) {
 // Creates and returns a Sync bookmark object containing the query's tag
 // folder name and smart bookmark query ID.
 var fetchQueryItem = Task.async(function* (bookmarkItem) {
-  let itemId = yield PlacesUtils.promiseItemId(bookmarkItem.guid);
   let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
 
-  let description = getItemDescription(itemId);
+  let description = yield getAnno(bookmarkItem.guid,
+                                  BookmarkSyncUtils.DESCRIPTION_ANNO);
   if (description) {
     item.description = description;
   }
@@ -1152,26 +1133,11 @@ var fetchQueryItem = Task.async(function* (bookmarkItem) {
     item.folder = folder;
   }
 
-  let query = null;
-  try {
-    // Throws if the bookmark doesn't have the smart bookmark anno.
-    query = PlacesUtils.annotations.getItemAnnotation(itemId,
-      BookmarkSyncUtils.SMART_BOOKMARKS_ANNO);
-  } catch (ex) {}
-  if (query != null) {
+  let query = yield getAnno(bookmarkItem.guid,
+                            BookmarkSyncUtils.SMART_BOOKMARKS_ANNO);
+  if (query) {
     item.query = query;
   }
 
   return item;
 });
-
-// Returns an item's description, or `null` if one isn't set.
-function getItemDescription(id) {
-  try {
-    return PlacesUtils.annotations.getItemAnnotation(id,
-      BookmarkSyncUtils.DESCRIPTION_ANNO);
-  } catch (ex) {}
-  return null;
-}
-
-

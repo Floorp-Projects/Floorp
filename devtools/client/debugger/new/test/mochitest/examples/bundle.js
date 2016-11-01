@@ -54,6 +54,12 @@
 	if(opts.extra) {
 	  output(times2(3));
 	}
+	
+	window.keepMeAlive = function() {
+	  // This function exists to make sure this script is never garbage
+	  // collected. It is also callable from tests.
+	  return times2(4);
+	}
 
 
 /***/ },

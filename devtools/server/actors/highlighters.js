@@ -97,7 +97,12 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
     this._highlighterHidden = this._highlighterHidden.bind(this);
     this._onNavigate = this._onNavigate.bind(this);
 
-    this._createHighlighter();
+    let doc = this._tabActor.window.document;
+    // Only try to create the highlighter when the document is loaded,
+    // otherwise, wait for the navigate event to fire.
+    if (doc.documentElement && doc.readyState != "uninitialized") {
+      this._createHighlighter();
+    }
 
     // Listen to navigation events to switch from the BoxModelHighlighter to the
     // SimpleOutlineHighlighter, and back, if the top level window changes.
@@ -191,7 +196,9 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
    * Hide the box model highlighting if it was shown before
    */
   hideBoxModel: function () {
-    this._highlighter.hide();
+    if (this._highlighter) {
+      this._highlighter.hide();
+    }
   },
 
   /**
@@ -242,6 +249,13 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
       this._preventContentEvent(event);
 
       if (!this._isEventAllowed(event)) {
+        return;
+      }
+
+      // If shift is pressed, this is only a preview click, send the event to
+      // the client, but don't stop picking.
+      if (event.shiftKey) {
+        events.emit(this._walker, "picker-node-previewed", this._findAndAttachElement(event));
         return;
       }
 
@@ -351,6 +365,16 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
     this._startPickerListeners();
 
     return null;
+  },
+
+  /**
+   * This pick method also focuses the highlighter's target window.
+   */
+  pickAndFocus: function() {
+    // Go ahead and pass on the results to help future-proof this method.
+    let pickResults = this.pick();
+    this._highlighterEnv.window.focus();
+    return pickResults;
   },
 
   _findAndAttachElement: function (event) {

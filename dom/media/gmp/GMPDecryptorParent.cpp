@@ -245,6 +245,7 @@ GMPExToNsresult(GMPDOMException aDomException) {
     case kGMPAbortError: return NS_ERROR_DOM_ABORT_ERR;
     case kGMPQuotaExceededError: return NS_ERROR_DOM_QUOTA_EXCEEDED_ERR;
     case kGMPTimeoutError: return NS_ERROR_DOM_TIMEOUT_ERR;
+    case kGMPTypeError: return NS_ERROR_DOM_TYPE_ERR;
     default: return NS_ERROR_DOM_UNKNOWN_ERR;
   }
 }

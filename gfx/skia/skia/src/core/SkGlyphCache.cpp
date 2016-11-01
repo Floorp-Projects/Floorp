@@ -8,7 +8,7 @@
 #include "SkGlyphCache.h"
 #include "SkGlyphCache_Globals.h"
 #include "SkGraphics.h"
-#include "SkOncePtr.h"
+#include "SkOnce.h"
 #include "SkPath.h"
 #include "SkTemplates.h"
 #include "SkTraceMemoryDump.h"
@@ -23,9 +23,12 @@ const char gGlyphCacheDumpName[] = "skia/sk_glyph_cache";
 }  // namespace
 
 // Returns the shared globals
-SK_DECLARE_STATIC_ONCE_PTR(SkGlyphCache_Globals, globals);
 static SkGlyphCache_Globals& get_globals() {
-    return *globals.get([]{ return new SkGlyphCache_Globals; });
+    static SkOnce once;
+    static SkGlyphCache_Globals* globals;
+
+    once([]{ globals = new SkGlyphCache_Globals; });
+    return *globals;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -88,12 +91,17 @@ SkGlyphCache::CharGlyphRec* SkGlyphCache::getCharGlyphRec(PackedUnicharID packed
 uint16_t SkGlyphCache::unicharToGlyph(SkUnichar charCode) {
     VALIDATE();
     PackedUnicharID packedUnicharID = SkGlyph::MakeID(charCode);
-    const CharGlyphRec& rec = *this->getCharGlyphRec(packedUnicharID);
+    CharGlyphRec* rec = this->getCharGlyphRec(packedUnicharID);
 
-    if (rec.fPackedUnicharID == packedUnicharID) {
-        return SkGlyph::ID2Code(rec.fPackedGlyphID);
+    if (rec->fPackedUnicharID == packedUnicharID) {
+        // The glyph exists in the unichar to glyph mapping cache. Return it.
+        return SkGlyph::ID2Code(rec->fPackedGlyphID);
     } else {
-        return fScalerContext->charToGlyphID(charCode);
+        // The glyph is not in the unichar to glyph mapping cache. Insert it.
+        rec->fPackedUnicharID = packedUnicharID;
+        uint16_t glyphID = fScalerContext->charToGlyphID(charCode);
+        rec->fPackedGlyphID = SkGlyph::MakeID(glyphID);
+        return glyphID;
     }
 }
 
@@ -467,7 +475,20 @@ void SkGlyphCache::invokeAndRemoveAuxProcs() {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef SkAutoTExclusive<SkSpinlock> Exclusive;
+size_t SkGlyphCache_Globals::getTotalMemoryUsed() const {
+    SkAutoExclusive ac(fLock);
+    return fTotalMemoryUsed;
+}
+
+int SkGlyphCache_Globals::getCacheCountUsed() const {
+    SkAutoExclusive ac(fLock);
+    return fCacheCount;
+}
+
+int SkGlyphCache_Globals::getCacheCountLimit() const {
+    SkAutoExclusive ac(fLock);
+    return fCacheCountLimit;
+}
 
 size_t SkGlyphCache_Globals::setCacheSizeLimit(size_t newLimit) {
     static const size_t minLimit = 256 * 1024;
@@ -475,7 +496,7 @@ size_t SkGlyphCache_Globals::setCacheSizeLimit(size_t newLimit) {
         newLimit = minLimit;
     }
 
-    Exclusive ac(fLock);
+    SkAutoExclusive ac(fLock);
 
     size_t prevLimit = fCacheSizeLimit;
     fCacheSizeLimit = newLimit;
@@ -483,12 +504,17 @@ size_t SkGlyphCache_Globals::setCacheSizeLimit(size_t newLimit) {
     return prevLimit;
 }
 
+size_t  SkGlyphCache_Globals::getCacheSizeLimit() const {
+    SkAutoExclusive ac(fLock);
+    return fCacheSizeLimit;
+}
+
 int SkGlyphCache_Globals::setCacheCountLimit(int newCount) {
     if (newCount < 0) {
         newCount = 0;
     }
 
-    Exclusive ac(fLock);
+    SkAutoExclusive ac(fLock);
 
     int prevCount = fCacheCountLimit;
     fCacheCountLimit = newCount;
@@ -497,7 +523,7 @@ int SkGlyphCache_Globals::setCacheCountLimit(int newCount) {
 }
 
 void SkGlyphCache_Globals::purgeAll() {
-    Exclusive ac(fLock);
+    SkAutoExclusive ac(fLock);
     this->internalPurge(fTotalMemoryUsed);
 }
 
@@ -508,24 +534,35 @@ void SkGlyphCache_Globals::purgeAll() {
     - call a fontscaler (which might call into the cache)
 */
 SkGlyphCache* SkGlyphCache::VisitCache(SkTypeface* typeface,
-                              const SkDescriptor* desc,
-                              bool (*proc)(const SkGlyphCache*, void*),
-                              void* context) {
+                                       const SkScalerContextEffects& effects,
+                                       const SkDescriptor* desc,
+                                       bool (*proc)(const SkGlyphCache*, void*),
+                                       void* context) {
     if (!typeface) {
         typeface = SkTypeface::GetDefaultTypeface();
     }
     SkASSERT(desc);
 
+    // Precondition: the typeface id must be the fFontID in the descriptor
+    SkDEBUGCODE(
+        uint32_t length = 0;
+        const SkScalerContext::Rec* rec = static_cast<const SkScalerContext::Rec*>(
+            desc->findEntry(kRec_SkDescriptorTag, &length));
+        SkASSERT(rec);
+        SkASSERT(length == sizeof(*rec));
+        SkASSERT(typeface->uniqueID() == rec->fFontID);
+    )
+
     SkGlyphCache_Globals& globals = get_globals();
     SkGlyphCache*         cache;
 
     {
-        Exclusive ac(globals.fLock);
+        SkAutoExclusive ac(globals.fLock);
 
         globals.validate();
 
         for (cache = globals.internalGetHead(); cache != nullptr; cache = cache->fNext) {
-            if (cache->fDesc->equals(*desc)) {
+            if (*cache->fDesc == *desc) {
                 globals.internalDetachCache(cache);
                 if (!proc(cache, context)) {
                     globals.internalAttachCacheToHead(cache);
@@ -542,10 +579,10 @@ SkGlyphCache* SkGlyphCache::VisitCache(SkTypeface* typeface,
     {
         // pass true the first time, to notice if the scalercontext failed,
         // so we can try the purge.
-        SkScalerContext* ctx = typeface->createScalerContext(desc, true);
+        SkScalerContext* ctx = typeface->createScalerContext(effects, desc, true);
         if (!ctx) {
             get_globals().purgeAll();
-            ctx = typeface->createScalerContext(desc, false);
+            ctx = typeface->createScalerContext(effects, desc, false);
             SkASSERT(ctx);
         }
         cache = new SkGlyphCache(typeface, desc, ctx);
@@ -633,7 +670,7 @@ void SkGlyphCache::DumpMemoryStatistics(SkTraceMemoryDump* dump) {
 
 void SkGlyphCache::VisitAll(Visitor visitor, void* context) {
     SkGlyphCache_Globals& globals = get_globals();
-    Exclusive ac(globals.fLock);
+    SkAutoExclusive ac(globals.fLock);
     SkGlyphCache*         cache;
 
     globals.validate();
@@ -646,7 +683,7 @@ void SkGlyphCache::VisitAll(Visitor visitor, void* context) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkGlyphCache_Globals::attachCacheToHead(SkGlyphCache* cache) {
-    Exclusive ac(fLock);
+    SkAutoExclusive ac(fLock);
 
     this->validate();
     cache->validate();

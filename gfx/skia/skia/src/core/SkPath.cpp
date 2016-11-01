@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+#include <cmath>
 #include "SkBuffer.h"
 #include "SkCubicClipper.h"
 #include "SkErrorInternals.h"
@@ -1164,7 +1165,7 @@ void SkPath::addRRect(const SkRRect &rrect, Direction dir, unsigned startIndex) 
             this->close();
 
             SkPathRef::Editor ed(&fPathRef);
-            ed.setIsRRect(isRRect);
+            ed.setIsRRect(isRRect, dir, startIndex % 8);
 
             SkASSERT(this->countVerbs() == initialVerbCount + kVerbs);
         }
@@ -1262,7 +1263,7 @@ void SkPath::addOval(const SkRect &oval, Direction dir, unsigned startPointIndex
 
     SkPathRef::Editor ed(&fPathRef);
 
-    ed.setIsOval(isOval);
+    ed.setIsOval(isOval, kCCW_Direction == dir, startPointIndex % 4);
 }
 
 void SkPath::addCircle(SkScalar x, SkScalar y, SkScalar r, Direction dir) {
@@ -1424,10 +1425,21 @@ void SkPath::addArc(const SkRect& oval, SkScalar startAngle, SkScalar sweepAngle
     const SkScalar kFullCircleAngle = SkIntToScalar(360);
 
     if (sweepAngle >= kFullCircleAngle || sweepAngle <= -kFullCircleAngle) {
-        this->addOval(oval, sweepAngle > 0 ? kCW_Direction : kCCW_Direction);
-    } else {
-        this->arcTo(oval, startAngle, sweepAngle, true);
+        // We can treat the arc as an oval if it begins at one of our legal starting positions.
+        // See SkPath::addOval() docs.
+        SkScalar startOver90 = startAngle / 90.f;
+        SkScalar startOver90I = SkScalarRoundToScalar(startOver90);
+        SkScalar error = startOver90 - startOver90I;
+        if (SkScalarNearlyEqual(error, 0)) {
+            // Index 1 is at startAngle == 0.
+            SkScalar startIndex = std::fmod(startOver90I + 1.f, 4.f);
+            startIndex = startIndex < 0 ? startIndex + 4.f : startIndex;
+            this->addOval(oval, sweepAngle > 0 ? kCW_Direction : kCCW_Direction,
+                          (unsigned) startIndex);
+            return;
+        }
     }
+    this->arcTo(oval, startAngle, sweepAngle, true);
 }
 
 /*
@@ -1774,7 +1786,10 @@ void SkPath::Iter::setPath(const SkPath& path, bool forceClose) {
     fPts = path.fPathRef->points();
     fVerbs = path.fPathRef->verbs();
     fVerbStop = path.fPathRef->verbsMemBegin();
-    fConicWeights = path.fPathRef->conicWeights() - 1; // begin one behind
+    fConicWeights = path.fPathRef->conicWeights();
+    if (fConicWeights) {
+      fConicWeights -= 1;  // begin one behind
+    }
     fLastPt.fX = fLastPt.fY = 0;
     fMoveTo.fX = fMoveTo.fY = 0;
     fForceClose = SkToU8(forceClose);
@@ -2049,7 +2064,7 @@ size_t SkPath::readFromMemory(const void* storage, size_t length) {
     }
 
     fConvexity = (packed >> kConvexity_SerializationShift) & 0xFF;
-    fFillType = (packed >> kFillType_SerializationShift) & 0xFF;
+    fFillType = (packed >> kFillType_SerializationShift) & 0x3;
     uint8_t dir = (packed >> kDirection_SerializationShift) & 0x3;
     fIsVolatile = (packed >> kIsVolatile_SerializationShift) & 0x1;
     SkPathRef* pathRef = SkPathRef::CreateFromBuffer(&buffer);
@@ -2253,6 +2268,7 @@ struct Convexicator {
     , fIsCurve(false) {
         fExpectedDir = kInvalid_DirChange;
         // warnings
+        fPriorPt.set(0,0);
         fLastPt.set(0, 0);
         fCurrPt.set(0, 0);
         fLastVec.set(0, 0);
@@ -2803,7 +2819,7 @@ static int winding_mono_cubic(const SkPoint pts[], SkScalar x, SkScalar y, int* 
     // compute the actual x(t) value
     SkScalar t;
     if (!SkCubicClipper::ChopMonoAtY(pts, y, &t)) {
-      return 0;
+        return 0;
     }
     SkScalar xt = eval_cubic_pts(pts[0].fX, pts[1].fX, pts[2].fX, pts[3].fX, t);
     if (SkScalarNearlyEqual(xt, x)) {
@@ -3042,7 +3058,7 @@ static void tangent_cubic(const SkPoint pts[], SkScalar x, SkScalar y,
         SkPoint* c = &dst[i * 3];
         SkScalar t;
         if (!SkCubicClipper::ChopMonoAtY(c, y, &t)) {
-          continue;
+            continue;
         }
         SkScalar xt = eval_cubic_pts(c[0].fX, c[1].fX, c[2].fX, c[3].fX, t);
         if (!SkScalarNearlyEqual(x, xt)) {
@@ -3238,4 +3254,135 @@ int SkPath::ConvertConicToQuads(const SkPoint& p0, const SkPoint& p1, const SkPo
                                 SkScalar w, SkPoint pts[], int pow2) {
     const SkConic conic(p0, p1, p2, w);
     return conic.chopIntoQuadsPOW2(pts, pow2);
+}
+
+bool SkPathPriv::IsSimpleClosedRect(const SkPath& path, SkRect* rect, SkPath::Direction* direction,
+                                    unsigned* start) {
+    if (path.getSegmentMasks() != SkPath::kLine_SegmentMask) {
+        return false;
+    }
+    SkPath::RawIter iter(path);
+    SkPoint verbPts[4];
+    SkPath::Verb v;
+    SkPoint rectPts[5];
+    int rectPtCnt = 0;
+    while ((v = iter.next(verbPts)) != SkPath::kDone_Verb) {
+        switch (v) {
+            case SkPath::kMove_Verb:
+                if (0 != rectPtCnt) {
+                    return false;
+                }
+                rectPts[0] = verbPts[0];
+                ++rectPtCnt;
+                break;
+            case SkPath::kLine_Verb:
+                if (5 == rectPtCnt) {
+                    return false;
+                }
+                rectPts[rectPtCnt] = verbPts[1];
+                ++rectPtCnt;
+                break;
+            case SkPath::kClose_Verb:
+                if (4 == rectPtCnt) {
+                    rectPts[4] = rectPts[0];
+                    rectPtCnt = 5;
+                }
+                break;
+            default:
+                return false;
+        }
+    }
+    if (rectPtCnt < 5) {
+        return false;
+    }
+    if (rectPts[0] != rectPts[4]) {
+        return false;
+    }
+    // Check for two cases of rectangles: pts 0 and 3 form a vertical edge or a horizontal edge (
+    // and pts 1 and 2 the opposite vertical or horizontal edge).
+    bool vec03IsVertical;
+    if (rectPts[0].fX == rectPts[3].fX && rectPts[1].fX == rectPts[2].fX &&
+        rectPts[0].fY == rectPts[1].fY && rectPts[3].fY == rectPts[2].fY) {
+        // Make sure it has non-zero width and height
+        if (rectPts[0].fX == rectPts[1].fX || rectPts[0].fY == rectPts[3].fY) {
+            return false;
+        }
+        vec03IsVertical = true;
+    } else if (rectPts[0].fY == rectPts[3].fY && rectPts[1].fY == rectPts[2].fY &&
+               rectPts[0].fX == rectPts[1].fX && rectPts[3].fX == rectPts[2].fX) {
+        // Make sure it has non-zero width and height
+        if (rectPts[0].fY == rectPts[1].fY || rectPts[0].fX == rectPts[3].fX) {
+            return false;
+        }
+        vec03IsVertical = false;
+    } else {
+        return false;
+    }
+    // Set sortFlags so that it has the low bit set if pt index 0 is on right edge and second bit
+    // set if it is on the bottom edge.
+    unsigned sortFlags =
+            ((rectPts[0].fX < rectPts[2].fX) ? 0b00 : 0b01) |
+            ((rectPts[0].fY < rectPts[2].fY) ? 0b00 : 0b10);
+    switch (sortFlags) {
+        case 0b00:
+            rect->set(rectPts[0].fX, rectPts[0].fY, rectPts[2].fX, rectPts[2].fY);
+            *direction = vec03IsVertical ? SkPath::kCW_Direction : SkPath::kCCW_Direction;
+            *start = 0;
+            break;
+        case 0b01:
+            rect->set(rectPts[2].fX, rectPts[0].fY, rectPts[0].fX, rectPts[2].fY);
+            *direction = vec03IsVertical ? SkPath::kCCW_Direction : SkPath::kCW_Direction;
+            *start = 1;
+            break;
+        case 0b10:
+            rect->set(rectPts[0].fX, rectPts[2].fY, rectPts[2].fX, rectPts[0].fY);
+            *direction = vec03IsVertical ? SkPath::kCCW_Direction : SkPath::kCW_Direction;
+            *start = 3;
+            break;
+        case 0b11:
+            rect->set(rectPts[2].fX, rectPts[2].fY, rectPts[0].fX, rectPts[0].fY);
+            *direction = vec03IsVertical ? SkPath::kCW_Direction : SkPath::kCCW_Direction;
+            *start = 2;
+            break;
+    }
+    return true;
+}
+
+void SkPathPriv::CreateDrawArcPath(SkPath* path, const SkRect& oval, SkScalar startAngle,
+                                   SkScalar sweepAngle, bool useCenter, bool isFillNoPathEffect) {
+    SkASSERT(!oval.isEmpty());
+    SkASSERT(sweepAngle);
+
+    path->reset();
+    path->setIsVolatile(true);
+    path->setFillType(SkPath::kWinding_FillType);
+    if (isFillNoPathEffect && SkScalarAbs(sweepAngle) >= 360.f) {
+        path->addOval(oval);
+        return;
+    }
+    if (useCenter) {
+        path->moveTo(oval.centerX(), oval.centerY());
+    }
+    // Arc to mods at 360 and drawArc is not supposed to.
+    bool forceMoveTo = !useCenter;
+    while (sweepAngle <= -360.f) {
+        path->arcTo(oval, startAngle, -180.f, forceMoveTo);
+        startAngle -= 180.f;
+        path->arcTo(oval, startAngle, -180.f, false);
+        startAngle -= 180.f;
+        forceMoveTo = false;
+        sweepAngle += 360.f;
+    }
+    while (sweepAngle >= 360.f) {
+        path->arcTo(oval, startAngle, 180.f, forceMoveTo);
+        startAngle += 180.f;
+        path->arcTo(oval, startAngle, 180.f, false);
+        startAngle += 180.f;
+        forceMoveTo = false;
+        sweepAngle -= 360.f;
+    }
+    path->arcTo(oval, startAngle, sweepAngle, forceMoveTo);
+    if (useCenter) {
+        path->close();
+    }
 }

@@ -7,15 +7,9 @@
 Cu.import("resource:///modules/experiments/Experiments.jsm");
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 
-const FILE_MANIFEST            = "experiments.manifest";
 const SEC_IN_ONE_DAY = 24 * 60 * 60;
-const MS_IN_ONE_DAY  = SEC_IN_ONE_DAY * 1000;
 
-var gProfileDir = null;
-var gHttpServer = null;
-var gHttpRoot   = null;
 var gPolicy     = null;
-
 
 function ManifestEntry(data) {
   this.id = EXPERIMENT1_ID;
@@ -50,7 +44,7 @@ function run_test() {
 
 add_task(function* test_setup() {
   createAppInfo();
-  gProfileDir = do_get_profile();
+  do_get_profile();
   startAddonManagerOnly();
   yield TelemetryController.testSetup();
   gPolicy = new Experiments.Policy();

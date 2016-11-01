@@ -2231,7 +2231,7 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
 {
   MOZ_ASSERT(aStyleContext, "aStyleContext must not be null");
 
-  // This short-circuit is OK because we don't call TryStartingTransition
+  // This short-circuit is OK because we don't call TryInitatingTransition
   // during style reresolution if the style context pointer hasn't changed.
   if (aStyleContext->GetParent() == aNewParentContext) {
     RefPtr<nsStyleContext> ret = aStyleContext;

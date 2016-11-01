@@ -72,6 +72,8 @@ protected:
 public:
     virtual bool HasData() const { return true; }
 
+    virtual bool Validate(WebGLContext* webgl, const char* funcName,
+                          const webgl::PackingInfo& pi) = 0;
     virtual bool TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
                                WebGLTexture* tex, TexImageTarget target, GLint level,
                                const webgl::DriverUnpackInfo* dui, GLint xOffset,
@@ -84,12 +86,16 @@ class TexUnpackBytes final : public TexUnpackBlob
 public:
     const bool mIsClientData;
     const uint8_t* const mPtr;
+    const size_t mAvailBytes;
 
     TexUnpackBytes(const WebGLContext* webgl, TexImageTarget target, uint32_t width,
-                   uint32_t height, uint32_t depth, bool isClientData, const uint8_t* ptr);
+                   uint32_t height, uint32_t depth, bool isClientData, const uint8_t* ptr,
+                   size_t availBytes);
 
     virtual bool HasData() const override { return !mIsClientData || bool(mPtr); }
 
+    virtual bool Validate(WebGLContext* webgl, const char* funcName,
+                          const webgl::PackingInfo& pi) override;
     virtual bool TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
                                WebGLTexture* tex, TexImageTarget target, GLint level,
                                const webgl::DriverUnpackInfo* dui, GLint xOffset,
@@ -108,6 +114,8 @@ public:
 
     ~TexUnpackImage(); // Prevent needing to define layers::Image in the header.
 
+    virtual bool Validate(WebGLContext* webgl, const char* funcName,
+                          const webgl::PackingInfo& pi) override;
     virtual bool TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
                                WebGLTexture* tex, TexImageTarget target, GLint level,
                                const webgl::DriverUnpackInfo* dui, GLint xOffset,
@@ -124,6 +132,8 @@ public:
                      uint32_t height, uint32_t depth, gfx::DataSourceSurface* surf,
                      bool isAlphaPremult);
 
+    virtual bool Validate(WebGLContext* webgl, const char* funcName,
+                          const webgl::PackingInfo& pi) override;
     virtual bool TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
                                WebGLTexture* tex, TexImageTarget target, GLint level,
                                const webgl::DriverUnpackInfo* dui, GLint xOffset,

@@ -5,6 +5,7 @@
 "use strict";
 
 this.EXPORTED_SYMBOLS = ["HostManifestManager", "NativeApp"];
+/* globals NativeApp */
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -162,7 +163,11 @@ this.HostManifestManager = {
 };
 
 this.NativeApp = class extends EventEmitter {
-  constructor(extension, context, application) {
+  /**
+   * @param {BaseContext} context The context that initiated the native app.
+   * @param {string} application The identifier of the native app.
+   */
+  constructor(context, application) {
     super();
 
     this.context = context;
@@ -171,25 +176,18 @@ this.NativeApp = class extends EventEmitter {
     // We want a close() notification when the window is destroyed.
     this.context.callOnClose(this);
 
-    this.encoder = new TextEncoder();
     this.proc = null;
     this.readPromise = null;
     this.sendQueue = [];
     this.writePromise = null;
     this.sentDisconnect = false;
 
-    // Grab these once at startup
-    XPCOMUtils.defineLazyPreferenceGetter(this, "maxRead", PREF_MAX_READ, MAX_READ);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "maxWrite", PREF_MAX_WRITE, MAX_WRITE);
-
     this.startupPromise = HostManifestManager.lookupApplication(application, context)
       .then(hostInfo => {
-        if (!hostInfo) {
-          throw new Error(`No such native application ${application}`);
-        }
-
-        if (!hostInfo.manifest.allowed_extensions.includes(extension.id)) {
-          throw new Error(`This extension does not have permission to use native application ${application}`);
+        // Put the two errors together to not leak information about whether a native
+        // application is installed to addons that do not have the right permission.
+        if (!hostInfo || !hostInfo.manifest.allowed_extensions.includes(context.extension.id)) {
+          throw new context.cloneScope.Error(`This extension does not have permission to use native application ${application} (or the application is not installed)`);
         }
 
         let command = hostInfo.manifest.path;
@@ -220,6 +218,44 @@ this.NativeApp = class extends EventEmitter {
       });
   }
 
+  /**
+   * Open a connection to a native messaging host.
+   *
+   * @param {BaseContext} context The context associated with the port.
+   * @param {nsIMessageSender} messageManager The message manager used to send
+   *     and receive messages from the port's creator.
+   * @param {string} portId A unique internal ID that identifies the port.
+   * @param {object} sender The object describing the creator of the connection
+   *     request.
+   * @param {string} application The name of the native messaging host.
+   */
+  static onConnectNative(context, messageManager, portId, sender, application) {
+    let app = new NativeApp(context, application);
+    let port = new ExtensionUtils.Port(context, messageManager, [messageManager], "", portId, sender, sender);
+    app.once("disconnect", (what, err) => port.disconnect(err));
+
+    /* eslint-disable mozilla/balanced-listeners */
+    app.on("message", (what, msg) => port.postMessage(msg));
+    /* eslint-enable mozilla/balanced-listeners */
+
+    port.registerOnMessage(msg => app.send(msg));
+    port.registerOnDisconnect(msg => app.close());
+  }
+
+  /**
+   * @param {BaseContext} context The scope from where `message` originates.
+   * @param {*} message A message from the extension, meant for a native app.
+   * @returns {ArrayBuffer} An ArrayBuffer that can be sent to the native app.
+   */
+  static encodeMessage(context, message) {
+    message = context.jsonStringify(message);
+    let buffer = new TextEncoder().encode(message).buffer;
+    if (buffer.byteLength > NativeApp.maxWrite) {
+      throw new context.cloneScope.Error("Write too big");
+    }
+    return buffer;
+  }
+
   // A port is definitely "alive" if this.proc is non-null.  But we have
   // to provide a live port object immediately when connecting so we also
   // need to consider a port alive if proc is null but the startupPromise
@@ -234,8 +270,8 @@ this.NativeApp = class extends EventEmitter {
     }
     this.readPromise = this.proc.stdout.readUint32()
       .then(len => {
-        if (len > this.maxRead) {
-          throw new Error(`Native application tried to send a message of ${len} bytes, which exceeds the limit of ${this.maxRead} bytes.`);
+        if (len > NativeApp.maxRead) {
+          throw new this.context.cloneScope.Error(`Native application tried to send a message of ${len} bytes, which exceeds the limit of ${NativeApp.maxRead} bytes.`);
         }
         return this.proc.stdout.readJSON(len);
       }).then(msg => {
@@ -304,16 +340,15 @@ this.NativeApp = class extends EventEmitter {
     if (this._isDisconnected) {
       throw new this.context.cloneScope.Error("Attempt to postMessage on disconnected port");
     }
-
-    let json;
-    try {
-      json = this.context.jsonStringify(msg);
-    } catch (err) {
-      throw new this.context.cloneScope.Error(err.message);
+    if (Cu.getClassName(msg, true) != "ArrayBuffer") {
+      // This error cannot be triggered by extensions; it indicates an error in
+      // our implementation.
+      throw new Error("The message to the native messaging host is not an ArrayBuffer");
     }
-    let buffer = this.encoder.encode(json).buffer;
 
-    if (buffer.byteLength > this.maxWrite) {
+    let buffer = msg;
+
+    if (buffer.byteLength > NativeApp.maxWrite) {
       throw new this.context.cloneScope.Error("Write too big");
     }
 
@@ -367,6 +402,9 @@ this.NativeApp = class extends EventEmitter {
 
     if (!this.sentDisconnect) {
       this.sentDisconnect = true;
+      if (err && err.errorCode == Subprocess.ERROR_END_OF_FILE) {
+        err = null;
+      }
       this.emit("disconnect", err);
     }
   }
@@ -376,52 +414,10 @@ this.NativeApp = class extends EventEmitter {
     this._cleanup();
   }
 
-  portAPI() {
-    let port = {
-      name: this.name,
-
-      disconnect: () => {
-        if (this._isDisconnected) {
-          throw new this.context.cloneScope.Error("Attempt to disconnect an already disconnected port");
-        }
-        this._cleanup();
-      },
-
-      postMessage: msg => {
-        this.send(msg);
-      },
-
-      onDisconnect: new ExtensionUtils.SingletonEventManager(this.context, "native.onDisconnect", fire => {
-        let listener = what => {
-          this.context.runSafeWithoutClone(fire, port);
-        };
-        this.on("disconnect", listener);
-        return () => {
-          this.off("disconnect", listener);
-        };
-      }).api(),
-
-      onMessage: new ExtensionUtils.SingletonEventManager(this.context, "native.onMessage", fire => {
-        let listener = (what, msg) => {
-          msg = Cu.cloneInto(msg, this.context.cloneScope);
-          this.context.runSafeWithoutClone(fire, msg, port);
-        };
-        this.on("message", listener);
-        return () => {
-          this.off("message", listener);
-        };
-      }).api(),
-    };
-
-    port = Cu.cloneInto(port, this.context.cloneScope, {cloneFunctions: true});
-
-    return port;
-  }
-
   sendMessage(msg) {
     let responsePromise = new Promise((resolve, reject) => {
-      this.on("message", (what, msg) => { resolve(msg); });
-      this.on("disconnect", (what, err) => { reject(err); });
+      this.once("message", (what, msg) => { resolve(msg); });
+      this.once("disconnect", (what, err) => { reject(err); });
     });
 
     let result = this.startupPromise.then(() => {
@@ -442,3 +438,6 @@ this.NativeApp = class extends EventEmitter {
     return result;
   }
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(NativeApp, "maxRead", PREF_MAX_READ, MAX_READ);
+XPCOMUtils.defineLazyPreferenceGetter(NativeApp, "maxWrite", PREF_MAX_WRITE, MAX_WRITE);

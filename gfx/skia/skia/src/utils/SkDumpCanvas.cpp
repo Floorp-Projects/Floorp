@@ -5,10 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "SkDumpCanvas.h"
-
-#ifdef SK_DEVELOPER
 #include "SkData.h"
+#include "SkDumpCanvas.h"
 #include "SkPatchUtils.h"
 #include "SkPicture.h"
 #include "SkPixelRef.h"
@@ -107,7 +105,7 @@ static void toString(const SkPath& path, SkString* str) {
     }
 }
 
-static const char* toString(SkRegion::Op op) {
+static const char* toString(SkCanvas::ClipOp op) {
     static const char* gOpNames[] = {
         "DIFF", "SECT", "UNION", "XOR", "RDIFF", "REPLACE"
     };
@@ -211,8 +209,8 @@ SkCanvas::SaveLayerStrategy SkDumpCanvas::getSaveLayerStrategy(const SaveLayerRe
         if (paint->getAlpha() != 0xFF) {
             str.appendf(" alpha:0x%02X", paint->getAlpha());
         }
-        if (paint->getXfermode()) {
-            str.appendf(" xfermode:%p", paint->getXfermode());
+        if (!paint->isSrcOver()) {
+            str.appendf(" blendmode:%d", (int)paint->getBlendMode());
         }
     }
     this->dump(kSave_Verb, paint, str.c_str());
@@ -260,7 +258,7 @@ const char* SkDumpCanvas::EdgeStyleToAAString(ClipEdgeStyle edgeStyle) {
     return kSoft_ClipEdgeStyle == edgeStyle ? "AA" : "BW";
 }
 
-void SkDumpCanvas::onClipRect(const SkRect& rect, SkRegion::Op op, ClipEdgeStyle edgeStyle) {
+void SkDumpCanvas::onClipRect(const SkRect& rect, ClipOp op, ClipEdgeStyle edgeStyle) {
     SkString str;
     toString(rect, &str);
     this->dump(kClip_Verb, nullptr, "clipRect(%s %s %s)", str.c_str(), toString(op),
@@ -268,7 +266,7 @@ void SkDumpCanvas::onClipRect(const SkRect& rect, SkRegion::Op op, ClipEdgeStyle
     this->INHERITED::onClipRect(rect, op, edgeStyle);
 }
 
-void SkDumpCanvas::onClipRRect(const SkRRect& rrect, SkRegion::Op op, ClipEdgeStyle edgeStyle) {
+void SkDumpCanvas::onClipRRect(const SkRRect& rrect, ClipOp op, ClipEdgeStyle edgeStyle) {
     SkString str;
     toString(rrect, &str);
     this->dump(kClip_Verb, nullptr, "clipRRect(%s %s %s)", str.c_str(), toString(op),
@@ -276,7 +274,7 @@ void SkDumpCanvas::onClipRRect(const SkRRect& rrect, SkRegion::Op op, ClipEdgeSt
     this->INHERITED::onClipRRect(rrect, op, edgeStyle);
 }
 
-void SkDumpCanvas::onClipPath(const SkPath& path, SkRegion::Op op, ClipEdgeStyle edgeStyle) {
+void SkDumpCanvas::onClipPath(const SkPath& path, ClipOp op, ClipEdgeStyle edgeStyle) {
     SkString str;
     toString(path, &str);
     this->dump(kClip_Verb, nullptr, "clipPath(%s %s %s)", str.c_str(), toString(op),
@@ -284,7 +282,7 @@ void SkDumpCanvas::onClipPath(const SkPath& path, SkRegion::Op op, ClipEdgeStyle
     this->INHERITED::onClipPath(path, op, edgeStyle);
 }
 
-void SkDumpCanvas::onClipRegion(const SkRegion& deviceRgn, SkRegion::Op op) {
+void SkDumpCanvas::onClipRegion(const SkRegion& deviceRgn, ClipOp op) {
     SkString str;
     toString(deviceRgn, &str);
     this->dump(kClip_Verb, nullptr, "clipRegion(%s %s)", str.c_str(),
@@ -308,6 +306,14 @@ void SkDumpCanvas::onDrawOval(const SkRect& rect, const SkPaint& paint) {
     SkString str;
     toString(rect, &str);
     this->dump(kDrawOval_Verb, &paint, "drawOval(%s)", str.c_str());
+}
+
+void SkDumpCanvas::onDrawArc(const SkRect& rect, SkScalar startAngle, SkScalar sweepAngle,
+                             bool useCenter, const SkPaint& paint) {
+    SkString str;
+    toString(rect, &str);
+    this->dump(kDrawArc_Verb, &paint, "drawArc(%s, %g, %g, %d)", str.c_str(), startAngle,
+               sweepAngle, useCenter);
 }
 
 void SkDumpCanvas::onDrawRect(const SkRect& rect, const SkPaint& paint) {
@@ -431,6 +437,14 @@ void SkDumpCanvas::onDrawTextOnPath(const void* text, size_t byteLength, const S
                str.c_str(), byteLength);
 }
 
+void SkDumpCanvas::onDrawTextRSXform(const void* text, size_t byteLength, const SkRSXform xform[],
+                                     const SkRect* cull, const SkPaint& paint) {
+    SkString str;
+    toString(text, byteLength, paint.getTextEncoding(), &str);
+    this->dump(kDrawText_Verb, &paint, "drawTextRSXform(%s [%d])",
+               str.c_str(), byteLength);
+}
+
 void SkDumpCanvas::onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y,
                                   const SkPaint& paint) {
     SkString str;
@@ -526,8 +540,10 @@ void SkFormatDumper::dump(SkDumpCanvas* canvas, SkDumpCanvas::Verb verb,
 
     if (p) {
         msg.appendf(" color:0x%08X flags:%X", p->getColor(), p->getFlags());
+        if (!p->isSrcOver()) {
+            msg.appendf(" blendmode:%d", p->getBlendMode());
+        }
         appendFlattenable(&msg, p->getShader(), "shader");
-        appendFlattenable(&msg, p->getXfermode(), "xfermode");
         appendFlattenable(&msg, p->getPathEffect(), "pathEffect");
         appendFlattenable(&msg, p->getMaskFilter(), "maskFilter");
         appendFlattenable(&msg, p->getPathEffect(), "pathEffect");
@@ -553,5 +569,3 @@ static void dumpToDebugf(const char text[], void*) {
 }
 
 SkDebugfDumper::SkDebugfDumper() : INHERITED(dumpToDebugf, nullptr) {}
-
-#endif

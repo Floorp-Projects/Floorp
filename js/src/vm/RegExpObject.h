@@ -236,6 +236,10 @@ class RegExpShared
     }
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
+
+#ifdef DEBUG
+    bool dumpBytecode(JSContext* cx, bool match_only, HandleLinearString input);
+#endif
 };
 
 /*
@@ -324,7 +328,10 @@ class RegExpCompartment
 
     /*
      * The shape of RegExp.prototype object that satisfies following:
+     *   * RegExp.prototype.flags getter is not modified
      *   * RegExp.prototype.global getter is not modified
+     *   * RegExp.prototype.ignoreCase getter is not modified
+     *   * RegExp.prototype.multiline getter is not modified
      *   * RegExp.prototype.sticky getter is not modified
      *   * RegExp.prototype.unicode getter is not modified
      *   * RegExp.prototype.exec is an own data property
@@ -489,6 +496,10 @@ class RegExpObject : public NativeObject
     //       exposed to script, because it requires that the "lastIndex"
     //       property be writable.
     void initAndZeroLastIndex(HandleAtom source, RegExpFlag flags, ExclusiveContext* cx);
+
+#ifdef DEBUG
+    bool dumpBytecode(JSContext* cx, bool match_only, HandleLinearString input);
+#endif
 
   private:
     /*

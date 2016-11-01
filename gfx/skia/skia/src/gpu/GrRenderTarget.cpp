@@ -9,11 +9,24 @@
 #include "GrRenderTarget.h"
 
 #include "GrContext.h"
+#include "GrContextPriv.h"
 #include "GrDrawContext.h"
 #include "GrDrawTarget.h"
 #include "GrGpu.h"
 #include "GrRenderTargetPriv.h"
 #include "GrStencilAttachment.h"
+
+GrRenderTarget::GrRenderTarget(GrGpu* gpu, const GrSurfaceDesc& desc, Flags flags,
+                               GrStencilAttachment* stencil)
+    : INHERITED(gpu, desc)
+    , fStencilAttachment(stencil)
+    , fMultisampleSpecsID(0)
+    , fFlags(flags)
+    , fLastDrawTarget(nullptr) {
+    SkASSERT(!(fFlags & Flags::kMixedSampled) || fDesc.fSampleCnt > 0);
+    SkASSERT(!(fFlags & Flags::kWindowRectsSupport) || gpu->caps()->maxWindowRectangles() > 0);
+    fResolveRect.setLargestInverted();
+}
 
 GrRenderTarget::~GrRenderTarget() {
     if (fLastDrawTarget) {
@@ -29,7 +42,8 @@ void GrRenderTarget::discard() {
         return;
     }
 
-    SkAutoTUnref<GrDrawContext> drawContext(context->drawContext(this));
+    sk_sp<GrDrawContext> drawContext(context->contextPriv().makeWrappedDrawContext(sk_ref_sp(this),
+                                                                                   nullptr));
     if (!drawContext) {
         return;
     }
@@ -105,7 +119,16 @@ bool GrRenderTargetPriv::attachStencilAttachment(GrStencilAttachment* stencil) {
     return true;
 }
 
+int GrRenderTargetPriv::numStencilBits() const {
+    return fRenderTarget->fStencilAttachment ? fRenderTarget->fStencilAttachment->bits() : 0;
+}
+
 const GrGpu::MultisampleSpecs&
 GrRenderTargetPriv::getMultisampleSpecs(const GrStencilSettings& stencil) const {
     return fRenderTarget->getGpu()->getMultisampleSpecs(fRenderTarget, stencil);
+}
+
+int GrRenderTargetPriv::maxWindowRectangles() const {
+    return (this->flags() & Flags::kWindowRectsSupport) ?
+           fRenderTarget->getGpu()->caps()->maxWindowRectangles() : 0;
 }

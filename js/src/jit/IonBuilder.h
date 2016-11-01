@@ -229,7 +229,7 @@ class IonBuilder
     MOZ_MUST_USE bool inspectOpcode(JSOp op);
     uint32_t readIndex(jsbytecode* pc);
     JSAtom* readAtom(jsbytecode* pc);
-    bool abort(const char* message, ...);
+    bool abort(const char* message, ...) MOZ_FORMAT_PRINTF(2, 3);
     void trackActionableAbort(const char* message);
     void spew(const char* message);
 
@@ -981,7 +981,7 @@ class IonBuilder
     InliningStatus inlineNativeCall(CallInfo& callInfo, JSFunction* target);
     InliningStatus inlineNativeGetter(CallInfo& callInfo, JSFunction* target);
     InliningStatus inlineNonFunctionCall(CallInfo& callInfo, JSObject* target);
-    MOZ_MUST_USE bool inlineScriptedCall(CallInfo& callInfo, JSFunction* target);
+    InliningStatus inlineScriptedCall(CallInfo& callInfo, JSFunction* target);
     InliningStatus inlineSingleCall(CallInfo& callInfo, JSObject* target);
 
     // Call functions

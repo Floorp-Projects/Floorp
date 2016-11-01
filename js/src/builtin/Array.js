@@ -203,6 +203,9 @@ function ArraySort(comparefn) {
     /* Step 2. */
     var len = ToLength(O.length);
 
+    if (len <= 1)
+      return this;
+
     /* 22.1.3.25.1 Runtime Semantics: SortCompare( x, y ) */
     var wrappedCompareFn = comparefn;
     comparefn = function(x, y) {
@@ -937,6 +940,7 @@ function ArraySpecies() {
     // Step 1.
     return this;
 }
+_SetCanonicalName(ArraySpecies, "get [Symbol.species]");
 
 // ES 2016 draft Mar 25, 2016 9.4.2.3.
 function ArraySpeciesCreate(originalArray, length) {

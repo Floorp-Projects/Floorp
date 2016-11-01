@@ -119,12 +119,12 @@ int
 nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count)
 {
     int r,_status;
-    NR_registry *children = 0;
+    //NR_registry *children = 0;
+
+    *count = 0;
 
     if ((r=NR_reg_get_child_count(NR_STUN_REG_PREF_ADDRESS_PRFX, (unsigned int*)count)))
-        if (r == R_NOT_FOUND)
-            *count = 0;
-        else
+        if (r != R_NOT_FOUND)
             ABORT(r);
 
     if (*count == 0) {
@@ -182,7 +182,7 @@ nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count)
 
      _status=0;
  abort:
-     RFREE(children);
+     //RFREE(children);
      return _status;
 }
 

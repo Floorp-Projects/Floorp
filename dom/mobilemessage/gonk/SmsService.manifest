@@ -1,7 +1,0 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-component {f9b9b5e2-73b4-11e4-83ff-a33e27428c86} SmsService.js
-contract @mozilla.org/sms/gonksmsservice;1 {f9b9b5e2-73b4-11e4-83ff-a33e27428c86}
-category profile-after-change SmsService @mozilla.org/sms/gonksmsservice;1

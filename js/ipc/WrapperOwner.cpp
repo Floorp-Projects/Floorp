@@ -1168,7 +1168,7 @@ WrapperOwner::toObjectVariant(JSContext* cx, JSObject* objArg, ObjectVariant* ob
 }
 
 JSObject*
-WrapperOwner::fromObjectVariant(JSContext* cx, ObjectVariant objVar)
+WrapperOwner::fromObjectVariant(JSContext* cx, const ObjectVariant& objVar)
 {
     if (objVar.type() == ObjectVariant::TRemoteObject) {
         return fromRemoteObjectVariant(cx, objVar.get_RemoteObject());
@@ -1178,7 +1178,7 @@ WrapperOwner::fromObjectVariant(JSContext* cx, ObjectVariant objVar)
 }
 
 JSObject*
-WrapperOwner::fromRemoteObjectVariant(JSContext* cx, RemoteObject objVar)
+WrapperOwner::fromRemoteObjectVariant(JSContext* cx, const RemoteObject& objVar)
 {
     ObjectId objId = ObjectId::deserialize(objVar.serializedId());
     RootedObject obj(cx, findCPOWById(objId));
@@ -1224,7 +1224,7 @@ WrapperOwner::fromRemoteObjectVariant(JSContext* cx, RemoteObject objVar)
 }
 
 JSObject*
-WrapperOwner::fromLocalObjectVariant(JSContext* cx, LocalObject objVar)
+WrapperOwner::fromLocalObjectVariant(JSContext* cx, const LocalObject& objVar)
 {
     ObjectId id = ObjectId::deserialize(objVar.serializedId());
     Rooted<JSObject*> obj(cx, findObjectById(cx, id));

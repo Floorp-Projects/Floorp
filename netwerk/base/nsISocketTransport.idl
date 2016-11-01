@@ -45,6 +45,14 @@ interface nsISocketTransport : nsITransport
     readonly attribute long port;
 
     /**
+     * This is only non-empty when "privacy.firstparty.isolate" is enabled.
+     * It is used to create sockets, and will eventually be used to isolate
+     * OCSP cache. It's the only way to carry it down to NSPR layers which are
+     * final consumers.  It must be set before the socket transport is built.
+     */
+    attribute AUTF8String firstPartyDomain;
+
+    /**
      * The platform-specific network interface id that this socket
      * associated with. Note that this attribute can be only accessed
      * in the socket thread.

@@ -4,7 +4,6 @@
  * This program is made available under an ISC-style license.  See the
  * accompanying file LICENSE for details.
  */
-
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif // NOMINMAX
@@ -15,9 +14,6 @@
 #include <cstring>
 #include <cstddef>
 #include <cstdio>
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
-#endif
 #include "cubeb_resampler.h"
 #include "cubeb-speex-resampler.h"
 #include "cubeb_resampler_internal.h"

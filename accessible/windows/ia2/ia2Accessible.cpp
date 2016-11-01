@@ -673,7 +673,7 @@ ia2Accessible::get_selectionRanges(IA2Range** aRanges,
 {
   A11Y_TRYBLOCK_BEGIN
 
-  if (!aRanges || !aNRanges || aNRanges <= 0)
+  if (!aRanges || !aNRanges)
     return E_INVALIDARG;
 
   *aNRanges = 0;

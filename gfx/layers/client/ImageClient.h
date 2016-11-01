@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
-#include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/CompositorTypes.h"  // for CompositableType, etc
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
@@ -25,7 +24,6 @@ namespace layers {
 
 class ClientLayer;
 class CompositableForwarder;
-class AsyncTransactionTracker;
 class Image;
 class ImageContainer;
 class ShadowableLayer;
@@ -64,12 +62,9 @@ public:
    * asynchronously remove all the textures used by the image client.
    *
    */
-  virtual void FlushAllImages(AsyncTransactionWaiter* aAsyncTransactionWaiter) {}
+  virtual void FlushAllImages() {}
 
   virtual void RemoveTexture(TextureClient* aTexture) override;
-
-  void RemoveTextureWithWaiter(TextureClient* aTexture,
-                               AsyncTransactionWaiter* aAsyncTransactionWaiter = nullptr);
 
   virtual ImageClientSingle* AsImageClientSingle() { return nullptr; }
 
@@ -102,7 +97,7 @@ public:
 
   virtual TextureInfo GetTextureInfo() const override;
 
-  virtual void FlushAllImages(AsyncTransactionWaiter* aAsyncTransactionWaiter) override;
+  virtual void FlushAllImages() override;
 
   ImageClientSingle* AsImageClientSingle() override { return this; }
 

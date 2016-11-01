@@ -47,17 +47,7 @@ public:
   void GetLastEventId(nsAString&) const;
   void GetSource(Nullable<OwningWindowProxyOrMessagePort>& aValue) const;
 
-  void GetPorts(Nullable<nsTArray<RefPtr<MessagePort>>>& aPorts);
-
-  void SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts);
-
-  // Non WebIDL methods
-  void SetSource(mozilla::dom::MessagePort* aPort);
-
-  void SetSource(nsPIDOMWindowInner* aWindow)
-  {
-    mWindowSource = aWindow;
-  }
+  void GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts);
 
   static already_AddRefed<MessageEvent>
   Constructor(const GlobalObject& aGlobal,
@@ -75,7 +65,7 @@ public:
                         bool aCancelable, JS::Handle<JS::Value> aData,
                         const nsAString& aOrigin, const nsAString& aLastEventId,
                         const Nullable<WindowProxyOrMessagePort>& aSource,
-                        const Nullable<Sequence<OwningNonNull<MessagePort>>>& aPorts);
+                        const Sequence<OwningNonNull<MessagePort>>& aPorts);
 
 protected:
   ~MessageEvent();
@@ -88,7 +78,6 @@ private:
   RefPtr<MessagePort> mPortSource;
 
   nsTArray<RefPtr<MessagePort>> mPorts;
-  bool mPortsSet;
 };
 
 } // namespace dom

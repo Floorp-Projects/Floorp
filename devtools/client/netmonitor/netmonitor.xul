@@ -8,143 +8,34 @@
 <?xml-stylesheet href="chrome://devtools/skin/netmonitor.css" type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        data-localization-bundle="devtools/locale/netmonitor.properties">
+        xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/javascript;version=1.8"
           src="chrome://devtools/content/shared/theme-switching.js"/>
   <script type="text/javascript" src="netmonitor-controller.js"/>
   <script type="text/javascript" src="netmonitor-view.js"/>
 
-  <popupset id="networkPopupSet">
-    <menupopup id="network-request-popup">
-      <menuitem id="request-menu-context-copy-url"
-                data-localization="label=netmonitor.context.copyUrl;accesskey=netmonitor.context.copyUrl.accesskey"/>
-      <menuitem id="request-menu-context-copy-url-params"
-                data-localization="label=netmonitor.context.copyUrlParams;accesskey=netmonitor.context.copyUrlParams.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.copyUrlParams();"/>
-      <menuitem id="request-menu-context-copy-post-data"
-                data-localization="label=netmonitor.context.copyPostData;accesskey=netmonitor.context.copyPostData.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.copyPostData();"/>
-      <menuitem id="request-menu-context-copy-as-curl"
-                data-localization="label=netmonitor.context.copyAsCurl;accesskey=netmonitor.context.copyAsCurl.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.copyAsCurl();"/>
-      <menuseparator class="request-menu-context-separator"/>
-      <menuitem id="request-menu-context-copy-request-headers"
-                data-localization="label=netmonitor.context.copyRequestHeaders;accesskey=netmonitor.context.copyRequestHeaders.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.copyRequestHeaders();"/>
-      <menuitem id="response-menu-context-copy-response-headers"
-                data-localization="label=netmonitor.context.copyResponseHeaders;accesskey=netmonitor.context.copyResponseHeaders.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.copyResponseHeaders();"/>
-      <menuitem id="request-menu-context-copy-response"
-                data-localization="label=netmonitor.context.copyResponse;accesskey=netmonitor.context.copyResponse.accesskey"/>
-      <menuitem id="request-menu-context-copy-image-as-data-uri"
-                data-localization="label=netmonitor.context.copyImageAsDataUri;accesskey=netmonitor.context.copyImageAsDataUri.accesskey"/>
-      <menuseparator class="request-menu-context-separator"/>
-      <menuitem id="request-menu-context-copy-all-as-har"
-                data-localization="label=netmonitor.context.copyAllAsHar;accesskey=netmonitor.context.copyAllAsHar.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.copyAllAsHar();"/>
-      <menuitem id="request-menu-context-save-all-as-har"
-                data-localization="label=netmonitor.context.saveAllAsHar;accesskey=netmonitor.context.saveAllAsHar.accesskey"
-                oncommand="NetMonitorView.RequestsMenu.saveAllAsHar();"/>
-      <menuseparator class="request-menu-context-separator"/>
-      <menuitem id="request-menu-context-resend"
-                data-localization="label=netmonitor.context.editAndResend;accesskey=netmonitor.context.editAndResend.accesskey"/>
-      <menuseparator class="request-menu-context-separator"/>
-      <menuitem id="request-menu-context-newtab"
-                data-localization="label=netmonitor.context.newTab;accesskey=netmonitor.context.newTab.accesskey"/>
-      <menuitem id="request-menu-context-perf"
-                data-localization="label=netmonitor.context.perfTools;accesskey=netmonitor.context.perfTools.accesskey"/>
-    </menupopup>
-  </popupset>
-
-  <commandset>
-    <command id="freeTextFilterCommand"
-             oncommand="NetMonitorView.RequestsMenu.freetextFilterBox.focus()"/>
-  </commandset>
-
-  <keyset>
-    <key id="freeTextFilterKey"
-         data-localization="key=netmonitor.footer.filterFreetext.key"
-         modifiers="accel"
-         command="freeTextFilterCommand"/>
-  </keyset>
-
-  <deck id="body" class="theme-sidebar" flex="1">
+  <deck id="body"
+        class="theme-sidebar"
+        flex="1"
+        data-localization-bundle="devtools/locale/netmonitor.properties">
 
     <vbox id="network-inspector-view" flex="1">
       <hbox id="netmonitor-toolbar" class="devtools-toolbar">
-        <toolbarbutton id="requests-menu-clear-button"
-                       class="devtools-toolbarbutton devtools-clear-icon"
-                       data-localization="tooltiptext=netmonitor.footer.clear"/>
-        <hbox id="requests-menu-filter-buttons">
-          <button id="requests-menu-filter-all-button"
-                  class="requests-menu-filter-button"
-                  checked="true"
-                  data-key="all"
-                  data-localization="label=netmonitor.footer.filterAll">
-          </button>
-          <button id="requests-menu-filter-html-button"
-                  class="requests-menu-filter-button"
-                  data-key="html"
-                  data-localization="label=netmonitor.footer.filterHTML">
-          </button>
-          <button id="requests-menu-filter-css-button"
-                  class="requests-menu-filter-button"
-                  data-key="css"
-                  data-localization="label=netmonitor.footer.filterCSS">
-          </button>
-          <button id="requests-menu-filter-js-button"
-                  class="requests-menu-filter-button"
-                  data-key="js"
-                  data-localization="label=netmonitor.footer.filterJS">
-          </button>
-          <button id="requests-menu-filter-xhr-button"
-                  class="requests-menu-filter-button"
-                  data-key="xhr"
-                  data-localization="label=netmonitor.footer.filterXHR">
-          </button>
-          <button id="requests-menu-filter-fonts-button"
-                  class="requests-menu-filter-button"
-                  data-key="fonts"
-                  data-localization="label=netmonitor.footer.filterFonts">
-          </button>
-          <button id="requests-menu-filter-images-button"
-                  class="requests-menu-filter-button"
-                  data-key="images"
-                  data-localization="label=netmonitor.footer.filterImages">
-          </button>
-          <button id="requests-menu-filter-media-button"
-                  class="requests-menu-filter-button"
-                  data-key="media"
-                  data-localization="label=netmonitor.footer.filterMedia">
-          </button>
-          <button id="requests-menu-filter-flash-button"
-                  class="requests-menu-filter-button"
-                  data-key="flash"
-                  data-localization="label=netmonitor.footer.filterFlash">
-          </button>
-          <button id="requests-menu-filter-ws-button"
-                  class="requests-menu-filter-button"
-                  data-key="ws"
-                  data-localization="label=netmonitor.footer.filterWS">
-          </button>
-          <button id="requests-menu-filter-other-button"
-                  class="requests-menu-filter-button"
-                  data-key="other"
-                  data-localization="label=netmonitor.footer.filterOther">
-          </button>
-        </hbox>
+        <html:div xmlns="http://www.w3.org/1999/xhtml"
+                  id="react-clear-button-hook"/>
+        <html:div xmlns="http://www.w3.org/1999/xhtml"
+                  id="react-filter-buttons-hook"/>
         <spacer id="requests-menu-spacer"
                 flex="1"/>
         <toolbarbutton id="requests-menu-network-summary-button"
                        class="devtools-toolbarbutton icon-and-text"
-                       data-localization="tooltiptext=netmonitor.footer.perf"/>
+                       data-localization="tooltiptext=netmonitor.toolbar.perf"/>
         <textbox id="requests-menu-filter-freetext-text"
                  class="devtools-filterinput"
                  type="search"
                  required="true"
-                 data-localization="placeholder=netmonitor.footer.filterFreetext.label"/>
+                 data-localization="placeholder=netmonitor.toolbar.filterFreetext.label"/>
         <toolbarbutton id="details-pane-toggle"
                        class="devtools-toolbarbutton"
                        data-localization="tooltiptext=netmonitor.panesButton.tooltip"
@@ -287,7 +178,7 @@
             </hbox>
           </vbox>
 
-          <vbox id="requests-menu-contents" flex="1" context="network-request-popup">
+          <vbox id="requests-menu-contents" flex="1">
             <hbox id="requests-menu-item-template" hidden="true">
               <hbox class="requests-menu-subitem requests-menu-status"
                     align="center">

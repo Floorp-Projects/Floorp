@@ -7,8 +7,14 @@
 #ifndef mozilla_dom_PresentationReceiver_h
 #define mozilla_dom_PresentationReceiver_h
 
+#include "mozilla/ErrorResult.h"
+#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPresentationListener.h"
+#include "nsWrapperCache.h"
+#include "nsString.h"
+
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -30,7 +36,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  nsISupports* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
     return mOwner;
   }

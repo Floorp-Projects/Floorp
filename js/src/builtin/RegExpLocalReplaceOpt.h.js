@@ -15,15 +15,12 @@
 // steps 11.a-16.
 // Optimized path for @@replace with the following conditions:
 //   * global flag is false
-function FUNC_NAME(rx, S, lengthS, replaceValue
+function FUNC_NAME(rx, S, lengthS, replaceValue, sticky
 #ifdef SUBSTITUTION
                    , firstDollarIndex
 #endif
                   )
 {
-    var flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
-    var sticky = !!(flags & REGEXP_STICKY_FLAG);
-
     var lastIndex;
     if (sticky) {
         lastIndex = ToLength(rx.lastIndex);

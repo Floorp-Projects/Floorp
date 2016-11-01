@@ -38,7 +38,6 @@ show allResults
   org.mozilla.gecko.NotificationClient \
   org.mozilla.gecko.NotificationHandler \
   org.mozilla.gecko.PrefsHelper \
-  org.mozilla.gecko.SmsManager \
   org.mozilla.gecko.SysInfo \
   org.mozilla.gecko.TouchEventInterceptor \
   org.mozilla.gecko.ZoomConstraints

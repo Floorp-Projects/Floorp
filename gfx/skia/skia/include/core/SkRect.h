@@ -390,10 +390,8 @@ struct SK_API SkIRect {
 struct SK_API SkRect {
     SkScalar    fLeft, fTop, fRight, fBottom;
 
-    static SkRect SK_WARN_UNUSED_RESULT MakeEmpty() {
-        SkRect r;
-        r.setEmpty();
-        return r;
+    static constexpr SkRect SK_WARN_UNUSED_RESULT MakeEmpty() {
+        return SkRect{0, 0, 0, 0};
     }
 
     static SkRect SK_WARN_UNUSED_RESULT MakeLargest() {
@@ -420,10 +418,9 @@ struct SK_API SkRect {
         return r;
     }
 
-    static SkRect SK_WARN_UNUSED_RESULT MakeLTRB(SkScalar l, SkScalar t, SkScalar r, SkScalar b) {
-        SkRect rect;
-        rect.set(l, t, r, b);
-        return rect;
+    static constexpr SkRect SK_WARN_UNUSED_RESULT MakeLTRB(SkScalar l, SkScalar t, SkScalar r,
+                                                           SkScalar b) {
+        return SkRect {l, t, r, b};
     }
 
     static SkRect SK_WARN_UNUSED_RESULT MakeXYWH(SkScalar x, SkScalar y, SkScalar w, SkScalar h) {
@@ -442,6 +439,10 @@ struct SK_API SkRect {
         return r;
     }
 
+    static SkRect Make(const SkISize& size) {
+        return MakeIWH(size.width(), size.height());
+    }
+    
     static SkRect SK_WARN_UNUSED_RESULT Make(const SkIRect& irect) {
         SkRect r;
         r.set(SkIntToScalar(irect.fLeft),
@@ -506,7 +507,7 @@ struct SK_API SkRect {
 
     /** Set this rectangle to the empty rectangle (0,0,0,0)
     */
-    void setEmpty() { memset(this, 0, sizeof(*this)); }
+    void setEmpty() { *this = MakeEmpty(); }
 
     void set(const SkIRect& src) {
         fLeft   = SkIntToScalar(src.fLeft);

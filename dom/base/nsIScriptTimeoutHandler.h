@@ -6,8 +6,11 @@
 #ifndef nsIScriptTimeoutHandler_h___
 #define nsIScriptTimeoutHandler_h___
 
+#include "nsITimeoutHandler.h"
 #include "nsTArray.h"
 #include "js/TypeDecls.h"
+#include "mozilla/Function.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,14 +27,14 @@ class Function;
  * language agnostic way.
  */
 
-class nsIScriptTimeoutHandler : public nsISupports
+class nsIScriptTimeoutHandler : public nsITimeoutHandler
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTTIMEOUTHANDLER_IID)
 
   // Get the Function to call.  If this returns nullptr, GetHandlerText() will
   // be called to get the string.
-  virtual mozilla::dom::Function *GetCallback() = 0;
+  virtual mozilla::dom::Function* GetCallback() = 0;
 
   // Get the handler text of not a compiled object.
   virtual const nsAString& GetHandlerText() = 0;
@@ -39,8 +42,6 @@ public:
   // Get the location of the script.
   // Note: The memory pointed to by aFileName is owned by the
   // nsIScriptTimeoutHandler and should not be freed by the caller.
-  virtual void GetLocation(const char **aFileName, uint32_t *aLineNo,
-                           uint32_t *aColumn) = 0;
 
   // If we have a Function, get the arguments for passing to it.
   virtual const nsTArray<JS::Value>& GetArgs() = 0;

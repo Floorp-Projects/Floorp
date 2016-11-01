@@ -364,10 +364,9 @@ for (type of typeRequireNotApply) {
 }
 
 // Now, checking for all types which accept the required attribute.
-// TODO: check 'datetime' and 'datetime-local'
-//       when they will be implemented.
 var typeRequireApply = ["text", "password", "search", "tel", "email", "url",
-                        "number", "date", "time", "month", "week"];
+                        "number", "date", "time", "month", "week",
+                        "datetime-local"];
 
 for (type of typeRequireApply) {
   checkInputRequiredValidity(type);

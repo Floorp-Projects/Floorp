@@ -86,3 +86,8 @@
   (func $main (call $print_i32 (i32.const 2)))
   (start $main)
 )
+
+(assert_trap
+  (module (func $main (unreachable)) (start $main))
+  "unreachable"
+)

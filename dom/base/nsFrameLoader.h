@@ -25,6 +25,7 @@
 #include "Units.h"
 #include "nsIWebBrowserPersistable.h"
 #include "nsIFrame.h"
+#include "nsIGroupedSHistory.h"
 
 class nsIURI;
 class nsSubDocumentFrame;
@@ -74,6 +75,7 @@ class nsFrameLoader final : public nsIFrameLoader,
 
 public:
   static nsFrameLoader* Create(mozilla::dom::Element* aOwner,
+                               nsPIDOMWindowOuter* aOpener,
                                bool aNetworkCreated);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -130,12 +132,12 @@ public:
   // frame loader owner needs to call this, and pass in the two references to
   // nsRefPtrs for frame loaders that need to be swapped.
   nsresult SwapWithOtherLoader(nsFrameLoader* aOther,
-                               RefPtr<nsFrameLoader>& aFirstToSwap,
-                               RefPtr<nsFrameLoader>& aSecondToSwap);
+                               nsIFrameLoaderOwner* aThisOwner,
+                               nsIFrameLoaderOwner* aOtherOwner);
 
   nsresult SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
-                                     RefPtr<nsFrameLoader>& aFirstToSwap,
-                                     RefPtr<nsFrameLoader>& aSecondToSwap);
+                                     nsIFrameLoaderOwner* aThisOwner,
+                                     nsIFrameLoaderOwner* aOtherOwner);
 
   /**
    * Return the primary frame for our owning content, or null if it
@@ -228,7 +230,9 @@ public:
   nsCOMPtr<nsIInProcessContentFrameMessageManager> mChildMessageManager;
 
 private:
-  nsFrameLoader(mozilla::dom::Element* aOwner, bool aNetworkCreated);
+  nsFrameLoader(mozilla::dom::Element* aOwner,
+                nsPIDOMWindowOuter* aOpener,
+                bool aNetworkCreated);
   ~nsFrameLoader();
 
   void SetOwnerContent(mozilla::dom::Element* aContent);
@@ -354,6 +358,9 @@ private:
   // a reframe, so that we know not to restore the presentation.
   nsCOMPtr<nsIDocument> mContainerDocWhileDetached;
 
+  // An opener window which should be used when the docshell is created.
+  nsCOMPtr<nsPIDOMWindowOuter> mOpener;
+
   TabParent* mRemoteBrowser;
   uint64_t mChildID;
 
@@ -363,6 +370,9 @@ private:
 
   // Holds the last known size of the frame.
   mozilla::ScreenIntSize mLazySize;
+
+  nsCOMPtr<nsIPartialSHistory> mPartialSessionHistory;
+  nsCOMPtr<nsIGroupedSHistory> mGroupedSessionHistory;
 
   bool mIsPrerendered : 1;
   bool mDepthTooGreat : 1;
@@ -387,6 +397,7 @@ private:
   // whether this frameloader's <iframe mozbrowser> is setVisible(true)'ed, and
   // doesn't necessarily correlate with docshell/document visibility.
   bool mVisible : 1;
+  bool mFreshProcess : 1;
 };
 
 #endif

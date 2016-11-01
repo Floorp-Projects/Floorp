@@ -148,11 +148,11 @@ function waitForInstallDialog() {
 
     info("Waiting for install dialog");
 
-    yield new Promise(resolve => {
+    let window = yield new Promise(resolve => {
       Services.wm.addListener({
         onOpenWindow: function(aXULWindow) {
           Services.wm.removeListener(this);
-          resolve();
+          resolve(aXULWindow);
         },
         onCloseWindow: function(aXULWindow) {
         },
@@ -162,8 +162,8 @@ function waitForInstallDialog() {
     });
     info("Install dialog opened, waiting for focus");
 
-    let domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDOMWindow);
+    let domwindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindow);
     yield new Promise(resolve => {
       waitForFocus(function() {
         resolve();
@@ -748,7 +748,6 @@ function test_localFile() {
 
     yield removeTab();
   });
-    path = CHROMEROOT + "corrupt.xpi";
 },
 
 function test_tabClose() {

@@ -67,25 +67,14 @@ wtu.glErrorShouldBe(gl, gl.INVALID_VALUE, "negative y");
 gl.texSubImage2D(gl.TEXTURE_2D, -1, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, c);
 wtu.glErrorShouldBe(gl, gl.INVALID_VALUE, "negative level");
 
-if (contextVersion >= 2) {
-    var text = "Should throw with no image data.";
-    try {
-        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-        testFailed(text);
-    } catch(e) {
-        testPassed(text);
-    }
-    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "no image data");
-} else {
+var text = "Should throw with no image data.";
+try {
     gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    wtu.glErrorShouldBe(gl, gl.INVALID_VALUE, "no image data");
+    testFailed(text);
+} catch(e) {
+    testPassed(text);
 }
-
-if (contextVersion < 2) {
-    // In WebGL2, null coerces to 0 for the PBO entrypoint.
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    wtu.glErrorShouldBe(gl, gl.INVALID_VALUE, "null pixels");
-}
+wtu.glErrorShouldBe(gl, gl.NO_ERROR, "no image data");
 
 // GL_INVALID_VALUE may be generated if level is greater than log 2 max, where max is the returned value of GL_MAX_TEXTURE_SIZE.
 // GL_INVALID_OPERATION is generated if the texture array has not been defined by a previous  glTexImage2D or glCopyTexImage2D operation whose internalformat matches the format of glTexSubImage2D.

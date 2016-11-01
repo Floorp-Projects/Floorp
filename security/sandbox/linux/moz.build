@@ -4,19 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# WARNING: On desktop Linux, SandboxHooks.cpp must be statically compiled
-# into the main executable in order to function properly.
-# This is currently the case, but if mozsandbox is moved to its own
-# shared library, something needs to change regarding SandboxHooks.cpp.
-# See Bug 1176099 for further details.
+SharedLibrary('mozsandbox')
 
+# Depend on mozglue if and only if it's a shared library;
+# this needs to match mozglue/build/moz.build:
 if CONFIG['OS_TARGET'] == 'Android':
-    SharedLibrary('mozsandbox')
     USE_LIBS += [
         'mozglue',
     ]
-else:
-    Library('mozsandbox')
 
 EXPORTS.mozilla += [
     'Sandbox.h',
@@ -72,11 +67,6 @@ SOURCES += [
     'SandboxUtil.cpp',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-    SOURCES += [
-        'SandboxHooks.cpp',
-    ]
-
 # This copy of SafeSPrintf doesn't need to avoid the Chromium logging
 # dependency like the one in libxul does, but this way the behavior is
 # consistent.  See also the comment in SandboxLogging.h.
@@ -113,14 +103,11 @@ if CONFIG['OS_TARGET'] != 'Android':
         'rt',
     ]
 
-USE_LIBS += [
-    'mfbt',
-]
-
 DIRS += [
     'broker',
     'common',
     'glue',
+    'interpose',
 ]
 
 TEST_DIRS += [

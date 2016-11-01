@@ -52,6 +52,22 @@
   background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted");
 }
 
+.item.client .item-twisty-container:dir(rtl) {
+  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded");
+}
+
+.item.client.closed .item-twisty-container:dir(rtl) {
+  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-rtl");
+}
+
+.item.client.selected:focus .item-twisty-container:dir(rtl) {
+  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded-inverted");
+}
+
+.item.client.selected.closed:focus .item-twisty-container:dir(rtl) {
+  background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-collapsed-inverted-rtl");
+}
+
 @media (-moz-mac-yosemite-theme) {
   .item.selected > .item-title-container {
     color: -moz-dialogtext;

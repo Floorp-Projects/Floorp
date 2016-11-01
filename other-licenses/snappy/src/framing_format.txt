@@ -1,5 +1,5 @@
 Snappy framing format description
-Last revised: 2011-12-15
+Last revised: 2013-10-25
 
 This format decribes a framing format for Snappy, allowing compressing to
 files or streams that can then more easily be decompressed without having
@@ -15,9 +15,9 @@ decompressor; it is not part of the Snappy core specification.
 
 The file consists solely of chunks, lying back-to-back with no padding
 in between. Each chunk consists first a single byte of chunk identifier,
-then a two-byte little-endian length of the chunk in bytes (from 0 to 65535,
-inclusive), and then the data if any. The three bytes of chunk header is not
-counted in the data length.
+then a three-byte little-endian length of the chunk in bytes (from 0 to
+16777215, inclusive), and then the data if any. The four bytes of chunk
+header is not counted in the data length.
 
 The different chunk types are listed below. The first chunk must always
 be the stream identifier chunk (see section 4.1, below). The stream
@@ -71,7 +71,7 @@ The stream identifier is always the first element in the stream.
 It is exactly six bytes long and contains "sNaPpY" in ASCII. This means that
 a valid Snappy framed stream always starts with the bytes
 
-  0xff 0x06 0x00 0x73 0x4e 0x61 0x50 0x70 0x59
+  0xff 0x06 0x00 0x00 0x73 0x4e 0x61 0x50 0x70 0x59
 
 The stream identifier chunk can come multiple times in the stream besides
 the first; if such a chunk shows up, it should simply be ignored, assuming
@@ -86,9 +86,9 @@ see the compressed format specification. The compressed data is preceded by
 the CRC-32C (see section 3) of the _uncompressed_ data.
 
 Note that the data portion of the chunk, i.e., the compressed contents,
-can be at most 65531 bytes (2^16 - 1, minus the checksum).
+can be at most 16777211 bytes (2^24 - 1, minus the checksum).
 However, we place an additional restriction that the uncompressed data
-in a chunk must be no longer than 32768 bytes. This allows consumers to
+in a chunk must be no longer than 65536 bytes. This allows consumers to
 easily use small fixed-size buffers.
 
 
@@ -102,11 +102,22 @@ As in the compressed chunks, the data is preceded by its own masked
 CRC-32C (see section 3).
 
 An uncompressed data chunk, like compressed data chunks, should contain
-no more than 32768 data bytes, so the maximum legal chunk length with the
-checksum is 32772.
+no more than 65536 data bytes, so the maximum legal chunk length with the
+checksum is 65540.
 
 
-4.4. Reserved unskippable chunks (chunk types 0x02-0x7f)
+4.4. Padding (chunk type 0xfe)
+
+Padding chunks allow a compressor to increase the size of the data stream
+so that it complies with external demands, e.g. that the total number of
+bytes is a multiple of some value.
+
+All bytes of the padding chunk, except the chunk byte itself and the length,
+should be zero, but decompressors must not try to interpret or verify the
+padding data in any way.
+
+
+4.5. Reserved unskippable chunks (chunk types 0x02-0x7f)
 
 These are reserved for future expansion. A decoder that sees such a chunk
 should immediately return an error, as it must assume it cannot decode the
@@ -115,10 +126,10 @@ stream correctly.
 Future versions of this specification may define meanings for these chunks.
 
 
-4.5. Reserved skippable chunks (chunk types 0x80-0xfe)
+4.6. Reserved skippable chunks (chunk types 0x80-0xfd)
 
 These are also reserved for future expansion, but unlike the chunks
-described in 4.4, a decoder seeing these must skip them and continue
+described in 4.5, a decoder seeing these must skip them and continue
 decoding.
 
 Future versions of this specification may define meanings for these chunks.

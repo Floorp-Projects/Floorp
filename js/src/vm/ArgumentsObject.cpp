@@ -9,6 +9,7 @@
 #include "mozilla/PodOperations.h"
 
 #include "jit/JitFrames.h"
+#include "vm/AsyncFunction.h"
 #include "vm/GlobalObject.h"
 #include "vm/Stack.h"
 
@@ -446,8 +447,13 @@ MappedArgGetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
             vp.setInt32(argsobj.initialLength());
     } else {
         MOZ_ASSERT(JSID_IS_ATOM(id, cx->names().callee));
-        if (!argsobj.hasOverriddenCallee())
-            vp.setObject(argsobj.callee());
+        if (!argsobj.hasOverriddenCallee()) {
+            RootedFunction callee(cx, &argsobj.callee());
+            if (callee->isAsync())
+                vp.setObject(*GetWrappedAsyncFunction(callee));
+            else
+                vp.setObject(*callee);
+        }
     }
     return true;
 }

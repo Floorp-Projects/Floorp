@@ -426,7 +426,7 @@ ExtractErrorValues(JSContext* aCx, JS::Handle<JS::Value> aValue,
       // this report anywhere.
       RefPtr<xpc::ErrorReport> report = new xpc::ErrorReport();
       report->Init(err,
-                   "<unknown>", // fallback message
+                   "<unknown>", // toString result
                    false,       // chrome
                    0);          // window ID
 
@@ -1171,7 +1171,6 @@ PushEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 ExtendableMessageEvent::ExtendableMessageEvent(EventTarget* aOwner)
   : ExtendableEvent(aOwner)
   , mData(JS::UndefinedValue())
-  , mPortsSet(false)
 {
   mozilla::HoldJSObjects(this);
 }
@@ -1233,54 +1232,24 @@ ExtendableMessageEvent::Constructor(mozilla::dom::EventTarget* aEventTarget,
   event->mOrigin = aOptions.mOrigin;
   event->mLastEventId = aOptions.mLastEventId;
 
-  if (aOptions.mSource.WasPassed() && !aOptions.mSource.Value().IsNull()) {
-    if (aOptions.mSource.Value().Value().IsClient()) {
-      event->mClient = aOptions.mSource.Value().Value().GetAsClient();
-    } else if (aOptions.mSource.Value().Value().IsServiceWorker()){
-      event->mServiceWorker = aOptions.mSource.Value().Value().GetAsServiceWorker();
-    } else if (aOptions.mSource.Value().Value().IsMessagePort()){
-      event->mMessagePort = aOptions.mSource.Value().Value().GetAsMessagePort();
+  if (!aOptions.mSource.IsNull()) {
+    if (aOptions.mSource.Value().IsClient()) {
+      event->mClient = aOptions.mSource.Value().GetAsClient();
+    } else if (aOptions.mSource.Value().IsServiceWorker()){
+      event->mServiceWorker = aOptions.mSource.Value().GetAsServiceWorker();
+    } else if (aOptions.mSource.Value().IsMessagePort()){
+      event->mMessagePort = aOptions.mSource.Value().GetAsMessagePort();
     }
-    MOZ_ASSERT(event->mClient || event->mServiceWorker || event->mMessagePort);
   }
 
-  if (aOptions.mPorts.WasPassed() && !aOptions.mPorts.Value().IsNull()) {
-    event->mPorts.AppendElements(aOptions.mPorts.Value().Value());
-    event->mPortsSet = true;
-  }
-
+  event->mPorts.AppendElements(aOptions.mPorts);
   return event.forget();
 }
 
 void
-ExtendableMessageEvent::GetPorts(Nullable<nsTArray<RefPtr<MessagePort>>>& aPorts)
+ExtendableMessageEvent::GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts)
 {
-  if (!mPortsSet) {
-    aPorts.SetNull();
-    return;
-  }
-
-  aPorts.SetValue(mPorts);
-}
-
-void
-ExtendableMessageEvent::SetPorts(nsTArray<RefPtr<MessagePort>>&& aPorts)
-{
-  MOZ_ASSERT(mPorts.IsEmpty() && !mPortsSet);
-  mPorts = Move(aPorts);
-  mPortsSet = true;
-}
-
-void
-ExtendableMessageEvent::SetSource(ServiceWorkerClient* aClient)
-{
-  mClient = aClient;
-}
-
-void
-ExtendableMessageEvent::SetSource(ServiceWorker* aServiceWorker)
-{
-  mServiceWorker = aServiceWorker;
+  aPorts = mPorts;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ExtendableMessageEvent)

@@ -129,7 +129,6 @@ var lazilyLoadedBrowserScripts = [
   ["PluginHelper", "chrome://browser/content/PluginHelper.js"],
   ["OfflineApps", "chrome://browser/content/OfflineApps.js"],
   ["Linkifier", "chrome://browser/content/Linkify.js"],
-  ["ZoomHelper", "chrome://browser/content/ZoomHelper.js"],
   ["CastingApps", "chrome://browser/content/CastingApps.js"],
   ["RemoteDebugger", "chrome://browser/content/RemoteDebugger.js"],
 ];
@@ -354,6 +353,7 @@ var BrowserApp = {
   startup: function startup() {
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
     dump("zerdatime " + Date.now() + " - browser chrome startup finished.");
+    Services.obs.notifyObservers(this.browser, "BrowserChrome:Ready", null);
 
     this.deck = document.getElementById("browsers");
 
@@ -3231,8 +3231,8 @@ function nsBrowserAccess() {
 nsBrowserAccess.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow]),
 
-  _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aContext) {
-    let isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+  _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aFlags) {
+    let isExternal = !!(aFlags & Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
     if (isExternal && aURI && aURI.schemeIs("chrome"))
       return null;
 
@@ -3240,12 +3240,10 @@ nsBrowserAccess.prototype = {
                       Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                       Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
     if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
-      switch (aContext) {
-        case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL:
-          aWhere = Services.prefs.getIntPref("browser.link.open_external");
-          break;
-        default: // OPEN_NEW or an illegal value
-          aWhere = Services.prefs.getIntPref("browser.link.open_newwindow");
+      if (isExternal) {
+        aWhere = Services.prefs.getIntPref("browser.link.open_external");
+      } else {
+        aWhere = Services.prefs.getIntPref("browser.link.open_newwindow");
       }
     }
 
@@ -3293,11 +3291,13 @@ nsBrowserAccess.prototype = {
         }
       }
 
+      let openerWindow = (aFlags & Ci.nsIBrowserDOMWindow.OPEN_NO_OPENER) ? null : aOpener;
       // BrowserApp.addTab calls loadURIWithFlags with the appropriate params
       let tab = BrowserApp.addTab(aURI ? aURI.spec : "about:blank", { flags: loadflags,
                                                                       referrerURI: referrer,
                                                                       external: isExternal,
                                                                       parentId: parentId,
+                                                                      opener: openerWindow,
                                                                       selected: true,
                                                                       isPrivate: isPrivate,
                                                                       pinned: pinned });
@@ -3314,13 +3314,13 @@ nsBrowserAccess.prototype = {
     return browser;
   },
 
-  openURI: function browser_openURI(aURI, aOpener, aWhere, aContext) {
-    let browser = this._getBrowser(aURI, aOpener, aWhere, aContext);
+  openURI: function browser_openURI(aURI, aOpener, aWhere, aFlags) {
+    let browser = this._getBrowser(aURI, aOpener, aWhere, aFlags);
     return browser ? browser.contentWindow : null;
   },
 
-  openURIInFrame: function browser_openURIInFrame(aURI, aParams, aWhere, aContext) {
-    let browser = this._getBrowser(aURI, null, aWhere, aContext);
+  openURIInFrame: function browser_openURIInFrame(aURI, aParams, aWhere, aFlags) {
+    let browser = this._getBrowser(aURI, null, aWhere, aFlags);
     return browser ? browser.QueryInterface(Ci.nsIFrameLoaderOwner) : null;
   },
 
@@ -3404,6 +3404,11 @@ Tab.prototype = {
     }
 
     this.browser.permanentKey = {};
+
+    // Check if we have a "parent" window which we need to set as our opener
+    if ("opener" in aParams) {
+      this.browser.presetOpenerWindow(aParams.opener);
+    }
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are added.
@@ -3520,6 +3525,7 @@ Tab.prototype = {
 
     Services.obs.addObserver(this, "before-first-paint", false);
     Services.obs.addObserver(this, "media-playback", false);
+    Services.obs.addObserver(this, "media-playback-resumed", false);
 
     // Always intialise new tabs with basic session store data to avoid
     // problems with functions that always expect it to be present
@@ -3630,6 +3636,7 @@ Tab.prototype = {
 
     Services.obs.removeObserver(this, "before-first-paint");
     Services.obs.removeObserver(this, "media-playback", false);
+    Services.obs.removeObserver(this, "media-playback-resumed", false);
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are removed.
@@ -4396,16 +4403,24 @@ Tab.prototype = {
         break;
 
       case "media-playback":
+      case "media-playback-resumed":
         if (!aSubject) {
           return;
         }
 
         let winId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
         if (this.browser.outerWindowID == winId) {
+          let status;
+          if (aTopic == "media-playback") {
+            status = aData === "active" ? "start" : "end";
+          } else if (aTopic == "media-playback-resumed") {
+            status = "resume";
+          }
+
           Messaging.sendRequest({
             type: "Tab:MediaPlaybackChange",
             tabID: this.id,
-            active: aData === "active"
+            status: status
           });
         }
         break;
@@ -4477,32 +4492,6 @@ var BrowserEventHandler = {
           uuid: aEvent.target.moz_video_uuid
         });
         break;
-      }
-    }
-  },
-
-  _handleTouchStart: function(aEvent) {
-    if (!BrowserApp.isBrowserContentDocumentDisplayed() || aEvent.touches.length > 1 || aEvent.defaultPrevented)
-      return;
-
-    let target = aEvent.target;
-    if (!target) {
-      return;
-    }
-
-    // If we've pressed a scrollable element, let Java know that we may
-    // want to override the scroll behaviour (for document sub-frames)
-    this._scrollableElement = this._findScrollableElement(target, true);
-    this._firstScrollEvent = true;
-
-    if (this._scrollableElement != null) {
-      // Discard if it's the top-level scrollable, we let Java handle this
-      // The top-level scrollable is the body in quirks mode and the html element
-      // in standards mode
-      let doc = BrowserApp.selectedBrowser.contentDocument;
-      let rootScrollable = (doc.compatMode === "BackCompat" ? doc.body : doc.documentElement);
-      if (this._scrollableElement != rootScrollable) {
-        Messaging.sendRequest({ type: "Panning:Override" });
       }
     }
   },
@@ -4610,45 +4599,6 @@ var BrowserEventHandler = {
     });
   },
 
-  onDoubleTap: function(aData) {
-    let metadata = ViewportHandler.getMetadataForDocument(BrowserApp.selectedBrowser.contentDocument);
-    if (metadata && !metadata.allowDoubleTapZoom) {
-      return;
-    }
-
-    let data = JSON.parse(aData);
-    let element = ElementTouchHelper.anyElementFromPoint(data.x, data.y);
-
-    if (!element) {
-      ZoomHelper.zoomOut();
-      return;
-    }
-
-    while (element && !this._shouldZoomToElement(element))
-      element = element.parentNode;
-
-    if (!element) {
-      ZoomHelper.zoomOut();
-    } else {
-      ZoomHelper.zoomToElement(element, data.y);
-    }
-  },
-
-  _shouldZoomToElement: function(aElement) {
-    let win = aElement.ownerDocument.defaultView;
-    if (win.getComputedStyle(aElement, null).display == "inline")
-      return false;
-    if (aElement instanceof Ci.nsIDOMHTMLLIElement)
-      return false;
-    if (aElement instanceof Ci.nsIDOMHTMLQuoteElement)
-      return false;
-    return true;
-  },
-
-  _firstScrollEvent: false,
-
-  _scrollableElement: null,
-
   _highlightElement: null,
 
   _doTapHighlight: function _doTapHighlight(aElement) {
@@ -4660,137 +4610,10 @@ var BrowserEventHandler = {
       return;
 
     this._highlightElement = null;
-  },
-
-  _updateLastPosition: function(x, y, dx, dy) {
-    this.lastX = x;
-    this.lastY = y;
-    this.lastTime = Date.now();
-
-    this.motionBuffer.push({ dx: dx, dy: dy, time: this.lastTime });
-  },
-
-  _sendMouseEvent: function _sendMouseEvent(aName, aX, aY) {
-    let win = BrowserApp.selectedBrowser.contentWindow;
-    try {
-      let cwu = win.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      cwu.sendMouseEventToWindow(aName, aX, aY, 0, 1, 0, true, 0, Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH, false);
-    } catch(e) {
-      Cu.reportError(e);
-    }
-  },
-
-  _hasScrollableOverflow: function(elem) {
-    var win = elem.ownerDocument.defaultView;
-    if (!win)
-      return false;
-    var computedStyle = win.getComputedStyle(elem);
-    if (!computedStyle)
-      return false;
-    // We check for overflow:hidden only because all the other cases are scrollable
-    // under various conditions. See https://bugzilla.mozilla.org/show_bug.cgi?id=911574#c24
-    // for some more details.
-    return !(computedStyle.overflowX == 'hidden' && computedStyle.overflowY == 'hidden');
-  },
-
-  _findScrollableElement: function(elem, checkElem) {
-    // Walk the DOM tree until we find a scrollable element
-    let scrollable = false;
-    while (elem) {
-      /* Element is scrollable if its scroll-size exceeds its client size, and:
-       * - It has overflow other than 'hidden', or
-       * - It's a textarea node, or
-       * - It's a text input, or
-       * - It's a select element showing multiple rows
-       */
-      if (checkElem) {
-        if ((elem.scrollTopMin != elem.scrollTopMax ||
-             elem.scrollLeftMin != elem.scrollLeftMax) &&
-            (this._hasScrollableOverflow(elem) ||
-             elem.matches("textarea")) ||
-            (elem instanceof HTMLInputElement && elem.mozIsTextField(false)) ||
-            (elem instanceof HTMLSelectElement && (elem.size > 1 || elem.multiple))) {
-          scrollable = true;
-          break;
-        }
-      } else {
-        checkElem = true;
-      }
-
-      // Propagate up iFrames
-      if (!elem.parentNode && elem.documentElement && elem.documentElement.ownerDocument)
-        elem = elem.documentElement.ownerDocument.defaultView.frameElement;
-      else
-        elem = elem.parentNode;
-    }
-
-    if (!scrollable)
-      return null;
-
-    return elem;
-  },
-
-  _scrollElementBy: function(elem, x, y) {
-    elem.scrollTop = elem.scrollTop + y;
-    elem.scrollLeft = elem.scrollLeft + x;
-  },
-
-  _elementCanScroll: function(elem, x, y) {
-    let scrollX = (x < 0 && elem.scrollLeft > 0)
-               || (x > 0 && elem.scrollLeft < elem.scrollLeftMax);
-
-    let scrollY = (y < 0 && elem.scrollTop > 0)
-               || (y > 0 && elem.scrollTop < elem.scrollTopMax);
-
-    return scrollX || scrollY;
   }
 };
 
 const ElementTouchHelper = {
-  /* Return the element at the given coordinates, starting from the given window and
-     drilling down through frames. If no window is provided, the top-level window of
-     the currently selected tab is used. The coordinates provided should be CSS pixels
-     relative to the window's scroll position. */
-  anyElementFromPoint: function(aX, aY, aWindow) {
-    let win = (aWindow ? aWindow : BrowserApp.selectedBrowser.contentWindow);
-    let cwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    let elem = cwu.elementFromPoint(aX, aY, true, true);
-
-    while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
-      let rect = elem.getBoundingClientRect();
-      aX -= rect.left;
-      aY -= rect.top;
-      cwu = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      elem = cwu.elementFromPoint(aX, aY, true, true);
-    }
-
-    return elem;
-  },
-
-  /* Returns the touch radius with zoom factored in. */
-  getTouchRadius: function getTouchRadius() {
-    let zoom = BrowserApp.selectedTab._zoom;
-    return {
-      top: this.radius.top / zoom,
-      right: this.radius.right / zoom,
-      bottom: this.radius.bottom / zoom,
-      left: this.radius.left / zoom
-    };
-  },
-
-  /* Returns the touch radius in device pixels. */
-  get radius() {
-    let mmToIn = 1 / 25.4;
-    let mmToPx = mmToIn * ViewportHandler.displayDPI;
-    let prefs = Services.prefs;
-    delete this.radius;
-    return this.radius = { "top": prefs.getIntPref("ui.touch.radius.topmm") * mmToPx,
-                           "right": prefs.getIntPref("ui.touch.radius.rightmm") * mmToPx,
-                           "bottom": prefs.getIntPref("ui.touch.radius.bottommm") * mmToPx,
-                           "left": prefs.getIntPref("ui.touch.radius.leftmm") * mmToPx
-                         };
-  },
-
   getBoundingContentRect: function(aElement) {
     if (!aElement)
       return {x: 0, y: 0, w: 0, h: 0};
@@ -5545,11 +5368,6 @@ var XPInstallObserver = {
 };
 
 var ViewportHandler = {
-  // The cached viewport metadata for each document. We tie viewport metadata to each document
-  // instead of to each tab so that we don't have to update it when the document changes. Using an
-  // ES6 weak map lets us avoid leaks.
-  _metadata: new WeakMap(),
-
   init: function init() {
     Services.obs.addObserver(this, "Window:Resize", false);
   },
@@ -5560,51 +5378,6 @@ var ViewportHandler = {
       let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
       windowUtils.setNextPaintSyncId(scrollChange.id);
     }
-  },
-
-  /**
-   * Returns true if a viewport tag was specified
-   */
-  isViewportSpecified: function isViewportSpecified(aWindow) {
-    let tab = BrowserApp.getTabForWindow(aWindow);
-    let readerMode = false;
-    try {
-      readerMode = tab.browser.contentDocument.documentURI.startsWith("about:reader");
-    } catch (e) {
-    }
-    if (tab.desktopMode && !readerMode) {
-      return false;
-    }
-
-    let windowUtils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    return !isNaN(parseFloat(windowUtils.getDocumentMetadata("viewport-initial-scale")))
-        || !isNaN(parseFloat(windowUtils.getDocumentMetadata("viewport-minimum-scale")))
-        || !isNaN(parseFloat(windowUtils.getDocumentMetadata("viewport-maximum-scale")))
-        || ("" != windowUtils.getDocumentMetadata("viewport-user-scalable"))
-        || ("" != windowUtils.getDocumentMetadata("viewport-width"))
-        || ("" != windowUtils.getDocumentMetadata("viewport-height"));
-  },
-
-  get displayDPI() {
-    let utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    delete this.displayDPI;
-    return this.displayDPI = utils.displayDPI;
-  },
-
-  /**
-   * Returns the viewport metadata for the given document, or undefined if there
-   * isn't one.
-   */
-  getMetadataForDocument: function getMetadataForDocument(aDocument) {
-    return this._metadata.get(aDocument);
-  },
-
-  /** Updates the saved viewport metadata for the given content document. */
-  setMetadataForDocument: function setMetadataForDocument(aDocument, aMetadata) {
-    if (!aMetadata)
-      this._metadata.delete(aDocument);
-    else
-      this._metadata.set(aDocument, aMetadata);
   }
 };
 

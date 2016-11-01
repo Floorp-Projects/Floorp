@@ -29,10 +29,6 @@
 
 #include "hb-directwrite.h"
 
-#include "hb-open-file-private.hh"
-#include "hb-ot-name-table.hh"
-#include "hb-ot-tag.h"
-
 
 #ifndef HB_DEBUG_DIRECTWRITE
 #define HB_DEBUG_DIRECTWRITE (HB_DEBUG+0)

@@ -406,20 +406,6 @@ ComputeBufferRect(const IntRect& aRequestedRect)
   // rendering glitch, and guarantees image rows can be SIMD'd for
   // even r5g6b5 surfaces pretty much everywhere.
   rect.width = std::max(aRequestedRect.width, 64);
-#ifdef MOZ_WIDGET_GONK
-  // Set a minumum height to guarantee a minumum height of buffers we
-  // allocate. Some GL implementations fail to render gralloc textures
-  // with a height 9px-16px. It happens on Adreno 200. Adreno 320 does not
-  // have this problem. 32 is choosed as alignment of gralloc buffers.
-  // See Bug 873937.
-  // Increase the height only when the requested height is more than 0.
-  // See Bug 895976.
-  // XXX it might be better to disable it on the gpu that does not have
-  // the height problem.
-  if (rect.height > 0) {
-    rect.height = std::max(aRequestedRect.height, 32);
-  }
-#endif
   return rect;
 }
 
@@ -480,7 +466,7 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
     }
 
     if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
-#if defined(MOZ_GFX_OPTIMIZE_MOBILE) || defined(MOZ_WIDGET_GONK)
+#if defined(MOZ_GFX_OPTIMIZE_MOBILE)
       mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
 #else
       if (!aLayer->GetParent() ||

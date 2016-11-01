@@ -1465,6 +1465,19 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
 
 ##-----------------------------------------------------------------------------
 
+def msgenums(protocol, pretty=False):
+    msgenum = TypeEnum('MessageType')
+    msgstart = _messageStartName(protocol.decl.type) +' << 16'
+    msgenum.addId(protocol.name + 'Start', msgstart)
+
+    for md in protocol.messageDecls:
+        msgenum.addId(md.prettyMsgName() if pretty else  md.msgId())
+        if md.hasReply():
+            msgenum.addId(md.prettyReplyName() if pretty else md.replyId())
+
+    msgenum.addId(protocol.name +'End')
+    return msgenum
+
 class _GenerateProtocolCode(ipdl.ast.Visitor):
     '''Creates code common to both the parent and child actors.'''
     def __init__(self):
@@ -1663,17 +1676,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         ns.addstmts([ StmtDecl(Decl(stateenum,'')), Whitespace.NL ])
 
         # spit out message type enum and classes
-        msgenum = TypeEnum('MessageType')
-        msgstart = _messageStartName(self.protocol.decl.type) +' << 16'
-        msgenum.addId(self.protocol.name + 'Start', msgstart)
-        #msgenum.addId(self.protocol.name +'PreStart', '('+ msgstart +') - 1')
-
-        for md in p.messageDecls:
-            msgenum.addId(md.msgId())
-            if md.hasReply():
-                msgenum.addId(md.replyId())
-
-        msgenum.addId(self.protocol.name +'End')
+        msgenum = msgenums(self.protocol)
         ns.addstmts([ StmtDecl(Decl(msgenum, '')), Whitespace.NL ])
 
         tfDecl, tfDefn = _splitFuncDeclDefn(self.genTransitionFunc())
@@ -3331,14 +3334,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             onstack.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.channelVar(), '.', p.onCxxStackVar().name))))
 
-            # void ProcessIncomingRacingInterruptCall
-            processincoming = MethodDefn(
-                MethodDecl('FlushPendingInterruptQueue', ret=Type.VOID))
-            processincoming.addstmt(StmtExpr(ExprCall(ExprSelect(_actorChannel(ExprVar.THIS), '.', 'FlushPendingInterruptQueue'))))
-
             self.cls.addstmts([ onentered, onexited,
                                 onenteredcall, onexitedcall,
-                                onstack, processincoming, Whitespace.NL ])
+                                onstack, Whitespace.NL ])
 
         # OnChannelClose()
         onclose = MethodDefn(MethodDecl('OnChannelClose'))
@@ -5195,18 +5193,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         msgexpr = ExprAddrOf(msgvar)
         isctor = md.decl.type.isCtor()
         stmts = ([
-            # this is kind of naughty, but the only two other options
-            # are forwarding the message name (yuck) or making the
-            # IPDL|*Channel abstraction leak more
-            StmtExpr(ExprCall(
-                ExprSelect(
-                    ExprCast(msgvar, Type('Message', ref=1), const=1),
-                    '.', 'set_name'),
-                args=[ ExprLiteral.String(md.prettyMsgName(self.protocol.name
-                                                           +'::')) ])),
             self.logMessage(md, msgexpr, 'Received ',
                             receiving=True),
-            self.profilerLabel('Recv', md.decl.progname),
+            self.profilerLabel(md),
             Whitespace.NL
         ])
 
@@ -5272,7 +5261,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             sendok,
             ([ Whitespace.NL,
                self.logMessage(md, msgexpr, 'Sending ', actor),
-               self.profilerLabel('AsyncSend', md.decl.progname) ]
+               self.profilerLabel(md) ]
             + self.transition(md, 'out', actor)
             + [ Whitespace.NL,
                 StmtDecl(Decl(Type.BOOL, sendok.name),
@@ -5289,7 +5278,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             sendok,
             ([ Whitespace.NL,
                self.logMessage(md, msgexpr, 'Sending ', actor),
-               self.profilerLabel('Send', md.decl.progname) ]
+               self.profilerLabel(md) ]
             + self.transition(md, 'out', actor)
             + [ Whitespace.NL,
                 StmtDecl(
@@ -5366,15 +5355,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                               args=[ ExprLiteral.String(actorname),
                                      self.protocol.callOtherPid(actor),
                                      ExprLiteral.String(pfx),
-                                     ExprCall(ExprSelect(msgptr, '->', 'name')),
+                                     ExprCall(ExprSelect(msgptr, '->', 'type')),
                                      ExprVar('mozilla::ipc::MessageDirection::eReceiving'
                                              if receiving
                                              else 'mozilla::ipc::MessageDirection::eSending') ])) ])
 
-    def profilerLabel(self, tag, msgname):
+    def profilerLabel(self, md):
         return StmtExpr(ExprCall(ExprVar('PROFILER_LABEL'),
-                                 [ ExprLiteral.String('IPDL::' + self.protocol.name),
-                                   ExprLiteral.String(tag + msgname),
+                                 [ ExprLiteral.String(self.protocol.name),
+                                   ExprLiteral.String(md.prettyMsgName()),
                                    ExprVar('js::ProfileEntry::Category::OTHER') ]))
 
     def saveActorId(self, md):

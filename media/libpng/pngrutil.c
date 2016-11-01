@@ -1,7 +1,7 @@
 
 /* pngrutil.c - utilities to read a PNG file
  *
- * Last changed in libpng 1.6.25 [September 1, 2016]
+ * Last changed in libpng 1.6.26 [October 20, 2016]
  * Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -86,7 +86,7 @@ png_get_int_32)(png_const_bytep buf)
 {
    png_uint_32 uval = png_get_uint_32(buf);
    if ((uval & 0x80000000) == 0) /* non-negative */
-      return uval;
+      return (png_int_32)uval;
 
    uval = (uval ^ 0xffffffff) + 1;  /* 2's complement: -x = ~x+1 */
    if ((uval & 0x80000000) == 0) /* no overflow */
@@ -370,11 +370,10 @@ png_inflate_claim(png_structrp png_ptr, png_uint_32 owner)
     */
    {
       int ret; /* zlib return code */
-#if PNG_ZLIB_VERNUM >= 0x1240
+#if ZLIB_VERNUM >= 0x1240
+      int window_bits = 0;
 
 # if defined(PNG_SET_OPTION_SUPPORTED) && defined(PNG_MAXIMUM_INFLATE_WINDOW)
-      int window_bits;
-
       if (((png_ptr->options >> PNG_MAXIMUM_INFLATE_WINDOW) & 3) ==
           PNG_OPTION_ON)
       {
@@ -384,13 +383,11 @@ png_inflate_claim(png_structrp png_ptr, png_uint_32 owner)
 
       else
       {
-         window_bits = 0;
          png_ptr->zstream_start = 1;
       }
-# else
-#   define window_bits 0
 # endif
-#endif
+
+#endif /* ZLIB_VERNUM >= 0x1240 */
 
       /* Set this for safety, just in case the previous owner left pointers to
        * memory allocations.
@@ -402,24 +399,30 @@ png_inflate_claim(png_structrp png_ptr, png_uint_32 owner)
 
       if ((png_ptr->flags & PNG_FLAG_ZSTREAM_INITIALIZED) != 0)
       {
-#if PNG_ZLIB_VERNUM < 0x1240
-         ret = inflateReset(&png_ptr->zstream);
-#else
+#if ZLIB_VERNUM >= 0x1240
          ret = inflateReset2(&png_ptr->zstream, window_bits);
+#else
+         ret = inflateReset(&png_ptr->zstream);
 #endif
       }
 
       else
       {
-#if PNG_ZLIB_VERNUM < 0x1240
-         ret = inflateInit(&png_ptr->zstream);
-#else
+#if ZLIB_VERNUM >= 0x1240
          ret = inflateInit2(&png_ptr->zstream, window_bits);
+#else
+         ret = inflateInit(&png_ptr->zstream);
 #endif
 
          if (ret == Z_OK)
             png_ptr->flags |= PNG_FLAG_ZSTREAM_INITIALIZED;
       }
+
+#if ZLIB_VERNUM >= 0x1281
+      /* Turn off validation of the ADLER32 checksum */
+      if ((png_ptr->flags & PNG_FLAG_CRC_CRITICAL_IGNORE) != 0)
+         ret = inflateValidate(&png_ptr->zstream, 0);
+#endif
 
       if (ret == Z_OK)
          png_ptr->zowner = owner;
@@ -435,7 +438,7 @@ png_inflate_claim(png_structrp png_ptr, png_uint_32 owner)
 #endif
 }
 
-#if PNG_ZLIB_VERNUM >= 0x1240
+#if ZLIB_VERNUM >= 0x1240
 /* Handle the start of the inflate stream if we called inflateInit2(strm,0);
  * in this case some zlib versions skip validation of the CINFO field and, in
  * certain circumstances, libpng may end up displaying an invalid image, in
@@ -1016,7 +1019,7 @@ png_handle_PLTE(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE)
 #endif
    {
-      png_crc_finish(png_ptr, (int) length - num * 3);
+      png_crc_finish(png_ptr, (png_uint_32) (length - (unsigned int)num * 3));
    }
 
 #ifndef PNG_READ_OPT_PLTE_SUPPORTED
@@ -1722,13 +1725,13 @@ png_handle_sPLT(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
    data_length = length - (png_uint_32)(entry_start - buffer);
 
    /* Integrity-check the data length */
-   if ((data_length % entry_size) != 0)
+   if ((data_length % (unsigned int)entry_size) != 0)
    {
       png_warning(png_ptr, "sPLT chunk has bad length");
       return;
    }
 
-   dl = (png_int_32)(data_length / entry_size);
+   dl = (png_uint_32)(data_length / (unsigned int)entry_size);
    max_dl = PNG_SIZE_MAX / (sizeof (png_sPLT_entry));
 
    if (dl > max_dl)
@@ -1737,10 +1740,10 @@ png_handle_sPLT(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
       return;
    }
 
-   new_palette.nentries = (png_int_32)(data_length / entry_size);
+   new_palette.nentries = (png_int_32)(data_length / (unsigned int)entry_size);
 
-   new_palette.entries = (png_sPLT_entryp)png_malloc_warn(
-       png_ptr, new_palette.nentries * (sizeof (png_sPLT_entry)));
+   new_palette.entries = (png_sPLT_entryp)png_malloc_warn(png_ptr,
+       (png_alloc_size_t) new_palette.nentries * (sizeof (png_sPLT_entry)));
 
    if (new_palette.entries == NULL)
    {
@@ -3278,7 +3281,7 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
 #     ifdef PNG_READ_PACKSWAP_SUPPORTED
       if ((png_ptr->transformations & PNG_PACKSWAP) != 0)
          /* little-endian byte */
-         end_mask = 0xff << end_mask;
+         end_mask = (unsigned int)(0xff << end_mask);
 
       else /* big-endian byte */
 #     endif
@@ -3724,7 +3727,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
 {
    /* Arrays to facilitate easy interlacing - use pass (0 - 6) as index */
    /* Offset to next interlace block */
-   static PNG_CONST int png_pass_inc[7] = {8, 8, 4, 4, 2, 2, 1};
+   static PNG_CONST unsigned int png_pass_inc[7] = {8, 8, 4, 4, 2, 2, 1};
 
    png_debug(1, "in png_do_read_interlace");
    if (row != NULL && row_info != NULL)
@@ -3739,9 +3742,10 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
          {
             png_bytep sp = row + (png_size_t)((row_info->width - 1) >> 3);
             png_bytep dp = row + (png_size_t)((final_width - 1) >> 3);
-            int sshift, dshift;
-            int s_start, s_end, s_inc;
-            int jstop = png_pass_inc[pass];
+            unsigned int sshift, dshift;
+            unsigned int s_start, s_end;
+            int s_inc;
+            int jstop = (int)png_pass_inc[pass];
             png_byte v;
             png_uint_32 i;
             int j;
@@ -3749,8 +3753,8 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
 #ifdef PNG_READ_PACKSWAP_SUPPORTED
             if ((transformations & PNG_PACKSWAP) != 0)
             {
-                sshift = (int)((row_info->width + 7) & 0x07);
-                dshift = (int)((final_width + 7) & 0x07);
+                sshift = ((row_info->width + 7) & 0x07);
+                dshift = ((final_width + 7) & 0x07);
                 s_start = 7;
                 s_end = 0;
                 s_inc = -1;
@@ -3759,8 +3763,8 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
             else
 #endif
             {
-                sshift = 7 - (int)((row_info->width + 7) & 0x07);
-                dshift = 7 - (int)((final_width + 7) & 0x07);
+                sshift = 7 - ((row_info->width + 7) & 0x07);
+                dshift = 7 - ((final_width + 7) & 0x07);
                 s_start = 0;
                 s_end = 7;
                 s_inc = 1;
@@ -3772,7 +3776,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
                for (j = 0; j < jstop; j++)
                {
                   unsigned int tmp = *dp & (0x7f7f >> (7 - dshift));
-                  tmp |= v << dshift;
+                  tmp |= (unsigned int)(v << dshift);
                   *dp = (png_byte)(tmp & 0xff);
 
                   if (dshift == s_end)
@@ -3782,7 +3786,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
                   }
 
                   else
-                     dshift += s_inc;
+                     dshift = (unsigned int)((int)dshift + s_inc);
                }
 
                if (sshift == s_end)
@@ -3792,7 +3796,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
                }
 
                else
-                  sshift += s_inc;
+                  sshift = (unsigned int)((int)sshift + s_inc);
             }
             break;
          }
@@ -3801,16 +3805,17 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
          {
             png_bytep sp = row + (png_uint_32)((row_info->width - 1) >> 2);
             png_bytep dp = row + (png_uint_32)((final_width - 1) >> 2);
-            int sshift, dshift;
-            int s_start, s_end, s_inc;
-            int jstop = png_pass_inc[pass];
+            unsigned int sshift, dshift;
+            unsigned int s_start, s_end;
+            int s_inc;
+            int jstop = (int)png_pass_inc[pass];
             png_uint_32 i;
 
 #ifdef PNG_READ_PACKSWAP_SUPPORTED
             if ((transformations & PNG_PACKSWAP) != 0)
             {
-               sshift = (int)(((row_info->width + 3) & 0x03) << 1);
-               dshift = (int)(((final_width + 3) & 0x03) << 1);
+               sshift = (((row_info->width + 3) & 0x03) << 1);
+               dshift = (((final_width + 3) & 0x03) << 1);
                s_start = 6;
                s_end = 0;
                s_inc = -2;
@@ -3819,8 +3824,8 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
             else
 #endif
             {
-               sshift = (int)((3 - ((row_info->width + 3) & 0x03)) << 1);
-               dshift = (int)((3 - ((final_width + 3) & 0x03)) << 1);
+               sshift = ((3 - ((row_info->width + 3) & 0x03)) << 1);
+               dshift = ((3 - ((final_width + 3) & 0x03)) << 1);
                s_start = 0;
                s_end = 6;
                s_inc = 2;
@@ -3835,7 +3840,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
                for (j = 0; j < jstop; j++)
                {
                   unsigned int tmp = *dp & (0x3f3f >> (6 - dshift));
-                  tmp |= v << dshift;
+                  tmp |= (unsigned int)(v << dshift);
                   *dp = (png_byte)(tmp & 0xff);
 
                   if (dshift == s_end)
@@ -3845,7 +3850,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
                   }
 
                   else
-                     dshift += s_inc;
+                     dshift = (unsigned int)((int)dshift + s_inc);
                }
 
                if (sshift == s_end)
@@ -3855,7 +3860,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
                }
 
                else
-                  sshift += s_inc;
+                  sshift = (unsigned int)((int)sshift + s_inc);
             }
             break;
          }
@@ -3864,16 +3869,17 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
          {
             png_bytep sp = row + (png_size_t)((row_info->width - 1) >> 1);
             png_bytep dp = row + (png_size_t)((final_width - 1) >> 1);
-            int sshift, dshift;
-            int s_start, s_end, s_inc;
+            unsigned int sshift, dshift;
+            unsigned int s_start, s_end;
+            int s_inc;
             png_uint_32 i;
-            int jstop = png_pass_inc[pass];
+            int jstop = (int)png_pass_inc[pass];
 
 #ifdef PNG_READ_PACKSWAP_SUPPORTED
             if ((transformations & PNG_PACKSWAP) != 0)
             {
-               sshift = (int)(((row_info->width + 1) & 0x01) << 2);
-               dshift = (int)(((final_width + 1) & 0x01) << 2);
+               sshift = (((row_info->width + 1) & 0x01) << 2);
+               dshift = (((final_width + 1) & 0x01) << 2);
                s_start = 4;
                s_end = 0;
                s_inc = -4;
@@ -3882,8 +3888,8 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
             else
 #endif
             {
-               sshift = (int)((1 - ((row_info->width + 1) & 0x01)) << 2);
-               dshift = (int)((1 - ((final_width + 1) & 0x01)) << 2);
+               sshift = ((1 - ((row_info->width + 1) & 0x01)) << 2);
+               dshift = ((1 - ((final_width + 1) & 0x01)) << 2);
                s_start = 0;
                s_end = 4;
                s_inc = 4;
@@ -3897,7 +3903,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
                for (j = 0; j < jstop; j++)
                {
                   unsigned int tmp = *dp & (0xf0f >> (4 - dshift));
-                  tmp |= v << dshift;
+                  tmp |= (unsigned int)(v << dshift);
                   *dp = (png_byte)(tmp & 0xff);
 
                   if (dshift == s_end)
@@ -3907,7 +3913,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
                   }
 
                   else
-                     dshift += s_inc;
+                     dshift = (unsigned int)((int)dshift + s_inc);
                }
 
                if (sshift == s_end)
@@ -3917,7 +3923,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
                }
 
                else
-                  sshift += s_inc;
+                  sshift = (unsigned int)((int)sshift + s_inc);
             }
             break;
          }
@@ -3931,7 +3937,7 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
 
             png_bytep dp = row + (png_size_t)(final_width - 1) * pixel_bytes;
 
-            int jstop = png_pass_inc[pass];
+            int jstop = (int)png_pass_inc[pass];
             png_uint_32 i;
 
             for (i = 0; i < row_info->width; i++)
@@ -4075,7 +4081,7 @@ static void
 png_read_filter_row_paeth_multibyte_pixel(png_row_infop row_info, png_bytep row,
     png_const_bytep prev_row)
 {
-   int bpp = (row_info->pixel_depth + 7) >> 3;
+   unsigned int bpp = (row_info->pixel_depth + 7) >> 3;
    png_bytep rp_end = row + bpp;
 
    /* Process the first pixel in the row completely (this is the same as 'up'
@@ -4088,7 +4094,7 @@ png_read_filter_row_paeth_multibyte_pixel(png_row_infop row_info, png_bytep row,
    }
 
    /* Remainder */
-   rp_end += row_info->rowbytes - bpp;
+   rp_end = rp_end + (row_info->rowbytes - bpp);
 
    while (row < rp_end)
    {
@@ -4316,7 +4322,15 @@ png_read_IDAT_data(png_structrp png_ptr, png_bytep output,
          png_zstream_error(png_ptr, ret);
 
          if (output != NULL)
-            png_chunk_error(png_ptr, png_ptr->zstream.msg);
+         {
+            if(!strncmp(png_ptr->zstream.msg,"incorrect data check",20))
+            {
+               png_chunk_benign_error(png_ptr, "ADLER32 checksum mismatch");
+               continue;
+            }
+            else
+               png_chunk_error(png_ptr, png_ptr->zstream.msg);
+         }
 
          else /* checking */
          {
@@ -4469,7 +4483,7 @@ png_read_start_row(png_structrp png_ptr)
    /* Offset to next interlace block in the y direction */
    static PNG_CONST png_byte png_pass_yinc[7] = {8, 8, 8, 4, 4, 2, 2};
 
-   int max_pixel_depth;
+   unsigned int max_pixel_depth;
    png_size_t row_bytes;
 
    png_debug(1, "in png_read_start_row");
@@ -4498,7 +4512,7 @@ png_read_start_row(png_structrp png_ptr)
       png_ptr->iwidth = png_ptr->width;
    }
 
-   max_pixel_depth = png_ptr->pixel_depth;
+   max_pixel_depth = (unsigned int)png_ptr->pixel_depth;
 
    /* WARNING: * png_read_transform_info (pngrtran.c) performs a simpler set of
     * calculations to calculate the final pixel depth, then
@@ -4633,7 +4647,7 @@ png_read_start_row(png_structrp png_ptr)
 defined(PNG_USER_TRANSFORM_PTR_SUPPORTED)
    if ((png_ptr->transformations & PNG_USER_TRANSFORM) != 0)
    {
-      int user_pixel_depth = png_ptr->user_transform_depth *
+      unsigned int user_pixel_depth = png_ptr->user_transform_depth *
          png_ptr->user_transform_channels;
 
       if (user_pixel_depth > max_pixel_depth)
@@ -4655,7 +4669,7 @@ defined(PNG_USER_TRANSFORM_PTR_SUPPORTED)
     * for safety's sake
     */
    row_bytes = PNG_ROWBYTES(max_pixel_depth, row_bytes) +
-       1 + ((max_pixel_depth + 7) >> 3);
+       1 + ((max_pixel_depth + 7) >> 3U);
 
 #ifdef PNG_MAX_MALLOC_64K
    if (row_bytes > (png_uint_32)65536L)
@@ -4724,7 +4738,7 @@ defined(PNG_USER_TRANSFORM_PTR_SUPPORTED)
     * does not, so free the read buffer now regardless; the sequential reader
     * reallocates it on demand.
     */
-   if (png_ptr->read_buffer != 0)
+   if (png_ptr->read_buffer != NULL)
    {
       png_bytep buffer = png_ptr->read_buffer;
 

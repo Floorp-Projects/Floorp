@@ -7,13 +7,14 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://pippki/locale/pippki.dtd">
 
-<dialog id="download_cert" title="&downloadCert.title;"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  style="width: 46em;"
-  buttons="accept,cancel"
-  ondialogaccept="return doOK();"
-  ondialogcancel="return doCancel();"
-  onload="onLoad();">
+<dialog id="download_cert"
+        title="&downloadCert.title;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        style="width: 46em;"
+        buttons="accept,cancel"
+        ondialogaccept="return onDialogAccept();"
+        ondialogcancel="return onDialogCancel();"
+        onload="onLoad();">
 
 <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
 
@@ -35,7 +36,7 @@
      -  * trust for object signing
     -->
   <vbox>
-    <description id="message2"/>
+    <description id="trustHeader"/>
     <checkbox label="&downloadCert.trustSSL;"
               id="trustSSL"/>
     <checkbox label="&downloadCert.trustEmail;"
@@ -46,11 +47,6 @@
 
   <separator/>
 
-  <!--  buttons for viewing cert and policies
-     -  "suggested you view the following:"
-     -  <>  view cert
-     -  <>  view policy
-    -->
   <vbox>
     <description>&downloadCert.message3;</description>
     <separator/>
@@ -63,7 +59,7 @@
         <row>
           <button id="viewC-button"
                   label="&downloadCert.viewCert.label;"
-                  oncommand="viewCert();"/> 
+                  oncommand="viewCert();"/>
           <description style="margin: 4px;">&downloadCert.viewCert.text;</description>
         </row>
       </rows>

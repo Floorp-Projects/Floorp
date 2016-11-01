@@ -169,7 +169,7 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
 }
 
 void
-xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aFallbackMessage,
+xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
                        bool aIsChrome, uint64_t aWindowID)
 {
     mCategory = aIsChrome ? NS_LITERAL_CSTRING("chrome javascript")
@@ -177,8 +177,8 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aFallbackMessage,
     mWindowID = aWindowID;
 
     ErrorReportToMessageString(aReport, mErrorMsg);
-    if (mErrorMsg.IsEmpty() && aFallbackMessage) {
-        mErrorMsg.AssignWithConversion(aFallbackMessage);
+    if (mErrorMsg.IsEmpty() && aToStringResult) {
+        AppendUTF8toUTF16(aToStringResult, mErrorMsg);
     }
 
     if (!aReport->filename) {
@@ -290,14 +290,13 @@ xpc::ErrorReport::ErrorReportToMessageString(JSErrorReport* aReport,
                                              nsAString& aString)
 {
     aString.Truncate();
-    const char16_t* m = aReport->ucmessage;
-    if (m) {
+    if (aReport->message()) {
         JSFlatString* name = js::GetErrorTypeName(CycleCollectedJSContext::Get()->Context(), aReport->exnType);
         if (name) {
             AssignJSFlatString(aString, name);
             aString.AppendLiteral(": ");
         }
-        aString.Append(m);
+        aString.Append(NS_ConvertUTF8toUTF16(aReport->message().c_str()));
     }
 }
 
@@ -1090,14 +1089,13 @@ WriteScriptOrFunction(nsIObjectOutputStream* stream, JSContext* cx,
         return rv;
 
 
-    uint32_t size;
-    void* data = nullptr;
+    TranscodeBuffer buffer;
     TranscodeResult code;
     {
         if (functionObj)
-            code = JS_EncodeInterpretedFunction(cx, functionObj, &size, &data);
+            code = EncodeInterpretedFunction(cx, buffer, functionObj);
         else
-            code = JS_EncodeScript(cx, script, &size, &data);
+            code = EncodeScript(cx, buffer, script);
     }
 
     if (code != TranscodeResult_Ok) {
@@ -1108,11 +1106,12 @@ WriteScriptOrFunction(nsIObjectOutputStream* stream, JSContext* cx,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    MOZ_ASSERT(size && data);
+    size_t size = buffer.length();
+    if (size > UINT32_MAX)
+        return NS_ERROR_FAILURE;
     rv = stream->Write32(size);
     if (NS_SUCCEEDED(rv))
-        rv = stream->WriteBytes(static_cast<char*>(data), size);
-    js_free(data);
+        rv = stream->WriteBytes(reinterpret_cast<char*>(buffer.begin()), size);
 
     return rv;
 }
@@ -1145,16 +1144,19 @@ ReadScriptOrFunction(nsIObjectInputStream* stream, JSContext* cx,
     if (NS_FAILED(rv))
         return rv;
 
+    TranscodeBuffer buffer;
+    buffer.replaceRawBuffer(reinterpret_cast<uint8_t*>(data), size);
+
     {
         TranscodeResult code;
         if (scriptp) {
             Rooted<JSScript*> script(cx);
-            code = JS_DecodeScript(cx, data, size, &script);
+            code = DecodeScript(cx, buffer, &script);
             if (code == TranscodeResult_Ok)
                 *scriptp = script.get();
         } else {
             Rooted<JSFunction*> funobj(cx);
-            code = JS_DecodeInterpretedFunction(cx, data, size, &funobj);
+            code = DecodeInterpretedFunction(cx, buffer, &funobj);
             if (code == TranscodeResult_Ok)
                 *functionObjp = JS_GetFunctionObject(funobj.get());
         }
@@ -1168,7 +1170,6 @@ ReadScriptOrFunction(nsIObjectInputStream* stream, JSContext* cx,
         }
     }
 
-    free(data);
     return rv;
 }
 
