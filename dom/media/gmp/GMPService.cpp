@@ -510,15 +510,6 @@ GeckoMediaPluginService::GetGMPDecryptor(GMPCrashHelper* aHelper,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-GeckoMediaPluginService::HasPluginForAPI(const nsACString& aAPI,
-                                         nsTArray<nsCString>* aTags,
-                                         bool* aOutHavePlugin)
-{
-  nsCString unused;
-  return GetPluginVersionForAPI(aAPI, aTags, aOutHavePlugin, unused);
-}
-
 void
 GeckoMediaPluginService::ConnectCrashHelper(uint32_t aPluginId, GMPCrashHelper* aHelper)
 {
