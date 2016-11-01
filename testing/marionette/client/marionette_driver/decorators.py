@@ -4,8 +4,6 @@
 
 from functools import wraps
 import socket
-import sys
-import traceback
 
 
 def _find_marionette_in_args(*args, **kwargs):
@@ -21,25 +19,13 @@ def do_process_check(func):
     """Decorator which checks the process status after the function has run."""
     @wraps(func)
     def _(*args, **kwargs):
-        m = _find_marionette_in_args(*args, **kwargs)
-
         try:
             return func(*args, **kwargs)
-        except IOError as e:
-            exc, val, tb = sys.exc_info()
-            crashed = False
-
-            try:
-                crashed = m.check_for_crash()
-            except Exception:
-                # don't want to lose the original exception
-                traceback.print_exc()
-
-            # In case of socket failures force a shutdown of the application
-            if type(e) in (socket.error, socket.timeout) or crashed:
-                m.handle_socket_failure(crashed)
-
-            raise exc, val, tb
+        except (socket.error, socket.timeout):
+            # In case of socket failures which will also include crashes of the
+            # application, make sure to handle those correctly.
+            m = _find_marionette_in_args(*args, **kwargs)
+            m.handle_socket_failure()
 
     return _
 
