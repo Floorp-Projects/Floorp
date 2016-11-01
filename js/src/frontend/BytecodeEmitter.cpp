@@ -4521,6 +4521,10 @@ class MOZ_STACK_CLASS IfThenElseEmitter
     JumpList jumpsAroundElse_;
     unsigned noteIndex_;
     int32_t thenDepth_;
+#ifdef DEBUG
+    int32_t pushed_;
+    bool calculatedPushed_;
+#endif
     enum State {
         Start,
         If,
@@ -4536,6 +4540,10 @@ class MOZ_STACK_CLASS IfThenElseEmitter
       : bce_(bce),
         noteIndex_(-1),
         thenDepth_(0),
+#ifdef DEBUG
+        pushed_(0),
+        calculatedPushed_(false),
+#endif
         state_(Start)
     {}
 
@@ -4559,8 +4567,13 @@ class MOZ_STACK_CLASS IfThenElseEmitter
             return false;
 
         // To restore stack depth in else part, save depth of the then part.
+#ifdef DEBUG
+        // If DEBUG, this is also necessary to calculate |pushed_|.
+        thenDepth_ = bce_->stackDepth;
+#else
         if (nextState == IfElse || nextState == Cond)
             thenDepth_ = bce_->stackDepth;
+#endif
         state_ = nextState;
         return true;
     }
@@ -4580,6 +4593,8 @@ class MOZ_STACK_CLASS IfThenElseEmitter
 
     bool emitElse() {
         MOZ_ASSERT(state_ == IfElse || state_ == Cond);
+
+        calculateOrCheckPushed();
 
         // Emit a jump from the end of our then part around the else part. The
         // patchJumpsToTarget call at the bottom of this function will fix up
@@ -4611,6 +4626,8 @@ class MOZ_STACK_CLASS IfThenElseEmitter
     bool emitEnd() {
         MOZ_ASSERT(state_ == If || state_ == Else);
 
+        calculateOrCheckPushed();
+
         if (state_ == If) {
             // No else part, fixup the branch-if-false to come here.
             if (!bce_->emitJumpTargetAndPatch(jumpAroundThen_))
@@ -4624,6 +4641,23 @@ class MOZ_STACK_CLASS IfThenElseEmitter
         state_ = End;
         return true;
     }
+
+    void calculateOrCheckPushed() {
+#ifdef DEBUG
+        if (!calculatedPushed_) {
+            pushed_ = bce_->stackDepth - thenDepth_;
+            calculatedPushed_ = true;
+        } else {
+            MOZ_ASSERT(pushed_ == bce_->stackDepth - thenDepth_);
+        }
+#endif
+    }
+
+#ifdef DEBUG
+    int32_t pushed() const {
+        return pushed_;
+    }
+#endif
 };
 
 bool
@@ -4750,6 +4784,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
             if (!isHead) {
                 if (!ifThenElse.emitEnd())
                     return false;
+                MOZ_ASSERT(ifThenElse.pushed() == -1);
             }
             needToPopIterator = false;
             MOZ_ASSERT(!member->pn_next);
@@ -4856,6 +4891,12 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
 
         if (!ifThenElse.emitEnd())
             return false;
+        if (hasNextNonSpread)
+            MOZ_ASSERT(ifThenElse.pushed() == 1);
+        else if (hasNextSpread)
+            MOZ_ASSERT(ifThenElse.pushed() == 0);
+        else
+            MOZ_ASSERT(ifThenElse.pushed() == -1);
     }
 
     if (needToPopIterator) {
@@ -8423,6 +8464,7 @@ BytecodeEmitter::emitConditionalExpression(ConditionalExpression& conditional)
 
     if (!ifThenElse.emitEnd())
         return false;
+    MOZ_ASSERT(ifThenElse.pushed() == 1);
 
     return true;
 }
