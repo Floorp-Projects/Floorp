@@ -192,7 +192,7 @@ class Continuation {
       needsPercentDecoding = false;
       wasQuotedString = false;
     }
-    ~Continuation() {}
+    ~Continuation() = default;
 
     const char *value;
     uint32_t length;

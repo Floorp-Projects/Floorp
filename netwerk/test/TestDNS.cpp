@@ -52,7 +52,7 @@ public:
     }
 
 private:
-    virtual ~myDNSListener() {}
+    virtual ~myDNSListener() = default;
 
     nsCString mHost;
     int32_t   mIndex;

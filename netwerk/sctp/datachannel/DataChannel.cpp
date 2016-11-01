@@ -98,7 +98,7 @@ public:
 private:
   // The only instance of DataChannelShutdown is owned by the observer
   // service, so there is no need to call RemoveObserver here.
-  virtual ~DataChannelShutdown() {}
+  virtual ~DataChannelShutdown() = default;
 
 public:
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
