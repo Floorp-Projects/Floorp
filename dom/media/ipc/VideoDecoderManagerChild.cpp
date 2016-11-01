@@ -246,7 +246,7 @@ VideoDecoderManagerChild::DeallocateSurfaceDescriptorGPUVideo(const SurfaceDescr
 }
 
 void
-VideoDecoderManagerChild::FatalError(const char* const aName, const char* const aMsg) const
+VideoDecoderManagerChild::HandleFatalError(const char* aName, const char* aMsg) const
 {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
 }

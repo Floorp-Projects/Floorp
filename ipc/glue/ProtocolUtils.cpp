@@ -456,5 +456,22 @@ IProtocol::OtherPid() const
   return Manager()->OtherPid();
 }
 
+void
+IProtocol::FatalError(const char* const aErrorMsg) const
+{
+  HandleFatalError(ProtocolName(), aErrorMsg);
+}
+
+void
+IProtocol::HandleFatalError(const char* aProtocolName, const char* aErrorMsg) const
+{
+  if (IProtocol* manager = Manager()) {
+    manager->HandleFatalError(aProtocolName, aErrorMsg);
+    return;
+  }
+
+  mozilla::ipc::FatalError(aProtocolName, aErrorMsg, mSide == ParentSide);
+}
+
 } // namespace ipc
 } // namespace mozilla
