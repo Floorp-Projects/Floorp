@@ -1148,7 +1148,10 @@ StateObject::HandleDormant(bool aDormant)
     return true;
   }
   SeekJob seekJob;
-  seekJob.mTarget = SeekTarget(mMaster->mCurrentPosition,
+  int64_t seekTargetTime = mMaster->mMediaSink->IsStarted()
+                           ? mMaster->GetClock() : mMaster->GetMediaTime();
+
+  seekJob.mTarget = SeekTarget(seekTargetTime,
                                SeekTarget::Accurate,
                                MediaDecoderEventVisibility::Suppressed);
   // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
