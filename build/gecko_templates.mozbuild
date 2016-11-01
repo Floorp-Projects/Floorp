@@ -42,7 +42,6 @@ def GeckoBinary(linkage='dependent', msvcrt='dynamic', mozglue=None):
     if linkage == 'dependent':
         USE_LIBS += [
             'nspr',
-            '%s_s' % xpcomglue,
             'xul',
         ]
     elif linkage == 'standalone':
