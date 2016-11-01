@@ -28,38 +28,8 @@ function FunctionBind(thisArg, ...boundArgs) {
         F = bind_bindFunctionN(target, thisArg, boundArgs);
     }
 
-    // Step 5.
-    var targetHasLength = callFunction(std_Object_hasOwnProperty, target, "length");
-
-    // Step 6.
-    var L;
-    if (targetHasLength) {
-        // Step 6.a.
-        var targetLen = target.length;
-        // Step 6.b.
-        if (typeof targetLen !== 'number') {
-            L = 0;
-        } else {
-            // Steps 6.b.i-ii.
-            L = std_Math_max(0, ToInteger(targetLen) - argCount);
-        }
-    } else {
-        // Step 7.
-        L = 0;
-    }
-
-    // Step 9.
-    var targetName = target.name;
-
-    // Step 10.
-    if (typeof targetName !== "string")
-        targetName = "";
-
-    // 9.2.11 SetFunctionName, Step 5.a.
-    targetName = "bound " + targetName;
-
-    // Steps 10-11, 15-16.
-    _FinishBoundFunctionInit(F, target, L, targetName);
+    // Steps 5-11.
+    _FinishBoundFunctionInit(F, target, argCount);
 
     // Ensure that the apply intrinsic has been cloned so it can be baked into
     // JIT code.

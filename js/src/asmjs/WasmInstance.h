@@ -136,6 +136,9 @@ class Instance
 
 typedef UniquePtr<Instance> UniqueInstance;
 
+bool InitInstanceStaticData();
+void ShutDownInstanceStaticData();
+
 } // namespace wasm
 } // namespace js
 

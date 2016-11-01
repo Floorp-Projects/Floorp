@@ -1319,11 +1319,23 @@ nsDragService::GetSourceList(void)
                         MOZ_LOG(sDragLm, LogLevel::Debug,
                                ("adding target %s\n", target->target));
                         targetArray.AppendElement(target);
+
+                        // If there is a file, add the text/uri-list type.
+                        if (strcmp(flavorStr, kFileMime) == 0) {
+                            GtkTargetEntry *urilistTarget =
+                             (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
+                            urilistTarget->target = g_strdup(gTextUriListType);
+                            urilistTarget->flags = 0;
+                            MOZ_LOG(sDragLm, LogLevel::Debug,
+                                   ("automatically adding target %s\n",
+                                    urilistTarget->target));
+                            targetArray.AppendElement(urilistTarget);
+                        }
                         // Check to see if this is text/unicode.
                         // If it is, add text/plain
                         // since we automatically support text/plain
                         // if we support text/unicode.
-                        if (strcmp(flavorStr, kUnicodeMime) == 0) {
+                        else if (strcmp(flavorStr, kUnicodeMime) == 0) {
                             GtkTargetEntry *plainUTF8Target =
                              (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                             plainUTF8Target->target = g_strdup(gTextPlainUTF8Type);
@@ -1345,7 +1357,7 @@ nsDragService::GetSourceList(void)
                         // Check to see if this is the x-moz-url type.
                         // If it is, add _NETSCAPE_URL
                         // this is a type used by everybody.
-                        if (strcmp(flavorStr, kURLMime) == 0) {
+                        else if (strcmp(flavorStr, kURLMime) == 0) {
                             GtkTargetEntry *urlTarget =
                              (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                             urlTarget->target = g_strdup(gMozUrlType);
@@ -1509,6 +1521,38 @@ CreateUriList(nsIArray *items, gchar **text, gint *length)
                 if (tmpData) {
                     // this wasn't allocated with glib
                     free(tmpData);
+                }
+            } else {
+                // There is no uri available.  If there is a file available,
+                // create a uri from the file.
+                nsCOMPtr<nsISupports> data;
+                rv = item->GetTransferData(kFileMime,
+                                           getter_AddRefs(data),
+                                           &tmpDataLen);
+                if (NS_SUCCEEDED(rv)) {
+                    nsCOMPtr<nsIFile> file = do_QueryInterface(data);
+                    if (!file) {
+                        // Sometimes the file is wrapped in a
+                        // nsISupportsInterfacePointer. See bug 1310193 for
+                        // removing this distinction.
+                        nsCOMPtr<nsISupportsInterfacePointer> ptr =
+                          do_QueryInterface(data);
+                        if (ptr) {
+                            ptr->GetData(getter_AddRefs(data));
+                            file = do_QueryInterface(data);
+                        }
+                    }
+
+                    if (file) {
+                        nsCOMPtr<nsIURI> fileURI;
+                        NS_NewFileURI(getter_AddRefs(fileURI), file);
+                        if (fileURI) {
+                            nsAutoCString uristring;
+                            fileURI->GetSpec(uristring);
+                            g_string_append(uriList, uristring.get());
+                            g_string_append(uriList, "\r\n");
+                        }
+                    }
                 }
             }
         }

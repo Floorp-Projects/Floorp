@@ -436,6 +436,8 @@ pref("browser.tabs.drawInTitlebar", true);
 pref("browser.tabs.selectOwnerOnClose", true);
 
 pref("browser.tabs.showAudioPlayingIcon", true);
+// This should match Chromium's audio indicator delay.
+pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
 
 pref("browser.tabs.dontfocusfordialogs", true);
 
@@ -1125,11 +1127,7 @@ pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 // user's tabs and bookmarks. Note this pref is also synced.
 pref("services.sync.syncedTabs.showRemoteIcons", true);
 
-#ifdef NIGHTLY_BUILD
 pref("services.sync.sendTabToDevice.enabled", true);
-#else
-pref("services.sync.sendTabToDevice.enabled", false);
-#endif
 
 // Developer edition preferences
 #ifdef MOZ_DEV_EDITION
@@ -1526,11 +1524,11 @@ pref("signon.schemeUpgrades", true);
 // For non-Linux, this feature is only enabled up to early Beta.
 #ifdef UNIX_BUT_NOT_MAC
 #if defined(NIGHTLY_BUILD)
-pref("print.user_simplify_page", true);
+pref("print.use_simplify_page", true);
 #endif
 #else
 #if defined(EARLY_BETA_OR_EARLIER)
-pref("print.user_simplify_page", true);
+pref("print.use_simplify_page", true);
 #endif
 #endif
 
@@ -1541,10 +1539,10 @@ pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https:
 // Whether or not the browser should scan for unsubmitted
 // crash reports, and then show a notification for submitting
 // those reports.
-#ifdef RELEASE_OR_BETA
-pref("browser.crashReports.unsubmittedCheck.enabled", false);
-#else
+#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.crashReports.unsubmittedCheck.enabled", true);
+#else
+pref("browser.crashReports.unsubmittedCheck.enabled", false);
 #endif
 
 // chancesUntilSuppress is how many times we'll show the unsubmitted

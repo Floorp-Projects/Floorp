@@ -12,6 +12,8 @@
 #include "SkReadBuffer.h"
 #include "SkWriteBuffer.h"
 
+class GrFragmentProcessor;
+
 class SkLocalMatrixShader : public SkShader {
 public:
     SkLocalMatrixShader(SkShader* proxy, const SkMatrix& localMatrix)
@@ -24,15 +26,7 @@ public:
     }
 
 #if SK_SUPPORT_GPU
-    const GrFragmentProcessor* asFragmentProcessor(GrContext* context, const SkMatrix& viewM,
-                                                   const SkMatrix* localMatrix,
-                                                   SkFilterQuality fq) const override {
-        SkMatrix tmp = this->getLocalMatrix();
-        if (localMatrix) {
-            tmp.preConcat(*localMatrix);
-        }
-        return fProxyShader->asFragmentProcessor(context, viewM, &tmp, fq);
-    }
+    sk_sp<GrFragmentProcessor> asFragmentProcessor(const AsFPArgs&) const override;
 #endif
 
     SkShader* refAsALocalMatrixShader(SkMatrix* localMatrix) const override {
@@ -53,9 +47,15 @@ protected:
         return fProxyShader->contextSize(rec);
     }
 
+    SkImage* onIsAImage(SkMatrix* matrix, TileMode* mode) const override {
+        return fProxyShader->isAImage(matrix, mode);
+    }
+
+#ifdef SK_SUPPORT_LEGACY_SHADER_ISABITMAP
     bool onIsABitmap(SkBitmap* bitmap, SkMatrix* matrix, TileMode* mode) const override {
         return fProxyShader->isABitmap(bitmap, matrix, mode);
     }
+#endif
 
 private:
     SkAutoTUnref<SkShader> fProxyShader;

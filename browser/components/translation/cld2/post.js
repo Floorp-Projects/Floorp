@@ -125,7 +125,7 @@ for (let code of Object.keys(Encodings)) {
 
 addOnPreMain(function() {
 
-  onmessage = function(aMsg){
+  onmessage = function(aMsg) {
     let data = aMsg['data'];
 
     let langInfo;

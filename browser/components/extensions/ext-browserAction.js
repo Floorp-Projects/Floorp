@@ -26,6 +26,15 @@ const POPUP_PRELOAD_TIMEOUT_MS = 200;
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+function isAncestorOrSelf(target, node) {
+  for (; node; node = node.parentNode) {
+    if (node === target) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // WeakMap[Extension -> BrowserAction]
 var browserActionMap = new WeakMap();
 
@@ -87,6 +96,8 @@ BrowserAction.prototype = {
       onDestroyed: document => {
         let view = document.getElementById(this.viewId);
         if (view) {
+          this.clearPopup();
+          CustomizableUI.hidePanelForNode(view);
           view.remove();
         }
       },
@@ -198,7 +209,8 @@ BrowserAction.prototype = {
           // If we have a pending pre-loaded popup, cancel it after we've waited
           // long enough that we can be relatively certain it won't be opening.
           if (this.pendingPopup) {
-            if (event.target === this.widget.forWindow(window).node) {
+            let {node} = this.widget.forWindow(window);
+            if (isAncestorOrSelf(node, event.originalTarget)) {
               this.pendingPopupTimeout = setTimeout(() => this.clearPopup(),
                                                     POPUP_PRELOAD_TIMEOUT_MS);
             } else {
@@ -447,9 +459,11 @@ extensions.registerSchemaAPI("browserAction", "addon_parent", context => {
       setIcon: function(details) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
 
+        // Note: the caller in the child process has already normalized
+        // `details` to not contain an `imageData` property, so the icon can
+        // safely be normalized here without errors.
         let icon = IconDetails.normalize(details, extension, context);
         BrowserAction.for(extension).setProperty(tab, "icon", icon);
-        return Promise.resolve();
       },
 
       setBadgeText: function(details) {

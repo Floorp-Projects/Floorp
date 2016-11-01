@@ -86,7 +86,7 @@ function checkNode(node, schema) {
   var tag = schema.shift();
   is(node.localName, tag, "Element should have expected tag");
   while (schema.length) {
-    var val = schema.shift();
+    let val = schema.shift();
     if (Array.isArray(val))
       var childSchema = val;
     else
@@ -98,7 +98,7 @@ function checkNode(node, schema) {
     };
     for (var name in attrSchema) {
       var [ns, nsName] = name.split(":");
-      var val = nsName ? node.getAttributeNS(nsTable[ns], nsName) :
+      let val = nsName ? node.getAttributeNS(nsTable[ns], nsName) :
                 node.getAttribute(name);
       is(val, attrSchema[name], "Attribute " + name + " should match");
     }

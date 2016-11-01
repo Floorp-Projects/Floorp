@@ -1,6 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* exported PREF_EXPERIMENTS_ENABLED, PREF_LOGGING_LEVEL, PREF_LOGGING_DUMP
+            PREF_MANIFEST_URI, PREF_FETCHINTERVAL, EXPERIMENT1_ID,
+            EXPERIMENT1_NAME, EXPERIMENT1_XPI_SHA1, EXPERIMENT1A_NAME,
+            EXPERIMENT1A_XPI_SHA1, EXPERIMENT2_ID, EXPERIMENT2_XPI_SHA1,
+            EXPERIMENT3_ID, EXPERIMENT4_ID, FAKE_EXPERIMENTS_1,
+            FAKE_EXPERIMENTS_2, gAppInfo, removeCacheFile, defineNow,
+            futureDate, dateToSeconds, loadAddonManager, promiseRestartManager,
+            startAddonManagerOnly, getExperimentAddons, replaceExperiments */
+
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");

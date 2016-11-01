@@ -290,7 +290,8 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       // variable, or an assignment of a PNK_GENERATOR node to the '.generator'
       // local, for a synthesized, prepended initial yield.  Yum!
       case PNK_YIELD_STAR:
-      case PNK_YIELD: {
+      case PNK_YIELD:
+      case PNK_AWAIT: {
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         MOZ_ASSERT(pn->pn_right);
         MOZ_ASSERT(pn->pn_right->isKind(PNK_NAME) ||

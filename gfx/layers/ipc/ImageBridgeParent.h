@@ -113,17 +113,6 @@ public:
 
   virtual bool IsSameProcess() const override;
 
-  virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) override;
-
-  void SendFenceHandleToNonRecycle(PTextureParent* aTexture);
-
-  void NotifyNotUsedToNonRecycle(PTextureParent* aTexture,
-                                 uint64_t aTransactionId);
-
-  static void NotifyNotUsedToNonRecycle(base::ProcessId aChildProcessId,
-                                        PTextureParent* aTexture,
-                                        uint64_t aTransactionId);
-
   using CompositableParentManager::SetAboutToSendAsyncMessages;
   static void SetAboutToSendAsyncMessages(base::ProcessId aChildProcessId);
 

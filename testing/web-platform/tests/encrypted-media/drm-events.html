@@ -2,7 +2,6 @@
 <html>
   <head>
     <meta charset=utf-8>
-    <meta name="timeout" content="long">
     <title>Encrypted Media Extensions: Events with DRM</title>
     <link rel="help" href="https://w3c.github.io/encrypted-media/">
 
@@ -43,7 +42,7 @@
                 initDataType,
                 initData;
 
-            var contentWithExplicitInitData = supported.filter( function( s ) { return s.content.initDataType; } );
+            var contentWithExplicitInitData = supported.filter( function( s ) { return s.content.keys && s.content.initDataType; } );
             if ( contentWithExplicitInitData.length > 0 )
             {
                 content = contentWithExplicitInitData[ 0 ].content;

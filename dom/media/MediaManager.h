@@ -94,6 +94,7 @@ protected:
   nsString mName;
   nsString mID;
   nsString mRawID;
+  bool mScary;
   dom::MediaSourceEnum mMediaSource;
   RefPtr<MediaEngineSource> mSource;
   RefPtr<MediaEngineSource::AllocationHandle> mAllocationHandle;

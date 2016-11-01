@@ -29,6 +29,8 @@ chrome.jar:
   content/browser.js                   (content/browser.js)
   content/geckoview.xul                (content/geckoview.xul)
   content/geckoview.js                 (content/geckoview.js)
+  content/PresentationView.xul         (content/PresentationView.xul)
+  content/PresentationView.js          (content/PresentationView.js)
   content/bindings/checkbox.xml        (content/bindings/checkbox.xml)
   content/bindings/settings.xml        (content/bindings/settings.xml)
   content/netError.xhtml               (content/netError.xhtml)
@@ -48,7 +50,6 @@ chrome.jar:
   content/FeedHandler.js               (content/FeedHandler.js)
   content/Feedback.js                  (content/Feedback.js)
   content/Linkify.js                   (content/Linkify.js)
-  content/ZoomHelper.js                (content/ZoomHelper.js)
   content/CastingApps.js               (content/CastingApps.js)
   content/RemoteDebugger.js            (content/RemoteDebugger.js)
 #ifdef MOZ_SERVICES_HEALTHREPORT

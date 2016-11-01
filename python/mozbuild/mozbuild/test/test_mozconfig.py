@@ -379,22 +379,25 @@ class TestMozconfigLoader(unittest.TestCase):
 
     def test_read_modify_variables(self):
         """Variables modified by mozconfig are detected."""
-        os.environ[b'CC'] = b'/usr/bin/gcc'
+        old_path = os.path.realpath(b'/usr/bin/gcc')
+        new_path = os.path.realpath(b'/usr/local/bin/clang')
+        os.environ[b'CC'] = old_path
 
         with NamedTemporaryFile(mode='w') as mozconfig:
-            mozconfig.write('CC=/usr/local/bin/clang\n')
+            mozconfig.write('CC="%s"\n' % new_path)
             mozconfig.flush()
 
             result = self.get_loader().read_mozconfig(mozconfig.name)
 
             self.assertEqual(result['vars']['modified'], {})
             self.assertEqual(result['env']['modified'], {
-                'CC': ('/usr/bin/gcc', '/usr/local/bin/clang')
+                'CC': (old_path, new_path)
             })
 
     def test_read_unmodified_variables(self):
         """Variables modified by mozconfig are detected."""
-        os.environ[b'CC'] = b'/usr/bin/gcc'
+        cc_path = os.path.realpath(b'/usr/bin/gcc')
+        os.environ[b'CC'] = cc_path
 
         with NamedTemporaryFile(mode='w') as mozconfig:
             mozconfig.flush()
@@ -403,12 +406,13 @@ class TestMozconfigLoader(unittest.TestCase):
 
             self.assertEqual(result['vars']['unmodified'], {})
             self.assertEqual(result['env']['unmodified'], {
-                'CC': '/usr/bin/gcc'
+                'CC': cc_path
             })
 
     def test_read_removed_variables(self):
         """Variables unset by the mozconfig are detected."""
-        os.environ[b'CC'] = b'/usr/bin/clang'
+        cc_path = os.path.realpath(b'/usr/bin/clang')
+        os.environ[b'CC'] = cc_path
 
         with NamedTemporaryFile(mode='w') as mozconfig:
             mozconfig.write('unset CC\n')
@@ -418,7 +422,7 @@ class TestMozconfigLoader(unittest.TestCase):
 
             self.assertEqual(result['vars']['removed'], {})
             self.assertEqual(result['env']['removed'], {
-                'CC': '/usr/bin/clang'})
+                'CC': cc_path})
 
     def test_read_multiline_variables(self):
         """Ensure multi-line variables are captured properly."""

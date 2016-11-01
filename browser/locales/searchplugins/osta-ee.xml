@@ -1,0 +1,14 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Osta</ShortName>
+<Description>Osta</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAACXBIWXMAAAsTAAALEwEAmpwYAAAA%2BklEQVQoFWP8%2F%2F8%2FAymAiRTFILXYNfw8OuFDk%2BDf5xcwjcOi4f%2BPDz%2FPLQSSn2c7YupB14CsDsj%2BtrUQzRIWZD6yaqA4l3c%2Fq1YAsgIgG6EBTTWLkgO7dQGaaiCXERKsQKt%2FX9vw7%2F0DZBVsRgncIfORRYBsqB%2F%2Bf%2F8AV83hXM%2FIIQCU%2B3VuwZclgUCbkfVANQBNApoHlAA6g9O5gSdmPUQR0FpgWCHrgToJIg0MfqDTmSUNgFyg8V%2FXJELEgSK8qfsh1qJogEjDSWQ9QIN4U%2FYDpdDjAa4ayMDqaQZgKOEHv66u%2F7an%2Ft%2F39xBl%2BJyEbBucjc9JcEXIDAC2WqE7XED1KgAAAABJRU5ErkJggg%3D%3D</Image>
+<Url type="text/html" method="GET" template="http://www.osta.ee/firefox/" resultdomain="osta.ee">
+  <Param name="keyword" value="{searchTerms}"/>
+</Url>
+<SearchForm>http://www.osta.ee/</SearchForm>
+</SearchPlugin>

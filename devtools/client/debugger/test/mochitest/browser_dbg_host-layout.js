@@ -84,7 +84,7 @@ function getHost(host) {
 
 function resizeToolboxWindow(panel, host) {
   let sizeOption = host.split(":")[1];
-  let win = panel._toolbox._host._window;
+  let win = panel._toolbox.win.parent;
 
   // should be the same value as BREAKPOINT_SMALL_WINDOW_WIDTH in debugger-view.js
   let breakpoint = 850;
@@ -101,7 +101,7 @@ function resizeToolboxWindow(panel, host) {
 function resizeAndWaitForLayoutChange(panel, width) {
     info("Updating toolbox window width to " + width);
 
-    let win = panel._toolbox._host._window;
+    let win = panel._toolbox.win.parent;
     let gDebugger = panel.panelWin;
 
     win.resizeTo(width, window.screen.availHeight);
@@ -125,17 +125,11 @@ function testHost(aPanel, aHostType, aLayoutType) {
       "The workers and sources pane's parent is correct for the horizontal layout.");
     is(gView._instrumentsPane.parentNode.id, "editor-and-instruments-pane",
       "The instruments pane's parent is correct for the horizontal layout.");
-    is(gDebugger.document.getElementById("promise-debugger-pane").parentNode.id,
-      "debugger-content",
-      "The promise pane's parent is correct for the horizontal layout.");
   } else {
     is(gView._workersAndSourcesPane.parentNode.id, "vertical-layout-panes-container",
       "The workers and sources pane's parent is correct for the vertical layout.");
     is(gView._instrumentsPane.parentNode.id, "vertical-layout-panes-container",
       "The instruments pane's parent is correct for the vertical layout.");
-    is(gDebugger.document.getElementById("promise-debugger-pane").parentNode.id,
-      "debugger-content",
-      "The promise pane's parent is correct for the horizontal layout.");
   }
 
   let widgets = gDebugger.document.getElementById("debugger-widgets").childNodes;
@@ -148,7 +142,7 @@ function testHost(aPanel, aHostType, aLayoutType) {
   if (aLayoutType == "horizontal") {
     is(widgets.length, 5, // 1 pane, 1 content box, 2 splitters and a phantom box.
       "Found the correct number of debugger widgets.");
-    is(content.length, 3, // 2 panes, 1 splitter.
+    is(content.length, 1, // 1 pane
       "Found the correct number of debugger content.");
     is(editorPane.length, 3, // 2 panes, 1 splitter
       "Found the correct number of debugger panes.");
@@ -157,7 +151,7 @@ function testHost(aPanel, aHostType, aLayoutType) {
   } else {
     is(widgets.length, 4, // 1 content box, 2 splitters and a phantom box.
       "Found the correct number of debugger widgets.");
-    is(content.length, 3, // 2 panes, 1 splitter.
+    is(content.length, 1, // 1 pane
       "Found the correct number of debugger content.");
     is(editorPane.length, 2, // 1 pane, 1 splitter
       "Found the correct number of debugger panes.");

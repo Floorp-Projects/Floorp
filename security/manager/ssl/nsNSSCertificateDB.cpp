@@ -1475,10 +1475,6 @@ VerifyCertAtTime(nsIX509Cert* aCert,
   *aHasEVPolicy = false;
   *_retval = PR_UNKNOWN_ERROR;
 
-#ifndef MOZ_NO_EV_CERTS
-  EnsureIdentityInfoLoaded();
-#endif
-
   UniqueCERTCertificate nssCert(aCert->GetCert());
   if (!nssCert) {
     return NS_ERROR_INVALID_ARG;
@@ -1501,6 +1497,7 @@ VerifyCertAtTime(nsIX509Cert* aCert,
                                                resultChain,
                                                false, // don't save intermediates
                                                aFlags,
+                                               nullptr, // firstPartyDomain
                                                &evOidPolicy);
   } else {
     result = certVerifier->VerifyCert(nssCert.get(), aUsage, aTime,
@@ -1510,6 +1507,7 @@ VerifyCertAtTime(nsIX509Cert* aCert,
                                       aFlags,
                                       nullptr, // stapledOCSPResponse
                                       nullptr, // sctsFromTLSExtension
+                                      nullptr, // firstPartyDomain
                                       &evOidPolicy);
   }
 

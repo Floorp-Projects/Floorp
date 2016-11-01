@@ -11,8 +11,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource:///modules/MigrationUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm"); /* globals OS */
+Cu.import("resource:///modules/MigrationUtils.jsm"); /* globals MigratorPrototype */
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
@@ -109,7 +109,7 @@ Bookmarks.prototype = {
     return this._file.exists() && this._file.isReadable();
   },
 
-  migrate: function (aCallback) {
+  migrate(aCallback) {
     return Task.spawn(function* () {
       let idToGuid = new Map();
       let folderGuid = PlacesUtils.bookmarks.toolbarGuid;
@@ -137,11 +137,11 @@ Bookmarks.prototype = {
            SELECT id, parent_id, is_folder, title, url FROM bookmark WHERE id`);
 
         for (let row of rows) {
-          let id = parseInt(row.getResultByName("id"), 10),
-              parent_id = parseInt(row.getResultByName("parent_id"), 10),
-              is_folder = parseInt(row.getResultByName("is_folder"), 10),
-              title = row.getResultByName("title"),
-              url = row.getResultByName("url");
+          let id = parseInt(row.getResultByName("id"), 10);
+          let parent_id = parseInt(row.getResultByName("parent_id"), 10);
+          let is_folder = parseInt(row.getResultByName("is_folder"), 10);
+          let title = row.getResultByName("title");
+          let url = row.getResultByName("url");
 
           let parentGuid = idToGuid.get(parent_id) || idToGuid.get("fallback");
           if (!parentGuid) {
@@ -213,8 +213,10 @@ Object.defineProperty(Qihoo360seProfileMigrator.prototype, "sourceProfiles", {
     if ("__sourceProfiles" in this)
       return this.__sourceProfiles;
 
-    if (!this._usersDir)
-      return this.__sourceProfiles = [];
+    if (!this._usersDir) {
+      this.__sourceProfiles = [];
+      return this.__sourceProfiles;
+    }
 
     let profiles = [];
     let noLoggedInUser = true;
@@ -276,10 +278,11 @@ Object.defineProperty(Qihoo360seProfileMigrator.prototype, "sourceProfiles", {
       });
     }
 
-    return this.__sourceProfiles = profiles.filter(profile => {
+    this.__sourceProfiles = profiles.filter(profile => {
       let resources = this.getResources(profile);
       return resources && resources.length > 0;
     });
+    return this.__sourceProfiles;
   }
 });
 
@@ -309,7 +312,7 @@ Qihoo360seProfileMigrator.prototype.getLastUsedDate = function() {
     return Promise.resolve(new Date(0));
   }
   let datePromises = bookmarksPaths.map(path => {
-    return OS.File.stat(path).catch(_ => null).then(info => {
+    return OS.File.stat(path).catch(() => null).then(info => {
       return info ? info.lastModificationDate : 0;
     });
   });

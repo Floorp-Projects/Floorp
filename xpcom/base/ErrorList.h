@@ -606,11 +606,8 @@
   /* 17: NS_ERROR_MODULE_EDITOR */
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_EDITOR
-  ERROR(NS_ERROR_EDITOR_NO_SELECTION,  FAILURE(1)),
-  ERROR(NS_ERROR_EDITOR_NO_TEXTNODE,   FAILURE(2)),
-  ERROR(NS_FOUND_TARGET,               FAILURE(3)),
-
-  ERROR(NS_EDITOR_ELEMENT_NOT_FOUND,   SUCCESS(1)),
+  ERROR(NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND,   SUCCESS(1)),
+  ERROR(NS_SUCCESS_EDITOR_FOUND_TARGET,        SUCCESS(2)),
 #undef MODULE
 
 
@@ -696,6 +693,8 @@
   ERROR(NS_ERROR_SRI_CORRUPT,                      FAILURE(200)),
   ERROR(NS_ERROR_SRI_DISABLED,                     FAILURE(201)),
   ERROR(NS_ERROR_SRI_NOT_ELIGIBLE,                 FAILURE(202)),
+  ERROR(NS_ERROR_SRI_UNEXPECTED_HASH_TYPE,         FAILURE(203)),
+  ERROR(NS_ERROR_SRI_IMPORT,                       FAILURE(204)),
 
   /* CMS specific nsresult error codes.  Note: the numbers used here correspond
    * to the values in nsICMSMessageErrors.idl. */

@@ -32,6 +32,8 @@ struct KeywordInfo;
 namespace js {
 namespace frontend {
 
+class AutoAwaitIsKeyword;
+
 struct TokenPos {
     uint32_t    begin;  // Offset of the token's first char.
     uint32_t    end;    // Offset of 1 past the token's last char.
@@ -237,18 +239,9 @@ struct Token
     }
 };
 
-struct CompileError {
-    JSErrorReport report;
-    char* message;
-    CompileError() : message(nullptr) {}
-    ~CompileError();
+class CompileError : public JSErrorReport {
+public:
     void throwError(JSContext* cx);
-
-  private:
-    // CompileError owns raw allocated memory, so disable assignment and copying
-    // for safety.
-    void operator=(const CompileError&) = delete;
-    CompileError(const CompileError&) = delete;
 };
 
 // Ideally, tokenizing would be entirely independent of context.  But the
@@ -366,6 +359,7 @@ class MOZ_STACK_CLASS TokenStream
     bool isEOF() const { return flags.isEOF; }
     bool sawOctalEscape() const { return flags.sawOctalEscape; }
     bool hadError() const { return flags.hadError; }
+    void clearSawOctalEscape() { flags.sawOctalEscape = false; }
 
     // TokenStream-specific error reporters.
     bool reportError(unsigned errorNumber, ...);
@@ -437,6 +431,9 @@ class MOZ_STACK_CLASS TokenStream
           : isEOF(), isDirtyLine(), sawOctalEscape(), hadError(), hitOOM()
         {}
     };
+
+    bool awaitIsKeyword = false;
+    friend class AutoAwaitIsKeyword;
 
   public:
     typedef Token::Modifier Modifier;
@@ -1021,6 +1018,25 @@ class MOZ_STACK_CLASS TokenStream
     ExclusiveContext*   const cx;
     bool                mutedErrors;
     StrictModeGetter*   strictModeGetter;  // used to test for strict mode
+};
+
+class MOZ_STACK_CLASS AutoAwaitIsKeyword
+{
+private:
+    TokenStream* ts_;
+    bool oldAwaitIsKeyword_;
+
+public:
+    AutoAwaitIsKeyword(TokenStream* ts, bool awaitIsKeyword) {
+        ts_ = ts;
+        oldAwaitIsKeyword_ = ts_->awaitIsKeyword;
+        ts_->awaitIsKeyword = awaitIsKeyword;
+    }
+
+    ~AutoAwaitIsKeyword() {
+        ts_->awaitIsKeyword = oldAwaitIsKeyword_;
+        ts_ = nullptr;
+    }
 };
 
 extern const char*

@@ -1064,6 +1064,67 @@ struct EmptyShape : public js::Shape
     ensureInitialCustomShape(ExclusiveContext* cx, Handle<ObjectSubclass*> obj);
 };
 
+// InitialShapeProto stores either:
+//
+// * A TaggedProto (or ReadBarriered<TaggedProto>).
+//
+// * A JSProtoKey. This is used instead of the TaggedProto if the proto is one
+//   of the global's builtin prototypes. For instance, if the proto is the
+//   initial Object.prototype, we use key_ = JSProto_Object, proto_ = nullptr.
+//
+// Using the JSProtoKey here is an optimization that lets us share more shapes
+// across compartments within a zone.
+template <typename PtrType>
+class InitialShapeProto
+{
+    template <typename T> friend class InitialShapeProto;
+
+    JSProtoKey key_;
+    PtrType proto_;
+
+  public:
+    InitialShapeProto()
+      : key_(JSProto_LIMIT), proto_()
+    {}
+
+    InitialShapeProto(JSProtoKey key, TaggedProto proto)
+      : key_(key), proto_(proto)
+    {}
+
+    template <typename T>
+    explicit InitialShapeProto(const InitialShapeProto<T>& other)
+      : key_(other.key()), proto_(other.proto_)
+    {}
+
+    explicit InitialShapeProto(TaggedProto proto)
+      : key_(JSProto_LIMIT), proto_(proto)
+    {}
+    explicit InitialShapeProto(JSProtoKey key)
+      : key_(key), proto_(nullptr)
+    {
+        MOZ_ASSERT(key < JSProto_LIMIT);
+    }
+
+    HashNumber hashCode() const {
+        return proto_.hashCode() ^ HashNumber(key_);
+    }
+    template <typename T>
+    bool match(const InitialShapeProto<T>& other) const {
+        return key_ == other.key_ &&
+               proto_.uniqueId() == other.proto_.unbarrieredGet().uniqueId();
+    }
+
+    JSProtoKey key() const {
+        return key_;
+    }
+    const PtrType& proto() const {
+        return proto_;
+    }
+    void setProto(TaggedProto proto) {
+        proto_ = proto;
+    }
+};
+
 /*
  * Entries for the per-zone initialShapes set indexing initial shapes for
  * objects in the zone and the associated types.
@@ -1081,25 +1142,24 @@ struct InitialShapeEntry
      * Matching prototype for the entry. The shape of an object determines its
      * prototype, but the prototype cannot be determined from the shape itself.
      */
-    ReadBarriered<TaggedProto> proto;
+    using ShapeProto = InitialShapeProto<ReadBarriered<TaggedProto>>;
+    ShapeProto proto;
 
     /* State used to determine a match on an initial shape. */
     struct Lookup {
+        using ShapeProto = InitialShapeProto<TaggedProto>;
         const Class* clasp;
-        TaggedProto proto;
+        ShapeProto proto;
         uint32_t nfixed;
         uint32_t baseFlags;
 
-        Lookup(const Class* clasp, TaggedProto proto, uint32_t nfixed, uint32_t baseFlags)
+        Lookup(const Class* clasp, ShapeProto proto, uint32_t nfixed, uint32_t baseFlags)
           : clasp(clasp), proto(proto), nfixed(nfixed), baseFlags(baseFlags)
         {}
     };
 
     inline InitialShapeEntry();
-    inline InitialShapeEntry(const ReadBarriered<Shape*>& shape,
-                             const ReadBarriered<TaggedProto>& proto);
-
-    inline Lookup getLookup() const;
+    inline InitialShapeEntry(Shape* shape, const Lookup::ShapeProto& proto);
 
     static inline HashNumber hash(const Lookup& lookup);
     static inline bool match(const InitialShapeEntry& key, const Lookup& lookup);
@@ -1107,9 +1167,9 @@ struct InitialShapeEntry
 
     bool needsSweep() {
         Shape* ushape = shape.unbarrieredGet();
-        JSObject* protoObj = proto.raw();
+        JSObject* protoObj = proto.proto().raw();
         return (gc::IsAboutToBeFinalizedUnbarriered(&ushape) ||
-                (proto.isObject() && gc::IsAboutToBeFinalizedUnbarriered(&protoObj)));
+                (proto.proto().isObject() && gc::IsAboutToBeFinalizedUnbarriered(&protoObj)));
     }
 };
 

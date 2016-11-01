@@ -42,6 +42,7 @@ ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2);
 // static
 const DOMTokenListSupportedToken HTMLAnchorElement::sSupportedRelValues[] = {
   "noreferrer",
+  "noopener",
   nullptr
 };
 
@@ -346,10 +347,11 @@ HTMLAnchorElement::ToString(nsAString& aSource)
   return GetHref(aSource);
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 HTMLAnchorElement::GetPing(nsAString& aValue)
 {
-  return GetURIListAttr(nsGkAtoms::ping, aValue);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

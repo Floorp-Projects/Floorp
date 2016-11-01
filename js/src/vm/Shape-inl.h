@@ -175,9 +175,7 @@ GetShapeAttributes(JSObject* obj, Shape* shape)
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         if (obj->is<TypedArrayObject>())
             return JSPROP_ENUMERATE | JSPROP_PERMANENT;
-        if (obj->as<NativeObject>().getElementsHeader()->isFrozen())
-            return JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY;
-        return JSPROP_ENUMERATE;
+        return obj->as<NativeObject>().getElementsHeader()->elementAttributes();
     }
 
     return shape->attributes();

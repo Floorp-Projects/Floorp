@@ -41,22 +41,19 @@ InternetCiter::GetCiteString(const nsAString& aInString,
   aInString.BeginReading(beginIter);
   aInString.EndReading(endIter);
   while(beginIter!= endIter &&
-        (*endIter == cr ||
-         *endIter == nl))
-  {
+        (*endIter == cr || *endIter == nl)) {
     --endIter;
   }
 
   // Loop over the string:
-  while (beginIter != endIter)
-  {
-    if (uch == nl)
-    {
+  while (beginIter != endIter) {
+    if (uch == nl) {
       aOutString.Append(gt);
       // No space between >: this is ">>> " style quoting, for
       // compatibility with RFC 2646 and format=flowed.
-      if (*beginIter != gt)
+      if (*beginIter != gt) {
         aOutString.Append(space);
+      }
     }
 
     uch = *beginIter;
@@ -65,9 +62,9 @@ InternetCiter::GetCiteString(const nsAString& aInString,
     aOutString += uch;
   }
 
-  if (uch != nl)
+  if (uch != nl) {
     aOutString += nl;
-
+  }
   return NS_OK;
 }
 
@@ -77,40 +74,42 @@ InternetCiter::StripCitesAndLinebreaks(const nsAString& aInString,
                                        bool aLinebreaksToo,
                                        int32_t* aCiteLevel)
 {
-  if (aCiteLevel)
+  if (aCiteLevel) {
     *aCiteLevel = 0;
+  }
 
   aOutString.Truncate();
   nsReadingIterator <char16_t> beginIter,endIter;
   aInString.BeginReading(beginIter);
   aInString.EndReading(endIter);
-  while (beginIter!= endIter)  // loop over lines
-  {
+  while (beginIter!= endIter) { // loop over lines
     // Clear out cites first, at the beginning of the line:
     int32_t thisLineCiteLevel = 0;
-    while (beginIter!= endIter && (*beginIter == gt || nsCRT::IsAsciiSpace(*beginIter)))
-    {
-      if (*beginIter == gt) ++thisLineCiteLevel;
+    while (beginIter!= endIter &&
+           (*beginIter == gt || nsCRT::IsAsciiSpace(*beginIter))) {
+      if (*beginIter == gt) {
+        ++thisLineCiteLevel;
+      }
       ++beginIter;
     }
-
     // Now copy characters until line end:
-    while (beginIter != endIter && (*beginIter != '\r' && *beginIter != '\n'))
-    {
+    while (beginIter != endIter && (*beginIter != '\r' && *beginIter != '\n')) {
       aOutString.Append(*beginIter);
       ++beginIter;
     }
-    if (aLinebreaksToo)
+    if (aLinebreaksToo) {
       aOutString.Append(char16_t(' '));
-    else
+    } else {
       aOutString.Append(char16_t('\n'));    // DOM linebreaks, not NS_LINEBREAK
-      // Skip over any more consecutive linebreak-like characters:
-    while (beginIter != endIter && (*beginIter == '\r' || *beginIter == '\n'))
+    }
+    // Skip over any more consecutive linebreak-like characters:
+    while (beginIter != endIter && (*beginIter == '\r' || *beginIter == '\n')) {
       ++beginIter;
-
+    }
     // Done with this line -- update cite level
-    if (aCiteLevel && (thisLineCiteLevel > *aCiteLevel))
+    if (aCiteLevel && (thisLineCiteLevel > *aCiteLevel)) {
       *aCiteLevel = thisLineCiteLevel;
+    }
   }
   return NS_OK;
 }
@@ -124,10 +123,12 @@ InternetCiter::StripCites(const nsAString& aInString,
 
 static void AddCite(nsAString& aOutString, int32_t citeLevel)
 {
-  for (int32_t i = 0; i < citeLevel; ++i)
+  for (int32_t i = 0; i < citeLevel; ++i) {
     aOutString.Append(gt);
-  if (citeLevel > 0)
+  }
+  if (citeLevel > 0) {
     aOutString.Append(space);
+  }
 }
 
 static inline void
@@ -135,13 +136,12 @@ BreakLine(nsAString& aOutString, uint32_t& outStringCol,
           uint32_t citeLevel)
 {
   aOutString.Append(nl);
-  if (citeLevel > 0)
-  {
+  if (citeLevel > 0) {
     AddCite(aOutString, citeLevel);
     outStringCol = citeLevel + 1;
-  }
-  else
+  } else {
     outStringCol = 0;
+  }
 }
 
 static inline bool IsSpace(char16_t c)
@@ -177,26 +177,26 @@ InternetCiter::Rewrap(const nsAString& aInString,
   uint32_t citeLevel = 0;
   const nsPromiseFlatString &tString = PromiseFlatString(aInString);
   length = tString.Length();
-  while (posInString < length)
-  {
+  while (posInString < length) {
     // Get the new cite level here since we're at the beginning of a line
     uint32_t newCiteLevel = 0;
-    while (posInString < length && tString[posInString] == gt)
-    {
+    while (posInString < length && tString[posInString] == gt) {
       ++newCiteLevel;
       ++posInString;
-      while (posInString < length && tString[posInString] == space)
+      while (posInString < length && tString[posInString] == space) {
         ++posInString;
+      }
     }
-    if (posInString >= length)
+    if (posInString >= length) {
       break;
+    }
 
     // Special case: if this is a blank line, maintain a blank line
     // (retain the original paragraph breaks)
-    if (tString[posInString] == nl && !aOutString.IsEmpty())
-    {
-      if (aOutString.Last() != nl)
+    if (tString[posInString] == nl && !aOutString.IsEmpty()) {
+      if (aOutString.Last() != nl) {
         aOutString.Append(nl);
+      }
       AddCite(aOutString, newCiteLevel);
       aOutString.Append(nl);
 
@@ -208,31 +208,30 @@ InternetCiter::Rewrap(const nsAString& aInString,
     // If the cite level has changed, then start a new line with the
     // new cite level (but if we're at the beginning of the string,
     // don't bother).
-    if (newCiteLevel != citeLevel && posInString > newCiteLevel+1
-        && outStringCol != 0)
-    {
+    if (newCiteLevel != citeLevel && posInString > newCiteLevel+1 &&
+        outStringCol) {
       BreakLine(aOutString, outStringCol, 0);
     }
     citeLevel = newCiteLevel;
 
     // Prepend the quote level to the out string if appropriate
-    if (outStringCol == 0)
-    {
+    if (!outStringCol) {
       AddCite(aOutString, citeLevel);
       outStringCol = citeLevel + (citeLevel ? 1 : 0);
     }
     // If it's not a cite, and we're not at the beginning of a line in
     // the output string, add a space to separate new text from the
     // previous text.
-    else if (outStringCol > citeLevel)
-    {
+    else if (outStringCol > citeLevel) {
       aOutString.Append(space);
       ++outStringCol;
     }
 
     // find the next newline -- don't want to go farther than that
     int32_t nextNewline = tString.FindChar(nl, posInString);
-    if (nextNewline < 0) nextNewline = length;
+    if (nextNewline < 0) {
+      nextNewline = length;
+    }
 
     // For now, don't wrap unquoted lines at all.
     // This is because the plaintext edit window has already wrapped them
@@ -241,13 +240,11 @@ InternetCiter::Rewrap(const nsAString& aInString,
     // with a line that's too long and gets displayed as a lone word
     // on a line by itself.  Need special logic to detect this case
     // and break it ourselves without resorting to the line breaker.
-    if (citeLevel == 0)
-    {
+    if (!citeLevel) {
       aOutString.Append(Substring(tString, posInString,
                                   nextNewline-posInString));
       outStringCol += nextNewline - posInString;
-      if (nextNewline != (int32_t)length)
-      {
+      if (nextNewline != (int32_t)length) {
         aOutString.Append(nl);
         outStringCol = 0;
       }
@@ -257,26 +254,26 @@ InternetCiter::Rewrap(const nsAString& aInString,
 
     // Otherwise we have to use the line breaker and loop
     // over this line of the input string to get all of it:
-    while ((int32_t)posInString < nextNewline)
-    {
+    while ((int32_t)posInString < nextNewline) {
       // Skip over initial spaces:
-      while ((int32_t)posInString < nextNewline
-             && nsCRT::IsAsciiSpace(tString[posInString]))
+      while ((int32_t)posInString < nextNewline &&
+             nsCRT::IsAsciiSpace(tString[posInString])) {
         ++posInString;
+      }
 
       // If this is a short line, just append it and continue:
-      if (outStringCol + nextNewline - posInString <= aWrapCol-citeLevel-1)
-      {
+      if (outStringCol + nextNewline - posInString <= aWrapCol-citeLevel-1) {
         // If this short line is the final one in the in string,
         // then we need to include the final newline, if any:
-        if (nextNewline+1 == (int32_t)length && tString[nextNewline-1] == nl)
+        if (nextNewline+1 == (int32_t)length && tString[nextNewline-1] == nl) {
           ++nextNewline;
-
+        }
         // Trim trailing spaces:
         int32_t lastRealChar = nextNewline;
-        while ((uint32_t)lastRealChar > posInString
-               && nsCRT::IsAsciiSpace(tString[lastRealChar-1]))
+        while ((uint32_t)lastRealChar > posInString &&
+               nsCRT::IsAsciiSpace(tString[lastRealChar-1])) {
           --lastRealChar;
+        }
 
         aOutString += Substring(tString,
                                 posInString, lastRealChar - posInString);
@@ -290,25 +287,22 @@ InternetCiter::Rewrap(const nsAString& aInString,
       // We'll first look backwards from there for a place to break.
       // If it's already less than our current position,
       // then our line is already too long, so break now.
-      if (eol <= (int32_t)posInString)
-      {
+      if (eol <= (int32_t)posInString) {
         BreakLine(aOutString, outStringCol, citeLevel);
         continue;    // continue inner loop, with outStringCol now at bol
       }
 
       int32_t breakPt = 0;
+      // XXX Why this uses NS_ERROR_"BASE"?
       rv = NS_ERROR_BASE;
-      if (lineBreaker)
-      {
+      if (lineBreaker) {
         breakPt = lineBreaker->Prev(tString.get() + posInString,
                                  length - posInString, eol + 1 - posInString);
-        if (breakPt == NS_LINEBREAKER_NEED_MORE_TEXT)
-        {
+        if (breakPt == NS_LINEBREAKER_NEED_MORE_TEXT) {
           // if we couldn't find a breakpoint looking backwards,
           // and we're not starting a new line, then end this line
           // and loop around again:
-          if (outStringCol > citeLevel + 1)
-          {
+          if (outStringCol > citeLevel + 1) {
             BreakLine(aOutString, outStringCol, citeLevel);
             continue;    // continue inner loop, with outStringCol now at bol
           }
@@ -316,16 +310,17 @@ InternetCiter::Rewrap(const nsAString& aInString,
           // Else try looking forwards:
           breakPt = lineBreaker->Next(tString.get() + posInString,
                                       length - posInString, eol - posInString);
-          if (breakPt == NS_LINEBREAKER_NEED_MORE_TEXT) rv = NS_ERROR_BASE;
-          else rv = NS_OK;
+
+          rv = breakPt == NS_LINEBREAKER_NEED_MORE_TEXT ? NS_ERROR_BASE :
+                                                          NS_OK;
+        } else {
+          rv = NS_OK;
         }
-        else rv = NS_OK;
       }
       // If rv is okay, then breakPt is the place to break.
       // If we get out here and rv is set, something went wrong with line
       // breaker.  Just break the line, hard.
-      if (NS_FAILED(rv))
-      {
+      if (NS_FAILED(rv)) {
         breakPt = eol;
       }
 
@@ -337,9 +332,8 @@ InternetCiter::Rewrap(const nsAString& aInString,
       // don't force a break since the long word might be a url
       // and breaking it would make it unclickable on the other end.
       const int SLOP = 6;
-      if (outStringCol + breakPt > aWrapCol + SLOP
-          && outStringCol > citeLevel+1)
-      {
+      if (outStringCol + breakPt > aWrapCol + SLOP &&
+          outStringCol > citeLevel+1) {
         BreakLine(aOutString, outStringCol, citeLevel);
         continue;
       }
@@ -347,20 +341,22 @@ InternetCiter::Rewrap(const nsAString& aInString,
       nsAutoString sub (Substring(tString, posInString, breakPt));
       // skip newlines or whitespace at the end of the string
       int32_t subend = sub.Length();
-      while (subend > 0 && IsSpace(sub[subend-1]))
+      while (subend > 0 && IsSpace(sub[subend-1])) {
         --subend;
+      }
       sub.Left(sub, subend);
       aOutString += sub;
       outStringCol += sub.Length();
       // Advance past the whitespace which caused the wrap:
       posInString += breakPt;
-      while (posInString < length && IsSpace(tString[posInString]))
+      while (posInString < length && IsSpace(tString[posInString])) {
         ++posInString;
+      }
 
       // Add a newline and the quote level to the out string
-      if (posInString < length)    // not for the last line, though
+      if (posInString < length) {  // not for the last line, though
         BreakLine(aOutString, outStringCol, citeLevel);
-
+      }
     } // end inner loop within one line of aInString
   } // end outer loop over lines of aInString
 

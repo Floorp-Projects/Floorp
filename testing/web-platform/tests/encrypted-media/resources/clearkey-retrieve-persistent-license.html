@@ -2,8 +2,7 @@
 <html>
   <head>
     <meta charset=utf-8>
-    <meta name="timeout" content="long">
-    <title>Encrypted Media Extensions: Retrieve stored persistent-license</title>
+    <title>Encrypted Media Extensions: persistent-license, retrieve and playback, ClearKey</title>
     <link rel="help" href="https://w3c.github.io/encrypted-media/">
 
     <!-- Helper scripts for Encrypted Media Extensions tests  -->
@@ -11,9 +10,6 @@
     <script src=/encrypted-media/util/fetch.js></script>
     <script src=/encrypted-media/util/utf8.js></script>
     <script src=/encrypted-media/util/testmediasource.js></script>
-
-    <!-- Message handler for Clear Key keysystem -->
-    <script src=/encrypted-media/util/clearkey-messagehandler.js></script>
 
   </head>
   <body>
@@ -34,35 +30,23 @@
                                 sessionTypes: [ 'persistent-license' ] },
             assertions = [ ];
 
-            var _mediaKeySession;
+        var _mediaKeySession;
 
-            config.video = document.getElementById('videoelement');
-            config.messagehandler = (new MessageHandler( 'org.w3.clearkey')).messagehandler;
+        config.video = document.getElementById('videoelement');
 
-        function onFailure(error) {
-            assertions.push( { actual: false, expected: true, message: error.toString() } );
+        function onComplete() {
             window.opener.postMessage(assertions, '*');
         }
 
-        function onMessage( event )
-        {
-            assertions.push( { expected: true, actual: event instanceof window.MediaKeyMessageEvent, message: "event is of correct class" } );
-            assertions.push( { expected: 'message', actual: event.type, message: "event type is message" } );
-
-            assert_in_array( event.messageType,
-                            [ 'license-request', 'individualization-request', 'license-release' ] );
-
-            config.messagehandler( event.messageType, event.message )
-            .then( function( response ) {
-                event.target.update( response ).catch(onFailure);
-            });
+        function onFailure(error) {
+            assertions.push( { actual: false, expected: true, message: error.toString() } );
+            onComplete();
         }
 
         function onTimeupdate(event) {
-            if ( config.video.currentTime > ( config.duration || 5 ) ) {
+            if ( config.video.currentTime > ( config.duration || 1 ) ) {
                 config.video.pause();
                 _mediaKeySession.close()
-                window.opener.postMessage(assertions, '*');
             }
         }
 
@@ -73,8 +57,8 @@
             config.video.setMediaKeys(mediaKeys);
             config.video.addEventListener('timeupdate', onTimeupdate, true);
             _mediaKeySession = mediaKeys.createSession( 'persistent-license' );
-            _mediaKeySession.addEventListener( 'message', onMessage );
-            return _mediaKeySession.load( event.data.sessionId );
+            _mediaKeySession.closed.then(onComplete);
+            return _mediaKeySession.load(event.data.sessionId);
         }).then(function( success ) {
             if ( !success ) throw new DOMException( 'Could not load session' );
             return testmediasource(config);

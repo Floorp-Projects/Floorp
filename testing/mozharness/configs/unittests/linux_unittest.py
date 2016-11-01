@@ -3,7 +3,7 @@ import platform
 
 # OS Specifics
 ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
-BINARY_PATH = os.path.join(ABS_WORK_DIR, "firefox", "firefox-bin")
+BINARY_PATH = os.path.join(ABS_WORK_DIR, "application", "firefox", "firefox-bin")
 INSTALLER_PATH = os.path.join(ABS_WORK_DIR, "installer.tar.bz2")
 XPCSHELL_NAME = "xpcshell"
 EXE_SUFFIX = ""
@@ -305,7 +305,7 @@ config = {
     "default_blob_upload_servers": [
         "https://blobupload.elasticbeanstalk.com",
     ],
-    "unstructured_flavors": {"mochitest": [],
+    "unstructured_flavors": {"mochitest": ['jetpack'],
                             "xpcshell": [],
                             "gtest": [],
                             "mozmill": [],

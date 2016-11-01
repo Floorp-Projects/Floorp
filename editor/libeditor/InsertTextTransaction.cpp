@@ -47,16 +47,16 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 NS_IMETHODIMP
 InsertTextTransaction::DoTransaction()
 {
-  nsresult res = mTextNode->InsertData(mOffset, mStringToInsert);
-  NS_ENSURE_SUCCESS(res, res);
+  nsresult rv = mTextNode->InsertData(mOffset, mStringToInsert);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Only set selection to insertion point if editor gives permission
   if (mEditorBase.GetShouldTxnSetSelection()) {
     RefPtr<Selection> selection = mEditorBase.GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-    res = selection->Collapse(mTextNode,
-                              mOffset + mStringToInsert.Length());
-    NS_ASSERTION(NS_SUCCEEDED(res),
+    DebugOnly<nsresult> rv =
+      selection->Collapse(mTextNode, mOffset + mStringToInsert.Length());
+    NS_ASSERTION(NS_SUCCEEDED(rv),
                  "Selection could not be collapsed after insert");
   } else {
     // Do nothing - DOM Range gravity will adjust selection

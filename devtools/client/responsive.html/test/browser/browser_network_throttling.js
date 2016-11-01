@@ -25,9 +25,7 @@ addRDMTask(TEST_URL, function* ({ ui, manager }) {
   yield testThrottlingProfile(ui, "Regular 3G");
 
   // Test switching back to no throttling
-  let changed = once(ui, "network-throttling-changed");
   yield switchNetworkThrottling(ui, "No throttling");
-  yield changed;
   testNetworkThrottlingSelectorLabel(ui, "No throttling");
   yield testNetworkThrottlingState(ui, null);
 });
@@ -46,9 +44,7 @@ var testNetworkThrottlingState = Task.async(function* (ui, expected) {
 });
 
 var testThrottlingProfile = Task.async(function* (ui, profile) {
-  let changed = once(ui, "network-throttling-changed");
   yield switchNetworkThrottling(ui, profile);
-  yield changed;
   testNetworkThrottlingSelectorLabel(ui, profile);
   let data = throttlingProfiles.find(({ id }) => id == profile);
   let { download, upload, latency } = data;

@@ -193,5 +193,5 @@ if CONFIG['ENABLE_TESTS']:
                 '/media/mtransport/test',
             ]
 
-if CONFIG['LIBFUZZER']:
-  DIRS += ['/tools/fuzzing/libfuzzer']
+if CONFIG['FUZZING']:
+    DIRS += ['/tools/fuzzing']

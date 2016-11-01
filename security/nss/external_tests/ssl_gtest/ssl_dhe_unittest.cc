@@ -279,8 +279,7 @@ class TlsDamageDHYTest
       public ::testing::WithParamInterface<DamageDHYProfile> {
  public:
   TlsDamageDHYTest()
-      : TlsConnectTestBase(TlsConnectTestBase::ToMode(std::get<0>(GetParam())),
-                           std::get<1>(GetParam())) {}
+      : TlsConnectTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {}
 };
 
 TEST_P(TlsDamageDHYTest, DamageServerY) {
@@ -444,6 +443,54 @@ TEST_P(TlsConnectGeneric, Ffdhe3072) {
   client_->ConfigNamedGroups(groups);
 
   Connect();
+}
+
+// Even though the client doesn't have DHE groups enabled the server assumes it
+// does. Because the client doesn't require named groups it accepts FF3072 as
+// custom group.
+TEST_P(TlsConnectGenericPre13, NamedGroupMismatchPre13) {
+  EnableOnlyDheCiphers();
+  static const std::vector<SSLNamedGroup> server_groups = {ssl_grp_ffdhe_3072};
+  static const std::vector<SSLNamedGroup> client_groups = {
+      ssl_grp_ec_secp256r1};
+  server_->ConfigNamedGroups(server_groups);
+  client_->ConfigNamedGroups(client_groups);
+
+  Connect();
+  CheckKeys(ssl_kea_dh, ssl_grp_ffdhe_custom, ssl_auth_rsa_sign,
+            ssl_sig_rsa_pss_sha256);
+}
+
+// Same test but for TLS 1.3. This has to fail.
+TEST_P(TlsConnectTls13, NamedGroupMismatch13) {
+  EnableOnlyDheCiphers();
+  static const std::vector<SSLNamedGroup> server_groups = {ssl_grp_ffdhe_3072};
+  static const std::vector<SSLNamedGroup> client_groups = {
+      ssl_grp_ec_secp256r1};
+  server_->ConfigNamedGroups(server_groups);
+  client_->ConfigNamedGroups(client_groups);
+
+  ConnectExpectFail();
+  server_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+}
+
+// Even though the client doesn't have DHE groups enabled the server assumes it
+// does. The client requires named groups and thus does not accept FF3072 as
+// custom group in contrast to the previous test.
+TEST_P(TlsConnectGenericPre13, RequireNamedGroupsMismatchPre13) {
+  EnableOnlyDheCiphers();
+  EXPECT_EQ(SECSuccess, SSL_OptionSet(client_->ssl_fd(),
+                                      SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE));
+  static const std::vector<SSLNamedGroup> server_groups = {ssl_grp_ffdhe_3072};
+  static const std::vector<SSLNamedGroup> client_groups = {ssl_grp_ec_secp256r1,
+                                                           ssl_grp_ffdhe_2048};
+  server_->ConfigNamedGroups(server_groups);
+  client_->ConfigNamedGroups(client_groups);
+
+  ConnectExpectFail();
+  server_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
 }
 
 TEST_P(TlsConnectGenericPre13, PreferredFfdhe) {

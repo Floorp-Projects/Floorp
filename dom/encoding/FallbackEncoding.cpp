@@ -69,7 +69,7 @@ FallbackEncoding::Get(nsACString& aFallback)
   nsCOMPtr<nsIXULChromeRegistry> registry =
     mozilla::services::GetXULChromeRegistryService();
   if (registry) {
-    registry->GetSelectedLocale(NS_LITERAL_CSTRING("global"), locale);
+    registry->GetSelectedLocale(NS_LITERAL_CSTRING("global"), false, locale);
   }
 
   // Let's lower case the string just in case unofficial language packs

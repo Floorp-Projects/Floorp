@@ -375,6 +375,11 @@ public:
         return mDefaultHpackBuffer;
     }
 
+    uint32_t MaxHttpResponseHeaderSize() const
+    {
+        return mMaxHttpResponseHeaderSize;
+    }
+
 private:
     virtual ~nsHttpHandler();
 
@@ -594,6 +599,9 @@ private:
 
     // The default size (in bytes) of the HPACK decompressor table.
     uint32_t mDefaultHpackBuffer;
+
+    // The max size (in bytes) for received Http response header.
+    uint32_t mMaxHttpResponseHeaderSize;
 
 private:
     // For Rate Pacing Certain Network Events. Only assign this pointer on

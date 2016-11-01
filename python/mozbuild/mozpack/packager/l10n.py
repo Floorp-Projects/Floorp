@@ -97,8 +97,12 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
 
     # The code further below assumes there's only one locale replaced with
     # another one.
-    if len(app.locales) > 1 or len(l10n.locales) > 1:
-        errors.fatal("Multiple locales aren't supported")
+    if len(app.locales) > 1:
+        errors.fatal("Multiple app locales aren't supported: " +
+                     ",".join(app.locales))
+    if len(l10n.locales) > 1:
+        errors.fatal("Multiple l10n locales aren't supported: " +
+                     ",".join(l10n.locales))
     locale = app.locales[0]
     l10n_locale = l10n.locales[0]
 
@@ -167,8 +171,11 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
             files = [f for p, f in l10n_finder.find(path)]
             if not len(files):
                 if base not in non_chrome:
+                    finderBase = ""
+                    if hasattr(l10n_finder, 'base'):
+                        finderBase = l10n_finder.base
                     errors.error("Missing file: %s" %
-                                 os.path.join(l10n_finder.base, path))
+                                 os.path.join(finderBase, path))
             else:
                 packager.add(path, files[0])
         else:

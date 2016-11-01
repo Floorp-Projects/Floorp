@@ -145,8 +145,15 @@ const Observer = {
         return Observer.console_api_log_event(subject, topic, data);
       case 'http-on-examine-response':
         return Observer.http_on_examine_response(subject, topic, data);
+      case 'http-on-modify-request':
+        return Observer.http_on_modify_request(subject, topic, data);
     }
     throw "Can't handle topic "+topic;
+  },
+  add_observers: function (services) {
+    services.obs.addObserver(Observer, "console-api-log-event", false);
+    services.obs.addObserver(Observer, "http-on-examine-response", false);
+    services.obs.addObserver(Observer, "http-on-modify-request", false);
   },
   // When a load is blocked which results in an error event within a page, the
   // test logs to the console.
@@ -173,18 +180,35 @@ const Observer = {
         test_settings[which_test].result[curTest.id]+", got blocked");
     test_settings[which_test].finished[curTest.id] = "blocked";
   },
+  get_current_test: function(uri) {
+    for (let item in test_servers) {
+      let re = RegExp('https?://'+test_servers[item].host);
+      if (re.test(uri)) {
+        return test_servers[item];
+      }
+    }
+    return null;
+  },
+  http_on_modify_request: function (subject, topic, data) {
+    let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+    if (channel.requestMethod != 'HEAD') {
+      return;
+    }
+
+    let curTest = this.get_current_test(channel.URI.asciiSpec);
+
+    if (!curTest) {
+      return;
+    }
+
+    ok(!(curTest.id in test_settings[which_test].priming), "Already saw a priming request for " + curTest.id);
+    test_settings[which_test].priming[curTest.id] = true;
+  },
   // When we see a response come back, peek at the response and test it is secure
   // or insecure as needed. Addtionally, watch the response for priming requests.
   http_on_examine_response: function (subject, topic, data) {
-    let curTest = null;
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
-    for (let item in test_servers) {
-      let re = RegExp('https?://'+test_servers[item].host);
-      if (re.test(channel.URI.asciiSpec)) {
-        curTest = test_servers[item];
-        break;
-      }
-    }
+    let curTest = this.get_current_test(channel.URI.asciiSpec);
 
     if (!curTest) {
       return;
@@ -196,7 +220,6 @@ const Observer = {
     // a response from the server
     if (channel.requestMethod == 'HEAD') {
       is(true, curTest.response, "HSTS priming response found " + curTest.id);
-      test_settings[which_test].priming[curTest.id] = true;
       return;
     }
 

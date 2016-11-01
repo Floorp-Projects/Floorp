@@ -113,6 +113,9 @@ public:
     virtual bool HasDefaultValue() const = 0;
 
     // Returns the pref value as a discriminated union.
+    virtual void GetLiveValue(GfxPrefValue* aOutValue) const = 0;
+
+    // Returns the pref value as a discriminated union.
     virtual void GetCachedValue(GfxPrefValue* aOutValue) const = 0;
 
     // Change the cached value. GfxPrefValue must be a compatible type.
@@ -158,7 +161,7 @@ private:
     }
 
   protected:
-    T GetLiveValue(const char* aPrefName) const {
+    T GetLiveValueByName(const char* aPrefName) const {
       if (IsPrefsServiceAvailable()) {
         return PrefGet(aPrefName, mValue);
       }
@@ -228,11 +231,15 @@ private:
     const char *Name() const override {
       return Prefname();
     }
+    void GetLiveValue(GfxPrefValue* aOutValue) const override {
+      T value = GetLiveValue();
+      CopyPrefValue(&value, aOutValue);
+    }
     // When using the Preferences service, the change callback can be triggered
     // *before* our cached value is updated, so we expose a method to grab the
     // true live value.
     T GetLiveValue() const {
-      return BaseClass::GetLiveValue(Prefname());
+      return BaseClass::GetLiveValueByName(Prefname());
     }
     bool HasDefaultValue() const override {
       return this->mValue == Default();
@@ -479,6 +486,7 @@ private:
   DECL_GFX_PREF(Once, "layers.force-shmem-tiles",              ForceShmemTiles, bool, false);
   DECL_GFX_PREF(Live, "layers.frame-counter",                  DrawFrameCounter, bool, false);
   DECL_GFX_PREF(Once, "layers.gpu-process.dev.enabled",        GPUProcessDevEnabled, bool, false);
+  DECL_GFX_PREF(Once, "layers.gpu-process.dev.force-enabled",  GPUProcessDevForceEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.gpu-process.dev.timeout_ms",     GPUProcessDevTimeoutMs, int32_t, 5000);
   DECL_GFX_PREF(Live, "layers.gpu-process.dev.max_restarts",   GPUProcessDevMaxRestarts, int32_t, 0);
   DECL_GFX_PREF(Once, "layers.gralloc.disable",                DisableGralloc, bool, false);

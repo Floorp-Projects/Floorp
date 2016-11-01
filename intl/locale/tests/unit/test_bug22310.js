@@ -3,12 +3,11 @@ String.prototype.has = function(s) { return this.indexOf(s) != -1; }
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
-const dts = Cc["@mozilla.org/intl/scriptabledateformat;1"]
-        .getService(Ci.nsIScriptableDateFormat);
-
 function dt(locale) {
-  return dts.FormatDateTime(locale, dts.dateFormatLong,
-                            dts.timeFormatSeconds, 2008, 6, 30, 13, 56, 34);
+  var date = new Date("2008-06-30T13:56:34");
+  const dtOptions = { year: 'numeric', month: 'long', day: 'numeric',
+                      hour: 'numeric', minute: 'numeric', second: 'numeric' };
+  return date.toLocaleString(locale, dtOptions);
 }
 
 var all_passed = true;
@@ -25,7 +24,9 @@ const tests =
    dt("en-US").indexOf("30") > dt("en-US").indexOf("June"),
   "month before day in en-US"],
  [dt("ja-JP").has("\u5E746\u670830\u65E5"), "year month and day in ja-JP"],
- [dt("ja-JP") == dt("ja-JP-mac"), "ja-JP-mac same as ja-JP"],
+ // The Firefox locale code ja-JP-mac will be resolved to a BCP47-compliant
+ // tag ja-JP-x-lvariant-mac by uloc_toLanguageTag
+ [dt("ja-JP") == dt("ja-JP-x-lvariant-mac"), "ja-JP-x-lvariant-mac same as ja-JP"],
  [dt("nn-NO").has("juni"), "month name in nn-NO"],
  [dt("nb-NO").has("juni"), "month name in nb-NO"],
  // Bug 1261775 - failures on win10

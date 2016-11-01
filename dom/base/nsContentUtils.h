@@ -85,7 +85,6 @@ class nsIScriptContext;
 class nsIScriptSecurityManager;
 class nsIStringBundle;
 class nsIStringBundleService;
-class nsISupportsArray;
 class nsISupportsHashKey;
 class nsIURI;
 class nsIUUIDGenerator;
@@ -1864,11 +1863,6 @@ public:
   static nsresult CreateArrayBuffer(JSContext *aCx, const nsACString& aData,
                                     JSObject** aResult);
 
-  static nsresult CreateBlobBuffer(JSContext* aCx,
-                                   nsISupports* aParent,
-                                   const nsACString& aData,
-                                   JS::MutableHandle<JS::Value> aBlob);
-
   static void StripNullChars(const nsAString& aInStr, nsAString& aOutStr);
 
   /**
@@ -2710,6 +2704,8 @@ public:
                                  int32_t aNamespaceID,
                                  nsIAtom* aAtom,
                                  JS::MutableHandle<JSObject*> prototype);
+
+  static bool AttemptLargeAllocationLoad(nsIHttpChannel* aChannel);
 
 private:
   static bool InitializeEventTable();

@@ -42,6 +42,30 @@ describe("ConsoleAPICall component:", () => {
       expect(locationLink.text()).toBe("test-tempfile.js:1:27");
     });
 
+    it("renders string grips with custom style", () => {
+      const message = stubPreparedMessages.get("console.log(%cfoobar)");
+      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+
+      const elements = wrapper.find(".objectBox-string");
+      expect(elements.text()).toBe("foobar");
+      expect(elements.length).toBe(2);
+
+      const firstElementStyle = elements.eq(0).prop("style");
+      // Allowed styles are applied accordingly on the first element.
+      expect(firstElementStyle.color).toBe(`blue`);
+      expect(firstElementStyle["font-size"]).toBe(`1.3em`);
+      // Forbidden styles are not applied.
+      expect(firstElementStyle["background-image"]).toBe(undefined);
+      expect(firstElementStyle.position).toBe(undefined);
+      expect(firstElementStyle.top).toBe(undefined);
+
+      const secondElementStyle = elements.eq(1).prop("style");
+      // Allowed styles are applied accordingly on the second element.
+      expect(secondElementStyle.color).toBe(`red`);
+      // Forbidden styles are not applied.
+      expect(secondElementStyle.background).toBe(undefined);
+    });
+
     it("renders repeat node", () => {
       const message =
         stubPreparedMessages.get("console.log('foobar', 'test')")

@@ -12,6 +12,15 @@ addEventListener("mozshowdropdown", event => {
     return;
 
   if (!SelectContentHelper.open) {
-    new SelectContentHelper(event.target, this);
+    new SelectContentHelper(event.target, {isOpenedViaTouch: false}, this);
+  }
+});
+
+addEventListener("mozshowdropdown-sourcetouch", event => {
+  if (!event.isTrusted)
+    return;
+
+  if (!SelectContentHelper.open) {
+    new SelectContentHelper(event.target, {isOpenedViaTouch: true}, this);
   }
 });

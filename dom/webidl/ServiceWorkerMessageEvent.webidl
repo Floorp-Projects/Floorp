@@ -15,7 +15,6 @@ interface ServiceWorkerMessageEvent : Event {
   /**
    * Custom data associated with this event.
    */
-  [GetterThrows]
   readonly attribute any data;
 
   /**
@@ -36,14 +35,14 @@ interface ServiceWorkerMessageEvent : Event {
   [Constant] readonly attribute (ServiceWorker or MessagePort)? source;
 
   [Constant, Cached, Frozen]
-  readonly attribute sequence<MessagePort>? ports;
+  readonly attribute sequence<MessagePort> ports;
 };
 
 dictionary ServiceWorkerMessageEventInit : EventInit
 {
-  any data;
-  DOMString origin;
-  DOMString lastEventId;
-  (ServiceWorker or MessagePort)? source;
-  sequence<MessagePort>? ports;
+  any data = null;
+  DOMString origin = "";
+  DOMString lastEventId = "";
+  (ServiceWorker or MessagePort)? source = null;
+  sequence<MessagePort> ports = [];
 };

@@ -36,13 +36,28 @@ NS_IMETHODIMP
 HSTSPrimingListener::OnStartRequest(nsIRequest *aRequest,
                                     nsISupports *aContext)
 {
-  nsresult rv = CheckHSTSPrimingRequestStatus(aRequest);
+  nsresult primingResult = CheckHSTSPrimingRequestStatus(aRequest);
   nsCOMPtr<nsIHstsPrimingCallback> callback(mCallback);
   mCallback = nullptr;
 
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsITimedChannel> timingChannel =
+    do_QueryInterface(callback);
+  if (timingChannel) {
+    TimeStamp channelCreationTime;
+    nsresult rv = timingChannel->GetChannelCreation(&channelCreationTime);
+    if (NS_SUCCEEDED(rv) && !channelCreationTime.IsNull()) {
+      PRUint32 interval =
+        (PRUint32) (TimeStamp::Now() - channelCreationTime).ToMilliseconds();
+      Telemetry::Accumulate(Telemetry::HSTS_PRIMING_REQUEST_DURATION,
+          (NS_SUCCEEDED(primingResult)) ? NS_LITERAL_CSTRING("success")
+                                        : NS_LITERAL_CSTRING("failure"),
+          interval);
+    }
+  }
+
+  if (NS_FAILED(primingResult)) {
     LOG(("HSTS Priming Failed (request was not approved)"));
-    return callback->OnHSTSPrimingFailed(rv, false);
+    return callback->OnHSTSPrimingFailed(primingResult, false);
   }
 
   LOG(("HSTS Priming Succeeded (request was approved)"));

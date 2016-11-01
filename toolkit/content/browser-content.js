@@ -215,12 +215,11 @@ var ClickEventHandler = {
     const kAutoscroll = 15;  // defined in mozilla/layers/ScrollInputMethods.h
     Services.telemetry.getHistogramById("SCROLL_INPUT_METHODS").add(kAutoscroll);
 
-    if (this._scrollable instanceof content.Window) {
-      this._scrollable.scrollBy(actualScrollX, actualScrollY);
-    } else { // an element with overflow
-      this._scrollable.scrollLeft += actualScrollX;
-      this._scrollable.scrollTop += actualScrollY;
-    }
+    this._scrollable.scrollBy({
+      left: actualScrollX,
+      top: actualScrollY,
+      behavior: "instant"
+    });
     content.requestAnimationFrame(this.autoscrollLoop);
   },
 
@@ -1641,10 +1640,11 @@ let DateTimePickerListener = {
 
   /**
    * Helper function that returns the rect of the element, which is the position
-   * in "screen" coordinates.
+   * relative to the left/top of the content area.
    */
   getBoundingContentRect: function(aElement) {
-    return BrowserUtils.getElementBoundingScreenRect(aElement);
+    return BrowserUtils.getElementBoundingRect(aElement);
+    // return BrowserUtils.getElementBoundingScreenRect(aElement);
   },
 
   /**

@@ -1071,7 +1071,8 @@ function TypedArraySome(callbackfn/*, thisArg*/) {
     return false;
 }
 
-// ES6 draft 20151210 22.2.3.26
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.3.26 TypedArray SortCompare abstract operation
 // Cases are ordered according to likelihood of occurrence
 // as opposed to the ordering in the spec.
 function TypedArrayCompare(x, y) {
@@ -1079,25 +1080,47 @@ function TypedArrayCompare(x, y) {
     assert(typeof x === "number" && typeof y === "number",
            "x and y are not numbers.");
 
-    // Steps 6 - 7.
+    // Step 2 (Implemented in TypedArraySort).
+
+    // Step 6.
+    if (x < y)
+        return -1;
+
+    // Step 7.
+    if (x > y)
+        return 1;
+
+    // Steps 8-9.
+    if (x === 0 && y === 0)
+        return (1/x > 0 ? 1 : 0) - (1/y > 0 ? 1 : 0);
+
+    // Steps 3-4.
+    if (Number_isNaN(x))
+        return Number_isNaN(y) ? 0 : 1;
+
+    // Steps 5, 10.
+    return Number_isNaN(y) ? -1 : 0;
+}
+
+// TypedArray SortCompare specialization for integer values.
+function TypedArrayCompareInt(x, y) {
+    // Step 1.
+    assert(typeof x === "number" && typeof y === "number",
+           "x and y are not numbers.");
+    assert((x === (x|0) || x === (x>>>0)) && (y === (y|0) || y === (y>>>0)),
+           "x and y are not int32/uint32 numbers.");
+
+    // Step 2 (Implemented in TypedArraySort).
+
+    // Steps 6-7.
     var diff = x - y;
     if (diff)
         return diff;
 
-    // Steps 8 - 10.
-    if (x === 0 && y === 0)
-        return (1/x > 0 ? 1 : 0) - (1/y > 0 ? 1 : 0);
+    // Steps 3-5, 8-9 (Not applicable when sorting integer values).
 
-    // Step 2. Implemented in TypedArraySort
-
-    // Step 3.
-    if (Number_isNaN(x) && Number_isNaN(y))
-        return 0;
-
-    // Steps 4 - 5.
-    if (Number_isNaN(x) || Number_isNaN(y))
-        return Number_isNaN(x) ? 1 : -1;
-
+    // Step 10.
+    return 0;
 }
 
 // ES6 draft 20151210 22.2.3.26 %TypedArray%.prototype.sort ( comparefn ).
@@ -1113,8 +1136,7 @@ function TypedArraySort(comparefn) {
     var buffer;
     if (isTypedArray) {
         buffer = GetAttachedArrayBuffer(obj);
-    }
-    else {
+    } else {
         buffer = callFunction(CallTypedArrayMethodIfWrapped, obj, obj, "GetAttachedArrayBuffer");
     }
 
@@ -1127,23 +1149,23 @@ function TypedArraySort(comparefn) {
     }
 
     if (comparefn === undefined) {
-        comparefn = TypedArrayCompare;
-        // CountingSort doesn't invoke the comparefn
+        // CountingSort doesn't invoke the comparator function.
         if (IsUint8TypedArray(obj)) {
             return CountingSort(obj, len, false /* signed */);
         } else if (IsInt8TypedArray(obj)) {
             return CountingSort(obj, len, true /* signed */);
         } else if (IsUint16TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 2 /* nbytes */, false /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 2 /* nbytes */, false /* signed */, false /* floating */, TypedArrayCompareInt);
         } else if (IsInt16TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 2 /* nbytes */, true /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 2 /* nbytes */, true /* signed */, false /* floating */, TypedArrayCompareInt);
         } else if (IsUint32TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 4 /* nbytes */, false /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 4 /* nbytes */, false /* signed */, false /* floating */, TypedArrayCompareInt);
         } else if (IsInt32TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, false /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, false /* floating */, TypedArrayCompareInt);
         } else if (IsFloat32TypedArray(obj)) {
-            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, true /* floating */, comparefn);
+            return RadixSort(obj, len, buffer, 4 /* nbytes */, true /* signed */, true /* floating */, TypedArrayCompare);
         }
+        return QuickSort(obj, len, TypedArrayCompare);
     }
 
     // To satisfy step 2 from TypedArray SortCompare described in 22.2.3.26
@@ -1153,13 +1175,23 @@ function TypedArraySort(comparefn) {
         // Step a.
         var v = wrappedCompareFn(x, y);
         // Step b.
+        if (buffer === null) {
+            // A typed array previously using inline storage may acquire a
+            // buffer, so we must check with the source.
+            if (isTypedArray) {
+                buffer = GetAttachedArrayBuffer(obj);
+            } else {
+                buffer = callFunction(CallTypedArrayMethodIfWrapped, obj, obj,
+                                      "GetAttachedArrayBuffer");
+            }
+        }
         var bufferDetached;
         if (isTypedArray) {
             bufferDetached = IsDetachedBuffer(buffer);
         } else {
-            // This is totally cheating and only works because we know `this`
+            // This is totally cheating and only works because we know `obj`
             // and `buffer` are same-compartment".
-            bufferDetached = callFunction(CallTypedArrayMethodIfWrapped, this,
+            bufferDetached = callFunction(CallTypedArrayMethodIfWrapped, obj,
                                           buffer, "IsDetachedBuffer");
         }
         if (bufferDetached)
@@ -1512,6 +1544,33 @@ function TypedArrayToStringTag() {
 }
 _SetCanonicalName(TypedArrayToStringTag, "get [Symbol.toStringTag]");
 
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 22.2.2.1.1 Runtime Semantics: IterableToList( items, method )
+function IterableToList(items, method) {
+    // Step 1.
+    var iterator = GetIterator(items, method);
+
+    // Step 2.
+    var values = [];
+
+    // Steps 3-4.
+    var i = 0;
+    while (true) {
+        // Step 4.a.
+        var next = callContentFunction(iterator.next, iterator);
+        if (!IsObject(next))
+            ThrowTypeError(JSMSG_NEXT_RETURNED_PRIMITIVE);
+
+        // Step 4.b.
+        if (next.done)
+            break;
+        _DefineDataProperty(values, i++, next.value);
+    }
+
+    // Step 5.
+    return values;
+}
+
 // ES 2016 draft Mar 25, 2016 24.1.4.3.
 function ArrayBufferSlice(start, end) {
     // Step 1.
@@ -1607,3 +1666,4 @@ function ArrayBufferSpecies() {
     // Step 1.
     return this;
 }
+_SetCanonicalName(ArrayBufferSpecies, "get [Symbol.species]");

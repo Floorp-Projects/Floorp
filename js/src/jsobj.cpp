@@ -1149,38 +1149,15 @@ GetScriptArrayObjectElements(JSContext* cx, HandleObject obj, MutableHandle<GCVe
 {
     MOZ_ASSERT(!obj->isSingleton());
     MOZ_ASSERT(obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>());
+    MOZ_ASSERT(!obj->isIndexed());
 
     size_t length = GetAnyBoxedOrUnboxedArrayLength(obj);
     if (!values.appendN(MagicValue(JS_ELEMENTS_HOLE), length))
         return false;
 
-    if (obj->nonProxyIsExtensible()) {
-        MOZ_ASSERT_IF(obj->is<ArrayObject>(), obj->as<ArrayObject>().slotSpan() == 0);
-
-        size_t initlen = GetAnyBoxedOrUnboxedInitializedLength(obj);
-        for (size_t i = 0; i < initlen; i++)
-            values[i].set(GetAnyBoxedOrUnboxedDenseElement(obj, i));
-    } else {
-        // Call site objects are frozen before they escape to script, which
-        // converts their dense elements into data properties.
-        ArrayObject* aobj = &obj->as<ArrayObject>();
-        for (Shape::Range<NoGC> r(aobj->lastProperty()); !r.empty(); r.popFront()) {
-            Shape& shape = r.front();
-            if (shape.propid() == NameToId(cx->names().length))
-                continue;
-            MOZ_ASSERT(shape.isDataDescriptor());
-
-            // The 'raw' property is added before freezing call site objects.
-            // After an XDR or deep clone the script object will no longer be
-            // frozen, and the two objects will be connected again the first
-            // time the JSOP_CALLSITEOBJ executes.
-            if (shape.propid() == NameToId(cx->names().raw))
-                continue;
-
-            uint32_t index = JSID_TO_INT(shape.propid());
-            values[index].set(aobj->getSlot(shape.slot()));
-        }
-    }
+    size_t initlen = GetAnyBoxedOrUnboxedInitializedLength(obj);
+    for (size_t i = 0; i < initlen; i++)
+        values[i].set(GetAnyBoxedOrUnboxedDenseElement(obj, i));
 
     return true;
 }
@@ -1995,6 +1972,47 @@ js::IsStandardPrototype(JSObject* obj, JSProtoKey key)
     GlobalObject& global = obj->global();
     Value v = global.getPrototype(key);
     return v.isObject() && obj == &v.toObject();
+}
+
+
+/**
+ * Returns the original Object.prototype from the embedding-provided incumbent
+ * global.
+ *
+ * Really, we want the incumbent global itself so we can pass it to other
+ * embedding hooks which need it. Specifically, the enqueue promise hook
+ * takes an incumbent global so it can set that on the PromiseCallbackJob
+ * it creates.
+ *
+ * The reason for not just returning the global itself is that we'd need to
+ * wrap it into the current compartment, and later unwrap it. Unwrapping
+ * globals is tricky, though: we might accidentally unwrap through an inner
+ * to its outer window and end up with the wrong global. Plain objects don't
+ * have this problem, so we use the global's Object.prototype. The code using
+ * it - e.g. EnqueuePromiseReactionJob - can then unwrap the object and get
+ * its global without fear of unwrapping too far.
+ */
+bool
+js::GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj)
+{
+    RootedObject globalObj(cx, cx->runtime()->getIncumbentGlobal(cx));
+    if (!globalObj) {
+        obj.set(nullptr);
+        return true;
+    }
+
+    {
+        AutoCompartment ac(cx, globalObj);
+        obj.set(globalObj->as<GlobalObject>().getOrCreateObjectPrototype(cx));
+        if (!obj)
+            return false;
+    }
+
+    // The object might be from a different compartment, so wrap it.
+    if (obj && !cx->compartment()->wrap(cx, obj))
+        return false;
+
+    return true;
 }
 
 JSProtoKey
@@ -3630,11 +3648,11 @@ js::DumpBacktrace(JSContext* cx, FILE* fp)
             i.isWasm() ? 'W' :
             '?';
 
-        sprinter.printf("#%d %14p %c   %s:%d",
+        sprinter.printf("#%" PRIuSIZE " %14p %c   %s:%d",
                         depth, i.rawFramePtr(), frameType, filename, line);
 
         if (i.hasScript()) {
-            sprinter.printf(" (%p @ %d)\n",
+            sprinter.printf(" (%p @ %" PRIuSIZE ")\n",
                             i.script(), i.script()->pcToOffset(i.pc()));
         } else {
             sprinter.printf(" (%p)\n", i.pc());
@@ -3923,6 +3941,16 @@ js::SpeciesConstructor(JSContext* cx, HandleObject obj, HandleValue defaultCtor,
 
     pctor.set(args.rval());
     return true;
+}
+
+bool
+js::SpeciesConstructor(JSContext* cx, HandleObject obj, JSProtoKey ctorKey,
+                       MutableHandleValue pctor)
+{
+    if (!GlobalObject::ensureConstructor(cx, cx->global(), ctorKey))
+        return false;
+    RootedValue defaultCtor(cx, cx->global()->getConstructor(ctorKey));
+    return SpeciesConstructor(cx, obj, defaultCtor, pctor);
 }
 
 bool

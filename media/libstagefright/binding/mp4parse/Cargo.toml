@@ -18,7 +18,7 @@ exclude = [
 ]
 
 [dependencies]
-byteorder = { version = "0.5.0" }
+byteorder = "0.5.0"
 
 [dev-dependencies]
 test-assembler = "0.1.2"

@@ -274,6 +274,68 @@ def fc_freetype(value, toolkit):
 
 add_old_configure_assignment('USE_FC_FREETYPE', fc_freetype)
 
+# Pango
+# ==============================================================
+pkg_check_modules('MOZ_PANGO',
+                  'pango >= 1.22.0 pangoft2 >= 1.22.0 pangocairo >= 1.22.0',
+                  when=toolkit_gtk)
+
+# Fontconfig
+# ==============================================================
+fontconfig_info = pkg_check_modules('_FONTCONFIG', 'fontconfig >= 2.7.0',
+                                    when=fc_freetype)
+
+@depends(fc_freetype)
+def check_for_freetype2(fc_freetype):
+    if fc_freetype:
+        return True
+
+# Check for freetype2. Flags are combined with fontconfig flags.
+freetype2_info = pkg_check_modules('_FT2', 'freetype2 >= 6.1.0',
+                                   when=check_for_freetype2)
+
+@depends(fontconfig_info, freetype2_info)
+def freetype2_combined_info(fontconfig_info, freetype2_info):
+    if not freetype2_info:
+        return
+    if not fontconfig_info:
+        return freetype2_info
+    return namespace(
+        cflags=freetype2_info.cflags + fontconfig_info.cflags,
+        libs=freetype2_info.libs + fontconfig_info.libs,
+    )
+
+add_old_configure_assignment('_HAVE_FREETYPE2',
+                             depends_if(freetype2_info)(lambda _: True))
+
+# Build Freetype in the tree
+# ==============================================================
+@depends(target)
+def tree_freetype(target):
+    if target.os == 'Android':
+        return True
+
+set_define('MOZ_TREE_FREETYPE', tree_freetype)
+set_config('MOZ_TREE_FREETYPE', tree_freetype)
+add_old_configure_assignment('MOZ_TREE_FREETYPE', tree_freetype)
+
+set_define('HAVE_FT_BITMAP_SIZE_Y_PPEM', tree_freetype)
+set_define('HAVE_FT_GLYPHSLOT_EMBOLDEN', tree_freetype)
+set_define('HAVE_FT_LOAD_SFNT_TABLE', tree_freetype)
+
+@depends(freetype2_combined_info, tree_freetype, check_build_environment)
+def ft2_info(freetype2_combined_info, tree_freetype, build_env):
+    if tree_freetype:
+        return namespace(cflags=('-I%s/modules/freetype2/include' % build_env.topsrcdir,),
+                         libs=())
+    if freetype2_combined_info:
+        return freetype2_combined_info
+
+set_config('FT2_LIBS', delayed_getattr(ft2_info, 'libs'))
+add_old_configure_assignment('FT2_LIBS',
+                             delayed_getattr(ft2_info, 'libs'))
+add_old_configure_assignment('FT2_CFLAGS',
+                             delayed_getattr(ft2_info, 'cflags'))
 
 # Apple platform decoder support
 # ==============================================================
@@ -473,7 +535,7 @@ def gpsd(value):
 system_gpsd = pkg_check_modules('MOZ_GPSD', 'libgps >= 3.11',
                                 when=gpsd)
 
-set_config('MOZ_GPSD', system_gpsd)
+set_config('MOZ_GPSD', depends_if(system_gpsd)(lambda _: True))
 
 # Miscellaneous programs
 # ==============================================================
@@ -614,22 +676,6 @@ def webspeech_test_backend(value):
 set_config('MOZ_WEBSPEECH_TEST_BACKEND', webspeech_test_backend)
 set_define('MOZ_WEBSPEECH_TEST_BACKEND', webspeech_test_backend)
 
-# WebSMS
-# ==============================================================
-@depends(build_project, '--help')
-def websms_default(build_project, _):
-    return build_project in ('b2g', 'b2g/graphene')
-
-option('--enable-websms-backend', default=websms_default,
-       help='Enable WebSMS backend')
-
-@depends_if('--enable-websms-backend')
-def websms_backend(value):
-    return True
-
-set_config('MOZ_WEBSMS_BACKEND', websms_backend)
-set_define('MOZ_WEBSMS_BACKEND', websms_backend)
-
 # Enable IPDL's "expensive" unit tests
 # ==============================================================
 option('--enable-ipdl-tests', help='Enable expensive IPDL tests')
@@ -744,6 +790,21 @@ def skia_gpu(value, skia, target):
 set_config('MOZ_ENABLE_SKIA_GPU', skia_gpu)
 set_define('USE_SKIA_GPU', skia_gpu)
 
+option('--enable-skia-pdf', help='Enable Skia PDF')
+
+@depends('--enable-skia-pdf', skia, target)
+def skia_pdf(value, skia, target):
+    if value.origin == 'default':
+        if not skia:
+            return None
+    elif value and not skia:
+        die('Cannot enable Skia PDF without enabling Skia')
+    if skia and value:
+        return True
+
+set_config('MOZ_ENABLE_SKIA_PDF', skia_pdf)
+set_define('MOZ_ENABLE_SKIA_PDF', skia_pdf)
+
 @depends(skia, skia_gpu)
 def skia_includes(skia, skia_gpu):
     includes = []
@@ -766,12 +827,24 @@ set_config('SKIA_INCLUDES', skia_includes)
 
 # Support various fuzzing options
 # ==============================================================
-option('--enable-libfuzzer', help='Enable libfuzzer support')
+with only_when('--enable-compile-environment'):
+    option('--enable-fuzzing', help='Enable fuzzing support')
 
-@depends('--enable-libfuzzer')
-def enable_libfuzzer(value):
-    if value:
-        return True
+    @depends('--enable-fuzzing')
+    def enable_fuzzing(value):
+        if value:
+            return True
 
-set_config('LIBFUZZER', enable_libfuzzer)
-set_define('LIBFUZZER', enable_libfuzzer)
+    @depends(enable_fuzzing,
+             try_compile(body='__AFL_COMPILER;',
+                         check_msg='for AFL compiler',
+                         when='--enable-fuzzing'))
+    def enable_libfuzzer(fuzzing, afl):
+        if fuzzing and not afl:
+            return True
+
+    set_config('FUZZING', enable_fuzzing)
+    set_define('FUZZING', enable_fuzzing)
+
+    set_config('LIBFUZZER', enable_libfuzzer)
+    set_define('LIBFUZZER', enable_libfuzzer)

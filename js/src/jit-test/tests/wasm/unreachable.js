@@ -5,7 +5,7 @@ load(libdir + "wasm.js");
 // meaning we have to have a special mode in the decoder for decoding code
 // that won't actually run.
 
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
    (func (result i32)
      (return (i32.const 42))
      (i32.add (f64.const 1.0) (f32.const 0.0))
@@ -13,10 +13,10 @@ assertEq(wasmEvalText(`(module
      (if (f32.const 3.0) (i64.const 2) (i32.const 1))
      (select (f64.const -5.0) (f32.const 2.3) (f64.const 8.9))
    )
-   (export "" 0)
-)`).exports[""](), 42);
+   (export "run" 0)
+)`, 42);
 
-assertEq(wasmEvalText(`(module
+wasmFullPass(`(module
    (func (result i32) (param i32)
      (block
         (br_if 1 (i32.const 41) (get_local 0))
@@ -27,5 +27,5 @@ assertEq(wasmEvalText(`(module
      (if (f32.const 3.0) (i64.const 2) (i32.const 1))
      (select (f64.const -5.0) (f32.const 2.3) (f64.const 8.9))
    )
-   (export "" 0)
-)`).exports[""](0), 42);
+   (export "run" 0)
+)`, 42, {}, 0);

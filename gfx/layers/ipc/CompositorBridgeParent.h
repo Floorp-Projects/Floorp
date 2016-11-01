@@ -27,9 +27,11 @@
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/SharedMemory.h"
+#include "mozilla/layers/CompositorController.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/ISurfaceAllocator.h" // for ShmemAllocator
 #include "mozilla/layers/LayersMessages.h"  // for TargetConfig
+#include "mozilla/layers/MetricsSharingController.h"
 #include "mozilla/layers/PCompositorBridgeParent.h"
 #include "mozilla/layers/APZTestData.h"
 #include "mozilla/widget/CompositorWidget.h"
@@ -93,19 +95,6 @@ public:
   explicit CompositorVsyncScheduler(CompositorBridgeParent* aCompositorBridgeParent,
                                     widget::CompositorWidget* aWidget);
 
-#ifdef MOZ_WIDGET_GONK
-  // emulator-ics never trigger the display on/off, so compositor will always
-  // skip composition request at that device. Only check the display status
-  // with kk device and upon.
-#if ANDROID_VERSION >= 19
-  // SetDisplay() and CancelSetDisplayTask() are used for the display on/off.
-  // It will clear all composition related task and flag, and skip another
-  // composition task during the display off. That could prevent the problem
-  // that compositor might show the old content at the first frame of display on.
-  void SetDisplay(bool aDisplayEnable);
-#endif
-#endif
-
   bool NotifyVsync(TimeStamp aVsyncTimestamp);
   void SetNeedsComposite();
   void OnForceComposeToTarget();
@@ -142,11 +131,6 @@ private:
   void DispatchTouchEvents(TimeStamp aVsyncTimestamp);
   void DispatchVREvents(TimeStamp aVsyncTimestamp);
   void CancelCurrentSetNeedsCompositeTask();
-#ifdef MOZ_WIDGET_GONK
-#if ANDROID_VERSION >= 19
-  void CancelSetDisplayTask();
-#endif
-#endif
 
   class Observer final : public VsyncObserver
   {
@@ -181,19 +165,12 @@ private:
 
   mozilla::Monitor mSetNeedsCompositeMonitor;
   RefPtr<CancelableRunnable> mSetNeedsCompositeTask;
-
-#ifdef MOZ_WIDGET_GONK
-#if ANDROID_VERSION >= 19
-  bool mDisplayEnabled;
-  mozilla::Monitor mSetDisplayMonitor;
-  RefPtr<CancelableRunnable> mSetDisplayTask;
-#endif
-#endif
 };
 
 class CompositorBridgeParentBase : public PCompositorBridgeParent,
                                    public HostIPCAllocator,
-                                   public ShmemAllocator
+                                   public ShmemAllocator,
+                                   public MetricsSharingController
 {
 public:
   virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
@@ -226,6 +203,8 @@ public:
 
   virtual ShmemAllocator* AsShmemAllocator() override { return this; }
 
+  virtual bool RecvSyncWithCompositor() override { return true; }
+
   // HostIPCAllocator
   virtual base::ProcessId GetChildProcessId() override;
   virtual void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
@@ -240,11 +219,20 @@ public:
                                 mozilla::ipc::Shmem* aShmem) override;
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
-  virtual bool RecvSyncWithCompositor() override { return true; }
-
+  // MetricsSharingController
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override { return HostIPCAllocator::AddRef(); }
+  NS_IMETHOD_(MozExternalRefCountType) Release() override { return HostIPCAllocator::Release(); }
+  base::ProcessId RemotePid() override;
+  bool StartSharingMetrics(mozilla::ipc::SharedMemoryBasic::Handle aHandle,
+                           CrossProcessMutexHandle aMutexHandle,
+                           uint64_t aLayersId,
+                           uint32_t aApzcId) override;
+  bool StopSharingMetrics(FrameMetrics::ViewID aScrollId,
+                          uint32_t aApzcId) override;
 };
 
 class CompositorBridgeParent final : public CompositorBridgeParentBase
+                                   , public CompositorController
 {
   friend class CompositorVsyncScheduler;
   friend class CompositorThreadHolder;
@@ -253,6 +241,9 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase
   friend class gfx::GPUParent;
 
 public:
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override { return CompositorBridgeParentBase::AddRef(); }
+  NS_IMETHOD_(MozExternalRefCountType) Release() override { return CompositorBridgeParentBase::Release(); }
+
   explicit CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
                                   const TimeDuration& aVsyncRate,
                                   bool aUseExternalSurfaceSize,
@@ -375,7 +366,7 @@ public:
   void AsyncRender();
 
   // Can be called from any thread
-  void ScheduleRenderOnCompositorThread();
+  void ScheduleRenderOnCompositorThread() override;
   void SchedulePauseOnCompositorThread();
   void InvalidateOnCompositorThread();
   /**
@@ -462,7 +453,9 @@ public:
     // acknowledged by the child.
     uint32_t mPendingCompositorUpdates;
 
-    PCompositorBridgeParent* CrossProcessPCompositorBridge() const;
+    CompositorController* GetCompositorController() const;
+    MetricsSharingController* CrossProcessSharingController() const;
+    MetricsSharingController* InProcessSharingController() const;
   };
 
   /**
@@ -501,10 +494,13 @@ public:
    * Plugin visibility helpers for the apz (main thread) and compositor
    * thread.
    */
-  void ScheduleShowAllPluginWindows();
-  void ScheduleHideAllPluginWindows();
+  void ScheduleShowAllPluginWindows() override;
+  void ScheduleHideAllPluginWindows() override;
   void ShowAllPluginWindows();
   void HideAllPluginWindows();
+#else
+  void ScheduleShowAllPluginWindows() override {}
+  void ScheduleHideAllPluginWindows() override {}
 #endif
 
   /**

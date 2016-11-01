@@ -235,7 +235,9 @@ class MozconfigLoader(object):
             shell = shell + '.exe'
 
         command = [shell, mozpath.normsep(self._loader_script),
-                   mozpath.normsep(self.topsrcdir), path]
+                   mozpath.normsep(self.topsrcdir), path, sys.executable,
+                   mozpath.join(mozpath.dirname(self._loader_script),
+                                'action', 'dump_env.py')]
 
         try:
             # We need to capture stderr because that's where the shell sends

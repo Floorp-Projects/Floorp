@@ -70,13 +70,6 @@ spidermonkey
 Spidermonkey tasks check out the full gecko source tree, then compile only the
 spidermonkey portion.  Each task runs specific tests after the build.
 
-b2g-device
-----------
-
-B2G device builds produce binaries targetted to specific devices.  These
-involve some device-specific binaries which are not redistributable, so the
-inputs to and outputs from these tasks are restricted.
-
 marionette-harness
 ------------------
 

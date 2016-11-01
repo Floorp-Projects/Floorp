@@ -98,5 +98,6 @@ interface nsIWindowProvider : nsISupports
                                    in nsIURI aURI,
                                    in AString aName,
                                    in AUTF8String aFeatures,
+                                   in boolean aForceNoOpener,
                                    out boolean aWindowIsNew);
 };

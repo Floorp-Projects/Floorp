@@ -29,7 +29,6 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_LOG
 #include "mozilla/layers/LayerTransactionChild.h"
-#include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/PCompositableChild.h"
 #include "mozilla/layers/PTextureChild.h"
 #include "ShadowLayerUtils.h"
@@ -208,7 +207,7 @@ ShadowLayerForwarder::BeginTransaction(const gfx::IntRect& aTargetBounds,
                                        ScreenRotation aRotation,
                                        dom::ScreenOrientationInternal aOrientation)
 {
-  MOZ_ASSERT(HasShadowManager(), "no manager to forward to");
+  MOZ_ASSERT(IPCOpen(), "no manager to forward to");
   MOZ_ASSERT(mTxn->Finished(), "uncommitted txn?");
   UpdateFwdTransactionId();
   mTxn->Begin(aTargetBounds, aRotation, aOrientation);
@@ -357,24 +356,6 @@ ShadowLayerForwarder::UseTiledLayerBuffer(CompositableClient* aCompositable,
 {
   MOZ_ASSERT(aCompositable && aCompositable->IsConnected());
 
-#ifdef MOZ_WIDGET_GONK
-  // GrallocTextureData alwasys requests fence delivery if ANDROID_VERSION >= 17.
-  const InfallibleTArray<TileDescriptor>& tileDescriptors = aTileLayerDescriptor.tiles();
-  for (size_t i = 0; i < tileDescriptors.Length(); i++) {
-    const TileDescriptor& tileDesc = tileDescriptors[i];
-    if (tileDesc.type() != TileDescriptor::TTexturedTileDescriptor) {
-      continue;
-    }
-    const TexturedTileDescriptor& texturedDesc = tileDesc.get_TexturedTileDescriptor();
-    RefPtr<TextureClient> texture = TextureClient::AsTextureClient(texturedDesc.textureChild());
-    mClientLayerManager->GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(texture);
-    if (texturedDesc.textureOnWhite().type() == MaybeTexture::TPTextureChild) {
-      texture = TextureClient::AsTextureClient(texturedDesc.textureOnWhite().get_PTextureChild());
-      mClientLayerManager->GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(texture);
-    }
-  }
-#endif
-
   mTxn->AddNoSwapPaint(CompositableOperation(nullptr, aCompositable->GetIPDLActor(),
                                              OpUseTiledLayerBuffer(aTileLayerDescriptor)));
 }
@@ -406,12 +387,10 @@ ShadowLayerForwarder::UseTextures(CompositableClient* aCompositable,
     MOZ_ASSERT(t.mTextureClient);
     MOZ_ASSERT(t.mTextureClient->GetIPDLActor());
     MOZ_RELEASE_ASSERT(t.mTextureClient->GetIPDLActor()->GetIPCChannel() == mShadowManager->GetIPCChannel());
-    FenceHandle fence = t.mTextureClient->GetAcquireFenceHandle();
     ReadLockDescriptor readLock;
     t.mTextureClient->SerializeReadLock(readLock);
     textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
                                         readLock,
-                                        fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
                                         t.mTimeStamp, t.mPictureRect,
                                         t.mFrameID, t.mProducerID));
     if ((t.mTextureClient->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD)
@@ -463,20 +442,6 @@ ShadowLayerForwarder::UseComponentAlphaTextures(CompositableClient* aCompositabl
     );
 }
 
-#ifdef MOZ_WIDGET_GONK
-void
-ShadowLayerForwarder::UseOverlaySource(CompositableClient* aCompositable,
-                                       const OverlaySource& aOverlay,
-                                       const nsIntRect& aPictureRect)
-{
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aCompositable->IsConnected());
-
-  mTxn->AddEdit(CompositableOperation(nullptr, aCompositable->GetIPDLActor(),
-                                      OpUseOverlaySource(aOverlay, aPictureRect)));
-}
-#endif
-
 static bool
 AddOpDestroy(Transaction* aTxn, const OpDestroy& op, bool synchronously)
 {
@@ -527,14 +492,6 @@ ShadowLayerForwarder::RemoveTextureFromCompositable(CompositableClient* aComposi
   }
 }
 
-void
-ShadowLayerForwarder::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aAsyncTransactionTracker,
-                                                         CompositableClient* aCompositable,
-                                                         TextureClient* aTexture)
-{
-  NS_RUNTIMEABORT("not reached");
-}
-
 bool
 ShadowLayerForwarder::InWorkerThread()
 {
@@ -560,7 +517,7 @@ ShadowLayerForwarder::StorePluginWidgetConfigurations(const nsTArray<nsIWidget::
 void
 ShadowLayerForwarder::SendPaintTime(uint64_t aId, TimeDuration aPaintTime)
 {
-  if (!HasShadowManager() || !mShadowManager->IPCOpen() ||
+  if (!IPCOpen() ||
       !mShadowManager->SendPaintTime(aId, aPaintTime)) {
     NS_WARNING("Could not send paint times over IPC");
   }
@@ -578,7 +535,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
 {
   *aSent = false;
 
-  MOZ_ASSERT(HasShadowManager(), "no manager to forward to");
+  MOZ_ASSERT(IPCOpen(), "no manager to forward to");
   if (!IPCOpen()) {
     return false;
   }
@@ -768,7 +725,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
 void
 ShadowLayerForwarder::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
 {
-  if (!HasShadowManager() || !mShadowManager->IPCOpen()) {
+  if (!IPCOpen()) {
     return;
   }
   Unused << mShadowManager->SendSetLayerObserverEpoch(aLayerObserverEpoch);
@@ -788,9 +745,8 @@ ShadowLayerForwarder::IPCOpen() const
 PLayerChild*
 ShadowLayerForwarder::ConstructShadowFor(ShadowableLayer* aLayer)
 {
-  MOZ_ASSERT(HasShadowManager(), "no manager to forward to");
-  if (!HasShadowManager() ||
-      !mShadowManager->IPCOpen()) {
+  MOZ_ASSERT(IPCOpen(), "no manager to forward to");
+  if (!IPCOpen()) {
     return nullptr;
   }
   return mShadowManager->SendPLayerConstructor(new ShadowLayerChild(aLayer));
@@ -814,13 +770,14 @@ ShadowLayerForwarder::Connect(CompositableClient* aCompositable,
 #endif
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(mShadowManager);
-  if (!HasShadowManager() ||
-      !mShadowManager->IPCOpen()) {
+  if (!IPCOpen()) {
     return;
   }
   PCompositableChild* actor =
     mShadowManager->SendPCompositableConstructor(aCompositable->GetTextureInfo());
-  MOZ_ASSERT(actor);
+  if (!actor) {
+    return;
+  }
   aCompositable->InitIPDLActor(actor);
 }
 
@@ -850,8 +807,7 @@ void ShadowLayerForwarder::SetShadowManager(PLayerTransactionChild* aShadowManag
 
 void ShadowLayerForwarder::StopReceiveAsyncParentMessge()
 {
-  if (!HasShadowManager() ||
-      !mShadowManager->IPCOpen()) {
+  if (!IPCOpen()) {
     return;
   }
   mShadowManager->SetForwarder(nullptr);
@@ -859,8 +815,7 @@ void ShadowLayerForwarder::StopReceiveAsyncParentMessge()
 
 void ShadowLayerForwarder::ClearCachedResources()
 {
-  if (!HasShadowManager() ||
-      !mShadowManager->IPCOpen()) {
+  if (!IPCOpen()) {
     return;
   }
   mShadowManager->SendClearCachedResources();
@@ -868,8 +823,7 @@ void ShadowLayerForwarder::ClearCachedResources()
 
 void ShadowLayerForwarder::Composite()
 {
-  if (!HasShadowManager() ||
-      !mShadowManager->IPCOpen()) {
+  if (!IPCOpen()) {
     return;
   }
   mShadowManager->SendForceComposite();

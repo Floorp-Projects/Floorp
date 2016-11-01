@@ -6,7 +6,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -97,10 +96,6 @@
 #include "TexturePoolOGL.h"
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-#include "mozilla/layers/GrallocTextureHost.h"
-#endif
-
 #ifdef USE_SKIA
 # ifdef __GNUC__
 #  pragma GCC diagnostic push
@@ -147,9 +142,6 @@ class mozilla::gl::SkiaGLGlue : public GenericAtomicRefCounted {
 
 namespace mozilla {
 namespace layers {
-#ifdef MOZ_WIDGET_GONK
-void InitGralloc();
-#endif
 void ShutdownTileCache();
 } // namespace layers
 } // namespace mozilla
@@ -607,7 +599,9 @@ static uint32_t GetSkiaGlyphCacheSize()
 void
 gfxPlatform::Init()
 {
+    MOZ_RELEASE_ASSERT(!XRE_IsGPUProcess(), "GFX: Not allowed in GPU process.");
     MOZ_RELEASE_ASSERT(NS_IsMainThread(), "GFX: Not in main thread.");
+
     if (gEverInitialized) {
         NS_RUNTIMEABORT("Already started???");
     }
@@ -687,6 +681,11 @@ gfxPlatform::Init()
 #endif
     gPlatform->InitAcceleration();
 
+    if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+      GPUProcessManager* gpu = GPUProcessManager::Get();
+      gpu->LaunchGPUProcess();
+    }
+
 #ifdef USE_SKIA
     SkGraphics::Init();
 #  ifdef MOZ_ENABLE_FREETYPE
@@ -749,10 +748,6 @@ gfxPlatform::Init()
 #ifdef MOZ_WIDGET_ANDROID
     // Texture pool init
     TexturePoolOGL::Init();
-#endif
-
-#ifdef MOZ_WIDGET_GONK
-    mozilla::layers::InitGralloc();
 #endif
 
     Preferences::RegisterCallbackAndCall(RecordingPrefChanged, "gfx.2d.recording", nullptr);
@@ -917,9 +912,6 @@ gfxPlatform::InitLayersIPC()
     if (XRE_IsParentProcess())
     {
         layers::CompositorThreadHolder::Start();
-#ifdef MOZ_WIDGET_GONK
-        SharedBufferManagerChild::StartUp();
-#endif
     }
 }
 
@@ -942,10 +934,6 @@ gfxPlatform::ShutdownLayersIPC()
         gfx::VRManagerChild::ShutDown();
         layers::CompositorBridgeChild::ShutDown();
         layers::ImageBridgeChild::ShutDown();
-
-#ifdef MOZ_WIDGET_GONK
-        layers::SharedBufferManagerChild::ShutDown();
-#endif
 
         // This has to happen after shutting down the child protocols.
         layers::CompositorThreadHolder::Shutdown();
@@ -1214,18 +1202,6 @@ gfxPlatform::ComputeTileSize()
       // but I think everything should at least support 1024
       w = h = clamped(int32_t(RoundUpPow2(screenSize.width)) / 4, 256, 1024);
     }
-
-#ifdef MOZ_WIDGET_GONK
-    android::sp<android::GraphicBuffer> alloc =
-          new android::GraphicBuffer(w, h, android::PIXEL_FORMAT_RGBA_8888,
-                                     android::GraphicBuffer::USAGE_SW_READ_OFTEN |
-                                     android::GraphicBuffer::USAGE_SW_WRITE_OFTEN |
-                                     android::GraphicBuffer::USAGE_HW_TEXTURE);
-
-    if (alloc.get()) {
-      w = alloc->getStride(); // We want the tiles to be gralloc stride aligned.
-    }
-#endif
   }
 
   // Don't allow changing the tile size after we've set it.
@@ -1391,11 +1367,6 @@ gfxPlatform::PurgeSkiaGPUCache()
 bool
 gfxPlatform::HasEnoughTotalSystemMemoryForSkiaGL()
 {
-#ifdef MOZ_WIDGET_GONK
-  if (mTotalSystemMemory < 250*1024*1024) {
-    return false;
-  }
-#endif
   return true;
 }
 
@@ -2180,31 +2151,46 @@ gfxPlatform::InitAcceleration()
                                          "media.hardware-video-decoding.failed",
                                          nullptr,
                                          Preferences::ExactMatch);
+    InitGPUProcessPrefs();
+  }
+}
 
-    FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);
-    if (gfxPrefs::GPUProcessDevEnabled()) {
-      // We want to hide this from about:support, so only set a default if the
-      // pref is known to be true.
-      gpuProc.SetDefaultFromPref(
-        gfxPrefs::GetGPUProcessDevEnabledPrefName(),
-        true,
-        gfxPrefs::GetGPUProcessDevEnabledPrefDefault());
+void
+gfxPlatform::InitGPUProcessPrefs()
+{
+  // We want to hide this from about:support, so only set a default if the
+  // pref is known to be true.
+  if (!gfxPrefs::GPUProcessDevEnabled() && !gfxPrefs::GPUProcessDevForceEnabled()) {
+    return;
+  }
 
-      // We require E10S - otherwise, there is very little benefit to the GPU
-      // process, since the UI process must still use acceleration for
-      // performance.
-      if (!BrowserTabsRemoteAutostart()) {
-        gpuProc.Disable(
-          FeatureStatus::Unavailable,
-          "Multi-process mode is not enabled",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_E10S"));
-      }
-    }
+  FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);
 
-    if (gpuProc.IsEnabled()) {
-      GPUProcessManager* gpu = GPUProcessManager::Get();
-      gpu->LaunchGPUProcess();
-    }
+  gpuProc.SetDefaultFromPref(
+    gfxPrefs::GetGPUProcessDevEnabledPrefName(),
+    true,
+    gfxPrefs::GetGPUProcessDevEnabledPrefDefault());
+
+  if (gfxPrefs::GPUProcessDevForceEnabled()) {
+    gpuProc.UserForceEnable("User force-enabled via pref");
+  }
+
+  // We require E10S - otherwise, there is very little benefit to the GPU
+  // process, since the UI process must still use acceleration for
+  // performance.
+  if (!BrowserTabsRemoteAutostart()) {
+    gpuProc.ForceDisable(
+      FeatureStatus::Unavailable,
+      "Multi-process mode is not enabled",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_E10S"));
+    return;
+  }
+  if (InSafeMode()) {
+    gpuProc.ForceDisable(
+      FeatureStatus::Blocked,
+      "Safe-mode is enabled",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_SAFE_MODE"));
+    return;
   }
 }
 

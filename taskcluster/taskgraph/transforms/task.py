@@ -86,7 +86,7 @@ task_description_schema = Schema({
     # if omitted, the build will not be indexed.
     Optional('index'): {
         # the name of the product this build produces
-        'product': Any('firefox', 'mobile', 'b2g'),
+        'product': Any('firefox', 'mobile'),
 
         # the names to use for this job in the TaskCluster index
         'job-name': Any(
@@ -157,7 +157,7 @@ task_description_schema = Schema({
 
         # worker features that should be enabled
         Required('relengapi-proxy', default=False): bool,
-        Required('chainOfTrust', default=False): bool,
+        Required('chain-of-trust', default=False): bool,
         Required('taskcluster-proxy', default=False): bool,
         Required('allow-ptrace', default=False): bool,
         Required('loopback-video', default=False): bool,
@@ -205,7 +205,7 @@ task_description_schema = Schema({
         Required('implementation'): 'generic-worker',
 
         # command is a list of commands to run, sequentially
-        'command': [basestring],
+        'command': [taskref_or_string],
 
         # artifacts to extract from the task image after completion; note that artifacts
         # for the generic worker cannot have names
@@ -217,11 +217,23 @@ task_description_schema = Schema({
             'path': basestring,
         }],
 
+        # directories and/or files to be mounted
+        Optional('mounts'): [{
+            # a unique name for the cache volume
+            'cache-name': basestring,
+
+            # task image path for the cache
+            'path': basestring,
+        }],
+
         # environment variables
         Required('env', default={}): {basestring: taskref_or_string},
 
         # the maximum time to run, in seconds
         'max-run-time': int,
+
+        # os user groups for test task workers
+        Optional('os-groups', default=[]): [basestring],
     }, {
         Required('implementation'): 'buildbot-bridge',
 
@@ -267,7 +279,6 @@ GROUP_NAMES = {
     'tc-W-e10s': 'Web platform tests executed by TaskCluster with e10s',
     'tc-X': 'Xpcshell tests executed by TaskCluster',
     'tc-X-e10s': 'Xpcshell tests executed by TaskCluster with e10s',
-    'tc-Sim': 'Mulet simulator runs',
     'Aries': 'Aries Device Image',
     'Nexus 5-L': 'Nexus 5-L Device Image',
     'Cc': 'Toolchain builds',
@@ -331,7 +342,7 @@ def build_docker_worker_payload(config, task, task_def):
         features['allowPtrace'] = True
         task_def['scopes'].append('docker-worker:feature:allowPtrace')
 
-    if worker.get('chainOfTrust'):
+    if worker.get('chain-of-trust'):
         features['chainOfTrust'] = True
 
     capabilities = {}
@@ -398,11 +409,21 @@ def build_generic_worker_payload(config, task, task_def):
             'expires': task_def['expires'],  # always expire with the task
         })
 
+    mounts = []
+
+    for mount in worker.get('mounts', []):
+        mounts.append({
+            'cacheName': mount['cache-name'],
+            'directory': mount['path']
+        })
+
     task_def['payload'] = {
         'command': worker['command'],
         'artifacts': artifacts,
-        'env': worker['env'],
+        'env': worker.get('env', {}),
+        'mounts': mounts,
         'maxRunTime': worker['max-run-time'],
+        'osGroups': worker.get('os-groups', []),
     }
 
     if 'retry-exit-status' in worker:
@@ -515,7 +536,7 @@ def build_task(config, tasks):
             ])
 
         if 'expires-after' not in task:
-            task['expires-after'] = '14 days' if config.params['project'] == 'try' else '1 year'
+            task['expires-after'] = '28 days' if config.params['project'] == 'try' else '1 year'
 
         if 'deadline-after' not in task:
             task['deadline-after'] = '1 day'

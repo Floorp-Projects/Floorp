@@ -435,7 +435,7 @@ JavaScriptShared::toSymbolVariant(JSContext* cx, JS::Symbol* symArg, SymbolVaria
 }
 
 JS::Symbol*
-JavaScriptShared::fromSymbolVariant(JSContext* cx, SymbolVariant symVar)
+JavaScriptShared::fromSymbolVariant(JSContext* cx, const SymbolVariant& symVar)
 {
     switch (symVar.type()) {
       case SymbolVariant::TWellKnownSymbol: {
@@ -630,7 +630,7 @@ JavaScriptShared::toObjectOrNullVariant(JSContext* cx, JSObject* obj, ObjectOrNu
 }
 
 JSObject*
-JavaScriptShared::fromObjectOrNullVariant(JSContext* cx, ObjectOrNullVariant objVar)
+JavaScriptShared::fromObjectOrNullVariant(JSContext* cx, const ObjectOrNullVariant& objVar)
 {
     if (objVar.type() == ObjectOrNullVariant::TNullVariant)
         return nullptr;

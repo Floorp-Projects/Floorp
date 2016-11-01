@@ -8,6 +8,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
 
 XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
@@ -53,44 +55,22 @@ function getSender(extension, target, sender) {
 // Used by Extension.jsm
 global.tabGetSender = getSender;
 
-function getDocShellOwner(docShell) {
-  let browser = docShell.chromeEventHandler;
-
-  let xulWindow = browser.ownerGlobal;
-
-  let {gBrowser} = xulWindow;
-  if (gBrowser) {
-    let tab = gBrowser.getTabForBrowser(browser);
-
-    return {xulWindow, tab};
-  }
-
-  return {};
-}
-
 /* eslint-disable mozilla/balanced-listeners */
-// This listener fires whenever an extension page opens in a tab
-// (either initiated by the extension or the user). Its job is to fill
-// in some tab-specific details and keep data around about the
-// ExtensionContext.
-extensions.on("page-load", (type, context, params, sender) => {
-  if (params.type == "tab" || params.type == "popup") {
-    let {xulWindow, tab} = getDocShellOwner(params.docShell);
-
-    // FIXME: Handle tabs being moved between windows.
-    context.windowId = WindowManager.getId(xulWindow);
-    if (tab) {
-      sender.tabId = TabManager.getId(tab);
-      context.tabId = TabManager.getId(tab);
-    }
-  }
-});
 
 extensions.on("page-shutdown", (type, context) => {
-  if (context.type == "tab") {
-    let {xulWindow, tab} = getDocShellOwner(context.docShell);
-    if (tab) {
-      xulWindow.gBrowser.removeTab(tab);
+  if (context.viewType == "tab") {
+    if (context.extension.id !== context.xulBrowser.contentPrincipal.addonId) {
+      // Only close extension tabs.
+      // This check prevents about:addons from closing when it contains a
+      // WebExtension as an embedded inline options page.
+      return;
+    }
+    let {gBrowser} = context.xulBrowser.ownerGlobal;
+    if (gBrowser) {
+      let tab = gBrowser.getTabForBrowser(context.xulBrowser);
+      if (tab) {
+        gBrowser.removeTab(tab);
+      }
     }
   }
 });
@@ -107,8 +87,8 @@ extensions.on("fill-browser-data", (type, browser, data, result) => {
 /* eslint-enable mozilla/balanced-listeners */
 
 global.currentWindow = function(context) {
-  let {xulWindow} = getDocShellOwner(context.docShell);
-  if (xulWindow) {
+  let {xulWindow} = context;
+  if (xulWindow && context.viewType != "background") {
     return xulWindow;
   }
   return WindowManager.topWindow;
@@ -133,13 +113,6 @@ let tabListener = {
     EventEmitter.decorate(this);
 
     this.initialized = true;
-  },
-
-  destroy() {
-    AllWindowEvents.removeListener("TabClose", this);
-    AllWindowEvents.removeListener("TabOpen", this);
-    WindowListManager.removeOpenListener(this.handleWindowOpen);
-    WindowListManager.removeCloseListener(this.handleWindowClose);
   },
 
   handleEvent(event) {
@@ -238,7 +211,17 @@ let tabListener = {
     let windowId = WindowManager.getId(tab.ownerGlobal);
     let tabId = TabManager.getId(tab);
 
-    this.emit("tab-removed", {tab, tabId, windowId, isWindowClosing});
+    // When addons run in-process, `window.close()` is synchronous. Most other
+    // addon-invoked calls are asynchronous since they go through a proxy
+    // context via the message manager. This includes event registrations such
+    // as `tabs.onRemoved.addListener`.
+    // So, even if `window.close()` were to be called (in-process) after calling
+    // `tabs.onRemoved.addListener`, then the tab would be closed before the
+    // event listener is registered. To make sure that the event listener is
+    // notified, we dispatch `tabs.onRemoved` asynchronously.
+    Services.tm.mainThread.dispatch(() => {
+      this.emit("tab-removed", {tab, tabId, windowId, isWindowClosing});
+    }, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   tabReadyInitialized: false,
@@ -292,6 +275,12 @@ let tabListener = {
   },
 };
 
+/* eslint-disable mozilla/balanced-listeners */
+extensions.on("startup", () => {
+  tabListener.init();
+});
+/* eslint-enable mozilla/balanced-listeners */
+
 extensions.registerSchemaAPI("tabs", "addon_parent", context => {
   let {extension} = context;
   let self = {
@@ -308,7 +297,6 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
           fire(TabManager.convert(extension, event.tab));
         };
 
-        tabListener.init();
         tabListener.on("tab-created", listener);
         return () => {
           tabListener.off("tab-created", listener);
@@ -333,7 +321,6 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
           fire(event.tabId, {newWindowId: event.newWindowId, newPosition: event.newPosition});
         };
 
-        tabListener.init();
         tabListener.on("tab-attached", listener);
         return () => {
           tabListener.off("tab-attached", listener);
@@ -345,7 +332,6 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
           fire(event.tabId, {oldWindowId: event.oldWindowId, oldPosition: event.oldPosition});
         };
 
-        tabListener.init();
         tabListener.on("tab-detached", listener);
         return () => {
           tabListener.off("tab-detached", listener);
@@ -357,7 +343,6 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
           fire(event.tabId, {windowId: event.windowId, isWindowClosing: event.isWindowClosing});
         };
 
-        tabListener.init();
         tabListener.on("tab-removed", listener);
         return () => {
           tabListener.off("tab-removed", listener);
@@ -540,8 +525,37 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             }
           }
 
+          if (createProperties.cookieStoreId && !extension.hasPermission("cookies")) {
+            return Promise.reject({message: `No permission for cookieStoreId: ${createProperties.cookieStoreId}`});
+          }
+
+          let options = {};
+          if (createProperties.cookieStoreId) {
+            if (!global.isValidCookieStoreId(createProperties.cookieStoreId)) {
+              return Promise.reject({message: `Illegal cookieStoreId: ${createProperties.cookieStoreId}`});
+            }
+
+            let privateWindow = PrivateBrowsingUtils.isBrowserPrivate(window.gBrowser);
+            if (privateWindow && !global.isPrivateCookieStoreId(createProperties.cookieStoreId)) {
+              return Promise.reject({message: `Illegal to set non-private cookieStorageId in a private window`});
+            }
+
+            if (!privateWindow && global.isPrivateCookieStoreId(createProperties.cookieStoreId)) {
+              return Promise.reject({message: `Illegal to set private cookieStorageId in a non-private window`});
+            }
+
+            if (global.isContainerCookieStoreId(createProperties.cookieStoreId)) {
+              let containerId = global.getContainerForCookieStoreId(createProperties.cookieStoreId);
+              if (!containerId) {
+                return Promise.reject({message: `No cookie store exists with ID ${createProperties.cookieStoreId}`});
+              }
+
+              options.userContextId = containerId;
+            }
+          }
+
           tabListener.initTabReady();
-          let tab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL);
+          let tab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL, options);
 
           let active = true;
           if (createProperties.active !== null) {
@@ -710,6 +724,11 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             }
           }
 
+          if (queryInfo.cookieStoreId !== null &&
+              tab.cookieStoreId != queryInfo.cookieStoreId) {
+            return false;
+          }
+
           if (pattern && !pattern.matches(Services.io.newURI(tab.url, null, null))) {
             return false;
           }
@@ -862,9 +881,9 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         let destinationWindow = null;
         if (moveProperties.windowId !== null) {
           destinationWindow = WindowManager.getWindow(moveProperties.windowId, context);
-          // Ignore invalid window.
+          // Fail on an invalid window.
           if (!destinationWindow) {
-            return;
+            return Promise.reject({message: `Invalid window ID: ${moveProperties.windowId}`});
           }
         }
 
@@ -1059,7 +1078,6 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
           }
         };
 
-        tabListener.init();
         tabListener.on("tab-attached", tabCreated);
         tabListener.on("tab-created", tabCreated);
 

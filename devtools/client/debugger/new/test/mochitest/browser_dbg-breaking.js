@@ -4,7 +4,7 @@
 // Tests the breakpoints are hit in various situations.
 
 add_task(function* () {
-  const dbg = yield initDebugger("doc-scripts.html", "scripts.html");
+  const dbg = yield initDebugger("doc-scripts.html");
   const { selectors: { getSelectedSource }, getState } = dbg;
 
   // Make sure we can set a top-level breakpoint and it will be hit on

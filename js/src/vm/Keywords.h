@@ -55,6 +55,7 @@
     macro(private, private_, TOK_STRICT_RESERVED) \
     macro(protected, protected_, TOK_STRICT_RESERVED) \
     macro(public, public_, TOK_STRICT_RESERVED) \
+    macro(await, await, TOK_AWAIT) \
     /* \
      * Yield is a token inside function*.  Outside of a function*, it is a \
      * future reserved keyword in strict mode, but a keyword in JS1.7 even \

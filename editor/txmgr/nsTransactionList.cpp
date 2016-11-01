@@ -46,17 +46,15 @@ NS_IMETHODIMP nsTransactionList::GetNumItems(int32_t *aNumItems)
   *aNumItems = 0;
 
   nsCOMPtr<nsITransactionManager> txMgr = do_QueryReferent(mTxnMgr);
-
   NS_ENSURE_TRUE(txMgr, NS_ERROR_FAILURE);
 
-  nsresult result = NS_OK;
-
-  if (mTxnStack)
+  if (mTxnStack) {
     *aNumItems = mTxnStack->GetSize();
-  else if (mTxnItem)
-    result = mTxnItem->GetNumberOfChildren(aNumItems);
+  } else if (mTxnItem) {
+    return mTxnItem->GetNumberOfChildren(aNumItems);
+  }
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsTransactionList::ItemIsBatch(int32_t aIndex, bool *aIsBatch)
@@ -66,20 +64,15 @@ NS_IMETHODIMP nsTransactionList::ItemIsBatch(int32_t aIndex, bool *aIsBatch)
   *aIsBatch = false;
 
   nsCOMPtr<nsITransactionManager> txMgr = do_QueryReferent(mTxnMgr);
-
   NS_ENSURE_TRUE(txMgr, NS_ERROR_FAILURE);
 
   RefPtr<nsTransactionItem> item;
-
-  nsresult result = NS_OK;
-
-  if (mTxnStack)
+  if (mTxnStack) {
     item = mTxnStack->GetItem(aIndex);
-  else if (mTxnItem)
-    result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
-
-  NS_ENSURE_SUCCESS(result, result);
-
+  } else if (mTxnItem) {
+    nsresult rv = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 
   return item->GetIsBatch(aIsBatch);
@@ -90,30 +83,25 @@ NS_IMETHODIMP nsTransactionList::GetData(int32_t aIndex,
                                          nsISupports ***aData)
 {
   nsCOMPtr<nsITransactionManager> txMgr = do_QueryReferent(mTxnMgr);
-
   NS_ENSURE_TRUE(txMgr, NS_ERROR_FAILURE);
 
   RefPtr<nsTransactionItem> item;
-
   if (mTxnStack) {
     item = mTxnStack->GetItem(aIndex);
   } else if (mTxnItem) {
-    nsresult result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
-    NS_ENSURE_SUCCESS(result, result);
+    nsresult rv = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsCOMArray<nsISupports>& data = item->GetData();
-
   nsISupports** ret = static_cast<nsISupports**>(moz_xmalloc(data.Count() *
     sizeof(nsISupports*)));
 
   for (int32_t i = 0; i < data.Count(); i++) {
     NS_ADDREF(ret[i] = data[i]);
   }
-
   *aLength = data.Count();
   *aData = ret;
-
   return NS_OK;
 }
 
@@ -124,24 +112,18 @@ NS_IMETHODIMP nsTransactionList::GetItem(int32_t aIndex, nsITransaction **aItem)
   *aItem = 0;
 
   nsCOMPtr<nsITransactionManager> txMgr = do_QueryReferent(mTxnMgr);
-
   NS_ENSURE_TRUE(txMgr, NS_ERROR_FAILURE);
 
   RefPtr<nsTransactionItem> item;
-
-  nsresult result = NS_OK;
-
-  if (mTxnStack)
+  if (mTxnStack) {
     item = mTxnStack->GetItem(aIndex);
-  else if (mTxnItem)
-    result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
-
-  NS_ENSURE_SUCCESS(result, result);
-
+  } else if (mTxnItem) {
+    nsresult rv = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 
   *aItem = item->GetTransaction().take();
-
   return NS_OK;
 }
 
@@ -152,20 +134,15 @@ NS_IMETHODIMP nsTransactionList::GetNumChildrenForItem(int32_t aIndex, int32_t *
   *aNumChildren = 0;
 
   nsCOMPtr<nsITransactionManager> txMgr = do_QueryReferent(mTxnMgr);
-
   NS_ENSURE_TRUE(txMgr, NS_ERROR_FAILURE);
 
   RefPtr<nsTransactionItem> item;
-
-  nsresult result = NS_OK;
-
-  if (mTxnStack)
+  if (mTxnStack) {
     item = mTxnStack->GetItem(aIndex);
-  else if (mTxnItem)
-    result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
-
-  NS_ENSURE_SUCCESS(result, result);
-
+  } else if (mTxnItem) {
+    nsresult rv = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 
   return item->GetNumberOfChildren(aNumChildren);
@@ -178,28 +155,20 @@ NS_IMETHODIMP nsTransactionList::GetChildListForItem(int32_t aIndex, nsITransact
   *aTxnList = 0;
 
   nsCOMPtr<nsITransactionManager> txMgr = do_QueryReferent(mTxnMgr);
-
   NS_ENSURE_TRUE(txMgr, NS_ERROR_FAILURE);
 
   RefPtr<nsTransactionItem> item;
-
-  nsresult result = NS_OK;
-
-  if (mTxnStack)
+  if (mTxnStack) {
     item = mTxnStack->GetItem(aIndex);
-  else if (mTxnItem)
-    result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
-
-  NS_ENSURE_SUCCESS(result, result);
-
+  } else if (mTxnItem) {
+    nsresult rv = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
 
   *aTxnList = (nsITransactionList *)new nsTransactionList(txMgr, item);
-
   NS_ENSURE_TRUE(*aTxnList, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*aTxnList);
-
   return NS_OK;
 }
-

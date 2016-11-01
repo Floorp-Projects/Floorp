@@ -129,6 +129,12 @@ Form History test: form field autocomplete
     <button type="submit">Submit</button>
   </form>
 
+  <!-- form with input type='datetime-local' -->
+  <form id="form20" onsubmit="return false;">
+    <input  type="datetime-local" name="field17">
+    <button type="submit">Submit</button>
+  </form>
+
 </div>
 
 <pre id="test">
@@ -172,18 +178,10 @@ function setupFormHistory(aCallback) {
     { op : "add", fieldname : "field14", value : "#ffffff" }, // not used, since type=color doesn't have autocomplete currently
     { op : "add", fieldname : "field15", value : "2016-08" },
     { op : "add", fieldname : "field16", value : "2016-W32" },
+    { op : "add", fieldname : "field17", value : "2016-10-21T10:10" },
     { op : "add", fieldname : "searchbar-history", value : "blacklist test" },
   ], aCallback);
 }
-
-// All these non-implemeted types might need autocomplete tests in the future.
-var todoTypes = [ "datetime", "datetime-local" ];
-var todoInput = document.createElement("input");
-for (var type of todoTypes) {
-  todoInput.type = type;
-  todo_is(todoInput.type, type, type + " type shouldn't be implemented");
-}
-
 
 function setForm(value) {
   input.value = value;
@@ -966,10 +964,22 @@ function runTest() {
         doKey("return");
         checkForm("2016-W32");
 
-        addEntry("field1", "value1");
+        input = $_(20, "field17");
+        restoreForm();
+        expectPopup();
+        doKey("down");
         break;
 
     case 411:
+        checkMenuEntries(["2016-10-21T10:10"]);
+        doKey("down");
+        doKey("return");
+        checkForm("2016-10-21T10:10");
+
+        addEntry("field1", "value1");
+        break;
+
+    case 412:
         input = $_(1, "field1");
         // Go to test 500.
         testNum = 499;

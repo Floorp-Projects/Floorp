@@ -204,10 +204,6 @@ SharedArrayRawBuffer::dropReference()
     }
 }
 
-const JSFunctionSpec SharedArrayBufferObject::jsfuncs[] = {
-    /* Nothing yet */
-    JS_FS_END
-};
 
 MOZ_ALWAYS_INLINE bool
 SharedArrayBufferObject::byteLengthGetterImpl(JSContext* cx, const CallArgs& args)
@@ -331,10 +327,29 @@ SharedArrayBufferObject::addSizeOfExcludingThis(JSObject* obj, mozilla::MallocSi
         buf.byteLength() / buf.rawBufferObject()->refcount();
 }
 
-const Class SharedArrayBufferObject::protoClass = {
-    "SharedArrayBufferPrototype",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer)
+static const ClassSpec SharedArrayBufferObjectProtoClassSpec = {
+    DELEGATED_CLASSSPEC(SharedArrayBufferObject::class_.spec),
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    ClassSpec::IsDelegated
 };
+
+static const Class SharedArrayBufferObjectProtoClass = {
+    "SharedArrayBufferPrototype",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer),
+    JS_NULL_CLASS_OPS,
+    &SharedArrayBufferObjectProtoClassSpec
+};
+
+static JSObject*
+CreateSharedArrayBufferPrototype(JSContext* cx, JSProtoKey key)
+{
+    return cx->global()->createBlankPrototype(cx, &SharedArrayBufferObjectProtoClass);
+}
 
 static const ClassOps SharedArrayBufferObjectClassOps = {
     nullptr, /* addProperty */
@@ -351,6 +366,32 @@ static const ClassOps SharedArrayBufferObjectClassOps = {
     nullptr, /* trace */
 };
 
+static const JSFunctionSpec static_functions[] = {
+    JS_FS_END
+};
+
+static const JSPropertySpec static_properties[] = {
+    JS_PS_END
+};
+
+static const JSFunctionSpec prototype_functions[] = {
+    JS_FS_END
+};
+
+static const JSPropertySpec prototype_properties[] = {
+    JS_PSG("byteLength", SharedArrayBufferObject::byteLengthGetter, 0),
+    JS_PS_END
+};
+
+static const ClassSpec ArrayBufferObjectClassSpec = {
+    GenericCreateConstructor<SharedArrayBufferObject::class_constructor, 1, gc::AllocKind::FUNCTION>,
+    CreateSharedArrayBufferPrototype,
+    static_functions,
+    static_properties,
+    prototype_functions,
+    prototype_properties
+};
+
 const Class SharedArrayBufferObject::class_ = {
     "SharedArrayBuffer",
     JSCLASS_DELAY_METADATA_BUILDER |
@@ -358,46 +399,9 @@ const Class SharedArrayBufferObject::class_ = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer) |
     JSCLASS_BACKGROUND_FINALIZE,
     &SharedArrayBufferObjectClassOps,
-    JS_NULL_CLASS_SPEC,
+    &ArrayBufferObjectClassSpec,
     JS_NULL_CLASS_EXT
 };
-
-JSObject*
-js::InitSharedArrayBufferClass(JSContext* cx, HandleObject obj)
-{
-    MOZ_ASSERT(obj->isNative());
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &SharedArrayBufferObject::protoClass));
-    if (!proto)
-        return nullptr;
-
-    RootedFunction ctor(cx, global->createConstructor(cx, SharedArrayBufferObject::class_constructor,
-                                                      cx->names().SharedArrayBuffer, 1));
-    if (!ctor)
-        return nullptr;
-
-    if (!LinkConstructorAndPrototype(cx, ctor, proto))
-        return nullptr;
-
-    RootedId byteLengthId(cx, NameToId(cx->names().byteLength));
-    unsigned attrs = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
-    JSObject* getter =
-        NewNativeFunction(cx, SharedArrayBufferObject::byteLengthGetter, 0, nullptr);
-    if (!getter)
-        return nullptr;
-
-    if (!NativeDefineProperty(cx, proto, byteLengthId, UndefinedHandleValue,
-                              JS_DATA_TO_FUNC_PTR(GetterOp, getter), nullptr, attrs))
-        return nullptr;
-
-    if (!JS_DefineFunctions(cx, proto, SharedArrayBufferObject::jsfuncs))
-        return nullptr;
-
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_SharedArrayBuffer, ctor, proto))
-        return nullptr;
-
-    return proto;
-}
 
 bool
 js::IsSharedArrayBuffer(HandleValue v)

@@ -12,10 +12,6 @@
 
 #include "vk/GrVkDefines.h"
 
-#ifdef SK_DEBUG
-#define ENABLE_VK_LAYERS
-#endif
-
 struct GrVkInterface;
 
 enum GrVkExtensionFlags {
@@ -25,7 +21,7 @@ enum GrVkExtensionFlags {
     kKHR_swapchain_GrVkExtensionFlag       = 0x0008,
     kKHR_win32_surface_GrVkExtensionFlag   = 0x0010,
     kKHR_android_surface_GrVkExtensionFlag = 0x0020,
-    kKHR_xlib_surface_GrVkExtensionFlag    = 0x0040,
+    kKHR_xcb_surface_GrVkExtensionFlag     = 0x0040,
 };
 
 enum GrVkFeatureFlags {
@@ -45,14 +41,20 @@ struct GrVkBackendContext : public SkRefCnt {
     VkPhysicalDevice                  fPhysicalDevice;
     VkDevice                          fDevice;
     VkQueue                           fQueue;
-    uint32_t                          fQueueFamilyIndex;
+    uint32_t                          fGraphicsQueueIndex;
     uint32_t                          fMinAPIVersion;
     uint32_t                          fExtensions;
     uint32_t                          fFeatures;
     SkAutoTUnref<const GrVkInterface> fInterface;
 
+    using CanPresentFn = std::function<bool(VkInstance, VkPhysicalDevice,
+                                            uint32_t queueFamilyIndex)>;
+
     // Helper function to create the default Vulkan objects needed by the GrVkGpu object
-    static const GrVkBackendContext* Create();
+    // If presentQueueIndex is non-NULL, will try to set up presentQueue as part of device
+    // creation using the platform-specific canPresent() function.
+    static const GrVkBackendContext* Create(uint32_t* presentQueueIndex = nullptr,
+                                            CanPresentFn = CanPresentFn());
 
     ~GrVkBackendContext() override;
 };

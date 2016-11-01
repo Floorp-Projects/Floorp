@@ -250,7 +250,10 @@ bool SkBitmapScaler::Resize(SkBitmap* resultPtr, const SkPixmap& source, ResizeM
     }
 
     SkBitmap result;
-    result.setInfo(SkImageInfo::MakeN32(destWidth, destHeight, source.alphaType()));
+    // Note: pass along the profile information even thought this is no the right answer because
+    // this could be scaling in sRGB.
+    result.setInfo(SkImageInfo::MakeN32(destWidth, destHeight, source.alphaType(),
+                                        sk_ref_sp(source.info().colorSpace())));
     result.allocPixels(allocator, nullptr);
 
     SkPixmap resultPM;

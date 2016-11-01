@@ -50,6 +50,7 @@ TraceLoggerGraphState* traceLoggerGraphState = nullptr;
 // are allowed, with %u standing for a full 32-bit number and %d standing for
 // an up to 3-digit number.
 static js::UniqueChars
+MOZ_FORMAT_PRINTF(1, 2)
 AllocTraceLogFilename(const char* pattern, ...) {
     js::UniqueChars filename;
 

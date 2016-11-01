@@ -23,3 +23,31 @@ function extensionApiFactory(context) {
 
 extensions.registerSchemaAPI("extension", "addon_child", extensionApiFactory);
 extensions.registerSchemaAPI("extension", "content_child", extensionApiFactory);
+extensions.registerSchemaAPI("extension", "addon_child", context => {
+  return {
+    extension: {
+      getViews: function(fetchProperties) {
+        let result = Cu.cloneInto([], context.cloneScope);
+
+        for (let view of context.extension.views) {
+          if (!view.active) {
+            continue;
+          }
+          if (fetchProperties !== null) {
+            if (fetchProperties.type !== null && view.viewType != fetchProperties.type) {
+              continue;
+            }
+
+            if (fetchProperties.windowId !== null && view.windowId != fetchProperties.windowId) {
+              continue;
+            }
+          }
+
+          result.push(view.contentWindow);
+        }
+
+        return result;
+      },
+    },
+  };
+});

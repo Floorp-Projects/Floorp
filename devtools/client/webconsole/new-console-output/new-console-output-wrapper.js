@@ -18,11 +18,12 @@ const store = configureStore();
 let queuedActions = [];
 let throttledDispatchTimeout = false;
 
-function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner) {
+function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, document) {
   this.parentNode = parentNode;
   this.jsterm = jsterm;
   this.toolbox = toolbox;
   this.owner = owner;
+  this.document = document;
 
   this.init = this.init.bind(this);
 }
@@ -54,7 +55,10 @@ NewConsoleOutputWrapper.prototype = {
           });
         },
         sourceMapService: this.toolbox ? this.toolbox._sourceMapService : null,
-        openLink: url => this.jsterm.hud.owner.openLink.call(this.jsterm.hud.owner, url)
+        openLink: url => this.jsterm.hud.owner.openLink.call(this.jsterm.hud.owner, url),
+        createElement: nodename => {
+          return this.document.createElementNS("http://www.w3.org/1999/xhtml", nodename);
+        }
       }
     });
     let filterBar = FilterBar({

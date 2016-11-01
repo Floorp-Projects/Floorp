@@ -95,6 +95,7 @@ ObjectElements::MakeElementsCopyOnWrite(ExclusiveContext* cx, NativeObject* obj)
     // Note: this method doesn't update type information to indicate that the
     // elements might be copy on write. Handling this is left to the caller.
     MOZ_ASSERT(!header->isCopyOnWrite());
+    MOZ_ASSERT(!header->isFrozen());
     header->flags |= COPY_ON_WRITE;
 
     header->ownerObject().init(obj);
@@ -498,8 +499,10 @@ NativeObject::shrinkSlots(ExclusiveContext* cx, uint32_t oldCount, uint32_t newC
     MOZ_ASSERT_IF(!is<ArrayObject>(), newCount >= SLOT_CAPACITY_MIN);
 
     HeapSlot* newslots = ReallocateObjectBuffer<HeapSlot>(cx, this, slots_, oldCount, newCount);
-    if (!newslots)
+    if (!newslots) {
+        cx->recoverFromOutOfMemory();
         return;  /* Leave slots at its old size. */
+    }
 
     slots_ = newslots;
 }
@@ -516,8 +519,19 @@ NativeObject::sparsifyDenseElement(ExclusiveContext* cx, HandleNativeObject obj,
     removeDenseElementForSparseIndex(cx, obj, index);
 
     uint32_t slot = obj->slotSpan();
-    if (!obj->addDataProperty(cx, INT_TO_JSID(index), slot, JSPROP_ENUMERATE)) {
-        obj->setDenseElement(index, value);
+
+    RootedId id(cx, INT_TO_JSID(index));
+
+    ShapeTable::Entry* entry = nullptr;
+    if (obj->inDictionaryMode())
+        entry = &obj->lastProperty()->table().search<MaybeAdding::Adding>(id);
+
+    // NOTE: We don't use addDataProperty because we don't want the
+    // extensibility check if we're, for example, sparsifying frozen objects..
+    if (!addPropertyInternal(cx, obj, id, nullptr, nullptr, slot,
+                             obj->getElementsHeader()->elementAttributes(),
+                             0, entry, true)) {
+        obj->setDenseElementUnchecked(index, value);
         return false;
     }
 
@@ -545,7 +559,7 @@ NativeObject::sparsifyDenseElements(js::ExclusiveContext* cx, HandleNativeObject
     }
 
     if (initialized)
-        obj->setDenseInitializedLength(0);
+        obj->setDenseInitializedLengthUnchecked(0);
 
     /*
      * Reduce storage for dense elements which are now holes. Explicitly mark
@@ -798,6 +812,7 @@ NativeObject::growElements(ExclusiveContext* cx, uint32_t reqCapacity)
 {
     MOZ_ASSERT(nonProxyIsExtensible());
     MOZ_ASSERT(canHaveNonEmptyElements());
+    MOZ_ASSERT(!denseElementsAreFrozen());
     if (denseElementsAreCopyOnWrite())
         MOZ_CRASH();
 
@@ -892,6 +907,7 @@ NativeObject::shrinkElements(ExclusiveContext* cx, uint32_t reqCapacity)
 NativeObject::CopyElementsForWrite(ExclusiveContext* cx, NativeObject* obj)
 {
     MOZ_ASSERT(obj->denseElementsAreCopyOnWrite());
+    MOZ_ASSERT(!obj->denseElementsAreFrozen());
 
     // The original owner of a COW elements array should never be modified.
     MOZ_ASSERT(obj->getElementsHeader()->ownerObject() != obj);
@@ -1003,7 +1019,7 @@ NativeObject::addDataProperty(ExclusiveContext* cx, jsid idArg, uint32_t slot, u
 
 Shape*
 NativeObject::addDataProperty(ExclusiveContext* cx, HandlePropertyName name,
-                          uint32_t slot, unsigned attrs)
+                              uint32_t slot, unsigned attrs)
 {
     MOZ_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     RootedNativeObject self(cx, this);

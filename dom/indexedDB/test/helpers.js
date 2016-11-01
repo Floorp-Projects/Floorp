@@ -76,7 +76,8 @@ function testHarnessSteps() {
         ["dom.indexedDB.testing", true],
         ["dom.indexedDB.experimental", true],
         ["dom.archivereader.enabled", true],
-        ["dom.workers.latestJSVersion", true]
+        ["dom.workers.latestJSVersion", true],
+        ["javascript.options.wasm", true]
       ]
     },
     nextTestHarnessStep
@@ -145,7 +146,7 @@ function testHarnessSteps() {
           break;
 
         case "loaded":
-          worker.postMessage({ op: "start" });
+          worker.postMessage({ op: "start", wasmSupported: isWasmSupported() });
           break;
 
         case "done":
@@ -161,6 +162,11 @@ function testHarnessSteps() {
           clearAllDatabases(function(){
             worker.postMessage({ op: "clearAllDatabasesDone" });
           });
+          break;
+
+        case "getWasmBinary":
+          worker.postMessage({ op: "getWasmBinaryDone",
+                               wasmBinary: getWasmBinarySync(message.text) });
           break;
 
         default:
@@ -348,8 +354,24 @@ function scheduleGC()
   SpecialPowers.exactGC(continueToNextStep);
 }
 
+function isWasmSupported()
+{
+  let testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
+  return testingFunctions.wasmIsSupported();
+}
+
+function getWasmBinarySync(text)
+{
+  let testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
+  let wasmTextToBinary = SpecialPowers.unwrap(testingFunctions.wasmTextToBinary);
+  let binary = wasmTextToBinary(text);
+  return binary;
+}
+
 function workerScript() {
   "use strict";
+
+  self.wasmSupported = false;
 
   self.repr = function(_thing_) {
     if (typeof(_thing_) == "undefined") {
@@ -538,6 +560,28 @@ function workerScript() {
     return true;
   };
 
+  self.isWasmSupported = function() {
+    return self.wasmSupported;
+  }
+
+  self.getWasmBinarySync = function(_text_) {
+    self.ok(false, "This can't be used on workers");
+  }
+
+  self.getWasmBinary = function(_text_) {
+    self.postMessage({ op: "getWasmBinary", text: _text_ });
+  }
+
+  self.getWasmModule = function(_binary_) {
+    let module = new WebAssembly.Module(_binary_);
+    return module;
+  }
+
+  self.verifyWasmModule = function(_module) {
+    self.todo(false, "Need a verifyWasmModule implementation on workers");
+    self.continueToNextStep();
+  }
+
   self.onmessage = function(_event_) {
     let message = _event_.data;
     switch (message.op) {
@@ -548,6 +592,7 @@ function workerScript() {
         break;
 
       case "start":
+        self.wasmSupported = message.wasmSupported;
         executeSoon(function() {
           info("Worker: starting tests");
           testGenerator.next();
@@ -559,6 +604,11 @@ function workerScript() {
         if (self._clearAllDatabasesCallback) {
           self._clearAllDatabasesCallback();
         }
+        break;
+
+      case "getWasmBinaryDone":
+        info("Worker: get wasm binary done");
+        testGenerator.send(message.wasmBinary);
         break;
 
       default:

@@ -125,7 +125,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, const CompileArgs& args,
             return false;
     }
 
-    if (!metadata_->assumptions.clone(args.assumptions))
+    if (!assumptions_.clone(args.assumptions))
         return false;
 
     // For asm.js, the Vectors in ModuleGeneratorData are max-sized reservations
@@ -670,9 +670,6 @@ ModuleGenerator::allocateGlobal(GlobalDesc* global)
       case ValType::B32x4:
         width = 16;
         break;
-      case ValType::Limit:
-        MOZ_CRASH("Limit");
-        break;
     }
 
     uint32_t offset;
@@ -858,6 +855,13 @@ ModuleGenerator::addElemSegment(InitExpr offset, Uint32Vector&& elemFuncIndices)
     }
 
     return elemSegments_.emplaceBack(0, offset, Move(elemFuncIndices));
+}
+
+void
+ModuleGenerator::setDataSegments(DataSegmentVector&& segments)
+{
+    MOZ_ASSERT(dataSegments_.empty());
+    dataSegments_ = Move(segments);
 }
 
 bool
@@ -1154,7 +1158,8 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     if (!finishLinkData(code))
         return nullptr;
 
-    return SharedModule(js_new<Module>(Move(code),
+    return SharedModule(js_new<Module>(Move(assumptions_),
+                                       Move(code),
                                        Move(linkData_),
                                        Move(imports_),
                                        Move(exports_),

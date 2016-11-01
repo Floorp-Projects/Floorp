@@ -22,6 +22,9 @@ window.onload = Task.async(function* () {
 
   try {
     yield testBasic();
+    yield testBooleanObject();
+    yield testNumberObject();
+    yield testStringObject();
 
     // Test property iterator
     yield testMaxProps();
@@ -61,6 +64,108 @@ window.onload = Task.async(function* () {
       {
         mode: "tiny",
         expectedOutput: `Object`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testBooleanObject() {
+    // Test object: `new Boolean(true)`
+    const testName = "testBooleanObject";
+
+    // Test that correct rep is chosen
+    const gripStub = getGripStub(testName);
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, Grip.rep, `Rep correctly selects ${Grip.rep.displayName}`);
+
+    // Test rendering
+    const defaultOutput = `Boolean { true }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `Boolean`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testNumberObject() {
+    // Test object: `new Number(42)`
+    const testName = "testNumberObject";
+
+    // Test that correct rep is chosen
+    const gripStub = getGripStub(testName);
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, Grip.rep, `Rep correctly selects ${Grip.rep.displayName}`);
+
+    // Test rendering
+    const defaultOutput = `Number { 42 }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `Number`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testStringObject() {
+    // Test object: `new String("foo")`
+    const testName = "testStringObject";
+
+    // Test that correct rep is chosen
+    const gripStub = getGripStub(testName);
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, Grip.rep, `Rep correctly selects ${Grip.rep.displayName}`);
+
+    // Test rendering
+    const defaultOutput = `String { "foo" }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `String`,
       },
       {
         mode: "short",
@@ -530,7 +635,48 @@ window.onload = Task.async(function* () {
             "safeGetterValues": {}
           }
         };
-
+      case "testBooleanObject":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj57",
+          "class": "Boolean",
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {},
+            "ownPropertiesLength": 0,
+            "safeGetterValues": {},
+            "wrappedValue": true
+          }
+        };
+      case "testNumberObject":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj59",
+          "class": "Number",
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {},
+            "ownPropertiesLength": 0,
+            "safeGetterValues": {},
+            "wrappedValue": 42
+          }
+        };
+      case "testStringObject":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj61",
+          "class": "String",
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {},
+            "ownPropertiesLength": 4,
+            "safeGetterValues": {},
+            "wrappedValue": "foo"
+          }
+        };
     }
   }
 });

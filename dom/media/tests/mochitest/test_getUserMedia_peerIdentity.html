@@ -22,7 +22,7 @@ function theTest() {
       .then(stream => Promise.all([
         audioIsSilence(withConstraint, stream),
         videoIsBlack(withConstraint, stream)
-      ]));
+      ]).then(() => stream.getTracks().forEach(t => t.stop())));
   };
 
   // both without and with the constraint

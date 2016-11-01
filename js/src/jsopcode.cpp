@@ -151,14 +151,14 @@ const char * PCCounts::numExecName = "interp";
 static MOZ_MUST_USE bool
 DumpIonScriptCounts(Sprinter* sp, HandleScript script, jit::IonScriptCounts* ionCounts)
 {
-    if (!sp->jsprintf("IonScript [%lu blocks]:\n", ionCounts->numBlocks()))
+    if (!sp->jsprintf("IonScript [%" PRIuSIZE " blocks]:\n", ionCounts->numBlocks()))
         return false;
 
     for (size_t i = 0; i < ionCounts->numBlocks(); i++) {
         const jit::IonBlockCounts& block = ionCounts->block(i);
         unsigned lineNumber = 0, columnNumber = 0;
         lineNumber = PCToLineNumber(script, script->offsetToPC(block.offset()), &columnNumber);
-        if (!sp->jsprintf("BB #%lu [%05u,%u,%u]",
+        if (!sp->jsprintf("BB #%" PRIu32 " [%05u,%u,%u]",
                           block.id(), block.offset(), lineNumber, columnNumber))
         {
             return false;
@@ -168,10 +168,10 @@ DumpIonScriptCounts(Sprinter* sp, HandleScript script, jit::IonScriptCounts* ion
                 return false;
         }
         for (size_t j = 0; j < block.numSuccessors(); j++) {
-            if (!sp->jsprintf(" -> #%lu", block.successor(j)))
+            if (!sp->jsprintf(" -> #%" PRIu32, block.successor(j)))
                 return false;
         }
-        if (!sp->jsprintf(" :: %llu hits\n", block.hitCount()))
+        if (!sp->jsprintf(" :: %" PRIu64 " hits\n", block.hitCount()))
             return false;
         if (!sp->jsprintf("%s\n", block.code()))
             return false;
@@ -354,7 +354,7 @@ class BytecodeParser
         uint32_t offset = offsetForStackOperand(script_->pcToOffset(pc), operand);
         if (offset >= SpecialOffsets::FirstSpecialOffset)
             return nullptr;
-        return script_->offsetToPC(offsetForStackOperand(script_->pcToOffset(pc), operand));
+        return script_->offsetToPC(offset);
     }
 
   private:
@@ -1265,6 +1265,16 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
         return write("super.") &&
                quote(prop, '\0');
       }
+      case JSOP_SETELEM:
+      case JSOP_STRICTSETELEM:
+        // NOTE: We don't show the right hand side of the operation because
+        // it's used in error messages like: "a[0] is not readable".
+        //
+        // We could though.
+        return decompilePCForStackOperand(pc, -3) &&
+               write("[") &&
+               decompilePCForStackOperand(pc, -2) &&
+               write("]");
       case JSOP_GETELEM:
       case JSOP_CALLELEM:
         return decompilePCForStackOperand(pc, -2) &&

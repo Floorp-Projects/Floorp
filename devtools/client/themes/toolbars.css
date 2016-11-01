@@ -11,11 +11,11 @@
   --searchbox-border-color: #ffbf00;
   --searcbox-no-match-background-color: #ffe5e5;
   --searcbox-no-match-border-color: #e52e2e;
-  --magnifying-glass-image: url(images/search.svg);
-  --filter-image: url(images/filter.svg);
-  --tool-options-image: url(images/tool-options.svg);
+  --magnifying-glass-image: url(chrome://devtools/skin/images/search.svg);
+  --filter-image: url(chrome://devtools/skin/images/filter.svg);
+  --tool-options-image: url(chrome://devtools/skin/images/tool-options.svg);
   --icon-filter: none;
-  --checked-icon-filter: url(images/filters.svg#checked-icon-state);
+  --checked-icon-filter: url(chrome://devtools/skin/images/filters.svg#checked-icon-state);
   --toolbar-button-border-color: rgba(170, 170, 170, .5);
 }
 
@@ -26,17 +26,17 @@
   --searchbox-border-color: #d99f2b;
   --searcbox-no-match-background-color: #402325;
   --searcbox-no-match-border-color: #cc3d3d;
-  --magnifying-glass-image: url(images/search.svg);
-  --filter-image: url(images/filter.svg);
-  --tool-options-image: url(images/tool-options.svg);
+  --magnifying-glass-image: url(chrome://devtools/skin/images/search.svg);
+  --filter-image: url(chrome://devtools/skin/images/filter.svg);
+  --tool-options-image: url(chrome://devtools/skin/images/tool-options.svg);
   --icon-filter: invert(1);
-  --checked-icon-filter: url(images/filters.svg#dark-theme-checked-icon-state);
+  --checked-icon-filter: url(chrome://devtools/skin/images/filters.svg#dark-theme-checked-icon-state);
   --toolbar-button-border-color: rgba(0, 0, 0, .4);
 }
 
 .theme-firebug {
-  --magnifying-glass-image: url(images/search.svg);
-  --tool-options-image: url(images/firebug/tool-options.svg);
+  --magnifying-glass-image: url(chrome://devtools/skin/images/search.svg);
+  --tool-options-image: url(chrome://devtools/skin/images/firebug/tool-options.svg);
   --icon-filter: none;
   --checked-icon-filter: none;
   --toolbar-button-border-color: rgba(170, 170, 170, .5);

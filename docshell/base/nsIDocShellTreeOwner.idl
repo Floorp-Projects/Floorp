@@ -16,24 +16,6 @@ interface nsITabParent;
 [scriptable, uuid(0e3dc4b1-4cea-4a37-af71-79f0afd07574)]
 interface nsIDocShellTreeOwner : nsISupports
 {
-	/*
-	Return the child DocShellTreeItem with the specified name.
-	name - This is the name of the item that is trying to be found.
-	aRequestor - This is the docshellTreeItem that is requesting the find.  This
-	parameter is used to identify when the child is asking its parent to find
-	a child with the specific name.  The parent uses this parameter to ensure
-	a resursive state does not occur by not again asking the requestor for find
-	a shell by the specified name.  Inversely the child uses it to ensure it
-	does not ask its parent to do the search if its parent is the one that
-	asked it to search.
-	aOriginalRequestor - The original treeitem that made the request, if any.
-	This is used to ensure that we don't run into cross-site issues.
-
-	*/
-	nsIDocShellTreeItem findItemWithName(in wstring name, 
-		in nsIDocShellTreeItem aRequestor,
-		in nsIDocShellTreeItem aOriginalRequestor);
-
 	/**
 	 * Called when a content shell is added to the docshell tree.  This is
 	 * _only_ called for "root" content shells (that is, ones whose parent is a

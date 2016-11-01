@@ -27,8 +27,8 @@
 #include "ds/SplayTree.h"
 
 #include "threading/LockGuard.h"
-#include "threading/Mutex.h"
 #include "threading/Thread.h"
+#include "vm/MutexIDs.h"
 
 namespace js {
 
@@ -60,7 +60,8 @@ class ProtectedRegionTree
     SplayTree<Region, Region> tree;
 
   public:
-    ProtectedRegionTree() : alloc(4096),
+    ProtectedRegionTree() : lock(mutexid::ProtectedRegionTree),
+                            alloc(4096),
                             tree(&alloc) {}
 
     ~ProtectedRegionTree() { MOZ_ASSERT(tree.empty()); }

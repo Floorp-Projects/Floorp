@@ -23,7 +23,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
     CHECK(buf_len1 = JS_NewArrayBuffer(cx, sizes[0]));
     CHECK(tarray_len1 = JS_NewInt32ArrayWithBuffer(cx, testBuf[0], 0, -1));
 
-    JS_SetElement(cx, testArray[0], 0, MAGIC_VALUE_1);
+    CHECK(JS_SetElement(cx, testArray[0], 0, MAGIC_VALUE_1));
 
     // Many-element ArrayBuffer (uses dynamic storage)
     CHECK(buf_len200 = JS_NewArrayBuffer(cx, 200 * sizeof(uint32_t)));
@@ -38,9 +38,9 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         // Byte lengths should all agree
         CHECK(JS_IsArrayBufferObject(obj));
         CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), size);
-        JS_GetProperty(cx, obj, "byteLength", &v);
+        CHECK(JS_GetProperty(cx, obj, "byteLength", &v));
         CHECK(v.isInt32(size));
-        JS_GetProperty(cx, view, "byteLength", &v);
+        CHECK(JS_GetProperty(cx, view, "byteLength", &v));
         CHECK(v.isInt32(size));
 
         // Modifying the underlying data should update the value returned through the view

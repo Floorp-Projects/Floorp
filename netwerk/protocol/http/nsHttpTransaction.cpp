@@ -20,6 +20,7 @@
 #include "nsIChannel.h"
 #include "nsIPipe.h"
 #include "nsCRT.h"
+#include "mozilla/Tokenizer.h"
 
 #include "nsISeekableStream.h"
 #include "nsMultiplexInputStream.h"
@@ -104,6 +105,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mPipelinePosition(0)
     , mHttpVersion(NS_HTTP_VERSION_UNKNOWN)
     , mHttpResponseCode(0)
+    , mCurrentHttpResponseHeaderSize(0)
     , mCapsToClear(0)
     , mResponseIsComplete(false)
     , mClosed(false)
@@ -987,7 +989,16 @@ nsHttpTransaction::Close(nsresult reason)
     // sent any data.  for this reason, mSendData == FALSE does not imply
     // mReceivedData == FALSE.  (see bug 203057 for more info.)
     //
-    if (reason == NS_ERROR_NET_RESET || reason == NS_OK) {
+    // Never restart transactions that are marked as sticky to their conenction.
+    // We use that capability to identify transactions bound to connection based
+    // authentication.  Reissuing them on a different connections will break
+    // this bondage.  Major issue may arise when there is an NTLM message auth
+    // header on the transaction and we send it to a different NTLM authenticated
+    // connection.  It will break that connection and also confuse the channel's
+    // auth provider, beliving the cached credentials are wrong and asking for
+    // the password mistakenly again from the user.
+    if ((reason == NS_ERROR_NET_RESET || reason == NS_OK) &&
+        !(mCaps & NS_HTTP_STICKY_CONNECTION)) {
 
         if (mForceRestart && NS_SUCCEEDED(Restart())) {
             if (mResponseHead) {
@@ -1220,6 +1231,10 @@ nsHttpTransaction::RestartInProgress()
     // they are eligible.
     if (!mHaveAllHeaders)
         return NS_ERROR_NET_RESET;
+
+    if (mCaps & NS_HTTP_STICKY_CONNECTION) {
+        return NS_ERROR_NET_RESET;
+    }
 
     // don't try and restart 0.9 or non 200/Get HTTP/1
     if (!mRestartInProgressVerifier.IsSetup())
@@ -1600,6 +1615,8 @@ nsHttpTransaction::HandleContentStart()
             LOG3(("]\n"));
         }
 
+        CheckForStickyAuthScheme();
+
         // Save http version, mResponseHead isn't available anymore after
         // TakeResponseHead() is called
         mHttpVersion = mResponseHead->Version();
@@ -1845,6 +1862,13 @@ nsHttpTransaction::ProcessData(char *buf, uint32_t count, uint32_t *countRead)
             bytesConsumed += localBytesConsumed;
         } while (rv == NS_ERROR_NET_INTERRUPT);
 
+        mCurrentHttpResponseHeaderSize += bytesConsumed;
+        if (mCurrentHttpResponseHeaderSize >
+            gHttpHandler->MaxHttpResponseHeaderSize()) {
+            LOG(("nsHttpTransaction %p The response header exceeds the limit.\n",
+                 this));
+            return NS_ERROR_FILE_TOO_BIG;
+        }
         count -= bytesConsumed;
 
         // if buf has some content in it, shift bytes to top of buf.
@@ -1991,6 +2015,61 @@ nsHttpTransaction::DisableSpdy()
         // is owned by the connection manager, so we're safe to change this here
         mConnInfo->SetNoSpdy(true);
     }
+}
+
+void
+nsHttpTransaction::CheckForStickyAuthScheme()
+{
+  LOG(("nsHttpTransaction::CheckForStickyAuthScheme this=%p"));
+
+  MOZ_ASSERT(mHaveAllHeaders);
+  MOZ_ASSERT(mResponseHead);
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+  CheckForStickyAuthSchemeAt(nsHttp::WWW_Authenticate);
+  CheckForStickyAuthSchemeAt(nsHttp::Proxy_Authenticate);
+}
+
+void
+nsHttpTransaction::CheckForStickyAuthSchemeAt(nsHttpAtom const& header)
+{
+  if (mCaps & NS_HTTP_STICKY_CONNECTION) {
+      LOG(("  already sticky"));
+      return;
+  }
+
+  nsAutoCString auth;
+  if (NS_FAILED(mResponseHead->GetHeader(header, auth))) {
+      return;
+  }
+
+  Tokenizer p(auth);
+  nsAutoCString schema;
+  while (p.ReadWord(schema)) {
+      ToLowerCase(schema);
+
+      nsAutoCString contractid;
+      contractid.Assign(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
+      contractid.Append(schema);
+
+      // using a new instance because of thread safety of auth modules refcnt
+      nsCOMPtr<nsIHttpAuthenticator> authenticator(do_CreateInstance(contractid.get()));
+      if (authenticator) {
+          uint32_t flags;
+          authenticator->GetAuthFlags(&flags);
+          if (flags & nsIHttpAuthenticator::CONNECTION_BASED) {
+              LOG(("  connection made sticky, found %s auth shema", schema.get()));
+              // This is enough to make this transaction keep it's current connection,
+              // prevents the connection from being released back to the pool.
+              mCaps |= NS_HTTP_STICKY_CONNECTION;
+              break;
+          }
+      }
+
+      // schemes are separated with LFs, nsHttpHeaderArray::MergeHeader
+      p.SkipUntil(Tokenizer::Token::NewLine());
+      p.SkipWhites(Tokenizer::INCLUDE_NEW_LINE);
+  }
 }
 
 const TimingStruct

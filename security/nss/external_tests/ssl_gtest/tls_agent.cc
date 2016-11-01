@@ -37,6 +37,7 @@ const std::string TlsAgent::kServerRsaPss = "rsa_pss";
 const std::string TlsAgent::kServerRsaDecrypt = "rsa_decrypt";
 const std::string TlsAgent::kServerEcdsa256 = "ecdsa256";
 const std::string TlsAgent::kServerEcdsa384 = "ecdsa384";
+const std::string TlsAgent::kServerEcdsa521 = "ecdsa521";
 const std::string TlsAgent::kServerEcdhRsa = "ecdh_rsa";
 const std::string TlsAgent::kServerEcdhEcdsa = "ecdh_ecdsa";
 const std::string TlsAgent::kServerDsa = "dsa";
@@ -365,50 +366,49 @@ void TlsAgent::SetServerKeyBits(uint16_t bits) { server_key_bits_ = bits; }
 
 void TlsAgent::ExpectReadWriteError() { expect_readwrite_error_ = true; }
 
-void TlsAgent::SetSignatureAlgorithms(const SSLSignatureAndHashAlg* algorithms,
-                                      size_t count) {
+void TlsAgent::SetSignatureSchemes(const SSLSignatureScheme* schemes,
+                                   size_t count) {
   EXPECT_TRUE(EnsureTlsSetup());
   EXPECT_LE(count, SSL_SignatureMaxCount());
-  EXPECT_EQ(SECSuccess, SSL_SignaturePrefSet(ssl_fd_, algorithms,
-                                             static_cast<unsigned int>(count)));
-  EXPECT_EQ(SECFailure, SSL_SignaturePrefSet(ssl_fd_, algorithms, 0))
-      << "setting no algorithms should fail and do nothing";
+  EXPECT_EQ(SECSuccess,
+            SSL_SignatureSchemePrefSet(ssl_fd_, schemes,
+                                       static_cast<unsigned int>(count)));
+  EXPECT_EQ(SECFailure, SSL_SignatureSchemePrefSet(ssl_fd_, schemes, 0))
+      << "setting no schemes should fail and do nothing";
 
-  std::vector<SSLSignatureAndHashAlg> configuredAlgorithms(count);
+  std::vector<SSLSignatureScheme> configuredSchemes(count);
   unsigned int configuredCount;
   EXPECT_EQ(SECFailure,
-            SSL_SignaturePrefGet(ssl_fd_, nullptr, &configuredCount, 1))
-      << "get algorithms, algorithms is nullptr";
-  EXPECT_EQ(SECFailure, SSL_SignaturePrefGet(ssl_fd_, &configuredAlgorithms[0],
-                                             &configuredCount, 0))
-      << "get algorithms, too little space";
+            SSL_SignatureSchemePrefGet(ssl_fd_, nullptr, &configuredCount, 1))
+      << "get schemes, schemes is nullptr";
   EXPECT_EQ(SECFailure,
-            SSL_SignaturePrefGet(ssl_fd_, &configuredAlgorithms[0], nullptr,
-                                 configuredAlgorithms.size()))
-      << "get algorithms, algCountOut is nullptr";
+            SSL_SignatureSchemePrefGet(ssl_fd_, &configuredSchemes[0],
+                                       &configuredCount, 0))
+      << "get schemes, too little space";
+  EXPECT_EQ(SECFailure,
+            SSL_SignatureSchemePrefGet(ssl_fd_, &configuredSchemes[0], nullptr,
+                                       configuredSchemes.size()))
+      << "get schemes, countOut is nullptr";
 
-  EXPECT_EQ(SECSuccess, SSL_SignaturePrefGet(ssl_fd_, &configuredAlgorithms[0],
-                                             &configuredCount,
-                                             configuredAlgorithms.size()));
-  // SignaturePrefSet drops unsupported algorithms silently, so the number that
-  // are configured might be fewer.
+  EXPECT_EQ(SECSuccess, SSL_SignatureSchemePrefGet(
+                            ssl_fd_, &configuredSchemes[0], &configuredCount,
+                            configuredSchemes.size()));
+  // SignatureSchemePrefSet drops unsupported algorithms silently, so the
+  // number that are configured might be fewer.
   EXPECT_LE(configuredCount, count);
   unsigned int i = 0;
   for (unsigned int j = 0; j < count && i < configuredCount; ++j) {
-    if (i < configuredCount &&
-        algorithms[j].hashAlg == configuredAlgorithms[i].hashAlg &&
-        algorithms[j].sigAlg == configuredAlgorithms[i].sigAlg) {
+    if (i < configuredCount && schemes[j] == configuredSchemes[i]) {
       ++i;
     }
   }
-  EXPECT_EQ(i, configuredCount) << "algorithms in use were all set";
+  EXPECT_EQ(i, configuredCount) << "schemes in use were all set";
 }
 
 void TlsAgent::CheckKEA(SSLKEAType kea_type, SSLNamedGroup kea_group,
                         size_t kea_size) const {
   EXPECT_EQ(STATE_CONNECTED, state_);
   EXPECT_EQ(kea_type, info_.keaType);
-  EXPECT_EQ(kea_group, info_.keaGroup);
   if (kea_size == 0) {
     switch (kea_group) {
       case ssl_grp_ec_curve25519:
@@ -423,6 +423,11 @@ void TlsAgent::CheckKEA(SSLKEAType kea_type, SSLNamedGroup kea_group,
       case ssl_grp_ffdhe_2048:
         kea_size = 2048;
         break;
+      case ssl_grp_ffdhe_3072:
+        kea_size = 3072;
+        break;
+      case ssl_grp_ffdhe_custom:
+        break;
       default:
         if (kea_type == ssl_kea_rsa) {
           kea_size = server_key_bits_;
@@ -431,7 +436,10 @@ void TlsAgent::CheckKEA(SSLKEAType kea_type, SSLNamedGroup kea_group,
         }
     }
   }
-  EXPECT_EQ(kea_size, info_.keaKeyBits);
+  if (kea_group != ssl_grp_ffdhe_custom) {
+    EXPECT_EQ(kea_size, info_.keaKeyBits);
+    EXPECT_EQ(kea_group, info_.keaGroup);
+  }
 }
 
 void TlsAgent::CheckAuthType(SSLAuthType auth_type,

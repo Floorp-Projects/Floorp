@@ -32,7 +32,7 @@ interface nsIDocShellTreeItem : nsISupports
          * @return <CODE>PR_TRUE</CODE> if names match;
          *         <CODE>PR_FALSE</CODE> otherwise.
          */
-        boolean nameEquals(in wstring name);
+        boolean nameEquals(in AString name);
 
 	/*
 	Definitions for the item types.
@@ -104,7 +104,7 @@ interface nsIDocShellTreeItem : nsISupports
 	aOriginalRequestor - The original treeitem that made the request, if any.
 		This is used to ensure that we don't run into cross-site issues.
 	*/
-	nsIDocShellTreeItem findItemWithName(in wstring name,
+	nsIDocShellTreeItem findItemWithName(in AString name,
 	                                     in nsISupports aRequestor,
 	                                     in nsIDocShellTreeItem aOriginalRequestor);
 
@@ -172,7 +172,7 @@ interface nsIDocShellTreeItem : nsISupports
 
 	Note the search is depth first when recursing.
 	*/
-	nsIDocShellTreeItem findChildWithName(in wstring aName,
+	nsIDocShellTreeItem findChildWithName(in AString aName,
 	                                      in boolean aRecurse,
 	                                      in boolean aSameType,
 	                                      in nsIDocShellTreeItem aRequestor,

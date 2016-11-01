@@ -33,10 +33,6 @@
 #include "nsISupportsImpl.h"            // for Image::Release, etc
 #include "nsRect.h"                     // for mozilla::gfx::IntRect
 
-#ifdef MOZ_WIDGET_GONK
-#include "GrallocImages.h"
-#endif
-
 namespace mozilla {
 namespace layers {
 
@@ -70,21 +66,6 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
 void
 ImageClient::RemoveTexture(TextureClient* aTexture)
 {
-  RemoveTextureWithWaiter(aTexture);
-}
-
-void
-ImageClient::RemoveTextureWithWaiter(TextureClient* aTexture,
-                                     AsyncTransactionWaiter* aAsyncTransactionWaiter)
-{
-  if (aAsyncTransactionWaiter &&
-      GetForwarder()->GetTextureForwarder()->UsesImageBridge()) {
-    RefPtr<AsyncTransactionTracker> request =
-      new RemoveTextureFromCompositableTracker(aAsyncTransactionWaiter);
-    GetForwarder()->RemoveTextureFromCompositableAsync(request, this, aTexture);
-    return;
-  }
-  MOZ_ASSERT(!aAsyncTransactionWaiter);
   GetForwarder()->RemoveTextureFromCompositable(this, aTexture);
 }
 
@@ -101,12 +82,12 @@ TextureInfo ImageClientSingle::GetTextureInfo() const
 }
 
 void
-ImageClientSingle::FlushAllImages(AsyncTransactionWaiter* aAsyncTransactionWaiter)
+ImageClientSingle::FlushAllImages()
 {
   MOZ_ASSERT(GetForwarder()->GetTextureForwarder()->UsesImageBridge());
 
   for (auto& b : mBuffers) {
-    RemoveTextureWithWaiter(b.mTextureClient, aAsyncTransactionWaiter);
+    RemoveTexture(b.mTextureClient);
   }
   mBuffers.Clear();
 }
@@ -221,28 +202,6 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 
   for (auto& img : images) {
     Image* image = img.mImage;
-
-#ifdef MOZ_WIDGET_GONK
-    if (image->GetFormat() == ImageFormat::OVERLAY_IMAGE) {
-      OverlayImage* overlayImage = static_cast<OverlayImage*>(image);
-      OverlaySource source;
-      if (overlayImage->GetSidebandStream().IsValid()) {
-        // Duplicate GonkNativeHandle::NhObj for ipc,
-        // since ParamTraits<GonkNativeHandle>::Write() absorbs native_handle_t.
-        RefPtr<GonkNativeHandle::NhObj> nhObj = overlayImage->GetSidebandStream().GetDupNhObj();
-        GonkNativeHandle handle(nhObj);
-        if (!handle.IsValid()) {
-          return false;
-        }
-        source.handle() = OverlayHandle(handle);
-      } else {
-        source.handle() = OverlayHandle(overlayImage->GetOverlayId());
-      }
-      source.size() = overlayImage->GetSize();
-      GetForwarder()->UseOverlaySource(this, source, image->GetPictureRect());
-      continue;
-    }
-#endif
 
     RefPtr<TextureClient> texture = image->GetTextureClient(GetForwarder());
     const bool hasTextureClient = !!texture;

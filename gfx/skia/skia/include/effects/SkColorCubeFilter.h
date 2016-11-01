@@ -10,7 +10,7 @@
 
 #include "SkColorFilter.h"
 #include "SkData.h"
-#include "../private/SkMutex.h"
+#include "../private/SkOnce.h"
 #include "../private/SkTemplates.h"
 
 class SK_API SkColorCubeFilter : public SkColorFilter {
@@ -30,7 +30,7 @@ public:
     uint32_t getFlags() const override;
 
 #if SK_SUPPORT_GPU
-    const GrFragmentProcessor* asFragmentProcessor(GrContext*) const override;
+    sk_sp<GrFragmentProcessor> asFragmentProcessor(GrContext*) const override;
 #endif
 
     SK_TO_STRING_OVERRIDE()
@@ -65,8 +65,7 @@ private:
         const int fCubeDimension;
 
         // Make sure we only initialize the caches once.
-        SkMutex fLutsMutex;
-        bool fLutsInited;
+        SkOnce fLutsInitOnce;
 
         static void initProcessingLuts(ColorCubeProcesingCache* cache);
     };

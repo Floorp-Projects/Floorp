@@ -11,7 +11,6 @@
 #include "nsSHEntryShared.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIContentViewer.h"
-#include "nsISupportsArray.h"
 #include "nsIStructuredCloneContainer.h"
 #include "nsIInputStream.h"
 #include "nsIURI.h"

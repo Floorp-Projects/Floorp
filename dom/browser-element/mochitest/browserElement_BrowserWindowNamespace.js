@@ -35,6 +35,10 @@ function runTest() {
 
     SimpleTest.executeSoon(function() {
       var iframe2 = document.createElement('iframe');
+      // Make sure that iframe1 and iframe2 are in the same TabGroup by linking
+      // them through opener. Right now this API requires chrome privileges, as
+      // it is on MozFrameLoaderOwner.
+      SpecialPowers.wrap(iframe2).presetOpenerWindow(iframe1.contentWindow);
       iframe2.setAttribute('mozbrowser', 'true');
 
       iframe2.addEventListener('mozbrowseropenwindow', function(e) {

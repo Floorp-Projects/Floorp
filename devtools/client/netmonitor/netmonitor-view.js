@@ -19,15 +19,19 @@ const {VariablesViewController} = require("resource://devtools/client/shared/wid
 const {ToolSidebar} = require("devtools/client/framework/sidebar");
 const {testing: isTesting} = require("devtools/shared/flags");
 const {ViewHelpers, Heritage} = require("devtools/client/shared/widgets/view-helpers");
-const {PluralForm} = require("devtools/shared/plural-form");
 const {Filters} = require("./filter-predicates");
 const {getFormDataSections,
        formDataURI,
-       writeHeaderText,
-       getKeyWithEvent,
        getUriHostPort} = require("./request-utils");
 const {L10N} = require("./l10n");
 const {RequestsMenuView} = require("./requests-menu-view");
+const {CustomRequestView} = require("./custom-request-view");
+const {ToolbarView} = require("./toolbar-view");
+const {configureStore} = require("./store");
+const {PerformanceStatisticsView} = require("./performance-statistics-view");
+
+// Initialize the global redux variables
+var gStore = configureStore();
 
 // ms
 const WDA_DEFAULT_VERIFY_INTERVAL = 50;
@@ -41,9 +45,7 @@ const WDA_DEFAULT_GIVE_UP_TIMEOUT = isTesting ? 45000 : 2000;
 
 // 100 KB in bytes
 const SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE = 102400;
-const REQUEST_TIME_DECIMALS = 2;
 const HEADERS_SIZE_DECIMALS = 3;
-const CONTENT_SIZE_DECIMALS = 2;
 const CONTENT_MIME_TYPE_MAPPINGS = {
   "/ecmascript": Editor.modes.js,
   "/javascript": Editor.modes.js,
@@ -75,8 +77,6 @@ const GENERIC_VARIABLES_VIEW_SETTINGS = {
   preventDescriptorModifiers: true,
   eval: () => {}
 };
-// px
-const NETWORK_ANALYSIS_PIE_CHART_DIAMETER = 200;
 
 /**
  * Object defining the network monitor view components.
@@ -88,10 +88,11 @@ var NetMonitorView = {
   initialize: function () {
     this._initializePanes();
 
-    this.Toolbar.initialize();
-    this.RequestsMenu.initialize();
+    this.Toolbar.initialize(gStore);
+    this.RequestsMenu.initialize(gStore);
     this.NetworkDetails.initialize();
     this.CustomRequest.initialize();
+    this.PerformanceStatistics.initialize(gStore);
   },
 
   /**
@@ -295,56 +296,6 @@ var NetMonitorView = {
 };
 
 /**
- * Functions handling the toolbar view: expand/collapse button etc.
- */
-function ToolbarView() {
-  dumpn("ToolbarView was instantiated");
-
-  this._onTogglePanesPressed = this._onTogglePanesPressed.bind(this);
-}
-
-ToolbarView.prototype = {
-  /**
-   * Initialization function, called when the debugger is started.
-   */
-  initialize: function () {
-    dumpn("Initializing the ToolbarView");
-
-    this._detailsPaneToggleButton = $("#details-pane-toggle");
-    this._detailsPaneToggleButton.addEventListener("mousedown",
-      this._onTogglePanesPressed, false);
-  },
-
-  /**
-   * Destruction function, called when the debugger is closed.
-   */
-  destroy: function () {
-    dumpn("Destroying the ToolbarView");
-
-    this._detailsPaneToggleButton.removeEventListener("mousedown",
-      this._onTogglePanesPressed, false);
-  },
-
-  /**
-   * Listener handling the toggle button click event.
-   */
-  _onTogglePanesPressed: function () {
-    let requestsMenu = NetMonitorView.RequestsMenu;
-    let selectedIndex = requestsMenu.selectedIndex;
-
-    // Make sure there's a selection if the button is pressed, to avoid
-    // showing an empty network details pane.
-    if (selectedIndex == -1 && requestsMenu.itemCount) {
-      requestsMenu.selectedIndex = 0;
-    } else {
-      requestsMenu.selectedIndex = -1;
-    }
-  },
-
-  _detailsPaneToggleButton: null
-};
-
-/**
  * Functions handling the sidebar details view.
  */
 function SidebarView() {
@@ -382,138 +333,6 @@ SidebarView.prototype = {
 
     window.emit(EVENTS.SIDEBAR_POPULATED);
   })
-};
-
-/**
- * Functions handling the custom request view.
- */
-function CustomRequestView() {
-  dumpn("CustomRequestView was instantiated");
-}
-
-CustomRequestView.prototype = {
-  /**
-   * Initialization function, called when the network monitor is started.
-   */
-  initialize: function () {
-    dumpn("Initializing the CustomRequestView");
-
-    this.updateCustomRequestEvent = getKeyWithEvent(this.onUpdate.bind(this));
-    $("#custom-pane").addEventListener("input",
-      this.updateCustomRequestEvent, false);
-  },
-
-  /**
-   * Destruction function, called when the network monitor is closed.
-   */
-  destroy: function () {
-    dumpn("Destroying the CustomRequestView");
-
-    $("#custom-pane").removeEventListener("input",
-      this.updateCustomRequestEvent, false);
-  },
-
-  /**
-   * Populates this view with the specified data.
-   *
-   * @param object data
-   *        The data source (this should be the attachment of a request item).
-   * @return object
-   *        Returns a promise that resolves upon population the view.
-   */
-  populate: Task.async(function* (data) {
-    $("#custom-url-value").value = data.url;
-    $("#custom-method-value").value = data.method;
-    this.updateCustomQuery(data.url);
-
-    if (data.requestHeaders) {
-      let headers = data.requestHeaders.headers;
-      $("#custom-headers-value").value = writeHeaderText(headers);
-    }
-    if (data.requestPostData) {
-      let postData = data.requestPostData.postData.text;
-      $("#custom-postdata-value").value = yield gNetwork.getString(postData);
-    }
-
-    window.emit(EVENTS.CUSTOMREQUESTVIEW_POPULATED);
-  }),
-
-  /**
-   * Handle user input in the custom request form.
-   *
-   * @param object field
-   *        the field that the user updated.
-   */
-  onUpdate: function (field) {
-    let selectedItem = NetMonitorView.RequestsMenu.selectedItem;
-    let value;
-
-    switch (field) {
-      case "method":
-        value = $("#custom-method-value").value.trim();
-        selectedItem.attachment.method = value;
-        break;
-      case "url":
-        value = $("#custom-url-value").value;
-        this.updateCustomQuery(value);
-        selectedItem.attachment.url = value;
-        break;
-      case "query":
-        let query = $("#custom-query-value").value;
-        this.updateCustomUrl(query);
-        field = "url";
-        value = $("#custom-url-value").value;
-        selectedItem.attachment.url = value;
-        break;
-      case "body":
-        value = $("#custom-postdata-value").value;
-        selectedItem.attachment.requestPostData = { postData: { text: value } };
-        break;
-      case "headers":
-        let headersText = $("#custom-headers-value").value;
-        value = parseHeadersText(headersText);
-        selectedItem.attachment.requestHeaders = { headers: value };
-        break;
-    }
-
-    NetMonitorView.RequestsMenu.updateMenuView(selectedItem, field, value);
-  },
-
-  /**
-   * Update the query string field based on the url.
-   *
-   * @param object url
-   *        The URL to extract query string from.
-   */
-  updateCustomQuery: function (url) {
-    let paramsArray = NetworkHelper.parseQueryString(
-      NetworkHelper.nsIURL(url).query);
-
-    if (!paramsArray) {
-      $("#custom-query").hidden = true;
-      return;
-    }
-
-    $("#custom-query").hidden = false;
-    $("#custom-query-value").value = writeQueryText(paramsArray);
-  },
-
-  /**
-   * Update the url based on the query string field.
-   *
-   * @param object queryText
-   *        The contents of the query string field.
-   */
-  updateCustomUrl: function (queryText) {
-    let params = parseQueryText(queryText);
-    let queryString = writeQueryString(params);
-
-    let url = $("#custom-url-value").value;
-    let oldQuery = NetworkHelper.nsIURL(url).query;
-    let path = url.replace(oldQuery, queryString);
-
-    $("#custom-url-value").value = path;
-  }
 };
 
 /**
@@ -990,7 +809,7 @@ NetworkDetailsView.prototype = {
         let jsonScopeName = L10N.getStr("jsonScopeName");
         let jsonScope = this._params.addScope(jsonScopeName);
         jsonScope.expanded = true;
-        let jsonItem = jsonScope.addItem("", { enumerable: true });
+        let jsonItem = jsonScope.addItem(undefined, { enumerable: true });
         jsonItem.populate(jsonVal, { sorted: true });
       } else {
         // This is really awkward, but hey, it works. Let's show an empty
@@ -1374,317 +1193,11 @@ NetworkDetailsView.prototype = {
 };
 
 /**
- * Functions handling the performance statistics view.
- */
-function PerformanceStatisticsView() {
-}
-
-PerformanceStatisticsView.prototype = {
-  /**
-   * Initializes and displays empty charts in this container.
-   */
-  displayPlaceholderCharts: function () {
-    this._createChart({
-      id: "#primed-cache-chart",
-      title: "charts.cacheEnabled"
-    });
-    this._createChart({
-      id: "#empty-cache-chart",
-      title: "charts.cacheDisabled"
-    });
-    window.emit(EVENTS.PLACEHOLDER_CHARTS_DISPLAYED);
-  },
-
-  /**
-   * Populates and displays the primed cache chart in this container.
-   *
-   * @param array items
-   *        @see this._sanitizeChartDataSource
-   */
-  createPrimedCacheChart: function (items) {
-    this._createChart({
-      id: "#primed-cache-chart",
-      title: "charts.cacheEnabled",
-      data: this._sanitizeChartDataSource(items),
-      strings: this._commonChartStrings,
-      totals: this._commonChartTotals,
-      sorted: true
-    });
-    window.emit(EVENTS.PRIMED_CACHE_CHART_DISPLAYED);
-  },
-
-  /**
-   * Populates and displays the empty cache chart in this container.
-   *
-   * @param array items
-   *        @see this._sanitizeChartDataSource
-   */
-  createEmptyCacheChart: function (items) {
-    this._createChart({
-      id: "#empty-cache-chart",
-      title: "charts.cacheDisabled",
-      data: this._sanitizeChartDataSource(items, true),
-      strings: this._commonChartStrings,
-      totals: this._commonChartTotals,
-      sorted: true
-    });
-    window.emit(EVENTS.EMPTY_CACHE_CHART_DISPLAYED);
-  },
-
-  /**
-   * Common stringifier predicates used for items and totals in both the
-   * "primed" and "empty" cache charts.
-   */
-  _commonChartStrings: {
-    size: value => {
-      let string = L10N.numberWithDecimals(value / 1024, CONTENT_SIZE_DECIMALS);
-      return L10N.getFormatStr("charts.sizeKB", string);
-    },
-    time: value => {
-      let string = L10N.numberWithDecimals(value / 1000, REQUEST_TIME_DECIMALS);
-      return L10N.getFormatStr("charts.totalS", string);
-    }
-  },
-  _commonChartTotals: {
-    size: total => {
-      let string = L10N.numberWithDecimals(total / 1024, CONTENT_SIZE_DECIMALS);
-      return L10N.getFormatStr("charts.totalSize", string);
-    },
-    time: total => {
-      let seconds = total / 1000;
-      let string = L10N.numberWithDecimals(seconds, REQUEST_TIME_DECIMALS);
-      return PluralForm.get(seconds,
-        L10N.getStr("charts.totalSeconds")).replace("#1", string);
-    },
-    cached: total => {
-      return L10N.getFormatStr("charts.totalCached", total);
-    },
-    count: total => {
-      return L10N.getFormatStr("charts.totalCount", total);
-    }
-  },
-
-  /**
-   * Adds a specific chart to this container.
-   *
-   * @param object
-   *        An object containing all or some the following properties:
-   *          - id: either "#primed-cache-chart" or "#empty-cache-chart"
-   *          - title/data/strings/totals/sorted: @see Chart.jsm for details
-   */
-  _createChart: function ({ id, title, data, strings, totals, sorted }) {
-    let container = $(id);
-
-    // Nuke all existing charts of the specified type.
-    while (container.hasChildNodes()) {
-      container.firstChild.remove();
-    }
-
-    // Create a new chart.
-    let chart = Chart.PieTable(document, {
-      diameter: NETWORK_ANALYSIS_PIE_CHART_DIAMETER,
-      title: L10N.getStr(title),
-      data: data,
-      strings: strings,
-      totals: totals,
-      sorted: sorted
-    });
-
-    chart.on("click", (_, item) => {
-      NetMonitorView.RequestsMenu.filterOnlyOn(item.label);
-      NetMonitorView.showNetworkInspectorView();
-    });
-
-    container.appendChild(chart.node);
-  },
-
-  /**
-   * Sanitizes the data source used for creating charts, to follow the
-   * data format spec defined in Chart.jsm.
-   *
-   * @param array items
-   *        A collection of request items used as the data source for the chart.
-   * @param boolean emptyCache
-   *        True if the cache is considered enabled, false for disabled.
-   */
-  _sanitizeChartDataSource: function (items, emptyCache) {
-    let data = [
-      "html", "css", "js", "xhr", "fonts", "images", "media", "flash", "ws", "other"
-    ].map(e => ({
-      cached: 0,
-      count: 0,
-      label: e,
-      size: 0,
-      time: 0
-    }));
-
-    for (let requestItem of items) {
-      let details = requestItem.attachment;
-      let type;
-
-      if (Filters.html(details)) {
-        // "html"
-        type = 0;
-      } else if (Filters.css(details)) {
-        // "css"
-        type = 1;
-      } else if (Filters.js(details)) {
-        // "js"
-        type = 2;
-      } else if (Filters.fonts(details)) {
-        // "fonts"
-        type = 4;
-      } else if (Filters.images(details)) {
-        // "images"
-        type = 5;
-      } else if (Filters.media(details)) {
-        // "media"
-        type = 6;
-      } else if (Filters.flash(details)) {
-        // "flash"
-        type = 7;
-      } else if (Filters.ws(details)) {
-        // "ws"
-        type = 8;
-      } else if (Filters.xhr(details)) {
-        // Verify XHR last, to categorize other mime types in their own blobs.
-        // "xhr"
-        type = 3;
-      } else {
-        // "other"
-        type = 9;
-      }
-
-      if (emptyCache || !responseIsFresh(details)) {
-        data[type].time += details.totalTime || 0;
-        data[type].size += details.contentSize || 0;
-      } else {
-        data[type].cached++;
-      }
-      data[type].count++;
-    }
-
-    return data.filter(e => e.count > 0);
-  },
-};
-
-/**
  * DOM query helper.
+ * TODO: Move it into "dom-utils.js" module and "require" it when needed.
  */
 var $ = (selector, target = document) => target.querySelector(selector);
 var $all = (selector, target = document) => target.querySelectorAll(selector);
-
-/**
- * Parse text representation of multiple HTTP headers.
- *
- * @param string text
- *        Text of headers
- * @return array
- *         Array of headers info {name, value}
- */
-function parseHeadersText(text) {
-  return parseRequestText(text, "\\S+?", ":");
-}
-
-/**
- * Parse readable text list of a query string.
- *
- * @param string text
- *        Text of query string represetation
- * @return array
- *         Array of query params {name, value}
- */
-function parseQueryText(text) {
-  return parseRequestText(text, ".+?", "=");
-}
-
-/**
- * Parse a text representation of a name[divider]value list with
- * the given name regex and divider character.
- *
- * @param string text
- *        Text of list
- * @return array
- *         Array of headers info {name, value}
- */
-function parseRequestText(text, namereg, divider) {
-  let regex = new RegExp("(" + namereg + ")\\" + divider + "\\s*(.+)");
-  let pairs = [];
-
-  for (let line of text.split("\n")) {
-    let matches;
-    if (matches = regex.exec(line)) { // eslint-disable-line
-      let [, name, value] = matches;
-      pairs.push({name: name, value: value});
-    }
-  }
-  return pairs;
-}
-
-/**
- * Write out a list of query params into a chunk of text
- *
- * @param array params
- *        Array of query params {name, value}
- * @return string
- *         List of query params in text format
- */
-function writeQueryText(params) {
-  return params.map(({name, value}) => name + "=" + value).join("\n");
-}
-
-/**
- * Write out a list of query params into a query string
- *
- * @param array params
- *        Array of query  params {name, value}
- * @return string
- *         Query string that can be appended to a url.
- */
-function writeQueryString(params) {
-  return params.map(({name, value}) => name + "=" + value).join("&");
-}
-
-/**
- * Checks if the "Expiration Calculations" defined in section 13.2.4 of the
- * "HTTP/1.1: Caching in HTTP" spec holds true for a collection of headers.
- *
- * @param object
- *        An object containing the { responseHeaders, status } properties.
- * @return boolean
- *         True if the response is fresh and loaded from cache.
- */
-function responseIsFresh({ responseHeaders, status }) {
-  // Check for a "304 Not Modified" status and response headers availability.
-  if (status != 304 || !responseHeaders) {
-    return false;
-  }
-
-  let list = responseHeaders.headers;
-  let cacheControl = list.filter(e => {
-    return e.name.toLowerCase() == "cache-control";
-  })[0];
-
-  let expires = list.filter(e => e.name.toLowerCase() == "expires")[0];
-
-  // Check the "Cache-Control" header for a maximum age value.
-  if (cacheControl) {
-    let maxAgeMatch =
-      cacheControl.value.match(/s-maxage\s*=\s*(\d+)/) ||
-      cacheControl.value.match(/max-age\s*=\s*(\d+)/);
-
-    if (maxAgeMatch && maxAgeMatch.pop() > 0) {
-      return true;
-    }
-  }
-
-  // Check the "Expires" header for a valid date.
-  if (expires && Date.parse(expires.value)) {
-    return true;
-  }
-
-  return false;
-}
 
 /**
  * Makes sure certain properties are available on all objects in a data store.

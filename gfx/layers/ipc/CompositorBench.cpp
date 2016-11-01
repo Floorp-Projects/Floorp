@@ -14,10 +14,6 @@
 #include <math.h>
 #include "GeckoProfiler.h"
 
-#ifdef MOZ_WIDGET_GONK
-#include "mozilla/layers/GrallocTextureHost.h"
-#endif
-
 #define TEST_STEPS 1000
 #define DURATION_THRESHOLD 30
 #define THRESHOLD_ABORT_COUNT 5
@@ -275,92 +271,6 @@ public:
   }
 };
 
-#ifdef MOZ_WIDGET_GONK
-class TrivialGrallocQuadBench : public BenchTest {
-public:
-  TrivialGrallocQuadBench()
-    : BenchTest("Travial Gralloc Quad (10s 256x256 quads)")
-  {}
-
-  uint32_t* mBuf;
-  android::sp<android::GraphicBuffer> mGralloc;
-  RefPtr<TextureSource> mTexture;
-
-  virtual void Setup(Compositor* aCompositor, size_t aStep) {
-    mBuf = nullptr;
-    int w = 256;
-    int h = 256;
-    int32_t format = android::PIXEL_FORMAT_RGBA_8888;;
-    mGralloc = new android::GraphicBuffer(w, h,
-                                 format,
-                                 android::GraphicBuffer::USAGE_SW_READ_OFTEN |
-                                 android::GraphicBuffer::USAGE_SW_WRITE_OFTEN |
-                                 android::GraphicBuffer::USAGE_HW_TEXTURE);
-    mTexture = new mozilla::layers::GrallocTextureSourceOGL((CompositorOGL*)aCompositor, mGralloc.get(), SurfaceFormat::B8G8R8A8);
-  }
-
-  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect, size_t aStep) {
-    EffectChain effects;
-    effects.mPrimaryEffect = CreateEffect(aStep);
-
-    DrawFrameTrivialQuad(aCompositor, aScreenRect, aStep, effects);
-  }
-
-  virtual void Teardown(Compositor* aCompositor) {
-    mGralloc = nullptr;
-    mTexture = nullptr;
-    free(mBuf);
-  }
-
-  virtual already_AddRefed<Effect> CreateEffect(size_t i) {
-    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture,
-                                SamplingFilter::POINT);
-  }
-};
-
-class StressGrallocQuadBench : public BenchTest {
-public:
-  StressGrallocQuadBench()
-    : BenchTest("Stress Gralloc Quad (10s 256x256 quads)")
-  {}
-
-  uint32_t* mBuf;
-  android::sp<android::GraphicBuffer> mGralloc;
-  RefPtr<TextureSource> mTexture;
-
-  virtual void Setup(Compositor* aCompositor, size_t aStep) {
-    mBuf = nullptr;
-    int w = 256;
-    int h = 256;
-    int32_t format = android::PIXEL_FORMAT_RGBA_8888;;
-    mGralloc = new android::GraphicBuffer(w, h,
-                                 format,
-                                 android::GraphicBuffer::USAGE_SW_READ_OFTEN |
-                                 android::GraphicBuffer::USAGE_SW_WRITE_OFTEN |
-                                 android::GraphicBuffer::USAGE_HW_TEXTURE);
-    mTexture = new mozilla::layers::GrallocTextureSourceOGL((CompositorOGL*)aCompositor, mGralloc.get(), SurfaceFormat::B8G8R8A8);
-  }
-
-  void DrawFrame(Compositor* aCompositor, const gfx::Rect& aScreenRect, size_t aStep) {
-    EffectChain effects;
-    effects.mPrimaryEffect = CreateEffect(aStep);
-
-    DrawFrameStressQuad(aCompositor, aScreenRect, aStep, effects);
-  }
-
-  virtual void Teardown(Compositor* aCompositor) {
-    mGralloc = nullptr;
-    mTexture = nullptr;
-    free(mBuf);
-  }
-
-  virtual already_AddRefed<Effect> CreateEffect(size_t i) {
-    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture,
-                                SamplingFilter::POINT);
-  }
-};
-#endif
-
 static void RunCompositorBench(Compositor* aCompositor, const gfx::Rect& aScreenRect)
 {
   std::vector<BenchTest*> tests;
@@ -371,10 +281,6 @@ static void RunCompositorBench(Compositor* aCompositor, const gfx::Rect& aScreen
   tests.push_back(new EffectSolidColorStressBench());
   tests.push_back(new TrivialTexturedQuadBench());
   tests.push_back(new StressTexturedQuadBench());
-#ifdef MOZ_WIDGET_GONK
-  tests.push_back(new TrivialGrallocQuadBench());
-  tests.push_back(new StressGrallocQuadBench());
-#endif
 
   for (size_t i = 0; i < tests.size(); i++) {
     BenchTest* test = tests[i];

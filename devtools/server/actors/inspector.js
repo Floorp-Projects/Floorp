@@ -618,6 +618,9 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * Get a unique selector string for this node.
    */
   getUniqueSelector: function () {
+    if (Cu.isDeadWrapper(this.rawNode)) {
+      return "";
+    }
     return CssLogic.findCssSelector(this.rawNode);
   },
 
@@ -2354,7 +2357,13 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   onFrameLoad: function ({ window, isTopLevel }) {
-    if (!this.rootDoc && isTopLevel) {
+    if (isTopLevel) {
+      // If we initialize the inspector while the document is loading,
+      // we may already have a root document set in the constructor.
+      if (this.rootDoc && !Cu.isDeadWrapper(this.rootDoc) &&
+          this.rootDoc.defaultView) {
+        this.onFrameUnload({ window: this.rootDoc.defaultView });
+      }
       this.rootDoc = window.document;
       this.rootNode = this.document();
       this.queueMutation({

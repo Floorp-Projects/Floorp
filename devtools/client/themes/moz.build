@@ -10,5 +10,6 @@ DIRS += [
 
 DevToolsModules(
     'common.css',
+    'splitters.css',
     'variables.css',
 )

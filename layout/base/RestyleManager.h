@@ -208,18 +208,18 @@ public:
   }
 
   /**
-   * Try starting a transition for an element or a ::before or ::after
+   * Try initiating a transition for an element or a ::before or ::after
    * pseudo-element, given an old and new style context.  This may
    * change the new style context if a transition is started.  Returns
-   * true iff it does change aNewStyleContext.
+   * true if it does change aNewStyleContext.
    *
    * For the pseudo-elements, aContent must be the anonymous content
    * that we're creating for that pseudo-element, not the real element.
    */
   static bool
-  TryStartingTransition(nsPresContext* aPresContext, nsIContent* aContent,
-                        nsStyleContext* aOldStyleContext,
-                        RefPtr<nsStyleContext>* aNewStyleContext /* inout */);
+  TryInitiatingTransition(nsPresContext* aPresContext, nsIContent* aContent,
+                          nsStyleContext* aOldStyleContext,
+                          RefPtr<nsStyleContext>* aNewStyleContext /* inout */);
 
   // AnimationsWithDestroyedFrame is used to stop animations and transitions
   // on elements that have no frame at the end of the restyling process.

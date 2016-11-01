@@ -14,5 +14,4 @@ jobs-from:
     - android.yml
     - linux.yml
     - macosx.yml
-    - mulet.yml
     - windows.yml

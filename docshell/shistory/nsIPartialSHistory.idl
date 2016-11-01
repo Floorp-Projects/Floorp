@@ -1,0 +1,62 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIFrameLoader;
+
+/**
+ * nsIPartialSHistory represents a part of nsIGroupedSHistory. It associates to
+ * a "partial" nsISHistory in either local or remote process.
+ */
+[scriptable, builtinclass, uuid(5cd75e28-838c-4a0a-972e-6005f736ef7a)]
+interface nsIPartialSHistory : nsISupports
+{
+  // The number of entries of its corresponding nsISHistory.
+  [infallible] readonly attribute unsigned long count;
+
+  // If it's part of a grouped session history, globalIndexOffset denotes the
+  // number of entries ahead.
+  [infallible] readonly attribute unsigned long globalIndexOffset;
+
+  // The frameloader which owns this partial session history.
+  readonly attribute nsIFrameLoader ownerFrameLoader;
+
+  /**
+   * Notify that it's been added to a grouped session history. It also implies
+   * it's becoming the active partial history of the group.
+   *
+   * @param aOffset                The number of entries in preceding partial
+   *                               session histories.
+   */
+  void onAttachGroupedSessionHistory(in unsigned long aOffset);
+
+  /**
+   * Notify that one or more entries in its associated nsISHistory object
+   * have been changed (i.e. add / remove / replace). It's mainly used for
+   * cross-process case, since in the in-process case we can just register an
+   * nsISHistoryListener instead.
+   *
+   * @param aCount The number of entries in the associated session history.
+   *               It can be the same as the old value if entries were replaced.
+   */
+  void onSessionHistoryChange(in unsigned long aCount);
+
+  /**
+   * Notify that the partial session history has been swapped in as the active
+   * session history. Only an active session history can possibly add / remove /
+   * replace its history entries.
+   *
+   * @param aGlobalLength      The up-to-date global length.
+   * @param aTargetLocalIndex  The local index to navigate to.
+   */
+  void onActive(in unsigned long aGlobalLength, in unsigned long aTargetLocalIndex);
+
+  /**
+   * Notify that the partial session history has been swapped out and is no
+   * longer active.
+   */
+  void onDeactive();
+};

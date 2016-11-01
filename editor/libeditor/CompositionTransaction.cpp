@@ -62,16 +62,21 @@ CompositionTransaction::DoTransaction()
   NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
 
   // Advance caret: This requires the presentation shell to get the selection.
-  nsresult res;
   if (mReplaceLength == 0) {
-    res = mTextNode->InsertData(mOffset, mStringToInsert);
+    nsresult rv = mTextNode->InsertData(mOffset, mStringToInsert);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   } else {
-    res = mTextNode->ReplaceData(mOffset, mReplaceLength, mStringToInsert);
+    nsresult rv =
+      mTextNode->ReplaceData(mOffset, mReplaceLength, mStringToInsert);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
-  NS_ENSURE_SUCCESS(res, res);
 
-  res = SetSelectionForRanges();
-  NS_ENSURE_SUCCESS(res, res);
+  nsresult rv = SetSelectionForRanges();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -84,14 +89,14 @@ CompositionTransaction::UndoTransaction()
   RefPtr<Selection> selection = mEditorBase.GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
-  nsresult res = mTextNode->DeleteData(mOffset, mStringToInsert.Length());
-  NS_ENSURE_SUCCESS(res, res);
+  nsresult rv = mTextNode->DeleteData(mOffset, mStringToInsert.Length());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // set the selection to the insertion point where the string was removed
-  res = selection->Collapse(mTextNode, mOffset);
-  NS_ASSERTION(NS_SUCCEEDED(res),
+  rv = selection->Collapse(mTextNode, mOffset);
+  NS_ASSERTION(NS_SUCCEEDED(rv),
                "Selection could not be collapsed after undo of IME insert.");
-  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

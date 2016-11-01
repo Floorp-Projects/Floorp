@@ -515,6 +515,7 @@ class LexicalEnvironmentObject : public EnvironmentObject
 class NamedLambdaObject : public LexicalEnvironmentObject
 {
     static NamedLambdaObject* create(JSContext* cx, HandleFunction callee,
+                                     HandleFunction replacement,
                                      HandleObject enclosing, gc::InitialHeap heap);
 
   public:
@@ -522,6 +523,8 @@ class NamedLambdaObject : public LexicalEnvironmentObject
                                                    gc::InitialHeap heap);
 
     static NamedLambdaObject* create(JSContext* cx, AbstractFramePtr frame);
+    static NamedLambdaObject* create(JSContext* cx, AbstractFramePtr frame,
+                                     HandleFunction replacement);
 
     // For JITs.
     static size_t lambdaSlot();

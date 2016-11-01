@@ -11,10 +11,10 @@
 #include "SkAdvancedTypefaceMetrics.h"
 #include "SkDWrite.h"
 #include "SkHRESULT.h"
+#include "SkLeanWindows.h"
 #include "SkTScopedComPtr.h"
 #include "SkTypeface.h"
 #include "SkTypefaceCache.h"
-#include "SkTypes.h"
 
 #include <dwrite.h>
 #if SK_HAS_DWRITE_1_H
@@ -25,25 +25,28 @@ class SkFontDescriptor;
 struct SkScalerContextRec;
 
 static SkFontStyle get_style(IDWriteFont* font) {
-    DWRITE_FONT_STYLE dwStyle = font->GetStyle();
-    return SkFontStyle(font->GetWeight(),
-                       font->GetStretch(),
-                       (DWRITE_FONT_STYLE_OBLIQUE == dwStyle ||
-                        DWRITE_FONT_STYLE_ITALIC  == dwStyle)
-                                                   ? SkFontStyle::kItalic_Slant
-                                                   : SkFontStyle::kUpright_Slant);
+    int weight = font->GetWeight();
+    int width = font->GetStretch();
+    SkFontStyle::Slant slant = SkFontStyle::kUpright_Slant;
+    switch (font->GetStyle()) {
+        case DWRITE_FONT_STYLE_NORMAL: slant = SkFontStyle::kUpright_Slant; break;
+        case DWRITE_FONT_STYLE_OBLIQUE: slant = SkFontStyle::kOblique_Slant; break;
+        case DWRITE_FONT_STYLE_ITALIC: slant = SkFontStyle::kItalic_Slant; break;
+        default: SkASSERT(false); break;
+    }
+    return SkFontStyle(weight, width, slant);
 }
 
 class DWriteFontTypeface : public SkTypeface {
 private:
-    DWriteFontTypeface(const SkFontStyle& style, SkFontID fontID,
+    DWriteFontTypeface(const SkFontStyle& style,
                        IDWriteFactory* factory,
                        IDWriteFontFace* fontFace,
                        IDWriteFont* font = nullptr,
                        IDWriteFontFamily* fontFamily = nullptr,
                        IDWriteFontFileLoader* fontFileLoader = nullptr,
                        IDWriteFontCollectionLoader* fontCollectionLoader = nullptr)
-        : SkTypeface(style, fontID, false)
+        : SkTypeface(style, false)
         , fFactory(SkRefComPtr(factory))
         , fDWriteFontCollectionLoader(SkSafeRefComPtr(fontCollectionLoader))
         , fDWriteFontFileLoader(SkSafeRefComPtr(fontFileLoader))
@@ -74,8 +77,7 @@ public:
     static DWriteFontTypeface* Create(IDWriteFactory* factory,
                                       IDWriteFontFace* fontFace,
                                       SkFontStyle aStyle) {
-        SkFontID fontID = SkTypefaceCache::NewFontID();
-        return new DWriteFontTypeface(aStyle, fontID, factory, fontFace,
+        return new DWriteFontTypeface(aStyle, factory, fontFace,
                                       nullptr, nullptr,
                                       nullptr, nullptr);
     }
@@ -86,8 +88,7 @@ public:
                                       IDWriteFontFamily* fontFamily,
                                       IDWriteFontFileLoader* fontFileLoader = nullptr,
                                       IDWriteFontCollectionLoader* fontCollectionLoader = nullptr) {
-        SkFontID fontID = SkTypefaceCache::NewFontID();
-        return new DWriteFontTypeface(get_style(font), fontID, factory, fontFace, font, fontFamily,
+        return new DWriteFontTypeface(get_style(font), factory, fontFace, font, fontFamily,
                                       fontFileLoader, fontCollectionLoader);
     }
 
@@ -105,7 +106,8 @@ protected:
     }
 
     SkStreamAsset* onOpenStream(int* ttcIndex) const override;
-    SkScalerContext* onCreateScalerContext(const SkDescriptor*) const override;
+    SkScalerContext* onCreateScalerContext(const SkScalerContextEffects&,
+                                           const SkDescriptor*) const override;
     void onFilterRec(SkScalerContextRec*) const override;
     SkAdvancedTypefaceMetrics* onGetAdvancedTypefaceMetrics(
                                 PerGlyphInfo, const uint32_t*, uint32_t) const override;

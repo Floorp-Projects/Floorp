@@ -633,8 +633,10 @@ MarkupContainer.prototype = {
     // Markup tree item should have accessible selected state.
     this.tagLine.setAttribute("aria-selected", value);
     if (this._selected) {
-      this.markup.getContainer(this.markup._rootNode).elt.setAttribute(
-        "aria-activedescendant", this.id);
+      let container = this.markup.getContainer(this.markup._rootNode);
+      if (container) {
+        container.elt.setAttribute("aria-activedescendant", this.id);
+      }
       this.tagLine.setAttribute("selected", "");
       this.tagState.classList.add("theme-selected");
     } else {

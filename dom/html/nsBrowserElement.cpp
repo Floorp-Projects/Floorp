@@ -669,18 +669,6 @@ nsBrowserElement::SetVolume(float aVolume, ErrorResult& aRv)
   }
 }
 
-void
-nsBrowserElement::SetNFCFocus(bool aIsFocus,
-                              ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  nsresult rv = mBrowserElementAPI->SetNFCFocus(aIsFocus);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-}
-
 already_AddRefed<DOMRequest>
 nsBrowserElement::ExecuteScript(const nsAString& aScript,
                                 const BrowserElementExecuteScriptOptions& aOptions,

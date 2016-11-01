@@ -7023,12 +7023,9 @@ nsWindow::RoundsWidgetCoordinatesTo()
 void nsWindow::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData)
 {
   #ifdef MOZ_X11
-  Display* xDisplay = (Display*)GetNativeData(NS_NATIVE_COMPOSITOR_DISPLAY);
-  char* xDisplayString = XDisplayString(xDisplay);
-
   *aInitData = mozilla::widget::CompositorWidgetInitData(
                                   mXWindow,
-                                  nsCString(xDisplayString),
+                                  nsCString(XDisplayString(mXDisplay)),
                                   GetClientSize());
   #endif
 }

@@ -1517,6 +1517,16 @@ add_task(function* test_mobile_query() {
     queryInfo = yield PlacesUtils.bookmarks.fetch(queryGuid);
     equal(queryInfo.title, "Mobile Bookmarks", "Should fix query title");
 
+    _("Point query to different folder");
+    yield PlacesUtils.bookmarks.update({
+      guid: queryGuid,
+      url: "place:folder=BOOKMARKS_MENU",
+    });
+    tracker._ensureMobileQuery();
+    queryInfo = yield PlacesUtils.bookmarks.fetch(queryGuid);
+    equal(queryInfo.url.href, `place:folder=${PlacesUtils.mobileFolderId}`,
+      "Should fix query URL to point to mobile root");
+
     _("We shouldn't track the query or the left pane root");
     yield verifyTrackedCount(0);
     do_check_eq(tracker.score, 0);

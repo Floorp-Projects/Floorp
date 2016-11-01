@@ -67,7 +67,6 @@ class PJavaScriptParent;
 } // namespace jsipc
 
 namespace layers {
-class PSharedBufferManagerParent;
 struct TextureFactoryIdentifier;
 } // namespace layers
 
@@ -136,7 +135,8 @@ public:
   GetNewOrUsedBrowserProcess(bool aForBrowserElement = false,
                              hal::ProcessPriority aPriority =
                              hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
-                             ContentParent* aOpener = nullptr);
+                             ContentParent* aOpener = nullptr,
+                             bool aFreshProcess = false);
 
   /**
    * Create a subprocess suitable for use as a preallocated app process.
@@ -151,7 +151,8 @@ public:
   static TabParent*
   CreateBrowserOrApp(const TabContext& aContext,
                      Element* aFrameElement,
-                     ContentParent* aOpenerContentParent);
+                     ContentParent* aOpenerContentParent,
+                     bool aFreshProcess = false);
 
   static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -574,6 +575,7 @@ protected:
 private:
   static nsDataHashtable<nsStringHashKey, ContentParent*> *sAppContentParents;
   static nsTArray<ContentParent*>* sNonAppContentParents;
+  static nsTArray<ContentParent*>* sLargeAllocationContentParents;
   static nsTArray<ContentParent*>* sPrivateContent;
   static StaticAutoPtr<LinkedList<ContentParent> > sContentParents;
 
@@ -701,10 +703,6 @@ private:
   PGMPServiceParent*
   AllocPGMPServiceParent(mozilla::ipc::Transport* aTransport,
                          base::ProcessId aOtherProcess) override;
-
-  PSharedBufferManagerParent*
-  AllocPSharedBufferManagerParent(mozilla::ipc::Transport* aTranport,
-                                   base::ProcessId aOtherProcess) override;
 
   PBackgroundParent*
   AllocPBackgroundParent(Transport* aTransport, ProcessId aOtherProcess)
@@ -842,14 +840,6 @@ private:
   virtual PHandlerServiceParent* AllocPHandlerServiceParent() override;
 
   virtual bool DeallocPHandlerServiceParent(PHandlerServiceParent*) override;
-
-  virtual PSmsParent* AllocPSmsParent() override;
-
-  virtual bool DeallocPSmsParent(PSmsParent*) override;
-
-  virtual PTelephonyParent* AllocPTelephonyParent() override;
-
-  virtual bool DeallocPTelephonyParent(PTelephonyParent*) override;
 
   virtual PMediaParent* AllocPMediaParent() override;
 

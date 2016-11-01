@@ -62,13 +62,11 @@ this.DateTimePickerHelper = {
         if (!this.picker) {
           return;
         }
-        this.picker.hidePopup();
+        this.picker.closePicker();
         break;
       }
       case "FormDateTime:UpdatePicker": {
-        let value = aMessage.data.value;
-        debug("Input box value is now: " + value.hour + ":" + value.minute);
-        // TODO: updating picker will be handled in Bug 1283384.
+        this.picker.setPopupValue(aMessage.data);
         break;
       }
       default:
@@ -115,6 +113,14 @@ this.DateTimePickerHelper = {
     let dir = aData.dir;
     let type = aData.type;
     let detail = aData.detail;
+
+    this._anchor = aBrowser.ownerGlobal.gBrowser.popupAnchor;
+    this._anchor.left = rect.left;
+    this._anchor.top = rect.top;
+    this._anchor.width = rect.width;
+    this._anchor.height = rect.height;
+    this._anchor.hidden = false;
+
     debug("Opening picker with details: " + JSON.stringify(detail));
 
     let window = aBrowser.ownerDocument.defaultView;
@@ -132,9 +138,11 @@ this.DateTimePickerHelper = {
       debug("aBrowser.dateTimePicker not found, exiting now.");
       return;
     }
-    this.picker.hidden = false;
-    this.picker.openPopupAtScreenRect("after_start", rect.left, rect.top,
-                                      rect.width, rect.height, false, false);
+    this.picker.loadPicker(type, detail);
+    // The arrow panel needs an anchor to work. The popupAnchor (this._anchor)
+    // is a transparent div that the arrow can point to.
+    this.picker.openPopup(this._anchor, "after_start", rect.left, rect.top);
+
     this.addPickerListeners();
   },
 
@@ -143,6 +151,7 @@ this.DateTimePickerHelper = {
     this.removePickerListeners();
     this.picker = null;
     this.weakBrowser = null;
+    this._anchor.hidden = true;
   },
 
   // Listen to picker's event.

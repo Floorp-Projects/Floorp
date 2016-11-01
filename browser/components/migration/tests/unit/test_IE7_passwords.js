@@ -1,3 +1,5 @@
+"use strict";
+
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -6,9 +8,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
 XPCOMUtils.defineLazyModuleGetter(this, "OSCrypto",
                                   "resource://gre/modules/OSCrypto.jsm");
 
-const CRYPT_PROTECT_UI_FORBIDDEN = 1;
 const IE7_FORM_PASSWORDS_MIGRATOR_NAME = "IE7FormPasswords";
-const LOGINS_KEY =  "Software\\Microsoft\\Internet Explorer\\IntelliForms\\Storage2";
+const LOGINS_KEY = "Software\\Microsoft\\Internet Explorer\\IntelliForms\\Storage2";
 const EXTENSION = "-backup";
 const TESTED_WEBSITES = {
   twitter: {
@@ -48,8 +49,8 @@ const TESTED_WEBSITES = {
         timeLastUsed: 1439326966000,
         timePasswordChanged: 1439326966000,
         timesUsed: 1,
-     },
-     {
+      },
+      {
         username: "username1",
         password: "password1",
         hostname: "https://www.facebook.com",
@@ -107,7 +108,7 @@ const TESTED_WEBSITES = {
         timeLastUsed: 1439338767000,
         timePasswordChanged: 1439338767000,
         timesUsed: 1,
-       },
+      },
     ],
   },
   reddit: {
@@ -153,7 +154,7 @@ const TESTED_WEBSITES = {
         timeLastUsed: 1439341166000,
         timePasswordChanged: 1439341166000,
         timesUsed: 1,
-     },
+      },
     ],
   },
 };
@@ -255,7 +256,7 @@ function createRegistryPath(path) {
   let loginPath = path.split("\\");
   let parentKey = Cc["@mozilla.org/windows-registry-key;1"].
                   createInstance(nsIWindowsRegKey);
-  let currentPath =[];
+  let currentPath = [];
   for (let currentKey of loginPath) {
     parentKey.open(nsIWindowsRegKey.ROOT_KEY_CURRENT_USER, currentPath.join("\\"),
                    nsIWindowsRegKey.ACCESS_ALL);

@@ -101,7 +101,6 @@ function onLoad() {
 
   // set our web progress listener on the helper app launcher
   printProgress.registerListener(progressListener);
-  moveToAlertPosition();
 
   //We need to delay the set title else dom will overwrite it
   window.setTimeout(doneIniting, 100);

@@ -6,6 +6,7 @@ toolkit.jar:
 % content extensions %content/extensions/
     content/extensions/ext-alarms.js
     content/extensions/ext-backgroundPage.js
+    content/extensions/ext-browser-content.js
     content/extensions/ext-cookies.js
     content/extensions/ext-downloads.js
     content/extensions/ext-management.js
@@ -18,5 +19,9 @@ toolkit.jar:
     content/extensions/ext-extension.js
     content/extensions/ext-storage.js
     content/extensions/ext-test.js
+    content/extensions/ext-topSites.js
+    content/extensions/ext-c-backgroundPage.js
     content/extensions/ext-c-extension.js
     content/extensions/ext-c-runtime.js
+    content/extensions/ext-c-storage.js
+    content/extensions/ext-c-test.js

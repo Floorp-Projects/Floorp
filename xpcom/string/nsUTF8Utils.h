@@ -13,6 +13,7 @@
 #include "nscore.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/SSE.h"
+#include "mozilla/TypeTraits.h"
 
 #include "nsCharTraits.h"
 
@@ -721,5 +722,21 @@ private:
   char* mDestination;
 };
 #endif // MOZILLA_INTERNAL_API
+
+
+template<typename Char, typename UnsignedT>
+inline UnsignedT
+RewindToPriorUTF8Codepoint(const Char* utf8Chars, UnsignedT index)
+{
+  static_assert(mozilla::IsSame<Char, char>::value ||
+                mozilla::IsSame<Char, unsigned char>::value ||
+                mozilla::IsSame<Char, signed char>::value,
+                "UTF-8 data must be in 8-bit units");
+  static_assert(mozilla::IsUnsigned<UnsignedT>::value, "index type must be unsigned");
+  while (index > 0 && (utf8Chars[index] & 0xC0) == 0x80)
+    --index;
+
+  return index;
+}
 
 #endif /* !defined(nsUTF8Utils_h_) */

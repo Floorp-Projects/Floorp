@@ -17,7 +17,6 @@
 #include "mozilla/gfx/Types.h"          // for Float
 #include "mozilla/gfx/Triangle.h"       // for Triangle, TexturedTriangle
 #include "mozilla/layers/CompositorTypes.h"  // for DiagnosticTypes, etc
-#include "mozilla/layers/FenceUtils.h"  // for FenceHandle
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend
 #include "mozilla/widget/CompositorWidget.h"
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
@@ -435,8 +434,6 @@ public:
 
   virtual void SetDispAcquireFence(Layer* aLayer);
 
-  virtual FenceHandle GetReleaseFence();
-
   /**
    * Post-rendering stuff if the rendering is done outside of this Compositor
    * e.g., by Composer2D.
@@ -682,10 +679,6 @@ protected:
   widget::CompositorWidget* mWidget;
 
   bool mIsDestroyed;
-
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-  FenceHandle mReleaseFenceHandle;
-#endif
 
   gfx::Color mClearColor;
   gfx::Color mDefaultClearColor;

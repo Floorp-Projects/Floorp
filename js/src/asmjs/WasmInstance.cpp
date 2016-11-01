@@ -85,7 +85,23 @@ class SigIdSet
     }
 };
 
-ExclusiveData<SigIdSet> sigIdSet;
+ExclusiveData<SigIdSet>* sigIdSet = nullptr;
+
+bool
+js::wasm::InitInstanceStaticData()
+{
+    MOZ_ASSERT(!sigIdSet);
+    sigIdSet = js_new<ExclusiveData<SigIdSet>>(mutexid::WasmSigIdSet);
+    return sigIdSet != nullptr;
+}
+
+void
+js::wasm::ShutDownInstanceStaticData()
+{
+    MOZ_ASSERT(sigIdSet);
+    js_delete(sigIdSet);
+    sigIdSet = nullptr;
+}
 
 const void**
 Instance::addressOfSigId(const SigIdDesc& sigId) const
@@ -150,7 +166,6 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
           case ValType::B8x16:
           case ValType::B16x8:
           case ValType::B32x4:
-          case ValType::Limit:
             MOZ_CRASH("unhandled type in callImport");
         }
     }
@@ -223,7 +238,6 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
           case ValType::B8x16: MOZ_CRASH("NYI");
           case ValType::B16x8: MOZ_CRASH("NYI");
           case ValType::B32x4: MOZ_CRASH("NYI");
-          case ValType::Limit: MOZ_CRASH("Limit");
         }
         if (!TypeScript::ArgTypes(script, i)->hasType(type))
             return true;
@@ -400,7 +414,7 @@ Instance::init(JSContext* cx)
     }
 
     if (!metadata().sigIds.empty()) {
-        ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet.lock();
+        ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet->lock();
 
         if (!lockedSigIdSet->ensureInitialized(cx))
             return false;
@@ -428,7 +442,7 @@ Instance::~Instance()
     }
 
     if (!metadata().sigIds.empty()) {
-        ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet.lock();
+        ExclusiveData<SigIdSet>::Guard lockedSigIdSet = sigIdSet->lock();
 
         for (const SigWithId& sig : metadata().sigIds) {
             if (const void* sigId = *addressOfSigId(sig.id))
@@ -624,8 +638,6 @@ Instance::callExport(JSContext* cx, uint32_t funcDefIndex, CallArgs args)
             memcpy(&exportArgs[i], simd.asInt32x4(), Simd128DataSize);
             break;
           }
-          case ValType::Limit:
-            MOZ_CRASH("Limit");
         }
     }
 

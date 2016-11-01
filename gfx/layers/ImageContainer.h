@@ -152,7 +152,6 @@ class SharedPlanarYCbCrImage;
 class PlanarYCbCrImage;
 class TextureClient;
 class KnowsCompositor;
-class GrallocImage;
 class NVImage;
 
 struct ImageBackendData
@@ -171,8 +170,6 @@ class SharedRGBImage;
 class SurfaceTextureImage;
 #elif defined(XP_MACOSX)
 class MacIOSurfaceImage;
-#elif defined(MOZ_WIDGET_GONK)
-class OverlayImage;
 #endif
 
 /**
@@ -214,11 +211,6 @@ public:
   int32_t GetSerial() { return mSerial; }
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() = 0;
-
-  virtual GrallocImage* AsGrallocImage()
-  {
-    return nullptr;
-  }
 
   virtual bool IsValid() { return true; }
 
@@ -384,10 +376,6 @@ public:
 
   // Factory methods for shared image types.
   RefPtr<SharedRGBImage> CreateSharedRGBImage();
-
-#ifdef MOZ_WIDGET_GONK
-  RefPtr<OverlayImage> CreateOverlayImage();
-#endif
 
   struct NonOwningImage {
     explicit NonOwningImage(Image* aImage = nullptr,
@@ -908,54 +896,6 @@ private:
   nsDataHashtable<nsUint32HashKey, RefPtr<TextureClient> >  mTextureClients;
   TextureFlags mTextureFlags;
 };
-
-#ifdef MOZ_WIDGET_GONK
-class OverlayImage : public Image {
-  /**
-   * OverlayImage is a special Image type that does not hold any buffer.
-   * It only hold an Id as identifier to the real content of the Image.
-   * Therefore, OverlayImage must be handled by some specialized hardware(e.g. HWC) 
-   * to show its content.
-   */
-public:
-  struct Data {
-    int32_t mOverlayId;
-    gfx::IntSize mSize;
-  };
-
-  struct SidebandStreamData {
-    GonkNativeHandle mStream;
-    gfx::IntSize mSize;
-  };
-
-  OverlayImage() : Image(nullptr, ImageFormat::OVERLAY_IMAGE) { mOverlayId = INVALID_OVERLAY; }
-
-  void SetData(const Data& aData)
-  {
-    mOverlayId = aData.mOverlayId;
-    mSize = aData.mSize;
-    mSidebandStream = GonkNativeHandle();
-  }
-
-  void SetData(const SidebandStreamData& aData)
-  {
-    mSidebandStream = aData.mStream;
-    mSize = aData.mSize;
-    mOverlayId = INVALID_OVERLAY;
-  }
-
-  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() { return nullptr; } ;
-  int32_t GetOverlayId() { return mOverlayId; }
-  GonkNativeHandle& GetSidebandStream() { return mSidebandStream; }
-
-  gfx::IntSize GetSize() { return mSize; }
-
-private:
-  int32_t mOverlayId;
-  GonkNativeHandle mSidebandStream;
-  gfx::IntSize mSize;
-};
-#endif
 
 } // namespace layers
 } // namespace mozilla

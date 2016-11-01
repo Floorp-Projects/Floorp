@@ -39,18 +39,6 @@ XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
   return temp;
 });
 
-XPCOMUtils.defineLazyGetter(this, "isXPOrVista64", function () {
-  let os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
-  if (os != "WINNT") {
-    return false;
-  }
-  let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-  if (parseFloat(sysInfo.getProperty("version")) < 6) {
-    return true;
-  }
-  return Services.appinfo.is64Bit;
-});
-
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
                                   "resource://gre/modules/UpdateUtils.jsm");
 
@@ -238,11 +226,6 @@ GMPInstallManager.prototype = {
 
         if (gmpAddon.isInstalled) {
           log.info("Addon |" + gmpAddon.id + "| already installed.");
-          return false;
-        }
-
-        if (gmpAddon.isEME && isXPOrVista64) {
-          log.info("Addon |" + gmpAddon.id + "| not supported on this platform.");
           return false;
         }
 

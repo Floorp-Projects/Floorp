@@ -180,7 +180,7 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   cursor: pointer;
   padding: 8px 0;
   margin: 0 8px;
-  background-image: url(images/itemToggle.svg);
+  background-image: url(images/item-toggle.svg);
   background-repeat: no-repeat;
   background-clip: content-box;
   background-position: center;

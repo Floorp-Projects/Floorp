@@ -79,6 +79,72 @@ InternalRequest::Clone()
   return clone.forget();
 }
 
+InternalRequest::InternalRequest(const nsACString& aURL)
+  : mMethod("GET")
+  , mHeaders(new InternalHeaders(HeadersGuardEnum::None))
+  , mContentPolicyType(nsIContentPolicy::TYPE_FETCH)
+  , mReferrer(NS_LITERAL_STRING(kFETCH_CLIENT_REFERRER_STR))
+  , mReferrerPolicy(ReferrerPolicy::_empty)
+  , mEnvironmentReferrerPolicy(net::RP_Default)
+  , mMode(RequestMode::No_cors)
+  , mCredentialsMode(RequestCredentials::Omit)
+  , mResponseTainting(LoadTainting::Basic)
+  , mCacheMode(RequestCache::Default)
+  , mRedirectMode(RequestRedirect::Follow)
+  , mAuthenticationFlag(false)
+  , mForceOriginHeader(false)
+  , mPreserveContentCodings(false)
+    // FIXME(nsm): This should be false by default, but will lead to the
+    // algorithm never loading data: URLs right now. See Bug 1018872 about
+    // how certain contexts will override it to set it to true. Fetch
+    // specification does not handle this yet.
+  , mSameOriginDataURL(true)
+  , mSkipServiceWorker(false)
+  , mSynchronous(false)
+  , mUnsafeRequest(false)
+  , mUseURLCredentials(false)
+{
+  MOZ_ASSERT(!aURL.IsEmpty());
+  AddURL(aURL);
+}
+
+InternalRequest::InternalRequest(const nsACString& aURL,
+                                 const nsACString& aMethod,
+                                 already_AddRefed<InternalHeaders> aHeaders,
+                                 RequestCache aCacheMode,
+                                 RequestMode aMode,
+                                 RequestRedirect aRequestRedirect,
+                                 RequestCredentials aRequestCredentials,
+                                 const nsAString& aReferrer,
+                                 ReferrerPolicy aReferrerPolicy,
+                                 nsContentPolicyType aContentPolicyType,
+                                 const nsAString& aIntegrity)
+  : mMethod(aMethod)
+  , mHeaders(aHeaders)
+  , mContentPolicyType(aContentPolicyType)
+  , mReferrer(aReferrer)
+  , mReferrerPolicy(aReferrerPolicy)
+  , mEnvironmentReferrerPolicy(net::RP_Default)
+  , mMode(aMode)
+  , mCredentialsMode(aRequestCredentials)
+  , mResponseTainting(LoadTainting::Basic)
+  , mCacheMode(aCacheMode)
+  , mRedirectMode(aRequestRedirect)
+  , mIntegrity(aIntegrity)
+  , mAuthenticationFlag(false)
+  , mForceOriginHeader(false)
+  , mPreserveContentCodings(false)
+    // FIXME See the above comment in the default constructor.
+  , mSameOriginDataURL(true)
+  , mSkipServiceWorker(false)
+  , mSynchronous(false)
+  , mUnsafeRequest(false)
+  , mUseURLCredentials(false)
+{
+  MOZ_ASSERT(!aURL.IsEmpty());
+  AddURL(aURL);
+}
+
 InternalRequest::InternalRequest(const InternalRequest& aOther)
   : mMethod(aOther.mMethod)
   , mURLList(aOther.mURLList)
@@ -420,6 +486,12 @@ InternalRequest::MaybeSkipCacheIfPerformingRevalidation()
       mHeaders->HasRevalidationHeaders()) {
     mCacheMode = RequestCache::No_store;
   }
+}
+
+void
+InternalRequest::SetPrincipalInfo(UniquePtr<mozilla::ipc::PrincipalInfo> aPrincipalInfo)
+{
+  mPrincipalInfo = Move(aPrincipalInfo);
 }
 
 } // namespace dom

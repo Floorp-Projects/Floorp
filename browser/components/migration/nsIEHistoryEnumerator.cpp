@@ -81,7 +81,7 @@ nsIEHistoryEnumerator::HasMoreElements(bool* _retval)
     }
   }
 
-  nsDependentString title(statURL.pwcsTitle);
+  nsDependentString title(statURL.pwcsTitle ? statURL.pwcsTitle : L"");
 
   bool lastVisitTimeIsValid;
   PRTime lastVisited = WinMigrationFileTimeToPRTime(&(statURL.ftLastVisited), &lastVisitTimeIsValid);

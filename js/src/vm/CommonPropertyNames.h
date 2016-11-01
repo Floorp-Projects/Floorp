@@ -29,10 +29,16 @@
     macro(ArrayValuesAt, ArrayValuesAt, "ArrayValuesAt") \
     macro(as, as, "as") \
     macro(Async, Async, "Async") \
+    macro(AsyncFunction, AsyncFunction, "AsyncFunction") \
+    macro(AsyncFunction_wrap, AsyncFunction_wrap, "AsyncFunction_wrap") \
+    macro(AsyncWrapped, AsyncWrapped, "AsyncWrapped") \
+    macro(async, async, "async") \
+    macro(await, await, "await") \
     macro(Bool8x16, Bool8x16, "Bool8x16") \
     macro(Bool16x8, Bool16x8, "Bool16x8") \
     macro(Bool32x4, Bool32x4, "Bool32x4") \
     macro(Bool64x2, Bool64x2, "Bool64x2") \
+    macro(boundWithSpace, boundWithSpace, "bound ") \
     macro(breakdown, breakdown, "breakdown") \
     macro(buffer, buffer, "buffer") \
     macro(builder, builder, "builder") \
@@ -120,7 +126,6 @@
     macro(frame, frame, "frame") \
     macro(from, from, "from") \
     macro(fulfilled, fulfilled, "fulfilled") \
-    macro(fulfillHandler, fulfillHandler, "fulfillHandler") \
     macro(futexNotEqual, futexNotEqual, "not-equal") \
     macro(futexOK, futexOK, "ok") \
     macro(futexTimedOut, futexTimedOut, "timed-out") \
@@ -164,6 +169,7 @@
     macro(isFinite, isFinite, "isFinite") \
     macro(isNaN, isNaN, "isNaN") \
     macro(isPrototypeOf, isPrototypeOf, "isPrototypeOf") \
+    macro(IterableToList, IterableToList, "IterableToList") \
     macro(iterate, iterate, "iterate") \
     macro(iteratorIntrinsic, iteratorIntrinsic, "__iterator__") \
     macro(join, join, "join") \
@@ -244,6 +250,7 @@
     macro(raw, raw, "raw") \
     macro(reason, reason, "reason") \
     macro(RegExpBuiltinExec, RegExpBuiltinExec, "RegExpBuiltinExec") \
+    macro(RegExpFlagsGetter, RegExpFlagsGetter, "RegExpFlagsGetter") \
     macro(RegExpMatcher, RegExpMatcher, "RegExpMatcher") \
     macro(RegExpSearcher, RegExpSearcher, "RegExpSearcher") \
     macro(RegExpTester, RegExpTester, "RegExpTester") \
@@ -251,7 +258,6 @@
     macro(Reify, Reify, "Reify") \
     macro(reject, reject, "reject") \
     macro(rejected, rejected, "rejected") \
-    macro(rejectHandler, rejectHandler, "rejectHandler") \
     macro(RequireObjectCoercible, RequireObjectCoercible, "RequireObjectCoercible") \
     macro(resolve, resolve, "resolve") \
     macro(resumeGenerator, resumeGenerator, "resumeGenerator") \

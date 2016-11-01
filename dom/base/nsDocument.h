@@ -69,6 +69,7 @@
 #include "ImportManager.h"
 #include "mozilla/LinkedList.h"
 #include "CustomElementRegistry.h"
+#include "mozilla/dom/Performance.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
@@ -97,6 +98,8 @@ class BoxObject;
 class ImageTracker;
 struct LifecycleCallbacks;
 class CallbackFunction;
+class DOMIntersectionObserver;
+class Performance;
 
 struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
 {
@@ -773,6 +776,15 @@ public:
 
   void ReportUseCounters();
 
+  virtual void AddIntersectionObserver(
+    mozilla::dom::DOMIntersectionObserver* aObserver) override;
+  virtual void RemoveIntersectionObserver(
+    mozilla::dom::DOMIntersectionObserver* aObserver) override;
+  virtual void UpdateIntersectionObservations() override;
+  virtual void ScheduleIntersectionObserverNotification() override;
+  virtual void NotifyIntersectionObservers() override;
+
+
 private:
   void AddOnDemandBuiltInUASheet(mozilla::StyleSheet* aSheet);
   nsRadioGroupStruct* GetRadioGroupInternal(const nsAString& aName) const;
@@ -1324,6 +1336,9 @@ protected:
 
   // Array of observers
   nsTObserverArray<nsIDocumentObserver*> mObservers;
+
+  // Array of intersection observers
+  nsTArray<RefPtr<mozilla::dom::DOMIntersectionObserver>> mIntersectionObservers;
 
   // Tracker for animations that are waiting to start.
   // nullptr until GetOrCreatePendingAnimationTracker is called.

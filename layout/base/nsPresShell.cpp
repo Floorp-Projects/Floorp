@@ -2981,7 +2981,7 @@ PresShell::CreateReferenceRenderingContext()
     // We assume the devCtx has positive width and height for this call.
     // However, width and height, may be outside of the reasonable range
     // so rc may still be null.
-    rc = devCtx->CreateRenderingContext();
+    rc = devCtx->CreateReferenceRenderingContext();
   }
 
   return rc ? rc.forget() : nullptr;
@@ -4477,7 +4477,7 @@ PresShell::ReconstructFrames(void)
 {
   NS_PRECONDITION(!mFrameConstructor->GetRootFrame() || mDidInitialize,
                   "Must not have root frame before initial reflow");
-  if (!mDidInitialize) {
+  if (!mDidInitialize || mIsDestroying) {
     // Nothing to do here
     return NS_OK;
   }
@@ -4487,6 +4487,10 @@ PresShell::ReconstructFrames(void)
   // Have to make sure that the content notifications are flushed before we
   // start messing with the frame model; otherwise we can get content doubling.
   mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
+
+  if (mIsDestroying) {
+    return NS_OK;
+  }
 
   nsAutoCauseReflowNotifier crNotifier(this);
   mFrameConstructor->BeginUpdate();
@@ -7741,7 +7745,10 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         frame->PresContext()->Document()->EventHandlingSuppressed()) {
       if (aEvent->mMessage == eMouseDown) {
         mNoDelayedMouseEvents = true;
-      } else if (!mNoDelayedMouseEvents && aEvent->mMessage == eMouseUp) {
+      } else if (!mNoDelayedMouseEvents && (aEvent->mMessage == eMouseUp ||
+        // contextmenu is triggered after right mouseup on Windows and right
+        // mousedown on other platforms.
+        aEvent->mMessage == eContextMenu)) {
         DelayedEvent* event = new DelayedMouseEvent(aEvent->AsMouseEvent());
         if (!mDelayedEvents.AppendElement(event)) {
           delete event;

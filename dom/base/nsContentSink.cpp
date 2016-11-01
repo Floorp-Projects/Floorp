@@ -90,8 +90,27 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
 nsContentSink::nsContentSink()
+  : mBackoffCount(0)
+  , mLastNotificationTime(0)
+  , mBeganUpdate(0)
+  , mLayoutStarted(0)
+  , mDynamicLowerValue(0)
+  , mParsing(0)
+  , mDroppedTimer(0)
+  , mDeferredLayoutStart(0)
+  , mDeferredFlushTags(0)
+  , mIsDocumentObserver(0)
+  , mRunsToCompletion(0)
+  , mDeflectedCount(0)
+  , mHasPendingEvent(false)
+  , mCurrentParseEndTime(0)
+  , mBeginLoadTime(0)
+  , mLastSampledUserEventTime(0)
+  , mInMonolithicContainer(0)
+  , mInNotification(0)
+  , mUpdatesInNotification(0)
+  , mPendingSheetCount(0)
 {
-  // We have a zeroing operator new
   NS_ASSERTION(!mLayoutStarted, "What?");
   NS_ASSERTION(!mDynamicLowerValue, "What?");
   NS_ASSERTION(!mParsing, "What?");

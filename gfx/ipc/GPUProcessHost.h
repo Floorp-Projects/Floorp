@@ -82,6 +82,14 @@ public:
     return !!mGPUChild;
   }
 
+  // Return the time stamp for when we tried to launch the GPU process. This is
+  // currently used for Telemetry so that we can determine how long GPU processes
+  // take to spin up. Note this doesn't denote a successful launch, just when we
+  // attempted launch.
+  TimeStamp GetLaunchTime() const {
+    return mLaunchTime;
+  }
+
   // Called on the IO thread.
   void OnChannelConnected(int32_t peer_pid) override;
   void OnChannelError() override;
@@ -122,6 +130,8 @@ private:
 
   bool mShutdownRequested;
   bool mChannelClosed;
+
+  TimeStamp mLaunchTime;
 };
 
 } // namespace gfx

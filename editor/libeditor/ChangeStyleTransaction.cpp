@@ -150,8 +150,8 @@ ChangeStyleTransaction::DoTransaction()
                                            nsGkAtoms::style);
 
   nsAutoString values;
-  nsresult result = cssDecl->GetPropertyValue(propertyNameString, values);
-  NS_ENSURE_SUCCESS(result, result);
+  nsresult rv = cssDecl->GetPropertyValue(propertyNameString, values);
+  NS_ENSURE_SUCCESS(rv, rv);
   mUndoValue.Assign(values);
 
   // Does this property accept more than one value? (bug 62682)
@@ -168,18 +168,17 @@ ChangeStyleTransaction::DoTransaction()
       RemoveValueFromListOfValues(values, NS_LITERAL_STRING("none"));
       RemoveValueFromListOfValues(values, mValue);
       if (values.IsEmpty()) {
-        result = cssDecl->RemoveProperty(propertyNameString, returnString);
-        NS_ENSURE_SUCCESS(result, result);
+        rv = cssDecl->RemoveProperty(propertyNameString, returnString);
+        NS_ENSURE_SUCCESS(rv, rv);
       } else {
         nsAutoString priority;
         cssDecl->GetPropertyPriority(propertyNameString, priority);
-        result = cssDecl->SetProperty(propertyNameString, values,
-                                      priority);
-        NS_ENSURE_SUCCESS(result, result);
+        rv = cssDecl->SetProperty(propertyNameString, values, priority);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
     } else {
-      result = cssDecl->RemoveProperty(propertyNameString, returnString);
-      NS_ENSURE_SUCCESS(result, result);
+      rv = cssDecl->RemoveProperty(propertyNameString, returnString);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   } else {
     nsAutoString priority;
@@ -194,18 +193,17 @@ ChangeStyleTransaction::DoTransaction()
     } else {
       values.Assign(mValue);
     }
-    result = cssDecl->SetProperty(propertyNameString, values,
-                                  priority);
-    NS_ENSURE_SUCCESS(result, result);
+    rv = cssDecl->SetProperty(propertyNameString, values, priority);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Let's be sure we don't keep an empty style attribute
   uint32_t length;
-  result = cssDecl->GetLength(&length);
-  NS_ENSURE_SUCCESS(result, result);
+  rv = cssDecl->GetLength(&length);
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!length) {
-    result = mElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
-    NS_ENSURE_SUCCESS(result, result);
+    rv = mElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     mRedoAttributeWasSet = true;
   }
@@ -217,7 +215,6 @@ nsresult
 ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
                                  nsAString& aValue)
 {
-  nsresult result = NS_OK;
   if (aAttributeWasSet) {
     // The style attribute was not empty, let's recreate the declaration
     nsAutoString propertyNameString;
@@ -230,18 +227,14 @@ ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
     if (aValue.IsEmpty()) {
       // An empty value means we have to remove the property
       nsAutoString returnString;
-      result = cssDecl->RemoveProperty(propertyNameString, returnString);
-    } else {
-      // Let's recreate the declaration as it was
-      nsAutoString priority;
-      cssDecl->GetPropertyPriority(propertyNameString, priority);
-      result = cssDecl->SetProperty(propertyNameString, aValue, priority);
+      return cssDecl->RemoveProperty(propertyNameString, returnString);
     }
-  } else {
-    result = mElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
+    // Let's recreate the declaration as it was
+    nsAutoString priority;
+    cssDecl->GetPropertyPriority(propertyNameString, priority);
+    return cssDecl->SetProperty(propertyNameString, aValue, priority);
   }
-
-  return result;
+  return mElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
 }
 
 NS_IMETHODIMP

@@ -27,29 +27,21 @@ var cert;
  *          A promise that resolves when the dialog has finished loading, with
  *          an array consisting of:
  *            1. The window of the opened dialog.
- *            2. The nsIDialogParamBlock passed to the dialog.
+ *            2. The return value nsIWritablePropertyBag2 passed to the dialog.
  */
 function openClientAuthDialog(cert) {
-  let params = Cc["@mozilla.org/embedcomp/dialogparam;1"]
-                 .createInstance(Ci.nsIDialogParamBlock);
-
   let certList = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
   certList.appendElement(cert, false);
-  let array = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-  array.appendElement(certList, false);
-  params.objects = array;
 
-  params.SetString(0, TEST_HOSTNAME);
-  params.SetString(1, TEST_ORG);
-  params.SetString(2, TEST_ISSUER_ORG);
-  params.SetInt(0, TEST_PORT);
-
+  let returnVals = Cc["@mozilla.org/hash-property-bag;1"]
+                     .createInstance(Ci.nsIWritablePropertyBag2);
   let win = window.openDialog("chrome://pippki/content/clientauthask.xul", "",
-                              "", params);
+                              "", TEST_HOSTNAME, TEST_ORG, TEST_ISSUER_ORG,
+                              TEST_PORT, certList, returnVals);
   return new Promise((resolve, reject) => {
     win.addEventListener("load", function onLoad() {
       win.removeEventListener("load", onLoad);
-      resolve([win, params]);
+      resolve([win, returnVals]);
     });
   });
 }
@@ -106,7 +98,7 @@ add_task(function* setup() {
 // Test that the contents of the dialog correspond to the details of the
 // provided cert.
 add_task(function* testContents() {
-  let [win, params] = yield openClientAuthDialog(cert);
+  let [win, retVals] = yield openClientAuthDialog(cert);
   checkDialogContents(win, cert.validity.notBeforeLocalTime,
                       cert.validity.notAfterLocalTime);
   yield BrowserTestUtils.closeWindow(win);
@@ -114,32 +106,32 @@ add_task(function* testContents() {
 
 // Test that the right values are returned when the dialog is accepted.
 add_task(function* testAcceptDialogReturnValues() {
-  let [win, params] = yield openClientAuthDialog(cert);
+  let [win, retVals] = yield openClientAuthDialog(cert);
   win.document.getElementById("rememberBox").checked = true;
   info("Accepting dialog");
   win.document.getElementById("certAuthAsk").acceptDialog();
   yield BrowserTestUtils.windowClosed(win);
 
-  Assert.equal(params.GetInt(0), 1,
-               "1 should be returned to signal user accepted");
-  Assert.equal(params.GetInt(1), 0,
+  Assert.ok(retVals.get("certChosen"),
+            "Return value should signal user chose a certificate");
+  Assert.equal(retVals.get("selectedIndex"), 0,
                "0 should be returned as the selected index");
-  Assert.equal(params.GetInt(2), 1,
-               "1 should be returned as the state of the 'Remember this " +
-               "decision' checkbox");
+  Assert.ok(retVals.get("rememberSelection"),
+            "Return value should signal 'Remember this decision' checkbox was" +
+            "checked");
 });
 
 // Test that the right values are returned when the dialog is canceled.
 add_task(function* testCancelDialogReturnValues() {
-  let [win, params] = yield openClientAuthDialog(cert);
+  let [win, retVals] = yield openClientAuthDialog(cert);
   win.document.getElementById("rememberBox").checked = false;
   info("Canceling dialog");
   win.document.getElementById("certAuthAsk").cancelDialog();
   yield BrowserTestUtils.windowClosed(win);
 
-  Assert.equal(params.GetInt(0), 0,
-               "0 should be returned to signal user canceled");
-  Assert.equal(params.GetInt(2), 0,
-               "0 should be returned as the state of the 'Remember this " +
-               "decision' checkbox");
+  Assert.ok(!retVals.get("certChosen"),
+            "Return value should signal user did not choose a certificate");
+  Assert.ok(!retVals.get("rememberSelection"),
+            "Return value should signal 'Remember this decision' checkbox was" +
+            "unchecked");
 });

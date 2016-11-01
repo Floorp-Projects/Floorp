@@ -487,7 +487,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
     nsCOMPtr<nsIXULChromeRegistry> chromeReg
         = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
     nsAutoCString locale;
-    rv = chromeReg->GetSelectedLocale(package, locale);
+    rv = chromeReg->GetSelectedLocale(package, false, locale);
     if (NS_FAILED(rv))
         return rv;
 

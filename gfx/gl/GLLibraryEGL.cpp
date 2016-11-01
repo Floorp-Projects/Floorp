@@ -431,11 +431,6 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
     Unused << GLLibraryLoader::LoadSymbols(mEGLLibrary, &optionalSymbols[0],
                                            nullptr, nullptr, false);
 
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
-    MOZ_RELEASE_ASSERT(mSymbols.fQueryStringImplementationANDROID,
-                       "GFX: Couldn't find eglQueryStringImplementationANDROID");
-#endif
-
     InitClientExtensions();
 
     const auto lookupFunction =

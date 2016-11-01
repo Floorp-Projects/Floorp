@@ -30,6 +30,10 @@ import urllib2
 
 
 FINGERPRINT_URL = 'http://taskcluster/secrets/v1/secret/project/taskcluster/gecko/hgfingerprint'
+FALLBACK_FINGERPRINT = {
+    'fingerprints':
+        "sha256:8e:ad:f7:6a:eb:44:06:15:ed:f3:e4:69:a6:64:60:37:2d:ff:98:88:37"
+        ":bf:d7:b8:40:84:01:48:9c:26:ce:d9"}
 
 
 def print_line(prefix, m):
@@ -75,7 +79,8 @@ def run_and_prefix_output(prefix, args, extra_env=None):
     return p.wait()
 
 
-def vcs_checkout(source_repo, dest, base_repo=None, revision=None, branch=None):
+def vcs_checkout(source_repo, dest, store_path,
+                 base_repo=None, revision=None, branch=None):
     # Specify method to checkout a revision. This defaults to revisions as
     # SHA-1 strings, but also supports symbolic revisions like `tip` via the
     # branch flag.
@@ -95,15 +100,17 @@ def vcs_checkout(source_repo, dest, base_repo=None, revision=None, branch=None):
                    FINGERPRINT_URL)
         res = urllib2.urlopen(FINGERPRINT_URL, timeout=10)
         secret = res.read()
-    except urllib2.URLError as e:
-        print('error retrieving hg fingerprint: %s' % e)
-        sys.exit(1)
-
-    try:
-        secret = json.loads(secret, encoding='utf-8')
-    except ValueError:
-        print('invalid JSON in hg fingerprint secret')
-        sys.exit(1)
+        try:
+            secret = json.loads(secret, encoding='utf-8')
+        except ValueError:
+            print_line(b'vcs', 'invalid JSON in hg fingerprint secret')
+            sys.exit(1)
+    except urllib2.URLError:
+        print_line(b'vcs', 'Unable to retrieve current hg.mozilla.org fingerprint'
+                           'using the secret service, using fallback instead.')
+        # XXX This fingerprint will not be accurate if running on an old
+        #     revision after the server fingerprint has changed.
+        secret = {'secret': FALLBACK_FINGERPRINT}
 
     hgmo_fingerprint = secret['secret']['fingerprints'].encode('ascii')
 
@@ -111,7 +118,7 @@ def vcs_checkout(source_repo, dest, base_repo=None, revision=None, branch=None):
         b'/usr/bin/hg',
         b'--config', b'hostsecurity.hg.mozilla.org:fingerprints=%s' % hgmo_fingerprint,
         b'robustcheckout',
-        b'--sharebase', b'/home/worker/hg-shared',
+        b'--sharebase', store_path,
         b'--purge',
     ]
 
@@ -127,6 +134,19 @@ def vcs_checkout(source_repo, dest, base_repo=None, revision=None, branch=None):
                                 extra_env={b'PYTHONUNBUFFERED': b'1'})
     if res:
         sys.exit(res)
+
+    # Meant to be temporary to flush out what's going on in bug 1292071.
+    print_line(b'vcs', b'verifying working directory is clean\n')
+    status = subprocess.check_output([b'/usr/bin/hg', b'status', b'--all'],
+                                     cwd=dest, stderr=subprocess.STDOUT)
+    status = status.strip()
+    status_lines = [l for l in status.splitlines() if not l.startswith(b'C ')]
+    if status_lines:
+        print_line(b'vcs', b'Error: checkout is not pristine! '
+                           b'Report this in bug 1292071\n')
+        for line in status_lines:
+            print_line(b'vcs', b'%s\n' % line)
+        sys.exit(1)
 
     # Update the current revision hash and ensure that it is well formed.
     revision = subprocess.check_output(
@@ -193,6 +213,7 @@ def main(args):
     gids = [g.gr_gid for g in grp.getgrall() if args.group in g.gr_mem]
 
     wanted_dir_mode = stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR
+
     def set_dir_permissions(path, uid, gid):
         st = os.lstat(path)
 
@@ -242,8 +263,21 @@ def main(args):
                 raise
 
         # And that it is owned by the appropriate user/group.
-        os.chown('/home/worker/hg-shared', uid, gid)
         os.chown(os.path.dirname(checkout), uid, gid)
+
+        # And ensure the shared store path exists and has proper permissions.
+        if 'HG_STORE_PATH' not in os.environ:
+            print('error: HG_STORE_PATH environment variable not set')
+            sys.exit(1)
+
+        store_path = os.environ['HG_STORE_PATH']
+        try:
+            os.makedirs(store_path)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        os.chown(store_path, uid, gid)
 
     prepare_checkout_dir(args.vcs_checkout)
     prepare_checkout_dir(args.tools_checkout)
@@ -273,6 +307,7 @@ def main(args):
         os.environ['GECKO_HEAD_REV'] = vcs_checkout(
             os.environ['GECKO_HEAD_REPOSITORY'],
             args.vcs_checkout,
+            os.environ['HG_STORE_PATH'],
             base_repo=base_repo,
             revision=os.environ.get('GECKO_HEAD_REV'),
             branch=os.environ.get('GECKO_HEAD_REF'))
@@ -285,6 +320,7 @@ def main(args):
     if args.tools_checkout:
         vcs_checkout(b'https://hg.mozilla.org/build/tools',
                      args.tools_checkout,
+                     os.environ['HG_STORE_PATH'],
                      # Always check out the latest commit on default branch.
                      # This is non-deterministic!
                      branch=b'default')

@@ -1,0 +1,15 @@
+[package]
+name = "unicode-bidi"
+version = "0.2.3"
+authors = ["The Servo Project Developers"]
+license = "MIT / Apache-2.0"
+description = "Implementation of the Unicode Bidirectional Algorithm"
+repository = "https://github.com/servo/unicode-bidi"
+documentation = "http://doc.servo.org/unicode_bidi/"
+keywords = ["rtl", "unicode", "text", "layout", "bidi"]
+
+[lib]
+name = "unicode_bidi"
+
+[dependencies]
+matches = "0.1"

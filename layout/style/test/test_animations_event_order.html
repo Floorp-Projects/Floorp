@@ -46,6 +46,8 @@ var gDisplay = document.getElementById('display');
 [ 'animationstart',
   'animationiteration',
   'animationend',
+  'transitionrun',
+  'transitionstart',
   'transitionend' ]
   .forEach(event =>
              gDisplay.addEventListener(event,
@@ -322,9 +324,13 @@ getComputedStyle(divs[0]).marginLeft;
 advance_clock(0);
 advance_clock(10000);
 
-checkEventOrder([ divs[0], 'transitionend' ],
+checkEventOrder([ divs[0], 'transitionrun' ],
+                [ divs[0], 'transitionstart' ],
+                [ divs[1], 'transitionrun' ],
+                [ divs[1], 'transitionstart' ],
+                [ divs[0], 'transitionend' ],
                 [ divs[1], 'transitionend' ],
-                'Simultaneous transitionend on siblings');
+                'Simultaneous transitionrun/start/end on siblings');
 
 divs.forEach(div => div.remove());
 divs = [];
@@ -360,10 +366,16 @@ getComputedStyle(divs[0]).marginLeft;
 advance_clock(0);
 advance_clock(10000);
 
-checkEventOrder([ divs[0], 'transitionend' ],
+checkEventOrder([ divs[0], 'transitionrun' ],
+                [ divs[0], 'transitionstart' ],
+                [ divs[2], 'transitionrun' ],
+                [ divs[2], 'transitionstart' ],
+                [ divs[1], 'transitionrun' ],
+                [ divs[1], 'transitionstart' ],
+                [ divs[0], 'transitionend' ],
                 [ divs[2], 'transitionend' ],
                 [ divs[1], 'transitionend' ],
-                'Simultaneous transitionend on children');
+                'Simultaneous transitionrun/start/end on children');
 
 divs.forEach(div => div.remove());
 divs = [];
@@ -408,11 +420,19 @@ getComputedStyle(divs[0]).marginLeft;
 advance_clock(0);
 advance_clock(10000);
 
-checkEventOrder([ divs[0], 'transitionend' ],
+checkEventOrder([ divs[0], 'transitionrun' ],
+                [ divs[0], 'transitionstart' ],
+                [ divs[0], '::before', 'transitionrun' ],
+                [ divs[0], '::before', 'transitionstart' ],
+                [ divs[0], '::after', 'transitionrun' ],
+                [ divs[0], '::after', 'transitionstart' ],
+                [ divs[1], 'transitionrun' ],
+                [ divs[1], 'transitionstart' ],
+                [ divs[0], 'transitionend' ],
                 [ divs[0], '::before', 'transitionend' ],
                 [ divs[0], '::after', 'transitionend' ],
                 [ divs[1], 'transitionend' ],
-                'Simultaneous transitionend on pseudo-elements');
+                'Simultaneous transitionrun/start/end on pseudo-elements');
 
 divs.forEach(div => div.remove());
 divs = [];
@@ -441,9 +461,13 @@ getComputedStyle(divs[0]).marginLeft;
 advance_clock(0);
 advance_clock(10000);
 
-checkEventOrder([ divs[1], 'transitionend' ],
+checkEventOrder([ divs[0], 'transitionrun' ],
+                [ divs[0], 'transitionstart' ],
+                [ divs[1], 'transitionrun' ],
+                [ divs[1], 'transitionstart' ],
+                [ divs[1], 'transitionend' ],
                 [ divs[0], 'transitionend' ],
-                'Sorting of transitionend events by time');
+                'Sorting of transitionrun/start/end events by time');
 
 divs.forEach(div => div.remove());
 divs = [];
@@ -466,11 +490,16 @@ divs.forEach(div => div.style.marginLeft = '100px');
 getComputedStyle(divs[0]).marginLeft;
 
 advance_clock(0);
-advance_clock(10000);
+advance_clock(10 * 1000);
 
-checkEventOrder([ divs[1], 'transitionend' ],
+checkEventOrder([ divs[0], 'transitionrun' ],
+                [ divs[1], 'transitionrun' ],
+                [ divs[1], 'transitionstart' ],
+                [ divs[0], 'transitionstart' ],
+                [ divs[1], 'transitionend' ],
                 [ divs[0], 'transitionend' ],
-                'Sorting of transitionend events by time (including delay)');
+                'Sorting of transitionrun/start/end events by time' +
+                '(including delay)');
 
 divs.forEach(div => div.remove());
 divs = [];
@@ -491,9 +520,14 @@ getComputedStyle(div).marginLeft;
 advance_clock(0);
 advance_clock(10000);
 
-checkEventOrder([ 'margin-left', 'transitionend' ],
+checkEventOrder([ 'margin-left', 'transitionrun' ],
+                [ 'margin-left', 'transitionstart' ],
+                [ 'opacity', 'transitionrun' ],
+                [ 'opacity', 'transitionstart' ],
+                [ 'margin-left', 'transitionend' ],
                 [ 'opacity', 'transitionend' ],
-                'Sorting of transitionend events by transition-property');
+                'Sorting of transitionrun/start/end events by ' +
+                'transition-property')
 
 div.remove();
 div = undefined;
@@ -518,7 +552,11 @@ getComputedStyle(divs[0]).marginLeft;
 advance_clock(0);
 advance_clock(10000);
 
-checkEventOrder([ divs[0], 'transitionend' ],
+checkEventOrder([ divs[0], 'transitionrun' ],
+                [ divs[0], 'transitionstart' ],
+                [ divs[1], 'transitionrun' ],
+                [ divs[1], 'transitionstart' ],
+                [ divs[0], 'transitionend' ],
                 [ divs[1], 'transitionend' ],
                 'Transition events are sorted by document position first, ' +
                 'before transition-property');
@@ -542,7 +580,11 @@ getComputedStyle(div).marginLeft;
 advance_clock(0);
 advance_clock(10000);
 
-checkEventOrder([ 'opacity', 'transitionend' ],
+checkEventOrder([ 'margin-left', 'transitionrun' ],
+                [ 'margin-left', 'transitionstart' ],
+                [ 'opacity', 'transitionrun' ],
+                [ 'opacity', 'transitionstart' ],
+                [ 'opacity', 'transitionend' ],
                 [ 'margin-left', 'transitionend' ],
                 'Transition events are sorted by time first, before ' +
                 'transition-property');
@@ -550,6 +592,36 @@ checkEventOrder([ 'opacity', 'transitionend' ],
 div.remove();
 div = undefined;
 
+// 4i. Test sorting transitions by document position (negative delay)
+
+divs = [ document.createElement('div'),
+         document.createElement('div') ];
+divs.forEach((div, i) => {
+  gDisplay.appendChild(div);
+  div.style.marginLeft = '0px';
+  div.setAttribute('id', 'div' + i);
+});
+
+divs[0].style.transition = 'margin-left 10s 5s';
+divs[1].style.transition = 'margin-left 10s';
+
+getComputedStyle(divs[0]).marginLeft;
+divs.forEach(div => div.style.marginLeft = '100px');
+getComputedStyle(divs[0]).marginLeft;
+
+advance_clock(0);
+advance_clock(15 * 1000);
+
+checkEventOrder([ divs[0], 'transitionrun' ],
+                [ divs[1], 'transitionrun' ],
+                [ divs[1], 'transitionstart' ],
+                [ divs[0], 'transitionstart' ],
+                [ divs[1], 'transitionend' ],
+                [ divs[0], 'transitionend' ],
+                'Simultaneous transitionrun/start/end on siblings');
+
+divs.forEach(div => div.remove());
+divs = [];
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 

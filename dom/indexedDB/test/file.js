@@ -45,8 +45,8 @@ function compareBuffers(buffer1, buffer2)
   if (buffer1.byteLength != buffer2.byteLength) {
     return false;
   }
-  let view1 = new Uint8Array(buffer1);
-  let view2 = new Uint8Array(buffer2);
+  let view1 = buffer1 instanceof Uint8Array ? buffer1 : new Uint8Array(buffer1);
+  let view2 = buffer2 instanceof Uint8Array ? buffer2 : new Uint8Array(buffer2);
   for (let i = 0; i < buffer1.byteLength; i++) {
     if (view1[i] != view2[i]) {
       return false;
@@ -85,9 +85,24 @@ function getNullFile(name, size)
   return getFile(name, "binary/null", getView(size));
 }
 
+// This needs to be async to make it available on workers too.
+function getWasmBinary(text)
+{
+  let binary = getWasmBinarySync(text);
+  SimpleTest.executeSoon(function() {
+    testGenerator.send(binary);
+  });
+}
+
+function getWasmModule(binary)
+{
+  let module = new WebAssembly.Module(binary);
+  return module;
+}
+
 function verifyBuffers(buffer1, buffer2)
 {
-  ok(compareBuffers(buffer1, buffer2), "Correct blob data");
+  ok(compareBuffers(buffer1, buffer2), "Correct buffer data");
 }
 
 function verifyBlob(blob1, blob2, fileId, blobReadHandler)
@@ -177,9 +192,30 @@ function verifyMutableFile(mutableFile1, file2)
   ok(mutableFile1 instanceof IDBMutableFile, "Instance of IDBMutableFile");
   is(mutableFile1.name, file2.name, "Correct name");
   is(mutableFile1.type, file2.type, "Correct type");
-  executeSoon(function() {
-    testGenerator.next();
-  });
+  continueToNextStep();
+}
+
+function verifyView(view1, view2)
+{
+  is(view1.byteLength, view2.byteLength, "Correct byteLength");
+  verifyBuffers(view1, view2);
+  continueToNextStep();
+}
+
+function verifyWasmModule(module1, module2)
+{
+  let getGlobalForObject = SpecialPowers.Cu.getGlobalForObject;
+  let testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
+  let wasmExtractCode = SpecialPowers.unwrap(testingFunctions.wasmExtractCode);
+  let exp1 = wasmExtractCode(module1);
+  let exp2 = wasmExtractCode(module2);
+  let code1 = exp1.code;
+  let code2 = exp2.code;
+  ok(code1 instanceof getGlobalForObject(code1).Uint8Array, "Instance of Uint8Array");
+  ok(code2 instanceof getGlobalForObject(code1).Uint8Array, "Instance of Uint8Array");
+  ok(code1.length == code2.length, "Correct length");
+  verifyBuffers(code1, code2);
+  continueToNextStep();
 }
 
 function grabFileUsageAndContinueHandler(request)

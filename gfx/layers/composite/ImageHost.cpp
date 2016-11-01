@@ -703,15 +703,6 @@ LayerRenderState
 ImageHostOverlay::GetRenderState()
 {
   LayerRenderState state;
-#ifdef MOZ_WIDGET_GONK
-  if (mOverlay.handle().type() == OverlayHandle::Tint32_t) {
-    state.SetOverlayId(mOverlay.handle().get_int32_t());
-  } else if (mOverlay.handle().type() == OverlayHandle::TGonkNativeHandle) {
-    state.SetSidebandStream(mOverlay.handle().get_GonkNativeHandle());
-  }
-  state.mSize.width = mPictureRect.Width();
-  state.mSize.height = mPictureRect.Height();
-#endif
   return state;
 }
 

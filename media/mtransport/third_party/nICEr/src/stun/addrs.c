@@ -149,9 +149,11 @@ abort:
 static int
 stun_get_win32_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
 {
-    int r,_status;
+    int r, _status;
     PIP_ADAPTER_ADDRESSES AdapterAddresses = NULL, tmpAddress = NULL;
-    ULONG buflen;
+    // recomended per https://msdn.microsoft.com/en-us/library/windows/desktop/aa365915(v=vs.85).aspx
+    static const ULONG initialBufLen = 15000;
+    ULONG buflen = initialBufLen;
     char bin_hashed_ifname[NR_MD5_HASH_LENGTH];
     char hex_hashed_ifname[MAXIFNAME];
     int n = 0;
@@ -159,31 +161,30 @@ stun_get_win32_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
     *count = 0;
 
     if (maxaddrs <= 0)
-      ABORT(R_INTERNAL);
+      ABORT(R_BAD_ARGS);
 
-    /* Call GetAdaptersAddresses() twice.  First, just to get the buf length */
+    /* According to MSDN (see above) we have try GetAdapterAddresses() multiple times */
+    for (n = 0; n < 5; n++) {
+      AdapterAddresses = (PIP_ADAPTER_ADDRESSES) RMALLOC(buflen);
+      if (AdapterAddresses == NULL) {
+        r_log(NR_LOG_STUN, LOG_ERR, "Error allocating buf for GetAdaptersAddresses()");
+        ABORT(R_NO_MEMORY);
+      }
 
-    buflen = 0;
-
-    r = GetAdaptersAddresses(AF_UNSPEC, 0, NULL, AdapterAddresses, &buflen);
-    if (r != ERROR_BUFFER_OVERFLOW) {
-      r_log(NR_LOG_STUN, LOG_ERR, "Error getting buf len from GetAdaptersAddresses()");
-      ABORT(R_INTERNAL);
+      r = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER, NULL, AdapterAddresses, &buflen);
+      if (r == NO_ERROR) {
+        break;
+      }
+      r_log(NR_LOG_STUN, LOG_ERR, "GetAdaptersAddresses() returned error (%d)", r);
+      RFREE(AdapterAddresses);
     }
 
-    AdapterAddresses = (PIP_ADAPTER_ADDRESSES) RMALLOC(buflen);
-    if (AdapterAddresses == NULL) {
-      r_log(NR_LOG_STUN, LOG_ERR, "Error allocating buf for GetAdaptersAddresses()");
-      ABORT(R_NO_MEMORY);
-    }
-
-    /* for real, this time */
-
-    r = GetAdaptersAddresses(AF_UNSPEC, 0, NULL, AdapterAddresses, &buflen);
-    if (r != NO_ERROR) {
-      r_log(NR_LOG_STUN, LOG_ERR, "Error getting addresses from GetAdaptersAddresses()");
+    if (n >= 5) {
+      r_log(NR_LOG_STUN, LOG_ERR, "5 failures calling GetAdaptersAddresses()");
       ABORT(R_INTERNAL);
     }
+
+    n = 0;
 
     /* Loop through the adapters */
 
@@ -258,7 +259,10 @@ stun_getifaddrs(nr_local_addr addrs[], int maxaddrs, int *count)
   struct ifaddrs* if_addrs_head=NULL;
   struct ifaddrs* if_addr;
 
-  *count=0;
+  *count = 0;
+
+  if (maxaddrs <= 0)
+    ABORT(R_BAD_ARGS);
 
   if (getifaddrs(&if_addrs_head) == -1) {
     r_log(NR_LOG_STUN, LOG_ERR, "getifaddrs error e = %d", errno);
@@ -395,6 +399,7 @@ nr_stun_remove_duplicate_addrs(nr_local_addr addrs[], int remove_loopback, int r
 
     *count = n;
 
+    memset(addrs, 0, *count * sizeof(*addrs));
     /* copy temporary array into passed in/out array */
     for (i = 0; i < *count; ++i) {
         if ((r=nr_local_addr_copy(&addrs[i], &tmp[i])))
@@ -412,7 +417,7 @@ nr_stun_remove_duplicate_addrs(nr_local_addr addrs[], int remove_loopback, int r
 int
 nr_stun_get_addrs(nr_local_addr addrs[], int maxaddrs, int drop_loopback, int drop_link_local, int *count)
 {
-    int _status=0;
+    int r,_status=0;
     int i;
     char typestr[100];
 
@@ -422,14 +427,16 @@ nr_stun_get_addrs(nr_local_addr addrs[], int maxaddrs, int drop_loopback, int dr
     _status = stun_getifaddrs(addrs, maxaddrs, count);
 #endif
 
-    nr_stun_remove_duplicate_addrs(addrs, drop_loopback, drop_link_local, count);
+    if ((r=nr_stun_remove_duplicate_addrs(addrs, drop_loopback, drop_link_local, count)))
+      ABORT(r);
 
     for (i = 0; i < *count; ++i) {
-    nr_local_addr_fmt_info_string(addrs+i,typestr,sizeof(typestr));
-        r_log(NR_LOG_STUN, LOG_DEBUG, "Address %d: %s on %s, type: %s\n",
+      nr_local_addr_fmt_info_string(addrs+i,typestr,sizeof(typestr));
+      r_log(NR_LOG_STUN, LOG_DEBUG, "Address %d: %s on %s, type: %s\n",
             i,addrs[i].addr.as_string,addrs[i].addr.ifname,typestr);
     }
 
+abort:
     return _status;
 }
 

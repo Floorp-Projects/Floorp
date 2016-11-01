@@ -121,6 +121,15 @@ constexpr char PresentationMediaPlayerManager::InvalidateAndScheduleComposite_t:
 constexpr char PresentationMediaPlayerManager::RemovePresentationSurface_t::name[];
 constexpr char PresentationMediaPlayerManager::RemovePresentationSurface_t::signature[];
 
+const char ScreenManagerHelper::name[] =
+        "org/mozilla/gecko/ScreenManagerHelper";
+
+constexpr char ScreenManagerHelper::AddDisplay_t::name[];
+constexpr char ScreenManagerHelper::AddDisplay_t::signature[];
+
+constexpr char ScreenManagerHelper::RemoveDisplay_t::name[];
+constexpr char ScreenManagerHelper::RemoveDisplay_t::signature[];
+
 const char Telemetry::name[] =
         "org/mozilla/gecko/Telemetry";
 
@@ -238,6 +247,45 @@ constexpr char CodecProxy::NativeCallbacks::OnOutput_t::signature[];
 
 constexpr char CodecProxy::NativeCallbacks::OnOutputFormatChanged_t::name[];
 constexpr char CodecProxy::NativeCallbacks::OnOutputFormatChanged_t::signature[];
+
+const char MediaDrmProxy::name[] =
+        "org/mozilla/gecko/media/MediaDrmProxy";
+
+constexpr char MediaDrmProxy::CanDecode_t::name[];
+constexpr char MediaDrmProxy::CanDecode_t::signature[];
+
+auto MediaDrmProxy::CanDecode(mozilla::jni::String::Param a0) -> bool
+{
+    return mozilla::jni::Method<CanDecode_t>::Call(MediaDrmProxy::Context(), nullptr, a0);
+}
+
+constexpr char MediaDrmProxy::IsCryptoSchemeSupported_t::name[];
+constexpr char MediaDrmProxy::IsCryptoSchemeSupported_t::signature[];
+
+auto MediaDrmProxy::IsCryptoSchemeSupported(mozilla::jni::String::Param a0, mozilla::jni::String::Param a1) -> bool
+{
+    return mozilla::jni::Method<IsCryptoSchemeSupported_t>::Call(MediaDrmProxy::Context(), nullptr, a0, a1);
+}
+
+constexpr char MediaDrmProxy::IsSchemeSupported_t::name[];
+constexpr char MediaDrmProxy::IsSchemeSupported_t::signature[];
+
+auto MediaDrmProxy::IsSchemeSupported(mozilla::jni::String::Param a0) -> bool
+{
+    return mozilla::jni::Method<IsSchemeSupported_t>::Call(MediaDrmProxy::Context(), nullptr, a0);
+}
+
+const char16_t MediaDrmProxy::AAC[] = u"audio/mp4a-latm";
+
+const char16_t MediaDrmProxy::AVC[] = u"video/avc";
+
+const char16_t MediaDrmProxy::OPUS[] = u"audio/opus";
+
+const char16_t MediaDrmProxy::VORBIS[] = u"audio/vorbis";
+
+const char16_t MediaDrmProxy::VP8[] = u"video/x-vnd.on2.vp8";
+
+const char16_t MediaDrmProxy::VP9[] = u"video/x-vnd.on2.vp9";
 
 const char Sample::name[] =
         "org/mozilla/gecko/media/Sample";

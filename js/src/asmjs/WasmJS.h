@@ -101,14 +101,6 @@ ExportedFunctionToDefinitionIndex(JSFunction* fun);
 
 } // namespace wasm
 
-// 'Wasm' and its one field 'experimentalVersion' are transitional APIs and
-// will be removed (replaced by 'WebAssembly') before release.
-
-extern const Class WasmClass;
-
-JSObject*
-InitWasmClass(JSContext* cx, HandleObject global);
-
 // The class of the WebAssembly global namespace object.
 
 extern const Class WebAssemblyClass;

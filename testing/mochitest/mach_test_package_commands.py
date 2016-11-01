@@ -28,7 +28,7 @@ def run_mochitest(context, **kwargs):
         args.test_paths = map(normalize, args.test_paths)
 
     import mozinfo
-    if mozinfo.info['buildapp'] == 'mobile/android':
+    if mozinfo.info.get('buildapp') == 'mobile/android':
         return run_mochitest_android(context, args)
     return run_mochitest_desktop(context, args)
 
@@ -61,7 +61,7 @@ def run_mochitest_android(context, args):
 
 def setup_argument_parser():
     import mozinfo
-    mozinfo.find_and_update_from_json(os.path.dirname(here))
+    mozinfo.find_and_update_from_json(here)
     app = 'generic'
     if mozinfo.info.get('buildapp') == 'mobile/android':
         app = 'android'

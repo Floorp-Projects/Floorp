@@ -33,7 +33,6 @@ class FixedList
 
     // Dynamic memory allocation requires the ability to report failure.
     MOZ_MUST_USE bool init(TempAllocator& alloc, size_t length) {
-        length_ = length;
         if (length == 0)
             return true;
 
@@ -41,7 +40,11 @@ class FixedList
         if (MOZ_UNLIKELY(!CalculateAllocSize<T>(length, &bytes)))
             return false;
         list_ = (T*)alloc.allocate(bytes);
-        return list_ != nullptr;
+        if (!list_)
+            return false;
+
+        length_ = length;
+        return true;
     }
 
     size_t empty() const {

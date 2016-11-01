@@ -97,7 +97,6 @@ protected:
 
     virtual int32_t
         CreateCapabilityMap(const char* deviceUniqueIdUTF8);
-
 private:
     ICreateDevEnum* _dsDevEnum;
     bool _CoUninitializeIsRequired;
@@ -106,21 +105,6 @@ private:
     WNDCLASS _wndClass;
     HINSTANCE _hInstance;
 };
-
-class DeviceInfoDSSingleton {
-public:
-  DeviceInfoDSSingleton::DeviceInfoDSSingleton()
-    : mDeviceInfoDS(nullptr) {}
-
-  static DeviceInfoDS*& GetInfo() {
-    return gTheInstance.get()->mDeviceInfoDS;
-  }
-
-private:
-  static Singleton<DeviceInfoDSSingleton> gTheInstance;
-  DeviceInfoDS* mDeviceInfoDS;
-};
-
 }  // namespace videocapturemodule
 }  // namespace webrtc
 #endif // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_

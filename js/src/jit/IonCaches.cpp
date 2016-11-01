@@ -3657,7 +3657,7 @@ SetPropertyIC::tryAttachAddSlot(JSContext* cx, HandleScript outerScript, IonScri
     // A GC may have caused cache.value() to become stale as it is not traced.
     // In this case the IonScript will have been invalidated, so check for that.
     // Assert no further GC is possible past this point.
-    JS::AutoAssertNoAlloc nogc;
+    JS::AutoAssertNoGC nogc;
     if (ion->invalidated())
         return true;
 

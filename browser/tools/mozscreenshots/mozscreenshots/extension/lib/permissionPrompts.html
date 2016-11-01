@@ -19,6 +19,8 @@
   </form>
 
   <script type="application/javascript">
+    // Share device used in onclick calls above.
+    /* exported shareDevice */
     function shareDevice(config) {
       navigator.mediaDevices.getUserMedia(config);
     }

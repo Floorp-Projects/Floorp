@@ -157,6 +157,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     promiseRejectionTrackerCallbackData(nullptr),
     startAsyncTaskCallback(nullptr),
     finishAsyncTaskCallback(nullptr),
+    promiseTasksToDestroy(mutexid::PromiseTaskPtrVector),
+    exclusiveAccessLock(mutexid::RuntimeExclusiveAccess),
 #ifdef DEBUG
     mainThreadHasExclusiveAccess(false),
 #endif
@@ -731,7 +733,8 @@ JSRuntime::enqueuePromiseJob(JSContext* cx, HandleFunction job, HandleObject pro
         // intrinsic_EnqueuePromiseReactionJob for details.
         if (IsWrapper(promise))
             unwrappedPromise = UncheckedUnwrap(promise);
-        allocationSite = JS::GetPromiseAllocationSite(unwrappedPromise);
+        if (unwrappedPromise->is<PromiseObject>())
+            allocationSite = JS::GetPromiseAllocationSite(unwrappedPromise);
     }
     return cx->runtime()->enqueuePromiseJobCallback(cx, job, allocationSite, incumbentGlobal, data);
 }

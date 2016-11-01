@@ -89,7 +89,11 @@ class WasmPrintBuffer
     uint32_t column_;
 
   public:
-    explicit WasmPrintBuffer(StringBuffer& stringBuffer) : stringBuffer_(stringBuffer), lineno_(1), column_(1) {}
+    explicit WasmPrintBuffer(StringBuffer& stringBuffer)
+      : stringBuffer_(stringBuffer),
+        lineno_(1),
+        column_(1)
+    {}
     inline char processChar(char ch) {
         if (ch == '\n') {
             lineno_++; column_ = 1;
@@ -125,6 +129,8 @@ class WasmPrintBuffer
     }
     template <size_t ArrayLength>
     bool append(const char (&array)[ArrayLength]) {
+        static_assert(ArrayLength > 0, "null-terminated");
+        MOZ_ASSERT(array[ArrayLength - 1] == '\0');
         return append(array, ArrayLength - 1);
     }
     char16_t getChar(size_t index) {

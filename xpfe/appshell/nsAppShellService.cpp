@@ -135,7 +135,7 @@ nsAppShellService::CreateHiddenWindowHelper(bool aIsPrivate)
   if (!aIsPrivate) {
     rv = JustCreateTopWindow(nullptr, url,
                              chromeMask, initialWidth, initialHeight,
-                             true, nullptr, getter_AddRefs(newWindow));
+                             true, nullptr, nullptr, getter_AddRefs(newWindow));
     NS_ENSURE_SUCCESS(rv, rv);
 
     mHiddenWindow.swap(newWindow);
@@ -145,7 +145,7 @@ nsAppShellService::CreateHiddenWindowHelper(bool aIsPrivate)
 
     rv = JustCreateTopWindow(nullptr, url,
                              chromeMask, initialWidth, initialHeight,
-                             true, nullptr, getter_AddRefs(newWindow));
+                             true, nullptr, nullptr, getter_AddRefs(newWindow));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDocShell> docShell;
@@ -190,6 +190,7 @@ nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
                                         int32_t aInitialWidth,
                                         int32_t aInitialHeight,
                                         nsITabParent *aOpeningTab,
+                                        mozIDOMWindowProxy *aOpenerWindow,
                                         nsIXULWindow **aResult)
 
 {
@@ -197,12 +198,12 @@ nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
 
   StartupTimeline::RecordOnce(StartupTimeline::CREATE_TOP_LEVEL_WINDOW);
 
-  nsWebShellWindow *newWindow = nullptr;
+  RefPtr<nsWebShellWindow> newWindow;
   rv = JustCreateTopWindow(aParent, aUrl,
                            aChromeMask, aInitialWidth, aInitialHeight,
-                           false, aOpeningTab, &newWindow);  // addrefs
-
-  *aResult = newWindow; // transfer ref
+                           false, aOpeningTab, aOpenerWindow,
+                           getter_AddRefs(newWindow));
+  newWindow.forget(aResult);
 
   if (NS_SUCCEEDED(rv)) {
     // the addref resulting from this is the owning addref for this window
@@ -626,6 +627,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
                                        int32_t aInitialHeight,
                                        bool aIsHiddenWindow,
                                        nsITabParent *aOpeningTab,
+                                       mozIDOMWindowProxy *aOpenerWindow,
                                        nsWebShellWindow **aResult)
 {
   *aResult = nullptr;
@@ -739,7 +741,8 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
 
   nsresult rv = window->Initialize(parent, center ? aParent : nullptr,
                                    aUrl, aInitialWidth, aInitialHeight,
-                                   aIsHiddenWindow, aOpeningTab, widgetInitData);
+                                   aIsHiddenWindow, aOpeningTab,
+                                   aOpenerWindow, widgetInitData);
 
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -29,7 +29,7 @@ namespace rx
 
 namespace
 {
-gl::Error InvalidateAttachmentSwizzles(const gl::FramebufferAttachment *attachment)
+gl::Error MarkAttachmentsDirty(const gl::FramebufferAttachment *attachment)
 {
     if (attachment && attachment->type() == GL_TEXTURE)
     {
@@ -45,7 +45,7 @@ gl::Error InvalidateAttachmentSwizzles(const gl::FramebufferAttachment *attachme
             TextureStorage11 *texStorage11 = GetAs<TextureStorage11>(texStorage);
             ASSERT(texStorage11);
 
-            texStorage11->invalidateSwizzleCacheLevel(attachment->mipLevel());
+            texStorage11->markLevelDirty(attachment->mipLevel());
         }
     }
 
@@ -89,18 +89,18 @@ Framebuffer11::~Framebuffer11()
 {
 }
 
-gl::Error Framebuffer11::invalidateSwizzles() const
+gl::Error Framebuffer11::markAttachmentsDirty() const
 {
     for (const auto &colorAttachment : mState.getColorAttachments())
     {
         if (colorAttachment.isAttached())
         {
-            ANGLE_TRY(InvalidateAttachmentSwizzles(&colorAttachment));
+            ANGLE_TRY(MarkAttachmentsDirty(&colorAttachment));
         }
     }
 
-    ANGLE_TRY(InvalidateAttachmentSwizzles(mState.getDepthAttachment()));
-    ANGLE_TRY(InvalidateAttachmentSwizzles(mState.getStencilAttachment()));
+    ANGLE_TRY(MarkAttachmentsDirty(mState.getDepthAttachment()));
+    ANGLE_TRY(MarkAttachmentsDirty(mState.getStencilAttachment()));
 
     return gl::NoError();
 }
@@ -128,7 +128,7 @@ gl::Error Framebuffer11::clearImpl(ContextImpl *context, const ClearParameters &
         ANGLE_TRY(clearer->clearFramebuffer(clearParams, mState));
     }
 
-    ANGLE_TRY(invalidateSwizzles());
+    ANGLE_TRY(markAttachmentsDirty());
 
     return gl::NoError();
 }
@@ -182,10 +182,10 @@ gl::Error Framebuffer11::invalidateBase(size_t count, const GLenum *attachments,
                 size_t colorIndex =
                     (attachments[i] == GL_COLOR ? 0u : (attachments[i] - GL_COLOR_ATTACHMENT0));
                 auto colorAttachment = mState.getColorAttachment(colorIndex);
-		if (colorAttachment)
-		{
-		    ANGLE_TRY(invalidateAttachment(colorAttachment));
-		}
+                if (colorAttachment)
+                {
+                    ANGLE_TRY(invalidateAttachment(colorAttachment));
+                }
                 break;
             }
         }
@@ -354,7 +354,7 @@ gl::Error Framebuffer11::blitImpl(const gl::Rectangle &sourceArea,
                                                   blitDepth, blitStencil));
     }
 
-    ANGLE_TRY(invalidateSwizzles());
+    ANGLE_TRY(markAttachmentsDirty());
     return gl::NoError();
 }
 

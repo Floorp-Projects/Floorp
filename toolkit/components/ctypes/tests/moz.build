@@ -21,6 +21,9 @@ LOCAL_INCLUDES += [
     '/js/src/ctypes',
 ]
 
+# Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc.
+DISABLE_STL_WRAPPING = True
+
 if CONFIG['COMPILE_ENVIRONMENT']:
     shared_library = '!%sjsctypes-test%s' % (CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'])
     TEST_HARNESS_FILES.xpcshell.toolkit.components.ctypes.tests.unit += [shared_library]

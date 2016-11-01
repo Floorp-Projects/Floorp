@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/narrate/VoiceSelect.jsm");
 Cu.import("resource://gre/modules/narrate/Narrator.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AsyncPrefs.jsm");
+Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
 
 this.EXPORTED_SYMBOLS = ["NarrateControls"];
 
@@ -18,6 +19,8 @@ var gStrings = Services.strings.createBundle("chrome://global/locale/narrate.pro
 function NarrateControls(mm, win) {
   this._mm = mm;
   this._winRef = Cu.getWeakReference(win);
+
+  win.addEventListener("unload", this);
 
   // Append content style sheet in document head
   let style = win.document.createElement("link");
@@ -148,6 +151,11 @@ NarrateControls.prototype = {
       case "voiceschanged":
         this._setupVoices();
         break;
+      case "unload":
+        if (this.narrator.speaking) {
+          TelemetryStopwatch.finish("NARRATE_CONTENT_SPEAKTIME_MS", this);
+        }
+        break;
     }
   },
 
@@ -158,7 +166,6 @@ NarrateControls.prototype = {
     return this.narrator.languagePromise.then(language => {
       this.voiceSelect.clear();
       let win = this._win;
-      let doc = win.document;
       let voicePrefs = this._getVoicePref();
       let selectedVoice = voicePrefs[language || "default"];
       let comparer = win.Intl ?
@@ -183,8 +190,23 @@ NarrateControls.prototype = {
         this.voiceSelect.addOptions(options);
       }
 
+      let narrateToggle = win.document.getElementById("narrate-toggle");
+      let histogram =
+        Services.telemetry.getKeyedHistogramById("NARRATE_CONTENT_BY_LANGUAGE");
+      let initial = !!this._voicesInitialized;
+      this._voicesInitialized = true;
+
+      if (initial) {
+        histogram.add(language, 0);
+      }
+
+      if (options.length && narrateToggle.hidden) {
+        // About to show for the first time..
+        histogram.add(language, 1);
+      }
+
       // We disable this entire feature if there are no available voices.
-      doc.getElementById("narrate-toggle").hidden = !options.length;
+      narrateToggle.hidden = !options.length;
     });
   },
 
@@ -250,6 +272,12 @@ NarrateControls.prototype = {
 
     this._doc.getElementById("narrate-skip-previous").disabled = !speaking;
     this._doc.getElementById("narrate-skip-next").disabled = !speaking;
+
+    if (speaking) {
+      TelemetryStopwatch.start("NARRATE_CONTENT_SPEAKTIME_MS", this);
+    } else {
+      TelemetryStopwatch.finish("NARRATE_CONTENT_SPEAKTIME_MS", this);
+    }
   },
 
   _createVoiceLabel: function(voice) {

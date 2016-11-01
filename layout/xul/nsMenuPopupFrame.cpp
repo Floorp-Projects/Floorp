@@ -880,6 +880,13 @@ nsMenuPopupFrame::ShowPopup(bool aIsContextMenu)
 
     // Clear mouse capture when a popup is opened.
     if (mPopupType == ePopupTypeMenu) {
+      EventStateManager* activeESM =
+        static_cast<EventStateManager*>(
+          EventStateManager::GetActiveEventStateManager());
+      if (activeESM) {
+        EventStateManager::ClearGlobalActiveContent(activeESM);
+      }
+
       nsIPresShell::SetCapturingContent(nullptr, 0);
     }
 

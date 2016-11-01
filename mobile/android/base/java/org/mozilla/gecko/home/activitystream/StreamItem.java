@@ -7,12 +7,14 @@ package org.mozilla.gecko.home.activitystream;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -21,6 +23,7 @@ import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.home.activitystream.topsites.CirclePageIndicator;
 import org.mozilla.gecko.home.activitystream.topsites.TopSitesPagerAdapter;
 import org.mozilla.gecko.icons.IconCallback;
@@ -71,6 +74,9 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
     public static class HighlightItem extends StreamItem implements IconCallback {
         public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
 
+        String title;
+        String url;
+
         final FaviconView vIconView;
         final TextView vLabel;
         final TextView vTimeSince;
@@ -81,7 +87,9 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         private Future<IconResponse> ongoingIconLoad;
         private int tilesMargin;
 
-        public HighlightItem(View itemView) {
+        public HighlightItem(final View itemView,
+                             final HomePager.OnUrlOpenListener onUrlOpenListener,
+                             final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
             super(itemView);
 
             tilesMargin = itemView.getResources().getDimensionPixelSize(R.dimen.activity_stream_base_margin);
@@ -93,18 +101,49 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             vPageView = (TextView) itemView.findViewById(R.id.page);
             vSourceIconView = (ImageView) itemView.findViewById(R.id.source_icon);
 
-            ImageView menuButton = (ImageView) itemView.findViewById(R.id.menu);
+            final ImageView menuButton = (ImageView) itemView.findViewById(R.id.menu);
 
             menuButton.setImageDrawable(
                     DrawableUtil.tintDrawable(menuButton.getContext(), R.drawable.menu, Color.LTGRAY));
+
+            itemView.post(new Runnable() {
+                @Override
+                public void run() {
+                    Rect delegateArea = new Rect();
+                    menuButton.getHitRect(delegateArea);
+
+                    final int targetHitArea = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, itemView.getContext().getResources().getDisplayMetrics());;
+
+                    final int widthDelta = (targetHitArea - delegateArea.width()) / 2;
+                    delegateArea.right += widthDelta;
+                    delegateArea.left -= widthDelta;
+
+                    final int heightDelta = (targetHitArea - delegateArea.height()) / 2;
+                    delegateArea.bottom += heightDelta;
+                    delegateArea.top -= heightDelta;
+
+                    TouchDelegate touchDelegate = new TouchDelegate(delegateArea, menuButton);
+                    itemView.setTouchDelegate(touchDelegate);
+                }
+            });
+
+            menuButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ActivityStreamContextMenu.show(v.getContext(), title, url, onUrlOpenListener, onUrlOpenInBackgroundListener, vIconView.getWidth(), vIconView.getHeight());
+                }
+            });
         }
 
         public void bind(Cursor cursor, int tilesWidth, int tilesHeight) {
+
             final long time = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.DATE));
             final String ago = DateUtils.getRelativeTimeSpanString(time, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, 0).toString();
-            final String url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
 
-            vLabel.setText(cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE)));
+            title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE));
+            url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
+
+            vLabel.setText(title);
             vTimeSince.setText(ago);
 
             ViewGroup.LayoutParams layoutParams = vIconView.getLayoutParams();

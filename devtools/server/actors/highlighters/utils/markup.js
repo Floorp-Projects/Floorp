@@ -242,7 +242,12 @@ function CanvasFrameAnonymousContentHelper(highlighterEnv, nodeBuilder) {
   this.anonymousContentGlobal = Cu.getGlobalForObject(
                                 this.anonymousContentDocument);
 
-  this._insert();
+  // Only try to create the highlighter when the document is loaded,
+  // otherwise, wait for the navigate event to fire.
+  let doc = this.highlighterEnv.document;
+  if (doc.documentElement && doc.readyState != "uninitialized") {
+    this._insert();
+  }
 
   this._onNavigate = this._onNavigate.bind(this);
   this.highlighterEnv.on("navigate", this._onNavigate);
@@ -268,13 +273,16 @@ CanvasFrameAnonymousContentHelper.prototype = {
   },
 
   _insert: function () {
-    // Insert the content node only if the page isn't in a XUL window, and if
-    // the document still exists.
-    if (!this.highlighterEnv.document.documentElement ||
+    let doc = this.highlighterEnv.document;
+    // Insert the content node only if the document:
+    // * is loaded (navigate event will fire once it is),
+    // * still exists,
+    // * isn't in XUL.
+    if (doc.readyState == "uninitialized" ||
+        !doc.documentElement ||
         isXUL(this.highlighterEnv.window)) {
       return;
     }
-    let doc = this.highlighterEnv.document;
 
     // For now highlighters.css is injected in content as a ua sheet because
     // <style scoped> doesn't work inside anonymous content (see bug 1086532).

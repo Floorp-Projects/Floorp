@@ -114,9 +114,6 @@ public:
 
   already_AddRefed<dom::DOMRequest> GetWebManifest(ErrorResult& aRv);
 
-  void SetNFCFocus(bool isFocus,
-                   ErrorResult& aRv);
-
   // Helper
   static void GenerateAllowedAudioChannels(
                  nsPIDOMWindowInner* aWindow,
