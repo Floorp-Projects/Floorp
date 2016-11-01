@@ -678,7 +678,7 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
   // SCTP has an option for Apple, on IP connections only, to release at least
   // one of the locks before calling a packet output routine; with changes to
   // the underlying SCTP stack this might remove the need to use an async proxy.
-  if ((0 /*peer->IsSTSThread()*/)) {
+  if ((false /*peer->IsSTSThread()*/)) {
     res = peer->SendPacket(static_cast<unsigned char *>(buffer), length, false);
   } else {
     auto *data = new unsigned char[length];

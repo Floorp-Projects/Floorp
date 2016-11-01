@@ -74,7 +74,7 @@ main(int argc, char* argv[])
     return 1;
   }
   int i = 1;
-  while (1) {
+  while (true) {
     char name[16];
     name[0] = 0;
     SprintfLiteral(name, "%d", i);
