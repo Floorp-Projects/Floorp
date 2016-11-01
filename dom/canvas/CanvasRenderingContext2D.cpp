@@ -4943,6 +4943,11 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
     bounds = mTarget->GetTransform().TransformBounds(bounds);
   }
 
+  if (!IsTargetValid()) {
+    gfxCriticalError() << "Unexpected invalid target in a Canvas2d.";
+    return;
+  }
+
   if (srcSurf) {
     gfx::Rect sourceRect(aSx, aSy, aSw, aSh);
     if (element == mCanvasElement) {
