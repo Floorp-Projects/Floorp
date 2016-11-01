@@ -4,7 +4,7 @@ function start_test_prefNotSet() {
     is(ZoomManager.zoom, 1, "initial zoom level should be 1");
     FullZoom.enlarge();
 
-    //capture the zoom level to test later
+    // capture the zoom level to test later
     zoomLevel = ZoomManager.zoom;
     isnot(zoomLevel, 1, "zoom level should have changed");
 

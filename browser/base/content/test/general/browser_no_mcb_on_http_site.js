@@ -61,7 +61,7 @@ function waitForCondition(condition, nextTest, errorMsg, okMsg) {
   };
 }
 
-//------------- TEST 1 -----------------------------------------
+// ------------- TEST 1 -----------------------------------------
 
 function test1A() {
   gTestBrowser.removeEventListener("load", test1A, true);
@@ -81,7 +81,7 @@ function test1B() {
   gTestBrowser.contentWindow.location = url;
 }
 
-//------------- TEST 2 -----------------------------------------
+// ------------- TEST 2 -----------------------------------------
 
 function test2A() {
   gTestBrowser.removeEventListener("load", test2A, true);
@@ -101,7 +101,7 @@ function test2B() {
   gTestBrowser.contentWindow.location = url;
 }
 
-//------------- TEST 3 -----------------------------------------
+// ------------- TEST 3 -----------------------------------------
 
 function test3() {
   gTestBrowser.removeEventListener("load", test3, true);
@@ -114,7 +114,7 @@ function test3() {
     "OK: Expected result in innerHTML!");
 }
 
-//------------------------------------------------------
+// ------------------------------------------------------
 
 function test() {
   // Performing async calls, e.g. 'onload', we have to wait till all of them finished

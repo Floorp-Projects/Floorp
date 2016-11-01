@@ -109,24 +109,24 @@ this.gLibs = gLibs; // ditto
 
 function convertESEError(errorCode) {
   switch (errorCode) {
-    case -1213 /*JET_errPageSizeMismatch */:
-    case -1002 /*JET_errInvalidName*/:
-    case -1507 /*JET_errColumnNotFound */:
+    case -1213 /* JET_errPageSizeMismatch */:
+    case -1002 /* JET_errInvalidName*/:
+    case -1507 /* JET_errColumnNotFound */:
       // The DB format has changed and we haven't updated this migration code:
       return "The database format has changed, error code: " + errorCode;
-    case -1207 /*JET_errDatabaseLocked */:
-    case -1302 /*JET_errTableLocked */:
+    case -1207 /* JET_errDatabaseLocked */:
+    case -1302 /* JET_errTableLocked */:
       return "The database or table is locked, error code: " + errorCode;
     case -1809 /* JET_errPermissionDenied*/:
     case -1907 /* JET_errAccessDenied */:
       return "Access or permission denied, error code: " + errorCode;
     case -1044 /* JET_errInvalidFilename */:
       return "Invalid file name";
-    case -1811 /*JET_errFileNotFound */:
+    case -1811 /* JET_errFileNotFound */:
       return "File not found";
-    case -550 /*JET_errDatabaseDirtyShutdown */:
+    case -550 /* JET_errDatabaseDirtyShutdown */:
       return "Database in dirty shutdown state (without the requisite logs?)";
-    case -514 /*JET_errBadLogVersion */:
+    case -514 /* JET_errBadLogVersion */:
       return "Database log version does not match the version of ESE in use.";
     default:
       return "Unknown error: " + errorCode;

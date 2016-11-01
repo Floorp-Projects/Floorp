@@ -1100,7 +1100,7 @@ function getDefaultFileName(aDefaultFileName, aURI, aDocument,
     // 8) Use the default file name
     return ContentAreaUtils.stringBundle.GetStringFromName("DefaultSaveFileName");
   } catch (e) {
-    //in case localized string cannot be found
+    // in case localized string cannot be found
   }
   // 9) If all else fails, use "index"
   return "index";

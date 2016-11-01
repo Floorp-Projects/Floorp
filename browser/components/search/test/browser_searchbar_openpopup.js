@@ -281,7 +281,7 @@ add_task(function* contextmenu_closes_popup() {
 
   promise = promiseEvent(searchPopup, "popuphidden");
 
-  //synthesizeKey does not work with VK_CONTEXT_MENU (bug 1127368)
+  // synthesizeKey does not work with VK_CONTEXT_MENU (bug 1127368)
   EventUtils.synthesizeMouseAtCenter(textbox, { type: "contextmenu", button: null });
 
   yield promise;

@@ -92,14 +92,14 @@ add_test(function test_savedsearches_bookmarks() {
       do_check_eq(item.itemId, bookmarkId);
 
       // XXX - FAILING - test live-update of query results - add a bookmark that matches the query
-      //var tmpBmId = PlacesUtils.bookmarks.insertBookmark(
+      // var tmpBmId = PlacesUtils.bookmarks.insertBookmark(
       //  root, uri("http://" + searchTerm + ".com"),
       //  PlacesUtils.bookmarks.DEFAULT_INDEX, searchTerm + "blah");
-      //do_check_eq(query.childCount, 2);
+      // do_check_eq(query.childCount, 2);
 
       // XXX - test live-update of query results - delete a bookmark that matches the query
-      //PlacesUtils.bookmarks.removeItem(tmpBMId);
-      //do_check_eq(query.childCount, 1);
+      // PlacesUtils.bookmarks.removeItem(tmpBMId);
+      // do_check_eq(query.childCount, 1);
 
       // test live-update of query results - add a folder that matches the query
       PlacesUtils.bookmarks.createFolder(

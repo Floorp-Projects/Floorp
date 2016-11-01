@@ -20,7 +20,7 @@ const NC_NS                 = "http://home.netscape.com/NC-rdf#";
 const NC_MIME_TYPES         = NC_NS + "MIME-types";
 const NC_PROTOCOL_SCHEMES   = NC_NS + "Protocol-Schemes";
 
-///////////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////////////
 // MIME Types DataSource Wrapper
 
 function NC_URI(aProperty)

@@ -5,7 +5,7 @@
 "use strict";
 
 /* import-globals-from ../../../content/contentAreaUtils.js */
-/*globals XMLStylesheetProcessingInstruction*/
+/* globals XMLStylesheetProcessingInstruction*/
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;

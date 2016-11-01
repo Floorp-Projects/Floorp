@@ -55,7 +55,7 @@ function promiseEvent(aTarget, aEventName, aPreventDefault) {
 
 function promiseNewEngine(basename, options = {}) {
   return new Promise((resolve, reject) => {
-    //Default the setAsCurrent option to true.
+    // Default the setAsCurrent option to true.
     let setAsCurrent =
       options.setAsCurrent == undefined ? true : options.setAsCurrent;
     info("Waiting for engine to be added: " + basename);

@@ -32,16 +32,21 @@ function* test(testDriver) {
     testDriver();
   };
 
-  yield synthesizeNativeTouch(v, 25, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
-  yield synthesizeNativeTouch(v, 25, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+
+  var pt = coordinatesRelativeToScreen(25, 5, v);
+  yield utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, pt.x, pt.y, 1, 90, null);
+  yield utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, pt.x, pt.y, 1, 90, null);
   ok(v._gotTouchend, 'Touchend was received on video element');
 
-  yield synthesizeNativeTouch(a, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
-  yield synthesizeNativeTouch(a, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
+  pt = coordinatesRelativeToScreen(25, 5, a);
+  yield utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, pt.x, pt.y, 1, 90, null);
+  yield utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, pt.x, pt.y, 1, 90, null);
   ok(a._gotTouchend, 'Touchend was received on audio element');
 
-  yield synthesizeNativeTouch(d, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
-  yield synthesizeNativeTouch(d, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
+  pt = coordinatesRelativeToScreen(25, 5, d);
+  yield utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, pt.x, pt.y, 1, 90, null);
+  yield utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, pt.x, pt.y, 1, 90, null);
   ok(d._gotTouchend, 'Touchend was received on div element');
 }
 

@@ -9,7 +9,6 @@ let searchInSearchbar = Task.async(function* (inputText) {
   // Write the search query in the searchbar.
   sb.focus();
   sb.value = inputText;
-  //sb.textbox.openPopup();
   sb.textbox.controller.startSearch(inputText);
   // Wait for the popup to show.
   yield BrowserTestUtils.waitForEvent(sb.textbox.popup, "popupshown");

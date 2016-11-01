@@ -895,26 +895,6 @@
     { 0x85, 0x44, 0x5a, 0x8d, 0x1a, 0xb7, 0x95, 0x37 } \
 }
 
-#define NS_PACKAGEDAPPSERVICE_CONTRACTID \
-    "@mozilla.org/network/packaged-app-service;1"
-#define NS_PACKAGEDAPPSERVICE_CID                      \
-{   /* adef6762-41b9-4470-a06a-dc29cf8de381 */         \
-    0xadef6762,                                        \
-    0x41b9,                                            \
-    0x4470,                                            \
-  { 0xa0, 0x6a, 0xdc, 0x29, 0xcf, 0x8d, 0xe3, 0x81 }   \
-}
-
-#define NS_PACKAGEDAPPVERIFIER_CONTRACTID \
-    "@mozilla.org/network/packaged-app-verifier;1"
-#define NS_PACKAGEDAPPVERIFIER_CID                      \
-{   /* 07242d20-4cae-11e5-b970-0800200c9a66 */         \
-    0x07242d20,                                        \
-    0x4cae,                                            \
-    0x11e5,                                            \
-  { 0xb9, 0x70, 0x08, 0x00, 0x20, 0x0c, 0x96, 0x66 }   \
-}
-
 /******************************************************************************
  * netwerk/cookie classes
  */

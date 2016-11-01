@@ -91,7 +91,7 @@ add_task(function*() {
   ok(otherTB.querySelector(`#${kNonPlacedWidgetId}`), "Button is on other toolbar, too.");
 
   let wasInformedCorrectlyOfAreaDisappearing = false;
-  //XXXgijs So we could be using promiseWindowClosed here. However, after
+  // XXXgijs So we could be using promiseWindowClosed here. However, after
   // repeated random oranges, I'm instead relying on onWindowClosed below to
   // fire appropriately - it is linked to an unload event as well, and so
   // reusing it prevents a potential race between unload handlers where the

@@ -129,19 +129,6 @@ protected:
   virtual PTCPSocketParent* AllocPTCPSocketParent(const nsString& host,
                                                   const uint16_t& port) override;
 
-  virtual PRemoteOpenFileParent*
-    AllocPRemoteOpenFileParent(const SerializedLoadContext& aSerialized,
-                               const URIParams& aFileURI,
-                               const OptionalURIParams& aAppURI) override;
-  virtual bool
-    RecvPRemoteOpenFileConstructor(PRemoteOpenFileParent* aActor,
-                                   const SerializedLoadContext& aSerialized,
-                                   const URIParams& aFileURI,
-                                   const OptionalURIParams& aAppURI)
-                                   override;
-  virtual bool DeallocPRemoteOpenFileParent(PRemoteOpenFileParent* aActor)
-                                            override;
-
   virtual bool DeallocPTCPSocketParent(PTCPSocketParent*) override;
   virtual PTCPServerSocketParent*
     AllocPTCPServerSocketParent(const uint16_t& aLocalPort,

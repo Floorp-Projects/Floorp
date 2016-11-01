@@ -234,7 +234,7 @@ function* check_autocomplete(test) {
         }
 
         if (!found)
-          do_throw(`Didn't find the current result ("${result.value}", "${result.comment}") in matches`); //' (Emacs syntax highlighting fix)
+          do_throw(`Didn't find the current result ("${result.value}", "${result.comment}") in matches`); // ' (Emacs syntax highlighting fix)
       }
     }
 
@@ -275,7 +275,9 @@ var addBookmark = Task.async(function* (aBookmarkObj) {
 
   if (aBookmarkObj.keyword) {
     yield PlacesUtils.keywords.insert({ keyword: aBookmarkObj.keyword,
-                                        url: aBookmarkObj.uri.spec });
+                                        url: aBookmarkObj.uri.spec,
+                                        postData: aBookmarkObj.postData
+                                      });
   }
 
   if (aBookmarkObj.tags) {

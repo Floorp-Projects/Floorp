@@ -1,4 +1,4 @@
-/*globals
+/* globals
   XPCOMUtils,
   aboutNewTabService,
   Services,

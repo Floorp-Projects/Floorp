@@ -7,7 +7,7 @@
 /* exported test */
 
 function test() {
-  //initialization
+  // initialization
   waitForExplicitFinish();
 
   let aboutNewTabService = Components.classes["@mozilla.org/browser/aboutnewtab-service;1"]

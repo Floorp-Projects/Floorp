@@ -16,7 +16,7 @@
 
 "use strict";
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
@@ -61,7 +61,7 @@ const gUnnamedProcessStr = "Main Process";
 
 var gIsDiff = false;
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 // Forward slashes in URLs in paths are represented with backslashes to avoid
 // being mistaken for path separators.  Paths/names where this hasn't been
@@ -120,13 +120,13 @@ function debug(x)
   appendElementWithText(section, "div", "debug", JSON.stringify(x));
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 function onUnload()
 {
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 // The <div> holding everything but the header and footer (if they're present).
 // It's what is updated each time the page changes.
@@ -213,7 +213,7 @@ function appendElementWithText(aP, aTagName, aClassName, aText)
   return e;
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 const explicitTreeDescription =
 "This tree covers explicit memory allocations by the application.  It includes \
@@ -234,7 +234,7 @@ and thread stacks. \
 most (including the entire heap), and therefore it is the single best number to \
 focus on when trying to reduce memory usage.";
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 function appendButton(aP, aTitle, aOnClick, aText, aId)
 {
@@ -421,7 +421,7 @@ function onLoad()
   }
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 function doGC()
 {
@@ -727,7 +727,7 @@ function updateAboutMemoryFromTwoFiles(aFilename1, aFilename2)
   });
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 // Something unlikely to appear in a process name.
 var kProcessPathSep = "^:^:^";
@@ -944,7 +944,7 @@ function diffJSONObjects(aJson1, aJson2)
   };
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 // |PColl| is short for "process collection".
 function PColl()
@@ -1095,7 +1095,7 @@ function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize)
   aProcessReports(handleReport, displayReports);
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 // There are two kinds of TreeNode.
 // - Leaf TreeNodes correspond to reports.
@@ -1989,7 +1989,7 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText)
                       aPadText, "", "", rootStringLength);
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 function appendSectionHeader(aP, aText)
 {
@@ -1997,7 +1997,7 @@ function appendSectionHeader(aP, aText)
   return appendElement(aP, "pre", "entries");
 }
 
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 function saveReportsToFile()
 {

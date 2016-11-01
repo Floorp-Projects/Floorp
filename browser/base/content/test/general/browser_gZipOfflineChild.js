@@ -16,7 +16,7 @@ registerCleanupFunction(function() {
 var cacheCount = 0;
 var intervalID = 0;
 
-////
+// //
 // Handle "message" events which are posted from the iframe upon
 // offline cache events.
 //

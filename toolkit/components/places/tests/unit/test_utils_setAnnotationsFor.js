@@ -55,7 +55,7 @@ function run_test() {
   });
 
   // To unset annotations we unset their values or set them to
-  //null/undefined
+  // null/undefined
   testAnnos[0].value = null;
   testAnnos[1].value = undefined;
   delete testAnnos[2].value;

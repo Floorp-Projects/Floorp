@@ -30,7 +30,7 @@ add_task(function*() {
 
   resetTabs();
 
-  //move the add-on button in the Panel Menu
+  // move the add-on button in the Panel Menu
   CustomizableUI.addWidgetToArea(kButton, CustomizableUI.AREA_PANEL);
   let addonButtonInNavbar = navBar.getElementsByAttribute("id", kButton);
   ok(!navBar.contains(addonButton), "Addon button was removed from the browser bar");
@@ -55,12 +55,12 @@ add_task(function* asyncCleanup() {
 });
 
 function resetTabs() {
-  //close all opened tabs
+  // close all opened tabs
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeTab(gBrowser.selectedTab);
   }
 
-  //restore the initial tab
+  // restore the initial tab
   gBrowser.addTab(initialLocation);
   gBrowser.removeTab(gBrowser.selectedTab);
 }

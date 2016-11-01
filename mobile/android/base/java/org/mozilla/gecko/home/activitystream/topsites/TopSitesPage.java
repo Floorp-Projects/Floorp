@@ -17,38 +17,22 @@ import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 import java.util.EnumSet;
 
 public class TopSitesPage
-        extends RecyclerView
-        implements RecyclerViewClickSupport.OnItemClickListener {
+        extends RecyclerView {
     public TopSitesPage(Context context,
                         @Nullable AttributeSet attrs) {
         super(context, attrs);
 
         setLayoutManager(new GridLayoutManager(context, 1));
-
-        RecyclerViewClickSupport.addTo(this)
-                .setOnItemClickListener(this);
     }
 
     public void setTiles(int tiles) {
         setLayoutManager(new GridLayoutManager(getContext(), tiles));
     }
 
-    private HomePager.OnUrlOpenListener onUrlOpenListener = null;
+    private HomePager.OnUrlOpenListener onUrlOpenListener;
+    private HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
 
     public TopSitesPageAdapter getAdapter() {
         return (TopSitesPageAdapter) super.getAdapter();
-    }
-
-    public void setOnUrlOpenListener(HomePager.OnUrlOpenListener onUrlOpenListener) {
-        this.onUrlOpenListener = onUrlOpenListener;
-    }
-
-    @Override
-    public void onItemClicked(RecyclerView recyclerView, int position, View v) {
-        if (onUrlOpenListener != null) {
-            final String url = getAdapter().getURLForPosition(position);
-
-            onUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(HomePager.OnUrlOpenListener.Flags.class));
-        }
     }
 }

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
-  //**************************************************************************//
+  //* *************************************************************************//
   // Database Creation, Schema Migration, and Backup
 
   // Note: in these tests we use createInstance instead of getService
@@ -112,7 +112,7 @@ function run_test() {
   statement.executeStep();
   do_check_eq(0, statement.getInt32(0));
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // Nonexistent Pref
 
   do_check_eq(cps.getPref(uri, "test.nonexistent.getPref"), undefined);
@@ -121,7 +121,7 @@ function run_test() {
   do_check_eq(cps.removePref(uri, "test.nonexistent.removePref"), undefined);
 
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // Existing Pref
 
   cps.setPref(uri, "test.existing", 5);
@@ -141,7 +141,7 @@ function run_test() {
   do_check_false(cps.hasPref(uri, "test.existing"));
 
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // Round-Trip Data Integrity
 
   // Make sure pref values remain the same from setPref to getPref.
@@ -184,7 +184,7 @@ function run_test() {
   do_check_false(cps.hasPref(uri, "test.data-integrity.null"));
 
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // getPrefs
 
   cps.setPref(uri, "test.getPrefs.a", 1);
@@ -200,7 +200,7 @@ function run_test() {
   do_check_eq(prefs.get("test.getPrefs.c"), 3);
 
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // Site-Specificity
 
   // These are all different sites, and setting a pref for one of them
@@ -231,7 +231,7 @@ function run_test() {
   do_check_false(cps.hasPref(uri3, "test.site-specificity.uri4"));
 
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // Observers
 
   var specificObserver = {
@@ -333,7 +333,7 @@ function run_test() {
   do_check_eq(genericObserver.numTimesRemovedCalled, 3);
 
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // Get/Remove Prefs By Name
 
   {
@@ -421,7 +421,7 @@ function run_test() {
   }
 
 
-  //**************************************************************************//
+  //* *************************************************************************//
   // Clear Private Data Pref Removal
 
   {
