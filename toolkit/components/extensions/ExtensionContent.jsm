@@ -214,11 +214,6 @@ Script.prototype = {
    *        the injection.
    */
   tryInject(window, sandbox, shouldRun, when) {
-    if (!this.matches(window)) {
-      this.deferred.reject({message: "No matching window"});
-      return;
-    }
-
     if (shouldRun("document_start")) {
       let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
