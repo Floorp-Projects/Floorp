@@ -118,9 +118,6 @@ def normalize_path():
                 out = ctypes.create_unicode_buffer(size)
                 needed = GetShortPathNameW(path, out, size)
                 if size >= needed:
-                    if ' ' in out.value:
-                        die("GetShortPathName returned a long path name. "
-                            "Are 8dot3 filenames disabled?")
                     return normsep(out.value)
                 size = needed
 
