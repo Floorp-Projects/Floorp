@@ -4657,6 +4657,10 @@ class MOZ_STACK_CLASS IfThenElseEmitter
     int32_t pushed() const {
         return pushed_;
     }
+
+    int32_t popped() const {
+        return -pushed_;
+    }
 #endif
 };
 
@@ -4784,7 +4788,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
             if (!isHead) {
                 if (!ifThenElse.emitEnd())
                     return false;
-                MOZ_ASSERT(ifThenElse.pushed() == -1);
+                MOZ_ASSERT(ifThenElse.popped() == 1);
             }
             needToPopIterator = false;
             MOZ_ASSERT(!member->pn_next);
@@ -4896,7 +4900,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
         else if (hasNextSpread)
             MOZ_ASSERT(ifThenElse.pushed() == 0);
         else
-            MOZ_ASSERT(ifThenElse.pushed() == -1);
+            MOZ_ASSERT(ifThenElse.popped() == 1);
     }
 
     if (needToPopIterator) {
