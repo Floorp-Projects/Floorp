@@ -57,6 +57,7 @@
 #include "mozilla/Hal.h"
 #include "nsISiteSpecificUserAgent.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/SSE.h"
 #include "mozilla/StaticPtr.h"
 #include "Connection.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
@@ -811,6 +812,12 @@ Navigator::HardwareConcurrency()
   }
 
   return rts->ClampedHardwareConcurrency();
+}
+
+bool
+Navigator::CpuHasSSE2()
+{
+  return mozilla::supports_sse2();
 }
 
 void
