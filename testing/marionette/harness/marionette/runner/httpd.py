@@ -50,6 +50,10 @@ class FixtureServer(object):
         return self._server.get_url(path)
 
     @property
+    def router(self):
+        return self._server.router
+
+    @property
     def routes(self):
         return self._server.router.routes
 

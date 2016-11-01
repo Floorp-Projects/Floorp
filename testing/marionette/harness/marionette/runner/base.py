@@ -997,6 +997,7 @@ class BaseMarionetteTestRunner(object):
                                            suite,
                                            testloader,
                                            self.marionette,
+                                           self.httpd,
                                            self.testvars,
                                            **self.test_kwargs)
                 break

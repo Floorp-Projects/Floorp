@@ -20,7 +20,8 @@ def empty_marionette_testcase():
 
 @pytest.fixture
 def empty_marionette_test(mock_marionette, empty_marionette_testcase):
-    return empty_marionette_testcase(lambda: mock_marionette, 'test_nothing')
+    return empty_marionette_testcase(lambda: mock_marionette, lambda: mock_httpd,
+                                     'test_nothing')
 
 
 @pytest.mark.parametrize("has_crashed", [True, False])
