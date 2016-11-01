@@ -4627,6 +4627,8 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
                     return false;
                 if (!emitJumpTargetAndPatch(beq))
                     return false;
+                if (!setSrcNoteOffset(noteIndex, 0, end.offset - beq.offset))
+                    return false;
                 stackDepth = depth;
             }
 
@@ -4645,8 +4647,6 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
 
             if (!isHead) {
                 if (!emitJumpTargetAndPatch(end))
-                    return false;
-                if (!setSrcNoteOffset(noteIndex, 0, end.offset - beq.offset))
                     return false;
             }
             needToPopIterator = false;
@@ -4733,6 +4733,8 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
             return false;
         if (!emitJumpTargetAndPatch(beq))
             return false;
+        if (!setSrcNoteOffset(noteIndex, 0, end.offset - beq.offset))
+            return false;
 
         stackDepth = depth;
         if (!emitAtomOp(cx->names().value, JSOP_GETPROP))         // ... OBJ? ITER VALUE
@@ -4761,8 +4763,6 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
         }
 
         if (!emitJumpTargetAndPatch(end))
-            return false;
-        if (!setSrcNoteOffset(noteIndex, 0, end.offset - beq.offset))
             return false;
     }
 
@@ -5647,29 +5647,14 @@ BytecodeEmitter::emitTry(ParseNode* pn)
 bool
 BytecodeEmitter::emitIf(ParseNode* pn)
 {
-    /* Initialize so we can detect else-if chains and avoid recursion. */
-    bool emittingElse = false;
-
     JumpList jumpsAroundElse;
     JumpList beq;
-    JumpList jmp; // else-if chains
     unsigned noteIndex = -1;
 
   if_again:
     /* Emit code for the condition before pushing stmtInfo. */
     if (!emitConditionallyExecutedTree(pn->pn_kid1))
         return false;
-
-    if (emittingElse) {
-        /*
-         * We came here from the goto further below that detects else-if
-         * chains, so we must mutate stmtInfo back into a StmtType::IF record.
-         * Also we need a note offset for SRC_IF_ELSE to help IonMonkey.
-         */
-        emittingElse = false;
-        if (!setSrcNoteOffset(noteIndex, 0, jmp.offset - beq.offset))
-            return false;
-    }
 
     /* Emit an annotated branch-if-false around the then part. */
     ParseNode* pn3 = pn->pn_kid3;
@@ -5684,8 +5669,6 @@ BytecodeEmitter::emitIf(ParseNode* pn)
         return false;
 
     if (pn3) {
-        emittingElse = true;
-
         /*
          * Emit a jump from the end of our then part around the else part. The
          * patchJumpsToTarget call at the bottom of this function will fix up
@@ -5693,10 +5676,18 @@ BytecodeEmitter::emitIf(ParseNode* pn)
          */
         if (!emitJump(JSOP_GOTO, &jumpsAroundElse))
             return false;
-        jmp = jumpsAroundElse;
 
         /* Ensure the branch-if-false comes here, then emit the else. */
         if (!emitJumpTargetAndPatch(beq))
+            return false;
+        /*
+         * Annotate SRC_IF_ELSE with the offset from branch to jump, for
+         * IonMonkey's benefit.  We can't just "back up" from the pc
+         * of the else clause, because we don't know whether an extended
+         * jump was required to leap from the end of the then clause over
+         * the else clause.
+         */
+        if (!setSrcNoteOffset(noteIndex, 0, jumpsAroundElse.offset - beq.offset))
             return false;
         if (pn3->isKind(PNK_IF)) {
             pn = pn3;
@@ -5705,16 +5696,6 @@ BytecodeEmitter::emitIf(ParseNode* pn)
 
         if (!emitConditionallyExecutedTree(pn3))
             return false;
-
-        /*
-         * Annotate SRC_IF_ELSE with the offset from branch to jump, for
-         * IonMonkey's benefit.  We can't just "back up" from the pc
-         * of the else clause, because we don't know whether an extended
-         * jump was required to leap from the end of the then clause over
-         * the else clause.
-         */
-        if (!setSrcNoteOffset(noteIndex, 0, jmp.offset - beq.offset))
-            return false;
     } else {
         /* No else part, fixup the branch-if-false to come here. */
         if (!emitJumpTargetAndPatch(beq))
@@ -5722,10 +5703,8 @@ BytecodeEmitter::emitIf(ParseNode* pn)
     }
 
     // Patch all the jumps around else parts.
-    JumpTarget here;
-    if (!emitJumpTarget(&here))
+    if (!emitJumpTargetAndPatch(jumpsAroundElse))
         return false;
-    patchJumpsToTarget(jumpsAroundElse, here);
 
     return true;
 }
