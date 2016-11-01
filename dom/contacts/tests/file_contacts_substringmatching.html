@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=877302
+-->
+<head>
+  <title>Test for Bug 877302 substring matching for WebContacts</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=877302">Mozilla Bug 877302</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="text/javascript;version=1.8" src="http://mochi.test:8888/tests/dom/contacts/tests/shared.js"></script>
+<script class="testbody" type="text/javascript">
+"use strict";
+
+var ok = parent.ok;
+var is = parent.is;
+
+var substringLength = 8;
+
+var prop = {
+  tel: [{value: "7932012345" }, {value: "7932012346"}]
+};
+
+var prop2 = {
+  tel: [{value: "01187654321" }]
+};
+
+var prop3 = {
+  tel: [{ value: "+43332112346" }]
+};
+
+var prop4 = {
+  tel: [{ value: "(0414) 233-9888" }]
+};
+
+var brazilianNumber = {
+  international1: "0041557932012345",
+  international2: "+557932012345"
+};
+
+var prop5 = {
+  tel: [{value: brazilianNumber.international2}]
+};
+
+var req;
+var steps = [
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding contact");
+    createResult1 = new mozContact(prop);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving all contacts");
+    req = mozContacts.find({});
+    req.onsuccess = function () {
+      is(req.result.length, 1, "One contact.");
+      findResult1 = req.result[0];
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 1");
+    var length = prop.tel[0].value.length;
+    var num = prop.tel[0].value.substring(length - substringLength, length);
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: num};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      is(findResult1.tel[0].value, "7932012345", "Same Value");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 2");
+    var length = prop.tel[1].value.length;
+    var num = prop.tel[1].value.substring(length - substringLength, length);
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: num};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      is(findResult1.tel[0].value, "7932012345", "Same Value");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 3");
+    var length = prop.tel[0].value.length;
+    var num = prop.tel[0].value.substring(length - substringLength + 1, length);
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: num};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 0, "Found exactly 0 contacts.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 4");
+    var length = prop.tel[0].value.length;
+    var num = prop.tel[0].value.substring(length - substringLength - 1, length);
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: num};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contacts.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding contact");
+    createResult1 = new mozContact(prop2);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 5");
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: "87654321"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contacts.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 6");
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: "01187654321"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contacts.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 7");
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: "909087654321"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contacts.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 8");
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: "0411187654321"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contacts.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 9");
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: "90411187654321"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contacts.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 10");
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: "+551187654321"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contacts.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding contact");
+    createResult1 = new mozContact(prop3);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    if (!isAndroid) { // Bug 905927
+      ok(true, "Retrieving by substring 1");
+      var length = prop3.tel[0].value.length;
+      var num = prop3.tel[0].value.substring(length - substringLength, length);
+      var options = {filterBy: ["tel"],
+                     filterOp: "match",
+                     filterValue: num};
+      req = mozContacts.find(options);
+      req.onsuccess = function () {
+        is(req.result.length, 0, "Found exactly 0 contacts.");
+        next();
+      };
+      req.onerror = onFailure;
+    } else {
+      SpecialPowers.executeSoon(next);
+    }
+  },
+  function () {
+    ok(true, "Adding contact");
+    createResult1 = new mozContact(prop4);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 1");
+    var num = "(0424) 233-9888"
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: num};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contacts.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding a new contact with a Brazilian country code");
+    createResult1 = new mozContact(prop5);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Searching for international number with prefix");
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: brazilianNumber.international1};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "all done!\n");
+    parent.SimpleTest.finish();
+  }
+];
+
+SpecialPowers.pushPrefEnv({
+  set: [
+    ["dom.phonenumber.substringmatching.BR", substringLength],
+    ["ril.lastKnownSimMcc", "724"]
+  ]
+}, start_tests);
+</script>
+</pre>
+</body>
+</html>

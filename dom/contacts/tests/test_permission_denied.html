@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<iframe></iframe>
+<pre id="test">
+<script type="application/javascript">
+
+function run_tests() {
+  var iframe = document.querySelector("iframe");
+  iframe.src = "file_permission_denied.html";
+}
+
+SimpleTest.waitForExplicitFinish();
+onload = function() {
+  SpecialPowers.pushPermissions([
+    {type: "contacts-read", allow: false, context: document},
+    {type: "contacts-write", allow: false, context: document},
+    {type: "contacts-create", allow: false, context: document},
+  ], run_tests);
+};
+
+</script>
+</pre>
+</body>
+</html>

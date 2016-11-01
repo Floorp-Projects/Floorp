@@ -1,0 +1,67 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsINeighboringCellInfo;
+
+[scriptable, uuid(0941cb79-36e5-41e0-b05f-cdb854c53f03)]
+interface nsINeighboringCellIdsCallback : nsISupports
+{
+  /**
+   * result is an array of nsINeighboringCellInfo.
+   */
+  void notifyGetNeighboringCellIds(in uint32_t count,
+                                   [array, size_is(count)] in nsINeighboringCellInfo result);
+
+  /**
+   * Callback function with error message.
+   */
+  void notifyGetNeighboringCellIdsFailed(in DOMString error);
+};
+
+[scriptable, uuid(87dc222e-abb3-4342-95bf-626aa19fa20e)]
+interface nsINeighboringCellInfo: nsISupports
+{
+  /**
+   * Type of radio technology.
+   *
+   * Possible values: 'gsm', 'gprs', 'edge', 'umts', 'hsdpa', 'hsupa', 'hspa',
+   *                  'hspa+' or null (unknown).
+   */
+  readonly attribute DOMString networkType;
+
+  /**
+   * Mobile Location Area Code (LAC) for GSM networks.
+   *
+   * Possible ranges from 0x0000 to 0xffff.
+   * nsICellInfo.UNKNOWN_VALUE if the LAC is unknown.
+   */
+  readonly attribute long gsmLocationAreaCode;
+
+  /**
+   * Mobile Cell ID for GSM networks.
+   *
+   * Possible ranges from 0x0000 to 0xffff.
+   * nsICellInfo.UNKNOWN_VALUE if the cell id is unknown.
+   */
+  readonly attribute long long gsmCellId;
+
+  /**
+   * Primary Scrambling Code (PSC) for WCDMA networks.
+   *
+   * Possible ranges from 0x0000 to 0x01ff.
+   * nsICellInfo.UNKNOWN_VALUE if the psc is unknown.
+   */
+  readonly attribute long wcdmaPsc;
+
+  /**
+   * For GSM networks, signalStrength is the received rssi, ranging from 0 to 31.
+   * For WCDMA networks, signalStrength is the CPICH Received Signal Code Power,
+   * ranging from -120 to -25.
+   *
+   * nsICellInfo.UNKNOWN_VALUE if signalStrength is unknown.
+   */
+  readonly attribute long signalStrength;
+};

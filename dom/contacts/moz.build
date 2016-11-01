@@ -1,0 +1,20 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Disable the tests on Android for now (bug 927869)
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+    MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+    MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
+
+EXTRA_COMPONENTS += [
+    'ContactManager.js',
+    'ContactManager.manifest',
+]
+
+EXTRA_JS_MODULES += [
+    'fallback/ContactDB.jsm',
+    'fallback/ContactService.jsm'
+]

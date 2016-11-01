@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=836519
+-->
+<head>
+  <title>Mozilla Bug 836519</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=836519">Mozilla Bug 836519</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="text/javascript;version=1.8" src="http://mochi.test:8888/tests/dom/contacts/tests/shared.js"></script>
+<script class="testbody" type="text/javascript;version=1.8">
+"use strict";
+
+var ok = parent.ok;
+var is = parent.is;
+var isnot = parent.isnot;
+
+let req;
+
+let steps = [
+  function start() {
+    SpecialPowers.Cc["@mozilla.org/tools/profiler;1"].getService(SpecialPowers.Ci.nsIProfiler).AddMarker("GETALL_START");
+    next();
+  },
+  clearDatabase,
+  addContacts,
+
+  function() {
+    ok(true, "Delete the current contact while iterating");
+    req = mozContacts.getAll({});
+    let count = 0;
+    let previousId = null;
+    req.onsuccess = function() {
+      if (req.result) {
+        ok(true, "on success");
+        if (previousId) {
+          isnot(previousId, req.result.id, "different contacts returned");
+        }
+        previousId = req.result.id;
+        count++;
+        let delReq = mozContacts.remove(req.result);
+        delReq.onsuccess = function() {
+          ok(true, "deleted current contact");
+          req.continue();
+        };
+      } else {
+        is(count, 40, "returned 40 contacts");
+        next();
+      }
+    };
+  },
+
+  clearDatabase,
+  addContacts,
+
+  function() {
+    ok(true, "Iterating through the contact list inside a cursor callback");
+    let count1 = 0, count2 = 0;
+    let req1 = mozContacts.getAll({});
+    let req2;
+    req1.onsuccess = function() {
+      if (count1 == 0) {
+        count1++;
+        req2 = mozContacts.getAll({});
+        req2.onsuccess = function() {
+          if (req2.result) {
+            count2++;
+            req2.continue();
+          } else {
+            is(count2, 40, "inner cursor returned 40 contacts");
+            req1.continue();
+          }
+        };
+      } else {
+        if (req1.result) {
+          count1++;
+          req1.continue();
+        } else {
+          is(count1, 40, "outer cursor returned 40 contacts");
+          next();
+        }
+      }
+    };
+  },
+
+  clearDatabase,
+  addContacts,
+
+  function() {
+    ok(true, "20 concurrent cursors");
+    const NUM_CURSORS = 20;
+    let completed = 0;
+    for (let i = 0; i < NUM_CURSORS; ++i) {
+      mozContacts.getAll({}).onsuccess = (function(i) {
+        let count = 0;
+        return function(event) {
+          let req = event.target;
+          if (req.result) {
+            count++;
+            req.continue();
+          } else {
+            is(count, 40, "cursor " + i + " returned 40 contacts");
+            if (++completed == NUM_CURSORS) {
+              next();
+            }
+          }
+        };
+      })(i);
+    }
+  },
+
+  clearDatabase,
+  addContacts,
+
+  function() {
+    if (!SpecialPowers.isMainProcess()) {
+      // We stop calling continue() intentionally here to see if the cursor gets
+      // cleaned up properly in the parent.
+      ok(true, "Leaking a cursor");
+      req = mozContacts.getAll({
+        sortBy: "familyName",
+        sortOrder: "ascending"
+      });
+      req.onsuccess = function(event) {
+        next();
+      };
+      req.onerror = onFailure;
+    } else {
+      next();
+    }
+  },
+
+  clearDatabase,
+
+  function() {
+    ok(true, "all done!\n");
+    SpecialPowers.Cc["@mozilla.org/tools/profiler;1"].getService(SpecialPowers.Ci.nsIProfiler).AddMarker("GETALL_END");
+    parent.SimpleTest.finish();
+  }
+];
+
+start_tests();
+</script>
+</pre>
+</body>
+</html>

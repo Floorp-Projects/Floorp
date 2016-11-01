@@ -8,7 +8,6 @@
 #define mozilla_dom_GamepadServiceTest_h_
 
 #include "nsIIPCBackgroundChildCreateCallback.h"
-#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/GamepadBinding.h"
 
 namespace mozilla {
