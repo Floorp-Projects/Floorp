@@ -1020,15 +1020,7 @@ GeckoMediaPluginServiceParent::FindPluginForAPIFrom(size_t aSearchStartIndex,
   mMutex.AssertCurrentThreadOwns();
   for (size_t i = aSearchStartIndex; i < mPlugins.Length(); i++) {
     RefPtr<GMPParent> gmp = mPlugins[i];
-    bool supportsAllTags = true;
-    for (size_t t = 0; t < aTags.Length(); t++) {
-      const nsCString& tag = aTags.ElementAt(t);
-      if (!gmp->SupportsAPI(aAPI, tag)) {
-        supportsAllTags = false;
-        break;
-      }
-    }
-    if (!supportsAllTags) {
+    if (!GMPCapability::Supports(gmp->GetCapabilities(), aAPI, aTags)) {
       continue;
     }
     if (aOutPluginIndex) {
