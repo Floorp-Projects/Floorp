@@ -105,25 +105,6 @@ HasGMPFor(const nsACString& aAPI,
           const nsACString& aCodec,
           const nsACString& aGMP)
 {
-#ifdef XP_WIN
-  // gmp-clearkey uses WMF for decoding, so if we're using clearkey we must
-  // verify that WMF works before continuing.
-  if (aGMP.Equals(kEMEKeySystemClearkey)) {
-    RefPtr<WMFDecoderModule> pdm(new WMFDecoderModule());
-    if (aCodec.EqualsLiteral("aac") &&
-        !pdm->SupportsMimeType(NS_LITERAL_CSTRING("audio/mp4a-latm"),
-                               /* DecoderDoctorDiagnostics* */ nullptr)) {
-      return false;
-    }
-    if (aCodec.EqualsLiteral("h264") &&
-        !pdm->SupportsMimeType(NS_LITERAL_CSTRING("video/avc"),
-                               /* DecoderDoctorDiagnostics* */ nullptr)) {
-      return false;
-    }
-  }
-#endif
-  MOZ_ASSERT(NS_IsMainThread(),
-             "HasPluginForAPI must be called on the main thread");
   nsTArray<nsCString> tags;
   tags.AppendElement(aCodec);
   tags.AppendElement(aGMP);
@@ -217,15 +198,32 @@ bool
 GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
                                    const Maybe<nsCString>& aGMP)
 {
-  StaticMutexAutoLock lock(sGMPCodecsMutex);
-  for (GMPCodecs& gmp : sGMPCodecs) {
-    if (((aMimeType.EqualsLiteral("audio/mp4a-latm") && gmp.mHasAAC) ||
-         (MP4Decoder::IsH264(aMimeType) && gmp.mHasH264) ||
-         (VPXDecoder::IsVP8(aMimeType) && gmp.mHasVP8) ||
-         (VPXDecoder::IsVP9(aMimeType) && gmp.mHasVP9)) &&
-        (aGMP.isNothing() || aGMP.value().Equals(gmp.mKeySystem))) {
-      return true;
-    }
+  if (aGMP.isNothing()) {
+    return false;
+  }
+
+  if (MP4Decoder::IsH264(aMimeType)) {
+    return HasGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+                     NS_LITERAL_CSTRING("h264"),
+                     aGMP.value());
+  }
+
+  if (VPXDecoder::IsVP9(aMimeType)) {
+    return HasGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+                     NS_LITERAL_CSTRING("vp9"),
+                     aGMP.value());
+  }
+
+  if (VPXDecoder::IsVP8(aMimeType)) {
+    return HasGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+                     NS_LITERAL_CSTRING("vp8"),
+                     aGMP.value());
+  }
+
+  if (MP4Decoder::IsAAC(aMimeType)) {
+    return HasGMPFor(NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
+                     NS_LITERAL_CSTRING("aac"),
+                     aGMP.value());
   }
 
   return false;
