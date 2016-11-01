@@ -535,6 +535,37 @@ IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid)
 }
 
 bool
+IToplevelProtocol::Open(mozilla::ipc::Transport* aTransport,
+                        base::ProcessId aOtherPid,
+                        MessageLoop* aThread,
+                        mozilla::ipc::Side aSide)
+{
+  SetOtherProcessId(aOtherPid);
+  return GetIPCChannel()->Open(aTransport, aThread, aSide);
+}
+
+bool
+IToplevelProtocol::Open(MessageChannel* aChannel,
+                        MessageLoop* aMessageLoop,
+                        mozilla::ipc::Side aSide)
+{
+  SetOtherProcessId(base::GetCurrentProcId());
+  return GetIPCChannel()->Open(aChannel, aMessageLoop, aSide);
+}
+
+void
+IToplevelProtocol::Close()
+{
+  GetIPCChannel()->Close();
+}
+
+void
+IToplevelProtocol::SetReplyTimeoutMs(int32_t aTimeoutMs)
+{
+  GetIPCChannel()->SetReplyTimeoutMs(aTimeoutMs);
+}
+
+bool
 IToplevelProtocol::IsOnCxxStack() const
 {
   return GetIPCChannel()->IsOnCxxStack();
