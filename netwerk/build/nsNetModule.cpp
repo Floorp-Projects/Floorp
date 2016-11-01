@@ -663,7 +663,7 @@ CreateNewBinaryDetectorFactory(nsISupports *aOuter, REFNSIID aIID, void **aResul
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  nsBinaryDetector* inst = new nsBinaryDetector();
+  auto* inst = new nsBinaryDetector();
   if (!inst) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
