@@ -138,7 +138,6 @@ this.GeckoDriver = function(appName, server) {
     "browserVersion": Services.appinfo.version,
     "platformName": Services.sysinfo.getProperty("name").toLowerCase(),
     "platformVersion": Services.sysinfo.getProperty("version"),
-    "specificationLevel": 0,
 
     // supported features
     "raisesAccessibilityExceptions": false,
@@ -147,6 +146,7 @@ this.GeckoDriver = function(appName, server) {
     "proxy": {},
 
     // proprietary extensions
+    "specificationLevel": 0,
     "processId" : Services.appinfo.processID,
   };
 
