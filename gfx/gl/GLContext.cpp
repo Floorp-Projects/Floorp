@@ -1795,6 +1795,13 @@ GLContext::InitExtensions()
             MarkExtensionSupported(OES_EGL_sync);
         }
 
+        if (Vendor() == GLVendor::ATI) {
+            // ATI drivers say this extension exists, but we can't
+            // actually find the EGLImageTargetRenderbufferStorageOES
+            // extension function pointer in the drivers.
+            MarkExtensionUnsupported(OES_EGL_image);
+        }
+
         if (Vendor() == GLVendor::Imagination &&
             Renderer() == GLRenderer::SGX540)
         {
