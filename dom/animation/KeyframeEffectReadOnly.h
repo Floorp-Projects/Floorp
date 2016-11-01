@@ -325,6 +325,12 @@ protected:
                           const OptionsType& aOptions,
                           ErrorResult& aRv);
 
+  template<class KeyframeEffectType>
+  static already_AddRefed<KeyframeEffectType>
+  ConstructKeyframeEffect(const GlobalObject& aGlobal,
+                          KeyframeEffectReadOnly& aSource,
+                          ErrorResult& aRv);
+
   // This effect is registered with its target element so long as:
   //
   // (a) It has a target element, and
