@@ -1022,6 +1022,9 @@ void HTMLMediaElement::AbortExistingLoads()
 
 void HTMLMediaElement::NoSupportedMediaSourceError(const nsACString& aErrorDetails)
 {
+  if (mDecoder) {
+    ShutdownDecoder();
+  }
   mError = new MediaError(this, MEDIA_ERR_SRC_NOT_SUPPORTED, aErrorDetails);
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
@@ -4413,9 +4416,6 @@ void HTMLMediaElement::FirstFrameLoaded()
 
 void HTMLMediaElement::NetworkError()
 {
-  if (mDecoder) {
-    ShutdownDecoder();
-  }
   if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
     NoSupportedMediaSourceError();
   } else {
@@ -4430,9 +4430,6 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError)
   const char16_t* params[] = { src.get() };
   ReportLoadError("MediaLoadDecodeError", params, ArrayLength(params));
 
-  if (mDecoder) {
-    ShutdownDecoder();
-  }
   AudioTracks()->EmptyTracks();
   VideoTracks()->EmptyTracks();
   if (mIsLoadingFromSourceChildren) {
