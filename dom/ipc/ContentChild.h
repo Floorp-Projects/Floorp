@@ -163,6 +163,9 @@ public:
                         base::ProcessId otherProcess) override;
 
   bool
+  RecvGMPsChanged(nsTArray<GMPCapabilityData>&& capabilities) override;
+
+  bool
   RecvInitRendering(
     Endpoint<PCompositorBridgeChild>&& aCompositor,
     Endpoint<PImageBridgeChild>&& aImageBridge,
