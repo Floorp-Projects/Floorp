@@ -339,7 +339,7 @@ nsresult doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
         { "http://a/b/c/d;p?q#f",     "g/h/../H?http://foo#bar", "http://a/b/c/g/H?http://foo#bar" },
         { "http://a/b/c/d;p?q#f",     "g/h/../H;baz?http://foo", "http://a/b/c/g/H;baz?http://foo" },
         { "http://a/b/c/d;p?q#f",     "g/h/../H;baz?http://foo#bar", "http://a/b/c/g/H;baz?http://foo#bar" },
-        { "http://a/b/c/d;p?q#f",     "g/h/../H;baz?C:\\temp", "http://a/b/c/g/H;baz?C:\\temp" },
+        { "http://a/b/c/d;p?q#f",     R"(g/h/../H;baz?C:\temp)", R"(http://a/b/c/g/H;baz?C:\temp)" },
         { "http://a/b/c/d;p?q#f",     "", "http://a/b/c/d;p?q" },
         { "http://a/b/c/d;p?q#f",     "#", "http://a/b/c/d;p?q#" },
         { "http://a/b/c;p/d;p?q#f",   "../g;p" , "http://a/b/g;p" },

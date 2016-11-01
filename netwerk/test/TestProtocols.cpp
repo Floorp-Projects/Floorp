@@ -799,7 +799,7 @@ nsresult LoadURLsFromFile(char *aFileName)
 nsresult LoadURLFromConsole()
 {
     char buffer[1024];
-    printf("Enter URL (\"q\" to start): ");
+    printf(R"(Enter URL ("q" to start): )");
     Unused << scanf("%s", buffer);
     if (buffer[0]=='q') 
         gAskUserForInput = false;
