@@ -10,10 +10,12 @@ enum MediaKeySystemStatus {
   "cdm-disabled",
   "cdm-not-supported",
   "cdm-not-installed",
-  "cdm-insufficient-version",
   "cdm-created",
-  "error"
 };
+
+/* Note: This dictionary and enum is only used by Gecko to convey messages
+ * to chrome JS code. It is not exposed to the web.
+ */
 
 dictionary RequestMediaKeySystemAccessNotification {
   required DOMString keySystem;
