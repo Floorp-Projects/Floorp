@@ -65,6 +65,8 @@ class NeckoParent;
 
 namespace ipc {
 
+class MessageChannel;
+
 #ifdef XP_WIN
 const base::ProcessHandle kInvalidProcessHandle = INVALID_HANDLE_VALUE;
 
@@ -231,9 +233,10 @@ public:
 
     virtual void OnChannelClose() = 0;
     virtual void OnChannelError() = 0;
-    virtual void OnProcessingError(Result aError, const char* aMsgName) = 0;
+    virtual void ProcessingError(Result aError, const char* aMsgName) {}
     virtual void OnChannelConnected(int32_t peer_pid) {}
-    virtual bool OnReplyTimeout() {
+
+    virtual bool ShouldContinueFromReplyTimeout() {
         return false;
     }
 
@@ -269,18 +272,13 @@ public:
     void ArtificialSleep() {}
 #endif
 
-    virtual void OnEnteredCxxStack() {
-        NS_RUNTIMEABORT("default impl shouldn't be invoked");
-    }
-    virtual void OnExitedCxxStack() {
-        NS_RUNTIMEABORT("default impl shouldn't be invoked");
-    }
-    virtual void OnEnteredCall() {
-        NS_RUNTIMEABORT("default impl shouldn't be invoked");
-    }
-    virtual void OnExitedCall() {
-        NS_RUNTIMEABORT("default impl shouldn't be invoked");
-    }
+    virtual void EnteredCxxStack() {}
+    virtual void ExitedCxxStack() {}
+    virtual void EnteredCall() {}
+    virtual void ExitedCall() {}
+
+    bool IsOnCxxStack() const;
+
     virtual RacyInterruptPolicy MediateInterruptRace(const MessageInfo& parent,
                                                      const MessageInfo& child)
     {

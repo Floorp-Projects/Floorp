@@ -3221,60 +3221,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         deallocshmemvar = ExprVar('DeallocShmems')
         deallocselfvar = ExprVar('Dealloc' + _actorName(ptype.name(), self.side))
 
-        if ptype.isToplevel():
-            # OnProcesingError(code)
-            codevar = ExprVar('aCode')
-            reasonvar = ExprVar('aReason')
-            onprocessingerror = MethodDefn(
-                MethodDecl('OnProcessingError',
-                           params=[ Param(_Result.Type(), codevar.name),
-                                    Param(Type('char', const=1, ptr=1), reasonvar.name) ]))
-            onprocessingerror.addstmt(StmtReturn(
-                ExprCall(p.processingErrorVar(), args=[ codevar, reasonvar ])))
-            self.cls.addstmts([ onprocessingerror, Whitespace.NL ])
-
         # int32_t GetProtocolTypeId() { return PFoo; }
         gettypetag = MethodDefn(
             MethodDecl('GetProtocolTypeId', ret=_actorTypeTagType()))
         gettypetag.addstmt(StmtReturn(_protocolId(ptype)))
         self.cls.addstmts([ gettypetag, Whitespace.NL ])
-
-        if ptype.isToplevel():
-            # OnReplyTimeout()
-            if toplevel.isSync() or toplevel.isInterrupt():
-                ontimeout = MethodDefn(
-                    MethodDecl('OnReplyTimeout', ret=Type.BOOL))
-                ontimeout.addstmt(StmtReturn(
-                    ExprCall(p.shouldContinueFromTimeoutVar())))
-                self.cls.addstmts([ ontimeout, Whitespace.NL ])
-
-        # C++-stack-related methods
-        if ptype.isToplevel():
-            # OnEnteredCxxStack()
-            onentered = MethodDefn(MethodDecl('OnEnteredCxxStack'))
-            onentered.addstmt(StmtReturn(ExprCall(p.enteredCxxStackVar())))
-
-            # OnExitedCxxStack()
-            onexited = MethodDefn(MethodDecl('OnExitedCxxStack'))
-            onexited.addstmt(StmtReturn(ExprCall(p.exitedCxxStackVar())))
-
-            # OnEnteredCxxStack()
-            onenteredcall = MethodDefn(MethodDecl('OnEnteredCall'))
-            onenteredcall.addstmt(StmtReturn(ExprCall(p.enteredCallVar())))
-
-            # OnExitedCxxStack()
-            onexitedcall = MethodDefn(MethodDecl('OnExitedCall'))
-            onexitedcall.addstmt(StmtReturn(ExprCall(p.exitedCallVar())))
-
-            # bool IsOnCxxStack()
-            onstack = MethodDefn(
-                MethodDecl(p.onCxxStackVar().name, ret=Type.BOOL, const=1))
-            onstack.addstmt(StmtReturn(ExprCall(
-                ExprSelect(p.channelVar(), '.', p.onCxxStackVar().name))))
-
-            self.cls.addstmts([ onentered, onexited,
-                                onenteredcall, onexitedcall,
-                                onstack, Whitespace.NL ])
 
         if ptype.isToplevel():
             # OnChannelClose()
