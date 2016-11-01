@@ -4524,6 +4524,7 @@ class MOZ_STACK_CLASS IfThenElseEmitter
     enum State {
         Start,
         If,
+        Cond,
         IfElse,
         Else,
         End
@@ -4544,20 +4545,21 @@ class MOZ_STACK_CLASS IfThenElseEmitter
   private:
     bool emitIf(State nextState) {
         MOZ_ASSERT(state_ == Start || state_ == Else);
-        MOZ_ASSERT(nextState == If || nextState == IfElse);
+        MOZ_ASSERT(nextState == If || nextState == IfElse || nextState == Cond);
 
         // Clear jumpAroundThen_ offset that points previous JSOP_IFEQ.
         if (state_ == Else)
             jumpAroundThen_ = JumpList();
 
         // Emit an annotated branch-if-false around the then part.
-        if (!bce_->newSrcNote(nextState == If ? SRC_IF : SRC_IF_ELSE, &noteIndex_))
+        SrcNoteType type = nextState == If ? SRC_IF : nextState == IfElse ? SRC_IF_ELSE : SRC_COND;
+        if (!bce_->newSrcNote(type, &noteIndex_))
             return false;
         if (!bce_->emitJump(JSOP_IFEQ, &jumpAroundThen_))
             return false;
 
         // To restore stack depth in else part, save depth of the then part.
-        if (nextState == IfElse)
+        if (nextState == IfElse || nextState == Cond)
             thenDepth_ = bce_->stackDepth;
         state_ = nextState;
         return true;
@@ -4568,12 +4570,16 @@ class MOZ_STACK_CLASS IfThenElseEmitter
         return emitIf(If);
     }
 
+    bool emitCond() {
+        return emitIf(Cond);
+    }
+
     bool emitIfElse() {
         return emitIf(IfElse);
     }
 
     bool emitElse() {
-        MOZ_ASSERT(state_ == IfElse);
+        MOZ_ASSERT(state_ == IfElse || state_ == Cond);
 
         // Emit a jump from the end of our then part around the else part. The
         // patchJumpsToTarget call at the bottom of this function will fix up
@@ -4585,8 +4591,8 @@ class MOZ_STACK_CLASS IfThenElseEmitter
         if (!bce_->emitJumpTargetAndPatch(jumpAroundThen_))
             return false;
 
-        // Annotate SRC_IF_ELSE with the offset from branch to jump, for
-        // IonMonkey's benefit.  We can't just "back up" from the pc
+        // Annotate SRC_IF_ELSE or SRC_COND with the offset from branch to
+        // jump, for IonMonkey's benefit.  We can't just "back up" from the pc
         // of the else clause, because we don't know whether an extended
         // jump was required to leap from the end of the then clause over
         // the else clause.
@@ -8402,40 +8408,20 @@ BytecodeEmitter::emitConditionalExpression(ConditionalExpression& conditional)
     if (!emitTree(&conditional.condition()))
         return false;
 
-    unsigned noteIndex;
-    if (!newSrcNote(SRC_COND, &noteIndex))
-        return false;
-
-    JumpList beq;
-    if (!emitJump(JSOP_IFEQ, &beq))
+    IfThenElseEmitter ifThenElse(this);
+    if (!ifThenElse.emitCond())
         return false;
 
     if (!emitConditionallyExecutedTree(&conditional.thenExpression()))
         return false;
 
-    /* Jump around else, fixup the branch, emit else, fixup jump. */
-    JumpList jmp;
-    if (!emitJump(JSOP_GOTO, &jmp))
-        return false;
-    if (!emitJumpTargetAndPatch(beq))
-        return false;
-    if (!setSrcNoteOffset(noteIndex, 0, jmp.offset - beq.offset))
+    if (!ifThenElse.emitElse())
         return false;
 
-    /*
-     * Because each branch pushes a single value, but our stack budgeting
-     * analysis ignores branches, we now have to adjust this->stackDepth to
-     * ignore the value pushed by the first branch.  Execution will follow
-     * only one path, so we must decrement this->stackDepth.
-     *
-     * Failing to do this will foil code, such as let block code generation,
-     * which must use the stack depth to compute local stack indexes correctly.
-     */
-    MOZ_ASSERT(stackDepth > 0);
-    stackDepth--;
     if (!emitConditionallyExecutedTree(&conditional.elseExpression()))
         return false;
-    if (!emitJumpTargetAndPatch(jmp))
+
+    if (!ifThenElse.emitEnd())
         return false;
 
     return true;
