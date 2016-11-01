@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/sh -e
 # Script to update mp4parse-rust sources to latest upstream
 
 # Default version.
-VER=v0.5.1
+VER=v0.6.0
 
 # Accept version or commit from the command line.
 if test -n "$1"; then
@@ -39,12 +39,18 @@ cp _upstream/mp4parse/mp4parse_capi/build.rs mp4parse_capi/
 cp _upstream/mp4parse/mp4parse_capi/include/mp4parse.h include/
 cp _upstream/mp4parse/mp4parse_capi/src/*.rs mp4parse_capi/src/
 
-# TODO: update vendored dependencies in $topsrcdir/third_party/rust
-
 echo "Applying patches..."
 patch -p4 < mp4parse-cargo.patch
 
 echo "Cleaning up..."
 rm -rf _upstream
+
+echo "Updating gecko Cargo.lock..."
+pushd ../../../toolkit/library/rust/
+cargo update --package mp4parse_capi
+popd
+pushd ../../../toolkit/library/gtest/rust/
+cargo update --package mp4parse_capi
+popd
 
 echo "Updated to ${VER}."
