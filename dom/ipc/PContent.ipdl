@@ -708,8 +708,6 @@ parent:
     sync BridgeToChildProcess(ContentParentId cpId);
 
     async CreateGMPService();
-    sync IsGMPPresentOnDisk(nsString keySystem, nsCString version)
-        returns (bool isPresent, nsCString message);
 
     /**
      * This call connects the content process to a plugin process. While this
