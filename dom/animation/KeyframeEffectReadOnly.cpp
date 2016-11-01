@@ -613,6 +613,42 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
   return effect.forget();
 }
 
+template<class KeyframeEffectType>
+/* static */ already_AddRefed<KeyframeEffectType>
+KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
+                                                KeyframeEffectReadOnly& aSource,
+                                                ErrorResult& aRv)
+{
+  nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
+  if (!doc) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  // Create a new KeyframeEffectReadOnly object with aSource's target,
+  // iteration composite operation, composite operation, and spacing mode.
+  // The constructor creates a new AnimationEffect(ReadOnly) object by
+  // aSource's TimingParams.
+  // Note: we don't need to re-throw exceptions since the value specified on
+  //       aSource's timing object can be assumed valid.
+  RefPtr<KeyframeEffectType> effect =
+    new KeyframeEffectType(doc,
+                           aSource.mTarget,
+                           aSource.SpecifiedTiming(),
+                           aSource.mEffectOptions);
+  // Copy cumulative change hint. mCumulativeChangeHint should be the same as
+  // the source one because both of targets are the same.
+  effect->mCumulativeChangeHint = aSource.mCumulativeChangeHint;
+
+  // Clone aSource's keyframes and then move it into the new effect.
+  // FIXME: Bug 1314537: We have to make sure SharedKeyframeList is handled
+  //        properly.
+  RefPtr<nsStyleContext> styleContext = effect->GetTargetStyleContext();
+  nsTArray<Keyframe> keyframes(aSource.mKeyframes);
+  effect->SetKeyframes(Move(keyframes), styleContext);
+  return effect.forget();
+}
+
 void
 KeyframeEffectReadOnly::UpdateTargetRegistration()
 {
