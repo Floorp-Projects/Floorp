@@ -959,17 +959,6 @@ ContentParent::RecvCreateGMPService()
 }
 
 bool
-ContentParent::RecvGetGMPPluginVersionForAPI(const nsCString& aAPI,
-                                             nsTArray<nsCString>&& aTags,
-                                             bool* aHasVersion,
-                                             nsCString* aVersion)
-{
-  return GMPServiceParent::RecvGetGMPPluginVersionForAPI(aAPI, Move(aTags),
-                                                         aHasVersion,
-                                                         aVersion);
-}
-
-bool
 ContentParent::RecvIsGMPPresentOnDisk(const nsString& aKeySystem,
                                       const nsCString& aVersion,
                                       bool* aIsPresent,

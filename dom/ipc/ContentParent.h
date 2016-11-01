@@ -248,11 +248,6 @@ public:
 
   virtual bool RecvCreateGMPService() override;
 
-  virtual bool RecvGetGMPPluginVersionForAPI(const nsCString& aAPI,
-                                             nsTArray<nsCString>&& aTags,
-                                             bool* aHasPlugin,
-                                             nsCString* aVersion) override;
-
   virtual bool RecvIsGMPPresentOnDisk(const nsString& aKeySystem,
                                       const nsCString& aVersion,
                                       bool* aIsPresent,
