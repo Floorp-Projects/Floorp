@@ -1,0 +1,15 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>BuscaPé</ShortName>
+<Description>Comparação de produtos e pesquisa de preços.</Description>
+<InputEncoding>iso-8859-1</InputEncoding>
+<Image width="16" height="16">data:image/x-icon;base64,R0lGODlhEAAQANUoALu7u/zW1/WFiPm1tnd3d/itryIiIvFSVlVVVd3d3e7u7vimqKqqqvm3uf3i4//6+v3p6u44Pfzb3PJobPBGS/ekpveane86P/FcYPWChe9BRvFZXfFVWfR2evaOkURERBEREYiIiO4zOMzMzDMzM2ZmZpmZmQAAAP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAACgALAAAAAAQABAAAAaPQBQgRDShUCZiaHQ8Ik4f0MkIAn1OoCbKYECFpolTCXVNNKGKZwJwCqFI2SP7dDIwvCcSqd00tRliKCVtIQBaBCcjCicIb3FaZCcAiG5QkEdSdGMjJwQoDxsDl6MVIiITDigBqwMFBQsCsRqmIhcWtLi5uBIBrwIdGBS6B6KjHrTEo0cQESIHDcpNGRzQkEEAOw==</Image>
+<Url type="text/html" method="GET" template="http://busca.buscape.com.br/cprocura" resultdomain="buscape.com.br">
+  <Param name="produto" value="{searchTerms}"/>
+  <Param name="site_origem" value="11642"/>
+</Url>
+<SearchForm>http://www.buscape.com.br/</SearchForm>
+</SearchPlugin>

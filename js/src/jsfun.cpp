@@ -851,6 +851,10 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
     if (!JSObject::setNewGroupUnknown(cx, &JSFunction::class_, functionProto))
         return nullptr;
 
+    // Set the prototype before we call NewFunctionWithProto below. This
+    // ensures EmptyShape::getInitialShape can share function shapes.
+    self->setPrototype(key, ObjectValue(*functionProto));
+
     // Construct the unique [[%ThrowTypeError%]] function object, used only for
     // "callee" and "caller" accessors on strict mode arguments objects.  (The
     // spec also uses this for "arguments" and "caller" on various functions,

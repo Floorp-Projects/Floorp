@@ -1,0 +1,20 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>พจนานุกรม ลองดู</ShortName>
+<Description>พจนานุกรม ลองดู</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAAcklEQVR42qSTwQ3AIAwDHZSROlOZiZ26k/tqRQtBjrgnECtEF+MJQqURMPsc+XuhQk4CAKCa1MHxe+ZDiz1CqA8FT0hQfHEVoDAdYoZwiAr9txqBaijYpKQk2grY6mBhaiySqLdnzYsDMgvVe5Va5wn3AGu/H1vn5EUlAAAAAElFTkSuQmCC</Image>
+<Url type="application/x-suggestions+json" method="GET" template="http://search.longdo.com/Suggest/HeadSearch">
+  <Param name="ds" value="head"/>
+  <Param name="fxjson" value="1"/>
+  <Param name="key" value="{searchTerms}"/>
+</Url>
+<Url type="text/html" method="GET" template="http://dict.longdo.org/" resultdomain="longdo.org">
+  <Param name="search" value="{searchTerms}"/>
+  <Param name="src" value="moz"/>
+</Url>
+<SearchForm>http://dict.longdo.org/</SearchForm>
+</SearchPlugin>

@@ -1,0 +1,17 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Allegro</ShortName>
+<Description>Wyszukiwanie w aukcjach Allegro</Description>
+<InputEncoding>UTF-8</InputEncoding>
+ <Image width="16" height="16">data:image/x-icon;base64,AAABAAEAEBAAAAAAAABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8AAFr/OgBa/zkAWv84AFr/OABa/zgAWv85AFr/PABa/wn///8A////AP///wD///8A////AABa/xYAWv+4AFr//wBa//8AWv//AFr//wBa//8AWv//AFr//wBa//8AWv+H////AP///wD///8A////AP///wAAWv/wAFr//wBa//8AWv//AFr//wBa//8AWv//AFr//wBa//8AWv//AFr/gv///wD///8A////AP///wAAWv9MAFr//wBa//8AWv//AFr/ewBa/zUAWv82AFr/NABa/2YAWv//AFr//wBa/4H///8A////AP///wD///8AAFr/gwBa//8AWv//AFr/if///wD///8A////AP///wAAWv8yAFr//wBa//8AWv+A////AP///wD///8A////AABa/4MAWv//AFr//wBa/8L///8A////AP///wD///8AAFr/MQBa//8AWv//AFr/gP///wD///8A////AP///wAAWv8oAFr//wBa//8AWv//AFr/xABa/34AWv9/AFr/fQBa/5sAWv//AFr//wBa/4D///8A////AP///wD///8A////AABa/5QAWv//AFr//wBa//8AWv//AFr//wBa//8AWv//AFr//wBa//8AWv+A////AP///wD///8A////AP///wD///8AAFr/NwBa/7UAWv//AFr//wBa//8AWv//AFr//wBa//8AWv//AFr/gf///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AABa/2IAWv//AFr//wBa/4L///8A////AP///wD///8A////AP///wAAWv/RAFr/ywBa/0b///8A////AABa/woAWv/mAFr//wBa//8AWv85////AP///wD///8A////AP///wD///8AAFr//wBa//8AWv//AFr//wBa//8AWv//AFr//wBa//8AWv/v////AP///wD///8A////AP///wD///8A////AABa/5gAWv//AFr//wBa//8AWv//AFr//wBa//8AWv//AFr/J////wD///8A////AP///wD///8A////AP///wD///8AAFr/FgBa/14AWv+CAFr/gQBa/4IAWv9eAFr/BP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A//8AAP//AADwAwAA4AMAAOPjAADD4wAAw+MAAOHDAADgAwAA+AMAAP/jAADzxwAA8AcAAPAPAAD+PwAA//8AAA==</Image>
+ <SearchForm>http://allegro.pl</SearchForm>
+ <Url method="GET"
+      template="http://allegro.pl/listing/listing.php"
+      type="text/html">
+  <Param name="string" value="{searchTerms}" />
+  <Param name="sourceid" value="Mozilla-search" />
+ </Url>
+</SearchPlugin>

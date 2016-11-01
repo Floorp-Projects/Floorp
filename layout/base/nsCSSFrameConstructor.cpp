@@ -9868,14 +9868,12 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
     return;
   }
 
-  nsIAtom* containerType = aParentFrame->GetType();
   const bool isWebkitBox = nsFlexContainerFrame::IsLegacyBox(aParentFrame);
 
   FCItemIterator iter(aItems);
   do {
     // Advance iter past children that don't want to be wrapped
-    if (iter.SkipItemsThatDontNeedAnonFlexOrGridItem(aState, containerType,
-                                                     isWebkitBox)) {
+    if (iter.SkipItemsThatDontNeedAnonFlexOrGridItem(aState, isWebkitBox)) {
       // Hit the end of the items without finding any remaining children that
       // need to be wrapped. We're finished!
       return;
@@ -9898,9 +9896,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
       bool hitEnd = afterWhitespaceIter.SkipWhitespace(aState);
       bool nextChildNeedsAnonItem =
         !hitEnd &&
-        afterWhitespaceIter.item().NeedsAnonFlexOrGridItem(aState,
-                                                           containerType,
-                                                           isWebkitBox);
+        afterWhitespaceIter.item().NeedsAnonFlexOrGridItem(aState, isWebkitBox);
 
       if (!nextChildNeedsAnonItem) {
         // There's nothing after the whitespace that we need to wrap, so we
@@ -9914,8 +9910,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
         // we jump back to the beginning of the loop to skip over that child
         // (and anything else non-wrappable after it)
         MOZ_ASSERT(!iter.IsDone() &&
-                   !iter.item().NeedsAnonFlexOrGridItem(aState, containerType,
-                                                        isWebkitBox),
+                   !iter.item().NeedsAnonFlexOrGridItem(aState, isWebkitBox),
                    "hitEnd and/or nextChildNeedsAnonItem lied");
         continue;
       }
@@ -9925,15 +9920,14 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
     // anonymous flex/grid item. Now we see how many children after it also want
     // to be wrapped in an anonymous flex/grid item.
     FCItemIterator endIter(iter); // iterator to find the end of the group
-    endIter.SkipItemsThatNeedAnonFlexOrGridItem(aState, containerType,
-                                                isWebkitBox);
+    endIter.SkipItemsThatNeedAnonFlexOrGridItem(aState, isWebkitBox);
 
     NS_ASSERTION(iter != endIter,
                  "Should've had at least one wrappable child to seek past");
 
     // Now, we create the anonymous flex or grid item to contain the children
     // between |iter| and |endIter|.
-    nsIAtom* pseudoType = containerType == nsGkAtoms::flexContainerFrame ?
+    nsIAtom* pseudoType = (aParentFrame->GetType() == nsGkAtoms::flexContainerFrame) ?
       nsCSSAnonBoxes::anonymousFlexItem : nsCSSAnonBoxes::anonymousGridItem;
     nsStyleContext* parentStyle = aParentFrame->StyleContext();
     nsIContent* parentContent = aParentFrame->GetContent();
@@ -10532,14 +10526,10 @@ void nsCSSFrameConstructor::CreateNeededPseudoSiblings(
 static bool
 FrameWantsToBeInAnonymousItem(const nsIAtom* aParentType, const nsIFrame* aFrame)
 {
-  // Note: This needs to match the logic in
-  // nsCSSFrameConstructor::FrameConstructionItem::NeedsAnonFlexOrGridItem()
-  if (aParentType == nsGkAtoms::gridContainerFrame) {
-    return aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
-  }
-  MOZ_ASSERT(aParentType == nsGkAtoms::flexContainerFrame);
-  return aFrame->IsFrameOfType(nsIFrame::eLineParticipant) ||
-         aFrame->GetType() == nsGkAtoms::placeholderFrame;
+  MOZ_ASSERT(aParentType == nsGkAtoms::flexContainerFrame ||
+             aParentType == nsGkAtoms::gridContainerFrame);
+
+  return aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
 }
 #endif
 
@@ -12175,11 +12165,9 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
 
     // Check if we're adding to-be-wrapped content right *after* an existing
     // anonymous flex or grid item (which would need to absorb this content).
-    nsIAtom* containerType = aFrame->GetType();
     const bool isWebkitBox = nsFlexContainerFrame::IsLegacyBox(aFrame);
     if (aPrevSibling && IsAnonymousFlexOrGridItem(aPrevSibling) &&
-        iter.item().NeedsAnonFlexOrGridItem(aState, containerType,
-                                            isWebkitBox)) {
+        iter.item().NeedsAnonFlexOrGridItem(aState, isWebkitBox)) {
       RecreateFramesForContent(aFrame->GetContent(), true,
                                REMOVE_FOR_RECONSTRUCTION, nullptr);
       return true;
@@ -12191,8 +12179,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
       // Jump to the last entry in the list
       iter.SetToEnd();
       iter.Prev();
-      if (iter.item().NeedsAnonFlexOrGridItem(aState, containerType,
-                                              isWebkitBox)) {
+      if (iter.item().NeedsAnonFlexOrGridItem(aState, isWebkitBox)) {
         RecreateFramesForContent(aFrame->GetContent(), true,
                                  REMOVE_FOR_RECONSTRUCTION, nullptr);
         return true;
@@ -12220,7 +12207,6 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     nsIFrame* containerFrame = aFrame->GetParent();
     const bool isWebkitBox = nsFlexContainerFrame::IsLegacyBox(containerFrame);
     if (!iter.SkipItemsThatNeedAnonFlexOrGridItem(aState,
-                                                  containerFrame->GetType(),
                                                   isWebkitBox)) {
       // We hit something that _doesn't_ need an anonymous flex item!
       // Rebuild the flex container to bust it out.
@@ -12679,22 +12665,10 @@ Iterator::SkipItemsNotWantingParentType(ParentType aParentType)
 bool
 nsCSSFrameConstructor::FrameConstructionItem::
   NeedsAnonFlexOrGridItem(const nsFrameConstructorState& aState,
-                          nsIAtom* aContainerType,
                           bool aIsWebkitBox)
 {
   if (mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) {
     // This will be an inline non-replaced box.
-    return true;
-  }
-
-  // Bug 874718: Flex containers still wrap placeholders; Grid containers don't.
-  if (aContainerType == nsGkAtoms::flexContainerFrame &&
-      !(mFCData->mBits & FCDATA_DISALLOW_OUT_OF_FLOW) &&
-      aState.GetGeometricParent(mStyleContext->StyleDisplay(), nullptr)) {
-    // We're abspos or fixedpos, which means we'll spawn a placeholder which
-    // we'll need to wrap in an anonymous flex item.  So, we just treat
-    // _this_ frame as if _it_ needs to be wrapped in an anonymous flex item,
-    // and then when we spawn the placeholder, it'll end up in the right spot.
     return true;
   }
 
@@ -12711,12 +12685,10 @@ inline bool
 nsCSSFrameConstructor::FrameConstructionItemList::
 Iterator::SkipItemsThatNeedAnonFlexOrGridItem(
   const nsFrameConstructorState& aState,
-  nsIAtom* aContainerType,
   bool aIsWebkitBox)
 {
   NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
-  while (item().NeedsAnonFlexOrGridItem(aState, aContainerType,
-                                        aIsWebkitBox)) {
+  while (item().NeedsAnonFlexOrGridItem(aState, aIsWebkitBox)) {
     Next();
     if (IsDone()) {
       return true;
@@ -12729,12 +12701,10 @@ inline bool
 nsCSSFrameConstructor::FrameConstructionItemList::
 Iterator::SkipItemsThatDontNeedAnonFlexOrGridItem(
   const nsFrameConstructorState& aState,
-  nsIAtom* aContainerType,
   bool aIsWebkitBox)
 {
   NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
-  while (!(item().NeedsAnonFlexOrGridItem(aState, aContainerType,
-                                          aIsWebkitBox))) {
+  while (!(item().NeedsAnonFlexOrGridItem(aState, aIsWebkitBox))) {
     Next();
     if (IsDone()) {
       return true;

@@ -1,0 +1,16 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>EUdict Eng->Cro</ShortName>
+<Description>EUdict - englesko-hrvatski rječnik</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/gif;base64,R0lGODlhEAAQAKIAAH6CuJufvmJwrtze4vb4%2BLwxMcZmZtG7uyH5BAAAAAAALAAAAAAQABAAAANvSHTMs0dBZWoNpMpiyLhBMBycMhTYUT0KiS3oYnVZXEczQBXRnRkBhoLDIp4MrGHhQUI2LQ8DRxpTzZhUYNIjOAwALJbIAyiPMAOBYBBQfwPmUDrIFoQABwBG35bACXAAdmlseBFmeXBeOml2C2sJADs%3D</Image>
+<Url type="text/html" method="GET" template="http://www.eudict.com/indexHr.php" resultdomain="eudict.com">
+  <Param name="lang" value="engcro"/>
+  <Param name="word" value="{searchTerms}"/>
+  <Param name="client" value="firefox"/>
+</Url>
+<SearchForm>http://www.eudict.com/indexHr.php</SearchForm>
+</SearchPlugin>

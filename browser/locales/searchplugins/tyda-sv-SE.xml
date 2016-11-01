@@ -1,0 +1,14 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Tyda.se</ShortName>
+<Description>Tyda.se, lexikon, ordlista och översättning.</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAABQklEQVR42mO8fv3GxvVbdu/ay0AcYBYRkrhx4+aXL1+I1cDCxE68agYGBiY4y93Dtbe/Q1lFiVgN4uJi+gZ6PDw8xGrQN9BlYGBwc3eWkJQIDgmIi4+GiEtISsTFR+vp6WDYICHOwMCgoqLMzc2lpKwYlxANcV5gkF9cQjQvHy+6hl079jAwMEybOuvunXvr1m5kYGBwc3dhYGCwtrF88eLlo4eP0TUgg7t37t29c8/dw1VZRUlCQvzokeOfPn/Gp4GBgWHd2o08PNyNzbUMDAzr1236+OEjAQ1Hjxz78uWrhIT4xQuXXjx/gSWU0MCXL1+PHjnGwMCwaydKqmGBsxYtXLpo4VJkOQkJcbg2wjaIioroG+hBHIaiwcbWWkJSAlNDQlIsAwPDzu270WM6IipERUUZU4OEhPjv37+fI3kXAgDUBm6U4URcZQAAAABJRU5ErkJggg==</Image>
+<Url type="text/html" method="GET" template="http://tyda.se" resultdomain="tyda.se">
+  <Param name="w" value="{searchTerms}"/>
+</Url>
+<SearchForm>http://tyda.se</SearchForm>
+</SearchPlugin>
