@@ -4514,6 +4514,112 @@ BytecodeEmitter::emitDefault(ParseNode* defaultExpr)
     return true;
 }
 
+class MOZ_STACK_CLASS IfThenElseEmitter
+{
+    BytecodeEmitter* bce_;
+    JumpList jumpAroundThen_;
+    JumpList jumpsAroundElse_;
+    unsigned noteIndex_;
+    int32_t thenDepth_;
+    enum State {
+        Start,
+        If,
+        IfElse,
+        Else,
+        End
+    };
+    State state_;
+
+  public:
+    explicit IfThenElseEmitter(BytecodeEmitter* bce)
+      : bce_(bce),
+        noteIndex_(-1),
+        thenDepth_(0),
+        state_(Start)
+    {}
+
+    ~IfThenElseEmitter()
+    {}
+
+  private:
+    bool emitIf(State nextState) {
+        MOZ_ASSERT(state_ == Start || state_ == Else);
+        MOZ_ASSERT(nextState == If || nextState == IfElse);
+
+        // Clear jumpAroundThen_ offset that points previous JSOP_IFEQ.
+        if (state_ == Else)
+            jumpAroundThen_ = JumpList();
+
+        // Emit an annotated branch-if-false around the then part.
+        if (!bce_->newSrcNote(nextState == If ? SRC_IF : SRC_IF_ELSE, &noteIndex_))
+            return false;
+        if (!bce_->emitJump(JSOP_IFEQ, &jumpAroundThen_))
+            return false;
+
+        // To restore stack depth in else part, save depth of the then part.
+        if (nextState == IfElse)
+            thenDepth_ = bce_->stackDepth;
+        state_ = nextState;
+        return true;
+    }
+
+  public:
+    bool emitIf() {
+        return emitIf(If);
+    }
+
+    bool emitIfElse() {
+        return emitIf(IfElse);
+    }
+
+    bool emitElse() {
+        MOZ_ASSERT(state_ == IfElse);
+
+        // Emit a jump from the end of our then part around the else part. The
+        // patchJumpsToTarget call at the bottom of this function will fix up
+        // the offset with jumpsAroundElse value.
+        if (!bce_->emitJump(JSOP_GOTO, &jumpsAroundElse_))
+            return false;
+
+        // Ensure the branch-if-false comes here, then emit the else.
+        if (!bce_->emitJumpTargetAndPatch(jumpAroundThen_))
+            return false;
+
+        // Annotate SRC_IF_ELSE with the offset from branch to jump, for
+        // IonMonkey's benefit.  We can't just "back up" from the pc
+        // of the else clause, because we don't know whether an extended
+        // jump was required to leap from the end of the then clause over
+        // the else clause.
+        if (!bce_->setSrcNoteOffset(noteIndex_, 0,
+                                    jumpsAroundElse_.offset - jumpAroundThen_.offset))
+        {
+            return false;
+        }
+
+        // Restore stack depth of the then part.
+        bce_->stackDepth = thenDepth_;
+        state_ = Else;
+        return true;
+    }
+
+    bool emitEnd() {
+        MOZ_ASSERT(state_ == If || state_ == Else);
+
+        if (state_ == If) {
+            // No else part, fixup the branch-if-false to come here.
+            if (!bce_->emitJumpTargetAndPatch(jumpAroundThen_))
+                return false;
+        }
+
+        // Patch all the jumps around else parts.
+        if (!bce_->emitJumpTargetAndPatch(jumpsAroundElse_))
+            return false;
+
+        state_ = End;
+        return true;
+    }
+};
+
 bool
 BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlavor flav)
 {
@@ -4604,18 +4710,13 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
     for (ParseNode* member = pattern->pn_head; member; member = member->pn_next) {
         bool isHead = member == pattern->pn_head;
         if (member->isKind(PNK_SPREAD)) {
-            JumpList beq;
-            JumpList end;
-            unsigned noteIndex = -1;
+            IfThenElseEmitter ifThenElse(this);
             if (!isHead) {
                 // If spread is not the first element of the pattern,
                 // iterator can already be completed.
-                if (!newSrcNote(SRC_IF_ELSE, &noteIndex))
-                    return false;
-                if (!emitJump(JSOP_IFEQ, &beq))                   // ... OBJ? ITER
+                if (!ifThenElse.emitIfElse())                     // ... OBJ? ITER
                     return false;
 
-                int32_t depth = stackDepth;
                 if (!emit1(JSOP_POP))                             // ... OBJ?
                     return false;
                 if (!emitUint32Operand(JSOP_NEWARRAY, 0))         // ... OBJ? ARRAY
@@ -4623,13 +4724,8 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
                 if (!emitConditionallyExecutedDestructuringLHS(member, flav)) // ... OBJ?
                     return false;
 
-                if (!emitJump(JSOP_GOTO, &end))
+                if (!ifThenElse.emitElse())                       // ... OBJ? ITER
                     return false;
-                if (!emitJumpTargetAndPatch(beq))
-                    return false;
-                if (!setSrcNoteOffset(noteIndex, 0, end.offset - beq.offset))
-                    return false;
-                stackDepth = depth;
             }
 
             // If iterator is not completed, create a new array with the rest
@@ -4646,7 +4742,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
                 return false;
 
             if (!isHead) {
-                if (!emitJumpTargetAndPatch(end))
+                if (!ifThenElse.emitEnd())
                     return false;
             }
             needToPopIterator = false;
@@ -4684,14 +4780,10 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
                 return false;
         }
 
-        unsigned noteIndex;
-        if (!newSrcNote(SRC_IF_ELSE, &noteIndex))
-            return false;
-        JumpList beq;
-        if (!emitJump(JSOP_IFEQ, &beq))                           // ... OBJ? ITER RESULT
+        IfThenElseEmitter ifThenElse(this);
+        if (!ifThenElse.emitIfElse())                             // ... OBJ? ITER RESULT
             return false;
 
-        int32_t depth = stackDepth;
         if (!emit1(JSOP_POP))                                     // ... OBJ? ITER
             return false;
         if (pndefault) {
@@ -4728,15 +4820,9 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
                 return false;
         }
 
-        JumpList end;
-        if (!emitJump(JSOP_GOTO, &end))
-            return false;
-        if (!emitJumpTargetAndPatch(beq))
-            return false;
-        if (!setSrcNoteOffset(noteIndex, 0, end.offset - beq.offset))
+        if (!ifThenElse.emitElse())                               // ... OBJ? ITER RESULT
             return false;
 
-        stackDepth = depth;
         if (!emitAtomOp(cx->names().value, JSOP_GETPROP))         // ... OBJ? ITER VALUE
             return false;
 
@@ -4762,7 +4848,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
                 return false;
         }
 
-        if (!emitJumpTargetAndPatch(end))
+        if (!ifThenElse.emitEnd())
             return false;
     }
 
@@ -5647,63 +5733,41 @@ BytecodeEmitter::emitTry(ParseNode* pn)
 bool
 BytecodeEmitter::emitIf(ParseNode* pn)
 {
-    JumpList jumpsAroundElse;
-    JumpList beq;
-    unsigned noteIndex = -1;
+    IfThenElseEmitter ifThenElse(this);
 
   if_again:
     /* Emit code for the condition before pushing stmtInfo. */
     if (!emitConditionallyExecutedTree(pn->pn_kid1))
         return false;
 
-    /* Emit an annotated branch-if-false around the then part. */
-    ParseNode* pn3 = pn->pn_kid3;
-    if (!newSrcNote(pn3 ? SRC_IF_ELSE : SRC_IF, &noteIndex))
-        return false;
-    beq = JumpList();
-    if (!emitJump(JSOP_IFEQ, &beq))
-        return false;
-
-    /* Emit code for the then and optional else parts. */
-    if (!emitConditionallyExecutedTree(pn->pn_kid2))
-        return false;
-
-    if (pn3) {
-        /*
-         * Emit a jump from the end of our then part around the else part. The
-         * patchJumpsToTarget call at the bottom of this function will fix up
-         * the offset with jumpsAroundElse value.
-         */
-        if (!emitJump(JSOP_GOTO, &jumpsAroundElse))
-            return false;
-
-        /* Ensure the branch-if-false comes here, then emit the else. */
-        if (!emitJumpTargetAndPatch(beq))
-            return false;
-        /*
-         * Annotate SRC_IF_ELSE with the offset from branch to jump, for
-         * IonMonkey's benefit.  We can't just "back up" from the pc
-         * of the else clause, because we don't know whether an extended
-         * jump was required to leap from the end of the then clause over
-         * the else clause.
-         */
-        if (!setSrcNoteOffset(noteIndex, 0, jumpsAroundElse.offset - beq.offset))
-            return false;
-        if (pn3->isKind(PNK_IF)) {
-            pn = pn3;
-            goto if_again;
-        }
-
-        if (!emitConditionallyExecutedTree(pn3))
+    ParseNode* elseNode = pn->pn_kid3;
+    if (elseNode) {
+        if (!ifThenElse.emitIfElse())
             return false;
     } else {
-        /* No else part, fixup the branch-if-false to come here. */
-        if (!emitJumpTargetAndPatch(beq))
+        if (!ifThenElse.emitIf())
             return false;
     }
 
-    // Patch all the jumps around else parts.
-    if (!emitJumpTargetAndPatch(jumpsAroundElse))
+    /* Emit code for the then part. */
+    if (!emitConditionallyExecutedTree(pn->pn_kid2))
+        return false;
+
+    if (elseNode) {
+        if (!ifThenElse.emitElse())
+            return false;
+
+        if (elseNode->isKind(PNK_IF)) {
+            pn = elseNode;
+            goto if_again;
+        }
+
+        /* Emit code for the else part. */
+        if (!emitConditionallyExecutedTree(elseNode))
+            return false;
+    }
+
+    if (!ifThenElse.emitEnd())
         return false;
 
     return true;
