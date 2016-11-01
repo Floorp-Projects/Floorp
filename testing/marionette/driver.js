@@ -125,6 +125,10 @@ this.GeckoDriver = function(appName, server) {
   this.searchTimeout = null;
   this.pageTimeout = 300000;  // five minutes
 
+  // Unsigned or invalid TLS certificates will be ignored if secureTLS
+  // is set to false.
+  this.secureTLS = true;
+
   // The curent context decides if commands should affect chrome- or
   // content space.
   this.context = Context.CONTENT;
@@ -146,6 +150,7 @@ this.GeckoDriver = function(appName, server) {
     "browserVersion": Services.appinfo.version,
     "platformName": Services.sysinfo.getProperty("name").toLowerCase(),
     "platformVersion": Services.sysinfo.getProperty("version"),
+    "acceptInsecureCerts": !this.secureTLS,
 
     // supported features
     "raisesAccessibilityExceptions": false,
@@ -649,6 +654,14 @@ GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
   let caps = copy(this.sessionCapabilities);
   caps = copy(newCaps, caps);
   logger.config("Changing capabilities: " + JSON.stringify(caps));
+
+  // update session state
+  this.secureTLS = !caps.acceptInsecureCerts;
+  if (!this.secureTLS) {
+    logger.warn("Invalid or self-signed TLS certificates " +
+        "will be discarded for this session");
+  }
+
   this.sessionCapabilities = caps;
 };
 
