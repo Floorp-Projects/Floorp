@@ -90,6 +90,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 # Try run will then put a download link for all log files
 # on tbpl.mozilla.org.
 
+# MOZ_LOG = "signaling:3,mtransport:4,DataChannel:4,jsep:4,MediaPipelineFactory:4"
 MOZ_LOG = ""
 
 #####################
@@ -456,7 +457,7 @@ class MochitestServer(object):
             time.sleep(.05)
             i += .05
         else:
-            self._log.info(
+            self._log.error(
                 "TEST-UNEXPECTED-FAIL | runtests.py | Timed out while waiting for server startup.")
             self.stop()
             sys.exit(1)
@@ -1236,7 +1237,7 @@ toolbar#nav-bar {
         manifest = self.writeChromeManifest(options)
 
         if not os.path.isdir(self.mochijar):
-            self.log.info(
+            self.log.error(
                 "TEST-UNEXPECTED-FAIL | invalid setup: missing mochikit extension")
             return None
 
@@ -1621,6 +1622,12 @@ toolbar#nav-bar {
             options.extraPrefs.append(
                 "testing.browserTestHarness.timeout=%d" %
                 options.timeout)
+        # browser-chrome tests use a fairly short default timeout of 45 seconds;
+        # this is sometimes too short on asan, where we expect reduced performance.
+        if mozinfo.info["asan"] and options.flavor == 'browser' and options.timeout is None:
+            self.log.info("Increasing default timeout to 90 seconds on ASAN")
+            options.extraPrefs.append("testing.browserTestHarness.timeout=90")
+
         options.extraPrefs.append(
             "browser.tabs.remote.autostart=%s" %
             ('true' if options.e10s else 'false'))
@@ -1709,7 +1716,7 @@ toolbar#nav-bar {
         # TODO: this should really be upstreamed somewhere, maybe mozprofile
         certificateStatus = self.fillCertificateDB(options)
         if certificateStatus:
-            self.log.info(
+            self.log.error(
                 "TEST-UNEXPECTED-FAIL | runtests.py | Certificate integration failed")
             return None
 
@@ -1840,8 +1847,8 @@ toolbar#nav-bar {
                 processPID)
             if isPidAlive(processPID):
                 foundZombie = True
-                self.log.info("TEST-UNEXPECTED-FAIL | zombiecheck | child process "
-                              "%d still alive after shutdown" % processPID)
+                self.log.error("TEST-UNEXPECTED-FAIL | zombiecheck | child process "
+                               "%d still alive after shutdown" % processPID)
                 self.killAndGetStack(
                     processPID,
                     utilityPath,
@@ -2033,7 +2040,7 @@ toolbar#nav-bar {
             # record post-test information
             if status:
                 self.message_logger.dump_buffered()
-                self.log.info(
+                self.log.error(
                     "TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s" %
                     (self.lastTestSeen, status))
             else:
@@ -2141,9 +2148,9 @@ toolbar#nav-bar {
                 # To inform that we are in the process of bisection, and to
                 # look for bleedthrough
                 if options.bisectChunk != "default" and not bisection_log:
-                    self.log.info("TEST-UNEXPECTED-FAIL | Bisection | Please ignore repeats "
-                                  "and look for 'Bleedthrough' (if any) at the end of "
-                                  "the failure list")
+                    self.log.error("TEST-UNEXPECTED-FAIL | Bisection | Please ignore repeats "
+                                   "and look for 'Bleedthrough' (if any) at the end of "
+                                   "the failure list")
                     bisection_log = 1
 
             result = self.doTests(options, testsToRun)

@@ -159,6 +159,48 @@ extern MOZ_MUST_USE bool
 intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp);
 
 /**
+ * Return a map of the supported time zone names, derived from the IANA time
+ * zone database <https://www.iana.org/time-zones>.
+ *
+ * There are two kinds of IANA time zone names: Zone and Link (denoted as such
+ * in database source files). Zone names are the canonical, preferred name for
+ * a time zone, e.g. Asia/Kolkata. Link names simply refer to target Zone names
+ * for their meaning, e.g. Asia/Calcutta targets Asia/Kolkata. That a name is a
+ * Link doesn't *necessarily* reflect a sense of deprecation: some Link names
+ * also exist partly for convenience, e.g. UTC and GMT as Link names targeting
+ * the Zone name Etc/UTC.
+ *
+ * Usage: timeZones = intl_availableTimeZones()
+ */
+extern MOZ_MUST_USE bool
+intl_availableTimeZones(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * Return the canonicalized time zone name. Canonicalization resolves link
+ * names to their target time zones.
+ *
+ * Usage: ianaTimeZone = intl_canonicalizeTimeZone(timeZone)
+ */
+extern MOZ_MUST_USE bool
+intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * Return the default time zone name. The time zone name is not canonicalized.
+ *
+ * Usage: icuDefaultTimeZone = intl_defaultTimeZone()
+ */
+extern MOZ_MUST_USE bool
+intl_defaultTimeZone(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * Return the raw offset from GMT in milliseconds for the default time zone.
+ *
+ * Usage: defaultTimeZoneOffset = intl_defaultTimeZoneOffset()
+ */
+extern MOZ_MUST_USE bool
+intl_defaultTimeZoneOffset(JSContext* cx, unsigned argc, Value* vp);
+
+/**
  * Return a pattern in the date-time format pattern language of Unicode
  * Technical Standard 35, Unicode Locale Data Markup Language, for the
  * best-fit date-time format pattern corresponding to skeleton for the

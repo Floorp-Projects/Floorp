@@ -163,14 +163,15 @@ GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder, 
 }
 
 static void
-TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj, Shape* shape, ObjOperandId objId)
+TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj, Shape* shape, ObjOperandId objId,
+                     Maybe<ObjOperandId>* expandoId)
 {
     if (obj->is<UnboxedPlainObject>()) {
         writer.guardGroup(objId, obj->group());
 
         if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando()) {
-            ObjOperandId expandoId = writer.guardAndLoadUnboxedExpando(objId);
-            writer.guardShape(expandoId, expando->lastProperty());
+            expandoId->emplace(writer.guardAndLoadUnboxedExpando(objId));
+            writer.guardShape(expandoId->ref(), expando->lastProperty());
         } else {
             writer.guardNoUnboxedExpando(objId);
         }
@@ -187,7 +188,8 @@ static void
 EmitReadSlotResult(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
                    Shape* shape, ObjOperandId objId)
 {
-    TestMatchingReceiver(writer, obj, shape, objId);
+    Maybe<ObjOperandId> expandoId;
+    TestMatchingReceiver(writer, obj, shape, objId, &expandoId);
 
     ObjOperandId holderId;
     if (obj != holder) {
@@ -212,7 +214,7 @@ EmitReadSlotResult(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
         }
     } else if (obj->is<UnboxedPlainObject>()) {
         holder = obj->as<UnboxedPlainObject>().maybeExpando();
-        holderId = writer.loadUnboxedExpando(objId);
+        holderId = *expandoId;
     } else {
         holderId = objId;
     }

@@ -1,8 +1,9 @@
-function runTest(config, testname) {
+function runTest(config,qualifier) {
 
-    var testname = config.keysystem + ', successful playback, persistent-usage-record, '
-                                    + /video\/([^;]*)/.exec( config.videoType )[ 1 ]
-                                    + ', set src before setMediaKeys, check events';
+    var testname = testnamePrefix(qualifier, config.keysystem)
+                                    + ', persistent-usage-record, '
+                                    + /video\/([^;]*)/.exec(config.videoType)[1]
+                                    + ', playback, check events';
 
     var configuration = {   initDataTypes: [ config.initDataType ],
                             audioCapabilities: [ { contentType: config.audioType } ],
@@ -10,161 +11,103 @@ function runTest(config, testname) {
                             sessionTypes: [ 'persistent-usage-record' ] };
 
 
-    async_test( function( test ) {
-
+    async_test(function(test) {
         var _video = config.video,
             _mediaKeys,
             _mediaKeySession,
-            _mediaSource,
             _sessionId,
-            _allKeysUsableEvent = false,
-            _playingEvent = false,
             _timeupdateEvent = false,
-            _releaseSequence = false,
             _events = [ ];
+
+        function recordEventFunc(eventType) {
+            return function() { _events.push(eventType); };
+        }
+
+        function onFailure(error) {
+            forceTestFailureFromPromise(test, error);
+        }
 
         function onMessage(event) {
             assert_equals( event.target, _mediaKeySession );
             assert_true( event instanceof window.MediaKeyMessageEvent );
             assert_equals( event.type, 'message');
 
-            assert_any( assert_equals,
-                        event.messageType,
-                        _releaseSequence    ? [ 'license-release' ]
-                                            : [ 'license-request', 'individualization-request' ] );
-
             if ( event.messageType !== 'individualization-request' ) {
                 _events.push( event.messageType );
             }
 
-            config.messagehandler( event.messageType, event.message ).then( function( response ) {
-                if ( event.messageType === 'license-request' ) {
-                    _events.push( 'license-response' );
-                } else if ( event.messageType === 'license-release' ) {
-                    _events.push( 'release-response' );
+            config.messagehandler(event.messageType, event.message).then(function(response) {
+                _events.push(event.messageType + '-response');
+                return _mediaKeySession.update(response);
+            }).then(test.step_func(function() {
+                _events.push('update-done');
+                if (event.messageType === 'license-release') {
+                    consoleWrite(_events);
+                    assert_array_equals(_events,
+                                    [   'encrypted',
+                                        'generaterequest-done',
+                                        'license-request',
+                                        'license-request-response',
+                                        'update-done',
+                                        'keystatuseschange',
+                                        'playing',
+                                        'remove-done',
+                                        'keystatuseschange',
+                                        'license-release',
+                                        'license-release-response',
+                                        'closed-promise',
+                                        'update-done'
+                                    ],
+                                    "Expected events sequence" );
+                    test.done();
                 }
 
-                waitForEventAndRunStep('keystatuseschange', _mediaKeySession, onKeyStatusesChange, test);
-                _mediaKeySession.update( response ).then( function() {
-                    _events.push('updated');
-                }).catch(function(error) {
-                    forceTestFailureFromPromise(test, error);
-                });
-            });
-        }
-
-        function onKeyStatusesChange(event) {
-            assert_equals(event.target, _mediaKeySession );
-            assert_true(event instanceof window.Event );
-            assert_equals(event.type, 'keystatuseschange' );
-
-            var hasKeys = false, pendingKeys = false;
-            _mediaKeySession.keyStatuses.forEach( function( value, keyid ) {
-                assert_any( assert_equals, value, [ 'status-pending', 'usable' ] );
-
-                hasKeys = true;
-                pendingKeys = pendingKeys || ( value === 'status-pending' );
-
-            });
-
-            if ( !_allKeysUsableEvent && hasKeys && !pendingKeys ) {
-                _allKeysUsableEvent = true;
-                _events.push( 'allkeysusable' );
-                _video.setMediaKeys(_mediaKeys);
-            }
-
-            if ( !hasKeys ) {
-                _events.push( 'emptykeyslist' );
-            }
+                if ( event.messageType === 'license-request' ) {
+                    _video.setMediaKeys(_mediaKeys);
+                }
+            })).catch(onFailure);
         }
 
         function onEncrypted(event) {
             assert_equals(event.target, _video);
             assert_true(event instanceof window.MediaEncryptedEvent);
-            assert_equals(event.type, 'encrypted');
-
-            waitForEventAndRunStep('message', _mediaKeySession, onMessage, test);
+            _events.push(event.type);
             _mediaKeySession.generateRequest(   config.initDataType || event.initDataType,
                                                 config.initData || event.initData ).then( function() {
-
-                _events.push( 'generaterequest' );
+                _events.push( 'generaterequest-done' );
                 _sessionId = _mediaKeySession.sessionId;
-            }).catch(function(error) {
-                forceTestFailureFromPromise(test, error);
-            });
-        }
-
-        function onClosed(event) {
-            _events.push( 'closed-promise' );
-
-            setTimeout( test.step_func( function() {
-
-                assert_array_equals( _events,
-                                    [
-                                        'generaterequest',
-                                        'license-request',
-                                        'license-response',
-                                        'updated',
-                                        'allkeysusable',
-                                        'playing',
-                                        'remove',
-                                        'emptykeyslist',
-                                        'license-release',
-                                        'release-response',
-                                        'closed-promise',
-                                        'updated'
-                                    ],
-                                    "Expected events sequence" );
-
-                _video.src = "";
-                _video.setMediaKeys( null ).then( function() { test.done() } );
-
-            } ), 0 );
+            }).catch(onFailure);
         }
 
         function onTimeupdate(event) {
-            if ( _video.currentTime > ( config.duration || 2 ) && !_timeupdateEvent ) {
+            if (_video.currentTime > (config.duration || 1) && !_timeupdateEvent) {
                 _timeupdateEvent = true;
                 _video.pause();
-
-                _releaseSequence = true;
-
-                _mediaKeySession.closed.then( test.step_func( onClosed ) );
-                _mediaKeySession.remove().then( function() {
-                    _events.push( 'remove' );
-                }).catch(function(error) {
-                    forceTestFailureFromPromise(test, error);
-                });
+                _mediaKeySession.remove().then(recordEventFunc('remove-done')).catch(onFailure);
             }
         }
 
-        function onPlaying(event) {
-            _playingEvent = true;
-            _events.push( 'playing' );
+        navigator.requestMediaKeySystemAccess(config.keysystem, [configuration]).then(function(access) {
+            return access.createMediaKeys();
+        }).then(function(mediaKeys) {
+            _mediaKeys = mediaKeys;
+            waitForEventAndRunStep('encrypted', _video, onEncrypted, test);
+            waitForEventAndRunStep('playing', _video, recordEventFunc('playing'), test);
 
             // Not using waitForEventAndRunStep() to avoid too many
             // EVENT(onTimeUpdate) logs.
             _video.addEventListener('timeupdate', onTimeupdate, true);
-        }
 
-        navigator.requestMediaKeySystemAccess(config.keysystem, [ configuration ]).then(function(access) {
-            return access.createMediaKeys();
-        }).then(function(mediaKeys) {
-            _mediaKeys = mediaKeys;
             _mediaKeySession = _mediaKeys.createSession( 'persistent-usage-record' );
-
-            waitForEventAndRunStep('encrypted', _video, onEncrypted, test);
-            waitForEventAndRunStep('playing', _video, onPlaying, test);
-        }).then(function() {
-            return config.servercertificate ? _mediaKeys.setServerCertificate( config.servercertificate ) : true;
+            waitForEventAndRunStep('message', _mediaKeySession, onMessage, test);
+            waitForEventAndRunStep('keystatuseschange', _mediaKeySession, recordEventFunc('keystatuseschange'), test);
+            _mediaKeySession.closed.then(recordEventFunc('closed-promise'));
+            return config.servercertificate ? _mediaKeys.setServerCertificate(config.servercertificate) : true;
         }).then(function( success ) {
             return testmediasource(config);
         }).then(function(source) {
-            _mediaSource = source;
-            _video.src = URL.createObjectURL(_mediaSource);
+            _video.src = URL.createObjectURL(source);
             _video.play();
-        }).catch(function(error) {
-            forceTestFailureFromPromise(test, error);
-        });
+        }).catch(onFailure);
     }, testname);
 }

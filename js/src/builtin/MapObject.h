@@ -11,6 +11,7 @@
 
 #include "builtin/SelfHostingDefines.h"
 #include "vm/GlobalObject.h"
+#include "vm/NativeObject.h"
 #include "vm/PIC.h"
 #include "vm/Runtime.h"
 
@@ -269,8 +270,6 @@ class SetIteratorObject : public NativeObject
 
 extern bool
 InitSelfHostingCollectionIteratorFunctions(JSContext* cx, js::HandleObject obj);
-
-bool IsPackedArray(JSObject* obj);
 
 using SetInitGetPrototypeOp = NativeObject* (*)(JSContext*, Handle<GlobalObject*>);
 using SetInitIsBuiltinOp = bool (*)(HandleValue, JSContext*);

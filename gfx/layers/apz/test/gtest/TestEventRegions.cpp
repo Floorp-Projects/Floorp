@@ -42,7 +42,7 @@ protected:
     layers[2]->SetEventRegions(regions);
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-    manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+    manager->UpdateHitTestingTree(0, root, false, 0, 0);
     rootApzc = ApzcOf(root);
   }
 
@@ -63,7 +63,7 @@ protected:
     layers[1]->SetEventRegions(regions);
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-    manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+    manager->UpdateHitTestingTree(0, root, false, 0, 0);
     rootApzc = ApzcOf(root);
   }
 
@@ -97,7 +97,7 @@ protected:
     layers[2]->SetEventRegions(regions);
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-    manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+    manager->UpdateHitTestingTree(0, root, false, 0, 0);
     rootApzc = ApzcOf(root);
   }
 
@@ -119,7 +119,7 @@ protected:
     SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1);
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-    manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+    manager->UpdateHitTestingTree(0, root, false, 0, 0);
   }
 
   void CreateBug1117712LayerTree() {
@@ -156,7 +156,7 @@ protected:
     layers[3]->SetEventRegions(regions);
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-    manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+    manager->UpdateHitTestingTree(0, root, false, 0, 0);
   }
 };
 
@@ -229,7 +229,7 @@ TEST_F(APZEventRegionsTester, Obscuration) {
   CreateObscuringLayerTree();
   ScopedLayerTreeRegistration registration(manager, 0, root, mcc);
 
-  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+  manager->UpdateHitTestingTree(0, root, false, 0, 0);
 
   TestAsyncPanZoomController* parent = ApzcOf(layers[1]);
   TestAsyncPanZoomController* child = ApzcOf(layers[2]);

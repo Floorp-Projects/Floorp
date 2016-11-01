@@ -37,6 +37,5 @@ var test = Task.async(function* () {
   is(packet.frame.where.line, 3,
      "Should have stopped at line 3 (debugger statement), not line 2 (other tab's breakpoint)");
 
-  yield teardown(panel1);
   yield resumeDebuggerThenCloseAndFinish(panel2);
 });

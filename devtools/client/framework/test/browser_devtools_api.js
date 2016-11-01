@@ -71,7 +71,7 @@ function runTests1(aTab) {
 
   gDevTools.showToolbox(target, toolId1).then(function (toolbox) {
     is(toolbox.target, target, "toolbox target is correct");
-    is(toolbox._host.hostTab, gBrowser.selectedTab, "toolbox host is correct");
+    is(toolbox.target.tab, gBrowser.selectedTab, "targeted tab is correct");
 
     ok(events["init"], "init event fired");
     ok(events["ready"], "ready event fired");
@@ -139,7 +139,7 @@ function runTests2() {
 
   gDevTools.showToolbox(target, toolId2).then(function (toolbox) {
     is(toolbox.target, target, "toolbox target is correct");
-    is(toolbox._host.hostTab, gBrowser.selectedTab, "toolbox host is correct");
+    is(toolbox.target.tab, gBrowser.selectedTab, "targeted tab is correct");
 
     ok(events["init"], "init event fired");
     ok(events["build"], "build event fired");

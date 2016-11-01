@@ -8,7 +8,7 @@
 
 /* global XPCNativeWrapper */
 
-var { Ci, Cu } = require("chrome");
+var { Ci, Cu, Cr } = require("chrome");
 var Services = require("Services");
 var { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 var promise = require("promise");
@@ -2495,9 +2495,27 @@ DebuggerProgressListener.prototype = {
       this._tabActor._willNavigate(window, newURI, request);
     }
     if (isWindow && isStop) {
-      // Somewhat equivalent of load event.
-      // (window.document.readyState == complete)
-      this._tabActor._navigate(window);
+      // Don't dispatch "navigate" event just yet when there is a redirect to
+      // about:neterror page.
+      if (request.status != Cr.NS_OK) {
+        // Instead, listen for DOMContentLoaded as about:neterror is loaded
+        // with LOAD_BACKGROUND flags and never dispatches load event.
+        // That may be the same reason why there is no onStateChange event
+        // for about:neterror loads.
+        let handler = getDocShellChromeEventHandler(progress);
+        let onLoad = evt => {
+          // Ignore events from iframes
+          if (evt.target == window.document) {
+            handler.removeEventListener("DOMContentLoaded", onLoad, true);
+            this._tabActor._navigate(window);
+          }
+        };
+        handler.addEventListener("DOMContentLoaded", onLoad, true);
+      } else {
+        // Somewhat equivalent of load event.
+        // (window.document.readyState == complete)
+        this._tabActor._navigate(window);
+      }
     }
   }, "DebuggerProgressListener.prototype.onStateChange")
 };

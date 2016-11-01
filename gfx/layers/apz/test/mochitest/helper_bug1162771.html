@@ -32,8 +32,8 @@ function* test(testDriver) {
     testDriver();
   };
 
-  yield synthesizeNativeTouch(v, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
-  yield synthesizeNativeTouch(v, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
+  yield synthesizeNativeTouch(v, 25, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
+  yield synthesizeNativeTouch(v, 25, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
   ok(v._gotTouchend, 'Touchend was received on video element');
 
   yield synthesizeNativeTouch(a, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);

@@ -121,8 +121,11 @@ public:
   using nsIConstraintValidation::Validity;
   using nsGenericHTMLFormElementWithState::GetForm;
 
+  enum class FromClone { no, yes };
+
   HTMLInputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
-                   mozilla::dom::FromParser aFromParser);
+                   mozilla::dom::FromParser aFromParser,
+                   FromClone aFromClone = FromClone::no);
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLInputElement, input)
 
@@ -1056,7 +1059,11 @@ protected:
   /**
    * Returns if the step attribute apply for the current type.
    */
-  bool DoesStepApply() const { return DoesMinMaxApply(); }
+  bool DoesStepApply() const
+  {
+    // TODO: this is temporary until bug 888331 is fixed.
+    return DoesMinMaxApply() && mType != NS_FORM_INPUT_DATETIME_LOCAL;
+  }
 
   /**
    * Returns if stepDown and stepUp methods apply for the current type.
@@ -1066,7 +1073,11 @@ protected:
   /**
    * Returns if valueAsNumber attribute applies for the current type.
    */
-  bool DoesValueAsNumberApply() const { return DoesMinMaxApply(); }
+  bool DoesValueAsNumberApply() const
+  {
+    // TODO: this is temporary until bug 888331 is fixed.
+    return DoesMinMaxApply() && mType != NS_FORM_INPUT_DATETIME_LOCAL;
+  }
 
   /**
    * Returns if autocomplete attribute applies for the current type.
@@ -1550,7 +1561,7 @@ protected:
   bool                     mChecked             : 1;
   bool                     mHandlingSelectEvent : 1;
   bool                     mShouldInitChecked   : 1;
-  bool                     mParserCreating      : 1;
+  bool                     mDoneCreating        : 1;
   bool                     mInInternalActivate  : 1;
   bool                     mCheckedIsToggled    : 1;
   bool                     mIndeterminate       : 1;

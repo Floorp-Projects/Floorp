@@ -1,8 +1,0 @@
-{
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "itemsDetected.json",
-  "title": "Definition: Items",
-  "description": "True when the object is an array of objects (Sections 3.2.7 and 3.2.8).",
-  "type": "array",
-  "minItems": 1
-}

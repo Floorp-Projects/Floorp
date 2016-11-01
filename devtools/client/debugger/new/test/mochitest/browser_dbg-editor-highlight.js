@@ -34,7 +34,6 @@ add_task(function* () {
 
   // Test jumping to a line in a source that exists but hasn't been
   // loaded yet.
-  yield waitForSources(dbg, "simple1.js");
   selectSource(dbg, "simple1.js", 6);
 
   // Make sure the source is in the loading state, wait for it to be

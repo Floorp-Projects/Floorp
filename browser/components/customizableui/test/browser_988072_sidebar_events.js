@@ -137,7 +137,7 @@ function add_sidebar_task(description, setup, teardown) {
 add_sidebar_task(
   "Check that a sidebar that uses a command event listener works",
 function*() {
-  gTestSidebarItem.addEventListener("command", sawEvent);
+  gTestSidebarItem.addEventListener("command", window.sawEvent);
 }, function*() {
   checkExpectedEvents({ command: 1 });
 });
@@ -145,7 +145,7 @@ function*() {
 add_sidebar_task(
   "Check that a sidebar that uses a click event listener works",
 function*() {
-  gTestSidebarItem.addEventListener("click", sawEvent);
+  gTestSidebarItem.addEventListener("click", window.sawEvent);
 }, function*() {
   checkExpectedEvents({ click: 1 });
 });
@@ -153,8 +153,8 @@ function*() {
 add_sidebar_task(
   "Check that a sidebar that uses both click and command event listeners works",
 function*() {
-  gTestSidebarItem.addEventListener("command", sawEvent);
-  gTestSidebarItem.addEventListener("click", sawEvent);
+  gTestSidebarItem.addEventListener("command", window.sawEvent);
+  gTestSidebarItem.addEventListener("click", window.sawEvent);
 }, function*() {
   checkExpectedEvents({ command: 1, click: 1 });
 });
@@ -162,7 +162,7 @@ function*() {
 add_sidebar_task(
   "Check that a sidebar that uses an oncommand attribute works",
 function*() {
-  gTestSidebarItem.setAttribute("oncommand", "sawEvent(event, true)");
+  gTestSidebarItem.setAttribute("oncommand", "window.sawEvent(event, true)");
 }, function*() {
   checkExpectedEvents({ oncommand: 1 });
 });
@@ -170,7 +170,7 @@ function*() {
 add_sidebar_task(
   "Check that a sidebar that uses an onclick attribute works",
 function*() {
-  gTestSidebarItem.setAttribute("onclick", "sawEvent(event, true)");
+  gTestSidebarItem.setAttribute("onclick", "window.sawEvent(event, true)");
 }, function*() {
   checkExpectedEvents({ onclick: 1 });
 });
@@ -178,8 +178,8 @@ function*() {
 add_sidebar_task(
   "Check that a sidebar that uses both onclick and oncommand attributes works",
 function*() {
-  gTestSidebarItem.setAttribute("onclick", "sawEvent(event, true)");
-  gTestSidebarItem.setAttribute("oncommand", "sawEvent(event, true)");
+  gTestSidebarItem.setAttribute("onclick", "window.sawEvent(event, true)");
+  gTestSidebarItem.setAttribute("oncommand", "window.sawEvent(event, true)");
 }, function*() {
   checkExpectedEvents({ onclick: 1, oncommand: 1 });
 });
@@ -187,8 +187,8 @@ function*() {
 add_sidebar_task(
   "Check that a sidebar that uses an onclick attribute and a command listener works",
 function*() {
-  gTestSidebarItem.setAttribute("onclick", "sawEvent(event, true)");
-  gTestSidebarItem.addEventListener("command", sawEvent);
+  gTestSidebarItem.setAttribute("onclick", "window.sawEvent(event, true)");
+  gTestSidebarItem.addEventListener("command", window.sawEvent);
 }, function*() {
   checkExpectedEvents({ onclick: 1, command: 1 });
 });
@@ -196,8 +196,8 @@ function*() {
 add_sidebar_task(
   "Check that a sidebar that uses an oncommand attribute and a click listener works",
 function*() {
-  gTestSidebarItem.setAttribute("oncommand", "sawEvent(event, true)");
-  gTestSidebarItem.addEventListener("click", sawEvent);
+  gTestSidebarItem.setAttribute("oncommand", "window.sawEvent(event, true)");
+  gTestSidebarItem.addEventListener("click", window.sawEvent);
 }, function*() {
   checkExpectedEvents({ click: 1, oncommand: 1 });
 });
@@ -205,8 +205,8 @@ function*() {
 add_sidebar_task(
   "A sidebar with both onclick attribute and click listener sees only one event :(",
 function*() {
-  gTestSidebarItem.setAttribute("onclick", "sawEvent(event, true)");
-  gTestSidebarItem.addEventListener("click", sawEvent);
+  gTestSidebarItem.setAttribute("onclick", "window.sawEvent(event, true)");
+  gTestSidebarItem.addEventListener("click", window.sawEvent);
 }, function*() {
   checkExpectedEvents({ onclick: 1 });
 });
@@ -214,8 +214,8 @@ function*() {
 add_sidebar_task(
   "A sidebar with both oncommand attribute and command listener sees only one event :(",
 function*() {
-  gTestSidebarItem.setAttribute("oncommand", "sawEvent(event, true)");
-  gTestSidebarItem.addEventListener("command", sawEvent);
+  gTestSidebarItem.setAttribute("oncommand", "window.sawEvent(event, true)");
+  gTestSidebarItem.addEventListener("command", window.sawEvent);
 }, function*() {
   checkExpectedEvents({ oncommand: 1 });
 });
@@ -225,7 +225,7 @@ add_sidebar_task(
 function*() {
   let broadcaster = document.createElement("broadcaster");
   broadcaster.setAttribute("id", "testbroadcaster");
-  broadcaster.setAttribute("oncommand", "sawEvent(event, true)");
+  broadcaster.setAttribute("oncommand", "window.sawEvent(event, true)");
   broadcaster.setAttribute("label", "Test Sidebar");
   document.getElementById("mainBroadcasterSet").appendChild(broadcaster);
 
@@ -240,7 +240,7 @@ add_sidebar_task(
 function*() {
   let broadcaster = document.createElement("broadcaster");
   broadcaster.setAttribute("id", "testbroadcaster");
-  broadcaster.setAttribute("onclick", "sawEvent(event, true)");
+  broadcaster.setAttribute("onclick", "window.sawEvent(event, true)");
   broadcaster.setAttribute("label", "Test Sidebar");
   document.getElementById("mainBroadcasterSet").appendChild(broadcaster);
 
@@ -255,8 +255,8 @@ add_sidebar_task(
 function*() {
   let broadcaster = document.createElement("broadcaster");
   broadcaster.setAttribute("id", "testbroadcaster");
-  broadcaster.setAttribute("onclick", "sawEvent(event, true)");
-  broadcaster.setAttribute("oncommand", "sawEvent(event, true)");
+  broadcaster.setAttribute("onclick", "window.sawEvent(event, true)");
+  broadcaster.setAttribute("oncommand", "window.sawEvent(event, true)");
   broadcaster.setAttribute("label", "Test Sidebar");
   document.getElementById("mainBroadcasterSet").appendChild(broadcaster);
 
@@ -271,12 +271,12 @@ add_sidebar_task(
 function*() {
   let broadcaster = document.createElement("broadcaster");
   broadcaster.setAttribute("id", "testbroadcaster");
-  broadcaster.setAttribute("oncommand", "sawEvent(event, true)");
+  broadcaster.setAttribute("oncommand", "window.sawEvent(event, true)");
   broadcaster.setAttribute("label", "Test Sidebar");
   document.getElementById("mainBroadcasterSet").appendChild(broadcaster);
 
   gTestSidebarItem.setAttribute("observes", "testbroadcaster");
-  gTestSidebarItem.addEventListener("click", sawEvent);
+  gTestSidebarItem.addEventListener("click", window.sawEvent);
 }, function*() {
   checkExpectedEvents({ click: 1, oncommand: 1 });
   document.getElementById("testbroadcaster").remove();
@@ -287,12 +287,12 @@ add_sidebar_task(
 function*() {
   let broadcaster = document.createElement("broadcaster");
   broadcaster.setAttribute("id", "testbroadcaster");
-  broadcaster.setAttribute("onclick", "sawEvent(event, true)");
+  broadcaster.setAttribute("onclick", "window.sawEvent(event, true)");
   broadcaster.setAttribute("label", "Test Sidebar");
   document.getElementById("mainBroadcasterSet").appendChild(broadcaster);
 
   gTestSidebarItem.setAttribute("observes", "testbroadcaster");
-  gTestSidebarItem.addEventListener("command", sawEvent);
+  gTestSidebarItem.addEventListener("command", window.sawEvent);
 }, function*() {
   checkExpectedEvents({ onclick: 1, command: 1 });
   document.getElementById("testbroadcaster").remove();
@@ -304,12 +304,12 @@ add_sidebar_task(
 function*() {
   let broadcaster = document.createElement("broadcaster");
   broadcaster.setAttribute("id", "testbroadcaster");
-  broadcaster.setAttribute("onclick", "sawEvent(event, true)");
+  broadcaster.setAttribute("onclick", "window.sawEvent(event, true)");
   broadcaster.setAttribute("label", "Test Sidebar");
   document.getElementById("mainBroadcasterSet").appendChild(broadcaster);
 
   gTestSidebarItem.setAttribute("observes", "testbroadcaster");
-  gTestSidebarItem.addEventListener("click", sawEvent);
+  gTestSidebarItem.addEventListener("click", window.sawEvent);
 }, function*() {
   checkExpectedEvents({ onclick: 1 });
   document.getElementById("testbroadcaster").remove();
@@ -321,12 +321,12 @@ add_sidebar_task(
 function*() {
   let broadcaster = document.createElement("broadcaster");
   broadcaster.setAttribute("id", "testbroadcaster");
-  broadcaster.setAttribute("oncommand", "sawEvent(event, true)");
+  broadcaster.setAttribute("oncommand", "window.sawEvent(event, true)");
   broadcaster.setAttribute("label", "Test Sidebar");
   document.getElementById("mainBroadcasterSet").appendChild(broadcaster);
 
   gTestSidebarItem.setAttribute("observes", "testbroadcaster");
-  gTestSidebarItem.addEventListener("command", sawEvent);
+  gTestSidebarItem.addEventListener("command", window.sawEvent);
 }, function*() {
   checkExpectedEvents({ oncommand: 1 });
   document.getElementById("testbroadcaster").remove();
@@ -338,7 +338,7 @@ function*() {
   let command = document.createElement("command");
   command.setAttribute("id", "testcommand");
   document.getElementById("mainCommandSet").appendChild(command);
-  command.addEventListener("command", sawEvent);
+  command.addEventListener("command", window.sawEvent);
 
   gTestSidebarItem.setAttribute("command", "testcommand");
 }, function*() {
@@ -351,7 +351,7 @@ add_sidebar_task(
 function*() {
   let command = document.createElement("command");
   command.setAttribute("id", "testcommand");
-  command.setAttribute("oncommand", "sawEvent(event, true)");
+  command.setAttribute("oncommand", "window.sawEvent(event, true)");
   document.getElementById("mainCommandSet").appendChild(command);
 
   gTestSidebarItem.setAttribute("command", "testcommand");
@@ -365,9 +365,9 @@ add_sidebar_task("Check that a sidebar that uses a command element with a " +
 function*() {
   let command = document.createElement("command");
   command.setAttribute("id", "testcommand");
-  command.setAttribute("oncommand", "sawEvent(event, true)");
+  command.setAttribute("oncommand", "window.sawEvent(event, true)");
   document.getElementById("mainCommandSet").appendChild(command);
-  command.addEventListener("command", sawEvent);
+  command.addEventListener("command", window.sawEvent);
 
   gTestSidebarItem.setAttribute("command", "testcommand");
 }, function*() {
@@ -380,12 +380,12 @@ add_sidebar_task(
 function*() {
   let command = document.createElement("command");
   command.setAttribute("id", "testcommand");
-  command.setAttribute("oncommand", "sawEvent(event, true)");
+  command.setAttribute("oncommand", "window.sawEvent(event, true)");
   document.getElementById("mainCommandSet").appendChild(command);
-  command.addEventListener("command", sawEvent);
+  command.addEventListener("command", window.sawEvent);
 
   gTestSidebarItem.setAttribute("command", "testcommand");
-  gTestSidebarItem.addEventListener("click", sawEvent);
+  gTestSidebarItem.addEventListener("click", window.sawEvent);
 }, function*() {
   checkExpectedEvents({ click: 1, command: 1, oncommand: 1 });
   document.getElementById("testcommand").remove();

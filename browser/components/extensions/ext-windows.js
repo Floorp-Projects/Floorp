@@ -39,12 +39,16 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
         let lastOnFocusChangedWindowId;
 
         let listener = event => {
-          let window = WindowManager.topWindow;
-          let windowId = window ? WindowManager.getId(window) : WindowManager.WINDOW_ID_NONE;
-          if (windowId !== lastOnFocusChangedWindowId) {
-            fire(windowId);
-            lastOnFocusChangedWindowId = windowId;
-          }
+          // Wait a tick to avoid firing a superfluous WINDOW_ID_NONE
+          // event when switching focus between two Firefox windows.
+          Promise.resolve().then(() => {
+            let window = Services.focus.activeWindow;
+            let windowId = window ? WindowManager.getId(window) : WindowManager.WINDOW_ID_NONE;
+            if (windowId !== lastOnFocusChangedWindowId) {
+              fire(windowId);
+              lastOnFocusChangedWindowId = windowId;
+            }
+          });
         };
         AllWindowEvents.addListener("focus", listener);
         AllWindowEvents.addListener("blur", listener);
@@ -113,19 +117,19 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
           }
           createData.incognito = incognito;
 
-          args.appendElement(tab, /*weak =*/ false);
+          args.appendElement(tab, /* weak = */ false);
         } else if (createData.url !== null) {
           if (Array.isArray(createData.url)) {
-            let array = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
+            let array = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
             for (let url of createData.url) {
-              array.AppendElement(mkstr(url));
+              array.appendElement(mkstr(url), /* weak = */ false);
             }
-            args.appendElement(array, /*weak =*/ false);
+            args.appendElement(array, /* weak = */ false);
           } else {
-            args.appendElement(mkstr(createData.url), /*weak =*/ false);
+            args.appendElement(mkstr(createData.url), /* weak = */ false);
           }
         } else {
-          args.appendElement(mkstr(aboutNewTabService.newTabURL), /*weak =*/ false);
+          args.appendElement(mkstr(aboutNewTabService.newTabURL), /* weak = */ false);
         }
 
         let features = ["chrome"];

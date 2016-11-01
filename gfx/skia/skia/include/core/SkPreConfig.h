@@ -24,14 +24,14 @@
         #include "TargetConditionals.h"
     #endif
 
-    #if defined(WIN32) || defined(__SYMBIAN32__)
+    #if defined(_WIN32) || defined(__SYMBIAN32__)
         #define SK_BUILD_FOR_WIN32
-    #elif defined(ANDROID)
+    #elif defined(ANDROID) || defined(__ANDROID__)
         #define SK_BUILD_FOR_ANDROID
     #elif defined(linux) || defined(__linux) || defined(__FreeBSD__) || \
           defined(__OpenBSD__) || defined(__sun) || defined(__NetBSD__) || \
-          defined(__DragonFly__) || defined(__GLIBC__) || defined(__GNU__) || \
-          defined(__unix__)
+          defined(__DragonFly__) || defined(__Fuchsia__) || \
+          defined(__GLIBC__) || defined(__GNU__) || defined(__unix__)
         #define SK_BUILD_FOR_UNIX
     #elif TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
         #define SK_BUILD_FOR_IOS
@@ -52,14 +52,6 @@
 
 //////////////////////////////////////////////////////////////////////
 
-#if !defined(SK_DEBUG) && !defined(SK_RELEASE)
-    #ifdef NDEBUG
-        #define SK_RELEASE
-    #else
-        #define SK_DEBUG
-    #endif
-#endif
-
 #ifdef SK_BUILD_FOR_WIN32
     #if !defined(SK_RESTRICT)
         #define SK_RESTRICT __restrict
@@ -68,8 +60,6 @@
         #define SK_WARN_UNUSED_RESULT
     #endif
 #endif
-
-//////////////////////////////////////////////////////////////////////
 
 #if !defined(SK_RESTRICT)
     #define SK_RESTRICT __restrict__
@@ -118,8 +108,12 @@
 #define SK_CPU_SSE_LEVEL_AVX      51
 #define SK_CPU_SSE_LEVEL_AVX2     52
 
-#ifdef SK_BUILD_FOR_IOS
-    #define SK_CPU_SSE_LEVEL 0  // We're tired of fighting with opts/ and iOS simulator.
+// When targetting iOS and using gyp to generate the build files, it is not
+// possible to select files to build depending on the architecture (i.e. it
+// is not possible to use hand optimized assembly implementation). In that
+// configuration SK_BUILD_NO_OPTS is defined. Remove optimisation then.
+#ifdef SK_BUILD_NO_OPTS
+    #define SK_CPU_SSE_LEVEL 0
 #endif
 
 // Are we in GCC?
@@ -190,15 +184,19 @@
     #endif
 #endif
 
-// Disable ARM64 optimizations for iOS due to complications regarding gyp and iOS.
-#if defined(__aarch64__) && !defined(SK_BUILD_FOR_IOS)
+#if defined(__aarch64__) && !defined(SK_BUILD_NO_OPTS)
     #define SK_CPU_ARM64
 #endif
 
 // All 64-bit ARM chips have NEON.  Many 32-bit ARM chips do too.
-// TODO: Why don't we want NEON on iOS?
-#if !defined(SK_ARM_HAS_NEON) && !defined(SK_BUILD_FOR_IOS) && (defined(__ARM_NEON__) || defined(__ARM_NEON))
+#if !defined(SK_ARM_HAS_NEON) && !defined(SK_BUILD_NO_OPTS) && (defined(__ARM_NEON__) || defined(__ARM_NEON))
     #define SK_ARM_HAS_NEON
+#endif
+
+// Really this __APPLE__ check shouldn't be necessary, but it seems that Apple's Clang defines
+// __ARM_FEATURE_CRC32 for -arch arm64, even though their chips don't support those instructions!
+#if defined(__ARM_FEATURE_CRC32) && !defined(__APPLE__)
+    #define SK_ARM_HAS_CRC32
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -207,18 +205,20 @@
     #define SKIA_IMPLEMENTATION 0
 #endif
 
-#if defined(SKIA_DLL)
-    #if defined(WIN32)
-        #if SKIA_IMPLEMENTATION
-            #define SK_API __declspec(dllexport)
+#if !defined(SK_API)
+    #if defined(SKIA_DLL)
+        #if defined(_MSC_VER)
+            #if SKIA_IMPLEMENTATION
+                #define SK_API __declspec(dllexport)
+            #else
+                #define SK_API __declspec(dllimport)
+            #endif
         #else
-            #define SK_API __declspec(dllimport)
+            #define SK_API __attribute__((visibility("default")))
         #endif
     #else
-        #define SK_API __attribute__((visibility("default")))
+        #define SK_API
     #endif
-#else
-    #define SK_API
 #endif
 
 //////////////////////////////////////////////////////////////////////

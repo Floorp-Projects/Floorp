@@ -244,7 +244,7 @@ function plInit() {
                      // to this reinitialization on the switch.
                      if (browserWindow.gMultiProcessBrowser) {
                        if (!firstPageCanLoadAsRemote())
-                         browserWindow.XULBrowserWindow.forceInitialBrowserNonRemote();
+                         browserWindow.XULBrowserWindow.forceInitialBrowserNonRemote(null);
                        // Implicit else: initial browser in e10s is remote by default.
                      }
 

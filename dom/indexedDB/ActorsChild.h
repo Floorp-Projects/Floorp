@@ -29,6 +29,10 @@ class nsIEventTarget;
 struct nsID;
 struct PRThread;
 
+namespace JS {
+struct WasmModule;
+} // namespace JS
+
 namespace mozilla {
 namespace ipc {
 
@@ -640,7 +644,15 @@ class BackgroundRequestChild final
   friend class BackgroundVersionChangeTransactionChild;
   friend IDBTransaction;
 
+  class PreprocessHelper;
+
   RefPtr<IDBTransaction> mTransaction;
+  nsTArray<RefPtr<PreprocessHelper>> mPreprocessHelpers;
+  nsTArray<nsTArray<RefPtr<JS::WasmModule>>> mModuleSets;
+  uint32_t mRunningPreprocessHelpers;
+  uint32_t mCurrentModuleSetIndex;
+  nsresult mPreprocessResultCode;
+  bool mGetAll;
 
 private:
   // Only created by IDBTransaction.
@@ -650,6 +662,19 @@ private:
   // Only destroyed by BackgroundTransactionChild or
   // BackgroundVersionChangeTransactionChild.
   ~BackgroundRequestChild();
+
+  void
+  MaybeSendContinue();
+
+  void
+  OnPreprocessFinished(uint32_t aModuleSetIndex,
+                       nsTArray<RefPtr<JS::WasmModule>>& aModuleSet);
+
+  void
+  OnPreprocessFailed(uint32_t aModuleSetIndex, nsresult aErrorCode);
+
+  const nsTArray<RefPtr<JS::WasmModule>>*
+  GetNextModuleSet(const StructuredCloneReadInfo& aInfo);
 
   void
   HandleResponse(nsresult aResponse);
@@ -672,12 +697,21 @@ private:
   void
   HandleResponse(uint64_t aResponse);
 
+  nsresult
+  HandlePreprocess(const WasmModulePreprocessInfo& aPreprocessInfo);
+
+  nsresult
+  HandlePreprocess(const nsTArray<WasmModulePreprocessInfo>& aPreprocessInfos);
+
   // IPDL methods are only called by IPDL.
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
   Recv__delete__(const RequestResponse& aResponse) override;
+
+  virtual bool
+  RecvPreprocess(const PreprocessParams& aParams) override;
 };
 
 class BackgroundCursorChild final

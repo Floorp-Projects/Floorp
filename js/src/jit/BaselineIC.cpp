@@ -2586,7 +2586,7 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
             {
                 JitSpew(JitSpew_BaselineIC,
                         "  Generating SetElem_DenseOrUnboxedArrayAdd stub "
-                        "(shape=%p, group=%p, protoDepth=%u)",
+                        "(shape=%p, group=%p, protoDepth=%" PRIuSIZE ")",
                         shape.get(), group.get(), protoDepth);
                 ICSetElemDenseOrUnboxedArrayAddCompiler compiler(cx, obj, protoDepth);
                 ICUpdatedStub* newStub = compiler.getStub(compiler.getStubSpace(outerScript));

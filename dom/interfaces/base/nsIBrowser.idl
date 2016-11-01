@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include "nsISupports.idl"
+
+interface nsIDOMElement;
+
+[scriptable, uuid(14e5a0cb-e223-4202-95e8-fe53275193ea)]
+interface nsIBrowser : nsISupports
+{
+  /**
+   * Gets a related browser for a given browser (if any). If this exists, then
+   * we should attempt to use the same content parent as its frameLoader
+   * for any new tab parents.
+   */
+  readonly attribute nsIDOMElement relatedBrowser;
+
+  /*
+   * Called by the child to inform the parent that links are dropped into
+   * content area.
+   *
+   * @param linksCount length of links
+   * @param links a flat array of url, name, and type for each link
+   */
+  void dropLinks(in unsigned long linksCount,
+                 [array, size_is(linksCount)] in wstring links);
+
+  /**
+   * Swapping of frameloaders are usually initiated from a frameloader owner
+   * or other components operating on frameloader owners. This is done by calling
+   * swapFrameLoaders at MozFrameLoaderOwner webidl interface.
+   *
+   * This function aimed to provide the other way around -
+   * if the swapping is initiated from frameloader itself or other platform level
+   * components, it uses this interface to delegate the swapping request to
+   * frameloader owners and ask them to re-initiate frameloader swapping, so that
+   * frameloader owners such as <xul:browser> can setup their properties and /
+   * or listeners properly on swapping.
+   */
+  void swapBrowsers(in nsIBrowser aOtherBrowser);
+
+  /**
+   * Close the browser (usually means to remove a tab).
+   */
+  void closeBrowser();
+};

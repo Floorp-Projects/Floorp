@@ -105,6 +105,10 @@ const walkerSpec = generateActorSpec({
       type: "pickerNodePicked",
       node: Arg(0, "disconnectedNode")
     },
+    "picker-node-previewed": {
+      type: "pickerNodePreviewed",
+      node: Arg(0, "disconnectedNode")
+    },
     "picker-node-hovered": {
       type: "pickerNodeHovered",
       node: Arg(0, "disconnectedNode")

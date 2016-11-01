@@ -219,7 +219,7 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     virtual bool toObjectVariant(JSContext* cx, JSObject* obj, ObjectVariant* objVarp) {
         return WrapperOwner::toObjectVariant(cx, obj, objVarp);
     }
-    virtual JSObject* fromObjectVariant(JSContext* cx, ObjectVariant objVar) {
+    virtual JSObject* fromObjectVariant(JSContext* cx, const ObjectVariant& objVar) {
         return WrapperOwner::fromObjectVariant(cx, objVar);
     }
 };

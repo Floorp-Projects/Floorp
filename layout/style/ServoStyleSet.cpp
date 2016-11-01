@@ -125,34 +125,16 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
 {
   MOZ_ASSERT(aTextNode && aTextNode->IsNodeOfType(nsINode::eTEXT));
   MOZ_ASSERT(aTextNode->GetParent());
+  MOZ_ASSERT(aParentContext);
 
-  nsIContent* parent = aTextNode->GetParent();
-
-  // If this text node is a child of a generated content node, it'll never have
-  // been traversed by Servo, and thus isn't styled.
-  //
-  // We inherit the style from the parent here, but also taking into account
-  // that only the frame of the parent has the correct style, given we take it
-  // from the map, and the content hasn't also being traversed from Servo.
-  //
-  // Otherwise, we rely on the fact that this text node should have been
-  // traversed by servo to just grab the computed values as appropriate.
-  //
-  // TODO: We might want to just do this and skip styling nodes entirely from
-  // Servo. This would accidentally fix the issue of having to stash
-  // change-hints from children in the parent element just because of inherited
-  // style struct changes.
-  RefPtr<ServoComputedValues> computedValues;
-  if (parent->IsGeneratedContentContainerForBefore() ||
-      parent->IsGeneratedContentContainerForAfter()) {
-    MOZ_ASSERT(aParentContext);
-    const ServoComputedValues* parentComputedValues =
-      aParentContext->StyleSource().AsServoComputedValues();
-    computedValues =
-      Servo_ComputedValues_Inherit(parentComputedValues).Consume();
-  } else {
-    computedValues = Servo_ComputedValues_Get(aTextNode).Consume();
-  }
+  // Gecko expects text node style contexts to be like elements that match no
+  // rules: inherit the inherit structs, reset the reset structs. This is cheap
+  // enough to do on the main thread, which means that the parallel style system
+  // can avoid worrying about text nodes.
+  const ServoComputedValues* parentComputedValues =
+    aParentContext->StyleSource().AsServoComputedValues();
+  RefPtr<ServoComputedValues> computedValues =
+    Servo_ComputedValues_Inherit(parentComputedValues).Consume();
 
   return GetContext(computedValues.forget(), aParentContext,
                     nsCSSAnonBoxes::mozText, CSSPseudoElementType::AnonBox);

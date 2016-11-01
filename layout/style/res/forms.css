@@ -29,6 +29,11 @@
   /* Flex container */
   flex-direction: inherit;
   flex-wrap: inherit;
+  /* -webkit-box container (aliased from -webkit versions to -moz versions) */
+  -moz-box-orient: inherit;
+  -moz-box-direction: inherit;
+  -moz-box-pack: inherit;
+  -moz-box-align: inherit;
   /* Grid container */
   grid-auto-columns: inherit;
   grid-auto-rows: inherit;
@@ -588,10 +593,15 @@ input[type="checkbox"]:disabled:hover:active {
   cursor: inherit;
 }
 
+% On Mac, the native theme takes care of this.
+% See nsNativeThemeCocoa::ThemeDrawsFocusForWidget.
+%ifndef XP_MACOSX
 input[type="checkbox"]:-moz-focusring,
 input[type="radio"]:-moz-focusring {
-  border-style: groove !important;
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
 }
+%endif
 
 input[type="checkbox"]:hover:active,
 input[type="radio"]:hover:active {
@@ -672,6 +682,11 @@ button {
   /* Flex container */
   flex-direction: inherit;
   flex-wrap: inherit;
+  /* -webkit-box container (aliased from -webkit versions to -moz versions) */
+  -moz-box-orient: inherit;
+  -moz-box-direction: inherit;
+  -moz-box-pack: inherit;
+  -moz-box-align: inherit;
   /* Grid container */
   grid-auto-columns: inherit;
   grid-auto-rows: inherit;

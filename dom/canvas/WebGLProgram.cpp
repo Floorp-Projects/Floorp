@@ -779,21 +779,19 @@ WebGLProgram::GetActiveUniformBlockName(GLuint uniformBlockIndex, nsAString& ret
     retval.Assign(NS_ConvertASCIItoUTF16(blockInfo->mBaseUserName));
 }
 
-void
-WebGLProgram::GetActiveUniformBlockParam(GLuint uniformBlockIndex, GLenum pname,
-                                         dom::Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval) const
+JS::Value
+WebGLProgram::GetActiveUniformBlockParam(GLuint uniformBlockIndex, GLenum pname) const
 {
-    retval.SetNull();
     if (!IsLinked()) {
         mContext->ErrorInvalidOperation("getActiveUniformBlockParameter: `program` must be linked.");
-        return;
+        return JS::NullValue();
     }
 
     const webgl::LinkedProgramInfo* linkInfo = LinkInfo();
     GLuint uniformBlockCount = (GLuint)linkInfo->uniformBlocks.size();
     if (uniformBlockIndex >= uniformBlockCount) {
         mContext->ErrorInvalidValue("getActiveUniformBlockParameter: index %u invalid.", uniformBlockIndex);
-        return;
+        return JS::NullValue();
     }
 
     gl::GLContext* gl = mContext->GL();
@@ -803,33 +801,34 @@ WebGLProgram::GetActiveUniformBlockParam(GLuint uniformBlockIndex, GLenum pname,
     case LOCAL_GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER:
     case LOCAL_GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER:
         gl->fGetActiveUniformBlockiv(mGLName, uniformBlockIndex, pname, &param);
-        retval.SetValue().SetAsBoolean() = (param != 0);
-        return;
+        return JS::BooleanValue(bool(param));
 
     case LOCAL_GL_UNIFORM_BLOCK_BINDING:
     case LOCAL_GL_UNIFORM_BLOCK_DATA_SIZE:
     case LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS:
         gl->fGetActiveUniformBlockiv(mGLName, uniformBlockIndex, pname, &param);
-        retval.SetValue().SetAsUnsignedLong() = param;
-        return;
+        return JS::NumberValue(param);
+
+    default:
+        MOZ_CRASH("bad `pname`.");
     }
 }
 
-void
+JS::Value
 WebGLProgram::GetActiveUniformBlockActiveUniforms(JSContext* cx, GLuint uniformBlockIndex,
-                                                  dom::Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval,
-                                                  ErrorResult& rv) const
+                                                  ErrorResult* const out_error) const
 {
+    const char funcName[] = "getActiveUniformBlockParameter";
     if (!IsLinked()) {
-        mContext->ErrorInvalidOperation("getActiveUniformBlockParameter: `program` must be linked.");
-        return;
+        mContext->ErrorInvalidOperation("%s: `program` must be linked.", funcName);
+        return JS::NullValue();
     }
 
     const webgl::LinkedProgramInfo* linkInfo = LinkInfo();
     GLuint uniformBlockCount = (GLuint)linkInfo->uniformBlocks.size();
     if (uniformBlockIndex >= uniformBlockCount) {
-        mContext->ErrorInvalidValue("getActiveUniformBlockParameter: index %u invalid.", uniformBlockIndex);
-        return;
+        mContext->ErrorInvalidValue("%s: Index %u invalid.", funcName, uniformBlockIndex);
+        return JS::NullValue();
     }
 
     gl::GLContext* gl = mContext->GL();
@@ -840,8 +839,8 @@ WebGLProgram::GetActiveUniformBlockActiveUniforms(JSContext* cx, GLuint uniformB
     JS::RootedObject obj(cx, dom::Uint32Array::Create(cx, mContext, activeUniformCount,
                                                       nullptr));
     if (!obj) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        return;
+        *out_error = NS_ERROR_OUT_OF_MEMORY;
+        return JS::NullValue();
     }
 
     dom::Uint32Array result;
@@ -852,8 +851,7 @@ WebGLProgram::GetActiveUniformBlockActiveUniforms(JSContext* cx, GLuint uniformB
                                  LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES,
                                  (GLint*)result.Data());
 
-    inited = retval.SetValue().SetAsUint32Array().Init(obj);
-    MOZ_ASSERT(inited);
+    return JS::ObjectValue(*obj);
 }
 
 already_AddRefed<WebGLUniformLocation>

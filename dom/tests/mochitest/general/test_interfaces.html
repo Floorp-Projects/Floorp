@@ -78,9 +78,9 @@ var ecmaGlobals =
     "Reflect",
     "RegExp",
     "Set",
-    {name: "SharedArrayBuffer", nightly: true},
+    {name: "SharedArrayBuffer", release: false},
     {name: "SIMD", nightly: true},
-    {name: "Atomics", nightly: true},
+    {name: "Atomics", release: false},
     "StopIteration",
     "String",
     "Symbol",
@@ -208,6 +208,8 @@ var interfaceNamesInGlobalScope =
     "Comment",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "CompositionEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ConstantSourceNode",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Controllers",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -563,6 +565,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "HTMLVideoElement",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "IdleDeadline",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "IDBCursor",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "IDBCursorWithValue",
@@ -608,6 +612,10 @@ var interfaceNamesInGlobalScope =
     "InputEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "InstallTrigger",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IntersectionObserver",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IntersectionObserverEntry",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "KeyEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -884,7 +892,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "StorageEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "StorageManager",
+    {name: "StorageManager", nightly: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "StyleSheet",
 // IMPORTANT: Do not change this list without review from a DOM peer!

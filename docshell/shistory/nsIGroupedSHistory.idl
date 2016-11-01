@@ -1,0 +1,47 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIFrameLoader;
+interface nsIPartialSHistory;
+
+/**
+ * nsIGroupedSHistory represent a combined session history across multiple
+ * root docshells (usually browser tabs). The participating nsISHistory can
+ * either be in chrome process or in content process, but nsIGroupedSHistory
+ * itself lives in chrome process. The communication is proxyed through
+ * nsIPartialSHistory.
+ */
+[scriptable, builtinclass, uuid(813e498d-73a8-449a-be09-6187e62c5352)]
+interface nsIGroupedSHistory : nsISupports
+{
+  // The total number of entries of all its partial session histories.
+  [infallible] readonly attribute unsigned long count;
+
+  /**
+   * Remove all partial histories after currently active one (if any) and then
+   * append the given partial session history to the end of the list.
+   */
+  void appendPartialSessionHistory(in nsIPartialSHistory aPartialHistory);
+
+  /**
+   * Notify the grouped session history that the active partial session history
+   * has been modified. All partial session histories after the active one
+   * will be removed and destroy.
+   */
+  void onPartialSessionHistoryChange(in nsIPartialSHistory aPartialHistory);
+
+  /**
+   * Find the proper partial session history and navigate to the entry
+   * corresponding to the given global index. Note it doesn't swap frameloaders,
+   * but rather return the target loader for the caller to swap.
+   *
+   * @param aGlobalIndex        The global index to navigate to.
+   * @param aTargetLoaderToSwap The owner frameloader of the to-be-navigate
+   *                            partial session history.
+   */
+  void gotoIndex(in unsigned long aGlobalIndex, out nsIFrameLoader aTargetLoaderToSwap);
+};

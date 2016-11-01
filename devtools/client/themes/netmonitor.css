@@ -7,6 +7,10 @@
   overflow: hidden;
 }
 
+#react-clear-button-hook {
+  display: flex;
+}
+
 /**
  * Collapsed details pane needs to be truly hidden to prevent both accessibility
  * tools and keyboard from accessing its contents.
@@ -289,7 +293,7 @@
 }
 
 .security-state-local {
-  list-style-image: url(chrome://devtools/skin/images/security-state-local.svg);
+  list-style-image: url(chrome://devtools/skin/images/globe.svg);
 }
 
 .requests-menu-type,
@@ -588,12 +592,6 @@
   background-color: var(--theme-toolbar-background);
 }
 
-/* Headers separators are toolbars, but they have different height
-  in Firebug theme */
-.theme-firebug .tabpanel-content .variables-view-container .title.devtools-toolbar {
-  height: 20px !important;
-}
-
 .theme-firebug .variables-view-scope:focus > .title {
   color: var(--theme-body-color);
 }
@@ -739,31 +737,6 @@
 
 #custom-method-value {
   width: 4.5em;
-}
-
-/* Main toolbar */
-.requests-menu-filter-button {
-  -moz-appearance: none;
-  background: rgba(128,128,128,0.1);
-  border: none;
-  border-radius: 2px;
-  min-width: 0;
-  padding: 0 5px;
-  margin: 2px;
-  color: var(--theme-body-color);
-}
-
-.requests-menu-filter-button:hover {
-  background: rgba(128,128,128,0.2);
-}
-
-.requests-menu-filter-button:hover:active {
-  background-color: var(--theme-selection-background-semitransparent);
-}
-
-.requests-menu-filter-button:not(:active)[checked] {
-  background-color: var(--theme-selection-background);
-  color: var(--theme-selection-color);
 }
 
 /* Performance analysis buttons */

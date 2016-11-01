@@ -26,10 +26,6 @@ public:
 
     bool willUseGeoShader() const override { return fWillUseGeoShader; }
 
-    bool hasTransformedLocalCoords() const override {
-        return kHasTransformed_LocalCoordsType == fLocalCoordsType;
-    }
-
     bool hasExplicitLocalCoords() const override {
         return kHasExplicit_LocalCoordsType == fLocalCoordsType;
     }
@@ -53,9 +49,10 @@ protected:
      * The processor key should reflect the vertex attributes, or there lack thereof in the
      * GrGeometryProcessor.
      */
-    const Attribute& addVertexAttrib(const Attribute& attribute) {
-        fVertexStride += attribute.fOffset;
-        fAttribs.push_back(attribute);
+    const Attribute& addVertexAttrib(const char* name, GrVertexAttribType type,
+                                     GrSLPrecision precision = kDefault_GrSLPrecision) {
+        fAttribs.emplace_back(name, type, precision);
+        fVertexStride += fAttribs.back().fOffset;
         return fAttribs.back();
     }
 

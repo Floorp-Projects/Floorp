@@ -145,6 +145,13 @@ public:
 
   already_AddRefed<InternalRequest>
   GetInternalRequest();
+
+  const UniquePtr<mozilla::ipc::PrincipalInfo>&
+  GetPrincipalInfo() const
+  {
+    return mRequest->GetPrincipalInfo();
+  }
+
 private:
   ~Request();
 

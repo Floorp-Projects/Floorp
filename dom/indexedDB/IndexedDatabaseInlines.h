@@ -23,7 +23,8 @@ namespace indexedDB {
 
 inline
 StructuredCloneFile::StructuredCloneFile()
-  : mMutable(false)
+  : mType(eBlob)
+  , mValid(true)
 {
   MOZ_COUNT_CTOR(StructuredCloneFile);
 }
@@ -41,12 +42,14 @@ StructuredCloneFile::operator==(const StructuredCloneFile& aOther) const
   return this->mBlob == aOther.mBlob &&
          this->mMutableFile == aOther.mMutableFile &&
          this->mFileInfo == aOther.mFileInfo &&
-         this->mMutable == aOther.mMutable;
+         this->mType == aOther.mType &&
+         this->mValid == aOther.mValid;
 }
 
 inline
 StructuredCloneReadInfo::StructuredCloneReadInfo()
   : mDatabase(nullptr)
+  , mHasPreprocessInfo(false)
 {
   MOZ_COUNT_CTOR(StructuredCloneReadInfo);
 }
@@ -63,6 +66,8 @@ StructuredCloneReadInfo::StructuredCloneReadInfo(
   mFiles.SwapElements(aCloneReadInfo.mFiles);
   mDatabase = aCloneReadInfo.mDatabase;
   aCloneReadInfo.mDatabase = nullptr;
+  mHasPreprocessInfo = aCloneReadInfo.mHasPreprocessInfo;
+  aCloneReadInfo.mHasPreprocessInfo = false;
 }
 
 inline
@@ -70,6 +75,7 @@ StructuredCloneReadInfo::StructuredCloneReadInfo(
                              SerializedStructuredCloneReadInfo&& aCloneReadInfo)
   : mData(Move(aCloneReadInfo.data().data))
   , mDatabase(nullptr)
+  , mHasPreprocessInfo(aCloneReadInfo.hasPreprocessInfo())
 {
   MOZ_COUNT_CTOR(StructuredCloneReadInfo);
 }
@@ -90,6 +96,8 @@ StructuredCloneReadInfo::operator=(StructuredCloneReadInfo&& aCloneReadInfo)
   mFiles.SwapElements(aCloneReadInfo.mFiles);
   mDatabase = aCloneReadInfo.mDatabase;
   aCloneReadInfo.mDatabase = nullptr;
+  mHasPreprocessInfo = aCloneReadInfo.mHasPreprocessInfo;
+  aCloneReadInfo.mHasPreprocessInfo = false;
   return *this;
 }
 

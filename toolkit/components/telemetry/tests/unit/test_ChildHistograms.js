@@ -18,6 +18,9 @@ function run_child_test() {
   let flagHist = Telemetry.getHistogramById("TELEMETRY_TEST_FLAG");
   flagHist.add(1);
   let countHist = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT");
+  Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_COUNT", false);
+  countHist.add();
+  Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_COUNT", true);
   countHist.add();
   countHist.add();
   let categHist = Telemetry.getHistogramById("TELEMETRY_TEST_CATEGORICAL");
@@ -28,6 +31,10 @@ function run_child_test() {
   flagKeyed.add("a", 1);
   flagKeyed.add("b", 1);
   let countKeyed = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_COUNT");
+  Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_KEYED_COUNT", false);
+  countKeyed.add("a");
+  countKeyed.add("b");
+  Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_KEYED_COUNT", true);
   countKeyed.add("a");
   countKeyed.add("b");
   countKeyed.add("b");

@@ -16,6 +16,8 @@
    (0xf900u <= (u) && (u) <= 0xfaffu) || \
    (0xff00u <= (u) && (u) <= 0xffefu) )
 
+#define IS_ZERO_WIDTH_SPACE(u) ((u) == 0x200B)
+
 void ToLowerCase(nsAString&);
 void ToUpperCase(nsAString&);
 
@@ -141,6 +143,9 @@ namespace mozilla {
  */
 uint32_t
 HashUTF8AsUTF16(const char* aUTF8, uint32_t aLength, bool* aErr);
+
+bool
+IsSegmentBreakSkipChar(uint32_t u);
 
 } // namespace mozilla
 

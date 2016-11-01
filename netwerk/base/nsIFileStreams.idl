@@ -8,6 +8,12 @@
 
 interface nsIFile;
 
+%{C++
+struct PRFileDesc;
+%}
+
+[ptr] native PRFileDescPtr(PRFileDesc);
+
 /**
  * An input stream that allows you to read from a file.
  */
@@ -222,4 +228,10 @@ interface nsIFileMetadata : nsISupports
      * January 1, 1970 Greenwich Mean Time (GMT).
      */
     readonly attribute long long lastModified;
+
+    /**
+     * The internal file descriptor. It can be used for memory mapping of the
+     * underlying file. Please use carefully!
+     */
+    [noscript] PRFileDescPtr getFileDescriptor();
 };

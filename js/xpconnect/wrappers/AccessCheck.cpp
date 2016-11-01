@@ -274,7 +274,7 @@ static void
 EnterAndThrowASCII(JSContext* cx, JSObject* wrapper, const char* msg)
 {
     JSAutoCompartment ac(cx, wrapper);
-    JS_ReportErrorASCII(cx, msg);
+    JS_ReportErrorASCII(cx, "%s", msg);
 }
 
 bool

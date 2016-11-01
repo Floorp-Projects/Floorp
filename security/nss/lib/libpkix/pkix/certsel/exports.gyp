@@ -15,7 +15,7 @@
             'pkix_certselector.h',
             'pkix_comcertselparams.h'
           ],
-          'destination': '<(PRODUCT_DIR)/dist/<(module)/private'
+          'destination': '<(nss_dist_dir)/private/<(module)'
         }
       ]
     }

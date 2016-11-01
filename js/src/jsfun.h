@@ -301,6 +301,17 @@ class JSFunction : public js::NativeObject
         flags_ |= RESOLVED_NAME;
     }
 
+    void setAsyncKind(js::FunctionAsyncKind asyncKind) {
+        if (isInterpretedLazy())
+            lazyScript()->setAsyncKind(asyncKind);
+        else
+            nonLazyScript()->setAsyncKind(asyncKind);
+    }
+
+    bool getUnresolvedLength(JSContext* cx, js::MutableHandleValue v);
+
+    JSAtom* getUnresolvedName(JSContext* cx);
+
     JSAtom* name() const { return hasGuessedAtom() ? nullptr : atom_.get(); }
 
     // Because display names (see Debugger.Object.displayName) are already stored
@@ -465,6 +476,18 @@ class JSFunction : public js::NativeObject
 
     bool isStarGenerator() const { return generatorKind() == js::StarGenerator; }
 
+    js::FunctionAsyncKind asyncKind() const {
+        return isInterpretedLazy() ? lazyScript()->asyncKind() : nonLazyScript()->asyncKind();
+    }
+
+    bool isAsync() const {
+        if (isInterpretedLazy())
+            return lazyScript()->asyncKind() == js::AsyncFunction;
+        if (hasScript())
+            return nonLazyScript()->asyncKind() == js::AsyncFunction;
+        return false;
+    }
+
     void setScript(JSScript* script_) {
         mutableScript() = script_;
     }
@@ -597,17 +620,22 @@ Function(JSContext* cx, unsigned argc, Value* vp);
 extern bool
 Generator(JSContext* cx, unsigned argc, Value* vp);
 
-// Allocate a new function backed by a JSNative.
+extern bool
+AsyncFunctionConstructor(JSContext* cx, unsigned argc, Value* vp);
+
+// Allocate a new function backed by a JSNative.  Note that by default this
+// creates a singleton object.
 extern JSFunction*
 NewNativeFunction(ExclusiveContext* cx, JSNative native, unsigned nargs, HandleAtom atom,
                   gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
-                  NewObjectKind newKind = GenericObject);
+                  NewObjectKind newKind = SingletonObject);
 
-// Allocate a new constructor backed by a JSNative.
+// Allocate a new constructor backed by a JSNative.  Note that by default this
+// creates a singleton object.
 extern JSFunction*
 NewNativeConstructor(ExclusiveContext* cx, JSNative native, unsigned nargs, HandleAtom atom,
                      gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
-                     NewObjectKind newKind = GenericObject,
+                     NewObjectKind newKind = SingletonObject,
                      JSFunction::Flags flags = JSFunction::NATIVE_CTOR);
 
 // Allocate a new scripted function.  If enclosingEnv is null, the

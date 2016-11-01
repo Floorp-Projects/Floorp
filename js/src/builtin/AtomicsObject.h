@@ -13,7 +13,7 @@
 #include "jsobj.h"
 
 #include "threading/ConditionVariable.h"
-#include "threading/Mutex.h"
+#include "vm/MutexIDs.h"
 
 namespace js {
 

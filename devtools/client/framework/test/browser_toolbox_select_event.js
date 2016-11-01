@@ -43,18 +43,17 @@ add_task(function* () {
   yield testSelectEvent("styleeditor");
   yield toolbox.destroy();
 
+  yield testSelectToolRace();
+
   /**
    * Assert that selecting the given toolId raises a select event
    * @param {toolId} Id of the tool to test
    */
-  function testSelectEvent(toolId) {
-    return new Promise(resolve => {
-      toolbox.once("select", (event, id) => {
-        is(id, toolId, toolId + " selected");
-        resolve();
-      });
-      toolbox.selectTool(toolId);
-    });
+  function* testSelectEvent(toolId) {
+    let onSelect = toolbox.once("select");
+    toolbox.selectTool(toolId);
+    let id = yield onSelect;
+    is(id, toolId, toolId + " selected");
   }
 
   /**
@@ -62,15 +61,41 @@ add_task(function* () {
    * selected event
    * @param {toolId} Id of the tool to test
    */
-  function testToolSelectEvent(toolId) {
-    return new Promise(resolve => {
-      toolbox.once(toolId + "-selected", () => {
-        let msg = toolId + " tool selected";
-        is(toolbox.currentToolId, toolId, msg);
-        resolve();
-      });
-      toolbox.selectTool(toolId);
-    });
+  function* testToolSelectEvent(toolId) {
+    let onSelected = toolbox.once(toolId + "-selected");
+    toolbox.selectTool(toolId);
+    yield onSelected;
+    is(toolbox.currentToolId, toolId, toolId + " tool selected");
+  }
+
+  /**
+   * Assert that two calls to selectTool won't race
+   */
+  function* testSelectToolRace() {
+    let toolbox = yield openToolboxForTab(tab, "webconsole");
+    let selected = false;
+    let onSelect = (event, id) => {
+      if (selected) {
+        ok(false, "Got more than one 'select' event");
+      } else {
+        selected = true;
+      }
+    };
+    toolbox.once("select", onSelect);
+    let p1 = toolbox.selectTool("inspector")
+    let p2 = toolbox.selectTool("inspector");
+    // Check that both promises don't resolve too early
+    let checkSelectToolResolution = panel => {
+      ok(selected, "selectTool resolves only after 'select' event is fired");
+      let inspector = toolbox.getPanel("inspector");
+      is(panel, inspector, "selecTool resolves to the panel instance");
+    };
+    p1.then(checkSelectToolResolution);
+    p2.then(checkSelectToolResolution);
+    yield p1;
+    yield p2;
+
+    yield toolbox.destroy();
   }
 });
 

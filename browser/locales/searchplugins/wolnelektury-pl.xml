@@ -1,0 +1,17 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+ <ShortName>Wolne Lektury</ShortName>
+ <Description>Biblioteka internetowa WolneLektury.pl</Description>
+ <InputEncoding>UTF-8</InputEncoding>
+ <Image height="16" width="16" type="image/png">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAZlBMVEWauyuauiubuiubuyqauyqbvCrHuBfHuBfsvADrvgDsvgDsvQDrvgDsvQCbuyvsvgC4ABy8ABy+ABm+ABq/ABq/ABm+ABk9YW4+YW49YW49YnA9Y3E4Y3E4Y3G/ABo+Ym+/ABm4ABw5ZyQ5AAAAInRSTlPbyaSAWzYSADZbgKTJ2///EjZbf6TJ28+kgFs2EgD//4AA+LFVUAAAAFdJREFUeAGdzsEKgDAMA9CklzlwQy/+/zeKoCAuspVdvAx8hwYCpSXoIKNLqC7Elo8RjaxnL/i7KAxyqc1ChkgHuiWjOm3qfwyv5G9xjFa4SfMurbhV4QWhBzKL2hdUYQAAAABJRU5ErkJggg==</Image>
+ <SearchForm>https://wolnelektury.pl</SearchForm>
+ <Url method="GET"
+      template="https://wolnelektury.pl/katalog/jtags/?mozhint=1&amp;q={searchTerms}"
+      type="application/x-suggestions+json" />
+ <Url method="GET"
+      template="https://wolnelektury.pl/szukaj/?q={searchTerms}"
+      type="text/html" />
+</SearchPlugin>

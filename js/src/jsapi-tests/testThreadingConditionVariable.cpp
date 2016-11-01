@@ -7,8 +7,8 @@
 
 #include "jsapi-tests/tests.h"
 #include "threading/ConditionVariable.h"
-#include "threading/Mutex.h"
 #include "threading/Thread.h"
+#include "vm/MutexIDs.h"
 
 struct TestState {
     js::Mutex mutex;
@@ -17,7 +17,8 @@ struct TestState {
     js::Thread testThread;
 
     explicit TestState(bool createThread = true)
-      : flag(false)
+      : mutex(js::mutexid::TestMutex),
+        flag(false)
     {
         if (createThread)
             MOZ_RELEASE_ASSERT(testThread.init(setFlag, this));

@@ -160,6 +160,7 @@ int main()
       TestHook("kernel32.dll", "CreateFileW") &&
 #endif
       TestDetour("user32.dll", "CreateWindowExW") &&
+      TestHook("user32.dll", "InSendMessageEx") &&
       TestHook("imm32.dll", "ImmGetContext") &&
       TestHook("imm32.dll", "ImmGetCompositionStringW") &&
       TestHook("imm32.dll", "ImmSetCandidateWindow") &&

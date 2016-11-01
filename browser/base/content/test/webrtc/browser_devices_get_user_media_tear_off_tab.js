@@ -49,13 +49,12 @@ var gTests = [
     // We need to load the content script in the first window so that we can
     // catch the notifications fired globally when closing the second window.
     gBrowser.selectedBrowser.messageManager.loadFrameScript(CONTENT_SCRIPT_HELPER, true);
+
+    let promises = [promiseObserverCalled("recording-device-events"),
+                    promiseObserverCalled("recording-window-ended")];
     yield BrowserTestUtils.closeWindow(win);
+    yield Promise.all(promises);
 
-    if ((yield promiseTodoObserverNotCalled("recording-device-events")) == 1) {
-      todo(false, "Got the 'recording-device-events' notification twice, likely because of bug 962719");
-    }
-
-    yield expectObserverCalled("recording-window-ended");
     yield expectNoObserverCalled();
     yield checkNotSharing();
   }

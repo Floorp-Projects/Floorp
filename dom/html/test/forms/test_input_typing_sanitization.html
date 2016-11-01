@@ -195,18 +195,10 @@ function runTest()
         '1000-W'
       ]
     },
-    { type: 'datetime', todo: true },
-    { type: 'datetime-local', todo: true },
   ];
 
   for (test of data) {
     gCurrentTest = test;
-
-    if (test.todo) {
-      input.type = test.type;
-      todo_is(input.type, test.type, test.type + " is not implemented");
-      continue;
-    }
 
     input.type = test.type;
     gValidData = test.validData;

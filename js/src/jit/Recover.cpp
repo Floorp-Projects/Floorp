@@ -6,6 +6,8 @@
 
 #include "jit/Recover.h"
 
+#include "mozilla/SizePrintfMacros.h"
+
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsmath.h"
@@ -123,7 +125,7 @@ MResumePoint::writeRecoverData(CompactBufferWriter& writer) const
     uint32_t formalArgs = CountArgSlots(script, fun);
     uint32_t nallocs = formalArgs + script->nfixed() + exprStack;
 
-    JitSpew(JitSpew_IonSnapshots, "Starting frame; implicit %u, formals %u, fixed %u, exprs %u",
+    JitSpew(JitSpew_IonSnapshots, "Starting frame; implicit %u, formals %u, fixed %" PRIuSIZE ", exprs %u",
             implicit, formalArgs - implicit, script->nfixed(), exprStack);
 
     uint32_t pcoff = script->pcToOffset(pc());
@@ -1047,6 +1049,31 @@ RStringSplit::recover(JSContext* cx, SnapshotIterator& iter) const
         return false;
 
     result.setObject(*res);
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
+MNaNToZero::writeRecoverData(CompactBufferWriter& writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_NaNToZero));
+    return true;
+}
+
+RNaNToZero::RNaNToZero(CompactBufferReader& reader)
+{ }
+
+
+bool
+RNaNToZero::recover(JSContext* cx, SnapshotIterator& iter) const
+{
+    RootedValue v(cx, iter.read());
+    RootedValue result(cx);
+
+    MOZ_ASSERT(v.isDouble());
+    result.setDouble((mozilla::IsNaN(v.toDouble()) || mozilla::IsNegativeZero(v.toDouble())) ? 0.0 : v.toDouble());
+
     iter.storeInstructionResult(result);
     return true;
 }

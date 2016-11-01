@@ -236,6 +236,7 @@ user_pref("browser.webapps.checkForUpdates", 0);
 user_pref("dom.presentation.tcp_server.debug", true);
 // Enable debug logging in the presentation core service.
 user_pref("logging.Presentation", "debug");
+user_pref("dom.presentation.testing.simulate-receiver", false);
 
 // Don't connect to Yahoo! for RSS feed tests.
 // en-US only uses .types.0.uri, but set all of them just to be sure.
@@ -318,6 +319,8 @@ user_pref("media.decoder.heuristic.dormant.timeout", 0);
 // Don't use auto-enabled e10s
 user_pref("browser.tabs.remote.autostart.1", false);
 user_pref("browser.tabs.remote.autostart.2", false);
+// Don't show a delay when hiding the audio indicator during tests
+user_pref("browser.tabs.delayHidingAudioPlayingIconMS", 0);
 // Don't forceably kill content processes after a timeout
 user_pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
 

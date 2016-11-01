@@ -28,8 +28,6 @@ class GrContext;
 class GrContextThreadSafeProxy;
 class GrTexture;
 
-#define SK_SUPPORT_LEGACY_IMAGEFACTORY
-
 /**
  *  SkImage is an abstraction for drawing a rectagle of pixels, though the
  *  particular type of image could be actually storing its data on the GPU, or
@@ -75,7 +73,7 @@ public:
      *
      *  If a subset is specified, it must be contained within the generator's bounds.
      */
-    static sk_sp<SkImage> MakeFromGenerator(SkImageGenerator*, const SkIRect* subset = NULL);
+    static sk_sp<SkImage> MakeFromGenerator(SkImageGenerator*, const SkIRect* subset = nullptr);
 
     /**
      *  Construct a new SkImage based on the specified encoded data. Returns NULL on failure,
@@ -83,7 +81,7 @@ public:
      *
      *  If a subset is specified, it must be contained within the encoded data's bounds.
      */
-    static sk_sp<SkImage> MakeFromEncoded(sk_sp<SkData> encoded, const SkIRect* subset = NULL);
+    static sk_sp<SkImage> MakeFromEncoded(sk_sp<SkData> encoded, const SkIRect* subset = nullptr);
 
     /**
      *  Create a new image from the specified descriptor. Note - the caller is responsible for
@@ -92,12 +90,12 @@ public:
      *  Will return NULL if the specified descriptor is unsupported.
      */
     static sk_sp<SkImage> MakeFromTexture(GrContext* ctx, const GrBackendTextureDesc& desc) {
-        return MakeFromTexture(ctx, desc, kPremul_SkAlphaType, NULL, NULL);
+        return MakeFromTexture(ctx, desc, kPremul_SkAlphaType, nullptr, nullptr, nullptr);
     }
 
     static sk_sp<SkImage> MakeFromTexture(GrContext* ctx, const GrBackendTextureDesc& de,
                                           SkAlphaType at) {
-        return MakeFromTexture(ctx, de, at, NULL, NULL);
+        return MakeFromTexture(ctx, de, at, nullptr, nullptr, nullptr);
     }
 
     typedef void (*TextureReleaseProc)(ReleaseContext);
@@ -109,8 +107,21 @@ public:
      *
      *  Will return NULL if the specified descriptor is unsupported.
      */
+    static sk_sp<SkImage> MakeFromTexture(GrContext* ctx, const GrBackendTextureDesc& desc,
+                                          SkAlphaType at, TextureReleaseProc trp,
+                                          ReleaseContext rc) {
+        return MakeFromTexture(ctx, desc, at, nullptr, trp, rc);
+    }
+
+    /**
+    *  Create a new image from the specified descriptor. The underlying platform texture must stay
+    *  valid and unaltered until the specified release-proc is invoked, indicating that Skia
+    *  no longer is holding a reference to it.
+    *
+    *  Will return NULL if the specified descriptor is unsupported.
+    */
     static sk_sp<SkImage> MakeFromTexture(GrContext*, const GrBackendTextureDesc&, SkAlphaType,
-                                          TextureReleaseProc, ReleaseContext);
+                                          sk_sp<SkColorSpace>, TextureReleaseProc, ReleaseContext);
 
     /**
      *  Create a new image from the specified descriptor. Note - Skia will delete or recycle the
@@ -119,16 +130,8 @@ public:
      *  Will return NULL if the specified descriptor is unsupported.
      */
     static sk_sp<SkImage> MakeFromAdoptedTexture(GrContext*, const GrBackendTextureDesc&,
-                                                 SkAlphaType = kPremul_SkAlphaType);
-
-    /**
-     *  Create a new image by copying the pixels from the specified descriptor. No reference is
-     *  kept to the original platform texture.
-     *
-     *  Will return NULL if the specified descriptor is unsupported.
-     */
-    static sk_sp<SkImage> MakeFromTextureCopy(GrContext*, const GrBackendTextureDesc&,
-                                              SkAlphaType = kPremul_SkAlphaType);
+                                                 SkAlphaType = kPremul_SkAlphaType,
+                                                 sk_sp<SkColorSpace> = nullptr);
 
     /**
      *  Create a new image by copying the pixels from the specified y, u, v textures. The data
@@ -138,7 +141,18 @@ public:
     static sk_sp<SkImage> MakeFromYUVTexturesCopy(GrContext*, SkYUVColorSpace,
                                                   const GrBackendObject yuvTextureHandles[3],
                                                   const SkISize yuvSizes[3],
-                                                  GrSurfaceOrigin);
+                                                  GrSurfaceOrigin,
+                                                  sk_sp<SkColorSpace> = nullptr);
+
+    /**
+     *  Create a new image by copying the pixels from the specified y and uv textures. The data
+     *  from the textures is immediately ingested into the image and the textures can be modified or
+     *  deleted after the function returns. The image will have the dimensions of the y texture.
+     */
+    static sk_sp<SkImage> MakeFromNV12TexturesCopy(GrContext*, SkYUVColorSpace,
+                                                   const GrBackendObject nv12TextureHandles[2],
+                                                   const SkISize nv12Sizes[2], GrSurfaceOrigin,
+                                                   sk_sp<SkColorSpace> = nullptr);
 
     static sk_sp<SkImage> MakeFromPicture(sk_sp<SkPicture>, const SkISize& dimensions,
                                           const SkMatrix*, const SkPaint*);
@@ -152,7 +166,8 @@ public:
     SkISize dimensions() const { return SkISize::Make(fWidth, fHeight); }
     SkIRect bounds() const { return SkIRect::MakeWH(fWidth, fHeight); }
     uint32_t uniqueID() const { return fUniqueID; }
-    virtual bool isOpaque() const { return false; }
+    SkAlphaType alphaType() const;
+    bool isOpaque() const { return SkAlphaTypeIsOpaque(this->alphaType()); }
 
     /**
      * Extracts YUV planes from the SkImage and stores them in client-provided memory. The sizes
@@ -322,10 +337,40 @@ public:
      */
     sk_sp<SkImage> makeTextureImage(GrContext*) const;
 
+    /**
+     * If the image is texture-backed this will make a raster copy of it (or nullptr if reading back
+     * the pixels fails). Otherwise, it returns the original image.
+     */
+    sk_sp<SkImage> makeNonTextureImage() const;
+    /**
+     *  Apply a given image filter to this image, and return the filtered result.
+     *
+     *  The subset represents the active portion of this image. The return value is similarly an
+     *  SkImage, with an active subset (outSubset). This is usually used with texture-backed
+     *  images, where the texture may be approx-match and thus larger than the required size.
+     *
+     *  clipBounds constrains the device-space extent of the image which may be produced to the
+     *  given rect.
+     *
+     *  offset is the amount to translate the resulting image relative to the src when it is drawn.
+     *  This is an out-param.
+     *
+     *  If the result image cannot be created, or the result would be transparent black, null
+     *  is returned, in which case the offset and outSubset parameters should be ignored by the
+     *  caller.
+     */
+    sk_sp<SkImage> makeWithFilter(const SkImageFilter* filter, const SkIRect& subset,
+                                  const SkIRect& clipBounds, SkIRect* outSubset,
+                                  SkIPoint* offset) const;
+
     /** Drawing params for which a deferred texture image data should be optimized. */
     struct DeferredTextureImageUsageParams {
+        DeferredTextureImageUsageParams(const SkMatrix matrix, const SkFilterQuality quality,
+                                        int preScaleMipLevel)
+            : fMatrix(matrix), fQuality(quality), fPreScaleMipLevel(preScaleMipLevel) {}
         SkMatrix        fMatrix;
         SkFilterQuality fQuality;
+        int             fPreScaleMipLevel;
     };
 
     /**
@@ -351,7 +396,9 @@ public:
     size_t getDeferredTextureImageData(const GrContextThreadSafeProxy&,
                                        const DeferredTextureImageUsageParams[],
                                        int paramCnt,
-                                       void* buffer) const;
+                                       void* buffer,
+                                       SkSourceGammaTreatment treatment =
+                                       SkSourceGammaTreatment::kIgnore) const;
 
     /**
      * Returns a texture-backed image from data produced in SkImage::getDeferredTextureImageData.
@@ -377,7 +424,7 @@ public:
      *  to empty.
      */
     bool asLegacyBitmap(SkBitmap*, LegacyBitmapMode) const;
-    
+
     /**
      *  Returns true if the image is backed by an image-generator or other src that creates
      *  (and caches) its pixels / texture on-demand.
@@ -392,21 +439,19 @@ public:
     static SkImage* NewFromRaster(const Info&, const void* pixels, size_t rowBytes,
                                   RasterReleaseProc, ReleaseContext);
     static SkImage* NewFromBitmap(const SkBitmap&);
-    static SkImage* NewFromGenerator(SkImageGenerator*, const SkIRect* subset = NULL);
-    static SkImage* NewFromEncoded(SkData* encoded, const SkIRect* subset = NULL);
+    static SkImage* NewFromGenerator(SkImageGenerator*, const SkIRect* subset = nullptr);
+    static SkImage* NewFromEncoded(SkData* encoded, const SkIRect* subset = nullptr);
     static SkImage* NewFromTexture(GrContext* ctx, const GrBackendTextureDesc& desc) {
-        return NewFromTexture(ctx, desc, kPremul_SkAlphaType, NULL, NULL);
+        return NewFromTexture(ctx, desc, kPremul_SkAlphaType, nullptr, nullptr);
     }
 
     static SkImage* NewFromTexture(GrContext* ctx, const GrBackendTextureDesc& de, SkAlphaType at) {
-        return NewFromTexture(ctx, de, at, NULL, NULL);
+        return NewFromTexture(ctx, de, at, nullptr, nullptr);
     }
     static SkImage* NewFromTexture(GrContext*, const GrBackendTextureDesc&, SkAlphaType,
                                    TextureReleaseProc, ReleaseContext);
     static SkImage* NewFromAdoptedTexture(GrContext*, const GrBackendTextureDesc&,
                                           SkAlphaType = kPremul_SkAlphaType);
-    static SkImage* NewFromTextureCopy(GrContext*, const GrBackendTextureDesc&,
-                                       SkAlphaType = kPremul_SkAlphaType);
     static SkImage* NewFromYUVTexturesCopy(GrContext*, SkYUVColorSpace,
                                            const GrBackendObject yuvTextureHandles[3],
                                            const SkISize yuvSizes[3],
@@ -424,6 +469,10 @@ protected:
     SkImage(int width, int height, uint32_t uniqueID);
 
 private:
+    static sk_sp<SkImage> MakeTextureFromMipMap(GrContext*, const SkImageInfo&,
+                                                const GrMipLevel* texels, int mipLevelCount,
+                                                SkBudgeted, SkSourceGammaTreatment);
+
     const int       fWidth;
     const int       fHeight;
     const uint32_t  fUniqueID;

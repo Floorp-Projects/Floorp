@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>Page broadcast channel creator for first party isolation</title>
+</head>
+<body>
+  <div id="display" style="white-space:pre; font-family:monospace; display:inline;"></div>
+  <iframe id="iframe" src="file_broadcastChanneliFrame.html"></iframe>>
+<script type="text/javascript;version=1.7">
+let bc = new BroadcastChannel("testBroadcastChannel");
+bc.onmessage = function (e) {
+  document.getElementById("display").innerHTML = e.data;
+};
+</script>
+</body>

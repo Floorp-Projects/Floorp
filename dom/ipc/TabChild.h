@@ -38,9 +38,12 @@
 #include "AudioChannelService.h"
 #include "PuppetWidget.h"
 #include "mozilla/layers/GeckoContentController.h"
+#include "nsISHistoryListener.h"
+#include "nsIPartialSHistoryListener.h"
 
 class nsICachedFileDescriptorListener;
 class nsIDOMWindowUtils;
+class nsIHttpChannel;
 
 namespace mozilla {
 namespace layout {
@@ -162,6 +165,27 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
 protected:
   ~ContentListener() {}
+  TabChild* mTabChild;
+};
+
+/**
+ * Listens on session history change, and sends NotifySessionHistoryChange to
+ * parent process.
+ */
+class TabChildSHistoryListener final : public nsISHistoryListener,
+                                       public nsIPartialSHistoryListener,
+                                       public nsSupportsWeakReference
+{
+public:
+  explicit TabChildSHistoryListener(TabChild* aTabChild) : mTabChild(aTabChild) {}
+  void ClearTabChild() { mTabChild = nullptr; }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISHISTORYLISTENER
+  NS_DECL_NSIPARTIALSHISTORYLISTENER
+
+private:
+  ~TabChildSHistoryListener() {}
   TabChild* mTabChild;
 };
 
@@ -422,7 +446,8 @@ public:
   RecvSwappedWithOtherRemoteLoader(const IPCTabContext& aContext) override;
 
   virtual PDocAccessibleChild*
-  AllocPDocAccessibleChild(PDocAccessibleChild*, const uint64_t&) override;
+  AllocPDocAccessibleChild(PDocAccessibleChild*, const uint64_t&,
+                           const uint32_t&) override;
 
   virtual bool DeallocPDocAccessibleChild(PDocAccessibleChild*) override;
 
@@ -651,6 +676,13 @@ public:
   uintptr_t GetNativeWindowHandle() const { return mNativeWindowHandle; }
 #endif
 
+  bool TakeIsFreshProcess()
+  {
+    bool wasFreshProcess = mIsFreshProcess;
+    mIsFreshProcess = false;
+    return wasFreshProcess;
+  }
+
 protected:
   virtual ~TabChild();
 
@@ -680,6 +712,15 @@ protected:
 
   virtual bool RecvMenuKeyboardListenerInstalled(
                  const bool& aInstalled) override;
+
+  virtual bool RecvNotifyAttachGroupedSessionHistory(const uint32_t& aOffset) override;
+
+  virtual bool RecvNotifyPartialSessionHistoryActive(const uint32_t& aGlobalLength,
+                                                     const uint32_t& aTargetLocalIndex) override;
+
+  virtual bool RecvNotifyPartialSessionHistoryDeactive() override;
+
+  virtual bool RecvSetFreshProcess() override;
 
 private:
   void HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
@@ -733,6 +774,7 @@ private:
   nsCOMPtr<nsIURI> mLastURI;
   RenderFrameChild* mRemoteFrame;
   RefPtr<nsIContentChild> mManager;
+  RefPtr<TabChildSHistoryListener> mHistoryListener;
   uint32_t mChromeFlags;
   int32_t mActiveSuppressDisplayport;
   uint64_t mLayersId;
@@ -772,6 +814,7 @@ private:
   CSSSize mUnscaledInnerSize;
   bool mDidSetRealShowInfo;
   bool mDidLoadURLInit;
+  bool mIsFreshProcess;
 
   AutoTArray<bool, NUMBER_OF_AUDIO_CHANNELS> mAudioChannelsActive;
 

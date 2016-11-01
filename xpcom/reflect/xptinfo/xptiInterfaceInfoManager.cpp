@@ -15,7 +15,6 @@
 #include "xptiprivate.h"
 #include "nsDependentString.h"
 #include "nsString.h"
-#include "nsISupportsArray.h"
 #include "nsArrayEnumerator.h"
 #include "nsDirectoryService.h"
 #include "nsIMemoryReporter.h"
@@ -228,7 +227,7 @@ XPTInterfaceInfoManager::GetScriptableInterfaces(nsCOMArray<nsIInterfaceInfo>& a
 {
     // I didn't want to incur the size overhead of using nsHashtable just to
     // make building an enumerator easier. So, this code makes a snapshot of
-    // the table using an nsISupportsArray and builds an enumerator for that.
+    // the table using an nsCOMArray and builds an enumerator for that.
     // We can afford this transient cost.
 
     ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);

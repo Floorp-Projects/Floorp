@@ -19,52 +19,13 @@
 using namespace js;
 using mozilla::PodEqual;
 
-void
-XDRBuffer::freeBuffer()
-{
-    js_free(base);
-#ifdef DEBUG
-    memset(this, 0xe2, sizeof *this);
-#endif
-}
-
-bool
-XDRBuffer::grow(size_t n)
-{
-    MOZ_ASSERT(n > size_t(limit - cursor));
-
-    const size_t MIN_CAPACITY = 8192;
-    const size_t MAX_CAPACITY = size_t(INT32_MAX) + 1;
-    size_t offset = cursor - base;
-    MOZ_ASSERT(offset <= MAX_CAPACITY);
-    if (n > MAX_CAPACITY - offset) {
-        js::gc::AutoSuppressGC suppressGC(cx());
-        JS_ReportErrorNumberASCII(cx(), GetErrorMessage, nullptr, JSMSG_TOO_BIG_TO_ENCODE);
-        return false;
-    }
-    size_t newCapacity = mozilla::RoundUpPow2(offset + n);
-    if (newCapacity < MIN_CAPACITY)
-        newCapacity = MIN_CAPACITY;
-
-    MOZ_ASSERT(newCapacity <= MAX_CAPACITY);
-    void* data = js_realloc(base, newCapacity);
-    if (!data) {
-        ReportOutOfMemory(cx());
-        return false;
-    }
-    base = static_cast<uint8_t*>(data);
-    cursor = base + offset;
-    limit = base + newCapacity;
-    return true;
-}
-
 template<XDRMode mode>
 void
 XDRState<mode>::postProcessContextErrors(JSContext* cx)
 {
     if (cx->isExceptionPending()) {
-        MOZ_ASSERT(resultCode_ == TranscodeResult_Ok);
-        resultCode_ = TranscodeResult_Throw;
+        MOZ_ASSERT(resultCode_ == JS::TranscodeResult_Ok);
+        resultCode_ = JS::TranscodeResult_Throw;
     }
 }
 
@@ -76,6 +37,8 @@ XDRState<mode>::codeChars(const Latin1Char* chars, size_t nchars)
 
     MOZ_ASSERT(mode == XDR_ENCODE);
 
+    if (nchars == 0)
+        return true;
     uint8_t* ptr = buf.write(nchars);
     if (!ptr)
         return false;
@@ -88,6 +51,8 @@ template<XDRMode mode>
 bool
 XDRState<mode>::codeChars(char16_t* chars, size_t nchars)
 {
+    if (nchars == 0)
+        return true;
     size_t nbytes = nchars * sizeof(char16_t);
     if (mode == XDR_ENCODE) {
         uint8_t* ptr = buf.write(nbytes);
@@ -121,7 +86,7 @@ VersionCheck(XDRState<mode>* xdr)
         return false;
 
     if (mode == XDR_DECODE && buildIdLength != buildId.length())
-        return xdr->fail(TranscodeResult_Failure_BadBuildId);
+        return xdr->fail(JS::TranscodeResult_Failure_BadBuildId);
 
     if (mode == XDR_ENCODE) {
         if (!xdr->codeBytes(buildId.begin(), buildIdLength))
@@ -141,7 +106,7 @@ VersionCheck(XDRState<mode>* xdr)
 
         // We do not provide binary compatibility with older scripts.
         if (!PodEqual(decodedBuildId.begin(), buildId.begin(), buildIdLength))
-            return xdr->fail(TranscodeResult_Failure_BadBuildId);
+            return xdr->fail(JS::TranscodeResult_Failure_BadBuildId);
     }
 
     return true;
@@ -199,12 +164,6 @@ bool
 XDRState<mode>::codeConstValue(MutableHandleValue vp)
 {
     return XDRScriptConst(this, vp);
-}
-
-XDRDecoder::XDRDecoder(JSContext* cx, const void* data, uint32_t length)
-  : XDRState<XDR_DECODE>(cx)
-{
-    buf.setData(data, length);
 }
 
 template class js::XDRState<XDR_ENCODE>;

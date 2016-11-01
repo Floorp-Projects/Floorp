@@ -74,6 +74,10 @@ class GamepadPlatformService final
   GamepadPlatformService();
   ~GamepadPlatformService();
   template<class T> void NotifyGamepadChange(const T& aInfo);
+
+  // Flush all pending events buffered in mPendingEvents, must be called
+  // with mMutex held
+  void FlushPendingEvents();
   void Cleanup();
 
   // mGamepadIndex can only be accessed by monitor thread
@@ -87,6 +91,11 @@ class GamepadPlatformService final
   // This mutex protects mChannelParents from race condition
   // between background and monitor thread
   Mutex mMutex;
+
+  // In mochitest, it is possible that the test Events is synthesized
+  // before GamepadEventChannel created, we need to buffer all events
+  // until the channel is created if that happens.
+  nsTArray<GamepadChangeEvent> mPendingEvents;
 };
 
 } // namespace dom

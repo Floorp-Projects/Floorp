@@ -9,6 +9,7 @@
     {
       'target_name': 'sectool',
       'type': 'static_library',
+      'standalone_static_library': 1,
       'sources': [
         'basicutil.c',
         'derprint.c',

@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIArray;
-interface nsISupportsArray;
+interface nsIArrayExtensions;
 interface nsIDOMCharacterData;
 interface nsIDOMElement;
 interface nsIDOMDocument;
@@ -24,7 +24,7 @@ interface inIDOMUtils : nsISupports
   void getAllStyleSheets (in nsIDOMDocument aDoc,
                           [optional] out unsigned long aLength,
                           [array, size_is (aLength), retval] out nsISupports aSheets);
-  nsISupportsArray getCSSStyleRules(in nsIDOMElement aElement, [optional] in DOMString aPseudo);
+  nsIArrayExtensions getCSSStyleRules(in nsIDOMElement aElement, [optional] in DOMString aPseudo);
 
   /**
    * Get the line number of a rule.

@@ -520,6 +520,10 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   transition: none;
 }
 
+#DateTimePickerPanel {
+  -moz-binding: url("chrome://global/content/bindings/datetimepopup.xml#datetime-popup");
+}
+
 #urlbar[pageproxystate="invalid"] > #urlbar-icons > .urlbar-icon,
 #urlbar[pageproxystate="invalid"][focused="true"] > #urlbar-go-button ~ toolbarbutton,
 #urlbar[pageproxystate="valid"] > #urlbar-go-button,

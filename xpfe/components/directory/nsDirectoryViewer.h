@@ -6,6 +6,7 @@
 #ifndef nsdirectoryviewer__h____
 #define nsdirectoryviewer__h____
 
+#include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
 #include "nsIContentViewer.h"
 #include "nsIHTTPIndex.h"
@@ -14,13 +15,14 @@
 #include "nsIRDFLiteral.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsITimer.h"
-#include "nsISupportsArray.h"
 #include "nsXPIDLString.h"
 #include "nsIDirIndexListener.h"
 #include "nsIFTPChannel.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIURI.h"
+
+class nsIMutableArray;
 
 class nsDirectoryViewerFactory : public nsIDocumentLoaderFactory
 {
@@ -70,8 +72,8 @@ protected:
     // an OnStartRequest() notification
 
     nsCOMPtr<nsIRDFDataSource>   mInner;
-    nsCOMPtr<nsISupportsArray>   mConnectionList;
-    nsCOMPtr<nsISupportsArray>   mNodeList;
+    nsCOMPtr<nsIMutableArray>    mConnectionList;
+    nsCOMPtr<nsIMutableArray>    mNodeList;
     nsCOMPtr<nsITimer>           mTimer;
     nsCOMPtr<nsIDirIndexParser>  mParser;
     nsCString mBaseURL;

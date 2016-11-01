@@ -69,6 +69,7 @@ ParseChunkRange(nsACString::const_iterator& aBegin,
 
 ProtocolParser::ProtocolParser()
   : mUpdateStatus(NS_OK)
+  , mUpdateWaitSec(0)
 {
 }
 
@@ -116,7 +117,6 @@ ProtocolParser::GetTableUpdate(const nsACString& aTable)
 
 ProtocolParserV2::ProtocolParserV2()
   : mState(PROTOCOL_STATE_CONTROL)
-  , mUpdateWait(0)
   , mResetRequested(false)
   , mTableUpdate(nullptr)
 {
@@ -180,8 +180,8 @@ ProtocolParserV2::ProcessControl(bool* aDone)
       // Set the table name from the table header line.
       SetCurrentTable(Substring(line, 2));
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("n:"))) {
-      if (PR_sscanf(line.get(), "n:%d", &mUpdateWait) != 1) {
-        PARSER_LOG(("Error parsing n: '%s' (%d)", line.get(), mUpdateWait));
+      if (PR_sscanf(line.get(), "n:%d", &mUpdateWaitSec) != 1) {
+        PARSER_LOG(("Error parsing n: '%s' (%d)", line.get(), mUpdateWaitSec));
         return NS_ERROR_FAILURE;
       }
     } else if (line.EqualsLiteral("r:pleasereset")) {
@@ -771,6 +771,10 @@ ProtocolParserProtobuf::End()
     return;
   }
 
+  auto minWaitDuration = response.minimum_wait_duration();
+  mUpdateWaitSec = minWaitDuration.seconds() +
+                   minWaitDuration.nanos() / 1000000000;
+
   for (int i = 0; i < response.list_update_responses_size(); i++) {
     auto r = response.list_update_responses(i);
     nsresult rv = ProcessOneResponse(r);
@@ -856,8 +860,12 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
   PARSER_LOG(("* hasChecksum: %s\n", (aResponse.has_checksum() ? "yes" : "no")));
 
   tuV4->SetFullUpdate(isFullUpdate);
-  ProcessAdditionOrRemoval(*tuV4, aResponse.additions(), true /*aIsAddition*/);
-  ProcessAdditionOrRemoval(*tuV4, aResponse.removals(), false);
+
+  rv = ProcessAdditionOrRemoval(*tuV4, aResponse.additions(), true /*aIsAddition*/);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = ProcessAdditionOrRemoval(*tuV4, aResponse.removals(), false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PARSER_LOG(("\n\n"));
 
   return NS_OK;
@@ -962,12 +970,13 @@ static nsresult
 DoRiceDeltaDecode(const RiceDeltaEncoding& aEncoding,
                   nsTArray<uint32_t>& aDecoded)
 {
-  // Sanity check of the encoding info.
-  if (!aEncoding.has_first_value() ||
-      !aEncoding.has_rice_parameter() ||
-      !aEncoding.has_num_entries() ||
-      !aEncoding.has_encoded_data()) {
+  if (!aEncoding.has_first_value()) {
     PARSER_LOG(("The encoding info is incomplete."));
+    return NS_ERROR_FAILURE;
+  }
+  if (aEncoding.num_entries() > 0 &&
+      (!aEncoding.has_rice_parameter() || !aEncoding.has_encoded_data())) {
+    PARSER_LOG(("Rice parameter or encoded data is missing."));
     return NS_ERROR_FAILURE;
   }
 
@@ -985,13 +994,12 @@ DoRiceDeltaDecode(const RiceDeltaEncoding& aEncoding,
   // Setup the output buffer. The "first value" is included in
   // the output buffer.
   aDecoded.SetLength(aEncoding.num_entries() + 1);
-  aDecoded[0] = aEncoding.first_value();
 
   // Decode!
   bool rv = decoder.Decode(aEncoding.rice_parameter(),
                            aEncoding.first_value(), // first value.
                            aEncoding.num_entries(), // # of entries (first value not included).
-                           &aDecoded[1]);
+                           &aDecoded[0]);
 
   NS_ENSURE_TRUE(rv, NS_ERROR_FAILURE);
 
@@ -1009,7 +1017,10 @@ ProtocolParserProtobuf::ProcessEncodedAddition(TableUpdateV4& aTableUpdate,
 
   nsTArray<uint32_t> decoded;
   nsresult rv = DoRiceDeltaDecode(aAddition.rice_hashes(), decoded);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    PARSER_LOG(("Failed to parse encoded prefixes."));
+    return rv;
+  }
 
   //  Say we have the following raw prefixes
   //                              BE            LE
@@ -1077,7 +1088,10 @@ ProtocolParserProtobuf::ProcessEncodedRemoval(TableUpdateV4& aTableUpdate,
 
   nsTArray<uint32_t> decoded;
   nsresult rv = DoRiceDeltaDecode(aRemoval.rice_indices(), decoded);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    PARSER_LOG(("Failed to decode encoded removal indices."));
+    return rv;
+  }
 
   // The encoded prefixes are always 4 bytes.
   aTableUpdate.NewRemovalIndices(&decoded[0], decoded.Length());

@@ -75,7 +75,7 @@ ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag)
       mozilla::services::GetToolkitChromeRegistryService();
     nsAutoCString uaLangTag;
     if (cr) {
-      cr->GetSelectedLocale(NS_LITERAL_CSTRING("global"), uaLangTag);
+      cr->GetSelectedLocale(NS_LITERAL_CSTRING("global"), true, uaLangTag);
     }
     if (!uaLangTag.IsEmpty()) {
       aBCP47LangTag = uaLangTag;

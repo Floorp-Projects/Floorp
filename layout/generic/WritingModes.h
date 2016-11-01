@@ -43,6 +43,11 @@ enum PhysicalAxis {
   eAxisHorizontal    = 0x1
 };
 
+inline LogicalAxis GetOrthogonalAxis(LogicalAxis aAxis)
+{
+  return aAxis == eLogicalAxisBlock ? eLogicalAxisInline : eLogicalAxisBlock;
+}
+
 inline bool IsInline(LogicalSide aSide) { return aSide & 0x2; }
 inline bool IsBlock(LogicalSide aSide) { return !IsInline(aSide); }
 inline bool IsEnd(LogicalSide aSide) { return aSide & 0x1; }
@@ -585,6 +590,35 @@ public:
   bool IsOrthogonalTo(const WritingMode& aOther) const
   {
     return IsVertical() != aOther.IsVertical();
+  }
+
+  /**
+   * Returns true if this WritingMode's aLogicalAxis has the same physical
+   * start side as the parallel axis of WritingMode |aOther|.
+   *
+   * @param aLogicalAxis The axis to compare from this WritingMode.
+   * @param aOther The other WritingMode (from which we'll choose the axis
+   *               that's parallel to this WritingMode's aLogicalAxis, for
+   *               comparison).
+   */
+  bool ParallelAxisStartsOnSameSide(LogicalAxis aLogicalAxis,
+                                    const WritingMode& aOther) const
+  {
+    Side myStartSide =
+      this->PhysicalSide(MakeLogicalSide(aLogicalAxis,
+                                         eLogicalEdgeStart));
+
+    // Figure out which of aOther's axes is parallel to |this| WritingMode's
+    // aLogicalAxis, and get its physical start side as well.
+    LogicalAxis otherWMAxis = aOther.IsOrthogonalTo(*this) ?
+      GetOrthogonalAxis(aLogicalAxis) : aLogicalAxis;
+    Side otherWMStartSide =
+      aOther.PhysicalSide(MakeLogicalSide(otherWMAxis,
+                                          eLogicalEdgeStart));
+
+    NS_ASSERTION(myStartSide % 2 == otherWMStartSide % 2,
+                 "Should end up with sides in the same physical axis");
+    return myStartSide == otherWMStartSide;
   }
 
   uint8_t GetBits() const { return mWritingMode; }

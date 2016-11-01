@@ -221,8 +221,7 @@ add_task(function* test_disconnect() {
       browser.test.sendMessage("message", msg);
     });
     port.onDisconnect.addListener(msgPort => {
-      browser.test.assertEq(port, msgPort, "onDisconnect handler should receive the port as the second argument");
-      browser.test.sendMessage("disconnected");
+      browser.test.fail("onDisconnect should not be called for disconnect()");
     });
     browser.test.onMessage.addListener((what, payload) => {
       if (what == "send") {
@@ -269,8 +268,6 @@ add_task(function* test_disconnect() {
   response = yield extension.awaitMessage("disconnect-result");
   equal(response.success, true, "disconnect succeeded");
 
-  yield extension.awaitMessage("disconnected");
-
   do_print("waiting for subprocess to exit");
   yield waitForSubprocessExit();
   procCount = yield getSubprocessCount();
@@ -278,8 +275,7 @@ add_task(function* test_disconnect() {
 
   extension.sendMessage("disconnect");
   response = yield extension.awaitMessage("disconnect-result");
-  equal(response.success, false, "second call to disconnect failed");
-  ok(/already disconnected/.test(response.errmsg), "disconnect error message is reasonable");
+  equal(response.success, true, "second call to disconnect silently ignored");
 
   yield extension.unload();
 });
@@ -333,7 +329,9 @@ add_task(function* test_read_limit() {
   function background() {
     const PAYLOAD = "0123456789A";
     let port = browser.runtime.connectNative("echo");
-    port.onDisconnect.addListener(() => {
+    port.onDisconnect.addListener(msgPort => {
+      browser.test.assertEq(port, msgPort, "onDisconnect handler should receive the port as the first argument");
+      browser.test.assertEq("Native application tried to send a message of 13 bytes, which exceeds the limit of 10 bytes.", port.error && port.error.message);
       browser.test.sendMessage("result", "disconnected");
     });
     port.onMessage.addListener(msg => {
@@ -387,7 +385,9 @@ add_task(function* test_ext_permission() {
 add_task(function* test_app_permission() {
   function background() {
     let port = browser.runtime.connectNative("echo");
-    port.onDisconnect.addListener(() => {
+    port.onDisconnect.addListener(msgPort => {
+      browser.test.assertEq(port, msgPort, "onDisconnect handler should receive the port as the first argument");
+      browser.test.assertEq("This extension does not have permission to use native application echo (or the application is not installed)", port.error && port.error.message);
       browser.test.sendMessage("result", "disconnected");
     });
     port.onMessage.addListener(msg => {
@@ -448,7 +448,9 @@ add_task(function* test_child_process() {
 add_task(function* test_stderr() {
   function background() {
     let port = browser.runtime.connectNative("stderr");
-    port.onDisconnect.addListener(() => {
+    port.onDisconnect.addListener(msgPort => {
+      browser.test.assertEq(port, msgPort, "onDisconnect handler should receive the port as the first argument");
+      browser.test.assertEq(null, port.error, "Normal application exit is not an error");
       browser.test.sendMessage("finished");
     });
   }

@@ -622,6 +622,12 @@ var WebBrowserChrome = {
 
     return true;
   },
+
+  // Try to reload the currently active or currently loading page in a new process.
+  reloadInFreshProcess: function(aDocShell, aURI, aReferrer) {
+    E10SUtils.redirectLoad(aDocShell, aURI, aReferrer, true);
+    return true;
+  }
 };
 
 if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {

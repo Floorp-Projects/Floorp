@@ -1259,7 +1259,7 @@ MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
             }
         }
     } else if (templateObj->is<InlineTypedObject>()) {
-        JS::AutoAssertOnGC nogc; // off-thread, so cannot GC
+        JS::AutoAssertNoGC nogc; // off-thread, so cannot GC
         size_t nbytes = templateObj->as<InlineTypedObject>().size();
         const uint8_t* memory = templateObj->as<InlineTypedObject>().inlineTypedMem(nogc);
 
@@ -2386,6 +2386,14 @@ MacroAssembler::icRestoreLive(LiveRegisterSet& liveRegs, AfterICSaveLive& aic)
     MOZ_ASSERT(framePushed() == aic.initialStack);
     PopRegsInMask(liveRegs);
 }
+
+#ifndef JS_CODEGEN_ARM64
+void
+MacroAssembler::subFromStackPtr(Register reg)
+{
+    subPtr(reg, getStackPointer());
+}
+#endif // JS_CODEGEN_ARM64
 
 //{{{ check_macroassembler_style
 // ===============================================================

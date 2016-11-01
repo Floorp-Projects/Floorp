@@ -249,7 +249,7 @@ DtmfInband::IsAddingTone()
 }
 
 int
-DtmfInband::Get10msTone(int16_t output[320],
+DtmfInband::Get10msTone(int16_t output[MAX_DTMF_SAMPLERATE/100],
                         uint16_t& outputSizeInSamples)
 {
     CriticalSectionScoped lock(&_critSect);
@@ -289,7 +289,7 @@ DtmfInband::DtmfFix_generate(int16_t *decoded,
                              int16_t value,
                              int16_t volume,
                              int16_t frameLen,
-                             int16_t fs)
+                             uint16_t fs)
 {
     const int16_t *a_times2Tbl;
     const int16_t *y2_Table;

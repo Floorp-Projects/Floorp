@@ -23,7 +23,7 @@
     <script src=/encrypted-media/util/clearkey-messagehandler.js></script>
 
     <!-- The script for this specific test -->
-    <script src=/encrypted-media/scripts/playback-temporary-multikey-multisession.js></script>
+    <script src=/encrypted-media/scripts/playback-temporary-multikey-sequential.js></script>
 
   </head>
   <body>
@@ -34,7 +34,7 @@
     </div>
 
     <script>
-        var contentitem = content['mp4-multikey'],
+        var contentitem = content['mp4-multikey-sequential'],
             handler = new MessageHandler( 'org.w3.clearkey', contentitem ),
             config = {  video:              document.getElementById('videoelement'),
                         keysystem:          'org.w3.clearkey',
@@ -45,8 +45,8 @@
                         videoType:          contentitem.video.type,
                         initDataType:       'keyids',
                         initData:           getMultikeyInitDatas(contentitem,'keyids'),
-                        duration:           5,
-                        testcase:           'sequential' };
+                        duration:           5
+                     };
 
         runTest(config);
     </script>

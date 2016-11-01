@@ -64,14 +64,7 @@ add_task(function* () {
       yield selectNode(nodeToSelect, inspector);
     }
 
-    let onNewRoot = inspector.once("new-root");
     yield navigateToAndWaitForNewRoot(url);
-
-    info("Waiting for new root.");
-    yield onNewRoot;
-
-    info("Waiting for inspector to update after new-root event.");
-    yield inspector.once("inspector-updated");
 
     let nodeFront = yield getNodeFront(selectedNode, inspector);
     ok(nodeFront, "Got expected node front");
@@ -79,23 +72,24 @@ add_task(function* () {
        selectedNode + " is selected after navigation.");
   }
 
-  function navigateToAndWaitForNewRoot(url) {
+  function* navigateToAndWaitForNewRoot(url) {
     info("Navigating and waiting for new-root event after navigation.");
 
-    let newRoot = inspector.once("new-root");
+    let current = yield testActor.eval("location.href");
+    if (url == current) {
+      info("Reloading page.");
+      let markuploaded = inspector.once("markuploaded");
+      let onNewRoot = inspector.once("new-root");
+      let onUpdated = inspector.once("inspector-updated");
 
-    return testActor.eval("location.href")
-      .then(current => {
-        if (url == current) {
-          info("Reloading page.");
-          let activeTab = toolbox.target.activeTab;
-          return activeTab.reload();
-        }
-
-        info("Navigating to " + url);
-        navigateTo(toolbox, url);
-
-        return newRoot;
-      });
+      let activeTab = toolbox.target.activeTab;
+      yield activeTab.reload();
+      info("Waiting for inspector to be ready.");
+      yield markuploaded;
+      yield onNewRoot;
+      yield onUpdated;
+    } else {
+      yield navigateTo(inspector, url);
+    }
   }
 });

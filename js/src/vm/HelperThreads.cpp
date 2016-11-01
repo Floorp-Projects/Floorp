@@ -740,7 +740,8 @@ GlobalHelperThreadState::GlobalHelperThreadState()
    threadCount(0),
    threads(nullptr),
    wasmCompilationInProgress(false),
-   numWasmFailedJobs(0)
+   numWasmFailedJobs(0),
+   helperLock(mutexid::GlobalHelperThreadState)
 {
     cpuCount = GetCPUCount();
     threadCount = ThreadCountForCPUCount(cpuCount);
@@ -1320,7 +1321,7 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSContext* cx, ParseTask* par
     // destination compartment.  Finish any ongoing incremental GC first and
     // assert that no allocation can occur.
     gc::FinishGC(cx);
-    JS::AutoAssertNoAlloc noAlloc(cx);
+    JS::AutoAssertNoGC nogc(cx);
 
     LeaveParseTaskZone(cx, parseTask);
 

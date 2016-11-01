@@ -96,7 +96,7 @@ this.E10SUtils = {
     return this.canLoadURIInProcess(aURI.spec, Services.appinfo.processType);
   },
 
-  redirectLoad: function(aDocShell, aURI, aReferrer) {
+  redirectLoad: function(aDocShell, aURI, aReferrer, aFreshProcess) {
     // Retarget the load to the correct process
     let messageManager = aDocShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIContentFrameMessageManager);
@@ -107,6 +107,7 @@ this.E10SUtils = {
         uri: aURI.spec,
         flags: Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
         referrer: aReferrer ? aReferrer.spec : null,
+        reloadInFreshProcess: !!aFreshProcess,
       },
       historyIndex: sessionHistory.requestedIndex,
     });

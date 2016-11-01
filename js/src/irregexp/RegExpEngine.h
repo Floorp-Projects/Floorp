@@ -153,6 +153,7 @@ class InfallibleVector
     T popCopy() { return vector_.popCopy(); }
 
     T* begin() { return vector_.begin(); }
+    const T* begin() const { return vector_.begin(); }
 
     T& operator[](size_t index) { return vector_[index]; }
     const T& operator[](size_t index) const { return vector_[index]; }

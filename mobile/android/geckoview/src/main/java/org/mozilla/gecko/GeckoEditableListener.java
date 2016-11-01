@@ -36,8 +36,8 @@ interface GeckoEditableListener {
 
     void notifyIME(int type);
     void notifyIMEContext(int state, String typeHint, String modeHint, String actionHint);
-    void onSelectionChange(int start, int end);
-    void onTextChange(CharSequence text, int start, int oldEnd, int newEnd);
+    void onSelectionChange();
+    void onTextChange();
     void onDefaultKeyEvent(KeyEvent event);
     void updateCompositionRects(final RectF[] aRects);
 }

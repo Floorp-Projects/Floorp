@@ -1,3 +1,5 @@
+"use strict";
+
 const EDGE_AVAILABLE_MIGRATIONS =
   MigrationUtils.resourceTypes.COOKIES |
   MigrationUtils.resourceTypes.BOOKMARKS |

@@ -569,4 +569,36 @@
 
 #endif /* __cplusplus */
 
+/**
+ * Printf style formats.  MOZ_FORMAT_PRINTF can be used to annotate a
+ * function or method that is "printf-like"; this will let (some)
+ * compilers check that the arguments match the template string.
+ *
+ * This macro takes two arguments.  The first argument is the argument
+ * number of the template string.  The second argument is the argument
+ * number of the '...' argument holding the arguments.
+ *
+ * Argument numbers start at 1.  Note that the implicit "this"
+ * argument of a non-static member function counts as an argument.
+ *
+ * So, for a simple case like:
+ *   void print_something (int whatever, const char *fmt, ...);
+ * The corresponding annotation would be
+ *   MOZ_FORMAT_PRINTF(2, 3)
+ * However, if "print_something" were a non-static member function,
+ * then the annotation would be:
+ *   MOZ_FORMAT_PRINTF(3, 4)
+ *
+ * Note that the checking is limited to standards-conforming
+ * printf-likes, and in particular this should not be used for
+ * PR_snprintf and friends, which are "printf-like" but which assign
+ * different meanings to the various formats.
+ */
+#ifdef __GNUC__
+#define MOZ_FORMAT_PRINTF(stringIndex, firstToCheck)  \
+    __attribute__ ((format (printf, stringIndex, firstToCheck)))
+#else
+#define MOZ_FORMAT_PRINTF(stringIndex, firstToCheck)
+#endif
+
 #endif /* mozilla_Attributes_h */

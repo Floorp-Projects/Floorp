@@ -453,10 +453,13 @@ class FunctionBox : public ObjectBox, public SharedContext
     uint16_t        length;
 
     uint8_t         generatorKindBits_;     /* The GeneratorKind of this function. */
+    uint8_t         asyncKindBits_;         /* The FunctionAsyncKing of this function. */
+
     bool            isGenexpLambda:1;       /* lambda from generator expression */
     bool            hasDestructuringArgs:1; /* parameter list contains destructuring expression */
     bool            hasParameterExprs:1;    /* parameter list contains expressions */
     bool            hasDirectEvalInParameterExpr:1; /* parameter list contains direct eval */
+    bool            hasDuplicateParameters:1; /* parameter list contains duplicate names */
     bool            useAsm:1;               /* see useAsmOrInsideUseAsm */
     bool            insideUseAsm:1;         /* see useAsmOrInsideUseAsm */
     bool            isAnnexB:1;             /* need to emit a synthesized Annex B assignment */
@@ -472,7 +475,8 @@ class FunctionBox : public ObjectBox, public SharedContext
     FunctionContextFlags funCxFlags;
 
     FunctionBox(ExclusiveContext* cx, LifoAlloc& alloc, ObjectBox* traceListHead, JSFunction* fun,
-                Directives directives, bool extraWarnings, GeneratorKind generatorKind);
+                Directives directives, bool extraWarnings, GeneratorKind generatorKind,
+                FunctionAsyncKind asyncKind);
 
     MutableHandle<LexicalScope::Data*> namedLambdaBindings() {
         MOZ_ASSERT(context->compartment()->runtimeFromAnyThread()->keepAtoms());
@@ -531,6 +535,8 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool isGenerator() const { return generatorKind() != NotGenerator; }
     bool isLegacyGenerator() const { return generatorKind() == LegacyGenerator; }
     bool isStarGenerator() const { return generatorKind() == StarGenerator; }
+    FunctionAsyncKind asyncKind() const { return AsyncKindFromBits(asyncKindBits_); }
+    bool isAsync() const { return asyncKind() == AsyncFunction; }
     bool isArrow() const { return function()->isArrow(); }
 
     void setGeneratorKind(GeneratorKind kind) {
@@ -560,8 +566,12 @@ class FunctionBox : public ObjectBox, public SharedContext
                                              funCxFlags.isDerivedClassConstructor = true; }
     void setHasInnerFunctions()            { funCxFlags.hasInnerFunctions         = true; }
 
+    bool hasSimpleParameterList() const {
+        return !function()->hasRest() && !hasParameterExprs && !hasDestructuringArgs;
+    }
+
     bool hasMappedArgsObj() const {
-        return !strict() && !function()->hasRest() && !hasParameterExprs && !hasDestructuringArgs;
+        return !strict() && hasSimpleParameterList();
     }
 
     // Return whether this or an enclosing function is being parsed and

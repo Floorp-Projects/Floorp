@@ -1,0 +1,16 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Gule sider</ShortName>
+<Description>Gule sider person og firmasøk</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAABI1f7/SNX+/0jV/v9I1f7/SNX+/0jV/v9I1f7/SNX+/0jV/v9K3P//OLDU/wAEBf8AAAD/AAAA/wAAAP8EDhL/StX+/0rV/v9K1f7/StX+/0rV/v9K1f7/StX+/0rV/v9K1f7/Td3//zirzv8AAgP/AAAA/wAAAP8AAAD/AwkM/0zW/f9M1v3/TNb9/0zW/f9M1v3/TNb9/0zW/f9M1v3/TNb9/0/e//85rM7/AAID/wAAAP8AAAD/AAAA/wMKDf9P1/3/T9f9/0/X/f9P1/3/T9f9/0/X/f9P1/3/T9f9/0/X/f9S3///OqzN/wAAAP8AAAD/AAAA/wAAAP8CBwn/UNj9/1DY/f9Q2P3/UNj9/1DX/f9U4f//Vuf//1bn//9W5///We7//z+32v8CCg3/AwcJ/wMHCf8DBwn/BhQZ/1LZ/f9S2f3/Utn9/1LZ/v9T3f7/NJGr/ydmeP8nZnj/J2Z4/ydneP8+qsf/Tcrm/0rD5P9Kw+T/SsPk/0vG5/9T2f3/U9n9/1PZ/f9U2v7/VOD//xM/TP8AAAD/AAAA/wAAAP8AAAD/K3aK/1rs//9V3v//Vd7//1Xe//9V3v//U9n9/1PZ/f9T2f3/VNr+/1Tf//8XSFb/AAAA/wAAAP8AAAD/AAAA/y16j/9Y5v//U9n9/1PZ/f9T2f3/U9n9/1PZ/f9T2f3/U9n9/1Ta/v9U3///F0hW/wAAAP8AAAD/AAAA/wAAAP8teo//WOb//1PZ/f9T2f3/U9n9/1PZ/f9V3v//Vd7//1Xe//9W3///VuT//xRATP8AAAD/AAAA/wAAAP8AAAD/LHWJ/1rs//9V3v//Vd7//1Xe//9V3v//S8Tk/0vE5P9LxOT/S8Tl/07O7P8uh6H/GlNk/xpUZf8aVGX/GlRl/zmjwP9OzOf/S8Tk/0vE5P9LxOT/S8bn/wMICf8DCAn/AwgJ/wMHCf8OLTb/Utr//1bl//9V4///VeP//1jq//9AuNr/AwoN/wMICf8DCAn/AwgJ/wYUGf8AAAD/AAAA/wAAAP8AAAD/CiEp/0/R9f9V3f//U9r+/1Pa/v9Y4v//Pa3N/wAAAP8AAAD/AAAA/wAAAP8CBwn/AAAA/wAAAP8AAAD/AAAA/wskLP9P0fX/VNz//1PZ/f9T2f3/V+H//z2uzv8AAgP/AAAA/wAAAP8AAAD/AwoN/wAAAP8AAAD/AAAA/wAAAP8LIyv/T9H1/1Tc//9T2f3/U9n9/1fh//89rc3/AAID/wAAAP8AAAD/AAAA/wMJDP8AAAD/AAAA/wAAAP8AAAD/DCcw/0/T9/9U3P//U9n9/1PZ/f9X4f//PrLT/wAEBf8AAAD/AAAA/wAAAP8EDhL/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==</Image>
+<Url type="text/html" method="GET" template="http://www.gulesider.no/query" resultdomain="gulesider.no">
+  <Param name="what" value="all"/>
+  <Param name="search_word" value="{searchTerms}"/>
+  <Param name="cmpid" value="fre_partner_fire_gssbtop"/>
+</Url>
+<SearchForm>http://www.gulesider.no/</SearchForm>
+</SearchPlugin>

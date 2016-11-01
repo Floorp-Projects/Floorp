@@ -1,0 +1,331 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test Promise rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - Promise</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+"use strict";
+
+window.onload = Task.async(function* () {
+  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+  let { PromiseRep } = browserRequire("devtools/client/shared/components/reps/promise");
+
+  const componentUnderTest = PromiseRep;
+
+  try {
+    yield testPending();
+    yield testFulfilledWithNumber();
+    yield testFulfilledWithString();
+    yield testFulfilledWithObject();
+    yield testFulfilledWithArray();
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function testPending() {
+    // Test object = `new Promise((resolve, reject) => true)`
+    const stub = getGripStub("testPending");
+
+    // Test that correct rep is chosen.
+    const renderedRep = shallowRenderComponent(Rep, { object: stub });
+    is(renderedRep.type, PromiseRep.rep,
+      `Rep correctly selects ${PromiseRep.rep.displayName} for pending Promise`);
+
+    // Test rendering
+    const defaultOutput = `Promise { <state>: "pending" }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `Promise { "pending" }`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testPending", componentUnderTest, stub);
+  }
+  function testFulfilledWithNumber() {
+    // Test object = `Promise.resolve(42)`
+    const stub = getGripStub("testFulfilledWithNumber");
+
+    // Test that correct rep is chosen.
+    const renderedRep = shallowRenderComponent(Rep, { object: stub });
+    const {displayName} = PromiseRep.rep;
+    is(renderedRep.type, PromiseRep.rep,
+      `Rep correctly selects ${displayName} for Promise fulfilled with a number`);
+
+    // Test rendering
+    const defaultOutput = `Promise { <state>: "fulfilled", <value>: 42 }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `Promise { "fulfilled" }`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testFulfilledWithNumber", componentUnderTest, stub);
+  }
+  function testFulfilledWithString() {
+    // Test object = `Promise.resolve("foo")`
+    const stub = getGripStub("testFulfilledWithString");
+
+    // Test that correct rep is chosen.
+    const renderedRep = shallowRenderComponent(Rep, { object: stub });
+    const {displayName} = PromiseRep.rep;
+    is(renderedRep.type, PromiseRep.rep,
+      `Rep correctly selects ${displayName} for Promise fulfilled with a string`);
+
+    // Test rendering
+    const defaultOutput = `Promise { <state>: "fulfilled", <value>: "foo" }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `Promise { "fulfilled" }`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testFulfilledWithString", componentUnderTest, stub);
+  }
+
+  function testFulfilledWithObject() {
+    // Test object = `Promise.resolve({foo: "bar", baz: "boo"})`
+    const stub = getGripStub("testFulfilledWithObject");
+
+    // Test that correct rep is chosen.
+    const renderedRep = shallowRenderComponent(Rep, { object: stub });
+    const {displayName} = PromiseRep.rep;
+    is(renderedRep.type, PromiseRep.rep,
+      `Rep correctly selects ${displayName} for Promise fulfilled with an object`);
+
+    // Test rendering
+    const defaultOutput = `Promise { <state>: "fulfilled", <value>: Object }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `Promise { "fulfilled" }`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testFulfilledWithObject", componentUnderTest, stub);
+  }
+
+  function testFulfilledWithArray() {
+    // Test object = `Promise.resolve([1,2,3])`
+    const stub = getGripStub("testFulfilledWithArray");
+
+    // Test that correct rep is chosen.
+    const renderedRep = shallowRenderComponent(Rep, { object: stub });
+    const {displayName} = PromiseRep.rep;
+    is(renderedRep.type, PromiseRep.rep,
+      `Rep correctly selects ${displayName} for Promise fulfilled with an array`);
+
+    // Test rendering
+    const defaultOutput = `Promise { <state>: "fulfilled", <value>: [3] }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `Promise { "fulfilled" }`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testFulfilledWithArray", componentUnderTest, stub);
+  }
+
+  function getGripStub(name) {
+    switch (name) {
+      case "testPending":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj54",
+          "class": "Promise",
+          "promiseState": {
+            "state": "pending",
+            "creationTimestamp": 1477327760242.5752
+          },
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {},
+            "ownPropertiesLength": 0,
+            "safeGetterValues": {}
+          }
+        };
+      case "testFulfilledWithNumber":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj55",
+          "class": "Promise",
+          "promiseState": {
+            "state": "fulfilled",
+            "value": 42,
+            "creationTimestamp": 1477327760242.721,
+            "timeToSettle": 0.018497000000479602
+          },
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {},
+            "ownPropertiesLength": 0,
+            "safeGetterValues": {}
+          }
+        };
+      case "testFulfilledWithString":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj56",
+          "class": "Promise",
+          "promiseState": {
+            "state": "fulfilled",
+            "value": "foo",
+            "creationTimestamp": 1477327760243.2483,
+            "timeToSettle": 0.0019969999998465937
+          },
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {},
+            "ownPropertiesLength": 0,
+            "safeGetterValues": {}
+          }
+        };
+      case "testFulfilledWithObject":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj59",
+          "class": "Promise",
+          "promiseState": {
+            "state": "fulfilled",
+            "value": {
+              "type": "object",
+              "actor": "server1.conn1.child1/obj60",
+              "class": "Object",
+              "extensible": true,
+              "frozen": false,
+              "sealed": false,
+              "ownPropertyLength": 2
+            },
+            "creationTimestamp": 1477327760243.2214,
+            "timeToSettle": 0.002035999999861815
+          },
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {},
+            "ownPropertiesLength": 0,
+            "safeGetterValues": {}
+          }
+        };
+      case "testFulfilledWithArray":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj57",
+          "class": "Promise",
+          "promiseState": {
+            "state": "fulfilled",
+            "value": {
+              "type": "object",
+              "actor": "server1.conn1.child1/obj58",
+              "class": "Array",
+              "extensible": true,
+              "frozen": false,
+              "sealed": false,
+              "ownPropertyLength": 4,
+              "preview": {
+                "kind": "ArrayLike",
+                "length": 3
+              }
+            },
+            "creationTimestamp": 1477327760242.9597,
+            "timeToSettle": 0.006158000000141328
+          },
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {},
+            "ownPropertiesLength": 0,
+            "safeGetterValues": {}
+          }
+        };
+    }
+    return null;
+  }
+});
+</script>
+</pre>
+</body>
+</html>

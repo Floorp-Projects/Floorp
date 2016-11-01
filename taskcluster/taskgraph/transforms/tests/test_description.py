@@ -106,8 +106,8 @@ test_description_schema = Schema({
     # test platform.
     Optional('worker-implementation'): Any(
         'docker-worker',
-        # coming soon:
         'generic-worker',
+        # coming soon:
         'docker-engine',
         'buildbot-bridge',
     ),
@@ -198,6 +198,14 @@ test_description_schema = Schema({
 
     # The current chunk; this is filled in by `all_kinds.py`
     Optional('this-chunk'): int,
+
+    # os user groups for test task workers; required scopes, will be
+    # added automatically
+    Optional('os-groups', default=[]): Any(
+        [basestring],
+        # todo: create a dedicated elevated worker group and name here
+        {'by-test-platform': {basestring: [basestring]}},
+    ),
 
     # -- values supplied by the task-generation infrastructure
 

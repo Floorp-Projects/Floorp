@@ -12,7 +12,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
-#include "mozilla/dom/PresentationConnectionClosedEvent.h"
+#include "mozilla/dom/PresentationConnectionCloseEvent.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/DebugOnly.h"
 #include "nsContentUtils.h"
@@ -434,7 +434,7 @@ PresentationConnection::ProcessStateChanged(nsresult aReason)
       }
 
       Unused <<
-        NS_WARN_IF(NS_FAILED(DispatchConnectionClosedEvent(reason, errorMsg)));
+        NS_WARN_IF(NS_FAILED(DispatchConnectionCloseEvent(reason, errorMsg)));
 
       return RemoveFromLoadGroup();
     }
@@ -504,9 +504,12 @@ PresentationConnection::DoReceiveMessage(const nsACString& aData, bool aIsBinary
   nsresult rv;
   if (aIsBinary) {
     if (mBinaryType == PresentationConnectionBinaryType::Blob) {
-      rv = nsContentUtils::CreateBlobBuffer(cx, GetOwner(), aData, &jsData);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+      RefPtr<Blob> blob =
+        Blob::CreateStringBlob(GetOwner(), aData, EmptyString());
+      MOZ_ASSERT(blob);
+
+      if (!ToJSValue(cx, blob, &jsData)) {
+        return NS_ERROR_FAILURE;
       }
     } else if (mBinaryType == PresentationConnectionBinaryType::Arraybuffer) {
       JS::Rooted<JSObject*> arrayBuf(cx);
@@ -530,7 +533,7 @@ PresentationConnection::DoReceiveMessage(const nsACString& aData, bool aIsBinary
 }
 
 nsresult
-PresentationConnection::DispatchConnectionClosedEvent(
+PresentationConnection::DispatchConnectionCloseEvent(
   PresentationConnectionClosedReason aReason,
   const nsAString& aMessage,
   bool aDispatchNow)
@@ -540,12 +543,12 @@ PresentationConnection::DispatchConnectionClosedEvent(
     return NS_ERROR_FAILURE;
   }
 
-  PresentationConnectionClosedEventInit init;
+  PresentationConnectionCloseEventInit init;
   init.mReason = aReason;
   init.mMessage = aMessage;
 
-  RefPtr<PresentationConnectionClosedEvent> closedEvent =
-    PresentationConnectionClosedEvent::Constructor(this,
+  RefPtr<PresentationConnectionCloseEvent> closedEvent =
+    PresentationConnectionCloseEvent::Constructor(this,
                                                    NS_LITERAL_STRING("close"),
                                                    init);
   closedEvent->SetTrusted(true);
@@ -580,7 +583,8 @@ PresentationConnection::DispatchMessageEvent(JS::Handle<JS::Value> aData)
   messageEvent->InitMessageEvent(nullptr,
                                  NS_LITERAL_STRING("message"),
                                  false, false, aData, origin,
-                                 EmptyString(), nullptr, nullptr);
+                                 EmptyString(), nullptr,
+                                 Sequence<OwningNonNull<MessagePort>>());
   messageEvent->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
@@ -738,7 +742,7 @@ PresentationConnection::AsyncCloseConnectionWithErrorMsg(const nsAString& aMessa
       // Make sure dispatching the event and closing the connection are invoked
       // at the same time by setting |aDispatchNow| to true.
       Unused << NS_WARN_IF(NS_FAILED(
-        DispatchConnectionClosedEvent(PresentationConnectionClosedReason::Error,
+        DispatchConnectionCloseEvent(PresentationConnectionClosedReason::Error,
                                       message,
                                       true)));
 

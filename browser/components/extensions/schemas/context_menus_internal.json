@@ -73,26 +73,6 @@
           }
         }
       }
-    ],
-    "events": [
-      {
-        "name": "onClicked",
-        "type": "function",
-        "description": "Fired when a context menu item is clicked.",
-        "parameters": [
-          {
-            "name": "info",
-            "$ref": "OnClickData",
-            "description": "Information about the item clicked and the context where the click happened."
-          },
-          {
-            "name": "tab",
-            "$ref": "tabs.Tab",
-            "description": "The details of the tab where the click took place. If the click did not take place in a tab, this parameter will be missing.",
-            "optional": true
-          }
-        ]
-      }
     ]
   }
 ]

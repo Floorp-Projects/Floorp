@@ -11,7 +11,7 @@
       'type': 'none',
       'direct_dependent_settings': {
         'include_dirs': [
-          '<(PRODUCT_DIR)/dist/nss/public'
+          '<(nss_dist_dir)/public/nss'
         ]
       },
       'dependencies': [
@@ -64,7 +64,7 @@
         ['disable_dbm==0', {
           'direct_dependent_settings': {
             'include_dirs': [
-              '<(PRODUCT_DIR)/dist/dbm/public'
+              '<(nss_dist_dir)/public/dbm'
             ]
           },
           'dependencies': [

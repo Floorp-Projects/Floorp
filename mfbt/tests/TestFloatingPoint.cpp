@@ -17,6 +17,7 @@ using mozilla::IsInfinite;
 using mozilla::IsNaN;
 using mozilla::IsNegative;
 using mozilla::IsNegativeZero;
+using mozilla::IsPositiveZero;
 using mozilla::NegativeInfinity;
 using mozilla::NumberEqualsInt32;
 using mozilla::NumberIsInt32;
@@ -376,6 +377,18 @@ TestFloatsPredicates()
   A(!IsNegativeZero(0.0f));
   A(!IsNegativeZero(-1.0f));
   A(!IsNegativeZero(1.0f));
+
+  A(!IsPositiveZero(PositiveInfinity<float>()));
+  A(!IsPositiveZero(NegativeInfinity<float>()));
+  A(!IsPositiveZero(SpecificNaN<float>(1, 17)));;
+  A(!IsPositiveZero(SpecificNaN<float>(1, 0x7fff0fUL)));
+  A(!IsPositiveZero(SpecificNaN<float>(0, 17)));;
+  A(!IsPositiveZero(SpecificNaN<float>(0, 0x7fff0fUL)));
+  A(!IsPositiveZero(UnspecifiedNaN<float>()));
+  A(IsPositiveZero(0.0f));
+  A(!IsPositiveZero(-0.0f));
+  A(!IsPositiveZero(-1.0f));
+  A(!IsPositiveZero(1.0f));
 
   int32_t i;
   const int32_t BIG = 2097151;

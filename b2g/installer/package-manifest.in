@@ -159,7 +159,6 @@
 @RESPATH@/components/dom_system_gonk.xpt
 #endif
 #ifdef MOZ_B2G_RIL
-@RESPATH@/components/dom_wappush.xpt
 @RESPATH@/components/dom_mobileconnection.xpt
 #endif
 #ifdef MOZ_B2G_BT
@@ -175,9 +174,6 @@
 @RESPATH@/components/dom_network.xpt
 #ifdef MOZ_SECUREELEMENT
 @RESPATH@/components/dom_secureelement.xpt
-#endif
-#ifdef MOZ_NFC
-@RESPATH@/components/dom_nfc.xpt
 #endif
 @RESPATH@/components/dom_notification.xpt
 @RESPATH@/components/dom_html.xpt
@@ -197,7 +193,6 @@
 @RESPATH@/components/dom_mobilemessage.xpt
 @RESPATH@/components/dom_storage.xpt
 @RESPATH@/components/dom_stylesheets.xpt
-@RESPATH@/components/dom_telephony.xpt
 @RESPATH@/components/dom_threads.xpt
 @RESPATH@/components/dom_traversal.xpt
 @RESPATH@/components/dom_tv.xpt
@@ -446,14 +441,6 @@
 @RESPATH@/components/TetheringManager.manifest
 #endif
 
-; ResourceStats
-#ifdef MOZ_WIDGET_GONK
-@RESPATH@/components/ResourceStats.js
-@RESPATH@/components/ResourceStats.manifest
-@RESPATH@/components/ResourceStatsManager.js
-@RESPATH@/components/ResourceStatsManager.manifest
-#endif // MOZ_WIDGET_GONK
-
 ; RIL
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
 @RESPATH@/components/CellBroadcastService.js
@@ -480,13 +467,7 @@
 @RESPATH@/components/StkCmdFactory.manifest
 @RESPATH@/components/RILSystemMessengerHelper.js
 @RESPATH@/components/RILSystemMessengerHelper.manifest
-@RESPATH@/components/TelephonyAudioService.js
-@RESPATH@/components/TelephonyAudioService.manifest
-@RESPATH@/components/USSDReceivedWrapper.js
-@RESPATH@/components/USSDReceivedWrapper.manifest
 #ifndef DISABLE_MOZ_RIL_GEOLOC
-@RESPATH@/components/TelephonyService.js
-@RESPATH@/components/TelephonyService.manifest
 #endif
 #endif // MOZ_WIDGET_GONK && MOZ_B2G_RIL
 
@@ -557,14 +538,6 @@
 @RESPATH@/components/webvtt.xpt
 @RESPATH@/components/WebVTT.manifest
 @RESPATH@/components/WebVTTParserWrapper.js
-#ifdef MOZ_NFC
-@RESPATH@/components/nsNfc.manifest
-@RESPATH@/components/nsNfc.js
-@RESPATH@/components/Nfc.manifest
-@RESPATH@/components/Nfc.js
-@RESPATH@/components/NfcContentHelper.manifest
-@RESPATH@/components/NfcContentHelper.js
-#endif
 #ifdef MOZ_SECUREELEMENT
 @RESPATH@/components/DOMSecureElement.manifest
 @RESPATH@/components/DOMSecureElement.js

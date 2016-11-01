@@ -232,13 +232,10 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
       CanCreateWMFDecoder<CLSID_CMP3DecMediaObject>()) {
     return true;
   }
-  if (MediaPrefs::PDMWMFIntelDecoderEnabled() && sDXVAEnabled) {
-    if (VPXDecoder::IsVP8(aTrackInfo.mMimeType) &&
-        CanCreateWMFDecoder<CLSID_WebmMfVp8Dec>()) {
-      return true;
-    }
-    if (VPXDecoder::IsVP9(aTrackInfo.mMimeType) &&
-        CanCreateWMFDecoder<CLSID_WebmMfVp9Dec>()) {
+  if (MediaPrefs::PDMWMFVP9DecoderEnabled() && sDXVAEnabled) {
+    if ((VPXDecoder::IsVP8(aTrackInfo.mMimeType) ||
+         VPXDecoder::IsVP9(aTrackInfo.mMimeType)) &&
+        CanCreateWMFDecoder<CLSID_WebmMfVpxDec>()) {
       return true;
     }
   }

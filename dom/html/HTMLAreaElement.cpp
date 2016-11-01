@@ -221,10 +221,11 @@ HTMLAreaElement::ToString(nsAString& aSource)
   return GetHref(aSource);
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 HTMLAreaElement::GetPing(nsAString& aValue)
 {
-  return GetURIListAttr(nsGkAtoms::ping, aValue);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

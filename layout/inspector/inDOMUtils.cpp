@@ -9,9 +9,9 @@
 #include "inDOMUtils.h"
 #include "inLayoutUtils.h"
 
+#include "nsArray.h"
 #include "nsAutoPtr.h"
 #include "nsIServiceManager.h"
-#include "nsISupportsArray.h"
 #include "nsString.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIContentInlines.h"
@@ -225,7 +225,7 @@ inDOMUtils::GetChildrenForNode(nsIDOMNode* aNode,
 NS_IMETHODIMP
 inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
                              const nsAString& aPseudo,
-                             nsISupportsArray **_retval)
+                             nsIArrayExtensions **_retval)
 {
   NS_ENSURE_ARG_POINTER(aElement);
 
@@ -247,13 +247,14 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
     return NS_OK;
   }
 
-  nsCOMPtr<nsISupportsArray> rules;
-  nsresult rv = NS_NewISupportsArray(getter_AddRefs(rules));
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  AutoTArray<nsRuleNode*, 16> ruleNodes;
+  while (!ruleNode->IsRoot()) {
+    ruleNodes.AppendElement(ruleNode);
+    ruleNode = ruleNode->GetParent();
   }
 
-  for ( ; !ruleNode->IsRoot(); ruleNode = ruleNode->GetParent()) {
+  nsCOMPtr<nsIMutableArray> rules = nsArray::Create();
+  for (nsRuleNode* ruleNode : Reversed(ruleNodes)) {
     RefPtr<Declaration> decl = do_QueryObject(ruleNode->GetRule());
     if (decl) {
       RefPtr<mozilla::css::StyleRule> styleRule =
@@ -261,7 +262,7 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
       if (styleRule) {
         nsCOMPtr<nsIDOMCSSRule> domRule = styleRule->GetDOMRule();
         if (domRule) {
-          rules->InsertElementAt(domRule, 0);
+          rules->AppendElement(domRule, /*weak =*/ false);
         }
       }
     }

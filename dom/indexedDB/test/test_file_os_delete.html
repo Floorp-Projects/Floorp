@@ -30,6 +30,10 @@
       obj: { id: 1, file: getRandomFile("random.bin", 100000) }
     };
 
+    SpecialPowers.pushPrefEnv({ set: [["dom.indexedDB.dataThreshold", -1]] },
+                              continueToNextStep);
+    yield undefined;
+
     {
       let request = indexedDB.open(name, 1);
       request.onerror = errorHandler;

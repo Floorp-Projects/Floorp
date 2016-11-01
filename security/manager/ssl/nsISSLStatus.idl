@@ -23,6 +23,13 @@ interface nsISSLStatus : nsISupports {
   const short TLS_VERSION_1_3 = 4;
   readonly attribute unsigned short protocolVersion;
 
+  const short CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE = 0;
+  const short CERTIFICATE_TRANSPARENCY_NONE           = 1;
+  const short CERTIFICATE_TRANSPARENCY_OK             = 2;
+  const short CERTIFICATE_TRANSPARENCY_UNKNOWN_LOG    = 3;
+  const short CERTIFICATE_TRANSPARENCY_INVALID        = 4;
+  readonly attribute unsigned short certificateTransparencyStatus;
+
   readonly attribute boolean isDomainMismatch;
   readonly attribute boolean isNotValidAtThisTime;
 

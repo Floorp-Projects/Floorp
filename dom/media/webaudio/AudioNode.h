@@ -94,7 +94,17 @@ public:
   virtual void Connect(AudioParam& aDestination, uint32_t aOutput,
                        ErrorResult& aRv);
 
+  virtual void Disconnect(ErrorResult& aRv);
   virtual void Disconnect(uint32_t aOutput, ErrorResult& aRv);
+  virtual void Disconnect(AudioNode& aDestination, ErrorResult& aRv);
+  virtual void Disconnect(AudioNode& aDestination, uint32_t aOutput,
+                          ErrorResult& aRv);
+  virtual void Disconnect(AudioNode& aDestination,
+                          uint32_t aOutput, uint32_t aInput,
+                          ErrorResult& aRv);
+  virtual void Disconnect(AudioParam& aDestination, ErrorResult& aRv);
+  virtual void Disconnect(AudioParam& aDestination, uint32_t aOutput,
+                          ErrorResult& aRv);
 
   // Called after input nodes have been explicitly added or removed through
   // the Connect() or Disconnect() methods.
@@ -191,6 +201,10 @@ public:
     return mOutputParams;
   }
 
+  template<typename T>
+  const nsTArray<InputNode>&
+  InputsForDestination(uint32_t aOutputIndex) const;
+
   void RemoveOutputParam(AudioParam* aParam);
 
   // MarkActive() asks the context to keep the AudioNode alive until the
@@ -212,6 +226,18 @@ public:
   virtual const char* NodeType() const = 0;
 
 private:
+  // Given:
+  //
+  // - a DestinationType, that can be an AudioNode or an AudioParam ;
+  // - a Predicate, a function that takes an InputNode& and returns a bool ;
+  //
+  // This method iterates on the InputNodes() of the node at the index
+  // aDestinationIndex, and calls `DisconnectFromOutputIfConnected` with this
+  // input node, if aPredicate returns true.
+  template<typename DestinationType, typename Predicate>
+  bool DisconnectMatchingDestinationInputs(uint32_t aDestinationIndex,
+                                           Predicate aPredicate);
+
   virtual void LastRelease() override
   {
     // We are about to be deleted, disconnect the object from the graph before
@@ -220,6 +246,9 @@ private:
   }
   // Callers must hold a reference to 'this'.
   void DisconnectFromGraph();
+
+  template<typename DestinationType>
+  bool DisconnectFromOutputIfConnected(uint32_t aOutputIndex, uint32_t aInputIndex);
 
 protected:
   // Helpers for sending different value types to streams

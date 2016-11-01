@@ -45,10 +45,8 @@ static_assert((((1 << nsStyleStructID_Length) - 1) &
                ~(NS_STYLE_INHERIT_MASK)) == 0,
               "Not enough bits in NS_STYLE_INHERIT_MASK");
 
-// These are the limits that we choose to clamp grid line numbers to.
-// http://dev.w3.org/csswg/css-grid/#overlarge-grids
-const int32_t nsStyleGridLine::kMinLine = -10000;
-const int32_t nsStyleGridLine::kMaxLine = 10000;
+/* static */ const int32_t nsStyleGridLine::kMinLine;
+/* static */ const int32_t nsStyleGridLine::kMaxLine;
 
 static bool
 EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
@@ -787,7 +785,7 @@ nsStyleXUL::CalcDifference(const nsStyleXUL& aNewData) const
 // --------------------
 // nsStyleColumn
 //
-/* static */ const uint32_t nsStyleColumn::kMaxColumnCount = 1000;
+/* static */ const uint32_t nsStyleColumn::kMaxColumnCount;
 
 nsStyleColumn::nsStyleColumn(StyleStructContext aContext)
   : mColumnCount(NS_STYLE_COLUMN_COUNT_AUTO)
@@ -2453,11 +2451,10 @@ nsStyleImageLayers::HasLayerWithImage() const
 bool
 nsStyleImageLayers::IsInitialPositionForLayerType(Position aPosition, LayerType aType)
 {
-  float intialValue = nsStyleImageLayers::GetInitialPositionForLayerType(aType);
-  if (aPosition.mXPosition.mPercent == intialValue &&
+  if (aPosition.mXPosition.mPercent == 0.0f &&
       aPosition.mXPosition.mLength == 0 &&
       aPosition.mXPosition.mHasPercent &&
-      aPosition.mYPosition.mPercent == intialValue &&
+      aPosition.mYPosition.mPercent == 0.0f &&
       aPosition.mYPosition.mLength == 0 &&
       aPosition.mYPosition.mHasPercent) {
     return true;
@@ -2591,33 +2588,6 @@ nsStyleImageLayers::Size::operator==(const Size& aOther) const
          (mHeightType != eLengthPercentage || mHeight == aOther.mHeight);
 }
 
-bool
-nsStyleImageLayers::Repeat::IsInitialValue(LayerType aType) const
-{
-  if (aType == LayerType::Background) {
-    return mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT &&
-           mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
-  } else {
-    MOZ_ASSERT(aType == LayerType::Mask);
-    return mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT &&
-           mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT;
-  }
-}
-
-void
-nsStyleImageLayers::Repeat::SetInitialValues(LayerType aType)
-{
-  if (aType == LayerType::Background) {
-    mXRepeat = NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
-    mYRepeat = NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
-  } else {
-    MOZ_ASSERT(aType == LayerType::Mask);
-
-    mXRepeat = NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT;
-    mYRepeat = NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT;
-  }
-}
-
 nsStyleImageLayers::Layer::Layer()
   : mClip(NS_STYLE_IMAGELAYER_CLIP_BORDER)
   , mAttachment(NS_STYLE_IMAGELAYER_ATTACHMENT_SCROLL)
@@ -2636,11 +2606,9 @@ nsStyleImageLayers::Layer::~Layer()
 void
 nsStyleImageLayers::Layer::Initialize(nsStyleImageLayers::LayerType aType)
 {
-  mRepeat.SetInitialValues(aType);
+  mRepeat.SetInitialValues();
 
-  float initialPositionValue =
-    nsStyleImageLayers::GetInitialPositionForLayerType(aType);
-  mPosition.SetInitialPercentValues(initialPositionValue);
+  mPosition.SetInitialPercentValues(0.0f);
 
   if (aType == LayerType::Background) {
     mOrigin = NS_STYLE_IMAGELAYER_ORIGIN_PADDING;
@@ -2959,7 +2927,7 @@ nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
   , mOverflowY(NS_STYLE_OVERFLOW_VISIBLE)
   , mOverflowClipBox(NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX)
   , mResize(NS_STYLE_RESIZE_NONE)
-  , mOrient(NS_STYLE_ORIENT_INLINE)
+  , mOrient(StyleOrient::Inline)
   , mIsolation(NS_STYLE_ISOLATION_AUTO)
   , mTopLayer(NS_STYLE_TOP_LAYER_NONE)
   , mWillChangeBitField(0)
@@ -3476,7 +3444,6 @@ nsStyleContentData::UntrackImage(nsPresContext* aContext)
 //
 
 nsStyleContent::nsStyleContent(StyleStructContext aContext)
-  : mMarkerOffset(eStyleUnit_Auto)
 {
   MOZ_COUNT_CTOR(nsStyleContent);
 }
@@ -3501,8 +3468,7 @@ nsStyleContent::Destroy(nsPresContext* aContext)
 }
 
 nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
-  : mMarkerOffset(aSource.mMarkerOffset)
-  , mContents(aSource.mContents)
+  : mContents(aSource.mContents)
   , mIncrements(aSource.mIncrements)
   , mResets(aSource.mResets)
 {
@@ -3531,10 +3497,6 @@ nsStyleContent::CalcDifference(const nsStyleContent& aNewData) const
       mIncrements != aNewData.mIncrements ||
       mResets != aNewData.mResets) {
     return nsChangeHint_ReconstructFrame;
-  }
-
-  if (mMarkerOffset != aNewData.mMarkerOffset) {
-    return NS_STYLE_HINT_REFLOW;
   }
 
   return nsChangeHint(0);
@@ -3849,8 +3811,8 @@ nsCursorImage::operator==(const nsCursorImage& aOther) const
 }
 
 nsStyleUserInterface::nsStyleUserInterface(StyleStructContext aContext)
-  : mUserInput(NS_STYLE_USER_INPUT_AUTO)
-  , mUserModify(NS_STYLE_USER_MODIFY_READ_ONLY)
+  : mUserInput(StyleUserInput::Auto)
+  , mUserModify(StyleUserModify::ReadOnly)
   , mUserFocus(StyleUserFocus::None)
   , mPointerEvents(NS_STYLE_POINTER_EVENTS_AUTO)
   , mCursor(NS_STYLE_CURSOR_AUTO)
@@ -3901,8 +3863,8 @@ nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aNewData) const
   }
 
   if (mUserInput != aNewData.mUserInput) {
-    if (NS_STYLE_USER_INPUT_NONE == mUserInput ||
-        NS_STYLE_USER_INPUT_NONE == aNewData.mUserInput) {
+    if (StyleUserInput::None == mUserInput ||
+        StyleUserInput::None == aNewData.mUserInput) {
       hint |= nsChangeHint_ReconstructFrame;
     } else {
       hint |= nsChangeHint_NeutralChange;
@@ -3924,7 +3886,7 @@ nsStyleUIReset::nsStyleUIReset(StyleStructContext aContext)
   : mUserSelect(StyleUserSelect::Auto)
   , mForceBrokenImageIcon(0)
   , mIMEMode(NS_STYLE_IME_MODE_AUTO)
-  , mWindowDragging(NS_STYLE_WINDOW_DRAGGING_DEFAULT)
+  , mWindowDragging(StyleWindowDragging::Default)
   , mWindowShadow(NS_STYLE_WINDOW_SHADOW_DEFAULT)
 {
   MOZ_COUNT_CTOR(nsStyleUIReset);

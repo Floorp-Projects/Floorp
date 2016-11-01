@@ -22,6 +22,7 @@
 #include "js/Conversions.h"
 #include "js/Value.h"
 
+#include "vm/NativeObject.h"
 #include "vm/TypedArrayObject.h"
 
 namespace js {
@@ -423,6 +424,64 @@ class ElementSpecific
         return true;
     }
 
+    /*
+     * Copy |source| into the typed array |target|.
+     */
+    static bool
+    initFromIterablePackedArray(JSContext* cx, Handle<SomeTypedArray*> target,
+                                HandleArrayObject source)
+    {
+        MOZ_ASSERT(target->type() == SpecificArray::ArrayTypeID(),
+                   "target type and NativeType must match");
+        MOZ_ASSERT(IsPackedArray(source), "source array must be packed");
+        MOZ_ASSERT(source->getDenseInitializedLength() <= target->length());
+
+        uint32_t len = source->getDenseInitializedLength();
+        uint32_t i = 0;
+
+        // Attempt fast-path infallible conversion of dense elements up to the
+        // first potentially side-effectful conversion.
+
+        SharedMem<T*> dest =
+            target->template as<TypedArrayObject>().viewDataEither().template cast<T*>();
+
+        const Value* srcValues = source->getDenseElements();
+        for (; i < len; i++) {
+            if (!canConvertInfallibly(srcValues[i]))
+                break;
+            Ops::store(dest + i, infallibleValueToNative(srcValues[i]));
+        }
+        if (i == len)
+            return true;
+
+        // Convert any remaining elements by first collecting them into a
+        // temporary list, and then copying them into the typed array.
+        AutoValueVector values(cx);
+        if (!values.append(srcValues + i, len - i))
+            return false;
+
+        RootedValue v(cx);
+        for (uint32_t j = 0; j < values.length(); i++, j++) {
+            v = values[j];
+
+            T n;
+            if (!valueToNative(cx, v, &n))
+                return false;
+
+            // |target| is a newly allocated typed array and not yet visible to
+            // content script, so valueToNative can't detach the underlying
+            // buffer.
+            MOZ_ASSERT(i < target->length());
+
+            // Compute every iteration in case GC moves the data.
+            SharedMem<T*> newDest =
+                target->template as<TypedArrayObject>().viewDataEither().template cast<T*>();
+            Ops::store(newDest + i, n);
+        }
+
+        return true;
+    }
+
   private:
     static bool
     setFromOverlappingTypedArray(JSContext* cx,
@@ -602,191 +661,6 @@ class TypedArrayMethods
     typedef typename SomeTypedArray::template OfType<uint8_clamped>::Type Uint8ClampedArrayType;
 
   public:
-    // subarray(start[, end])
-    // %TypedArray%.prototype.subarray is a self-hosted method, so this code is
-    // only used for shared typed arrays.  We should self-host both methods
-    // eventually (but note TypedArraySubarray will require changes to be used
-    // with shared typed arrays), but we need to rejigger the shared typed
-    // array prototype chain before we can do that.
-    static bool
-    subarray(JSContext* cx, const CallArgs& args)
-    {
-        MOZ_ASSERT(SomeTypedArray::is(args.thisv()));
-
-        Rooted<SomeTypedArray*> tarray(cx, &args.thisv().toObject().as<SomeTypedArray>());
-
-        // These are the default values.
-        uint32_t initialLength = tarray->length();
-        uint32_t begin = 0, end = initialLength;
-
-        if (args.length() > 0) {
-            if (!ToClampedIndex(cx, args[0], initialLength, &begin))
-                return false;
-
-            if (args.length() > 1) {
-                if (!ToClampedIndex(cx, args[1], initialLength, &end))
-                    return false;
-            }
-        }
-
-        if (begin > end)
-            begin = end;
-
-        if (begin > tarray->length() || end > tarray->length() || begin > end) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
-            return false;
-        }
-
-        if (!SomeTypedArray::ensureHasBuffer(cx, tarray))
-            return false;
-
-        Rooted<BufferType*> bufobj(cx, tarray->buffer());
-        MOZ_ASSERT(bufobj);
-
-        uint32_t length = end - begin;
-
-        size_t elementSize = tarray->bytesPerElement();
-        MOZ_ASSERT(begin < UINT32_MAX / elementSize);
-
-        uint32_t arrayByteOffset = tarray->byteOffset();
-        MOZ_ASSERT(UINT32_MAX - begin * elementSize >= arrayByteOffset);
-
-        uint32_t byteOffset = arrayByteOffset + begin * elementSize;
-
-        JSObject* nobj = nullptr;
-        switch (tarray->type()) {
-          case Scalar::Int8:
-            nobj = Int8ArrayType::makeInstance(cx, bufobj, byteOffset, length);
-            break;
-          case Scalar::Uint8:
-            nobj = Uint8ArrayType::makeInstance(cx, bufobj, byteOffset, length);
-            break;
-          case Scalar::Int16:
-            nobj = Int16ArrayType::makeInstance(cx, bufobj, byteOffset, length);
-            break;
-          case Scalar::Uint16:
-            nobj = Uint16ArrayType::makeInstance(cx, bufobj, byteOffset, length);
-            break;
-          case Scalar::Int32:
-            nobj = Int32ArrayType::makeInstance(cx, bufobj, byteOffset, length);
-            break;
-          case Scalar::Uint32:
-            nobj = Uint32ArrayType::makeInstance(cx, bufobj, byteOffset, length);
-            break;
-          case Scalar::Float32:
-            nobj = Float32ArrayType::makeInstance(cx, bufobj, byteOffset, length);
-            break;
-          case Scalar::Float64:
-            nobj = Float64ArrayType::makeInstance(cx, bufobj, byteOffset, length);
-            break;
-          case Scalar::Uint8Clamped:
-            nobj = Uint8ClampedArrayType::makeInstance(cx, bufobj, byteOffset, length);
-            break;
-          default:
-            MOZ_CRASH("nonsense target element type");
-            break;
-        }
-        if (!nobj)
-            return false;
-
-        args.rval().setObject(*nobj);
-        return true;
-    }
-
-    /* copyWithin(target, start[, end]) */
-    // ES6 draft rev 26, 22.2.3.5
-    // %TypedArray%.prototype.copyWithin is a self-hosted method, so this code
-    // is only used for shared typed arrays.  We should self-host both methods
-    // eventually (but note TypedArrayCopyWithin will require changes to be
-    // usable for shared typed arrays), but we need to rejigger the shared
-    // typed array prototype chain before we can do that.
-    static bool
-    copyWithin(JSContext* cx, const CallArgs& args)
-    {
-        MOZ_ASSERT(SomeTypedArray::is(args.thisv()));
-
-        // Steps 1-2.
-        Rooted<SomeTypedArray*> obj(cx, &args.thisv().toObject().as<SomeTypedArray>());
-
-        // Steps 3-4.
-        uint32_t len = obj->length();
-
-        // Steps 6-8.
-        uint32_t to;
-        if (!ToClampedIndex(cx, args.get(0), len, &to))
-            return false;
-
-        // Steps 9-11.
-        uint32_t from;
-        if (!ToClampedIndex(cx, args.get(1), len, &from))
-            return false;
-
-        // Steps 12-14.
-        uint32_t final;
-        if (args.get(2).isUndefined()) {
-            final = len;
-        } else {
-            if (!ToClampedIndex(cx, args.get(2), len, &final))
-                return false;
-        }
-
-        // Steps 15-18.
-
-        // If |final - from < 0|, then |count| will be less than 0, so step 18
-        // never loops.  Exit early so |count| can use a non-negative type.
-        // Also exit early if elements are being moved to their pre-existing
-        // location.
-        if (final < from || to == from) {
-            args.rval().setObject(*obj);
-            return true;
-        }
-
-        uint32_t count = Min(final - from, len - to);
-        uint32_t lengthDuringMove = obj->length(); // beware ToClampedIndex
-
-        // Technically |from + count| and |to + count| can't overflow, because
-        // buffer contents are limited to INT32_MAX length.  But eventually
-        // we're going to lift this restriction, and the extra checking cost is
-        // negligible, so just handle it anyway.
-        if (from > lengthDuringMove ||
-            to > lengthDuringMove ||
-            count > lengthDuringMove - from ||
-            count > lengthDuringMove - to)
-        {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
-            return false;
-        }
-
-        const size_t ElementSize = obj->bytesPerElement();
-
-        MOZ_ASSERT(to <= UINT32_MAX / ElementSize);
-        uint32_t byteDest = to * ElementSize;
-
-        MOZ_ASSERT(from <= UINT32_MAX / ElementSize);
-        uint32_t byteSrc = from * ElementSize;
-
-        MOZ_ASSERT(count <= UINT32_MAX / ElementSize);
-        uint32_t byteSize = count * ElementSize;
-
-
-#ifdef DEBUG
-        uint32_t viewByteLength = obj->byteLength();
-        MOZ_ASSERT(byteSize <= viewByteLength);
-        MOZ_ASSERT(byteDest <= viewByteLength);
-        MOZ_ASSERT(byteSrc <= viewByteLength);
-        MOZ_ASSERT(byteDest <= viewByteLength - byteSize);
-        MOZ_ASSERT(byteSrc <= viewByteLength - byteSize);
-#endif
-
-        SharedMem<uint8_t*> data =
-            obj->template as<TypedArrayObject>().viewDataEither().template cast<uint8_t*>();
-        SharedOps::memmove(data + byteDest, data + byteSrc, byteSize);
-
-        // Step 19.
-        args.rval().set(args.thisv());
-        return true;
-    }
-
     /* set(array[, offset]) */
     static bool
     set(JSContext* cx, const CallArgs& args)
@@ -942,6 +816,60 @@ class TypedArrayMethods
             if (isShared)
                 return ElementSpecific<Uint8ClampedArrayType, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
             return ElementSpecific<Uint8ClampedArrayType, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
+          case Scalar::Int64:
+          case Scalar::Float32x4:
+          case Scalar::Int8x16:
+          case Scalar::Int16x8:
+          case Scalar::Int32x4:
+          case Scalar::MaxTypedArrayViewType:
+            break;
+        }
+        MOZ_CRASH("bad target array type");
+    }
+
+    static bool
+    initFromIterablePackedArray(JSContext* cx, Handle<SomeTypedArray*> target,
+                                HandleArrayObject source)
+    {
+        bool isShared = target->isSharedMemory();
+
+        switch (target->type()) {
+          case Scalar::Int8:
+            if (isShared)
+                return ElementSpecific<Int8ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Int8ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Uint8:
+            if (isShared)
+                return ElementSpecific<Uint8ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Uint8ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Int16:
+            if (isShared)
+                return ElementSpecific<Int16ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Int16ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Uint16:
+            if (isShared)
+                return ElementSpecific<Uint16ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Uint16ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Int32:
+            if (isShared)
+                return ElementSpecific<Int32ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Int32ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Uint32:
+            if (isShared)
+                return ElementSpecific<Uint32ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Uint32ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Float32:
+            if (isShared)
+                return ElementSpecific<Float32ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Float32ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Float64:
+            if (isShared)
+                return ElementSpecific<Float64ArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Float64ArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
+          case Scalar::Uint8Clamped:
+            if (isShared)
+                return ElementSpecific<Uint8ClampedArrayType, SharedOps>::initFromIterablePackedArray(cx, target, source);
+            return ElementSpecific<Uint8ClampedArrayType, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
           case Scalar::Int64:
           case Scalar::Float32x4:
           case Scalar::Int8x16:

@@ -619,13 +619,13 @@ class TestPreprocessor(unittest.TestCase):
         with MockedOpen({'f': '#include foo\n'}):
             with self.assertRaises(Preprocessor.Error) as e:
                 self.pp.do_include('f')
-                self.assertEqual(e.key, 'FILE_NOT_FOUND')
+            self.assertEqual(e.exception.key, 'FILE_NOT_FOUND')
 
     def test_include_undefined_variable(self):
         with MockedOpen({'f': '#filter substitution\n#include @foo@\n'}):
             with self.assertRaises(Preprocessor.Error) as e:
                 self.pp.do_include('f')
-                self.assertEqual(e.key, 'UNDEFINED_VAR')
+            self.assertEqual(e.exception.key, 'UNDEFINED_VAR')
 
     def test_include_literal_at(self):
         files = {

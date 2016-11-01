@@ -138,8 +138,9 @@ HTMLEditor::DoInlineTableEditingAction(nsIDOMElement* aElement)
       NS_SUCCEEDED(aElement->HasAttribute(NS_LITERAL_STRING("_moz_anonclass"), &anonElement)) &&
       anonElement) {
     nsAutoString anonclass;
-    nsresult res = aElement->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
-    NS_ENSURE_SUCCESS(res, res);
+    nsresult rv =
+      aElement->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (!StringBeginsWith(anonclass, NS_LITERAL_STRING("mozTable")))
       return NS_OK;
@@ -147,8 +148,8 @@ HTMLEditor::DoInlineTableEditingAction(nsIDOMElement* aElement)
     nsCOMPtr<nsIDOMNode> tableNode = GetEnclosingTable(mInlineEditedCell);
     nsCOMPtr<nsIDOMElement> tableElement = do_QueryInterface(tableNode);
     int32_t rowCount, colCount;
-    res = GetTableSize(tableElement, &rowCount, &colCount);
-    NS_ENSURE_SUCCESS(res, res);
+    rv = GetTableSize(tableElement, &rowCount, &colCount);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     bool hideUI = false;
     bool hideResizersWithInlineTableUI = (GetAsDOMNode(mResizedObject) == tableElement);
@@ -217,10 +218,10 @@ HTMLEditor::RefreshInlineTableEditingUI()
   int32_t xCell, yCell, wCell, hCell;
   GetElementOrigin(mInlineEditedCell, xCell, yCell);
 
-  nsresult res = htmlElement->GetOffsetWidth(&wCell);
-  NS_ENSURE_SUCCESS(res, res);
-  res = htmlElement->GetOffsetHeight(&hCell);
-  NS_ENSURE_SUCCESS(res, res);
+  nsresult rv = htmlElement->GetOffsetWidth(&wCell);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = htmlElement->GetOffsetHeight(&hCell);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t xHoriz = xCell + wCell/2;
   int32_t yVert  = yCell + hCell/2;
@@ -228,8 +229,8 @@ HTMLEditor::RefreshInlineTableEditingUI()
   nsCOMPtr<nsIDOMNode> tableNode = GetEnclosingTable(mInlineEditedCell);
   nsCOMPtr<nsIDOMElement> tableElement = do_QueryInterface(tableNode);
   int32_t rowCount, colCount;
-  res = GetTableSize(tableElement, &rowCount, &colCount);
-  NS_ENSURE_SUCCESS(res, res);
+  rv = GetTableSize(tableElement, &rowCount, &colCount);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   SetAnonymousElementPosition(xHoriz-10, yCell-7,  mAddColumnBeforeButton);
 #ifdef DISABLE_TABLE_DELETION
@@ -241,9 +242,10 @@ HTMLEditor::RefreshInlineTableEditingUI()
   }
   else {
     bool hasClass = false;
-    res = mRemoveColumnButton->HasAttribute(classStr, &hasClass);
-    if (NS_SUCCEEDED(res) && hasClass)
+    rv = mRemoveColumnButton->HasAttribute(classStr, &hasClass);
+    if (NS_SUCCEEDED(rv) && hasClass) {
       mRemoveColumnButton->RemoveAttribute(classStr);
+    }
 #endif
     SetAnonymousElementPosition(xHoriz-4, yCell-7,  mRemoveColumnButton);
 #ifdef DISABLE_TABLE_DELETION
@@ -259,9 +261,10 @@ HTMLEditor::RefreshInlineTableEditingUI()
   }
   else {
     bool hasClass = false;
-    res = mRemoveRowButton->HasAttribute(classStr, &hasClass);
-    if (NS_SUCCEEDED(res) && hasClass)
+    rv = mRemoveRowButton->HasAttribute(classStr, &hasClass);
+    if (NS_SUCCEEDED(rv) && hasClass) {
       mRemoveRowButton->RemoveAttribute(classStr);
+    }
 #endif
     SetAnonymousElementPosition(xCell-7, yVert-4,  mRemoveRowButton);
 #ifdef DISABLE_TABLE_DELETION

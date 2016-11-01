@@ -183,8 +183,8 @@ ReflowInput::ReflowInput(
   : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext)
   , mBlockDelta(0)
   , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
-  , mReflowDepth(aParentReflowInput.mReflowDepth + 1)
   , mFlags(aParentReflowInput.mFlags)
+  , mReflowDepth(aParentReflowInput.mReflowDepth + 1)
 {
   MOZ_ASSERT(aPresContext, "no pres context");
   MOZ_ASSERT(aFrame, "no frame");
@@ -233,6 +233,7 @@ ReflowInput::ReflowInput(
   mFlags.mShrinkWrap = !!(aFlags & COMPUTE_SIZE_SHRINK_WRAP);
   mFlags.mUseAutoBSize = !!(aFlags & COMPUTE_SIZE_USE_AUTO_BSIZE);
   mFlags.mStaticPosIsCBOrigin = !!(aFlags & STATIC_POS_IS_CB_ORIGIN);
+  mFlags.mIOffsetsNeedCSSAlign = mFlags.mBOffsetsNeedCSSAlign = false;
 
   mDiscoveredClearance = nullptr;
   mPercentBSizeObserver = (aParentReflowInput.mPercentBSizeObserver &&
@@ -1347,7 +1348,7 @@ ReflowInput::CalculateHypotheticalPosition
     } else {
       NS_ASSERTION(iter.GetContainer() == blockFrame,
                    "Found placeholder in wrong block!");
-      nsBlockFrame::line_iterator lineBox = iter.GetLine();
+      nsBlockFrame::LineIterator lineBox = iter.GetLine();
 
       // How we determine the hypothetical box depends on whether the element
       // would have been inline-level or block-level
@@ -1556,6 +1557,8 @@ ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
   nsHypotheticalPosition hypotheticalPos;
   if ((iStartIsAuto && iEndIsAuto) || (bStartIsAuto && bEndIsAuto)) {
     if (mFlags.mStaticPosIsCBOrigin) {
+      // XXXdholbert This whole clause should be removed in bug 1269017, where
+      // we'll be making abpsos grid children share our CSS Box Alignment code.
       hypotheticalPos.mWritingMode = cbwm;
       hypotheticalPos.mIStart = nscoord(0);
       hypotheticalPos.mBStart = nscoord(0);
@@ -1565,6 +1568,20 @@ ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
       NS_ASSERTION(placeholderFrame, "no placeholder frame");
       CalculateHypotheticalPosition(aPresContext, placeholderFrame, cbrs,
                                     hypotheticalPos, aFrameType);
+
+      if (placeholderFrame->HasAnyStateBits(
+            PLACEHOLDER_STATICPOS_NEEDS_CSSALIGN)) {
+        DebugOnly<nsIFrame*> placeholderParent = placeholderFrame->GetParent();
+        MOZ_ASSERT(placeholderParent, "shouldn't have unparented placeholders");
+        MOZ_ASSERT(placeholderParent->IsFlexOrGridContainer(),
+                   "This flag should only be set on grid/flex children");
+
+        // If the (as-yet unknown) static position will determine the inline
+        // and/or block offsets, set flags to note those offsets aren't valid
+        // until we can do CSS Box Alignment on the OOF frame.
+        mFlags.mIOffsetsNeedCSSAlign = (iStartIsAuto && iEndIsAuto);
+        mFlags.mBOffsetsNeedCSSAlign = (bStartIsAuto && bEndIsAuto);
+      }
     }
   }
 

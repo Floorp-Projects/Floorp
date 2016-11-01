@@ -13,7 +13,6 @@ Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 var params;
 var cookieBundle;
-var gDateService = null;
 
 var showDetails = "";
 var hideDetails = "";
@@ -38,13 +37,6 @@ function onload()
   document.getElementById("ok").setAttribute("icon", "accept");
   document.getElementById("cancel").setAttribute("icon", "cancel");
   document.getElementById("disclosureButton").setAttribute("icon", "properties");
-
-  if (!gDateService) {
-    const nsScriptableDateFormat_CONTRACTID = "@mozilla.org/intl/scriptabledateformat;1";
-    const nsIScriptableDateFormat = Components.interfaces.nsIScriptableDateFormat;
-    gDateService = Components.classes[nsScriptableDateFormat_CONTRACTID]
-                             .getService(nsIScriptableDateFormat);
-  }
 
   cookieBundle = document.getElementById("cookieBundle");
 
@@ -183,21 +175,12 @@ function cookieDeny()
 function GetExpiresString(secondsUntilExpires) {
   if (secondsUntilExpires) {
     var date = new Date(1000*secondsUntilExpires);
-
-    // if a server manages to set a really long-lived cookie, the dateservice
-    // can't cope with it properly, so we'll just return a blank string
-    // see bug 238045 for details
-    var expiry = "";
-    try {
-      expiry = gDateService.FormatDateTime("", gDateService.dateFormatLong,
-                                           gDateService.timeFormatSeconds,
-                                           date.getFullYear(), date.getMonth()+1,
-                                           date.getDate(), date.getHours(),
-                                           date.getMinutes(), date.getSeconds());
-    } catch (ex) {
-      // do nothing
-    }
-    return expiry;
+    const locale = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                   .getService(Components.interfaces.nsIXULChromeRegistry)
+                   .getSelectedLocale("global", true);
+    const dtOptions = { year: 'numeric', month: 'long', day: 'numeric',
+                        hour: 'numeric', minute: 'numeric', second: 'numeric' };
+    return date.toLocaleString(locale, dtOptions);
   }
   return cookieBundle.getString("expireAtEndOfSession");
 }

@@ -278,6 +278,7 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
 
   return StyleAnimationValue::ComputeDistance(toWrapper->mPropID,
                                               *fromCSSValue, *toCSSValue,
+                                              nullptr,
                                               aDistance) ?
     NS_OK : NS_ERROR_FAILURE;
 }

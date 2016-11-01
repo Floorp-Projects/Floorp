@@ -53,7 +53,7 @@ var NotificationTracker = {
   init: function() {
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
                .getService(Ci.nsIMessageBroadcaster);
-    ppmm.addMessageListener("Addons:GetNotifications", this);
+    ppmm.initialProcessData.remoteAddonsNotificationPaths = this._paths;
   },
 
   add: function(path) {
@@ -81,13 +81,6 @@ var NotificationTracker = {
                .getService(Ci.nsIMessageBroadcaster);
     ppmm.broadcastAsyncMessage("Addons:ChangeNotification", {path: path, count: tracked._count});
   },
-
-  receiveMessage: function(msg) {
-    if (msg.name == "Addons:GetNotifications") {
-      return this._paths;
-    }
-    return undefined;
-  }
 };
 NotificationTracker.init();
 

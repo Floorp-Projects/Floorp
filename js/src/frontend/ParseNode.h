@@ -120,6 +120,7 @@ class ObjectBox;
     F(VOID) \
     F(NOT) \
     F(BITNOT) \
+    F(AWAIT) \
     \
     /* \
      * Binary operators. \
@@ -350,7 +351,8 @@ IsTypeofKind(ParseNodeKind kind)
  * PNK_NEG
  * PNK_VOID,    unary       pn_kid: UNARY expr
  * PNK_NOT,
- * PNK_BITNOT
+ * PNK_BITNOT,
+ * PNK_AWAIT
  * PNK_TYPEOFNAME, unary    pn_kid: UNARY expr
  * PNK_TYPEOFEXPR
  * PNK_PREINCREMENT, unary  pn_kid: MEMBER expr

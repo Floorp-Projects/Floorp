@@ -164,7 +164,7 @@ PrintUsageHeader(const char *progName)
             "         [-f password_file] [-L [seconds]] [-M maxProcs] [-P dbprefix]\n"
             "         [-V [min-version]:[max-version]] [-a sni_name]\n"
             "         [ T <good|revoked|unknown|badsig|corrupted|none|ocsp>] [-A ca]\n"
-            "         [-C SSLCacheEntries] [-S dsa_nickname] -Q"
+            "         [-C SSLCacheEntries] [-S dsa_nickname] -Q [-I groups]"
 #ifndef NSS_DISABLE_ECC
             " [-e ec_nickname]"
 #endif /* NSS_DISABLE_ECC */
@@ -224,7 +224,10 @@ PrintParameterUsage()
         "-c Restrict ciphers\n"
         "-Y prints cipher values allowed for parameter -c and exits\n"
         "-G enables the extended master secret extension [RFC7627]\n"
-        "-Q enables ALPN for HTTP/1.1 [RFC7301]\n",
+        "-Q enables ALPN for HTTP/1.1 [RFC7301]\n"
+        "-I comma separated list of enabled groups for TLS key exchange.\n"
+        "   The following values are valid:\n"
+        "   P256, P384, P521, x25519, FF2048, FF3072, FF4096, FF6144, FF8192\n",
         stderr);
 }
 
@@ -801,6 +804,8 @@ PRBool failedToNegotiateName = PR_FALSE;
 PRBool enableExtendedMasterSecret = PR_FALSE;
 PRBool zeroRTT = PR_FALSE;
 PRBool enableALPN = PR_FALSE;
+SSLNamedGroup *enabledGroups = NULL;
+unsigned int enabledGroupsCount = 0;
 
 static char *virtServerNameArray[MAX_VIRT_SERVER_NAME_ARRAY_INDEX];
 static int virtServerNameIndex = 1;
@@ -1968,6 +1973,13 @@ server_main(
         }
     }
 
+    if (enabledGroups) {
+        rv = SSL_NamedGroupConfig(model_sock, enabledGroups, enabledGroupsCount);
+        if (rv < 0) {
+            errExit("SSL_NamedGroupConfig failed");
+        }
+    }
+
     /* This cipher is not on by default. The Acceptance test
      * would like it to be. Turn this cipher on.
      */
@@ -2185,7 +2197,7 @@ main(int argc, char **argv)
     int optionsFound = 0;
     int maxProcs = 1;
     unsigned short port = 0;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     PRStatus prStatus;
     PRBool bindOnly = PR_FALSE;
     PRBool useLocalThreads = PR_FALSE;
@@ -2214,7 +2226,7 @@ main(int argc, char **argv)
     ** XXX: 'B', 'E', 'q', and 'x' were used in the past but removed
     **      in 3.28, please leave some time before resuing those. */
     optstate = PL_CreateOptState(argc, argv,
-                                 "2:A:C:DGH:L:M:NP:QRS:T:U:V:W:YZa:bc:d:e:f:g:hi:jk:lmn:op:rst:uvw:yz");
+                                 "2:A:C:DGH:I:L:M:NP:QRS:T:U:V:W:YZa:bc:d:e:f:g:hi:jk:lmn:op:rst:uvw:yz");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         ++optionsFound;
         switch (optstate->option) {
@@ -2240,9 +2252,6 @@ main(int argc, char **argv)
 
             case 'G':
                 enableExtendedMasterSecret = PR_TRUE;
-                break;
-
-            case 'I': /* reserved for OCSP multi-stapling */
                 break;
 
             case 'L':
@@ -2440,6 +2449,16 @@ main(int argc, char **argv)
 
             case 'Q':
                 enableALPN = PR_TRUE;
+                break;
+
+            case 'I':
+                rv = parseGroupList(optstate->value, &enabledGroups, &enabledGroupsCount);
+                if (rv != SECSuccess) {
+                    PL_DestroyOptState(optstate);
+                    fprintf(stderr, "Bad group specified.\n");
+                    fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
+                    exit(5);
+                }
                 break;
 
             default:
@@ -2744,6 +2763,9 @@ cleanup:
     }
     if (certStatusArena) {
         PORT_FreeArena(certStatusArena, PR_FALSE);
+    }
+    if (enabledGroups) {
+        PORT_Free(enabledGroups);
     }
     if (NSS_Shutdown() != SECSuccess) {
         SECU_PrintError(progName, "NSS_Shutdown");

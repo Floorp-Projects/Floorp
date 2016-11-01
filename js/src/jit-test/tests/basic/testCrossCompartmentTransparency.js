@@ -13,8 +13,9 @@ var proxyStr = "new Proxy({},                              "+
 var proxy1 = g1.eval(proxyStr);
 var proxy2 = g2.eval(proxyStr);
 
-function test(str, f, isGeneric = false) {
-    "use strict";
+var test = (function() {
+"use strict";
+return function test(str, f, isGeneric = false) {
 
     var x = f(eval(str));
     assertEq(x, f(g1.eval(str)));
@@ -53,6 +54,7 @@ function test(str, f, isGeneric = false) {
     }
     assertEq(threw, !isGeneric);
 }
+})();
 
 test("new Boolean(true)", b => Boolean.prototype.toSource.call(b));
 test("new Boolean(true)", b => Boolean.prototype.toString.call(b));

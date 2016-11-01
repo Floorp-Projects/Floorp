@@ -14,6 +14,8 @@
 #include "webrtc/typedefs.h"
 #include "webrtc/voice_engine/voice_engine_defines.h"
 
+#define MAX_DTMF_SAMPLERATE 48000
+
 namespace webrtc {
 class CriticalSectionWrapper;
 
@@ -41,7 +43,7 @@ public:
 
     bool IsAddingTone();
 
-    int Get10msTone(int16_t output[320], uint16_t& outputSizeInSamples);
+    int Get10msTone(int16_t output[MAX_DTMF_SAMPLERATE/100], uint16_t& outputSizeInSamples);
 
     uint32_t DelaySinceLastTone() const;
 
@@ -53,7 +55,7 @@ private:
                              int16_t value,
                              int16_t volume,
                              int16_t frameLen,
-                             int16_t fs);
+                             uint16_t fs);
 
 private:
     enum {kDtmfFrameSizeMs = 10};
@@ -69,10 +71,10 @@ private:
 private:
     CriticalSectionWrapper& _critSect;
     int32_t _id;
-    uint16_t _outputFrequencyHz;  // {8000, 16000, 32000}
+    uint16_t _outputFrequencyHz;  // {8000, 16000, 32000, 44100, 48000}
     int16_t _oldOutputLow[2];     // Data needed for oscillator model
     int16_t _oldOutputHigh[2];    // Data needed for oscillator model
-    int16_t _frameLengthSamples;  // {80, 160, 320}
+    int16_t _frameLengthSamples;  // {80, 160, 320, 441, 480}
     int32_t _remainingSamples;
     int16_t _eventCode;           // [0, 15]
     int16_t _attenuationDb;       // [0, 36]

@@ -72,6 +72,9 @@ wasm::HasCompilerSupport(ExclusiveContext* cx)
 #endif
 }
 
+// ============================================================================
+// Imports
+
 template<typename T>
 JSObject*
 js::wasm::CreateCustomNaNObject(JSContext* cx, T* addr)
@@ -181,9 +184,6 @@ wasm::ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
 
     return true;
 }
-
-// ============================================================================
-// (Temporary) Wasm class and static methods
 
 static bool
 ThrowBadImportArg(JSContext* cx)
@@ -332,6 +332,9 @@ GetImports(JSContext* cx,
     return true;
 }
 
+// ============================================================================
+// Fuzzing support
+
 static bool
 DescribeScriptedCaller(JSContext* cx, ScriptedCaller* scriptedCaller)
 {
@@ -393,56 +396,6 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
         return false;
 
     return module->instantiate(cx, funcs, table, memory, globals, nullptr, instanceObj);
-}
-
-#if JS_HAS_TOSOURCE
-static bool
-wasm_toSource(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setString(cx->names().Wasm);
-    return true;
-}
-#endif
-
-static const JSFunctionSpec wasm_static_methods[] = {
-#if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,     wasm_toSource,     0, 0),
-#endif
-    JS_FS_END
-};
-
-const Class js::WasmClass = {
-    js_Wasm_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Wasm)
-};
-
-JSObject*
-js::InitWasmClass(JSContext* cx, HandleObject global)
-{
-    MOZ_RELEASE_ASSERT(HasCompilerSupport(cx));
-    MOZ_ASSERT(cx->options().wasm());
-
-    RootedObject proto(cx, global->as<GlobalObject>().getOrCreateObjectPrototype(cx));
-    if (!proto)
-        return nullptr;
-
-    RootedObject Wasm(cx, NewObjectWithGivenProto(cx, &WasmClass, proto, SingletonObject));
-    if (!Wasm)
-        return nullptr;
-
-    if (!JS_DefineProperty(cx, global, js_Wasm_str, Wasm, JSPROP_RESOLVING))
-        return nullptr;
-
-    RootedValue version(cx, Int32Value(EncodingVersion));
-    if (!JS_DefineProperty(cx, Wasm, "experimentalVersion", version, JSPROP_RESOLVING))
-        return nullptr;
-
-    if (!JS_DefineFunctions(cx, Wasm, wasm_static_methods))
-        return nullptr;
-
-    global->as<GlobalObject>().setConstructor(JSProto_Wasm, ObjectValue(*Wasm));
-    return Wasm;
 }
 
 // ============================================================================
@@ -820,7 +773,7 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
 
     unsigned numArgs = instance.metadata().lookupFuncDefExport(funcDefIndex).sig().args().length();
     fun.set(NewNativeConstructor(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED,
-                                 GenericObject, JSFunction::ASMJS_CTOR));
+                                 SingletonObject, JSFunction::ASMJS_CTOR));
     if (!fun)
         return false;
 
@@ -1595,14 +1548,6 @@ WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (error) {
-        if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                               JSMSG_WASM_COMPILE_ERROR, error.get()))
-        {
-            return false;
-        }
-    }
-
     callArgs.rval().setBoolean(validated);
     return true;
 }
@@ -1684,10 +1629,6 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
 
     RootedObject wasm(cx, NewObjectWithGivenProto(cx, &WebAssemblyClass, proto, SingletonObject));
     if (!wasm)
-        return nullptr;
-
-    // This property will be removed before the initial WebAssembly release.
-    if (!JS_DefineProperty(cx, wasm, "experimentalVersion", EncodingVersion, JSPROP_RESOLVING))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, wasm, WebAssembly_static_methods))

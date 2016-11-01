@@ -1,8 +1,5 @@
 ;; TODO: move all tests in this file to appropriate operator-specific files.
 
-;; at least one valid module is required for the testing framework
-(module)
-
 (assert_invalid
   (module (func $type-unary-operand-missing
     (i32.eqz) (drop)
@@ -156,14 +153,6 @@
   (module (func $type-br-operand-missing-in-block
     (i32.const 0)
     (block i32 (br 0))
-    (i32.eqz) (drop)
-  ))
-  "type mismatch"
-)
-(assert_invalid
-  (module (func $type-br-operand-missing-in-loop
-    (i32.const 0)
-    (loop i32 (br 0))
     (i32.eqz) (drop)
   ))
   "type mismatch"

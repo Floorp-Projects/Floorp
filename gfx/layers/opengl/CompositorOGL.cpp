@@ -148,12 +148,6 @@ CompositorOGL::CreateContext()
     NS_WARNING("Failed to create CompositorOGL context");
   }
 
-#ifdef MOZ_WIDGET_GONK
-  MOZ_ASSERT(widget);
-  widget->SetNativeData(
-    NS_NATIVE_OPENGL_CONTEXT, reinterpret_cast<uintptr_t>(context.get()));
-#endif
-
   return context.forget();
 }
 
@@ -178,11 +172,6 @@ CompositorOGL::CleanupResources()
 {
   if (!mGLContext)
     return;
-
-#ifdef MOZ_WIDGET_GONK
-  mWidget->RealWidget()->SetNativeData(
-    NS_NATIVE_OPENGL_CONTEXT, reinterpret_cast<uintptr_t>(nullptr));
-#endif
 
   RefPtr<GLContext> ctx = mGLContext->GetSharedContext();
   if (!ctx) {
@@ -1778,11 +1767,7 @@ GLuint
 CompositorOGL::GetTemporaryTexture(GLenum aTarget, GLenum aUnit)
 {
   if (!mTexturePool) {
-#ifdef MOZ_WIDGET_GONK
-    mTexturePool = new PerFrameTexturePoolOGL(gl());
-#else
     mTexturePool = new PerUnitTexturePoolOGL(gl());
-#endif
   }
   return mTexturePool->GetTexture(aTarget, aUnit);
 }

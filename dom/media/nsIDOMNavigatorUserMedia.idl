@@ -13,6 +13,7 @@ interface nsIMediaDevice : nsISupports
   readonly attribute DOMString id;
   readonly attribute DOMString mediaSource;
   readonly attribute DOMString rawId;
+  readonly attribute boolean scary;
 };
 
 [scriptable, function, uuid(24544878-d35e-4962-8c5f-fb84e97bdfee)]

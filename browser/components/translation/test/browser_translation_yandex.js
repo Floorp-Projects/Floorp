@@ -91,7 +91,7 @@ add_task(function* test_preference_attribution() {
  *
  * @param filename  Name of a fixture file.
  */
-function constructFixtureURL(filename){
+function constructFixtureURL(filename) {
   // Deduce the Mochitest server address in use from a pref that was pre-processed.
   let server = Services.prefs.getCharPref("browser.translation.yandex.translateURLOverride")
                              .replace("http://", "");

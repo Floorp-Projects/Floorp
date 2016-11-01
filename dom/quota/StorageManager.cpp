@@ -332,6 +332,20 @@ StorageManager::Estimate(ErrorResult& aRv)
   return promise.forget();
 }
 
+// static
+bool
+StorageManager::PrefEnabled(JSContext* aCx, JSObject* aObj)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.storageManager.enabled");
+  }
+
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  MOZ_ASSERT(workerPrivate);
+
+  return workerPrivate->StorageManagerEnabled();
+}
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(StorageManager, mOwner)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(StorageManager)

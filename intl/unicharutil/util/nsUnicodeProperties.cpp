@@ -55,12 +55,12 @@ GetCharProps2(uint32_t aCh)
     using namespace mozilla::unicode;
     static const nsCharProps2 undefined = {
 #if ENABLE_INTL_API
-        PAIRED_BRACKET_TYPE_NONE,
         VERTICAL_ORIENTATION_R,
         XIDMOD_NOT_CHARS
 #else
         uint8_t(Script::UNKNOWN),
         PAIRED_BRACKET_TYPE_NONE,
+        0, // EastAsianWidthFWH
         HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED,
         eCharType_LeftToRight,
         XIDMOD_NOT_CHARS,
@@ -294,6 +294,11 @@ GetTitlecaseForAll(uint32_t aCh)
         return GetTitlecaseForLower(aCh ^ (mapValue & kCaseMapCharMask));
     }
     return aCh;
+}
+
+bool IsEastAsianWidthFWH(uint32_t aCh)
+{
+    return GetCharProps2(aCh).mEastAsianWidthFWH;
 }
 #endif
 

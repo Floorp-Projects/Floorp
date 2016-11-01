@@ -190,6 +190,7 @@ add_task(function* test_without_tabs_permission() {
           }
         }
       });
+      browser.tabs.reload(tab.id);
     });
   }, false /* withPermissions */);
 });

@@ -137,6 +137,11 @@ public:
     return mGPUChild;
   }
 
+  // Returns whether or not a GPU process was ever launched.
+  bool AttemptedGPUProcess() const {
+    return mNumProcessAttempts > 0;
+  }
+
 private:
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();

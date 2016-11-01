@@ -1737,10 +1737,6 @@ ChildImpl::CloseForCurrentThread()
   threadLocalInfo->mClosed = true;
 #endif
 
-  if (threadLocalInfo->mActor) {
-    threadLocalInfo->mActor->FlushPendingInterruptQueue();
-  }
-
   // Clearing the thread local will synchronously close the actor.
   DebugOnly<PRStatus> status = PR_SetThreadPrivate(sThreadLocalIndex, nullptr);
   MOZ_ASSERT(status == PR_SUCCESS);
@@ -2032,6 +2028,13 @@ ChildImpl::OpenProtocolOnMainThread(nsIEventTarget* aEventTarget)
 
   ContentChild* content = ContentChild::GetSingleton();
   MOZ_ASSERT(content);
+
+  if (content->IsShuttingDown()) {
+    // The transport for ContentChild is shut down and can't be used to open
+    // PBackground.
+    DispatchFailureCallback(aEventTarget);
+    return false;
+  }
 
   if (!PBackground::Open(content)) {
     MOZ_CRASH("Failed to create top level actor!");

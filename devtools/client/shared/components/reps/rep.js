@@ -21,6 +21,8 @@ define(function (require, exports, module) {
   const { ArrayRep } = require("./array");
   const { Obj } = require("./object");
   const { SymbolRep } = require("./symbol");
+  const { InfinityRep } = require("./infinity");
+  const { NaNRep } = require("./nan");
 
   // DOM types (grips)
   const { Attribute } = require("./attribute");
@@ -28,8 +30,10 @@ define(function (require, exports, module) {
   const { Document } = require("./document");
   const { Event } = require("./event");
   const { Func } = require("./function");
+  const { PromiseRep } = require("./promise");
   const { RegExp } = require("./regexp");
   const { StyleSheet } = require("./stylesheet");
+  const { CommentNode } = require("./comment-node");
   const { TextNode } = require("./text-node");
   const { Window } = require("./window");
   const { ObjectWithText } = require("./object-with-text");
@@ -46,9 +50,11 @@ define(function (require, exports, module) {
     StyleSheet,
     Event,
     DateTime,
+    CommentNode,
     TextNode,
     Attribute,
     Func,
+    PromiseRep,
     ArrayRep,
     Document,
     Window,
@@ -62,6 +68,8 @@ define(function (require, exports, module) {
     StringRep,
     Number,
     SymbolRep,
+    InfinityRep,
+    NaNRep,
   ];
 
   /**
@@ -102,8 +110,8 @@ define(function (require, exports, module) {
     let type = typeof object;
     if (type == "object" && object instanceof String) {
       type = "string";
-    } else if (object && type == "object" && object.type === "symbol") {
-      type = "symbol";
+    } else if (object && type == "object" && object.type) {
+      type = object.type;
     }
 
     if (isGrip(object)) {

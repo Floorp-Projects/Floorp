@@ -326,6 +326,8 @@ AbstractFile.read = function read(path, bytes, options = {}) {
     let buffer = file.read(bytes, options);
     if ("compression" in options) {
       if (options.compression == "lz4") {
+        options = Object.create(options);
+        options.path = path;
         buffer = Lz4.decompressFileContent(buffer, options);
       } else {
         throw OS.File.Error.invalidArgument("Compression");

@@ -184,10 +184,12 @@ add_task(function* testDetailsObjects() {
       let detailString = JSON.stringify(details);
       browser.test.log(`Setting browerAction/pageAction to ${detailString} expecting URLs ${JSON.stringify(details.resolutions)}`);
 
-      browser.browserAction.setIcon(Object.assign({tabId}, details.details));
-      browser.pageAction.setIcon(Object.assign({tabId}, details.details));
-
-      browser.test.sendMessage("iconSet");
+      Promise.all([
+        browser.browserAction.setIcon(Object.assign({tabId}, details.details)),
+        browser.pageAction.setIcon(Object.assign({tabId}, details.details)),
+      ]).then(() => {
+        browser.test.sendMessage("iconSet");
+      });
     });
 
     // Generate a list of tests and resolutions to send back to the test

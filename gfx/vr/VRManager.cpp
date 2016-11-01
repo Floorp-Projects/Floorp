@@ -176,6 +176,9 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
   }
 
   if (bHaveEventListener) {
+    for (uint32_t i = 0; i < mControllerManagers.Length(); ++i) {
+      mControllerManagers[i]->HandleInput();
+    }
     // If content has set an EventHandler to be notified of VR display events
     // we must continually refresh the VR display enumeration to check
     // for events that we must fire such as Window.onvrdisplayconnect
@@ -358,10 +361,6 @@ VRManager::RefreshVRControllers()
       mVRControllers.Put(controller->GetControllerInfo().GetControllerID(),
                          controller);
     }
-  }
-
-  for (uint32_t i = 0; i < mControllerManagers.Length(); ++i) {
-    mControllerManagers[i]->HandleInput();
   }
 }
 

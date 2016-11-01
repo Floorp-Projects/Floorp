@@ -1,0 +1,18 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Findbook</ShortName>
+<Description>Findbook 書籍搜尋</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAArHEA/6xxAP+scQD/rHEA/6xxAP+scQD/rHEA/6xxAP+scQD/rHEA/6xxAP+scQD/rHEA/7a2tv8AAAAArHEA/LZ3AP/LhgT/1YwF/9SMBP/UjAT/1IwE/9SMBP/UjAT/1IwE/9SMBf/UjAX/1IwF/6xxAP+2trb/ypMqDqxxAP+2eAD/y4YC/9OMBf/QgQD/9uvV////////////uXAA/9WMBP/UjAX/1IwF/9SMBf+scQD/tra2/61zAuKscQD/tngA/8uGAv/UjAX/z4EA//Xmyv///////////7pwAP/VjAT/1IwF/9SMBf/UjAX/rHEA/7a2tv+scQD/rHEA/7Z4AP/LhgT/1IwF/8+BAP/15sr///////////+6cAD/1YwE/9SMBf/UjAX/1IwF/6xxAP+2trb/rHEA/6xxAP+2eAD/y4YC/9OMBf/QgQD/9ebK////////////tGQA/9GCAP/PgAD/0YQA/9SMBf+scQD/tra2/6xxAP+scQD/tngA/8uGBP/UjAX/z4EA//Xmyv/////////////////////////////////QggD/rHEA/7a2tv+scQD/rHEA/7Z4AP/LhgL/1IwF/9CBAP/15sr///////////+5hCL/yJg5/8iYO//BjjD/04kA/6xxAP+2trb/rHEA/6xxAP+2eAD/y4YE/9SMBf/OgQD/9ebK////////////um0A/9aKAP/UiQD/1YoA/9SLA/+scQD/tra2/6xxAP+scQD/tngA/8uGBP/UjAX/0IEA//Xmyf///////////7pwAP/VjAT/1IwF/9SLA//Tiwb/rHEA/7a2tv+scQD/rHEA/7Z4AP/LhgL/1IwE/859AP/15sr///////////+1ZwD/04YA/9GEAP/RgAD/zKVa/6xxAP+2trb/rHEA/6xxAP+2eAD/y4YB/9WMBf////////////////////////////////////////////////+scQD/tra2/6xxAP+scQD/tXUA/8uDAP/SkRj/yJc5/8iXOf/Ilzn/yJc5/8iWN//Ilzn/x5c5/8iXOf/Ilzn/rHEA/7a2tv+scQD/rHEA/7B2CP+scQD/rHEA/6xxAP+scQD/rHEA/6xxAP+scQD/rHEA/6xxAP+scQD/rHEA/61xAP+2trb/rHEA/6xyAfvp+///6PD//+z2///w+///9f////v//////////////////////////////////////////////6xxAP8AAAAArncM8axxAP+scQD/rHEA/6xxAP+scQD/rHEA/6xxAP+scQD/rHEA/6xxAP+scQD/rHEA/691B/mtcwPugAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAA%3D%3D</Image>
+<Url type="application/x-suggestions+json" method="GET" template="http://findbook.tw/search/suggest?q={searchTerms}&amp;utm_source=ff-bundled&amp;utm_medium=mozsearch&amp;utm_campaign=search" />
+<Url type="text/html" method="GET" template="http://findbook.tw/search" resultdomain="findbook.tw">
+	<Param name="q" value="{searchTerms}"/>
+	<Param name="utm_source" value="ff-bundled"/>
+	<Param name="utm_medium" value="mozsearch"/>
+	<Param name="utm_campaign" value="search"/>
+</Url>
+<SearchForm>http://findbook.tw/search</SearchForm>
+</SearchPlugin>

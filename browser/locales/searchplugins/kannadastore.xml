@@ -1,0 +1,14 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Kannada Store</ShortName>
+<Description>Kanada Store, Online store</Description>
+<InputEncoding>ISO-8859-1</InputEncoding>
+<Image width="16" height="16">data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%06%00%00%00%1F%F3%FFa%00%00%00%01sRGB%00%AE%CE%1C%E9%00%00%00%06bKGD%00%FF%00%FF%00%FF%A0%BD%A7%93%00%00%00%09pHYs%00%00%0B%13%00%00%0B%13%01%00%9A%9C%18%00%00%00%07tIME%07%D8%0A%0E%11%0D%25%7B%988%3D%00%00%00%19tEXtComment%00Created%20with%20GIMPW%81%0E%17%00%00%02%96IDAT8%CB%B5S%5DHSq%1C%3D%FF%BB%7B%AFw%DB%DD%A6ss%CEebs%E9%0Cm%AB%F0%23T%10%FB%20la%05%81%91F%F8%D0%93%BD%F4R%0F%BD%D4%7B%09AAbdDA%84f%8C%B0%CC%1E%FAxP%B0%9A%99%18%E9%CA%0F%B4%E9%3Elnn%BB%9B%F7%DF%93%D2%C7%A4%A7~%AF%BF%F3%3B%9Cs8%3F%E0%7FN4%D2g%F9%17%86l%B6%A0%94%8A%81%5E%D7%AB%F3%2B%DD%CE%2C%93%12%81%88%3C%DB%E7%91%1Ek%09%18qEb%07%2F%19o%5B%F4%8AavS%EA%D8%D8%BE%2Fr%A5%93%F7%BD%9D%19)v%5D%8B%B2%92%CA%5E%CF%F1%99s%1FO-%7B%F9%89%9B%03%9A(%00lJ%10%0F%BCv%C5%FD%5E%5C%3E%7D%F6%8E%D9D%3A%00%A0%E7%DE%03m%8C%81%D3%B0%93%B6%1C%3CZ%1E%06%00%26%DD%F1%D2%87%AEN)%E4%AE%CFS%8D%40%FCv%F78%A5%B4%00%00%04VRX%AD%DB%0A%0E45%C7%D7%B1i%15%F0k%5E%AB%A8yZh%AE%06%BAG%D9d%CF%E8r%C5%05w%A0L%D8%C16H%FE%B9%00%00'%80%A1%8D%10%FB%DF%CC%E6%3E%FA%1Cl%CE%B3%08W_%8E%871%1CJ%E0%8C%ED%09%15U%22%AEO%B7%12Be%C8s2%88%17%A8-%D3%2C6%ED%15l%ED%8D%BA%F0%86%02F%9D%7D%D13%95q%AEk%60%95f%A8%B3%08%C7%25%D09%DFF%90%93%09%B5%AC%40%CA%17%07%13%0D%C3a%5DE%89%3Er%BF%BD%D1%11%5EW%CB%00%C0~%87%F2V%9D%3D%E5%DFU%A8%24rL%09%CA%E6%40%CC7BT)!%FB%FD%A0%DF%C7%E04%2C%A0%D6F%A0%15%D7B%BF%DAe%00%80%10%F2i%E9%07%EF%AD)V%80%E3%08h%24%85%E4%D7%04%92%93%3E%C8A%1F8%9D%06%06%A3%0E%16%93%16%5B%8D%CA%DF%82%DF%08%D1%A4%97%19K6%0F%BB%83b%DC%C7%02kI%10%A8%20%0B%3A%18T%0C%EC%25z%24%14%B2%A4%E3%B9%D1%B4%04z%3DK%8A%B6%08%B4F%99A%92%3E%19%D3A%0A)%C4%40%A3%11Pi%D6%60%C8%F3%0E%E6y7%A9(%B7%09%7FY%00%80%3D%A5Y%1D%0F%FB%06%C9%EC%E4%04%8A%84%14%B4%99%02d%15%8F%5C.%09%B3%B0%0C%C1s%03f%83.%E8%AC%A8%9DI%FB%0B%94R%F5%A1%FD%0D%11C%FEv%94%1Dn%C3%82%2C%E2y%FF3%F0%93%2F%D0%D6%D2%8C%BA%EA%DD%88%85%97%8FUUW%F5%A6%B5%00%E0%CA%89%93%AD%A9X%2C%CE%E4%EB)%93%13%5E%C4%FB)7%9A%8E%B8%A0W%B1(-)%06%A7%20%BD%7F%96%EE'%A3%D6%EC%AB%93r%84%7D%00%00%00%00IEND%AEB%60%82</Image>
+<Url type="text/html" method="GET" template="http://www.kannadastore.com/advanced_search_result.php" resultdomain="kannadastore.com">
+    <Param name="keywords" value="{searchTerms}"/>
+</Url>
+<SearchForm>http://www.kannadastore.com/advanced_search_result.php</SearchForm> 
+</SearchPlugin>

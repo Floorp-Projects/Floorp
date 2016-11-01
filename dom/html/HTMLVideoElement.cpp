@@ -254,19 +254,19 @@ HTMLVideoElement::GetVideoPlaybackQuality()
       FrameStatisticsData stats =
         mDecoder->GetFrameStatistics().GetFrameStatisticsData();
       if (sizeof(totalFrames) >= sizeof(stats.mParsedFrames)) {
-        totalFrames = stats.mParsedFrames;
+        totalFrames = stats.mPresentedFrames + stats.mDroppedFrames;
         droppedFrames = stats.mDroppedFrames;
       } else {
-        auto maxStat = std::max(stats.mParsedFrames, stats.mDroppedFrames);
+        uint64_t total = stats.mPresentedFrames + stats.mDroppedFrames;
         const auto maxNumber = std::numeric_limits<uint32_t>::max();
-        if (maxStat <= maxNumber) {
-          totalFrames = static_cast<uint32_t>(stats.mParsedFrames);
-          droppedFrames = static_cast<uint32_t>(stats.mDroppedFrames);
+        if (total <= maxNumber) {
+          totalFrames = uint32_t(total);
+          droppedFrames = uint32_t(stats.mDroppedFrames);
         } else {
           // Too big number(s) -> Resize everything to fit in 32 bits.
-          double ratio = double(maxNumber) / double(maxStat);
-          totalFrames = double(stats.mParsedFrames) * ratio;
-          droppedFrames = double(stats.mDroppedFrames) * ratio;
+          double ratio = double(maxNumber) / double(total);
+          totalFrames = maxNumber; // === total * ratio
+          droppedFrames = uint32_t(double(stats.mDroppedFrames) * ratio);
         }
       }
       corruptedFrames = 0;

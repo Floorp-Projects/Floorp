@@ -14,16 +14,19 @@ function testSteps()
     this.window ? window.location.pathname : "test_quotaExceeded_recovery";
   const objectStoreName = "foo";
 
-  // We want 8 MB database on Android and 32 MB database on other platforms.
-  const groupLimitMB = mozinfo.os == "android" ? 8 : 32;
+  const android = mozinfo.os == "android";
+
+  // We want 512 KB database on Android and 4 MB database on other platforms.
+  const groupLimitKB = android ? 512 : 4096;
 
   // The group limit is calculated as 20% of the global temporary storage limit.
-  const tempStorageLimitKB = groupLimitMB * 5 * 1024;
+  const tempStorageLimitKB = groupLimitKB * 5;
 
-  // Store in 1 MB chunks.
-  const dataSize = 1024 * 1024;
+  // We want 64 KB chunks on Android and 512 KB chunks on other platforms.
+  const dataSizeKB = android ? 64 : 512;
+  const dataSize = dataSizeKB * 1024;
 
-  const maxIter = 10;
+  const maxIter = 5;
 
   for (let blobs of [false, true]) {
     setTemporaryStorageLimit(tempStorageLimitKB);

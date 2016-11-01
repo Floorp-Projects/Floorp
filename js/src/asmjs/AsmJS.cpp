@@ -29,6 +29,7 @@
 
 #include "jswrapper.h"
 
+#include "asmjs/WasmBinaryFormat.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmInstance.h"
 #include "asmjs/WasmJS.h"
@@ -2250,7 +2251,7 @@ class MOZ_STACK_CLASS ModuleValidator
         return false;
     }
 
-    bool failfOffset(uint32_t offset, const char* fmt, ...) {
+    bool failfOffset(uint32_t offset, const char* fmt, ...) MOZ_FORMAT_PRINTF(3, 4) {
         va_list ap;
         va_start(ap, fmt);
         failfVAOffset(offset, fmt, ap);
@@ -2258,7 +2259,7 @@ class MOZ_STACK_CLASS ModuleValidator
         return false;
     }
 
-    bool failf(ParseNode* pn, const char* fmt, ...) {
+    bool failf(ParseNode* pn, const char* fmt, ...) MOZ_FORMAT_PRINTF(3, 4) {
         va_list ap;
         va_start(ap, fmt);
         failfVAOffset(pn->pn_pos.begin, fmt, ap);
@@ -2944,7 +2945,7 @@ class MOZ_STACK_CLASS FunctionValidator
         return m_.fail(pn, str);
     }
 
-    bool failf(ParseNode* pn, const char* fmt, ...) {
+    bool failf(ParseNode* pn, const char* fmt, ...) MOZ_FORMAT_PRINTF(3, 4) {
         va_list ap;
         va_start(ap, fmt);
         m_.failfVAOffset(pn->pn_pos.begin, fmt, ap);
@@ -4720,7 +4721,8 @@ static bool
 CheckSignatureAgainstExisting(ModuleValidator& m, ParseNode* usepn, const Sig& sig, const Sig& existing)
 {
     if (sig.args().length() != existing.args().length()) {
-        return m.failf(usepn, "incompatible number of arguments (%u here vs. %u before)",
+        return m.failf(usepn, "incompatible number of arguments (%" PRIuSIZE
+                       " here vs. %" PRIuSIZE " before)",
                        sig.args().length(), existing.args().length());
     }
 
@@ -4910,7 +4912,7 @@ CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, Type 
     if (!f.m().declareImport(calleeName, Move(sig), ffiIndex, &importIndex))
         return false;
 
-    if (!f.writeCall(callNode, Expr::CallImport))
+    if (!f.writeCall(callNode, Expr::OldCallImport))
         return false;
 
     // Import index
@@ -7066,7 +7068,7 @@ ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line)
     ParseContext* outerpc = m.parser().pc;
     Directives directives(outerpc);
     FunctionBox* funbox = m.parser().newFunctionBox(fn, fun, directives, NotGenerator,
-                                                    /* tryAnnexB = */ false);
+                                                    SyncFunction, /* tryAnnexB = */ false);
     if (!funbox)
         return false;
     funbox->initWithEnclosingParseContext(outerpc, frontend::Statement);
@@ -7576,8 +7578,6 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue imp
             *val = Val(simdConstant.asInt32x4());
             return true;
           }
-          case ValType::Limit:
-            MOZ_CRASH("Limit");
         }
       }
     }
@@ -8455,8 +8455,12 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, ExclusiveContext* c
     if (!moduleChars.init(parser))
         return JS::AsmJSCache_InternalError;
 
-    size_t serializedSize = moduleChars.serializedSize() +
-                            module.serializedSize();
+    size_t bytecodeSize, compiledSize;
+    module.serializedSize(&bytecodeSize, &compiledSize);
+
+    size_t serializedSize = 2 * sizeof(size_t) +
+                            bytecodeSize + compiledSize +
+                            moduleChars.serializedSize();
 
     JS::OpenAsmJSCacheEntryForWriteOp open = cx->asmJSCacheOps().openEntryForWrite;
     if (!open)
@@ -8473,10 +8477,20 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, ExclusiveContext* c
         return openResult;
 
     uint8_t* cursor = entry.memory;
-    cursor = moduleChars.serialize(cursor);
-    cursor = module.serialize(cursor);
 
-    MOZ_ASSERT(cursor == entry.memory + serializedSize);
+    cursor = WriteScalar<size_t>(cursor, bytecodeSize);
+    cursor = WriteScalar<size_t>(cursor, compiledSize);
+
+    uint8_t* compiledBegin = cursor;
+    uint8_t* bytecodeBegin = compiledBegin + compiledSize;;
+
+    module.serialize(bytecodeBegin, bytecodeSize, compiledBegin, compiledSize);
+    cursor = bytecodeBegin + bytecodeSize;
+
+    cursor = moduleChars.serialize(cursor);
+
+    MOZ_RELEASE_ASSERT(cursor == entry.memory + serializedSize);
+
     return JS::AsmJSCache_Success;
 }
 
@@ -8501,38 +8515,46 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
 
     const uint8_t* cursor = entry.memory;
 
-    ModuleCharsForLookup moduleChars;
-    cursor = moduleChars.deserialize(cursor);
-    if (!moduleChars.match(parser))
+    size_t bytecodeSize, compiledSize;
+    cursor = ReadScalar<size_t>(cursor, &bytecodeSize);
+    cursor = ReadScalar<size_t>(cursor, &compiledSize);
+
+    const uint8_t* compiledBegin = cursor;
+    const uint8_t* bytecodeBegin = compiledBegin + compiledSize;
+
+    Assumptions assumptions;
+    if (!assumptions.initBuildIdFromContext(cx))
+        return false;
+
+    if (!Module::assumptionsMatch(assumptions, compiledBegin))
         return true;
 
     MutableAsmJSMetadata asmJSMetadata = cx->new_<AsmJSMetadata>();
     if (!asmJSMetadata)
         return false;
 
-    cursor = Module::deserialize(cursor, module, asmJSMetadata.get());
-    if (!cursor) {
+    *module = Module::deserialize(bytecodeBegin, bytecodeSize, compiledBegin, compiledSize,
+                                  asmJSMetadata.get());
+    if (!*module) {
         ReportOutOfMemory(cx);
         return false;
     }
+    cursor = bytecodeBegin + bytecodeSize;
+
+    // Due to the hash comparison made by openEntryForRead, this should succeed
+    // with high probability.
+    ModuleCharsForLookup moduleChars;
+    cursor = moduleChars.deserialize(cursor);
+    if (!moduleChars.match(parser))
+        return true;
+
+    MOZ_RELEASE_ASSERT(cursor == entry.memory + entry.serializedSize);
 
     // See AsmJSMetadata comment as well as ModuleValidator::init().
     asmJSMetadata->srcStart = parser.pc->functionBox()->functionNode->pn_body->pn_pos.begin;
     asmJSMetadata->srcBodyStart = parser.tokenStream.currentToken().pos.end;
     asmJSMetadata->strict = parser.pc->sc()->strict() && !parser.pc->sc()->hasExplicitUseStrict();
     asmJSMetadata->scriptSource.reset(parser.ss);
-
-    bool atEnd = cursor == entry.memory + entry.serializedSize;
-    MOZ_ASSERT(atEnd, "Corrupt cache file");
-    if (!atEnd)
-        return true;
-
-    Assumptions assumptions;
-    if (!assumptions.initBuildIdFromContext(cx))
-        return false;
-
-    if (assumptions != (*module)->metadata().assumptions)
-        return true;
 
     if (!parser.tokenStream.advance(asmJSMetadata->srcEndBeforeCurly()))
         return false;

@@ -16,9 +16,15 @@ LOCAL_INCLUDES += [
 
 # This code is only used in the stand-alone minidump analyzer executable so
 # enabling exceptions should be fine.
-CXXFLAGS += [
-    '-fexceptions',
-]
+if CONFIG['CLANG_CL']:
+    CXXFLAGS += [
+        '-Xclang',
+        '-fcxx-exceptions',
+    ]
+elif not CONFIG['_MSC_VER']:
+    CXXFLAGS += [
+        '-fexceptions',
+    ]
 
 # Required to build with exceptions enabled
 DISABLE_STL_WRAPPING = True

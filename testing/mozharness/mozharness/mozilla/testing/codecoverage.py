@@ -14,7 +14,7 @@ from mozharness.base.script import (
 
 code_coverage_config_options = [
     [["--code-coverage"],
-     {"action": "store",
+     {"action": "store_true",
       "dest": "code_coverage",
       "default": False,
       "help": "Whether test run should package and upload code coverage data."

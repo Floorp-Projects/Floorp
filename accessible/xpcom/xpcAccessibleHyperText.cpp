@@ -68,13 +68,9 @@ xpcAccessibleHyperText::GetText(int32_t aStartOffset, int32_t aEndOffset,
   if (mIntl.IsAccessible()) {
     Intl()->TextSubstring(aStartOffset, aEndOffset, aText);
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     nsString text;
     mIntl.AsProxy()->TextSubstring(aStartOffset, aEndOffset, text);
     aText = text;
-#endif
   }
   return NS_OK;
 }
@@ -98,14 +94,10 @@ xpcAccessibleHyperText::GetTextBeforeOffset(int32_t aOffset,
     Intl()->TextBeforeOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, 
                              aText);
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     nsString text;
     mIntl.AsProxy()->GetTextBeforeOffset(aOffset, aBoundaryType, text,
                                          aStartOffset, aEndOffset);
     aText = text;
-#endif
   }
   return NS_OK;
 }
@@ -128,14 +120,10 @@ xpcAccessibleHyperText::GetTextAtOffset(int32_t aOffset,
     Intl()->TextAtOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, 
                          aText);
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     nsString text;
     mIntl.AsProxy()->GetTextAtOffset(aOffset, aBoundaryType, text, 
                                      aStartOffset, aEndOffset);
     aText = text;
-#endif
   }
   return NS_OK;
 }
@@ -158,14 +146,10 @@ xpcAccessibleHyperText::GetTextAfterOffset(int32_t aOffset,
     Intl()->TextAfterOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, 
                             aText);
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     nsString text;
     mIntl.AsProxy()->GetTextAfterOffset(aOffset, aBoundaryType, text, 
                                         aStartOffset, aEndOffset);
     aText = text;
-#endif
   }
   return NS_OK;
 }
@@ -355,11 +339,7 @@ xpcAccessibleHyperText::GetCaretOffset(int32_t* aCaretOffset)
   if (mIntl.IsAccessible()) {
     *aCaretOffset = Intl()->CaretOffset();
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     *aCaretOffset = mIntl.AsProxy()->CaretOffset();
-#endif
   }
   return NS_OK;
 }
@@ -373,11 +353,7 @@ xpcAccessibleHyperText::SetCaretOffset(int32_t aCaretOffset)
   if (mIntl.IsAccessible()) {
     Intl()->SetCaretOffset(aCaretOffset);
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     mIntl.AsProxy()->SetCaretOffset(aCaretOffset);
-#endif
   }
   return NS_OK;
 }
@@ -473,11 +449,7 @@ xpcAccessibleHyperText::AddSelection(int32_t aStartOffset, int32_t aEndOffset)
   if (mIntl.IsAccessible()) {
     Intl()->AddToSelection(aStartOffset, aEndOffset);
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     mIntl.AsProxy()->AddToSelection(aStartOffset, aEndOffset);
-#endif
   }
   return NS_OK;
 }
@@ -491,11 +463,7 @@ xpcAccessibleHyperText::RemoveSelection(int32_t aSelectionNum)
   if (mIntl.IsAccessible()) {
     Intl()->RemoveFromSelection(aSelectionNum);
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     mIntl.AsProxy()->RemoveFromSelection(aSelectionNum);
-#endif
   }
   return NS_OK;
 }
@@ -511,11 +479,7 @@ xpcAccessibleHyperText::ScrollSubstringTo(int32_t aStartOffset,
   if (mIntl.IsAccessible()) {
     Intl()->ScrollSubstringTo(aStartOffset, aEndOffset, aScrollType);
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     mIntl.AsProxy()->ScrollSubstringTo(aStartOffset, aEndOffset, aScrollType);
-#endif
   }
   return NS_OK;
 }
@@ -533,12 +497,8 @@ xpcAccessibleHyperText::ScrollSubstringToPoint(int32_t aStartOffset,
     Intl()->ScrollSubstringToPoint(aStartOffset, aEndOffset, aCoordinateType,
                                    aX, aY);
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     mIntl.AsProxy()->ScrollSubstringToPoint(aStartOffset, aEndOffset,
                                             aCoordinateType, aX, aY);
-#endif
   }
   return NS_OK;
 }

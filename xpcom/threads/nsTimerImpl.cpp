@@ -326,17 +326,14 @@ void
 nsTimerImpl::Neuter()
 {
   if (gThread) {
-    gThread->RemoveTimer(this);
+    gThread->RemoveTimer(this, true);
   }
 
   // If invoked on the target thread, guarantees that the timer doesn't pop.
   // If invoked anywhere else, it might prevent the timer from popping, but
-  // no guarantees.
+  // no guarantees. In any case, the above RemoveTimer call will prevent it
+  // from being rescheduled.
   ++mGeneration;
-
-  // Breaks cycles when TimerEvents are in the queue of a thread that is no
-  // longer running.
-  mEventTarget = nullptr;
 }
 
 NS_IMETHODIMP

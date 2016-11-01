@@ -83,13 +83,13 @@
 #include "shell/OSObject.h"
 #include "threading/ConditionVariable.h"
 #include "threading/LockGuard.h"
-#include "threading/Mutex.h"
 #include "threading/Thread.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/Monitor.h"
+#include "vm/MutexIDs.h"
 #include "vm/Shape.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/StringBuffer.h"
@@ -179,7 +179,12 @@ class OffThreadState {
     };
 
   public:
-    OffThreadState() : monitor(), state(IDLE), token(), source(nullptr) { }
+    OffThreadState()
+      : monitor(mutexid::ShellOffThreadState),
+        state(IDLE),
+        token(),
+        source(nullptr)
+    { }
 
     bool startIfIdle(JSContext* cx, ScriptKind kind,
                      ScopedJSFreePtr<char16_t>& newSource)
@@ -431,9 +436,10 @@ ShellContext::ShellContext(JSContext* cx)
     lastWarning(cx, NullValue()),
 #ifdef SPIDERMONKEY_PROMISE
     promiseRejectionTrackerCallback(cx, NullValue()),
-    asyncTasks(cx),
+    asyncTasks(mutexid::ShellAsyncTasks, cx),
     drainingJobQueue(false),
 #endif // SPIDERMONKEY_PROMISE
+    watchdogLock(mutexid::ShellContextWatchdog),
     exitCode(0),
     quitting(false),
     readLineBufPos(0),
@@ -1511,36 +1517,36 @@ CacheEntry_setBytecode(JSContext* cx, HandleObject cache, uint8_t* buffer, uint3
 }
 
 static bool
-ConvertTranscodeResultToJSException(JSContext* cx, TranscodeResult rv)
+ConvertTranscodeResultToJSException(JSContext* cx, JS::TranscodeResult rv)
 {
     switch (rv) {
-      case TranscodeResult_Ok:
+      case JS::TranscodeResult_Ok:
         return true;
 
       default:
         MOZ_FALLTHROUGH;
-      case TranscodeResult_Failure:
+      case JS::TranscodeResult_Failure:
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "generic warning");
         return false;
-      case TranscodeResult_Failure_BadBuildId:
+      case JS::TranscodeResult_Failure_BadBuildId:
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "the build-id does not match");
         return false;
-      case TranscodeResult_Failure_RunOnceNotSupported:
+      case JS::TranscodeResult_Failure_RunOnceNotSupported:
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "run-once script are not supported by XDR");
         return false;
-      case TranscodeResult_Failure_AsmJSNotSupported:
+      case JS::TranscodeResult_Failure_AsmJSNotSupported:
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "Asm.js is not supported by XDR");
         return false;
-      case TranscodeResult_Failure_UnknownClassKind:
+      case JS::TranscodeResult_Failure_UnknownClassKind:
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "Unknown class kind, go fix it.");
         return false;
 
-      case TranscodeResult_Throw:
+      case JS::TranscodeResult_Throw:
         MOZ_ASSERT(cx->isExceptionPending());
         return false;
     }
@@ -1663,15 +1669,19 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
     if (!codeChars.initTwoByte(cx, code))
         return false;
 
-    uint32_t loadLength = 0;
-    uint8_t* loadBuffer = nullptr;
-    uint32_t saveLength = 0;
-    ScopedJSFreePtr<uint8_t> saveBuffer;
+    JS::TranscodeBuffer loadBuffer;
+    JS::TranscodeBuffer saveBuffer;
 
     if (loadBytecode) {
-        loadBuffer = CacheEntry_getBytecode(cacheEntry, &loadLength);
-        if (!loadBuffer)
+        uint32_t loadLength = 0;
+        uint8_t* loadData = nullptr;
+        loadData = CacheEntry_getBytecode(cacheEntry, &loadLength);
+        if (!loadData)
             return false;
+        if (!loadBuffer.append(loadData, loadLength)) {
+            JS_ReportOutOfMemory(cx);
+            return false;
+        }
     }
 
     {
@@ -1691,7 +1701,7 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
             }
 
             if (loadBytecode) {
-                TranscodeResult rv = JS_DecodeScript(cx, loadBuffer, loadLength, &script);
+                JS::TranscodeResult rv = JS::DecodeScript(cx, loadBuffer, &script);
                 if (!ConvertTranscodeResultToJSException(cx, rv))
                     return false;
             } else {
@@ -1742,8 +1752,7 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         }
 
         if (saveBytecode) {
-            TranscodeResult rv = JS_EncodeScript(cx, script, &saveLength,
-                                                 reinterpret_cast<void**>(&saveBuffer.rwget()));
+            JS::TranscodeResult rv = JS::EncodeScript(cx, saveBuffer, script);
             if (!ConvertTranscodeResultToJSException(cx, rv))
                 return false;
         }
@@ -1753,28 +1762,34 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         // If we are both loading and saving, we assert that we are going to
         // replace the current bytecode by the same stream of bytes.
         if (loadBytecode && assertEqBytecode) {
-            if (saveLength != loadLength) {
+            if (saveBuffer.length() != loadBuffer.length()) {
                 char loadLengthStr[16];
-                SprintfLiteral(loadLengthStr, "%" PRIu32, loadLength);
+                SprintfLiteral(loadLengthStr, "%" PRIuSIZE, loadBuffer.length());
                 char saveLengthStr[16];
-                SprintfLiteral(saveLengthStr,"%" PRIu32, saveLength);
+                SprintfLiteral(saveLengthStr,"%" PRIuSIZE, saveBuffer.length());
 
                 JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_CACHE_EQ_SIZE_FAILED,
                                           loadLengthStr, saveLengthStr);
                 return false;
             }
 
-            if (!PodEqual(loadBuffer, saveBuffer.get(), loadLength)) {
+            if (!PodEqual(loadBuffer.begin(), saveBuffer.begin(), loadBuffer.length())) {
                 JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
                                           JSSMSG_CACHE_EQ_CONTENT_FAILED);
                 return false;
             }
         }
 
-        if (!CacheEntry_setBytecode(cx, cacheEntry, saveBuffer, saveLength))
+        size_t saveLength = saveBuffer.length();
+        if (saveLength >= INT32_MAX) {
+            JS_ReportErrorASCII(cx, "Cannot save large cache entry content");
             return false;
-
-        saveBuffer.forget();
+        }
+        uint8_t* saveData = saveBuffer.extractOrCopyRawBuffer();
+        if (!CacheEntry_setBytecode(cx, cacheEntry, saveData, saveLength)) {
+            js_free(saveData);
+            return false;
+        }
     }
 
     return JS_WrapValue(cx, args.rval());
@@ -1788,15 +1803,13 @@ js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr)
         return nullptr;
 
     FILE* file;
-    RootedString str(cx);
-    size_t len, cc;
-    char* buf;
 
     file = fopen(pathname.ptr(), "rb");
     if (!file) {
         ReportCantOpenErrorUnknownEncoding(cx, pathname.ptr());
         return nullptr;
     }
+
     AutoCloseFile autoClose(file);
 
     if (fseek(file, 0, SEEK_END) != 0) {
@@ -1804,45 +1817,47 @@ js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr)
         if (!pathname.encodeUtf8(cx, pathnameStr))
             return nullptr;
         JS_ReportErrorUTF8(cx, "can't seek end of %s", pathname.ptr());
-    } else {
-        len = ftell(file);
-        if (fseek(file, 0, SEEK_SET) != 0) {
+        return nullptr;
+    }
+
+    size_t len = ftell(file);
+    if (fseek(file, 0, SEEK_SET) != 0) {
+        pathname.clear();
+        if (!pathname.encodeUtf8(cx, pathnameStr))
+            return nullptr;
+        JS_ReportErrorUTF8(cx, "can't seek start of %s", pathname.ptr());
+        return nullptr;
+    }
+
+    UniqueChars buf(static_cast<char*>(js_malloc(len + 1)));
+    if (!buf)
+        return nullptr;
+
+    size_t cc = fread(buf.get(), 1, len, file);
+    if (cc != len) {
+        if (ptrdiff_t(cc) < 0) {
+            ReportCantOpenErrorUnknownEncoding(cx, pathname.ptr());
+        } else {
             pathname.clear();
             if (!pathname.encodeUtf8(cx, pathnameStr))
                 return nullptr;
-            JS_ReportErrorUTF8(cx, "can't seek start of %s", pathname.ptr());
-        } else {
-            buf = (char*) JS_malloc(cx, len + 1);
-            if (buf) {
-                cc = fread(buf, 1, len, file);
-                if (cc != len) {
-                    if (ptrdiff_t(cc) < 0) {
-                        ReportCantOpenErrorUnknownEncoding(cx, pathname.ptr());
-                    } else {
-                        pathname.clear();
-                        if (!pathname.encodeUtf8(cx, pathnameStr))
-                            return nullptr;
-                        JS_ReportErrorUTF8(cx, "can't read %s: short read", pathname.ptr());
-                    }
-                } else {
-                    char16_t* ucbuf =
-                        JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(buf, len), &len).get();
-                    if (!ucbuf) {
-                        pathname.clear();
-                        if (!pathname.encodeUtf8(cx, pathnameStr))
-                            return nullptr;
-                        JS_ReportErrorUTF8(cx, "Invalid UTF-8 in file '%s'", pathname.ptr());
-                        return nullptr;
-                    }
-                    str = JS_NewUCStringCopyN(cx, ucbuf, len);
-                    free(ucbuf);
-                }
-                JS_free(cx, buf);
-            }
+            JS_ReportErrorUTF8(cx, "can't read %s: short read", pathname.ptr());
         }
+        return nullptr;
     }
 
-    return str;
+    UniqueTwoByteChars ucbuf(
+        JS::LossyUTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(buf.get(), len), &len).get()
+    );
+    if (!ucbuf) {
+        pathname.clear();
+        if (!pathname.encodeUtf8(cx, pathnameStr))
+            return nullptr;
+        JS_ReportErrorUTF8(cx, "Invalid UTF-8 in file '%s'", pathname.ptr());
+        return nullptr;
+    }
+
+    return JS_NewUCStringCopyN(cx, ucbuf.get(), len);
 }
 
 /*
@@ -3387,7 +3402,7 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!workerThreadsLock) {
-        workerThreadsLock = js_new<Mutex>();
+        workerThreadsLock = js_new<Mutex>(mutexid::ShellWorkerThreads);
         if (!workerThreadsLock) {
             ReportOutOfMemory(cx);
             return false;
@@ -3453,6 +3468,27 @@ GroupOf(JSContext* cx, unsigned argc, JS::Value* vp)
     if (!group)
         return false;
     args.rval().set(JS_NumberValue(double(uintptr_t(group) >> 3)));
+    return true;
+}
+
+static bool
+UnwrappedObjectsHaveSameShape(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.get(0).isObject() || !args.get(1).isObject()) {
+        JS_ReportErrorASCII(cx, "2 objects expected");
+        return false;
+    }
+
+    RootedObject obj1(cx, UncheckedUnwrap(&args[0].toObject()));
+    RootedObject obj2(cx, UncheckedUnwrap(&args[1].toObject()));
+
+    if (!obj1->is<ShapedObject>() || !obj2->is<ShapedObject>()) {
+        JS_ReportErrorASCII(cx, "object does not have a Shape");
+        return false;
+    }
+
+    args.rval().setBoolean(obj1->as<ShapedObject>().shape() == obj2->as<ShapedObject>().shape());
     return true;
 }
 
@@ -4983,7 +5019,7 @@ static SharedArrayRawBuffer* sharedArrayBufferMailbox;
 static bool
 InitSharedArrayBufferMailbox()
 {
-    sharedArrayBufferMailboxLock = js_new<Mutex>();
+    sharedArrayBufferMailboxLock = js_new<Mutex>(mutexid::ShellArrayBufferMailbox);
     return sharedArrayBufferMailboxLock != nullptr;
 }
 
@@ -5232,7 +5268,7 @@ ReflectTrackedOptimizations(JSContext* cx, unsigned argc, Value* vp)
             uint8_t* addr = ion->method()->raw() + endOffset;
             entry.youngestFrameLocationAtAddr(rt, addr, &script, &pc);
 
-            if (!sp.jsprintf("{\"location\":\"%s:%u\",\"offset\":%u,\"index\":%u}%s",
+            if (!sp.jsprintf("{\"location\":\"%s:%" PRIuSIZE "\",\"offset\":%" PRIuSIZE ",\"index\":%u}%s",
                              script->filename(), script->lineno(), script->pcToOffset(pc), index,
                              iter.more() ? "," : ""))
             {
@@ -5799,6 +5835,12 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "groupOf(obj)",
 "  Get the group of obj (an implementation detail)."),
 
+    JS_FN_HELP("unwrappedObjectsHaveSameShape", UnwrappedObjectsHaveSameShape, 2, 0,
+"unwrappedObjectsHaveSameShape(obj1, obj2)",
+"  Returns true iff obj1 and obj2 have the same shape, false otherwise. Both\n"
+"  objects are unwrapped first, so this can be used on objects from different\n"
+"  globals."),
+
 #ifdef DEBUG
     JS_FN_HELP("arrayInfo", ArrayInfo, 1, 0,
 "arrayInfo(a1, a2, ...)",
@@ -6314,7 +6356,7 @@ CreateLastWarningObject(JSContext* cx, JSErrorReport* report)
     if (!DefineProperty(cx, warningObj, cx->names().name, nameVal))
         return false;
 
-    RootedString messageStr(cx, JS_NewUCStringCopyZ(cx, report->ucmessage));
+    RootedString messageStr(cx, report->newMessageString(cx));
     if (!messageStr)
         return false;
     RootedValue messageVal(cx, StringValue(messageStr));
@@ -6394,7 +6436,8 @@ js::shell::AutoReportException::~AutoReportException()
     ShellContext* sc = GetShellContext(cx);
     js::ErrorReport report(cx);
     if (!report.init(cx, exn, js::ErrorReport::WithSideEffects)) {
-        PrintError(cx, stderr, "out of memory initializing ErrorReport", nullptr, reportWarnings);
+        fprintf(stderr, "out of memory initializing ErrorReport\n");
+        fflush(stderr);
         JS_ClearPendingException(cx);
         return;
     }
@@ -6402,7 +6445,7 @@ js::shell::AutoReportException::~AutoReportException()
     MOZ_ASSERT(!JSREPORT_IS_WARNING(report.report()->flags));
 
     FILE* fp = ErrorFilePointer();
-    PrintError(cx, fp, report.message(), report.report(), reportWarnings);
+    PrintError(cx, fp, report.toStringResult(), report.report(), reportWarnings);
 
     {
         JS::AutoSaveExceptionState savedExc(cx);
@@ -6420,7 +6463,7 @@ js::shell::AutoReportException::~AutoReportException()
 }
 
 void
-js::shell::WarningReporter(JSContext* cx, const char* message, JSErrorReport* report)
+js::shell::WarningReporter(JSContext* cx, JSErrorReport* report)
 {
     ShellContext* sc = GetShellContext(cx);
     FILE* fp = ErrorFilePointer();
@@ -6438,7 +6481,7 @@ js::shell::WarningReporter(JSContext* cx, const char* message, JSErrorReport* re
     }
 
     // Print the warning.
-    PrintError(cx, fp, message, report, reportWarnings);
+    PrintError(cx, fp, JS::ConstUTF8CharsZ(), report, reportWarnings);
 }
 
 static bool

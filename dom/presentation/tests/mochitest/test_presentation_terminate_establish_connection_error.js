@@ -138,6 +138,15 @@ function testConnectionTerminate() {
       };
     }),
     new Promise(function(aResolve, aReject) {
+      function deviceDisconnectedHandler() {
+        gScript.removeMessageListener('device-disconnected', deviceDisconnectedHandler);
+        ok(true, 'should not receive device disconnect');
+        aResolve();
+      }
+
+      gScript.addMessageListener('device-disconnected', deviceDisconnectedHandler);
+    }),
+    new Promise(function(aResolve, aReject) {
       receiverIframe.addEventListener('mozbrowserclose', function() {
         ok(true, 'observe receiver page closing');
         aResolve();

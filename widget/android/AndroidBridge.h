@@ -24,8 +24,6 @@
 #include "gfxRect.h"
 
 #include "nsIAndroidBridge.h"
-#include "nsIMobileMessageCallback.h"
-#include "nsIMobileMessageCursorCallback.h"
 #include "nsIDOMDOMCursor.h"
 
 #include "mozilla/Likely.h"
@@ -60,12 +58,6 @@ class BatteryInformation;
 class NetworkInformation;
 } // namespace hal
 
-namespace dom {
-namespace mobilemessage {
-class SmsFilterData;
-} // namespace mobilemessage
-} // namespace dom
-
 // The order and number of the members in this structure must correspond
 // to the attrsAppearance array in GeckoAppShell.getSystemColors()
 typedef struct AndroidSystemColors {
@@ -81,24 +73,6 @@ typedef struct AndroidSystemColors {
     nscolor panelColorForeground;
     nscolor panelColorBackground;
 } AndroidSystemColors;
-
-class ThreadCursorContinueCallback : public nsICursorContinueCallback
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSICURSORCONTINUECALLBACK
-
-    ThreadCursorContinueCallback(int aRequestId)
-        : mRequestId(aRequestId)
-    {
-    }
-private:
-    virtual ~ThreadCursorContinueCallback()
-    {
-    }
-
-    int mRequestId;
-};
 
 class MessageCursorContinueCallback : public nsICursorContinueCallback
 {
@@ -187,36 +161,6 @@ public:
 
     void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo);
 
-    nsresult GetSegmentInfoForText(const nsAString& aText,
-                                   nsIMobileMessageCallback* aRequest);
-    void SendMessage(const nsAString& aNumber, const nsAString& aText,
-                     nsIMobileMessageCallback* aRequest);
-    void GetMessage(int32_t aMessageId, nsIMobileMessageCallback* aRequest);
-    void DeleteMessage(int32_t aMessageId, nsIMobileMessageCallback* aRequest);
-    void MarkMessageRead(int32_t aMessageId,
-                         bool aValue,
-                         bool aSendReadReport,
-                         nsIMobileMessageCallback* aRequest);
-    already_AddRefed<nsICursorContinueCallback>
-    CreateMessageCursor(bool aHasStartDate,
-                        uint64_t aStartDate,
-                        bool aHasEndDate,
-                        uint64_t aEndDate,
-                        const char16_t** aNumbers,
-                        uint32_t aNumbersCount,
-                        const nsAString& aDelivery,
-                        bool aHasRead,
-                        bool aRead,
-                        bool aHasThreadId,
-                        uint64_t aThreadId,
-                        bool aReverse,
-                        nsIMobileMessageCursorCallback* aRequest);
-    already_AddRefed<nsICursorContinueCallback>
-    CreateThreadCursor(nsIMobileMessageCursorCallback* aRequest);
-    already_AddRefed<nsIMobileMessageCallback> DequeueSmsRequest(uint32_t aRequestId);
-    nsCOMPtr<nsIMobileMessageCursorCallback> GetSmsCursorRequest(uint32_t aRequestId);
-    already_AddRefed<nsIMobileMessageCursorCallback> DequeueSmsCursorRequest(uint32_t aRequestId);
-
     void GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo);
 
     // These methods don't use a ScreenOrientation because it's an
@@ -264,19 +208,11 @@ protected:
     static nsDataHashtable<nsStringHashKey, nsString> sStoragePaths;
 
     static AndroidBridge* sBridge;
-    nsTArray<nsCOMPtr<nsIMobileMessageCallback>> mSmsRequests;
-    nsTArray<nsCOMPtr<nsIMobileMessageCursorCallback>> mSmsCursorRequests;
-
-    // the android.telephony.SmsMessage class
-    jclass mAndroidSmsMessageClass;
 
     AndroidBridge();
     ~AndroidBridge();
 
     int mAPIVersion;
-
-    bool QueueSmsRequest(nsIMobileMessageCallback* aRequest, uint32_t* aRequestIdOut);
-    bool QueueSmsCursorRequest(nsIMobileMessageCursorCallback* aRequest, uint32_t* aRequestIdOut);
 
     // intput stream
     jclass jReadableByteChannel;

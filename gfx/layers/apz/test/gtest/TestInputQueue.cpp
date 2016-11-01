@@ -14,7 +14,7 @@ TEST_F(APZCTreeManagerTester, WheelInterruptedByMouseDrag) {
   // Set up a scrollable layer
   CreateSimpleScrollingLayer();
   ScopedLayerTreeRegistration registration(manager, 0, root, mcc);
-  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+  manager->UpdateHitTestingTree(0, root, false, 0, 0);
   RefPtr<TestAsyncPanZoomController> apzc = ApzcOf(root);
 
   uint64_t dragBlockId = 0;

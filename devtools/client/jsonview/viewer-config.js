@@ -27,6 +27,7 @@ require.config({
   baseUrl: ".",
   paths: {
     "devtools/client/shared": "resource://devtools/client/shared",
+    "devtools/shared": "resource://devtools/shared",
     "devtools/client/shared/vendor/react": [
       "resource://devtools/client/shared/vendor/react-dev",
       "resource://devtools/client/shared/vendor/react"

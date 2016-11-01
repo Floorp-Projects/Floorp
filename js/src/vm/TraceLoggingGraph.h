@@ -8,7 +8,7 @@
 #define TraceLoggingGraph_h
 
 #include "js/TypeDecls.h"
-#include "threading/Mutex.h"
+#include "vm/MutexIDs.h"
 #include "vm/TraceLoggingTypes.h"
 
 /*
@@ -80,12 +80,13 @@ class TraceLoggerGraphState
 
   public:
     TraceLoggerGraphState()
-      : numLoggers(0),
-        pid_(0),
-        out(nullptr)
+      : numLoggers(0)
+      , pid_(0)
+      , out(nullptr)
 #ifdef DEBUG
       , initialized(false)
 #endif
+      , lock(js::mutexid::TraceLoggerGraphState)
     {}
 
     bool init();

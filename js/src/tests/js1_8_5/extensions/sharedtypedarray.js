@@ -174,7 +174,7 @@ function testSharedTypedArrayMethods() {
 
 function testClone1() {
     var sab1 = b;
-    var blob = serialize(sab1, [sab1]);
+    var blob = serialize(sab1, []);
     var sab2 = deserialize(blob);
     assertEq(sharedAddress(sab1), sharedAddress(sab2));
 }
@@ -182,13 +182,37 @@ function testClone1() {
 function testClone2() {
     var sab = b;
     var ia1 = new Int32Array(sab);
-    var blob = serialize(ia1, [sab]);
+    var blob = serialize(ia1, []);
     var ia2 = deserialize(blob);
     assertEq(ia1.length, ia2.length);
     assertEq(ia1.buffer instanceof SharedArrayBuffer, true);
     assertEq(sharedAddress(ia1.buffer), sharedAddress(ia2.buffer));
     ia1[10] = 37;
     assertEq(ia2[10], 37);
+}
+
+// Serializing a SharedArrayBuffer should fail if we've set its flag to 'deny' or if
+// the flag is bogus.
+
+function testNoClone() {
+    // This just tests the API in serialize()
+    assertThrowsInstanceOf(() => serialize(b, [], {SharedArrayBuffer: false}), Error);
+
+    // This tests the actual cloning functionality - should fail
+    assertThrowsInstanceOf(() => serialize(b, [], {SharedArrayBuffer: 'deny'}), TypeError);
+
+    // Ditto - should succeed
+    assertEq(typeof serialize(b, [], {SharedArrayBuffer: 'allow'}), "object");
+}
+
+// Eventually, this will be prohibited, but for now, allow the SAB to
+// appear in the transfer list.  See bug 1302036 and bug 1302037.
+
+function testRedundantTransfer() {
+    var sab1 = b;
+    var blob = serialize(sab1, [sab1]);
+    var sab2 = deserialize(blob);
+    assertEq(sharedAddress(sab1), sharedAddress(sab2));
 }
 
 function testApplicable() {
@@ -229,6 +253,8 @@ testSharedTypedArray();
 testSharedTypedArrayMethods();
 testClone1();
 testClone2();
+testNoClone();
+testRedundantTransfer();
 testApplicable();
 
 reportCompare(0, 0, 'ok');

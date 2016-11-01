@@ -57,18 +57,30 @@
         "name": "show",
         "type": "function",
         "description": "Shows the page action. The page action is shown whenever the tab is selected.",
-        "async": true,
+        "async": "callback",
         "parameters": [
-          {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."}
+          {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."},
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": []
+          }
         ]
       },
       {
         "name": "hide",
         "type": "function",
         "description": "Hides the page action.",
-        "async": true,
+        "async": "callback",
         "parameters": [
-          {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."}
+          {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."},
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": []
+          }
         ]
       },
       {
@@ -163,7 +175,7 @@
       {
         "name": "setPopup",
         "type": "function",
-        "async": true,
+        "async": "callback",
         "description": "Sets the html document to be opened as a popup when the user clicks on the page action's icon.",
         "parameters": [
           {
@@ -176,6 +188,12 @@
                 "description": "The html file to show in a popup.  If set to the empty string (''), no popup is shown."
               }
             }
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": []
           }
         ]
       },
@@ -183,7 +201,7 @@
         "name": "getPopup",
         "type": "function",
         "description": "Gets the html document set as the popup for this page action.",
-        "async": true,
+        "async": "callback",
         "parameters": [
           {
             "name": "details",
@@ -194,6 +212,12 @@
                 "description": "Specify the tab to get the popup from."
               }
             }
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": []
           }
         ]
       }

@@ -341,6 +341,58 @@ add_task(function* test_referrer()
 });
 
 /**
+ * Checks the adjustChannel callback for downloads.
+ */
+add_task(function* test_adjustChannel()
+{
+  const sourcePath = "/test_post.txt";
+  const sourceUrl = httpUrl("test_post.txt");
+  const targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
+  const customHeader = { name: "X-Answer", value: "42" };
+  const postData = "Don't Panic";
+
+  function cleanup() {
+    gHttpServer.registerPathHandler(sourcePath, null);
+  }
+  do_register_cleanup(cleanup);
+
+  gHttpServer.registerPathHandler(sourcePath, aRequest => {
+    do_check_eq(aRequest.method, "POST");
+
+    do_check_true(aRequest.hasHeader(customHeader.name));
+    do_check_eq(aRequest.getHeader(customHeader.name), customHeader.value);
+
+    const stream = aRequest.bodyInputStream;
+    const body = NetUtil.readInputStreamToString(stream, stream.available());
+    do_check_eq(body, postData);
+  });
+
+  function adjustChannel(channel) {
+    channel.QueryInterface(Ci.nsIHttpChannel);
+    channel.setRequestHeader(customHeader.name, customHeader.value, false);
+
+    const stream = Cc["@mozilla.org/io/string-input-stream;1"]
+                   .createInstance(Ci.nsIStringInputStream);
+    stream.setData(postData, postData.length);
+
+    channel.QueryInterface(Ci.nsIUploadChannel2);
+    channel.explicitSetUploadStream(stream, null, -1, "POST", false);
+
+    return Promise.resolve();
+  }
+
+  const download = yield Downloads.createDownload({
+    source: { url: sourceUrl, adjustChannel },
+    target: targetPath,
+  });
+  do_check_eq(download.source.adjustChannel, adjustChannel);
+  do_check_eq(download.toSerializable(), null);
+  yield download.start();
+
+  cleanup();
+});
+
+/**
  * Checks initial and final state and progress for a successful download.
  */
 add_task(function* test_initial_final_state()

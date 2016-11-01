@@ -1,0 +1,15 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>MercadoLivre</ShortName>
+<Description>Onde comprar e vender de Tudo.</Description>
+<InputEncoding>iso-8859-1</InputEncoding>
+<Image width="16" height="16">data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABnRSTlMAAAAAAABupgeRAAABnklEQVR4nGNgGPqA8f///wwMDP///7199/2Js28fPvspI/b3758P////Y2IWfPiCjYeX1d9ZREWRj5mFlYGBgeH///+XrrycMONSZtk5LeOw//8Z0FBVuYSm1eaqljNHTjz6//8/4/lLL1asedTRaPr3H8P+A7vF+dM+fDBk5Cj+8OkDL8ctxr+b/zDYCktU6euwF1WfDPaVYsgsPnL+0vPnz/7+RwUXrvw/fALB/fXt/8sX3+z9N7F8/PznyOkPxzdpJMSp/WXtklV3EORjkJJg0NdmOHb624rNXAL/lgmy1967fe8h6/nnr38y8QmyLlj5nFk8zDXotIe04945NacuMhw7x/DkE8Odp1yP95R46Eabe9z7yKy3fstHNSUhhj9/fzoG7mBgWJCcZAD36OalfVuXNJ7dwAvhtjYqMjDMEtVe9+HjVwaIE2cvvcjAuI6BqSIzT3DLCoZdyxj2rWLYvpqhqJSfgSuHgWFVXc9piEpG5Eh58Oz/zj2fn7x79erN+1+//3NzcKtKSznYC+ipMTAwMDAyMmKJyEEAAHOj6iZS/gfAAAAAAElFTkSuQmCC</Image>
+<Url type="text/html" method="GET" template="http://pmstrk.mercadolivre.com.br/jm/PmsTrk" resultdomain="mercadolivre.com.br">
+  <Param name="tool" value="5668605"/>
+  <Param name="go" value="/jm/search%3fas_word={searchTerms}%26as_search_both=N"/>
+</Url>
+<SearchForm>http://www.mercadolivre.com.br/</SearchForm>
+</SearchPlugin>

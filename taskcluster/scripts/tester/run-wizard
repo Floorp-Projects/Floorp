@@ -96,7 +96,7 @@ def clone():
     # TODO Bug 1301382 - pin hg.mozilla.org fingerprint.
     call([
         b'/usr/bin/hg', b'robustcheckout',
-        b'--sharebase', b'/home/worker/hg-shared',
+        b'--sharebase', os.environ['HG_STORE_PATH'],
         b'--purge',
         b'--upstream', b'https://hg.mozilla.org/mozilla-unified',
         revision_flag, revision,

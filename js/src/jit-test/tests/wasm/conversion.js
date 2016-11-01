@@ -4,23 +4,23 @@ load(libdir + "wasm.js");
 function testConversion(resultType, opcode, paramType, op, expect) {
   if (paramType === 'i64') {
     // i64 cannot be imported, so we use a wrapper function.
-    assertEq(wasmEvalText(`(module
-                            (func (param i64) (result ${resultType}) (${resultType}.${opcode}/i64 (get_local 0)))
-                            (export "" 0))`).exports[""](createI64(op)), expect);
+    wasmFullPass(`(module
+                    (func (param i64) (result ${resultType}) (${resultType}.${opcode}/i64 (get_local 0)))
+                    (export "run" 0))`, expect, {}, createI64(op));
     // The same, but now the input is a constant.
-    assertEq(wasmEvalText(`(module
-                            (func (result ${resultType}) (${resultType}.${opcode}/i64 (i64.const ${op})))
-                            (export "" 0))`).exports[""](), expect);
+    wasmFullPass(`(module
+                    (func (result ${resultType}) (${resultType}.${opcode}/i64 (i64.const ${op})))
+                    (export "run" 0))`, expect);
   } else if (resultType === 'i64') {
-    assertEqI64(wasmEvalText(`(module
-                            (func (param ${paramType}) (result i64) (i64.${opcode}/${paramType} (get_local 0)))
-                            (export "" 0))`).exports[""](op), createI64(expect));
+    wasmFullPassI64(`(module
+                        (func (param ${paramType}) (result i64) (i64.${opcode}/${paramType} (get_local 0)))
+                        (export "run" 0))`, createI64(expect), {}, op);
     // The same, but now the input is a constant.
-    assertEqI64(wasmEvalText(`(module
-                            (func (result i64) (i64.${opcode}/${paramType} (${paramType}.const ${op})))
-                            (export "" 0))`).exports[""](), createI64(expect));
+    wasmFullPassI64(`(module
+                        (func (result i64) (i64.${opcode}/${paramType} (${paramType}.const ${op})))
+                        (export "run" 0))`, createI64(expect));
   } else {
-    assertEq(wasmEvalText('(module (func (param ' + paramType + ') (result ' + resultType + ') (' + resultType + '.' + opcode + '/' + paramType + ' (get_local 0))) (export "" 0))').exports[""](op), expect);
+    wasmFullPass('(module (func (param ' + paramType + ') (result ' + resultType + ') (' + resultType + '.' + opcode + '/' + paramType + ' (get_local 0))) (export "run" 0))', expect, {}, op);
   }
 
   let formerTestMode = getJitCompilerOptions()['wasm.test-mode'];
@@ -269,5 +269,5 @@ testConversion('f32', 'demote', 'f64', 40.1, 40.099998474121094);
 testConversion('f64', 'promote', 'f32', 40.1, 40.099998474121094);
 
 // Non-canonical NaNs.
-assertEq(wasmEvalText('(module (func (result i32) (i32.reinterpret/f32 (f32.demote/f64 (f64.const -nan:0x4444444444444)))) (export "" 0))').exports[""](), -0x1dddde);
-assertEq(wasmEvalText('(module (func (result i32) (local i64) (set_local 0 (i64.reinterpret/f64 (f64.promote/f32 (f32.const -nan:0x222222)))) (i32.xor (i32.wrap/i64 (get_local 0)) (i32.wrap/i64 (i64.shr_u (get_local 0) (i64.const 32))))) (export "" 0))').exports[""](), -0x4003bbbc);
+wasmFullPass('(module (func (result i32) (i32.reinterpret/f32 (f32.demote/f64 (f64.const -nan:0x4444444444444)))) (export "run" 0))', -0x1dddde);
+wasmFullPass('(module (func (result i32) (local i64) (set_local 0 (i64.reinterpret/f64 (f64.promote/f32 (f32.const -nan:0x222222)))) (i32.xor (i32.wrap/i64 (get_local 0)) (i32.wrap/i64 (i64.shr_u (get_local 0) (i64.const 32))))) (export "run" 0))', -0x4003bbbc);

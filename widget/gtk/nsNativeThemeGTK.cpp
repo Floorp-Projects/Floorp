@@ -149,19 +149,15 @@ static void SetWidgetStateSafe(uint8_t *aSafeVector,
   aSafeVector[key >> 3] |= (1 << (key & 7));
 }
 
-static GtkTextDirection GetTextDirection(nsIFrame* aFrame)
+/* static */ GtkTextDirection
+nsNativeThemeGTK::GetTextDirection(nsIFrame* aFrame)
 {
-  if (!aFrame)
-    return GTK_TEXT_DIR_NONE;
-
-  switch (aFrame->StyleVisibility()->mDirection) {
-    case NS_STYLE_DIRECTION_RTL:
-      return GTK_TEXT_DIR_RTL;
-    case NS_STYLE_DIRECTION_LTR:
-      return GTK_TEXT_DIR_LTR;
-  }
-
-  return GTK_TEXT_DIR_NONE;
+  // IsFrameRTL() treats vertical-rl modes as right-to-left (in addition to
+  // horizontal text with direction=RTL), rather than just considering the
+  // text direction.  GtkTextDirection does not have distinct values for
+  // vertical writing modes, but considering the block flow direction is
+  // important for resizers and scrollbar elements, at least.
+  return IsFrameRTL(aFrame) ? GTK_TEXT_DIR_RTL : GTK_TEXT_DIR_LTR;
 }
 
 // Returns positive for negative margins (otherwise 0).
@@ -1119,14 +1115,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
 {
   GtkWidgetState state;
   WidgetNodeType gtkWidgetType;
-  // For resizer drawing, we want IsFrameRTL, which treats vertical-rl modes
-  // as right-to-left (in addition to horizontal text with direction=RTL),
-  // rather than just considering the text direction.
-  // This will make resizers on vertically-oriented elements render properly.
-  GtkTextDirection direction =
-    aWidgetType == NS_THEME_RESIZER
-    ? (IsFrameRTL(aFrame) ? GTK_TEXT_DIR_RTL : GTK_TEXT_DIR_LTR)
-    : GetTextDirection(aFrame);
+  GtkTextDirection direction = GetTextDirection(aFrame);
   gint flags;
   if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, &state,
                             &flags))
@@ -1486,15 +1475,32 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case NS_THEME_SCROLLBAR_HORIZONTAL:
     case NS_THEME_SCROLLBAR_VERTICAL:
     {
+      /* While we enforce a minimum size for the thumb, this is ignored
+       * for the some scrollbars if buttons are hidden (bug 513006) because
+       * the thumb isn't a direct child of the scrollbar, unlike the buttons
+       * or track. So add a minimum size to the track as well to prevent a
+       * 0-width scrollbar. */
       if (gtk_check_version(3,20,0) == nullptr) {
-          moz_gtk_get_widget_min_size(NativeThemeToGtkTheme(aWidgetType, aFrame),
-                                      &(aResult->width), &(aResult->height));
+        // Thumb min dimensions to start with
+        WidgetNodeType thumbType = aWidgetType == NS_THEME_SCROLLBAR_VERTICAL ?
+          MOZ_GTK_SCROLLBAR_THUMB_VERTICAL : MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL;
+        moz_gtk_get_widget_min_size(thumbType, &(aResult->width), &(aResult->height));
+
+        // Add scrollbar's borders
+        nsIntMargin border;
+        nsNativeThemeGTK::GetWidgetBorder(aFrame->PresContext()->DeviceContext(),
+                                          aFrame, aWidgetType, &border);
+        aResult->width += border.left + border.right;
+        aResult->height += border.top + border.bottom;
+
+        // Add track's borders
+        uint8_t trackType = aWidgetType == NS_THEME_SCROLLBAR_VERTICAL ?
+          NS_THEME_SCROLLBARTRACK_VERTICAL : NS_THEME_SCROLLBARTRACK_HORIZONTAL;
+        nsNativeThemeGTK::GetWidgetBorder(aFrame->PresContext()->DeviceContext(),
+                                          aFrame, trackType, &border);
+        aResult->width += border.left + border.right;
+        aResult->height += border.top + border.bottom;
       } else {
-        /* While we enforce a minimum size for the thumb, this is ignored
-         * for the some scrollbars if buttons are hidden (bug 513006) because
-         * the thumb isn't a direct child of the scrollbar, unlike the buttons
-         * or track. So add a minimum size to the track as well to prevent a
-         * 0-width scrollbar. */
         MozGtkScrollbarMetrics metrics;
         moz_gtk_get_scrollbar_metrics(&metrics);
 

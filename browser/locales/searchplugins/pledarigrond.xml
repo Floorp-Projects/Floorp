@@ -1,0 +1,12 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>Pledari Grond</ShortName>
+  <Description>Pledari Grond online: vocabulari rumantsch-tudestg</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image width="16" height="16">data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAALGOfPtRkwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6AAAdTAAAOpgAAA6lwAAF2+XqZnUAAABXUlEQVR4nGJk0Jzyn4ECABBATJRoBgGAAKLYAIAAotgAgABicdB8ybC/Zjdc4OM3VoYNZ2UZFhxUZjhwXRwsNiH2DIOD1ksGfbn3YP7FR4IMCTOsGC48FGQACCAUF4Ak+Ll+M8Tb3mOYEHcGrjnf4wZY88M33GAxEHtD0QEGAa5fDAABxIJsQMEiE7BN9UGX4LaBNIPAwsNKYFsN5N8zBJg8ZnjwGmIYQAChGAAyFeQCEDgIdD7Ie3C5M7IMCXZ3gfgeRECTAegFIQaAAEIx4MEbHoYPX9nAfpuwQwMlsBREvjIIcP9isEcyFOQFgADC8AIs4GAA5G95oOYE+7sME7ZrMCTOtGSYn34cLg8QQCgGYAMBfQ4MB2p2gcMEWSPI4AdADBBALCCicZ0e1AvcGAaAvOPQ4gYOD5AXwOqAAbjgkDKYDRBAjJTmBYAAojglAgQQxQYABBDFBgAEGAB/YnDI5He1+AAAAABJRU5ErkJggg==</Image>
+  <Url type="text/html" method="GET" template="http://pledarigrond.ch/#searchPhrase={searchTerms}" resultdomain="pledarigrond.ch" />
+  <SearchForm>http://www.pledarigrond.ch/</SearchForm>
+</SearchPlugin>

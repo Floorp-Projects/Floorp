@@ -69,7 +69,7 @@ MediaKeySession::MediaKeySession(JSContext* aCx,
   , mKeyStatusMap(new MediaKeyStatusMap(aParent))
   , mExpiration(JS::GenericNaN())
 {
-  EME_LOG("MediaKeySession[%p,''] session Id set", this);
+  EME_LOG("MediaKeySession[%p,''] ctor", this);
 
   MOZ_ASSERT(aParent);
   if (aRv.Failed()) {
@@ -325,6 +325,7 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
   // to copy it here.
   nsAutoCString base64InitData(ToBase64(data));
   PromiseId pid = mKeys->StorePromise(promise);
+  mKeys->ConnectPendingPromiseIdWithToken(pid, Token());
   mKeys->GetCDMProxy()->CreateSession(Token(),
                                       mSessionType,
                                       pid,
@@ -380,6 +381,20 @@ MediaKeySession::Load(const nsAString& aSessionId, ErrorResult& aRv)
     EME_LOG("MediaKeySession[%p,''] Load() failed, no sessionId", this);
     return promise.forget();
   }
+
+  // 5. If the result of running the Is persistent session type? algorithm
+  // on this object's session type is false, return a promise rejected with
+  // a newly created TypeError.
+  if (mSessionType == MediaKeySessionType::Temporary) {
+    promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR,
+                         NS_LITERAL_CSTRING("Trying to load() into a non-persistent session"));
+    EME_LOG("MediaKeySession[%p,''] Load() failed, can't load in a non-persistent session", this);
+    return promise.forget();
+  }
+
+  // Note: We don't support persistent sessions in any keysystem, so all calls
+  // to Load() should reject with a TypeError in the preceding check. Omitting
+  // implementing the rest of the specified MediaKeySession::Load() algorithm.
 
   // We now know the sessionId being loaded into this session. Remove the
   // session from its owning MediaKey's set of sessions awaiting a sessionId.
@@ -462,26 +477,42 @@ MediaKeySession::Close(ErrorResult& aRv)
   if (aRv.Failed()) {
     return nullptr;
   }
-  if (!IsCallable()) {
-    // If this object's callable value is false, return a promise rejected
-    // with a new DOMException whose name is InvalidStateError.
-    EME_LOG("MediaKeySession[%p,''] Close() called before sessionId set by CDM", this);
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-      NS_LITERAL_CSTRING("MediaKeySession.Close() called before sessionId set by CDM"));
-    return promise.forget();
-  }
-  if (IsClosed() || !mKeys->GetCDMProxy()) {
+  // 1. Let session be the associated MediaKeySession object.
+  // 2. If session is closed, return a resolved promise.
+  if (IsClosed()) {
     EME_LOG("MediaKeySession[%p,'%s'] Close() already closed",
             this, NS_ConvertUTF16toUTF8(mSessionId).get());
     promise->MaybeResolveWithUndefined();
     return promise.forget();
   }
+  // 3. If session's callable value is false, return a promise rejected
+  // with an InvalidStateError.
+  if (!IsCallable()) {
+    EME_LOG("MediaKeySession[%p,''] Close() called before sessionId set by CDM", this);
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+      NS_LITERAL_CSTRING("MediaKeySession.Close() called before sessionId set by CDM"));
+    return promise.forget();
+  }
+  if (!mKeys->GetCDMProxy()) {
+    EME_LOG("MediaKeySession[%p,'%s'] Close() null CDMProxy",
+            this, NS_ConvertUTF16toUTF8(mSessionId).get());
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+      NS_LITERAL_CSTRING("MediaKeySession.Close() lost reference to CDM"));
+    return promise.forget();
+  }
+  // 4. Let promise be a new promise.
   PromiseId pid = mKeys->StorePromise(promise);
+  // 5. Run the following steps in parallel:
+  // 5.1 Let cdm be the CDM instance represented by session's cdm instance value.
+  // 5.2 Use cdm to close the session associated with session.
   mKeys->GetCDMProxy()->CloseSession(mSessionId, pid);
 
   EME_LOG("MediaKeySession[%p,'%s'] Close() sent to CDM, promiseId=%d",
           this, NS_ConvertUTF16toUTF8(mSessionId).get(), pid);
 
+  // Session Closed algorithm is run when CDM causes us to run OnSessionClosed().
+
+  // 6. Return promise.
   return promise.forget();
 }
 
