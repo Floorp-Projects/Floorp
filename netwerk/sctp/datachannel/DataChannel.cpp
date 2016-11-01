@@ -433,8 +433,8 @@ DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aUs
   memset(&event, 0, sizeof(event));
   event.se_assoc_id = SCTP_ALL_ASSOC;
   event.se_on = 1;
-  for (uint32_t i = 0; i < sizeof(event_types)/sizeof(event_types[0]); ++i) {
-    event.se_type = event_types[i];
+  for (unsigned short event_type : event_types) {
+    event.se_type = event_type;
     if (usrsctp_setsockopt(mMasterSocket, IPPROTO_SCTP, SCTP_EVENT, &event, sizeof(event)) < 0) {
       LOG(("*** failed setsockopt SCTP_EVENT errno %d", errno));
       goto error_cleanup;

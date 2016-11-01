@@ -349,10 +349,10 @@ nsresult doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
     const int numTests = sizeof(tests) / sizeof(tests[0]);
     int failed = 0;
     nsresult rv;
-    for (int i = 0 ; i<numTests ; ++i)
+    for (auto & test : tests)
     {
-        rv = makeAbsTest(tests[i].baseURL, tests[i].relativeURL,
-                         tests[i].expectedResult);
+        rv = makeAbsTest(test.baseURL, test.relativeURL,
+                         test.expectedResult);
         if (NS_FAILED(rv))
             failed++;
     }
