@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
 
 const MAX_LONG_STRING_LENGTH = 200000;
 const MAX_PROPERTY_ITEMS = 2000;
-const DBG_STRINGS_URI = "devtools/client/locales/debugger.properties";
+const DBG_STRINGS_URI = "devtools/locale/debugger.properties";
 
 this.EXPORTED_SYMBOLS = ["VariablesViewController", "StackFrameUtils"];
 

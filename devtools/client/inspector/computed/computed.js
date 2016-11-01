@@ -24,7 +24,7 @@ const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 const {BoxModelView} = require("devtools/client/inspector/components/box-model");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
-const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
+const STYLE_INSPECTOR_PROPERTIES = "devtools-shared/locale/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
