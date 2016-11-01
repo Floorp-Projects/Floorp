@@ -232,7 +232,7 @@ impl <U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
 
 pub fn start<T, U>(address: SocketAddr,
                    handler: T,
-                   extension_routes: Vec<(Method, &str, U)>)
+                   extension_routes: &[(Method, &str, U)])
                    -> Result<Listening>
     where T: 'static + WebDriverHandler<U>,
           U: 'static + WebDriverExtensionRoute
