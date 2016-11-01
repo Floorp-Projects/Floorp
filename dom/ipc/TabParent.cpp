@@ -938,7 +938,9 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
     auto parentDoc = static_cast<a11y::DocAccessibleParent*>(aParentDoc);
     bool added = parentDoc->AddChildDoc(doc, aParentID);
 #ifdef XP_WIN
-    a11y::WrapperFor(doc)->SetID(aMsaaID);
+    if (added) {
+      a11y::WrapperFor(doc)->SetID(aMsaaID);
+    }
 #endif
     return added;
   } else {
