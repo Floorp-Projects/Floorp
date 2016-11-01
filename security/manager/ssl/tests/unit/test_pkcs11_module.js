@@ -86,14 +86,15 @@ function run_test() {
 
   // Check that listing the slots for the test module works.
   let slots = testModule.listSlots();
-  let testModuleSlotCount = 0;
+  let testModuleSlotNames = [];
   while (slots.hasMoreElements()) {
     let slot = slots.getNext().QueryInterface(Ci.nsIPKCS11Slot);
-    equal(slot.name, "Test PKCS11 Slot",
-          "Test module slot should have correct name");
-    testModuleSlotCount++;
+    testModuleSlotNames.push(slot.name);
   }
-  equal(testModuleSlotCount, 1, "Test module should only have one slot");
+  testModuleSlotNames.sort();
+  const expectedSlotNames = ["Test PKCS11 Slot", "Test PKCS11 Slot 二"];
+  deepEqual(testModuleSlotNames, expectedSlotNames,
+            "Actual and expected slot names should be equal");
 
   // Check that finding the test slot by name is possible, and that trying to
   // find a non-present slot fails.

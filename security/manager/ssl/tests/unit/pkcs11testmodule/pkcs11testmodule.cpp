@@ -9,6 +9,8 @@
 // this function in a tight loop. Each time, this module waits for 50ms and
 // returns, having changed its internal state to report that the token has
 // either been inserted or removed, as appropriate.
+// This module also provides an alternate token that is always present for tests
+// that don't want the cyclic behavior described above.
 
 #include <string.h>
 
@@ -38,7 +40,7 @@ static const char TestManufacturerID[] = "Test PKCS11 Manufacturer ID";
 /* The dest buffer is one in the CK_INFO or CK_TOKEN_INFO structs.
  * Those buffers are padded with spaces. DestSize corresponds to the declared
  * size for those buffers (e.g. 32 for `char foo[32]`).
- * The src buffer is a string litteral. SrcSize includes the string
+ * The src buffer is a string literal. SrcSize includes the string
  * termination character (e.g. 4 for `const char foo[] = "foo"` */
 template <size_t DestSize, size_t SrcSize>
 void CopyString(unsigned char (&dest)[DestSize], const char (&src)[SrcSize])
@@ -77,27 +79,51 @@ CK_RV Test_C_GetSlotList(CK_BBOOL limitToTokensPresent,
     return CKR_ARGUMENTS_BAD;
   }
 
+  // Slot 2 is always present, while slot 1 may or may not be present.
+  CK_ULONG slotCount = (!limitToTokensPresent || tokenPresent ? 1 : 0) + 1;
+
   if (pSlotList) {
+    if (*pulCount < slotCount) {
+      return CKR_BUFFER_TOO_SMALL;
+    }
     // apparently CK_SLOT_IDs are integers [1,N] because
     // who likes counting from 0 all the time?
-    pSlotList[0] = 1;
+    if (slotCount == 1) {
+      pSlotList[0] = 2;
+    } else {
+      pSlotList[0] = 1;
+      pSlotList[1] = 2;
+    }
   }
 
-  *pulCount = (!limitToTokensPresent || tokenPresent ? 1 : 0);
+  *pulCount = slotCount;
   return CKR_OK;
 }
 
 static const char TestSlotDescription[] = "Test PKCS11 Slot";
+static const char TestSlot2Description[] = "Test PKCS11 Slot 二";
 
-CK_RV Test_C_GetSlotInfo(CK_SLOT_ID, CK_SLOT_INFO_PTR pInfo)
+CK_RV Test_C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
 {
   if (!pInfo) {
     return CKR_ARGUMENTS_BAD;
   }
 
-  CopyString(pInfo->slotDescription, TestSlotDescription);
+  switch (slotID) {
+    case 1:
+      CopyString(pInfo->slotDescription, TestSlotDescription);
+      pInfo->flags = (tokenPresent ? CKF_TOKEN_PRESENT : 0) |
+                     CKF_REMOVABLE_DEVICE;
+      break;
+    case 2:
+      CopyString(pInfo->slotDescription, TestSlot2Description);
+      pInfo->flags = CKF_TOKEN_PRESENT | CKF_REMOVABLE_DEVICE;
+      break;
+    default:
+      return CKR_ARGUMENTS_BAD;
+  }
+
   CopyString(pInfo->manufacturerID, TestManufacturerID);
-  pInfo->flags = (tokenPresent ? CKF_TOKEN_PRESENT : 0) | CKF_REMOVABLE_DEVICE;
   pInfo->hardwareVersion = TestLibraryVersion;
   pInfo->firmwareVersion = TestLibraryVersion;
   return CKR_OK;
@@ -107,15 +133,26 @@ CK_RV Test_C_GetSlotInfo(CK_SLOT_ID, CK_SLOT_INFO_PTR pInfo)
 // The PKCS #11 base specification v2.20 specifies that strings be encoded
 // as UTF-8.
 static const char TestTokenLabel[] = "Test PKCS11 Tokeñ Label";
+static const char TestToken2Label[] = "Test PKCS11 Tokeñ 2 Label";
 static const char TestTokenModel[] = "Test Model";
 
-CK_RV Test_C_GetTokenInfo(CK_SLOT_ID, CK_TOKEN_INFO_PTR pInfo)
+CK_RV Test_C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
 {
   if (!pInfo) {
     return CKR_ARGUMENTS_BAD;
   }
 
-  CopyString(pInfo->label, TestTokenLabel);
+  switch (slotID) {
+    case 1:
+      CopyString(pInfo->label, TestTokenLabel);
+      break;
+    case 2:
+      CopyString(pInfo->label, TestToken2Label);
+      break;
+    default:
+      return CKR_ARGUMENTS_BAD;
+  }
+
   CopyString(pInfo->manufacturerID, TestManufacturerID);
   CopyString(pInfo->model, TestTokenModel);
   memset(pInfo->serialNumber, 0, sizeof(pInfo->serialNumber));
@@ -170,10 +207,20 @@ CK_RV Test_C_SetPIN(CK_SESSION_HANDLE, CK_UTF8CHAR_PTR, CK_ULONG,
   return CKR_FUNCTION_NOT_SUPPORTED;
 }
 
-CK_RV Test_C_OpenSession(CK_SLOT_ID, CK_FLAGS, CK_VOID_PTR, CK_NOTIFY,
+CK_RV Test_C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS, CK_VOID_PTR, CK_NOTIFY,
                          CK_SESSION_HANDLE_PTR phSession)
 {
-  *phSession = 1;
+  switch (slotID) {
+    case 1:
+      *phSession = 1;
+      break;
+    case 2:
+      *phSession = 2;
+      break;
+    default:
+      return CKR_ARGUMENTS_BAD;
+  }
+
   return CKR_OK;
 }
 
@@ -187,13 +234,24 @@ CK_RV Test_C_CloseAllSessions(CK_SLOT_ID)
   return CKR_OK;
 }
 
-CK_RV Test_C_GetSessionInfo(CK_SESSION_HANDLE, CK_SESSION_INFO_PTR pInfo)
+CK_RV Test_C_GetSessionInfo(CK_SESSION_HANDLE hSession,
+                            CK_SESSION_INFO_PTR pInfo)
 {
   if (!pInfo) {
     return CKR_ARGUMENTS_BAD;
   }
 
-  pInfo->slotID = 1;
+  switch (hSession) {
+    case 1:
+      pInfo->slotID = 1;
+      break;
+    case 2:
+      pInfo->slotID = 2;
+      break;
+    default:
+      return CKR_ARGUMENTS_BAD;
+  }
+
   pInfo->state = CKS_RO_PUBLIC_SESSION;
   pInfo->flags = CKF_SERIAL_SESSION;
   return CKR_OK;
