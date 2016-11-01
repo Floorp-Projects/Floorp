@@ -13,17 +13,15 @@ add_task(function* () {
   let label = MigrationUtils.getLocalizedString("importedBookmarksFolder", [source]);
 
   let expectedParents = [ PlacesUtils.toolbarFolderId ];
-  let itemCount = 0;
 
-  let bmObserver = {
+  PlacesUtils.bookmarks.addObserver({
     onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle) {
-      if (aTitle != label) {
-        itemCount++;
-      }
-      if (expectedParents.length > 0 && aTitle == label) {
+      if (aTitle == label) {
         let index = expectedParents.indexOf(aParentId);
-        Assert.ok(index != -1, "Found expected parent");
+        Assert.notEqual(index, -1);
         expectedParents.splice(index, 1);
+        if (expectedParents.length == 0)
+          PlacesUtils.bookmarks.removeObserver(this);
       }
     },
     onBeginUpdateBatch() {},
@@ -32,15 +30,10 @@ add_task(function* () {
     onItemChanged() {},
     onItemVisited() {},
     onItemMoved() {},
-  };
-  PlacesUtils.bookmarks.addObserver(bmObserver, false);
+  }, false);
 
   yield promiseMigration(migrator, MigrationUtils.resourceTypes.BOOKMARKS);
-  PlacesUtils.bookmarks.removeObserver(bmObserver);
 
   // Check the bookmarks have been imported to all the expected parents.
-  Assert.ok(!expectedParents.length, "No more expected parents");
-  Assert.equal(itemCount, 13, "Should import all 13 items.");
-  // Check that the telemetry matches:
-  Assert.equal(MigrationUtils._importQuantities.bookmarks, itemCount, "Telemetry reporting correct.");
+  Assert.equal(expectedParents.length, 0);
 });
