@@ -214,18 +214,23 @@ GeckoMediaPluginServiceChild::GetPluginVersionForAPI(const nsACString& aAPI,
                                                      bool* aHasPlugin,
                                                      nsACString& aOutVersion)
 {
-  dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-  if (!contentChild) {
-    return NS_ERROR_FAILURE;
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!sGMPCapabilities) {
+    *aHasPlugin = false;
+    return NS_OK;
   }
 
-  MOZ_ASSERT(NS_IsMainThread());
+  nsCString api(aAPI);
+  for (const GMPCapabilityAndVersion& plugin : *sGMPCapabilities) {
+    if (GMPCapability::Supports(plugin.mCapabilities, api, *aTags)) {
+      aOutVersion = plugin.mVersion;
+      *aHasPlugin = true;
+      return NS_OK;
+    }
+  }
 
-  nsCString version;
-  bool ok = contentChild->SendGetGMPPluginVersionForAPI(nsCString(aAPI), *aTags,
-                                                        aHasPlugin, &version);
-  aOutVersion = version;
-  return ok ? NS_OK : NS_ERROR_FAILURE;
+  *aHasPlugin = false;
+  return NS_OK;
 }
 
 class GetNodeIdDone : public GetServiceChildCallback
