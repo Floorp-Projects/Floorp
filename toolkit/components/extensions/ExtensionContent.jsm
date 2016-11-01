@@ -215,11 +215,11 @@ Script.prototype = {
    */
   tryInject(window, sandbox, shouldRun, when) {
     if (shouldRun("document_start")) {
-      let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-
       let {cssURLs} = this;
       if (cssURLs.length > 0) {
+        let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+
         let method = this.remove_css ? winUtils.removeSheetUsingURIString : winUtils.loadSheetUsingURIString;
         for (let url of cssURLs) {
           runSafeSyncWithoutClone(method, url, winUtils.AUTHOR_SHEET);
