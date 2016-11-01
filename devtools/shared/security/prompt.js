@@ -15,7 +15,7 @@ loader.lazyRequireGetter(this, "AuthenticationResult",
   "devtools/shared/security/auth", true);
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/shared/locales/debugger.properties");
+const L10N = new LocalizationHelper("devtools-shared/locale/debugger.properties");
 
 var Client = exports.Client = {};
 var Server = exports.Server = {};

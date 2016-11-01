@@ -20,7 +20,7 @@ const { loadSheet } = require("sdk/stylesheet/utils");
 
 // Localization
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/netmonitor.properties");
+const L10N = new LocalizationHelper("devtools/locale/netmonitor.properties");
 
 // Stylesheets
 var styleSheets = [

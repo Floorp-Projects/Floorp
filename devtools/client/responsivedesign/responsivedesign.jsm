@@ -41,7 +41,7 @@ const ROUND_RATIO = 10;
 
 const INPUT_PARSER = /(\d+)[^\d]+(\d+)/;
 
-const SHARED_L10N = new LocalizationHelper("devtools/client/locales/shared.properties");
+const SHARED_L10N = new LocalizationHelper("devtools/locale/shared.properties");
 
 function debug(msg) {
   // dump(`RDM UI: ${msg}\n`);

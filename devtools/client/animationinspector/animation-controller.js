@@ -22,8 +22,7 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "AnimationsFront", "devtools/shared/fronts/animation", true);
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const L10N =
-      new LocalizationHelper("devtools/client/locales/animationinspector.properties");
+const L10N = new LocalizationHelper("devtools/locale/animationinspector.properties");
 
 // Global toolbox/inspector, set when startup is called.
 var gToolbox, gInspector;

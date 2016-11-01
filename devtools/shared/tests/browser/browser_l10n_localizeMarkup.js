@@ -9,8 +9,8 @@ const { localizeMarkup, LocalizationHelper } = require("devtools/shared/l10n");
 
 add_task(function* () {
   info("Check that the strings used for this test are still valid");
-  let STARTUP_L10N = new LocalizationHelper("devtools/client/locales/startup.properties");
-  let TOOLBOX_L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+  let STARTUP_L10N = new LocalizationHelper("devtools/locale/startup.properties");
+  let TOOLBOX_L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
   let str1 = STARTUP_L10N.getStr("inspector.label");
   let str2 = STARTUP_L10N.getStr("inspector.commandkey");
   let str3 = TOOLBOX_L10N.getStr("toolbox.defaultTitle");
@@ -19,7 +19,7 @@ add_task(function* () {
   info("Create the test markup");
   let div = document.createElement("div");
   div.innerHTML =
-  `<div data-localization-bundle="devtools/client/locales/startup.properties">
+  `<div data-localization-bundle="devtools/locale/startup.properties">
      <div id="d0" data-localization="content=inspector.someInvalidKey"></div>
      <div id="d1" data-localization="content=inspector.label">Text will disappear</div>
      <div id="d2" data-localization="content=inspector.label;title=inspector.commandkey">
@@ -28,7 +28,7 @@ add_task(function* () {
      <div id="d3" data-localization="content=inspector.label;
                                      title=inspector.commandkey"></div>
      <div id="d4" data-localization="aria-label=inspector.label">Some content</div>
-     <div data-localization-bundle="devtools/client/locales/toolbox.properties">
+     <div data-localization-bundle="devtools/locale/toolbox.properties">
        <div id="d5" data-localization="content=toolbox.defaultTitle"></div>
      </div>
    </div>

@@ -24,7 +24,7 @@ loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/client/scratc
 loader.lazyGetter(this, "DomPanel", () => require("devtools/client/dom/dom-panel").DomPanel);
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/startup.properties");
+const L10N = new LocalizationHelper("devtools/locale/startup.properties");
 
 var Tools = {};
 exports.Tools = Tools;
