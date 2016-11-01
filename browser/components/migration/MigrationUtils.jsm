@@ -691,6 +691,7 @@ this.MigrationUtils = Object.freeze({
       "Microsoft Edge":                    "edge",
       "Safari":                            "safari",
       "Firefox":                           "firefox",
+      "Nightly":                           "firefox",
       "Google Chrome":                     "chrome",  // Windows, Linux
       "Chrome":                            "chrome",  // OS X
       "Chromium":                          "chromium", // Windows, OS X
@@ -705,6 +706,10 @@ this.MigrationUtils = Object.freeze({
           .getService(Ci.nsIExternalProtocolService)
           .getApplicationDescription("http");
       key = APP_DESC_TO_KEY[browserDesc] || "";
+      // Handle devedition, as well as "FirefoxNightly" on OS X.
+      if (!key && browserDesc.startsWith("Firefox")) {
+        key = "firefox";
+      }
     }
     catch (ex) {
       Cu.reportError("Could not detect default browser: " + ex);
