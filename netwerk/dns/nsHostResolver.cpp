@@ -542,9 +542,7 @@ nsHostResolver::nsHostResolver(uint32_t maxCacheEntries,
     mShortIdleTimeout = PR_SecondsToInterval(ShortIdleTimeoutSeconds);
 }
 
-nsHostResolver::~nsHostResolver()
-{
-}
+nsHostResolver::~nsHostResolver() = default;
 
 nsresult
 nsHostResolver::Init()

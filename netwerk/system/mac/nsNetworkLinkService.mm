@@ -84,9 +84,7 @@ nsNetworkLinkService::nsNetworkLinkService()
 {
 }
 
-nsNetworkLinkService::~nsNetworkLinkService()
-{
-}
+nsNetworkLinkService::~nsNetworkLinkService() = default;
 
 NS_IMETHODIMP
 nsNetworkLinkService::GetIsLinkUp(bool *aIsUp)

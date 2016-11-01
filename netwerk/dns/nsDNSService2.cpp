@@ -68,7 +68,7 @@ public:
         , mDone(false) {}
 
 private:
-    virtual ~nsDNSRecord() {}
+    virtual ~nsDNSRecord() = default;
 
     RefPtr<nsHostRecord>  mHostRecord;
     NetAddrElement         *mIter;
@@ -294,7 +294,7 @@ nsDNSRecord::ReportUnusable(uint16_t aPort)
 class nsDNSAsyncRequest final : public nsResolveHostCallback
                               , public nsICancelable
 {
-    ~nsDNSAsyncRequest() {}
+    ~nsDNSAsyncRequest() = default;
 
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -396,7 +396,7 @@ public:
         : mDone(false)
         , mStatus(NS_OK)
         , mMonitor(mon) {}
-    virtual ~nsDNSSyncRequest() {}
+    virtual ~nsDNSSyncRequest() = default;
 
     void OnLookupComplete(nsHostResolver *, nsHostRecord *, nsresult);
     bool EqualsAsyncListener(nsIDNSListener *aListener);
@@ -482,9 +482,7 @@ nsDNSService::nsDNSService()
 {
 }
 
-nsDNSService::~nsDNSService()
-{
-}
+nsDNSService::~nsDNSService() = default;
 
 NS_IMPL_ISUPPORTS(nsDNSService, nsIDNSService, nsPIDNSService, nsIObserver,
                   nsIMemoryReporter)
