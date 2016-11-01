@@ -290,7 +290,7 @@ Sanitizer.prototype = {
           // We don't want to wait for this operation to complete...
           promiseClearPluginCookies = this.promiseClearPluginCookies(range);
 
-          //... at least, not for more than 10 seconds.
+          // ... at least, not for more than 10 seconds.
           yield Promise.race([
             promiseClearPluginCookies,
             new Promise(resolve => setTimeout(resolve, 10000 /* 10 seconds */))

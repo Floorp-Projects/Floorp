@@ -655,7 +655,7 @@ var LightWeightThemeWebInstaller = {
       uri = makeURI(srcURIString);
     }
     catch (e) {
-      //makeURI fails if srcURIString is a nonsense URI
+      // makeURI fails if srcURIString is a nonsense URI
       return false;
     }
 

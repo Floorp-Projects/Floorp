@@ -60,7 +60,7 @@
           },
         });
         sendAsyncMessage("navigate", "download.auto");
-      }).then(null, SpecialPowers.Cu.reportError);
+      }).then(null, Cu.reportError);
     });
     script.addMessageListener("navigate", function(url) {
       window.location = url;

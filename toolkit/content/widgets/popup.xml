@@ -570,7 +570,6 @@
     <handlers>
       <handler event="mouseover"><![CDATA[
         var rel = event.relatedTarget;
-        //dump("ENTERING " + (rel ? rel.localName : "null") + "\n");
         if (!rel)
           return;
 
@@ -588,7 +587,6 @@
 
       <handler event="mouseout"><![CDATA[
         var rel = event.relatedTarget;
-        //dump("LEAVING " + (rel ? rel.localName : "null") + "\n");
 
         // relatedTarget is null when the titletip is first shown: a mouseout event fires
         // because the mouse is exiting the main window and entering the titletip "window".

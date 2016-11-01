@@ -45,7 +45,7 @@ FormAutoCompleteResult.prototype = {
   // The default item that should be entered if none is selected
   _defaultIndex: 0,
 
-  //The reason the search failed
+  // The reason the search failed
   _errorDescription: "",
 
   /**

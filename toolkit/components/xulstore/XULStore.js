@@ -224,7 +224,7 @@ XULStore.prototype = {
     if (attr in obj && obj[attr] == value)
       return;
 
-    obj[attr] = value; //IE, this._data[docURI][id][attr] = value;
+    obj[attr] = value; // IE, this._data[docURI][id][attr] = value;
 
     this.markAsChanged();
   },

@@ -8,6 +8,31 @@ const { sprintf } = require("devtools/shared/sprintfjs/sprintf");
 
 const propertiesMap = {};
 
+// We need some special treatment here for webpack.
+//
+// Webpack doesn't always handle dynamic requires in the best way.  In
+// particular if it sees an unrestricted dynamic require, it will try
+// to put all the files it can find into the generated pack.  (It can
+// also try a bit to parse the expression passed to require, but in
+// our case this doesn't work, because our call below doesn't provide
+// enough information.)
+//
+// Webpack also provides a way around this: require.context.  The idea
+// here is to tell webpack some constraints so that it can include
+// fewer files in the pack.
+//
+// Here we introduce new require contexts for each possible locale
+// directory.  Then we use the correct context to load the property
+// file.  In the webpack case this results in just the locale property
+// files being included in the pack; and in the devtools case this is
+// a wordy no-op.
+const reqShared = require.context("raw!devtools-shared/locale/",
+                                  true, /^.*\.properties$/);
+const reqClient = require.context("raw!devtools/locale/",
+                                  true, /^.*\.properties$/);
+const reqGlobal = require.context("raw!global/locale/",
+                                  true, /^.*\.properties$/);
+
 /**
  * Memoized getter for properties files that ensures a given url is only required and
  * parsed once.
@@ -18,7 +43,23 @@ const propertiesMap = {};
  */
 function getProperties(url) {
   if (!propertiesMap[url]) {
-    propertiesMap[url] = parsePropertiesFile(require(`raw!${url}`));
+    // See the comment above about webpack and require contexts.  Here
+    // we take an input like "devtools-shared/locale/debugger.properties"
+    // and decide which context require function to use.  Despite the
+    // string processing here, in the end a string identical to |url|
+    // ends up being passed to "require".
+    let index = url.lastIndexOf("/");
+    // Turn "mumble/locale/resource.properties" => "./resource.properties".
+    let baseName = "." + url.substr(index);
+    let reqFn;
+    if (/^global/.test(url)) {
+      reqFn = reqGlobal;
+    } else if (/^devtools-shared/.test(url)) {
+      reqFn = reqShared;
+    } else {
+      reqFn = reqClient;
+    }
+    propertiesMap[url] = parsePropertiesFile(reqFn(baseName));
   }
 
   return propertiesMap[url];

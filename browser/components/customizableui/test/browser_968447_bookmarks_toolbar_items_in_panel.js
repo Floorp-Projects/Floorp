@@ -43,7 +43,7 @@ add_task(function*() {
      "Button in new window should have 'wrap' attribute");
 
   newWin.PanelUI.panel.removeEventListener("popuphidden", hideTrace);
-  //XXXgijs on Linux, we're sometimes seeing the panel being hidden early
+  // XXXgijs on Linux, we're sometimes seeing the panel being hidden early
   // in the newly created window, probably because something else steals focus.
   if (newWin.PanelUI.panel.state != "closed") {
     info("Panel is still open in new window, waiting for it to close");

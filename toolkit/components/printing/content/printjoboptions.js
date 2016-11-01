@@ -14,7 +14,7 @@ var gPrefs;
 var gPrintSetInterface = Components.interfaces.nsIPrintSettings;
 var doDebug            = true;
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function checkDouble(element, maxVal)
 {
   var value = element.value;
@@ -30,7 +30,7 @@ function checkDouble(element, maxVal)
   }
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function isListOfPrinterFeaturesAvailable()
 {
   var has_printerfeatures = false;
@@ -43,7 +43,7 @@ function isListOfPrinterFeaturesAvailable()
   return has_printerfeatures;
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function getDoubleStr(val, dec)
 {
   var str = val.toString();
@@ -51,12 +51,12 @@ function getDoubleStr(val, dec)
   return str.substring(0, inx+dec+1);
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function initDialog()
 {
   gPrintBundle = document.getElementById("printBundle");
 
-  dialog = new Object;
+  dialog = {};
 
   dialog.paperList       = document.getElementById("paperList");
   dialog.paperGroup      = document.getElementById("paperGroup");
@@ -76,14 +76,14 @@ function initDialog()
   dialog.rightInput      = document.getElementById("rightInput");
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function round10(val)
 {
   return Math.round(val * 10) / 10;
 }
 
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function paperListElement(aPaperListElement)
   {
     this.paperListElement = aPaperListElement;
@@ -127,11 +127,11 @@ paperListElement.prototype =
         }
   };
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function createPaperArrayFromDefaults()
 {
   var paperNames   = ["letterSize", "legalSize", "exectiveSize", "a5Size", "a4Size", "a3Size", "a2Size", "a1Size", "a0Size"];
-  //var paperNames   = ["&letterRadio.label;", "&legalRadio.label;", "&exectiveRadio.label;", "&a4Radio.label;", "&a3Radio.label;"];
+  // var paperNames   = ["&letterRadio.label;", "&legalRadio.label;", "&exectiveRadio.label;", "&a4Radio.label;", "&a3Radio.label;"];
   var paperWidths  = [ 8.5,  8.5,  7.25, 148.0, 210.0, 287.0, 420.0, 594.0,  841.0];
   var paperHeights = [11.0, 14.0, 10.50, 210.0, 297.0, 420.0, 594.0, 841.0, 1189.0];
   var paperInches  = [true, true, true,  false, false, false, false, false, false];
@@ -141,7 +141,7 @@ function createPaperArrayFromDefaults()
   gPaperArray = new Array();
 
   for (var i=0;i<paperNames.length;i++) {
-    var obj    = new Object();
+    var obj    = {};
     obj.name   = paperNames[i];
     obj.width  = paperWidths[i];
     obj.height = paperHeights[i];
@@ -160,7 +160,7 @@ function createPaperArrayFromDefaults()
   }
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function createPaperArrayFromPrinterFeatures()
 {
   var printername = gPrintSettings.printerName;
@@ -177,7 +177,7 @@ function createPaperArrayFromPrinterFeatures()
   }
 
   for (var i=0;i<numPapers;i++) {
-    var obj    = new Object();
+    var obj       = {};
     obj.name      = gPrefs.getCharPref("print.tmp.printerfeatures." + printername + ".paper." + i + ".name");
     obj.width_mm  = gPrefs.getIntPref("print.tmp.printerfeatures."  + printername + ".paper." + i + ".width_mm");
     obj.height_mm = gPrefs.getIntPref("print.tmp.printerfeatures."  + printername + ".paper." + i + ".height_mm");
@@ -201,7 +201,7 @@ function createPaperArrayFromPrinterFeatures()
   }
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function createPaperArray()
 {
   if (isListOfPrinterFeaturesAvailable()) {
@@ -212,7 +212,7 @@ function createPaperArray()
   }
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function createPaperSizeList(selectedInx)
 {
   var selectElement = new paperListElement(dialog.paperList);
@@ -224,10 +224,10 @@ function createPaperSizeList(selectedInx)
     selectElement.paperListElement.selectedIndex = selectedInx;
   }
 
-  //dialog.paperList = selectElement;
+  // dialog.paperList = selectElement;
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function loadDialog()
 {
   var print_paper_unit       = 0;
@@ -326,7 +326,7 @@ function loadDialog()
   dialog.rightInput.value  = gPrintSettings.edgeRight.toFixed(2);
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function onLoad()
 {
   // Init dialog.
@@ -346,7 +346,7 @@ function onLoad()
   loadDialog();
 }
 
-//---------------------------------------------------
+// ---------------------------------------------------
 function onAccept()
 {
   var print_paper_unit        = gPrintSettingsInterface.kPaperSizeInches;

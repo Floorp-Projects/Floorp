@@ -6,8 +6,8 @@
 
 "use strict";
 
-////////////////////////////////////////////////////////////////////////////////
-//// Constants
+// //////////////////////////////////////////////////////////////////////////////
+// // Constants
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
@@ -246,8 +246,8 @@ const SQL_BOOKMARKED_URL_QUERY = urlQuery("AND bookmarked");
 
 const SQL_BOOKMARKED_TYPED_URL_QUERY = urlQuery("AND bookmarked AND h.typed = 1");
 
-////////////////////////////////////////////////////////////////////////////////
-//// Getters
+// //////////////////////////////////////////////////////////////////////////////
+// // Getters
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -272,6 +272,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesSearchAutocompleteProvider",
                                   "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesRemoteTabsAutocompleteProvider",
                                   "resource://gre/modules/PlacesRemoteTabsAutocompleteProvider.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+                                  "resource://gre/modules/BrowserUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "textURIService",
                                    "@mozilla.org/intl/texttosuburi;1",
@@ -504,8 +506,8 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
   return Object.seal(store);
 });
 
-////////////////////////////////////////////////////////////////////////////////
-//// Helper functions
+// //////////////////////////////////////////////////////////////////////////////
+// // Helper functions
 
 /**
  * Used to unescape encoded URI strings and drop information that we do not
@@ -624,7 +626,7 @@ function looksLikeUrl(str, ignoreAlphanumericHosts = false) {
           (ignoreAlphanumericHosts ? /(.*\..*){3,}/.test(str) : str.includes(".")));
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 
 /**
  * Manages a single instance of an autocomplete search.
@@ -913,7 +915,7 @@ Search.prototype = {
         return;
     }
 
-    if (this._enableActions) {
+    if (this._enableActions && this._searchTokens.length > 0) {
       yield this._matchSearchSuggestions();
       if (!this.pending)
         return;
@@ -953,18 +955,19 @@ Search.prototype = {
     // We always try to make the first result a special "heuristic" result.  The
     // heuristics below determine what type of result it will be, if any.
 
-    if (this._searchTokens.length > 0) {
-      // This may be a Places keyword.
-      let matched = yield this._matchPlacesKeyword();
+    let hasSearchTerms = this._searchTokens.length > 0 ;
+
+    if (this._enableActions && hasSearchTerms) {
+      // It may be a search engine with an alias - which works like a keyword.
+      let matched = yield this._matchSearchEngineAlias();
       if (matched) {
         return true;
       }
     }
 
-    if (this.pending && this._enableActions) {
-      // If it's not a Places keyword, then it may be a search engine
-      // with an alias - which works like a keyword.
-      let matched = yield this._matchSearchEngineAlias();
+    if (this.pending && hasSearchTerms) {
+      // It may be a Places keyword.
+      let matched = yield this._matchPlacesKeyword();
       if (matched) {
         return true;
       }
@@ -987,7 +990,7 @@ Search.prototype = {
       }
     }
 
-    if (this.pending && this._enableActions) {
+    if (this.pending && hasSearchTerms && this._enableActions) {
       // If we don't have a result that matches what we know about, then
       // we use a fallback for things we don't know about.
 
@@ -1133,23 +1136,26 @@ Search.prototype = {
     if (!entry)
       return false;
 
-    // Build the url.
-    let searchString = this._trimmedOriginalSearchString;
-    let queryString = "";
-    let queryIndex = searchString.indexOf(" ");
-    if (queryIndex != -1) {
-      queryString = searchString.substring(queryIndex + 1);
+    let searchString = this._trimmedOriginalSearchString.substr(keyword.length + 1);
+
+    let url = null, postData = null;
+    try {
+      [url, postData] =
+        yield BrowserUtils.parseUrlAndPostData(entry.url.href,
+                                               entry.postData,
+                                               searchString);
+    } catch (ex) {
+      // It's not possible to bind a param to this keyword.
+      return false;
     }
-    // We need to escape the parameters as if they were the query in a URL
-    queryString = encodeURIComponent(queryString).replace(/%20/g, "+");
-    let escapedURL = entry.url.href.replace("%s", queryString);
 
     let style = (this._enableActions ? "action " : "") + "keyword";
     let actionURL = PlacesUtils.mozActionURI("keyword", {
-      url: escapedURL,
+      url,
       input: this._originalSearchString,
+      postData,
     });
-    let value = this._enableActions ? actionURL : escapedURL;
+    let value = this._enableActions ? actionURL : url;
     // The title will end up being "host: queryString"
     let comment = entry.url.host;
 
@@ -1219,7 +1225,7 @@ Search.prototype = {
       return false;
 
     match.engineAlias = alias;
-    let query = this._searchTokens.slice(1).join(" ");
+    let query = this._trimmedOriginalSearchString.substr(alias.length + 1);
 
     this._addSearchEngineMatch(match, query);
     return true;
@@ -1836,9 +1842,9 @@ Search.prototype = {
   },
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//// UnifiedComplete class
-//// component @mozilla.org/autocomplete/search;1?name=unifiedcomplete
+// //////////////////////////////////////////////////////////////////////////////
+// // UnifiedComplete class
+// // component @mozilla.org/autocomplete/search;1?name=unifiedcomplete
 
 function UnifiedComplete() {
   // Make sure the preferences are initialized as soon as possible.
@@ -1849,8 +1855,8 @@ function UnifiedComplete() {
 }
 
 UnifiedComplete.prototype = {
-  //////////////////////////////////////////////////////////////////////////////
-  //// Database handling
+  // ////////////////////////////////////////////////////////////////////////////
+  // // Database handling
 
   /**
    * Promise resolved when the database initialization has completed, or null
@@ -1900,8 +1906,8 @@ UnifiedComplete.prototype = {
     return this._promiseDatabase;
   },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// mozIPlacesAutoComplete
+  // ////////////////////////////////////////////////////////////////////////////
+  // // mozIPlacesAutoComplete
 
   registerOpenPage: function PAC_registerOpenPage(uri) {
     SwitchToTabStorage.add(uri);
@@ -1911,8 +1917,8 @@ UnifiedComplete.prototype = {
     SwitchToTabStorage.delete(uri);
   },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsIAutoCompleteSearch
+  // ////////////////////////////////////////////////////////////////////////////
+  // // nsIAutoCompleteSearch
 
   startSearch: function (searchString, searchParam, previousResult, listener) {
     // Stop the search in case the controller has not taken care of it.
@@ -1994,8 +2000,8 @@ UnifiedComplete.prototype = {
     search.notifyResults(false);
   },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsIAutoCompleteSimpleResultListener
+  // ////////////////////////////////////////////////////////////////////////////
+  // // nsIAutoCompleteSimpleResultListener
 
   onValueRemoved: function (result, spec, removeFromDB) {
     if (removeFromDB) {
@@ -2003,8 +2009,8 @@ UnifiedComplete.prototype = {
     }
   },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsIAutoCompleteSearchDescriptor
+  // ////////////////////////////////////////////////////////////////////////////
+  // // nsIAutoCompleteSearchDescriptor
 
   get searchType() {
     return Ci.nsIAutoCompleteSearchDescriptor.SEARCH_TYPE_IMMEDIATE;
@@ -2014,8 +2020,8 @@ UnifiedComplete.prototype = {
     return true;
   },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsISupports
+  // ////////////////////////////////////////////////////////////////////////////
+  // // nsISupports
 
   classID: Components.ID("f964a319-397a-4d21-8be6-5cdd1ee3e3ae"),
 

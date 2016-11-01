@@ -69,11 +69,11 @@ var gWebProgressListener = {
   // ---------------------------------------------------------------------------
   // NOTIFY_LOCATION mode should work fine without these methods.
   //
-  //onStateChange: function() {},
-  //onStatusChange: function() {},
-  //onProgressChange: function() {},
-  //onSecurityChange: function() {},
-  //----------------------------------------------------------------------------
+  // onStateChange: function() {},
+  // onStatusChange: function() {},
+  // onProgressChange: function() {},
+  // onSecurityChange: function() {},
+  // ----------------------------------------------------------------------------
 
   onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
     if (!aRequest) {

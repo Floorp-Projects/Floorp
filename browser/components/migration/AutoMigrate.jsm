@@ -358,6 +358,8 @@ const AutoMigrate = {
     notificationBox.appendNotification(
       message, kNotificationId, null, notificationBox.PRIORITY_INFO_HIGH, buttons
     );
+    let remainingDays = Preferences.get(kAutoMigrateDaysToOfferUndoPref, 0);
+    Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_UNDO_OFFERED").add(4 - remainingDays);
   },
 
   shouldStillShowUndoPrompt() {

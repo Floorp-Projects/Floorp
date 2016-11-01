@@ -54,7 +54,7 @@ function PathHandler(aMeta, aResponse, aChannelEvent, aRedirURL) {
   if (aRedirURL)
     aResponse.setHeader("Location", aRedirURL, false);
 
-  //aResponse.setHeader("Content-Type", "text/html", false);
+  // aResponse.setHeader("Content-Type", "text/html", false);
   let body = STATUS[aChannelEvent][1] + "\r\n";
   aResponse.bodyOutputStream.write(body, body.length);
 }

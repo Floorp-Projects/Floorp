@@ -134,7 +134,7 @@
         <body>
         <![CDATA[
           var xOffset = screen.availWidth/2 - window.outerWidth/2;
-          var yOffset = screen.availHeight/2 - window.outerHeight/2; //(opener.outerHeight *2)/10;
+          var yOffset = screen.availHeight/2 - window.outerHeight/2;
 
           xOffset = xOffset > 0 ? xOffset : 0;
           yOffset = yOffset > 0 ? yOffset : 0;

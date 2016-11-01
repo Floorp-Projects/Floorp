@@ -133,9 +133,10 @@ nsWindowBase::SynthesizeNativeTouchPoint(uint32_t aPointerId,
 {
   AutoObserverNotifier notifier(aObserver, "touchpoint");
 
-  if (!InitTouchInjection()) {
-    // If we don't have touch injection from the OS, we can just fake it and
-    // synthesize the events from here.
+  if (gfxPrefs::APZTestFailsWithNativeInjection() || !InitTouchInjection()) {
+    // If we don't have touch injection from the OS, or if we are running a test
+    // that cannot properly inject events to satisfy the OS requirements (see bug
+    // 1313170)  we can just fake it and synthesize the events from here.
     MOZ_ASSERT(NS_IsMainThread());
     if (aPointerState == TOUCH_HOVER) {
       return NS_ERROR_UNEXPECTED;

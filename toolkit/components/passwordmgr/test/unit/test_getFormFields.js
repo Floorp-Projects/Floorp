@@ -4,7 +4,7 @@
 
 "use strict";
 
-//Services.prefs.setBoolPref("signon.debug", true);
+// Services.prefs.setBoolPref("signon.debug", true);
 
 Cu.importGlobalProperties(["URL"]);
 

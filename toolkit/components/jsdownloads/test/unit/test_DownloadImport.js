@@ -7,8 +7,8 @@
 
 "use strict";
 
-////////////////////////////////////////////////////////////////////////////////
-//// Globals
+// //////////////////////////////////////////////////////////////////////////////
+// // Globals
 
 XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
@@ -126,10 +126,10 @@ function promiseInsertRow(aConnection, aDownloadRow) {
                             + "maxBytes, mimeType, preferredApplication,"
                             + "preferredAction, autoResume, guid)"
                             + "VALUES ("
-                            + "'', ?, ?, ?, ?, " //name,
-                            + "0, ?, ?, ?, 0, "  //endTime, currBytes
+                            + "'', ?, ?, ?, ?, " // name,
+                            + "0, ?, ?, ?, 0, "  // endTime, currBytes
                             + " ?, ?, ?, "       //
-                            + " ?, ?, '')",      //and guid are not imported
+                            + " ?, ?, '')",      // and guid are not imported
                             values);
 }
 
@@ -322,8 +322,8 @@ function checkDownload(aDownload, aDownloadRow) {
   });
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//// Preparation tasks
+// //////////////////////////////////////////////////////////////////////////////
+// // Preparation tasks
 
 /**
  * Prepares the list of downloads to be added to the database that should
@@ -652,8 +652,8 @@ add_task(function* prepareNonImportableDownloads()
   ];
 });
 
-////////////////////////////////////////////////////////////////////////////////
-//// Test
+// //////////////////////////////////////////////////////////////////////////////
+// // Test
 
 /**
  * Creates a temporary Sqlite database with download data and perform an

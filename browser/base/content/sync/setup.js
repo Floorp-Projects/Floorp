@@ -72,7 +72,7 @@ var gSyncSetup = {
     let self = this;
     let addRem = function(add) {
       obs.forEach(function([topic, func]) {
-        //XXXzpao This should use Services.obs.* but Weave's Obs does nice handling
+        // XXXzpao This should use Services.obs.* but Weave's Obs does nice handling
         //        of `this`. Fix in a followup. (bug 583347)
         if (add)
           Weave.Svc.Obs.add(topic, self[func], self);
@@ -1028,7 +1028,7 @@ var gSyncSetup = {
     // If we didn't find a captcha, assume it's not needed and don't show it.
     let responseStatus = request.QueryInterface(Ci.nsIHttpChannel).responseStatus;
     setVisibility(this.captchaBrowser, responseStatus != 404);
-    //XXX TODO we should really log any responseStatus other than 200
+    // XXX TODO we should really log any responseStatus other than 200
   },
   onProgressChange: function() {},
   onStatusChange: function() {},

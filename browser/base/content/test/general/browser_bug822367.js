@@ -60,7 +60,7 @@ function MixedTest1C() {
   MixedTest2();
 }
 
-//Mixed Display Test - Doorhanger should not appear
+// Mixed Display Test - Doorhanger should not appear
 function MixedTest2() {
   gTestBrowser.addEventListener("load", MixedTest2A, true);
   var url = gHttpTestRoot2 + "file_bug822367_2.html";

@@ -238,7 +238,7 @@ function selectOnOK()
     try {
       file.normalize();
     } catch (e) {
-      //promptService.alert(window, "Problem", "normalize failed, continuing");
+      // promptService.alert(window, "Problem", "normalize failed, continuing");
     }
 
     var fileExists = file.exists();

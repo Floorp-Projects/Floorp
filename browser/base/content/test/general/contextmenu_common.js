@@ -186,7 +186,7 @@ function checkMenuItem(actualItem, actualEnabled, expectedItem, expectedEnabled,
  */
 function checkMenu(menu, expectedItems, data) {
     var actualItems = getVisibleMenuItems(menu, data);
-    //ok(false, "Items are: " + actualItems);
+    // ok(false, "Items are: " + actualItems);
     for (var i = 0; i < expectedItems.length; i+=2) {
         var actualItem   = actualItems[i];
         var actualEnabled = actualItems[i + 1];

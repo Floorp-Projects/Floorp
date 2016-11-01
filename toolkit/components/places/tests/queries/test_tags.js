@@ -534,7 +534,7 @@ const QUERY_KEY_NOT_TAGS = "!tags";
 
 const TEST_URI = uri("http://example.com/");
 
-///////////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////////////
 
 /**
  * Adds a bookmark.
@@ -626,7 +626,7 @@ function* task_doWithVisit(aTags, aCallback) {
  */
 function encodeTag(aTag) {
   return encodeURIComponent(aTag).
-         replace(/[-_.!~*'()]/g, //'
+         replace(/[-_.!~*'()]/g, // '
                  s => "%" + s.charCodeAt(0).toString(16));
 }
 
@@ -740,7 +740,7 @@ function setsAreEqual(aArr1, aArr2, aIsOrdered) {
   }
 }
 
-///////////////////////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////////////
 
 function run_test() {
   run_next_test();

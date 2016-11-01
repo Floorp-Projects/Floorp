@@ -40,7 +40,7 @@ var gSingleton = null;
 
 function amManager() {
   Cu.import("resource://gre/modules/AddonManager.jsm");
-  /*globals AddonManagerPrivate*/
+  /* globals AddonManagerPrivate*/
 
   Services.mm.loadFrameScript(CHILD_SCRIPT, true);
   Services.mm.addMessageListener(MSG_INSTALL_ENABLED, this);

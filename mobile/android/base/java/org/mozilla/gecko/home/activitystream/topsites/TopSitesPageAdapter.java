@@ -15,6 +15,7 @@ import android.widget.FrameLayout;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.home.HomePager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,10 +24,12 @@ public class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> {
     static final class TopSite {
         public final long id;
         public final String url;
+        public final String title;
 
-        TopSite(long id, String url) {
+        TopSite(long id, String url, String title) {
             this.id = id;
             this.url = url;
+            this.title = title;
         }
     }
 
@@ -36,7 +39,11 @@ public class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> {
     private int tilesHeight;
     private int textHeight;
 
-    public TopSitesPageAdapter(Context context, int tiles, int tilesWidth, int tilesHeight) {
+    private final HomePager.OnUrlOpenListener onUrlOpenListener;
+    private final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
+
+    public TopSitesPageAdapter(Context context, int tiles, int tilesWidth, int tilesHeight,
+                               HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         setHasStableIds(true);
 
         this.topSites = new ArrayList<>();
@@ -44,6 +51,9 @@ public class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> {
         this.tilesWidth = tilesWidth;
         this.tilesHeight = tilesHeight;
         this.textHeight = context.getResources().getDimensionPixelSize(R.dimen.activity_stream_top_sites_text_height);
+
+        this.onUrlOpenListener = onUrlOpenListener;
+        this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
     }
 
     /**
@@ -66,8 +76,9 @@ public class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> {
             // page in the TopSites query will contain a HISTORY_ID. _ID however will be 0 for all rows.
             final long id = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID));
             final String url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
+            final String title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.TITLE));
 
-            topSites.add(new TopSite(id, url));
+            topSites.add(new TopSite(id, url, title));
         }
 
         notifyDataSetChanged();
@@ -90,12 +101,7 @@ public class TopSitesPageAdapter extends RecyclerView.Adapter<TopSitesCard> {
         layoutParams.height = tilesHeight + textHeight;
         content.setLayoutParams(layoutParams);
 
-        return new TopSitesCard(card);
-    }
-
-    @UiThread
-    public String getURLForPosition(int position) {
-        return topSites.get(position).url;
+        return new TopSitesCard(card, onUrlOpenListener, onUrlOpenInBackgroundListener);
     }
 
     @Override

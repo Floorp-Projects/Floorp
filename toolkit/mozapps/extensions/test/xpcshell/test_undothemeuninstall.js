@@ -133,7 +133,7 @@ add_task(function* uninstallEnabledOffersUndo() {
   do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
 });
 
-//Tests that uninstalling an enabled theme can be undone
+// Tests that uninstalling an enabled theme can be undone
 add_task(function* canUndoUninstallEnabled() {
   writeInstallRDFForExtension(theme1, profileDir);
 
@@ -228,7 +228,7 @@ add_task(function* canUndoUninstallEnabled() {
   yield promiseRestartManager();
 });
 
-//Tests that uninstalling a disabled theme offers the option to undo
+// Tests that uninstalling a disabled theme offers the option to undo
 add_task(function* uninstallDisabledOffersUndo() {
   writeInstallRDFForExtension(theme1, profileDir);
 
@@ -283,7 +283,7 @@ add_task(function* uninstallDisabledOffersUndo() {
   do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
 });
 
-//Tests that uninstalling a disabled theme can be undone
+// Tests that uninstalling a disabled theme can be undone
 add_task(function* canUndoUninstallDisabled() {
   writeInstallRDFForExtension(theme1, profileDir);
 
@@ -362,7 +362,7 @@ add_task(function* canUndoUninstallDisabled() {
   yield promiseRestartManager();
 });
 
-//Tests that uninstalling an enabled lightweight theme offers the option to undo
+// Tests that uninstalling an enabled lightweight theme offers the option to undo
 add_task(function* uninstallLWTOffersUndo() {
   // skipped since lightweight themes don't support undoable uninstall yet
   return;

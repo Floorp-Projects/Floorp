@@ -342,7 +342,7 @@ PluginContent.prototype = {
     return true;
   },
 
-  addLinkClickCallback: function (linkNode, callbackName /*callbackArgs...*/) {
+  addLinkClickCallback: function (linkNode, callbackName /* callbackArgs...*/) {
     // XXX just doing (callback)(arg) was giving a same-origin error. bug?
     let self = this;
     let callbackArgs = Array.prototype.slice.call(arguments).slice(2);

@@ -13,19 +13,10 @@
 #include "nsIMIMEService.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
-#include "nsClassHashtable.h"
-#include "nsHashKeys.h"
-#include "nsTArrayForwardDeclare.h"
-
-class nsIHashable;
-class nsIRemoteOpenFileListener;
 
 class nsJARProtocolHandler final : public nsIJARProtocolHandler
                                  , public nsSupportsWeakReference
 {
-    typedef AutoTArray<nsCOMPtr<nsIRemoteOpenFileListener>, 5>
-            RemoteFileListenerArray;
-
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
@@ -41,25 +32,11 @@ public:
     // returns non addref'ed pointer.  
     nsIMIMEService    *MimeService();
     nsIZipReaderCache *JarCache() { return mJARCache; }
-
-    bool IsMainProcess() const { return mIsMainProcess; }
-
-    bool RemoteOpenFileInProgress(nsIHashable *aRemoteFile,
-                                  nsIRemoteOpenFileListener *aListener);
-    void RemoteOpenFileComplete(nsIHashable *aRemoteFile, nsresult aStatus);
-
 protected:
     virtual ~nsJARProtocolHandler();
 
     nsCOMPtr<nsIZipReaderCache> mJARCache;
     nsCOMPtr<nsIMIMEService> mMimeService;
-
-    // Holds lists of RemoteOpenFileChild (not including the 1st) that have
-    // requested the same file from parent.
-    nsClassHashtable<nsHashableHashKey, RemoteFileListenerArray>
-        mRemoteFileListeners;
-
-    bool mIsMainProcess;
 };
 
 extern nsJARProtocolHandler *gJarHandler;

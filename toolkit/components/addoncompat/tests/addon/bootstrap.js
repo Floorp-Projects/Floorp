@@ -64,7 +64,7 @@ function testContentWindow()
       ok(browser.contentDocument.getElementById("link"), "link present in document");
 
       // FIXME: Waiting on bug 1073631.
-      //is(browser.contentWindow.wrappedJSObject.global, 3, "global available on document");
+      // is(browser.contentWindow.wrappedJSObject.global, 3, "global available on document");
 
       removeTab(tab, resolve);
     });
