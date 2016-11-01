@@ -16,7 +16,7 @@ namespace mozilla {
 namespace media {
 
 // media::Parent implements the chrome-process side of ipc for media::Child APIs
-// A "SameProcess" version may also be created to service non-e10s calls.
+// A same-process version may also be created to service non-e10s calls.
 
 class OriginKeyStore;
 
@@ -35,6 +35,9 @@ protected:
                                       const bool& aOnlyPrivateBrowsing) = 0;
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) = 0;
+
+  bool SendGetOriginKeyResponse(const uint32_t& aRequestId,
+                                nsCString aKey);
 };
 
 // Super = PMediaParent or NonE10s
@@ -45,7 +48,7 @@ class Parent : public Super
   typedef mozilla::ipc::IProtocolManager<mozilla::ipc::IProtocol>::ActorDestroyReason
       ActorDestroyReason;
 public:
-  static Parent* GetSingleton();
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Parent<Super>)
 
   virtual bool RecvGetOriginKey(const uint32_t& aRequestId,
                                 const nsCString& aOrigin,
@@ -55,13 +58,12 @@ public:
                                       const bool& aOnlyPrivateBrowsing) override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  explicit Parent(bool aSameProcess = false);
-  virtual ~Parent();
+  Parent();
 private:
+  virtual ~Parent();
 
   RefPtr<OriginKeyStore> mOriginKeyStore;
   bool mDestroyed;
-  bool mSameProcess;
 
   CoatCheck<Pledge<nsCString>> mOutstandingPledges;
 };
