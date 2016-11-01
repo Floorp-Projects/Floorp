@@ -193,8 +193,9 @@ BrowserAction.prototype = {
           // be ready by the time we get a complete click.
           let tab = window.gBrowser.selectedTab;
           let popupURL = this.getProperty(tab, "popup");
+          let enabled = this.getProperty(tab, "enabled");
 
-          if (popupURL) {
+          if (popupURL && enabled) {
             this.pendingPopup = this.getPopup(window, popupURL);
             window.addEventListener("mouseup", this, true);
           } else {
