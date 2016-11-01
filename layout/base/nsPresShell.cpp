@@ -6300,7 +6300,9 @@ PresShell::Paint(nsView*        aViewToPaint,
     mIsFirstPaint = false;
   }
 
-  layerManager->BeginTransaction();
+  if (!layerManager->BeginTransaction()) {
+    return;
+  }
 
   if (frame) {
     // Try to do an empty transaction, if the frame tree does not
