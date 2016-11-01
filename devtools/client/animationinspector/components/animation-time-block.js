@@ -10,8 +10,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {createNode, TimeScale} = require("devtools/client/animationinspector/utils");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const L10N =
-      new LocalizationHelper("devtools/client/locales/animationinspector.properties");
+const L10N = new LocalizationHelper("devtools/locale/animationinspector.properties");
 
 // In the createPathSegments function, an animation duration is divided by
 // DURATION_RESOLUTION in order to draw the way the animation progresses.

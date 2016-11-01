@@ -29,7 +29,7 @@ const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {Task} = require("devtools/shared/task");
 
-const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
+const STYLE_INSPECTOR_PROPERTIES = "devtools-shared/locale/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 

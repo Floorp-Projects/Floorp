@@ -134,6 +134,8 @@ devtools/shared/*.js
 !devtools/shared/indentation.js
 !devtools/shared/loader-plugin-raw.jsm
 !devtools/shared/task.js
+devtools/shared/*.jsm
+!devtools/shared/Loader.jsm
 devtools/shared/apps/**
 devtools/shared/client/**
 devtools/shared/discovery/**

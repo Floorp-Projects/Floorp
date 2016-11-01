@@ -52,13 +52,6 @@ BuiltinProvider.prototype = {
       // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
       // Allow access to xpcshell test items from the loader.
       "xpcshell-test": "resource://test",
-
-      // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-      // Allow access to locale data using paths closer to what is
-      // used in the source tree.
-      "devtools/client/locales": "chrome://devtools/locale",
-      "devtools/shared/locales": "chrome://devtools-shared/locale",
-      "toolkit/locales": "chrome://global/locale",
     };
     // When creating a Loader invisible to the Debugger, we have to ensure
     // using only modules and not depend on any JSM. As everything that is

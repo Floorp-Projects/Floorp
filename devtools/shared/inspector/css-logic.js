@@ -44,7 +44,7 @@ const Services = require("Services");
 const CSSLexer = require("devtools/shared/css/lexer");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const styleInspectorL10N =
-  new LocalizationHelper("devtools/shared/locales/styleinspector.properties");
+  new LocalizationHelper("devtools-shared/locale/styleinspector.properties");
 
 /**
  * Special values for filter, in addition to an href these values can be used
