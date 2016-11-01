@@ -219,10 +219,9 @@ GeckoMediaPluginServiceChild::UpdateGMPCapabilities(nsTArray<GMPCapabilityData>&
 }
 
 NS_IMETHODIMP
-GeckoMediaPluginServiceChild::GetPluginVersionForAPI(const nsACString& aAPI,
-                                                     nsTArray<nsCString>* aTags,
-                                                     bool* aHasPlugin,
-                                                     nsACString& aOutVersion)
+GeckoMediaPluginServiceChild::HasPluginForAPI(const nsACString& aAPI,
+                                              nsTArray<nsCString>* aTags,
+                                              bool* aHasPlugin)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!sGMPCapabilities) {
@@ -233,7 +232,6 @@ GeckoMediaPluginServiceChild::GetPluginVersionForAPI(const nsACString& aAPI,
   nsCString api(aAPI);
   for (const GMPCapabilityAndVersion& plugin : *sGMPCapabilities) {
     if (GMPCapability::Supports(plugin.mCapabilities, api, *aTags)) {
-      aOutVersion = plugin.mVersion;
       *aHasPlugin = true;
       return NS_OK;
     }

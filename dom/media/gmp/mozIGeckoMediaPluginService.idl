@@ -77,14 +77,6 @@ interface mozIGeckoMediaPluginService : nsISupports
   boolean hasPluginForAPI(in ACString api, in TagArray tags);
 
   /**
-   * Get the version of the plugin that supports the specified tags.
-   * Callable on any thread
-   */
-  [noscript]
-  void getPluginVersionForAPI(in ACString api, in TagArray tags,
-                              out boolean hasPlugin, out ACString version);
-
-  /**
    * Get a video decoder that supports the specified tags.
    * The array of tags should at least contain a codec tag, and optionally
    * other tags such as for EME keysystem.
