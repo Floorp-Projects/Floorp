@@ -305,18 +305,12 @@ private:
  * RequestDiscard() are made to the imgRequestProxy and ImageTracker as
  * appropriate, according to the mode flags passed in to the constructor.
  *
- * The main thread constructor takes a pointer to the already-created
- * imgRequestProxy, and the css::ImageValue that was used while creating it.
- * The ImageValue object is only used to grab the URL details to store
- * into mBaseURI and mURIString.
- *
- * The off-main-thread constructor creates a new css::ImageValue to
- * hold all the data required to resolve the imgRequestProxy later.  This
- * constructor also stores the URL details into mbaseURI and mURIString.
- * The ImageValue is held on to in mImageTracker until the Resolve call.
- *
- * We use mBaseURI and mURIString so that we can perform nsStyleImageRequest
- * equality comparisons without needing an imgRequestProxy.
+ * The main thread constructor takes a pointer to the css::ImageValue that
+ * is the specified url() value, while the off-main-thread constructor
+ * creates a new css::ImageValue to represent the url() information passed
+ * to the constructor.  This ImageValue is held on to for the comparisons done
+ * in DefinitelyEquals(), so that we don't need to call into the non-OMT-safe
+ * Equals() on the nsIURI objects returned from imgRequestProxy::GetURI().
  */
 class nsStyleImageRequest
 {
@@ -358,8 +352,8 @@ public:
     return const_cast<nsStyleImageRequest*>(this)->get();
   }
 
-  // Returns whether the mBaseURI and mURIString values in the two
-  // nsStyleImageRequests are equal.
+  // Returns whether the ImageValue objects in the two nsStyleImageRequests
+  // return true from URLValueData::DefinitelyEqualURIs.
   bool DefinitelyEquals(const nsStyleImageRequest& aOther) const;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsStyleImageRequest);
@@ -373,13 +367,6 @@ private:
   RefPtr<imgRequestProxy> mRequestProxy;
   RefPtr<mozilla::css::ImageValue> mImageValue;
   RefPtr<mozilla::dom::ImageTracker> mImageTracker;
-
-  // Components that are (or were) used to produce the nsIURI for resolving
-  // the imgRequestProxy.  We use these in DefinitelyEquals, rather than
-  // comparing the URI information in the imgRequestProxy objects, since
-  // they may not yet be resolved (or might have failed to resolve).
-  mozilla::PtrHandle<nsIURI> mBaseURI;
-  RefPtr<nsStringBuffer> mURIString;
 
   Mode mModeFlags;
   bool mResolved;
