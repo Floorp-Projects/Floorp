@@ -70,7 +70,7 @@ function initTreeView() {
   gTreeData = [];
   gStateObject.windows.forEach(function(aWinData, aIx) {
     var winState = {
-      label: aWinData.tabGroupsMigrationTitle || winLabel.replace("%S", (aIx + 1)),
+      label: winLabel.replace("%S", (aIx + 1)),
       open: true,
       checked: true,
       ix: aIx
