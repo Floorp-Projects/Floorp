@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!-- Reference case for behavior of the 'baseline' value for align-items and
+     align-self.
+
+     NOTE: For multi-line 'display: block' elements in the testcase (and inline
+     content that gets wrapped in an anonymous block), we add an inline-table
+     wrapper here in the reference case, so that we get first-line baseline
+     alignment instead of the last-line baseline-alignment that an inline-block
+     would give us.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CSS Reftest Reference</title>
+    <link rel="author" title="Brad Werth" href="mailto:bwerth@mozilla.com"/>
+    <style>
+      .container {
+        display: block;
+        border: 1px dashed blue;
+        font: 14px sans-serif;
+        height: 50px;
+      }
+
+      div   { display: inline-block; }
+      table { display: inline-table; }
+
+      .ortho  { writing-mode: vertical-rl;
+                width: 17px;
+                float: left; }
+      .offset { margin-top: 10px; }
+
+
+      .lime   { background: lime;   }
+      .yellow { background: yellow; }
+      .orange { background: orange; }
+      .pink   { background: pink;   }
+   </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="lime ortho">ortho</div
+      ><div class="yellow">one line</div
+      ><table cellspacing="0" cellpadding="0"
+              class="orange">two<br/>lines</table
+      ><div class="pink offset">offset</div>
+    </div>
+  </body>
+</html>
