@@ -13,16 +13,14 @@ add_task(function* () {
   let expectedParents = [ PlacesUtils.bookmarksMenuFolderId,
                           PlacesUtils.toolbarFolderId ];
 
-  let itemCount = 0;
-  let bmObserver = {
+  PlacesUtils.bookmarks.addObserver({
     onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle) {
-      if (aTitle != label) {
-        itemCount++;
-      }
-      if (expectedParents.length > 0 && aTitle == label) {
+      if (aTitle == label) {
         let index = expectedParents.indexOf(aParentId);
         Assert.notEqual(index, -1);
         expectedParents.splice(index, 1);
+        if (expectedParents.length == 0)
+          PlacesUtils.bookmarks.removeObserver(this);
       }
     },
     onBeginUpdateBatch() {},
@@ -31,14 +29,10 @@ add_task(function* () {
     onItemChanged() {},
     onItemVisited() {},
     onItemMoved() {},
-  };
-  PlacesUtils.bookmarks.addObserver(bmObserver, false);
+  }, false);
 
   yield promiseMigration(migrator, MigrationUtils.resourceTypes.BOOKMARKS);
-  PlacesUtils.bookmarks.removeObserver(bmObserver);
-  Assert.equal(MigrationUtils._importQuantities.bookmarks, itemCount,
-               "Ensure telemetry matches actual number of imported items.");
 
   // Check the bookmarks have been imported to all the expected parents.
-  Assert.equal(expectedParents.length, 0, "Got all the expected parents");
+  Assert.equal(expectedParents.length, 0);
 });

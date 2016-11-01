@@ -19,6 +19,7 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/MigrationUtils.jsm"); /* globals MigratorPrototype */
 Cu.import("resource:///modules/MSMigrationUtils.jsm");
+Cu.import("resource://gre/modules/LoginHelper.jsm");
 
 
 XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
@@ -92,7 +93,7 @@ History.prototype = {
       return;
     }
 
-    MigrationUtils.insertVisitsWrapper(places, {
+    PlacesUtils.asyncHistory.updatePlaces(places, {
       _success: false,
       handleResult: function() {
         // Importing any entry is considered a successful import.
@@ -248,7 +249,7 @@ IE7FormPasswords.prototype = {
           hostname: ieLogin.url,
           timeCreated: ieLogin.creation,
         };
-        MigrationUtils.insertLoginWrapper(login);
+        LoginHelper.maybeImportLogin(login);
       } catch (e) {
         Cu.reportError(e);
       }

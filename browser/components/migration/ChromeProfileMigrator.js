@@ -88,11 +88,11 @@ function* insertBookmarkItems(parentGuid, items, errorAccumulator) {
           // messages to the console, so we avoid doing that.
           continue;
         }
-        yield MigrationUtils.insertBookmarkWrapper({
+        yield PlacesUtils.bookmarks.insert({
           parentGuid, url: item.url, title: item.name
         });
       } else if (item.type == "folder") {
-        let newFolderGuid = (yield MigrationUtils.insertBookmarkWrapper({
+        let newFolderGuid = (yield PlacesUtils.bookmarks.insert({
           parentGuid, type: PlacesUtils.bookmarks.TYPE_FOLDER, title: item.name
         })).guid;
 
@@ -339,7 +339,7 @@ function GetHistoryResource(aProfileFolder) {
 
         if (places.length > 0) {
           yield new Promise((resolve, reject) => {
-            MigrationUtils.insertVisitsWrapper(places, {
+            PlacesUtils.asyncHistory.updatePlaces(places, {
               _success: false,
               handleResult: function() {
                 // Importing any entry is considered a successful import.
@@ -447,7 +447,7 @@ function GetWindowsPasswordsResource(aProfileFolder) {
           password: crypto.
                     decryptData(crypto.arrayToString(row.getResultByName("password_value")),
                                                      null),
-          hostname: NetUtil.newURI(row.getResultByName("origin_url")).prePath,
+          hostName: NetUtil.newURI(row.getResultByName("origin_url")).prePath,
           submitURL: null,
           httpRealm: null,
           usernameElement: row.getResultByName("username_element"),
@@ -465,13 +465,32 @@ function GetWindowsPasswordsResource(aProfileFolder) {
             case AUTH_TYPE.SCHEME_DIGEST:
               // signon_realm format is URIrealm, so we need remove URI
               loginInfo.httpRealm = row.getResultByName("signon_realm")
-                                       .substring(loginInfo.hostname.length + 1);
+                                    .substring(loginInfo.hostName.length + 1);
               break;
             default:
               throw new Error("Login data scheme type not supported: " +
                               row.getResultByName("scheme"));
           }
-          MigrationUtils.insertLoginWrapper(loginInfo);
+          let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+
+          login.init(loginInfo.hostName, loginInfo.submitURL, loginInfo.httpRealm,
+                     loginInfo.username, loginInfo.password, loginInfo.usernameElement,
+                     loginInfo.passwordElement);
+          login.QueryInterface(Ci.nsILoginMetaInfo);
+          login.timeCreated = loginInfo.timeCreated;
+          login.timeLastUsed = loginInfo.timeCreated;
+          login.timePasswordChanged = loginInfo.timeCreated;
+          login.timesUsed = loginInfo.timesUsed;
+
+          // Add the login only if there's not an existing entry
+          let logins = Services.logins.findLogins({}, login.hostname,
+                                                  login.formSubmitURL,
+                                                  login.httpRealm);
+
+          // Bug 1187190: Password changes should be propagated depending on timestamps.
+          if (!logins.some(l => login.matches(l, true))) {
+            Services.logins.addLogin(login);
+          }
         } catch (e) {
           Cu.reportError(e);
         }

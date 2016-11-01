@@ -138,7 +138,7 @@ EdgeTypedURLMigrator.prototype = {
       return;
     }
 
-    MigrationUtils.insertVisitsWrapper(places, {
+    PlacesUtils.asyncHistory.updatePlaces(places, {
       _success: false,
       handleResult: function() {
         // Importing any entry is considered a successful import.
@@ -201,7 +201,7 @@ EdgeReadingListMigrator.prototype = {
     let exceptionThrown;
     for (let item of readingListItems) {
       let dateAdded = item.AddedDate || new Date();
-      yield MigrationUtils.insertBookmarkWrapper({
+      yield PlacesUtils.bookmarks.insert({
         parentGuid: destFolderGuid, url: item.URL, title: item.Title, dateAdded
       }).catch(ex => {
         if (!exceptionThrown) {
@@ -219,7 +219,7 @@ EdgeReadingListMigrator.prototype = {
     if (!this.__readingListFolderGuid) {
       let folderTitle = MigrationUtils.getLocalizedString("importedEdgeReadingList");
       let folderSpec = {type: PlacesUtils.bookmarks.TYPE_FOLDER, parentGuid, title: folderTitle};
-      this.__readingListFolderGuid = (yield MigrationUtils.insertBookmarkWrapper(folderSpec)).guid;
+      this.__readingListFolderGuid = (yield PlacesUtils.bookmarks.insert(folderSpec)).guid;
     }
     return this.__readingListFolderGuid;
   }),
@@ -322,7 +322,7 @@ EdgeBookmarksMigrator.prototype = {
         title: bookmark.Title,
       };
 
-      yield MigrationUtils.insertBookmarkWrapper(placesInfo).catch(ex => {
+      yield PlacesUtils.bookmarks.insert(placesInfo).catch(ex => {
         if (!exceptionThrown) {
           exceptionThrown = ex;
         }
@@ -390,7 +390,7 @@ EdgeBookmarksMigrator.prototype = {
       parentGuid,
     };
     // and add ourselves as a kid, and return the guid we got.
-    let parentBM = yield MigrationUtils.insertBookmarkWrapper(folderInfo);
+    let parentBM = yield PlacesUtils.bookmarks.insert(folderInfo);
     folder._guid = parentBM.guid;
     return folder._guid;
   }),
