@@ -445,6 +445,7 @@ AddonsReconciler.prototype = {
     }
 
     let record = this._addons[id];
+    record.isSyncable = addon.isSyncable;
 
     if (!record.installed) {
       // It is possible the record is marked as uninstalled because an
