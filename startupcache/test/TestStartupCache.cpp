@@ -410,48 +410,6 @@ int main(int argc, char** argv)
   int rv = 0;
   nsresult scrv;
 
-  // Register TestStartupCacheTelemetry
-  nsCOMPtr<nsIFile> manifest;
-  scrv = NS_GetSpecialDirectory(NS_GRE_DIR,
-                                getter_AddRefs(manifest));
-  if (NS_FAILED(scrv)) {
-    fail("NS_XPCOM_CURRENT_PROCESS_DIR");
-    return 1;
-  }
-
-#ifdef XP_MACOSX
-  nsCOMPtr<nsIFile> tempManifest;
-  manifest->Clone(getter_AddRefs(tempManifest));
-  manifest->AppendNative(
-    NS_LITERAL_CSTRING("TestStartupCacheTelemetry.manifest"));
-  bool exists;
-  manifest->Exists(&exists);
-  if (!exists) {
-    // Workaround for bug 1080338 in mozharness.
-    manifest = tempManifest.forget();
-    manifest->SetNativeLeafName(NS_LITERAL_CSTRING("MacOS"));
-    manifest->AppendNative(
-      NS_LITERAL_CSTRING("TestStartupCacheTelemetry.manifest"));
-  }
-#else
-  manifest->AppendNative(
-    NS_LITERAL_CSTRING("TestStartupCacheTelemetry.manifest"));
-#endif
-
-  XRE_AddManifestLocation(NS_APP_LOCATION, manifest);
-
-  nsCOMPtr<nsIObserver> telemetryThing =
-    do_GetService("@mozilla.org/testing/startup-cache-telemetry.js");
-  if (!telemetryThing) {
-    fail("telemetryThing");
-    return 1;
-  }
-  scrv = telemetryThing->Observe(nullptr, "save-initial", nullptr);
-  if (NS_FAILED(scrv)) {
-    fail("save-initial");
-    rv = 1;
-  }
-
   nsCOMPtr<nsIStartupCache> sc 
     = do_GetService("@mozilla.org/startupcache/cache;1", &scrv);
   if (NS_FAILED(scrv))
@@ -469,12 +427,6 @@ int main(int argc, char** argv)
     rv = 1;
   if (NS_FAILED(TestEarlyShutdown()))
     rv = 1;
-
-  scrv = telemetryThing->Observe(nullptr, "save-initial", nullptr);
-  if (NS_FAILED(scrv)) {
-    fail("check-final");
-    rv = 1;
-  }
 
   return rv;
 }
