@@ -1132,5 +1132,7 @@ OBJDIR_PP_FILES.mobile.android.base += [
 gbjar.sources += ['generated/org/mozilla/gecko/' + x for x in [
     'media/ICodec.java',
     'media/ICodecCallbacks.java',
+    'media/IMediaDrmBridge.java',
+    'media/IMediaDrmBridgeCallbacks.java',
     'media/IMediaManager.java',
 ]]
