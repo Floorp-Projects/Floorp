@@ -60,7 +60,8 @@ module.exports = function(context) {
         return;
       }
 
-      let root = helpers.getRootDir(context);
+      let filepath = helpers.getAbsoluteFilePath(context);
+      let root = helpers.getRootDir(filepath);
       for (let script of SCRIPTS) {
         let fileName = path.join(root, script);
         try {
