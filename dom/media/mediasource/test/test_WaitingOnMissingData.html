@@ -11,59 +11,50 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var receivedSourceOpen = false;
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
+runWithMSE(function(ms, el) {
+  once(ms, 'sourceopen').then(function() {
     ok(true, "Receive a sourceopen event");
-    ok(!receivedSourceOpen, "Should only receive one sourceopen for this test");
-    receivedSourceOpen = true;
     var sb = ms.addSourceBuffer("video/webm");
-    ok(sb, "Create a SourceBuffer");
-
-    function once(target, name, cb) {
-      target.addEventListener(name, function() {
-        target.removeEventListener(name, cb);
-        cb();
-      });
-    }
-    function loadSegment(typedArray) {
-      info(`Loading buffer: [${typedArray.byteOffset}, ${typedArray.byteOffset + typedArray.byteLength})`);
-      return new Promise(function(resolve, reject) {
-        once(sb, 'update', resolve);
-        sb.appendBuffer(typedArray);
-      });
-    }
-
     fetchWithXHR("seek.webm", function(arrayBuffer) {
       sb.addEventListener('error', (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
-      loadSegment.bind(null, new Uint8Array(arrayBuffer, 0, 318))().then(
-      loadSegment.bind(null, new Uint8Array(arrayBuffer, 318, 25223-318))).then(
-      loadSegment.bind(null, new Uint8Array(arrayBuffer, 25223, 46712-25223))).then(
+      loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 0, 318))()
+      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 318, 25223-318)))
+      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 25223, 46712-25223)))
       /* Note - Missing |46712, 67833 - 46712| segment here */
-      loadSegment.bind(null, new Uint8Array(arrayBuffer, 67833, 88966 - 67833))).then(
-      loadSegment.bind(null, new Uint8Array(arrayBuffer, 88966))).then(function() {
-
-        v.addEventListener("waiting", function onwaiting() {
-          ok(true, "Got a waiting event at " + v.currentTime);
-          if (v.currentTime > 0.7 && v.currentTime < 1.2) {
-            v.removeEventListener("waiting", onwaiting);
-            todo(v.currentTime >= 0.8, "See bug 1091774");
-            gotWaiting = true;
-            ok(true, "Received waiting event at time " + v.currentTime);
-            loadSegment(new Uint8Array(arrayBuffer, 46712, 67833 - 46712)).then(() => ms.endOfStream());
-          }
-        });
-
-        info("Playing video. It should play for a bit, then fire 'waiting'");
-        v.play();
+      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 67833, 88966 - 67833)))
+      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 88966)))
+      .then(function() {
+        // HTMLMediaElement fires 'waiting' if somebody invokes |play()| before the MDSM
+        // has notified it of available data. Make sure that we get 'playing' before
+        // we starting waiting for 'waiting'.
+        info("Invoking play()");
+        var p = once(el, 'playing');
+        el.play();
+        return p;
+      }).then(function() {
+        ok(true, "Video playing. It should play for a bit, then fire 'waiting'");
+        var p = once(el, 'waiting');
+        el.play();
+        return p;
+      }).then(function() {
+        // currentTime is based on the current video frame, so if the audio ends just before
+        // the next video frame, currentTime can be up to 1 frame's worth earlier than
+        // min(audioEnd, videoEnd).
+        // 0.0465 is the length of the last audio frame.
+        ok(el.currentTime >= (sb.buffered.end(0) - 0.0465),
+           "Got a waiting event at " + el.currentTime);
+        info("Loading more data");
+        var p = once(el, 'ended');
+        loadSegment(sb, new Uint8Array(arrayBuffer, 46712, 67833 - 46712)).then(() => ms.endOfStream());
+        return p;
+      }).then(function() {
+        // These fuzz factors are bigger than they should be. We should investigate
+        // and fix them in bug 1137574.
+        isfuzzy(el.duration, 4.001, 0.1, "Video has correct duration: " + el.duration);
+        isfuzzy(el.currentTime, el.duration, 0.1, "Video has correct currentTime.");
+        SimpleTest.finish();
       });
     });
-  });
-  v.addEventListener("ended", function () {
-    ok(Math.abs(v.duration - 4) < 0.1, "Video has correct duration. This fuzz factor is due to bug 1065207");
-    ok(Math.abs(v.currentTime - 4) < 0.1, "Video has correct currentTime. See bug 1101062");
-    ok(gotWaiting, "Received waiting event and playback continued after data added");
-    SimpleTest.finish();
   });
 });
 </script>
