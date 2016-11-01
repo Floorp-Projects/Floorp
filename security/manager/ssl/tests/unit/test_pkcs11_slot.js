@@ -9,16 +9,7 @@
 do_get_profile();
 
 function run_test() {
-  let libraryFile = Services.dirsvc.get("CurWorkD", Ci.nsILocalFile);
-  libraryFile.append("pkcs11testmodule");
-  libraryFile.append(ctypes.libraryName("pkcs11testmodule"));
-  ok(libraryFile.exists(), "The pkcs11testmodule file should exist");
-
-  let pkcs11 = Cc["@mozilla.org/security/pkcs11;1"].getService(Ci.nsIPKCS11);
-  do_register_cleanup(() => {
-    pkcs11.deleteModule("PKCS11 Test Module");
-  });
-  pkcs11.addModule("PKCS11 Test Module", libraryFile.path, 0, 0);
+  loadPKCS11TestModule(false);
 
   let moduleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
                    .getService(Ci.nsIPKCS11ModuleDB);
