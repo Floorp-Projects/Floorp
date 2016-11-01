@@ -5,6 +5,8 @@
 
 #include "GMPServiceChild.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPtr.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozIGeckoMediaPluginChromeService.h"
 #include "nsCOMPtr.h"
@@ -126,6 +128,84 @@ GeckoMediaPluginServiceChild::GetContentParentFrom(GMPCrashHelper* aHelper,
   GetServiceChild(Move(callback));
 
   return true;
+}
+
+typedef mozilla::dom::GMPCapabilityData GMPCapabilityData;
+typedef mozilla::dom::GMPAPITags GMPAPITags;
+
+struct GMPCapabilityAndVersion
+{
+  explicit GMPCapabilityAndVersion(const GMPCapabilityData& aCapabilities)
+    : mName(aCapabilities.name())
+    , mVersion(aCapabilities.version())
+  {
+    for (const GMPAPITags& tags : aCapabilities.capabilities()) {
+      GMPCapability cap;
+      cap.mAPIName = tags.api();
+      for (const nsCString& tag : tags.tags()) {
+        cap.mAPITags.AppendElement(tag);
+      }
+      mCapabilities.AppendElement(Move(cap));
+    }
+  }
+
+  nsCString ToString() const
+  {
+    nsCString s;
+    s.Append(mName);
+    s.Append(" version=");
+    s.Append(mVersion);
+    s.Append(" tags=[");
+    nsCString tags;
+    for (const GMPCapability& cap : mCapabilities) {
+      if (!tags.IsEmpty()) {
+        tags.Append(" ");
+      }
+      tags.Append(cap.mAPIName);
+      for (const nsCString& tag : cap.mAPITags) {
+        tags.Append(":");
+        tags.Append(tag);
+      }
+    }
+    s.Append(tags);
+    s.Append("]");
+    return s;
+  }
+
+  nsCString mName;
+  nsCString mVersion;
+  nsTArray<GMPCapability> mCapabilities;
+};
+
+StaticAutoPtr<nsTArray<GMPCapabilityAndVersion>> sGMPCapabilities;
+
+static nsCString
+GMPCapabilitiesToString()
+{
+  nsCString s;
+  for (const GMPCapabilityAndVersion& gmp : *sGMPCapabilities) {
+    if (!s.IsEmpty()) {
+      s.Append(", ");
+    }
+    s.Append(gmp.ToString());
+  }
+  return s;
+}
+
+/* static */
+void
+GeckoMediaPluginServiceChild::UpdateGMPCapabilities(nsTArray<GMPCapabilityData>&& aCapabilities)
+{
+  if (!sGMPCapabilities) {
+    sGMPCapabilities = new nsTArray<GMPCapabilityAndVersion>();
+    ClearOnShutdown(&sGMPCapabilities);
+  }
+  sGMPCapabilities->Clear();
+  for (const GMPCapabilityData& plugin : aCapabilities) {
+    sGMPCapabilities->AppendElement(GMPCapabilityAndVersion(plugin));
+  }
+
+  LOGD(("UpdateGMPCapabilities {%s}", GMPCapabilitiesToString().get()));
 }
 
 NS_IMETHODIMP

@@ -336,6 +336,19 @@ struct BlobURLRegistrationData
     Principal principal;
 };
 
+struct GMPAPITags
+{
+    nsCString api;
+    nsCString[] tags;
+};
+
+struct GMPCapabilityData
+{
+    nsCString name;
+    nsCString version;
+    GMPAPITags[] capabilities;
+};
+
 nested(upto inside_cpow) sync protocol PContent
 {
     parent spawns PPluginModule;
@@ -661,6 +674,9 @@ child:
                               Principal aPrincipal);
 
     async BlobURLUnregistration(nsCString aURI);
+
+
+    async GMPsChanged(GMPCapabilityData[] capabilities);
 
 parent:
     /**
