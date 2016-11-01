@@ -2303,7 +2303,7 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
       neckoOriginAttributes.InheritFromDocShellToNecko(docshellOriginAttributes);
     }
 
-    nsHttpConnectionInfo *ci =
+    auto *ci =
         new nsHttpConnectionInfo(host, port, EmptyCString(), username, nullptr,
                                  neckoOriginAttributes, usingSSL);
     ci->SetAnonymous(anonymous);

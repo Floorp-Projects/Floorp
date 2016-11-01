@@ -784,7 +784,7 @@ nsDNSService::AsyncResolveExtended(const nsACString  &aHostname,
 
     uint16_t af = GetAFForLookup(hostname, flags);
 
-    nsDNSAsyncRequest *req =
+    auto *req =
         new nsDNSAsyncRequest(res, hostname, listener, flags, af,
                               aNetworkInterface);
     if (!req)
@@ -912,7 +912,7 @@ nsDNSService::Resolve(const nsACString &aHostname,
             rv = syncReq.mStatus;
         else {
             NS_ASSERTION(syncReq.mHostRecord, "no host record");
-            nsDNSRecord *rec = new nsDNSRecord(syncReq.mHostRecord);
+            auto *rec = new nsDNSRecord(syncReq.mHostRecord);
             if (!rec)
                 rv = NS_ERROR_OUT_OF_MEMORY;
             else

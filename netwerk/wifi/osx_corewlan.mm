@@ -49,7 +49,7 @@ GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints)
     NSEnumerator *enumerator = [scan objectEnumerator];
 
     while (id anObject = [enumerator nextObject]) {
-      nsWifiAccessPoint* ap = new nsWifiAccessPoint();
+      auto* ap = new nsWifiAccessPoint();
       if (!ap) {
         [pool release];
         return NS_ERROR_OUT_OF_MEMORY;

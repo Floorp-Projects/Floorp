@@ -130,7 +130,7 @@ BufferedMsg::BufferedMsg(struct sctp_sendv_spa &spa, const char *data,
 {
   mSpa = new sctp_sendv_spa;
   *mSpa = spa;
-  char *tmp = new char[length]; // infallible malloc!
+  auto *tmp = new char[length]; // infallible malloc!
   memcpy(tmp, data, length);
   mData = tmp;
 }
@@ -681,7 +681,7 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
   if ((0 /*peer->IsSTSThread()*/)) {
     res = peer->SendPacket(static_cast<unsigned char *>(buffer), length, false);
   } else {
-    unsigned char *data = new unsigned char[length];
+    auto *data = new unsigned char[length];
     memcpy(data, buffer, length);
     // Commented out since we have to Dispatch SendPacket to avoid deadlock"
     // res = -1;
@@ -2230,7 +2230,7 @@ DataChannelConnection::SendMsgInternal(DataChannel *channel, const char *data,
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
 
       // queue data for resend!  And queue any further data for the stream until it is...
-      BufferedMsg *buffered = new BufferedMsg(spa, data, length); // infallible malloc
+      auto *buffered = new BufferedMsg(spa, data, length); // infallible malloc
       channel->mBufferedData.AppendElement(buffered); // owned by mBufferedData array
       channel->mFlags |= DATA_CHANNEL_FLAGS_SEND_DATA;
       LOG(("Queued %u buffers (len=%u)", channel->mBufferedData.Length(), length));
