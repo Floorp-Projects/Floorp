@@ -55,10 +55,6 @@ interface nsIStartupCache : nsISupports
   boolean startupWriteComplete();
   void resetStartupWriteTimer();
 
-  /* Instruct clients to always post cache ages to Telemetry, even in
-     cases where it would not normally make sense.  */
-  void recordAgesAlways();
-
   /* Allows clients to simulate the behavior of ObserverService. */
   readonly attribute nsIObserver observer;
 };
