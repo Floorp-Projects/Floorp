@@ -39,13 +39,20 @@ add_task(function* test_abouthome_simpleQuery() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
-  yield new Promise(resolve => {
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+
+  info("Setup waiting for AboutHomeLoadSnippetsCompleted.");
+  let promiseAboutHomeLoaded = new Promise(resolve => {
     tab.linkedBrowser.addEventListener("AboutHomeLoadSnippetsCompleted", function loadListener(event) {
       tab.linkedBrowser.removeEventListener("AboutHomeLoadSnippetsCompleted", loadListener, true);
       resolve();
     }, true, true);
   });
+
+  info("Load about:home.");
+  tab.linkedBrowser.loadURI("about:home");
+  info("Wait for AboutHomeLoadSnippetsCompleted.");
+  yield promiseAboutHomeLoaded;
 
   info("Trigger a simple serch, just test + enter.");
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
