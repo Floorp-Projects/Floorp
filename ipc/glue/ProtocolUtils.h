@@ -239,6 +239,19 @@ public:
     virtual void ProcessingError(Result aError, const char* aMsgName) {}
     virtual void OnChannelConnected(int32_t peer_pid) {}
 
+    bool Open(mozilla::ipc::Transport* aTransport,
+              base::ProcessId aOtherPid,
+              MessageLoop* aThread = nullptr,
+              mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
+
+    bool Open(MessageChannel* aChannel,
+              MessageLoop* aMessageLoop,
+              mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
+
+    void Close();
+
+    void SetReplyTimeoutMs(int32_t aTimeoutMs);
+
     virtual bool ShouldContinueFromReplyTimeout() {
         return false;
     }
