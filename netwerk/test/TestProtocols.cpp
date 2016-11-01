@@ -446,7 +446,7 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
   }
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
   if (httpChannel) {
-    HeaderVisitor *visitor = new HeaderVisitor();
+    auto *visitor = new HeaderVisitor();
     if (!visitor)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(visitor);
@@ -624,7 +624,7 @@ nsresult StartLoadingURL(const char* aUrlString)
         }
         nsCOMPtr<nsIChannel> pChannel;
 
-        NotificationCallbacks* callbacks = new NotificationCallbacks();
+        auto* callbacks = new NotificationCallbacks();
         if (!callbacks) {
             LOG(("Failed to create a new consumer!"));
             return NS_ERROR_OUT_OF_MEMORY;;
@@ -682,13 +682,13 @@ nsresult StartLoadingURL(const char* aUrlString)
                                             false);
             if (NS_FAILED(rv)) return rv;
         }            
-        URLLoadInfo* info = new URLLoadInfo(aUrlString);
+        auto* info = new URLLoadInfo(aUrlString);
         if (!info) {
             NS_ERROR("Failed to create a load info!");
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        InputTestConsumer* listener = new InputTestConsumer(info);
+        auto* listener = new InputTestConsumer(info);
         NS_IF_ADDREF(listener);
         if (!listener) {
             NS_ERROR("Failed to create a new stream listener!");

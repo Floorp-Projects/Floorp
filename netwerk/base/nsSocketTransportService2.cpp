@@ -179,7 +179,7 @@ nsSocketTransportService::NotifyWhenCanAttachSocket(nsIRunnable *event)
         return Dispatch(event, NS_DISPATCH_NORMAL);
     }
 
-    LinkedRunnableEvent *runnable = new LinkedRunnableEvent(event);
+    auto *runnable = new LinkedRunnableEvent(event);
     mPendingSocketQueue.insertBack(runnable);
     return NS_OK;
 }
