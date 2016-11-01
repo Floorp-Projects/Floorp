@@ -97,6 +97,12 @@ uint8_t gLayerManagerUserData;
  * The user data is a MaskLayerUserData.
  */
 uint8_t gMaskLayerUserData;
+/**
+ * The address of gCSSMaskLayerUserData is used as the user
+ * data key for mask layers of css masking managed by FrameLayerBuilder.
+ * The user data is a CSSMaskLayerUserData.
+ */
+uint8_t gCSSMaskLayerUserData;
 
 // a global cache of image containers used for mask layers
 static MaskLayerImageCache* gMaskLayerImageCache = nullptr;
@@ -1525,6 +1531,100 @@ struct MaskLayerUserData : public LayerUserData
   // The ContainerLayerParameters offset which is applied to the mask's transform.
   nsIntPoint mOffset;
   int32_t mAppUnitsPerDevPixel;
+};
+
+/*
+ * User data for layers which will be used as masks for css positioned mask.
+ */
+struct CSSMaskLayerUserData : public LayerUserData
+{
+  CSSMaskLayerUserData()
+    : mImageLayers(nsStyleImageLayers::LayerType::Mask)
+  { }
+
+  CSSMaskLayerUserData(nsIFrame* aFrame, const nsRect& aBound)
+    : mImageLayers(aFrame->StyleSVGReset()->mMask),
+      mContentRect(aFrame->GetContentRectRelativeToSelf()),
+      mPaddingRect(aFrame->GetPaddingRectRelativeToSelf()),
+      mBorderRect(aFrame->GetRectRelativeToSelf()),
+      mMarginRect(aFrame->GetMarginRectRelativeToSelf()),
+      mBounds(aBound)
+  {
+    Hash(aFrame);
+  }
+
+  CSSMaskLayerUserData& operator=(const CSSMaskLayerUserData& aOther)
+  {
+    mImageLayers = aOther.mImageLayers;
+
+    mContentRect = aOther.mContentRect;
+    mPaddingRect = aOther.mPaddingRect;
+    mBorderRect = aOther.mBorderRect;
+    mMarginRect = aOther.mMarginRect;
+
+    mBounds = aOther.mBounds;
+
+    mHash = aOther.mHash;
+
+    return *this;
+  }
+
+  bool
+  operator==(const CSSMaskLayerUserData& aOther) const
+  {
+    if (mHash != aOther.mHash) {
+      return false;
+    }
+
+    if (mImageLayers.mLayers != aOther.mImageLayers.mLayers) {
+      return false;
+    }
+
+    if (!mContentRect.IsEqualEdges(aOther.mContentRect) ||
+        !mPaddingRect.IsEqualEdges(aOther.mPaddingRect) ||
+        !mBorderRect.IsEqualEdges(aOther.mBorderRect) ||
+        !mMarginRect.IsEqualEdges(aOther.mMarginRect)) {
+      return false;
+    }
+
+    if (!mBounds.IsEqualEdges(aOther.mBounds)) {
+      return false;
+    }
+
+    return true;
+  }
+
+private:
+  void Hash(nsIFrame* aFrame)
+  {
+    uint32_t hash = 0;
+
+    const nsStyleImageLayers& imageLayers = aFrame->StyleSVGReset()->mMask;
+    for (uint32_t i = 0; i < imageLayers.mLayers.Length(); i++) {
+      const nsStyleImageLayers::Layer& newLayer = imageLayers.mLayers[i];
+      hash = AddToHash(hash, HashBytes(&newLayer, sizeof(newLayer)));
+    }
+
+    hash = AddToHash(hash, HashBytes(&mContentRect, sizeof(mContentRect)));
+    hash = AddToHash(hash, HashBytes(&mPaddingRect, sizeof(mPaddingRect)));
+    hash = AddToHash(hash, HashBytes(&mBorderRect, sizeof(mBorderRect)));
+    hash = AddToHash(hash, HashBytes(&mMarginRect, sizeof(mMarginRect)));
+
+    hash = AddToHash(hash, HashBytes(&mBounds, sizeof(mBounds)));
+
+    mHash = hash;
+  }
+
+  nsStyleImageLayers mImageLayers;
+
+  nsRect mContentRect;
+  nsRect mPaddingRect;
+  nsRect mBorderRect;
+  nsRect mMarginRect;
+
+  nsRect mBounds;
+
+  uint32_t mHash;
 };
 
 /*
