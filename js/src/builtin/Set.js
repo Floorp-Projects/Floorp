@@ -66,7 +66,7 @@ function SetForEach(callbackfn, thisArg = undefined) {
     /* Step 7-8. */
     var values = callFunction(std_Set_iterator, S);
     while (true) {
-        var result = callFunction(std_Set_iterator_next, values);
+        var result = callFunction(SetIteratorNext, values);
         if (result.done)
             break;
         var value = result.value;
@@ -80,3 +80,51 @@ function SetSpecies() {
     return this;
 }
 _SetCanonicalName(SetSpecies, "get [Symbol.species]");
+
+
+var setIteratorTemp = { setIterationResult : null };
+
+function SetIteratorNext() {
+    // Step 1.
+    var O = this;
+
+    // Steps 2-3.
+    if (!IsObject(O) || !IsSetIterator(O))
+        return callFunction(CallSetIteratorMethodIfWrapped, O, "SetIteratorNext");
+
+    // Steps 4-5 (implemented in _GetNextSetEntryForIterator).
+    // Steps 8-9 (omitted).
+
+    var setIterationResult = setIteratorTemp.setIterationResult;
+    if (!setIterationResult) {
+        setIterationResult = setIteratorTemp.setIterationResult = _CreateSetIterationResult();
+    }
+
+    var retVal = {value: undefined, done: true};
+
+    // Steps 10.a, 11.
+    var done = _GetNextSetEntryForIterator(O, setIterationResult);
+    if (!done) {
+        // Steps 10.b-c (omitted).
+
+        // Step 6.
+        var itemKind = UnsafeGetInt32FromReservedSlot(this, ITERATOR_SLOT_ITEM_KIND);
+
+        var result;
+        if (itemKind === ITEM_KIND_VALUE) {
+            // Step 10.d.i.
+            result = setIterationResult[0];
+        } else {
+            // Step 10.d.ii.
+            assert(itemKind === ITEM_KIND_KEY_AND_VALUE, itemKind);
+            result = [setIterationResult[0], setIterationResult[0]];
+        }
+
+        setIterationResult[0] = null;
+        retVal.value = result;
+        retVal.done = false;
+    }
+
+    // Steps 7, 10.d, 12.
+    return retVal;
+}
