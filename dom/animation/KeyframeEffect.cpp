@@ -51,8 +51,7 @@ KeyframeEffect::Constructor(const GlobalObject& aGlobal,
                             KeyframeEffectReadOnly& aSource,
                             ErrorResult& aRv)
 {
-  // TODO: Implement this in the later patches.
-  return nullptr;
+  return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aSource, aRv);
 }
 
 /* static */ already_AddRefed<KeyframeEffect>
