@@ -16,6 +16,9 @@
 #    'eeIssuedByV1Cert.pem',
 #    'emptyIssuerName.pem',
 #    'emptyNameCA.pem',
+#    'ev-test-intermediate.pem',
+#    'ev-test.pem',
+#    'evroot.pem',
 #    'expired-ee.pem',
 #    'expiredINT.pem',
 #    'expiredissuer.pem',
@@ -56,6 +59,7 @@
 #
 #test_keys = (
 #    'default-ee.key',
+#    'evroot.key',
 #    'inadequateKeySizeEE.key',
 #    'other-test-ca.key',
 #)
