@@ -361,3 +361,9 @@ AudioChannelAgent::IsPlayingStarted() const
   return mIsRegToService;
 }
 
+bool
+AudioChannelAgent::ShouldBlockMedia() const
+{
+  return mWindow ?
+    mWindow->GetMediaSuspend() == nsISuspendedTypes::SUSPENDED_BLOCK : false;
+}
