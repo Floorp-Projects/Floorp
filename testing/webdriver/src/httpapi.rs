@@ -201,7 +201,7 @@ pub struct WebDriverHttpApi<U: WebDriverExtensionRoute> {
 }
 
 impl <U: WebDriverExtensionRoute> WebDriverHttpApi<U> {
-    pub fn new(extension_routes:Vec<(Method, &str, U)>) -> WebDriverHttpApi<U> {
+    pub fn new(extension_routes: &[(Method, &str, U)]) -> WebDriverHttpApi<U> {
         let mut rv = WebDriverHttpApi::<U> {
             routes: vec![],
         };
