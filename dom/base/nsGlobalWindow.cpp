@@ -84,7 +84,8 @@
 #include "nsAboutProtocolUtils.h"
 #include "nsCharTraits.h" // NS_IS_HIGH/LOW_SURROGATE
 #include "PostMessageEvent.h"
-#include "DocGroup.h"
+#include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/TabGroup.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"

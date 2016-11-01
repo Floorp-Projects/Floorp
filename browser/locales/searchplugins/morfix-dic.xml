@@ -1,0 +1,38 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- milon.morfix.co.il MozSearch plugin
+     Compatible with Mozilla Firefox 2+
+     Tomer Cohen, September 2006 - http://mozilla.org.il             -->
+   
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>מילון מורפיקס</ShortName>
+  <Description></Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+g
+vaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1gkdCRktdt52QwAAACR0
+RVh0Q29tbWVudABUb21lciBDb2hlbgp0b21lcmNAZ21haWwuY29tUau7swAAAxxJ
+REFUOMttk91rm2UYxq/7eZ/3fZO8SZqlcflct2at/YjokDJBPNAyHW4Hgw31wP9B
+kP0Bngw2QWHsxFOPdjJPhG1MEaqIddOWDbqxOmrStE3atGk+lrxJ3o/neTxYtlXx
+hpv74Oa64Oa+foQDpZQCAALAAPDhJADiQCsieqGh/4g5gCCAmO85cdFvhZVUJM0R
+O2AGGsTQJFAPgP/chA6IdQBxr7MzIde+m9Vqi+OsUxwl4ULo0dZecK4kXvvsYTqb
+faJpWuO5CQeAXrerBa1QzKuvnmD3L79n7P55grqVDKRrASAO6qfZcmV/69bY2utf
+BkLH37jfdBpNAJKqb09TMZM2kl9cyR+tfnNB37pzBv3GEQCaAgQ9O8sA4ChQ8fF+
+9IdL5vTNTlquCiUG2sUwo+ZGVTemvUzSXniX7NqbAPi+jcqDCisZnLXCpjIARAkI
+jZiOXyw1d5YIVWn6fQYACsCxSFUjuxYFoA181H4pmUsL1uc//n7k65/7RvoJABtA
+iGvInrS8XGptKjxWn2EcAJ6mQiogGgTpAkC372GjTIWVs+c/fliYmR11/thN4dFX
+efiuxYBgBH7o7NxpY/7UB8QBQHZcLJRT0zFnaqrbE/H1QWyCItnruUzW1Q2DfCsB
+MAOAKxXg+hKOyTX/cDKp+A1KKxUPQ7fzj47K1pzrdNHCYeTe+vSiETAPOY1iRt+7
+Ow7hWgAcV2Bvs2PVzEjcJkaSz9+4Tp7jUDqTIfb420uB7dtzuqoaJq721E/XFEkn
+Rp1yGsLVQahtNdVff4vJ4ju5XDcSjChemJkBAO5sL0eM+vejrL2SgvQPvUypYlBK
+Athp2Hhwd8u6xyfPrR8fHx+AoPgwksrr7Qv96UYPwm0PGWAApFQYeAL17bZa/W3T
+uree+GT59Pz79WQyKRhj4MMvuvKVk5srzfyi2N3dAxAeGvgKsEvt4HZZ5Ivs1Y/W
+z5z6sD5bKDicc3WQBVJSBsqVamxp8ddou93ShzsJYo5hjdj5Y2OdyYmJQSKREJqm
+qf+jkQAw3/eZEPIlrgTFGJOapiki+hfKAPAPFp9sbyN2GzAAAAAASUVORK5CYII=
+</Image>
+  <Url type="text/html" method="GET" template="http://milon.morfix.co.il/default.aspx" resultdomain="morfix.co.il">
+    <Param name="q" value="{searchTerms}"/>
+  </Url>
+  <SearchForm>http://milon.morfix.co.il/</SearchForm>
+</SearchPlugin>

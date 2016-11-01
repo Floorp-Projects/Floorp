@@ -2124,11 +2124,13 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
         }
       }
 
-      if (sPostGCEventsToObserver) {
-        nsString json;
-        json.Adopt(aDesc.formatJSON(aCx, PR_Now()));
-        RefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
-        NS_DispatchToMainThread(notify);
+      if (!sShuttingDown) {
+        if (sPostGCEventsToObserver || Telemetry::CanRecordExtended()) {
+          nsString json;
+          json.Adopt(aDesc.formatJSON(aCx, PR_Now()));
+          RefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
+          NS_DispatchToMainThread(notify);
+        }
       }
 
       sCCLockedOut = false;

@@ -25,6 +25,7 @@
 namespace mozilla {
 class ErrorResult;
 class WebGLContext;
+struct TexImageSource;
 
 namespace dom {
 class Element;
@@ -232,28 +233,6 @@ public:
     ////////////////////////////////////
     // WebGLTextureUpload.cpp
 
-    void TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarget target,
-                       GLint level, GLenum internalFormat, GLint xOffset, GLint yOffset,
-                       GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
-                       GLint border, GLenum unpackFormat, GLenum unpackType,
-                       const dom::ArrayBufferView* view);
-
-    void TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarget target,
-                       GLint level, GLenum internalFormat, GLint xOffset, GLint yOffset,
-                       GLint zOffset, GLenum unpackFormat, GLenum unpackType,
-                       const dom::ImageData& imageData);
-
-    void TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarget target,
-                       GLint level, GLenum internalFormat, GLint xOffset, GLint yOffset,
-                       GLint zOffset, GLenum unpackFormat, GLenum unpackType,
-                       const dom::Element& elem, ErrorResult* const out_error);
-
-    void TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarget target,
-                       GLint level, GLenum internalFormat, GLint xOffset, GLint yOffset,
-                       GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
-                       GLint border, GLenum unpackFormat, GLenum unpackType,
-                       WebGLsizeiptr offset);
-
 protected:
     void TexOrSubImageBlob(bool isSubImage, const char* funcName, TexImageTarget target,
                            GLint level, GLenum internalFormat, GLint xOffset,
@@ -277,6 +256,13 @@ protected:
 public:
     void TexStorage(const char* funcName, TexTarget target, GLsizei levels,
                     GLenum sizedFormat, GLsizei width, GLsizei height, GLsizei depth);
+    void TexImage(const char* funcName, TexImageTarget target, GLint level,
+                  GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth,
+                  GLint border, const webgl::PackingInfo& pi, const TexImageSource& src);
+    void TexSubImage(const char* funcName, TexImageTarget target, GLint level,
+                     GLint xOffset, GLint yOffset, GLint zOffset, GLsizei width,
+                     GLsizei height, GLsizei depth, const webgl::PackingInfo& pi,
+                     const TexImageSource& src);
 protected:
     void TexImage(const char* funcName, TexImageTarget target, GLint level,
                   GLenum internalFormat, const webgl::PackingInfo& pi,
@@ -287,12 +273,12 @@ protected:
 public:
     void CompressedTexImage(const char* funcName, TexImageTarget target, GLint level,
                             GLenum internalFormat, GLsizei width, GLsizei height,
-                            GLsizei depth, GLint border,
-                            const dom::ArrayBufferView& view);
+                            GLsizei depth, GLint border, const TexImageSource& src);
     void CompressedTexSubImage(const char* funcName, TexImageTarget target, GLint level,
                                GLint xOffset, GLint yOffset, GLint zOffset, GLsizei width,
                                GLsizei height, GLsizei depth, GLenum sizedUnpackFormat,
-                               const dom::ArrayBufferView& view);
+                               const TexImageSource& src);
+
     void CopyTexImage2D(TexImageTarget target, GLint level, GLenum internalFormat,
                         GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
     void CopyTexSubImage(const char* funcName, TexImageTarget target, GLint level,
