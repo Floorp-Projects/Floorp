@@ -6,7 +6,7 @@ var gQueuedForInstall = [];
 var gResults = [];
 
 function frame_script() {
-  /*globals addMessageListener, sendAsyncMessage*/
+  /* globals addMessageListener, sendAsyncMessage*/
   addMessageListener("Test:StartInstall", () => {
     content.document.getElementById("installnow").click()
   });

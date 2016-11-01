@@ -663,7 +663,7 @@ FinderHighlighter.prototype = {
     let t, textContent = [];
     for (let node of content.childNodes) {
       t = node.textContent || node.nodeValue;
-      //if (t && t.trim())
+      // if (t && t.trim())
         textContent.push(t);
     }
     return textContent;

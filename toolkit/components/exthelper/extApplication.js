@@ -5,14 +5,14 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
-//=================================================
+// =================================================
 // Console constructor
 function Console() {
   this._console = Components.classes["@mozilla.org/consoleservice;1"]
                             .getService(Ci.nsIConsoleService);
 }
 
-//=================================================
+// =================================================
 // Console implementation
 Console.prototype = {
   log: function cs_log(aMsg) {
@@ -38,14 +38,14 @@ Console.prototype = {
 };
 
 
-//=================================================
+// =================================================
 // EventItem constructor
 function EventItem(aType, aData) {
   this._type = aType;
   this._data = aData;
 }
 
-//=================================================
+// =================================================
 // EventItem implementation
 EventItem.prototype = {
   _cancel: false,
@@ -66,14 +66,14 @@ EventItem.prototype = {
 };
 
 
-//=================================================
+// =================================================
 // Events constructor
 function Events(notifier) {
   this._listeners = [];
   this._notifier = notifier;
 }
 
-//=================================================
+// =================================================
 // Events implementation
 Events.prototype = {
   addListener: function evts_al(aEvent, aListener) {
@@ -119,7 +119,7 @@ Events.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.extIEvents])
 };
 
-//=================================================
+// =================================================
 // PreferenceObserver (internal class)
 //
 // PreferenceObserver is a global singleton which watches the browser's
@@ -193,7 +193,7 @@ PreferenceObserver.prototype = {
   }
 };
 
-//=================================================
+// =================================================
 // PreferenceBranch constructor
 function PreferenceBranch(aBranch) {
   if (!aBranch)
@@ -219,7 +219,7 @@ function PreferenceBranch(aBranch) {
   };
 }
 
-//=================================================
+// =================================================
 // PreferenceBranch implementation
 PreferenceBranch.prototype = {
   get root() {
@@ -306,7 +306,7 @@ PreferenceBranch.prototype = {
 };
 
 
-//=================================================
+// =================================================
 // Preference constructor
 function Preference(aName, aBranch) {
   this._name = aName;
@@ -324,7 +324,7 @@ function Preference(aName, aBranch) {
   };
 }
 
-//=================================================
+// =================================================
 // Preference implementation
 Preference.prototype = {
   get name() {
@@ -386,14 +386,14 @@ Preference.prototype = {
 };
 
 
-//=================================================
+// =================================================
 // SessionStorage constructor
 function SessionStorage() {
   this._storage = {};
   this._events = new Events();
 }
 
-//=================================================
+// =================================================
 // SessionStorage implementation
 SessionStorage.prototype = {
   get events() {
@@ -416,7 +416,7 @@ SessionStorage.prototype = {
   QueryInterface : XPCOMUtils.generateQI([Ci.extISessionStorage])
 };
 
-//=================================================
+// =================================================
 // ExtensionObserver constructor (internal class)
 //
 // ExtensionObserver is a global singleton which watches the browser's
@@ -429,7 +429,7 @@ function ExtensionObserver() {
   AddonManager.addInstallListener(this);
 }
 
-//=================================================
+// =================================================
 // ExtensionObserver implementation (internal class)
 ExtensionObserver.prototype = {
   onDisabling: function eo_onDisabling(addon, needsRestart) {
@@ -480,7 +480,7 @@ ExtensionObserver.prototype = {
   }
 };
 
-//=================================================
+// =================================================
 // Extension constructor
 function Extension(aItem) {
   this._item = aItem;
@@ -506,7 +506,7 @@ function Extension(aItem) {
   }
 }
 
-//=================================================
+// =================================================
 // Extension implementation
 Extension.prototype = {
   get id() {
@@ -545,7 +545,7 @@ Extension.prototype = {
 };
 
 
-//=================================================
+// =================================================
 // Extensions constructor
 function Extensions(addons) {
   this._cache = {};
@@ -555,7 +555,7 @@ function Extensions(addons) {
   }, this);
 }
 
-//=================================================
+// =================================================
 // Extensions implementation
 Extensions.prototype = {
   get all() {
@@ -583,18 +583,18 @@ Extensions.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.extIExtensions])
 };
 
-//=================================================
+// =================================================
 // Application globals
 
 var gExtensionObserver = new ExtensionObserver();
 var gPreferenceObserver = new PreferenceObserver();
 
-//=================================================
+// =================================================
 // extApplication constructor
 function extApplication() {
 }
 
-//=================================================
+// =================================================
 // extApplication implementation
 extApplication.prototype = {
   initToolkitHelpers: function extApp_initToolkitHelpers() {

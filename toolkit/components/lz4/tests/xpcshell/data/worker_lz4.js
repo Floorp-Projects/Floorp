@@ -3,7 +3,7 @@ importScripts("resource://gre/modules/osfile.jsm");
 
 
 function do_print(x) {
-  //self.postMessage({kind: "do_print", args: [x]});
+  // self.postMessage({kind: "do_print", args: [x]});
   dump("TEST-INFO: " + x + "\n");
 }
 

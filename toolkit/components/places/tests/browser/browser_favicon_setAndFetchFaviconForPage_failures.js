@@ -50,7 +50,7 @@ function test() {
         throw ("Unexpected error (" + aError.result + "): " + aError.message);
       },
       handleCompletion: function final_handleCompletion(aReason) {
-        //begin testing
+        // begin testing
         info("Previous records in moz_favicons: " + favIconsResultCount);
         if (aCallback) {
           aCallback();

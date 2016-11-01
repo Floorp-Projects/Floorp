@@ -70,7 +70,7 @@ add_task(function*() {
   checkWidgetFates(widgetIds);
   toolbarNode.remove();
 
-  //XXXgijs: ensure cleanup function doesn't barf:
+  // XXXgijs: ensure cleanup function doesn't barf:
   gAddedToolbars.delete(kToolbarName);
 
   // Remove all the XUL widgets, destroy the others:

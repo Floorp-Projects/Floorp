@@ -12,7 +12,7 @@ const TEST_URI = "http://www.mozilla.org/";
 var gTests = [];
 var gLibrary;
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 gTests.push({
   desc: "Bug 430148 - Remove or hide the more/less button in details pane...",
@@ -165,7 +165,7 @@ function getAndCheckElmtById(id) {
   return elmt;
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 function nextTest() {
   if (gTests.length) {

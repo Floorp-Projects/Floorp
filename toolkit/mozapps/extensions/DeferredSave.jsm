@@ -9,7 +9,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/osfile.jsm");
-/*globals OS*/
+/* globals OS*/
 Cu.import("resource://gre/modules/Promise.jsm");
 
 // Make it possible to mock out timers for testing
@@ -21,26 +21,26 @@ this.EXPORTED_SYMBOLS = ["DeferredSave"];
 const DEFAULT_SAVE_DELAY_MS = 50;
 
 Cu.import("resource://gre/modules/Log.jsm");
-//Configure a logger at the parent 'DeferredSave' level to format
-//messages for all the modules under DeferredSave.*
+// Configure a logger at the parent 'DeferredSave' level to format
+// messages for all the modules under DeferredSave.*
 const DEFERREDSAVE_PARENT_LOGGER_ID = "DeferredSave";
 var parentLogger = Log.repository.getLogger(DEFERREDSAVE_PARENT_LOGGER_ID);
 parentLogger.level = Log.Level.Warn;
 var formatter = new Log.BasicFormatter();
-//Set parent logger (and its children) to append to
-//the Javascript section of the Browser Console
+// Set parent logger (and its children) to append to
+// the Javascript section of the Browser Console
 parentLogger.addAppender(new Log.ConsoleAppender(formatter));
-//Set parent logger (and its children) to
-//also append to standard out
+// Set parent logger (and its children) to
+// also append to standard out
 parentLogger.addAppender(new Log.DumpAppender(formatter));
 
-//Provide the ability to enable/disable logging
-//messages at runtime.
-//If the "extensions.logging.enabled" preference is
-//missing or 'false', messages at the WARNING and higher
-//severity should be logged to the JS console and standard error.
-//If "extensions.logging.enabled" is set to 'true', messages
-//at DEBUG and higher should go to JS console and standard error.
+// Provide the ability to enable/disable logging
+// messages at runtime.
+// If the "extensions.logging.enabled" preference is
+// missing or 'false', messages at the WARNING and higher
+// severity should be logged to the JS console and standard error.
+// If "extensions.logging.enabled" is set to 'true', messages
+// at DEBUG and higher should go to JS console and standard error.
 Cu.import("resource://gre/modules/Services.jsm");
 
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";

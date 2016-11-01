@@ -31,12 +31,16 @@ public class TopSitesPagerAdapter extends PagerAdapter {
 
     private final Context context;
     private final HomePager.OnUrlOpenListener onUrlOpenListener;
+    private final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
 
     private int count = 0;
 
-    public TopSitesPagerAdapter(Context context, HomePager.OnUrlOpenListener onUrlOpenListener) {
+    public TopSitesPagerAdapter(Context context,
+                                HomePager.OnUrlOpenListener onUrlOpenListener,
+                                HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         this.context = context;
         this.onUrlOpenListener = onUrlOpenListener;
+        this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
     }
 
     public void setTilesSize(int tiles, int tilesWidth, int tilesHeight) {
@@ -91,8 +95,9 @@ public class TopSitesPagerAdapter extends PagerAdapter {
                 final TopSitesPage page = (TopSitesPage) inflater.inflate(R.layout.activity_stream_topsites_page, null, false);
 
                 page.setTiles(tiles);
-                page.setOnUrlOpenListener(onUrlOpenListener);
-                page.setAdapter(new TopSitesPageAdapter(context, tiles, tilesWidth, tilesHeight));
+                final TopSitesPageAdapter adapter = new TopSitesPageAdapter(context, tiles, tilesWidth, tilesHeight,
+                        onUrlOpenListener, onUrlOpenInBackgroundListener);
+                page.setAdapter(adapter);
                 pages.add(page);
             }
         } else if (pageDelta < 0) {

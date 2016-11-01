@@ -1,7 +1,7 @@
 var noop = function() {};
 Browser = {
   updateViewportSize: noop
-    /*************************************************************
+    /** ***********************************************************
   function
     let browser = document.getElementById("googlenews");
     let cdoc = browser.contentDocument;
@@ -249,7 +249,7 @@ BrowserView.prototype = {
   },
 
   zoomToPage: function zoomToPage() {
-    /********************************************************
+    /** ******************************************************
     let needToPanToTop = this._needToPanToTop;
     // Ensure pages are panned at the top before zooming/painting
     // combine the initial pan + zoom into a transaction
@@ -327,7 +327,7 @@ function onMouseMove(e) {
 
       bv.onBeforeScroll(x, y, dx, dy);
 
-      /*dump("==========scroll==========" + endl);
+      /* dump("==========scroll==========" + endl);
       dump("delta: " + dx + "," + dy + endl);
       let xx = {};
       let yy = {};
@@ -336,7 +336,7 @@ function onMouseMove(e) {
 
       scrollbox.scrollBy(dx, dy);
 
-      /*scrollbox.getPosition(xx, yy);
+      /* scrollbox.getPosition(xx, yy);
       dump(xx.value + "," + yy.value + endl);
       dump("==========================" + endl);*/
 

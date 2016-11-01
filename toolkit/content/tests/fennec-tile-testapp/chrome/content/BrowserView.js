@@ -241,7 +241,7 @@ function() {
         bvs.visibleY = vr.top;
 
         // reclamp minimally to the new visible rect
-        //this.setViewportDimensions(bvs.viewportRect.right, bvs.viewportRect.bottom);
+        // this.setViewportDimensions(bvs.viewportRect.right, bvs.viewportRect.bottom);
       } else
         this._viewportChanged(false, false);
     },
@@ -262,7 +262,7 @@ function() {
       if (!bvs)
         return;
 
-      //[width, height] = clampViewportWH(width, height, vis);
+      // [width, height] = clampViewportWH(width, height, vis);
       bvs.viewportRect.right  = width;
       bvs.viewportRect.bottom = height;
 
@@ -636,7 +636,7 @@ function() {
 
       this._container.appendChild(canvas);
 
-      //dump('++ ' + tile.toString(true) + endl);
+      // dump('++ ' + tile.toString(true) + endl);
     },
 
     _removeTile: function _removeTile(tile) {
@@ -644,7 +644,7 @@ function() {
 
       this._container.removeChild(canvas);
 
-      //dump('-- ' + tile.toString(true) + endl);
+      // dump('-- ' + tile.toString(true) + endl);
     }
 
   };

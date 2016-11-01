@@ -50,7 +50,7 @@ add_task(function* test_search() {
   var engineProps = hasProp(currentEngine);
   ["name", "placeholder", "iconBuffer"].forEach(engineProps);
 
-  //create dummy test engines to test observer
+  // create dummy test engines to test observer
   Services.search.addEngineWithDetails("TestSearch1", "", "", "", "GET",
     "http://example.com/?q={searchTerms}");
   Services.search.addEngineWithDetails("TestSearch2", "", "", "", "GET",

@@ -536,7 +536,6 @@ add_task(function* test_form1_check_only_entry_remaining() {
   // Delete the only remaining entry, "testuser2"
   doKey("down");
   doKey("delete", shiftModifier);
-  //doKey("return");
   checkACForm("", "");
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 1, "Correct number of logins after deleting one");

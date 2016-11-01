@@ -165,25 +165,25 @@ function setPasswordStrength()
 
   var pw=document.getElementById('pw1').value;
 
-//length of the password
+// length of the password
   var pwlength=(pw.length);
   if (pwlength>5)
     pwlength=5;
 
 
-//use of numbers in the password
+// use of numbers in the password
   var numnumeric = pw.replace (/[0-9]/g, "");
   var numeric=(pw.length - numnumeric.length);
   if (numeric>3)
     numeric=3;
 
-//use of symbols in the password
+// use of symbols in the password
   var symbols = pw.replace (/\W/g, "");
   var numsymbols=(pw.length - symbols.length);
   if (numsymbols>3)
     numsymbols=3;
 
-//use of uppercase in the password
+// use of uppercase in the password
   var numupper = pw.replace (/[A-Z]/g, "");
   var upper=(pw.length - numupper.length);
   if (upper>3)

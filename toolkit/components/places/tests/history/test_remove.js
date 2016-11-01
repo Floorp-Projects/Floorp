@@ -320,7 +320,7 @@ add_task(function* test_error_cases() {
     "History.remove with an array containing an ill-formed guid/url argument should throw a TypeError"
   );
   Assert.throws(
-    () => PlacesUtils.history.remove(["0123456789ab"/*valid guid*/, null]),
+    () => PlacesUtils.history.remove(["0123456789ab"/* valid guid*/, null]),
     /TypeError: Invalid url or guid: null/,
     "History.remove with an array containing a guid and a second argument that is null should throw a TypeError"
   );

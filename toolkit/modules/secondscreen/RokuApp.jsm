@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
 function log(msg) {
-  //Services.console.logStringMessage(msg);
+  // Services.console.logStringMessage(msg);
 }
 
 const PROTOCOL_VERSION = 1;

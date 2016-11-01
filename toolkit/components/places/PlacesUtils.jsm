@@ -422,6 +422,11 @@ this.PlacesUtils = {
   mozActionURI(type, params) {
     let encodedParams = {};
     for (let key in params) {
+      // Strip null or undefined.
+      // Regardless, don't encode them or they would be converted to a string.
+      if (params[key] === null || params[key] === undefined) {
+        continue;
+      }
       encodedParams[key] = encodeURIComponent(params[key]);
     }
     return "moz-action:" + type + "," + JSON.stringify(encodedParams);
@@ -576,8 +581,8 @@ this.PlacesUtils = {
     this._shutdownFunctions.push(aFunc);
   },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsIObserver
+  // ////////////////////////////////////////////////////////////////////////////
+  // // nsIObserver
   observe: function PU_observe(aSubject, aTopic, aData)
   {
     switch (aTopic) {
@@ -610,8 +615,8 @@ this.PlacesUtils = {
   onPageAnnotationRemoved: function() {},
 
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsITransactionListener
+  // ////////////////////////////////////////////////////////////////////////////
+  // // nsITransactionListener
 
   didDo: function PU_didDo(aManager, aTransaction, aDoResult)
   {
@@ -2551,8 +2556,8 @@ var GuidHelper = {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// Transactions handlers.
+// //////////////////////////////////////////////////////////////////////////////
+// // Transactions handlers.
 
 /**
  * Updates commands in the undo group of the active window commands.

@@ -145,7 +145,7 @@
 	});
 
 	function startup() {
-            //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
+            // Need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
             var channel = NetUtil.newChannel({
                 uri: "http://example.com",
                 loadUsingSystemPrincipal: true

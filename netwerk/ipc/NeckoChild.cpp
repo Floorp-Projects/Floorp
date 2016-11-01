@@ -17,7 +17,6 @@
 #include "mozilla/net/WebSocketChannelChild.h"
 #include "mozilla/net/WebSocketEventListenerChild.h"
 #include "mozilla/net/DNSRequestChild.h"
-#include "mozilla/net/RemoteOpenFileChild.h"
 #include "mozilla/net/ChannelDiverterChild.h"
 #include "mozilla/net/IPCTransportProvider.h"
 #include "mozilla/dom/network/TCPSocketChild.h"
@@ -312,25 +311,6 @@ bool
 NeckoChild::DeallocPDNSRequestChild(PDNSRequestChild* aChild)
 {
   DNSRequestChild *p = static_cast<DNSRequestChild*>(aChild);
-  p->ReleaseIPDLReference();
-  return true;
-}
-
-PRemoteOpenFileChild*
-NeckoChild::AllocPRemoteOpenFileChild(const SerializedLoadContext& aSerialized,
-                                      const URIParams&,
-                                      const OptionalURIParams&)
-{
-  // We don't allocate here: instead we always use IPDL constructor that takes
-  // an existing RemoteOpenFileChild
-  NS_NOTREACHED("AllocPRemoteOpenFileChild should not be called on child");
-  return nullptr;
-}
-
-bool
-NeckoChild::DeallocPRemoteOpenFileChild(PRemoteOpenFileChild* aChild)
-{
-  RemoteOpenFileChild *p = static_cast<RemoteOpenFileChild*>(aChild);
   p->ReleaseIPDLReference();
   return true;
 }

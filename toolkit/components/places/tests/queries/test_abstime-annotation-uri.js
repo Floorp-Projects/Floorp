@@ -107,7 +107,7 @@ function run_test()
 
 add_task(function* test_abstime_annotation_uri()
 {
-  //Initialize database
+  // Initialize database
   yield task_populateDB(testData);
 
   // Query

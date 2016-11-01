@@ -637,8 +637,6 @@ child:
 
     async LoadURL(nsCString uri, ShowInfo info);
 
-    async CacheFileDescriptor(nsString path, FileDescriptor fd);
-
     async UpdateDimensions(CSSRect rect, CSSSize size,
                            ScreenOrientationInternal orientation,
                            LayoutDeviceIntPoint clientOffset,

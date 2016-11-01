@@ -175,7 +175,7 @@ function configureProfileURL(profile, responseStatus = 200) {
             "responseBody=" + responseBody +
             // This is a bit cheeky - the FxA code will just append "/profile"
             // to the preference value. We arrange for this to be seen by our
-            //.sjs as part of the query string.
+            // .sjs as part of the query string.
             "&path=";
 
   Services.prefs.setCharPref("identity.fxaccounts.remote.profile.uri", url);

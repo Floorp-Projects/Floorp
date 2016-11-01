@@ -388,7 +388,7 @@ this.MigratorPrototype = {
     return exists;
   },
 
-  /*** PRIVATE STUFF - DO NOT OVERRIDE ***/
+  /** * PRIVATE STUFF - DO NOT OVERRIDE ***/
   _getMaybeCachedResources: function PMB__getMaybeCachedResources(aProfile) {
     let profileKey = aProfile ? aProfile.id : "";
     if (this._resourcesByProfile) {

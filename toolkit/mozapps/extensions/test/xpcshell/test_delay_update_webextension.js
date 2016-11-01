@@ -7,7 +7,7 @@
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
-/*globals browser*/
+/* globals browser*/
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");

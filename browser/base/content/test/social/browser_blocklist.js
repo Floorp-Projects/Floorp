@@ -61,7 +61,7 @@ function test() {
   });
 
   runSocialTests(tests, undefined, undefined, function () {
-    resetBlocklist().then(finish); //restore to original pref
+    resetBlocklist().then(finish); // restore to original pref
   });
 }
 

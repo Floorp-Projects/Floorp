@@ -45,12 +45,12 @@ this.Toolbars = {
 };
 
 
-///// helpers /////
+// /// helpers /////
 
 function toggleMenubarIfNecessary(visible) {
   let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
   // The menubar is not shown on OS X or while in fullScreen
-  if (Services.appinfo.OS != "Darwin" /*&& !browserWindow.fullScreen*/) {
+  if (Services.appinfo.OS != "Darwin" /* && !browserWindow.fullScreen*/) {
     let menubar = browserWindow.document.getElementById("toolbar-menubar");
     browserWindow.setToolbarVisibility(menubar, visible);
   }
