@@ -1773,7 +1773,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 41;
+    const UI_VERSION = 42;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2099,6 +2099,12 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 41) {
       const Preferences = Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
       Preferences.resetBranch("loop.");
+    }
+
+    if (currentUIVersion < 42) {
+      let backupFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
+      backupFile.append("tabgroups-session-backup.json");
+      OS.File.remove(backupFile.path, {ignoreAbsent: true}).catch(ex => Cu.reportError(ex));
     }
 
     // Update the migration version.
