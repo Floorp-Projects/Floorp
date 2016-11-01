@@ -155,7 +155,7 @@ Bookmarks.prototype = {
 
           try {
             if (is_folder == 1) {
-              let newFolderGuid = (yield MigrationUtils.insertBookmarkWrapper({
+              let newFolderGuid = (yield PlacesUtils.bookmarks.insert({
                 parentGuid,
                 type: PlacesUtils.bookmarks.TYPE_FOLDER,
                 title
@@ -163,7 +163,7 @@ Bookmarks.prototype = {
 
               idToGuid.set(id, newFolderGuid);
             } else {
-              yield MigrationUtils.insertBookmarkWrapper({
+              yield PlacesUtils.bookmarks.insert({
                 parentGuid,
                 url,
                 title
