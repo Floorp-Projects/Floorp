@@ -1,0 +1,27 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Priberam</ShortName>
+<Description>Dicionário Priberam</Description>
+<InputEncoding>ISO-8859-15</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAAHnlligAAAABGdBTUEAANbY1E9YMgAAABl0RVh0
+U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAKoSURBVHjaYvz7+dv3r98Y/n7+7u/jCxBA
+jH8/fmVgYGBat23T1+/fAQKI8e+X7wz//xeVlykqKjB8fP4qJj4GqHzR3LkAAQRV9+zlCylxCSYG
+JkYgunXnNohx78qNv5++fXn9Dkgy/Prw5YVwLQsLyy2hSoAAYgRaATTt4ZPHX799+fTh06Mnj4P9
+g5iZmZgYGBmASExEZPfevdHJCbdu3548c+rd+3eZGMCAk5Mz7b/Zg4cP33x8X5Cd+2vHbcaf7z4d
+OXbUwdaOARUABBDUXUDw79+/L9++MTIx8nJxA53FwsDI+Ofvn2vXr/Fy85y7fOnvnz9hQSEga4Ee
++vPpK5D8+eGzqpLy8wePbpy7CPQ4C8g4Rsblq1ZIiEncvnd36vTpvLw8xaqFDECPyUhJA0kgkpeT
+B5K/P3wBeQ5oCAjdexuiYsvEzARkvz11++f91yzfvn27dv36rvDepcXtC7gvGttarbAq+asuzbh/
+yw4zU1MODg5UXzACBBg45P/9h4uAfPPly+9fv779+M7EzHzt5g0JMXFdLW2oNBMjOKjAwfjh44cL
+Fy98+faVh49XWFRk3qIF2iaGl65cPnv+7NUb1yBqQFoYgKaDkQC/gIG+AR8P77nz58urq46fPPX/
+37/TZ86EBoW8ffcut6jg/qOHIB1AJ0E8ePX0ufrK6o3r1v/6+BkYdNaWlnp6ekDG7UtXwoNDLp89
+B1IGdD9Iw6dvpw4e2bBi9a8PnyEBdvPqVSkpKaBxU/snQkSg6Mt3aAKB+/hj+a6fM/dfZfslvDu+
+rreN+R9Dfnbu5YuXzk/a/PvZ28qwPMbbV65NmTFDVETk04cPMioKroY2CtxibLICDGzMwGA4cPSw
+vZWNoIAgw6+/fx99YFYUZPz39cd/pGDFD4CJBwBLx4gNwqkZawAAAABJRU5ErkJggg==</Image>
+<Url type="text/html" method="GET" template="http://www.priberam.pt/dlpo/firefox.aspx" resultdomain="priberam.pt">
+  <Param name="pal" value="{searchTerms}"/>
+</Url>
+<SearchForm>http://www.priberam.pt/dlpo/</SearchForm>
+</SearchPlugin>

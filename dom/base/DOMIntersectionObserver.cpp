@@ -265,14 +265,16 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
     nsCOMPtr<nsIPresShell> presShell = aDocument->GetShell();
     if (presShell) {
       rootFrame = presShell->GetRootScrollFrame();
-      nsPresContext* presContext = rootFrame->PresContext();
-      while (!presContext->IsRootContentDocument()) {
-        presContext = rootFrame->PresContext()->GetParentPresContext();
-        rootFrame = presContext->PresShell()->GetRootScrollFrame();
+      if (rootFrame) {
+        nsPresContext* presContext = rootFrame->PresContext();
+        while (!presContext->IsRootContentDocument()) {
+          presContext = rootFrame->PresContext()->GetParentPresContext();
+          rootFrame = presContext->PresShell()->GetRootScrollFrame();
+        }
+        root = rootFrame->GetContent()->AsElement();
+        nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame);
+        rootRect = scrollFrame->GetScrollPortRect();
       }
-      root = rootFrame->GetContent()->AsElement();
-      nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame);
-      rootRect = scrollFrame->GetScrollPortRect();
     }
   }
 
@@ -348,7 +350,8 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
     }
 
     nsRect rootIntersectionRect = rootRect;
-    bool isInSimilarOriginBrowsingContext = CheckSimilarOrigin(root, target);
+    bool isInSimilarOriginBrowsingContext = rootFrame && targetFrame &&
+                                            CheckSimilarOrigin(root, target);
 
     if (isInSimilarOriginBrowsingContext) {
       rootIntersectionRect.Inflate(rootMargin);

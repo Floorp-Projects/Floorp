@@ -253,6 +253,7 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/TabGroup.h"
 
 #include "mozilla/DocLoadingTimelineMarker.h"
 

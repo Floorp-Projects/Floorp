@@ -114,12 +114,10 @@ class TestManifestParser(unittest.TestCase):
 foo = bar
 
 [fleem]
-subsuite = 
 
 [include/flowers]
 blue = ocean
 red = roses
-subsuite = 
 yellow = submarine"""  # noqa
 
         self.assertEqual(buffer.getvalue().strip(),
@@ -157,7 +155,7 @@ yellow = submarine"""  # noqa
         buffer = StringIO()
         parser.write(fp=buffer, global_kwargs={'x': 'level_1'})
         self.assertEqual(buffer.getvalue().strip(),
-                         '[DEFAULT]\nx = level_1\n\n[test_3]\nsubsuite =')
+                         '[DEFAULT]\nx = level_1\n\n[test_3]')
 
     def test_parent_defaults(self):
         """
@@ -182,7 +180,7 @@ yellow = submarine"""  # noqa
         buffer = StringIO()
         parser.write(fp=buffer, global_kwargs={'x': 'level_3'})
         self.assertEqual(buffer.getvalue().strip(),
-                         '[DEFAULT]\nx = level_3\n\n[test_3]\nsubsuite =')
+                         '[DEFAULT]\nx = level_3\n\n[test_3]')
 
     def test_parent_defaults_include(self):
         parent_example = os.path.join(here, 'parent', 'include', 'manifest.ini')

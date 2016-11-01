@@ -41,8 +41,8 @@
         display: inline-block;
       }
       div.noFlexFn {
-        width: 15px;
-        height: 15px;
+        width: 16px;
+        height: 16px;
         background: teal;
         display: inline-block;
       }
@@ -55,19 +55,20 @@
            ><div class="a abspos" style="width: 30px"/><div class="b"/></div>
       <!-- Second child abspos: -->
       <div class="flexbox"
-           ><div class="a"/><div class="b abspos" style="width: 20px"/></div>
+           ><div class="a"/><div class="b abspos"
+                                 style="width: 20px; left: 0"/></div>
       <!-- Middle child abspos: -->
       <div class="flexbox"
            ><div class="a" style="width: 80px"
-          /><div class="inflex abspos"
+          /><div class="inflex abspos" style="left: 0"
           /><div class="b" style="width: 120px"/></div>
       <!-- Third child abspos, w/ inflexible items & justify-content: space-around: -->
       <div class="flexbox"
-           ><div class="inflex" style="margin-left: 12px"
-          /><div class="inflex" style="margin-left: 24px"
-          /><div class="inflex" style="margin-left: 24px"
-          /><div class="noFlexFn abspos" style="margin-left: 24px"
-          /><div class="inflex" style="margin-left: 48px"/></div>
+           ><div class="inflex" style="margin-left: 15px"
+          /><div class="inflex" style="margin-left: 30px"
+          /><div class="inflex" style="margin-left: 30px"
+          /><div class="noFlexFn abspos" style="left: 90px"
+          /><div class="inflex" style="margin-left: 30px"/></div>
     </div>
   </body>
 </html>

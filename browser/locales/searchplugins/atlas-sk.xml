@@ -1,0 +1,15 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Atlas</ShortName>
+<Description>Internetovy portal - Atlas.sk</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALESURBVHjaYvz//z8DMvj7nuHXY4YfLxiA4hziDJzyDIyCyPIAAcSCYP55w/Bi7deHW188e/H5B/tfRg5mVnZuAWEJVXteWR8GVjGIKoAAYoTa8P3mz0tVj27f+8rrIazmxSkgx8TM+v/fr6/vH768vZ+L7aOKZTI7vw5QIUAAAW3+///7ve8H3W+sCHh+59zf/+jgz5//j64fO7e16fPrG0AuQAAxAI35e7n4xVr3L68f/8cNnt27fOXQit+/vgMEEOP/z5d+HMn+r97Eqehw/9Wf5Ue+/vrDyMLCxMLIyMTMKMzDbKPBqi7FBHTMz+/f2Dg4AAKIheH9JUYuTTYZK6DQ07d/Zu36+O0HIzs7MzMTEysrMycH26Zzv0t9OW3Umdk5uYBqAAKI5e+394y8mkysbECOhjRLTzTX9x9/mZiY/v//t+/0g1MvJO+/5t989pe5CicrM8jPAAHExMDE85+ZCxJkInwsqrJ8Pxk43nxl+vybjY2V9d+fn3/+Mjx88+/nb2h0AQQQCxOPIsvvuxDOhpPfGtd8fvWJgY0V6KL/zMyKzBwM//7++/2PCR67AAHExCigwcDMzvDn8/ffDGtOfHvwhoH970c7yftxhi9Nuc/+/vjk9z/mv38Z4dELEEAsDJxijJL2DEws//8w/GdgYmX+//c/44GTDw7/+/Lr509maTEmBsa///4zwKwACCBg0mD8zyPz689v5v8/HDUZTt399+OPMLO8x39GBjZGRqDCn7///vqDSEEAAcQCTBk/vn9/9+79t29fjcV/ZZp9P3Pv7/effxkY/nNyccnJyvAL8EkJMLGxQF0FEEDA+GFgZWVhYWUFJoGvX75JsT4zFXzz7t2nX7//crNwG4rquTiYcnKywm0ACCBGePL+8/fvn99/fv768+Pn71+//gDjAehadnY2QX4eNjZmuAaAAAMA9HBNfsA2E5MAAAAASUVORK5CYII=</Image>
+<Url type="text/html" method="GET" template="http://www.atlas.sk/search.php" resultdomain="atlas.sk">
+  <Param name="phrase" value="{searchTerms}"/>
+  <Param name="sourceid" value="firefox"/>
+</Url>
+<SearchForm>http://www.atlas.sk/</SearchForm>
+</SearchPlugin>

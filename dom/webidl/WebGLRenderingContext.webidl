@@ -100,6 +100,9 @@ interface WebGLShaderPrecisionFormat {
     readonly attribute GLint precision;
 };
 
+typedef (Float32Array or sequence<GLfloat>) Float32List;
+typedef (Int32Array or sequence<GLint>) Int32List;
+
 [Exposed=(Window,Worker),
  Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface WebGLRenderingContext {
@@ -699,7 +702,7 @@ interface WebGLRenderingContext {
                     GLenum type, ArrayBufferView? pixels);
     [Throws] // Can't actually throw.
     void texImage2D(GLenum target, GLint level, GLenum internalformat,
-                    GLenum format, GLenum type, ImageData? pixels);
+                    GLenum format, GLenum type, ImageData pixels);
     [Throws]
     void texImage2D(GLenum target, GLint level, GLenum internalformat,
                     GLenum format, GLenum type, HTMLImageElement image); // May throw DOMException
@@ -716,10 +719,10 @@ interface WebGLRenderingContext {
     [Throws] // Can't actually throw.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLsizei width, GLsizei height, GLenum format, GLenum type,
-                       ArrayBufferView? pixels);
+                       ArrayBufferView pixels);
     [Throws] // Can't actually throw.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLenum format, GLenum type, ImageData? pixels);
+                       GLenum format, GLenum type, ImageData pixels);
     [Throws]
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, HTMLImageElement image); // May throw DOMException
@@ -731,42 +734,28 @@ interface WebGLRenderingContext {
                        GLenum format, GLenum type, HTMLVideoElement video); // May throw DOMException
 
     void uniform1f(WebGLUniformLocation? location, GLfloat x);
-    void uniform1fv(WebGLUniformLocation? location, Float32Array v);
-    void uniform1fv(WebGLUniformLocation? location, sequence<GLfloat> v);
-    void uniform1i(WebGLUniformLocation? location, GLint x);
-    void uniform1iv(WebGLUniformLocation? location, Int32Array v);
-    void uniform1iv(WebGLUniformLocation? location, sequence<long> v);
     void uniform2f(WebGLUniformLocation? location, GLfloat x, GLfloat y);
-    void uniform2fv(WebGLUniformLocation? location, Float32Array v);
-    void uniform2fv(WebGLUniformLocation? location, sequence<GLfloat> v);
-    void uniform2i(WebGLUniformLocation? location, GLint x, GLint y);
-    void uniform2iv(WebGLUniformLocation? location, Int32Array v);
-    void uniform2iv(WebGLUniformLocation? location, sequence<long> v);
     void uniform3f(WebGLUniformLocation? location, GLfloat x, GLfloat y, GLfloat z);
-    void uniform3fv(WebGLUniformLocation? location, Float32Array v);
-    void uniform3fv(WebGLUniformLocation? location, sequence<GLfloat> v);
-    void uniform3i(WebGLUniformLocation? location, GLint x, GLint y, GLint z);
-    void uniform3iv(WebGLUniformLocation? location, Int32Array v);
-    void uniform3iv(WebGLUniformLocation? location, sequence<long> v);
     void uniform4f(WebGLUniformLocation? location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-    void uniform4fv(WebGLUniformLocation? location, Float32Array v);
-    void uniform4fv(WebGLUniformLocation? location, sequence<GLfloat> v);
-    void uniform4i(WebGLUniformLocation? location, GLint x, GLint y, GLint z, GLint w);
-    void uniform4iv(WebGLUniformLocation? location, Int32Array v);
-    void uniform4iv(WebGLUniformLocation? location, sequence<long> v);
 
-    void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose,
-                          Float32Array value);
-    void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose,
-                          sequence<GLfloat> value);
-    void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose,
-                          Float32Array value);
-    void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose,
-                          sequence<GLfloat> value);
-    void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose,
-                          Float32Array value);
-    void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose,
-                          sequence<GLfloat> value);
+    void uniform1i(WebGLUniformLocation? location, GLint x);
+    void uniform2i(WebGLUniformLocation? location, GLint x, GLint y);
+    void uniform3i(WebGLUniformLocation? location, GLint x, GLint y, GLint z);
+    void uniform4i(WebGLUniformLocation? location, GLint x, GLint y, GLint z, GLint w);
+
+    void uniform1fv(WebGLUniformLocation? location, Float32List data);
+    void uniform2fv(WebGLUniformLocation? location, Float32List data);
+    void uniform3fv(WebGLUniformLocation? location, Float32List data);
+    void uniform4fv(WebGLUniformLocation? location, Float32List data);
+
+    void uniform1iv(WebGLUniformLocation? location, Int32List data);
+    void uniform2iv(WebGLUniformLocation? location, Int32List data);
+    void uniform3iv(WebGLUniformLocation? location, Int32List data);
+    void uniform4iv(WebGLUniformLocation? location, Int32List data);
+
+    void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
+    void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
+    void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
 
     void useProgram(WebGLProgram? program);
     void validateProgram(WebGLProgram? program);

@@ -404,6 +404,16 @@ NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURI(nsIDocShell *aDocShell,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsContentTreeOwner::ReloadInFreshProcess(nsIDocShell* aDocShell,
+                                                       nsIURI* aURI,
+                                                       nsIURI* aReferrer,
+                                                       bool* aRetVal)
+{
+  NS_WARNING("Cannot reload in fresh process from a nsContentTreeOwner!");
+  *aRetVal = false;
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsContentTreeOwner::nsIWebBrowserChrome2
 //*****************************************************************************   

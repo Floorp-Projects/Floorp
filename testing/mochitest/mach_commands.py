@@ -378,17 +378,17 @@ class MachCommands(MachCommandBase):
             if test['flavor'] not in ALL_FLAVORS:
                 continue
 
-            key = (test['flavor'], test['subsuite'])
+            key = (test['flavor'], test.get('subsuite', ''))
             if test['flavor'] not in flavors:
                 unsupported.add(key)
                 continue
 
             if subsuite == 'default':
                 # "--subsuite default" means only run tests that don't have a subsuite
-                if test['subsuite']:
+                if test.get('subsuite'):
                     unsupported.add(key)
                     continue
-            elif subsuite and test['subsuite'] != subsuite:
+            elif subsuite and test.get('subsuite', '') != subsuite:
                 unsupported.add(key)
                 continue
 

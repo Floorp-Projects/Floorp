@@ -8,6 +8,7 @@ include protocol PBrowser;
 include PBrowserOrId;
 
 using UIStateChangeType from "nsPIDOMWindow.h";
+using mozilla::DocShellOriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -35,8 +36,8 @@ struct PopupIPCTabContext
 // An IPCTabContext which corresponds to an app, browser, or normal frame.
 struct FrameIPCTabContext
 {
-  // The stringified originAttributes dictionary.
-  nsCString originSuffix;
+  // The originAttributes dictionary.
+  DocShellOriginAttributes originAttributes;
 
   // The ID of the app containing this app/browser frame, if applicable.
   uint32_t frameOwnerAppId;

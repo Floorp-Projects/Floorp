@@ -591,6 +591,15 @@ FRAME_STATE_BIT(Placeholder, 22, PLACEHOLDER_FOR_FIXEDPOS)
 FRAME_STATE_BIT(Placeholder, 23, PLACEHOLDER_FOR_POPUP)
 FRAME_STATE_BIT(Placeholder, 24, PLACEHOLDER_FOR_TOPLAYER)
 
+// This bit indicates that the out-of-flow frame's static position needs to be
+// determined using the CSS Box Alignment properties
+// ([align,justify]-[self,content]).  When this is set, the placeholder frame's
+// position doesn't represent the static position, as it usually would --
+// rather, it represents the logical start corner of the alignment containing
+// block.  Then, after we've determined the out-of-flow frame's size, we can
+// resolve the actual static position using the alignment properties.
+FRAME_STATE_BIT(Placeholder, 25, PLACEHOLDER_STATICPOS_NEEDS_CSSALIGN)
+
 
 // == Frame state bits that apply to table cell frames ========================
 
