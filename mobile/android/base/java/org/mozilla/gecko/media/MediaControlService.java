@@ -305,12 +305,6 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
             return;
         }
 
-        // TODO : remove this checking when the media control is ready to ship,
-        // see bug1290836.
-        if (!AppConstants.NIGHTLY_BUILD) {
-            return;
-        }
-
         final Tab tab = mTabReference.get();
 
         if (tab == null) {
