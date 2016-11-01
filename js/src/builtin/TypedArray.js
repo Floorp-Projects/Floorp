@@ -1669,9 +1669,73 @@ function ArrayBufferSpecies() {
 }
 _SetCanonicalName(ArrayBufferSpecies, "get [Symbol.species]");
 
-// ES 2017 proposal
+// Shared memory and atomics proposal (30 Oct 2016)
 function SharedArrayBufferSpecies() {
     // Step 1.
     return this;
 }
 _SetCanonicalName(SharedArrayBufferSpecies, "get [Symbol.species]");
+
+// Shared memory and atomics proposal 6.2.1.5.3 (30 Oct 2016)
+// http://tc39.github.io/ecmascript_sharedmem/shmem.html
+function SharedArrayBufferSlice(start, end) {
+    // Step 1.
+    var O = this;
+
+    // Steps 2-4,
+    // This function is not generic.
+    if (!IsObject(O) || !IsSharedArrayBuffer(O)) {
+        return callFunction(CallSharedArrayBufferMethodIfWrapped, O, start, end,
+                            "SharedArrayBufferSlice");
+    }
+
+    // Step 5.
+    var len = SharedArrayBufferByteLength(O);
+
+    // Step 6.
+    var relativeStart = ToInteger(start);
+
+    // Step 7.
+    var first = relativeStart < 0 ? std_Math_max(len + relativeStart, 0)
+                                  : std_Math_min(relativeStart, len);
+
+    // Step 8.
+    var relativeEnd = end === undefined ? len
+                                        : ToInteger(end);
+
+    // Step 9.
+    var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0)
+                                : std_Math_min(relativeEnd, len);
+
+    // Step 10.
+    var newLen = std_Math_max(final - first, 0);
+
+    // Step 11
+    var ctor = SpeciesConstructor(O, GetBuiltinConstructor("SharedArrayBuffer"));
+
+    // Step 12.
+    var new_ = new ctor(newLen);
+
+    // Step 13.
+    var isWrapped = false;
+    if (!IsSharedArrayBuffer(new_)) {
+        if (!IsWrappedSharedArrayBuffer(new_))
+            ThrowTypeError(JSMSG_NON_SHARED_ARRAY_BUFFER_RETURNED);
+        isWrapped = true;
+    }
+
+    // Step 14.
+    if (new_ === O)
+        ThrowTypeError(JSMSG_SAME_SHARED_ARRAY_BUFFER_RETURNED);
+
+    // Step 15.
+    var actualLen = PossiblyWrappedSharedArrayBufferByteLength(new_);
+    if (actualLen < newLen)
+        ThrowTypeError(JSMSG_SHORT_SHARED_ARRAY_BUFFER_RETURNED, newLen, actualLen);
+
+    // Steps 16-18.
+    SharedArrayBufferCopyData(new_, O, first | 0, newLen | 0, isWrapped);
+
+    // Step 19.
+    return new_;
+}

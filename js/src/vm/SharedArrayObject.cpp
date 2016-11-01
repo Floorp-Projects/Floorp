@@ -327,6 +327,20 @@ SharedArrayBufferObject::addSizeOfExcludingThis(JSObject* obj, mozilla::MallocSi
         buf.byteLength() / buf.rawBufferObject()->refcount();
 }
 
+/* static */ void
+SharedArrayBufferObject::copyData(Handle<SharedArrayBufferObject*> toBuffer,
+                                  Handle<SharedArrayBufferObject*> fromBuffer,
+                                  uint32_t fromIndex, uint32_t count)
+{
+    MOZ_ASSERT(toBuffer->byteLength() >= count);
+    MOZ_ASSERT(fromBuffer->byteLength() >= fromIndex);
+    MOZ_ASSERT(fromBuffer->byteLength() >= fromIndex + count);
+
+    jit::AtomicOperations::memcpySafeWhenRacy(toBuffer->dataPointerShared(),
+                                              fromBuffer->dataPointerShared() + fromIndex,
+                                              count);
+}
+
 static const ClassSpec SharedArrayBufferObjectProtoClassSpec = {
     DELEGATED_CLASSSPEC(SharedArrayBufferObject::class_.spec),
     nullptr,
@@ -376,6 +390,7 @@ static const JSPropertySpec static_properties[] = {
 };
 
 static const JSFunctionSpec prototype_functions[] = {
+    JS_SELF_HOSTED_FN("slice", "SharedArrayBufferSlice", 2, 0),
     JS_FS_END
 };
 
