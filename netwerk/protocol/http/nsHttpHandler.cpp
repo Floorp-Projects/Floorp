@@ -331,7 +331,7 @@ nsHttpHandler::Init()
           appInfo->GetName(mAppName);
         }
         appInfo->GetVersion(mAppVersion);
-        mAppName.StripChars(" ()<>@,;:\\\"/[]?={}");
+        mAppName.StripChars(R"( ()<>@,;:\"/[]?={})");
     } else {
         mAppVersion.AssignLiteral(MOZ_APP_UA_VERSION);
     }
