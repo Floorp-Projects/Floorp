@@ -252,10 +252,6 @@ public:
                         const nsString& aGMPName,
                         const bool& aInPrivateBrowsing,
                         nsCString* aID) override;
-  static bool RecvGetGMPPluginVersionForAPI(const nsCString& aAPI,
-                                            nsTArray<nsCString>&& aTags,
-                                            bool* aHasPlugin,
-                                            nsCString* aVersion);
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   static PGMPServiceParent* Create(Transport* aTransport, ProcessId aOtherPid);

@@ -2044,20 +2044,6 @@ GMPServiceParent::RecvGetGMPNodeId(const nsString& aOrigin,
   return NS_SUCCEEDED(rv);
 }
 
-/* static */
-bool
-GMPServiceParent::RecvGetGMPPluginVersionForAPI(const nsCString& aAPI,
-                                                nsTArray<nsCString>&& aTags,
-                                                bool* aHasPlugin,
-                                                nsCString* aVersion)
-{
-  RefPtr<GeckoMediaPluginServiceParent> service =
-    GeckoMediaPluginServiceParent::GetSingleton();
-  return service &&
-         NS_SUCCEEDED(service->GetPluginVersionForAPI(aAPI, &aTags, aHasPlugin,
-                                                      *aVersion));
-}
-
 class DeleteGMPServiceParent : public mozilla::Runnable
 {
 public:
