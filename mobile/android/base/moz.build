@@ -564,6 +564,8 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'media/MediaDrmProxy.java',
     'media/MediaManager.java',
     'media/RemoteManager.java',
+    'media/RemoteMediaDrmBridge.java',
+    'media/RemoteMediaDrmBridgeStub.java',
     'media/Sample.java',
     'media/SamplePool.java',
     'media/SessionKeyInfo.java',
