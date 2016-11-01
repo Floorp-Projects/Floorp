@@ -441,6 +441,8 @@ function checkMediaStreamCloneAgainstOriginal(clone, original) {
      "All audio tracks should get cloned");
   is(clone.getVideoTracks().length, original.getVideoTracks().length,
      "All video tracks should get cloned");
+  is(clone.active, original.active,
+     "Active state should be preserved");
   original.getTracks()
           .forEach(t => ok(!clone.getTrackById(t.id),
                            "The clone's tracks should be originals"));
@@ -457,6 +459,8 @@ function checkMediaStreamTrackCloneAgainstOriginal(clone, original) {
      "Track clone's kind should be same as the original's");
   is(clone.enabled, original.enabled,
      "Track clone's kind should be same as the original's");
+  is(clone.readyState, original.readyState,
+     "Track clone's readyState should be same as the original's");
 }
 
 /*** Utility methods */
