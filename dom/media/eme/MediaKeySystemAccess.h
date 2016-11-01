@@ -34,7 +34,6 @@ public:
 public:
   explicit MediaKeySystemAccess(nsPIDOMWindowInner* aParent,
                                 const nsAString& aKeySystem,
-                                const nsAString& aCDMVersion,
                                 const MediaKeySystemConfiguration& aConfig);
 
 protected:
@@ -50,8 +49,6 @@ public:
   void GetConfiguration(MediaKeySystemConfiguration& aConfig);
 
   already_AddRefed<Promise> CreateMediaKeys(ErrorResult& aRv);
-
-
 
   static MediaKeySystemStatus GetKeySystemStatus(const nsAString& aKeySystem,
                                                  int32_t aMinCdmVersion,
@@ -77,7 +74,6 @@ public:
 private:
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   const nsString mKeySystem;
-  const nsString mCDMVersion;
   const MediaKeySystemConfiguration mConfig;
 };
 

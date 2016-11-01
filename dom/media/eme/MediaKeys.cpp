@@ -49,11 +49,9 @@ NS_INTERFACE_MAP_END
 
 MediaKeys::MediaKeys(nsPIDOMWindowInner* aParent,
                      const nsAString& aKeySystem,
-                     const nsAString& aCDMVersion,
                      const MediaKeySystemConfiguration& aConfig)
   : mParent(aParent)
   , mKeySystem(aKeySystem)
-  , mCDMVersion(aCDMVersion)
   , mCreatePromiseId(0)
   , mConfig(aConfig)
 {
@@ -483,12 +481,11 @@ MediaKeys::CreateSession(JSContext* aCx,
   EME_LOG("MediaKeys[%p] Creating session", this);
 
   RefPtr<MediaKeySession> session = new MediaKeySession(aCx,
-                                                          GetParentObject(),
-                                                          this,
-                                                          mKeySystem,
-                                                          mCDMVersion,
-                                                          aSessionType,
-                                                          aRv);
+                                                        GetParentObject(),
+                                                        this,
+                                                        mKeySystem,
+                                                        aSessionType,
+                                                        aRv);
 
   if (aRv.Failed()) {
     return nullptr;
