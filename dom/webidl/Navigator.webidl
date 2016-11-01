@@ -235,6 +235,12 @@ partial interface Navigator {
    */
   [Throws, Pref="dom.wakelock.enabled", Func="Navigator::HasWakeLockSupport", UnsafeInPrerendering]
   MozWakeLock requestWakeLock(DOMString aTopic);
+
+  /**
+   * Make CPU instruction subset information available for UpdateUtils.
+   */
+  [ChromeOnly]
+  readonly attribute boolean cpuHasSSE2;
 };
 
 partial interface Navigator {
