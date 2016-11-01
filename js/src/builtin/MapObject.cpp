@@ -193,8 +193,8 @@ MapIteratorObject::finalize(FreeOp* fop, JSObject* obj)
 }
 
 bool
-MapIteratorObject::next(JSContext* cx, Handle<MapIteratorObject*> mapIterator,
-                        HandleArrayObject resultPairObj)
+MapIteratorObject::next(Handle<MapIteratorObject*> mapIterator, HandleArrayObject resultPairObj,
+                        JSContext* cx)
 {
     // Check invariants for inlined _GetNextMapEntryForIterator.
 
@@ -880,14 +880,15 @@ const Class SetIteratorObject::class_ = {
 };
 
 const JSFunctionSpec SetIteratorObject::methods[] = {
-    JS_FN("next", next, 0, 0),
+    JS_SELF_HOSTED_FN("next", "SetIteratorNext", 0, 0),
     JS_FS_END
 };
 
-inline ValueSet::Range*
-SetIteratorObject::range()
+static inline ValueSet::Range*
+SetIteratorObjectRange(NativeObject* obj)
 {
-    return static_cast<ValueSet::Range*>(getSlot(RangeSlot).toPrivate());
+    MOZ_ASSERT(obj->is<SetIteratorObject>());
+    return static_cast<ValueSet::Range*>(obj->getSlot(SetIteratorObject::RangeSlot).toPrivate());
 }
 
 inline SetObject::IteratorKind
@@ -920,6 +921,8 @@ SetIteratorObject*
 SetIteratorObject::create(JSContext* cx, HandleObject setobj, ValueSet* data,
                           SetObject::IteratorKind kind)
 {
+    MOZ_ASSERT(kind != SetObject::Keys);
+
     Rooted<GlobalObject*> global(cx, &setobj->global());
     Rooted<JSObject*> proto(cx, GlobalObject::getOrCreateSetIteratorPrototype(cx, global));
     if (!proto)
@@ -935,8 +938,8 @@ SetIteratorObject::create(JSContext* cx, HandleObject setobj, ValueSet* data,
         return nullptr;
     }
     iterobj->setSlot(TargetSlot, ObjectValue(*setobj));
-    iterobj->setSlot(KindSlot, Int32Value(int32_t(kind)));
     iterobj->setSlot(RangeSlot, PrivateValue(range));
+    iterobj->setSlot(KindSlot, Int32Value(int32_t(kind)));
     return iterobj;
 }
 
@@ -944,63 +947,52 @@ void
 SetIteratorObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onMainThread());
-    fop->delete_(obj->as<SetIteratorObject>().range());
+    fop->delete_(SetIteratorObjectRange(static_cast<NativeObject*>(obj)));
 }
 
 bool
-SetIteratorObject::is(HandleValue v)
+SetIteratorObject::next(Handle<SetIteratorObject*> setIterator, HandleArrayObject resultObj,
+                        JSContext* cx)
 {
-    return v.isObject() && v.toObject().is<SetIteratorObject>();
-}
+    // The array should be tenured, so that post-barrier can be done simply.
+    MOZ_ASSERT(resultObj->isTenured());
 
-bool
-SetIteratorObject::next_impl(JSContext* cx, const CallArgs& args)
-{
-    SetIteratorObject& thisobj = args.thisv().toObject().as<SetIteratorObject>();
-    ValueSet::Range* range = thisobj.range();
-    RootedValue value(cx);
-    bool done;
+    // The array elements should be fixed.
+    MOZ_ASSERT(resultObj->hasFixedElements());
+    MOZ_ASSERT(resultObj->getDenseInitializedLength() == 1);
+    MOZ_ASSERT(resultObj->getDenseCapacity() >= 1);
 
+    ValueSet::Range* range = SetIteratorObjectRange(setIterator);
     if (!range || range->empty()) {
         js_delete(range);
-        thisobj.setReservedSlot(RangeSlot, PrivateValue(nullptr));
-        value.setUndefined();
-        done = true;
-    } else {
-        switch (thisobj.kind()) {
-          case SetObject::Values:
-            value = range->front().get();
-            break;
-
-          case SetObject::Entries: {
-            JS::AutoValueArray<2> pair(cx);
-            pair[0].set(range->front().get());
-            pair[1].set(range->front().get());
-
-            JSObject* pairObj = NewDenseCopiedArray(cx, 2, pair.begin());
-            if (!pairObj)
-              return false;
-            value.setObject(*pairObj);
-            break;
-          }
-        }
-        range->popFront();
-        done = false;
+        setIterator->setReservedSlot(RangeSlot, PrivateValue(nullptr));
+        return true;
     }
-
-    RootedObject result(cx, CreateItrResultObject(cx, value, done));
-    if (!result)
-        return false;
-    args.rval().setObject(*result);
-
-    return true;
+    resultObj->setDenseElementWithType(cx, 0, range->front().get());
+    range->popFront();
+    return false;
 }
 
-bool
-SetIteratorObject::next(JSContext* cx, unsigned argc, Value* vp)
+/* static */ JSObject*
+SetIteratorObject::createResult(JSContext* cx)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, is, next_impl, args);
+    RootedArrayObject resultObj(cx, NewDenseFullyAllocatedArray(cx, 1, nullptr, TenuredObject));
+    if (!resultObj)
+        return nullptr;
+
+    Rooted<TaggedProto> proto(cx, resultObj->taggedProto());
+    ObjectGroup* group = ObjectGroupCompartment::makeGroup(cx, resultObj->getClass(), proto);
+    if (!group)
+        return nullptr;
+    resultObj->setGroup(group);
+
+    resultObj->setDenseInitializedLength(1);
+    resultObj->initDenseElement(0, NullValue());
+
+    // See comments in SetIteratorObject::next.
+    AddTypePropertyId(cx, resultObj, JSID_VOID, TypeSet::UnknownType());
+
+    return resultObj;
 }
 
 
@@ -1450,17 +1442,6 @@ JSObject*
 js::InitSetClass(JSContext* cx, HandleObject obj)
 {
     return SetObject::initClass(cx, obj);
-}
-
-const JSFunctionSpec selfhosting_collection_iterator_methods[] = {
-    JS_FN("std_Set_iterator_next", SetIteratorObject::next, 0, 0),
-    JS_FS_END
-};
-
-bool
-js::InitSelfHostingCollectionIteratorFunctions(JSContext* cx, HandleObject obj)
-{
-    return DefineFunctions(cx, obj, selfhosting_collection_iterator_methods, AsIntrinsic);
 }
 
 /*** JS static utility functions *********************************************/
