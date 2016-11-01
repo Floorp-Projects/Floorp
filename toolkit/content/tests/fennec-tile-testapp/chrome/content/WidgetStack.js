@@ -39,13 +39,11 @@ function dumpJSStack(stopAtNamedFunction) {
 }
 
 function log() {
-  return;
-  logbase.apply(window, arguments);
+  // logbase.apply(window, arguments);
 }
 
 function log2() {
-  return;
-  logbase.apply(window, arguments);
+  // logbase.apply(window, arguments);
 }
 
 var reportError = log;

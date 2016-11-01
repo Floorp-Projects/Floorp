@@ -366,6 +366,7 @@ add_task(function* canUndoUninstallDisabled() {
 add_task(function* uninstallLWTOffersUndo() {
   // skipped since lightweight themes don't support undoable uninstall yet
   return;
+  /*
   LightweightThemeManager.currentTheme = dummyLWTheme("theme1");
 
   let [ t1, d ] = yield promiseAddonsByIDs(["theme1@personas.mozilla.org",
@@ -418,4 +419,5 @@ add_task(function* uninstallLWTOffersUndo() {
   do_check_eq(t1, null);
 
   do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
+  */
 });

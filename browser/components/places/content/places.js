@@ -79,7 +79,6 @@ var PlacesOrganizer = {
             break;
           default:
             throw new Error("Invalid container type found: " + container);
-            break;
         }
         PlacesUtils.asContainer(this._places.selectedNode).containerOpen = true;
       }
@@ -974,7 +973,6 @@ var PlacesQueryBuilder = {
         break;
       default:
         throw "Invalid search scope";
-        break;
     }
 
     // Update the search box.  Re-search if there's an active search.

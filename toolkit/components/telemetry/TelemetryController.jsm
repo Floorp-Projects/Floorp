@@ -837,7 +837,6 @@ var Impl = {
     case "app-startup":
       // app-startup is only registered for content processes.
       return this.setupContentTelemetry();
-      break;
     }
     return undefined;
   },

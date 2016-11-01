@@ -356,7 +356,6 @@ const queryOptionSwitches = [
           case aOptions1.SORT_BY_ANNOTATION_ASCENDING:
           case aOptions1.SORT_BY_ANNOTATION_DESCENDING:
             return aOptions1.sortingAnnotation === aOptions2.sortingAnnotation;
-            break;
         }
         return true;
       }
