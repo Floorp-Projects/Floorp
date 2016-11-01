@@ -72,6 +72,8 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
                                            ServoStyleSet* aStyleSet,
                                            nsStyleChangeList& aChangeListToProcess)
 {
+  MOZ_ASSERT(aContent->IsElement() || aContent->IsNodeOfType(nsINode::eTEXT));
+
   nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
   if (!primaryFrame && !aContent->IsDirtyForServo()) {
     // This happens when, for example, a display: none child of a
@@ -79,42 +81,55 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
     return;
   }
 
-  if (aContent->IsDirtyForServo()) {
+  // Work on text before.
+  if (!aContent->IsElement()) {
+    if (primaryFrame) {
+      RefPtr<nsStyleContext> oldStyleContext = primaryFrame->StyleContext();
+      RefPtr<nsStyleContext> newContext =
+        aStyleSet->ResolveStyleForText(aContent, aParentContext);
+
+      for (nsIFrame* f = primaryFrame; f;
+           f = GetNextContinuationWithSameStyle(f, oldStyleContext)) {
+        f->SetStyleContext(newContext);
+      }
+    }
+
+    aContent->UnsetIsDirtyForServo();
+    return;
+  }
+
+  Element* element = aContent->AsElement();
+  if (element->IsDirtyForServo()) {
     RefPtr<ServoComputedValues> computedValues =
       Servo_ComputedValues_Get(aContent).Consume();
     MOZ_ASSERT(computedValues);
 
     nsChangeHint changeHint = nsChangeHint(0);
-    // NB: Change hint processing only applies to elements, at least until we
-    // support display: contents.
-    if (aContent->IsElement()) {
-      Element* element = aContent->AsElement();
 
-      // Add an explicit change hint if appropriate.
-      ServoElementSnapshot* snapshot;
-      if (mModifiedElements.Get(element, &snapshot)) {
-        changeHint |= snapshot->ExplicitChangeHint();
-      }
+    // Add an explicit change hint if appropriate.
+    ServoElementSnapshot* snapshot;
+    if (mModifiedElements.Get(element, &snapshot)) {
+      changeHint |= snapshot->ExplicitChangeHint();
+    }
 
-      // Add the stored change hint if there's a frame. If there isn't a frame,
-      // generate a ReconstructFrame change hint if the new display value
-      // (which we can get from the ComputedValues stored on the node) is not
-      // none.
-      if (primaryFrame) {
-        changeHint |= primaryFrame->StyleContext()->ConsumeStoredChangeHint();
-      } else {
-        const nsStyleDisplay* currentDisplay =
-          Servo_GetStyleDisplay(computedValues);
-        if (currentDisplay->mDisplay != StyleDisplay::None) {
-          changeHint |= nsChangeHint_ReconstructFrame;
-        }
+    // Add the stored change hint if there's a frame. If there isn't a frame,
+    // generate a ReconstructFrame change hint if the new display value
+    // (which we can get from the ComputedValues stored on the node) is not
+    // none.
+    if (primaryFrame) {
+      changeHint |= primaryFrame->StyleContext()->ConsumeStoredChangeHint();
+    } else {
+      const nsStyleDisplay* currentDisplay =
+        Servo_GetStyleDisplay(computedValues);
+      if (currentDisplay->mDisplay != StyleDisplay::None) {
+        changeHint |= nsChangeHint_ReconstructFrame;
       }
+    }
 
-      // Add the new change hint to the list of elements to process if
-      // we need to do any work.
-      if (changeHint) {
-        aChangeListToProcess.AppendChange(primaryFrame, element, changeHint);
-      }
+    // Add the new change hint to the list of elements to process if
+    // we need to do any work.
+    if (changeHint) {
+      aChangeListToProcess.AppendChange(primaryFrame, element, changeHint);
     }
 
     // The frame reconstruction step (if needed) will ask for the descendants'
@@ -131,8 +146,6 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
     RefPtr<nsStyleContext> oldStyleContext = primaryFrame->StyleContext();
     MOZ_ASSERT(oldStyleContext);
 
-    // TODO: Figure out what pseudos does this content have, and do the proper
-    // thing with them.
     RefPtr<nsStyleContext> newContext =
       aStyleSet->GetContext(computedValues.forget(), aParentContext, nullptr,
                             CSSPseudoElementType::NotPseudo);
@@ -146,45 +159,40 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
     }
 
     // Update pseudo-elements state if appropriate.
-    if (aContent->IsElement()) {
-      Element* aElement = aContent->AsElement();
-      const static CSSPseudoElementType pseudosToRestyle[] = {
-        CSSPseudoElementType::before,
-        CSSPseudoElementType::after,
-      };
+    const static CSSPseudoElementType pseudosToRestyle[] = {
+      CSSPseudoElementType::before,
+      CSSPseudoElementType::after,
+    };
 
-      for (CSSPseudoElementType pseudoType : pseudosToRestyle) {
-        nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(pseudoType);
+    for (CSSPseudoElementType pseudoType : pseudosToRestyle) {
+      nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(pseudoType);
 
-        if (nsIFrame* pseudoFrame =
-              FrameForPseudoElement(aElement, pseudoTag)) {
-          // TODO: we could maybe make this more performant via calling into
-          // Servo just once to know which pseudo-elements we've got to restyle?
-          RefPtr<nsStyleContext> pseudoContext =
-            aStyleSet->ProbePseudoElementStyle(aElement, pseudoType,
-                                               newContext);
+      if (nsIFrame* pseudoFrame = FrameForPseudoElement(element, pseudoTag)) {
+        // TODO: we could maybe make this more performant via calling into
+        // Servo just once to know which pseudo-elements we've got to restyle?
+        RefPtr<nsStyleContext> pseudoContext =
+          aStyleSet->ProbePseudoElementStyle(element, pseudoType, newContext);
 
-          // If pseudoContext is null here, it means the frame is going away, so
-          // our change hint computation should have already indicated we need
-          // to reframe.
-          MOZ_ASSERT_IF(!pseudoContext,
-                        changeHint & nsChangeHint_ReconstructFrame);
-          if (pseudoContext) {
-            pseudoFrame->SetStyleContext(pseudoContext);
+        // If pseudoContext is null here, it means the frame is going away, so
+        // our change hint computation should have already indicated we need
+        // to reframe.
+        MOZ_ASSERT_IF(!pseudoContext,
+                      changeHint & nsChangeHint_ReconstructFrame);
+        if (pseudoContext) {
+          pseudoFrame->SetStyleContext(pseudoContext);
 
-            // We only care restyling text nodes, since other type of nodes
-            // (images), are still not supported. If that eventually changes, we
-            // may have to write more code here... Or not, I don't think too
-            // many inherited properties can affect those other frames.
-            StyleChildrenIterator it(pseudoFrame->GetContent());
-            for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
-              if (n->IsNodeOfType(nsINode::eTEXT)) {
-                RefPtr<nsStyleContext> childContext =
-                  aStyleSet->ResolveStyleForText(n, pseudoContext);
-                MOZ_ASSERT(n->GetPrimaryFrame(),
-                           "How? This node is created at FC time!");
-                n->GetPrimaryFrame()->SetStyleContext(childContext);
-              }
+          // We only care restyling text nodes, since other type of nodes
+          // (images), are still not supported. If that eventually changes, we
+          // may have to write more code here... Or not, I don't think too
+          // many inherited properties can affect those other frames.
+          StyleChildrenIterator it(pseudoFrame->GetContent());
+          for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+            if (n->IsNodeOfType(nsINode::eTEXT)) {
+              RefPtr<nsStyleContext> childContext =
+                aStyleSet->ResolveStyleForText(n, pseudoContext);
+              MOZ_ASSERT(n->GetPrimaryFrame(),
+                         "How? This node is created at FC time!");
+              n->GetPrimaryFrame()->SetStyleContext(childContext);
             }
           }
         }
@@ -200,8 +208,10 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
                "correct style for the children, so no need to be here.");
     StyleChildrenIterator it(aContent);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
-      RecreateStyleContexts(n, primaryFrame->StyleContext(),
-                            aStyleSet, aChangeListToProcess);
+      if (n->IsElement() || n->IsNodeOfType(nsINode::eTEXT)) {
+        RecreateStyleContexts(n, primaryFrame->StyleContext(),
+                              aStyleSet, aChangeListToProcess);
+      }
     }
     aContent->UnsetHasDirtyDescendantsForServo();
   }
