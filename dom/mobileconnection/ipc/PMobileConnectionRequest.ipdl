@@ -1,0 +1,100 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PMobileConnection;
+include PMobileConnectionTypes;
+
+namespace mozilla {
+namespace dom {
+namespace mobileconnection {
+
+protocol PMobileConnectionRequest
+{
+  manager PMobileConnection;
+
+child:
+  /**
+   * Send when asynchronous request has completed.
+   */
+  async __delete__(MobileConnectionReply aResponse);
+};
+
+/**
+ * MobileConnectionReply
+ */
+// Success
+struct MobileConnectionReplySuccess
+{
+};
+
+struct MobileConnectionReplySuccessBoolean
+{
+  bool result;
+};
+
+struct MobileConnectionReplySuccessNetworks
+{
+  nsMobileNetworkInfo[] results;
+};
+
+struct MobileConnectionReplySuccessCallForwarding
+{
+  nsMobileCallForwardingOptions[] results;
+};
+
+struct MobileConnectionReplySuccessCallBarring
+{
+  uint16_t program;
+  bool enabled;
+  uint16_t serviceClass;
+};
+
+struct MobileConnectionReplySuccessCallWaiting
+{
+  uint16_t serviceClass;
+};
+
+struct MobileConnectionReplySuccessClirStatus
+{
+  uint16_t n;
+  uint16_t m;
+};
+
+struct MobileConnectionReplySuccessPreferredNetworkType
+{
+  int32_t type;
+};
+
+struct MobileConnectionReplySuccessRoamingPreference
+{
+  int32_t mode;
+};
+
+// Error
+struct MobileConnectionReplyError
+{
+  nsString message;
+};
+
+union MobileConnectionReply
+{
+  // Success
+  MobileConnectionReplySuccess;
+  MobileConnectionReplySuccessBoolean;
+  MobileConnectionReplySuccessNetworks;
+  MobileConnectionReplySuccessCallForwarding;
+  MobileConnectionReplySuccessCallBarring;
+  MobileConnectionReplySuccessCallWaiting;
+  MobileConnectionReplySuccessClirStatus;
+  MobileConnectionReplySuccessPreferredNetworkType;
+  MobileConnectionReplySuccessRoamingPreference;
+  // Error
+  MobileConnectionReplyError;
+};
+
+} // namespace mobileconnection
+} // namespace dom
+} // namespace mozilla

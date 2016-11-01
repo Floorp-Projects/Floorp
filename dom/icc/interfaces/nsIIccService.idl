@@ -1,0 +1,538 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIIcc;
+interface nsIIccContact;
+interface nsIIccInfo;
+interface nsIStkDownloadEvent;
+interface nsIStkProactiveCmd;
+interface nsIStkTerminalResponse;
+
+[scriptable, uuid(71b33012-eca2-11e4-a40d-9ff040a6fe2a)]
+interface nsIIccListener : nsISupports
+{
+  void notifyStkCommand(in nsIStkProactiveCmd aStkProactiveCmd);
+  void notifyStkSessionEnd();
+  void notifyCardStateChanged();
+  void notifyIccInfoChanged();
+};
+
+/**
+ * A callback interface for handling asynchronous response.
+ */
+[scriptable, uuid(b7b0623f-fb2c-4cec-b0dc-00ac2fe7b296)]
+interface nsIIccCallback : nsISupports
+{
+  /**
+   * The success callback with no result required:
+   * |unlockCardLock|, |setCardLockEnabled| and |changeCardLockPassword|.
+   */
+  void notifySuccess();
+
+  /**
+   * The success callback with boolean response:
+   * |getCardLockEnabled|, |matchMvno|, and |getServiceStateEnabled|.
+   */
+  void notifySuccessWithBoolean(in boolean aResult);
+
+  /**
+   * The success callback of |getCardLockRetryCount|.
+   *
+   * @param aCount
+   *        The number of remaining retries. -1 if unknown.
+   */
+  void notifyGetCardLockRetryCount(in long aCount);
+
+  /**
+   * The success callback of |readContacts|.
+   *
+   * @param aContacts
+   *        The list of contacts retrieved from ICC.
+   * @param aCount
+   *        The number of contacts retrieved from ICC.
+   */
+  void notifyRetrievedIccContacts([array, size_is(aCount)] in nsIIccContact aContacts,
+                                  in uint32_t aCount);
+
+  /**
+   * The success callback of |updateContact|.
+   *
+   * @param aContact
+   *        The contact with the updated result.
+   */
+  void notifyUpdatedIccContact(in nsIIccContact aContact);
+
+  /**
+   * The error callback of |getCardLockEnabled|, |getCardLockRetryCount|,
+   * |matchMvno|, |getServiceStateEnabled|, |readContacts| and |updateContact|.
+   *
+   * @param aErrorMsg
+   *        The error message.
+   */
+  void notifyError(in DOMString aErrorMsg);
+
+  /**
+   * The error callback of |unlockCardLock|, |setCardLockEnabled| and
+   * |changeCardLockPassword|.
+   *
+   * @param aErrorMsg
+   *        The error message.
+   * @param aRetryCount
+   *        The number of remaining retries. -1 if unknown.
+   */
+  void notifyCardLockError(in DOMString aErrorMsg, in long aRetryCount);
+};
+
+[scriptable, uuid(6136acab-b50e-494a-a86d-df392a032897)]
+interface nsIIccChannelCallback : nsISupports
+{
+  /**
+   * Callback function to notify on successfully opening a logical channel.
+   *
+   * @param channel
+   *        The Channel Number/Handle that is successfully opened.
+   */
+  void notifyOpenChannelSuccess(in long channel);
+
+  /**
+   * Callback function to notify on successfully closing the logical channel.
+   *
+   */
+  void notifyCloseChannelSuccess();
+
+  /**
+   * Callback function to notify the status of 'iccExchangeAPDU' command.
+   *
+   * @param sw1
+   *        Response's First Status Byte
+   * @param sw2
+   *        Response's Second Status Byte
+   * @param data
+   *        Response's data
+   */
+  void notifyExchangeAPDUResponse(in octet sw1,
+                                  in octet sw2,
+                                  in DOMString data);
+
+  /**
+   * Callback function to notify error
+   *
+   */
+  void notifyError(in DOMString error);
+};
+
+%{C++
+#define ICC_SERVICE_CID \
+  { 0xbab0277a, 0x900e, 0x11e4, { 0x80, 0xc7, 0xdb, 0xd7, 0xad, 0x05, 0x24, 0x01 } }
+#define ICC_SERVICE_CONTRACTID \
+  "@mozilla.org/icc/iccservice;1"
+
+template<typename T> struct already_AddRefed;
+%}
+
+/**
+ * XPCOM Service for the selection of the ICC to be accessed.
+ */
+[scriptable, uuid(6590a04c-9ca4-11e4-ae95-570876ecc428)]
+interface nsIIccService : nsISupports
+{
+  /**
+   * Get Icc instance with specified Service Id.
+   *
+   * @param aServiceId
+   *        Started from 0 to nsIMobileConnectionService.numItems - 1;
+   *
+   * @return a nsIcc instance.
+   */
+  nsIIcc getIccByServiceId(in unsigned long aServiceId);
+};
+
+%{C++
+already_AddRefed<nsIIccService>
+NS_CreateIccService();
+%}
+
+/**
+ * XPCOM component that provides the access to the selected ICC.
+ */
+[scriptable, uuid(1791f102-b081-4435-8555-37eb035fa4e2)]
+interface nsIIcc : nsISupports
+{
+  /**
+   * Card State Constants
+   *
+   * Note: MUST be matched with enum IccCardState in MozIcc.webidl!
+   */
+  const unsigned long CARD_STATE_UNKNOWN = 0;
+  const unsigned long CARD_STATE_READY = 1;
+  const unsigned long CARD_STATE_PIN_REQUIRED = 2;
+  const unsigned long CARD_STATE_PUK_REQUIRED = 3;
+  const unsigned long CARD_STATE_PERMANENT_BLOCKED = 4;
+  const unsigned long CARD_STATE_PERSONALIZATION_IN_PROGRESS = 5;
+  const unsigned long CARD_STATE_PERSONALIZATION_READY = 6;
+  const unsigned long CARD_STATE_NETWORK_LOCKED = 7;
+  const unsigned long CARD_STATE_NETWORK_SUBSET_LOCKED = 8;
+  const unsigned long CARD_STATE_CORPORATE_LOCKED = 9;
+  const unsigned long CARD_STATE_SERVICE_PROVIDER_LOCKED = 10;
+  const unsigned long CARD_STATE_SIM_LOCKED = 11;
+  const unsigned long CARD_STATE_NETWORK_PUK_REQUIRED = 12;
+  const unsigned long CARD_STATE_NETWORK_SUBSET_PUK_REQUIRED = 13;
+  const unsigned long CARD_STATE_CORPORATE_PUK_REQUIRED = 14;
+  const unsigned long CARD_STATE_SERVICE_PROVIDER_PUK_REQUIRED = 15;
+  const unsigned long CARD_STATE_SIM_PUK_REQUIRED = 16;
+  const unsigned long CARD_STATE_NETWORK1_LOCKED = 17;
+  const unsigned long CARD_STATE_NETWORK2_LOCKED = 18;
+  const unsigned long CARD_STATE_HRPD_NETWORK_LOCKED = 19;
+  const unsigned long CARD_STATE_RUIM_CORPORATE_LOCKED = 20;
+  const unsigned long CARD_STATE_RUIM_SERVICE_PROVIDER_LOCKED = 21;
+  const unsigned long CARD_STATE_RUIM_LOCKED = 22;
+  const unsigned long CARD_STATE_NETWORK1_PUK_REQUIRED = 23;
+  const unsigned long CARD_STATE_NETWORK2_PUK_REQUIRED = 24;
+  const unsigned long CARD_STATE_HRPD_NETWORK_PUK_REQUIRED = 25;
+  const unsigned long CARD_STATE_RUIM_CORPORATE_PUK_REQUIRED = 26;
+  const unsigned long CARD_STATE_RUIM_SERVICE_PROVIDER_PUK_REQUIRED = 27;
+  const unsigned long CARD_STATE_RUIM_PUK_REQUIRED = 28;
+  const unsigned long CARD_STATE_ILLEGAL = 29;
+
+  const unsigned long CARD_STATE_UNDETECTED = 4294967295; // UINT32_MAX
+
+  /**
+   * Card Lock Constants
+   *
+   * Note: MUST be matched with enum IccLockType in MozIcc.webidl!
+   */
+  const unsigned long CARD_LOCK_TYPE_PIN = 0;
+  const unsigned long CARD_LOCK_TYPE_PIN2 = 1;
+  const unsigned long CARD_LOCK_TYPE_PUK = 2;
+  const unsigned long CARD_LOCK_TYPE_PUK2 = 3;
+  const unsigned long CARD_LOCK_TYPE_NCK = 4;
+  const unsigned long CARD_LOCK_TYPE_NSCK = 5;
+  const unsigned long CARD_LOCK_TYPE_NCK1 = 6;
+  const unsigned long CARD_LOCK_TYPE_NCK2 = 7;
+  const unsigned long CARD_LOCK_TYPE_HNCK = 8;
+  const unsigned long CARD_LOCK_TYPE_CCK = 9;
+  const unsigned long CARD_LOCK_TYPE_SPCK = 10;
+  const unsigned long CARD_LOCK_TYPE_PCK = 11;
+  const unsigned long CARD_LOCK_TYPE_RCCK = 12;
+  const unsigned long CARD_LOCK_TYPE_RSPCK = 13;
+  const unsigned long CARD_LOCK_TYPE_NCK_PUK = 14;
+  const unsigned long CARD_LOCK_TYPE_NSCK_PUK = 15;
+  const unsigned long CARD_LOCK_TYPE_NCK1_PUK = 16;
+  const unsigned long CARD_LOCK_TYPE_NCK2_PUK = 17;
+  const unsigned long CARD_LOCK_TYPE_HNCK_PUK = 18;
+  const unsigned long CARD_LOCK_TYPE_CCK_PUK = 19;
+  const unsigned long CARD_LOCK_TYPE_SPCK_PUK = 20;
+  const unsigned long CARD_LOCK_TYPE_PCK_PUK = 21;
+  const unsigned long CARD_LOCK_TYPE_RCCK_PUK = 22;
+  const unsigned long CARD_LOCK_TYPE_RSPCK_PUK = 23;
+  const unsigned long CARD_LOCK_TYPE_FDN = 24;
+
+  /**
+   * Contact Type Constants
+   *
+   * Note: MUST be matched with enum IccContactType in MozIcc.webidl!
+   */
+  const unsigned long CARD_CONTACT_TYPE_ADN = 0;
+  const unsigned long CARD_CONTACT_TYPE_FDN = 1;
+  const unsigned long CARD_CONTACT_TYPE_SDN = 2;
+
+  /**
+   * MVNO Type Constants
+   *
+   * Note: MUST be matched with enum IccMvnoType in MozIcc.webidl!
+   */
+  const unsigned long CARD_MVNO_TYPE_IMSI = 0;
+  const unsigned long CARD_MVNO_TYPE_SPN = 1;
+  const unsigned long CARD_MVNO_TYPE_GID = 2;
+
+  /**
+   * Card Service Constants
+   *
+   * Note: MUST be matched with enum IccService in MozIcc.webidl!
+   */
+  const unsigned long CARD_SERVICE_FDN = 0;
+
+  /**
+   * Icc Contact Type Constants
+   *
+   * Note: MUST be matched with enum IccContactType in MozIcc.webidl!
+   */
+  const unsigned long CONTACT_TYPE_ADN = 0;
+  const unsigned long CONTACT_TYPE_FDN = 1;
+  const unsigned long CONTACT_TYPE_SDN = 2;
+
+  /**
+   * Called to register icc-related changes.
+   *
+   * 'mobileconnection' permission is required to register.
+   */
+  void registerListener(in nsIIccListener aListener);
+  void unregisterListener(in nsIIccListener aListener);
+
+  /**
+   * Information stored in this ICC.
+   */
+  readonly attribute nsIIccInfo iccInfo;
+
+  /**
+   * Indicates the state of this ICC.
+   *
+   * One of the CARD_STATE_* values.
+   */
+  readonly attribute unsigned long cardState;
+
+  /**
+   * IMSI of this ICC.
+   */
+  readonly attribute DOMString imsi;
+
+  /**
+   * Get the status of an ICC lock (e.g. the PIN lock).
+   *
+   * @param aLockType
+   *        One of the CARD_LOCK_TYPE_* values.
+   * @param aCallback
+   *        An instance of nsIIccCallback:
+   *        nsIIccCallback::notifySuccessWithBoolean() if success.
+   *        nsIIccCallback::notifyError(), otherwise.
+   */
+  void getCardLockEnabled(in unsigned long aLockType,
+                          in nsIIccCallback aCallback);
+
+  /**
+   * Unlock a card lock.
+   *
+   * @param aLockType
+   *        One of the CARD_LOCK_TYPE_* values.
+   * @param aPassword
+   *        The password of this lock.
+   * @param aNewPin (Optional)
+   *        The new PIN to be set after PUK/PUK2 is unlock.
+   * @param aCallback
+   *        An instance of nsIIccCallback:
+   *        nsIIccCallback::notifySuccess() if success.
+   *        nsIIccCallback::notifyCardLockError(), otherwise.
+   */
+  void unlockCardLock(in unsigned long aLockType,
+                      in DOMString aPassword,
+                      in DOMString aNewPin,
+                      in nsIIccCallback aCallback);
+
+  /**
+   * Enable/Disable a card lock.
+   *
+   * @param aLockType
+   *        One of the CARD_LOCK_TYPE_* values.
+   * @param aPassword
+   *        The password of this lock.
+   * @param aEnabled.
+   *        True to enable the lock. False to disable, otherwise.
+   * @param aCallback
+   *        An instance of nsIIccCallback:
+   *        nsIIccCallback::notifySuccess() if success.
+   *        nsIIccCallback::notifyCardLockError(), otherwise.
+   */
+  void setCardLockEnabled(in unsigned long aLockType,
+                          in DOMString aPassword,
+                          in boolean aEnabled,
+                          in nsIIccCallback aCallback);
+
+  /**
+   * Change the password of a card lock.
+   *
+   * @param aLockType
+   *        One of the CARD_LOCK_TYPE_* values.
+   * @param aPassword
+   *        The password of this lock.
+   * @param aNewPassword.
+   *        The new password of this lock.
+   * @param aCallback
+   *        An instance of nsIIccCallback:
+   *        nsIIccCallback::notifySuccess() if success.
+   *        nsIIccCallback::notifyCardLockError(), otherwise.
+   */
+  void changeCardLockPassword(in unsigned long aLockType,
+                              in DOMString aPassword,
+                              in DOMString aNewPassword,
+                              in nsIIccCallback aCallback);
+
+  /**
+   * Get the number of remaining tries of a lock.
+   *
+   * @param aLockType
+   *        One of the CARD_LOCK_TYPE_* values.
+   * @param aCallback
+   *        An instance of nsIIccCallback:
+   *        nsIIccCallback::notifyGetCardLockRetryCount() if success.
+   *        nsIIccCallback::notifyError(), otherwise.
+   */
+  void getCardLockRetryCount(in unsigned long aLockType,
+                             in nsIIccCallback aCallback);
+
+  /**
+   * Verify whether the passed data (matchData) matches with some ICC's field
+   * according to the mvno type (mvnoType).
+   *
+   * @param aMvnoType
+   *        One of CARD_MVNO_TYPE_* values.
+   * @param aMvnoData
+   *        Data to be compared with ICC's field.
+   * @param aCallback
+   *        An instance of nsIIccCallback:
+   *        nsIIccCallback::notifySuccessWithBoolean() if success.
+   *        nsIIccCallback::notifyError(), otherwise.
+   */
+  void matchMvno(in unsigned long aMvnoType,
+                 in DOMString aMvnoData,
+                 in nsIIccCallback aCallback);
+
+  /**
+   * Retrieve the the availability of an icc service.
+   *
+   * @param aService
+   *        One of CARD_SERVICE_* values.
+   * @param aCallback
+   *        An instance of nsIIccCallback:
+   *        nsIIccCallback::notifySuccessWithBoolean() if success.
+   *        nsIIccCallback::notifyError(), otherwise.
+   */
+  void getServiceStateEnabled(in unsigned long aService,
+                              in nsIIccCallback aCallback);
+
+  /**
+   * Open Secure Card Icc communication channel
+   *
+   * @param aAid
+   *        Card Application Id in this UICC.
+   * @param aCallback
+   *        An instance of nsIIccChannelCallback.
+   *        nsIIccChannelCallback::notifyOpenChannelSuccess() if success.
+   *        nsIIccChannelCallback::notifyError(), otherwise.
+   */
+  void iccOpenChannel(in DOMString aAid,
+                      in nsIIccChannelCallback aCallback);
+
+  /**
+   * Exchange Command APDU (C-APDU) with UICC on the given logical channel.
+   * Note that 'P3' parameter could be Le/Lc depending on command APDU case.
+   * For Case 1 scenario (when only command header is present), the value
+   * of 'P3' should be set to '-1' explicitly.
+   * Refer to 3G TS 31.101 , 10.2 'Command APDU Structure' for all the cases.
+   *
+   * @param aChannel
+   *        given logical channel.
+   * @param aCla
+   *        APDU class.
+   * @param aIns
+   *        Instruction code.
+   * @param aP1, aP2, aP3
+   *        P1, P2, P3 parameters in APDU.
+   * @param aData
+   *        The hex data to be sent by this PDU.
+   * @param aCallback
+   *        An instance of nsIIccChannelCallback.
+   *        nsIIccChannelCallback::notifyExchangeAPDUResponse() if success.
+   *        nsIIccChannelCallback::notifyError(), otherwise.
+   */
+  void iccExchangeAPDU(in long aChannel,
+                       in octet aCla,
+                       in octet aIns,
+                       in octet aP1,
+                       in octet aP2,
+                       in short aP3,
+                       in DOMString aData,
+                       in nsIIccChannelCallback aCallback);
+
+  /**
+   * Close Secure Card Icc communication channel
+   *
+   * @param aChannel
+   *        Channel to be closed.
+   * @param aCallback
+   *        An instance of nsIIccChannelCallback.
+   *        nsIIccChannelCallback::notifyCloseChannelSuccess() if success.
+   *        nsIIccChannelCallback::notifyError(), otherwise.
+   */
+  void iccCloseChannel(in long aChannel,
+                       in nsIIccChannelCallback aCallback);
+
+  /**
+   * Send STK terminal response to the received proactive command.
+   *
+   * @param aCommand
+   *        The received proactive command.
+   * @param aResponse
+   *        The response to be reply to the card application that issues
+   *        this proactive command.
+   */
+   void sendStkResponse(in nsIStkProactiveCmd aCommand,
+                        in nsIStkTerminalResponse aResponse);
+
+  /**
+   * Send envelope to notify the selected item of the main STK menu.
+   *
+   * @param aItemIdentifier
+   *        The identifier of the menu item.
+   * @param aHelpRequested
+   *        True if help information of the selected item is requested by
+   *        the user.
+   */
+   void sendStkMenuSelection(in unsigned short aItemIdentifier,
+                             in boolean aHelpRequested);
+
+  /**
+   * Send envelope to notify the expiration of a requested timer.
+   *
+   * @param aTimerId
+   *        The TimerId provided from previous proactive command.
+   * @param aTimerValue
+   *        The real used seconds when expired.
+   */
+   void sendStkTimerExpiration(in unsigned short aTimerId,
+                               in unsigned long aTimerValue);
+
+  /**
+   * Send "Event Download" envelope to the ICC.
+   *
+   * @param aEvent
+   *        The event that ICC listening to in STK_CMD_SET_UP_EVENT_LIST.
+   */
+   void sendStkEventDownload(in nsIStkDownloadEvent aEvent);
+
+  /**
+   * Read Specified type of Contact from ICC.
+   *
+   * @param aContactType
+   *        One of CONTACT_TYPE_*.
+   *
+   * @param aCallback
+   *        An instance of nsIIccCallback:
+   *        nsIIccCallback::notifyRetrievedIccContacts() if success.
+   *        nsIIccCallback::notifyError(), otherwise.
+   */
+   void readContacts(in unsigned long aContactType,
+                     in nsIIccCallback aCallback);
+
+   /**
+   * Update Specified type of Contact in ICC.
+   *
+   * @param aContactType
+   *        One of CONTACT_TYPE_*.
+   * @param aContact
+   *        an nsIIccContact instance with information to be updated.
+   * @param aPin2 (Optional)
+   *        The PIN2 required to update FDN contact.
+   *
+   * @param aCallback
+   *        An instance of nsIIccCallback:
+   *        nsIIccCallback::notifyUpdatedIccContact() if success.
+   *        nsIIccCallback::notifyError(), otherwise.
+   */
+   void updateContact(in unsigned long aContactType,
+                      in nsIIccContact aContact,
+                      in DOMString aPin2,
+                      in nsIIccCallback aCallback);
+};

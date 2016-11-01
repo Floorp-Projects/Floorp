@@ -1,0 +1,22 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIStkProactiveCmd;
+
+[scriptable, uuid(000696fe-5d85-11e4-8da2-2fdf3880276b)]
+interface nsIIccMessenger : nsISupports
+{
+  /**
+   * To broadcast 'icc-stkcommand' system message
+   *
+   * @param aIccId
+   *        Integrated Circuit Card Identifier.
+   * @param aCommand
+   *        An instance of nsIStkProactiveCmd or its sub-class.
+   */
+  void notifyStkProactiveCommand(in DOMString aIccId,
+                                 in nsIStkProactiveCmd aCommand);
+};

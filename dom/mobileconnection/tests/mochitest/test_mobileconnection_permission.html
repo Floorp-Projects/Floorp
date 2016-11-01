@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test to mobileconnection permission</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+"use strict";
+
+if (!SpecialPowers.hasPermission("mobileconnection", document)) {
+  // Add "mobileconnection" permission and propagate it by reloading the page.
+  SpecialPowers.addPermission("mobileconnection", true, document);
+  window.location.reload();
+} else if (SpecialPowers.hasPermission("mobilenetwork", document)) {
+  // Remove "mobilenetwork" permission and propagate it by reloading the page.
+  SpecialPowers.removePermission("mobilenetwork", document);
+  window.location.reload();
+} else {
+  // Start test.
+  ok("mozMobileConnections" in navigator, "navigator.mozMobileConnections should be accessible for the content that has mobilenetwork permission.");
+
+  var mobileConnection = navigator.mozMobileConnections[0];
+
+  // Should not be accessible for the content that has mobileconnection permission.
+  is("lastKnownNetwork" in mobileConnection, false, "lastKnownNetwork");
+  is("lastKnownHomeNetwork" in mobileConnection, false, "lastKnownHomeNetwork");
+
+  // Should be accessible for the content that has mobileconnection permission.
+  is("voice" in mobileConnection, true, "voice");
+  is("data" in mobileConnection, true, "data");
+  is("iccId" in mobileConnection, true, "iccId");
+  is("networkSelectionMode" in mobileConnection, true, "networkSelectionMode");
+  is("radioState" in mobileConnection, true, "radioState");
+  is("supportedNetworkTypes" in mobileConnection, true, "supportedNetworkTypes");
+
+  is("getNetworks" in mobileConnection, true, "getNetworks");
+  is("selectNetwork" in mobileConnection, true, "selectNetwork");
+  is("selectNetworkAutomatically" in mobileConnection, true, "selectNetworkAutomatically");
+  is("setPreferredNetworkType" in mobileConnection, true, "setPreferredNetworkType");
+  is("getPreferredNetworkType" in mobileConnection, true, "getPreferredNetworkType");
+  is("setRoamingPreference" in mobileConnection, true, "setRoamingPreference");
+  is("getRoamingPreference" in mobileConnection, true, "getRoamingPreference");
+  is("setVoicePrivacyMode" in mobileConnection, true, "setVoicePrivacyMode");
+  is("getVoicePrivacyMode" in mobileConnection, true, "getVoicePrivacyMode");
+  is("setCallForwardingOption" in mobileConnection, true, "setCallForwardingOption");
+  is("getCallForwardingOption" in mobileConnection, true, "getCallForwardingOption");
+  is("setCallBarringOption" in mobileConnection, true, "setCallBarringOption");
+  is("getCallBarringOption" in mobileConnection, true, "getCallBarringOption");
+  is("changeCallBarringPassword" in mobileConnection, true, "changeCallBarringPassword");
+  is("setCallWaitingOption" in mobileConnection, true, "setCallWaitingOption");
+  is("getCallWaitingOption" in mobileConnection, true, "getCallWaitingOption");
+  is("setCallingLineIdRestriction" in mobileConnection, true, "setCallingLineIdRestriction");
+  is("getCallingLineIdRestriction" in mobileConnection, true, "getCallingLineIdRestriction");
+  is("exitEmergencyCbMode" in mobileConnection, true, "exitEmergencyCbMode");
+  is("setRadioEnabled" in mobileConnection, true, "setRadioEnabled");
+}
+
+</script>
+</pre>
+</body>
+</html>
