@@ -129,8 +129,6 @@ public:
   nsresult GetDebugObjectOutputStream(nsIObjectOutputStream* aStream,
                                       nsIObjectOutputStream** outStream);
 
-  nsresult RecordAgesAlways();
-
   static StartupCache* GetSingleton();
   static void DeleteSingleton();
 
@@ -144,13 +142,7 @@ private:
   StartupCache();
   virtual ~StartupCache();
 
-  enum TelemetrifyAge {
-    IGNORE_AGE = 0,
-    RECORD_AGE = 1
-  };
-  static enum TelemetrifyAge gPostFlushAgeAction;
-
-  nsresult LoadArchive(enum TelemetrifyAge flag);
+  nsresult LoadArchive();
   nsresult Init();
   void WriteToDisk();
   nsresult ResetStartupWriteTimer();
