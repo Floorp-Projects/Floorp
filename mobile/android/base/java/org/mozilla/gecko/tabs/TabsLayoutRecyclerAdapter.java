@@ -108,10 +108,9 @@ public class TabsLayoutRecyclerAdapter
         final Tab tab = getItem(position);
         final TabsLayoutItemView itemView = (TabsLayoutItemView) viewHolder.itemView;
         itemView.assignValues(tab);
-        // Make sure we didn't miss any resets after animations and swipes:
-        itemView.setAlpha(1);
-        itemView.setTranslationX(0);
-        itemView.setTranslationY(0);
+        // Be careful (re)setting position values here: bind is called on each notifyItemChanged,
+        // so you could be stomping on values that have been set in support of other animations
+        // that are already underway.
     }
 
     @Override
