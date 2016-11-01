@@ -1454,6 +1454,10 @@ GetProxiedAccessibleInSubtree(const DocAccessibleParent* aDoc,
   }
 
   wrapper->GetNativeInterface(getter_AddRefs(comProxy));
+  MOZ_ASSERT(comProxy);
+  if (!comProxy) {
+    return nullptr;
+  }
 
   RefPtr<IDispatch> disp;
   if (FAILED(comProxy->get_accChild(aVarChild, getter_AddRefs(disp)))) {
