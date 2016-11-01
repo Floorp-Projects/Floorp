@@ -1229,7 +1229,8 @@ protected:
   // Notifies the audio channel agent when the element starts or stops playing.
   void NotifyAudioChannelAgent(bool aPlaying);
 
-  // Creates the audio channel agent.
+  // Creates the audio channel agent in the beginning and this agent would be
+  // used to communicate with the AudioChannelService.
   void CreateAudioChannelAgent();
 
   // Determine if the element should be paused because of suspend conditions.
@@ -1634,7 +1635,8 @@ protected:
   // playback.
   bool mDisableVideo;
 
-  // An agent used to join audio channel service.
+  // An agent used to join audio channel service and its life cycle would equal
+  // to media element.
   RefPtr<AudioChannelAgent> mAudioChannelAgent;
 
   RefPtr<TextTrackManager> mTextTrackManager;
