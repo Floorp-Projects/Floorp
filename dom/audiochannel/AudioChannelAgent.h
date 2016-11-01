@@ -48,6 +48,8 @@ public:
   uint64_t WindowID() const;
   uint64_t InnerWindowID() const;
 
+  bool IsPlayingStarted() const;
+
 private:
   virtual ~AudioChannelAgent();
 
