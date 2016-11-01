@@ -52,7 +52,6 @@ public:
 
   MediaKeys(nsPIDOMWindowInner* aParentWindow,
             const nsAString& aKeySystem,
-            const nsAString& aCDMVersion,
             const MediaKeySystemConfiguration& aConfig);
 
   already_AddRefed<DetailedPromise> Init(ErrorResult& aRv);
@@ -147,7 +146,6 @@ private:
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   const nsString mKeySystem;
-  const nsString mCDMVersion;
   nsCString mNodeId;
   KeySessionHashMap mKeySessions;
   PromiseHashMap mPromises;

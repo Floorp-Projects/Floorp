@@ -182,7 +182,7 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
   MediaKeySystemConfiguration config;
   if (MediaKeySystemAccess::GetSupportedConfig(keySystem, aConfigs, config, &diagnostics)) {
     RefPtr<MediaKeySystemAccess> access(
-      new MediaKeySystemAccess(mWindow, keySystem, NS_ConvertUTF8toUTF16(cdmVersion), config));
+      new MediaKeySystemAccess(mWindow, aKeySystem, config));
     aPromise->MaybeResolve(access);
     diagnostics.StoreMediaKeySystemAccess(mWindow->GetExtantDoc(),
                                           aKeySystem, true, __func__);

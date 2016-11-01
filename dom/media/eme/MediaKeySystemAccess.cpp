@@ -53,11 +53,9 @@ NS_INTERFACE_MAP_END
 
 MediaKeySystemAccess::MediaKeySystemAccess(nsPIDOMWindowInner* aParent,
                                            const nsAString& aKeySystem,
-                                           const nsAString& aCDMVersion,
                                            const MediaKeySystemConfiguration& aConfig)
   : mParent(aParent)
   , mKeySystem(aKeySystem)
-  , mCDMVersion(aCDMVersion)
   , mConfig(aConfig)
 {
 }
@@ -95,7 +93,6 @@ MediaKeySystemAccess::CreateMediaKeys(ErrorResult& aRv)
 {
   RefPtr<MediaKeys> keys(new MediaKeys(mParent,
                                        mKeySystem,
-                                       mCDMVersion,
                                        mConfig));
   return keys->Init(aRv);
 }
