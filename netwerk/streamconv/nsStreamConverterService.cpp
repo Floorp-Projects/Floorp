@@ -67,8 +67,7 @@ nsStreamConverterService::nsStreamConverterService()
 {
 }
 
-nsStreamConverterService::~nsStreamConverterService() {
-}
+nsStreamConverterService::~nsStreamConverterService() = default;
 
 // Builds the graph represented as an adjacency list (and built up in
 // memory using an nsObjectHashtable and nsCOMArray combination).

@@ -164,7 +164,7 @@ void PrintTimingInformation(nsITimedChannel* channel) {
 
 class HeaderVisitor : public nsIHttpHeaderVisitor
 {
-  virtual ~HeaderVisitor() {}
+  virtual ~HeaderVisitor() = default;
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHTTPHEADERVISITOR
@@ -210,9 +210,7 @@ URLLoadInfo::URLLoadInfo(const char *aUrl) : mURLString(aUrl)
   mConnectTime = mTotalTime = PR_Now();
 }
 
-URLLoadInfo::~URLLoadInfo()
-{
-}
+URLLoadInfo::~URLLoadInfo() = default;
 
 
 NS_IMPL_ISUPPORTS0(URLLoadInfo)
@@ -236,9 +234,7 @@ TestChannelEventSink::TestChannelEventSink()
 {
 }
 
-TestChannelEventSink::~TestChannelEventSink()
-{
-}
+TestChannelEventSink::~TestChannelEventSink() = default;
 
 
 NS_IMPL_ISUPPORTS(TestChannelEventSink, nsIChannelEventSink)
@@ -276,9 +272,7 @@ TestAuthPrompt::TestAuthPrompt()
 {
 }
 
-TestAuthPrompt::~TestAuthPrompt()
-{
-}
+TestAuthPrompt::~TestAuthPrompt() = default;
 
 NS_IMETHODIMP
 TestAuthPrompt::Prompt(const char16_t *dialogTitle,
@@ -567,7 +561,7 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
 
 class NotificationCallbacks final : public nsIInterfaceRequestor {
 
-    ~NotificationCallbacks() {}
+    ~NotificationCallbacks() = default;
 
 public:
     NS_DECL_ISUPPORTS
