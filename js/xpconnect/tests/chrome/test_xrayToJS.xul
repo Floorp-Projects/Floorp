@@ -258,7 +258,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     constructorProps(["isView", "slice", Symbol.species]);
 
   if (!isReleaseOrBeta) {
-    gPrototypeProperties['SharedArrayBuffer'] = ["constructor", "byteLength", Symbol.toStringTag];
+    gPrototypeProperties['SharedArrayBuffer'] = ["constructor", "slice", "byteLength", Symbol.toStringTag];
     gConstructorProperties['SharedArrayBuffer'] = constructorProps([Symbol.species]);
   } else {
     is(typeof SharedArrayBuffer, "undefined", "Enable tests!");
@@ -904,8 +904,6 @@ for (var prop of props) {
 
     if (!isReleaseOrBeta) {
       constructors.push('SharedArrayBuffer');
-      // If this fails enable the test a bit below.
-      is(typeof SharedArrayBuffer.prototype.slice, "undefined", "SharedArrayBuffer doesn't have slice");
     }
 
     for (const c of constructors) {
@@ -914,10 +912,12 @@ for (var prop of props) {
       var t = new iwin[c](12);
       is(t.byteLength, 12, `${c} byteLength is correct`);
 
+      is(t.slice(4).byteLength, 8, `${c} byteLength is correct after slicing`);
+      is(Cu.getGlobalForObject(t.slice(4)), iwin, "Slice results lives in the target compartment");
+      is(Object.getPrototypeOf(t.slice(4)), iwin[c].prototype, "Slice results proto lives in target compartment")
+
+      // SharedArrayBuffer does not have static slice method
       if (c === 'ArrayBuffer') {
-        is(t.slice(4).byteLength, 8, `${c} byteLength is correct after slicing`);
-        is(Cu.getGlobalForObject(t.slice(4)), iwin, "Slice results lives in the target compartment");
-        is(Object.getPrototypeOf(t.slice(4)), iwin[c].prototype, "Slice results proto lives in target compartment")
         is(ArrayBuffer.slice(t, 4).byteLength, 8, `${c}.slice (deprecated) works`);
       }
 
