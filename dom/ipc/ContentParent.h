@@ -45,6 +45,7 @@
 #define LARGE_ALLOCATION_REMOTE_TYPE "webLargeAllocation"
 
 class nsConsoleService;
+class nsIContentProcessInfo;
 class nsICycleCollectorLogSink;
 class nsIDumpGCAndCCLogsCallback;
 class nsITabParent;
@@ -370,6 +371,10 @@ public:
   ContentParent* Opener() const
   {
     return mOpener;
+  }
+  nsIContentProcessInfo* ScriptableHelper() const
+  {
+    return mScriptableHelper;
   }
 
   bool NeedsPermissionsUpdate() const
@@ -1173,6 +1178,7 @@ private:
 
   RefPtr<nsConsoleService>  mConsoleService;
   nsConsoleService* GetConsoleService();
+  nsCOMPtr<nsIContentProcessInfo> mScriptableHelper;
 
   nsTArray<nsCOMPtr<nsIObserver>> mIdleListeners;
 
