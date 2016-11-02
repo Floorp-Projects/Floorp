@@ -56,11 +56,15 @@ public:
 
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(dom::Element* aElement,
-                  nsStyleContext* aParentContext);
+                  nsStyleContext* aParentContext,
+                  ConsumeStyleBehavior aConsume,
+                  LazyComputeBehavior aMayCompute);
 
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(dom::Element* aElement,
                   nsStyleContext* aParentContext,
+                  ConsumeStyleBehavior aConsume,
+                  LazyComputeBehavior aMayCompute,
                   TreeMatchContext& aTreeMatchContext);
 
   already_AddRefed<nsStyleContext>
@@ -118,19 +122,10 @@ public:
     dom::Element* aPseudoElement, EventStates aStateMask);
 
   /**
-   * Computes a restyle hint given a element and a previous element snapshot.
-   */
-  nsRestyleHint ComputeRestyleHint(dom::Element* aElement,
-                                   ServoElementSnapshot* aSnapshot);
-
-  /**
    * Performs a Servo traversal to compute style for all dirty nodes in the
    * document. The root element must be non-null.
-   *
-   * If aLeaveDirtyBits is true, the dirty/dirty-descendant bits are not
-   * cleared.
    */
-  void StyleDocument(bool aLeaveDirtyBits);
+  void StyleDocument();
 
   /**
    * Eagerly styles a subtree of dirty nodes that were just appended to the
@@ -152,6 +147,12 @@ public:
    */
   void StyleNewChildren(nsIContent* aParent);
 
+#ifdef DEBUG
+  void AssertTreeIsClean();
+#else
+  void AssertTreeIsClean() {}
+#endif
+
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
                                               nsStyleContext* aParentContext,
@@ -161,7 +162,9 @@ private:
   already_AddRefed<nsStyleContext> GetContext(nsIContent* aContent,
                                               nsStyleContext* aParentContext,
                                               nsIAtom* aPseudoTag,
-                                              CSSPseudoElementType aPseudoType);
+                                              CSSPseudoElementType aPseudoType,
+                                              ConsumeStyleBehavior aConsume,
+                                              LazyComputeBehavior aMayCompute);
 
   nsPresContext* mPresContext;
   UniquePtr<RawServoStyleSet> mRawSet;

@@ -302,7 +302,9 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
       RefPtr<nsStyleContext> kidSC;
 
       kidSC = shell->StyleSet()->ResolveStyleFor(child->AsElement(),
-                                                 mStyleContext);
+                                                 mStyleContext,
+                                                 ConsumeStyleBehavior::DontConsume,
+                                                 LazyComputeBehavior::Allow);
       if (child->IsHTMLElement(nsGkAtoms::frameset)) {
         frame = NS_NewHTMLFramesetFrame(shell, kidSC);
 

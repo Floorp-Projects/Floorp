@@ -8,6 +8,7 @@
 #define mozilla_dom_ElementInlines_h
 
 #include "mozilla/dom/Element.h"
+#include "nsIContentInlines.h"
 #include "nsIDocument.h"
 
 namespace mozilla {
@@ -24,6 +25,46 @@ Element::UnregisterActivityObserver()
 {
   OwnerDoc()->UnregisterActivityObserver(this);
 }
+
+inline Element*
+Element::GetFlattenedTreeParentElement() const
+{
+  nsINode* parentNode = GetFlattenedTreeParentNode();
+  if MOZ_LIKELY(parentNode && parentNode->IsElement()) {
+    return parentNode->AsElement();
+  }
+
+  return nullptr;
+}
+
+inline void
+Element::NoteDirtyDescendantsForServo()
+{
+  Element* curr = this;
+  while (curr && !curr->HasDirtyDescendantsForServo()) {
+    curr->SetHasDirtyDescendantsForServo();
+    curr = curr->GetFlattenedTreeParentElement();
+  }
+
+  MOZ_ASSERT(DirtyDescendantsBitIsPropagatedForServo());
+}
+
+#ifdef DEBUG
+inline bool
+Element::DirtyDescendantsBitIsPropagatedForServo()
+{
+  Element* curr = this;
+  while (curr) {
+    if (!curr->HasDirtyDescendantsForServo()) {
+      return false;
+    }
+    nsINode* parentNode = curr->GetParentNode();
+    curr = curr->GetFlattenedTreeParentElement();
+    MOZ_ASSERT_IF(!curr, parentNode == OwnerDoc());
+  }
+  return true;
+}
+#endif
 
 } // namespace dom
 } // namespace mozilla
