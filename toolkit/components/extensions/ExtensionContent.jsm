@@ -188,7 +188,32 @@ Script.prototype = {
     }
   },
 
-  tryInject(window, sandbox, shouldRun) {
+  /**
+   * Tries to inject this script into the given window and sandbox, if
+   * there are pending operations for the window's current load state.
+   *
+   * @param {Window} window
+   *        The DOM Window to inject the scripts and CSS into.
+   * @param {Sandbox} sandbox
+   *        A Sandbox inheriting from `window` in which to evaluate the
+   *        injected scripts.
+   * @param {function} shouldRun
+   *        A function which, when passed the document load state that a
+   *        script is expected to run at, returns `true` if we should
+   *        currently be injecting scripts for that load state.
+   *
+   *        For initial injection of a script, this function should
+   *        return true if the document is currently in or has already
+   *        passed through the given state. For injections triggered by
+   *        document state changes, it should only return true if the
+   *        given state exactly matches the state that triggered the
+   *        change.
+   * @param {string} when
+   *        The document's current load state, or if triggered by a
+   *        document state change, the new document state that triggered
+   *        the injection.
+   */
+  tryInject(window, sandbox, shouldRun, when) {
     if (!this.matches(window)) {
       this.deferred.reject({message: "No matching window"});
       return;
@@ -218,7 +243,9 @@ Script.prototype = {
         let options = {
           target: sandbox,
           charset: "UTF-8",
-          async: false,
+          // Inject asynchronously unless we're expected to inject before any
+          // page scripts have run, and we haven't already missed that boat.
+          async: this.run_at !== "document_start" || when !== "document_start",
         };
         try {
           result = Services.scriptloader.loadSubScriptWithOptions(url, options);
@@ -363,13 +390,13 @@ class ExtensionContext extends BaseContext {
     return this.sandbox;
   }
 
-  execute(script, shouldRun) {
-    script.tryInject(this.contentWindow, this.sandbox, shouldRun);
+  execute(script, shouldRun, when) {
+    script.tryInject(this.contentWindow, this.sandbox, shouldRun, when);
   }
 
-  addScript(script) {
+  addScript(script, when) {
     let state = DocumentManager.getWindowState(this.contentWindow);
-    this.execute(script, scheduled => isWhenBeforeOrSame(scheduled, state));
+    this.execute(script, scheduled => isWhenBeforeOrSame(scheduled, state), when);
 
     // Save the script in case it has pending operations in later load
     // states, but only if we're before document_idle, or require cleanup.
@@ -380,7 +407,7 @@ class ExtensionContext extends BaseContext {
 
   triggerScripts(documentState) {
     for (let script of this.scripts) {
-      this.execute(script, scheduled => scheduled == documentState);
+      this.execute(script, scheduled => scheduled == documentState, documentState);
     }
     if (documentState == "document_idle") {
       // Don't bother saving scripts after document_idle.
@@ -715,7 +742,7 @@ DocumentManager = {
         for (let script of extension.scripts) {
           if (script.matches(window)) {
             let context = this.getContentScriptContext(extension, window);
-            context.addScript(script);
+            context.addScript(script, when);
           }
         }
       }
