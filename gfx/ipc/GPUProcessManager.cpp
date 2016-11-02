@@ -397,7 +397,10 @@ GPUProcessManager::DestroyProcess()
   mProcessToken = 0;
   mProcess = nullptr;
   mGPUChild = nullptr;
-  mVsyncBridge = nullptr;
+  if (mVsyncBridge) {
+    mVsyncBridge->Close();
+    mVsyncBridge = nullptr;
+  }
 }
 
 RefPtr<CompositorSession>
