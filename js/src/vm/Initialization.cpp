@@ -14,7 +14,6 @@
 
 #include "jstypes.h"
 
-#include "asmjs/WasmInstance.h"
 #include "builtin/AtomicsObject.h"
 #include "ds/MemoryProtectionExceptionHandler.h"
 #include "gc/Statistics.h"
@@ -30,6 +29,7 @@
 #include "vm/Runtime.h"
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
+#include "wasm/WasmInstance.h"
 
 using JS::detail::InitState;
 using JS::detail::libraryInitState;

@@ -22,10 +22,10 @@
 # include <valgrind/memcheck.h>
 #endif
 
-#include "asmjs/AsmJS.h"
-#include "asmjs/WasmTypes.h"
 #include "vm/SharedMem.h"
 #include "vm/TypedArrayCommon.h"
+#include "wasm/AsmJS.h"
+#include "wasm/WasmTypes.h"
 
 #include "jsobjinlines.h"
 

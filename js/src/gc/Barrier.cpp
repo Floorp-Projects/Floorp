@@ -9,7 +9,6 @@
 #include "jscompartment.h"
 #include "jsobj.h"
 
-#include "asmjs/WasmJS.h"
 #include "builtin/TypedObject.h"
 #include "gc/Policy.h"
 #include "gc/Zone.h"
@@ -18,6 +17,7 @@
 #include "vm/EnvironmentObject.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/Symbol.h"
+#include "wasm/WasmJS.h"
 
 namespace js {
 

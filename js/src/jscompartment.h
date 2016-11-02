@@ -14,7 +14,6 @@
 #include "mozilla/Variant.h"
 #include "mozilla/XorShift128PlusRNG.h"
 
-#include "asmjs/WasmCompartment.h"
 #include "builtin/RegExp.h"
 #include "gc/Barrier.h"
 #include "gc/NurseryAwareHashMap.h"
@@ -23,6 +22,7 @@
 #include "vm/PIC.h"
 #include "vm/SavedStacks.h"
 #include "vm/Time.h"
+#include "wasm/WasmCompartment.h"
 
 namespace js {
 
