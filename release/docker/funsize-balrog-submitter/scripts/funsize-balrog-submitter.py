@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import site
 import os
 import logging
 import argparse
@@ -10,8 +11,7 @@ import tempfile
 from boto.s3.connection import S3Connection
 from mardor.marfile import MarFile
 
-sys.path.insert(0, os.path.join(
-    os.path.dirname(__file__), "/home/worker/tools/lib/python"))
+site.addsitedir("/home/worker/tools/lib/python")
 
 from balrog.submitter.cli import NightlySubmitterV4, ReleaseSubmitterV4
 from util.retry import retry, retriable
