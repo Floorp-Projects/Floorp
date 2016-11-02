@@ -545,7 +545,7 @@ HttpObserverManager = {
 
         if (loadInfo) {
           let originPrincipal = loadInfo.triggeringPrincipal || loadInfo.loadingPrincipal;
-          if (originPrincipal && originPrincipal.URI) {
+          if (originPrincipal.URI) {
             commonData.originUrl = originPrincipal.URI.spec;
           }
           Object.assign(commonData, {
@@ -553,6 +553,10 @@ HttpObserverManager = {
                         loadInfo.frameOuterWindowID : loadInfo.outerWindowID,
             parentWindowId: loadInfo.frameOuterWindowID ?
                               loadInfo.outerWindowID : loadInfo.parentOuterWindowID,
+            isSystemPrincipal: Services.scriptSecurityManager
+                                       .isSystemPrincipal(loadInfo.triggeringPrincipal) ||
+                               Services.scriptSecurityManager
+                                       .isSystemPrincipal(loadInfo.loadingPrincipal),
           });
         } else {
           Object.assign(commonData, {
