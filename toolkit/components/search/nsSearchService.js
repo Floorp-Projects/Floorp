@@ -312,20 +312,15 @@ loadListener.prototype = {
   _engine: null,
   _stream: null,
 
-  QueryInterface: function SRCH_loadQI(aIID) {
-    if (aIID.equals(Ci.nsISupports)           ||
-        aIID.equals(Ci.nsIRequestObserver)    ||
-        aIID.equals(Ci.nsIStreamListener)     ||
-        aIID.equals(Ci.nsIChannelEventSink)   ||
-        aIID.equals(Ci.nsIInterfaceRequestor) ||
-        // See FIXME comment below
-        aIID.equals(Ci.nsIHttpEventSink)      ||
-        aIID.equals(Ci.nsIProgressEventSink)  ||
-        false)
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIRequestObserver,
+    Ci.nsIStreamListener,
+    Ci.nsIChannelEventSink,
+    Ci.nsIInterfaceRequestor,
+    // See FIXME comment below.
+    Ci.nsIHttpEventSink,
+    Ci.nsIProgressEventSink
+  ]),
 
   // nsIRequestObserver
   onStartRequest: function SRCH_loadStartR(aRequest, aContext) {
@@ -2507,12 +2502,7 @@ Engine.prototype = {
   },
 
   // nsISupports
-  QueryInterface: function SRCH_ENG_QI(aIID) {
-    if (aIID.equals(Ci.nsISearchEngine) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISearchEngine]),
 
   get wrappedJSObject() {
     return this;
@@ -2614,12 +2604,7 @@ Submission.prototype = {
   get postData() {
     return this._postData;
   },
-  QueryInterface: function SRCH_SUBM_QI(aIID) {
-    if (aIID.equals(Ci.nsISearchSubmission) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISearchSubmission])
 }
 
 // nsISearchParseSubmissionResult
@@ -4741,14 +4726,11 @@ SearchService.prototype = {
     }
   },
 
-  QueryInterface: function SRCH_SVC_QI(aIID) {
-    if (aIID.equals(Ci.nsIBrowserSearchService) ||
-        aIID.equals(Ci.nsIObserver)             ||
-        aIID.equals(Ci.nsITimerCallback)        ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIBrowserSearchService,
+    Ci.nsIObserver,
+    Ci.nsITimerCallback
+  ])
 };
 
 
