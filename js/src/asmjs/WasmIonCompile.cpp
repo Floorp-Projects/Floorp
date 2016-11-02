@@ -240,16 +240,16 @@ class FunctionCompiler
             MInstruction* ins = nullptr;
             switch (locals_[i]) {
               case ValType::I32:
-                ins = MConstant::NewAsmJS(alloc(), Int32Value(0), MIRType::Int32);
+                ins = MConstant::New(alloc(), Int32Value(0), MIRType::Int32);
                 break;
               case ValType::I64:
                 ins = MConstant::NewInt64(alloc(), 0);
                 break;
               case ValType::F32:
-                ins = MConstant::NewAsmJS(alloc(), Float32Value(0.f), MIRType::Float32);
+                ins = MConstant::New(alloc(), Float32Value(0.f), MIRType::Float32);
                 break;
               case ValType::F64:
-                ins = MConstant::NewAsmJS(alloc(), DoubleValue(0.0), MIRType::Double);
+                ins = MConstant::New(alloc(), DoubleValue(0.0), MIRType::Double);
                 break;
               case ValType::I8x16:
                 ins = MSimdConstant::New(alloc(), SimdConstant::SplatX16(0), MIRType::Int8x16);
@@ -283,7 +283,7 @@ class FunctionCompiler
                 return false;
         }
 
-        dummyIns_ = MConstant::NewAsmJS(alloc(), Int32Value(0), MIRType::Int32);
+        dummyIns_ = MConstant::New(alloc(), Int32Value(0), MIRType::Int32);
         curBlock_->add(dummyIns_);
 
         addInterruptCheck();
@@ -338,7 +338,7 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        MConstant* constant = MConstant::NewAsmJS(alloc(), v, type);
+        MConstant* constant = MConstant::New(alloc(), v, type);
         curBlock_->add(constant);
         return constant;
     }
@@ -370,13 +370,12 @@ class FunctionCompiler
         return constant;
     }
 
-    // Specialized for MToFloat32
     template <class T>
     MDefinition* unary(MDefinition* op)
     {
         if (inDeadCode())
             return nullptr;
-        T* ins = T::NewAsmJS(alloc(), op);
+        T* ins = T::New(alloc(), op);
         curBlock_->add(ins);
         return ins;
     }
@@ -386,7 +385,7 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        T* ins = T::NewAsmJS(alloc(), op, type);
+        T* ins = T::New(alloc(), op, type);
         curBlock_->add(ins);
         return ins;
     }
@@ -406,7 +405,7 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        T* ins = T::NewAsmJS(alloc(), lhs, rhs, type);
+        T* ins = T::New(alloc(), lhs, rhs, type);
         curBlock_->add(ins);
         return ins;
     }
@@ -422,7 +421,7 @@ class FunctionCompiler
             return nullptr;
 
         // wasm can't fold x - 0.0 because of NaN with custom payloads.
-        MSub* ins = MSub::NewAsmJS(alloc(), lhs, rhs, type, mustPreserveNaN(type));
+        MSub* ins = MSub::New(alloc(), lhs, rhs, type, mustPreserveNaN(type));
         curBlock_->add(ins);
         return ins;
     }
@@ -620,43 +619,32 @@ class FunctionCompiler
         return ins;
     }
 
-    MDefinition* div(MDefinition* lhs, MDefinition* rhs, MIRType type, bool unsignd,
-                     bool trapOnError)
+    MDefinition* div(MDefinition* lhs, MDefinition* rhs, MIRType type, bool unsignd)
     {
         if (inDeadCode())
             return nullptr;
-        auto* ins = MDiv::NewAsmJS(alloc(), lhs, rhs, type, unsignd, trapOnError, trapOffset(),
-                                   mustPreserveNaN(type));
+        bool trapOnError = !mg().isAsmJS();
+        auto* ins = MDiv::New(alloc(), lhs, rhs, type, unsignd, trapOnError, trapOffset(),
+                              mustPreserveNaN(type));
         curBlock_->add(ins);
         return ins;
     }
 
-    MDefinition* mod(MDefinition* lhs, MDefinition* rhs, MIRType type, bool unsignd,
-                     bool trapOnError)
+    MDefinition* mod(MDefinition* lhs, MDefinition* rhs, MIRType type, bool unsignd)
     {
         if (inDeadCode())
             return nullptr;
-        MMod* ins = MMod::NewAsmJS(alloc(), lhs, rhs, type, unsignd, trapOnError, trapOffset());
+        bool trapOnError = !mg().isAsmJS();
+        auto* ins = MMod::New(alloc(), lhs, rhs, type, unsignd, trapOnError, trapOffset());
         curBlock_->add(ins);
         return ins;
     }
 
-    template <class T>
-    MDefinition* bitwise(MDefinition* lhs, MDefinition* rhs, MIRType type)
+    MDefinition* bitnot(MDefinition* op)
     {
         if (inDeadCode())
             return nullptr;
-        T* ins = T::NewAsmJS(alloc(), lhs, rhs, type);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    template <class T>
-    MDefinition* bitwise(MDefinition* op)
-    {
-        if (inDeadCode())
-            return nullptr;
-        T* ins = T::NewAsmJS(alloc(), op);
+        auto* ins = MBitNot::NewInt32(alloc(), op);
         curBlock_->add(ins);
         return ins;
     }
@@ -674,7 +662,7 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        MExtendInt32ToInt64* ins = MExtendInt32ToInt64::NewAsmJS(alloc(), op, isUnsigned);
+        auto* ins = MExtendInt32ToInt64::New(alloc(), op, isUnsigned);
         curBlock_->add(ins);
         return ins;
     }
@@ -683,7 +671,7 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        MInt64ToFloatingPoint* ins = MInt64ToFloatingPoint::NewAsmJS(alloc(), op, type, isUnsigned);
+        auto* ins = MInt64ToFloatingPoint::New(alloc(), op, type, isUnsigned);
         curBlock_->add(ins);
         return ins;
     }
@@ -692,17 +680,7 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        auto* ins = MRotate::NewAsmJS(alloc(), input, count, type, left);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    template <class T>
-    MDefinition* asmJSTruncate(MDefinition* op, bool isUnsigned)
-    {
-        if (inDeadCode())
-            return nullptr;
-        T* ins = T::NewAsmJS(alloc(), op, isUnsigned);
+        auto* ins = MRotate::New(alloc(), input, count, type, left);
         curBlock_->add(ins);
         return ins;
     }
@@ -712,7 +690,7 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        T* ins = T::NewAsmJS(alloc(), op, isUnsigned, trapOffset());
+        auto* ins = T::New(alloc(), op, isUnsigned, trapOffset());
         curBlock_->add(ins);
         return ins;
     }
@@ -721,7 +699,7 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        MCompare* ins = MCompare::NewAsmJS(alloc(), lhs, rhs, op, type);
+        auto* ins = MCompare::New(alloc(), lhs, rhs, op, type);
         curBlock_->add(ins);
         return ins;
     }
@@ -918,9 +896,9 @@ class FunctionCompiler
         switch (arg.kind()) {
 #ifdef JS_CODEGEN_REGISTER_PAIR
           case ABIArg::GPR_PAIR: {
-            auto mirLow = MWrapInt64ToInt32::NewAsmJS(alloc(), argDef, /* bottomHalf = */ true);
+            auto mirLow = MWrapInt64ToInt32::New(alloc(), argDef, /* bottomHalf = */ true);
             curBlock_->add(mirLow);
-            auto mirHigh = MWrapInt64ToInt32::NewAsmJS(alloc(), argDef, /* bottomHalf = */ false);
+            auto mirHigh = MWrapInt64ToInt32::New(alloc(), argDef, /* bottomHalf = */ false);
             curBlock_->add(mirHigh);
             return call->regArgs_.append(MWasmCall::Arg(AnyRegister(arg.gpr64().low), mirLow)) &&
                    call->regArgs_.append(MWasmCall::Arg(AnyRegister(arg.gpr64().high), mirHigh));
@@ -1041,7 +1019,7 @@ class FunctionCompiler
 
             MConstant* mask = MConstant::New(alloc(), Int32Value(table.limits.initial - 1));
             curBlock_->add(mask);
-            MBitAnd* maskedIndex = MBitAnd::NewAsmJS(alloc(), index, mask, MIRType::Int32);
+            MBitAnd* maskedIndex = MBitAnd::New(alloc(), index, mask, MIRType::Int32);
             curBlock_->add(maskedIndex);
 
             index = maskedIndex;
@@ -1488,7 +1466,7 @@ class FunctionCompiler
         if (inDeadCode())
             return true;
 
-        MGoto* jump = MGoto::NewAsm(alloc());
+        MGoto* jump = MGoto::New(alloc());
         if (!addControlFlowPatch(jump, relativeDepth, MGoto::TargetIndex))
             return false;
 
@@ -1508,7 +1486,7 @@ class FunctionCompiler
         if (!newBlock(curBlock_, &joinBlock))
             return false;
 
-        MTest* test = MTest::NewAsm(alloc(), condition, joinBlock);
+        MTest* test = MTest::New(alloc(), condition, joinBlock);
         if (!addControlFlowPatch(test, relativeDepth, MTest::TrueBranchIndex))
             return false;
 
@@ -1670,7 +1648,27 @@ MDefinition* FunctionCompiler::unary<MToFloat32>(MDefinition* op)
 {
     if (inDeadCode())
         return nullptr;
-    auto* ins = MToFloat32::NewAsmJS(alloc(), op, mustPreserveNaN(op->type()));
+    auto* ins = MToFloat32::New(alloc(), op, mustPreserveNaN(op->type()));
+    curBlock_->add(ins);
+    return ins;
+}
+
+template <>
+MDefinition* FunctionCompiler::unary<MNot>(MDefinition* op)
+{
+    if (inDeadCode())
+        return nullptr;
+    auto* ins = MNot::NewInt32(alloc(), op);
+    curBlock_->add(ins);
+    return ins;
+}
+
+template <>
+MDefinition* FunctionCompiler::unary<MAbs>(MDefinition* op, MIRType type)
+{
+    if (inDeadCode())
+        return nullptr;
+    auto* ins = MAbs::NewWasm(alloc(), op, type);
     curBlock_->add(ins);
     return ins;
 }
@@ -2202,7 +2200,7 @@ EmitTruncate(FunctionCompiler& f, ValType operandType, ValType resultType,
 
     if (resultType == ValType::I32) {
         if (f.mg().isAsmJS())
-            f.iter().setResult(f.asmJSTruncate<MTruncateToInt32>(input, isUnsigned));
+            f.iter().setResult(f.unary<MTruncateToInt32>(input));
         else
             f.iter().setResult(f.truncate<MWasmTruncateToInt32>(input, isUnsigned));
     } else {
@@ -2284,15 +2282,14 @@ EmitRotate(FunctionCompiler& f, ValType type, bool isLeftRotation)
     return true;
 }
 
-template <typename MIRClass>
 static bool
-EmitBitwise(FunctionCompiler& f, ValType operandType)
+EmitBitNot(FunctionCompiler& f, ValType operandType)
 {
     MDefinition* input;
     if (!f.iter().readUnary(operandType, &input))
         return false;
 
-    f.iter().setResult(f.bitwise<MIRClass>(input));
+    f.iter().setResult(f.bitnot(input));
     return true;
 }
 
@@ -2305,7 +2302,7 @@ EmitBitwise(FunctionCompiler& f, ValType operandType, MIRType mirType)
     if (!f.iter().readBinary(operandType, &lhs, &rhs))
         return false;
 
-    f.iter().setResult(f.bitwise<MIRClass>(lhs, rhs, mirType));
+    f.iter().setResult(f.binary<MIRClass>(lhs, rhs, mirType));
     return true;
 }
 
@@ -2330,8 +2327,7 @@ EmitDiv(FunctionCompiler& f, ValType operandType, MIRType mirType, bool isUnsign
     if (!f.iter().readBinary(operandType, &lhs, &rhs))
         return false;
 
-    bool trapOnError = !f.mg().isAsmJS();
-    f.iter().setResult(f.div(lhs, rhs, mirType, isUnsigned, trapOnError));
+    f.iter().setResult(f.div(lhs, rhs, mirType, isUnsigned));
     return true;
 }
 
@@ -2343,8 +2339,7 @@ EmitRem(FunctionCompiler& f, ValType operandType, MIRType mirType, bool isUnsign
     if (!f.iter().readBinary(operandType, &lhs, &rhs))
         return false;
 
-    bool trapOnError = !f.mg().isAsmJS();
-    f.iter().setResult(f.mod(lhs, rhs, mirType, isUnsigned, trapOnError));
+    f.iter().setResult(f.mod(lhs, rhs, mirType, isUnsigned));
     return true;
 }
 
@@ -3245,11 +3240,11 @@ EmitExpr(FunctionCompiler& f)
       case Expr::I32ReinterpretF32:
         return EmitReinterpret(f, ValType::I32, ValType::F32, MIRType::Int32);
       case Expr::I32Clz:
-        return EmitUnary<MClz>(f, ValType::I32);
+        return EmitUnaryWithType<MClz>(f, ValType::I32, MIRType::Int32);
       case Expr::I32Ctz:
-        return EmitUnary<MCtz>(f, ValType::I32);
+        return EmitUnaryWithType<MCtz>(f, ValType::I32, MIRType::Int32);
       case Expr::I32Popcnt:
-        return EmitUnary<MPopcnt>(f, ValType::I32);
+        return EmitUnaryWithType<MPopcnt>(f, ValType::I32, MIRType::Int32);
       case Expr::I32Abs:
         return EmitUnaryWithType<MAbs>(f, ValType::I32, MIRType::Int32);
       case Expr::I32Neg:
@@ -3267,7 +3262,7 @@ EmitExpr(FunctionCompiler& f)
       case Expr::I32ShrU:
         return EmitBitwise<MUrsh>(f, ValType::I32, MIRType::Int32);
       case Expr::I32BitNot:
-        return EmitBitwise<MBitNot>(f, ValType::I32);
+        return EmitBitNot(f, ValType::I32);
       case Expr::I32Load8S:
         return EmitLoad(f, ValType::I32, Scalar::Int8);
       case Expr::I32Load8U:
@@ -3344,11 +3339,11 @@ EmitExpr(FunctionCompiler& f)
       case Expr::I64Eqz:
         return EmitConversion<MNot>(f, ValType::I64, ValType::I32);
       case Expr::I64Clz:
-        return EmitUnary<MClz>(f, ValType::I64);
+        return EmitUnaryWithType<MClz>(f, ValType::I64, MIRType::Int64);
       case Expr::I64Ctz:
-        return EmitUnary<MCtz>(f, ValType::I64);
+        return EmitUnaryWithType<MCtz>(f, ValType::I64, MIRType::Int64);
       case Expr::I64Popcnt:
-        return EmitUnary<MPopcnt>(f, ValType::I64);
+        return EmitUnaryWithType<MPopcnt>(f, ValType::I64, MIRType::Int64);
       case Expr::I64Load8S:
         return EmitLoad(f, ValType::I64, Scalar::Int8);
       case Expr::I64Load8U:

@@ -1066,7 +1066,7 @@ IonBuilder::inlineMathClz32(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MClz* ins = MClz::New(alloc(), callInfo.getArg(0));
+    MClz* ins = MClz::New(alloc(), callInfo.getArg(0), MIRType::Int32);
     current->add(ins);
     current->push(ins);
     return InliningStatus_Inlined;
@@ -1133,7 +1133,7 @@ IonBuilder::inlineMathSqrt(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MSqrt* sqrt = MSqrt::New(alloc(), callInfo.getArg(0));
+    MSqrt* sqrt = MSqrt::New(alloc(), callInfo.getArg(0), MIRType::Double);
     current->add(sqrt);
     current->push(sqrt);
     return InliningStatus_Inlined;
