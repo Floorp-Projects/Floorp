@@ -92,6 +92,15 @@ private:
                             UPowerClient* aListener);
 
   /**
+   * Callback used by 'PropertiesChanged' signal.
+   * This method is called when the the battery level changes.
+   * (Only with upower >= 0.99)
+   */
+  static void PropertiesChanged(DBusGProxy* aProxy, const gchar*,
+                                GHashTable*, char**,
+                                UPowerClient* aListener);
+
+  /**
    * Callback called when mDBusConnection gets a signal.
    */
   static DBusHandlerResult ConnectionSignalFilter(DBusConnection* aConnection,
@@ -243,6 +252,9 @@ UPowerClient::StopListening()
   mTrackedDevice = nullptr;
 
   if (mTrackedDeviceProxy) {
+    dbus_g_proxy_disconnect_signal(mTrackedDeviceProxy, "PropertiesChanged",
+                                   G_CALLBACK (PropertiesChanged), this);
+
     g_object_unref(mTrackedDeviceProxy);
     mTrackedDeviceProxy = nullptr;
   }
@@ -273,6 +285,9 @@ UPowerClient::UpdateTrackedDeviceSync()
 
   // Reset the current tracked device proxy:
   if (mTrackedDeviceProxy) {
+    dbus_g_proxy_disconnect_signal(mTrackedDeviceProxy, "PropertiesChanged",
+                                   G_CALLBACK (PropertiesChanged), this);
+
     g_object_unref(mTrackedDeviceProxy);
     mTrackedDeviceProxy = nullptr;
   }
@@ -309,11 +324,22 @@ UPowerClient::UpdateTrackedDeviceSync()
     g_free(devicePath);
   }
 
+  if (mTrackedDeviceProxy) {
+    dbus_g_proxy_add_signal(mTrackedDeviceProxy, "PropertiesChanged",
+                            G_TYPE_STRING,
+                            dbus_g_type_get_map("GHashTable", G_TYPE_STRING,
+                                                G_TYPE_VALUE),
+                            G_TYPE_STRV, G_TYPE_INVALID);
+    dbus_g_proxy_connect_signal(mTrackedDeviceProxy, "PropertiesChanged",
+                                G_CALLBACK (PropertiesChanged), this, nullptr);
+  }
+
   g_ptr_array_free(devices, true);
 }
 
 /* static */ void
-UPowerClient::DeviceChanged(DBusGProxy* aProxy, const gchar* aObjectPath, UPowerClient* aListener)
+UPowerClient::DeviceChanged(DBusGProxy* aProxy, const gchar* aObjectPath,
+                            UPowerClient* aListener)
 {
   if (!aListener->mTrackedDevice) {
     return;
@@ -327,6 +353,13 @@ UPowerClient::DeviceChanged(DBusGProxy* aProxy, const gchar* aObjectPath, UPower
     return;
   }
 
+  aListener->GetDevicePropertiesAsync(aListener->mTrackedDeviceProxy);
+}
+
+/* static */ void
+UPowerClient::PropertiesChanged(DBusGProxy* aProxy, const gchar*, GHashTable*,
+                                char**, UPowerClient* aListener)
+{
   aListener->GetDevicePropertiesAsync(aListener->mTrackedDeviceProxy);
 }
 
