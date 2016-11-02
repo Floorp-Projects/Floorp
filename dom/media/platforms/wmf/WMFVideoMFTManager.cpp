@@ -8,7 +8,7 @@
 #include <winsdkver.h>
 #include "WMFVideoMFTManager.h"
 #include "MediaDecoderReader.h"
-#include "MediaPrefs.h"
+#include "gfxPrefs.h"
 #include "WMFUtils.h"
 #include "ImageContainer.h"
 #include "VideoUtils.h"
@@ -18,7 +18,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "MediaInfo.h"
-#include "MediaPrefs.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "nsWindowsHelpers.h"
@@ -316,10 +315,8 @@ public:
     NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
     nsACString* failureReason = &mFailureReason;
     nsCString secondFailureReason;
-    bool allowD3D11 = (XRE_GetProcessType() == GeckoProcessType_GPU) ||
-                      MediaPrefs::PDMWMFAllowD3D11();
     if (mBackend == LayersBackend::LAYERS_D3D11 &&
-        allowD3D11 && IsWin8OrLater()) {
+      gfxPrefs::PDMWMFAllowD3D11() && IsWin8OrLater()) {
       const nsCString& blacklistedDLL = FindD3D11BlacklistedDLL();
       if (!blacklistedDLL.IsEmpty()) {
         failureReason->AppendPrintf("D3D11 blacklisted with DLL %s",
@@ -447,8 +444,7 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
     attr->GetUINT32(MF_SA_D3D_AWARE, &aware);
     attr->SetUINT32(CODECAPI_AVDecNumWorkerThreads,
       WMFDecoderModule::GetNumDecoderThreads());
-    if ((XRE_GetProcessType() != GeckoProcessType_GPU) &&
-        MediaPrefs::PDMWMFLowLatencyEnabled()) {
+    if (gfxPrefs::PDMWMFLowLatencyEnabled()) {
       hr = attr->SetUINT32(CODECAPI_AVLowLatencyMode, TRUE);
       if (SUCCEEDED(hr)) {
         LOG("Enabling Low Latency Mode");
