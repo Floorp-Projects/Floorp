@@ -46,16 +46,10 @@ public:
   SupportsMimeType(const nsACString& aMimeType,
                    DecoderDoctorDiagnostics* aDiagnostics) const override;
 
-  // Main thread only.
-  static void Init();
-
   static const Maybe<nsCString> PreferredGMP(const nsACString& aMimeType);
 
   static bool SupportsMimeType(const nsACString& aMimeType,
                                const Maybe<nsCString>& aGMP);
-
-  // Main thread only.
-  static void UpdateUsableCodecs();
 };
 
 } // namespace mozilla
