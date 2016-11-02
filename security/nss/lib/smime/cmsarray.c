@@ -46,26 +46,27 @@ NSS_CMSArray_Add(PLArenaPool *poolp, void ***array, void *obj)
 
     PORT_Assert(array != NULL);
     if (array == NULL)
-	return SECFailure;
+        return SECFailure;
 
     if (*array == NULL) {
-	dest = (void **)PORT_ArenaAlloc(poolp, 2 * sizeof(void *));
-	n = 0;
+        dest = (void **)PORT_ArenaAlloc(poolp, 2 * sizeof(void *));
+        n = 0;
     } else {
-	n = 0; p = *array;
-	while (*p++)
-	    n++;
-	dest = (void **)PORT_ArenaGrow (poolp, 
-			      *array,
-			      (n + 1) * sizeof(void *),
-			      (n + 2) * sizeof(void *));
+        n = 0;
+        p = *array;
+        while (*p++)
+            n++;
+        dest = (void **)PORT_ArenaGrow(poolp,
+                                       *array,
+                                       (n + 1) * sizeof(void *),
+                                       (n + 2) * sizeof(void *));
     }
 
     if (dest == NULL)
-	return SECFailure;
+        return SECFailure;
 
     dest[n] = obj;
-    dest[n+1] = NULL;
+    dest[n + 1] = NULL;
     *array = dest;
     return SECSuccess;
 }
@@ -88,10 +89,10 @@ NSS_CMSArray_Count(void **array)
     int n = 0;
 
     if (array == NULL)
-	return 0;
+        return 0;
 
     while (*array++ != NULL)
-	n++;
+        n++;
 
     return n;
 }
@@ -102,14 +103,14 @@ NSS_CMSArray_Count(void **array)
  * If "secondary" or "tertiary are not NULL, it must be arrays with the same
  *  number of elements as "primary". The same reordering will get applied to it.
  *
- * "compare" is a function that returns 
+ * "compare" is a function that returns
  *  < 0 when the first element is less than the second
  *  = 0 when the first element is equal to the second
  *  > 0 when the first element is greater than the second
  * to acheive ascending ordering.
  */
 void
-NSS_CMSArray_Sort(void **primary, int (*compare)(void *,void *), void **secondary, void **tertiary)
+NSS_CMSArray_Sort(void **primary, int (*compare)(void *, void *), void **secondary, void **tertiary)
 {
     int n, i, limit, lastxchg;
     void *tmp;
@@ -118,36 +119,36 @@ NSS_CMSArray_Sort(void **primary, int (*compare)(void *,void *), void **secondar
 
     PORT_Assert(secondary == NULL || NSS_CMSArray_Count(secondary) == n);
     PORT_Assert(tertiary == NULL || NSS_CMSArray_Count(tertiary) == n);
-    
-    if (n <= 1)	/* ordering is fine */
-	return;
-    
+
+    if (n <= 1) /* ordering is fine */
+        return;
+
     /* yes, ladies and gentlemen, it's BUBBLE SORT TIME! */
     limit = n - 1;
     while (1) {
-	lastxchg = 0;
-	for (i = 0; i < limit; i++) {
-	    if ((*compare)(primary[i], primary[i+1]) > 0) {
-		/* exchange the neighbours */
-		tmp = primary[i+1];
-		primary[i+1] = primary[i];
-		primary[i] = tmp;
-		if (secondary) {		/* secondary array? */
-		    tmp = secondary[i+1];	/* exchange there as well */
-		    secondary[i+1] = secondary[i];
-		    secondary[i] = tmp;
-		}
-		if (tertiary) {			/* tertiary array? */
-		    tmp = tertiary[i+1];	/* exchange there as well */
-		    tertiary[i+1] = tertiary[i];
-		    tertiary[i] = tmp;
-		}
-		lastxchg = i+1;	/* index of the last element bubbled up */
-	    }
-	}
-	if (lastxchg == 0)	/* no exchanges, so array is sorted */
-	    break;		/* we're done */
-	limit = lastxchg;	/* array is sorted up to [limit] */
+        lastxchg = 0;
+        for (i = 0; i < limit; i++) {
+            if ((*compare)(primary[i], primary[i + 1]) > 0) {
+                /* exchange the neighbours */
+                tmp = primary[i + 1];
+                primary[i + 1] = primary[i];
+                primary[i] = tmp;
+                if (secondary) {            /* secondary array? */
+                    tmp = secondary[i + 1]; /* exchange there as well */
+                    secondary[i + 1] = secondary[i];
+                    secondary[i] = tmp;
+                }
+                if (tertiary) {            /* tertiary array? */
+                    tmp = tertiary[i + 1]; /* exchange there as well */
+                    tertiary[i + 1] = tertiary[i];
+                    tertiary[i] = tmp;
+                }
+                lastxchg = i + 1; /* index of the last element bubbled up */
+            }
+        }
+        if (lastxchg == 0) /* no exchanges, so array is sorted */
+            break;         /* we're done */
+        limit = lastxchg;  /* array is sorted up to [limit] */
     }
 }
 
@@ -162,7 +163,7 @@ NSSCMSArrayIterator
 NSS_CMSArray_First(void **array)
 {
     if (array == NULL || array[0] == NULL)
-	return NULL;
+    return NULL;
     return (NSSCMSArrayIterator)&(array[0]);
 }
 
@@ -171,7 +172,7 @@ NSS_CMSArray_Obj(NSSCMSArrayIterator iter)
 {
     void **p = (void **)iter;
 
-    return *iter;	/* which is NULL if we are at the end of the array */
+    return *iter;   /* which is NULL if we are at the end of the array */
 }
 
 NSSCMSArrayIterator
