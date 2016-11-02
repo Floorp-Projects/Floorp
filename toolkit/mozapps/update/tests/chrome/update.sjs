@@ -51,7 +51,7 @@ function handleRequest(aRequest, aResponse) {
   let statusReason = params.statusReason ? params.statusReason : "OK";
   aResponse.setStatusLine(aRequest.httpVersion, statusCode, statusReason);
   aResponse.setHeader("Cache-Control", "no-cache", false);
-  
+
   // When a mar download is started by the update service it can finish
   // downloading before the ui has loaded. By specifying a serviceURL for the
   // update patch that points to this file and has a slowDownloadMar param the
