@@ -37,26 +37,6 @@ class ArrayBufferViewOrArrayBuffer;
   #endif
 #endif
 
-#define NO_CDM_VERSION -1
-
-// Checks a keySystem string against a whitelist, and determines whether
-// the keySystem is in the whitelist, and extracts the requested minimum
-// CDM version.
-//
-// Format of EME keysystems:
-// com.domain.keysystem[.minVersionAsInt]
-// i.e. org.w3.clearkey, com.adobe.primetime.7
-//
-// Returns true if aKeySystem contains a valid keySystem which we support,
-// false otherwise.
-//
-// On success, aOutKeySystem contains the keySystem string stripped of the
-// min version number, and aOutMinCDMVersion contains the min version number
-// if present. If it was not present, aOutMinCDMVersion is NO_CDM_VERSION.
-bool ParseKeySystem(const nsAString& aKeySystem,
-                    nsAString& aOutKeySystem,
-                    int32_t& aOutMinCDMVersion);
-
 // Helper function to extract a copy of data coming in from JS in an
 // (ArrayBuffer or ArrayBufferView) IDL typed function argument.
 //
