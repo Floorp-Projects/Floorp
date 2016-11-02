@@ -22,7 +22,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsThreadUtils.h"
-#include "nsSOCKSIOLayer.h"
 #include "nsString.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
@@ -386,6 +385,16 @@ proxy_GetBoolPref(nsIPrefBranch *aPrefBranch,
         aResult = false;
     else
         aResult = temp;
+}
+
+static inline bool
+IsHostDomainSocket(const nsACString& aHost)
+{
+#ifdef XP_UNIX
+    return Substring(aHost, 0, 5) == "file:";
+#else
+    return false;
+#endif // XP_UNIX
 }
 
 //----------------------------------------------------------------------------
@@ -1853,7 +1862,7 @@ nsProtocolProxyService::Resolve_Internal(nsIChannel *channel,
 
     if ((flags & RESOLVE_PREFER_SOCKS_PROXY) &&
         !mSOCKSProxyTarget.IsEmpty() &&
-        (IsHostLocalTarget(mSOCKSProxyTarget) || mSOCKSProxyPort > 0)) {
+        (IsHostDomainSocket(mSOCKSProxyTarget) || mSOCKSProxyPort > 0)) {
       host = &mSOCKSProxyTarget;
       if (mSOCKSProxyVersion == 4)
           type = kProxyType_SOCKS4;
@@ -1891,7 +1900,7 @@ nsProtocolProxyService::Resolve_Internal(nsIChannel *channel,
         port = mFTPProxyPort;
     }
     else if (!mSOCKSProxyTarget.IsEmpty() &&
-        (IsHostLocalTarget(mSOCKSProxyTarget) || mSOCKSProxyPort > 0)) {
+        (IsHostDomainSocket(mSOCKSProxyTarget) || mSOCKSProxyPort > 0)) {
         host = &mSOCKSProxyTarget;
         if (mSOCKSProxyVersion == 4)
             type = kProxyType_SOCKS4;
