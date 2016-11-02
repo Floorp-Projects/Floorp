@@ -4518,10 +4518,6 @@ pref("layers.acceleration.disabled", false);
 // and output the result to stderr.
 pref("layers.bench.enabled", false);
 
-#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
-pref("layers.gpu-process.dev.enabled", true);
-#endif
-
 // Whether to force acceleration on, ignoring blacklists.
 #ifdef ANDROID
 // bug 838603 -- on Android, accidentally blacklisting OpenGL layers
