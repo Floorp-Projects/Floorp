@@ -2597,7 +2597,7 @@ BacktrackingAllocator::trySplitAcrossHotcode(LiveBundle* bundle, bool* success)
     // uses within the hot/cold code. This heuristic is in place as the below
     // mechanism regresses several asm.js tests. Hopefully this will be fixed
     // soon and this special case removed. See bug 948838.
-    if (compilingAsmJS()) {
+    if (compilingWasm()) {
         SplitPositionVector splitPositions;
         if (!splitPositions.append(hotRange->from()) || !splitPositions.append(hotRange->to()))
             return false;

@@ -238,7 +238,7 @@ class CompileInfo
     JSScript* script() const {
         return script_;
     }
-    bool compilingAsmJS() const {
+    bool compilingWasm() const {
         return script() == nullptr;
     }
     JSFunction* funMaybeLazy() const {
