@@ -355,7 +355,7 @@ CodeGeneratorX64::visitAsmSelectI64(LAsmSelectI64* lir)
 }
 
 void
-CodeGeneratorX64::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
+CodeGeneratorX64::visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
     MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Int64);
@@ -363,7 +363,7 @@ CodeGeneratorX64::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
 }
 
 void
-CodeGeneratorX64::visitAsmReinterpretToI64(LAsmReinterpretToI64* lir)
+CodeGeneratorX64::visitWasmReinterpretToI64(LWasmReinterpretToI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
     MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Double);

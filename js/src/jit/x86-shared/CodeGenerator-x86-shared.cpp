@@ -365,10 +365,10 @@ CodeGeneratorX86Shared::visitAsmSelect(LAsmSelect* ins)
 }
 
 void
-CodeGeneratorX86Shared::visitAsmReinterpret(LAsmReinterpret* lir)
+CodeGeneratorX86Shared::visitWasmReinterpret(LWasmReinterpret* lir)
 {
     MOZ_ASSERT(gen->compilingAsmJS());
-    MAsmReinterpret* ins = lir->mir();
+    MWasmReinterpret* ins = lir->mir();
 
     MIRType to = ins->type();
 #ifdef DEBUG
@@ -388,7 +388,7 @@ CodeGeneratorX86Shared::visitAsmReinterpret(LAsmReinterpret* lir)
       case MIRType::Int64:
         MOZ_CRASH("not handled by this LIR opcode");
       default:
-        MOZ_CRASH("unexpected AsmReinterpret");
+        MOZ_CRASH("unexpected WasmReinterpret");
     }
 }
 

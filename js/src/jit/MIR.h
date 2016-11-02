@@ -14079,11 +14079,11 @@ class MAsmSelect
     ALLOW_CLONE(MAsmSelect)
 };
 
-class MAsmReinterpret
+class MWasmReinterpret
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    MAsmReinterpret(MDefinition* val, MIRType toType)
+    MWasmReinterpret(MDefinition* val, MIRType toType)
       : MUnaryInstruction(val)
     {
         switch (val->type()) {
@@ -14098,11 +14098,11 @@ class MAsmReinterpret
     }
 
   public:
-    INSTRUCTION_HEADER(AsmReinterpret)
+    INSTRUCTION_HEADER(WasmReinterpret)
 
-    static MAsmReinterpret* NewAsmJS(TempAllocator& alloc, MDefinition* val, MIRType toType)
+    static MWasmReinterpret* NewAsmJS(TempAllocator& alloc, MDefinition* val, MIRType toType)
     {
-        return new(alloc) MAsmReinterpret(val, toType);
+        return new(alloc) MWasmReinterpret(val, toType);
     }
 
     AliasSet getAliasSet() const override {
@@ -14112,7 +14112,7 @@ class MAsmReinterpret
         return congruentIfOperandsEqual(ins);
     }
 
-    ALLOW_CLONE(MAsmReinterpret)
+    ALLOW_CLONE(MWasmReinterpret)
 };
 
 class MRotate

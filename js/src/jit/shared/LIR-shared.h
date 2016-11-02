@@ -1405,7 +1405,7 @@ class LWasmTrap : public LInstructionHelper<0, 0, 0>
 };
 
 template<size_t Defs, size_t Ops>
-class LAsmReinterpretBase : public LInstructionHelper<Defs, Ops, 0>
+class LWasmReinterpretBase : public LInstructionHelper<Defs, Ops, 0>
 {
     typedef LInstructionHelper<Defs, Ops, 0> Base;
 
@@ -1413,34 +1413,34 @@ class LAsmReinterpretBase : public LInstructionHelper<Defs, Ops, 0>
     const LAllocation* input() {
         return Base::getOperand(0);
     }
-    MAsmReinterpret* mir() const {
-        return Base::mir_->toAsmReinterpret();
+    MWasmReinterpret* mir() const {
+        return Base::mir_->toWasmReinterpret();
     }
 };
 
-class LAsmReinterpret : public LAsmReinterpretBase<1, 1>
+class LWasmReinterpret : public LWasmReinterpretBase<1, 1>
 {
   public:
-    LIR_HEADER(AsmReinterpret);
-    explicit LAsmReinterpret(const LAllocation& input) {
+    LIR_HEADER(WasmReinterpret);
+    explicit LWasmReinterpret(const LAllocation& input) {
         setOperand(0, input);
     }
 };
 
-class LAsmReinterpretFromI64 : public LAsmReinterpretBase<1, INT64_PIECES>
+class LWasmReinterpretFromI64 : public LWasmReinterpretBase<1, INT64_PIECES>
 {
   public:
-    LIR_HEADER(AsmReinterpretFromI64);
-    explicit LAsmReinterpretFromI64(const LInt64Allocation& input) {
+    LIR_HEADER(WasmReinterpretFromI64);
+    explicit LWasmReinterpretFromI64(const LInt64Allocation& input) {
         setInt64Operand(0, input);
     }
 };
 
-class LAsmReinterpretToI64 : public LAsmReinterpretBase<INT64_PIECES, 1>
+class LWasmReinterpretToI64 : public LWasmReinterpretBase<INT64_PIECES, 1>
 {
   public:
-    LIR_HEADER(AsmReinterpretToI64);
-    explicit LAsmReinterpretToI64(const LAllocation& input) {
+    LIR_HEADER(WasmReinterpretToI64);
+    explicit LWasmReinterpretToI64(const LAllocation& input) {
         setOperand(0, input);
     }
 };
