@@ -2377,7 +2377,7 @@ CodeGeneratorMIPSShared::visitWasmSelect(LWasmSelect* ins)
 void
 CodeGeneratorMIPSShared::visitWasmReinterpret(LWasmReinterpret* lir)
 {
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     MWasmReinterpret* ins = lir->mir();
 
     MIRType to = ins->type();

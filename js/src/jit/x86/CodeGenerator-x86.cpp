@@ -862,7 +862,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool)
 
         masm.setupUnalignedABICall(output);
         masm.passABIArg(input, MoveOp::DOUBLE);
-        if (gen->compilingAsmJS())
+        if (gen->compilingWasm())
             masm.callWithABI(wasm::SymbolicAddress::ToInt32);
         else
             masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
@@ -946,7 +946,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32* ool)
         masm.vcvtss2sd(input, input, input);
         masm.passABIArg(input.asDouble(), MoveOp::DOUBLE);
 
-        if (gen->compilingAsmJS())
+        if (gen->compilingWasm())
             masm.callWithABI(wasm::SymbolicAddress::ToInt32);
         else
             masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
@@ -1068,7 +1068,7 @@ CodeGeneratorX86::visitDivOrModI64(LDivOrModI64* lir)
     masm.passABIArg(rhs.high);
     masm.passABIArg(rhs.low);
 
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     if (lir->mir()->isMod())
         masm.callWithABI(wasm::SymbolicAddress::ModI64);
     else
@@ -1110,7 +1110,7 @@ CodeGeneratorX86::visitUDivOrModI64(LUDivOrModI64* lir)
     masm.passABIArg(rhs.high);
     masm.passABIArg(rhs.low);
 
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     if (lir->mir()->isMod())
         masm.callWithABI(wasm::SymbolicAddress::UModI64);
     else
