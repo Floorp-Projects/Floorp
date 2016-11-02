@@ -4,9 +4,9 @@
 
 #include <stdlib.h>
 
-#include "asmjs/WasmBinary.h"
-
 #include "jsapi-tests/tests.h"
+
+#include "wasm/WasmBinary.h"
 
 static bool WriteValidBytes(js::wasm::Encoder& encoder, bool* passed)
 {

@@ -9,10 +9,10 @@
 
 #include "jsscript.h"
 
-#include "asmjs/AsmJS.h"
 #include "jit/BaselineJIT.h"
 #include "jit/IonAnalysis.h"
 #include "vm/EnvironmentObject.h"
+#include "wasm/AsmJS.h"
 
 #include "jscompartmentinlines.h"
 

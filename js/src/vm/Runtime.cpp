@@ -38,7 +38,6 @@
 #include "jswin.h"
 #include "jswrapper.h"
 
-#include "asmjs/WasmSignalHandlers.h"
 #include "builtin/Promise.h"
 #include "gc/GCInternals.h"
 #include "jit/arm/Simulator-arm.h"
@@ -52,6 +51,7 @@
 #include "js/MemoryMetrics.h"
 #include "js/SliceBudget.h"
 #include "vm/Debugger.h"
+#include "wasm/WasmSignalHandlers.h"
 
 #include "jscntxtinlines.h"
 #include "jsgcinlines.h"

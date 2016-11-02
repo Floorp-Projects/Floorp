@@ -12,7 +12,6 @@
 #include "jsnativestack.h"
 #include "jsnum.h" // For FIX_FPU()
 
-#include "asmjs/WasmIonCompile.h"
 #include "builtin/Promise.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
@@ -21,6 +20,7 @@
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
+#include "wasm/WasmIonCompile.h"
 
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"

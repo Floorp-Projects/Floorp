@@ -15,7 +15,6 @@
 #include "jsgc.h"
 #include "jsprf.h"
 
-#include "asmjs/WasmJS.h"
 #include "builtin/ModuleObject.h"
 #include "gc/GCInternals.h"
 #include "gc/Policy.h"
@@ -30,6 +29,7 @@
 #include "vm/Symbol.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/UnboxedObject.h"
+#include "wasm/WasmJS.h"
 
 #include "jscompartmentinlines.h"
 #include "jsgcinlines.h"

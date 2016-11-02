@@ -11,13 +11,13 @@
 
 #include <limits.h>
 
-#include "asmjs/WasmTypes.h"
 #include "jit/AtomicOp.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/Label.h"
 #include "jit/Registers.h"
 #include "jit/RegisterSets.h"
 #include "vm/HelperThreads.h"
+#include "wasm/WasmTypes.h"
 
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
