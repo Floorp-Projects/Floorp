@@ -107,6 +107,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
     @Override
     public int getItemCount() {
         final int highlightsCount;
+
         if (highlightsCursor != null) {
             highlightsCount = highlightsCursor.getCount();
         } else {
