@@ -72,7 +72,7 @@ CompositorD3D9::GetTextureFactoryIdentifier()
   TextureFactoryIdentifier ident;
   ident.mMaxTextureSize = GetMaxTextureSize();
   ident.mParentBackend = LayersBackend::LAYERS_D3D9;
-  ident.mParentProcessId = XRE_GetProcessType();
+  ident.mParentProcessType = XRE_GetProcessType();
   ident.mSupportsComponentAlpha = SupportsEffect(EffectTypes::COMPONENT_ALPHA);
   return ident;
 }
