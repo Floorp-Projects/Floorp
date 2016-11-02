@@ -479,13 +479,12 @@ function createUserContextMenu(event, addCommandAttribute = true, excludeUserCon
     }
 
     menuitem.classList.add("menuitem-iconic");
-    menuitem.setAttribute("data-identity-color", identity.color);
 
     if (addCommandAttribute) {
       menuitem.setAttribute("command", "Browser:NewUserContextTab");
     }
 
-    menuitem.setAttribute("data-identity-icon", identity.icon);
+    menuitem.setAttribute("image", identity.icon);
 
     docfrag.appendChild(menuitem);
   });
