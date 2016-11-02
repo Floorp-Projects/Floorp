@@ -1272,6 +1272,9 @@ protected:
   // A method to check whether the media element is allowed to start playback.
   bool IsAllowedToPlay();
 
+  // If the network state is empty and then we would trigger DoLoad().
+  void MaybeDoLoad();
+
   // True if the tab which media element belongs to has been to foreground at
   // least once or activated by manually clicking the unblocking tab icon.
   bool IsTabActivated() const;
