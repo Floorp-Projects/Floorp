@@ -3876,7 +3876,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx, JSVersion version)
     werrorOption = cx->options().werror();
     if (!cx->options().asmJS())
         asmJSOption = AsmJSOption::Disabled;
-    else if (cx->compartment()->debuggerObservesAsmJS())
+    else if (cx->compartment()->debuggerObservesWasm())
         asmJSOption = AsmJSOption::DisabledByDebugger;
     else
         asmJSOption = AsmJSOption::Enabled;
