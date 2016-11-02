@@ -1279,9 +1279,8 @@ var gFinishedPage = {
     }
 
     if (getPref("getBoolPref", PREF_APP_UPDATE_TEST_LOOP, false)) {
-      setTimeout(function () {
-                   gUpdates.wiz.getButton("finish").click();
-                 }, UPDATE_TEST_LOOP_INTERVAL);
+      setTimeout(function () { gUpdates.wiz.getButton("finish").click(); },
+                 UPDATE_TEST_LOOP_INTERVAL);
     }
   },
 
