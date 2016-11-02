@@ -163,6 +163,8 @@ public:
 
   bool IsD3D9Ex() { return mDeviceEx; }
 
+  bool HasComponentAlpha() { return mHasComponentAlpha; }
+
   bool HasDynamicTextures() { return mHasDynamicTextures; }
 
   enum ShaderMode {
@@ -326,6 +328,9 @@ private:
    * rotation, but some older hardware doesn't support it.
    */
   D3DTEXTUREADDRESS mTextureAddressingMode;
+
+  /* If this device supports component alpha */
+  bool mHasComponentAlpha;
 
   /* If this device supports dynamic textures */
   bool mHasDynamicTextures;
