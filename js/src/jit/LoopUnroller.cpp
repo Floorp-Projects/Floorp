@@ -219,9 +219,9 @@ LoopUnroller::go(LoopIterationBound* bound)
             MBasicBlock::New(graph, nullptr, info,
                              unrolledHeader, oldPreheader->trackedSite(), MBasicBlock::NORMAL);
     } else {
-        unrolledHeader = MBasicBlock::NewAsmJS(graph, info, oldPreheader, MBasicBlock::LOOP_HEADER);
-        unrolledBackedge = MBasicBlock::NewAsmJS(graph, info, unrolledHeader, MBasicBlock::NORMAL);
-        newPreheader = MBasicBlock::NewAsmJS(graph, info, unrolledHeader, MBasicBlock::NORMAL);
+        unrolledHeader = MBasicBlock::New(graph, info, oldPreheader, MBasicBlock::LOOP_HEADER);
+        unrolledBackedge = MBasicBlock::New(graph, info, unrolledHeader, MBasicBlock::NORMAL);
+        newPreheader = MBasicBlock::New(graph, info, unrolledHeader, MBasicBlock::NORMAL);
     }
 
     unrolledHeader->discardAllResumePoints();

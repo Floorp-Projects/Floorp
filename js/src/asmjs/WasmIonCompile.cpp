@@ -1346,8 +1346,8 @@ class FunctionCompiler
 
         // Create the loop header.
         MOZ_ASSERT(curBlock_->loopDepth() == loopDepth_ - 1);
-        *loopHeader = MBasicBlock::NewAsmJS(mirGraph(), info(), curBlock_,
-                                            MBasicBlock::PENDING_LOOP_HEADER);
+        *loopHeader = MBasicBlock::New(mirGraph(), info(), curBlock_,
+                                       MBasicBlock::PENDING_LOOP_HEADER);
         if (!*loopHeader)
             return false;
 
@@ -1374,7 +1374,7 @@ class FunctionCompiler
 
     bool setLoopBackedge(MBasicBlock* loopEntry, MBasicBlock* loopBody, MBasicBlock* backedge)
     {
-        if (!loopEntry->setBackedgeAsmJS(backedge))
+        if (!loopEntry->setBackedgeWasm(backedge))
             return false;
 
         // Flag all redundant phis as unused.
@@ -1586,7 +1586,7 @@ class FunctionCompiler
   private:
     bool newBlock(MBasicBlock* pred, MBasicBlock** block)
     {
-        *block = MBasicBlock::NewAsmJS(mirGraph(), info(), pred, MBasicBlock::NORMAL);
+        *block = MBasicBlock::New(mirGraph(), info(), pred, MBasicBlock::NORMAL);
         if (!*block)
             return false;
         mirGraph().addBlock(*block);
