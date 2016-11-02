@@ -25,6 +25,7 @@
 #include "nsStyleUtil.h"
 #include "nsDeviceContext.h"
 #include "nsStyleSet.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 
@@ -363,6 +364,17 @@ imgRequestProxy* nsCSSValue::GetImageValue(nsIDocument* aDocument) const
 {
   MOZ_ASSERT(mUnit == eCSSUnit_Image, "not an Image value");
   return mValue.mImage->mRequests.GetWeak(aDocument);
+}
+
+already_AddRefed<imgRequestProxy>
+nsCSSValue::GetPossiblyStaticImageValue(nsIDocument* aDocument,
+                                        nsPresContext* aPresContext) const
+{
+  imgRequestProxy* req = GetImageValue(aDocument);
+  if (aPresContext->IsDynamic()) {
+    return do_AddRef(req);
+  }
+  return nsContentUtils::GetStaticRequest(req);
 }
 
 nscoord nsCSSValue::GetFixedLength(nsPresContext* aPresContext) const
