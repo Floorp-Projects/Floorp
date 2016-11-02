@@ -21,6 +21,9 @@ SimpleTest.waitForExplicitFinish();
 // 6. Add 1.6s of data once video element fired waiting, that canplay is fired once readyState is HAVE_FUTURE_DATA.
 // 7. Finally load data to the end and ensure that canplaythrough is fired and that readyState is now HAVE_ENOUGH_DATA
 
+// FIXME: bug 1319293
+addMSEPrefs(["media.dormant-on-pause-timeout-ms", -1]);
+
 runWithMSE(function(ms, el) {
   el.controls = true;
   once(ms, 'sourceopen').then(function() {
