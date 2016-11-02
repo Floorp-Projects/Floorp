@@ -231,6 +231,9 @@ public:
 
     ProtocolId GetProtocolId() const { return mProtocolId; }
 
+    base::ProcessId OtherPid() const;
+    void SetOtherProcessId(base::ProcessId aOtherPid);
+
     virtual void OnChannelClose() = 0;
     virtual void OnChannelError() = 0;
     virtual void ProcessingError(Result aError, const char* aMsgName) {}
@@ -302,6 +305,7 @@ public:
 private:
     ProtocolId mProtocolId;
     UniquePtr<Transport> mTrans;
+    base::ProcessId mOtherPid;
 };
 
 class IShmemAllocator
