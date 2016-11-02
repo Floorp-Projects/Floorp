@@ -37,6 +37,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
+#include "gfxMathTable.h"
 #include "gfxSVGGlyphs.h"
 #include "gfx2DGlue.h"
 
@@ -841,6 +842,7 @@ gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
     mScaledFont(aScaledFont),
     mFontEntry(aFontEntry), mIsValid(true),
     mApplySyntheticBold(false),
+    mMathInitialized(false),
     mStyle(*aFontStyle),
     mAdjustedSize(0.0),
     mFUnitsConvFactor(-1.0f), // negative to indicate "not yet initialized"
@@ -4005,4 +4007,22 @@ gfxFontStyle::AdjustForSubSuperscript(int32_t aAppUnitsPerDevPixel)
 
     // clear the variant field
     variantSubSuper = NS_FONT_VARIANT_POSITION_NORMAL;
+}
+
+bool
+gfxFont::TryGetMathTable()
+{
+    if (!mMathInitialized) {
+        mMathInitialized = true;
+
+        hb_face_t *face = GetFontEntry()->GetHBFace();
+        if (face) {
+            if (hb_ot_math_has_data(face)) {
+                mMathTable = MakeUnique<gfxMathTable>(face, GetAdjustedSize());
+            }
+            hb_face_destroy(face);
+        }
+    }
+
+    return !!mMathTable;
 }
