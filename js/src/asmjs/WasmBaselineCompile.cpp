@@ -2987,7 +2987,7 @@ class BaseCompiler
     //
     // Global variable access.
 
-    // CodeGenerator{X86,X64}::visitAsmJSLoadGlobalVar()
+    // CodeGenerator{X86,X64}::visitWasmLoadGlobal()
 
     void loadGlobalVarI32(unsigned globalDataOffset, RegI32 r)
     {
@@ -3060,7 +3060,7 @@ class BaseCompiler
 #endif
     }
 
-    // CodeGeneratorX64::visitAsmJSStoreGlobalVar()
+    // CodeGeneratorX64::visitWasmStoreGlobal()
 
     void storeGlobalVarI32(unsigned globalDataOffset, RegI32 r)
     {
