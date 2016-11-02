@@ -17,6 +17,7 @@
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/Unused.h"
 #include "nsPrintfCString.h"
 
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
@@ -511,7 +512,8 @@ IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId, Side aSide)
  : IProtocol(aSide),
    mProtocolId(aProtoId),
    mOtherPid(mozilla::ipc::kInvalidProcessId),
-   mLastRouteId(mSide == ParentSide : 1 : 0)
+   mLastRouteId(aSide == ParentSide ? 1 : 0),
+   mLastShmemId(aSide == ParentSide ? 1 : 0)
 {
 }
 
@@ -586,7 +588,7 @@ IToplevelProtocol::IsOnCxxStack() const
 int32_t
 IToplevelProtocol::Register(IProtocol* aRouted)
 {
-  int32_t id = mSide == ParentSide ? ++mLastRouteId : --mLastRouteId;
+  int32_t id = GetSide() == ParentSide ? ++mLastRouteId : --mLastRouteId;
   mActorMap.AddWithID(aRouted, id);
   return id;
 }
@@ -609,6 +611,109 @@ void
 IToplevelProtocol::Unregister(int32_t aId)
 {
   return mActorMap.Remove(aId);
+}
+
+Shmem::SharedMemory*
+IToplevelProtocol::CreateSharedMemory(size_t aSize,
+                                      Shmem::SharedMemory::SharedMemoryType aType,
+                                      bool aUnsafe,
+                                      Shmem::id_t* aId)
+{
+  RefPtr<Shmem::SharedMemory> segment(
+    Shmem::Alloc(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), aSize, aType, aUnsafe));
+  if (!segment) {
+    return nullptr;
+  }
+  int32_t id = GetSide() == ParentSide ? ++mLastShmemId : --mLastShmemId;
+  Shmem shmem(
+    Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(),
+    segment.get(),
+    id);
+  Message* descriptor = shmem.ShareTo(
+    Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), OtherPid(), MSG_ROUTING_CONTROL);
+  if (!descriptor) {
+    return nullptr;
+  }
+  Unused << GetIPCChannel()->Send(descriptor);
+
+  *aId = shmem.Id(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead());
+  Shmem::SharedMemory* rawSegment = segment.get();
+  mShmemMap.AddWithID(segment.forget().take(), *aId);
+  return rawSegment;
+}
+
+Shmem::SharedMemory*
+IToplevelProtocol::LookupSharedMemory(Shmem::id_t aId)
+{
+  return mShmemMap.Lookup(aId);
+}
+
+bool
+IToplevelProtocol::IsTrackingSharedMemory(Shmem::SharedMemory* segment)
+{
+  return mShmemMap.HasData(segment);
+}
+
+bool
+IToplevelProtocol::DestroySharedMemory(Shmem& shmem)
+{
+  Shmem::id_t aId = shmem.Id(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead());
+  Shmem::SharedMemory* segment = LookupSharedMemory(aId);
+  if (!segment) {
+    return false;
+  }
+
+  Message* descriptor = shmem.UnshareFrom(
+    Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), OtherPid(), MSG_ROUTING_CONTROL);
+
+  mShmemMap.Remove(aId);
+  Shmem::Dealloc(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), segment);
+
+  if (!GetIPCChannel()->CanSend()) {
+    delete descriptor;
+    return true;
+  }
+
+  return descriptor && GetIPCChannel()->Send(descriptor);
+}
+
+void
+IToplevelProtocol::DeallocShmems()
+{
+  for (IDMap<SharedMemory>::const_iterator cit = mShmemMap.begin(); cit != mShmemMap.end(); ++cit) {
+    Shmem::Dealloc(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), cit->second);
+  }
+  mShmemMap.Clear();
+}
+
+bool
+IToplevelProtocol::ShmemCreated(const Message& aMsg)
+{
+  Shmem::id_t id;
+  RefPtr<Shmem::SharedMemory> rawmem(Shmem::OpenExisting(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), aMsg, &id, true));
+  if (!rawmem) {
+    return false;
+  }
+  mShmemMap.AddWithID(rawmem.forget().take(), id);
+  return true;
+}
+
+bool
+IToplevelProtocol::ShmemDestroyed(const Message& aMsg)
+{
+  Shmem::id_t id;
+  PickleIterator iter = PickleIterator(aMsg);
+  if (!IPC::ReadParam(&aMsg, &iter, &id)) {
+    return false;
+  }
+  aMsg.EndRead(iter);
+
+  Shmem::SharedMemory* rawmem = LookupSharedMemory(id);
+  if (rawmem) {
+    mShmemMap.Remove(id);
+    Shmem::Dealloc(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), rawmem);
+  }
+  return true;
 }
 
 } // namespace ipc
