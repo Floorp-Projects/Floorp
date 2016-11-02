@@ -98,7 +98,7 @@ TinderBoxPrintRe = {
     "harness_error": {
         'full_regex': re.compile(r"(?:TEST-UNEXPECTED-FAIL|PROCESS-CRASH) \| .* \| (application crashed|missing output line for total leaks!|negative leaks caught!|\d+ bytes leaked)"),
         'minimum_regex': re.compile(r'''(TEST-UNEXPECTED|PROCESS-CRASH)'''),
-        'retry_regex': re.compile(r'''(FAIL-SHOULD-RETRY|No space left on device|DMError|Connection to the other side was lost in a non-clean fashion|program finished with exit code 80|INFRA-ERROR|twisted.spread.pb.PBConnectionLost)''')
+        'retry_regex': re.compile(r'''(FAIL-SHOULD-RETRY|No space left on device|DMError|Connection to the other side was lost in a non-clean fashion|program finished with exit code 80|INFRA-ERROR|twisted.spread.pb.PBConnectionLost|_dl_open: Assertion)''')
     },
 }
 
