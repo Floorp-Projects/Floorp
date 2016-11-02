@@ -403,13 +403,13 @@
     _(WasmStoreGlobalVarI64)        \
     _(AsmJSLoadHeap)                \
     _(AsmJSStoreHeap)               \
-    _(AsmJSParameter)               \
-    _(AsmJSParameterI64)            \
+    _(WasmParameter)                \
+    _(WasmParameterI64)             \
     _(WasmReturn)                   \
     _(WasmReturnI64)                \
     _(WasmReturnVoid)               \
-    _(AsmJSPassStackArg)            \
-    _(AsmJSPassStackArgI64)         \
+    _(WasmStackArg)                 \
+    _(WasmStackArgI64)              \
     _(WasmCall)                     \
     _(WasmCallI64)                  \
     _(AsmJSCompareExchangeHeap)     \

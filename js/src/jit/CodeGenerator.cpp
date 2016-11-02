@@ -11479,12 +11479,12 @@ CodeGenerator::visitHasClass(LHasClass* ins)
 }
 
 void
-CodeGenerator::visitAsmJSParameter(LAsmJSParameter* lir)
+CodeGenerator::visitWasmParameter(LWasmParameter* lir)
 {
 }
 
 void
-CodeGenerator::visitAsmJSParameterI64(LAsmJSParameterI64* lir)
+CodeGenerator::visitWasmParameterI64(LWasmParameterI64* lir)
 {
 }
 

@@ -108,7 +108,7 @@ class CallCompileState
     // Accumulates the stack arguments while compiling arguments. This is only
     // necessary to track when childClobbers_ is true so that the stack offsets
     // can be updated.
-    Vector<MAsmJSPassStackArg*, 0, SystemAllocPolicy> stackArgs_;
+    Vector<MWasmStackArg*, 0, SystemAllocPolicy> stackArgs_;
 
     // Set by child calls (i.e., calls that execute while evaluating a parent's
     // operands) to indicate that the child and parent call cannot reuse the
@@ -171,7 +171,7 @@ class FunctionCompiler
     FuncCompileResults&        compileResults_;
 
     // TLS pointer argument to the current function.
-    MAsmJSParameter*           tlsPointer_;
+    MWasmParameter*            tlsPointer_;
 
   public:
     FunctionCompiler(const ModuleGeneratorData& mg,
@@ -223,7 +223,7 @@ class FunctionCompiler
             return false;
 
         for (ABIArgValTypeIter i(args); !i.done(); i++) {
-            MAsmJSParameter* ins = MAsmJSParameter::New(alloc(), *i, i.mirType());
+            MWasmParameter* ins = MWasmParameter::New(alloc(), *i, i.mirType());
             curBlock_->add(ins);
             curBlock_->initSlot(info().localSlot(i.index()), ins);
             if (!mirGen_.ensureBallast())
@@ -231,7 +231,7 @@ class FunctionCompiler
         }
 
         // Set up a parameter that receives the hidden TLS pointer argument.
-        tlsPointer_ = MAsmJSParameter::New(alloc(), ABIArg(WasmTlsReg), MIRType::Pointer);
+        tlsPointer_ = MWasmParameter::New(alloc(), ABIArg(WasmTlsReg), MIRType::Pointer);
         curBlock_->add(tlsPointer_);
         if (!mirGen_.ensureBallast())
             return false;
@@ -930,7 +930,7 @@ class FunctionCompiler
           case ABIArg::FPU:
             return call->regArgs_.append(MWasmCall::Arg(arg.reg(), argDef));
           case ABIArg::Stack: {
-            auto* mir = MAsmJSPassStackArg::New(alloc(), arg.offsetFromArgBase(), argDef);
+            auto* mir = MWasmStackArg::New(alloc(), arg.offsetFromArgBase(), argDef);
             curBlock_->add(mir);
             return call->stackArgs_.append(mir);
           }
@@ -981,7 +981,7 @@ class FunctionCompiler
 
         if (call->childClobbers_) {
             call->spIncrement_ = AlignBytes(call->maxChildStackBytes_, AsmJSStackAlignment);
-            for (MAsmJSPassStackArg* stackArg : call->stackArgs_)
+            for (MWasmStackArg* stackArg : call->stackArgs_)
                 stackArg->incrementOffset(call->spIncrement_);
 
             // If instanceArg_ is not initialized then instanceArg_.kind() != ABIArg::Stack

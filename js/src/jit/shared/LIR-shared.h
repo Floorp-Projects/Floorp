@@ -8365,16 +8365,16 @@ class LWasmStoreGlobalVarI64 : public LInstructionHelper<0, INT64_PIECES, 0>
     }
 };
 
-class LAsmJSParameter : public LInstructionHelper<1, 0, 0>
+class LWasmParameter : public LInstructionHelper<1, 0, 0>
 {
   public:
-    LIR_HEADER(AsmJSParameter);
+    LIR_HEADER(WasmParameter);
 };
 
-class LAsmJSParameterI64 : public LInstructionHelper<INT64_PIECES, 0, 0>
+class LWasmParameterI64 : public LInstructionHelper<INT64_PIECES, 0, 0>
 {
   public:
-    LIR_HEADER(AsmJSParameterI64);
+    LIR_HEADER(WasmParameterI64);
 };
 
 class LWasmReturn : public LInstructionHelper<0, 2, 0>
@@ -8399,30 +8399,30 @@ class LWasmReturnVoid : public LInstructionHelper<0, 1, 0>
     LIR_HEADER(WasmReturnVoid);
 };
 
-class LAsmJSPassStackArg : public LInstructionHelper<0, 1, 0>
+class LWasmStackArg : public LInstructionHelper<0, 1, 0>
 {
   public:
-    LIR_HEADER(AsmJSPassStackArg);
-    explicit LAsmJSPassStackArg(const LAllocation& arg) {
+    LIR_HEADER(WasmStackArg);
+    explicit LWasmStackArg(const LAllocation& arg) {
         setOperand(0, arg);
     }
-    MAsmJSPassStackArg* mir() const {
-        return mirRaw()->toAsmJSPassStackArg();
+    MWasmStackArg* mir() const {
+        return mirRaw()->toWasmStackArg();
     }
     const LAllocation* arg() {
         return getOperand(0);
     }
 };
 
-class LAsmJSPassStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0>
+class LWasmStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0>
 {
   public:
-    LIR_HEADER(AsmJSPassStackArgI64);
-    explicit LAsmJSPassStackArgI64(const LInt64Allocation& arg) {
+    LIR_HEADER(WasmStackArgI64);
+    explicit LWasmStackArgI64(const LInt64Allocation& arg) {
         setInt64Operand(0, arg);
     }
-    MAsmJSPassStackArg* mir() const {
-        return mirRaw()->toAsmJSPassStackArg();
+    MWasmStackArg* mir() const {
+        return mirRaw()->toWasmStackArg();
     }
     const LInt64Allocation arg() {
         return getInt64Operand(0);
