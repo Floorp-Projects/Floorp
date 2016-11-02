@@ -3031,6 +3031,7 @@ void
 HTMLMediaElement::Play(ErrorResult& aRv)
 {
   if (!IsAllowedToPlay()) {
+    MaybeDoLoad();
     return;
   }
 
@@ -3049,9 +3050,7 @@ HTMLMediaElement::PlayInternal()
   StopSuspendingAfterFirstFrame();
   SetPlayedOrSeeked(true);
 
-  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
-    DoLoad();
-  }
+  MaybeDoLoad();
   if (mSuspendedForPreloadNone) {
     ResumeLoad(PRELOAD_ENOUGH);
   }
@@ -3117,9 +3116,18 @@ HTMLMediaElement::PlayInternal()
   return NS_OK;
 }
 
+void
+HTMLMediaElement::MaybeDoLoad()
+{
+  if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
+    DoLoad();
+  }
+}
+
 NS_IMETHODIMP HTMLMediaElement::Play()
 {
   if (!IsAllowedToPlay()) {
+    MaybeDoLoad();
     return NS_OK;
   }
 
