@@ -227,46 +227,4 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
       return bundle;
     });
   }
-  // Pass through the kbHash field from the unencrypted record. If
-  // encryption fails, we can use this to try to detect whether we are
-  // being compromised or if the record here was encoded with a
-  // different kB.
-  encode(record) {
-    const encodePromise = super.encode(record);
-    return Task.spawn(function* () {
-      const encoded = yield encodePromise;
-      encoded.kbHash = record.kbHash;
-      return encoded;
-    });
-  }
-
-  decode(record) {
-    const decodePromise = super.decode(record);
-    return Task.spawn(function* () {
-      try {
-        return yield decodePromise;
-      } catch (e) {
-        if (Utils.isHMACMismatch(e)) {
-          const currentKBHash = yield ExtensionStorageSync.getKBHash();
-          if (record.kbHash != currentKBHash) {
-            // Some other client encoded this with a kB that we don't
-            // have access to.
-            KeyRingEncryptionRemoteTransformer.throwOutdatedKB(currentKBHash, record.kbHash);
-          }
-        }
-        throw e;
-      }
-    });
-  }
-
-  // Generator and discriminator for KB-is-outdated exceptions.
-  static throwOutdatedKB(shouldBe, is) {
-    throw new Error(`kB hash on record is outdated: should be ${shouldBe}, is ${is}`);
-  }
-
-  static isOutdatedKB(exc) {
-    const kbMessage = "kB hash on record is outdated: ";
-    return exc && exc.message && exc.message.indexOf &&
-      (exc.message.indexOf(kbMessage) == 0);
-  }
 }
