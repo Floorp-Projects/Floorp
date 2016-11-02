@@ -28,7 +28,7 @@ function finish() {
 
 function testConnectionAvailable() {
   return new Promise(function(aResolve, aReject) {
-    ok(!navigator.presentation.receiver, "navigator.presentation.receiver shouldn't be available in non-receiving pages.");
+    is(navigator.presentation.receiver, null, "navigator.presentation.receiver shouldn't be available in non-receiving pages.");
     aResolve();
   });
 }

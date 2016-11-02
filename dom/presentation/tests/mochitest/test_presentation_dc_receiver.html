@@ -99,7 +99,7 @@ function testIncomingSessionRequest() {
       info("Trying to launch receiver page.");
 
       ok(navigator.presentation, "navigator.presentation should be available in in-process pages.");
-      ok(!navigator.presentation.receiver, "Non-receiving in-process pages shouldn't get a presentation receiver instance.");
+      is(navigator.presentation.receiver, null, "Non-receiving in-process pages shouldn't get a presentation receiver instance.");
       aResolve();
     });
 
@@ -128,7 +128,7 @@ SpecialPowers.pushPermissions([
   {type: "browser", allow: true, context: document},
 ], function() {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
-                                      ["dom.presentation.controller.enabled", true],
+                                      ["dom.presentation.controller.enabled", false],
                                       ["dom.presentation.receiver.enabled", true],
                                       ["dom.presentation.session_transport.data_channel.enable", true],
                                       ["dom.mozBrowserFramesEnabled", true]]},
