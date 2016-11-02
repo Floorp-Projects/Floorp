@@ -155,8 +155,7 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
                 pd->out_flags = 0;  /* pre-condition */
                 /* make sure this is an NSPR supported stack */
                 bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
-                // ignore a socket without PR_NSPR_IO_LAYER available.
-
+                PR_ASSERT(NULL != bottom);  /* what to do about that? */
                 if ((NULL != bottom)
                 && (_PR_FILEDESC_OPEN == bottom->secret->state))
                 {

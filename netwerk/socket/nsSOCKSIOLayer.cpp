@@ -14,7 +14,6 @@
 #include "nsIDNSRecord.h"
 #include "nsISOCKSSocketInfo.h"
 #include "nsISocketProvider.h"
-#include "nsNamedPipeIOLayer.h"
 #include "nsSOCKSIOLayer.h"
 #include "nsNetCID.h"
 #include "nsIDNSListener.h"
@@ -85,14 +84,9 @@ public:
     int16_t GetPollFlags() const;
     bool IsConnected() const { return mState == SOCKS_CONNECTED; }
     void ForgetFD() { mFD = nullptr; }
-    void SetNamedPipeFD(PRFileDesc *fd) { mFD = fd; }
 
 private:
-    virtual ~nsSOCKSSocketInfo()
-    {
-        ForgetFD();
-        HandshakeFinished();
-    }
+    virtual ~nsSOCKSSocketInfo() { HandshakeFinished(); }
 
     void HandshakeFinished(PRErrorCode err = 0);
     PRStatus StartDNS(PRFileDesc *fd);
@@ -183,20 +177,6 @@ private:
         mozilla::Unused << aProxyAddr;
         return NS_ERROR_NOT_IMPLEMENTED;
 #endif
-    }
-
-    bool
-    SetupNamedPipeLayer(PRFileDesc *fd)
-    {
-#if defined(XP_WIN)
-        if (IsLocalProxy()) {
-            // nsSOCKSIOLayer handshaking only works under blocking mode
-            // unfortunately. Remember named pipe's FD to switch between modes.
-            SetNamedPipeFD(fd->lower);
-            return true;
-        }
-#endif
-        return false;
     }
 
 private:
@@ -425,14 +405,6 @@ nsSOCKSSocketInfo::HandshakeFinished(PRErrorCode err)
 {
     if (err == 0) {
         mState = SOCKS_CONNECTED;
-        // Switch back to nonblocking mode after finishing handshaking.
-        if (mFD) {
-            PRSocketOptionData opt_nonblock;
-            opt_nonblock.option = PR_SockOpt_Nonblocking;
-            opt_nonblock.value.non_blocking = PR_TRUE;
-            PR_SetSocketOption(mFD, &opt_nonblock);
-            mFD = nullptr;
-        }
     } else {
         mState = SOCKS_FAILED;
         PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -573,14 +545,6 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
         }
     } while (status != PR_SUCCESS);
 
-    // Switch to blocking mode during handshaking
-    if (mFD) {
-        PRSocketOptionData opt_nonblock;
-        opt_nonblock.option = PR_SockOpt_Nonblocking;
-        opt_nonblock.value.non_blocking = PR_FALSE;
-        PR_SetSocketOption(mFD, &opt_nonblock);
-    }
-
     // Connected now, start SOCKS
     if (mVersion == 4)
         return WriteV4ConnectRequest();
@@ -613,18 +577,11 @@ nsSOCKSSocketInfo::FixupAddressFamily(PRFileDesc *fd, NetAddr *proxy)
         // mDestinationFamily should not be updated
         return;
     }
-    // There's no PR_NSPR_IO_LAYER required when using named pipe,
-    // we simply ignore the TCP family here.
-    if (SetupNamedPipeLayer(fd)) {
-        return;
-    }
-
     // Get an OS native handle from a specified FileDesc
     PROsfd osfd = PR_FileDesc2NativeHandle(fd);
     if (osfd == -1) {
         return;
     }
-
     // Create a new FileDesc with a specified family
     PRFileDesc *tmpfd = PR_OpenTCPSocket(proxyFamily);
     if (!tmpfd) {
@@ -1572,16 +1529,7 @@ nsSOCKSIOLayerAddToSocket(int32_t family,
     NS_ADDREF(infoObject);
     infoObject->Init(socksVersion, family, proxy, host, flags);
     layer->secret = (PRFilePrivate*) infoObject;
-
-    PRDescIdentity fdIdentity = PR_GetLayersIdentity(fd);
-#if defined(XP_WIN)
-    if (fdIdentity == mozilla::net::nsNamedPipeLayerIdentity) {
-        // remember named pipe fd on the info object so that we can switch
-        // blocking and non-blocking mode on the pipe later.
-        infoObject->SetNamedPipeFD(fd);
-    }
-#endif
-    rv = PR_PushIOLayer(fd, fdIdentity, layer);
+    rv = PR_PushIOLayer(fd, PR_GetLayersIdentity(fd), layer);
 
     if (rv == PR_FAILURE) {
         LOGERROR(("PR_PushIOLayer() failed. rv = %x.", rv));
@@ -1601,7 +1549,7 @@ IsHostLocalTarget(const nsACString& aHost)
 #if defined(XP_UNIX)
     return StringBeginsWith(aHost, NS_LITERAL_CSTRING("file:"));
 #elif defined(XP_WIN)
-    return IsNamedPipePath(aHost);
+    return StringBeginsWith(aHost, NS_LITERAL_CSTRING("\\\\.\\pipe\\"));
 #else
     return false;
 #endif // XP_UNIX
