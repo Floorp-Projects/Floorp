@@ -34,14 +34,14 @@ using mozilla::ArrayLength;
 static void
 AssertStackAlignment(MacroAssembler& masm, uint32_t alignment, uint32_t addBeforeAssert = 0)
 {
-    MOZ_ASSERT((sizeof(AsmJSFrame) + masm.framePushed() + addBeforeAssert) % alignment == 0);
+    MOZ_ASSERT((sizeof(Frame) + masm.framePushed() + addBeforeAssert) % alignment == 0);
     masm.assertStackAlignment(alignment, addBeforeAssert);
 }
 
 static unsigned
 StackDecrementForCall(MacroAssembler& masm, uint32_t alignment, unsigned bytesToPush)
 {
-    return StackDecrementForCall(alignment, sizeof(AsmJSFrame) + masm.framePushed(), bytesToPush);
+    return StackDecrementForCall(alignment, sizeof(Frame) + masm.framePushed(), bytesToPush);
 }
 
 template <class VectorT>
@@ -122,7 +122,7 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncDefExport& func)
     Register scratch = ABINonArgReturnReg1;
 
     // Read the arguments of wasm::ExportFuncPtr according to the native ABI.
-    // The entry stub's frame is only 1 word, not the usual 2 for AsmJSFrame.
+    // The entry stub's frame is only 1 word, not the usual 2 for wasm::Frame.
     const unsigned argBase = sizeof(void*) + masm.framePushed();
     ABIArgGenerator abi;
     ABIArg arg;
@@ -155,12 +155,12 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncDefExport& func)
     masm.storeStackPtr(Address(scratch, WasmActivation::offsetOfEntrySP()));
 
     // Dynamically align the stack since ABIStackAlignment is not necessarily
-    // AsmJSStackAlignment. We'll use entrySP to recover the original stack
+    // WasmStackAlignment. We'll use entrySP to recover the original stack
     // pointer on return.
-    masm.andToStackPtr(Imm32(~(AsmJSStackAlignment - 1)));
+    masm.andToStackPtr(Imm32(~(WasmStackAlignment - 1)));
 
     // Bump the stack for the call.
-    masm.reserveStack(AlignBytes(StackArgBytes(func.sig().args()), AsmJSStackAlignment));
+    masm.reserveStack(AlignBytes(StackArgBytes(func.sig().args()), WasmStackAlignment));
 
     // Copy parameters out of argv and into the registers/stack-slots specified by
     // the system ABI.
@@ -263,7 +263,7 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncDefExport& func)
     }
 
     // Call into the real function.
-    masm.assertStackAlignment(AsmJSStackAlignment);
+    masm.assertStackAlignment(WasmStackAlignment);
     masm.call(CallSiteDesc(CallSiteDesc::FuncDef), func.funcDefIndex());
 
     // Recover the stack pointer value before dynamic alignment.
@@ -461,7 +461,7 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
     GenerateExitPrologue(masm, framePushed, ExitReason::ImportInterp, &offsets);
 
     // Fill the argument array.
-    unsigned offsetToCallerStackArgs = sizeof(AsmJSFrame) + masm.framePushed();
+    unsigned offsetToCallerStackArgs = sizeof(Frame) + masm.framePushed();
     Register scratch = ABINonArgReturnReg0;
     FillArgumentArray(masm, sig.args(), argOffset, offsetToCallerStackArgs, scratch, ToValue(false));
 
@@ -581,7 +581,7 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
     // JIT's ABI does not preserve non-volatile regs. Also, unlike most ABIs,
     // the JIT ABI requires that sp be JitStackAlignment-aligned *after* pushing
     // the return address.
-    static_assert(AsmJSStackAlignment >= JitStackAlignment, "subsumes");
+    static_assert(WasmStackAlignment >= JitStackAlignment, "subsumes");
     unsigned sizeOfRetAddr = sizeof(void*);
     unsigned jitFrameBytes = 3 * sizeof(void*) + (1 + sig.args().length()) * sizeof(Value);
     unsigned totalJitFrameBytes = sizeOfRetAddr + jitFrameBytes + SavedTlsReg;
@@ -623,7 +623,7 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
     argOffset += sizeof(Value);
 
     // 5. Fill the arguments
-    unsigned offsetToCallerStackArgs = jitFramePushed + sizeof(AsmJSFrame);
+    unsigned offsetToCallerStackArgs = jitFramePushed + sizeof(Frame);
     FillArgumentArray(masm, sig.args(), argOffset, offsetToCallerStackArgs, scratch, ToValue(true));
     argOffset += sig.args().length() * sizeof(Value);
     MOZ_ASSERT(argOffset == jitFrameBytes);
@@ -639,9 +639,9 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
         //
         // This sequence requires two registers, and needs to preserve the
         // 'callee' register, so there are three live registers.
-        MOZ_ASSERT(callee == AsmJSIonExitRegCallee);
-        Register cx = AsmJSIonExitRegE0;
-        Register act = AsmJSIonExitRegE1;
+        MOZ_ASSERT(callee == WasmIonExitRegCallee);
+        Register cx = WasmIonExitRegE0;
+        Register act = WasmIonExitRegE1;
 
         // JitActivation* act = cx->activation();
         masm.movePtr(SymbolicAddress::Context, cx);
@@ -666,11 +666,11 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
         //
         // This sequence needs three registers, and must preserve the JSReturnReg_Data and
         // JSReturnReg_Type, so there are five live registers.
-        MOZ_ASSERT(JSReturnReg_Data == AsmJSIonExitRegReturnData);
-        MOZ_ASSERT(JSReturnReg_Type == AsmJSIonExitRegReturnType);
-        Register cx = AsmJSIonExitRegD0;
-        Register act = AsmJSIonExitRegD1;
-        Register tmp = AsmJSIonExitRegD2;
+        MOZ_ASSERT(JSReturnReg_Data == WasmIonExitRegReturnData);
+        MOZ_ASSERT(JSReturnReg_Type == WasmIonExitRegReturnType);
+        Register cx = WasmIonExitRegD0;
+        Register act = WasmIonExitRegD1;
+        Register tmp = WasmIonExitRegD2;
 
         // JitActivation* act = cx->activation();
         masm.movePtr(SymbolicAddress::Context, cx);
@@ -750,7 +750,7 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
         masm.setFramePushed(nativeFramePushed);
 
         // Coercion calls use the following stack layout (sp grows to the left):
-        //   | args | padding | Value argv[1] | padding | exit AsmJSFrame |
+        //   | args | padding | Value argv[1] | padding | exit Frame |
         MIRTypeVector coerceArgTypes;
         JS_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Pointer));
         unsigned offsetToCoerceArgv = AlignBytes(StackArgBytes(coerceArgTypes), sizeof(Value));

@@ -2334,7 +2334,7 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
                 masm.append(wasm::BoundsCheck(cmp.getOffset()));
 
                 size_t nanOffset = size == 32 ? wasm::NaN32GlobalDataOffset : wasm::NaN64GlobalDataOffset;
-                masm.ma_vldr(Address(GlobalReg, nanOffset - AsmJSGlobalRegBias), output, scratch,
+                masm.ma_vldr(Address(GlobalReg, nanOffset - WasmGlobalRegBias), output, scratch,
                              Assembler::AboveOrEqual);
                 cond = Assembler::Below;
             }
@@ -3088,7 +3088,7 @@ void
 CodeGeneratorARM::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
 {
     const MWasmLoadGlobalVar* mir = ins->mir();
-    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    unsigned addr = mir->globalDataOffset() - WasmGlobalRegBias;
 
     ScratchRegisterScope scratch(masm);
 
@@ -3107,7 +3107,7 @@ void
 CodeGeneratorARM::visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins)
 {
     const MWasmLoadGlobalVar* mir = ins->mir();
-    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    unsigned addr = mir->globalDataOffset() - WasmGlobalRegBias;
     MOZ_ASSERT(mir->type() == MIRType::Int64);
     Register64 output = ToOutRegister64(ins);
 
@@ -3124,7 +3124,7 @@ CodeGeneratorARM::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
 
     ScratchRegisterScope scratch(masm);
 
-    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    unsigned addr = mir->globalDataOffset() - WasmGlobalRegBias;
     if (type == MIRType::Int32) {
         masm.ma_dtr(IsStore, GlobalReg, Imm32(addr), ToRegister(ins->value()), scratch);
     } else if (type == MIRType::Float32) {
@@ -3140,7 +3140,7 @@ void
 CodeGeneratorARM::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
 {
     const MWasmStoreGlobalVar* mir = ins->mir();
-    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    unsigned addr = mir->globalDataOffset() - WasmGlobalRegBias;
     MOZ_ASSERT (mir->value()->type() == MIRType::Int64);
     Register64 input = ToRegister64(ins->value());
 

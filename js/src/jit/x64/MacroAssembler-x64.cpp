@@ -452,7 +452,7 @@ MacroAssembler::setupUnalignedABICall(Register scratch)
 }
 
 void
-MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS)
+MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm)
 {
     MOZ_ASSERT(inCall_);
     uint32_t stackForCall = abiArgs_.stackBytesConsumedSoFar();
@@ -463,8 +463,8 @@ MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS)
         stackForCall += ComputeByteAlignment(stackForCall + sizeof(intptr_t),
                                              ABIStackAlignment);
     } else {
-        static_assert(sizeof(AsmJSFrame) % ABIStackAlignment == 0,
-                      "AsmJSFrame should be part of the stack alignment.");
+        static_assert(sizeof(wasm::Frame) % ABIStackAlignment == 0,
+                      "wasm::Frame should be part of the stack alignment.");
         stackForCall += ComputeByteAlignment(stackForCall + framePushed(),
                                              ABIStackAlignment);
     }

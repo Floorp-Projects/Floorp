@@ -35,13 +35,13 @@ using mozilla::Swap;
 static void*
 ReturnAddressFromFP(void* fp)
 {
-    return reinterpret_cast<AsmJSFrame*>(fp)->returnAddress;
+    return reinterpret_cast<Frame*>(fp)->returnAddress;
 }
 
 static uint8_t*
 CallerFPFromFP(void* fp)
 {
-    return reinterpret_cast<AsmJSFrame*>(fp)->callerFP;
+    return reinterpret_cast<Frame*>(fp)->callerFP;
 }
 
 FrameIterator::FrameIterator()
@@ -401,7 +401,7 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
     masm.nopAlign(CodeAlignment);
     offsets->nonProfilingEntry = masm.currentOffset();
     PushRetAddr(masm);
-    masm.subFromStackPtr(Imm32(framePushed + AsmJSFrameBytesAfterReturnAddress));
+    masm.subFromStackPtr(Imm32(framePushed + FrameBytesAfterReturnAddress));
 
     // Prologue join point, body begin:
     masm.bind(&body);
@@ -430,7 +430,7 @@ wasm::GenerateFunctionEpilogue(MacroAssembler& masm, unsigned framePushed, FuncO
     offsets->profilingJump = masm.nopPatchableToNearJump().offset();
 
     // Normal epilogue:
-    masm.addToStackPtr(Imm32(framePushed + AsmJSFrameBytesAfterReturnAddress));
+    masm.addToStackPtr(Imm32(framePushed + FrameBytesAfterReturnAddress));
     masm.ret();
     masm.setFramePushed(0);
 
@@ -629,13 +629,13 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
       case CodeRange::TrapExit: {
-        // When the pc is inside the prologue/epilogue, the innermost
-        // call's AsmJSFrame is not complete and thus fp points to the
-        // second-to-innermost call's AsmJSFrame. Since fp can only tell you
-        // about its caller (via ReturnAddressFromFP(fp)), naively unwinding
-        // while pc is in the prologue/epilogue would skip the second-to-
-        // innermost call. To avoid this problem, we use the static structure of
-        // the code in the prologue and epilogue to do the Right Thing.
+        // When the pc is inside the prologue/epilogue, the innermost call's
+        // Frame is not complete and thus fp points to the second-to-innermost
+        // call's Frame. Since fp can only tell you about its caller (via
+        // ReturnAddressFromFP(fp)), naively unwinding while pc is in the
+        // prologue/epilogue would skip the second-to- innermost call. To avoid
+        // this problem, we use the static structure of the code in the prologue
+        // and epilogue to do the Right Thing.
         uint32_t offsetInModule = (uint8_t*)state.pc - code_->segment().base();
         MOZ_ASSERT(offsetInModule >= codeRange->begin());
         MOZ_ASSERT(offsetInModule < codeRange->end());
@@ -650,7 +650,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_, sp - 2);
         } else if (offsetInModule == codeRange->profilingReturn() - PostStorePrePopFP) {
             // Second-to-last instruction of the ARM/MIPS function; fp points to
-            // the caller's fp; have not yet popped AsmJSFrame.
+            // the caller's fp; have not yet popped Frame.
             callerPC_ = ReturnAddressFromFP(sp);
             callerFP_ = CallerFPFromFP(sp);
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_, sp);
@@ -665,8 +665,8 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
             callerFP_ = fp;
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_, sp - 1);
         } else if (offsetInCodeRange < StoredFP) {
-            // The full AsmJSFrame has been pushed; fp still points to the
-            // caller's frame.
+            // The full Frame has been pushed; fp still points to the caller's
+            // frame.
             MOZ_ASSERT(fp == CallerFPFromFP(sp));
             callerPC_ = ReturnAddressFromFP(sp);
             callerFP_ = CallerFPFromFP(sp);

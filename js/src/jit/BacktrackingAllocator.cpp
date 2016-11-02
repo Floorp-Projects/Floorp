@@ -2593,7 +2593,7 @@ BacktrackingAllocator::trySplitAcrossHotcode(LiveBundle* bundle, bool* success)
 
     JitSpew(JitSpew_RegAlloc, "  split across hot range %s", hotRange->toString().get());
 
-    // Tweak the splitting method when compiling asm.js code to look at actual
+    // Tweak the splitting method when compiling wasm code to look at actual
     // uses within the hot/cold code. This heuristic is in place as the below
     // mechanism regresses several asm.js tests. Hopefully this will be fixed
     // soon and this special case removed. See bug 948838.

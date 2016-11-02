@@ -27,7 +27,7 @@ using namespace js::jit;
 using mozilla::CountLeadingZeroes32;
 using mozilla::DebugOnly;
 
-// Note this is used for inter-AsmJS calls and may pass arguments and results
+// Note this is used for inter-wasm calls and may pass arguments and results
 // in floating point registers even if the system ABI does not.
 
 ABIArg

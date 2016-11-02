@@ -858,7 +858,7 @@ class FunctionCompiler
     // Since we do not use IonMonkey's MPrepareCall/MPassArg/MCall, we must
     // manually accumulate, for the entire function, the maximum required stack
     // space for argument passing. (This is passed to the CodeGenerator via
-    // MIRGenerator::maxAsmJSStackArgBytes.) Naively, this would just be the
+    // MIRGenerator::maxWasmStackArgBytes.) Naively, this would just be the
     // maximum of the stack space required for each individual call (as
     // determined by the call ABI). However, as an optimization, arguments are
     // stored to the stack immediately after evaluation (to decrease live
@@ -958,7 +958,7 @@ class FunctionCompiler
         }
 
         if (call->childClobbers_) {
-            call->spIncrement_ = AlignBytes(call->maxChildStackBytes_, AsmJSStackAlignment);
+            call->spIncrement_ = AlignBytes(call->maxChildStackBytes_, WasmStackAlignment);
             for (MWasmStackArg* stackArg : call->stackArgs_)
                 stackArg->incrementOffset(call->spIncrement_);
 
@@ -3764,8 +3764,8 @@ wasm::IonCompileFunction(IonCompileTask* task)
     MIRGraph graph(&results.alloc());
     CompileInfo compileInfo(locals.length());
     MIRGenerator mir(nullptr, options, &results.alloc(), &graph, &compileInfo,
-                     IonOptimizations.get(OptimizationLevel::AsmJS));
-    mir.initMinAsmJSHeapLength(task->mg().minMemoryLength);
+                     IonOptimizations.get(OptimizationLevel::Wasm));
+    mir.initMinWasmHeapLength(task->mg().minMemoryLength);
 
     // Capture the prologue's trap site before decoding the function.
 

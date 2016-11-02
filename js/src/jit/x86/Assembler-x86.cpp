@@ -42,7 +42,7 @@ ABIArgGenerator::next(MIRType type)
       case MIRType::Bool16x8:
       case MIRType::Bool32x4:
         // SIMD values aren't passed in or out of C++, so we can make up
-        // whatever internal ABI we like. visitAsmJSPassArg assumes
+        // whatever internal ABI we like. visitWasmStackArg assumes
         // SimdMemoryAlignment.
         stackOffset_ = AlignBytes(stackOffset_, SimdMemoryAlignment);
         current_ = ABIArg(stackOffset_);

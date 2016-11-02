@@ -105,16 +105,16 @@ static constexpr Register OsrFrameReg = edx;
 static constexpr Register PreBarrierReg = edx;
 
 // Registers used in the GenerateFFIIonExit Enable Activation block.
-static constexpr Register AsmJSIonExitRegCallee = ecx;
-static constexpr Register AsmJSIonExitRegE0 = edi;
-static constexpr Register AsmJSIonExitRegE1 = eax;
+static constexpr Register WasmIonExitRegCallee = ecx;
+static constexpr Register WasmIonExitRegE0 = edi;
+static constexpr Register WasmIonExitRegE1 = eax;
 
 // Registers used in the GenerateFFIIonExit Disable Activation block.
-static constexpr Register AsmJSIonExitRegReturnData = edx;
-static constexpr Register AsmJSIonExitRegReturnType = ecx;
-static constexpr Register AsmJSIonExitRegD0 = edi;
-static constexpr Register AsmJSIonExitRegD1 = eax;
-static constexpr Register AsmJSIonExitRegD2 = esi;
+static constexpr Register WasmIonExitRegReturnData = edx;
+static constexpr Register WasmIonExitRegReturnType = ecx;
+static constexpr Register WasmIonExitRegD0 = edi;
+static constexpr Register WasmIonExitRegD1 = eax;
+static constexpr Register WasmIonExitRegD2 = esi;
 
 // Registerd used in RegExpMatcher instruction (do not use JSReturnOperand).
 static constexpr Register RegExpMatcherRegExpReg = CallTempReg0;
@@ -127,7 +127,7 @@ static constexpr Register RegExpTesterStringReg = CallTempReg2;
 static constexpr Register RegExpTesterLastIndexReg = CallTempReg3;
 
 // GCC stack is aligned on 16 bytes. Ion does not maintain this for internal
-// calls. asm.js code does.
+// calls. wasm code does.
 #if defined(__GNUC__)
 static constexpr uint32_t ABIStackAlignment = 16;
 #else
@@ -156,7 +156,7 @@ static_assert(JitStackAlignment % SimdMemoryAlignment == 0,
   "Stack alignment should be larger than any of the alignments which are used for "
   "spilled values.  Thus it should be larger than the alignment for SIMD accesses.");
 
-static const uint32_t AsmJSStackAlignment = SimdMemoryAlignment;
+static const uint32_t WasmStackAlignment = SimdMemoryAlignment;
 
 struct ImmTag : public Imm32
 {
@@ -311,7 +311,7 @@ class Assembler : public AssemblerX86Shared
     }
     void mov(wasm::SymbolicAddress imm, Register dest) {
         masm.movl_i32r(-1, dest.encoding());
-        append(AsmJSAbsoluteAddress(CodeOffset(masm.currentOffset()), imm));
+        append(wasm::SymbolicAccess(CodeOffset(masm.currentOffset()), imm));
     }
     void mov(const Operand& src, Register dest) {
         movl(src, dest);
@@ -383,11 +383,11 @@ class Assembler : public AssemblerX86Shared
     }
     void cmpl(Register rhs, wasm::SymbolicAddress lhs) {
         masm.cmpl_rm_disp32(rhs.encoding(), (void*)-1);
-        append(AsmJSAbsoluteAddress(CodeOffset(masm.currentOffset()), lhs));
+        append(wasm::SymbolicAccess(CodeOffset(masm.currentOffset()), lhs));
     }
     void cmpl(Imm32 rhs, wasm::SymbolicAddress lhs) {
         JmpSrc src = masm.cmpl_im_disp32(rhs.value, (void*)-1);
-        append(AsmJSAbsoluteAddress(CodeOffset(src.offset()), lhs));
+        append(wasm::SymbolicAccess(CodeOffset(src.offset()), lhs));
     }
 
     void adcl(Imm32 imm, Register dest) {

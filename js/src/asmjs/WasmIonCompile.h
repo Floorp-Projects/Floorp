@@ -81,7 +81,7 @@ class FuncCompileResults
   public:
     explicit FuncCompileResults(LifoAlloc& lifo)
       : alloc_(&lifo),
-        masm_(jit::MacroAssembler::AsmJSToken(), alloc_)
+        masm_(jit::MacroAssembler::WasmToken(), alloc_)
     {}
 
     jit::TempAllocator& alloc() { return alloc_; }
