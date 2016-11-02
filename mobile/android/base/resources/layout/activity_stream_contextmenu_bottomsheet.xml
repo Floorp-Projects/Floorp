@@ -60,7 +60,7 @@
 
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="@dimen/activity_stream_contextmenu_max_menu_height">
+        android:layout_height="wrap_content">
 
         <android.support.design.widget.NavigationView
             xmlns:android="http://schemas.android.com/apk/res/android"
