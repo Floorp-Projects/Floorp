@@ -5305,11 +5305,11 @@ class MToFloat32
 };
 
 // Converts a uint32 to a double (coming from asm.js).
-class MAsmJSUnsignedToDouble
+class MWasmUnsignedToDouble
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    explicit MAsmJSUnsignedToDouble(MDefinition* def)
+    explicit MWasmUnsignedToDouble(MDefinition* def)
       : MUnaryInstruction(def)
     {
         setResultType(MIRType::Double);
@@ -5317,9 +5317,9 @@ class MAsmJSUnsignedToDouble
     }
 
   public:
-    INSTRUCTION_HEADER(AsmJSUnsignedToDouble)
-    static MAsmJSUnsignedToDouble* NewAsmJS(TempAllocator& alloc, MDefinition* def) {
-        return new(alloc) MAsmJSUnsignedToDouble(def);
+    INSTRUCTION_HEADER(WasmUnsignedToDouble)
+    static MWasmUnsignedToDouble* NewAsmJS(TempAllocator& alloc, MDefinition* def) {
+        return new(alloc) MWasmUnsignedToDouble(def);
     }
 
     MDefinition* foldsTo(TempAllocator& alloc) override;

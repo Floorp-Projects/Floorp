@@ -103,7 +103,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     void visitGuardShape(MGuardShape* ins);
     void visitGuardObjectGroup(MGuardObjectGroup* ins);
     void visitWasmSelect(MWasmSelect* ins);
-    void visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble* ins);
+    void visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins);
     void visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins);
     void visitWasmLoad(MWasmLoad* ins);
     void visitWasmStore(MWasmStore* ins);

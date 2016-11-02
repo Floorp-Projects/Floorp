@@ -1633,7 +1633,7 @@ CodeGeneratorARM::visitBitAndAndBranch(LBitAndAndBranch* baab)
 }
 
 void
-CodeGeneratorARM::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir)
+CodeGeneratorARM::visitWasmUint32ToDouble(LWasmUint32ToDouble* lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
 }

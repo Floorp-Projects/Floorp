@@ -74,7 +74,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins);
     void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins);
     void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins);
-    void visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir);
+    void visitWasmUint32ToDouble(LWasmUint32ToDouble* lir);
     void visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32* lir);
     void visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir);
     void visitWasmReinterpretToI64(LWasmReinterpretToI64* lir);

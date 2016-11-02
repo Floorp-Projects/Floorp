@@ -240,9 +240,9 @@ LIRGeneratorARM64::lowerUMod(MMod* mod)
 }
 
 void
-LIRGeneratorARM64::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble* ins)
+LIRGeneratorARM64::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins)
 {
-    MOZ_CRASH("visitAsmJSUnsignedToDouble");
+    MOZ_CRASH("visitWasmUnsignedToDouble");
 }
 
 void

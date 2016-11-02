@@ -371,7 +371,7 @@ CodeGeneratorX64::visitWasmReinterpretToI64(LWasmReinterpretToI64* lir)
 }
 
 void
-CodeGeneratorX64::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir)
+CodeGeneratorX64::visitWasmUint32ToDouble(LWasmUint32ToDouble* lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
 }

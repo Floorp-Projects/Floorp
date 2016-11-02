@@ -169,7 +169,7 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     virtual void visitCompareDAndBranch(LCompareDAndBranch* comp);
     virtual void visitCompareFAndBranch(LCompareFAndBranch* comp);
     virtual void visitBitAndAndBranch(LBitAndAndBranch* lir);
-    virtual void visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir);
+    virtual void visitWasmUint32ToDouble(LWasmUint32ToDouble* lir);
     virtual void visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32* lir);
     virtual void visitNotI(LNotI* ins);
     virtual void visitNotD(LNotD* ins);
