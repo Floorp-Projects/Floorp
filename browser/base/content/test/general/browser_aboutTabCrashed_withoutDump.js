@@ -32,9 +32,9 @@ add_task(function* test_without_dump() {
       Assert.ok(!doc.documentElement.classList.contains("crashDumpAvailable"),
          "doesn't have crash dump");
 
-      let container = doc.getElementById("crash-reporter-container");
-      Assert.ok(container, "has crash-reporter-container");
-      Assert.ok(container.hidden, "crash-reporter-container is hidden");
+      let options = doc.getElementById("options");
+      Assert.ok(options, "has crash report options");
+      Assert.ok(options.hidden, "crash report options are hidden");
 
       doc.getElementById("closeTab").click();
     });

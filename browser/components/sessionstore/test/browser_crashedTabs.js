@@ -392,7 +392,8 @@ add_task(function* test_hide_restore_all_button() {
   let restoreAllButton = doc.getElementById("restoreAll");
   let restoreOneButton = doc.getElementById("restoreTab");
 
-  is(restoreAllButton.getAttribute("hidden"), "true", "Restore All button should be hidden");
+  let restoreAllStyles = window.getComputedStyle(restoreAllButton);
+  is(restoreAllStyles.display, "none", "Restore All button should be hidden");
   ok(restoreOneButton.classList.contains("primary"), "Restore Tab button should have the primary class");
 
   let newTab2 = gBrowser.addTab();
@@ -421,7 +422,8 @@ add_task(function* test_hide_restore_all_button() {
   restoreAllButton = doc.getElementById("restoreAll");
   restoreOneButton = doc.getElementById("restoreTab");
 
-  ok(!restoreAllButton.hasAttribute("hidden"), "Restore All button should not be hidden");
+  restoreAllStyles = window.getComputedStyle(restoreAllButton);
+  isnot(restoreAllStyles.display, "none", "Restore All button should not be hidden");
   ok(!(restoreOneButton.classList.contains("primary")), "Restore Tab button should not have the primary class");
 
   yield BrowserTestUtils.closeWindow(win2);
