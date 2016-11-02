@@ -1945,7 +1945,8 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
   }
   // Init mSimulcastEncodings always since they hold info from setParameters.
   // TODO(bug 1210175): H264 doesn't support simulcast yet.
-  for (size_t i = 0; i < codecInfo->mSimulcastEncodings.size(); ++i) {
+  size_t numberOfSimulcastEncodings = std::min(codecInfo->mSimulcastEncodings.size(), (size_t)webrtc::kMaxSimulcastStreams);
+  for (size_t i = 0; i < numberOfSimulcastEncodings; ++i) {
     const VideoCodecConfig::SimulcastEncoding& encoding =
       codecInfo->mSimulcastEncodings[i];
     // Make sure the constraints on the whole stream are reflected.
@@ -1989,10 +1990,10 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
     }
     // webrtc.org expects simulcast streams to be ordered by increasing
     // fidelity, our jsep code does the opposite.
-    cinst.simulcastStream[codecInfo->mSimulcastEncodings.size()-i-1] = stream;
+    cinst.simulcastStream[numberOfSimulcastEncodings-i-1] = stream;
   }
 
-  cinst.numberOfSimulcastStreams = codecInfo->mSimulcastEncodings.size();
+  cinst.numberOfSimulcastStreams = numberOfSimulcastEncodings;
 }
 
 /**
