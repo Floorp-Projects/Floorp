@@ -2898,6 +2898,7 @@ GetTextFrameForContent(nsIContent* aContent, bool aFlushLayout)
 }
 
 static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
+                                   mozilla::dom::DOMStringList* aTextList,
                                    nsIContent* aContent, int32_t aStartOffset,
                                    int32_t aEndOffset, bool aClampToEdge,
                                    bool aFlushLayout)
@@ -2994,11 +2995,11 @@ nsRange::CollectClientRectsAndText(nsLayoutUtils::RectCallback* aCollector,
        if (node == startContainer) {
          int32_t offset = startContainer == endContainer ?
            aEndOffset : content->GetText()->GetLength();
-         GetPartialTextRect(aCollector, content, aStartOffset, offset,
+         GetPartialTextRect(aCollector, aTextList, content, aStartOffset, offset,
                             aClampToEdge, aFlushLayout);
          continue;
        } else if (node == endContainer) {
-         GetPartialTextRect(aCollector, content, 0, aEndOffset,
+         GetPartialTextRect(aCollector, aTextList, content, 0, aEndOffset,
                             aClampToEdge, aFlushLayout);
          continue;
        }
