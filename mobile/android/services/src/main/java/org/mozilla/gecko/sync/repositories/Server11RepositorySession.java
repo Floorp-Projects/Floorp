@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.sync.repositories;
 
+import android.net.Uri;
+
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
@@ -35,7 +37,10 @@ public class Server11RepositorySession extends RepositorySession {
     super.setStoreDelegate(storeDelegate);
 
     // Now that we have the delegate, we can initialize our uploader.
-    this.uploader = new BatchingUploader(this, storeWorkQueue, delegate);
+    this.uploader = new BatchingUploader(
+            this, storeWorkQueue, storeDelegate, Uri.parse(serverRepository.collectionURI.toString()),
+            serverRepository.getCollectionLastModified(), serverRepository.getInfoConfiguration(),
+            serverRepository.authHeaderProvider);
   }
 
   @Override

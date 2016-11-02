@@ -3,6 +3,7 @@
 
 package org.mozilla.gecko.sync.repositories.uploaders;
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import static org.junit.Assert.*;
@@ -428,11 +429,20 @@ public class BatchingUploaderTest {
     }
 
     private BatchingUploader makeConstrainedUploader(long maxPostRecords, long maxTotalRecords, boolean firstSync) {
+        ExtendedJSONObject infoConfigurationJSON = new ExtendedJSONObject();
+        infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_BYTES, 4096L);
+        infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_RECORDS, maxTotalRecords);
+        infoConfigurationJSON.put(InfoConfiguration.MAX_POST_RECORDS, maxPostRecords);
+        infoConfigurationJSON.put(InfoConfiguration.MAX_POST_BYTES, 1024L);
+        infoConfigurationJSON.put(InfoConfiguration.MAX_REQUEST_BYTES, 1024L);
+
         Server11RepositorySession server11RepositorySession = new Server11RepositorySession(
                 makeCountConstrainedRepository(maxPostRecords, maxTotalRecords, firstSync)
         );
         server11RepositorySession.setStoreDelegate(storeDelegate);
-        return new BatchingUploader(server11RepositorySession, workQueue, storeDelegate);
+        return new BatchingUploader(
+                server11RepositorySession, workQueue, storeDelegate, Uri.EMPTY, null,
+                new InfoConfiguration(infoConfigurationJSON), null);
     }
 
     private Server11Repository makeCountConstrainedRepository(long maxPostRecords, long maxTotalRecords, boolean firstSync) {
@@ -465,6 +475,7 @@ public class BatchingUploaderTest {
                 }
             };
         }
+
 
         try {
             return new Server11Repository(
