@@ -51,7 +51,7 @@ const PING_FORMAT_VERSION = 1;
 
 // The set of engines we record telemetry for - any other engines are ignored.
 const ENGINES = new Set(["addons", "bookmarks", "clients", "forms", "history",
-                         "passwords", "prefs", "tabs", "extension-storage"]);
+                         "passwords", "prefs", "tabs"]);
 
 // A regex we can use to replace the profile dir in error messages. We use a
 // regexp so we can simply replace all case-insensitive occurences.

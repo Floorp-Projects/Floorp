@@ -25,8 +25,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
                                   "resource://gre/modules/ExtensionStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "loadKinto",
                                   "resource://services-common/kinto-offline-client.js");
-XPCOMUtils.defineLazyModuleGetter(this, "Observers",
-                                  "resource://services-common/observers.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyPreferenceGetter(this, "prefPermitsStorageSync",
@@ -329,7 +327,6 @@ this.ExtensionStorageSync = {
   },
 
   notifyListeners(extension, changes) {
-    Observers.notify("ext.storage.sync-changed");
     let listeners = this.listeners.get(extension) || new Set();
     if (listeners) {
       for (let listener of listeners) {
