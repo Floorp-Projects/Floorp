@@ -8152,7 +8152,7 @@ NewAsmJSModuleFunction(ExclusiveContext* cx, JSFunction* origFun, HandleObject m
     RootedAtom name(cx, origFun->name());
 
     JSFunction::Flags flags = origFun->isLambda() ? JSFunction::ASMJS_LAMBDA_CTOR
-                                                  : JSFunction::ASMJS_CTOR;
+                                                  : JSFunction::WASM_CTOR;
     JSFunction* moduleFun =
         NewNativeConstructor(cx, InstantiateAsmJS, origFun->nargs(), name,
                              gc::AllocKind::FUNCTION_EXTENDED, TenuredObject,

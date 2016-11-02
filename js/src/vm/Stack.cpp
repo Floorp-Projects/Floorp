@@ -1763,7 +1763,7 @@ JS::ProfilingFrameIterator::operator++()
     MOZ_ASSERT(activation_->isWasm() || activation_->isJit());
 
     if (activation_->isWasm()) {
-        ++asmJSIter();
+        ++wasmIter();
         settle();
         return;
     }
@@ -1829,7 +1829,7 @@ JS::ProfilingFrameIterator::iteratorDestroy()
     MOZ_ASSERT(activation_->isWasm() || activation_->isJit());
 
     if (activation_->isWasm()) {
-        asmJSIter().~ProfilingFrameIterator();
+        wasmIter().~ProfilingFrameIterator();
         return;
     }
 
@@ -1845,7 +1845,7 @@ JS::ProfilingFrameIterator::iteratorDone()
     MOZ_ASSERT(activation_->isWasm() || activation_->isJit());
 
     if (activation_->isWasm())
-        return asmJSIter().done();
+        return wasmIter().done();
 
     return jitIter().done();
 }
@@ -1857,7 +1857,7 @@ JS::ProfilingFrameIterator::stackAddress() const
     MOZ_ASSERT(activation_->isWasm() || activation_->isJit());
 
     if (activation_->isWasm())
-        return asmJSIter().stackAddress();
+        return wasmIter().stackAddress();
 
     return jitIter().stackAddress();
 }
@@ -1867,9 +1867,9 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(jit::JitcodeGlobalEntry* en
 {
     void* stackAddr = stackAddress();
 
-    if (isAsmJS()) {
+    if (isWasm()) {
         Frame frame;
-        frame.kind = Frame_AsmJS;
+        frame.kind = Frame_Wasm;
         frame.stackAddress = stackAddr;
         frame.returnAddress = nullptr;
         frame.activation = activation_;
@@ -1913,9 +1913,9 @@ JS::ProfilingFrameIterator::extractStack(Frame* frames, uint32_t offset, uint32_
     if (physicalFrame.isNothing())
         return 0;
 
-    if (isAsmJS()) {
+    if (isWasm()) {
         frames[offset] = mozilla::Move(physicalFrame.ref());
-        frames[offset].label = DuplicateString(asmJSIter().label());
+        frames[offset].label = DuplicateString(wasmIter().label());
         if (!frames[offset].label)
             return 0; // Drop stack frames silently on OOM.
         return 1;
@@ -1946,7 +1946,7 @@ JS::ProfilingFrameIterator::getPhysicalFrameWithoutLabel() const
 }
 
 bool
-JS::ProfilingFrameIterator::isAsmJS() const
+JS::ProfilingFrameIterator::isWasm() const
 {
     MOZ_ASSERT(!done());
     return activation_->isWasm();

@@ -1768,8 +1768,8 @@ ReadSPSProfilingStack(JSContext* cx, unsigned argc, Value* vp)
               case JS::ProfilingFrameIterator::Frame_Ion:
                 frameKindStr = "ion";
                 break;
-              case JS::ProfilingFrameIterator::Frame_AsmJS:
-                frameKindStr = "asmjs";
+              case JS::ProfilingFrameIterator::Frame_Wasm:
+                frameKindStr = "wasm";
                 break;
               default:
                 frameKindStr = "unknown";
@@ -4427,7 +4427,7 @@ gc::ZealModeHelpText),
 "setIonCheckGraphCoherency(bool)",
 "  Set whether Ion should perform graph consistency (DEBUG-only) assertions. These assertions\n"
 "  are valuable and should be generally enabled, however they can be very expensive for large\n"
-"  (asm.js) programs."),
+"  (wasm) programs."),
 
     JS_FN_HELP("serialize", Serialize, 1, 0,
 "serialize(data, [transferables, [policy]])",

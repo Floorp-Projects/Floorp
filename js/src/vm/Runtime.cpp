@@ -383,7 +383,7 @@ JSRuntime::destroyRuntime()
 
         /*
          * Cancel any pending, in progress or completed Ion compilations and
-         * parse tasks. Waiting for AsmJS and compression tasks is done
+         * parse tasks. Waiting for wasm and compression tasks is done
          * synchronously (on the main thread or during parse tasks), so no
          * explicit canceling is needed for these.
          */
