@@ -19,7 +19,9 @@ var WebRequestUpload;
 
 function rewind(stream) {
   try {
-    stream.seek(0, 0);
+    if (stream instanceof Ci.nsISeekableStream) {
+      stream.seek(0, 0);
+    }
   } catch (e) {
     // It might be already closed, e.g. because of a previous error.
   }
