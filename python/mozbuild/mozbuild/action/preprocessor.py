@@ -9,9 +9,15 @@ import sys
 from mozbuild.preprocessor import Preprocessor
 
 
+def generate(output, *args):
+    pp = Preprocessor()
+    pp.out = output
+    pp.handleCommandLine(list(args), True)
+    return set(pp.includes)
+
 def main(args):
-  pp = Preprocessor()
-  pp.handleCommandLine(args, True)
+    pp = Preprocessor()
+    pp.handleCommandLine(args, True)
 
 
 if __name__ == "__main__":
