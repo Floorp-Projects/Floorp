@@ -52,7 +52,6 @@ EXTRA_JS_MODULES['services-sync'].engines += [
     'modules/engines/addons.js',
     'modules/engines/bookmarks.js',
     'modules/engines/clients.js',
-    'modules/engines/extension-storage.js',
     'modules/engines/forms.js',
     'modules/engines/history.js',
     'modules/engines/passwords.js',
