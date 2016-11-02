@@ -103,7 +103,6 @@ function Inspector(toolbox) {
   this.onTextBoxContextMenu = this.onTextBoxContextMenu.bind(this);
   this._updateSearchResultsLabel = this._updateSearchResultsLabel.bind(this);
   this.onNewSelection = this.onNewSelection.bind(this);
-  this.onBeforeNewSelection = this.onBeforeNewSelection.bind(this);
   this.onDetached = this.onDetached.bind(this);
   this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
   this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
@@ -223,7 +222,6 @@ Inspector.prototype = {
     this.walker.on("new-root", this.onNewRoot);
 
     this.selection.on("new-node-front", this.onNewSelection);
-    this.selection.on("before-new-node-front", this.onBeforeNewSelection);
     this.selection.on("detached-front", this.onDetached);
 
     if (this.target.isLocalTab) {
@@ -856,16 +854,6 @@ Inspector.prototype = {
   },
 
   /**
-   * When a new node is selected, before the selection has changed.
-   */
-  onBeforeNewSelection: function (event, node) {
-    if (this.breadcrumbs.indexOf(node) == -1) {
-      // only clear locks if we'd have to update breadcrumbs
-      this.clearPseudoClasses();
-    }
-  },
-
-  /**
    * When a node is deleted, select its parent node or the defaultNode if no
    * parent is found (may happen when deleting an iframe inside which the
    * node was selected).
@@ -928,7 +916,6 @@ Inspector.prototype = {
     this.teardownToolbar();
     this.breadcrumbs.destroy();
     this.selection.off("new-node-front", this.onNewSelection);
-    this.selection.off("before-new-node-front", this.onBeforeNewSelection);
     this.selection.off("detached-front", this.onDetached);
     let markupDestroyer = this._destroyMarkup();
     this.panelWin.inspector = null;
@@ -1555,16 +1542,6 @@ Inspector.prototype = {
         this.emit("console-var-ready");
       });
     });
-  },
-
-  /**
-   * Clear any pseudo-class locks applied to the current hierarchy.
-   */
-  clearPseudoClasses: function () {
-    if (!this.walker) {
-      return promise.resolve();
-    }
-    return this.walker.clearPseudoClassLocks().catch(this._handleRejectionIfNotDestroyed);
   },
 
   /**
