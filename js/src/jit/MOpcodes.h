@@ -290,7 +290,7 @@ namespace jit {
     _(AsmJSVoidReturn)                                                      \
     _(AsmJSPassStackArg)                                                    \
     _(WasmCall)                                                             \
-    _(AsmSelect)                                                            \
+    _(WasmSelect)                                                           \
     _(WasmReinterpret)                                                      \
     _(Rotate)                                                               \
     _(NewDerivedTypedObject)                                                \

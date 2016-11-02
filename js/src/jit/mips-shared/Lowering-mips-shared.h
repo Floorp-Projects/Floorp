@@ -73,7 +73,7 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared
     void visitAsmJSNeg(MAsmJSNeg* ins);
     void visitWasmLoad(MWasmLoad* ins);
     void visitWasmStore(MWasmStore* ins);
-    void visitAsmSelect(MAsmSelect* ins);
+    void visitWasmSelect(MWasmSelect* ins);
 
     LTableSwitch* newLTableSwitch(const LAllocation& in, const LDefinition& inputCopy,
                                   MTableSwitch* ins);

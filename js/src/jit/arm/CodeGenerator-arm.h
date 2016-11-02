@@ -179,7 +179,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual void visitBitOpI64(LBitOpI64* lir);
     virtual void visitRotateI64(LRotateI64* lir);
     virtual void visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* lir);
-    virtual void visitAsmSelectI64(LAsmSelectI64* lir);
+    virtual void visitWasmSelectI64(LWasmSelectI64* lir);
     virtual void visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir);
     virtual void visitWasmReinterpretToI64(LWasmReinterpretToI64* lir);
     virtual void visitPopcntI64(LPopcntI64* ins);
@@ -233,7 +233,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayElementBinopForEffect* lir);
     void visitCompareExchangeTypedArrayElement(LCompareExchangeTypedArrayElement* lir);
     void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir);
-    void visitAsmSelect(LAsmSelect* ins);
+    void visitWasmSelect(LWasmSelect* ins);
     void visitWasmReinterpret(LWasmReinterpret* ins);
     void emitWasmCall(LWasmCallBase* ins);
     void visitWasmCall(LWasmCall* ins);

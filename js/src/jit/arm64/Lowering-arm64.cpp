@@ -222,9 +222,9 @@ LIRGeneratorARM64::visitAsmJSNeg(MAsmJSNeg* ins)
 }
 
 void
-LIRGeneratorARM64::visitAsmSelect(MAsmSelect* ins)
+LIRGeneratorARM64::visitWasmSelect(MWasmSelect* ins)
 {
-    MOZ_CRASH("visitAsmSelect");
+    MOZ_CRASH("visitWasmSelect");
 }
 
 void

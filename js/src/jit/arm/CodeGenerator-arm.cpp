@@ -2171,7 +2171,7 @@ CodeGeneratorARM::visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayEl
 }
 
 void
-CodeGeneratorARM::visitAsmSelect(LAsmSelect* ins)
+CodeGeneratorARM::visitWasmSelect(LWasmSelect* ins)
 {
     MIRType mirType = ins->mir()->type();
 
@@ -2196,7 +2196,7 @@ CodeGeneratorARM::visitAsmSelect(LAsmSelect* ins)
     else if (mirType == MIRType::Float32)
         masm.moveFloat32(falseExpr, out, Assembler::Zero);
     else
-        MOZ_CRASH("unhandled type in visitAsmSelect!");
+        MOZ_CRASH("unhandled type in visitWasmSelect!");
 }
 
 void
@@ -3633,7 +3633,7 @@ CodeGeneratorARM::visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins)
 }
 
 void
-CodeGeneratorARM::visitAsmSelectI64(LAsmSelectI64* lir)
+CodeGeneratorARM::visitWasmSelectI64(LWasmSelectI64* lir)
 {
     Register cond = ToRegister(lir->condExpr());
     const LInt64Allocation falseExpr = lir->falseExpr();

@@ -559,7 +559,7 @@ CodeGeneratorMIPS64::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
 }
 
 void
-CodeGeneratorMIPS64::visitAsmSelectI64(LAsmSelectI64* lir)
+CodeGeneratorMIPS64::visitWasmSelectI64(LWasmSelectI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
 
