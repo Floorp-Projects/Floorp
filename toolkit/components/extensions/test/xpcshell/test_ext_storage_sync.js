@@ -328,6 +328,8 @@ function assertKeyRingKey(keyRing, extensionId, expectedKey, message) {
 
 // Tests using this ID will share keys in local storage, so be careful.
 const extensionId = "{13bdde76-4dc7-11e6-9bdc-54ee758d6342}";
+// FIXME: need to access whatever mechanism we use in the syncing code
+const collectionId = extensionId;
 const extension = {id: extensionId};
 
 const BORING_KB = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
@@ -341,7 +343,6 @@ const loggedInUser = {
     },
   },
 };
-const collectionId = extensionIdToCollectionId(loggedInUser, extensionId);
 
 function uuid() {
   const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);

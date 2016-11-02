@@ -360,6 +360,9 @@ function cleanUpForContext(extension, context) {
  * @returns {Promise<Collection>}
  */
 const openCollection = Task.async(function* (extension, context) {
+  // FIXME: This leaks metadata about what extensions a user has
+  // installed.  We should calculate collection ID using a hash of
+  // user ID, extension ID, and some secret.
   let collectionId = extension.id;
   const db = makeKinto();
   const coll = db.collection(collectionId, {
@@ -429,7 +432,8 @@ this.ExtensionStorageSync = {
       log.info("User was not signed into FxA; cannot sync");
       throw new Error("Not signed in to FxA");
     }
-    const collectionId = extensionIdToCollectionId(signedInUser, extension.id);
+    // FIXME: this leaks metadata about what extensions are being used
+    const collectionId = extension.id;
     let syncResults;
     try {
       syncResults = yield this._syncCollection(collection, {
