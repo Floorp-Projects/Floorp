@@ -3421,7 +3421,7 @@ EmitExpr(FunctionCompiler& f)
       case Expr::F32ConvertSI32:
         return EmitConversion<MToFloat32>(f, ValType::I32, ValType::F32);
       case Expr::F32ConvertUI32:
-        return EmitConversion<MAsmJSUnsignedToFloat32>(f, ValType::I32, ValType::F32);
+        return EmitConversion<MWasmUnsignedToFloat32>(f, ValType::I32, ValType::F32);
       case Expr::F32ConvertSI64:
       case Expr::F32ConvertUI64:
         return EmitConvertI64ToFloatingPoint(f, ValType::F32, MIRType::Float32,
