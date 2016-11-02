@@ -367,7 +367,7 @@ CodeGeneratorX86Shared::visitWasmSelect(LWasmSelect* ins)
 void
 CodeGeneratorX86Shared::visitWasmReinterpret(LWasmReinterpret* lir)
 {
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     MWasmReinterpret* ins = lir->mir();
 
     MIRType to = ins->type();
@@ -2500,7 +2500,7 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
 
     masm.jump(ool->rejoin());
 
-    if (gen->compilingAsmJS()) {
+    if (gen->compilingWasm()) {
         masm.bindLater(&onConversionError, trap(ool, wasm::Trap::ImpreciseSimdConversion));
     } else {
         masm.bind(&onConversionError);
@@ -2580,7 +2580,7 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     masm.vmovmskps(scratch, temp);
     masm.cmp32(temp, Imm32(0));
 
-    if (gen->compilingAsmJS())
+    if (gen->compilingWasm())
         masm.j(Assembler::NotEqual, trap(mir, wasm::Trap::ImpreciseSimdConversion));
     else
         bailoutIf(Assembler::NotEqual, ins->snapshot());
@@ -2850,7 +2850,7 @@ CodeGeneratorX86Shared::visitSimdExtractElementF(LSimdExtractElementF* ins)
     // when we extract an element into a "regular" scalar JS value, we have to
     // canonicalize. In asm.js code, we can skip this, as asm.js only has to
     // canonicalize NaNs at FFI boundaries.
-    if (!gen->compilingAsmJS())
+    if (!gen->compilingWasm())
         masm.canonicalizeFloat(output);
 }
 

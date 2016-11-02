@@ -283,7 +283,7 @@ ConvertToBailingBlock(TempAllocator& alloc, MBasicBlock* block)
 bool
 jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
 {
-    MOZ_ASSERT(!mir->compilingAsmJS(), "AsmJS compilation have no code coverage support.");
+    MOZ_ASSERT(!mir->compilingWasm(), "AsmJS compilation have no code coverage support.");
 
     // We do a reverse-post-order traversal, marking basic blocks when the block
     // have to be converted into bailing blocks, and flagging block as
@@ -1909,7 +1909,7 @@ TypeAnalyzer::tryEmitFloatOperations()
 {
     // Asm.js uses the ahead of time type checks to specialize operations, no need to check
     // them again at this point.
-    if (mir->compilingAsmJS())
+    if (mir->compilingWasm())
         return true;
 
     // Check ahead of time that there is at least one definition typed as Float32, otherwise we

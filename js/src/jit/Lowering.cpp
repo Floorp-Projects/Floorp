@@ -133,7 +133,7 @@ TryToUseImplicitInterruptCheck(MIRGraph& graph, MBasicBlock* backedge)
 void
 LIRGenerator::visitGoto(MGoto* ins)
 {
-    if (!gen->compilingAsmJS() && ins->block()->isLoopBackedge())
+    if (!gen->compilingWasm() && ins->block()->isLoopBackedge())
         TryToUseImplicitInterruptCheck(graph, ins->block());
 
     add(new(alloc()) LGoto(ins->target()));
@@ -4443,7 +4443,7 @@ LIRGenerator::visitSimdConvert(MSimdConvert* ins)
         switch (ins->signedness()) {
           case SimdSign::Signed: {
               LFloat32x4ToInt32x4* lir = new(alloc()) LFloat32x4ToInt32x4(use, temp());
-              if (!gen->compilingAsmJS())
+              if (!gen->compilingWasm())
                   assignSnapshot(lir, Bailout_BoundsCheck);
               define(lir, ins);
               break;
@@ -4451,7 +4451,7 @@ LIRGenerator::visitSimdConvert(MSimdConvert* ins)
           case SimdSign::Unsigned: {
               LFloat32x4ToUint32x4* lir =
                 new (alloc()) LFloat32x4ToUint32x4(use, temp(), temp(LDefinition::SIMD128INT));
-              if (!gen->compilingAsmJS())
+              if (!gen->compilingWasm())
                   assignSnapshot(lir, Bailout_BoundsCheck);
               define(lir, ins);
               break;
@@ -4786,7 +4786,7 @@ LIRGenerator::updateResumeState(MBasicBlock* block)
     //
     // Note: RangeAnalysis can flag blocks as unreachable, but they are only
     // removed iff GVN (including UCE) is enabled.
-    MOZ_ASSERT_IF(!mir()->compilingAsmJS() && !block->unreachable(), block->entryResumePoint());
+    MOZ_ASSERT_IF(!mir()->compilingWasm() && !block->unreachable(), block->entryResumePoint());
     MOZ_ASSERT_IF(block->unreachable(), block->graph().osrBlock() ||
                   !mir()->optimizationInfo().gvnEnabled());
     lastResumePoint_ = block->entryResumePoint();

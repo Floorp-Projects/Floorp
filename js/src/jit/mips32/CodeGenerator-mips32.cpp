@@ -408,7 +408,7 @@ CodeGeneratorMIPS::visitDivOrModI64(LDivOrModI64* lir)
     masm.passABIArg(rhs.high);
     masm.passABIArg(rhs.low);
 
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     if (lir->mir()->isMod())
         masm.callWithABI(wasm::SymbolicAddress::ModI64);
     else
@@ -447,7 +447,7 @@ CodeGeneratorMIPS::visitUDivOrModI64(LUDivOrModI64* lir)
     masm.passABIArg(rhs.high);
     masm.passABIArg(rhs.low);
 
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     if (lir->mir()->isMod())
         masm.callWithABI(wasm::SymbolicAddress::UModI64);
     else

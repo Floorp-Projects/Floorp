@@ -624,7 +624,7 @@ CodeGeneratorARM::visitSoftDivI(LSoftDivI* ins)
     masm.setupAlignedABICall();
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    if (gen->compilingAsmJS())
+    if (gen->compilingWasm())
         masm.callWithABI(wasm::SymbolicAddress::aeabi_idivmod);
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod));
@@ -805,7 +805,7 @@ CodeGeneratorARM::visitSoftModI(LSoftModI* ins)
     masm.setupAlignedABICall();
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    if (gen->compilingAsmJS())
+    if (gen->compilingWasm())
         masm.callWithABI(wasm::SymbolicAddress::aeabi_idivmod);
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod));
@@ -2202,7 +2202,7 @@ CodeGeneratorARM::visitWasmSelect(LWasmSelect* ins)
 void
 CodeGeneratorARM::visitWasmReinterpret(LWasmReinterpret* lir)
 {
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     MWasmReinterpret* ins = lir->mir();
 
     MIRType to = ins->type();
@@ -3047,7 +3047,7 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod* ins)
     masm.setupAlignedABICall();
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    if (gen->compilingAsmJS())
+    if (gen->compilingWasm())
         masm.callWithABI(wasm::SymbolicAddress::aeabi_uidivmod);
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_uidivmod));
@@ -3406,7 +3406,7 @@ CodeGeneratorARM::visitDivOrModI64(LDivOrModI64* lir)
     masm.passABIArg(rhs.high);
     masm.passABIArg(rhs.low);
 
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     if (lir->mir()->isMod())
         masm.callWithABI(wasm::SymbolicAddress::ModI64);
     else
@@ -3446,7 +3446,7 @@ CodeGeneratorARM::visitUDivOrModI64(LUDivOrModI64* lir)
     masm.passABIArg(rhs.high);
     masm.passABIArg(rhs.low);
 
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     if (lir->mir()->isMod())
         masm.callWithABI(wasm::SymbolicAddress::UModI64);
     else
