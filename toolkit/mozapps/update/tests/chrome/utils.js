@@ -562,7 +562,7 @@ function getExpectedButtonStates() {
       if (gTest.neverButton) {
         return {extra1: {disabled: false, hidden: false},
                 extra2: {disabled: false, hidden: false},
-                next: {disabled: false, hidden: false}}
+                next: {disabled: false, hidden: false}};
       }
       return {extra1: {disabled: false, hidden: false},
               next: {disabled: false, hidden: false}};

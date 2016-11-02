@@ -61,7 +61,7 @@ const FILE_UPDATE_TEST               = "update.test";
 const FILE_UPDATE_VERSION            = "update.version";
 
 const UPDATE_SETTINGS_CONTENTS = "[Settings]\n" +
-                                 "ACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n"
+                                 "ACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n";
 
 const PR_RDWR        = 0x04;
 const PR_CREATE_FILE = 0x08;
