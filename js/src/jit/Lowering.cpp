@@ -4224,12 +4224,12 @@ LIRGenerator::visitAsmJSParameter(MAsmJSParameter* ins)
 }
 
 void
-LIRGenerator::visitAsmJSReturn(MAsmJSReturn* ins)
+LIRGenerator::visitWasmReturn(MWasmReturn* ins)
 {
     MDefinition* rval = ins->getOperand(0);
 
     if (rval->type() == MIRType::Int64) {
-        LAsmJSReturnI64* lir = new(alloc()) LAsmJSReturnI64(useInt64Fixed(rval, ReturnReg64));
+        LWasmReturnI64* lir = new(alloc()) LWasmReturnI64(useInt64Fixed(rval, ReturnReg64));
 
         // Preserve the TLS pointer we were passed in `WasmTlsReg`.
         MDefinition* tlsPtr = ins->getOperand(1);
@@ -4239,7 +4239,7 @@ LIRGenerator::visitAsmJSReturn(MAsmJSReturn* ins)
         return;
     }
 
-    LAsmJSReturn* lir = new(alloc()) LAsmJSReturn;
+    LWasmReturn* lir = new(alloc()) LWasmReturn;
     if (rval->type() == MIRType::Float32)
         lir->setOperand(0, useFixed(rval, ReturnFloat32Reg));
     else if (rval->type() == MIRType::Double)
@@ -4259,9 +4259,9 @@ LIRGenerator::visitAsmJSReturn(MAsmJSReturn* ins)
 }
 
 void
-LIRGenerator::visitAsmJSVoidReturn(MAsmJSVoidReturn* ins)
+LIRGenerator::visitWasmReturnVoid(MWasmReturnVoid* ins)
 {
-    auto* lir = new(alloc()) LAsmJSVoidReturn;
+    auto* lir = new(alloc()) LWasmReturnVoid;
 
     // Preserve the TLS pointer we were passed in `WasmTlsReg`.
     MDefinition* tlsPtr = ins->getOperand(0);

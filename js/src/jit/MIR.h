@@ -13917,30 +13917,30 @@ class MAsmJSParameter : public MNullaryInstruction
     ABIArg abi() const { return abi_; }
 };
 
-class MAsmJSReturn
+class MWasmReturn
   : public MAryControlInstruction<2, 0>,
     public NoTypePolicy::Data
 {
-    explicit MAsmJSReturn(MDefinition* ins, MDefinition* tlsPtr) {
+    explicit MWasmReturn(MDefinition* ins, MDefinition* tlsPtr) {
         initOperand(0, ins);
         initOperand(1, tlsPtr);
     }
 
   public:
-    INSTRUCTION_HEADER(AsmJSReturn)
+    INSTRUCTION_HEADER(WasmReturn)
     TRIVIAL_NEW_WRAPPERS
 };
 
-class MAsmJSVoidReturn
+class MWasmReturnVoid
   : public MAryControlInstruction<1, 0>,
     public NoTypePolicy::Data
 {
-    explicit MAsmJSVoidReturn(MDefinition* tlsPtr) {
+    explicit MWasmReturnVoid(MDefinition* tlsPtr) {
         initOperand(0, tlsPtr);
     }
 
   public:
-    INSTRUCTION_HEADER(AsmJSVoidReturn)
+    INSTRUCTION_HEADER(WasmReturnVoid)
     TRIVIAL_NEW_WRAPPERS
 };
 

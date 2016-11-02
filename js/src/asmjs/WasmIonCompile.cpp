@@ -1140,7 +1140,7 @@ class FunctionCompiler
         if (inDeadCode())
             return;
 
-        MAsmJSReturn* ins = MAsmJSReturn::New(alloc(), expr, tlsPointer_);
+        MWasmReturn* ins = MWasmReturn::New(alloc(), expr, tlsPointer_);
         curBlock_->end(ins);
         curBlock_ = nullptr;
     }
@@ -1150,7 +1150,7 @@ class FunctionCompiler
         if (inDeadCode())
             return;
 
-        MAsmJSVoidReturn* ins = MAsmJSVoidReturn::New(alloc(), tlsPointer_);
+        MWasmReturnVoid* ins = MWasmReturnVoid::New(alloc(), tlsPointer_);
         curBlock_->end(ins);
         curBlock_ = nullptr;
     }
