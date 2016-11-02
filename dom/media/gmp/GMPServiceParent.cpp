@@ -839,9 +839,6 @@ GeckoMediaPluginServiceParent::PathRunnable::Run()
   mService->UpdateContentProcessGMPCapabilities();
 
 #ifndef MOZ_WIDGET_GONK // Bug 1214967: disabled on B2G due to inscrutable test failures.
-  // For e10s, we must fire a notification so that all ContentParents notify
-  // their children to update the codecs that the GMPDecoderModule can use.
-  NS_DispatchToMainThread(new NotifyObserversTask("gmp-changed"), NS_DISPATCH_NORMAL);
   // For non-e10s, and for decoding in the chrome process, must update GMP
   // PDM's codecs list directly.
   NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
@@ -895,6 +892,14 @@ GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities()
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
     Unused << cp->SendGMPsChanged(caps);
   }
+
+  // For non-e10s, we must fire a notification so that any MediaKeySystemAccess
+  // requests waiting on a CDM to download will retry.
+  nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
+  MOZ_ASSERT(obsService);
+  if (obsService) {
+    obsService->NotifyObservers(nullptr, "gmp-changed", nullptr);
+  }
 }
 
 RefPtr<GenericPromise>
@@ -913,13 +918,6 @@ GeckoMediaPluginServiceParent::AsyncAddPluginDirectory(const nsAString& aDirecto
         LOGD(("GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s succeeded",
               NS_ConvertUTF16toUTF8(dir).get()));
         MOZ_ASSERT(NS_IsMainThread());
-        // For e10s, we must fire a notification so that all ContentParents notify
-        // their children to update the codecs that the GMPDecoderModule can use.
-        nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
-        MOZ_ASSERT(obsService);
-        if (obsService) {
-          obsService->NotifyObservers(nullptr, "gmp-changed", nullptr);
-        }
         self->UpdateContentProcessGMPCapabilities();
         // For non-e10s, and for decoding in the chrome process, must update GMP
         // PDM's codecs list directly.

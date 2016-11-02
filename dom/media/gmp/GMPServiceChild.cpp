@@ -16,6 +16,8 @@
 #include "mozilla/SyncRunnable.h"
 #include "runnable_utils.h"
 #include "base/task.h"
+#include "nsIObserverService.h"
+#include "nsComponentManagerUtils.h"
 
 namespace mozilla {
 
@@ -206,6 +208,14 @@ GeckoMediaPluginServiceChild::UpdateGMPCapabilities(nsTArray<GMPCapabilityData>&
   }
 
   LOGD(("UpdateGMPCapabilities {%s}", GMPCapabilitiesToString().get()));
+
+  // Fire a notification so that any MediaKeySystemAccess
+  // requests waiting on a CDM to download will retry.
+  nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
+  MOZ_ASSERT(obsService);
+  if (obsService) {
+    obsService->NotifyObservers(nullptr, "gmp-changed", nullptr);
+  }
 }
 
 NS_IMETHODIMP
