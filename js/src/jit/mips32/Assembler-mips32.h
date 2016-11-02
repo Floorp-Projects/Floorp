@@ -25,7 +25,7 @@ class ABIArgGenerator
     unsigned usedArgSlots_;
     unsigned firstArgFloatSize_;
     // Note: This is not compliant with the system ABI.  The Lowering phase
-    // expects to lower an MAsmJSParameter to only one register.
+    // expects to lower an MWasmParameter to only one register.
     bool useGPRForFloats_;
     ABIArg current_;
 

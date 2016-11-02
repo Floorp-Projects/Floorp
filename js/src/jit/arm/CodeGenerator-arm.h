@@ -178,7 +178,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual void visitCompareI64AndBranch(LCompareI64AndBranch* lir);
     virtual void visitBitOpI64(LBitOpI64* lir);
     virtual void visitRotateI64(LRotateI64* lir);
-    virtual void visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* lir);
+    virtual void visitWasmStackArgI64(LWasmStackArgI64* lir);
     virtual void visitWasmSelectI64(LWasmSelectI64* lir);
     virtual void visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir);
     virtual void visitWasmReinterpretToI64(LWasmReinterpretToI64* lir);
@@ -260,7 +260,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins);
     void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins);
     void visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins);
-    void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
+    void visitWasmStackArg(LWasmStackArg* ins);
     void visitWasmTruncateToInt32(LWasmTruncateToInt32* ins);
     void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool);
     void visitCopySignD(LCopySignD* ins);

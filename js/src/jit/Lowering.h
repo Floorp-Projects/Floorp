@@ -291,10 +291,10 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitWasmBoundsCheck(MWasmBoundsCheck* ins);
     void visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins);
     void visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins);
-    void visitAsmJSParameter(MAsmJSParameter* ins);
+    void visitWasmParameter(MWasmParameter* ins);
     void visitWasmReturn(MWasmReturn* ins);
     void visitWasmReturnVoid(MWasmReturnVoid* ins);
-    void visitAsmJSPassStackArg(MAsmJSPassStackArg* ins);
+    void visitWasmStackArg(MWasmStackArg* ins);
     void visitWasmCall(MWasmCall* ins);
     void visitSetDOMProperty(MSetDOMProperty* ins);
     void visitGetDOMProperty(MGetDOMProperty* ins);
