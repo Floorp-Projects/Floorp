@@ -261,6 +261,17 @@ public:
     virtual IProtocol* Lookup(int32_t);
     virtual void Unregister(int32_t);
 
+    virtual Shmem::SharedMemory* CreateSharedMemory(
+        size_t, SharedMemory::SharedMemoryType, bool, int32_t*);
+    virtual Shmem::SharedMemory* LookupSharedMemory(int32_t);
+    virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*);
+    virtual bool DestroySharedMemory(Shmem&);
+
+    void DeallocShmems();
+
+    bool ShmemCreated(const Message& aMsg);
+    bool ShmemDestroyed(const Message& aMsg);
+
     virtual bool ShouldContinueFromReplyTimeout() {
         return false;
     }
@@ -330,6 +341,8 @@ private:
     base::ProcessId mOtherPid;
     IDMap<IProtocol> mActorMap;
     int32_t mLastRouteId;
+    IDMap<Shmem::SharedMemory> mShmemMap;
+    Shmem::id_t mLastShmemId;
 };
 
 class IShmemAllocator
