@@ -196,7 +196,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitFunctionEnvironment(MFunctionEnvironment* ins);
     void visitInterruptCheck(MInterruptCheck* ins);
     void visitWasmTrap(MWasmTrap* ins);
-    void visitAsmReinterpret(MAsmReinterpret* ins);
+    void visitWasmReinterpret(MWasmReinterpret* ins);
     void visitStoreSlot(MStoreSlot* ins);
     void visitFilterTypeSet(MFilterTypeSet* ins);
     void visitTypeBarrier(MTypeBarrier* ins);

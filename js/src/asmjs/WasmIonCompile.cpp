@@ -2243,7 +2243,7 @@ EmitReinterpret(FunctionCompiler& f, ValType resultType, ValType operandType, MI
     if (!f.iter().readConversion(operandType, resultType, &input))
         return false;
 
-    f.iter().setResult(f.unary<MAsmReinterpret>(input, mirType));
+    f.iter().setResult(f.unary<MWasmReinterpret>(input, mirType));
     return true;
 }
 

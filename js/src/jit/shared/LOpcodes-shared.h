@@ -374,9 +374,9 @@
     _(CallInstanceOf)               \
     _(InterruptCheck)               \
     _(WasmTrap)                     \
-    _(AsmReinterpret)               \
-    _(AsmReinterpretToI64)          \
-    _(AsmReinterpretFromI64)        \
+    _(WasmReinterpret)              \
+    _(WasmReinterpretToI64)         \
+    _(WasmReinterpretFromI64)       \
     _(Rotate)                       \
     _(RotateI64)                    \
     _(GetDOMProperty)               \
