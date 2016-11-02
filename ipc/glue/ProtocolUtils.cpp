@@ -510,7 +510,8 @@ IProtocol::DeallocShmem(Shmem& aMem)
 IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId, Side aSide)
  : IProtocol(aSide),
    mProtocolId(aProtoId),
-   mOtherPid(mozilla::ipc::kInvalidProcessId)
+   mOtherPid(mozilla::ipc::kInvalidProcessId),
+   mLastRouteId(mSide == ParentSide : 1 : 0)
 {
 }
 
@@ -580,6 +581,34 @@ bool
 IToplevelProtocol::IsOnCxxStack() const
 {
   return GetIPCChannel()->IsOnCxxStack();
+}
+
+int32_t
+IToplevelProtocol::Register(IProtocol* aRouted)
+{
+  int32_t id = mSide == ParentSide ? ++mLastRouteId : --mLastRouteId;
+  mActorMap.AddWithID(aRouted, id);
+  return id;
+}
+
+int32_t
+IToplevelProtocol::RegisterID(IProtocol* aRouted,
+                              int32_t aId)
+{
+  mActorMap.AddWithID(aRouted, aId);
+  return aId;
+}
+
+IProtocol*
+IToplevelProtocol::Lookup(int32_t aId)
+{
+  return mActorMap.Lookup(aId);
+}
+
+void
+IToplevelProtocol::Unregister(int32_t aId)
+{
+  return mActorMap.Remove(aId);
 }
 
 } // namespace ipc
