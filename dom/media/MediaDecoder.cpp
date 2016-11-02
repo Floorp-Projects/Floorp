@@ -782,7 +782,7 @@ MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
               aInfo->mAudio.mChannels, aInfo->mAudio.mRate,
               aInfo->HasAudio(), aInfo->HasVideo());
 
-  SetMediaSeekable(aInfo->mMediaSeekable);
+  mMediaSeekable = aInfo->mMediaSeekable;
   SetMediaSeekableOnlyInBufferedRanges(aInfo->mMediaSeekableOnlyInBufferedRanges);
   mInfo = aInfo.forget();
   ConstructMediaTracks();
@@ -1275,12 +1275,6 @@ MediaDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
   }
 
   mEstimatedDuration = Some(TimeUnit::FromMicroseconds(aDuration));
-}
-
-void
-MediaDecoder::SetMediaSeekable(bool aMediaSeekable) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mMediaSeekable = aMediaSeekable;
 }
 
 void
