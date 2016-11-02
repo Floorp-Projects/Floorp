@@ -8377,26 +8377,26 @@ class LAsmJSParameterI64 : public LInstructionHelper<INT64_PIECES, 0, 0>
     LIR_HEADER(AsmJSParameterI64);
 };
 
-class LAsmJSReturn : public LInstructionHelper<0, 2, 0>
+class LWasmReturn : public LInstructionHelper<0, 2, 0>
 {
   public:
-    LIR_HEADER(AsmJSReturn);
+    LIR_HEADER(WasmReturn);
 };
 
-class LAsmJSReturnI64 : public LInstructionHelper<0, INT64_PIECES + 1, 0>
+class LWasmReturnI64 : public LInstructionHelper<0, INT64_PIECES + 1, 0>
 {
   public:
-    LIR_HEADER(AsmJSReturnI64)
+    LIR_HEADER(WasmReturnI64)
 
-    explicit LAsmJSReturnI64(const LInt64Allocation& input) {
+    explicit LWasmReturnI64(const LInt64Allocation& input) {
         setInt64Operand(0, input);
     }
 };
 
-class LAsmJSVoidReturn : public LInstructionHelper<0, 1, 0>
+class LWasmReturnVoid : public LInstructionHelper<0, 1, 0>
 {
   public:
-    LIR_HEADER(AsmJSVoidReturn);
+    LIR_HEADER(WasmReturnVoid);
 };
 
 class LAsmJSPassStackArg : public LInstructionHelper<0, 1, 0>
