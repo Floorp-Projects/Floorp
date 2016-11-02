@@ -82,9 +82,6 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
         navigationView = (NavigationView) content.findViewById(R.id.menu);
         navigationView.setNavigationItemSelectedListener(this);
 
-        BottomSheetBehavior<View> bsBehaviour = BottomSheetBehavior.from((View) content.getParent());
-        bsBehaviour.setPeekHeight(context.getResources().getDimensionPixelSize(R.dimen.activity_stream_contextmenu_peek_height));
-
         super.postInit();
     }
 
