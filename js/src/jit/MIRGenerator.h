@@ -39,8 +39,8 @@ class MIRGenerator
                  TempAllocator* alloc, MIRGraph* graph,
                  const CompileInfo* info, const OptimizationInfo* optimizationInfo);
 
-    void initMinAsmJSHeapLength(uint32_t init) {
-        minAsmJSHeapLength_ = init;
+    void initMinWasmHeapLength(uint32_t init) {
+        minWasmHeapLength_ = init;
     }
 
     TempAllocator& alloc() {
@@ -139,8 +139,8 @@ class MIRGenerator
         MOZ_ASSERT(wasmMaxStackArgBytes_ == 0);
         wasmMaxStackArgBytes_ = n;
     }
-    uint32_t minAsmJSHeapLength() const {
-        return minAsmJSHeapLength_;
+    uint32_t minWasmHeapLength() const {
+        return minWasmHeapLength_;
     }
     void setPerformsCall() {
         performsCall_ = true;
@@ -195,7 +195,7 @@ class MIRGenerator
 
     void addAbortedPreliminaryGroup(ObjectGroup* group);
 
-    uint32_t minAsmJSHeapLength_;
+    uint32_t minWasmHeapLength_;
 
     void setForceAbort() {
         shouldForceAbort_ = true;
@@ -205,10 +205,10 @@ class MIRGenerator
     }
 
 #if defined(JS_ION_PERF)
-    AsmJSPerfSpewer asmJSPerfSpewer_;
+    WasmPerfSpewer wasmPerfSpewer_;
 
   public:
-    AsmJSPerfSpewer& perfSpewer() { return asmJSPerfSpewer_; }
+    WasmPerfSpewer& perfSpewer() { return wasmPerfSpewer_; }
 #endif
 
   public:

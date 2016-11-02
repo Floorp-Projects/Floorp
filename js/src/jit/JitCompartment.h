@@ -90,7 +90,7 @@ class JitRuntime
   private:
     friend class JitCompartment;
 
-    // Executable allocator for all code except asm.js code and Ion code with
+    // Executable allocator for all code except wasm code and Ion code with
     // patchable backedges (see below).
     ExecutableAllocator execAlloc_;
 

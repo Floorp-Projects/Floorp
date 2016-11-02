@@ -353,9 +353,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     explicit MacroAssembler(JSContext* cx, IonScript* ion = nullptr,
                             JSScript* script = nullptr, jsbytecode* pc = nullptr);
 
-    // asm.js compilation handles its own JitContext-pushing
-    struct AsmJSToken {};
-    explicit MacroAssembler(AsmJSToken, TempAllocator& alloc)
+    // wasm compilation handles its own JitContext-pushing
+    struct WasmToken {};
+    explicit MacroAssembler(WasmToken, TempAllocator& alloc)
       : framePushed_(0),
 #ifdef DEBUG
         inCall_(false),
@@ -550,7 +550,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void setupABICall();
 
     // Reserve the stack and resolve the arguments move.
-    void callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS = false) PER_ARCH;
+    void callWithABIPre(uint32_t* stackAdjust, bool callFromWasm = false) PER_ARCH;
 
     // Emits a call to a C/C++ function, resolving all argument moves.
     void callWithABINoProfiler(void* fun, MoveOp::Type result);

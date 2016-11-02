@@ -417,8 +417,8 @@ AliasSet::Name(size_t flag)
       case 4: return "FixedSlot";
       case 5: return "DOMProperty";
       case 6: return "FrameArgument";
-      case 7: return "AsmJSGlobalVar";
-      case 8: return "AsmJSHeap";
+      case 7: return "WasmGlobalVar";
+      case 8: return "WasmHeap";
       case 9: return "TypedArrayLength";
       default:
         MOZ_CRASH("Unknown flag");
@@ -1146,7 +1146,7 @@ MConstant::toJSValue() const
 {
     // Wasm has types like int64 that cannot be stored as js::Value. It also
     // doesn't want the NaN canonicalization enforced by js::Value.
-    MOZ_ASSERT(!IsCompilingAsmJS());
+    MOZ_ASSERT(!IsCompilingWasm());
 
     switch (type()) {
       case MIRType::Undefined:
@@ -3985,7 +3985,7 @@ MUrsh::New(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType 
     // exception to the type rules: we can return values in
     // (INT32_MIN,UINT32_MAX] and still claim that we have an Int32 type
     // without bailing out. This is necessary because Ion has no UInt32
-    // type and we can't have bailouts in asm.js code.
+    // type and we can't have bailouts in wasm code.
     ins->bailoutsDisabled_ = true;
 
     return ins;

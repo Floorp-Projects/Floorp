@@ -2118,10 +2118,10 @@ CodeGeneratorMIPSShared::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     // Offset is out of range. Load default values.
     if (isFloat) {
         if (size == 32)
-            masm.loadFloat32(Address(GlobalReg, wasm::NaN32GlobalDataOffset - AsmJSGlobalRegBias),
+            masm.loadFloat32(Address(GlobalReg, wasm::NaN32GlobalDataOffset - WasmGlobalRegBias),
                              ToFloatRegister(out));
         else
-            masm.loadDouble(Address(GlobalReg, wasm::NaN64GlobalDataOffset - AsmJSGlobalRegBias),
+            masm.loadDouble(Address(GlobalReg, wasm::NaN64GlobalDataOffset - WasmGlobalRegBias),
                             ToFloatRegister(out));
     } else {
         masm.move32(Imm32(0), ToRegister(out));
@@ -2459,7 +2459,7 @@ void
 CodeGeneratorMIPSShared::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
 {
     const MWasmLoadGlobalVar* mir = ins->mir();
-    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    unsigned addr = mir->globalDataOffset() - WasmGlobalRegBias;
     if (mir->type() == MIRType::Int32)
         masm.load32(Address(GlobalReg, addr), ToRegister(ins->output()));
     else if (mir->type() == MIRType::Float32)
@@ -2474,7 +2474,7 @@ CodeGeneratorMIPSShared::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
     const MWasmStoreGlobalVar* mir = ins->mir();
 
     MOZ_ASSERT(IsNumberType(mir->value()->type()));
-    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    unsigned addr = mir->globalDataOffset() - WasmGlobalRegBias;
     if (mir->value()->type() == MIRType::Int32)
         masm.store32(ToRegister(ins->value()), Address(GlobalReg, addr));
     else if (mir->value()->type() == MIRType::Float32)

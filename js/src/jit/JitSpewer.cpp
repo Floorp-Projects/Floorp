@@ -110,7 +110,7 @@ FilterContainsLocation(JSScript* function)
     if (!filter || !filter[0])
         return true;
 
-    // Disable asm.js output when filter is set.
+    // Disable wasm output when filter is set.
     if (!function)
         return false;
 

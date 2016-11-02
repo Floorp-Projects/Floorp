@@ -3432,7 +3432,7 @@ AutoFlushICache::setInhibit()
 // within this code range is also deferred avoiding redundant flushing.  Flushing outside
 // this code range is not affected and proceeds immediately.
 //
-// In some cases flushing is not necessary, such as when compiling an asm.js module which
+// In some cases flushing is not necessary, such as when compiling an wasm module which
 // is flushed again when dynamically linked, and also in error paths that abandon the
 // code.  Flushing within the set code range can be inhibited within the AutoFlushICache
 // dynamic context by setting an inhibit flag.

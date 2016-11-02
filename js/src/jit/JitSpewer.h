@@ -122,7 +122,7 @@ static const int NULL_ID = -1;
 
 #ifdef JS_JITSPEW
 
-// Class made to hold the MIR and LIR graphs of an AsmJS / Ion compilation.
+// Class made to hold the MIR and LIR graphs of an Wasm / Ion compilation.
 class GraphSpewer
 {
   private:

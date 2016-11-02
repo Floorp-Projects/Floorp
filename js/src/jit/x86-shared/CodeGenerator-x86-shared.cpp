@@ -2848,7 +2848,7 @@ CodeGeneratorX86Shared::visitSimdExtractElementF(LSimdExtractElementF* ins)
     }
     // NaNs contained within SIMD values are not enforced to be canonical, so
     // when we extract an element into a "regular" scalar JS value, we have to
-    // canonicalize. In asm.js code, we can skip this, as asm.js only has to
+    // canonicalize. In wasm code, we can skip this, as wasm only has to
     // canonicalize NaNs at FFI boundaries.
     if (!gen->compilingWasm())
         masm.canonicalizeFloat(output);

@@ -544,7 +544,7 @@ void
 CodeGeneratorMIPS64::visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins)
 {
     const MWasmLoadGlobalVar* mir = ins->mir();
-    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    unsigned addr = mir->globalDataOffset() - WasmGlobalRegBias;
     MOZ_ASSERT(mir->type() == MIRType::Int64);
     masm.load64(Address(GlobalReg, addr), ToOutRegister64(ins));
 }
@@ -553,7 +553,7 @@ void
 CodeGeneratorMIPS64::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
 {
     const MWasmStoreGlobalVar* mir = ins->mir();
-    unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
+    unsigned addr = mir->globalDataOffset() - WasmGlobalRegBias;
     MOZ_ASSERT(mir->value()->type() == MIRType::Int64);
     masm.store64(ToRegister64(ins->value()), Address(GlobalReg, addr));
 }

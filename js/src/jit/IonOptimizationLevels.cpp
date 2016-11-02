@@ -55,22 +55,22 @@ OptimizationInfo::initNormalOptimizationInfo()
 }
 
 void
-OptimizationInfo::initAsmjsOptimizationInfo()
+OptimizationInfo::initWasmOptimizationInfo()
 {
-    // The AsmJS optimization level
-    // Disables some passes that don't work well with asmjs.
+    // The Wasm optimization level
+    // Disables some passes that don't work well with wasm.
 
     // Take normal option values for not specified values.
     initNormalOptimizationInfo();
 
-    level_ = OptimizationLevel::AsmJS;
+    level_ = OptimizationLevel::Wasm;
 
     ama_ = true;
     autoTruncate_ = false;
-    eagerSimdUnbox_ = false;           // AsmJS has no boxing / unboxing.
+    eagerSimdUnbox_ = false;           // wasm has no boxing / unboxing.
     edgeCaseAnalysis_ = false;
     eliminateRedundantChecks_ = false;
-    scalarReplacement_ = false;        // AsmJS has no objects.
+    scalarReplacement_ = false;        // wasm has no objects.
     sincos_ = false;
     sink_ = false;
 }
@@ -119,7 +119,7 @@ OptimizationInfo::compilerWarmUpThreshold(JSScript* script, jsbytecode* pc) cons
 OptimizationLevelInfo::OptimizationLevelInfo()
 {
     infos_[OptimizationLevel::Normal].initNormalOptimizationInfo();
-    infos_[OptimizationLevel::AsmJS].initAsmjsOptimizationInfo();
+    infos_[OptimizationLevel::Wasm].initWasmOptimizationInfo();
 
 #ifdef DEBUG
     OptimizationLevel level = firstLevel();
@@ -139,7 +139,7 @@ OptimizationLevelInfo::nextLevel(OptimizationLevel level) const
       case OptimizationLevel::DontCompile:
         return OptimizationLevel::Normal;
       case OptimizationLevel::Normal:
-      case OptimizationLevel::AsmJS:
+      case OptimizationLevel::Wasm:
       case OptimizationLevel::Count:;
     }
     MOZ_CRASH("Unknown optimization level.");

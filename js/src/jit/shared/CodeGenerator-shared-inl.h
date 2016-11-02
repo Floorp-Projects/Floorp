@@ -222,7 +222,7 @@ int32_t
 CodeGeneratorShared::ArgToStackOffset(int32_t slot) const
 {
     return masm.framePushed() +
-           (gen->compilingWasm() ? sizeof(AsmJSFrame) : sizeof(JitFrameLayout)) +
+           (gen->compilingWasm() ? sizeof(wasm::Frame) : sizeof(JitFrameLayout)) +
            slot;
 }
 

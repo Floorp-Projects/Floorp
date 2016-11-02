@@ -1665,4 +1665,3 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
     MOZ_ASSERT(global->isStandardClassResolved(JSProto_WebAssembly));
     return wasm;
 }
-

@@ -1595,7 +1595,7 @@ void
 MacroAssembler::assumeUnreachable(const char* output)
 {
 #ifdef DEBUG
-    if (!IsCompilingAsmJS()) {
+    if (!IsCompilingWasm()) {
         AllocatableRegisterSet regs(RegisterSet::Volatile());
         LiveRegisterSet save(regs.asLiveSet());
         PushRegsInMask(save);
@@ -2660,7 +2660,7 @@ void
 MacroAssembler::callWithABINoProfiler(wasm::SymbolicAddress imm, MoveOp::Type result)
 {
     uint32_t stackAdjust;
-    callWithABIPre(&stackAdjust, /* callFromAsmJS = */ true);
+    callWithABIPre(&stackAdjust, /* callFromWasm = */ true);
     call(imm);
     callWithABIPost(stackAdjust, result);
 }
@@ -2883,7 +2883,7 @@ MacroAssembler::wasmEmitTrapOutOfLineCode()
             setFramePushed(site.framePushed);
 
             // Align the stack for a nullary call.
-            size_t alreadyPushed = sizeof(AsmJSFrame) + framePushed();
+            size_t alreadyPushed = sizeof(wasm::Frame) + framePushed();
             size_t toPush = ABIArgGenerator().stackBytesConsumedSoFar();
             if (size_t dec = StackDecrementForCall(ABIStackAlignment, alreadyPushed, toPush))
                 reserveStack(dec);
