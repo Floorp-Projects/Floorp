@@ -324,7 +324,7 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins)
 }
 
 void
-CodeGeneratorX86Shared::visitAsmSelect(LAsmSelect* ins)
+CodeGeneratorX86Shared::visitWasmSelect(LWasmSelect* ins)
 {
     MIRType mirType = ins->mir()->type();
 
@@ -357,7 +357,7 @@ CodeGeneratorX86Shared::visitAsmSelect(LAsmSelect* ins)
         else
             masm.loadDouble(falseExpr, out);
     } else {
-        MOZ_CRASH("unhandled type in visitAsmSelect!");
+        MOZ_CRASH("unhandled type in visitWasmSelect!");
     }
 
     masm.bind(&done);

@@ -7836,26 +7836,28 @@ class LHasClass : public LInstructionHelper<1, 1, 0>
 };
 
 template<size_t Defs, size_t Ops>
-class LAsmSelectBase : public LInstructionHelper<Defs, Ops, 0>
+class LWasmSelectBase : public LInstructionHelper<Defs, Ops, 0>
 {
     typedef LInstructionHelper<Defs, Ops, 0> Base;
   public:
 
-    MAsmSelect* mir() const {
-        return Base::mir_->toAsmSelect();
+    MWasmSelect* mir() const {
+        return Base::mir_->toWasmSelect();
     }
 };
 
-class LAsmSelect : public LAsmSelectBase<1, 3>
+class LWasmSelect : public LWasmSelectBase<1, 3>
 {
   public:
-    LIR_HEADER(AsmSelect);
+    LIR_HEADER(WasmSelect);
 
     static const size_t TrueExprIndex = 0;
     static const size_t FalseExprIndex = 1;
     static const size_t CondIndex = 2;
 
-    LAsmSelect(const LAllocation& trueExpr, const LAllocation& falseExpr, const LAllocation& cond) {
+    LWasmSelect(const LAllocation& trueExpr, const LAllocation& falseExpr,
+                const LAllocation& cond)
+    {
         setOperand(TrueExprIndex, trueExpr);
         setOperand(FalseExprIndex, falseExpr);
         setOperand(CondIndex, cond);
@@ -7872,17 +7874,17 @@ class LAsmSelect : public LAsmSelectBase<1, 3>
     }
 };
 
-class LAsmSelectI64 : public LAsmSelectBase<INT64_PIECES, 2 * INT64_PIECES + 1>
+class LWasmSelectI64 : public LWasmSelectBase<INT64_PIECES, 2 * INT64_PIECES + 1>
 {
   public:
-    LIR_HEADER(AsmSelectI64);
+    LIR_HEADER(WasmSelectI64);
 
     static const size_t TrueExprIndex = 0;
     static const size_t FalseExprIndex = INT64_PIECES;
     static const size_t CondIndex = INT64_PIECES * 2;
 
-    LAsmSelectI64(const LInt64Allocation& trueExpr, const LInt64Allocation& falseExpr,
-                  const LAllocation& cond)
+    LWasmSelectI64(const LInt64Allocation& trueExpr, const LInt64Allocation& falseExpr,
+                   const LAllocation& cond)
     {
         setInt64Operand(TrueExprIndex, trueExpr);
         setInt64Operand(FalseExprIndex, falseExpr);

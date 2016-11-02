@@ -389,8 +389,8 @@
     _(IsObject)                     \
     _(IsObjectAndBranch)            \
     _(HasClass)                     \
-    _(AsmSelect)                    \
-    _(AsmSelectI64)                 \
+    _(WasmSelect)                   \
+    _(WasmSelectI64)                \
     _(WasmBoundsCheck)              \
     _(WasmAddOffset)                \
     _(WasmLoad)                     \

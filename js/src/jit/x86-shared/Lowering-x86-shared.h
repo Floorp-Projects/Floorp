@@ -47,7 +47,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
                                  MDefinition* lhs, MDefinition* rhs);
     void visitAsmJSNeg(MAsmJSNeg* ins);
     void lowerWasmLoad(MWasmLoad* ins);
-    void visitAsmSelect(MAsmSelect* ins);
+    void visitWasmSelect(MWasmSelect* ins);
     void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
     void lowerDivI(MDiv* div);
     void lowerModI(MMod* mod);

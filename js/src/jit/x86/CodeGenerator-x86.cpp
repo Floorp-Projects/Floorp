@@ -1122,7 +1122,7 @@ CodeGeneratorX86::visitUDivOrModI64(LUDivOrModI64* lir)
 }
 
 void
-CodeGeneratorX86::visitAsmSelectI64(LAsmSelectI64* lir)
+CodeGeneratorX86::visitWasmSelectI64(LWasmSelectI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
 

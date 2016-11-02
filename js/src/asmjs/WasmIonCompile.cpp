@@ -665,7 +665,7 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        auto* ins = MAsmSelect::New(alloc(), trueExpr, falseExpr, condExpr);
+        auto* ins = MWasmSelect::New(alloc(), trueExpr, falseExpr, condExpr);
         curBlock_->add(ins);
         return ins;
     }
