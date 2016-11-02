@@ -472,8 +472,24 @@ const void* nsStyleContext::StyleData(nsStyleStructID aSID)
       mCachedInheritedData.mStyleStructs[aSID] = const_cast<void*>(newData);
     }
   } else {
-    // The Servo-backed StyleContextSource owns the struct.
     newData = StyleStructFromServoComputedValues(aSID);
+
+    // perform any remaining main thread work on the struct
+    switch (aSID) {
+#define STYLE_STRUCT(name_, checkdata_cb_)                                    \
+      case eStyleStruct_##name_: {                                            \
+        auto data = static_cast<const nsStyle##name_*>(newData);              \
+        const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext());        \
+        break;                                                                \
+      }
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+      default:
+        MOZ_ASSERT_UNREACHABLE("unexpected nsStyleStructID value");
+        break;
+    }
+
+    // The Servo-backed StyleContextSource owns the struct.
     AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
 
     // XXXbholley: Unconditionally caching reset structs here defeats the memory
