@@ -540,6 +540,7 @@ class Marionette(object):
 
     CONTEXT_CHROME = 'chrome'  # non-browser content: windows, dialogs, etc.
     CONTEXT_CONTENT = 'content'  # browser content: iframes, divs, etc.
+    DEFAULT_CRASH_TIMEOUT = 10
     DEFAULT_SOCKET_TIMEOUT = 60
     DEFAULT_STARTUP_TIMEOUT = 120
     DEFAULT_SHUTDOWN_TIMEOUT = 65  # Firefox will kill hanging threads after 60s
@@ -572,6 +573,7 @@ class Marionette(object):
         self._test_name = None
         self.timeout = timeout
         self.socket_timeout = socket_timeout
+        self.crashed = 0
 
         startup_timeout = startup_timeout or self.DEFAULT_STARTUP_TIMEOUT
         if self.bin:
@@ -621,7 +623,6 @@ class Marionette(object):
                 # hit an exception/died or the connection died. We can
                 # do no further server-side cleanup in this case.
                 pass
-            self.session = None
         if self.instance:
             self.instance.close()
 
@@ -721,11 +722,8 @@ class Marionette(object):
             else:
                 msg = self.client.request(name, params)
 
-        except socket.timeout:
-            self.session = None
-            self.window = None
-            self.client.close()
-
+        except IOError:
+            self.delete_session(send_request=False)
             raise
 
         res, err = msg.result, msg.error
@@ -783,36 +781,54 @@ class Marionette(object):
             self.set_page_load_timeout(30000)
 
     def check_for_crash(self):
-        returncode = None
-        name = None
-        crashed = False
+        """Check if the process crashed.
+
+        :returns: True, if a crash happened since the method has been called the last time.
+        """
+        crash_count = 0
+
         if self.instance:
-            if self.instance.runner.check_for_crashes(
-                    test_name=self.test_name or os.path.basename(__file__)):
-                crashed = True
-        if returncode is not None:
-            print ('PROCESS-CRASH | {0} | abnormal termination with exit code {1}'
-                   .format(name, returncode))
-        return crashed
+            name = self.test_name or 'marionette.py'
+            crash_count = self.instance.runner.check_for_crashes(test_name=name)
+            self.crashed = self.crashed + crash_count
 
-    def force_shutdown(self):
-        """Force a shutdown of the running instance.
+        return crash_count > 0
 
-        If we've launched the binary we are connected to, wait for it to shut down.
-        In the case when it doesn't happen, force its shut down.
+    def handle_socket_failure(self, crashed=False):
+        """Handle socket failures for the currently running instance.
+
+        :param crashed: Optional flag which indicates that the process has been crashed,
+            and no further socket checks have to be performed. Defaults to False.
+
+        If the application crashed then clean-up internal states, or in case of a content
+        crash also kill the process. If there are other reasons for a socket failure,
+        wait for the process to shutdown itself, or force kill it.
 
         """
         if self.instance:
             exc, val, tb = sys.exc_info()
 
-            # Give the application some time to shutdown
-            returncode = self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
-            if returncode is None:
-                self.cleanup()
-                message = ('Process killed because the connection to Marionette server is lost.'
-                           ' Check gecko.log for errors')
+            # If the content process crashed, Marionette forces the application to shutdown.
+            if crashed:
+                returncode = self.instance.runner.wait(timeout=self.DEFAULT_CRASH_TIMEOUT)
+
+                if returncode == 0:
+                    message = 'Content process crashed'
+                else:
+                    message = 'Process crashed (Exit code: {returncode})'
+                self.delete_session(send_request=False, reset_session_id=True)
+
             else:
-                message = 'Process has been closed (Exit code: {returncode})'
+                # Somehow the socket disconnected. Give the application some time to shutdown
+                # itself before killing the process.
+                returncode = self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
+                if returncode is None:
+                    self.quit()
+                    message = ('Process killed because the connection to Marionette server is '
+                               'lost. Check gecko.log for errors')
+                else:
+                    message = 'Process has been closed (Exit code: {returncode})'
+                    self.delete_session(send_request=False, reset_session_id=True)
 
             if exc:
                 message += ' (Reason: {reason})'
@@ -1135,12 +1151,14 @@ class Marionette(object):
                 callback()
             else:
                 self._request_in_app_shutdown()
-            self.delete_session(in_app=True)
+
+            # Ensure to explicitely mark the session as deleted
+            self.delete_session(send_request=False, reset_session_id=True)
 
             # Give the application some time to shutdown
             self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
         else:
-            self.delete_session()
+            self.delete_session(reset_session_id=True)
             self.instance.close()
 
     @do_process_check
@@ -1174,7 +1192,9 @@ class Marionette(object):
                 callback()
             else:
                 self._request_in_app_shutdown("eRestart")
-            self.delete_session(in_app=True)
+
+            # Ensure to explicitely mark the session as deleted
+            self.delete_session(send_request=False, reset_session_id=True)
 
             try:
                 self.raise_for_port()
@@ -1221,7 +1241,11 @@ class Marionette(object):
         :param session_id: unique identifier for the session. If no session id is
             passed in then one will be generated by the marionette server.
 
-        :returns: A dict of the capabilities offered."""
+        :returns: A dict of the capabilities offered.
+
+        """
+        self.crashed = 0
+
         if self.instance:
             returncode = self.instance.runner.returncode
             if returncode is not None:
@@ -1255,19 +1279,25 @@ class Marionette(object):
         self._send_message("setTestName", {"value": test_name})
         self._test_name = test_name
 
-    def delete_session(self, in_app=False):
+    def delete_session(self, send_request=True, reset_session_id=False):
         """Close the current session and disconnect from the server.
 
-        :param in_app: False, if the session should be closed from the client.
-                       Otherwise a request to quit or restart the instance from
-                       within the application itself is used.
+        :param send_request: Optional, if `True` a request to close the session on
+            the server side will be send. Use `False` in case of eg. in_app restart()
+            or quit(), which trigger a deletion themselves. Defaults to `True`.
+        :param reset_session_id: Optional, if `True` the current session id will
+            be reset, which will require an explicit call to `start_session()` before
+            the test can continue. Defaults to `False`.
         """
-        if not in_app:
-            self._send_message("deleteSession")
-        self.session_id = None
-        self.session = None
-        self.window = None
-        self.client.close()
+        try:
+            if send_request:
+                self._send_message("deleteSession")
+        finally:
+            if reset_session_id:
+                self.session_id = None
+            self.session = None
+            self.window = None
+            self.client.close()
 
     @property
     def session_capabilities(self):

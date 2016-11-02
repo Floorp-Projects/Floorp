@@ -125,13 +125,23 @@ class TcpTransport(object):
         """
         self.addr = addr
         self.port = port
-        self.socket_timeout = socket_timeout
+        self._socket_timeout = socket_timeout
 
         self.protocol = 1
         self.application_type = None
         self.last_id = 0
         self.expected_response = None
         self.sock = None
+
+    @property
+    def socket_timeout(self):
+        return self._socket_timeout
+
+    @socket_timeout.setter
+    def socket_timeout(self, value):
+        if self.sock:
+            self.sock.settimeout(value)
+        self._socket_timeout = value
 
     def _unmarshal(self, packet):
         msg = None
