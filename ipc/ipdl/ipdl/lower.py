@@ -1160,30 +1160,7 @@ class Protocol(ipdl.ast.Protocol):
         assert self.decl.type.isToplevel()
         return ExprVar('IsOnCxxStack')
 
-    def nextActorIdExpr(self, side):
-        assert self.decl.type.isToplevel()
-        if side is 'parent':   op = '++'
-        elif side is 'child':  op = '--'
-        else: assert 0
-        return ExprPrefixUnop(self.lastActorIdVar(), op)
-
-    def actorIdInit(self, side):
-        assert self.decl.type.isToplevel()
-
-        # parents go up from FREED, children go down from NULL
-        if side is 'parent':  return _FREED_ACTOR_ID
-        elif side is 'child': return _NULL_ACTOR_ID
-        else: assert 0
-
     # an actor's C++ private variables
-    def lastActorIdVar(self):
-        assert self.decl.type.isToplevel()
-        return ExprVar('mLastRouteId')
-
-    def actorMapVar(self):
-        assert self.decl.type.isToplevel()
-        return ExprVar('mActorMap')
-
     def channelVar(self, actorThis=None):
         if actorThis is not None:
             return ExprSelect(actorThis, '->', 'mChannel')
@@ -2930,8 +2907,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprMemberInit(p.channelVar(), [
                     ExprCall(ExprVar('ALLOW_THIS_IN_INITIALIZER_LIST'),
                              [ ExprVar.THIS ]) ]),
-                ExprMemberInit(p.lastActorIdVar(),
-                               [ p.actorIdInit(self.side) ]),
                 ExprMemberInit(p.lastShmemIdVar(),
                                [ p.shmemIdInit(self.side) ]),
                 ExprMemberInit(p.stateVar(),
@@ -3339,11 +3314,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ## private members
         if ptype.isToplevel():
             self.cls.addstmt(StmtDecl(Decl(p.channelType(), 'mChannel')))
-            self.cls.addstmts([
-                StmtDecl(Decl(Type('IDMap', T=Type('ProtocolBase')),
-                              p.actorMapVar().name)),
-                StmtDecl(Decl(_actorIdType(), p.lastActorIdVar().name))
-            ])
         elif ptype.isManaged():
             self.cls.addstmts([
                 StmtDecl(Decl(_actorIdType(), p.idVar().name))
@@ -3380,25 +3350,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         methods = []
 
         if p.decl.type.isToplevel():
-            register = MethodDefn(MethodDecl(
-                p.registerMethod().name,
-                params=[ Decl(protocolbase, routedvar.name) ],
-                ret=_actorIdType(), virtual=1))
-            registerid = MethodDefn(MethodDecl(
-                p.registerIDMethod().name,
-                params=[ Decl(protocolbase, routedvar.name),
-                         Decl(_actorIdType(), idvar.name) ],
-                ret=_actorIdType(),
-                virtual=1))
-            lookup = MethodDefn(MethodDecl(
-                p.lookupIDMethod().name,
-                params=[ Decl(_actorIdType(), idvar.name) ],
-                ret=protocolbase, virtual=1))
-            unregister = MethodDefn(MethodDecl(
-                p.unregisterMethod().name,
-                params=[ Decl(_actorIdType(), idvar.name) ],
-                virtual=1))
-
             createshmem = MethodDefn(MethodDecl(
                 p.createSharedMemory().name,
                 ret=_rawShmemType(ptr=1),
@@ -3435,11 +3386,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 virtual=1, const=1))
             getchannelconst.addstmt(StmtReturn(ExprAddrOf(p.channelVar())))
 
-            methods += [ register,
-                         registerid,
-                         lookup,
-                         unregister,
-                         createshmem,
+            methods += [ createshmem,
                          lookupshmem,
                          istracking,
                          destroyshmem,
@@ -3448,27 +3395,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         if p.decl.type.isToplevel():
             tmpvar = ExprVar('tmp')
-
-            register.addstmts([
-                StmtDecl(Decl(_actorIdType(), tmpvar.name),
-                         p.nextActorIdExpr(self.side)),
-                StmtExpr(ExprCall(
-                    ExprSelect(p.actorMapVar(), '.', 'AddWithID'),
-                    [ routedvar, tmpvar ])),
-                StmtReturn(tmpvar)
-            ])
-            registerid.addstmts([
-                StmtExpr(
-                    ExprCall(ExprSelect(p.actorMapVar(), '.', 'AddWithID'),
-                             [ routedvar, idvar ])),
-                StmtReturn(idvar)
-            ])
-            lookup.addstmt(StmtReturn(
-                ExprCall(ExprSelect(p.actorMapVar(), '.', 'Lookup'),
-                         [ idvar ])))
-            unregister.addstmt(StmtReturn(
-                ExprCall(ExprSelect(p.actorMapVar(), '.', 'Remove'),
-                         [ idvar ])))
 
             # SharedMemory* CreateSharedMemory(size_t aSize, Type aType, bool aUnsafe, id_t* aId):
             #   RefPtr<SharedMemory> segment(Shmem::Alloc(aSize, aType, aUnsafe));
