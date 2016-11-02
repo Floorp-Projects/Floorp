@@ -7,8 +7,6 @@
 
 "use strict";
 
-/* exported extensionIdToCollectionId */
-
 this.EXPORTED_SYMBOLS = ["ExtensionStorageSync"];
 
 const Ci = Components.interfaces;
@@ -42,10 +40,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppsUtils",
                                   "resource://gre/modules/AppsUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CollectionKeyManager",
                                   "resource://services-sync/record.js");
-XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
-                                  "resource://services-common/utils.js");
-XPCOMUtils.defineLazyModuleGetter(this, "CryptoUtils",
-                                  "resource://services-crypto/utils.js");
 XPCOMUtils.defineLazyModuleGetter(this, "EncryptionRemoteTransformer",
                                   "resource://services-sync/engines/extension-storage.js");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
@@ -373,28 +367,6 @@ const openCollection = Task.async(function* (extension, context) {
   yield cryptoCollection.incrementUses();
   return coll;
 });
-
-/**
- * Hash an extension ID for a given user so that an attacker can't
- * identify the extensions a user has installed.
- *
- * @param {User} user
- *               The user for whom to choose a collection to sync
- *               an extension to.
- * @param {string} extensionId The extension ID to obfuscate.
- * @returns {string} A collection ID suitable for use to sync to.
- */
-function extensionIdToCollectionId(user, extensionId) {
-  const userFingerprint = CryptoUtils.hkdf(user.uid, undefined,
-                                           "identity.mozilla.com/picl/v1/chrome.storage.sync.collectionIds", 2 * 32);
-  let data = new TextEncoder().encode(userFingerprint + extensionId);
-  let hasher = Cc["@mozilla.org/security/hash;1"]
-                 .createInstance(Ci.nsICryptoHash);
-  hasher.init(hasher.SHA256);
-  hasher.update(data, data.length);
-
-  return CommonUtils.bytesAsHex(hasher.finish(false));
-}
 
 this.ExtensionStorageSync = {
   _fxaService: fxAccounts,

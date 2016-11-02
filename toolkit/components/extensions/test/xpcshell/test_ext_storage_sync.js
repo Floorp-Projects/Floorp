@@ -7,12 +7,12 @@ do_get_profile();   // so we can use FxAccounts
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://services-common/utils.js");
+
 Cu.import("resource://gre/modules/ExtensionStorageSync.jsm");
 const {
   CollectionKeyEncryptionRemoteTransformer,
   cryptoCollection,
   idToKey,
-  extensionIdToCollectionId,
   keyToId,
 } = Cu.import("resource://gre/modules/ExtensionStorageSync.jsm");
 Cu.import("resource://services-sync/engines/extension-storage.js");
@@ -333,9 +333,7 @@ const collectionId = extensionId;
 const extension = {id: extensionId};
 
 const BORING_KB = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-const ANOTHER_KB = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde0";
 const loggedInUser = {
-  uid: "0123456789abcdef0123456789abcdef",
   kB: BORING_KB,
   oauthTokens: {
     "sync:addon-storage": {
@@ -372,20 +370,6 @@ add_task(function* test_key_to_id() {
   equal(idToKey("key-"), "");
   equal(idToKey("key-1"), "1");
   equal(idToKey("key-_2D_"), "-");
-});
-
-add_task(function* test_extension_id_to_collection_id() {
-  const newKBUser = Object.assign(loggedInUser, {kB: ANOTHER_KB});
-  const extensionId = "{9419cce6-5435-11e6-84bf-54ee758d6342}";
-  const extensionId2 = "{9419cce6-5435-11e6-84bf-54ee758d6343}";
-
-  // "random" 32-char hex userid
-  equal(extensionIdToCollectionId(loggedInUser, extensionId),
-        "abf4e257dad0c89027f8f25bd196d4d69c100df375655a0c49f4cea7b791ea7d");
-  equal(extensionIdToCollectionId(loggedInUser, extensionId),
-        extensionIdToCollectionId(newKBUser, extensionId));
-  equal(extensionIdToCollectionId(loggedInUser, extensionId2),
-        "6584b0153336fb274912b31a3225c15a92b703cdc3adfe1917c1aa43122a52b8");
 });
 
 add_task(function* ensureKeysFor_posts_new_keys() {
