@@ -405,9 +405,9 @@
     _(AsmJSStoreHeap)               \
     _(AsmJSParameter)               \
     _(AsmJSParameterI64)            \
-    _(AsmJSReturn)                  \
-    _(AsmJSReturnI64)               \
-    _(AsmJSVoidReturn)              \
+    _(WasmReturn)                   \
+    _(WasmReturnI64)                \
+    _(WasmReturnVoid)               \
     _(AsmJSPassStackArg)            \
     _(AsmJSPassStackArgI64)         \
     _(WasmCall)                     \
