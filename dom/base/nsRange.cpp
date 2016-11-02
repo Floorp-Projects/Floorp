@@ -2905,11 +2905,22 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
 {
   nsTextFrame* textFrame = GetTextFrameForContent(aContent, aFlushLayout);
   if (textFrame) {
+    // If we'll need it later, collect the full content text now.
+    nsAutoString textContent;
+    if (aTextList) {
+      mozilla::ErrorResult err; // ignored
+      aContent->GetTextContent(textContent, err);
+    }
+
     nsIFrame* relativeTo = nsLayoutUtils::GetContainingBlockForClientRect(textFrame);
     for (nsTextFrame* f = textFrame; f; f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
       int32_t fstart = f->GetContentOffset(), fend = f->GetContentEnd();
       if (fend <= aStartOffset || fstart >= aEndOffset)
         continue;
+
+      // Calculate the text content offsets we'll need if text is requested.
+      int32_t textContentStart = fstart;
+      int32_t textContentEnd = fend;
 
       // overlapping with the offset we want
       f->EnsureTextRun(nsTextFrame::eInflated);
@@ -2919,13 +2930,24 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
       if (fstart < aStartOffset) {
         // aStartOffset is within this frame
         ExtractRectFromOffset(f, aStartOffset, &r, rtl, aClampToEdge);
+        textContentStart = aStartOffset;
       }
       if (fend > aEndOffset) {
         // aEndOffset is in the middle of this frame
         ExtractRectFromOffset(f, aEndOffset, &r, !rtl, aClampToEdge);
+        textContentEnd = aEndOffset;
       }
       r = nsLayoutUtils::TransformFrameRectToAncestor(f, r, relativeTo);
       aCallback->AddRect(r);
+
+      // Finally capture the text, if requested.
+      if (aTextList) {
+        const nsAString& textSubstring =
+          Substring(textContent,
+                    textContentStart,
+                    (textContentEnd - textContentStart));
+        aTextList->Add(textSubstring);
+      }
     }
   }
   return NS_OK;
@@ -3007,8 +3029,9 @@ nsRange::CollectClientRectsAndText(nsLayoutUtils::RectCallback* aCollector,
 
     nsIFrame* frame = content->GetPrimaryFrame();
     if (frame) {
-      nsLayoutUtils::GetAllInFlowRects(frame,
+      nsLayoutUtils::GetAllInFlowRectsAndTexts(frame,
         nsLayoutUtils::GetContainingBlockForClientRect(frame), aCollector,
+        aTextList,
         nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
     }
   } while (!iter.IsDone());

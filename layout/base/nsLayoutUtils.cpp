@@ -70,6 +70,7 @@
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/DOMRect.h"
+#include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/KeyframeEffectReadOnly.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "imgIRequest.h"
@@ -3938,11 +3939,40 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
   }
 };
 
+struct BoxToRectAndText : public BoxToRect {
+  mozilla::dom::DOMStringList* mTextList;
+
+  BoxToRectAndText(nsIFrame* aRelativeTo, nsLayoutUtils::RectCallback* aCallback,
+                   mozilla::dom::DOMStringList* aTextList, uint32_t aFlags)
+    : BoxToRect(aRelativeTo, aCallback, aFlags), mTextList(aTextList) {}
+
+  virtual void AddBox(nsIFrame* aFrame) override {
+    BoxToRect::AddBox(aFrame);
+    if (mTextList) {
+      nsIContent* content = aFrame->GetContent();
+      nsAutoString textContent;
+      mozilla::ErrorResult err; // ignored
+      content->GetTextContent(textContent, err);
+      mTextList->Add(textContent);
+    }
+  }
+};
+
 void
 nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
                                  RectCallback* aCallback, uint32_t aFlags)
 {
   BoxToRect converter(aRelativeTo, aCallback, aFlags);
+  GetAllInFlowBoxes(aFrame, &converter);
+}
+
+void
+nsLayoutUtils::GetAllInFlowRectsAndTexts(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+                                         RectCallback* aCallback,
+                                         mozilla::dom::DOMStringList* aTextList,
+                                         uint32_t aFlags)
+{
+  BoxToRectAndText converter(aRelativeTo, aCallback, aTextList, aFlags);
   GetAllInFlowBoxes(aFrame, &converter);
 }
 

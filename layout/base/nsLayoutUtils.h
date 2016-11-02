@@ -1198,6 +1198,11 @@ public:
   static void GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
                                 RectCallback* aCallback, uint32_t aFlags = 0);
 
+  static void GetAllInFlowRectsAndTexts(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+                                        RectCallback* aCallback,
+                                        mozilla::dom::DOMStringList* aTextList,
+                                        uint32_t aFlags = 0);
+
   /**
    * Computes the union of all rects returned by GetAllInFlowRects. If
    * the union is empty, returns the first rect.
