@@ -31,8 +31,8 @@ add_task(function* test_show_form() {
     let checkbox = doc.getElementById("sendReport");
     ok(checkbox.checked, "Send report checkbox is checked.");
 
-    // Ensure the form is displayed.
-    let container = doc.getElementById("crash-reporter-container");
-    ok(!container.hidden, "Showing the crash report detail form.");
+    // Ensure the options form is displayed.
+    let options = doc.getElementById("options");
+    ok(!options.hidden, "Showing the crash report options form.");
   });
 });
