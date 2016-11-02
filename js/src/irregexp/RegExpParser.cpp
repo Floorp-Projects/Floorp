@@ -276,7 +276,7 @@ HexValue(uint32_t c)
 }
 
 template <typename CharT>
-widechar
+size_t
 RegExpParser<CharT>::ParseOctalLiteral()
 {
     MOZ_ASSERT('0' <= current() && current() <= '7');
@@ -297,7 +297,7 @@ RegExpParser<CharT>::ParseOctalLiteral()
 
 template <typename CharT>
 bool
-RegExpParser<CharT>::ParseHexEscape(int length, widechar* value)
+RegExpParser<CharT>::ParseHexEscape(int length, size_t* value)
 {
     const CharT* start = position();
     uint32_t val = 0;
@@ -321,7 +321,7 @@ RegExpParser<CharT>::ParseHexEscape(int length, widechar* value)
 
 template <typename CharT>
 bool
-RegExpParser<CharT>::ParseBracedHexEscape(widechar* value)
+RegExpParser<CharT>::ParseBracedHexEscape(size_t* value)
 {
     MOZ_ASSERT(current() == '{');
     Advance();
@@ -363,7 +363,7 @@ RegExpParser<CharT>::ParseBracedHexEscape(widechar* value)
 
 template <typename CharT>
 bool
-RegExpParser<CharT>::ParseTrailSurrogate(widechar* value)
+RegExpParser<CharT>::ParseTrailSurrogate(size_t* value)
 {
     if (current() != '\\')
         return false;
@@ -541,7 +541,7 @@ RegExpParser<CharT>::ParseClassCharacterEscape(widechar* code)
         return true;
       case 'x': {
         Advance();
-        widechar value;
+        size_t value;
         if (ParseHexEscape(2, &value)) {
             *code = value;
             return true;
@@ -557,7 +557,7 @@ RegExpParser<CharT>::ParseClassCharacterEscape(widechar* code)
       }
       case 'u': {
         Advance();
-        widechar value;
+        size_t value;
         if (unicode_) {
             if (current() == '{') {
                 if (!ParseBracedHexEscape(&value))
@@ -567,7 +567,7 @@ RegExpParser<CharT>::ParseClassCharacterEscape(widechar* code)
             }
             if (ParseHexEscape(4, &value)) {
                 if (unicode::IsLeadSurrogate(value)) {
-                    widechar trail;
+                    size_t trail;
                     if (ParseTrailSurrogate(&trail)) {
                         *code = unicode::UTF16Decode(value, trail);
                         return true;
@@ -782,10 +782,10 @@ NegateUnicodeRanges(LifoAlloc* alloc, InfallibleVector<RangeType, 1>** ranges,
         const RangeType& range = (**ranges)[i];
         for (size_t j = 0; j < tmp_ranges->length(); j++) {
             const RangeType& tmpRange = (*tmp_ranges)[j];
-            auto from1 = tmpRange.from();
-            auto to1 = tmpRange.to();
-            auto from2 = range.from();
-            auto to2 = range.to();
+            size_t from1 = tmpRange.from();
+            size_t to1 = tmpRange.to();
+            size_t from2 = range.from();
+            size_t to2 = range.to();
 
             if (from1 < from2) {
                 if (to1 < from2) {
@@ -926,8 +926,8 @@ UnicodeRangesAtom(LifoAlloc* alloc,
         const WideCharRange& range = (*wide_ranges)[i];
         widechar from = range.from();
         widechar to = range.to();
-        char16_t from_lead, from_trail;
-        char16_t to_lead, to_trail;
+        size_t from_lead, from_trail;
+        size_t to_lead, to_trail;
 
         unicode::UTF16Encode(from, &from_lead, &from_trail);
         if (from == to) {
@@ -1636,7 +1636,7 @@ RegExpParser<CharT>::ParseDisjunction()
                 }
 
                 Advance();
-                widechar octal = ParseOctalLiteral();
+                size_t octal = ParseOctalLiteral();
                 builder->AddCharacter(octal);
                 break;
               }
@@ -1684,7 +1684,7 @@ RegExpParser<CharT>::ParseDisjunction()
               }
               case 'x': {
                 Advance(2);
-                widechar value;
+                size_t value;
                 if (ParseHexEscape(2, &value)) {
                     builder->AddCharacter(value);
                 } else {
@@ -1696,7 +1696,7 @@ RegExpParser<CharT>::ParseDisjunction()
               }
               case 'u': {
                 Advance(2);
-                widechar value;
+                size_t value;
                 if (unicode_) {
                     if (current() == '{') {
                         if (!ParseBracedHexEscape(&value))
@@ -1706,7 +1706,7 @@ RegExpParser<CharT>::ParseDisjunction()
                         } else if (unicode::IsTrailSurrogate(value)) {
                             builder->AddAtom(TrailSurrogateAtom(alloc, value));
                         } else if (value >= unicode::NonBMPMin) {
-                            char16_t lead, trail;
+                            size_t lead, trail;
                             unicode::UTF16Encode(value, &lead, &trail);
                             builder->AddAtom(SurrogatePairAtom(alloc, lead, trail,
                                                                ignore_case_));
@@ -1715,7 +1715,7 @@ RegExpParser<CharT>::ParseDisjunction()
                         }
                     } else if (ParseHexEscape(4, &value)) {
                         if (unicode::IsLeadSurrogate(value)) {
-                            widechar trail;
+                            size_t trail;
                             if (ParseTrailSurrogate(&trail)) {
                                 builder->AddAtom(SurrogatePairAtom(alloc, value, trail,
                                                                    ignore_case_));
