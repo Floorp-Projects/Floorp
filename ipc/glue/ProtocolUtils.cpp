@@ -535,6 +535,17 @@ IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid)
 }
 
 bool
+IToplevelProtocol::TakeMinidump(nsIFile** aDump, uint32_t* aSequence)
+{
+  MOZ_RELEASE_ASSERT(GetSide() == ParentSide);
+#ifdef MOZ_CRASHREPORTER
+  return XRE_TakeMinidumpForChild(OtherPid(), aDump, aSequence);
+#else
+  return false;
+#endif
+}
+
+bool
 IToplevelProtocol::Open(mozilla::ipc::Transport* aTransport,
                         base::ProcessId aOtherPid,
                         MessageLoop* aThread,

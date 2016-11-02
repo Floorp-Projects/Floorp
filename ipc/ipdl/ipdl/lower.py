@@ -3189,29 +3189,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
             self.cls.addstmts([ processnative, Whitespace.NL ])
 
-        if ptype.isToplevel() and self.side is 'parent':
-            ## bool GetMinidump(nsIFile** dump)
-            self.cls.addstmt(Label.PROTECTED)
-
-            dumpvar = ExprVar('aDump')
-            seqvar = ExprVar('aSequence')
-            getdump = MethodDefn(MethodDecl(
-                'TakeMinidump',
-                params=[ Decl(Type('nsIFile', ptrptr=1), dumpvar.name),
-                         Decl(Type.UINT32PTR, seqvar.name)],
-                ret=Type.BOOL,
-                const=1))
-            getdump.addstmts([
-                CppDirective('ifdef', 'MOZ_CRASHREPORTER'),
-                StmtReturn(ExprCall(
-                    ExprVar('XRE_TakeMinidumpForChild'),
-                    args=[ ExprCall(p.otherPidMethod()), dumpvar, seqvar ])),
-                CppDirective('else'),
-                StmtReturn.FALSE,
-                CppDirective('endif')
-            ])
-            self.cls.addstmts([ getdump, Whitespace.NL ])
-
         ## private methods
         self.cls.addstmt(Label.PRIVATE)
 
