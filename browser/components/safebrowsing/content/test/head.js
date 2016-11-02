@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
  */
 function promiseTabLoadEvent(tab, url, eventType="load")
 {
-  let deferred = Promise.defer();
   info(`Wait tab event: ${eventType}`);
 
   function handle(loadedUrl) {
@@ -46,22 +45,10 @@ function promiseTabLoadEvent(tab, url, eventType="load")
                                            true, undefined, true);
   }
 
-  let timeout = setTimeout(() => {
-    deferred.reject(new Error(`Timed out while waiting for a ${eventType} event`));
-  }, 30000);
-
-  loaded.then(() => {
-    clearTimeout(timeout);
-    deferred.resolve()
-  });
-
   if (url)
     BrowserTestUtils.loadURI(tab.linkedBrowser, url);
 
-  // Promise.all rejects if either promise rejects (i.e. if we time out) and
-  // if our loaded promise resolves before the timeout, then we resolve the
-  // timeout promise as well, causing the all promise to resolve.
-  return Promise.all([deferred.promise, loaded]);
+  return loaded;
 }
 
 Services.prefs.setCharPref("urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple");
