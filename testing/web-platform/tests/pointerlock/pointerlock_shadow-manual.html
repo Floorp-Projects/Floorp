@@ -39,38 +39,39 @@
 <script>
 function run_test() {
     async_test((test) => {
-	document.onpointerlockerror = test.unreached_func('onpointerlockerror is not expected.');
+        document.onpointerlockerror = test.unreached_func('onpointerlockerror is not expected.');
 
-	document.onpointerlockchange = test.step_func_done(() => {
-	    // Not interested in handling before or after exitPointerLock.
-	    if (document.pointerLockElement === null)
-		return;
+        document.onpointerlockchange = test.step_func(() => {
+            // Not interested in handling before or after exitPointerLock.
+            if (document.pointerLockElement === null)
+                return;
 
-	    assert_equals(document.pointerLockElement, ids.host2, 'document.pointerLockElement should be shadow #host2.');
-	    assert_equals(ids.root.pointerLockElement, null, '#root\'s shadowRoot.pointerLockElement should be null.');
-	    assert_equals(ids.root2.pointerLockElement, ids.host3, '#root2\'s shadowRoot.pointerLockElement should be host3.');
-	    assert_equals(ids.root3.pointerLockElement, ids.canvas, '#root3\'s shadowRoot.pointerLockElement should be canvas element.');
-	    assert_equals(ids.root4.pointerLockElement, null, '#root4\'s shadowRoot.pointerLockElement should be null.');
-	    assert_equals(ids.root5.pointerLockElement, null, '#root5\'s shadowRoot.pointerLockElement should be null.');
+            assert_equals(document.pointerLockElement, ids.host2, 'document.pointerLockElement should be shadow #host2.');
+            assert_equals(ids.root.pointerLockElement, null, '#root\'s shadowRoot.pointerLockElement should be null.');
+            assert_equals(ids.root2.pointerLockElement, ids.host3, '#root2\'s shadowRoot.pointerLockElement should be host3.');
+            assert_equals(ids.root3.pointerLockElement, ids.canvas, '#root3\'s shadowRoot.pointerLockElement should be canvas element.');
+            assert_equals(ids.root4.pointerLockElement, null, '#root4\'s shadowRoot.pointerLockElement should be null.');
+            assert_equals(ids.root5.pointerLockElement, null, '#root5\'s shadowRoot.pointerLockElement should be null.');
 
-	    document.exitPointerLock();
-	});
+            document.exitPointerLock();
+            test.done();
+        });
 
-	var ids = createTestTree(host);
-	document.body.appendChild(ids.host);
+        var ids = createTestTree(host);
+        document.body.appendChild(ids.host);
 
-	// All pointerLockElement should default to null.
-	test.step(() => {
-	    assert_equals(document.pointerLockElement, null);
-	    assert_equals(ids.root.pointerLockElement, null);
-	    assert_equals(ids.root2.pointerLockElement, null);
-	    assert_equals(ids.root3.pointerLockElement, null);
-	    assert_equals(ids.root4.pointerLockElement, null);
-	    assert_equals(ids.root5.pointerLockElement, null);
-	});
+        // All pointerLockElement should default to null.
+        test.step(() => {
+            assert_equals(document.pointerLockElement, null);
+            assert_equals(ids.root.pointerLockElement, null);
+            assert_equals(ids.root2.pointerLockElement, null);
+            assert_equals(ids.root3.pointerLockElement, null);
+            assert_equals(ids.root4.pointerLockElement, null);
+            assert_equals(ids.root5.pointerLockElement, null);
+        });
 
-	var canvas = ids.canvas;
-	canvas.requestPointerLock();
+        var canvas = ids.canvas;
+        canvas.requestPointerLock();
     }, 'Test for pointerLockElement adjustment for Shadow DOM.');
 }
 </script>

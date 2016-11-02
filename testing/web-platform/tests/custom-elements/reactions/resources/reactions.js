@@ -39,11 +39,45 @@ function testNodeDisconnector(testFunction, name) {
         assert_array_equals(element.takeLog().types(), ['constructed']);
         container.appendChild(instance);
         assert_array_equals(element.takeLog().types(), ['connected']);
-        testFunction(instance);
+        testFunction(instance, window);
         assert_array_equals(element.takeLog().types(), ['disconnected']);
     }, name + ' must enqueue a disconnected reaction');
 
     container.parentNode.removeChild(container);
+}
+
+function testInsertingMarkup(testFunction, name) {
+    let container = document.createElement('div');
+    container.appendChild(document.createElement('div'));
+    document.body.appendChild(container);
+
+    test(function () {
+        var element = define_new_custom_element();
+        testFunction(container, `<${element.name}></${element.name}>`);
+        assert_array_equals(element.takeLog().types(), ['constructed', 'connected']);
+    }, name + ' must enqueue a connected reaction for a newly constructed custom element');
+
+    test(function () {
+        var element = define_new_custom_element(['title']);
+        testFunction(container, `<${element.name} id="hello" title="hi"></${element.name}>`);
+        var logEntries = element.takeLog();
+        assert_array_equals(logEntries.types(), ['constructed', 'attributeChanged', 'connected']);
+        assert_attribute_log_entry(logEntries[1], {name: 'title', oldValue: null, newValue: 'hi', namespace: null});
+    }, name + ' must enqueue a attributeChanged reaction for a newly constructed custom element');
+
+    container.parentNode.removeChild(container);
+}
+
+function testParsingMarkup(testFunction, name) {
+    test(function () {
+        var element = define_new_custom_element(['id']);
+        assert_array_equals(element.takeLog().types(), []);
+        var instance = testFunction(document, `<${element.name} id="hello" class="foo"></${element.name}>`);
+        assert_equals(Object.getPrototypeOf(instance.querySelector(element.name)), element.class.prototype);
+        var logEntries = element.takeLog();
+        assert_array_equals(logEntries.types(), ['constructed', 'attributeChanged']);
+        assert_attribute_log_entry(logEntries[1], {name: 'id', oldValue: null, newValue: 'hello', namespace: null});
+    }, name + ' must construct a custom element');
 }
 
 function testCloner(testFunction, name) {
@@ -92,7 +126,7 @@ function testCloner(testFunction, name) {
     }, name + ' must enqueue an attributeChanged reaction when cloning an element only for observed attributes');
 }
 
-function testReflectAttribute(jsAttributeName, contentAttributeName, validValue1, validValue2, name) {
+function testReflectAttributeWithContentValues(jsAttributeName, contentAttributeName, validValue1, contentValue1, validValue2, contentValue2, name) {
     test(function () {
         var element = define_new_custom_element([contentAttributeName]);
         var instance = document.createElement(element.name);
@@ -100,7 +134,8 @@ function testReflectAttribute(jsAttributeName, contentAttributeName, validValue1
         instance[jsAttributeName] = validValue1;
         var logEntries = element.takeLog();
         assert_array_equals(logEntries.types(), ['attributeChanged']);
-        assert_attribute_log_entry(logEntries.last(), {name: contentAttributeName, oldValue: null, newValue: validValue1, namespace: null});
+
+        assert_attribute_log_entry(logEntries.last(), {name: contentAttributeName, oldValue: null, newValue: contentValue1, namespace: null});
     }, name + ' must enqueue an attributeChanged reaction when adding ' + contentAttributeName + ' content attribute');
 
     test(function () {
@@ -111,8 +146,16 @@ function testReflectAttribute(jsAttributeName, contentAttributeName, validValue1
         instance[jsAttributeName] = validValue2;
         var logEntries = element.takeLog();
         assert_array_equals(logEntries.types(), ['attributeChanged']);
-        assert_attribute_log_entry(logEntries.last(), {name: contentAttributeName, oldValue: validValue1, newValue: validValue2, namespace: null});
+        assert_attribute_log_entry(logEntries.last(), {name: contentAttributeName, oldValue: contentValue1, newValue: contentValue2, namespace: null});
     }, name + ' must enqueue an attributeChanged reaction when replacing an existing attribute');
+}
+
+function testReflectAttribute(jsAttributeName, contentAttributeName, validValue1, validValue2, name) {
+    testReflectAttributeWithContentValues(jsAttributeName, contentAttributeName, validValue1, validValue1, validValue2, validValue2, name);
+}
+
+function testReflectBooleanAttribute(jsAttributeName, contentAttributeName, name) {
+    testReflectAttributeWithContentValues(jsAttributeName, contentAttributeName, true, '', false, null, name);
 }
 
 function testAttributeAdder(testFunction, name) {
@@ -177,14 +220,16 @@ function testAttributeMutator(testFunction, name) {
     }, name + ' must not enqueue an attributeChanged reaction when replacing an existing unobserved attribute');
 }
 
-function testAttributeRemover(testFunction, name) {
-    test(function () {
-        var element = define_new_custom_element(['title']);
-        var instance = document.createElement(element.name);
-        assert_array_equals(element.takeLog().types(), ['constructed']);
-        testFunction(instance, 'title');
-        assert_array_equals(element.takeLog().types(), []);
-    }, name + ' must not enqueue an attributeChanged reaction when removing an attribute that does not exist');
+function testAttributeRemover(testFunction, name, options) {
+    if (options && !options.onlyExistingAttribute) {
+        test(function () {
+            var element = define_new_custom_element(['title']);
+            var instance = document.createElement(element.name);
+            assert_array_equals(element.takeLog().types(), ['constructed']);
+            testFunction(instance, 'title');
+            assert_array_equals(element.takeLog().types(), []);
+        }, name + ' must not enqueue an attributeChanged reaction when removing an attribute that does not exist');
+    }
 
     test(function () {
         var element = define_new_custom_element([]);
@@ -214,4 +259,103 @@ function testAttributeRemover(testFunction, name) {
         testFunction(instance, 'data-lang');
         assert_array_equals(element.takeLog().types(), []);
     }, name + ' must not enqueue an attributeChanged reaction when removing an existing unobserved attribute');
+}
+
+function test_mutating_style_property_value(testFunction, name, options) {
+    const propertyName = (options || {}).propertyName || 'color';
+    const idlName = (options || {}).idlName || 'color';
+    const value1 = (options || {}).value1 || 'blue';
+    const rule1 = `${propertyName}: ${value1};`;
+    const value2 = (options || {}).value2 || 'red';
+    const rule2 = `${propertyName}: ${value2};`;
+
+    test(function () {
+        var element = define_new_custom_element(['style']);
+        var instance = document.createElement(element.name);
+        assert_array_equals(element.takeLog().types(), ['constructed']);
+        testFunction(instance, propertyName, idlName, value1);
+        assert_equals(instance.getAttribute('style'), rule1);
+        var logEntries = element.takeLog();
+        assert_array_equals(logEntries.types(), ['attributeChanged']);
+        assert_attribute_log_entry(logEntries.last(), {name: 'style', oldValue: null, newValue: rule1, namespace: null});
+    }, name + ' must enqueue an attributeChanged reaction when it adds the observed style attribute');
+
+    test(function () {
+        var element = define_new_custom_element(['title']);
+        var instance = document.createElement(element.name);
+        assert_array_equals(element.takeLog().types(), ['constructed']);
+        testFunction(instance, propertyName, idlName, value1);
+        assert_equals(instance.getAttribute('style'), rule1);
+        assert_array_equals(element.takeLog().types(), []);
+    }, name + ' must not enqueue an attributeChanged reaction when it adds the style attribute but the style attribute is not observed');
+
+    test(function () {
+        var element = define_new_custom_element(['style']);
+        var instance = document.createElement(element.name);
+        testFunction(instance, propertyName, idlName, value1);
+        assert_array_equals(element.takeLog().types(), ['constructed', 'attributeChanged']);
+        testFunction(instance, propertyName, idlName, value2);
+        assert_equals(instance.getAttribute('style'), rule2);
+        var logEntries = element.takeLog();
+        assert_array_equals(logEntries.types(), ['attributeChanged']);
+        assert_attribute_log_entry(logEntries.last(), {name: 'style', oldValue: rule1, newValue: rule2, namespace: null});
+    }, name + ' must enqueue an attributeChanged reaction when it mutates the observed style attribute');
+
+    test(function () {
+        var element = define_new_custom_element([]);
+        var instance = document.createElement(element.name);
+        testFunction(instance, propertyName, idlName, value1);
+        assert_array_equals(element.takeLog().types(), ['constructed']);
+        testFunction(instance, propertyName, idlName, value2);
+        assert_equals(instance.getAttribute('style'), rule2);
+        assert_array_equals(element.takeLog().types(), []);
+    }, name + ' must not enqueue an attributeChanged reaction when it mutates the style attribute but the style attribute is not observed');
+}
+
+function test_removing_style_property_value(testFunction, name) {
+    test(function () {
+        var element = define_new_custom_element(['style']);
+        var instance = document.createElement(element.name);
+        instance.setAttribute('style', 'color: red; display: none;');
+        assert_array_equals(element.takeLog().types(), ['constructed', 'attributeChanged']);
+        testFunction(instance, 'color', 'color');
+        assert_equals(instance.getAttribute('style'), 'display: none;'); // Don't make this empty since browser behaviors are inconsistent now.
+        var logEntries = element.takeLog();
+        assert_array_equals(logEntries.types(), ['attributeChanged']);
+        assert_attribute_log_entry(logEntries.last(), {name: 'style', oldValue: 'color: red; display: none;', newValue: 'display: none;', namespace: null});
+    }, name + ' must enqueue an attributeChanged reaction when it removes a property from the observed style attribute');
+
+    test(function () {
+        var element = define_new_custom_element(['class']);
+        var instance = document.createElement(element.name);
+        instance.setAttribute('style', 'color: red; display: none;');
+        assert_array_equals(element.takeLog().types(), ['constructed']);
+        testFunction(instance, 'color', 'color');
+        assert_equals(instance.getAttribute('style'), 'display: none;'); // Don't make this empty since browser behaviors are inconsistent now.
+        assert_array_equals(element.takeLog().types(), []);
+    }, name + ' must not enqueue an attributeChanged reaction when it removes a property from the style attribute but the style attribute is not observed');
+}
+
+function test_mutating_style_property_priority(testFunction, name) {
+    test(function () {
+        var element = define_new_custom_element(['style']);
+        var instance = document.createElement(element.name);
+        instance.setAttribute('style', 'color: red');
+        assert_array_equals(element.takeLog().types(), ['constructed', 'attributeChanged']);
+        testFunction(instance, 'color', 'color', true);
+        assert_equals(instance.getAttribute('style'), 'color: red !important;');
+        var logEntries = element.takeLog();
+        assert_array_equals(logEntries.types(), ['attributeChanged']);
+        assert_attribute_log_entry(logEntries.last(), {name: 'style', oldValue: 'color: red', newValue: 'color: red !important;', namespace: null});
+    }, name + ' must enqueue an attributeChanged reaction when it makes a property important and the style attribute is observed');
+
+    test(function () {
+        var element = define_new_custom_element(['id']);
+        var instance = document.createElement(element.name);
+        instance.setAttribute('style', 'color: red');
+        assert_array_equals(element.takeLog().types(), ['constructed']);
+        testFunction(instance, 'color', 'color', true);
+        assert_equals(instance.getAttribute('style'), 'color: red !important;');
+        assert_array_equals(element.takeLog().types(), []);
+    }, name + ' must enqueue an attributeChanged reaction when it makes a property important but the style attribute is not observed');
 }
