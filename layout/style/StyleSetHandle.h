@@ -9,6 +9,7 @@
 
 #include "mozilla/EventStates.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ServoTypes.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/StyleBackendType.h"
 #include "mozilla/StyleSheet.h"
@@ -114,10 +115,14 @@ public:
     inline nsresult EndUpdate();
     inline already_AddRefed<nsStyleContext>
     ResolveStyleFor(dom::Element* aElement,
-                    nsStyleContext* aParentContext);
+                    nsStyleContext* aParentContext,
+                    ConsumeStyleBehavior aConsume,
+                    LazyComputeBehavior aMayCompute);
     inline already_AddRefed<nsStyleContext>
     ResolveStyleFor(dom::Element* aElement,
                     nsStyleContext* aParentContext,
+                    ConsumeStyleBehavior aConsume,
+                    LazyComputeBehavior aMayCompute,
                     TreeMatchContext& aTreeMatchContext);
     inline already_AddRefed<nsStyleContext>
     ResolveStyleForText(nsIContent* aTextNode,
