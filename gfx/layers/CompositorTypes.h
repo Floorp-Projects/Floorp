@@ -166,7 +166,7 @@ typedef uintptr_t SyncHandle;
 struct TextureFactoryIdentifier
 {
   LayersBackend mParentBackend;
-  GeckoProcessType mParentProcessId;
+  GeckoProcessType mParentProcessType;
   int32_t mMaxTextureSize;
   bool mSupportsTextureBlitting;
   bool mSupportsPartialUploads;
@@ -174,14 +174,14 @@ struct TextureFactoryIdentifier
   SyncHandle mSyncHandle;
 
   explicit TextureFactoryIdentifier(LayersBackend aLayersBackend = LayersBackend::LAYERS_NONE,
-                                    GeckoProcessType aParentProcessId = GeckoProcessType_Default,
+                                    GeckoProcessType aParentProcessType = GeckoProcessType_Default,
                                     int32_t aMaxTextureSize = 4096,
                                     bool aSupportsTextureBlitting = false,
                                     bool aSupportsPartialUploads = false,
                                     bool aSupportsComponentAlpha = true,
                                     SyncHandle aSyncHandle = 0)
     : mParentBackend(aLayersBackend)
-    , mParentProcessId(aParentProcessId)
+    , mParentProcessType(aParentProcessType)
     , mMaxTextureSize(aMaxTextureSize)
     , mSupportsTextureBlitting(aSupportsTextureBlitting)
     , mSupportsPartialUploads(aSupportsPartialUploads)
