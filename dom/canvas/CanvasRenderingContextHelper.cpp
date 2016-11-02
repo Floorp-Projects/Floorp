@@ -123,13 +123,6 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
 already_AddRefed<nsICanvasRenderingContextInternal>
 CanvasRenderingContextHelper::CreateContext(CanvasContextType aContextType)
 {
-  return CreateContextHelper(aContextType, layers::LayersBackend::LAYERS_NONE);
-}
-
-already_AddRefed<nsICanvasRenderingContextInternal>
-CanvasRenderingContextHelper::CreateContextHelper(CanvasContextType aContextType,
-                                                  layers::LayersBackend aCompositorBackend)
-{
   MOZ_ASSERT(aContextType != CanvasContextType::NoContext);
   RefPtr<nsICanvasRenderingContextInternal> ret;
 
@@ -139,7 +132,7 @@ CanvasRenderingContextHelper::CreateContextHelper(CanvasContextType aContextType
 
   case CanvasContextType::Canvas2D:
     Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
-    ret = new CanvasRenderingContext2D(aCompositorBackend);
+    ret = new CanvasRenderingContext2D();
     break;
 
   case CanvasContextType::WebGL1:
