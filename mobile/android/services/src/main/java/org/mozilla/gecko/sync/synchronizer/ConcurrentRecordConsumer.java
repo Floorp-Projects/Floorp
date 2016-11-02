@@ -65,7 +65,7 @@ class ConcurrentRecordConsumer extends RecordConsumer {
 
   private void consumerIsDone() {
     Logger.debug(LOG_TAG, "Consumer is done. Processed " + counter + ((counter == 1) ? " record." : " records."));
-    delegate.consumerIsDone(!allRecordsQueued);
+    delegate.consumerIsDone(allRecordsQueued);
   }
 
   @Override
