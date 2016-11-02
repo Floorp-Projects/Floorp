@@ -8869,7 +8869,7 @@ nsLayoutUtils::GetSelectionBoundingRect(Selection* aSel)
     RectAccumulator accumulator;
     for (int32_t idx = 0; idx < rangeCount; ++idx) {
       nsRange* range = aSel->GetRangeAt(idx);
-      nsRange::CollectClientRects(&accumulator, range,
+      nsRange::CollectClientRectsAndText(&accumulator, nullptr, range,
                                   range->GetStartParent(), range->StartOffset(),
                                   range->GetEndParent(), range->EndOffset(),
                                   true, false);
