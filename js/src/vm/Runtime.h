@@ -23,7 +23,7 @@
 #include "jsscript.h"
 
 #ifdef XP_DARWIN
-# include "asmjs/WasmSignalHandlers.h"
+# include "wasm/WasmSignalHandlers.h"
 #endif
 #include "builtin/AtomicsObject.h"
 #include "builtin/Promise.h"

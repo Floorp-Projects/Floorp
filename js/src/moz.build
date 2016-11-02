@@ -18,7 +18,7 @@ with Files('../public/**'):
 with Files('*'):
     BUG_COMPONENT = component_engine
 
-with Files('asmjs/**'):
+with Files('wasm/**'):
     BUG_COMPONENT = component_jit
 with Files('builtin/**'):
     BUG_COMPONENT = component_stl
@@ -154,29 +154,6 @@ EXPORTS.js += [
 ]
 
 UNIFIED_SOURCES += [
-    'asmjs/AsmJS.cpp',
-    'asmjs/WasmBaselineCompile.cpp',
-    'asmjs/WasmBinary.cpp',
-    'asmjs/WasmBinaryFormat.cpp',
-    'asmjs/WasmBinaryIterator.cpp',
-    'asmjs/WasmBinaryToAST.cpp',
-    'asmjs/WasmBinaryToExperimentalText.cpp',
-    'asmjs/WasmBinaryToText.cpp',
-    'asmjs/WasmCode.cpp',
-    'asmjs/WasmCompartment.cpp',
-    'asmjs/WasmCompile.cpp',
-    'asmjs/WasmFrameIterator.cpp',
-    'asmjs/WasmGenerator.cpp',
-    'asmjs/WasmInstance.cpp',
-    'asmjs/WasmIonCompile.cpp',
-    'asmjs/WasmJS.cpp',
-    'asmjs/WasmModule.cpp',
-    'asmjs/WasmSignalHandlers.cpp',
-    'asmjs/WasmStubs.cpp',
-    'asmjs/WasmTable.cpp',
-    'asmjs/WasmTextToBinary.cpp',
-    'asmjs/WasmTextUtils.cpp',
-    'asmjs/WasmTypes.cpp',
     'builtin/AtomicsObject.cpp',
     'builtin/Eval.cpp',
     'builtin/Intl.cpp',
@@ -378,7 +355,30 @@ UNIFIED_SOURCES += [
     'vm/Unicode.cpp',
     'vm/Value.cpp',
     'vm/WeakMapPtr.cpp',
-    'vm/Xdr.cpp'
+    'vm/Xdr.cpp',
+    'wasm/AsmJS.cpp',
+    'wasm/WasmBaselineCompile.cpp',
+    'wasm/WasmBinary.cpp',
+    'wasm/WasmBinaryFormat.cpp',
+    'wasm/WasmBinaryIterator.cpp',
+    'wasm/WasmBinaryToAST.cpp',
+    'wasm/WasmBinaryToExperimentalText.cpp',
+    'wasm/WasmBinaryToText.cpp',
+    'wasm/WasmCode.cpp',
+    'wasm/WasmCompartment.cpp',
+    'wasm/WasmCompile.cpp',
+    'wasm/WasmFrameIterator.cpp',
+    'wasm/WasmGenerator.cpp',
+    'wasm/WasmInstance.cpp',
+    'wasm/WasmIonCompile.cpp',
+    'wasm/WasmJS.cpp',
+    'wasm/WasmModule.cpp',
+    'wasm/WasmSignalHandlers.cpp',
+    'wasm/WasmStubs.cpp',
+    'wasm/WasmTable.cpp',
+    'wasm/WasmTextToBinary.cpp',
+    'wasm/WasmTextUtils.cpp',
+    'wasm/WasmTypes.cpp'
 ]
 
 # jsarray.cpp and jsatom.cpp cannot be built in unified mode because

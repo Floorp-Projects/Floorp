@@ -18,7 +18,6 @@
 #include "jsweakmap.h"
 #include "jswrapper.h"
 
-#include "asmjs/WasmJS.h"
 #include "builtin/Promise.h"
 #include "ds/TraceableFifo.h"
 #include "gc/Barrier.h"
@@ -27,6 +26,7 @@
 #include "js/HashTable.h"
 #include "vm/GlobalObject.h"
 #include "vm/SavedStacks.h"
+#include "wasm/WasmJS.h"
 
 enum JSTrapStatus {
     JSTRAP_ERROR,

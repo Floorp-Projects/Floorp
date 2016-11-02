@@ -11,7 +11,6 @@
 #include "jscntxt.h"
 #include "jsscript.h"
 
-#include "asmjs/AsmJS.h"
 #include "builtin/ModuleObject.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
@@ -19,6 +18,7 @@
 #include "frontend/Parser.h"
 #include "vm/GlobalObject.h"
 #include "vm/TraceLogging.h"
+#include "wasm/AsmJS.h"
 
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"

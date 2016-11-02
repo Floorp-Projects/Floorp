@@ -56,13 +56,13 @@
 #include "jsfriendapi.h"
 #include "jsnum.h"
 
-#include "asmjs/WasmInstance.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
 #include "vm/GlobalObject.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
+#include "wasm/WasmInstance.h"
 
 #include "jsobjinlines.h"
 

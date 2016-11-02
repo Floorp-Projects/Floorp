@@ -28,12 +28,12 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "asmjs/AsmJS.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
 #include "vm/Stack.h"
+#include "wasm/AsmJS.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"

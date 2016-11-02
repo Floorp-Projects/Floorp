@@ -6,12 +6,12 @@
 
 #include "jit/MIRGraph.h"
 
-#include "asmjs/WasmTypes.h"
 #include "jit/BytecodeAnalysis.h"
 #include "jit/Ion.h"
 #include "jit/JitSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
+#include "wasm/WasmTypes.h"
 
 using namespace js;
 using namespace js::jit;
