@@ -251,15 +251,9 @@ protected:
   void UpdateEstimatedMediaDuration(int64_t aDuration) override;
 
 public:
-  // Set a flag indicating whether seeking is supported only in buffered ranges
-  void SetMediaSeekableOnlyInBufferedRanges(bool aMediaSeekableOnlyInBufferedRanges);
-
   // Returns true if this media supports random seeking. False for example with
   // chained ogg files.
   bool IsMediaSeekable();
-  // Returns true if this media supports seeking only in buffered ranges. True
-  // for example in WebMs with no cues
-  bool IsMediaSeekableOnlyInBufferedRanges();
   // Returns true if seeking is supported on a transport level (e.g. the server
   // supports range requests, we are playing a file, etc.).
   bool IsTransportSeekable();
@@ -768,7 +762,8 @@ protected:
   // back again.
   Canonical<int64_t> mDecoderPosition;
 
-  // True if the media is only seekable within its buffered ranges.
+  // True if the media is only seekable within its buffered ranges
+  // like WebMs with no cues.
   Canonical<bool> mMediaSeekableOnlyInBufferedRanges;
 
   // True if the decoder is visible.
