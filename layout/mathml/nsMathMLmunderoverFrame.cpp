@@ -8,7 +8,6 @@
 #include "nsRenderingContext.h"
 #include "nsMathMLmmultiscriptsFrame.h"
 #include <algorithm>
-#include "gfxMathTable.h"
 
 //
 // <munderover> -- attach an underscript-overscript pair to a base - implementation
@@ -430,11 +429,11 @@ nsMathMLmunderoverFrame::Place(DrawTarget*          aDrawTarget,
       // that we may use when the base is a stretchy horizontal operator. See
       // bug 963131.
       bigOpSpacing2 =
-        mathFont->MathTable()->Constant(gfxMathTable::LowerLimitGapMin,
-                                        oneDevPixel);
+        mathFont->GetMathConstant(gfxFontEntry::LowerLimitGapMin,
+                                  oneDevPixel);
       bigOpSpacing4 =
-        mathFont->MathTable()->Constant(gfxMathTable::LowerLimitBaselineDropMin,
-                                        oneDevPixel);
+        mathFont->GetMathConstant(gfxFontEntry::LowerLimitBaselineDropMin,
+                                  oneDevPixel);
       bigOpSpacing5 = 0;
     }
     underDelta1 = std::max(bigOpSpacing2, (bigOpSpacing4 - bmUnder.ascent));
@@ -473,11 +472,11 @@ nsMathMLmunderoverFrame::Place(DrawTarget*          aDrawTarget,
       // that we may use when the base is a stretchy horizontal operator. See
       // bug 963131.
       bigOpSpacing1 =
-        mathFont->MathTable()->Constant(gfxMathTable::UpperLimitGapMin,
-                                        oneDevPixel);
+        mathFont->GetMathConstant(gfxFontEntry::UpperLimitGapMin,
+                                  oneDevPixel);
       bigOpSpacing3 =
-        mathFont->MathTable()->Constant(gfxMathTable::UpperLimitBaselineRiseMin,
-                                        oneDevPixel);
+        mathFont->GetMathConstant(gfxFontEntry::UpperLimitBaselineRiseMin,
+                                  oneDevPixel);
       bigOpSpacing5 = 0;
     }
     overDelta1 = std::max(bigOpSpacing1, (bigOpSpacing3 - bmOver.descent));
@@ -523,8 +522,8 @@ nsMathMLmunderoverFrame::Place(DrawTarget*          aDrawTarget,
     nscoord accentBaseHeight = xHeight;
     if (mathFont) {
       accentBaseHeight =
-        mathFont->MathTable()->Constant(gfxMathTable::AccentBaseHeight,
-                                        oneDevPixel);
+        mathFont->GetMathConstant(gfxFontEntry::AccentBaseHeight,
+                                  oneDevPixel);
     }
     if (bmBase.ascent < accentBaseHeight) {
       // also ensure at least accentBaseHeight above the baseline of the base

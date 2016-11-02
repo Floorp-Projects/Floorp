@@ -16,7 +16,6 @@
 #include "gfxContext.h"
 #include "nsMathMLElement.h"
 #include <algorithm>
-#include "gfxMathTable.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -240,8 +239,9 @@ nsMathMLmfracFrame::PlaceInternal(DrawTarget*          aDrawTarget,
   nscoord oneDevPixel = fm->AppUnitsPerDevPixel();
   gfxFont* mathFont = fm->GetThebesFontGroup()->GetFirstMathFont();
   if (mathFont) {
-    defaultRuleThickness = mathFont->MathTable()->
-      Constant(gfxMathTable::FractionRuleThickness, oneDevPixel);
+    defaultRuleThickness =
+      mathFont->GetMathConstant(gfxFontEntry::FractionRuleThickness,
+                                oneDevPixel);
   } else {
     GetRuleThickness(aDrawTarget, fm, defaultRuleThickness);
   }
@@ -305,30 +305,31 @@ nsMathMLmfracFrame::PlaceInternal(DrawTarget*          aDrawTarget,
       denShift = displayStyle ? denShift1 : denShift2;
       if (mathFont) {
         numShift = mathFont->
-          MathTable()->Constant(displayStyle ?
-                                gfxMathTable::StackTopDisplayStyleShiftUp :
-                                gfxMathTable::StackTopShiftUp,
-                                oneDevPixel);
+          GetMathConstant(displayStyle ?
+                          gfxFontEntry::StackTopDisplayStyleShiftUp :
+                          gfxFontEntry::StackTopShiftUp,
+                          oneDevPixel);
         denShift = mathFont->
-          MathTable()->Constant(displayStyle ?
-                                gfxMathTable::StackBottomDisplayStyleShiftDown :
-                                gfxMathTable::StackBottomShiftDown,
-                                oneDevPixel);
+          GetMathConstant(displayStyle ?
+                          gfxFontEntry::StackBottomDisplayStyleShiftDown :
+                          gfxFontEntry::StackBottomShiftDown,
+                          oneDevPixel);
       }
     } else {
       numShift = displayStyle ? numShift1 : numShift2;
       denShift = displayStyle ? denShift1 : denShift2;
       if (mathFont) {
-        numShift = mathFont->MathTable()->
-          Constant(displayStyle ?
-                   gfxMathTable::FractionNumeratorDisplayStyleShiftUp :
-                   gfxMathTable::FractionNumeratorShiftUp,
-                   oneDevPixel);
-        denShift = mathFont->MathTable()->
-          Constant(displayStyle ?
-                   gfxMathTable::FractionDenominatorDisplayStyleShiftDown :
-                   gfxMathTable::FractionDenominatorShiftDown,
-                   oneDevPixel);
+        numShift = mathFont->
+          GetMathConstant(displayStyle ?
+                          gfxFontEntry::FractionNumeratorDisplayStyleShiftUp :
+                          gfxFontEntry::FractionNumeratorShiftUp,
+                          oneDevPixel);
+        denShift = mathFont->
+          GetMathConstant(
+            displayStyle ?
+            gfxFontEntry::FractionDenominatorDisplayStyleShiftDown :
+            gfxFontEntry::FractionDenominatorShiftDown,
+            oneDevPixel);
       }
     }
 
@@ -339,11 +340,11 @@ nsMathMLmfracFrame::PlaceInternal(DrawTarget*          aDrawTarget,
       nscoord minClearance = displayStyle ?
         7 * defaultRuleThickness : 3 * defaultRuleThickness;
       if (mathFont) {
-        minClearance = mathFont->MathTable()->
-          Constant(displayStyle ?
-                   gfxMathTable::StackDisplayStyleGapMin :
-                   gfxMathTable::StackGapMin,
-                   oneDevPixel);
+        minClearance =
+          mathFont->GetMathConstant(displayStyle ?
+                                    gfxFontEntry::StackDisplayStyleGapMin :
+                                    gfxFontEntry::StackGapMin,
+                                    oneDevPixel);
       }
       // Factor in axis height
       // http://www.mathml-association.org/MathMLinHTML5/S3.html#SS3.SSS2
@@ -378,15 +379,15 @@ nsMathMLmfracFrame::PlaceInternal(DrawTarget*          aDrawTarget,
       nscoord minClearanceDen = minClearanceNum;
       if (mathFont) {
         minClearanceNum = mathFont->
-          MathTable()->Constant(displayStyle ?
-                                gfxMathTable::FractionNumDisplayStyleGapMin :
-                                gfxMathTable::FractionNumeratorGapMin,
-                                oneDevPixel);
+          GetMathConstant(displayStyle ?
+                          gfxFontEntry::FractionNumDisplayStyleGapMin :
+                          gfxFontEntry::FractionNumeratorGapMin,
+                          oneDevPixel);
         minClearanceDen = mathFont->
-          MathTable()->Constant(displayStyle ?
-                                gfxMathTable::FractionDenomDisplayStyleGapMin :
-                                gfxMathTable::FractionDenominatorGapMin,
-                                oneDevPixel);
+          GetMathConstant(displayStyle ?
+                          gfxFontEntry::FractionDenomDisplayStyleGapMin :
+                          gfxFontEntry::FractionDenominatorGapMin,
+                          oneDevPixel);
       }
 
       // adjust numShift to maintain minClearanceNum if needed
