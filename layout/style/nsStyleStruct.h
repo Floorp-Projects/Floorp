@@ -417,22 +417,28 @@ struct nsStyleImage
   nsStyleImage& operator=(const nsStyleImage& aOther);
 
   void SetNull();
-  void SetImageData(imgRequestProxy* aImage);
-  void TrackImage(mozilla::dom::ImageTracker* aImageTracker);
-  void UntrackImage(mozilla::dom::ImageTracker* aImageTracker);
+  void SetImageRequest(already_AddRefed<nsStyleImageRequest> aImage);
   void SetGradientData(nsStyleGradient* aGradient);
   void SetElementId(const char16_t* aElementId);
   void SetCropRect(mozilla::UniquePtr<nsStyleSides> aCropRect);
 
+  void ResolveImage(nsPresContext* aContext) {
+    MOZ_ASSERT(mType != eStyleImageType_Image || mImage);
+    if (mType == eStyleImageType_Image && !mImage->IsResolved()) {
+      mImage->Resolve(aContext);
+    }
+  }
+
   nsStyleImageType GetType() const {
     return mType;
   }
-  imgRequestProxy* GetImageData() const {
+  nsStyleImageRequest* GetImageRequest() const {
     MOZ_ASSERT(mType == eStyleImageType_Image, "Data is not an image!");
     MOZ_ASSERT(mImage);
-    MOZ_ASSERT(mImageTracked,
-               "Should be tracking any image we're going to use!");
     return mImage;
+  }
+  imgRequestProxy* GetImageData() const {
+    return GetImageRequest()->get();
   }
   nsStyleGradient* GetGradientData() const {
     NS_ASSERTION(mType == eStyleImageType_Gradient, "Data is not a gradient!");
@@ -526,16 +532,13 @@ private:
 
   nsStyleImageType mType;
   union {
-    imgRequestProxy* mImage;
+    nsStyleImageRequest* mImage;
     nsStyleGradient* mGradient;
     char16_t* mElementId;
   };
 
   // This is _currently_ used only in conjunction with eStyleImageType_Image.
   mozilla::UniquePtr<nsStyleSides> mCropRect;
-#ifdef DEBUG
-  bool mImageTracked;
-#endif
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColor
@@ -814,16 +817,9 @@ struct nsStyleImageLayers {
     // Initialize mRepeat and mOrigin by specified layer type
     void Initialize(LayerType aType);
 
-    // Register/unregister images with the document. We do this only
-    // after the dust has settled in ComputeBackgroundData.
-    void TrackImages(mozilla::dom::ImageTracker* aImageTracker) {
+    void ResolveImage(nsPresContext* aContext) {
       if (mImage.GetType() == eStyleImageType_Image) {
-        mImage.TrackImage(aImageTracker);
-      }
-    }
-    void UntrackImages(mozilla::dom::ImageTracker* aImageTracker) {
-      if (mImage.GetType() == eStyleImageType_Image) {
-        mImage.UntrackImage(aImageTracker);
+        mImage.ResolveImage(aContext);
       }
     }
 
@@ -873,14 +869,10 @@ struct nsStyleImageLayers {
 
   const Layer& BottomLayer() const { return mLayers[mImageCount - 1]; }
 
-  void TrackImages(mozilla::dom::ImageTracker* aImageTracker) {
+  void ResolveImages(nsPresContext* aContext) {
     for (uint32_t i = 0; i < mImageCount; ++i) {
-        mLayers[i].TrackImages(aImageTracker);
+      mLayers[i].ResolveImage(aContext);
     }
-  }
-  void UntrackImages(mozilla::dom::ImageTracker* aImageTracker) {
-    for (uint32_t i = 0; i < mImageCount; ++i)
-      mLayers[i].UntrackImages(aImageTracker);
   }
 
   nsChangeHint CalcDifference(const nsStyleImageLayers& aNewLayers,
@@ -903,7 +895,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
   explicit nsStyleBackground(StyleStructContext aContext);
   nsStyleBackground(const nsStyleBackground& aOther);
   ~nsStyleBackground();
-  void FinishStyle(nsPresContext* aPresContext) {}
+
+  // Resolves and tracks the images in mImage.  Only called with a Servo-backed
+  // style system, where those images must be resolved later than the OMT
+  // nsStyleBackground constructor call.
+  void FinishStyle(nsPresContext* aPresContext);
 
   void* operator new(size_t sz, nsStyleBackground* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -1212,7 +1208,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
   explicit nsStyleBorder(StyleStructContext aContext);
   nsStyleBorder(const nsStyleBorder& aBorder);
   ~nsStyleBorder();
-  void FinishStyle(nsPresContext* aPresContext) {}
+
+  // Resolves and tracks mBorderImageSource.  Only called with a Servo-backed
+  // style system, where those images must be resolved later than the OMT
+  // nsStyleBorder constructor call.
+  void FinishStyle(nsPresContext* aPresContext);
 
   void* operator new(size_t sz, nsStyleBorder* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -1316,16 +1316,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
     return mBorderImageSource.IsLoaded();
   }
 
-  void TrackImage(mozilla::dom::ImageTracker* aImageTracker)
+  void ResolveImage(nsPresContext* aContext)
   {
     if (mBorderImageSource.GetType() == eStyleImageType_Image) {
-      mBorderImageSource.TrackImage(aImageTracker);
-    }
-  }
-  void UntrackImage(mozilla::dom::ImageTracker* aImageTracker)
-  {
-    if (mBorderImageSource.GetType() == eStyleImageType_Image) {
-      mBorderImageSource.UntrackImage(aImageTracker);
+      mBorderImageSource.ResolveImage(aContext);
     }
   }
 
@@ -3768,7 +3762,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
   explicit nsStyleSVGReset(StyleStructContext aContext);
   nsStyleSVGReset(const nsStyleSVGReset& aSource);
   ~nsStyleSVGReset();
-  void FinishStyle(nsPresContext* aPresContext) {}
+
+  // Resolves and tracks the images in mMask.  Only called with a Servo-backed
+  // style system, where those images must be resolved later than the OMT
+  // nsStyleSVGReset constructor call.
+  void FinishStyle(nsPresContext* aPresContext);
 
   void* operator new(size_t sz, nsStyleSVGReset* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
