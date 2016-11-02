@@ -66,6 +66,10 @@ struct nsStyleDisplay;
 
 extern "C" {
 
+// Object refcounting.
+NS_DECL_HOLDER_FFI_REFCOUNTING(nsIPrincipal, Principal)
+NS_DECL_HOLDER_FFI_REFCOUNTING(nsIURI, URI)
+
 // DOM Traversal.
 uint32_t Gecko_ChildrenCount(RawGeckoNodeBorrowed node);
 bool Gecko_NodeIsElement(RawGeckoNodeBorrowed node);
@@ -156,9 +160,15 @@ void Gecko_SetListStyleType(nsStyleList* style_struct, uint32_t type);
 void Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src);
 
 // background-image style.
-// TODO: support url() values (and maybe element() too?).
+// TODO: support element() and -moz-image()
 void Gecko_SetNullImageValue(nsStyleImage* image);
 void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient);
+void Gecko_SetUrlImageValue(nsStyleImage* image,
+                            const uint8_t* url_bytes,
+                            uint32_t url_length,
+                            ThreadSafeURIHolder* base_uri,
+                            ThreadSafeURIHolder* referrer,
+                            ThreadSafePrincipalHolder* principal);
 void Gecko_CopyImageValueFrom(nsStyleImage* image, const nsStyleImage* other);
 
 nsStyleGradient* Gecko_CreateGradient(uint8_t shape,
@@ -166,10 +176,6 @@ nsStyleGradient* Gecko_CreateGradient(uint8_t shape,
                                       bool repeating,
                                       bool legacy_syntax,
                                       uint32_t stops);
-
-// Object refcounting.
-NS_DECL_HOLDER_FFI_REFCOUNTING(nsIPrincipal, Principal)
-NS_DECL_HOLDER_FFI_REFCOUNTING(nsIURI, URI)
 
 // Display style.
 void Gecko_SetMozBinding(nsStyleDisplay* style_struct,
