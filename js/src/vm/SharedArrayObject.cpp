@@ -371,6 +371,7 @@ static const JSFunctionSpec static_functions[] = {
 };
 
 static const JSPropertySpec static_properties[] = {
+    JS_SELF_HOSTED_SYM_GET(species, "SharedArrayBufferSpecies", 0),
     JS_PS_END
 };
 
@@ -380,6 +381,7 @@ static const JSFunctionSpec prototype_functions[] = {
 
 static const JSPropertySpec prototype_properties[] = {
     JS_PSG("byteLength", SharedArrayBufferObject::byteLengthGetter, 0),
+    JS_STRING_SYM_PS(toStringTag, "SharedArrayBuffer", JSPROP_READONLY),
     JS_PS_END
 };
 
