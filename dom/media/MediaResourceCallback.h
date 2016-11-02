@@ -34,9 +34,6 @@ public:
   // Notify is duration is known to this MediaResource.
   virtual void SetInfinite(bool aInfinite) {}
 
-  // Notify if seeking is supported by this MediaResource.
-  virtual void SetMediaSeekable(bool aMediaSeekable) {}
-
   // Notify that a network error is encountered.
   virtual void NotifyNetworkError() {}
 

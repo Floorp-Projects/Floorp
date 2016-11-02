@@ -172,15 +172,6 @@ MediaDecoder::ResourceCallback::SetInfinite(bool aInfinite)
 }
 
 void
-MediaDecoder::ResourceCallback::SetMediaSeekable(bool aMediaSeekable)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mDecoder) {
-    mDecoder->SetMediaSeekable(aMediaSeekable);
-  }
-}
-
-void
 MediaDecoder::ResourceCallback::NotifyNetworkError()
 {
   MOZ_ASSERT(NS_IsMainThread());
