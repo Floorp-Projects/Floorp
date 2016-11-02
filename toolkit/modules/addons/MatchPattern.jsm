@@ -41,8 +41,8 @@ function globToRegexp(pat, allowQuestion) {
 function SingleMatchPattern(pat) {
   if (pat == "<all_urls>") {
     this.schemes = PERMITTED_SCHEMES;
-    this.host = "*";
-    this.path = new RegExp(".*");
+    this.hostMatch = () => true;
+    this.pathMatch = () => true;
   } else if (!pat) {
     this.schemes = [];
   } else {
@@ -59,42 +59,41 @@ function SingleMatchPattern(pat) {
     } else {
       this.schemes = [match[1]];
     }
-    this.host = match[2];
-    this.path = globToRegexp(match[3], false);
 
     // We allow the host to be empty for file URLs.
-    if (this.host == "" && this.schemes[0] != "file") {
+    if (match[2] == "" && this.schemes[0] != "file") {
       Cu.reportError(`Invalid match pattern: '${pat}'`);
       this.schemes = [];
       return;
     }
+
+    this.host = match[2];
+    this.hostMatch = this.getHostMatcher(match[2]);
+
+    let pathMatch = globToRegexp(match[3], false);
+    this.pathMatch = pathMatch.test.bind(pathMatch);
   }
 }
 
 SingleMatchPattern.prototype = {
-  matches(uri, ignorePath = false) {
-    if (!this.schemes.includes(uri.scheme)) {
-      return false;
-    }
-
+  getHostMatcher(host) {
     // This code ignores the port, as Chrome does.
-    if (this.host == "*") {
-      // Don't check anything.
-    } else if (this.host[0] == "*") {
-      // It must be *.foo. We also need to allow foo by itself.
-      let suffix = this.host.substr(2);
-      if (uri.host != suffix && !uri.host.endsWith("." + suffix)) {
-        return false;
-      }
-    } else if (this.host != uri.host) {
-      return false;
+    if (host == "*") {
+      return () => true;
     }
+    if (host.startsWith("*.")) {
+      let suffix = host.substr(2);
+      let dotSuffix = "." + suffix;
 
-    if (!ignorePath && !this.path.test(uri.path)) {
-      return false;
+      return ({host}) => host === suffix || host.endsWith(dotSuffix);
     }
+    return uri => uri.host === host;
+  },
 
-    return true;
+  matches(uri, ignorePath = false) {
+    return (this.schemes.includes(uri.scheme) &&
+            this.hostMatch(uri) &&
+            (ignorePath || this.pathMatch(uri.path)));
   },
 };
 
@@ -112,21 +111,11 @@ this.MatchPattern = function(pat) {
 MatchPattern.prototype = {
   // |uri| should be an nsIURI.
   matches(uri) {
-    for (let matcher of this.matchers) {
-      if (matcher.matches(uri)) {
-        return true;
-      }
-    }
-    return false;
+    return this.matchers.some(matcher => matcher.matches(uri));
   },
 
   matchesIgnoringPath(uri) {
-    for (let matcher of this.matchers) {
-      if (matcher.matches(uri, true)) {
-        return true;
-      }
-    }
-    return false;
+    return this.matchers.some(matcher => matcher.matches(uri, true));
   },
 
   // Checks that this match pattern grants access to read the given
