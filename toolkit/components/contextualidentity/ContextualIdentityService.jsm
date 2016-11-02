@@ -41,32 +41,32 @@ _ContextualIdentityService.prototype = {
   _defaultIdentities: [
     { userContextId: 1,
       public: true,
-      icon: "fingerprint",
-      color: "blue",
+      icon: "chrome://browser/skin/usercontext/personal.svg",
+      color: "#00a7e0",
       l10nID: "userContextPersonal.label",
       accessKey: "userContextPersonal.accesskey",
       telemetryId: 1,
     },
     { userContextId: 2,
       public: true,
-      icon: "briefcase",
-      color: "orange",
+      icon: "chrome://browser/skin/usercontext/work.svg",
+      color: "#f89c24",
       l10nID: "userContextWork.label",
       accessKey: "userContextWork.accesskey",
       telemetryId: 2,
     },
     { userContextId: 3,
       public: true,
-      icon: "dollar",
-      color: "green",
+      icon: "chrome://browser/skin/usercontext/banking.svg",
+      color: "#7dc14c",
       l10nID: "userContextBanking.label",
       accessKey: "userContextBanking.accesskey",
       telemetryId: 3,
     },
     { userContextId: 4,
       public: true,
-      icon: "cart",
-      color: "pink",
+      icon: "chrome://browser/skin/usercontext/shopping.svg",
+      color: "#ee5195",
       l10nID: "userContextShopping.label",
       accessKey: "userContextShopping.accesskey",
       telemetryId: 4,
@@ -106,10 +106,7 @@ _ContextualIdentityService.prototype = {
 
       try {
         let data = JSON.parse(gTextDecoder.decode(bytes));
-        if (data.version == 1) {
-          this.resetDefault();
-        }
-        if (data.version != 2) {
+        if (data.version != 1) {
           dump("ERROR - ContextualIdentityService - Unknown version found in " + this._path + "\n");
           this.loadError(null);
           return;
@@ -127,15 +124,6 @@ _ContextualIdentityService.prototype = {
     });
   },
 
-  resetDefault() {
-    this._identities = this._defaultIdentities;
-    this._lastUserContextId = this._defaultIdentities.length;
-
-    this._dataReady = true;
-
-    this.saveSoon();
-  },
-
   loadError(error) {
     if (error != null &&
         !(error instanceof OS.File.Error && error.becauseNoSuchFile) &&
@@ -150,7 +138,12 @@ _ContextualIdentityService.prototype = {
       return;
     }
 
-    this.resetDefault();
+    this._identities = this._defaultIdentities;
+    this._lastUserContextId = this._defaultIdentities.length;
+
+    this._dataReady = true;
+
+    this.saveSoon();
   },
 
   saveSoon() {
@@ -159,7 +152,7 @@ _ContextualIdentityService.prototype = {
 
   save() {
    let object = {
-     version: 2,
+     version: 1,
      lastUserContextId: this._lastUserContextId,
      identities: this._identities
    };
@@ -187,7 +180,7 @@ _ContextualIdentityService.prototype = {
   update(userContextId, name, icon, color) {
     let identity = this._identities.find(identity => identity.userContextId == userContextId &&
                                          identity.public);
-    if (identity && name) {
+    if (identity) {
       identity.name = name;
       identity.color = color;
       identity.icon = icon;
@@ -274,14 +267,22 @@ _ContextualIdentityService.prototype = {
   },
 
   setTabStyle(tab) {
+    // inline style is only a temporary fix for some bad performances related
+    // to the use of CSS vars. This code will be removed in bug 1278177.
     if (!tab.hasAttribute("usercontextid")) {
+      tab.style.removeProperty("background-image");
+      tab.style.removeProperty("background-size");
+      tab.style.removeProperty("background-repeat");
       return;
     }
 
     let userContextId = tab.getAttribute("usercontextid");
     let identity = this.getIdentityFromId(userContextId);
 
-    tab.setAttribute("data-identity-color", identity.color);
+    let color = identity ? identity.color : DEFAULT_TAB_COLOR;
+    tab.style.backgroundImage = "linear-gradient(to right, transparent 20%, " + color + " 30%, " + color + " 70%, transparent 80%)";
+    tab.style.backgroundSize = "auto 2px";
+    tab.style.backgroundRepeat = "no-repeat";
   },
 
   countContainerTabs() {
