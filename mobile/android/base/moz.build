@@ -440,6 +440,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/activitystream/ActivityStreamHomeFragment.java',
     'home/activitystream/ActivityStreamHomeScreen.java',
     'home/activitystream/menu/ActivityStreamContextMenu.java',
+    'home/activitystream/menu/BottomSheetContextMenu.java',
     'home/activitystream/StreamItem.java',
     'home/activitystream/StreamRecyclerAdapter.java',
     'home/activitystream/topsites/CirclePageIndicator.java',

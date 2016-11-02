@@ -92,6 +92,7 @@ class TopSitesCard extends RecyclerView.ViewHolder
             onUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(HomePager.OnUrlOpenListener.Flags.class));
         } else if (clickedView == menuButton) {
             ActivityStreamContextMenu.show(clickedView.getContext(),
+                    menuButton,
                     ActivityStreamContextMenu.MenuMode.TOPSITE,
                     title.getText().toString(), url,
                     onUrlOpenListener, onUrlOpenInBackgroundListener,

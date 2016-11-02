@@ -48,14 +48,9 @@ public class testActivityStreamContextMenu extends BaseTest {
      * the correct state.
      */
     private void testMenuForUrl(final String url, final boolean isBookmarked, final boolean isVisited) {
-        final ActivityStreamContextMenu menu = ActivityStreamContextMenu.show(getActivity(), ActivityStreamContextMenu.MenuMode.HIGHLIGHT, "foobar", url, null, null, 100, 100);
+        final View anchor = new View(getActivity());
 
-        waitForContextMenu(menu);
-
-        final View wrapper = menu.findViewById(R.id.info_wrapper);
-        mAsserter.is(wrapper.getVisibility(), View.VISIBLE, "menu should be visible");
-
-        NavigationView nv = (NavigationView) menu.findViewById(R.id.menu);
+        final ActivityStreamContextMenu menu = ActivityStreamContextMenu.show(getActivity(), anchor, ActivityStreamContextMenu.MenuMode.HIGHLIGHT, "foobar", url, null, null, 100, 100);
 
         final int expectedBookmarkString;
         if (isBookmarked) {
@@ -64,24 +59,13 @@ public class testActivityStreamContextMenu extends BaseTest {
             expectedBookmarkString = R.string.bookmark;
         }
 
-        final MenuItem bookmarkItem = nv.getMenu().findItem(R.id.bookmark);
+        final MenuItem bookmarkItem = menu.getItemByID(R.id.bookmark);
         assertMenuItemHasString(bookmarkItem, expectedBookmarkString);
 
-        final MenuItem deleteItem = nv.getMenu().findItem(R.id.delete);
+        final MenuItem deleteItem = menu.getItemByID(R.id.delete);
         assertMenuItemIsVisible(deleteItem, isVisited);
 
         menu.dismiss();
-    }
-
-    private void waitForContextMenu(final ActivityStreamContextMenu menu) {
-        waitForCondition(new Condition() {
-            @Override
-            public boolean isSatisfied() {
-                final View v = menu.findViewById(R.id.info_wrapper);
-
-                return (v != null);
-            }
-        }, 5000);
     }
 
     private void assertMenuItemIsVisible(final MenuItem item, final boolean shouldBeVisible) {
