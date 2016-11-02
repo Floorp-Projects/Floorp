@@ -120,55 +120,6 @@ HasGMPFor(const nsACString& aAPI,
   return hasPlugin;
 }
 
-StaticMutex sGMPCodecsMutex;
-
-struct GMPCodecs {
-  const nsLiteralCString mKeySystem;
-  bool mHasAAC;
-  bool mHasH264;
-  bool mHasVP8;
-  bool mHasVP9;
-};
-
-static GMPCodecs sGMPCodecs[] = {
-  { kEMEKeySystemClearkey, false, false, false, false },
-  { kEMEKeySystemWidevine, false, false, false, false },
-  { kEMEKeySystemPrimetime, false, false, false, false },
-};
-
-void
-GMPDecoderModule::UpdateUsableCodecs()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  StaticMutexAutoLock lock(sGMPCodecsMutex);
-  for (GMPCodecs& gmp : sGMPCodecs) {
-    gmp.mHasAAC = HasGMPFor(NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
-                            NS_LITERAL_CSTRING("aac"),
-                            gmp.mKeySystem);
-    gmp.mHasH264 = HasGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                             NS_LITERAL_CSTRING("h264"),
-                             gmp.mKeySystem);
-    gmp.mHasVP8 = HasGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                            NS_LITERAL_CSTRING("vp8"),
-                            gmp.mKeySystem);
-    gmp.mHasVP9 = HasGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                            NS_LITERAL_CSTRING("vp9"),
-                            gmp.mKeySystem);
-  }
-}
-
-/* static */
-void
-GMPDecoderModule::Init()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  // GMPService::HasPluginForAPI is main thread only, so to implement
-  // SupportsMimeType() we build a table of the codecs which each whitelisted
-  // GMP has and update it when any GMPs are removed or added at runtime.
-  UpdateUsableCodecs();
-}
-
 /* static */
 const Maybe<nsCString>
 GMPDecoderModule::PreferredGMP(const nsACString& aMimeType)
