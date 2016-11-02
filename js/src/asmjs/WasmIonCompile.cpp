@@ -3501,7 +3501,7 @@ EmitExpr(FunctionCompiler& f)
       case Expr::F64ConvertSI32:
         return EmitConversion<MToDouble>(f, ValType::I32, ValType::F64);
       case Expr::F64ConvertUI32:
-        return EmitConversion<MAsmJSUnsignedToDouble>(f, ValType::I32, ValType::F64);
+        return EmitConversion<MWasmUnsignedToDouble>(f, ValType::I32, ValType::F64);
       case Expr::F64ConvertSI64:
       case Expr::F64ConvertUI64:
         return EmitConvertI64ToFloatingPoint(f, ValType::F64, MIRType::Double,

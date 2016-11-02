@@ -1741,7 +1741,7 @@ CodeGeneratorMIPSShared::visitBitAndAndBranch(LBitAndAndBranch* lir)
 }
 
 void
-CodeGeneratorMIPSShared::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir)
+CodeGeneratorMIPSShared::visitWasmUint32ToDouble(LWasmUint32ToDouble* lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
 }

@@ -518,9 +518,9 @@ CodeGeneratorARM64::visitBitAndAndBranch(LBitAndAndBranch* baab)
 }
 
 void
-CodeGeneratorARM64::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir)
+CodeGeneratorARM64::visitWasmUint32ToDouble(LWasmUint32ToDouble* lir)
 {
-    MOZ_CRASH("visitAsmJSUInt32ToDouble");
+    MOZ_CRASH("visitWasmUint32ToDouble");
 }
 
 void

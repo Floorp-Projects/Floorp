@@ -5658,7 +5658,7 @@ MGetPropertyCache::updateForReplacement(MDefinition* ins)
 }
 
 MDefinition*
-MAsmJSUnsignedToDouble::foldsTo(TempAllocator& alloc)
+MWasmUnsignedToDouble::foldsTo(TempAllocator& alloc)
 {
     if (input()->isConstant() && input()->type() == MIRType::Int32)
         return MConstant::New(alloc, DoubleValue(uint32_t(input()->toConstant()->toInt32())));
