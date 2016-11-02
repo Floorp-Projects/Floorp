@@ -4,31 +4,27 @@
 {
   'includes': [
     '../../coreconf/config.gypi',
-    'gtest.gypi',
+    '../common/gtest.gypi',
   ],
   'targets': [
     {
-      'target_name': 'gtests',
+      'target_name': 'der_gtest',
       'type': 'executable',
       'sources': [
-        'gtests.cc'
+        'der_getint_unittest.cc',
+        '<(DEPTH)/gtests/common/gtests.cc'
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
-        '<(DEPTH)/lib/nss/nss.gyp:nss3',
-        '<(DEPTH)/lib/util/util.gyp:nssutil3',
-        '<(DEPTH)/lib/smime/smime.gyp:smime3',
-        '<(DEPTH)/lib/ssl/ssl.gyp:ssl3',
-        '<(DEPTH)/external_tests/google_test/google_test.gyp:gtest',
-        '<(DEPTH)/cmd/lib/lib.gyp:sectool'
+        '<(DEPTH)/gtests/google_test/google_test.gyp:gtest',
       ]
     }
   ],
   'target_defaults': {
     'include_dirs': [
-      '../../external_tests/google_test/gtest/include',
-      '../../external_tests/common'
-    ],
+      '../../gtests/google_test/gtest/include',
+      '../../gtests/common'
+    ]
   },
   'variables': {
     'module': 'nss'
