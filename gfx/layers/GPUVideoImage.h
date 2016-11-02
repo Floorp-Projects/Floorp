@@ -13,13 +13,17 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 
 namespace mozilla {
+namespace dom {
+class VideoDecoderManagerChild;
+}
 namespace layers {
 
 // Image class that refers to a decoded video frame within
 // the GPU process.
 class GPUVideoImage final : public Image {
 public:
-  GPUVideoImage(const SurfaceDescriptorGPUVideo& aSD,
+  GPUVideoImage(dom::VideoDecoderManagerChild* aManager,
+                const SurfaceDescriptorGPUVideo& aSD,
                 const gfx::IntSize& aSize)
     : Image(nullptr, ImageFormat::GPU_VIDEO)
     , mSize(aSize)
@@ -27,7 +31,7 @@ public:
     // Create the TextureClient immediately since the GPUVideoTextureData
     // is responsible for deallocating the SurfaceDescriptor.
     mTextureClient =
-      TextureClient::CreateWithData(new GPUVideoTextureData(aSD, aSize),
+      TextureClient::CreateWithData(new GPUVideoTextureData(aManager, aSD, aSize),
                                     TextureFlags::DEFAULT,
                                     ImageBridgeChild::GetSingleton().get());
   }
