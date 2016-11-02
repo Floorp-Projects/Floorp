@@ -25,7 +25,7 @@ import android.support.annotation.Nullable;
 public class Server11Repository extends Repository {
   public final AuthHeaderProvider authHeaderProvider;
 
-  /* package-local */ final long syncDeadline;
+  private final long syncDeadlineMillis;
   /* package-local */ final URI collectionURI;
 
   protected final String collection;
@@ -46,6 +46,7 @@ public class Server11Repository extends Repository {
    */
   public Server11Repository(
           @NonNull String collection,
+          long syncDeadlineMillis,
           @NonNull String storageURL,
           AuthHeaderProvider authHeaderProvider,
           @NonNull InfoCollections infoCollections,
@@ -60,6 +61,7 @@ public class Server11Repository extends Repository {
       throw new IllegalArgumentException("infoCollections must not be null");
     }
     this.collection = collection;
+    this.syncDeadlineMillis = syncDeadlineMillis;
     this.collectionURI = new URI(storageURL + (storageURL.endsWith("/") ? collection : "/" + collection));
     this.authHeaderProvider = authHeaderProvider;
     this.infoCollections = infoCollections;
@@ -99,5 +101,14 @@ public class Server11Repository extends Repository {
 
   public boolean getAllowMultipleBatches() {
     return true;
+  }
+
+  /**
+   * A point in time by which this repository's session must complete fetch and store operations.
+   * Particularly pertinent for batching downloads performed by the session (should we fetch
+   * another batch?) and buffered repositories (do we have enough time to merge what we've downloaded?).
+   */
+  public long getSyncDeadline() {
+    return syncDeadlineMillis;
   }
 }

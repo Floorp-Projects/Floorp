@@ -46,6 +46,7 @@ public class AndroidBrowserHistoryServerSyncStage extends ServerSyncStage {
   protected Repository getRemoteRepository() throws URISyntaxException {
     return new ConstrainedServer11Repository(
             getCollection(),
+            session.getSyncDeadline(),
             session.config.storageURL(),
             session.getAuthHeaderProvider(),
             session.config.infoCollections,

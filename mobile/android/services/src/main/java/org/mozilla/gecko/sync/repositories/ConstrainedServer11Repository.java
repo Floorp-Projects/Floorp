@@ -24,6 +24,7 @@ public class ConstrainedServer11Repository extends Server11Repository {
 
   public ConstrainedServer11Repository(
           String collection,
+          long syncDeadline,
           String storageURL,
           AuthHeaderProvider authHeaderProvider,
           InfoCollections infoCollections,
@@ -33,6 +34,7 @@ public class ConstrainedServer11Repository extends Server11Repository {
           boolean allowMultipleBatches) throws URISyntaxException {
     super(
             collection,
+            syncDeadline,
             storageURL,
             authHeaderProvider,
             infoCollections,
