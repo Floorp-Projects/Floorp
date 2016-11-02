@@ -670,7 +670,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   // We could do something fancy to avoid the TrackImage/UntrackImage
   // work, but it doesn't seem worth it.  (We need to call TrackImage
   // since we're not going through nsRuleNode::ComputeBorderData.)
-  newStyleBorder.TrackImage(aPresContext);
+  newStyleBorder.TrackImage(aPresContext->Document()->ImageTracker());
 
   NS_FOR_CSS_SIDES(side) {
     nscolor color = aStyleContext->GetVisitedDependentColor(
@@ -685,7 +685,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   // We could do something fancy to avoid the TrackImage/UntrackImage
   // work, but it doesn't seem worth it.  (We need to call UntrackImage
   // since we're not going through nsStyleBorder::Destroy.)
-  newStyleBorder.UntrackImage(aPresContext);
+  newStyleBorder.UntrackImage(aPresContext->Document()->ImageTracker());
 
   return result;
 }
