@@ -93,15 +93,14 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
 
   DecoderDoctorDiagnostics diagnostics;
 
-  // Parse keysystem, split it out into keySystem prefix, and version suffix.
-  nsAutoString keySystem;
-  int32_t minCdmVersion = NO_CDM_VERSION;
-  if (!ParseKeySystem(aKeySystem, keySystem, minCdmVersion)) {
+  // Ensure keysystem is supported.
+  if (!IsWidevineKeySystem(aKeySystem) &&
+      !IsClearkeyKeySystem(aKeySystem) &&
+      !IsPrimetimeKeySystem(aKeySystem)) {
     // Not to inform user, because nothing to do if the keySystem is not
     // supported.
     aPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                          NS_LITERAL_CSTRING("Key system string is invalid,"
-                                             " or key system is unsupported"));
+                          NS_LITERAL_CSTRING("Key system is unsupported"));
     diagnostics.StoreMediaKeySystemAccess(mWindow->GetExtantDoc(),
                                           aKeySystem, false, __func__);
     return;
@@ -123,17 +122,17 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
 
   nsAutoCString message;
   MediaKeySystemStatus status =
-    MediaKeySystemAccess::GetKeySystemStatus(keySystem, message);
+    MediaKeySystemAccess::GetKeySystemStatus(aKeySystem, message);
 
   nsPrintfCString msg("MediaKeySystemAccess::GetKeySystemStatus(%s) "
                       "result=%s msg='%s'",
-                      NS_ConvertUTF16toUTF8(keySystem).get(),
+                      NS_ConvertUTF16toUTF8(aKeySystem).get(),
                       MediaKeySystemStatusValues::strings[(size_t)status].value,
                       message.get());
   LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
 
   if (status == MediaKeySystemStatus::Cdm_not_installed &&
-      (IsPrimetimeKeySystem(keySystem) || IsWidevineKeySystem(keySystem))) {
+      (IsPrimetimeKeySystem(aKeySystem) || IsWidevineKeySystem(aKeySystem))) {
     // These are cases which could be resolved by downloading a new(er) CDM.
     // When we send the status to chrome, chrome's GMPProvider will attempt to
     // download or update the CDM. In AwaitInstall() we add listeners to wait
@@ -147,7 +146,7 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
       // Note: If we're re-trying, we don't re-send the notification,
       // as chrome is already displaying the "we can't play, updating"
       // notification.
-      MediaKeySystemAccess::NotifyObservers(mWindow, keySystem, status);
+      MediaKeySystemAccess::NotifyObservers(mWindow, aKeySystem, status);
     } else {
       // We waited or can't wait for an update and we still can't service
       // the request. Give up. Chrome will still be showing a "I can't play,
@@ -163,13 +162,13 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
     // Failed due to user disabling something, send a notification to
     // chrome, so we can show some UI to explain how the user can rectify
     // the situation.
-    MediaKeySystemAccess::NotifyObservers(mWindow, keySystem, status);
+    MediaKeySystemAccess::NotifyObservers(mWindow, aKeySystem, status);
     aPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR, message);
     return;
   }
 
   MediaKeySystemConfiguration config;
-  if (MediaKeySystemAccess::GetSupportedConfig(keySystem, aConfigs, config, &diagnostics)) {
+  if (MediaKeySystemAccess::GetSupportedConfig(aKeySystem, aConfigs, config, &diagnostics)) {
     RefPtr<MediaKeySystemAccess> access(
       new MediaKeySystemAccess(mWindow, aKeySystem, config));
     aPromise->MaybeResolve(access);
