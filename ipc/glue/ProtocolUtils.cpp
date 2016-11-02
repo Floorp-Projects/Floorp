@@ -53,20 +53,6 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPSecurityDescriptor, \
 
 namespace ipc {
 
-IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId, Side aSide)
- : IProtocol(aSide),
-   mProtocolId(aProtoId)
-{
-}
-
-IToplevelProtocol::~IToplevelProtocol()
-{
-  if (mTrans) {
-    RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(mTrans.release());
-    XRE_GetIOMessageLoop()->PostTask(task.forget());
-  }
-}
-
 class ChannelOpened : public IPC::Message
 {
 public:
@@ -519,6 +505,33 @@ IProtocol::DeallocShmem(Shmem& aMem)
 #endif // DEBUG
   aMem.forget(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead());
   return ok;
+}
+
+IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId, Side aSide)
+ : IProtocol(aSide),
+   mProtocolId(aProtoId),
+   mOtherPid(mozilla::ipc::kInvalidProcessId)
+{
+}
+
+IToplevelProtocol::~IToplevelProtocol()
+{
+  if (mTrans) {
+    RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(mTrans.release());
+    XRE_GetIOMessageLoop()->PostTask(task.forget());
+  }
+}
+
+base::ProcessId
+IToplevelProtocol::OtherPid() const
+{
+  return mOtherPid;
+}
+
+void
+IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid)
+{
+  mOtherPid = aOtherPid;
 }
 
 bool
