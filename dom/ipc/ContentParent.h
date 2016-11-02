@@ -136,7 +136,7 @@ public:
                              hal::ProcessPriority aPriority =
                              hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
                              ContentParent* aOpener = nullptr,
-                             bool aFreshProcess = false);
+                             bool aLargeAllocationProcess = false);
 
   /**
    * Create a subprocess suitable for use as a preallocated app process.
@@ -1206,6 +1206,7 @@ private:
   nsRefPtrHashtable<nsIDHashKey, GetFilesHelper> mGetFilesPendingRequests;
 
   nsTArray<nsCString> mBlobURLs;
+  bool mLargeAllocationProcess;
 };
 
 } // namespace dom
