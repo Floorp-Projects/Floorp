@@ -56,8 +56,6 @@ class KintoServer {
     this.port = this.httpServer.identity.primaryPort;
     // POST requests we receive from the client go here
     this.posts = [];
-    // DELETEd buckets will go here.
-    this.deletedBuckets = [];
     // Anything in here will force the next POST to generate a conflict
     this.conflicts = [];
 
@@ -72,10 +70,6 @@ class KintoServer {
 
   getPosts() {
     return this.posts;
-  }
-
-  getDeletedBuckets() {
-    return this.deletedBuckets;
   }
 
   installConfigPath() {
@@ -193,51 +187,14 @@ class KintoServer {
       response.setHeader("Date", (new Date()).toUTCString());
       response.setHeader("ETag", this.etag.toString());
 
-      const records = this.collections.get(collectionId);
-      // Can't JSON a Set directly, so convert to Array
-      const data = Array.from(records);
-      for (const record of records) {
-        if (record._onlyOnce) {
-          records.delete(record);
-        }
-      }
-
       const body = JSON.stringify({
-        "data": data,
+        // Can't JSON a Set directly, so convert to Array
+        "data": Array.from(this.collections.get(collectionId)),
       });
       response.write(body);
     }
 
     this.httpServer.registerPathHandler(remoteRecordsPath, handleGetRecords.bind(this));
-  }
-
-  installDeleteBucket() {
-    this.httpServer.registerPrefixHandler("/v1/buckets/", (request, response) => {
-      if (request.method != "DELETE") {
-        dump(`got a non-delete action on bucket: ${request.method} ${request.path}\n`);
-        return;
-      }
-
-      const noPrefix = request.path.slice("/v1/buckets/".length);
-      const [bucket, afterBucket] = noPrefix.split("/", 1);
-      if (afterBucket && afterBucket != "") {
-        dump(`got a delete for a non-bucket: ${request.method} ${request.path}\n`);
-      }
-
-      this.deletedBuckets.push(bucket);
-      // Fake like this actually deletes the records.
-      for (const [, set] of this.collections) {
-        set.clear();
-      }
-
-      response.write(JSON.stringify({
-        data: {
-          deleted: true,
-          last_modified: 1475161309026,
-          id: "b09f1618-d789-302d-696e-74ec53ee18a8", // FIXME
-        },
-      }));
-    });
   }
 
   // Utility function to install a keyring at the start of a test.
@@ -256,18 +213,6 @@ class KintoServer {
 
   encryptAndAddRecord(transformer, collectionId, record) {
     return transformer.encode(record).then(encrypted => {
-      this.collections.get(collectionId).add(encrypted);
-    });
-  }
-
-  // Like encryptAndAddRecord, but add a flag that will only serve
-  // this record once.
-  //
-  // Since in real life, Kinto only serves a record as part of a changes feed
-  // once, this can be useful for testing complicated syncing logic.
-  encryptAndAddRecordOnlyOnce(transformer, collectionId, record) {
-    return transformer.encode(record).then(encrypted => {
-      encrypted._onlyOnce = true;
       this.collections.get(collectionId).add(encrypted);
     });
   }
@@ -322,9 +267,6 @@ function* withSignedInUser(user, f) {
     },
     getOAuthToken() {
       return Promise.resolve("some-access-token");
-    },
-    sessionStatus() {
-      return Promise.resolve(true);
     },
   };
 
@@ -617,182 +559,8 @@ add_task(function* checkSyncKeyRing_reuploads_keys() {
         error = e;
       }
       ok(error, "decrypting the keyring with the old kB should fail");
-      ok(Utils.isHMACMismatch(error) || KeyRingEncryptionRemoteTransformer.isOutdatedKB(error),
+      ok(Utils.isHMACMismatch(error),
          "decrypting the keyring with the old kB should throw an HMAC mismatch");
-    });
-  });
-});
-
-add_task(function* checkSyncKeyRing_overwrites_on_conflict() {
-  // If there is already a record on the server that was encrypted
-  // with a different kB, we wipe the server, clear sync state, and
-  // overwrite it with our keys.
-  const extensionId = uuid();
-  const transformer = new KeyRingEncryptionRemoteTransformer();
-  let extensionKey;
-  yield* withSyncContext(function* (context) {
-    yield* withServer(function* (server) {
-      // The old device has this kB, which is very similar to the
-      // current kB but with the last f changed to an e.
-      const NOVEL_KB = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdee";
-      const oldUser = Object.assign({}, loggedInUser, {kB: NOVEL_KB});
-      server.installCollection("storage-sync-crypto");
-      server.installDeleteBucket();
-      server.etag = 765;
-      yield* withSignedInUser(oldUser, function* () {
-        const FAKE_KEYRING = {
-          id: "keys",
-          keys: {},
-          uuid: "abcd",
-          kbHash: "abcd",
-        };
-        yield server.encryptAndAddRecord(transformer, "storage-sync-crypto", FAKE_KEYRING);
-      });
-
-      // Now we have this new user with a different kB.
-      yield* withSignedInUser(loggedInUser, function* () {
-        // Prompt ExtensionStorageSync to initialize crypto
-        yield ExtensionStorageSync.get({id: extensionId}, "random-key", context);
-        yield cryptoCollection._clear();
-
-        // Do an `ensureKeysFor` to generate some keys.
-        // This will try to sync, notice that the record is
-        // undecryptable, and clear the server.
-        let collectionKeys = yield ExtensionStorageSync.ensureKeysFor([extensionId]);
-        ok(collectionKeys.hasKeysFor([extensionId]),
-           `ensureKeysFor should always return a keyring with a key for ${extensionId}`);
-        extensionKey = collectionKeys.keyForCollection(extensionId).keyPairB64;
-
-        deepEqual(server.getDeletedBuckets(), ["default"],
-                  "Kinto server should have been wiped when keyring was thrown away");
-
-        let posts = server.getPosts();
-        equal(posts.length, 1,
-             "new keyring should have been uploaded");
-        const postedKeys = posts[0];
-        // The POST was to an empty server, so etag shouldn't be respected
-        equal(postedKeys.headers.Authorization, "Bearer some-access-token",
-              "keyring upload should be authorized");
-        equal(postedKeys.headers["If-None-Match"], "*",
-              "keyring upload should be to empty Kinto server");
-        equal(postedKeys.path, collectionRecordsPath("storage-sync-crypto") + "/keys",
-              "keyring upload should be to keyring path");
-
-        let body = yield new KeyRingEncryptionRemoteTransformer().decode(postedKeys.body.data);
-        ok(body.uuid, "new keyring should have a UUID");
-        notEqual(body.uuid, "abcd",
-                 "new keyring should not have the same UUID as previous keyring");
-        ok(body.keys,
-           "new keyring should have a keys attribute");
-        ok(body.keys.default, "new keyring should have a default key");
-        // We should keep the extension key that was in our uploaded version.
-        deepEqual(extensionKey, body.keys.collections[extensionId],
-                  "ensureKeysFor should have returned keyring with the same key that was uploaded");
-
-        // This should be a no-op; the keys were uploaded as part of ensurekeysfor
-        yield ExtensionStorageSync.checkSyncKeyRing();
-        equal(server.getPosts().length, 1,
-              "checkSyncKeyRing should not need to post keys after they were reuploaded");
-      });
-    });
-  });
-});
-
-add_task(function* checkSyncKeyRing_flushes_on_uuid_change() {
-  // If we can decrypt the record, but the UUID has changed, that
-  // means another client has wiped the server and reuploaded a
-  // keyring, so reset sync state and reupload everything.
-  const extensionId = uuid();
-  const extension = {id: extensionId};
-  const collectionId = extensionIdToCollectionId(loggedInUser, extensionId);
-  const transformer = new KeyRingEncryptionRemoteTransformer();
-  yield* withSyncContext(function* (context) {
-    yield* withServer(function* (server) {
-      server.installCollection("storage-sync-crypto");
-      server.installCollection(collectionId);
-      server.installDeleteBucket();
-      yield* withSignedInUser(loggedInUser, function* () {
-        // Prompt ExtensionStorageSync to initialize crypto
-        yield ExtensionStorageSync.get(extension, "random-key", context);
-        yield cryptoCollection._clear();
-
-        // Do an `ensureKeysFor` to get access to keys.
-        let collectionKeys = yield ExtensionStorageSync.ensureKeysFor([extensionId]);
-        ok(collectionKeys.hasKeysFor([extensionId]),
-           `ensureKeysFor should always return a keyring that has a key for ${extensionId}`);
-        const extensionKey = collectionKeys.keyForCollection(extensionId).keyPairB64;
-
-        // Set something to make sure that it gets re-uploaded when
-        // uuid changes.
-        yield ExtensionStorageSync.set(extension, {"my-key": 5}, context);
-        yield ExtensionStorageSync.syncAll();
-
-        let posts = server.getPosts();
-        equal(posts.length, 2,
-              "should have posted a new keyring and an extension datum");
-        const postedKeys = posts[0];
-        equal(postedKeys.path, collectionRecordsPath("storage-sync-crypto") + "/keys",
-              "should have posted keyring to /keys");
-
-        let body = yield transformer.decode(postedKeys.body.data);
-        ok(body.uuid,
-           "keyring should have a UUID");
-        ok(body.keys,
-           "keyring should have a keys attribute");
-        ok(body.keys.default,
-           "keyring should have a default key");
-        deepEqual(extensionKey, body.keys.collections[extensionId],
-                  "new keyring should have the same key that we uploaded");
-
-        // Another client comes along and replaces the UUID.
-        // In real life, this would mean changing the keys too, but
-        // this test verifies that just changing the UUID is enough.
-        const newKeyRingData = Object.assign({}, body, {
-          uuid: "abcd",
-          // Technically, last_modified should be served outside the
-          // object, but the transformer will pass it through in
-          // either direction, so this is OK.
-          last_modified: 765,
-        });
-        server.clearCollection("storage-sync-crypto");
-        server.etag = 765;
-        yield server.encryptAndAddRecordOnlyOnce(transformer, "storage-sync-crypto", newKeyRingData);
-
-        // Fake adding another extension just so that the keyring will
-        // really get synced.
-        const newExtension = uuid();
-        const newKeyRing = yield ExtensionStorageSync.ensureKeysFor([newExtension]);
-
-        // This should have detected the UUID change and flushed everything.
-        // The keyring should, however, be the same, since we just
-        // changed the UUID of the previously POSTed one.
-        deepEqual(newKeyRing.keyForCollection(extensionId).keyPairB64, extensionKey,
-                  "ensureKeysFor should have pulled down a new keyring with the same keys");
-
-        // Syncing should reupload the data for the extension.
-        yield ExtensionStorageSync.syncAll();
-        posts = server.getPosts();
-        equal(posts.length, 4,
-              "should have posted keyring for new extension and reuploaded extension data");
-
-        const finalKeyRingPost = posts[2];
-        const reuploadedPost = posts[3];
-
-        equal(finalKeyRingPost.path, collectionRecordsPath("storage-sync-crypto") + "/keys",
-              "keyring for new extension should have been posted to /keys");
-        let finalKeyRing = yield transformer.decode(finalKeyRingPost.body.data);
-        equal(finalKeyRing.uuid, "abcd",
-              "newly uploaded keyring should preserve UUID from replacement keyring");
-
-        // Confirm that the data got reuploaded
-        equal(reuploadedPost.path, collectionRecordsPath(collectionId) + "/key-my_2D_key",
-              "extension data should be posted to path corresponding to its key");
-        let reuploadedData = yield new CollectionKeyEncryptionRemoteTransformer(extensionId).decode(reuploadedPost.body.data);
-        equal(reuploadedData.key, "my-key",
-              "extension data should have a key attribute corresponding to the extension data key");
-        equal(reuploadedData.data, 5,
-              "extension data should have a data attribute corresponding to the extension data value");
-      });
     });
   });
 });

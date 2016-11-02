@@ -52,8 +52,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
                                   "resource://gre/modules/ExtensionStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
                                   "resource://gre/modules/FxAccounts.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "KintoHttpClient",
-                                  "resource://services-common/kinto-http-client.js");
 XPCOMUtils.defineLazyModuleGetter(this, "loadKinto",
                                   "resource://services-common/kinto-offline-client.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
@@ -236,17 +234,7 @@ const cryptoCollection = this.cryptoCollection = {
   getKeyRingRecord: Task.async(function* () {
     const collection = yield this._kintoCollectionPromise;
     const cryptoKeyRecord = yield collection.getAny(STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID);
-
-    let data = cryptoKeyRecord.data;
-    if (!data) {
-      // This is a new keyring. Invent an ID for this record. If this
-      // changes, it means a client replaced the keyring, so we need to
-      // reupload everything.
-      const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-      const uuid = uuidgen.generateUUID();
-      data = {uuid};
-    }
-    return data;
+    return cryptoKeyRecord.data;
   }),
 
   /**
@@ -257,15 +245,13 @@ const cryptoCollection = this.cryptoCollection = {
   getKeyRing: Task.async(function* () {
     const cryptoKeyRecord = yield this.getKeyRingRecord();
     const collectionKeys = new CollectionKeyManager();
-    if (cryptoKeyRecord.keys) {
+    if (cryptoKeyRecord) {
       collectionKeys.setContents(cryptoKeyRecord.keys, cryptoKeyRecord.last_modified);
     } else {
       // We never actually use the default key, so it's OK if we
       // generate one multiple times.
       collectionKeys.generateDefaultKey();
     }
-    // Pass through uuid field so that we can save it if we need to.
-    collectionKeys.uuid = cryptoKeyRecord.uuid;
     return collectionKeys;
   }),
 
@@ -290,15 +276,6 @@ const cryptoCollection = this.cryptoCollection = {
     return yield ExtensionStorageSync._syncCollection(collection, {
       strategy: "server_wins",
     });
-  }),
-
-  /**
-   * Reset sync status for ALL collections by directly
-   * accessing the FirefoxAdapter.
-   */
-  resetSyncStatus: Task.async(function* () {
-    const coll = yield this._kintoCollectionPromise;
-    yield coll.db.resetSyncStatus();
   }),
 
   // Used only for testing.
@@ -559,20 +536,6 @@ this.ExtensionStorageSync = {
   }),
 
   /**
-   * Helper similar to _syncCollection, but for deleting the user's bucket.
-   */
-  _deleteBucket: Task.async(function* () {
-    return yield this._requestWithToken("Clearing server", function* (token) {
-      const headers = {Authorization: "Bearer " + token};
-      const kintoHttp = new KintoHttpClient(prefStorageSyncServerURL, {
-        headers: headers,
-        timeout: KINTO_REQUEST_TIMEOUT,
-      });
-      return yield kintoHttp.deleteBucket("default");
-    });
-  }),
-
-  /**
    * Recursive promise that terminates when our local collectionKeys,
    * as well as that on the server, have keys for all the extensions
    * in extIds.
@@ -592,12 +555,11 @@ this.ExtensionStorageSync = {
     const newRecord = {
       id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID,
       keys: newKeys.asWBO().cleartext,
-      uuid: collectionKeys.uuid,
       // Add a field for the current kB hash.
       kbHash: kbHash,
     };
     yield cryptoCollection.upsert(newRecord);
-    const result = yield this._syncKeyRing(newRecord);
+    const result = yield cryptoCollection.sync();
     if (result.resolved.length != 0) {
       // We had a conflict which was automatically resolved. We now
       // have a new keyring which might have keys for the
@@ -678,73 +640,25 @@ this.ExtensionStorageSync = {
       // keyring, or it could be because we failed to sync after
       // adding a key. Either way, take this opportunity to sync the
       // keyring.
-      yield this._syncKeyRing(cryptoKeyRecord);
-    }
-  }),
-
-  _syncKeyRing: Task.async(function* (cryptoKeyRecord) {
-    try {
-      // Try to sync using server_wins.
       //
       // We use server_wins here because whatever is on the server is
       // at least consistent with itself -- the crypto in the keyring
       // matches the crypto on the collection records. This is because
       // we generate and upload keys just before syncing data.
       //
-      // It's possible that we can't decode the version on the server.
-      // This can happen if a user is locked out of their account, and
-      // does a "reset password" to get in on a new device. In this
-      // case, we are in a bind -- we can't decrypt the record on the
-      // server, so we can't merge keys. If this happens, we try to
-      // figure out if we're the one with the correct (new) kB or if
-      // we just got locked out because we have the old kB. If we're
-      // the one with the correct kB, we wipe the server and reupload
-      // everything, including a new keyring.
-      //
-      // If another device has wiped the server, we need to reupload
-      // everything we have on our end too, so we detect this by
-      // adding a UUID to the keyring. UUIDs are preserved throughout
-      // the lifetime of a keyring, so the only time a keyring UUID
-      // changes is when a new keyring is uploaded, which only happens
-      // after a server wipe. So when we get a "conflict" (resolved by
-      // server_wins), we check whether the server version has a new
-      // UUID. If so, reset our sync status, so that we'll reupload
-      // everything.
-      const result = yield cryptoCollection.sync();
-      if (result.resolved.length > 0) {
-        if (result.resolved[0].uuid != cryptoKeyRecord.uuid) {
-          log.info("Detected a new UUID. Reseting sync status for everything.");
-          yield cryptoCollection.resetSyncStatus();
-          // Any open collections might have a lastModified; we need
-          // to wipe that too.
-          for (let [, cPromise] of collectionPromises) {
-            const coll = yield cPromise;
-            // FIXME: should there be a method here?
-            coll._lastModified = null;
-          }
-
-          // Server version is now correct. Return that result.
-          return result;
-        }
-      }
-      // No conflicts, or conflict was just someone else adding keys.
-      return result;
-    } catch (e) {
-      if (KeyRingEncryptionRemoteTransformer.isOutdatedKB(e)) {
-        // Check if our token is still valid, or if we got locked out
-        // between starting the sync and talking to Kinto.
-        const isSessionValid = yield this._fxaService.sessionStatus();
-        if (isSessionValid) {
-          yield this._deleteBucket();
-          yield cryptoCollection.resetSyncStatus();
-
-          // Reupload our keyring, which is the only new keyring.
-          // We don't want client_wins here because another device
-          // could have uploaded another keyring in the meantime.
-          return yield cryptoCollection.sync();
-        }
-      }
-      throw e;
+      // We can also get into the unhappy situation where we need to
+      // resolve conflicts with a record uploaded by a client with a
+      // different password. In this case, we will fail (throw an
+      // exception) because we can't decrypt the record. This behavior
+      // is correct because we have absolutely no chance of resolving
+      // conflicts intelligently -- in particular, we can't prove that
+      // uploading our key won't erase keys that have already been
+      // used on remote data. If this happens, hopefully the user will
+      // relogin so that all devices have a consistent kB; this will
+      // ensure that the most recent version on the server is
+      // encrypted with the same kB that other devices have, and they
+      // will sync the keyring successfully on subsequent syncs.
+      yield cryptoCollection.sync();
     }
   }),
 
