@@ -279,13 +279,19 @@ class MessageLogger(object):
 
     def dump_buffered(self, limit=False):
         if limit:
-            dumped_messages = self.buffered_messages[-
-                                                     self.BUFFERING_THRESHOLD:]
+            dumped_messages = self.buffered_messages[-self.BUFFERING_THRESHOLD:]
         else:
             dumped_messages = self.buffered_messages
 
-        for buf_msg in dumped_messages:
-            self.logger.log_raw(buf_msg)
+        last_timestamp = None
+        for buf in dumped_messages:
+            timestamp = datetime.fromtimestamp(buf['time'] / 1000).strftime('%H:%M:%S')
+            if timestamp != last_timestamp:
+                self.logger.info("Buffered messages logged at {}".format(timestamp))
+            last_timestamp = timestamp
+
+            self.logger.log_raw(buf)
+        self.logger.info("Buffered messages finished")
         # Cleaning the list of buffered messages
         self.buffered_messages = []
 
