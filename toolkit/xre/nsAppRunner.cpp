@@ -4855,42 +4855,49 @@ MultiprocessBlockPolicy() {
     return gMultiprocessBlockPolicy;
   }
 
-#if defined(XP_WIN)
-  // These checks are currently only in use under WinXP
-  if (!IsVistaOrLater()) {
-    bool disabledForA11y = false;
-    /**
-      * Avoids enabling e10s if accessibility has recently loaded. Performs the
-      * following checks:
-      * 1) Checks a pref indicating if a11y loaded in the last session. This pref
-      * is set in nsBrowserGlue.js. If a11y was loaded in the last session we
-      * do not enable e10s in this session.
-      * 2) Accessibility stores a last run date (PR_IntervalNow) when it is
-      * initialized (see nsBaseWidget.cpp). We check if this pref exists and
-      * compare it to now. If a11y hasn't run in an extended period of time or
-      * if the date pref does not exist we load e10s.
-      */
-    disabledForA11y = Preferences::GetBool(kAccessibilityLoadedLastSessionPref, false);
-    if (!disabledForA11y  &&
-        Preferences::HasUserValue(kAccessibilityLastRunDatePref)) {
-      #define ONE_WEEK_IN_SECONDS (60*60*24*7)
-      uint32_t a11yRunDate = Preferences::GetInt(kAccessibilityLastRunDatePref, 0);
-      MOZ_ASSERT(0 != a11yRunDate);
-      // If a11y hasn't run for a period of time, clear the pref and load e10s
-      uint32_t now = PRTimeToSeconds(PR_Now());
-      uint32_t difference = now - a11yRunDate;
-      if (difference > ONE_WEEK_IN_SECONDS || !a11yRunDate) {
-        Preferences::ClearUser(kAccessibilityLastRunDatePref);
-      } else {
-        disabledForA11y = true;
-      }
-    }
-    if (disabledForA11y) {
-      gMultiprocessBlockPolicy = kE10sDisabledForAccessibility;
-      return gMultiprocessBlockPolicy;
+  bool disabledForA11y = false;
+
+  /**
+   * Avoids enabling e10s if accessibility has recently loaded. Performs the
+   * following checks:
+   * 1) Checks a pref indicating if a11y loaded in the last session. This pref
+   * is set in nsBrowserGlue.js. If a11y was loaded in the last session we
+   * do not enable e10s in this session.
+   * 2) Accessibility stores a last run date (PR_IntervalNow) when it is
+   * initialized (see nsBaseWidget.cpp). We check if this pref exists and
+   * compare it to now. If a11y hasn't run in an extended period of time or
+   * if the date pref does not exist we load e10s.
+   */
+  disabledForA11y = Preferences::GetBool(kAccessibilityLoadedLastSessionPref, false);
+  if (!disabledForA11y  &&
+      Preferences::HasUserValue(kAccessibilityLastRunDatePref)) {
+    #define ONE_WEEK_IN_SECONDS (60*60*24*7)
+    uint32_t a11yRunDate = Preferences::GetInt(kAccessibilityLastRunDatePref, 0);
+    MOZ_ASSERT(0 != a11yRunDate);
+    // If a11y hasn't run for a period of time, clear the pref and load e10s
+    uint32_t now = PRTimeToSeconds(PR_Now());
+    uint32_t difference = now - a11yRunDate;
+    if (difference > ONE_WEEK_IN_SECONDS || !a11yRunDate) {
+      Preferences::ClearUser(kAccessibilityLastRunDatePref);
+    } else {
+      disabledForA11y = true;
     }
   }
+
+  bool doAccessibilityCheck = true;
+#if defined(MOZ_WIDGET_GTK) && !defined(RELEASE_OR_BETA)
+  // For linux nightly and aurora builds skip accessibility
+  // checks.
+  doAccessibilityCheck = false;
+#elif defined(XP_WIN)
+  // For Windows Vista and up, skip accessibility checks.
+  doAccessibilityCheck = !IsVistaOrLater();
 #endif
+
+  if (doAccessibilityCheck && disabledForA11y) {
+    gMultiprocessBlockPolicy = kE10sDisabledForAccessibility;
+    return gMultiprocessBlockPolicy;
+  }
 
   /**
    * Avoids enabling e10s for Windows XP users on the release channel.
