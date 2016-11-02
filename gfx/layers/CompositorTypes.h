@@ -170,6 +170,7 @@ struct TextureFactoryIdentifier
   int32_t mMaxTextureSize;
   bool mSupportsTextureBlitting;
   bool mSupportsPartialUploads;
+  bool mSupportsComponentAlpha;
   SyncHandle mSyncHandle;
 
   explicit TextureFactoryIdentifier(LayersBackend aLayersBackend = LayersBackend::LAYERS_NONE,
@@ -177,12 +178,14 @@ struct TextureFactoryIdentifier
                                     int32_t aMaxTextureSize = 4096,
                                     bool aSupportsTextureBlitting = false,
                                     bool aSupportsPartialUploads = false,
+                                    bool aSupportsComponentAlpha = true,
                                     SyncHandle aSyncHandle = 0)
     : mParentBackend(aLayersBackend)
     , mParentProcessId(aParentProcessId)
     , mMaxTextureSize(aMaxTextureSize)
     , mSupportsTextureBlitting(aSupportsTextureBlitting)
     , mSupportsPartialUploads(aSupportsPartialUploads)
+    , mSupportsComponentAlpha(aSupportsComponentAlpha)
     , mSyncHandle(aSyncHandle)
   {}
 };
