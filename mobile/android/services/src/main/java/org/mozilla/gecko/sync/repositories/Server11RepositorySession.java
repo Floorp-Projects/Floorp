@@ -112,6 +112,7 @@ public class Server11RepositorySession extends RepositorySession {
     return new BatchingDownloader(
             serverRepositorySession.serverRepository.authHeaderProvider,
             Uri.parse(serverRepositorySession.serverRepository.collectionURI().toString()),
+            serverRepositorySession.serverRepository.getSyncDeadline(),
             serverRepositorySession.serverRepository.getAllowMultipleBatches(),
             serverRepositorySession);
   }
