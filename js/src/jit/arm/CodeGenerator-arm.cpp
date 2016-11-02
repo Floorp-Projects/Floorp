@@ -2200,10 +2200,10 @@ CodeGeneratorARM::visitAsmSelect(LAsmSelect* ins)
 }
 
 void
-CodeGeneratorARM::visitAsmReinterpret(LAsmReinterpret* lir)
+CodeGeneratorARM::visitWasmReinterpret(LWasmReinterpret* lir)
 {
     MOZ_ASSERT(gen->compilingAsmJS());
-    MAsmReinterpret* ins = lir->mir();
+    MWasmReinterpret* ins = lir->mir();
 
     MIRType to = ins->type();
     DebugOnly<MIRType> from = ins->input()->type();
@@ -2221,7 +2221,7 @@ CodeGeneratorARM::visitAsmReinterpret(LAsmReinterpret* lir)
       case MIRType::Int64:
         MOZ_CRASH("not handled by this LIR opcode");
       default:
-        MOZ_CRASH("unexpected AsmReinterpret");
+        MOZ_CRASH("unexpected WasmReinterpret");
     }
 }
 
@@ -3653,7 +3653,7 @@ CodeGeneratorARM::visitAsmSelectI64(LAsmSelectI64* lir)
 }
 
 void
-CodeGeneratorARM::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
+CodeGeneratorARM::visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
     MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Int64);
@@ -3664,7 +3664,7 @@ CodeGeneratorARM::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
 }
 
 void
-CodeGeneratorARM::visitAsmReinterpretToI64(LAsmReinterpretToI64* lir)
+CodeGeneratorARM::visitWasmReinterpretToI64(LWasmReinterpretToI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
     MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Double);

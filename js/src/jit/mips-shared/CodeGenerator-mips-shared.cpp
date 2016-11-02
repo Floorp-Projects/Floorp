@@ -2375,10 +2375,10 @@ CodeGeneratorMIPSShared::visitAsmSelect(LAsmSelect* ins)
 }
 
 void
-CodeGeneratorMIPSShared::visitAsmReinterpret(LAsmReinterpret* lir)
+CodeGeneratorMIPSShared::visitWasmReinterpret(LWasmReinterpret* lir)
 {
     MOZ_ASSERT(gen->compilingAsmJS());
-    MAsmReinterpret* ins = lir->mir();
+    MWasmReinterpret* ins = lir->mir();
 
     MIRType to = ins->type();
     DebugOnly<MIRType> from = ins->input()->type();
@@ -2396,7 +2396,7 @@ CodeGeneratorMIPSShared::visitAsmReinterpret(LAsmReinterpret* lir)
       case MIRType::Int64:
         MOZ_CRASH("not handled by this LIR opcode");
       default:
-        MOZ_CRASH("unexpected AsmReinterpret");
+        MOZ_CRASH("unexpected WasmReinterpret");
     }
 }
 
