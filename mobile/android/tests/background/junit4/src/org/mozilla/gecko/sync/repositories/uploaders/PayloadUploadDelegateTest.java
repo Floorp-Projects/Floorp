@@ -8,15 +8,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.HTTPFailureException;
-import org.mozilla.gecko.sync.InfoCollections;
-import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
-import org.mozilla.gecko.sync.repositories.RepositorySession;
-import org.mozilla.gecko.sync.repositories.Server11Repository;
-import org.mozilla.gecko.sync.repositories.Server11RepositorySession;
 
 import static org.mockito.Mockito.mock;
 
@@ -30,8 +25,6 @@ import ch.boye.httpclientandroidlib.ProtocolVersion;
 import ch.boye.httpclientandroidlib.entity.BasicHttpEntity;
 import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
 import ch.boye.httpclientandroidlib.message.BasicStatusLine;
-
-import static org.mockito.Mockito.mock;
 
 import static org.junit.Assert.*;
 
@@ -84,18 +77,6 @@ public class PayloadUploadDelegateTest {
 
     @Before
     public void setUp() throws Exception {
-        Server11Repository server11Repository = new Server11Repository(
-                "dummyCollection",
-                "http://dummy.url/",
-                null,
-                new InfoCollections() {
-                    @Override
-                    public Long getTimestamp(String collection) {
-                        return 0L;
-                    }
-                },
-                new InfoConfiguration()
-        );
         payloadDispatcher = new MockPayloadDispatcher(
                 null,
                 mock(BatchingUploader.class)
