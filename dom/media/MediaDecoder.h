@@ -666,6 +666,9 @@ protected:
   // True if we've already fired metadataloaded.
   bool mFiredMetadataLoaded;
 
+  // True if the media is seekable (i.e. supports random access).
+  bool mMediaSeekable = true;
+
   // Stores media info, including info of audio tracks and video tracks, should
   // only be accessed from main thread.
   nsAutoPtr<MediaInfo> mInfo;
@@ -765,9 +768,6 @@ protected:
   // back again.
   Canonical<int64_t> mDecoderPosition;
 
-  // True if the media is seekable (i.e. supports random access).
-  Canonical<bool> mMediaSeekable;
-
   // True if the media is only seekable within its buffered ranges.
   Canonical<bool> mMediaSeekableOnlyInBufferedRanges;
 
@@ -811,9 +811,6 @@ public:
   }
   AbstractCanonical<int64_t>* CanonicalDecoderPosition() {
     return &mDecoderPosition;
-  }
-  AbstractCanonical<bool>* CanonicalMediaSeekable() {
-    return &mMediaSeekable;
   }
   AbstractCanonical<bool>* CanonicalMediaSeekableOnlyInBufferedRanges() {
     return &mMediaSeekableOnlyInBufferedRanges;
