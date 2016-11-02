@@ -108,6 +108,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // its slots and stack depth are initialized from |pred|.
     static MBasicBlock* New(MIRGraph& graph, BytecodeAnalysis* analysis, const CompileInfo& info,
                             MBasicBlock* pred, BytecodeSite* site, Kind kind);
+    static MBasicBlock* New(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pred, Kind kind);
     static MBasicBlock* NewPopN(MIRGraph& graph, const CompileInfo& info,
                                 MBasicBlock* pred, BytecodeSite* site, Kind kind, uint32_t popn);
     static MBasicBlock* NewWithResumePoint(MIRGraph& graph, const CompileInfo& info,
@@ -119,8 +120,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     static MBasicBlock* NewSplitEdge(MIRGraph& graph, const CompileInfo& info,
                                      MBasicBlock* pred, size_t predEdgeIdx,
                                      MBasicBlock* succ);
-    static MBasicBlock* NewAsmJS(MIRGraph& graph, const CompileInfo& info,
-                                 MBasicBlock* pred, Kind kind);
 
     bool dominates(const MBasicBlock* other) const {
         return other->domIndex() - domIndex() < numDominated();
@@ -256,7 +255,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // the current loop as necessary. If the backedge introduces new types for
     // phis at the loop header, returns a disabling abort.
     MOZ_MUST_USE AbortReason setBackedge(TempAllocator& alloc, MBasicBlock* block);
-    MOZ_MUST_USE bool setBackedgeAsmJS(MBasicBlock* block);
+    MOZ_MUST_USE bool setBackedgeWasm(MBasicBlock* block);
 
     // Resets a LOOP_HEADER block to a NORMAL block.  This is needed when
     // optimizations remove the backedge.
