@@ -465,62 +465,6 @@ var tests = [
     ],
     shouldPass: false,
   },
-  {
-    name: "CDM version less than",
-    keySystem: CLEARKEY_KEYSYSTEM + ".0",
-    options: [
-      {
-        label: SUPPORTED_LABEL,
-        initDataTypes: ['cenc'],
-        videoCapabilities: [{contentType: 'video/mp4'}],
-      }
-    ],
-    expectedConfig: {
-      label: SUPPORTED_LABEL,
-      initDataTypes: ['cenc'],
-      videoCapabilities: [{contentType: 'video/mp4'}],
-    },
-    shouldPass: true
-  },
-  {
-    name: "CDM version equal to",
-    keySystem: CLEARKEY_KEYSYSTEM + ".1",
-    options: [
-      {
-        label: SUPPORTED_LABEL,
-        initDataTypes: ['cenc'],
-        videoCapabilities: [{contentType: 'video/mp4'}],
-      }
-    ],
-    expectedConfig: {
-      label: SUPPORTED_LABEL,
-      initDataTypes: ['cenc'],
-      videoCapabilities: [{contentType: 'video/mp4'}],
-    },
-    shouldPass: true
-  },
-  {
-    name: "CDM version greater than",
-    keySystem: CLEARKEY_KEYSYSTEM + ".2",
-    options: [
-      {
-        initDataTypes: ['cenc'],
-        videoCapabilities: [{contentType: 'video/mp4'}],
-      }
-    ],
-    shouldPass: false
-  },
-  {
-    name: "Non-whole number CDM version",
-    keySystem: CLEARKEY_KEYSYSTEM + ".0.1",
-    options: [
-      {
-        initDataTypes: ['cenc'],
-        videoCapabilities: [{contentType: 'video/mp4'}],
-      }
-    ],
-    shouldPass: false
-  },
 ];
 
 function beginTest() {
