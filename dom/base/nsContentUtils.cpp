@@ -9670,49 +9670,41 @@ nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel)
     return false;
   }
 
+  nsIDocShell* docShell = outer->GetDocShell();
   nsIDocument* doc = outer->GetExtantDoc();
 
-  // If we aren't in the content process, we cannot perform a cross-process
-  // load, so abort right away
-  if (NS_WARN_IF(!XRE_IsContentProcess())) {
-    if (doc) {
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("DOM"),
-                                      doc,
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      "LargeAllocationNonE10S");
-    }
-    return false;
+  // If the docshell is not allowed to change process, report an error based on
+  // the reason
+  const char* errorName = nullptr;
+  switch (docShell->GetProcessLockReason()) {
+    case nsIDocShell::PROCESS_LOCK_NON_CONTENT:
+      errorName = "LargeAllocationNonE10S";
+      break;
+    case nsIDocShell::PROCESS_LOCK_IFRAME:
+      errorName = "LargeAllocationIFrame";
+      break;
+    case nsIDocShell::PROCESS_LOCK_RELATED_CONTEXTS:
+      errorName = "LargeAllocationRelatedBrowsingContexts";
+      break;
+    case nsIDocShell::PROCESS_LOCK_NONE:
+      // Don't print a warning, we're allowed to change processes!
+      break;
+    default:
+      MOZ_ASSERT(false, "Should be unreachable!");
+      return false;
   }
 
-  // Check if we are a toplevel window
-  if (NS_WARN_IF(outer->GetScriptableParentOrNull())) {
+  if (errorName) {
     if (doc) {
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                       NS_LITERAL_CSTRING("DOM"),
                                       doc,
                                       nsContentUtils::eDOM_PROPERTIES,
-                                      "LargeAllocationInIFrame");
+                                      errorName);
     }
-    return false;
-  }
 
-  // If we have any other toplevel windows in our tab group, then we cannot
-  // perform the navigation.
-  TabGroup* tabGroup = nsGlobalWindow::Cast(outer)->TabGroup();
-  nsTArray<nsPIDOMWindowOuter*> toplevelWindows = tabGroup->GetTopLevelWindows();
-  if (NS_WARN_IF(toplevelWindows.Length() > 1)) {
-    if (doc) {
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("DOM"),
-                                      doc,
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      "LargeAllocationRelatedBrowsingContexts");
-    }
     return false;
   }
-  MOZ_ASSERT(toplevelWindows.Length() == 1);
-  MOZ_ASSERT(toplevelWindows[0] == outer);
 
   // Get the request method, and check if it is a GET request. If it is not GET,
   // then we cannot perform a large allocation load.
@@ -9751,7 +9743,7 @@ nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel)
   // have one, as we have already confirmed that we are running in a content
   // process.
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  outer->GetDocShell()->GetTreeOwner(getter_AddRefs(treeOwner));
+  docShell->GetTreeOwner(getter_AddRefs(treeOwner));
   NS_ENSURE_TRUE(treeOwner, false);
 
   nsCOMPtr<nsIWebBrowserChrome3> wbc3 = do_GetInterface(treeOwner);
@@ -9768,7 +9760,7 @@ nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel)
 
   // Actually perform the cross process load
   bool reloadSucceeded = false;
-  rv = wbc3->ReloadInFreshProcess(outer->GetDocShell(), uri, referrer, &reloadSucceeded);
+  rv = wbc3->ReloadInFreshProcess(docShell, uri, referrer, &reloadSucceeded);
   NS_ENSURE_SUCCESS(rv, false);
 
   return reloadSucceeded;

@@ -1157,4 +1157,35 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Don't override the platform/pref default behaviour for touch events.
    */
   const unsigned long TOUCHEVENTS_OVERRIDE_NONE = 2;
+
+  /**
+   * A DocShell is locked to the current process if it would be
+   * content-observable for a process switch to occur before performing a
+   * navigation load. It is important to ensure that a DocShell is not process
+   * locked before perfoming process changing loads.
+   */
+  [infallible] readonly attribute unsigned long processLockReason;
+  /**
+   * The DocShell is not locked to the current process, and a navigation may
+   * proceed in a new process.
+   */
+  const unsigned long PROCESS_LOCK_NONE = 0;
+  /**
+   * The DocShell is locked to the current process because it is not a
+   * toplevel browsing context.
+   */
+  const unsigned long PROCESS_LOCK_IFRAME = 1;
+  /**
+   * The DocShell is locked to the current process because there exist other
+   * related browsing contexts which may be holding a reference.
+   */
+  const unsigned long PROCESS_LOCK_RELATED_CONTEXTS = 2;
+  /**
+   * The DocShell is locked to the current process because the current
+   * process is not a content process.
+   *
+   * NOTE: Some loads may not consider this a hard process lock, and may wish to
+   * ignore this reason.
+   */
+  const unsigned long PROCESS_LOCK_NON_CONTENT = 3;
 };

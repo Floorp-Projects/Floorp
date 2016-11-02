@@ -14686,3 +14686,38 @@ nsDocShell::GetCommandManager()
   NS_ENSURE_SUCCESS(EnsureCommandHandler(), nullptr);
   return mCommandManager;
 }
+
+NS_IMETHODIMP
+nsDocShell::GetProcessLockReason(uint32_t* aReason)
+{
+  MOZ_ASSERT(aReason);
+
+  nsPIDOMWindowOuter* outer = GetWindow();
+  MOZ_ASSERT(outer);
+
+  // Check if we are a toplevel window
+  if (outer->GetScriptableParentOrNull()) {
+    *aReason = PROCESS_LOCK_IFRAME;
+    return NS_OK;
+  }
+
+  // If we have any other toplevel windows in our tab group, then we cannot
+  // perform the navigation.
+  nsTArray<nsPIDOMWindowOuter*> toplevelWindows =
+    outer->TabGroup()->GetTopLevelWindows();
+  if (toplevelWindows.Length() > 1) {
+    *aReason = PROCESS_LOCK_RELATED_CONTEXTS;
+    return NS_OK;
+  }
+  MOZ_ASSERT(toplevelWindows.Length() == 1);
+  MOZ_ASSERT(toplevelWindows[0] == outer);
+
+  // If we aren't in a content process, we cannot perform a cross-process load.
+  if (!XRE_IsContentProcess()) {
+    *aReason = PROCESS_LOCK_NON_CONTENT;
+    return NS_OK;
+  }
+
+  *aReason = PROCESS_LOCK_NONE;
+  return NS_OK;
+}
