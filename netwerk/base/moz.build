@@ -301,7 +301,6 @@ LOCAL_INCLUDES += [
     '/docshell/base',
     '/dom/base',
     '/netwerk/protocol/http',
-    '/netwerk/socket',
     '/security/pkix/include'
 ]
 

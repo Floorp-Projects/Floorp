@@ -20,6 +20,4 @@ nsresult nsSOCKSIOLayerAddToSocket(int32_t       family,
                                    PRFileDesc   *fd, 
                                    nsISupports **info);
 
-bool IsHostLocalTarget(const nsACString& aHost);
-
 #endif /* nsSOCKSIOLayer_h__ */
