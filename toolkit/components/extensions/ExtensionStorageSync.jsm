@@ -219,10 +219,6 @@ const cryptoCollection = this.cryptoCollection = {
     }
   }),
 
-  isActive() {
-    return this.refCount != 0;
-  },
-
   /**
    * Retrieve the keyring record from the crypto collection.
    *
@@ -253,13 +249,6 @@ const cryptoCollection = this.cryptoCollection = {
       collectionKeys.generateDefaultKey();
     }
     return collectionKeys;
-  }),
-
-  updateKBHash: Task.async(function* (kbHash) {
-    const coll = yield this._kintoCollectionPromise;
-    yield coll.update({id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID,
-                       kbHash: kbHash},
-                      {patch: true});
   }),
 
   upsert: Task.async(function* (record) {
@@ -422,7 +411,6 @@ this.ExtensionStorageSync = {
         return;
       }
       yield this.ensureKeysFor(extIds);
-      yield this.checkSyncKeyRing();
       const promises = Array.from(collectionPromises.entries(), ([extension, collPromise]) => {
         return collPromise.then(coll => {
           return this.sync(extension, coll);
@@ -550,13 +538,10 @@ this.ExtensionStorageSync = {
       return collectionKeys;
     }
 
-    const kbHash = yield this.getKBHash();
     const newKeys = yield collectionKeys.ensureKeysFor(extIds);
     const newRecord = {
       id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID,
       keys: newKeys.asWBO().cleartext,
-      // Add a field for the current kB hash.
-      kbHash: kbHash,
     };
     yield cryptoCollection.upsert(newRecord);
     const result = yield cryptoCollection.sync();
@@ -569,97 +554,6 @@ this.ExtensionStorageSync = {
 
     // No conflicts. We're good.
     return newKeys;
-  }),
-
-  /**
-   * Get the current user's hashed kB.
-   *
-   * @returns sha256 of the user's kB as a hex string
-   */
-  getKBHash: Task.async(function* () {
-    const signedInUser = yield this._fxaService.getSignedInUser();
-    if (!signedInUser) {
-      throw new Error("User isn't signed in!");
-    }
-
-    if (!signedInUser.kB) {
-      throw new Error("User doesn't have kB??");
-    }
-
-    let kBbytes = CommonUtils.hexToBytes(signedInUser.kB);
-    let hasher = Cc["@mozilla.org/security/hash;1"]
-                    .createInstance(Ci.nsICryptoHash);
-    hasher.init(hasher.SHA256);
-    return CommonUtils.bytesAsHex(CryptoUtils.digestBytes(signedInUser.uid + kBbytes, hasher));
-  }),
-
-  /**
-   * Update the kB in the crypto record.
-   */
-  updateKeyRingKB: Task.async(function* () {
-    const signedInUser = yield this._fxaService.getSignedInUser();
-    if (!signedInUser) {
-      // Although this function is meant to be called on login,
-      // it's not unreasonable to check any time, even if we aren't
-      // logged in.
-      //
-      // If we aren't logged in, we don't have any information about
-      // the user's kB, so we can't be sure that the user changed
-      // their kB, so just return.
-      return;
-    }
-
-    const thisKBHash = yield this.getKBHash();
-    yield cryptoCollection.updateKBHash(thisKBHash);
-  }),
-
-  /**
-   * Make sure the keyring is up to date and synced.
-   *
-   * This is called on log-in events to maintain the keyring in the
-   * correct state on the server. It's also called on syncs to make
-   * sure that we don't sync anything to any collection unless the key
-   * for that collection is on the server.
-   */
-  checkSyncKeyRing: Task.async(function* () {
-    if (!cryptoCollection.isActive()) {
-      // We got called while no extensions use storage.sync. We don't
-      // have any access to the crypto record, so just let this
-      // notification slip through our fingers. If we do get
-      // extensions later, we'll pick this up on a subsequent sync.
-      log.info("Tried to check keyring, but no extensions are loaded. Ignoring.");
-      return;
-    }
-
-    yield this.updateKeyRingKB();
-
-    const cryptoKeyRecord = yield cryptoCollection.getKeyRingRecord();
-    if (cryptoKeyRecord && cryptoKeyRecord._status !== "synced") {
-      // We haven't successfully synced the keyring since the last
-      // change. This could be because kB changed and we touched the
-      // keyring, or it could be because we failed to sync after
-      // adding a key. Either way, take this opportunity to sync the
-      // keyring.
-      //
-      // We use server_wins here because whatever is on the server is
-      // at least consistent with itself -- the crypto in the keyring
-      // matches the crypto on the collection records. This is because
-      // we generate and upload keys just before syncing data.
-      //
-      // We can also get into the unhappy situation where we need to
-      // resolve conflicts with a record uploaded by a client with a
-      // different password. In this case, we will fail (throw an
-      // exception) because we can't decrypt the record. This behavior
-      // is correct because we have absolutely no chance of resolving
-      // conflicts intelligently -- in particular, we can't prove that
-      // uploading our key won't erase keys that have already been
-      // used on remote data. If this happens, hopefully the user will
-      // relogin so that all devices have a consistent kB; this will
-      // ensure that the most recent version on the server is
-      // encrypted with the same kB that other devices have, and they
-      // will sync the keyring successfully on subsequent syncs.
-      yield cryptoCollection.sync();
-    }
   }),
 
   /**
