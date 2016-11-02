@@ -3,7 +3,6 @@ if (this.document === undefined) {
   importScripts("../resources/utils.js");
 }
 
-<<<<<<< b45946c54935c6113fefb5199b3fe0e4bf087777
 function checkFetchResponse(url, data, mime, fetchMode, method) {
   var cut = (url.length >= 40) ? "[...]" : "";
   desc = "Fetching " + (method ? "[" + method + "] " : "") + url.substring(0, 40) + cut + " is OK";

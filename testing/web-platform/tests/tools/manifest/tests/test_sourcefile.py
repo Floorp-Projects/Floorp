@@ -60,17 +60,7 @@ def test_worker():
 
     assert not s.content_is_testharness
 
-    assert items(s) == [("testharness", "/html/test.worker")]
-
-def test_worker_long_timeout():
-    s = create("html/test.worker.js",
-               contents="""// <meta> timeout=long
-importScripts('/resources/testharnes.js')
-test()""")
-
-    manifest_items = s.manifest_items()
-    assert len(manifest_items) == 1
-    assert manifest_items[0].timeout == "long"
+    assert items(s) == [("testharness", "/html/test.worker.html")]
 
 
 def test_multi_global():
@@ -85,7 +75,7 @@ def test_multi_global():
 
     assert items(s) == [
         ("testharness", "/html/test.any.html"),
-        ("testharness", "/html/test.any.worker"),
+        ("testharness", "/html/test.any.worker.html"),
     ]
 
 
