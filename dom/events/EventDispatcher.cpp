@@ -131,14 +131,6 @@ static bool IsEventTargetChrome(EventTarget* aEventTarget,
 }
 
 
-#define NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH  (1 << 0)
-#define NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT (1 << 1)
-#define NS_TARGET_CHAIN_MAY_HAVE_MANAGER        (1 << 2)
-#define NS_TARGET_CHAIN_CHECKED_IF_CHROME       (1 << 3)
-#define NS_TARGET_CHAIN_IS_CHROME_CONTENT       (1 << 4)
-#define NS_TARGET_CHAIN_WANTS_PRE_HANDLE_EVENT  (1 << 5)
-#define NS_TARGET_CHAIN_PRE_HANDLE_EVENT_ONLY   (1 << 6)
-
 // EventTargetChainItem represents a single item in the event target chain.
 class EventTargetChainItem
 {
@@ -146,8 +138,7 @@ private:
   explicit EventTargetChainItem(EventTarget* aTarget);
 public:
   EventTargetChainItem()
-    : mFlags(0)
-    , mItemFlags(0)
+    : mItemFlags(0)
   {
   }
 
@@ -205,72 +196,52 @@ public:
 
   void SetForceContentDispatch(bool aForce)
   {
-    if (aForce) {
-      mFlags |= NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH;
-    } else {
-      mFlags &= ~NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH;
-    }
+    mFlags.mForceContentDispatch = aForce;
   }
 
   bool ForceContentDispatch()
   {
-    return !!(mFlags & NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH);
+    return mFlags.mForceContentDispatch;
   }
 
   void SetWantsWillHandleEvent(bool aWants)
   {
-    if (aWants) {
-      mFlags |= NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT;
-    } else {
-      mFlags &= ~NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT;
-    }
+    mFlags.mWantsWillHandleEvent = aWants;
   }
 
   bool WantsWillHandleEvent()
   {
-    return !!(mFlags & NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT);
+    return mFlags.mWantsWillHandleEvent;
   }
 
   void SetWantsPreHandleEvent(bool aWants)
   {
-    if (aWants) {
-      mFlags |= NS_TARGET_CHAIN_WANTS_PRE_HANDLE_EVENT;
-    } else {
-      mFlags &= ~NS_TARGET_CHAIN_WANTS_PRE_HANDLE_EVENT;
-    }
+    mFlags.mWantsPreHandleEvent = aWants;
   }
 
   bool WantsPreHandleEvent()
   {
-    return !!(mFlags & NS_TARGET_CHAIN_WANTS_PRE_HANDLE_EVENT);
+    return mFlags.mWantsPreHandleEvent;
   }
 
   void SetPreHandleEventOnly(bool aWants)
   {
-    if (aWants) {
-      mFlags |= NS_TARGET_CHAIN_PRE_HANDLE_EVENT_ONLY;
-    } else {
-      mFlags &= ~NS_TARGET_CHAIN_PRE_HANDLE_EVENT_ONLY;
-    }
+    mFlags.mPreHandleEventOnly = aWants;
   }
 
   bool PreHandleEventOnly()
   {
-    return !!(mFlags & NS_TARGET_CHAIN_PRE_HANDLE_EVENT_ONLY);
+    return mFlags.mPreHandleEventOnly;
   }
 
   void SetMayHaveListenerManager(bool aMayHave)
   {
-    if (aMayHave) {
-      mFlags |= NS_TARGET_CHAIN_MAY_HAVE_MANAGER;
-    } else {
-      mFlags &= ~NS_TARGET_CHAIN_MAY_HAVE_MANAGER;
-    }
+    mFlags.mMayHaveManager = aMayHave;
   }
 
   bool MayHaveListenerManager()
   {
-    return !!(mFlags & NS_TARGET_CHAIN_MAY_HAVE_MANAGER);
+    return mFlags.mMayHaveManager;
   }
   
   EventTarget* CurrentTarget()
@@ -343,7 +314,34 @@ public:
 
 private:
   nsCOMPtr<EventTarget>             mTarget;
-  uint16_t                          mFlags;
+
+  class EventTargetChainFlags
+  {
+  public:
+    explicit EventTargetChainFlags()
+    {
+      SetRawFlags(0);
+    }
+    // Cached flags for each EventTargetChainItem which are set when calling
+    // GetEventTargetParent to create event target chain. They are used to
+    // manage or speedup event dispatching.
+    bool mForceContentDispatch : 1;
+    bool mWantsWillHandleEvent : 1;
+    bool mMayHaveManager : 1;
+    bool mChechedIfChrome : 1;
+    bool mIsChromeContent : 1;
+    bool mWantsPreHandleEvent : 1;
+    bool mPreHandleEventOnly : 1;
+  private:
+    typedef uint32_t RawFlags;
+    void SetRawFlags(RawFlags aRawFlags)
+    {
+      static_assert(sizeof(EventTargetChainFlags) <= sizeof(RawFlags),
+        "EventTargetChainFlags must not be bigger than the RawFlags");
+      memcpy(this, &aRawFlags, sizeof(EventTargetChainFlags));
+    }
+  } mFlags;
+
   uint16_t                          mItemFlags;
   nsCOMPtr<nsISupports>             mItemData;
   // Event retargeting must happen whenever mNewTarget is non-null.
@@ -353,19 +351,18 @@ private:
 
   bool IsCurrentTargetChrome()
   {
-    if (!(mFlags & NS_TARGET_CHAIN_CHECKED_IF_CHROME)) {
-      mFlags |= NS_TARGET_CHAIN_CHECKED_IF_CHROME;
+    if (!mFlags.mChechedIfChrome) {
+      mFlags.mChechedIfChrome = true;
       if (IsEventTargetChrome(mTarget)) {
-        mFlags |= NS_TARGET_CHAIN_IS_CHROME_CONTENT;
+        mFlags.mIsChromeContent = true;
       }
     }
-    return !!(mFlags & NS_TARGET_CHAIN_IS_CHROME_CONTENT);
+    return mFlags.mIsChromeContent;
   }
 };
 
 EventTargetChainItem::EventTargetChainItem(EventTarget* aTarget)
   : mTarget(aTarget)
-  , mFlags(0)
   , mItemFlags(0)
 {
   MOZ_ASSERT(!aTarget || mTarget == aTarget->GetTargetForEventTargetChain());
