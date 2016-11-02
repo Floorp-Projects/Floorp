@@ -125,7 +125,7 @@ RemoteVideoDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
 nsresult
 RemoteDecoderModule::Startup()
 {
-  if (!VideoDecoderManagerChild::GetSingleton()) {
+  if (!VideoDecoderManagerChild::GetManagerThread()) {
     return NS_ERROR_FAILURE;
   }
   return mWrapped->Startup();
