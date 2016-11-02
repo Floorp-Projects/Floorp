@@ -7,7 +7,6 @@
 UNIFIED_SOURCES += [
     'MockMediaResource.cpp',
     'TestAudioCompactor.cpp',
-    'TestEME.cpp',
     'TestGMPCrossOrigin.cpp',
     'TestGMPRemoveAndDelete.cpp',
     'TestGMPUtils.cpp',
@@ -59,7 +58,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
     '/dom/media',
-    '/dom/media/eme',
     '/dom/media/encoder',
     '/dom/media/fmp4',
     '/dom/media/gmp',
