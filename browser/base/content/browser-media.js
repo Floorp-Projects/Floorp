@@ -94,11 +94,9 @@ var gEMEHandler = {
       case "cdm-not-supported":
         // Not to pop up user-level notification because they cannot do anything
         // about it.
-      case "error":
-        // Fall through and do the same for unknown messages:
+        return;
       default:
-        let typeOfIssue = status == "error" ? "error" : "message ('" + status + "')";
-        Cu.reportError("Unknown " + typeOfIssue + " dealing with EME key request: " + data);
+        Cu.reportError(new Error("Unknown message ('" + status + "') dealing with EME key request: " + data));
         return;
     }
 
@@ -145,7 +143,6 @@ var gEMEHandler = {
     // We're playing EME content! Remove any "we can't play because..." messages.
     var box = gBrowser.getNotificationBox(browser);
     ["drmContentDisabled",
-     "drmContentCDMInsufficientVersion",
      "drmContentCDMInstalling"
      ].forEach(function (value) {
         var notification = box.getNotificationWithValue(value);
