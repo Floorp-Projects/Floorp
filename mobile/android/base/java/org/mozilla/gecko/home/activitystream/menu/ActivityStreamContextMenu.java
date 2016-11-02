@@ -21,6 +21,7 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.util.Clipboard;
+import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
 
@@ -218,11 +219,19 @@ public abstract class ActivityStreamContextMenu
                                                       final int tilesWidth, final int tilesHeight) {
         final ActivityStreamContextMenu menu;
 
-        menu = new BottomSheetContextMenu(context,
-                menuMode,
-                title, url,
-                onUrlOpenListener, onUrlOpenInBackgroundListener,
-                tilesWidth, tilesHeight);
+        if (!HardwareUtils.isTablet()) {
+            menu = new BottomSheetContextMenu(context,
+                    menuMode,
+                    title, url,
+                    onUrlOpenListener, onUrlOpenInBackgroundListener,
+                    tilesWidth, tilesHeight);
+        } else {
+            menu = new PopupContextMenu(context,
+                    anchor,
+                    menuMode,
+                    title, url,
+                    onUrlOpenListener, onUrlOpenInBackgroundListener);
+        }
 
         menu.show();
         return menu;
