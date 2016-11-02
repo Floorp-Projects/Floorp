@@ -410,9 +410,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           let mayInheritPrincipal = false;
           let postData = null;
           let browser = gBrowser.selectedBrowser;
-
           let action = this._parseActionUrl(url);
-          if (action) {
+
+          if (selectedOneOff && selectedOneOff.engine) {
+            // If there's a selected one-off button then load a search using
+            // the one-off's engine.
+            [url, postData] =
+              this._parseAndRecordSearchEngineLoad(selectedOneOff.engine,
+                                                   this.oneOffSearchQuery,
+                                                   event, where,
+                                                   openUILinkParams);
+          } else if (action) {
             switch (action.type) {
               case "visiturl":
                 // Unifiedcomplete uses fixupURI to tell if something is a visit
@@ -471,25 +479,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 );
                 break;
             }
-          } else if (selectedOneOff && selectedOneOff.engine) {
-            // If there's a selected one-off button and the input value is a
-            // search query (or "keyword" in URI-fixup terminology), then load a
-            // search using the one-off's engine.
-            let value = this.oneOffSearchQuery;
-            let fixup;
-            try {
-              fixup = Services.uriFixup.getFixupURIInfo(
-                value,
-                Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
-              );
-            } catch (ex) {}
-            if (!fixup || !fixup.keywordProviderName) {
-              return;
-            }
-
-            [url, postData] =
-              this._parseAndRecordSearchEngineLoad(selectedOneOff.engine, value,
-                                                   event, where, openUILinkParams);
           } else {
             // This is a fallback for add-ons and old testing code that directly
             // set value and try to confirm it. UnifiedComplete should always
