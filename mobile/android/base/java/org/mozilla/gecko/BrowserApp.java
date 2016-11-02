@@ -320,12 +320,12 @@ public class BrowserApp extends GeckoApp
     private final TelemetryCorePingDelegate mTelemetryCorePingDelegate = new TelemetryCorePingDelegate();
 
     private final List<BrowserAppDelegate> delegates = Collections.unmodifiableList(Arrays.asList(
-            (BrowserAppDelegate) new AddToHomeScreenPromotion(),
-            (BrowserAppDelegate) new ScreenshotDelegate(),
-            (BrowserAppDelegate) new BookmarkStateChangeDelegate(),
-            (BrowserAppDelegate) new ReaderViewBookmarkPromotion(),
-            (BrowserAppDelegate) new ContentNotificationsDelegate(),
-            (BrowserAppDelegate) new PostUpdateHandler(),
+            new AddToHomeScreenPromotion(),
+            new ScreenshotDelegate(),
+            new BookmarkStateChangeDelegate(),
+            new ReaderViewBookmarkPromotion(),
+            new ContentNotificationsDelegate(),
+            new PostUpdateHandler(),
             mTelemetryCorePingDelegate,
             new OfflineTabStatusDelegate(),
             new AdjustBrowserAppDelegate(mTelemetryCorePingDelegate)
