@@ -57,7 +57,6 @@ config = {
         "cppunittest": {
             "options": [
                 "--symbols-path=%(symbols_path)s",
-                "--utility-path=tests/bin",
                 "--xre-path=%(abs_res_dir)s"
             ],
             "run_filename": "runcppunittests.py",
