@@ -1745,9 +1745,9 @@ function runUpdateUsingUpdater(aExpectedStatus, aSwitchApp, aExpectedExitValue) 
   let asan_options = null;
   if (gEnv.exists("ASAN_OPTIONS")) {
     asan_options = gEnv.get("ASAN_OPTIONS");
-    gEnv.set("ASAN_OPTIONS", asan_options + ":detect_leaks=0")
+    gEnv.set("ASAN_OPTIONS", asan_options + ":detect_leaks=0");
   } else {
-    gEnv.set("ASAN_OPTIONS", "detect_leaks=0")
+    gEnv.set("ASAN_OPTIONS", "detect_leaks=0");
   }
 
   let process = Cc["@mozilla.org/process/util;1"].
@@ -1807,7 +1807,7 @@ function createSymlink() {
                "the helper process exit value should be 0");
   getApplyDirFile(DIR_RESOURCES + "link", false).permissions = 0o666;
   args = ["setup-symlink", "moz-foo2", "moz-bar2", "target2",
-          getApplyDirFile().path +"/" + DIR_RESOURCES + "link2", "change-perm"];
+          getApplyDirFile().path + "/" + DIR_RESOURCES + "link2", "change-perm"];
   exitValue = runTestHelperSync(args);
   Assert.equal(exitValue, 0,
                "the helper process exit value should be 0");
@@ -3644,7 +3644,7 @@ function UpdatePrompt(aCallback) {
 
       callback.apply(this._callback,
                      Array.prototype.slice.call(arguments));
-    }
+    };
   });
 }
 
@@ -3967,7 +3967,7 @@ function adjustGeneralPaths() {
     }
 
     // Call end_test first before the directory provider is unregistered
-    if (typeof(end_test) == typeof(Function)) {
+    if (typeof end_test == typeof Function) {
       debugDump("calling end_test");
       end_test();
     }
@@ -4037,7 +4037,7 @@ function runUpdateUsingApp(aExpectedStatus) {
     try {
       status = readStatusFile();
     } catch (e) {
-      logTestInfo("error reading status file, exception: "+ e);
+      logTestInfo("error reading status file, exception: " + e);
     }
     // Don't proceed until the update's status is the expected value.
     if (status != aExpectedStatus) {

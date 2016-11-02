@@ -109,7 +109,7 @@ IncrementalDownload.prototype = {
       this._observer.onStartRequest(this, this._ctxt);
       let mar = getTestDirFile(FILE_SIMPLE_MAR);
       mar.copyTo(this._destination.parent, this._destination.leafName);
-      let status = Cr.NS_OK
+      let status = Cr.NS_OK;
       switch (gIncrementalDownloadErrorType++) {
         case 0:
           status = Cr.NS_ERROR_NET_RESET;
