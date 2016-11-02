@@ -65,7 +65,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins);
     void visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins);
     void visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins);
-    void visitAsmSelectI64(LAsmSelectI64* ins);
+    void visitWasmSelectI64(LWasmSelectI64* ins);
     void visitWasmCall(LWasmCall* ins);
     void visitWasmCallI64(LWasmCallI64* ins);
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);

@@ -2335,7 +2335,7 @@ CodeGeneratorMIPSShared::visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins)
 }
 
 void
-CodeGeneratorMIPSShared::visitAsmSelect(LAsmSelect* ins)
+CodeGeneratorMIPSShared::visitWasmSelect(LWasmSelect* ins)
 {
     MIRType mirType = ins->mir()->type();
 
@@ -2358,7 +2358,7 @@ CodeGeneratorMIPSShared::visitAsmSelect(LAsmSelect* ins)
         else if (mirType == MIRType::Double)
             masm.as_movz(Assembler::DoubleFloat, out, ToFloatRegister(falseExpr), cond);
         else
-            MOZ_CRASH("unhandled type in visitAsmSelect!");
+            MOZ_CRASH("unhandled type in visitWasmSelect!");
     } else {
         Label done;
         masm.ma_b(cond, cond, &done, Assembler::NonZero, ShortJump);
@@ -2368,7 +2368,7 @@ CodeGeneratorMIPSShared::visitAsmSelect(LAsmSelect* ins)
         else if (mirType == MIRType::Double)
             masm.loadDouble(ToAddress(falseExpr), out);
         else
-            MOZ_CRASH("unhandled type in visitAsmSelect!");
+            MOZ_CRASH("unhandled type in visitWasmSelect!");
 
         masm.bind(&done);
     }

@@ -59,7 +59,7 @@ class CodeGeneratorMIPS64 : public CodeGeneratorMIPSShared
     void visitWasmUnalignedStoreI64(LWasmUnalignedStoreI64* ins);
     void visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins);
     void visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins);
-    void visitAsmSelectI64(LAsmSelectI64* ins);
+    void visitWasmSelectI64(LWasmSelectI64* ins);
     void visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir);
     void visitWasmReinterpretToI64(LWasmReinterpretToI64* lir);
     void visitExtendInt32ToInt64(LExtendInt32ToInt64* lir);

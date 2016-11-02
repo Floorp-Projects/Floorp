@@ -231,7 +231,7 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
 
     void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
     void visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins);
-    void visitAsmSelect(LAsmSelect* ins);
+    void visitWasmSelect(LWasmSelect* ins);
     void visitWasmReinterpret(LWasmReinterpret* ins);
 
     void visitMemoryBarrier(LMemoryBarrier* ins);

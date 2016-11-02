@@ -74,7 +74,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitCompareI64AndBranch(LCompareI64AndBranch* lir);
     void visitDivOrModI64(LDivOrModI64* lir);
     void visitUDivOrModI64(LUDivOrModI64* lir);
-    void visitAsmSelectI64(LAsmSelectI64* lir);
+    void visitWasmSelectI64(LWasmSelectI64* lir);
     void visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir);
     void visitWasmReinterpretToI64(LWasmReinterpretToI64* lir);
     void visitExtendInt32ToInt64(LExtendInt32ToInt64* lir);

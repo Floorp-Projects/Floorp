@@ -88,7 +88,7 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins) { MOZ_CRASH(); }
     void visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins) { MOZ_CRASH(); }
     void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins) { MOZ_CRASH(); }
-    void visitAsmSelect(MAsmSelect*) { MOZ_CRASH(); }
+    void visitWasmSelect(MWasmSelect*) { MOZ_CRASH(); }
     void visitWasmBoundsCheck(MWasmBoundsCheck* ins) { MOZ_CRASH(); }
     void visitWasmLoad(MWasmLoad* ins) { MOZ_CRASH(); }
     void visitWasmStore(MWasmStore* ins) { MOZ_CRASH(); }
