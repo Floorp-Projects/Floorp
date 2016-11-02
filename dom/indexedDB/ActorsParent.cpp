@@ -7915,18 +7915,16 @@ class RenameObjectStoreOp final
 {
   friend class VersionChangeTransaction;
 
-  const int64_t mId;
-  const nsString mNewName;
+  const RefPtr<FullObjectStoreMetadata> mMetadata;
 
 private:
   // Only created by VersionChangeTransaction.
   RenameObjectStoreOp(VersionChangeTransaction* aTransaction,
                       FullObjectStoreMetadata* const aMetadata)
     : VersionChangeTransactionOp(aTransaction)
-    , mId(aMetadata->mCommonMetadata.id())
-    , mNewName(aMetadata->mCommonMetadata.name())
+    , mMetadata(aMetadata)
   {
-    MOZ_ASSERT(mId);
+    MOZ_ASSERT(aMetadata->mCommonMetadata.id());
   }
 
   ~RenameObjectStoreOp()
@@ -8111,9 +8109,8 @@ class RenameIndexOp final
 {
   friend class VersionChangeTransaction;
 
+  const RefPtr<FullIndexMetadata> mMetadata;
   const int64_t mObjectStoreId;
-  const int64_t mIndexId;
-  const nsString mNewName;
 
 private:
   // Only created by VersionChangeTransaction.
@@ -8121,11 +8118,10 @@ private:
                 FullIndexMetadata* const aMetadata,
                 int64_t aObjectStoreId)
     : VersionChangeTransactionOp(aTransaction)
+    , mMetadata(aMetadata)
     , mObjectStoreId(aObjectStoreId)
-    , mIndexId(aMetadata->mCommonMetadata.id())
-    , mNewName(aMetadata->mCommonMetadata.name())
   {
-    MOZ_ASSERT(mIndexId);
+    MOZ_ASSERT(aMetadata->mCommonMetadata.id());
   }
 
   ~RenameIndexOp()
@@ -24400,10 +24396,12 @@ RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
         &stmt));
 
     MOZ_ALWAYS_SUCCEEDS(
-      stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mNewName));
+      stmt->BindStringByName(NS_LITERAL_CSTRING("name"),
+                             mMetadata->mCommonMetadata.name()));
 
     MOZ_ALWAYS_SUCCEEDS(
-      stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), mId));
+      stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"),
+                            mMetadata->mCommonMetadata.id()));
 
     bool hasResult;
     MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
@@ -24427,13 +24425,15 @@ RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mNewName);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"),
+                              mMetadata->mCommonMetadata.name());
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), mId);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"),
+                             mMetadata->mCommonMetadata.id());
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -25506,10 +25506,12 @@ RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
                             mObjectStoreId));
 
     MOZ_ALWAYS_SUCCEEDS(
-      stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mNewName));
+      stmt->BindStringByName(NS_LITERAL_CSTRING("name"),
+                             mMetadata->mCommonMetadata.name()));
 
     MOZ_ALWAYS_SUCCEEDS(
-      stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), mIndexId));
+      stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"),
+                            mMetadata->mCommonMetadata.id()));
 
     bool hasResult;
     MOZ_ALWAYS_SUCCEEDS(stmt->ExecuteStep(&hasResult));
@@ -25535,13 +25537,15 @@ RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mNewName);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"),
+                              mMetadata->mCommonMetadata.name());
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), mIndexId);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"),
+                             mMetadata->mCommonMetadata.id());
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
