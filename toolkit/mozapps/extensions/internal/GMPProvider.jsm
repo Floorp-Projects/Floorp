@@ -412,7 +412,7 @@ GMPWrapper.prototype = {
       return;
     }
     let {status: status, keySystem: keySystem} = parsedData;
-    if (status == "cdm-not-installed" || status == "cdm-insufficient-version") {
+    if (status == "cdm-not-installed") {
       this.checkForUpdates(0);
     }
   },
