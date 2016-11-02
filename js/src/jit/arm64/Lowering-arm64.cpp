@@ -246,9 +246,9 @@ LIRGeneratorARM64::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins)
 }
 
 void
-LIRGeneratorARM64::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins)
+LIRGeneratorARM64::visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins)
 {
-    MOZ_CRASH("visitAsmJSUnsignedToFloat32");
+    MOZ_CRASH("visitWasmUnsignedToFloat32");
 }
 
 void

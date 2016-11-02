@@ -243,7 +243,7 @@ CodeGeneratorX86::visitWasmUint32ToDouble(LWasmUint32ToDouble* lir)
 }
 
 void
-CodeGeneratorX86::visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32* lir)
+CodeGeneratorX86::visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir)
 {
     Register input = ToRegister(lir->input());
     Register temp = ToRegister(lir->temp());
