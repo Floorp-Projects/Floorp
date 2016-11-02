@@ -21,12 +21,4 @@ UNIFIED_SOURCES += [
     'nsUDPSocketProvider.cpp',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    XPIDL_SOURCES += [
-        'nsINamedPipeService.idl',
-    ]
-    UNIFIED_SOURCES += [
-        'nsNamedPipeService.cpp'
-    ]
-
 FINAL_LIBRARY = 'xul'
