@@ -146,9 +146,12 @@ class MessageLogger(object):
 
     def __init__(self, logger, buffering=True):
         self.logger = logger
-        self.buffering = buffering
-        self.restore_buffering = False
-        self.tests_started = False
+
+        # Even if buffering is enabled, we only want to buffer messages between
+        # TEST-START/TEST-END. So it is off to begin, but will be enabled after
+        # a TEST-START comes in.
+        self.buffering = False
+        self.restore_buffering = buffering
 
         # Message buffering
         self.buffered_messages = []
@@ -210,9 +213,6 @@ class MessageLogger(object):
 
     def process_message(self, message):
         """Processes a structured message. Takes into account buffering, errors, ..."""
-        if not self.tests_started and message['action'] == 'test_start':
-            self.tests_started = True
-
         # Activation/deactivating message buffering from the JS side
         if message['action'] == 'buffering_on':
             self.buffering = True
@@ -251,7 +251,6 @@ class MessageLogger(object):
         # unstructured, it is directly logged.
         elif any([not self.buffering,
                   unstructured,
-                  not self.tests_started,
                   message['action'] not in self.BUFFERED_ACTIONS]):
             self.logger.log_raw(message)
         else:
@@ -261,6 +260,10 @@ class MessageLogger(object):
         # If a test ended, we clean the buffer
         if message['action'] == 'test_end':
             self.buffered_messages = []
+            self.restore_buffering = self.restore_buffering or self.buffering
+            self.buffering = False
+
+        if message['action'] == 'test_start':
             if self.restore_buffering:
                 self.restore_buffering = False
                 self.buffering = True
