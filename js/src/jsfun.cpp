@@ -378,7 +378,7 @@ static const JSPropertySpec function_properties[] = {
 static bool
 ResolveInterpretedFunctionPrototype(JSContext* cx, HandleFunction fun, HandleId id)
 {
-    MOZ_ASSERT(fun->isInterpreted() || fun->isAsmJSNative());
+    MOZ_ASSERT(fun->isInterpreted() || fun->isWasmNative());
     MOZ_ASSERT(id == NameToId(cx->names().prototype));
 
     // Assert that fun is not a compiler-created function object, which
@@ -919,7 +919,7 @@ js::FindBody(JSContext* cx, HandleFunction fun, HandleLinearString src, size_t* 
     CompileOptions options(cx);
     options.setFileAndLine("internal-findBody", 0);
 
-    // For asm.js modules, there's no script.
+    // For asm.js/wasm modules, there's no script.
     if (fun->hasScript())
         options.setVersion(fun->nonLazyScript()->getVersion());
 

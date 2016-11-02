@@ -616,11 +616,11 @@ struct JSRuntime : public JS::shadow::Runtime,
         return &interrupt_;
     }
 
-    // Set when handling a segfault in the asm.js signal handler.
+    // Set when handling a segfault in the wasm signal handler.
     bool handlingSegFault;
 
   private:
-    // Set when we're handling an interrupt of JIT/asm.js code in
+    // Set when we're handling an interrupt of JIT/wasm code in
     // InterruptRunningJitCode.
     mozilla::Atomic<bool> handlingJitInterrupt_;
 

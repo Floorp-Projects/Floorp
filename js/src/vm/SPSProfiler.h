@@ -187,7 +187,7 @@ class SPSProfiler
         }
     }
 
-    /* Enter asm.js code */
+    /* Enter wasm code */
     void beginPseudoJS(const char* string, void* sp);
     void endPseudoJS() { pop(); }
 

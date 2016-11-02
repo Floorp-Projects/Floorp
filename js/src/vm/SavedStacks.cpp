@@ -1512,7 +1512,7 @@ SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
 
     // When we have a |JSScript| for this frame, use a potentially memoized
     // location from our PCLocationMap and copy it into |locationp|. When we do
-    // not have a |JSScript| for this frame (asm.js frames), we take a slow path
+    // not have a |JSScript| for this frame (wasm frames), we take a slow path
     // that doesn't employ memoization, and update |locationp|'s slots directly.
 
     if (!iter.hasScript()) {
