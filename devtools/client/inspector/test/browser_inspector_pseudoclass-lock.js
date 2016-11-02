@@ -75,17 +75,14 @@ function* testNavigate(inspector, testActor, ruleview) {
   ok((yield testActor.hasPseudoClassLock("#div-1", PSEUDO)),
      "pseudo-class lock is still applied after inspecting ancestor");
 
-  let onPseudo = inspector.selection.once("pseudoclass");
   yield selectNode("#div-2", inspector);
-  yield onPseudo;
 
-  info("Make sure the pseudoclass is removed after navigating to a " +
+  info("Make sure the pseudoclass is still set after navigating to a " +
        "non-hierarchy node");
-  ok(!(yield testActor.hasPseudoClassLock("#div-1", PSEUDO)),
-     "pseudo-class lock is removed after inspecting sibling node");
+  ok(yield testActor.hasPseudoClassLock("#div-1", PSEUDO),
+     "pseudo-class lock is still on after inspecting sibling node");
 
   yield selectNode("#div-1", inspector);
-  yield togglePseudoClass(inspector);
 }
 
 function* showPickerOn(selector, inspector) {

@@ -42,7 +42,6 @@ var EventEmitter = require("devtools/shared/event-emitter");
  *
  * Events:
  *   "new-node-front" when the inner node changed
- *   "before-new-node-front" when the inner node is set to change
  *   "attribute-changed" when an attribute is changed
  *   "detached-front" when the node (or one of its parents) is removed from
  *   the document
@@ -124,7 +123,6 @@ Selection.prototype = {
       value = parentNode;
     }
 
-    this.emit("before-new-node-front", value, reason);
     this._nodeFront = value;
     this.emit("new-node-front", value, this.reason);
   },
