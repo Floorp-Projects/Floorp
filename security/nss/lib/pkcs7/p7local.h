@@ -25,7 +25,6 @@ extern const SEC_ASN1Template sec_PKCS7ContentInfoTemplate[];
 /* opaque objects */
 typedef struct sec_pkcs7_cipher_object sec_PKCS7CipherObject;
 
-
 /************************************************************************/
 SEC_BEGIN_PROTOS
 
@@ -36,49 +35,48 @@ SEC_BEGIN_PROTOS
  * just return the first one found. (XXX Does anybody really want
  * that first-found behavior?  It was like that when I found it...)
  */
-extern SEC_PKCS7Attribute *sec_PKCS7FindAttribute (SEC_PKCS7Attribute **attrs,
-						   SECOidTag oidtag,
-						   PRBool only);
+extern SEC_PKCS7Attribute *sec_PKCS7FindAttribute(SEC_PKCS7Attribute **attrs,
+                                                  SECOidTag oidtag,
+                                                  PRBool only);
 /*
  * Return the single attribute value, doing some sanity checking first:
  * - Multiple values are *not* expected.
  * - Empty values are *not* expected.
  */
-extern SECItem *sec_PKCS7AttributeValue (SEC_PKCS7Attribute *attr);
+extern SECItem *sec_PKCS7AttributeValue(SEC_PKCS7Attribute *attr);
 
 /*
  * Encode a set of attributes (found in "src").
  */
-extern SECItem *sec_PKCS7EncodeAttributes (PLArenaPool *poolp,
-					   SECItem *dest, void *src);
+extern SECItem *sec_PKCS7EncodeAttributes(PLArenaPool *poolp,
+                                          SECItem *dest, void *src);
 
 /*
  * Make sure that the order of the attributes guarantees valid DER
  * (which must be in lexigraphically ascending order for a SET OF);
  * if reordering is necessary it will be done in place (in attrs).
  */
-extern SECStatus sec_PKCS7ReorderAttributes (SEC_PKCS7Attribute **attrs);
-
+extern SECStatus sec_PKCS7ReorderAttributes(SEC_PKCS7Attribute **attrs);
 
 /*
  * Create a context for decrypting, based on the given key and algorithm.
  */
 extern sec_PKCS7CipherObject *
-sec_PKCS7CreateDecryptObject (PK11SymKey *key, SECAlgorithmID *algid);
+sec_PKCS7CreateDecryptObject(PK11SymKey *key, SECAlgorithmID *algid);
 
 /*
  * Create a context for encrypting, based on the given key and algorithm,
  * and fill in the algorithm id.
  */
 extern sec_PKCS7CipherObject *
-sec_PKCS7CreateEncryptObject (PLArenaPool *poolp, PK11SymKey *key,
-			      SECOidTag algtag, SECAlgorithmID *algid);
+sec_PKCS7CreateEncryptObject(PLArenaPool *poolp, PK11SymKey *key,
+                             SECOidTag algtag, SECAlgorithmID *algid);
 
 /*
  * Destroy the given decryption or encryption object.
  */
-extern void sec_PKCS7DestroyDecryptObject (sec_PKCS7CipherObject *obj);
-extern void sec_PKCS7DestroyEncryptObject (sec_PKCS7CipherObject *obj);
+extern void sec_PKCS7DestroyDecryptObject(sec_PKCS7CipherObject *obj);
+extern void sec_PKCS7DestroyEncryptObject(sec_PKCS7CipherObject *obj);
 
 /*
  * What will be the output length of the next call to encrypt/decrypt?
@@ -96,12 +94,12 @@ extern void sec_PKCS7DestroyEncryptObject (sec_PKCS7CipherObject *obj);
  * passed in to the subsequent cipher operation, as no output bytes
  * will be stored.
  */
-extern unsigned int sec_PKCS7DecryptLength (sec_PKCS7CipherObject *obj,
-					    unsigned int input_len,
-					    PRBool final);
-extern unsigned int sec_PKCS7EncryptLength (sec_PKCS7CipherObject *obj,
-					    unsigned int input_len,
-					    PRBool final);
+extern unsigned int sec_PKCS7DecryptLength(sec_PKCS7CipherObject *obj,
+                                           unsigned int input_len,
+                                           PRBool final);
+extern unsigned int sec_PKCS7EncryptLength(sec_PKCS7CipherObject *obj,
+                                           unsigned int input_len,
+                                           PRBool final);
 
 /*
  * Decrypt a given length of input buffer (starting at "input" and
@@ -109,14 +107,14 @@ extern unsigned int sec_PKCS7EncryptLength (sec_PKCS7CipherObject *obj,
  * "output" and storing the output length in "*output_len_p".
  * "obj" is the return value from sec_PKCS7CreateDecryptObject.
  * When "final" is true, this is the last of the data to be decrypted.
- */ 
-extern SECStatus sec_PKCS7Decrypt (sec_PKCS7CipherObject *obj,
-				   unsigned char *output,
-				   unsigned int *output_len_p,
-				   unsigned int max_output_len,
-				   const unsigned char *input,
-				   unsigned int input_len,
-				   PRBool final);
+ */
+extern SECStatus sec_PKCS7Decrypt(sec_PKCS7CipherObject *obj,
+                                  unsigned char *output,
+                                  unsigned int *output_len_p,
+                                  unsigned int max_output_len,
+                                  const unsigned char *input,
+                                  unsigned int input_len,
+                                  PRBool final);
 
 /*
  * Encrypt a given length of input buffer (starting at "input" and
@@ -124,14 +122,14 @@ extern SECStatus sec_PKCS7Decrypt (sec_PKCS7CipherObject *obj,
  * "output" and storing the output length in "*output_len_p".
  * "obj" is the return value from sec_PKCS7CreateEncryptObject.
  * When "final" is true, this is the last of the data to be encrypted.
- */ 
-extern SECStatus sec_PKCS7Encrypt (sec_PKCS7CipherObject *obj,
-				   unsigned char *output,
-				   unsigned int *output_len_p,
-				   unsigned int max_output_len,
-				   const unsigned char *input,
-				   unsigned int input_len,
-				   PRBool final);
+ */
+extern SECStatus sec_PKCS7Encrypt(sec_PKCS7CipherObject *obj,
+                                  unsigned char *output,
+                                  unsigned int *output_len_p,
+                                  unsigned int max_output_len,
+                                  const unsigned char *input,
+                                  unsigned int input_len,
+                                  PRBool final);
 
 /************************************************************************/
 SEC_END_PROTOS

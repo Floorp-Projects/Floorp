@@ -27,7 +27,7 @@ include $(CORE_DEPTH)/coreconf/config.mk
 #######################################################################
 
 ifdef NSS_DISABLE_GTESTS
-DIRS := $(filter-out external_tests,$(DIRS))
+DIRS := $(filter-out gtests,$(DIRS))
 endif
 
 #######################################################################
