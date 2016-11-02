@@ -32,6 +32,7 @@ add_task(function* test_contentscript_context() {
       content_scripts: [{
         "matches": ["http://example.com/"],
         "js": ["content_script.js"],
+        "run_at": "document_start",
       }],
     },
 
