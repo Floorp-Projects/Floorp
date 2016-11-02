@@ -663,6 +663,10 @@ protected:
   // True if the media is seekable (i.e. supports random access).
   bool mMediaSeekable = true;
 
+  // True if the media is only seekable within its buffered ranges
+  // like WebMs with no cues.
+  bool mMediaSeekableOnlyInBufferedRanges = false;
+
   // Stores media info, including info of audio tracks and video tracks, should
   // only be accessed from main thread.
   nsAutoPtr<MediaInfo> mInfo;
@@ -762,10 +766,6 @@ protected:
   // back again.
   Canonical<int64_t> mDecoderPosition;
 
-  // True if the media is only seekable within its buffered ranges
-  // like WebMs with no cues.
-  Canonical<bool> mMediaSeekableOnlyInBufferedRanges;
-
   // True if the decoder is visible.
   Canonical<bool> mIsVisible;
 
@@ -806,9 +806,6 @@ public:
   }
   AbstractCanonical<int64_t>* CanonicalDecoderPosition() {
     return &mDecoderPosition;
-  }
-  AbstractCanonical<bool>* CanonicalMediaSeekableOnlyInBufferedRanges() {
-    return &mMediaSeekableOnlyInBufferedRanges;
   }
   AbstractCanonical<bool>* CanonicalIsVisible() {
     return &mIsVisible;
