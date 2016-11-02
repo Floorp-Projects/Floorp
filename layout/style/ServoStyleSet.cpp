@@ -89,20 +89,26 @@ ServoStyleSet::EndUpdate()
 
 already_AddRefed<nsStyleContext>
 ServoStyleSet::ResolveStyleFor(Element* aElement,
-                               nsStyleContext* aParentContext)
+                               nsStyleContext* aParentContext,
+                               ConsumeStyleBehavior aConsume,
+                               LazyComputeBehavior aMayCompute)
 {
   return GetContext(aElement, aParentContext, nullptr,
-                    CSSPseudoElementType::NotPseudo);
+                    CSSPseudoElementType::NotPseudo, aConsume, aMayCompute);
 }
 
 already_AddRefed<nsStyleContext>
 ServoStyleSet::GetContext(nsIContent* aContent,
                           nsStyleContext* aParentContext,
                           nsIAtom* aPseudoTag,
-                          CSSPseudoElementType aPseudoType)
+                          CSSPseudoElementType aPseudoType,
+                          ConsumeStyleBehavior aConsume,
+                          LazyComputeBehavior aMayCompute)
 {
+  MOZ_ASSERT(aContent->IsElement());
+  Element* element = aContent->AsElement();
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ComputedValues_Get(aContent).Consume();
+    Servo_ResolveStyle(element, mRawSet.get(), aConsume, aMayCompute).Consume();
   MOZ_ASSERT(computedValues);
   return GetContext(computedValues.forget(), aParentContext, aPseudoTag, aPseudoType);
 }
@@ -126,12 +132,14 @@ ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
 already_AddRefed<nsStyleContext>
 ServoStyleSet::ResolveStyleFor(Element* aElement,
                                nsStyleContext* aParentContext,
+                               ConsumeStyleBehavior aConsume,
+                               LazyComputeBehavior aMayCompute,
                                TreeMatchContext& aTreeMatchContext)
 {
   // aTreeMatchContext is used to speed up selector matching,
   // but if the element already has a ServoComputedValues computed in
   // advance, then we shouldn't need to use it.
-  return ResolveStyleFor(aElement, aParentContext);
+  return ResolveStyleFor(aElement, aParentContext, aConsume, aMayCompute);
 }
 
 already_AddRefed<nsStyleContext>
@@ -437,58 +445,39 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
   return nsRestyleHint(0);
 }
 
-nsRestyleHint
-ServoStyleSet::ComputeRestyleHint(dom::Element* aElement,
-                                  ServoElementSnapshot* aSnapshot)
-{
-  return Servo_ComputeRestyleHint(aElement, aSnapshot, mRawSet.get());
-}
-
-static void
-ClearDirtyBits(nsIContent* aContent)
-{
-  bool traverseDescendants = aContent->HasDirtyDescendantsForServo();
-  aContent->UnsetIsDirtyAndHasDirtyDescendantsForServo();
-  if (!traverseDescendants) {
-    return;
-  }
-
-  StyleChildrenIterator it(aContent);
-  for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
-    ClearDirtyBits(n);
-  }
-}
-
 void
-ServoStyleSet::StyleDocument(bool aLeaveDirtyBits)
+ServoStyleSet::StyleDocument()
 {
   // Grab the root.
   nsIDocument* doc = mPresContext->Document();
-  nsIContent* root = doc->GetRootElement();
+  Element* root = doc->GetRootElement();
   MOZ_ASSERT(root);
 
-  // Restyle the document, clearing the dirty bits if requested.
-  Servo_RestyleSubtree(root, mRawSet.get());
-  if (!aLeaveDirtyBits) {
-    ClearDirtyBits(root);
-    doc->UnsetHasDirtyDescendantsForServo();
-  }
+  // Restyle the document.
+  Servo_TraverseSubtree(root, mRawSet.get(), SkipRootBehavior::DontSkip);
 }
 
 void
 ServoStyleSet::StyleNewSubtree(nsIContent* aContent)
 {
-  MOZ_ASSERT(aContent->IsDirtyForServo());
-  if (aContent->IsElement() || aContent->IsNodeOfType(nsINode::eTEXT)) {
-    Servo_RestyleSubtree(aContent, mRawSet.get());
+  if (aContent->IsElement()) {
+    Servo_TraverseSubtree(aContent->AsElement(), mRawSet.get(), SkipRootBehavior::DontSkip);
   }
-  ClearDirtyBits(aContent);
 }
 
 void
 ServoStyleSet::StyleNewChildren(nsIContent* aParent)
 {
-  MOZ_ASSERT(aParent->HasDirtyDescendantsForServo());
-  Servo_RestyleSubtree(aParent, mRawSet.get());
-  ClearDirtyBits(aParent);
+  MOZ_ASSERT(aParent->IsElement());
+  Servo_TraverseSubtree(aParent->AsElement(), mRawSet.get(), SkipRootBehavior::Skip);
 }
+
+#ifdef DEBUG
+void
+ServoStyleSet::AssertTreeIsClean()
+{
+  if (Element* root = mPresContext->Document()->GetRootElement()) {
+    Servo_AssertTreeIsClean(root);
+  }
+}
+#endif
