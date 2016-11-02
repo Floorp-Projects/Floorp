@@ -11,15 +11,13 @@ import android.app.DownloadManager;
 import android.content.ContentProviderClient;
 import android.os.Environment;
 import android.os.Process;
-import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 
 import android.graphics.Rect;
 
 import org.json.JSONArray;
 import org.mozilla.gecko.activitystream.ActivityStream;
-import org.mozilla.gecko.adjust.AdjustHelperInterface;
-import org.mozilla.gecko.adjust.AttributionHelperListener;
+import org.mozilla.gecko.adjust.AdjustBrowserAppDelegate;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
@@ -329,7 +327,8 @@ public class BrowserApp extends GeckoApp
             (BrowserAppDelegate) new ContentNotificationsDelegate(),
             (BrowserAppDelegate) new PostUpdateHandler(),
             mTelemetryCorePingDelegate,
-            new OfflineTabStatusDelegate()
+            new OfflineTabStatusDelegate(),
+            new AdjustBrowserAppDelegate(mTelemetryCorePingDelegate)
     ));
 
     @NonNull
@@ -772,8 +771,6 @@ public class BrowserApp extends GeckoApp
         mReadingListHelper = new ReadingListHelper(appContext, profile);
         mAccountsHelper = new AccountsHelper(appContext, profile);
 
-        initAdjustSDK(this, isInAutomation, mTelemetryCorePingDelegate);
-
         if (AppConstants.MOZ_ANDROID_BEAM) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
             if (nfc != null) {
@@ -850,19 +847,6 @@ public class BrowserApp extends GeckoApp
 
     private static void initTelemetryUploader(final boolean isInAutomation) {
         TelemetryUploadService.setDisabled(isInAutomation);
-    }
-
-    private static void initAdjustSDK(final Context context, final boolean isInAutomation, final AttributionHelperListener listener) {
-        final AdjustHelperInterface adjustHelper = AdjustConstants.getAdjustHelper();
-        adjustHelper.onCreate(context, AdjustConstants.MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN, listener);
-
-        // Adjust stores enabled state so this is only necessary because users may have set
-        // their data preferences before this feature was implemented and we need to respect
-        // those before upload can occur in Adjust.onResume.
-        final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
-        final boolean enabled = !isInAutomation &&
-                prefs.getBoolean(GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true);
-        adjustHelper.setEnabled(enabled);
     }
 
     private void showUpdaterPermissionSnackbar() {
@@ -1075,9 +1059,6 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        // Needed for Adjust to get accurate session measurements
-        AdjustConstants.getAdjustHelper().onResume();
-
         if (!mHasResumed) {
             EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
                     "Prompt:ShowTop");
@@ -1097,9 +1078,6 @@ public class BrowserApp extends GeckoApp
         if (mIsAbortingAppLaunch) {
             return;
         }
-
-        // Needed for Adjust to get accurate session measurements
-        AdjustConstants.getAdjustHelper().onPause();
 
         if (mHasResumed) {
             // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
