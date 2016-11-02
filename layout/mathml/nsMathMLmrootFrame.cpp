@@ -7,7 +7,6 @@
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
 #include <algorithm>
-#include "gfxMathTable.h"
 
 using namespace mozilla;
 
@@ -117,8 +116,8 @@ nsMathMLmrootFrame::GetRadicalXOffsets(nscoord aIndexWidth, nscoord aSqrWidth,
   gfxFont* mathFont = aFontMetrics->GetThebesFontGroup()->GetFirstMathFont();
   if (mathFont) {
     indexRadicalKern =
-      mathFont->MathTable()->Constant(gfxMathTable::RadicalKernAfterDegree,
-                                      oneDevPixel);
+      mathFont->GetMathConstant(gfxFontEntry::RadicalKernAfterDegree,
+                                oneDevPixel);
     indexRadicalKern = -indexRadicalKern;
   }
   if (indexRadicalKern > aIndexWidth) {
@@ -134,8 +133,8 @@ nsMathMLmrootFrame::GetRadicalXOffsets(nscoord aIndexWidth, nscoord aSqrWidth,
     // add some kern before the radical index
     nscoord indexRadicalKernBefore = 0;
     indexRadicalKernBefore =
-      mathFont->MathTable()->Constant(gfxMathTable::RadicalKernBeforeDegree,
-                                      oneDevPixel);
+      mathFont->GetMathConstant(gfxFontEntry::RadicalKernBeforeDegree,
+                                oneDevPixel);
     dxIndex += indexRadicalKernBefore;
     dxSqr += indexRadicalKernBefore;
   } else {
@@ -296,8 +295,8 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   float raiseIndexPercent = 0.6f;
   gfxFont* mathFont = fm->GetThebesFontGroup()->GetFirstMathFont();
   if (mathFont) {
-    raiseIndexPercent = mathFont->MathTable()->
-      Constant(gfxMathTable::RadicalDegreeBottomRaisePercent);
+    raiseIndexPercent =
+      mathFont->GetMathConstant(gfxFontEntry::RadicalDegreeBottomRaisePercent);
   }
   nscoord raiseIndexDelta = NSToCoordRound(raiseIndexPercent *
                                            (bmSqr.ascent + bmSqr.descent));
