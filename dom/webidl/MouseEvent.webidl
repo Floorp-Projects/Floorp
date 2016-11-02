@@ -16,6 +16,10 @@ interface MouseEvent : UIEvent {
   readonly attribute long           screenY;
   readonly attribute long           clientX;
   readonly attribute long           clientY;
+  [BinaryName="clientX"]
+  readonly attribute long           x;
+  [BinaryName="clientY"]
+  readonly attribute long           y;
   readonly attribute long           offsetX;
   readonly attribute long           offsetY;
   readonly attribute boolean        ctrlKey;

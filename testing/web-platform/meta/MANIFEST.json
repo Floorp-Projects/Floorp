@@ -14916,6 +14916,10 @@
         "url": "/cssom-view/elementsFromPoint.html"
       },
       {
+        "path": "cssom-view/mouseEvent.html",
+        "url": "/cssom-view/mouseEvent.html"
+      },
+      {
         "path": "cssom-view/negativeMargins.html",
         "url": "/cssom-view/negativeMargins.html"
       },
