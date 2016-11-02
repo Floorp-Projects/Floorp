@@ -49,7 +49,7 @@ ModuleGenerator::ModuleGenerator(ImportVector&& imports)
     numTables_(0),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
     masmAlloc_(&lifo_),
-    masm_(MacroAssembler::AsmJSToken(), masmAlloc_),
+    masm_(MacroAssembler::WasmToken(), masmAlloc_),
     lastPatchedCallsite_(0),
     startOfUnpatchedCallsites_(0),
     parallel_(false),
@@ -58,7 +58,7 @@ ModuleGenerator::ModuleGenerator(ImportVector&& imports)
     startedFuncDefs_(false),
     finishedFuncDefs_(false)
 {
-    MOZ_ASSERT(IsCompilingAsmJS());
+    MOZ_ASSERT(IsCompilingWasm());
 }
 
 ModuleGenerator::~ModuleGenerator()
@@ -462,7 +462,7 @@ ModuleGenerator::finishCodegen()
 
     {
         TempAllocator alloc(&lifo_);
-        MacroAssembler masm(MacroAssembler::AsmJSToken(), alloc);
+        MacroAssembler masm(MacroAssembler::WasmToken(), alloc);
         Label throwLabel;
 
         if (!entries.resize(numFuncDefExports))
@@ -571,8 +571,8 @@ ModuleGenerator::finishLinkData(Bytes& code)
     linkData_.globalDataLength = AlignBytes(linkData_.globalDataLength, gc::SystemPageSize());
 
     // Add links to absolute addresses identified symbolically.
-    for (size_t i = 0; i < masm_.numAsmJSAbsoluteAddresses(); i++) {
-        AsmJSAbsoluteAddress src = masm_.asmJSAbsoluteAddress(i);
+    for (size_t i = 0; i < masm_.numWasmSymbolicAccesses(); i++) {
+        SymbolicAccess src = masm_.wasmSymbolicAccess(i);
         if (!linkData_.symbolicLinks[src.target].append(src.patchAt.offset()))
             return false;
     }

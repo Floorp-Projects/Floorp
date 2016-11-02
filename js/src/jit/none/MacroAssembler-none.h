@@ -43,15 +43,15 @@ static constexpr Register IntArgReg3 = { Registers::invalid_reg };
 static constexpr Register GlobalReg = { Registers::invalid_reg };
 static constexpr Register HeapReg = { Registers::invalid_reg };
 
-static constexpr Register AsmJSIonExitRegCallee = { Registers::invalid_reg };
-static constexpr Register AsmJSIonExitRegE0 = { Registers::invalid_reg };
-static constexpr Register AsmJSIonExitRegE1 = { Registers::invalid_reg };
+static constexpr Register WasmIonExitRegCallee = { Registers::invalid_reg };
+static constexpr Register WasmIonExitRegE0 = { Registers::invalid_reg };
+static constexpr Register WasmIonExitRegE1 = { Registers::invalid_reg };
 
-static constexpr Register AsmJSIonExitRegReturnData = { Registers::invalid_reg };
-static constexpr Register AsmJSIonExitRegReturnType = { Registers::invalid_reg };
-static constexpr Register AsmJSIonExitRegD0 = { Registers::invalid_reg };
-static constexpr Register AsmJSIonExitRegD1 = { Registers::invalid_reg };
-static constexpr Register AsmJSIonExitRegD2 = { Registers::invalid_reg };
+static constexpr Register WasmIonExitRegReturnData = { Registers::invalid_reg };
+static constexpr Register WasmIonExitRegReturnType = { Registers::invalid_reg };
+static constexpr Register WasmIonExitRegD0 = { Registers::invalid_reg };
+static constexpr Register WasmIonExitRegD1 = { Registers::invalid_reg };
+static constexpr Register WasmIonExitRegD2 = { Registers::invalid_reg };
 
 static constexpr Register RegExpTesterRegExpReg = { Registers::invalid_reg };
 static constexpr Register RegExpTesterStringReg = { Registers::invalid_reg };

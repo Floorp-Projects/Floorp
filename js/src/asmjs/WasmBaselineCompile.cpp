@@ -2046,7 +2046,7 @@ class BaseCompiler
 
     bool endFunction() {
         // Out-of-line prologue.  Assumes that the in-line prologue has
-        // been executed and that a frame of size = localSize_ + sizeof(AsmJSFrame)
+        // been executed and that a frame of size = localSize_ + sizeof(Frame)
         // has been allocated.
 
         masm.bind(&outOfLinePrologue_);
@@ -2149,7 +2149,7 @@ class BaseCompiler
 #endif
         }
 
-        call.frameAlignAdjustment = ComputeByteAlignment(masm.framePushed() + sizeof(AsmJSFrame),
+        call.frameAlignAdjustment = ComputeByteAlignment(masm.framePushed() + sizeof(Frame),
                                                          JitStackAlignment);
     }
 
@@ -2999,7 +2999,7 @@ class BaseCompiler
         masm.append(GlobalAccess(label, globalDataOffset));
 #elif defined(JS_CODEGEN_ARM)
         ScratchRegisterScope scratch(*this); // Really must be the ARM scratchreg
-        unsigned addr = globalDataOffset - AsmJSGlobalRegBias;
+        unsigned addr = globalDataOffset - WasmGlobalRegBias;
         masm.ma_dtr(js::jit::IsLoad, GlobalReg, Imm32(addr), r.reg, scratch);
 #else
         MOZ_CRASH("BaseCompiler platform hook: loadGlobalVarI32");
@@ -3018,7 +3018,7 @@ class BaseCompiler
         masm.append(GlobalAccess(labelHigh, globalDataOffset + INT64HIGH_OFFSET));
 #elif defined(JS_CODEGEN_ARM)
         ScratchRegisterScope scratch(*this); // Really must be the ARM scratchreg
-        unsigned addr = globalDataOffset - AsmJSGlobalRegBias;
+        unsigned addr = globalDataOffset - WasmGlobalRegBias;
         masm.ma_dtr(js::jit::IsLoad, GlobalReg, Imm32(addr + INT64LOW_OFFSET), r.reg.low, scratch);
         masm.ma_dtr(js::jit::IsLoad, GlobalReg, Imm32(addr + INT64HIGH_OFFSET), r.reg.high,
                     scratch);
@@ -3036,7 +3036,7 @@ class BaseCompiler
         CodeOffset label = masm.vmovssWithPatch(PatchedAbsoluteAddress(), r.reg);
         masm.append(GlobalAccess(label, globalDataOffset));
 #elif defined(JS_CODEGEN_ARM)
-        unsigned addr = globalDataOffset - AsmJSGlobalRegBias;
+        unsigned addr = globalDataOffset - WasmGlobalRegBias;
         VFPRegister vd(r.reg);
         masm.ma_vldr(VFPAddr(GlobalReg, VFPOffImm(addr)), vd.singleOverlay());
 #else
@@ -3053,7 +3053,7 @@ class BaseCompiler
         CodeOffset label = masm.vmovsdWithPatch(PatchedAbsoluteAddress(), r.reg);
         masm.append(GlobalAccess(label, globalDataOffset));
 #elif defined(JS_CODEGEN_ARM)
-        unsigned addr = globalDataOffset - AsmJSGlobalRegBias;
+        unsigned addr = globalDataOffset - WasmGlobalRegBias;
         masm.ma_vldr(VFPAddr(GlobalReg, VFPOffImm(addr)), r.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: loadGlobalVarF64");
@@ -3072,7 +3072,7 @@ class BaseCompiler
         masm.append(GlobalAccess(label, globalDataOffset));
 #elif defined(JS_CODEGEN_ARM)
         ScratchRegisterScope scratch(*this); // Really must be the ARM scratchreg
-        unsigned addr = globalDataOffset - AsmJSGlobalRegBias;
+        unsigned addr = globalDataOffset - WasmGlobalRegBias;
         masm.ma_dtr(js::jit::IsStore, GlobalReg, Imm32(addr), r.reg, scratch);
 #else
         MOZ_CRASH("BaseCompiler platform hook: storeGlobalVarI32");
@@ -3091,7 +3091,7 @@ class BaseCompiler
         masm.append(GlobalAccess(labelHigh, globalDataOffset + INT64HIGH_OFFSET));
 #elif defined(JS_CODEGEN_ARM)
         ScratchRegisterScope scratch(*this); // Really must be the ARM scratchreg
-        unsigned addr = globalDataOffset - AsmJSGlobalRegBias;
+        unsigned addr = globalDataOffset - WasmGlobalRegBias;
         masm.ma_dtr(js::jit::IsStore, GlobalReg, Imm32(addr + INT64LOW_OFFSET), r.reg.low, scratch);
         masm.ma_dtr(js::jit::IsStore, GlobalReg, Imm32(addr + INT64HIGH_OFFSET), r.reg.high,
                     scratch);
@@ -3109,7 +3109,7 @@ class BaseCompiler
         CodeOffset label = masm.vmovssWithPatch(r.reg, PatchedAbsoluteAddress());
         masm.append(GlobalAccess(label, globalDataOffset));
 #elif defined(JS_CODEGEN_ARM)
-        unsigned addr = globalDataOffset - AsmJSGlobalRegBias;
+        unsigned addr = globalDataOffset - WasmGlobalRegBias;
         VFPRegister vd(r.reg);
         masm.ma_vstr(vd.singleOverlay(), VFPAddr(GlobalReg, VFPOffImm(addr)));
 #else
@@ -3126,7 +3126,7 @@ class BaseCompiler
         CodeOffset label = masm.vmovsdWithPatch(r.reg, PatchedAbsoluteAddress());
         masm.append(GlobalAccess(label, globalDataOffset));
 #elif defined(JS_CODEGEN_ARM)
-        unsigned addr = globalDataOffset - AsmJSGlobalRegBias;
+        unsigned addr = globalDataOffset - WasmGlobalRegBias;
         masm.ma_vstr(r.reg, VFPAddr(GlobalReg, VFPOffImm(addr)));
 #else
         MOZ_CRASH("BaseCompiler platform hook: storeGlobalVarF64");
@@ -7376,25 +7376,25 @@ BaseCompiler::init()
             if (i->argInRegister())
                 l.init(MIRType::Int32, pushLocal(4));
             else
-                l.init(MIRType::Int32, -(i->offsetFromArgBase() + sizeof(AsmJSFrame)));
+                l.init(MIRType::Int32, -(i->offsetFromArgBase() + sizeof(Frame)));
             break;
           case MIRType::Int64:
             if (i->argInRegister())
                 l.init(MIRType::Int64, pushLocal(8));
             else
-                l.init(MIRType::Int64, -(i->offsetFromArgBase() + sizeof(AsmJSFrame)));
+                l.init(MIRType::Int64, -(i->offsetFromArgBase() + sizeof(Frame)));
             break;
           case MIRType::Double:
             if (i->argInRegister())
                 l.init(MIRType::Double, pushLocal(8));
             else
-                l.init(MIRType::Double, -(i->offsetFromArgBase() + sizeof(AsmJSFrame)));
+                l.init(MIRType::Double, -(i->offsetFromArgBase() + sizeof(Frame)));
             break;
           case MIRType::Float32:
             if (i->argInRegister())
                 l.init(MIRType::Float32, pushLocal(4));
             else
-                l.init(MIRType::Float32, -(i->offsetFromArgBase() + sizeof(AsmJSFrame)));
+                l.init(MIRType::Float32, -(i->offsetFromArgBase() + sizeof(Frame)));
             break;
           default:
             MOZ_CRASH("Argument type");

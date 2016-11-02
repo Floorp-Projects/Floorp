@@ -149,9 +149,9 @@ struct Imm64
 
 #ifdef DEBUG
 static inline bool
-IsCompilingAsmJS()
+IsCompilingWasm()
 {
-    // asm.js compilation pushes a JitContext with a null JSCompartment.
+    // wasm compilation pushes a JitContext with a null JSCompartment.
     return GetJitContext()->compartment == nullptr;
 }
 #endif
@@ -165,42 +165,42 @@ struct ImmPtr
     {
         // To make code serialization-safe, wasm compilation should only
         // compile pointer immediates using a SymbolicAddress.
-        MOZ_ASSERT(!IsCompilingAsmJS());
+        MOZ_ASSERT(!IsCompilingWasm());
     }
 
     template <class R>
     explicit ImmPtr(R (*pf)())
       : value(JS_FUNC_TO_DATA_PTR(void*, pf))
     {
-        MOZ_ASSERT(!IsCompilingAsmJS());
+        MOZ_ASSERT(!IsCompilingWasm());
     }
 
     template <class R, class A1>
     explicit ImmPtr(R (*pf)(A1))
       : value(JS_FUNC_TO_DATA_PTR(void*, pf))
     {
-        MOZ_ASSERT(!IsCompilingAsmJS());
+        MOZ_ASSERT(!IsCompilingWasm());
     }
 
     template <class R, class A1, class A2>
     explicit ImmPtr(R (*pf)(A1, A2))
       : value(JS_FUNC_TO_DATA_PTR(void*, pf))
     {
-        MOZ_ASSERT(!IsCompilingAsmJS());
+        MOZ_ASSERT(!IsCompilingWasm());
     }
 
     template <class R, class A1, class A2, class A3>
     explicit ImmPtr(R (*pf)(A1, A2, A3))
       : value(JS_FUNC_TO_DATA_PTR(void*, pf))
     {
-        MOZ_ASSERT(!IsCompilingAsmJS());
+        MOZ_ASSERT(!IsCompilingWasm());
     }
 
     template <class R, class A1, class A2, class A3, class A4>
     explicit ImmPtr(R (*pf)(A1, A2, A3, A4))
       : value(JS_FUNC_TO_DATA_PTR(void*, pf))
     {
-        MOZ_ASSERT(!IsCompilingAsmJS());
+        MOZ_ASSERT(!IsCompilingWasm());
     }
 
 };
@@ -235,8 +235,8 @@ class ImmGCPtr
         MOZ_ASSERT_IF(ptr && !ptr->isTenured(),
                       !CurrentThreadIsIonCompilingSafeForMinorGC());
 
-        // asm.js shouldn't be creating GC things
-        MOZ_ASSERT(!IsCompilingAsmJS());
+        // wasm shouldn't be creating GC things
+        MOZ_ASSERT(!IsCompilingWasm());
     }
 
   private:
@@ -252,7 +252,7 @@ struct AbsoluteAddress
     explicit AbsoluteAddress(const void* addr)
       : addr(const_cast<void*>(addr))
     {
-        MOZ_ASSERT(!IsCompilingAsmJS());
+        MOZ_ASSERT(!IsCompilingWasm());
     }
 
     AbsoluteAddress offset(ptrdiff_t delta) {
@@ -661,15 +661,19 @@ class CodeLocationLabel
     }
 };
 
-// As an invariant across architectures, within asm.js code:
-//   $sp % AsmJSStackAlignment = (sizeof(AsmJSFrame) + masm.framePushed) % AsmJSStackAlignment
-// Thus, AsmJSFrame represents the bytes pushed after the call (which occurred
-// with a AsmJSStackAlignment-aligned StackPointer) that are not included in
+} // namespace jit
+
+namespace wasm {
+
+// As an invariant across architectures, within wasm code:
+//   $sp % WasmStackAlignment = (sizeof(wasm::Frame) + masm.framePushed) % WasmStackAlignment
+// Thus, wasm::Frame represents the bytes pushed after the call (which occurred
+// with a WasmStackAlignment-aligned StackPointer) that are not included in
 // masm.framePushed.
-struct AsmJSFrame
+struct Frame
 {
     // The caller's saved frame pointer. In non-profiling mode, internal
-    // asm.js-to-asm.js calls don't update fp and thus don't save the caller's
+    // wasm-to-wasm calls don't update fp and thus don't save the caller's
     // frame pointer; the space is reserved, however, so that profiling mode can
     // reuse the same function body without recompiling.
     uint8_t* callerFP;
@@ -678,24 +682,21 @@ struct AsmJSFrame
     // address is pushed by the first instruction of the prologue).
     void* returnAddress;
 };
-static_assert(sizeof(AsmJSFrame) == 2 * sizeof(void*), "?!");
-static const uint32_t AsmJSFrameBytesAfterReturnAddress = sizeof(void*);
+
+static_assert(sizeof(Frame) == 2 * sizeof(void*), "?!");
+static const uint32_t FrameBytesAfterReturnAddress = sizeof(void*);
 
 // Represents an instruction to be patched and the intended pointee. These
 // links are accumulated in the MacroAssembler, but patching is done outside
 // the MacroAssembler (in Module::staticallyLink).
-struct AsmJSAbsoluteAddress
+struct SymbolicAccess
 {
-    AsmJSAbsoluteAddress(CodeOffset patchAt, wasm::SymbolicAddress target)
+    SymbolicAccess(jit::CodeOffset patchAt, SymbolicAddress target)
       : patchAt(patchAt), target(target) {}
 
-    CodeOffset patchAt;
-    wasm::SymbolicAddress target;
+    jit::CodeOffset patchAt;
+    SymbolicAddress target;
 };
-
-} // namespace jit
-
-namespace wasm {
 
 class MemoryAccessDesc
 {
@@ -750,7 +751,7 @@ class MemoryAccessDesc
 };
 
 // Summarizes a global access for a mutable (in asm.js) or immutable value (in
-// asm.js or the MVP) that needs to get patched later.
+// asm.js or the wasm MVP) that needs to get patched later.
 
 struct GlobalAccess
 {
@@ -829,7 +830,7 @@ class AssemblerShared
     wasm::MemoryPatchVector memoryPatches_;
     wasm::BoundsCheckVector boundsChecks_;
     wasm::GlobalAccessVector globalAccesses_;
-    Vector<AsmJSAbsoluteAddress, 0, SystemAllocPolicy> asmJSAbsoluteAddresses_;
+    Vector<wasm::SymbolicAccess, 0, SystemAllocPolicy> wasmSymbolicAccesses_;
 
   protected:
     Vector<CodeLabel, 0, SystemAllocPolicy> codeLabels_;
@@ -863,9 +864,9 @@ class AssemblerShared
     void append(const wasm::CallSiteDesc& desc, CodeOffset retAddr, size_t framePushed,
                 Args&&... args)
     {
-        // framePushed does not include sizeof(AsmJSFrame), so add it in explicitly when
+        // framePushed does not include sizeof(wasm:Frame), so add it in explicitly when
         // setting the CallSite::stackDepth.
-        wasm::CallSite cs(desc, retAddr.offset(), framePushed + sizeof(AsmJSFrame));
+        wasm::CallSite cs(desc, retAddr.offset(), framePushed + sizeof(wasm::Frame));
         enoughMemory_ &= callSites_.emplaceBack(cs, mozilla::Forward<Args>(args)...);
     }
     wasm::CallSiteAndTargetVector& callSites() { return callSites_; }
@@ -912,9 +913,9 @@ class AssemblerShared
     void append(wasm::GlobalAccess access) { enoughMemory_ &= globalAccesses_.append(access); }
     const wasm::GlobalAccessVector& globalAccesses() const { return globalAccesses_; }
 
-    void append(AsmJSAbsoluteAddress link) { enoughMemory_ &= asmJSAbsoluteAddresses_.append(link); }
-    size_t numAsmJSAbsoluteAddresses() const { return asmJSAbsoluteAddresses_.length(); }
-    AsmJSAbsoluteAddress asmJSAbsoluteAddress(size_t i) const { return asmJSAbsoluteAddresses_[i]; }
+    void append(wasm::SymbolicAccess link) { enoughMemory_ &= wasmSymbolicAccesses_.append(link); }
+    size_t numWasmSymbolicAccesses() const { return wasmSymbolicAccesses_.length(); }
+    wasm::SymbolicAccess wasmSymbolicAccess(size_t i) const { return wasmSymbolicAccesses_[i]; }
 
     static bool canUseInSingleByteInstruction(Register reg) { return true; }
 
@@ -963,10 +964,10 @@ class AssemblerShared
         for (; i < globalAccesses_.length(); i++)
             globalAccesses_[i].patchAt.offsetBy(delta);
 
-        i = asmJSAbsoluteAddresses_.length();
-        enoughMemory_ &= asmJSAbsoluteAddresses_.appendAll(other.asmJSAbsoluteAddresses_);
-        for (; i < asmJSAbsoluteAddresses_.length(); i++)
-            asmJSAbsoluteAddresses_[i].patchAt.offsetBy(delta);
+        i = wasmSymbolicAccesses_.length();
+        enoughMemory_ &= wasmSymbolicAccesses_.appendAll(other.wasmSymbolicAccesses_);
+        for (; i < wasmSymbolicAccesses_.length(); i++)
+            wasmSymbolicAccesses_[i].patchAt.offsetBy(delta);
 
         i = codeLabels_.length();
         enoughMemory_ &= codeLabels_.appendAll(other.codeLabels_);

@@ -35,12 +35,12 @@ AnalyzeAsmHeapAddress(MDefinition* ptr, MIRGraph& graph)
     // EffectiveAddressAnalysis pass.
     //
     // Putting the add on the outside might seem like it exposes other users of
-    // the expression to the possibility of i32 overflow, if we aren't in asm.js
+    // the expression to the possibility of i32 overflow, if we aren't in wasm
     // and they aren't naturally truncating. However, since we use MAdd::New
     // with MIRType::Int32, we make sure that the value is truncated, just as it
     // would be by the MBitAnd.
 
-    MOZ_ASSERT(IsCompilingAsmJS());
+    MOZ_ASSERT(IsCompilingWasm());
 
     if (!ptr->isBitAnd())
         return;

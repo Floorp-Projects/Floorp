@@ -382,8 +382,8 @@ class AliasSet {
         FixedSlot         = 1 << 4, // A Value member of obj->fixedSlots().
         DOMProperty       = 1 << 5, // A DOM property
         FrameArgument     = 1 << 6, // An argument kept on the stack frame
-        AsmJSGlobalVar    = 1 << 7, // An asm.js global var
-        AsmJSHeap         = 1 << 8, // An asm.js heap load
+        WasmGlobalVar     = 1 << 7, // An asm.js/wasm global var
+        WasmHeap          = 1 << 8, // An asm.js/wasm heap load
         TypedArrayLength  = 1 << 9,// A typed array's length
         Last              = TypedArrayLength,
         Any               = Last | (Last - 1),
@@ -1931,7 +1931,7 @@ class MSimdExtractElement
         MOZ_ASSERT((sign != SimdSign::NotApplicable) == IsIntegerSimdType(vecType),
                    "Signedness must be specified for integer SIMD extractLanes");
         // The resulting type should match the lane type.
-        // Allow extracting boolean lanes directly into an Int32 (for asm.js).
+        // Allow extracting boolean lanes directly into an Int32 (for wasm).
         // Allow extracting Uint32 lanes into a double.
         //
         // We also allow extracting Uint32 lanes into a MIRType::Int32. This is
@@ -5311,7 +5311,7 @@ class MToFloat32
     ALLOW_CLONE(MToFloat32)
 };
 
-// Converts a uint32 to a double (coming from asm.js).
+// Converts a uint32 to a double (coming from wasm).
 class MWasmUnsignedToDouble
   : public MUnaryInstruction,
     public NoTypePolicy::Data
@@ -5336,7 +5336,7 @@ class MWasmUnsignedToDouble
     }
 };
 
-// Converts a uint32 to a float32 (coming from asm.js).
+// Converts a uint32 to a float32 (coming from wasm).
 class MWasmUnsignedToFloat32
   : public MUnaryInstruction,
     public NoTypePolicy::Data
@@ -6125,7 +6125,7 @@ class MBinaryArithInstruction
     public ArithPolicy::Data
 {
     // Implicit truncate flag is set by the truncate backward range analysis
-    // optimization phase, and by asm.js pre-processing. It is used in
+    // optimization phase, and by wasm pre-processing. It is used in
     // NeedNegativeZeroCheck to check if the result of a multiplication needs to
     // produce -0 double value, and for avoiding overflow checks.
 
@@ -13585,8 +13585,8 @@ class MWasmLoad
         // When a barrier is needed, make the instruction effectful by giving
         // it a "store" effect.
         if (access_.isAtomic())
-            return AliasSet::Store(AliasSet::AsmJSHeap);
-        return AliasSet::Load(AliasSet::AsmJSHeap);
+            return AliasSet::Store(AliasSet::WasmHeap);
+        return AliasSet::Load(AliasSet::WasmHeap);
     }
 };
 
@@ -13613,7 +13613,7 @@ class MWasmStore
     }
 
     AliasSet getAliasSet() const override {
-        return AliasSet::Store(AliasSet::AsmJSHeap);
+        return AliasSet::Store(AliasSet::WasmHeap);
     }
 };
 
@@ -13669,7 +13669,7 @@ class MAsmJSLoadHeap
 
     bool congruentTo(const MDefinition* ins) const override;
     AliasSet getAliasSet() const override {
-        return AliasSet::Load(AliasSet::AsmJSHeap);
+        return AliasSet::Load(AliasSet::WasmHeap);
     }
     AliasType mightAlias(const MDefinition* def) const override;
 };
@@ -13693,7 +13693,7 @@ class MAsmJSStoreHeap
     MDefinition* value() const { return getOperand(1); }
 
     AliasSet getAliasSet() const override {
-        return AliasSet::Store(AliasSet::AsmJSHeap);
+        return AliasSet::Store(AliasSet::WasmHeap);
     }
 };
 
@@ -13724,7 +13724,7 @@ class MAsmJSCompareExchangeHeap
     MDefinition* tls() const { return getOperand(3); }
 
     AliasSet getAliasSet() const override {
-        return AliasSet::Store(AliasSet::AsmJSHeap);
+        return AliasSet::Store(AliasSet::WasmHeap);
     }
 };
 
@@ -13754,7 +13754,7 @@ class MAsmJSAtomicExchangeHeap
     MDefinition* tls() const { return getOperand(2); }
 
     AliasSet getAliasSet() const override {
-        return AliasSet::Store(AliasSet::AsmJSHeap);
+        return AliasSet::Store(AliasSet::WasmHeap);
     }
 };
 
@@ -13787,7 +13787,7 @@ class MAsmJSAtomicBinopHeap
     MDefinition* tls() const { return getOperand(2); }
 
     AliasSet getAliasSet() const override {
-        return AliasSet::Store(AliasSet::AsmJSHeap);
+        return AliasSet::Store(AliasSet::WasmHeap);
     }
 };
 
@@ -13815,7 +13815,7 @@ class MWasmLoadGlobalVar : public MNullaryInstruction
     MDefinition* foldsTo(TempAllocator& alloc) override;
 
     AliasSet getAliasSet() const override {
-        return isConstant_ ? AliasSet::None() : AliasSet::Load(AliasSet::AsmJSGlobalVar);
+        return isConstant_ ? AliasSet::None() : AliasSet::Load(AliasSet::WasmGlobalVar);
     }
 
     AliasType mightAlias(const MDefinition* def) const override;
@@ -13839,7 +13839,7 @@ class MWasmStoreGlobalVar
     MDefinition* value() const { return getOperand(0); }
 
     AliasSet getAliasSet() const override {
-        return AliasSet::Store(AliasSet::AsmJSGlobalVar);
+        return AliasSet::Store(AliasSet::WasmGlobalVar);
     }
 };
 

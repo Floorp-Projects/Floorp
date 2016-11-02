@@ -76,16 +76,16 @@ class PerfSpewer
 void writePerfSpewerBaselineProfile(JSScript* script, JitCode* code);
 void writePerfSpewerJitCodeProfile(JitCode* code, const char* msg);
 
-// AsmJS doesn't support block annotations.
-class AsmJSPerfSpewer : public PerfSpewer
+// wasm doesn't support block annotations.
+class WasmPerfSpewer : public PerfSpewer
 {
   public:
     MOZ_MUST_USE bool startBasicBlock(MBasicBlock* blk, MacroAssembler& masm) { return true; }
     MOZ_MUST_USE bool endBasicBlock(MacroAssembler& masm) { return true; }
 };
 
-void writePerfSpewerAsmJSFunctionMap(uintptr_t base, uintptr_t size, const char* filename,
-                                     unsigned lineno, unsigned colIndex, const char* funcName);
+void writePerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size, const char* filename,
+                                    unsigned lineno, unsigned colIndex, const char* funcName);
 
 #endif // JS_ION_PERF
 
