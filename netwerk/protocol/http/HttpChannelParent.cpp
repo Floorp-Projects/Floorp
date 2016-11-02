@@ -632,7 +632,8 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
                                        const RequestHeaderTuples& changedHeaders,
                                        const uint32_t& loadFlags,
                                        const OptionalURIParams& aAPIRedirectURI,
-                                       const OptionalCorsPreflightArgs& aCorsPreflightArgs)
+                                       const OptionalCorsPreflightArgs& aCorsPreflightArgs,
+                                       const bool& aChooseAppcache)
 {
   LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%x]\n",
        this, result));
@@ -668,6 +669,12 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
         MOZ_RELEASE_ASSERT(newInternalChannel);
         const CorsPreflightArgs& args = aCorsPreflightArgs.get_CorsPreflightArgs();
         newInternalChannel->SetCorsPreflightParameters(args.unsafeHeaders());
+      }
+
+      nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
+        do_QueryInterface(newHttpChannel);
+      if (appCacheChannel) {
+        appCacheChannel->SetChooseApplicationCache(aChooseAppcache);
       }
     }
   }
