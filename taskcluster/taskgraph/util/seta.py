@@ -10,7 +10,7 @@ headers = {
 }
 
 # It's a list of project name which SETA is useful on
-SETA_PROJECTS = ['mozilla-inbound', 'fx-team', 'autoland']
+SETA_PROJECTS = ['mozilla-inbound', 'autoland']
 SETA_ENDPOINT = "http://seta.herokuapp.com/data/setadetails/?branch=%s"
 
 
