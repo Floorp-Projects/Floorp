@@ -660,11 +660,9 @@ FinderHighlighter.prototype = {
    */
   _getRangeContentArray(range) {
     let content = range.cloneContents();
-    let t, textContent = [];
+    let textContent = [];
     for (let node of content.childNodes) {
-      t = node.textContent || node.nodeValue;
-      // if (t && t.trim())
-        textContent.push(t);
+      textContent.push(node.textContent || node.nodeValue);
     }
     return textContent;
   },
@@ -1145,8 +1143,6 @@ FinderHighlighter.prototype = {
         if (dict.detectedGeometryChange)
           return;
 
-        if (this._checkOverlap(dict.currentFoundRange, range))
-          continue;
         for (let rect of rects)
           allRects.push(new DOMRect(rect.x, rect.y, rect.width, rect.height));
       }
