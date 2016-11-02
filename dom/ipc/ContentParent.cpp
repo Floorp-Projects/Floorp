@@ -1778,13 +1778,13 @@ ContentParent::RecvDeallocateLayerTreeId(const uint64_t& aId)
 {
   GPUProcessManager* gpu = GPUProcessManager::Get();
 
-  if (!gpu->IsLayerTreeIdMapped(aId, this->OtherPid()))
+  if (!gpu->IsLayerTreeIdMapped(aId, OtherPid()))
   {
     // You can't deallocate layer tree ids that you didn't allocate
     KillHard("DeallocateLayerTreeId");
   }
 
-  gpu->DeallocateLayerTreeId(aId);
+  gpu->UnmapLayerTreeId(aId, OtherPid());
 
   return true;
 }
