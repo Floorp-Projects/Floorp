@@ -152,7 +152,8 @@ protected:
                                    const RequestHeaderTuples& changedHeaders,
                                    const uint32_t& loadFlags,
                                    const OptionalURIParams& apiRedirectUri,
-                                   const OptionalCorsPreflightArgs& aCorsPreflightArgs) override;
+                                   const OptionalCorsPreflightArgs& aCorsPreflightArgs,
+                                   const bool& aChooseAppcache) override;
   virtual bool RecvUpdateAssociatedContentSecurity(const int32_t& broken,
                                                    const int32_t& no) override;
   virtual bool RecvDocumentChannelCleanup() override;
