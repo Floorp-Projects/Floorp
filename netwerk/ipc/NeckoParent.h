@@ -37,7 +37,6 @@ public:
   static const char *
   GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
                       PContentParent* aBrowser,
-                      nsIPrincipal* aRequestingPrincipal,
                       mozilla::DocShellOriginAttributes& aAttrs);
 
   /*
@@ -52,7 +51,6 @@ public:
   CreateChannelLoadContext(const PBrowserOrId& aBrowser,
                            PContentParent* aContent,
                            const SerializedLoadContext& aSerialized,
-                           nsIPrincipal* aRequestingPrincipal,
                            nsCOMPtr<nsILoadContext> &aResult);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
