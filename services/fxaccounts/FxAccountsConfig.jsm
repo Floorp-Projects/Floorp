@@ -144,7 +144,11 @@ this.FxAccountsConfig = {
     try {
       // Update the prefs directly specified by the config.
       let config = JSON.parse(jsonStr)
-      Services.prefs.setCharPref("identity.fxaccounts.auth.uri", config.auth_server_base_url);
+      let authServerBase = config.auth_server_base_url;
+      if (!authServerBase.endsWith("/v1")) {
+        authServerBase += "/v1";
+      }
+      Services.prefs.setCharPref("identity.fxaccounts.auth.uri", authServerBase);
       Services.prefs.setCharPref("identity.fxaccounts.remote.oauth.uri", config.oauth_server_base_url + "/v1");
       Services.prefs.setCharPref("identity.fxaccounts.remote.profile.uri", config.profile_server_base_url + "/v1");
       Services.prefs.setCharPref("identity.sync.tokenserver.uri", config.sync_tokenserver_base_url + "/1.0/sync/1.5");
