@@ -5446,11 +5446,6 @@ pref("webextensions.webRequest.requestBodyMaxRawBytes", 16777216);
 
 // This functionality is still experimental
 pref("webextensions.storage.sync.enabled", false);
-#ifdef RELEASE_OR_BETA
-pref("webextensions.storage.sync.serverURL", "https://webextensions.settings.services.mozilla.com/v1");
-#else
-pref("webextensions.storage.sync.serverURL", "https://webextensions.dev.mozaws.net/v1");
-#endif
 
 // Allow customization of the fallback directory for file uploads
 pref("dom.input.fallbackUploadDir", "");
