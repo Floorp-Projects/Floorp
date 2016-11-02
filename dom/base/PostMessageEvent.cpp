@@ -107,12 +107,18 @@ PostMessageEvent::Run()
     //       don't do that in other places it seems better to hold the line for
     //       now.  Long-term, we want HTML5 to address this so that we can
     //       be compliant while being safer.
-    if (!targetPrin->Equals(mProvidedPrincipal)) {
+    if (!BasePrincipal::Cast(targetPrin)->EqualsIgnoringAddonId(mProvidedPrincipal)) {
       nsAutoString providedOrigin, targetOrigin;
       nsresult rv = nsContentUtils::GetUTFOrigin(targetPrin, targetOrigin);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = nsContentUtils::GetUTFOrigin(mProvidedPrincipal, providedOrigin);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      MOZ_DIAGNOSTIC_ASSERT(providedOrigin != targetOrigin ||
+                            (BasePrincipal::Cast(mProvidedPrincipal)->OriginAttributesRef() ==
+                              BasePrincipal::Cast(targetPrin)->OriginAttributesRef()),
+                            "Unexpected postMessage call to a window with mismatched "
+                            "origin attributes");
 
       const char16_t* params[] = { providedOrigin.get(), targetOrigin.get() };
 
