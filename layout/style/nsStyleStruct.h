@@ -320,12 +320,25 @@ public:
   // when obtaining and releasing the imgRequestProxy, and whether
   // RequestDiscard will be called on release.
   enum class Mode : uint8_t {
-    Track   = 0x1,  // used by all except nsCursorImage
-    Lock    = 0x2,  // used by all except nsStyleContentData
-    Discard = 0x4,  // used only by nsCursorImage
+    // The imgRequestProxy will be added to the ImageTracker when resolved
+    // Without this flag, the nsStyleImageRequest itself will call LockImage/
+    // UnlockImage on the imgRequestProxy, rather than leaving locking to the
+    // ImageTracker to manage.
+    //
+    // This flag is currently used by all nsStyleImageRequests except
+    // those for list-style-image and cursor.
+    Track = 0x1,
+
+    // The imgRequestProxy will have its RequestDiscard method called when
+    // the nsStyleImageRequest is going away.
+    //
+    // This is currently used only for cursor images.
+    Discard = 0x2,
   };
 
   // Must be called from the main thread.
+  //
+  // aImageTracker must be non-null iff aModeFlags contains Track.
   nsStyleImageRequest(Mode aModeFlags,
                       imgRequestProxy* aRequestProxy,
                       mozilla::css::ImageValue* aImageValue,
