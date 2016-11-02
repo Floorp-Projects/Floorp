@@ -417,7 +417,7 @@
     _(AsmJSAtomicBinopHeap)         \
     _(AsmJSAtomicBinopHeapForEffect)\
     _(WasmUint32ToDouble)           \
-    _(AsmJSUInt32ToFloat32)         \
+    _(WasmUint32ToFloat32)          \
     _(RecompileCheck)               \
     _(MemoryBarrier)                \
     _(AssertRangeI)                 \

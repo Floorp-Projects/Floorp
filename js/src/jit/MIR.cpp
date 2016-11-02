@@ -5667,7 +5667,7 @@ MWasmUnsignedToDouble::foldsTo(TempAllocator& alloc)
 }
 
 MDefinition*
-MAsmJSUnsignedToFloat32::foldsTo(TempAllocator& alloc)
+MWasmUnsignedToFloat32::foldsTo(TempAllocator& alloc)
 {
     if (input()->isConstant() && input()->type() == MIRType::Int32) {
         double dval = double(uint32_t(input()->toConstant()->toInt32()));

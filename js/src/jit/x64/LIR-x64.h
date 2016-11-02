@@ -70,12 +70,12 @@ class LWasmUint32ToDouble : public LInstructionHelper<1, 1, 0>
 };
 
 // Convert a 32-bit unsigned integer to a float32.
-class LAsmJSUInt32ToFloat32 : public LInstructionHelper<1, 1, 0>
+class LWasmUint32ToFloat32 : public LInstructionHelper<1, 1, 0>
 {
   public:
-    LIR_HEADER(AsmJSUInt32ToFloat32)
+    LIR_HEADER(WasmUint32ToFloat32)
 
-    explicit LAsmJSUInt32ToFloat32(const LAllocation& input) {
+    explicit LWasmUint32ToFloat32(const LAllocation& input) {
         setOperand(0, input);
     }
 };
