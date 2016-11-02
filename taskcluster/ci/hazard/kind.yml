@@ -33,8 +33,7 @@ jobs:
             using: hazard
             tooltool-manifest: "browser/config/tooltool-manifests/linux64/hazard.manifest"
             command: >
-                tc-vcs checkout workspace/gecko "$GECKO_BASE_REPOSITORY" "$GECKO_HEAD_REPOSITORY" "$GECKO_HEAD_REV" "$GECKO_HEAD_REF"
-                && cd ./workspace/gecko/taskcluster/scripts/builder
+                cd /home/worker/checkouts/gecko/taskcluster/scripts/builder
                 && ./build-haz-linux.sh --project shell $HOME/workspace
         when:
             files-changed:
@@ -55,6 +54,5 @@ jobs:
             tooltool-manifest: "browser/config/tooltool-manifests/linux64/hazard.manifest"
             mozconfig: "browser/config/mozconfigs/linux64/hazards"
             command: >
-                tc-vcs checkout workspace/gecko "$GECKO_BASE_REPOSITORY" "$GECKO_HEAD_REPOSITORY" "$GECKO_HEAD_REV" "$GECKO_HEAD_REF"
-                && cd ./workspace/gecko/taskcluster/scripts/builder
+                cd /home/worker/checkouts/gecko/taskcluster/scripts/builder
                 && ./build-haz-linux.sh --project browser $HOME/workspace
