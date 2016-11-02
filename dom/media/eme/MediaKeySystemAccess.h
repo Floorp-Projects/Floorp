@@ -51,9 +51,7 @@ public:
   already_AddRefed<Promise> CreateMediaKeys(ErrorResult& aRv);
 
   static MediaKeySystemStatus GetKeySystemStatus(const nsAString& aKeySystem,
-                                                 int32_t aMinCdmVersion,
-                                                 nsACString& aOutExceptionMessage,
-                                                 nsACString& aOutCdmVersion);
+                                                 nsACString& aOutExceptionMessage);
 
   static bool IsSupported(const nsAString& aKeySystem,
                           const Sequence<MediaKeySystemConfiguration>& aConfigs,

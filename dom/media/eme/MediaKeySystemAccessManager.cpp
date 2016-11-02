@@ -122,21 +122,17 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
   }
 
   nsAutoCString message;
-  nsAutoCString cdmVersion;
   MediaKeySystemStatus status =
-    MediaKeySystemAccess::GetKeySystemStatus(keySystem, minCdmVersion, message, cdmVersion);
+    MediaKeySystemAccess::GetKeySystemStatus(keySystem, message);
 
-  nsPrintfCString msg("MediaKeySystemAccess::GetKeySystemStatus(%s, minVer=%d) "
-                      "result=%s version='%s' msg='%s'",
+  nsPrintfCString msg("MediaKeySystemAccess::GetKeySystemStatus(%s) "
+                      "result=%s msg='%s'",
                       NS_ConvertUTF16toUTF8(keySystem).get(),
-                      minCdmVersion,
                       MediaKeySystemStatusValues::strings[(size_t)status].value,
-                      cdmVersion.get(),
                       message.get());
   LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
 
-  if ((status == MediaKeySystemStatus::Cdm_not_installed ||
-       status == MediaKeySystemStatus::Cdm_insufficient_version) &&
+  if (status == MediaKeySystemStatus::Cdm_not_installed &&
       (IsPrimetimeKeySystem(keySystem) || IsWidevineKeySystem(keySystem))) {
     // These are cases which could be resolved by downloading a new(er) CDM.
     // When we send the status to chrome, chrome's GMPProvider will attempt to
@@ -164,18 +160,11 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
     return;
   }
   if (status != MediaKeySystemStatus::Available) {
-    if (status != MediaKeySystemStatus::Error) {
-      // Failed due to user disabling something, send a notification to
-      // chrome, so we can show some UI to explain how the user can rectify
-      // the situation.
-      MediaKeySystemAccess::NotifyObservers(mWindow, keySystem, status);
-      aPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR, message);
-      return;
-    }
-    aPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                          NS_LITERAL_CSTRING("GetKeySystemAccess failed"));
-    diagnostics.StoreMediaKeySystemAccess(mWindow->GetExtantDoc(),
-                                          aKeySystem, false, __func__);
+    // Failed due to user disabling something, send a notification to
+    // chrome, so we can show some UI to explain how the user can rectify
+    // the situation.
+    MediaKeySystemAccess::NotifyObservers(mWindow, keySystem, status);
+    aPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR, message);
     return;
   }
 
@@ -285,12 +274,8 @@ MediaKeySystemAccessManager::Observe(nsISupports* aSubject,
       const size_t index = i - i;
       PendingRequest& request = mRequests[index];
       nsAutoCString message;
-      nsAutoCString cdmVersion;
       MediaKeySystemStatus status =
-        MediaKeySystemAccess::GetKeySystemStatus(request.mKeySystem,
-                                                 NO_CDM_VERSION,
-                                                 message,
-                                                 cdmVersion);
+        MediaKeySystemAccess::GetKeySystemStatus(request.mKeySystem, message);
       if (status == MediaKeySystemStatus::Cdm_not_installed) {
         // Not yet installed, don't retry. Keep waiting until timeout.
         continue;

@@ -117,38 +117,33 @@ HaveGMPFor(mozIGeckoMediaPluginService* aGMPService,
   return hasPlugin;
 }
 
-static MediaKeySystemStatus
-EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
-                    const nsAString& aKeySystem,
-                    int32_t aMinCdmVersion,
-                    nsACString& aOutMessage,
-                    nsACString& aOutCdmVersion)
+static bool
+HavePluginForKeySystem(const nsCString& aKeySystem)
 {
-  nsTArray<nsCString> tags;
-  tags.AppendElement(NS_ConvertUTF16toUTF8(aKeySystem));
-  bool hasPlugin;
-  nsAutoCString versionStr;
-  if (NS_FAILED(aGMPService->GetPluginVersionForAPI(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
-                                                    &tags,
-                                                    &hasPlugin,
-                                                    versionStr))) {
-    aOutMessage = NS_LITERAL_CSTRING("GetPluginVersionForAPI failed");
-    return MediaKeySystemStatus::Error;
+  bool havePlugin = false;
+  nsCOMPtr<mozIGeckoMediaPluginService> mps =
+    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  if (mps) {
+    havePlugin = HaveGMPFor(mps,
+                            aKeySystem,
+                            NS_LITERAL_CSTRING(GMP_API_DECRYPTOR));
   }
+#ifdef MOZ_WIDGET_ANDROID
+  // Check if we can use MediaDrm for this keysystem.
+  if (!havePlugin) {
+    havePlugin = mozilla::java::MediaDrmProxy::IsSchemeSupported(aKeySystem);
+  }
+#endif
+  return havePlugin;
+}
 
-  aOutCdmVersion = versionStr;
-
-  if (!hasPlugin) {
+static MediaKeySystemStatus
+EnsureCDMInstalled(const nsAString& aKeySystem,
+                    nsACString& aOutMessage)
+{
+  if (!HavePluginForKeySystem(NS_ConvertUTF16toUTF8(aKeySystem))) {
     aOutMessage = NS_LITERAL_CSTRING("CDM is not installed");
     return MediaKeySystemStatus::Cdm_not_installed;
-  }
-
-  nsresult rv;
-  int32_t version = versionStr.ToInteger(&rv);
-  if (aMinCdmVersion != NO_CDM_VERSION &&
-      (NS_FAILED(rv) || version < 0 || aMinCdmVersion > version)) {
-    aOutMessage = NS_LITERAL_CSTRING("Installed CDM version insufficient");
-    return MediaKeySystemStatus::Cdm_insufficient_version;
   }
 
   return MediaKeySystemStatus::Available;
@@ -157,20 +152,12 @@ EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
 /* static */
 MediaKeySystemStatus
 MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
-                                         int32_t aMinCdmVersion,
-                                         nsACString& aOutMessage,
-                                         nsACString& aOutCdmVersion)
+                                         nsACString& aOutMessage)
 {
   MOZ_ASSERT(MediaPrefs::EMEEnabled() || IsClearkeyKeySystem(aKeySystem));
-  nsCOMPtr<mozIGeckoMediaPluginService> mps =
-    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-  if (NS_WARN_IF(!mps)) {
-    aOutMessage = NS_LITERAL_CSTRING("Failed to get GMP service");
-    return MediaKeySystemStatus::Error;
-  }
 
   if (IsClearkeyKeySystem(aKeySystem)) {
-    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
+    return EnsureCDMInstalled(aKeySystem, aOutMessage);
   }
 
   if (Preferences::GetBool("media.gmp-eme-adobe.visible", false)) {
@@ -186,7 +173,7 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
         return MediaKeySystemStatus::Cdm_not_supported;
       }
 #endif
-      return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
+      return EnsureCDMInstalled(aKeySystem, aOutMessage);
     }
   }
 
@@ -203,7 +190,7 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
         aOutMessage = NS_LITERAL_CSTRING("Widevine EME disabled");
         return MediaKeySystemStatus::Cdm_disabled;
       }
-      return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
+      return EnsureCDMInstalled(aKeySystem, aOutMessage);
 #ifdef MOZ_WIDGET_ANDROID
     } else if (Preferences::GetBool("media.mediadrm-widevinecdm.visible", false)) {
         nsCString keySystem = NS_ConvertUTF16toUTF8(aKeySystem);
@@ -317,26 +304,6 @@ struct KeySystemConfig
   KeySystemContainerSupport mMP4;
   KeySystemContainerSupport mWebM;
 };
-
-bool
-HavePluginForKeySystem(const nsCString& aKeySystem)
-{
-  bool havePlugin = false;
-  nsCOMPtr<mozIGeckoMediaPluginService> mps =
-    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-  if (mps) {
-    havePlugin = HaveGMPFor(mps,
-                            aKeySystem,
-                            NS_LITERAL_CSTRING(GMP_API_DECRYPTOR));
-  }
-#ifdef MOZ_WIDGET_ANDROID
-  // Check if we can use MediaDrm for this keysystem.
-  if (!havePlugin) {
-     havePlugin = mozilla::java::MediaDrmProxy::IsSchemeSupported(aKeySystem);
-  }
-#endif
-  return havePlugin;
-}
 
 static nsTArray<KeySystemConfig>
 GetSupportedKeySystems()
