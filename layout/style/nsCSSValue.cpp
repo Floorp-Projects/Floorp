@@ -2883,7 +2883,24 @@ css::ImageValue::ImageValue(nsIURI* aURI, nsStringBuffer* aString,
                  do_AddRef(new PtrHolder<nsIURI>(aReferrer)),
                  do_AddRef(new PtrHolder<nsIPrincipal>(aOriginPrincipal)))
 {
+  Initialize(aDocument);
+}
+
+css::ImageValue::ImageValue(
+    nsStringBuffer* aString,
+    already_AddRefed<PtrHolder<nsIURI>> aBaseURI,
+    already_AddRefed<PtrHolder<nsIURI>> aReferrer,
+    already_AddRefed<PtrHolder<nsIPrincipal>> aOriginPrincipal)
+  : URLValueData(aString, Move(aBaseURI), Move(aReferrer),
+                 Move(aOriginPrincipal))
+{
+}
+
+void
+css::ImageValue::Initialize(nsIDocument* aDocument)
+{
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mInitialized);
 
   // NB: If aDocument is not the original document, we may not be able to load
   // images from aDocument.  Instead we do the image load from the original doc
@@ -2893,12 +2910,16 @@ css::ImageValue::ImageValue(nsIURI* aURI, nsStringBuffer* aString,
     loadingDoc = aDocument;
   }
 
-  loadingDoc->StyleImageLoader()->LoadImage(aURI, aOriginPrincipal, aReferrer,
-                                            this);
+  loadingDoc->StyleImageLoader()->LoadImage(GetURI(), mOriginPrincipal,
+                                            mReferrer, this);
 
   if (loadingDoc != aDocument) {
     aDocument->StyleImageLoader()->MaybeRegisterCSSImage(this);
   }
+
+#ifdef DEBUG
+  mInitialized = true;
+#endif
 }
 
 css::ImageValue::~ImageValue()
