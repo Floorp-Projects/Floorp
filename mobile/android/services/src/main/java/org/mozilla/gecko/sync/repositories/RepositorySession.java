@@ -126,6 +126,8 @@ public abstract class RepositorySession {
   }
   public abstract void store(Record record) throws NoStoreDelegateException;
 
+  public void storeIncomplete() {}
+
   public void storeDone() {
     // Our default behavior will be to assume that the Runnable is
     // executed as soon as all the stores synchronously finish, so

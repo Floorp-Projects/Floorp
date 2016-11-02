@@ -902,46 +902,42 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
 
   @SuppressWarnings("unchecked")
   private void finishUp() {
-    try {
-      flushQueues();
-      Logger.debug(LOG_TAG, "Have " + parentToChildArray.size() + " folders whose children might need repositioning.");
-      for (Entry<String, JSONArray> entry : parentToChildArray.entrySet()) {
-        String guid = entry.getKey();
-        JSONArray onServer = entry.getValue();
-        try {
-          final long folderID = getIDForGUID(guid);
-          final JSONArray inDB = new JSONArray();
-          final boolean clean = getChildrenArray(folderID, false, inDB);
-          final boolean sameArrays = Utils.sameArrays(onServer, inDB);
+    flushQueues();
+    Logger.debug(LOG_TAG, "Have " + parentToChildArray.size() + " folders whose children might need repositioning.");
+    for (Entry<String, JSONArray> entry : parentToChildArray.entrySet()) {
+      String guid = entry.getKey();
+      JSONArray onServer = entry.getValue();
+      try {
+        final long folderID = getIDForGUID(guid);
+        final JSONArray inDB = new JSONArray();
+        final boolean clean = getChildrenArray(folderID, false, inDB);
+        final boolean sameArrays = Utils.sameArrays(onServer, inDB);
 
-          // If the local children and the remote children are already
-          // the same, then we don't need to bump the modified time of the
-          // parent: we wouldn't upload a different record, so avoid the cycle.
-          if (!sameArrays) {
-            int added = 0;
-            for (Object o : inDB) {
-              if (!onServer.contains(o)) {
-                onServer.add(o);
-                added++;
-              }
+        // If the local children and the remote children are already
+        // the same, then we don't need to bump the modified time of the
+        // parent: we wouldn't upload a different record, so avoid the cycle.
+        if (!sameArrays) {
+          int added = 0;
+          for (Object o : inDB) {
+            if (!onServer.contains(o)) {
+              onServer.add(o);
+              added++;
             }
-            Logger.debug(LOG_TAG, "Added " + added + " items locally.");
-            Logger.debug(LOG_TAG, "Untracking and bumping " + guid + "(" + folderID + ")");
-            dataAccessor.bumpModified(folderID, now());
-            untrackGUID(guid);
           }
-
-          // If the arrays are different, or they're the same but not flushed to disk,
-          // write them out now.
-          if (!sameArrays || !clean) {
-            dataAccessor.updatePositions(new ArrayList<String>(onServer));
-          }
-        } catch (Exception e) {
-          Logger.warn(LOG_TAG, "Error repositioning children for " + guid, e);
+          Logger.debug(LOG_TAG, "Added " + added + " items locally.");
+          Logger.debug(LOG_TAG, "Untracking and bumping " + guid + "(" + folderID + ")");
+          dataAccessor.bumpModified(folderID, now());
+          untrackGUID(guid);
         }
+
+        // If the arrays are different, or they're the same but not flushed to disk,
+        // write them out now.
+        if (!sameArrays || !clean) {
+          dataAccessor.updatePositions(new ArrayList<String>(onServer));
+        }
+      } catch (Exception e) {
+        Logger.warn(LOG_TAG, "Error repositioning children for " + guid, e);
       }
-    } finally {
-      super.storeDone();
     }
   }
 
@@ -977,7 +973,11 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     Runnable command = new Runnable() {
       @Override
       public void run() {
-        finishUp();
+        try {
+          finishUp();
+        } finally {
+          AndroidBrowserBookmarksRepositorySession.super.storeDone();
+        }
       }
     };
     storeWorkQueue.execute(command);
