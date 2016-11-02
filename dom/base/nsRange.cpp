@@ -30,6 +30,7 @@
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/RangeBinding.h"
 #include "mozilla/dom/DOMRect.h"
+#include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/Telemetry.h"
@@ -2930,11 +2931,12 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
 }
 
 /* static */ void
-nsRange::CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
-                            nsRange* aRange,
-                            nsINode* aStartParent, int32_t aStartOffset,
-                            nsINode* aEndParent, int32_t aEndOffset,
-                            bool aClampToEdge, bool aFlushLayout)
+nsRange::CollectClientRectsAndText(nsLayoutUtils::RectCallback* aCollector,
+                                   mozilla::dom::DOMStringList* aTextList,
+                                   nsRange* aRange,
+                                   nsINode* aStartParent, int32_t aStartOffset,
+                                   nsINode* aEndParent, int32_t aEndOffset,
+                                   bool aClampToEdge, bool aFlushLayout)
 {
   // Hold strong pointers across the flush
   nsCOMPtr<nsINode> startContainer = aStartParent;
@@ -3027,8 +3029,8 @@ nsRange::GetBoundingClientRect(bool aClampToEdge, bool aFlushLayout)
   }
 
   nsLayoutUtils::RectAccumulator accumulator;
-  CollectClientRects(&accumulator, this, mStartParent, mStartOffset, 
-    mEndParent, mEndOffset, aClampToEdge, aFlushLayout);
+  CollectClientRectsAndText(&accumulator, nullptr, this, mStartParent,
+    mStartOffset, mEndParent, mEndOffset, aClampToEdge, aFlushLayout);
 
   nsRect r = accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect : 
     accumulator.mResultRect;
@@ -3055,8 +3057,8 @@ nsRange::GetClientRects(bool aClampToEdge, bool aFlushLayout)
 
   nsLayoutUtils::RectListBuilder builder(rectList);
 
-  CollectClientRects(&builder, this, mStartParent, mStartOffset, 
-    mEndParent, mEndOffset, aClampToEdge, aFlushLayout);
+  CollectClientRectsAndText(&builder, nullptr, this, mStartParent,
+    mStartOffset, mEndParent, mEndOffset, aClampToEdge, aFlushLayout);
   return rectList.forget();
 }
 
