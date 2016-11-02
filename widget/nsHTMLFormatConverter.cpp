@@ -43,13 +43,13 @@ nsHTMLFormatConverter::GetInputDataFlavors(nsIArray **_retval)
 {
   if ( !_retval )
     return NS_ERROR_INVALID_ARG;
-  
+
   nsCOMPtr<nsIMutableArray> array = nsArray::Create();
   nsresult rv = AddFlavorToList ( array, kHTMLMime );
-  
+
   array.forget(_retval);
   return rv;
-  
+
 } // GetInputDataFlavors
 
 
@@ -68,7 +68,7 @@ nsHTMLFormatConverter::GetOutputDataFlavors(nsIArray **_retval)
 {
   if ( !_retval )
     return NS_ERROR_INVALID_ARG;
-  
+
   nsCOMPtr<nsIMutableArray> array = nsArray::Create();
   nsresult rv = AddFlavorToList ( array, kHTMLMime );
   if ( NS_FAILED(rv) )
@@ -93,7 +93,7 @@ nsresult
 nsHTMLFormatConverter :: AddFlavorToList ( nsCOMPtr<nsIMutableArray>& inList, const char* inFlavor )
 {
   nsresult rv;
-  
+
   nsCOMPtr<nsISupportsCString> dataFlavor =
       do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
   if ( dataFlavor ) {
@@ -152,7 +152,7 @@ nsHTMLFormatConverter::CanConvert(const char *aFromDataFlavor, const char *aToDa
 //XXX unicode out of the string. Lame lame lame.
 //
 NS_IMETHODIMP
-nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromData, uint32_t aDataLen, 
+nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromData, uint32_t aDataLen,
                                const char *aToDataFlavor, nsISupports **aToData, uint32_t *aDataToLen)
 {
   if ( !aToData || !aDataToLen )
@@ -166,7 +166,7 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
     nsAutoCString toFlavor ( aToDataFlavor );
 
     // HTML on clipboard is going to always be double byte so it will be in a primitive
-    // class of nsISupportsString. Also, since the data is in two byte chunks the 
+    // class of nsISupportsString. Also, since the data is in two byte chunks the
     // length represents the length in 1-byte chars, so we need to divide by two.
     nsCOMPtr<nsISupportsString> dataWrapper0 ( do_QueryInterface(aFromData) );
     if (!dataWrapper0) {
@@ -174,8 +174,8 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
     }
 
     nsAutoString dataStr;
-    dataWrapper0->GetData ( dataStr );  //еее COPY #1
-    // note: conversion to text/plain is done inside the clipboard. we do not need to worry 
+    dataWrapper0->GetData ( dataStr );  // COPY #1
+    // note: conversion to text/plain is done inside the clipboard. we do not need to worry
     // about it here.
     if ( toFlavor.Equals(kHTMLMime) || toFlavor.Equals(kUnicodeMime) ) {
       nsresult res;
@@ -190,7 +190,7 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
         if (NS_SUCCEEDED(res)) {
           int32_t dataLen = outStr.Length() * 2;
           nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), outStr.get(), dataLen, aToData );
-          if ( *aToData ) 
+          if ( *aToData )
             *aDataToLen = dataLen;
         }
       }
@@ -200,7 +200,7 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
       if ( NS_SUCCEEDED(ConvertFromHTMLToAOLMail(dataStr, outStr)) ) {
         int32_t dataLen = outStr.Length() * 2;
         nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), outStr.get(), dataLen, aToData );
-        if ( *aToData ) 
+        if ( *aToData )
           *aDataToLen = dataLen;
       }
     } // else if AOL mail
@@ -209,10 +209,10 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
     }
   } // if we got html mime
   else
-    rv = NS_ERROR_FAILURE;      
-    
+    rv = NS_ERROR_FAILURE;
+
   return rv;
-  
+
 } // Convert
 
 
