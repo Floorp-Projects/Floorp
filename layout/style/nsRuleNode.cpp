@@ -139,8 +139,7 @@ SetStyleImageRequest(function<void(nsStyleImageRequest*)> aCallback,
                      nsPresContext* aPresContext,
                      const nsCSSValue& aValue,
                      nsStyleImageRequest::Mode aModeFlags =
-                       nsStyleImageRequest::Mode::Track |
-                       nsStyleImageRequest::Mode::Lock)
+                       nsStyleImageRequest::Mode::Track)
 {
   SetImageRequest([&](imgRequestProxy* aProxy) {
     RefPtr<nsStyleImageRequest> request;

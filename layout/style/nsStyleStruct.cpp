@@ -1931,18 +1931,15 @@ public:
       return NS_OK;
     }
 
-    MOZ_ASSERT(mImageTracker);
-
-    if (mModeFlags & Mode::Lock) {
+    if (mModeFlags & Mode::Track) {
+      MOZ_ASSERT(mImageTracker);
+      mImageTracker->Remove(mRequestProxy);
+    } else {
       mRequestProxy->UnlockImage();
     }
 
     if (mModeFlags & Mode::Discard) {
       mRequestProxy->RequestDiscard();
-    }
-
-    if (mModeFlags & Mode::Track) {
-      mImageTracker->Remove(mRequestProxy);
     }
 
     return NS_OK;
@@ -1973,7 +1970,7 @@ nsStyleImageRequest::nsStyleImageRequest(Mode aModeFlags,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRequestProxy);
   MOZ_ASSERT(aImageValue);
-  MOZ_ASSERT(aImageTracker);
+  MOZ_ASSERT(!!(aModeFlags & Mode::Track) == !!aImageTracker);
 
   MaybeTrackAndLock();
 }
@@ -2038,7 +2035,10 @@ nsStyleImageRequest::Resolve(nsPresContext* aPresContext)
     return false;
   }
 
-  mImageTracker = aPresContext->Document()->ImageTracker();
+  if (mModeFlags & Mode::Track) {
+    mImageTracker = aPresContext->Document()->ImageTracker();
+  }
+
   MaybeTrackAndLock();
   return true;
 }
@@ -2049,13 +2049,12 @@ nsStyleImageRequest::MaybeTrackAndLock()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsResolved());
   MOZ_ASSERT(mRequestProxy);
-  MOZ_ASSERT(mImageTracker);
 
   if (mModeFlags & Mode::Track) {
+    MOZ_ASSERT(mImageTracker);
     mImageTracker->Add(mRequestProxy);
-  }
-
-  if (mModeFlags & Mode::Lock) {
+  } else {
+    MOZ_ASSERT(!mImageTracker);
     mRequestProxy->LockImage();
   }
 }
