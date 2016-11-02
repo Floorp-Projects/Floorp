@@ -19,7 +19,6 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "MediaInfo.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Preferences.h"
 #include "nsWindowsHelpers.h"
 #include "gfx2DGlue.h"
 #include "gfxWindowsPlatform.h"
@@ -169,6 +168,7 @@ StaticAutoPtr<D3DDLLBlacklistingCache> sD3D9BlacklistingCache;
 // If a blacklisted DLL is found, return its information, otherwise "".
 static const nsCString&
 FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingCache,
+                       const nsCString& aBlacklist,
                        const char* aDLLBlacklistPrefName)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
@@ -180,16 +180,7 @@ FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingC
     ClearOnShutdown(&aDLLBlacklistingCache);
   }
 
-  if (XRE_GetProcessType() == GeckoProcessType_GPU) {
-    // The blacklist code doesn't support running in
-    // the GPU process yet.
-    aDLLBlacklistingCache->mBlacklistPref.SetLength(0);
-    aDLLBlacklistingCache->mBlacklistedDLL.SetLength(0);
-    return aDLLBlacklistingCache->mBlacklistedDLL;
-  }
-
-  nsAdoptingCString blacklist = Preferences::GetCString(aDLLBlacklistPrefName);
-  if (blacklist.IsEmpty()) {
+  if (aBlacklist.IsEmpty()) {
     // Empty blacklist -> No blacklisting.
     aDLLBlacklistingCache->mBlacklistPref.SetLength(0);
     aDLLBlacklistingCache->mBlacklistedDLL.SetLength(0);
@@ -197,17 +188,17 @@ FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingC
   }
 
   // Detect changes in pref.
-  if (aDLLBlacklistingCache->mBlacklistPref.Equals(blacklist)) {
+  if (aDLLBlacklistingCache->mBlacklistPref.Equals(aBlacklist)) {
     // Same blacklist -> Return same result (i.e., don't check DLLs again).
     return aDLLBlacklistingCache->mBlacklistedDLL;
   }
   // Adopt new pref now, so we don't work on it again.
-  aDLLBlacklistingCache->mBlacklistPref = blacklist;
+  aDLLBlacklistingCache->mBlacklistPref = aBlacklist;
 
   // media.wmf.disable-d3d*-for-dlls format: (whitespace is trimmed)
   // "dll1.dll: 1.2.3.4[, more versions...][; more dlls...]"
   nsTArray<nsCString> dlls;
-  SplitAt(";", blacklist, dlls);
+  SplitAt(";", aBlacklist, dlls);
   for (const auto& dll : dlls) {
     nsTArray<nsCString> nameAndVersions;
     SplitAt(":", dll, nameAndVersions);
@@ -292,12 +283,14 @@ FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingC
 static const nsCString&
 FindD3D11BlacklistedDLL() {
   return FindDXVABlacklistedDLL(sD3D11BlacklistingCache,
+                                gfx::gfxVars::PDMWMFDisableD3D11Dlls(),
                                 "media.wmf.disable-d3d11-for-dlls");
 }
 
 static const nsCString&
 FindD3D9BlacklistedDLL() {
   return FindDXVABlacklistedDLL(sD3D9BlacklistingCache,
+                                gfx::gfxVars::PDMWMFDisableD3D9Dlls(),
                                 "media.wmf.disable-d3d9-for-dlls");
 }
 
