@@ -7,105 +7,46 @@
 
 #include "gfxFont.h"
 
+struct Coverage;
+struct GlyphAssembly;
+struct MATHTableHeader;
+struct MathConstants;
+struct MathGlyphConstruction;
+struct MathGlyphInfo;
+struct MathVariants;
+
 /**
- * Used by |gfxFont| to represent the MATH table of an OpenType font.
- * Each |gfxFont| owns at most one |gfxMathTable| instance.
+ * Used by |gfxFontEntry| to represent the MATH table of an OpenType font.
+ * Each |gfxFontEntry| owns at most one |gfxMathTable| instance.
  */
 class gfxMathTable
 {
 public:
     /**
-     * @param aFace The HarfBuzz face containing the math table.
-     * @param aSize The font size to pass to HarfBuzz.
+     * @param aMathTable The MATH table from the OpenType font
+     *
+     * The gfxMathTable object takes over ownership of the blob references
+     * that are passed in, and will hb_blob_destroy() them when finished;
+     * the caller should -not- destroy this reference.
      */
-    gfxMathTable(hb_face_t *aFace, gfxFloat aSize);
+    explicit gfxMathTable(hb_blob_t* aMathTable);
 
     /**
      * Releases our reference to the MATH table and cleans up everything else.
      */
     ~gfxMathTable();
 
-    enum MathConstant {
-        // The order of the constants must match the order of the fields
-        // defined in the MATH table.
-        ScriptPercentScaleDown,
-        ScriptScriptPercentScaleDown,
-        DelimitedSubFormulaMinHeight,
-        DisplayOperatorMinHeight,
-        MathLeading,
-        AxisHeight,
-        AccentBaseHeight,
-        FlattenedAccentBaseHeight,
-        SubscriptShiftDown,
-        SubscriptTopMax,
-        SubscriptBaselineDropMin,
-        SuperscriptShiftUp,
-        SuperscriptShiftUpCramped,
-        SuperscriptBottomMin,
-        SuperscriptBaselineDropMax,
-        SubSuperscriptGapMin,
-        SuperscriptBottomMaxWithSubscript,
-        SpaceAfterScript,
-        UpperLimitGapMin,
-        UpperLimitBaselineRiseMin,
-        LowerLimitGapMin,
-        LowerLimitBaselineDropMin,
-        StackTopShiftUp,
-        StackTopDisplayStyleShiftUp,
-        StackBottomShiftDown,
-        StackBottomDisplayStyleShiftDown,
-        StackGapMin,
-        StackDisplayStyleGapMin,
-        StretchStackTopShiftUp,
-        StretchStackBottomShiftDown,
-        StretchStackGapAboveMin,
-        StretchStackGapBelowMin,
-        FractionNumeratorShiftUp,
-        FractionNumeratorDisplayStyleShiftUp,
-        FractionDenominatorShiftDown,
-        FractionDenominatorDisplayStyleShiftDown,
-        FractionNumeratorGapMin,
-        FractionNumDisplayStyleGapMin,
-        FractionRuleThickness,
-        FractionDenominatorGapMin,
-        FractionDenomDisplayStyleGapMin,
-        SkewedFractionHorizontalGap,
-        SkewedFractionVerticalGap,
-        OverbarVerticalGap,
-        OverbarRuleThickness,
-        OverbarExtraAscender,
-        UnderbarVerticalGap,
-        UnderbarRuleThickness,
-        UnderbarExtraDescender,
-        RadicalVerticalGap,
-        RadicalDisplayStyleVerticalGap,
-        RadicalRuleThickness,
-        RadicalExtraAscender,
-        RadicalKernBeforeDegree,
-        RadicalKernAfterDegree,
-        RadicalDegreeBottomRaisePercent
-    };
-
     /**
      * Returns the value of the specified constant from the MATH table.
      */
-    gfxFloat Constant(MathConstant aConstant) const;
-
-    /**
-     * Returns the value of the specified constant in app units.
-     */
-    nscoord Constant(MathConstant aConstant,
-                     uint32_t aAppUnitsPerDevPixel) const
-    {
-        return NSToCoordRound(Constant(aConstant) * aAppUnitsPerDevPixel);
-    }
+    int32_t GetMathConstant(gfxFontEntry::MathConstant aConstant);
 
     /**
      *  If the MATH table contains an italic correction for that glyph, this
-     *  function returns the corresponding value. Otherwise it returns 0.
+     *  function gets the value and returns true. Otherwise it returns false.
      */
-    gfxFloat
-    ItalicsCorrection(uint32_t aGlyphID) const;
+    bool
+    GetMathItalicsCorrection(uint32_t aGlyphID, int16_t* aItalicCorrection);
 
     /**
      * @param aGlyphID  glyph index of the character we want to stretch
@@ -115,8 +56,8 @@ public:
      * Returns the glyph index of the desired size variant or 0 if there is not
      * any such size variant.
      */
-    uint32_t VariantsSize(uint32_t aGlyphID, bool aVertical,
-                          uint16_t aSize) const;
+    uint32_t GetMathVariantsSize(uint32_t aGlyphID, bool aVertical,
+                                 uint16_t aSize);
 
     /**
      * @param aGlyphID  glyph index of the character we want to stretch
@@ -132,24 +73,52 @@ public:
      * the format is not supported by the nsMathMLChar code.
      *
      */
-    bool VariantsParts(uint32_t aGlyphID, bool aVertical,
-                       uint32_t aGlyphs[4]) const;
+    bool GetMathVariantsParts(uint32_t aGlyphID, bool aVertical,
+                              uint32_t aGlyphs[4]);
+
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+protected:
+    friend class gfxFontEntry;
+    // This allows gfxFontEntry to verify the validity of the main headers
+    // before starting to use the MATH table.
+    bool HasValidHeaders();
 
 private:
-    // size-specific font object, owned by the gfxMathTable
-    hb_font_t *mHBFont;
+    // HarfBuzz blob where the MATH table is stored.
+    hb_blob_t*    mMathTable;
 
-    static const unsigned int kMaxCachedSizeCount = 10;
-    struct MathVariantCacheEntry {
-      uint32_t glyphID;
-      bool vertical;
-      uint32_t sizes[kMaxCachedSizeCount];
-      uint32_t parts[4];
-      bool arePartsValid;
-    };
-    mutable MathVariantCacheEntry mMathVariantCache;
-    void ClearCache() const;
-    void UpdateMathVariantCache(uint32_t aGlyphID, bool aVertical) const;
+    // Cached values for the latest (mGlyphID, mVertical) pair that has been
+    // accessed and the corresponding glyph construction. These are verified
+    // by SelectGlyphConstruction and updated if necessary.
+    // mGlyphConstruction will be set to nullptr if no construction is defined
+    // for the glyph. If non-null, its mGlyphAssembly and mVariantCount fields
+    // may be safely read, but no further validation will have been done.
+    const MathGlyphConstruction* mGlyphConstruction;
+    uint32_t mGlyphID;
+    bool     mVertical;
+    void     SelectGlyphConstruction(uint32_t aGlyphID, bool aVertical);
+
+    // Access to some structures of the MATH table.
+    // These accessors just return a pointer, but do NOT themselves check the
+    // validity of anything. Until we've checked that HasValidHeaders (which
+    // does validate them) returns true, they might return pointers that cannot
+    // even safely be dereferenced. GetGlyphAssembly may return nullptr if the
+    // given glyph has no assembly defined.
+    const MATHTableHeader* GetMATHTableHeader();
+    const MathConstants*   GetMathConstants();
+    const MathGlyphInfo*   GetMathGlyphInfo();
+    const MathVariants*    GetMathVariants();
+    const GlyphAssembly*   GetGlyphAssembly(uint32_t aGlyphID, bool aVertical);
+
+    // Verify whether a structure or an offset belongs to the math data and can
+    // be read safely.
+    bool ValidStructure(const char* aStructStart, uint16_t aStructSize);
+    bool ValidOffset(const char* aOffsetStart, uint16_t aOffset);
+
+    // Get the coverage index of a glyph index from an Open Type coverage table
+    // or -1 if the glyph index is not found.
+    int32_t GetCoverageIndex(const Coverage* aCoverage, uint32_t aGlyph);
 };
 
 #endif
