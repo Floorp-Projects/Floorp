@@ -895,18 +895,6 @@
     { 0x85, 0x44, 0x5a, 0x8d, 0x1a, 0xb7, 0x95, 0x37 } \
 }
 
-#ifdef XP_WIN
-#define NS_NAMEDPIPESERVICE_CONTRACTID \
-    "@mozilla.org/network/named-pipe-service;1"
-#define NS_NAMEDPIPESERVICE_CID                        \
-{                                                      \
-    0xae298cf9,                                        \
-    0x91f4,                                            \
-    0x4337,                                            \
-  { 0x95, 0x69, 0x61, 0x88, 0xb9, 0xd0, 0x21, 0x6e }   \
-}
-#endif
-
 /******************************************************************************
  * netwerk/cookie classes
  */
