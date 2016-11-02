@@ -1256,15 +1256,10 @@ bool gfxPlatform::AllowOpenGLCanvas()
   // For now, only allow Skia+OpenGL, unless it's blocked.
   // Allow acceleration on Skia if the preference is set, unless it's blocked
   // as long as we have the accelerated layers
-
-  // The compositor backend is only set correctly in the parent process,
-  // so we let content process always assume correct compositor backend.
-  // The callers have to do the right thing.
-  bool correctBackend = !XRE_IsParentProcess() ||
-    ((mCompositorBackend == LayersBackend::LAYERS_OPENGL) &&
-     (GetContentBackendFor(mCompositorBackend) == BackendType::SKIA));
-
-  if (gfxPrefs::CanvasAzureAccelerated() && correctBackend) {
+  if (gfxPrefs::CanvasAzureAccelerated() &&
+      mCompositorBackend == LayersBackend::LAYERS_OPENGL &&
+      (GetContentBackendFor(mCompositorBackend) == BackendType::SKIA))
+  {
     nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
     int32_t status;
     nsCString discardFailureId;

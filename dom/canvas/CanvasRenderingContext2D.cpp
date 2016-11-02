@@ -1053,9 +1053,8 @@ DrawTarget* CanvasRenderingContext2D::sErrorTarget = nullptr;
 
 
 
-CanvasRenderingContext2D::CanvasRenderingContext2D(layers::LayersBackend aCompositorBackend)
+CanvasRenderingContext2D::CanvasRenderingContext2D()
   : mRenderingMode(RenderingMode::OpenGLBackendMode)
-  , mCompositorBackend(aCompositorBackend)
   // these are the default values from the Canvas spec
   , mWidth(0), mHeight(0)
   , mZero(false), mOpaque(false)
@@ -1076,7 +1075,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(layers::LayersBackend aCompos
   nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 
   // The default is to use OpenGL mode
-  if (AllowOpenGLCanvas()) {
+  if (gfxPlatform::GetPlatform()->AllowOpenGLCanvas()) {
     mDrawObserver = new CanvasDrawObserver(this);
   } else {
     mRenderingMode = RenderingMode::SoftwareBackendMode;
@@ -1322,26 +1321,6 @@ CanvasRenderingContext2D::RedrawUser(const gfxRect& aR)
   Redraw(newr);
 }
 
-bool
-CanvasRenderingContext2D::AllowOpenGLCanvas() const
-{
-  // If we somehow didn't have the correct compositor in the constructor,
-  // we could do something like this to get it:
-  //
-  // HTMLCanvasElement* el = GetCanvas();
-  // if (el) {
-  //   mCompositorBackend = el->GetCompositorBackendType();
-  // }
-  //
-  // We could have LAYERS_NONE if there was no widget at the time of
-  // canvas creation, but in that case the
-  // HTMLCanvasElement::GetCompositorBackendType would return LAYERS_NONE
-  // as well, so it wouldn't help much.
-
-  return (mCompositorBackend == LayersBackend::LAYERS_OPENGL) &&
-    gfxPlatform::GetPlatform()->AllowOpenGLCanvas();
-}
-
 bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
 {
   if (!IsTargetValid() || mRenderingMode == aRenderingMode) {
@@ -1353,7 +1332,7 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
 #ifdef USE_SKIA_GPU
   // Do not attempt to switch into GL mode if the platform doesn't allow it.
   if ((aRenderingMode == RenderingMode::OpenGLBackendMode) &&
-      !AllowOpenGLCanvas()) {
+      !gfxPlatform::GetPlatform()->AllowOpenGLCanvas()) {
       return false;
   }
 #endif
@@ -1729,10 +1708,13 @@ CanvasRenderingContext2D::TrySkiaGLTarget(RefPtr<gfx::DrawTarget>& aOutDT,
   aOutDT = nullptr;
   aOutProvider = nullptr;
 
+
   mIsSkiaGL = false;
 
   IntSize size(mWidth, mHeight);
-  if (!AllowOpenGLCanvas() || !CheckSizeForSkiaGL(size)) {
+  if (!gfxPlatform::GetPlatform()->AllowOpenGLCanvas() ||
+      !CheckSizeForSkiaGL(size)) {
+
     return false;
   }
 
@@ -4778,7 +4760,7 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       mIsSkiaGL &&
       !srcSurf &&
       aImage.IsHTMLVideoElement() &&
-      AllowOpenGLCanvas()) {
+      gfxPlatform::GetPlatform()->AllowOpenGLCanvas()) {
     mozilla::gl::GLContext* gl = gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext();
     MOZ_ASSERT(gl);
 

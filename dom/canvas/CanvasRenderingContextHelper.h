@@ -7,7 +7,6 @@
 #define MOZILLA_DOM_CANVASRENDERINGCONTEXTHELPER_H_
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/layers/LayersTypes.h"
 #include "nsSize.h"
 
 class nsICanvasRenderingContextInternal;
@@ -66,10 +65,6 @@ protected:
 
   virtual already_AddRefed<nsICanvasRenderingContextInternal>
   CreateContext(CanvasContextType aContextType);
-
-  already_AddRefed<nsICanvasRenderingContextInternal>
-  CreateContextHelper(CanvasContextType aContextType,
-                      layers::LayersBackend aCompositorBackend);
 
   virtual nsIntSize GetWidthHeight() = 0;
 
