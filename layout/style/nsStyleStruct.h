@@ -282,6 +282,97 @@ private:
   nsStyleGradient& operator=(const nsStyleGradient& aOther) = delete;
 };
 
+/**
+ * A wrapper for an imgRequestProxy that supports off-main-thread creation
+ * and equality comparison.
+ *
+ * An nsStyleImageRequest can be created in two ways:
+ *
+ * 1. Using the constructor that takes an imgRequestProxy.  This must
+ *    be called from the main thread.  The nsStyleImageRequest is
+ *    immediately considered "resolved", and the get() method that
+ *    returns the imgRequestProxy can be called.
+ *
+ * 2. Using the constructor that takes the URL, base URI, referrer
+ *    and principal that can be used to inititiate an image load and
+ *    produce an imgRequestProxy later.  This can be called from
+ *    any thread.  The nsStyleImageRequest is not considered "resolved"
+ *    at this point, and the Resolve() method must be called later
+ *    to initiate the image load and make calls to get() valid.
+ *
+ * Calls to TrackImage(), UntrackImage(), LockImage(), UnlockImage() and
+ * RequestDiscard() are made to the imgRequestProxy and ImageTracker as
+ * appropriate, according to the mode flags passed in to the constructor.
+ *
+ * The main thread constructor takes a pointer to the css::ImageValue that
+ * is the specified url() value, while the off-main-thread constructor
+ * creates a new css::ImageValue to represent the url() information passed
+ * to the constructor.  This ImageValue is held on to for the comparisons done
+ * in DefinitelyEquals(), so that we don't need to call into the non-OMT-safe
+ * Equals() on the nsIURI objects returned from imgRequestProxy::GetURI().
+ */
+class nsStyleImageRequest
+{
+public:
+  // Flags describing whether the imgRequestProxy must be tracked in the
+  // ImageTracker, whether LockImage/UnlockImage calls will be made
+  // when obtaining and releasing the imgRequestProxy, and whether
+  // RequestDiscard will be called on release.
+  enum class Mode : uint8_t {
+    Track   = 0x1,  // used by all except nsCursorImage
+    Lock    = 0x2,  // used by all except nsStyleContentData
+    Discard = 0x4,  // used only by nsCursorImage
+  };
+
+  // Must be called from the main thread.
+  nsStyleImageRequest(Mode aModeFlags,
+                      imgRequestProxy* aRequestProxy,
+                      mozilla::css::ImageValue* aImageValue,
+                      mozilla::dom::ImageTracker* aImageTracker);
+
+  // Can be called from any thread, but Resolve() must be called later
+  // on the main thread before get() can be used.
+  nsStyleImageRequest(
+      Mode aModeFlags,
+      nsStringBuffer* aURLBuffer,
+      already_AddRefed<mozilla::PtrHolder<nsIURI>> aBaseURI,
+      already_AddRefed<mozilla::PtrHolder<nsIURI>> aReferrer,
+      already_AddRefed<mozilla::PtrHolder<nsIPrincipal>> aPrincipal);
+
+  bool Resolve(nsPresContext* aPresContext);
+  bool IsResolved() const { return mResolved; }
+
+  imgRequestProxy* get() {
+    MOZ_ASSERT(IsResolved(), "Resolve() must be called first");
+    MOZ_ASSERT(NS_IsMainThread());
+    return mRequestProxy.get();
+  }
+  const imgRequestProxy* get() const {
+    return const_cast<nsStyleImageRequest*>(this)->get();
+  }
+
+  // Returns whether the ImageValue objects in the two nsStyleImageRequests
+  // return true from URLValueData::DefinitelyEqualURIs.
+  bool DefinitelyEquals(const nsStyleImageRequest& aOther) const;
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsStyleImageRequest);
+
+private:
+  ~nsStyleImageRequest();
+  nsStyleImageRequest& operator=(const nsStyleImageRequest& aOther) = delete;
+
+  void MaybeTrackAndLock();
+
+  RefPtr<imgRequestProxy> mRequestProxy;
+  RefPtr<mozilla::css::ImageValue> mImageValue;
+  RefPtr<mozilla::dom::ImageTracker> mImageTracker;
+
+  Mode mModeFlags;
+  bool mResolved;
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsStyleImageRequest::Mode)
+
 enum nsStyleImageType {
   eStyleImageType_Null,
   eStyleImageType_Image,
