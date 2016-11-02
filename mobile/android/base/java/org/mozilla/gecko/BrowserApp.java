@@ -603,7 +603,7 @@ public class BrowserApp extends GeckoApp
         }
 
         final SafeIntent intent = new SafeIntent(getIntent());
-        final boolean isInAutomation = getIsInAutomationFromEnvironment(intent);
+        final boolean isInAutomation = IntentUtils.getIsInAutomationFromEnvironment(intent);
 
         // This has to be prepared prior to calling GeckoApp.onCreate, because
         // widget code and BrowserToolbar need it, and they're created by the
@@ -828,22 +828,6 @@ public class BrowserApp extends GeckoApp
         // We want to get an understanding of how our user base is spread (bug 1221646).
         final String installerPackageName = getPackageManager().getInstallerPackageName(getPackageName());
         Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH, TelemetryContract.Method.SYSTEM, "installer_" + installerPackageName);
-    }
-
-    /**
-     * Gets whether or not we're in automation from the passed in environment variables.
-     *
-     * We need to read environment variables from the intent string
-     * extra because environment variables from our test harness aren't set
-     * until Gecko is loaded, and we need to know this before then.
-     *
-     * The return value of this method should be used early since other
-     * initialization may depend on its results.
-     */
-    @CheckResult
-    private boolean getIsInAutomationFromEnvironment(final SafeIntent intent) {
-        final HashMap<String, String> envVars = IntentUtils.getEnvVarMap(intent);
-        return !TextUtils.isEmpty(envVars.get(IntentUtils.ENV_VAR_IN_AUTOMATION));
     }
 
     /**
