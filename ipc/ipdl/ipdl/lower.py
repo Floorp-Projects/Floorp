@@ -1224,10 +1224,6 @@ class Protocol(ipdl.ast.Protocol):
             mvar = ExprCall(ExprSelect(thisexpr, '->', 'Manager'), args=[])
         return mvar
 
-    def otherPidVar(self):
-        assert self.decl.type.isToplevel()
-        return ExprVar('mOtherPid')
-
     def managedCxxType(self, actortype, side):
         assert self.decl.type.isManagerOf(actortype)
         return Type(_actorName(actortype.name(), side), ptr=1)
@@ -2936,8 +2932,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                              [ ExprVar.THIS ]) ]),
                 ExprMemberInit(p.lastActorIdVar(),
                                [ p.actorIdInit(self.side) ]),
-                ExprMemberInit(p.otherPidVar(),
-                               [ ExprVar('mozilla::ipc::kInvalidProcessId') ]),
                 ExprMemberInit(p.lastShmemIdVar(),
                                [ p.shmemIdInit(self.side) ]),
                 ExprMemberInit(p.stateVar(),
@@ -3268,18 +3262,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmts([ processnative, Whitespace.NL ])
 
         if ptype.isToplevel() and self.side is 'parent':
-            ## void SetOtherProcessId(ProcessId aOtherPid)
-            otherpidvar = ExprVar('aOtherPid')
-            setotherprocessid = MethodDefn(MethodDecl(
-                    'SetOtherProcessId',
-                    params=[ Decl(Type('base::ProcessId'), otherpidvar.name)]))
-            setotherprocessid.addstmts([
-                StmtExpr(ExprAssn(p.otherPidVar(), otherpidvar)),
-            ])
-            self.cls.addstmts([
-                    setotherprocessid,
-                    Whitespace.NL])
-
             ## bool GetMinidump(nsIFile** dump)
             self.cls.addstmt(Label.PROTECTED)
 
@@ -3455,9 +3437,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmts([
                 StmtDecl(Decl(Type('IDMap', T=Type('ProtocolBase')),
                               p.actorMapVar().name)),
-                StmtDecl(Decl(_actorIdType(), p.lastActorIdVar().name)),
-                StmtDecl(Decl(Type('base::ProcessId'),
-                              p.otherPidVar().name))
+                StmtDecl(Decl(_actorIdType(), p.lastActorIdVar().name))
             ])
         elif ptype.isManaged():
             self.cls.addstmts([
@@ -3538,11 +3518,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 params=[ Decl(_rawShmemType(ptr=1), rawvar.name) ],
                 virtual=1))
 
-            otherpid = MethodDefn(MethodDecl(
-                p.otherPidMethod().name,
-                ret=Type('base::ProcessId'),
-                const=1,
-                virtual=1))
             getchannel = MethodDefn(MethodDecl(
                 p.getChannelMethod().name,
                 ret=Type('MessageChannel', ptr=1),
@@ -3563,7 +3538,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                          lookupshmem,
                          istracking,
                          destroyshmem,
-                         otherpid,
                          getchannel,
                          getchannelconst ]
 
@@ -3721,8 +3695,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     CaseLabel('SHMEM_CREATED_MESSAGE_TYPE'), abort)
                 self.asyncSwitch.addcase(
                     CaseLabel('SHMEM_DESTROYED_MESSAGE_TYPE'), abort)
-
-            otherpid.addstmt(StmtReturn(p.otherPidVar()))
 
         othervar = ExprVar('other')
         managertype = Type(_actorName(p.name, self.side), ptr=1)
