@@ -279,8 +279,8 @@ MBasicBlock::NewSplitEdge(MIRGraph& graph, const CompileInfo& info, MBasicBlock*
 {
     MBasicBlock* split = nullptr;
     if (!pred->pc()) {
-        // The predecessor does not have a PC, this is an AsmJS compilation.
-        split = MBasicBlock::NewAsmJS(graph, info, pred, SPLIT_EDGE);
+        // The predecessor does not have a PC, this is a Wasm compilation.
+        split = MBasicBlock::New(graph, info, pred, SPLIT_EDGE);
         if (!split)
             return nullptr;
     } else {
@@ -329,8 +329,8 @@ MBasicBlock::NewSplitEdge(MIRGraph& graph, const CompileInfo& info, MBasicBlock*
             splitEntry->initOperand(i, def);
         }
 
-        // This is done in the NewAsmJS, so we cannot keep this line below,
-        // where the rest of the graph is modified.
+        // This is done in the New variant for wasm, so we cannot keep this
+        // line below, where the rest of the graph is modified.
         if (!split->predecessors_.append(pred))
             return nullptr;
     }
@@ -348,7 +348,7 @@ MBasicBlock::NewSplitEdge(MIRGraph& graph, const CompileInfo& info, MBasicBlock*
 }
 
 MBasicBlock*
-MBasicBlock::NewAsmJS(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pred, Kind kind)
+MBasicBlock::New(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pred, Kind kind)
 {
     BytecodeSite* site = new(graph.alloc()) BytecodeSite();
     MBasicBlock* block = new(graph.alloc()) MBasicBlock(graph, info, site, kind);
@@ -1262,7 +1262,7 @@ MBasicBlock::setBackedge(TempAllocator& alloc, MBasicBlock* pred)
 }
 
 bool
-MBasicBlock::setBackedgeAsmJS(MBasicBlock* pred)
+MBasicBlock::setBackedgeWasm(MBasicBlock* pred)
 {
     // Predecessors must be finished, and at the correct stack depth.
     MOZ_ASSERT(hasLastIns());
@@ -1274,7 +1274,7 @@ MBasicBlock::setBackedgeAsmJS(MBasicBlock* pred)
 
     // Add exit definitions to each corresponding phi at the entry.
     // Note: Phis are inserted in the same order as the slots. (see
-    // MBasicBlock::NewAsmJS)
+    // MBasicBlock::New)
     size_t slot = 0;
     for (MPhiIterator phi = phisBegin(); phi != phisEnd(); phi++, slot++) {
         MPhi* entryDef = *phi;
