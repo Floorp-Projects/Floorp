@@ -68,7 +68,7 @@ function check_test_pt1() {
             gAppInfo.appBuildID + "/" + gAppInfo.OS + "_" + getABI() + "/" +
             INSTALL_LOCALE + "/test_channel/" + gAppInfo.platformVersion + "/" +
             getOSVersion() + "/" + getSystemCapabilities() +
-            "/test_distro/test_distro_version/updates.xml?force=1"
+            "/test_distro/test_distro_version/updates.xml?force=1";
   // Log the urls since Assert.equal won't print the entire urls to the log.
   if (gRequestURL != url) {
     logTestInfo("expected url: " + url);
@@ -161,7 +161,7 @@ function getOSVersion() {
     }
     osVersion = encodeURIComponent(osVersion);
   }
-  return osVersion
+  return osVersion;
 }
 
 function getServicePack() {
@@ -301,5 +301,5 @@ function getSystemCapabilities() {
     return instructionSet;
   }
 
-  return "NA"
+  return "NA";
 }
