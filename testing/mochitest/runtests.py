@@ -90,7 +90,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 # Try run will then put a download link for all log files
 # on tbpl.mozilla.org.
 
-# MOZ_LOG = "signaling:3,mtransport:4,DataChannel:4,jsep:4,MediaPipelineFactory:4"
 MOZ_LOG = ""
 
 #####################
@@ -771,7 +770,7 @@ class MochitestDesktop(object):
     # TODO: replace this with 'runtests.py' or 'mochitest' or the like
     test_name = 'automation.py'
 
-    def __init__(self, logger_options):
+    def __init__(self, logger_options, quiet=False):
         self.update_mozinfo()
         self.server = None
         self.wsserver = None
@@ -797,7 +796,7 @@ class MochitestDesktop(object):
                                                  })
             MochitestDesktop.log = self.log
 
-        self.message_logger = MessageLogger(logger=self.log)
+        self.message_logger = MessageLogger(logger=self.log, buffering=quiet)
         # Max time in seconds to wait for server startup before tests will fail -- if
         # this seems big, it's mostly for debug machines where cold startup
         # (particularly after a build) takes forever.
@@ -1873,17 +1872,12 @@ toolbar#nav-bar {
                detectShutdownLeaks=False,
                screenshotOnFail=False,
                bisectChunk=None,
-               quiet=False,
                marionette_args=None):
         """
         Run the app, log the duration it took to execute, return the status code.
         Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing
         for |timeout| seconds.
         """
-
-        # configure the message logger buffering
-        self.message_logger.buffering = quiet
-
         # It can't be the case that both a with-debugger and an
         # on-Valgrind run have been requested.  doTests() should have
         # already excluded this possibility.
@@ -2396,7 +2390,6 @@ toolbar#nav-bar {
                                  detectShutdownLeaks=detectShutdownLeaks,
                                  screenshotOnFail=options.screenshotOnFail,
                                  bisectChunk=options.bisectChunk,
-                                 quiet=options.quiet,
                                  marionette_args=marionette_args,
                                  )
         except KeyboardInterrupt:
@@ -2660,7 +2653,7 @@ def run_test_harness(parser, options):
         key: value for key, value in vars(options).iteritems()
         if key.startswith('log') or key == 'valgrind'}
 
-    runner = MochitestDesktop(logger_options)
+    runner = MochitestDesktop(logger_options, quiet=options.quiet)
 
     options.runByDir = False
 
