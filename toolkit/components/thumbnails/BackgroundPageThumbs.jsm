@@ -136,6 +136,14 @@ const BackgroundPageThumbs = {
   }),
 
   /**
+   * Tell the service that the thumbnail browser should be recreated at next
+   * call of _ensureBrowser().
+   */
+  renewThumbnailBrowser: function() {
+    this._renewThumbBrowser = true;
+  },
+
+  /**
    * Ensures that initialization of the thumbnail browser's parent window has
    * begun.
    *
@@ -190,8 +198,11 @@ const BackgroundPageThumbs = {
    * Creates the thumbnail browser if it doesn't already exist.
    */
   _ensureBrowser: function () {
-    if (this._thumbBrowser)
+    if (this._thumbBrowser && !this._renewThumbBrowser)
       return;
+
+    this._destroyBrowser();
+    this._renewThumbBrowser = false;
 
     let browser = this._parentWin.document.createElementNS(XUL_NS, "browser");
     browser.setAttribute("type", "content");
@@ -306,6 +317,14 @@ const BackgroundPageThumbs = {
 
   _destroyBrowserTimeout: DESTROY_BROWSER_TIMEOUT,
 };
+
+Services.prefs.addObserver(ABOUT_NEWTAB_SEGREGATION_PREF,
+  function(aSubject, aTopic, aData) {
+    if (aTopic == "nsPref:changed" && aData == ABOUT_NEWTAB_SEGREGATION_PREF) {
+      BackgroundPageThumbs.renewThumbnailBrowser();
+    }
+  },
+  false);
 
 Object.defineProperty(this, "BackgroundPageThumbs", {
   value: BackgroundPageThumbs,
