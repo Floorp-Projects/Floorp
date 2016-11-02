@@ -737,6 +737,9 @@ private:
   // True if the media is seekable (i.e. supports random access).
   bool mMediaSeekable = true;
 
+  // True if the media is seekable only in buffered ranges.
+  bool mMediaSeekableOnlyInBufferedRanges = false;
+
   // Track enabling video decode suspension via timer
   DelayedScheduler mVideoDecodeSuspendTimer;
 
@@ -811,9 +814,6 @@ private:
 
   // Current decoding position in the stream.
   Mirror<int64_t> mDecoderPosition;
-
-  // True if the media is seekable only in buffered ranges.
-  Mirror<bool> mMediaSeekableOnlyInBufferedRanges;
 
   // IsVisible, mirrored from the media decoder.
   Mirror<bool> mIsVisible;
