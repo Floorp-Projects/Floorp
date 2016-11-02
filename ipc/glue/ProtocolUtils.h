@@ -170,6 +170,7 @@ public:
 
     // XXX odd ducks, acknowledged
     virtual ProcessId OtherPid() const;
+    Side GetSide() const { return mSide; }
 
     virtual const char* ProtocolName() const = 0;
     void FatalError(const char* const aErrorMsg) const;
@@ -233,6 +234,8 @@ public:
 
     base::ProcessId OtherPid() const;
     void SetOtherProcessId(base::ProcessId aOtherPid);
+
+    bool TakeMinidump(nsIFile** aDump, uint32_t* aSequence);
 
     virtual void OnChannelClose() = 0;
     virtual void OnChannelError() = 0;
