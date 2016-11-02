@@ -1844,6 +1844,15 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     this._removePseudoClassLock(node, pseudo);
 
+    // Remove pseudo class for children as we don't want to allow
+    // turning it on for some childs without setting it on some parents
+    for (let locked of this._activePseudoClassLocks) {
+      if (node.rawNode.contains(locked.rawNode) &&
+          DOMUtils.hasPseudoClassLock(locked.rawNode, pseudo)) {
+        this._removePseudoClassLock(locked, pseudo);
+      }
+    }
+
     if (!options.parents) {
       return;
     }
