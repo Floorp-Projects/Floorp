@@ -2918,9 +2918,9 @@ CodeGeneratorARM::visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins)
 }
 
 void
-CodeGeneratorARM::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
+CodeGeneratorARM::visitWasmStackArg(LWasmStackArg* ins)
 {
-    const MAsmJSPassStackArg* mir = ins->mir();
+    const MWasmStackArg* mir = ins->mir();
     Address dst(StackPointer, mir->spOffset());
     ScratchRegisterScope scratch(masm);
     SecondScratchRegisterScope scratch2(masm);
@@ -3622,9 +3622,9 @@ CodeGeneratorARM::visitRotateI64(LRotateI64* lir)
 }
 
 void
-CodeGeneratorARM::visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins)
+CodeGeneratorARM::visitWasmStackArgI64(LWasmStackArgI64* ins)
 {
-    const MAsmJSPassStackArg* mir = ins->mir();
+    const MWasmStackArg* mir = ins->mir();
     Address dst(StackPointer, mir->spOffset());
     if (IsConstant(ins->arg()))
         masm.store64(Imm64(ToInt64(ins->arg())), dst);

@@ -674,9 +674,9 @@ CodeGeneratorARM64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 }
 
 void
-CodeGeneratorARM64::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
+CodeGeneratorARM64::visitWasmStackArg(LWasmStackArg* ins)
 {
-    MOZ_CRASH("visitAsmJSPassStackArg");
+    MOZ_CRASH("visitWasmStackArg");
 }
 
 void

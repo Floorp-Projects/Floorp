@@ -287,8 +287,8 @@ namespace jit {
     _(WasmStoreGlobalVar)                                                   \
     _(WasmReturn)                                                           \
     _(WasmReturnVoid)                                                       \
-    _(AsmJSParameter)                                                       \
-    _(AsmJSPassStackArg)                                                    \
+    _(WasmParameter)                                                        \
+    _(WasmStackArg)                                                         \
     _(WasmCall)                                                             \
     _(WasmSelect)                                                           \
     _(WasmReinterpret)                                                      \

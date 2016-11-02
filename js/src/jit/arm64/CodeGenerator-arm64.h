@@ -204,7 +204,7 @@ class CodeGeneratorARM64 : public CodeGeneratorShared
     void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
     void visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins);
     void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins);
-    void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
+    void visitWasmStackArg(LWasmStackArg* ins);
 
     void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins);
     void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins);

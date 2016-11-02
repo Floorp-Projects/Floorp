@@ -4192,24 +4192,24 @@ LIRGenerator::visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins)
 }
 
 void
-LIRGenerator::visitAsmJSParameter(MAsmJSParameter* ins)
+LIRGenerator::visitWasmParameter(MWasmParameter* ins)
 {
     ABIArg abi = ins->abi();
     if (abi.argInRegister()) {
 #if defined(JS_NUNBOX32)
         if (abi.isGeneralRegPair()) {
-            defineInt64Fixed(new(alloc()) LAsmJSParameterI64, ins,
+            defineInt64Fixed(new(alloc()) LWasmParameterI64, ins,
                 LInt64Allocation(LAllocation(AnyRegister(abi.gpr64().high)),
                                  LAllocation(AnyRegister(abi.gpr64().low))));
             return;
         }
 #endif
-        defineFixed(new(alloc()) LAsmJSParameter, ins, LAllocation(abi.reg()));
+        defineFixed(new(alloc()) LWasmParameter, ins, LAllocation(abi.reg()));
         return;
     }
     if (ins->type() == MIRType::Int64) {
         MOZ_ASSERT(!abi.argInRegister());
-        defineInt64Fixed(new(alloc()) LAsmJSParameterI64, ins,
+        defineInt64Fixed(new(alloc()) LWasmParameterI64, ins,
 #if defined(JS_NUNBOX32)
             LInt64Allocation(LArgument(abi.offsetFromArgBase() + INT64HIGH_OFFSET),
                              LArgument(abi.offsetFromArgBase() + INT64LOW_OFFSET))
@@ -4219,7 +4219,7 @@ LIRGenerator::visitAsmJSParameter(MAsmJSParameter* ins)
         );
     } else {
         MOZ_ASSERT(IsNumberType(ins->type()) || IsSimdType(ins->type()));
-        defineFixed(new(alloc()) LAsmJSParameter, ins, LArgument(abi.offsetFromArgBase()));
+        defineFixed(new(alloc()) LWasmParameter, ins, LArgument(abi.offsetFromArgBase()));
     }
 }
 
@@ -4271,15 +4271,15 @@ LIRGenerator::visitWasmReturnVoid(MWasmReturnVoid* ins)
 }
 
 void
-LIRGenerator::visitAsmJSPassStackArg(MAsmJSPassStackArg* ins)
+LIRGenerator::visitWasmStackArg(MWasmStackArg* ins)
 {
     if (ins->arg()->type() == MIRType::Int64) {
-        add(new(alloc()) LAsmJSPassStackArgI64(useInt64OrConstantAtStart(ins->arg())), ins);
+        add(new(alloc()) LWasmStackArgI64(useInt64OrConstantAtStart(ins->arg())), ins);
     } else if (IsFloatingPointType(ins->arg()->type()) || IsSimdType(ins->arg()->type())) {
         MOZ_ASSERT(!ins->arg()->isEmittedAtUses());
-        add(new(alloc()) LAsmJSPassStackArg(useRegisterAtStart(ins->arg())), ins);
+        add(new(alloc()) LWasmStackArg(useRegisterAtStart(ins->arg())), ins);
     } else {
-        add(new(alloc()) LAsmJSPassStackArg(useRegisterOrConstantAtStart(ins->arg())), ins);
+        add(new(alloc()) LWasmStackArg(useRegisterOrConstantAtStart(ins->arg())), ins);
     }
 }
 
