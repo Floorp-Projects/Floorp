@@ -204,7 +204,7 @@ random-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
 == operator-1.xhtml operator-1-ref.xhtml
 == scriptshift-1.xhtml scriptshift-1-ref.xhtml
 == number-size-1.xhtml number-size-1-ref.xhtml
-fuzzy-if(skiaContent,1,80) fails-if(winWidget&&/^Windows\x20NT\x205\.1/.test(http.oscpu)) == multiscripts-1.html multiscripts-1-ref.html
+fuzzy-if(skiaContent,1,80) fails-if(winWidget) == multiscripts-1.html multiscripts-1-ref.html
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
 != menclose-1a.html menclose-1-ref.html
