@@ -77,6 +77,8 @@ public:
 
   virtual bool SupportsPartialTextureUpdate() override{ return true; }
 
+  virtual bool SupportsEffect(EffectTypes aEffect) override;
+
 #ifdef MOZ_DUMP_PAINTING
   virtual const char* Name() const override { return "Direct3D9"; }
 #endif

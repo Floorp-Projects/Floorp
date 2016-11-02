@@ -73,6 +73,7 @@ CompositorD3D9::GetTextureFactoryIdentifier()
   ident.mMaxTextureSize = GetMaxTextureSize();
   ident.mParentBackend = LayersBackend::LAYERS_D3D9;
   ident.mParentProcessId = XRE_GetProcessType();
+  ident.mSupportsComponentAlpha = SupportsEffect(EffectTypes::COMPONENT_ALPHA);
   return ident;
 }
 
@@ -769,6 +770,17 @@ CompositorD3D9::PrepareViewport(const gfx::IntSize& aSize)
   if (FAILED(hr)) {
     NS_WARNING("Failed to set projection matrix");
   }
+}
+
+bool
+CompositorD3D9::SupportsEffect(EffectTypes aEffect)
+{
+  if (aEffect == EffectTypes::COMPONENT_ALPHA &&
+      !mDeviceManager->HasComponentAlpha()) {
+    return false;
+  }
+
+  return Compositor::SupportsEffect(aEffect);
 }
 
 void
