@@ -19,6 +19,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/main.js");
@@ -48,6 +49,11 @@ var prefs = Cc["@mozilla.org/preferences-service;1"]
 
 var mozmillInit = {};
 Cu.import('resource://mozmill/driver/mozmill.js', mozmillInit);
+
+XPCOMUtils.defineLazyGetter(this, "fileProtocolHandler", () => {
+  let fileHandler = Services.io.getProtocolHandler("file");
+  return fileHandler.QueryInterface(Ci.nsIFileProtocolHandler);
+});
 
 // Options for wiping data during a sync
 const SYNC_RESET_CLIENT = "resetClient";
@@ -744,6 +750,10 @@ var TPS = {
         if (this.shouldValidateAddons) {
           this.ValidateAddons();
         }
+        // Force this early so that we run the validation and detect missing pings
+        // *before* we start shutting down, since if we do it after, the python
+        // code won't notice the failure.
+        SyncTelemetry.shutdown();
         // we're all done
         Logger.logInfo("test phase " + this._currentPhase + ": " +
                        (this._errors ? "FAIL" : "PASS"));
@@ -751,7 +761,7 @@ var TPS = {
         this.quit();
         return;
       }
-
+      this.seconds_since_epoch = prefs.getIntPref("tps.seconds_since_epoch", 0);
       if (this.seconds_since_epoch)
         this._usSinceEpoch = this.seconds_since_epoch * 1000 * 1000;
       else {
@@ -783,6 +793,50 @@ var TPS = {
       return;
     }
     this.RunNextTestAction();
+  },
+
+  _getFileRelativeToSourceRoot(testFileURL, relativePath) {
+    let file = fileProtocolHandler.getFileFromURLSpec(testFileURL);
+    let root = file // <root>/services/sync/tests/tps/test_foo.js
+      .parent // <root>/services/sync/tests/tps
+      .parent // <root>/services/sync/tests
+      .parent // <root>/services/sync
+      .parent // <root>/services
+      .parent // <root>
+      ;
+    root.appendRelativePath(relativePath);
+    return root;
+  },
+
+  // Attempt to load the sync_ping_schema.json and initialize `this.pingValidator`
+  // based on the source of the tps file. Assumes that it's at "../unit/sync_ping_schema.json"
+  // relative to the directory the tps test file (testFile) is contained in.
+  _tryLoadPingSchema(testFile) {
+    try {
+      let schemaFile = this._getFileRelativeToSourceRoot(testFile,
+        "services/sync/tests/unit/sync_ping_schema.json");
+
+      let stream = Cc["@mozilla.org/network/file-input-stream;1"]
+                   .createInstance(Ci.nsIFileInputStream);
+
+      let jsonReader = Cc["@mozilla.org/dom/json;1"]
+                       .createInstance(Components.interfaces.nsIJSON);
+
+      stream.init(schemaFile, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
+      let schema = jsonReader.decodeFromStream(stream, stream.available());
+      Logger.logInfo("Successfully loaded schema")
+
+      // Importing resource://testing-common/* isn't possible from within TPS,
+      // so we load Ajv manually.
+      let ajvFile = this._getFileRelativeToSourceRoot(testFile, "testing/modules/ajv-4.1.1.js");
+      let ajvURL = fileProtocolHandler.getURLSpecFromFile(ajvFile);
+      let ns = {};
+      Cu.import(ajvURL, ns);
+      let ajv = new ns.Ajv({ async: "co*" });
+      this.pingValidator = ajv.compile(schema);
+    } catch (e) {
+      this.DumpError(`Failed to load ping schema and AJV relative to "${testFile}".`, e);
+    }
   },
 
   /**
@@ -853,6 +907,7 @@ var TPS = {
    */
   _executeTestPhase: function _executeTestPhase(file, phase, settings) {
     try {
+      this.config = JSON.parse(prefs.getCharPref('tps.config'));
       // parse the test file
       Services.scriptloader.loadSubScript(file, this);
       this._currentPhase = phase;
@@ -862,6 +917,9 @@ var TPS = {
                              .selectedProfile.name;
         this.phases[this._currentPhase] = profileToClean;
         this.Phase(this._currentPhase, [[this.Cleanup]]);
+      } else {
+        // Don't bother doing this for cleanup phases.
+        this._tryLoadPingSchema(file);
       }
       let this_phase = this._phaselist[this._currentPhase];
 
@@ -895,24 +953,6 @@ var TPS = {
       Logger.logInfo("setting client.name to " + this.phases[this._currentPhase]);
       Weave.Svc.Prefs.set("client.name", this.phases[this._currentPhase]);
 
-      // If a custom server was specified, set it now
-      if (this.config["serverURL"]) {
-        Weave.Service.serverURL = this.config.serverURL;
-        prefs.setCharPref('tps.serverURL', this.config.serverURL);
-      }
-
-      // Store account details as prefs so they're accessible to the Mozmill
-      // framework.
-      if (this.fxaccounts_enabled) {
-        prefs.setCharPref('tps.account.username', this.config.fx_account.username);
-        prefs.setCharPref('tps.account.password', this.config.fx_account.password);
-      }
-      else {
-        prefs.setCharPref('tps.account.username', this.config.sync_account.username);
-        prefs.setCharPref('tps.account.password', this.config.sync_account.password);
-        prefs.setCharPref('tps.account.passphrase', this.config.sync_account.passphrase);
-      }
-
       this._interceptSyncTelemetry();
 
       // start processing the test actions
@@ -942,15 +982,27 @@ var TPS = {
       Logger.logInfo("Intercepted sync telemetry submission: " + JSON.stringify(record));
       this._syncsReportedViaTelemetry += record.syncs.length + (record.discarded || 0);
       if (record.discarded) {
-        Logger.AssertTrue(record.syncs.length == SyncTelemetry.maxPayloadCount,
-                          "Syncs discarded from ping before maximum payload count reached");
+        if (record.syncs.length != SyncTelemetry.maxPayloadCount) {
+          this.DumpError("Syncs discarded from ping before maximum payload count reached");
+        }
       }
       // If this is the shutdown ping, check and see that the telemetry saw all the syncs.
       if (record.why === "shutdown") {
         // If we happen to sync outside of tps manually causing it, its not an
         // error in the telemetry, so we only complain if we didn't see all of them.
-        Logger.AssertTrue(this._syncsReportedViaTelemetry >= this._syncCount,
-                          `Telemetry missed syncs: Saw ${this._syncsReportedViaTelemetry}, should have >= ${this._syncCount}.`);
+        if (this._syncsReportedViaTelemetry < this._syncCount) {
+          this.DumpError(`Telemetry missed syncs: Saw ${this._syncsReportedViaTelemetry}, should have >= ${this._syncCount}.`);
+        }
+      }
+      if (!record.syncs.length) {
+        // Note: we're overwriting submit, so this is called even for pings that
+        // may have no data (which wouldn't be submitted to telemetry and would
+        // fail validation).
+        return;
+      }
+      if (!this.pingValidator(record)) {
+        // Note that we already logged the record.
+        this.DumpError("Sync ping validation failed with errors: " + JSON.stringify(this.pingValidator.errors));
       }
     };
   },
