@@ -734,6 +734,9 @@ private:
   // True if video decoding is suspended.
   bool mVideoDecodeSuspended;
 
+  // True if the media is seekable (i.e. supports random access).
+  bool mMediaSeekable = true;
+
   // Track enabling video decode suspension via timer
   DelayedScheduler mVideoDecodeSuspendTimer;
 
@@ -750,6 +753,7 @@ private:
   MediaEventListener mAudioQueueListener;
   MediaEventListener mVideoQueueListener;
   MediaEventListener mAudibleListener;
+  MediaEventListener mOnMediaNotSeekable;
 
   MediaEventProducerExc<nsAutoPtr<MediaInfo>,
                         nsAutoPtr<MetadataTags>,
@@ -807,9 +811,6 @@ private:
 
   // Current decoding position in the stream.
   Mirror<int64_t> mDecoderPosition;
-
-  // True if the media is seekable (i.e. supports random access).
-  Mirror<bool> mMediaSeekable;
 
   // True if the media is seekable only in buffered ranges.
   Mirror<bool> mMediaSeekableOnlyInBufferedRanges;

@@ -1224,6 +1224,7 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
 
   mMaster->mInfo = Some(aMetadata->mInfo);
   mMaster->mMetadataTags = aMetadata->mTags.forget();
+  mMaster->mMediaSeekable = Info().mMediaSeekable;
 
   if (Info().mMetadataDuration.isSome()) {
     mMaster->RecomputeDuration();
@@ -1661,6 +1662,7 @@ ShutdownState::Enter()
   master->mAudioQueueListener.Disconnect();
   master->mVideoQueueListener.Disconnect();
   master->mMetadataManager.Disconnect();
+  master->mOnMediaNotSeekable.Disconnect();
 
   // Disconnect canonicals and mirrors before shutting down our task queue.
   master->mBuffered.DisconnectIfConnected();
@@ -1675,7 +1677,6 @@ ShutdownState::Enter()
   master->mPlaybackBytesPerSecond.DisconnectIfConnected();
   master->mPlaybackRateReliable.DisconnectIfConnected();
   master->mDecoderPosition.DisconnectIfConnected();
-  master->mMediaSeekable.DisconnectIfConnected();
   master->mMediaSeekableOnlyInBufferedRanges.DisconnectIfConnected();
   master->mIsVisible.DisconnectIfConnected();
 
@@ -1748,7 +1749,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_MIRROR(mPlaybackBytesPerSecond, 0.0),
   INIT_MIRROR(mPlaybackRateReliable, true),
   INIT_MIRROR(mDecoderPosition, 0),
-  INIT_MIRROR(mMediaSeekable, true),
   INIT_MIRROR(mMediaSeekableOnlyInBufferedRanges, false),
   INIT_MIRROR(mIsVisible, true),
   INIT_CANONICAL(mDuration, NullableTimeUnit()),
@@ -1805,7 +1805,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mPlaybackBytesPerSecond.Connect(aDecoder->CanonicalPlaybackBytesPerSecond());
   mPlaybackRateReliable.Connect(aDecoder->CanonicalPlaybackRateReliable());
   mDecoderPosition.Connect(aDecoder->CanonicalDecoderPosition());
-  mMediaSeekable.Connect(aDecoder->CanonicalMediaSeekable());
   mMediaSeekableOnlyInBufferedRanges.Connect(aDecoder->CanonicalMediaSeekableOnlyInBufferedRanges());
 
   // Initialize watchers.
@@ -2185,6 +2184,11 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
     mTaskQueue, this, &MediaDecoderStateMachine::OnVideoPopped);
 
   mMetadataManager.Connect(mReader->TimedMetadataEvent(), OwnerThread());
+
+  mOnMediaNotSeekable = mReader->OnMediaNotSeekable().Connect(
+    OwnerThread(), [this] () {
+      mMediaSeekable = false;
+    });
 
   mMediaSink = CreateMediaSink(mAudioCaptured);
 
@@ -2846,7 +2850,7 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
 
   DECODER_LOG("Media duration %lld, "
               "transportSeekable=%d, mediaSeekable=%d",
-              Duration().ToMicroseconds(), mResource->IsTransportSeekable(), mMediaSeekable.Ref());
+              Duration().ToMicroseconds(), mResource->IsTransportSeekable(), mMediaSeekable);
 
   // Get potentially updated metadata
   mReader->ReadUpdatedMetadata(mInfo.ptr());
