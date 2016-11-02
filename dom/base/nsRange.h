@@ -25,6 +25,7 @@
 namespace mozilla {
 class ErrorResult;
 namespace dom {
+struct ClientRectsAndTexts;
 class DocumentFragment;
 class DOMRect;
 class DOMRectList;
@@ -212,6 +213,9 @@ public:
                                                   bool aFlushLayout = true);
   already_AddRefed<DOMRectList> GetClientRects(bool aClampToEdge = true,
                                                bool aFlushLayout = true);
+  void GetClientRectsAndTexts(
+    mozilla::dom::ClientRectsAndTexts& aResult,
+    ErrorResult& aErr);
   static void GetInnerTextNoFlush(mozilla::dom::DOMString& aValue,
                                   mozilla::ErrorResult& aError,
                                   nsIContent* aStartParent,
