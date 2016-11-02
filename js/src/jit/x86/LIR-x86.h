@@ -80,12 +80,12 @@ class LUnboxFloatingPoint : public LInstructionHelper<1, 2, 0>
 };
 
 // Convert a 32-bit unsigned integer to a double.
-class LAsmJSUInt32ToDouble : public LInstructionHelper<1, 1, 1>
+class LWasmUint32ToDouble : public LInstructionHelper<1, 1, 1>
 {
   public:
-    LIR_HEADER(AsmJSUInt32ToDouble)
+    LIR_HEADER(WasmUint32ToDouble)
 
-    LAsmJSUInt32ToDouble(const LAllocation& input, const LDefinition& temp) {
+    LWasmUint32ToDouble(const LAllocation& input, const LDefinition& temp) {
         setOperand(0, input);
         setTemp(0, temp);
     }

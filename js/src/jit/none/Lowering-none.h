@@ -77,7 +77,7 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void visitAsmJSNeg(MAsmJSNeg*) { MOZ_CRASH(); }
     void visitGuardShape(MGuardShape* ins) { MOZ_CRASH(); }
     void visitGuardObjectGroup(MGuardObjectGroup* ins) { MOZ_CRASH(); }
-    void visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble* ins) { MOZ_CRASH(); }
+    void visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins) { MOZ_CRASH(); }
     void visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins) { MOZ_CRASH(); }
     void visitAsmJSLoadHeap(MAsmJSLoadHeap* ins) { MOZ_CRASH(); }
     void visitAsmJSStoreHeap(MAsmJSStoreHeap* ins) { MOZ_CRASH(); }
