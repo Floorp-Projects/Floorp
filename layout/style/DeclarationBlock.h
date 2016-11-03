@@ -92,6 +92,9 @@ public:
     return c.mHTMLCSSStyleSheet;
   }
 
+  inline uint32_t Count() const;
+  inline bool GetNthProperty(uint32_t aIndex, nsAString& aReturn) const;
+
 private:
   union {
     // We only ever have one of these since we have an
