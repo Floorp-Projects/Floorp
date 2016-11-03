@@ -14,6 +14,9 @@ namespace mozilla {
 class ServoDeclarationBlock final : public DeclarationBlock
 {
 public:
+  ServoDeclarationBlock()
+    : ServoDeclarationBlock(Servo_DeclarationBlock_CreateEmpty().Consume()) {}
+
   NS_INLINE_DECL_REFCOUNTING(ServoDeclarationBlock)
 
   static already_AddRefed<ServoDeclarationBlock>
