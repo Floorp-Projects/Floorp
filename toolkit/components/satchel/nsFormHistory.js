@@ -548,7 +548,6 @@ FormHistory.prototype = {
         this.enabled        = Services.prefs.getBoolPref("browser.formfill.enable");
     },
 
-//* *************************************************************************//
     // Database Creation & Access
 
     /*

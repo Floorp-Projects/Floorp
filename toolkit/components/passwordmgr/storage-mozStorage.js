@@ -801,7 +801,6 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  //* *************************************************************************//
   // Database Creation & Access
 
   /**
