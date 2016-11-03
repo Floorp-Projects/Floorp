@@ -16,8 +16,6 @@ interface FileSystemEntry {
 
     readonly attribute FileSystem filesystem;
 
-/** Not implemented:
- *  void getParent(optional FileSystemEntryCallback successCallback,
- *                 optional ErrorCallback errorCallback);
- */
+    void getParent(optional FileSystemEntryCallback successCallback,
+                   optional ErrorCallback errorCallback);
 };

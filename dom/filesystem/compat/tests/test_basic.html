@@ -80,6 +80,15 @@ function test_fileEntry_createWriter() {
   });
 }
 
+function test_fileEntry_getParent() {
+  fileEntry.getParent(function(entry) {
+    is(fileEntry.fullPath, entry.fullPath, "Top level FileEntry should return itself as parent.");
+    next();
+  }, function() {
+    ok(false, "This is wrong.");
+  });
+}
+
 function test_directoryEntry() {
   ok("name" in directoryEntry, "We have a name.");
   ok("fullPath" in directoryEntry, "We have a fullPath.");
@@ -112,6 +121,15 @@ function test_directoryEntry_createReader() {
 
   }, function() {
     ok(false, "Something when wrong!");
+  });
+}
+
+function test_directoryEntry_getParent() {
+  directoryEntry.getParent(function(entry) {
+    is(directoryEntry.fullPath, entry.fullPath, "Top level FileEntry should return itself as parent.");
+    next();
+  }, function() {
+    ok(false, "This is wrong.");
   });
 }
 
@@ -159,7 +177,7 @@ function test_directoryEntry_getFile_simple() {
   directoryEntry.getFile("foo.txt", {},
   function(e) {
     is(e.name, "foo.txt", "We have the right FileEntry.");
-    next();
+    test_getParent(e, directoryEntry);
   }, function(e) {
     ok(false, "This should not happen.");
   });
@@ -169,7 +187,7 @@ function test_directoryEntry_getFile_deep() {
   directoryEntry.getFile("subdir/bar.txt", {},
   function(e) {
     is(e.name, "bar.txt", "We have the right FileEntry.");
-    next();
+    test_getParent(e, null);
   }, function(e) {
     ok(false, "This should not happen.");
   });
@@ -219,7 +237,7 @@ function test_directoryEntry_getDirectory_simple() {
   directoryEntry.getDirectory("subdir", {},
   function(e) {
     is(e.name, "subdir", "We have the right DirectoryEntry.");
-    next();
+    test_getParent(e, directoryEntry);
   }, function(e) {
     ok(false, "This should not happen.");
   });
@@ -229,7 +247,7 @@ function test_directoryEntry_getDirectory_deep() {
   directoryEntry.getDirectory("subdir/subsubdir", {},
   function(e) {
     is(e.name, "subsubdir", "We have the right DirectoryEntry.");
-    next();
+    test_getParent(e, directoryEntry);
   }, function(e) {
     ok(false, "This should not happen.");
   });
@@ -385,6 +403,18 @@ function cleanUpTestingFiles() {
   script.sendAsyncMessage("entries.delete");
 }
 
+function test_getParent(entry, parentEntry) {
+  entry.getParent(function(e) {
+    ok(e, "We have a parent Entry.");
+    if (parentEntry) {
+      is (e, parentEntry, "Parent entry matches");
+    }
+    next();
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
 var tests = [
   setup_tests,
   populate_entries,
@@ -394,9 +424,11 @@ var tests = [
   test_fileEntry,
   test_fileEntry_file,
   test_fileEntry_createWriter,
+  test_fileEntry_getParent,
 
   test_directoryEntry,
   test_directoryEntry_createReader,
+  test_directoryEntry_getParent,
 
   test_directoryEntry_getFile_securityError,
   test_directoryEntry_getFile_typeMismatchError,

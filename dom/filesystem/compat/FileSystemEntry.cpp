@@ -13,7 +13,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileSystemEntry, mParent, mFileSystem)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileSystemEntry, mParent, mParentEntry,
+                                      mFileSystem)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystemEntry)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemEntry)
@@ -35,11 +36,13 @@ FileSystemEntry::Create(nsIGlobalObject* aGlobalObject,
   if (aFileOrDirectory.IsFile()) {
     entry = new FileSystemFileEntry(aGlobalObject,
                                     aFileOrDirectory.GetAsFile(),
+                                    nullptr,
                                     aFileSystem);
   } else {
     MOZ_ASSERT(aFileOrDirectory.IsDirectory());
     entry = new FileSystemDirectoryEntry(aGlobalObject,
                                          aFileOrDirectory.GetAsDirectory(),
+                                         nullptr,
                                          aFileSystem);
   }
 
@@ -47,8 +50,10 @@ FileSystemEntry::Create(nsIGlobalObject* aGlobalObject,
 }
 
 FileSystemEntry::FileSystemEntry(nsIGlobalObject* aGlobal,
+                                 FileSystemEntry* aParentEntry,
                                  FileSystem* aFileSystem)
   : mParent(aGlobal)
+  , mParentEntry(aParentEntry)
   , mFileSystem(aFileSystem)
 {
   MOZ_ASSERT(aGlobal);
@@ -62,6 +67,22 @@ JSObject*
 FileSystemEntry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return FileSystemEntryBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+FileSystemEntry::GetParent(const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
+                           const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback)
+{
+  if (!aSuccessCallback.WasPassed() && !aErrorCallback.WasPassed()) {
+    return;
+  }
+
+  if (mParentEntry) {
+    FileSystemEntryCallbackHelper::Call(aSuccessCallback, mParentEntry);
+    return;
+  }
+
+  FileSystemEntryCallbackHelper::Call(aSuccessCallback, this);
 }
 
 } // dom namespace

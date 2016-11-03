@@ -326,9 +326,9 @@ DataTransferItem::GetAsEntry(nsIPrincipal& aSubjectPrincipal,
     }
 
     RefPtr<Directory> directory = Directory::Create(global, directoryFile);
-    entry = new FileSystemDirectoryEntry(global, directory, fs);
+    entry = new FileSystemDirectoryEntry(global, directory, nullptr, fs);
   } else {
-    entry = new FileSystemFileEntry(global, file, fs);
+    entry = new FileSystemFileEntry(global, file, nullptr, fs);
   }
 
   Sequence<RefPtr<FileSystemEntry>> entries;

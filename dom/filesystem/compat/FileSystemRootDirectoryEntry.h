@@ -29,7 +29,7 @@ public:
   GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const override;
 
   virtual already_AddRefed<FileSystemDirectoryReader>
-  CreateReader() const override;
+  CreateReader() override;
 
 private:
   ~FileSystemRootDirectoryEntry();
@@ -38,7 +38,7 @@ private:
   GetInternal(const nsAString& aPath, const FileSystemFlags& aFlag,
               const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
               const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-              GetInternalType aType) const override;
+              GetInternalType aType) override;
 
   void
   Error(const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
