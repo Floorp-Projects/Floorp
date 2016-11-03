@@ -25,7 +25,7 @@ static PRLogModuleInfo *gTestLog = nullptr;
 class MySocketListener : public nsIServerSocketListener
 {
 protected:
-    virtual ~MySocketListener() {}
+    virtual ~MySocketListener() = default;
 
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

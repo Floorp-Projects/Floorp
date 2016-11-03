@@ -62,7 +62,7 @@ asan-tests:
 windows-vm-tests:
     - cppunit
     #- crashtest
-    #- external-media-tests
+    - external-media-tests
     #- gtest
     #- jittest
     #- jsreftest

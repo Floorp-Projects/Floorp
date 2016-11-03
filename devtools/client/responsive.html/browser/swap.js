@@ -52,6 +52,8 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
   return {
 
     start: Task.async(function* () {
+      tab.isReponsiveDesignMode = true;
+
       // Freeze navigation temporarily to avoid "blinking" in the location bar.
       freezeNavigationState(tab);
 
@@ -150,6 +152,8 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // content element had been focused inside the viewport before stopping, it will
       // have lost focus.  Activate the frame to restore expected focus.
       tab.linkedBrowser.frameLoader.activateRemoteFrame();
+
+      delete tab.isReponsiveDesignMode;
     },
 
   };

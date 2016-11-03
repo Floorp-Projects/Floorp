@@ -4849,6 +4849,39 @@
     "keyed": true,
     "description": "How long it took to import logins (passwords) from another browser, keyed by the name of the browser."
   },
+  "FX_MIGRATION_BOOKMARKS_QUANTITY": {
+    "bug_numbers": [1279501],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "56",
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 1000,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "How many bookmarks we imported from another browser, keyed by the name of the browser."
+  },
+  "FX_MIGRATION_HISTORY_QUANTITY": {
+    "bug_numbers": [1279501],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "56",
+    "kind": "exponential",
+    "n_buckets": 40,
+    "high": 10000,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "How many history visits we imported from another browser, keyed by the name of the browser."
+  },
+  "FX_MIGRATION_LOGINS_QUANTITY": {
+    "bug_numbers": [1279501],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "56",
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 1000,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "How many logins (passwords) we imported from another browser, keyed by the name of the browser."
+  },
   "FX_STARTUP_MIGRATION_BROWSER_COUNT": {
     "bug_numbers": [1275114],
     "alert_emails": ["gijs@mozilla.com"],

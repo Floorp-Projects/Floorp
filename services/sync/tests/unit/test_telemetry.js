@@ -517,6 +517,32 @@ add_task(function* test_no_foreign_engines_in_error_ping() {
   }
 });
 
+add_task(function* test_sql_error() {
+  Service.engineManager.register(SteamEngine);
+  let engine = Service.engineManager.get("steam");
+  engine.enabled = true;
+  let store  = engine._store;
+  let server = serverForUsers({"foo": "password"}, {
+    meta: {global: {engines: {steam: {version: engine.version,
+                                      syncID: engine.syncID}}}},
+    steam: {}
+  });
+  new SyncTestingInfrastructure(server.server);
+  engine._sync = function() {
+    // Just grab a DB connection and issue a bogus SQL statement synchronously.
+    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
+    Async.querySpinningly(db.createAsyncStatement("select bar from foo"));
+  };
+  try {
+    let ping = yield sync_and_validate_telem(true);
+    let enginePing = ping.engines.find(e => e.name === "steam");
+    deepEqual(enginePing.failureReason, { name: "sqlerror", code: 1 });
+  } finally {
+    Service.engineManager.unregister(engine);
+    yield cleanAndGo(server);
+  }
+});
+
 add_task(function* test_no_foreign_engines_in_success_ping() {
   Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");

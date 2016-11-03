@@ -57,10 +57,9 @@ function test_install_lwtheme() {
     gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, false);
 
     BrowserTestUtils.synthesizeMouse("#theme-install", 2, 2, {}, gBrowser.selectedBrowser);
-    let notification;
     let notificationBox = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
     waitForCondition(
-      () => (notification = notificationBox.getNotificationWithValue("lwtheme-install-notification")),
+      () => notificationBox.getNotificationWithValue("lwtheme-install-notification"),
       () => {
         is(LightweightThemeManager.currentTheme.id, "test", "Should have installed the test theme");
 

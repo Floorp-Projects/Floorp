@@ -8,15 +8,15 @@
 #ifndef nsGenConList_h___
 #define nsGenConList_h___
 
+#include "mozilla/LinkedList.h"
 #include "nsIFrame.h"
 #include "nsStyleStruct.h"
-#include "prclist.h"
 #include "nsCSSPseudoElements.h"
 #include "nsTextNode.h"
 
 class nsGenConList;
 
-struct nsGenConNode : public PRCList {
+struct nsGenConNode : public mozilla::LinkedListElement<nsGenConNode> {
   // The wrapper frame for all of the pseudo-element's content.  This
   // frame generally has useful style data and has the
   // NS_FRAME_GENERATED_CONTENT bit set (so we use it to track removal),
@@ -51,7 +51,7 @@ struct nsGenConNode : public PRCList {
    * @return true iff this marked the list dirty
    */
   virtual bool InitTextFrame(nsGenConList* aList, nsIFrame* aPseudoFrame,
-                               nsIFrame* aTextFrame)
+                             nsIFrame* aTextFrame)
   {
     mPseudoFrame = aPseudoFrame;
     CheckFrameAssertions();
@@ -82,31 +82,45 @@ protected:
 
 class nsGenConList {
 protected:
-  nsGenConNode* mFirstNode;
+  mozilla::LinkedList<nsGenConNode> mList;
   uint32_t mSize;
+
 public:
-  nsGenConList() : mFirstNode(nullptr), mSize(0) {}
+  nsGenConList() : mSize(0) {}
   ~nsGenConList() { Clear(); }
   void Clear();
   static nsGenConNode* Next(nsGenConNode* aNode) {
-    return static_cast<nsGenConNode*>(PR_NEXT_LINK(aNode));
+    MOZ_ASSERT(aNode, "aNode cannot be nullptr!");
+    return aNode->getNext();
   }
   static nsGenConNode* Prev(nsGenConNode* aNode) {
-    return static_cast<nsGenConNode*>(PR_PREV_LINK(aNode));
+    MOZ_ASSERT(aNode, "aNode cannot be nullptr!");
+    return aNode->getPrevious();
   }
   void Insert(nsGenConNode* aNode);
-  // returns whether any nodes have been destroyed
-  bool DestroyNodesFor(nsIFrame* aFrame); //destroy all nodes with aFrame as parent
+
+  // Destroy all nodes with aFrame as parent. Returns true if some nodes
+  // have been destroyed; otherwise false.
+  bool DestroyNodesFor(nsIFrame* aFrame);
 
   // Return true if |aNode1| is after |aNode2|.
   static bool NodeAfter(const nsGenConNode* aNode1,
-                          const nsGenConNode* aNode2);
+                        const nsGenConNode* aNode2);
 
-  bool IsLast(nsGenConNode* aNode) { return (Next(aNode) == mFirstNode); }
+  bool IsFirst(nsGenConNode* aNode) {
+    MOZ_ASSERT(aNode, "aNode cannot be nullptr!");
+    return aNode == mList.getFirst();
+  }
+
+  bool IsLast(nsGenConNode* aNode) {
+    MOZ_ASSERT(aNode, "aNode cannot be nullptr!");
+    return aNode == mList.getLast();
+  }
+
 private:
   void Destroy(nsGenConNode* aNode)
   {
-    PR_REMOVE_LINK(aNode);
+    MOZ_ASSERT(aNode, "aNode cannot be nullptr!");
     delete aNode;
     mSize--;
   }

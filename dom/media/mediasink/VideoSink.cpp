@@ -474,6 +474,7 @@ VideoSink::DumpDebugInfo()
     "mEndPromiseHolder.IsEmpty()=%d",
     IsStarted(), IsPlaying(), VideoQueue().IsFinished(), VideoQueue().GetSize(),
     mVideoFrameEndTime, mHasVideo, mVideoSinkEndRequest.Exists(), mEndPromiseHolder.IsEmpty());
+  mAudioSink->DumpDebugInfo();
 }
 
 } // namespace media

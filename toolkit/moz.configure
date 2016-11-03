@@ -92,6 +92,7 @@ option('--with-l10n-base', nargs=1, env='L10NBASEDIR',
        help='Path to l10n repositories')
 
 @depends('--with-l10n-base')
+@imports('os')
 def l10n_base(value):
     if value:
         path = value[0]

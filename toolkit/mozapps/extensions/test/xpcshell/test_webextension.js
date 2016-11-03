@@ -402,3 +402,20 @@ add_task(function* developerEmpty() {
     addon.uninstall();
   }
 });
+
+add_task(function* authorNotString() {
+  for (let author of [{}, [], 42]) {
+    let addon = yield promiseInstallWebExtension({
+      manifest: {
+        author: author,
+        manifest_version: 2,
+        name: "Web Extension Name",
+        version: "1.0",
+      }
+    });
+
+    addon = yield promiseAddonByID(addon.id);
+    equal(addon.creator, null);
+    addon.uninstall();
+  }
+});

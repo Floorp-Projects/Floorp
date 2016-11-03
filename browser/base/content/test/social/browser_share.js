@@ -118,7 +118,6 @@ var corpus = [
 ];
 
 function hasoptions(testOptions, options) {
-  let msg;
   for (let option in testOptions) {
     let data = testOptions[option];
     info("data: "+JSON.stringify(data));
@@ -182,8 +181,6 @@ var tests = {
     });
   },
   testSharePage: function(next) {
-    let provider = Social._getProviderFromOrigin(manifest.origin);
-
     let testTab;
     let testIndex = 0;
     let testData = corpus[testIndex++];

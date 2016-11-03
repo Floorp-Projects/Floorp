@@ -38,9 +38,7 @@ ServerListener::ServerListener()
 {
 }
 
-ServerListener::~ServerListener()
-{
-}
+ServerListener::~ServerListener() = default;
 
 NS_IMETHODIMP
 ServerListener::OnSocketAccepted(nsIServerSocket *aServ,
@@ -88,9 +86,7 @@ ClientInputCallback::ClientInputCallback()
 {
 }
 
-ClientInputCallback::~ClientInputCallback()
-{
-}
+ClientInputCallback::~ClientInputCallback() = default;
 
 NS_IMETHODIMP
 ClientInputCallback::OnInputStreamReady(nsIAsyncInputStream *aStream)

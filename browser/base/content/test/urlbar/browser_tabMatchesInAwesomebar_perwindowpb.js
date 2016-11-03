@@ -23,7 +23,7 @@ add_task(function*() {
 });
 
 function* runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
-  let baseTab = yield BrowserTestUtils.openNewForegroundTab(aSourceWindow.gBrowser, testURL);
+  yield BrowserTestUtils.openNewForegroundTab(aSourceWindow.gBrowser, testURL);
   let testTab = yield BrowserTestUtils.openNewForegroundTab(aDestWindow.gBrowser);
 
   info("waiting for focus on the window");

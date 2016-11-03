@@ -398,7 +398,7 @@ COMPILER ERROR
 
     MakeHashKey(mHashKey, mHttps ? NS_LITERAL_CSTRING("https") : NS_LITERAL_CSTRING("http"),
                 mOriginHost, mOriginPort, mPrivate);
-  } while (0);
+  } while (false);
 }
 
 // This is the asynchronous null transaction used to validate
@@ -897,7 +897,7 @@ AltSvcCache::UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
     uri.Append(NS_LITERAL_CSTRING("/.well-known/http-opportunistic"));
     NS_NewURI(getter_AddRefs(wellKnown), uri);
 
-    WellKnownChecker *checker = new WellKnownChecker(wellKnown, origin, caps, ci, map);
+    auto *checker = new WellKnownChecker(wellKnown, origin, caps, ci, map);
     if (NS_FAILED(checker->Start())) {
       LOG(("AltSvcCache::UpdateAltServiceMapping %p .wk checker failed to start\n", this));
       map->SetExpired();

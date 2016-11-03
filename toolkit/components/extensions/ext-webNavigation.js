@@ -109,11 +109,6 @@ function WebNavigationEventManager(context, eventName) {
         return;
       }
 
-      let tabId = TabManager.getBrowserId(data.browser);
-      if (tabId == -1) {
-        return;
-      }
-
       let data2 = {
         url: data.url,
         timeStamp: Date.now(),
@@ -126,9 +121,8 @@ function WebNavigationEventManager(context, eventName) {
       }
 
       // Fills in tabId typically.
-      let result = {};
-      extensions.emit("fill-browser-data", data.browser, data2, result);
-      if (result.cancel) {
+      extensions.emit("fill-browser-data", data.browser, data2);
+      if (data2.tabId < 0) {
         return;
       }
 

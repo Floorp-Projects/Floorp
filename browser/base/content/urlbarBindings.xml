@@ -77,7 +77,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.inputField.addEventListener("overflow", this, false);
         this.inputField.addEventListener("underflow", this, false);
 
-        const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
         var textBox = document.getAnonymousElementByAttribute(this,
                                                 "anonid", "textbox-input-box");
         var cxmenu = document.getAnonymousElementByAttribute(textBox,
@@ -2341,7 +2340,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           let chromeWin = window.QueryInterface(Ci.nsIDOMChromeWindow);
           let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(chromeWin);
 
-          let label, linkLabel, linkUrl, button1, button2;
+          let label, linkLabel, button1, button2;
 
           if (action.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
             button1 = {
@@ -2468,7 +2467,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <parameter name="pluginName" /> <!-- null for the multiple-plugin case -->
         <parameter name="prePath" />
         <body><![CDATA[
-          var bsn = this._brandShortName;
           var span = document.getAnonymousElementByAttribute(this, "anonid", "click-to-play-plugins-notification-description");
           while (span.lastChild) {
             span.removeChild(span.lastChild);

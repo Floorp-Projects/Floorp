@@ -11,6 +11,7 @@
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/gmp/PGMPServiceChild.h"
 #include "nsRefPtrHashtable.h"
+#include "mozilla/dom/ContentChild.h"
 
 namespace mozilla {
 namespace gmp {
@@ -54,6 +55,8 @@ public:
   void SetServiceChild(UniquePtr<GMPServiceChild>&& aServiceChild);
 
   void RemoveGMPContentParent(GMPContentParent* aGMPContentParent);
+
+  static void UpdateGMPCapabilities(nsTArray<mozilla::dom::GMPCapabilityData>&& aCapabilities);
 
 protected:
   void InitializePlugins(AbstractThread*) override

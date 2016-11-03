@@ -513,8 +513,15 @@ protected:
         numBytes += 4;
         break;
       case kModNoRegDisp:
-        if ((*aModRm & kMaskRm) == kRmNoRegDispDisp32 ||
-            ((*aModRm & kMaskRm) == kRmNeedSib &&
+        if ((*aModRm & kMaskRm) == kRmNoRegDispDisp32) {
+#if defined(_M_X64)
+          // RIP-relative on AMD64, currently unsupported
+          return -1;
+#else
+          // On IA-32, all ModR/M instruction modes address memory relative to 0
+          numBytes += 4;
+#endif
+        } else if (((*aModRm & kMaskRm) == kRmNeedSib &&
              (*(aModRm + 1) & kMaskSibBase) == kSibBaseEbp)) {
           numBytes += 4;
         }

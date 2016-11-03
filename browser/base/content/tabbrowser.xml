@@ -1766,7 +1766,7 @@
             // Include the true final argument to indicate that this event is
             // simulated (instead of being observed by the webProgressListener).
             this._callProgressListeners(aBrowser, "onSecurityChange",
-                                        [aBrowser.webProgress, null, securityUI.state, true],
+                                        [aBrowser.webProgress, null, state, true],
                                         true, false);
 
             if (aShouldBeRemote) {
@@ -3788,7 +3788,7 @@
               this.assert(this.tabbrowser._switcher);
               this.assert(this.tabbrowser._switcher === this);
 
-              for (let [tab, state] of this.tabState) {
+              for (let [tab, ] of this.tabState) {
                 if (!tab.linkedBrowser) {
                   this.tabState.delete(tab);
                 }
@@ -4747,7 +4747,6 @@
 
       <constructor>
         <![CDATA[
-          let browserStack = document.getAnonymousElementByAttribute(this, "anonid", "browserStack");
           this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
           this.mCurrentBrowser.permanentKey = {};
 
@@ -5077,10 +5076,18 @@
           clearTimeout(tab._soundPlayingAttrRemovalTimer);
           tab._soundPlayingAttrRemovalTimer = 0;
 
+          let modifiedAttrs = [];
+          if (tab.hasAttribute("soundplaying-scheduledremoval")) {
+            tab.removeAttribute("soundplaying-scheduledremoval");
+            modifiedAttrs.push("soundplaying-scheduledremoval");
+          }
+
           if (!tab.hasAttribute("soundplaying")) {
             tab.setAttribute("soundplaying", true);
-            this._tabAttrModified(tab, ["soundplaying"]);
+            modifiedAttrs.push("soundplaying");
           }
+
+          this._tabAttrModified(tab, modifiedAttrs);
         ]]>
       </handler>
       <handler event="DOMAudioPlaybackStopped">
@@ -5096,9 +5103,15 @@
 
           if (tab.hasAttribute("soundplaying")) {
             let removalDelay = Services.prefs.getIntPref("browser.tabs.delayHidingAudioPlayingIconMS");
+
+            tab.style.setProperty("--soundplaying-removal-delay", `${removalDelay - 300}ms`);
+            tab.setAttribute("soundplaying-scheduledremoval", "true");
+            this._tabAttrModified(tab, ["soundplaying-scheduledremoval"]);
+
             tab._soundPlayingAttrRemovalTimer = setTimeout(() => {
+              tab.removeAttribute("soundplaying-scheduledremoval");
               tab.removeAttribute("soundplaying");
-              this._tabAttrModified(tab, ["soundplaying"]);
+              this._tabAttrModified(tab, ["soundplaying", "soundplaying-scheduledremoval"]);
             }, removalDelay);
           }
         ]]>
@@ -5594,7 +5607,6 @@
           if (screenX == draggedTab._dragData.animLastScreenX)
             return;
 
-          let draggingRight = screenX > draggedTab._dragData.animLastScreenX;
           draggedTab._dragData.animLastScreenX = screenX;
 
           let rtl = (window.getComputedStyle(this).direction == "rtl");
@@ -6544,7 +6556,7 @@
                      anonid="sharing-icon"
                      class="tab-sharing-icon-overlay"
                      role="presentation"/>
-          <xul:image xbl:inherits="crashed,busy,soundplaying,pinned,muted,selected=visuallyselected"
+          <xul:image xbl:inherits="crashed,busy,soundplaying,soundplaying-scheduledremoval,pinned,muted,selected=visuallyselected"
                      anonid="overlay-icon"
                      class="tab-icon-overlay"
                      role="presentation"/>
@@ -6552,7 +6564,7 @@
                      xbl:inherits="value=label,crop,accesskey,fadein,pinned,selected=visuallyselected,attention"
                      class="tab-text tab-label"
                      role="presentation"/>
-          <xul:image xbl:inherits="soundplaying,pinned,muted,selected=visuallyselected"
+          <xul:image xbl:inherits="soundplaying,soundplaying-scheduledremoval,pinned,muted,selected=visuallyselected"
                      anonid="soundplaying-icon"
                      class="tab-icon-sound"
                      role="presentation"/>
@@ -7159,8 +7171,6 @@
             return val;
 
           let toTab = this.getRelatedElement(this.childNodes[val]);
-          let fromTab = this._selectedPanel ? this.getRelatedElement(this._selectedPanel)
-                                            : null;
 
           gBrowser._getSwitcher().requestTab(toTab);
 

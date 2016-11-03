@@ -15,7 +15,7 @@ static PRLogModuleInfo *gTestLog = nullptr;
 
 class MyStreamLoaderObserver final : public nsIStreamLoaderObserver
 {
-  ~MyStreamLoaderObserver() {}
+  ~MyStreamLoaderObserver() = default;
 
 public:
   NS_DECL_ISUPPORTS

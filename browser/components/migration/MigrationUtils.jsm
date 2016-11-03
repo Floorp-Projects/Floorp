@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AutoMigrate",
                                   "resource:///modules/AutoMigrate.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
                                   "resource://gre/modules/BookmarkHTMLUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
+                                  "resource://gre/modules/LoginHelper.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
@@ -254,6 +256,17 @@ this.MigratorPrototype = {
       }
     };
 
+    let collectQuantityTelemetry = () => {
+      try {
+        for (let resourceType of Object.keys(MigrationUtils._importQuantities)) {
+          let histogramId =
+            "FX_MIGRATION_" + resourceType.toUpperCase() + "_QUANTITY";
+          let histogram = Services.telemetry.getKeyedHistogram(histogramId);
+          histogram.add(this.getKey(), MigrationUtils._importQuantities[resourceType]);
+        }
+      } catch (ex) { /* Telemetry is exception-happy */ }
+    };
+
     // Called either directly or through the bookmarks import callback.
     let doMigrate = Task.async(function*() {
       let resourcesGroupedByItems = new Map();
@@ -271,6 +284,9 @@ this.MigratorPrototype = {
         Services.obs.notifyObservers(null, aMsg, aItemType);
       };
 
+      for (let resourceType of Object.keys(MigrationUtils._importQuantities)) {
+        MigrationUtils._importQuantities[resourceType] = 0;
+      }
       notify("Migration:Started");
       for (let [key, value] of resourcesGroupedByItems) {
         // Workaround bug 449811.
@@ -294,6 +310,7 @@ this.MigratorPrototype = {
                      migrationType);
               resourcesGroupedByItems.delete(migrationType);
               if (resourcesGroupedByItems.size == 0) {
+                collectQuantityTelemetry();
                 notify("Migration:Ended");
               }
             }
@@ -674,6 +691,7 @@ this.MigrationUtils = Object.freeze({
       "Microsoft Edge":                    "edge",
       "Safari":                            "safari",
       "Firefox":                           "firefox",
+      "Nightly":                           "firefox",
       "Google Chrome":                     "chrome",  // Windows, Linux
       "Chrome":                            "chrome",  // OS X
       "Chromium":                          "chromium", // Windows, OS X
@@ -688,6 +706,10 @@ this.MigrationUtils = Object.freeze({
           .getService(Ci.nsIExternalProtocolService)
           .getApplicationDescription("http");
       key = APP_DESC_TO_KEY[browserDesc] || "";
+      // Handle devedition, as well as "FirefoxNightly" on OS X.
+      if (!key && browserDesc.startsWith("Firefox")) {
+        key = "firefox";
+      }
     }
     catch (ex) {
       Cu.reportError("Could not detect default browser: " + ex);
@@ -905,6 +927,27 @@ this.MigrationUtils = Object.freeze({
       aProfileToMigrate,
     ];
     this.showMigrationWizard(null, params);
+  },
+
+  _importQuantities: {
+    bookmarks: 0,
+    logins: 0,
+    history: 0,
+  },
+
+  insertBookmarkWrapper(bookmark) {
+    this._importQuantities.bookmarks++;
+    return PlacesUtils.bookmarks.insert(bookmark);
+  },
+
+  insertVisitsWrapper(places, options) {
+    this._importQuantities.history += places.length;
+    return PlacesUtils.asyncHistory.updatePlaces(places, options);
+  },
+
+  insertLoginWrapper(login) {
+    this._importQuantities.logins++;
+    return LoginHelper.maybeImportLogin(login);
   },
 
   /**

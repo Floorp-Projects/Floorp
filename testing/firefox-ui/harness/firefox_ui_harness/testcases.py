@@ -168,7 +168,11 @@ class UpdateTestCase(FirefoxTestCase):
 
         about_window = self.browser.open_about_window()
         try:
+            # Bug 604364 - We do not support watershed releases yet.
             update_available = self.check_for_updates(about_window)
+            self.assertFalse(update_available,
+                             'Additional update found due to watershed release {}'.format(
+                                 update['build_post']['version']))
 
             # The upgraded version should be identical with the version given by
             # the update and we shouldn't have run a downgrade
@@ -198,17 +202,6 @@ class UpdateTestCase(FirefoxTestCase):
             # Check that no application-wide add-ons have been disabled
             self.assertEqual(update['build_post']['disabled_addons'],
                              update['build_pre']['disabled_addons'])
-
-            # Bug 604364 - We do not support watershed releases yet.
-            if update_available:
-                self.download_update(about_window, wait_for_finish=False)
-                self.assertNotEqual(self.software_update.active_update.type,
-                                    update['patch']['type'],
-                                    'No further update of the same type gets offered: '
-                                    '{0} != {1}'.format(
-                                        self.software_update.active_update.type,
-                                        update['patch']['type']
-                                    ))
 
             update['success'] = True
 
@@ -316,7 +309,7 @@ class UpdateTestCase(FirefoxTestCase):
             self.software_update.force_fallback()
 
         # Restart Firefox to apply the downloaded update
-        self.restart()
+        self.restart(callback=lambda: about_window.deck.apply.button.click())
 
     def download_and_apply_forced_update(self):
         # The update wizard dialog opens automatically after the restart but with a short delay
@@ -343,8 +336,10 @@ class UpdateTestCase(FirefoxTestCase):
                 self.wait_for_update_applied(about_window)
 
             finally:
-                if about_window:
-                    self.updates[self.current_update_index]['patch'] = self.patch_info
+                self.updates[self.current_update_index]['patch'] = self.patch_info
+
+            # Restart Firefox to apply the forced update
+            self.restart(callback=lambda: about_window.deck.apply.button.click())
 
         else:
             try:
@@ -353,13 +348,12 @@ class UpdateTestCase(FirefoxTestCase):
 
                 # Start downloading the fallback update
                 self.download_update(dialog)
-                dialog.close()
 
             finally:
                 self.updates[self.current_update_index]['patch'] = self.patch_info
 
-        # Restart Firefox to apply the update
-        self.restart()
+            # Restart Firefox to apply the forced update
+            self.restart(callback=lambda: dialog.wizard.finish_button.click())
 
     def read_update_log(self):
         """Read the content of the update log file for the last update attempt."""

@@ -10,7 +10,6 @@ add_task(function*() {
   // returning a list of opened tabs for verifying the expected order.
   // The new tab behaviour is documented in bug 465673
   let tabs = [];
-  let promises = [];
   function addTab(aURL, aReferrer) {
     let tab = gBrowser.addTab(aURL, {referrerURI: aReferrer});
     tabs.push(tab);

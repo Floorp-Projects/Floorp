@@ -160,6 +160,10 @@ Stores error information, if any is present. Always contains the "name" property
 
    - ``error``: The message provided by the error.
 
+- ``sqlerror``: Indicates that we recieved a ``mozIStorageError`` from a database query.
+
+    - ``code``: Value of the ``error.result`` property, one of the constants listed `here <https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/MozIStorageError#Constants>`_.
+
 syncs.engine.name
 ~~~~~~~~~~~~~~~~~
 

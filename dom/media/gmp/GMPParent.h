@@ -54,6 +54,14 @@ public:
   explicit GMPCapability(const GMPCapability& aOther) = default;
   nsCString mAPIName;
   nsTArray<nsCString> mAPITags;
+
+  static bool Supports(const nsTArray<GMPCapability>& aCapabilities,
+                       const nsCString& aAPI,
+                       const nsTArray<nsCString>& aTags);
+
+  static bool Supports(const nsTArray<GMPCapability>& aCapabilities,
+                       const nsCString& aAPI,
+                       const nsCString& aTag);
 };
 
 enum GMPState {
@@ -110,8 +118,6 @@ public:
   // This must not be called while we're in the middle of abnormal ActorDestroy
   void DeleteProcess();
 
-  bool SupportsAPI(const nsCString& aAPI, const nsCString& aTag);
-
   GMPState State() const;
   nsIThread* GMPThread();
 
@@ -159,6 +165,8 @@ public:
   bool EnsureProcessLoaded(base::ProcessId* aID);
 
   bool Bridge(GMPServiceParent* aGMPServiceParent);
+
+  const nsTArray<GMPCapability>& GetCapabilities() const { return mCapabilities; }
 
 private:
   ~GMPParent();

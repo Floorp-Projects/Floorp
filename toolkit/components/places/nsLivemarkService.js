@@ -228,14 +228,15 @@ LivemarkService.prototype = {
                                   , lastModified: toPRTime(folder.lastModified)
                                   });
 
-      livemark.writeFeedURI(aLivemarkInfo.feedURI);
+      livemark.writeFeedURI(aLivemarkInfo.feedURI, aLivemarkInfo.source);
       if (aLivemarkInfo.siteURI) {
-        livemark.writeSiteURI(aLivemarkInfo.siteURI);
+        livemark.writeSiteURI(aLivemarkInfo.siteURI, aLivemarkInfo.source);
       }
 
       if (aLivemarkInfo.lastModified) {
         yield PlacesUtils.bookmarks.update({ guid: folder.guid,
-                                             lastModified: toDate(aLivemarkInfo.lastModified) });
+                                             lastModified: toDate(aLivemarkInfo.lastModified),
+                                             source: aLivemarkInfo.source });
         livemark.lastModified = aLivemarkInfo.lastModified;
       }
 
@@ -266,7 +267,8 @@ LivemarkService.prototype = {
       if (!livemarksMap.has(aLivemarkInfo.guid))
         throw new Components.Exception("Invalid livemark", Cr.NS_ERROR_INVALID_ARG);
 
-      yield PlacesUtils.bookmarks.remove(aLivemarkInfo.guid);
+      yield PlacesUtils.bookmarks.remove(aLivemarkInfo.guid,
+                                         { source: aLivemarkInfo.source });
     }.bind(this));
   },
 
@@ -465,18 +467,20 @@ Livemark.prototype = {
     return this._status;
   },
 
-  writeFeedURI(aFeedURI) {
+  writeFeedURI(aFeedURI, aSource) {
     PlacesUtils.annotations
                .setItemAnnotation(this.id, PlacesUtils.LMANNO_FEEDURI,
                                   aFeedURI.spec,
-                                  0, PlacesUtils.annotations.EXPIRE_NEVER);
+                                  0, PlacesUtils.annotations.EXPIRE_NEVER,
+                                  aSource);
     this.feedURI = aFeedURI;
   },
 
-  writeSiteURI(aSiteURI) {
+  writeSiteURI(aSiteURI, aSource) {
     if (!aSiteURI) {
       PlacesUtils.annotations.removeItemAnnotation(this.id,
-                                                   PlacesUtils.LMANNO_SITEURI)
+                                                   PlacesUtils.LMANNO_SITEURI,
+                                                   aSource)
       this.siteURI = null;
       return;
     }
@@ -495,7 +499,8 @@ Livemark.prototype = {
     PlacesUtils.annotations
                .setItemAnnotation(this.id, PlacesUtils.LMANNO_SITEURI,
                                   aSiteURI.spec,
-                                  0, PlacesUtils.annotations.EXPIRE_NEVER);
+                                  0, PlacesUtils.annotations.EXPIRE_NEVER,
+                                  aSource);
     this.siteURI = aSiteURI;
   },
 

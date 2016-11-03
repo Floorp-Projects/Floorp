@@ -46,37 +46,14 @@ class GenerateRTCCertificateTask : public GenerateAsymmetricKeyTask
 public:
   GenerateRTCCertificateTask(nsIGlobalObject* aGlobal, JSContext* aCx,
                              const ObjectOrString& aAlgorithm,
-                             const Sequence<nsString>& aKeyUsages)
+                             const Sequence<nsString>& aKeyUsages,
+                             PRTime expires)
       : GenerateAsymmetricKeyTask(aGlobal, aCx, aAlgorithm, true, aKeyUsages),
-        mExpires(0),
+        mExpires(expires),
         mAuthType(ssl_kea_null),
         mCertificate(nullptr),
         mSignatureAlg(SEC_OID_UNKNOWN)
   {
-    // Expiry is 30 days after by default.
-    // This is a sort of arbitrary range designed to be valid
-    // now with some slack in case the other side expects
-    // some before expiry.
-    //
-
-    mExpires = EXPIRATION_DEFAULT;
-    if (!aAlgorithm.IsObject()) {
-      return;
-    }
-
-    // Load the "expires" attribute from the algorithm dictionary.  This is
-    // (currently) non-standard; it exists to support testing of certificate
-    // expiration, since one month is too long to wait for a test to run.
-    JS::Rooted<JS::Value> exp(aCx, JS::UndefinedValue());
-    JS::Rooted<JSObject*> jsval(aCx, aAlgorithm.GetAsObject());
-    bool ok = JS_GetProperty(aCx, jsval, "expires", &exp);
-    int64_t expval;
-    if (ok) {
-      ok = JS::ToInt64(aCx, exp, &expval);
-    }
-    if (ok && expval > 0) {
-      mExpires = std::min(expval, EXPIRATION_MAX);
-    }
   }
 
 private:
@@ -249,9 +226,37 @@ private:
   }
 };
 
+static PRTime
+ReadExpires(JSContext* aCx, const ObjectOrString& aOptions,
+            ErrorResult& aRv)
+{
+  // This conversion might fail, but we don't really care; use the default.
+  // If this isn't an object, or it doesn't coerce into the right type,
+  // then we won't get the |expires| value.  Either will be caught later.
+  RTCCertificateExpiration expiration;
+  if (!aOptions.IsObject()) {
+    return EXPIRATION_DEFAULT;
+  }
+  JS::RootedValue value(aCx, JS::ObjectValue(*aOptions.GetAsObject()));
+  if (!expiration.Init(aCx, value)) {
+    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    return 0;
+  }
+
+  if (!expiration.mExpires.WasPassed()) {
+    return EXPIRATION_DEFAULT;
+  }
+  static const uint64_t max =
+      static_cast<uint64_t>(EXPIRATION_MAX / PR_USEC_PER_MSEC);
+  if (expiration.mExpires.Value() > max) {
+    return EXPIRATION_MAX;
+  }
+  return static_cast<PRTime>(expiration.mExpires.Value() * PR_USEC_PER_MSEC);
+}
+
 already_AddRefed<Promise>
 RTCCertificate::GenerateCertificate(
-    const GlobalObject& aGlobal, const ObjectOrString& aKeygenAlgorithm,
+    const GlobalObject& aGlobal, const ObjectOrString& aOptions,
     ErrorResult& aRv, JSCompartment* aCompartment)
 {
   nsIGlobalObject* global = xpc::NativeGlobal(aGlobal.Get());
@@ -261,11 +266,17 @@ RTCCertificate::GenerateCertificate(
   }
   Sequence<nsString> usages;
   if (!usages.AppendElement(NS_LITERAL_STRING("sign"), fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
+  PRTime expires = ReadExpires(aGlobal.Context(), aOptions, aRv);
+  if (aRv.Failed()) {
     return nullptr;
   }
   RefPtr<WebCryptoTask> task =
       new GenerateRTCCertificateTask(global, aGlobal.Context(),
-                                     aKeygenAlgorithm, usages);
+                                     aOptions, usages, expires);
   task->DispatchWithPromise(p);
   return p.forget();
 }
