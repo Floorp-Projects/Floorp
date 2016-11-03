@@ -74,18 +74,18 @@ EmptyEntriesCallbackRunnable::Run()
   return NS_OK;
 }
 
-GetEntryHelper::GetEntryHelper(nsIGlobalObject* aGlobalObject,
+GetEntryHelper::GetEntryHelper(FileSystemDirectoryEntry* aParentEntry,
                                FileSystem* aFileSystem,
                                FileSystemEntryCallback* aSuccessCallback,
                                ErrorCallback* aErrorCallback,
                                FileSystemDirectoryEntry::GetInternalType aType)
-  : mGlobal(aGlobalObject)
+  : mParentEntry(aParentEntry)
   , mFileSystem(aFileSystem)
   , mSuccessCallback(aSuccessCallback)
   , mErrorCallback(aErrorCallback)
   , mType(aType)
 {
-  MOZ_ASSERT(aGlobalObject);
+  MOZ_ASSERT(aParentEntry);
   MOZ_ASSERT(aFileSystem);
   MOZ_ASSERT(aSuccessCallback || aErrorCallback);
 }
@@ -110,7 +110,8 @@ GetEntryHelper::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
     }
 
     RefPtr<FileSystemFileEntry> entry =
-      new FileSystemFileEntry(mGlobal, file, mFileSystem);
+      new FileSystemFileEntry(mParentEntry->GetParentObject(), file,
+                              mParentEntry, mFileSystem);
     mSuccessCallback->HandleEvent(*entry);
     return;
   }
@@ -124,7 +125,8 @@ GetEntryHelper::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
   }
 
   RefPtr<FileSystemDirectoryEntry> entry =
-    new FileSystemDirectoryEntry(mGlobal, directory, mFileSystem);
+    new FileSystemDirectoryEntry(mParentEntry->GetParentObject(), directory,
+                                 mParentEntry, mFileSystem);
   mSuccessCallback->HandleEvent(*entry);
 }
 
@@ -141,13 +143,29 @@ GetEntryHelper::Error(nsresult aError)
 
   if (mErrorCallback) {
     RefPtr<ErrorCallbackRunnable> runnable =
-      new ErrorCallbackRunnable(mGlobal, mErrorCallback, aError);
+      new ErrorCallbackRunnable(mParentEntry->GetParentObject(),
+                                mErrorCallback, aError);
     DebugOnly<nsresult> rv = NS_DispatchToMainThread(runnable);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
   }
 }
 
 NS_IMPL_ISUPPORTS0(GetEntryHelper);
+
+/* static */ void
+FileSystemEntryCallbackHelper::Call(const Optional<OwningNonNull<FileSystemEntryCallback>>& aEntryCallback,
+                                    FileSystemEntry* aEntry)
+{
+  MOZ_ASSERT(aEntry);
+
+  if (aEntryCallback.WasPassed()) {
+    RefPtr<EntryCallbackRunnable> runnable =
+      new EntryCallbackRunnable(&aEntryCallback.Value(), aEntry);
+
+    DebugOnly<nsresult> rv = NS_DispatchToMainThread(runnable);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
+  }
+}
 
 /* static */ void
 ErrorCallbackHelper::Call(nsIGlobalObject* aGlobal,

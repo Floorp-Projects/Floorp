@@ -19,7 +19,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemRootDirectoryReader,
                                            FileSystemDirectoryReader)
 
-  explicit FileSystemRootDirectoryReader(nsIGlobalObject* aGlobalObject,
+  explicit FileSystemRootDirectoryReader(FileSystemDirectoryEntry* aParentEntry,
                                          FileSystem* aFileSystem,
                                          const Sequence<RefPtr<FileSystemEntry>>& aEntries);
 
