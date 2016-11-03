@@ -788,6 +788,11 @@ KEY_MAP_GTK     (MailReply, GDK_Reply)
 KEY_MAP_WIN_CMD (MailSend, APPCOMMAND_SEND_MAIL)
 KEY_MAP_GTK     (MailSend, GDK_Send)
 
+// MediaFastForward
+KEY_MAP_WIN_CMD (MediaFastForward, APPCOMMAND_MEDIA_FAST_FORWARD)
+KEY_MAP_GTK     (MediaFastForward, GDK_AudioForward)
+KEY_MAP_ANDROID (MediaFastForward, AKEYCODE_MEDIA_FAST_FORWARD)
+
 // MediaPause
 KEY_MAP_WIN_CMD (MediaPause, APPCOMMAND_MEDIA_PAUSE)
 KEY_MAP_GTK     (MediaPause, GDK_AudioPause)
@@ -1089,11 +1094,6 @@ KEY_MAP_ANDROID (Guide, AKEYCODE_GUIDE)
 
 // Info
 KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
-
-// MediaFastForward
-KEY_MAP_WIN_CMD (MediaFastForward, APPCOMMAND_MEDIA_FAST_FORWARD)
-KEY_MAP_GTK     (MediaFastForward, GDK_AudioForward)
-KEY_MAP_ANDROID (MediaFastForward, AKEYCODE_MEDIA_FAST_FORWARD)
 
 // MediaLast
 
