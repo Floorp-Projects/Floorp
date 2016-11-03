@@ -13,6 +13,7 @@
 
 #include <limits>
 #include <type_traits>
+#include "nsIAtom.h"
 #include "nsString.h"
 #include "nsCSSPropertyID.h"
 #include "nsStyleStructFwd.h"
@@ -330,6 +331,10 @@ enum nsStyleAnimType {
   // property not animatable
   eStyleAnimType_None
 };
+
+// Empty class derived from nsIAtom so that function signatures can
+// require an atom from the atom list.
+class nsICSSProperty : public nsIAtom {};
 
 class nsCSSProps {
 public:
@@ -667,6 +672,25 @@ public:
     }
     return false;
   }
+
+public:
+  static void AddRefAtoms();
+  static nsICSSProperty* AtomForProperty(nsCSSPropertyID aProperty)
+  {
+    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT);
+    return gPropertyAtomTable[aProperty];
+  }
+
+#define CSS_PROP(name_, id_, ...) static nsICSSProperty* id_;
+#define CSS_PROP_SHORTHAND(name_, id_, ...) CSS_PROP(name_, id_, ...)
+#define CSS_PROP_LIST_INCLUDE_LOGICAL
+#include "nsCSSPropList.h"
+#undef CSS_PROP_LIST_INCLUDE_LOGICAL
+#undef CSS_PROP_SHORTHAND
+#undef CSS_PROP
+
+private:
+  static nsICSSProperty* gPropertyAtomTable[eCSSProperty_COUNT];
 
 public:
 
