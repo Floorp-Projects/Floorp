@@ -208,4 +208,22 @@ GMPInfoFileParser::Get(const nsCString& aKey) const {
   return EmptyCString();
 }
 
+bool
+HaveGMPFor(const nsCString& aAPI,
+           nsTArray<nsCString>&& aTags)
+{
+  nsCOMPtr<mozIGeckoMediaPluginService> mps =
+    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  if (NS_WARN_IF(!mps)) {
+    return false;
+  }
+
+  bool hasPlugin = false;
+  if (NS_FAILED(mps->HasPluginForAPI(aAPI, &aTags, &hasPlugin))) {
+    return false;
+  }
+  return hasPlugin;
+}
+
+
 } // namespace mozilla
