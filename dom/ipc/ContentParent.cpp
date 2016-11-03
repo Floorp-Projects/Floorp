@@ -561,7 +561,6 @@ static const char* sObserverTopics[] = {
   "profiler-subprocess-gather",
   "profiler-subprocess",
 #endif
-  "gmp-changed",
   "cacheservice:empty-cache",
 };
 
@@ -2846,9 +2845,6 @@ ContentParent::Observe(nsISupports* aSubject,
     Unused << SendPauseProfiler(false);
   }
 #endif
-  else if (!strcmp(aTopic, "gmp-changed")) {
-    Unused << SendNotifyGMPsChanged();
-  }
   else if (!strcmp(aTopic, "cacheservice:empty-cache")) {
     Unused << SendNotifyEmptyHTTPCache();
   }

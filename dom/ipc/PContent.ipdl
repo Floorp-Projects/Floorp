@@ -629,11 +629,6 @@ child:
     async NotifyPresentationReceiverCleanUp(nsString aSessionId);
 
     /**
-     * Notify the child that the Gecko Media Plugins installed changed.
-     */
-    async NotifyGMPsChanged();
-
-    /**
      * Notify the child that cache is emptied.
      */
     async NotifyEmptyHTTPCache();
