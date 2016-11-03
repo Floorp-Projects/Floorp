@@ -418,8 +418,7 @@ public:
     auto t = mMaster->mMediaSink->IsStarted()
       ? mMaster->GetClock()
       : mMaster->GetMediaTime();
-    mPendingSeek.mTarget = SeekTarget(
-      t, SeekTarget::Accurate, MediaDecoderEventVisibility::Suppressed);
+    mPendingSeek.mTarget = SeekTarget(t, SeekTarget::Accurate);
     // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
     // need to create the promise even it is not used at all.
     RefPtr<MediaDecoder::SeekPromise> x = mPendingSeek.mPromise.Ensure(__func__);
@@ -1210,7 +1209,6 @@ StateObject::HandleResumeVideoDecoding()
 
   seekJob.mTarget = SeekTarget(mMaster->GetMediaTime(),
                                type,
-                               MediaDecoderEventVisibility::Suppressed,
                                true /* aVideoOnly */);
 
   SetState<SeekingState>(Move(seekJob), EventVisibility::Suppressed)->Then(
