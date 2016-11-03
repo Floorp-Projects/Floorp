@@ -4,12 +4,12 @@
 
 import os
 
-from marionette.marionette_test import MarionetteTestCase, skip_if_chrome
+from marionette import MarionetteTestCase, WindowManagerMixin, skip_if_chrome
 from marionette_driver.errors import JavascriptException
 from marionette_driver.by import By
 
 
-class TestImportScriptContent(MarionetteTestCase):
+class TestImportScriptContent(WindowManagerMixin, MarionetteTestCase):
     contexts = set(["chrome", "content"])
 
     script_file = os.path.abspath(
@@ -18,7 +18,8 @@ class TestImportScriptContent(MarionetteTestCase):
         os.path.join(__file__, os.path.pardir, "importanotherscript.js"))
 
     def setUp(self):
-        MarionetteTestCase.setUp(self)
+        super(TestImportScriptContent, self).setUp()
+
         for context in self.contexts:
             with self.marionette.using_context(context):
                 self.marionette.clear_imported_scripts()
@@ -106,19 +107,17 @@ class TestImportScriptContent(MarionetteTestCase):
     def test_imports_apply_globally(self):
         self.marionette.navigate(
             self.marionette.absolute_url("test_windows.html"))
-        original_window = self.marionette.current_chrome_window_handle
-        self.marionette.find_element(By.LINK_TEXT, "Open new window").click()
 
-        windows = set(self.marionette.chrome_window_handles)
-        print "windows={}".format(windows)
-        new_window = windows.difference([original_window]).pop()
+        def open_window_with_link():
+            self.marionette.find_element(By.LINK_TEXT, "Open new window").click()
+
+        new_window = self.open_window(trigger=open_window_with_link)
         self.marionette.switch_to_window(new_window)
 
         self.marionette.import_script(self.script_file)
         self.marionette.close_chrome_window()
 
-        print "switching to original window: {}".format(original_window)
-        self.marionette.switch_to_window(original_window)
+        self.marionette.switch_to_window(self.start_window)
         self.assert_defined("testFunc")
 
 
