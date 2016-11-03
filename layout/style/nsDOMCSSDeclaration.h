@@ -160,15 +160,12 @@ protected:
                               const nsAString& aPropValue,
                               bool aIsImportant);
 
-  // Prop-id based version of RemoveProperty.  Note that this does not
-  // return the old value; it just does a straight removal.
-  nsresult RemoveProperty(const nsCSSPropertyID aPropID);
-
-  void GetCustomPropertyValue(const nsAString& aPropertyName, nsAString& aValue);
-  nsresult RemoveCustomProperty(const nsAString& aPropertyName);
   nsresult ParseCustomPropertyValue(const nsAString& aPropertyName,
                                     const nsAString& aPropValue,
                                     bool aIsImportant);
+
+  nsresult RemovePropertyInternal(nsCSSPropertyID aPropID);
+  nsresult RemovePropertyInternal(const nsAString& aProperty);
 
 protected:
   virtual ~nsDOMCSSDeclaration();
