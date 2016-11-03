@@ -16,6 +16,7 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v7.widget.AppCompatDrawableManager;
 
 import org.mozilla.gecko.AppConstants;
 
@@ -29,7 +30,7 @@ public class DrawableUtil {
                                         @DrawableRes final int drawableID,
                                         @ColorInt final int color) {
         final Drawable icon = DrawableCompat.wrap(
-                ContextCompat.getDrawable(context, drawableID).mutate());
+                AppCompatDrawableManager.get().getDrawable(context, drawableID).mutate());
         DrawableCompat.setTint(icon, color);
         return icon;
     }
