@@ -63,10 +63,6 @@ public:
                 aFlag, aSuccessCallback, aErrorCallback, eGetDirectory);
   }
 
-  void
-  RemoveRecursively(VoidCallback& aSuccessCallback,
-                    const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const;
-
   enum GetInternalType { eGetFile, eGetDirectory };
 
   virtual void

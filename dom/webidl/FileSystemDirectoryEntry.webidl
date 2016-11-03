@@ -16,9 +16,4 @@ interface FileSystemDirectoryEntry : FileSystemEntry {
                       optional FileSystemFlags options,
                       optional FileSystemEntryCallback successCallback,
                       optional ErrorCallback errorCallback);
-
-    // This method is not implemented. ErrorCallback will be called
-    // with SecurityError
-    void removeRecursively(VoidCallback successCallback,
-                           optional ErrorCallback errorCallback);
 };
