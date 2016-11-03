@@ -9,28 +9,29 @@ from marionette_driver import By, Wait
 
 class TestSwitchWindow(MarionetteTestCase):
     def open_new_window(self):
-        self.marionette.set_context("chrome")
-        self.marionette.set_script_timeout(5000)
-        self.marionette.execute_async_script("""
-var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                   .getService(Components.interfaces.nsIWindowWatcher);
-var win = ww.openWindow(null, "chrome://browser/content/browser.xul", "testWin", null, null);
-win.addEventListener("load", function() {
-  win.removeEventListener("load", arguments.callee, true);
-  marionetteScriptFinished();
-}, null);
-""")
-        self.marionette.set_context("content")
+        with self.marionette.using_context("chrome"):
+            print '**** %s' % self.marionette.execute_async_script("""
+              var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"].
+                                  getService(Components.interfaces.nsIWindowWatcher);
+              var win = ww.openWindow(null, "chrome://browser/content/browser.xul",
+                                      "testWin", null, null);
+              win.addEventListener("load", function() {
+                marionetteScriptFinished(true);
+              }, {once: true});
+              dump(win.readyState);
+              if (win.readyState == 'loaded')
+                marionetteScriptFinished(true);
+            """)
 
     def close_new_window(self):
         self.marionette.set_context("chrome")
         self.marionette.execute_script("""
-var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                   .getService(Components.interfaces.nsIWindowWatcher);
-var win = ww.getWindowByName("testWin", null);
-if (win != null)
-  win.close();
-""")
+          var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"].
+                              getService(Components.interfaces.nsIWindowWatcher);
+          var win = ww.getWindowByName("testWin", null);
+          if (win != null)
+            win.close();
+        """)
         self.marionette.set_context("content")
 
     def test_windows(self):
