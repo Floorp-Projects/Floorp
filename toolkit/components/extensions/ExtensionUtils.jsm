@@ -2190,6 +2190,7 @@ this.ExtensionUtils = {
   runSafeWithoutClone,
   stylesheetMap,
   BaseContext,
+  DefaultMap,
   DefaultWeakMap,
   EventEmitter,
   EventManager,
