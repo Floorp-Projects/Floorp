@@ -34,6 +34,7 @@ var {
   getInnerWindowID,
   BaseContext,
   ChildAPIManager,
+  defineLazyGetter,
   LocalAPIImplementation,
   Messenger,
   SchemaAPIManager,
@@ -169,33 +170,22 @@ class ExtensionContext extends BaseContext {
     if (uri) {
       sender.url = uri.spec;
     }
+    this.sender = sender;
 
-    let filter = {extensionId: extension.id};
-    let optionalFilter = {};
-    // Addon-generated messages (not necessarily from the same process as the
-    // addon itself) are sent to the main process, which forwards them via the
-    // parent process message manager. Specific replies can be sent to the frame
-    // message manager.
-    this.messenger = new Messenger(this, [Services.cpmm, this.messageManager], sender, filter, optionalFilter);
-
-    let localApis = {};
-    apiManager.generateAPIs(this, localApis);
-    this.childManager = new WannabeChildAPIManager(this, this.messageManager, localApis, {
-      envType: "addon_parent",
-      viewType,
-      url: uri.spec,
+    Schemas.exportLazyGetter(contentWindow, "browser", () => {
+      let browserObj = Cu.createObjectIn(contentWindow);
+      Schemas.inject(browserObj, this.childManager);
+      return browserObj;
     });
-    let chromeApiWrapper = Object.create(this.childManager);
-    chromeApiWrapper.isChromeCompat = true;
 
-    let browserObj = Cu.createObjectIn(contentWindow, {defineAs: "browser"});
-    let chromeObj = Cu.createObjectIn(contentWindow, {defineAs: "chrome"});
-    Schemas.inject(browserObj, this.childManager);
-    Schemas.inject(chromeObj, chromeApiWrapper);
+    Schemas.exportLazyGetter(contentWindow, "chrome", () => {
+      let chromeApiWrapper = Object.create(this.childManager);
+      chromeApiWrapper.isChromeCompat = true;
 
-    if (viewType == "background") {
-      apiManager.global.initializeBackgroundPage(contentWindow);
-    }
+      let chromeObj = Cu.createObjectIn(contentWindow);
+      Schemas.inject(chromeObj, chromeApiWrapper);
+      return chromeObj;
+    });
 
     this.extension.views.add(this);
   }
@@ -230,11 +220,44 @@ class ExtensionContext extends BaseContext {
       return;
     }
 
+    if (this.contentWindow) {
+      this.contentWindow.close();
+    }
+
     super.unload();
-    this.childManager.close();
     this.extension.views.delete(this);
   }
 }
+
+defineLazyGetter(ExtensionContext.prototype, "messenger", function() {
+  let filter = {extensionId: this.extension.id};
+  let optionalFilter = {};
+  // Addon-generated messages (not necessarily from the same process as the
+  // addon itself) are sent to the main process, which forwards them via the
+  // parent process message manager. Specific replies can be sent to the frame
+  // message manager.
+  return new Messenger(this, [Services.cpmm, this.messageManager], this.sender,
+                       filter, optionalFilter);
+});
+
+defineLazyGetter(ExtensionContext.prototype, "childManager", function() {
+  let localApis = {};
+  apiManager.generateAPIs(this, localApis);
+
+  if (this.viewType == "background") {
+    apiManager.global.initializeBackgroundPage(this.contentWindow);
+  }
+
+  let childManager = new WannabeChildAPIManager(this, this.messageManager, localApis, {
+    envType: "addon_parent",
+    viewType: this.viewType,
+    url: this.uri.spec,
+  });
+
+  this.callOnClose(childManager);
+
+  return childManager;
+});
 
 // All subframes in a tab, background page, popup, etc. have the same view type.
 // This class keeps track of such global state.
