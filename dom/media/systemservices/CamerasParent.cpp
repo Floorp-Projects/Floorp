@@ -21,6 +21,11 @@
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 
+#if defined(_WIN32)
+#include <process.h>
+#define getpid() _getpid()
+#endif
+
 #undef LOG
 #undef LOG_ENABLED
 mozilla::LazyLogModule gCamerasParentLog("CamerasParent");
