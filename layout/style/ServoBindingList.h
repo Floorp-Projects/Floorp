@@ -84,6 +84,15 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_Count, uint32_t,
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetNthProperty, bool,
                    RawServoDeclarationBlockBorrowed declarations,
                    uint32_t index, nsAString* result)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetPropertyValue, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsIAtom* property, bool is_custom, nsAString* value)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetPropertyIsImportant, bool,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsIAtom* property, bool is_custom)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemoveProperty, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsIAtom* property, bool is_custom)
 
 // CSS supports()
 SERVO_BINDING_FUNC(Servo_CSSSupports, bool,
