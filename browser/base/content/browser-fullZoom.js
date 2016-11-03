@@ -28,7 +28,6 @@ var FullZoom = {
     return this._siteSpecificPref;
   },
 
-  //* *************************************************************************//
   // nsISupports
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMEventListener,
@@ -37,7 +36,6 @@ var FullZoom = {
                                          Ci.nsISupportsWeakReference,
                                          Ci.nsISupports]),
 
-  //* *************************************************************************//
   // Initialization & Destruction
 
   init: function FullZoom_init() {
@@ -75,7 +73,6 @@ var FullZoom = {
   },
 
 
-  //* *************************************************************************//
   // Event Handlers
 
   // nsIDOMEventListener
@@ -246,7 +243,6 @@ var FullZoom = {
     menuItem.setAttribute("checked", !ZoomManager.useFullZoom);
   },
 
-  //* *************************************************************************//
   // Setting & Pref Manipulation
 
   /**
@@ -391,7 +387,6 @@ var FullZoom = {
     });
   },
 
-  //* *************************************************************************//
   // Utilities
 
   /**
