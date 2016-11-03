@@ -580,23 +580,17 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   if (!svgChildFrame)
     return DrawResult::SUCCESS;
 
-  float opacity = aFrame->StyleEffects()->mOpacity;
-  if (opacity == 0.0f)
+  MaskUsage maskUsage;
+  DetermineMaskUsage(aFrame, true, maskUsage);
+  if (maskUsage.opacity == 0.0f) {
     return DrawResult::SUCCESS;
+  }
 
   const nsIContent* content = aFrame->GetContent();
   if (content->IsSVGElement() &&
       !static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
     return DrawResult::SUCCESS;
   }
-
-  /* Properties are added lazily and may have been removed by a restyle,
-     so make sure all applicable ones are set again. */
-
-  nsSVGEffects::EffectProperties effectProperties =
-    nsSVGEffects::GetEffectProperties(aFrame);
-
-  bool isOK = effectProperties.HasNoFilterOrHasValidFilter();
 
   if (aDirtyRect &&
       !(aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
@@ -648,17 +642,13 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
    * + Merge opacity and masking if both used together.
    */
 
-  if (opacity != 1.0f && CanOptimizeOpacity(aFrame))
-    opacity = 1.0f;
-
-  DrawTarget* drawTarget = aContext.GetDrawTarget();
-  bool complexEffects = false;
-
+  /* Properties are added lazily and may have been removed by a restyle,
+     so make sure all applicable ones are set again. */
+  nsSVGEffects::EffectProperties effectProperties =
+    nsSVGEffects::GetEffectProperties(aFrame);
+  bool isOK = effectProperties.HasNoFilterOrHasValidFilter();
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
   nsSVGMaskFrame *maskFrame = effectProperties.GetFirstMaskFrame(&isOK);
-
-  bool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : true;
-
   if (!isOK) {
     // Some resource is invalid. We shouldn't paint anything.
     return DrawResult::SUCCESS;
@@ -670,22 +660,26 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
 
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
-  if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)
-      || aFrame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
-    complexEffects = true;
+  bool shouldGenerateMask = (maskUsage.opacity != 1.0f ||
+                             maskUsage.shouldGenerateClipMaskLayer ||
+                             maskUsage.shouldGenerateMaskLayer ||
+                             aFrame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL);
 
+  if (shouldGenerateMask) {
     Matrix maskTransform;
-    RefPtr<SourceSurface> maskSurface =
-      maskFrame ? maskFrame->GetMaskForMaskedFrame(&aContext,
-                                                    aFrame, aTransform, opacity, &maskTransform)
-                : nullptr;
+    RefPtr<SourceSurface> maskSurface;
 
-    if (maskFrame && !maskSurface) {
-      // Entire surface is clipped out.
-      return DrawResult::SUCCESS;
+    if (maskUsage.shouldGenerateMaskLayer) {
+      maskSurface =
+        maskFrame->GetMaskForMaskedFrame(&aContext, aFrame, aTransform,
+                                         maskUsage.opacity, &maskTransform);
+
+      if (!maskSurface) {
+        // Entire surface is clipped out.
+        return DrawResult::SUCCESS;
+      }
     }
 
-    aContext.Save();
     if (!(aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
       // aFrame has a valid visual overflow rect, so clip to it before calling
       // PushGroup() to minimize the size of the surfaces we'll composite:
@@ -700,7 +694,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
       }
       aContext.Clip(NSRectToSnappedRect(overflowRect,
                                         aFrame->PresContext()->AppUnitsPerDevPixel(),
-                                        *drawTarget));
+                                        *aContext.GetDrawTarget()));
     }
 
     if (aFrame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
@@ -726,10 +720,12 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
       targetOffset = drawRect.TopLeft();
     }
 
-    if (clipPathFrame && !isTrivialClip) {
+    if (maskUsage.shouldGenerateClipMaskLayer) {
       Matrix clippedMaskTransform;
-      RefPtr<SourceSurface> clipMaskSurface = clipPathFrame->GetClipMask(aContext, aFrame, aTransform,
-                                                                         &clippedMaskTransform, maskSurface, maskTransform);
+      RefPtr<SourceSurface> clipMaskSurface =
+        clipPathFrame->GetClipMask(aContext, aFrame, aTransform,
+                                   &clippedMaskTransform, maskSurface,
+                                   maskTransform);
 
       if (clipMaskSurface) {
         maskSurface = clipMaskSurface;
@@ -737,21 +733,22 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
       }
     }
 
-    if (maskFrame) {
-      target->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, 1.0,
-                                    maskSurface, maskTransform);
-    } else if (opacity != 1.0f || (clipPathFrame && !isTrivialClip)) {
-      target->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity,
-                                    maskSurface, maskTransform);
-    }
+    // SVG mask multiply opacity into maskSurface already, so we do not bother
+    // to apply opacity again.
+    float opacity = maskFrame ? 1.0 : maskUsage.opacity;
+    target->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity,
+                                  maskSurface, maskTransform);
   }
 
   /* If this frame has only a trivial clipPath, set up cairo's clipping now so
    * we can just do normal painting and get it clipped appropriately.
    */
-  if (clipPathFrame && isTrivialClip) {
-    aContext.Save();
-    clipPathFrame->ApplyClipPath(aContext, aFrame, aTransform);
+  if (maskUsage.shouldApplyClipPath || maskUsage.shouldApplyBasicShape) {
+    if (maskUsage.shouldApplyClipPath) {
+      clipPathFrame->ApplyClipPath(aContext, aFrame, aTransform);
+    } else {
+      nsCSSClipPathInstance::ApplyBasicShapeClip(aContext, aFrame);
+    }
   }
 
   DrawResult result = DrawResult::SUCCESS;
@@ -786,15 +783,11 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
     result = svgChildFrame->PaintSVG(*target, aTransform, aDirtyRect);
   }
 
-  if (clipPathFrame && isTrivialClip) {
-    aContext.Restore();
+  if (maskUsage.shouldApplyClipPath || maskUsage.shouldApplyBasicShape) {
+    aContext.PopClip();
   }
 
-  /* No more effects, we're done. */
-  if (!complexEffects)
-    return result;
-
-  if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)) {
+  if (shouldGenerateMask) {
     target->PopGroupAndBlend();
   }
 
@@ -809,7 +802,6 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
     aContext.Paint();
   }
 
-  aContext.Restore();
   return result;
 }
 
