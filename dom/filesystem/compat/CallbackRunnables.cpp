@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CallbackRunnables.h"
+#include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/File.h"
@@ -75,23 +76,46 @@ EmptyEntriesCallbackRunnable::Run()
 }
 
 GetEntryHelper::GetEntryHelper(FileSystemDirectoryEntry* aParentEntry,
+                               Directory* aDirectory,
+                               nsTArray<nsString>& aParts,
                                FileSystem* aFileSystem,
                                FileSystemEntryCallback* aSuccessCallback,
                                ErrorCallback* aErrorCallback,
                                FileSystemDirectoryEntry::GetInternalType aType)
   : mParentEntry(aParentEntry)
+  , mDirectory(aDirectory)
+  , mParts(aParts)
   , mFileSystem(aFileSystem)
   , mSuccessCallback(aSuccessCallback)
   , mErrorCallback(aErrorCallback)
   , mType(aType)
 {
   MOZ_ASSERT(aParentEntry);
+  MOZ_ASSERT(aDirectory);
+  MOZ_ASSERT(!aParts.IsEmpty());
   MOZ_ASSERT(aFileSystem);
   MOZ_ASSERT(aSuccessCallback || aErrorCallback);
 }
 
 GetEntryHelper::~GetEntryHelper()
 {}
+
+void
+GetEntryHelper::Run()
+{
+  MOZ_ASSERT(!mParts.IsEmpty());
+
+  ErrorResult rv;
+  RefPtr<Promise> promise = mDirectory->Get(mParts[0], rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
+    Error(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  mParts.RemoveElementAt(0);
+  promise->AppendNativeHandler(this);
+}
 
 void
 GetEntryHelper::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
@@ -102,9 +126,23 @@ GetEntryHelper::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 
   JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
 
+  // This is not the last part of the path.
+  if (!mParts.IsEmpty()) {
+    ContinueRunning(obj);
+    return;
+  }
+
+  CompleteOperation(obj);
+}
+
+void
+GetEntryHelper::CompleteOperation(JSObject* aObj)
+{
+  MOZ_ASSERT(mParts.IsEmpty());
+
   if (mType == FileSystemDirectoryEntry::eGetFile) {
     RefPtr<File> file;
-    if (NS_FAILED(UNWRAP_OBJECT(File, obj, file))) {
+    if (NS_FAILED(UNWRAP_OBJECT(File, aObj, file))) {
       Error(NS_ERROR_DOM_TYPE_MISMATCH_ERR);
       return;
     }
@@ -119,7 +157,7 @@ GetEntryHelper::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
   MOZ_ASSERT(mType == FileSystemDirectoryEntry::eGetDirectory);
 
   RefPtr<Directory> directory;
-  if (NS_FAILED(UNWRAP_OBJECT(Directory, obj, directory))) {
+  if (NS_FAILED(UNWRAP_OBJECT(Directory, aObj, directory))) {
     Error(NS_ERROR_DOM_TYPE_MISMATCH_ERR);
     return;
   }
@@ -128,6 +166,28 @@ GetEntryHelper::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
     new FileSystemDirectoryEntry(mParentEntry->GetParentObject(), directory,
                                  mParentEntry, mFileSystem);
   mSuccessCallback->HandleEvent(*entry);
+}
+
+void
+GetEntryHelper::ContinueRunning(JSObject* aObj)
+{
+  MOZ_ASSERT(!mParts.IsEmpty());
+
+  RefPtr<Directory> directory;
+  if (NS_FAILED(UNWRAP_OBJECT(Directory, aObj, directory))) {
+    Error(NS_ERROR_DOM_TYPE_MISMATCH_ERR);
+    return;
+  }
+
+  RefPtr<FileSystemDirectoryEntry> entry =
+    new FileSystemDirectoryEntry(mParentEntry->GetParentObject(), directory,
+                                 mParentEntry, mFileSystem);
+
+  // Update the internal values.
+  mParentEntry = entry;
+  mDirectory = directory;
+
+  Run();
 }
 
 void
