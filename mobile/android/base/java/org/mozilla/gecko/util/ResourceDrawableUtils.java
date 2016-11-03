@@ -115,7 +115,7 @@ public class ResourceDrawableUtils {
         if (data.startsWith("drawable://")) {
             final Uri imageUri = Uri.parse(data);
             final int id = getResource(context, imageUri);
-            final Drawable d = context.getResources().getDrawable(id);
+            final Drawable d = AppCompatDrawableManager.get().getDrawable(context, id);
 
             runOnBitmapFoundOnUiThread(loader, d);
             return;
