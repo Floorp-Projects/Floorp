@@ -1471,12 +1471,11 @@ Inspector.prototype = {
 
     // Insert the html and expect a childList markup mutation.
     let onMutations = this.once("markupmutation");
-    let {nodes} = yield this.walker.insertAdjacentHTML(this.selection.nodeFront,
-                                                       "beforeEnd", html);
+    yield this.walker.insertAdjacentHTML(this.selection.nodeFront, "beforeEnd", html);
     yield onMutations;
 
-    // Select the new node (this will auto-expand its parent).
-    this.selection.setNodeFront(nodes[0], "node-inserted");
+    // Expand the parent node.
+    this.markup.expandNode(this.selection.nodeFront);
   }),
 
   /**
