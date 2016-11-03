@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AudioEventTimeline.cpp"
-#include "TestHarness.h"
+#include "AudioEventTimeline.h"
 #include <sstream>
 #include <limits>
+#include "gtest/gtest.h"
 
 // Mock the MediaStream class
 namespace mozilla {
@@ -27,11 +27,10 @@ using std::numeric_limits;
 // Some simple testing primitives
 void ok(bool val, const char* msg)
 {
-  if (val) {
-    passed(msg);
-  } else {
-    fail(msg);
+  if (!val) {
+    fprintf(stderr, "failure: %s", msg);
   }
+  ASSERT_TRUE(val);
 }
 
 namespace std {
@@ -50,7 +49,7 @@ template <class T, class U>
 void is(const T& a, const U& b, const char* msg)
 {
   std::stringstream ss;
-  ss << msg << ", Got: " << a << ", expected: " << b;
+  ss << msg << ", Got: " << a << ", expected: " << b << std::endl;
   ok(a == b, ss.str().c_str());
 }
 
@@ -61,7 +60,7 @@ void is(const float& a, const float& b, const char* msg)
   const float kEpsilon = 0.00001f;
 
   std::stringstream ss;
-  ss << msg << ", Got: " << a << ", expected: " << b;
+  ss << msg << ", Got: " << a << ", expected: " << b << std::endl;
   ok(fabsf(a - b) < kEpsilon, ss.str().c_str());
 }
 
@@ -94,7 +93,7 @@ private:
 
 typedef AudioEventTimeline Timeline;
 
-void TestSpecExample()
+TEST(AudioEventTimeline, SpecExample)
 {
   // First, run the basic tests
   Timeline timeline(10.0f);
@@ -150,7 +149,7 @@ void TestSpecExample()
   is(timeline.GetValueAtTime(1.0), 1.0f, "Correct value");
 }
 
-void TestInvalidEvents()
+TEST(AudioEventTimeline, InvalidEvents)
 {
   static_assert(numeric_limits<float>::has_quiet_NaN, "Platform must have a quiet NaN");
   const float NaN = numeric_limits<float>::quiet_NaN();
@@ -218,7 +217,7 @@ void TestInvalidEvents()
   is(rv, NS_ERROR_DOM_SYNTAX_ERR, "Correct error code returned");
 }
 
-void TestEventReplacement()
+TEST(AudioEventTimeline, EventReplacement)
 {
   Timeline timeline(10.0f);
 
@@ -237,7 +236,7 @@ void TestEventReplacement()
   is(timeline.GetValueAtTime(0.1), 30.0f, "The first event should be overwritten");
 }
 
-void TestEventRemoval()
+TEST(AudioEventTimeline, EventRemoval)
 {
   Timeline timeline(10.0f);
 
@@ -258,7 +257,7 @@ void TestEventRemoval()
   ok(timeline.HasSimpleValue(), "No event should remain scheduled");
 }
 
-void TestBeforeFirstEventSetValue()
+TEST(AudioEventTimeline, BeforeFirstEventSetValue)
 {
   Timeline timeline(10.0f);
 
@@ -268,7 +267,7 @@ void TestBeforeFirstEventSetValue()
   is(timeline.GetValueAtTime(0.5), 10.0f, "Retrun the default value before the first event");
 }
 
-void TestBeforeFirstEventSetTarget()
+TEST(AudioEventTimeline, BeforeFirstEventSetTarget)
 {
   Timeline timeline(10.0f);
 
@@ -278,7 +277,7 @@ void TestBeforeFirstEventSetTarget()
   is(timeline.GetValueAtTime(0.5), 10.0f, "Retrun the default value before the first event");
 }
 
-void TestBeforeFirstEventLinearRamp()
+TEST(AudioEventTimeline, BeforeFirstEventLinearRamp)
 {
   Timeline timeline(10.0f);
 
@@ -288,7 +287,7 @@ void TestBeforeFirstEventLinearRamp()
   is(timeline.GetValueAtTime(0.5), 10.0f, "Retrun the default value before the first event");
 }
 
-void TestBeforeFirstEventExponentialRamp()
+TEST(AudioEventTimeline, BeforeFirstEventExponentialRamp)
 {
   Timeline timeline(10.0f);
 
@@ -298,7 +297,7 @@ void TestBeforeFirstEventExponentialRamp()
   is(timeline.GetValueAtTime(0.5), 10.0f, "Retrun the default value before the first event");
 }
 
-void TestAfterLastValueEvent()
+TEST(AudioEventTimeline, AfterLastValueEvent)
 {
   Timeline timeline(10.0f);
 
@@ -308,7 +307,7 @@ void TestAfterLastValueEvent()
   is(timeline.GetValueAtTime(1.5), 20.0f, "Return the last value after the last SetValue event");
 }
 
-void TestAfterLastTargetValueEvent()
+TEST(AudioEventTimeline, AfterLastTargetValueEvent)
 {
   Timeline timeline(10.0f);
 
@@ -318,7 +317,7 @@ void TestAfterLastTargetValueEvent()
   is(timeline.GetValueAtTime(10.), (20.f + (10.f - 20.f) * expf(-9.0f / 5.0f)), "Return the value after the last SetTarget event based on the curve");
 }
 
-void TestAfterLastTargetValueEventWithValueSet()
+TEST(AudioEventTimeline, AfterLastTargetValueEventWithValueSet)
 {
   Timeline timeline(10.0f);
 
@@ -338,7 +337,7 @@ void TestAfterLastTargetValueEventWithValueSet()
   is(timeline.GetValueAtTime(10.), (20.f + (50.f - 20.f) * expf(-9.0f / 5.0f)), "Return the value after SetValue and the last SetTarget event based on the curve");
 }
 
-void TestValue()
+TEST(AudioEventTimeline, Value)
 {
   Timeline timeline(10.0f);
 
@@ -354,7 +353,7 @@ void TestValue()
   is(timeline.Value(), 20.0f, "Should not be able to set the value");
 }
 
-void TestLinearRampAtZero()
+TEST(AudioEventTimeline, LinearRampAtZero)
 {
   Timeline timeline(10.0f);
 
@@ -364,7 +363,7 @@ void TestLinearRampAtZero()
   is(timeline.GetValueAtTime(0.0), 20.0f, "Should get the correct value when t0 == t1 == 0");
 }
 
-void TestExponentialRampAtZero()
+TEST(AudioEventTimeline, ExponentialRampAtZero)
 {
   Timeline timeline(10.0f);
 
@@ -374,7 +373,7 @@ void TestExponentialRampAtZero()
   is(timeline.GetValueAtTime(0.0), 20.0f, "Should get the correct value when t0 == t1 == 0");
 }
 
-void TestLinearRampAtSameTime()
+TEST(AudioEventTimeline, LinearRampAtSameTime)
 {
   Timeline timeline(10.0f);
 
@@ -385,7 +384,7 @@ void TestLinearRampAtSameTime()
   is(timeline.GetValueAtTime(1.0), 20.0f, "Should get the correct value when t0 == t1");
 }
 
-void TestExponentialRampAtSameTime()
+TEST(AudioEventTimeline, ExponentialRampAtSameTime)
 {
   Timeline timeline(10.0f);
 
@@ -396,7 +395,7 @@ void TestExponentialRampAtSameTime()
   is(timeline.GetValueAtTime(1.0), 20.0f, "Should get the correct value when t0 == t1");
 }
 
-void TestSetTargetZeroTimeConstant()
+TEST(AudioEventTimeline, SetTargetZeroTimeConstant)
 {
   Timeline timeline(10.0f);
 
@@ -406,7 +405,7 @@ void TestSetTargetZeroTimeConstant()
   is(timeline.GetValueAtTime(1.0), 20.0f, "Should get the correct value when t0 == t1");
 }
 
-void TestExponentialInvalidPreviousZeroValue()
+TEST(AudioEventTimeline, ExponentialInvalidPreviousZeroValue)
 {
   Timeline timeline(0.f);
 
@@ -432,8 +431,7 @@ void TestExponentialInvalidPreviousZeroValue()
   is(rv, NS_OK, "Should succeed this time");
 }
 
-void
-TestSettingValueCurveTwice()
+TEST(AudioEventTimeline, SettingValueCurveTwice)
 {
   Timeline timeline(0.f);
   float curve[] = { -1.0f, 0.0f, 1.0f };
@@ -443,35 +441,5 @@ TestSettingValueCurveTwice()
   timeline.SetValueCurveAtTime(curve, ArrayLength(curve), 0.0f, 0.3f, rv);
   timeline.SetValueCurveAtTime(curve, ArrayLength(curve), 0.0f, 0.3f, rv);
   is(rv, NS_OK, "SetValueCurveAtTime succeeded");
-}
-
-int main()
-{
-  ScopedXPCOM xpcom("TestAudioEventTimeline");
-  if (xpcom.failed()) {
-    return 1;
-  }
-
-  TestSpecExample();
-  TestInvalidEvents();
-  TestEventReplacement();
-  TestEventRemoval();
-  TestBeforeFirstEventSetValue();
-  TestBeforeFirstEventSetTarget();
-  TestBeforeFirstEventLinearRamp();
-  TestBeforeFirstEventExponentialRamp();
-  TestAfterLastValueEvent();
-  TestAfterLastTargetValueEvent();
-  TestAfterLastTargetValueEventWithValueSet();
-  TestValue();
-  TestLinearRampAtZero();
-  TestExponentialRampAtZero();
-  TestLinearRampAtSameTime();
-  TestExponentialRampAtSameTime();
-  TestSetTargetZeroTimeConstant();
-  TestExponentialInvalidPreviousZeroValue();
-  TestSettingValueCurveTwice();
-
-  return gFailCount > 0;
 }
 
