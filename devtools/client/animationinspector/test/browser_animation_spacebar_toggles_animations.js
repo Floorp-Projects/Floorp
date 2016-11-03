@@ -4,6 +4,12 @@
 
 "use strict";
 
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.processCount", 1]]
+  });
+});
+
 // Test that the spacebar key press toggles the toggleAll button state
 // when a node with no animation is selected.
 // This test doesn't need to test if animations actually pause/resume

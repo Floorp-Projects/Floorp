@@ -8,7 +8,16 @@ from marionette_driver.errors import (ElementNotAccessibleException,
 from marionette_driver.by import By
 
 
+
 class TestAccessibility(MarionetteTestCase):
+    def setUp(self):
+        super(TestAccessibility, self).setUp()
+        with self.marionette.using_context("chrome"):
+            self.marionette.set_pref("dom.ipc.processCount", 1)
+
+    def tearDown(self):
+        with self.marionette.using_context("chrome"):
+            self.marionette.clear_pref("dom.ipc.processCount")
 
     # Elements that are accessible with and without the accessibliity API
     valid_elementIDs = [
