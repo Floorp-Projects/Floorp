@@ -88,6 +88,7 @@ enum Phase : uint8_t {
     PHASE_MARK_RUNTIME_DATA,
     PHASE_MARK_EMBEDDING,
     PHASE_MARK_COMPARTMENTS,
+    PHASE_PURGE_SHAPE_TABLES,
 
     PHASE_LIMIT,
     PHASE_NONE = PHASE_LIMIT,
@@ -144,6 +145,7 @@ struct ZoneGCStats
     _(WaitBgThread,  "waitBG",   PHASE_WAIT_BACKGROUND_THREAD)                \
     _(DiscardCode,   "discard",  PHASE_MARK_DISCARD_CODE)                     \
     _(RelazifyFunc,  "relazify", PHASE_RELAZIFY_FUNCTIONS)                    \
+    _(PurgeTables,   "purgeTables", PHASE_PURGE_SHAPE_TABLES)                 \
     _(Purge,         "purge",    PHASE_PURGE)                                 \
     _(Mark,          "mark",     PHASE_MARK)                                  \
     _(Sweep,         "sweep",    PHASE_SWEEP)                                 \
