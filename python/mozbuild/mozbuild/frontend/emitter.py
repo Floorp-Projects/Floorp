@@ -1241,7 +1241,8 @@ class TreeMetadataEmitter(LoggingMixin):
             else:
                 script = None
                 method = None
-            yield GeneratedFile(context, script, method, outputs, inputs)
+            yield GeneratedFile(context, script, method, outputs, inputs,
+                                flags.flags)
 
     def _process_test_manifests(self, context):
         for prefix, info in TEST_MANIFESTS.items():
