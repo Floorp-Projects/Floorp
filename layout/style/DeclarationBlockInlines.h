@@ -26,6 +26,12 @@ DeclarationBlock::Release()
   MOZ_STYLO_FORWARD(Release, ())
 }
 
+void
+DeclarationBlock::ToString(nsAString& aString) const
+{
+  MOZ_STYLO_FORWARD(ToString, (aString))
+}
+
 uint32_t
 DeclarationBlock::Count() const
 {
