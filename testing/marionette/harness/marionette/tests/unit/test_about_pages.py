@@ -2,16 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette import MarionetteTestCase
-from marionette.marionette_test import skip_if_e10s
+from marionette import MarionetteTestCase, WindowManagerMixin
 from marionette_driver.keys import Keys
 from marionette_driver.by import By
 
 
-class TestAboutPages(MarionetteTestCase):
+class TestAboutPages(WindowManagerMixin, MarionetteTestCase):
 
     def setUp(self):
-        MarionetteTestCase.setUp(self)
+        super(TestAboutPages, self).setUp()
+
         if self.marionette.session_capabilities['platformName'] == 'darwin':
             self.mod_key = Keys.META
         else:
@@ -20,7 +20,17 @@ class TestAboutPages(MarionetteTestCase):
         self.remote_uri = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(self.remote_uri)
 
+    def tearDown(self):
+        self.close_all_tabs()
+
+        super(TestAboutPages, self).tearDown()
+
     def test_back_forward(self):
+        # Bug 1311041 - Prevent changing of window handle by forcing the test
+        # to be run in a new tab.
+        new_tab = self.open_tab(trigger='menu')
+        self.marionette.switch_to_window(new_tab)
+
         self.marionette.navigate("about:blank")
         self.marionette.navigate(self.remote_uri)
 
@@ -31,33 +41,43 @@ class TestAboutPages(MarionetteTestCase):
         self.wait_for_condition(
             lambda mn: mn.get_url() == self.remote_uri)
 
+        self.marionette.close()
+        self.marionette.switch_to_window(self.start_tab)
+
     def test_navigate_non_remote_about_pages(self):
+        # Bug 1311041 - Prevent changing of window handle by forcing the test
+        # to be run in a new tab.
+        new_tab = self.open_tab(trigger='menu')
+        self.marionette.switch_to_window(new_tab)
+
         self.marionette.navigate("about:blank")
         self.assertEqual(self.marionette.get_url(), "about:blank")
         self.marionette.navigate("about:preferences")
         self.assertEqual(self.marionette.get_url(), "about:preferences")
 
-    def test_navigate_shortcut_key(self):
-        self.marionette.navigate("about:preferences")
-        self.marionette.navigate(self.remote_uri)
-        self.marionette.navigate("about:blank")
-
-        start_win = self.marionette.current_window_handle
-        start_win_handles = self.marionette.window_handles
-        with self.marionette.using_context("chrome"):
-            main_win = self.marionette.find_element(By.ID, "main-window")
-            main_win.send_keys(self.mod_key, Keys.SHIFT, 'a')
-
-        self.wait_for_condition(lambda mn: len(mn.window_handles) == 2)
-        self.assertEqual(start_win, self.marionette.current_window_handle)
-        [new_tab] = list(set(self.marionette.window_handles) - set(start_win_handles))
-        self.marionette.switch_to_window(new_tab)
-        self.wait_for_condition(lambda mn: mn.get_url() == "about:addons")
         self.marionette.close()
-        self.marionette.switch_to_window(start_win)
+        self.marionette.switch_to_window(self.start_tab)
 
-    @skip_if_e10s
+    def test_navigate_shortcut_key(self):
+        def open_with_shortcut():
+            with self.marionette.using_context("chrome"):
+                main_win = self.marionette.find_element(By.ID, "main-window")
+                main_win.send_keys(self.mod_key, Keys.SHIFT, 'a')
+
+        new_tab = self.open_tab(trigger=open_with_shortcut)
+        self.marionette.switch_to_window(new_tab)
+
+        self.wait_for_condition(lambda mn: mn.get_url() == "about:addons")
+
+        self.marionette.close()
+        self.marionette.switch_to_window(self.start_tab)
+
     def test_type_to_non_remote_tab(self):
+        # Bug 1311041 - Prevent changing of window handle by forcing the test
+        # to be run in a new tab.
+        new_tab = self.open_tab(trigger='menu')
+        self.marionette.switch_to_window(new_tab)
+
         with self.marionette.using_context("chrome"):
             urlbar = self.marionette.find_element(By.ID, 'urlbar')
             urlbar.send_keys(self.mod_key + 'a')
@@ -65,29 +85,23 @@ class TestAboutPages(MarionetteTestCase):
             urlbar.send_keys('about:preferences' + Keys.ENTER)
         self.wait_for_condition(lambda mn: mn.get_url() == "about:preferences")
 
+        self.marionette.close()
+        self.marionette.switch_to_window(self.start_tab)
+
     def test_type_to_remote_tab(self):
-        self.marionette.navigate("about:preferences")
+        # about:blank keeps remoteness from remote_uri
+        self.marionette.navigate("about:blank")
         with self.marionette.using_context("chrome"):
             urlbar = self.marionette.find_element(By.ID, 'urlbar')
-            urlbar.send_keys(self.mod_key + 'a')
-            urlbar.send_keys(self.mod_key + 'x')
             urlbar.send_keys(self.remote_uri + Keys.ENTER)
 
         self.wait_for_condition(lambda mn: mn.get_url() == self.remote_uri)
 
     def test_hang(self):
-        self.marionette.set_context('chrome')
-        initial_tab = self.marionette.window_handles[0]
-
         # Open a new tab and close the first one
-        new_tab = self.marionette.find_element(By.ID, 'menu_newNavigatorTab')
-        new_tab.click()
-
-        new_tab = [handle for handle in self.marionette.window_handles if
-                   handle != initial_tab][0]
+        new_tab = self.open_tab(trigger="menu")
 
         self.marionette.close()
         self.marionette.switch_to_window(new_tab)
 
-        with self.marionette.using_context('content'):
-            self.marionette.navigate(self.remote_uri)
+        self.marionette.navigate(self.remote_uri)
