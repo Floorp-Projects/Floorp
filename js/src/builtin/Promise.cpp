@@ -1039,8 +1039,11 @@ GetResolveFunctionFromPromise(PromiseObject* promise)
     if (rejectFunVal.isUndefined())
         return nullptr;
     JSObject* rejectFunObj = &rejectFunVal.toObject();
+
+    // We can safely unwrap it because all we want is to get the resolve
+    // function.
     if (IsWrapper(rejectFunObj))
-        rejectFunObj = CheckedUnwrap(rejectFunObj);
+        rejectFunObj = UncheckedUnwrap(rejectFunObj);
 
     if (!rejectFunObj->is<JSFunction>())
         return nullptr;
