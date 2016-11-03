@@ -26,6 +26,7 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Visits;
+import org.mozilla.gecko.db.BrowserContract.PageMetadata;
 import org.mozilla.gecko.db.BrowserContract.Numbers;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
@@ -59,7 +60,7 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
     // Replace the Bug number below with your Bug that is conducting a DB upgrade, as to force a merge conflict with any
     // other patches that require a DB upgrade.
-    public static final int DATABASE_VERSION = 35; // Bug 1298783
+    public static final int DATABASE_VERSION = 36; // Bug 1301717
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
@@ -67,6 +68,7 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     static final String TABLE_BOOKMARKS = Bookmarks.TABLE_NAME;
     static final String TABLE_HISTORY = History.TABLE_NAME;
     static final String TABLE_VISITS = Visits.TABLE_NAME;
+    static final String TABLE_PAGE_METADATA = PageMetadata.TABLE_NAME;
     static final String TABLE_FAVICONS = Favicons.TABLE_NAME;
     static final String TABLE_THUMBNAILS = Thumbnails.TABLE_NAME;
     static final String TABLE_READING_LIST = ReadingListItems.TABLE_NAME;
@@ -211,6 +213,27 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 Thumbnails.URL + " TEXT UNIQUE," +
                 Thumbnails.DATA + " BLOB" +
                 ");");
+    }
+
+    private void createPageMetadataTable(SQLiteDatabase db) {
+        debug("Creating " + TABLE_PAGE_METADATA + " table");
+        db.execSQL("CREATE TABLE " + TABLE_PAGE_METADATA + "(" +
+                PageMetadata._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                PageMetadata.HISTORY_GUID + " TEXT NOT NULL," +
+                PageMetadata.DATE_CREATED + " INTEGER NOT NULL, " +
+                PageMetadata.HAS_IMAGE + " TINYINT NOT NULL DEFAULT 0, " +
+                PageMetadata.JSON + " TEXT NOT NULL, " +
+
+                "FOREIGN KEY (" + Visits.HISTORY_GUID + ") REFERENCES " +
+                TABLE_HISTORY + "(" + History.GUID + ") ON DELETE CASCADE ON UPDATE CASCADE" +
+                ");");
+
+        // Establish a 1-to-1 relationship with History table.
+        db.execSQL("CREATE UNIQUE INDEX page_metadata_history_guid ON " + TABLE_PAGE_METADATA + "("
+                + PageMetadata.HISTORY_GUID + ")");
+        // Improve performance of commonly occurring selections.
+        db.execSQL("CREATE INDEX page_metadata_history_guid_and_has_image ON " + TABLE_PAGE_METADATA + "("
+                + PageMetadata.HISTORY_GUID + ", " + PageMetadata.HAS_IMAGE + ")");
     }
 
     private void createBookmarksWithFaviconsView(SQLiteDatabase db) {
@@ -726,6 +749,8 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createCombinedViewOn34(db);
 
         createActivityStreamBlocklistTable(db);
+
+        createPageMetadataTable(db);
     }
 
     /**
@@ -1951,6 +1976,10 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createActivityStreamBlocklistTable(db);
     }
 
+    private void upgradeDatabaseFrom35to36(final SQLiteDatabase db) {
+        createPageMetadataTable(db);
+    }
+
     private void createV33CombinedView(final SQLiteDatabase db) {
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED);
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_FAVICONS);
@@ -2081,6 +2110,10 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
                 case 35:
                     upgradeDatabaseFrom34to35(db);
+                    break;
+
+                case 36:
+                    upgradeDatabaseFrom35to36(db);
                     break;
             }
         }
