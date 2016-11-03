@@ -9,25 +9,14 @@ interface FileSystemEntry {
     readonly attribute boolean isDirectory;
 
     [GetterThrows]
-    readonly attribute DOMString name;
+    readonly attribute USVString name;
 
     [GetterThrows]
-    readonly attribute DOMString fullPath;
+    readonly attribute USVString fullPath;
 
     readonly attribute FileSystem filesystem;
 
 /** Not implemented:
- *  void getMetadata(MetadataCallback successCallback,
- *                   optional ErrorCallback errorCallback);
- *  void moveTo(FileSystemDirectoryEntry parent, optional DOMString? name,
- *              optional FileSystemEntryCallback successCallback,
- *              optional ErrorCallback errorCallback);
- *  void copyTo(FileSystemDirectoryEntry parent, optional DOMString? name,
- *              optional FileSystemEntryCallback successCallback,
- *              optional ErrorCallback errorCallback);
- *  DOMString toURL();
- *  void remove(VoidCallback successCallback,
- *              optional ErrorCallback errorCallback);
  *  void getParent(optional FileSystemEntryCallback successCallback,
  *                 optional ErrorCallback errorCallback);
  */

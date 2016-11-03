@@ -24,6 +24,6 @@ callback interface ErrorCallback {
 };
 
 interface FileSystem {
-    readonly    attribute DOMString name;
+    readonly    attribute USVString name;
     readonly    attribute FileSystemDirectoryEntry root;
 };
