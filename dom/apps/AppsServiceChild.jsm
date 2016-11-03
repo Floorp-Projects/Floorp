@@ -103,13 +103,7 @@ this.DOMApplicationRegistry = {
       this.cpmm.addMessageListener(aMsgName, this);
     }).bind(this));
 
-    this.cpmm.sendAsyncMessage("Webapps:RegisterForMessages", {
-      messages: APPS_IPC_MSG_NAMES
-    });
-
-    // We need to prime the cache with the list of apps.
-    let list = this.cpmm.sendSyncMessage("Webapps:GetList", { })[0];
-    this.webapps = list ? list.webapps : { };
+    this.webapps = { };
     // We need a fast mapping from localId -> app, so we add an index.
     // We also add the manifest to the app object.
     this.localIdIndex = { };
