@@ -298,11 +298,18 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSPropertyID aPropID,
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
   RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
 
-  nsCSSParser cssParser(env.mCSSLoader);
   bool changed;
-  cssParser.ParseProperty(aPropID, aPropValue,
-                          env.mSheetURI, env.mBaseURI, env.mPrincipal,
-                          decl->AsGecko(), &changed, aIsImportant);
+  if (decl->IsGecko()) {
+    nsCSSParser cssParser(env.mCSSLoader);
+    cssParser.ParseProperty(aPropID, aPropValue,
+                            env.mSheetURI, env.mBaseURI, env.mPrincipal,
+                            decl->AsGecko(), &changed, aIsImportant);
+  } else {
+    nsIAtom* atom = nsCSSProps::AtomForProperty(aPropID);
+    NS_ConvertUTF16toUTF8 value(aPropValue);
+    changed = Servo_DeclarationBlock_SetProperty(
+      decl->AsServo()->Raw(), atom, false, &value, aIsImportant);
+  }
   if (!changed) {
     // Parsing failed -- but we don't throw an exception for that.
     return NS_OK;
@@ -337,13 +344,19 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
   RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
 
-  nsCSSParser cssParser(env.mCSSLoader);
   bool changed;
-  cssParser.ParseVariable(Substring(aPropertyName,
-                                    CSS_CUSTOM_NAME_PREFIX_LENGTH),
-                          aPropValue, env.mSheetURI,
-                          env.mBaseURI, env.mPrincipal, decl->AsGecko(),
-                          &changed, aIsImportant);
+  auto propName = Substring(aPropertyName, CSS_CUSTOM_NAME_PREFIX_LENGTH);
+  if (decl->IsGecko()) {
+    nsCSSParser cssParser(env.mCSSLoader);
+    cssParser.ParseVariable(propName, aPropValue, env.mSheetURI,
+                            env.mBaseURI, env.mPrincipal, decl->AsGecko(),
+                            &changed, aIsImportant);
+  } else {
+    RefPtr<nsIAtom> atom = NS_Atomize(propName);
+    NS_ConvertUTF16toUTF8 value(aPropValue);
+    changed = Servo_DeclarationBlock_SetProperty(
+      decl->AsServo()->Raw(), atom, true, &value, aIsImportant);
+  }
   if (!changed) {
     // Parsing failed -- but we don't throw an exception for that.
     return NS_OK;

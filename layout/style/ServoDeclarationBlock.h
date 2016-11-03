@@ -26,6 +26,7 @@ public:
   static already_AddRefed<ServoDeclarationBlock>
   FromCssText(const nsAString& aCssText);
 
+  RawServoDeclarationBlock* Raw() const { return mRaw; }
   RawServoDeclarationBlock* const* RefRaw() const {
     static_assert(sizeof(RefPtr<RawServoDeclarationBlock>) ==
                   sizeof(RawServoDeclarationBlock*),
