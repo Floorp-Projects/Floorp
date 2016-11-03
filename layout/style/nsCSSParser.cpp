@@ -6097,7 +6097,8 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
 
   if (aSelector.IsPseudoElement()) {
     CSSPseudoElementType type = aSelector.PseudoType();
-    if (!nsCSSPseudoElements::PseudoElementSupportsUserActionState(type)) {
+    if (type >= CSSPseudoElementType::Count ||
+        !nsCSSPseudoElements::PseudoElementSupportsUserActionState(type)) {
       // We only allow user action pseudo-classes on certain pseudo-elements.
       REPORT_UNEXPECTED_TOKEN(PEPseudoSelNoUserActionPC);
       UngetToken();
