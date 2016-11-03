@@ -1144,14 +1144,12 @@ MediaDecoder::OnSeekResolved(SeekResolveValue aVal)
   }
 
   // Ensure logical position is updated after seek.
-  UpdateLogicalPositionInternal(aVal.mEventVisibility);
+  UpdateLogicalPositionInternal();
 
-  if (aVal.mEventVisibility != MediaDecoderEventVisibility::Suppressed) {
-    mOwner->SeekCompleted();
-    AsyncResolveSeekDOMPromiseIfExists();
-    if (fireEnded) {
-      mOwner->PlaybackEnded();
-    }
+  mOwner->SeekCompleted();
+  AsyncResolveSeekDOMPromiseIfExists();
+  if (fireEnded) {
+    mOwner->PlaybackEnded();
   }
 }
 
@@ -1193,7 +1191,7 @@ MediaDecoder::ChangeState(PlayState aState)
 }
 
 void
-MediaDecoder::UpdateLogicalPositionInternal(MediaDecoderEventVisibility aEventVisibility)
+MediaDecoder::UpdateLogicalPositionInternal()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsShutdown());
@@ -1211,8 +1209,7 @@ MediaDecoder::UpdateLogicalPositionInternal(MediaDecoderEventVisibility aEventVi
   // frame has reflowed and the size updated beforehand.
   Invalidate();
 
-  if (logicalPositionChanged &&
-      aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
+  if (logicalPositionChanged) {
     FireTimeUpdate();
   }
 }
