@@ -130,20 +130,6 @@ function test_state_after_finalize()
   do_check_eq(Ci.mozIStorageStatement.MOZ_STORAGE_STATEMENT_INVALID, stmt.state);
 }
 
-function test_getColumnDecltype()
-{
-  var stmt = createStatement("SELECT name, id FROM test");
-  do_check_eq("TEXT", stmt.getColumnDecltype(0));
-  do_check_eq("INTEGER", stmt.getColumnDecltype(1));
-  try {
-    do_check_eq("GARBAGE", stmt.getColumnDecltype(2));
-    do_throw("should not get here");
-  } catch (e) {
-    do_check_eq(Cr.NS_ERROR_ILLEGAL_VALUE, e.result);
-  }
-  stmt.finalize();
-}
-
 function test_failed_execute()
 {
   var stmt = createStatement("INSERT INTO test (name) VALUES ('foo')");
@@ -181,7 +167,6 @@ var tests = [test_parameterCount_none, test_parameterCount_one,
              test_getColumnName, test_getColumnIndex_same_case,
              test_getColumnIndex_different_case, test_state_ready,
              test_state_executing, test_state_after_finalize,
-             test_getColumnDecltype,
              test_failed_execute,
              test_bind_undefined,
 ];
