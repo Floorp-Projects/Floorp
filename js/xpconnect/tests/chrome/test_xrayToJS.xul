@@ -258,8 +258,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     constructorProps(["isView", "slice", Symbol.species]);
 
   if (!isReleaseOrBeta) {
-    gPrototypeProperties['SharedArrayBuffer'] = ["constructor", "byteLength"];
-    gConstructorProperties['SharedArrayBuffer'] = constructorProps([]);
+    gPrototypeProperties['SharedArrayBuffer'] = ["constructor", "byteLength", Symbol.toStringTag];
+    gConstructorProperties['SharedArrayBuffer'] = constructorProps([Symbol.species]);
   } else {
     is(typeof SharedArrayBuffer, "undefined", "Enable tests!");
   }
