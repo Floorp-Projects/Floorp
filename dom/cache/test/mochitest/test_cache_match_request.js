@@ -25,36 +25,6 @@ function checkResponse(r, expectedBody) {
     }
   });
 }
-function checkFragment(cache, request, requestWithDifferentFragment) {
-  var req1 = new Request(request);
-  var req2 = new Request(requestWithDifferentFragment);
-  var res1 = new Response("Hello World1");
-  var res2 = new Response("Hello World2");
-
-  // Ensure both request and requestWithDifferentFragment have fragment.
-  ok(req1.url.includes('#fragment'), "Request URL should keep the fragment.");
-  ok(req2.url.includes('#other'), "Request URL should keep the fragment.");
-
-  cache.put(req1, res1).then(() => cache.put(req2, res2))
-  .then(function () {
-    // Test for ensuring we get the fragment from cache request.
-    cache.keys(req2).then(function(keys) {
-      keys.forEach(function(r, index, array) {
-        is(req2.url, r.url, "Request URL should be the same");
-      });
-    })
-    return cache.match(req1);
-  }).then(function (resp) {
-    return resp.text();
-  }).then(function (body) {
-    // Test for ensuring only the last response will be cached.
-    is(body, "Hello World2", "Response should be the same as last one");
-    cache.delete(req1);
-    cache.delete(req2);
-  });
-  return Promise.resolve();
-}
-
 fetch(new Request(request)).then(function(r) {
   response = r;
   return response.text();
@@ -73,8 +43,6 @@ function testRequest(request, unknownRequest, requestWithAlternateQueryString,
                      requestWithDifferentFragment) {
   return caches.open(name).then(function(cache) {
     c = cache;
-    return checkFragment(c, request, requestWithDifferentFragment);
-  }).then(function() {
     return c.add(request);
   }).then(function() {
     return Promise.all(
