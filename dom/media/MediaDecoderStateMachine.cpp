@@ -1281,7 +1281,6 @@ MediaDecoderStateMachine::
 DormantState::HandleSeek(SeekTarget aTarget)
 {
   // Exit dormant when the user wants to seek.
-  mPendingSeek.RejectIfExists(__func__);
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
   return SetState<SeekingState>(Move(seekJob));
