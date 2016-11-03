@@ -39345,6 +39345,160 @@
             "url": "/IndexedDB/idbobjectstore-rename-store.html"
           }
         ],
+        "WebCryptoAPI/derive_bits_keys/pbkdf2.worker.js": [
+          {
+            "path": "WebCryptoAPI/derive_bits_keys/pbkdf2.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/derive_bits_keys/pbkdf2.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_AES-CBC.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_AES-CBC.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_AES-CBC.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_AES-CTR.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_AES-CTR.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_AES-CTR.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_AES-GCM.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_AES-GCM.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_AES-GCM.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_AES-KW.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_AES-KW.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_AES-KW.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_ECDH.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_ECDH.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_ECDH.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_ECDSA.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_ECDSA.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_ECDSA.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_HMAC.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_HMAC.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_HMAC.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_RSA-OAEP.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_RSA-OAEP.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_RSA-OAEP.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_RSA-PSS.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_RSA-PSS.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_RSA-PSS.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/failures_RSASSA-PKCS1-v1_5.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/failures_RSASSA-PKCS1-v1_5.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/failures_RSASSA-PKCS1-v1_5.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_AES-CBC.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_AES-CBC.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_AES-CBC.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_AES-CTR.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_AES-CTR.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_AES-CTR.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_AES-GCM.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_AES-GCM.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_AES-GCM.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_AES-KW.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_AES-KW.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_AES-KW.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_ECDH.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_ECDH.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_ECDH.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_ECDSA.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_ECDSA.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_ECDSA.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_HMAC.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_HMAC.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_HMAC.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_RSA-OAEP.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_RSA-OAEP.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_RSA-OAEP.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_RSA-PSS.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_RSA-PSS.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_RSA-PSS.worker.html"
+          }
+        ],
+        "WebCryptoAPI/generateKey/successes_RSASSA-PKCS1-v1_5.worker.js": [
+          {
+            "path": "WebCryptoAPI/generateKey/successes_RSASSA-PKCS1-v1_5.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/generateKey/successes_RSASSA-PKCS1-v1_5.worker.html"
+          }
+        ],
+        "WebCryptoAPI/wrapKey_unwrapKey/wrapKey_unwrapKey.worker.js": [
+          {
+            "path": "WebCryptoAPI/wrapKey_unwrapKey/wrapKey_unwrapKey.worker.js",
+            "timeout": "long",
+            "url": "/WebCryptoAPI/wrapKey_unwrapKey/wrapKey_unwrapKey.worker.html"
+          }
+        ],
         "cssom-view/mouseEvent.html": [
           {
             "path": "cssom-view/mouseEvent.html",
