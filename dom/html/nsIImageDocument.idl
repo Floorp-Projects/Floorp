@@ -14,9 +14,6 @@ interface imgIRequest;
 [scriptable, uuid(87c27f98-37dc-4b64-a8cd-92003624bcee)]
 interface nsIImageDocument : nsISupports {
 
-  /* Whether the pref for image resizing has been set. */
-  readonly attribute boolean imageResizingEnabled;
-
   /* Whether the image is overflowing visible area. */
   readonly attribute boolean imageIsOverflowing;
 
