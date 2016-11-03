@@ -12,8 +12,8 @@
 namespace mozilla {
 namespace dom {
 
-class BlobCallback;
 class File;
+class FileCallback;
 class FileSystemDirectoryEntry;
 
 class FileSystemFileEntry final : public FileSystemEntry
@@ -46,7 +46,7 @@ public:
                const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const;
 
   void
-  GetFile(BlobCallback& aSuccessCallback,
+  GetFile(FileCallback& aSuccessCallback,
           const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const;
 
 private:
