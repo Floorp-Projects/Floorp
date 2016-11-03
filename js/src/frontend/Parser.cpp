@@ -8327,7 +8327,8 @@ Parser<ParseHandler>::assignExprWithoutYieldOrAwait(YieldHandling yieldHandling)
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::argumentList(YieldHandling yieldHandling, Node listNode, bool* isSpread)
+Parser<ParseHandler>::argumentList(YieldHandling yieldHandling, Node listNode, bool* isSpread,
+                                   PossibleError* possibleError /* = nullptr */)
 {
     bool matched;
     if (!tokenStream.matchToken(&matched, TOK_RP, TokenStream::Operand))
@@ -8348,7 +8349,7 @@ Parser<ParseHandler>::argumentList(YieldHandling yieldHandling, Node listNode, b
             *isSpread = true;
         }
 
-        Node argNode = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+        Node argNode = assignExpr(InAllowed, yieldHandling, TripledotProhibited, possibleError);
         if (!argNode)
             return false;
         if (spread) {
@@ -8542,8 +8543,9 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
                     return null();
 
                 JSOp op = JSOP_CALL;
-                if (handler.isNameAnyParentheses(lhs)) {
-                    if (tt == TOK_LP && handler.nameIsEvalAnyParentheses(lhs, context)) {
+                bool maybeAsyncArrow = false;
+                if (tt == TOK_LP && handler.isNameAnyParentheses(lhs)) {
+                    if (handler.nameIsEvalAnyParentheses(lhs, context)) {
                         // Select the right EVAL op and flag pc as having a
                         // direct eval.
                         op = pc->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
@@ -8560,6 +8562,14 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
                         // it. (If we're not in a method, that's fine, so
                         // ignore the return value.)
                         checkAndMarkSuperScope();
+                    } else if (handler.nameIsUnparenthesizedAsync(lhs, context)) {
+                        // |async (| can be the start of an async arrow
+                        // function, so we need to defer reporting possible
+                        // errors from destructuring syntax. To give better
+                        // error messages, we only allow the AsyncArrowHead
+                        // part of the CoverCallExpressionAndAsyncArrowHead
+                        // syntax when the initial name is "async".
+                        maybeAsyncArrow = true;
                     }
                 } else if (PropertyName* prop = handler.maybeDottedProperty(lhs)) {
                     // Use the JSOP_FUN{APPLY,CALL} optimizations given the
@@ -8578,7 +8588,8 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
 
                 if (tt == TOK_LP) {
                     bool isSpread = false;
-                    if (!argumentList(yieldHandling, nextMember, &isSpread))
+                    PossibleError* asyncPossibleError = maybeAsyncArrow ? possibleError : nullptr;
+                    if (!argumentList(yieldHandling, nextMember, &isSpread, asyncPossibleError))
                         return null();
                     if (isSpread) {
                         if (op == JSOP_EVAL)
