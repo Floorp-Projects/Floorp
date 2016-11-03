@@ -12,7 +12,7 @@ option(env='DIST', nargs=1, help='DIST directory')
 # Do not allow objdir == srcdir builds.
 # ==============================================================
 @depends('--help', 'DIST')
-@imports('os')
+@imports(_from='os.path', _import='exists')
 def check_build_environment(help, dist):
     topobjdir = os.path.realpath(os.path.abspath('.'))
     topsrcdir = os.path.realpath(os.path.abspath(
@@ -47,7 +47,7 @@ def check_build_environment(help, dist):
     # Check for a couple representative files in the source tree
     conflict_files = [
         '*         %s' % f for f in ('Makefile', 'config/autoconf.mk')
-        if os.path.exists(os.path.join(topsrcdir, f))
+        if exists(os.path.join(topsrcdir, f))
     ]
     if conflict_files:
         die('  ***\n'
@@ -634,7 +634,7 @@ option('--with-external-source-dir', env='EXTERNAL_SOURCE_DIR', nargs=1,
 
 @depends('--enable-project', '--with-external-source-dir',
          check_build_environment, '--help')
-@imports('os')
+@imports(_from='os.path', _import='exists')
 def include_project_configure(project, external_source_dir, build_env, help):
     if not project:
         die('--enable-project is required.')
@@ -644,7 +644,7 @@ def include_project_configure(project, external_source_dir, build_env, help):
         base_dir = os.path.join(base_dir, external_source_dir[0])
 
     path = os.path.join(base_dir, project[0], 'moz.configure')
-    if not os.path.exists(path):
+    if not exists(path):
         die('Cannot find project %s', project[0])
     return path
 
