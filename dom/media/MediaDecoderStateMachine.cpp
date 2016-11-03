@@ -357,6 +357,7 @@ public:
   void Enter()
   {
     MOZ_ASSERT(!mMaster->mVideoDecodeSuspended);
+    mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
   }
 
   void Exit() override
@@ -568,6 +569,10 @@ public:
 
     mMaster->UpdatePlaybackPositionPeriodically();
 
+    // Ensure currentTime is up to date prior updating mNextFrameStatus so that
+    // the MediaDecoderOwner fire events at correct currentTime.
+    mMaster->UpdateNextFrameStatus();
+
     MOZ_ASSERT(!mMaster->IsPlaying() ||
                mMaster->IsStateMachineScheduled(),
                "Must have timer scheduled");
@@ -758,6 +763,7 @@ public:
                                           EventVisibility aVisibility)
   {
     mSeekJob = Move(aSeekJob);
+    mVisibility = aVisibility;
 
     // Always switch off the blank decoder otherwise we might become visible
     // in the middle of seeking and won't have a valid video frame to show
@@ -798,8 +804,11 @@ public:
     mMaster->UpdatePlaybackPositionInternal(
       mSeekTask->GetSeekTarget().GetTime().ToMicroseconds());
 
-    if (aVisibility == EventVisibility::Observable) {
+    if (mVisibility == EventVisibility::Observable) {
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::SeekStarted);
+      // We want dormant actions to be transparent to the user.
+      // So we only notify the change when the seek request is from the user.
+      mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING);
     }
 
     // Reset our state machine and decoding pipeline before seeking.
@@ -906,6 +915,7 @@ private:
   void SeekCompleted();
 
   SeekJob mSeekJob;
+  EventVisibility mVisibility = EventVisibility::Observable;
   MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
   RefPtr<SeekTask> mSeekTask;
 };
@@ -939,6 +949,8 @@ public:
          stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)");
 
     mMaster->ScheduleStateMachineIn(USECS_PER_S);
+
+    mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING);
   }
 
   void Step() override;
@@ -1323,6 +1335,8 @@ DecodingFirstFrameState::Enter(SeekJob aPendingSeek)
 
   // Dispatch tasks to decode first frames.
   mMaster->DispatchDecodeTasksIfNeeded();
+
+  mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
 }
 
 RefPtr<MediaDecoder::SeekPromise>
@@ -1517,6 +1531,10 @@ SeekingState::SeekCompleted()
   if (video) {
     mMaster->mMediaSink->Redraw(Info().mVideo);
     mMaster->mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
+  }
+
+  if (mVisibility == EventVisibility::Observable) {
+    mMaster->UpdateNextFrameStatus();
   }
 
   if (nextState == DECODER_STATE_COMPLETED) {
@@ -1758,9 +1776,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
 
   // Initialize watchers.
   mWatchManager.Watch(mBuffered, &MediaDecoderStateMachine::BufferedRangeUpdated);
-  mWatchManager.Watch(mState, &MediaDecoderStateMachine::UpdateNextFrameStatus);
-  mWatchManager.Watch(mAudioCompleted, &MediaDecoderStateMachine::UpdateNextFrameStatus);
-  mWatchManager.Watch(mVideoCompleted, &MediaDecoderStateMachine::UpdateNextFrameStatus);
   mWatchManager.Watch(mVolume, &MediaDecoderStateMachine::VolumeChanged);
   mWatchManager.Watch(mPreservesPitch, &MediaDecoderStateMachine::PreservesPitchChanged);
   mWatchManager.Watch(mEstimatedDuration, &MediaDecoderStateMachine::RecomputeDuration);
@@ -1997,7 +2012,6 @@ MediaDecoderStateMachine::Push(MediaData* aSample, MediaData::Type aSampleType)
   } else {
     // TODO: Handle MediaRawData, determine which queue should be pushed.
   }
-  UpdateNextFrameStatus();
   DispatchDecodeTasksIfNeeded();
 }
 
@@ -2007,7 +2021,6 @@ MediaDecoderStateMachine::OnAudioPopped(const RefPtr<MediaData>& aSample)
   MOZ_ASSERT(OnTaskQueue());
 
   mPlaybackOffset = std::max(mPlaybackOffset.Ref(), aSample->mOffset);
-  UpdateNextFrameStatus();
   DispatchAudioDecodeTaskIfNeeded();
 }
 
@@ -2016,7 +2029,6 @@ MediaDecoderStateMachine::OnVideoPopped(const RefPtr<MediaData>& aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
   mPlaybackOffset = std::max(mPlaybackOffset.Ref(), aSample->mOffset);
-  UpdateNextFrameStatus();
   DispatchVideoDecodeTaskIfNeeded();
 }
 
@@ -2928,41 +2940,36 @@ MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
   ScheduleStateMachineIn(delay);
 }
 
-void MediaDecoderStateMachine::UpdateNextFrameStatus()
+/* static */ const char*
+MediaDecoderStateMachine::ToStr(NextFrameStatus aStatus)
+{
+  switch (aStatus) {
+    case MediaDecoderOwner::NEXT_FRAME_AVAILABLE: return "NEXT_FRAME_AVAILABLE";
+    case MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE: return "NEXT_FRAME_UNAVAILABLE";
+    case MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING: return "NEXT_FRAME_UNAVAILABLE_BUFFERING";
+    case MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING: return "NEXT_FRAME_UNAVAILABLE_SEEKING";
+    case MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED: return "NEXT_FRAME_UNINITIALIZED";
+  }
+  return "UNKNOWN";
+}
+
+void
+MediaDecoderStateMachine::UpdateNextFrameStatus(NextFrameStatus aStatus)
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  MediaDecoderOwner::NextFrameStatus status;
-  const char* statusString;
-
-  switch (mState.Ref()) {
-    case DECODER_STATE_BUFFERING:
-      status = MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING;
-      statusString = "NEXT_FRAME_UNAVAILABLE_BUFFERING";
-      break;
-    case DECODER_STATE_SEEKING:
-      status = MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING;
-      statusString = "NEXT_FRAME_UNAVAILABLE_SEEKING";
-      break;
-    default:
-      bool b = HaveNextFrameData();
-      status = b ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE :
-                   MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
-      statusString = b ? "NEXT_FRAME_AVAILABLE" : "NEXT_FRAME_UNAVAILABLE";
-      break;
+  if (aStatus != mNextFrameStatus) {
+    DECODER_LOG("Changed mNextFrameStatus to %s", ToStr(aStatus));
+    mNextFrameStatus = aStatus;
   }
+}
 
-  if (status != mNextFrameStatus) {
-    DECODER_LOG("Changed mNextFrameStatus to %s", statusString);
-    if(status == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING ||
-       status == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE) {
-      // Ensure currentTime is up to date prior updating mNextFrameStatus so that
-      // the MediaDecoderOwner fire events at correct currentTime.
-      UpdatePlaybackPositionPeriodically();
-    }
-  }
-
-  mNextFrameStatus = status;
+void
+MediaDecoderStateMachine::UpdateNextFrameStatus()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  UpdateNextFrameStatus(HaveNextFrameData()
+    ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
+    : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
 }
 
 bool

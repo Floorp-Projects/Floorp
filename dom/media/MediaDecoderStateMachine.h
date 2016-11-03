@@ -270,6 +270,7 @@ private:
   class ShutdownState;
 
   static const char* ToStateStr(State aState);
+  static const char* ToStr(NextFrameStatus aStatus);
   const char* ToStateStr();
 
   // Functions used by assertions to ensure we're calling things
@@ -401,6 +402,7 @@ protected:
   // Recomputes mNextFrameStatus, possibly dispatching notifications to interested
   // parties.
   void UpdateNextFrameStatus();
+  void UpdateNextFrameStatus(NextFrameStatus aStatus);
 
   // Return the current time, either the audio clock if available (if the media
   // has audio, and the playback is possible), or a clock for the video.
