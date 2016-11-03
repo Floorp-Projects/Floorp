@@ -121,15 +121,6 @@ constexpr char PresentationMediaPlayerManager::InvalidateAndScheduleComposite_t:
 constexpr char PresentationMediaPlayerManager::RemovePresentationSurface_t::name[];
 constexpr char PresentationMediaPlayerManager::RemovePresentationSurface_t::signature[];
 
-const char ScreenManagerHelper::name[] =
-        "org/mozilla/gecko/ScreenManagerHelper";
-
-constexpr char ScreenManagerHelper::AddDisplay_t::name[];
-constexpr char ScreenManagerHelper::AddDisplay_t::signature[];
-
-constexpr char ScreenManagerHelper::RemoveDisplay_t::name[];
-constexpr char ScreenManagerHelper::RemoveDisplay_t::signature[];
-
 const char Telemetry::name[] =
         "org/mozilla/gecko/Telemetry";
 
