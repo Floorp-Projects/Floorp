@@ -1057,7 +1057,7 @@ function getPropertyBagValue(bag, key) {
 function promiseCrashReport(expectedExtra={}) {
   return Task.spawn(function*() {
     info("Starting wait on crash-report-status");
-    let [subject, data] =
+    let [subject, ] =
       yield TestUtils.topicObserved("crash-report-status", (subject, data) => {
         return data == "success";
       });

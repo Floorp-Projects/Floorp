@@ -118,6 +118,9 @@ def normalize_path():
                 out = ctypes.create_unicode_buffer(size)
                 needed = GetShortPathNameW(path, out, size)
                 if size >= needed:
+                    if ' ' in out.value:
+                        die("GetShortPathName returned a long path name. "
+                            "Are 8dot3 filenames disabled?")
                     return normsep(out.value)
                 size = needed
 
@@ -338,8 +341,8 @@ def dependable(obj):
     if isinstance(obj, SandboxDependsFunction):
         return obj
     if isfunction(obj):
-        return depends('--help')(lambda _: obj())
-    return depends('--help')(lambda _: obj)
+        return depends(when=True)(obj)
+    return depends(when=True)(lambda: obj)
 
 
 always = dependable(True)
@@ -356,23 +359,15 @@ never = dependable(False)
 #       return namespace(foo=value)
 #   set_config('FOO', delayed_getattr(option, 'foo')
 @template
-@imports('__sandbox__')
 def delayed_getattr(func, key):
-    deps = __sandbox__._depends.get(func, ())
-    if deps:
-        deps = deps.sandboxed_dependencies
-
-    def result(value, _=None):
+    @depends(func)
+    def result(value):
         # The @depends function we're being passed may have returned
         # None, or an object that simply doesn't have the wanted key.
         # In that case, just return None.
         return getattr(value, key, None)
 
-    # Automatically add a dependency on --help when the given @depends
-    # function itself depends on --help.
-    if __sandbox__._help_option in deps:
-        return depends(func, '--help')(result)
-    return depends(func)(result)
+    return result
 
 
 # Like @depends, but the decorated function is only called if one of the

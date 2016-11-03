@@ -427,12 +427,13 @@ var Bookmarks = Object.freeze({
       item = yield removeBookmark(item, options);
 
       // Notify onItemRemoved to listeners.
+      let { source = Bookmarks.SOURCES.DEFAULT } = options;
       let observers = PlacesUtils.bookmarks.getObservers();
       let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
       notify(observers, "onItemRemoved", [ item._id, item._parentId, item.index,
                                            item.type, uri, item.guid,
                                            item.parentGuid,
-                                           removeInfo.source ]);
+                                           source ]);
 
       let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
       if (isUntagging) {
@@ -441,7 +442,7 @@ var Bookmarks = Object.freeze({
                                                PlacesUtils.toPRTime(entry.lastModified),
                                                entry.type, entry._parentId,
                                                entry.guid, entry.parentGuid,
-                                               "", removeInfo.source ]);
+                                               "", source ]);
         }
       }
 

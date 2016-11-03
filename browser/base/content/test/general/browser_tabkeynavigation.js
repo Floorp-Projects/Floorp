@@ -140,7 +140,6 @@ add_task(function* test() {
     is(gBrowser.tabs.length, 3,
       "The count of tabs should be 3 since tab2 should be closed");
 
-    let activeWindow = gBrowser.getBrowserForTab(gBrowser.selectedTab).contentWindow;
     // NOTE: keypress event shouldn't be fired since the keydown event should
     //       be consumed by tab2.
       EventUtils.synthesizeKey("VK_F4", { type: "keyup", ctrlKey: true });

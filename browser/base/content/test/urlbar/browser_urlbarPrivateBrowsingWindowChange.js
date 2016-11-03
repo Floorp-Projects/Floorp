@@ -7,8 +7,6 @@
 add_task(function*() {
   let urlbarTestValue = "Mary had a little lamb";
   let win = OpenBrowserWindow({private: true});
-  let delayedStartupFinished = TestUtils.topicObserved("browser-delayed-startup-finished",
-                                                       subject => subject == win);
   yield BrowserTestUtils.waitForEvent(win, "load");
   let urlbar = win.document.getElementById("urlbar");
   urlbar.value = urlbarTestValue;

@@ -331,7 +331,7 @@ nsHttpHandler::Init()
           appInfo->GetName(mAppName);
         }
         appInfo->GetVersion(mAppVersion);
-        mAppName.StripChars(" ()<>@,;:\\\"/[]?={}");
+        mAppName.StripChars(R"( ()<>@,;:\"/[]?={})");
     } else {
         mAppVersion.AssignLiteral(MOZ_APP_UA_VERSION);
     }
@@ -2303,7 +2303,7 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
       neckoOriginAttributes.InheritFromDocShellToNecko(docshellOriginAttributes);
     }
 
-    nsHttpConnectionInfo *ci =
+    auto *ci =
         new nsHttpConnectionInfo(host, port, EmptyCString(), username, nullptr,
                                  neckoOriginAttributes, usingSSL);
     ci->SetAnonymous(anonymous);

@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_webRequest_serviceworker_events() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.serviceWorkers.testing.enabled", true]],
+  });
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "<all_urls>",
+      ],
+    },
+    background() {
+      let eventNames = new Set([
+        "onBeforeRequest",
+        "onBeforeSendHeaders",
+        "onSendHeaders",
+        "onHeadersReceived",
+        "onResponseStarted",
+        "onCompleted",
+      ]);
+
+      function listener(name, details) {
+        browser.test.assertTrue(eventNames.has(name), `recieved ${name}`);
+        eventNames.delete(name);
+        if (eventNames.size == 0) {
+          browser.test.sendMessage("done");
+        }
+      }
+
+      for (let name of eventNames) {
+        browser.webRequest[name].addListener(
+          listener.bind(null, name),
+          {urls: ["https://example.com/*"]}
+        );
+      }
+    },
+  });
+
+  yield extension.startup();
+  let registration = yield navigator.serviceWorker.register("webrequest_worker.js", {scope: "."});
+  yield extension.awaitMessage("done");
+  yield registration.unregister();
+  yield extension.unload();
+});
+
+add_task(function* test_webRequest_background_events() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "<all_urls>",
+      ],
+    },
+    background() {
+      let eventNames = new Set([
+        "onBeforeRequest",
+        "onBeforeSendHeaders",
+        "onSendHeaders",
+        "onHeadersReceived",
+        "onResponseStarted",
+        "onCompleted",
+      ]);
+
+      function listener(name, details) {
+        browser.test.assertTrue(eventNames.has(name), `recieved ${name}`);
+        eventNames.delete(name);
+      }
+
+      for (let name of eventNames) {
+        browser.webRequest[name].addListener(
+          listener.bind(null, name),
+          {urls: ["https://example.com/*"]}
+        );
+      }
+
+      fetch("https://example.com/example.txt").then(() => {
+        browser.test.assertEq(0, eventNames.size, "messages recieved");
+        browser.test.sendMessage("done");
+      }, () => {
+        browser.test.fail("fetch recieved");
+        browser.test.sendMessage("done");
+      });
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("done");
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

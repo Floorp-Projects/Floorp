@@ -387,6 +387,9 @@ add_task(function*() {
   let bookmarksMigrator = migrator.wrappedJSObject.getESEMigratorForTesting(db);
   Assert.ok(bookmarksMigrator.exists, "Should recognize table we just created");
 
+  let source = MigrationUtils.getLocalizedString("sourceNameEdge");
+  let sourceLabel = MigrationUtils.getLocalizedString("importedBookmarksFolder", [source]);
+
   let seenBookmarks = [];
   let bookmarkObserver = {
     onItemAdded(itemId, parentId, index, itemType, url, title, dateAdded, itemGuid, parentGuid) {
@@ -412,6 +415,9 @@ add_task(function*() {
   PlacesUtils.bookmarks.removeObserver(bookmarkObserver);
   Assert.ok(migrateResult, "Migration should succeed");
   Assert.equal(seenBookmarks.length, 7, "Should have seen 7 items being bookmarked.");
+  Assert.equal(seenBookmarks.filter(bm => bm.title != sourceLabel).length,
+               MigrationUtils._importQuantities.bookmarks,
+               "Telemetry should have items except for 'From Microsoft Edge' folders");
 
   let menuParents = seenBookmarks.filter(item => item.parentGuid == PlacesUtils.bookmarks.menuGuid);
   Assert.equal(menuParents.length, 1, "Should have a single folder added to the menu");

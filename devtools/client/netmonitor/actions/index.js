@@ -4,5 +4,6 @@
 "use strict";
 
 const filters = require("./filters");
+const sidebar = require("./sidebar");
 
-module.exports = Object.assign({}, filters);
+module.exports = Object.assign({}, filters, sidebar);

@@ -6,8 +6,8 @@ function test () {
 
   function loadListener() {
     function testLocation(link, url, next) {
-      var tabOpenListener = new TabOpenListener(url, function () {
-          gBrowser.removeTab(this.tab);
+      new TabOpenListener(url, function () {
+        gBrowser.removeTab(this.tab);
       }, function () {
         next();
       });

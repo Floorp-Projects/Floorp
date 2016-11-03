@@ -265,6 +265,7 @@ def vc_path(c_compiler):
 
 @depends_win(vc_path)
 @checking('for the Debug Interface Access SDK', lambda x: x or 'not found')
+@imports('os')
 def dia_sdk_dir(vc_path):
     if vc_path:
         path = os.path.join(os.path.dirname(vc_path), 'DIA SDK')

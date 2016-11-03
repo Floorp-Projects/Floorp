@@ -321,6 +321,9 @@ this.PermissionPromptPrototype = {
           }
         },
       };
+      if (promptAction.dismiss) {
+        action.dismiss = promptAction.dismiss
+      }
 
       popupNotificationActions.push(action);
     }

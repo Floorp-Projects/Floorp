@@ -572,6 +572,20 @@ jit::SplitCriticalEdges(MIRGraph& graph)
     return true;
 }
 
+bool
+jit::IsUint32Type(const MDefinition* def)
+{
+    if (def->isBeta())
+        def = def->getOperand(0);
+
+    if (def->type() != MIRType::Int32)
+        return false;
+
+    return def->isUrsh() && def->getOperand(1)->isConstant() &&
+        def->getOperand(1)->toConstant()->type() == MIRType::Int32 &&
+        def->getOperand(1)->toConstant()->toInt32() == 0;
+}
+
 // Return whether a block simply computes the specified constant value.
 static bool
 BlockComputesConstant(MBasicBlock* block, MDefinition* value, bool* constBool)

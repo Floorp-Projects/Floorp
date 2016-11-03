@@ -336,16 +336,27 @@ int NrIceCtx::ice_checking(void *obj, nr_ice_peer_ctx *pctx) {
   return 0;
 }
 
-int NrIceCtx::ice_completed(void *obj, nr_ice_peer_ctx *pctx) {
-  MOZ_MTLOG(ML_DEBUG, "ice_completed called");
+int NrIceCtx::ice_connected(void *obj, nr_ice_peer_ctx *pctx) {
+  MOZ_MTLOG(ML_DEBUG, "ice_connected called");
 
   // Get the ICE ctx
   NrIceCtx *ctx = static_cast<NrIceCtx *>(obj);
 
   // This is called even on failed contexts.
   if (ctx->connection_state() != ICE_CTX_FAILED) {
-    ctx->SetConnectionState(ICE_CTX_OPEN);
+    ctx->SetConnectionState(ICE_CTX_CONNECTED);
   }
+
+  return 0;
+}
+
+int NrIceCtx::ice_disconnected(void *obj, nr_ice_peer_ctx *pctx) {
+  MOZ_MTLOG(ML_DEBUG, "ice_disconnected called");
+
+  // Get the ICE ctx
+  NrIceCtx *ctx = static_cast<NrIceCtx *>(obj);
+
+  ctx->SetConnectionState(ICE_CTX_DISCONNECTED);
 
   return 0;
 }
@@ -613,9 +624,10 @@ NrIceCtx::Initialize(const std::string& ufrag,
   ice_handler_vtbl_->select_pair = &NrIceCtx::select_pair;
   ice_handler_vtbl_->stream_ready = &NrIceCtx::stream_ready;
   ice_handler_vtbl_->stream_failed = &NrIceCtx::stream_failed;
-  ice_handler_vtbl_->ice_completed = &NrIceCtx::ice_completed;
+  ice_handler_vtbl_->ice_connected = &NrIceCtx::ice_connected;
   ice_handler_vtbl_->msg_recvd = &NrIceCtx::msg_recvd;
   ice_handler_vtbl_->ice_checking = &NrIceCtx::ice_checking;
+  ice_handler_vtbl_->ice_disconnected = &NrIceCtx::ice_disconnected;
 
   ice_handler_ = new nr_ice_handler();
   ice_handler_->vtbl = ice_handler_vtbl_;

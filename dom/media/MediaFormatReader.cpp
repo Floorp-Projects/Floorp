@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/CDMProxy.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -15,6 +16,7 @@
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "MediaFormatReader.h"
+#include "MediaPrefs.h"
 #include "MediaResource.h"
 #include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
@@ -22,6 +24,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 
 #include <algorithm>
+#include <queue>
 
 using namespace mozilla::media;
 
@@ -36,6 +39,366 @@ mozilla::LazyLogModule gMediaDemuxerLog("MediaDemuxer");
 #define LOGV(arg, ...) MOZ_LOG(sFormatDecoderLog, mozilla::LogLevel::Verbose, ("MediaFormatReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
+
+/**
+ * This is a singleton which controls the number of decoders that can be
+ * created concurrently. Before calling PDMFactory::CreateDecoder(), Alloc()
+ * must be called to get a token object as a permission to create a decoder.
+ * The token should stay alive until Shutdown() is called on the decoder.
+ * The destructor of the token will restore the decoder count so it is available
+ * for next calls of Alloc().
+ */
+class DecoderAllocPolicy
+{
+  using TrackType = TrackInfo::TrackType;
+
+public:
+  class Token
+  {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Token)
+  protected:
+    virtual ~Token() {}
+  };
+
+  using Promise = MozPromise<RefPtr<Token>, bool, true>;
+
+  // Acquire a token for decoder creation. Thread-safe.
+  auto Alloc(TrackType aTrack) -> RefPtr<Promise>;
+
+  // Called by ClearOnShutdown() to delete the singleton.
+  void operator=(decltype(nullptr));
+
+  // Get the singleton. Thread-safe.
+  static DecoderAllocPolicy& Instance();
+
+private:
+  class AutoDeallocToken;
+  using PromisePrivate = Promise::Private;
+  DecoderAllocPolicy();
+  ~DecoderAllocPolicy();
+  // Called by the destructor of TokenImpl to restore the decoder limit.
+  void Dealloc();
+  // Decrement the decoder limit and resolve a promise if available.
+  void ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock);
+
+  ReentrantMonitor mMonitor;
+  // The number of decoders available for creation.
+  int mDecoderLimit;
+  // Requests to acquire tokens.
+  std::queue<RefPtr<PromisePrivate>> mPromises;
+};
+
+class DecoderAllocPolicy::AutoDeallocToken : public Token
+{
+private:
+  ~AutoDeallocToken() { DecoderAllocPolicy::Instance().Dealloc(); }
+};
+
+DecoderAllocPolicy::DecoderAllocPolicy()
+  : mMonitor("DecoderAllocPolicy::mMonitor")
+  , mDecoderLimit(MediaPrefs::MediaDecoderLimit())
+{
+  AbstractThread::MainThread()->Dispatch(NS_NewRunnableFunction([this] () {
+    ClearOnShutdown(this, ShutdownPhase::ShutdownThreads);
+  }));
+}
+
+DecoderAllocPolicy::~DecoderAllocPolicy()
+{
+  while (!mPromises.empty()) {
+    RefPtr<PromisePrivate> p = mPromises.front().forget();
+    mPromises.pop();
+    p->Reject(true, __func__);
+  }
+}
+
+DecoderAllocPolicy&
+DecoderAllocPolicy::Instance()
+{
+  // Note: Function-static initialization is not thread-safe in VS 2013.
+  // Don't uplift this code to 45esr.
+  static auto sPolicy = new DecoderAllocPolicy();
+  return *sPolicy;
+}
+
+auto
+DecoderAllocPolicy::Alloc(TrackType aTrack) -> RefPtr<Promise>
+{
+  // No limit for audio decoders or a negative number.
+  if (aTrack == TrackInfo::kAudioTrack || mDecoderLimit < 0) {
+    return Promise::CreateAndResolve(new Token(), __func__);
+  }
+
+  ReentrantMonitorAutoEnter mon(mMonitor);
+  RefPtr<PromisePrivate> p = new PromisePrivate(__func__);
+  mPromises.push(p);
+  ResolvePromise(mon);
+  return p.forget();
+}
+
+void
+DecoderAllocPolicy::Dealloc()
+{
+  ReentrantMonitorAutoEnter mon(mMonitor);
+  ++mDecoderLimit;
+  ResolvePromise(mon);
+}
+
+void
+DecoderAllocPolicy::ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock)
+{
+  MOZ_ASSERT(mDecoderLimit >= 0);
+
+  if (mDecoderLimit > 0 && !mPromises.empty()) {
+    --mDecoderLimit;
+    RefPtr<PromisePrivate> p = mPromises.front().forget();
+    mPromises.pop();
+    p->Resolve(new AutoDeallocToken(), __func__);
+  }
+}
+
+void
+DecoderAllocPolicy::operator=(std::nullptr_t)
+{
+  delete this;
+}
+
+class MediaFormatReader::DecoderFactory
+{
+  using InitPromise = MediaDataDecoder::InitPromise;
+  using TokenPromise = DecoderAllocPolicy::Promise;
+  using Token = DecoderAllocPolicy::Token;
+
+public:
+  explicit DecoderFactory(MediaFormatReader* aOwner) : mOwner(aOwner) {}
+  void CreateDecoder(TrackType aTrack);
+
+private:
+  class Wrapper;
+
+  enum class Stage : int8_t
+  {
+    None,
+    WaitForToken,
+    CreateDecoder,
+    WaitForInit
+  };
+
+  struct Data
+  {
+    Stage mStage = Stage::None;
+    RefPtr<Token> mToken;
+    RefPtr<MediaDataDecoder> mDecoder;
+    MozPromiseRequestHolder<TokenPromise> mTokenPromise;
+    MozPromiseRequestHolder<InitPromise> mInitPromise;
+    ~Data()
+    {
+      mTokenPromise.DisconnectIfExists();
+      mInitPromise.DisconnectIfExists();
+      if (mDecoder) {
+        mDecoder->Shutdown();
+      }
+    }
+  } mAudio, mVideo;
+
+  void RunStage(TrackType aTrack);
+  MediaResult DoCreateDecoder(TrackType aTrack);
+  void DoInitDecoder(TrackType aTrack);
+
+  MediaFormatReader* const mOwner; // guaranteed to be valid by the owner.
+};
+
+void
+MediaFormatReader::DecoderFactory::CreateDecoder(TrackType aTrack)
+{
+  MOZ_ASSERT(aTrack == TrackInfo::kAudioTrack ||
+             aTrack == TrackInfo::kVideoTrack);
+  RunStage(aTrack);
+}
+
+class MediaFormatReader::DecoderFactory::Wrapper : public MediaDataDecoder
+{
+  using Token = DecoderAllocPolicy::Token;
+
+public:
+  Wrapper(already_AddRefed<MediaDataDecoder> aDecoder,
+          already_AddRefed<Token> aToken)
+    : mDecoder(aDecoder), mToken(aToken) {}
+
+  RefPtr<InitPromise> Init() override { return mDecoder->Init(); }
+  void Input(MediaRawData* aSample) override { mDecoder->Input(aSample); }
+  void Flush() override { mDecoder->Flush(); }
+  void Drain() override { mDecoder->Drain(); }
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const override
+  {
+    return mDecoder->IsHardwareAccelerated(aFailureReason);
+  }
+  const char* GetDescriptionName() const override
+  {
+    return mDecoder->GetDescriptionName();
+  }
+  void SetSeekThreshold(const media::TimeUnit& aTime) override
+  {
+    mDecoder->SetSeekThreshold(aTime);
+  }
+  void Shutdown() override
+  {
+    mDecoder->Shutdown();
+    mDecoder = nullptr;
+    mToken = nullptr;
+  }
+
+private:
+  RefPtr<MediaDataDecoder> mDecoder;
+  RefPtr<Token> mToken;
+};
+
+void
+MediaFormatReader::DecoderFactory::RunStage(TrackType aTrack)
+{
+  auto& data = aTrack == TrackInfo::kAudioTrack ? mAudio : mVideo;
+
+  switch (data.mStage) {
+    case Stage::None: {
+      MOZ_ASSERT(!data.mToken);
+      data.mTokenPromise.Begin(DecoderAllocPolicy::Instance().Alloc(aTrack)->Then(
+        mOwner->OwnerThread(), __func__,
+        [this, &data, aTrack] (Token* aToken) {
+          data.mTokenPromise.Complete();
+          data.mToken = aToken;
+          data.mStage = Stage::CreateDecoder;
+          RunStage(aTrack);
+        },
+        [&data] () {
+          data.mTokenPromise.Complete();
+          data.mStage = Stage::None;
+        }));
+      data.mStage = Stage::WaitForToken;
+      break;
+    }
+
+    case Stage::WaitForToken: {
+      MOZ_ASSERT(!data.mToken);
+      MOZ_ASSERT(data.mTokenPromise.Exists());
+      break;
+    }
+
+    case Stage::CreateDecoder: {
+      MOZ_ASSERT(data.mToken);
+      MOZ_ASSERT(!data.mDecoder);
+      MOZ_ASSERT(!data.mInitPromise.Exists());
+
+      MediaResult rv = DoCreateDecoder(aTrack);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Error constructing decoders");
+        data.mToken = nullptr;
+        data.mStage = Stage::None;
+        mOwner->NotifyError(aTrack, rv);
+        return;
+      }
+
+      data.mDecoder = new Wrapper(data.mDecoder.forget(), data.mToken.forget());
+      DoInitDecoder(aTrack);
+      data.mStage = Stage::WaitForInit;
+      break;
+    }
+
+    case Stage::WaitForInit: {
+      MOZ_ASSERT(data.mDecoder);
+      MOZ_ASSERT(data.mInitPromise.Exists());
+      break;
+    }
+  }
+}
+
+MediaResult
+MediaFormatReader::DecoderFactory::DoCreateDecoder(TrackType aTrack)
+{
+  auto& ownerData = mOwner->GetDecoderData(aTrack);
+  auto& data = aTrack == TrackInfo::kAudioTrack ? mAudio : mVideo;
+
+  auto decoderCreatingError = "error creating audio decoder";
+  MediaResult result = MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, decoderCreatingError);
+
+  if (!mOwner->mPlatform) {
+    mOwner->mPlatform = new PDMFactory();
+    if (mOwner->IsEncrypted()) {
+      MOZ_ASSERT(mOwner->mCDMProxy);
+      mOwner->mPlatform->SetCDMProxy(mOwner->mCDMProxy);
+    }
+  }
+
+  switch (aTrack) {
+    case TrackInfo::kAudioTrack: {
+      data.mDecoder = mOwner->mPlatform->CreateDecoder({
+        ownerData.mInfo
+        ? *ownerData.mInfo->GetAsAudioInfo()
+        : *ownerData.mOriginalInfo->GetAsAudioInfo(),
+        ownerData.mTaskQueue,
+        ownerData.mCallback.get(),
+        mOwner->mCrashHelper,
+        ownerData.mIsBlankDecode,
+        &result
+      });
+      break;
+    }
+
+    case TrackType::kVideoTrack: {
+      // Decoders use the layers backend to decide if they can use hardware decoding,
+      // so specify LAYERS_NONE if we want to forcibly disable it.
+      data.mDecoder = mOwner->mPlatform->CreateDecoder({
+        ownerData.mInfo
+        ? *ownerData.mInfo->GetAsVideoInfo()
+        : *ownerData.mOriginalInfo->GetAsVideoInfo(),
+        ownerData.mTaskQueue,
+        ownerData.mCallback.get(),
+        mOwner->mKnowsCompositor,
+        mOwner->GetImageContainer(),
+        mOwner->mCrashHelper,
+        ownerData.mIsBlankDecode,
+        &result
+      });
+      break;
+    }
+
+    default:
+      break;
+  }
+
+  if (data.mDecoder) {
+    result = MediaResult(NS_OK);
+    return result;
+  }
+
+  ownerData.mDescription = decoderCreatingError;
+  return result;
+}
+
+void
+MediaFormatReader::DecoderFactory::DoInitDecoder(TrackType aTrack)
+{
+  auto& ownerData = mOwner->GetDecoderData(aTrack);
+  auto& data = aTrack == TrackInfo::kAudioTrack ? mAudio : mVideo;
+
+  data.mInitPromise.Begin(data.mDecoder->Init()->Then(
+    mOwner->OwnerThread(), __func__,
+    [this, &data, &ownerData] (TrackType aTrack) {
+      data.mInitPromise.Complete();
+      data.mStage = Stage::None;
+      MonitorAutoLock mon(ownerData.mMonitor);
+      ownerData.mDecoder = data.mDecoder.forget();
+      ownerData.mDescription = ownerData.mDecoder->GetDescriptionName();
+      mOwner->SetVideoDecodeThreshold();
+      mOwner->ScheduleUpdate(aTrack);
+    },
+    [this, &data, aTrack] (MediaResult aError) {
+      data.mInitPromise.Complete();
+      data.mStage = Stage::None;
+      data.mDecoder->Shutdown();
+      data.mDecoder = nullptr;
+      mOwner->NotifyError(aTrack, aError);
+    }));
+}
 
 static const char*
 TrackTypeToStr(TrackInfo::TrackType aTrack)
@@ -72,6 +435,7 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mDemuxOnly(false)
   , mSeekScheduled(false)
   , mVideoFrameContainer(aVideoFrameContainer)
+  , mDecoderFactory(new DecoderFactory(this))
 {
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
@@ -87,6 +451,7 @@ MediaFormatReader::Shutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
 
+  mDecoderFactory = nullptr;
   mDemuxerInitRequest.DisconnectIfExists();
   mMetadataPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   mSeekPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
@@ -375,117 +740,6 @@ MediaFormatReader::OnDemuxerInitFailed(const MediaResult& aError)
   mMetadataPromise.Reject(aError, __func__);
 }
 
-MediaResult
-MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_DIAGNOSTIC_ASSERT(!IsSuspended());
-
-  auto decoderCreatingError = "error creating decoder";
-  MediaResult result = MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, decoderCreatingError);
-  auto& decoder = GetDecoderData(aTrack);
-
-  if (decoder.mDecoder) {
-    result = NS_OK;
-    return result;
-  }
-
-  if (!mPlatform) {
-    mPlatform = new PDMFactory();
-    if (IsEncrypted()) {
-      MOZ_ASSERT(mCDMProxy);
-      mPlatform->SetCDMProxy(mCDMProxy);
-    }
-  }
-
-  decoder.mDecoderInitialized = false;
-
-  MonitorAutoLock mon(decoder.mMonitor);
-
-  switch (aTrack) {
-    case TrackType::kAudioTrack: {
-      decoder.mDecoder = mPlatform->CreateDecoder({
-        decoder.mInfo
-        ? *decoder.mInfo->GetAsAudioInfo()
-        : *decoder.mOriginalInfo->GetAsAudioInfo(),
-        decoder.mTaskQueue,
-        decoder.mCallback.get(),
-        mCrashHelper,
-        decoder.mIsBlankDecode,
-        &result
-      });
-      break;
-    }
-
-    case TrackType::kVideoTrack: {
-      // Decoders use the layers backend to decide if they can use hardware decoding,
-      // so specify LAYERS_NONE if we want to forcibly disable it.
-      decoder.mDecoder = mPlatform->CreateDecoder({
-        decoder.mInfo
-        ? *decoder.mInfo->GetAsVideoInfo()
-        : *decoder.mOriginalInfo->GetAsVideoInfo(),
-        decoder.mTaskQueue,
-        decoder.mCallback.get(),
-        mKnowsCompositor,
-        GetImageContainer(),
-        mCrashHelper,
-        decoder.mIsBlankDecode,
-        &result
-      });
-      break;
-    }
-    default:
-      break;
-  }
-  if (decoder.mDecoder) {
-    decoder.mDescription = decoder.mDecoder->GetDescriptionName();
-    result = MediaResult(NS_OK);
-    return result;
-  }
-
-  decoder.mDescription = decoderCreatingError;
-  return result;
-}
-
-bool
-MediaFormatReader::EnsureDecoderInitialized(TrackType aTrack)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_DIAGNOSTIC_ASSERT(!IsSuspended());
-
-  auto& decoder = GetDecoderData(aTrack);
-
-  if (!decoder.mDecoder || decoder.mInitPromise.Exists()) {
-    MOZ_ASSERT(decoder.mDecoder);
-    return false;
-  }
-  if (decoder.mDecoderInitialized) {
-    return true;
-  }
-
-  RefPtr<MediaFormatReader> self = this;
-  decoder.mInitPromise.Begin(decoder.mDecoder->Init()
-       ->Then(OwnerThread(), __func__,
-              [self] (TrackType aTrack) {
-                MOZ_DIAGNOSTIC_ASSERT(!self->IsSuspended());
-                auto& decoder = self->GetDecoderData(aTrack);
-                MOZ_DIAGNOSTIC_ASSERT(decoder.mDecoder);
-                decoder.mInitPromise.Complete();
-                decoder.mDecoderInitialized = true;
-                MonitorAutoLock mon(decoder.mMonitor);
-                decoder.mDescription = decoder.mDecoder->GetDescriptionName();
-                self->SetVideoDecodeThreshold();
-                self->ScheduleUpdate(aTrack);
-              },
-              [self, aTrack] (MediaResult aError) {
-                auto& decoder = self->GetDecoderData(aTrack);
-                decoder.mInitPromise.Complete();
-                decoder.ShutdownDecoder();
-                self->NotifyError(aTrack, aError);
-              }));
-  return false;
-}
-
 void
 MediaFormatReader::ReadUpdatedMetadata(MediaInfo* aInfo)
 {
@@ -542,10 +796,6 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
 
   if (mShutdown) {
     NS_WARNING("RequestVideoData on shutdown MediaFormatReader!");
-    return MediaDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  }
-
-  if (IsSuspended()) {
     return MediaDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   }
 
@@ -633,10 +883,6 @@ MediaFormatReader::RequestAudioData()
   if (!HasAudio()) {
     LOG("called with no audio track");
     return MediaDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
-  }
-
-  if (IsSuspended()) {
-    return MediaDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   }
 
   if (IsSeeking()) {
@@ -934,28 +1180,14 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  // Don't try to create or initialize decoders
-  // (which might allocate hardware resources) when suspended.
-  if (IsSuspended()) {
-    // Should've deleted decoders when suspended.
-    MOZ_DIAGNOSTIC_ASSERT(!mAudio.mDecoder && !mVideo.mDecoder);
-    return;
-  }
-
   auto& decoder = GetDecoderData(aTrack);
 
   if (decoder.mQueuedSamples.IsEmpty()) {
     return;
   }
 
-  MediaResult rv = EnsureDecoderCreated(aTrack);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Error constructing decoders");
-    NotifyError(aTrack, rv);
-    return;
-  }
-
-  if (!EnsureDecoderInitialized(aTrack)) {
+  if (!decoder.mDecoder) {
+    mDecoderFactory->CreateDecoder(aTrack);
     return;
   }
 

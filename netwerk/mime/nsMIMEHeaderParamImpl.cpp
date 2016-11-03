@@ -192,7 +192,7 @@ class Continuation {
       needsPercentDecoding = false;
       wasQuotedString = false;
     }
-    ~Continuation() {}
+    ~Continuation() = default;
 
     const char *value;
     uint32_t length;
@@ -1157,7 +1157,7 @@ nsresult DecodeQOrBase64Str(const char *aEncoded, size_t aLen, char aQOrBase64,
   return NS_OK;
 }
 
-static const char especials[] = "()<>@,;:\\\"/[]?.=";
+static const char especials[] = R"(()<>@,;:\"/[]?.=)";
 
 // |decode_mime_part2_str| taken from comi18n.c
 // Decode RFC2047-encoded words in the input and convert the result to UTF-8.

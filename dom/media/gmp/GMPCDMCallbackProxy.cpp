@@ -19,30 +19,7 @@ namespace mozilla {
 
 GMPCDMCallbackProxy::GMPCDMCallbackProxy(CDMProxy* aProxy)
   : mProxy(aProxy)
-{
-
-}
-
-class SetSessionIdTask : public Runnable {
-public:
-  SetSessionIdTask(CDMProxy* aProxy,
-                   uint32_t aToken,
-                   const nsCString& aSessionId)
-    : mProxy(aProxy)
-    , mToken(aToken)
-    , mSid(NS_ConvertUTF8toUTF16(aSessionId))
-  {
-  }
-
-  NS_IMETHOD Run() override {
-    mProxy->OnSetSessionId(mToken, mSid);
-    return NS_OK;
-  }
-
-  RefPtr<CDMProxy> mProxy;
-  uint32_t mToken;
-  nsString mSid;
-};
+{}
 
 void
 GMPCDMCallbackProxy::SetSessionId(uint32_t aToken,
@@ -50,32 +27,17 @@ GMPCDMCallbackProxy::SetSessionId(uint32_t aToken,
 {
   MOZ_ASSERT(mProxy->IsOnOwnerThread());
 
-  nsCOMPtr<nsIRunnable> task(new SetSessionIdTask(mProxy,
-                                                  aToken,
-                                                  aSessionId));
-  NS_DispatchToMainThread(task);
+  RefPtr<CDMProxy> proxy = mProxy;
+  auto sid = NS_ConvertUTF8toUTF16(aSessionId);
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction([proxy,
+                            aToken,
+                            sid] ()
+    {
+      proxy->OnSetSessionId(aToken, sid);
+    })
+  );
 }
-
-class LoadSessionTask : public Runnable {
-public:
-  LoadSessionTask(CDMProxy* aProxy,
-                  uint32_t aPromiseId,
-                  bool aSuccess)
-    : mProxy(aProxy)
-    , mPid(aPromiseId)
-    , mSuccess(aSuccess)
-  {
-  }
-
-  NS_IMETHOD Run() override {
-    mProxy->OnResolveLoadSessionPromise(mPid, mSuccess);
-    return NS_OK;
-  }
-
-  RefPtr<CDMProxy> mProxy;
-  dom::PromiseId mPid;
-  bool mSuccess;
-};
 
 void
 GMPCDMCallbackProxy::ResolveLoadSessionPromise(uint32_t aPromiseId,
@@ -83,10 +45,13 @@ GMPCDMCallbackProxy::ResolveLoadSessionPromise(uint32_t aPromiseId,
 {
   MOZ_ASSERT(mProxy->IsOnOwnerThread());
 
-  nsCOMPtr<nsIRunnable> task(new LoadSessionTask(mProxy,
-                                                 aPromiseId,
-                                                 aSuccess));
-  NS_DispatchToMainThread(task);
+  RefPtr<CDMProxy> proxy = mProxy;
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction([proxy, aPromiseId, aSuccess] ()
+    {
+      proxy->OnResolveLoadSessionPromise(aPromiseId, aSuccess);
+    })
+  );
 }
 
 void
@@ -98,31 +63,6 @@ GMPCDMCallbackProxy::ResolvePromise(uint32_t aPromiseId)
   mProxy->ResolvePromise(aPromiseId);
 }
 
-class RejectPromiseTask : public Runnable {
-public:
-  RejectPromiseTask(CDMProxy* aProxy,
-                    uint32_t aPromiseId,
-                    nsresult aException,
-                    const nsCString& aMessage)
-    : mProxy(aProxy)
-    , mPid(aPromiseId)
-    , mException(aException)
-    , mMsg(aMessage)
-  {
-  }
-
-  NS_IMETHOD Run() override {
-    mProxy->OnRejectPromise(mPid, mException, mMsg);
-    return NS_OK;
-  }
-
-  RefPtr<CDMProxy> mProxy;
-  dom::PromiseId mPid;
-  nsresult mException;
-  nsCString mMsg;
-};
-
-
 void
 GMPCDMCallbackProxy::RejectPromise(uint32_t aPromiseId,
                                    nsresult aException,
@@ -130,37 +70,17 @@ GMPCDMCallbackProxy::RejectPromise(uint32_t aPromiseId,
 {
   MOZ_ASSERT(mProxy->IsOnOwnerThread());
 
-  nsCOMPtr<nsIRunnable> task;
-  task = new RejectPromiseTask(mProxy,
-                               aPromiseId,
-                               aException,
-                               aMessage);
-  NS_DispatchToMainThread(task);
+  RefPtr<CDMProxy> proxy = mProxy;
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction([proxy,
+                            aPromiseId,
+                            aException,
+                            aMessage] ()
+    {
+      proxy->OnRejectPromise(aPromiseId, aException, aMessage);
+    })
+  );
 }
-
-class SessionMessageTask : public Runnable {
-public:
-  SessionMessageTask(CDMProxy* aProxy,
-                     const nsCString& aSessionId,
-                     dom::MediaKeyMessageType aMessageType,
-                     const nsTArray<uint8_t>& aMessage)
-    : mProxy(aProxy)
-    , mSid(NS_ConvertUTF8toUTF16(aSessionId))
-    , mMsgType(aMessageType)
-  {
-    mMsg.AppendElements(aMessage);
-  }
-
-  NS_IMETHOD Run() override {
-    mProxy->OnSessionMessage(mSid, mMsgType, mMsg);
-    return NS_OK;
-  }
-
-  RefPtr<CDMProxy> mProxy;
-  nsString mSid;
-  dom::MediaKeyMessageType mMsgType;
-  nsTArray<uint8_t> mMsg;
-};
 
 void
 GMPCDMCallbackProxy::SessionMessage(const nsCString& aSessionId,
@@ -169,33 +89,19 @@ GMPCDMCallbackProxy::SessionMessage(const nsCString& aSessionId,
 {
   MOZ_ASSERT(mProxy->IsOnOwnerThread());
 
-  nsCOMPtr<nsIRunnable> task;
-  task = new SessionMessageTask(mProxy,
-                                aSessionId,
-                                aMessageType,
-                                aMessage);
-  NS_DispatchToMainThread(task);
+  RefPtr<CDMProxy> proxy = mProxy;
+  auto sid = NS_ConvertUTF8toUTF16(aSessionId);
+  nsTArray<uint8_t> msg(aMessage);
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction([proxy,
+                            sid,
+                            aMessageType,
+                            msg] () mutable
+    {
+      proxy->OnSessionMessage(sid, aMessageType, msg);
+    })
+  );
 }
-
-class ExpirationChangeTask : public Runnable {
-public:
-  ExpirationChangeTask(CDMProxy* aProxy,
-                       const nsCString& aSessionId,
-                       GMPTimestamp aExpiryTime)
-    : mProxy(aProxy)
-    , mSid(NS_ConvertUTF8toUTF16(aSessionId))
-    , mTimestamp(aExpiryTime)
-  {}
-
-  NS_IMETHOD Run() override {
-    mProxy->OnExpirationChange(mSid, mTimestamp);
-    return NS_OK;
-  }
-
-  RefPtr<CDMProxy> mProxy;
-  nsString mSid;
-  GMPTimestamp mTimestamp;
-};
 
 void
 GMPCDMCallbackProxy::ExpirationChange(const nsCString& aSessionId,
@@ -203,11 +109,16 @@ GMPCDMCallbackProxy::ExpirationChange(const nsCString& aSessionId,
 {
   MOZ_ASSERT(mProxy->IsOnOwnerThread());
 
-  nsCOMPtr<nsIRunnable> task;
-  task = new ExpirationChangeTask(mProxy,
-                                  aSessionId,
-                                  aExpiryTime);
-  NS_DispatchToMainThread(task);
+  RefPtr<CDMProxy> proxy = mProxy;
+  auto sid = NS_ConvertUTF8toUTF16(aSessionId);
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction([proxy,
+                            sid,
+                            aExpiryTime] ()
+    {
+      proxy->OnExpirationChange(sid, aExpiryTime);
+    })
+  );
 }
 
 void
@@ -216,51 +127,29 @@ GMPCDMCallbackProxy::SessionClosed(const nsCString& aSessionId)
   MOZ_ASSERT(mProxy->IsOnOwnerThread());
 
   bool keyStatusesChange = false;
+  auto sid = NS_ConvertUTF8toUTF16(aSessionId);
   {
     CDMCaps::AutoLock caps(mProxy->Capabilites());
     keyStatusesChange = caps.RemoveKeysForSession(NS_ConvertUTF8toUTF16(aSessionId));
   }
   if (keyStatusesChange) {
-    nsCOMPtr<nsIRunnable> task;
-    task = NewRunnableMethod<nsString>(mProxy,
-      &CDMProxy::OnKeyStatusesChange,
-      NS_ConvertUTF8toUTF16(aSessionId));
-    NS_DispatchToMainThread(task);
+    RefPtr<CDMProxy> proxy = mProxy;
+    NS_DispatchToMainThread(
+      NS_NewRunnableFunction([proxy, sid] ()
+      {
+        proxy->OnKeyStatusesChange(sid);
+      })
+    );
   }
 
-  nsCOMPtr<nsIRunnable> task;
-  task = NewRunnableMethod<nsString>(mProxy,
-                                     &CDMProxy::OnSessionClosed,
-                                     NS_ConvertUTF8toUTF16(aSessionId));
-  NS_DispatchToMainThread(task);
+  RefPtr<CDMProxy> proxy = mProxy;
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction([proxy, sid] ()
+    {
+      proxy->OnSessionClosed(sid);
+    })
+  );
 }
-
-class SessionErrorTask : public Runnable {
-public:
-  SessionErrorTask(CDMProxy* aProxy,
-                   const nsCString& aSessionId,
-                   nsresult aException,
-                   uint32_t aSystemCode,
-                   const nsCString& aMessage)
-    : mProxy(aProxy)
-    , mSid(NS_ConvertUTF8toUTF16(aSessionId))
-    , mException(aException)
-    , mSystemCode(aSystemCode)
-    , mMsg(NS_ConvertUTF8toUTF16(aMessage))
-  {}
-
-  NS_IMETHOD Run() override {
-    mProxy->OnSessionError(mSid, mException, mSystemCode, mMsg);
-    return NS_OK;
-  }
-
-  RefPtr<CDMProxy> mProxy;
-  dom::PromiseId mPid;
-  nsString mSid;
-  nsresult mException;
-  uint32_t mSystemCode;
-  nsString mMsg;
-};
 
 void
 GMPCDMCallbackProxy::SessionError(const nsCString& aSessionId,
@@ -270,13 +159,22 @@ GMPCDMCallbackProxy::SessionError(const nsCString& aSessionId,
 {
   MOZ_ASSERT(mProxy->IsOnOwnerThread());
 
-  nsCOMPtr<nsIRunnable> task;
-  task = new SessionErrorTask(mProxy,
-                              aSessionId,
-                              aException,
-                              aSystemCode,
-                              aMessage);
-  NS_DispatchToMainThread(task);
+  RefPtr<CDMProxy> proxy = mProxy;
+  auto sid = NS_ConvertUTF8toUTF16(aSessionId);
+  auto msg = NS_ConvertUTF8toUTF16(aMessage);
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction([proxy,
+                            sid,
+                            aException,
+                            aSystemCode,
+                            msg] ()
+    {
+      proxy->OnSessionError(sid,
+                        aException,
+                        aSystemCode,
+                        msg);
+    })
+  );
 }
 
 void
@@ -302,11 +200,14 @@ GMPCDMCallbackProxy::BatchedKeyStatusChangedInternal(const nsCString& aSessionId
     }
   }
   if (keyStatusesChange) {
-    nsCOMPtr<nsIRunnable> task;
-    task = NewRunnableMethod<nsString>(mProxy,
-                                       &CDMProxy::OnKeyStatusesChange,
-                                       NS_ConvertUTF8toUTF16(aSessionId));
-    NS_DispatchToMainThread(task);
+    RefPtr<CDMProxy> proxy = mProxy;
+    auto sid = NS_ConvertUTF8toUTF16(aSessionId);
+    NS_DispatchToMainThread(
+      NS_NewRunnableFunction([proxy, sid] ()
+      {
+        proxy->OnKeyStatusesChange(sid);
+      })
+    );
   }
 }
 
@@ -324,8 +225,14 @@ void
 GMPCDMCallbackProxy::Terminated()
 {
   MOZ_ASSERT(mProxy->IsOnOwnerThread());
-  nsCOMPtr<nsIRunnable> task = NewRunnableMethod(mProxy, &CDMProxy::Terminated);
-  NS_DispatchToMainThread(task);
+
+  RefPtr<CDMProxy> proxy = mProxy;
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction([proxy] ()
+      {
+        proxy->Terminated();
+      })
+  );
 }
 
 } // namespace mozilla

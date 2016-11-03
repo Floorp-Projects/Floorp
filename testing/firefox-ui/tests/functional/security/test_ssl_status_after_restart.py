@@ -43,6 +43,7 @@ class TestSSLStatusAfterRestart(FirefoxTestCase):
             self.browser.tabbar.close_all_tabs([self.browser.tabbar.tabs[0]])
             self.browser.switch_to()
             self.identity_popup.close(force=True)
+            self.marionette.clear_pref('browser.startup.page')
         finally:
             FirefoxTestCase.tearDown(self)
 

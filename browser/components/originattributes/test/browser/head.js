@@ -281,6 +281,11 @@ this.IsolationTestTools = {
     let firstFrameSetting;
     let secondFrameSetting;
 
+    // Request a longer timeout since the test will run a test for three times
+    // with different settings. Thus, one test here represents three tests.
+    // For this reason, we triple the timeout.
+    requestLongerTimeout(3);
+
     if (typeof aURL === "string") {
       pageURL = aURL;
     } else if (typeof aURL === "object") {

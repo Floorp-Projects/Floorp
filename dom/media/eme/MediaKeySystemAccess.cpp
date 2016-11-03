@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/MediaKeySystemAccess.h"
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
 #include "mozilla/Preferences.h"
@@ -121,106 +120,6 @@ HaveGMPFor(mozIGeckoMediaPluginService* aGMPService,
   return hasPlugin;
 }
 
-#ifdef XP_WIN
-static bool
-AdobePluginFileExists(const nsACString& aVersionStr,
-                      const nsAString& aFilename)
-{
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
-
-  nsCOMPtr<nsIFile> path;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(path));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  rv = path->Append(NS_LITERAL_STRING("gmp-eme-adobe"));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  rv = path->AppendNative(aVersionStr);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  rv = path->Append(aFilename);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  bool exists = false;
-  return NS_SUCCEEDED(path->Exists(&exists)) && exists;
-}
-
-static bool
-AdobePluginDLLExists(const nsACString& aVersionStr)
-{
-  return AdobePluginFileExists(aVersionStr, NS_LITERAL_STRING("eme-adobe.dll"));
-}
-
-static bool
-AdobePluginVoucherExists(const nsACString& aVersionStr)
-{
-  return AdobePluginFileExists(aVersionStr, NS_LITERAL_STRING("eme-adobe.voucher"));
-}
-#endif
-
-/* static */ bool
-MediaKeySystemAccess::IsGMPPresentOnDisk(const nsAString& aKeySystem,
-                                         const nsACString& aVersion,
-                                         nsACString& aOutMessage)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
-    // We need to be able to access the filesystem, so call this in the
-    // main process via ContentChild.
-    ContentChild* contentChild = ContentChild::GetSingleton();
-    if (NS_WARN_IF(!contentChild)) {
-      return false;
-    }
-
-    nsCString message;
-    bool result = false;
-    bool ok = contentChild->SendIsGMPPresentOnDisk(nsString(aKeySystem), nsCString(aVersion),
-                                                   &result, &message);
-    aOutMessage = message;
-    return ok && result;
-  }
-
-  bool isPresent = true;
-
-#if XP_WIN
-  if (IsPrimetimeKeySystem(aKeySystem)) {
-    if (!AdobePluginDLLExists(aVersion)) {
-      NS_WARNING("Adobe EME plugin disappeared from disk!");
-      aOutMessage = NS_LITERAL_CSTRING("Adobe DLL was expected to be on disk but was not");
-      isPresent = false;
-    }
-    if (!AdobePluginVoucherExists(aVersion)) {
-      NS_WARNING("Adobe EME voucher disappeared from disk!");
-      aOutMessage = NS_LITERAL_CSTRING("Adobe plugin voucher was expected to be on disk but was not");
-      isPresent = false;
-    }
-
-    if (!isPresent) {
-      // Reset the prefs that Firefox's GMP downloader sets, so that
-      // Firefox will try to download the plugin next time the updater runs.
-      Preferences::ClearUser("media.gmp-eme-adobe.lastUpdate");
-      Preferences::ClearUser("media.gmp-eme-adobe.version");
-    } else if (!EMEVoucherFileExists()) {
-      // Gecko doesn't have a voucher file for the plugin-container.
-      // Adobe EME isn't going to work, so don't advertise that it will.
-      aOutMessage = NS_LITERAL_CSTRING("Plugin-container voucher not present");
-      isPresent = false;
-    }
-  }
-#endif
-
-  return isPresent;
-}
-
 static MediaKeySystemStatus
 EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
                     const nsAString& aKeySystem,
@@ -244,10 +143,6 @@ EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
 
   if (!hasPlugin) {
     aOutMessage = NS_LITERAL_CSTRING("CDM is not installed");
-    return MediaKeySystemStatus::Cdm_not_installed;
-  }
-
-  if (!MediaKeySystemAccess::IsGMPPresentOnDisk(aKeySystem, versionStr, aOutMessage)) {
     return MediaKeySystemStatus::Cdm_not_installed;
   }
 

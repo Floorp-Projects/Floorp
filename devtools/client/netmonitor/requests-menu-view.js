@@ -127,6 +127,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   initialize: function (store) {
     dumpn("Initializing the RequestsMenuView");
 
+    this.store = store;
+
     let widgetParentEl = $("#requests-menu-contents");
     this.widget = new SideMenuWidget(widgetParentEl);
     this._splitter = $("#network-inspector-view-splitter");
@@ -765,7 +767,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     NetMonitorController.NetworkEventsHandler.clearMarkers();
     NetMonitorView.Sidebar.toggle(false);
 
-    $("#details-pane-toggle").disabled = true;
+    this.store.dispatch(Actions.disableToggleButton(true));
     $("#requests-menu-empty-notice").hidden = false;
 
     this.empty();
@@ -1078,7 +1080,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this._updateQueue = [];
     this._addQueue = [];
 
-    $("#details-pane-toggle").disabled = !this.itemCount;
+    this.store.dispatch(Actions.disableToggleButton(!this.itemCount));
     $("#requests-menu-empty-notice").hidden = !!this.itemCount;
 
     // Make sure all the requests are sorted and filtered.

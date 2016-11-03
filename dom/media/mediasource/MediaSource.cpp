@@ -33,6 +33,10 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Sprintf.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidBridge.h"
+#endif
+
 struct JSContext;
 class JSObject;
 
@@ -71,7 +75,12 @@ IsWebMForced(DecoderDoctorDiagnostics* aDiagnostics)
     DecoderTraits::IsMP4TypeAndEnabled(NS_LITERAL_CSTRING("video/mp4"),
                                        aDiagnostics);
   bool hwsupported = gfx::gfxVars::CanUseHardwareVideoDecoding();
+#ifdef MOZ_WIDGET_ANDROID
+  return !mp4supported || !hwsupported || VP9Benchmark::IsVP9DecodeFast() ||
+         java::HardwareCodecCapabilityUtils::HasHWVP9();
+#else
   return !mp4supported || !hwsupported || VP9Benchmark::IsVP9DecodeFast();
+#endif
 }
 
 namespace dom {
@@ -112,8 +121,7 @@ MediaSource::IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* a
   }
   if (mimeType.EqualsASCII("audio/webm")) {
     if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
-          Preferences::GetBool("media.mediasource.webm.audio.enabled", true) ||
-          IsWebMForced(aDiagnostics))) {
+          Preferences::GetBool("media.mediasource.webm.audio.enabled", true))) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
     return NS_OK;

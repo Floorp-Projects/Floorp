@@ -23,7 +23,7 @@
 class FetchObserver final : public nsIRequestObserver
                           , public nsIProgressEventSink
 {
-  ~FetchObserver() {}
+  ~FetchObserver() = default;
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER

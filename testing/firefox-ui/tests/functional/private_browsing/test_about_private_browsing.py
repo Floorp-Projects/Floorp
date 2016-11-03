@@ -20,6 +20,12 @@ class TestAboutPrivateBrowsing(FirefoxTestCase):
 
         self.pb_url = support_url + 'private-browsing'
 
+    def tearDown(self):
+        try:
+            self.marionette.clear_pref('app.support.baseURL')
+        finally:
+            FirefoxTestCase.tearDown(self)
+
     def testCheckAboutPrivateBrowsing(self):
         self.assertFalse(self.browser.is_private)
 

@@ -5,4 +5,5 @@
 
 DevToolsModules(
     'filter-buttons.js',
+    'toggle-button.js',
 )

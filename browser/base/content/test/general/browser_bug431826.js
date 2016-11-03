@@ -19,8 +19,6 @@ add_task(function* () {
     Assert.ok(uri.startsWith("about:certerror"), "Broken page should go to about:certerror, not about:neterror");
   });
 
-  let advancedDiv, advancedDivVisibility, technicalDivCollapsed;
-
   yield remote(() => {
     let div = content.document.getElementById("badCertAdvancedPanel");
     // Confirm that the expert section is collapsed

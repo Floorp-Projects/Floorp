@@ -9,7 +9,6 @@ this.ContentSearchUIController = (function () {
 const MAX_DISPLAYED_SUGGESTIONS = 6;
 const SUGGESTION_ID_PREFIX = "searchSuggestion";
 const ONE_OFF_ID_PREFIX = "oneOff";
-const CSS_URI = "chrome://browser/content/contentSearchUI.css";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 

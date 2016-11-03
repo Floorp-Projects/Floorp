@@ -121,7 +121,6 @@ add_task(function* () {
 
 
   // Test that a suggested tile is not enhanced by a directory tile
-  let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
   NewTabUtils.isTopPlacesSite = () => true;
   yield setLinks("-1,2,3,4,5,6,7,8");
 
