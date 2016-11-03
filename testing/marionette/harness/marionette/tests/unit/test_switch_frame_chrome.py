@@ -2,25 +2,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette import MarionetteTestCase
+from unittest import skip
+
+from marionette import MarionetteTestCase, WindowManagerMixin
 from marionette_driver.errors import JavascriptException
 
 
-class TestSwitchFrameChrome(MarionetteTestCase):
+class TestSwitchFrameChrome(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
-        MarionetteTestCase.setUp(self)
+        super(TestSwitchFrameChrome, self).setUp()
         self.marionette.set_context("chrome")
-        self.win = self.marionette.current_window_handle
-        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', 'foo', 'chrome,centerscreen');")
-        self.marionette.switch_to_window('foo')
-        self.assertNotEqual(self.win, self.marionette.current_window_handle)
+
+        def open_window_with_js():
+            self.marionette.execute_script("""
+              window.open('chrome://marionette/content/test.xul',
+                          'foo', 'chrome,centerscreen');
+            """)
+
+        new_window = self.open_window(trigger=open_window_with_js)
+        self.marionette.switch_to_window(new_window)
+        self.assertNotEqual(self.start_window, self.marionette.current_chrome_window_handle)
 
     def tearDown(self):
-        self.assertNotEqual(self.win, self.marionette.current_window_handle)
-        self.marionette.execute_script("window.close();")
-        self.marionette.switch_to_window(self.win)
-        MarionetteTestCase.tearDown(self)
+        self.close_all_windows()
+        super(TestSwitchFrameChrome, self).tearDown()
 
+    @skip("Bug 1311657 - Opened chrome window cannot be closed after call to switch_to_frame(0)")
     def test_switch_simple(self):
         self.assertIn("test.xul", self.marionette.get_url(), "Initial navigation has failed")
         self.marionette.switch_to_frame(0)
@@ -40,6 +48,7 @@ class TestSwitchFrameChrome(MarionetteTestCase):
         self.marionette.switch_to_frame(iframe_element)
         self.assertIn("test2.xul", self.marionette.get_url(), "Switching by element failed")
 
+    @skip("Bug 1311657 - Opened chrome window cannot be closed after call to switch_to_frame(0)")
     def test_stack_trace(self):
         self.assertIn("test.xul", self.marionette.get_url(), "Initial navigation has failed")
         self.marionette.switch_to_frame(0)
