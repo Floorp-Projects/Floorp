@@ -1,0 +1,617 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=687787
+-->
+<head>
+  <title>Test for Bug 687787</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=687787">Mozilla Bug 687787</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var content = document.getElementById('content');
+var eventStack = [];
+
+function _callback(e){
+    var event = {'type' : e.type, 'target' : e.target, 'relatedTarget' : e.relatedTarget }
+    eventStack.push(event);
+}
+
+function clearEventStack(){
+    eventStack = [];
+}
+
+window.addEventListener("focus", _callback, true);
+window.addEventListener("focusin", _callback, true);
+window.addEventListener("focusout", _callback, true);
+window.addEventListener("blur", _callback, true);
+
+function CompareEventToExpected(e, expected) {
+    if (expected == null || e == null)
+        return false;
+    if (e.type == expected.type && e.target == expected.target && e.relatedTarget == expected.relatedTarget)
+        return true;
+    return false;
+}
+
+function TestEventOrderNormal() {
+
+    var input1 = document.createElement('input');
+    var input2 = document.createElement('input');
+    var input3 = document.createElement('input');
+    var content = document.getElementById('content');
+
+    input1.setAttribute('id', 'input1');
+    input2.setAttribute('id', 'input2');
+    input3.setAttribute('id', 'input3');
+    input1.setAttribute('type', 'text');
+    input2.setAttribute('type', 'text');
+    input3.setAttribute('type', 'text');
+
+    content.appendChild(input1);
+    content.appendChild(input2);
+    content.appendChild(input3);
+    content.style.display = 'block'
+
+    expectedEventOrder = [
+        {'type' : 'blur',
+        'target' : input1,
+        'relatedTarget' : input2},
+        {'type' : 'focusout',
+        'target' : input1,
+        'relatedTarget' : input2},
+        {'type' : 'focus',
+        'target' : input2,
+        'relatedTarget' : input1},
+        {'type' : 'focusin',
+        'target' : input2,
+        'relatedTarget' : input1},
+        {'type' : 'blur',
+        'target' : input2,
+        'relatedTarget' : input3},
+        {'type' : 'focusout',
+        'target' : input2,
+        'relatedTarget' : input3},
+        {'type' : 'focus',
+        'target' : input3,
+        'relatedTarget' : input2},
+        {'type' : 'focusin',
+        'target' : input3,
+        'relatedTarget' : input2},
+    ]
+
+    input1.focus();
+    clearEventStack();
+
+    input2.focus();
+    input3.focus();
+
+    for (var i = 0; i < expectedEventOrder.length || i < eventStack.length ; i++) {
+        ok(CompareEventToExpected(expectedEventOrder[i], eventStack[i]), 'Normal event order is correct: Event ' + i + ': '
+                + 'Expected ('
+                    + expectedEventOrder[i].type + ','
+                    + (expectedEventOrder[i].target ? expectedEventOrder[i].target.id : null) + ','
+                    + (expectedEventOrder[i].relatedTarget ? expectedEventOrder[i].relatedTarget.id : null) + '), '
+                + 'Actual ('
+                    + eventStack[i].type + ','
+                    + (eventStack[i].target ? eventStack[i].target.id : null) + ','
+                    + (eventStack[i].relatedTarget ? eventStack[i].relatedTarget.id : null) + ')');
+    }
+
+    content.innerHTML = '';
+}
+
+function TestEventOrderNormalFiresAtRightTime() {
+
+    var input1 = document.createElement('input');
+    var input2 = document.createElement('input');
+    var input3 = document.createElement('input');
+    var content = document.getElementById('content');
+
+    input1.setAttribute('id', 'input1');
+    input2.setAttribute('id', 'input2');
+    input3.setAttribute('id', 'input3');
+    input1.setAttribute('type', 'text');
+    input2.setAttribute('type', 'text');
+    input3.setAttribute('type', 'text');
+
+    input1.onblur = function(e)
+    {
+        ok(document.activeElement == document.body, 'input1: not focused when blur fires')
+    }
+
+    input1.addEventListener('focusout', function(e)
+    {
+        ok(document.activeElement == document.body, 'input1: not focused when focusout fires')
+    });
+
+    input2.onfocus = function(e)
+    {
+        ok(document.activeElement == input2, 'input2: focused when focus fires')
+    }
+
+    input2.addEventListener('focusin', function(e)
+    {
+        ok(document.activeElement == input2, 'input2: focused when focusin fires')
+    });
+
+    content.appendChild(input1);
+    content.appendChild(input2);
+    content.style.display = 'block'
+
+    expectedEventOrder = [
+        {'type' : 'blur',
+        'target' : input1,
+        'relatedTarget' : input2},
+        {'type' : 'focusout',
+        'target' : input1,
+        'relatedTarget' : input2},
+        {'type' : 'focus',
+        'target' : input2,
+        'relatedTarget' : input1},
+        {'type' : 'focusin',
+        'target' : input2,
+        'relatedTarget' : input1},
+    ]
+
+    input1.focus();
+    clearEventStack();
+
+    input2.focus();
+
+    for (var i = 0; i < expectedEventOrder.length || i < eventStack.length ; i++) {
+        ok(CompareEventToExpected(expectedEventOrder[i], eventStack[i]), 'Normal event order is correct: Event ' + i + ': '
+                + 'Expected ('
+                    + expectedEventOrder[i].type + ','
+                    + (expectedEventOrder[i].target ? expectedEventOrder[i].target.id : null) + ','
+                    + (expectedEventOrder[i].relatedTarget ? expectedEventOrder[i].relatedTarget.id : null) + '), '
+                + 'Actual ('
+                    + eventStack[i].type + ','
+                    + (eventStack[i].target ? eventStack[i].target.id : null) + ','
+                    + (eventStack[i].relatedTarget ? eventStack[i].relatedTarget.id : null) + ')');
+    }
+
+    content.innerHTML = '';
+}
+
+function TestFocusOutRedirectsFocus() {
+
+    var input1 = document.createElement('input');
+    var input2 = document.createElement('input');
+    var input3 = document.createElement('input');
+    var content = document.getElementById('content');
+
+    input1.setAttribute('id', 'input1');
+    input2.setAttribute('id', 'input2');
+    input3.setAttribute('id', 'input3');
+    input1.setAttribute('type', 'text');
+    input2.setAttribute('type', 'text');
+    input3.setAttribute('type', 'text');
+    input1.addEventListener('focusout', function () {
+        input3.focus();
+    });
+
+    content.appendChild(input1);
+    content.appendChild(input2);
+    content.appendChild(input3);
+    content.style.display = 'block'
+
+    expectedEventOrder = [
+        {'type' : 'blur',
+        'target' : input1,
+        'relatedTarget' : input2},
+        {'type' : 'focusout',
+        'target' : input1,
+        'relatedTarget' : input2},
+        {'type' : 'focus',
+        'target' : input3,
+        'relatedTarget' : null},
+        {'type' : 'focusin',
+        'target' : input3,
+        'relatedTarget' : null},
+    ]
+
+    input1.focus();
+    clearEventStack();
+    input2.focus();
+
+    for (var i = 0; i < expectedEventOrder.length || i < eventStack.length; i++) {
+        ok(CompareEventToExpected(expectedEventOrder[i], eventStack[i]), 'Normal event order is correct: Event ' + i + ': '
+                + 'Expected ('
+                    + expectedEventOrder[i].type + ','
+                    + (expectedEventOrder[i].target ? expectedEventOrder[i].target.id : null) + ','
+                    + (expectedEventOrder[i].relatedTarget ? expectedEventOrder[i].relatedTarget.id : null) + '), '
+                + 'Actual ('
+                    + eventStack[i].type + ','
+                    + (eventStack[i].target ? eventStack[i].target.id : null) + ','
+                    + (eventStack[i].relatedTarget ? eventStack[i].relatedTarget.id : null) + ')');
+    }
+
+    content.innerHTML = '';
+}
+
+function TestFocusInRedirectsFocus() {
+
+    var input1 = document.createElement('input');
+    var input2 = document.createElement('input');
+    var input3 = document.createElement('input');
+    var content = document.getElementById('content');
+
+    input1.setAttribute('id', 'input1');
+    input2.setAttribute('id', 'input2');
+    input3.setAttribute('id', 'input3');
+    input1.setAttribute('type', 'text');
+    input2.setAttribute('type', 'text');
+    input3.setAttribute('type', 'text');
+    input2.addEventListener('focusin', function () {
+        input3.focus();
+    });
+
+    content.appendChild(input1);
+    content.appendChild(input2);
+    content.appendChild(input3);
+    content.style.display = 'block'
+
+    expectedEventOrder = [
+        {'type' : 'blur',
+        'target' : input1,
+        'relatedTarget' : input2},
+        {'type' : 'focusout',
+        'target' : input1,
+        'relatedTarget' : input2},
+        {'type' : 'focus',
+        'target' : input2,
+        'relatedTarget' : input1},
+        {'type' : 'focusin',
+        'target' : input2,
+        'relatedTarget' : input1},
+        {'type' : 'blur',
+        'target' : input2,
+        'relatedTarget' : input3},
+        {'type' : 'focusout',
+        'target' : input2,
+        'relatedTarget' : input3},
+        {'type' : 'focus',
+        'target' : input3,
+        'relatedTarget' : input2},
+        {'type' : 'focusin',
+        'target' : input3,
+        'relatedTarget' : input2},
+    ]
+
+    input1.focus();
+    clearEventStack();
+    input2.focus();
+
+    for (var i = 0; i < expectedEventOrder.length || i < eventStack.length; i++) {
+        ok(CompareEventToExpected(expectedEventOrder[i], eventStack[i]), 'Normal event order is correct: Event ' + i + ': '
+                + 'Expected ('
+                    + expectedEventOrder[i].type + ','
+                    + (expectedEventOrder[i].target ? expectedEventOrder[i].target.id : null) + ','
+                    + (expectedEventOrder[i].relatedTarget ? expectedEventOrder[i].relatedTarget.id : null) + '), '
+                + 'Actual ('
+                    + eventStack[i].type + ','
+                    + (eventStack[i].target ? eventStack[i].target.id : null) + ','
+                    + (eventStack[i].relatedTarget ? eventStack[i].relatedTarget.id : null) + ')');
+    }
+
+    content.innerHTML = '';
+}
+
+function TestBlurRedirectsFocus() {
+
+    var input1 = document.createElement('input');
+    var input2 = document.createElement('input');
+    var input3 = document.createElement('input');
+    var content = document.getElementById('content');
+
+    input1.setAttribute('id', 'input1');
+    input2.setAttribute('id', 'input2');
+    input3.setAttribute('id', 'input3');
+    input1.setAttribute('type', 'text');
+    input2.setAttribute('type', 'text');
+    input3.setAttribute('type', 'text');
+    input1.onblur = function () {
+        input3.focus();
+    }
+
+    content.appendChild(input1);
+    content.appendChild(input2);
+    content.appendChild(input3);
+    content.style.display = 'block'
+
+    expectedEventOrder = [
+        {'type' : 'blur',
+        'target' : input1,
+        'relatedTarget' : input2},
+        {'type' : 'focus',
+        'target' : input3,
+        'relatedTarget' : null},
+        {'type' : 'focusin',
+        'target' : input3,
+        'relatedTarget' : null},
+        {'type' : 'focusout',
+        'target' : input1,
+        'relatedTarget' : input2},
+    ]
+
+    input1.focus();
+    clearEventStack();
+    input2.focus();
+
+    for (var i = 0; i < expectedEventOrder.length || i < eventStack.length; i++) {
+        ok(CompareEventToExpected(expectedEventOrder[i], eventStack[i]), 'Normal event order is correct: Event ' + i + ': '
+                + 'Expected ('
+                    + expectedEventOrder[i].type + ','
+                    + (expectedEventOrder[i].target ? expectedEventOrder[i].target.id : null) + ','
+                    + (expectedEventOrder[i].relatedTarget ? expectedEventOrder[i].relatedTarget.id : null) + '), '
+                + 'Actual ('
+                    + eventStack[i].type + ','
+                    + (eventStack[i].target ? eventStack[i].target.id : null) + ','
+                    + (eventStack[i].relatedTarget ? eventStack[i].relatedTarget.id : null) + ')');
+    }
+
+    content.innerHTML = '';
+}
+
+function TestFocusRedirectsFocus() {
+
+    var input1 = document.createElement('input');
+    var input2 = document.createElement('input');
+    var input3 = document.createElement('input');
+    var content = document.getElementById('content');
+
+    input1.setAttribute('id', 'input1');
+    input2.setAttribute('id', 'input2');
+    input3.setAttribute('id', 'input3');
+    input1.setAttribute('type', 'text');
+    input2.setAttribute('type', 'text');
+    input3.setAttribute('type', 'text');
+    input2.onfocus = function () {
+        input3.focus();
+    }
+
+    content.appendChild(input1);
+    content.appendChild(input2);
+    content.appendChild(input3);
+    content.style.display = 'block'
+
+    expectedEventOrder = [
+        {'type' : 'blur',
+        'target' : input1,
+        'relatedTarget' : input2},
+        {'type' : 'focusout',
+        'target' : input1,
+        'relatedTarget' : input2},
+        {'type' : 'focus',
+        'target' : input2,
+        'relatedTarget' : input1},
+        {'type' : 'blur',
+        'target' : input2,
+        'relatedTarget' : input3},
+        {'type' : 'focusout',
+        'target' : input2,
+        'relatedTarget' : input3},
+        {'type' : 'focus',
+        'target' : input3,
+        'relatedTarget' : input2},
+        {'type' : 'focusin',
+        'target' : input3,
+        'relatedTarget' : input2},
+    ]
+
+    input1.focus();
+    clearEventStack();
+    input2.focus();
+
+    for (var i = 0; i < expectedEventOrder.length || i < eventStack.length; i++) {
+        ok(CompareEventToExpected(expectedEventOrder[i], eventStack[i]), 'Normal event order is correct: Event ' + i + ': '
+                + 'Expected ('
+                    + expectedEventOrder[i].type + ','
+                    + (expectedEventOrder[i].target ? expectedEventOrder[i].target.id : null) + ','
+                    + (expectedEventOrder[i].relatedTarget ? expectedEventOrder[i].relatedTarget.id : null) + '), '
+                + 'Actual ('
+                    + eventStack[i].type + ','
+                    + (eventStack[i].target ? eventStack[i].target.id : null) + ','
+                    + (eventStack[i].relatedTarget ? eventStack[i].relatedTarget.id : null) + ')');
+    }
+
+    content.innerHTML = '';
+}
+
+function TestEventOrderDifferentDocument() {
+
+    var input1 = document.createElement('input');
+    var input2 = document.createElement('input');
+    var iframe1 = document.createElement('iframe');
+    var content = document.getElementById('content');
+
+    input1.setAttribute('id', 'input1');
+    input2.setAttribute('id', 'input2');
+    iframe1.setAttribute('id', 'iframe1');
+    input1.setAttribute('type', 'text');
+    input2.setAttribute('type', 'text');
+
+    content.appendChild(input1);
+    content.appendChild(iframe1);
+    iframe1.contentDocument.body.appendChild(input2);
+    content.style.display = 'block'
+
+    iframe1.contentDocument.addEventListener("focus", _callback, true);
+    iframe1.contentDocument.addEventListener("focusin", _callback, true);
+    iframe1.contentDocument.addEventListener("focusout", _callback, true);
+    iframe1.contentDocument.addEventListener("blur", _callback, true);
+
+    expectedEventOrder = [
+        {'type' : 'blur',
+        'target' : input1,
+        'relatedTarget' : null},
+        {'type' : 'focusout',
+        'target' : input1,
+        'relatedTarget' : null},
+        {'type' : 'blur',
+        'target' : document,
+        'relatedTarget' : null},
+        {'type' : 'blur',
+        'target' : window,
+        'relatedTarget' : null},
+        {'type' : 'focus',
+        'target' : iframe1.contentDocument,
+        'relatedTarget' : null},
+        {'type' : 'focus',
+        'target' : input2,
+        'relatedTarget' : null},
+        {'type' : 'focusin',
+        'target' : input2,
+        'relatedTarget' : null},
+    ]
+
+    input1.focus();
+    clearEventStack();
+    input2.focus();
+
+    for (var i = 0; i < expectedEventOrder.length || i < eventStack.length; i++) {
+        ok(CompareEventToExpected(expectedEventOrder[i], eventStack[i]), 'Normal event order is correct: Event ' + i + ': '
+                + 'Expected ('
+                    + expectedEventOrder[i].type + ','
+                    + (expectedEventOrder[i].target ? expectedEventOrder[i].target.id : null) + ','
+                    + (expectedEventOrder[i].relatedTarget ? expectedEventOrder[i].relatedTarget.id : null) + '), '
+                + 'Actual ('
+                    + eventStack[i].type + ','
+                    + (eventStack[i].target ? eventStack[i].target.id : null) + ','
+                    + (eventStack[i].relatedTarget ? eventStack[i].relatedTarget.id : null) + ')');
+    }
+
+    content.innerHTML = '';
+}
+
+
+function TestFocusOutMovesTarget() {
+
+    var input1 = document.createElement('input');
+    var input2 = document.createElement('input');
+    var iframe1 = document.createElement('iframe');
+    var content = document.getElementById('content');
+
+    input1.setAttribute('id', 'input1');
+    input2.setAttribute('id', 'input2');
+    iframe1.setAttribute('id', 'iframe1');
+    input1.setAttribute('type', 'text');
+    input2.setAttribute('type', 'text');
+
+    input1.addEventListener('focusout', function () {
+        iframe1.contentDocument.body.appendChild(input2);
+    });
+
+    content.appendChild(input1);
+    content.appendChild(input2);
+    content.appendChild(iframe1);
+    content.style.display = 'block'
+
+    iframe1.contentDocument.addEventListener("focus", _callback, true);
+    iframe1.contentDocument.addEventListener("focusin", _callback, true);
+    iframe1.contentDocument.addEventListener("focusout", _callback, true);
+    iframe1.contentDocument.addEventListener("blur", _callback, true);
+
+    expectedEventOrder = [
+        {'type' : 'blur',
+        'target' : input1,
+        'relatedTarget' : input2},
+        {'type' : 'focusout',
+        'target' : input1,
+        'relatedTarget' : input2},
+        {'type' : 'focus',
+        'target' : input2,
+        'relatedTarget' : null},
+        {'type' : 'focusin',
+        'target' : input2,
+        'relatedTarget' : null},
+    ]
+
+    input1.focus();
+    clearEventStack();
+    input2.focus();
+
+    for (var i = 0; i < expectedEventOrder.length || i < eventStack.length; i++) {
+        ok(CompareEventToExpected(expectedEventOrder[i], eventStack[i]), 'Normal event order is correct: Event ' + i + ': '
+                + 'Expected ('
+                    + expectedEventOrder[i].type + ','
+                    + (expectedEventOrder[i].target ? expectedEventOrder[i].target.id : null) + ','
+                    + (expectedEventOrder[i].relatedTarget ? expectedEventOrder[i].relatedTarget.id : null) + '), '
+                + 'Actual ('
+                    + eventStack[i].type + ','
+                    + (eventStack[i].target ? eventStack[i].target.id : null) + ','
+                    + (eventStack[i].relatedTarget ? eventStack[i].relatedTarget.id : null) + ')');
+    }
+
+    content.innerHTML = '';
+}
+
+function TestBlurWindowAndRefocusInputOnlyFiresFocusInOnInput() {
+
+    var input1 = document.createElement('input');
+    var content = document.getElementById('content');
+
+    input1.setAttribute('id', 'input1');
+    input1.setAttribute('type', 'text');
+
+    content.appendChild(input1);
+
+    expectedEventOrder = [
+        {'type' : 'focus',
+        'target' : document,
+        'relatedTarget' : null},
+        {'type' : 'focus',
+        'target' : window,
+        'relatedTarget' : null},
+        {'type' : 'focus',
+        'target' : input1,
+        'relatedTarget' : null},
+        {'type' : 'focusin',
+        'target' : input1,
+        'relatedTarget' : null},
+    ]
+
+    window.blur();
+    clearEventStack();
+    input1.focus();
+
+    for (var i = 0; i < expectedEventOrder.length || i < eventStack.length; i++) {
+        ok(CompareEventToExpected(expectedEventOrder[i], eventStack[i]), 'Normal event order is correct: Event ' + i + ': '
+                + 'Expected ('
+                    + expectedEventOrder[i].type + ','
+                    + (expectedEventOrder[i].target ? expectedEventOrder[i].target.id : null) + ','
+                    + (expectedEventOrder[i].relatedTarget ? expectedEventOrder[i].relatedTarget.id : null) + '), '
+                + 'Actual ('
+                    + eventStack[i].type + ','
+                    + (eventStack[i].target ? eventStack[i].target.id : null) + ','
+                    + (eventStack[i].relatedTarget ? eventStack[i].relatedTarget.id : null) + ')');
+    }
+
+    content.innerHTML = '';
+}
+
+TestEventOrderNormal();
+TestEventOrderNormalFiresAtRightTime();
+TestFocusOutRedirectsFocus();
+TestFocusInRedirectsFocus();
+TestBlurRedirectsFocus();
+TestFocusRedirectsFocus();
+TestFocusOutMovesTarget();
+TestEventOrderDifferentDocument();
+TestBlurWindowAndRefocusInputOnlyFiresFocusInOnInput();
+
+</script>
+</pre>
+</body>
+</html>

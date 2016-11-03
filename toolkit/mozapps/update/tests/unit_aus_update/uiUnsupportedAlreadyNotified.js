@@ -4,6 +4,22 @@
 
 Cu.import("resource://testing-common/MockRegistrar.jsm");
 
+const WindowWatcher = {
+  openWindow: function(aParent, aUrl, aName, aFeatures, aArgs) {
+    check_showUpdateAvailable();
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowWatcher])
+};
+
+const WindowMediator = {
+  getMostRecentWindow: function(aWindowType) {
+    return null;
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowMediator])
+};
+
 function run_test() {
   setupTestCommon();
 
@@ -56,19 +72,3 @@ function check_test() {
 function check_showUpdateAvailable() {
   do_throw("showUpdateAvailable should not have called openWindow!");
 }
-
-const WindowWatcher = {
-  openWindow: function(aParent, aUrl, aName, aFeatures, aArgs) {
-    check_showUpdateAvailable();
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowWatcher])
-};
-
-const WindowMediator = {
-  getMostRecentWindow: function(aWindowType) {
-    return null;
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowMediator])
-};

@@ -6,8 +6,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1248185
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 1248185</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
   SimpleTest.waitForExplicitFinish();
@@ -26,28 +26,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1248185
 
     var sel = window.getSelection();
 
-    const kMoveRight2 = "cmd_moveRight2";
-    var controller =
-      top.document.commandDispatcher.getControllerForCommand(kMoveRight2);
-    ok((controller && controller.isCommandEnabled(kMoveRight2)),
-       "have " + kMoveRight2 + " command");
-
-    // we assume the controller for these is the same
-    const kSelectLeft2 = "cmd_selectLeft2";
-    const kSelectRight2 = "cmd_selectRight2";
-
-    controller.doCommand(kMoveRight2);
-    controller.doCommand(kMoveRight2);
-    controller.doCommand(kMoveRight2);
-    controller.doCommand(kSelectRight2);
+    SpecialPowers.doCommand(window, "cmd_moveRight2");
+    SpecialPowers.doCommand(window, "cmd_moveRight2");
+    SpecialPowers.doCommand(window, "cmd_moveRight2");
+    SpecialPowers.doCommand(window, "cmd_selectRight2");
     ok(sel.toString() == "three ", "expected 'three ' to be selected");
 
-    controller.doCommand(kMoveRight2);
-    controller.doCommand(kMoveRight2);
-    controller.doCommand(kMoveRight2);
+    SpecialPowers.doCommand(window, "cmd_moveRight2");
+    SpecialPowers.doCommand(window, "cmd_moveRight2");
+    SpecialPowers.doCommand(window, "cmd_moveRight2");
     ok(sel.toString() == "", "expected empty selection");
 
-    controller.doCommand(kSelectLeft2);
+    SpecialPowers.doCommand(window, "cmd_selectLeft2");
     ok(sel.toString() == "five", "expected 'five' to be selected");
 
     SimpleTest.finish();

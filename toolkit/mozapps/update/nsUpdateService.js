@@ -494,7 +494,7 @@ function getCanApplyUpdates() {
         }
       }
     } catch (e) {
-       LOG("getCanApplyUpdates - unable to apply updates. Exception: " + e);
+      LOG("getCanApplyUpdates - unable to apply updates. Exception: " + e);
       // No write privileges to install directory
       return false;
     }
@@ -510,8 +510,7 @@ function getCanApplyUpdates() {
  *
  * @return true if updates can be staged for this session.
  */
-XPCOMUtils.defineLazyGetter(this, "gCanStageUpdatesSession",
-                            function aus_gCanStageUpdatesSession() {
+XPCOMUtils.defineLazyGetter(this, "gCanStageUpdatesSession", function aus_gCSUS() {
   if (getElevationRequired()) {
     LOG("gCanStageUpdatesSession - unable to stage updates because elevation " +
         "is required.");
@@ -542,8 +541,8 @@ XPCOMUtils.defineLazyGetter(this, "gCanStageUpdatesSession",
       updateTestFile.remove(false);
     }
   } catch (e) {
-     LOG("gCanStageUpdatesSession - unable to stage updates. Exception: " +
-         e);
+    LOG("gCanStageUpdatesSession - unable to stage updates. Exception: " +
+        e);
     // No write privileges
     return false;
   }
@@ -955,19 +954,19 @@ function shouldUseService() {
   // http://msdn.microsoft.com/en-us/library/ms724833%28v=vs.85%29.aspx
   const SZCSDVERSIONLENGTH = 128;
   const OSVERSIONINFOEXW = new ctypes.StructType('OSVERSIONINFOEXW',
-  [
-    {dwOSVersionInfoSize: DWORD},
-    {dwMajorVersion: DWORD},
-    {dwMinorVersion: DWORD},
-    {dwBuildNumber: DWORD},
-    {dwPlatformId: DWORD},
-    {szCSDVersion: ctypes.ArrayType(WCHAR, SZCSDVERSIONLENGTH)},
-    {wServicePackMajor: WORD},
-    {wServicePackMinor: WORD},
-    {wSuiteMask: WORD},
-    {wProductType: BYTE},
-    {wReserved: BYTE}
-  ]);
+    [
+      {dwOSVersionInfoSize: DWORD},
+      {dwMajorVersion: DWORD},
+      {dwMinorVersion: DWORD},
+      {dwBuildNumber: DWORD},
+      {dwPlatformId: DWORD},
+      {szCSDVersion: ctypes.ArrayType(WCHAR, SZCSDVERSIONLENGTH)},
+      {wServicePackMajor: WORD},
+      {wServicePackMinor: WORD},
+      {wSuiteMask: WORD},
+      {wProductType: BYTE},
+      {wReserved: BYTE}
+    ]);
 
   let kernel32 = false;
   try {
@@ -1051,9 +1050,9 @@ function cleanUpUpdatesDir(aRemovePatchFiles = true) {
   }
 
   // Preserve the last update log file for debugging purposes.
-  let file = updateDir.clone();
-  file.append(FILE_UPDATE_LOG);
-  if (file.exists()) {
+  let updateLogFile = updateDir.clone();
+  updateLogFile.append(FILE_UPDATE_LOG);
+  if (updateLogFile.exists()) {
     let dir = updateDir.parent;
     let logFile = dir.clone();
     logFile.append(FILE_LAST_UPDATE_LOG);
@@ -1067,19 +1066,19 @@ function cleanUpUpdatesDir(aRemovePatchFiles = true) {
     }
 
     try {
-      file.moveTo(dir, FILE_LAST_UPDATE_LOG);
+      updateLogFile.moveTo(dir, FILE_LAST_UPDATE_LOG);
     } catch (e) {
-      LOG("cleanUpUpdatesDir - failed to rename file " + file.path +
+      LOG("cleanUpUpdatesDir - failed to rename file " + updateLogFile.path +
           " to " + FILE_LAST_UPDATE_LOG);
     }
   }
 
   if (aRemovePatchFiles) {
-    let e = updateDir.directoryEntries;
-    while (e.hasMoreElements()) {
-      let f = e.getNext().QueryInterface(Ci.nsIFile);
+    let dirEntries = updateDir.directoryEntries;
+    while (dirEntries.hasMoreElements()) {
+      let file = dirEntries.getNext().QueryInterface(Ci.nsIFile);
       if (AppConstants.platform == "gonk") {
-        if (f.leafName == FILE_UPDATE_LINK) {
+        if (file.leafName == FILE_UPDATE_LINK) {
           let linkedFile = getFileFromUpdateLink(updateDir);
           if (linkedFile && linkedFile.exists()) {
             linkedFile.remove(false);
@@ -1092,9 +1091,9 @@ function cleanUpUpdatesDir(aRemovePatchFiles = true) {
       // which is itself a directory and the MozUpdater directory on platforms
       // other than Windows.
       try {
-        f.remove(true);
+        file.remove(true);
       } catch (e) {
-        LOG("cleanUpUpdatesDir - failed to remove file " + f.path);
+        LOG("cleanUpUpdatesDir - failed to remove file " + file.path);
       }
     }
   }
@@ -3241,12 +3240,12 @@ Checker.prototype = {
   /**
    * The XMLHttpRequest object that performs the connection.
    */
-  _request  : null,
+  _request: null,
 
   /**
    * The nsIUpdateCheckListener callback
    */
-  _callback : null,
+  _callback: null,
 
   /**
    * The URL of the update service XML file to connect to that contains details

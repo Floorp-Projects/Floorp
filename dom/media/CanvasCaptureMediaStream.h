@@ -112,7 +112,13 @@ public:
   // WebIDL
   HTMLCanvasElement* Canvas() const { return mCanvas; }
   void RequestFrame();
+
   dom::FrameCaptureListener* FrameCaptureListener();
+
+  /**
+   * Stops capturing for this stream at mCanvas.
+   */
+  void StopCapture();
 
   /**
    * Create a CanvasCaptureMediaStream whose underlying stream is a SourceMediaStream.

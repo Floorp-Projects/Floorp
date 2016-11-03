@@ -4,17 +4,6 @@
 
 "use strict";
 
-var openUILinkInCalled = false;
-var expectOpenUILinkInCall = false;
-this.originalOpenUILinkIn = openUILinkIn;
-openUILinkIn = (aUrl, aWhichTab) => {
-  is(aUrl, "about:home", "about:home should be requested to open.");
-  is(aWhichTab, "current", "Should use the current tab for the search page.");
-  openUILinkInCalled = true;
-  if (!expectOpenUILinkInCall) {
-    ok(false, "OpenUILinkIn was called when it shouldn't have been.");
-  }
-};
 logActiveElement();
 
 function* waitForSearchBarFocus()
@@ -105,30 +94,6 @@ add_task(function*() {
   yield waitForSearchBarFocus();
 });
 
-// Ctrl+K should open the search page if the search bar has been customized out.
-add_task(function*() {
-  try {
-    expectOpenUILinkInCall = true;
-    CustomizableUI.removeWidgetFromArea("search-container");
-    let placement = CustomizableUI.getPlacementOfWidget("search-container");
-    is(placement, null, "Search container should be in palette");
-
-    openUILinkInCalled = false;
-
-    sendWebSearchKeyCommand();
-    yield waitForCondition(() => openUILinkInCalled);
-    ok(openUILinkInCalled, "The search page should have been opened.")
-    expectOpenUILinkInCall = false;
-  } catch (e) {
-    ok(false, e);
-  }
-  CustomizableUI.reset();
-});
-
-registerCleanupFunction(function() {
-  openUILinkIn = this.originalOpenUILinkIn;
-  delete this.originalOpenUILinkIn;
-});
 
 function sendWebSearchKeyCommand() {
   if (Services.appinfo.OS === "Darwin")

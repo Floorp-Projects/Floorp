@@ -21,7 +21,7 @@ using namespace gfx;
 
 VideoDecoderChild::VideoDecoderChild()
   : mThread(VideoDecoderManagerChild::GetManagerThread())
-  , mCanSend(true)
+  , mCanSend(false)
   , mInitialized(false)
   , mIsHardwareAccelerated(false)
 {
@@ -42,7 +42,7 @@ VideoDecoderChild::RecvOutput(const VideoDataIPDL& aData)
   // The Image here creates a TextureData object that takes ownership
   // of the SurfaceDescriptor, and is responsible for making sure that
   // it gets deallocated.
-  RefPtr<Image> image = new GPUVideoImage(aData.sd(), aData.display());
+  RefPtr<Image> image = new GPUVideoImage(GetManager(), aData.sd(), aData.display());
 
   RefPtr<VideoData> video = VideoData::CreateFromImage(info,
                                                        aData.base().offset(),
@@ -117,11 +117,17 @@ VideoDecoderChild::InitIPDL(MediaDataDecoderCallback* aCallback,
                             const VideoInfo& aVideoInfo,
                             layers::KnowsCompositor* aKnowsCompositor)
 {
-  VideoDecoderManagerChild::GetSingleton()->SendPVideoDecoderConstructor(this);
+  RefPtr<VideoDecoderManagerChild> manager = VideoDecoderManagerChild::GetSingleton();
+  if (!manager) {
+    return;
+  }
   mIPDLSelfRef = this;
   mCallback = aCallback;
   mVideoInfo = aVideoInfo;
   mKnowsCompositor = aKnowsCompositor;
+  if (manager->SendPVideoDecoderConstructor(this)) {
+    mCanSend = true;
+  }
 }
 
 void
@@ -231,6 +237,15 @@ void
 VideoDecoderChild::AssertOnManagerThread()
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mThread);
+}
+
+VideoDecoderManagerChild*
+VideoDecoderChild::GetManager()
+{
+  if (!mCanSend) {
+    return nullptr;
+  }
+  return static_cast<VideoDecoderManagerChild*>(Manager());
 }
 
 } // namespace dom

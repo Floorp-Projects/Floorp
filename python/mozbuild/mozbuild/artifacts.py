@@ -108,7 +108,6 @@ PROCESSED_SUFFIX = '.processed.jar'
 
 CANDIDATE_TREES = (
     'mozilla-central',
-    'integration/fx-team',
     'integration/mozilla-inbound',
     'releases/mozilla-aurora'
 )

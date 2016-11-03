@@ -639,7 +639,7 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
   // Note that RLE-encoded BMPs might be transparent because the 'delta' mode
   // can skip pixels and cause implicit transparency.
   mMayHaveTransparency =
-    (mH.mCompression == Compression::RGB && mIsWithinICO && mH.mBpp == 32) ||
+    mIsWithinICO ||
     mH.mCompression == Compression::RLE8 ||
     mH.mCompression == Compression::RLE4 ||
     (mH.mCompression == Compression::BITFIELDS &&
@@ -675,7 +675,9 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
 
   MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
   nsresult rv = AllocateFrame(/* aFrameNum = */ 0, OutputSize(),
-                              FullOutputFrame(), SurfaceFormat::B8G8R8A8);
+                              FullOutputFrame(),
+                              mMayHaveTransparency ? SurfaceFormat::B8G8R8A8
+                                                   : SurfaceFormat::B8G8R8X8);
   if (NS_FAILED(rv)) {
     return Transition::TerminateFailure();
   }

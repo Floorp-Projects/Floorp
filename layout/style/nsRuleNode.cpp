@@ -139,8 +139,7 @@ SetStyleImageRequest(function<void(nsStyleImageRequest*)> aCallback,
                      nsPresContext* aPresContext,
                      const nsCSSValue& aValue,
                      nsStyleImageRequest::Mode aModeFlags =
-                       nsStyleImageRequest::Mode::Track |
-                       nsStyleImageRequest::Mode::Lock)
+                       nsStyleImageRequest::Mode::Track)
 {
   SetImageRequest([&](imgRequestProxy* aProxy) {
     RefPtr<nsStyleImageRequest> request;
@@ -7965,18 +7964,18 @@ nsRuleNode::ComputeListData(void* aStartStruct,
   // list-style-image: url, none, inherit
   const nsCSSValue* imageValue = aRuleData->ValueForListStyleImage();
   if (eCSSUnit_Image == imageValue->GetUnit()) {
-    SetStyleImageRequest([&](nsStyleImageRequest* req) {
-      list->mListStyleImage = req;
+    SetImageRequest([&](imgRequestProxy* req) {
+      list->SetListStyleImage(req);
     }, mPresContext, *imageValue);
   }
   else if (eCSSUnit_None == imageValue->GetUnit() ||
            eCSSUnit_Initial == imageValue->GetUnit()) {
-    list->mListStyleImage = nullptr;
+    list->SetListStyleImage(nullptr);
   }
   else if (eCSSUnit_Inherit == imageValue->GetUnit() ||
            eCSSUnit_Unset == imageValue->GetUnit()) {
     conditions.SetUncacheable();
-    list->mListStyleImage = parentList->mListStyleImage;
+    list->SetListStyleImage(parentList->GetListStyleImage());
   }
 
   // list-style-position: enum, inherit, initial

@@ -1,0 +1,28 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+DEPTH      = ../..
+MODULE = nss
+
+CPPSRCS = \
+      pk11_aeskeywrap_unittest.cc \
+      pk11_chacha20poly1305_unittest.cc \
+      pk11_export_unittest.cc \
+      pk11_pbkdf2_unittest.cc \
+      pk11_prf_unittest.cc \
+      pk11_prng_unittest.cc \
+      pk11_rsapss_unittest.cc \
+      $(NULL)
+
+INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
+            -I$(CORE_DEPTH)/gtests/common
+
+REQUIRES = nspr nss libdbm gtest
+
+PROGRAM = pk11_gtest
+
+EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) $(EXTRA_OBJS) \
+             ../common/$(OBJDIR)/gtests$(OBJ_SUFFIX)
+

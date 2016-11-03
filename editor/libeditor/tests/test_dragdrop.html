@@ -1,12 +1,11 @@
+<!doctype html>
 <html>
 
 <head>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
 </head>
 
 <body>
@@ -45,17 +44,17 @@ function doTest()
   selection.selectAllChildren(text);
   var result = synthesizeDragStart(text, [[htmlContextData, htmlInfoData, htmlData,
                                            {type: "text/plain", data: "Some Text"}]], window, 40, 10);
-  ok(!result, "Test dragging regular text");
+  is(result, null, "Test dragging regular text");
 
   // -------- Test dragging text from an <input>
   input.setSelectionRange(1, 4);
   result = synthesizeDragStart(input, [[{type: "text/plain", data: "rag"}]], window, 25, 6);
-  ok(!result, "Test dragging input");
+  is(result, null, "Test dragging input");
 
   // -------- Test dragging text from a <textarea>
   textarea.setSelectionRange(1, 7);
   result = synthesizeDragStart(textarea, [[{type: "text/plain", data: "ome Te"}]], window, 25, 6);
-  ok(!result, "Test dragging textarea");
+  is(result, null, "Test dragging textarea");
   textarea.blur();
 
   // -------- Test dragging text from a contenteditable
@@ -64,7 +63,7 @@ function doTest()
                                [[htmlContextDataEditable, htmlInfoData,
                                 {type: 'text/html', data: '<b id="bold">editable</b>' },
                                 {type: "text/plain", data: "editable"}]], window, 5, 6);
-  ok(!result, "Test dragging contenteditable");
+  is(result, null, "Test dragging contenteditable");
   contenteditable.blur();
 
   // -------- Test dragging regular text of text/html to <input>

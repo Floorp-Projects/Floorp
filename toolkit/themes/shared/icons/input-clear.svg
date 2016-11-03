@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 19.2.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 12 12" style="enable-background:new 0 0 12 12;" xml:space="preserve">
-<path id="Combined-Shape" d="M6,12c3.3,0,6-2.7,6-6S9.3,0,6,0S0,2.7,0,6S2.7,12,6,12z M9,8.1L8.1,9L6,6.9L3.9,9L3,8.1L5.1,6L3,3.9
-	L3.9,3L6,5.1L8.1,3L9,3.9L6.9,6L9,8.1z"/>
+ <!-- This Source Code Form is subject to the terms of the Mozilla Public
+    - License, v. 2.0. If a copy of the MPL was not distributed with this
+    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12">
+  <style>
+    .st0 {
+      fill: #858585;
+    }
+    .st1 {
+      fill: #FFFFFF;
+    }
+  </style>
+  <circle id="Combined-Shape" class="st0" cx="6" cy="6" r="6"/>
+  <polygon id="Close_Button_-_Normal-path" class="st1" points="9,8.1 8.1,9 6,6.9 3.9,9 3,8.1 5.1,6 3,3.9 3.9,3 6,5.1 8.1,3 9,3.9 6.9,6"/>
 </svg>

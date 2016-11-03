@@ -17,7 +17,7 @@
 #include "mozilla/Telemetry.h"
 #include "MediaTelemetryConstants.h"
 #include "mfapi.h"
-#include "MediaPrefs.h"
+#include "gfxPrefs.h"
 #include "MFTDecoder.h"
 #include "DriverCrashGuard.h"
 #include "nsPrintfCString.h"
@@ -408,7 +408,7 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
     return hr;
   }
 
-  if (adapter.VendorId == 0x1022 && !MediaPrefs::PDMWMFSkipBlacklist()) {
+  if (adapter.VendorId == 0x1022 && !gfxPrefs::PDMWMFSkipBlacklist()) {
     for (size_t i = 0; i < MOZ_ARRAY_LENGTH(sAMDPreUVD4); i++) {
       if (adapter.DeviceId == sAMDPreUVD4[i]) {
         mIsAMDPreUVD4 = true;
@@ -503,11 +503,7 @@ DXVA2Manager::CreateD3D9DXVA(layers::KnowsCompositor* aKnowsCompositor,
 
   // DXVA processing takes up a lot of GPU resources, so limit the number of
   // videos we use DXVA with at any one time.
-  uint32_t dxvaLimit = 4;
-  // TODO: Sync this value across to the GPU process.
-  if (XRE_GetProcessType() != GeckoProcessType_GPU) {
-    dxvaLimit = MediaPrefs::PDMWMFMaxDXVAVideos();
-  }
+  uint32_t dxvaLimit = gfxPrefs::PDMWMFMaxDXVAVideos();
 
   if (sDXVAVideosCount == dxvaLimit) {
     aFailureReason.AssignLiteral("Too many DXVA videos playing");
@@ -745,7 +741,7 @@ D3D11DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
     return hr;
   }
 
-  if (adapterDesc.VendorId == 0x1022 && !MediaPrefs::PDMWMFSkipBlacklist()) {
+  if (adapterDesc.VendorId == 0x1022 && !gfxPrefs::PDMWMFSkipBlacklist()) {
     for (size_t i = 0; i < MOZ_ARRAY_LENGTH(sAMDPreUVD4); i++) {
       if (adapterDesc.DeviceId == sAMDPreUVD4[i]) {
         mIsAMDPreUVD4 = true;
@@ -924,11 +920,7 @@ DXVA2Manager::CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor,
 {
   // DXVA processing takes up a lot of GPU resources, so limit the number of
   // videos we use DXVA with at any one time.
-  uint32_t dxvaLimit = 4;
-  // TODO: Sync this value across to the GPU process.
-  if (XRE_GetProcessType() != GeckoProcessType_GPU) {
-    dxvaLimit = MediaPrefs::PDMWMFMaxDXVAVideos();
-  }
+  uint32_t dxvaLimit = gfxPrefs::PDMWMFMaxDXVAVideos();
 
   if (sDXVAVideosCount == dxvaLimit) {
     aFailureReason.AssignLiteral("Too many DXVA videos playing");

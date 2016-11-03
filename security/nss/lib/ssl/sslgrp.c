@@ -16,6 +16,11 @@ struct {
     PRCallOnceType once;
 } gECDHEKeyPairs[SSL_NAMED_GROUP_COUNT];
 
+typedef struct sslSocketAndGroupArgStr {
+    const sslNamedGroupDef *group;
+    const sslSocket *ss;
+} sslSocketAndGroupArg;
+
 /* Function to clear out the ECDHE keys. */
 static SECStatus
 ssl_CleanupECDHEKeys(void *appData, void *nssData)
@@ -48,13 +53,16 @@ ssl_SetupCleanupECDHEKeysOnce(void)
 static PRStatus
 ssl_CreateStaticECDHEKeyPair(void *arg)
 {
-    const sslNamedGroupDef *group = (const sslNamedGroupDef *)arg;
+    const sslSocketAndGroupArg *typed_arg = (sslSocketAndGroupArg *)arg;
+    const sslNamedGroupDef *group = typed_arg->group;
+    const sslSocket *ss = typed_arg->ss;
     unsigned int i = group - ssl_named_groups;
     SECStatus rv;
 
     PORT_Assert(group->keaType == ssl_kea_ecdh);
     PORT_Assert(i < SSL_NAMED_GROUP_COUNT);
-    rv = ssl_CreateECDHEphemeralKeyPair(group, &gECDHEKeyPairs[i].keyPair);
+    rv = ssl_CreateECDHEphemeralKeyPair(ss, group,
+                                        &gECDHEKeyPairs[i].keyPair);
     if (rv != SECSuccess) {
         gECDHEKeyPairs[i].keyPair = NULL;
         SSL_TRC(5, ("%d: SSL[-]: disabling group %d",
@@ -69,6 +77,7 @@ ssl_FilterSupportedGroups(sslSocket *ss)
 {
     unsigned int i;
     PRStatus prv;
+    sslSocketAndGroupArg arg = { NULL, ss };
 
     prv = PR_CallOnce(&cleanupECDHEKeysOnce, ssl_SetupCleanupECDHEKeysOnce);
     PORT_Assert(prv == PR_SUCCESS);
@@ -100,9 +109,10 @@ ssl_FilterSupportedGroups(sslSocket *ss)
         index = group - ssl_named_groups;
         PORT_Assert(index < SSL_NAMED_GROUP_COUNT);
 
+        arg.group = group;
         prv = PR_CallOnceWithArg(&gECDHEKeyPairs[index].once,
                                  ssl_CreateStaticECDHEKeyPair,
-                                 (void *)group);
+                                 (void *)&arg);
         PORT_Assert(prv == PR_SUCCESS);
         if (prv != PR_SUCCESS) {
             continue;
@@ -125,10 +135,11 @@ ssl_CreateStaticECDHEKey(sslSocket *ss, const sslNamedGroupDef *ecGroup)
     /* We index gECDHEKeyPairs by the named group.  Pointer arithmetic! */
     unsigned int index = ecGroup - ssl_named_groups;
     PRStatus prv;
+    sslSocketAndGroupArg arg = { ecGroup, ss };
 
     prv = PR_CallOnceWithArg(&gECDHEKeyPairs[index].once,
                              ssl_CreateStaticECDHEKeyPair,
-                             (void *)ecGroup);
+                             (void *)&arg);
     PORT_Assert(prv == PR_SUCCESS);
     if (prv != PR_SUCCESS) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);

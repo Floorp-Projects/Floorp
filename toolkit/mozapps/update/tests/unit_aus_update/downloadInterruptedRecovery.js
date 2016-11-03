@@ -104,40 +104,40 @@ IncrementalDownload.prototype = {
     // Do the actual operation async to give a chance for observers
     // to add themselves.
     tm.mainThread.dispatch(function() {
-        this._observer = observer.QueryInterface(Ci.nsIRequestObserver);
-        this._ctxt = ctxt;
-        this._observer.onStartRequest(this, this._ctxt);
-        let mar = getTestDirFile(FILE_SIMPLE_MAR);
-        mar.copyTo(this._destination.parent, this._destination.leafName);
-        let status = Cr.NS_OK
-        switch (gIncrementalDownloadErrorType++) {
-          case 0:
-            status = Cr.NS_ERROR_NET_RESET;
-            break;
-          case 1:
-            status = Cr.NS_ERROR_CONNECTION_REFUSED;
-            break;
-          case 2:
-            status = Cr.NS_ERROR_NET_RESET;
-            break;
-          case 3:
-            status = Cr.NS_OK;
-            break;
-          case 4:
-            status = Cr.NS_ERROR_OFFLINE;
-            // After we report offline, we want to eventually show offline
-            // status being changed to online.
-            let tm = Cc["@mozilla.org/thread-manager;1"].
-                     getService(Ci.nsIThreadManager);
-            tm.mainThread.dispatch(function() {
-              Services.obs.notifyObservers(gAUS,
-                                           "network:offline-status-changed",
-                                           "online");
-            }, Ci.nsIThread.DISPATCH_NORMAL);
-            break;
-        }
-        this._observer.onStopRequest(this, this._ctxt, status);
-      }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+      this._observer = observer.QueryInterface(Ci.nsIRequestObserver);
+      this._ctxt = ctxt;
+      this._observer.onStartRequest(this, this._ctxt);
+      let mar = getTestDirFile(FILE_SIMPLE_MAR);
+      mar.copyTo(this._destination.parent, this._destination.leafName);
+      let status = Cr.NS_OK;
+      switch (gIncrementalDownloadErrorType++) {
+        case 0:
+          status = Cr.NS_ERROR_NET_RESET;
+          break;
+        case 1:
+          status = Cr.NS_ERROR_CONNECTION_REFUSED;
+          break;
+        case 2:
+          status = Cr.NS_ERROR_NET_RESET;
+          break;
+        case 3:
+          status = Cr.NS_OK;
+          break;
+        case 4:
+          status = Cr.NS_ERROR_OFFLINE;
+          // After we report offline, we want to eventually show offline
+          // status being changed to online.
+          let tm2 = Cc["@mozilla.org/thread-manager;1"].
+                    getService(Ci.nsIThreadManager);
+          tm2.mainThread.dispatch(function() {
+            Services.obs.notifyObservers(gAUS,
+                                         "network:offline-status-changed",
+                                         "online");
+          }, Ci.nsIThread.DISPATCH_NORMAL);
+          break;
+      }
+      this._observer.onStopRequest(this, this._ctxt, status);
+    }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   get URI() {

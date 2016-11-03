@@ -277,6 +277,12 @@ public:
   bool IsFrameCaptureRequested() const;
 
   /*
+   * Processes destroyed FrameCaptureListeners and removes them if necessary.
+   * Should there be none left, the FrameRefreshObserver will be unregistered.
+   */
+  void ProcessDestroyedFrameListeners();
+
+  /*
    * Called by the RefreshDriver hook when a frame has been captured.
    * Makes a copy of the provided surface and hands it to all
    * FrameCaptureListeners having requested frame capture.

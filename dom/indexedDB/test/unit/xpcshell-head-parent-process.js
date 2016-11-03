@@ -530,6 +530,12 @@ function setDataThreshold(threshold)
   SpecialPowers.setIntPref("dom.indexedDB.dataThreshold", threshold);
 }
 
+function setMaxSerializedMsgSize(aSize)
+{
+  info("Setting maximal size of a serialized message to " + aSize);
+  SpecialPowers.setIntPref("dom.indexedDB.maxSerializedMsgSize", aSize);
+}
+
 function getPrincipal(url)
 {
   let uri = Cc["@mozilla.org/network/io-service;1"]

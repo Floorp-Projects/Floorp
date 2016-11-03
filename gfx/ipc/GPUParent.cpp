@@ -295,16 +295,19 @@ GPUParent::RecvNewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent
 }
 
 bool
-GPUParent::RecvDeallocateLayerTreeId(const uint64_t& aLayersId)
+GPUParent::RecvAddLayerTreeIdMapping(nsTArray<LayerTreeIdMapping>&& aMappings)
 {
-  CompositorBridgeParent::DeallocateLayerTreeId(aLayersId);
+  for (const LayerTreeIdMapping& map : aMappings) {
+    LayerTreeOwnerTracker::Get()->Map(map.layersId(), map.ownerId());
+  }
   return true;
 }
 
 bool
-GPUParent::RecvAddLayerTreeIdMapping(const uint64_t& aLayersId, const ProcessId& aOwnerId)
+GPUParent::RecvRemoveLayerTreeIdMapping(const LayerTreeIdMapping& aMapping)
 {
-  LayerTreeOwnerTracker::Get()->Map(aLayersId, aOwnerId);
+  LayerTreeOwnerTracker::Get()->Unmap(aMapping.layersId(), aMapping.ownerId());
+  CompositorBridgeParent::DeallocateLayerTreeId(aMapping.layersId());
   return true;
 }
 

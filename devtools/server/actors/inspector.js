@@ -73,7 +73,7 @@ const {
   isShadowAnonymous,
   getFrameElement
 } = require("devtools/shared/layout/utils");
-const {getLayoutChangesObserver, releaseLayoutChangesObserver} = require("devtools/server/actors/layout");
+const {getLayoutChangesObserver, releaseLayoutChangesObserver} = require("devtools/server/actors/reflow");
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
 
 const {EventParsers} = require("devtools/server/event-parsers");

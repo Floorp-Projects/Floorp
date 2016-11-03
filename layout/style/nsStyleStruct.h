@@ -305,18 +305,12 @@ private:
  * RequestDiscard() are made to the imgRequestProxy and ImageTracker as
  * appropriate, according to the mode flags passed in to the constructor.
  *
- * The main thread constructor takes a pointer to the already-created
- * imgRequestProxy, and the css::ImageValue that was used while creating it.
- * The ImageValue object is only used to grab the URL details to store
- * into mBaseURI and mURIString.
- *
- * The off-main-thread constructor creates a new css::ImageValue to
- * hold all the data required to resolve the imgRequestProxy later.  This
- * constructor also stores the URL details into mbaseURI and mURIString.
- * The ImageValue is held on to in mImageTracker until the Resolve call.
- *
- * We use mBaseURI and mURIString so that we can perform nsStyleImageRequest
- * equality comparisons without needing an imgRequestProxy.
+ * The main thread constructor takes a pointer to the css::ImageValue that
+ * is the specified url() value, while the off-main-thread constructor
+ * creates a new css::ImageValue to represent the url() information passed
+ * to the constructor.  This ImageValue is held on to for the comparisons done
+ * in DefinitelyEquals(), so that we don't need to call into the non-OMT-safe
+ * Equals() on the nsIURI objects returned from imgRequestProxy::GetURI().
  */
 class nsStyleImageRequest
 {
@@ -326,12 +320,25 @@ public:
   // when obtaining and releasing the imgRequestProxy, and whether
   // RequestDiscard will be called on release.
   enum class Mode : uint8_t {
-    Track   = 0x1,  // used by all except nsCursorImage
-    Lock    = 0x2,  // used by all except nsStyleContentData
-    Discard = 0x4,  // used only by nsCursorImage
+    // The imgRequestProxy will be added to the ImageTracker when resolved
+    // Without this flag, the nsStyleImageRequest itself will call LockImage/
+    // UnlockImage on the imgRequestProxy, rather than leaving locking to the
+    // ImageTracker to manage.
+    //
+    // This flag is currently used by all nsStyleImageRequests except
+    // those for list-style-image and cursor.
+    Track = 0x1,
+
+    // The imgRequestProxy will have its RequestDiscard method called when
+    // the nsStyleImageRequest is going away.
+    //
+    // This is currently used only for cursor images.
+    Discard = 0x2,
   };
 
   // Must be called from the main thread.
+  //
+  // aImageTracker must be non-null iff aModeFlags contains Track.
   nsStyleImageRequest(Mode aModeFlags,
                       imgRequestProxy* aRequestProxy,
                       mozilla::css::ImageValue* aImageValue,
@@ -358,8 +365,8 @@ public:
     return const_cast<nsStyleImageRequest*>(this)->get();
   }
 
-  // Returns whether the mBaseURI and mURIString values in the two
-  // nsStyleImageRequests are equal.
+  // Returns whether the ImageValue objects in the two nsStyleImageRequests
+  // return true from URLValueData::DefinitelyEqualURIs.
   bool DefinitelyEquals(const nsStyleImageRequest& aOther) const;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsStyleImageRequest);
@@ -373,13 +380,6 @@ private:
   RefPtr<imgRequestProxy> mRequestProxy;
   RefPtr<mozilla::css::ImageValue> mImageValue;
   RefPtr<mozilla::dom::ImageTracker> mImageTracker;
-
-  // Components that are (or were) used to produce the nsIURI for resolving
-  // the imgRequestProxy.  We use these in DefinitelyEquals, rather than
-  // comparing the URI information in the imgRequestProxy objects, since
-  // they may not yet be resolved (or might have failed to resolve).
-  mozilla::PtrHandle<nsIURI> mBaseURI;
-  RefPtr<nsStringBuffer> mURIString;
 
   Mode mModeFlags;
   bool mResolved;
@@ -1523,8 +1523,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
   explicit nsStyleList(StyleStructContext aContext);
   nsStyleList(const nsStyleList& aStyleList);
   ~nsStyleList();
-
-  void FinishStyle(nsPresContext* aPresContext);
+  void FinishStyle(nsPresContext* aPresContext) {}
 
   void* operator new(size_t sz, nsStyleList* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -1555,9 +1554,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
     sNoneQuotes = nullptr;
   }
 
-  imgRequestProxy* GetListStyleImage() const
+  imgRequestProxy* GetListStyleImage() const { return mListStyleImage; }
+  void SetListStyleImage(imgRequestProxy* aReq)
   {
-    return mListStyleImage ? mListStyleImage->get() : nullptr;
+    if (mListStyleImage) {
+      mListStyleImage->UnlockImage();
+    }
+    mListStyleImage = aReq;
+    if (mListStyleImage) {
+      mListStyleImage->LockImage();
+    }
   }
 
   void GetListStyleType(nsSubstring& aType) const { mCounterStyle->GetStyleName(aType); }
@@ -1585,10 +1591,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
   void SetQuotesNone();
   void SetQuotes(nsStyleQuoteValues::QuotePairArray&& aValues);
 
-  uint8_t mListStylePosition;                  // [inherited]
-  RefPtr<nsStyleImageRequest> mListStyleImage; // [inherited]
+  uint8_t   mListStylePosition;         // [inherited]
 private:
   RefPtr<mozilla::CounterStyle> mCounterStyle; // [inherited]
+  RefPtr<imgRequestProxy> mListStyleImage; // [inherited]
   RefPtr<nsStyleQuoteValues> mQuotes;   // [inherited]
   nsStyleList& operator=(const nsStyleList& aOther) = delete;
 public:

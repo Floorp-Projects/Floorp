@@ -51,6 +51,15 @@ LayerTreeOwnerTracker::Map(uint64_t aLayersId, base::ProcessId aProcessId)
   mLayerIds[aLayersId] = aProcessId;
 }
 
+void
+LayerTreeOwnerTracker::Unmap(uint64_t aLayersId, base::ProcessId aProcessId)
+{
+  MutexAutoLock lock(mLayerIdsLock);
+
+  MOZ_ASSERT(mLayerIds[aLayersId] == aProcessId);
+  mLayerIds.erase(aLayersId);
+}
+
 bool
 LayerTreeOwnerTracker::IsMapped(uint64_t aLayersId, base::ProcessId aProcessId)
 {
@@ -58,6 +67,16 @@ LayerTreeOwnerTracker::IsMapped(uint64_t aLayersId, base::ProcessId aProcessId)
 
   auto iter = mLayerIds.find(aLayersId);
   return iter != mLayerIds.end() && iter->second == aProcessId;
+}
+
+void
+LayerTreeOwnerTracker::Iterate(function<void(uint64_t aLayersId, base::ProcessId aProcessId)> aCallback)
+{
+  MutexAutoLock lock(mLayerIdsLock);
+
+  for (const auto& iter : mLayerIds) {
+    aCallback(iter.first, iter.second);
+  }
 }
 
 } // namespace layers
