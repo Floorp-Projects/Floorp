@@ -114,6 +114,18 @@ nsHTTPDownloadEvent::Run()
   chan->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS |
                      nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
 
+  if (!mRequestSession->mFirstPartyDomain.IsEmpty()) {
+    NeckoOriginAttributes attrs;
+    attrs.mFirstPartyDomain =
+      NS_ConvertUTF8toUTF16(mRequestSession->mFirstPartyDomain);
+
+    nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
+    if (loadInfo) {
+      rv = loadInfo->SetOriginAttributes(attrs);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
   // Create a loadgroup for this new channel.  This way if the channel
   // is redirected, we'll have a way to cancel the resulting channel.
   nsCOMPtr<nsILoadGroup> lg = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
@@ -218,6 +230,7 @@ nsNSSHttpRequestSession::createFcn(const nsNSSHttpServerSession* session,
                                    const char* http_protocol_variant,
                                    const char* path_and_query_string,
                                    const char* http_request_method,
+                                   const char* first_party_domain,
                                    const PRIntervalTime timeout,
                            /*out*/ nsNSSHttpRequestSession** pRequest)
 {
@@ -246,6 +259,8 @@ nsNSSHttpRequestSession::createFcn(const nsNSSHttpServerSession* session,
   rs->mURL.Append(':');
   rs->mURL.AppendInt(session->mPort);
   rs->mURL.Append(path_and_query_string);
+
+  rs->mFirstPartyDomain.Assign(first_party_domain);
 
   rs->mRequestMethod = http_request_method;
 
