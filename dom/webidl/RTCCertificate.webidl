@@ -6,6 +6,11 @@
  * Specification: http://w3c.github.io/webrtc-pc/#certificate-management
  */
 
+dictionary RTCCertificateExpiration {
+  [EnforceRange]
+  DOMTimeStamp expires;
+};
+
 [Pref="media.peerconnection.enabled"]
 interface RTCCertificate {
   readonly attribute DOMTimeStamp expires;

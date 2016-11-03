@@ -447,6 +447,9 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
             if let Some(rate) = v.audio_sample_rate {
                 (*info).sample_rate = rate;
             }
+            if let Some(channels) = v.audio_channel_count {
+                (*info).channels = channels;
+            }
         }
         AudioCodecSpecific::FLACSpecificBox(ref flac) => {
             // Return the STREAMINFO metadata block in the codec_specific.
@@ -801,7 +804,7 @@ fn arg_validation_with_data() {
 
         let mut audio = Default::default();
         assert_eq!(MP4PARSE_OK, mp4parse_get_track_audio_info(parser, 1, &mut audio));
-        assert_eq!(audio.channels, 2);
+        assert_eq!(audio.channels, 1);
         assert_eq!(audio.bit_depth, 16);
         assert_eq!(audio.sample_rate, 48000);
 

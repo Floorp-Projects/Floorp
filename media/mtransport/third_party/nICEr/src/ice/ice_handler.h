@@ -59,16 +59,17 @@ int component_id, nr_ice_cand_pair **potentials,int potential_ct);
   /* This media stream has failed */
   int (*stream_failed)(void *obj, nr_ice_media_stream *stream);
 
-  /* ICE is completed for this peer ctx
-     if need_update is nonzero, a SIP update is required
-   */
-  int (*ice_completed)(void *obj, nr_ice_peer_ctx *pctx);
+  /* ICE is connected for this peer ctx */
+  int (*ice_connected)(void *obj, nr_ice_peer_ctx *pctx);
 
   /* A message was delivered to us */
   int (*msg_recvd)(void *obj, nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, int component_id, UCHAR *msg, int len);
 
   /* ICE has started checking. */
   int (*ice_checking)(void *obj, nr_ice_peer_ctx *pctx);
+
+  /* ICE detected a (temporary?) disconnect. */
+  int (*ice_disconnected)(void *obj, nr_ice_peer_ctx *pctx);
 } nr_ice_handler_vtbl;
 
 typedef struct nr_ice_handler_ {

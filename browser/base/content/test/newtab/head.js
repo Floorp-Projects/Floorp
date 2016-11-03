@@ -151,7 +151,7 @@ function performOnCell(aIndex, aFn) {
   return ContentTask.spawn(gWindow.gBrowser.selectedBrowser,
                            { index: aIndex, fn: aFn.toString() }, function* (args) {
     let cell = content.gGrid.cells[args.index];
-    return eval("(" + args.fn + ")(cell)");
+    return eval(args.fn)(cell);
   });
 }
 
@@ -414,8 +414,6 @@ function* simulateExternalDrop(aDestIndex) {
       let iframe = doc.createElement("iframe");
 
       function iframeLoaded() {
-        let link = iframe.contentDocument.getElementById("link");
-
         let dataTransfer = new iframe.contentWindow.DataTransfer("dragstart", false);
         dataTransfer.mozSetDataAt("text/x-moz-url", "http://example99.com/", 0);
 

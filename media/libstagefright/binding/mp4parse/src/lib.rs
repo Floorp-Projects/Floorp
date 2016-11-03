@@ -209,6 +209,7 @@ pub enum SampleEntry {
 pub struct ES_Descriptor {
     pub audio_codec: CodecType,
     pub audio_sample_rate: Option<u32>,
+    pub audio_channel_count: Option<u16>,
     pub codec_specific_config: Vec<u8>,
 }
 
@@ -1136,10 +1137,11 @@ fn read_esds<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
     let esds_array = try!(read_buf(src, esds_size as usize));
 
     // Parsing DecoderConfig descriptor to get the object_profile_indicator
-    // for correct codec type and audio sample rate.
-    let (object_profile_indicator, sample_frequency) = {
+    // for correct codec type, audio sample rate and channel counts.
+    let (object_profile_indicator, sample_frequency, channels) = {
         let mut object_profile: u8 = 0;
         let mut sample_frequency = None;
+        let mut channels = None;
 
         // clone a esds cursor for parsing.
         let esds = &mut Cursor::new(&esds_array);
@@ -1209,12 +1211,16 @@ fn read_esds<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
 
                 let sample_index = (audio_specific_config & 0x07FF) >> 7;
 
+                let channel_counts = (audio_specific_config & 0x007F) >> 3;
+
                 sample_frequency =
                     frequency_table.iter().find(|item| item.0 == sample_index).map(|x| x.1);
+
+                channels = Some(channel_counts);
             }
         }
 
-        (object_profile, sample_frequency)
+        (object_profile, sample_frequency, channels)
     };
 
     let codec = match object_profile_indicator {
@@ -1230,6 +1236,7 @@ fn read_esds<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
     Ok(ES_Descriptor {
         audio_codec: codec,
         audio_sample_rate: sample_frequency,
+        audio_channel_count: channels,
         codec_specific_config: esds_array,
     })
 }

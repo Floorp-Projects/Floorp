@@ -48,10 +48,9 @@ function parsePromise(uri) {
     xhr.onreadystatechange = function() {
       if (this.readyState == this.DONE) {
         let scriptText = this.responseText;
-        let ast;
         try {
           info("Checking " + uri);
-          ast = Reflect.parse(scriptText);
+          Reflect.parse(scriptText);
           resolve(true);
         } catch (ex) {
           let errorMsg = "Script error reading " + uri + ": " + ex;
@@ -131,4 +130,3 @@ add_task(function* checkAllTheJS() {
   let promiseResults = yield Promise.all(allPromises);
   is(promiseResults.filter((x) => !x).length, 0, "There should be 0 parsing errors");
 });
-

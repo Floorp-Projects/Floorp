@@ -13,6 +13,7 @@ var EXPORTED_SYMBOLS = ["PlacesItem", "Bookmark", "Separator", "Livemark",
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/PlacesBackups.jsm");
+Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/async.js");
@@ -107,6 +108,11 @@ PlacesItem.prototype = {
         return ret;
       })().join(", ") + ")";
     return string;
+  },
+
+  GetSyncId() {
+    let guid = Async.promiseSpinningly(PlacesUtils.promiseItemGuid(this.props.item_id));
+    return PlacesSyncUtils.bookmarks.guidToSyncId(guid);
   },
 
   /**
@@ -432,8 +438,19 @@ Bookmark.prototype = {
    * @return nothing
    */
   SetKeyword: function(keyword) {
-    if (keyword != null)
-      PlacesUtils.bookmarks.setKeywordForBookmark(this.props.item_id, keyword);
+    if (keyword != null) {
+      // Mirror logic from PlacesSyncUtils's updateBookmarkMetadata
+      let entry = Async.promiseSpinningly(PlacesUtils.keywords.fetch({
+        url: this.props.uri,
+      }));
+      if (entry) {
+        Async.promiseSpinningly(PlacesUtils.keywords.remove(entry));
+      }
+      Async.promiseSpinningly(PlacesUtils.keywords.insert({
+        keyword: keyword,
+        url: this.props.uri
+      }));
+    }
   },
 
   /**
@@ -542,11 +559,11 @@ Bookmark.prototype = {
   Update: function() {
     Logger.AssertTrue(this.props.item_id != -1 && this.props.item_id != null,
       "Invalid item_id during Remove");
-    this.SetKeyword(this.updateProps.keyword);
     this.SetDescription(this.updateProps.description);
     this.SetLoadInSidebar(this.updateProps.loadInSidebar);
     this.SetTitle(this.updateProps.title);
     this.SetUri(this.updateProps.uri);
+    this.SetKeyword(this.updateProps.keyword);
     this.SetTags(this.updateProps.tags);
     this.SetLocation(this.updateProps.location);
     this.SetPosition(this.updateProps.position);
@@ -578,7 +595,8 @@ Bookmark.prototype = {
     if (!this.CheckDescription(this.props.description))
       return -1;
     if (this.props.keyword != null) {
-      let keyword = PlacesUtils.bookmarks.getKeywordForBookmark(this.props.item_id);
+      let { keyword } = Async.promiseSpinningly(
+        PlacesSyncUtils.bookmarks.fetch(this.GetSyncId()));
       if (keyword != this.props.keyword) {
         Logger.logPotentialError("Incorrect keyword - expected: " +
           this.props.keyword + ", actual: " + keyword +

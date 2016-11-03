@@ -199,7 +199,6 @@ var tests = {
       panel.button.click();
     });
 
-    let activationURL = manifest2.origin + "/browser/browser/base/content/test/social/social_activate.html"
     Services.prefs.setCharPref("social.directories", manifest2.origin);
     is(SocialService.getOriginActivationType(manifest2.origin), "directory", "testing directory install");
     let data = {

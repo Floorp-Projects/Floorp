@@ -13,8 +13,6 @@ const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const nsIX509Cert = Components.interfaces.nsIX509Cert;
 const nsICertTree = Components.interfaces.nsICertTree;
 const nsCertTree = "@mozilla.org/security/nsCertTree;1";
-const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
-const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
 
 const gCertFileTypes = "*.p7b; *.crt; *.cert; *.cer; *.pem; *.der";
 
@@ -32,10 +30,30 @@ var selected_tree_items = [];
 var selected_index = [];
 var certdb;
 
+/**
+ * Cert tree for the "Authorities" tab.
+ * @type nsICertTree
+ */
 var caTreeView;
+/**
+ * Cert tree for the "Servers" tab.
+ * @type nsICertTree
+ */
 var serverTreeView;
+/**
+ * Cert tree for the "People" tab.
+ * @type nsICertTree
+ */
 var emailTreeView;
+/**
+ * Cert tree for the "Your Certificates" tab.
+ * @type nsICertTree
+ */
 var userTreeView;
+/**
+ * Cert tree for the "Other" tab.
+ * @type nsICertTree
+ */
 var orphanTreeView;
 
 var smartCardObserver = {
@@ -402,58 +420,39 @@ function exportCerts()
   }
 }
 
-function deleteCerts()
-{
+/**
+ * Deletes the selected certs in the active tab.
+ */
+function deleteCerts() {
   getSelectedTreeItems();
-  var numcerts = selected_tree_items.length;
+  let numcerts = selected_tree_items.length;
   if (numcerts == 0) {
     return;
   }
 
-  var params = Components.classes[nsDialogParamBlock].createInstance(nsIDialogParamBlock);
+  const treeViewMap = {
+    "mine_tab": userTreeView,
+    "websites_tab": serverTreeView,
+    "ca_tab": caTreeView,
+    "others_tab": emailTreeView,
+    "orphan_tab": orphanTreeView,
+  };
+  let selTab = document.getElementById("certMgrTabbox").selectedItem;
+  let selTabID = selTab.getAttribute("id");
 
-  var selTab = document.getElementById('certMgrTabbox').selectedItem;
-  var selTabID = selTab.getAttribute('id');
-
-  switch (selTabID) {
-    case "mine_tab":
-    case "websites_tab":
-    case "ca_tab":
-    case "others_tab":
-    case "orphan_tab":
-      params.SetString(0, selTabID);
-      break;
-    default:
-      return;
+  if (!(selTabID in treeViewMap)) {
+    return;
   }
 
-  let array = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-  for (let treeItem of selected_tree_items) {
-    array.appendElement(treeItem, false);
-  }
-  params.objects = array;
+  let retVals = {
+    deleteConfirmed: false,
+  };
+  window.openDialog("chrome://pippki/content/deletecert.xul", "",
+                    "chrome,centerscreen,modal", selTabID, selected_tree_items,
+                    retVals);
 
-  window.openDialog('chrome://pippki/content/deletecert.xul', "",
-                    'chrome,centerscreen,modal', params);
-
-  if (params.GetInt(1) == 1) {
-    // user closed dialog with OK
-    var treeView = null;
-    var loadParam = null;
-
-    selTab = document.getElementById('certMgrTabbox').selectedItem;
-    selTabID = selTab.getAttribute('id');
-    if (selTabID == 'mine_tab') {
-      treeView = userTreeView;
-    } else if (selTabID == "others_tab") {
-      treeView = emailTreeView;
-    } else if (selTabID == "websites_tab") {
-      treeView = serverTreeView;
-    } else if (selTabID == "ca_tab") {
-      treeView = caTreeView;
-    } else if (selTabID == "orphan_tab") {
-      treeView = orphanTreeView;
-    }
+  if (retVals.deleteConfirmed) {
+    let treeView = treeViewMap[selTabID];
 
     for (let t = numcerts - 1; t >= 0; t--) {
       treeView.deleteEntryObject(selected_index[t]);
@@ -462,7 +461,7 @@ function deleteCerts()
     selected_tree_items = [];
     selected_index = [];
     treeView.selection.clearSelection();
-    if (selTabID == 'mine_tab') {
+    if (selTabID == "mine_tab") {
       enableBackupAllButton();
     }
   }

@@ -366,13 +366,8 @@ class TestConfigure(unittest.TestCase):
 
     def test_os_path(self):
         config = self.get_config(['--with-imports=%s' % __file__])
-        self.assertIn('IS_FILE', config)
-        self.assertEquals(config['IS_FILE'], True)
-
-        config = self.get_config(['--with-imports=%s.no-exist' % __file__])
-        self.assertIn('IS_FILE', config)
-        self.assertEquals(config['IS_FILE'], False)
-
+        self.assertIn('HAS_ABSPATH', config)
+        self.assertEquals(config['HAS_ABSPATH'], True)
         self.assertIn('HAS_GETATIME', config)
         self.assertEquals(config['HAS_GETATIME'], True)
         self.assertIn('HAS_GETATIME2', config)
@@ -435,15 +430,9 @@ class TestConfigure(unittest.TestCase):
 
     def test_set_config_when(self):
         with self.moz_configure('''
-            @depends('--help')
-            def always(_):
-                return True
-            @depends('--help')
-            def never(_):
-                return False
             option('--with-qux', help='qux')
-            set_config('FOO', 'foo', when=always)
-            set_config('BAR', 'bar', when=never)
+            set_config('FOO', 'foo', when=True)
+            set_config('BAR', 'bar', when=False)
             set_config('QUX', 'qux', when='--with-qux')
         '''):
             config = self.get_config()
@@ -490,15 +479,9 @@ class TestConfigure(unittest.TestCase):
 
     def test_set_define_when(self):
         with self.moz_configure('''
-            @depends('--help')
-            def always(_):
-                return True
-            @depends('--help')
-            def never(_):
-                return False
             option('--with-qux', help='qux')
-            set_define('FOO', 'foo', when=always)
-            set_define('BAR', 'bar', when=never)
+            set_define('FOO', 'foo', when=True)
+            set_define('BAR', 'bar', when=False)
             set_define('QUX', 'qux', when='--with-qux')
         '''):
             config = self.get_config()
@@ -766,18 +749,12 @@ class TestConfigure(unittest.TestCase):
 
     def test_option_when(self):
         with self.moz_configure('''
-            @depends('--help')
-            def always(_):
-                return True
-            @depends('--help')
-            def never(_):
-                return False
-            option('--with-foo', help='foo', when=always)
-            option('--with-bar', help='bar', when=never)
+            option('--with-foo', help='foo', when=True)
+            option('--with-bar', help='bar', when=False)
             option('--with-qux', env="QUX", help='qux', when='--with-foo')
 
-            set_config('FOO', depends('--with-foo', when=always)(lambda x: x))
-            set_config('BAR', depends('--with-bar', when=never)(lambda x: x))
+            set_config('FOO', depends('--with-foo', when=True)(lambda x: x))
+            set_config('BAR', depends('--with-bar', when=False)(lambda x: x))
             set_config('QUX', depends('--with-qux', when='--with-foo')(lambda x: x))
         '''):
             config = self.get_config()
@@ -850,10 +827,7 @@ class TestConfigure(unittest.TestCase):
             '''))
 
         with self.moz_configure('''
-            @depends('--help')
-            def always(_):
-                return True
-            option('--with-foo', help='foo', when=always)
+            option('--with-foo', help='foo', when=True)
             set_config('FOO', depends('--with-foo')(lambda x: x))
         '''):
             with self.assertRaises(ConfigureError) as e:
@@ -864,11 +838,11 @@ class TestConfigure(unittest.TestCase):
                               'options it depends on')
 
         with self.moz_configure('''
-            @depends('--help')
-            def always(_):
+            @depends(when=True)
+            def always():
                 return True
-            @depends('--help')
-            def always2(_):
+            @depends(when=True)
+            def always2():
                 return True
             option('--with-foo', help='foo', when=always)
             set_config('FOO', depends('--with-foo', when=always2)(lambda x: x))
@@ -918,17 +892,10 @@ class TestConfigure(unittest.TestCase):
     def test_include_when(self):
         with MockedOpen({
             os.path.join(test_data_path, 'moz.configure'): textwrap.dedent('''
-                @depends('--help')
-                def always(_):
-                    return True
-                @depends('--help')
-                def never(_):
-                    return False
-
                 option('--with-foo', help='foo')
 
-                include('always.configure', when=always)
-                include('never.configure', when=never)
+                include('always.configure', when=True)
+                include('never.configure', when=False)
                 include('foo.configure', when='--with-foo')
 
                 set_config('FOO', foo)
@@ -1064,23 +1031,6 @@ class TestConfigure(unittest.TestCase):
         self.assertEquals(e.exception.message,
                           "Cannot decorate generator functions with @depends")
 
-        with self.assertRaises(ConfigureError) as e:
-            with self.moz_configure('''
-                option('--foo', help='foo')
-                @depends('--foo')
-                def foo(value):
-                    return value
-
-                @depends('--help', foo)
-                def bar(help, foo):
-                    return
-            '''):
-                self.get_config()
-
-        self.assertEquals(e.exception.message,
-                          "`bar` depends on '--help' and `foo`. "
-                          "`foo` must depend on '--help'")
-
         with self.assertRaises(TypeError) as e:
             with self.moz_configure('''
                 depends('--help')(42)
@@ -1089,20 +1039,6 @@ class TestConfigure(unittest.TestCase):
 
         self.assertEquals(e.exception.message,
                           "Unexpected type: 'int'")
-
-        with self.assertRaises(ConfigureError) as e:
-            with self.moz_configure('''
-                option('--foo', help='foo')
-                @depends('--foo')
-                def foo(value):
-                    return value
-
-                include(foo)
-            '''):
-                self.get_config()
-
-        self.assertEquals(e.exception.message,
-                          "Missing @depends for `foo`: '--help'")
 
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure('''
@@ -1131,28 +1067,21 @@ class TestConfigure(unittest.TestCase):
 
     def test_depends_when(self):
         with self.moz_configure('''
-            @depends('--help')
-            def always(_):
-                return True
-            @depends('--help')
-            def never(_):
-                return False
-
-            @depends('--help', when=always)
-            def foo(_):
+            @depends(when=True)
+            def foo():
                 return 'foo'
 
             set_config('FOO', foo)
 
-            @depends('--help', when=never)
-            def bar(_):
+            @depends(when=False)
+            def bar():
                 return 'bar'
 
             set_config('BAR', bar)
 
             option('--with-qux', help='qux')
-            @depends('--help', when='--with-qux')
-            def qux(_):
+            @depends(when='--with-qux')
+            def qux():
                 return 'qux'
 
             set_config('QUX', qux)

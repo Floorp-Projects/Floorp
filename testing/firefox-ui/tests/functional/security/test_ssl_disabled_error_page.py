@@ -25,6 +25,13 @@ class TestSSLDisabledErrorPage(FirefoxTestCase):
         self.prefs.set_pref('security.tls.version.min', 3)
         self.prefs.set_pref('security.tls.version.max', 3)
 
+    def tearDown(self):
+        try:
+            self.marionette.clear_pref('security.tls.version.min')
+            self.marionette.clear_pref('security.tls.version.max')
+        finally:
+            FirefoxTestCase.tearDown(self)
+
     def test_ssl_disabled_error_page(self):
         with self.marionette.using_context('content'):
             # Open the test page

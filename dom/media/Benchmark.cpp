@@ -35,7 +35,7 @@ VP9Benchmark::IsVP9DecodeFast()
   MOZ_ASSERT(NS_IsMainThread());
 
 #ifdef MOZ_WIDGET_ANDROID
-  return true;
+  return false;
 #else
   bool hasPref = Preferences::HasUserValue(sBenchmarkFpsPref);
   uint32_t hadRecentUpdate = Preferences::GetUint(sBenchmarkFpsVersionCheck, 0U);

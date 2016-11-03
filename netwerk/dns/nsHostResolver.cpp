@@ -542,9 +542,7 @@ nsHostResolver::nsHostResolver(uint32_t maxCacheEntries,
     mShortIdleTimeout = PR_SecondsToInterval(ShortIdleTimeoutSeconds);
 }
 
-nsHostResolver::~nsHostResolver()
-{
-}
+nsHostResolver::~nsHostResolver() = default;
 
 nsresult
 nsHostResolver::Init()
@@ -1519,7 +1517,7 @@ nsHostResolver::Create(uint32_t maxCacheEntries,
                        uint32_t defaultGracePeriod,
                        nsHostResolver **result)
 {
-    nsHostResolver *res = new nsHostResolver(maxCacheEntries, defaultCacheEntryLifetime,
+    auto *res = new nsHostResolver(maxCacheEntries, defaultCacheEntryLifetime,
                                              defaultGracePeriod);
     NS_ADDREF(res);
 

@@ -22,6 +22,7 @@ import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.icons.IconCallback;
@@ -76,8 +77,11 @@ public class ActivityStreamContextMenu
         setContentView(content);
 
         ((TextView) findViewById(R.id.title)).setText(title);
-        final String label = extractLabel(url, false);
-        ((TextView) findViewById(R.id.url)).setText(label);
+        extractLabel(context, url, false, new ActivityStream.LabelCallback() {
+                public void onLabelExtracted(String label) {
+                    ((TextView) findViewById(R.id.url)).setText(label);
+                }
+        });
 
         // Copy layouted parameters from the Highlights / TopSites items to ensure consistency
         final FaviconView faviconView = (FaviconView) findViewById(R.id.icon);

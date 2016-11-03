@@ -378,6 +378,15 @@ add_task(function* test_passwordsAvailable() {
     loginCount += website.logins.length;
     Assert.equal(logins.length, loginCount,
                  "The number of logins has increased after the migration");
+    // NB: because telemetry records any login data passed to the login manager, it
+    // also gets told about logins that are duplicates or invalid (for one reason
+    // or another) and so its counts might exceed those of the login manager itself.
+    Assert.greaterOrEqual(MigrationUtils._importQuantities.logins, loginCount,
+                          "Telemetry quantities equal or exceed the actual import.");
+    // Reset - this normally happens at the start of a new migration, but we're calling
+    // the migrator directly so can't rely on that:
+    MigrationUtils._importQuantities.logins = 0;
+
     let startIndex = loginCount - website.logins.length;
     // compares the imported password manager logins with their expected logins
     for (let i = 0; i < website.logins.length; i++) {

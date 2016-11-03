@@ -114,9 +114,6 @@ private:
   void NotifyDemuxer();
   void ReturnOutput(MediaData* aData, TrackType aTrack);
 
-  MediaResult EnsureDecoderCreated(TrackType aTrack);
-  bool EnsureDecoderInitialized(TrackType aTrack);
-
   // Enqueues a task to call Update(aTrack) on the decoder task queue.
   // Lock for corresponding track must be held.
   void ScheduleUpdate(TrackType aTrack);
@@ -238,7 +235,6 @@ private:
       , mWaitingForData(false)
       , mWaitingForKey(false)
       , mReceivedNewData(false)
-      , mDecoderInitialized(false)
       , mOutputRequested(false)
       , mDecodePending(false)
       , mNeedDraining(false)
@@ -273,7 +269,6 @@ private:
     const char* mDescription;
     void ShutdownDecoder()
     {
-      mInitPromise.DisconnectIfExists();
       MonitorAutoLock mon(mMonitor);
       if (mDecoder) {
         mDecoder->Shutdown();
@@ -310,10 +305,6 @@ private:
     }
 
     // MediaDataDecoder handler's variables.
-    // Decoder initialization promise holder.
-    MozPromiseRequestHolder<MediaDataDecoder::InitPromise> mInitPromise;
-    // False when decoder is created. True when decoder Init() promise is resolved.
-    bool mDecoderInitialized;
     bool mOutputRequested;
     // Set to true once the MediaDataDecoder has been fed a compressed sample.
     // No more samples will be passed to the decoder while true.
@@ -581,6 +572,9 @@ private:
   RefPtr<GMPCrashHelper> mCrashHelper;
 
   void SetBlankDecode(TrackType aTrack, bool aIsBlankDecode);
+
+  class DecoderFactory;
+  UniquePtr<DecoderFactory> mDecoderFactory;
 };
 
 } // namespace mozilla

@@ -119,9 +119,9 @@ include('build/moz.configure/warnings.configure',
 
 include(include_project_configure)
 
-@dependable
+@depends('--help')
 @imports(_from='mozbuild.backend', _import='backends')
-def build_backends_choices():
+def build_backends_choices(_):
     return tuple(backends)
 
 

@@ -113,11 +113,9 @@ add_task(function* test_reader_view_element_attribute_transform() {
   });
 
   function observeAttribute(element, attribute, triggerFn, checkFn) {
-    let initValue = element.getAttribute(attribute);
     return new Promise(resolve => {
       let observer = new MutationObserver((mutations) => {
         mutations.forEach( mu => {
-          let muValue = element.getAttribute(attribute);
           if (element.getAttribute(attribute) !== mu.oldValue) {
             checkFn();
             resolve();

@@ -13,7 +13,6 @@ add_task(function* () {
     let {site} = content.wrappedJSObject.gGrid.cells[args.index];
 
     let origOnClick = site.onClick;
-    let clicked = false;
     site.onClick = e => {
       origOnClick.call(site, e);
       sendAsyncMessage("test:clicked-on-cell", {});

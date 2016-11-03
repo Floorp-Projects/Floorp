@@ -143,8 +143,7 @@ SimulatorCore.prototype = {
       case "mousedown":
         this.target = evt.target;
 
-        this.contextMenuTimeout =
-          this.sendContextMenu(evt.target, evt.pageX, evt.pageY);
+        this.contextMenuTimeout = this.sendContextMenu(evt);
 
         this.cancelClick = false;
         this.startX = evt.pageX;
@@ -235,13 +234,18 @@ SimulatorCore.prototype = {
                          Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH);
   },
 
-  sendContextMenu(target, x, y) {
-    let doc = target.ownerDocument;
-    let evt = doc.createEvent("MouseEvent");
-    evt.initMouseEvent("contextmenu", true, true, doc.defaultView,
-                       0, x, y, x, y, false, false, false, false,
-                       0, null);
-
+  sendContextMenu({ target, clientX, clientY, screenX, screenY }) {
+    let view = target.ownerDocument.defaultView;
+    let { MouseEvent } = view;
+    let evt = new MouseEvent("contextmenu", {
+      bubbles: true,
+      cancelable: true,
+      view,
+      screenX,
+      screenY,
+      clientX,
+      clientY,
+    });
     let content = this.getContent(target);
     let timeout = content.setTimeout((function contextMenu() {
       target.dispatchEvent(evt);

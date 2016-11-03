@@ -221,7 +221,6 @@ function setUserMadeChoicePref(userMadeChoice) {
 function suggestionsPresent() {
   let controller = gURLBar.popup.input.controller;
   let matchCount = controller.matchCount;
-  let present = false;
   for (let i = 0; i < matchCount; i++) {
     let url = controller.getValueAt(i);
     let mozActionMatch = url.match(/^moz-action:([^,]+),(.*)$/);

@@ -107,15 +107,6 @@ using mozilla::dom::gonk::SystemWorkerManager;
   {0xd53b6524, 0x6ac3, 0x42b0, {0xae, 0xca, 0x62, 0xb3, 0xc4, 0xe5, 0x2b, 0x04}}
 #endif
 
-#ifdef MOZ_B2G_BT
-#include "BluetoothService.h"
-using mozilla::dom::bluetooth::BluetoothService;
-#define BLUETOOTHSERVICE_CID \
-  {0xa753b487, 0x3344, 0x4de4, {0xad, 0x5f, 0x06, 0x36, 0x76, 0xa7, 0xc1, 0x04}}
-#define BLUETOOTHSERVICE_CONTRACTID \
-  "@mozilla.org/bluetooth/service;1"
-#endif
-
 #ifdef MOZ_WIDGET_GONK
 #include "AudioManager.h"
 using mozilla::dom::gonk::AudioManager;
@@ -308,10 +299,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(WorkerDebuggerManager,
 #ifdef MOZ_WIDGET_GONK
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(SystemWorkerManager,
                                          SystemWorkerManager::FactoryCreate)
-#endif
-#ifdef MOZ_B2G_BT
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(BluetoothService,
-                                         BluetoothService::FactoryCreate)
 #endif
 
 #ifdef MOZ_WEBSPEECH
@@ -741,9 +728,6 @@ NS_DEFINE_NAMED_CID(WORKERDEBUGGERMANAGER_CID);
 #ifdef MOZ_WIDGET_GONK
 NS_DEFINE_NAMED_CID(SYSTEMWORKERMANAGER_CID);
 #endif
-#ifdef MOZ_B2G_BT
-NS_DEFINE_NAMED_CID(BLUETOOTHSERVICE_CID);
-#endif
 #ifdef MOZ_WIDGET_GONK
 NS_DEFINE_NAMED_CID(NS_AUDIOMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_VOLUMESERVICE_CID);
@@ -1034,9 +1018,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #ifdef MOZ_WIDGET_GONK
   { &kSYSTEMWORKERMANAGER_CID, true, nullptr, SystemWorkerManagerConstructor },
 #endif
-#ifdef MOZ_B2G_BT
-  { &kBLUETOOTHSERVICE_CID, true, nullptr, BluetoothServiceConstructor },
-#endif
 #ifdef MOZ_WIDGET_GONK
   { &kNS_AUDIOMANAGER_CID, true, nullptr, AudioManagerConstructor },
   { &kNS_VOLUMESERVICE_CID, true, nullptr, nsVolumeServiceConstructor },
@@ -1188,9 +1169,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #ifdef MOZ_WIDGET_GONK
   { SYSTEMWORKERMANAGER_CONTRACTID, &kSYSTEMWORKERMANAGER_CID },
 #endif
-#ifdef MOZ_B2G_BT
-  { BLUETOOTHSERVICE_CONTRACTID, &kBLUETOOTHSERVICE_CID },
-#endif
 #ifdef MOZ_WIDGET_GONK
   { NS_AUDIOMANAGER_CONTRACTID, &kNS_AUDIOMANAGER_CID },
   { NS_VOLUMESERVICE_CONTRACTID, &kNS_VOLUMESERVICE_CID },
@@ -1282,9 +1260,6 @@ static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
   CONTENTDLF_CATEGORIES
 #ifdef MOZ_WIDGET_GONK
   { "profile-after-change", "Gonk System Worker Manager", SYSTEMWORKERMANAGER_CONTRACTID },
-#endif
-#ifdef MOZ_B2G_BT
-  { "profile-after-change", "Bluetooth Service", BLUETOOTHSERVICE_CONTRACTID },
 #endif
   { "profile-after-change", "PresentationDeviceManager", PRESENTATION_DEVICE_MANAGER_CONTRACTID },
   { "profile-after-change", "PresentationService", PRESENTATION_SERVICE_CONTRACTID },

@@ -19,6 +19,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/CryptoKey.h"
+#include "mozilla/dom/RTCCertificateBinding.h"
 #include "mtransport/dtlsidentity.h"
 #include "js/StructuredClone.h"
 #include "js/TypeDecls.h"
@@ -39,7 +40,7 @@ public:
 
   // WebIDL method that implements RTCPeerConnection.generateCertificate.
   static already_AddRefed<Promise> GenerateCertificate(
-      const GlobalObject& global, const ObjectOrString& keygenAlgorithm,
+      const GlobalObject& aGlobal, const ObjectOrString& aOptions,
       ErrorResult& aRv, JSCompartment* aCompartment = nullptr);
 
   explicit RTCCertificate(nsIGlobalObject* aGlobal);

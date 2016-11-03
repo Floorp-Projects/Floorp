@@ -182,7 +182,6 @@ function test_open_from_chrome() {
 }
 
 function waitForTabOpen(aOptions) {
-  let start = Date.now();
   let message = aOptions.message;
 
   if (!message.title) {
@@ -231,7 +230,6 @@ function waitForTabOpen(aOptions) {
 
 
 function waitForWindowOpen(aOptions) {
-  let start = Date.now();
   let message = aOptions.message;
   let url = aOptions.url || "about:blank";
 
@@ -273,7 +271,6 @@ function executeWindowOpenInContent(aParam) {
 }
 
 function waitForWindowOpenFromChrome(aOptions) {
-  let start = Date.now();
   let message = aOptions.message;
   let url = aOptions.url || "about:blank";
 
@@ -299,7 +296,7 @@ function waitForWindowOpenFromChrome(aOptions) {
   });
   Services.wm.addListener(listener);
 
-  let testWindow = window.open(url, message.title, message.option);
+  window.open(url, message.title, message.option);
 }
 
 function WindowListener(aTitle, aUrl, aCallBackObj) {

@@ -12,6 +12,7 @@ option(env='DIST', nargs=1, help='DIST directory')
 # Do not allow objdir == srcdir builds.
 # ==============================================================
 @depends('--help', 'DIST')
+@imports('os')
 def check_build_environment(help, dist):
     topobjdir = os.path.realpath(os.path.abspath('.'))
     topsrcdir = os.path.realpath(os.path.abspath(
@@ -633,6 +634,7 @@ option('--with-external-source-dir', env='EXTERNAL_SOURCE_DIR', nargs=1,
 
 @depends('--enable-project', '--with-external-source-dir',
          check_build_environment, '--help')
+@imports('os')
 def include_project_configure(project, external_source_dir, build_env, help):
     if not project:
         die('--enable-project is required.')
@@ -811,6 +813,6 @@ def js_option(*args, **kwargs):
 # actual implementation is located in b2g/moz.configure.
 # Remove this function as soon as 'android_ndk_include'
 # depends on 'target.'
-@dependable
-def gonkdir():
+@depends('--help')
+def gonkdir(_):
     return None

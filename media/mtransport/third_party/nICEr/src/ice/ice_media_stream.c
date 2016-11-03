@@ -619,8 +619,8 @@ int nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_c
       stream->pctx->handler->vtbl->stream_ready(stream->pctx->handler->obj,stream->local_stream);
     }
 
-    /* Now tell the peer_ctx that we're done */
-    if(r=nr_ice_peer_ctx_check_if_done(stream->pctx))
+    /* Now tell the peer_ctx that we're connected */
+    if(r=nr_ice_peer_ctx_check_if_connected(stream->pctx))
       ABORT(r);
 
   done:
@@ -660,8 +660,8 @@ int nr_ice_media_stream_component_failed(nr_ice_media_stream *stream,nr_ice_comp
       stream->pctx->handler->vtbl->stream_failed(stream->pctx->handler->obj,stream->local_stream);
     }
 
-    /* Now tell the peer_ctx that we're done */
-    if(r=nr_ice_peer_ctx_check_if_done(stream->pctx))
+    /* Now tell the peer_ctx that we're connected */
+    if(r=nr_ice_peer_ctx_check_if_connected(stream->pctx))
       ABORT(r);
 
     _status=0;

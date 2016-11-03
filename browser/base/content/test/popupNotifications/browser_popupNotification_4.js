@@ -103,7 +103,6 @@ var tests = [
       showNotification(notifyObj);
       let win = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
       whenDelayedStartupFinished(win, function() {
-        let [tab] = win.gBrowser.tabs;
         let anchor = win.document.getElementById("default-notification-icon");
         win.PopupNotifications._reshowNotifications(anchor);
         ok(win.PopupNotifications.panel.childNodes.length == 0,
@@ -132,8 +131,6 @@ var tests = [
       let notification = showNotification(notifyObj);
       let win = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
       yield whenDelayedStartupFinished(win);
-      let [tab] = win.gBrowser.tabs;
-      let anchor = win.document.getElementById("default-notification-icon");
 
       yield new Promise(resolve => {
         let originalCallback = notification.options.eventCallback;

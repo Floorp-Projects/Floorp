@@ -125,7 +125,6 @@ function MixedTest4C() {
 
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
-  let {gIdentityHandler} = gTestBrowser.ownerGlobal;
   waitForCondition(() => content.document.getElementById('p1').innerHTML == "", MixedTest4D, "Mixed script loaded in test 4 after location change!");
 }
 function MixedTest4D() {

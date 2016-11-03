@@ -1000,13 +1000,6 @@ pref("layers.compositor-lru-size", 10);
 // In B2G by deafult any AudioChannelAgent is muted when created.
 pref("dom.audiochannel.mutedByDefault", true);
 
-// The app origin of bluetooth app, which is responsible for listening pairing
-// requests.
-pref("dom.bluetooth.app-origin", "app://bluetooth.gaiamobile.org");
-
-// Enable W3C WebBluetooth API and disable B2G only GATT client API.
-pref("dom.bluetooth.webbluetooth.enabled", false);
-
 // Default device name for Presentation API
 pref("dom.presentation.device.name", "Firefox OS");
 

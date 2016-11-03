@@ -118,7 +118,7 @@ var AboutReader = function(mm, win, articlePromise) {
   }
 
   this._loadArticle();
-}
+};
 
 AboutReader.prototype = {
   _BLOCK_IMAGES_SELECTOR: ".content p > img:only-child, " +
@@ -696,7 +696,7 @@ AboutReader.prototype = {
       } else {
         img.removeAttribute("moz-reader-center");
       }
-    }
+    };
 
     let imgs = this._doc.querySelectorAll(this._BLOCK_IMAGES_SELECTOR);
     for (let i = imgs.length; --i >= 0;) {
@@ -707,7 +707,7 @@ AboutReader.prototype = {
       } else {
         img.onload = function() {
           setImageMargins(img);
-        }
+        };
       }
     }
   },

@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="chrome_head.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+Cu.import(SimpleTest.getTestFileURL("webrequest_test.jsm"));
+let {testFetch, testXHR} = webrequest_test;
+
+// Here we test that any requests originating from a system principal are not
+// accessible through WebRequest.  text_ext_webrequest_background_events tests
+// non-system principal requests.
+
+let testExtension = {
+  manifest: {
+    permissions: [
+      "webRequest",
+      "<all_urls>",
+    ],
+  },
+  background() {
+    let eventNames = [
+      "onBeforeRequest",
+      "onBeforeSendHeaders",
+      "onSendHeaders",
+      "onHeadersReceived",
+      "onResponseStarted",
+      "onCompleted",
+    ];
+
+    function listener(name, details) {
+      // If we get anything, we failed.  Removing the system principal check
+      // in ext-webrequest triggers this failure.
+      browser.test.fail(`recieved ${name}`);
+    }
+
+    for (let name of eventNames) {
+      browser.webRequest[name].addListener(
+        listener.bind(null, name),
+        {urls: ["https://example.com/*"]}
+      );
+    }
+  },
+};
+
+add_task(function* test_webRequest_chromeworker_events() {
+  let extension = ExtensionTestUtils.loadExtension(testExtension);
+  yield extension.startup();
+  yield new Promise(resolve => {
+    let worker = new ChromeWorker("webrequest_chromeworker.js");
+    worker.onmessage = event => {
+      ok("chrome worker fetch finished");
+      resolve();
+    };
+    worker.postMessage("go");
+  });
+  yield extension.unload();
+});
+
+add_task(function* test_webRequest_chromepage_events() {
+  let extension = ExtensionTestUtils.loadExtension(testExtension);
+  yield extension.startup();
+  yield new Promise(resolve => {
+    fetch("https://example.com/example.txt").then(() => {
+      ok("test page loaded");
+      resolve();
+    });
+  });
+  yield extension.unload();
+});
+
+add_task(function* test_webRequest_jsm_events() {
+  let extension = ExtensionTestUtils.loadExtension(testExtension);
+  yield extension.startup();
+  yield testFetch("https://example.com/example.txt").then(() => {
+    ok("fetch page loaded");
+  });
+  yield testXHR("https://example.com/example.txt").then(() => {
+    ok("xhr page loaded");
+  });
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>
