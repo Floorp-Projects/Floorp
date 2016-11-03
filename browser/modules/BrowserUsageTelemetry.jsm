@@ -273,6 +273,13 @@ let BrowserUsageTelemetry = {
 
     if (isOneOff) {
       if (!KNOWN_ONEOFF_SOURCES.includes(source)) {
+        // Silently drop the error if this bogus call
+        // came from 'urlbar' or 'searchbar'. They're
+        // calling |recordSearch| twice from two different
+        // code paths.
+        if (['urlbar', 'searchbar'].includes(source)) {
+          return;
+        }
         throw new Error("Unknown source for one-off search: " + source);
       }
     } else {
