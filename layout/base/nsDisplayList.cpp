@@ -7090,8 +7090,8 @@ bool nsDisplayMask::ShouldPaintOnMaskLayer(LayerManager* aManager)
     return false;
   }
 
-  nsSVGIntegrationUtils::MaskUsage maskUsage;
-  nsSVGIntegrationUtils::DetermineMaskUsage(mFrame, mHandleOpacity, maskUsage);
+  nsSVGUtils::MaskUsage maskUsage;
+  nsSVGUtils::DetermineMaskUsage(mFrame, mHandleOpacity, maskUsage);
 
   if (!maskUsage.shouldGenerateMaskLayer ||
       maskUsage.opacity != 1.0 || maskUsage.shouldApplyClipPath ||
