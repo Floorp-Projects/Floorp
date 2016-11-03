@@ -37,8 +37,7 @@ Cu.import("resource://gre/modules/SharedPromptUtils.jsm");
 
 
 var dialog = {
-  // ////////////////////////////////////////////////////////////////////////////
-  // // Member Variables
+  // Member Variables
 
   _handlerInfo: null,
   _URI: null,
@@ -47,8 +46,7 @@ var dialog = {
   _windowCtxt: null,
   _buttonDisabled: true,
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // Methods
+  // Methods
 
  /**
   * This function initializes the content of the dialog.
@@ -263,8 +261,7 @@ var dialog = {
       document.documentElement.acceptDialog();
   },
 
-  // ///////////////////////////////////////////////////////////////////////////
-  // // Getters / Setters
+  // Getters / Setters
 
  /**
   * Returns/sets the selected element in the richlistbox

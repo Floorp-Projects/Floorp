@@ -85,7 +85,6 @@ function _getString(name) {
   return _stringBundle.GetStringFromName(name);
 }
 
-// ///////////////////////////////////////////////////////////////////////////
 // Task list configuration data object.
 
 var tasksCfg = [
@@ -135,7 +134,6 @@ var tasksCfg = [
   },
 ];
 
-// ///////////////////////////////////////////////////////////////////////////
 // Implementation
 
 this.WinTaskbarJumpList =

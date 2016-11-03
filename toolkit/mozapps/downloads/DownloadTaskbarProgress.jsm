@@ -8,8 +8,7 @@ this.EXPORTED_SYMBOLS = [
   "DownloadTaskbarProgress",
 ];
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Constants
+// Constants
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -24,8 +23,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 const kTaskbarIDWin = "@mozilla.org/windows-taskbar;1";
 const kTaskbarIDMac = "@mozilla.org/widget/macdocksupport;1";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadTaskbarProgress Object
+// DownloadTaskbarProgress Object
 
 this.DownloadTaskbarProgress =
 {
@@ -94,8 +92,7 @@ this.DownloadTaskbarProgress =
 
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadTaskbarProgressUpdater Object
+// DownloadTaskbarProgressUpdater Object
 
 var DownloadTaskbarProgressUpdater =
 {
@@ -370,8 +367,7 @@ var DownloadTaskbarProgressUpdater =
     }
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsIDownloadProgressListener
+  // nsIDownloadProgressListener
 
   /**
    * Update status if a download's progress has changed.

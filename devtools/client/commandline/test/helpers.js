@@ -476,8 +476,6 @@ var { helpers, assert } = (function () {
     }).then(finish, helpers.handleError);
   };
 
-// /////////////////////////////////////////////////////////////////////////////
-
 /**
  * Ensure that the options object is setup correctly
  * options should contain an automator object that looks like this:

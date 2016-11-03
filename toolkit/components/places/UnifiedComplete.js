@@ -6,8 +6,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Constants
+// Constants
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
@@ -246,8 +245,7 @@ const SQL_BOOKMARKED_URL_QUERY = urlQuery("AND bookmarked");
 
 const SQL_BOOKMARKED_TYPED_URL_QUERY = urlQuery("AND bookmarked AND h.typed = 1");
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Getters
+// Getters
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -506,8 +504,7 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
   return Object.seal(store);
 });
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Helper functions
+// Helper functions
 
 /**
  * Used to unescape encoded URI strings and drop information that we do not
@@ -625,8 +622,6 @@ function looksLikeUrl(str, ignoreAlphanumericHosts = false) {
          (["/", "@", ":", "["].some(c => str.includes(c)) ||
           (ignoreAlphanumericHosts ? /(.*\..*){3,}/.test(str) : str.includes(".")));
 }
-
-// //////////////////////////////////////////////////////////////////////////////
 
 /**
  * Manages a single instance of an autocomplete search.
@@ -1842,9 +1837,8 @@ Search.prototype = {
   },
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // UnifiedComplete class
-// // component @mozilla.org/autocomplete/search;1?name=unifiedcomplete
+// UnifiedComplete class
+// component @mozilla.org/autocomplete/search;1?name=unifiedcomplete
 
 function UnifiedComplete() {
   // Make sure the preferences are initialized as soon as possible.
@@ -1855,8 +1849,7 @@ function UnifiedComplete() {
 }
 
 UnifiedComplete.prototype = {
-  // ////////////////////////////////////////////////////////////////////////////
-  // // Database handling
+  // Database handling
 
   /**
    * Promise resolved when the database initialization has completed, or null
@@ -1906,8 +1899,7 @@ UnifiedComplete.prototype = {
     return this._promiseDatabase;
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // mozIPlacesAutoComplete
+  // mozIPlacesAutoComplete
 
   registerOpenPage: function PAC_registerOpenPage(uri) {
     SwitchToTabStorage.add(uri);
@@ -1917,8 +1909,7 @@ UnifiedComplete.prototype = {
     SwitchToTabStorage.delete(uri);
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsIAutoCompleteSearch
+  // nsIAutoCompleteSearch
 
   startSearch: function (searchString, searchParam, previousResult, listener) {
     // Stop the search in case the controller has not taken care of it.
@@ -2000,8 +1991,7 @@ UnifiedComplete.prototype = {
     search.notifyResults(false);
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsIAutoCompleteSimpleResultListener
+  // nsIAutoCompleteSimpleResultListener
 
   onValueRemoved: function (result, spec, removeFromDB) {
     if (removeFromDB) {
@@ -2009,8 +1999,7 @@ UnifiedComplete.prototype = {
     }
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsIAutoCompleteSearchDescriptor
+  // nsIAutoCompleteSearchDescriptor
 
   get searchType() {
     return Ci.nsIAutoCompleteSearchDescriptor.SEARCH_TYPE_IMMEDIATE;
@@ -2020,8 +2009,7 @@ UnifiedComplete.prototype = {
     return true;
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsISupports
+  // nsISupports
 
   classID: Components.ID("f964a319-397a-4d21-8be6-5cdd1ee3e3ae"),
 

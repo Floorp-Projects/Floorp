@@ -4,8 +4,7 @@
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Modules and services.
+// Modules and services.
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -24,8 +23,7 @@ XPCOMUtils.defineLazyGetter(this, "asyncHistory", function () {
   return PlacesUtils.asyncHistory;
 });
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Constants
+// Constants
 
 // Delay between reloads of consecute livemarks.
 const RELOAD_DELAY_MS = 500;
@@ -34,8 +32,7 @@ const EXPIRE_TIME_MS = 3600000; // 1 hour.
 // Expire livemarks after this time on error.
 const ONERROR_EXPIRE_TIME_MS = 300000; // 5 minutes.
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Livemarks cache.
+// Livemarks cache.
 
 XPCOMUtils.defineLazyGetter(this, "CACHE_SQL", () => {
   function getAnnoSQLFragment(aAnnoParam) {
@@ -108,8 +105,7 @@ function toDate(time) {
   return time ? new Date(parseInt(time / 1000)) : undefined;
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // LivemarkService
+// LivemarkService
 
 function LivemarkService() {
   // Cleanup on shutdown.
@@ -149,8 +145,7 @@ LivemarkService.prototype = {
     }, RELOAD_DELAY_MS, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsIObserver
+  // nsIObserver
 
   observe(aSubject, aTopic, aData) {
     if (aTopic == PlacesUtils.TOPIC_SHUTDOWN) {
@@ -169,8 +164,7 @@ LivemarkService.prototype = {
     }
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // mozIAsyncLivemarks
+  // mozIAsyncLivemarks
 
   addLivemark(aLivemarkInfo) {
     if (!aLivemarkInfo) {
@@ -314,8 +308,7 @@ LivemarkService.prototype = {
     }.bind(this));
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsINavBookmarkObserver
+  // nsINavBookmarkObserver
 
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
@@ -366,8 +359,7 @@ LivemarkService.prototype = {
     });
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsINavHistoryObserver
+  // nsINavHistoryObserver
 
   onPageChanged() {},
   onTitleChanged() {},
@@ -397,8 +389,7 @@ LivemarkService.prototype = {
     });
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsISupports
+  // nsISupports
 
   classID: Components.ID("{dca61eb5-c7cd-4df1-b0fb-d0722baba251}"),
 
@@ -413,8 +404,7 @@ LivemarkService.prototype = {
   ])
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Livemark
+// Livemark
 
 /**
  * Object used internally to represent a livemark.
@@ -730,8 +720,7 @@ Livemark.prototype = {
   ])
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // LivemarkLoadListener
+// LivemarkLoadListener
 
 /**
  * Object used internally to handle loading a livemark's contents.

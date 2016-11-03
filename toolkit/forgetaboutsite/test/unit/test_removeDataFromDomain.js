@@ -9,8 +9,7 @@
  * to remove all traces of visiting a site.
  */
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -36,8 +35,7 @@ const PERMISSION_VALUE = Ci.nsIPermissionManager.ALLOW_ACTION;
 
 const PREFERENCE_NAME = "test-pref";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Utility Functions
+// Utility Functions
 
 /**
  * Creates an nsIURI object for the given string representation of a URI.
@@ -250,8 +248,7 @@ function preference_exists(aURI)
   return deferred.promise;
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Test Functions
+// Test Functions
 
 // History
 function* test_history_cleared_with_direct_match()

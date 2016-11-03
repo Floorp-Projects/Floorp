@@ -4,8 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Constants
+// Constants
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -17,8 +16,7 @@ const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
 // Seconds between maintenance runs.
 const MAINTENANCE_INTERVAL_SECONDS = 7 * 86400;
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Imports
+// Imports
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -58,8 +56,7 @@ function PlacesCategoriesStarter()
 }
 
 PlacesCategoriesStarter.prototype = {
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsIObserver
+  // nsIObserver
 
   observe: function PCS_observe(aSubject, aTopic, aData)
   {
@@ -95,8 +92,7 @@ PlacesCategoriesStarter.prototype = {
     }
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsISupports
+  // nsISupports
 
   classID: Components.ID("803938d5-e26d-4453-bf46-ad4b26e41114"),
 
@@ -108,8 +104,7 @@ PlacesCategoriesStarter.prototype = {
   ])
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Module Registration
+// Module Registration
 
 var components = [PlacesCategoriesStarter];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

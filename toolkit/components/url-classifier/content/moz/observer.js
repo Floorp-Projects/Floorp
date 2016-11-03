@@ -5,13 +5,13 @@
 
 // A couple of classes to simplify creating observers. 
 //
-// // Example1:
+// Example1:
 //
 // function doSomething() { ... }
 // var observer = new G_ObserverWrapper(topic, doSomething);
 // someObj.addObserver(topic, observer);
 //
-// // Example2: 
+// Example2: 
 //
 // function doSomething() { ... }
 // new G_ObserverServiceObserver("profile-after-change", 

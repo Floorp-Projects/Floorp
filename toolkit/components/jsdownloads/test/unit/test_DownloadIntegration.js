@@ -7,8 +7,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 /**
  * Notifies the prompt observers and verify the expected downloads count.
@@ -44,8 +43,7 @@ function notifyPromptObservers(aIsPrivate, aExpectedCount, aExpectedPBCount) {
   delete DownloadIntegration._testPromptDownloads;
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 /**
  * Allows re-enabling the real download directory logic during one test.
@@ -206,8 +204,7 @@ add_task(function* test_getTemporaryDownloadsDirectory()
   cleanup();
 });
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests DownloadObserver
+// Tests DownloadObserver
 
 /**
  * Re-enables the default observers for the following tests.

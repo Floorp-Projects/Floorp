@@ -130,8 +130,6 @@ add_task(function* changeuri_nonexistent_bookmark()
   yield PlacesTestUtils.clearHistory();
 });
 
-// /////////////////////////////////////////////////////////////////////////////
-
 function run_test()
 {
   run_next_test();
