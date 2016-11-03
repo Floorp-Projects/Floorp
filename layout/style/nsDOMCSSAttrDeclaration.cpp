@@ -128,8 +128,13 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(Operation aOperation)
   }
 
   // cannot fail
-  RefPtr<css::Declaration> decl = new css::Declaration();
-  decl->InitializeEmpty();
+  RefPtr<DeclarationBlock> decl;
+  if (mElement->IsStyledByServo()) {
+    decl = new ServoDeclarationBlock();
+  } else {
+    decl = new css::Declaration();
+    decl->AsGecko()->InitializeEmpty();
+  }
 
   // this *can* fail (inside SetAttrAndNotify, at least).
   nsresult rv;
