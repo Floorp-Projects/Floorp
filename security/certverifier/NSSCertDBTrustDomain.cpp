@@ -558,7 +558,7 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
     // Owned by arena
     SECItem* responseSECItem = nullptr;
     Result tempRV =
-      DoOCSPRequest(arena, url, &ocspRequestItem,
+      DoOCSPRequest(arena, url, mFirstPartyDomain, &ocspRequestItem,
                     OCSPFetchingTypeToTimeoutTime(mOCSPFetching),
                     mOCSPGetConfig == CertVerifier::ocspGetEnabled,
                     responseSECItem);
