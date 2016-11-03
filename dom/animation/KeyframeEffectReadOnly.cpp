@@ -640,12 +640,13 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
   // the source one because both of targets are the same.
   effect->mCumulativeChangeHint = aSource.mCumulativeChangeHint;
 
-  // Clone aSource's keyframes and then move it into the new effect.
+  // Copy aSource's keyframes and animation properties.
+  // Note: We don't call SetKeyframes directly, which might revise the
+  //       computed offsets and rebuild the animation properties.
   // FIXME: Bug 1314537: We have to make sure SharedKeyframeList is handled
   //        properly.
-  RefPtr<nsStyleContext> styleContext = effect->GetTargetStyleContext();
-  nsTArray<Keyframe> keyframes(aSource.mKeyframes);
-  effect->SetKeyframes(Move(keyframes), styleContext);
+  effect->mKeyframes = aSource.mKeyframes;
+  effect->mProperties = aSource.mProperties;
   return effect.forget();
 }
 
