@@ -394,8 +394,7 @@ private:
  * Purpose: release decoder resources to save memory and hardware resources.
  *
  * Transition to:
- *   DECODING_FIRSTFRAME when play state changes to PLAYING.
- *   SEEKING if any seek request.
+ *   SEEKING if any seek request or play state changes to PLAYING.
  */
 class MediaDecoderStateMachine::DormantState
   : public MediaDecoderStateMachine::StateObject
@@ -1295,7 +1294,8 @@ DormantState::HandlePlayStateChanged(MediaDecoder::PlayState aPlayState)
   if (aPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
     // Exit dormant when the user wants to play.
     MOZ_ASSERT(!Info().IsEncrypted() || mMaster->mCDMProxy);
-    SetState<DecodingFirstFrameState>(Move(mPendingSeek));
+    MOZ_ASSERT(mMaster->mSentFirstFrameLoadedEvent);
+    SetState<SeekingState>(Move(mPendingSeek));
   }
 }
 
