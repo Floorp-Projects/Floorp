@@ -543,7 +543,7 @@ input[type="radio"] {
   margin-block-end: 0px;
   margin-inline-start: 5px;
   margin-inline-end: 3px;
-  border-radius: 100%;
+  border-radius: 100% !important;
 }
 
 /* check boxes */
@@ -553,7 +553,7 @@ input[type="checkbox"] {
   margin-block-end: 3px;
   margin-inline-start: 4px;
   margin-inline-end: 3px;
-  border-radius: 0;
+  border-radius: 0 !important;
 }
 
 /* common features of radio buttons and check boxes */
@@ -569,11 +569,12 @@ input[type="checkbox"] {
   inline-size: 13px;
   block-size: 13px;
   cursor: default;
-  padding: 0;
+  padding: 0 !important;
   -moz-binding: none;
-  border: 2px inset ThreeDLightShadow;
-  background-repeat: no-repeat;
-  background-position: center;
+  /* same colors as |input| rule, but |!important| this time. */
+  background-color: -moz-Field ! important;
+  color: -moz-FieldText ! important;
+  border: 2px inset ThreeDLightShadow ! important;
 }
 
 input[type="radio"]:disabled,
@@ -585,7 +586,10 @@ input[type="checkbox"]:disabled:active,
 input[type="checkbox"]:disabled:hover,
 input[type="checkbox"]:disabled:hover:active {
   padding: 1px;
-  border: 1px inset ThreeDShadow;
+  border: 1px inset ThreeDShadow ! important;
+  /* same as above, but !important */
+  color: GrayText ! important;
+  background-color: ThreeDFace ! important;
   cursor: inherit;
 }
 
@@ -601,40 +605,8 @@ input[type="radio"]:-moz-focusring {
 
 input[type="checkbox"]:hover:active,
 input[type="radio"]:hover:active {
-  background-color: ThreeDFace;
-  border-style: inset;
-}
-
-input[type="radio"] {
-  background-size: calc(100% - 4px) calc(100% - 4px);
-}
-
-input[type="radio"]:checked {
-  background-image: url(radio.svg);
-}
-
-input[type="radio"]:disabled:checked {
-  background-image: url(radio.svg#disabled);
-}
-
-input[type="checkbox"] {
-  background-size: 100% 100%;
-}
-
-input[type="checkbox"]:checked {
-  background-image: url(checkmark.svg);
-}
-
-input[type="checkbox"]:disabled:checked {
-  background-image: url(checkmark.svg#disabled);
-}
-
-input[type="checkbox"]:indeterminate {
-  background-image: url(indeterminate-checkmark.svg);
-}
-
-input[type="checkbox"]:indeterminate:disabled {
-  background-image: url(indeterminate-checkmark.svg#disabled);
+  background-color: ThreeDFace ! important;
+  border-style: inset !important;
 }
 
 input[type="search"] {
