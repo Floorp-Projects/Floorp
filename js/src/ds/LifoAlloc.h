@@ -454,6 +454,16 @@ class LifoAlloc
     JS_DECLARE_NEW_METHODS(new_, alloc, MOZ_ALWAYS_INLINE)
     JS_DECLARE_NEW_METHODS(newInfallible, allocInfallible, MOZ_ALWAYS_INLINE)
 
+#ifdef DEBUG
+    bool contains(void* ptr) const {
+        for (BumpChunk* chunk = first; chunk; chunk = chunk->next()) {
+            if (chunk->contains(ptr))
+                return true;
+        }
+        return false;
+    }
+#endif
+
     // A mutable enumeration of the allocated data.
     class Enum
     {
