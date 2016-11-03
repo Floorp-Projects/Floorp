@@ -1,0 +1,1 @@
+module.exports = require("devtools/client/shared/vendor/react").addons.shallowCompare;

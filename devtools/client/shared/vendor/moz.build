@@ -7,6 +7,7 @@ modules = []
 modules += [
     'immutable.js',
     'jsol.js',
+    'react-addons-shallow-compare.js',
 ]
 
 # react-dev is used if either debug mode is enabled,
@@ -18,6 +19,7 @@ modules += [
     'react-dom.js',
     'react-proxy.js',
     'react-redux.js',
+    'react-virtualized.js',
     'react.js',
     'redux.js',
     'reselect.js',
