@@ -199,9 +199,11 @@ static const PhaseInfo phases[] = {
         { PHASE_MARK_RUNTIME_DATA, "Mark Runtime-wide Data", PHASE_MARK_ROOTS, 52 },
         { PHASE_MARK_EMBEDDING, "Mark Embedding", PHASE_MARK_ROOTS, 53 },
         { PHASE_MARK_COMPARTMENTS, "Mark Compartments", PHASE_MARK_ROOTS, 54 },
-    { PHASE_LIMIT, nullptr, PHASE_NO_PARENT, 59 }
+    { PHASE_PURGE_SHAPE_TABLES, "Purge ShapeTables", PHASE_NO_PARENT, 60 },
 
-    // Current number of telemetryBuckets is 59. If you insert new phases
+    { PHASE_LIMIT, nullptr, PHASE_NO_PARENT, 60 }
+
+    // Current number of telemetryBuckets is 60. If you insert new phases
     // somewhere, start at that number and count up. Do not change any existing
     // numbers.
 };
