@@ -5,11 +5,11 @@
 package org.mozilla.gecko.menu;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.support.v7.widget.AppCompatDrawableManager;
 import android.util.AttributeSet;
 
 public class MenuItemActionBar extends ThemedImageButton
@@ -49,7 +49,7 @@ public class MenuItemActionBar extends ThemedImageButton
     }
 
     void setIcon(int icon) {
-        setIcon((icon == 0) ? null : AppCompatDrawableManager.get().getDrawable(getContext(), icon));
+        setIcon((icon == 0) ? null : ResourceDrawableUtils.getDrawable(getContext(), icon));
     }
 
     void setTitle(CharSequence title) {
