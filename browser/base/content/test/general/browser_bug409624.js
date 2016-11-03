@@ -26,9 +26,6 @@ add_task(function* test() {
   let prefService = Cc["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefService);
 
-  let findBar = gFindBar;
-  let textbox = gFindBar.getElement("findbar-textbox");
-
   let tempScope = {};
   Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
                                              .loadSubScript("chrome://browser/content/sanitize.js", tempScope);

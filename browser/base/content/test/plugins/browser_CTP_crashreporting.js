@@ -139,7 +139,7 @@ add_task(function*() {
       }, "Timed out waiting for plugin binding to be in success state");
     });
 
-    let [subject, data] = yield crashReportPromise;
+    let [subject, ] = yield crashReportPromise;
 
     ok(subject instanceof Ci.nsIPropertyBag,
        "The crash report subject should be an nsIPropertyBag.");
@@ -211,7 +211,7 @@ add_task(function*() {
     let submitButton = buttons[1];
     submitButton.click();
 
-    let [subject, data] = yield crashReportPromise;
+    let [subject, ] = yield crashReportPromise;
 
     ok(subject instanceof Ci.nsIPropertyBag,
        "The crash report subject should be an nsIPropertyBag.");

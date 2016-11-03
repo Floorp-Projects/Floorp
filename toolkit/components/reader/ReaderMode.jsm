@@ -289,7 +289,7 @@ this.ReaderMode = {
         }
         resolve(doc);
         histogram.add(DOWNLOAD_SUCCESS);
-      }
+      };
       xhr.send();
     });
   },

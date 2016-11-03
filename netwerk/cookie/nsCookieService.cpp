@@ -145,9 +145,7 @@ struct nsCookieAttributes
 struct nsListIter
 {
   // default (non-initializing) constructor.
-  nsListIter()
-  {
-  }
+  nsListIter() = default;
 
   // explicit constructor to a given iterator state with entryclass 'aEntry'
   // and index 'aIndex'.
@@ -370,7 +368,7 @@ class InsertCookieDBListener final : public DBListenerErrorHandler
 private:
   virtual const char *GetOpType() override { return "INSERT"; }
 
-  ~InsertCookieDBListener() {}
+  ~InsertCookieDBListener() = default;
 
 public:
   NS_DECL_ISUPPORTS
@@ -406,7 +404,7 @@ class UpdateCookieDBListener final : public DBListenerErrorHandler
 private:
   virtual const char *GetOpType() override { return "UPDATE"; }
 
-  ~UpdateCookieDBListener() {}
+  ~UpdateCookieDBListener() = default;
 
 public:
   NS_DECL_ISUPPORTS
@@ -434,7 +432,7 @@ class RemoveCookieDBListener final : public DBListenerErrorHandler
 private:
   virtual const char *GetOpType() override { return "REMOVE"; }
 
-  ~RemoveCookieDBListener() {}
+  ~RemoveCookieDBListener() = default;
 
 public:
   NS_DECL_ISUPPORTS
@@ -463,7 +461,7 @@ private:
   virtual const char *GetOpType() override { return "READ"; }
   bool mCanceled;
 
-  ~ReadCookieDBListener() {}
+  ~ReadCookieDBListener() = default;
 
 public:
   NS_DECL_ISUPPORTS
@@ -480,7 +478,7 @@ public:
   {
     nsCOMPtr<mozIStorageRow> row;
 
-    while (1) {
+    while (true) {
       DebugOnly<nsresult> rv = aResult->GetNextRow(getter_AddRefs(row));
       NS_ASSERT_SUCCESS(rv);
 
@@ -546,7 +544,7 @@ NS_IMPL_ISUPPORTS(ReadCookieDBListener, mozIStorageStatementCallback)
  ******************************************************************************/
 class CloseCookieDBListener final :  public mozIStorageCompletionCallback
 {
-  ~CloseCookieDBListener() {}
+  ~CloseCookieDBListener() = default;
 
 public:
   explicit CloseCookieDBListener(DBState* dbState) : mDBState(dbState) { }
@@ -566,7 +564,7 @@ namespace {
 
 class AppClearDataObserver final : public nsIObserver {
 
-  ~AppClearDataObserver() {}
+  ~AppClearDataObserver() = default;
 
 public:
   NS_DECL_ISUPPORTS
@@ -812,7 +810,7 @@ namespace {
 
 class ConvertAppIdToOriginAttrsSQLFunction final : public mozIStorageFunction
 {
-  ~ConvertAppIdToOriginAttrsSQLFunction() {}
+  ~ConvertAppIdToOriginAttrsSQLFunction() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
@@ -848,7 +846,7 @@ ConvertAppIdToOriginAttrsSQLFunction::OnFunctionCall(
 
 class SetAppIdFromOriginAttributesSQLFunction final : public mozIStorageFunction
 {
-  ~SetAppIdFromOriginAttributesSQLFunction() {}
+  ~SetAppIdFromOriginAttributesSQLFunction() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
@@ -880,7 +878,7 @@ SetAppIdFromOriginAttributesSQLFunction::OnFunctionCall(
 class SetInBrowserFromOriginAttributesSQLFunction final :
   public mozIStorageFunction
 {
-  ~SetInBrowserFromOriginAttributesSQLFunction() {}
+  ~SetInBrowserFromOriginAttributesSQLFunction() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
@@ -1025,7 +1023,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
 
         nsCString baseDomain, host;
         bool hasResult;
-        while (1) {
+        while (true) {
           rv = select->ExecuteStep(&hasResult);
           NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
@@ -1102,7 +1100,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
           select->GetUTF8String(SCHEMA3_IDX_PATH, path1);
 
           nsCString name2, host2, path2;
-          while (1) {
+          while (true) {
             // Read the second row.
             rv = select->ExecuteStep(&hasResult);
             NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
@@ -2135,7 +2133,7 @@ nsCookieService::NotifyThirdParty(nsIURI *aHostURI, bool aIsAccepted, nsIChannel
     nsAutoString referringHostUTF16 = NS_ConvertUTF8toUTF16(referringHost);
     os->NotifyObservers(aHostURI, topic, referringHostUTF16.get());
     return;
-  } while (0);
+  } while (false);
 
   // This can fail for a number of reasons, in which kind we fallback to "?"
   os->NotifyObservers(aHostURI, topic, u"?");
@@ -2724,7 +2722,7 @@ nsCookieService::EnsureReadDomain(const nsCookieKey &aKey)
   bool hasResult;
   nsCString name, value, host, path;
   AutoTArray<RefPtr<nsCookie>, kMaxCookiesPerHost> array;
-  while (1) {
+  while (true) {
     rv = mDefaultDBState->stmtReadDomain->ExecuteStep(&hasResult);
     if (NS_FAILED(rv)) {
       // Recreate the database.
@@ -2801,7 +2799,7 @@ nsCookieService::EnsureReadComplete()
   nsCString baseDomain, name, value, host, path;
   bool hasResult;
   nsTArray<CookieDomainTuple> array(kMaxNumberOfCookies);
-  while (1) {
+  while (true) {
     rv = stmt->ExecuteStep(&hasResult);
     if (NS_FAILED(rv)) {
       // Recreate the database.

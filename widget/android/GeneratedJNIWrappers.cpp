@@ -1745,6 +1745,14 @@ auto Clipboard::SetText(mozilla::jni::String::Param a0) -> void
 const char HardwareCodecCapabilityUtils::name[] =
         "org/mozilla/gecko/util/HardwareCodecCapabilityUtils";
 
+constexpr char HardwareCodecCapabilityUtils::HasHWVP9_t::name[];
+constexpr char HardwareCodecCapabilityUtils::HasHWVP9_t::signature[];
+
+auto HardwareCodecCapabilityUtils::HasHWVP9() -> bool
+{
+    return mozilla::jni::Method<HasHWVP9_t>::Call(HardwareCodecCapabilityUtils::Context(), nullptr);
+}
+
 constexpr char HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType_t::name[];
 constexpr char HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType_t::signature[];
 

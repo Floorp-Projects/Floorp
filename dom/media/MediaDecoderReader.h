@@ -289,22 +289,6 @@ public:
     return mOnMediaNotSeekable;
   }
 
-  bool IsSuspended() const
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return mIsSuspended;
-  }
-
-  void SetIsSuspended(bool aState)
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    mIsSuspended = aState;
-  }
-
-  AbstractCanonical<bool>* CanonicalIsSuspended() {
-    return &mIsSuspended;
-  }
-
   // Switch the video decoder to BlankDecoderModule. It might takes effective
   // since a few samples later depends on how much demuxed samples are already
   // queued in the original video decoder.
@@ -450,8 +434,6 @@ private:
   // of Request{Audio,Video}Data.
   MozPromiseHolder<MediaDataPromise> mBaseAudioPromise;
   MozPromiseHolder<MediaDataPromise> mBaseVideoPromise;
-
-  Canonical<bool> mIsSuspended;
 
   MediaEventListener mDataArrivedListener;
 };

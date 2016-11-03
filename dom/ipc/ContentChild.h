@@ -163,6 +163,9 @@ public:
                         base::ProcessId otherProcess) override;
 
   bool
+  RecvGMPsChanged(nsTArray<GMPCapabilityData>&& capabilities) override;
+
+  bool
   RecvInitRendering(
     Endpoint<PCompositorBridgeChild>&& aCompositor,
     Endpoint<PImageBridgeChild>&& aImageBridge,
@@ -339,10 +342,6 @@ public:
   virtual PStorageChild* AllocPStorageChild() override;
 
   virtual bool DeallocPStorageChild(PStorageChild* aActor) override;
-
-  virtual PBluetoothChild* AllocPBluetoothChild() override;
-
-  virtual bool DeallocPBluetoothChild(PBluetoothChild* aActor) override;
 
   virtual PPresentationChild* AllocPPresentationChild() override;
 

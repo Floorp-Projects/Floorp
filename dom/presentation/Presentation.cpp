@@ -161,6 +161,18 @@ Presentation::GetReceiver()
   return receiver.forget();
 }
 
+void
+Presentation::SetStartSessionUnsettled(bool aIsUnsettled)
+{
+  mStartSessionUnsettled = aIsUnsettled;
+}
+
+bool
+Presentation::IsStartSessionUnsettled() const
+{
+  return mStartSessionUnsettled;
+}
+
 bool
 Presentation::IsInPresentedContent() const
 {

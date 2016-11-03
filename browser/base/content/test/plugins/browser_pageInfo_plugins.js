@@ -80,7 +80,6 @@ function testPart1b() {
   let testRadioGroup = gPageInfo.document.getElementById(gTestPermissionString + "RadioGroup");
   let testRadioDefault = gPageInfo.document.getElementById(gTestPermissionString + "#0");
 
-  var qString = "#" + gTestPermissionString.replace(':', '\\:') + "\\#0";
   is(testRadioGroup.selectedItem, testRadioDefault, "part 1b: Test radio group should be set to 'Default'");
   let testRadioAllow = gPageInfo.document.getElementById(gTestPermissionString + "#1");
   testRadioGroup.selectedItem = testRadioAllow;

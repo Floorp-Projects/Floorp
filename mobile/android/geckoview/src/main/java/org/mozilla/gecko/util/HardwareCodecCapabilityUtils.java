@@ -24,6 +24,7 @@ public final class HardwareCodecCapabilityUtils {
   private static final String[] supportedVp8HwDecCodecPrefixes =
   {"OMX.qcom.", "OMX.Nvidia.", "OMX.Exynos.", "OMX.Intel." };
   private static final String VP8_MIME_TYPE = "video/x-vnd.on2.vp8";
+  private static final String VP9_MIME_TYPE = "video/x-vnd.on2.vp9";
   // NV12 color format supported by QCOM codec, but not declared in MediaCodec -
   // see /hardware/qcom/media/mm-core/inc/OMX_QCOMExtns.h
   private static final int
@@ -106,6 +107,15 @@ public final class HardwareCodecCapabilityUtils {
   }
 
   public static boolean getHWDecoderCapability() {
+    return getHWDecoderCapability(VP8_MIME_TYPE);
+  }
+
+  @WrapForJNI
+  public static boolean HasHWVP9() {
+    return getHWDecoderCapability(VP9_MIME_TYPE);
+  }
+
+  public static boolean getHWDecoderCapability(String aMimeType) {
     if (Versions.feature20Plus) {
       for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
         MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
@@ -114,7 +124,7 @@ public final class HardwareCodecCapabilityUtils {
         }
         String name = null;
         for (String mimeType : info.getSupportedTypes()) {
-          if (mimeType.equals(VP8_MIME_TYPE)) {
+          if (mimeType.equals(aMimeType)) {
             name = info.getName();
             break;
           }
@@ -138,7 +148,7 @@ public final class HardwareCodecCapabilityUtils {
 
         // Check if codec supports either yuv420 or nv12.
         CodecCapabilities capabilities =
-          info.getCapabilitiesForType(VP8_MIME_TYPE);
+          info.getCapabilitiesForType(aMimeType);
         for (int colorFormat : capabilities.colorFormats) {
           Log.v(LOGTAG, "   Color: 0x" + Integer.toHexString(colorFormat));
         }

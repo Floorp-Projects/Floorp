@@ -128,6 +128,13 @@ function testStartConnection() {
       teardown();
       aReject();
     });
+
+    let request2 = new PresentationRequest("/");
+    request2.start().then(() => {
+      ok(false, "Sender: session start should fail while there is an unsettled promise.");
+    }).catch((aError) => {
+      is(aError.name, "OperationError", "Expect to get OperationError.");
+    });
   });
 }
 

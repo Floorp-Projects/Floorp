@@ -27,6 +27,9 @@ FoldTests(MIRGraph& graph);
 MOZ_MUST_USE bool
 SplitCriticalEdges(MIRGraph& graph);
 
+bool
+IsUint32Type(const MDefinition* def);
+
 enum Observability {
     ConservativeObservability,
     AggressiveObservability

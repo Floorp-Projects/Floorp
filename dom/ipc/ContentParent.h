@@ -248,16 +248,6 @@ public:
 
   virtual bool RecvCreateGMPService() override;
 
-  virtual bool RecvGetGMPPluginVersionForAPI(const nsCString& aAPI,
-                                             nsTArray<nsCString>&& aTags,
-                                             bool* aHasPlugin,
-                                             nsCString* aVersion) override;
-
-  virtual bool RecvIsGMPPresentOnDisk(const nsString& aKeySystem,
-                                      const nsCString& aVersion,
-                                      bool* aIsPresent,
-                                      nsCString* aMessage) override;
-
   virtual bool RecvLoadPlugin(const uint32_t& aPluginId, nsresult* aRv,
                               uint32_t* aRunID) override;
 
@@ -846,12 +836,6 @@ private:
   virtual bool DeallocPMediaParent(PMediaParent* aActor) override;
 
   virtual bool DeallocPStorageParent(PStorageParent* aActor) override;
-
-  virtual PBluetoothParent* AllocPBluetoothParent() override;
-
-  virtual bool DeallocPBluetoothParent(PBluetoothParent* aActor) override;
-
-  virtual bool RecvPBluetoothConstructor(PBluetoothParent* aActor) override;
 
   virtual PPresentationParent* AllocPPresentationParent() override;
 

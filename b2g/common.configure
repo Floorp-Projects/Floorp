@@ -9,6 +9,7 @@
 option(env='MOZTTDIR', nargs=1, help='Path to truetype fonts for B2G')
 
 @depends('MOZTTDIR')
+@imports('os')
 def mozttdir(value):
     if value:
         path = value[0]

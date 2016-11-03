@@ -37,8 +37,6 @@ mozilla::LazyLogModule gMediaParentLog("MediaParent");
 namespace mozilla {
 namespace media {
 
-static Parent<PMediaParent>* sIPCServingParent;
-
 static OriginKeyStore* sOriginKeyStore = nullptr;
 
 class OriginKeyStore : public nsISupports
@@ -355,28 +353,18 @@ public:
 
 NS_IMPL_ISUPPORTS0(OriginKeyStore)
 
-template<> /* static */
-Parent<PMediaParent>* Parent<PMediaParent>::GetSingleton()
-{
-  return sIPCServingParent;
-}
-
-template<> /* static */
-Parent<NonE10s>* Parent<NonE10s>::GetSingleton()
-{
-  RefPtr<MediaManager> mgr = MediaManager::GetInstance();
+bool NonE10s::SendGetOriginKeyResponse(const uint32_t& aRequestId,
+                                       nsCString aKey) {
+  MediaManager* mgr = MediaManager::GetIfExists();
   if (!mgr) {
-    return nullptr;
+    return false;
   }
-  return mgr->GetNonE10sParent();
+  RefPtr<Pledge<nsCString>> pledge = mgr->mGetOriginKeyPledges.Remove(aRequestId);
+  if (pledge) {
+    pledge->Resolve(aKey);
+  }
+  return true;
 }
-
-// TODO: Remove once upgraded to GCC 4.8+ on linux. Bogus error on static func:
-// error: 'this' was not captured for this lambda function
-
-template<class Super> static
-Parent<Super>* GccGetSingleton() { return Parent<Super>::GetSingleton(); };
-
 
 template<class Super> bool
 Parent<Super>::RecvGetOriginKey(const uint32_t& aRequestId,
@@ -404,29 +392,27 @@ Parent<Super>::RecvGetOriginKey(const uint32_t& aRequestId,
 
   nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(sts);
-  RefPtr<OriginKeyStore> store(mOriginKeyStore);
-  bool sameProcess = mSameProcess;
+  RefPtr<Parent<Super>> that(this);
 
-  rv = sts->Dispatch(NewRunnableFrom([id, profileDir, store, sameProcess, aOrigin,
+  rv = sts->Dispatch(NewRunnableFrom([this, that, id, profileDir, aOrigin,
                                       aPrivateBrowsing, aPersist]() -> nsresult {
     MOZ_ASSERT(!NS_IsMainThread());
-    store->mOriginKeys.SetProfileDir(profileDir);
+    mOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
     nsCString result;
     if (aPrivateBrowsing) {
-      store->mPrivateBrowsingOriginKeys.GetOriginKey(aOrigin, result);
+      mOriginKeyStore->mPrivateBrowsingOriginKeys.GetOriginKey(aOrigin, result);
     } else {
-      store->mOriginKeys.GetOriginKey(aOrigin, result, aPersist);
+      mOriginKeyStore->mOriginKeys.GetOriginKey(aOrigin, result, aPersist);
     }
 
     // Pass result back to main thread.
     nsresult rv;
-    rv = NS_DispatchToMainThread(NewRunnableFrom([id, store, sameProcess,
+    rv = NS_DispatchToMainThread(NewRunnableFrom([this, that, id,
                                                   result]() -> nsresult {
-      Parent* parent = GccGetSingleton<Super>(); // GetSingleton();
-      if (!parent) {
+      if (mDestroyed) {
         return NS_OK;
       }
-      RefPtr<Pledge<nsCString>> p = parent->mOutstandingPledges.Remove(id);
+      RefPtr<Pledge<nsCString>> p = mOutstandingPledges.Remove(id);
       if (!p) {
         return NS_ERROR_UNEXPECTED;
       }
@@ -443,24 +429,11 @@ Parent<Super>::RecvGetOriginKey(const uint32_t& aRequestId,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
-
-  p->Then([aRequestId, sameProcess](const nsCString& aKey) mutable {
-    if (!sameProcess) {
-      if (!sIPCServingParent) {
-        return NS_OK;
-      }
-      Unused << sIPCServingParent->SendGetOriginKeyResponse(aRequestId, aKey);
-    } else {
-      RefPtr<MediaManager> mgr = MediaManager::GetInstance();
-      if (!mgr) {
-        return NS_OK;
-      }
-      RefPtr<Pledge<nsCString>> pledge =
-          mgr->mGetOriginKeyPledges.Remove(aRequestId);
-      if (pledge) {
-        pledge->Resolve(aKey);
-      }
+  p->Then([this, that, aRequestId](const nsCString& aKey) mutable {
+    if (mDestroyed) {
+      return NS_OK;
     }
+    Unused << this->SendGetOriginKeyResponse(aRequestId, aKey);
     return NS_OK;
   });
   return true;
@@ -508,10 +481,9 @@ Parent<Super>::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 template<class Super>
-Parent<Super>::Parent(bool aSameProcess)
+Parent<Super>::Parent()
   : mOriginKeyStore(OriginKeyStore::Get())
   , mDestroyed(false)
-  , mSameProcess(aSameProcess)
 {
   LOG(("media::Parent: %p", this));
 }
@@ -525,17 +497,15 @@ Parent<Super>::~Parent()
 PMediaParent*
 AllocPMediaParent()
 {
-  MOZ_ASSERT(!sIPCServingParent);
-  sIPCServingParent = new Parent<PMediaParent>();
-  return sIPCServingParent;
+  Parent<PMediaParent>* obj = new Parent<PMediaParent>();
+  obj->AddRef();
+  return obj;
 }
 
 bool
 DeallocPMediaParent(media::PMediaParent *aActor)
 {
-  MOZ_ASSERT(sIPCServingParent == static_cast<Parent<PMediaParent>*>(aActor));
-  delete sIPCServingParent;
-  sIPCServingParent = nullptr;
+  static_cast<Parent<PMediaParent>*>(aActor)->Release();
   return true;
 }
 

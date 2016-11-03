@@ -69,7 +69,7 @@ var gDataNotificationInfoBar = {
     }];
 
     this._log.info("Creating data reporting policy notification.");
-    let notification = this._notificationBox.appendNotification(
+    this._notificationBox.appendNotification(
       message,
       this._DATA_REPORTING_NOTIFICATION,
       null,
@@ -125,4 +125,3 @@ var gDataNotificationInfoBar = {
     Ci.nsISupportsWeakReference,
   ]),
 };
-

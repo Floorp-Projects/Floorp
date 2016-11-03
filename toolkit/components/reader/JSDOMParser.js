@@ -460,16 +460,15 @@
             else
               this.children.push(newNode);
           }
-        } else {
+        } else if (oldNode.nodeType === Node.ELEMENT_NODE) {
           // new node is not an element node.
           // if the old one was, update its element siblings:
-          if (oldNode.nodeType === Node.ELEMENT_NODE) {
-            if (oldNode.previousElementSibling)
-              oldNode.previousElementSibling.nextElementSibling = oldNode.nextElementSibling;
-            if (oldNode.nextElementSibling)
-              oldNode.nextElementSibling.previousElementSibling = oldNode.previousElementSibling;
-            this.children.splice(this.children.indexOf(oldNode), 1);
-          }
+          if (oldNode.previousElementSibling)
+            oldNode.previousElementSibling.nextElementSibling = oldNode.nextElementSibling;
+          if (oldNode.nextElementSibling)
+            oldNode.nextElementSibling.previousElementSibling = oldNode.previousElementSibling;
+          this.children.splice(this.children.indexOf(oldNode), 1);
+
           // If the old node wasn't an element, neither the new nor the old node was an element,
           // and the children array and its members shouldn't need any updating.
         }
@@ -489,8 +488,8 @@
     __JSDOMParser__: true,
   };
 
-  for (var i in nodeTypes) {
-    Node[i] = Node.prototype[i] = nodeTypes[i];
+  for (var nodeType in nodeTypes) {
+    Node[nodeType] = Node.prototype[nodeType] = nodeTypes[nodeType];
   }
 
   var Attribute = function (name, value) {
@@ -559,7 +558,7 @@
       this._textContent = newText;
       delete this._innerHTML;
     },
-  }
+  };
 
   var Document = function () {
     this.styleSheets = [];
@@ -829,7 +828,7 @@
       Style.prototype.__defineSetter__(jsName, function (value) {
         this.setStyle(cssName, value);
       });
-    }) (styleMap[jsName]);
+    })(styleMap[jsName]);
   }
 
   var JSDOMParser = function () {
@@ -976,7 +975,7 @@
 
       retPair[0] = node;
       retPair[1] = closed;
-      return true
+      return true;
     },
 
     /**
@@ -1193,4 +1192,4 @@
   // Attach JSDOMParser to the global scope
   global.JSDOMParser = JSDOMParser;
 
-}) (this);
+})(this);

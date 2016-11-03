@@ -604,30 +604,59 @@ AddCSSValuePixel(double aCoeff1, const nsCSSValue &aValue1,
                         eCSSUnit_Pixel);
 }
 
+static bool
+AddCSSValuePixelPercentCalc(const uint32_t aValueRestrictions,
+                            const nsCSSUnit aCommonUnit,
+                            double aCoeff1, const nsCSSValue &aValue1,
+                            double aCoeff2, const nsCSSValue &aValue2,
+                            nsCSSValue &aResult)
+{
+  switch (aCommonUnit) {
+    case eCSSUnit_Pixel:
+      AddCSSValuePixel(aCoeff1, aValue1,
+                       aCoeff2, aValue2,
+                       aResult, aValueRestrictions);
+      break;
+    case eCSSUnit_Percent:
+      AddCSSValuePercent(aCoeff1, aValue1,
+                         aCoeff2, aValue2,
+                         aResult, aValueRestrictions);
+      break;
+    case eCSSUnit_Calc:
+      AddCSSValueCanonicalCalc(aCoeff1, aValue1,
+                               aCoeff2, aValue2,
+                               aResult);
+      break;
+    default:
+      return false;
+  }
+
+  return true;
+}
+
 static void
 AddTransformTranslate(double aCoeff1, const nsCSSValue &aValue1,
                       double aCoeff2, const nsCSSValue &aValue2,
                       nsCSSValue &aResult)
 {
+  // Only three possible units: eCSSUnit_Pixel, eCSSUnit_Percent, or
+  // eCSSUnit_Calc.
   MOZ_ASSERT(aValue1.GetUnit() == eCSSUnit_Percent ||
              aValue1.GetUnit() == eCSSUnit_Pixel ||
-            aValue1.IsCalcUnit(),
-            "unexpected unit");
+             aValue1.IsCalcUnit(),
+             "unexpected unit");
   MOZ_ASSERT(aValue2.GetUnit() == eCSSUnit_Percent ||
              aValue2.GetUnit() == eCSSUnit_Pixel ||
              aValue2.IsCalcUnit(),
              "unexpected unit");
-
-  if (aValue1.GetUnit() != aValue2.GetUnit() || aValue1.IsCalcUnit()) {
-    // different units; create a calc() expression
-    AddCSSValueCanonicalCalc(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
-  } else if (aValue1.GetUnit() == eCSSUnit_Percent) {
-    // both percent
-    AddCSSValuePercent(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
-  } else {
-    // both pixels
-    AddCSSValuePixel(aCoeff1, aValue1, aCoeff2, aValue2, aResult);
-  }
+  AddCSSValuePixelPercentCalc(0,
+                              (aValue1.GetUnit() != aValue2.GetUnit() ||
+                               aValue1.IsCalcUnit())
+                                ? eCSSUnit_Calc
+                                : aValue1.GetUnit(),
+                              aCoeff1, aValue1,
+                              aCoeff2, aValue2,
+                              aResult);
 }
 
 // CLASS METHODS
@@ -702,6 +731,92 @@ StyleAnimationValue::ComputeColorDistance(const RGBAColorData& aStartColor,
   double diffG = startG - endG;
   double diffB = startB - endB;
   return sqrt(diffA * diffA + diffR * diffR + diffG * diffG + diffB * diffB);
+}
+
+enum class Restrictions {
+  Enable,
+  Disable
+};
+
+static already_AddRefed<nsCSSValue::Array>
+AddShapeFunction(nsCSSPropertyID aProperty,
+                 double aCoeff1, const nsCSSValue::Array* aArray1,
+                 double aCoeff2, const nsCSSValue::Array* aArray2,
+                 Restrictions aRestriction = Restrictions::Enable);
+
+static double
+ComputeShapeDistance(nsCSSPropertyID aProperty,
+                     const nsCSSValue::Array* aArray1,
+                     const nsCSSValue::Array* aArray2)
+{
+  // Use AddShapeFunction to get the difference between two shape functions.
+  RefPtr<nsCSSValue::Array> diffShape =
+    AddShapeFunction(aProperty, 1.0, aArray2, -1.0, aArray1,
+                     Restrictions::Disable);
+  if (!diffShape) {
+    return 0.0;
+  }
+
+  // A helper function to convert a calc() diff value into a double distance.
+  auto pixelCalcDistance = [](const PixelCalcValue& aValue) {
+    MOZ_ASSERT(aValue.mHasPercent || aValue.mPercent == 0.0f,
+             "can't have a nonzero percentage part without having percentages");
+    return aValue.mLength * aValue.mLength + aValue.mPercent * aValue.mPercent;
+  };
+
+  double squareDistance = 0.0;
+  const nsCSSValue::Array* func = diffShape->Item(0).GetArrayValue();
+  nsCSSKeyword shapeFuncName = func->Item(0).GetKeywordValue();
+  switch (shapeFuncName) {
+    case eCSSKeyword_ellipse:
+    case eCSSKeyword_circle: {
+      // Skip the first element which is the function keyword.
+      // Also, skip the last element which is an array for <position>
+      const size_t len = func->Count();
+      for (size_t i = 1; i < len - 1; ++i) {
+        squareDistance += pixelCalcDistance(ExtractCalcValue(func->Item(i)));
+      }
+      // Only iterate over elements 1 and 3. The <position> is 'uncomputed' to
+      // only those elements.  See also the comment in SetPositionValue.
+      for (size_t i = 1; i < 4; i += 2) {
+        const nsCSSValue& value = func->Item(len - 1).GetArrayValue()->Item(i);
+        squareDistance += pixelCalcDistance(ExtractCalcValue(value));
+      }
+      break;
+    }
+    case eCSSKeyword_polygon: {
+      // Don't care about the first element which is the function keyword, and
+      // the second element which is the fill rule.
+      const nsCSSValuePairList* list = func->Item(2).GetPairListValue();
+      do {
+        squareDistance += pixelCalcDistance(ExtractCalcValue(list->mXValue)) +
+                          pixelCalcDistance(ExtractCalcValue(list->mYValue));
+        list = list->mNext;
+      } while (list);
+      break;
+    }
+    case eCSSKeyword_inset: {
+      // Items 1-4 are respectively the top, right, bottom and left offsets
+      // from the reference box.
+      for (size_t i = 1; i <= 4; ++i) {
+        const nsCSSValue& value = func->Item(i);
+        squareDistance += pixelCalcDistance(ExtractCalcValue(value));
+      }
+      // Item 5 contains the radii of the rounded corners for the inset
+      // rectangle.
+      const nsCSSValue::Array* array = func->Item(5).GetArrayValue();
+      const size_t len = array->Count();
+      for (size_t i = 0; i < len; ++i) {
+        const nsCSSValuePair& pair = array->Item(i).GetPairValue();
+        squareDistance += pixelCalcDistance(ExtractCalcValue(pair.mXValue)) +
+                          pixelCalcDistance(ExtractCalcValue(pair.mYValue));
+      }
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown shape type");
+  }
+  return sqrt(squareDistance);
 }
 
 static nsCSSValueList*
@@ -1387,9 +1502,10 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
       return true;
     }
     case eUnit_Shape:
-      // Bug 1286150: The CSS Shapes spec doesn't define paced animations for
-      // shape functions, but we still need to implement one.
-      return false;
+      aDistance = ComputeShapeDistance(aProperty,
+                                       aStartValue.GetCSSValueArrayValue(),
+                                       aEndValue.GetCSSValueArrayValue());
+      return true;
 
     case eUnit_Filter:
       // Bug 1286151: Support paced animations for filter function
@@ -1539,36 +1655,6 @@ AddCSSValueNumber(double aCoeff1, const nsCSSValue &aValue1,
                                       aCoeff1 * aValue1.GetFloatValue() +
                                       aCoeff2 * aValue2.GetFloatValue()),
                         eCSSUnit_Number);
-}
-
-static bool
-AddCSSValuePixelPercentCalc(const uint32_t aValueRestrictions,
-                            const nsCSSUnit aCommonUnit,
-                            double aCoeff1, const nsCSSValue &aValue1,
-                            double aCoeff2, const nsCSSValue &aValue2,
-                            nsCSSValue &aResult)
-{
-  switch (aCommonUnit) {
-    case eCSSUnit_Pixel:
-      AddCSSValuePixel(aCoeff1, aValue1,
-                       aCoeff2, aValue2,
-                       aResult, aValueRestrictions);
-      break;
-    case eCSSUnit_Percent:
-      AddCSSValuePercent(aCoeff1, aValue1,
-                         aCoeff2, aValue2,
-                         aResult, aValueRestrictions);
-      break;
-    case eCSSUnit_Calc:
-      AddCSSValueCanonicalCalc(aCoeff1, aValue1,
-                               aCoeff2, aValue2,
-                               aResult);
-      break;
-    default:
-      return false;
-  }
-
-  return true;
 }
 
 static inline float
@@ -2136,7 +2222,8 @@ AddCSSValuePairList(nsCSSPropertyID aProperty,
 static already_AddRefed<nsCSSValue::Array>
 AddShapeFunction(nsCSSPropertyID aProperty,
                  double aCoeff1, const nsCSSValue::Array* aArray1,
-                 double aCoeff2, const nsCSSValue::Array* aArray2)
+                 double aCoeff2, const nsCSSValue::Array* aArray2,
+                 Restrictions aRestriction)
 {
   MOZ_ASSERT(aArray1 && aArray1->Count() == 2, "expected shape function");
   MOZ_ASSERT(aArray2 && aArray2->Count() == 2, "expected shape function");
@@ -2168,7 +2255,9 @@ AddShapeFunction(nsCSSPropertyID aProperty,
   switch (shapeFuncName) {
     case eCSSKeyword_ellipse:
       // Add ellipses' |ry| values (but fail if we encounter an enum):
-      if (!AddCSSValuePixelPercentCalc(CSS_PROPERTY_VALUE_NONNEGATIVE,
+      if (!AddCSSValuePixelPercentCalc(aRestriction == Restrictions::Enable
+                                         ? CSS_PROPERTY_VALUE_NONNEGATIVE
+                                         : 0,
                                        GetCommonUnit(aProperty,
                                                      func1->Item(2).GetUnit(),
                                                      func2->Item(2).GetUnit()),
@@ -2180,7 +2269,9 @@ AddShapeFunction(nsCSSPropertyID aProperty,
       MOZ_FALLTHROUGH;  // to handle rx and center point
     case eCSSKeyword_circle: {
       // Add circles' |r| (or ellipses' |rx|) values:
-      if (!AddCSSValuePixelPercentCalc(CSS_PROPERTY_VALUE_NONNEGATIVE,
+      if (!AddCSSValuePixelPercentCalc(aRestriction == Restrictions::Enable
+                                         ? CSS_PROPERTY_VALUE_NONNEGATIVE
+                                         : 0,
                                        GetCommonUnit(aProperty,
                                                      func1->Item(1).GetUnit(),
                                                      func2->Item(1).GetUnit()),
@@ -2220,7 +2311,9 @@ AddShapeFunction(nsCSSPropertyID aProperty,
       // Items 1-4 are respectively the top, right, bottom and left offsets
       // from the reference box.
       for (size_t i = 1; i <= 4; ++i) {
-        if (!AddCSSValuePixelPercentCalc(CSS_PROPERTY_VALUE_NONNEGATIVE,
+        if (!AddCSSValuePixelPercentCalc(aRestriction == Restrictions::Enable
+                                           ? CSS_PROPERTY_VALUE_NONNEGATIVE
+                                           : 0,
                                          GetCommonUnit(aProperty,
                                                        func1->Item(i).GetUnit(),
                                                        func2->Item(i).GetUnit()),
@@ -2243,7 +2336,9 @@ AddShapeFunction(nsCSSPropertyID aProperty,
       // We use an arbitrary border-radius property here to get the appropriate
       // restrictions for radii since this is a <border-radius> value.
       uint32_t restrictions =
-        nsCSSProps::ValueRestrictions(eCSSProperty_border_top_left_radius);
+        aRestriction == Restrictions::Enable
+          ? nsCSSProps::ValueRestrictions(eCSSProperty_border_top_left_radius)
+          : 0;
       for (size_t i = 0; i < 4; ++i) {
         const nsCSSValuePair& pair1 = radii1->Item(i).GetPairValue();
         const nsCSSValuePair& pair2 = radii2->Item(i).GetPairValue();

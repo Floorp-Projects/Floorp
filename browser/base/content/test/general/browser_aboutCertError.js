@@ -87,7 +87,7 @@ add_task(function* checkReturnToPreviousPage() {
 
 add_task(function* checkBadStsCert() {
   info("Loading a badStsCert and making sure exception button doesn't show up");
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, GOOD_PAGE);
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, GOOD_PAGE);
   let browser = gBrowser.selectedBrowser;
 
   info("Loading and waiting for the cert error");
@@ -111,7 +111,7 @@ add_task(function* checkWrongSystemTimeWarning() {
   function* setUpPage() {
     let browser;
     let certErrorLoaded;
-    let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
       gBrowser.selectedTab = gBrowser.addTab(BAD_CERT);
       browser = gBrowser.selectedBrowser;
       certErrorLoaded = waitForCertErrorLoad(browser);
@@ -211,7 +211,7 @@ add_task(function* checkAdvancedDetails() {
   info("Loading a bad cert page and verifying the advanced details section");
   let browser;
   let certErrorLoaded;
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     gBrowser.selectedTab = gBrowser.addTab(BAD_CERT);
     browser = gBrowser.selectedBrowser;
     certErrorLoaded = waitForCertErrorLoad(browser);
@@ -238,9 +238,6 @@ add_task(function* checkAdvancedDetails() {
     let div = doc.getElementById("certificateErrorDebugInformation");
     let text = doc.getElementById("certificateErrorText");
 
-    let docshell = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsIDocShell);
     let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
                      .getService(Ci.nsISerializationHelper);
     let serializable =  docShell.failedChannel.securityInfo
@@ -271,7 +268,7 @@ add_task(function* checkAdvancedDetailsForHSTS() {
   info("Loading a bad STS cert page and verifying the advanced details section");
   let browser;
   let certErrorLoaded;
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     gBrowser.selectedTab = gBrowser.addTab(BAD_STS_CERT);
     browser = gBrowser.selectedBrowser;
     certErrorLoaded = waitForCertErrorLoad(browser);
@@ -310,9 +307,6 @@ add_task(function* checkAdvancedDetailsForHSTS() {
     let div = doc.getElementById("certificateErrorDebugInformation");
     let text = doc.getElementById("certificateErrorText");
 
-    let docshell = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsIDocShell);
     let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
                      .getService(Ci.nsISerializationHelper);
     let serializable =  docShell.failedChannel.securityInfo
@@ -343,7 +337,7 @@ add_task(function* checkUnknownIssuerLearnMoreLink() {
   info("Loading a cert error for self-signed pages and checking the correct link is shown");
   let browser;
   let certErrorLoaded;
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
     gBrowser.selectedTab = gBrowser.addTab(UNKNOWN_ISSUER);
     browser = gBrowser.selectedBrowser;
     certErrorLoaded = waitForCertErrorLoad(browser);

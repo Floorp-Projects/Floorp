@@ -15,6 +15,7 @@ option(env='AUTOCONF', nargs=1, help='Path to autoconf 2.13')
 
 @depends(mozconfig, 'AUTOCONF')
 @checking('for autoconf')
+@imports('os')
 @imports('re')
 def autoconf(mozconfig, autoconf):
     mozconfig_autoconf = None
@@ -64,6 +65,7 @@ set_config('AUTOCONF', autoconf)
 @imports(_from='__builtin__', _import='print')
 @imports('glob')
 @imports('itertools')
+@imports('os')
 @imports('subprocess')
 # Import getmtime without overwriting the sandbox os.path.
 @imports(_from='os.path', _import='getmtime')
@@ -77,7 +79,7 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
     old_configure = os.path.abspath(old_configure[0])
     if build_project == 'js':
         old_configure_dir = os.path.dirname(old_configure)
-        if not old_configure_dir.endswith('/js/src'):
+        if not old_configure_dir.replace(os.sep, '/').endswith('/js/src'):
             old_configure = os.path.join(old_configure_dir, 'js', 'src',
                                          os.path.basename(old_configure))
 
@@ -407,10 +409,10 @@ def post_old_configure(raw_config):
 # them. We only do so for options that haven't been declared so far,
 # which should be a proxy for the options that old-configure handles
 # and that we don't know anything about.
-@dependable
+@depends('--help')
 @imports('__sandbox__')
 @imports(_from='mozbuild.configure.options', _import='Option')
-def remaining_mozconfig_options():
+def remaining_mozconfig_options(_):
     helper = __sandbox__._helper
     for arg in helper:
         if helper._origins[arg] != 'mozconfig':
