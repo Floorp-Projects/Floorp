@@ -1476,8 +1476,14 @@ GetWaitForAllPromise(JSContext* cx, unsigned argc, Value* vp)
     if (!promises.resize(count))
         return false;
 
-    for (uint32_t i = 0; i < count; i++)
-        promises[i].set(&list->getDenseElement(i).toObject());
+    for (uint32_t i = 0; i < count; i++) {
+        RootedValue elem(cx, list->getDenseElement(i));
+        if (!elem.isObject() || !elem.toObject().is<PromiseObject>()) {
+            JS_ReportErrorASCII(cx, "Each entry in the passed-in Array must be a Promise");
+            return false;
+        }
+        promises[i].set(&elem.toObject());
+    }
 
     RootedObject resultPromise(cx, JS::GetWaitForAllPromise(cx, promises));
     if (!resultPromise)
