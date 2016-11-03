@@ -20,13 +20,17 @@ public:
   NS_INLINE_DECL_REFCOUNTING(ServoDeclarationBlock)
 
   static already_AddRefed<ServoDeclarationBlock>
-  FromStyleAttribute(const nsAString& aString);
+  FromCssText(const nsAString& aCssText);
 
   RawServoDeclarationBlock* const* RefRaw() const {
     static_assert(sizeof(RefPtr<RawServoDeclarationBlock>) ==
                   sizeof(RawServoDeclarationBlock*),
                   "RefPtr should just be a pointer");
     return reinterpret_cast<RawServoDeclarationBlock* const*>(&mRaw);
+  }
+
+  void ToString(nsAString& aResult) const {
+    Servo_DeclarationBlock_GetCssText(mRaw, &aResult);
   }
 
   uint32_t Count() const {

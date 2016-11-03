@@ -92,6 +92,8 @@ public:
     return c.mHTMLCSSStyleSheet;
   }
 
+  inline void ToString(nsAString& aString) const;
+
   inline uint32_t Count() const;
   inline bool GetNthProperty(uint32_t aIndex, nsAString& aReturn) const;
 

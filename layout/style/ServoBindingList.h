@@ -71,6 +71,9 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_Release, void,
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Equals, bool,
                    RawServoDeclarationBlockBorrowed a,
                    RawServoDeclarationBlockBorrowed b)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetCssText, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsAString* result)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SerializeOneValue, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsString* buffer)
