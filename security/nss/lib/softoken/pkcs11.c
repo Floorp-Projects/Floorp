@@ -4006,7 +4006,9 @@ NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
         return CKR_PIN_LEN_RANGE;
 
     /* convert to null terminated string */
-    PORT_Memcpy(pinStr, pPin, ulPinLen);
+    if (ulPinLen) {
+        PORT_Memcpy(pinStr, pPin, ulPinLen);
+    }
     pinStr[ulPinLen] = 0;
 
     handle = sftk_getKeyDB(slot);

@@ -61,10 +61,8 @@ public:
   };
 
   MediaStreamTrackSource(nsIPrincipal* aPrincipal,
-                         const bool aIsRemote,
                          const nsString& aLabel)
     : mPrincipal(aPrincipal),
-      mIsRemote(aIsRemote),
       mLabel(aLabel),
       mStopped(false)
   {
@@ -105,12 +103,6 @@ public:
    * lifetime.
    */
   virtual const PeerIdentity* GetPeerIdentity() const { return nullptr; }
-
-  /**
-   * Indicates whether the track is remote or not per the MediaCapture and
-   * Streams spec.
-   */
-  virtual bool IsRemote() const { return mIsRemote; }
 
   /**
    * MediaStreamTrack::GetLabel (see spec) calls through to here.
@@ -164,7 +156,8 @@ public:
   void UnregisterSink(Sink* aSink)
   {
     MOZ_ASSERT(NS_IsMainThread());
-    if (mSinks.RemoveElement(aSink) && mSinks.IsEmpty() && !IsRemote()) {
+    if (mSinks.RemoveElement(aSink) && mSinks.IsEmpty()) {
+      MOZ_ASSERT(!mStopped);
       Stop();
       mStopped = true;
     }
@@ -193,41 +186,56 @@ protected:
   // Currently registered sinks.
   nsTArray<Sink*> mSinks;
 
-  // True if this is a remote track source, i.e., a PeerConnection.
-  const bool mIsRemote;
-
   // The label of the track we are the source of per the MediaStreamTrack spec.
   const nsString mLabel;
 
-  // True if this source is not remote, all MediaStreamTrack users have
-  // unregistered from this source and Stop() has been called.
+  // True if all MediaStreamTrack users have unregistered from this source and
+  // Stop() has been called.
   bool mStopped;
 };
 
 /**
- * Basic implementation of MediaStreamTrackSource that ignores Stop().
+ * Basic implementation of MediaStreamTrackSource that doesn't forward Stop().
  */
-class BasicUnstoppableTrackSource : public MediaStreamTrackSource
+class BasicTrackSource : public MediaStreamTrackSource
 {
 public:
-  explicit BasicUnstoppableTrackSource(nsIPrincipal* aPrincipal,
-                                       const MediaSourceEnum aMediaSource =
-                                         MediaSourceEnum::Other)
-    : MediaStreamTrackSource(aPrincipal, true, nsString())
+  explicit BasicTrackSource(nsIPrincipal* aPrincipal,
+                            const MediaSourceEnum aMediaSource =
+                            MediaSourceEnum::Other)
+    : MediaStreamTrackSource(aPrincipal, nsString())
     , mMediaSource(aMediaSource)
   {}
 
   MediaSourceEnum GetMediaSource() const override { return mMediaSource; }
 
-  void
-  GetSettings(dom::MediaTrackSettings& aResult) override {}
-
   void Stop() override {}
 
 protected:
-  ~BasicUnstoppableTrackSource() {}
+  ~BasicTrackSource() {}
 
   const MediaSourceEnum mMediaSource;
+};
+
+/**
+ * Base class that consumers of a MediaStreamTrack can use to get notifications
+ * about state changes in the track.
+ */
+class MediaStreamTrackConsumer : public nsISupports
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(MediaStreamTrackConsumer)
+
+  /**
+   * Called when the track's readyState transitions to "ended".
+   * Unlike the "ended" event exposed to script this is called for any reason,
+   * including MediaStreamTrack::Stop().
+   */
+  virtual void NotifyEnded(MediaStreamTrack* aTrack) {};
+
+protected:
+  virtual ~MediaStreamTrackConsumer() {}
 };
 
 /**
@@ -306,7 +314,7 @@ public:
    * Note that this sets the track to ended and raises the "ended" event
    * synchronously.
    */
-  void NotifyEnded();
+  void OverrideEnded();
 
   /**
    * Get this track's principal.
@@ -319,6 +327,12 @@ public:
    * principal we know that the principal change has propagated to consumers.
    */
   void NotifyPrincipalHandleChanged(const PrincipalHandle& aPrincipalHandle);
+
+  /**
+   * Called when this track's readyState transitions to "ended".
+   * Notifies all MediaStreamTrackConsumers that this track ended.
+   */
+  void NotifyEnded();
 
   /**
    * Get this track's CORS mode.
@@ -362,6 +376,18 @@ public:
    * Returns true if it was successfully removed.
    */
   bool RemovePrincipalChangeObserver(PrincipalChangeObserver<MediaStreamTrack>* aObserver);
+
+  /**
+   * Add a MediaStreamTrackConsumer to this track.
+   *
+   * Adding the same consumer multiple times is prohibited.
+   */
+  void AddConsumer(MediaStreamTrackConsumer* aConsumer);
+
+  /**
+   * Remove an added MediaStreamTrackConsumer from this track.
+   */
+  void RemoveConsumer(MediaStreamTrackConsumer* aConsumer);
 
   /**
    * Adds a MediaStreamTrackListener to the MediaStreamGraph representation of
@@ -429,6 +455,8 @@ protected:
 
   nsTArray<PrincipalChangeObserver<MediaStreamTrack>*> mPrincipalChangeObservers;
 
+  nsTArray<RefPtr<MediaStreamTrackConsumer>> mConsumers;
+
   RefPtr<DOMMediaStream> mOwningStream;
   TrackID mTrackID;
   TrackID mInputTrackID;
@@ -444,7 +472,6 @@ protected:
   nsString mID;
   MediaStreamTrackState mReadyState;
   bool mEnabled;
-  const bool mRemote;
   dom::MediaTrackConstraints mConstraints;
 };
 

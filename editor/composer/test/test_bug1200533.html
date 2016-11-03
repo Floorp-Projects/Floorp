@@ -5,8 +5,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1200533
 -->
 <head>
   <title>Test for Bug 1200533</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1200533">Mozilla Bug 1200533</a>
@@ -48,51 +48,61 @@ var tests = [
   ];
 
 var loadCount = 0;
-var en_GB;
-var en_AU;
-var en_DE;
-var hunspell;
+var script;
 
 var loadListener = function(evt) {
-  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
-  Components.utils.import("resource://gre/modules/Services.jsm");
-
   if (loadCount == 0) {
-    var dir = Components.classes["@mozilla.org/file/directory_service;1"]
-                        .getService(Components.interfaces.nsIProperties)
-                        .get("CurWorkD", Components.interfaces.nsIFile);
-    dir.append("tests");
-    dir.append("editor");
-    dir.append("composer");
-    dir.append("test");
+    script = SpecialPowers.loadChromeScript(function() {
+      var dir = Components.classes["@mozilla.org/file/directory_service;1"]
+                          .getService(Components.interfaces.nsIProperties)
+                          .get("CurWorkD", Components.interfaces.nsIFile);
+      dir.append("tests");
+      dir.append("editor");
+      dir.append("composer");
+      dir.append("test");
 
-    hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
-                         .getService(Components.interfaces.mozISpellCheckingEngine);
+      var hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
+                               .getService(Components.interfaces.mozISpellCheckingEngine);
 
-    // Install en-GB, en-AU and de-DE dictionaries.
-    en_GB = dir.clone();
-    en_AU = dir.clone();
-    de_DE = dir.clone();
-    en_GB.append("en-GB");
-    en_AU.append("en-AU");
-    de_DE.append("de-DE");
-    is(en_GB.exists(), true, "true expected (en-GB directory should exist)");
-    is(en_AU.exists(), true, "true expected (en-AU directory should exist)");
-    is(de_DE.exists(), true, "true expected (de-DE directory should exist)");
-    hunspell.addDirectory(en_GB);
-    hunspell.addDirectory(en_AU);
-    hunspell.addDirectory(de_DE);
+      // Install en-GB, en-AU and de-DE dictionaries.
+      var en_GB = dir.clone();
+      var en_AU = dir.clone();
+      var de_DE = dir.clone();
+      en_GB.append("en-GB");
+      en_AU.append("en-AU");
+      de_DE.append("de-DE");
+      hunspell.addDirectory(en_GB);
+      hunspell.addDirectory(en_AU);
+      hunspell.addDirectory(de_DE);
+
+      addMessageListener("check-existence",
+                         () => [en_GB.exists(), en_AU.exists(),
+                                de_DE.exists()]);
+      addMessageListener("destroy", () => {
+        hunspell.removeDirectory(en_GB);
+        hunspell.removeDirectory(en_AU);
+        hunspell.removeDirectory(de_DE);
+      });
+    });
+    var existenceChecks = script.sendSyncMessage("check-existence")[0][0];
+    is(existenceChecks[0], true, "true expected (en-GB directory should exist)");
+    is(existenceChecks[1], true, "true expected (en-AU directory should exist)");
+    is(existenceChecks[2], true, "true expected (de-DE directory should exist)");
   }
 
-  Services.prefs.setCharPref("spellchecker.dictionary", tests[loadCount][1]);
+  SpecialPowers.pushPrefEnv({set: [["spellchecker.dictionary", tests[loadCount][1]]]},
+                            function() { continueTest(evt) });
+}
 
+function continueTest(evt) {
   var doc = evt.target.contentDocument;
   var elem = doc.getElementById(tests[loadCount][0]);
-  var editor = elem.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+  var editor = SpecialPowers.wrap(elem).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
   editor.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor.getInlineSpellChecker(true);
 
-  onSpellCheck(elem, function () {
+  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm")
+  .onSpellCheck(elem, function () {
     var spellchecker = inlineSpellChecker.spellChecker;
     try {
       var dict = spellchecker.GetCurrentDictionary();
@@ -111,12 +121,7 @@ var loadListener = function(evt) {
       content.src = 'http://mochi.test:8888/tests/editor/composer/test/bug1200533_subframe.html?firstload=false';
     } else {
       // Remove the fake  dictionaries again, since it's otherwise picked up by later tests.
-      hunspell.removeDirectory(en_GB);
-      hunspell.removeDirectory(en_AU);
-      hunspell.removeDirectory(de_DE);
-
-      // Reset the preference, so the last value we set doesn't collide with the next test.
-      Services.prefs.setCharPref("spellchecker.dictionary", "");
+      script.sendSyncMessage("destroy");
 
       SimpleTest.finish();
     }

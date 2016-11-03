@@ -51,6 +51,8 @@ DeviceMotionEvent::InitDeviceMotionEvent(
                      Nullable<double> aInterval,
                      Nullable<uint64_t> aTimeStamp)
 {
+  NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
+
   Event::InitEvent(aType, aCanBubble, aCancelable);
 
   mAcceleration = new DeviceAcceleration(this, aAcceleration.mX,

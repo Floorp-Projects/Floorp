@@ -224,7 +224,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitComputeThis(LComputeThis* lir);
     void visitArrayLength(LArrayLength* lir);
     void visitSetArrayLength(LSetArrayLength* lir);
-    void visitGetNextMapEntryForIterator(LGetNextMapEntryForIterator* lir);
+    void visitGetNextEntryForIterator(LGetNextEntryForIterator* lir);
     void visitTypedArrayLength(LTypedArrayLength* lir);
     void visitTypedArrayElements(LTypedArrayElements* lir);
     void visitSetDisjointTypedElements(LSetDisjointTypedElements* lir);
@@ -462,6 +462,12 @@ class CodeGenerator final : public CodeGeneratorSpecific
 
     void emitFilterArgumentsOrEval(LInstruction* lir, Register string, Register temp1,
                                    Register temp2);
+
+    template <class IteratorObject, class OrderedHashTable>
+    void emitGetNextEntryForIterator(LGetNextEntryForIterator* lir);
+
+    template <class OrderedHashTable>
+    void emitLoadIteratorValues(Register result, Register temp, Register front);
 
     IonScriptCounts* maybeCreateScriptCounts();
 

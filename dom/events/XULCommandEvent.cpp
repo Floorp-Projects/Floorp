@@ -113,6 +113,8 @@ XULCommandEvent::InitCommandEvent(const nsAString& aType,
                                   bool aMetaKey,
                                   nsIDOMEvent* aSourceEvent)
 {
+  NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
+
   auto* view = nsGlobalWindow::Cast(nsPIDOMWindowInner::From(aView));
   UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, view, aDetail);
 

@@ -117,7 +117,7 @@ function getRemotePatchString(aType, aURL, aHashFunction, aHashValue, aSize) {
  */
 function getLocalUpdatesXMLString(aUpdates) {
   if (!aUpdates || aUpdates == "") {
-    return "<updates xmlns=\"http://www.mozilla.org/2005/app-update\"/>"
+    return "<updates xmlns=\"http://www.mozilla.org/2005/app-update\"/>";
   }
   return ("<updates xmlns=\"http://www.mozilla.org/2005/app-update\">" +
             aUpdates +
@@ -161,11 +161,11 @@ function getLocalUpdateString(aPatches, aType, aName, aDisplayVersion,
   let installDate = aInstallDate ? aInstallDate : "1238441400314";
   let statusText = aStatusText ? aStatusText : "Install Pending";
   let isCompleteUpdate =
-    typeof(aIsCompleteUpdate) == "string" ? aIsCompleteUpdate : "true";
+    typeof aIsCompleteUpdate == "string" ? aIsCompleteUpdate : "true";
   let channel = aChannel ? aChannel
                          : gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_CHANNEL);
   let foregroundDownload =
-    typeof(aForegroundDownload) == "string" ? aForegroundDownload : "true";
+    typeof aForegroundDownload == "string" ? aForegroundDownload : "true";
   let previousAppVersion = aPreviousAppVersion ? "previousAppVersion=\"" +
                                                  aPreviousAppVersion + "\" "
                                                : "";
@@ -199,7 +199,7 @@ function getLocalUpdateString(aPatches, aType, aName, aDisplayVersion,
  */
 function getLocalPatchString(aType, aURL, aHashFunction, aHashValue, aSize,
                              aSelected, aState) {
-  let selected = typeof(aSelected) == "string" ? aSelected : "true";
+  let selected = typeof aSelected == "string" ? aSelected : "true";
   let state = aState ? aState : STATE_SUCCEEDED;
   return getPatchString(aType, aURL, aHashFunction, aHashValue, aSize) + " " +
          "selected=\"" + selected + "\" " +

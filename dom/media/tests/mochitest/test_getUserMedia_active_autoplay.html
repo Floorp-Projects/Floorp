@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<video id="testAutoplay" autoplay></video>
+<script type="application/javascript">
+"use strict";
+
+const video = document.getElementById("testAutoplay");
+var stream;
+var otherVideoTrack;
+var otherAudioTrack;
+
+createHTML({
+  title: "MediaStream can be autoplayed in media element after going inactive and then active",
+  bug: "1208316"
+});
+
+runTest(() => getUserMedia({audio: true, video: true}).then(s => {
+  stream = s;
+  otherVideoTrack = stream.getVideoTracks()[0].clone();
+  otherAudioTrack = stream.getAudioTracks()[0].clone();
+
+  video.srcObject = stream;
+  return haveEvent(video, "playing", wait(5000, new Error("Timeout")));
+})
+.then(() => {
+  ok(!video.ended, "Video element should be playing after adding a gUM stream");
+  stream.getTracks().forEach(t => t.stop());
+  return haveEvent(video, "ended", wait(5000, new Error("Timeout")));
+})
+.then(() => {
+  ok(video.ended, "Video element should be ended");
+  stream.addTrack(otherVideoTrack);
+  return haveEvent(video, "playing", wait(5000, new Error("Timeout")));
+})
+.then(() => {
+  ok(!video.ended, "Video element should be playing after adding a video track");
+  stream.getTracks().forEach(t => t.stop());
+  return haveEvent(video, "ended", wait(5000, new Error("Timeout")));
+})
+.then(() => {
+  ok(video.ended, "Video element should be ended");
+  stream.addTrack(otherAudioTrack);
+  return haveEvent(video, "playing", wait(5000, new Error("Timeout")));
+})
+.then(() => {
+  ok(!video.ended, "Video element should be playing after adding a audio track");
+  stream.getTracks().forEach(t => t.stop());
+  return haveEvent(video, "ended", wait(5000, new Error("Timeout")));
+})
+.then(() => {
+  ok(video.ended, "Video element should be ended");
+}));
+</script>
+</pre>
+</body>
+</html>

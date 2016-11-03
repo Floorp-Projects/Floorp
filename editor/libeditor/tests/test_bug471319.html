@@ -9,9 +9,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
 
 <head>
   <title>Test for Bug 471319</title>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 
 <body onload="doTest();">
@@ -28,12 +27,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
       SimpleTest.waitForExplicitFinish();
 
       function doTest() {
-        let t1 = $("t1");
+        let t1 = SpecialPowers.wrap($("t1"));
         let editor = null;
 
         // Test 1: Undo on an empty editor - the editor should not forget about
         // the bogus node
-        t1.QueryInterface(Components.interfaces.nsIDOMNSEditableElement);
+        t1.QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
         t1Editor = t1.editor;
 
         // Did the editor recognize the new bogus node?
@@ -43,8 +42,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
 
         // Test 2: Redo on an empty editor - the editor should not forget about
         // the bogus node
-        let t2 = $("t2");
-        t2.QueryInterface(Components.interfaces.nsIDOMNSEditableElement);
+        let t2 = SpecialPowers.wrap($("t2"));
+        t2.QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
         t2Editor = t2.editor;
 
         // Did the editor recognize the new bogus node?

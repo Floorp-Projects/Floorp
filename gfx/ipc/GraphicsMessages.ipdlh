@@ -74,6 +74,7 @@ union GfxVarValue
   bool;
   gfxImageFormat;
   IntSize;
+  nsCString;
 };
 
 struct GfxVarUpdate

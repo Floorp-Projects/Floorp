@@ -1,0 +1,219 @@
+<!doctype html>
+<title>Test for nsSelectionMoveCommands</title>
+<link rel=stylesheet href="/tests/SimpleTest/test.css">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/SpawnTask.js"></script>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=454004">Mozilla Bug 454004</a>
+
+<iframe id="edit" width="200" height="100" src="about:blank"></iframe>
+
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("Legacy test, possibly no good reason");
+
+var winUtils = SpecialPowers.getDOMWindowUtils(window);
+
+function* setup() {
+  yield SpecialPowers.pushPrefEnv({set: [["general.smoothScroll", false]]});
+  winUtils.advanceTimeAndRefresh(100);
+}
+
+function* runTests() {
+  var e = document.getElementById("edit");
+  var doc = e.contentDocument;
+  var win = e.contentWindow;
+  var root = doc.documentElement;
+  var body = doc.body;
+
+  body.style.fontSize='16px';
+  body.style.lineHeight='16px';
+  body.style.height='400px';
+  body.style.padding='0px';
+  body.style.margin='0px';
+  body.style.borderWidth='0px';
+
+  var sel = win.getSelection();
+  doc.designMode='on';
+  body.innerHTML = "1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>";
+  win.focus();
+  // Flush out layout to make sure that the subdocument will be the size we
+  // expect by the time we try to scroll it.
+  is(body.getBoundingClientRect().height, 400,
+     "Body height should be what we set it to");
+  yield;
+
+  function testScrollCommand(cmd, expectTop) {
+    // http://dev.w3.org/csswg/cssom-view/#dom-element-getboundingclientrect
+    // doesn't explicitly rule out -0 here, but for now assume that only
+    // positive zeroes are permitted.
+    if (navigator.appVersion.indexOf("Android") != -1 && expectTop != 0) {
+      // Android doesn't get the values exactly correct for some reason
+      todo_is(root.getBoundingClientRect().top, -expectTop + 0, cmd);
+      ok(Math.abs(root.getBoundingClientRect().top + expectTop) < 0.2,
+         cmd + " (approximately)");
+    } else {
+      is(root.getBoundingClientRect().top, -expectTop + 0, cmd);
+    }
+  }
+
+  function testMoveCommand(cmd, expectNode, expectOffset) {
+    SpecialPowers.doCommand(window, cmd);
+    is(sel.isCollapsed, true, "collapsed after " + cmd);
+    is(sel.anchorNode, expectNode, "node after " + cmd);
+    is(sel.anchorOffset, expectOffset, "offset after " + cmd);
+  }
+
+  function findChildNum(e, child) {
+    var i = 0;
+    var n = e.firstChild;
+    while (n && n != child) {
+      n = n.nextSibling;
+      ++i;
+    }
+    if (!n)
+      return -1;
+    return i;
+  }
+
+  function testPageMoveCommand(cmd, expectOffset) {
+    SpecialPowers.doCommand(window, cmd);
+    is(sel.isCollapsed, true, "collapsed after " + cmd);
+    is(sel.anchorOffset, expectOffset, "offset after " + cmd);
+    return findChildNum(body, sel.anchorNode);
+  }
+
+  function testSelectCommand(cmd, expectNode, expectOffset) {
+    var anchorNode = sel.anchorNode;
+    var anchorOffset = sel.anchorOffset;
+    SpecialPowers.doCommand(window, cmd);
+    is(sel.isCollapsed, false, "not collapsed after " + cmd);
+    is(sel.anchorNode, anchorNode, "anchor not moved after " + cmd);
+    is(sel.anchorOffset, anchorOffset, "anchor not moved after " + cmd);
+    is(sel.focusNode, expectNode, "node after " + cmd);
+    is(sel.focusOffset, expectOffset, "offset after " + cmd);
+  }
+
+  function testPageSelectCommand(cmd, expectOffset) {
+    var anchorNode = sel.anchorNode;
+    var anchorOffset = sel.anchorOffset;
+    SpecialPowers.doCommand(window, cmd);
+    is(sel.isCollapsed, false, "not collapsed after " + cmd);
+    is(sel.anchorNode, anchorNode, "anchor not moved after " + cmd);
+    is(sel.anchorOffset, anchorOffset, "anchor not moved after " + cmd);
+    is(sel.focusOffset, expectOffset, "offset after " + cmd);
+    return findChildNum(body, sel.focusNode);
+  }
+
+  function node(i) {
+    var n = body.firstChild;
+    while (i > 0) {
+      n = n.nextSibling;
+      --i;
+    }
+    return n;
+  }
+
+  SpecialPowers.doCommand(window, "cmd_scrollBottom");
+  yield;
+  testScrollCommand("cmd_scrollBottom", root.scrollHeight - 100);
+  SpecialPowers.doCommand(window, "cmd_scrollTop");
+  yield;
+  testScrollCommand("cmd_scrollTop", 0);
+
+  SpecialPowers.doCommand(window, "cmd_scrollPageDown");
+  yield;
+  var pageHeight = -root.getBoundingClientRect().top;
+  ok(pageHeight > 0, "cmd_scrollPageDown works");
+  ok(pageHeight <= 100, "cmd_scrollPageDown doesn't scroll too much");
+  SpecialPowers.doCommand(window, "cmd_scrollBottom");
+  SpecialPowers.doCommand(window, "cmd_scrollPageUp");
+  yield;
+  testScrollCommand("cmd_scrollPageUp", root.scrollHeight - 100 - pageHeight);
+
+  SpecialPowers.doCommand(window, "cmd_scrollTop");
+  SpecialPowers.doCommand(window, "cmd_scrollLineDown");
+  yield;
+  var lineHeight = -root.getBoundingClientRect().top;
+  ok(lineHeight > 0, "Can scroll by lines");
+  SpecialPowers.doCommand(window, "cmd_scrollBottom");
+  SpecialPowers.doCommand(window, "cmd_scrollLineUp");
+  yield;
+  testScrollCommand("cmd_scrollLineUp", root.scrollHeight - 100 - lineHeight);
+
+  var runSelectionTests = function(selectWordNextNode, selectWordNextOffset) {
+    testMoveCommand("cmd_moveBottom", body, 23);
+    testMoveCommand("cmd_moveTop", node(0), 0);
+    testSelectCommand("cmd_selectBottom", body, 23);
+    SpecialPowers.doCommand(window, "cmd_moveBottom");
+    testSelectCommand("cmd_selectTop", node(0), 0);
+
+    SpecialPowers.doCommand(window, "cmd_moveTop");
+    testMoveCommand("cmd_lineNext", node(2), 0);
+    testMoveCommand("cmd_linePrevious", node(0), 0);
+    testSelectCommand("cmd_selectLineNext", node(2), 0);
+    SpecialPowers.doCommand(window, "cmd_moveBottom");
+    testSelectCommand("cmd_selectLinePrevious", node(20), 2);
+
+    SpecialPowers.doCommand(window, "cmd_moveBottom");
+    testMoveCommand("cmd_charPrevious", node(22), 1);
+    testMoveCommand("cmd_charNext", node(22), 2);
+    testSelectCommand("cmd_selectCharPrevious", node(22), 1);
+    SpecialPowers.doCommand(window, "cmd_moveTop");
+    testSelectCommand("cmd_selectCharNext", node(0), 1);
+
+    SpecialPowers.doCommand(window, "cmd_moveTop");
+    testMoveCommand("cmd_endLine", node(0), 1);
+    testMoveCommand("cmd_beginLine", node(0), 0);
+    testSelectCommand("cmd_selectEndLine", node(0), 1);
+    SpecialPowers.doCommand(window, "cmd_moveBottom");
+    testSelectCommand("cmd_selectBeginLine", node(22), 0);
+
+    SpecialPowers.doCommand(window, "cmd_moveBottom");
+    testMoveCommand("cmd_wordPrevious", node(22), 0);
+    testMoveCommand("cmd_wordNext", body, 23);
+    testSelectCommand("cmd_selectWordPrevious", node(22), 0);
+    SpecialPowers.doCommand(window, "cmd_moveTop");
+    testSelectCommand("cmd_selectWordNext", selectWordNextNode, selectWordNextOffset);
+
+    SpecialPowers.doCommand(window, "cmd_moveTop");
+    var lineNum = testPageMoveCommand("cmd_movePageDown", 0);
+    ok(lineNum > 0, "cmd_movePageDown works");
+    SpecialPowers.doCommand(window, "cmd_moveBottom");
+    SpecialPowers.doCommand(window, "cmd_beginLine");
+    is(testPageMoveCommand("cmd_movePageUp", 0), 22 - lineNum, "cmd_movePageUp");
+
+    SpecialPowers.doCommand(window, "cmd_moveTop");
+    is(testPageSelectCommand("cmd_selectPageDown", 0), lineNum, "cmd_selectPageDown");
+    SpecialPowers.doCommand(window, "cmd_moveBottom");
+    SpecialPowers.doCommand(window, "cmd_beginLine");
+    is(testPageSelectCommand("cmd_selectPageUp", 0), 22 - lineNum, "cmd_selectPageUp");
+  }
+
+  yield SpecialPowers.pushPrefEnv({set: [["layout.word_select.eat_space_to_next_word", false]]});
+  runSelectionTests(body, 1);
+  yield SpecialPowers.pushPrefEnv({set: [["layout.word_select.eat_space_to_next_word", true]]});
+  runSelectionTests(node(2), 0);
+}
+
+function cleanup() {
+  winUtils.restoreNormalRefresh();
+  SimpleTest.finish();
+}
+
+function* testRunner() {
+  let curTest = runTests();
+  while (true) {
+    winUtils.advanceTimeAndRefresh(100);
+    if (curTest.next().done) {
+      break;
+    }
+    winUtils.advanceTimeAndRefresh(100);
+    yield new Promise(resolve => setTimeout(resolve, 20));
+  }
+}
+
+spawn_task(setup)
+  .then(() => spawn_task(testRunner))
+  .then(() => spawn_task(cleanup))
+  .catch(err => ok(false, err));
+</script>

@@ -664,23 +664,12 @@ nsStyleList::~nsStyleList()
 
 nsStyleList::nsStyleList(const nsStyleList& aSource)
   : mListStylePosition(aSource.mListStylePosition)
-  , mListStyleImage(aSource.mListStyleImage)
   , mCounterStyle(aSource.mCounterStyle)
   , mQuotes(aSource.mQuotes)
   , mImageRegion(aSource.mImageRegion)
 {
+  SetListStyleImage(aSource.GetListStyleImage());
   MOZ_COUNT_CTOR(nsStyleList);
-}
-
-void
-nsStyleList::FinishStyle(nsPresContext* aPresContext)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
-
-  if (mListStyleImage && !mListStyleImage->IsResolved()) {
-    mListStyleImage->Resolve(aPresContext);
-  }
 }
 
 void
@@ -747,7 +736,7 @@ nsStyleList::CalcDifference(const nsStyleList& aNewData) const
   if (mListStylePosition != aNewData.mListStylePosition) {
     return nsChangeHint_ReconstructFrame;
   }
-  if (DefinitelyEqualImages(mListStyleImage, aNewData.mListStyleImage) &&
+  if (EqualImages(mListStyleImage, aNewData.mListStyleImage) &&
       mCounterStyle == aNewData.mCounterStyle) {
     if (mImageRegion.IsEqualInterior(aNewData.mImageRegion)) {
       return nsChangeHint(0);
@@ -1913,31 +1902,9 @@ nsStyleGradient::HasCalc()
 // --------------------
 // nsStyleImageRequest
 
-static void
-MaybeUntrackAndUnlock(nsStyleImageRequest::Mode aModeFlags,
-                      imgRequestProxy* aRequestProxy,
-                      ImageTracker* aImageTracker)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aRequestProxy);
-  MOZ_ASSERT(aImageTracker);
-
-  if (aModeFlags & nsStyleImageRequest::Mode::Lock) {
-    aRequestProxy->UnlockImage();
-  }
-
-  if (aModeFlags & nsStyleImageRequest::Mode::Discard) {
-    aRequestProxy->RequestDiscard();
-  }
-
-  if (aModeFlags & nsStyleImageRequest::Mode::Track) {
-    aImageTracker->Remove(aRequestProxy);
-  }
-}
-
 /**
  * Runnable to release the nsStyleImageRequest's mRequestProxy,
- * mImageValue and mImageTracker on the main thread, and to perform
+ * mImageValue and mImageValue on the main thread, and to perform
  * any necessary unlocking and untracking of the image.
  */
 class StyleImageRequestCleanupTask : public mozilla::Runnable
@@ -1954,14 +1921,27 @@ public:
     , mImageValue(aImageValue)
     , mImageTracker(aImageTracker)
   {
-    MOZ_ASSERT(!!mRequestProxy == !!mImageTracker);
   }
 
   NS_IMETHOD Run() final
   {
-    if (mRequestProxy) {
-      MaybeUntrackAndUnlock(mModeFlags, mRequestProxy, mImageTracker);
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!mRequestProxy) {
+      return NS_OK;
     }
+
+    if (mModeFlags & Mode::Track) {
+      MOZ_ASSERT(mImageTracker);
+      mImageTracker->Remove(mRequestProxy);
+    } else {
+      mRequestProxy->UnlockImage();
+    }
+
+    if (mModeFlags & Mode::Discard) {
+      mRequestProxy->RequestDiscard();
+    }
+
     return NS_OK;
   }
 
@@ -1970,8 +1950,8 @@ protected:
 
 private:
   Mode mModeFlags;
-  // These will be released on the main thread when the
-  // StyleImageRequestCleanupTask is deleted.
+  // Since we always dispatch this runnable to the main thread, these will be
+  // released on the main thread when the runnable itself is released.
   RefPtr<imgRequestProxy> mRequestProxy;
   RefPtr<css::ImageValue> mImageValue;
   RefPtr<ImageTracker> mImageTracker;
@@ -1982,15 +1962,15 @@ nsStyleImageRequest::nsStyleImageRequest(Mode aModeFlags,
                                          css::ImageValue* aImageValue,
                                          ImageTracker* aImageTracker)
   : mRequestProxy(aRequestProxy)
+  , mImageValue(aImageValue)
   , mImageTracker(aImageTracker)
-  , mBaseURI(aImageValue->mBaseURI)
-  , mURIString(aImageValue->mString)
   , mModeFlags(aModeFlags)
   , mResolved(true)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRequestProxy);
-  MOZ_ASSERT(aImageTracker);
+  MOZ_ASSERT(aImageValue);
+  MOZ_ASSERT(!!(aModeFlags & Mode::Track) == !!aImageTracker);
 
   MaybeTrackAndLock();
 }
@@ -2006,32 +1986,29 @@ nsStyleImageRequest::nsStyleImageRequest(
 {
   mImageValue = new css::ImageValue(aURLBuffer, Move(aBaseURI),
                                     Move(aReferrer), Move(aPrincipal));
-  mBaseURI = mImageValue->mBaseURI;
-  mURIString = mImageValue->mString;
 }
 
 nsStyleImageRequest::~nsStyleImageRequest()
 {
-  if (NS_IsMainThread()) {
-    // In the main thread case, mRequestProxy, mImageValue and
-    // mImageTracker will be released as normal after the nsStyleImageRequest
-    // has run.
-    if (mRequestProxy) {
-      MaybeUntrackAndUnlock(mModeFlags, mRequestProxy, mImageTracker);
-    }
-  } else {
-    // In the OMT case, we transfer ownership of these objects to the
-    // cleanup task runnable, which will call MaybeUntrackAndUnlock and
-    // then release the objects.
-    if (mRequestProxy || mImageValue) {
-      RefPtr<StyleImageRequestCleanupTask> task =
-          new StyleImageRequestCleanupTask(mModeFlags,
-                                           mRequestProxy.forget(),
-                                           mImageValue.forget(),
-                                           mImageTracker.forget());
+  // We may or may not be being destroyed on the main thread.  To clean
+  // up, we must untrack and unlock the image (depending on mModeFlags),
+  // and release mRequestProxy and mImageValue, all on the main thread.
+  {
+    RefPtr<StyleImageRequestCleanupTask> task =
+        new StyleImageRequestCleanupTask(mModeFlags,
+                                         mRequestProxy.forget(),
+                                         mImageValue.forget(),
+                                         mImageTracker.forget());
+    if (NS_IsMainThread()) {
+      task->Run();
+    } else {
       NS_DispatchToMainThread(task.forget());
     }
   }
+
+  MOZ_ASSERT(!mRequestProxy);
+  MOZ_ASSERT(!mImageValue);
+  MOZ_ASSERT(!mImageTracker);
 }
 
 bool
@@ -2053,15 +2030,15 @@ nsStyleImageRequest::Resolve(nsPresContext* aPresContext)
   mRequestProxy = value.GetPossiblyStaticImageValue(aPresContext->Document(),
                                                     aPresContext);
 
-  // We no longer need the ImageValue.
-  mImageValue = nullptr;
-
   if (!mRequestProxy) {
     // The URL resolution or image load failed.
     return false;
   }
 
-  mImageTracker = aPresContext->Document()->ImageTracker();
+  if (mModeFlags & Mode::Track) {
+    mImageTracker = aPresContext->Document()->ImageTracker();
+  }
+
   MaybeTrackAndLock();
   return true;
 }
@@ -2072,33 +2049,20 @@ nsStyleImageRequest::MaybeTrackAndLock()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsResolved());
   MOZ_ASSERT(mRequestProxy);
-  MOZ_ASSERT(mImageTracker);
 
   if (mModeFlags & Mode::Track) {
+    MOZ_ASSERT(mImageTracker);
     mImageTracker->Add(mRequestProxy);
-  }
-
-  if (mModeFlags & Mode::Lock) {
+  } else {
+    MOZ_ASSERT(!mImageTracker);
     mRequestProxy->LockImage();
   }
-}
-
-static const char16_t*
-GetBufferValue(nsStringBuffer* aBuffer)
-{
-  // Since the nsStringBuffers we work with come from a css::ImageValue, we
-  // can assume (just like nsCSSValue::GetBufferValue does) that we have
-  // a 16 bit, null terminated string.
-  return static_cast<char16_t*>(aBuffer->Data());
 }
 
 bool
 nsStyleImageRequest::DefinitelyEquals(const nsStyleImageRequest& aOther) const
 {
-  return mBaseURI == aOther.mBaseURI &&
-         (mURIString == aOther.mURIString ||
-          NS_strcmp(GetBufferValue(mURIString),
-                    GetBufferValue(aOther.mURIString)) == 0);
+  return DefinitelyEqualURIs(mImageValue, aOther.mImageValue);
 }
 
 // --------------------

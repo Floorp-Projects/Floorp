@@ -90,17 +90,17 @@ function setupSymLinks() {
     createSymlink();
     do_register_cleanup(removeSymlink);
     gTestFiles.splice(gTestFiles.length - 3, 0,
-    {
-      description      : "Readable symlink",
-      fileName         : "link",
-      relPathDir       : DIR_RESOURCES,
-      originalContents : "test",
-      compareContents  : "test",
-      originalFile     : null,
-      compareFile      : null,
-      originalPerms    : 0o666,
-      comparePerms     : 0o666
-    });
+      {
+        description: "Readable symlink",
+        fileName: "link",
+        relPathDir: DIR_RESOURCES,
+        originalContents: "test",
+        compareContents: "test",
+        originalFile: null,
+        compareFile: null,
+        originalPerms: 0o666,
+        comparePerms: 0o666
+      });
   }
 }
 

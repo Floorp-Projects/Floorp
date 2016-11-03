@@ -20,64 +20,94 @@
     .then(() => videoElement = createMediaElement('video', 'constructorsTest'))
     .then(() => getUserMedia({video: true})).then(gUMStream => {
       info("Test default constructor with video");
+      ok(gUMStream.active, "gUMStream with one track should be active");
       var track = gUMStream.getTracks()[0];
 
       var stream = new MediaStream();
+      ok(!stream.active, "New MediaStream should be inactive");
       checkMediaStreamContains(stream, [], "Default constructed stream");
 
       stream.addTrack(track);
+      ok(stream.active, "MediaStream should be active after adding a track");
       checkMediaStreamContains(stream, [track], "Added video track");
 
       var playback = new MediaStreamPlayback(videoElement, stream);
-      return playback.playMedia(false).then(() => gUMStream.stop());
+      return playback.playMedia(false).then(() => {
+        ok(!gUMStream.active, "gUMStream should be inactive after stopping");
+        ok(!stream.active, "stream with stopped tracks should be inactive");
+      });
     })
     .then(() => getUserMedia({video: true})).then(gUMStream => {
       info("Test copy constructor with gUM stream");
+      ok(gUMStream.active, "gUMStream with one track should be active");
       var track = gUMStream.getTracks()[0];
 
       var stream = new MediaStream(gUMStream);
+      ok(stream.active, "List constructed MediaStream should be active");
       checkMediaStreamContains(stream, [track], "Copy constructed video track");
 
       var playback = new MediaStreamPlayback(videoElement, stream);
-      return playback.playMedia(false).then(() => gUMStream.stop());
+      return playback.playMedia(false).then(() => {
+        ok(!gUMStream.active, "gUMStream should be inactive after stopping");
+        ok(!stream.active, "stream with stopped tracks should be inactive");
+      });
     })
     .then(() => getUserMedia({video: true})).then(gUMStream => {
       info("Test list constructor with empty list");
+      ok(gUMStream.active, "gUMStream with one track should be active");
       var track = gUMStream.getTracks()[0];
 
       var stream = new MediaStream([]);
+      ok(!stream.active, "Empty-list constructed MediaStream should be inactive");
       checkMediaStreamContains(stream, [], "Empty-list constructed stream");
 
       stream.addTrack(track);
+      ok(stream.active, "MediaStream should be active after adding a track");
       checkMediaStreamContains(stream, [track], "Added video track");
 
       var playback = new MediaStreamPlayback(videoElement, stream);
-      return playback.playMedia(false).then(() => gUMStream.stop());
+      return playback.playMedia(false).then(() => {
+        ok(!gUMStream.active, "gUMStream should be inactive after stopping");
+        ok(!stream.active, "stream with stopped tracks should be inactive");
+      });
     })
     .then(() => getUserMedia({audio: true, video: true})).then(gUMStream => {
       info("Test list constructor with a gUM audio/video stream");
+      ok(gUMStream.active, "gUMStream with two tracks should be active");
       var audioTrack = gUMStream.getAudioTracks()[0];
       var videoTrack = gUMStream.getVideoTracks()[0];
 
       var stream = new MediaStream([audioTrack, videoTrack]);
+      ok(stream.active, "List constructed MediaStream should be active");
       checkMediaStreamContains(stream, [audioTrack, videoTrack],
                                "List constructed audio and video tracks");
 
       var playback = new MediaStreamPlayback(videoElement, stream);
-      return playback.playMedia(false).then(() => gUMStream.stop());
+      return playback.playMedia(false).then(() => {
+        ok(!gUMStream.active, "gUMStream should be inactive after stopping");
+        ok(!stream.active, "stream with stopped tracks should be inactive");
+      });
     })
     .then(() => getUserMedia({video: true})).then(gUMStream => {
       info("Test list constructor with gUM-video and WebAudio tracks");
+      ok(gUMStream.active, "gUMStream with one track should be active");
       var audioStream = createOscillatorStream(audioContext, 2000);
+      ok(audioStream.active, "WebAudio stream should be active");
+
       var audioTrack = audioStream.getTracks()[0];
       var videoTrack = gUMStream.getTracks()[0];
 
       var stream = new MediaStream([audioTrack, videoTrack]);
+      ok(stream.active, "List constructed MediaStream should be active");
       checkMediaStreamContains(stream, [audioTrack, videoTrack],
                                "List constructed WebAudio and gUM-video tracks");
 
       var playback = new MediaStreamPlayback(videoElement, stream);
-      return playback.playMedia(false).then(() => gUMStream.stop());
+      return playback.playMedia(false).then(() => {
+        gUMStream.getTracks().forEach(t => t.stop());
+        ok(!gUMStream.active, "gUMStream should be inactive after stopping");
+        ok(!stream.active, "stream with stopped tracks should be inactive");
+      });
     })
     .then(() => {
       var osc1k = createOscillatorStream(audioContext, 1000);
@@ -101,6 +131,8 @@
       }).then(() => {
         info("Analysing audio output with copy constructed 5k stream");
         var stream = new MediaStream(osc5k);
+        is(stream.active, osc5k.active,
+           "Copy constructed MediaStream should preserve active state");
         var analyser = new AudioStreamAnalyser(audioContext, stream);
         return analyser.waitForAnalysisSuccess(array =>
           array[analyser.binIndexForFrequency(1000)]  < 50 &&
@@ -119,6 +151,8 @@
       }).then(() => {
         info("Analysing audio output with list constructed 1k, 5k and 10k tracks");
         var stream = new MediaStream([audioTrack1k, audioTrack5k, audioTrack10k]);
+        ok(stream.active,
+           "List constructed MediaStream from WebAudio should be active");
         var analyser = new AudioStreamAnalyser(audioContext, stream);
         return analyser.waitForAnalysisSuccess(array =>
           array[analyser.binIndexForFrequency(50)]    < 50 &&

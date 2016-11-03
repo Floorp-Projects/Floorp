@@ -26,7 +26,7 @@ runNetworkTest(() => {
       return getUserMedia(test.pcLocal.constraints[0]).then(stream => {
         originalStream = stream;
         localVideoOriginal =
-          createMediaElement("audiovideo", "local-original");
+          createMediaElement("video", "local-original");
         localVideoOriginal.srcObject = stream;
         test.pcLocal.attachLocalStream(originalStream.clone());
       });
@@ -34,9 +34,9 @@ runNetworkTest(() => {
   ]);
   test.chain.append([
     function CHECK_ASSUMPTIONS() {
-      is(test.pcLocal.localMediaElements.length, 1,
+      is(test.pcLocal.localMediaElements.length, 2,
          "pcLocal should have one media element");
-      is(test.pcRemote.remoteMediaElements.length, 1,
+      is(test.pcRemote.remoteMediaElements.length, 2,
          "pcRemote should have one media element");
       is(test.pcLocal._pc.getLocalStreams().length, 1,
          "pcLocal should have one stream");
@@ -46,8 +46,10 @@ runNetworkTest(() => {
     function CHECK_VIDEO() {
       info("Checking video");
       var h = new CaptureStreamTestHelper2D();
-      var localVideoClone = test.pcLocal.localMediaElements[0];
-      var remoteVideoClone = test.pcRemote.remoteMediaElements[0];
+      var localVideoClone = test.pcLocal.localMediaElements
+        .find(e => e instanceof HTMLVideoElement);
+      var remoteVideoClone = test.pcRemote.remoteMediaElements
+        .find(e => e instanceof HTMLVideoElement);
 
       // We check a pixel somewhere away from the top left corner since
       // MediaEngineDefault puts semi-transparent time indicators there.

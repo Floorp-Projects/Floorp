@@ -1332,6 +1332,13 @@
     "n_buckets": 50,
     "description": "Decode count"
   },
+  "IMAGE_DECODE_OPAQUE_BGRA": {
+    "alert_emails": ["aosmond@mozilla.com"],
+    "expires_in_version": "53",
+    "kind": "boolean",
+    "description": "Opaque images are BGRA",
+    "bug_numbers": [1311779]
+  },
   "IMAGE_DECODE_SPEED_JPEG": {
     "expires_in_version": "never",
     "kind": "exponential",
