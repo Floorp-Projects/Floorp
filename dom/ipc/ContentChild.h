@@ -223,13 +223,6 @@ public:
   virtual bool
   DeallocPHeapSnapshotTempFileHelperChild(PHeapSnapshotTempFileHelperChild*) override;
 
-  PIccChild*
-  SendPIccConstructor(PIccChild* aActor, const uint32_t& aServiceId);
-
-  virtual PIccChild* AllocPIccChild(const uint32_t& aClientId) override;
-
-  virtual bool DeallocPIccChild(PIccChild* aActor) override;
-
   virtual PMemoryReportRequestChild*
   AllocPMemoryReportRequestChild(const uint32_t& aGeneration,
                                  const bool& aAnonymize,
@@ -279,16 +272,6 @@ public:
   virtual bool RecvPTestShellConstructor(PTestShellChild*) override;
 
   jsipc::CPOWManager* GetCPOWManager() override;
-
-  PMobileConnectionChild*
-  SendPMobileConnectionConstructor(PMobileConnectionChild* aActor,
-                                   const uint32_t& aClientId);
-
-  virtual PMobileConnectionChild*
-  AllocPMobileConnectionChild(const uint32_t& aClientId) override;
-
-  virtual bool
-  DeallocPMobileConnectionChild(PMobileConnectionChild* aActor) override;
 
   virtual PNeckoChild* AllocPNeckoChild() override;
 

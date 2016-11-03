@@ -19,12 +19,10 @@ include protocol PDeviceStorageRequest;
 include protocol PFileDescriptorSet;
 include protocol PHal;
 include protocol PHeapSnapshotTempFileHelper;
-include protocol PIcc;
 include protocol PProcessHangMonitor;
 include protocol PImageBridge;
 include protocol PMedia;
 include protocol PMemoryReportRequest;
-include protocol PMobileConnection;
 include protocol PNecko;
 // FIXME This is pretty ridiculous, but we have to keep the order of the
 //       following 4 includes, or the parser is confused about PGMPContent
@@ -369,10 +367,8 @@ nested(upto inside_cpow) sync protocol PContent
     manages PHal;
     manages PHandlerService;
     manages PHeapSnapshotTempFileHelper;
-    manages PIcc;
     manages PMedia;
     manages PMemoryReportRequest;
-    manages PMobileConnection;
     manages PNecko;
     manages POfflineCacheUpdate;
     manages PPrinting;
@@ -803,10 +799,6 @@ parent:
     nested(inside_cpow) async PHal();
 
     async PHeapSnapshotTempFileHelper();
-
-    async PIcc(uint32_t serviceId);
-
-    async PMobileConnection(uint32_t clientId);
 
     async PNecko();
 
