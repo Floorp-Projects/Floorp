@@ -8,6 +8,7 @@
 #include "nsDOMCSSDeclaration.h"
 
 #include "nsCSSParser.h"
+#include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Rule.h"
 #include "mozilla/DeclarationBlockInlines.h"
@@ -47,7 +48,7 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
   NS_PRECONDITION(aPropID != eCSSProperty_UNKNOWN,
                   "Should never pass eCSSProperty_UNKNOWN around");
 
-  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
 
   aValue.Truncate();
   if (decl) {
@@ -63,7 +64,7 @@ nsDOMCSSDeclaration::GetCustomPropertyValue(const nsAString& aPropertyName,
   MOZ_ASSERT(Substring(aPropertyName, 0,
                        CSS_CUSTOM_NAME_PREFIX_LENGTH).EqualsLiteral("--"));
 
-  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
   if (!decl) {
     aValue.Truncate();
     return;
@@ -115,7 +116,7 @@ nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetCssText(nsAString& aCssText)
 {
-  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
   aCssText.Truncate();
 
   if (decl) {
@@ -130,7 +131,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 {
   // We don't need to *do* anything with the old declaration, but we need
   // to ensure that it exists, or else SetCSSDeclaration may crash.
-  css::Declaration* olddecl = GetCSSDeclaration(eOperation_Modify);
+  css::Declaration* olddecl = GetCSSDeclaration(eOperation_Modify)->AsGecko();
   if (!olddecl) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -165,7 +166,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetLength(uint32_t* aLength)
 {
-  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
 
   if (decl) {
     *aLength = decl->Count();
@@ -187,7 +188,7 @@ nsDOMCSSDeclaration::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRe
 void
 nsDOMCSSDeclaration::IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName)
 {
-  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
   aFound = decl && decl->GetNthProperty(aIndex, aPropName);
 }
 
@@ -226,7 +227,7 @@ nsDOMCSSDeclaration::GetAuthoredPropertyValue(const nsAString& aPropertyName,
     return NS_OK;
   }
 
-  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
   if (!decl) {
     return NS_ERROR_FAILURE;
   }
@@ -239,7 +240,7 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
                                          nsAString& aReturn)
 {
-  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
 
   aReturn.Truncate();
   if (decl && decl->GetValueIsImportant(aPropertyName)) {
@@ -331,7 +332,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSPropertyID aPropID,
                                         const nsAString& aPropValue,
                                         bool aIsImportant)
 {
-  css::Declaration* olddecl = GetCSSDeclaration(eOperation_Modify);
+  css::Declaration* olddecl = GetCSSDeclaration(eOperation_Modify)->AsGecko();
   if (!olddecl) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -369,7 +370,7 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
 {
   MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
 
-  css::Declaration* olddecl = GetCSSDeclaration(eOperation_Modify);
+  css::Declaration* olddecl = GetCSSDeclaration(eOperation_Modify)->AsGecko();
   if (!olddecl) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -406,7 +407,8 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
 nsresult
 nsDOMCSSDeclaration::RemoveProperty(const nsCSSPropertyID aPropID)
 {
-  css::Declaration* olddecl = GetCSSDeclaration(eOperation_RemoveProperty);
+  css::Declaration* olddecl =
+    GetCSSDeclaration(eOperation_RemoveProperty)->AsGecko();
   if (!olddecl) {
     return NS_OK; // no decl, so nothing to remove
   }
@@ -429,7 +431,8 @@ nsDOMCSSDeclaration::RemoveCustomProperty(const nsAString& aPropertyName)
   MOZ_ASSERT(Substring(aPropertyName, 0,
                        CSS_CUSTOM_NAME_PREFIX_LENGTH).EqualsLiteral("--"));
 
-  css::Declaration* olddecl = GetCSSDeclaration(eOperation_RemoveProperty);
+  css::Declaration* olddecl =
+    GetCSSDeclaration(eOperation_RemoveProperty)->AsGecko();
   if (!olddecl) {
     return NS_OK; // no decl, so nothing to remove
   }
