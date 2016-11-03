@@ -19,31 +19,31 @@
  * Cipher stuff.
  */
 
-typedef SECStatus (*nss_cms_cipher_function) (void *, unsigned char *, unsigned int *,
-					unsigned int, const unsigned char *, unsigned int);
-typedef SECStatus (*nss_cms_cipher_destroy) (void *, PRBool);
+typedef SECStatus (*nss_cms_cipher_function)(void *, unsigned char *, unsigned int *,
+                                             unsigned int, const unsigned char *, unsigned int);
+typedef SECStatus (*nss_cms_cipher_destroy)(void *, PRBool);
 
 #define BLOCK_SIZE 4096
 
 struct NSSCMSCipherContextStr {
-    void *		cx;			/* PK11 cipher context */
+    void *cx; /* PK11 cipher context */
     nss_cms_cipher_function doit;
     nss_cms_cipher_destroy destroy;
-    PRBool		encrypt;		/* encrypt / decrypt switch */
-    int			block_size;		/* block & pad sizes for cipher */
-    int			pad_size;
-    int			pending_count;		/* pending data (not yet en/decrypted */
-    unsigned char	pending_buf[BLOCK_SIZE];/* because of blocking */
+    PRBool encrypt; /* encrypt / decrypt switch */
+    int block_size; /* block & pad sizes for cipher */
+    int pad_size;
+    int pending_count;                     /* pending data (not yet en/decrypted */
+    unsigned char pending_buf[BLOCK_SIZE]; /* because of blocking */
 };
 
 /*
  * NSS_CMSCipherContext_StartDecrypt - create a cipher context to do decryption
- * based on the given bulk encryption key and algorithm identifier (which 
+ * based on the given bulk encryption key and algorithm identifier (which
  * may include an iv).
  *
  * XXX Once both are working, it might be nice to combine this and the
  * function below (for starting up encryption) into one routine, and just
- * have two simple cover functions which call it. 
+ * have two simple cover functions which call it.
  */
 NSSCMSCipherContext *
 NSS_CMSCipherContext_StartDecrypt(PK11SymKey *key, SECAlgorithmID *algid)
@@ -59,28 +59,28 @@ NSS_CMSCipherContext_StartDecrypt(PK11SymKey *key, SECAlgorithmID *algid)
 
     /* set param and mechanism */
     if (SEC_PKCS5IsAlgorithmPBEAlg(algid)) {
-	SECItem *pwitem;
+        SECItem *pwitem;
 
-	pwitem = PK11_GetSymKeyUserData(key);
-	if (!pwitem) 
-	    return NULL;
+        pwitem = PK11_GetSymKeyUserData(key);
+        if (!pwitem)
+            return NULL;
 
-	cryptoMechType = PK11_GetPBECryptoMechanism(algid, &param, pwitem);
-	if (cryptoMechType == CKM_INVALID_MECHANISM) {
-	    SECITEM_FreeItem(param,PR_TRUE);
-	    return NULL;
-	}
+        cryptoMechType = PK11_GetPBECryptoMechanism(algid, &param, pwitem);
+        if (cryptoMechType == CKM_INVALID_MECHANISM) {
+            SECITEM_FreeItem(param, PR_TRUE);
+            return NULL;
+        }
 
     } else {
-	cryptoMechType = PK11_AlgtagToMechanism(algtag);
-	if ((param = PK11_ParamFromAlgid(algid)) == NULL)
-	    return NULL;
+        cryptoMechType = PK11_AlgtagToMechanism(algtag);
+        if ((param = PK11_ParamFromAlgid(algid)) == NULL)
+            return NULL;
     }
 
     cc = (NSSCMSCipherContext *)PORT_ZAlloc(sizeof(NSSCMSCipherContext));
     if (cc == NULL) {
-	SECITEM_FreeItem(param,PR_TRUE);
-	return NULL;
+        SECITEM_FreeItem(param, PR_TRUE);
+        return NULL;
     }
 
     /* figure out pad and block sizes */
@@ -90,17 +90,17 @@ NSS_CMSCipherContext_StartDecrypt(PK11SymKey *key, SECAlgorithmID *algid)
     PK11_FreeSlot(slot);
 
     /* create PK11 cipher context */
-    ciphercx = PK11_CreateContextBySymKey(cryptoMechType, CKA_DECRYPT, 
-					  key, param);
+    ciphercx = PK11_CreateContextBySymKey(cryptoMechType, CKA_DECRYPT,
+                                          key, param);
     SECITEM_FreeItem(param, PR_TRUE);
     if (ciphercx == NULL) {
-	PORT_Free (cc);
-	return NULL;
+        PORT_Free(cc);
+        return NULL;
     }
 
     cc->cx = ciphercx;
-    cc->doit =  (nss_cms_cipher_function) PK11_CipherOp;
-    cc->destroy = (nss_cms_cipher_destroy) PK11_DestroyContext;
+    cc->doit = (nss_cms_cipher_function)PK11_CipherOp;
+    cc->destroy = (nss_cms_cipher_destroy)PK11_DestroyContext;
     cc->encrypt = PR_FALSE;
     cc->pending_count = 0;
 
@@ -109,12 +109,12 @@ NSS_CMSCipherContext_StartDecrypt(PK11SymKey *key, SECAlgorithmID *algid)
 
 /*
  * NSS_CMSCipherContext_StartEncrypt - create a cipher object to do encryption,
- * based on the given bulk encryption key and algorithm tag.  Fill in the 
+ * based on the given bulk encryption key and algorithm tag.  Fill in the
  * algorithm identifier (which may include an iv) appropriately.
  *
  * XXX Once both are working, it might be nice to combine this and the
  * function above (for starting up decryption) into one routine, and just
- * have two simple cover functions which call it. 
+ * have two simple cover functions which call it.
  */
 NSSCMSCipherContext *
 NSS_CMSCipherContext_StartEncrypt(PLArenaPool *poolp, PK11SymKey *key, SECAlgorithmID *algid)
@@ -130,27 +130,27 @@ NSS_CMSCipherContext_StartEncrypt(PLArenaPool *poolp, PK11SymKey *key, SECAlgori
 
     /* set param and mechanism */
     if (SEC_PKCS5IsAlgorithmPBEAlg(algid)) {
-	SECItem *pwitem;
+        SECItem *pwitem;
 
-	pwitem = PK11_GetSymKeyUserData(key);
-	if (!pwitem) 
-	    return NULL;
+        pwitem = PK11_GetSymKeyUserData(key);
+        if (!pwitem)
+            return NULL;
 
-	cryptoMechType = PK11_GetPBECryptoMechanism(algid, &param, pwitem);
-	if (cryptoMechType == CKM_INVALID_MECHANISM) {
-	    SECITEM_FreeItem(param,PR_TRUE);
-	    return NULL;
-	}
+        cryptoMechType = PK11_GetPBECryptoMechanism(algid, &param, pwitem);
+        if (cryptoMechType == CKM_INVALID_MECHANISM) {
+            SECITEM_FreeItem(param, PR_TRUE);
+            return NULL;
+        }
     } else {
-	cryptoMechType = PK11_AlgtagToMechanism(algtag);
-	if ((param = PK11_GenerateNewParam(cryptoMechType, key)) == NULL)
-	    return NULL;
-	needToEncodeAlgid = PR_TRUE;
+        cryptoMechType = PK11_AlgtagToMechanism(algtag);
+        if ((param = PK11_GenerateNewParam(cryptoMechType, key)) == NULL)
+            return NULL;
+        needToEncodeAlgid = PR_TRUE;
     }
 
     cc = (NSSCMSCipherContext *)PORT_ZAlloc(sizeof(NSSCMSCipherContext));
     if (cc == NULL) {
-	goto loser;
+        goto loser;
     }
 
     /* now find pad and block sizes for our mechanism */
@@ -160,12 +160,12 @@ NSS_CMSCipherContext_StartEncrypt(PLArenaPool *poolp, PK11SymKey *key, SECAlgori
     PK11_FreeSlot(slot);
 
     /* and here we go, creating a PK11 cipher context */
-    ciphercx = PK11_CreateContextBySymKey(cryptoMechType, CKA_ENCRYPT, 
-					  key, param);
+    ciphercx = PK11_CreateContextBySymKey(cryptoMechType, CKA_ENCRYPT,
+                                          key, param);
     if (ciphercx == NULL) {
-	PORT_Free(cc);
-	cc = NULL;
-	goto loser;
+        PORT_Free(cc);
+        cc = NULL;
+        goto loser;
     }
 
     /*
@@ -177,12 +177,12 @@ NSS_CMSCipherContext_StartEncrypt(PLArenaPool *poolp, PK11SymKey *key, SECAlgori
      *     BEFORE encoding the algid in the contentInfo, right?
      */
     if (needToEncodeAlgid) {
-	rv = PK11_ParamToAlgid(algtag, param, poolp, algid);
-	if(rv != SECSuccess) {
-	    PORT_Free(cc);
-	    cc = NULL;
-	    goto loser;
-	}
+        rv = PK11_ParamToAlgid(algtag, param, poolp, algid);
+        if (rv != SECSuccess) {
+            PORT_Free(cc);
+            cc = NULL;
+            goto loser;
+        }
     }
 
     cc->cx = ciphercx;
@@ -206,7 +206,7 @@ NSS_CMSCipherContext_Destroy(NSSCMSCipherContext *cc)
 {
     PORT_Assert(cc != NULL);
     if (cc == NULL)
-	return;
+        return;
     (*cc->destroy)(cc->cx, PR_TRUE);
     PORT_Free(cc);
 }
@@ -237,7 +237,7 @@ NSS_CMSCipherContext_DecryptLength(NSSCMSCipherContext *cc, unsigned int input_l
 {
     int blocks, block_size;
 
-    PORT_Assert (! cc->encrypt);
+    PORT_Assert(!cc->encrypt);
 
     block_size = cc->block_size;
 
@@ -246,7 +246,7 @@ NSS_CMSCipherContext_DecryptLength(NSSCMSCipherContext *cc, unsigned int input_l
      * number of output bytes as we had input bytes.
      */
     if (block_size == 0)
-	return input_len;
+        return input_len;
 
     /*
      * On the final call, we will always use up all of the pending
@@ -257,7 +257,7 @@ NSS_CMSCipherContext_DecryptLength(NSSCMSCipherContext *cc, unsigned int input_l
      * at least 1 byte of padding), but seemed clearer/better to me.
      */
     if (final)
-	return cc->pending_count + input_len;
+        return cc->pending_count + input_len;
 
     /*
      * Okay, this amount is exactly what we will output on the
@@ -296,7 +296,7 @@ NSS_CMSCipherContext_EncryptLength(NSSCMSCipherContext *cc, unsigned int input_l
     int blocks, block_size;
     int pad_size;
 
-    PORT_Assert (cc->encrypt);
+    PORT_Assert(cc->encrypt);
 
     block_size = cc->block_size;
     pad_size = cc->pad_size;
@@ -306,7 +306,7 @@ NSS_CMSCipherContext_EncryptLength(NSSCMSCipherContext *cc, unsigned int input_l
      * number of output bytes as we had input bytes.
      */
     if (block_size == 0)
-	return input_len;
+        return input_len;
 
     /*
      * On the final call, we only send out what we need for
@@ -315,13 +315,13 @@ NSS_CMSCipherContext_EncryptLength(NSSCMSCipherContext *cc, unsigned int input_l
      * will add another full block that is just padding.)
      */
     if (final) {
-	if (pad_size == 0) {
-    	    return cc->pending_count + input_len;
-	} else {
-    	    blocks = (cc->pending_count + input_len) / pad_size;
-	    blocks++;
-	    return blocks*pad_size;
-	}
+        if (pad_size == 0) {
+            return cc->pending_count + input_len;
+        } else {
+            blocks = (cc->pending_count + input_len) / pad_size;
+            blocks++;
+            return blocks * pad_size;
+        }
     }
 
     /*
@@ -329,10 +329,8 @@ NSS_CMSCipherContext_EncryptLength(NSSCMSCipherContext *cc, unsigned int input_l
      */
     blocks = (cc->pending_count + input_len) / block_size;
 
-
     return blocks * block_size;
 }
-
 
 /*
  * NSS_CMSCipherContext_Decrypt - do the decryption
@@ -363,29 +361,29 @@ NSS_CMSCipherContext_EncryptLength(NSSCMSCipherContext *cc, unsigned int input_l
  * the same as the length of the padding, and that all data is padded.
  * (Even data that starts out with an exact multiple of blocks gets
  * added to it another block, all of which is padding.)
- */ 
+ */
 SECStatus
 NSS_CMSCipherContext_Decrypt(NSSCMSCipherContext *cc, unsigned char *output,
-		  unsigned int *output_len_p, unsigned int max_output_len,
-		  const unsigned char *input, unsigned int input_len,
-		  PRBool final)
+                             unsigned int *output_len_p, unsigned int max_output_len,
+                             const unsigned char *input, unsigned int input_len,
+                             PRBool final)
 {
     unsigned int blocks, bsize, pcount, padsize;
     unsigned int max_needed, ifraglen, ofraglen, output_len;
     unsigned char *pbuf;
     SECStatus rv;
 
-    PORT_Assert (! cc->encrypt);
+    PORT_Assert(!cc->encrypt);
 
     /*
      * Check that we have enough room for the output.  Our caller should
      * already handle this; failure is really an internal error (i.e. bug).
      */
     max_needed = NSS_CMSCipherContext_DecryptLength(cc, input_len, final);
-    PORT_Assert (max_output_len >= max_needed);
+    PORT_Assert(max_output_len >= max_needed);
     if (max_output_len < max_needed) {
-	/* PORT_SetError (XXX); */
-	return SECFailure;
+        /* PORT_SetError (XXX); */
+        return SECFailure;
     }
 
     /*
@@ -400,8 +398,8 @@ NSS_CMSCipherContext_Decrypt(NSSCMSCipherContext *cc, unsigned char *output,
      * cipher function and we are done.
      */
     if (bsize == 0) {
-	return (* cc->doit) (cc->cx, output, output_len_p, max_output_len,
-			      input, input_len);
+        return (*cc->doit)(cc->cx, output, output_len_p, max_output_len,
+                           input, input_len);
     }
 
     pcount = cc->pending_count;
@@ -410,63 +408,63 @@ NSS_CMSCipherContext_Decrypt(NSSCMSCipherContext *cc, unsigned char *output,
     output_len = 0;
 
     if (pcount) {
-	/*
-	 * Try to fill in an entire block, starting with the bytes
-	 * we already have saved away.
-	 */
-	while (input_len && pcount < bsize) {
-	    pbuf[pcount++] = *input++;
-	    input_len--;
-	}
-	/*
-	 * If we have at most a whole block and this is not our last call,
-	 * then we are done for now.  (We do not try to decrypt a lone
-	 * single block because we cannot interpret the padding bytes
-	 * until we know we are handling the very last block of all input.)
-	 */
-	if (input_len == 0 && !final) {
-	    cc->pending_count = pcount;
-	    if (output_len_p)
-		*output_len_p = 0;
-	    return SECSuccess;
-	}
-	/*
-	 * Given the logic above, we expect to have a full block by now.
-	 * If we do not, there is something wrong, either with our own
-	 * logic or with (length of) the data given to us.
-	 */
-	if ((padsize != 0) && (pcount % padsize) != 0) {
-	    PORT_Assert (final);	
-	    PORT_SetError (SEC_ERROR_BAD_DATA);
-	    return SECFailure;
-	}
-	/*
-	 * Decrypt the block.
-	 */
-	rv = (*cc->doit)(cc->cx, output, &ofraglen, max_output_len,
-			    pbuf, pcount);
-	if (rv != SECSuccess)
-	    return rv;
+        /*
+         * Try to fill in an entire block, starting with the bytes
+         * we already have saved away.
+         */
+        while (input_len && pcount < bsize) {
+            pbuf[pcount++] = *input++;
+            input_len--;
+        }
+        /*
+         * If we have at most a whole block and this is not our last call,
+         * then we are done for now.  (We do not try to decrypt a lone
+         * single block because we cannot interpret the padding bytes
+         * until we know we are handling the very last block of all input.)
+         */
+        if (input_len == 0 && !final) {
+            cc->pending_count = pcount;
+            if (output_len_p)
+                *output_len_p = 0;
+            return SECSuccess;
+        }
+        /*
+         * Given the logic above, we expect to have a full block by now.
+         * If we do not, there is something wrong, either with our own
+         * logic or with (length of) the data given to us.
+         */
+        if ((padsize != 0) && (pcount % padsize) != 0) {
+            PORT_Assert(final);
+            PORT_SetError(SEC_ERROR_BAD_DATA);
+            return SECFailure;
+        }
+        /*
+         * Decrypt the block.
+         */
+        rv = (*cc->doit)(cc->cx, output, &ofraglen, max_output_len,
+                         pbuf, pcount);
+        if (rv != SECSuccess)
+            return rv;
 
-	/*
-	 * For now anyway, all of our ciphers have the same number of
-	 * bytes of output as they do input.  If this ever becomes untrue,
-	 * then NSS_CMSCipherContext_DecryptLength needs to be made smarter!
-	 */
-	PORT_Assert(ofraglen == pcount);
+        /*
+         * For now anyway, all of our ciphers have the same number of
+         * bytes of output as they do input.  If this ever becomes untrue,
+         * then NSS_CMSCipherContext_DecryptLength needs to be made smarter!
+         */
+        PORT_Assert(ofraglen == pcount);
 
-	/*
-	 * Account for the bytes now in output.
-	 */
-	max_output_len -= ofraglen;
-	output_len += ofraglen;
-	output += ofraglen;
+        /*
+         * Account for the bytes now in output.
+         */
+        max_output_len -= ofraglen;
+        output_len += ofraglen;
+        output += ofraglen;
     }
 
     /*
      * If this is our last call, we expect to have an exact number of
      * blocks left to be decrypted; we will decrypt them all.
-     * 
+     *
      * If not our last call, we always save between 1 and bsize bytes
      * until next time.  (We must do this because we cannot be sure
      * that none of the decrypted bytes are padding bytes until we
@@ -477,46 +475,47 @@ NSS_CMSCipherContext_Decrypt(NSSCMSCipherContext *cc, unsigned char *output,
      * the same way we treat partial block bytes.
      */
     if (final) {
-	if (padsize) {
-	    blocks = input_len / padsize;
-	    ifraglen = blocks * padsize;
-	} else ifraglen = input_len;
-	PORT_Assert (ifraglen == input_len);
+        if (padsize) {
+            blocks = input_len / padsize;
+            ifraglen = blocks * padsize;
+        } else
+            ifraglen = input_len;
+        PORT_Assert(ifraglen == input_len);
 
-	if (ifraglen != input_len) {
-	    PORT_SetError(SEC_ERROR_BAD_DATA);
-	    return SECFailure;
-	}
+        if (ifraglen != input_len) {
+            PORT_SetError(SEC_ERROR_BAD_DATA);
+            return SECFailure;
+        }
     } else {
-	blocks = (input_len - 1) / bsize;
-	ifraglen = blocks * bsize;
-	PORT_Assert (ifraglen < input_len);
+        blocks = (input_len - 1) / bsize;
+        ifraglen = blocks * bsize;
+        PORT_Assert(ifraglen < input_len);
 
-	pcount = input_len - ifraglen;
-	PORT_Memcpy (pbuf, input + ifraglen, pcount);
-	cc->pending_count = pcount;
+        pcount = input_len - ifraglen;
+        PORT_Memcpy(pbuf, input + ifraglen, pcount);
+        cc->pending_count = pcount;
     }
 
     if (ifraglen) {
-	rv = (* cc->doit)(cc->cx, output, &ofraglen, max_output_len,
-			    input, ifraglen);
-	if (rv != SECSuccess)
-	    return rv;
+        rv = (*cc->doit)(cc->cx, output, &ofraglen, max_output_len,
+                         input, ifraglen);
+        if (rv != SECSuccess)
+            return rv;
 
-	/*
-	 * For now anyway, all of our ciphers have the same number of
-	 * bytes of output as they do input.  If this ever becomes untrue,
-	 * then sec_PKCS7DecryptLength needs to be made smarter!
-	 */
-	PORT_Assert (ifraglen == ofraglen);
-	if (ifraglen != ofraglen) {
-	    PORT_SetError(SEC_ERROR_BAD_DATA);
-	    return SECFailure;
-	}
+        /*
+         * For now anyway, all of our ciphers have the same number of
+         * bytes of output as they do input.  If this ever becomes untrue,
+         * then sec_PKCS7DecryptLength needs to be made smarter!
+         */
+        PORT_Assert(ifraglen == ofraglen);
+        if (ifraglen != ofraglen) {
+            PORT_SetError(SEC_ERROR_BAD_DATA);
+            return SECFailure;
+        }
 
-	output_len += ofraglen;
+        output_len += ofraglen;
     } else {
-	ofraglen = 0;
+        ofraglen = 0;
     }
 
     /*
@@ -524,18 +523,18 @@ NSS_CMSCipherContext_Decrypt(NSSCMSCipherContext *cc, unsigned char *output,
      * adjusting the output length.
      */
     if (final && (padsize != 0)) {
-	unsigned int padlen = *(output + ofraglen - 1);
+        unsigned int padlen = *(output + ofraglen - 1);
 
-	if (padlen == 0 || padlen > padsize) {
-	    PORT_SetError(SEC_ERROR_BAD_DATA);
-	    return SECFailure;
-	}
-	output_len -= padlen;
+        if (padlen == 0 || padlen > padsize) {
+            PORT_SetError(SEC_ERROR_BAD_DATA);
+            return SECFailure;
+        }
+        output_len -= padlen;
     }
 
-    PORT_Assert (output_len_p != NULL || output_len == 0);
+    PORT_Assert(output_len_p != NULL || output_len == 0);
     if (output_len_p != NULL)
-	*output_len_p = output_len;
+        *output_len_p = output_len;
 
     return SECSuccess;
 }
@@ -574,29 +573,29 @@ NSS_CMSCipherContext_Decrypt(NSSCMSCipherContext *cc, unsigned char *output,
  * tricky parts about padding and filling blocks would be much
  * harder to read that way, so I left them separate.  At least for
  * now until it is clear that they are right.
- */ 
+ */
 SECStatus
 NSS_CMSCipherContext_Encrypt(NSSCMSCipherContext *cc, unsigned char *output,
-		  unsigned int *output_len_p, unsigned int max_output_len,
-		  const unsigned char *input, unsigned int input_len,
-		  PRBool final)
+                             unsigned int *output_len_p, unsigned int max_output_len,
+                             const unsigned char *input, unsigned int input_len,
+                             PRBool final)
 {
     int blocks, bsize, padlen, pcount, padsize;
     unsigned int max_needed, ifraglen, ofraglen, output_len;
     unsigned char *pbuf;
     SECStatus rv;
 
-    PORT_Assert (cc->encrypt);
+    PORT_Assert(cc->encrypt);
 
     /*
      * Check that we have enough room for the output.  Our caller should
      * already handle this; failure is really an internal error (i.e. bug).
      */
-    max_needed = NSS_CMSCipherContext_EncryptLength (cc, input_len, final);
-    PORT_Assert (max_output_len >= max_needed);
+    max_needed = NSS_CMSCipherContext_EncryptLength(cc, input_len, final);
+    PORT_Assert(max_output_len >= max_needed);
     if (max_output_len < max_needed) {
-	/* PORT_SetError (XXX); */
-	return SECFailure;
+        /* PORT_SetError (XXX); */
+        return SECFailure;
     }
 
     bsize = cc->block_size;
@@ -607,8 +606,8 @@ NSS_CMSCipherContext_Encrypt(NSSCMSCipherContext *cc, unsigned char *output,
      * cipher function and we are done.
      */
     if (bsize == 0) {
-	return (*cc->doit)(cc->cx, output, output_len_p, max_output_len,
-			      input, input_len);
+        return (*cc->doit)(cc->cx, output, output_len_p, max_output_len,
+                           input, input_len);
     }
 
     pcount = cc->pending_count;
@@ -617,107 +616,107 @@ NSS_CMSCipherContext_Encrypt(NSSCMSCipherContext *cc, unsigned char *output,
     output_len = 0;
 
     if (pcount) {
-	/*
-	 * Try to fill in an entire block, starting with the bytes
-	 * we already have saved away.
-	 */
-	while (input_len && pcount < bsize) {
-	    pbuf[pcount++] = *input++;
-	    input_len--;
-	}
-	/*
-	 * If we do not have a full block and we know we will be
-	 * called again, then we are done for now.
-	 */
-	if (pcount < bsize && !final) {
-	    cc->pending_count = pcount;
-	    if (output_len_p != NULL)
-		*output_len_p = 0;
-	    return SECSuccess;
-	}
-	/*
-	 * If we have a whole block available, encrypt it.
-	 */
-	if ((padsize == 0) || (pcount % padsize) == 0) {
-	    rv = (* cc->doit) (cc->cx, output, &ofraglen, max_output_len,
-				pbuf, pcount);
-	    if (rv != SECSuccess)
-		return rv;
+        /*
+         * Try to fill in an entire block, starting with the bytes
+         * we already have saved away.
+         */
+        while (input_len && pcount < bsize) {
+            pbuf[pcount++] = *input++;
+            input_len--;
+        }
+        /*
+         * If we do not have a full block and we know we will be
+         * called again, then we are done for now.
+         */
+        if (pcount < bsize && !final) {
+            cc->pending_count = pcount;
+            if (output_len_p != NULL)
+                *output_len_p = 0;
+            return SECSuccess;
+        }
+        /*
+         * If we have a whole block available, encrypt it.
+         */
+        if ((padsize == 0) || (pcount % padsize) == 0) {
+            rv = (*cc->doit)(cc->cx, output, &ofraglen, max_output_len,
+                             pbuf, pcount);
+            if (rv != SECSuccess)
+                return rv;
 
-	    /*
-	     * For now anyway, all of our ciphers have the same number of
-	     * bytes of output as they do input.  If this ever becomes untrue,
-	     * then sec_PKCS7EncryptLength needs to be made smarter!
-	     */
-	    PORT_Assert (ofraglen == pcount);
+            /*
+             * For now anyway, all of our ciphers have the same number of
+             * bytes of output as they do input.  If this ever becomes untrue,
+             * then sec_PKCS7EncryptLength needs to be made smarter!
+             */
+            PORT_Assert(ofraglen == pcount);
 
-	    /*
-	     * Account for the bytes now in output.
-	     */
-	    max_output_len -= ofraglen;
-	    output_len += ofraglen;
-	    output += ofraglen;
+            /*
+             * Account for the bytes now in output.
+             */
+            max_output_len -= ofraglen;
+            output_len += ofraglen;
+            output += ofraglen;
 
-	    pcount = 0;
-	}
+            pcount = 0;
+        }
     }
 
     if (input_len) {
-	PORT_Assert (pcount == 0);
+        PORT_Assert(pcount == 0);
 
-	blocks = input_len / bsize;
-	ifraglen = blocks * bsize;
+        blocks = input_len / bsize;
+        ifraglen = blocks * bsize;
 
-	if (ifraglen) {
-	    rv = (* cc->doit) (cc->cx, output, &ofraglen, max_output_len,
-				input, ifraglen);
-	    if (rv != SECSuccess)
-		return rv;
+        if (ifraglen) {
+            rv = (*cc->doit)(cc->cx, output, &ofraglen, max_output_len,
+                             input, ifraglen);
+            if (rv != SECSuccess)
+                return rv;
 
-	    /*
-	     * For now anyway, all of our ciphers have the same number of
-	     * bytes of output as they do input.  If this ever becomes untrue,
-	     * then sec_PKCS7EncryptLength needs to be made smarter!
-	     */
-	    PORT_Assert (ifraglen == ofraglen);
+            /*
+             * For now anyway, all of our ciphers have the same number of
+             * bytes of output as they do input.  If this ever becomes untrue,
+             * then sec_PKCS7EncryptLength needs to be made smarter!
+             */
+            PORT_Assert(ifraglen == ofraglen);
 
-	    max_output_len -= ofraglen;
-	    output_len += ofraglen;
-	    output += ofraglen;
-	}
+            max_output_len -= ofraglen;
+            output_len += ofraglen;
+            output += ofraglen;
+        }
 
-	pcount = input_len - ifraglen;
-	PORT_Assert (pcount < bsize);
-	if (pcount)
-	    PORT_Memcpy (pbuf, input + ifraglen, pcount);
+        pcount = input_len - ifraglen;
+        PORT_Assert(pcount < bsize);
+        if (pcount)
+            PORT_Memcpy(pbuf, input + ifraglen, pcount);
     }
 
     if (final) {
-	if (padsize <= 0) {
-	    padlen = 0;
-	} else {
-	    padlen = padsize - (pcount % padsize);
-	    PORT_Memset (pbuf + pcount, padlen, padlen);
-	}
-	rv = (* cc->doit) (cc->cx, output, &ofraglen, max_output_len,
-			    pbuf, pcount+padlen);
-	if (rv != SECSuccess)
-	    return rv;
+        if (padsize <= 0) {
+            padlen = 0;
+        } else {
+            padlen = padsize - (pcount % padsize);
+            PORT_Memset(pbuf + pcount, padlen, padlen);
+        }
+        rv = (*cc->doit)(cc->cx, output, &ofraglen, max_output_len,
+                         pbuf, pcount + padlen);
+        if (rv != SECSuccess)
+            return rv;
 
-	/*
-	 * For now anyway, all of our ciphers have the same number of
-	 * bytes of output as they do input.  If this ever becomes untrue,
-	 * then sec_PKCS7EncryptLength needs to be made smarter!
-	 */
-	PORT_Assert (ofraglen == (pcount+padlen));
-	output_len += ofraglen;
+        /*
+         * For now anyway, all of our ciphers have the same number of
+         * bytes of output as they do input.  If this ever becomes untrue,
+         * then sec_PKCS7EncryptLength needs to be made smarter!
+         */
+        PORT_Assert(ofraglen == (pcount + padlen));
+        output_len += ofraglen;
     } else {
-	cc->pending_count = pcount;
+        cc->pending_count = pcount;
     }
 
-    PORT_Assert (output_len_p != NULL || output_len == 0);
+    PORT_Assert(output_len_p != NULL || output_len == 0);
     if (output_len_p != NULL)
-	*output_len_p = output_len;
+        *output_len_p = output_len;
 
     return SECSuccess;
 }

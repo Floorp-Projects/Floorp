@@ -714,7 +714,7 @@ ProxyAutoConfig::SetupJS()
 
   // check if this is a data: uri so that we don't spam the js console with
   // huge meaningless strings. this is not on the main thread, so it can't
-  // use nsIRUI scheme methods
+  // use nsIURI scheme methods
   bool isDataURI = nsDependentCSubstring(mPACURI, 0, 5).LowerCaseEqualsASCII("data:", 5);
 
   SetRunning(this);

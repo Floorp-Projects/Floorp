@@ -1429,6 +1429,34 @@ IDBObjectStore::AddOrPut(JSContext* aCx,
     return nullptr;
   }
 
+  // Check the size limit of the serialized message which mainly consists of
+  // a StructuredCloneBuffer, an encoded object key, and the encoded index keys.
+  // kMaxIDBMsgOverhead covers the minor stuff not included in this calculation
+  // because the precise calculation would slow down this AddOrPut operation.
+  static const size_t kMaxIDBMsgOverhead = 1024 * 1024; // 1MB
+  const uint32_t maximalSizeFromPref =
+    IndexedDatabaseManager::MaxSerializedMsgSize();
+  MOZ_ASSERT(maximalSizeFromPref > kMaxIDBMsgOverhead);
+  const size_t kMaxMessageSize = maximalSizeFromPref - kMaxIDBMsgOverhead;
+
+  size_t indexUpdateInfoSize = 0;
+  for (size_t i = 0; i < updateInfo.Length(); i++) {
+    indexUpdateInfoSize += updateInfo[i].value().GetBuffer().Length();
+    indexUpdateInfoSize += updateInfo[i].localizedValue().GetBuffer().Length();
+  }
+
+  size_t messageSize = cloneWriteInfo.mCloneBuffer.data().Size() +
+    key.GetBuffer().Length() + indexUpdateInfoSize;
+
+  if (messageSize > kMaxMessageSize) {
+    IDB_REPORT_INTERNAL_ERR();
+    aRv.ThrowDOMException(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
+      nsPrintfCString("The serialized value is too large"
+                      " (size=%zu bytes, max=%zu bytes).",
+                      messageSize, kMaxMessageSize));
+    return nullptr;
+  }
+
   ObjectStoreAddPutParams commonParams;
   commonParams.objectStoreId() = Id();
   commonParams.cloneInfo().data().data = Move(cloneWriteInfo.mCloneBuffer.data());

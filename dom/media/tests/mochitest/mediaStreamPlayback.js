@@ -48,34 +48,10 @@ MediaStreamPlayback.prototype = {
    */
   stopTracksForStreamInMediaPlayback : function () {
     var elem = this.mediaElement;
-    var waitForEnded = () => new Promise(resolve => {
-      elem.addEventListener('ended', function ended() {
-        elem.removeEventListener('ended', ended);
-        resolve();
-      });
-    });
-
-    var noTrackEnded = Promise.all(this.mediaStream.getTracks().map(t => {
-      let onNextLoop = wait(0);
-      let p = Promise.race([
-        onNextLoop,
-        haveEvent(t, "ended", onNextLoop)
-          .then(() => Promise.reject("Unexpected ended event for track " + t.id),
-                () => Promise.resolve())
-      ]);
-      t.stop();
-      return p;
-    }));
-
-    // XXX (bug 1208316) When we implement MediaStream.active, do not stop
-    // the stream. We just do it now so the media element will raise 'ended'.
-    if (!this.mediaStream.stop) {
-      return;
-    }
-    this.mediaStream.stop();
-    return timeout(waitForEnded(), ENDED_TIMEOUT_LENGTH, "ended event never fired")
-             .then(() => ok(true, "ended event successfully fired"))
-             .then(() => noTrackEnded);
+    return Promise.all([
+      haveEvent(elem, "ended", wait(ENDED_TIMEOUT_LENGTH, new Error("Timeout"))),
+      ...this.mediaStream.getTracks().map(t => (t.stop(), haveNoEvent(t, "ended")))
+    ]);
   },
 
   /**

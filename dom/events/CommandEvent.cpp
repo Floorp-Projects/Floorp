@@ -51,6 +51,8 @@ CommandEvent::InitCommandEvent(const nsAString& aTypeArg,
                                bool aCancelableArg,
                                const nsAString& aCommand)
 {
+  NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
+
   Event::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
 
   mEvent->AsCommandEvent()->mCommand = NS_Atomize(aCommand);

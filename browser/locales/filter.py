@@ -17,11 +17,8 @@ def test(mod, path, entity = None):
     # we only have exceptions for browser and extensions/spellcheck
     return "error"
   if not entity:
-    # the only files to ignore are spell checkers and search
+    # the only files to ignore are spell checkers
     if mod == "extensions/spellcheck":
-      return "ignore"
-    # browser
-    if (re.match(r"searchplugins\/.+\.xml", path)):
       return "ignore"
     return "error"
   if mod == "extensions/spellcheck":

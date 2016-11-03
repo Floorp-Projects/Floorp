@@ -1815,7 +1815,10 @@ function synthesizeDragStart(element, expectedDragData, aWindow, x, y)
   var result = "trapDrag was not called";
   var trapDrag = function(event) {
     try {
-      var dataTransfer = event.dataTransfer;
+      // We must wrap only in plain mochitests, not chrome
+      var c = Object.getOwnPropertyDescriptor(window, 'Components');
+      var dataTransfer = c.value && !c.writable
+        ? event.dataTransfer : SpecialPowers.wrap(event.dataTransfer);
       result = null;
       if (!dataTransfer)
         throw "no dataTransfer";

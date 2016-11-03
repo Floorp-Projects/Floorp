@@ -497,11 +497,13 @@ class JSFunction : public js::NativeObject
     }
 
     void setUnlazifiedScript(JSScript* script) {
-        // Note: createScriptForLazilyInterpretedFunction triggers a barrier on
-        // lazy script before it is overwritten here.
         MOZ_ASSERT(isInterpretedLazy());
-        if (lazyScriptOrNull() && !lazyScript()->maybeScript())
-            lazyScript()->initScript(script);
+        if (lazyScriptOrNull()) {
+            // Trigger a pre barrier on the lazy script being overwritten.
+            js::LazyScript::writeBarrierPre(lazyScriptOrNull());
+            if (!lazyScript()->maybeScript())
+                lazyScript()->initScript(script);
+        }
         flags_ &= ~INTERPRETED_LAZY;
         flags_ |= INTERPRETED;
         initScript(script);

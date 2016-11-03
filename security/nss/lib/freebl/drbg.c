@@ -20,6 +20,10 @@
 #include "secrng.h" /* for RNG_SystemRNG() */
 #include "secmpi.h"
 
+#ifdef UNSAFE_FUZZER_MODE
+#include "det_rng.h"
+#endif
+
 /* PRNG_SEEDLEN defined in NIST SP 800-90 section 10.1
  * for SHA-1, SHA-224, and SHA-256 it's 440 bits.
  * for SHA-384 and SHA-512 it's 888 bits */
@@ -650,7 +654,21 @@ prng_GenerateGlobalRandomBytes(RNGContext *rng,
 SECStatus
 RNG_GenerateGlobalRandomBytes(void *dest, size_t len)
 {
+#ifdef UNSAFE_FUZZER_MODE
+    return prng_GenerateDeterministicRandomBytes(globalrng->lock, dest, len);
+#else
     return prng_GenerateGlobalRandomBytes(globalrng, dest, len);
+#endif
+}
+
+SECStatus
+RNG_ResetForFuzzing(void)
+{
+#ifdef UNSAFE_FUZZER_MODE
+    return prng_ResetForFuzzing(globalrng->lock);
+#else
+    return SECFailure;
+#endif
 }
 
 void

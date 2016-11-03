@@ -1898,7 +1898,7 @@ gfxFontGroup::GetFirstMathFont()
     uint32_t count = mFonts.Length();
     for (uint32_t i = 0; i < count; ++i) {
         gfxFont* font = GetFontAt(i);
-        if (font && font->GetFontEntry()->TryGetMathTable()) {
+        if (font && font->TryGetMathTable()) {
             return font;
         }
     }

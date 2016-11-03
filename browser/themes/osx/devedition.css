@@ -87,11 +87,6 @@
   }
 }
 
-#forward-button:hover:active:not(:-moz-lwtheme) {
-  background-image: none;
-  box-shadow: none;
-}
-
 /* Don't use the default background for tabs toolbar */
 #TabsToolbar {
   -moz-appearance: none !important;

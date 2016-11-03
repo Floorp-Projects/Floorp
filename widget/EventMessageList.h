@@ -129,6 +129,8 @@ NS_EVENT_MESSAGE(eFormInvalid)
 //Need separate focus/blur notifications for non-native widgets
 NS_EVENT_MESSAGE(eFocus)
 NS_EVENT_MESSAGE(eBlur)
+NS_EVENT_MESSAGE(eFocusIn)
+NS_EVENT_MESSAGE(eFocusOut)
 
 NS_EVENT_MESSAGE(eDragEnter)
 NS_EVENT_MESSAGE(eDragOver)

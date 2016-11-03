@@ -125,7 +125,7 @@ RemoteVideoDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
 nsresult
 RemoteDecoderModule::Startup()
 {
-  if (!VideoDecoderManagerChild::GetSingleton()) {
+  if (!VideoDecoderManagerChild::GetManagerThread()) {
     return NS_ERROR_FAILURE;
   }
   return mWrapped->Startup();
@@ -147,7 +147,8 @@ RemoteDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 already_AddRefed<MediaDataDecoder>
 RemoteDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
-  if (!aParams.mKnowsCompositor) {
+  if (!aParams.mKnowsCompositor ||
+      aParams.mKnowsCompositor->GetTextureFactoryIdentifier().mParentProcessType != GeckoProcessType_GPU) {
     return nullptr;
   }
 

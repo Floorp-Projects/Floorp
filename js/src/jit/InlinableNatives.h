@@ -119,10 +119,13 @@
                                     \
     _(IntrinsicIsArrayIterator)     \
     _(IntrinsicIsMapIterator)       \
+    _(IntrinsicIsSetIterator)       \
     _(IntrinsicIsStringIterator)    \
     _(IntrinsicIsListIterator)      \
                                     \
     _(IntrinsicGetNextMapEntryForIterator) \
+                                    \
+    _(IntrinsicGetNextSetEntryForIterator) \
                                     \
     _(IntrinsicArrayBufferByteLength) \
     _(IntrinsicPossiblyWrappedArrayBufferByteLength) \

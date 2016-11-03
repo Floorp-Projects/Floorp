@@ -2021,6 +2021,49 @@ public:
   nsCOMPtr<EventTarget>   mRelatedTarget;
 };
 
+class FocusInOutEvent : public Runnable
+{
+public:
+  FocusInOutEvent(nsISupports* aTarget, EventMessage aEventMessage,
+                 nsPresContext* aContext,
+                 nsPIDOMWindowOuter* aOriginalFocusedWindow,
+                 nsIContent* aOriginalFocusedContent,
+                 EventTarget* aRelatedTarget)
+    : mTarget(aTarget)
+    , mContext(aContext)
+    , mEventMessage(aEventMessage)
+    , mOriginalFocusedWindow(aOriginalFocusedWindow)
+    , mOriginalFocusedContent(aOriginalFocusedContent)
+    , mRelatedTarget(aRelatedTarget)
+  {
+  }
+
+  NS_IMETHOD Run() override
+  {
+    nsCOMPtr<nsIContent> originalWindowFocus = mOriginalFocusedWindow ?
+        mOriginalFocusedWindow->GetFocusedNode() :
+        nullptr;
+    // Blink does not check that focus is the same after blur, but WebKit does.
+    // Opt to follow Blink's behavior (see bug 687787).
+    if (mEventMessage == eFocusOut ||
+        originalWindowFocus == mOriginalFocusedContent) {
+      InternalFocusEvent event(true, mEventMessage);
+      event.mFlags.mBubbles = true;
+      event.mFlags.mCancelable = false;
+      event.mRelatedTarget = mRelatedTarget;
+      return EventDispatcher::Dispatch(mTarget, mContext, &event);
+    }
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISupports>        mTarget;
+  RefPtr<nsPresContext>        mContext;
+  EventMessage                 mEventMessage;
+  nsCOMPtr<nsPIDOMWindowOuter> mOriginalFocusedWindow;
+  nsCOMPtr<nsIContent>         mOriginalFocusedContent;
+  nsCOMPtr<EventTarget>        mRelatedTarget;
+};
+
 static nsIDocument*
 GetDocumentHelper(EventTarget* aTarget)
 {
@@ -2031,6 +2074,26 @@ GetDocumentHelper(EventTarget* aTarget)
   }
 
   return node->OwnerDoc();
+}
+
+void nsFocusManager::SendFocusInOrOutEvent(EventMessage aEventMessage,
+                                     nsIPresShell* aPresShell,
+                                     nsISupports* aTarget,
+                                     nsPIDOMWindowOuter* aCurrentFocusedWindow,
+                                     nsIContent* aCurrentFocusedContent,
+                                     EventTarget* aRelatedTarget)
+{
+  NS_ASSERTION(aEventMessage == eFocusIn || aEventMessage == eFocusOut,
+      "Wrong event type for SendFocusInOrOutEvent");
+
+  nsContentUtils::AddScriptRunner(
+      new FocusInOutEvent(
+        aTarget,
+        aEventMessage,
+        aPresShell->GetPresContext(),
+        aCurrentFocusedWindow,
+        aCurrentFocusedContent,
+        aRelatedTarget));
 }
 
 void
@@ -2049,6 +2112,11 @@ nsFocusManager::SendFocusOrBlurEvent(EventMessage aEventMessage,
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);
   nsCOMPtr<nsIDocument> eventTargetDoc = GetDocumentHelper(eventTarget);
   nsCOMPtr<nsIDocument> relatedTargetDoc = GetDocumentHelper(aRelatedTarget);
+  nsCOMPtr<nsPIDOMWindowOuter> currentWindow = mFocusedWindow;
+  nsCOMPtr<nsPIDOMWindowInner> targetWindow = do_QueryInterface(aTarget);
+  nsCOMPtr<nsIDocument> targetDocument = do_QueryInterface(aTarget);
+  nsCOMPtr<nsIContent> currentFocusedContent = currentWindow ?
+      currentWindow->GetFocusedNode() : nullptr;
 
   // set aRelatedTarget to null if it's not in the same document as eventTarget
   if (eventTargetDoc != relatedTargetDoc) {
@@ -2099,6 +2167,19 @@ nsFocusManager::SendFocusOrBlurEvent(EventMessage aEventMessage,
     nsContentUtils::AddScriptRunner(
       new FocusBlurEvent(aTarget, aEventMessage, aPresShell->GetPresContext(),
                          aWindowRaised, aIsRefocus, aRelatedTarget));
+
+    // Check that the target is not a window or document before firing
+    // focusin/focusout. Other browsers do not fire focusin/focusout on window,
+    // despite being required in the spec, so follow their behavior.
+    //
+    // As for document, we should not even fire focus/blur, but until then, we
+    // need this check. targetDocument should be removed once bug 1228802 is
+    // resolved.
+    if (!targetWindow && !targetDocument) {
+      EventMessage focusInOrOutMessage = aEventMessage == eFocus ? eFocusIn : eFocusOut;
+      SendFocusInOrOutEvent(focusInOrOutMessage, aPresShell, aTarget,
+          currentWindow, currentFocusedContent, aRelatedTarget);
+    }
   }
 }
 

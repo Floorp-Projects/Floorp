@@ -193,8 +193,9 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     rv = NS_NewURI(getter_AddRefs(scopeURI), aOptions.mScope.Value(),
                    nullptr, baseURI);
     if (NS_WARN_IF(NS_FAILED(rv))) {
+      nsIURI* uri = baseURI ? baseURI : scriptURI;
       nsAutoCString spec;
-      baseURI->GetSpec(spec);
+      uri->GetSpec(spec);
       NS_ConvertUTF8toUTF16 wSpec(spec);
       aRv.ThrowTypeError<MSG_INVALID_SCOPE>(aOptions.mScope.Value(), wSpec);
       return nullptr;

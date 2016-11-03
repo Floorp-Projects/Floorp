@@ -17,7 +17,6 @@
 #include "nsIFileStreams.h"
 #include "nsIInputStream.h"
 #include "nsIIPCSerializableInputStream.h"
-#include "nsIMemoryReporter.h"
 #include "nsIMIMEService.h"
 #include "nsISeekableStream.h"
 #include "nsIUnicharInputStream.h"
@@ -192,8 +191,8 @@ Blob::Create(nsISupports* aParent, const nsAString& aContentType,
 Blob::CreateStringBlob(nsISupports* aParent, const nsACString& aData,
                        const nsAString& aContentType)
 {
-  RefPtr<Blob> blob = Blob::Create(aParent,
-    new BlobImplString(aData, aContentType));
+  RefPtr<BlobImpl> blobImpl = BlobImplString::Create(aData, aContentType);
+  RefPtr<Blob> blob = Blob::Create(aParent, blobImpl);
   MOZ_ASSERT(!blob->mImpl->IsFile());
   return blob.forget();
 }
@@ -1051,7 +1050,27 @@ EmptyBlobImpl::GetInternalStream(nsIInputStream** aStream,
 ////////////////////////////////////////////////////////////////////////////
 // BlobImplString implementation
 
-NS_IMPL_ISUPPORTS_INHERITED0(BlobImplString, BlobImpl)
+NS_IMPL_ISUPPORTS_INHERITED(BlobImplString, BlobImpl, nsIMemoryReporter)
+
+/* static */ already_AddRefed<BlobImplString>
+BlobImplString::Create(const nsACString& aData, const nsAString& aContentType)
+{
+  RefPtr<BlobImplString> blobImpl = new BlobImplString(aData, aContentType);
+  RegisterWeakMemoryReporter(blobImpl);
+  return blobImpl.forget();
+}
+
+BlobImplString::BlobImplString(const nsACString& aData,
+                               const nsAString& aContentType)
+  : BlobImplBase(aContentType, aData.Length())
+  , mData(aData)
+{
+}
+
+BlobImplString::~BlobImplString()
+{
+  UnregisterWeakMemoryReporter(this);
+}
 
 already_AddRefed<BlobImpl>
 BlobImplString::CreateSlice(uint64_t aStart, uint64_t aLength,
@@ -1068,6 +1087,17 @@ void
 BlobImplString::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
 {
   aRv = NS_NewCStringInputStream(aStream, mData);
+}
+
+NS_IMETHODIMP
+BlobImplString::CollectReports(nsIHandleReportCallback* aHandleReport,
+                               nsISupports* aData, bool aAnonymize)
+{
+  MOZ_COLLECT_REPORT(
+    "explicit/dom/memory-file-data/string", KIND_HEAP, UNITS_BYTES,
+    mData.SizeOfExcludingThisIfUnshared(MallocSizeOf),
+    "Memory used to back a File/Blob based on a string.");
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////

@@ -226,18 +226,30 @@ public:
     virtual ~TrackListener() {}
 
     /**
-     * Called when the DOMMediaStream has a new track added, either by
-     * JS (addTrack()) or the source creating one.
+     * Called when the DOMMediaStream has a live track added, either by
+     * script (addTrack()) or the source creating one.
      */
     virtual void
     NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) {};
 
     /**
-     * Called when the DOMMediaStream removes a track, either by
-     * JS (removeTrack()) or the source ending it.
+     * Called when the DOMMediaStream removes a live track from playback, either
+     * by script (removeTrack(), track.stop()) or the source ending it.
      */
     virtual void
     NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) {};
+
+    /**
+     * Called when the DOMMediaStream has become active.
+     */
+    virtual void
+    NotifyActive() {};
+
+    /**
+     * Called when the DOMMediaStream has become inactive.
+     */
+    virtual void
+    NotifyInactive() {};
   };
 
   /**
@@ -363,6 +375,8 @@ public:
   /** Identical to CloneInternal(TrackForwardingOption::EXPLICIT) */
   already_AddRefed<DOMMediaStream> Clone();
 
+  bool Active() const;
+
   IMPL_EVENT_HANDLER(addtrack)
 
   // NON-WebIDL
@@ -445,7 +459,16 @@ public:
   virtual DOMLocalMediaStream* AsDOMLocalMediaStream() { return nullptr; }
   virtual DOMHwMediaStream* AsDOMHwMediaStream() { return nullptr; }
 
-  bool IsFinished();
+  /**
+   * Legacy method that returns true when the playback stream has finished.
+   */
+  bool IsFinished() const;
+
+  /**
+   * Becomes inactive only when the playback stream has finished.
+   */
+  void SetInactiveOnFinish();
+
   /**
    * Returns a principal indicating who may access this stream. The stream contents
    * can only be accessed by principals subsuming this principal.
@@ -599,6 +622,15 @@ protected:
   // created.
   void NotifyTracksCreated();
 
+  // Called when our playback stream has finished in the MediaStreamGraph.
+  void NotifyFinished();
+
+  // Dispatches NotifyActive() to all registered track listeners.
+  void NotifyActive();
+
+  // Dispatches NotifyInactive() to all registered track listeners.
+  void NotifyInactive();
+
   // Dispatches NotifyTrackAdded() to all registered track listeners.
   void NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack);
 
@@ -614,6 +646,9 @@ protected:
 
   class PlaybackStreamListener;
   friend class PlaybackStreamListener;
+
+  class PlaybackTrackListener;
+  friend class PlaybackTrackListener;
 
   /**
    * Block a track in our playback stream. Calls NotifyPlaybackTrackBlocked()
@@ -684,6 +719,9 @@ protected:
   // in this DOMMediaStream and notifications to mTrackListeners.
   RefPtr<PlaybackStreamListener> mPlaybackListener;
 
+  // Listener tracking when live MediaStreamTracks in mTracks end.
+  RefPtr<PlaybackTrackListener> mPlaybackTrackListener;
+
   nsTArray<nsAutoPtr<OnTracksAvailableCallback> > mRunOnTracksAvailable;
 
   // Set to true after MediaStreamGraph has created tracks for mPlaybackStream.
@@ -698,6 +736,14 @@ protected:
 
   // The track listeners subscribe to changes in this stream's track set.
   nsTArray<TrackListener*> mTrackListeners;
+
+  // True if this stream has live tracks.
+  bool mActive;
+
+  // True if this stream only sets mActive to false when its playback stream
+  // finishes. This is a hack to maintain legacy functionality for playing a
+  // HTMLMediaElement::MozCaptureStream(). See bug 1302379.
+  bool mSetInactiveOnFinish;
 
 private:
   void NotifyPrincipalChanged();

@@ -61,7 +61,7 @@ const FILE_UPDATE_TEST               = "update.test";
 const FILE_UPDATE_VERSION            = "update.version";
 
 const UPDATE_SETTINGS_CONTENTS = "[Settings]\n" +
-                                 "ACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n"
+                                 "ACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n";
 
 const PR_RDWR        = 0x04;
 const PR_CREATE_FILE = 0x08;
@@ -140,19 +140,6 @@ function reloadUpdateManagerData() {
   observe(null, "um-reload-update-data", "");
 }
 
-/**
- * Sets the app.update.channel preference.
- *
- * @param  aChannel
- *         The update channel.
- */
-function setUpdateChannel(aChannel) {
-  gChannel = aChannel;
-  debugDump("setting default pref " + PREF_APP_UPDATE_CHANNEL + " to " + gChannel);
-  gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_CHANNEL, gChannel);
-  gPrefRoot.addObserver(PREF_APP_UPDATE_CHANNEL, observer, false);
-}
-
 const observer = {
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "nsPref:changed" && aData == PREF_APP_UPDATE_CHANNEL) {
@@ -165,6 +152,19 @@ const observer = {
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
 };
+
+/**
+ * Sets the app.update.channel preference.
+ *
+ * @param  aChannel
+ *         The update channel.
+ */
+function setUpdateChannel(aChannel) {
+  gChannel = aChannel;
+  debugDump("setting default pref " + PREF_APP_UPDATE_CHANNEL + " to " + gChannel);
+  gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_CHANNEL, gChannel);
+  gPrefRoot.addObserver(PREF_APP_UPDATE_CHANNEL, observer, false);
+}
 
 /**
  * Sets the app.update.url.override preference.
@@ -483,8 +483,8 @@ function cleanUpdatesDir(aDir) {
       try {
         entry.remove(false);
       } catch (e) {
-       logTestInfo("cleanUpdatesDir: unable to remove file. Path: " +
-                   entry.path + ", Exception: " + e);
+        logTestInfo("cleanUpdatesDir: unable to remove file. Path: " +
+                    entry.path + ", Exception: " + e);
         throw (e);
       }
     }
@@ -595,7 +595,7 @@ function getGREBinDir() {
  */
 function logTestInfo(aText, aCaller) {
   let caller = aCaller ? aCaller : Components.stack.caller;
-  let now = new Date;
+  let now = new Date();
   let hh = now.getHours();
   let mm = now.getMinutes();
   let ss = now.getSeconds();
