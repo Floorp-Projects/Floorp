@@ -431,15 +431,16 @@ add_task(function* test_async_open_with_shared_cache() {
 });
 
 add_task(function* test_clone_trivial_async() {
-  let db1 = getService().openDatabase(getTestDB());
-  do_print("Opened adb1");
-  do_check_true(db1 instanceof Ci.mozIStorageAsyncConnection);
-  let adb2 = yield asyncClone(db1, true);
-  do_check_true(adb2 instanceof Ci.mozIStorageAsyncConnection);
-  do_print("Cloned to adb2");
-  db1.close();
-  do_print("Closed db1");
-  yield asyncClose(adb2);
+  do_print("Open connection");
+  let db = getService().openDatabase(getTestDB());
+  do_check_true(db instanceof Ci.mozIStorageAsyncConnection);
+  do_print("AsyncClone connection");
+  let clone = yield asyncClone(db, true);
+  do_check_true(clone instanceof Ci.mozIStorageAsyncConnection);
+  do_print("Close connection");
+  yield asyncClose(db);
+  do_print("Close clone");
+  yield asyncClose(clone);
 });
 
 add_task(function* test_clone_no_optional_param_async() {
