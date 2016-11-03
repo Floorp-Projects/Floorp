@@ -19,6 +19,7 @@
 <!ENTITY  paneContent.title       "Content">
 <!ENTITY  paneApplications.title  "Applications">
 <!ENTITY  panePrivacy.title       "Privacy">
+<!ENTITY  paneContainers.title    "Container Tabs">
 <!ENTITY  paneSecurity.title      "Security">
 <!ENTITY  paneAdvanced.title      "Advanced">
 

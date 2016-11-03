@@ -69,6 +69,29 @@
 
   </binding>
 
+  <binding id="container">
+    <content>
+      <xul:hbox flex="1" equalsize="always">
+        <xul:hbox flex="1" align="center">
+          <xul:hbox xbl:inherits="data-identity-icon=containerIcon,data-identity-color=containerColor" height="24" width="24" class="userContext-icon"/>
+          <xul:label flex="1" crop="end" xbl:inherits="value=containerName"/>
+        </xul:hbox>
+        <xul:hbox flex="1" align="right">
+          <xul:button anonid="preferencesButton"
+                      xbl:inherits="value=userContextId"
+                      onclick="gContainersPane.onPeferenceClick(event.originalTarget)">
+            Preferences
+          </xul:button>
+          <xul:button anonid="removeButton"
+                      xbl:inherits="value=userContextId"
+                      onclick="gContainersPane.onRemoveClick(event.originalTarget)">
+            Remove
+          </xul:button>
+        </xul:hbox>
+      </xul:hbox>
+    </content>
+  </binding>
+
   <binding id="offlineapp"
 	   extends="chrome://global/content/bindings/listbox.xml#listitem">
     <content>
