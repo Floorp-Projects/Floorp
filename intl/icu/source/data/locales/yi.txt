@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/yi.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 yi{
     AuxExemplarCharacters{"[\u200E\u200F]"}
     ExemplarCharacters{
@@ -34,7 +28,7 @@ yi{
         native{"latn"}
         traditional{"hebr"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.27.97"}
     calendar{
         generic{
             DateTimePatterns{
@@ -58,6 +52,10 @@ yi{
         }
         gregorian{
             AmPmMarkers{
+                "פֿאַרמיטאָג",
+                "נאָכמיטאָג",
+            }
+            AmPmMarkersAbbr{
                 "פֿאַרמיטאָג",
                 "נאָכמיטאָג",
             }
@@ -447,10 +445,10 @@ yi{
         }
     }
     delimiters{
-        alternateQuotationEnd{"'"}
-        alternateQuotationStart{"'"}
-        quotationEnd{"\u0022"}
-        quotationStart{"\u0022"}
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"’"}
+        quotationEnd{"”"}
+        quotationStart{"”"}
     }
     fields{
         day{

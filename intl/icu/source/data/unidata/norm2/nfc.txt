@@ -1,4 +1,4 @@
-# Copyright (C) 1999-2015, International Business Machines
+# Copyright (C) 1999-2016, International Business Machines
 # Corporation and others.  All Rights Reserved.
 #
 # file name: nfc.txt
@@ -7,7 +7,7 @@
 #
 # Complete data for Unicode NFC normalization.
 
-* Unicode 8.0.0
+* Unicode 9.0.0
 
 # Canonical_Combining_Class (ccc) values
 0300..0314:230
@@ -129,6 +129,7 @@
 0825..0827:230
 0829..082D:230
 0859..085B:220
+08D4..08E1:230
 08E3:220
 08E4..08E5:230
 08E6:220
@@ -233,6 +234,7 @@
 1DCF:220
 1DD0:202
 1DD1..1DF5:230
+1DFB:230
 1DFC:233
 1DFD:220
 1DFE:230
@@ -310,6 +312,8 @@ FE2E..FE2F:230
 1134D:9
 11366..1136C:230
 11370..11374:230
+11442:9
+11446:7
 114C2:9
 114C3:7
 115BF:9
@@ -318,6 +322,7 @@ FE2E..FE2F:230
 116B6:9
 116B7:7
 1172B:9
+11C3F:9
 16AF0..16AF4:1
 16B30..16B36:230
 1BC9E:1
@@ -330,7 +335,14 @@ FE2E..FE2F:230
 1D18A..1D18B:220
 1D1AA..1D1AD:230
 1D242..1D244:230
+1E000..1E006:230
+1E008..1E018:230
+1E01B..1E021:230
+1E023..1E024:230
+1E026..1E02A:230
 1E8D0..1E8D6:220
+1E944..1E949:230
+1E94A:7
 
 # Canonical decomposition mappings
 00C0=0041 0300

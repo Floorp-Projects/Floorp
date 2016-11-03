@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/uz.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 uz{
-    Version{"2.1.20.4"}
+    Version{"2.1.29.44"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -70,7 +64,7 @@ uz{
             ec{"Duala"}
         }
         "Africa:El_Aaiun"{
-            ec{"El-Ayun"}
+            ec{"Al-Ayun"}
         }
         "Africa:Freetown"{
             ec{"Fritaun"}
@@ -145,7 +139,7 @@ uz{
             ec{"Niamey"}
         }
         "Africa:Nouakchott"{
-            ec{"Nuakshot"}
+            ec{"Nouakchott"}
         }
         "Africa:Ouagadougou"{
             ec{"Uagadugu"}
@@ -184,7 +178,7 @@ uz{
             ec{"La-Rioxa"}
         }
         "America:Argentina:Rio_Gallegos"{
-            ec{"Rio-Gallegos"}
+            ec{"Rio-Galyegos"}
         }
         "America:Argentina:Salta"{
             ec{"Salta"}
@@ -208,7 +202,7 @@ uz{
             ec{"Asunson"}
         }
         "America:Bahia"{
-            ec{"Bahiya"}
+            ec{"Baiya"}
         }
         "America:Bahia_Banderas"{
             ec{"Bahiya-Banderas"}
@@ -309,6 +303,9 @@ uz{
         "America:El_Salvador"{
             ec{"Salvador"}
         }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
+        }
         "America:Fortaleza"{
             ec{"Fortaleza"}
         }
@@ -355,7 +352,7 @@ uz{
             ec{"Marengo, Indiana"}
         }
         "America:Indiana:Petersburg"{
-            ec{"Peterburg, Indiana"}
+            ec{"Pitersberg, Indiana"}
         }
         "America:Indiana:Tell_City"{
             ec{"Tell-Siti, Indiana"}
@@ -472,7 +469,7 @@ uz{
             ec{"Nom"}
         }
         "America:Noronha"{
-            ec{"Noronxa"}
+            ec{"Noronya"}
         }
         "America:North_Dakota:Beulah"{
             ec{"Boyla, Shimoliy Dakota"}
@@ -544,13 +541,13 @@ uz{
             ec{"San-Paulu"}
         }
         "America:Scoresbysund"{
-            ec{"Skorsbisunn"}
+            ec{"Ittokkortoormiut"}
         }
         "America:Sitka"{
             ec{"Sitka"}
         }
         "America:St_Barthelemy"{
-            ec{"Sen-Bartelmi"}
+            ec{"Sen-Bartelemi"}
         }
         "America:St_Johns"{
             ec{"Sent-Jons"}
@@ -640,13 +637,13 @@ uz{
             ec{"Longyir"}
         }
         "Asia:Aden"{
-            ec{"Aden"}
+            ec{"Adan"}
         }
         "Asia:Almaty"{
-            ec{"Olma-Ota"}
+            ec{"Almati"}
         }
         "Asia:Amman"{
-            ec{"Amman"}
+            ec{"Ammon"}
         }
         "Asia:Anadyr"{
             ec{"Anadir"}
@@ -655,7 +652,7 @@ uz{
             ec{"Oqtov"}
         }
         "Asia:Aqtobe"{
-            ec{"Aktobe"}
+            ec{"Oqto‘ba"}
         }
         "Asia:Ashgabat"{
             ec{"Ashxobod"}
@@ -671,6 +668,9 @@ uz{
         }
         "Asia:Bangkok"{
             ec{"Bangkok"}
+        }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
         }
         "Asia:Beirut"{
             ec{"Bayrut"}
@@ -730,10 +730,10 @@ uz{
             ec{"Jaypur"}
         }
         "Asia:Jerusalem"{
-            ec{"Ierusalim"}
+            ec{"Quddus"}
         }
         "Asia:Kabul"{
-            ec{"Qobul"}
+            ec{"Kobul"}
         }
         "Asia:Kamchatka"{
             ec{"Kamchatka"}
@@ -757,7 +757,7 @@ uz{
             ec{"Kuching"}
         }
         "Asia:Kuwait"{
-            ec{"Quvayt"}
+            ec{"Kuvayt"}
         }
         "Asia:Macau"{
             ec{"Makao"}
@@ -787,7 +787,7 @@ uz{
             ec{"Omsk"}
         }
         "Asia:Oral"{
-            ec{"Oral"}
+            ec{"Uralsk"}
         }
         "Asia:Phnom_Penh"{
             ec{"Pnompen"}
@@ -844,10 +844,13 @@ uz{
             ec{"Tehron"}
         }
         "Asia:Thimphu"{
-            ec{"Timpu"}
+            ec{"Thimphu"}
         }
         "Asia:Tokyo"{
             ec{"Tokio"}
+        }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
         }
         "Asia:Ulaanbaatar"{
             ec{"Ulan-Bator"}
@@ -919,7 +922,7 @@ uz{
             ec{"Darvin"}
         }
         "Australia:Eucla"{
-            ec{"Yukla"}
+            ec{"Evkla"}
         }
         "Australia:Hobart"{
             ec{"Xobart"}
@@ -940,13 +943,16 @@ uz{
             ec{"Sidney"}
         }
         "Etc:Unknown"{
-            ec{"Noma’lum shahar"}
+            ec{"noma’lum shahar"}
         }
         "Europe:Amsterdam"{
             ec{"Amsterdam"}
         }
         "Europe:Andorra"{
             ec{"Andorra"}
+        }
+        "Europe:Astrakhan"{
+            ec{"Astraxan"}
         }
         "Europe:Athens"{
             ec{"Afina"}
@@ -1005,6 +1011,9 @@ uz{
         }
         "Europe:Kiev"{
             ec{"Kiyev"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
         }
         "Europe:Lisbon"{
             ec{"Lissabon"}
@@ -1082,11 +1091,14 @@ uz{
         "Europe:Tirane"{
             ec{"Tirana"}
         }
+        "Europe:Ulyanovsk"{
+            ec{"Ulyanovsk"}
+        }
         "Europe:Uzhgorod"{
             ec{"Ujgorod"}
         }
         "Europe:Vaduz"{
-            ec{"Vaduz"}
+            ec{"Vaduts"}
         }
         "Europe:Vatican"{
             ec{"Vatikan"}
@@ -1131,7 +1143,7 @@ uz{
             ec{"Kergelen"}
         }
         "Indian:Mahe"{
-            ec{"Mahe"}
+            ec{"Mae"}
         }
         "Indian:Maldives"{
             ec{"Maldiv orollari"}
@@ -1233,7 +1245,7 @@ uz{
             ec{"Pitkern"}
         }
         "Pacific:Ponape"{
-            ec{"Ponape oroli"}
+            ec{"Ponpei oroli"}
         }
         "Pacific:Port_Moresby"{
             ec{"Port-Morsbi"}
@@ -1300,14 +1312,14 @@ uz{
             ls{"Sharqiy Amerika standart vaqti"}
         }
         "meta:America_Mountain"{
-            ld{"Shimoliy Amerika togʻ yozgi vaqti"}
-            lg{"Shimoliy Amerika togʻ vaqti"}
-            ls{"Shimoliy Amerika togʻ standart vaqti"}
+            ld{"Tog‘ yozgi vaqti (AQSH)"}
+            lg{"Tog‘ vaqti (AQSH)"}
+            ls{"Tog‘ standart vaqti (AQSH)"}
         }
         "meta:America_Pacific"{
-            ld{"Shimoliy Amerika Tinch okeani yozgi vaqti"}
-            lg{"Shimoliy Amerika Tinch okeani vaqti"}
-            ls{"Shimoliy Amerika Tinch okeani standart vaqti"}
+            ld{"Tinch okeani yozgi vaqti"}
+            lg{"Tinch okeani vaqti"}
+            ls{"Tinch okeani standart vaqti"}
         }
         "meta:Apia"{
             ld{"Apia yozgi vaqti"}
@@ -1486,7 +1498,7 @@ uz{
             ls{"Fransuz Gvianasi vaqti"}
         }
         "meta:French_Southern"{
-            ls{"Fransuz Janubiy va Antarktika vaqti"}
+            ls{"Fransuz Janubiy hududlari va Antarktika vaqti"}
         }
         "meta:GMT"{
             ls{"Grinvich o‘rtacha vaqti"}
@@ -1511,9 +1523,9 @@ uz{
             ls{"Sharqiy Grenlandiya standart vaqti"}
         }
         "meta:Greenland_Western"{
-            ld{"Gʻarbiy Grenlandiya yozgi vaqti"}
-            lg{"Gʻarbiy Grenlandiya vaqti"}
-            ls{"Gʻarbiy Grenlandiya standart vaqti"}
+            ld{"G‘arbiy Grenlandiya yozgi vaqti"}
+            lg{"G‘arbiy Grenlandiya vaqti"}
+            ls{"G‘arbiy Grenlandiya standart vaqti"}
         }
         "meta:Gulf"{
             ls{"Fors ko‘rfazi standart vaqti"}
@@ -1737,6 +1749,9 @@ uz{
         "meta:Ponape"{
             ls{"Ponape vaqti"}
         }
+        "meta:Pyongyang"{
+            ls{"Pxenyan vaqti"}
+        }
         "meta:Reunion"{
             ls{"Reyunion vaqti"}
         }
@@ -1807,9 +1822,9 @@ uz{
             ls{"Urugvay standart vaqti"}
         }
         "meta:Uzbekistan"{
-            ld{"Oʻzbekiston yozgi vaqti"}
-            lg{"Oʻzbekiston vaqti"}
-            ls{"Oʻzbekiston standart vaqti"}
+            ld{"O‘zbekiston yozgi vaqti"}
+            lg{"O‘zbekiston vaqti"}
+            ls{"O‘zbekiston standart vaqti"}
         }
         "meta:Vanuatu"{
             ld{"Vanuatu yozgi vaqti"}
@@ -1852,8 +1867,8 @@ uz{
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0} vaqti"}
-        regionFormatDaylight{"{0} yozgi vaqti"}
-        regionFormatStandard{"{0} standart vaqti"}
+        regionFormat{"{0}"}
+        regionFormatDaylight{"{0} (+1)"}
+        regionFormatStandard{"{0} (+0)"}
     }
 }

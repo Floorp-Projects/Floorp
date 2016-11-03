@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/is.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 is{
     Currencies{
         ADP{
@@ -136,9 +130,13 @@ is{
             "BWP",
             "botsvönsk púla",
         }
+        BYN{
+            "BYN",
+            "hvítrússnesk rúbla",
+        }
         BYR{
             "BYR",
-            "hvítrússnesk rúbla",
+            "hvítrússnesk rúbla (2000–2016)",
         }
         BZD{
             "BZD",
@@ -902,7 +900,7 @@ is{
         BND{"$"}
         BRL{"R$"}
         BSD{"$"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1045,9 +1043,13 @@ is{
             one{"botsvönsk púla"}
             other{"botsvanskar púlur"}
         }
-        BYR{
+        BYN{
             one{"hvítrússnesk rúbla"}
             other{"hvítrússneskar rúblur"}
+        }
+        BYR{
+            one{"hvítrússnesk rúbla (2000–2016)"}
+            other{"hvítrússneskar rúblur (2000–2016)"}
         }
         BZD{
             one{"belískur dalur"}
@@ -1598,5 +1600,5 @@ is{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.29.65"}
 }

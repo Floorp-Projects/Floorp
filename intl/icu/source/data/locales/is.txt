@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/is.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 is{
     AuxExemplarCharacters{"[c q w z]"}
     Ellipsis{
@@ -90,6 +84,44 @@ is{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"0 þ'.' ¤"}
+                        other{"0 þ'.' ¤"}
+                    }
+                    10000{
+                        one{"00 þ'.' ¤"}
+                        other{"00 þ'.' ¤"}
+                    }
+                    100000{
+                        one{"000 þ'.' ¤"}
+                        other{"000 þ'.' ¤"}
+                    }
+                    1000000{
+                        one{"0 m'.' ¤"}
+                        other{"0 m'.' ¤"}
+                    }
+                    10000000{
+                        one{"00 m'.' ¤"}
+                        other{"00 m'.' ¤"}
+                    }
+                    100000000{
+                        one{"000 m'.' ¤"}
+                        other{"000 m'.' ¤"}
+                    }
+                    1000000000{
+                        one{"0 ma'.' ¤"}
+                        other{"0 ma'.' ¤"}
+                    }
+                    10000000000{
+                        one{"00 ma'.' ¤"}
+                        other{"00 ma'.' ¤"}
+                    }
+                    100000000000{
+                        one{"000 ma'.' ¤"}
+                        other{"000 ma'.' ¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0 þ'.'"}
@@ -159,7 +191,7 @@ is{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.29.65"}
     calendar{
         generic{
             DateTimePatterns{
@@ -363,6 +395,10 @@ is{
                 MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
                 MMMMEd{"E, d. MMMM"}
+                MMMMW{
+                    one{"'viku' W 'í' MMM"}
+                    other{"'viku' W 'í' MMM"}
+                }
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
                 Md{"d.M."}
@@ -383,6 +419,10 @@ is{
                 yMd{"d.M.y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"'viku' w 'af' y"}
+                    other{"'viku' w 'af' y"}
+                }
             }
             dayNames{
                 format{
@@ -492,19 +532,23 @@ is{
                 stand-alone{
                     abbreviated{
                         afternoon1{"síðd."}
+                        am{"f.h."}
                         evening1{"kv."}
                         midnight{"miðn."}
                         morning1{"morg."}
                         night1{"nótt"}
                         noon{"hád."}
+                        pm{"e.h."}
                     }
                     narrow{
                         afternoon1{"sd."}
+                        am{"f.h."}
                         evening1{"kv."}
                         midnight{"mn."}
                         morning1{"mrg."}
                         night1{"n."}
                         noon{"hd."}
+                        pm{"e.h."}
                     }
                     wide{
                         afternoon1{"eftir hádegi"}
@@ -772,6 +816,94 @@ is{
             }
         }
     }
+    characterLabel{
+        activities{"virkni"}
+        african_scripts{"afrískt letur"}
+        american_scripts{"amerískt letur"}
+        animal{"dýr"}
+        animals_nature{"dýr eða náttúra"}
+        arrows{"ör"}
+        body{"líkami"}
+        box_drawing{"kassateikning"}
+        braille{"blindraletur"}
+        building{"bygging"}
+        bullets_stars{"punktur eða stjarna"}
+        consonantal_jamo{"samhljóðajamó"}
+        currency_symbols{"gjaldmiðilstákn"}
+        dash_connector{"skáastrik eða tengi"}
+        digits{"tala"}
+        dingbats{"dingbat"}
+        divination_symbols{"dýrðartákn"}
+        downwards_arrows{"niðurör"}
+        downwards_upwards_arrows{"ör niður og upp"}
+        east_asian_scripts{"austur-asískt letur"}
+        emoji{"emoji"}
+        european_scripts{"evrópskt letur"}
+        female{"kona"}
+        flag{"fáni"}
+        flags{"fánar"}
+        food_drink{"matur og drykkur"}
+        format{"snið"}
+        format_whitespace{"snið og bil"}
+        full_width_form_variant{"afbriði með fullri breidd"}
+        geometric_shapes{"form"}
+        half_width_form_variant{"afbrigði með hálfri lengd"}
+        han_characters{"han-stafur"}
+        han_radicals{"han-grunnmerki"}
+        hanja{"hanja"}
+        hanzi_simplified{"hanzi (einfaldað)"}
+        hanzi_traditional{"hanzi (hefðbundið)"}
+        heart{"hjarta"}
+        historic_scripts{"sögulegt letur"}
+        ideographic_desc_characters{"myndstafur"}
+        japanese_kana{"japanskt kana"}
+        kanbun{"kanbun"}
+        kanji{"kanji"}
+        keycap{"takki"}
+        leftwards_arrows{"ör til vinstri"}
+        leftwards_rightwards_arrows{"ör til vinstri og hægri"}
+        letterlike_symbols{"bókstafatákn"}
+        limited_use{"takmörkuð notkun"}
+        male{"karl"}
+        math_symbols{"stærðfræðimerki"}
+        middle_eastern_scripts{"mið-austurlenskt letur"}
+        miscellaneous{"ýmislegt"}
+        modern_scripts{"nútímaletur"}
+        modifier{"breytilykill"}
+        musical_symbols{"tónlistartákn"}
+        nature{"náttúra"}
+        nonspacing{"ekkert bil"}
+        numbers{"tölur"}
+        objects{"hlutur"}
+        other{"annað"}
+        paired{"parað"}
+        person{"manneskja"}
+        phonetic_alphabet{"hljóðfræðilegt stafróf"}
+        pictographs{"myndrit"}
+        place{"staður"}
+        plant{"planta"}
+        punctuation{"greinarmerki"}
+        rightwards_arrows{"ör niður"}
+        sign_standard_symbols{"merki eða tákn"}
+        small_form_variant{"lítil afbrigði"}
+        smiley{"broskarl"}
+        smileys_people{"broskarl eða persóna"}
+        south_asian_scripts{"suður-asískt letur"}
+        southeast_asian_scripts{"letur frá suðaustur-asíu"}
+        spacing{"stafabil"}
+        sport{"íþróttir"}
+        symbols{"tákn"}
+        technical_symbols{"tæknilegt tákn"}
+        tone_marks{"tónmerki"}
+        travel{"ferðalög"}
+        travel_places{"ferð eða staður"}
+        upwards_arrows{"ör upp"}
+        variant_forms{"afbrigði"}
+        vocalic_jamo{"sérhljóðajamó"}
+        weather{"veður"}
+        western_asian_scripts{"vestur-asískt letur"}
+        whitespace{"bil"}
+    }
     delimiters{
         alternateQuotationEnd{"‘"}
         alternateQuotationStart{"‚"}
@@ -802,7 +934,10 @@ is{
         day-narrow{
             dn{"d."}
             relative{
+                "-1"{"í gær"}
                 "-2"{"í fyrradag"}
+                "0"{"í dag"}
+                "1"{"á morgun"}
                 "2"{"eftir tvo daga"}
             }
             relativeTime{
@@ -819,7 +954,10 @@ is{
         day-short{
             dn{"dagur"}
             relative{
+                "-1"{"í gær"}
                 "-2"{"í fyrradag"}
+                "0"{"í dag"}
+                "1"{"á morgun"}
                 "2"{"eftir tvo daga"}
             }
             relativeTime{
@@ -841,23 +979,23 @@ is{
         }
         fri{
             relative{
-                "-1"{"föstudagur í síðustu viku"}
-                "0"{"föstudagur í þessari viku"}
-                "1"{"föstudagur í næstu viku"}
+                "-1"{"síðasta föstudag"}
+                "0"{"á föstudaginn"}
+                "1"{"næsta föstudag"}
             }
         }
         fri-narrow{
             relative{
-                "-1"{"síðasti fös."}
-                "0"{"þessi fös."}
-                "1"{"nk. fös."}
+                "-1"{"síðasta fös."}
+                "0"{"á fös."}
+                "1"{"næsta fös."}
             }
         }
         fri-short{
             relative{
-                "-1"{"síðasti fös."}
-                "0"{"þessi fös."}
-                "1"{"næstkomandi fös."}
+                "-1"{"síðasta fös."}
+                "0"{"á fös."}
+                "1"{"næsta fös."}
             }
         }
         hour{
@@ -1069,23 +1207,23 @@ is{
         }
         sat{
             relative{
-                "-1"{"laugardagur í síðustu viku"}
-                "0"{"laugardagur í þessari viku"}
-                "1"{"laugardagur í næstu viku"}
+                "-1"{"síðasta laugardag"}
+                "0"{"á laugardaginn"}
+                "1"{"næsta laugardag"}
             }
         }
         sat-narrow{
             relative{
-                "-1"{"síðasti lau."}
-                "0"{"þessi lau."}
-                "1"{"nk. lau."}
+                "-1"{"síðasta lau."}
+                "0"{"á lau."}
+                "1"{"næsta lau."}
             }
         }
         sat-short{
             relative{
-                "-1"{"síðasti lau."}
-                "0"{"þessi lau."}
-                "1"{"næstkomandi lau."}
+                "-1"{"síðasta lau."}
+                "0"{"á lau."}
+                "1"{"næsta lau."}
             }
         }
         second{
@@ -1359,17 +1497,5 @@ is{
         UK{"breskt"}
         US{"bandarískt"}
         metric{"metrakerfi"}
-    }
-    transformNames{
-        BGN{"BGN"}
-        Numeric{"Tölulegur"}
-        Tone{"Tónn"}
-        UNGEGN{"UNGEGN"}
-        x-Accents{"Áherslur"}
-        x-Fullwidth{"Full breidd"}
-        x-Halfwidth{"Hálf breidd"}
-        x-Jamo{"Jamo"}
-        x-Pinyin{"Pinyin"}
-        x-Publishing{"Birting"}
     }
 }

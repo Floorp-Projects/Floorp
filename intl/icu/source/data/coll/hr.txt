@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/collation/hr.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 hr{
     Version{"2.1.19.14"}
     collations{
@@ -15,7 +9,7 @@ hr{
                 "[import hr-u-co-standard]"
                 "[reorder others]"
             }
-            Version{"28"}
+            Version{"30.0.2"}
         }
         standard{
             Sequence{
@@ -27,7 +21,7 @@ hr{
                 "&S<š<<<Š"
                 "&Z<ž<<<Ž"
             }
-            Version{"28"}
+            Version{"30.0.2"}
         }
     }
 }

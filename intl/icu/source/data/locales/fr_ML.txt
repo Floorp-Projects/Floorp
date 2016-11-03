@@ -1,11 +1,49 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fr_ML.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fr_ML{
-    Version{"2.1.19.14"}
+    NumberElements{
+        latn{
+            miscPatterns{
+                atLeast{"au moins {0}"}
+            }
+        }
+    }
+    Version{"2.1.27.63"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE d MMMM y",
+                "d MMMM y",
+                "d MMM y",
+                "dd/MM/y",
+                "{1}, {0}",
+                "{1} 'à' {0}",
+                "{1} 'à' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            quarters{
+                format{
+                    wide{
+                        "le 1er trimestre",
+                        "le 2ème trimestre",
+                        "le 3ème trimestre",
+                        "le 4ème trimestre",
+                    }
+                }
+                stand-alone{
+                    wide{
+                        "1er trimestre",
+                        "2ème trimestre",
+                        "3ème trimestre",
+                        "4ème trimestre",
+                    }
+                }
+            }
+        }
+    }
 }

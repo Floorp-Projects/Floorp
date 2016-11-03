@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ms.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ms{
     Currencies{
         AED{
@@ -100,9 +94,13 @@ ms{
             "BWP",
             "Pula Botswana",
         }
+        BYN{
+            "BYN",
+            "Rubel Belarus",
+        }
         BYR{
             "BYR",
-            "Ruble Belarus",
+            "Rubel Belarus (2000–2016)",
         }
         BZD{
             "BZD",
@@ -474,7 +472,7 @@ ms{
         }
         RUB{
             "RUB",
-            "Ruble Rusia",
+            "Rubel Rusia",
         }
         RWF{
             "RWF",
@@ -658,7 +656,7 @@ ms{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -675,6 +673,7 @@ ms{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -715,6 +714,7 @@ ms{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -812,8 +812,11 @@ ms{
         BWP{
             other{"Pula Botswana"}
         }
+        BYN{
+            other{"Rubel Belarus"}
+        }
         BYR{
-            other{"Ruble Belarus"}
+            other{"Rubel Belarus (2000–2016)"}
         }
         BZD{
             other{"Dolar Belize"}
@@ -1089,7 +1092,7 @@ ms{
             other{"Dinar Serbia"}
         }
         RUB{
-            other{"Ruble Rusia"}
+            other{"Rubel Rusia"}
         }
         RWF{
             other{"Franc Rwanda"}
@@ -1218,5 +1221,5 @@ ms{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.28.79"}
 }

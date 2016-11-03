@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ta.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ta{
-    Version{"2.1.19.55"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"அபிட்ஜான்"}
@@ -64,7 +58,7 @@ ta{
             ec{"தார் எஸ் சலாம்"}
         }
         "Africa:Djibouti"{
-            ec{"டிஜிபவ்டி"}
+            ec{"ஜிபௌட்டி"}
         }
         "Africa:Douala"{
             ec{"தவுலா"}
@@ -184,7 +178,7 @@ ta{
             ec{"லா ரியோஜா"}
         }
         "America:Argentina:Rio_Gallegos"{
-            ec{"ரியோ கேலிகாஸ்"}
+            ec{"ரியோ கேலெகோஸ்"}
         }
         "America:Argentina:Salta"{
             ec{"சால்டா"}
@@ -247,7 +241,7 @@ ta{
             ec{"கன்குன்"}
         }
         "America:Caracas"{
-            ec{"கேராகஸ்"}
+            ec{"கரகாஸ்"}
         }
         "America:Catamarca"{
             ec{"கடமார்கா"}
@@ -309,6 +303,9 @@ ta{
         "America:El_Salvador"{
             ec{"எல் சால்வடோர்"}
         }
+        "America:Fort_Nelson"{
+            ec{"ஃபோர்ட் நெல்சன்"}
+        }
         "America:Fortaleza"{
             ec{"ஃபோர்டாலெசா"}
         }
@@ -322,7 +319,7 @@ ta{
             ec{"கூஸ் பே"}
         }
         "America:Grand_Turk"{
-            ec{"கிராண்ட் துர்க்"}
+            ec{"கிராண்ட் டர்க்"}
         }
         "America:Grenada"{
             ec{"கிரனடா"}
@@ -388,7 +385,7 @@ ta{
             ec{"ஜுனியூ"}
         }
         "America:Kentucky:Monticello"{
-            ec{"மான்டிசெல்லோ, கென்டக்கி"}
+            ec{"மான்டிசெல்லோ, கென்டகி"}
         }
         "America:Kralendijk"{
             ec{"கிரெலன்டிஜ்"}
@@ -499,7 +496,7 @@ ta{
             ec{"ஃபோனிக்ஸ்"}
         }
         "America:Port-au-Prince"{
-            ec{"போர்ட்-வ்-பிரின்ஸ்"}
+            ec{"போர்ட்-அவ்-பிரின்ஸ்"}
         }
         "America:Port_of_Spain"{
             ec{"போர்ட் ஆஃப் ஸ்பெயின்"}
@@ -559,13 +556,13 @@ ta{
             ec{"செயின்ட் கீட்ஸ்"}
         }
         "America:St_Lucia"{
-            ec{"செயிண்ட் லூசியா"}
+            ec{"செயின்ட் லூசியா"}
         }
         "America:St_Thomas"{
             ec{"செயின்ட் தாமஸ்"}
         }
         "America:St_Vincent"{
-            ec{"செயிண்ட் வின்சென்ட்"}
+            ec{"செயின்ட் வின்சென்ட்"}
         }
         "America:Swift_Current"{
             ec{"ஸ்விஃப்ட் கரண்ட்"}
@@ -672,6 +669,9 @@ ta{
         "Asia:Bangkok"{
             ec{"பாங்காக்"}
         }
+        "Asia:Barnaul"{
+            ec{"பார்னால்"}
+        }
         "Asia:Beirut"{
             ec{"பெய்ரூட்"}
         }
@@ -760,7 +760,7 @@ ta{
             ec{"குவைத்"}
         }
         "Asia:Macau"{
-            ec{"மகவ்"}
+            ec{"மகாவு"}
         }
         "Asia:Magadan"{
             ec{"மகதன்"}
@@ -796,7 +796,7 @@ ta{
             ec{"போன்டியானாக்"}
         }
         "Asia:Pyongyang"{
-            ec{"பியோங்கியாங்"}
+            ec{"பியாங்யாங்"}
         }
         "Asia:Qatar"{
             ec{"கத்தார்"}
@@ -832,7 +832,7 @@ ta{
             ec{"ஸ்ரெட்நிகோலிம்ஸ்க்"}
         }
         "Asia:Taipei"{
-            ec{"தைபே"}
+            ec{"தாய்பே"}
         }
         "Asia:Tashkent"{
             ec{"தாஷ்கண்ட்"}
@@ -848,6 +848,9 @@ ta{
         }
         "Asia:Tokyo"{
             ec{"டோக்கியோ"}
+        }
+        "Asia:Tomsk"{
+            ec{"டாம்ஸ்க்"}
         }
         "Asia:Ulaanbaatar"{
             ec{"உலான்பாட்டர்"}
@@ -928,7 +931,7 @@ ta{
             ec{"லின்டெமன்"}
         }
         "Australia:Lord_Howe"{
-            ec{"லார்டு ஹோவே"}
+            ec{"லார்ட் ஹோவே"}
         }
         "Australia:Melbourne"{
             ec{"மெல்போர்ன்"}
@@ -943,16 +946,19 @@ ta{
             ec{"தெரியாத நகரம்"}
         }
         "Europe:Amsterdam"{
-            ec{"ஆம்ஸ்டர்டம்"}
+            ec{"ஆம்ஸ்ட்ரடாம்"}
         }
         "Europe:Andorra"{
             ec{"அண்டோரா"}
         }
+        "Europe:Astrakhan"{
+            ec{"அஸ்ட்ராகான்"}
+        }
         "Europe:Athens"{
-            ec{"ஏதேன்ஸ்"}
+            ec{"ஏதன்ஸ்"}
         }
         "Europe:Belgrade"{
-            ec{"பெல்க்ரேடு"}
+            ec{"பெல்கிரேட்"}
         }
         "Europe:Berlin"{
             ec{"பெர்லின்"}
@@ -961,7 +967,7 @@ ta{
             ec{"பிரடிஸ்லாவா"}
         }
         "Europe:Brussels"{
-            ec{"புருசேல்ஸ்"}
+            ec{"புரூசல்ஸ்"}
         }
         "Europe:Bucharest"{
             ec{"புசாரெஸ்ட்"}
@@ -1001,10 +1007,13 @@ ta{
             ec{"ஜெர்சி"}
         }
         "Europe:Kaliningrad"{
-            ec{"கலினின்கிராடு"}
+            ec{"கலினின்கிராட்"}
         }
         "Europe:Kiev"{
             ec{"கீவ்"}
+        }
+        "Europe:Kirov"{
+            ec{"கிரோவ்"}
         }
         "Europe:Lisbon"{
             ec{"லிஸ்பன்"}
@@ -1020,13 +1029,13 @@ ta{
             ec{"லக்சம்பர்க்"}
         }
         "Europe:Madrid"{
-            ec{"மாட்ரிட்"}
+            ec{"மேட்ரிட்"}
         }
         "Europe:Malta"{
             ec{"மால்டா"}
         }
         "Europe:Mariehamn"{
-            ec{"மரிஹமன்"}
+            ec{"மரிஹம்"}
         }
         "Europe:Minsk"{
             ec{"மின்ஸ்க்"}
@@ -1059,10 +1068,10 @@ ta{
             ec{"சமாரா"}
         }
         "Europe:San_Marino"{
-            ec{"சான் மாரினோ"}
+            ec{"சான் மரினோ"}
         }
         "Europe:Sarajevo"{
-            ec{"சராஜேவோ"}
+            ec{"சரயேவோ"}
         }
         "Europe:Simferopol"{
             ec{"சிம்ஃபெரோபோல்"}
@@ -1082,8 +1091,11 @@ ta{
         "Europe:Tirane"{
             ec{"திரானே"}
         }
+        "Europe:Ulyanovsk"{
+            ec{"உல்யானோஸ்க்"}
+        }
         "Europe:Uzhgorod"{
-            ec{"உஜ்கோரோட்"}
+            ec{"உஷோரோட்"}
         }
         "Europe:Vaduz"{
             ec{"வதுஸ்"}
@@ -1182,7 +1194,7 @@ ta{
             ec{"கேம்பியர்"}
         }
         "Pacific:Guadalcanal"{
-            ec{"கவுடால்கேனல்"}
+            ec{"க்வாடால்கேனல்"}
         }
         "Pacific:Guam"{
             ec{"குவாம்"}
@@ -1194,7 +1206,7 @@ ta{
             ec{"ஜோன்ஸ்டன்"}
         }
         "Pacific:Kiritimati"{
-            ec{"கிரிடிமடி"}
+            ec{"கிரிடிமாட்டி"}
         }
         "Pacific:Kosrae"{
             ec{"கோஸ்ரே"}
@@ -1221,7 +1233,7 @@ ta{
             ec{"நார்ஃபோக்"}
         }
         "Pacific:Noumea"{
-            ec{"நவுமியா"}
+            ec{"நோவுமியா"}
         }
         "Pacific:Pago_Pago"{
             ec{"பேகோ பேகோ"}
@@ -1280,7 +1292,7 @@ ta{
             ls{"தென் ஆப்பிரிக்க நிலையான நேரம்"}
         }
         "meta:Africa_Western"{
-            ld{"மேற்கு ஆப்பிரிக்கா கோடை நேரம்"}
+            ld{"மேற்கு ஆப்பிரிக்க கோடை நேரம்"}
             lg{"மேற்கு ஆப்பிரிக்க நேரம்"}
             ls{"மேற்கு ஆப்பிரிக்க நிலையான நேரம்"}
         }
@@ -1511,7 +1523,7 @@ ta{
             ls{"ஃபிரஞ்சு கயானா நேரம்"}
         }
         "meta:French_Southern"{
-            ls{"ஃபிரஞ்சு தெற்கத்திய & அண்டார்டிக் நேரம்"}
+            ls{"பிரெஞ்சு தெற்கத்திய & அண்டார்டிக் நேரம்"}
         }
         "meta:GMT"{
             ls{"கிரீன்விச் சராசரி நேரம்"}
@@ -1575,13 +1587,13 @@ ta{
             ls{"இந்தோசீன நேரம்"}
         }
         "meta:Indonesia_Central"{
-            ls{"மத்திய இந்தோனேஷிய நேரம்"}
+            ls{"மத்திய இந்தோனேசிய நேரம்"}
         }
         "meta:Indonesia_Eastern"{
-            ls{"கிழக்கத்திய இந்தோனேஷிய நேரம்"}
+            ls{"கிழக்கத்திய இந்தோனேசிய நேரம்"}
         }
         "meta:Indonesia_Western"{
-            ls{"மேற்கத்திய இந்தோனேஷியா நேரம்"}
+            ls{"மேற்கத்திய இந்தோனேசிய நேரம்"}
         }
         "meta:Iran"{
             ld{"ஈரான் பகலொளி நேரம்"}
@@ -1701,7 +1713,7 @@ ta{
             ls{"நவ்ரூ நேரம்"}
         }
         "meta:Nepal"{
-            ls{"நேபாள் நேரம்"}
+            ls{"நேபாள நேரம்"}
         }
         "meta:New_Caledonia"{
             ld{"நியூ கலிடோனியா கோடை நேரம்"}
@@ -1722,7 +1734,7 @@ ta{
             ls{"நியு நேரம்"}
         }
         "meta:Norfolk"{
-            ls{"நோர்ஃபோக் தீவுகள் நேரம்"}
+            ls{"நார்ஃபோக் தீவு நேரம்"}
         }
         "meta:Noronha"{
             ld{"பெர்னான்டோ டி நோரோன்ஹா கோடை நேரம்"}
@@ -1782,6 +1794,9 @@ ta{
         "meta:Ponape"{
             ls{"போனாபே நேரம்"}
         }
+        "meta:Pyongyang"{
+            ls{"பியாங்யாங் நேரம்"}
+        }
         "meta:Qyzylorda"{
             ld{"கைஜைலோர்டா கோடை நேரம்"}
             lg{"கைஜைலோர்டா நேரம்"}
@@ -1830,9 +1845,9 @@ ta{
             ls{"தஹிதி நேரம்"}
         }
         "meta:Taipei"{
-            ld{"தைபே பகலொளி நேரம்"}
-            lg{"தைபே நேரம்"}
-            ls{"தைபே நிலையான நேரம்"}
+            ld{"தாய்பே பகலொளி நேரம்"}
+            lg{"தாய்பே நேரம்"}
+            ls{"தாய்பே நிலையான நேரம்"}
         }
         "meta:Tajikistan"{
             ls{"தஜிகிஸ்தான் நேரம்"}

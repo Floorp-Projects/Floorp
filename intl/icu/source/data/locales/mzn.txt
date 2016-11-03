@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/mzn.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 mzn{
     AuxExemplarCharacters{"[\u200C\u200D\u200E\u200F \u064E \u064F \u0650 \u0652 \u0656 \u0670 إ ك ى ي]"}
     Ellipsis{
@@ -27,7 +21,7 @@ mzn{
         default{"arabext"}
         native{"arabext"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.76"}
     calendar{
         default{"persian"}
         gregorian{

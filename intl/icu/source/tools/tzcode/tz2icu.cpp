@@ -1,4 +1,5 @@
-
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
 * Copyright (c) 2003-2014, International Business Machines
@@ -742,7 +743,7 @@ struct FinalZone {
                << " and rule ID " << ruleid;
             throw invalid_argument(os.str());
         }
-        if (year < 1900 || year >= 2050) {
+        if (year < 1900) {
             ostringstream os;
             os << "Invalid input year " << year
                << " with offset " << offset
@@ -1713,12 +1714,8 @@ int main(int argc, char *argv[]) {
     ofstream file(filename.c_str());
     if (file) {
         file << "//---------------------------------------------------------" << endl
-             << "// Copyright (C) 2003";
-        if (thisYear > 2003) {
-            file << "-" << thisYear;
-        }
-        file << ", International Business Machines" << endl
-             << "// Corporation and others.  All Rights Reserved." << endl
+             << "// Copyright (C) 2016 and later: Unicode, Inc. and others." << endl
+             << "// License & terms of use: http://www.unicode.org/copyright.html#License" << endl
              << "//---------------------------------------------------------" << endl
              << "// Build tool:  tz2icu" << endl
              << "// Build date:  " << asctime(now) /* << endl -- asctime emits CR */

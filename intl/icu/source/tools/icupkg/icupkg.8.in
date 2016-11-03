@@ -2,6 +2,8 @@
 .\"
 .\" icupkg.8: manual page for the icupkg utility
 .\"
+.\" Copyright (C) 2016 and later: Unicode, Inc. and others.
+.\" License & terms of use: http://www.unicode.org/copyright.html
 .\" Copyright (C) 2000-2006 IBM, Inc. and others.
 .\"
 .TH ICUPKG 8 "18 August 2006" "ICU MANPAGE" "ICU @VERSION@ Manual"

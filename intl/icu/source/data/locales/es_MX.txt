@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/es_MX.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 es_MX{
     %%Parent{"es_419"}
     MoreInformation{"[...]"}
@@ -14,25 +8,9 @@ es_MX{
             patterns{
                 percentFormat{"#,##0%"}
             }
-            patternsShort{
-                decimalFormat{
-                    1000{
-                        one{"0k"}
-                        other{"0k"}
-                    }
-                    10000{
-                        one{"00k"}
-                        other{"00k"}
-                    }
-                    100000{
-                        one{"000k"}
-                        other{"000k"}
-                    }
-                }
-            }
         }
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.28.76"}
     calendar{
         generic{
             DateTimePatterns{
@@ -80,6 +58,14 @@ es_MX{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "a. m.",
+                "p. m.",
+            }
+            AmPmMarkersAbbr{
+                "a. m.",
+                "p. m.",
+            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -132,17 +118,37 @@ es_MX{
                     }
                 }
             }
+            dayPeriod{
+                format{
+                    narrow{
+                        evening1{"de la tarde"}
+                        morning1{"de la madrugada"}
+                        morning2{"mañana"}
+                        night1{"de la noche"}
+                        noon{"del mediodía"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
+                    narrow{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
+                    wide{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
+                }
+            }
             intervalFormats{
                 H{
                     H{"HH–HH"}
                 }
-                Hm{
-                    H{"H:mm–H:mm"}
-                    m{"H:mm–H:mm"}
-                }
-                Hmv{
-                    H{"H:mm–H:mm v"}
-                    m{"H:mm–H:mm v"}
+                Hv{
+                    H{"HH – HH v"}
                 }
                 MEd{
                     M{"E d/M – E d/M"}
@@ -235,7 +241,7 @@ es_MX{
                         "1er. trimestre",
                         "2º. trimestre",
                         "3er. trimestre",
-                        "4º trimestre",
+                        "4o. trimestre",
                     }
                 }
                 stand-alone{
@@ -290,6 +296,9 @@ es_MX{
                     other{"en {0} días"}
                 }
             }
+        }
+        dayperiod{
+            dn{"a. m./p. m."}
         }
         fri{
             relative{

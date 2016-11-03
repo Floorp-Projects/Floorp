@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 2000-2014, International Business Machines
+*   Copyright (C) 2000-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 */
@@ -221,6 +223,14 @@ ures_getStringByKeyWithFallback(const UResourceBundle *resB,
                           const char* inKey,  
                           int32_t* len,
                           UErrorCode *status);
+
+#ifdef __cplusplus
+
+U_CAPI void U_EXPORT2
+ures_getAllItemsWithFallback(const UResourceBundle *bundle, const char *path,
+                             icu::ResourceSink &sink, UErrorCode &errorCode);
+
+#endif  /* __cplusplus */
 
 /**
  * Get a version number by key

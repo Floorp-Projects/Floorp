@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ko.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ko{
     AuxExemplarCharacters{
         "[ᄀ-ᄒ ᅡ-ᅵ ᆨ-ᇂ 丘 串 乃 久 乖 九 乞 乫 乾 亂 亘 交 京 仇 今 介 件 价 企 伋 伎 伽 佳 佶 侃 來 侊 供 係 俓 俱 個"
@@ -63,7 +57,7 @@ ko{
             patternsLong{
                 decimalFormat{
                     1000{
-                        other{"0"}
+                        other{"0천"}
                     }
                     10000{
                         other{"0만"}
@@ -103,7 +97,7 @@ ko{
             patternsShort{
                 currencyFormat{
                     1000{
-                        other{"0"}
+                        other{"¤0천"}
                     }
                     10000{
                         other{"¤0만"}
@@ -141,7 +135,7 @@ ko{
                 }
                 decimalFormat{
                     1000{
-                        other{"0"}
+                        other{"0천"}
                     }
                     10000{
                         other{"0만"}
@@ -196,7 +190,7 @@ ko{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.29.22"}
     calendar{
         buddhist{
             eras{
@@ -1066,6 +1060,9 @@ ko{
                 MMM{"LLL"}
                 MMMEEEEd{"MMM d일 EEEE"}
                 MMMEd{"MMM d일 (E)"}
+                MMMMW{
+                    other{"MMM W번째 주"}
+                }
                 MMMMd{"MMMM d일"}
                 MMMd{"MMM d일"}
                 Md{"M. d."}
@@ -1090,6 +1087,9 @@ ko{
                 yMd{"y. M. d."}
                 yQQQ{"y년 QQQ"}
                 yQQQQ{"y년 QQQQ"}
+                yw{
+                    other{"y년 w번째 주"}
+                }
             }
             dayNames{
                 format{
@@ -1202,14 +1202,14 @@ ko{
                 stand-alone{
                     abbreviated{
                         afternoon1{"오후"}
-                        am{"오전"}
+                        am{"AM"}
                         evening1{"저녁"}
                         midnight{"자정"}
                         morning1{"새벽"}
                         morning2{"오전"}
                         night1{"밤"}
                         noon{"정오"}
-                        pm{"오후"}
+                        pm{"PM"}
                     }
                     narrow{
                         afternoon1{"오후"}
@@ -1922,6 +1922,91 @@ ko{
             }
         }
     }
+    characterLabel{
+        activities{"활동"}
+        african_scripts{"아프리카 문자"}
+        american_scripts{"아메리카 문자"}
+        animal{"동물"}
+        arrows{"화살표"}
+        body{"몸"}
+        box_drawing{"상자 그림"}
+        braille{"점자"}
+        building{"건물"}
+        bullets_stars{"구분점/별"}
+        consonantal_jamo{"닿소리 자모"}
+        currency_symbols{"통화 기호"}
+        dash_connector{"대시/연결어"}
+        digits{"숫자"}
+        dingbats{"딩뱃"}
+        divination_symbols{"점성 기호"}
+        downwards_arrows{"아래쪽 방향 화살표"}
+        downwards_upwards_arrows{"상하 양방향 화살표"}
+        east_asian_scripts{"동아시아 문자"}
+        emoji{"이모티콘"}
+        european_scripts{"유럽 문자"}
+        female{"여"}
+        flag{"깃발"}
+        flags{"깃발"}
+        food_drink{"음식 및 음료"}
+        format{"포맷"}
+        format_whitespace{"포맷 및 공백"}
+        full_width_form_variant{"전각 형식 변형"}
+        geometric_shapes{"도형 모양"}
+        half_width_form_variant{"반각 형식 변형"}
+        han_characters{"한자"}
+        han_radicals{"한자 부수"}
+        hanja{"한자"}
+        hanzi_simplified{"한자(간체)"}
+        hanzi_traditional{"한자(번체)"}
+        heart{"하트"}
+        historic_scripts{"고전 문자"}
+        ideographic_desc_characters{"상형 설명 문자"}
+        kanbun{"간분"}
+        kanji{"칸지"}
+        keycap{"키캡"}
+        leftwards_arrows{"왼쪽 방향 화살표"}
+        leftwards_rightwards_arrows{"좌우 양방향 화살표"}
+        letterlike_symbols{"문자형 기호"}
+        limited_use{"제한적 사용"}
+        male{"남"}
+        math_symbols{"수학 기호"}
+        middle_eastern_scripts{"중동 문자"}
+        miscellaneous{"기타"}
+        modern_scripts{"근대 문자"}
+        modifier{"수식어"}
+        musical_symbols{"음악 기호"}
+        nature{"자연"}
+        nonspacing{"공백 없음"}
+        numbers{"숫자"}
+        objects{"사물"}
+        other{"기타"}
+        person{"사람"}
+        phonetic_alphabet{"음성 기호 알파벳"}
+        pictographs{"그림 문자"}
+        place{"장소"}
+        plant{"식물"}
+        punctuation{"구두점"}
+        rightwards_arrows{"오른쪽 방향 화살표"}
+        sign_standard_symbols{"상징/표준 기호"}
+        small_form_variant{"작은 부호 변형"}
+        smiley{"스마일"}
+        smileys_people{"스마일리 및 사람"}
+        south_asian_scripts{"남아시아 문자"}
+        southeast_asian_scripts{"동남아시아 문자"}
+        spacing{"간격"}
+        sport{"스포츠"}
+        symbols{"기호"}
+        technical_symbols{"기술 기호"}
+        tone_marks{"성조 표시"}
+        travel{"여행"}
+        travel_places{"여행 및 장소"}
+        upwards_arrows{"위쪽 방향 화살표"}
+        variant_forms{"부호 변형"}
+        vocalic_jamo{"홀소리 자모"}
+        weather{"날씨"}
+        western_asian_scripts{"동서양 문자"}
+        whitespace{"공백"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -1981,12 +2066,28 @@ ko{
                 "0"{"이번 금요일"}
                 "1"{"다음 금요일"}
             }
+            relativeTime{
+                future{
+                    other{"{0}주 후 금요일"}
+                }
+                past{
+                    other{"{0}주 전 금요일"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"지난 금요일"}
                 "0"{"이번 금요일"}
                 "1"{"다음 금요일"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}주 후 금요일"}
+                }
+                past{
+                    other{"{0}주 전 금요일"}
+                }
             }
         }
         fri-short{
@@ -1995,9 +2096,20 @@ ko{
                 "0"{"이번 금요일"}
                 "1"{"다음 금요일"}
             }
+            relativeTime{
+                future{
+                    other{"{0}주 후 금요일"}
+                }
+                past{
+                    other{"{0}주 전 금요일"}
+                }
+            }
         }
         hour{
             dn{"시"}
+            relative{
+                "0"{"현재 시간"}
+            }
             relativeTime{
                 future{
                     other{"{0}시간 후"}
@@ -2031,6 +2143,9 @@ ko{
         }
         minute{
             dn{"분"}
+            relative{
+                "0"{"현재 분"}
+            }
             relativeTime{
                 future{
                     other{"{0}분 후"}
@@ -2068,6 +2183,14 @@ ko{
                 "0"{"이번 월요일"}
                 "1"{"다음 월요일"}
             }
+            relativeTime{
+                future{
+                    other{"{0}주 후 월요일"}
+                }
+                past{
+                    other{"{0}주 전 월요일"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -2075,12 +2198,28 @@ ko{
                 "0"{"이번 월요일"}
                 "1"{"다음 월요일"}
             }
+            relativeTime{
+                future{
+                    other{"{0}주 후 월요일"}
+                }
+                past{
+                    other{"{0}주 전 월요일"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"지난 월요일"}
                 "0"{"이번 월요일"}
                 "1"{"다음 월요일"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}주 후 월요일"}
+                }
+                past{
+                    other{"{0}주 전 월요일"}
+                }
             }
         }
         month{
@@ -2123,6 +2262,11 @@ ko{
         }
         quarter{
             dn{"분기"}
+            relative{
+                "-1"{"지난 분기"}
+                "0"{"이번 분기"}
+                "1"{"다음 분기"}
+            }
             relativeTime{
                 future{
                     other{"{0}분기 후"}
@@ -2160,6 +2304,14 @@ ko{
                 "0"{"이번 토요일"}
                 "1"{"다음 토요일"}
             }
+            relativeTime{
+                future{
+                    other{"{0}주 후 토요일"}
+                }
+                past{
+                    other{"{0}주 전 토요일"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -2167,12 +2319,28 @@ ko{
                 "0"{"이번 토요일"}
                 "1"{"다음 토요일"}
             }
+            relativeTime{
+                future{
+                    other{"{0}주 후 토요일"}
+                }
+                past{
+                    other{"{0}주 전 토요일"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"지난 토요일"}
                 "0"{"이번 토요일"}
                 "1"{"다음 토요일"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}주 후 토요일"}
+                }
+                past{
+                    other{"{0}주 전 토요일"}
+                }
             }
         }
         second{
@@ -2217,12 +2385,28 @@ ko{
                 "0"{"이번 일요일"}
                 "1"{"다음 일요일"}
             }
+            relativeTime{
+                future{
+                    other{"{0}주 후 일요일"}
+                }
+                past{
+                    other{"{0}주 전 일요일"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"지난 일요일"}
                 "0"{"이번 일요일"}
                 "1"{"다음 일요일"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}주 후 일요일"}
+                }
+                past{
+                    other{"{0}주 전 일요일"}
+                }
             }
         }
         sun-short{
@@ -2231,12 +2415,28 @@ ko{
                 "0"{"이번 일요일"}
                 "1"{"다음 일요일"}
             }
+            relativeTime{
+                future{
+                    other{"{0}주 후 일요일"}
+                }
+                past{
+                    other{"{0}주 전 일요일"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"지난 목요일"}
                 "0"{"이번 목요일"}
                 "1"{"다음 목요일"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}주 후 목요일"}
+                }
+                past{
+                    other{"{0}주 전 목요일"}
+                }
             }
         }
         thu-narrow{
@@ -2245,12 +2445,28 @@ ko{
                 "0"{"이번 목요일"}
                 "1"{"다음 목요일"}
             }
+            relativeTime{
+                future{
+                    other{"{0}주 후 목요일"}
+                }
+                past{
+                    other{"{0}주 전 목요일"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"지난 목요일"}
                 "0"{"이번 목요일"}
                 "1"{"다음 목요일"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}주 후 목요일"}
+                }
+                past{
+                    other{"{0}주 전 목요일"}
+                }
             }
         }
         tue{
@@ -2259,12 +2475,28 @@ ko{
                 "0"{"이번 화요일"}
                 "1"{"다음 화요일"}
             }
+            relativeTime{
+                future{
+                    other{"{0}주 후 화요일"}
+                }
+                past{
+                    other{"{0}주 전 화요일"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"지난 화요일"}
                 "0"{"이번 화요일"}
                 "1"{"다음 화요일"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}주 후 화요일"}
+                }
+                past{
+                    other{"{0}주 전 화요일"}
+                }
             }
         }
         tue-short{
@@ -2273,12 +2505,28 @@ ko{
                 "0"{"이번 화요일"}
                 "1"{"다음 화요일"}
             }
+            relativeTime{
+                future{
+                    other{"{0}주 후 화요일"}
+                }
+                past{
+                    other{"{0}주 전 화요일"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"지난 수요일"}
                 "0"{"이번 수요일"}
                 "1"{"다음 수요일"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}주 후 수요일"}
+                }
+                past{
+                    other{"{0}주 전 수요일"}
+                }
             }
         }
         wed-narrow{
@@ -2287,12 +2535,28 @@ ko{
                 "0"{"이번 수요일"}
                 "1"{"다음 수요일"}
             }
+            relativeTime{
+                future{
+                    other{"{0}주 후 수요일"}
+                }
+                past{
+                    other{"{0}주 전 수요일"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"지난 수요일"}
                 "0"{"이번 수요일"}
                 "1"{"다음 수요일"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}주 후 수요일"}
+                }
+                past{
+                    other{"{0}주 전 수요일"}
+                }
             }
         }
         week{
@@ -2302,6 +2566,7 @@ ko{
                 "0"{"이번 주"}
                 "1"{"다음 주"}
             }
+            relativePeriod{"{0}번째 주"}
             relativeTime{
                 future{
                     other{"{0}주 후"}
@@ -2313,6 +2578,7 @@ ko{
         }
         week-narrow{
             dn{"주"}
+            relativePeriod{"{0}번째 주"}
             relativeTime{
                 future{
                     other{"{0}주 후"}
@@ -2324,6 +2590,7 @@ ko{
         }
         week-short{
             dn{"주"}
+            relativePeriod{"{0}번째 주"}
             relativeTime{
                 future{
                     other{"{0}주 후"}
@@ -2385,6 +2652,12 @@ ko{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-short{
+            2{"{0} 및 {1}"}
+            end{"{0} 및 {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         unit{
             2{"{0} {1}"}
             end{"{0} {1}"}
@@ -2408,17 +2681,5 @@ ko{
         UK{"영국식"}
         US{"미국식"}
         metric{"미터법"}
-    }
-    transformNames{
-        BGN{"미국 지명위원회(BGN)"}
-        Numeric{"숫자"}
-        Tone{"성조"}
-        UNGEGN{"유엔지명전문가회의(UNGEGN)"}
-        x-Accents{"악센트"}
-        x-Fullwidth{"전각"}
-        x-Halfwidth{"반각"}
-        x-Jamo{"자모"}
-        x-Pinyin{"병음"}
-        x-Publishing{"게시"}
     }
 }

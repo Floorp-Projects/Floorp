@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/es_MX.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 es_MX{
     %%Parent{"es_419"}
     Currencies{
@@ -228,8 +222,9 @@ es_MX{
     }
     Currencies%narrow{
         ARS{"$a"}
-        BYR{"Br"}
+        BYN{"Br"}
         DOP{"RD$"}
+        RON{"lei"}
         TRY{"TL"}
     }
     CurrencyPlurals{
@@ -446,5 +441,5 @@ es_MX{
             other{"kwachas zambianos"}
         }
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.28.76"}
 }

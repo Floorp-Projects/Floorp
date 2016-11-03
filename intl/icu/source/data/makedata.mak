@@ -1,5 +1,7 @@
+# Copyright (C) 2016 and later: Unicode, Inc. and others.
+# License & terms of use: http://www.unicode.org/copyright.html
 #**********************************************************************
-#* Copyright (C) 1999-2015, International Business Machines Corporation
+#* Copyright (C) 1999-2016, International Business Machines Corporation
 #* and others.  All Rights Reserved.
 #**********************************************************************
 # nmake file for creating data files on win32
@@ -10,10 +12,10 @@
 
 ##############################################################################
 # Keep the following in sync with the version - see common/unicode/uvernum.h
-U_ICUDATA_NAME=icudt56
+U_ICUDATA_NAME=icudt58
 ##############################################################################
 U_ICUDATA_ENDIAN_SUFFIX=l
-UNICODE_VERSION=8.0
+UNICODE_VERSION=9.0
 ICU_LIB_TARGET=$(DLL_OUTPUT)\$(U_ICUDATA_NAME).dll
 
 #  ICUMAKE
@@ -753,30 +755,30 @@ CLEAN : GODATA
 
 
 # RBBI .brk file generation.
-{$(ICUSRCDATA_RELATIVE_PATH)\$(ICUBRK)}.txt.brk:
+{$(ICUSRCDATA_RELATIVE_PATH)\$(ICUBRK)\rules}.txt.brk:
 	@echo Creating $@
 	@"$(ICUTOOLS)\genbrk\$(CFG)\genbrk" -c -r $< -o $@ -d"$(ICUBLD_PKG)" -i "$(ICUBLD_PKG)"
 
 #RBBI .dict file generation.
-{$(ICUSRCDATA_RELATIVE_PATH)\$(ICUBRK)}.txt.dict:
+{$(ICUSRCDATA_RELATIVE_PATH)\$(ICUBRK)\dictionaries}.txt.dict:
     @echo Creating $@
     @"$(ICUTOOLS)\gendict\$(CFG)\gendict" -c --uchars $<  "$(ICUBLD_PKG)\$@"
 
 $(ICUBRK)\thaidict.dict:
 	@echo Creating $(ICUBRK)\thaidict.dict
-	@"$(ICUTOOLS)\gendict\$(CFG)\gendict" -c --bytes --transform offset-0x0e00 $(ICUSRCDATA_RELATIVE_PATH)\$(ICUBRK)\thaidict.txt "$(ICUBLD_PKG)\$(ICUBRK)\thaidict.dict"
+	@"$(ICUTOOLS)\gendict\$(CFG)\gendict" -c --bytes --transform offset-0x0e00 $(ICUSRCDATA_RELATIVE_PATH)\$(ICUBRK)\dictionaries\thaidict.txt "$(ICUBLD_PKG)\$(ICUBRK)\thaidict.dict"
 
 $(ICUBRK)\laodict.dict:
 	@echo Creating $(ICUBRK)\laodict.dict
-	@"$(ICUTOOLS)\gendict\$(CFG)\gendict" -c --bytes --transform offset-0x0e80 $(ICUSRCDATA_RELATIVE_PATH)\$(ICUBRK)\laodict.txt "$(ICUBLD_PKG)\$(ICUBRK)\laodict.dict"
+	@"$(ICUTOOLS)\gendict\$(CFG)\gendict" -c --bytes --transform offset-0x0e80 $(ICUSRCDATA_RELATIVE_PATH)\$(ICUBRK)\dictionaries\laodict.txt "$(ICUBLD_PKG)\$(ICUBRK)\laodict.dict"
 
 $(ICUBRK)\burmesedict.dict:
 	@echo Creating $(ICUBRK)\burmesedict.dict
-	@"$(ICUTOOLS)\gendict\$(CFG)\gendict" -c --bytes --transform offset-0x1000 $(ICUSRCDATA_RELATIVE_PATH)\$(ICUBRK)\burmesedict.txt "$(ICUBLD_PKG)\$(ICUBRK)\burmesedict.dict"
+	@"$(ICUTOOLS)\gendict\$(CFG)\gendict" -c --bytes --transform offset-0x1000 $(ICUSRCDATA_RELATIVE_PATH)\$(ICUBRK)\dictionaries\burmesedict.txt "$(ICUBLD_PKG)\$(ICUBRK)\burmesedict.dict"
 
 $(ICUBRK)\khmerdict.dict:
 	@echo Creating $(ICUBRK)\khmerdict.dict
-	@"$(ICUTOOLS)\gendict\$(CFG)\gendict" -c --bytes --transform offset-0x1780 $(ICUSRCDATA_RELATIVE_PATH)\$(ICUBRK)\khmerdict.txt "$(ICUBLD_PKG)\$(ICUBRK)\khmerdict.dict"
+	@"$(ICUTOOLS)\gendict\$(CFG)\gendict" -c --bytes --transform offset-0x1780 $(ICUSRCDATA_RELATIVE_PATH)\$(ICUBRK)\dictionaries\khmerdict.txt "$(ICUBLD_PKG)\$(ICUBRK)\khmerdict.dict"
 
 !IFNDEF ICUDATA_SOURCE_ARCHIVE
 # Rule for creating converters

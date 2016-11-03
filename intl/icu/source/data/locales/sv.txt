@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/sv.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 sv{
     AuxExemplarCharacters{"[á â ã ā ç ë í î ï ī ñ ó ú ÿ ü æ ø]"}
     Ellipsis{
@@ -26,13 +20,17 @@ sv{
     NumberElements{
         arab{
             symbols{
-                minusSign{"‏−"}
+                minusSign{"؜−"}
+                nan{"¤¤¤"}
+                perMille{"؉‏"}
                 timeSeparator{":"}
             }
         }
         arabext{
             symbols{
-                minusSign{"‏−"}
+                minusSign{"‎−‎"}
+                nan{"¤¤¤"}
+                plusSign{"‎+‎"}
                 timeSeparator{":"}
             }
         }
@@ -221,12 +219,42 @@ sv{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.30.7"}
     calendar{
         buddhist{
             eras{
                 abbreviated{
                     "BE",
+                }
+            }
+            intervalFormats{
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+            }
+        }
+        chinese{
+            monthNames{
+                format{
+                    wide{
+                        "första månaden",
+                        "andra månaden",
+                        "tredje månaden",
+                        "fjärde månaden",
+                        "femte månaden",
+                        "sjätte månaden",
+                        "sjunde månaden",
+                        "åttonde månaden",
+                        "nionde månaden",
+                        "tionde månaden",
+                        "elfte månaden",
+                        "tolfte månaden",
+                    }
                 }
             }
         }
@@ -494,6 +522,14 @@ sv{
                 H{
                     H{"HH–HH"}
                 }
+                Hm{
+                    H{"HH:mm – HH:mm"}
+                    m{"HH:mm – HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm – HH:mm v"}
+                    m{"HH:mm – HH:mm v"}
+                }
                 Hv{
                     H{"HH–HH v"}
                 }
@@ -630,6 +666,10 @@ sv{
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMMEd{"E d MMMM"}
+                MMMMW{
+                    one{"'vecka' W 'i' MMM"}
+                    other{"'vecka' W 'i' MMM"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 MMd{"d/M"}
@@ -653,6 +693,10 @@ sv{
                 yMd{"y-MM-dd"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"'vecka' w, y"}
+                    other{"'vecka' w, y"}
+                }
             }
             dayNames{
                 format{
@@ -1052,6 +1096,16 @@ sv{
                     "AM",
                 }
             }
+            intervalFormats{
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1132,6 +1186,15 @@ sv{
                     "Saka-eran",
                 }
             }
+            intervalFormats{
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    m{"HH:mm–HH:mm v"}
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1199,6 +1262,16 @@ sv{
             eras{
                 abbreviated{
                     "AH",
+                }
+            }
+            intervalFormats{
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
                 }
             }
             monthNames{
@@ -1499,6 +1572,16 @@ sv{
                     "AP",
                 }
             }
+            intervalFormats{
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1569,7 +1652,101 @@ sv{
                     "R.K.",
                 }
             }
+            intervalFormats{
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+            }
         }
+    }
+    characterLabel{
+        activities{"aktiviteter"}
+        african_scripts{"afrikanska skriftsystem"}
+        american_scripts{"amerikanska skriftsystem"}
+        animal{"djur"}
+        animals_nature{"djur och natur"}
+        arrows{"pilar"}
+        body{"kropp"}
+        box_drawing{"boxritning"}
+        braille{"blindskrift"}
+        building{"byggnad"}
+        bullets_stars{"punkter/stjärnor"}
+        consonantal_jamo{"jamokonsonanter"}
+        currency_symbols{"valutasymboler"}
+        dash_connector{"streck-tecken"}
+        digits{"siffror"}
+        dingbats{"dingbat-tecken"}
+        divination_symbols{"spådomssymboler"}
+        downwards_arrows{"nedåtpilar"}
+        downwards_upwards_arrows{"nedåtuppåtpilar"}
+        east_asian_scripts{"östasiatiska skriftsystem"}
+        emoji{"emoji"}
+        european_scripts{"europeiska skriftsystem"}
+        female{"kvinnlig"}
+        flag{"flagga"}
+        flags{"flaggor"}
+        food_drink{"mat och dryck"}
+        format{"formattecken"}
+        full_width_form_variant{"fullbreddsvarianter"}
+        geometric_shapes{"geometriska former"}
+        half_width_form_variant{"breddvarianter"}
+        han_characters{"hantecken"}
+        han_radicals{"han-radikaler"}
+        hanja{"kinesiska hanja"}
+        hanzi_simplified{"hanzi (förenklade)"}
+        hanzi_traditional{"hanzi (traditionella)"}
+        heart{"hjärta"}
+        historic_scripts{"historiska skriftsystem"}
+        ideographic_desc_characters{"ideografiska beskrivningstecken"}
+        japanese_kana{"japanska kana"}
+        kanbun{"kanbun-tecken"}
+        kanji{"japanska kanji"}
+        keycap{"keycap"}
+        letterlike_symbols{"bokstavsliknande symboler"}
+        limited_use{"begränsad användning"}
+        male{"manlig"}
+        math_symbols{"matematiska symboler"}
+        middle_eastern_scripts{"mellanösternskriftsystem"}
+        miscellaneous{"diverse"}
+        modern_scripts{"moderna skriftsystem"}
+        modifier{"modifierare"}
+        musical_symbols{"musiksymboler"}
+        nature{"natur"}
+        nonspacing{"icke-stegande tecken"}
+        numbers{"numeralsymboler"}
+        objects{"objekt"}
+        other{"annat"}
+        paired{"tecken i par"}
+        person{"person"}
+        phonetic_alphabet{"fonetiskt alfabet"}
+        pictographs{"piktografiska tecken"}
+        place{"plats"}
+        plant{"växt"}
+        punctuation{"interpunktion"}
+        sign_standard_symbols{"vanliga symboler"}
+        small_form_variant{"småformvarianter"}
+        smiley{"smiley"}
+        smileys_people{"smileys och människor"}
+        south_asian_scripts{"sydasiatiska skriftsystem"}
+        southeast_asian_scripts{"sydöstasiatiska skriftsystem"}
+        spacing{"stegande tecken"}
+        sport{"sport"}
+        symbols{"symboler"}
+        technical_symbols{"tekniska symboler"}
+        tone_marks{"tonmarkeringar"}
+        travel{"resa"}
+        travel_places{"resor och platser"}
+        upwards_arrows{"uppåtpilar"}
+        variant_forms{"formvarianter"}
+        vocalic_jamo{"jamovokaler"}
+        weather{"väder"}
+        western_asian_scripts{"västasiatiska skriftsystem"}
+        whitespace{"blanka tecken"}
     }
     contextTransforms{
         currencyName:intvector{
@@ -1660,12 +1837,32 @@ sv{
                 "0"{"fredag denna vecka"}
                 "1"{"fredag nästa vecka"}
             }
+            relativeTime{
+                future{
+                    one{"om {0} fredag"}
+                    other{"om {0} fredagar"}
+                }
+                past{
+                    one{"för {0} fredag sedan"}
+                    other{"för {0} fredagar sedan"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"förra fre."}
                 "0"{"denna fre."}
                 "1"{"nästa fre."}
+            }
+            relativeTime{
+                future{
+                    one{"+{0} fre"}
+                    other{"+{0} fre"}
+                }
+                past{
+                    one{"−{0} fre"}
+                    other{"−{0} fre"}
+                }
             }
         }
         fri-short{
@@ -1674,9 +1871,22 @@ sv{
                 "0"{"fre. denna vecka"}
                 "1"{"fre. nästa vecka"}
             }
+            relativeTime{
+                future{
+                    one{"om {0} fre."}
+                    other{"om {0} fre."}
+                }
+                past{
+                    one{"för {0} fre. sen"}
+                    other{"för {0} fred. sen"}
+                }
+            }
         }
         hour{
             dn{"timme"}
+            relative{
+                "0"{"denna timme"}
+            }
             relativeTime{
                 future{
                     one{"om {0} timme"}
@@ -1690,6 +1900,9 @@ sv{
         }
         hour-narrow{
             dn{"h"}
+            relative{
+                "0"{"denna timme"}
+            }
             relativeTime{
                 future{
                     one{"+{0} h"}
@@ -1703,6 +1916,9 @@ sv{
         }
         hour-short{
             dn{"tim"}
+            relative{
+                "0"{"denna timme"}
+            }
             relativeTime{
                 future{
                     one{"om {0} tim"}
@@ -1716,6 +1932,9 @@ sv{
         }
         minute{
             dn{"minut"}
+            relative{
+                "0"{"denna minut"}
+            }
             relativeTime{
                 future{
                     one{"om {0} minut"}
@@ -1729,6 +1948,9 @@ sv{
         }
         minute-narrow{
             dn{"m"}
+            relative{
+                "0"{"denna minut"}
+            }
             relativeTime{
                 future{
                     one{"+{0} min"}
@@ -1742,6 +1964,9 @@ sv{
         }
         minute-short{
             dn{"min"}
+            relative{
+                "0"{"denna minut"}
+            }
             relativeTime{
                 future{
                     one{"om {0} min"}
@@ -1759,6 +1984,16 @@ sv{
                 "0"{"måndag denna vecka"}
                 "1"{"måndag nästa vecka"}
             }
+            relativeTime{
+                future{
+                    one{"om {0} måndag"}
+                    other{"om {0} måndagar"}
+                }
+                past{
+                    one{"för {0} måndag sedan"}
+                    other{"för {0} måndagar sedan"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -1766,12 +2001,32 @@ sv{
                 "0"{"denna mån."}
                 "1"{"nästa mån."}
             }
+            relativeTime{
+                future{
+                    one{"+{0} må."}
+                    other{"+{0} må."}
+                }
+                past{
+                    one{"–{0} månd"}
+                    other{"–{0} månd"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"mån. förra veckan"}
                 "0"{"mån. denna vecka"}
                 "1"{"mån. nästa vecka"}
+            }
+            relativeTime{
+                future{
+                    one{"om {0} månd."}
+                    other{"om {0} månd."}
+                }
+                past{
+                    one{"för {0} månd. sen"}
+                    other{"för {0} månd. sen"}
+                }
             }
         }
         month{
@@ -1793,7 +2048,7 @@ sv{
             }
         }
         month-narrow{
-            dn{"m"}
+            dn{"mån"}
             relative{
                 "-1"{"förra mån."}
                 "0"{"denna mån."}
@@ -1888,6 +2143,16 @@ sv{
                 "0"{"lördag denna vecka"}
                 "1"{"lördag nästa vecka"}
             }
+            relativeTime{
+                future{
+                    one{"om {0} lördag"}
+                    other{"om {0} lördagar"}
+                }
+                past{
+                    one{"för {0} lördag sedan"}
+                    other{"för {0} lördagar sedan"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1895,12 +2160,32 @@ sv{
                 "0"{"denna lör."}
                 "1"{"nästa lör."}
             }
+            relativeTime{
+                future{
+                    one{"+{0} lör"}
+                    other{"+{0} lör"}
+                }
+                past{
+                    one{"−{0} lör"}
+                    other{"−{0} lör"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"lör. förra veckan"}
                 "0"{"lör. denna vecka"}
                 "1"{"lör. nästa vecka"}
+            }
+            relativeTime{
+                future{
+                    one{"om {0} lör."}
+                    other{"om {0} lör."}
+                }
+                past{
+                    one{"för {0} lör. sen"}
+                    other{"för {0} lör. sen"}
+                }
             }
         }
         second{
@@ -1921,6 +2206,9 @@ sv{
         }
         second-narrow{
             dn{"s"}
+            relative{
+                "0"{"nu"}
+            }
             relativeTime{
                 future{
                     one{"+{0} s"}
@@ -1934,6 +2222,9 @@ sv{
         }
         second-short{
             dn{"sek"}
+            relative{
+                "0"{"nu"}
+            }
             relativeTime{
                 future{
                     one{"om {0} sek"}
@@ -1951,12 +2242,32 @@ sv{
                 "0"{"söndag denna vecka"}
                 "1"{"söndag nästa vecka"}
             }
+            relativeTime{
+                future{
+                    one{"om {0} söndag"}
+                    other{"om {0} söndagar"}
+                }
+                past{
+                    one{"för {0} söndag sedan"}
+                    other{"för {0} söndagar sedan"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"förra sön."}
                 "0"{"denna sön."}
                 "1"{"nästa sön."}
+            }
+            relativeTime{
+                future{
+                    one{"+{0} sön"}
+                    other{"+{0} sön"}
+                }
+                past{
+                    one{"−{0} sön"}
+                    other{"−{0} sön"}
+                }
             }
         }
         sun-short{
@@ -1965,12 +2276,32 @@ sv{
                 "0"{"sön. denna vecka"}
                 "1"{"sön. nästa vecka"}
             }
+            relativeTime{
+                future{
+                    one{"om {0} sön."}
+                    other{"om {0} sön."}
+                }
+                past{
+                    one{"för {0} sön. sen"}
+                    other{"för {0} sön. sen"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"torsdag förra veckan"}
                 "0"{"torsdag denna vecka"}
                 "1"{"torsdag nästa vecka"}
+            }
+            relativeTime{
+                future{
+                    one{"om {0} torsdag"}
+                    other{"om {0} torsdagar"}
+                }
+                past{
+                    one{"för {0} torsdag sedan"}
+                    other{"för {0} torsdagar sedan"}
+                }
             }
         }
         thu-narrow{
@@ -1979,12 +2310,32 @@ sv{
                 "0"{"denna tors."}
                 "1"{"nästa tors."}
             }
+            relativeTime{
+                future{
+                    one{"+{0} tors"}
+                    other{"+{0} tors"}
+                }
+                past{
+                    one{"−{0} tors"}
+                    other{"−{0} tors"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"tors. förra veckan"}
                 "0"{"tors. denna vecka"}
                 "1"{"tors. nästa vecka"}
+            }
+            relativeTime{
+                future{
+                    one{"om {0} tors."}
+                    other{"om {0} tors."}
+                }
+                past{
+                    one{"för {0} tors. sen"}
+                    other{"för {0} tors. sen"}
+                }
             }
         }
         tue{
@@ -1993,12 +2344,32 @@ sv{
                 "0"{"tisdag denna vecka"}
                 "1"{"tisdag nästa vecka"}
             }
+            relativeTime{
+                future{
+                    one{"om {0} tisdag"}
+                    other{"om {0} tisdagar"}
+                }
+                past{
+                    one{"för {0} tisdag sedan"}
+                    other{"för {0} tisdagar sedan"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"förra tis."}
                 "0"{"denna tis."}
                 "1"{"nästa tis."}
+            }
+            relativeTime{
+                future{
+                    one{"+{0} tis"}
+                    other{"+{0} tis"}
+                }
+                past{
+                    one{"−{0} tis"}
+                    other{"−{0} tis"}
+                }
             }
         }
         tue-short{
@@ -2007,12 +2378,32 @@ sv{
                 "0"{"tis. denna vecka"}
                 "1"{"tis. nästa vecka"}
             }
+            relativeTime{
+                future{
+                    one{"om {0} tis."}
+                    other{"om {0} tis."}
+                }
+                past{
+                    one{"för {0} tis. sen"}
+                    other{"för {0} tis. sen"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"onsdag förra veckan"}
                 "0"{"onsdag denna vecka"}
                 "1"{"onsdag nästa vecka"}
+            }
+            relativeTime{
+                future{
+                    one{"om {0} onsdag"}
+                    other{"om {0} onsdagar"}
+                }
+                past{
+                    one{"för {0} onsdag sedan"}
+                    other{"för {0} onsdagar sedan"}
+                }
             }
         }
         wed-narrow{
@@ -2021,12 +2412,32 @@ sv{
                 "0"{"denna ons."}
                 "1"{"nästa ons."}
             }
+            relativeTime{
+                future{
+                    one{"+{0} ons"}
+                    other{"+{0} ons"}
+                }
+                past{
+                    one{"−{0} ons"}
+                    other{"−{0} ons"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"ons. förra veckan"}
                 "0"{"ons. denna vecka"}
                 "1"{"ons. nästa vecka"}
+            }
+            relativeTime{
+                future{
+                    one{"om {0} ons."}
+                    other{"om {0} ons."}
+                }
+                past{
+                    one{"för {0} ons. sen"}
+                    other{"för {0} ons. sen"}
+                }
             }
         }
         week{
@@ -2036,6 +2447,7 @@ sv{
                 "0"{"denna vecka"}
                 "1"{"nästa vecka"}
             }
+            relativePeriod{"veckan för {0}"}
             relativeTime{
                 future{
                     one{"om {0} vecka"}
@@ -2054,6 +2466,7 @@ sv{
                 "0"{"denna v."}
                 "1"{"nästa v."}
             }
+            relativePeriod{"veckan för {0}"}
             relativeTime{
                 future{
                     one{"+{0} v."}
@@ -2072,6 +2485,7 @@ sv{
                 "0"{"denna v."}
                 "1"{"nästa v."}
             }
+            relativePeriod{"veckan för {0}"}
             relativeTime{
                 future{
                     one{"om {0} v."}
@@ -2151,6 +2565,12 @@ sv{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-short{
+            2{"{0} och {1}"}
+            end{"{0} och {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         unit{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
@@ -2174,17 +2594,5 @@ sv{
         UK{"engelska enheter"}
         US{"USA-enheter"}
         metric{"SI-enheter"}
-    }
-    transformNames{
-        BGN{"BGN"}
-        Numeric{"Numerisk"}
-        Tone{"Ton"}
-        UNGEGN{"UNGEGN"}
-        x-Accents{"Accenter"}
-        x-Fullwidth{"Helbreda"}
-        x-Halfwidth{"Halvbreda"}
-        x-Jamo{"Jamo"}
-        x-Pinyin{"Pinyin"}
-        x-Publishing{"För publicering"}
     }
 }

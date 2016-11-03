@@ -1,20 +1,18 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/en_001.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 en_001{
     Currencies{
         BYB{
             "BYB",
             "Belarusian New Rouble (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "Belarusian Rouble",
+        }
         BYR{
             "BYR",
-            "Belarusian Rouble",
+            "Belarusian Rouble (2000–2016)",
         }
         JPY{
             "JP¥",
@@ -46,9 +44,13 @@ en_001{
             one{"Belarusian new rouble (1994–1999)"}
             other{"Belarusian new roubles (1994–1999)"}
         }
-        BYR{
+        BYN{
             one{"Belarusian rouble"}
             other{"Belarusian roubles"}
+        }
+        BYR{
+            one{"Belarusian rouble (2000–2016)"}
+            other{"Belarusian roubles (2000–2016)"}
         }
         LVR{
             one{"Latvian rouble"}
@@ -67,5 +69,5 @@ en_001{
             other{"Tajikistani roubles"}
         }
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.29.54"}
 }

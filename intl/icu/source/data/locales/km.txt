@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/km.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 km{
     AuxExemplarCharacters{"[\u17B4\u17B5\u200B \u17CC \u17CE \u17CF \u17D1 ឝ ឞ]"}
     Ellipsis{
@@ -31,8 +25,8 @@ km{
                 range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
-                currencyFormat{"¤#,##0.00"}
+                accountingFormat{"#,##0.00¤;(#,##0.00¤)"}
+                currencyFormat{"#,##0.00¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -173,7 +167,7 @@ km{
         minimumGroupingDigits{"1"}
         native{"khmr"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.28.79"}
     calendar{
         generic{
             DateTimePatterns{
@@ -181,13 +175,13 @@ km{
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE, d MMMM y G",
-                "d MMMM, y G",
+                "EEEE d MMMM y G",
+                "d MMMM y G",
                 "d MMM y G",
                 "d/M/y GGGGG",
                 "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} នៅ​ម៉ោង {0}",
+                "{1} នៅ​ម៉ោង {0}",
                 "{1}, {0}",
                 "{1}, {0}",
             }
@@ -202,12 +196,12 @@ km{
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
-                MEd{"E, d-M"}
+                MEd{"E d/M"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
-                MMMMd{"MMMM d"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
-                Md{"d-M"}
+                Md{"d/M"}
                 d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
@@ -215,13 +209,13 @@ km{
                 ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
-                yyyyM{"M-y GGGGG"}
-                yyyyMEd{"E, d-M-y G"}
+                yyyyM{"M/y GGGGG"}
+                yyyyMEd{"E d/M/y GGGGG"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E, d MMM y G"}
                 yyyyMMMM{"G y MMMM"}
                 yyyyMMMd{"d MMM y G"}
-                yyyyMd{"d-M-y G"}
+                yyyyMd{"d/M/y GGGGG"}
                 yyyyQQQ{"QQQ y G"}
                 yyyyQQQQ{"QQQQ y G"}
             }
@@ -323,16 +317,16 @@ km{
         }
         gregorian{
             AmPmMarkers{
-                "ព្រឹក",
-                "ល្ងាច",
+                "AM",
+                "PM",
             }
             AmPmMarkersAbbr{
-                "ព្រឹក",
-                "ល្ងាច",
+                "AM",
+                "PM",
             }
             AmPmMarkersNarrow{
-                "ព្រឹក",
-                "ល្ងាច",
+                "a",
+                "p",
             }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -344,8 +338,8 @@ km{
                 "d MMM y",
                 "d/M/yy",
                 "{1}, {0}",
-                "{1} នៅ {0}",
-                "{1} នៅ {0}",
+                "{1} នៅ​ម៉ោង {0}",
+                "{1} នៅ​ម៉ោង {0}",
                 "{1}, {0}",
                 "{1}, {0}",
             }
@@ -369,12 +363,15 @@ km{
                 Hmsv{"HH:mm:ss v"}
                 Hmv{"HH:mm v"}
                 M{"L"}
-                MEd{"E d MMM"}
+                MEd{"E d/M"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
+                MMMMW{
+                    other{"សប្តាហ៍ទី W នៃខែ MMM"}
+                }
                 MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
-                Md{"d-M"}
+                Md{"d/M"}
                 d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
@@ -383,15 +380,18 @@ km{
                 hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
-                yM{"M-y"}
-                yMEd{"E d-M-y"}
+                yM{"M/y"}
+                yMEd{"E d/M/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E d MMM y"}
                 yMMMM{"MMMM y"}
                 yMMMd{"d MMM y"}
-                yMd{"d-M-y"}
+                yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    other{"សប្តាហ៍ទី w នៃឆ្នាំ y"}
+                }
             }
             dayNames{
                 format{
@@ -405,6 +405,15 @@ km{
                         "សៅរ៍",
                     }
                     narrow{
+                        "អ",
+                        "ច",
+                        "អ",
+                        "ព",
+                        "ព",
+                        "ស",
+                        "ស",
+                    }
+                    short{
                         "អា",
                         "ច",
                         "អ",
@@ -412,15 +421,6 @@ km{
                         "ព្រ",
                         "សុ",
                         "ស",
-                    }
-                    short{
-                        "អាទិត្យ",
-                        "ច័ន្ទ",
-                        "អង្គារ",
-                        "ពុធ",
-                        "ព្រហស្បតិ៍",
-                        "សុក្រ",
-                        "សៅរ៍",
                     }
                     wide{
                         "អាទិត្យ",
@@ -443,6 +443,15 @@ km{
                         "សៅរ៍",
                     }
                     narrow{
+                        "អ",
+                        "ច",
+                        "អ",
+                        "ព",
+                        "ព",
+                        "ស",
+                        "ស",
+                    }
+                    short{
                         "អា",
                         "ច",
                         "អ",
@@ -450,15 +459,6 @@ km{
                         "ព្រ",
                         "សុ",
                         "ស",
-                    }
-                    short{
-                        "អាទិត្យ",
-                        "ច័ន្ទ",
-                        "អង្គារ",
-                        "ពុធ",
-                        "ព្រហស្បតិ៍",
-                        "សុក្រ",
-                        "សៅរ៍",
                     }
                     wide{
                         "អាទិត្យ",
@@ -476,15 +476,15 @@ km{
                     abbreviated{
                         afternoon1{"រសៀល"}
                         evening1{"ល្ងាច"}
-                        midnight{"អាធ្រាត្រ"}
+                        midnight{"អធ្រាត្រ"}
                         morning1{"ព្រឹក"}
                         night1{"យប់"}
-                        noon{"ថ្ងៃ"}
+                        noon{"ថ្ងៃត្រង់"}
                     }
                     narrow{
                         afternoon1{"រសៀល"}
                         evening1{"ល្ងាច"}
-                        midnight{"កណ្តាលអាធ្រាត្រ"}
+                        midnight{"អធ្រាត្រ"}
                         morning1{"ព្រឹក"}
                         night1{"យប់"}
                         noon{"ថ្ងៃត្រង់"}
@@ -492,42 +492,42 @@ km{
                     wide{
                         afternoon1{"រសៀល"}
                         evening1{"ល្ងាច"}
-                        midnight{"អាធ្រាត្រ"}
+                        midnight{"អធ្រាត្រ"}
                         morning1{"ព្រឹក"}
                         night1{"យប់"}
-                        noon{"ថ្ងៃ"}
+                        noon{"ថ្ងៃត្រង់"}
                     }
                 }
                 stand-alone{
                     abbreviated{
                         afternoon1{"រសៀល"}
-                        am{"ព្រឹក"}
+                        am{"AM"}
                         evening1{"ល្ងាច"}
-                        midnight{"កណ្តាលអាធ្រាត្រ"}
+                        midnight{"អធ្រាត្រ"}
                         morning1{"ព្រឹក"}
                         night1{"យប់"}
                         noon{"ថ្ងៃ​ត្រង់"}
-                        pm{"ល្ងាច"}
+                        pm{"PM"}
                     }
                     narrow{
                         afternoon1{"រសៀល"}
-                        am{"ព្រឹក"}
+                        am{"AM"}
                         evening1{"ល្ងាច"}
-                        midnight{"កណ្តាលអាធ្រាត្រ"}
+                        midnight{"អធ្រាត្រ"}
                         morning1{"ព្រឹក"}
                         night1{"យប់"}
                         noon{"ថ្ងៃ​ត្រង់"}
-                        pm{"ល្ងាច"}
+                        pm{"PM"}
                     }
                     wide{
                         afternoon1{"រសៀល"}
-                        am{"ព្រឹក"}
+                        am{"AM"}
                         evening1{"ល្ងាច"}
-                        midnight{"កណ្តាលអាធ្រាត្រ"}
+                        midnight{"អធ្រាត្រ"}
                         morning1{"ព្រឹក"}
                         night1{"យប់"}
                         noon{"ថ្ងៃ​ត្រង់"}
-                        pm{"ល្ងាច"}
+                        pm{"PM"}
                     }
                 }
             }
@@ -653,18 +653,18 @@ km{
                         "ធ្នូ",
                     }
                     narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
+                        "ម",
+                        "ក",
+                        "ម",
+                        "ម",
+                        "ឧ",
+                        "ម",
+                        "ក",
+                        "ស",
+                        "ក",
+                        "ត",
+                        "វ",
+                        "ធ",
                     }
                     wide{
                         "មករា",
@@ -697,18 +697,18 @@ km{
                         "ធ្នូ",
                     }
                     narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
+                        "ម",
+                        "ក",
+                        "ម",
+                        "ម",
+                        "ឧ",
+                        "ម",
+                        "ក",
+                        "ស",
+                        "ក",
+                        "ត",
+                        "វ",
+                        "ធ",
                     }
                     wide{
                         "មករា",
@@ -770,6 +770,94 @@ km{
             }
         }
     }
+    characterLabel{
+        activities{"សកម្មភាព"}
+        african_scripts{"ក្រុមអក្សរអាហ្វ្រិក"}
+        american_scripts{"ក្រុមអក្សរអាមេរិក"}
+        animal{"សត្វពាហនៈ"}
+        animals_nature{"សត្វ និងធម្មជាតិ"}
+        arrows{"ព្រួញ"}
+        body{"ខ្លួប្រាណ"}
+        box_drawing{"ការគូរប្រអប់"}
+        braille{"ប្រែល"}
+        building{"អាគារ"}
+        bullets_stars{"ចំណុច/ផ្កាយ"}
+        consonantal_jamo{"ព្យញ្ជនៈចាម៉ូ"}
+        currency_symbols{"និមិត្តសញ្ញារូបិយប័ណ្ណ"}
+        dash_connector{"ដាស៍/សញ្ញាភ្ជាប់"}
+        digits{"ខ្ទង់"}
+        dingbats{"សញ្ញាឌីងប៊ែត"}
+        divination_symbols{"និមិត្តសញ្ញាពិសិដ្ឋ"}
+        downwards_arrows{"ព្រួញចុះក្រោម"}
+        downwards_upwards_arrows{"ព្រួញចុះឡើង"}
+        east_asian_scripts{"ក្រុមអក្សរអាស៊ីខាងកើត"}
+        emoji{"សញ្ញាអារម្មណ៍"}
+        european_scripts{"ក្រុមអក្សរអឺរ៉ុប"}
+        female{"នារី"}
+        flag{"ទីង់"}
+        flags{"ទង់ជាតិ"}
+        food_drink{"អាហារ និងភេសជ្ជៈ"}
+        format{"ទម្រង់"}
+        format_whitespace{"ទម្រង់ និងចន្លោះ"}
+        full_width_form_variant{"វ៉ារ្យ៉ង់ទម្រង់ទទឹងពេញលេញ"}
+        geometric_shapes{"ទម្រង់ធរណីមាត្រ"}
+        half_width_form_variant{"វ៉ារ្យ៉ង់ទម្រង់ទទឹង"}
+        han_characters{"តួអក្សរចិន"}
+        han_radicals{"​រ៉ាឌីកាល់អក្សរចិន"}
+        hanja{"ហានយ៉ា"}
+        hanzi_simplified{"ហានហ្ស៊ី (សាមញ្ញ)"}
+        hanzi_traditional{"ហានហ្ស៊ី (ប្រពៃណី)"}
+        heart{"បេះដូង"}
+        historic_scripts{"អក្សរជាប្រវត្តិសាស្ត្រ"}
+        ideographic_desc_characters{"តួអក្សរពិពណ៌នារូបសញ្ញា"}
+        japanese_kana{"អក្សរខាណាជប៉ុន"}
+        kanbun{"កានប៊ុន"}
+        kanji{"កានជី"}
+        keycap{"គម្របគ្រាប់ចុច"}
+        leftwards_arrows{"ព្រួញទៅឆ្វេង"}
+        leftwards_rightwards_arrows{"ព្រួញទៅឆ្វេងស្តាំ"}
+        letterlike_symbols{"និមិត្តសញ្ញាដូចតួអក្សរ"}
+        limited_use{"ប្រើមានកំណត់"}
+        male{"បុរស"}
+        math_symbols{"និមិត្តសញ្ញាគណិតវិទ្យា"}
+        middle_eastern_scripts{"ក្រុមអក្សរមជ្ឈិមបូព៌ា"}
+        miscellaneous{"ផ្សេងៗ"}
+        modern_scripts{"អក្សរសម័យទំនើប"}
+        modifier{"អង្គបញ្ជាក់ន័យ"}
+        musical_symbols{"និមិត្តសញ្ញាតន្ត្រី"}
+        nature{"ធម្មជាតិ"}
+        nonspacing{"មិនដកឃ្លា"}
+        numbers{"លេខ"}
+        objects{"កម្មបទ"}
+        other{"ផ្សេងទៀត"}
+        paired{"ផ្គូផ្គង"}
+        person{"មនុស្ស"}
+        phonetic_alphabet{"អក្ខរក្រមសូរសព្ទ"}
+        pictographs{"អក្សររូប"}
+        place{"ទីកន្លែង"}
+        plant{"រុក្ខជាតិ"}
+        punctuation{"វិធីប្រើវណ្ណយុត្ដ"}
+        rightwards_arrows{"ព្រួញទៅស្តាំ"}
+        sign_standard_symbols{"សញ្ញា/និមិត្តសញ្ញាបទដ្ឋាន"}
+        small_form_variant{"វ៉ារ្យ៉ង់ទម្រង់តូច"}
+        smiley{"ញញឺម"}
+        smileys_people{"រូបសញ្ញាសើច និងមនុស្ស"}
+        south_asian_scripts{"ក្រុមអក្សរអាស៊ីអាគ្នេយ៍ខាងត្បូង"}
+        southeast_asian_scripts{"ក្រុមអក្សរអាស៊ីអាគ្នេយ៍"}
+        spacing{"ដកឃ្លា"}
+        sport{"កីឡា"}
+        symbols{"និមិត្តសញ្ញា"}
+        technical_symbols{"និមិត្តសញ្ញាបច្ចេកទេស"}
+        tone_marks{"សញ្ញាសំឡេង"}
+        travel{"ធ្វើដំណើរ"}
+        travel_places{"ដំណើរកម្សាន្ត និងទីកន្លែង"}
+        upwards_arrows{"ព្រួញឡើងលើ"}
+        variant_forms{"ទម្រង់វ៉ារ្យ៉ង់"}
+        vocalic_jamo{"ស្រៈចាម៉ូ"}
+        weather{"អាកាសធាតុ"}
+        western_asian_scripts{"ក្រុមអក្សរអាស៊ីខាងលិច"}
+        whitespace{"ចន្លោះ"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -788,7 +876,7 @@ km{
             }
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} ថ្ងៃ"}
+                    other{"{0} ថ្ងៃទៀត"}
                 }
                 past{
                     other{"{0} ថ្ងៃ​មុន"}
@@ -806,7 +894,7 @@ km{
             }
             relativeTime{
                 future{
-                    other{"ក្នុងពេល {0} ថ្ងៃ"}
+                    other{"{0} ថ្ងៃទៀត"}
                 }
                 past{
                     other{"{0} ថ្ងៃ​​មុន"}
@@ -824,7 +912,7 @@ km{
             }
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} ថ្ងៃ"}
+                    other{"{0} ថ្ងៃទៀត"}
                 }
                 past{
                     other{"{0} ថ្ងៃ​​មុន"}
@@ -843,12 +931,28 @@ km{
                 "0"{"ថ្ងៃ​សុក្រ​នេះ"}
                 "1"{"ថ្ងៃ​សុក្រ​ក្រោយ"}
             }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃសុក្រ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃសុក្រ {0} សប្តាហ៍មុន"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"ថ្ងៃ​សុក្រ​មុន"}
                 "0"{"ថ្ងៃ​សុក្រ​នេះ"}
                 "1"{"ថ្ងៃ​សុក្រ​ក្រោយ"}
+            }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃសុក្រ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃសុក្រ {0} សប្តាហ៍មុន"}
+                }
             }
         }
         fri-short{
@@ -857,9 +961,20 @@ km{
                 "0"{"ថ្ងៃ​សុក្រ​នេះ"}
                 "1"{"ថ្ងៃ​សុក្រ​ក្រោយ"}
             }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃសុក្រ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃសុក្រ {0} សប្តាហ៍មុន"}
+                }
+            }
         }
         hour{
             dn{"ម៉ោង"}
+            relative{
+                "0"{"ម៉ោងនេះ"}
+            }
             relativeTime{
                 future{
                     other{"ក្នុង​រយៈ​ពេល {0} ម៉ោង"}
@@ -873,7 +988,7 @@ km{
             dn{"ម៉ោង"}
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} ម៉ោង"}
+                    other{"{0} ម៉ោងទៀត"}
                 }
                 past{
                     other{"{0} ម៉ោង​មុន"}
@@ -884,7 +999,7 @@ km{
             dn{"ម៉ោង"}
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} ម៉ោង"}
+                    other{"{0} ម៉ោងទៀត"}
                 }
                 past{
                     other{"{0} ម៉ោង​មុន"}
@@ -893,9 +1008,12 @@ km{
         }
         minute{
             dn{"នាទី"}
+            relative{
+                "0"{"នាទីនេះ"}
+            }
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈពេល {0} នាទី"}
+                    other{"{0} នាទីទៀត"}
                 }
                 past{
                     other{"{0} នាទី​មុន"}
@@ -906,7 +1024,7 @@ km{
             dn{"នាទី"}
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈពេល {0} នាទី"}
+                    other{"{0} នាទីទៀត"}
                 }
                 past{
                     other{"{0} នាទី​​មុន"}
@@ -917,7 +1035,7 @@ km{
             dn{"នាទី"}
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈពេល {0} នាទី"}
+                    other{"{0} នាទីទៀត"}
                 }
                 past{
                     other{"{0} នាទី​​មុន"}
@@ -930,6 +1048,14 @@ km{
                 "0"{"ថ្ងៃ​ច័ន្ទ​នេះ"}
                 "1"{"ថ្ងៃ​ច័ន្ទ​ក្រោយ"}
             }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃច័ន្ទ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃច័ន្ទ {0} សប្តាហ៍មុន"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -937,12 +1063,28 @@ km{
                 "0"{"ថ្ងៃ​ច័ន្ទ​នេះ"}
                 "1"{"ថ្ងៃ​ច័ន្ទ​ក្រោយ"}
             }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃច័ន្ទ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃច័ន្ទ {0} សប្តាហ៍មុន"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"ថ្ងៃ​ច័ន្ទ​មុន"}
                 "0"{"ថ្ងៃ​ច័ន្ទ​នេះ"}
                 "1"{"ថ្ងៃ​ច័ន្ទ​ក្រោយ"}
+            }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃច័ន្ទ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃច័ន្ទ {0} សប្តាហ៍មុន"}
+                }
             }
         }
         month{
@@ -954,7 +1096,7 @@ km{
             }
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} ខែ"}
+                    other{"{0} ខែទៀត"}
                 }
                 past{
                     other{"{0} ខែមុន"}
@@ -970,7 +1112,7 @@ km{
             }
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} ខែ"}
+                    other{"{0} ខែទៀត"}
                 }
                 past{
                     other{"{0} ខែមុន"}
@@ -986,7 +1128,7 @@ km{
             }
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} ខែ"}
+                    other{"{0} ខែទៀត"}
                 }
                 past{
                     other{"{0} ខែមុន"}
@@ -1002,7 +1144,7 @@ km{
             }
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} ត្រីមាស"}
+                    other{"{0} ត្រីមាសទៀត"}
                 }
                 past{
                     other{"{0} ត្រីមាស​មុន"}
@@ -1018,7 +1160,7 @@ km{
             }
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} ត្រីមាស"}
+                    other{"{0} ត្រីមាសទៀត"}
                 }
                 past{
                     other{"{0} ត្រីមាស​មុន"}
@@ -1034,7 +1176,7 @@ km{
             }
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} ត្រីមាស"}
+                    other{"{0} ត្រីមាសទៀត"}
                 }
                 past{
                     other{"{0} ត្រីមាស​មុន"}
@@ -1047,6 +1189,14 @@ km{
                 "0"{"ថ្ងៃ​សៅរ៍​នេះ"}
                 "1"{"ថ្ងៃ​សៅរ៍​ក្រោយ"}
             }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃសៅរ៍ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃសៅរ៍ {0} សប្តាហ៍មុន"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1054,12 +1204,28 @@ km{
                 "0"{"ថ្ងៃ​សៅរ៍​នេះ"}
                 "1"{"ថ្ងៃ​សៅរ៍​ក្រោយ"}
             }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃសៅរ៍ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃសៅរ៍ {0} សប្តាហ៍មុន"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"ថ្ងៃ​សៅរ៍​មុន"}
                 "0"{"ថ្ងៃ​សៅរ៍​នេះ"}
                 "1"{"ថ្ងៃ​សៅរ៍​ក្រោយ"}
+            }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃសៅរ៍ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃសៅរ៍ {0} សប្តាហ៍មុន"}
+                }
             }
         }
         second{
@@ -1069,7 +1235,7 @@ km{
             }
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈពេល {0} វិនាទី"}
+                    other{"{0} វិនាទីទៀត"}
                 }
                 past{
                     other{"{0} វិនាទី​មុន"}
@@ -1080,7 +1246,7 @@ km{
             dn{"វិនាទី"}
             relativeTime{
                 future{
-                    other{"{0} វិនាទី"}
+                    other{"{0} វិនាទីទៀត"}
                 }
                 past{
                     other{"{0} វិនាទី​មុន"}
@@ -1091,7 +1257,7 @@ km{
             dn{"វិនាទី"}
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈពេល {0} វិនាទី"}
+                    other{"{0} វិនាទីទៀត"}
                 }
                 past{
                     other{"{0} វិនាទី​មុន"}
@@ -1104,12 +1270,28 @@ km{
                 "0"{"ថ្ងៃ​អាទិត្យ​នេះ"}
                 "1"{"ថ្ងៃ​អាទិត្យ​ក្រោយ"}
             }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃអាទិត្យ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃអាទិត្យ {0} សប្តាហ៍មុន"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"ថ្ងៃ​អាទិត្យ​មុន"}
                 "0"{"ថ្ងៃ​អាទិត្យ​នេះ"}
                 "1"{"ថ្ងៃ​អាទិត្យ​ក្រោយ"}
+            }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃអាទិត្យ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃអាទិត្យ {0} សប្តាហ៍មុន"}
+                }
             }
         }
         sun-short{
@@ -1118,12 +1300,28 @@ km{
                 "0"{"ថ្ងៃ​អាទិត្យ​នេះ"}
                 "1"{"ថ្ងៃ​អាទិត្យ​ក្រោយ"}
             }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃអាទិត្យ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃអាទិត្យ {0} សប្តាហ៍មុន"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"ថ្ងៃ​ព្រហស្បតិ៍​មុន"}
                 "0"{"ថ្ងៃ​ព្រហស្បតិ៍​នេះ"}
                 "1"{"ថ្ងៃ​ព្រហស្បតិ៍​ក្រោយ"}
+            }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃព្រហស្បតិ៍ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃព្រហស្បតិ៍ {0} សប្តាហ៍មុន"}
+                }
             }
         }
         thu-narrow{
@@ -1132,12 +1330,28 @@ km{
                 "0"{"ថ្ងៃ​ព្រហស្បតិ៍​នេះ"}
                 "1"{"ថ្ងៃ​ព្រហស្បតិ៍​ក្រោយ"}
             }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃព្រហស្បតិ៍ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃព្រហស្បតិ៍ {0} សប្តាហ៍មុន"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"ថ្ងៃ​ព្រហស្បតិ៍​មុន"}
                 "0"{"ថ្ងៃ​ព្រហស្បតិ៍​នេះ"}
                 "1"{"ថ្ងៃ​ព្រហស្បតិ៍​ក្រោយ"}
+            }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃព្រហស្បតិ៍ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃព្រហស្បតិ៍ {0} សប្តាហ៍មុន"}
+                }
             }
         }
         tue{
@@ -1146,12 +1360,28 @@ km{
                 "0"{"ថ្ងៃ​អង្គារ​នេះ"}
                 "1"{"ថ្ងៃ​អង្គារ​ក្រោយ"}
             }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃអង្គារ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃអង្គារ {0} សប្តាហ៍មុន"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"ថ្ងៃ​អង្គារ​មុន"}
                 "0"{"ថ្ងៃ​អង្គារ​នេះ"}
                 "1"{"ថ្ងៃ​អង្គារ​ក្រោយ"}
+            }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃអង្គារ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃអង្គារ {0} សប្តាហ៍មុន"}
+                }
             }
         }
         tue-short{
@@ -1160,12 +1390,28 @@ km{
                 "0"{"ថ្ងៃ​អង្គារ​នេះ"}
                 "1"{"ថ្ងៃ​អង្គារ​ក្រោយ"}
             }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃអង្គារ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃអង្គារ {0} សប្តាហ៍មុន"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"ថ្ងៃ​ពុធ​មុន"}
                 "0"{"ថ្ងៃ​ពុធ​នេះ"}
                 "1"{"ថ្ងៃ​ពុធ​ក្រោយ"}
+            }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃពុធ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃពុធ {0} សប្តាហ៍មុន"}
+                }
             }
         }
         wed-narrow{
@@ -1174,12 +1420,28 @@ km{
                 "0"{"ថ្ងៃ​ពុធ​នេះ"}
                 "1"{"ថ្ងៃ​ពុធ​ក្រោយ"}
             }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃពុធ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃពុធ {0} សប្តាហ៍មុន"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"ថ្ងៃ​ពុធ​មុន"}
                 "0"{"ថ្ងៃ​ពុធ​នេះ"}
                 "1"{"ថ្ងៃ​ពុធ​ក្រោយ"}
+            }
+            relativeTime{
+                future{
+                    other{"ថ្ងៃពុធ {0} សប្តាហ៍ទៀត"}
+                }
+                past{
+                    other{"ថ្ងៃពុធ {0} សប្តាហ៍មុន"}
+                }
             }
         }
         week{
@@ -1189,9 +1451,10 @@ km{
                 "0"{"សប្ដាហ៍​នេះ"}
                 "1"{"សប្ដាហ៍​ក្រោយ"}
             }
+            relativePeriod{"សប្តាហ៍នៃ {0}"}
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} សប្ដាហ៍"}
+                    other{"{0} សប្ដាហ៍ទៀត"}
                 }
                 past{
                     other{"{0} សប្ដាហ៍​មុន"}
@@ -1205,9 +1468,10 @@ km{
                 "0"{"សប្ដាហ៍​នេះ"}
                 "1"{"សប្ដាហ៍​ក្រោយ"}
             }
+            relativePeriod{"សប្តាហ៍នៃ {0}"}
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} សប្ដាហ៍"}
+                    other{"{0} សប្ដាហ៍ទៀត"}
                 }
                 past{
                     other{"{0} សប្ដាហ៍​មុន"}
@@ -1221,9 +1485,10 @@ km{
                 "0"{"សប្ដាហ៍​នេះ"}
                 "1"{"សប្ដាហ៍​ក្រោយ"}
             }
+            relativePeriod{"សប្តាហ៍នៃ {0}"}
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} សប្ដាហ៍"}
+                    other{"{0} សប្ដាហ៍ទៀត"}
                 }
                 past{
                     other{"{0} សប្ដាហ៍​មុន"}
@@ -1242,7 +1507,7 @@ km{
             }
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} ឆ្នាំ"}
+                    other{"{0} ឆ្នាំទៀត"}
                 }
                 past{
                     other{"{0} ឆ្នាំ​មុន"}
@@ -1258,7 +1523,7 @@ km{
             }
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} ឆ្នាំ"}
+                    other{"{0} ឆ្នាំទៀត"}
                 }
                 past{
                     other{"{0} ឆ្នាំ​មុន"}
@@ -1274,7 +1539,7 @@ km{
             }
             relativeTime{
                 future{
-                    other{"ក្នុង​រយៈ​ពេល {0} ឆ្នាំ"}
+                    other{"{0} ឆ្នាំទៀត"}
                 }
                 past{
                     other{"{0} ឆ្នាំ​មុន"}

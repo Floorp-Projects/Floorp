@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 1998-2014, International Business Machines
+*   Copyright (C) 1998-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -350,7 +352,7 @@ u_scanf_skip_leading_positive_sign(UFILE   *input,
         symbolLen = unum_getSymbol(format,
             UNUM_PLUS_SIGN_SYMBOL,
             plusSymbol,
-            sizeof(plusSymbol)/sizeof(*plusSymbol),
+            UPRV_LENGTHOF(plusSymbol),
             &localStatus);
 
         if (U_SUCCESS(localStatus)) {
@@ -1352,7 +1354,7 @@ u_scanf_parse(UFILE     *f,
                 case ufmt_count:
                     /* set the spec's width to the # of items converted */
                     spec.fInfo.fWidth = cpConsumed;
-                    /* fall through to next case */
+                    U_FALLTHROUGH;
                 case ufmt_char:
                 case ufmt_uchar:
                 case ufmt_int:

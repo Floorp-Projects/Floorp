@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
  *****************************************************************************
  *
- *   Copyright (C) 1998-2014, International Business Machines
+ *   Copyright (C) 1998-2016, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
  *****************************************************************************
@@ -26,7 +28,7 @@
 #include "unicode/ucnv.h"
 #include "ustrfmt.h"
 
-#define VALUE_STRING_LENGTH 32
+#define VALUE_STRING_LENGTH 48
 /*Magic # 32 = 4(number of char in value string) * 8(max number of bytes per char for any converter) */
 #define UNICODE_PERCENT_SIGN_CODEPOINT  0x0025
 #define UNICODE_U_CODEPOINT             0x0055

@@ -1,9 +1,12 @@
 ﻿//---------------------------------------------------------
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
+//---------------------------------------------------------
 // Copyright (C) 2013, International Business Machines
 // Corporation and others.  All Rights Reserved.
 //---------------------------------------------------------
 // Build tool: com.ibm.icu.dev.tool.currency.NumericCodeData
-// Build date: 2013-02-14T23:20:42Z
+// Build date: 2016-09-26T18:29:12Z
 //---------------------------------------------------------
 // >> !!! >>   THIS IS A MACHINE-GENERATED FILE   << !!! <<
 // >> !!! >>>            DO NOT EDIT             <<< !!! <<
@@ -54,6 +57,7 @@ currencyNumericCodes:table(nofallback){
         BTN:int{64}
         BWP:int{72}
         BYB:int{112}
+        BYN:int{933}
         BYR:int{974}
         BZD:int{84}
         CAD:int{124}

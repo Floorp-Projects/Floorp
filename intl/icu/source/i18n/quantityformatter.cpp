@@ -1,12 +1,19 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
-* Copyright (C) 2014-2015, International Business Machines
+* Copyright (C) 2014-2016, International Business Machines
 * Corporation and others.  All Rights Reserved.
 ******************************************************************************
 * quantityformatter.cpp
 */
+
+#include "unicode/utypes.h"
+
+#if !UCONFIG_NO_FORMATTING
+
+#include "unicode/simpleformatter.h"
 #include "quantityformatter.h"
-#include "simplepatternformatter.h"
 #include "uassert.h"
 #include "unicode/unistr.h"
 #include "unicode/decimfmt.h"
@@ -15,25 +22,11 @@
 #include "charstr.h"
 #include "unicode/fmtable.h"
 #include "unicode/fieldpos.h"
+#include "standardplural.h"
 #include "visibledigits.h"
-
-#if !UCONFIG_NO_FORMATTING
+#include "uassert.h"
 
 U_NAMESPACE_BEGIN
-
-// other must always be first.
-static const char * const gPluralForms[] = {
-        "other", "zero", "one", "two", "few", "many"};
-
-static int32_t getPluralIndex(const char *pluralForm) {
-    int32_t len = UPRV_LENGTHOF(gPluralForms);
-    for (int32_t i = 0; i < len; ++i) {
-        if (uprv_strcmp(pluralForm, gPluralForms[i]) == 0) {
-            return i;
-        }
-    }
-    return -1;
-}
 
 QuantityFormatter::QuantityFormatter() {
     for (int32_t i = 0; i < UPRV_LENGTHOF(formatters); ++i) {
@@ -46,7 +39,7 @@ QuantityFormatter::QuantityFormatter(const QuantityFormatter &other) {
         if (other.formatters[i] == NULL) {
             formatters[i] = NULL;
         } else {
-            formatters[i] = new SimplePatternFormatter(*other.formatters[i]);
+            formatters[i] = new SimpleFormatter(*other.formatters[i]);
         }
     }
 }
@@ -61,7 +54,7 @@ QuantityFormatter &QuantityFormatter::operator=(
         if (other.formatters[i] == NULL) {
             formatters[i] = NULL;
         } else {
-            formatters[i] = new SimplePatternFormatter(*other.formatters[i]);
+            formatters[i] = new SimpleFormatter(*other.formatters[i]);
         }
     }
     return *this;
@@ -80,112 +73,126 @@ void QuantityFormatter::reset() {
     }
 }
 
-UBool QuantityFormatter::add(
+UBool QuantityFormatter::addIfAbsent(
         const char *variant,
         const UnicodeString &rawPattern,
         UErrorCode &status) {
+    int32_t pluralIndex = StandardPlural::indexFromString(variant, status);
     if (U_FAILURE(status)) {
         return FALSE;
     }
-    int32_t pluralIndex = getPluralIndex(variant);
-    if (pluralIndex == -1) {
-        status = U_ILLEGAL_ARGUMENT_ERROR;
-        return FALSE;
+    if (formatters[pluralIndex] != NULL) {
+        return TRUE;
     }
-    SimplePatternFormatter *newFmt =
-            new SimplePatternFormatter(rawPattern);
+    SimpleFormatter *newFmt = new SimpleFormatter(rawPattern, 0, 1, status);
     if (newFmt == NULL) {
         status = U_MEMORY_ALLOCATION_ERROR;
         return FALSE;
     }
-    if (newFmt->getPlaceholderCount() > 1) {
+    if (U_FAILURE(status)) {
         delete newFmt;
-        status = U_ILLEGAL_ARGUMENT_ERROR;
         return FALSE;
     }
-    delete formatters[pluralIndex];
     formatters[pluralIndex] = newFmt;
     return TRUE;
 }
 
 UBool QuantityFormatter::isValid() const {
-    return formatters[0] != NULL;
+    return formatters[StandardPlural::OTHER] != NULL;
 }
 
-const SimplePatternFormatter *QuantityFormatter::getByVariant(
+const SimpleFormatter *QuantityFormatter::getByVariant(
         const char *variant) const {
-    int32_t pluralIndex = getPluralIndex(variant);
-    if (pluralIndex == -1) {
-        pluralIndex = 0;
-    }
-    const SimplePatternFormatter *pattern = formatters[pluralIndex];
+    U_ASSERT(isValid());
+    int32_t pluralIndex = StandardPlural::indexOrOtherIndexFromString(variant);
+    const SimpleFormatter *pattern = formatters[pluralIndex];
     if (pattern == NULL) {
-        pattern = formatters[0];
+        pattern = formatters[StandardPlural::OTHER];
     }
     return pattern;
 }
 
 UnicodeString &QuantityFormatter::format(
-            const Formattable& quantity,
+            const Formattable &number,
             const NumberFormat &fmt,
             const PluralRules &rules,
             UnicodeString &appendTo,
             FieldPosition &pos,
             UErrorCode &status) const {
+    UnicodeString formattedNumber;
+    StandardPlural::Form p = selectPlural(number, fmt, rules, formattedNumber, pos, status);
     if (U_FAILURE(status)) {
         return appendTo;
     }
-    UnicodeString count;
+    const SimpleFormatter *pattern = formatters[p];
+    if (pattern == NULL) {
+        pattern = formatters[StandardPlural::OTHER];
+        if (pattern == NULL) {
+            status = U_INVALID_STATE_ERROR;
+            return appendTo;
+        }
+    }
+    return format(*pattern, formattedNumber, appendTo, pos, status);
+}
+
+// The following methods live here so that class PluralRules does not depend on number formatting,
+// and the SimpleFormatter does not depend on FieldPosition.
+
+StandardPlural::Form QuantityFormatter::selectPlural(
+            const Formattable &number,
+            const NumberFormat &fmt,
+            const PluralRules &rules,
+            UnicodeString &formattedNumber,
+            FieldPosition &pos,
+            UErrorCode &status) {
+    if (U_FAILURE(status)) {
+        return StandardPlural::OTHER;
+    }
+    UnicodeString pluralKeyword;
     VisibleDigitsWithExponent digits;
     const DecimalFormat *decFmt = dynamic_cast<const DecimalFormat *>(&fmt);
     if (decFmt != NULL) {
-        decFmt->initVisibleDigitsWithExponent(quantity, digits, status);
+        decFmt->initVisibleDigitsWithExponent(number, digits, status);
         if (U_FAILURE(status)) {
-            return appendTo;
+            return StandardPlural::OTHER;
         }
-        count = rules.select(digits);
+        pluralKeyword = rules.select(digits);
+        decFmt->format(digits, formattedNumber, pos, status);
     } else {
-        if (quantity.getType() == Formattable::kDouble) {
-            count = rules.select(quantity.getDouble());
-        } else if (quantity.getType() == Formattable::kLong) {
-            count = rules.select(quantity.getLong());
-        } else if (quantity.getType() == Formattable::kInt64) {
-            count = rules.select((double) quantity.getInt64());
+        if (number.getType() == Formattable::kDouble) {
+            pluralKeyword = rules.select(number.getDouble());
+        } else if (number.getType() == Formattable::kLong) {
+            pluralKeyword = rules.select(number.getLong());
+        } else if (number.getType() == Formattable::kInt64) {
+            pluralKeyword = rules.select((double) number.getInt64());
         } else {
             status = U_ILLEGAL_ARGUMENT_ERROR;
-            return appendTo;
+            return StandardPlural::OTHER;
         }
+        fmt.format(number, formattedNumber, pos, status);
     }
-    CharString buffer;
-    buffer.appendInvariantChars(count, status);
+    return StandardPlural::orOtherFromString(pluralKeyword);
+}
+
+UnicodeString &QuantityFormatter::format(
+            const SimpleFormatter &pattern,
+            const UnicodeString &value,
+            UnicodeString &appendTo,
+            FieldPosition &pos,
+            UErrorCode &status) {
     if (U_FAILURE(status)) {
         return appendTo;
     }
-    const SimplePatternFormatter *pattern = getByVariant(buffer.data());
-    if (pattern == NULL) {
-        status = U_INVALID_STATE_ERROR;
-        return appendTo;
-    }
-    UnicodeString formattedNumber;
-    FieldPosition fpos(pos.getField());
-    if (decFmt != NULL) {
-        decFmt->format(digits, formattedNumber, fpos, status);
-    } else {
-        fmt.format(quantity, formattedNumber, fpos, status);
-    }
-    const UnicodeString *params[1] = {&formattedNumber};
-    int32_t offsets[1];
-    pattern->formatAndAppend(
-            params,
-            UPRV_LENGTHOF(params),
-            appendTo,
-            offsets,
-            UPRV_LENGTHOF(offsets),
-            status);
-    if (offsets[0] != -1) {
-        if (fpos.getBeginIndex() != 0 || fpos.getEndIndex() != 0) {
-            pos.setBeginIndex(fpos.getBeginIndex() + offsets[0]);
-            pos.setEndIndex(fpos.getEndIndex() + offsets[0]);
+    const UnicodeString *param = &value;
+    int32_t offset;
+    pattern.formatAndAppend(&param, 1, appendTo, &offset, 1, status);
+    if (pos.getBeginIndex() != 0 || pos.getEndIndex() != 0) {
+        if (offset >= 0) {
+            pos.setBeginIndex(pos.getBeginIndex() + offset);
+            pos.setEndIndex(pos.getEndIndex() + offset);
+        } else {
+            pos.setBeginIndex(0);
+            pos.setEndIndex(0);
         }
     }
     return appendTo;

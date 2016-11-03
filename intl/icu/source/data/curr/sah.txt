@@ -1,17 +1,29 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/sah.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 sah{
     Currencies{
         RUB{
             "₽",
-            "RUB",
+            "Арассыыйа солкуобайа",
+        }
+        USD{
+            "US$",
+            "АХШ дуоллара",
         }
     }
-    Version{"2.1.19.14"}
+    Currencies%narrow{
+        RUB{"₽"}
+    }
+    CurrencyPlurals{
+        RUB{
+            other{"Арассыыйа солкуобайа"}
+        }
+        USD{
+            other{"АХШ дуоллара"}
+        }
+    }
+    CurrencyUnitPatterns{
+        other{"{0} {1}"}
+    }
+    Version{"2.1.27.87"}
 }

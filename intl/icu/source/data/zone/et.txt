@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/et.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 et{
-    Version{"2.1.20.4"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -309,6 +303,9 @@ et{
         "America:El_Salvador"{
             ec{"El Salvador"}
         }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
+        }
         "America:Fortaleza"{
             ec{"Fortaleza"}
         }
@@ -475,13 +472,13 @@ et{
             ec{"Noronha"}
         }
         "America:North_Dakota:Beulah"{
-            ec{"Beulah, North Dakota"}
+            ec{"Beulah, Põhja-Dakota"}
         }
         "America:North_Dakota:Center"{
-            ec{"Center, North Dakota"}
+            ec{"Center, Põhja-Dakota"}
         }
         "America:North_Dakota:New_Salem"{
-            ec{"New Salem, North Dakota"}
+            ec{"New Salem, Põhja-Dakota"}
         }
         "America:Ojinaga"{
             ec{"Ojinaga"}
@@ -672,6 +669,9 @@ et{
         "Asia:Bangkok"{
             ec{"Bangkok"}
         }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
+        }
         "Asia:Beirut"{
             ec{"Beirut"}
         }
@@ -849,6 +849,9 @@ et{
         "Asia:Tokyo"{
             ec{"Tōkyō"}
         }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"Ulaanbaatar"}
         }
@@ -948,6 +951,9 @@ et{
         "Europe:Andorra"{
             ec{"Andorra"}
         }
+        "Europe:Astrakhan"{
+            ec{"Astrahan"}
+        }
         "Europe:Athens"{
             ec{"Ateena"}
         }
@@ -1005,6 +1011,9 @@ et{
         }
         "Europe:Kiev"{
             ec{"Kiiev"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
         }
         "Europe:Lisbon"{
             ec{"Lissabon"}
@@ -1081,6 +1090,9 @@ et{
         }
         "Europe:Tirane"{
             ec{"Tirana"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Uljanovsk"}
         }
         "Europe:Uzhgorod"{
             ec{"Užgorod"}
@@ -1633,9 +1645,9 @@ et{
             ls{"Line’i saarte aeg"}
         }
         "meta:Lord_Howe"{
-            ld{"Lord Howe suveaeg"}
-            lg{"Lord Howe aeg"}
-            ls{"Lord Howe standardaeg"}
+            ld{"Lord Howe’i suveaeg"}
+            lg{"Lord Howe’i aeg"}
+            ls{"Lord Howe’i standardaeg"}
         }
         "meta:Macquarie"{
             ls{"Macquarie saare aeg"}
@@ -1769,6 +1781,9 @@ et{
         }
         "meta:Ponape"{
             ls{"Pohnpei aeg"}
+        }
+        "meta:Pyongyang"{
+            ls{"Pyongyangi aeg"}
         }
         "meta:Qyzylorda"{
             ld{"Kõzõlorda suveaeg"}

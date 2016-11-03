@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
-*   Copyright (C) 2004-2014, International Business Machines
+*   Copyright (C) 2004-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *******************************************************************************
 *   file name:  ucol_sit.cpp
@@ -130,7 +132,7 @@ static const AttributeConversion conversions[12] = {
 static UColAttributeValue
 ucol_sit_letterToAttributeValue(char letter, UErrorCode *status) {
     uint32_t i = 0;
-    for(i = 0; i < sizeof(conversions)/sizeof(conversions[0]); i++) {
+    for(i = 0; i < UPRV_LENGTHOF(conversions); i++) {
         if(conversions[i].letter == letter) {
             return conversions[i].value;
         }

@@ -1,15 +1,24 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/es_US.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 es_US{
     %%Parent{"es_419"}
-    Version{"2.1.19.14"}
+    Version{"2.1.27.99"}
     zoneStrings{
+        "America:Curacao"{
+            ec{"Curazao"}
+        }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
+        }
+        "Europe:Astrakhan"{
+            ec{"Astrakhan"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Ulyanovsk"}
+        }
         "Pacific:Honolulu"{
             sd{"HDT"}
             sg{"HST"}
@@ -44,6 +53,9 @@ es_US{
             sd{"ADT"}
             sg{"AT"}
             ss{"AST"}
+        }
+        "meta:Chamorro"{
+            ls{"hora de Chamorro"}
         }
         "meta:Hawaii_Aleutian"{
             sd{"HADT"}

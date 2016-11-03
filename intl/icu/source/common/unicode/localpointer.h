@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2009-2015, International Business Machines
+*   Copyright (C) 2009-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -18,7 +20,7 @@
 #define __LOCALPOINTER_H__
 
 /**
- * \file 
+ * \file
  * \brief C++ API: "Smart pointers" for use with and in ICU4C C++ code.
  *
  * These classes are inspired by
@@ -52,7 +54,7 @@ U_NAMESPACE_BEGIN
  * Destructor and adoptInstead().
  *
  * There is no operator T *() provided because the programmer must decide
- * whether to use getAlias() (without transfer of ownership) or orpan()
+ * whether to use getAlias() (without transfer of ownership) or orphan()
  * (with transfer of ownership and NULLing of the pointer).
  *
  * @see LocalPointer
@@ -185,13 +187,14 @@ private:
 template<typename T>
 class LocalPointer : public LocalPointerBase<T> {
 public:
+    using LocalPointerBase<T>::operator*;
+    using LocalPointerBase<T>::operator->;
     /**
      * Constructor takes ownership.
      * @param p simple pointer to an object that is adopted
      * @stable ICU 4.4
      */
     explicit LocalPointer(T *p=NULL) : LocalPointerBase<T>(p) {}
-#ifndef U_HIDE_DRAFT_API
     /**
      * Constructor takes ownership and reports an error if NULL.
      *
@@ -203,7 +206,7 @@ public:
      * @param p simple pointer to an object that is adopted
      * @param errorCode in/out UErrorCode, set to U_MEMORY_ALLOCATION_ERROR
      *     if p==NULL and no other failure code had been set
-     * @draft ICU 55
+     * @stable ICU 55
      */
     LocalPointer(T *p, UErrorCode &errorCode) : LocalPointerBase<T>(p) {
         if(p==NULL && U_SUCCESS(errorCode)) {
@@ -214,13 +217,12 @@ public:
     /**
      * Move constructor, leaves src with isNull().
      * @param src source smart pointer
-     * @draft ICU 56
+     * @stable ICU 56
      */
     LocalPointer(LocalPointer<T> &&src) U_NOEXCEPT : LocalPointerBase<T>(src.ptr) {
         src.ptr=NULL;
     }
 #endif
-#endif  /* U_HIDE_DRAFT_API */
     /**
      * Destructor deletes the object it owns.
      * @stable ICU 4.4
@@ -228,19 +230,19 @@ public:
     ~LocalPointer() {
         delete LocalPointerBase<T>::ptr;
     }
-#ifndef U_HIDE_DRAFT_API
 #if U_HAVE_RVALUE_REFERENCES
     /**
      * Move assignment operator, leaves src with isNull().
      * The behavior is undefined if *this and src are the same object.
      * @param src source smart pointer
      * @return *this
-     * @draft ICU 56
+     * @stable ICU 56
      */
     LocalPointer<T> &operator=(LocalPointer<T> &&src) U_NOEXCEPT {
         return moveFrom(src);
     }
 #endif
+    // do not use #ifndef U_HIDE_DRAFT_API for moveFrom, needed by non-draft API
     /**
      * Move assignment, leaves src with isNull().
      * The behavior is undefined if *this and src are the same object.
@@ -259,7 +261,7 @@ public:
     /**
      * Swap pointers.
      * @param other other smart pointer
-     * @draft ICU 56
+     * @stable ICU 56
      */
     void swap(LocalPointer<T> &other) U_NOEXCEPT {
         T *temp=LocalPointerBase<T>::ptr;
@@ -270,12 +272,11 @@ public:
      * Non-member LocalPointer swap function.
      * @param p1 will get p2's pointer
      * @param p2 will get p1's pointer
-     * @draft ICU 56
+     * @stable ICU 56
      */
     friend inline void swap(LocalPointer<T> &p1, LocalPointer<T> &p2) U_NOEXCEPT {
         p1.swap(p2);
     }
-#endif  /* U_HIDE_DRAFT_API */
     /**
      * Deletes the object it owns,
      * and adopts (takes ownership of) the one passed in.
@@ -286,7 +287,6 @@ public:
         delete LocalPointerBase<T>::ptr;
         LocalPointerBase<T>::ptr=p;
     }
-#ifndef U_HIDE_DRAFT_API
     /**
      * Deletes the object it owns,
      * and adopts (takes ownership of) the one passed in.
@@ -300,7 +300,7 @@ public:
      * @param p simple pointer to an object that is adopted
      * @param errorCode in/out UErrorCode, set to U_MEMORY_ALLOCATION_ERROR
      *     if p==NULL and no other failure code had been set
-     * @draft ICU 55
+     * @stable ICU 55
      */
     void adoptInsteadAndCheckErrorCode(T *p, UErrorCode &errorCode) {
         if(U_SUCCESS(errorCode)) {
@@ -313,7 +313,6 @@ public:
             delete p;
         }
     }
-#endif  /* U_HIDE_DRAFT_API */
 };
 
 /**
@@ -337,13 +336,14 @@ public:
 template<typename T>
 class LocalArray : public LocalPointerBase<T> {
 public:
+    using LocalPointerBase<T>::operator*;
+    using LocalPointerBase<T>::operator->;
     /**
      * Constructor takes ownership.
      * @param p simple pointer to an array of T objects that is adopted
      * @stable ICU 4.4
      */
     explicit LocalArray(T *p=NULL) : LocalPointerBase<T>(p) {}
-#ifndef U_HIDE_DRAFT_API
     /**
      * Constructor takes ownership and reports an error if NULL.
      *
@@ -355,7 +355,7 @@ public:
      * @param p simple pointer to an array of T objects that is adopted
      * @param errorCode in/out UErrorCode, set to U_MEMORY_ALLOCATION_ERROR
      *     if p==NULL and no other failure code had been set
-     * @draft ICU 56
+     * @stable ICU 56
      */
     LocalArray(T *p, UErrorCode &errorCode) : LocalPointerBase<T>(p) {
         if(p==NULL && U_SUCCESS(errorCode)) {
@@ -366,13 +366,12 @@ public:
     /**
      * Move constructor, leaves src with isNull().
      * @param src source smart pointer
-     * @draft ICU 56
+     * @stable ICU 56
      */
     LocalArray(LocalArray<T> &&src) U_NOEXCEPT : LocalPointerBase<T>(src.ptr) {
         src.ptr=NULL;
     }
 #endif
-#endif  /* U_HIDE_DRAFT_API */
     /**
      * Destructor deletes the array it owns.
      * @stable ICU 4.4
@@ -380,19 +379,19 @@ public:
     ~LocalArray() {
         delete[] LocalPointerBase<T>::ptr;
     }
-#ifndef U_HIDE_DRAFT_API
 #if U_HAVE_RVALUE_REFERENCES
     /**
      * Move assignment operator, leaves src with isNull().
      * The behavior is undefined if *this and src are the same object.
      * @param src source smart pointer
      * @return *this
-     * @draft ICU 56
+     * @stable ICU 56
      */
     LocalArray<T> &operator=(LocalArray<T> &&src) U_NOEXCEPT {
         return moveFrom(src);
     }
 #endif
+    // do not use #ifndef U_HIDE_DRAFT_API for moveFrom, needed by non-draft API
     /**
      * Move assignment, leaves src with isNull().
      * The behavior is undefined if *this and src are the same object.
@@ -411,7 +410,7 @@ public:
     /**
      * Swap pointers.
      * @param other other smart pointer
-     * @draft ICU 56
+     * @stable ICU 56
      */
     void swap(LocalArray<T> &other) U_NOEXCEPT {
         T *temp=LocalPointerBase<T>::ptr;
@@ -422,12 +421,11 @@ public:
      * Non-member LocalArray swap function.
      * @param p1 will get p2's pointer
      * @param p2 will get p1's pointer
-     * @draft ICU 56
+     * @stable ICU 56
      */
     friend inline void swap(LocalArray<T> &p1, LocalArray<T> &p2) U_NOEXCEPT {
         p1.swap(p2);
     }
-#endif  /* U_HIDE_DRAFT_API */
     /**
      * Deletes the array it owns,
      * and adopts (takes ownership of) the one passed in.
@@ -438,7 +436,6 @@ public:
         delete[] LocalPointerBase<T>::ptr;
         LocalPointerBase<T>::ptr=p;
     }
-#ifndef U_HIDE_DRAFT_API
     /**
      * Deletes the array it owns,
      * and adopts (takes ownership of) the one passed in.
@@ -452,7 +449,7 @@ public:
      * @param p simple pointer to an array of T objects that is adopted
      * @param errorCode in/out UErrorCode, set to U_MEMORY_ALLOCATION_ERROR
      *     if p==NULL and no other failure code had been set
-     * @draft ICU 56
+     * @stable ICU 56
      */
     void adoptInsteadAndCheckErrorCode(T *p, UErrorCode &errorCode) {
         if(U_SUCCESS(errorCode)) {
@@ -465,7 +462,6 @@ public:
             delete[] p;
         }
     }
-#endif  /* U_HIDE_DRAFT_API */
     /**
      * Array item access (writable).
      * No index bounds check.
@@ -482,9 +478,6 @@ public:
  * Defines a subclass of LocalPointerBase which works just
  * like LocalPointer<Type> except that this subclass will use the closeFunction
  * rather than the C++ delete operator.
- *
- * Requirement: The closeFunction must tolerate a NULL pointer.
- * (We could add a NULL check here but it is normally redundant.)
  *
  * Usage example:
  * \code
@@ -503,17 +496,19 @@ public:
 #define U_DEFINE_LOCAL_OPEN_POINTER(LocalPointerClassName, Type, closeFunction) \
     class LocalPointerClassName : public LocalPointerBase<Type> { \
     public: \
+        using LocalPointerBase<Type>::operator*; \
+        using LocalPointerBase<Type>::operator->; \
         explicit LocalPointerClassName(Type *p=NULL) : LocalPointerBase<Type>(p) {} \
         LocalPointerClassName(LocalPointerClassName &&src) U_NOEXCEPT \
                 : LocalPointerBase<Type>(src.ptr) { \
             src.ptr=NULL; \
         } \
-        ~LocalPointerClassName() { closeFunction(ptr); } \
+        ~LocalPointerClassName() { if (ptr != NULL) { closeFunction(ptr); } } \
         LocalPointerClassName &operator=(LocalPointerClassName &&src) U_NOEXCEPT { \
             return moveFrom(src); \
         } \
         LocalPointerClassName &moveFrom(LocalPointerClassName &src) U_NOEXCEPT { \
-            closeFunction(ptr); \
+            if (ptr != NULL) { closeFunction(ptr); } \
             LocalPointerBase<Type>::ptr=src.ptr; \
             src.ptr=NULL; \
             return *this; \
@@ -527,7 +522,7 @@ public:
             p1.swap(p2); \
         } \
         void adoptInstead(Type *p) { \
-            closeFunction(ptr); \
+            if (ptr != NULL) { closeFunction(ptr); } \
             ptr=p; \
         } \
     }
@@ -535,10 +530,12 @@ public:
 #define U_DEFINE_LOCAL_OPEN_POINTER(LocalPointerClassName, Type, closeFunction) \
     class LocalPointerClassName : public LocalPointerBase<Type> { \
     public: \
+        using LocalPointerBase<Type>::operator*; \
+        using LocalPointerBase<Type>::operator->; \
         explicit LocalPointerClassName(Type *p=NULL) : LocalPointerBase<Type>(p) {} \
         ~LocalPointerClassName() { closeFunction(ptr); } \
         LocalPointerClassName &moveFrom(LocalPointerClassName &src) U_NOEXCEPT { \
-            closeFunction(ptr); \
+            if (ptr != NULL) { closeFunction(ptr); } \
             LocalPointerBase<Type>::ptr=src.ptr; \
             src.ptr=NULL; \
             return *this; \
@@ -552,7 +549,7 @@ public:
             p1.swap(p2); \
         } \
         void adoptInstead(Type *p) { \
-            closeFunction(ptr); \
+            if (ptr != NULL) { closeFunction(ptr); } \
             ptr=p; \
         } \
     }

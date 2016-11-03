@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fur.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fur{
     Currencies{
         AMD{
@@ -40,9 +34,13 @@ fur{
             "R$",
             "real brasilian",
         }
+        BYN{
+            "BYN",
+            "Rubli bielorùs",
+        }
         BYR{
             "BYR",
-            "Rubli bielorùs",
+            "Rubli bielorùs (2000–2016)",
         }
         CAD{
             "CA$",
@@ -379,5 +377,5 @@ fur{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.76"}
 }

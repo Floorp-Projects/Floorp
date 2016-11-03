@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fy.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fy{
-    AuxExemplarCharacters{"[à â æ è ê ô ù û]"}
+    AuxExemplarCharacters{"[æ ò ù]"}
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}
@@ -17,10 +11,10 @@ fy{
         word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{
-        "[a á ä b c d e é ë f g h i ì ï {ij} {íj\u0301} j k l m n o ò ö p r s t u ú ü"
-        " v w y ỳ z]"
+        "[a á à â ä b c d e é è ê ë f g h i í ï {ij} {íj\u0301} j k l m n o ó ô ö p r"
+        " s t u ú û ü v w y ý z]"
     }
-    ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P R S T U V W Y Z]"}
+    ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P R S T U V W X Z]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
         "″]"
@@ -155,10 +149,12 @@ fy{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
+        minimumGroupingDigits{"1"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.29.44"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -900,6 +896,10 @@ fy{
                 "AM",
                 "PM",
             }
+            AmPmMarkersAbbr{
+                "AM",
+                "PM",
+            }
             AmPmMarkersNarrow{
                 "AM",
                 "PM",
@@ -914,8 +914,8 @@ fy{
                 "d MMM y",
                 "dd-MM-yy",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'om' {0}",
+                "{1} 'om' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -923,22 +923,29 @@ fy{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                E{"ccc"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
-                Ed{"E d"}
+                Ed{"d, E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
-                Gy{"y G"}
+                Gy{"G y"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E d-M"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
+                MMMMW{
+                    one{"'wike' W 'fan' MMM"}
+                    other{"'wike' W 'fan' MMM"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d-M"}
@@ -946,6 +953,8 @@ fy{
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M-y"}
@@ -957,6 +966,10 @@ fy{
                 yMd{"d-M-y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"'wike' w 'fan' y"}
+                    other{"'wike' w 'fan' y"}
+                }
             }
             dayNames{
                 format{
@@ -970,13 +983,13 @@ fy{
                         "so",
                     }
                     narrow{
-                        "Z",
+                        "S",
                         "M",
-                        "D",
+                        "T",
                         "W",
-                        "D",
-                        "V",
-                        "Z",
+                        "T",
+                        "F",
+                        "S",
                     }
                     short{
                         "si",
@@ -1008,13 +1021,13 @@ fy{
                         "so",
                     }
                     narrow{
-                        "Z",
+                        "S",
                         "M",
-                        "D",
+                        "T",
                         "W",
-                        "D",
-                        "V",
-                        "Z",
+                        "T",
+                        "F",
+                        "S",
                     }
                     short{
                         "si",
@@ -1039,12 +1052,16 @@ fy{
             dayPeriod{
                 stand-alone{
                     abbreviated{
-                        am{"a.m."}
-                        pm{"p.m."}
+                        am{"AM"}
+                        pm{"PM"}
+                    }
+                    narrow{
+                        am{"AM"}
+                        pm{"PM"}
                     }
                     wide{
-                        am{"foarmiddei"}
-                        pm{"p.m."}
+                        am{"AM"}
+                        pm{"PM"}
                     }
                 }
             }
@@ -1175,18 +1192,18 @@ fy{
             monthNames{
                 format{
                     abbreviated{
-                        "jan.",
-                        "feb.",
-                        "mrt.",
-                        "apr.",
-                        "mai.",
-                        "jun.",
-                        "jul.",
-                        "aug.",
-                        "sep.",
-                        "okt.",
-                        "nov.",
-                        "des.",
+                        "Jan",
+                        "Feb",
+                        "Mrt",
+                        "Apr",
+                        "Mai",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Okt",
+                        "Nov",
+                        "Des",
                     }
                     narrow{
                         "J",
@@ -1203,34 +1220,34 @@ fy{
                         "D",
                     }
                     wide{
-                        "jannewaris",
-                        "febrewaris",
-                        "maart",
-                        "april",
-                        "maaie",
-                        "juny",
-                        "july",
-                        "augustus",
-                        "septimber",
-                        "oktober",
-                        "novimber",
-                        "desimber",
+                        "Jannewaris",
+                        "Febrewaris",
+                        "Maart",
+                        "April",
+                        "Maaie",
+                        "Juny",
+                        "July",
+                        "Augustus",
+                        "Septimber",
+                        "Oktober",
+                        "Novimber",
+                        "Desimber",
                     }
                 }
                 stand-alone{
                     abbreviated{
-                        "jan",
-                        "feb",
-                        "mrt",
-                        "apr",
-                        "mai",
-                        "jun",
-                        "jul",
-                        "aug",
-                        "sep",
-                        "okt",
-                        "nov",
-                        "des",
+                        "Jan",
+                        "Feb",
+                        "Mrt",
+                        "Apr",
+                        "Mai",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Okt",
+                        "Nov",
+                        "Des",
                     }
                     narrow{
                         "J",
@@ -1247,18 +1264,18 @@ fy{
                         "D",
                     }
                     wide{
-                        "jannewaris",
-                        "febrewaris",
-                        "maart",
-                        "april",
-                        "maaie",
-                        "juny",
-                        "july",
-                        "augustus",
-                        "septimber",
-                        "oktober",
-                        "novimber",
-                        "desimber",
+                        "Jannewaris",
+                        "Febrewaris",
+                        "Maart",
+                        "April",
+                        "Maaie",
+                        "Juny",
+                        "July",
+                        "Augustus",
+                        "Septimber",
+                        "Oktober",
+                        "Novimber",
+                        "Desimber",
                     }
                 }
             }
@@ -1277,10 +1294,10 @@ fy{
                         "4",
                     }
                     wide{
-                        "1e kwartaal",
-                        "2e kwartaal",
-                        "3e kwartaal",
-                        "4e kwartaal",
+                        "1e fearnsjier",
+                        "2e fearnsjier",
+                        "3e fearnsjier",
+                        "4e fearnsjier",
                     }
                 }
                 stand-alone{
@@ -1297,10 +1314,10 @@ fy{
                         "4",
                     }
                     wide{
-                        "1e kwartaal",
-                        "2e kwartaal",
-                        "3e kwartaal",
-                        "4e kwartaal",
+                        "1e fearnsjier",
+                        "2e fearnsjier",
+                        "3e fearnsjier",
+                        "4e fearnsjier",
                     }
                 }
             }
@@ -2059,17 +2076,5 @@ fy{
         UK{"Brits"}
         US{"Amerikaansk"}
         metric{"Metriek"}
-    }
-    transformNames{
-        BGN{"BGN"}
-        Numeric{"Numeriek"}
-        Tone{"Toon"}
-        UNGEGN{"UNGEGN"}
-        x-Accents{"Accenten"}
-        x-Fullwidth{"Volledige breedte"}
-        x-Halfwidth{"Halve breedte"}
-        x-Jamo{"Jamo"}
-        x-Pinyin{"Pinyin"}
-        x-Publishing{"Publicatie"}
     }
 }
