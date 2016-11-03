@@ -93,22 +93,14 @@ FileSystemDirectoryEntry::GetInternal(const nsAString& aPath,
     return;
   }
 
-  ErrorResult error;
-  RefPtr<Promise> promise = mDirectory->Get(aPath, error);
-  if (NS_WARN_IF(error.Failed())) {
-    ErrorCallbackHelper::Call(GetParentObject(), aErrorCallback,
-                              error.StealNSResult());
-    return;
-  }
-
-  RefPtr<GetEntryHelper> handler =
-    new GetEntryHelper(this, Filesystem(),
+  RefPtr<GetEntryHelper> helper =
+    new GetEntryHelper(this, mDirectory, parts, Filesystem(),
                        aSuccessCallback.WasPassed()
                          ? &aSuccessCallback.Value() : nullptr,
                        aErrorCallback.WasPassed()
                          ? &aErrorCallback.Value() : nullptr,
                        aType);
-  promise->AppendNativeHandler(handler);
+  helper->Run();
 }
 
 void
