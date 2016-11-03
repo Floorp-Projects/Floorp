@@ -124,11 +124,10 @@ var ExtensionSearchHandler = Object.freeze({
     }
 
     if (id != gCurrentCallbackID) {
-      return false;
+      throw new Error("The callback is no longer active");
     }
 
     gSuggestionsCallback(suggestions);
-    return true;
   },
 
   /**
