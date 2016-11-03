@@ -3753,6 +3753,31 @@ public:
 
 NS_IMPL_ISUPPORTS(UpdateTimerCallback, nsITimerCallback)
 
+bool
+ServiceWorkerManager::MayHaveActiveServiceWorkerInstance(ContentParent* aContent,
+                                                         nsIPrincipal* aPrincipal)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aPrincipal);
+
+  if (mShuttingDown) {
+    return false;
+  }
+
+  nsAutoCString scopeKey;
+  nsresult rv = PrincipalToScopeKey(aPrincipal, scopeKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  RegistrationDataPerPrincipal* data;
+  if (!mRegistrationInfos.Get(scopeKey, &data)) {
+    return false;
+  }
+
+  return true;
+}
+
 void
 ServiceWorkerManager::ScheduleUpdateTimer(nsIPrincipal* aPrincipal,
                                           const nsACString& aScope)
