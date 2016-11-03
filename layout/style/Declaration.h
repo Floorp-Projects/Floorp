@@ -188,6 +188,10 @@ public:
   nsCSSCompressedDataBlock* GetNormalBlock() const { return mData; }
   nsCSSCompressedDataBlock* GetImportantBlock() const { return mImportantData; }
 
+  void AssertNotExpanded() const {
+    MOZ_ASSERT(mData, "should only be called when not expanded");
+  }
+
   /**
    * Initialize this declaration as holding no data.  Cannot fail.
    */
@@ -223,7 +227,7 @@ public:
   }
 
   void MapImportantRuleInfoInto(nsRuleData *aRuleData) const {
-    MOZ_ASSERT(mData, "called while expanded");
+    AssertNotExpanded();
     MOZ_ASSERT(mImportantData || mImportantVariables,
                "must have important data or variables");
     if (mImportantData) {
@@ -251,7 +255,7 @@ public:
                          bool* aChanged)
   {
     AssertMutable();
-    MOZ_ASSERT(mData, "called while expanded");
+    AssertNotExpanded();
 
     if (nsCSSProps::IsShorthand(aProperty)) {
       *aChanged = false;
@@ -279,11 +283,6 @@ public:
     MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty), "must be longhand");
     return !!mData->ValueFor(aProperty);
   }
-
-  /**
-   * Copy |this|, if necessary to ensure that it can be modified.
-   */
-  already_AddRefed<Declaration> EnsureMutable();
 
   /**
    * Clear the data, in preparation for its replacement with entirely

@@ -38,6 +38,20 @@ DeclarationBlock::Clone() const
   return result.forget();
 }
 
+already_AddRefed<DeclarationBlock>
+DeclarationBlock::EnsureMutable()
+{
+#ifdef DEBUG
+  if (IsGecko()) {
+    AsGecko()->AssertNotExpanded();
+  }
+#endif
+  if (!IsMutable()) {
+    return Clone();
+  }
+  return do_AddRef(this);
+}
+
 void
 DeclarationBlock::ToString(nsAString& aString) const
 {
