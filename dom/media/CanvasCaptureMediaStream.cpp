@@ -238,7 +238,6 @@ CanvasCaptureMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGive
 void
 CanvasCaptureMediaStream::RequestFrame()
 {
-  MOZ_ASSERT(mOutputStreamDriver);
   if (mOutputStreamDriver) {
     mOutputStreamDriver->RequestFrameCapture();
   }
@@ -281,6 +280,17 @@ FrameCaptureListener*
 CanvasCaptureMediaStream::FrameCaptureListener()
 {
   return mOutputStreamDriver;
+}
+
+void
+CanvasCaptureMediaStream::StopCapture()
+{
+  if (!mOutputStreamDriver) {
+    return;
+  }
+
+  mOutputStreamDriver->Forget();
+  mOutputStreamDriver = nullptr;
 }
 
 } // namespace dom

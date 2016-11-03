@@ -294,22 +294,19 @@ js::gc::AssertSafeToSkipBarrier(TenuredCell* thing)
     MOZ_ASSERT(!zone->needsIncrementalBarrier() || zone->isAtomsZone());
 }
 
-static void
-AssertMarkedOrAllocated(const EdgeValue& edge)
+static bool
+IsMarkedOrAllocated(const EdgeValue& edge)
 {
     if (!edge.thing || IsMarkedOrAllocated(TenuredCell::fromPointer(edge.thing)))
-        return;
+        return true;
 
     // Permanent atoms and well-known symbols aren't marked during graph traversal.
     if (edge.kind == JS::TraceKind::String && static_cast<JSString*>(edge.thing)->isPermanentAtom())
-        return;
+        return true;
     if (edge.kind == JS::TraceKind::Symbol && static_cast<JS::Symbol*>(edge.thing)->isWellKnownSymbol())
-        return;
+        return true;
 
-    char msgbuf[1024];
-    SprintfLiteral(msgbuf, "[barrier verifier] Unmarked edge: %s", edge.label);
-    MOZ_ReportAssertionFailure(msgbuf, __FILE__, __LINE__);
-    MOZ_CRASH();
+    return false;
 }
 
 void
@@ -355,8 +352,19 @@ gc::GCRuntime::endVerifyPreBarriers()
             js::TraceChildren(&cetrc, node->thing, node->kind);
 
             if (node->count <= MAX_VERIFIER_EDGES) {
-                for (uint32_t i = 0; i < node->count; i++)
-                    AssertMarkedOrAllocated(node->edges[i]);
+                for (uint32_t i = 0; i < node->count; i++) {
+                    EdgeValue& edge = node->edges[i];
+                    if (!IsMarkedOrAllocated(edge)) {
+                        char msgbuf[1024];
+                        SprintfLiteral(msgbuf,
+                                       "[barrier verifier] Unmarked edge: %s %p '%s' edge to %s %p",
+                                       JS::GCTraceKindToAscii(node->kind), node->thing,
+                                       edge.label,
+                                       JS::GCTraceKindToAscii(edge.kind), edge.thing);
+                        MOZ_ReportAssertionFailure(msgbuf, __FILE__, __LINE__);
+                        MOZ_CRASH();
+                    }
+                }
             }
 
             node = NextNode(node);

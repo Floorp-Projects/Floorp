@@ -19,6 +19,7 @@ class nsDisplayItem;
 class nsDisplayListBuilder;
 class nsDisplayTableItem;
 class nsDisplayThemedBackground;
+class nsDisplaySVGEffects;
 class nsDisplayMask;
 class nsDisplayFilter;
 
@@ -266,39 +267,41 @@ public:
   mozilla::gfx::Color mColor;
 };
 
-class nsDisplayMaskGeometry : public nsDisplayItemGeometry
+class nsDisplaySVGEffectGeometry : public nsDisplayItemGeometry
+{
+public:
+  nsDisplaySVGEffectGeometry(nsDisplaySVGEffects* aItem,
+                             nsDisplayListBuilder* aBuilder);
+
+  virtual void MoveBy(const nsPoint& aOffset) override;
+
+  gfxRect mBBox;
+  gfxPoint mUserSpaceOffset;
+  nsPoint mFrameOffsetToReferenceFrame;
+};
+
+class nsDisplayMaskGeometry : public nsDisplaySVGEffectGeometry
   , public nsImageGeometryMixin<nsDisplayMaskGeometry>
 {
 public:
   nsDisplayMaskGeometry(nsDisplayMask* aItem, nsDisplayListBuilder* aBuilder);
 
-  virtual void MoveBy(const nsPoint& aOffset) override;
-
-  gfxRect mBBox;
-  gfxPoint mUserSpaceOffset;
-  nsPoint mFrameOffsetToReferenceFrame;
-
   nsTArray<nsRect> mDestRects;
 };
 
-class nsDisplayFilterGeometry : public nsDisplayItemGeometry
-  , public nsImageGeometryMixin<nsDisplayMaskGeometry>
+class nsDisplayFilterGeometry : public nsDisplaySVGEffectGeometry
+  , public nsImageGeometryMixin<nsDisplayFilterGeometry>
 {
 public:
   nsDisplayFilterGeometry(nsDisplayFilter* aItem,
                           nsDisplayListBuilder* aBuilder);
-
-  virtual void MoveBy(const nsPoint& aOffset) override;
-
-  gfxRect mBBox;
-  gfxPoint mUserSpaceOffset;
-  nsPoint mFrameOffsetToReferenceFrame;
 };
 
 class nsCharClipGeometry : public nsDisplayItemGenericGeometry
 {
 public:
-  nsCharClipGeometry(nsCharClipDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
+  nsCharClipGeometry(nsCharClipDisplayItem* aItem,
+                     nsDisplayListBuilder* aBuilder);
 
   nscoord mVisIStartEdge;
   nscoord mVisIEndEdge;

@@ -734,13 +734,14 @@ Gecko_SetGradientImageValue(nsStyleImage* aImage, nsStyleGradient* aGradient)
   aImage->SetGradientData(aGradient);
 }
 
-static already_AddRefed<nsStyleImageRequest>
-CreateStyleImageRequest(nsStyleImageRequest::Mode aModeFlags,
-                        const uint8_t* aURLString, uint32_t aURLStringLength,
-                        ThreadSafeURIHolder* aBaseURI,
-                        ThreadSafeURIHolder* aReferrer,
-                        ThreadSafePrincipalHolder* aPrincipal)
+void
+Gecko_SetUrlImageValue(nsStyleImage* aImage,
+                       const uint8_t* aURLString, uint32_t aURLStringLength,
+                       ThreadSafeURIHolder* aBaseURI,
+                       ThreadSafeURIHolder* aReferrer,
+                       ThreadSafePrincipalHolder* aPrincipal)
 {
+  MOZ_ASSERT(aImage);
   MOZ_ASSERT(aURLString);
   MOZ_ASSERT(aBaseURI);
   MOZ_ASSERT(aReferrer);
@@ -753,23 +754,11 @@ CreateStyleImageRequest(nsStyleImageRequest::Mode aModeFlags,
   RefPtr<nsStringBuffer> urlBuffer = nsCSSValue::BufferFromString(url);
 
   RefPtr<nsStyleImageRequest> req =
-    new nsStyleImageRequest(aModeFlags, urlBuffer, do_AddRef(aBaseURI),
-                            do_AddRef(aReferrer), do_AddRef(aPrincipal));
-  return req.forget();
-}
-
-void
-Gecko_SetUrlImageValue(nsStyleImage* aImage,
-                       const uint8_t* aURLString, uint32_t aURLStringLength,
-                       ThreadSafeURIHolder* aBaseURI,
-                       ThreadSafeURIHolder* aReferrer,
-                       ThreadSafePrincipalHolder* aPrincipal)
-{
-  RefPtr<nsStyleImageRequest> req =
-    CreateStyleImageRequest(nsStyleImageRequest::Mode::Track |
-                            nsStyleImageRequest::Mode::Lock,
-                            aURLString, aURLStringLength,
-                            aBaseURI, aReferrer, aPrincipal);
+    new nsStyleImageRequest(nsStyleImageRequest::Mode::Track,
+                            urlBuffer,
+                            do_AddRef(aBaseURI),
+                            do_AddRef(aReferrer),
+                            do_AddRef(aPrincipal));
   aImage->SetImageRequest(req.forget());
 }
 
@@ -812,32 +801,6 @@ Gecko_CreateGradient(uint8_t aShape,
   }
 
   return result;
-}
-
-void
-Gecko_SetListStyleImageNone(nsStyleList* aList)
-{
-  aList->mListStyleImage = nullptr;
-}
-
-void
-Gecko_SetListStyleImage(nsStyleList* aList,
-                        const uint8_t* aURLString, uint32_t aURLStringLength,
-                        ThreadSafeURIHolder* aBaseURI,
-                        ThreadSafeURIHolder* aReferrer,
-                        ThreadSafePrincipalHolder* aPrincipal)
-{
-  aList->mListStyleImage =
-    CreateStyleImageRequest(nsStyleImageRequest::Mode::Track |
-                            nsStyleImageRequest::Mode::Lock,
-                            aURLString, aURLStringLength,
-                            aBaseURI, aReferrer, aPrincipal);
-}
-
-void
-Gecko_CopyListStyleImageFrom(nsStyleList* aList, const nsStyleList* aSource)
-{
-  aList->mListStyleImage = aSource->mListStyleImage;
 }
 
 void

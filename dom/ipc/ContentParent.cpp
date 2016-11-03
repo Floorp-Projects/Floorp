@@ -742,14 +742,14 @@ ContentParent::JoinAllSubprocesses()
 ContentParent::GetNewOrUsedBrowserProcess(bool aForBrowserElement,
                                           ProcessPriority aPriority,
                                           ContentParent* aOpener,
-                                          bool aFreshProcess)
+                                          bool aLargeAllocationProcess)
 {
   nsTArray<ContentParent*>* contentParents;
   int32_t maxContentParents;
 
   // Decide which pool of content parents we are going to be pulling from based
-  // on the aFreshProcess flag.
-  if (aFreshProcess) {
+  // on the aLargeAllocationProcess flag.
+  if (aLargeAllocationProcess) {
     if (!sLargeAllocationContentParents) {
       sLargeAllocationContentParents = new nsTArray<ContentParent*>();
     }
@@ -770,7 +770,9 @@ ContentParent::GetNewOrUsedBrowserProcess(bool aForBrowserElement,
   }
 
   if (contentParents->Length() >= uint32_t(maxContentParents)) {
-    uint32_t startIdx = rand() % contentParents->Length();
+    uint32_t maxSelectable = std::min(static_cast<uint32_t>(contentParents->Length()),
+                                      static_cast<uint32_t>(maxContentParents));
+    uint32_t startIdx = rand() % maxSelectable;
     uint32_t currIdx = startIdx;
     do {
       RefPtr<ContentParent> p = (*contentParents)[currIdx];
@@ -778,7 +780,7 @@ ContentParent::GetNewOrUsedBrowserProcess(bool aForBrowserElement,
       if (p->mOpener == aOpener) {
         return p.forget();
       }
-      currIdx = (currIdx + 1) % contentParents->Length();
+      currIdx = (currIdx + 1) % maxSelectable;
     } while (currIdx != startIdx);
   }
 
@@ -799,6 +801,9 @@ ContentParent::GetNewOrUsedBrowserProcess(bool aForBrowserElement,
 
     p->Init();
   }
+
+  p->mLargeAllocationProcess = aLargeAllocationProcess;
+
   p->ForwardKnownInfo();
 
   contentParents->AppendElement(p);
@@ -1745,13 +1750,13 @@ ContentParent::RecvDeallocateLayerTreeId(const uint64_t& aId)
 {
   GPUProcessManager* gpu = GPUProcessManager::Get();
 
-  if (!gpu->IsLayerTreeIdMapped(aId, this->OtherPid()))
+  if (!gpu->IsLayerTreeIdMapped(aId, OtherPid()))
   {
     // You can't deallocate layer tree ids that you didn't allocate
     KillHard("DeallocateLayerTreeId");
   }
 
-  gpu->DeallocateLayerTreeId(aId);
+  gpu->UnmapLayerTreeId(aId, OtherPid());
 
   return true;
 }
@@ -1958,6 +1963,12 @@ ContentParent::NotifyTabDestroying(const TabId& aTabId,
         return;
     }
 
+    uint32_t numberOfParents = sNonAppContentParents ? sNonAppContentParents->Length() : 0;
+    int32_t processesToKeepAlive = Preferences::GetInt("dom.ipc.keepProcessesAlive", 0);
+    if (!cp->mLargeAllocationProcess && static_cast<int32_t>(numberOfParents) <= processesToKeepAlive) {
+      return;
+    }
+
     // We're dying now, so prevent this content process from being
     // recycled during its shutdown procedure.
     cp->MarkAsDead();
@@ -2006,7 +2017,15 @@ ContentParent::NotifyTabDestroyed(const TabId& aTabId,
   // us down.
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   nsTArray<TabId> tabIds = cpm->GetTabParentsByProcessId(this->ChildID());
-  if (tabIds.Length() == 1) {
+
+  // We might want to keep alive some content processes for testing, because of performance
+  // reasons, but we don't want to alter behavior if the pref is not set.
+  uint32_t numberOfParents = sNonAppContentParents ? sNonAppContentParents->Length() : 0;
+  int32_t processesToKeepAlive = Preferences::GetInt("dom.ipc.keepProcessesAlive", 0);
+  bool shouldKeepAliveAny = !mLargeAllocationProcess && processesToKeepAlive > 0;
+  bool shouldKeepAliveThis = shouldKeepAliveAny && static_cast<int32_t>(numberOfParents) <= processesToKeepAlive;
+
+  if (tabIds.Length() == 1 && !shouldKeepAliveThis) {
     // In the case of normal shutdown, send a shutdown message to child to
     // allow it to perform shutdown tasks.
     MessageLoop::current()->PostTask(NewRunnableMethod
@@ -2097,6 +2116,7 @@ ContentParent::ContentParent(mozIApplication* aApp,
   : nsIContentParent()
   , mOpener(aOpener)
   , mIsForBrowser(aIsForBrowser)
+  , mLargeAllocationProcess(false)
 {
   InitializeMembers();  // Perform common initialization.
 

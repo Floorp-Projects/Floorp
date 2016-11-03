@@ -19,6 +19,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMBlob.h"
 #include "nsIFile.h"
+#include "nsIMemoryReporter.h"
 #include "nsIMutable.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsString.h"
@@ -525,14 +526,16 @@ protected:
 };
 
 class BlobImplString final : public BlobImplBase
+                           , public nsIMemoryReporter
 {
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+
 public:
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIMEMORYREPORTER
 
-  BlobImplString(const nsACString& aData, const nsAString& aContentType)
-    : BlobImplBase(aContentType, aData.Length())
-    , mData(aData)
-  {}
+  static already_AddRefed<BlobImplString>
+  Create(const nsACString& aData, const nsAString& aContentType);
 
   virtual void GetInternalStream(nsIInputStream** aStream,
                                  ErrorResult& aRv) override;
@@ -542,10 +545,13 @@ public:
               const nsAString& aContentType, ErrorResult& aRv) override;
 
 private:
-  ~BlobImplString() {}
+  BlobImplString(const nsACString& aData, const nsAString& aContentType);
+
+  ~BlobImplString();
 
   nsCString mData;
 };
+
 /**
  * This class may be used off the main thread, and in particular, its
  * constructor and destructor may not run on the same thread.  Be careful!

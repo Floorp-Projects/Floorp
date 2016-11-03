@@ -290,10 +290,7 @@ config = {
     },
 
     ### project branches
-    'fx-team': {
-        'repo_path': 'integration/fx-team',
-        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
-    },
+    #'fx-team': {},   #Bug 1296396
     'gum': {
         'branch_uses_per_checkin_strategy': True,
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',

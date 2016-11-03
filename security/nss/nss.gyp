@@ -207,13 +207,13 @@
             'cmd/tstclnt/tstclnt.gyp:tstclnt',
             'cmd/vfychain/vfychain.gyp:vfychain',
             'cmd/vfyserv/vfyserv.gyp:vfyserv',
-            'external_tests/google_test/google_test.gyp:gtest1',
-            'external_tests/common/common.gyp:gtests',
-            'external_tests/der_gtest/der_gtest.gyp:der_gtest',
-            'external_tests/pk11_gtest/pk11_gtest.gyp:pk11_gtest',
-            'external_tests/ssl_gtest/ssl_gtest.gyp:ssl_gtest',
-            'external_tests/util_gtest/util_gtest.gyp:util_gtest',
-            'external_tests/nss_bogo_shim/nss_bogo_shim.gyp:nss_bogo_shim'
+            'gtests/google_test/google_test.gyp:gtest1',
+            'gtests/common/common.gyp:gtests',
+            'gtests/der_gtest/der_gtest.gyp:der_gtest',
+            'gtests/pk11_gtest/pk11_gtest.gyp:pk11_gtest',
+            'gtests/ssl_gtest/ssl_gtest.gyp:ssl_gtest',
+            'gtests/util_gtest/util_gtest.gyp:util_gtest',
+            'gtests/nss_bogo_shim/nss_bogo_shim.gyp:nss_bogo_shim'
           ],
           'conditions': [
             [ 'OS=="linux"', {
@@ -226,6 +226,23 @@
                 'cmd/pkix-errcodes/pkix-errcodes.gyp:pkix-errcodes',
               ],
             }],
+          ],
+        },
+      ],
+    }],
+    [ 'fuzz==1', {
+      'targets': [
+        {
+          'target_name': 'fuzz',
+          'type': 'none',
+          'actions': [
+            {
+              'action_name': 'warn_fuzz',
+              'action': ['cat', 'fuzz/warning.txt'],
+              'inputs': ['fuzz/warning.txt'],
+              'ninja_use_console': 1,
+              'outputs': ['dummy'],
+            }
           ],
         },
       ],

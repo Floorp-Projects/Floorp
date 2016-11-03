@@ -32,6 +32,11 @@ struct GfxPrefSetting {
   GfxPrefValue value;
 };
 
+struct LayerTreeIdMapping {
+  uint64_t layersId;
+  ProcessId ownerId;
+};
+
 sync protocol PGPU
 {
 parent:
@@ -61,10 +66,9 @@ parent:
   async NewContentVRManager(Endpoint<PVRManagerParent> endpoint);
   async NewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent> endpoint);
 
-  async DeallocateLayerTreeId(uint64_t layersId);
-
   // Called to notify the GPU process of who owns a layersId.
-  sync AddLayerTreeIdMapping(uint64_t layersId, ProcessId ownerId);
+  sync AddLayerTreeIdMapping(LayerTreeIdMapping[] mapping);
+  async RemoveLayerTreeIdMapping(LayerTreeIdMapping mapping);
 
   // Request the current DeviceStatus from the GPU process. This blocks until
   // one is available (i.e., Init has completed).

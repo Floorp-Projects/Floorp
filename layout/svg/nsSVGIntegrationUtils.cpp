@@ -566,28 +566,26 @@ ComputeOpacity(const PaintFramesParams& aParams)
 }
 
 static bool
-ValidateSVGFrame(const PaintFramesParams& aParams, bool aHasSVGLayout,
-                 DrawResult* aResult)
+ValidateSVGFrame(nsIFrame* aFrame)
 {
 #ifdef DEBUG
-  NS_ASSERTION(!(aParams.frame->GetStateBits() & NS_FRAME_SVG_LAYOUT) ||
+  NS_ASSERTION(!(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) ||
                (NS_SVGDisplayListPaintingEnabled() &&
-                !(aParams.frame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)),
+                !(aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)),
                "Should not use nsSVGIntegrationUtils on this SVG frame");
 #endif
 
-  nsIFrame* frame = aParams.frame;
-  const nsIContent* content = frame->GetContent();
-  if (aHasSVGLayout) {
-    nsISVGChildFrame *svgChildFrame = do_QueryFrame(frame);
-    if (!svgChildFrame || !frame->GetContent()->IsSVGElement()) {
-      NS_ASSERTION(false, "why?");
-      *aResult = DrawResult::BAD_ARGS;
-      return false;
-    }
+  bool hasSVGLayout = (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
+  if (hasSVGLayout) {
+#ifdef DEBUG
+    nsISVGChildFrame *svgChildFrame = do_QueryFrame(aFrame);
+    MOZ_ASSERT(svgChildFrame && aFrame->GetContent()->IsSVGElement(),
+               "A non-SVG frame carries NS_FRAME_SVG_LAYOUT flag?");
+#endif
+
+    const nsIContent* content = aFrame->GetContent();
     if (!static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
       // The SVG spec says not to draw _anything_
-      *aResult = DrawResult::SUCCESS;
       return false;
     }
   }
@@ -685,8 +683,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
    */
   nsIFrame* frame = aParams.frame;
   DrawResult result = DrawResult::SUCCESS;
-  bool hasSVGLayout = (frame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
-  if (!ValidateSVGFrame(aParams, hasSVGLayout, &result)) {
+  if (!ValidateSVGFrame(frame)) {
     return result;
   }
 
@@ -705,11 +702,6 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(firstFrame);
 
-  bool isOK = effectProperties.HasNoFilterOrHasValidFilter();
-  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
-
-  bool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : true;
-
   gfxMatrix cssPxToDevPxMatrix = GetCSSPxToDevPxMatrix(frame);
   const nsStyleSVGReset *svgReset = firstFrame->StyleSVGReset();
   nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
@@ -723,6 +715,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
   // For a SVG doc:
   //   SVG 1.1 say that  if we fail to resolve a mask, we should draw the
   //   object unmasked.
+  bool hasSVGLayout = (frame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
   bool shouldGenerateMaskLayer = hasSVGLayout
                                  ? maskFrames.Length() == 1 && maskFrames[0]
                                  : maskFrames.Length() > 0;
@@ -734,11 +727,34 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
   bool shouldGenerateMaskLayer = maskFrames.Length() == 1 && maskFrames[0];
 #endif
 
-  bool shouldGenerateClipMaskLayer = clipPathFrame && !isTrivialClip;
-  bool shouldApplyClipPath = clipPathFrame && isTrivialClip;
-  bool shouldApplyBasicShape = !clipPathFrame && svgReset->HasClipPath();
-  MOZ_ASSERT_IF(shouldGenerateClipMaskLayer,
-                !shouldApplyClipPath && !shouldApplyBasicShape);
+  bool isOK = effectProperties.HasNoFilterOrHasValidFilter();
+  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
+  MOZ_ASSERT_IF(clipPathFrame,
+                svgReset->mClipPath.GetType() == StyleShapeSourceType::URL);
+
+  bool shouldGenerateClipMaskLayer = false;
+  bool shouldApplyClipPath = false;
+  bool shouldApplyBasicShape = false;
+  switch (svgReset->mClipPath.GetType()) {
+    case StyleShapeSourceType::URL:
+      if (clipPathFrame) {
+        if (clipPathFrame->IsTrivial()) {
+          shouldApplyClipPath = true;
+        } else {
+          shouldGenerateClipMaskLayer = true;
+        }
+      }
+      break;
+    case StyleShapeSourceType::Shape:
+    case StyleShapeSourceType::Box:
+      shouldApplyBasicShape = true;
+      break;
+    case StyleShapeSourceType::None:
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported clip-path type.");
+      break;
+  }
 
   nsPoint offsetToBoundingBox;
   nsPoint offsetToUserSpace;
@@ -819,7 +835,8 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
    * we can just do normal painting and get it clipped appropriately.
    */
   if (shouldApplyClipPath || shouldApplyBasicShape) {
-    context.Save();
+    gfxContextMatrixAutoSaveRestore matSR(&context);
+
     SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
                        offsetToUserSpace, false);
 
@@ -841,7 +858,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
   basic->SetTarget(oldCtx);
 
   if (shouldApplyClipPath || shouldApplyBasicShape) {
-    context.Restore();
+    context.PopClip();
   }
 
   if (shouldGenerateMask) {
@@ -860,10 +877,8 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
              "Should not use this method when no filter effect on this frame");
 
   nsIFrame* frame = aParams.frame;
-  DrawResult result = DrawResult::SUCCESS;
-  bool hasSVGLayout = (frame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
-  if (!ValidateSVGFrame(aParams, hasSVGLayout, &result)) {
-    return result;
+  if (!ValidateSVGFrame(frame)) {
+    return DrawResult::SUCCESS;
   }
 
   float opacity = ComputeOpacity(aParams);
@@ -907,7 +922,7 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
     context.PopGroupAndBlend();
   }
 
-  return result;
+  return DrawResult::SUCCESS;
 }
 
 gfxMatrix

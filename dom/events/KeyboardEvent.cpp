@@ -337,6 +337,8 @@ KeyboardEvent::InitKeyEvent(const nsAString& aType,
                             uint32_t aKeyCode,
                             uint32_t aCharCode)
 {
+  NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
+
   UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);
 
   WidgetKeyboardEvent* keyEvent = mEvent->AsKeyboardEvent();

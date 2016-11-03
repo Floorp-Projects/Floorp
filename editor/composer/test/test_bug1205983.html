@@ -5,8 +5,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1205983
 -->
 <head>
   <title>Test for Bug 1205983</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1205983">Mozilla Bug 1205983</a>
@@ -20,36 +20,43 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1205983
 <script class="testbody" type="text/javascript">
 
 function getMisspelledWords(editor) {
-  return editor.selectionController.getSelection(Components.interfaces.nsISelectionController.SELECTION_SPELLCHECK).toString();
+  return editor.selectionController.getSelection(SpecialPowers.Ci.nsISelectionController.SELECTION_SPELLCHECK).toString();
 }
 
 var elem_de;
 var editor_de;
 var selcon_de;
-var de_DE;
-var hunspell;
+var script;
+
+var onSpellCheck =
+  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm")
+               .onSpellCheck;
 
 /** Test for Bug 1205983 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
+  script = SpecialPowers.loadChromeScript(function() {
+    var dir = Components.classes["@mozilla.org/file/directory_service;1"]
+                        .getService(Components.interfaces.nsIProperties)
+                        .get("CurWorkD", Components.interfaces.nsIFile);
+    dir.append("tests");
+    dir.append("editor");
+    dir.append("composer");
+    dir.append("test");
 
-  var dir = Components.classes["@mozilla.org/file/directory_service;1"]
-                      .getService(Components.interfaces.nsIProperties)
-                      .get("CurWorkD", Components.interfaces.nsIFile);
-  dir.append("tests");
-  dir.append("editor");
-  dir.append("composer");
-  dir.append("test");
+    var hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
+                             .getService(Components.interfaces.mozISpellCheckingEngine);
 
-  hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
-                       .getService(Components.interfaces.mozISpellCheckingEngine);
+    // Install de-DE dictionary.
+    var de_DE = dir.clone();
+    de_DE.append("de-DE");
+    hunspell.addDirectory(de_DE);
 
-  // Install de-DE dictionary.
-  de_DE = dir.clone();
-  de_DE.append("de-DE");
-  is(de_DE.exists(), true, "true expected (de_DE directory should exist)");
-  hunspell.addDirectory(de_DE);
+    addMessageListener("de_DE-exists", () => de_DE.exists());
+    addMessageListener("destroy", () => hunspell.removeDirectory(de_DE));
+  });
+  is(script.sendSyncMessage("de_DE-exists")[0][0], true,
+     "true expected (de_DE directory should exist)");
 
   document.getElementById('de-DE').focus();
 });
@@ -58,8 +65,9 @@ function deFocus() {
   elem_de = document.getElementById('de-DE');
 
   onSpellCheck(elem_de, function () {
-    var Ci = Components.interfaces;
-    var editingSession = window.QueryInterface(Ci.nsIInterfaceRequestor)
+    var Ci = SpecialPowers.Ci;
+    var editingSession = SpecialPowers.wrap(window)
+                               .QueryInterface(Ci.nsIInterfaceRequestor)
                                .getInterface(Ci.nsIWebNavigation)
                                .QueryInterface(Ci.nsIInterfaceRequestor)
                                .getInterface(Ci.nsIEditingSession);
@@ -77,7 +85,10 @@ function deFocus() {
 
 function enFocus() {
   var elem_en = document.getElementById('en-US');
-  var editor_en = elem_en.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+  var editor_en =
+    SpecialPowers.wrap(elem_en)
+                 .QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement)
+                 .editor;
   editor_en.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor_en.getInlineSpellChecker(true);
 
@@ -98,7 +109,7 @@ function enFocus() {
     is(sel.toString(), "German", "one misspelled word expected: German");
 
     // Remove the fake de_DE dictionary again.
-    hunspell.removeDirectory(de_DE);
+    script.sendSyncMessage("destroy");
 
     // Focus again, so the spelling gets updated, but before we need to kill the focus handler.
     elem_de.onfocus = null;

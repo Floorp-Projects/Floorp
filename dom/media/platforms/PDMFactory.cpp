@@ -374,10 +374,8 @@ PDMFactory::CreatePDMs()
     // expect it's not going to work (i.e. on Windows older than Vista).
     m = new WMFDecoderModule();
     RefPtr<PlatformDecoderModule> remote = new dom::RemoteDecoderModule(m);
-    mWMFFailedToLoad = !StartupPDM(remote);
-    if (mWMFFailedToLoad) {
-      mWMFFailedToLoad = !StartupPDM(m);
-    }
+    StartupPDM(remote);
+    mWMFFailedToLoad = !StartupPDM(m);
   } else {
     mWMFFailedToLoad = MediaPrefs::DecoderDoctorWMFDisabledIsFailure();
   }
