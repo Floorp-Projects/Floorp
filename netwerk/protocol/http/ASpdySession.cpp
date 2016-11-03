@@ -28,9 +28,7 @@ ASpdySession::ASpdySession()
 {
 }
 
-ASpdySession::~ASpdySession()
-{
-}
+ASpdySession::~ASpdySession() = default;
 
 ASpdySession *
 ASpdySession::NewSpdySession(uint32_t version,

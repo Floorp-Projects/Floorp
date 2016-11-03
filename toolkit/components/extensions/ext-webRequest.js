@@ -23,12 +23,9 @@ function WebRequestEventManager(context, eventName) {
   let name = `webRequest.${eventName}`;
   let register = (callback, filter, info) => {
     let listener = data => {
-      if (!data.browser) {
-        return;
-      }
-
-      let tabId = TabManager.getBrowserId(data.browser);
-      if (tabId == -1) {
+      // Prevent listening in on requests originating from system principal to
+      // prevent tinkering with OCSP, app and addon updates, etc.
+      if (data.isSystemPrincipal) {
         return;
       }
 
@@ -52,12 +49,7 @@ function WebRequestEventManager(context, eventName) {
         data2.ip = data.ip;
       }
 
-      // Fills in tabId typically.
-      let result = {};
-      extensions.emit("fill-browser-data", data.browser, data2, result);
-      if (result.cancel) {
-        return;
-      }
+      extensions.emit("fill-browser-data", data.browser, data2);
 
       let optional = ["requestHeaders", "responseHeaders", "statusCode", "statusLine", "error", "redirectUrl",
                       "requestBody"];

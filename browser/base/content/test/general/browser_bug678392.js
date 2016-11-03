@@ -157,7 +157,6 @@ function test2() {
   let tab = gBrowser.selectedTab;
 
   load(tab, HTTPROOT + "browser_bug678392-1.html", function() {
-    var historyIndex = gBrowser.webNavigation.sessionHistory.index - 1;
     load(tab, HTTPROOT + "browser_bug678392-2.html", function() {
       is(gHistorySwipeAnimation._trackedSnapshots.length, 2, "Length of " +
          "snapshot array is equal to 2 after loading two pages");

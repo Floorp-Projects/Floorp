@@ -4,7 +4,7 @@ add_task(function* test_switchtab_decodeuri() {
   yield promiseTabLoadEvent(tab);
 
   info("Opening and selecting second tab");
-  let newTab = gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedTab = gBrowser.addTab();
 
   info("Wait for autocomplete")
   yield promiseAutocompleteResultPopup("dummy_page");

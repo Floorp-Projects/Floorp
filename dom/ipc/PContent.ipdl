@@ -6,7 +6,6 @@
 
 include protocol PBackground;
 include protocol PBlob;
-include protocol PBluetooth;
 include protocol PBrowser;
 include protocol PCompositorBridge;
 include protocol PContentBridge;
@@ -337,6 +336,19 @@ struct BlobURLRegistrationData
     Principal principal;
 };
 
+struct GMPAPITags
+{
+    nsCString api;
+    nsCString[] tags;
+};
+
+struct GMPCapabilityData
+{
+    nsCString name;
+    nsCString version;
+    GMPAPITags[] capabilities;
+};
+
 nested(upto inside_cpow) sync protocol PContent
 {
     parent spawns PPluginModule;
@@ -346,7 +358,6 @@ nested(upto inside_cpow) sync protocol PContent
     child opens PBackground;
 
     manages PBlob;
-    manages PBluetooth;
     manages PBrowser;
     manages PContentPermissionRequest;
     manages PCrashReporter;
@@ -664,6 +675,9 @@ child:
 
     async BlobURLUnregistration(nsCString aURI);
 
+
+    async GMPsChanged(GMPCapabilityData[] capabilities);
+
 parent:
     /**
      * Tell the content process some attributes of itself.  This is
@@ -694,10 +708,6 @@ parent:
     sync BridgeToChildProcess(ContentParentId cpId);
 
     async CreateGMPService();
-    sync GetGMPPluginVersionForAPI(nsCString api, nsCString[] tags)
-        returns (bool hasPlugin, nsCString version);
-    sync IsGMPPresentOnDisk(nsString keySystem, nsCString version)
-        returns (bool isPresent, nsCString message);
 
     /**
      * This call connects the content process to a plugin process. While this
@@ -819,8 +829,6 @@ parent:
     nested(inside_cpow) async PStorage();
 
     async PMedia();
-
-    async PBluetooth();
 
     async PWebrtcGlobal();
 

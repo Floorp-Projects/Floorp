@@ -52,6 +52,8 @@ public:
 
   nsresult DispatchConnectionAvailableEvent(PresentationConnection* aConnection);
 
+  void NotifyPromiseSettled();
+
 private:
   PresentationRequest(nsPIDOMWindowInner* aWindow,
                       nsTArray<nsString>&& aUrls);

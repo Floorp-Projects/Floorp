@@ -186,7 +186,7 @@ public:
     }
 
     nsCounterNode* First() {
-        return static_cast<nsCounterNode*>(mFirstNode);
+        return static_cast<nsCounterNode*>(mList.getFirst());
     }
 
     static nsCounterNode* Next(nsCounterNode* aNode) {

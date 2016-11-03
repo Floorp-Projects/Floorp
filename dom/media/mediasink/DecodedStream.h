@@ -63,6 +63,8 @@ public:
   bool IsStarted() const override;
   bool IsPlaying() const override;
 
+  void DumpDebugInfo() override;
+
 protected:
   virtual ~DecodedStream();
 

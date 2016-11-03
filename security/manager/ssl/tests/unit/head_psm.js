@@ -794,3 +794,32 @@ function asyncTestCertificateUsages(certdb, cert, expectedUsages) {
   });
   return Promise.all(promises);
 }
+
+/**
+ * Loads the pkcs11testmodule.cpp test PKCS #11 module, and registers a cleanup
+ * function that unloads it once the calling test completes.
+ *
+ * @param {Boolean} expectModuleUnloadToFail
+ *                  Should be set to true for tests that manually unload the
+ *                  test module, so the attempt to auto unload the test module
+ *                  doesn't cause a test failure. Should be set to false
+ *                  otherwise, so failure to automatically unload the test
+ *                  module gets reported.
+ */
+function loadPKCS11TestModule(expectModuleUnloadToFail) {
+  let libraryFile = Services.dirsvc.get("CurWorkD", Ci.nsILocalFile);
+  libraryFile.append("pkcs11testmodule");
+  libraryFile.append(ctypes.libraryName("pkcs11testmodule"));
+  ok(libraryFile.exists(), "The pkcs11testmodule file should exist");
+
+  let pkcs11 = Cc["@mozilla.org/security/pkcs11;1"].getService(Ci.nsIPKCS11);
+  do_register_cleanup(() => {
+    try {
+      pkcs11.deleteModule("PKCS11 Test Module");
+    } catch (e) {
+      Assert.ok(expectModuleUnloadToFail,
+                `Module unload should suceed only when expected: ${e}`);
+    }
+  });
+  pkcs11.addModule("PKCS11 Test Module", libraryFile.path, 0, 0);
+}

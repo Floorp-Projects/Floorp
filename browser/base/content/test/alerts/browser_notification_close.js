@@ -3,7 +3,6 @@
 const {PlacesTestUtils} =
   Cu.import("resource://testing-common/PlacesTestUtils.jsm", {});
 
-let tab;
 let notificationURL = "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
 let oldShowFavicons;
 
@@ -53,7 +52,7 @@ add_task(function* test_notificationClose() {
     let closedTime = alertWindow.Date.now();
     alertCloseButton.click();
     info("Clicked on close button");
-    let beforeUnloadEvent = yield promiseBeforeUnloadEvent;
+    yield promiseBeforeUnloadEvent;
 
     ok(true, "Alert should close when the close button is clicked");
     let currentTime = alertWindow.Date.now();

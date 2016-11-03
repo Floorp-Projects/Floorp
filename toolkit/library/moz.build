@@ -201,7 +201,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'winspool',
     ]
 
-if CONFIG['MOZ_B2G_BT_BLUEZ'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     OS_LIBS += [
         'dbus',
     ]

@@ -110,7 +110,6 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
   }
 
   let providersAdded = 0;
-  let firstProvider;
 
   manifests.forEach(function (m) {
     SocialService.addProvider(m, function(provider) {

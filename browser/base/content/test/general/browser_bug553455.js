@@ -1025,14 +1025,6 @@ function test_renotifyInstalled() {
 
 function test_cancel() {
   return Task.spawn(function* () {
-    function complete_install(callback) {
-      let url = TESTROOT + "slowinstall.sjs?continue=true"
-      NetUtil.asyncFetch({
-        uri: url,
-        loadUsingSystemPrincipal: true
-      }, callback || (() => {}));
-    }
-
     let pm = Services.perms;
     pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 

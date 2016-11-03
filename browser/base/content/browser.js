@@ -50,6 +50,7 @@ Cu.import("resource://gre/modules/NotificationDB.jsm");
   ["TelemetryStopwatch", "resource://gre/modules/TelemetryStopwatch.jsm"],
   ["Translation", "resource:///modules/translation/Translation.jsm"],
   ["UITour", "resource:///modules/UITour.jsm"],
+  ["URLBarZoom", "resource:///modules/URLBarZoom.jsm"],
   ["UpdateUtils", "resource://gre/modules/UpdateUtils.jsm"],
   ["Weave", "resource://services-sync/main.js"],
   ["fxAccounts", "resource://gre/modules/FxAccounts.jsm"],
@@ -621,7 +622,7 @@ var gPopupBlockerObserver = {
 
   showAllBlockedPopups: function (aBrowser)
   {
-    let popups = aBrowser.retrieveListOfBlockedPopups().then(popups => {
+    aBrowser.retrieveListOfBlockedPopups().then(popups => {
       for (let i = 0; i < popups.length; i++) {
         if (popups[i].popupWindowURIspec)
           aBrowser.unblockPopup(i);
@@ -796,7 +797,6 @@ function _loadURIWithFlags(browser, uri, params) {
   let referrer = params.referrerURI;
   let referrerPolicy = ('referrerPolicy' in params ? params.referrerPolicy :
                         Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT);
-  let charset = params.charset;
   let postData = params.postData;
 
   let wasRemote = browser.isRemoteBrowser;
@@ -3104,7 +3104,6 @@ function populateMirrorTabMenu(popup) {
   if (!Services.prefs.getBoolPref("browser.casting.enabled")) {
     return;
   }
-  let videoEl = this.target;
   let doc = popup.ownerDocument;
   let services = CastingApps.getServicesForMirroring();
   services.forEach(service => {
@@ -4449,16 +4448,13 @@ var XULBrowserWindow = {
       }
 
       URLBarSetURI(aLocationURI);
-
       BookmarkingUI.onLocationChange();
-
       gIdentityHandler.onLocationChange();
-
       SocialUI.updateState();
-
       UITour.onLocationChange(location);
-
       gTabletModePageCounter.inc();
+      ReaderParent.updateReaderButton(gBrowser.selectedBrowser);
+      URLBarZoom.updateZoomButton(gBrowser.selectedBrowser, "browser-fullZoom:location-change");
 
       // Utility functions for disabling find
       var shouldDisableFind = function shouldDisableFind(aDocument) {
@@ -4512,7 +4508,6 @@ var XULBrowserWindow = {
       }
     }
     UpdateBackForwardCommands(gBrowser.webNavigation);
-    ReaderParent.updateReaderButton(gBrowser.selectedBrowser);
 
     gGestureSupport.restoreRotationState();
 
@@ -5635,7 +5630,7 @@ function handleDroppedLink(event, urlOrLinks, name)
   // inBackground should be false, as it's loading into current browser.
   let inBackground = false;
   if (event) {
-    let inBackground = Services.prefs.getBoolPref("browser.tabs.loadInBackground");
+    inBackground = Services.prefs.getBoolPref("browser.tabs.loadInBackground");
     if (event.shiftKey)
       inBackground = !inBackground;
   }

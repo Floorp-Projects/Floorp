@@ -112,9 +112,6 @@ public:
   AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() {
     return mReader->CanonicalBuffered();
   }
-  AbstractCanonical<bool>* CanonicalIsSuspended() {
-    return mReader->CanonicalIsSuspended();
-  }
 
   void SetCDMProxy(CDMProxy* aProxy) { mReader->SetCDMProxy(aProxy); }
 

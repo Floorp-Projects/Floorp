@@ -11,9 +11,9 @@
 
 /**
  * An array of tree items corresponding to TEST_CASES.
- * @type nsIMutableArray<nsICertTreeItem>
+ * @type nsICertTreeItem[]
  */
-var gCertArray = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+var gCertArray = [];
 
 const FAKE_HOST_PORT = "Fake host and port";
 
@@ -56,20 +56,18 @@ const TEST_CASES = [
  *          A promise that resolves when the dialog has finished loading, with
  *          an array consisting of:
  *            1. The window of the opened dialog.
- *            2. The nsIDialogParamBlock passed to the dialog.
+ *            2. The return value object passed to the dialog.
  */
 function openDeleteCertConfirmDialog(tabID) {
-  let params = Cc["@mozilla.org/embedcomp/dialogparam;1"]
-                 .createInstance(Ci.nsIDialogParamBlock);
-  params.SetString(0, tabID);
-  params.objects = gCertArray;
-
+  let retVals = {
+    deleteConfirmed: false,
+  };
   let win = window.openDialog("chrome://pippki/content/deletecert.xul", "", "",
-                              params);
+                              tabID, gCertArray, retVals);
   return new Promise((resolve, reject) => {
     win.addEventListener("load", function onLoad() {
       win.removeEventListener("load", onLoad);
-      resolve([win, params]);
+      resolve([win, retVals]);
     });
   });
 }
@@ -91,7 +89,7 @@ add_task(function* setup() {
         throw new Error(Cr.NS_ERROR_NO_INTERFACE);
       }
     };
-    gCertArray.appendElement(certTreeItem, false);
+    gCertArray.push(certTreeItem);
   }
 });
 
@@ -108,7 +106,7 @@ add_task(function* setup() {
  *        Impact the dialog is expected to show.
  */
 function* testHelper(tabID, expectedTitle, expectedConfirmMsg, expectedImpact) {
-  let [win, params] = yield openDeleteCertConfirmDialog(tabID);
+  let [win, retVals] = yield openDeleteCertConfirmDialog(tabID);
   let certList = win.document.getElementById("certlist");
 
   Assert.equal(win.document.title, expectedTitle,
@@ -196,22 +194,22 @@ add_task(function* testDeleteOtherCerts() {
 
 // Test that the right values are returned when the dialog is accepted.
 add_task(function* testAcceptDialogReturnValues() {
-  let [win, params] = yield openDeleteCertConfirmDialog("ca_tab" /*arbitrary*/);
+  let [win, retVals] = yield openDeleteCertConfirmDialog("ca_tab" /*arbitrary*/);
   info("Accepting dialog");
   win.document.getElementById("deleteCertificate").acceptDialog();
   yield BrowserTestUtils.windowClosed(win);
 
-  Assert.equal(params.GetInt(1), 1,
-               "1 should be returned to signal user accepted");
+  Assert.ok(retVals.deleteConfirmed,
+            "Return value should signal user accepted");
 });
 
 // Test that the right values are returned when the dialog is canceled.
 add_task(function* testCancelDialogReturnValues() {
-  let [win, params] = yield openDeleteCertConfirmDialog("ca_tab" /*arbitrary*/);
+  let [win, retVals] = yield openDeleteCertConfirmDialog("ca_tab" /*arbitrary*/);
   info("Canceling dialog");
   win.document.getElementById("deleteCertificate").cancelDialog();
   yield BrowserTestUtils.windowClosed(win);
 
-  Assert.equal(params.GetInt(1), 0,
-               "0 should be returned to signal user canceled");
+  Assert.ok(!retVals.deleteConfirmed,
+            "Return value should signal user did not accept");
 });

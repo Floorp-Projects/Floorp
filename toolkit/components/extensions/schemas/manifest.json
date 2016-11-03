@@ -61,7 +61,8 @@
           "author": {
             "type": "string",
             "optional": true,
-            "preprocess": "localize"
+            "preprocess": "localize",
+            "onError": "warn"
           },
 
           "version": {

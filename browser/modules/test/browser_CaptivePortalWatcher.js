@@ -96,6 +96,30 @@ function ensureNoPortalNotification(win) {
     "There should be no captive portal notification in the window.");
 }
 
+/**
+ * Some tests open a new window and close it later. When the window is closed,
+ * the original window opened by mochitest gains focus, generating a
+ * xul-window-visible notification. If the next test also opens a new window
+ * before this notification has a chance to fire, CaptivePortalWatcher picks
+ * up the first one instead of the one from the new window. To avoid this
+ * unfortunate intermittent timing issue, we wait for the notification from
+ * the original window every time we close a window that we opened.
+ */
+function waitForXulWindowVisible() {
+  return new Promise(resolve => {
+    Services.obs.addObserver(function observe() {
+      Services.obs.removeObserver(observe, "xul-window-visible");
+      resolve();
+    }, "xul-window-visible", false);
+  });
+}
+
+function* closeWindowAndWaitForXulWindowVisible(win) {
+  let p = waitForXulWindowVisible();
+  yield BrowserTestUtils.closeWindow(win);
+  yield p;
+}
+
 // Each of the test cases below is run twice: once for login-success and once
 // for login-abort (aSuccess set to true and false respectively).
 let testCasesForBothSuccessAndAbort = [
@@ -111,7 +135,7 @@ let testCasesForBothSuccessAndAbort = [
     freePortal(aSuccess);
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);
-    yield BrowserTestUtils.closeWindow(win);
+    yield closeWindowAndWaitForXulWindowVisible(win);
   },
 
   /**
@@ -129,7 +153,7 @@ let testCasesForBothSuccessAndAbort = [
     });
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);
-    yield BrowserTestUtils.closeWindow(win);
+    yield closeWindowAndWaitForXulWindowVisible(win);
   },
 
   /**
@@ -191,7 +215,7 @@ let singleRunTestCases = [
     freePortal(true);
     ensurePortalTab(win);
     ensureNoPortalNotification(win);
-    yield BrowserTestUtils.closeWindow(win);
+    yield closeWindowAndWaitForXulWindowVisible(win);
   },
 
   /**

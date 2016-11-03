@@ -7,13 +7,13 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<dialog id="deleteCertificate" 
+<dialog id="deleteCertificate"
   title="&certmgr.deletecert.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="setWindowName();"
+  onload="onLoad();"
   buttons="accept,cancel"
-  ondialogaccept="return doOK();"
-  ondialogcancel="return doCancel();">
+  ondialogaccept="return onDialogAccept();"
+  ondialogcancel="return onDialogCancel();">
 
   <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
 

@@ -136,7 +136,6 @@ add_task(function* test_history_downloads_checked() {
   let promiseSanitized = promiseSanitizationComplete();
 
   yield PlacesTestUtils.addVisits(places);
-  let totalHistoryVisits = uris.length + olderURIs.length;
 
   let wh = new WindowHelper();
   wh.onload = function () {
