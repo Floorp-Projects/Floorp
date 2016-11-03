@@ -16,6 +16,7 @@ namespace dom {
 
 class RemoteVideoDecoder;
 class RemoteDecoderModule;
+class VideoDecoderManagerChild;
 
 class VideoDecoderChild final : public PVideoDecoderChild
 {
@@ -50,6 +51,8 @@ public:
 
   // Called from IPDL when our actor has been destroyed
   void IPDLActorDestroyed();
+
+  VideoDecoderManagerChild* GetManager();
 
 private:
   ~VideoDecoderChild();

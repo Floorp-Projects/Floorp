@@ -184,6 +184,7 @@ DeviceManagerD3D9::DeviceManagerD3D9()
   , mDeviceResetCount(0)
   , mMaxTextureSize(0)
   , mTextureAddressingMode(D3DTADDRESS_CLAMP)
+  , mHasComponentAlpha(true)
   , mHasDynamicTextures(false)
   , mDeviceWasRemoved(false)
 {
@@ -825,6 +826,10 @@ DeviceManagerD3D9::VerifyCaps()
     mTextureAddressingMode = D3DTADDRESS_WRAP;
   } else {
     gfxPlatform::DisableBufferRotation();
+  }
+
+  if (LACKS_CAP(caps.DestBlendCaps, D3DPBLENDCAPS_INVSRCCOLOR)) {
+    mHasComponentAlpha = false;
   }
 
   return true;

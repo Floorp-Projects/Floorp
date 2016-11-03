@@ -153,7 +153,7 @@ function check_test_pt02() {
   // is confusing if it returns null which is an invalid value since the test
   // failure output will show a failure for null == null. To lessen the
   // confusion first check that the typeof for patch.state is string.
-  Assert.equal(typeof(patch.state), "string",
+  Assert.equal(typeof patch.state, "string",
                "the update patch state typeof value should equal |string|");
   Assert.equal(patch.state, STATE_NONE,
                "the update patch state attribute" + MSG_SHOULD_EQUAL);

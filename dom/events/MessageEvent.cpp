@@ -146,6 +146,8 @@ MessageEvent::InitMessageEvent(JSContext* aCx, const nsAString& aType,
                                const Nullable<WindowProxyOrMessagePort>& aSource,
                                const Sequence<OwningNonNull<MessagePort>>& aPorts)
 {
+  NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
+
   Event::InitEvent(aType, aCanBubble, aCancelable);
   mData = aData;
   mozilla::HoldJSObjects(this);

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const KEY_UPDATE_ARCHIVE_DIR = "UpdArchD"
+const KEY_UPDATE_ARCHIVE_DIR = "UpdArchD";
 
 var gActiveUpdate;
 var gDirService;

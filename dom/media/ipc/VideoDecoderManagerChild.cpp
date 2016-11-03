@@ -8,6 +8,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "MediaPrefs.h"
 #include "nsThreadUtils.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -16,8 +17,11 @@ using namespace ipc;
 using namespace layers;
 using namespace gfx;
 
+// Only modified on the main-thread
 StaticRefPtr<nsIThread> sVideoDecoderChildThread;
 StaticRefPtr<AbstractThread> sVideoDecoderChildAbstractThread;
+
+// Only accessed from sVideoDecoderChildThread
 static StaticRefPtr<VideoDecoderManagerChild> sDecoderManager;
 
 /* static */ void
@@ -46,21 +50,6 @@ VideoDecoderManagerChild::Initialize()
     sVideoDecoderChildAbstractThread =
       AbstractThread::CreateXPCOMThreadWrapper(childThread, false);
   }
-
-  Endpoint<PVideoDecoderManagerChild> endpoint;
-  if (!ContentChild::GetSingleton()->SendInitVideoDecoderManager(&endpoint)) {
-    return;
-  }
-
-  if (!endpoint.IsValid()) {
-    return;
-  }
-
-  sDecoderManager = new VideoDecoderManagerChild();
-
-  RefPtr<Runnable> task = NewRunnableMethod<Endpoint<PVideoDecoderManagerChild>&&>(
-    sDecoderManager, &VideoDecoderManagerChild::Open, Move(endpoint));
-  sVideoDecoderChildThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
 #else
   return;
 #endif
@@ -73,13 +62,12 @@ VideoDecoderManagerChild::Shutdown()
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sVideoDecoderChildThread) {
-    MOZ_ASSERT(sDecoderManager);
-
     sVideoDecoderChildThread->Dispatch(NS_NewRunnableFunction([]() {
-      sDecoderManager->Close();
-    }), NS_DISPATCH_SYNC);
-
-    sDecoderManager = nullptr;
+      if (sDecoderManager) {
+        sDecoderManager->Close();
+        sDecoderManager = nullptr;
+      }
+    }), NS_DISPATCH_NORMAL);
 
     sVideoDecoderChildAbstractThread = nullptr;
     sVideoDecoderChildThread->Shutdown();
@@ -90,6 +78,30 @@ VideoDecoderManagerChild::Shutdown()
 /* static */ VideoDecoderManagerChild*
 VideoDecoderManagerChild::GetSingleton()
 {
+  MOZ_ASSERT(NS_GetCurrentThread() == GetManagerThread());
+
+  if (!sDecoderManager || !sDecoderManager->mCanSend) {
+    RefPtr<VideoDecoderManagerChild> manager;
+      
+    NS_DispatchToMainThread(NS_NewRunnableFunction([&]() {
+      Endpoint<PVideoDecoderManagerChild> endpoint;
+      if (!ContentChild::GetSingleton()->SendInitVideoDecoderManager(&endpoint)) {
+        return;
+      }
+
+      if (!endpoint.IsValid()) {
+        return;
+      }
+
+      manager = new VideoDecoderManagerChild();
+
+      RefPtr<Runnable> task = NewRunnableMethod<Endpoint<PVideoDecoderManagerChild>&&>(
+        manager, &VideoDecoderManagerChild::Open, Move(endpoint));
+      sVideoDecoderChildThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
+    }), NS_DISPATCH_SYNC);
+
+    sDecoderManager = manager;
+  }
   return sDecoderManager;
 }
 
@@ -123,10 +135,16 @@ void
 VideoDecoderManagerChild::Open(Endpoint<PVideoDecoderManagerChild>&& aEndpoint)
 {
   if (!aEndpoint.Bind(this)) {
-    // We can't recover from this.
-    MOZ_CRASH("Failed to bind VideoDecoderChild to endpoint");
+    return;
   }
   AddRef();
+  mCanSend = true;
+}
+
+void
+VideoDecoderManagerChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  mCanSend = false;
 }
 
 void
@@ -141,7 +159,9 @@ VideoDecoderManagerChild::DeallocateSurfaceDescriptorGPUVideo(const SurfaceDescr
   RefPtr<VideoDecoderManagerChild> ref = this;
   SurfaceDescriptorGPUVideo sd = Move(aSD);
   sVideoDecoderChildThread->Dispatch(NS_NewRunnableFunction([ref, sd]() {
-    ref->SendDeallocateSurfaceDescriptorGPUVideo(sd);
+    if (ref->mCanSend) {
+      ref->SendDeallocateSurfaceDescriptorGPUVideo(sd);
+    }
   }), NS_DISPATCH_NORMAL);
 }
 

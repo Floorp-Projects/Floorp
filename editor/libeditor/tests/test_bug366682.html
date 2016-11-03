@@ -5,9 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366682
 -->
 <head>
   <title>Test for Bug 366682</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script src="spellcheck.js"></script>
 </head>
 <body>
@@ -34,12 +34,13 @@ function editDoc() {
 }
 
 function getEditor() {
-  var Ci = Components.interfaces;
+  var Ci = SpecialPowers.Ci;
   var win = editDoc().defaultView;
-  var editingSession = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIEditingSession);
+  var editingSession = SpecialPowers.wrap(win)
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIWebNavigation)
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIEditingSession);
   return editingSession.getEditorForWindow(win);
 }
 
@@ -48,8 +49,8 @@ function runTest() {
   gMisspeltWords = ["errror", "errror"];
   editDoc().designMode = "on";
 
-  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
-  onSpellCheck(editDoc().documentElement, evalTest);
+  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm")
+               .onSpellCheck(editDoc().documentElement, evalTest);
 }
 
 function evalTest() {

@@ -2083,6 +2083,16 @@ SpecialPowersAPI.prototype = {
     unwrapIfWrapped(mo).observe(unwrapIfWrapped(node),
                                 {nativeAnonymousChildList, subtree});
   },
+
+  doCommand(window, cmd) {
+    return this._getDocShell(window).doCommand(cmd);
+  },
+
+  setCommandNode(window, node) {
+    return this._getDocShell(window).contentViewer
+               .QueryInterface(Ci.nsIContentViewerEdit)
+               .setCommandNode(node);
+  },
 };
 
 this.SpecialPowersAPI = SpecialPowersAPI;

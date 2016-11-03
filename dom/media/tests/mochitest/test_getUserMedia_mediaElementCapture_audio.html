@@ -19,7 +19,7 @@ var gUMAudioElement;
 var analyser;
 runTest(() => getUserMedia({audio: true})
   .then(stream => {
-    gUMAudioElement = createMediaElement("gUMAudio", "local", "gUMAudio", true);
+    gUMAudioElement = createMediaElement("audio", "gUMAudio");
     gUMAudioElement.srcObject = stream;
 
     audioContext = new AudioContext();

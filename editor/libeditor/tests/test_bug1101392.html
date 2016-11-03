@@ -6,8 +6,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1101392
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 1101392</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
   /** Test for Bug 1101392 **/
@@ -17,33 +17,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1101392
   function runCopyCommand(element, compareText, nextTest)
   {
     element.focus();
-    if (element.editor) {
-      var sel = element.editor.selection;
+    var expectedEndpoint, sel;
+    if (element.localName == "textarea") {
       element.select();
+      expectedEndpoint = element.selectionEnd;
     } else {
-      var sel = window.getSelection();
+      sel = getSelection();
       sel.selectAllChildren(element.parentNode);
+      expectedEndpoint = [sel.getRangeAt(0).endContainer,
+                          sel.getRangeAt(0).endOffset];
     }
 
-    var expectedEndpoint = [
-      sel.getRangeAt(0).endContainer,
-      sel.getRangeAt(0).endOffset
-    ];
-
     function checkCollapse() {
-      is(sel.isCollapsed, true, "collapsed after cmd_copyAndCollapseToEnd");
-      is(sel.anchorNode, expectedEndpoint[0], "node after cmd_copyAndCollapseToEnd");
-      is(sel.anchorOffset, expectedEndpoint[1], "offset after cmd_copyAndCollapseToEnd");
+      var desc = " after cmd_copyAndCollapseToEnd for " +
+                 element.localName;
+      if (element.localName == "textarea") {
+        is(element.selectionStart, expectedEndpoint, "start offset" + desc);
+        is(element.selectionEnd, expectedEndpoint, "end offset" + desc);
+      } else {
+        is(sel.isCollapsed, true, "collapsed" + desc);
+        is(sel.anchorNode, expectedEndpoint[0], "node" + desc);
+        is(sel.anchorOffset, expectedEndpoint[1], "offset" + desc);
+      }
 
       nextTest();
     }
 
-    const kCmd = "cmd_copyAndCollapseToEnd";
-    var controller = top.document.commandDispatcher
-                     .getControllerForCommand(kCmd);
-    ok((controller && controller.isCommandEnabled(kCmd)), "have cmd_copyAndCollapseToEnd command");
     SimpleTest.waitForClipboard(compareText,
-        () => { controller.doCommand(kCmd); },
+        () => SpecialPowers.doCommand(window, "cmd_copyAndCollapseToEnd"),
         checkCollapse, checkCollapse);
   }
 

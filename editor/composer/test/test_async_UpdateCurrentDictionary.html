@@ -5,8 +5,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=856270
 -->
 <head>
   <title>Test for Bug 856270 - Async UpdateCurrentDictionary</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=856270">Mozilla Bug 856270</a>
@@ -21,12 +21,12 @@ SimpleTest.waitForExplicitFinish();
 addLoadEvent(start);
 
 function start() {
-  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
   var textarea = document.getElementById("editor");
   textarea.focus();
 
-  onSpellCheck(textarea, function () {
-    var isc = textarea.editor.getInlineSpellChecker(false);
+  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm")
+  .onSpellCheck(textarea, function () {
+    var isc = SpecialPowers.wrap(textarea).editor.getInlineSpellChecker(false);
     ok(isc, "Inline spell checker should exist after focus and spell check");
     var sc = isc.spellChecker;
     isnot(sc.GetCurrentDictionary(), lang,

@@ -124,6 +124,8 @@ SimpleGestureEvent::InitSimpleGestureEvent(const nsAString& aTypeArg,
                                            double aDeltaArg,
                                            uint32_t aClickCountArg)
 {
+  NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
+
   MouseEvent::InitMouseEvent(aTypeArg, aCanBubbleArg, aCancelableArg,
                              aViewArg, aDetailArg,
                              aScreenX, aScreenY, aClientX, aClientY,

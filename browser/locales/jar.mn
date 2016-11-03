@@ -90,7 +90,7 @@
     locale/browser/syncQuota.properties         (%chrome/browser/syncQuota.properties)
 % resource search-plugins chrome://browser/locale/searchplugins/
 #if BUILD_FASTER
-    locale/browser/searchplugins/               (%searchplugins/*.xml)
+    locale/browser/searchplugins/               (searchplugins/*.xml)
     locale/browser/searchplugins/list.json      (search/list.json)
 #else
     locale/browser/searchplugins/               (.deps/generated_@AB_CD@/*.xml)

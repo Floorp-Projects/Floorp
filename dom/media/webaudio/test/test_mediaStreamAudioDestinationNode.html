@@ -34,8 +34,14 @@ addLoadEvent(function() {
       is(elem.played.length, 1, "should have a played interval");
       is(elem.played.start(0), 0, "should have played immediately");
       isnot(elem.played.end(0), 0, "should have played for a non-zero interval");
-      SimpleTest.finish();
+
+      // This will end the media element.
+      dest.stream.getTracks()[0].stop();
     }, 2000);
+  };
+  elem.onended = function() {
+    ok(true, "media element ended after destination track.stop()");
+    SimpleTest.finish();
   };
 
   source.start(0);

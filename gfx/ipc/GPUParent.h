@@ -44,9 +44,9 @@ public:
   bool RecvNewContentImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint) override;
   bool RecvNewContentVRManager(Endpoint<PVRManagerParent>&& aEndpoint) override;
   bool RecvNewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent>&& aEndpoint) override;
-  bool RecvDeallocateLayerTreeId(const uint64_t& aLayersId) override;
   bool RecvGetDeviceStatus(GPUDeviceData* aOutStatus) override;
-  bool RecvAddLayerTreeIdMapping(const uint64_t& aLayersId, const ProcessId& aOwnerId) override;
+  bool RecvAddLayerTreeIdMapping(nsTArray<LayerTreeIdMapping>&& aMappings) override;
+  bool RecvRemoveLayerTreeIdMapping(const LayerTreeIdMapping& aMapping) override;
   bool RecvNotifyGpuObservers(const nsCString& aTopic) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;

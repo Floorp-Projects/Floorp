@@ -84,7 +84,7 @@ pref(dom.details_element.enabled,false) == no-summary.html disabled-no-summary-r
 == mouse-click-open-second-summary.html open-multiple-summary.html
 == mouse-click-overflow-hidden-details.html overflow-hidden-open-details.html
 == mouse-click-twice-overflow-hidden-details.html overflow-hidden-details.html
-== mouse-click-overflow-auto-details.html overflow-auto-open-details.html
+fuzzy-if(gtkWidget,1,20) == mouse-click-overflow-auto-details.html overflow-auto-open-details.html #Bug 1294278
 == mouse-click-twice-overflow-auto-details.html overflow-auto-details.html
 == mouse-click-display-none-details.html open-single-summary.html
 == mouse-click-change-details-to-display-none.html open-single-summary.html

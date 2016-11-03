@@ -22,6 +22,7 @@
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Telemetry.h"
 #include "nsMargin.h"
 #include "nsThreadUtils.h"
 
@@ -619,6 +620,8 @@ imgFrame::Finish(Opacity aFrameOpacity /* = Opacity::SOME_TRANSPARENCY */,
 
   if (aFrameOpacity == Opacity::FULLY_OPAQUE) {
     mHasNoAlpha = true;
+    Telemetry::Accumulate(Telemetry::IMAGE_DECODE_OPAQUE_BGRA,
+                          mFormat == SurfaceFormat::B8G8R8A8);
   }
 
   mDisposalMethod = aDisposalMethod;

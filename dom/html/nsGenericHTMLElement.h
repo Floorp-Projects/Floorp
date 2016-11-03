@@ -972,7 +972,8 @@ protected:
       UnsetHTMLAttr(aName, aError);
     }
   }
-  void SetHTMLIntAttr(nsIAtom* aName, int32_t aValue, mozilla::ErrorResult& aError)
+  template<typename T>
+  void SetHTMLIntAttr(nsIAtom* aName, T aValue, mozilla::ErrorResult& aError)
   {
     nsAutoString value;
     value.AppendInt(aValue);

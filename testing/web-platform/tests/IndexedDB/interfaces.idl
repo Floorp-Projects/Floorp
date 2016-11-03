@@ -67,9 +67,8 @@ interface IDBVersionChangeEvent : Event {
     readonly    attribute unsigned long long? newVersion;
 };
 
-[NoInterfaceObject]
-interface IDBEnvironment {
-    readonly    attribute IDBFactory indexedDB;
+partial interface WindowOrWorkerGlobalScope {
+  readonly attribute IDBFactory indexedDB;
 };
 
 [Exposed=(Window,Worker)]

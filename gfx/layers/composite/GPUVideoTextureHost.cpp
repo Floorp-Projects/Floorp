@@ -59,6 +59,15 @@ GPUVideoTextureHost::SetCompositor(Compositor* aCompositor)
   }
 }
 
+YUVColorSpace
+GPUVideoTextureHost::GetYUVColorSpace() const
+{
+  if (mWrappedTextureHost) {
+    return mWrappedTextureHost->GetYUVColorSpace();
+  }
+  return YUVColorSpace::UNKNOWN;
+}
+
 gfx::IntSize
 GPUVideoTextureHost::GetSize() const
 {

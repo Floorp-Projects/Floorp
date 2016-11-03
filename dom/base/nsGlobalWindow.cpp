@@ -1321,7 +1321,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
   gRefCnt++;
 
-  if (gRefCnt == 1) {
+  static bool sFirstTime = true;
+  if (sFirstTime) {
     Preferences::AddIntVarCache(&gMinTimeoutValue,
                                 "dom.min_timeout_value",
                                 DEFAULT_MIN_TIMEOUT_VALUE);
@@ -1335,6 +1336,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     Preferences::AddUintVarCache(&gThrottledIdlePeriodLength,
                                  "dom.idle_period.throttled_length",
                                  DEFAULT_THROTTLED_IDLE_PERIOD_LENGTH);
+    sFirstTime = false;
   }
 
   if (gDumpFile == nullptr) {
