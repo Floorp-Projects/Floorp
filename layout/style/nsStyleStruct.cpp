@@ -664,12 +664,23 @@ nsStyleList::~nsStyleList()
 
 nsStyleList::nsStyleList(const nsStyleList& aSource)
   : mListStylePosition(aSource.mListStylePosition)
+  , mListStyleImage(aSource.mListStyleImage)
   , mCounterStyle(aSource.mCounterStyle)
   , mQuotes(aSource.mQuotes)
   , mImageRegion(aSource.mImageRegion)
 {
-  SetListStyleImage(aSource.GetListStyleImage());
   MOZ_COUNT_CTOR(nsStyleList);
+}
+
+void
+nsStyleList::FinishStyle(nsPresContext* aPresContext)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
+
+  if (mListStyleImage && !mListStyleImage->IsResolved()) {
+    mListStyleImage->Resolve(aPresContext);
+  }
 }
 
 void
@@ -736,7 +747,7 @@ nsStyleList::CalcDifference(const nsStyleList& aNewData) const
   if (mListStylePosition != aNewData.mListStylePosition) {
     return nsChangeHint_ReconstructFrame;
   }
-  if (EqualImages(mListStyleImage, aNewData.mListStyleImage) &&
+  if (DefinitelyEqualImages(mListStyleImage, aNewData.mListStyleImage) &&
       mCounterStyle == aNewData.mCounterStyle) {
     if (mImageRegion.IsEqualInterior(aNewData.mImageRegion)) {
       return nsChangeHint(0);
