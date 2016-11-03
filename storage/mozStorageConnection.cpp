@@ -762,6 +762,10 @@ Connection::initializeInternal()
     return convertResultCode(srv);
   }
 
+#if defined(MOZ_MEMORY_TEMP_STORE_PRAGMA)
+  (void)ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA temp_store = 2;"));
+#endif
+
   // Register our built-in SQL functions.
   srv = registerFunctions(mDBConn);
   if (srv != SQLITE_OK) {
