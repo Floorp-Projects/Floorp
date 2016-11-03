@@ -26,6 +26,18 @@ DeclarationBlock::Release()
   MOZ_STYLO_FORWARD(Release, ())
 }
 
+uint32_t
+DeclarationBlock::Count() const
+{
+  MOZ_STYLO_FORWARD(Count, ())
+}
+
+bool
+DeclarationBlock::GetNthProperty(uint32_t aIndex, nsAString& aReturn) const
+{
+  MOZ_STYLO_FORWARD(GetNthProperty, (aIndex, aReturn))
+}
+
 } // namespace mozilla
 
 #endif // mozilla_DeclarationBlockInlines_h

@@ -166,7 +166,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetLength(uint32_t* aLength)
 {
-  css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
+  DeclarationBlock* decl = GetCSSDeclaration(eOperation_Read);
 
   if (decl) {
     *aLength = decl->Count();
@@ -188,7 +188,7 @@ nsDOMCSSDeclaration::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRe
 void
 nsDOMCSSDeclaration::IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName)
 {
-  css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
+  DeclarationBlock* decl = GetCSSDeclaration(eOperation_Read);
   aFound = decl && decl->GetNthProperty(aIndex, aPropName);
 }
 

@@ -29,6 +29,14 @@ public:
     return reinterpret_cast<RawServoDeclarationBlock* const*>(&mRaw);
   }
 
+  uint32_t Count() const {
+    return Servo_DeclarationBlock_Count(mRaw);
+  }
+  bool GetNthProperty(uint32_t aIndex, nsAString& aReturn) const {
+    aReturn.Truncate();
+    return Servo_DeclarationBlock_GetNthProperty(mRaw, aIndex, &aReturn);
+  }
+
 protected:
   explicit ServoDeclarationBlock(
     already_AddRefed<RawServoDeclarationBlock> aRaw)
