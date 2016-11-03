@@ -1108,8 +1108,10 @@ const CustomizableWidgets = [
 
       let onItemCommand = function (aEvent) {
         let item = aEvent.target;
-        let userContextId = parseInt(item.getAttribute("usercontextid"));
-        win.openUILinkIn(win.BROWSER_NEW_TAB_URL, "tab", {userContextId});
+        if (item.hasAttribute("usercontextid")) {
+          let userContextId = parseInt(item.getAttribute("usercontextid"));
+          win.openUILinkIn(win.BROWSER_NEW_TAB_URL, "tab", {userContextId});
+        }
       };
       items.addEventListener("command", onItemCommand);
 
@@ -1134,9 +1136,9 @@ const CustomizableWidgets = [
       }
 
       let fragment = doc.createDocumentFragment();
+      let bundle = doc.getElementById("bundle_browser");
 
       ContextualIdentityService.getIdentities().forEach(identity => {
-        let bundle = doc.getElementById("bundle_browser");
         let label = ContextualIdentityService.getUserContextLabel(identity.userContextId);
 
         let item = doc.createElementNS(kNSXUL, "toolbarbutton");
@@ -1148,6 +1150,14 @@ const CustomizableWidgets = [
 
         fragment.appendChild(item);
       });
+
+      fragment.appendChild(doc.createElementNS(kNSXUL, "menuseparator"));
+
+      let item = doc.createElementNS(kNSXUL, "toolbarbutton");
+      item.setAttribute("label", bundle.getString("userContext.aboutPage.label"));
+      item.setAttribute("command", "Browser:OpenAboutContainers");
+      item.setAttribute("class", "subviewbutton");
+      fragment.appendChild(item);
 
       items.appendChild(fragment);
     },

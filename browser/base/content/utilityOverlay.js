@@ -438,9 +438,8 @@ function checkForMiddleClick(node, event) {
 }
 
 // Populate a menu with user-context menu items. This method should be called
-// by onpopupshowing passing the event as first argument. addCommandAttribute
-// param is used to set the 'command' attribute in the new menuitem elements.
-function createUserContextMenu(event, addCommandAttribute = true, excludeUserContextId = 0) {
+// by onpopupshowing passing the event as first argument.
+function createUserContextMenu(event, isContextMenu = false, excludeUserContextId = 0) {
   while (event.target.hasChildNodes()) {
     event.target.removeChild(event.target.firstChild);
   }
@@ -455,9 +454,9 @@ function createUserContextMenu(event, addCommandAttribute = true, excludeUserCon
     menuitem.setAttribute("label", bundle.getString("userContextNone.label"));
     menuitem.setAttribute("accesskey", bundle.getString("userContextNone.accesskey"));
 
-    // We don't set an oncommand/command attribute attribute because if we have
+    // We don't set an oncommand/command attribute because if we have
     // to exclude a userContextId we are generating the contextMenu and
-    // addCommandAttribute will be false.
+    // isContextMenu will be true.
 
     docfrag.appendChild(menuitem);
 
@@ -481,7 +480,7 @@ function createUserContextMenu(event, addCommandAttribute = true, excludeUserCon
     menuitem.classList.add("menuitem-iconic");
     menuitem.setAttribute("data-identity-color", identity.color);
 
-    if (addCommandAttribute) {
+    if (!isContextMenu) {
       menuitem.setAttribute("command", "Browser:NewUserContextTab");
     }
 
@@ -489,6 +488,18 @@ function createUserContextMenu(event, addCommandAttribute = true, excludeUserCon
 
     docfrag.appendChild(menuitem);
   });
+
+  if (!isContextMenu) {
+    docfrag.appendChild(document.createElement("menuseparator"));
+
+    let menuitem = document.createElement("menuitem");
+    menuitem.setAttribute("label",
+                          bundle.getString("userContext.aboutPage.label"));
+    menuitem.setAttribute("accesskey",
+                          bundle.getString("userContext.aboutPage.accesskey"));
+    menuitem.setAttribute("command", "Browser:OpenAboutContainers");
+    docfrag.appendChild(menuitem);
+  }
 
   event.target.appendChild(docfrag);
   return true;
