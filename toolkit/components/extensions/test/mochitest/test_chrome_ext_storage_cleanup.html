@@ -36,10 +36,10 @@ add_task(function* test_uninstall() {
         let transaction = db.transaction("store", "readwrite");
         let addreq = transaction.objectStore("store")
                                 .add({name: "hello", value: "world"});
-        addreq.onerror = e => {
-          reject(new Error(`add to indexedDB failed with ${e.errorCode}`));
+        addreq.onerror = addreqError => {
+          reject(new Error(`add to indexedDB failed with ${addreqError.errorCode}`));
         };
-        addreq.onsuccess = e => {
+        addreq.onsuccess = () => {
           resolve();
         };
       };
@@ -70,10 +70,10 @@ add_task(function* test_uninstall() {
         let db = e.target.result;
         let transaction = db.transaction("store", "readwrite");
         let addreq = transaction.objectStore("store").get("hello");
-        addreq.onerror = e => {
-          reject(new Error(`read from indexedDB failed with ${e.errorCode}`));
+        addreq.onerror = addreqError => {
+          reject(new Error(`read from indexedDB failed with ${addreqError.errorCode}`));
         };
-        addreq.onsuccess = e => {
+        addreq.onsuccess = () => {
           let match = (addreq.result.value == "world");
           resolve(match);
         };

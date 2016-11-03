@@ -41,8 +41,6 @@ var tests = [
 
 ];
 
-var currentTest;
-
 add_task(function* test() {
   // The pref should not exist by default.
   Assert.throws(() => getInterval());

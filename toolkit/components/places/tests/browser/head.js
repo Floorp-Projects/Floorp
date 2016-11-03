@@ -288,7 +288,7 @@ function whenNewWindowLoaded(aOptions, aCallback) {
  */
 function promiseIsURIVisited(aURI, aExpectedValue) {
   return new Promise(resolve => {
-    PlacesUtils.asyncHistory.isURIVisited(aURI, function(aURI, aIsVisited) {
+    PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
       resolve(aIsVisited);
     });
   });

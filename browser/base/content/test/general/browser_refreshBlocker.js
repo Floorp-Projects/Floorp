@@ -17,12 +17,12 @@ const PREF = "accessibility.blockautorefresh";
  * @returns Promise
  */
 function* attemptFakeRefresh(browser, expectRefresh) {
-  yield ContentTask.spawn(browser, expectRefresh, function*(expectRefresh) {
+  yield ContentTask.spawn(browser, expectRefresh, function*(contentExpectRefresh) {
     let URI = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;
     let refresher = docShell.QueryInterface(Ci.nsIRefreshURI);
     refresher.refreshURI(URI, 0, false, true);
 
-    Assert.equal(refresher.refreshPending, expectRefresh,
+    Assert.equal(refresher.refreshPending, contentExpectRefresh,
       "Got the right refreshPending state");
 
     if (refresher.refreshPending) {

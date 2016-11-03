@@ -313,9 +313,9 @@ function test() {
     let newWhitelist = origWhitelist + " http://example.com";
     Services.prefs.setCharPref(webchannelWhitelistPref, newWhitelist);
     try {
-      for (let test of gTests) {
-        info("Running: " + test.desc);
-        yield test.run();
+      for (let testCase of gTests) {
+        info("Running: " + testCase.desc);
+        yield testCase.run();
       }
     } finally {
       Services.prefs.clearUserPref(webchannelWhitelistPref);
