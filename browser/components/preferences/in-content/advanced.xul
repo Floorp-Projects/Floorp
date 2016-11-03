@@ -328,6 +328,15 @@
           </vbox>
         </hbox>
       </groupbox>
+
+      <!-- Site Data -->
+      <groupbox id="siteDataGroup" hidden="true">
+        <caption><label>&siteData.label;</label></caption>
+
+        <hbox align="center">
+          <label id="totalSiteDataSize" flex="1"></label>
+        </hbox>
+      </groupbox>
     </tabpanel>
 
     <!-- Update -->
