@@ -544,6 +544,28 @@ EventTargetChainItemForChromeTarget(nsTArray<EventTargetChainItem>& aChain,
   return etci;
 }
 
+/* static */ EventTargetChainItem*
+MayRetargetToChromeIfCanNotHandleEvent(
+  nsTArray<EventTargetChainItem>& aChain, EventChainPreVisitor& aPreVisitor,
+  EventTargetChainItem* aTargetEtci, EventTargetChainItem* aChildEtci,
+  nsINode* aContent)
+{
+  if (!aPreVisitor.mWantsPreHandleEvent) {
+    // Keep EventTargetChainItem if we need to call PreHandleEvent on it.
+    EventTargetChainItem::DestroyLast(aChain, aTargetEtci);
+  }
+  if (aPreVisitor.mAutomaticChromeDispatch && aContent) {
+    // Event target couldn't handle the event. Try to propagate to chrome.
+    EventTargetChainItem* chromeTargetEtci =
+      EventTargetChainItemForChromeTarget(aChain, aContent, aChildEtci);
+    if (chromeTargetEtci) {
+      chromeTargetEtci->GetEventTargetParent(aPreVisitor);
+      return chromeTargetEtci;
+    }
+  }
+  return nullptr;
+}
+
 /* static */ nsresult
 EventDispatcher::Dispatch(nsISupports* aTarget,
                           nsPresContext* aPresContext,
@@ -711,16 +733,9 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   targetEtci->GetEventTargetParent(preVisitor);
 
   if (!preVisitor.mCanHandle) {
-    if (!preVisitor.mWantsPreHandleEvent) {
-      // Keep EventTargetChainItem if we need to call PreHandleEvent on it.
-      EventTargetChainItem::DestroyLast(chain, targetEtci);
-    }
-    if (preVisitor.mAutomaticChromeDispatch && content) {
-      // Event target couldn't handle the event. Try to propagate to chrome.
-      targetEtci = EventTargetChainItemForChromeTarget(chain, content);
-      NS_ENSURE_STATE(targetEtci);
-      targetEtci->GetEventTargetParent(preVisitor);
-    }
+    targetEtci = MayRetargetToChromeIfCanNotHandleEvent(chain, preVisitor,
+                                                        targetEtci, nullptr,
+                                                        content);
   }
   if (!preVisitor.mCanHandle) {
     // The original target and chrome target (mAutomaticChromeDispatch=true)
@@ -757,30 +772,18 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
       if (preVisitor.mCanHandle) {
         topEtci = parentEtci;
       } else {
-        if (!preVisitor.mWantsPreHandleEvent) {
-          // Keep EventTargetChainItem if we need to call PreHandleEvent on it.
-          EventTargetChainItem::DestroyLast(chain, parentEtci);
-        }
-        parentEtci = nullptr;
-        if (preVisitor.mAutomaticChromeDispatch && content) {
-          // Even if the current target can't handle the event, try to
-          // propagate to chrome.
-          nsCOMPtr<nsINode> disabledTarget = do_QueryInterface(parentTarget);
-          if (disabledTarget) {
-            parentEtci = EventTargetChainItemForChromeTarget(chain,
-                                                             disabledTarget,
-                                                             topEtci);
-            if (parentEtci) {
-              parentEtci->GetEventTargetParent(preVisitor);
-              if (preVisitor.mCanHandle) {
-                EventTargetChainItem* item =
-                  EventTargetChainItem::GetFirstCanHandleEventTarget(chain);
-                item->SetNewTarget(parentTarget);
-                topEtci = parentEtci;
-                continue;
-              }
-            }
-          }
+        nsCOMPtr<nsINode> disabledTarget = do_QueryInterface(parentTarget);
+        parentEtci = MayRetargetToChromeIfCanNotHandleEvent(chain,
+                                                            preVisitor,
+                                                            parentEtci,
+                                                            topEtci,
+                                                            disabledTarget);
+        if (parentEtci && preVisitor.mCanHandle) {
+          EventTargetChainItem* item =
+            EventTargetChainItem::GetFirstCanHandleEventTarget(chain);
+          item->SetNewTarget(parentTarget);
+          topEtci = parentEtci;
+          continue;
         }
         break;
       }
