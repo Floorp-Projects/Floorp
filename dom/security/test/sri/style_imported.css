@@ -1,0 +1,6 @@
+#text-for-import-test {
+  color: red;
+}
+#text-for-import-test::before {
+  content: 'Test failed';
+}
