@@ -1523,7 +1523,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
   explicit nsStyleList(StyleStructContext aContext);
   nsStyleList(const nsStyleList& aStyleList);
   ~nsStyleList();
-  void FinishStyle(nsPresContext* aPresContext) {}
+
+  void FinishStyle(nsPresContext* aPresContext);
 
   void* operator new(size_t sz, nsStyleList* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
@@ -1554,16 +1555,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
     sNoneQuotes = nullptr;
   }
 
-  imgRequestProxy* GetListStyleImage() const { return mListStyleImage; }
-  void SetListStyleImage(imgRequestProxy* aReq)
+  imgRequestProxy* GetListStyleImage() const
   {
-    if (mListStyleImage) {
-      mListStyleImage->UnlockImage();
-    }
-    mListStyleImage = aReq;
-    if (mListStyleImage) {
-      mListStyleImage->LockImage();
-    }
+    return mListStyleImage ? mListStyleImage->get() : nullptr;
   }
 
   void GetListStyleType(nsSubstring& aType) const { mCounterStyle->GetStyleName(aType); }
@@ -1591,10 +1585,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
   void SetQuotesNone();
   void SetQuotes(nsStyleQuoteValues::QuotePairArray&& aValues);
 
-  uint8_t   mListStylePosition;         // [inherited]
+  uint8_t mListStylePosition;                  // [inherited]
+  RefPtr<nsStyleImageRequest> mListStyleImage; // [inherited]
 private:
   RefPtr<mozilla::CounterStyle> mCounterStyle; // [inherited]
-  RefPtr<imgRequestProxy> mListStyleImage; // [inherited]
   RefPtr<nsStyleQuoteValues> mQuotes;   // [inherited]
   nsStyleList& operator=(const nsStyleList& aOther) = delete;
 public:

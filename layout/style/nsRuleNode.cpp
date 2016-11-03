@@ -145,7 +145,10 @@ SetStyleImageRequest(function<void(nsStyleImageRequest*)> aCallback,
     RefPtr<nsStyleImageRequest> request;
     if (aProxy) {
       css::ImageValue* imageValue = aValue.GetImageStructValue();
-      ImageTracker* imageTracker = aPresContext->Document()->ImageTracker();
+      ImageTracker* imageTracker =
+        (aModeFlags & nsStyleImageRequest::Mode::Track)
+        ? aPresContext->Document()->ImageTracker()
+        : nullptr;
       request =
         new nsStyleImageRequest(aModeFlags, aProxy, imageValue, imageTracker);
     }
@@ -7964,18 +7967,18 @@ nsRuleNode::ComputeListData(void* aStartStruct,
   // list-style-image: url, none, inherit
   const nsCSSValue* imageValue = aRuleData->ValueForListStyleImage();
   if (eCSSUnit_Image == imageValue->GetUnit()) {
-    SetImageRequest([&](imgRequestProxy* req) {
-      list->SetListStyleImage(req);
-    }, mPresContext, *imageValue);
+    SetStyleImageRequest([&](nsStyleImageRequest* req) {
+      list->mListStyleImage = req;
+    }, mPresContext, *imageValue, nsStyleImageRequest::Mode(0));
   }
   else if (eCSSUnit_None == imageValue->GetUnit() ||
            eCSSUnit_Initial == imageValue->GetUnit()) {
-    list->SetListStyleImage(nullptr);
+    list->mListStyleImage = nullptr;
   }
   else if (eCSSUnit_Inherit == imageValue->GetUnit() ||
            eCSSUnit_Unset == imageValue->GetUnit()) {
     conditions.SetUncacheable();
-    list->SetListStyleImage(parentList->GetListStyleImage());
+    list->mListStyleImage = parentList->mListStyleImage;
   }
 
   // list-style-position: enum, inherit, initial
