@@ -360,8 +360,6 @@ public:
   virtual bool
   RecvNotifyPresentationReceiverCleanUp(const nsString& aSessionId) override;
 
-  virtual bool RecvNotifyGMPsChanged() override;
-
   virtual bool RecvNotifyEmptyHTTPCache() override;
 
   virtual PSpeechSynthesisChild* AllocPSpeechSynthesisChild() override;
