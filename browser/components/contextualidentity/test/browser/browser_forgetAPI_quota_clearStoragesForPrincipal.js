@@ -87,7 +87,7 @@ function* checkIndexedDB(browser) {
     });
 
     try {
-      let transaction = db.transaction(["obj"], "readonly");
+      db.transaction(["obj"], "readonly");
       ok(false, "The indexedDB should not exist");
     } catch (e) {
       is(e.name, "NotFoundError", "The indexedDB does not exist as expected");
@@ -145,4 +145,3 @@ add_task(function* test_quota_clearStoragesForPrincipal() {
     yield BrowserTestUtils.removeTab(tabs[userContextId].tab);
   }
 });
-

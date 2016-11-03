@@ -280,8 +280,6 @@ PlacesTreeView.prototype = {
     if (this._isPlainContainer(aContainer))
       return cc;
 
-    const openLiteral = PlacesUIUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
-    const trueLiteral = PlacesUIUtils.RDF.GetLiteral("true");
     let sortingMode = this._result.sortingMode;
 
     let rowsInserted = 0;
@@ -1060,7 +1058,6 @@ PlacesTreeView.prototype = {
 
     let [desiredColumn, desiredIsDescending] =
       this._sortTypeToColumnType(aSortingMode);
-    let colCount = columns.count;
     let column = this._findColumnByType(desiredColumn);
     if (column) {
       let sortDir = desiredIsDescending ? "descending" : "ascending";
@@ -1385,7 +1382,7 @@ PlacesTreeView.prototype = {
   },
 
   getParentIndex: function PTV_getParentIndex(aRow) {
-    let [parentNode, parentRow] = this._getParentByChildRow(aRow);
+    let [, parentRow] = this._getParentByChildRow(aRow);
     return parentRow;
   },
 

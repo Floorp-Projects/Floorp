@@ -62,7 +62,6 @@ function checkPlacesContextMenu(aItemWithContextMenu) {
  */
 function checkSpecialContextMenus() {
   return Task.spawn(function* () {
-    let contextMenu = document.getElementById("placesContext");
     let bookmarksMenuButton = document.getElementById(kBookmarksButton);
     let bookmarksMenuPopup = document.getElementById("BMB_bookmarksPopup");
 

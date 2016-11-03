@@ -633,12 +633,6 @@ var BookmarkPropertiesPanel = {
     if (!PlacesUIUtils.useAsyncTransactions)
       return this._createNewItem();
 
-    let txnFunc =
-      { [BOOKMARK_FOLDER]: PlacesTransactions.NewFolder,
-        [LIVEMARK_CONTAINER]: PlacesTransactions.NewLivemark,
-        [BOOKMARK_ITEM]: PlacesTransactions.NewBookmark
-      }[this._itemType];
-
     let [containerId, index] = this._getInsertionPointDetails();
     let parentGuid = yield PlacesUtils.promiseItemGuid(containerId);
     let annotations = [];

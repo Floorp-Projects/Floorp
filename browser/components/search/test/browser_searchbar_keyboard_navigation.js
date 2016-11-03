@@ -371,7 +371,7 @@ add_task(function* test_tab_and_arrows() {
 
 add_task(function* test_open_search() {
   let rootDir = getRootDirectory(gTestPath);
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, rootDir + "opensearch.html");
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, rootDir + "opensearch.html");
 
   let promise = promiseEvent(searchPopup, "popupshown");
   info("Opening search panel");

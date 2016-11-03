@@ -68,7 +68,6 @@ add_task(function* test_sessionRestore() {
   // Save the current session.
   let SessionStore =
     Cu.import("resource:///modules/sessionstore/SessionStore.jsm", {}).SessionStore;
-  let backupState = SessionStore.getBrowserState();
 
   // Load the custom state and wait for SSTabRestored, as we want to make sure
   // that the URI counting code was hit.

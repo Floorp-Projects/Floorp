@@ -299,7 +299,9 @@ FeedConverter.prototype = {
         request.cancel(Cr.NS_BINDING_ABORTED);
         return;
       }
-      let noSniff = httpChannel.getResponseHeader("X-Moz-Is-Feed");
+
+      // Note: this throws if the header is not set.
+      httpChannel.getResponseHeader("X-Moz-Is-Feed");
     }
     catch (ex) {
       this._sniffed = true;

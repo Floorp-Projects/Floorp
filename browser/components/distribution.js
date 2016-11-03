@@ -111,7 +111,7 @@ DistributionCustomizer.prototype = {
     for (let key of keys) {
       let m = re.exec(key);
       if (m) {
-        let [foo, itemIndex, iprop, ilocale] = m;
+        let [, itemIndex, iprop, ilocale] = m;
         itemIndex = parseInt(itemIndex);
 
         if (ilocale)

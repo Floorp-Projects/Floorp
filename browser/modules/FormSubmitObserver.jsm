@@ -195,7 +195,6 @@ FormSubmitObserver.prototype =
     // We want to show the popup at the middle of checkbox and radio buttons
     // and where the content begin for the other elements.
     let offset = 0;
-    let position = "";
 
     if (aElement.tagName == 'INPUT' &&
         (aElement.type == 'radio' || aElement.type == 'checkbox')) {
