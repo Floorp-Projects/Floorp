@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 sqlite3_aggregate_context
-sqlite3_aggregate_count
 sqlite3_auto_extension
 sqlite3_bind_blob
 sqlite3_bind_double
@@ -59,7 +58,7 @@ sqlite3_errcode
 sqlite3_errmsg
 sqlite3_errmsg16
 sqlite3_exec
-sqlite3_expired
+sqlite3_expanded_sql
 sqlite3_extended_result_codes
 sqlite3_file_control
 sqlite3_finalize
@@ -68,7 +67,6 @@ sqlite3_free_table
 sqlite3_get_autocommit
 sqlite3_get_auxdata
 sqlite3_get_table
-sqlite3_global_recover
 sqlite3_initialize
 sqlite3_interrupt
 sqlite3_last_insert_rowid
@@ -76,7 +74,6 @@ sqlite3_libversion
 sqlite3_libversion_number
 sqlite3_load_extension
 sqlite3_malloc
-sqlite3_memory_alarm
 sqlite3_memory_highwater
 sqlite3_memory_used
 sqlite3_mutex_alloc
@@ -94,7 +91,6 @@ sqlite3_prepare
 sqlite3_prepare16
 sqlite3_prepare16_v2
 sqlite3_prepare_v2
-sqlite3_profile
 sqlite3_progress_handler
 sqlite3_realloc
 sqlite3_release_memory
@@ -128,10 +124,8 @@ sqlite3_stmt_status
 #ifdef XP_UNIX
 sqlite3_temp_directory
 #endif
-sqlite3_thread_cleanup
 sqlite3_total_changes
-sqlite3_trace
-sqlite3_transfer_bindings
+sqlite3_trace_v2
 sqlite3_unlock_notify
 sqlite3_update_hook
 sqlite3_uri_parameter
