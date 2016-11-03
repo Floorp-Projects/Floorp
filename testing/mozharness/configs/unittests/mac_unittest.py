@@ -255,7 +255,6 @@ config = {
         "https://blobupload.elasticbeanstalk.com",
     ],
     "unstructured_flavors": {"mochitest": ['jetpack'],
-                            "xpcshell": [],
                             "gtest": [],
                             "mozmill": [],
                             "cppunittest": [],
