@@ -5,7 +5,7 @@ https://ssl.icu-project.org/trac/ticket/12023
 diff --git a/intl/icu/source/common/unicode/std_string.h b/intl/icu/source/common/unicode/std_string.h
 --- a/intl/icu/source/common/unicode/std_string.h
 +++ b/intl/icu/source/common/unicode/std_string.h
-@@ -22,16 +22,16 @@
+@@ -24,16 +24,16 @@
   * \brief C++ API: Central ICU header for including the C++ standard &lt;string&gt;
   *                 header and for related definitions.
   */
@@ -26,10 +26,10 @@ diff --git a/intl/icu/source/common/unicode/std_string.h b/intl/icu/source/commo
 diff --git a/intl/icu/source/common/utypeinfo.h b/intl/icu/source/common/utypeinfo.h
 --- a/intl/icu/source/common/utypeinfo.h
 +++ b/intl/icu/source/common/utypeinfo.h
-@@ -17,14 +17,14 @@
+@@ -19,14 +19,14 @@
  // Whenever 'typeid' is used, this header has to be included
  // instead of <typeinfo>.
- // Visual Stuido 10 emits warning 4275 with this change. If you compile
+ // Visual Studio 10 emits warning 4275 with this change. If you compile
  // with exception disabled, you have to suppress warning 4275.
  #if defined(_MSC_VER) && _HAS_EXCEPTIONS == 0
  #include <exception>
@@ -45,7 +45,7 @@ diff --git a/intl/icu/source/common/utypeinfo.h b/intl/icu/source/common/utypein
 diff --git a/intl/icu/source/io/unicode/ustream.h b/intl/icu/source/io/unicode/ustream.h
 --- a/intl/icu/source/io/unicode/ustream.h
 +++ b/intl/icu/source/io/unicode/ustream.h
-@@ -23,17 +23,17 @@
+@@ -25,17 +25,17 @@
   * \file
   * \brief C++ API: Unicode iostream like API
   *
