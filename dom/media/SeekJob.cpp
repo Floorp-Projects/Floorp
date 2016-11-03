@@ -41,7 +41,7 @@ bool SeekJob::Exists() const
 
 void SeekJob::Resolve(bool aAtEnd, const char* aCallSite)
 {
-  MediaDecoder::SeekResolveValue val(aAtEnd, mTarget.mEventVisibility);
+  MediaDecoder::SeekResolveValue val(aAtEnd, MediaDecoderEventVisibility::Observable);
   mPromise.Resolve(val, aCallSite);
   mTarget.Reset();
 }
