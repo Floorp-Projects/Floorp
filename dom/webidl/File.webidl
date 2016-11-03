@@ -41,7 +41,7 @@ partial interface File {
   readonly attribute Date lastModifiedDate;
 
   [BinaryName="path", Func="mozilla::dom::Directory::WebkitBlinkDirectoryPickerEnabled"]
-  readonly attribute DOMString webkitRelativePath;
+  readonly attribute USVString webkitRelativePath;
 
   [GetterThrows, ChromeOnly]
   readonly attribute DOMString mozFullPath;
