@@ -8009,6 +8009,11 @@ nsHttpChannel::MessageDiversionStarted(ADivertableParentChannel *aParentChannel)
   LOG(("nsHttpChannel::MessageDiversionStarted [this=%p]", this));
   MOZ_ASSERT(!mParentChannel);
   mParentChannel = aParentChannel;
+  // If the channel is suspended, propagate that info to the parent's mEventQ.
+  uint32_t suspendCount = mSuspendCount;
+  while (suspendCount--) {
+    mParentChannel->SuspendMessageDiversion();
+  }
   return NS_OK;
 }
 
