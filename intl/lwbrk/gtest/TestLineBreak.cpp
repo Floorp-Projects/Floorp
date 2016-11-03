@@ -10,11 +10,8 @@
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
 #include "nsLWBrkCIID.h"
-#include "nsStringAPI.h"
-#include "nsEmbedString.h"
-#include "TestHarness.h"
-
-#define WORK_AROUND_SERVICE_MANAGER_ASSERT
+#include "nsString.h"
+#include "gtest/gtest.h"
 
 NS_DEFINE_CID(kLBrkCID, NS_LBRK_CID);
 NS_DEFINE_CID(kWBrkCID, NS_WBRK_CID);
@@ -25,7 +22,7 @@ static char teng1[] =
 //01234567890123456789012345678901234567890123456789012345678901234567890123456789
  "This is a test to test(reasonable) line    break. This 0.01123 = 45 x 48.";
 
-static uint32_t exp1[] = {
+static uint32_t lexp1[] = {
   4,7,9,14,17,34,39,40,41,42,49,54,62,64,67,69,73
 };
 
@@ -50,7 +47,7 @@ static uint32_t wexp2[] = {
 //01234567890123456789012345678901234567890123456789012345678901234567890123456789
 static char teng3[] = 
  "It's a test to test(ronae ) line break....";
-static uint32_t exp3[] = {
+static uint32_t lexp3[] = {
   4,6,11,14,25,27,32,42
 };
 static uint32_t wexp3[] = {
@@ -62,16 +59,59 @@ static char ruler1[] =
 static char ruler2[] =
 "0123456789012345678901234567890123456789012345678901234567890123456789012";
 
+bool
+Check(const char* in, const uint32_t* out, uint32_t outlen, uint32_t i,
+      uint32_t res[256])
+{
+  bool ok = true;
+
+  if (i != outlen) {
+    ok = false;
+    printf("WARNING!!! return size wrong, expect %d but got %d \n",
+           outlen, i);
+  }
+
+  for (uint32_t j = 0; j < i; j++) {
+    if (j < outlen) {
+      if (res[j] != out[j]) {
+         ok = false;
+         printf("[%d] expect %d but got %d\n", j, out[j], res[j]);
+      }
+    } else {
+      ok = false;
+      printf("[%d] additional %d\n", j, res[j]);
+    }
+  }
+
+  if (!ok) {
+    printf("string  = \n%s\n", in);
+    printf("%s\n", ruler1);
+    printf("%s\n", ruler2);
+
+    printf("Expect = \n");
+    for (uint32_t j = 0; j < outlen; j++) {
+      printf("%d,", out[j]);
+    }
+
+    printf("\nResult = \n");
+    for (uint32_t j = 0; j < i; j++) {
+      printf("%d,", res[j]);
+    }
+    printf("\n");
+  }
+
+  return ok;
+}
 
 bool TestASCIILB(nsILineBreaker *lb,
-                 const char* in, const uint32_t len, 
+                 const char* in,
                  const uint32_t* out, uint32_t outlen)
 {
          NS_ConvertASCIItoUTF16 eng1(in);
-         uint32_t i,j;
+         uint32_t i;
          uint32_t res[256];
-         bool ok = true;
          int32_t curr;
+
          for(i = 0, curr = 0; (curr != NS_LINEBREAKER_NEED_MORE_TEXT) && 
              (i < 256); i++)
          {
@@ -79,52 +119,18 @@ bool TestASCIILB(nsILineBreaker *lb,
             res [i] = curr != NS_LINEBREAKER_NEED_MORE_TEXT ? curr : eng1.Length();
     
          }
-         if (i != outlen)
-         {
-            ok = false;
-            printf("WARNING!!! return size wrong, expect %d but got %d \n",
-                   outlen, i);
-         }
-         printf("string  = \n%s\n", in);
-         printf("%s\n", ruler1);
-         printf("%s\n", ruler2);
-         printf("Expect = \n");
-         for(j=0;j<outlen;j++)
-         {
-            printf("%d,", out[j]);
-         }
-         printf("\nResult = \n");
-         for(j=0;j<i;j++)
-         {
-            printf("%d,", res[j]);
-         }
-         printf("\n");
-         for(j=0;j<i;j++)
-         {
-            if(j < outlen)
-            {
-                if (res[j] != out[j])
-                {
-                   ok = false;
-                   printf("[%d] expect %d but got %d\n", j, out[j], res[j]);
-                }
-            } else {
-                   ok = false;
-                   printf("[%d] additional %d\n", j, res[j]);
-            }
-         }
-         return ok;
+
+         return Check(in, out, outlen, i, res);
 }
 
 bool TestASCIIWB(nsIWordBreaker *lb,
-                 const char* in, const uint32_t len, 
+                 const char* in,
                  const uint32_t* out, uint32_t outlen)
 {
          NS_ConvertASCIItoUTF16 eng1(in);
 
-         uint32_t i,j;
+         uint32_t i;
          uint32_t res[256];
-         bool ok = true;
          int32_t curr = 0;
 
          for(i = 0, curr = lb->NextWord(eng1.get(), eng1.Length(), curr);
@@ -133,174 +139,47 @@ bool TestASCIIWB(nsIWordBreaker *lb,
          {
             res [i] = curr != NS_WORDBREAKER_NEED_MORE_TEXT ? curr : eng1.Length();
          }
-         if (i != outlen)
-         {
-            ok = false;
-            printf("WARNING!!! return size wrong, expect %d but got %d\n",
-                   outlen, i);
-         }
-         printf("string  = \n%s\n", in);
-         printf("%s\n", ruler1);
-         printf("%s\n", ruler2);
-         printf("Expect = \n");
-         for(j=0;j<outlen;j++)
-         {
-            printf("%d,", out[j]);
-         }
-         printf("\nResult = \n");
-         for(j=0;j<i;j++)
-         {
-            printf("%d,", res[j]);
-         }
-         printf("\n");
-         for(j=0;j<i;j++)
-         {
-            if(j < outlen)
-            {
-                if (res[j] != out[j])
-                {
-                   ok = false;
-                   printf("[%d] expect %d but got %d\n", j, out[j], res[j]);
-                }
-            } else {
-                   ok = false;
-                   printf("[%d] additional %d\n", j, res[j]);
-            }
-         }
-         return ok;
+
+         return Check(in, out, outlen, i, res);
 }
      
      
-bool TestLineBreaker()
+TEST(LineBreak, LineBreaker)
 {
-   printf("===========================\n");
-   printf("Finish nsILineBreaker Test \n");
-   printf("===========================\n");
    nsILineBreaker *t = nullptr;
    nsresult res;
-   bool ok = true;
-   res = CallGetService(kLBrkCID, &t);
-           
-   printf("Test 1 - GetService():\n");
-   if (NS_FAILED(res) || !t) {
-     printf("\t1st GetService failed\n");
-     ok = false;
-   }
 
+   res = CallGetService(kLBrkCID, &t);
+   ASSERT_TRUE(NS_SUCCEEDED(res) && t);
    NS_IF_RELEASE(t);
 
    res = CallGetService(kLBrkCID, &t);
- 
-   if (NS_FAILED(res) || !t) {
-     printf("\t2nd GetService failed\n");
-     ok = false;
-   } else {
-     printf("Test 4 - {First,Next}ForwardBreak():\n");
-     if( TestASCIILB(t, teng1, sizeof(teng1)/sizeof(char), 
-              exp1, sizeof(exp1)/sizeof(uint32_t)) )
-     {
-       printf("Test 4 Passed\n\n");
-     } else {
-       ok = false;
-       printf("Test 4 Failed\n\n");
-     }
+   ASSERT_TRUE(NS_SUCCEEDED(res) && t);
 
-     printf("Test 5 - {First,Next}ForwardBreak():\n");
-     if(TestASCIILB(t, teng2, sizeof(teng2)/sizeof(char), 
-               lexp2, sizeof(lexp2)/sizeof(uint32_t)) )
-     {
-       printf("Test 5 Passed\n\n");
-     } else {
-       ok = false;
-       printf("Test 5 Failed\n\n");
-     }
+   ASSERT_TRUE(TestASCIILB(t, teng1, lexp1, sizeof(lexp1) / sizeof(uint32_t)));
+   ASSERT_TRUE(TestASCIILB(t, teng2, lexp2, sizeof(lexp2) / sizeof(uint32_t)));
+   ASSERT_TRUE(TestASCIILB(t, teng3, lexp3, sizeof(lexp3) / sizeof(uint32_t)));
 
-     printf("Test 6 - {First,Next}ForwardBreak():\n");
-     if(TestASCIILB(t, teng3, sizeof(teng3)/sizeof(char), 
-               exp3, sizeof(exp3)/sizeof(uint32_t)) )
-     {
-       printf("Test 6 Passed\n\n");
-     } else {
-       ok = false;
-       printf("Test 6 Failed\n\n");
-     }
-
-
-     NS_RELEASE(t);
-
-   }
-
-   printf("===========================\n");
-   printf("Finish nsILineBreaker Test \n");
-   printf("===========================\n");
-
- return ok;
+   NS_RELEASE(t);
 }
 
-bool TestWordBreaker()
+TEST(LineBreak, WordBreaker)
 {
-   printf("===========================\n");
-   printf("Finish nsIWordBreaker Test \n");
-   printf("===========================\n");
    nsIWordBreaker *t = nullptr;
    nsresult res;
-   bool ok = true;
-   res = CallGetService(kWBrkCID, &t);
-           
-   printf("Test 1 - GetService():\n");
-   if (NS_FAILED(res) || !t) {
-     printf("\t1st GetService failed\n");
-     ok = false;
-   } else {
-     NS_RELEASE(t);
-   }
 
    res = CallGetService(kWBrkCID, &t);
-           
-   if (NS_FAILED(res) || !t) {
-     printf("\t2nd GetService failed\n");
-     ok = false;
-   } else {
+   ASSERT_TRUE(NS_SUCCEEDED(res) && t);
+   NS_IF_RELEASE(t);
 
-     printf("Test 4 - {First,Next}ForwardBreak():\n");
-     if( TestASCIIWB(t, teng1, sizeof(teng1)/sizeof(char), 
-               wexp1, sizeof(wexp1)/sizeof(uint32_t)) )
-     {
-        printf("Test 4 Passed\n\n");
-     } else {
-       ok = false;
-       printf("Test 4 Failed\n\n");
-     }
+   res = CallGetService(kWBrkCID, &t);
+   ASSERT_TRUE(NS_SUCCEEDED(res) && t);
 
-     printf("Test 5 - {First,Next}ForwardBreak():\n");
-     if(TestASCIIWB(t, teng2, sizeof(teng2)/sizeof(char), 
-               wexp2, sizeof(wexp2)/sizeof(uint32_t)) )
-     {
-       printf("Test 5 Passed\n\n");
-     } else {
-       ok = false;
-       printf("Test 5 Failed\n\n");
-     }
+   ASSERT_TRUE(TestASCIIWB(t, teng1, wexp1, sizeof(wexp1) / sizeof(uint32_t)));
+   ASSERT_TRUE(TestASCIIWB(t, teng2, wexp2, sizeof(wexp2) / sizeof(uint32_t)));
+   ASSERT_TRUE(TestASCIIWB(t, teng3, wexp3, sizeof(wexp3) / sizeof(uint32_t)));
 
-     printf("Test 6 - {First,Next}ForwardBreak():\n");
-     if(TestASCIIWB(t, teng3, sizeof(teng3)/sizeof(char), 
-               wexp3, sizeof(wexp3)/sizeof(uint32_t)) )
-     {
-       printf("Test 6 Passed\n\n");
-     } else {
-       ok = false;
-       printf("Test 6 Failed\n\n");
-     }
-
-
-     NS_RELEASE(t);
-   }
-
-   printf("===========================\n");
-   printf("Finish nsIWordBreaker Test \n");
-   printf("===========================\n");
-
-   return ok;
+   NS_RELEASE(t);
 }
 
 void   SamplePrintWordWithBreak();
@@ -448,47 +327,10 @@ void SampleFindWordBreakFromPosition(uint32_t fragN, uint32_t offset)
    NS_IF_RELEASE(wbk);
 }
 
-// Main
-
-int main(int argc, char** argv) {
-
-   int rv = 0;
-   ScopedXPCOM xpcom("TestLineBreak");
-   if (xpcom.failed())
-       return -1;
-   
-   // --------------------------------------------
-   printf("Test Line Break\n");
-
-   bool lbok ; 
-   bool wbok ; 
-   lbok =TestWordBreaker();
-   if(lbok)
-      passed("Line Break Test");
-   else {
-      fail("Line Break Test");
-      rv = -1;
-   }
-
-   wbok = TestLineBreaker();
-   if(wbok)
-      passed("Word Break Test");
-   else {
-      fail("Word Break Test");
-      rv = -1;
-   }
-
+// XXX: this prints output but doesn't actually test anything and so cannot
+// fail. It should be converted to a real test.
+TEST(LineBreak, SampleWordBreakUsage)
+{
    SampleWordBreakUsage();
-   
-
-   // --------------------------------------------
-   printf("Finish All The Test Cases\n");
-
-   if(lbok && wbok)
-      passed("Line/Word Break Test");
-   else {
-      fail("Line/Word Break Test");
-      rv = -1;
-   }
-   return rv;
 }
+
