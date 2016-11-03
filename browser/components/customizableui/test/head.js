@@ -476,7 +476,6 @@ function popupHidden(aPopup) {
  */
 function promisePopupEvent(aPopup, aEventSuffix) {
   let deferred = Promise.defer();
-  let win = aPopup.ownerGlobal;
   let eventType = "popup" + aEventSuffix;
 
   function onPopupEvent(e) {

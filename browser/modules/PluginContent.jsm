@@ -135,7 +135,6 @@ PluginContent.prototype = {
         if (this.haveShownNotification &&
             aSubject.top.document == this.content.document &&
             data.formats.toLowerCase().includes("application/x-mpegurl", 0)) {
-          let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
           let principal = this.content.document.nodePrincipal;
           let location = this.content.document.location.href;
           this.global.content.pluginRequiresReload = true;
@@ -453,7 +452,6 @@ PluginContent.prototype = {
     }
 
     let plugin = event.target;
-    let doc = plugin.ownerDocument;
 
     if (eventType == "PluginPlaceholderReplaced") {
       plugin.removeAttribute("href");
@@ -514,7 +512,6 @@ PluginContent.prototype = {
       case "PluginVulnerableNoUpdate":
       case "PluginClickToPlay":
         this._handleClickToPlayEvent(plugin);
-        let overlay = this.getPluginUI(plugin, "main");
         let pluginName = this._getPluginInfo(plugin).pluginName;
         let messageString = gNavigatorBundle.formatStringFromName("PluginClickToActivate", [pluginName], 1);
         let overlayText = this.getPluginUI(plugin, "clickToPlay");

@@ -821,8 +821,6 @@
             case "cmd_clearhistory":
               var param = this._self.getAttribute("autocompletesearchparam");
 
-              let searchBar = this._self.parentNode;
-
               BrowserSearch.searchBar.FormHistory.update({ op : "remove", fieldname : param }, null);
               this._self.value = "";
               break;
@@ -1682,9 +1680,6 @@
         <parameter name="aWrapAround"/>
         <parameter name="aCycleEngines"/>
         <body><![CDATA[
-          let popup = this.popup;
-          let list = document.getAnonymousElementByAttribute(popup, "anonid",
-                                                             "search-panel-one-offs");
           let selectedButton = this.selectedButton;
           let buttons = this.getSelectableButtons(aCycleEngines);
 

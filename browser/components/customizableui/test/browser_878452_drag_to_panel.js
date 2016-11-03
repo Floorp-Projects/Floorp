@@ -8,7 +8,6 @@
 add_task(function*() {
   yield startCustomizing();
   let btn = document.getElementById("feed-button");
-  let panel = document.getElementById(CustomizableUI.AREA_PANEL);
   let placements = getAreaWidgetIds(CustomizableUI.AREA_PANEL);
 
   let lastButtonIndex = placements.length - 1;

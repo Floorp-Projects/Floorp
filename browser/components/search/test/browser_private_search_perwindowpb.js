@@ -7,8 +7,6 @@ add_task(function* () {
   Services.prefs.setIntPref("browser.startup.page", 0);
   registerCleanupFunction(() => Services.prefs.clearUserPref("browser.startup.page"));
 
-  let engineURL =
-    "http://mochi.test:8888/browser/browser/components/search/test/";
   let windowsToClose = [];
 
   function performSearch(aWin, aIsPrivate) {

@@ -42,7 +42,6 @@ let gDebug;
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let scope = {};
   Cu.import("resource://gre/modules/Console.jsm", scope);
-  let ConsoleAPI = scope.ConsoleAPI;
   try {
     gDebug = Services.prefs.getBoolPref(kPrefCustomizationDebug);
   } catch (ex) {}
@@ -246,7 +245,6 @@ CustomizeMode.prototype = {
 
       let toolbarVisibilityBtn = document.getElementById(kToolbarVisibilityBtn);
       let togglableToolbars = window.getTogglableToolbars();
-      let bookmarksToolbar = document.getElementById("PersonalToolbar");
       if (togglableToolbars.length == 0) {
         toolbarVisibilityBtn.setAttribute("hidden", "true");
       } else {
@@ -427,7 +425,6 @@ CustomizeMode.prototype = {
 
     let window = this.window;
     let document = this.document;
-    let documentElement = document.documentElement;
 
     // Hide the palette before starting the transition for increased perf.
     this.visiblePalette.hidden = true;
@@ -1406,7 +1403,6 @@ CustomizeMode.prototype = {
 
       let footer = doc.getElementById("customization-lwtheme-menu-footer");
       let panel = footer.parentNode;
-      let themesInMyThemesSection = 0;
       let recommendedLabel = doc.getElementById("customization-lwtheme-menu-recommended");
       for (let theme of themes) {
         let button = buildToolbarButton(theme);
@@ -1418,7 +1414,6 @@ CustomizeMode.prototype = {
           onThemeSelected(panel);
         });
         panel.insertBefore(button, recommendedLabel);
-        themesInMyThemesSection++;
       }
 
       let lwthemePrefs = Services.prefs.getBranch("lightweightThemes.");

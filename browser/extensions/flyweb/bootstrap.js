@@ -237,7 +237,6 @@ let FlyWebView = {
       onViewShowing(aEvent) {
         let doc = aEvent.target.ownerDocument;
 
-        let panel = doc.getElementById("flyweb-panel");
         let items = doc.getElementById("flyweb-items");
         let empty = doc.getElementById("flyweb-items-empty");
 
