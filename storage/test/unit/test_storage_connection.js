@@ -4,8 +4,7 @@
 
 // This file tests the functions of mozIStorageConnection
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Test Functions
+// Test Functions
 
 add_task(function* test_connectionReady_open() {
   // there doesn't seem to be a way for the connection to not be ready (unless

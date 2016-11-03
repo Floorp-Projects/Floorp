@@ -31,8 +31,7 @@ Cu.import("resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Constants
+// Constants
 
 // Last expiration step should run before the final sync.
 const TOPIC_SHUTDOWN = "places-will-close-connection";
@@ -453,13 +452,11 @@ function notify(observers, notification, args = []) {
   }
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // nsPlacesExpiration definition
+// nsPlacesExpiration definition
 
 function nsPlacesExpiration()
 {
-  // ////////////////////////////////////////////////////////////////////////////
-  // // Smart Getters
+  // Smart Getters
 
   XPCOMUtils.defineLazyGetter(this, "_db", function () {
     let db = Cc["@mozilla.org/browser/nav-history-service;1"].
@@ -508,8 +505,7 @@ function nsPlacesExpiration()
 
 nsPlacesExpiration.prototype = {
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsIObserver
+  // nsIObserver
 
   observe: function PEX_observe(aSubject, aTopic, aData)
   {
@@ -593,8 +589,7 @@ nsPlacesExpiration.prototype = {
     }
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsINavHistoryObserver
+  // nsINavHistoryObserver
 
   _inBatchMode: false,
   onBeginUpdateBatch: function PEX_onBeginUpdateBatch()
@@ -631,8 +626,7 @@ nsPlacesExpiration.prototype = {
   onPageChanged: function() {},
   onDeleteVisits: function() {},
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsITimerCallback
+  // nsITimerCallback
 
   notify: function PEX_timerCallback()
   {
@@ -656,8 +650,7 @@ nsPlacesExpiration.prototype = {
     }).bind(this));
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // mozIStorageStatementCallback
+  // mozIStorageStatementCallback
 
   handleResult: function PEX_handleResult(aResultSet)
   {
@@ -768,8 +761,7 @@ nsPlacesExpiration.prototype = {
     }
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsPlacesExpiration
+  // nsPlacesExpiration
 
   _urisLimit: PREF_MAX_URIS_NOTSET,
   _interval: PREF_INTERVAL_SECONDS_NOTSET,
@@ -1092,8 +1084,7 @@ nsPlacesExpiration.prototype = {
     return this._timer = timer;
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsISupports
+  // nsISupports
 
   classID: Components.ID("705a423f-2f69-42f3-b9fe-1517e0dee56f"),
 
@@ -1108,8 +1099,7 @@ nsPlacesExpiration.prototype = {
   ])
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Module Registration
+// Module Registration
 
 var components = [nsPlacesExpiration];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

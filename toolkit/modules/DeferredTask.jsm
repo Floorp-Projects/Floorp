@@ -82,8 +82,7 @@ this.EXPORTED_SYMBOLS = [
  *                              .then(null, Components.utils.reportError);
  */
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
@@ -97,8 +96,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer",
                                      "initWithCallback");
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DeferredTask
+// DeferredTask
 
 /**
  * Sets up a task whose execution can be triggered after a delay.

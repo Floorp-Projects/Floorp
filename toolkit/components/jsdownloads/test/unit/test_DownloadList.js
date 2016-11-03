@@ -9,8 +9,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 /**
  * Returns a PRTime in the past usable to add expirable visits.
@@ -65,8 +64,7 @@ function promiseExpirableDownloadVisit(aSourceUrl)
   return deferred.promise;
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 /**
  * Checks the testing mechanism used to build different download lists.

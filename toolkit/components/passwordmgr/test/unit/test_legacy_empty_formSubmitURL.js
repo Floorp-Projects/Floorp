@@ -37,8 +37,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 /**
  * Adds a login with an empty formSubmitURL, then it verifies that no other

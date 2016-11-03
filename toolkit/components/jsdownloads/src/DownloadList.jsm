@@ -26,8 +26,7 @@ this.EXPORTED_SYMBOLS = [
   "DownloadSummary",
 ];
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -41,8 +40,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadList
+// DownloadList
 
 /**
  * Represents a collection of Download objects that can be viewed and managed by
@@ -255,8 +253,7 @@ this.DownloadList.prototype = {
   },
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadCombinedList
+// DownloadCombinedList
 
 /**
  * Provides a unified, unordered list combining public and private downloads.
@@ -340,8 +337,7 @@ this.DownloadCombinedList.prototype = {
     return this._publicList.remove(aDownload);
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // DownloadList view
+  // DownloadList view
 
   onDownloadAdded: function (aDownload)
   {
@@ -364,8 +360,7 @@ this.DownloadCombinedList.prototype = {
   },
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadSummary
+// DownloadSummary
 
 /**
  * Provides an aggregated view on the contents of a DownloadList.
@@ -538,8 +533,7 @@ this.DownloadSummary.prototype = {
     }
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // DownloadList view
+  // DownloadList view
 
   onDownloadAdded: function (aDownload)
   {

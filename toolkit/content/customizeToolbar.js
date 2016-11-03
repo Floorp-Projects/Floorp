@@ -618,8 +618,7 @@ function isToolbarItem(aElt)
          aElt.localName == "toolbarspacer";
 }
 
-// /////////////////////////////////////////////////////////////////////////
-// // Drag and Drop observers
+// Drag and Drop observers
 
 function onToolbarDragExit(aEvent)
 {

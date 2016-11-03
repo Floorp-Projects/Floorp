@@ -28,8 +28,6 @@ var uris = [
   "http://example.com/5",
 ];
 
-// /////////////////////////////////////////////////////////////////////////////
-
 /**
  * Adds some bookmarks for the URIs in |uris|.
  */
@@ -138,7 +136,6 @@ function* teardown(file, begin, success, fail) {
   yield PlacesUtils.bookmarks.eraseEverything();
 }
 
-// /////////////////////////////////////////////////////////////////////////////
 add_task(function* test_json_restore_normal() {
   // data: the data passed to nsIObserver.observe() corresponding to the test
   // folderId: for HTML restore into a folder, the folder ID to restore into;

@@ -6,8 +6,6 @@
 
 var tests = [];
 
-// //////////////////////////////////////////////////////////////////////////////
-
 tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_NONE,
 
@@ -68,8 +66,6 @@ tests.push({
     // no reverse sorting for SORT BY NONE
   }
 });
-
-// //////////////////////////////////////////////////////////////////////////////
 
 tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING,
@@ -143,8 +139,6 @@ tests.push({
     this.check();
   }
 });
-
-// //////////////////////////////////////////////////////////////////////////////
 
 tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING,
@@ -243,8 +237,6 @@ tests.push({
     this.check();
   }
 });
-
-// //////////////////////////////////////////////////////////////////////////////
 
 tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_URI_ASCENDING,
@@ -350,8 +342,6 @@ tests.push({
   }
 });
 
-// //////////////////////////////////////////////////////////////////////////////
-
 tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_ASCENDING,
 
@@ -451,8 +441,6 @@ tests.push({
   }
 });
 
-// //////////////////////////////////////////////////////////////////////////////
-
 tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_KEYWORD_ASCENDING,
 
@@ -550,8 +538,6 @@ tests.push({
   }
 });
 
-// //////////////////////////////////////////////////////////////////////////////
-
 tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_ASCENDING,
 
@@ -639,8 +625,6 @@ tests.push({
     this.check();
   }
 });
-
-// //////////////////////////////////////////////////////////////////////////////
 
 tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_ASCENDING,
@@ -737,8 +721,6 @@ tests.push({
     this.check();
   }
 });
-
-// //////////////////////////////////////////////////////////////////////////////
 
 tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_TAGS_ASCENDING,
@@ -838,7 +820,6 @@ tests.push({
   }
 });
 
-// //////////////////////////////////////////////////////////////////////////////
 // SORT_BY_ANNOTATION_* (int32)
 
 tests.push({
@@ -934,7 +915,6 @@ tests.push({
   }
 });
 
-// //////////////////////////////////////////////////////////////////////////////
 // SORT_BY_ANNOTATION_* (int64)
 
 tests.push({
@@ -1016,7 +996,6 @@ tests.push({
   }
 });
 
-// //////////////////////////////////////////////////////////////////////////////
 // SORT_BY_ANNOTATION_* (string)
 
 tests.push({
@@ -1098,7 +1077,6 @@ tests.push({
   }
 });
 
-// //////////////////////////////////////////////////////////////////////////////
 // SORT_BY_ANNOTATION_* (double)
 
 tests.push({
@@ -1180,7 +1158,6 @@ tests.push({
   }
 });
 
-// //////////////////////////////////////////////////////////////////////////////
 // SORT_BY_FRECENCY_*
 
 tests.push({
@@ -1267,8 +1244,6 @@ tests.push({
     this.check();
   }
 });
-
-// //////////////////////////////////////////////////////////////////////////////
 
 function run_test()
 {
