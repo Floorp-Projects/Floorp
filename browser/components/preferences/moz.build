@@ -18,5 +18,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3', 'cocoa'):
 
 JAR_MANIFESTS += ['jar.mn']
 
+EXTRA_JS_MODULES += [
+    'SiteDataManager.jsm',
+]
+
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Preferences')
