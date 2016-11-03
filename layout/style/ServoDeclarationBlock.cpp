@@ -10,9 +10,9 @@
 namespace mozilla {
 
 /* static */ already_AddRefed<ServoDeclarationBlock>
-ServoDeclarationBlock::FromStyleAttribute(const nsAString& aString)
+ServoDeclarationBlock::FromCssText(const nsAString& aCssText)
 {
-  NS_ConvertUTF16toUTF8 value(aString);
+  NS_ConvertUTF16toUTF8 value(aCssText);
   RefPtr<RawServoDeclarationBlock>
     raw = Servo_ParseStyleAttribute(&value).Consume();
   RefPtr<ServoDeclarationBlock> decl = new ServoDeclarationBlock(raw.forget());
