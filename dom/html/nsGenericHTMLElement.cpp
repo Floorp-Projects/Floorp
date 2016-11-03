@@ -190,16 +190,10 @@ nsGenericHTMLElement::CopyInnerTo(Element* aDst)
     if (name->Equals(nsGkAtoms::style, kNameSpaceID_None) &&
         value->Type() == nsAttrValue::eCSSDeclaration) {
       DeclarationBlock* decl = value->GetCSSDeclarationValue();
-      if (decl->IsServo()) {
-        MOZ_CRASH("stylo: clone not implemented");
-        continue;
-      }
-
       // We can't just set this as a string, because that will fail
       // to reparse the string into style data until the node is
       // inserted into the document.  Clone the Rule instead.
-      RefPtr<css::Declaration>
-        declClone = new css::Declaration(*decl->AsGecko());
+      RefPtr<DeclarationBlock> declClone = decl->Clone();
 
       rv = aDst->SetInlineStyleDeclaration(declClone, &valStr, false);
       NS_ENSURE_SUCCESS(rv, rv);

@@ -64,6 +64,8 @@ SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, RawServoDeclarationBlockStrong,
                    const nsACString* data)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_CreateEmpty,
                    RawServoDeclarationBlockStrong)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_Clone, RawServoDeclarationBlockStrong,
+                   RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_AddRef, void,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Release, void,

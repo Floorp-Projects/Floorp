@@ -41,6 +41,8 @@ public:
   inline MozExternalRefCountType AddRef();
   inline MozExternalRefCountType Release();
 
+  inline already_AddRefed<DeclarationBlock> Clone() const;
+
   /**
    * Return whether |this| may be modified.
    */
