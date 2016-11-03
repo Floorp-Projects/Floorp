@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/naq.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 naq{
     AuxExemplarCharacters{"[j l v]"}
     ExemplarCharacters{"[a â b c d e f g h i î k m n o ô p q r s t u û w x y z ǀ ǁ ǂ ǃ]"}
@@ -17,7 +11,7 @@ naq{
             }
         }
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.27.40"}
     calendar{
         generic{
             DateTimePatterns{
@@ -61,6 +55,10 @@ naq{
         }
         gregorian{
             AmPmMarkers{
+                "ǁgoagas",
+                "ǃuias",
+            }
+            AmPmMarkersAbbr{
                 "ǁgoagas",
                 "ǃuias",
             }

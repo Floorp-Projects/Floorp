@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/zh_Hans_SG.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hans_SG{
-    Version{"2.1.19.79"}
+    Version{"2.1.27.99"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -44,7 +38,7 @@ zh_Hans_SG{
                     "U年MMMd日",
                     "hanidec",
                 }
-                "r-M-d",
+                "r/M/d",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -58,9 +52,9 @@ zh_Hans_SG{
                 "z ah:mm:ss",
                 "ah:mm:ss",
                 "ah:mm",
-                "Gy年M月d日EEEE",
-                "Gy年M月d日",
-                "Gy年M月d日",
+                "Gy年MM月d日EEEE",
+                "Gy年MM月d日",
+                "Gy年MM月d日",
                 "dd/MM/yyGGGGG",
                 "{1} {0}",
                 "{1} {0}",

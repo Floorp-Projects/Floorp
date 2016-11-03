@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/uz_Cyrl.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 uz_Cyrl{
     %%Parent{"root"}
     AuxExemplarCharacters{"[ц щ ы ь]"}
@@ -22,7 +16,7 @@ uz_Cyrl{
     NumberElements{
         arabext{
             patterns{
-                currencyFormat{"¤ #,##0.00"}
+                currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -33,7 +27,7 @@ uz_Cyrl{
                 group{"٬"}
                 infinity{"∞"}
                 minusSign{"-"}
-                nan{"NaN"}
+                nan{"ҳақиқий сон эмас"}
                 perMille{"؉"}
                 percentSign{"٪"}
                 plusSign{"+"}
@@ -42,11 +36,12 @@ uz_Cyrl{
         }
         latn{
             miscPatterns{
-                atLeast{"⩾{0}"}
+                atLeast{"{0}+"}
                 range{"{0}–{1}"}
             }
             patterns{
-                currencyFormat{"¤ #,##0.00"}
+                accountingFormat{"#,##0.00 ¤"}
+                currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -161,7 +156,7 @@ uz_Cyrl{
                 group{" "}
                 infinity{"∞"}
                 minusSign{"-"}
-                nan{"NaN"}
+                nan{"ҳақиқий сон эмас"}
                 perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"+"}
@@ -169,12 +164,12 @@ uz_Cyrl{
             }
         }
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.27.98"}
     calendar{
         generic{
             DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
+                "HH:mm:ss (zzzz)",
+                "HH:mm:ss (z)",
                 "HH:mm:ss",
                 "HH:mm",
                 "EEEE, G y MMMM dd",
@@ -276,14 +271,26 @@ uz_Cyrl{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "ТО",
+                "ТК",
+            }
+            AmPmMarkersAbbr{
+                "ТО",
+                "ТК",
+            }
+            AmPmMarkersNarrow{
+                "ТО",
+                "ТК",
+            }
             DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
+                "HH:mm:ss (zzzz)",
+                "HH:mm:ss (z)",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE, y MMMM dd",
-                "y MMMM d",
-                "y MMM d",
+                "EEEE, dd MMMM, y",
+                "d MMMM, y",
+                "d MMM, y",
                 "dd/MM/yy",
                 "{1} {0}",
                 "{1} {0}",
@@ -295,50 +302,63 @@ uz_Cyrl{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
+                EHm{"E, HH:mm"}
+                EHms{"E, HH:mm:ss"}
                 Ed{"d, E"}
-                Ehm{"E h:mm a"}
-                Ehms{"E h:mm:ss a"}
+                Ehm{"E, h:mm a"}
+                Ehms{"E, h:mm:ss a"}
                 Gy{"G y"}
-                GyMMM{"G y MMM"}
-                GyMMMEd{"G y MMM d, E"}
-                GyMMMd{"G y MMM d"}
+                GyMMM{"MMM, G y"}
+                GyMMMEd{"E, d-MMM, G y"}
+                GyMMMd{"d MMM, G y"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
-                M{"L"}
-                MEd{"MM-dd, E"}
+                Hmsv{"HH:mm:ss (v)"}
+                Hmv{"HH:mm (v)"}
+                M{"LL"}
+                MEd{"E, dd/MM"}
                 MMM{"LLL"}
-                MMMEd{"MMM d, E"}
-                MMMd{"MMM d"}
-                Md{"MM-dd"}
+                MMMEd{"E, d MMM"}
+                MMMMW{
+                    one{"MMM, W-'ҳафта'"}
+                    other{"MMM, W-'ҳафта'"}
+                }
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                Md{"dd/MM"}
                 d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a (v)"}
+                hmv{"h:mm a (v)"}
                 ms{"mm:ss"}
                 y{"y"}
-                yM{"y-MM"}
-                yMEd{"y-MM-dd, E"}
-                yMMM{"y MMM"}
-                yMMMEd{"y MMM d, E"}
-                yMMMM{"y MMMM"}
-                yMMMd{"y MMM d"}
-                yMd{"y-MM-dd"}
-                yQQQ{"y QQQ"}
-                yQQQQ{"y QQQQ"}
+                yM{"MM/y"}
+                yMEd{"E, dd/MM/y"}
+                yMMM{"MMM, y"}
+                yMMMEd{"E, d-MMM, y"}
+                yMMMM{"MMMM, y"}
+                yMMMd{"d MMM, y"}
+                yMd{"dd/MM/y"}
+                yQQQ{"y, QQQ"}
+                yQQQQ{"y, QQQQ"}
+                yw{
+                    one{"y, w-'ҳафта'"}
+                    other{"y, w-'ҳафта'"}
+                }
             }
             dayNames{
                 format{
                     abbreviated{
-                        "Якш",
-                        "Душ",
-                        "Сеш",
-                        "Чор",
-                        "Пай",
-                        "Жум",
-                        "Шан",
+                        "якш",
+                        "душ",
+                        "сеш",
+                        "чор",
+                        "пай",
+                        "жум",
+                        "шан",
                     }
                     narrow{
                         "Я",
@@ -350,13 +370,13 @@ uz_Cyrl{
                         "Ш",
                     }
                     short{
-                        "Якш",
-                        "Душ",
-                        "Сеш",
-                        "Чор",
-                        "Пай",
-                        "Жум",
-                        "Шан",
+                        "Як",
+                        "Ду",
+                        "Се",
+                        "Чо",
+                        "Па",
+                        "Жу",
+                        "Ша",
                     }
                     wide{
                         "якшанба",
@@ -388,29 +408,101 @@ uz_Cyrl{
                         "Ш",
                     }
                     short{
-                        "Якш",
-                        "Душ",
-                        "Сеш",
-                        "Чор",
-                        "Пай",
-                        "Жум",
-                        "Шан",
+                        "Як",
+                        "Ду",
+                        "Се",
+                        "Чо",
+                        "Па",
+                        "Жу",
+                        "Ша",
                     }
                     wide{
-                        "якшанба",
-                        "душанба",
-                        "сешанба",
-                        "чоршанба",
-                        "пайшанба",
-                        "жума",
-                        "шанба",
+                        "Якшанба",
+                        "Душанба",
+                        "Сешанба",
+                        "Чоршанба",
+                        "Пайшанба",
+                        "Жума",
+                        "Шанба",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"кундузи"}
+                        evening1{"кечқурун"}
+                        midnight{"ярим тун"}
+                        morning1{"эрталаб"}
+                        night1{"кечаси"}
+                        noon{"туш пайти"}
+                    }
+                    narrow{
+                        afternoon1{"кундузи"}
+                        evening1{"кечқурун"}
+                        midnight{"ярим тун"}
+                        morning1{"эрталаб"}
+                        night1{"кечаси"}
+                        noon{"туш пайти"}
+                    }
+                    wide{
+                        afternoon1{"кундузи"}
+                        evening1{"кечқурун"}
+                        midnight{"ярим тун"}
+                        morning1{"эрталаб"}
+                        night1{"кечаси"}
+                        noon{"туш пайти"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"кундузи"}
+                        am{"ТО"}
+                        evening1{"кечқурун"}
+                        midnight{"ярим тун"}
+                        morning1{"эрталаб"}
+                        night1{"кечаси"}
+                        noon{"туш пайти"}
+                        pm{"ТК"}
+                    }
+                    narrow{
+                        afternoon1{"кундузи"}
+                        am{"ТО"}
+                        evening1{"кечқурун"}
+                        midnight{"ярим тун"}
+                        morning1{"эрталаб"}
+                        night1{"кечаси"}
+                        noon{"туш пайти"}
+                        pm{"ТК"}
+                    }
+                    wide{
+                        afternoon1{"кундузи"}
+                        am{"ТО"}
+                        evening1{"кечқурун"}
+                        midnight{"ярим тун"}
+                        morning1{"эрталаб"}
+                        night1{"кечаси"}
+                        noon{"туш пайти"}
+                        pm{"ТК"}
                     }
                 }
             }
             eras{
                 abbreviated{
-                    "М.А.",
-                    "Э",
+                    "м.а.",
+                    "милодий",
+                }
+                abbreviated%variant{
+                    "э.а.",
+                    "CE",
+                }
+                wide{
+                    "милоддан аввалги",
+                    "милодий",
+                }
+                wide%variant{
+                    "эрамиздан аввалги",
+                    "CE",
                 }
             }
             intervalFormats{
@@ -422,33 +514,33 @@ uz_Cyrl{
                     m{"HH:mm–HH:mm"}
                 }
                 Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
+                    H{"HH:mm–HH:mm (v)"}
+                    m{"HH:mm–HH:mm (v)"}
                 }
                 Hv{
-                    H{"HH–HH v"}
+                    H{"HH–HH (v)"}
                 }
                 M{
                     M{"MM–MM"}
                 }
                 MEd{
-                    M{"MM-dd, E – MM-dd, E"}
-                    d{"MM-dd, E – MM-dd, E"}
+                    M{"E, dd/MM – E, dd/MM"}
+                    d{"E, dd/MM – E, dd/MM"}
                 }
                 MMM{
-                    M{"LLL–LLL"}
+                    M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"MMM d, E – MMM d, E"}
-                    d{"MMM d, E – MMM d, E"}
+                    M{"E, d MMM – E, d MMM"}
+                    d{"E, d MMM – E, d MMM"}
                 }
                 MMMd{
-                    M{"MMM d – MMM d"}
-                    d{"MMM d–d"}
+                    M{"d MMM – d MMM"}
+                    d{"d – d MMM"}
                 }
                 Md{
-                    M{"MM-dd – MM-dd"}
-                    d{"MM-dd – MM-dd"}
+                    M{"dd/MM – dd/MM"}
+                    d{"dd/MM – dd/MM"}
                 }
                 d{
                     d{"d–d"}
@@ -464,65 +556,65 @@ uz_Cyrl{
                     m{"h:mm–h:mm a"}
                 }
                 hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
+                    a{"h:mm a – h:mm a (v)"}
+                    h{"h:mm–h:mm a (v)"}
+                    m{"h:mm–h:mm a (v)"}
                 }
                 hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
+                    a{"h a – h a (v)"}
+                    h{"h–h a (v)"}
                 }
                 y{
                     y{"y–y"}
                 }
                 yM{
-                    M{"y-MM – y-MM"}
-                    y{"y-MM – y-MM"}
+                    M{"MM/y – MM/y"}
+                    y{"MM/y – MM/y"}
                 }
                 yMEd{
-                    M{"y-MM-dd, E – y-MM-dd, E"}
-                    d{"y-MM-dd, E – y-MM-dd, E"}
-                    y{"y-MM-dd, E – y-MM-dd, E"}
+                    M{"E, dd/MM/y – E, dd/MM/y"}
+                    d{"E, dd/MM/y – E, dd/MM/y"}
+                    y{"E, dd/MM/y – E, dd/MM/y"}
                 }
                 yMMM{
-                    M{"y MMM–MMM"}
-                    y{"y MMM – y MMM"}
+                    M{"MMM – MMM, y"}
+                    y{"MMM, y – MMM, y"}
                 }
                 yMMMEd{
-                    M{"y MMM d, E – MMM d, E"}
-                    d{"y MMM d, E – MMM d, E"}
-                    y{"y MMM d, E – y MMM d, E"}
+                    M{"E, d MMM – E, d MMM, y"}
+                    d{"E, d MMM – E, d MMM, y"}
+                    y{"E, d MMM, y – E, d MMM, y"}
                 }
                 yMMMM{
-                    M{"y MMMM–MMMM"}
-                    y{"y MMMM – y MMMM"}
+                    M{"MMMM – MMMM, y"}
+                    y{"MMMM, y – MMMM, y"}
                 }
                 yMMMd{
-                    M{"y MMM d – MMM d"}
-                    d{"y MMM d–d"}
-                    y{"y MMM d – y MMM d"}
+                    M{"d MMM – d MMM, y"}
+                    d{"d – d MMM, y"}
+                    y{"d MMM, y – d MMM, y"}
                 }
                 yMd{
-                    M{"y-MM-dd – y-MM-dd"}
-                    d{"y-MM-dd – y-MM-dd"}
-                    y{"y-MM-dd – y-MM-dd"}
+                    M{"dd/MM/y – dd/MM/y"}
+                    d{"dd/MM/y – dd/MM/y"}
+                    y{"dd/MM/y – dd/MM/y"}
                 }
             }
             monthNames{
                 format{
                     abbreviated{
-                        "Янв",
-                        "Фев",
-                        "Мар",
-                        "Апр",
-                        "Май",
-                        "Июн",
-                        "Июл",
-                        "Авг",
-                        "Сен",
-                        "Окт",
-                        "Ноя",
-                        "Дек",
+                        "янв",
+                        "фев",
+                        "мар",
+                        "апр",
+                        "май",
+                        "июн",
+                        "июл",
+                        "авг",
+                        "сен",
+                        "окт",
+                        "ноя",
+                        "дек",
                     }
                     narrow{
                         "Я",
@@ -539,18 +631,18 @@ uz_Cyrl{
                         "Д",
                     }
                     wide{
-                        "Январ",
-                        "Феврал",
-                        "Март",
-                        "Апрел",
-                        "Май",
-                        "Июн",
-                        "Июл",
-                        "Август",
-                        "Сентябр",
-                        "Октябр",
-                        "Ноябр",
-                        "Декабр",
+                        "январ",
+                        "феврал",
+                        "март",
+                        "апрел",
+                        "май",
+                        "июн",
+                        "июл",
+                        "август",
+                        "сентябр",
+                        "октябр",
+                        "ноябр",
+                        "декабр",
                     }
                 }
                 stand-alone{

@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
  **********************************************************************
- *   Copyright (C) 2005-2012, International Business Machines
+ *   Copyright (C) 2005-2016, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  **********************************************************************
  */
@@ -9,14 +11,13 @@
 
 #if !UCONFIG_NO_CONVERSION
 
+#include "cmemory.h"
 #include "csmatch.h"
 #include "csrmbcs.h"
 
 #include <math.h>
 
 U_NAMESPACE_BEGIN
-
-#define ARRAY_SIZE(array) (sizeof array / sizeof array[0])
 
 #define min(x,y) (((x)<(y))?(x):(y))
 
@@ -269,7 +270,7 @@ UBool CharsetRecog_sjis::nextChar(IteratedChar* it, InputText* det) const {
 }
 
 UBool CharsetRecog_sjis::match(InputText* det, CharsetMatch *results) const {
-    int32_t confidence = match_mbcs(det, commonChars_sjis, ARRAY_SIZE(commonChars_sjis));
+    int32_t confidence = match_mbcs(det, commonChars_sjis, UPRV_LENGTHOF(commonChars_sjis));
     results->set(det, this, confidence);
     return (confidence > 0);
 }
@@ -370,7 +371,7 @@ const char *CharsetRecog_euc_jp::getLanguage() const
 
 UBool CharsetRecog_euc_jp::match(InputText *det, CharsetMatch *results) const
 {
-    int32_t confidence = match_mbcs(det, commonChars_euc_jp, ARRAY_SIZE(commonChars_euc_jp));
+    int32_t confidence = match_mbcs(det, commonChars_euc_jp, UPRV_LENGTHOF(commonChars_euc_jp));
     results->set(det, this, confidence);
     return (confidence > 0);
 }
@@ -392,7 +393,7 @@ const char *CharsetRecog_euc_kr::getLanguage() const
 
 UBool CharsetRecog_euc_kr::match(InputText *det, CharsetMatch *results) const
 {
-    int32_t confidence =  match_mbcs(det, commonChars_euc_kr, ARRAY_SIZE(commonChars_euc_kr));
+    int32_t confidence =  match_mbcs(det, commonChars_euc_kr, UPRV_LENGTHOF(commonChars_euc_kr));
     results->set(det, this, confidence);
     return (confidence > 0);
 }
@@ -444,7 +445,7 @@ const char *CharsetRecog_big5::getLanguage() const
 
 UBool CharsetRecog_big5::match(InputText *det, CharsetMatch *results) const
 {
-    int32_t confidence = match_mbcs(det, commonChars_big5, ARRAY_SIZE(commonChars_big5));
+    int32_t confidence = match_mbcs(det, commonChars_big5, UPRV_LENGTHOF(commonChars_big5));
     results->set(det, this, confidence);
     return (confidence > 0);
 }
@@ -520,7 +521,7 @@ const char *CharsetRecog_gb_18030::getLanguage() const
 
 UBool CharsetRecog_gb_18030::match(InputText *det, CharsetMatch *results) const
 {
-    int32_t confidence = match_mbcs(det, commonChars_gb_18030, ARRAY_SIZE(commonChars_gb_18030));
+    int32_t confidence = match_mbcs(det, commonChars_gb_18030, UPRV_LENGTHOF(commonChars_gb_18030));
     results->set(det, this, confidence);
     return (confidence > 0);
 }

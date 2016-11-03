@@ -1,4 +1,6 @@
 ## -*-makefile-*-
+## Copyright (C) 2016 and later: Unicode, Inc. and others.
+## License & terms of use: http://www.unicode.org/copyright.html
 ## MP-RAS specific setup
 ## Copyright (c) 2003-2004, International Business Machines Corporation and
 ## others. All Rights Reserved.

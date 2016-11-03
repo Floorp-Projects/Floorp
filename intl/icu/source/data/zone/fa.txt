@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fa.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fa{
-    Version{"2.1.19.94"}
+    Version{"2.1.29.44"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"آبیجان"}
@@ -295,7 +289,7 @@ fa{
             ec{"دنور"}
         }
         "America:Detroit"{
-            ec{"دترویت"}
+            ec{"دیترویت"}
         }
         "America:Dominica"{
             ec{"دومینیکا"}
@@ -308,6 +302,9 @@ fa{
         }
         "America:El_Salvador"{
             ec{"السالوادور"}
+        }
+        "America:Fort_Nelson"{
+            ec{"فورت نلسون"}
         }
         "America:Fortaleza"{
             ec{"فورتالزا"}
@@ -672,6 +669,9 @@ fa{
         "Asia:Bangkok"{
             ec{"بانکوک"}
         }
+        "Asia:Barnaul"{
+            ec{"بارنائول"}
+        }
         "Asia:Beirut"{
             ec{"بیروت"}
         }
@@ -849,6 +849,9 @@ fa{
         "Asia:Tokyo"{
             ec{"توکیو"}
         }
+        "Asia:Tomsk"{
+            ec{"تومسک"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"اولان‌باتور"}
         }
@@ -948,6 +951,9 @@ fa{
         "Europe:Andorra"{
             ec{"آندورا"}
         }
+        "Europe:Astrakhan"{
+            ec{"آستراخان"}
+        }
         "Europe:Athens"{
             ec{"آتن"}
         }
@@ -1005,6 +1011,9 @@ fa{
         }
         "Europe:Kiev"{
             ec{"کیف"}
+        }
+        "Europe:Kirov"{
+            ec{"کیروف"}
         }
         "Europe:Lisbon"{
             ec{"لیسبون"}
@@ -1081,6 +1090,9 @@ fa{
         }
         "Europe:Tirane"{
             ec{"تیرانا"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"اولیانوفسک"}
         }
         "Europe:Uzhgorod"{
             ec{"اوژگورود"}
@@ -1765,6 +1777,9 @@ fa{
         }
         "meta:Ponape"{
             ls{"وقت پوناپه"}
+        }
+        "meta:Pyongyang"{
+            ls{"وقت پیونگ‌یانگ"}
         }
         "meta:Qyzylorda"{
             ld{"وقت تابستانی قیزیل‌اوردا"}

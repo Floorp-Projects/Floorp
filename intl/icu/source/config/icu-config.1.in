@@ -2,6 +2,8 @@
 .\"
 .\" icu-config.1: manual page for the icu-config utility
 .\"
+.\" Copyright (C) 2016 and later: Unicode, Inc. and others.
+.\" License & terms of use: http://www.unicode.org/copyright.html
 .\" Copyright (C) 2002-2008 IBM, Inc. and others.
 .\"
 .\" Based on  Yves Arrouye's pkgdata page <yves@arrouye.net>
@@ -72,9 +74,6 @@
 ]
 [
 .BI "\-\-ldflags"
-]
-[
-.BI "\-\-ldflags\-layout"
 ]
 [
 .BI "\-\-ldflags\-libsonly"

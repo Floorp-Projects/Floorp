@@ -1,4 +1,6 @@
 ## -*-makefile-*-
+## Copyright (C) 2016 and later: Unicode, Inc. and others.
+## License & terms of use: http://www.unicode.org/copyright.html
 ## os/390, z/OS specific setup 
 ## Copyright (c) 1999-2014, International Business Machines Corporation and
 ## others. All Rights Reserved.
@@ -175,7 +177,6 @@ endif
 LIBICUDT=	$(top_builddir)/stubdata/$(LIBICU)data$(ICULIBSUFFIX)$(STUB_SUFFIX)$(SO_TARGET_VERSION).x
 LIBICUUC=	$(top_builddir)/common/$(LIBICU)uc$(ICULIBSUFFIX)$(SO_TARGET_VERSION).x
 LIBICUI18N=	$(top_builddir)/i18n/$(LIBICU)i18n$(ICULIBSUFFIX)$(SO_TARGET_VERSION).x
-LIBICULE=	$(top_builddir)/layout/$(LIBICU)le$(ICULIBSUFFIX)$(SO_TARGET_VERSION).x
 LIBICULX=	$(top_builddir)/layoutex/$(LIBICU)lx$(ICULIBSUFFIX)$(SO_TARGET_VERSION).x
 LIBICUIO=	$(top_builddir)/io/$(LIBICU)io$(ICULIBSUFFIX)$(SO_TARGET_VERSION).x
 LIBCTESTFW=	$(top_builddir)/tools/ctestfw/$(LIBICU)test$(ICULIBSUFFIX)$(SO_TARGET_VERSION).x

@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
-* Copyright (c) 1996-2015, International Business Machines Corporation
+* Copyright (c) 1996-2016, International Business Machines Corporation
 *               and others. All Rights Reserved.
 *******************************************************************************
 * File unorm.h
@@ -22,11 +24,9 @@
 #include "unicode/uiter.h"
 #include "unicode/unorm2.h"
 
-#ifndef U_HIDE_DEPRECATED_API
-
 /**
  * \file
- * \brief C API: Unicode Normalization 
+ * \brief C API: Unicode Normalization
  *
  * Old Unicode normalization API.
  *
@@ -60,7 +60,7 @@
  *
  * To a user of your program, however, both of these sequences should be
  * treated as the same "user-level" character "A with acute accent".  When you are searching or
- * comparing text, you must ensure that these two sequences are treated 
+ * comparing text, you must ensure that these two sequences are treated
  * equivalently.  In addition, you must handle characters with more than one
  * accent.  Sometimes the order of a character's combining accents is
  * significant, while in other cases accent sequences in different orders are
@@ -88,8 +88,8 @@
  * will often want to use these mappings.
  *
  * <code>unorm_normalize</code> helps solve these problems by transforming text into the
- * canonical composed and decomposed forms as shown in the first example above.  
- * In addition, you can have it perform compatibility decompositions so that 
+ * canonical composed and decomposed forms as shown in the first example above.
+ * In addition, you can have it perform compatibility decompositions so that
  * you can treat compatibility characters the same as their equivalents.
  * Finally, <code>unorm_normalize</code> rearranges accents into the proper canonical
  * order, so that you do not have to worry about accent rearrangement on your
@@ -129,14 +129,15 @@
  * For more usage examples, see the Unicode Standard Annex.
  */
 
-#ifndef U_HIDE_DEPRECATED_API
+// Do not conditionalize the following enum with #ifndef U_HIDE_DEPRECATED_API,
+// it is needed for layout of Normalizer object.
 /**
  * Constants for normalization modes.
  * @deprecated ICU 56 Use unorm2.h instead.
  */
 typedef enum {
   /** No decomposition/composition. @deprecated ICU 56 Use unorm2.h instead. */
-  UNORM_NONE = 1, 
+  UNORM_NONE = 1,
   /** Canonical decomposition. @deprecated ICU 56 Use unorm2.h instead. */
   UNORM_NFD = 2,
   /** Compatibility decomposition. @deprecated ICU 56 Use unorm2.h instead. */
@@ -144,7 +145,7 @@ typedef enum {
   /** Canonical decomposition followed by canonical composition. @deprecated ICU 56 Use unorm2.h instead. */
   UNORM_NFC = 4,
   /** Default normalization. @deprecated ICU 56 Use unorm2.h instead. */
-  UNORM_DEFAULT = UNORM_NFC, 
+  UNORM_DEFAULT = UNORM_NFC,
   /** Compatibility decomposition followed by canonical composition. @deprecated ICU 56 Use unorm2.h instead. */
   UNORM_NFKC =5,
   /** "Fast C or D" form. @deprecated ICU 56 Use unorm2.h instead. */
@@ -153,7 +154,8 @@ typedef enum {
   /** One more than the highest normalization mode constant. @deprecated ICU 56 Use unorm2.h instead. */
   UNORM_MODE_COUNT
 } UNormalizationMode;
-#endif  /* U_HIDE_DEPRECATED_API */
+
+#ifndef U_HIDE_DEPRECATED_API
 
 /**
  * Constants for options flags for normalization.
@@ -197,7 +199,7 @@ enum {
  *
  * @param source The string to normalize.
  * @param sourceLength The length of source, or -1 if NUL-terminated.
- * @param mode The normalization mode; one of UNORM_NONE, 
+ * @param mode The normalization mode; one of UNORM_NONE,
  *             UNORM_NFD, UNORM_NFC, UNORM_NFKC, UNORM_NFKD, UNORM_DEFAULT.
  * @param options The normalization options, ORed together (0 for no options).
  * @param result A pointer to a buffer to receive the result string.
@@ -208,21 +210,21 @@ enum {
  *         the output was truncated, and the error code is set to U_BUFFER_OVERFLOW_ERROR.
  * @deprecated ICU 56 Use unorm2.h instead.
  */
-U_STABLE int32_t U_EXPORT2 
+U_STABLE int32_t U_EXPORT2
 unorm_normalize(const UChar *source, int32_t sourceLength,
                 UNormalizationMode mode, int32_t options,
                 UChar *result, int32_t resultLength,
                 UErrorCode *status);
 
 /**
- * Performing quick check on a string, to quickly determine if the string is 
+ * Performing quick check on a string, to quickly determine if the string is
  * in a particular normalization format.
  * Three types of result can be returned UNORM_YES, UNORM_NO or
  * UNORM_MAYBE. Result UNORM_YES indicates that the argument
  * string is in the desired normalized format, UNORM_NO determines that
- * argument string is not in the desired normalized format. A 
- * UNORM_MAYBE result indicates that a more thorough check is required, 
- * the user may have to put the string in its normalized form and compare the 
+ * argument string is not in the desired normalized format. A
+ * UNORM_MAYBE result indicates that a more thorough check is required,
+ * the user may have to put the string in its normalized form and compare the
  * results.
  *
  * @param source       string for determining if it is in a normalized format
@@ -256,7 +258,7 @@ unorm_quickCheck(const UChar *source, int32_t sourcelength,
  * @deprecated ICU 56 Use unorm2.h instead.
  */
 U_STABLE UNormalizationCheckResult U_EXPORT2
-unorm_quickCheckWithOptions(const UChar *src, int32_t srcLength, 
+unorm_quickCheckWithOptions(const UChar *src, int32_t srcLength,
                             UNormalizationMode mode, int32_t options,
                             UErrorCode *pErrorCode);
 

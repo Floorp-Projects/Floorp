@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2013-2014, International Business Machines
+*   Copyright (C) 2013-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -15,7 +17,7 @@
 */
 
 #include "unicode/listformatter.h"
-#include "simplepatternformatter.h"
+#include "unicode/simpleformatter.h"
 #include "mutex.h"
 #include "hash.h"
 #include "cstring.h"
@@ -27,26 +29,27 @@
 U_NAMESPACE_BEGIN
 
 struct ListFormatInternal : public UMemory {
-    SimplePatternFormatter twoPattern;
-    SimplePatternFormatter startPattern;
-    SimplePatternFormatter middlePattern;
-    SimplePatternFormatter endPattern;
+    SimpleFormatter twoPattern;
+    SimpleFormatter startPattern;
+    SimpleFormatter middlePattern;
+    SimpleFormatter endPattern;
 
 ListFormatInternal(
         const UnicodeString& two,
         const UnicodeString& start,
         const UnicodeString& middle,
-        const UnicodeString& end) :
-        twoPattern(two),
-        startPattern(start),
-        middlePattern(middle),
-        endPattern(end) {}
+        const UnicodeString& end,
+        UErrorCode &errorCode) :
+        twoPattern(two, 2, 2, errorCode),
+        startPattern(start, 2, 2, errorCode),
+        middlePattern(middle, 2, 2, errorCode),
+        endPattern(end, 2, 2, errorCode) {}
 
-ListFormatInternal(const ListFormatData &data) :
-        twoPattern(data.twoPattern),
-        startPattern(data.startPattern),
-        middlePattern(data.middlePattern),
-        endPattern(data.endPattern) { }
+ListFormatInternal(const ListFormatData &data, UErrorCode &errorCode) :
+        twoPattern(data.twoPattern, errorCode),
+        startPattern(data.startPattern, errorCode),
+        middlePattern(data.middlePattern, errorCode),
+        endPattern(data.endPattern, errorCode) { }
 
 ListFormatInternal(const ListFormatInternal &other) :
     twoPattern(other.twoPattern),
@@ -191,9 +194,13 @@ static ListFormatInternal* loadListFormatInternal(
     if (U_FAILURE(errorCode)) {
         return NULL;
     }
-    ListFormatInternal* result = new ListFormatInternal(two, start, middle, end);
+    ListFormatInternal* result = new ListFormatInternal(two, start, middle, end, errorCode);
     if (result == NULL) {
         errorCode = U_MEMORY_ALLOCATION_ERROR;
+        return NULL;
+    }
+    if (U_FAILURE(errorCode)) {
+        delete result;
         return NULL;
     }
     return result;
@@ -231,8 +238,8 @@ ListFormatter* ListFormatter::createInstance(const Locale& locale, const char *s
     return p;
 }
 
-ListFormatter::ListFormatter(const ListFormatData& listFormatData) {
-    owned = new ListFormatInternal(listFormatData);
+ListFormatter::ListFormatter(const ListFormatData& listFormatData, UErrorCode &errorCode) {
+    owned = new ListFormatInternal(listFormatData, errorCode);
     data = owned;
 }
 
@@ -252,7 +259,7 @@ ListFormatter::~ListFormatter() {
  * according to pat. Any previous value of result gets replaced.
  */
 static void joinStringsAndReplace(
-        const SimplePatternFormatter& pat,
+        const SimpleFormatter& pat,
         const UnicodeString& first,
         const UnicodeString& second,
         UnicodeString &result,

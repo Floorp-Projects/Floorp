@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/es_CL.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 es_CL{
     %%Parent{"es_419"}
     NumberElements{
@@ -18,8 +12,9 @@ es_CL{
                 group{"."}
             }
         }
+        minimumGroupingDigits{"2"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.27.99"}
     calendar{
         generic{
             DateTimePatterns{
@@ -90,6 +85,14 @@ es_CL{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "a. m.",
+                "p. m.",
+            }
+            AmPmMarkersAbbr{
+                "a. m.",
+                "p. m.",
+            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -106,6 +109,7 @@ es_CL{
                 "{1} {0}",
             }
             availableFormats{
+                GyMMMd{"d MMM y G"}
                 MEd{"E, dd-MM"}
                 Md{"dd-MM"}
                 yM{"MM-y"}
@@ -125,21 +129,23 @@ es_CL{
                     }
                 }
             }
+            dayPeriod{
+                stand-alone{
+                    abbreviated{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
+                    narrow{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
+                    wide{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
+                }
+            }
             intervalFormats{
-                H{
-                    H{"H–H"}
-                }
-                Hm{
-                    H{"H:mm–H:mm"}
-                    m{"H:mm–H:mm"}
-                }
-                Hmv{
-                    H{"H:mm–H:mm v"}
-                    m{"H:mm–H:mm v"}
-                }
-                Hv{
-                    H{"H–H v"}
-                }
                 MEd{
                     M{"E dd-MM – E dd-MM"}
                     d{"E dd-MM – E dd-MM"}
@@ -214,6 +220,11 @@ es_CL{
                     }
                 }
             }
+        }
+    }
+    fields{
+        dayperiod{
+            dn{"a. m./p. m."}
         }
     }
 }

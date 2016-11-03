@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
-* Copyright (C) 2014, International Business Machines
+* Copyright (C) 2014-2016, International Business Machines
 * Corporation and others.  All Rights Reserved.
 *******************************************************************************
 * dictionarydata.h
@@ -45,13 +47,13 @@ int32_t UCharsDictionaryMatcher::matches(UText *text, int32_t maxLength, int32_t
                             int32_t *prefix) const {
 
     UCharsTrie uct(characters);
-    int32_t startingTextIndex = utext_getNativeIndex(text);
+    int32_t startingTextIndex = (int32_t)utext_getNativeIndex(text);
     int32_t wordCount = 0;
     int32_t codePointsMatched = 0;
 
     for (UChar32 c = utext_next32(text); c >= 0; c=utext_next32(text)) {
         UStringTrieResult result = (codePointsMatched == 0) ? uct.first(c) : uct.next(c);
-        int32_t lengthMatched = utext_getNativeIndex(text) - startingTextIndex;
+        int32_t lengthMatched = (int32_t)utext_getNativeIndex(text) - startingTextIndex;
         codePointsMatched += 1;
         if (USTRINGTRIE_HAS_VALUE(result)) {
             if (wordCount < limit) {
@@ -112,13 +114,13 @@ int32_t BytesDictionaryMatcher::matches(UText *text, int32_t maxLength, int32_t 
                             int32_t *lengths, int32_t *cpLengths, int32_t *values,
                             int32_t *prefix) const {
     BytesTrie bt(characters);
-    int32_t startingTextIndex = utext_getNativeIndex(text);
+    int32_t startingTextIndex = (int32_t)utext_getNativeIndex(text);
     int32_t wordCount = 0;
     int32_t codePointsMatched = 0;
 
     for (UChar32 c = utext_next32(text); c >= 0; c=utext_next32(text)) {
         UStringTrieResult result = (codePointsMatched == 0) ? bt.first(transform(c)) : bt.next(transform(c));
-        int32_t lengthMatched = utext_getNativeIndex(text) - startingTextIndex;
+        int32_t lengthMatched = (int32_t)utext_getNativeIndex(text) - startingTextIndex;
         codePointsMatched += 1;
         if (USTRINGTRIE_HAS_VALUE(result)) {
             if (wordCount < limit) {

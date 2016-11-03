@@ -1,5 +1,5 @@
-# *   Copyright (C) 1998-2015, International Business Machines
-# *   Corporation and others.  All Rights Reserved.
+# © 2016 and later: Unicode, Inc. and others.
+# License & terms of use: http://www.unicode.org/copyright.html#License
 COLLATION_CLDR_VERSION = %version%
 # A list of txt's to build
 # Note:
@@ -66,7 +66,7 @@ COLLATION_SOURCE = $(COLLATION_EMPTY_SOURCE) af.txt am.txt ar.txt\
  ru.txt se.txt si.txt sk.txt sl.txt\
  smn.txt sq.txt sr.txt sr_Latn.txt sv.txt\
  sw.txt ta.txt te.txt th.txt to.txt\
- tr.txt ug.txt uk.txt ur.txt vi.txt\
- wae.txt yi.txt yo.txt zh.txt zh_Hant.txt\
- zu.txt
+ tr.txt ug.txt uk.txt ur.txt uz.txt\
+ vi.txt wae.txt yi.txt yo.txt zh.txt\
+ zh_Hant.txt zu.txt
 

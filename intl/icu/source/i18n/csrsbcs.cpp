@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
  **********************************************************************
- *   Copyright (C) 2005-2015, International Business Machines
+ *   Copyright (C) 2005-2016, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  **********************************************************************
  */
@@ -15,7 +17,6 @@
 
 #define N_GRAM_SIZE 3
 #define N_GRAM_MASK 0xFFFFFF
-#define ARRAY_SIZE(array) (sizeof array / sizeof array[0])
 
 U_NAMESPACE_BEGIN
 
@@ -892,7 +893,7 @@ UBool CharsetRecog_8859_1::match(InputText *textIn, CharsetMatch *results) const
     const char *name = textIn->fC1Bytes? "windows-1252" : "ISO-8859-1";
     uint32_t i;
     int32_t bestConfidenceSoFar = -1;
-    for (i=0; i < ARRAY_SIZE(ngrams_8859_1) ; i++) {
+    for (i=0; i < UPRV_LENGTHOF(ngrams_8859_1) ; i++) {
         const int32_t *ngrams = ngrams_8859_1[i].ngrams;
         const char    *lang   = ngrams_8859_1[i].lang;
         int32_t confidence = match_sbcs(textIn, ngrams, charMap_8859_1);
@@ -919,7 +920,7 @@ UBool CharsetRecog_8859_2::match(InputText *textIn, CharsetMatch *results) const
     const char *name = textIn->fC1Bytes? "windows-1250" : "ISO-8859-2";
     uint32_t i;
     int32_t bestConfidenceSoFar = -1;
-    for (i=0; i < ARRAY_SIZE(ngrams_8859_2) ; i++) {
+    for (i=0; i < UPRV_LENGTHOF(ngrams_8859_2) ; i++) {
         const int32_t *ngrams = ngrams_8859_2[i].ngrams;
         const char    *lang   = ngrams_8859_2[i].lang;
         int32_t confidence = match_sbcs(textIn, ngrams, charMap_8859_2);
