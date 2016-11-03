@@ -185,7 +185,6 @@ add_task(function* testPanelStatus() {
 });
 
 add_task(function* testActions() {
-  let listComponent = {};
   let windowMock = {
     openUILink() {},
   };

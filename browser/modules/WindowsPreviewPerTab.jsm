@@ -471,7 +471,7 @@ TabWindow.prototype = {
     // Because making a tab visible requires that the tab it is next to be
     // visible, it is far simpler to unset the 'next' tab and recreate them all
     // at once.
-    for (let [tab, preview] of this.previews) {
+    for (let [, preview] of this.previews) {
       preview.move(null);
       preview.visible = enable;
     }
@@ -835,7 +835,7 @@ this.AeroPeek = {
   onPageChanged(uri, changedConst, newValue) {
     if (this.enabled && changedConst == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON) {
       for (let win of this.windows) {
-        for (let [tab, preview] of win.previews) {
+        for (let [tab, ] of win.previews) {
           if (tab.getAttribute("image") == newValue) {
             win.onLinkIconAvailable(tab.linkedBrowser, newValue);
           }

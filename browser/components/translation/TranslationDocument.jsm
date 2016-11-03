@@ -503,7 +503,6 @@ function swapTextForItem(item, target) {
   // visitStack is the stack of items that we still need to visit.
   // Let's start the process by adding the root item.
   let visitStack = [ item ];
-  let source = target == "translation" ? "original" : "translation";
 
   while (visitStack.length > 0) {
     let curItem = visitStack.shift();

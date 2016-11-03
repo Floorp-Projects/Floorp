@@ -218,7 +218,8 @@ add_task(function* test_show_original() {
 });
 
 add_task(function* test_language_change() {
-  for (let i of Array(4)) {
+  // This is run 4 times, the total additions are checked afterwards.
+  for (let i of Array(4)) { // eslint-disable-line no-unused-vars
     let tab = yield offerTranslationFor("<h1>Hallo Welt!</h1>", "fr");
     let browser = tab.linkedBrowser;
     // In the offer state, translation is executed by the Translate button,

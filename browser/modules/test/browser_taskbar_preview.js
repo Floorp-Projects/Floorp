@@ -97,8 +97,4 @@ function test() {
   function checkSelectedTab() {
     return getPreviewForTab(gBrowser.selectedTab).active;
   }
-
-  function isTabSelected(idx) {
-    return gBrowser.tabs[idx].selected;
-  }
 }

@@ -180,7 +180,6 @@ this.UITour = {
     ["searchPrefsLink", {
       query: (aDocument) => {
         let element = null;
-        let searchbar = aDocument.getElementById("searchbar");
         let popup = aDocument.getElementById("PopupSearchAutoComplete");
         if (popup.state != "open")
           return null;
@@ -1832,7 +1831,7 @@ this.UITour = {
         } else if (AppConstants.platform == "linux") {
           // The ShellService may not exist on some versions of Linux.
           try {
-            let shell = aWindow.getShellService();
+            aWindow.getShellService();
           } catch (e) {
             canSetDefaultBrowserInBackground = null;
           }
