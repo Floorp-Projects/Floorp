@@ -212,21 +212,21 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports.ArrowKeyStepper = exports["default"] = void 0;
+        }), exports.ArrowKeyStepper = exports.default = void 0;
         var _ArrowKeyStepper2 = __webpack_require__(2), _ArrowKeyStepper3 = _interopRequireDefault(_ArrowKeyStepper2);
-        exports["default"] = _ArrowKeyStepper3["default"], exports.ArrowKeyStepper = _ArrowKeyStepper3["default"];
+        exports.default = _ArrowKeyStepper3.default, exports.ArrowKeyStepper = _ArrowKeyStepper3.default;
     }, /* 2 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
@@ -234,9 +234,9 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         });
         var _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _react = __webpack_require__(89), _react2 = _interopRequireDefault(_react), _reactAddonsShallowCompare = __webpack_require__(90), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), ArrowKeyStepper = function(_Component) {
             function ArrowKeyStepper(props, context) {
-                (0, _classCallCheck3["default"])(this, ArrowKeyStepper);
-                var _this = (0, _possibleConstructorReturn3["default"])(this, (ArrowKeyStepper.__proto__ || (0,
-                _getPrototypeOf2["default"])(ArrowKeyStepper)).call(this, props, context));
+                (0, _classCallCheck3.default)(this, ArrowKeyStepper);
+                var _this = (0, _possibleConstructorReturn3.default)(this, (ArrowKeyStepper.__proto__ || (0,
+                _getPrototypeOf2.default)(ArrowKeyStepper)).call(this, props, context));
                 return _this.state = {
                     scrollToColumn: 0,
                     scrollToRow: 0
@@ -244,11 +244,11 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 _this._rowStopIndex = 0, _this._onKeyDown = _this._onKeyDown.bind(_this), _this._onSectionRendered = _this._onSectionRendered.bind(_this),
                 _this;
             }
-            return (0, _inherits3["default"])(ArrowKeyStepper, _Component), (0, _createClass3["default"])(ArrowKeyStepper, [ {
+            return (0, _inherits3.default)(ArrowKeyStepper, _Component), (0, _createClass3.default)(ArrowKeyStepper, [ {
                 key: "render",
                 value: function() {
                     var _props = this.props, className = _props.className, children = _props.children, _state = this.state, scrollToColumn = _state.scrollToColumn, scrollToRow = _state.scrollToRow;
-                    return _react2["default"].createElement("div", {
+                    return _react2.default.createElement("div", {
                         className: className,
                         onKeyDown: this._onKeyDown
                     }, children({
@@ -260,7 +260,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "shouldComponentUpdate",
                 value: function(nextProps, nextState) {
-                    return (0, _reactAddonsShallowCompare2["default"])(this, nextProps, nextState);
+                    return (0, _reactAddonsShallowCompare2.default)(this, nextProps, nextState);
                 }
             }, {
                 key: "_onKeyDown",
@@ -300,17 +300,12 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), ArrowKeyStepper;
         }(_react.Component);
-        ArrowKeyStepper.propTypes = {
-            children: _react.PropTypes.func.isRequired,
-            className: _react.PropTypes.string,
-            columnCount: _react.PropTypes.number.isRequired,
-            rowCount: _react.PropTypes.number.isRequired
-        }, exports["default"] = ArrowKeyStepper;
+        exports.default = ArrowKeyStepper;
     }, /* 3 */
     /***/
     function(module, exports, __webpack_require__) {
         module.exports = {
-            "default": __webpack_require__(4),
+            default: __webpack_require__(4),
             __esModule: !0
         };
     }, /* 4 */
@@ -548,7 +543,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
     function(module, exports, __webpack_require__) {
         var isObject = __webpack_require__(22), document = __webpack_require__(12).document, is = isObject(document) && isObject(document.createElement);
         module.exports = function(it) {
-            return is ? document.createElementNS("http://www.w3.org/1999/xhtml", it) : {};
+            return is ? document.createElementNS("http://www.w3.org/1999/xhtml",it) : {};
         };
     }, /* 27 */
     /***/
@@ -580,7 +575,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
     /***/
     function(module, exports) {
         "use strict";
-        exports.__esModule = !0, exports["default"] = function(instance, Constructor) {
+        exports.__esModule = !0, exports.default = function(instance, Constructor) {
             if (!(instance instanceof Constructor)) throw new TypeError("Cannot call a class as a function");
         };
     }, /* 30 */
@@ -589,17 +584,17 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         exports.__esModule = !0;
         var _defineProperty = __webpack_require__(31), _defineProperty2 = _interopRequireDefault(_defineProperty);
-        exports["default"] = function() {
+        exports.default = function() {
             function defineProperties(target, props) {
                 for (var i = 0; i < props.length; i++) {
                     var descriptor = props[i];
                     descriptor.enumerable = descriptor.enumerable || !1, descriptor.configurable = !0,
-                    "value" in descriptor && (descriptor.writable = !0), (0, _defineProperty2["default"])(target, descriptor.key, descriptor);
+                    "value" in descriptor && (descriptor.writable = !0), (0, _defineProperty2.default)(target, descriptor.key, descriptor);
                 }
             }
             return function(Constructor, protoProps, staticProps) {
@@ -611,7 +606,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
     /***/
     function(module, exports, __webpack_require__) {
         module.exports = {
-            "default": __webpack_require__(32),
+            default: __webpack_require__(32),
             __esModule: !0
         };
     }, /* 32 */
@@ -636,14 +631,14 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         exports.__esModule = !0;
         var _typeof2 = __webpack_require__(35), _typeof3 = _interopRequireDefault(_typeof2);
-        exports["default"] = function(self, call) {
+        exports.default = function(self, call) {
             if (!self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-            return !call || "object" !== ("undefined" == typeof call ? "undefined" : (0, _typeof3["default"])(call)) && "function" != typeof call ? self : call;
+            return !call || "object" !== ("undefined" == typeof call ? "undefined" : (0, _typeof3.default)(call)) && "function" != typeof call ? self : call;
         };
     }, /* 35 */
     /***/
@@ -651,25 +646,25 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         exports.__esModule = !0;
-        var _iterator = __webpack_require__(36), _iterator2 = _interopRequireDefault(_iterator), _symbol = __webpack_require__(65), _symbol2 = _interopRequireDefault(_symbol), _typeof = "function" == typeof _symbol2["default"] && "symbol" == typeof _iterator2["default"] ? function(obj) {
+        var _iterator = __webpack_require__(36), _iterator2 = _interopRequireDefault(_iterator), _symbol = __webpack_require__(65), _symbol2 = _interopRequireDefault(_symbol), _typeof = "function" == typeof _symbol2.default && "symbol" == typeof _iterator2.default ? function(obj) {
             return typeof obj;
         } : function(obj) {
-            return obj && "function" == typeof _symbol2["default"] && obj.constructor === _symbol2["default"] ? "symbol" : typeof obj;
+            return obj && "function" == typeof _symbol2.default && obj.constructor === _symbol2.default && obj !== _symbol2.default.prototype ? "symbol" : typeof obj;
         };
-        exports["default"] = "function" == typeof _symbol2["default"] && "symbol" === _typeof(_iterator2["default"]) ? function(obj) {
+        exports.default = "function" == typeof _symbol2.default && "symbol" === _typeof(_iterator2.default) ? function(obj) {
             return "undefined" == typeof obj ? "undefined" : _typeof(obj);
         } : function(obj) {
-            return obj && "function" == typeof _symbol2["default"] && obj.constructor === _symbol2["default"] ? "symbol" : "undefined" == typeof obj ? "undefined" : _typeof(obj);
+            return obj && "function" == typeof _symbol2.default && obj.constructor === _symbol2.default && obj !== _symbol2.default.prototype ? "symbol" : "undefined" == typeof obj ? "undefined" : _typeof(obj);
         };
     }, /* 36 */
     /***/
     function(module, exports, __webpack_require__) {
         module.exports = {
-            "default": __webpack_require__(37),
+            default: __webpack_require__(37),
             __esModule: !0
         };
     }, /* 37 */
@@ -961,7 +956,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
     /***/
     function(module, exports, __webpack_require__) {
         module.exports = {
-            "default": __webpack_require__(66),
+            default: __webpack_require__(66),
             __esModule: !0
         };
     }, /* 66 */
@@ -1046,7 +1041,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         for (var symbols = $keys(wks.store), i = 0; symbols.length > i; ) wksDefine(symbols[i++]);
         $export($export.S + $export.F * !USE_NATIVE, "Symbol", {
             // 19.4.2.1 Symbol.for(key)
-            "for": function(key) {
+            for: function(key) {
                 return has(SymbolRegistry, key += "") ? SymbolRegistry[key] : SymbolRegistry[key] = $Symbol(key);
             },
             // 19.4.2.5 Symbol.keyFor(sym)
@@ -1237,28 +1232,28 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         exports.__esModule = !0;
         var _setPrototypeOf = __webpack_require__(82), _setPrototypeOf2 = _interopRequireDefault(_setPrototypeOf), _create = __webpack_require__(86), _create2 = _interopRequireDefault(_create), _typeof2 = __webpack_require__(35), _typeof3 = _interopRequireDefault(_typeof2);
-        exports["default"] = function(subClass, superClass) {
+        exports.default = function(subClass, superClass) {
             if ("function" != typeof superClass && null !== superClass) throw new TypeError("Super expression must either be null or a function, not " + ("undefined" == typeof superClass ? "undefined" : (0,
-            _typeof3["default"])(superClass)));
-            subClass.prototype = (0, _create2["default"])(superClass && superClass.prototype, {
+            _typeof3.default)(superClass)));
+            subClass.prototype = (0, _create2.default)(superClass && superClass.prototype, {
                 constructor: {
                     value: subClass,
                     enumerable: !1,
                     writable: !0,
                     configurable: !0
                 }
-            }), superClass && (_setPrototypeOf2["default"] ? (0, _setPrototypeOf2["default"])(subClass, superClass) : subClass.__proto__ = superClass);
+            }), superClass && (_setPrototypeOf2.default ? (0, _setPrototypeOf2.default)(subClass, superClass) : subClass.__proto__ = superClass);
         };
     }, /* 82 */
     /***/
     function(module, exports, __webpack_require__) {
         module.exports = {
-            "default": __webpack_require__(83),
+            default: __webpack_require__(83),
             __esModule: !0
         };
     }, /* 83 */
@@ -1300,7 +1295,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
     /***/
     function(module, exports, __webpack_require__) {
         module.exports = {
-            "default": __webpack_require__(87),
+            default: __webpack_require__(87),
             __esModule: !0
         };
     }, /* 87 */
@@ -1333,41 +1328,41 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports.AutoSizer = exports["default"] = void 0;
+        }), exports.AutoSizer = exports.default = void 0;
         var _AutoSizer2 = __webpack_require__(92), _AutoSizer3 = _interopRequireDefault(_AutoSizer2);
-        exports["default"] = _AutoSizer3["default"], exports.AutoSizer = _AutoSizer3["default"];
+        exports.default = _AutoSizer3.default, exports.AutoSizer = _AutoSizer3.default;
     }, /* 92 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
         });
-        var _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _react = __webpack_require__(89), _react2 = _interopRequireDefault(_react), _reactAddonsShallowCompare = __webpack_require__(90), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), AutoSizer = function(_Component) {
+        var _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _react = __webpack_require__(89), _react2 = _interopRequireDefault(_react), _reactAddonsShallowCompare = __webpack_require__(90), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), _detectElementResize = __webpack_require__(93), _detectElementResize2 = _interopRequireDefault(_detectElementResize), AutoSizer = function(_Component) {
             function AutoSizer(props) {
-                (0, _classCallCheck3["default"])(this, AutoSizer);
-                var _this = (0, _possibleConstructorReturn3["default"])(this, (AutoSizer.__proto__ || (0,
-                _getPrototypeOf2["default"])(AutoSizer)).call(this, props));
+                (0, _classCallCheck3.default)(this, AutoSizer);
+                var _this = (0, _possibleConstructorReturn3.default)(this, (AutoSizer.__proto__ || (0,
+                _getPrototypeOf2.default)(AutoSizer)).call(this, props));
                 return _this.state = {
                     height: 0,
                     width: 0
                 }, _this._onResize = _this._onResize.bind(_this), _this._setRef = _this._setRef.bind(_this),
                 _this;
             }
-            return (0, _inherits3["default"])(AutoSizer, _Component), (0, _createClass3["default"])(AutoSizer, [ {
+            return (0, _inherits3.default)(AutoSizer, _Component), (0, _createClass3.default)(AutoSizer, [ {
                 key: "componentDidMount",
                 value: function() {
-                    this._parentNode = this._autoSizer.parentNode, this._detectElementResize = __webpack_require__(93),
+                    this._parentNode = this._autoSizer.parentNode, this._detectElementResize = (0, _detectElementResize2.default)(),
                     this._detectElementResize.addResizeListener(this._parentNode, this._onResize), this._onResize();
                 }
             }, {
@@ -1382,7 +1377,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                         overflow: "visible"
                     };
                     return disableHeight || (outerStyle.height = 0), disableWidth || (outerStyle.width = 0),
-                    _react2["default"].createElement("div", {
+                    _react2.default.createElement("div", {
                         ref: this._setRef,
                         style: outerStyle
                     }, children({
@@ -1393,12 +1388,12 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "shouldComponentUpdate",
                 value: function(nextProps, nextState) {
-                    return (0, _reactAddonsShallowCompare2["default"])(this, nextProps, nextState);
+                    return (0, _reactAddonsShallowCompare2.default)(this, nextProps, nextState);
                 }
             }, {
                 key: "_onResize",
                 value: function() {
-                    var onResize = this.props.onResize, boundingRect = this._parentNode.getBoundingClientRect(), height = boundingRect.height || 0, width = boundingRect.width || 0, style = getComputedStyle(this._parentNode), paddingLeft = parseInt(style.paddingLeft, 10) || 0, paddingRight = parseInt(style.paddingRight, 10) || 0, paddingTop = parseInt(style.paddingTop, 10) || 0, paddingBottom = parseInt(style.paddingBottom, 10) || 0;
+                    var onResize = this.props.onResize, boundingRect = this._parentNode.getBoundingClientRect(), height = boundingRect.height || 0, width = boundingRect.width || 0, style = window.getComputedStyle(this._parentNode), paddingLeft = parseInt(style.paddingLeft, 10) || 0, paddingRight = parseInt(style.paddingRight, 10) || 0, paddingTop = parseInt(style.paddingTop, 10) || 0, paddingBottom = parseInt(style.paddingBottom, 10) || 0;
                     this.setState({
                         height: height - paddingTop - paddingBottom,
                         width: width - paddingLeft - paddingRight
@@ -1414,120 +1409,123 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), AutoSizer;
         }(_react.Component);
-        AutoSizer.propTypes = {
-            children: _react.PropTypes.func.isRequired,
-            disableHeight: _react.PropTypes.bool,
-            disableWidth: _react.PropTypes.bool,
-            onResize: _react.PropTypes.func.isRequired
-        }, AutoSizer.defaultProps = {
+        AutoSizer.defaultProps = {
             onResize: function() {}
-        }, exports["default"] = AutoSizer;
+        }, exports.default = AutoSizer;
     }, /* 93 */
     /***/
     function(module, exports) {
         "use strict";
-        var _window;
-        _window = "undefined" != typeof window ? window : "undefined" != typeof self ? self : void 0;
-        var attachEvent = "undefined" != typeof document && document.attachEvent, stylesCreated = !1;
-        if (!attachEvent) {
-            var requestFrame = function() {
-                var raf = _window.requestAnimationFrame || _window.mozRequestAnimationFrame || _window.webkitRequestAnimationFrame || function(fn) {
-                    return _window.setTimeout(fn, 20);
-                };
-                return function(fn) {
-                    return raf(fn);
-                };
-            }(), cancelFrame = function() {
-                var cancel = _window.cancelAnimationFrame || _window.mozCancelAnimationFrame || _window.webkitCancelAnimationFrame || _window.clearTimeout;
-                return function(id) {
-                    return cancel(id);
-                };
-            }(), resetTriggers = function(element) {
-                var triggers = element.__resizeTriggers__, expand = triggers.firstElementChild, contract = triggers.lastElementChild, expandChild = expand.firstElementChild;
-                contract.scrollLeft = contract.scrollWidth, contract.scrollTop = contract.scrollHeight,
-                expandChild.style.width = expand.offsetWidth + 1 + "px", expandChild.style.height = expand.offsetHeight + 1 + "px",
-                expand.scrollLeft = expand.scrollWidth, expand.scrollTop = expand.scrollHeight;
-            }, checkTriggers = function(element) {
-                return element.offsetWidth != element.__resizeLast__.width || element.offsetHeight != element.__resizeLast__.height;
-            }, scrollListener = function(e) {
-                if (!(e.target.className.indexOf("contract-trigger") < 0 && e.target.className.indexOf("expand-trigger") < 0)) {
-                    var element = this;
-                    resetTriggers(this), this.__resizeRAF__ && cancelFrame(this.__resizeRAF__), this.__resizeRAF__ = requestFrame(function() {
-                        checkTriggers(element) && (element.__resizeLast__.width = element.offsetWidth, element.__resizeLast__.height = element.offsetHeight,
-                        element.__resizeListeners__.forEach(function(fn) {
-                            fn.call(element, e);
-                        }));
-                    });
+        function createDetectElementResize() {
+            var _window;
+            _window = "undefined" != typeof window ? window : "undefined" != typeof self ? self : this;
+            var attachEvent = "undefined" != typeof document && document.attachEvent, stylesCreated = !1;
+            if (!attachEvent) {
+                var requestFrame = function() {
+                    var raf = _window.requestAnimationFrame || _window.mozRequestAnimationFrame || _window.webkitRequestAnimationFrame || function(fn) {
+                        return _window.setTimeout(fn, 20);
+                    };
+                    return function(fn) {
+                        return raf(fn);
+                    };
+                }(), cancelFrame = function() {
+                    var cancel = _window.cancelAnimationFrame || _window.mozCancelAnimationFrame || _window.webkitCancelAnimationFrame || _window.clearTimeout;
+                    return function(id) {
+                        return cancel(id);
+                    };
+                }(), resetTriggers = function(element) {
+                    var triggers = element.__resizeTriggers__, expand = triggers.firstElementChild, contract = triggers.lastElementChild, expandChild = expand.firstElementChild;
+                    contract.scrollLeft = contract.scrollWidth, contract.scrollTop = contract.scrollHeight,
+                    expandChild.style.width = expand.offsetWidth + 1 + "px", expandChild.style.height = expand.offsetHeight + 1 + "px",
+                    expand.scrollLeft = expand.scrollWidth, expand.scrollTop = expand.scrollHeight;
+                }, checkTriggers = function(element) {
+                    return element.offsetWidth != element.__resizeLast__.width || element.offsetHeight != element.__resizeLast__.height;
+                }, scrollListener = function(e) {
+                    if (!(e.target.className.indexOf("contract-trigger") < 0 && e.target.className.indexOf("expand-trigger") < 0)) {
+                        var element = this;
+                        resetTriggers(this), this.__resizeRAF__ && cancelFrame(this.__resizeRAF__), this.__resizeRAF__ = requestFrame(function() {
+                            checkTriggers(element) && (element.__resizeLast__.width = element.offsetWidth, element.__resizeLast__.height = element.offsetHeight,
+                            element.__resizeListeners__.forEach(function(fn) {
+                                fn.call(element, e);
+                            }));
+                        });
+                    }
+                }, animation = !1, animationstring = "animation", keyframeprefix = "", animationstartevent = "animationstart", domPrefixes = "Webkit Moz O ms".split(" "), startEvents = "webkitAnimationStart animationstart oAnimationStart MSAnimationStart".split(" "), pfx = "", elm = document.createElementNS("http://www.w3.org/1999/xhtml","fakeelement");
+                if (void 0 !== elm.style.animationName && (animation = !0), animation === !1) for (var i = 0; i < domPrefixes.length; i++) if (void 0 !== elm.style[domPrefixes[i] + "AnimationName"]) {
+                    pfx = domPrefixes[i], animationstring = pfx + "Animation", keyframeprefix = "-" + pfx.toLowerCase() + "-",
+                    animationstartevent = startEvents[i], animation = !0;
+                    break;
                 }
-            }, animation = !1, animationstring = "animation", keyframeprefix = "", animationstartevent = "animationstart", domPrefixes = "Webkit Moz O ms".split(" "), startEvents = "webkitAnimationStart animationstart oAnimationStart MSAnimationStart".split(" "), pfx = "", elm = document.createElementNS("http://www.w3.org/1999/xhtml", "fakeelement");
-            if (void 0 !== elm.style.animationName && (animation = !0), animation === !1) for (var i = 0; i < domPrefixes.length; i++) if (void 0 !== elm.style[domPrefixes[i] + "AnimationName"]) {
-                pfx = domPrefixes[i], animationstring = pfx + "Animation", keyframeprefix = "-" + pfx.toLowerCase() + "-",
-                animationstartevent = startEvents[i], animation = !0;
-                break;
+                var animationName = "resizeanim", animationKeyframes = "@" + keyframeprefix + "keyframes " + animationName + " { from { opacity: 0; } to { opacity: 0; } } ", animationStyle = keyframeprefix + "animation: 1ms " + animationName + "; ";
             }
-            var animationName = "resizeanim", animationKeyframes = "@" + keyframeprefix + "keyframes " + animationName + " { from { opacity: 0; } to { opacity: 0; } } ", animationStyle = keyframeprefix + "animation: 1ms " + animationName + "; ";
+            var createStyles = function() {
+                if (!stylesCreated) {
+                    var css = (animationKeyframes ? animationKeyframes : "") + ".resize-triggers { " + (animationStyle ? animationStyle : "") + 'visibility: hidden; opacity: 0; } .resize-triggers, .resize-triggers > div, .contract-trigger:before { content: " "; display: block; position: absolute; top: 0; left: 0; height: 100%; width: 100%; overflow: hidden; z-index: -1; } .resize-triggers > div { background: #eee; overflow: auto; } .contract-trigger:before { width: 200%; height: 200%; }', head = document.firstElementChild || document.getElementsByTagName("head")[0], style = document.createElementNS("http://www.w3.org/1999/xhtml","style");
+                    style.type = "text/css", style.styleSheet ? style.styleSheet.cssText = css : style.appendChild(document.createTextNode(css)),
+                    head.appendChild(style), stylesCreated = !0;
+                }
+            }, addResizeListener = function(element, fn) {
+                attachEvent ? element.attachEvent("onresize", fn) : (element.__resizeTriggers__ || ("static" == _window.getComputedStyle(element).position && (element.style.position = "relative"),
+                createStyles(), element.__resizeLast__ = {}, element.__resizeListeners__ = [], (element.__resizeTriggers__ = document.createElementNS("http://www.w3.org/1999/xhtml","div")).className = "resize-triggers",
+                element.__resizeTriggers__.innerHTML = '<div class="expand-trigger"><div></div></div><div class="contract-trigger"></div>',
+                element.appendChild(element.__resizeTriggers__), resetTriggers(element), element.addEventListener("scroll", scrollListener, !0),
+                animationstartevent && (element.__resizeTriggers__.__animationListener__ = function(e) {
+                    e.animationName == animationName && resetTriggers(element);
+                }, element.__resizeTriggers__.addEventListener(animationstartevent, element.__resizeTriggers__.__animationListener__))),
+                element.__resizeListeners__.push(fn));
+            }, removeResizeListener = function(element, fn) {
+                attachEvent ? element.detachEvent("onresize", fn) : (element.__resizeListeners__.splice(element.__resizeListeners__.indexOf(fn), 1),
+                element.__resizeListeners__.length || (element.removeEventListener("scroll", scrollListener, !0),
+                element.__resizeTriggers__.__animationListener__ && (element.__resizeTriggers__.removeEventListener(animationstartevent, element.__resizeTriggers__.__animationListener__),
+                element.__resizeTriggers__.__animationListener__ = null), element.__resizeTriggers__ = !element.removeChild(element.__resizeTriggers__)));
+            };
+            return {
+                addResizeListener: addResizeListener,
+                removeResizeListener: removeResizeListener
+            };
         }
-        var createStyles = function() {
-            if (!stylesCreated) {
-                var css = (animationKeyframes ? animationKeyframes : "") + ".resize-triggers { " + (animationStyle ? animationStyle : "") + 'visibility: hidden; opacity: 0; } .resize-triggers, .resize-triggers > div, .contract-trigger:before { content: " "; display: block; position: absolute; top: 0; left: 0; height: 100%; width: 100%; overflow: hidden; z-index: -1; } .resize-triggers > div { background: #eee; overflow: auto; } .contract-trigger:before { width: 200%; height: 200%; }', head = document.firstElementChild || document.getElementsByTagName("head")[0], style = document.createElementNS("http://www.w3.org/1999/xhtml", "style");
-                style.type = "text/css", style.styleSheet ? style.styleSheet.cssText = css : style.appendChild(document.createTextNode(css)),
-                head.appendChild(style), stylesCreated = !0;
-            }
-        }, addResizeListener = function(element, fn) {
-            attachEvent ? element.attachEvent("onresize", fn) : (element.__resizeTriggers__ || ("static" == getComputedStyle(element).position && (element.style.position = "relative"),
-            createStyles(), element.__resizeLast__ = {}, element.__resizeListeners__ = [], (element.__resizeTriggers__ = document.createElementNS("http://www.w3.org/1999/xhtml", "div")).className = "resize-triggers",
-            element.__resizeTriggers__.innerHTML = '<div class="expand-trigger"><div></div></div><div class="contract-trigger"></div>',
-            element.appendChild(element.__resizeTriggers__), resetTriggers(element), element.addEventListener("scroll", scrollListener, !0),
-            animationstartevent && element.__resizeTriggers__.addEventListener(animationstartevent, function(e) {
-                e.animationName == animationName && resetTriggers(element);
-            })), element.__resizeListeners__.push(fn));
-        }, removeResizeListener = function(element, fn) {
-            attachEvent ? element.detachEvent("onresize", fn) : (element.__resizeListeners__.splice(element.__resizeListeners__.indexOf(fn), 1),
-            element.__resizeListeners__.length || (element.removeEventListener("scroll", scrollListener, !0),
-            element.__resizeTriggers__ = !element.removeChild(element.__resizeTriggers__)));
-        };
-        module.exports = {
-            addResizeListener: addResizeListener,
-            removeResizeListener: removeResizeListener
-        };
+        Object.defineProperty(exports, "__esModule", {
+            value: !0
+        }), exports.default = createDetectElementResize;
     }, /* 94 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports.defaultCellSizeCache = exports.CellMeasurer = exports["default"] = void 0;
+        }), exports.defaultCellSizeCache = exports.CellMeasurer = exports.default = void 0;
         var _CellMeasurer2 = __webpack_require__(95), _CellMeasurer3 = _interopRequireDefault(_CellMeasurer2), _defaultCellSizeCache2 = __webpack_require__(97), _defaultCellSizeCache3 = _interopRequireDefault(_defaultCellSizeCache2);
-        exports["default"] = _CellMeasurer3["default"], exports.CellMeasurer = _CellMeasurer3["default"],
-        exports.defaultCellSizeCache = _defaultCellSizeCache3["default"];
+        exports.default = _CellMeasurer3.default, exports.CellMeasurer = _CellMeasurer3.default,
+        exports.defaultCellSizeCache = _defaultCellSizeCache3.default;
     }, /* 95 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
         });
-        var _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _react = __webpack_require__(89), _react2 = _interopRequireDefault(_react), _reactAddonsShallowCompare = __webpack_require__(90), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), _reactDom = __webpack_require__(96), _reactDom2 = _interopRequireDefault(_reactDom), _defaultCellSizeCache = __webpack_require__(97), _defaultCellSizeCache2 = _interopRequireDefault(_defaultCellSizeCache), CellMeasurer = function(_Component) {
+        var _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _react = __webpack_require__(89), _reactAddonsShallowCompare = (_interopRequireDefault(_react),
+        __webpack_require__(90)), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), _reactDom = __webpack_require__(96), _reactDom2 = _interopRequireDefault(_reactDom), _defaultCellSizeCache = __webpack_require__(97), _defaultCellSizeCache2 = _interopRequireDefault(_defaultCellSizeCache), CellMeasurer = function(_Component) {
             function CellMeasurer(props, state) {
-                (0, _classCallCheck3["default"])(this, CellMeasurer);
-                var _this = (0, _possibleConstructorReturn3["default"])(this, (CellMeasurer.__proto__ || (0,
-                _getPrototypeOf2["default"])(CellMeasurer)).call(this, props, state));
-                return _this._cellSizeCache = props.cellSizeCache || new _defaultCellSizeCache2["default"](),
+                (0, _classCallCheck3.default)(this, CellMeasurer);
+                var _this = (0, _possibleConstructorReturn3.default)(this, (CellMeasurer.__proto__ || (0,
+                _getPrototypeOf2.default)(CellMeasurer)).call(this, props, state));
+                return _this._cellSizeCache = props.cellSizeCache || new _defaultCellSizeCache2.default(),
                 _this.getColumnWidth = _this.getColumnWidth.bind(_this), _this.getRowHeight = _this.getRowHeight.bind(_this),
                 _this.resetMeasurements = _this.resetMeasurements.bind(_this), _this.resetMeasurementForColumn = _this.resetMeasurementForColumn.bind(_this),
                 _this.resetMeasurementForRow = _this.resetMeasurementForRow.bind(_this), _this;
             }
-            return (0, _inherits3["default"])(CellMeasurer, _Component), (0, _createClass3["default"])(CellMeasurer, [ {
+            return (0, _inherits3.default)(CellMeasurer, _Component), (0, _createClass3.default)(CellMeasurer, [ {
                 key: "getColumnWidth",
                 value: function(_ref) {
                     var index = _ref.index;
@@ -1604,13 +1602,13 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "shouldComponentUpdate",
                 value: function(nextProps, nextState) {
-                    return (0, _reactAddonsShallowCompare2["default"])(this, nextProps, nextState);
+                    return (0, _reactAddonsShallowCompare2.default)(this, nextProps, nextState);
                 }
             }, {
                 key: "_getContainerNode",
                 value: function(props) {
                     var container = props.container;
-                    return container ? _reactDom2["default"].findDOMNode("function" == typeof container ? container() : container) : document.firstElementChild;
+                    return container ? _reactDom2.default.findDOMNode("function" == typeof container ? container() : container) : document.firstElementChild;
                 }
             }, {
                 key: "_measureCell",
@@ -1619,17 +1617,17 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                         columnIndex: columnIndex,
                         rowIndex: rowIndex
                     });
-                    this._renderAndMount(), _reactDom2["default"].unstable_renderSubtreeIntoContainer(this, rendered, this._div);
+                    this._renderAndMount(), _reactDom2.default.unstable_renderSubtreeIntoContainer(this, rendered, this._div);
                     var measurements = {
                         height: clientHeight && this._div.clientHeight,
                         width: clientWidth && this._div.clientWidth
                     };
-                    return _reactDom2["default"].unmountComponentAtNode(this._div), measurements;
+                    return _reactDom2.default.unmountComponentAtNode(this._div), measurements;
                 }
             }, {
                 key: "_renderAndMount",
                 value: function() {
-                    this._div || (this._div = document.createElementNS("http://www.w3.org/1999/xhtml", "div"), this._div.style.display = "inline-block",
+                    this._div || (this._div = document.createElementNS("http://www.w3.org/1999/xhtml","div"), this._div.style.display = "inline-block",
                     this._div.style.position = "absolute", this._div.style.visibility = "hidden", this._div.style.zIndex = -1,
                     this._updateDivDimensions(this.props), this._containerNode = this._getContainerNode(this.props),
                     this._containerNode.appendChild(this._div));
@@ -1648,16 +1646,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), CellMeasurer;
         }(_react.Component);
-        CellMeasurer.propTypes = {
-            cellRenderer: _react.PropTypes.func.isRequired,
-            cellSizeCache: _react.PropTypes.object,
-            children: _react.PropTypes.func.isRequired,
-            columnCount: _react.PropTypes.number.isRequired,
-            container: _react2["default"].PropTypes.oneOfType([ _react2["default"].PropTypes.func, _react2["default"].PropTypes.node ]),
-            height: _react.PropTypes.number,
-            rowCount: _react.PropTypes.number.isRequired,
-            width: _react.PropTypes.number
-        }, exports["default"] = CellMeasurer;
+        exports.default = CellMeasurer;
     }, /* 96 */
     /***/
     function(module, exports) {
@@ -1668,7 +1657,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
@@ -1676,11 +1665,11 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         });
         var _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), CellSizeCache = function() {
             function CellSizeCache() {
-                var _ref = arguments.length <= 0 || void 0 === arguments[0] ? {} : arguments[0], _ref$uniformRowHeight = _ref.uniformRowHeight, uniformRowHeight = void 0 !== _ref$uniformRowHeight && _ref$uniformRowHeight, _ref$uniformColumnWid = _ref.uniformColumnWidth, uniformColumnWidth = void 0 !== _ref$uniformColumnWid && _ref$uniformColumnWid;
-                (0, _classCallCheck3["default"])(this, CellSizeCache), this._uniformRowHeight = uniformRowHeight,
+                var _ref = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {}, _ref$uniformRowHeight = _ref.uniformRowHeight, uniformRowHeight = void 0 !== _ref$uniformRowHeight && _ref$uniformRowHeight, _ref$uniformColumnWid = _ref.uniformColumnWidth, uniformColumnWidth = void 0 !== _ref$uniformColumnWid && _ref$uniformColumnWid;
+                (0, _classCallCheck3.default)(this, CellSizeCache), this._uniformRowHeight = uniformRowHeight,
                 this._uniformColumnWidth = uniformColumnWidth, this._cachedColumnWidths = {}, this._cachedRowHeights = {};
             }
-            return (0, _createClass3["default"])(CellSizeCache, [ {
+            return (0, _createClass3.default)(CellSizeCache, [ {
                 key: "clearAllColumnWidths",
                 value: function() {
                     this._cachedColumnWidth = void 0, this._cachedColumnWidths = {};
@@ -1732,28 +1721,28 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), CellSizeCache;
         }();
-        exports["default"] = CellSizeCache;
+        exports.default = CellSizeCache;
     }, /* 98 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports.Collection = exports["default"] = void 0;
+        }), exports.Collection = exports.default = void 0;
         var _Collection2 = __webpack_require__(99), _Collection3 = _interopRequireDefault(_Collection2);
-        exports["default"] = _Collection3["default"], exports.Collection = _Collection3["default"];
+        exports.default = _Collection3.default, exports.Collection = _Collection3.default;
     }, /* 99 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         function defaultCellGroupRenderer(_ref5) {
@@ -1784,13 +1773,13 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         });
         var _extends2 = __webpack_require__(100), _extends3 = _interopRequireDefault(_extends2), _objectWithoutProperties2 = __webpack_require__(105), _objectWithoutProperties3 = _interopRequireDefault(_objectWithoutProperties2), _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _react = __webpack_require__(89), _react2 = _interopRequireDefault(_react), _CollectionView = __webpack_require__(106), _CollectionView2 = _interopRequireDefault(_CollectionView), _calculateSizeAndPositionData2 = __webpack_require__(114), _calculateSizeAndPositionData3 = _interopRequireDefault(_calculateSizeAndPositionData2), _getUpdatedOffsetForIndex = __webpack_require__(117), _getUpdatedOffsetForIndex2 = _interopRequireDefault(_getUpdatedOffsetForIndex), _reactAddonsShallowCompare = __webpack_require__(90), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), Collection = function(_Component) {
             function Collection(props, context) {
-                (0, _classCallCheck3["default"])(this, Collection);
-                var _this = (0, _possibleConstructorReturn3["default"])(this, (Collection.__proto__ || (0,
-                _getPrototypeOf2["default"])(Collection)).call(this, props, context));
+                (0, _classCallCheck3.default)(this, Collection);
+                var _this = (0, _possibleConstructorReturn3.default)(this, (Collection.__proto__ || (0,
+                _getPrototypeOf2.default)(Collection)).call(this, props, context));
                 return _this._cellMetadata = [], _this._lastRenderedCellIndices = [], _this._cellCache = [],
                 _this._isScrollingChange = _this._isScrollingChange.bind(_this), _this;
             }
-            return (0, _inherits3["default"])(Collection, _Component), (0, _createClass3["default"])(Collection, [ {
+            return (0, _inherits3.default)(Collection, _Component), (0, _createClass3.default)(Collection, [ {
                 key: "recomputeCellSizesAndPositions",
                 value: function() {
                     this._cellCache = [], this._collectionView.recomputeCellSizesAndPositions();
@@ -1798,8 +1787,8 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "render",
                 value: function() {
-                    var _this2 = this, props = (0, _objectWithoutProperties3["default"])(this.props, []);
-                    return _react2["default"].createElement(_CollectionView2["default"], (0, _extends3["default"])({
+                    var _this2 = this, props = (0, _objectWithoutProperties3.default)(this.props, []);
+                    return _react2.default.createElement(_CollectionView2.default, (0, _extends3.default)({
                         cellLayoutManager: this,
                         isScrollingChange: this._isScrollingChange,
                         ref: function(_ref) {
@@ -1810,13 +1799,13 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "shouldComponentUpdate",
                 value: function(nextProps, nextState) {
-                    return (0, _reactAddonsShallowCompare2["default"])(this, nextProps, nextState);
+                    return (0, _reactAddonsShallowCompare2.default)(this, nextProps, nextState);
                 }
             }, {
                 key: "calculateSizeAndPositionData",
                 value: function() {
                     var _props = this.props, cellCount = _props.cellCount, cellSizeAndPositionGetter = _props.cellSizeAndPositionGetter, sectionSize = _props.sectionSize, data = (0,
-                    _calculateSizeAndPositionData3["default"])({
+                    _calculateSizeAndPositionData3.default)({
                         cellCount: cellCount,
                         cellSizeAndPositionGetter: cellSizeAndPositionGetter,
                         sectionSize: sectionSize
@@ -1835,14 +1824,14 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                     var align = _ref2.align, cellIndex = _ref2.cellIndex, height = _ref2.height, scrollLeft = _ref2.scrollLeft, scrollTop = _ref2.scrollTop, width = _ref2.width, cellCount = this.props.cellCount;
                     if (cellIndex >= 0 && cellIndex < cellCount) {
                         var cellMetadata = this._cellMetadata[cellIndex];
-                        scrollLeft = (0, _getUpdatedOffsetForIndex2["default"])({
+                        scrollLeft = (0, _getUpdatedOffsetForIndex2.default)({
                             align: align,
                             cellOffset: cellMetadata.x,
                             cellSize: cellMetadata.width,
                             containerSize: width,
                             currentOffset: scrollLeft,
                             targetIndex: cellIndex
-                        }), scrollTop = (0, _getUpdatedOffsetForIndex2["default"])({
+                        }), scrollTop = (0, _getUpdatedOffsetForIndex2.default)({
                             align: align,
                             cellOffset: cellMetadata.y,
                             cellSize: cellMetadata.height,
@@ -1893,29 +1882,22 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), Collection;
         }(_react.Component);
-        Collection.propTypes = {
-            "aria-label": _react.PropTypes.string,
-            cellCount: _react.PropTypes.number.isRequired,
-            cellGroupRenderer: _react.PropTypes.func.isRequired,
-            cellRenderer: _react.PropTypes.func.isRequired,
-            cellSizeAndPositionGetter: _react.PropTypes.func.isRequired,
-            sectionSize: _react.PropTypes.number
-        }, Collection.defaultProps = {
+        Collection.defaultProps = {
             "aria-label": "grid",
             cellGroupRenderer: defaultCellGroupRenderer
-        }, exports["default"] = Collection;
+        }, exports.default = Collection;
     }, /* 100 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         exports.__esModule = !0;
         var _assign = __webpack_require__(101), _assign2 = _interopRequireDefault(_assign);
-        exports["default"] = _assign2["default"] || function(target) {
+        exports.default = _assign2.default || function(target) {
             for (var i = 1; i < arguments.length; i++) {
                 var source = arguments[i];
                 for (var key in source) Object.prototype.hasOwnProperty.call(source, key) && (target[key] = source[key]);
@@ -1926,7 +1908,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
     /***/
     function(module, exports, __webpack_require__) {
         module.exports = {
-            "default": __webpack_require__(102),
+            default: __webpack_require__(102),
             __esModule: !0
         };
     }, /* 102 */
@@ -1962,7 +1944,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
     /***/
     function(module, exports) {
         "use strict";
-        exports.__esModule = !0, exports["default"] = function(obj, keys) {
+        exports.__esModule = !0, exports.default = function(obj, keys) {
             var target = {};
             for (var i in obj) keys.indexOf(i) >= 0 || Object.prototype.hasOwnProperty.call(obj, i) && (target[i] = obj[i]);
             return target;
@@ -1973,7 +1955,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
@@ -1984,20 +1966,20 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             REQUESTED: "requested"
         }, CollectionView = function(_Component) {
             function CollectionView(props, context) {
-                (0, _classCallCheck3["default"])(this, CollectionView);
-                var _this = (0, _possibleConstructorReturn3["default"])(this, (CollectionView.__proto__ || (0,
-                _getPrototypeOf2["default"])(CollectionView)).call(this, props, context));
+                (0, _classCallCheck3.default)(this, CollectionView);
+                var _this = (0, _possibleConstructorReturn3.default)(this, (CollectionView.__proto__ || (0,
+                _getPrototypeOf2.default)(CollectionView)).call(this, props, context));
                 return _this.state = {
                     calculateSizeAndPositionDataOnNextUpdate: !1,
                     isScrolling: !1,
                     scrollLeft: 0,
                     scrollTop: 0
-                }, _this._onSectionRenderedMemoizer = (0, _createCallbackMemoizer2["default"])(),
-                _this._onScrollMemoizer = (0, _createCallbackMemoizer2["default"])(!1), _this._invokeOnSectionRenderedHelper = _this._invokeOnSectionRenderedHelper.bind(_this),
+                }, _this._onSectionRenderedMemoizer = (0, _createCallbackMemoizer2.default)(), _this._onScrollMemoizer = (0,
+                _createCallbackMemoizer2.default)(!1), _this._invokeOnSectionRenderedHelper = _this._invokeOnSectionRenderedHelper.bind(_this),
                 _this._onScroll = _this._onScroll.bind(_this), _this._updateScrollPositionForScrollToCell = _this._updateScrollPositionForScrollToCell.bind(_this),
                 _this;
             }
-            return (0, _inherits3["default"])(CollectionView, _Component), (0, _createClass3["default"])(CollectionView, [ {
+            return (0, _inherits3.default)(CollectionView, _Component), (0, _createClass3.default)(CollectionView, [ {
                 key: "recomputeCellSizesAndPositions",
                 value: function() {
                     this.setState({
@@ -2008,7 +1990,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 key: "componentDidMount",
                 value: function() {
                     var _props = this.props, cellLayoutManager = _props.cellLayoutManager, scrollLeft = _props.scrollLeft, scrollToCell = _props.scrollToCell, scrollTop = _props.scrollTop;
-                    this._scrollbarSizeMeasured || (this._scrollbarSize = (0, _scrollbarSize2["default"])(),
+                    this._scrollbarSizeMeasured || (this._scrollbarSize = (0, _scrollbarSize2.default)(),
                     this._scrollbarSizeMeasured = !0, this.setState({})), scrollToCell >= 0 ? this._updateScrollPositionForScrollToCell() : (scrollLeft >= 0 || scrollTop >= 0) && this._setScrollPosition({
                         scrollLeft: scrollLeft,
                         scrollTop: scrollTop
@@ -2024,7 +2006,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "componentDidUpdate",
                 value: function(prevProps, prevState) {
-                    var _props2 = this.props, height = _props2.height, scrollToCell = _props2.scrollToCell, width = _props2.width, _state = this.state, scrollLeft = _state.scrollLeft, scrollPositionChangeReason = _state.scrollPositionChangeReason, scrollToAlignment = _state.scrollToAlignment, scrollTop = _state.scrollTop;
+                    var _props2 = this.props, height = _props2.height, scrollToAlignment = _props2.scrollToAlignment, scrollToCell = _props2.scrollToCell, width = _props2.width, _state = this.state, scrollLeft = _state.scrollLeft, scrollPositionChangeReason = _state.scrollPositionChangeReason, scrollTop = _state.scrollTop;
                     scrollPositionChangeReason === SCROLL_POSITION_CHANGE_REASONS.REQUESTED && (scrollLeft >= 0 && scrollLeft !== prevState.scrollLeft && scrollLeft !== this._scrollingContainer.scrollLeft && (this._scrollingContainer.scrollLeft = scrollLeft),
                     scrollTop >= 0 && scrollTop !== prevState.scrollTop && scrollTop !== this._scrollingContainer.scrollTop && (this._scrollingContainer.scrollTop = scrollTop)),
                     height === prevProps.height && scrollToAlignment === prevProps.scrollToAlignment && scrollToCell === prevProps.scrollToCell && width === prevProps.width || this._updateScrollPositionForScrollToCell(),
@@ -2034,7 +2016,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 key: "componentWillMount",
                 value: function() {
                     var cellLayoutManager = this.props.cellLayoutManager;
-                    cellLayoutManager.calculateSizeAndPositionData(), this._scrollbarSize = (0, _scrollbarSize2["default"])(),
+                    cellLayoutManager.calculateSizeAndPositionData(), this._scrollbarSize = (0, _scrollbarSize2.default)(),
                     void 0 === this._scrollbarSize ? (this._scrollbarSizeMeasured = !1, this._scrollbarSize = 0) : this._scrollbarSizeMeasured = !0;
                 }
             }, {
@@ -2059,7 +2041,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "render",
                 value: function() {
-                    var _this2 = this, _props3 = this.props, autoHeight = _props3.autoHeight, cellCount = _props3.cellCount, cellLayoutManager = _props3.cellLayoutManager, className = _props3.className, height = _props3.height, horizontalOverscanSize = _props3.horizontalOverscanSize, noContentRenderer = _props3.noContentRenderer, style = _props3.style, verticalOverscanSize = _props3.verticalOverscanSize, width = _props3.width, _state2 = this.state, isScrolling = _state2.isScrolling, scrollLeft = _state2.scrollLeft, scrollTop = _state2.scrollTop, _cellLayoutManager$ge2 = cellLayoutManager.getTotalSize(), totalHeight = _cellLayoutManager$ge2.height, totalWidth = _cellLayoutManager$ge2.width, left = Math.max(0, scrollLeft - horizontalOverscanSize), top = Math.max(0, scrollTop - verticalOverscanSize), right = Math.min(totalWidth, scrollLeft + width + horizontalOverscanSize), bottom = Math.min(totalHeight, scrollTop + height + verticalOverscanSize), childrenToDisplay = height > 0 && width > 0 ? cellLayoutManager.cellRenderers({
+                    var _this2 = this, _props3 = this.props, autoHeight = _props3.autoHeight, cellCount = _props3.cellCount, cellLayoutManager = _props3.cellLayoutManager, className = _props3.className, height = _props3.height, horizontalOverscanSize = _props3.horizontalOverscanSize, id = _props3.id, noContentRenderer = _props3.noContentRenderer, style = _props3.style, verticalOverscanSize = _props3.verticalOverscanSize, width = _props3.width, _state2 = this.state, isScrolling = _state2.isScrolling, scrollLeft = _state2.scrollLeft, scrollTop = _state2.scrollTop, _cellLayoutManager$ge2 = cellLayoutManager.getTotalSize(), totalHeight = _cellLayoutManager$ge2.height, totalWidth = _cellLayoutManager$ge2.width, left = Math.max(0, scrollLeft - horizontalOverscanSize), top = Math.max(0, scrollTop - verticalOverscanSize), right = Math.min(totalWidth, scrollLeft + width + horizontalOverscanSize), bottom = Math.min(totalHeight, scrollTop + height + verticalOverscanSize), childrenToDisplay = height > 0 && width > 0 ? cellLayoutManager.cellRenderers({
                         height: bottom - top,
                         isScrolling: isScrolling,
                         width: right - left,
@@ -2076,17 +2058,18 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                     }, verticalScrollBarSize = totalHeight > height ? this._scrollbarSize : 0, horizontalScrollBarSize = totalWidth > width ? this._scrollbarSize : 0;
                     return totalWidth + verticalScrollBarSize <= width && (collectionStyle.overflowX = "hidden"),
                     totalHeight + horizontalScrollBarSize <= height && (collectionStyle.overflowY = "hidden"),
-                    _react2["default"].createElement("div", {
+                    _react2.default.createElement("div", {
                         ref: function(_ref) {
                             _this2._scrollingContainer = _ref;
                         },
                         "aria-label": this.props["aria-label"],
-                        className: (0, _classnames2["default"])("ReactVirtualized__Collection", className),
+                        className: (0, _classnames2.default)("ReactVirtualized__Collection", className),
+                        id: id,
                         onScroll: this._onScroll,
                         role: "grid",
-                        style: (0, _extends3["default"])({}, collectionStyle, style),
+                        style: (0, _extends3.default)({}, collectionStyle, style),
                         tabIndex: 0
-                    }, cellCount > 0 && _react2["default"].createElement("div", {
+                    }, cellCount > 0 && _react2.default.createElement("div", {
                         className: "ReactVirtualized__Collection__innerScrollContainer",
                         style: {
                             height: totalHeight,
@@ -2101,7 +2084,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "shouldComponentUpdate",
                 value: function(nextProps, nextState) {
-                    return (0, _reactAddonsShallowCompare2["default"])(this, nextProps, nextState);
+                    return (0, _reactAddonsShallowCompare2.default)(this, nextProps, nextState);
                 }
             }, {
                 key: "_enablePointerEventsAfterDelay",
@@ -2198,26 +2181,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), CollectionView;
         }(_react.Component);
-        CollectionView.propTypes = {
-            "aria-label": _react.PropTypes.string,
-            autoHeight: _react.PropTypes.bool,
-            cellCount: _react.PropTypes.number.isRequired,
-            cellLayoutManager: _react.PropTypes.object.isRequired,
-            className: _react.PropTypes.string,
-            height: _react.PropTypes.number.isRequired,
-            horizontalOverscanSize: _react.PropTypes.number.isRequired,
-            isScrollingChange: _react.PropTypes.func,
-            noContentRenderer: _react.PropTypes.func.isRequired,
-            onScroll: _react.PropTypes.func.isRequired,
-            onSectionRendered: _react.PropTypes.func.isRequired,
-            scrollLeft: _react.PropTypes.number,
-            scrollToAlignment: _react.PropTypes.oneOf([ "auto", "end", "start", "center" ]).isRequired,
-            scrollToCell: _react.PropTypes.number,
-            scrollTop: _react.PropTypes.number,
-            style: _react.PropTypes.object,
-            verticalOverscanSize: _react.PropTypes.number.isRequired,
-            width: _react.PropTypes.number.isRequired
-        }, CollectionView.defaultProps = {
+        CollectionView.defaultProps = {
             "aria-label": "grid",
             horizontalOverscanSize: 0,
             noContentRenderer: function() {
@@ -2232,7 +2196,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             scrollToAlignment: "auto",
             style: {},
             verticalOverscanSize: 0
-        }, exports["default"] = CollectionView;
+        }, exports.default = CollectionView;
     }, /* 107 */
     /***/
     function(module, exports, __webpack_require__) {
@@ -2268,16 +2232,16 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         function createCallbackMemoizer() {
-            var requireAllKeys = arguments.length <= 0 || void 0 === arguments[0] || arguments[0], cachedIndices = {};
+            var requireAllKeys = !(arguments.length > 0 && void 0 !== arguments[0]) || arguments[0], cachedIndices = {};
             return function(_ref) {
-                var callback = _ref.callback, indices = _ref.indices, keys = (0, _keys2["default"])(indices), allInitialized = !requireAllKeys || keys.every(function(key) {
+                var callback = _ref.callback, indices = _ref.indices, keys = (0, _keys2.default)(indices), allInitialized = !requireAllKeys || keys.every(function(key) {
                     var value = indices[key];
                     return Array.isArray(value) ? value.length > 0 : value >= 0;
-                }), indexChanged = keys.length !== (0, _keys2["default"])(cachedIndices).length || keys.some(function(key) {
+                }), indexChanged = keys.length !== (0, _keys2.default)(cachedIndices).length || keys.some(function(key) {
                     var cachedValue = cachedIndices[key], value = indices[key];
                     return Array.isArray(value) ? cachedValue.join(",") !== value.join(",") : cachedValue !== value;
                 });
@@ -2288,12 +2252,12 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             value: !0
         });
         var _keys = __webpack_require__(109), _keys2 = _interopRequireDefault(_keys);
-        exports["default"] = createCallbackMemoizer;
+        exports.default = createCallbackMemoizer;
     }, /* 109 */
     /***/
     function(module, exports, __webpack_require__) {
         module.exports = {
-            "default": __webpack_require__(110),
+            default: __webpack_require__(110),
             __esModule: !0
         };
     }, /* 110 */
@@ -2335,11 +2299,11 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         function calculateSizeAndPositionData(_ref) {
-            for (var cellCount = _ref.cellCount, cellSizeAndPositionGetter = _ref.cellSizeAndPositionGetter, sectionSize = _ref.sectionSize, cellMetadata = [], sectionManager = new _SectionManager2["default"](sectionSize), height = 0, width = 0, index = 0; index < cellCount; index++) {
+            for (var cellCount = _ref.cellCount, cellSizeAndPositionGetter = _ref.cellSizeAndPositionGetter, sectionSize = _ref.sectionSize, cellMetadata = [], sectionManager = new _SectionManager2.default(sectionSize), height = 0, width = 0, index = 0; index < cellCount; index++) {
                 var cellMetadatum = cellSizeAndPositionGetter({
                     index: index
                 });
@@ -2359,7 +2323,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports["default"] = calculateSizeAndPositionData;
+        }), exports.default = calculateSizeAndPositionData;
         var _SectionManager = __webpack_require__(115), _SectionManager2 = _interopRequireDefault(_SectionManager);
     }, /* 115 */
     /***/
@@ -2367,7 +2331,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
@@ -2375,11 +2339,11 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         });
         var _keys = __webpack_require__(109), _keys2 = _interopRequireDefault(_keys), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _Section = __webpack_require__(116), _Section2 = _interopRequireDefault(_Section), SECTION_SIZE = 100, SectionManager = function() {
             function SectionManager() {
-                var sectionSize = arguments.length <= 0 || void 0 === arguments[0] ? SECTION_SIZE : arguments[0];
-                (0, _classCallCheck3["default"])(this, SectionManager), this._sectionSize = sectionSize,
+                var sectionSize = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : SECTION_SIZE;
+                (0, _classCallCheck3.default)(this, SectionManager), this._sectionSize = sectionSize,
                 this._cellMetadata = [], this._sections = {};
             }
-            return (0, _createClass3["default"])(SectionManager, [ {
+            return (0, _createClass3.default)(SectionManager, [ {
                 key: "getCellIndices",
                 value: function(_ref) {
                     var height = _ref.height, width = _ref.width, x = _ref.x, y = _ref.y, indices = {};
@@ -2392,7 +2356,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                         return section.getCellIndices().forEach(function(index) {
                             indices[index] = index;
                         });
-                    }), (0, _keys2["default"])(indices).map(function(index) {
+                    }), (0, _keys2.default)(indices).map(function(index) {
                         return indices[index];
                     });
                 }
@@ -2407,7 +2371,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 value: function(_ref3) {
                     for (var height = _ref3.height, width = _ref3.width, x = _ref3.x, y = _ref3.y, sectionXStart = Math.floor(x / this._sectionSize), sectionXStop = Math.floor((x + width - 1) / this._sectionSize), sectionYStart = Math.floor(y / this._sectionSize), sectionYStop = Math.floor((y + height - 1) / this._sectionSize), sections = [], sectionX = sectionXStart; sectionX <= sectionXStop; sectionX++) for (var sectionY = sectionYStart; sectionY <= sectionYStop; sectionY++) {
                         var key = sectionX + "." + sectionY;
-                        this._sections[key] || (this._sections[key] = new _Section2["default"]({
+                        this._sections[key] || (this._sections[key] = new _Section2.default({
                             height: this._sectionSize,
                             width: this._sectionSize,
                             x: sectionX * this._sectionSize,
@@ -2419,13 +2383,13 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "getTotalSectionCount",
                 value: function() {
-                    return (0, _keys2["default"])(this._sections).length;
+                    return (0, _keys2.default)(this._sections).length;
                 }
             }, {
                 key: "toString",
                 value: function() {
                     var _this = this;
-                    return (0, _keys2["default"])(this._sections).map(function(index) {
+                    return (0, _keys2.default)(this._sections).map(function(index) {
                         return _this._sections[index].toString();
                     });
                 }
@@ -2441,14 +2405,14 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), SectionManager;
         }();
-        exports["default"] = SectionManager;
+        exports.default = SectionManager;
     }, /* 116 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
@@ -2457,10 +2421,10 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         var _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), Section = function() {
             function Section(_ref) {
                 var height = _ref.height, width = _ref.width, x = _ref.x, y = _ref.y;
-                (0, _classCallCheck3["default"])(this, Section), this.height = height, this.width = width,
+                (0, _classCallCheck3.default)(this, Section), this.height = height, this.width = width,
                 this.x = x, this.y = y, this._indexMap = {}, this._indices = [];
             }
-            return (0, _createClass3["default"])(Section, [ {
+            return (0, _createClass3.default)(Section, [ {
                 key: "addCellIndex",
                 value: function(_ref2) {
                     var index = _ref2.index;
@@ -2478,7 +2442,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), Section;
         }();
-        exports["default"] = Section;
+        exports.default = Section;
     }, /* 117 */
     /***/
     function(module, exports) {
@@ -2501,28 +2465,28 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports["default"] = getUpdatedOffsetForIndex;
+        }), exports.default = getUpdatedOffsetForIndex;
     }, /* 118 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports.ColumnSizer = exports["default"] = void 0;
+        }), exports.ColumnSizer = exports.default = void 0;
         var _ColumnSizer2 = __webpack_require__(119), _ColumnSizer3 = _interopRequireDefault(_ColumnSizer2);
-        exports["default"] = _ColumnSizer3["default"], exports.ColumnSizer = _ColumnSizer3["default"];
+        exports.default = _ColumnSizer3.default, exports.ColumnSizer = _ColumnSizer3.default;
     }, /* 119 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
@@ -2530,12 +2494,12 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         });
         var _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _react = __webpack_require__(89), _reactAddonsShallowCompare = __webpack_require__(90), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), _Grid = __webpack_require__(120), _Grid2 = _interopRequireDefault(_Grid), ColumnSizer = function(_Component) {
             function ColumnSizer(props, context) {
-                (0, _classCallCheck3["default"])(this, ColumnSizer);
-                var _this = (0, _possibleConstructorReturn3["default"])(this, (ColumnSizer.__proto__ || (0,
-                _getPrototypeOf2["default"])(ColumnSizer)).call(this, props, context));
+                (0, _classCallCheck3.default)(this, ColumnSizer);
+                var _this = (0, _possibleConstructorReturn3.default)(this, (ColumnSizer.__proto__ || (0,
+                _getPrototypeOf2.default)(ColumnSizer)).call(this, props, context));
                 return _this._registerChild = _this._registerChild.bind(_this), _this;
             }
-            return (0, _inherits3["default"])(ColumnSizer, _Component), (0, _createClass3["default"])(ColumnSizer, [ {
+            return (0, _inherits3.default)(ColumnSizer, _Component), (0, _createClass3.default)(ColumnSizer, [ {
                 key: "componentDidUpdate",
                 value: function(prevProps, prevState) {
                     var _props = this.props, columnMaxWidth = _props.columnMaxWidth, columnMinWidth = _props.columnMinWidth, columnCount = _props.columnCount, width = _props.width;
@@ -2559,44 +2523,38 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "shouldComponentUpdate",
                 value: function(nextProps, nextState) {
-                    return (0, _reactAddonsShallowCompare2["default"])(this, nextProps, nextState);
+                    return (0, _reactAddonsShallowCompare2.default)(this, nextProps, nextState);
                 }
             }, {
                 key: "_registerChild",
                 value: function(child) {
-                    if (null !== child && !(child instanceof _Grid2["default"])) throw Error("Unexpected child type registered; only Grid children are supported.");
+                    if (null !== child && !(child instanceof _Grid2.default)) throw Error("Unexpected child type registered; only Grid children are supported.");
                     this._registeredChild = child, this._registeredChild && this._registeredChild.recomputeGridSize();
                 }
             } ]), ColumnSizer;
         }(_react.Component);
-        ColumnSizer.propTypes = {
-            children: _react.PropTypes.func.isRequired,
-            columnMaxWidth: _react.PropTypes.number,
-            columnMinWidth: _react.PropTypes.number,
-            columnCount: _react.PropTypes.number.isRequired,
-            width: _react.PropTypes.number.isRequired
-        }, exports["default"] = ColumnSizer;
+        exports.default = ColumnSizer;
     }, /* 120 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports.defaultCellRangeRenderer = exports.Grid = exports["default"] = void 0;
+        }), exports.defaultCellRangeRenderer = exports.Grid = exports.default = void 0;
         var _Grid2 = __webpack_require__(121), _Grid3 = _interopRequireDefault(_Grid2), _defaultCellRangeRenderer2 = __webpack_require__(127), _defaultCellRangeRenderer3 = _interopRequireDefault(_defaultCellRangeRenderer2);
-        exports["default"] = _Grid3["default"], exports.Grid = _Grid3["default"], exports.defaultCellRangeRenderer = _defaultCellRangeRenderer3["default"];
+        exports.default = _Grid3.default, exports.Grid = _Grid3.default, exports.defaultCellRangeRenderer = _defaultCellRangeRenderer3.default;
     }, /* 121 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
@@ -2607,28 +2565,28 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             REQUESTED: "requested"
         }, Grid = function(_Component) {
             function Grid(props, context) {
-                (0, _classCallCheck3["default"])(this, Grid);
-                var _this = (0, _possibleConstructorReturn3["default"])(this, (Grid.__proto__ || (0,
-                _getPrototypeOf2["default"])(Grid)).call(this, props, context));
+                (0, _classCallCheck3.default)(this, Grid);
+                var _this = (0, _possibleConstructorReturn3.default)(this, (Grid.__proto__ || (0,
+                _getPrototypeOf2.default)(Grid)).call(this, props, context));
                 return _this.state = {
                     isScrolling: !1,
                     scrollDirectionHorizontal: _getOverscanIndices.SCROLL_DIRECTION_FIXED,
                     scrollDirectionVertical: _getOverscanIndices.SCROLL_DIRECTION_FIXED,
                     scrollLeft: 0,
                     scrollTop: 0
-                }, _this._onGridRenderedMemoizer = (0, _createCallbackMemoizer2["default"])(), _this._onScrollMemoizer = (0,
-                _createCallbackMemoizer2["default"])(!1), _this._enablePointerEventsAfterDelayCallback = _this._enablePointerEventsAfterDelayCallback.bind(_this),
+                }, _this._onGridRenderedMemoizer = (0, _createCallbackMemoizer2.default)(), _this._onScrollMemoizer = (0,
+                _createCallbackMemoizer2.default)(!1), _this._enablePointerEventsAfterDelayCallback = _this._enablePointerEventsAfterDelayCallback.bind(_this),
                 _this._invokeOnGridRenderedHelper = _this._invokeOnGridRenderedHelper.bind(_this),
                 _this._onScroll = _this._onScroll.bind(_this), _this._updateScrollLeftForScrollToColumn = _this._updateScrollLeftForScrollToColumn.bind(_this),
                 _this._updateScrollTopForScrollToRow = _this._updateScrollTopForScrollToRow.bind(_this),
                 _this._columnWidthGetter = _this._wrapSizeGetter(props.columnWidth), _this._rowHeightGetter = _this._wrapSizeGetter(props.rowHeight),
-                _this._columnSizeAndPositionManager = new _ScalingCellSizeAndPositionManager2["default"]({
+                _this._columnSizeAndPositionManager = new _ScalingCellSizeAndPositionManager2.default({
                     cellCount: props.columnCount,
                     cellSizeGetter: function(index) {
                         return _this._columnWidthGetter(index);
                     },
                     estimatedCellSize: _this._getEstimatedColumnSize(props)
-                }), _this._rowSizeAndPositionManager = new _ScalingCellSizeAndPositionManager2["default"]({
+                }), _this._rowSizeAndPositionManager = new _ScalingCellSizeAndPositionManager2.default({
                     cellCount: props.rowCount,
                     cellSizeGetter: function(index) {
                         return _this._rowHeightGetter(index);
@@ -2636,7 +2594,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                     estimatedCellSize: _this._getEstimatedRowSize(props)
                 }), _this._cellCache = {}, _this;
             }
-            return (0, _inherits3["default"])(Grid, _Component), (0, _createClass3["default"])(Grid, [ {
+            return (0, _inherits3.default)(Grid, _Component), (0, _createClass3.default)(Grid, [ {
                 key: "measureAllCells",
                 value: function() {
                     var _props = this.props, columnCount = _props.columnCount, rowCount = _props.rowCount;
@@ -2645,7 +2603,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "recomputeGridSize",
                 value: function() {
-                    var _ref = arguments.length <= 0 || void 0 === arguments[0] ? {} : arguments[0], _ref$columnIndex = _ref.columnIndex, columnIndex = void 0 === _ref$columnIndex ? 0 : _ref$columnIndex, _ref$rowIndex = _ref.rowIndex, rowIndex = void 0 === _ref$rowIndex ? 0 : _ref$rowIndex;
+                    var _ref = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {}, _ref$columnIndex = _ref.columnIndex, columnIndex = void 0 === _ref$columnIndex ? 0 : _ref$columnIndex, _ref$rowIndex = _ref.rowIndex, rowIndex = void 0 === _ref$rowIndex ? 0 : _ref$rowIndex;
                     this._columnSizeAndPositionManager.resetCell(columnIndex), this._rowSizeAndPositionManager.resetCell(rowIndex),
                     this._cellCache = {}, this.forceUpdate();
                 }
@@ -2653,7 +2611,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 key: "componentDidMount",
                 value: function() {
                     var _props2 = this.props, scrollLeft = _props2.scrollLeft, scrollToColumn = _props2.scrollToColumn, scrollTop = _props2.scrollTop, scrollToRow = _props2.scrollToRow;
-                    this._scrollbarSizeMeasured || (this._scrollbarSize = (0, _scrollbarSize2["default"])(),
+                    this._scrollbarSizeMeasured || (this._scrollbarSize = (0, _scrollbarSize2.default)(),
                     this._scrollbarSizeMeasured = !0, this.setState({})), (scrollLeft >= 0 || scrollTop >= 0) && this._setScrollPosition({
                         scrollLeft: scrollLeft,
                         scrollTop: scrollTop
@@ -2671,7 +2629,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                     var _this2 = this, _props3 = this.props, autoHeight = _props3.autoHeight, columnCount = _props3.columnCount, height = _props3.height, rowCount = _props3.rowCount, scrollToAlignment = _props3.scrollToAlignment, scrollToColumn = _props3.scrollToColumn, scrollToRow = _props3.scrollToRow, width = _props3.width, _state = this.state, scrollLeft = _state.scrollLeft, scrollPositionChangeReason = _state.scrollPositionChangeReason, scrollTop = _state.scrollTop, columnOrRowCountJustIncreasedFromZero = columnCount > 0 && 0 === prevProps.columnCount || rowCount > 0 && 0 === prevProps.rowCount;
                     if (scrollPositionChangeReason === SCROLL_POSITION_CHANGE_REASONS.REQUESTED && (scrollLeft >= 0 && (scrollLeft !== prevState.scrollLeft && scrollLeft !== this._scrollingContainer.scrollLeft || columnOrRowCountJustIncreasedFromZero) && (this._scrollingContainer.scrollLeft = scrollLeft),
                     !autoHeight && scrollTop >= 0 && (scrollTop !== prevState.scrollTop && scrollTop !== this._scrollingContainer.scrollTop || columnOrRowCountJustIncreasedFromZero) && (this._scrollingContainer.scrollTop = scrollTop)),
-                    (0, _updateScrollIndexHelper2["default"])({
+                    (0, _updateScrollIndexHelper2.default)({
                         cellSizeAndPositionManager: this._columnSizeAndPositionManager,
                         previousCellsCount: prevProps.columnCount,
                         previousCellSize: prevProps.columnWidth,
@@ -2683,11 +2641,11 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                         scrollToIndex: scrollToColumn,
                         size: width,
                         updateScrollIndexCallback: function(scrollToColumn) {
-                            return _this2._updateScrollLeftForScrollToColumn((0, _extends3["default"])({}, _this2.props, {
+                            return _this2._updateScrollLeftForScrollToColumn((0, _extends3.default)({}, _this2.props, {
                                 scrollToColumn: scrollToColumn
                             }));
                         }
-                    }), (0, _updateScrollIndexHelper2["default"])({
+                    }), (0, _updateScrollIndexHelper2.default)({
                         cellSizeAndPositionManager: this._rowSizeAndPositionManager,
                         previousCellsCount: prevProps.rowCount,
                         previousCellSize: prevProps.rowHeight,
@@ -2699,7 +2657,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                         scrollToIndex: scrollToRow,
                         size: height,
                         updateScrollIndexCallback: function(scrollToRow) {
-                            return _this2._updateScrollTopForScrollToRow((0, _extends3["default"])({}, _this2.props, {
+                            return _this2._updateScrollTopForScrollToRow((0, _extends3.default)({}, _this2.props, {
                                 scrollToRow: scrollToRow
                             }));
                         }
@@ -2716,7 +2674,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "componentWillMount",
                 value: function() {
-                    this._scrollbarSize = (0, _scrollbarSize2["default"])(), void 0 === this._scrollbarSize ? (this._scrollbarSizeMeasured = !1,
+                    this._scrollbarSize = (0, _scrollbarSize2.default)(), void 0 === this._scrollbarSize ? (this._scrollbarSizeMeasured = !1,
                     this._scrollbarSize = 0) : this._scrollbarSizeMeasured = !0, this._calculateChildrenToRender();
                 }
             }, {
@@ -2741,7 +2699,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                     }), this._rowSizeAndPositionManager.configure({
                         cellCount: nextProps.rowCount,
                         estimatedCellSize: this._getEstimatedRowSize(nextProps)
-                    }), (0, _calculateSizeAndPositionDataAndUpdateScrollOffset2["default"])({
+                    }), (0, _calculateSizeAndPositionDataAndUpdateScrollOffset2.default)({
                         cellCount: this.props.columnCount,
                         cellSize: this.props.columnWidth,
                         computeMetadataCallback: function() {
@@ -2755,7 +2713,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                         updateScrollOffsetForScrollToIndex: function() {
                             return _this3._updateScrollLeftForScrollToColumn(nextProps, nextState);
                         }
-                    }), (0, _calculateSizeAndPositionDataAndUpdateScrollOffset2["default"])({
+                    }), (0, _calculateSizeAndPositionDataAndUpdateScrollOffset2.default)({
                         cellCount: this.props.rowCount,
                         cellSize: this.props.rowHeight,
                         computeMetadataCallback: function() {
@@ -2774,7 +2732,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "render",
                 value: function() {
-                    var _this4 = this, _props4 = this.props, autoContainerWidth = _props4.autoContainerWidth, autoHeight = _props4.autoHeight, className = _props4.className, height = _props4.height, noContentRenderer = _props4.noContentRenderer, style = _props4.style, tabIndex = _props4.tabIndex, width = _props4.width, isScrolling = this.state.isScrolling, gridStyle = {
+                    var _this4 = this, _props4 = this.props, autoContainerWidth = _props4.autoContainerWidth, autoHeight = _props4.autoHeight, className = _props4.className, containerStyle = _props4.containerStyle, height = _props4.height, id = _props4.id, noContentRenderer = _props4.noContentRenderer, style = _props4.style, tabIndex = _props4.tabIndex, width = _props4.width, isScrolling = this.state.isScrolling, gridStyle = {
                         boxSizing: "border-box",
                         height: autoHeight ? "auto" : height,
                         position: "relative",
@@ -2785,37 +2743,38 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                     gridStyle.overflowX = totalColumnsWidth + verticalScrollBarSize <= width ? "hidden" : "auto",
                     gridStyle.overflowY = totalRowsHeight + horizontalScrollBarSize <= height ? "hidden" : "auto";
                     var childrenToDisplay = this._childrenToDisplay, showNoContentRenderer = 0 === childrenToDisplay.length && height > 0 && width > 0;
-                    return _react2["default"].createElement("div", {
+                    return _react2.default.createElement("div", {
                         ref: function(_ref2) {
                             _this4._scrollingContainer = _ref2;
                         },
                         "aria-label": this.props["aria-label"],
-                        className: (0, _classnames2["default"])("ReactVirtualized__Grid", className),
+                        className: (0, _classnames2.default)("ReactVirtualized__Grid", className),
+                        id: id,
                         onScroll: this._onScroll,
                         role: "grid",
-                        style: (0, _extends3["default"])({}, gridStyle, style),
+                        style: (0, _extends3.default)({}, gridStyle, style),
                         tabIndex: tabIndex
-                    }, childrenToDisplay.length > 0 && _react2["default"].createElement("div", {
+                    }, childrenToDisplay.length > 0 && _react2.default.createElement("div", {
                         className: "ReactVirtualized__Grid__innerScrollContainer",
-                        style: {
+                        style: (0, _extends3.default)({
                             width: autoContainerWidth ? "auto" : totalColumnsWidth,
                             height: totalRowsHeight,
                             maxWidth: totalColumnsWidth,
                             maxHeight: totalRowsHeight,
                             overflow: "hidden",
                             pointerEvents: isScrolling ? "none" : ""
-                        }
+                        }, containerStyle)
                     }, childrenToDisplay), showNoContentRenderer && noContentRenderer());
                 }
             }, {
                 key: "shouldComponentUpdate",
                 value: function(nextProps, nextState) {
-                    return (0, _reactAddonsShallowCompare2["default"])(this, nextProps, nextState);
+                    return (0, _reactAddonsShallowCompare2.default)(this, nextProps, nextState);
                 }
             }, {
                 key: "_calculateChildrenToRender",
                 value: function() {
-                    var props = arguments.length <= 0 || void 0 === arguments[0] ? this.props : arguments[0], state = arguments.length <= 1 || void 0 === arguments[1] ? this.state : arguments[1], cellRenderer = props.cellRenderer, cellRangeRenderer = props.cellRangeRenderer, columnCount = props.columnCount, height = props.height, overscanColumnCount = props.overscanColumnCount, overscanRowCount = props.overscanRowCount, rowCount = props.rowCount, width = props.width, isScrolling = state.isScrolling, scrollDirectionHorizontal = state.scrollDirectionHorizontal, scrollDirectionVertical = state.scrollDirectionVertical, scrollLeft = state.scrollLeft, scrollTop = state.scrollTop;
+                    var props = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : this.props, state = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : this.state, cellRenderer = props.cellRenderer, cellRangeRenderer = props.cellRangeRenderer, columnCount = props.columnCount, height = props.height, overscanColumnCount = props.overscanColumnCount, overscanRowCount = props.overscanRowCount, rowCount = props.rowCount, width = props.width, isScrolling = state.isScrolling, scrollDirectionHorizontal = state.scrollDirectionHorizontal, scrollDirectionVertical = state.scrollDirectionVertical, scrollLeft = state.scrollLeft, scrollTop = state.scrollTop;
                     if (this._childrenToDisplay = [], height > 0 && width > 0) {
                         var visibleColumnIndices = this._columnSizeAndPositionManager.getVisibleCellRange({
                             containerSize: width,
@@ -2832,13 +2791,13 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                         });
                         this._renderedColumnStartIndex = visibleColumnIndices.start, this._renderedColumnStopIndex = visibleColumnIndices.stop,
                         this._renderedRowStartIndex = visibleRowIndices.start, this._renderedRowStopIndex = visibleRowIndices.stop;
-                        var overscanColumnIndices = (0, _getOverscanIndices2["default"])({
+                        var overscanColumnIndices = (0, _getOverscanIndices2.default)({
                             cellCount: columnCount,
                             overscanCellsCount: overscanColumnCount,
                             scrollDirection: scrollDirectionHorizontal,
                             startIndex: this._renderedColumnStartIndex,
                             stopIndex: this._renderedColumnStopIndex
-                        }), overscanRowIndices = (0, _getOverscanIndices2["default"])({
+                        }), overscanRowIndices = (0, _getOverscanIndices2.default)({
                             cellCount: rowCount,
                             overscanCellsCount: overscanRowCount,
                             scrollDirection: scrollDirectionVertical,
@@ -2860,7 +2819,9 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                             rowStopIndex: this._rowStopIndex,
                             scrollLeft: scrollLeft,
                             scrollTop: scrollTop,
-                            verticalOffsetAdjustment: verticalOffsetAdjustment
+                            verticalOffsetAdjustment: verticalOffsetAdjustment,
+                            visibleColumnIndices: visibleColumnIndices,
+                            visibleRowIndices: visibleRowIndices
                         });
                     }
                 }
@@ -2954,7 +2915,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "_updateScrollLeftForScrollToColumn",
                 value: function() {
-                    var props = arguments.length <= 0 || void 0 === arguments[0] ? this.props : arguments[0], state = arguments.length <= 1 || void 0 === arguments[1] ? this.state : arguments[1], columnCount = props.columnCount, scrollToAlignment = props.scrollToAlignment, scrollToColumn = props.scrollToColumn, width = props.width, scrollLeft = state.scrollLeft;
+                    var props = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : this.props, state = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : this.state, columnCount = props.columnCount, scrollToAlignment = props.scrollToAlignment, scrollToColumn = props.scrollToColumn, width = props.width, scrollLeft = state.scrollLeft;
                     if (scrollToColumn >= 0 && columnCount > 0) {
                         var targetIndex = Math.max(0, Math.min(columnCount - 1, scrollToColumn)), calculatedScrollLeft = this._columnSizeAndPositionManager.getUpdatedOffsetForIndex({
                             align: scrollToAlignment,
@@ -2970,7 +2931,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "_updateScrollTopForScrollToRow",
                 value: function() {
-                    var props = arguments.length <= 0 || void 0 === arguments[0] ? this.props : arguments[0], state = arguments.length <= 1 || void 0 === arguments[1] ? this.state : arguments[1], height = props.height, rowCount = props.rowCount, scrollToAlignment = props.scrollToAlignment, scrollToRow = props.scrollToRow, scrollTop = state.scrollTop;
+                    var props = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : this.props, state = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : this.state, height = props.height, rowCount = props.rowCount, scrollToAlignment = props.scrollToAlignment, scrollToRow = props.scrollToRow, scrollTop = state.scrollTop;
                     if (scrollToRow >= 0 && rowCount > 0) {
                         var targetIndex = Math.max(0, Math.min(rowCount - 1, scrollToRow)), calculatedScrollTop = this._rowSizeAndPositionManager.getUpdatedOffsetForIndex({
                             align: scrollToAlignment,
@@ -3010,37 +2971,9 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), Grid;
         }(_react.Component);
-        Grid.propTypes = {
-            "aria-label": _react.PropTypes.string,
-            autoContainerWidth: _react.PropTypes.bool,
-            autoHeight: _react.PropTypes.bool,
-            cellRenderer: _react.PropTypes.func.isRequired,
-            cellRangeRenderer: _react.PropTypes.func.isRequired,
-            className: _react.PropTypes.string,
-            columnCount: _react.PropTypes.number.isRequired,
-            columnWidth: _react.PropTypes.oneOfType([ _react.PropTypes.number, _react.PropTypes.func ]).isRequired,
-            estimatedColumnSize: _react.PropTypes.number.isRequired,
-            estimatedRowSize: _react.PropTypes.number.isRequired,
-            height: _react.PropTypes.number.isRequired,
-            noContentRenderer: _react.PropTypes.func.isRequired,
-            onScroll: _react.PropTypes.func.isRequired,
-            onSectionRendered: _react.PropTypes.func.isRequired,
-            overscanColumnCount: _react.PropTypes.number.isRequired,
-            overscanRowCount: _react.PropTypes.number.isRequired,
-            rowHeight: _react.PropTypes.oneOfType([ _react.PropTypes.number, _react.PropTypes.func ]).isRequired,
-            rowCount: _react.PropTypes.number.isRequired,
-            scrollingResetTimeInterval: _react.PropTypes.number,
-            scrollLeft: _react.PropTypes.number,
-            scrollToAlignment: _react.PropTypes.oneOf([ "auto", "end", "start", "center" ]).isRequired,
-            scrollToColumn: _react.PropTypes.number,
-            scrollTop: _react.PropTypes.number,
-            scrollToRow: _react.PropTypes.number,
-            style: _react.PropTypes.object,
-            tabIndex: _react.PropTypes.number,
-            width: _react.PropTypes.number.isRequired
-        }, Grid.defaultProps = {
+        Grid.defaultProps = {
             "aria-label": "grid",
-            cellRangeRenderer: _defaultCellRangeRenderer2["default"],
+            cellRangeRenderer: _defaultCellRangeRenderer2.default,
             estimatedColumnSize: 100,
             estimatedRowSize: 30,
             noContentRenderer: function() {
@@ -3058,7 +2991,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             scrollToAlignment: "auto",
             style: {},
             tabIndex: 0
-        }, exports["default"] = Grid;
+        }, exports.default = Grid;
     }, /* 122 */
     /***/
     function(module, exports) {
@@ -3070,14 +3003,14 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports["default"] = calculateSizeAndPositionDataAndUpdateScrollOffset;
+        }), exports.default = calculateSizeAndPositionDataAndUpdateScrollOffset;
     }, /* 123 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
@@ -3086,11 +3019,11 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         var _objectWithoutProperties2 = __webpack_require__(105), _objectWithoutProperties3 = _interopRequireDefault(_objectWithoutProperties2), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _CellSizeAndPositionManager = __webpack_require__(124), _CellSizeAndPositionManager2 = _interopRequireDefault(_CellSizeAndPositionManager), DEFAULT_MAX_SCROLL_SIZE = exports.DEFAULT_MAX_SCROLL_SIZE = 15e5, ScalingCellSizeAndPositionManager = function() {
             function ScalingCellSizeAndPositionManager(_ref) {
                 var _ref$maxScrollSize = _ref.maxScrollSize, maxScrollSize = void 0 === _ref$maxScrollSize ? DEFAULT_MAX_SCROLL_SIZE : _ref$maxScrollSize, params = (0,
-                _objectWithoutProperties3["default"])(_ref, [ "maxScrollSize" ]);
-                (0, _classCallCheck3["default"])(this, ScalingCellSizeAndPositionManager), this._cellSizeAndPositionManager = new _CellSizeAndPositionManager2["default"](params),
+                _objectWithoutProperties3.default)(_ref, [ "maxScrollSize" ]);
+                (0, _classCallCheck3.default)(this, ScalingCellSizeAndPositionManager), this._cellSizeAndPositionManager = new _CellSizeAndPositionManager2.default(params),
                 this._maxScrollSize = maxScrollSize;
             }
-            return (0, _createClass3["default"])(ScalingCellSizeAndPositionManager, [ {
+            return (0, _createClass3.default)(ScalingCellSizeAndPositionManager, [ {
                 key: "configure",
                 value: function(params) {
                     this._cellSizeAndPositionManager.configure(params);
@@ -3204,14 +3137,14 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), ScalingCellSizeAndPositionManager;
         }();
-        exports["default"] = ScalingCellSizeAndPositionManager;
+        exports.default = ScalingCellSizeAndPositionManager;
     }, /* 124 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
@@ -3220,11 +3153,11 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         var _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), CellSizeAndPositionManager = function() {
             function CellSizeAndPositionManager(_ref) {
                 var cellCount = _ref.cellCount, cellSizeGetter = _ref.cellSizeGetter, estimatedCellSize = _ref.estimatedCellSize;
-                (0, _classCallCheck3["default"])(this, CellSizeAndPositionManager), this._cellSizeGetter = cellSizeGetter,
+                (0, _classCallCheck3.default)(this, CellSizeAndPositionManager), this._cellSizeGetter = cellSizeGetter,
                 this._cellCount = cellCount, this._estimatedCellSize = estimatedCellSize, this._cellSizeAndPositionData = {},
                 this._lastMeasuredIndex = -1;
             }
-            return (0, _createClass3["default"])(CellSizeAndPositionManager, [ {
+            return (0, _createClass3.default)(CellSizeAndPositionManager, [ {
                 key: "configure",
                 value: function(_ref2) {
                     var cellCount = _ref2.cellCount, estimatedCellSize = _ref2.estimatedCellSize;
@@ -3360,7 +3293,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), CellSizeAndPositionManager;
         }();
-        exports["default"] = CellSizeAndPositionManager;
+        exports.default = CellSizeAndPositionManager;
     }, /* 125 */
     /***/
     function(module, exports) {
@@ -3377,7 +3310,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports["default"] = getOverscanIndices;
+        }), exports.default = getOverscanIndices;
         var SCROLL_DIRECTION_BACKWARD = exports.SCROLL_DIRECTION_BACKWARD = -1, SCROLL_DIRECTION_FORWARD = (exports.SCROLL_DIRECTION_FIXED = 0,
         exports.SCROLL_DIRECTION_FORWARD = 1);
     }, /* 126 */
@@ -3390,15 +3323,15 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports["default"] = updateScrollIndexHelper;
+        }), exports.default = updateScrollIndexHelper;
     }, /* 127 */
     /***/
     function(module, exports) {
         "use strict";
         function defaultCellRangeRenderer(_ref) {
             for (var cellCache = _ref.cellCache, cellRenderer = _ref.cellRenderer, columnSizeAndPositionManager = _ref.columnSizeAndPositionManager, columnStartIndex = _ref.columnStartIndex, columnStopIndex = _ref.columnStopIndex, horizontalOffsetAdjustment = _ref.horizontalOffsetAdjustment, isScrolling = _ref.isScrolling, rowSizeAndPositionManager = _ref.rowSizeAndPositionManager, rowStartIndex = _ref.rowStartIndex, rowStopIndex = _ref.rowStopIndex, verticalOffsetAdjustment = (_ref.scrollLeft,
-            _ref.scrollTop, _ref.verticalOffsetAdjustment), renderedCells = [], rowIndex = rowStartIndex; rowIndex <= rowStopIndex; rowIndex++) for (var rowDatum = rowSizeAndPositionManager.getSizeAndPositionOfCell(rowIndex), columnIndex = columnStartIndex; columnIndex <= columnStopIndex; columnIndex++) {
-                var columnDatum = columnSizeAndPositionManager.getSizeAndPositionOfCell(columnIndex), key = rowIndex + "-" + columnIndex, style = {
+            _ref.scrollTop, _ref.verticalOffsetAdjustment), visibleColumnIndices = _ref.visibleColumnIndices, visibleRowIndices = _ref.visibleRowIndices, renderedCells = [], rowIndex = rowStartIndex; rowIndex <= rowStopIndex; rowIndex++) for (var rowDatum = rowSizeAndPositionManager.getSizeAndPositionOfCell(rowIndex), columnIndex = columnStartIndex; columnIndex <= columnStopIndex; columnIndex++) {
+                var columnDatum = columnSizeAndPositionManager.getSizeAndPositionOfCell(columnIndex), isVisible = columnIndex >= visibleColumnIndices.start && columnIndex <= visibleColumnIndices.stop && rowIndex >= visibleRowIndices.start && rowIndex <= visibleRowIndices.stop, key = rowIndex + "-" + columnIndex, style = {
                     height: rowDatum.size,
                     left: columnDatum.offset + horizontalOffsetAdjustment,
                     position: "absolute",
@@ -3407,6 +3340,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }, cellRendererParams = {
                     columnIndex: columnIndex,
                     isScrolling: isScrolling,
+                    isVisible: isVisible,
                     key: key,
                     rowIndex: rowIndex,
                     style: style
@@ -3418,49 +3352,50 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports["default"] = defaultCellRangeRenderer;
+        }), exports.default = defaultCellRangeRenderer;
     }, /* 128 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports.SortIndicator = exports.SortDirection = exports.Column = exports.Table = exports.defaultRowRenderer = exports.defaultHeaderRenderer = exports.defaultCellRenderer = exports.defaultCellDataGetter = exports["default"] = void 0;
+        }), exports.SortIndicator = exports.SortDirection = exports.Column = exports.Table = exports.defaultRowRenderer = exports.defaultHeaderRenderer = exports.defaultCellRenderer = exports.defaultCellDataGetter = exports.default = void 0;
         var _Table2 = __webpack_require__(129), _Table3 = _interopRequireDefault(_Table2), _defaultCellDataGetter2 = __webpack_require__(135), _defaultCellDataGetter3 = _interopRequireDefault(_defaultCellDataGetter2), _defaultCellRenderer2 = __webpack_require__(134), _defaultCellRenderer3 = _interopRequireDefault(_defaultCellRenderer2), _defaultHeaderRenderer2 = __webpack_require__(131), _defaultHeaderRenderer3 = _interopRequireDefault(_defaultHeaderRenderer2), _defaultRowRenderer2 = __webpack_require__(136), _defaultRowRenderer3 = _interopRequireDefault(_defaultRowRenderer2), _Column2 = __webpack_require__(130), _Column3 = _interopRequireDefault(_Column2), _SortDirection2 = __webpack_require__(133), _SortDirection3 = _interopRequireDefault(_SortDirection2), _SortIndicator2 = __webpack_require__(132), _SortIndicator3 = _interopRequireDefault(_SortIndicator2);
-        exports["default"] = _Table3["default"], exports.defaultCellDataGetter = _defaultCellDataGetter3["default"],
-        exports.defaultCellRenderer = _defaultCellRenderer3["default"], exports.defaultHeaderRenderer = _defaultHeaderRenderer3["default"],
-        exports.defaultRowRenderer = _defaultRowRenderer3["default"], exports.Table = _Table3["default"],
-        exports.Column = _Column3["default"], exports.SortDirection = _SortDirection3["default"],
-        exports.SortIndicator = _SortIndicator3["default"];
+        exports.default = _Table3.default, exports.defaultCellDataGetter = _defaultCellDataGetter3.default,
+        exports.defaultCellRenderer = _defaultCellRenderer3.default, exports.defaultHeaderRenderer = _defaultHeaderRenderer3.default,
+        exports.defaultRowRenderer = _defaultRowRenderer3.default, exports.Table = _Table3.default,
+        exports.Column = _Column3.default, exports.SortDirection = _SortDirection3.default,
+        exports.SortIndicator = _SortIndicator3.default;
     }, /* 129 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
         });
-        var _extends2 = __webpack_require__(100), _extends3 = _interopRequireDefault(_extends2), _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _classnames = __webpack_require__(107), _classnames2 = _interopRequireDefault(_classnames), _Column = __webpack_require__(130), _Column2 = _interopRequireDefault(_Column), _react = __webpack_require__(89), _react2 = _interopRequireDefault(_react), _reactDom = __webpack_require__(96), _reactAddonsShallowCompare = __webpack_require__(90), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), _Grid = __webpack_require__(120), _Grid2 = _interopRequireDefault(_Grid), _defaultRowRenderer = __webpack_require__(136), _defaultRowRenderer2 = _interopRequireDefault(_defaultRowRenderer), _SortDirection = __webpack_require__(133), _SortDirection2 = _interopRequireDefault(_SortDirection), Table = function(_Component) {
+        var _extends2 = __webpack_require__(100), _extends3 = _interopRequireDefault(_extends2), _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _classnames = __webpack_require__(107), _classnames2 = _interopRequireDefault(_classnames), _Column = __webpack_require__(130), _react = (_interopRequireDefault(_Column),
+        __webpack_require__(89)), _react2 = _interopRequireDefault(_react), _reactDom = __webpack_require__(96), _reactAddonsShallowCompare = __webpack_require__(90), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), _Grid = __webpack_require__(120), _Grid2 = _interopRequireDefault(_Grid), _defaultRowRenderer = __webpack_require__(136), _defaultRowRenderer2 = _interopRequireDefault(_defaultRowRenderer), _SortDirection = __webpack_require__(133), _SortDirection2 = _interopRequireDefault(_SortDirection), Table = function(_Component) {
             function Table(props) {
-                (0, _classCallCheck3["default"])(this, Table);
-                var _this = (0, _possibleConstructorReturn3["default"])(this, (Table.__proto__ || (0,
-                _getPrototypeOf2["default"])(Table)).call(this, props));
+                (0, _classCallCheck3.default)(this, Table);
+                var _this = (0, _possibleConstructorReturn3.default)(this, (Table.__proto__ || (0,
+                _getPrototypeOf2.default)(Table)).call(this, props));
                 return _this.state = {
                     scrollbarWidth: 0
                 }, _this._createColumn = _this._createColumn.bind(_this), _this._createRow = _this._createRow.bind(_this),
                 _this._onScroll = _this._onScroll.bind(_this), _this._onSectionRendered = _this._onSectionRendered.bind(_this),
                 _this;
             }
-            return (0, _inherits3["default"])(Table, _Component), (0, _createClass3["default"])(Table, [ {
+            return (0, _inherits3.default)(Table, _Component), (0, _createClass3.default)(Table, [ {
                 key: "forceUpdateGrid",
                 value: function() {
                     this.Grid.forceUpdate();
@@ -3473,7 +3408,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "recomputeRowHeights",
                 value: function() {
-                    var index = arguments.length <= 0 || void 0 === arguments[0] ? 0 : arguments[0];
+                    var index = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0;
                     this.Grid.recomputeGridSize({
                         rowIndex: index
                     }), this.forceUpdateGrid();
@@ -3491,35 +3426,37 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "render",
                 value: function() {
-                    var _this2 = this, _props = this.props, children = _props.children, className = _props.className, disableHeader = _props.disableHeader, gridClassName = _props.gridClassName, gridStyle = _props.gridStyle, headerHeight = _props.headerHeight, height = _props.height, noRowsRenderer = _props.noRowsRenderer, rowClassName = _props.rowClassName, rowStyle = _props.rowStyle, scrollToIndex = _props.scrollToIndex, style = _props.style, width = _props.width, scrollbarWidth = this.state.scrollbarWidth, availableRowsHeight = height - headerHeight, rowClass = rowClassName instanceof Function ? rowClassName({
+                    var _this2 = this, _props = this.props, children = _props.children, className = _props.className, disableHeader = _props.disableHeader, gridClassName = _props.gridClassName, gridStyle = _props.gridStyle, headerHeight = _props.headerHeight, height = _props.height, id = _props.id, noRowsRenderer = _props.noRowsRenderer, rowClassName = _props.rowClassName, rowStyle = _props.rowStyle, scrollToIndex = _props.scrollToIndex, style = _props.style, width = _props.width, scrollbarWidth = this.state.scrollbarWidth, availableRowsHeight = height - headerHeight, rowClass = rowClassName instanceof Function ? rowClassName({
                         index: -1
                     }) : rowClassName, rowStyleObject = rowStyle instanceof Function ? rowStyle({
                         index: -1
                     }) : rowStyle;
-                    return this._cachedColumnStyles = [], _react2["default"].Children.toArray(children).forEach(function(column, index) {
+                    return this._cachedColumnStyles = [], _react2.default.Children.toArray(children).forEach(function(column, index) {
                         var flexStyles = _this2._getFlexStyleForColumn(column, column.props.style);
-                        _this2._cachedColumnStyles[index] = (0, _extends3["default"])({}, flexStyles, {
+                        _this2._cachedColumnStyles[index] = (0, _extends3.default)({}, flexStyles, {
                             overflow: "hidden"
                         });
-                    }), _react2["default"].createElement("div", {
-                        className: (0, _classnames2["default"])("ReactVirtualized__Table", className),
+                    }), _react2.default.createElement("div", {
+                        className: (0, _classnames2.default)("ReactVirtualized__Table", className),
+                        id: id,
                         style: style
-                    }, !disableHeader && _react2["default"].createElement("div", {
-                        className: (0, _classnames2["default"])("ReactVirtualized__Table__headerRow", rowClass),
-                        style: (0, _extends3["default"])({}, rowStyleObject, {
+                    }, !disableHeader && _react2.default.createElement("div", {
+                        className: (0, _classnames2.default)("ReactVirtualized__Table__headerRow", rowClass),
+                        style: (0, _extends3.default)({}, rowStyleObject, {
                             height: headerHeight,
                             overflow: "hidden",
                             paddingRight: scrollbarWidth,
                             width: width
                         })
-                    }, this._getRenderedHeaderRow()), _react2["default"].createElement(_Grid2["default"], (0,
-                    _extends3["default"])({}, this.props, {
+                    }, this._getRenderedHeaderRow()), _react2.default.createElement(_Grid2.default, (0,
+                    _extends3.default)({}, this.props, {
                         autoContainerWidth: !0,
-                        className: (0, _classnames2["default"])("ReactVirtualized__Table__Grid", gridClassName),
+                        className: (0, _classnames2.default)("ReactVirtualized__Table__Grid", gridClassName),
                         cellRenderer: this._createRow,
                         columnWidth: width,
                         columnCount: 1,
                         height: availableRowsHeight,
+                        id: void 0,
                         noContentRenderer: noRowsRenderer,
                         onScroll: this._onScroll,
                         onSectionRendered: this._onSectionRendered,
@@ -3528,7 +3465,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                         },
                         scrollbarWidth: scrollbarWidth,
                         scrollToRow: scrollToIndex,
-                        style: (0, _extends3["default"])({}, gridStyle, {
+                        style: (0, _extends3.default)({}, gridStyle, {
                             overflowX: "hidden"
                         })
                     })));
@@ -3536,7 +3473,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "shouldComponentUpdate",
                 value: function(nextProps, nextState) {
-                    return (0, _reactAddonsShallowCompare2["default"])(this, nextProps, nextState);
+                    return (0, _reactAddonsShallowCompare2.default)(this, nextProps, nextState);
                 }
             }, {
                 key: "_createColumn",
@@ -3553,9 +3490,9 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                         rowData: rowData,
                         rowIndex: rowIndex
                     }), style = this._cachedColumnStyles[columnIndex], title = "string" == typeof renderedCell ? renderedCell : null;
-                    return _react2["default"].createElement("div", {
+                    return _react2.default.createElement("div", {
                         key: "Row" + rowIndex + "-Col" + columnIndex,
-                        className: (0, _classnames2["default"])("ReactVirtualized__Table__rowColumn", className),
+                        className: (0, _classnames2.default)("ReactVirtualized__Table__rowColumn", className),
                         style: style,
                         title: title
                     }, renderedCell);
@@ -3564,7 +3501,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 key: "_createHeader",
                 value: function(_ref3) {
                     var column = _ref3.column, index = _ref3.index, _props2 = this.props, headerClassName = _props2.headerClassName, headerStyle = _props2.headerStyle, onHeaderClick = _props2.onHeaderClick, sort = _props2.sort, sortBy = _props2.sortBy, sortDirection = _props2.sortDirection, _column$props2 = column.props, dataKey = _column$props2.dataKey, disableSort = _column$props2.disableSort, headerRenderer = _column$props2.headerRenderer, label = _column$props2.label, columnData = _column$props2.columnData, sortEnabled = !disableSort && sort, classNames = (0,
-                    _classnames2["default"])("ReactVirtualized__Table__headerColumn", headerClassName, column.props.headerClassName, {
+                    _classnames2.default)("ReactVirtualized__Table__headerColumn", headerClassName, column.props.headerClassName, {
                         ReactVirtualized__Table__sortableHeaderColumn: sortEnabled
                     }), style = this._getFlexStyleForColumn(column, headerStyle), renderedHeader = headerRenderer({
                         columnData: columnData,
@@ -3575,7 +3512,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                         sortDirection: sortDirection
                     }), a11yProps = {};
                     return (sortEnabled || onHeaderClick) && !function() {
-                        var newSortDirection = sortBy !== dataKey || sortDirection === _SortDirection2["default"].DESC ? _SortDirection2["default"].ASC : _SortDirection2["default"].DESC, onClick = function() {
+                        var newSortDirection = sortBy !== dataKey || sortDirection === _SortDirection2.default.DESC ? _SortDirection2.default.ASC : _SortDirection2.default.DESC, onClick = function() {
                             sortEnabled && sort({
                                 sortBy: dataKey,
                                 sortDirection: newSortDirection
@@ -3588,7 +3525,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                         };
                         a11yProps["aria-label"] = column.props["aria-label"] || label || dataKey, a11yProps.role = "rowheader",
                         a11yProps.tabIndex = 0, a11yProps.onClick = onClick, a11yProps.onKeyDown = onKeyDown;
-                    }(), _react2["default"].createElement("div", (0, _extends3["default"])({}, a11yProps, {
+                    }(), _react2.default.createElement("div", (0, _extends3.default)({}, a11yProps, {
                         key: "Header-Col" + index,
                         className: classNames,
                         style: style
@@ -3603,7 +3540,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                         index: index
                     }) : rowStyle, rowData = rowGetter({
                         index: index
-                    }), columns = _react2["default"].Children.toArray(children).map(function(column, columnIndex) {
+                    }), columns = _react2.default.Children.toArray(children).map(function(column, columnIndex) {
                         return _this3._createColumn({
                             column: column,
                             columnIndex: columnIndex,
@@ -3612,8 +3549,8 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                             rowIndex: index,
                             scrollbarWidth: scrollbarWidth
                         });
-                    }), className = (0, _classnames2["default"])("ReactVirtualized__Table__row", rowClass), flattenedStyle = (0,
-                    _extends3["default"])({}, style, rowStyleObject, {
+                    }), className = (0, _classnames2.default)("ReactVirtualized__Table__row", rowClass), flattenedStyle = (0,
+                    _extends3.default)({}, style, rowStyleObject, {
                         height: this._getRowHeight(index),
                         overflow: "hidden",
                         paddingRight: scrollbarWidth
@@ -3635,8 +3572,8 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "_getFlexStyleForColumn",
                 value: function(column) {
-                    var customStyle = arguments.length <= 1 || void 0 === arguments[1] ? {} : arguments[1], flexValue = column.props.flexGrow + " " + column.props.flexShrink + " " + column.props.width + "px", style = (0,
-                    _extends3["default"])({}, customStyle, {
+                    var customStyle = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {}, flexValue = column.props.flexGrow + " " + column.props.flexShrink + " " + column.props.width + "px", style = (0,
+                    _extends3.default)({}, customStyle, {
                         flex: flexValue,
                         msFlex: flexValue,
                         WebkitFlex: flexValue
@@ -3647,7 +3584,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "_getRenderedHeaderRow",
                 value: function() {
-                    var _this4 = this, _props4 = this.props, children = _props4.children, disableHeader = _props4.disableHeader, items = disableHeader ? [] : _react2["default"].Children.toArray(children);
+                    var _this4 = this, _props4 = this.props, children = _props4.children, disableHeader = _props4.disableHeader, items = disableHeader ? [] : _react2.default.Children.toArray(children);
                     return items.map(function(column, index) {
                         return _this4._createHeader({
                             column: column,
@@ -3694,46 +3631,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), Table;
         }(_react.Component);
-        Table.propTypes = {
-            "aria-label": _react.PropTypes.string,
-            autoHeight: _react.PropTypes.bool,
-            children: function children(props, propName, componentName) {
-                for (var children = _react2["default"].Children.toArray(props.children), i = 0; i < children.length; i++) if (children[i].type !== _Column2["default"]) return new Error("Table only accepts children of type Column");
-            },
-            className: _react.PropTypes.string,
-            disableHeader: _react.PropTypes.bool,
-            estimatedRowSize: _react.PropTypes.number.isRequired,
-            gridClassName: _react.PropTypes.string,
-            gridStyle: _react.PropTypes.object,
-            headerClassName: _react.PropTypes.string,
-            headerHeight: _react.PropTypes.number.isRequired,
-            height: _react.PropTypes.number.isRequired,
-            noRowsRenderer: _react.PropTypes.func,
-            onHeaderClick: _react.PropTypes.func,
-            headerStyle: _react.PropTypes.object,
-            onRowClick: _react.PropTypes.func,
-            onRowDoubleClick: _react.PropTypes.func,
-            onRowMouseOut: _react.PropTypes.func,
-            onRowMouseOver: _react.PropTypes.func,
-            onRowsRendered: _react.PropTypes.func,
-            onScroll: _react.PropTypes.func.isRequired,
-            overscanRowCount: _react.PropTypes.number.isRequired,
-            rowClassName: _react.PropTypes.oneOfType([ _react.PropTypes.string, _react.PropTypes.func ]),
-            rowGetter: _react.PropTypes.func.isRequired,
-            rowHeight: _react.PropTypes.oneOfType([ _react.PropTypes.number, _react.PropTypes.func ]).isRequired,
-            rowCount: _react.PropTypes.number.isRequired,
-            rowRenderer: _react.PropTypes.func,
-            rowStyle: _react.PropTypes.oneOfType([ _react.PropTypes.object, _react.PropTypes.func ]).isRequired,
-            scrollToAlignment: _react.PropTypes.oneOf([ "auto", "end", "start", "center" ]).isRequired,
-            scrollToIndex: _react.PropTypes.number,
-            scrollTop: _react.PropTypes.number,
-            sort: _react.PropTypes.func,
-            sortBy: _react.PropTypes.string,
-            sortDirection: _react.PropTypes.oneOf([ _SortDirection2["default"].ASC, _SortDirection2["default"].DESC ]),
-            style: _react.PropTypes.object,
-            tabIndex: _react.PropTypes.number,
-            width: _react.PropTypes.number.isRequired
-        }, Table.defaultProps = {
+        Table.defaultProps = {
             disableHeader: !1,
             estimatedRowSize: 30,
             headerHeight: 0,
@@ -3748,18 +3646,18 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 return null;
             },
             overscanRowCount: 10,
-            rowRenderer: _defaultRowRenderer2["default"],
+            rowRenderer: _defaultRowRenderer2.default,
             rowStyle: {},
             scrollToAlignment: "auto",
             style: {}
-        }, exports["default"] = Table;
+        }, exports.default = Table;
     }, /* 130 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
@@ -3767,59 +3665,42 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         });
         var _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _react = __webpack_require__(89), _defaultHeaderRenderer = __webpack_require__(131), _defaultHeaderRenderer2 = _interopRequireDefault(_defaultHeaderRenderer), _defaultCellRenderer = __webpack_require__(134), _defaultCellRenderer2 = _interopRequireDefault(_defaultCellRenderer), _defaultCellDataGetter = __webpack_require__(135), _defaultCellDataGetter2 = _interopRequireDefault(_defaultCellDataGetter), Column = function(_Component) {
             function Column() {
-                return (0, _classCallCheck3["default"])(this, Column), (0, _possibleConstructorReturn3["default"])(this, (Column.__proto__ || (0,
-                _getPrototypeOf2["default"])(Column)).apply(this, arguments));
+                return (0, _classCallCheck3.default)(this, Column), (0, _possibleConstructorReturn3.default)(this, (Column.__proto__ || (0,
+                _getPrototypeOf2.default)(Column)).apply(this, arguments));
             }
-            return (0, _inherits3["default"])(Column, _Component), Column;
+            return (0, _inherits3.default)(Column, _Component), Column;
         }(_react.Component);
         Column.defaultProps = {
-            cellDataGetter: _defaultCellDataGetter2["default"],
-            cellRenderer: _defaultCellRenderer2["default"],
+            cellDataGetter: _defaultCellDataGetter2.default,
+            cellRenderer: _defaultCellRenderer2.default,
             flexGrow: 0,
             flexShrink: 1,
-            headerRenderer: _defaultHeaderRenderer2["default"],
+            headerRenderer: _defaultHeaderRenderer2.default,
             style: {}
-        }, Column.propTypes = {
-            "aria-label": _react.PropTypes.string,
-            cellDataGetter: _react.PropTypes.func,
-            cellRenderer: _react.PropTypes.func,
-            className: _react.PropTypes.string,
-            columnData: _react.PropTypes.object,
-            dataKey: _react.PropTypes.any.isRequired,
-            disableSort: _react.PropTypes.bool,
-            flexGrow: _react.PropTypes.number,
-            flexShrink: _react.PropTypes.number,
-            headerClassName: _react.PropTypes.string,
-            headerRenderer: _react.PropTypes.func.isRequired,
-            label: _react.PropTypes.string,
-            maxWidth: _react.PropTypes.number,
-            minWidth: _react.PropTypes.number,
-            style: _react.PropTypes.object,
-            width: _react.PropTypes.number.isRequired
-        }, exports["default"] = Column;
+        }, exports.default = Column;
     }, /* 131 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         function defaultHeaderRenderer(_ref) {
-            var dataKey = (_ref.columnData, _ref.dataKey), label = (_ref.disableSort, _ref.label), sortBy = _ref.sortBy, sortDirection = _ref.sortDirection, showSortIndicator = sortBy === dataKey, children = [ _react2["default"].createElement("span", {
+            var dataKey = (_ref.columnData, _ref.dataKey), label = (_ref.disableSort, _ref.label), sortBy = _ref.sortBy, sortDirection = _ref.sortDirection, showSortIndicator = sortBy === dataKey, children = [ _react2.default.createElement("span", {
                 className: "ReactVirtualized__Table__headerTruncatedText",
                 key: "label",
                 title: label
             }, label) ];
-            return showSortIndicator && children.push(_react2["default"].createElement(_SortIndicator2["default"], {
+            return showSortIndicator && children.push(_react2.default.createElement(_SortIndicator2.default, {
                 key: "SortIndicator",
                 sortDirection: sortDirection
             })), children;
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports["default"] = defaultHeaderRenderer;
+        }), exports.default = defaultHeaderRenderer;
         var _react = __webpack_require__(89), _react2 = _interopRequireDefault(_react), _SortIndicator = __webpack_require__(132), _SortIndicator2 = _interopRequireDefault(_SortIndicator);
     }, /* 132 */
     /***/
@@ -3827,35 +3708,32 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         function SortIndicator(_ref) {
-            var sortDirection = _ref.sortDirection, classNames = (0, _classnames2["default"])("ReactVirtualized__Table__sortableHeaderIcon", {
-                "ReactVirtualized__Table__sortableHeaderIcon--ASC": sortDirection === _SortDirection2["default"].ASC,
-                "ReactVirtualized__Table__sortableHeaderIcon--DESC": sortDirection === _SortDirection2["default"].DESC
+            var sortDirection = _ref.sortDirection, classNames = (0, _classnames2.default)("ReactVirtualized__Table__sortableHeaderIcon", {
+                "ReactVirtualized__Table__sortableHeaderIcon--ASC": sortDirection === _SortDirection2.default.ASC,
+                "ReactVirtualized__Table__sortableHeaderIcon--DESC": sortDirection === _SortDirection2.default.DESC
             });
-            return _react2["default"].createElement("svg", {
+            return _react2.default.createElement("svg", {
                 className: classNames,
                 width: 18,
                 height: 18,
                 viewBox: "0 0 24 24"
-            }, sortDirection === _SortDirection2["default"].ASC ? _react2["default"].createElement("path", {
+            }, sortDirection === _SortDirection2.default.ASC ? _react2.default.createElement("path", {
                 d: "M7 14l5-5 5 5z"
-            }) : _react2["default"].createElement("path", {
+            }) : _react2.default.createElement("path", {
                 d: "M7 10l5 5 5-5z"
-            }), _react2["default"].createElement("path", {
+            }), _react2.default.createElement("path", {
                 d: "M0 0h24v24H0z",
                 fill: "none"
             }));
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports["default"] = SortIndicator;
+        }), exports.default = SortIndicator;
         var _react = __webpack_require__(89), _react2 = _interopRequireDefault(_react), _classnames = __webpack_require__(107), _classnames2 = _interopRequireDefault(_classnames), _SortDirection = __webpack_require__(133), _SortDirection2 = _interopRequireDefault(_SortDirection);
-        SortIndicator.propTypes = {
-            sortDirection: _react.PropTypes.oneOf([ _SortDirection2["default"].ASC, _SortDirection2["default"].DESC ])
-        };
     }, /* 133 */
     /***/
     function(module, exports) {
@@ -3867,7 +3745,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             ASC: "ASC",
             DESC: "DESC"
         };
-        exports["default"] = SortDirection;
+        exports.default = SortDirection;
     }, /* 134 */
     /***/
     function(module, exports) {
@@ -3879,7 +3757,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports["default"] = defaultCellRenderer;
+        }), exports.default = defaultCellRenderer;
     }, /* 135 */
     /***/
     function(module, exports) {
@@ -3890,14 +3768,14 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports["default"] = defaultCellDataGetter;
+        }), exports.default = defaultCellDataGetter;
     }, /* 136 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         function defaultRowRenderer(_ref) {
@@ -3921,7 +3799,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 return onRowMouseOver({
                     index: index
                 });
-            })), _react2["default"].createElement("div", (0, _extends3["default"])({}, a11yProps, {
+            })), _react2.default.createElement("div", (0, _extends3.default)({}, a11yProps, {
                 className: className,
                 key: key,
                 style: style
@@ -3931,7 +3809,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             value: !0
         });
         var _extends2 = __webpack_require__(100), _extends3 = _interopRequireDefault(_extends2);
-        exports["default"] = defaultRowRenderer;
+        exports.default = defaultRowRenderer;
         var _react = __webpack_require__(89), _react2 = _interopRequireDefault(_react);
     }, /* 137 */
     /***/
@@ -3939,21 +3817,21 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports.InfiniteLoader = exports["default"] = void 0;
+        }), exports.InfiniteLoader = exports.default = void 0;
         var _InfiniteLoader2 = __webpack_require__(138), _InfiniteLoader3 = _interopRequireDefault(_InfiniteLoader2);
-        exports["default"] = _InfiniteLoader3["default"], exports.InfiniteLoader = _InfiniteLoader3["default"];
+        exports.default = _InfiniteLoader3.default, exports.InfiniteLoader = _InfiniteLoader3.default;
     }, /* 138 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         function isRangeVisible(_ref2) {
@@ -3999,14 +3877,13 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         exports.forceUpdateReactVirtualizedComponent = forceUpdateReactVirtualizedComponent;
         var _react = __webpack_require__(89), _reactAddonsShallowCompare = __webpack_require__(90), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), _createCallbackMemoizer = __webpack_require__(108), _createCallbackMemoizer2 = _interopRequireDefault(_createCallbackMemoizer), InfiniteLoader = function(_Component) {
             function InfiniteLoader(props, context) {
-                (0, _classCallCheck3["default"])(this, InfiniteLoader);
-                var _this = (0, _possibleConstructorReturn3["default"])(this, (InfiniteLoader.__proto__ || (0,
-                _getPrototypeOf2["default"])(InfiniteLoader)).call(this, props, context));
-                return _this._loadMoreRowsMemoizer = (0, _createCallbackMemoizer2["default"])(),
-                _this._onRowsRendered = _this._onRowsRendered.bind(_this), _this._registerChild = _this._registerChild.bind(_this),
-                _this;
+                (0, _classCallCheck3.default)(this, InfiniteLoader);
+                var _this = (0, _possibleConstructorReturn3.default)(this, (InfiniteLoader.__proto__ || (0,
+                _getPrototypeOf2.default)(InfiniteLoader)).call(this, props, context));
+                return _this._loadMoreRowsMemoizer = (0, _createCallbackMemoizer2.default)(), _this._onRowsRendered = _this._onRowsRendered.bind(_this),
+                _this._registerChild = _this._registerChild.bind(_this), _this;
             }
-            return (0, _inherits3["default"])(InfiniteLoader, _Component), (0, _createClass3["default"])(InfiniteLoader, [ {
+            return (0, _inherits3.default)(InfiniteLoader, _Component), (0, _createClass3.default)(InfiniteLoader, [ {
                 key: "render",
                 value: function() {
                     var children = this.props.children;
@@ -4018,7 +3895,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "shouldComponentUpdate",
                 value: function(nextProps, nextState) {
-                    return (0, _reactAddonsShallowCompare2["default"])(this, nextProps, nextState);
+                    return (0, _reactAddonsShallowCompare2.default)(this, nextProps, nextState);
                 }
             }, {
                 key: "_loadUnloadedRanges",
@@ -4066,39 +3943,32 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), InfiniteLoader;
         }(_react.Component);
-        InfiniteLoader.propTypes = {
-            children: _react.PropTypes.func.isRequired,
-            isRowLoaded: _react.PropTypes.func.isRequired,
-            loadMoreRows: _react.PropTypes.func.isRequired,
-            minimumBatchSize: _react.PropTypes.number.isRequired,
-            rowCount: _react.PropTypes.number.isRequired,
-            threshold: _react.PropTypes.number.isRequired
-        }, InfiniteLoader.defaultProps = {
+        InfiniteLoader.defaultProps = {
             minimumBatchSize: 10,
             rowCount: 0,
             threshold: 15
-        }, exports["default"] = InfiniteLoader;
+        }, exports.default = InfiniteLoader;
     }, /* 139 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports.ScrollSync = exports["default"] = void 0;
+        }), exports.ScrollSync = exports.default = void 0;
         var _ScrollSync2 = __webpack_require__(140), _ScrollSync3 = _interopRequireDefault(_ScrollSync2);
-        exports["default"] = _ScrollSync3["default"], exports.ScrollSync = _ScrollSync3["default"];
+        exports.default = _ScrollSync3.default, exports.ScrollSync = _ScrollSync3.default;
     }, /* 140 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
@@ -4106,9 +3976,9 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         });
         var _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _react = __webpack_require__(89), _reactAddonsShallowCompare = __webpack_require__(90), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), ScrollSync = function(_Component) {
             function ScrollSync(props, context) {
-                (0, _classCallCheck3["default"])(this, ScrollSync);
-                var _this = (0, _possibleConstructorReturn3["default"])(this, (ScrollSync.__proto__ || (0,
-                _getPrototypeOf2["default"])(ScrollSync)).call(this, props, context));
+                (0, _classCallCheck3.default)(this, ScrollSync);
+                var _this = (0, _possibleConstructorReturn3.default)(this, (ScrollSync.__proto__ || (0,
+                _getPrototypeOf2.default)(ScrollSync)).call(this, props, context));
                 return _this.state = {
                     clientHeight: 0,
                     clientWidth: 0,
@@ -4118,7 +3988,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                     scrollWidth: 0
                 }, _this._onScroll = _this._onScroll.bind(_this), _this;
             }
-            return (0, _inherits3["default"])(ScrollSync, _Component), (0, _createClass3["default"])(ScrollSync, [ {
+            return (0, _inherits3.default)(ScrollSync, _Component), (0, _createClass3.default)(ScrollSync, [ {
                 key: "render",
                 value: function() {
                     var children = this.props.children, _state = this.state, clientHeight = _state.clientHeight, clientWidth = _state.clientWidth, scrollHeight = _state.scrollHeight, scrollLeft = _state.scrollLeft, scrollTop = _state.scrollTop, scrollWidth = _state.scrollWidth;
@@ -4135,7 +4005,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "shouldComponentUpdate",
                 value: function(nextProps, nextState) {
-                    return (0, _reactAddonsShallowCompare2["default"])(this, nextProps, nextState);
+                    return (0, _reactAddonsShallowCompare2.default)(this, nextProps, nextState);
                 }
             }, {
                 key: "_onScroll",
@@ -4152,44 +4022,42 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), ScrollSync;
         }(_react.Component);
-        ScrollSync.propTypes = {
-            children: _react.PropTypes.func.isRequired
-        }, exports["default"] = ScrollSync;
+        exports.default = ScrollSync;
     }, /* 141 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports.List = exports["default"] = void 0;
+        }), exports.List = exports.default = void 0;
         var _List2 = __webpack_require__(142), _List3 = _interopRequireDefault(_List2);
-        exports["default"] = _List3["default"], exports.List = _List3["default"];
+        exports.default = _List3.default, exports.List = _List3.default;
     }, /* 142 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
         });
-        var _extends2 = __webpack_require__(100), _extends3 = _interopRequireDefault(_extends2), _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _Grid = __webpack_require__(120), _Grid2 = _interopRequireDefault(_Grid), _react = __webpack_require__(89), _react2 = _interopRequireDefault(_react), _classnames = __webpack_require__(107), _classnames2 = _interopRequireDefault(_classnames), _reactAddonsShallowCompare = __webpack_require__(90), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), List = function(_Component) {
+        var _objectWithoutProperties2 = __webpack_require__(105), _objectWithoutProperties3 = _interopRequireDefault(_objectWithoutProperties2), _extends2 = __webpack_require__(100), _extends3 = _interopRequireDefault(_extends2), _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _Grid = __webpack_require__(120), _Grid2 = _interopRequireDefault(_Grid), _react = __webpack_require__(89), _react2 = _interopRequireDefault(_react), _classnames = __webpack_require__(107), _classnames2 = _interopRequireDefault(_classnames), _reactAddonsShallowCompare = __webpack_require__(90), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), List = function(_Component) {
             function List(props, context) {
-                (0, _classCallCheck3["default"])(this, List);
-                var _this = (0, _possibleConstructorReturn3["default"])(this, (List.__proto__ || (0,
-                _getPrototypeOf2["default"])(List)).call(this, props, context));
+                (0, _classCallCheck3.default)(this, List);
+                var _this = (0, _possibleConstructorReturn3.default)(this, (List.__proto__ || (0,
+                _getPrototypeOf2.default)(List)).call(this, props, context));
                 return _this._cellRenderer = _this._cellRenderer.bind(_this), _this._onScroll = _this._onScroll.bind(_this),
                 _this._onSectionRendered = _this._onSectionRendered.bind(_this), _this;
             }
-            return (0, _inherits3["default"])(List, _Component), (0, _createClass3["default"])(List, [ {
+            return (0, _inherits3.default)(List, _Component), (0, _createClass3.default)(List, [ {
                 key: "forceUpdateGrid",
                 value: function() {
                     this.Grid.forceUpdate();
@@ -4202,7 +4070,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "recomputeRowHeights",
                 value: function() {
-                    var index = arguments.length <= 0 || void 0 === arguments[0] ? 0 : arguments[0];
+                    var index = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0;
                     this.Grid.recomputeGridSize({
                         rowIndex: index
                     }), this.forceUpdateGrid();
@@ -4211,8 +4079,8 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 key: "render",
                 value: function() {
                     var _this2 = this, _props = this.props, className = _props.className, noRowsRenderer = _props.noRowsRenderer, scrollToIndex = _props.scrollToIndex, width = _props.width, classNames = (0,
-                    _classnames2["default"])("ReactVirtualized__List", className);
-                    return _react2["default"].createElement(_Grid2["default"], (0, _extends3["default"])({}, this.props, {
+                    _classnames2.default)("ReactVirtualized__List", className);
+                    return _react2.default.createElement(_Grid2.default, (0, _extends3.default)({}, this.props, {
                         autoContainerWidth: !0,
                         cellRenderer: this._cellRenderer,
                         className: classNames,
@@ -4230,18 +4098,16 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "shouldComponentUpdate",
                 value: function(nextProps, nextState) {
-                    return (0, _reactAddonsShallowCompare2["default"])(this, nextProps, nextState);
+                    return (0, _reactAddonsShallowCompare2.default)(this, nextProps, nextState);
                 }
             }, {
                 key: "_cellRenderer",
                 value: function(_ref2) {
-                    var isScrolling = (_ref2.columnIndex, _ref2.isScrolling), key = _ref2.key, rowIndex = _ref2.rowIndex, style = _ref2.style, rowRenderer = this.props.rowRenderer;
-                    return style.width = "100%", rowRenderer({
+                    var rowIndex = _ref2.rowIndex, style = _ref2.style, rest = (0, _objectWithoutProperties3.default)(_ref2, [ "rowIndex", "style" ]), rowRenderer = this.props.rowRenderer;
+                    return style.width = "100%", rowRenderer((0, _extends3.default)({
                         index: rowIndex,
-                        isScrolling: isScrolling,
-                        key: key,
                         style: style
-                    });
+                    }, rest));
                 }
             }, {
                 key: "_onScroll",
@@ -4266,26 +4132,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), List;
         }(_react.Component);
-        List.propTypes = {
-            "aria-label": _react.PropTypes.string,
-            autoHeight: _react.PropTypes.bool,
-            className: _react.PropTypes.string,
-            estimatedRowSize: _react.PropTypes.number.isRequired,
-            height: _react.PropTypes.number.isRequired,
-            noRowsRenderer: _react.PropTypes.func.isRequired,
-            onRowsRendered: _react.PropTypes.func.isRequired,
-            overscanRowCount: _react.PropTypes.number.isRequired,
-            onScroll: _react.PropTypes.func.isRequired,
-            rowHeight: _react.PropTypes.oneOfType([ _react.PropTypes.number, _react.PropTypes.func ]).isRequired,
-            rowRenderer: _react.PropTypes.func.isRequired,
-            rowCount: _react.PropTypes.number.isRequired,
-            scrollToAlignment: _react.PropTypes.oneOf([ "auto", "end", "start", "center" ]).isRequired,
-            scrollToIndex: _react.PropTypes.number,
-            scrollTop: _react.PropTypes.number,
-            style: _react.PropTypes.object,
-            tabIndex: _react.PropTypes.number,
-            width: _react.PropTypes.number.isRequired
-        }, List.defaultProps = {
+        List.defaultProps = {
             estimatedRowSize: 30,
             noRowsRenderer: function() {
                 return null;
@@ -4299,19 +4146,19 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             overscanRowCount: 10,
             scrollToAlignment: "auto",
             style: {}
-        }, exports["default"] = List;
+        }, exports.default = List;
     }, /* 143 */
     /***/
     function(module, exports, __webpack_require__) {
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
             value: !0
-        }), exports.IS_SCROLLING_TIMEOUT = exports.WindowScroller = exports["default"] = void 0;
+        }), exports.IS_SCROLLING_TIMEOUT = exports.WindowScroller = exports.default = void 0;
         var _onScroll = __webpack_require__(144);
         Object.defineProperty(exports, "IS_SCROLLING_TIMEOUT", {
             enumerable: !0,
@@ -4320,7 +4167,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }
         });
         var _WindowScroller2 = __webpack_require__(145), _WindowScroller3 = _interopRequireDefault(_WindowScroller2);
-        exports["default"] = _WindowScroller3["default"], exports.WindowScroller = _WindowScroller3["default"];
+        exports.default = _WindowScroller3.default, exports.WindowScroller = _WindowScroller3.default;
     }, /* 144 */
     /***/
     function(module, exports) {
@@ -4362,7 +4209,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         "use strict";
         function _interopRequireDefault(obj) {
             return obj && obj.__esModule ? obj : {
-                "default": obj
+                default: obj
             };
         }
         Object.defineProperty(exports, "__esModule", {
@@ -4370,9 +4217,9 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
         });
         var _getPrototypeOf = __webpack_require__(3), _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf), _classCallCheck2 = __webpack_require__(29), _classCallCheck3 = _interopRequireDefault(_classCallCheck2), _createClass2 = __webpack_require__(30), _createClass3 = _interopRequireDefault(_createClass2), _possibleConstructorReturn2 = __webpack_require__(34), _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2), _inherits2 = __webpack_require__(81), _inherits3 = _interopRequireDefault(_inherits2), _react = __webpack_require__(89), _react2 = _interopRequireDefault(_react), _reactDom = __webpack_require__(96), _reactDom2 = _interopRequireDefault(_reactDom), _reactAddonsShallowCompare = __webpack_require__(90), _reactAddonsShallowCompare2 = _interopRequireDefault(_reactAddonsShallowCompare), _onScroll = __webpack_require__(144), WindowScroller = function(_Component) {
             function WindowScroller(props) {
-                (0, _classCallCheck3["default"])(this, WindowScroller);
-                var _this = (0, _possibleConstructorReturn3["default"])(this, (WindowScroller.__proto__ || (0,
-                _getPrototypeOf2["default"])(WindowScroller)).call(this, props)), height = "undefined" != typeof window ? window.innerHeight : 0;
+                (0, _classCallCheck3.default)(this, WindowScroller);
+                var _this = (0, _possibleConstructorReturn3.default)(this, (WindowScroller.__proto__ || (0,
+                _getPrototypeOf2.default)(WindowScroller)).call(this, props)), height = "undefined" != typeof window ? window.innerHeight : 0;
                 return _this.state = {
                     isScrolling: !1,
                     height: height,
@@ -4381,11 +4228,11 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 _this._enablePointerEventsAfterDelayCallback = _this._enablePointerEventsAfterDelayCallback.bind(_this),
                 _this;
             }
-            return (0, _inherits3["default"])(WindowScroller, _Component), (0, _createClass3["default"])(WindowScroller, [ {
+            return (0, _inherits3.default)(WindowScroller, _Component), (0, _createClass3.default)(WindowScroller, [ {
                 key: "componentDidMount",
                 value: function() {
                     var height = this.state.height;
-                    this._positionFromTop = _reactDom2["default"].findDOMNode(this).getBoundingClientRect().top - document.documentElement.getBoundingClientRect().top,
+                    this._positionFromTop = _reactDom2.default.findDOMNode(this).getBoundingClientRect().top - document.documentElement.getBoundingClientRect().top,
                     height !== window.innerHeight && this.setState({
                         height: window.innerHeight
                     }), (0, _onScroll.registerScrollListener)(this), window.addEventListener("resize", this._onResizeWindow, !1);
@@ -4399,7 +4246,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 key: "render",
                 value: function() {
                     var children = this.props.children, _state = this.state, isScrolling = _state.isScrolling, scrollTop = _state.scrollTop, height = _state.height;
-                    return _react2["default"].createElement("div", null, children({
+                    return _react2.default.createElement("div", null, children({
                         height: height,
                         isScrolling: isScrolling,
                         scrollTop: scrollTop
@@ -4408,7 +4255,7 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
             }, {
                 key: "shouldComponentUpdate",
                 value: function(nextProps, nextState) {
-                    return (0, _reactAddonsShallowCompare2["default"])(this, nextProps, nextState);
+                    return (0, _reactAddonsShallowCompare2.default)(this, nextProps, nextState);
                 }
             }, {
                 key: "_enablePointerEventsAfterDelayCallback",
@@ -4440,14 +4287,10 @@ var REACT_SHALLOW_COMPARE = "devtools/client/shared/vendor/react-addons-shallow-
                 }
             } ]), WindowScroller;
         }(_react.Component);
-        WindowScroller.propTypes = {
-            children: _react.PropTypes.func.isRequired,
-            onResize: _react.PropTypes.func.isRequired,
-            onScroll: _react.PropTypes.func.isRequired
-        }, WindowScroller.defaultProps = {
+        WindowScroller.defaultProps = {
             onResize: function() {},
             onScroll: function() {}
-        }, exports["default"] = WindowScroller;
+        }, exports.default = WindowScroller;
     } ]);
 });
 //# sourceMappingURL=react-virtualized.js.map
