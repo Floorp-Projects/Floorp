@@ -74,7 +74,5 @@ add_task(function* testPageAction() {
 
   yield extension.unload();
 
-  yield new Promise(resolve => setTimeout(resolve, 0));
-
   is(panel.parentNode, null, "Panel should be removed from the document");
 });

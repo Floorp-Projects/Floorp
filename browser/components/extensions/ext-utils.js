@@ -78,15 +78,6 @@ XPCOMUtils.defineLazyGetter(this, "standaloneStylesheets", () => {
   return stylesheets;
 });
 
-/* eslint-disable mozilla/balanced-listeners */
-extensions.on("page-shutdown", (type, context) => {
-  if (context.viewType == "popup" && context.active) {
-    // TODO(robwu): This is not webext-oop compatible.
-    context.xulBrowser.contentWindow.close();
-  }
-});
-/* eslint-enable mozilla/balanced-listeners */
-
 class BasePopup {
   constructor(extension, viewNode, popupURL, browserStyle, fixedWidth = false) {
     this.extension = extension;
@@ -96,6 +87,8 @@ class BasePopup {
     this.window = viewNode.ownerGlobal;
     this.destroyed = false;
     this.fixedWidth = fixedWidth;
+
+    extension.callOnClose(this);
 
     this.contentReady = new Promise(resolve => {
       this._resolveContentReady = resolve;
@@ -120,7 +113,13 @@ class BasePopup {
     return BasePopup.instances.get(window).get(extension);
   }
 
+  close() {
+    this.closePopup();
+  }
+
   destroy() {
+    this.extension.forgetOnClose(this);
+
     this.destroyed = true;
     this.browserLoadedDeferred.reject(new Error("Popup destroyed"));
     return this.browserReady.then(() => {

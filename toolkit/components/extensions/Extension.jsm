@@ -83,6 +83,7 @@ if (!AppConstants.RELEASE_OR_BETA) {
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   BaseContext,
+  defineLazyGetter,
   EventEmitter,
   SchemaAPIManager,
   LocaleData,
@@ -289,20 +290,14 @@ class ProxyContext extends BaseContext {
     this.currentMessageManager = xulBrowser.messageManager;
     this._docShellTracker = new BrowserDocshellFollower(xulBrowser,
         this.onBrowserChange.bind(this));
-    this.principal_ = principal;
 
-    this.apiObj = {};
-    GlobalManager.injectInObject(this, false, this.apiObj);
+    Object.defineProperty(this, "principal", {
+      value: principal, enumerable: true, configurable: true,
+    });
 
     this.listenerProxies = new Map();
 
-    this.sandbox = Cu.Sandbox(principal, {});
-
     Management.emit("proxy-context-load", this);
-  }
-
-  get principal() {
-    return this.principal_;
   }
 
   get cloneScope() {
@@ -333,6 +328,16 @@ class ProxyContext extends BaseContext {
     Management.emit("proxy-context-unload", this);
   }
 }
+
+defineLazyGetter(ProxyContext.prototype, "apiObj", function() {
+  let obj = {};
+  GlobalManager.injectInObject(this, false, obj);
+  return obj;
+});
+
+defineLazyGetter(ProxyContext.prototype, "sandbox", function() {
+  return Cu.Sandbox(this.principal);
+});
 
 // The parent ProxyContext of an ExtensionContext in ExtensionChild.jsm.
 class ExtensionChildProxyContext extends ProxyContext {
