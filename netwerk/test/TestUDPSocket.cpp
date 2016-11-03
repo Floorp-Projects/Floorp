@@ -110,9 +110,7 @@ public:
 
 NS_IMPL_ISUPPORTS(UDPClientListener, nsIUDPSocketListener)
 
-UDPClientListener::~UDPClientListener()
-{
-}
+UDPClientListener::~UDPClientListener() = default;
 
 NS_IMETHODIMP
 UDPClientListener::OnPacketReceived(nsIUDPSocket* socket, nsIUDPMessage* message)
@@ -172,9 +170,7 @@ public:
 
 NS_IMPL_ISUPPORTS(UDPServerListener, nsIUDPSocketListener)
 
-UDPServerListener::~UDPServerListener()
-{
-}
+UDPServerListener::~UDPServerListener() = default;
 
 NS_IMETHODIMP
 UDPServerListener::OnPacketReceived(nsIUDPSocket* socket, nsIUDPMessage* message)
@@ -240,9 +236,7 @@ public:
 
 NS_IMPL_ISUPPORTS(MulticastTimerCallback, nsITimerCallback)
 
-MulticastTimerCallback::~MulticastTimerCallback()
-{
-}
+MulticastTimerCallback::~MulticastTimerCallback() = default;
 
 NS_IMETHODIMP
 MulticastTimerCallback::Notify(nsITimer* timer)

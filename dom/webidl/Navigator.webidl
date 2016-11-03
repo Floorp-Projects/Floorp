@@ -304,13 +304,6 @@ partial interface Navigator {
   readonly attribute sequence<VRDisplay> activeVRDisplays;
 };
 
-#ifdef MOZ_B2G_BT
-partial interface Navigator {
-  [Throws, ChromeOnly, UnsafeInPrerendering]
-  readonly attribute BluetoothManager mozBluetooth;
-};
-#endif // MOZ_B2G_BT
-
 #ifdef MOZ_TIME_MANAGER
 // nsIDOMMozNavigatorTime
 partial interface Navigator {

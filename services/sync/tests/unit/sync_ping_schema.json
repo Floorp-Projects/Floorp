@@ -134,7 +134,8 @@
         { "$ref": "#/definitions/shutdownError" },
         { "$ref": "#/definitions/authError" },
         { "$ref": "#/definitions/otherError" },
-        { "$ref": "#/definitions/unexpectedError" }
+        { "$ref": "#/definitions/unexpectedError" },
+        { "$ref": "#/definitions/sqlError" }
       ]
     },
     "httpError": {
@@ -176,6 +177,13 @@
       "properties": {
         "name": { "enum": ["unexpectederror"] },
         "error": { "type": "string" }
+      }
+    },
+    "sqlError": {
+      "required": ["name"],
+      "properties": {
+        "name": { "enum": ["sqlerror"] },
+        "code": { "type": "integer" }
       }
     },
     "validationProblem": {

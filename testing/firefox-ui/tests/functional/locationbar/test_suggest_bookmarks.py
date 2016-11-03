@@ -39,6 +39,7 @@ class TestStarInAutocomplete(FirefoxTestCase):
 
             self.browser.navbar.locationbar.autocomplete_results.close()
             self.places.restore_default_bookmarks()
+            self.marionette.clear_pref(self.PREF_SUGGEST_SEARCHES)
         finally:
             FirefoxTestCase.tearDown(self)
 

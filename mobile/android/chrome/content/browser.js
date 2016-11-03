@@ -4385,6 +4385,29 @@ Tab.prototype = {
     // for now anyway.
   },
 
+  ShouldNotifyMediaPlaybackChange: function(inactive) {
+    // We don't want to show the media control interface for the short sound
+    // which duration is smaller than the threshold. The basic unit is second.
+    // Note : the streaming format's duration is infinite.
+    const mediaDurationThreshold = 1.0;
+
+    let audioElements = this.browser.contentDocument.getElementsByTagName("audio");
+    for each (let audio in audioElements) {
+      if (audio.paused == inactive && audio.duration > mediaDurationThreshold) {
+        return true;
+      }
+    }
+
+    let videoElements = this.browser.contentDocument.getElementsByTagName("video");
+    for each (let video in videoElements) {
+      if (video.paused == inactive && video.duration > mediaDurationThreshold) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "before-first-paint":
@@ -4409,20 +4432,27 @@ Tab.prototype = {
         }
 
         let winId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
-        if (this.browser.outerWindowID == winId) {
-          let status;
-          if (aTopic == "media-playback") {
-            status = aData === "active" ? "start" : "end";
-          } else if (aTopic == "media-playback-resumed") {
-            status = "resume";
-          }
-
-          Messaging.sendRequest({
-            type: "Tab:MediaPlaybackChange",
-            tabID: this.id,
-            status: status
-          });
+        if (this.browser.outerWindowID != winId) {
+          return;
         }
+
+        let isInactive = (aData === "inactive");
+        if (!this.ShouldNotifyMediaPlaybackChange(isInactive)) {
+          return;
+        }
+
+        let status;
+        if (aTopic == "media-playback") {
+          status = isInactive ? "end" : "start";
+        } else if (aTopic == "media-playback-resumed") {
+          status = "resume";
+        }
+
+        Messaging.sendRequest({
+          type: "Tab:MediaPlaybackChange",
+          tabID: this.id,
+          status: status
+        });
         break;
     }
   },

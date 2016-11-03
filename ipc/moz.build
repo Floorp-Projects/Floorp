@@ -14,10 +14,10 @@ DIRS += [
 if CONFIG['MOZ_B2G_RIL']:
     DIRS += ['ril']
 
-if CONFIG['MOZ_ENABLE_DBUS'] or CONFIG['MOZ_B2G_BT_BLUEZ']:
+if CONFIG['MOZ_ENABLE_DBUS']:
     DIRS += ['dbus']
 
-if CONFIG['MOZ_B2G_RIL'] or CONFIG['MOZ_B2G_BT'] or CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+if CONFIG['MOZ_B2G_RIL'] or CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     DIRS += ['unixfd', 'unixsocket']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':

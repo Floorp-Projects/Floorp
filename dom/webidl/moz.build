@@ -685,30 +685,6 @@ if CONFIG['MOZ_DEBUG']:
                      'TestInterfaceJSDictionaries.webidl',
                      'TestInterfaceJSMaplikeSetlikeIterable.webidl']
 
-if CONFIG['MOZ_B2G_BT']:
-    WEBIDL_FILES += [
-        'BluetoothAdapter.webidl',
-        'BluetoothClassOfDevice.webidl',
-        'BluetoothDevice.webidl',
-        'BluetoothDiscoveryHandle.webidl',
-        'BluetoothGatt.webidl',
-        'BluetoothGattAttributeEvent.webidl',
-        'BluetoothGattCharacteristic.webidl',
-        'BluetoothGattDescriptor.webidl',
-        'BluetoothGattServer.webidl',
-        'BluetoothGattService.webidl',
-        'BluetoothLeDeviceEvent.webidl',
-        'BluetoothManager.webidl',
-        'BluetoothMapParameters.webidl',
-        'BluetoothMapRequestHandle.webidl',
-        'BluetoothObexAuthHandle.webidl',
-        'BluetoothPairingHandle.webidl',
-        'BluetoothPairingListener.webidl',
-        'BluetoothPbapParameters.webidl',
-        'BluetoothPbapRequestHandle.webidl',
-        'BluetoothUUID.webidl',
-    ]
-
 if CONFIG['MOZ_SECUREELEMENT']:
     WEBIDL_FILES += [
          'SecureElement.webidl',
@@ -805,26 +781,6 @@ if CONFIG['MOZ_GAMEPAD']:
         'GamepadAxisMoveEvent.webidl',
         'GamepadButtonEvent.webidl',
         'GamepadEvent.webidl',
-    ]
-
-if CONFIG['MOZ_B2G_BT']:
-    GENERATED_EVENTS_WEBIDL_FILES += [
-        'BluetoothAdapterEvent.webidl',
-        'BluetoothAttributeEvent.webidl',
-        'BluetoothDeviceEvent.webidl',
-        'BluetoothGattCharacteristicEvent.webidl',
-        'BluetoothMapFolderListingEvent.webidl',
-        'BluetoothMapGetMessageEvent.webidl',
-        'BluetoothMapMessagesListingEvent.webidl',
-        'BluetoothMapMessageUpdateEvent.webidl',
-        'BluetoothMapSendMessageEvent.webidl',
-        'BluetoothMapSetMessageStatusEvent.webidl',
-        'BluetoothObexAuthEvent.webidl',
-        'BluetoothPairingEvent.webidl',
-        'BluetoothPhonebookPullingEvent.webidl',
-        'BluetoothStatusChangedEvent.webidl',
-        'BluetoothVCardListingEvent.webidl',
-        'BluetoothVCardPullingEvent.webidl'
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':

@@ -104,7 +104,7 @@ if test -n "$gonkdir"; then
 
     case "$android_version" in
     15)
-        CPPFLAGS="-I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/frameworks/base/include -I$gonkdir/frameworks/base/services/camera -I$gonkdir/frameworks/base/include/media/ -I$gonkdir/frameworks/base/include/media/stagefright -I$gonkdir/frameworks/base/include/media/stagefright/openmax -I$gonkdir/frameworks/base/media/libstagefright/rtsp -I$gonkdir/frameworks/base/media/libstagefright/include -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib -I$gonkdir/dalvik/libnativehelper/include/nativehelper $CPPFLAGS"
+        CPPFLAGS="-I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/frameworks/base/include -I$gonkdir/frameworks/base/services/camera -I$gonkdir/frameworks/base/include/media/ -I$gonkdir/frameworks/base/include/media/stagefright -I$gonkdir/frameworks/base/include/media/stagefright/openmax -I$gonkdir/frameworks/base/media/libstagefright/rtsp -I$gonkdir/frameworks/base/media/libstagefright/include -I$gonkdir/external/dbus -I$gonkdir/dalvik/libnativehelper/include/nativehelper $CPPFLAGS"
         MOZ_SECUREELEMENT=1
         ;;
     17|18)
@@ -128,16 +128,6 @@ if test -n "$gonkdir"; then
         AC_MSG_ERROR([Unsupported platform version: $android_version])
         ;;
     esac
-
-    dnl Enable Bluetooth backends depending on available drivers
-    if test -d "$gonkdir/system/bluetoothd"; then
-        MOZ_B2G_BT=1
-        MOZ_B2G_BT_DAEMON=1
-    fi
-    if test -d "$gonkdir/external/bluetooth/bluez"; then
-        MOZ_B2G_BT=1
-        MOZ_B2G_BT_BLUEZ=1
-    fi
 
     CPPFLAGS="-I$gonkdir/system -I$gonkdir/system/core/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/external/valgrind/fxos-include $CPPFLAGS"
     LDFLAGS="-L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib $LDFLAGS"
@@ -4739,20 +4729,6 @@ if test -n "$MOZ_B2G_RIL"; then
     fi
 fi
 AC_SUBST(MOZ_B2G_RIL)
-
-dnl ========================================================
-dnl = Enable Bluetooth Interface for B2G (Gonk usually)
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(b2g-bt,
-[  --enable-b2g-bt      Set compile flags necessary for compiling Bluetooth API for B2G ],
-    MOZ_B2G_BT=1,
-    MOZ_B2G_BT= )
-if test -n "$MOZ_B2G_BT"; then
-    AC_DEFINE(MOZ_B2G_BT)
-fi
-AC_SUBST(MOZ_B2G_BT)
-AC_SUBST(MOZ_B2G_BT_BLUEZ)
-AC_SUBST(MOZ_B2G_BT_DAEMON)
 
 dnl ========================================================
 dnl = Enable Pico Speech Synthesis (Gonk usually)

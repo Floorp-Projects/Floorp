@@ -29,6 +29,12 @@ class BaseWindowTestCase(FirefoxTestCase):
         FirefoxTestCase.setUp(self)
         self.prefs.set_pref('dom.ipc.tabs.shutdownTimeoutSecs', 0)
 
+    def tearDown(self):
+        try:
+            self.marionette.clear_pref('dom.ipc.tabs.shutdownTimeoutSecs')
+        finally:
+            FirefoxTestCase.tearDown(self)
+
 
 class TestWindows(BaseWindowTestCase):
 

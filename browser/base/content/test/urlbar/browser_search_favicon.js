@@ -25,7 +25,7 @@ add_task(function*() {
   let uri = NetUtil.newURI("http://s.example.com/search?q=foo&client=1");
   yield PlacesTestUtils.addVisits({ uri: uri, title: "Foo - SearchEngine Search" });
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla", {animate: false});
+  gBrowser.selectedTab = gBrowser.addTab("about:mozilla", {animate: false});
   yield promiseTabLoaded(gBrowser.selectedTab);
 
   // The first autocomplete result has the action searchengine, while

@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.activitystream.ActivityStream.LabelCallback;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
@@ -165,14 +166,13 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             vSourceView.setText(vSourceView.getText());
         }
 
-        private void updatePage(String url) {
-            final String label = extractLabel(url, false);
-
-            if (!TextUtils.isEmpty(label)) {
-                vPageView.setText(label);
-            } else {
-                vPageView.setText(url);
-            }
+        private void updatePage(final String url) {
+            extractLabel(itemView.getContext(), url, false, new LabelCallback() {
+                @Override
+                public void onLabelExtracted(String label) {
+                    vPageView.setText(TextUtils.isEmpty(label) ? url : label);
+                }
+            });
         }
 
         @Override

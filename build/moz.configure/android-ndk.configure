@@ -14,7 +14,7 @@ js_option('--with-android-toolchain', nargs=1,
 js_option('--with-android-gnu-compiler-version', nargs=1,
           help='GNU compiler version to use')
 
-min_android_version = dependable('9')
+min_android_version = dependable(lambda: '9')
 
 js_option('--with-android-version',
           nargs=1,
@@ -54,6 +54,7 @@ add_old_configure_assignment('android_ndk', ndk)
 
 @depends(target, android_version, ndk)
 @checking('for android platform directory')
+@imports('os')
 def android_platform(target, android_version, ndk):
     if target.os != 'Android':
         return
@@ -97,6 +98,7 @@ def extra_toolchain_flags(platform_dir):
 @depends(target, host, ndk, '--with-android-toolchain',
          '--with-android-gnu-compiler-version')
 @checking('for the Android toolchain directory', lambda x: x or 'not found')
+@imports('os')
 @imports(_from='mozbuild.shellutil', _import='quote')
 def android_toolchain(target, host, ndk, toolchain, gnu_compiler_version):
     if not ndk:

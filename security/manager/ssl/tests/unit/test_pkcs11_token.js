@@ -5,10 +5,14 @@
 
 // Tests the methods and attributes for interfacing with a PKCS #11 token, using
 // the internal key token.
-// Note: We don't use the test token in the test PKCS #11 module because it is
-//       inconvenient to test. See the top level comment in
-//       test_pkcs11_insert_remove.js for why. However, some token DB tests are
-//       located in that file out of convenience.
+// We don't use either of the test tokens in the test PKCS #11 module because:
+//   1. Test token 1 cyclically inserts and removes itself in a tight loop.
+//      Using token 1 would complicate the test and introduce intermittent
+//      failures.
+//   2. Neither test token implements login or password related functionality.
+//      We want to test such functionality.
+//   3. Using the internal token lets us actually test the internal token works
+//      as expected.
 
 // Ensure that the appropriate initialization has happened.
 do_get_profile();

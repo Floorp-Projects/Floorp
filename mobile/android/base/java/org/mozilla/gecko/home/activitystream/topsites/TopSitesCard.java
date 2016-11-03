@@ -56,8 +56,12 @@ class TopSitesCard extends RecyclerView.ViewHolder
     }
 
     void bind(final TopSitesPageAdapter.TopSite topSite) {
-        final String label = ActivityStream.extractLabel(topSite.url, true);
-        title.setText(label);
+        ActivityStream.extractLabel(itemView.getContext(), topSite.url, true, new ActivityStream.LabelCallback() {
+            @Override
+            public void onLabelExtracted(String label) {
+                title.setText(label);
+            }
+        });
 
         this.url = topSite.url;
 

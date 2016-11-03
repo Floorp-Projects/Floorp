@@ -75,14 +75,8 @@ extensions.on("page-shutdown", (type, context) => {
   }
 });
 
-extensions.on("fill-browser-data", (type, browser, data, result) => {
-  let tabId = TabManager.getBrowserId(browser);
-  if (tabId == -1) {
-    result.cancel = true;
-    return;
-  }
-
-  data.tabId = tabId;
+extensions.on("fill-browser-data", (type, browser, data) => {
+  data.tabId = browser ? TabManager.getBrowserId(browser) : -1;
 });
 /* eslint-enable mozilla/balanced-listeners */
 

@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_driver.errors import MarionetteException
-
 from firefox_puppeteer.base import BaseLib
 
 
@@ -102,42 +100,6 @@ class Preferences(BaseLib):
               }
             """, script_args=[pref_name])
 
-    def restore_all_prefs(self):
-        """Restores all previously modified preferences to their former values.
-
-        Please see :func:`~Preferences.restore_pref` for details.
-        """
-        while len(self.archive):
-            self.restore_pref(self.archive.keys()[0])
-
-    def restore_pref(self, pref_name):
-        """Restores a previously set preference to its former value.
-
-        The first time a preference gets modified a backup of its value is
-        made. By calling this method, exactly this value will be restored,
-        whether how often the preference has been modified again afterward.
-
-        If the preference did not exist before and has been newly created, it
-        will be reset to its original value. Please see
-        :func:`~Preferences.reset_pref` for details.
-
-        :param pref_name: The preference to restore
-        """
-        assert pref_name is not None
-
-        try:
-            # in case it is a newly set preference, reset it. Otherwise restore
-            # its original value.
-            if self.archive[pref_name] is None:
-                self.reset_pref(pref_name)
-            else:
-                self.set_pref(pref_name, self.archive[pref_name])
-
-            del self.archive[pref_name]
-        except KeyError:
-            raise MarionetteException('Nothing to restore for preference "%s"',
-                                      pref_name)
-
     def set_pref(self, pref_name, value):
         """Sets a preference to a specified value.
 
@@ -145,7 +107,7 @@ class Preferences(BaseLib):
 
         The first time a new value for a preference is set, its value will be
         automatically archived. It allows to restore the original value by
-        calling :func:`~Preferences.restore_pref`.
+        calling :func:`self.marionette.clear_pref`.
 
         :param pref_name: The preference to set
         :param value: The value to set the preference to

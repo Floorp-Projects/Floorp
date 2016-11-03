@@ -582,7 +582,6 @@ add_task(function* search() {
                           { str: "xfoo", type: "formHistory" }, "xbar"], 1);
 
   modifiers.button = 0;
-  let currentTab = gBrowser.selectedTab;
   p = msg("waitForSearch");
   yield msg("click", { eltIdx: 1, modifiers: modifiers });
   mesg = yield p;
@@ -760,7 +759,7 @@ function setUpEngines() {
     let currentEngines = Services.search.getVisibleEngines();
     info("Adding test search engines");
     let engine1 = yield promiseNewSearchEngine(TEST_ENGINE_BASENAME);
-    let engine2 = yield promiseNewSearchEngine(TEST_ENGINE_2_BASENAME);
+    yield promiseNewSearchEngine(TEST_ENGINE_2_BASENAME);
     Services.search.currentEngine = engine1;
     for (let engine of currentEngines) {
       Services.search.removeEngine(engine);

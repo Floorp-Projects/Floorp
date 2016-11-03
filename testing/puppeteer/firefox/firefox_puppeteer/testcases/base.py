@@ -71,10 +71,7 @@ class BaseFirefoxTestCase(unittest.TestCase, Puppeteer):
 
         :param flags: Specific restart flags for Firefox
         """
-        if kwargs.get('clean'):
-            self.marionette.restart(clean=True)
-        else:
-            self.marionette.restart(in_app=True)
+        self.marionette.restart(in_app=not kwargs.get('clean'), **kwargs)
 
         # Ensure that we always have a valid browser instance available
         self.browser = self.windows.switch_to(lambda win: type(win) is BrowserWindow)
@@ -96,8 +93,6 @@ class BaseFirefoxTestCase(unittest.TestCase, Puppeteer):
         self.marionette.set_context('chrome')
 
         try:
-            self.prefs.restore_all_prefs()
-
             # This code should be run after all other tearDown code
             # so that in case of a failure, further tests will not run
             # in a state that is more inconsistent than necessary.

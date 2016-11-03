@@ -74,20 +74,13 @@ nsQuoteList::Calc(nsQuoteNode* aNode)
 void
 nsQuoteList::RecalcAll()
 {
-  nsQuoteNode *node = FirstNode();
-  if (!node)
-    return;
-
-  do {
+  for (nsQuoteNode* node = FirstNode(); node; node = Next(node)) {
     int32_t oldDepth = node->mDepthBefore;
     Calc(node);
 
     if (node->mDepthBefore != oldDepth && node->mText && node->IsRealQuote())
       node->mText->SetData(*node->Text());
-
-    // Next node
-    node = Next(node);
-  } while (node != FirstNode());
+  }
 }
 
 #ifdef DEBUG
@@ -95,11 +88,7 @@ void
 nsQuoteList::PrintChain()
 {
   printf("Chain: \n");
-  if (!FirstNode()) {
-    return;
-  }
-  nsQuoteNode* node = FirstNode();
-  do {
+  for (nsQuoteNode* node = FirstNode(); node; node = Next(node)) {
     printf("  %p %d - ", static_cast<void*>(node), node->mDepthBefore);
     switch(node->mType) {
         case (eStyleContentType_OpenQuote):
@@ -124,7 +113,6 @@ nsQuoteList::PrintChain()
       printf(" \"%s\",", NS_ConvertUTF16toUTF8(data).get());
     }
     printf("\n");
-    node = Next(node);
-  } while (node != FirstNode());
+  }
 }
 #endif

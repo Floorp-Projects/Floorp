@@ -278,9 +278,7 @@ NetAddrElement::NetAddrElement(const NetAddrElement& netAddr)
   mAddress = netAddr.mAddress;
 }
 
-NetAddrElement::~NetAddrElement()
-{
-}
+NetAddrElement::~NetAddrElement() = default;
 
 AddrInfo::AddrInfo(const char *host, const PRAddrInfo *prAddrInfo,
                    bool disableIPv4, bool filterNameCollision, const char *cname)
@@ -300,7 +298,7 @@ AddrInfo::AddrInfo(const char *host, const PRAddrInfo *prAddrInfo,
         (!disableIPv4 || tmpAddr.raw.family != PR_AF_INET) &&
         (!filterNameCollision || tmpAddr.raw.family != PR_AF_INET || (tmpAddr.inet.ip != nameCollisionAddr));
     if (addIt) {
-        NetAddrElement *addrElement = new NetAddrElement(&tmpAddr);
+        auto *addrElement = new NetAddrElement(&tmpAddr);
         mAddresses.insertBack(addrElement);
     }
   } while (iter);

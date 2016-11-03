@@ -23,7 +23,11 @@ from mozbuild.util import exec_
 from mozpack import path as mozpath
 
 from buildconfig import topsrcdir
-from common import ConfigureTestSandbox, ensure_exe_extension
+from common import (
+    ConfigureTestSandbox,
+    ensure_exe_extension,
+    fake_short_path,
+)
 
 
 class TestChecksConfigure(unittest.TestCase):
@@ -179,8 +183,9 @@ class TestChecksConfigure(unittest.TestCase):
         config, out, status = self.get_result(
             'check_prog("FOO", ("unknown", "unknown-2", "known c"))')
         self.assertEqual(status, 0)
-        self.assertEqual(config, {'FOO': self.KNOWN_C})
-        self.assertEqual(out, "checking for foo... '%s'\n" % self.KNOWN_C)
+        self.assertEqual(config, {'FOO': fake_short_path(self.KNOWN_C)})
+        self.assertEqual(out, "checking for foo... '%s'\n"
+                              % fake_short_path(self.KNOWN_C))
 
         config, out, status = self.get_result(
             'check_prog("FOO", ("unknown",))')
@@ -259,8 +264,9 @@ class TestChecksConfigure(unittest.TestCase):
             'check_prog("FOO", ("unknown",))',
             ['FOO=known c'])
         self.assertEqual(status, 0)
-        self.assertEqual(config, {'FOO': self.KNOWN_C})
-        self.assertEqual(out, "checking for foo... '%s'\n" % self.KNOWN_C)
+        self.assertEqual(config, {'FOO': fake_short_path(self.KNOWN_C)})
+        self.assertEqual(out, "checking for foo... '%s'\n"
+                              % fake_short_path(self.KNOWN_C))
 
         config, out, status = self.get_result(
             'check_prog("FOO", ("unknown", "unknown-2", "unknown 3"), '
@@ -405,7 +411,7 @@ class TestChecksConfigure(unittest.TestCase):
 
         with self.assertRaises(ConfigureError) as e:
             self.get_result(
-                'foo = depends("--help")(lambda h: ("a", "b"))\n'
+                'foo = depends(when=True)(lambda: ("a", "b"))\n'
                 'check_prog("FOO", ("known-a",), input=foo)'
             )
 
@@ -415,7 +421,7 @@ class TestChecksConfigure(unittest.TestCase):
 
         with self.assertRaises(ConfigureError) as e:
             self.get_result(
-                'foo = depends("--help")(lambda h: {"a": "b"})\n'
+                'foo = depends(when=True)(lambda: {"a": "b"})\n'
                 'check_prog("FOO", ("known-a",), input=foo)'
             )
 

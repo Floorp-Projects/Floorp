@@ -10,6 +10,7 @@ include $(topsrcdir)/config/rules.mk
 MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
 
 MOZ_PKG_MANIFEST = $(srcdir)/package-manifest.in
+MOZ_PKG_DUPEFLAGS = -f $(srcdir)/allowed-dupes.mn
 
 # Some files have been already bundled with xulrunner
 ifndef MOZ_MULET

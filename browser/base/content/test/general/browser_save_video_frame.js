@@ -104,7 +104,6 @@ add_task(function*() {
   yield promiseTabLoadEvent(tab, VIDEO_URL);
   info("Video tab loaded.");
 
-  let video = browser.contentDocument.getElementById("video1");
   let context = document.getElementById("contentAreaContextMenu");
   let popupPromise = promisePopupShown(context);
 

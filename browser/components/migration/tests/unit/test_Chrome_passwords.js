@@ -173,6 +173,8 @@ add_task(function* test_importIntoEmptyDB() {
 
   logins = Services.logins.getAllLogins({});
   Assert.equal(logins.length, TEST_LOGINS.length, "Check login count after importing the data");
+  Assert.equal(logins.length, MigrationUtils._importQuantities.logins,
+               "Check telemetry matches the actual import.");
 
   for (let i = 0; i < TEST_LOGINS.length; i++) {
     checkLoginsAreEqual(logins[i], TEST_LOGINS[i], i + 1);
@@ -208,6 +210,8 @@ add_task(function* test_importExistingLogins() {
   logins = Services.logins.getAllLogins({});
   Assert.equal(logins.length, TEST_LOGINS.length,
                "Check there are still the same number of logins after re-importing the data");
+  Assert.equal(logins.length, MigrationUtils._importQuantities.logins,
+               "Check telemetry matches the actual import.");
 
   for (let i = 0; i < newLogins.length; i++) {
     checkLoginsAreEqual(logins[i], newLogins[i], i + 1);

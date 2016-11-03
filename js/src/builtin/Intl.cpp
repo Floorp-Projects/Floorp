@@ -23,14 +23,13 @@
 #include "jsobj.h"
 
 #if ENABLE_INTL_API
-#include "unicode/locid.h"
-#include "unicode/numsys.h"
 #include "unicode/ucal.h"
 #include "unicode/ucol.h"
 #include "unicode/udat.h"
 #include "unicode/udatpg.h"
 #include "unicode/uenum.h"
 #include "unicode/unum.h"
+#include "unicode/unumsys.h"
 #include "unicode/ustring.h"
 #endif
 #include "vm/DateTime.h"
@@ -50,11 +49,6 @@ using mozilla::IsFinite;
 using mozilla::IsNegativeZero;
 using mozilla::MakeScopeExit;
 using mozilla::PodCopy;
-
-#if ENABLE_INTL_API
-using icu::Locale;
-using icu::NumberingSystem;
-#endif
 
 
 /*
@@ -283,34 +277,24 @@ unum_setTextAttribute(UNumberFormat* fmt, UNumberFormatTextAttribute tag, const 
     MOZ_CRASH("unum_setTextAttribute: Intl API disabled");
 }
 
-class Locale {
-  public:
-    explicit Locale(const char* language, const char* country = 0, const char* variant = 0,
-                    const char* keywordsAndValues = 0);
-};
+typedef void* UNumberingSystem;
 
-Locale::Locale(const char* language, const char* country, const char* variant,
-               const char* keywordsAndValues)
+static UNumberingSystem*
+unumsys_open(const char* locale, UErrorCode* status)
 {
-    MOZ_CRASH("Locale::Locale: Intl API disabled");
+    MOZ_CRASH("unumsys_open: Intl API disabled");
 }
 
-class NumberingSystem {
-  public:
-    static NumberingSystem* createInstance(const Locale& inLocale, UErrorCode& status);
-    const char* getName();
-};
-
-NumberingSystem*
-NumberingSystem::createInstance(const Locale& inLocale, UErrorCode& status)
+static const char*
+unumsys_getName(const UNumberingSystem* unumsys)
 {
-    MOZ_CRASH("NumberingSystem::createInstance: Intl API disabled");
+    MOZ_CRASH("unumsys_getName: Intl API disabled");
 }
 
-const char*
-NumberingSystem::getName()
+static void
+unumsys_close(UNumberingSystem* unumsys)
 {
-    MOZ_CRASH("NumberingSystem::getName: Intl API disabled");
+    MOZ_CRASH("unumsys_close: Intl API disabled");
 }
 
 typedef void* UCalendar;
@@ -1445,20 +1429,20 @@ js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp)
     if (!locale)
         return false;
 
-    // There's no C API for numbering system, so use the C++ API and hope it
-    // won't break. http://bugs.icu-project.org/trac/ticket/10039
-    Locale ulocale(locale.ptr());
     UErrorCode status = U_ZERO_ERROR;
-    NumberingSystem* numbers = NumberingSystem::createInstance(ulocale, status);
+    UNumberingSystem* numbers = unumsys_open(icuLocale(locale.ptr()), &status);
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
-    const char* name = numbers->getName();
+
+    ScopedICUObject<UNumberingSystem, unumsys_close> toClose(numbers);
+
+    const char* name = unumsys_getName(numbers);
     RootedString jsname(cx, JS_NewStringCopyZ(cx, name));
-    delete numbers;
     if (!jsname)
         return false;
+
     args.rval().setString(jsname);
     return true;
 }

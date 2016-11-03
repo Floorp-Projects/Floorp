@@ -1,0 +1,195 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<form method="post"
+  action="file_WebRequest_page3.html?trigger=form"
+  target="_blank"
+  enctype="multipart/form-data"
+  >
+<input type="text" name="&quot;special&quot; chˆrs" value="spÛcial">
+<input type="file" name="testFile">
+<input type="file" name="emptyFile">
+<input type="text" name="textInput1" value="value1">
+</form>
+
+<form method="post"
+  action="file_WebRequest_page3.html?trigger=form"
+  target="_blank"
+  enctype="multipart/form-data"
+  >
+<input type="text" name="textInput2" value="value2">
+<input type="file" name="testFile">
+<input type="file" name="emptyFile">
+</form>
+
+</form>
+<form method="post"
+  action="file_WebRequest_page3.html?trigger=form"
+  target="_blank"
+  >
+<input type="text" name="textInput" value="value1">
+<input type="text" name="textInput" value="value2">
+</form>
+<script>
+"use strict";
+
+let files, testFile, blob, file, uploads;
+add_task(function* test_setup() {
+  files = yield new Promise(resolve => {
+    SpecialPowers.createFiles([{name: "testFile.pdf", data: "Not really a PDF file :)", "type": "application/x-pdf"}], (files) => {
+      resolve(files);
+    });
+  });
+  testFile = files[0];
+  blob = {
+    name: "blobAsFile",
+    content: new Blob(["A blob sent as a file"], {type: "text/csv"}),
+    fileName: "blobAsFile.csv",
+  };
+  file = {
+    name: "testFile",
+    fileName: testFile.name,
+  };
+  uploads = {
+    [blob.name]: blob,
+    [file.name]: file,
+  };
+});
+
+function background() {
+  let events = {
+    "onBeforeRequest":  [{urls: ["<all_urls>"]}, ["blocking", "requestBody"]],
+    "onCompleted":      [{urls: ["<all_urls>"]}, ["responseHeaders"]],
+  };
+
+  function onUpload(details) {
+    let url = new URL(details.url);
+    let upload = url.searchParams.get("upload");
+    if (!upload) {
+      return;
+    }
+    let requestBody = details.requestBody;
+    browser.test.log(`onUpload ${details.url} ${JSON.stringify(details.requestBody)}`);
+    browser.test.assertTrue(!!requestBody, `Intercepted upload ${details.url} #${details.requestId} ${upload} have a requestBody`);
+    if (!requestBody) {
+      return;
+    }
+    let byteLength = parseInt(upload, 10);
+    if (byteLength) {
+      browser.test.assertTrue(!!requestBody.raw, `Binary upload ${details.url} #${details.requestId} ${upload} have a raw attribute`);
+      browser.test.assertEq(byteLength, requestBody.raw && requestBody.raw.map(r => r.bytes && r.bytes.byteLength || 0).reduce((a, b) => a + b), `Binary upload size matches`);
+      return;
+    }
+    if ("raw" in requestBody) {
+      browser.test.assertEq(upload, JSON.stringify(requestBody.raw).replace(/(\bfile: ")[^"]+/, "$1<file>"), `Upload ${details.url} #${details.requestId} matches raw data`);
+    } else {
+      browser.test.assertEq(upload, JSON.stringify(requestBody.formData), `Upload ${details.url} #${details.requestId} matches form data.`);
+    }
+  }
+
+  function listener(name, details) {
+    browser.test.log(`${name} ${details.requestId} ${details.url}`);
+
+    if (name == "onBeforeRequest") {
+      onUpload(details);
+    } else if (name == "onCompleted") {
+      browser.test.sendMessage("done");
+    }
+  }
+
+  for (let [name, args] of Object.entries(events)) {
+    try {
+      browser.test.log(`adding listener for ${name}`);
+      browser.webRequest[name].addListener(
+        listener.bind(null, name), ...args);
+    } catch (e) {
+      // requestBody is disabled in release builds
+      if (!/\brequestBody\b/.test(e.message)) {
+        args.pop();
+        browser.webRequest[name].addListener(
+          listener.bind(null, name), ...args);
+      }
+    }
+  }
+}
+
+add_task(function* test_xhr_forms() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "<all_urls>",
+      ],
+    },
+    background,
+  });
+
+  yield extension.startup();
+
+  for (let form of document.forms) {
+    if (file.name in form.elements) {
+      SpecialPowers.wrap(form.elements[file.name]).mozSetFileArray(files);
+    }
+    let action = new URL(form.action);
+    let formData = new FormData(form);
+    let webRequestFD = {};
+
+    let updateActionURL = () => {
+      for (let name of formData.keys()) {
+        webRequestFD[name] = name in uploads ? [uploads[name].fileName] : formData.getAll(name);
+      }
+      action.searchParams.set("upload", JSON.stringify(webRequestFD));
+      action.searchParams.set("enctype", form.enctype);
+    };
+
+    updateActionURL();
+
+    form.action = action;
+    form.submit();
+    yield extension.awaitMessage("done");
+
+    if (form.enctype !== "multipart/form-data") {
+      continue;
+    }
+
+    let post = (data) => {
+      let xhr = new XMLHttpRequest();
+      action.searchParams.set("xhr", "1");
+      xhr.open("POST", action.href);
+      xhr.send(data);
+      action.searchParams.delete("xhr");
+      return extension.awaitMessage("done");
+    };
+
+    formData.append(blob.name, blob.content, blob.fileName);
+    formData.append("formDataField", "some value");
+    updateActionURL();
+    yield post(formData);
+
+    action.searchParams.set("upload", JSON.stringify([{file: "<file>"}]));
+    yield post(testFile);
+
+    action.searchParams.set("upload", `${blob.content.size} bytes`);
+    yield post(blob.content);
+
+    let byteLength = 16;
+    action.searchParams.set("upload", `${byteLength} bytes`);
+    yield post(new ArrayBuffer(byteLength));
+  }
+
+  yield extension.unload();
+});
+</script>
+</body>
+</html>

@@ -146,7 +146,6 @@ add_task(function*() {
   gURLBar.focus();
   yield SimpleTest.promiseFocus();
 
-  var messages = "";
   if (gMultiProcessBrowser) {
     messageManager.addMessageListener("Browser:FocusChanged", message => {
       actualEvents.push(message.data.details);
@@ -565,4 +564,3 @@ function* expectFocusShift(callback, expectedWindow, expectedElement, focusChang
     }
   });
 }
-

@@ -797,7 +797,6 @@ var gSyncSetup = {
     let el = document.getElementById("server");
     let valid = false;
     let feedback = document.getElementById("serverFeedbackRow");
-    let str = "";
     if (el.value) {
       valid = this._validateServer(el);
       let str = valid ? "" : "serverInvalid.label";

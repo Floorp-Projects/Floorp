@@ -31,6 +31,8 @@ class TestFaviconInAutocomplete(FirefoxTestCase):
     def tearDown(self):
         try:
             self.autocomplete_results.close(force=True)
+            self.marionette.clear_pref(self.PREF_SUGGEST_SEARCHES)
+            self.marionette.clear_pref(self.PREF_SUGGEST_BOOKMARK)
         finally:
             FirefoxTestCase.tearDown(self)
 
