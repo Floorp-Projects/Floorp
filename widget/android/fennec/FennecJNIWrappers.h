@@ -397,58 +397,6 @@ public:
     template<class Impl> class Natives;
 };
 
-class ScreenManagerHelper : public mozilla::jni::ObjectBase<ScreenManagerHelper>
-{
-public:
-    static const char name[];
-
-    explicit ScreenManagerHelper(const Context& ctx) : ObjectBase<ScreenManagerHelper>(ctx) {}
-
-    struct AddDisplay_t {
-        typedef ScreenManagerHelper Owner;
-        typedef int32_t ReturnType;
-        typedef int32_t SetterType;
-        typedef mozilla::jni::Args<
-                int32_t,
-                int32_t,
-                int32_t,
-                float> Args;
-        static constexpr char name[] = "addDisplay";
-        static constexpr char signature[] =
-                "(IIIF)I";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    struct RemoveDisplay_t {
-        typedef ScreenManagerHelper Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                int32_t> Args;
-        static constexpr char name[] = "removeDisplay";
-        static constexpr char signature[] =
-                "(I)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static const mozilla::jni::CallingThread callingThread =
-            mozilla::jni::CallingThread::ANY;
-
-    template<class Impl> class Natives;
-};
-
 class Telemetry : public mozilla::jni::ObjectBase<Telemetry>
 {
 public:
