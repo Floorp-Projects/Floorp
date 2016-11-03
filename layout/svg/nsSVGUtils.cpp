@@ -564,6 +564,61 @@ nsSVGUtils::DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
   }
 }
 
+static IntRect
+ComputeClipExtsInDeviceSpace(gfxContext& aCtx)
+{
+  gfxContextMatrixAutoSaveRestore matRestore(&aCtx);
+
+  // Get the clip extents in device space.
+  aCtx.SetMatrix(gfxMatrix());
+  gfxRect clippedFrameSurfaceRect = aCtx.GetClipExtents();
+  clippedFrameSurfaceRect.RoundOut();
+
+  IntRect result;
+  ToRect(clippedFrameSurfaceRect).ToIntRect(&result);
+  return mozilla::gfx::Factory::CheckSurfaceSize(result.Size()) ? result
+                                                                : IntRect();
+}
+
+static already_AddRefed<gfxContext>
+CreateBlendTarget(gfxContext* aContext, IntPoint& aTargetOffset)
+{
+  // Create a temporary context to draw to so we can blend it back with
+  // another operator.
+  IntRect drawRect = ComputeClipExtsInDeviceSpace(*aContext);
+
+  RefPtr<DrawTarget> targetDT =
+    aContext->GetDrawTarget()->CreateSimilarDrawTarget(drawRect.Size(),
+                                                       SurfaceFormat::B8G8R8A8);
+  if (!targetDT || !targetDT->IsValid()) {
+    return nullptr;
+  }
+
+  RefPtr<gfxContext> target = gfxContext::CreateOrNull(targetDT);
+  MOZ_ASSERT(target); // already checked the draw target above
+  target->SetMatrix(aContext->CurrentMatrix() *
+                    gfxMatrix::Translation(-drawRect.TopLeft()));
+  aTargetOffset = drawRect.TopLeft();
+
+  return target.forget();
+}
+
+static void
+BlendToTarget(nsIFrame* aFrame, gfxContext* aSource, gfxContext* aTarget,
+              const IntPoint& aTargetOffset)
+{
+  MOZ_ASSERT(aFrame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL);
+
+  RefPtr<DrawTarget> targetDT = aTarget->GetDrawTarget();
+  RefPtr<SourceSurface> targetSurf = targetDT->Snapshot();
+
+  gfxContextAutoSaveRestore save(aSource);
+  aSource->SetMatrix(gfxMatrix()); // This will be restored right after.
+  RefPtr<gfxPattern> pattern = new gfxPattern(targetSurf, Matrix::Translation(aTargetOffset.x, aTargetOffset.y));
+  aSource->SetPattern(pattern);
+  aSource->Paint();
+}
+
 DrawResult
 nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
                                   gfxContext& aContext,
