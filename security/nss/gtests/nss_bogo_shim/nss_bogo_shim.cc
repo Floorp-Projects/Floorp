@@ -265,7 +265,7 @@ std::unique_ptr<const Config> ReadConfig(int argc, char** argv) {
 
   cfg->AddEntry<int>("port", 0);
   cfg->AddEntry<bool>("server", false);
-  cfg->AddEntry<bool>("resume", false);
+  cfg->AddEntry<int>("resume-count", 0);
   cfg->AddEntry<std::string>("key-file", "");
   cfg->AddEntry<std::string>("cert-file", "");
 
@@ -321,7 +321,8 @@ int main(int argc, char** argv) {
   // Run a single test cycle.
   bool success = RunCycle(cfg);
 
-  if (success && cfg->get<bool>("resume")) {
+  int resume_count = cfg->get<int>("resume-count");
+  while (success && resume_count-- > 0) {
     std::cout << "Resuming" << std::endl;
     success = RunCycle(cfg);
   }
