@@ -8,6 +8,8 @@ import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.AppCompatDrawableManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -24,6 +26,13 @@ import static org.mozilla.gecko.gfx.BitmapUtils.getResource;
 
 public class ResourceDrawableUtils {
     private static final String LOGTAG = "ResourceDrawableUtils";
+
+    public static Drawable getDrawable(@NonNull final Context context,
+                                       @DrawableRes final int drawableID) {
+        // TODO: upgrade this call to use AppCompatResources when upgrading to support library >= 24.2
+        // https://developer.android.com/reference/android/support/v7/content/res/AppCompatResources.html#getDrawable(android.content.Context,%20int)
+        return AppCompatDrawableManager.get().getDrawable(context, drawableID);
+    }
 
     public interface BitmapLoader {
         public void onBitmapFound(Drawable d);
@@ -115,7 +124,7 @@ public class ResourceDrawableUtils {
         if (data.startsWith("drawable://")) {
             final Uri imageUri = Uri.parse(data);
             final int id = getResource(context, imageUri);
-            final Drawable d = AppCompatDrawableManager.get().getDrawable(context, id);
+            final Drawable d = getDrawable(context, id);
 
             runOnBitmapFoundOnUiThread(loader, d);
             return;

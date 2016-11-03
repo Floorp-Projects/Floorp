@@ -5,11 +5,11 @@
 package org.mozilla.gecko.menu;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.support.v7.widget.AppCompatDrawableManager;
 import android.text.TextUtils;
 import android.view.ActionProvider;
 import android.view.ContextMenu;
@@ -156,7 +156,7 @@ public class GeckoMenuItem implements MenuItem {
     public Drawable getIcon() {
         if (mIcon == null) {
             if (mIconRes != 0)
-                return AppCompatDrawableManager.get().getDrawable(mMenu.getContext(), mIconRes);
+                return ResourceDrawableUtils.getDrawable(mMenu.getContext(), mIconRes);
             else
                 return null;
         } else {
