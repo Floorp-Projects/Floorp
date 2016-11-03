@@ -363,9 +363,9 @@ private:
     ProtocolId mProtocolId;
     UniquePtr<Transport> mTrans;
     base::ProcessId mOtherPid;
-    IDMap<IProtocol> mActorMap;
+    IDMap<IProtocol*> mActorMap;
     int32_t mLastRouteId;
-    IDMap<Shmem::SharedMemory> mShmemMap;
+    IDMap<Shmem::SharedMemory*> mShmemMap;
     Shmem::id_t mLastShmemId;
 };
 
