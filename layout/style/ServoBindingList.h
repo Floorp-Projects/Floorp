@@ -90,6 +90,10 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetPropertyValue, void,
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetPropertyIsImportant, bool,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsIAtom* property, bool is_custom)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetProperty, bool,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsIAtom* property, bool is_custom,
+                   nsACString* value, bool is_important)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemoveProperty, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsIAtom* property, bool is_custom)
