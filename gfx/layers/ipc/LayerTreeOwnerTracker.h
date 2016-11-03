@@ -9,6 +9,7 @@
 
 #include "base/process.h"  // for base::ProcessId
 #include "mozilla/Mutex.h" // for mozilla::Mutex
+#include "mozilla/Function.h"
 
 #include <map>
 
@@ -44,10 +45,18 @@ public:
    * can access that layer tree.
    */
   void Map(uint64_t aLayersId, base::ProcessId aProcessId);
+
+  /**
+  * Remove an existing mapping.
+  */
+  void Unmap(uint64_t aLayersId, base::ProcessId aProcessId);
+
   /**
    * Checks whether it is okay for aProcessId to access aLayersId.
    */
   bool IsMapped(uint64_t aLayersId, base::ProcessId aProcessId);
+
+  void Iterate(function<void(uint64_t aLayersId, base::ProcessId aProcessId)> aCallback);
 
 private:
   LayerTreeOwnerTracker();

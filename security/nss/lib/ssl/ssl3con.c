@@ -6315,7 +6315,9 @@ ssl3_SendClientKeyExchange(sslSocket *ss)
 }
 
 SECStatus
-ssl_PickSignatureScheme(sslSocket *ss, SECKEYPublicKey *key,
+ssl_PickSignatureScheme(sslSocket *ss,
+                        SECKEYPublicKey *pubKey,
+                        SECKEYPrivateKey *privKey,
                         const SSLSignatureScheme *peerSchemes,
                         unsigned int peerSchemeCount,
                         PRBool requireSha1)
@@ -6323,18 +6325,29 @@ ssl_PickSignatureScheme(sslSocket *ss, SECKEYPublicKey *key,
     unsigned int i, j;
     const sslNamedGroupDef *group = NULL;
     KeyType keyType;
+    PK11SlotInfo *slot;
+    PRBool slotDoesPss;
     PRBool isTLS13 = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3;
 
     /* We can't require SHA-1 in TLS 1.3. */
     PORT_Assert(!(requireSha1 && isTLS13));
-    if (!key) {
+    if (!pubKey || !privKey) {
         PORT_Assert(0);
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
-    keyType = SECKEY_GetPublicKeyType(key);
+
+    slot = PK11_GetSlotFromPrivateKey(privKey);
+    if (!slot) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+    slotDoesPss = PK11_DoesMechanism(slot, auth_alg_defs[ssl_auth_rsa_pss]);
+    PK11_FreeSlot(slot);
+
+    keyType = SECKEY_GetPublicKeyType(pubKey);
     if (keyType == ecKey) {
-        group = ssl_ECPubKey2NamedGroup(key);
+        group = ssl_ECPubKey2NamedGroup(pubKey);
     }
 
     /* Here we look for the first local preference that the client has
@@ -6348,6 +6361,12 @@ ssl_PickSignatureScheme(sslSocket *ss, SECKEYPublicKey *key,
         if (!ssl_SignatureSchemeValidForKey(!isTLS13 /* allowSha1 */,
                                             PR_TRUE /* matchGroup */,
                                             keyType, group, preferred)) {
+            continue;
+        }
+
+        /* Skip RSA-PSS schemes when the certificate's private key slot does
+         * not supporting that mechanism. */
+        if (ssl_IsRsaPssSignatureScheme(preferred) && !slotDoesPss) {
             continue;
         }
 
@@ -6410,41 +6429,44 @@ ssl3_PickServerSignatureScheme(sslSocket *ss)
     }
 
     /* Sets error code, if needed. */
-    return ssl_PickSignatureScheme(ss, keyPair->pubKey,
+    return ssl_PickSignatureScheme(ss, keyPair->pubKey, keyPair->privKey,
                                    ss->ssl3.hs.clientSigSchemes,
                                    ss->ssl3.hs.numClientSigScheme,
-                                   PR_FALSE);
+                                   PR_FALSE /* requireSha1 */);
 }
 
 static SECStatus
 ssl_PickClientSignatureScheme(sslSocket *ss, const SSLSignatureScheme *schemes,
                               unsigned int numSchemes)
 {
-    SECKEYPublicKey *key;
+    SECKEYPrivateKey *privKey = ss->ssl3.clientPrivateKey;
+    SECKEYPublicKey *pubKey;
     SECStatus rv;
 
-    key = CERT_ExtractPublicKey(ss->ssl3.clientCertificate);
-    PORT_Assert(key);
+    pubKey = CERT_ExtractPublicKey(ss->ssl3.clientCertificate);
+    PORT_Assert(pubKey);
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3 &&
-        (SECKEY_GetPublicKeyType(key) == rsaKey ||
-         SECKEY_GetPublicKeyType(key) == dsaKey) &&
-        SECKEY_PublicKeyStrengthInBits(key) <= 1024) {
+        (SECKEY_GetPublicKeyType(pubKey) == rsaKey ||
+         SECKEY_GetPublicKeyType(pubKey) == dsaKey) &&
+        SECKEY_PublicKeyStrengthInBits(pubKey) <= 1024) {
         /* If the key is a 1024-bit RSA or DSA key, assume conservatively that
          * it may be unable to sign SHA-256 hashes. This is the case for older
          * Estonian ID cards that have 1024-bit RSA keys. In FIPS 186-2 and
          * older, DSA key size is at most 1024 bits and the hash function must
          * be SHA-1.
          */
-        rv = ssl_PickSignatureScheme(ss, key, schemes, numSchemes, PR_TRUE);
+        rv = ssl_PickSignatureScheme(ss, pubKey, privKey, schemes, numSchemes,
+                                     PR_TRUE /* requireSha1 */);
         if (rv == SECSuccess) {
-            SECKEY_DestroyPublicKey(key);
+            SECKEY_DestroyPublicKey(pubKey);
             return SECSuccess;
         }
         /* If this fails, that's because the peer doesn't advertise SHA-1,
          * so fall back to the full negotiation. */
     }
-    rv = ssl_PickSignatureScheme(ss, key, schemes, numSchemes, PR_FALSE);
-    SECKEY_DestroyPublicKey(key);
+    rv = ssl_PickSignatureScheme(ss, pubKey, privKey, schemes, numSchemes,
+                                 PR_FALSE /* requireSha1 */);
+    SECKEY_DestroyPublicKey(pubKey);
     return rv;
 }
 

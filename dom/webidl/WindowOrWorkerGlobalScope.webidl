@@ -53,6 +53,13 @@ partial interface WindowOrWorkerGlobalScope {
   readonly attribute boolean isSecureContext;
 };
 
+// http://w3c.github.io/IndexedDB/#factory-interface
+partial interface WindowOrWorkerGlobalScope {
+   // readonly attribute IDBFactory indexedDB;
+   [Throws]
+   readonly attribute IDBFactory? indexedDB;
+};
+
 // Mozilla extensions
 partial interface WindowOrWorkerGlobalScope {
   // Extensions to ImageBitmap bits.

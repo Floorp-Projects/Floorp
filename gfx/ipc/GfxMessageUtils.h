@@ -876,6 +876,14 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
 };
 
 template<>
+struct ParamTraits<GeckoProcessType>
+  : public ContiguousEnumSerializer<
+             GeckoProcessType,
+             GeckoProcessType_Default,
+             GeckoProcessType_End>
+{};
+
+template<>
 struct ParamTraits<mozilla::layers::TextureFactoryIdentifier>
 {
   typedef mozilla::layers::TextureFactoryIdentifier paramType;
@@ -883,18 +891,22 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, aParam.mParentBackend);
+    WriteParam(aMsg, aParam.mParentProcessType);
     WriteParam(aMsg, aParam.mMaxTextureSize);
     WriteParam(aMsg, aParam.mSupportsTextureBlitting);
     WriteParam(aMsg, aParam.mSupportsPartialUploads);
+    WriteParam(aMsg, aParam.mSupportsComponentAlpha);
     WriteParam(aMsg, aParam.mSyncHandle);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     bool result = ReadParam(aMsg, aIter, &aResult->mParentBackend) &&
+                  ReadParam(aMsg, aIter, &aResult->mParentProcessType) &&
                   ReadParam(aMsg, aIter, &aResult->mMaxTextureSize) &&
                   ReadParam(aMsg, aIter, &aResult->mSupportsTextureBlitting) &&
                   ReadParam(aMsg, aIter, &aResult->mSupportsPartialUploads) &&
+                  ReadParam(aMsg, aIter, &aResult->mSupportsComponentAlpha) &&
                   ReadParam(aMsg, aIter, &aResult->mSyncHandle);
     return result;
   }

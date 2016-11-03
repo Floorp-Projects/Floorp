@@ -162,6 +162,7 @@ bool
 LayerManagerComposite::AreComponentAlphaLayersEnabled()
 {
   return mCompositor->GetBackendType() != LayersBackend::LAYERS_BASIC &&
+         mCompositor->SupportsEffect(EffectTypes::COMPONENT_ALPHA) &&
          LayerManager::AreComponentAlphaLayersEnabled();
 }
 

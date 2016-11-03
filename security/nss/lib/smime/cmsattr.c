@@ -25,7 +25,6 @@
  * to external naming convention, and move them elsewhere!
  */
 
-
 /*
  * NSS_CMSAttribute_Create - create an attribute
  *
@@ -33,44 +32,45 @@
  * with NSS_CMSAttribute_AddValue.
  */
 NSSCMSAttribute *
-NSS_CMSAttribute_Create(PLArenaPool *poolp, SECOidTag oidtag, SECItem *value, PRBool encoded)
+NSS_CMSAttribute_Create(PLArenaPool *poolp, SECOidTag oidtag, SECItem *value,
+                        PRBool encoded)
 {
     NSSCMSAttribute *attr;
     SECItem *copiedvalue;
     void *mark;
 
-    PORT_Assert (poolp != NULL);
+    PORT_Assert(poolp != NULL);
 
-    mark = PORT_ArenaMark (poolp);
+    mark = PORT_ArenaMark(poolp);
 
     attr = (NSSCMSAttribute *)PORT_ArenaZAlloc(poolp, sizeof(NSSCMSAttribute));
     if (attr == NULL)
-	goto loser;
+        goto loser;
 
     attr->typeTag = SECOID_FindOIDByTag(oidtag);
     if (attr->typeTag == NULL)
-	goto loser;
+        goto loser;
 
     if (SECITEM_CopyItem(poolp, &(attr->type), &(attr->typeTag->oid)) != SECSuccess)
-	goto loser;
+        goto loser;
 
     if (value != NULL) {
-	if ((copiedvalue = SECITEM_ArenaDupItem(poolp, value)) == NULL)
-	    goto loser;
+        if ((copiedvalue = SECITEM_ArenaDupItem(poolp, value)) == NULL)
+            goto loser;
 
-	if (NSS_CMSArray_Add(poolp, (void ***)&(attr->values), (void *)copiedvalue) != SECSuccess)
-	    goto loser;
+        if (NSS_CMSArray_Add(poolp, (void ***)&(attr->values), (void *)copiedvalue) != SECSuccess)
+            goto loser;
     }
 
     attr->encoded = encoded;
 
-    PORT_ArenaUnmark (poolp, mark);
+    PORT_ArenaUnmark(poolp, mark);
 
     return attr;
 
 loser:
-    PORT_Assert (mark != NULL);
-    PORT_ArenaRelease (poolp, mark);
+    PORT_Assert(mark != NULL);
+    PORT_ArenaRelease(poolp, mark);
     return NULL;
 }
 
@@ -83,27 +83,27 @@ NSS_CMSAttribute_AddValue(PLArenaPool *poolp, NSSCMSAttribute *attr, SECItem *va
     SECItem *copiedvalue;
     void *mark;
 
-    PORT_Assert (poolp != NULL);
+    PORT_Assert(poolp != NULL);
 
     mark = PORT_ArenaMark(poolp);
 
     if (value == NULL) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	goto loser;
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        goto loser;
     }
 
     if ((copiedvalue = SECITEM_ArenaDupItem(poolp, value)) == NULL)
-	goto loser;
+        goto loser;
 
     if (NSS_CMSArray_Add(poolp, (void ***)&(attr->values), (void *)copiedvalue) != SECSuccess)
-	goto loser;
+        goto loser;
 
     PORT_ArenaUnmark(poolp, mark);
     return SECSuccess;
 
 loser:
-    PORT_Assert (mark != NULL);
-    PORT_ArenaRelease (poolp, mark);
+    PORT_Assert(mark != NULL);
+    PORT_ArenaRelease(poolp, mark);
     return SECFailure;
 }
 
@@ -117,7 +117,7 @@ NSS_CMSAttribute_GetType(NSSCMSAttribute *attr)
 
     typetag = SECOID_FindOID(&(attr->type));
     if (typetag == NULL)
-	return SEC_OID_UNKNOWN;
+        return SEC_OID_UNKNOWN;
 
     return typetag->offset;
 }
@@ -135,15 +135,15 @@ NSS_CMSAttribute_GetValue(NSSCMSAttribute *attr)
     SECItem *value;
 
     if (attr == NULL)
-	return NULL;
+        return NULL;
 
     value = attr->values[0];
 
     if (value == NULL || value->data == NULL || value->len == 0)
-	return NULL;
+        return NULL;
 
     if (attr->values[1] != NULL)
-	return NULL;
+        return NULL;
 
     return value;
 }
@@ -155,14 +155,14 @@ PRBool
 NSS_CMSAttribute_CompareValue(NSSCMSAttribute *attr, SECItem *av)
 {
     SECItem *value;
-    
+
     if (attr == NULL)
-	return PR_FALSE;
+        return PR_FALSE;
 
     value = NSS_CMSAttribute_GetValue(attr);
 
     return (value != NULL && value->len == av->len &&
-	PORT_Memcmp (value->data, av->data, value->len) == 0);
+            PORT_Memcmp(value->data, av->data, value->len) == 0);
 }
 
 /*
@@ -182,14 +182,14 @@ cms_attr_choose_attr_value_template(void *src_or_dest, PRBool encoding)
     SECOidData *oiddata;
     PRBool encoded;
 
-    PORT_Assert (src_or_dest != NULL);
+    PORT_Assert(src_or_dest != NULL);
     if (src_or_dest == NULL)
-	return NULL;
+        return NULL;
 
     attribute = (NSSCMSAttribute *)src_or_dest;
 
     if (encoding && (!attribute->values || !attribute->values[0] ||
-        attribute->encoded)) {
+                     attribute->encoded)) {
         /* we're encoding, and the attribute has no value or the attribute
          * value is already encoded. */
         return SEC_ASN1_GET(SEC_AnyTemplate);
@@ -198,77 +198,76 @@ cms_attr_choose_attr_value_template(void *src_or_dest, PRBool encoding)
     /* get attribute's typeTag */
     oiddata = attribute->typeTag;
     if (oiddata == NULL) {
-	oiddata = SECOID_FindOID(&attribute->type);
-	attribute->typeTag = oiddata;
+        oiddata = SECOID_FindOID(&attribute->type);
+        attribute->typeTag = oiddata;
     }
 
     if (oiddata == NULL) {
-	/* still no OID tag? OID is unknown then. en/decode value as ANY. */
-	encoded = PR_TRUE;
-	theTemplate = SEC_ASN1_GET(SEC_AnyTemplate);
+        /* still no OID tag? OID is unknown then. en/decode value as ANY. */
+        encoded = PR_TRUE;
+        theTemplate = SEC_ASN1_GET(SEC_AnyTemplate);
     } else {
-	switch (oiddata->offset) {
-	case SEC_OID_PKCS9_SMIME_CAPABILITIES:
-	case SEC_OID_SMIME_ENCRYPTION_KEY_PREFERENCE:
-	    /* these guys need to stay DER-encoded */
-	default:
-	    /* same goes for OIDs that are not handled here */
-	    encoded = PR_TRUE;
-	    theTemplate = SEC_ASN1_GET(SEC_AnyTemplate);
-	    break;
-	    /* otherwise choose proper template */
-	case SEC_OID_PKCS9_EMAIL_ADDRESS:
-	case SEC_OID_RFC1274_MAIL:
-	case SEC_OID_PKCS9_UNSTRUCTURED_NAME:
-	    encoded = PR_FALSE;
-	    theTemplate = SEC_ASN1_GET(SEC_IA5StringTemplate);
-	    break;
-	case SEC_OID_PKCS9_CONTENT_TYPE:
-	    encoded = PR_FALSE;
-	    theTemplate = SEC_ASN1_GET(SEC_ObjectIDTemplate);
-	    break;
-	case SEC_OID_PKCS9_MESSAGE_DIGEST:
-	    encoded = PR_FALSE;
-	    theTemplate = SEC_ASN1_GET(SEC_OctetStringTemplate);
-	    break;
-	case SEC_OID_PKCS9_SIGNING_TIME:
-	    encoded = PR_FALSE;
-	    theTemplate = SEC_ASN1_GET(CERT_TimeChoiceTemplate);
-	    break;
-	  /* XXX Want other types here, too */
-	}
+        switch (oiddata->offset) {
+            case SEC_OID_PKCS9_SMIME_CAPABILITIES:
+            case SEC_OID_SMIME_ENCRYPTION_KEY_PREFERENCE:
+            /* these guys need to stay DER-encoded */
+            default:
+                /* same goes for OIDs that are not handled here */
+                encoded = PR_TRUE;
+                theTemplate = SEC_ASN1_GET(SEC_AnyTemplate);
+                break;
+            /* otherwise choose proper template */
+            case SEC_OID_PKCS9_EMAIL_ADDRESS:
+            case SEC_OID_RFC1274_MAIL:
+            case SEC_OID_PKCS9_UNSTRUCTURED_NAME:
+                encoded = PR_FALSE;
+                theTemplate = SEC_ASN1_GET(SEC_IA5StringTemplate);
+                break;
+            case SEC_OID_PKCS9_CONTENT_TYPE:
+                encoded = PR_FALSE;
+                theTemplate = SEC_ASN1_GET(SEC_ObjectIDTemplate);
+                break;
+            case SEC_OID_PKCS9_MESSAGE_DIGEST:
+                encoded = PR_FALSE;
+                theTemplate = SEC_ASN1_GET(SEC_OctetStringTemplate);
+                break;
+            case SEC_OID_PKCS9_SIGNING_TIME:
+                encoded = PR_FALSE;
+                theTemplate = SEC_ASN1_GET(CERT_TimeChoiceTemplate);
+                break;
+                /* XXX Want other types here, too */
+        }
     }
 
     if (encoding) {
-	/*
-	 * If we are encoding and we think we have an already-encoded value,
-	 * then the code which initialized this attribute should have set
-	 * the "encoded" property to true (and we would have returned early,
-	 * up above).  No devastating error, but that code should be fixed.
-	 * (It could indicate that the resulting encoded bytes are wrong.)
-	 */
-	PORT_Assert (!encoded);
+        /*
+         * If we are encoding and we think we have an already-encoded value,
+         * then the code which initialized this attribute should have set
+         * the "encoded" property to true (and we would have returned early,
+         * up above).  No devastating error, but that code should be fixed.
+         * (It could indicate that the resulting encoded bytes are wrong.)
+         */
+        PORT_Assert(!encoded);
     } else {
-	/*
-	 * We are decoding; record whether the resulting value is
-	 * still encoded or not.
-	 */
-	attribute->encoded = encoded;
+        /*
+         * We are decoding; record whether the resulting value is
+         * still encoded or not.
+         */
+        attribute->encoded = encoded;
     }
     return theTemplate;
 }
 
-static const SEC_ASN1TemplateChooserPtr cms_attr_chooser
-	= cms_attr_choose_attr_value_template;
+static const SEC_ASN1TemplateChooserPtr cms_attr_chooser = cms_attr_choose_attr_value_template;
 
 const SEC_ASN1Template nss_cms_attribute_template[] = {
     { SEC_ASN1_SEQUENCE,
-	  0, NULL, sizeof(NSSCMSAttribute) },
+      0, NULL, sizeof(NSSCMSAttribute) },
     { SEC_ASN1_OBJECT_ID,
-	  offsetof(NSSCMSAttribute,type) },
+      offsetof(NSSCMSAttribute, type) },
     { SEC_ASN1_DYNAMIC | SEC_ASN1_SET_OF,
-	  offsetof(NSSCMSAttribute,values),
-	  &cms_attr_chooser },
+      offsetof(NSSCMSAttribute, values),
+      &cms_attr_chooser },
     { 0 }
 };
 
@@ -292,7 +291,7 @@ const SEC_ASN1Template nss_cms_set_of_attribute_template[] = {
 SECItem *
 NSS_CMSAttributeArray_Encode(PLArenaPool *poolp, NSSCMSAttribute ***attrs, SECItem *dest)
 {
-    return SEC_ASN1EncodeItem (poolp, dest, (void *)attrs, nss_cms_set_of_attribute_template);
+    return SEC_ASN1EncodeItem(poolp, dest, (void *)attrs, nss_cms_set_of_attribute_template);
 }
 
 /*
@@ -323,44 +322,43 @@ NSS_CMSAttributeArray_FindAttrByOidTag(NSSCMSAttribute **attrs, SECOidTag oidtag
     NSSCMSAttribute *attr1, *attr2;
 
     if (attrs == NULL)
-	return NULL;
+        return NULL;
 
     oid = SECOID_FindOIDByTag(oidtag);
     if (oid == NULL)
-	return NULL;
+        return NULL;
 
     while ((attr1 = *attrs++) != NULL) {
-	if (attr1->type.len == oid->oid.len && PORT_Memcmp (attr1->type.data,
-							    oid->oid.data,
-							    oid->oid.len) == 0)
-	    break;
+        if (attr1->type.len == oid->oid.len &&
+            PORT_Memcmp(attr1->type.data, oid->oid.data, oid->oid.len) == 0)
+            break;
     }
 
     if (attr1 == NULL)
-	return NULL;
+        return NULL;
 
     if (!only)
-	return attr1;
+        return attr1;
 
     while ((attr2 = *attrs++) != NULL) {
-	if (attr2->type.len == oid->oid.len && PORT_Memcmp (attr2->type.data,
-							    oid->oid.data,
-							    oid->oid.len) == 0)
-	    break;
+        if (attr2->type.len == oid->oid.len &&
+            PORT_Memcmp(attr2->type.data, oid->oid.data, oid->oid.len) == 0)
+            break;
     }
 
     if (attr2 != NULL)
-	return NULL;
+        return NULL;
 
     return attr1;
 }
 
 /*
  * NSS_CMSAttributeArray_AddAttr - add an attribute to an
- * array of attributes. 
+ * array of attributes.
  */
 SECStatus
-NSS_CMSAttributeArray_AddAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs, NSSCMSAttribute *attr)
+NSS_CMSAttributeArray_AddAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs,
+                              NSSCMSAttribute *attr)
 {
     NSSCMSAttribute *oattr;
     void *mark;
@@ -373,13 +371,13 @@ NSS_CMSAttributeArray_AddAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs, NSSC
 
     /* see if we have one already */
     oattr = NSS_CMSAttributeArray_FindAttrByOidTag(*attrs, type, PR_FALSE);
-    PORT_Assert (oattr == NULL);
+    PORT_Assert(oattr == NULL);
     if (oattr != NULL)
-	goto loser;	/* XXX or would it be better to replace it? */
+        goto loser; /* XXX or would it be better to replace it? */
 
     /* no, shove it in */
     if (NSS_CMSArray_Add(poolp, (void ***)attrs, (void *)attr) != SECSuccess)
-	goto loser;
+        goto loser;
 
     PORT_ArenaUnmark(poolp, mark);
     return SECSuccess;
@@ -393,7 +391,8 @@ loser:
  * NSS_CMSAttributeArray_SetAttr - set an attribute's value in a set of attributes
  */
 SECStatus
-NSS_CMSAttributeArray_SetAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs, SECOidTag type, SECItem *value, PRBool encoded)
+NSS_CMSAttributeArray_SetAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs,
+                              SECOidTag type, SECItem *value, PRBool encoded)
 {
     NSSCMSAttribute *attr;
     void *mark;
@@ -403,25 +402,24 @@ NSS_CMSAttributeArray_SetAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs, SECO
     /* see if we have one already */
     attr = NSS_CMSAttributeArray_FindAttrByOidTag(*attrs, type, PR_FALSE);
     if (attr == NULL) {
-	/* not found? create one! */
-	attr = NSS_CMSAttribute_Create(poolp, type, value, encoded);
-	if (attr == NULL)
-	    goto loser;
-	/* and add it to the list */
-	if (NSS_CMSArray_Add(poolp, (void ***)attrs, (void *)attr) != SECSuccess)
-	    goto loser;
+        /* not found? create one! */
+        attr = NSS_CMSAttribute_Create(poolp, type, value, encoded);
+        if (attr == NULL)
+            goto loser;
+        /* and add it to the list */
+        if (NSS_CMSArray_Add(poolp, (void ***)attrs, (void *)attr) != SECSuccess)
+            goto loser;
     } else {
-	/* found, shove it in */
-	/* XXX we need a decent memory model @#$#$!#!!! */
-	attr->values[0] = value;
-	attr->encoded = encoded;
+        /* found, shove it in */
+        /* XXX we need a decent memory model @#$#$!#!!! */
+        attr->values[0] = value;
+        attr->encoded = encoded;
     }
 
-    PORT_ArenaUnmark (poolp, mark);
+    PORT_ArenaUnmark(poolp, mark);
     return SECSuccess;
 
 loser:
-    PORT_ArenaRelease (poolp, mark);
+    PORT_ArenaRelease(poolp, mark);
     return SECFailure;
 }
-

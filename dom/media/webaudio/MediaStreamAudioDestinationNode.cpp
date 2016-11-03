@@ -16,6 +16,55 @@
 namespace mozilla {
 namespace dom {
 
+class AudioDestinationTrackSource :
+  public MediaStreamTrackSource
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioDestinationTrackSource,
+                                           MediaStreamTrackSource)
+
+  AudioDestinationTrackSource(MediaStreamAudioDestinationNode* aNode,
+                              nsIPrincipal* aPrincipal)
+    : MediaStreamTrackSource(aPrincipal, nsString())
+    , mNode(aNode)
+  {
+  }
+
+  void Destroy() override
+  {
+    if (mNode) {
+      mNode->DestroyMediaStream();
+      mNode = nullptr;
+    }
+  }
+
+  MediaSourceEnum GetMediaSource() const override
+  {
+    return MediaSourceEnum::AudioCapture;
+  }
+
+  void Stop() override
+  {
+    Destroy();
+  }
+
+private:
+  virtual ~AudioDestinationTrackSource() {}
+
+  RefPtr<MediaStreamAudioDestinationNode> mNode;
+};
+
+NS_IMPL_ADDREF_INHERITED(AudioDestinationTrackSource,
+                         MediaStreamTrackSource)
+NS_IMPL_RELEASE_INHERITED(AudioDestinationTrackSource,
+                          MediaStreamTrackSource)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioDestinationTrackSource)
+NS_INTERFACE_MAP_END_INHERITING(MediaStreamTrackSource)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioDestinationTrackSource,
+                                   MediaStreamTrackSource,
+                                   mNode)
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaStreamAudioDestinationNode, AudioNode, mDOMStream)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaStreamAudioDestinationNode)
@@ -37,8 +86,7 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(AudioContext* a
   // Ensure an audio track with the correct ID is exposed to JS
   nsIDocument* doc = aContext->GetParentObject()->GetExtantDoc();
   RefPtr<MediaStreamTrackSource> source =
-    new BasicUnstoppableTrackSource(doc->NodePrincipal(),
-                                    MediaSourceEnum::AudioCapture);
+    new AudioDestinationTrackSource(this, doc->NodePrincipal());
   RefPtr<MediaStreamTrack> track =
     mDOMStream->CreateDOMTrack(AudioNodeStream::AUDIO_TRACK,
                                MediaSegment::AUDIO, source,

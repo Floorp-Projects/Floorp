@@ -1,0 +1,42 @@
+<!doctype html>
+<title>Mozilla bug 636465</title>
+<link rel=stylesheet href="/tests/SimpleTest/test.css">
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=636465"
+   target="_blank">Mozilla Bug 636465</a>
+<input id="x" value="foobarbaz" spellcheck="true">
+<script>
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm",
+                          window);
+  var x = document.getElementById("x");
+  x.focus();
+  onSpellCheck(x, function () {
+    x.blur();
+    var spellCheckTrue = snapshotWindow(window);
+    x.setAttribute("spellcheck", "false");
+    var spellCheckFalse = snapshotWindow(window);
+    x.setAttribute("spellcheck", "true");
+    x.focus();
+    onSpellCheck(x, function () {
+      x.blur();
+      var spellCheckTrueAgain = snapshotWindow(window);
+      x.removeAttribute("spellcheck");
+      var spellCheckNone = snapshotWindow(window);
+      var after = snapshotWindow(window);
+      ok(compareSnapshots(spellCheckTrue, spellCheckFalse, false)[0],
+         "Setting the spellcheck attribute to false should work");
+      ok(compareSnapshots(spellCheckTrue, spellCheckTrueAgain, true)[0],
+         "Setting the spellcheck attribute back to true should work");
+      ok(compareSnapshots(spellCheckNone, spellCheckFalse, true)[0],
+         "Unsetting the spellcheck attribute should work");
+      SimpleTest.finish();
+    });
+  });
+}
+addLoadEvent(runTest);
+</script>

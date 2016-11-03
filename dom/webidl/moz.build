@@ -257,7 +257,6 @@ WEBIDL_FILES = [
     'IccCardLockError.webidl',
     'IDBCursor.webidl',
     'IDBDatabase.webidl',
-    'IDBEnvironment.webidl',
     'IDBFactory.webidl',
     'IDBFileHandle.webidl',
     'IDBFileRequest.webidl',

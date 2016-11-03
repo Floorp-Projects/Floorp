@@ -476,34 +476,6 @@ add_task(function* () {
 });
 
 add_task(function* () {
-  info("Cmd+k should focus the search box in the page when the search box in the toolbar is absent");
-
-  // Remove the search bar from toolbar
-  CustomizableUI.removeWidgetFromArea("search-container");
-
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#brandLogo", {}, browser);
-    yield ContentTask.spawn(browser, null, function* () {
-      let doc = content.document;
-      isnot(doc.getElementById("searchText"), doc.activeElement,
-        "Search input should not be the active element.");
-    });
-
-    EventUtils.synthesizeKey("k", { accelKey: true });
-
-    yield ContentTask.spawn(browser, null, function* () {
-      let doc = content.document;
-      let searchInput = doc.getElementById("searchText");
-
-      yield ContentTaskUtils.waitForCondition(() => doc.activeElement === searchInput,
-        "Search input should be the active element.");
-    });
-  });
-
-  CustomizableUI.reset();
-});
-
-add_task(function* () {
   info("Cmd+k should focus the search box in the toolbar when it's present");
 
   yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {

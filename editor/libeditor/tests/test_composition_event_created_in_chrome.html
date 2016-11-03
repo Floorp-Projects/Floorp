@@ -1,12 +1,11 @@
+<!doctype html>
 <html>
 
 <head>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
 </head>
 
 <body>
@@ -17,17 +16,16 @@
 
 // In nsEditorEventListener, when listening event is not created with proper
 // event interface, it asserts the fact.
-SimpleTest.expectAssertions(2);
 SimpleTest.waitForExplicitFinish();
 
 var gInputElement = document.getElementById("input");
 
 function getEditorIMESupport(aInputElement)
 {
-  var editableElement = aInputElement.QueryInterface(Components.interfaces.nsIDOMNSEditableElement);
+  var editableElement = SpecialPowers.wrap(aInputElement).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
   ok(editableElement, "The input element doesn't have nsIDOMNSEditableElement interface");
   ok(editableElement.editor, "There is no editor for the input element");
-  var editorIMESupport = editableElement.editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
+  var editorIMESupport = SpecialPowers.wrap(editableElement).editor.QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport);
   ok(editorIMESupport, "The input element doesn't have nsIEditorIMESupport interface");
   return editorIMESupport;
 }

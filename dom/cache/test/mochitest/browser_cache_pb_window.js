@@ -74,8 +74,7 @@ function test() {
         testDelete(privateWin),
         testKeys(privateWin)
       ]).then(function() {
-        privateWin.close();
-        finish();
+        BrowserTestUtils.closeWindow(privateWin).then(finish);
       });
     });
   });

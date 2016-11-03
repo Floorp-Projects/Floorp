@@ -1078,7 +1078,7 @@ camellia_setup192(const unsigned char *key, PRUint32 *subkey)
  * Stuff related to camellia encryption/decryption
  *
  */
-SECStatus
+SECStatus NO_SANITIZE_ALIGNMENT
 camellia_encrypt128(const PRUint32 *subkey,
                     unsigned char *output,
                     const unsigned char *input)
@@ -1185,7 +1185,7 @@ camellia_encrypt128(const PRUint32 *subkey,
     return SECSuccess;
 }
 
-SECStatus
+SECStatus NO_SANITIZE_ALIGNMENT
 camellia_decrypt128(const PRUint32 *subkey,
                     unsigned char *output,
                     const unsigned char *input)
@@ -1295,7 +1295,7 @@ camellia_decrypt128(const PRUint32 *subkey,
 /**
  * stuff for 192 and 256bit encryption/decryption
  */
-SECStatus
+SECStatus NO_SANITIZE_ALIGNMENT
 camellia_encrypt256(const PRUint32 *subkey,
                     unsigned char *output,
                     const unsigned char *input)
@@ -1426,7 +1426,7 @@ camellia_encrypt256(const PRUint32 *subkey,
     return SECSuccess;
 }
 
-SECStatus
+SECStatus NO_SANITIZE_ALIGNMENT
 camellia_decrypt256(const PRUint32 *subkey,
                     unsigned char *output,
                     const unsigned char *input)

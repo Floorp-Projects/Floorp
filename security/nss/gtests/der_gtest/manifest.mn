@@ -1,0 +1,22 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+DEPTH      = ../..
+MODULE = nss
+
+CPPSRCS = \
+      der_getint_unittest.cc \
+      der_private_key_import_unittest.cc \
+      $(NULL)
+
+INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
+            -I$(CORE_DEPTH)/gtests/common
+
+REQUIRES = nspr nss libdbm gtest
+
+PROGRAM = der_gtest
+
+EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) $(EXTRA_OBJS) \
+             ../common/$(OBJDIR)/gtests$(OBJ_SUFFIX)

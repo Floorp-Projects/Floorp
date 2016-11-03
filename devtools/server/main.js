@@ -507,7 +507,7 @@ var DebuggerServer = {
       constructor: "EventLoopLagActor",
       type: { tab: true }
     });
-    this.registerModule("devtools/server/actors/layout", {
+    this.registerModule("devtools/server/actors/reflow", {
       prefix: "reflow",
       constructor: "ReflowActor",
       type: { tab: true }

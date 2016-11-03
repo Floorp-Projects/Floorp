@@ -41,9 +41,9 @@ function test() {
     let urlNode = networkEventMessage.querySelector(".url");
 
     let deferred = promise.defer();
-    urlNode.addEventListener("click", function onClick(aEvent) {
+    urlNode.addEventListener("click", function onClick(event) {
       urlNode.removeEventListener("click", onClick);
-      ok(aEvent.defaultPrevented, "The default action was prevented.");
+      ok(event.defaultPrevented, "The default action was prevented.");
 
       deferred.resolve();
     });

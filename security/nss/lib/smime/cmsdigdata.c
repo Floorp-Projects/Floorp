@@ -34,12 +34,12 @@ NSS_CMSDigestedData_Create(NSSCMSMessage *cmsg, SECAlgorithmID *digestalg)
 
     digd = (NSSCMSDigestedData *)PORT_ArenaZAlloc(poolp, sizeof(NSSCMSDigestedData));
     if (digd == NULL)
-	goto loser;
+        goto loser;
 
     digd->cmsg = cmsg;
 
-    if (SECOID_CopyAlgorithmID (poolp, &(digd->digestAlg), digestalg) != SECSuccess)
-	goto loser;
+    if (SECOID_CopyAlgorithmID(poolp, &(digd->digestAlg), digestalg) != SECSuccess)
+        goto loser;
 
     PORT_ArenaUnmark(poolp, mark);
     return digd;
@@ -84,8 +84,8 @@ NSS_CMSDigestedData_Encode_BeforeStart(NSSCMSDigestedData *digd)
 
     version = NSS_CMS_DIGESTED_DATA_VERSION_DATA;
     if (!NSS_CMSType_IsData(NSS_CMSContentInfo_GetContentTypeTag(
-							&(digd->contentInfo))))
-	version = NSS_CMS_DIGESTED_DATA_VERSION_ENCAP;
+            &(digd->contentInfo))))
+        version = NSS_CMS_DIGESTED_DATA_VERSION_ENCAP;
 
     dummy = SEC_ASN1EncodeInteger(digd->cmsg->poolp, &(digd->version), version);
     return (dummy == NULL) ? SECFailure : SECSuccess;
@@ -101,17 +101,17 @@ NSS_CMSDigestedData_Encode_BeforeStart(NSSCMSDigestedData *digd)
 SECStatus
 NSS_CMSDigestedData_Encode_BeforeData(NSSCMSDigestedData *digd)
 {
-    SECStatus rv =NSS_CMSContentInfo_Private_Init(&digd->contentInfo);
-    if (rv != SECSuccess)  {
-	return SECFailure;
+    SECStatus rv = NSS_CMSContentInfo_Private_Init(&digd->contentInfo);
+    if (rv != SECSuccess) {
+        return SECFailure;
     }
 
     /* set up the digests */
     if (digd->digestAlg.algorithm.len != 0 && digd->digest.len == 0) {
-	/* if digest is already there, do nothing */
-	digd->contentInfo.privateInfo->digcx = NSS_CMSDigestContext_StartSingle(&(digd->digestAlg));
-	if (digd->contentInfo.privateInfo->digcx == NULL)
-	    return SECFailure;
+        /* if digest is already there, do nothing */
+        digd->contentInfo.privateInfo->digcx = NSS_CMSDigestContext_StartSingle(&(digd->digestAlg));
+        if (digd->contentInfo.privateInfo->digcx == NULL)
+            return SECFailure;
     }
     return SECSuccess;
 }
@@ -129,11 +129,11 @@ NSS_CMSDigestedData_Encode_AfterData(NSSCMSDigestedData *digd)
     SECStatus rv = SECSuccess;
     /* did we have digest calculation going on? */
     if (digd->contentInfo.privateInfo && digd->contentInfo.privateInfo->digcx) {
-	rv = NSS_CMSDigestContext_FinishSingle(digd->contentInfo.privateInfo->digcx,
-				               digd->cmsg->poolp, 
-					       &(digd->digest));
-	/* error has been set by NSS_CMSDigestContext_FinishSingle */
-	digd->contentInfo.privateInfo->digcx = NULL;
+        rv = NSS_CMSDigestContext_FinishSingle(digd->contentInfo.privateInfo->digcx,
+                                               digd->cmsg->poolp,
+                                               &(digd->digest));
+        /* error has been set by NSS_CMSDigestContext_FinishSingle */
+        digd->contentInfo.privateInfo->digcx = NULL;
     }
 
     return rv;
@@ -153,16 +153,16 @@ NSS_CMSDigestedData_Decode_BeforeData(NSSCMSDigestedData *digd)
 
     /* is there a digest algorithm yet? */
     if (digd->digestAlg.algorithm.len == 0)
-	return SECFailure;
+        return SECFailure;
 
     rv = NSS_CMSContentInfo_Private_Init(&digd->contentInfo);
     if (rv != SECSuccess) {
-	return SECFailure;
+        return SECFailure;
     }
 
     digd->contentInfo.privateInfo->digcx = NSS_CMSDigestContext_StartSingle(&(digd->digestAlg));
     if (digd->contentInfo.privateInfo->digcx == NULL)
-	return SECFailure;
+        return SECFailure;
 
     return SECSuccess;
 }
@@ -180,11 +180,11 @@ NSS_CMSDigestedData_Decode_AfterData(NSSCMSDigestedData *digd)
     SECStatus rv = SECSuccess;
     /* did we have digest calculation going on? */
     if (digd->contentInfo.privateInfo && digd->contentInfo.privateInfo->digcx) {
-	rv = NSS_CMSDigestContext_FinishSingle(digd->contentInfo.privateInfo->digcx,
-				               digd->cmsg->poolp, 
-					       &(digd->cdigest));
-	/* error has been set by NSS_CMSDigestContext_FinishSingle */
-	digd->contentInfo.privateInfo->digcx = NULL;
+        rv = NSS_CMSDigestContext_FinishSingle(digd->contentInfo.privateInfo->digcx,
+                                               digd->cmsg->poolp,
+                                               &(digd->cdigest));
+        /* error has been set by NSS_CMSDigestContext_FinishSingle */
+        digd->contentInfo.privateInfo->digcx = NULL;
     }
 
     return rv;
@@ -201,9 +201,9 @@ NSS_CMSDigestedData_Decode_AfterEnd(NSSCMSDigestedData *digd)
 {
     /* did we have digest calculation going on? */
     if (digd->cdigest.len != 0) {
-	/* XXX comparision btw digest & cdigest */
-	/* XXX set status */
-	/* TODO!!!! */
+        /* XXX comparision btw digest & cdigest */
+        /* XXX set status */
+        /* TODO!!!! */
     }
 
     return SECSuccess;

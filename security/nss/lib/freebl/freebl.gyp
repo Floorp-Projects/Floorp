@@ -47,6 +47,7 @@
         'cts.c',
         'des.c',
         'desblapi.c',
+        'det_rng.c',
         'dh.c',
         'drbg.c',
         'dsa.c',
@@ -213,6 +214,11 @@
             }],
           ],
         }],
+        [ 'fuzz==1', {
+          'defines': [
+            'UNSAFE_FUZZER_MODE',
+          ],
+        }],
         [ 'OS=="mac"', {
           'conditions': [
             [ 'target_arch=="ia32"', {
@@ -255,7 +261,6 @@
           'type': 'shared_library',
           'defines': [
             'FREEBL_NO_DEPEND',
-            'FREEBL_LOWHASH',
           ],
           'sources': [
             'lowhash_vector.c'
@@ -348,11 +353,13 @@
         ],
       }],
       [ 'OS=="linux"', {
+        'defines': [
+          'FREEBL_LOWHASH',
+        ],
         'conditions': [
           [ 'test_build==0', {
             'defines': [
               'FREEBL_NO_DEPEND',
-              'FREEBL_LOWHASH',
             ],
           }],
           [ 'target_arch=="x64"', {
@@ -393,12 +400,5 @@
   },
   'variables': {
     'module': 'nss',
-    'conditions': [
-      [ 'OS=="linux"', {
-        'freebl_name': 'freeblpriv3',
-      }, {
-        'freebl_name': 'freebl3',
-      }],
-    ],
   }
 }

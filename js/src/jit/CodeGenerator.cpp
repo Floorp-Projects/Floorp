@@ -6225,68 +6225,145 @@ CodeGenerator::visitSetArrayLength(LSetArrayLength* lir)
     masm.dec32(&newLength);
 }
 
-static inline void
-ValueMapRangeFront(MacroAssembler& masm, Register range, Register i, Register front)
+template <class OrderedHashTable>
+static void
+RangeFront(MacroAssembler&, Register, Register, Register);
+
+template <>
+void
+RangeFront<ValueMap>(MacroAssembler& masm, Register range, Register i, Register front)
 {
     masm.loadPtr(Address(range, ValueMap::Range::offsetOfHashTable()), front);
     masm.loadPtr(Address(front, ValueMap::offsetOfImplData()), front);
 
-    MOZ_ASSERT(ValueMap::sizeofImplData() == 24);
+    static_assert(ValueMap::offsetOfImplDataElement() == 0, "offsetof(Data, element) is 0");
+    static_assert(ValueMap::sizeofImplData() == 24, "sizeof(Data) is 24");
     masm.mulBy3(i, i);
     masm.lshiftPtr(Imm32(3), i);
     masm.addPtr(i, front);
 }
 
-static inline void
-ValueMapRangePopFront(MacroAssembler& masm, Register range, Register front, Register dataLength,
-                      Register temp)
+template <>
+void
+RangeFront<ValueSet>(MacroAssembler& masm, Register range, Register i, Register front)
+{
+    masm.loadPtr(Address(range, ValueSet::Range::offsetOfHashTable()), front);
+    masm.loadPtr(Address(front, ValueSet::offsetOfImplData()), front);
+
+    static_assert(ValueSet::offsetOfImplDataElement() == 0, "offsetof(Data, element) is 0");
+    static_assert(ValueSet::sizeofImplData() == 16, "sizeof(Data) is 16");
+    masm.lshiftPtr(Imm32(4), i);
+    masm.addPtr(i, front);
+}
+
+template <class OrderedHashTable>
+static void
+RangePopFront(MacroAssembler& masm, Register range, Register front, Register dataLength,
+              Register temp)
 {
     Register i = temp;
 
-    masm.add32(Imm32(1), Address(range, ValueMap::Range::offsetOfCount()));
+    masm.add32(Imm32(1), Address(range, OrderedHashTable::Range::offsetOfCount()));
 
-    masm.load32(Address(range, ValueMap::Range::offsetOfI()), i);
+    masm.load32(Address(range, OrderedHashTable::Range::offsetOfI()), i);
     masm.add32(Imm32(1), i);
 
     Label done, seek;
     masm.bind(&seek);
     masm.branch32(Assembler::AboveOrEqual, i, dataLength, &done);
 
-    MOZ_ASSERT(ValueMap::sizeofImplData() == 24);
-    masm.addPtr(Imm32(24), front);
+    // We can add sizeof(Data) to |front| to select the next element, because
+    // |front| and |range.ht.data[i]| point to the same location.
+    static_assert(OrderedHashTable::offsetOfImplDataElement() == 0, "offsetof(Data, element) is 0");
+    masm.addPtr(Imm32(OrderedHashTable::sizeofImplData()), front);
 
-    masm.branchTestMagic(Assembler::NotEqual, Address(front, ValueMap::Entry::offsetOfKey()),
+    masm.branchTestMagic(Assembler::NotEqual, Address(front, OrderedHashTable::offsetOfEntryKey()),
                          JS_HASH_KEY_EMPTY, &done);
 
     masm.add32(Imm32(1), i);
     masm.jump(&seek);
 
     masm.bind(&done);
-    masm.store32(i, Address(range, ValueMap::Range::offsetOfI()));
+    masm.store32(i, Address(range, OrderedHashTable::Range::offsetOfI()));
 }
 
+template <class OrderedHashTable>
 static inline void
-ValueMapRangeDestruct(MacroAssembler& masm, Register range, Register temp0, Register temp1)
+RangeDestruct(MacroAssembler& masm, Register range, Register temp0, Register temp1)
 {
     Register next = temp0;
     Register prevp = temp1;
 
-    masm.loadPtr(Address(range, ValueMap::Range::offsetOfNext()), next);
-    masm.loadPtr(Address(range, ValueMap::Range::offsetOfPrevP()), prevp);
+    masm.loadPtr(Address(range, OrderedHashTable::Range::offsetOfNext()), next);
+    masm.loadPtr(Address(range, OrderedHashTable::Range::offsetOfPrevP()), prevp);
     masm.storePtr(next, Address(prevp, 0));
 
     Label hasNoNext;
     masm.branchTestPtr(Assembler::Zero, next, next, &hasNoNext);
 
-    masm.storePtr(prevp, Address(next, ValueMap::Range::offsetOfPrevP()));
+    masm.storePtr(prevp, Address(next, OrderedHashTable::Range::offsetOfPrevP()));
 
     masm.bind(&hasNoNext);
 
     masm.callFreeStub(range);
 }
 
+template <>
 void
-CodeGenerator::visitGetNextMapEntryForIterator(LGetNextMapEntryForIterator* lir)
+CodeGenerator::emitLoadIteratorValues<ValueMap>(Register result, Register temp, Register front)
+{
+    size_t elementsOffset = NativeObject::offsetOfFixedElements();
+
+    Address keyAddress(front, ValueMap::Entry::offsetOfKey());
+    Address valueAddress(front, ValueMap::Entry::offsetOfValue());
+    Address keyElemAddress(result, elementsOffset);
+    Address valueElemAddress(result, elementsOffset + sizeof(Value));
+    masm.patchableCallPreBarrier(keyElemAddress, MIRType::Value);
+    masm.patchableCallPreBarrier(valueElemAddress, MIRType::Value);
+    masm.storeValue(keyAddress, keyElemAddress, temp);
+    masm.storeValue(valueAddress, valueElemAddress, temp);
+
+    Label keyIsNotObject, valueIsNotNurseryObject, emitBarrier;
+    masm.branchTestObject(Assembler::NotEqual, keyAddress, &keyIsNotObject);
+    masm.branchValueIsNurseryObject(Assembler::Equal, keyAddress, temp, &emitBarrier);
+    masm.bind(&keyIsNotObject);
+    masm.branchTestObject(Assembler::NotEqual, valueAddress, &valueIsNotNurseryObject);
+    masm.branchValueIsNurseryObject(Assembler::NotEqual, valueAddress, temp,
+                                    &valueIsNotNurseryObject);
+    {
+        masm.bind(&emitBarrier);
+        saveVolatile(temp);
+        emitPostWriteBarrier(result);
+        restoreVolatile(temp);
+    }
+    masm.bind(&valueIsNotNurseryObject);
+}
+
+template <>
+void
+CodeGenerator::emitLoadIteratorValues<ValueSet>(Register result, Register temp, Register front)
+{
+    size_t elementsOffset = NativeObject::offsetOfFixedElements();
+
+    Address keyAddress(front, ValueSet::offsetOfEntryKey());
+    Address keyElemAddress(result, elementsOffset);
+    masm.patchableCallPreBarrier(keyElemAddress, MIRType::Value);
+    masm.storeValue(keyAddress, keyElemAddress, temp);
+
+    Label keyIsNotObject;
+    masm.branchTestObject(Assembler::NotEqual, keyAddress, &keyIsNotObject);
+    masm.branchValueIsNurseryObject(Assembler::NotEqual, keyAddress, temp, &keyIsNotObject);
+    {
+        saveVolatile(temp);
+        emitPostWriteBarrier(result);
+        restoreVolatile(temp);
+    }
+    masm.bind(&keyIsNotObject);
+}
+
+template <class IteratorObject, class OrderedHashTable>
+void
+CodeGenerator::emitGetNextEntryForIterator(LGetNextEntryForIterator* lir)
 {
     Register iter = ToRegister(lir->iter());
     Register result = ToRegister(lir->result());
@@ -6295,50 +6372,25 @@ CodeGenerator::visitGetNextMapEntryForIterator(LGetNextMapEntryForIterator* lir)
     Register range = ToRegister(lir->temp2());
     Register output = ToRegister(lir->output());
 
-    masm.loadPrivate(Address(iter, NativeObject::getFixedSlotOffset(MapIteratorObject::RangeSlot)),
+    masm.loadPrivate(Address(iter, NativeObject::getFixedSlotOffset(IteratorObject::RangeSlot)),
                      range);
 
     Label iterAlreadyDone, iterDone, done;
     masm.branchTestPtr(Assembler::Zero, range, range, &iterAlreadyDone);
 
-    masm.load32(Address(range, ValueMap::Range::offsetOfI()), temp);
-    masm.loadPtr(Address(range, ValueMap::Range::offsetOfHashTable()), dataLength);
-    masm.load32(Address(dataLength, ValueMap::offsetOfImplDataLength()), dataLength);
+    masm.load32(Address(range, OrderedHashTable::Range::offsetOfI()), temp);
+    masm.loadPtr(Address(range, OrderedHashTable::Range::offsetOfHashTable()), dataLength);
+    masm.load32(Address(dataLength, OrderedHashTable::offsetOfImplDataLength()), dataLength);
     masm.branch32(Assembler::AboveOrEqual, temp, dataLength, &iterDone);
     {
         masm.push(iter);
 
         Register front = iter;
-        ValueMapRangeFront(masm, range, temp, front);
+        RangeFront<OrderedHashTable>(masm, range, temp, front);
 
-        size_t elementsOffset = NativeObject::offsetOfFixedElements();
+        emitLoadIteratorValues<OrderedHashTable>(result, temp, front);
 
-        Address keyAddress(front, ValueMap::Entry::offsetOfKey());
-        Address valueAddress(front, ValueMap::Entry::offsetOfValue());
-        Address keyElemAddress(result, elementsOffset);
-        Address valueElemAddress(result, elementsOffset + sizeof(Value));
-        masm.patchableCallPreBarrier(keyElemAddress, MIRType::Value);
-        masm.patchableCallPreBarrier(valueElemAddress, MIRType::Value);
-        masm.storeValue(keyAddress, keyElemAddress, temp);
-        masm.storeValue(valueAddress, valueElemAddress, temp);
-
-        Label keyIsNotObject, valueIsNotNurseryObject, emitBarrier;
-        masm.branchTestObject(Assembler::NotEqual, keyAddress, &keyIsNotObject);
-        masm.branchValueIsNurseryObject(Assembler::Equal, keyAddress, temp,
-                                        &emitBarrier);
-        masm.bind(&keyIsNotObject);
-        masm.branchTestObject(Assembler::NotEqual, valueAddress, &valueIsNotNurseryObject);
-        masm.branchValueIsNurseryObject(Assembler::NotEqual, valueAddress, temp,
-                                        &valueIsNotNurseryObject);
-        {
-            masm.bind(&emitBarrier);
-            saveVolatile(temp);
-            emitPostWriteBarrier(result);
-            restoreVolatile(temp);
-        }
-        masm.bind(&valueIsNotNurseryObject);
-
-        ValueMapRangePopFront(masm, range, front, dataLength, temp);
+        RangePopFront<OrderedHashTable>(masm, range, front, dataLength, temp);
 
         masm.pop(iter);
         masm.move32(Imm32(0), output);
@@ -6347,16 +6399,27 @@ CodeGenerator::visitGetNextMapEntryForIterator(LGetNextMapEntryForIterator* lir)
     {
         masm.bind(&iterDone);
 
-        ValueMapRangeDestruct(masm, range, temp, dataLength);
+        RangeDestruct<OrderedHashTable>(masm, range, temp, dataLength);
 
         masm.storeValue(PrivateValue(nullptr),
-                        Address(iter, NativeObject::getFixedSlotOffset(MapIteratorObject::RangeSlot)));
+                        Address(iter, NativeObject::getFixedSlotOffset(IteratorObject::RangeSlot)));
 
         masm.bind(&iterAlreadyDone);
 
         masm.move32(Imm32(1), output);
     }
     masm.bind(&done);
+}
+
+void
+CodeGenerator::visitGetNextEntryForIterator(LGetNextEntryForIterator* lir)
+{
+    if (lir->mir()->mode() == MGetNextEntryForIterator::Map) {
+        emitGetNextEntryForIterator<MapIteratorObject, ValueMap>(lir);
+    } else {
+        MOZ_ASSERT(lir->mir()->mode() == MGetNextEntryForIterator::Set);
+        emitGetNextEntryForIterator<SetIteratorObject, ValueSet>(lir);
+    }
 }
 
 void

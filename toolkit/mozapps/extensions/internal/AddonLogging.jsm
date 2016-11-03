@@ -95,6 +95,18 @@ AddonLogger.prototype = {
     // Always dump errors, in case the Console Service isn't listening yet
     dump("*** " + message + "\n");
 
+    function formatTimestamp(date) {
+      // Format timestamp as: "%Y-%m-%d %H:%M:%S"
+      let year = String(date.getFullYear());
+      let month = String(date.getMonth() + 1).padStart(2, "0");
+      let day = String(date.getDate()).padStart(2, "0");
+      let hours = String(date.getHours()).padStart(2, "0");
+      let minutes = String(date.getMinutes()).padStart(2, "0");
+      let seconds = String(date.getSeconds()).padStart(2, "0");
+
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+
     try {
       var tstamp = new Date();
       var logfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS_LOG]);
@@ -104,7 +116,7 @@ AddonLogger.prototype = {
       var writer = Cc["@mozilla.org/intl/converter-output-stream;1"].
                    createInstance(Ci.nsIConverterOutputStream);
       writer.init(stream, "UTF-8", 0, 0x0000);
-      writer.writeString(tstamp.toLocaleFormat("%Y-%m-%d %H:%M:%S ") +
+      writer.writeString(formatTimestamp(tstamp) + " " +
                          message + " at " + stack.sourceName + ":" +
                          stack.lineNumber + "\n");
       writer.close();

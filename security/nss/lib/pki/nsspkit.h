@@ -27,7 +27,7 @@ PR_BEGIN_EXTERN_C
  * it can be verified only within a trust domain.  The underlying type
  * of certificate may be of any supported standard, e.g. PKIX, PGP, etc.
  *
- * People speak of "verifying (with) the server's, or correspondant's, 
+ * People speak of "verifying (with) the server's, or correspondant's,
  * certificate"; for simple operations we support that simplification
  * by implementing public-key crypto operations as methods on this type.
  */
@@ -45,7 +45,7 @@ typedef struct NSSCertificateStr NSSCertificate;
  * private-key crypto operations as methods on this type.
  *
  * The current design only weakly distinguishes between certificates
- * and user certificates: as far as the compiler goes they're 
+ * and user certificates: as far as the compiler goes they're
  * interchangeable; debug libraries only have one common pointer-tracker;
  * etc.  However, attempts to do private-key operations on a certificate
  * for which the private key is not available will fail.
@@ -87,7 +87,7 @@ typedef struct NSSSymmetricKeyStr NSSSymmetricKey;
  *
  * A Trust Domain is the field in which certificates may be validated.
  * A trust domain will generally have one or more cryptographic modules
- * open; these modules perform the cryptographic operations, and 
+ * open; these modules perform the cryptographic operations, and
  * provide the basic "root" trust information from which the trust in
  * a specific certificate or key depends.
  *
@@ -123,7 +123,7 @@ typedef struct NSSTrustDomainStr NSSTrustDomain;
  * streaming crypto operations.
  *
  * This object descends from the "temporary database" concept in the
- * old code, but it has changed a lot as a result of what we've 
+ * old code, but it has changed a lot as a result of what we've
  * learned.
  */
 
@@ -139,10 +139,10 @@ typedef struct NSSCryptoContextStr NSSCryptoContext;
  * This is the basic OID that crops up everywhere.
  */
 
-struct NSSOIDStr;  /* unused opaque structure */
+struct NSSOIDStr; /* unused opaque structure */
 typedef struct NSSOIDStr NSSOID;
 
-/* 
+/*
  * NSSTime
  *
  * Unfortunately, we need an "exceptional" value to indicate
@@ -212,16 +212,16 @@ typedef struct NSSCallbackStr NSSCallback;
 
 struct NSSCallbackStr {
     /* Prompt for a password to initialize a slot.  */
-    PRStatus (* getInitPW)(NSSUTF8 *slotName, void *arg, 
-                           NSSUTF8 **ssoPW, NSSUTF8 **userPW); 
-    /* Prompt for oldPW and newPW in order to change the 
-     * password on a slot.  
+    PRStatus (*getInitPW)(NSSUTF8 *slotName, void *arg,
+                          NSSUTF8 **ssoPW, NSSUTF8 **userPW);
+    /* Prompt for oldPW and newPW in order to change the
+     * password on a slot.
      */
-    PRStatus (* getNewPW)(NSSUTF8 *slotName, PRUint32 *retries, void *arg,
-                          NSSUTF8 **oldPW, NSSUTF8 **newPW); 
+    PRStatus (*getNewPW)(NSSUTF8 *slotName, PRUint32 *retries, void *arg,
+                         NSSUTF8 **oldPW, NSSUTF8 **newPW);
     /* Prompt for slot password.  */
-    PRStatus (* getPW)(NSSUTF8 *slotName, PRUint32 *retries, void *arg,
-                       NSSUTF8 **password); 
+    PRStatus (*getPW)(NSSUTF8 *slotName, PRUint32 *retries, void *arg,
+                      NSSUTF8 **password);
     void *arg;
 };
 
@@ -231,14 +231,14 @@ typedef PRUint32 NSSOperations;
 /* 1) Do we want these to be preprocessor definitions or constants? */
 /* 2) What is the correct and complete list? */
 
-#define NSSOperations_ENCRYPT           0x0001
-#define NSSOperations_DECRYPT           0x0002
-#define NSSOperations_WRAP              0x0004
-#define NSSOperations_UNWRAP            0x0008
-#define NSSOperations_SIGN              0x0010
-#define NSSOperations_SIGN_RECOVER      0x0020
-#define NSSOperations_VERIFY            0x0040
-#define NSSOperations_VERIFY_RECOVER    0x0080
+#define NSSOperations_ENCRYPT 0x0001
+#define NSSOperations_DECRYPT 0x0002
+#define NSSOperations_WRAP 0x0004
+#define NSSOperations_UNWRAP 0x0008
+#define NSSOperations_SIGN 0x0010
+#define NSSOperations_SIGN_RECOVER 0x0020
+#define NSSOperations_VERIFY 0x0040
+#define NSSOperations_VERIFY_RECOVER 0x0080
 
 struct NSSPKIXCertificateStr;
 

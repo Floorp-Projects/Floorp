@@ -58,6 +58,11 @@ public:
     return mTextureFactoryIdentifier.mSupportsPartialUploads;
   }
 
+  bool SupportsComponentAlpha() const
+  {
+    return mTextureFactoryIdentifier.mSupportsComponentAlpha;
+  }
+
   const TextureFactoryIdentifier& GetTextureFactoryIdentifier() const
   {
     return mTextureFactoryIdentifier;

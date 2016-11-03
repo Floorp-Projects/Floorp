@@ -46,7 +46,6 @@ EXTRA_JS_MODULES.sessionstore = [
     'TabState.jsm',
     'TabStateCache.jsm',
     'TabStateFlusher.jsm',
-    'Utils.jsm',
 ]
 
 with Files('**'):

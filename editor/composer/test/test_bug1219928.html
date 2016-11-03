@@ -5,8 +5,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1219928
 -->
 <head>
   <title>Test for Bug 1219928</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1219928">Mozilla Bug 1219928</a>
@@ -29,26 +29,30 @@ var spellchecker;
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
+  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm",
+                          window);
 
   var elem = document.getElementById('en-US');
   elem.focus();
 
   onSpellCheck(elem, function () {
-    var Ci = Components.interfaces;
-    var editingSession = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIWebNavigation)
-                               .QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIEditingSession);
+    var Ci = SpecialPowers.Ci;
+    var editingSession = SpecialPowers.wrap(window)
+                                      .QueryInterface(Ci.nsIInterfaceRequestor)
+                                      .getInterface(Ci.nsIWebNavigation)
+                                      .QueryInterface(Ci.nsIInterfaceRequestor)
+                                      .getInterface(Ci.nsIEditingSession);
     var editor = editingSession.getEditorForWindow(window);
     var selcon = editor.selectionController;
     var sel = selcon.getSelection(selcon.SELECTION_SPELLCHECK);
 
     is(sel.toString(), "missspelled", "one misspelled word expected: missspelled");
 
-    spellchecker = Components.classes['@mozilla.org/editor/editorspellchecker;1'].createInstance(Components.interfaces.nsIEditorSpellCheck);
+    spellchecker = SpecialPowers.Cc['@mozilla.org/editor/editorspellchecker;1']
+                                .createInstance(Ci.nsIEditorSpellCheck);
     var filterContractId = "@mozilla.org/editor/txtsrvfilter;1";
-    spellchecker.setFilter(Components.classes[filterContractId].createInstance(Components.interfaces.nsITextServicesFilter));
+    spellchecker.setFilter(SpecialPowers.Cc[filterContractId]
+                                        .createInstance(Ci.nsITextServicesFilter));
     spellchecker.InitSpellChecker(editor, false, spellCheckStarted);
   });
 });

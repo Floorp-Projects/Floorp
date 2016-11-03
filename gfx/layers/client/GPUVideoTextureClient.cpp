@@ -11,6 +11,18 @@ namespace layers {
 
 using namespace gfx;
 
+GPUVideoTextureData::GPUVideoTextureData(dom::VideoDecoderManagerChild* aManager,
+                                         const SurfaceDescriptorGPUVideo& aSD,
+                                         const gfx::IntSize& aSize)
+  : mManager(aManager)
+  , mSD(aSD)
+  , mSize(aSize)
+{}
+
+GPUVideoTextureData::~GPUVideoTextureData()
+{
+}
+
 bool
 GPUVideoTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 {
@@ -35,7 +47,7 @@ GPUVideoTextureData::FillInfo(TextureData::Info& aInfo) const
 void
 GPUVideoTextureData::Deallocate(LayersIPCChannel* aAllocator)
 {
-  dom::VideoDecoderManagerChild::GetSingleton()->DeallocateSurfaceDescriptorGPUVideo(mSD);
+  mManager->DeallocateSurfaceDescriptorGPUVideo(mSD);
   mSD = SurfaceDescriptorGPUVideo();
 }
 

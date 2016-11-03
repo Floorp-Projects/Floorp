@@ -10,7 +10,7 @@
 function* runTest(installer) {
   let mgrWindow = yield open_manager("addons://list/extension");
 
-  let {addon, id} = yield installer();
+  let {addon, id} = yield* installer();
   isnot(addon, null, "Extension is installed");
 
   let element = get_addon_element(mgrWindow, id);
@@ -47,8 +47,8 @@ function* runTest(installer) {
 }
 
 // Test that deferred handling of optionsURL works for a signed webextension
-add_task(function test_options_signed() {
-  return runTest(function*() {
+add_task(function* test_options_signed() {
+  yield* runTest(function*() {
     // The extension in-tree is signed with this ID:
     const ID = "{9792932b-32b2-4567-998c-e7bf6c4c5e35}";
 
@@ -60,7 +60,7 @@ add_task(function test_options_signed() {
 });
 
 add_task(function* test_options_temporary() {
-  return runTest(function*() {
+  yield* runTest(function*() {
     let dir = get_addon_file_url("options_signed").file;
     let addon = yield AddonManager.installTemporaryAddon(dir);
     isnot(addon, null, "Extension is installed (temporarily)");

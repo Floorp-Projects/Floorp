@@ -1,0 +1,38 @@
+<!doctype html>
+<title>Mozilla Bug 646194</title>
+<link rel=stylesheet href="/tests/SimpleTest/test.css">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=646194"
+   target="_blank">Mozilla Bug 646194</a>
+<iframe id="i" src="data:text/html,&lt;div contenteditable=true id=t&gt;test me now&lt;/div&gt;"></iframe>
+<script>
+SimpleTest.expectAssertions(1);
+
+function runTest() {
+  var i = document.getElementById("i");
+  i.focus();
+  var win = i.contentWindow;
+  var doc = i.contentDocument;
+  var t = doc.getElementById("t");
+  t.focus();
+  // put the caret at the end
+  win.getSelection().collapse(t.firstChild, 11);
+
+  // Simulate pression Option+Delete on Mac
+  // We do things this way because not every platform can invoke this
+  // command using the available key bindings.
+  SpecialPowers.doCommand(window, "cmd_wordPrevious");
+  SpecialPowers.doCommand(window, "cmd_wordPrevious");
+  SpecialPowers.doCommand(window, "cmd_deleteWordBackward");
+  SpecialPowers.doCommand(window, "cmd_deleteWordBackward");
+
+  // If we reach here, we haven't crashed.  Phew!
+  // But let's check the value too, now that we're here.
+  is(t.textContent, "me now", "The command has worked correctly");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+</script>

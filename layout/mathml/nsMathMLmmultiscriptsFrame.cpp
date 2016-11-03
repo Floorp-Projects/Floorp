@@ -8,6 +8,7 @@
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
 #include <algorithm>
+#include "gfxMathTable.h"
 
 using mozilla::WritingMode;
 
@@ -195,8 +196,8 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
   // scriptspace from TeX for extra spacing after sup/subscript
   nscoord scriptSpace;
   if (mathFont) {
-    scriptSpace =
-      mathFont->GetMathConstant(gfxFontEntry::SpaceAfterScript, oneDevPixel);
+    scriptSpace = mathFont->MathTable()->
+      Constant(gfxMathTable::SpaceAfterScript, oneDevPixel);
   } else {
     // (0.5pt in plain TeX)
     scriptSpace = nsPresContext::CSSPointsToAppUnits(0.5f);
@@ -204,10 +205,10 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
 
   // Try and read sub and sup drops from the MATH table.
   if (mathFont) {
-    subDrop = mathFont->
-      GetMathConstant(gfxFontEntry::SubscriptBaselineDropMin, oneDevPixel);
-    supDrop = mathFont->
-      GetMathConstant(gfxFontEntry::SuperscriptBaselineDropMax, oneDevPixel);
+    subDrop = mathFont->MathTable()->
+      Constant(gfxMathTable::SubscriptBaselineDropMin, oneDevPixel);
+    supDrop = mathFont->MathTable()->
+      Constant(gfxMathTable::SuperscriptBaselineDropMax, oneDevPixel);
   }
 
   // force the scriptSpace to be at least 1 pixel
@@ -221,8 +222,8 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
   if (mathFont) {
     // Try and get the sub script shift from the MATH table. Note that contrary
     // to TeX we only have one parameter.
-    subScriptShift =
-      mathFont->GetMathConstant(gfxFontEntry::SubscriptShiftDown, oneDevPixel);
+    subScriptShift = mathFont->MathTable()->
+      Constant(gfxMathTable::SubscriptShiftDown, oneDevPixel);
   } else {
     // subScriptShift{1,2}
     // = minimum amount to shift the subscript down
@@ -253,10 +254,10 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
     // Try and get the super script shift from the MATH table. Note that
     // contrary to TeX we only have two parameters.
     supScriptShift = mathFont->
-      GetMathConstant(NS_MATHML_IS_COMPRESSED(presentationData.flags) ?
-                      gfxFontEntry::SuperscriptShiftUpCramped :
-                      gfxFontEntry::SuperscriptShiftUp,
-                      oneDevPixel);
+      MathTable()->Constant(NS_MATHML_IS_COMPRESSED(presentationData.flags) ?
+                            gfxMathTable::SuperscriptShiftUpCramped :
+                            gfxMathTable::SuperscriptShiftUp,
+                            oneDevPixel);
   } else {
     // supScriptShift{1,2,3}
     // = minimum amount to shift the supscript up
@@ -424,8 +425,8 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
           nscoord subscriptTopMax;
           if (mathFont) {
             subscriptTopMax =
-              mathFont->GetMathConstant(gfxFontEntry::SubscriptTopMax,
-                                        oneDevPixel);
+              mathFont->MathTable()->Constant(gfxMathTable::SubscriptTopMax,
+                                              oneDevPixel);
           } else {
             // get min subscript shift limit from x-height
             // = h(x) - 4/5 * sigma_5, Rule 18b, App. G, TeXbook
@@ -450,8 +451,8 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
         nscoord superscriptBottomMin;
         if (mathFont) {
           superscriptBottomMin =
-            mathFont->GetMathConstant(gfxFontEntry::SuperscriptBottomMin,
-                                      oneDevPixel);
+            mathFont->MathTable()->Constant(gfxMathTable::SuperscriptBottomMin,
+                                            oneDevPixel);
         } else {
           // get min supscript shift limit from x-height
           // = d(x) + 1/4 * sigma_5, Rule 18c, App. G, TeXbook
@@ -495,9 +496,8 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
             tag == nsGkAtoms::msubsup_) {
           nscoord subSuperscriptGapMin;
           if (mathFont) {
-            subSuperscriptGapMin =
-              mathFont->GetMathConstant(gfxFontEntry::SubSuperscriptGapMin,
-                                        oneDevPixel);
+            subSuperscriptGapMin = mathFont->MathTable()->
+              Constant(gfxMathTable::SubSuperscriptGapMin, oneDevPixel);
           } else {
             nscoord ruleSize;
             GetRuleThickness(aDrawTarget, fm, ruleSize);
@@ -515,9 +515,9 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
           // will be > superscriptBottomMaxWithSubscript
           nscoord superscriptBottomMaxWithSubscript;
           if (mathFont) {
-            superscriptBottomMaxWithSubscript = mathFont->
-              GetMathConstant(gfxFontEntry::SuperscriptBottomMaxWithSubscript,
-                              oneDevPixel);
+            superscriptBottomMaxWithSubscript = mathFont->MathTable()->
+              Constant(gfxMathTable::SuperscriptBottomMaxWithSubscript,
+                       oneDevPixel);
           } else {
             superscriptBottomMaxWithSubscript =
               NSToCoordRound((4.0f / 5.0f) * xHeight);

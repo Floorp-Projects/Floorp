@@ -169,6 +169,8 @@ UIEvent::InitUIEvent(const nsAString& typeArg,
                      mozIDOMWindow* viewArg,
                      int32_t detailArg)
 {
+  NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
+
   Event::InitEvent(typeArg, canBubbleArg, cancelableArg);
 
   mDetail = detailArg;

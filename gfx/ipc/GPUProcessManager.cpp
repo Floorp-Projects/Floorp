@@ -148,7 +148,7 @@ GPUProcessManager::DisableGPUProcess(const char* aMessage)
 void
 GPUProcessManager::EnsureGPUReady()
 {
-  if (mProcess && mProcess->IsConnected()) {
+  if (mProcess && !mProcess->IsConnected()) {
     if (!mProcess->WaitForLaunch()) {
       // If this fails, we should have fired OnProcessLaunchComplete and
       // removed the process.
@@ -249,6 +249,12 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
 
   mVsyncBridge = VsyncBridgeChild::Create(mVsyncIOThread, mProcessToken, Move(vsyncChild));
   mGPUChild->SendInitVsyncBridge(Move(vsyncParent));
+
+  nsTArray<LayerTreeIdMapping> mappings;
+  LayerTreeOwnerTracker::Get()->Iterate([&](uint64_t aLayersId, base::ProcessId aProcessId) {
+    mappings.AppendElement(LayerTreeIdMapping(aLayersId, aProcessId));
+  });
+  mGPUChild->SendAddLayerTreeIdMapping(mappings);
 }
 
 void
@@ -670,10 +676,22 @@ GPUProcessManager::MapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId)
   LayerTreeOwnerTracker::Get()->Map(aLayersId, aOwningId);
 
   if (mGPUChild) {
-    mGPUChild->SendAddLayerTreeIdMapping(
-        aLayersId,
-        aOwningId);
+    AutoTArray<LayerTreeIdMapping, 1> mappings;
+    mappings.AppendElement(LayerTreeIdMapping(aLayersId, aOwningId));
+    mGPUChild->SendAddLayerTreeIdMapping(mappings);
   }
+}
+
+void
+GPUProcessManager::UnmapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId)
+{
+  LayerTreeOwnerTracker::Get()->Unmap(aLayersId, aOwningId);
+
+  if (mGPUChild) {
+    mGPUChild->SendRemoveLayerTreeIdMapping(LayerTreeIdMapping(aLayersId, aOwningId));
+    return;
+  }
+  CompositorBridgeParent::DeallocateLayerTreeId(aLayersId);
 }
 
 bool
@@ -687,16 +705,6 @@ GPUProcessManager::AllocateLayerTreeId()
 {
   MOZ_ASSERT(NS_IsMainThread());
   return ++mNextLayerTreeId;
-}
-
-void
-GPUProcessManager::DeallocateLayerTreeId(uint64_t aLayersId)
-{
-  if (mGPUChild) {
-    mGPUChild->SendDeallocateLayerTreeId(aLayersId);
-    return;
-  }
-  CompositorBridgeParent::DeallocateLayerTreeId(aLayersId);
 }
 
 void
