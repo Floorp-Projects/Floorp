@@ -31,6 +31,7 @@ PRBool SSLInt_DamageEarlyTrafficSecret(PRFileDesc *fd);
 SECStatus SSLInt_Set0RttAlpn(PRFileDesc *fd, PRUint8 *data, unsigned int len);
 PRBool SSLInt_HasCertWithAuthType(PRFileDesc *fd, SSLAuthType authType);
 PRBool SSLInt_SendAlert(PRFileDesc *fd, uint8_t level, uint8_t type);
+PRBool SSLInt_SendNewSessionTicket(PRFileDesc *fd);
 SECStatus SSLInt_AdvanceWriteSeqNum(PRFileDesc *fd, PRUint64 to);
 SECStatus SSLInt_AdvanceReadSeqNum(PRFileDesc *fd, PRUint64 to);
 SECStatus SSLInt_AdvanceWriteSeqByAWindow(PRFileDesc *fd, PRInt32 extra);
