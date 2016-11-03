@@ -7,12 +7,12 @@
 interface FileSystemDirectoryEntry : FileSystemEntry {
     FileSystemDirectoryReader createReader();
 
-    void getFile(DOMString? path,
+    void getFile(optional USVString? path,
                  optional FileSystemFlags options,
                  optional FileSystemEntryCallback successCallback,
                  optional ErrorCallback errorCallback);
 
-    void getDirectory(DOMString? path,
+    void getDirectory(optional USVString? path,
                       optional FileSystemFlags options,
                       optional FileSystemEntryCallback successCallback,
                       optional ErrorCallback errorCallback);

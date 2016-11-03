@@ -46,19 +46,21 @@ public:
   CreateReader() const;
 
   void
-  GetFile(const nsAString& aPath, const FileSystemFlags& aFlag,
+  GetFile(const Optional<nsAString>& aPath, const FileSystemFlags& aFlag,
           const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
           const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
   {
-    GetInternal(aPath, aFlag, aSuccessCallback, aErrorCallback, eGetFile);
+    GetInternal(aPath.WasPassed() ? aPath.Value() : EmptyString(),
+                aFlag, aSuccessCallback, aErrorCallback, eGetFile);
   }
 
   void
-  GetDirectory(const nsAString& aPath, const FileSystemFlags& aFlag,
+  GetDirectory(const Optional<nsAString>& aPath, const FileSystemFlags& aFlag,
                const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
                const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
   {
-    GetInternal(aPath, aFlag, aSuccessCallback, aErrorCallback, eGetDirectory);
+    GetInternal(aPath.WasPassed() ? aPath.Value() : EmptyString(),
+                aFlag, aSuccessCallback, aErrorCallback, eGetDirectory);
   }
 
   void
