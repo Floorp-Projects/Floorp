@@ -429,7 +429,7 @@ sdp_result_e sdp_parse_attr_maxprate (sdp_t *sdp_p, sdp_attr_t *attr_p,
  * missing.
  *
  */
-static void sdp_attr_fmtp_no_value(sdp_t *sdp, char *param_name)
+static void sdp_attr_fmtp_no_value(sdp_t *sdp, const char *param_name)
 {
   sdp_parse_error(sdp,
     "%s Warning: No %s value specified for fmtp attribute",
@@ -443,9 +443,8 @@ static void sdp_attr_fmtp_no_value(sdp_t *sdp, char *param_name)
  * incorrect.
  *
  */
-
-static void sdp_attr_fmtp_invalid_value(sdp_t *sdp, char *param_name,
-  char* param_value)
+static void sdp_attr_fmtp_invalid_value(sdp_t *sdp, const char *param_name,
+  const char* param_value)
 {
   sdp_parse_error(sdp,
     "%s Warning: Invalid %s: %s specified for fmtp attribute",
