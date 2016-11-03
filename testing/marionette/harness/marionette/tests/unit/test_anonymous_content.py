@@ -2,8 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette import MarionetteTestCase
+from unittest import skip
 
+from marionette import MarionetteTestCase, WindowManagerMixin
 from marionette_driver.errors import NoSuchElementException
 from marionette_driver.expected import element_present
 from marionette_driver.marionette import HTMLElement
@@ -11,20 +12,24 @@ from marionette_driver.wait import Wait
 from marionette_driver.by import By
 
 
-class TestAnonymousContent(MarionetteTestCase):
+class TestAnonymousContent(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
-        MarionetteTestCase.setUp(self)
+        super(TestAnonymousContent, self).setUp()
         self.marionette.set_context("chrome")
-        self.win = self.marionette.current_chrome_window_handle
-        self.marionette.execute_script("window.open('chrome://marionette/content/test_anonymous_content.xul', 'foo', 'chrome,centerscreen');")
-        self.marionette.switch_to_window('foo')
-        self.assertNotEqual(self.win, self.marionette.current_chrome_window_handle)
+
+        def open_window_with_js():
+            self.marionette.execute_script("""
+              window.open('chrome://marionette/content/test_anonymous_content.xul',
+                          'foo', 'chrome,centerscreen');
+            """)
+
+        new_window = self.open_window(trigger=open_window_with_js)
+        self.marionette.switch_to_window(new_window)
+        self.assertNotEqual(self.marionette.current_chrome_window_handle, self.start_window)
 
     def tearDown(self):
-        self.assertNotEqual(self.win, self.marionette.current_chrome_window_handle)
-        self.marionette.close_chrome_window()
-        self.marionette.switch_to_window(self.win)
-        MarionetteTestCase.tearDown(self)
+        self.close_all_windows()
 
     def test_switch_to_anonymous_frame(self):
         self.marionette.find_element(By.ID, "testAnonymousContentBox")
@@ -35,6 +40,7 @@ class TestAnonymousContent(MarionetteTestCase):
         self.marionette.find_element(By.ID, "testXulBox")
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "testAnonymousContentBox")
 
+    @skip("Bug 1311657 - Opened chrome window cannot be closed after call to switch_to_frame")
     def test_switch_to_anonymous_iframe(self):
         self.marionette.find_element(By.ID, "testAnonymousContentBox")
         el = self.marionette.find_element(By.ID, "container2")
