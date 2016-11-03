@@ -8,6 +8,7 @@
 #include "DecoderDoctorDiagnostics.h"
 #include "GMPAudioDecoder.h"
 #include "GMPVideoDecoder.h"
+#include "GMPUtils.h"
 #include "MediaDataDecoderProxy.h"
 #include "MediaPrefs.h"
 #include "VideoUtils.h"
@@ -100,26 +101,6 @@ GMPDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
   }
 }
 
-static bool
-HasGMPFor(const nsACString& aAPI,
-          const nsACString& aCodec,
-          const nsACString& aGMP)
-{
-  nsTArray<nsCString> tags;
-  tags.AppendElement(aCodec);
-  tags.AppendElement(aGMP);
-  nsCOMPtr<mozIGeckoMediaPluginService> mps =
-    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-  if (NS_WARN_IF(!mps)) {
-    return false;
-  }
-  bool hasPlugin = false;
-  if (NS_FAILED(mps->HasPluginForAPI(aAPI, &tags, &hasPlugin))) {
-    return false;
-  }
-  return hasPlugin;
-}
-
 /* static */
 const Maybe<nsCString>
 GMPDecoderModule::PreferredGMP(const nsACString& aMimeType)
@@ -154,27 +135,23 @@ GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
   }
 
   if (MP4Decoder::IsH264(aMimeType)) {
-    return HasGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                     NS_LITERAL_CSTRING("h264"),
-                     aGMP.value());
+    return HaveGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+                      { NS_LITERAL_CSTRING("h264"), aGMP.value()});
   }
 
   if (VPXDecoder::IsVP9(aMimeType)) {
-    return HasGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                     NS_LITERAL_CSTRING("vp9"),
-                     aGMP.value());
+    return HaveGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+                      { NS_LITERAL_CSTRING("vp9"), aGMP.value()});
   }
 
   if (VPXDecoder::IsVP8(aMimeType)) {
-    return HasGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                     NS_LITERAL_CSTRING("vp8"),
-                     aGMP.value());
+    return HaveGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+                      { NS_LITERAL_CSTRING("vp8"), aGMP.value()});
   }
 
   if (MP4Decoder::IsAAC(aMimeType)) {
-    return HasGMPFor(NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
-                     NS_LITERAL_CSTRING("aac"),
-                     aGMP.value());
+    return HaveGMPFor(NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
+                      { NS_LITERAL_CSTRING("aac"), aGMP.value()});
   }
 
   return false;

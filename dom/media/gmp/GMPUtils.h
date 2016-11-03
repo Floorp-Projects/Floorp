@@ -80,6 +80,10 @@ ReadIntoString(nsIFile* aFile,
                nsCString& aOutDst,
                size_t aMaxLength);
 
+bool
+HaveGMPFor(const nsCString& aAPI,
+           nsTArray<nsCString>&& aTags);
+
 } // namespace mozilla
 
 #endif
