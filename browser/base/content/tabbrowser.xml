@@ -2133,28 +2133,30 @@
             var aEventDetail;
             var aRelatedBrowser;
             var aOriginPrincipal;
+            var aDisallowInheritPrincipal;
             var aOpener;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
               let params = arguments[1];
-              aReferrerURI          = params.referrerURI;
-              aReferrerPolicy       = params.referrerPolicy;
-              aCharset              = params.charset;
-              aPostData             = params.postData;
-              aOwner                = params.ownerTab;
-              aAllowThirdPartyFixup = params.allowThirdPartyFixup;
-              aFromExternal         = params.fromExternal;
-              aRelatedToCurrent     = params.relatedToCurrent;
-              aSkipAnimation        = params.skipAnimation;
-              aAllowMixedContent    = params.allowMixedContent;
-              aForceNotRemote       = params.forceNotRemote;
-              aNoReferrer           = params.noReferrer;
-              aUserContextId        = params.userContextId;
-              aEventDetail          = params.eventDetail;
-              aRelatedBrowser       = params.relatedBrowser;
-              aOriginPrincipal      = params.originPrincipal;
-              aOpener               = params.opener;
+              aReferrerURI              = params.referrerURI;
+              aReferrerPolicy           = params.referrerPolicy;
+              aCharset                  = params.charset;
+              aPostData                 = params.postData;
+              aOwner                    = params.ownerTab;
+              aAllowThirdPartyFixup     = params.allowThirdPartyFixup;
+              aFromExternal             = params.fromExternal;
+              aRelatedToCurrent         = params.relatedToCurrent;
+              aSkipAnimation            = params.skipAnimation;
+              aAllowMixedContent        = params.allowMixedContent;
+              aForceNotRemote           = params.forceNotRemote;
+              aNoReferrer               = params.noReferrer;
+              aUserContextId            = params.userContextId;
+              aEventDetail              = params.eventDetail;
+              aRelatedBrowser           = params.relatedBrowser;
+              aOriginPrincipal          = params.originPrincipal;
+              aDisallowInheritPrincipal = params.disallowInheritPrincipal;
+              aOpener                   = params.opener;
             }
 
             // if we're adding tabs, we're past interrupt mode, ditch the owner
@@ -2241,7 +2243,7 @@
 
             // If we didn't swap docShells with a preloaded browser
             // then let's just continue loading the page normally.
-            if (!usingPreloadedContent && !uriIsAboutBlank) {
+            if (!usingPreloadedContent && (!uriIsAboutBlank || aDisallowInheritPrincipal)) {
               // pretend the user typed this so it'll be available till
               // the document successfully loads
               if (aURI && gInitialPages.indexOf(aURI) == -1)
@@ -2256,6 +2258,8 @@
                 flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
               if (aAllowMixedContent)
                 flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT;
+              if (aDisallowInheritPrincipal)
+                flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
               try {
                 b.loadURIWithFlags(aURI, {
                   flags,
