@@ -153,9 +153,6 @@ module.exports = {
     // No unreachable statements
     // "no-unreachable": 2,
 
-    // No expressions where a statement is expected
-    // "no-unused-expressions": 2,
-
     // No declaring variables that are never used
     // "no-unused-vars": [2, {"vars": "all", "args": "none"}],
 
