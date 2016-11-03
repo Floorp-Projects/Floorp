@@ -22,7 +22,7 @@ namespace dom {
 void
 CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
                                      nsIGlobalObject* aGlobal,
-                                     FileCallback& aCallback,
+                                     BlobCallback& aCallback,
                                      const nsAString& aType,
                                      JS::Handle<JS::Value> aParams,
                                      ErrorResult& aRv)
@@ -31,9 +31,9 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
   class EncodeCallback : public EncodeCompleteCallback
   {
   public:
-    EncodeCallback(nsIGlobalObject* aGlobal, FileCallback* aCallback)
+    EncodeCallback(nsIGlobalObject* aGlobal, BlobCallback* aCallback)
       : mGlobal(aGlobal)
-      , mFileCallback(aCallback) {}
+      , mBlobCallback(aCallback) {}
 
     // This is called on main thread.
     nsresult ReceiveBlob(already_AddRefed<Blob> aBlob)
@@ -53,16 +53,16 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
 
       RefPtr<Blob> newBlob = Blob::Create(mGlobal, blob->Impl());
 
-      mFileCallback->Call(*newBlob, rv);
+      mBlobCallback->Call(*newBlob, rv);
 
       mGlobal = nullptr;
-      mFileCallback = nullptr;
+      mBlobCallback = nullptr;
 
       return rv.StealNSResult();
     }
 
     nsCOMPtr<nsIGlobalObject> mGlobal;
-    RefPtr<FileCallback> mFileCallback;
+    RefPtr<BlobCallback> mBlobCallback;
   };
 
   RefPtr<EncodeCompleteCallback> callback =
