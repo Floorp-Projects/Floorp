@@ -8,6 +8,7 @@
 '''
 
 import distutils.version
+import errno
 import os
 import subprocess
 import sys
@@ -21,6 +22,7 @@ from mozharness.base.script import (
     PostScriptAction,
     PostScriptRun,
     PreScriptAction,
+    ScriptMixin,
 )
 from mozharness.base.errors import VirtualenvErrorList
 from mozharness.base.log import WARNING, FATAL
@@ -493,7 +495,43 @@ class VirtualenvMixin(object):
         execfile(activate, dict(__file__=activate))
 
 
-class ResourceMonitoringMixin(object):
+# This is (sadly) a mixin for logging methods.
+class PerfherderResourceOptionsMixin(ScriptMixin):
+    def perfherder_resource_options(self):
+        """Obtain a list of extraOptions values to identify the env."""
+        opts = []
+
+        if 'TASKCLUSTER_INSTANCE_TYPE' in os.environ:
+            # Include the instance type so results can be grouped.
+            opts.append('taskcluster-%s' % os.environ['TASKCLUSTER_INSTANCE_TYPE'])
+        else:
+            # We assume !taskcluster => buildbot.
+            instance = 'unknown'
+
+            # Try to load EC2 instance type from metadata file. This file
+            # may not exist in many scenarios (including when inside a chroot).
+            # So treat it as optional.
+            # TODO support Windows.
+            try:
+                # This file should exist on Linux in EC2.
+                with open('/etc/instance_metadata.json', 'rb') as fh:
+                    im = json.load(fh)
+                    instance = im['aws_instance_type'].encode('ascii')
+            except IOError as e:
+                if e.errno != errno.ENOENT:
+                    raise
+                self.info('instance_metadata.json not found; unable to '
+                          'determine instance type')
+            except Exception:
+                self.warning('error reading instance_metadata: %s' %
+                             traceback.format_exc())
+
+            opts.append('buildbot-%s' % instance)
+
+        return opts
+
+
+class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
     """Provides resource monitoring capabilities to scripts.
 
     When this class is in the inheritance chain, resource usage stats of the
@@ -661,7 +699,7 @@ class ResourceMonitoringMixin(object):
 
             suites.append({
                 'name': '%s.overall' % perfherder_name,
-                'extraOptions': perfherder_options,
+                'extraOptions': perfherder_options + self.perfherder_resource_options(),
                 'subtests': overall,
 
             })
