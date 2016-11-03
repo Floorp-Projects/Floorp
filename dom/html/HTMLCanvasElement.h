@@ -41,9 +41,9 @@ class VRLayerChild;
 } // namespace gfx
 
 namespace dom {
+class BlobCallback;
 class CanvasCaptureMediaStream;
 class File;
-class FileCallback;
 class HTMLCanvasPrintState;
 class OffscreenCanvas;
 class PrintCallback;
@@ -182,7 +182,7 @@ public:
   }
 
   void ToBlob(JSContext* aCx,
-              FileCallback& aCallback,
+              BlobCallback& aCallback,
               const nsAString& aType,
               JS::Handle<JS::Value> aParams,
               ErrorResult& aRv);
