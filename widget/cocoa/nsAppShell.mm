@@ -110,7 +110,14 @@ static bool gAppShellMethodsSwizzled = false;
   [super sendEvent:anEvent];
 }
 
+#if defined(MAC_OS_X_VERSION_10_12) && \
+    MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12 && \
+    __LP64__
+// 10.12 changed `mask` to NSEventMask (unsigned long long) for x86_64 builds.
+- (NSEvent*)nextEventMatchingMask:(NSEventMask)mask
+#else
 - (NSEvent*)nextEventMatchingMask:(NSUInteger)mask
+#endif
                         untilDate:(NSDate*)expiration
                            inMode:(NSString*)mode
                           dequeue:(BOOL)flag
@@ -127,7 +134,6 @@ static bool gAppShellMethodsSwizzled = false;
 }
 
 @end
-
 
 // AppShellDelegate
 //
