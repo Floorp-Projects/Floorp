@@ -35,6 +35,12 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
     return; // Nothing to do.
   }
 
+  // XXX This is a temporary hack to make style attribute change works.
+  //     In the future, we should be able to use this hint directly.
+  if (aRestyleHint & eRestyle_StyleAttribute) {
+    aRestyleHint |= eRestyle_Subtree;
+  }
+
   // Note that unlike in Servo, we don't mark elements as dirty until we process
   // the restyle hints in ProcessPendingRestyles.
   if (aRestyleHint || aMinChangeHint) {
@@ -505,6 +511,17 @@ ServoRestyleManager::AttributeWillChange(Element* aElement,
 {
   ServoElementSnapshot* snapshot = SnapshotForElement(aElement);
   snapshot->AddAttrs(aElement);
+}
+
+void
+ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
+                                      nsIAtom* aAttribute, int32_t aModType,
+                                      const nsAttrValue* aOldValue)
+{
+  MOZ_ASSERT(SnapshotForElement(aElement)->HasAttrs());
+  if (aAttribute == nsGkAtoms::style) {
+    PostRestyleEvent(aElement, eRestyle_StyleAttribute, nsChangeHint(0));
+  }
 }
 
 nsresult
