@@ -690,7 +690,7 @@ IToplevelProtocol::DestroySharedMemory(Shmem& shmem)
 void
 IToplevelProtocol::DeallocShmems()
 {
-  for (IDMap<SharedMemory>::const_iterator cit = mShmemMap.begin(); cit != mShmemMap.end(); ++cit) {
+  for (IDMap<SharedMemory*>::const_iterator cit = mShmemMap.begin(); cit != mShmemMap.end(); ++cit) {
     Shmem::Dealloc(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), cit->second);
   }
   mShmemMap.Clear();
