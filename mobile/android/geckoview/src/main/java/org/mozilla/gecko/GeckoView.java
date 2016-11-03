@@ -51,7 +51,7 @@ public class GeckoView extends LayerView
     private InputConnectionListener mInputConnectionListener;
 
     protected boolean onAttachedToWindowCalled;
-    protected String chromeURI = getGeckoInterface().getDefaultChromeURI();
+    protected String chromeURI;
     protected int screenId = 0; // default to the primary screen
 
     @Override
@@ -230,6 +230,9 @@ public class GeckoView extends LayerView
     }
 
     protected void openWindow() {
+        if (chromeURI == null) {
+            chromeURI = getGeckoInterface().getDefaultChromeURI();
+        }
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             Window.open(window, this, getCompositor(), eventDispatcher,
