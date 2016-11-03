@@ -526,7 +526,6 @@ var DirectoryLinksProvider = {
    * @return download promise
    */
   reportSitesAction: function DirectoryLinksProvider_reportSitesAction(sites, action, triggeringSiteIndex) {
-    let pastImpressions;
     // Check if the suggested tile was shown
     if (action == "view") {
       sites.slice(0, triggeringSiteIndex + 1).filter(s => s).forEach(site => {
@@ -544,13 +543,6 @@ var DirectoryLinksProvider = {
       // suggested tile has targetedSite, or frecent_sites if it was pinned
       let {frecent_sites, targetedSite, url} = sites[triggeringSiteIndex].link;
       if (frecent_sites || targetedSite) {
-        // skip past_impressions for "unpin" to avoid chance of tracking
-        if (this._frequencyCaps[url] && action != "unpin") {
-          pastImpressions = {
-            total: this._frequencyCaps[url].totalViews,
-            daily: this._frequencyCaps[url].dailyViews
-          };
-        }
         this._setFrequencyCapClick(url);
       }
     }
