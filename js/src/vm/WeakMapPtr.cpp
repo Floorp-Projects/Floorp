@@ -15,7 +15,7 @@
 
 using namespace js;
 
-namespace {
+namespace details {
 
 template<typename T>
 struct DataType
@@ -55,7 +55,7 @@ void
 JS::WeakMapPtr<K, V>::destroy()
 {
     MOZ_ASSERT(initialized());
-    js_delete(Utils<K, V>::cast(ptr));
+    js_delete(details::Utils<K, V>::cast(ptr));
     ptr = nullptr;
 }
 
@@ -64,7 +64,7 @@ bool
 JS::WeakMapPtr<K, V>::init(JSContext* cx)
 {
     MOZ_ASSERT(!initialized());
-    typename Utils<K, V>::PtrType map = cx->runtime()->new_<typename Utils<K,V>::Type>(cx);
+    typename details::Utils<K, V>::PtrType map = cx->runtime()->new_<typename details::Utils<K,V>::Type>(cx);
     if (!map || !map->init())
         return false;
     ptr = map;
@@ -76,7 +76,7 @@ void
 JS::WeakMapPtr<K, V>::trace(JSTracer* trc)
 {
     MOZ_ASSERT(initialized());
-    return Utils<K, V>::cast(ptr)->trace(trc);
+    return details::Utils<K, V>::cast(ptr)->trace(trc);
 }
 
 template <typename K, typename V>
@@ -84,9 +84,9 @@ V
 JS::WeakMapPtr<K, V>::lookup(const K& key)
 {
     MOZ_ASSERT(initialized());
-    typename Utils<K, V>::Type::Ptr result = Utils<K, V>::cast(ptr)->lookup(key);
+    typename details::Utils<K, V>::Type::Ptr result = details::Utils<K, V>::cast(ptr)->lookup(key);
     if (!result)
-        return DataType<V>::NullValue();
+        return details::DataType<V>::NullValue();
     return result->value();
 }
 
@@ -95,7 +95,7 @@ bool
 JS::WeakMapPtr<K, V>::put(JSContext* cx, const K& key, const V& value)
 {
     MOZ_ASSERT(initialized());
-    return Utils<K, V>::cast(ptr)->put(key, value);
+    return details::Utils<K, V>::cast(ptr)->put(key, value);
 }
 
 //
