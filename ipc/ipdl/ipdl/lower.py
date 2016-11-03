@@ -120,8 +120,8 @@ def _actorTypeTagType():
 
 def _actorId(actor=None):
     if actor is not None:
-        return ExprSelect(actor, '->', 'mId')
-    return ExprVar('mId')
+        return ExprCall(ExprSelect(actor, '->', 'Id'))
+    return ExprCall(ExprVar('Id'))
 
 def _actorHId(actorhandle):
     return ExprSelect(actorhandle, '.', 'mId')
@@ -1170,12 +1170,8 @@ class Protocol(ipdl.ast.Protocol):
         if self.decl.type.isToplevel():
             return ExprVar('MSG_ROUTING_CONTROL')
         if actorThis is not None:
-            return ExprSelect(actorThis, '->', self.idVar().name)
-        return self.idVar()
-
-    def idVar(self):
-        assert not self.decl.type.isToplevel()
-        return ExprVar('mId')
+            return ExprCall(ExprSelect(actorThis, '->', 'Id'))
+        return ExprCall(ExprVar('Id'))
 
     def stateVar(self, actorThis=None):
         if actorThis is not None:
@@ -2878,7 +2874,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         else:
             ctor.memberinits = [
                 ExprMemberInit(ExprVar('mozilla::ipc::IProtocol'), [side]),
-                ExprMemberInit(p.idVar(), [ ExprLiteral.ZERO ]),
                 ExprMemberInit(p.stateVar(),
                                [ p.deadState() ])
             ]
@@ -3255,10 +3250,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ## private members
         if ptype.isToplevel():
             self.cls.addstmt(StmtDecl(Decl(p.channelType(), 'mChannel')))
-        elif ptype.isManaged():
-            self.cls.addstmts([
-                StmtDecl(Decl(_actorIdType(), p.idVar().name))
-            ])
 
         self.cls.addstmt(StmtDecl(Decl(Type('State'), p.stateVar().name)))
 
@@ -4113,7 +4104,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         return [
             self.failIfNullActor(actorvar, errfn, msg="Error constructing actor %s" % actortype.name() + self.side.capitalize()),
-            StmtExpr(ExprAssn(_actorId(actorvar), idexpr)),
+            StmtExpr(ExprCall(ExprSelect(actorvar, '->', 'SetId'), args=[idexpr])),
             StmtExpr(ExprCall(ExprSelect(actorvar, '->', 'SetManager'), args=[ExprVar.THIS])),
             StmtExpr(ExprCall(ExprSelect(actorvar, '->', 'SetIPCChannel'),
                               args=[self.protocol.callGetChannel()])),
@@ -4365,10 +4356,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         failif.addifstmt(StmtReturn(retOnNull))
         return failif
 
-    def unregisterActor(self, actorexpr=None):
-        return [ StmtExpr(ExprCall(self.protocol.unregisterMethod(actorexpr),
-                                   args=[ _actorId(actorexpr) ])),
-                 StmtExpr(ExprAssn(_actorId(actorexpr), _FREED_ACTOR_ID)) ]
+    def unregisterActor(self):
+        return [ StmtExpr(ExprCall(self.protocol.unregisterMethod(),
+                                   args=[ _actorId() ])),
+                 StmtExpr(ExprCall(ExprVar('SetId'), args=[_FREED_ACTOR_ID])) ]
 
     def makeMessage(self, md, errfn, fromActor=None):
         msgvar = self.msgvar

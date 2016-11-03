@@ -155,7 +155,7 @@ public:
     typedef IPC::Message Message;
     typedef IPC::MessageInfo MessageInfo;
 
-    IProtocol(Side aSide) : mSide(aSide), mManager(nullptr), mChannel(nullptr) {}
+    IProtocol(Side aSide) : mId(0), mSide(aSide), mManager(nullptr), mChannel(nullptr) {}
 
     virtual int32_t Register(IProtocol*);
     virtual int32_t RegisterID(IProtocol*, int32_t);
@@ -186,6 +186,7 @@ public:
 
     virtual int32_t GetProtocolTypeId() = 0;
 
+    int32_t Id() const { return mId; }
     IProtocol* Manager() const { return mManager; }
     virtual const MessageChannel* GetIPCChannel() const { return mChannel; }
     virtual MessageChannel* GetIPCChannel() { return mChannel; }
@@ -195,10 +196,12 @@ public:
     bool DeallocShmem(Shmem& aMem);
 
 protected:
+    void SetId(int32_t aId) { mId = aId; }
     void SetManager(IProtocol* aManager) { mManager = aManager; }
     void SetIPCChannel(MessageChannel* aChannel) { mChannel = aChannel; }
 
 private:
+    int32_t mId;
     Side mSide;
     IProtocol* mManager;
     MessageChannel* mChannel;
