@@ -1813,19 +1813,6 @@ Declaration::InitializeEmpty()
   mData = nsCSSCompressedDataBlock::CreateEmptyBlock();
 }
 
-already_AddRefed<Declaration>
-Declaration::EnsureMutable()
-{
-  MOZ_ASSERT(mData, "should only be called when not expanded");
-  RefPtr<Declaration> result;
-  if (!IsMutable()) {
-    result = new Declaration(*this);
-  } else {
-    result = this;
-  }
-  return result.forget();
-}
-
 size_t
 Declaration::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
