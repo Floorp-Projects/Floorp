@@ -345,12 +345,22 @@ public:
     // file is the 'ftyp' atom followed by a file type. We just check for a
     // vaguely valid 'ftyp' atom.
     AtomParser parser(mType, aData);
+    if (!parser.IsValid()) {
+      return MediaResult(
+        NS_ERROR_FAILURE,
+        RESULT_DETAIL("Invalid Box:%s", parser.LastInvalidBox()));
+    }
     return parser.StartWithInitSegment() ? NS_OK : NS_ERROR_NOT_AVAILABLE;
   }
 
   MediaResult IsMediaSegmentPresent(MediaByteBuffer* aData) override
   {
     AtomParser parser(mType, aData);
+    if (!parser.IsValid()) {
+      return MediaResult(
+        NS_ERROR_FAILURE,
+        RESULT_DETAIL("Invalid Box:%s", parser.LastInvalidBox()));
+    }
     return parser.StartWithMediaSegment() ? NS_OK : NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -364,13 +374,38 @@ private:
       mp4_demuxer::AtomType initAtom("ftyp");
       mp4_demuxer::AtomType mediaAtom("moof");
 
+      // Valid top-level boxes defined in ISO/IEC 14496-12 (Table 1)
+      static const mp4_demuxer::AtomType validBoxes[] = {
+        "ftyp", "moov", // init segment
+        "pdin", "free", "sidx", // optional prior moov box
+        "styp", "moof", "mdat", // media segment
+        "mfra", "skip", "meta", "meco", "ssix", "prft" // others.
+        "pssh", // optional with encrypted EME, though ignored.
+      };
+
       while (reader.Remaining() >= 8) {
         uint64_t size = reader.ReadU32();
         const uint8_t* typec = reader.Peek(4);
-        uint32_t type = reader.ReadU32();
+        mp4_demuxer::AtomType type(reader.ReadU32());
         MSE_DEBUGV(AtomParser ,"Checking atom:'%c%c%c%c' @ %u",
                    typec[0], typec[1], typec[2], typec[3],
                    (uint32_t)reader.Offset() - 8);
+
+        for (const auto& boxType : validBoxes) {
+          if (type == boxType) {
+            mValid = true;
+            break;
+          }
+        }
+        if (!mValid) {
+          // No point continuing.
+          mLastInvalidBox[0] = typec[3];
+          mLastInvalidBox[1] = typec[2];
+          mLastInvalidBox[2] = typec[1];
+          mLastInvalidBox[3] = typec[0];
+          mLastInvalidBox[4] = '\0';
+          break;
+        }
         if (mInitOffset.isNothing() &&
             mp4_demuxer::AtomType(type) == initAtom) {
           mInitOffset = Some(reader.Offset());
@@ -402,19 +437,23 @@ private:
       }
     }
 
-    bool StartWithInitSegment()
+    bool StartWithInitSegment() const
     {
       return mInitOffset.isSome() &&
         (mMediaOffset.isNothing() || mInitOffset.ref() < mMediaOffset.ref());
     }
-    bool StartWithMediaSegment()
+    bool StartWithMediaSegment() const
     {
       return mMediaOffset.isSome() &&
         (mInitOffset.isNothing() || mMediaOffset.ref() < mInitOffset.ref());
     }
+    bool IsValid() const { return mValid; }
+    const char* LastInvalidBox() const { return mLastInvalidBox; }
   private:
     Maybe<size_t> mInitOffset;
     Maybe<size_t> mMediaOffset;
+    bool mValid = false;
+    char mLastInvalidBox[5];
   };
 
 public:
