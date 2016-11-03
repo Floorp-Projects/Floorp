@@ -156,7 +156,7 @@ using namespace mozilla::gfx;
 #define DEFAULT_QUIESCENT_FRAMES 2
 // The time (milliseconds) we estimate is needed between the end of an
 // idle time and the next Tick.
-#define DEFAULT_IDLE_PERIOD_TIME_LIMIT 3.0f
+#define DEFAULT_IDLE_PERIOD_TIME_LIMIT 1.0f
 
 #ifdef DEBUG
 // TODO: remove, see bug 598468.
