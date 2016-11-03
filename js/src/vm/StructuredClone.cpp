@@ -971,8 +971,9 @@ JSStructuredCloneWriter::parseTransferable()
 
         // Backward compatibility, see bug 1302036 and bug 1302037.
         if (tObj->is<SharedArrayBufferObject>()) {
-            JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage,
-                                         nullptr, JSMSG_SC_SAB_TRANSFER);
+            if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage,
+                                              nullptr, JSMSG_SC_SAB_TRANSFER))
+                return false;
             continue;
         }
 
