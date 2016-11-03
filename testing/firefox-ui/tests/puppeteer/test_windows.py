@@ -44,7 +44,7 @@ class TestWindows(BaseWindowTestCase):
         finally:
             BaseWindowTestCase.tearDown(self)
 
-    def test_windows(self):
+    def test_switch_to(self):
         url = self.marionette.absolute_url('layout/mozilla.html')
 
         # Open two more windows
@@ -86,6 +86,18 @@ class TestWindows(BaseWindowTestCase):
         self.browser.switch_to()
 
         self.assertEqual(len(self.windows.all), 1)
+
+    def test_switch_to_unknown_window_type(self):
+        def open_by_js(_):
+            with self.marionette.using_context('chrome'):
+                self.marionette.execute_script("""
+                  window.open('chrome://browser/content/safeMode.xul', '_blank',
+                              'chrome,centerscreen,resizable=no');
+                """)
+
+        win = self.browser.open_window(callback=open_by_js, expected_window_class=BaseWindow)
+        win.close()
+        self.browser.switch_to()
 
 
 class TestBaseWindow(BaseWindowTestCase):
