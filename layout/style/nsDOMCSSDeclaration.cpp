@@ -48,31 +48,11 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
   NS_PRECONDITION(aPropID != eCSSProperty_UNKNOWN,
                   "Should never pass eCSSProperty_UNKNOWN around");
 
-  css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
-
   aValue.Truncate();
-  if (decl) {
-    decl->GetValue(aPropID, aValue);
+  if (css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko()) {
+    decl->GetPropertyValueByID(aPropID, aValue);
   }
   return NS_OK;
-}
-
-void
-nsDOMCSSDeclaration::GetCustomPropertyValue(const nsAString& aPropertyName,
-                                            nsAString& aValue)
-{
-  MOZ_ASSERT(Substring(aPropertyName, 0,
-                       CSS_CUSTOM_NAME_PREFIX_LENGTH).EqualsLiteral("--"));
-
-  css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
-  if (!decl) {
-    aValue.Truncate();
-    return;
-  }
-
-  decl->GetVariableDeclaration(Substring(aPropertyName,
-                                         CSS_CUSTOM_NAME_PREFIX_LENGTH),
-                               aValue);
 }
 
 NS_IMETHODIMP
@@ -106,7 +86,7 @@ nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
   if (aValue.IsEmpty()) {
     // If the new value of the property is an empty string we remove the
     // property.
-    return RemoveProperty(aPropID);
+    return RemovePropertyInternal(aPropID);
   }
 
   return ParsePropertyValue(aPropID, aValue, false);
@@ -202,43 +182,20 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName,
                                       nsAString& aReturn)
 {
-  const nsCSSPropertyID propID =
-    nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
-  if (propID == eCSSProperty_UNKNOWN) {
-    aReturn.Truncate();
-    return NS_OK;
+  aReturn.Truncate();
+  if (css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko()) {
+    decl->GetPropertyValue(aPropertyName, aReturn);
   }
-
-  if (propID == eCSSPropertyExtra_variable) {
-    GetCustomPropertyValue(aPropertyName, aReturn);
-    return NS_OK;
-  }
-
-  return GetPropertyValue(propID, aReturn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetAuthoredPropertyValue(const nsAString& aPropertyName,
                                               nsAString& aReturn)
 {
-  const nsCSSPropertyID propID =
-    nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
-  if (propID == eCSSProperty_UNKNOWN) {
-    aReturn.Truncate();
-    return NS_OK;
+  if (css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko()) {
+    decl->GetAuthoredPropertyValue(aPropertyName, aReturn);
   }
-
-  if (propID == eCSSPropertyExtra_variable) {
-    GetCustomPropertyValue(aPropertyName, aReturn);
-    return NS_OK;
-  }
-
-  css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
-  if (!decl) {
-    return NS_ERROR_FAILURE;
-  }
-
-  decl->GetAuthoredValue(propID, aReturn);
   return NS_OK;
 }
 
@@ -249,7 +206,7 @@ nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
   css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
 
   aReturn.Truncate();
-  if (decl && decl->GetValueIsImportant(aPropertyName)) {
+  if (decl && decl->GetPropertyIsImportant(aPropertyName)) {
     aReturn.AssignLiteral("important");
   }
 
@@ -261,21 +218,18 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
                                  const nsAString& aValue,
                                  const nsAString& aPriority)
 {
+  if (aValue.IsEmpty()) {
+    // If the new value of the property is an empty string we remove the
+    // property.
+    // XXX this ignores the priority string, should it?
+    return RemovePropertyInternal(aPropertyName);
+  }
+
   // In the common (and fast) cases we can use the property id
   nsCSSPropertyID propID =
     nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
   if (propID == eCSSProperty_UNKNOWN) {
     return NS_OK;
-  }
-
-  if (aValue.IsEmpty()) {
-    // If the new value of the property is an empty string we remove the
-    // property.
-    // XXX this ignores the priority string, should it?
-    if (propID == eCSSPropertyExtra_variable) {
-      return RemoveCustomProperty(aPropertyName);
-    }
-    return RemoveProperty(propID);
   }
 
   bool important;
@@ -298,22 +252,9 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::RemoveProperty(const nsAString& aPropertyName,
                                     nsAString& aReturn)
 {
-  const nsCSSPropertyID propID =
-    nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
-  if (propID == eCSSProperty_UNKNOWN) {
-    aReturn.Truncate();
-    return NS_OK;
-  }
-
-  if (propID == eCSSPropertyExtra_variable) {
-    RemoveCustomProperty(aPropertyName);
-    return NS_OK;
-  }
-
-  nsresult rv = GetPropertyValue(propID, aReturn);
+  nsresult rv = GetPropertyValue(aPropertyName, aReturn);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return RemoveProperty(propID);
+  return RemovePropertyInternal(aPropertyName);
 }
 
 /* static */ void
@@ -411,7 +352,7 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
 }
 
 nsresult
-nsDOMCSSDeclaration::RemoveProperty(const nsCSSPropertyID aPropID)
+nsDOMCSSDeclaration::RemovePropertyInternal(nsCSSPropertyID aPropID)
 {
   css::Declaration* olddecl =
     GetCSSDeclaration(eOperation_RemoveProperty)->AsGecko();
@@ -427,16 +368,13 @@ nsDOMCSSDeclaration::RemoveProperty(const nsCSSPropertyID aPropID)
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
 
   RefPtr<css::Declaration> decl = olddecl->EnsureMutable();
-  decl->RemoveProperty(aPropID);
+  decl->RemovePropertyByID(aPropID);
   return SetCSSDeclaration(decl);
 }
 
 nsresult
-nsDOMCSSDeclaration::RemoveCustomProperty(const nsAString& aPropertyName)
+nsDOMCSSDeclaration::RemovePropertyInternal(const nsAString& aPropertyName)
 {
-  MOZ_ASSERT(Substring(aPropertyName, 0,
-                       CSS_CUSTOM_NAME_PREFIX_LENGTH).EqualsLiteral("--"));
-
   css::Declaration* olddecl =
     GetCSSDeclaration(eOperation_RemoveProperty)->AsGecko();
   if (!olddecl) {
@@ -451,7 +389,6 @@ nsDOMCSSDeclaration::RemoveCustomProperty(const nsAString& aPropertyName)
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
 
   RefPtr<css::Declaration> decl = olddecl->EnsureMutable();
-  decl->RemoveVariableDeclaration(Substring(aPropertyName,
-                                            CSS_CUSTOM_NAME_PREFIX_LENGTH));
+  decl->RemoveProperty(aPropertyName);
   return SetCSSDeclaration(decl);
 }
