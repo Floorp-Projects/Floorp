@@ -43,13 +43,11 @@ nsTerminatorTelemetry.prototype = {
 
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(nsTerminatorTelemetry),
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsISupports
+  // nsISupports
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsIObserver
+  // nsIObserver
 
   observe: function DS_observe(aSubject, aTopic, aData)
   {
@@ -102,7 +100,6 @@ nsTerminatorTelemetry.prototype = {
   },
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Module
+// Module
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsTerminatorTelemetry]);

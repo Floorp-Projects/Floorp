@@ -632,8 +632,6 @@ add_task(function* test_offline_apps_permissions() {
 var now_mSec = Date.now();
 var now_uSec = now_mSec * 1000;
 
-// /////////////////////////////////////////////////////////////////////////////
-
 /**
  * This wraps the dialog and provides some convenience methods for interacting
  * with it.

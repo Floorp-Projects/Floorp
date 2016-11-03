@@ -314,8 +314,8 @@ function run_test() {
   do_check_eq(specificObserver.numTimesRemovedCalled, 1);
   do_check_eq(genericObserver.numTimesRemovedCalled, 2);
 
-  // // Make sure information about private context is properly
-  // // retrieved by the observer.
+  // Make sure information about private context is properly
+  // retrieved by the observer.
   cps.setPref(uri, "test.observer.private", "test value", {usePrivateBrowsing: true});
   cps.setPref(uri, "test.observer.normal", "test value", {usePrivateBrowsing: false});
   cps.removePref(uri, "test.observer.private");

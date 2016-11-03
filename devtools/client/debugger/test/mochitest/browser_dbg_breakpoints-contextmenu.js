@@ -181,7 +181,7 @@ function test() {
         ok(!!bp.disabled, "All breakpoints should be disabled.");
       }
 
-      // // Test re-enabling all breakpoints.
+      // Test re-enabling all breakpoints.
       enableAll();
       yield waitForDispatch(gPanel, gDebugger.constants.ADD_BREAKPOINT, 5);
       for (let bp of queries.getBreakpoints(getState())) {

@@ -779,7 +779,6 @@ var Bookmarks = Object.freeze({
   },
 });
 
-// //////////////////////////////////////////////////////////////////////////////
 // Globals.
 
 /**
@@ -800,7 +799,6 @@ function notify(observers, notification, args) {
   }
 }
 
-// //////////////////////////////////////////////////////////////////////////////
 // Update implementation.
 
 function updateBookmark(info, item, newParent) {
@@ -885,7 +883,6 @@ function updateBookmark(info, item, newParent) {
   }));
 }
 
-// //////////////////////////////////////////////////////////////////////////////
 // Insert implementation.
 
 function insertBookmark(item, parent) {
@@ -940,7 +937,6 @@ function insertBookmark(item, parent) {
   }));
 }
 
-// //////////////////////////////////////////////////////////////////////////////
 // Query implementation.
 
 function queryBookmarks(info) {
@@ -990,7 +986,6 @@ function queryBookmarks(info) {
 }
 
 
-// //////////////////////////////////////////////////////////////////////////////
 // Fetch implementation.
 
 function fetchBookmark(info) {
@@ -1102,7 +1097,6 @@ function fetchBookmarksByParent(info) {
   }));
 }
 
-// //////////////////////////////////////////////////////////////////////////////
 // Remove implementation.
 
 function removeBookmark(item, options) {
@@ -1151,7 +1145,6 @@ function removeBookmark(item, options) {
   }));
 }
 
-// //////////////////////////////////////////////////////////////////////////////
 // Reorder implementation.
 
 function reorderChildren(parent, orderedChildrenGuids) {
@@ -1237,7 +1230,6 @@ function reorderChildren(parent, orderedChildrenGuids) {
   );
 }
 
-// //////////////////////////////////////////////////////////////////////////////
 // Helpers.
 
 /**

@@ -46,8 +46,7 @@ this.EXPORTED_SYMBOLS = [
   "LoginStore",
 ];
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
@@ -73,8 +72,7 @@ const kDataVersion = 2;
 // The permission type we store in the permission manager.
 const PERMISSION_SAVE_LOGINS = "login-saving";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // LoginStore
+// LoginStore
 
 /**
  * Inherits from JSONFile and handles serialization of login-related data and

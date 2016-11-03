@@ -10,8 +10,7 @@ this.EXPORTED_SYMBOLS = [
   "DownloadImport",
 ];
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -42,8 +41,7 @@ const DOWNLOAD_DOWNLOADING = 0;
 const DOWNLOAD_PAUSED = 4;
 const DOWNLOAD_QUEUED = 5;
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadImport
+// DownloadImport
 
 /**
  * Provides an object that has a method to import downloads

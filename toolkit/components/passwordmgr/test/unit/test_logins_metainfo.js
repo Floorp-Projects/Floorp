@@ -10,8 +10,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
@@ -65,8 +64,7 @@ var gLoginMetaInfo1;
 var gLoginMetaInfo2;
 var gLoginMetaInfo3;
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 /**
  * Prepare the test objects that will be used by the following tests.

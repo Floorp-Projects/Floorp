@@ -9,16 +9,14 @@
  * AutoComplete implementation does not throw.
  */
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals and Constants
+// Globals and Constants
 
 var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
           getService(Ci.nsINavHistoryService);
 var ac = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"].
          getService(Ci.nsIAutoCompleteSearch);
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Test Functions
+// Test Functions
 
 function test_stopSearch()
 {
@@ -30,8 +28,7 @@ function test_stopSearch()
   }
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Test Runner
+// Test Runner
 
 var tests = [
   test_stopSearch,
