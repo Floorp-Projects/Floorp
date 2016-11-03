@@ -1793,7 +1793,7 @@ CSS_PROP_POSITION(
     eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     float,
-    float,
+    float_,
     CSS_PROP_PUBLIC_OR_PRIVATE(CssFloat, Float),
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
