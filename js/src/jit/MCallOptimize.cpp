@@ -3090,7 +3090,21 @@ IonBuilder::inlineAtomicsStore(CallInfo& callInfo)
         return InliningStatus_NotInlined;
     }
 
+    // Atomics.store() is annoying because it returns the result of converting
+    // the value by ToInteger(), not the input value, nor the result of
+    // converting the value by ToInt32().  It is especially annoying because
+    // almost nobody uses the result value.
+    //
+    // As an expedient compromise, therefore, we inline only if the result is
+    // obviously unused or if the argument is already Int32 and thus requires no
+    // conversion.
+
     MDefinition* value = callInfo.getArg(2);
+    if (!BytecodeIsPopped(pc) && value->type() != MIRType::Int32) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadType);
+        return InliningStatus_NotInlined;
+    }
+
     if (value->mightBeType(MIRType::Object) || value->mightBeType(MIRType::Symbol))
         return InliningStatus_NotInlined;
 
@@ -3109,15 +3123,15 @@ IonBuilder::inlineAtomicsStore(CallInfo& callInfo)
         addSharedTypedArrayGuard(callInfo.getArg(0));
 
     MDefinition* toWrite = value;
-    if (value->type() != MIRType::Int32) {
-        toWrite = MTruncateToInt32::New(alloc(), value);
+    if (toWrite->type() != MIRType::Int32) {
+        toWrite = MTruncateToInt32::New(alloc(), toWrite);
         current->add(toWrite->toInstruction());
     }
     MStoreUnboxedScalar* store =
         MStoreUnboxedScalar::New(alloc(), elements, index, toWrite, arrayType,
                                  MStoreUnboxedScalar::TruncateInput, DoesRequireMemoryBarrier);
     current->add(store);
-    current->push(value);
+    current->push(value);       // Either Int32 or not used; in either case correct
 
     if (!resumeAfter(store))
         return InliningStatus_Error;
