@@ -20,6 +20,8 @@ browser.jar:
 *   content/browser/preferences/languages.xul
     content/browser/preferences/languages.js
     content/browser/preferences/permissions.xul
+    content/browser/preferences/containers.xul
+    content/browser/preferences/containers.js
     content/browser/preferences/permissions.js
     content/browser/preferences/sanitize.xul
     content/browser/preferences/sanitize.js

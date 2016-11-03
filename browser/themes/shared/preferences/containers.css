@@ -1,0 +1,53 @@
+/* Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../../components/contextualidentity/content/usercontext.css
+
+:root {
+  --preference-selected-color: #0996f8;
+  --preference-unselected-color: #333;
+  --preference-active-color: #858585;
+}
+
+radiogroup {
+  display: flex;
+  margin-inline-start: 0.35rem;
+}
+
+radio {
+  flex: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -moz-user-select: none;
+  outline: 2px solid transparent;
+  outline-offset: 4px;
+  -moz-outline-radius: 100%;
+  min-block-size: 24px;
+  min-inline-size: 24px;
+  border-radius: 50%;
+  padding: 2px;
+  margin: 10px;
+}
+
+.icon-buttons > radio > [data-identity-icon] {
+  fill: #4d4d4d;
+}
+
+radio > [data-identity-icon] {
+  inline-size: 22px;
+  block-size: 22px;
+}
+
+radio[selected=true] {
+  outline-color: var(--preference-unselected-color);
+}
+
+radio[focused=true] {
+  outline-color: var(--preference-selected-color);
+}
+
+radio:hover:active {
+  outline-color: var(--preference-active-color);
+}

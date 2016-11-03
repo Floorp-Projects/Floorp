@@ -10,6 +10,10 @@
   -moz-binding: url("chrome://browser/content/preferences/handlers.xml#handler-selected");
 }
 
+#containersView > richlistitem {
+  -moz-binding: url("chrome://browser/content/preferences/handlers.xml#container");
+}
+
 /**
  * Make the icons appear.
  * Note: we display the icon box for every item whether or not it has an icon
