@@ -634,7 +634,6 @@ checkbox:-moz-focusring {
   width: 100%;
 }
 
-.devtools-searchinput:-moz-any([filled],.filled),
 .devtools-filterinput:-moz-any([filled],.filled) {
   background-color: var(--searchbox-background-color);
   border-color: var(--searchbox-border-color);
