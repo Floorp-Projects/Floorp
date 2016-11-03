@@ -1,13 +1,23 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fr_HT.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fr_HT{
-    Version{"2.1.19.94"}
+    Version{"2.1.27.63"}
+    calendar{
+        gregorian{
+            dayPeriod{
+                format{
+                    wide{
+                        afternoon1{"de l’après-midi"}
+                        evening1{"du soir"}
+                        midnight{"minuit"}
+                        morning1{"du matin"}
+                        night1{"de la nuit"}
+                        noon{"midi"}
+                    }
+                }
+            }
+        }
+    }
     fields{
         day-narrow{
             dn{"jr."}

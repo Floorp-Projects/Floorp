@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/hsb.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 hsb{
     Currencies{
         ADP{
@@ -188,9 +182,13 @@ hsb{
             "BYB",
             "běłoruski rubl (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "běłoruski rubl",
+        }
         BYR{
             "BYR",
-            "běłoruski rubl",
+            "běłoruski rubl (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1015,11 +1013,17 @@ hsb{
             other{"běłoruskich rublow (1994–1999)"}
             two{"běłoruskej rublej (1994–1999)"}
         }
-        BYR{
+        BYN{
             few{"běłoruske ruble"}
             one{"běłoruski rubl"}
             other{"běłoruskich rublow"}
             two{"běłoruskej rublej"}
+        }
+        BYR{
+            few{"běłoruske ruble (2000–2016)"}
+            one{"běłoruski rubl (2000–2016)"}
+            other{"běłoruskich rublow (2000–2016)"}
+            two{"běłoruskej rublej (2000–2016)"}
         }
         BZD{
             few{"belizeske dolary"}
@@ -1850,5 +1854,5 @@ hsb{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.76"}
 }

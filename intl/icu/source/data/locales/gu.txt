@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/gu.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 gu{
     AuxExemplarCharacters{"[\u200C\u200D ૰]"}
     Ellipsis{
@@ -37,6 +31,26 @@ gu{
             }
         }
         default{"latn"}
+        gujr{
+            patterns{
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
         latn{
             miscPatterns{
                 atLeast{"{0}+"}
@@ -221,7 +235,7 @@ gu{
         minimumGroupingDigits{"1"}
         native{"gujr"}
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
     calendar{
         generic{
             DateTimePatterns{
@@ -422,6 +436,10 @@ gu{
                 MEd{"E, d/M"}
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
+                MMMMW{
+                    one{"MMM ના W અઠવાડિયા"}
+                    other{"MMM ના W અઠવાડિયા"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 MMdd{"dd-MM"}
@@ -444,6 +462,10 @@ gu{
                 yMd{"d/M/y"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
+                yw{
+                    one{"y ના w અઠવાડિયા"}
+                    other{"y ના w અઠવાડિયા"}
+                }
             }
             dayNames{
                 format{
@@ -526,44 +548,44 @@ gu{
             dayPeriod{
                 format{
                     abbreviated{
-                        afternoon1{"બપોર"}
-                        evening1{"સાંજ"}
+                        afternoon1{"બપોરે"}
+                        evening1{"સાંજે"}
                         midnight{"મધ્યરાત્રિ"}
-                        morning1{"સવાર"}
-                        night1{"રાત્રિ"}
+                        morning1{"સવારે"}
+                        night1{"રાત્રે"}
                     }
                     narrow{
-                        afternoon1{"બ"}
-                        evening1{"સાં"}
+                        afternoon1{"બપોરે"}
+                        evening1{"સાંજે"}
                         midnight{"મ.રાત્રિ"}
-                        morning1{"સ"}
-                        night1{"રા"}
+                        morning1{"સવારે"}
+                        night1{"રાત્રે"}
                     }
                     wide{
-                        afternoon1{"બપોર"}
-                        evening1{"સાંજ"}
+                        afternoon1{"બપોરે"}
+                        evening1{"સાંજે"}
                         midnight{"મધ્યરાત્રિ"}
-                        morning1{"સવાર"}
-                        night1{"રાત્રિ"}
+                        morning1{"સવારે"}
+                        night1{"રાત્રે"}
                     }
                 }
                 stand-alone{
                     abbreviated{
-                        afternoon1{"બપોર"}
+                        afternoon1{"બપોરે"}
                         am{"AM"}
-                        evening1{"સાંજ"}
+                        evening1{"સાંજે"}
                         midnight{"મધ્યરાત્રિ"}
-                        morning1{"સવાર"}
-                        night1{"રાત્રિ"}
+                        morning1{"સવારે"}
+                        night1{"રાત્રે"}
                         pm{"PM"}
                     }
                     narrow{
-                        afternoon1{"બપોર"}
+                        afternoon1{"બપોરે"}
                         am{"AM"}
-                        evening1{"સાંજ"}
+                        evening1{"સાંજે"}
                         midnight{"મધ્યરાત્રિ"}
-                        morning1{"સવાર"}
-                        night1{"રાત્રિ"}
+                        morning1{"સવારે"}
+                        night1{"રાત્રે"}
                         pm{"PM"}
                     }
                     wide{
@@ -838,6 +860,94 @@ gu{
             }
         }
     }
+    characterLabel{
+        activities{"પ્રવૃત્તિઓ"}
+        african_scripts{"આફ્રિકન સ્ક્રિપ્ટ"}
+        american_scripts{"અમેરિકન સ્ક્રિપ્ટ"}
+        animal{"પ્રાણી"}
+        animals_nature{"પ્રાણીઓ અને કુદરત"}
+        arrows{"એરોઝ"}
+        body{"શરીર"}
+        box_drawing{"બોક્સ ડ્રોઈંગ"}
+        braille{"બ્રેઈલ"}
+        building{"બિલ્ડિંગ"}
+        bullets_stars{"બુલેટ્સ/સ્ટાર્સ"}
+        consonantal_jamo{"કોન્સોનન્ટલ જેમો"}
+        currency_symbols{"ચલણી ચિહ્નો"}
+        dash_connector{"ડેશ/જોડણો"}
+        digits{"અંકો"}
+        dingbats{"ડિન્ગબેટ્સ"}
+        divination_symbols{"અનુમાન ચિહ્નો"}
+        downwards_arrows{"નીચેની બાજુનો એરો"}
+        downwards_upwards_arrows{"ઉપરની બાજુનો એરો"}
+        east_asian_scripts{"પૂર્વ એશિયન સ્ક્રિપ્ટ"}
+        emoji{"ઈમોજી"}
+        european_scripts{"યુરોપીયન સ્ક્રિપ્ટ"}
+        female{"સ્ત્રી"}
+        flag{"ઝંડો"}
+        flags{"ધ્વજ"}
+        food_drink{"આહાર અને પીણાં"}
+        format{"ફોર્મેટ"}
+        format_whitespace{"ફોર્મેટ અને ખાલી સ્થાનો"}
+        full_width_form_variant{"પૂર્ણ પહોળાઈ નમૂનારૂપ વેરિએન્ટ"}
+        geometric_shapes{"ભૌમિતીક આકારો"}
+        half_width_form_variant{"પહોળા નમૂનારૂપ વેરિએન્ટ"}
+        han_characters{"હાન કેરેક્ટર્સ"}
+        han_radicals{"હાન રેડિકલ્સ"}
+        hanja{"હાન્જા"}
+        hanzi_simplified{"હાન્ઝી (સિમ્લીફાય્ડ)"}
+        hanzi_traditional{"હાન્ઝી (ટ્રેડિશનલ)"}
+        heart{"હૃદય"}
+        historic_scripts{"ઐતિહાસિક સ્ક્રિપ્ટ"}
+        ideographic_desc_characters{"ઈન્ડિયોગ્રાફિક દશાંશ અક્ષરો"}
+        japanese_kana{"જાપાનીઝ કાના"}
+        kanbun{"કાનબુન"}
+        kanji{"કાન્જી"}
+        keycap{"કીકેપ"}
+        leftwards_arrows{"ડાબી તરફનો એરો"}
+        leftwards_rightwards_arrows{"ડાબી તરફ જમણી તરફનો એરો"}
+        letterlike_symbols{"અક્ષર આકારના ચિહ્નો"}
+        limited_use{"મર્યાદિત ઉપયોગ"}
+        male{"પુરુષ"}
+        math_symbols{"ગાણિતીક ચિહ્નો"}
+        middle_eastern_scripts{"મધ્ય પૂર્વીય સ્ક્રિપ્ટ"}
+        miscellaneous{"મિશ્ર"}
+        modern_scripts{"મોર્ડન સ્ક્રિપ્ટ"}
+        modifier{"રૂપાંતરકારી"}
+        musical_symbols{"સંગીતસંજ્ઞાઓ"}
+        nature{"પ્રકૃતિ"}
+        nonspacing{"નોનસ્પેસીંગ"}
+        numbers{"સંખ્યાઓ"}
+        objects{"વસ્તુઓ"}
+        other{"અન્ય"}
+        paired{"જોડી"}
+        person{"માણસ"}
+        phonetic_alphabet{"ફોનેટીક આલ્ફાબેટ"}
+        pictographs{"ચિત્રમયઅક્ષરો"}
+        place{"સ્થાન"}
+        plant{"ઝાડ"}
+        punctuation{"વિરામચિહ્ન"}
+        rightwards_arrows{"જમણી તરફનો એરો"}
+        sign_standard_symbols{"સહીૂ/પ્રમાણભૂત ચિહ્નો"}
+        small_form_variant{"નાના નમૂનારૂપ વેરિયન્ટ"}
+        smiley{"સ્માઇલી"}
+        smileys_people{"સ્માઈલીઝ અને લોકો"}
+        south_asian_scripts{"દક્ષિણ એશિયન સ્ક્રિપ્ટ"}
+        southeast_asian_scripts{"દક્ષિણપૂર્વીય એશિયન સ્ક્રિપ્ટ"}
+        spacing{"સ્પેસીંગ"}
+        sport{"સ્પૉર્ટ"}
+        symbols{"ચિહ્નો"}
+        technical_symbols{"ટેક્નિકલ ચિહ્નો"}
+        tone_marks{"ટોન માર્ક્સ"}
+        travel{"મુસાફરી"}
+        travel_places{"પ્રવાસ અને સ્થળો"}
+        upwards_arrows{"ઉપરની તરફનો એરો"}
+        variant_forms{"વેરિએન્ટ સ્વરૂપે"}
+        vocalic_jamo{"વોકેલિક જેમો"}
+        weather{"હવામાન"}
+        western_asian_scripts{"પશ્ચિમી એશિયન સ્ક્રિપ્ટ"}
+        whitespace{"રિક્ત સ્થાન"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -861,14 +971,17 @@ gu{
                 }
                 past{
                     one{"{0} દિવસ પહેલાં"}
-                    other{"{0} દિવસ પહેલા"}
+                    other{"{0} દિવસ પહેલાં"}
                 }
             }
         }
         day-narrow{
             dn{"દિવસ"}
             relative{
+                "-1"{"ગઈકાલે"}
                 "-2"{"ગયા પરમદિવસે"}
+                "0"{"આજે"}
+                "1"{"આવતીકાલે"}
                 "2"{"પરમદિવસે"}
             }
             relativeTime{
@@ -877,15 +990,18 @@ gu{
                     other{"+{0} દિવસ"}
                 }
                 past{
-                    one{"{0} દિવસ પહેલાં"}
+                    one{"-{0} દિવસ"}
                     other{"-{0} દિવસ"}
                 }
             }
         }
         day-short{
-            dn{"દિ."}
+            dn{"દિવસ"}
             relative{
+                "-1"{"ગઈકાલે"}
                 "-2"{"ગયા પરમદિવસે"}
+                "0"{"આજે"}
+                "1"{"આવતીકાલે"}
                 "2"{"પરમદિવસે"}
             }
             relativeTime{
@@ -895,7 +1011,7 @@ gu{
                 }
                 past{
                     one{"{0} દિવસ પહેલાં"}
-                    other{"{0} દિવસ પહેલા"}
+                    other{"{0} દિવસ પહેલાં"}
                 }
             }
         }
@@ -911,12 +1027,32 @@ gu{
                 "0"{"આ શુક્રવારે"}
                 "1"{"આવતા શુક્રવારે"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} શુક્રવાર"}
+                    other{"+{0} શુક્રવાર"}
+                }
+                past{
+                    one{"-{0} શુક્રવાર"}
+                    other{"-{0} શુક્રવાર"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"ગયા શુક્રવારે"}
                 "0"{"આ શુક્રવારે"}
                 "1"{"આવતા શુક્રવારે"}
+            }
+            relativeTime{
+                future{
+                    one{"+{0} શુક્રવાર"}
+                    other{"+{0} શુક્રવાર"}
+                }
+                past{
+                    one{"-{0} શુક્રવાર"}
+                    other{"-{0} શુક્રવાર"}
+                }
             }
         }
         fri-short{
@@ -925,17 +1061,30 @@ gu{
                 "0"{"આ શુક્રવારે"}
                 "1"{"આવતા શુક્રવારે"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} શુક્રવાર"}
+                    other{"+{0} શુક્રવાર"}
+                }
+                past{
+                    one{"-{0} શુક્રવાર"}
+                    other{"-{0} શુક્રવાર"}
+                }
+            }
         }
         hour{
             dn{"કલાક"}
+            relative{
+                "0"{"આ કલાક"}
+            }
             relativeTime{
                 future{
                     one{"{0} કલાકમાં"}
                     other{"{0} કલાકમાં"}
                 }
                 past{
-                    one{"{0} કલાક પહેલા"}
-                    other{"{0} કલાક પહેલા"}
+                    one{"{0} કલાક પહેલાં"}
+                    other{"{0} કલાક પહેલાં"}
                 }
             }
         }
@@ -947,8 +1096,8 @@ gu{
                     other{"{0} કલાકમાં"}
                 }
                 past{
-                    one{"-{0} કલાક"}
-                    other{"-{0} કલાક"}
+                    one{"{0} કલાક પહેલાં"}
+                    other{"{0} કલાક પહેલાં"}
                 }
             }
         }
@@ -960,21 +1109,24 @@ gu{
                     other{"{0} કલાકમાં"}
                 }
                 past{
-                    one{"{0} કલાક પહેલા"}
-                    other{"{0} કલાક પહેલા"}
+                    one{"{0} કલાક પહેલાં"}
+                    other{"{0} કલાક પહેલાં"}
                 }
             }
         }
         minute{
             dn{"મિનિટ"}
+            relative{
+                "0"{"આ મિનિટ"}
+            }
             relativeTime{
                 future{
                     one{"{0} મિનિટમાં"}
                     other{"{0} મિનિટમાં"}
                 }
                 past{
-                    one{"{0} મિનિટ પહેલા"}
-                    other{"{0} મિનિટ પહેલા"}
+                    one{"{0} મિનિટ પહેલાં"}
+                    other{"{0} મિનિટ પહેલાં"}
                 }
             }
         }
@@ -986,8 +1138,8 @@ gu{
                     other{"{0} મિનિટમાં"}
                 }
                 past{
-                    one{"-{0} મિનિટ"}
-                    other{"-{0} મિનિટ"}
+                    one{"{0} મિનિટ પહેલાં"}
+                    other{"{0} મિનિટ પહેલાં"}
                 }
             }
         }
@@ -999,8 +1151,8 @@ gu{
                     other{"{0} મિનિટમાં"}
                 }
                 past{
-                    one{"{0} મિનિટ પહેલા"}
-                    other{"{0} મિનિટ પહેલા"}
+                    one{"{0} મિનિટ પહેલાં"}
+                    other{"{0} મિનિટ પહેલાં"}
                 }
             }
         }
@@ -1010,6 +1162,16 @@ gu{
                 "0"{"આ સોમવારે"}
                 "1"{"આવતા સોમવારે"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} સોમવાર"}
+                    other{"+{0} સોમવાર"}
+                }
+                past{
+                    one{"-{0} સોમવાર"}
+                    other{"-{0} સોમવાર"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -1017,12 +1179,32 @@ gu{
                 "0"{"આ સોમવારે"}
                 "1"{"આવતા સોમવારે"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} સોમવાર"}
+                    other{"+{0} સોમવાર"}
+                }
+                past{
+                    one{"-{0} સોમવાર"}
+                    other{"-{0} સોમવાર"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"ગયા સોમવારે"}
                 "0"{"આ સોમવારે"}
                 "1"{"આવતા સોમવારે"}
+            }
+            relativeTime{
+                future{
+                    one{"+{0} સોમવાર"}
+                    other{"+{0} સોમવાર"}
+                }
+                past{
+                    one{"-{0} સોમવાર"}
+                    other{"-{0} સોમવાર"}
+                }
             }
         }
         month{
@@ -1038,8 +1220,8 @@ gu{
                     other{"{0} મહિનામાં"}
                 }
                 past{
-                    one{"{0} મહિના પહેલા"}
-                    other{"{0} મહિના પહેલા"}
+                    one{"{0} મહિના પહેલાં"}
+                    other{"{0} મહિના પહેલાં"}
                 }
             }
         }
@@ -1052,12 +1234,12 @@ gu{
             }
             relativeTime{
                 future{
-                    one{"+{0} મહિના"}
-                    other{"+{0} મહિના"}
+                    one{"{0} મહિનામાં"}
+                    other{"{0} મહિનામાં"}
                 }
                 past{
-                    one{"-{0} મહિના"}
-                    other{"-{0} મહિના"}
+                    one{"{0} મહિના પહેલાં"}
+                    other{"{0} મહિના પહેલાં"}
                 }
             }
         }
@@ -1074,21 +1256,26 @@ gu{
                     other{"{0} મહિનામાં"}
                 }
                 past{
-                    one{"{0} મહિના પહેલા"}
-                    other{"{0} મહિના પહેલા"}
+                    one{"{0} મહિના પહેલાં"}
+                    other{"{0} મહિના પહેલાં"}
                 }
             }
         }
         quarter{
             dn{"ત્રિમાસિક"}
+            relative{
+                "-1"{"છેલ્લું ત્રિમાસિક"}
+                "0"{"આ ત્રિમાસિક"}
+                "1"{"પછીનું ત્રિમાસિક"}
+            }
             relativeTime{
                 future{
                     one{"{0} ત્રિમાસિકમાં"}
                     other{"{0} ત્રિમાસિકમાં"}
                 }
                 past{
-                    one{"{0} ત્રિમાસિક પહેલા"}
-                    other{"{0} ત્રિમાસિક પહેલા"}
+                    one{"{0} ત્રિમાસિક પહેલાં"}
+                    other{"{0} ત્રિમાસિક પહેલાં"}
                 }
             }
         }
@@ -1096,12 +1283,12 @@ gu{
             dn{"ત્રિમાસ."}
             relativeTime{
                 future{
-                    one{"+{0} ત્રિમાસ"}
-                    other{"+{0} ત્રિમાસ"}
+                    one{"{0} ત્રિમાસમાં"}
+                    other{"{0} ત્રિમાસમાં"}
                 }
                 past{
-                    one{"-{0} ત્રિમાસ"}
-                    other{"-{0} ત્રિમાસ"}
+                    one{"{0} ત્રિમાસ પહેલાં"}
+                    other{"{0} ત્રિમાસ પહેલાં"}
                 }
             }
         }
@@ -1124,6 +1311,16 @@ gu{
                 "0"{"આ શનિવારે"}
                 "1"{"આવતા શનિવારે"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} શનિવાર"}
+                    other{"+{0} શનિવાર"}
+                }
+                past{
+                    one{"-{0} શનિવાર"}
+                    other{"-{0} શનિવાર"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1131,12 +1328,32 @@ gu{
                 "0"{"આ શનિવારે"}
                 "1"{"આવતા શનિવારે"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} શનિવાર"}
+                    other{"+{0} શનિવાર"}
+                }
+                past{
+                    one{"-{0} શનિવાર"}
+                    other{"-{0} શનિવાર"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"ગયા શનિવારે"}
                 "0"{"આ શનિવારે"}
                 "1"{"આવતા શનિવારે"}
+            }
+            relativeTime{
+                future{
+                    one{"+{0} શનિવાર"}
+                    other{"+{0} શનિવાર"}
+                }
+                past{
+                    one{"-{0} શનિવાર"}
+                    other{"-{0} શનિવાર"}
+                }
             }
         }
         second{
@@ -1150,8 +1367,8 @@ gu{
                     other{"{0} સેકંડમાં"}
                 }
                 past{
-                    one{"{0} સેકંડ પહેલા"}
-                    other{"{0} સેકંડ પહેલા"}
+                    one{"{0} સેકંડ પહેલાં"}
+                    other{"{0} સેકંડ પહેલાં"}
                 }
             }
         }
@@ -1163,8 +1380,8 @@ gu{
                     other{"{0} સેકંડમાં"}
                 }
                 past{
-                    one{"-{0} સેકંડ પહેલા"}
-                    other{"-{0} સેકંડ પહેલા"}
+                    one{"{0} સેકંડ પહેલાં"}
+                    other{"{0} સેકંડ પહેલાં"}
                 }
             }
         }
@@ -1176,8 +1393,8 @@ gu{
                     other{"{0} સેકંડમાં"}
                 }
                 past{
-                    one{"{0} સેકંડ પહેલા"}
-                    other{"{0} સેકંડ પહેલા"}
+                    one{"{0} સેકંડ પહેલાં"}
+                    other{"{0} સેકંડ પહેલાં"}
                 }
             }
         }
@@ -1187,12 +1404,32 @@ gu{
                 "0"{"આ રવિવારે"}
                 "1"{"આવતા રવિવારે"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} રવિવાર"}
+                    other{"+{0} રવિવાર"}
+                }
+                past{
+                    one{"-{0} રવિવાર"}
+                    other{"-{0} રવિવાર"}
+                }
+            }
         }
         sun-narrow{
             relative{
-                "-1"{"ગયા રવિવારે"}
-                "0"{"આ રવિવારે"}
-                "1"{"આવતા રવિવારે"}
+                "-1"{"ગયા રવિ."}
+                "0"{"આ રવિ"}
+                "1"{"આવતા રવિ"}
+            }
+            relativeTime{
+                future{
+                    one{"+{0} રવિવાર"}
+                    other{"+{0} રવિવાર"}
+                }
+                past{
+                    one{"-{0} રવિવાર"}
+                    other{"-{0} રવિવાર"}
+                }
             }
         }
         sun-short{
@@ -1201,12 +1438,32 @@ gu{
                 "0"{"આ રવિવારે"}
                 "1"{"આવતા રવિવારે"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} રવિવાર"}
+                    other{"+{0} રવિવાર"}
+                }
+                past{
+                    one{"-{0} રવિવાર"}
+                    other{"-{0} રવિવાર"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"ગયા ગુરુવારે"}
                 "0"{"આ ગુરુવારે"}
                 "1"{"આવતા ગુરુવારે"}
+            }
+            relativeTime{
+                future{
+                    one{"+{0} ગુરુવાર"}
+                    other{"+{0} ગુરુવાર"}
+                }
+                past{
+                    one{"-{0} ગુરુવાર"}
+                    other{"-{0} ગુરુવાર"}
+                }
             }
         }
         thu-narrow{
@@ -1215,12 +1472,32 @@ gu{
                 "0"{"આ ગુરુવારે"}
                 "1"{"આવતા ગુરુવારે"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} ગુરુવાર"}
+                    other{"+{0} ગુરુવાર"}
+                }
+                past{
+                    one{"-{0} ગુરુવાર"}
+                    other{"-{0} ગુરુવાર"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"ગયા ગુરુવારે"}
                 "0"{"આ ગુરુવારે"}
                 "1"{"આવતા ગુરુવારે"}
+            }
+            relativeTime{
+                future{
+                    one{"+{0} ગુરુવાર"}
+                    other{"+{0} ગુરુવાર"}
+                }
+                past{
+                    one{"-{0} ગુરુવાર"}
+                    other{"-{0} ગુરુવાર"}
+                }
             }
         }
         tue{
@@ -1229,12 +1506,32 @@ gu{
                 "0"{"આ મંગળવારે"}
                 "1"{"આવતા મંગળવારે"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} મંગળવાર"}
+                    other{"+{0} મંગળવાર"}
+                }
+                past{
+                    one{"-{0} મંગળવાર"}
+                    other{"-{0} મંગળવાર"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"ગયા મંગળવારે"}
                 "0"{"આ મંગળવારે"}
                 "1"{"આવતા મંગળવારે"}
+            }
+            relativeTime{
+                future{
+                    one{"+{0} મંગળવાર"}
+                    other{"+{0} મંગળવાર"}
+                }
+                past{
+                    one{"-{0} મંગળવાર"}
+                    other{"-{0} મંગળવાર"}
+                }
             }
         }
         tue-short{
@@ -1243,12 +1540,32 @@ gu{
                 "0"{"આ મંગળવારે"}
                 "1"{"આવતા મંગળવારે"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} મંગળવાર"}
+                    other{"+{0} મંગળવાર"}
+                }
+                past{
+                    one{"-{0} મંગળવાર"}
+                    other{"-{0} મંગળવાર"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"ગયા બુધવારે"}
                 "0"{"આ બુધવારે"}
                 "1"{"આવતા બુધવારે"}
+            }
+            relativeTime{
+                future{
+                    one{"+{0} બુધવાર"}
+                    other{"+{0} બુધવાર"}
+                }
+                past{
+                    one{"-{0} બુધવાર"}
+                    other{"-{0} બુધવાર"}
+                }
             }
         }
         wed-narrow{
@@ -1257,12 +1574,32 @@ gu{
                 "0"{"આ બુધવારે"}
                 "1"{"આવતા બુધવારે"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} બુધવાર"}
+                    other{"+{0} બુધવાર"}
+                }
+                past{
+                    one{"-{0} બુધવાર"}
+                    other{"-{0} બુધવાર"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"ગયા બુધવારે"}
                 "0"{"આ બુધવારે"}
                 "1"{"આવતા બુધવારે"}
+            }
+            relativeTime{
+                future{
+                    one{"+{0} બુધવાર"}
+                    other{"+{0} બુધવાર"}
+                }
+                past{
+                    one{"-{0} બુધવાર"}
+                    other{"-{0} બુધવાર"}
+                }
             }
         }
         week{
@@ -1272,14 +1609,15 @@ gu{
                 "0"{"આ અઠવાડિયે"}
                 "1"{"આવતા અઠવાડિયે"}
             }
+            relativePeriod{"{0} નું અઠવાડિયું"}
             relativeTime{
                 future{
                     one{"{0} અઠવાડિયામાં"}
                     other{"{0} અઠવાડિયામાં"}
                 }
                 past{
-                    one{"{0} અઠવાડિયા પહેલા"}
-                    other{"{0} અઠવાડિયા પહેલા"}
+                    one{"{0} અઠવાડિયા પહેલાં"}
+                    other{"{0} અઠવાડિયા પહેલાં"}
                 }
             }
         }
@@ -1290,14 +1628,15 @@ gu{
                 "0"{"આ અઠવાડિયે"}
                 "1"{"આવતા અઠવાડિયે"}
             }
+            relativePeriod{"{0} નું અઠવાડિયું"}
             relativeTime{
                 future{
-                    one{"+{0} અઠવાડિયા"}
-                    other{"+{0} અઠવાડિયા"}
+                    one{"{0} અઠ. માં"}
+                    other{"{0} અઠ. માં"}
                 }
                 past{
-                    one{"-{0} અઠવાડિયા"}
-                    other{"-{0} અઠવાડિયા"}
+                    one{"{0} અઠ. પહેલાં"}
+                    other{"{0} અઠ. પહેલાં"}
                 }
             }
         }
@@ -1308,14 +1647,15 @@ gu{
                 "0"{"આ અઠવાડિયે"}
                 "1"{"આવતા અઠવાડિયે"}
             }
+            relativePeriod{"{0} નું અઠવાડિયું"}
             relativeTime{
                 future{
-                    one{"{0} અઠવાડિયામાં"}
-                    other{"{0} અઠવાડિયામાં"}
+                    one{"{0} અઠ. માં"}
+                    other{"{0} અઠ. માં"}
                 }
                 past{
-                    one{"{0} અઠવાડિયા પહેલા"}
-                    other{"{0} અઠવાડિયા પહેલા"}
+                    one{"{0} અઠ. પહેલાં"}
+                    other{"{0} અઠ. પહેલાં"}
                 }
             }
         }
@@ -1335,8 +1675,8 @@ gu{
                     other{"{0} વર્ષમાં"}
                 }
                 past{
-                    one{"{0} વર્ષ પહેલા"}
-                    other{"{0} વર્ષ પહેલા"}
+                    one{"{0} વર્ષ પહેલાં"}
+                    other{"{0} વર્ષ પહેલાં"}
                 }
             }
         }
@@ -1371,8 +1711,8 @@ gu{
                     other{"{0} વર્ષમાં"}
                 }
                 past{
-                    one{"{0} વર્ષ પહેલા"}
-                    other{"{0} વર્ષ પહેલા"}
+                    one{"{0} વર્ષ પહેલાં"}
+                    other{"{0} વર્ષ પહેલાં"}
                 }
             }
         }
@@ -1382,6 +1722,12 @@ gu{
     }
     listPattern{
         standard{
+            2{"{0} અને {1}"}
+            end{"{0} અને {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
             2{"{0} અને {1}"}
             end{"{0} અને {1}"}
             middle{"{0}, {1}"}
@@ -1410,17 +1756,5 @@ gu{
         UK{"યુકે"}
         US{"અમેરિકા"}
         metric{"મેટ્રિક"}
-    }
-    transformNames{
-        BGN{"BGN"}
-        Numeric{"સંખ્યા"}
-        Tone{"ધ્વની"}
-        UNGEGN{"UNGEGN"}
-        x-Accents{"સ્વરાઘાતો"}
-        x-Fullwidth{"પૂર્ણપહોળાઇ"}
-        x-Halfwidth{"અર્ધપહોળાઈ"}
-        x-Jamo{"જેમો"}
-        x-Pinyin{"પીનયીન"}
-        x-Publishing{"પ્રકાશન"}
     }
 }

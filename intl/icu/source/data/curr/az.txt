@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/az.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 az{
     Currencies{
         ADP{
@@ -196,9 +190,13 @@ az{
             "BYB",
             "Belarus Yeni Rublu (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "Belarus Rublu",
+        }
         BYR{
             "BYR",
-            "Belarus Rublu",
+            "Belarus Rublu (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1066,6 +1064,7 @@ az{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
         BAM{"KM"}
@@ -1073,15 +1072,18 @@ az{
         BDT{"৳"}
         BMD{"$"}
         BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
-        BYR{"р."}
+        BWP{"P"}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
         CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
         CUP{"$"}
         CZK{"Kč"}
         DKK{"kr"}
@@ -1089,45 +1091,73 @@ az{
         EGP{"E£"}
         EUR{"€"}
         FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
         HRK{"kn"}
         HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
         LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"ley"}
         RUB{"₽"}
+        RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
         SYP{"S£"}
+        THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
+        VEF{"Bs"}
         VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
     }
     Currencies%variant{
         GEL{"₾"}
@@ -1322,9 +1352,13 @@ az{
             one{"Belarus yeni rublu (1994–1999)"}
             other{"Belarus yeni rublu (1994–1999)"}
         }
-        BYR{
+        BYN{
             one{"Belarus rublu"}
             other{"Belarus rublu"}
+        }
+        BYR{
+            one{"Belarus rublu (2000–2016)"}
+            other{"Belarus rublu (2000–2016)"}
         }
         BZD{
             one{"Beliz dolları"}
@@ -2195,5 +2229,5 @@ az{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.83"}
+    Version{"2.1.28.79"}
 }

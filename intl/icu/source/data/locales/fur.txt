@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fur.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fur{
     AuxExemplarCharacters{"[å č é ë ğ ï ñ ó š ü]"}
     ExemplarCharacters{"[a à â b c ç d e è ê f g h i ì î j k l m n o ò ô p q r s t u ù û v w x y z]"}
@@ -32,7 +26,7 @@ fur{
             }
         }
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.76"}
     calendar{
         generic{
             DateTimePatterns{
@@ -171,6 +165,10 @@ fur{
         }
         gregorian{
             AmPmMarkers{
+                "a.",
+                "p.",
+            }
+            AmPmMarkersAbbr{
                 "a.",
                 "p.",
             }

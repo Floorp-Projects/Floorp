@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/en.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 en{
-    Version{"2.1.19.72"}
+    Version{"2.1.30.50"}
     zoneStrings{
         "Africa:Sao_Tome"{
             ec{"São Tomé"}
@@ -590,6 +584,9 @@ en{
         }
         "meta:Ponape"{
             ls{"Ponape Time"}
+        }
+        "meta:Pyongyang"{
+            ls{"Pyongyang Time"}
         }
         "meta:Qyzylorda"{
             ld{"Qyzylorda Summer Time"}

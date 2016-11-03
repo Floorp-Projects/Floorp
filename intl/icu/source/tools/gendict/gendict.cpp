@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 2002-2015, International Business Machines
+*   Copyright (C) 2002-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *
@@ -245,7 +247,7 @@ int  main(int argc, char **argv) {
     //
     U_MAIN_INIT_ARGS(argc, argv);
     progName = argv[0];
-    argc=u_parseArgs(argc, argv, sizeof(options)/sizeof(options[0]), options);
+    argc=u_parseArgs(argc, argv, UPRV_LENGTHOF(options), options);
     if(argc<0) {
         // Unrecognized option
         fprintf(stderr, "error in command line argument \"%s\"\n", argv[-argc]);

@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/zh_Hant.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hant{
     %%Parent{"root"}
     AuxExemplarCharacters{
@@ -89,6 +83,27 @@ zh_Hant{
     NumberElements{
         default{"latn"}
         finance{"hantfin"}
+        hanidec{
+            patterns{
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                minusSign{"-"}
+                nan{"非數值"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
         latn{
             miscPatterns{
                 atLeast{"{0}+"}
@@ -104,7 +119,7 @@ zh_Hant{
             patternsLong{
                 decimalFormat{
                     1000{
-                        other{"0"}
+                        other{"0千"}
                     }
                     10000{
                         other{"0萬"}
@@ -144,7 +159,7 @@ zh_Hant{
             patternsShort{
                 currencyFormat{
                     1000{
-                        other{"0"}
+                        other{"¤0千"}
                     }
                     10000{
                         other{"¤0萬"}
@@ -182,7 +197,7 @@ zh_Hant{
                 }
                 decimalFormat{
                     1000{
-                        other{"0"}
+                        other{"0千"}
                     }
                     10000{
                         other{"0萬"}
@@ -237,7 +252,7 @@ zh_Hant{
         native{"hanidec"}
         traditional{"hant"}
     }
-    Version{"2.1.19.89"}
+    Version{"2.1.28.79"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1174,7 +1189,6 @@ zh_Hant{
                 d{
                     d{"d日至d日"}
                 }
-                fallback{"{0}至{1}"}
                 h{
                     a{"ah時至ah時"}
                     h{"ah時至h時"}
@@ -1235,6 +1249,10 @@ zh_Hant{
                 "上午",
                 "下午",
             }
+            AmPmMarkersAbbr{
+                "上午",
+                "下午",
+            }
             AmPmMarkersNarrow{
                 "上午",
                 "下午",
@@ -1277,6 +1295,9 @@ zh_Hant{
                 MEd{"M/d（E）"}
                 MMM{"LLL"}
                 MMMEd{"M月d日 E"}
+                MMMMW{
+                    other{"MMM的第W週"}
+                }
                 MMMMd{"M月d日"}
                 MMMd{"M月d日"}
                 MMdd{"MM/dd"}
@@ -1299,6 +1320,9 @@ zh_Hant{
                 yMd{"y/M/d"}
                 yQQQ{"y年QQQ"}
                 yQQQQ{"y年QQQQ"}
+                yw{
+                    other{"y年的第w週"}
+                }
             }
             dayNames{
                 format{
@@ -1412,11 +1436,13 @@ zh_Hant{
                     abbreviated{
                         afternoon1{"中午"}
                         afternoon2{"下午"}
+                        am{"上午"}
                         evening1{"晚上"}
                         midnight{"午夜"}
                         morning1{"清晨"}
                         morning2{"上午"}
                         night1{"凌晨"}
+                        pm{"下午"}
                     }
                     narrow{
                         afternoon1{"中午"}
@@ -1432,11 +1458,13 @@ zh_Hant{
                     wide{
                         afternoon1{"中午"}
                         afternoon2{"下午"}
+                        am{"上午"}
                         evening1{"晚上"}
                         midnight{"午夜"}
                         morning1{"清晨"}
                         morning2{"上午"}
                         night1{"凌晨"}
+                        pm{"下午"}
                     }
                 }
             }
@@ -1468,18 +1496,18 @@ zh_Hant{
             }
             intervalFormats{
                 H{
-                    H{"HH–HH"}
+                    H{"HH – HH"}
                 }
                 Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm至HH:mm"}
+                    H{"HH:mm – HH:mm"}
+                    m{"HH:mm – HH:mm"}
                 }
                 Hmv{
-                    H{"HH:mm–HH:mm [v]"}
-                    m{"HH:mm–HH:mm [v]"}
+                    H{"HH:mm – HH:mm [v]"}
+                    m{"HH:mm – HH:mm [v]"}
                 }
                 Hv{
-                    H{"HH–HH [v]"}
+                    H{"HH – HH [v]"}
                 }
                 M{
                     M{"M月至M月"}
@@ -1509,7 +1537,6 @@ zh_Hant{
                 d{
                     d{"d日至d日"}
                 }
-                fallback{"{0}至{1}"}
                 h{
                     a{"ah時至ah時"}
                     h{"ah時至h時"}
@@ -1546,7 +1573,7 @@ zh_Hant{
                 }
                 yMMMEd{
                     M{"y年M月d日E至M月d日E"}
-                    d{"y年M月d日E至d日E"}
+                    d{"y年M月d日E至M月d日E"}
                     y{"y年M月d日E至y年M月d日E"}
                 }
                 yMMMM{
@@ -2464,7 +2491,7 @@ zh_Hant{
             }
             availableFormats{
                 E{"ccc"}
-                Ed{"d日（E）"}
+                Ed{"d E"}
                 Gy{"Gy年"}
                 GyMMM{"Gy年M月"}
                 GyMMMEd{"Gy年M月d日E"}
@@ -2496,6 +2523,94 @@ zh_Hant{
                 }
             }
         }
+    }
+    characterLabel{
+        activities{"活動"}
+        african_scripts{"非洲語系"}
+        american_scripts{"美洲語系"}
+        animal{"動物"}
+        animals_nature{"動物與自然"}
+        arrows{"箭頭"}
+        body{"身體"}
+        box_drawing{"製表符"}
+        braille{"點字"}
+        building{"建築"}
+        bullets_stars{"項目符號/星號"}
+        consonantal_jamo{"輔音字母"}
+        currency_symbols{"貨幣符號"}
+        dash_connector{"破折號/連接號"}
+        digits{"數字"}
+        dingbats{"裝飾符號"}
+        divination_symbols{"占卜符號"}
+        downwards_arrows{"向下箭頭"}
+        downwards_upwards_arrows{"上下箭頭"}
+        east_asian_scripts{"東亞語系"}
+        emoji{"表情符號"}
+        european_scripts{"歐洲語系"}
+        female{"女性"}
+        flag{"旗子"}
+        flags{"旗幟"}
+        food_drink{"飲食"}
+        format{"格式"}
+        format_whitespace{"格式與空白"}
+        full_width_form_variant{"全形格式變體"}
+        geometric_shapes{"幾何形狀"}
+        half_width_form_variant{"半形格式變體"}
+        han_characters{"漢字"}
+        han_radicals{"漢字部首"}
+        hanja{"韓文漢字"}
+        hanzi_simplified{"漢字（簡體）"}
+        hanzi_traditional{"漢字（繁體）"}
+        heart{"心"}
+        historic_scripts{"古老語系"}
+        ideographic_desc_characters{"表意文字描述字元"}
+        japanese_kana{"日文假名"}
+        kanbun{"漢字批註"}
+        kanji{"日文漢字"}
+        keycap{"按鍵"}
+        leftwards_arrows{"向左箭頭"}
+        leftwards_rightwards_arrows{"左右箭頭"}
+        letterlike_symbols{"類字母符號"}
+        limited_use{"限制使用"}
+        male{"男性"}
+        math_symbols{"數學符號"}
+        middle_eastern_scripts{"中東語系"}
+        miscellaneous{"混合"}
+        modern_scripts{"現代語系"}
+        modifier{"修飾字母"}
+        musical_symbols{"音樂符號"}
+        nature{"自然"}
+        nonspacing{"非間距"}
+        numbers{"數字"}
+        objects{"物品"}
+        other{"其他"}
+        paired{"成對"}
+        person{"人物"}
+        phonetic_alphabet{"音標"}
+        pictographs{"象形文字"}
+        place{"地點"}
+        plant{"植物"}
+        punctuation{"標點符號"}
+        rightwards_arrows{"向右箭頭"}
+        sign_standard_symbols{"標誌/標準符號"}
+        small_form_variant{"小寫符號變體"}
+        smiley{"微笑"}
+        smileys_people{"表情符號與人物"}
+        south_asian_scripts{"南亞語系"}
+        southeast_asian_scripts{"東南亞語系"}
+        spacing{"空格"}
+        sport{"運動"}
+        symbols{"符號"}
+        technical_symbols{"技術符號"}
+        tone_marks{"聲調"}
+        travel{"旅遊"}
+        travel_places{"旅遊與地點"}
+        upwards_arrows{"向上箭頭"}
+        variant_forms{"變體形式"}
+        vocalic_jamo{"母音字母"}
+        weather{"天氣"}
+        western_asian_scripts{"西亞語系"}
+        whitespace{"空白"}
     }
     delimiters{
         alternateQuotationEnd{"』"}
@@ -2556,12 +2671,28 @@ zh_Hant{
                 "0"{"本週五"}
                 "1"{"下週五"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個週五後"}
+                }
+                past{
+                    other{"{0} 個週五前"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"上週五"}
                 "0"{"本週五"}
                 "1"{"下週五"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個週五後"}
+                }
+                past{
+                    other{"{0} 個週五前"}
+                }
             }
         }
         fri-short{
@@ -2570,9 +2701,20 @@ zh_Hant{
                 "0"{"本週五"}
                 "1"{"下週五"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個週五後"}
+                }
+                past{
+                    other{"{0} 個週五前"}
+                }
+            }
         }
         hour{
             dn{"小時"}
+            relative{
+                "0"{"這一小時"}
+            }
             relativeTime{
                 future{
                     other{"{0} 小時後"}
@@ -2606,6 +2748,9 @@ zh_Hant{
         }
         minute{
             dn{"分鐘"}
+            relative{
+                "0"{"這一分鐘"}
+            }
             relativeTime{
                 future{
                     other{"{0} 分鐘後"}
@@ -2643,6 +2788,14 @@ zh_Hant{
                 "0"{"本週一"}
                 "1"{"下週一"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個週一後"}
+                }
+                past{
+                    other{"{0} 個週一前"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -2650,12 +2803,28 @@ zh_Hant{
                 "0"{"本週一"}
                 "1"{"下週一"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個週一後"}
+                }
+                past{
+                    other{"{0} 個週一前"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"上週一"}
                 "0"{"本週一"}
                 "1"{"下週一"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個週一後"}
+                }
+                past{
+                    other{"{0} 個週一前"}
+                }
             }
         }
         month{
@@ -2750,6 +2919,14 @@ zh_Hant{
                 "0"{"本週六"}
                 "1"{"下週六"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個週六後"}
+                }
+                past{
+                    other{"{0} 個週六前"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -2757,12 +2934,28 @@ zh_Hant{
                 "0"{"本週六"}
                 "1"{"下週六"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個週六後"}
+                }
+                past{
+                    other{"{0} 個週六前"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"上週六"}
                 "0"{"本週六"}
                 "1"{"下週六"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個週六後"}
+                }
+                past{
+                    other{"{0} 個週六前"}
+                }
             }
         }
         second{
@@ -2807,12 +3000,28 @@ zh_Hant{
                 "0"{"本週日"}
                 "1"{"下週日"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個週日後"}
+                }
+                past{
+                    other{"{0} 個週日前"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"上週日"}
                 "0"{"本週日"}
                 "1"{"下週日"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個週日後"}
+                }
+                past{
+                    other{"{0} 個週日前"}
+                }
             }
         }
         sun-short{
@@ -2821,12 +3030,28 @@ zh_Hant{
                 "0"{"本週日"}
                 "1"{"下週日"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個週日後"}
+                }
+                past{
+                    other{"{0} 個週日前"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"上週四"}
                 "0"{"本週四"}
                 "1"{"下週四"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個週四後"}
+                }
+                past{
+                    other{"{0} 個週四前"}
+                }
             }
         }
         thu-narrow{
@@ -2835,12 +3060,28 @@ zh_Hant{
                 "0"{"本週四"}
                 "1"{"下週四"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個週四後"}
+                }
+                past{
+                    other{"{0} 個週四前"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"上週四"}
                 "0"{"本週四"}
                 "1"{"下週四"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個週四後"}
+                }
+                past{
+                    other{"{0} 個週四前"}
+                }
             }
         }
         tue{
@@ -2849,12 +3090,28 @@ zh_Hant{
                 "0"{"本週二"}
                 "1"{"下週二"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個週二後"}
+                }
+                past{
+                    other{"{0} 個週二前"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"上週二"}
                 "0"{"本週二"}
                 "1"{"下週二"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個週二後"}
+                }
+                past{
+                    other{"{0} 個週二前"}
+                }
             }
         }
         tue-short{
@@ -2863,12 +3120,28 @@ zh_Hant{
                 "0"{"本週二"}
                 "1"{"下週二"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個週二後"}
+                }
+                past{
+                    other{"{0} 個週二前"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"上週三"}
                 "0"{"本週三"}
                 "1"{"下週三"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個週三後"}
+                }
+                past{
+                    other{"{0} 個週三前"}
+                }
             }
         }
         wed-narrow{
@@ -2877,12 +3150,28 @@ zh_Hant{
                 "0"{"本週三"}
                 "1"{"下週三"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個週三後"}
+                }
+                past{
+                    other{"{0} 個週三前"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"上週三"}
                 "0"{"本週三"}
                 "1"{"下週三"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個週三後"}
+                }
+                past{
+                    other{"{0} 個週三前"}
+                }
             }
         }
         week{
@@ -2892,6 +3181,7 @@ zh_Hant{
                 "0"{"本週"}
                 "1"{"下週"}
             }
+            relativePeriod{"{0} 當週"}
             relativeTime{
                 future{
                     other{"{0} 週後"}
@@ -2903,6 +3193,7 @@ zh_Hant{
         }
         week-narrow{
             dn{"週"}
+            relativePeriod{"{0} 當週"}
             relativeTime{
                 future{
                     other{"{0} 週後"}
@@ -2914,6 +3205,7 @@ zh_Hant{
         }
         week-short{
             dn{"週"}
+            relativePeriod{"{0} 當週"}
             relativeTime{
                 future{
                     other{"{0} 週後"}
@@ -2975,6 +3267,12 @@ zh_Hant{
             middle{"{0}、{1}"}
             start{"{0}、{1}"}
         }
+        standard-short{
+            2{"{0}和{1}"}
+            end{"{0}和{1}"}
+            middle{"{0}、{1}"}
+            start{"{0}、{1}"}
+        }
         unit{
             2{"{0} {1}"}
             end{"{0} {1}"}
@@ -2998,17 +3296,5 @@ zh_Hant{
         UK{"英制"}
         US{"美制"}
         metric{"公制"}
-    }
-    transformNames{
-        BGN{"美國地名委員會"}
-        Numeric{"數字"}
-        Tone{"聲調"}
-        UNGEGN{"聯合國地名專家組"}
-        x-Accents{"變音符號"}
-        x-Fullwidth{"全形"}
-        x-Halfwidth{"半形"}
-        x-Jamo{"韓文字母"}
-        x-Pinyin{"拼音"}
-        x-Publishing{"出版"}
     }
 }

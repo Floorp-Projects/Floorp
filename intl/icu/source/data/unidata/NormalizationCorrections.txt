@@ -1,11 +1,13 @@
-# NormalizationCorrections-8.0.0.txt
-# Date: 2015-03-07, 01:30:00 GMT [KW, LI]
+# NormalizationCorrections-9.0.0.txt
+# Date: 2016-01-21, 22:00:00 GMT [KW, LI]
+# © 2016 Unicode®, Inc.
+# For terms of use, see http://www.unicode.org/terms_of_use.html
+#
+# Unicode Character Database
+# For documentation, see http://www.unicode.org/reports/tr44/
 #
 # This file is a normative contributory data file in the
 # Unicode Character Database.
-#
-# Copyright (c) 1991-2015 Unicode, Inc.
-# For terms of use, see http://www.unicode.org/terms_of_use.html
 #
 # The normalization stability policy of the Unicode Consortium
 # ordinarily precludes any change to the decomposition

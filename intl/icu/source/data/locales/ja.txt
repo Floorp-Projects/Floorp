@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ja.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ja{
     AuxExemplarCharacters{"[兌 拼 楔 錄 鳯]"}
     Ellipsis{
@@ -231,7 +225,7 @@ ja{
         native{"latn"}
         traditional{"jpan"}
     }
-    Version{"2.1.19.89"}
+    Version{"2.1.28.79"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1113,7 +1107,7 @@ ja{
                 "H:mm:ss z",
                 "H:mm:ss",
                 "H:mm",
-                "Gy年M月d日EEEE",
+                "Gy年M月d日(EEEE)",
                 "Gy年M月d日",
                 "Gy/MM/dd",
                 "Gy/M/d",
@@ -1125,21 +1119,21 @@ ja{
             }
             availableFormats{
                 E{"ccc"}
-                EEEEd{"d日EEEE"}
+                EEEEd{"d日(EEEE)"}
                 Ed{"d日(E)"}
                 Gy{"Gy年"}
                 GyMMM{"Gy年M月"}
-                GyMMMEEEEd{"Gy年M月d日EEEE"}
+                GyMMMEEEEd{"Gy年M月d日(EEEE)"}
                 GyMMMEd{"Gy年M月d日(E)"}
                 GyMMMd{"Gy年M月d日"}
                 H{"H時"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
                 M{"M月"}
-                MEEEEd{"M/dEEEE"}
+                MEEEEd{"M/d(EEEE)"}
                 MEd{"M/d(E)"}
                 MMM{"M月"}
-                MMMEEEEd{"M月d日EEEE"}
+                MMMEEEEd{"M月d日(EEEE)"}
                 MMMEd{"M月d日(E)"}
                 MMMMd{"M月d日"}
                 MMMd{"M月d日"}
@@ -1152,16 +1146,16 @@ ja{
                 y{"Gy年"}
                 yyyy{"Gy年"}
                 yyyyM{"Gy/M"}
-                yyyyMEEEEd{"Gy/M/dEEEE"}
+                yyyyMEEEEd{"Gy/M/d(EEEE)"}
                 yyyyMEd{"Gy/M/d(E)"}
                 yyyyMMM{"Gy年M月"}
-                yyyyMMMEEEEd{"Gy年M月d日EEEE"}
+                yyyyMMMEEEEd{"Gy年M月d日(EEEE)"}
                 yyyyMMMEd{"Gy年M月d日(E)"}
                 yyyyMMMM{"Gy年M月"}
                 yyyyMMMd{"Gy年M月d日"}
                 yyyyMd{"Gy/M/d"}
                 yyyyQQQ{"Gy/QQQ"}
-                yyyyQQQQ{"GyQQQQ"}
+                yyyyQQQQ{"Gy年QQQQ"}
             }
             intervalFormats{
                 H{
@@ -1317,6 +1311,9 @@ ja{
                 MMM{"M月"}
                 MMMEEEEd{"M月d日EEEE"}
                 MMMEd{"M月d日(E)"}
+                MMMMW{
+                    other{"M月第W週"}
+                }
                 MMMMd{"M月d日"}
                 MMMd{"M月d日"}
                 Md{"M/d"}
@@ -1339,7 +1336,10 @@ ja{
                 yMMMd{"y年M月d日"}
                 yMd{"y/M/d"}
                 yQQQ{"y/QQQ"}
-                yQQQQ{"yQQQQ"}
+                yQQQQ{"y年QQQQ"}
+                yw{
+                    other{"y年第w週"}
+                }
             }
             dayNames{
                 format{
@@ -2141,7 +2141,7 @@ ja{
                 yyyyMMMd{"Gy年M月d日"}
                 yyyyMd{"Gy/M/d"}
                 yyyyQQQ{"Gy/QQQ"}
-                yyyyQQQQ{"GyQQQQ"}
+                yyyyQQQQ{"Gy年QQQQ"}
             }
             eras{
                 abbreviated{
@@ -2754,6 +2754,94 @@ ja{
             }
         }
     }
+    characterLabel{
+        activities{"アクティビティ"}
+        african_scripts{"アフリカの文字"}
+        american_scripts{"アメリカの文字"}
+        animal{"どうぶつ"}
+        animals_nature{"動物と自然"}
+        arrows{"矢印"}
+        body{"からだ"}
+        box_drawing{"罫線素片"}
+        braille{"点字"}
+        building{"たてもの"}
+        bullets_stars{"行頭文字/星"}
+        consonantal_jamo{"子音字母"}
+        currency_symbols{"通貨記号"}
+        dash_connector{"ダッシュ/連結用句読記号"}
+        digits{"数字記号"}
+        dingbats{"装飾記号"}
+        divination_symbols{"占術記号"}
+        downwards_arrows{"下向矢印"}
+        downwards_upwards_arrows{"下向/上向矢印"}
+        east_asian_scripts{"東アジアの文字"}
+        emoji{"絵文字"}
+        european_scripts{"ヨーロッパの文字"}
+        female{"じょせい"}
+        flag{"はた"}
+        flags{"国旗"}
+        food_drink{"食事と飲み物"}
+        format{"書式"}
+        format_whitespace{"書式とホワイトスペース"}
+        full_width_form_variant{"全角文字変種"}
+        geometric_shapes{"幾何学的な図形"}
+        half_width_form_variant{"半角文字変種"}
+        han_characters{"漢字"}
+        han_radicals{"部首"}
+        hanja{"漢字"}
+        hanzi_simplified{"漢字 (簡体字)"}
+        hanzi_traditional{"漢字 (繁体字)"}
+        heart{"はーと"}
+        historic_scripts{"古代文字"}
+        ideographic_desc_characters{"漢字構成記述文字"}
+        japanese_kana{"仮名"}
+        kanbun{"漢文"}
+        kanji{"漢字"}
+        keycap{"かこみすうじ"}
+        leftwards_arrows{"左向矢印"}
+        leftwards_rightwards_arrows{"左向/右向矢印"}
+        letterlike_symbols{"文字種記号"}
+        limited_use{"限定利用"}
+        male{"だんせい"}
+        math_symbols{"数学記号"}
+        middle_eastern_scripts{"中東の文字"}
+        miscellaneous{"雑多"}
+        modern_scripts{"現代文字"}
+        modifier{"修飾文字"}
+        musical_symbols{"音楽記号"}
+        nature{"しぜん"}
+        nonspacing{"前進を伴わない修飾文字"}
+        numbers{"数字"}
+        objects{"物"}
+        other{"その他"}
+        paired{"対の記号"}
+        person{"ひと"}
+        phonetic_alphabet{"音声記号"}
+        pictographs{"ピクトグラム"}
+        place{"ばしょ"}
+        plant{"しょくぶつ"}
+        punctuation{"句読点"}
+        rightwards_arrows{"右向矢印"}
+        sign_standard_symbols{"標識/標準記号"}
+        small_form_variant{"小字形変種"}
+        smiley{"すまいりー"}
+        smileys_people{"スマイリーと人々"}
+        south_asian_scripts{"南アジアの文字"}
+        southeast_asian_scripts{"東南アジアの文字"}
+        spacing{"前進を伴う修飾文字"}
+        sport{"すぽーつ"}
+        symbols{"記号"}
+        technical_symbols{"技術用記号"}
+        tone_marks{"声調記号"}
+        travel{"りょこう"}
+        travel_places{"旅行と場所"}
+        upwards_arrows{"上向矢印"}
+        variant_forms{"変種"}
+        vocalic_jamo{"母音字母"}
+        weather{"てんき"}
+        western_asian_scripts{"西アジアの文字"}
+        whitespace{"ホワイトスペース"}
+    }
     delimiters{
         alternateQuotationEnd{"』"}
         alternateQuotationStart{"『"}
@@ -2782,22 +2870,28 @@ ja{
         day-narrow{
             dn{"日"}
             relative{
+                "-1"{"昨日"}
                 "-2"{"一昨日"}
+                "0"{"今日"}
+                "1"{"明日"}
                 "2"{"明後日"}
             }
             relativeTime{
                 future{
-                    other{"{0} 日後"}
+                    other{"{0}日後"}
                 }
                 past{
-                    other{"{0} 日前"}
+                    other{"{0}日前"}
                 }
             }
         }
         day-short{
             dn{"日"}
             relative{
+                "-1"{"昨日"}
                 "-2"{"一昨日"}
+                "0"{"今日"}
+                "1"{"明日"}
                 "2"{"明後日"}
             }
             relativeTime{
@@ -2821,12 +2915,28 @@ ja{
                 "0"{"今週の金曜日"}
                 "1"{"来週の金曜日"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個後の金曜日"}
+                }
+                past{
+                    other{"{0} 個前の金曜日"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"先週の金曜"}
                 "0"{"今週の金曜"}
                 "1"{"来週の金曜"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}個後の金曜"}
+                }
+                past{
+                    other{"{0}個前の金曜"}
+                }
             }
         }
         fri-short{
@@ -2835,9 +2945,20 @@ ja{
                 "0"{"今週の金曜"}
                 "1"{"来週の金曜"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個後の金曜"}
+                }
+                past{
+                    other{"{0} 個前の金曜"}
+                }
+            }
         }
         hour{
             dn{"時"}
+            relative{
+                "0"{"1 時間以内"}
+            }
             relativeTime{
                 future{
                     other{"{0} 時間後"}
@@ -2851,10 +2972,10 @@ ja{
             dn{"時"}
             relativeTime{
                 future{
-                    other{"{0} 時間後"}
+                    other{"{0}時間後"}
                 }
                 past{
-                    other{"{0} 時間前"}
+                    other{"{0}時間前"}
                 }
             }
         }
@@ -2871,6 +2992,9 @@ ja{
         }
         minute{
             dn{"分"}
+            relative{
+                "0"{"1 分以内"}
+            }
             relativeTime{
                 future{
                     other{"{0} 分後"}
@@ -2884,10 +3008,10 @@ ja{
             dn{"分"}
             relativeTime{
                 future{
-                    other{"{0} 分後"}
+                    other{"{0}分後"}
                 }
                 past{
-                    other{"{0} 分前"}
+                    other{"{0}分前"}
                 }
             }
         }
@@ -2908,6 +3032,14 @@ ja{
                 "0"{"今週の月曜日"}
                 "1"{"来週の月曜日"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個後の月曜日"}
+                }
+                past{
+                    other{"{0} 個前の月曜日"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -2915,12 +3047,28 @@ ja{
                 "0"{"今週の月曜"}
                 "1"{"来週の月曜"}
             }
+            relativeTime{
+                future{
+                    other{"{0}個後の月曜"}
+                }
+                past{
+                    other{"{0}個前の月曜"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"先週の月曜"}
                 "0"{"今週の月曜"}
                 "1"{"来週の月曜"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個後の月曜"}
+                }
+                past{
+                    other{"{0} 個前の月曜"}
+                }
             }
         }
         month{
@@ -2948,10 +3096,10 @@ ja{
             }
             relativeTime{
                 future{
-                    other{"{0} か月後"}
+                    other{"{0}か月後"}
                 }
                 past{
-                    other{"{0} か月前"}
+                    other{"{0}か月前"}
                 }
             }
         }
@@ -2973,6 +3121,11 @@ ja{
         }
         quarter{
             dn{"四半期"}
+            relative{
+                "-1"{"前四半期"}
+                "0"{"今四半期"}
+                "1"{"翌四半期"}
+            }
             relativeTime{
                 future{
                     other{"{0} 四半期後"}
@@ -2986,10 +3139,10 @@ ja{
             dn{"四半期"}
             relativeTime{
                 future{
-                    other{"{0} 四半期後"}
+                    other{"{0}四半期後"}
                 }
                 past{
-                    other{"{0} 四半期前"}
+                    other{"{0}四半期前"}
                 }
             }
         }
@@ -3010,12 +3163,28 @@ ja{
                 "0"{"今週の土曜日"}
                 "1"{"来週の土曜日"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個後の土曜日"}
+                }
+                past{
+                    other{"{0} 個前の土曜日"}
+                }
+            }
         }
         sat-narrow{
             relative{
                 "-1"{"先週の土曜"}
                 "0"{"今週の土曜"}
                 "1"{"来週の土曜"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}個後の土曜"}
+                }
+                past{
+                    other{"{0}個前の土曜"}
+                }
             }
         }
         sat-short{
@@ -3024,11 +3193,19 @@ ja{
                 "0"{"今週の土曜"}
                 "1"{"来週の土曜"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個後の土曜"}
+                }
+                past{
+                    other{"{0} 個前の土曜"}
+                }
+            }
         }
         second{
             dn{"秒"}
             relative{
-                "0"{"今すぐ"}
+                "0"{"今"}
             }
             relativeTime{
                 future{
@@ -3043,10 +3220,10 @@ ja{
             dn{"秒"}
             relativeTime{
                 future{
-                    other{"{0} 秒後"}
+                    other{"{0}秒後"}
                 }
                 past{
-                    other{"{0} 秒前"}
+                    other{"{0}秒前"}
                 }
             }
         }
@@ -3067,12 +3244,28 @@ ja{
                 "0"{"今週の日曜日"}
                 "1"{"来週の日曜日"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個後の日曜日"}
+                }
+                past{
+                    other{"{0} 個前の日曜日"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"先週の日曜"}
                 "0"{"今週の日曜"}
                 "1"{"来週の日曜"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}個後の日曜"}
+                }
+                past{
+                    other{"{0}個前の日曜"}
+                }
             }
         }
         sun-short{
@@ -3081,12 +3274,28 @@ ja{
                 "0"{"今週の日曜"}
                 "1"{"来週の日曜"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個後の日曜"}
+                }
+                past{
+                    other{"{0} 個前の日曜"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"先週の木曜日"}
                 "0"{"今週の木曜日"}
                 "1"{"来週の木曜日"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個後の木曜日"}
+                }
+                past{
+                    other{"{0} 個前の木曜日"}
+                }
             }
         }
         thu-narrow{
@@ -3095,12 +3304,28 @@ ja{
                 "0"{"今週の木曜"}
                 "1"{"来週の木曜"}
             }
+            relativeTime{
+                future{
+                    other{"{0}個後の木曜"}
+                }
+                past{
+                    other{"{0}個前の木曜"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"先週の木曜"}
                 "0"{"今週の木曜"}
                 "1"{"来週の木曜"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個後の木曜"}
+                }
+                past{
+                    other{"{0} 個前の木曜"}
+                }
             }
         }
         tue{
@@ -3109,12 +3334,28 @@ ja{
                 "0"{"今週の火曜日"}
                 "1"{"来週の火曜日"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個後の火曜日"}
+                }
+                past{
+                    other{"{0} 個前の火曜日"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"先週の火曜"}
                 "0"{"今週の火曜"}
                 "1"{"来週の火曜"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}個後の火曜"}
+                }
+                past{
+                    other{"{0}個前の火曜"}
+                }
             }
         }
         tue-short{
@@ -3123,12 +3364,28 @@ ja{
                 "0"{"今週の火曜"}
                 "1"{"来週の火曜"}
             }
+            relativeTime{
+                future{
+                    other{"{0} 個後の火曜"}
+                }
+                past{
+                    other{"{0} 個前の火曜"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"先週の水曜日"}
                 "0"{"今週の水曜日"}
                 "1"{"来週の水曜日"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個後の水曜日"}
+                }
+                past{
+                    other{"{0} 個前の水曜日"}
+                }
             }
         }
         wed-narrow{
@@ -3137,12 +3394,28 @@ ja{
                 "0"{"今週の水曜"}
                 "1"{"来週の水曜"}
             }
+            relativeTime{
+                future{
+                    other{"{0}個後の水曜"}
+                }
+                past{
+                    other{"{0}個前の水曜"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"先週の水曜"}
                 "0"{"今週の水曜"}
                 "1"{"来週の水曜"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 個後の水曜"}
+                }
+                past{
+                    other{"{0} 個前の水曜"}
+                }
             }
         }
         week{
@@ -3152,6 +3425,7 @@ ja{
                 "0"{"今週"}
                 "1"{"翌週"}
             }
+            relativePeriod{"{0} 日の週"}
             relativeTime{
                 future{
                     other{"{0} 週間後"}
@@ -3168,12 +3442,13 @@ ja{
                 "0"{"今週"}
                 "1"{"翌週"}
             }
+            relativePeriod{"{0}日の週"}
             relativeTime{
                 future{
-                    other{"{0} 週間後"}
+                    other{"{0}週間後"}
                 }
                 past{
-                    other{"{0} 週間前"}
+                    other{"{0}週間前"}
                 }
             }
         }
@@ -3184,6 +3459,7 @@ ja{
                 "0"{"今週"}
                 "1"{"翌週"}
             }
+            relativePeriod{"{0} 日の週"}
             relativeTime{
                 future{
                     other{"{0} 週間後"}
@@ -3221,10 +3497,10 @@ ja{
             }
             relativeTime{
                 future{
-                    other{"{0} 年後"}
+                    other{"{0}年後"}
                 }
                 past{
-                    other{"{0} 年前"}
+                    other{"{0}年前"}
                 }
             }
         }
@@ -3255,6 +3531,12 @@ ja{
             middle{"{0}、{1}"}
             start{"{0}、{1}"}
         }
+        standard-short{
+            2{"{0}、{1}"}
+            end{"{0}、{1}"}
+            middle{"{0}、{1}"}
+            start{"{0}、{1}"}
+        }
         unit{
             2{"{0} {1}"}
             end{"{0} {1}"}
@@ -3278,17 +3560,5 @@ ja{
         UK{"英ヤード・ポンド法"}
         US{"米ヤード・ポンド法"}
         metric{"メートル法"}
-    }
-    transformNames{
-        BGN{"BGN"}
-        Numeric{"数字"}
-        Tone{"声調"}
-        UNGEGN{"UNGEGN"}
-        x-Accents{"アクセント"}
-        x-Fullwidth{"全角"}
-        x-Halfwidth{"半角"}
-        x-Jamo{"字母"}
-        x-Pinyin{"ピンイン"}
-        x-Publishing{"出版"}
     }
 }

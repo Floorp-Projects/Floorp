@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/gu.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 gu{
     Currencies{
         AED{
@@ -100,9 +94,13 @@ gu{
             "BWP",
             "બોત્સવાનન પુલા",
         }
+        BYN{
+            "BYN",
+            "બેલારુશિયન રૂબલ",
+        }
         BYR{
             "BYR",
-            "બેલારુશિયન રૂબલ",
+            "બેલારુશિયન રૂબલ (2000–2016)",
         }
         BZD{
             "BZD",
@@ -658,7 +656,7 @@ gu{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -675,6 +673,7 @@ gu{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -836,9 +835,13 @@ gu{
             one{"બોત્સવાનન પુલા"}
             other{"બોત્સવાનન પુલા"}
         }
-        BYR{
+        BYN{
             one{"બેલારુશિયન રૂબલ"}
             other{"બેલારુશિયન રૂબલ"}
+        }
+        BYR{
+            one{"બેલારુશિયન રૂબલ (2000–2016)"}
+            other{"બેલારુશિયન રૂબલ (2000–2016)"}
         }
         BZD{
             one{"બેલિઝ ડોલર"}
@@ -1377,5 +1380,5 @@ gu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
 }

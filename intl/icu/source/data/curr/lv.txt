@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/lv.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 lv{
     Currencies{
         AED{
@@ -58,7 +52,7 @@ lv{
         }
         BAM{
             "BAM",
-            "Bosnijas un Hercogovinas marka",
+            "Bosnijas un Hercogovinas konvertējamā marka",
         }
         BBD{
             "BBD",
@@ -112,9 +106,13 @@ lv{
             "BWP",
             "Botsvanas pula",
         }
+        BYN{
+            "BYN",
+            "Baltkrievijas rubelis",
+        }
         BYR{
             "BYR",
-            "Baltkrievijas rubelis",
+            "Baltkrievijas rubelis (2000–2016)",
         }
         BZD{
             "BZD",
@@ -826,6 +824,7 @@ lv{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
         BAM{"KM"}
@@ -836,7 +835,8 @@ lv{
         BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
-        BYR{"р."}
+        BWP{"P"}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -853,6 +853,7 @@ lv{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -861,34 +862,50 @@ lv{
         HNL{"L"}
         HRK{"kn"}
         HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
         ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
         NIO{"C$"}
         NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
         RUB{"₽"}
+        RWF{"RF"}
         SBD{"$"}
         SEK{"kr"}
         SGD{"$"}
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
@@ -898,9 +915,12 @@ lv{
         VEF{"Bs"}
         VND{"₫"}
         XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
     }
     Currencies%variant{
         GEL{"₾"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         AED{
@@ -959,9 +979,9 @@ lv{
             zero{"Azerbaidžānas manati"}
         }
         BAM{
-            one{"Bosnijas un Hercogovinas marka"}
-            other{"Bosnijas un Hercogovinas markas"}
-            zero{"Bosnijas un Hercogovinas markas"}
+            one{"Bosnijas un Hercogovinas konvertējamā marka"}
+            other{"Bosnijas un Hercogovinas konvertējamās markas"}
+            zero{"Bosnijas un Hercogovinas konvertējamās markas"}
         }
         BBD{
             one{"Barbadosas dolārs"}
@@ -1028,10 +1048,15 @@ lv{
             other{"Botsvanas pulas"}
             zero{"Botsvanas pulas"}
         }
-        BYR{
+        BYN{
             one{"Baltkrievijas rubelis"}
             other{"Baltkrievijas rubeļi"}
             zero{"Baltkrievijas rubeļi"}
+        }
+        BYR{
+            one{"Baltkrievijas rubelis (2000–2016)"}
+            other{"Baltkrievijas rubeļi (2000–2016)"}
+            zero{"Baltkrievijas rubeļi (2000–2016)"}
         }
         BZD{
             one{"Belizas dolārs"}
@@ -1759,5 +1784,5 @@ lv{
         other{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"2.1.19.19"}
+    Version{"2.1.28.79"}
 }

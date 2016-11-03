@@ -1,7 +1,13 @@
 
 #*****************************************************************************
 #
-#   Copyright (C) 2002-2003, International Business Machines Corporation and others.
+#   Copyright (C) 2016 and later: Unicode, Inc. and others.
+#   License & terms of use: http://www.unicode.org/copyright.html#License
+#
+#*****************************************************************************
+#*****************************************************************************
+#
+#   Copyright (C) 2002-2016, International Business Machines Corporation and others.
 #   All Rights Reserved.
 #
 #*****************************************************************************
@@ -19,6 +25,7 @@
 #     This file is processed by a perl script "rbbicst.pl" to produce initialized C arrays
 #     that are then built with the rule parser.
 #
+#    perl rbbicst.pl    < rbbirpt.txt > rbbirpt.h
 
 #
 # Here is the syntax of the state definitions in this file:
@@ -57,6 +64,7 @@
 start:
     escaped                term                  ^break-rule-end    doExprStart                       
     white_space          n start                     
+    '^'                  n start-after-caret     ^break-rule-end    doNoChain
     '$'                    scan-var-name         ^assign-or-rule    doExprStart
     '!'                  n rev-option                             
     ';'                  n start                                                  # ignore empty rules.
@@ -71,7 +79,21 @@ break-rule-end:
     white_space          n break-rule-end
     default                errorDeath                               doRuleError
      
-
+#
+# start of a rule, after having seen a '^' (inhibits rule chain in).
+#     Similar to the main 'start' state in most respects, except
+#          - empty rule is an error.
+#          - A second '^' is an error.
+#
+start-after-caret:
+    escaped                term                                     doExprStart
+    white_space          n start-after-caret
+    '^'                    errorDeath                               doRuleError    # two '^'s
+    '$'                    scan-var-name         ^term-var-ref      doExprStart
+    ';'                    errorDeath                               doRuleError    # ^ ;
+    eof                    errorDeath                               doRuleError
+    default                term                                     doExprStart
+ 
 #
 #   !               We've just scanned a '!', indicating either a !!key word flag or a
 #                   !Reverse rule.

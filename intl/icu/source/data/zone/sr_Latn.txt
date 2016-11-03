@@ -1,14 +1,8 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/sr_Latn.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 sr_Latn{
     %%Parent{"root"}
-    Version{"2.1.20.4"}
+    Version{"2.1.29.33"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidžan"}
@@ -185,7 +179,7 @@ sr_Latn{
             ec{"La Rioha"}
         }
         "America:Argentina:Rio_Gallegos"{
-            ec{"Rio Gelegos"}
+            ec{"Rio Galjegos"}
         }
         "America:Argentina:Salta"{
             ec{"Salta"}
@@ -309,6 +303,9 @@ sr_Latn{
         }
         "America:El_Salvador"{
             ec{"Salvador"}
+        }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
         }
         "America:Fortaleza"{
             ec{"Fortaleza"}
@@ -671,7 +668,10 @@ sr_Latn{
             ec{"Baku"}
         }
         "Asia:Bangkok"{
-            ec{"Bankok"}
+            ec{"Bangkok"}
+        }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
         }
         "Asia:Beirut"{
             ec{"Bejrut"}
@@ -680,7 +680,7 @@ sr_Latn{
             ec{"Biškek"}
         }
         "Asia:Brunei"{
-            ec{"Bruneji"}
+            ec{"Brunej"}
         }
         "Asia:Calcutta"{
             ec{"Kalkuta"}
@@ -716,7 +716,7 @@ sr_Latn{
             ec{"Hebron"}
         }
         "Asia:Hong_Kong"{
-            ec{"Hong Kong"}
+            ec{"Hongkong"}
         }
         "Asia:Hovd"{
             ec{"Hovd"}
@@ -850,6 +850,9 @@ sr_Latn{
         "Asia:Tokyo"{
             ec{"Tokio"}
         }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"Ulan Bator"}
         }
@@ -949,6 +952,9 @@ sr_Latn{
         "Europe:Andorra"{
             ec{"Andora"}
         }
+        "Europe:Astrakhan"{
+            ec{"Astrakan"}
+        }
         "Europe:Athens"{
             ec{"Atina"}
         }
@@ -1006,6 +1012,9 @@ sr_Latn{
         }
         "Europe:Kiev"{
             ec{"Kijev"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
         }
         "Europe:Lisbon"{
             ec{"Lisabon"}
@@ -1082,6 +1091,9 @@ sr_Latn{
         }
         "Europe:Tirane"{
             ec{"Tirana"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Uljanovsk"}
         }
         "Europe:Uzhgorod"{
             ec{"Užgorod"}
@@ -1301,24 +1313,24 @@ sr_Latn{
             ls{"Amazon standardno vreme"}
         }
         "meta:America_Central"{
-            ld{"Severnoamerički Centralno letnje računanje vremena"}
-            lg{"Severnoamerički Centralno vreme"}
-            ls{"Severnoamerički Centralno standardno vreme"}
+            ld{"Severnoameričko centralno letnje vreme"}
+            lg{"Severnoameričko centralno vreme"}
+            ls{"Severnoameričko centralno standardno vreme"}
         }
         "meta:America_Eastern"{
-            ld{"Severnoamerički Istočno letnje računanje vremena"}
-            lg{"Severnoamerički Istočno vreme"}
-            ls{"Severnoamerički Istočno standardno vreme"}
+            ld{"Severnoameričko istočno letnje vreme"}
+            lg{"Severnoameričko istočno vreme"}
+            ls{"Severnoameričko istočno standardno vreme"}
         }
         "meta:America_Mountain"{
-            ld{"Severnoamerički Planinsko letnje računanje vremena"}
-            lg{"Severnoamerički Planinsko vreme"}
-            ls{"Severnoamerički Planinsko standardno vreme"}
+            ld{"Severnoameričko planinsko letnje vreme"}
+            lg{"Severnoameričko planinsko vreme"}
+            ls{"Severnoameričko planinsko standardno vreme"}
         }
         "meta:America_Pacific"{
-            ld{"Severnoamerički Pacifičko letnje računanje vremena"}
-            lg{"Severnoamerički Pacifičko vreme"}
-            ls{"Severnoamerički Pacifičko standardno vreme"}
+            ld{"Severnoameričko pacifičko letnje vreme"}
+            lg{"Severnoameričko pacifičko vreme"}
+            ls{"Severnoameričko pacifičko standardno vreme"}
         }
         "meta:Anadyr"{
             ld{"Anadir letnje računanje vremena"}
@@ -1361,9 +1373,9 @@ sr_Latn{
             ls{"Jermenija standardno vreme"}
         }
         "meta:Atlantic"{
-            ld{"Atlansko ltnje računanje vremena"}
-            lg{"Atlansko vreme"}
-            ls{"Atlansko standardno vreme"}
+            ld{"Atlantsko letnje računanje vremena"}
+            lg{"Atlantsko vreme"}
+            ls{"Atlantsko standardno vreme"}
         }
         "meta:Australia_Central"{
             ld{"Australijsko centralno letnje računanje vremena"}
@@ -1638,7 +1650,7 @@ sr_Latn{
             ls{"Krasnojarsk standardno vreme"}
         }
         "meta:Kyrgystan"{
-            ls{"Kirgizstan vreme"}
+            ls{"Kirgistan vreme"}
         }
         "meta:Lanka"{
             ls{"Šri Lanka vreme"}
@@ -1686,7 +1698,7 @@ sr_Latn{
         }
         "meta:Mexico_Northwest"{
             ld{"Severozapadni Meksiko letnje računanje vremena"}
-            lg{"Severni Meksiko"}
+            lg{"Severozapadni Meksiko"}
             ls{"Severozapadni Meksiko standardno vreme"}
         }
         "meta:Mexico_Pacific"{
@@ -1792,6 +1804,9 @@ sr_Latn{
         "meta:Ponape"{
             ls{"Ponpej vreme"}
         }
+        "meta:Pyongyang"{
+            ls{"Pjongjanško vreme"}
+        }
         "meta:Qyzylorda"{
             ld{"Kizilorda letnje računanje vremena"}
             lg{"Kizilorda vreme"}
@@ -1840,9 +1855,9 @@ sr_Latn{
             ls{"Tahiti vreme"}
         }
         "meta:Taipei"{
-            ld{"Taipei letnje računanje vremena"}
-            lg{"Taipei vreme"}
-            ls{"Taipei standardno vreme"}
+            ld{"Tajpej letnje vreme"}
+            lg{"Tajpej vreme"}
+            ls{"Tajpej standardno vreme"}
         }
         "meta:Tajikistan"{
             ls{"Tadžikistan vreme"}
@@ -1916,8 +1931,8 @@ sr_Latn{
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
-        hourFormat{"+HHmm;-HHmm"}
-        regionFormat{"Vreme u zemlji: {0}"}
+        hourFormat{"+HH:mm;-HH:mm"}
+        regionFormat{"{0}"}
         regionFormatDaylight{"{0}, letnje vreme"}
         regionFormatStandard{"{0}, standardno vreme"}
     }

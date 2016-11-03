@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/de.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 de{
     Currencies{
         ADP{
@@ -224,9 +218,13 @@ de{
             "BYB",
             "Belarus-Rubel (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "Weißrussischer Rubel",
+        }
         BYR{
             "BYR",
-            "Weißrussischer Rubel",
+            "Weißrussischer Rubel (2000–2016)",
         }
         BZD{
             "BZD",
@@ -302,7 +300,7 @@ de{
         }
         CVE{
             "CVE",
-            "Kap-Verde-Escudo",
+            "Cabo-Verde-Escudo",
         }
         CYP{
             "CYP",
@@ -782,7 +780,7 @@ de{
         }
         PEN{
             "PEN",
-            "Peruanischer Neuer Sol",
+            "Peruanischer Sol",
         }
         PES{
             "PES",
@@ -1210,7 +1208,7 @@ de{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1228,6 +1226,7 @@ de{
         FJD{"$"}
         FKP{"Fl£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"F.G."}
         GTQ{"Q"}
@@ -1268,6 +1267,7 @@ de{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"L"}
         RUB{"₽"}
         RUR{"р."}
         RWF{"F.Rw"}
@@ -1514,9 +1514,13 @@ de{
             one{"Belarus-Rubel (1994–1999)"}
             other{"Belarus-Rubel (1994–1999)"}
         }
-        BYR{
+        BYN{
             one{"Weißrussischer Rubel"}
             other{"Weißrussische Rubel"}
+        }
+        BYR{
+            one{"Weißrussischer Rubel (2000–2016)"}
+            other{"Weißrussische Rubel (2000–2016)"}
         }
         BZD{
             one{"Belize-Dollar"}
@@ -1591,8 +1595,8 @@ de{
             other{"Kubanische Pesos"}
         }
         CVE{
-            one{"Kap-Verde-Escudo"}
-            other{"Kap-Verde-Escudos"}
+            one{"Cabo-Verde-Escudo"}
+            other{"Cabo-Verde-Escudos"}
         }
         CYP{
             one{"Zypern Pfund"}
@@ -2071,8 +2075,8 @@ de{
             other{"Peruanische Inti"}
         }
         PEN{
-            one{"Peruanischer Neuer Sol"}
-            other{"Peruanische Neue Sol"}
+            one{"Peruanischer Sol"}
+            other{"Peruanische Sol"}
         }
         PES{
             one{"Peruanischer Sol (1863–1965)"}
@@ -2491,5 +2495,5 @@ de{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.72"}
+    Version{"2.1.28.79"}
 }

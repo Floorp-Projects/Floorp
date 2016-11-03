@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/as.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 as{
     AuxExemplarCharacters{"[\u200C\u200D ৲]"}
     ExemplarCharacters{
@@ -24,10 +18,14 @@ as{
         }
         native{"beng"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.27.40"}
     calendar{
         gregorian{
             AmPmMarkers{
+                "পূৰ্বাহ্ণ",
+                "অপৰাহ্ণ",
+            }
+            AmPmMarkersAbbr{
                 "পূৰ্বাহ্ণ",
                 "অপৰাহ্ণ",
             }

@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/hi.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 hi{
     Currencies{
         AED{
@@ -104,9 +98,13 @@ hi{
             "BWP",
             "बोत्सवानियाई पुला",
         }
+        BYN{
+            "BYN",
+            "बेलारूसी रूबल",
+        }
         BYR{
             "BYR",
-            "बेलारूसी रूबल",
+            "बेलारूसी रूबल (2000–2016)",
         }
         BZD{
             "BZD",
@@ -742,7 +740,7 @@ hi{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -786,7 +784,7 @@ hi{
         MGA{"Ar"}
         MMK{"K"}
         MNT{"₮"}
-        MUR{"₨"}
+        MUR{"Rs"}
         MXN{"$"}
         MYR{"RM"}
         NAD{"$"}
@@ -796,7 +794,7 @@ hi{
         NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
-        PKR{"₨"}
+        PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
         RUB{"₽"}
@@ -920,9 +918,13 @@ hi{
             one{"बोत्सवानियाई पुला"}
             other{"बोत्सवानियाई पुला"}
         }
-        BYR{
+        BYN{
             one{"बेलारूसी रूबल"}
             other{"बेलारूसी रूबल"}
+        }
+        BYR{
+            one{"बेलारूसी रूबल (2000–2016)"}
+            other{"बेलारूसी रूबल (2000–2016)"}
         }
         BZD{
             one{"बेलीज़ डॉलर"}
@@ -1461,5 +1463,5 @@ hi{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.47"}
+    Version{"2.1.28.79"}
 }

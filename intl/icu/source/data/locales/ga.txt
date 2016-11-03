@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ga.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ga{
     AuxExemplarCharacters{"[å ḃ ċ ḋ ḟ ġ j k ṁ ṗ q ṡ ṫ v w x y z]"}
     Ellipsis{
@@ -311,8 +305,158 @@ ga{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
     calendar{
+        buddhist{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd/MM/y GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"E d"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E d MMM y G"}
+                GyMMMd{"d MMM y G"}
+                M{"LL"}
+                MEd{"E dd/MM"}
+                MMM{"LLL"}
+                MMMEd{"E d MMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                Md{"dd/MM"}
+                d{"d"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"MM/y GGGGG"}
+                yyyyMEd{"E dd/MM/y GGGGG"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E d MMM y G"}
+                yyyyMMMM{"MMMM y G"}
+                yyyyMMMd{"d MMM y G"}
+                yyyyMd{"dd/MM/y GGGGG"}
+                yyyyQQQ{"QQQ y G"}
+                yyyyQQQQ{"QQQQ y G"}
+            }
+            eras{
+                abbreviated{
+                    "RB",
+                }
+                narrow{
+                    "RB",
+                }
+                wide{
+                    "RB",
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH – HH"}
+                }
+                Hm{
+                    H{"HH:mm – HH:mm"}
+                    m{"HH:mm – HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm – HH:mm v"}
+                    m{"HH:mm – HH:mm v"}
+                }
+                Hv{
+                    H{"HH – HH v"}
+                }
+                M{
+                    M{"MM – MM"}
+                }
+                MEd{
+                    M{"E dd/MM – E dd/MM"}
+                    d{"E dd/MM – E dd/MM"}
+                }
+                MMM{
+                    M{"MMM – MMM"}
+                }
+                MMMEd{
+                    M{"E d MMM – E d MMM"}
+                    d{"E d MMM – E d MMM"}
+                }
+                MMMd{
+                    M{"d MMM – d MMM"}
+                    d{"d – d MMM"}
+                }
+                Md{
+                    M{"dd/MM – dd/MM"}
+                    d{"dd/MM – dd/MM"}
+                }
+                d{
+                    d{"d – d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h – h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm – h:mm a"}
+                    m{"h:mm – h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm – h:mm a v"}
+                    m{"h:mm – h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h – h a v"}
+                }
+                y{
+                    y{"y – y G"}
+                }
+                yM{
+                    M{"MM/y – MM/y GGGGG"}
+                    y{"MM/y – MM/y GGGGG"}
+                }
+                yMEd{
+                    M{"E dd/MM/y – E dd/MM/y GGGGG"}
+                    d{"E dd/MM/y – E dd/MM/y GGGGG"}
+                    y{"E dd/MM/y – E dd/MM/y GGGGG"}
+                }
+                yMMM{
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                yMMMEd{
+                    M{"E d MMM – E d MMM y G"}
+                    d{"E d MMM – E d MMM y G"}
+                    y{"E d MMM y – E d MMM y G"}
+                }
+                yMMMM{
+                    M{"MMMM – MMMM y G"}
+                    y{"MMMM y – MMMM y G"}
+                }
+                yMMMd{
+                    M{"d MMM – d MMM y G"}
+                    d{"d – d MMM y G"}
+                    y{"d MMM y – d MMM y G"}
+                }
+                yMd{
+                    M{"dd/MM/y – dd/MM/y GGGGG"}
+                    d{"dd/MM/y – dd/MM/y GGGGG"}
+                    y{"dd/MM/y – dd/MM/y GGGGG"}
+                }
+            }
+        }
         generic{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -340,6 +484,7 @@ ga{
                 MEd{"E dd/MM"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"dd/MM"}
                 d{"d"}
@@ -349,12 +494,27 @@ ga{
                 yyyyMEd{"E dd/MM/y GGGGG"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E d MMM y G"}
+                yyyyMMMM{"MMMM y G"}
                 yyyyMMMd{"d MMM y G"}
                 yyyyMd{"dd/MM/y GGGGG"}
                 yyyyQQQ{"QQQ y G"}
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                H{
+                    H{"HH – HH"}
+                }
+                Hm{
+                    H{"HH:mm – HH:mm"}
+                    m{"HH:mm – HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm – HH:mm v"}
+                    m{"HH:mm – HH:mm v"}
+                }
+                Hv{
+                    H{"HH – HH v"}
+                }
                 M{
                     M{"MM – MM"}
                 }
@@ -381,6 +541,24 @@ ga{
                     d{"d – d"}
                 }
                 fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm – h:mm a"}
+                    m{"h:mm – h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm – h:mm a v"}
+                    m{"h:mm – h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h – h a v"}
+                }
                 y{
                     y{"y – y G"}
                 }
@@ -469,6 +647,13 @@ ga{
                 MEd{"E dd/MM"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
+                MMMMW{
+                    few{"'seachtain' 'a' W 'i' MMM"}
+                    many{"'seachtain' 'a' W 'i' MMM"}
+                    one{"'seachtain' 'a' W 'i' MMM"}
+                    other{"'seachtain' 'a' W 'i' MMM"}
+                    two{"'seachtain' 'a' W 'i' MMM"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"dd/MM"}
@@ -489,6 +674,13 @@ ga{
                 yMd{"dd/MM/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    few{"'seachtain' 'a' w 'i' y"}
+                    many{"'seachtain' 'a' w 'i' y"}
+                    one{"'seachtain' 'a' w 'i' y"}
+                    other{"'seachtain' 'a' w 'i' y"}
+                    two{"'seachtain' 'a' w 'i' y"}
+                }
             }
             dayNames{
                 format{
@@ -839,6 +1031,94 @@ ga{
             }
         }
     }
+    characterLabel{
+        activities{"Gníomhaíochtaí"}
+        african_scripts{"Scripteanna na hAfraice"}
+        american_scripts{"Scripteanna Meiriceánacha"}
+        animal{"ainmhí"}
+        animals_nature{"Ainmhithe agus an Nádúr"}
+        arrows{"Saighde"}
+        body{"corp"}
+        box_drawing{"Líníocht Boscaí"}
+        braille{"Braille"}
+        building{"foirgneamh"}
+        bullets_stars{"Urchair/Réaltaí"}
+        consonantal_jamo{"Seamó Consanta"}
+        currency_symbols{"Siombailí Airgeadra"}
+        dash_connector{"Dais/Nascóir"}
+        digits{"Digití"}
+        dingbats{"Smísteoga"}
+        divination_symbols{"Siombailí na Fáistine"}
+        downwards_arrows{"Saighde Síos"}
+        downwards_upwards_arrows{"Saighde Síos Suas"}
+        east_asian_scripts{"Scripteanna na hÁise Thoir"}
+        emoji{"Emoji"}
+        european_scripts{"Scripteanna na hEorpa"}
+        female{"baineann"}
+        flag{"bratach"}
+        flags{"Bratacha"}
+        food_drink{"Bia agus Deoch"}
+        format{"Formáid"}
+        format_whitespace{"Formáid agus Spás Bán"}
+        full_width_form_variant{"Foirmeacha Malartacha Lánleithid"}
+        geometric_shapes{"Cruthanna Geoiméadracha"}
+        half_width_form_variant{"Foirmeacha Malartacha Leathleithid"}
+        han_characters{"Carachtair Han"}
+        han_radicals{"Fréamhacha Han"}
+        hanja{"Hanaí"}
+        hanzi_simplified{"Hansaí (Simplithe)"}
+        hanzi_traditional{"Hansaí (Traidisiúnta)"}
+        heart{"croí"}
+        historic_scripts{"Scripteanna Stairiúla"}
+        ideographic_desc_characters{"Carachtair Thuairiscithe Idéagrafacha"}
+        japanese_kana{"Kana Seapánach"}
+        kanbun{"Kanbun"}
+        kanji{"Ceansaí"}
+        keycap{"eochair caidhpe"}
+        leftwards_arrows{"Saighde Clé"}
+        leftwards_rightwards_arrows{"Saighde Clé-Deas"}
+        letterlike_symbols{"Siombailí Cosúil le Litreacha"}
+        limited_use{"Neamhfhorleathan"}
+        male{"fearann"}
+        math_symbols{"Siombailí Matamaiticiúla"}
+        middle_eastern_scripts{"Scripteanna an Mheánoirthir"}
+        miscellaneous{"Éagsúil"}
+        modern_scripts{"Scripteanna Nua-Aimseartha"}
+        modifier{"Mionathraitheoir"}
+        musical_symbols{"Siombailí Ceoil"}
+        nature{"nádúr"}
+        nonspacing{"Neamhspásáilte"}
+        numbers{"Uimhreacha"}
+        objects{"Nithe"}
+        other{"Eile"}
+        paired{"Péireáilte"}
+        person{"duine"}
+        phonetic_alphabet{"Aibítir Foghraíochta"}
+        pictographs{"Picteagraif"}
+        place{"áit"}
+        plant{"planda"}
+        punctuation{"Poncaíocht"}
+        rightwards_arrows{"Saighde Deasa"}
+        sign_standard_symbols{"Comharthaí/Siombailí Coitianta"}
+        small_form_variant{"Foirmeacha Beaga Malartacha"}
+        smiley{"aghaidh"}
+        smileys_people{"Straoiseoga agus Daoine"}
+        south_asian_scripts{"Scripteanna na hÁise Theas"}
+        southeast_asian_scripts{"Scripteanna na hÁise Thoir Theas"}
+        spacing{"Spásáil"}
+        sport{"spórt"}
+        symbols{"Siombailí"}
+        technical_symbols{"Siombailí Teicniúla"}
+        tone_marks{"Comharthaí Toin"}
+        travel{"taisteal"}
+        travel_places{"Taisteal agus Áiteanna"}
+        upwards_arrows{"Saighde Suas"}
+        variant_forms{"Foirmeacha Malartacha"}
+        vocalic_jamo{"Seamó Guthach"}
+        weather{"aimsir"}
+        western_asian_scripts{"Scripteanna na hÁise Thiar"}
+        whitespace{"Spás Bán"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -875,7 +1155,10 @@ ga{
         day-narrow{
             dn{"Lá"}
             relative{
+                "-1"{"inné"}
                 "-2"{"arú inné"}
+                "0"{"inniu"}
+                "1"{"amárach"}
                 "2"{"arú amárach"}
             }
             relativeTime{
@@ -898,7 +1181,10 @@ ga{
         day-short{
             dn{"Lá"}
             relative{
+                "-1"{"inné"}
                 "-2"{"arú inné"}
+                "0"{"inniu"}
+                "1"{"amárach"}
                 "2"{"arú amárach"}
             }
             relativeTime{
@@ -930,12 +1216,44 @@ ga{
                 "0"{"an Aoine seo"}
                 "1"{"an Aoine seo chugainn"}
             }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Aoine"}
+                    many{"{0} seachtaine ón Aoine"}
+                    one{"{0} seachtain ón Aoine"}
+                    other{"{0} seachtain ón Aoine"}
+                    two{"{0} sheachtain ón Aoine"}
+                }
+                past{
+                    few{"Dé hAoine {0} seachtaine ó shin"}
+                    many{"Dé hAoine {0} seachtaine ó shin"}
+                    one{"Dé hAoine {0} seachtain ó shin"}
+                    other{"Dé hAoine {0} seachtain ó shin"}
+                    two{"Dé hAoine {0} sheachtain ó shin"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"an Aoine seo caite"}
                 "0"{"an Aoine seo"}
                 "1"{"an Aoine seo chug."}
+            }
+            relativeTime{
+                future{
+                    few{"+{0} Aoine"}
+                    many{"+{0} Aoine"}
+                    one{"+{0} Aoine"}
+                    other{"+{0} Aoine"}
+                    two{"+{0} Aoine"}
+                }
+                past{
+                    few{"{0} Aoine ó shin"}
+                    many{"{0} Aoine ó shin"}
+                    one{"{0} Aoine ó shin"}
+                    other{"{0} Aoine ó shin"}
+                    two{"{0} Aoine ó shin"}
+                }
             }
         }
         fri-short{
@@ -944,9 +1262,28 @@ ga{
                 "0"{"an Aoine seo"}
                 "1"{"an Aoine seo chugainn"}
             }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Aoine"}
+                    many{"{0} seachtaine ón Aoine"}
+                    one{"{0} seachtain ón Aoine"}
+                    other{"{0} seachtain ón Aoine"}
+                    two{"{0} sheachtain ón Aoine"}
+                }
+                past{
+                    few{"Dé hAoine {0} seachtaine ó shin"}
+                    many{"Dé hAoine {0} seachtaine ó shin"}
+                    one{"Dé hAoine {0} seachtain ó shin"}
+                    other{"Dé hAoine {0} seachtain ó shin"}
+                    two{"Dé hAoine {0} sheachtain ó shin"}
+                }
+            }
         }
         hour{
             dn{"Uair"}
+            relative{
+                "0"{"an uair seo"}
+            }
             relativeTime{
                 future{
                     few{"i gceann {0} huaire an chloig"}
@@ -966,6 +1303,9 @@ ga{
         }
         hour-narrow{
             dn{"u"}
+            relative{
+                "0"{"an uair seo"}
+            }
             relativeTime{
                 future{
                     few{"+{0} u"}
@@ -985,6 +1325,9 @@ ga{
         }
         hour-short{
             dn{"uair"}
+            relative{
+                "0"{"an uair seo"}
+            }
             relativeTime{
                 future{
                     few{"i gceann {0} huaire"}
@@ -1004,6 +1347,9 @@ ga{
         }
         minute{
             dn{"Nóiméad"}
+            relative{
+                "0"{"an nóiméad seo"}
+            }
             relativeTime{
                 future{
                     few{"i gceann {0} nóiméad"}
@@ -1023,6 +1369,9 @@ ga{
         }
         minute-narrow{
             dn{"n"}
+            relative{
+                "0"{"an nóiméad seo"}
+            }
             relativeTime{
                 future{
                     few{"+{0} n"}
@@ -1042,6 +1391,9 @@ ga{
         }
         minute-short{
             dn{"nóim."}
+            relative{
+                "0"{"an nóiméad seo"}
+            }
             relativeTime{
                 future{
                     few{"i gceann {0} nóim."}
@@ -1065,6 +1417,22 @@ ga{
                 "0"{"an Luan seo"}
                 "1"{"an Luan seo chugainn"}
             }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Luan"}
+                    many{"{0} seachtaine ón Luan"}
+                    one{"{0} seachtain ón Luan"}
+                    other{"{0} seachtain ón Luan"}
+                    two{"{0} sheachtain ón Luan"}
+                }
+                past{
+                    few{"Dé Luain {0} seachtaine ó shin"}
+                    many{"Dé Luain {0} seachtaine ó shin"}
+                    one{"Dé Luain {0} seachtain ó shin"}
+                    other{"Dé Luain {0} seachtain ó shin"}
+                    two{"Dé Luain {0} sheachtain ó shin"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -1072,12 +1440,44 @@ ga{
                 "0"{"an Luan seo"}
                 "1"{"an Luan seo chug."}
             }
+            relativeTime{
+                future{
+                    few{"+{0} Luan"}
+                    many{"+{0} Luan"}
+                    one{"+{0} Luan"}
+                    other{"+{0} Luan"}
+                    two{"+{0} Luan"}
+                }
+                past{
+                    few{"{0} Luan ó shin"}
+                    many{"{0} Luan ó shin"}
+                    one{"{0} Luan ó shin"}
+                    other{"{0} Luan ó shin"}
+                    two{"{0} Luan ó shin"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"an Luan seo caite"}
                 "0"{"an Luan seo"}
                 "1"{"an Luan seo chugainn"}
+            }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Luan"}
+                    many{"{0} seachtaine ón Luan"}
+                    one{"{0} seachtain ón Luan"}
+                    other{"{0} seachtain ón Luan"}
+                    two{"{0} sheachtain ón Luan"}
+                }
+                past{
+                    few{"Dé Luain {0} seachtaine ó shin"}
+                    many{"Dé Luain {0} seachtaine ó shin"}
+                    one{"Dé Luain {0} seachtain ó shin"}
+                    other{"Dé Luain {0} seachtain ó shin"}
+                    two{"Dé Luain {0} sheachtain ó shin"}
+                }
             }
         }
         month{
@@ -1230,6 +1630,22 @@ ga{
                 "0"{"an Satharn seo"}
                 "1"{"an Satharn seo chugainn"}
             }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Satharn"}
+                    many{"{0} seachtaine ón Satharn"}
+                    one{"{0} seachtain ón Satharn"}
+                    other{"{0} seachtain ón Satharn"}
+                    two{"{0} sheachtain ón Satharn"}
+                }
+                past{
+                    few{"Dé Sathairn {0} seachtaine ó shin"}
+                    many{"Dé Sathairn {0} seachtaine ó shin"}
+                    one{"Dé Sathairn {0} seachtain ó shin"}
+                    other{"Dé Sathairn {0} seachtain ó shin"}
+                    two{"Dé Sathairn {0} sheachtain ó shin"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1237,12 +1653,44 @@ ga{
                 "0"{"an Sath seo"}
                 "1"{"an Sath seo chug."}
             }
+            relativeTime{
+                future{
+                    few{"+{0} Shatharn"}
+                    many{"+{0} Satharn"}
+                    one{"+{0} Satharn"}
+                    other{"+{0} Satharn"}
+                    two{"+{0} Shatharn"}
+                }
+                past{
+                    few{"{0} Shatharn ó shin"}
+                    many{"{0} Satharn ó shin"}
+                    one{"{0} Satharn ó shin"}
+                    other{"{0} Satharn ó shin"}
+                    two{"{0} Shatharn ó shin"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"an Sath. seo caite"}
                 "0"{"an Sath. seo"}
                 "1"{"an Sath. seo chugainn"}
+            }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Satharn"}
+                    many{"{0} seachtaine ón Satharn"}
+                    one{"{0} seachtain ón Satharn"}
+                    other{"{0} seachtain ón Satharn"}
+                    two{"{0} sheachtain ón Satharn"}
+                }
+                past{
+                    few{"Dé Sathairn {0} seachtaine ó shin"}
+                    many{"Dé Sathairn {0} seachtaine ó shin"}
+                    one{"Dé Sathairn {0} seachtain ó shin"}
+                    other{"Dé Sathairn {0} seachtain ó shin"}
+                    two{"Dé Sathairn {0} sheachtain ó shin"}
+                }
             }
         }
         second{
@@ -1317,12 +1765,44 @@ ga{
                 "0"{"an Domhnach seo"}
                 "1"{"an Domhnach seo chugainn"}
             }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Domhnach"}
+                    many{"{0} seachtaine ón Domhnach"}
+                    one{"{0} seachtain ón Domhnach"}
+                    other{"{0} seachtain ón Domhnach"}
+                    two{"{0} sheachtain ón Domhnach"}
+                }
+                past{
+                    few{"Dé Domhnaigh {0} seachtaine ó shin"}
+                    many{"Dé Domhnaigh {0} seachtaine ó shin"}
+                    one{"Dé Domhnaigh {0} seachtain ó shin"}
+                    other{"Dé Domhnaigh {0} seachtain ó shin"}
+                    two{"Dé Domhnaigh {0} sheachtain ó shin"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"an Domh seo caite"}
                 "0"{"an Domh seo"}
                 "1"{"an Domh seo chug."}
+            }
+            relativeTime{
+                future{
+                    few{"+{0} Dhomh."}
+                    many{"+{0} nDomh."}
+                    one{"+{0} Domh."}
+                    other{"+{0} Domh."}
+                    two{"+{0} Dhomh."}
+                }
+                past{
+                    few{"{0} Dhomh. ó shin"}
+                    many{"{0} nDomh. ó shin"}
+                    one{"{0} Domh. ó shin"}
+                    other{"{0} Domh. ó shin"}
+                    two{"{0} Dhomh. ó shin"}
+                }
             }
         }
         sun-short{
@@ -1331,12 +1811,44 @@ ga{
                 "0"{"an Domh. seo"}
                 "1"{"an Domh. seo chugainn"}
             }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Domh."}
+                    many{"{0} seachtaine ón Domh."}
+                    one{"{0} seachtain ón Domh."}
+                    other{"{0} seachtain ón Domh."}
+                    two{"{0} sheachtain ón Domh."}
+                }
+                past{
+                    few{"Dé Domh. {0} seachtaine ó shin"}
+                    many{"Dé Domh. {0} seachtaine ó shin"}
+                    one{"Dé Domh. {0} seachtain ó shin"}
+                    other{"Dé Domh. {0} seachtain ó shin"}
+                    two{"Dé Domh. {0} sheachtain ó shin"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"an Déardaoin seo caite"}
                 "0"{"an Déardaoin seo"}
                 "1"{"an Déardaoin seo chugainn"}
+            }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Déardaoin"}
+                    many{"{0} seachtaine ón Déardaoin"}
+                    one{"{0} seachtain ón Déardaoin"}
+                    other{"{0} seachtain ón Déardaoin"}
+                    two{"{0} sheachtain ón Déardaoin"}
+                }
+                past{
+                    few{"Déardaoin {0} seachtaine ó shin"}
+                    many{"Déardaoin {0} seachtaine ó shin"}
+                    one{"Déardaoin {0} seachtain ó shin"}
+                    other{"Déardaoin {0} seachtain ó shin"}
+                    two{"Déardaoin {0} sheachtain ó shin"}
+                }
             }
         }
         thu-narrow{
@@ -1345,12 +1857,44 @@ ga{
                 "0"{"an Déar. seo"}
                 "1"{"an Déar. seo chug."}
             }
+            relativeTime{
+                future{
+                    few{"+{0} Dhéardaoin"}
+                    many{"+{0} nDéardaoin"}
+                    one{"+{0} Déardaoin"}
+                    other{"+{0} Déardaoin"}
+                    two{"+{0} Dhéardaoin"}
+                }
+                past{
+                    few{"{0} Dhéardaoin ó shin"}
+                    many{"{0} nDéardaoin ó shin"}
+                    one{"{0} Déardaoin ó shin"}
+                    other{"{0} Déardaoin ó shin"}
+                    two{"{0} Dhéardaoin ó shin"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"an Déar. seo caite"}
                 "0"{"an Déar. seo"}
                 "1"{"an Déar. seo chugainn"}
+            }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Déardaoin"}
+                    many{"{0} seachtaine ón Déardaoin"}
+                    one{"{0} seachtain ón Déardaoin"}
+                    other{"{0} seachtain ón Déardaoin"}
+                    two{"{0} sheachtain ón Déardaoin"}
+                }
+                past{
+                    few{"Déardaoin {0} seachtaine ó shin"}
+                    many{"Déardaoin {0} seachtaine ó shin"}
+                    one{"Déardaoin {0} seachtain ó shin"}
+                    other{"Déardaoin {0} seachtain ó shin"}
+                    two{"Déardaoin {0} sheachtain ó shin"}
+                }
             }
         }
         tue{
@@ -1359,12 +1903,44 @@ ga{
                 "0"{"an Mháirt seo"}
                 "1"{"an Mháirt seo chugainn"}
             }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Máirt"}
+                    many{"{0} seachtaine ón Máirt"}
+                    one{"{0} seachtain ón Máirt"}
+                    other{"{0} seachtain ón Máirt"}
+                    two{"{0} sheachtain ón Máirt"}
+                }
+                past{
+                    few{"Dé Máirt {0} seachtaine ó shin"}
+                    many{"Dé Máirt {0} seachtaine ó shin"}
+                    one{"Dé Máirt {0} seachtain ó shin"}
+                    other{"Dé Máirt {0} seachtain ó shin"}
+                    two{"Dé Máirt {0} sheachtain ó shin"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"an Mháirt seo caite"}
                 "0"{"an Mháirt seo"}
                 "1"{"an Mháirt seo chug."}
+            }
+            relativeTime{
+                future{
+                    few{"+{0} Mháirt"}
+                    many{"+{0} Máirt"}
+                    one{"+{0} Mháirt"}
+                    other{"+{0} Máirt"}
+                    two{"+{0} Mháirt"}
+                }
+                past{
+                    few{"{0} Mháirt ó shin"}
+                    many{"{0} Máirt ó shin"}
+                    one{"{0} Mháirt ó shin"}
+                    other{"{0} Máirt ó shin"}
+                    two{"{0} Mháirt ó shin"}
+                }
             }
         }
         tue-short{
@@ -1373,12 +1949,44 @@ ga{
                 "0"{"an Mháirt seo"}
                 "1"{"an Mháirt seo chugainn"}
             }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Máirt"}
+                    many{"{0} seachtaine ón Máirt"}
+                    one{"{0} seachtain ón Máirt"}
+                    other{"{0} seachtain ón Máirt"}
+                    two{"{0} sheachtain ón Máirt"}
+                }
+                past{
+                    few{"Dé Máirt {0} seachtaine ó shin"}
+                    many{"Dé Máirt {0} seachtaine ó shin"}
+                    one{"Dé Máirt {0} seachtain ó shin"}
+                    other{"Dé Máirt {0} seachtain ó shin"}
+                    two{"Dé Máirt {0} sheachtain ó shin"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"an Chéadaoin seo caite"}
                 "0"{"an Chéadaoin seo"}
                 "1"{"an Chéadaoin seo chugainn"}
+            }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Chéadaoin"}
+                    many{"{0} seachtaine ón Chéadaoin"}
+                    one{"{0} seachtain ón Chéadaoin"}
+                    other{"{0} seachtain ón Chéadaoin"}
+                    two{"{0} sheachtain ón Chéadaoin"}
+                }
+                past{
+                    few{"Dé Céadaoin {0} seachtaine ó shin"}
+                    many{"Dé Céadaoin {0} seachtaine ó shin"}
+                    one{"Dé Céadaoin {0} seachtain ó shin"}
+                    other{"Dé Céadaoin {0} seachtain ó shin"}
+                    two{"Dé Céadaoin {0} sheachtain ó shin"}
+                }
             }
         }
         wed-narrow{
@@ -1387,12 +1995,44 @@ ga{
                 "0"{"an Chéad. seo"}
                 "1"{"an Chéad seo chug."}
             }
+            relativeTime{
+                future{
+                    few{"+{0} Chéadaoin"}
+                    many{"+{0} gCéadaoin"}
+                    one{"+{0} Chéadaoin"}
+                    other{"+{0} Céadaoin"}
+                    two{"+{0} Chéadaoin"}
+                }
+                past{
+                    few{"{0} Chéadaoin ó shin"}
+                    many{"{0} gCéadaoin ó shin"}
+                    one{"{0} Chéadaoin ó shin"}
+                    other{"{0} Céadaoin ó shin"}
+                    two{"{0} Chéadaoin ó shin"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"an Chéad. seo caite"}
                 "0"{"an Chéad. seo"}
                 "1"{"an Chéad. seo chugainn"}
+            }
+            relativeTime{
+                future{
+                    few{"{0} seachtaine ón Chéadaoin"}
+                    many{"{0} seachtaine ón Chéadaoin"}
+                    one{"{0} seachtain ón Chéadaoin"}
+                    other{"{0} seachtain ón Chéadaoin"}
+                    two{"{0} sheachtain ón Chéadaoin"}
+                }
+                past{
+                    few{"Dé Céadaoin {0} seachtaine ó shin"}
+                    many{"Dé Céadaoin {0} seachtaine ó shin"}
+                    one{"Dé Céadaoin {0} seachtain ó shin"}
+                    other{"Dé Céadaoin {0} seachtain ó shin"}
+                    two{"Dé Céadaoin {0} sheachtain ó shin"}
+                }
             }
         }
         week{
@@ -1402,6 +2042,7 @@ ga{
                 "0"{"an tseachtain seo"}
                 "1"{"an tseachtain seo chugainn"}
             }
+            relativePeriod{"seachtain {0}"}
             relativeTime{
                 future{
                     few{"i gceann {0} seachtaine"}
@@ -1426,6 +2067,7 @@ ga{
                 "0"{"an tscht. seo"}
                 "1"{"an tscht. seo chugainn"}
             }
+            relativePeriod{"seachtain {0}"}
             relativeTime{
                 future{
                     few{"+{0} scht."}
@@ -1450,6 +2092,7 @@ ga{
                 "0"{"an tscht. seo"}
                 "1"{"an tscht. seo chugainn"}
             }
+            relativePeriod{"seachtain {0}"}
             relativeTime{
                 future{
                     few{"i gceann {0} scht."}
@@ -1548,6 +2191,12 @@ ga{
     }
     listPattern{
         standard{
+            2{"{0} agus {1}"}
+            end{"{0}, agus {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
             2{"{0} agus {1}"}
             end{"{0}, agus {1}"}
             middle{"{0}, {1}"}

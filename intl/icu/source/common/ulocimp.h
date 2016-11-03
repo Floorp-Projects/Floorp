@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 2004-2014, International Business Machines
+*   Copyright (C) 2004-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 */
@@ -58,6 +60,35 @@ U_CFUNC int32_t
 ulocimp_getCountry(const char *localeID,
                    char *country, int32_t countryCapacity,
                    const char **pEnd);
+
+/**
+ * Get the region to use for supplemental data lookup. Uses
+ * (1) any region specified by locale tag "rg"; if none then
+ * (2) any unicode_region_tag in the locale ID; if none then
+ * (3) if inferRegion is TRUE, the region suggested by
+ * getLikelySubtags on the localeID.
+ * If no region is found, returns length 0.
+ * 
+ * @param localeID
+ *     The complete locale ID (with keywords) from which
+ *     to get the region to use for supplemental data.
+ * @param inferRegion
+ *     If TRUE, will try to infer region from localeID if
+ *     no other region is found.
+ * @param region
+ *     Buffer in which to put the region ID found; should
+ *     have a capacity at least ULOC_COUNTRY_CAPACITY. 
+ * @param regionCapacity
+ *     The actual capacity of the region buffer.
+ * @param status
+ *     Pointer to in/out UErrorCode value for latest status.
+ * @return
+ *     The length of any region code found, or 0 if none.
+ * @internal ICU 57
+ */
+U_CAPI int32_t U_EXPORT2
+ulocimp_getRegionForSupplementalData(const char *localeID, UBool inferRegion,
+                                     char *region, int32_t regionCapacity, UErrorCode* status);
 
 U_CAPI const char * U_EXPORT2
 locale_getKeywordsStart(const char *localeID);

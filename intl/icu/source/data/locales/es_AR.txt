@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/es_AR.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 es_AR{
     %%Parent{"es_419"}
     NumberElements{
@@ -19,8 +13,9 @@ es_AR{
                 group{"."}
             }
         }
+        minimumGroupingDigits{"2"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.27.99"}
     calendar{
         generic{
             availableFormats{
@@ -29,15 +24,40 @@ es_AR{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "a. m.",
+                "p. m.",
+            }
+            AmPmMarkersAbbr{
+                "a. m.",
+                "p. m.",
+            }
             availableFormats{
                 GyMMMEd{"E, d 'de' MMM 'de' y G"}
+                GyMMMd{"d MMM y G"}
                 Hmsv{"HH:mm:ss v"}
+                Hmsvvvv{"HH:mm:ss (vvvv)"}
                 Hmv{"HH:mm v"}
                 MEd{"E d-M"}
                 hms{"hh:mm:ss"}
                 yM{"M-y"}
                 yMEd{"E, d/M/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, d MMM y"}
                 yMMMd{"d 'de' MMM 'de' y"}
+            }
+            dayNames{
+                format{
+                    narrow{
+                        "D",
+                        "L",
+                        "M",
+                        "M",
+                        "J",
+                        "V",
+                        "S",
+                    }
+                }
             }
             dayPeriod{
                 format{
@@ -57,16 +77,25 @@ es_AR{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
                     narrow{
-                        evening1{"tarde"}
+                        am{"a. m."}
                         noon{"m."}
+                        pm{"p. m."}
                     }
                     wide{
-                        evening1{"tarde"}
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                 }
             }
             intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
                 Hm{
                     H{"HH:mm–HH:mm"}
                     m{"HH:mm–HH:mm"}
@@ -95,6 +124,19 @@ es_AR{
                     d{"dd/MM – dd/MM"}
                 }
                 fallback{"{0} a el {1}"}
+                h{
+                    a{"h a – h a"}
+                }
+                hm{
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                }
                 yM{
                     M{"MM/y – MM/y"}
                     y{"MM/y – MM/y"}
@@ -152,6 +194,9 @@ es_AR{
                     other{"hace {0} días"}
                 }
             }
+        }
+        dayperiod{
+            dn{"a. m./p. m."}
         }
         second-narrow{
             dn{"seg."}

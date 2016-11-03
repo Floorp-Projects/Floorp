@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 1997-2015, International Business Machines
+*   Copyright (C) 1997-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *
@@ -348,10 +350,14 @@ typedef enum {
    *  @deprecated ICU 2.8 
    */
   ULOC_REQUESTED_LOCALE = 2,
-#endif /* U_HIDE_DEPRECATED_API */
 
-  ULOC_DATA_LOCALE_TYPE_LIMIT = 3
-} ULocDataLocaleType ;
+    /**
+     * One more than the highest normal ULocDataLocaleType value.
+     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
+     */
+    ULOC_DATA_LOCALE_TYPE_LIMIT = 3
+#endif  // U_HIDE_DEPRECATED_API
+} ULocDataLocaleType;
 
 #ifndef U_HIDE_SYSTEM_API
 /**
@@ -588,6 +594,8 @@ uloc_getDisplayScript(const char* locale,
 
 /**
  * Gets the country name suitable for display for the specified locale.
+ * Warning: this is for the region part of a valid locale ID; it cannot just be the region code (like "FR").
+ * To get the display name for a region alone, or for other options, use ULocaleDisplayNames instead.
  *
  * @param locale the locale to get the displayable country code with. NULL may be used to specify the default.
  * @param displayLocale Specifies the locale to be used to display the name.  In other words,

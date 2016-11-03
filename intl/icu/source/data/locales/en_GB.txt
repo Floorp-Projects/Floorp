@@ -1,14 +1,8 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/en_GB.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 en_GB{
     %%Parent{"en_001"}
-    Version{"2.1.19.79"}
+    Version{"2.1.29.24"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -34,23 +28,15 @@ en_GB{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            availableFormats{
+                MEd{"E dd/MM"}
+                MMMEd{"E d MMM"}
+            }
             dayPeriod{
-                format{
-                    abbreviated{
-                        noon{"noon"}
-                    }
-                    narrow{
-                        noon{"n"}
-                    }
-                    wide{
-                        noon{"noon"}
-                    }
-                }
                 stand-alone{
-                    narrow{
-                        am{"a"}
-                        noon{"n"}
-                        pm{"p"}
+                    abbreviated{
+                        am{"am"}
+                        pm{"pm"}
                     }
                     wide{
                         am{"am"}
@@ -59,185 +45,18 @@ en_GB{
                 }
             }
         }
-    }
-    fields{
-        dayperiod{
-            dn{"am/pm"}
-        }
-        hour-narrow{
-            relativeTime{
-                future{
-                    one{"in {0} hr"}
-                    other{"in {0} hr"}
-                }
-                past{
-                    one{"{0} hr ago"}
-                    other{"{0} hr ago"}
-                }
-            }
-        }
-        hour-short{
-            dn{"hr"}
-            relativeTime{
-                future{
-                    one{"in {0} hr"}
-                    other{"in {0} hr"}
-                }
-                past{
-                    one{"{0} hr ago"}
-                    other{"{0} hr ago"}
-                }
-            }
-        }
-        minute-narrow{
-            relativeTime{
-                future{
-                    one{"in {0} min"}
-                    other{"in {0} min"}
-                }
-                past{
-                    one{"{0} min ago"}
-                    other{"{0} min ago"}
-                }
-            }
-        }
-        minute-short{
-            dn{"min"}
-            relativeTime{
-                future{
-                    one{"in {0} min"}
-                    other{"in {0} min"}
-                }
-                past{
-                    one{"{0} min ago"}
-                    other{"{0} min ago"}
-                }
-            }
-        }
-        month-narrow{
-            dn{"mo"}
-            relativeTime{
-                future{
-                    one{"in {0} mo"}
-                }
-                past{
-                    one{"{0} mo ago"}
-                }
-            }
-        }
-        month-short{
-            dn{"mo"}
-            relativeTime{
-                future{
-                    one{"in {0} mo"}
-                    other{"in {0} mo"}
-                }
-                past{
-                    one{"{0} mo ago"}
-                    other{"{0} mo ago"}
-                }
-            }
-        }
-        quarter-narrow{
-            dn{"qtr"}
-            relativeTime{
-                future{
-                    one{"in {0} qtr"}
-                }
-                past{
-                    one{"{0} qtr ago"}
-                }
-            }
-        }
-        quarter-short{
-            dn{"qtr"}
-            relativeTime{
-                future{
-                    one{"in {0} qtr"}
-                    other{"in {0} qtr"}
-                }
-                past{
-                    one{"{0} qtr ago"}
-                    other{"{0} qtr ago"}
-                }
-            }
-        }
-        second-narrow{
-            relativeTime{
-                future{
-                    one{"in {0} sec"}
-                    other{"in {0} sec"}
-                }
-                past{
-                    one{"{0} sec ago"}
-                    other{"{0} sec ago"}
-                }
-            }
-        }
-        second-short{
-            dn{"sec"}
-            relativeTime{
-                future{
-                    one{"in {0} sec"}
-                    other{"in {0} sec"}
-                }
-                past{
-                    one{"{0} sec ago"}
-                    other{"{0} sec ago"}
-                }
-            }
-        }
-        week-narrow{
-            dn{"wk"}
-            relativeTime{
-                future{
-                    one{"in {0} wk"}
-                }
-                past{
-                    one{"{0} wk ago"}
-                    other{"{0} wk ago"}
-                }
-            }
-        }
-        week-short{
-            dn{"wk"}
-            relativeTime{
-                future{
-                    one{"in {0} wk"}
-                    other{"in {0} wk"}
-                }
-                past{
-                    one{"{0} wk ago"}
-                    other{"{0} wk ago"}
-                }
-            }
-        }
-        year-narrow{
-            relativeTime{
-                future{
-                    one{"in {0} yr"}
-                }
-                past{
-                    one{"{0} yr ago"}
-                }
-            }
-        }
-        year-short{
-            dn{"yr"}
-            relativeTime{
-                future{
-                    one{"in {0} yr"}
-                    other{"in {0} yr"}
-                }
-                past{
-                    one{"{0} yr ago"}
-                    other{"{0} yr ago"}
-                }
+        islamic{
+            availableFormats{
+                MEd{"E dd/MM"}
+                MMMEd{"E d MMM"}
             }
         }
     }
     listPattern{
         standard{
+            end{"{0} and {1}"}
+        }
+        standard-short{
             end{"{0} and {1}"}
         }
     }

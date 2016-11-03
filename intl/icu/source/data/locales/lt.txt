@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/lt.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 lt{
     AuxExemplarCharacters{
         "[á à ã {ą\u0301} {ą\u0303} {ch} {dz} {dž} é è ẽ {ę\u0301} {ę\u0303} {ė\u0301"
@@ -284,7 +278,7 @@ lt{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.79"}
     calendar{
         buddhist{
             eras{
@@ -1412,6 +1406,12 @@ lt{
                 MMMEd{"MM-dd, E"}
                 MMMM{"LLLL"}
                 MMMMEd{"MMMM d 'd'., E"}
+                MMMMW{
+                    few{"MMM W 'sav'."}
+                    many{"MMM W 'sav'."}
+                    one{"MMM W 'sav'."}
+                    other{"MMM W 'sav'."}
+                }
                 MMMMd{"MMMM d 'd'."}
                 MMMd{"MM-dd"}
                 MMdd{"MM-dd"}
@@ -1435,6 +1435,12 @@ lt{
                 yMd{"y-MM-dd"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
+                yw{
+                    few{"y w 'sav'."}
+                    many{"y w 'sav'."}
+                    one{"y w 'sav'."}
+                    other{"y w 'sav'."}
+                }
             }
             dayNames{
                 format{
@@ -2497,6 +2503,94 @@ lt{
             }
         }
     }
+    characterLabel{
+        activities{"veikla"}
+        african_scripts{"afrikietiški raštai"}
+        american_scripts{"amerikietiški raštai"}
+        animal{"gyvūnas"}
+        animals_nature{"gyvūnai ir gamta"}
+        arrows{"rodyklės"}
+        body{"kūnas"}
+        box_drawing{"laukelių piešimas"}
+        braille{"Brailis"}
+        building{"statymas"}
+        bullets_stars{"punktuacija / žvaigždutės"}
+        consonantal_jamo{"priebalsė, balsė"}
+        currency_symbols{"valiutos simboliai"}
+        dash_connector{"brūkšnys / jungtukas"}
+        digits{"skaitmenys"}
+        dingbats{"šriftai"}
+        divination_symbols{"vudu simboliai"}
+        downwards_arrows{"rodyklės žemyn"}
+        downwards_upwards_arrows{"rodyklės žemyn ir aukštyn"}
+        east_asian_scripts{"Rytų Azijos raštai"}
+        emoji{"jaustukas"}
+        european_scripts{"europietiški raštai"}
+        female{"moteris"}
+        flag{"vėliava"}
+        flags{"vėliavėlės"}
+        food_drink{"maistas ir gėrimai"}
+        format{"formatas"}
+        format_whitespace{"formatas ir tarpai"}
+        full_width_form_variant{"visapločiai formos variantai"}
+        geometric_shapes{"geometrinės figūros"}
+        half_width_form_variant{"pusės ploto formos variantai"}
+        han_characters{"han simboliai"}
+        han_radicals{"han radikalai"}
+        hanja{"handža"}
+        hanzi_simplified{"hanzi (supaprastinta)"}
+        hanzi_traditional{"hanzi (tradicinė)"}
+        heart{"širdelė"}
+        historic_scripts{"istoriniai raštai"}
+        ideographic_desc_characters{"ideografiniai apr. ženklai"}
+        japanese_kana{"japonų kalba"}
+        kanbun{"kanbun"}
+        kanji{"kanji"}
+        keycap{"mygtukas"}
+        leftwards_arrows{"rodyklės į kairę"}
+        leftwards_rightwards_arrows{"rodyklės į kairę ir dešinę"}
+        letterlike_symbols{"raidiniai simboliai"}
+        limited_use{"riboto naudojimo"}
+        male{"vyras"}
+        math_symbols{"matematiniai simboliai"}
+        middle_eastern_scripts{"Artimųjų Rytų raštai"}
+        miscellaneous{"įvairūs"}
+        modern_scripts{"modernieji raštai"}
+        modifier{"modifikatorius"}
+        musical_symbols{"muzikiniai simboliai"}
+        nature{"gamta"}
+        nonspacing{"be tarpų"}
+        numbers{"skaičiai"}
+        objects{"objektai"}
+        other{"kita"}
+        paired{"suporuoti"}
+        person{"asmuo"}
+        phonetic_alphabet{"fonetinis alfabetas"}
+        pictographs{"ženklai"}
+        place{"vieta"}
+        plant{"augalas"}
+        punctuation{"skyryba"}
+        rightwards_arrows{"rodyklės į dešinę"}
+        sign_standard_symbols{"ženklas / standartiniai simboliai"}
+        small_form_variant{"mažos formos variantai"}
+        smiley{"šypsenėlė"}
+        smileys_people{"veidukai ir žmonės"}
+        south_asian_scripts{"Pietų Azijos raštai"}
+        southeast_asian_scripts{"Pietryčių Azijos raštai"}
+        spacing{"tarpai"}
+        sport{"sportas"}
+        symbols{"simboliai"}
+        technical_symbols{"techniniai simboliai"}
+        tone_marks{"toniniai ženklai"}
+        travel{"kelionė"}
+        travel_places{"kelionės ir vietovės"}
+        upwards_arrows{"rodyklės į viršų"}
+        variant_forms{"įvairios formos"}
+        vocalic_jamo{"vokalinė balsė"}
+        weather{"oras"}
+        western_asian_scripts{"Vakarų Azijos raštai"}
+        whitespace{"tarpas"}
+    }
     delimiters{
         alternateQuotationEnd{"“"}
         alternateQuotationStart{"„"}
@@ -2574,12 +2668,40 @@ lt{
                 "0"{"šį penktadienį"}
                 "1"{"kitą penktadienį"}
             }
+            relativeTime{
+                future{
+                    few{"po {0} penktadienių"}
+                    many{"po {0} penktadienio"}
+                    one{"po {0} penktadienio"}
+                    other{"po {0} penktadienių"}
+                }
+                past{
+                    few{"prieš {0} penktadienius"}
+                    many{"prieš {0} penktadienio"}
+                    one{"prieš {0} penktadienį"}
+                    other{"prieš {0} penktadienių"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"praėjusį penkt."}
                 "0"{"šį penkt."}
                 "1"{"kitą penkt."}
+            }
+            relativeTime{
+                future{
+                    few{"po {0} penktadienių"}
+                    many{"po {0} penktadienio"}
+                    one{"po {0} penktadienio"}
+                    other{"po {0} penktadienių"}
+                }
+                past{
+                    few{"prieš {0} penktadienius"}
+                    many{"prieš {0} penktadienio"}
+                    one{"prieš {0} penktadienį"}
+                    other{"prieš {0} penktadienių"}
+                }
             }
         }
         fri-short{
@@ -2588,9 +2710,26 @@ lt{
                 "0"{"šį penkt."}
                 "1"{"kitą penkt."}
             }
+            relativeTime{
+                future{
+                    few{"po {0} penktadienių"}
+                    many{"po {0} penktadienio"}
+                    one{"po {0} penktadienio"}
+                    other{"po {0} penktadienių"}
+                }
+                past{
+                    few{"prieš {0} penktadienius"}
+                    many{"prieš {0} penktadienio"}
+                    one{"prieš {0} penktadienį"}
+                    other{"prieš {0} penktadienių"}
+                }
+            }
         }
         hour{
             dn{"valanda"}
+            relative{
+                "0"{"šią valandą"}
+            }
             relativeTime{
                 future{
                     few{"po {0} valandų"}
@@ -2642,6 +2781,9 @@ lt{
         }
         minute{
             dn{"minutė"}
+            relative{
+                "0"{"šią minutę"}
+            }
             relativeTime{
                 future{
                     few{"po {0} minučių"}
@@ -2697,6 +2839,20 @@ lt{
                 "0"{"šį pirmadienį"}
                 "1"{"kitą pirmadienį"}
             }
+            relativeTime{
+                future{
+                    few{"po {0} pirmadienių"}
+                    many{"po {0} pirmadienio"}
+                    one{"po {0} pirmadienio"}
+                    other{"po {0} pirmadienių"}
+                }
+                past{
+                    few{"prieš {0} pirmadienius"}
+                    many{"prieš {0} pirmadienio"}
+                    one{"prieš {0} pirmadienį"}
+                    other{"prieš {0} pirmadienių"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -2704,12 +2860,40 @@ lt{
                 "0"{"šį pirm."}
                 "1"{"kitą pirm."}
             }
+            relativeTime{
+                future{
+                    few{"po {0} pirmadienių"}
+                    many{"po {0} pirmadienio"}
+                    one{"po {0} pirmadienio"}
+                    other{"po {0} pirmadienių"}
+                }
+                past{
+                    few{"prieš {0} pirmadienius"}
+                    many{"prieš {0} pirmadienio"}
+                    one{"prieš {0} pirmadienį"}
+                    other{"prieš {0} pirmadienių"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"praėjusį pirm."}
                 "0"{"šį pirm."}
                 "1"{"kitą pirm."}
+            }
+            relativeTime{
+                future{
+                    few{"po {0} pirmadienių"}
+                    many{"po {0} pirmadienio"}
+                    one{"po {0} pirmadienio"}
+                    other{"po {0} pirmadienių"}
+                }
+                past{
+                    few{"prieš {0} pirmadienius"}
+                    many{"prieš {0} pirmadienio"}
+                    one{"prieš {0} pirmadienį"}
+                    other{"prieš {0} pirmadienių"}
+                }
             }
         }
         month{
@@ -2770,6 +2954,11 @@ lt{
         }
         quarter{
             dn{"ketvirtis"}
+            relative{
+                "-1"{"praėjęs ketvirtis"}
+                "0"{"šis ketvirtis"}
+                "1"{"kitas ketvirtis"}
+            }
             relativeTime{
                 future{
                     few{"po {0} ketvirčių"}
@@ -2825,6 +3014,20 @@ lt{
                 "0"{"šį šeštadienį"}
                 "1"{"kitą šeštadienį"}
             }
+            relativeTime{
+                future{
+                    few{"po {0} šeštadienių"}
+                    many{"po {0} šeštadienio"}
+                    one{"po {0} šeštadienio"}
+                    other{"po {0} šeštadienių"}
+                }
+                past{
+                    few{"prieš {0} šeštadienius"}
+                    many{"prieš {0} šeštadienio"}
+                    one{"prieš {0} šeštadienį"}
+                    other{"prieš {0} šeštadienių"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -2832,12 +3035,40 @@ lt{
                 "0"{"šį šešt."}
                 "1"{"kitą šešt."}
             }
+            relativeTime{
+                future{
+                    few{"po {0} šeštadienių"}
+                    many{"po {0} šeštadienio"}
+                    one{"po {0} šeštadienio"}
+                    other{"po {0} šeštadienių"}
+                }
+                past{
+                    few{"prieš {0} šeštadienius"}
+                    many{"prieš {0} šeštadienio"}
+                    one{"prieš {0} šeštadienį"}
+                    other{"prieš {0} šeštadienių"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"praėjusį šešt."}
                 "0"{"šį šešt."}
                 "1"{"kitą šešt."}
+            }
+            relativeTime{
+                future{
+                    few{"po {0} šeštadienių"}
+                    many{"po {0} šeštadienio"}
+                    one{"po {0} šeštadienio"}
+                    other{"po {0} šeštadienių"}
+                }
+                past{
+                    few{"prieš {0} šeštadienius"}
+                    many{"prieš {0} šeštadienio"}
+                    one{"prieš {0} šeštadienį"}
+                    other{"prieš {0} šeštadienių"}
+                }
             }
         }
         second{
@@ -2900,12 +3131,40 @@ lt{
                 "0"{"šį sekmadienį"}
                 "1"{"kitą sekmadienį"}
             }
+            relativeTime{
+                future{
+                    few{"po {0} sekmadienių"}
+                    many{"po {0} sekmadienio"}
+                    one{"po {0} sekmadienio"}
+                    other{"po {0} sekmadienių"}
+                }
+                past{
+                    few{"prieš {0} sekmadienius"}
+                    many{"prieš {0} sekmadienio"}
+                    one{"prieš {0} sekmadienį"}
+                    other{"prieš {0} sekmadienių"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"praėjusį sekm."}
                 "0"{"šį sekm."}
                 "1"{"kitą sekm."}
+            }
+            relativeTime{
+                future{
+                    few{"po {0} sekmadienių"}
+                    many{"po {0} sekmadienio"}
+                    one{"po {0} sekmadienio"}
+                    other{"po {0} sekmadienių"}
+                }
+                past{
+                    few{"prieš {0} sekmadienius"}
+                    many{"prieš {0} sekmadienio"}
+                    one{"prieš {0} sekmadienį"}
+                    other{"prieš {0} sekmadienių"}
+                }
             }
         }
         sun-short{
@@ -2914,12 +3173,40 @@ lt{
                 "0"{"šį sekm."}
                 "1"{"kitą sekm."}
             }
+            relativeTime{
+                future{
+                    few{"po {0} sekmadienių"}
+                    many{"po {0} sekmadienio"}
+                    one{"po {0} sekmadienio"}
+                    other{"po {0} sekmadienių"}
+                }
+                past{
+                    few{"prieš {0} sekmadienius"}
+                    many{"prieš {0} sekmadienio"}
+                    one{"prieš {0} sekmadienį"}
+                    other{"prieš {0} sekmadienių"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"praėjusį ketvirtadienį"}
                 "0"{"šį ketvirtadienį"}
                 "1"{"kitą ketvirtadienį"}
+            }
+            relativeTime{
+                future{
+                    few{"po {0} ketvirtadienių"}
+                    many{"po {0} ketvirtadienio"}
+                    one{"po {0} ketvirtadienio"}
+                    other{"po {0} ketvirtadienių"}
+                }
+                past{
+                    few{"prieš {0} ketvirtadienius"}
+                    many{"prieš {0} ketvirtadienio"}
+                    one{"prieš {0} ketvirtadienį"}
+                    other{"prieš {0} ketvirtadienių"}
+                }
             }
         }
         thu-narrow{
@@ -2928,12 +3215,40 @@ lt{
                 "0"{"šį ketv."}
                 "1"{"kitą ketv."}
             }
+            relativeTime{
+                future{
+                    few{"po {0} ketvirtadienių"}
+                    many{"po {0} ketvirtadienio"}
+                    one{"po {0} ketvirtadienio"}
+                    other{"po {0} ketvirtadienių"}
+                }
+                past{
+                    few{"prieš {0} ketvirtadienius"}
+                    many{"prieš {0} ketvirtadienio"}
+                    one{"prieš {0} ketvirtadienį"}
+                    other{"prieš {0} ketvirtadienių"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"praėjusį ketv."}
                 "0"{"šį ketv."}
                 "1"{"kitą ketv."}
+            }
+            relativeTime{
+                future{
+                    few{"po {0} ketvirtadienių"}
+                    many{"po {0} ketvirtadienio"}
+                    one{"po {0} ketvirtadienio"}
+                    other{"po {0} ketvirtadienių"}
+                }
+                past{
+                    few{"prieš {0} ketvirtadienius"}
+                    many{"prieš {0} ketvirtadienio"}
+                    one{"prieš {0} ketvirtadienį"}
+                    other{"prieš {0} ketvirtadienių"}
+                }
             }
         }
         tue{
@@ -2942,12 +3257,40 @@ lt{
                 "0"{"šį antradienį"}
                 "1"{"kitą antradienį"}
             }
+            relativeTime{
+                future{
+                    few{"po {0} antradienių"}
+                    many{"po {0} antradienio"}
+                    one{"po {0} antradienio"}
+                    other{"po {0} antradienių"}
+                }
+                past{
+                    few{"prieš {0} antradienius"}
+                    many{"prieš {0} antradienio"}
+                    one{"prieš {0} antradienį"}
+                    other{"prieš {0} antradienių"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"praėjusį antr."}
                 "0"{"šį antr."}
                 "1"{"kitą antr."}
+            }
+            relativeTime{
+                future{
+                    few{"po {0} antradienių"}
+                    many{"po {0} antradienio"}
+                    one{"po {0} antradienio"}
+                    other{"po {0} antradienių"}
+                }
+                past{
+                    few{"prieš {0} antradienius"}
+                    many{"prieš {0} antradienio"}
+                    one{"prieš {0} antradienį"}
+                    other{"prieš {0} antradienių"}
+                }
             }
         }
         tue-short{
@@ -2956,12 +3299,40 @@ lt{
                 "0"{"šį antr."}
                 "1"{"kitą antr."}
             }
+            relativeTime{
+                future{
+                    few{"po {0} antradienių"}
+                    many{"po {0} antradienio"}
+                    one{"po {0} antradienio"}
+                    other{"po {0} antradienių"}
+                }
+                past{
+                    few{"prieš {0} antradienius"}
+                    many{"prieš {0} antradienio"}
+                    one{"prieš {0} antradienį"}
+                    other{"prieš {0} antradienių"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"praėjusį trečiadienį"}
                 "0"{"šį trečiadienį"}
                 "1"{"kitą trečiadienį"}
+            }
+            relativeTime{
+                future{
+                    few{"po {0} trečiadienių"}
+                    many{"po {0} trečiadienio"}
+                    one{"po {0} trečiadienio"}
+                    other{"po {0} trečiadienių"}
+                }
+                past{
+                    few{"prieš {0} trečiadienius"}
+                    many{"prieš {0} trečiadienio"}
+                    one{"prieš {0} trečiadienį"}
+                    other{"prieš {0} trečiadienių"}
+                }
             }
         }
         wed-narrow{
@@ -2970,12 +3341,40 @@ lt{
                 "0"{"šį treč."}
                 "1"{"kitą treč."}
             }
+            relativeTime{
+                future{
+                    few{"po {0} trečiadienių"}
+                    many{"po {0} trečiadienio"}
+                    one{"po {0} trečiadienio"}
+                    other{"po {0} trečiadienių"}
+                }
+                past{
+                    few{"prieš {0} trečiadienius"}
+                    many{"prieš {0} trečiadienio"}
+                    one{"prieš {0} trečiadienį"}
+                    other{"prieš {0} trečiadienių"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"praėjusį treč."}
                 "0"{"šį treč."}
                 "1"{"kitą treč."}
+            }
+            relativeTime{
+                future{
+                    few{"po {0} trečiadienių"}
+                    many{"po {0} trečiadienio"}
+                    one{"po {0} trečiadienio"}
+                    other{"po {0} trečiadienių"}
+                }
+                past{
+                    few{"prieš {0} trečiadienius"}
+                    many{"prieš {0} trečiadienio"}
+                    one{"prieš {0} trečiadienį"}
+                    other{"prieš {0} trečiadienių"}
+                }
             }
         }
         week{
@@ -2985,6 +3384,7 @@ lt{
                 "0"{"šią savaitę"}
                 "1"{"kitą savaitę"}
             }
+            relativePeriod{"{0} savaitę"}
             relativeTime{
                 future{
                     few{"po {0} savaičių"}
@@ -3002,6 +3402,7 @@ lt{
         }
         week-narrow{
             dn{"sav."}
+            relativePeriod{"{0} savaitę"}
             relativeTime{
                 future{
                     few{"po {0} sav."}
@@ -3019,6 +3420,7 @@ lt{
         }
         week-short{
             dn{"sav."}
+            relativePeriod{"{0} savaitę"}
             relativeTime{
                 future{
                     few{"po {0} sav."}
@@ -3104,6 +3506,12 @@ lt{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-short{
+            2{"{0} ir {1}"}
+            end{"{0} ir {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         unit{
             2{"{0} ir {1}"}
             end{"{0} ir {1}"}
@@ -3127,17 +3535,5 @@ lt{
         UK{"JK"}
         US{"JAV"}
         metric{"metrinė"}
-    }
-    transformNames{
-        BGN{"BGN simboliai"}
-        Numeric{"Skaitinis"}
-        Tone{"Tonas"}
-        UNGEGN{"UNGEGN simboliai"}
-        x-Accents{"Kirčiai"}
-        x-Fullwidth{"Viso pločio"}
-        x-Halfwidth{"Vidutinio pločio"}
-        x-Jamo{"Jamo simboliai"}
-        x-Pinyin{"Pinjino simboliai"}
-        x-Publishing{"Skelbimas"}
     }
 }

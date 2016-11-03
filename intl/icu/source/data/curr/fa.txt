@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fa.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fa{
     Currencies{
         ADP{
@@ -140,9 +134,13 @@ fa{
             "BYB",
             "روبل جدید بیلوروسی (۱۹۹۴ تا ۱۹۹۹)",
         }
+        BYN{
+            "BYN",
+            "روبل بیلوروسی",
+        }
         BYR{
             "BYR",
-            "روبل بیلوروسی",
+            "روبل بیلوروسی (۲۰۰۰–۲۰۱۶)",
         }
         BZD{
             "BZD",
@@ -878,7 +876,7 @@ fa{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -895,6 +893,7 @@ fa{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1069,9 +1068,13 @@ fa{
             one{"پولای بوتسوانا"}
             other{"پولای بوتسوانا"}
         }
-        BYR{
+        BYN{
             one{"روبل بیلوروسی"}
             other{"روبل بیلوروسی"}
+        }
+        BYR{
+            one{"روبل بیلوروسی (۲۰۰۰–۲۰۱۶)"}
+            other{"روبل بیلوروسی (۲۰۰۰–۲۰۱۶)"}
         }
         BZD{
             one{"دلار بلیز"}
@@ -1634,5 +1637,5 @@ fa{
             other{"کواچای زامبیا"}
         }
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.29.44"}
 }

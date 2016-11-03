@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/mn.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 mn{
     AuxExemplarCharacters{"[ә җ ӊ һ]"}
     Ellipsis{
@@ -89,34 +83,84 @@ mn{
                 }
             }
             patternsShort{
-                decimalFormat{
+                currencyFormat{
                     1000{
-                        one{"0М"}
-                        other{"0М"}
+                        one{"¤ 0Мянга"}
+                        other{"¤ 0Мянга"}
                     }
                     10000{
-                        one{"00М"}
-                        other{"00М"}
+                        one{"¤ 00Мянга"}
+                        other{"¤ 00Мянга"}
+                    }
+                    100000{
+                        one{"¤ 0Мянга"}
+                        other{"¤ 0Мянга"}
+                    }
+                    1000000{
+                        one{"¤ 0Сая"}
+                        other{"¤ 0Сая"}
+                    }
+                    10000000{
+                        one{"¤ 00Сая"}
+                        other{"¤ 00Сая"}
+                    }
+                    100000000{
+                        one{"¤ 000Сая"}
+                        other{"¤ 000Сая"}
+                    }
+                    1000000000{
+                        one{"¤ 0Тэрбум"}
+                        other{"¤ 0Тэрбум"}
+                    }
+                    10000000000{
+                        one{"¤ 00Тэрбум"}
+                        other{"¤ 00Тэрбум"}
+                    }
+                    100000000000{
+                        one{"¤ 000Тэрбум"}
+                        other{"¤ 000Тэрбум"}
+                    }
+                    1000000000000{
+                        one{"¤ 0ИН"}
+                        other{"¤ 0ИН"}
+                    }
+                    10000000000000{
+                        one{"¤ 00ИН"}
+                        other{"¤ 00ИН"}
+                    }
+                    100000000000000{
+                        one{"¤ 000ИН"}
+                        other{"¤ 000ИН"}
+                    }
+                }
+                decimalFormat{
+                    1000{
+                        one{"0мянга"}
+                        other{"0мянга"}
+                    }
+                    10000{
+                        one{"00мянга"}
+                        other{"00мянга"}
                     }
                     100000{
                         one{"000М"}
                         other{"000М"}
                     }
                     1000000{
-                        one{"0С"}
-                        other{"0С"}
+                        one{"0сая"}
+                        other{"0сая"}
                     }
                     10000000{
-                        one{"00С"}
-                        other{"00С"}
+                        one{"00сая"}
+                        other{"00сая"}
                     }
                     100000000{
-                        one{"000С"}
-                        other{"000С"}
+                        one{"000сая"}
+                        other{"000сая"}
                     }
                     1000000000{
-                        one{"0Т"}
-                        other{"0Т"}
+                        one{"0тэрбум"}
+                        other{"0тэрбум"}
                     }
                     10000000000{
                         one{"00Т"}
@@ -158,7 +202,7 @@ mn{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.79"}
     calendar{
         generic{
             DateTimePatterns{
@@ -166,10 +210,10 @@ mn{
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE, G y 'оны' MM 'сарын' dd",
-                "G y 'оны' MM 'сарын' d",
-                "G y MM d",
-                "GGGGG y-MM-dd",
+                "EEEE, y 'оны' MM 'сарын' dd",
+                "y 'оны' MM 'сарын' dd",
+                "y MM d",
+                "y-MM-dd",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -177,19 +221,21 @@ mn{
                 "{1}, {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"dd E"}
-                Gy{"G y"}
-                GyMMM{"G y MM"}
-                GyMMMEd{"E, G y MMM d"}
-                GyMMMd{"G y MMM d"}
+                Gy{"y"}
+                GyMMM{"y MM"}
+                GyMMMEd{"E, y MM d"}
+                GyMMMd{"y MMM d"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
                 MEd{"E, M-d"}
                 MMM{"LLL"}
-                MMMEd{"E MMM d"}
-                MMMd{"MMM d"}
+                MMMEd{"E MM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"MM d"}
                 Md{"M-d"}
                 d{"d"}
                 h{"h a"}
@@ -199,9 +245,10 @@ mn{
                 y{"G y"}
                 yyyy{"G y"}
                 yyyyM{"G y-M"}
-                yyyyMEd{"E, G y-M-d"}
+                yyyyMEd{"E, y-M-d"}
                 yyyyMMM{"G y MMM"}
                 yyyyMMMEd{"E, G y MMM d"}
+                yyyyMMMM{"G y MMMM"}
                 yyyyMMMd{"G y MMM d"}
                 yyyyMd{"G y-M-d"}
                 yyyyQQQ{"G y QQQ"}
@@ -223,14 +270,14 @@ mn{
                     H{"HH–HH v"}
                 }
                 M{
-                    M{"M–M"}
+                    M{"M – M"}
                 }
                 MEd{
                     M{"E, MM/dd – E, MM/dd"}
                     d{"E, MM/dd – E, MM/dd"}
                 }
                 MMM{
-                    M{"LLL–LLL"}
+                    M{"MMM – MMM"}
                 }
                 MMMEd{
                     M{"E, MM/dd – E, MM/dd"}
@@ -245,7 +292,7 @@ mn{
                     d{"MM/dd–MM/dd"}
                 }
                 d{
-                    d{"d–d"}
+                    d{"d – d"}
                 }
                 fallback{"{0} – {1}"}
                 h{
@@ -305,6 +352,10 @@ mn{
         }
         gregorian{
             AmPmMarkers{
+                "ү.ө",
+                "ү.х",
+            }
+            AmPmMarkersAbbr{
                 "ҮӨ",
                 "ҮХ",
             }
@@ -318,7 +369,7 @@ mn{
                 "HH:mm:ss",
                 "HH:mm",
                 "EEEE, y 'оны' MM 'сарын' d",
-                "y 'оны' MM 'сарын' d",
+                "y'оны' MMMM'сарын' d'өдөр'",
                 "y MMM d",
                 "y-MM-dd",
                 "{1} {0}",
@@ -344,26 +395,40 @@ mn{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, M-d"}
                 MMM{"LLL"}
                 MMMEd{"E MMM d"}
+                MMMMW{
+                    one{"MMM-'ын' W 'долоо' 'хоног'"}
+                    other{"MMM-'ын' W 'долоо' 'хоног'"}
+                }
+                MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"M-d"}
                 d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"y-M"}
                 yMEd{"E, y-M-d"}
                 yMMM{"y MMM"}
                 yMMMEd{"E, y MMM d"}
+                yMMMM{"y MMMM"}
                 yMMMd{"y MMM d"}
                 yMd{"y-M-d"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y 'оны' QQQQ"}
+                yw{
+                    one{"y'жилийн' w 'долоо' 'хоног'"}
+                    other{"y 'жилийн' w 'долоо' 'хоног'"}
+                }
             }
             dayNames{
                 format{
@@ -377,13 +442,13 @@ mn{
                         "Бя",
                     }
                     narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
+                        "Ня",
+                        "Да",
+                        "Мя",
+                        "Лх",
+                        "Пү",
+                        "Ба",
+                        "Бя",
                     }
                     short{
                         "Ня",
@@ -415,13 +480,13 @@ mn{
                         "Бя",
                     }
                     narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
+                        "Ня",
+                        "Да",
+                        "Мя",
+                        "Лх",
+                        "Пү",
+                        "Ба",
+                        "Бя",
                     }
                     short{
                         "Ня",
@@ -445,6 +510,14 @@ mn{
             }
             dayPeriod{
                 format{
+                    abbreviated{
+                        afternoon1{"өдөр"}
+                        evening1{"орой"}
+                        midnight{"шөнө дунд"}
+                        morning1{"өглөө"}
+                        night1{"шөнө"}
+                        noon{"үд дунд"}
+                    }
                     narrow{
                         afternoon1{"өдөр"}
                         evening1{"орой"}
@@ -463,13 +536,35 @@ mn{
                     }
                 }
                 stand-alone{
-                    wide{
+                    abbreviated{
                         afternoon1{"өдөр"}
+                        am{"ҮӨ"}
                         evening1{"орой"}
                         midnight{"шөнө дунд"}
                         morning1{"өглөө"}
                         night1{"шөнө"}
                         noon{"үд дунд"}
+                        pm{"ҮХ"}
+                    }
+                    narrow{
+                        afternoon1{"өдөр"}
+                        am{"ҮӨ"}
+                        evening1{"орой"}
+                        midnight{"шөнө дунд"}
+                        morning1{"өглөө"}
+                        night1{"шөнө"}
+                        noon{"үд дунд"}
+                        pm{"ҮХ"}
+                    }
+                    wide{
+                        afternoon1{"өдөр"}
+                        am{"ҮӨ"}
+                        evening1{"орой"}
+                        midnight{"шөнө дунд"}
+                        morning1{"өглөө"}
+                        night1{"шөнө"}
+                        noon{"үд дунд"}
+                        pm{"ҮХ"}
                     }
                 }
             }
@@ -497,28 +592,28 @@ mn{
             }
             intervalFormats{
                 H{
-                    H{"HH–HH"}
+                    H{"HH – HH"}
                 }
                 Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
+                    H{"HH:mm – HH:mm"}
+                    m{"HH:mm – HH:mm"}
                 }
                 Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
+                    H{"HH:mm – HH:mm v"}
+                    m{"HH:mm – HH:mm v"}
                 }
                 Hv{
-                    H{"HH–HH v"}
+                    H{"HH – HH v"}
                 }
                 M{
-                    M{"M–M"}
+                    M{"M – M"}
                 }
                 MEd{
                     M{"E, MM/dd – E, MM/dd"}
                     d{"E, MM/dd – E, MM/dd"}
                 }
                 MMM{
-                    M{"LLL–LLL"}
+                    M{"MMM – MMM"}
                 }
                 MMMEd{
                     M{"E, MM/dd – E, MM/dd"}
@@ -533,29 +628,29 @@ mn{
                     d{"MM/dd–MM/dd"}
                 }
                 d{
-                    d{"d–d"}
+                    d{"d – d"}
                 }
                 fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
-                    h{"h–h a"}
+                    h{"h – h a"}
                 }
                 hm{
                     a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
+                    h{"h:mm – h:mm a"}
+                    m{"h:mm – h:mm a"}
                 }
                 hmv{
                     a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
+                    h{"h:mm – h:mm a v"}
+                    m{"h:mm – h:mm a v"}
                 }
                 hv{
                     a{"h a – h a v"}
-                    h{"h–h a v"}
+                    h{"h – h a v"}
                 }
                 y{
-                    y{"y–y"}
+                    y{"y – y"}
                 }
                 yM{
                     M{"y/MM–MM"}
@@ -724,6 +819,94 @@ mn{
             }
         }
     }
+    characterLabel{
+        activities{"Үйл ажиллагаанууд"}
+        african_scripts{"Африк бичвэр"}
+        american_scripts{"Америк бичвэр"}
+        animal{"амьтан"}
+        animals_nature{"Ан амьтан ба байгаль"}
+        arrows{"Сум"}
+        body{"бие"}
+        box_drawing{"Хайрцаг зурах"}
+        braille{"Брайль"}
+        building{"барилга"}
+        bullets_stars{"Сум/од"}
+        consonantal_jamo{"Жамо гийгүүлэгчийн дараалал"}
+        currency_symbols{"Ханшны тэмдэгт"}
+        dash_connector{"Зураас/холбоос"}
+        digits{"Тоонууд"}
+        dingbats{"Дүрс тэмдгүүд"}
+        divination_symbols{"Мэргийн тэмдгүүд"}
+        downwards_arrows{"Доош заасан сум"}
+        downwards_upwards_arrows{"Доош, дээш заасан сум"}
+        east_asian_scripts{"Зүүн Азийн бичвэр"}
+        emoji{"Эможи"}
+        european_scripts{"Европ бичвэр"}
+        female{"эмэгтэй"}
+        flag{"туг"}
+        flags{"Туг"}
+        food_drink{"Хоол, унд"}
+        format{"Формат"}
+        format_whitespace{"Формат, хоосон зай"}
+        full_width_form_variant{"Бүтэн өргөн загварын хувилбар"}
+        geometric_shapes{"Геометрийн дүрсүүд"}
+        half_width_form_variant{"Өргөөшөө загварын хувилбарууд"}
+        han_characters{"Хан ханзнууд"}
+        han_radicals{"Хятад язгуур"}
+        hanja{"Ханжа"}
+        hanzi_simplified{"Ханз (Хялбаршуулсан)"}
+        hanzi_traditional{"Ханз (Уламжлалт)"}
+        heart{"зүрх"}
+        historic_scripts{"Түүхэн бичвэр"}
+        ideographic_desc_characters{"Идеографик буурах тэмдэгтүүд"}
+        japanese_kana{"Япон кана"}
+        kanbun{"Канбун"}
+        kanji{"Канжи"}
+        keycap{"түлхүүрийн гэр"}
+        leftwards_arrows{"Зүүн харсан сум"}
+        leftwards_rightwards_arrows{"Зүүн, баруун харсан сум"}
+        letterlike_symbols{"Үсгэн тэмдэгтүүд"}
+        limited_use{"Хязгаарлагдмал хэрэглээ"}
+        male{"эрэгтэй"}
+        math_symbols{"Математикийн тэмдэгтүүд"}
+        middle_eastern_scripts{"Ойрх дорнодын бичвэр"}
+        miscellaneous{"Бусад"}
+        modern_scripts{"Орчин цагийн бичвэр"}
+        modifier{"Өөрчлөгч"}
+        musical_symbols{"Хөгжмийн тэмдэгтүүд"}
+        nature{"байгаль"}
+        nonspacing{"Зайгүй"}
+        numbers{"Тоонууд"}
+        objects{"Дүрснүүд"}
+        other{"Бусад"}
+        paired{"Хослосон"}
+        person{"хүн"}
+        phonetic_alphabet{"Дуудлагын үсэг"}
+        pictographs{"Пиктограм"}
+        place{"газар"}
+        plant{"ургамал"}
+        punctuation{"Цэг, таслал"}
+        rightwards_arrows{"Баруун заасан сум"}
+        sign_standard_symbols{"Тэмдэг/стандарт тэмдэгт"}
+        small_form_variant{"Жижиг загварын хувилбарууд"}
+        smiley{"инээмсэглэл"}
+        smileys_people{"Инээмсэглэлүүд ба хүмүүс"}
+        south_asian_scripts{"Өмнөд Азийн бичвэр"}
+        southeast_asian_scripts{"Зүүн өмнөд азийн бичвэр"}
+        spacing{"Зай авалт"}
+        sport{"спорт"}
+        symbols{"Тэмдэгүүд"}
+        technical_symbols{"Техникийн тэмдэгүүд"}
+        tone_marks{"Дууны өнгөний тэмдэглэгээ"}
+        travel{"аялал"}
+        travel_places{"Аялал, газар нутгууд"}
+        upwards_arrows{"Дээш заасан сум"}
+        variant_forms{"Хувилбарын хэлбэрүүд"}
+        vocalic_jamo{"Эгшгийн Жамо"}
+        weather{"цаг агаар"}
+        western_asian_scripts{"Баруун азийн бичвэр"}
+        whitespace{"Хоосон зай"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -732,7 +915,7 @@ mn{
     }
     fields{
         day{
-            dn{"Өдөр"}
+            dn{"өдөр"}
             relative{
                 "-1"{"өчигдөр"}
                 "-2"{"уржигдар"}
@@ -752,24 +935,24 @@ mn{
             }
         }
         day-narrow{
-            dn{"Өдөр"}
+            dn{"өдөр"}
             relativeTime{
                 future{
-                    one{"+{0} өдөр"}
-                    other{"+{0} өдөр"}
+                    one{"{0} өдөрт"}
+                    other{"{0} өдөрт"}
                 }
                 past{
-                    one{"-{0} өдөр"}
-                    other{"-{0} өдөр"}
+                    one{"{0} өдрийн өмнө"}
+                    other{"{0} өдрийн өмнө"}
                 }
             }
         }
         day-short{
-            dn{"Өдөр"}
+            dn{"өдөр"}
             relativeTime{
                 future{
-                    one{"{0} өдрийн дараа"}
-                    other{"{0} өдрийн дараа"}
+                    one{"{0} өдөрт"}
+                    other{"{0} өдөрт"}
                 }
                 past{
                     one{"{0} өдрийн өмнө"}
@@ -778,10 +961,10 @@ mn{
             }
         }
         dayperiod{
-            dn{"ҮӨ/ҮХ"}
+            dn{"ү.ө./ү.х."}
         }
         era{
-            dn{"Эрин"}
+            dn{"эрин"}
         }
         fri{
             relative{
@@ -789,23 +972,56 @@ mn{
                 "0"{"энэ баасан гараг"}
                 "1"{"ирэх баасан гараг"}
             }
+            relativeTime{
+                future{
+                    one{"{0} баасан гарагт"}
+                    other{"{0} баасан гарагт"}
+                }
+                past{
+                    one{"{0} баасан гарагийн өмнө"}
+                    other{"{0} баасан гарагийн өмнө"}
+                }
+            }
         }
         fri-narrow{
             relative{
-                "-1"{"өнгөрсөн ба"}
-                "0"{"энэ ба"}
-                "1"{"ирэх ба"}
+                "-1"{"өнгөрсөн баасан гараг"}
+                "0"{"энэ баасан гараг"}
+                "1"{"ирэх баасан гараг"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} баасан гарагт"}
+                    other{"{0} баасан гарагт"}
+                }
+                past{
+                    one{"{0} баасан гарагийн өмнө"}
+                    other{"{0} баасан гарагийн өмнө"}
+                }
             }
         }
         fri-short{
             relative{
-                "-1"{"өнгөрсөн баа."}
-                "0"{"энэ баа."}
-                "1"{"ирэх баа."}
+                "-1"{"өнгөрсөн баасан гараг"}
+                "0"{"энэ баасан гараг"}
+                "1"{"ирэх баасан гараг"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} баасан гарагт"}
+                    other{"{0} баасан гарагт"}
+                }
+                past{
+                    one{"{0} баасан гарагийн өмнө"}
+                    other{"{0} баасан гарагийн өмнө"}
+                }
             }
         }
         hour{
-            dn{"Цаг"}
+            dn{"цаг"}
+            relative{
+                "0"{"энэ цаг"}
+            }
             relativeTime{
                 future{
                     one{"{0} цагийн дараа"}
@@ -821,12 +1037,12 @@ mn{
             dn{"ц."}
             relativeTime{
                 future{
-                    one{"+{0} ц"}
-                    other{"+{0} ц"}
+                    one{"{0} ц. дараа"}
+                    other{"{0} ц. дараа"}
                 }
                 past{
-                    one{"-{0} ц"}
-                    other{"-{0} ц"}
+                    one{"{0} ц. өмнө"}
+                    other{"{0} ц. өмнө"}
                 }
             }
         }
@@ -844,7 +1060,10 @@ mn{
             }
         }
         minute{
-            dn{"Минут"}
+            dn{"минут"}
+            relative{
+                "0"{"энэ минут"}
+            }
             relativeTime{
                 future{
                     one{"{0} минутын дараа"}
@@ -857,15 +1076,15 @@ mn{
             }
         }
         minute-narrow{
-            dn{"м"}
+            dn{"мин."}
             relativeTime{
                 future{
-                    one{"+{0} м"}
-                    other{"+{0} м"}
+                    one{"{0} мин. дараа"}
+                    other{"{0} мин. дараа"}
                 }
                 past{
-                    one{"-{0} м"}
-                    other{"-{0} м"}
+                    one{"{0} мин. өмнө"}
+                    other{"{0} мин. өмнө"}
                 }
             }
         }
@@ -888,23 +1107,53 @@ mn{
                 "0"{"энэ даваа гараг"}
                 "1"{"ирэх даваа гараг"}
             }
+            relativeTime{
+                future{
+                    one{"{0} даваа гарагт"}
+                    other{"{0} даваа гарагт"}
+                }
+                past{
+                    one{"{0} даваа гарагийн өмнө"}
+                    other{"{0} даваа гарагийн өмнө"}
+                }
+            }
         }
         mon-narrow{
             relative{
-                "-1"{"өнгөрсөн да"}
-                "0"{"энэ да"}
-                "1"{"ирэх да"}
+                "-1"{"өнгөрсөн даваа"}
+                "0"{"энэ даваа"}
+                "1"{"ирэх даваа"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} даваа гарагт"}
+                    other{"{0} даваа гарагт"}
+                }
+                past{
+                    one{"{0} даваа гарагийн өмнө"}
+                    other{"{0} даваа гарагийн өмнө"}
+                }
             }
         }
         mon-short{
             relative{
-                "-1"{"өнгөрсөн дав."}
-                "0"{"энэ дав."}
-                "1"{"ирэх дав."}
+                "-1"{"өнгөрсөн даваа"}
+                "0"{"энэ даваа гараг"}
+                "1"{"ирэх даваа гараг"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} даваа гарагт"}
+                    other{"{0} даваа гарагт"}
+                }
+                past{
+                    one{"{0} даваа гарагийн өмнө"}
+                    other{"{0} даваа гарагийн өмнө"}
+                }
             }
         }
         month{
-            dn{"Сар"}
+            dn{"сар"}
             relative{
                 "-1"{"өнгөрсөн сар"}
                 "0"{"энэ сар"}
@@ -922,33 +1171,38 @@ mn{
             }
         }
         month-narrow{
-            dn{"ср."}
+            dn{"сар"}
             relativeTime{
                 future{
-                    one{"+{0} ср."}
-                    other{"+{0} ср."}
+                    one{"+{0} сард"}
+                    other{"+{0} сард"}
                 }
                 past{
-                    one{"-{0} ср."}
-                    other{"-{0} ср."}
+                    one{"{0} сарын өмнө"}
+                    other{"{0} сарын өмнө"}
                 }
             }
         }
         month-short{
-            dn{"ср."}
+            dn{"сар"}
             relativeTime{
                 future{
-                    one{"{0} ср. дараа"}
-                    other{"{0} ср. дараа"}
+                    one{"{0} сарын дараа"}
+                    other{"{0} сарын дараа"}
                 }
                 past{
-                    one{"{0} ср. өмнө"}
-                    other{"{0} ср. өмнө"}
+                    one{"{0} сарын өмнө"}
+                    other{"{0} сарын өмнө"}
                 }
             }
         }
         quarter{
-            dn{"Улирал"}
+            dn{"улирал"}
+            relative{
+                "-1"{"өнгөрсөн улирал"}
+                "0"{"энэ улирал"}
+                "1"{"дараагийн улирал"}
+            }
             relativeTime{
                 future{
                     one{"{0} улирлын дараа"}
@@ -961,28 +1215,28 @@ mn{
             }
         }
         quarter-narrow{
-            dn{"улрл."}
+            dn{"улирал"}
             relativeTime{
                 future{
-                    one{"+{0} У"}
-                    other{"+{0} У"}
+                    one{"{0} улирлын дараа"}
+                    other{"{0} улирлын дараа"}
                 }
                 past{
-                    one{"-{0} У"}
-                    other{"-{0} У"}
+                    one{"{0} улирлын өмнө"}
+                    other{"{0} улирлын өмнө"}
                 }
             }
         }
         quarter-short{
-            dn{"улрл."}
+            dn{"улирал"}
             relativeTime{
                 future{
-                    one{"{0} улрл. дараа"}
-                    other{"{0} улрл. дараа"}
+                    one{"{0} улирлын дараа"}
+                    other{"{0} улирлын дараа"}
                 }
                 past{
-                    one{"{0} улрл. өмнө"}
-                    other{"{0} улрл. өмнө"}
+                    one{"{0} улирлын өмнө"}
+                    other{"{0} улирлын өмнө"}
                 }
             }
         }
@@ -992,25 +1246,55 @@ mn{
                 "0"{"энэ бямба гараг"}
                 "1"{"ирэх бямба гараг"}
             }
+            relativeTime{
+                future{
+                    one{"{0} бямба гарагт"}
+                    other{"{0} бямба гарагт"}
+                }
+                past{
+                    one{"{0} бямба гарагийн өмнө"}
+                    other{"{0} бямба гарагийн өмнө"}
+                }
+            }
         }
         sat-narrow{
             relative{
-                "-1"{"өнгөрсөн бя"}
-                "0"{"энэ бя"}
-                "1"{"ирэх бя"}
+                "-1"{"өнгөрсөн бямба"}
+                "0"{"энэ бямба"}
+                "1"{"ирэх бямба"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} бямба гарагт"}
+                    other{"{0} бямба гарагт"}
+                }
+                past{
+                    one{"{0} бямба гарагийн өмнө"}
+                    other{"{0} бямба гарагийн өмнө"}
+                }
             }
         }
         sat-short{
             relative{
-                "-1"{"өнгөрсөн бям."}
-                "0"{"энэ бям."}
-                "1"{"ирэх бям."}
+                "-1"{"өнгөрсөн бямба"}
+                "0"{"энэ бямба"}
+                "1"{"ирэх бямба"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} бямба гарагт"}
+                    other{"{0} бямба гарагт"}
+                }
+                past{
+                    one{"{0} бямба гарагийн өмнө"}
+                    other{"{0} бямба гарагийн өмнө"}
+                }
             }
         }
         second{
-            dn{"Секунд"}
+            dn{"секунд"}
             relative{
-                "0"{"Одоо"}
+                "0"{"одоо"}
             }
             relativeTime{
                 future{
@@ -1024,15 +1308,15 @@ mn{
             }
         }
         second-narrow{
-            dn{"с"}
+            dn{"сек."}
             relativeTime{
                 future{
-                    one{"+{0} с"}
-                    other{"+{0} с"}
+                    one{"{0} сек. дараа"}
+                    other{"{0} сек. дараа"}
                 }
                 past{
-                    one{"-{0} с"}
-                    other{"-{0} с"}
+                    one{"{0} сек. өмнө"}
+                    other{"{0} сек. өмнө"}
                 }
             }
         }
@@ -1055,12 +1339,32 @@ mn{
                 "0"{"энэ ням гараг"}
                 "1"{"ирэх ням гараг"}
             }
+            relativeTime{
+                future{
+                    one{"{0} ням гарагт"}
+                    other{"{0} ням гарагт"}
+                }
+                past{
+                    one{"{0} ням гарагийн өмнө"}
+                    other{"{0} ням гарагийн өмнө"}
+                }
+            }
         }
         sun-narrow{
             relative{
-                "-1"{"өнгөрсөн ня"}
-                "0"{"энэ ня"}
-                "1"{"ирэх ня"}
+                "-1"{"өнгөрсөн ням."}
+                "0"{"энэ ням"}
+                "1"{"ирэх ням."}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ням гарагт"}
+                    other{"{0} ням гарагт"}
+                }
+                past{
+                    one{"{0} ням гарагийн өмнө"}
+                    other{"{0} ням гарагийн өмнө"}
+                }
             }
         }
         sun-short{
@@ -1069,12 +1373,32 @@ mn{
                 "0"{"энэ ням."}
                 "1"{"ирэх ням."}
             }
+            relativeTime{
+                future{
+                    one{"{0} ням гарагт"}
+                    other{"{0} ням гарагт"}
+                }
+                past{
+                    one{"{0} ням гарагийн өмнө"}
+                    other{"{0} ням гарагийн өмнө"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"өнгөрсөн пүрэв гараг"}
                 "0"{"энэ пүрэв гараг"}
                 "1"{"ирэх пүрэв гараг"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} пүрэв гарагт"}
+                    other{"{0} пүрэв гарагт"}
+                }
+                past{
+                    one{"{0} пүрэв гарагийн өмнө"}
+                    other{"{0} пүрэв гарагийн өмнө"}
+                }
             }
         }
         thu-narrow{
@@ -1083,12 +1407,32 @@ mn{
                 "0"{"энэ пү"}
                 "1"{"ирэх пү"}
             }
+            relativeTime{
+                future{
+                    one{"{0} пүрэв гарагт"}
+                    other{"{0} пүрэв гарагт"}
+                }
+                past{
+                    one{"{0} пүрэв гарагийн өмнө"}
+                    other{"{0} пүрэв гарагийн өмнө"}
+                }
+            }
         }
         thu-short{
             relative{
-                "-1"{"өнгөрсөн пүр."}
-                "0"{"энэ пүр."}
-                "1"{"ирэх пүр."}
+                "-1"{"өнгөрсөн пүрэв"}
+                "0"{"энэ пүрэв"}
+                "1"{"ирэх пүрэв"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} пүрэв гарагт"}
+                    other{"{0} пүрэв гарагт"}
+                }
+                past{
+                    one{"{0} пүрэв гарагийн өмнө"}
+                    other{"{0} пүрэв гарагийн өмнө"}
+                }
             }
         }
         tue{
@@ -1097,19 +1441,49 @@ mn{
                 "0"{"энэ мягмар гараг"}
                 "1"{"ирэх мягмар гараг"}
             }
+            relativeTime{
+                future{
+                    one{"{0} мягмар гарагт"}
+                    other{"{0} мягмар гарагт"}
+                }
+                past{
+                    one{"{0} мягмар гарагийн өмнө"}
+                    other{"{0} мягмар гарагийн өмнө"}
+                }
+            }
         }
         tue-narrow{
             relative{
-                "-1"{"өнгөрсөн мя"}
-                "0"{"энэ мя"}
-                "1"{"ирэх мя"}
+                "-1"{"өнгөрсөн мягмар"}
+                "0"{"энэ мягмар"}
+                "1"{"ирэх мягмар"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} мягмар гарагт"}
+                    other{"{0} мягмар гарагт"}
+                }
+                past{
+                    one{"{0} мягмар гарагийн өмнө"}
+                    other{"{0} мягмар гарагийн өмнө"}
+                }
             }
         }
         tue-short{
             relative{
-                "-1"{"өнгөрсөн мяг."}
-                "0"{"энэ мяг."}
-                "1"{"ирэх мяг."}
+                "-1"{"өнгөрсөн мягмар"}
+                "0"{"энэ мягмар"}
+                "1"{"ирэх мягмар"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} мягмар гарагт"}
+                    other{"{0} мягмар гарагт"}
+                }
+                past{
+                    one{"{0} мягмар гарагийн өмнө"}
+                    other{"{0} мягмар гарагийн өмнө"}
+                }
             }
         }
         wed{
@@ -1118,6 +1492,16 @@ mn{
                 "0"{"энэ лхагва гараг"}
                 "1"{"ирэх лхагва гараг"}
             }
+            relativeTime{
+                future{
+                    one{"{0} лхагва гарагт"}
+                    other{"{0} лхагва гарагт"}
+                }
+                past{
+                    one{"{0} лхагва гарагийн өмнө"}
+                    other{"{0} лхагва гарагийн өмнө"}
+                }
+            }
         }
         wed-narrow{
             relative{
@@ -1125,63 +1509,86 @@ mn{
                 "0"{"энэ лх"}
                 "1"{"ирэх лх"}
             }
+            relativeTime{
+                future{
+                    one{"{0} лхагва гарагт"}
+                    other{"{0} лхагва гарагт"}
+                }
+                past{
+                    one{"{0} лхагва гарагийн өмнө"}
+                    other{"{0} лхагва гарагийн өмнө"}
+                }
+            }
         }
         wed-short{
             relative{
-                "-1"{"өнгөрсөн лха."}
-                "0"{"энэ лха."}
-                "1"{"ирэх лха."}
+                "-1"{"өнгөрсөн лхагва"}
+                "0"{"энэ лхагва"}
+                "1"{"ирэх лхагва"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} лхагва гарагт"}
+                    other{"{0} лхагва гарагт"}
+                }
+                past{
+                    one{"{0} лхагва гарагийн өмнө"}
+                    other{"{0} лхагва гарагийн өмнө"}
+                }
             }
         }
         week{
-            dn{"Долоо хоног"}
+            dn{"долоо хоног"}
             relative{
                 "-1"{"өнгөрсөн долоо хоног"}
                 "0"{"энэ долоо хоног"}
                 "1"{"ирэх долоо хоног"}
             }
+            relativePeriod{"{0} дэх долоо хоног"}
             relativeTime{
                 future{
-                    one{"{0} долоо хоногийн дараа"}
-                    other{"{0} долоо хоногийн дараа"}
+                    one{"{0} 7х-ийн дараа"}
+                    other{"{0} 7х-ийн дараа"}
                 }
                 past{
-                    one{"{0} долоо хоногийн өмнө"}
-                    other{"{0} долоо хоногийн өмнө"}
+                    one{"{0} 7х-ийн өмнө"}
+                    other{"{0} 7х-ийн өмнө"}
                 }
             }
         }
         week-narrow{
-            dn{"дх."}
+            dn{"7х"}
+            relativePeriod{"{0} дэх долоо хоног"}
             relativeTime{
                 future{
-                    one{"+{0} дх."}
-                    other{"+{0} дх."}
+                    one{"{0} 7х-ийн дараа"}
+                    other{"{0} 7х-ийн дараа"}
                 }
                 past{
-                    one{"-{0} дх."}
-                    other{"-{0} дх."}
+                    one{"{0} 7х-ийн өмнө"}
+                    other{"{0} 7х-ийн өмнө"}
                 }
             }
         }
         week-short{
-            dn{"дх."}
+            dn{"7х"}
+            relativePeriod{"{0} дэх долоо хоног"}
             relativeTime{
                 future{
-                    one{"{0} дх. дараа"}
-                    other{"{0} дх. дараа"}
+                    one{"{0} 7х-ийн дараа"}
+                    other{"{0} 7х-ийн дараа"}
                 }
                 past{
-                    one{"{0} дх. өмнө"}
-                    other{"{0} дх. өмнө"}
+                    one{"{0} 7х-ийн өмнө"}
+                    other{"{0} 7х-ийн өмнө"}
                 }
             }
         }
         weekday{
-            dn{"Гараг"}
+            dn{"гараг"}
         }
         year{
-            dn{"Жил"}
+            dn{"жил"}
             relative{
                 "-1"{"өнгөрсөн жил"}
                 "0"{"энэ жил"}
@@ -1199,37 +1606,43 @@ mn{
             }
         }
         year-narrow{
-            dn{"жл."}
+            dn{"жил"}
             relativeTime{
                 future{
-                    one{"+{0} жл."}
-                    other{"+{0} жл."}
+                    one{"+{0} жилд"}
+                    other{"+{0} жилд"}
                 }
                 past{
-                    one{"-{0} жл."}
-                    other{"-{0} жл."}
+                    one{"-{0} жил.н өмнө"}
+                    other{"-{0} жил.н өмнө"}
                 }
             }
         }
         year-short{
-            dn{"жл."}
+            dn{"жил"}
             relativeTime{
                 future{
-                    one{"{0} жл. дараа"}
-                    other{"{0} жл. дараа"}
+                    one{"{0} жилийн дараа"}
+                    other{"{0} жилийн дараа"}
                 }
                 past{
-                    one{"{0} жл. өмнө"}
-                    other{"{0} жл. өмнө"}
+                    one{"{0} жилийн өмнө"}
+                    other{"{0} жилийн өмнө"}
                 }
             }
         }
         zone{
-            dn{"Цагийн бүс"}
+            dn{"цагийн бүс"}
         }
     }
     listPattern{
         standard{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
             middle{"{0}, {1}"}

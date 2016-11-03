@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
 *                                                                            *
-* Copyright (C) 2003-2013, International Business Machines                   *
+* Copyright (C) 2003-2016, International Business Machines                   *
 *                Corporation and others. All Rights Reserved.                *
 *                                                                            *
 ******************************************************************************
@@ -21,6 +23,7 @@
 #include "unicode/ulocdata.h"
 #include "uresimp.h"
 #include "ureslocs.h"
+#include "ulocimp.h"
 
 #define MEASUREMENT_SYSTEM  "MeasurementSystem"
 #define PAPER_SIZE          "PaperSize"
@@ -189,16 +192,11 @@ ulocdata_getDelimiter(ULocaleData *uld, ULocaleDataDelimiterType type,
 }
 
 static UResourceBundle * measurementTypeBundleForLocale(const char *localeID, const char *measurementType, UErrorCode *status){
-    char fullLoc[ULOC_FULLNAME_CAPACITY];
     char region[ULOC_COUNTRY_CAPACITY];
     UResourceBundle *rb;
     UResourceBundle *measTypeBundle = NULL;
     
-    /* The following code is basically copied from Calendar::setWeekData and
-     * Calendar::getCalendarTypeForLocale with adjustments for resource name
-     */
-    uloc_addLikelySubtags(localeID, fullLoc, ULOC_FULLNAME_CAPACITY, status);
-    uloc_getCountry(fullLoc, region, ULOC_COUNTRY_CAPACITY, status);
+    ulocimp_getRegionForSupplementalData(localeID, TRUE, region, ULOC_COUNTRY_CAPACITY, status);
     
     rb = ures_openDirect(NULL, "supplementalData", status);
     ures_getByKey(rb, "measurementData", rb, status);
