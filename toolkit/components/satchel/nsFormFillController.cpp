@@ -216,7 +216,7 @@ void
 nsFormFillController::MaybeRemoveMutationObserver(nsINode* aNode)
 {
   // Nodes being tracked in mPwmgrInputs will have their observers removed when
-  // they stop being tracked. 
+  // they stop being tracked.
   if (!mPwmgrInputs.Get(aNode)) {
     aNode->RemoveMutationObserver(this);
   }
@@ -900,7 +900,7 @@ nsFormFillController::MaybeStartControllingInput(nsIDOMHTMLInputElement* aInput)
     return;
 
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aInput);
-  if (!formControl || !formControl->IsSingleLineTextControl(true))
+  if (!formControl || !formControl->IsSingleLineTextControl(false))
     return;
 
   bool isReadOnly = false;
