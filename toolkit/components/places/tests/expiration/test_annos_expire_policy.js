@@ -82,7 +82,7 @@ add_task(function* test_annos_expire_policy() {
   // Expire all expirable pages.
   setMaxPages(0);
 
-  let now = getExpirablePRTime();
+  now = getExpirablePRTime();
   // Add some bookmarked page and timed annotations for each.
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");

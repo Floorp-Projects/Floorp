@@ -584,7 +584,7 @@ add_task(function* test_offline_cache() {
 
   var cacheListener = {
     onCacheEntryCheck: function() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
-    onCacheEntryAvailable: function (entry, isnew, appcache, status) {
+    onCacheEntryAvailable: function (entry, isnew, unused, status) {
       is(status, Cr.NS_OK);
       var stream = entry.openOutputStream(0);
       var content = "content";

@@ -41,11 +41,11 @@ const olderthansixmonths = today - (DAY_MICROSEC * 31 * 7);
 function* task_populateDB(aArray)
 {
   // Iterate over aArray and execute all instructions.
-  for (let data of aArray) {
+  for (let arrayItem of aArray) {
     try {
       // make the data object into a query data object in order to create proper
       // default values for anything left unspecified
-      var qdata = new queryData(data);
+      var qdata = new queryData(arrayItem);
       if (qdata.isVisit) {
         // Then we should add a visit for this node
         yield PlacesTestUtils.addVisits({
@@ -184,8 +184,8 @@ function* task_populateDB(aArray)
         });
       }
     } catch (ex) {
-      // use the data object here in case instantiation of qdata failed
-      do_print("Problem with this URI: " + data.uri);
+      // use the arrayItem object here in case instantiation of qdata failed
+      do_print("Problem with this URI: " + arrayItem.uri);
       do_throw("Error creating database: " + ex + "\n");
     }
   }
