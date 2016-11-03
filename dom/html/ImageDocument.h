@@ -56,10 +56,6 @@ public:
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
     override;
 
-  bool ImageResizingEnabled() const
-  {
-    return true;
-  }
   bool ImageIsOverflowing() const
   {
     return mImageIsOverflowingHorizontally || mImageIsOverflowingVertically;
