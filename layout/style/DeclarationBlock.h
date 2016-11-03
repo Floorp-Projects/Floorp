@@ -15,6 +15,8 @@
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleBackendType.h"
 
+#include "nsCSSPropertyID.h"
+
 class nsHTMLCSSStyleSheet;
 
 namespace mozilla {
@@ -103,6 +105,16 @@ public:
 
   inline uint32_t Count() const;
   inline bool GetNthProperty(uint32_t aIndex, nsAString& aReturn) const;
+
+  inline void GetPropertyValue(const nsAString& aProperty,
+                               nsAString& aValue) const;
+  inline void GetPropertyValueByID(nsCSSPropertyID aPropID,
+                                   nsAString& aValue) const;
+  inline void GetAuthoredPropertyValue(const nsAString& aProperty,
+                                       nsAString& aValue) const;
+  inline bool GetPropertyIsImportant(const nsAString& aProperty) const;
+  inline void RemoveProperty(const nsAString& aProperty);
+  inline void RemovePropertyByID(nsCSSPropertyID aProperty);
 
 private:
   union {

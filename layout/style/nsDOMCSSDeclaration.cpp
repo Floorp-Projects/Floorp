@@ -49,7 +49,7 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
                   "Should never pass eCSSProperty_UNKNOWN around");
 
   aValue.Truncate();
-  if (css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko()) {
+  if (DeclarationBlock* decl = GetCSSDeclaration(eOperation_Read)) {
     decl->GetPropertyValueByID(aPropID, aValue);
   }
   return NS_OK;
@@ -183,7 +183,7 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName,
                                       nsAString& aReturn)
 {
   aReturn.Truncate();
-  if (css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko()) {
+  if (DeclarationBlock* decl = GetCSSDeclaration(eOperation_Read)) {
     decl->GetPropertyValue(aPropertyName, aReturn);
   }
   return NS_OK;
@@ -193,7 +193,7 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::GetAuthoredPropertyValue(const nsAString& aPropertyName,
                                               nsAString& aReturn)
 {
-  if (css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko()) {
+  if (DeclarationBlock* decl = GetCSSDeclaration(eOperation_Read)) {
     decl->GetAuthoredPropertyValue(aPropertyName, aReturn);
   }
   return NS_OK;
@@ -203,7 +203,7 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
                                          nsAString& aReturn)
 {
-  css::Declaration* decl = GetCSSDeclaration(eOperation_Read)->AsGecko();
+  DeclarationBlock* decl = GetCSSDeclaration(eOperation_Read);
 
   aReturn.Truncate();
   if (decl && decl->GetPropertyIsImportant(aPropertyName)) {
@@ -368,7 +368,7 @@ nsDOMCSSDeclaration::RemovePropertyInternal(nsCSSPropertyID aPropID)
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
 
   RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
-  decl->AsGecko()->RemovePropertyByID(aPropID);
+  decl->RemovePropertyByID(aPropID);
   return SetCSSDeclaration(decl);
 }
 
@@ -388,6 +388,6 @@ nsDOMCSSDeclaration::RemovePropertyInternal(const nsAString& aPropertyName)
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
 
   RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
-  decl->AsGecko()->RemoveProperty(aPropertyName);
+  decl->RemoveProperty(aPropertyName);
   return SetCSSDeclaration(decl);
 }

@@ -70,6 +70,45 @@ DeclarationBlock::GetNthProperty(uint32_t aIndex, nsAString& aReturn) const
   MOZ_STYLO_FORWARD(GetNthProperty, (aIndex, aReturn))
 }
 
+void
+DeclarationBlock::GetPropertyValue(const nsAString& aProperty,
+                                   nsAString& aValue) const
+{
+  MOZ_STYLO_FORWARD(GetPropertyValue, (aProperty, aValue))
+}
+
+void
+DeclarationBlock::GetPropertyValueByID(nsCSSPropertyID aPropID,
+                                       nsAString& aValue) const
+{
+  MOZ_STYLO_FORWARD(GetPropertyValueByID, (aPropID, aValue))
+}
+
+void
+DeclarationBlock::GetAuthoredPropertyValue(const nsAString& aProperty,
+                                           nsAString& aValue) const
+{
+  MOZ_STYLO_FORWARD(GetAuthoredPropertyValue, (aProperty, aValue))
+}
+
+bool
+DeclarationBlock::GetPropertyIsImportant(const nsAString& aProperty) const
+{
+  MOZ_STYLO_FORWARD(GetPropertyIsImportant, (aProperty))
+}
+
+void
+DeclarationBlock::RemoveProperty(const nsAString& aProperty)
+{
+  MOZ_STYLO_FORWARD(RemoveProperty, (aProperty))
+}
+
+void
+DeclarationBlock::RemovePropertyByID(nsCSSPropertyID aProperty)
+{
+  MOZ_STYLO_FORWARD(RemovePropertyByID, (aProperty))
+}
+
 } // namespace mozilla
 
 #endif // mozilla_DeclarationBlockInlines_h
