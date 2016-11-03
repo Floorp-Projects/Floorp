@@ -291,13 +291,6 @@ ImageDocument::OnPageShow(bool aPersisted,
 }
 
 NS_IMETHODIMP
-ImageDocument::GetImageResizingEnabled(bool* aImageResizingEnabled)
-{
-  *aImageResizingEnabled = ImageResizingEnabled();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 ImageDocument::GetImageIsOverflowing(bool* aImageIsOverflowing)
 {
   *aImageIsOverflowing = ImageIsOverflowing();
