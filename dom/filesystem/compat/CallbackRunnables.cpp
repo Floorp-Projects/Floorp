@@ -7,7 +7,7 @@
 #include "CallbackRunnables.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DirectoryBinding.h"
-#include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/FileSystemDirectoryReaderBinding.h"
@@ -56,8 +56,8 @@ ErrorCallbackRunnable::Run()
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<DOMError> error = new DOMError(window, mError);
-  mCallback->HandleEvent(*error);
+  RefPtr<DOMException> exception = DOMException::Create(mError);
+  mCallback->HandleEvent(*exception);
   return NS_OK;
 }
 
