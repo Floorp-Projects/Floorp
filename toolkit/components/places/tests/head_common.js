@@ -370,9 +370,9 @@ function check_no_bookmarks() {
 function promiseTopicObserved(aTopic)
 {
   return new Promise(resolve => {
-    Services.obs.addObserver(function observe(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(observe, aTopic);
-      resolve([aSubject, aData]);
+    Services.obs.addObserver(function observe(aObsSubject, aObsTopic, aObsData) {
+      Services.obs.removeObserver(observe, aObsTopic);
+      resolve([aObsSubject, aObsData]);
     }, aTopic, false);
   });
 }
@@ -821,7 +821,7 @@ NavHistoryResultObserver.prototype = {
 function promiseIsURIVisited(aURI) {
   let deferred = Promise.defer();
 
-  PlacesUtils.asyncHistory.isURIVisited(aURI, function(aURI, aIsVisited) {
+  PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
     deferred.resolve(aIsVisited);
   });
 

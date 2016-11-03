@@ -327,7 +327,7 @@ function waitForAsyncUpdates(aCallback, aScope, aArguments) {
  */
 function promiseIsURIVisited(aURI, aExpectedValue) {
   let deferred = Promise.defer();
-  PlacesUtils.asyncHistory.isURIVisited(aURI, function(aURI, aIsVisited) {
+  PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
     deferred.resolve(aIsVisited);
   });
 
@@ -373,9 +373,9 @@ function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
       deferred.resolve();
   }
   aURIs.forEach(function (aURI) {
-    PlacesUtils.asyncHistory.isURIVisited(aURI, function(aURI, aIsVisited) {
-      is(aIsVisited, !aShouldBeCleared,
-         "history visit " + aURI.spec + " should " + niceStr + " exist");
+    PlacesUtils.asyncHistory.isURIVisited(aURI, function(uri, isVisited) {
+      is(isVisited, !aShouldBeCleared,
+         "history visit " + uri.spec + " should " + niceStr + " exist");
       callbackDone();
     });
   });
@@ -400,7 +400,7 @@ function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
  * @return promise
  */
 function waitForDocLoadAndStopIt(aExpectedURL, aBrowser=gBrowser.selectedBrowser, aStopFromProgressListener=true) {
-  function content_script(aStopFromProgressListener) {
+  function content_script(contentStopFromProgressListener) {
     let { interfaces: Ci, utils: Cu } = Components;
     Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
     let wp = docShell.QueryInterface(Ci.nsIWebProgress);
@@ -428,7 +428,7 @@ function waitForDocLoadAndStopIt(aExpectedURL, aBrowser=gBrowser.selectedBrowser
           let chan = req.QueryInterface(Ci.nsIChannel);
           dump(`waitForDocLoadAndStopIt: Document start: ${chan.URI.spec}\n`);
 
-          stopContent(aStopFromProgressListener, chan.originalURI.spec);
+          stopContent(contentStopFromProgressListener, chan.originalURI.spec);
         }
       },
       QueryInterface: XPCOMUtils.generateQI(["nsISupportsWeakReference"])
@@ -908,8 +908,8 @@ function promiseTopicObserved(aTopic)
 {
   return new Promise((resolve) => {
     Services.obs.addObserver(
-      function PTO_observe(aSubject, aTopic, aData) {
-        Services.obs.removeObserver(PTO_observe, aTopic);
+      function PTO_observe(aSubject, aTopic2, aData) {
+        Services.obs.removeObserver(PTO_observe, aTopic2);
         resolve({subject: aSubject, data: aData});
       }, aTopic, false);
   });
@@ -1045,7 +1045,7 @@ function promiseCrashReport(expectedExtra={}) {
   return Task.spawn(function*() {
     info("Starting wait on crash-report-status");
     let [subject, ] =
-      yield TestUtils.topicObserved("crash-report-status", (subject, data) => {
+      yield TestUtils.topicObserved("crash-report-status", (unused, data) => {
         return data == "success";
       });
     info("Topic observed!");
