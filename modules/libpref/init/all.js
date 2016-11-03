@@ -2171,6 +2171,9 @@ pref("security.xcto_nosniff_block_images", false);
 // OCSP must-staple
 pref("security.ssl.enable_ocsp_must_staple", true);
 
+// Insecure Form Field Warning
+pref("security.insecure_field_warning.contextual.enabled", false);
+
 // Disable pinning checks by default.
 pref("security.cert_pinning.enforcement_level", 0);
 // Do not process hpkp headers rooted by not built in roots by default.
