@@ -78,6 +78,7 @@
   background-repeat: no-repeat;
 }
 
+.userContext-icon,
 .menuitem-iconic[data-usercontextid] > .menu-iconic-left > .menu-iconic-icon,
 .subviewbutton[usercontextid] > .toolbarbutton-icon,
 #userContext-indicator {
