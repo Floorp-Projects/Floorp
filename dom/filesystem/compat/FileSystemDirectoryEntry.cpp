@@ -103,13 +103,5 @@ FileSystemDirectoryEntry::GetInternal(const nsAString& aPath,
   helper->Run();
 }
 
-void
-FileSystemDirectoryEntry::RemoveRecursively(VoidCallback& aSuccessCallback,
-                                            const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
-{
-  ErrorCallbackHelper::Call(GetParentObject(), aErrorCallback,
-                            NS_ERROR_DOM_SECURITY_ERR);
-}
-
 } // dom namespace
 } // mozilla namespace
