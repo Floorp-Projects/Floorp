@@ -17,6 +17,10 @@ public:
   ServoDeclarationBlock()
     : ServoDeclarationBlock(Servo_DeclarationBlock_CreateEmpty().Consume()) {}
 
+  ServoDeclarationBlock(const ServoDeclarationBlock& aCopy)
+    : DeclarationBlock(aCopy)
+    , mRaw(Servo_DeclarationBlock_Clone(aCopy.mRaw).Consume()) {}
+
   NS_INLINE_DECL_REFCOUNTING(ServoDeclarationBlock)
 
   static already_AddRefed<ServoDeclarationBlock>

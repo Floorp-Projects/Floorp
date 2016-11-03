@@ -26,6 +26,18 @@ DeclarationBlock::Release()
   MOZ_STYLO_FORWARD(Release, ())
 }
 
+already_AddRefed<DeclarationBlock>
+DeclarationBlock::Clone() const
+{
+  RefPtr<DeclarationBlock> result;
+  if (IsGecko()) {
+    result = new css::Declaration(*AsGecko());
+  } else {
+    result = new ServoDeclarationBlock(*AsServo());
+  }
+  return result.forget();
+}
+
 void
 DeclarationBlock::ToString(nsAString& aString) const
 {
