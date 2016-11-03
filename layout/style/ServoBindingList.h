@@ -74,6 +74,11 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_Equals, bool,
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SerializeOneValue, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsString* buffer)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_Count, uint32_t,
+                   RawServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetNthProperty, bool,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   uint32_t index, nsAString* result)
 
 // CSS supports()
 SERVO_BINDING_FUNC(Servo_CSSSupports, bool,
