@@ -21,6 +21,7 @@ add_task(function* () {
   let target = TargetFactory.forTab(tab);
   toolbox = yield gDevTools.showToolbox(target);
   doc = toolbox.doc;
+  yield registerNewPerToolboxTool();
   yield testSelectTool();
   yield testOptionsShortcut();
   yield testOptions();
@@ -44,6 +45,31 @@ function registerNewTool() {
   gDevTools.registerTool(toolDefinition);
   ok(gDevTools.getToolDefinitionMap().has("test-tool"),
     "The tool is registered");
+}
+
+function registerNewPerToolboxTool() {
+  let toolDefinition = {
+    id: "test-pertoolbox-tool",
+    isTargetSupported: () => true,
+    visibilityswitch: "devtools.test-pertoolbox-tool.enabled",
+    url: "about:blank",
+    label: "perToolboxSomeLabel"
+  };
+
+  ok(gDevTools, "gDevTools exists");
+  ok(!gDevTools.getToolDefinitionMap().has("test-pertoolbox-tool"),
+     "The per-toolbox tool is not registered globally");
+
+  ok(toolbox, "toolbox exists");
+  ok(!toolbox.hasAdditionalTool("test-pertoolbox-tool"),
+     "The per-toolbox tool is not yet registered to the toolbox");
+
+  toolbox.addAdditionalTool(toolDefinition);
+
+  ok(!gDevTools.getToolDefinitionMap().has("test-pertoolbox-tool"),
+     "The per-toolbox tool is not registered globally");
+  ok(toolbox.hasAdditionalTool("test-pertoolbox-tool"),
+     "The per-toolbox tool has been registered to the toolbox");
 }
 
 function* testSelectTool() {
@@ -168,9 +194,13 @@ function* testToggleTools() {
     "#additional-tools-box input[type=checkbox]:not([data-unsupported])");
   let enabledTools = [...toolNodes].filter(node => node.checked);
 
-  let toggleableTools = gDevTools.getDefaultTools().filter(tool => {
-    return tool.visibilityswitch;
-  }).concat(gDevTools.getAdditionalTools());
+  let toggleableTools = gDevTools.getDefaultTools()
+                                 .filter(tool => {
+                                   return tool.visibilityswitch;
+                                 })
+                                 .concat(gDevTools.getAdditionalTools())
+                                 .concat(toolbox.getAdditionalTools());
+
 
   for (let node of toolNodes) {
     let id = node.getAttribute("id");
