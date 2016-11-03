@@ -56,6 +56,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <field name="AppConstants" readonly="true">
         (Components.utils.import("resource://gre/modules/AppConstants.jsm", {})).AppConstants;
       </field>
+
+      <field name="ExtensionSearchHandler" readonly="true">
+        {
+          let searchHandler = {};
+          Components.utils.import("resource://gre/modules/ExtensionSearchHandler.jsm", searchHandler);
+          searchHandler.ExtensionSearchHandler;
+        }
+      </field>
+
       <constructor><![CDATA[
         this._prefs = Components.classes["@mozilla.org/preferences-service;1"]
                                 .getService(Components.interfaces.nsIPrefService)
@@ -172,6 +181,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               case "keyword": // Fall through.
               case "searchengine": {
                 returnValue = action.params.input;
+                break;
+              }
+              case "extension": {
+                returnValue = action.params.content;
                 break;
               }
             }
@@ -470,6 +483,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   actionDetails
                 );
                 break;
+              case "extension":
+                this.handleRevert();
+                // Give the extension control of handling the command.
+                let searchString = action.params.content;
+                let keyword = action.params.keyword;
+                this.ExtensionSearchHandler.handleInputEntered(keyword, searchString, where);
+                return;
             }
           } else if (selectedOneOff && selectedOneOff.engine) {
             // If there's a selected one-off button and the input value is a
@@ -606,7 +626,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               engineOrEngineName;
           let isOneOff = this.popup.oneOffSearchButtons
               .maybeRecordTelemetry(event, openUILinkWhere, openUILinkParams);
-          // Infer the type of the even which triggered the search.
+          // Infer the type of the event which triggered the search.
           let eventType = "unknown";
           if (event instanceof KeyboardEvent) {
             eventType = "key";
@@ -1183,6 +1203,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         if (event.originalTarget == this.inputField) {
           this._clearNoActions();
           this.formatValue();
+        }
+        if (ExtensionSearchHandler.hasActiveInputSession()) {
+          ExtensionSearchHandler.handleInputCancelled();
         }
       ]]></handler>
 
