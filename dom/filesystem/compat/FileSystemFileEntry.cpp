@@ -49,8 +49,9 @@ NS_INTERFACE_MAP_END_INHERITING(FileSystemEntry)
 
 FileSystemFileEntry::FileSystemFileEntry(nsIGlobalObject* aGlobal,
                                          File* aFile,
+                                         FileSystemDirectoryEntry* aParentEntry,
                                          FileSystem* aFileSystem)
-  : FileSystemEntry(aGlobal, aFileSystem)
+  : FileSystemEntry(aGlobal, aParentEntry, aFileSystem)
   , mFile(aFile)
 {
   MOZ_ASSERT(aGlobal);

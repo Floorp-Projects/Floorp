@@ -12,8 +12,9 @@
 namespace mozilla {
 namespace dom {
 
-class File;
 class BlobCallback;
+class File;
+class FileSystemDirectoryEntry;
 
 class FileSystemFileEntry final : public FileSystemEntry
 {
@@ -22,6 +23,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemFileEntry, FileSystemEntry)
 
   FileSystemFileEntry(nsIGlobalObject* aGlobalObject, File* aFile,
+                      FileSystemDirectoryEntry* aParentEntry,
                       FileSystem* aFileSystem);
 
   virtual JSObject*

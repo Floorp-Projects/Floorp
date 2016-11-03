@@ -56,14 +56,14 @@ NS_IMPL_RELEASE_INHERITED(FileSystemRootDirectoryReader,
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileSystemRootDirectoryReader)
 NS_INTERFACE_MAP_END_INHERITING(FileSystemDirectoryReader)
 
-FileSystemRootDirectoryReader::FileSystemRootDirectoryReader(nsIGlobalObject* aGlobal,
+FileSystemRootDirectoryReader::FileSystemRootDirectoryReader(FileSystemDirectoryEntry* aParentEntry,
                                                              FileSystem* aFileSystem,
                                                              const Sequence<RefPtr<FileSystemEntry>>& aEntries)
-  : FileSystemDirectoryReader(aGlobal, aFileSystem, nullptr)
+  : FileSystemDirectoryReader(aParentEntry, aFileSystem, nullptr)
   , mEntries(aEntries)
   , mAlreadyRead(false)
 {
-  MOZ_ASSERT(aGlobal);
+  MOZ_ASSERT(aParentEntry);
   MOZ_ASSERT(aFileSystem);
 }
 

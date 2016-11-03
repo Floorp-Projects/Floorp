@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_FileSystemDirectoryEntry_h
 #define mozilla_dom_FileSystemDirectoryEntry_h
 
-#include "mozilla/dom/FileSystemBinding.h"
 #include "mozilla/dom/FileSystemEntry.h"
 
 namespace mozilla {
@@ -25,6 +24,7 @@ public:
 
   FileSystemDirectoryEntry(nsIGlobalObject* aGlobalObject,
                            Directory* aDirectory,
+                           FileSystemDirectoryEntry* aParentEntry,
                            FileSystem* aFileSystem);
 
   virtual JSObject*
@@ -43,12 +43,12 @@ public:
   GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const override;
 
   virtual already_AddRefed<FileSystemDirectoryReader>
-  CreateReader() const;
+  CreateReader();
 
   void
   GetFile(const Optional<nsAString>& aPath, const FileSystemFlags& aFlag,
           const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
-          const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
+          const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback)
   {
     GetInternal(aPath.WasPassed() ? aPath.Value() : EmptyString(),
                 aFlag, aSuccessCallback, aErrorCallback, eGetFile);
@@ -57,7 +57,7 @@ public:
   void
   GetDirectory(const Optional<nsAString>& aPath, const FileSystemFlags& aFlag,
                const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
-               const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
+               const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback)
   {
     GetInternal(aPath.WasPassed() ? aPath.Value() : EmptyString(),
                 aFlag, aSuccessCallback, aErrorCallback, eGetDirectory);
@@ -73,7 +73,7 @@ public:
   GetInternal(const nsAString& aPath, const FileSystemFlags& aFlag,
               const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
               const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-              GetInternalType aType) const;
+              GetInternalType aType);
 
 protected:
   virtual ~FileSystemDirectoryEntry();

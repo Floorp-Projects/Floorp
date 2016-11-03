@@ -25,8 +25,9 @@ NS_INTERFACE_MAP_END_INHERITING(FileSystemEntry)
 
 FileSystemDirectoryEntry::FileSystemDirectoryEntry(nsIGlobalObject* aGlobal,
                                                    Directory* aDirectory,
+                                                   FileSystemDirectoryEntry* aParentEntry,
                                                    FileSystem* aFileSystem)
-  : FileSystemEntry(aGlobal, aFileSystem)
+  : FileSystemEntry(aGlobal, aParentEntry, aFileSystem)
   , mDirectory(aDirectory)
 {
   MOZ_ASSERT(aGlobal);
@@ -57,12 +58,12 @@ FileSystemDirectoryEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
 }
 
 already_AddRefed<FileSystemDirectoryReader>
-FileSystemDirectoryEntry::CreateReader() const
+FileSystemDirectoryEntry::CreateReader()
 {
   MOZ_ASSERT(mDirectory);
 
   RefPtr<FileSystemDirectoryReader> reader =
-    new FileSystemDirectoryReader(GetParentObject(), Filesystem(), mDirectory);
+    new FileSystemDirectoryReader(this, Filesystem(), mDirectory);
   return reader.forget();
 }
 
@@ -71,7 +72,7 @@ FileSystemDirectoryEntry::GetInternal(const nsAString& aPath,
                                       const FileSystemFlags& aFlag,
                                       const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
                                       const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-                                      GetInternalType aType) const
+                                      GetInternalType aType)
 {
   MOZ_ASSERT(mDirectory);
 
@@ -101,7 +102,7 @@ FileSystemDirectoryEntry::GetInternal(const nsAString& aPath,
   }
 
   RefPtr<GetEntryHelper> handler =
-    new GetEntryHelper(GetParentObject(), Filesystem(),
+    new GetEntryHelper(this, Filesystem(),
                        aSuccessCallback.WasPassed()
                          ? &aSuccessCallback.Value() : nullptr,
                        aErrorCallback.WasPassed()

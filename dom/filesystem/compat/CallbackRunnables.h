@@ -65,7 +65,7 @@ class GetEntryHelper final : public PromiseNativeHandler
 public:
   NS_DECL_ISUPPORTS
 
-  GetEntryHelper(nsIGlobalObject* aGlobalObject,
+  GetEntryHelper(FileSystemDirectoryEntry* aParentEntry,
                  FileSystem* aFileSystem,
                  FileSystemEntryCallback* aSuccessCallback,
                  ErrorCallback* aErrorCallback,
@@ -83,11 +83,19 @@ private:
   void
   Error(nsresult aError);
 
-  nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<FileSystemDirectoryEntry> mParentEntry;
   RefPtr<FileSystem> mFileSystem;
   RefPtr<FileSystemEntryCallback> mSuccessCallback;
   RefPtr<ErrorCallback> mErrorCallback;
   FileSystemDirectoryEntry::GetInternalType mType;
+};
+
+class FileSystemEntryCallbackHelper
+{
+public:
+  static void
+  Call(const Optional<OwningNonNull<FileSystemEntryCallback>>& aEntryCallback,
+       FileSystemEntry* aEntry);
 };
 
 class ErrorCallbackHelper
