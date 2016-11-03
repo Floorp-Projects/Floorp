@@ -138,6 +138,10 @@ static MOZ_MUST_USE bool RunResolutionFunction(JSContext *cx, HandleObject resol
 static bool
 AbruptRejectPromise(JSContext *cx, CallArgs& args, HandleObject promiseObj, HandleObject reject)
 {
+    // Not much we can do about uncatchable exceptions, so just bail.
+    if (!cx->isExceptionPending())
+        return false;
+
     // Step 1.a.
     RootedValue reason(cx);
     if (!GetAndClearException(cx, &reason))
