@@ -41,7 +41,6 @@ public:
                   nsPIDOMWindowInner* aParent,
                   MediaKeys* aKeys,
                   const nsAString& aKeySystem,
-                  const nsAString& aCDMVersion,
                   MediaKeySessionType aSessionType,
                   ErrorResult& aRv);
 
@@ -123,7 +122,6 @@ private:
   RefPtr<MediaKeyError> mMediaKeyError;
   RefPtr<MediaKeys> mKeys;
   const nsString mKeySystem;
-  const nsString mCDMVersion;
   nsString mSessionId;
   const MediaKeySessionType mSessionType;
   const uint32_t mToken;

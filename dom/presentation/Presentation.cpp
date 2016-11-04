@@ -44,54 +44,6 @@ Presentation::Create(nsPIDOMWindowInner* aWindow)
   return presentation.forget();
 }
 
-/* static */ bool
-Presentation::HasReceiverSupport(JSContext* aCx, JSObject* aGlobal)
-{
-  JS::Rooted<JSObject*> global(aCx, aGlobal);
-
-  nsCOMPtr<nsPIDOMWindowInner> inner =
-    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(global));
-  if (NS_WARN_IF(!inner)) {
-    return false;
-  }
-
-  // Grant access to browser receiving pages and their same-origin iframes. (App
-  // pages should be controlled by "presentation" permission in app manifests.)
-  nsCOMPtr<nsIDocShell> docshell = inner->GetDocShell();
-  if (!docshell) {
-    return false;
-  }
-
-  if (!Preferences::GetBool("dom.presentation.testing.simulate-receiver") &&
-      !docshell->GetIsInMozBrowserOrApp()) {
-    return false;
-  }
-
-  nsAutoString presentationURL;
-  nsContentUtils::GetPresentationURL(docshell, presentationURL);
-
-  if (presentationURL.IsEmpty()) {
-    return false;
-  }
-
-  nsCOMPtr<nsIScriptSecurityManager> securityManager =
-    nsContentUtils::GetSecurityManager();
-  if (!securityManager) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> presentationURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(presentationURI), presentationURL);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> docURI = inner->GetDocumentURI();
-  return NS_SUCCEEDED(securityManager->CheckSameOriginURI(presentationURI,
-                                                          docURI,
-                                                          false));
-}
-
 Presentation::Presentation(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
 {
@@ -111,10 +63,6 @@ Presentation::WrapObject(JSContext* aCx,
 void
 Presentation::SetDefaultRequest(PresentationRequest* aRequest)
 {
-  if (IsInPresentedContent()) {
-    return;
-  }
-
   nsCOMPtr<nsIDocument> doc = mWindow ? mWindow->GetExtantDoc() : nullptr;
   if (NS_WARN_IF(!doc)) {
     return;
@@ -130,10 +78,6 @@ Presentation::SetDefaultRequest(PresentationRequest* aRequest)
 already_AddRefed<PresentationRequest>
 Presentation::GetDefaultRequest() const
 {
-  if (IsInPresentedContent()) {
-    return nullptr;
-  }
-
   RefPtr<PresentationRequest> request = mDefaultRequest;
   return request.forget();
 }
@@ -147,7 +91,7 @@ Presentation::GetReceiver()
     return receiver.forget();
   }
 
-  if (!IsInPresentedContent()) {
+  if (!HasReceiverSupport() || !IsInPresentedContent()) {
     return nullptr;
   }
 
@@ -171,6 +115,50 @@ bool
 Presentation::IsStartSessionUnsettled() const
 {
   return mStartSessionUnsettled;
+}
+
+bool
+Presentation::HasReceiverSupport() const
+{
+  if (!mWindow) {
+    return false;
+  }
+
+  // Grant access to browser receiving pages and their same-origin iframes. (App
+  // pages should be controlled by "presentation" permission in app manifests.)
+  nsCOMPtr<nsIDocShell> docShell = mWindow->GetDocShell();
+  if (!docShell) {
+    return false;
+  }
+
+  if (!Preferences::GetBool("dom.presentation.testing.simulate-receiver") &&
+      !docShell->GetIsInMozBrowserOrApp()) {
+    return false;
+  }
+
+  nsAutoString presentationURL;
+  nsContentUtils::GetPresentationURL(docShell, presentationURL);
+
+  if (presentationURL.IsEmpty()) {
+    return false;
+  }
+
+  nsCOMPtr<nsIScriptSecurityManager> securityManager =
+    nsContentUtils::GetSecurityManager();
+  if (!securityManager) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> presentationURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(presentationURI), presentationURL);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> docURI = mWindow->GetDocumentURI();
+  return NS_SUCCEEDED(securityManager->CheckSameOriginURI(presentationURI,
+                                                          docURI,
+                                                          false));
 }
 
 bool

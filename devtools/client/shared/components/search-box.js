@@ -44,7 +44,10 @@ module.exports = createClass({
   },
 
   componentWillUnmount() {
-    this.shortcuts.destroy();
+    if (this.shortcuts) {
+      this.shortcuts.destroy();
+    }
+
     // Clean up an existing timeout.
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);

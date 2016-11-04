@@ -8,7 +8,7 @@
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const DBG_STRINGS_URI = "devtools/locale/debugger.properties";
+const DBG_STRINGS_URI = "devtools/client/locales/debugger.properties";
 const LAZY_EMPTY_DELAY = 150; // ms
 const SCROLL_PAGE_SIZE_DEFAULT = 0;
 const PAGE_SIZE_SCROLL_HEIGHT_RATIO = 100;

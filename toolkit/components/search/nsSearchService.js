@@ -1,15 +1,17 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/debug.js");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
   "resource://gre/modules/AsyncShutdown.jsm");
@@ -141,12 +143,7 @@ const LOCALE_PREF = "general.useragent.locale";
 const USER_DEFINED = "{searchTerms}";
 
 // Custom search parameters
-#ifdef MOZ_OFFICIAL_BRANDING
-const MOZ_OFFICIAL = "official";
-#else
-const MOZ_OFFICIAL = "unofficial";
-#endif
-#expand const MOZ_DISTRIBUTION_ID = __MOZ_DISTRIBUTION_ID__;
+const MOZ_OFFICIAL = AppConstants.MOZ_OFFICIAL_BRANDING ? "official" : "unofficial";
 
 const MOZ_PARAM_LOCALE         = /\{moz:locale\}/g;
 const MOZ_PARAM_DIST_ID        = /\{moz:distributionID\}/g;
@@ -229,26 +226,21 @@ function DO_LOG(aText) {
   Services.console.logStringMessage(aText);
 }
 
-#ifdef DEBUG
 /**
  * In debug builds, use a live, pref-based (browser.search.log) LOG function
- * to allow enabling/disabling without a restart.
+ * to allow enabling/disabling without a restart. Otherwise, don't log at all by
+ * default. This can be overridden at startup by the pref, see SearchService's
+ * _init method.
  */
-function PREF_LOG(aText) {
-  if (getBoolPref(BROWSER_SEARCH_PREF + "log", false))
-    DO_LOG(aText);
+var LOG = function() {};
+
+if (AppConstants.DEBUG) {
+  LOG = function (aText) {
+    if (getBoolPref(BROWSER_SEARCH_PREF + "log", false)) {
+      DO_LOG(aText);
+    }
+  };
 }
-var LOG = PREF_LOG;
-
-#else
-
-/**
- * Otherwise, don't log at all by default. This can be overridden at startup
- * by the pref, see SearchService's _init method.
- */
-var LOG = function(){};
-
-#endif
 
 /**
  * Presents an assertion dialog in non-release builds and throws.
@@ -320,20 +312,15 @@ loadListener.prototype = {
   _engine: null,
   _stream: null,
 
-  QueryInterface: function SRCH_loadQI(aIID) {
-    if (aIID.equals(Ci.nsISupports)           ||
-        aIID.equals(Ci.nsIRequestObserver)    ||
-        aIID.equals(Ci.nsIStreamListener)     ||
-        aIID.equals(Ci.nsIChannelEventSink)   ||
-        aIID.equals(Ci.nsIInterfaceRequestor) ||
-        // See FIXME comment below
-        aIID.equals(Ci.nsIHttpEventSink)      ||
-        aIID.equals(Ci.nsIProgressEventSink)  ||
-        false)
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIRequestObserver,
+    Ci.nsIStreamListener,
+    Ci.nsIChannelEventSink,
+    Ci.nsIInterfaceRequestor,
+    // See FIXME comment below.
+    Ci.nsIHttpEventSink,
+    Ci.nsIProgressEventSink
+  ]),
 
   // nsIRequestObserver
   onStartRequest: function SRCH_loadStartR(aRequest, aContext) {
@@ -408,7 +395,7 @@ function geoSpecificDefaultsEnabled() {
   let geoSpecificDefaults = false;
   try {
     geoSpecificDefaults = Services.prefs.getBoolPref("browser.search.geoSpecificDefaults");
-  } catch(e) {}
+  } catch (e) {}
 
   return geoSpecificDefaults;
 }
@@ -473,7 +460,7 @@ function getIsUS() {
   // If we've got a region pref, trust it.
   try {
     return Services.prefs.getCharPref("browser.search.region") == "US";
-  } catch(e) {}
+  } catch (e) {}
 
   // So we are en-US but have no region pref - fallback to hacky timezone check.
   let isNA = isUSTimezone();
@@ -518,7 +505,7 @@ var ensureKnownCountryCode = Task.async(function* (ss) {
   let countryCode;
   try {
     countryCode = Services.prefs.getCharPref("browser.search.countryCode");
-  } catch(e) {}
+  } catch (e) {}
 
   if (!countryCode) {
     // We don't have it cached, so fetch it. fetchCountryCode() will call
@@ -744,7 +731,7 @@ var fetchRegionDefault = (ss) => new Promise(resolve => {
   let cohort;
   try {
     cohort = Services.prefs.getCharPref(cohortPref);
-  } catch(e) {}
+  } catch (e) {}
   if (cohort)
     endpoint += "/" + cohort;
 
@@ -1020,7 +1007,7 @@ function QueryParameter(aName, aValue, aPurpose) {
 function ParamSubstitution(aParamValue, aSearchTerms, aEngine) {
   var value = aParamValue;
 
-  var distributionID = MOZ_DISTRIBUTION_ID;
+  var distributionID = Services.appinfo.distributionID;
   try {
     distributionID = Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "distributionID");
   }
@@ -1415,18 +1402,16 @@ Engine.prototype = {
    * @returns {Promise} A promise, resolved successfully if initializing from
    * data succeeds, rejected if it fails.
    */
-  _asyncInitFromFile: function SRCH_ENG__asyncInitFromFile(file) {
-    return Task.spawn(function() {
-      if (!file || !(yield OS.File.exists(file.path)))
-        FAIL("File must exist before calling initFromFile!", Cr.NS_ERROR_UNEXPECTED);
+  _asyncInitFromFile: Task.async(function* (file) {
+    if (!file || !(yield OS.File.exists(file.path)))
+      FAIL("File must exist before calling initFromFile!", Cr.NS_ERROR_UNEXPECTED);
 
-      let fileURI = NetUtil.ioService.newFileURI(file);
-      yield this._retrieveSearchXMLData(fileURI.spec);
+    let fileURI = NetUtil.ioService.newFileURI(file);
+    yield this._retrieveSearchXMLData(fileURI.spec);
 
-      // Now that the data is loaded, initialize the engine object
-      this._initFromData();
-    }.bind(this));
-  },
+    // Now that the data is loaded, initialize the engine object
+    this._initFromData();
+  }),
 
   /**
    * Retrieves the engine data from a URI. Initializes the engine, flushes to
@@ -1465,14 +1450,12 @@ Engine.prototype = {
    * @returns {Promise} A promise, resolved successfully if retrieveing data
    * succeeds.
    */
-  _asyncInitFromURI: function SRCH_ENG__asyncInitFromURI(uri) {
-    return Task.spawn(function() {
-      LOG("_asyncInitFromURI: Loading engine from: \"" + uri.spec + "\".");
-      yield this._retrieveSearchXMLData(uri.spec);
-      // Now that the data is loaded, initialize the engine object
-      this._initFromData();
-    }.bind(this));
-  },
+  _asyncInitFromURI: Task.async(function* (uri) {
+    LOG("_asyncInitFromURI: Loading engine from: \"" + uri.spec + "\".");
+    yield this._retrieveSearchXMLData(uri.spec);
+    // Now that the data is loaded, initialize the engine object
+    this._initFromData();
+  }),
 
   /**
    * Retrieves the engine data for a given URI asynchronously.
@@ -2235,23 +2218,23 @@ Engine.prototype = {
         uri = gChromeReg.convertChromeURL(uri);
       }
 
-#ifdef ANDROID
-      // On Android the omni.ja file isn't at the same path as the binary
-      // used to start the process. We tweak the path here so that the code
-      // shared with Desktop will correctly identify files from the omni.ja
-      // file as coming from the [app] folder.
-      let appPath = Services.io.getProtocolHandler("resource")
-                            .QueryInterface(Ci.nsIResProtocolHandler)
-                            .getSubstitution("android");
-      if (appPath) {
-        appPath = appPath.spec;
-        let spec = uri.spec;
-        if (spec.includes(appPath)) {
-          let appURI = Services.io.newFileURI(getDir(knownDirs["app"]));
-          uri = NetUtil.newURI(spec.replace(appPath, appURI.spec));
+      if (AppConstants.platform == "android") {
+        // On Android the omni.ja file isn't at the same path as the binary
+        // used to start the process. We tweak the path here so that the code
+        // shared with Desktop will correctly identify files from the omni.ja
+        // file as coming from the [app] folder.
+        let appPath = Services.io.getProtocolHandler("resource")
+                              .QueryInterface(Ci.nsIResProtocolHandler)
+                              .getSubstitution("android");
+        if (appPath) {
+          appPath = appPath.spec;
+          let spec = uri.spec;
+          if (spec.includes(appPath)) {
+            let appURI = Services.io.newFileURI(getDir(knownDirs["app"]));
+            uri = NetUtil.newURI(spec.replace(appPath, appURI.spec));
+          }
         }
       }
-#endif
 
       if (uri instanceof Ci.nsINestedURI) {
         prefix = "jar:";
@@ -2276,7 +2259,7 @@ Engine.prototype = {
       let path;
       try {
         path = getDir(knownDirs[key]).path;
-      } catch(e) {
+      } catch (e) {
         // Getting XRE_APP_DISTRIBUTION_DIR throws during unit tests.
         continue;
       }
@@ -2391,7 +2374,6 @@ Engine.prototype = {
     url.addParam(aName, aValue);
   },
 
-#ifdef ANDROID
   get _defaultMobileResponseType() {
     let type = URLTYPE_SEARCH_HTML;
 
@@ -2408,7 +2390,6 @@ Engine.prototype = {
     delete this._defaultMobileResponseType;
     return this._defaultMobileResponseType = type;
   },
-#endif
 
   get _isWhiteListed() {
     let url = this._getURLOfType(URLTYPE_SEARCH_HTML).template;
@@ -2427,13 +2408,9 @@ Engine.prototype = {
 
   // from nsISearchEngine
   getSubmission: function SRCH_ENG_getSubmission(aData, aResponseType, aPurpose) {
-#ifdef ANDROID
     if (!aResponseType) {
-      aResponseType = this._defaultMobileResponseType;
-    }
-#endif
-    if (!aResponseType) {
-      aResponseType = URLTYPE_SEARCH_HTML;
+      aResponseType = AppConstants.platform == "android" ? this._defaultMobileResponseType :
+                                                           URLTYPE_SEARCH_HTML;
     }
 
     if (aResponseType == URLTYPE_SEARCH_HTML &&
@@ -2484,13 +2461,9 @@ Engine.prototype = {
 
   // from nsISearchEngine
   getResultDomain: function SRCH_ENG_getResultDomain(aResponseType) {
-#ifdef ANDROID
     if (!aResponseType) {
-      aResponseType = this._defaultMobileResponseType;
-    }
-#endif
-    if (!aResponseType) {
-      aResponseType = URLTYPE_SEARCH_HTML;
+      aResponseType = AppConstants.platform == "android" ? this._defaultMobileResponseType :
+                                                           URLTYPE_SEARCH_HTML;
     }
 
     LOG("getResultDomain: responseType: \"" + aResponseType + "\"");
@@ -2505,11 +2478,8 @@ Engine.prototype = {
    * Returns URL parsing properties used by _buildParseSubmissionMap.
    */
   getURLParsingInfo: function () {
-#ifdef ANDROID
-    let responseType = this._defaultMobileResponseType;
-#else
-    let responseType = URLTYPE_SEARCH_HTML;
-#endif
+    let responseType = AppConstants.platform == "android" ? this._defaultMobileResponseType :
+                                                            URLTYPE_SEARCH_HTML;
 
     LOG("getURLParsingInfo: responseType: \"" + responseType + "\"");
 
@@ -2532,12 +2502,7 @@ Engine.prototype = {
   },
 
   // nsISupports
-  QueryInterface: function SRCH_ENG_QI(aIID) {
-    if (aIID.equals(Ci.nsISearchEngine) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISearchEngine]),
 
   get wrappedJSObject() {
     return this;
@@ -2639,12 +2604,7 @@ Submission.prototype = {
   get postData() {
     return this._postData;
   },
-  QueryInterface: function SRCH_SUBM_QI(aIID) {
-    if (aIID.equals(Ci.nsISearchSubmission) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISearchSubmission])
 }
 
 // nsISearchParseSubmissionResult
@@ -2786,43 +2746,48 @@ SearchService.prototype = {
    * @returns {Promise} A promise, resolved successfully if the initialization
    * succeeds.
    */
-  _asyncInit: function SRCH_SVC__asyncInit() {
+  _asyncInit: Task.async(function* () {
+    LOG("_asyncInit start");
+
     migrateRegionPrefs();
-    return Task.spawn(function() {
-      LOG("_asyncInit start");
 
-      // See if we have a cache file so we don't have to parse a bunch of XML.
-      let cache = {};
-      // Not using checkForSyncCompletion here because we want to ensure we
-      // fetch the country code and geo specific defaults asynchronously even
-      // if a sync init has been forced.
-      cache = yield this._asyncReadCacheFile();
+    // See if we have a cache file so we don't have to parse a bunch of XML.
+    let cache = {};
+    // Not using checkForSyncCompletion here because we want to ensure we
+    // fetch the country code and geo specific defaults asynchronously even
+    // if a sync init has been forced.
+    cache = yield this._asyncReadCacheFile();
 
-      if (!gInitialized && cache.metaData)
-        this._metaData = cache.metaData;
+    if (!gInitialized && cache.metaData)
+      this._metaData = cache.metaData;
 
-      try {
-        yield checkForSyncCompletion(ensureKnownCountryCode(this));
-      } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
-        LOG("_asyncInit: failure determining country code: " + ex);
+    try {
+      yield checkForSyncCompletion(ensureKnownCountryCode(this));
+    } catch (ex) {
+      if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
+        throw ex;
       }
-      try {
-        yield checkForSyncCompletion(this._asyncLoadEngines(cache));
-      } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
-        this._initRV = Cr.NS_ERROR_FAILURE;
-        LOG("_asyncInit: failure loading engines: " + ex);
+      LOG("_asyncInit: failure determining country code: " + ex);
+    }
+    try {
+      yield checkForSyncCompletion(this._asyncLoadEngines(cache));
+    } catch (ex) {
+      if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
+        throw ex;
       }
-      this._addObservers();
-      gInitialized = true;
-      this._cacheFileJSON = null;
-      this._initObservers.resolve(this._initRV);
-      Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
-      Services.telemetry.getHistogramById("SEARCH_SERVICE_INIT_SYNC").add(false);
-      this._recordEngineTelemetry();
+      this._initRV = Cr.NS_ERROR_FAILURE;
+      LOG("_asyncInit: failure loading engines: " + ex);
+    }
+    this._addObservers();
+    gInitialized = true;
+    this._cacheFileJSON = null;
+    this._initObservers.resolve(this._initRV);
+    Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
+    Services.telemetry.getHistogramById("SEARCH_SERVICE_INIT_SYNC").add(false);
+    this._recordEngineTelemetry();
 
-      LOG("_asyncInit: Completed _asyncInit");
-    }.bind(this));
-  },
+    LOG("_asyncInit: Completed _asyncInit");
+  }),
 
   _metaData: { },
   setGlobalAttr(name, val) {
@@ -3016,136 +2981,138 @@ SearchService.prototype = {
    * @returns {Promise} A promise, resolved successfully if loading data
    * succeeds.
    */
-  _asyncLoadEngines: function SRCH_SVC__asyncLoadEngines(cache) {
-    return Task.spawn(function() {
-      LOG("_asyncLoadEngines: start");
-      Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "find-jar-engines");
-      let chromeURIs =
-        yield checkForSyncCompletion(this._asyncFindJAREngines());
+  _asyncLoadEngines: Task.async(function* (cache) {
+    LOG("_asyncLoadEngines: start");
+    Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "find-jar-engines");
+    let chromeURIs =
+      yield checkForSyncCompletion(this._asyncFindJAREngines());
 
-      // Get the non-empty distribution directories into distDirs...
-      let distDirs = [];
-      let locations;
+    // Get the non-empty distribution directories into distDirs...
+    let distDirs = [];
+    let locations;
+    try {
+      locations = getDir(NS_APP_DISTRIBUTION_SEARCH_DIR_LIST,
+                         Ci.nsISimpleEnumerator);
+    } catch (e) {
+      // NS_APP_DISTRIBUTION_SEARCH_DIR_LIST is defined by each app
+      // so this throws during unit tests (but not xpcshell tests).
+      locations = {hasMoreElements: () => false};
+    }
+    while (locations.hasMoreElements()) {
+      let dir = locations.getNext().QueryInterface(Ci.nsIFile);
+      let iterator = new OS.File.DirectoryIterator(dir.path,
+                                                   { winPattern: "*.xml" });
       try {
-        locations = getDir(NS_APP_DISTRIBUTION_SEARCH_DIR_LIST,
-                           Ci.nsISimpleEnumerator);
-      } catch (e) {
-        // NS_APP_DISTRIBUTION_SEARCH_DIR_LIST is defined by each app
-        // so this throws during unit tests (but not xpcshell tests).
-        locations = {hasMoreElements: () => false};
-      }
-      while (locations.hasMoreElements()) {
-        let dir = locations.getNext().QueryInterface(Ci.nsIFile);
-        let iterator = new OS.File.DirectoryIterator(dir.path,
-                                                     { winPattern: "*.xml" });
-        try {
-          // Add dir to distDirs if it contains any files.
-          yield checkForSyncCompletion(iterator.next());
-          distDirs.push(dir);
-        } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
-          // Catch for StopIteration exception.
-        } finally {
-          iterator.close();
+        // Add dir to distDirs if it contains any files.
+        yield checkForSyncCompletion(iterator.next());
+        distDirs.push(dir);
+      } catch (ex) {
+        // Catch for StopIteration exception.
+        if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
+          throw ex;
         }
+      } finally {
+        iterator.close();
       }
+    }
 
-      // Add the non-empty directories of NS_APP_SEARCH_DIR_LIST to
-      // otherDirs...
-      let otherDirs = [];
-      let userSearchDir = getDir(NS_APP_USER_SEARCH_DIR);
-      locations = getDir(NS_APP_SEARCH_DIR_LIST, Ci.nsISimpleEnumerator);
-      while (locations.hasMoreElements()) {
-        let dir = locations.getNext().QueryInterface(Ci.nsIFile);
-        if (cache.engines && dir.equals(userSearchDir))
+    // Add the non-empty directories of NS_APP_SEARCH_DIR_LIST to
+    // otherDirs...
+    let otherDirs = [];
+    let userSearchDir = getDir(NS_APP_USER_SEARCH_DIR);
+    locations = getDir(NS_APP_SEARCH_DIR_LIST, Ci.nsISimpleEnumerator);
+    while (locations.hasMoreElements()) {
+      let dir = locations.getNext().QueryInterface(Ci.nsIFile);
+      if (cache.engines && dir.equals(userSearchDir))
+        continue;
+      let iterator = new OS.File.DirectoryIterator(dir.path,
+                                                   { winPattern: "*.xml" });
+      try {
+        // Add dir to otherDirs if it contains any files.
+        yield checkForSyncCompletion(iterator.next());
+        otherDirs.push(dir);
+      } catch (ex) {
+        // Catch for StopIteration exception.
+        if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
+          throw ex;
+        }
+      } finally {
+        iterator.close();
+      }
+    }
+
+    let hasModifiedDir = Task.async(function* (aList) {
+      let modifiedDir = false;
+
+      for (let dir of aList) {
+        let lastModifiedTime = cacheOtherPaths.get(dir.path);
+        if (!lastModifiedTime) {
           continue;
-        let iterator = new OS.File.DirectoryIterator(dir.path,
-                                                     { winPattern: "*.xml" });
-        try {
-          // Add dir to otherDirs if it contains any files.
-          yield checkForSyncCompletion(iterator.next());
-          otherDirs.push(dir);
-        } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
-          // Catch for StopIteration exception.
-        } finally {
-          iterator.close();
-        }
-      }
-
-      function hasModifiedDir(aList) {
-        return Task.spawn(function() {
-          let modifiedDir = false;
-
-          for (let dir of aList) {
-            let lastModifiedTime = cacheOtherPaths.get(dir.path);
-            if (!lastModifiedTime) {
-              continue;
-            }
-
-            let info = yield OS.File.stat(dir.path);
-            if (lastModifiedTime != info.lastModificationDate.getTime()) {
-              modifiedDir = true;
-              break;
-            }
-          }
-          throw new Task.Result(modifiedDir);
-        });
-      }
-
-      function notInCacheVisibleEngines(aEngineName) {
-        return cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
-      }
-
-      let buildID = Services.appinfo.platformBuildID;
-      let cacheOtherPaths = new Map();
-      if (cache.engines) {
-        for (let engine of cache.engines) {
-          if (engine._dirPath) {
-            cacheOtherPaths.set(engine._dirPath, engine._dirLastModifiedTime);
-          }
-        }
-      }
-
-      let rebuildCache = !cache.engines ||
-                         cache.version != CACHE_VERSION ||
-                         cache.locale != getLocale() ||
-                         cache.buildID != buildID ||
-                         cacheOtherPaths.size != otherDirs.length ||
-                         otherDirs.some(d => !cacheOtherPaths.has(d.path)) ||
-                         cache.visibleDefaultEngines.length != this._visibleDefaultEngines.length ||
-                         this._visibleDefaultEngines.some(notInCacheVisibleEngines) ||
-                         (yield checkForSyncCompletion(hasModifiedDir(otherDirs)));
-
-      if (rebuildCache) {
-        LOG("_asyncLoadEngines: Absent or outdated cache. Loading engines from disk.");
-        for (let loadDir of distDirs) {
-          let enginesFromDir =
-            yield checkForSyncCompletion(this._asyncLoadEnginesFromDir(loadDir));
-          enginesFromDir.forEach(this._addEngineToStore, this);
-        }
-        let enginesFromURLs =
-          yield checkForSyncCompletion(this._asyncLoadFromChromeURLs(chromeURIs));
-        enginesFromURLs.forEach(this._addEngineToStore, this);
-
-        LOG("_asyncLoadEngines: loading user-installed engines from the obsolete cache");
-        this._loadEnginesFromCache(cache, true);
-
-        for (let loadDir of otherDirs) {
-          let enginesFromDir =
-            yield checkForSyncCompletion(this._asyncLoadEnginesFromDir(loadDir));
-          enginesFromDir.forEach(this._addEngineToStore, this);
         }
 
-        this._loadEnginesMetadataFromCache(cache);
-        this._buildCache();
-        return;
+        let info = yield OS.File.stat(dir.path);
+        if (lastModifiedTime != info.lastModificationDate.getTime()) {
+          modifiedDir = true;
+          break;
+        }
+      }
+      return modifiedDir;
+    });
+
+    function notInCacheVisibleEngines(aEngineName) {
+      return cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
+    }
+
+    let buildID = Services.appinfo.platformBuildID;
+    let cacheOtherPaths = new Map();
+    if (cache.engines) {
+      for (let engine of cache.engines) {
+        if (engine._dirPath) {
+          cacheOtherPaths.set(engine._dirPath, engine._dirLastModifiedTime);
+        }
+      }
+    }
+
+    let rebuildCache = !cache.engines ||
+                       cache.version != CACHE_VERSION ||
+                       cache.locale != getLocale() ||
+                       cache.buildID != buildID ||
+                       cacheOtherPaths.size != otherDirs.length ||
+                       otherDirs.some(d => !cacheOtherPaths.has(d.path)) ||
+                       cache.visibleDefaultEngines.length != this._visibleDefaultEngines.length ||
+                       this._visibleDefaultEngines.some(notInCacheVisibleEngines) ||
+                       (yield checkForSyncCompletion(hasModifiedDir(otherDirs)));
+
+    if (rebuildCache) {
+      LOG("_asyncLoadEngines: Absent or outdated cache. Loading engines from disk.");
+      for (let loadDir of distDirs) {
+        let enginesFromDir =
+          yield checkForSyncCompletion(this._asyncLoadEnginesFromDir(loadDir));
+        enginesFromDir.forEach(this._addEngineToStore, this);
+      }
+      let enginesFromURLs =
+        yield checkForSyncCompletion(this._asyncLoadFromChromeURLs(chromeURIs));
+      enginesFromURLs.forEach(this._addEngineToStore, this);
+
+      LOG("_asyncLoadEngines: loading user-installed engines from the obsolete cache");
+      this._loadEnginesFromCache(cache, true);
+
+      for (let loadDir of otherDirs) {
+        let enginesFromDir =
+          yield checkForSyncCompletion(this._asyncLoadEnginesFromDir(loadDir));
+        enginesFromDir.forEach(this._addEngineToStore, this);
       }
 
-      LOG("_asyncLoadEngines: loading from cache directories");
-      this._loadEnginesFromCache(cache);
+      this._loadEnginesMetadataFromCache(cache);
+      this._buildCache();
+      return;
+    }
 
-      LOG("_asyncLoadEngines: done");
-    }.bind(this));
-  },
+    LOG("_asyncLoadEngines: loading from cache directories");
+    this._loadEnginesFromCache(cache);
+
+    LOG("_asyncLoadEngines: done");
+  }),
 
   _asyncReInit: function () {
     LOG("_asyncReInit");
@@ -3232,7 +3199,7 @@ SearchService.prototype = {
       if (!json.engines || !json.engines.length)
         throw "no engine in the file";
       return json;
-    } catch(ex) {
+    } catch (ex) {
       LOG("_readCacheFile: Error reading cache file: " + ex);
     } finally {
       stream.close();
@@ -3262,7 +3229,7 @@ SearchService.prototype = {
       json._oldMetadata = metadata;
 
       return json;
-    } catch(ex) {
+    } catch (ex) {
       LOG("_readCacheFile: failed to read old metadata: " + ex);
       return {};
     } finally {
@@ -3277,45 +3244,43 @@ SearchService.prototype = {
    * @returns {Promise} A promise, resolved successfully if retrieveing data
    * succeeds.
    */
-  _asyncReadCacheFile: function SRCH_SVC__asyncReadCacheFile() {
-    return Task.spawn(function() {
-      let json;
-      try {
-        let cacheFilePath = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
-        let bytes = yield OS.File.read(cacheFilePath, {compression: "lz4"});
-        json = JSON.parse(new TextDecoder().decode(bytes));
-        if (!json.engines || !json.engines.length)
-          throw "no engine in the file";
-        this._cacheFileJSON = json;
-      } catch (ex) {
-        LOG("_asyncReadCacheFile: Error reading cache file: " + ex);
-        json = {};
+  _asyncReadCacheFile: Task.async(function* () {
+    let json;
+    try {
+      let cacheFilePath = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
+      let bytes = yield OS.File.read(cacheFilePath, {compression: "lz4"});
+      json = JSON.parse(new TextDecoder().decode(bytes));
+      if (!json.engines || !json.engines.length)
+        throw "no engine in the file";
+      this._cacheFileJSON = json;
+    } catch (ex) {
+      LOG("_asyncReadCacheFile: Error reading cache file: " + ex);
+      json = {};
 
-        let oldMetadata =
-          OS.Path.join(OS.Constants.Path.profileDir, "search-metadata.json");
-        try {
-          let bytes = yield OS.File.read(oldMetadata);
-          let metadata = JSON.parse(new TextDecoder().decode(bytes));
-          if ("[global]" in metadata) {
-            LOG("_asyncReadCacheFile: migrating metadata from search-metadata.json");
-            let data = metadata["[global]"];
-            json.metaData = {};
-            let fields = ["searchDefault", "searchDefaultHash", "searchDefaultExpir",
-                          "current", "hash",
-                          "visibleDefaultEngines", "visibleDefaultEnginesHash"];
-            for (let field of fields) {
-              let name = field.toLowerCase();
-              if (name in data)
-                json.metaData[field] = data[name];
-            }
+      let oldMetadata =
+        OS.Path.join(OS.Constants.Path.profileDir, "search-metadata.json");
+      try {
+        let bytes = yield OS.File.read(oldMetadata);
+        let metadata = JSON.parse(new TextDecoder().decode(bytes));
+        if ("[global]" in metadata) {
+          LOG("_asyncReadCacheFile: migrating metadata from search-metadata.json");
+          let data = metadata["[global]"];
+          json.metaData = {};
+          let fields = ["searchDefault", "searchDefaultHash", "searchDefaultExpir",
+                        "current", "hash",
+                        "visibleDefaultEngines", "visibleDefaultEnginesHash"];
+          for (let field of fields) {
+            let name = field.toLowerCase();
+            if (name in data)
+              json.metaData[field] = data[name];
           }
-          delete metadata["[global]"];
-          json._oldMetadata = metadata;
-        } catch (ex) {}
-      }
-      throw new Task.Result(json);
-    }.bind(this));
-  },
+        }
+        delete metadata["[global]"];
+        json._oldMetadata = metadata;
+      } catch (ex) {}
+    }
+    return json;
+  }),
 
   _batchTask: null,
   get batchTask() {
@@ -3491,52 +3456,53 @@ SearchService.prototype = {
    * @returns {Promise} A promise, resolved successfully if retrieveing data
    * succeeds.
    */
-  _asyncLoadEnginesFromDir: function SRCH_SVC__asyncLoadEnginesFromDir(aDir) {
+  _asyncLoadEnginesFromDir: Task.async(function* (aDir) {
     LOG("_asyncLoadEnginesFromDir: Searching in " + aDir.path + " for search engines.");
 
     // Check whether aDir is the user profile dir
     let isInProfile = aDir.equals(getDir(NS_APP_USER_SEARCH_DIR));
     let dirPath = aDir.path;
     let iterator = new OS.File.DirectoryIterator(dirPath);
-    return Task.spawn(function() {
-      let osfiles = yield iterator.nextBatch();
-      iterator.close();
 
-      let engines = [];
-      for (let osfile of osfiles) {
-        if (osfile.isDir || osfile.isSymLink)
-          continue;
+    let osfiles = yield iterator.nextBatch();
+    iterator.close();
 
-        let fileInfo = yield OS.File.stat(osfile.path);
-        if (fileInfo.size == 0)
-          continue;
+    let engines = [];
+    for (let osfile of osfiles) {
+      if (osfile.isDir || osfile.isSymLink)
+        continue;
 
-        let parts = osfile.path.split(".");
-        if (parts.length <= 1 || (parts.pop()).toLowerCase() != "xml") {
-          // Not an engine
-          continue;
-        }
+      let fileInfo = yield OS.File.stat(osfile.path);
+      if (fileInfo.size == 0)
+        continue;
 
-        let addedEngine = null;
-        try {
-          let file = new FileUtils.File(osfile.path);
-          addedEngine = new Engine(file, !isInProfile);
-          yield checkForSyncCompletion(addedEngine._asyncInitFromFile(file));
-          if (!isInProfile && !addedEngine._isDefault) {
-            addedEngine._dirPath = dirPath;
-            let info = yield OS.File.stat(dirPath);
-            addedEngine._dirLastModifiedTime =
-              info.lastModificationDate.getTime();
-          }
-        } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
-          LOG("_asyncLoadEnginesFromDir: Failed to load " + osfile.path + "!\n" + ex);
-          continue;
+      let parts = osfile.path.split(".");
+      if (parts.length <= 1 || (parts.pop()).toLowerCase() != "xml") {
+        // Not an engine
+        continue;
+      }
+
+      let addedEngine = null;
+      try {
+        let file = new FileUtils.File(osfile.path);
+        addedEngine = new Engine(file, !isInProfile);
+        yield checkForSyncCompletion(addedEngine._asyncInitFromFile(file));
+        if (!isInProfile && !addedEngine._isDefault) {
+          addedEngine._dirPath = dirPath;
+          let info = yield OS.File.stat(dirPath);
+          addedEngine._dirLastModifiedTime =
+            info.lastModificationDate.getTime();
         }
         engines.push(addedEngine);
+      } catch (ex) {
+        if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
+          throw ex;
+        }
+        LOG("_asyncLoadEnginesFromDir: Failed to load " + osfile.path + "!\n" + ex);
       }
-      throw new Task.Result(engines);
-    }.bind(this));
-  },
+    }
+    return engines;
+  }),
 
   _loadFromChromeURLs: function SRCH_SVC_loadFromChromeURLs(aURLs) {
     aURLs.forEach(function (url) {
@@ -3563,23 +3529,24 @@ SearchService.prototype = {
    * @returns {Promise} A promise, resolved successfully if loading data
    * succeeds.
    */
-  _asyncLoadFromChromeURLs: function SRCH_SVC__asyncLoadFromChromeURLs(aURLs) {
-    return Task.spawn(function() {
-      let engines = [];
-      for (let url of aURLs) {
-        try {
-          LOG("_asyncLoadFromChromeURLs: loading engine from chrome url: " + url);
-          let uri = NetUtil.newURI(url);
-          let engine = new Engine(uri, true);
-          yield checkForSyncCompletion(engine._asyncInitFromURI(uri));
-          engines.push(engine);
-        } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
-          LOG("_asyncLoadFromChromeURLs: failed to load engine: " + ex);
+  _asyncLoadFromChromeURLs: Task.async(function* (aURLs) {
+    let engines = [];
+    for (let url of aURLs) {
+      try {
+        LOG("_asyncLoadFromChromeURLs: loading engine from chrome url: " + url);
+        let uri = NetUtil.newURI(url);
+        let engine = new Engine(uri, true);
+        yield checkForSyncCompletion(engine._asyncInitFromURI(uri));
+        engines.push(engine);
+      } catch (ex) {
+        if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
+          throw ex;
         }
+        LOG("_asyncLoadFromChromeURLs: failed to load engine: " + ex);
       }
-      throw new Task.Result(engines);
-    }.bind(this));
-  },
+    }
+    return engines;
+  }),
 
   _convertChannelToFile: function(chan) {
     let fileURI = chan.URI;
@@ -3623,55 +3590,53 @@ SearchService.prototype = {
    * @returns {Promise} A promise, resolved successfully if finding jar engines
    * succeeds.
    */
-  _asyncFindJAREngines: function SRCH_SVC__asyncFindJAREngines() {
-    return Task.spawn(function() {
-      LOG("_asyncFindJAREngines: looking for engines in JARs")
+  _asyncFindJAREngines: Task.async(function* () {
+    LOG("_asyncFindJAREngines: looking for engines in JARs")
 
-      let listURL = APP_SEARCH_PREFIX + "list.json";
-      let chan = makeChannel(listURL);
-      if (!chan) {
-        LOG("_asyncFindJAREngines: " + APP_SEARCH_PREFIX + " isn't registered");
-        throw new Task.Result([]);
-      }
+    let listURL = APP_SEARCH_PREFIX + "list.json";
+    let chan = makeChannel(listURL);
+    if (!chan) {
+      LOG("_asyncFindJAREngines: " + APP_SEARCH_PREFIX + " isn't registered");
+      return [];
+    }
 
-      let uris = [];
+    let uris = [];
 
-      // Read list.json to find the engines we need to load.
-      let deferred = Promise.defer();
-      let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                      createInstance(Ci.nsIXMLHttpRequest);
-      request.overrideMimeType("text/plain");
-      request.onload = function(aEvent) {
-        deferred.resolve(aEvent.target.responseText);
-      };
+    // Read list.json to find the engines we need to load.
+    let deferred = Promise.defer();
+    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                    createInstance(Ci.nsIXMLHttpRequest);
+    request.overrideMimeType("text/plain");
+    request.onload = function(aEvent) {
+      deferred.resolve(aEvent.target.responseText);
+    };
+    request.onerror = function(aEvent) {
+      LOG("_asyncFindJAREngines: failed to read " + listURL);
+      // Couldn't find list.json, try list.txt
       request.onerror = function(aEvent) {
-        LOG("_asyncFindJAREngines: failed to read " + listURL);
-        // Couldn't find list.json, try list.txt
-        request.onerror = function(aEvent) {
-          LOG("_asyncFindJAREngines: failed to read " + APP_SEARCH_PREFIX + "list.txt");
-          deferred.resolve("");
-        }
-        request.open("GET", NetUtil.newURI(APP_SEARCH_PREFIX + "list.txt").spec, true);
-        request.send();
-      };
-      request.open("GET", NetUtil.newURI(listURL).spec, true);
-      request.send();
-      let list = yield deferred.promise;
-
-      if (request.responseURL.endsWith(".txt")) {
-        this._parseListTxt(list, uris);
-      } else {
-        this._parseListJSON(list, uris);
+        LOG("_asyncFindJAREngines: failed to read " + APP_SEARCH_PREFIX + "list.txt");
+        deferred.resolve("");
       }
-      throw new Task.Result(uris);
-    }.bind(this));
-  },
+      request.open("GET", NetUtil.newURI(APP_SEARCH_PREFIX + "list.txt").spec, true);
+      request.send();
+    };
+    request.open("GET", NetUtil.newURI(listURL).spec, true);
+    request.send();
+    let list = yield deferred.promise;
+
+    if (request.responseURL.endsWith(".txt")) {
+      this._parseListTxt(list, uris);
+    } else {
+      this._parseListJSON(list, uris);
+    }
+    return uris;
+  }),
 
   _parseListJSON: function SRCH_SVC_parseListJSON(list, uris) {
     let searchSettings;
     try {
       searchSettings = JSON.parse(list);
-    } catch(e) {
+    } catch (e) {
       LOG("failing to parse list.json: " + e);
       return;
     }
@@ -3919,18 +3884,20 @@ SearchService.prototype = {
     if (!this._initStarted) {
       TelemetryStopwatch.start("SEARCH_SERVICE_INIT_MS");
       this._initStarted = true;
-      Task.spawn(function task() {
+      Task.spawn(function* task() {
         try {
           // Complete initialization by calling asynchronous initializer.
           yield self._asyncInit();
           TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
-        } catch (ex if ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
-          // No need to pursue asynchronous because synchronous fallback was
-          // called and has finished.
-          TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
         } catch (ex) {
-          self._initObservers.reject(ex);
-          TelemetryStopwatch.cancel("SEARCH_SERVICE_INIT_MS");
+          if (ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
+            // No need to pursue asynchronous because synchronous fallback was
+            // called and has finished.
+            TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
+          } else {
+            self._initObservers.reject(ex);
+            TelemetryStopwatch.cancel("SEARCH_SERVICE_INIT_MS");
+          }
         }
       });
     }
@@ -3975,7 +3942,7 @@ SearchService.prototype = {
     this._ensureInitialized();
     function isDefault(engine) {
       return engine._isDefault;
-    };
+    }
     var engines = this._sortedEngines.filter(isDefault);
     var engineOrder = {};
     var engineName;
@@ -4311,7 +4278,7 @@ SearchService.prototype = {
     let engine;
     try {
       engine = this.defaultEngine;
-    } catch(e) {
+    } catch (e) {
       // The defaultEngine getter will throw if there's no engine at all,
       // which shouldn't happen unless an add-on or a test deleted all of them.
       // Our preferences UI doesn't let users do that.
@@ -4354,7 +4321,7 @@ SearchService.prototype = {
               sendSubmissionURL = true;
               break;
             }
-          } catch(e) {}
+          } catch (e) {}
         }
 
         let prefNameBase = getGeoSpecificPrefName(BROWSER_SEARCH_PREF + "order");
@@ -4487,8 +4454,14 @@ SearchService.prototype = {
     // Quick helper method to ensure formData filtered/sorted for compares.
     let getSortedFormData = data => {
       return data.filter(a => a.name && a.value).sort((a, b) => {
-        return (a.name > b.name) ? 1 : (b.name > a.name) ? -1 :
-               (a.value > b.value) ? 1 : (b.value > a.value) ? -1 : 0;
+        if (a.name > b.name) {
+          return 1;
+        } else if (b.name > a.name) {
+          return -1;
+        } else if (a.value > b.value) {
+          return 1;
+        }
+        return (b.value > a.value) ? -1 : 0;
       });
     };
 
@@ -4505,7 +4478,7 @@ SearchService.prototype = {
             url.template != template ||
             url.params.length != sortedFormLength) {
           return false;
-        };
+        }
 
         // Ensure engineURL formData is pre-sorted. Then, we're
         // not an engineURL match if any queryParam doesn't compare.
@@ -4517,8 +4490,8 @@ SearchService.prototype = {
               param.value != formData.value ||
               param.purpose != formData.purpose) {
             return false;
-          };
-        };
+          }
+        }
         // Else we're a match.
         return true;
       });
@@ -4703,9 +4676,9 @@ SearchService.prototype = {
     Services.obs.addObserver(this, SEARCH_ENGINE_TOPIC, false);
     Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC, false);
 
-#ifdef MOZ_FENNEC
-    Services.prefs.addObserver(LOCALE_PREF, this, false);
-#endif
+    if (AppConstants.MOZ_BUILD_APP == "mobile/android") {
+      Services.prefs.addObserver(LOCALE_PREF, this, false);
+    }
 
     // The current stage of shutdown. Used to help analyze crash
     // signatures in case of shutdown timeout.
@@ -4748,19 +4721,16 @@ SearchService.prototype = {
     Services.obs.removeObserver(this, SEARCH_ENGINE_TOPIC);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
 
-#ifdef MOZ_FENNEC
-    Services.prefs.removeObserver(LOCALE_PREF, this);
-#endif
+    if (AppConstants.MOZ_BUILD_APP == "mobile/android") {
+      Services.prefs.removeObserver(LOCALE_PREF, this);
+    }
   },
 
-  QueryInterface: function SRCH_SVC_QI(aIID) {
-    if (aIID.equals(Ci.nsIBrowserSearchService) ||
-        aIID.equals(Ci.nsIObserver)             ||
-        aIID.equals(Ci.nsITimerCallback)        ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIBrowserSearchService,
+    Ci.nsIObserver,
+    Ci.nsITimerCallback
+  ])
 };
 
 
@@ -4817,5 +4787,3 @@ var engineUpdateService = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SearchService]);
-
-#include ../../../toolkit/modules/debug.js

@@ -25,6 +25,7 @@ window.onload = Task.async(function* () {
     yield testBooleanObject();
     yield testNumberObject();
     yield testStringObject();
+    yield testProxy();
 
     // Test property iterator
     yield testMaxProps();
@@ -166,6 +167,40 @@ window.onload = Task.async(function* () {
       {
         mode: "tiny",
         expectedOutput: `String`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testProxy() {
+    // Test object: `new Proxy({a:1},[1,2,3])`
+    const testName = "testProxy";
+
+    // Test that correct rep is chosen
+    const gripStub = getGripStub(testName);
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, Grip.rep, `Rep correctly selects ${Grip.rep.displayName}`);
+
+    // Test rendering
+    const defaultOutput = `Proxy { <target>: Object, <handler>: [3] }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `Proxy`,
       },
       {
         mode: "short",
@@ -675,6 +710,54 @@ window.onload = Task.async(function* () {
             "ownPropertiesLength": 4,
             "safeGetterValues": {},
             "wrappedValue": "foo"
+          }
+        };
+      case "testProxy":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj47",
+          "class": "Proxy",
+          "proxyTarget": {
+            "type": "object",
+            "actor": "server1.conn1.child1/obj48",
+            "class": "Object",
+            "ownPropertyLength": 1
+          },
+          "proxyHandler": {
+            "type": "object",
+            "actor": "server1.conn1.child1/obj49",
+            "class": "Array",
+            "ownPropertyLength": 4,
+            "preview": {
+              "kind": "ArrayLike",
+              "length": 3
+            }
+          },
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {
+              "<target>": {
+                "value": {
+                  "type": "object",
+                  "actor": "server1.conn1.child1/obj48",
+                  "class": "Object",
+                  "ownPropertyLength": 1
+                }
+              },
+              "<handler>": {
+                "value": {
+                  "type": "object",
+                  "actor": "server1.conn1.child1/obj49",
+                  "class": "Array",
+                  "ownPropertyLength": 4,
+                  "preview": {
+                    "kind": "ArrayLike",
+                    "length": 3
+                  }
+                }
+              }
+            },
+            "ownPropertiesLength": 2
           }
         };
     }

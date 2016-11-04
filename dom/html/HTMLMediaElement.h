@@ -1212,7 +1212,7 @@ protected:
   bool IsPlayingThroughTheAudioChannel() const;
 
   // Update the audio channel playing state
-  void UpdateAudioChannelPlayingState();
+  void UpdateAudioChannelPlayingState(bool aForcePlaying = false);
 
   // Adds to the element's list of pending text tracks each text track
   // in the element's list of text tracks whose text track mode is not disabled
@@ -1229,7 +1229,8 @@ protected:
   // Notifies the audio channel agent when the element starts or stops playing.
   void NotifyAudioChannelAgent(bool aPlaying);
 
-  // Creates the audio channel agent.
+  // Creates the audio channel agent in the beginning and this agent would be
+  // used to communicate with the AudioChannelService.
   void CreateAudioChannelAgent();
 
   // Determine if the element should be paused because of suspend conditions.
@@ -1268,7 +1269,15 @@ protected:
   bool IsSuspendedByAudioChannel() const;
   void SetAudioChannelSuspended(SuspendTypes aSuspend);
 
+  // A method to check whether the media element is allowed to start playback.
   bool IsAllowedToPlay();
+
+  // If the network state is empty and then we would trigger DoLoad().
+  void MaybeDoLoad();
+
+  // True if the tab which media element belongs to has been to foreground at
+  // least once or activated by manually clicking the unblocking tab icon.
+  bool IsTabActivated() const;
 
   bool IsAudible() const;
   bool HaveFailedWithSourceNotSupportedError() const;
@@ -1634,7 +1643,8 @@ protected:
   // playback.
   bool mDisableVideo;
 
-  // An agent used to join audio channel service.
+  // An agent used to join audio channel service and its life cycle would equal
+  // to media element.
   RefPtr<AudioChannelAgent> mAudioChannelAgent;
 
   RefPtr<TextTrackManager> mTextTrackManager;

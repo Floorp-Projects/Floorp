@@ -10454,5 +10454,15 @@
     "n_buckets": 50,
     "bug_numbers": [1301346],
     "description": "The time spent handling beforeunload event in milliseconds. It measures all documents and subframes separately. If there are multiple handlers for the unload event in a document, this will record a single value across all handlers in the document."
+  },
+  "TABCHILD_PAINT_TIME": {
+    "alert_emails": ["mconley@mozilla.com"],
+    "bug_numbers": [1313686],
+    "expires_in_version": "56",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "description": "Time spent painting the contents of a remote browser (ms).",
+    "releaseChannelCollection": "opt-out"
   }
 }

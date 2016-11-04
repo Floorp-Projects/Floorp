@@ -119,7 +119,7 @@ add_test(function test_isr_duplicateChildren()  {
 function getDummyServerAndClient() {
   let server = [
     {
-      id: 'aaaaaaaaaaaa',
+      id: 'menu',
       parentid: 'places',
       type: 'folder',
       parentName: '',
@@ -129,14 +129,14 @@ function getDummyServerAndClient() {
     {
       id: 'bbbbbbbbbbbb',
       type: 'bookmark',
-      parentid: 'aaaaaaaaaaaa',
+      parentid: 'menu',
       parentName: 'foo',
       title: 'bar',
       bmkUri: 'http://baz.com'
     },
     {
       id: 'cccccccccccc',
-      parentid: 'aaaaaaaaaaaa',
+      parentid: 'menu',
       parentName: 'foo',
       title: '',
       type: 'query',
@@ -151,7 +151,7 @@ function getDummyServerAndClient() {
     "type": "text/x-moz-place-container",
     "children": [
       {
-        "guid": "aaaaaaaaaaaa",
+        "guid": "menu________",
         "title": "foo",
         "id": 1000,
         "type": "text/x-moz-place-container",
@@ -203,7 +203,7 @@ add_test(function test_cswc_serverMissing() {
   let c = new BookmarkValidator().compareServerWithClient(server, client).problemData;
   deepEqual(c.serverMissing, ['cccccccccccc']);
   equal(c.clientMissing.length, 0);
-  deepEqual(c.structuralDifferences, [{id: 'aaaaaaaaaaaa', differences: ['childGUIDs']}]);
+  deepEqual(c.structuralDifferences, [{id: 'menu', differences: ['childGUIDs']}]);
   run_next_test();
 });
 
@@ -214,7 +214,7 @@ add_test(function test_cswc_clientMissing() {
   let c = new BookmarkValidator().compareServerWithClient(server, client).problemData;
   deepEqual(c.clientMissing, ['cccccccccccc']);
   equal(c.serverMissing.length, 0);
-  deepEqual(c.structuralDifferences, [{id: 'aaaaaaaaaaaa', differences: ['childGUIDs']}]);
+  deepEqual(c.structuralDifferences, [{id: 'menu', differences: ['childGUIDs']}]);
   run_next_test();
 });
 
@@ -305,10 +305,13 @@ function validationPing(server, client, duration) {
     Svc.Obs.notify("weave:service:sync:start");
     Svc.Obs.notify("weave:engine:sync:start", null, "bookmarks");
     Svc.Obs.notify("weave:engine:sync:finish", null, "bookmarks");
+    let validator = new BookmarkValidator();
     let data = {
-      duration, // We fake this just so that we can verify it's passed through.
+      // We fake duration and version just so that we can verify they're passed through.
+      duration,
+      version: validator.version,
       recordCount: server.length,
-      problems: new BookmarkValidator().compareServerWithClient(server, client).problemData,
+      problems: validator.compareServerWithClient(server, client).problemData,
     };
     Svc.Obs.notify("weave:engine:validate:finish", data, "bookmarks");
     Svc.Obs.notify("weave:service:sync:finish");
@@ -330,8 +333,9 @@ add_task(function *test_telemetry_integration() {
   equal(bme.validation.checked, server.length);
   equal(bme.validation.took, duration);
   bme.validation.problems.sort((a, b) => String.localeCompare(a.name, b.name));
+  equal(bme.validation.version, new BookmarkValidator().version);
   deepEqual(bme.validation.problems, [
-    { name: "badClientRoots", count: 4 },
+    { name: "badClientRoots", count: 3 },
     { name: "sdiff:childGUIDs", count: 1 },
     { name: "serverMissing", count: 1 },
     { name: "structuralDifferences", count: 1 },

@@ -184,13 +184,7 @@ public:
   virtual nsresult Play();
 
   // Notify activity of the decoder owner is changed.
-  // Based on the activity, dormant state is updated.
-  // Dormant state is a state to free all scarce media resources
-  //  (like hw video codec), did not decoding and stay dormant.
-  // It is used to share scarece media resources in system.
   virtual void NotifyOwnerActivityChanged(bool aIsVisible);
-
-  void UpdateDormantState(bool aDormantTimeout, bool aActivity);
 
   // Pause video playback.
   virtual void Pause();
@@ -506,14 +500,6 @@ protected:
 
   void SetStateMachineParameters();
 
-  static void DormantTimerExpired(nsITimer *aTimer, void *aClosure);
-
-  // Start a timer for heuristic dormant.
-  void StartDormantTimer();
-
-  // Cancel a timer for heuristic dormant.
-  void CancelDormantTimer();
-
   bool IsShutdown() const;
 
   // Called by the state machine to notify the decoder that the duration
@@ -541,9 +527,6 @@ protected:
   /******
    * The following members should be accessed with the decoder lock held.
    ******/
-
-  // Whether the decoder implementation supports dormant mode.
-  bool mDormantSupported;
 
   // The logical playback position of the media resource in units of
   // seconds. This corresponds to the "official position" in HTML5. Note that
@@ -628,9 +611,6 @@ protected:
   void DiscardOngoingSeekIfExists();
   virtual void CallSeek(const SeekTarget& aTarget, dom::Promise* aPromise);
 
-  // Returns true if heuristic dormant is supported.
-  bool IsHeuristicDormantSupported() const;
-
   MozPromiseRequestHolder<SeekPromise> mSeekRequest;
   RefPtr<dom::Promise> mSeekDOMPromise;
 
@@ -698,21 +678,6 @@ protected:
 
   // If true, forces the decoder to be considered hidden.
   bool mForcedHidden;
-
-  // True if MediaDecoder is in dormant state.
-  bool mIsDormant;
-
-  // True if heuristic dormant is supported.
-  const bool mIsHeuristicDormantSupported;
-
-  // Timeout ms of heuristic dormant timer.
-  const int mHeuristicDormantTimeout;
-
-  // True if MediaDecoder is in dormant by heuristic.
-  bool mIsHeuristicDormant;
-
-  // Timer to schedule updating dormant state.
-  nsCOMPtr<nsITimer> mDormantTimer;
 
   // A listener to receive metadata updates from MDSM.
   MediaEventListener mTimedMetadataListener;

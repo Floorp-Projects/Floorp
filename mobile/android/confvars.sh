@@ -30,6 +30,8 @@ MOZ_XULRUNNER=
 MOZ_CAPTURE=1
 MOZ_RAW=1
 
+MOZ_RUST_MP4PARSE=1
+
 # use custom widget for html:select
 MOZ_USE_NATIVE_POPUP_WINDOWS=1
 

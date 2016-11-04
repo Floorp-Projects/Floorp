@@ -55,13 +55,11 @@ MediaKeySession::MediaKeySession(JSContext* aCx,
                                  nsPIDOMWindowInner* aParent,
                                  MediaKeys* aKeys,
                                  const nsAString& aKeySystem,
-                                 const nsAString& aCDMVersion,
                                  MediaKeySessionType aSessionType,
                                  ErrorResult& aRv)
   : DOMEventTargetHelper(aParent)
   , mKeys(aKeys)
   , mKeySystem(aKeySystem)
-  , mCDMVersion(aCDMVersion)
   , mSessionType(aSessionType)
   , mToken(sMediaKeySessionNum++)
   , mIsClosed(false)

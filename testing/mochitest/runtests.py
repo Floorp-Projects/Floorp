@@ -90,7 +90,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 # Try run will then put a download link for all log files
 # on tbpl.mozilla.org.
 
-# MOZ_LOG = "signaling:3,mtransport:4,DataChannel:4,jsep:4,MediaPipelineFactory:4"
 MOZ_LOG = ""
 
 #####################
@@ -147,9 +146,12 @@ class MessageLogger(object):
 
     def __init__(self, logger, buffering=True):
         self.logger = logger
-        self.buffering = buffering
-        self.restore_buffering = False
-        self.tests_started = False
+
+        # Even if buffering is enabled, we only want to buffer messages between
+        # TEST-START/TEST-END. So it is off to begin, but will be enabled after
+        # a TEST-START comes in.
+        self.buffering = False
+        self.restore_buffering = buffering
 
         # Message buffering
         self.buffered_messages = []
@@ -211,9 +213,6 @@ class MessageLogger(object):
 
     def process_message(self, message):
         """Processes a structured message. Takes into account buffering, errors, ..."""
-        if not self.tests_started and message['action'] == 'test_start':
-            self.tests_started = True
-
         # Activation/deactivating message buffering from the JS side
         if message['action'] == 'buffering_on':
             self.buffering = True
@@ -252,7 +251,6 @@ class MessageLogger(object):
         # unstructured, it is directly logged.
         elif any([not self.buffering,
                   unstructured,
-                  not self.tests_started,
                   message['action'] not in self.BUFFERED_ACTIONS]):
             self.logger.log_raw(message)
         else:
@@ -262,6 +260,10 @@ class MessageLogger(object):
         # If a test ended, we clean the buffer
         if message['action'] == 'test_end':
             self.buffered_messages = []
+            self.restore_buffering = self.restore_buffering or self.buffering
+            self.buffering = False
+
+        if message['action'] == 'test_start':
             if self.restore_buffering:
                 self.restore_buffering = False
                 self.buffering = True
@@ -277,13 +279,19 @@ class MessageLogger(object):
 
     def dump_buffered(self, limit=False):
         if limit:
-            dumped_messages = self.buffered_messages[-
-                                                     self.BUFFERING_THRESHOLD:]
+            dumped_messages = self.buffered_messages[-self.BUFFERING_THRESHOLD:]
         else:
             dumped_messages = self.buffered_messages
 
-        for buf_msg in dumped_messages:
-            self.logger.log_raw(buf_msg)
+        last_timestamp = None
+        for buf in dumped_messages:
+            timestamp = datetime.fromtimestamp(buf['time'] / 1000).strftime('%H:%M:%S')
+            if timestamp != last_timestamp:
+                self.logger.info("Buffered messages logged at {}".format(timestamp))
+            last_timestamp = timestamp
+
+            self.logger.log_raw(buf)
+        self.logger.info("Buffered messages finished")
         # Cleaning the list of buffered messages
         self.buffered_messages = []
 
@@ -771,7 +779,7 @@ class MochitestDesktop(object):
     # TODO: replace this with 'runtests.py' or 'mochitest' or the like
     test_name = 'automation.py'
 
-    def __init__(self, logger_options):
+    def __init__(self, logger_options, quiet=False):
         self.update_mozinfo()
         self.server = None
         self.wsserver = None
@@ -797,7 +805,7 @@ class MochitestDesktop(object):
                                                  })
             MochitestDesktop.log = self.log
 
-        self.message_logger = MessageLogger(logger=self.log)
+        self.message_logger = MessageLogger(logger=self.log, buffering=quiet)
         # Max time in seconds to wait for server startup before tests will fail -- if
         # this seems big, it's mostly for debug machines where cold startup
         # (particularly after a build) takes forever.
@@ -1873,17 +1881,12 @@ toolbar#nav-bar {
                detectShutdownLeaks=False,
                screenshotOnFail=False,
                bisectChunk=None,
-               quiet=False,
                marionette_args=None):
         """
         Run the app, log the duration it took to execute, return the status code.
         Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing
         for |timeout| seconds.
         """
-
-        # configure the message logger buffering
-        self.message_logger.buffering = quiet
-
         # It can't be the case that both a with-debugger and an
         # on-Valgrind run have been requested.  doTests() should have
         # already excluded this possibility.
@@ -2396,7 +2399,6 @@ toolbar#nav-bar {
                                  detectShutdownLeaks=detectShutdownLeaks,
                                  screenshotOnFail=options.screenshotOnFail,
                                  bisectChunk=options.bisectChunk,
-                                 quiet=options.quiet,
                                  marionette_args=marionette_args,
                                  )
         except KeyboardInterrupt:
@@ -2660,7 +2662,7 @@ def run_test_harness(parser, options):
         key: value for key, value in vars(options).iteritems()
         if key.startswith('log') or key == 'valgrind'}
 
-    runner = MochitestDesktop(logger_options)
+    runner = MochitestDesktop(logger_options, quiet=options.quiet)
 
     options.runByDir = False
 
