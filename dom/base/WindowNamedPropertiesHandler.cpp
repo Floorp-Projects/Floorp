@@ -271,6 +271,7 @@ EnumerateWindowNamedProperties(JSContext* aCx, JS::Handle<JSObject*> aWrapper,
 const NativePropertyHooks sWindowNamedPropertiesNativePropertyHooks[] = { {
   ResolveWindowNamedProperty,
   EnumerateWindowNamedProperties,
+  nullptr,
   { nullptr, nullptr },
   prototypes::id::_ID_Count,
   constructors::id::_ID_Count,
