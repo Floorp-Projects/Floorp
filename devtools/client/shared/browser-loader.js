@@ -12,6 +12,7 @@ const Services = devtools.require("Services");
 const { AppConstants } = devtools.require("resource://gre/modules/AppConstants.jsm");
 
 const BROWSER_BASED_DIRS = [
+  "resource://devtools/client/inspector/layout",
   "resource://devtools/client/jsonview",
   "resource://devtools/client/shared/vendor",
   "resource://devtools/client/shared/redux",
