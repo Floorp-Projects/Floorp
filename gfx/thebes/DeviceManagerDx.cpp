@@ -500,19 +500,41 @@ DeviceManagerDx::CreateContentDevice()
 RefPtr<ID3D11Device>
 DeviceManagerDx::CreateDecoderDevice()
 {
-  if (mCompositorDevice && mCompositorDeviceSupportsVideo && !mDecoderDevice) {
-    mDecoderDevice = mCompositorDevice;
-
-    RefPtr<ID3D10Multithread> multi;
-    mDecoderDevice->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
-    if (multi) {
-      multi->SetMultithreadProtected(TRUE);
+  bool isAMD = false;
+  {
+    MutexAutoLock lock(mDeviceLock);
+    if (!mDeviceStatus) {
+      return nullptr;
     }
+    isAMD = mDeviceStatus->adapter().VendorId == 0x1002;
   }
 
-  if (mDecoderDevice) {
-    RefPtr<ID3D11Device> dev = mDecoderDevice;
-    return dev.forget();
+  bool reuseDevice = false;
+  if (gfxPrefs::Direct3D11ReuseDecoderDevice() < 0) {
+    // Use the default logic, which is to allow reuse of devices on AMD, but create
+    // separate devices everywhere else.
+    if (isAMD) {
+      reuseDevice = true;
+    }
+  } else if (gfxPrefs::Direct3D11ReuseDecoderDevice() > 0) {
+    reuseDevice = true;
+  }
+
+  if (reuseDevice) {
+    if (mCompositorDevice && mCompositorDeviceSupportsVideo && !mDecoderDevice) {
+      mDecoderDevice = mCompositorDevice;
+
+      RefPtr<ID3D10Multithread> multi;
+      mDecoderDevice->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
+      if (multi) {
+        multi->SetMultithreadProtected(TRUE);
+      }
+    }
+
+    if (mDecoderDevice) {
+      RefPtr<ID3D11Device> dev = mDecoderDevice;
+      return dev.forget();
+    }
   }
 
    if (!sD3D11CreateDeviceFn) {
@@ -542,7 +564,9 @@ DeviceManagerDx::CreateDecoderDevice()
 
   multi->SetMultithreadProtected(TRUE);
 
-  mDecoderDevice = device;
+  if (reuseDevice) {
+    mDecoderDevice = device;
+  }
   return device;
 }
 
