@@ -38,7 +38,11 @@ NS_IMPL_ISUPPORTS(MediaEngineDefaultVideoSource, nsITimerCallback)
  */
 
 MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
+#ifdef MOZ_WEBRTC
   : MediaEngineCameraVideoSource("FakeVideo.Monitor")
+#else
+  : MediaEngineVideoSource()
+#endif
   , mTimer(nullptr)
   , mMonitor("Fake video")
   , mCb(16), mCr(16)
