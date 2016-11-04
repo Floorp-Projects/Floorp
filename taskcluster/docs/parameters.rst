@@ -49,14 +49,6 @@ Push Information
    The timestamp of the push to the repository that triggered this decision
    task.  Expressed as an integer seconds since the UNIX epoch.
 
-``build_date``
-   The timestamp of the build date. Defaults to ``pushdate`` and falls back to present time of
-   taskgraph invocation. Expressed as an integer seconds since the UNIX epoch.
-
-``moz_build_date``
-   A formatted timestamp of ``build_date``. Expressed as a string with the following
-   format: %Y%m%d%H%M%S
-
 Tree Information
 ----------------
 

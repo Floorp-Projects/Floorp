@@ -54,7 +54,7 @@ def docker_worker_hazard(config, job, taskdesc):
 
     env = worker['env']
     env.update({
-        'MOZ_BUILD_DATE': config.params['moz_build_date'],
+        'MOZ_BUILD_DATE': time.strftime("%Y%m%d%H%M%S", time.gmtime(config.params['pushdate'])),
         'MOZ_SCM_LEVEL': config.params['level'],
     })
 
