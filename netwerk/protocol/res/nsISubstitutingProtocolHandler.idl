@@ -21,19 +21,19 @@ interface nsISubstitutingProtocolHandler : nsIProtocolHandler
    * A root key should always be lowercase; however, this may not be
    * enforced.
    */
-  void setSubstitution(in ACString root, in nsIURI baseURI);
+  [must_use] void setSubstitution(in ACString root, in nsIURI baseURI);
 
   /**
    * Gets the substitution for the root key.
    *
    * @throws NS_ERROR_NOT_AVAILABLE if none exists.
    */
-  nsIURI getSubstitution(in ACString root);
+  [must_use] nsIURI getSubstitution(in ACString root);
 
   /**
    * Returns TRUE if the substitution exists and FALSE otherwise.
    */
-  boolean hasSubstitution(in ACString root);
+  [must_use] boolean hasSubstitution(in ACString root);
 
   /**
    * Utility function to resolve a substituted URI.  A resolved URI is not
@@ -42,5 +42,5 @@ interface nsISubstitutingProtocolHandler : nsIProtocolHandler
    *
    * @throws NS_ERROR_NOT_AVAILABLE if resURI.host() is an unknown root key.
    */
-  AUTF8String resolveURI(in nsIURI resURI);
+  [must_use] AUTF8String resolveURI(in nsIURI resURI);
 };
