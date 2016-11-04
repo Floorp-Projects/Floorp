@@ -6,21 +6,17 @@
 #include "prio.h"
 #include "prsystem.h"
 
-#include "TestHarness.h"
-
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 
-static const char* gFunction = "main";
+#include "gtest/gtest.h"
 
 static bool VerifyResult(nsresult aRV, const char* aMsg)
 {
-  if (NS_FAILED(aRV)) {
-    fail("%s %s, rv=%x", gFunction, aMsg, aRV);
-    return false;
-  }
-  return true;
+  bool failed = NS_FAILED(aRV);
+  EXPECT_FALSE(failed) << aMsg << " rv=" << std::hex << (unsigned int)aRV;
+  return !failed;
 }
 
 static already_AddRefed<nsIFile> NewFile(nsIFile* aBase)
@@ -53,7 +49,6 @@ static nsCString FixName(const char* aName)
 // Test nsIFile::AppendNative, verifying that aName is not a valid file name
 static bool TestInvalidFileName(nsIFile* aBase, const char* aName)
 {
-  gFunction = "TestInvalidFileName";
   nsCOMPtr<nsIFile> file = NewFile(aBase);
   if (!file)
     return false;
@@ -61,7 +56,7 @@ static bool TestInvalidFileName(nsIFile* aBase, const char* aName)
   nsCString name = FixName(aName);
   nsresult rv = file->AppendNative(name);
   if (NS_SUCCEEDED(rv)) {
-    fail("%s AppendNative with invalid filename %s", gFunction, name.get());
+    EXPECT_FALSE(NS_SUCCEEDED(rv)) << "AppendNative with invalid filename " << name.get();
     return false;
   }
 
@@ -72,7 +67,6 @@ static bool TestInvalidFileName(nsIFile* aBase, const char* aName)
 // and leaving it there for future tests
 static bool TestCreate(nsIFile* aBase, const char* aName, int32_t aType, int32_t aPerm)
 {
-  gFunction = "TestCreate";
   nsCOMPtr<nsIFile> file = NewFile(aBase);
   if (!file)
     return false;
@@ -86,8 +80,8 @@ static bool TestCreate(nsIFile* aBase, const char* aName, int32_t aType, int32_t
   rv = file->Exists(&exists);
   if (!VerifyResult(rv, "Exists (before)"))
     return false;
+  EXPECT_FALSE(exists) << "File "<< name.get() << " already exists";
   if (exists) {
-    fail("%s File %s already exists", gFunction, name.get());
     return false;
   }
 
@@ -98,8 +92,8 @@ static bool TestCreate(nsIFile* aBase, const char* aName, int32_t aType, int32_t
   rv = file->Exists(&exists);
   if (!VerifyResult(rv, "Exists (after)"))
     return false;
+  EXPECT_TRUE(exists) << "File " << name.get() << " was not created";
   if (!exists) {
-    fail("%s File %s was not created", gFunction, name.get());
     return false;
   }
 
@@ -111,7 +105,6 @@ static bool TestCreate(nsIFile* aBase, const char* aName, int32_t aType, int32_t
 // The new file is left in place.
 static bool TestCreateUnique(nsIFile* aBase, const char* aName, int32_t aType, int32_t aPerm)
 {
-  gFunction = "TestCreateUnique";
   nsCOMPtr<nsIFile> file = NewFile(aBase);
   if (!file)
     return false;
@@ -134,8 +127,8 @@ static bool TestCreateUnique(nsIFile* aBase, const char* aName, int32_t aType, i
   rv = file->Exists(&existsAfter);
   if (!VerifyResult(rv, "Exists (after)"))
     return false;
+  EXPECT_TRUE(existsAfter) << "File " << name.get() << " was not created";
   if (!existsAfter) {
-    fail("%s File %s was not created", gFunction, name.get());
     return false;
   }
 
@@ -144,8 +137,8 @@ static bool TestCreateUnique(nsIFile* aBase, const char* aName, int32_t aType, i
     rv = file->GetNativeLeafName(leafName);
     if (!VerifyResult(rv, "GetNativeLeafName"))
       return false;
+    EXPECT_FALSE(leafName.Equals(name)) << "File " << name.get() << " was not given a new name by CreateUnique";
     if (leafName.Equals(name)) {
-      fail("%s File %s was not given a new name by CreateUnique", gFunction, name.get());
       return false;
     }
   }
@@ -157,7 +150,6 @@ static bool TestCreateUnique(nsIFile* aBase, const char* aName, int32_t aType, i
 // and did not exist before, and leaving it there for future tests
 static bool TestDeleteOnClose(nsIFile* aBase, const char* aName, int32_t aFlags, int32_t aPerm)
 {
-  gFunction = "TestDeleteOnClose";
   nsCOMPtr<nsIFile> file = NewFile(aBase);
   if (!file)
     return false;
@@ -171,8 +163,8 @@ static bool TestDeleteOnClose(nsIFile* aBase, const char* aName, int32_t aFlags,
   rv = file->Exists(&exists);
   if (!VerifyResult(rv, "Exists (before)"))
     return false;
+  EXPECT_FALSE(exists) << "File " << name.get() << " already exists";
   if (exists) {
-    fail("%s File %s already exists", gFunction, name.get());
     return false;
   }
 
@@ -181,16 +173,16 @@ static bool TestDeleteOnClose(nsIFile* aBase, const char* aName, int32_t aFlags,
   if (!VerifyResult(rv, "OpenNSPRFileDesc"))
     return false;
   PRStatus status = PR_Close(fileDesc);
+  EXPECT_EQ(status, PR_SUCCESS) << "File " << name.get() << " could not be closed";
   if (status != PR_SUCCESS) {
-    fail("%s File %s could not be closed", gFunction, name.get());
     return false;
   }
 
   rv = file->Exists(&exists);
   if (!VerifyResult(rv, "Exists (after)"))
     return false;
+  EXPECT_FALSE(exists) << "File " << name.get() << " was not removed on close";
   if (exists) {
-    fail("%s File %s was not removed on close!", gFunction, name.get());
     return false;
   }
 
@@ -200,7 +192,6 @@ static bool TestDeleteOnClose(nsIFile* aBase, const char* aName, int32_t aFlags,
 // Test nsIFile::Remove, verifying that the file does not exist and did before
 static bool TestRemove(nsIFile* aBase, const char* aName, bool aRecursive)
 {
-  gFunction = "TestDelete";
   nsCOMPtr<nsIFile> file = NewFile(aBase);
   if (!file)
     return false;
@@ -214,8 +205,8 @@ static bool TestRemove(nsIFile* aBase, const char* aName, bool aRecursive)
   rv = file->Exists(&exists);
   if (!VerifyResult(rv, "Exists (before)"))
     return false;
+  EXPECT_TRUE(exists);
   if (!exists) {
-    fail("%s File %s does not exist", gFunction, name.get());
     return false;
   }
 
@@ -226,8 +217,8 @@ static bool TestRemove(nsIFile* aBase, const char* aName, bool aRecursive)
   rv = file->Exists(&exists);
   if (!VerifyResult(rv, "Exists (after)"))
     return false;
+  EXPECT_FALSE(exists) << "File " << name.get() << " was not removed";
   if (exists) {
-    fail("%s File %s was not removed", gFunction, name.get());
     return false;
   }
 
@@ -238,7 +229,6 @@ static bool TestRemove(nsIFile* aBase, const char* aName, bool aRecursive)
 // before and does afterward, and that it does not exist at the old location anymore
 static bool TestMove(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const char* aNewName)
 {
-  gFunction = "TestMove";
   nsCOMPtr<nsIFile> file = NewFile(aBase);
   if (!file)
     return false;
@@ -252,8 +242,8 @@ static bool TestMove(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
   rv = file->Exists(&exists);
   if (!VerifyResult(rv, "Exists (before)"))
     return false;
+  EXPECT_TRUE(exists);
   if (!exists) {
-    fail("%s File %s does not exist", gFunction, name.get());
     return false;
   }
 
@@ -266,8 +256,8 @@ static bool TestMove(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
   rv = file->Exists(&exists);
   if (!VerifyResult(rv, "Exists (after)"))
     return false;
+  EXPECT_FALSE(exists) << "File " << name.get() << " was not moved";
   if (exists) {
-    fail("%s File %s was not moved", gFunction, name.get());
     return false;
   }
 
@@ -281,16 +271,16 @@ static bool TestMove(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
   rv = file->Equals(newFile, &equal);
   if (!VerifyResult(rv, "Equals"))
     return false;
+  EXPECT_TRUE(equal) << "File object was not updated to destination";
   if (!equal) {
-    fail("%s file object was not updated to destination", gFunction);
     return false;
   }
 
   rv = file->Exists(&exists);
   if (!VerifyResult(rv, "Exists (new after)"))
     return false;
+  EXPECT_TRUE(exists) << "Destination file " << newName.get() << " was not created";
   if (!exists) {
-    fail("%s Destination file %s was not created", gFunction, newName.get());
     return false;
   }
 
@@ -301,7 +291,6 @@ static bool TestMove(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
 // before and does afterward, and that it does exist at the old location too
 static bool TestCopy(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const char* aNewName)
 {
-  gFunction = "TestCopy";
   nsCOMPtr<nsIFile> file = NewFile(aBase);
   if (!file)
     return false;
@@ -315,8 +304,8 @@ static bool TestCopy(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
   rv = file->Exists(&exists);
   if (!VerifyResult(rv, "Exists (before)"))
     return false;
+  EXPECT_TRUE(exists);
   if (!exists) {
-    fail("%s File %s does not exist", gFunction, name.get());
     return false;
   }
 
@@ -329,16 +318,16 @@ static bool TestCopy(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
   rv = file->Equals(newFile, &equal);
   if (!VerifyResult(rv, "Equals"))
     return false;
+  EXPECT_TRUE(equal) << "File object updated unexpectedly";
   if (!equal) {
-    fail("%s file object updated unexpectedly", gFunction);
     return false;
   }
 
   rv = file->Exists(&exists);
   if (!VerifyResult(rv, "Exists (after)"))
     return false;
+  EXPECT_TRUE(exists) << "File " << name.get() << " was removed";
   if (!exists) {
-    fail("%s File %s was removed", gFunction, name.get());
     return false;
   }
 
@@ -352,8 +341,8 @@ static bool TestCopy(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
   rv = file->Exists(&exists);
   if (!VerifyResult(rv, "Exists (new after)"))
     return false;
+  EXPECT_TRUE(exists) << "Destination file " << newName.get() << " was not created";
   if (!exists) {
-    fail("%s Destination file %s was not created", gFunction, newName.get());
     return false;
   }
 
@@ -363,7 +352,6 @@ static bool TestCopy(nsIFile* aBase, nsIFile* aDestDir, const char* aName, const
 // Test nsIFile::GetParent
 static bool TestParent(nsIFile* aBase, nsIFile* aStart)
 {
-  gFunction = "TestParent";
   nsCOMPtr<nsIFile> file = NewFile(aStart);
   if (!file)
     return false;
@@ -375,8 +363,8 @@ static bool TestParent(nsIFile* aBase, nsIFile* aStart)
   bool equal;
   rv = parent->Equals(aBase, &equal);
   VerifyResult(rv, "Equals");
+  EXPECT_TRUE(equal) << "Incorrect parent";
   if (!equal) {
-    fail("%s Incorrect parent", gFunction);
     return false;
   }
 
@@ -386,7 +374,6 @@ static bool TestParent(nsIFile* aBase, nsIFile* aStart)
 // Test nsIFile::Normalize and native path setting/getting
 static bool TestNormalizeNativePath(nsIFile* aBase, nsIFile* aStart)
 {
-  gFunction = "TestNormalizeNativePath";
   nsCOMPtr<nsIFile> file = NewFile(aStart);
   if (!file)
     return false;
@@ -406,119 +393,85 @@ static bool TestNormalizeNativePath(nsIFile* aBase, nsIFile* aStart)
   rv = aBase->GetNativePath(basePath);
   VerifyResult(rv, "GetNativePath (base)");
 
+  EXPECT_TRUE(path.Equals(basePath)) << "Incorrect normalization: " << path.get() << " - " << basePath.get();
   if (!path.Equals(basePath)) {
-    fail("%s Incorrect normalization");
     return false;
   }
 
   return true;
 }
 
-int main(int argc, char** argv)
+TEST(TestFile, Tests)
 {
-  ScopedXPCOM xpcom("nsLocalFile");
-  if (xpcom.failed())
-    return 1;
-
   nsCOMPtr<nsIFile> base;
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(base));
-  if (!VerifyResult(rv, "Getting temp directory"))
-    return 1;
+  ASSERT_TRUE(VerifyResult(rv, "Getting temp directory"));
+
   rv = base->AppendNative(nsDependentCString("mozfiletests"));
-  if (!VerifyResult(rv, "Appending mozfiletests to temp directory name"))
-    return 1;
+  ASSERT_TRUE(VerifyResult(rv, "Appending mozfiletests to temp directory name"));
+
   // Remove the directory in case tests failed and left it behind.
   // don't check result since it might not be there
   base->Remove(true);
 
   // Now create the working directory we're going to use
   rv = base->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  if (!VerifyResult(rv, "Creating temp directory"))
-    return 1;
+  ASSERT_TRUE(VerifyResult(rv, "Creating temp directory"));
+
   // Now we can safely normalize the path
   rv = base->Normalize();
-  if (!VerifyResult(rv, "Normalizing temp directory name"))
-    return 1;
+  ASSERT_TRUE(VerifyResult(rv, "Normalizing temp directory name"));
 
   // Initialize subdir object for later use
   nsCOMPtr<nsIFile> subdir = NewFile(base);
-  if (!subdir)
-    return 1;
-  rv = subdir->AppendNative(nsDependentCString("subdir"));
-  if (!VerifyResult(rv, "Appending 'subdir' to test dir name"))
-    return 1;
+  ASSERT_TRUE(subdir);
 
-  passed("Setup");
+  rv = subdir->AppendNative(nsDependentCString("subdir"));
+  ASSERT_TRUE(VerifyResult(rv, "Appending 'subdir' to test dir name"));
+
+  // ---------------
+  // End setup code.
+  // ---------------
 
   // Test path parsing
-  if (TestInvalidFileName(base, "a/b")) {
-    passed("AppendNative with invalid file name");
-  }
-  if (TestParent(base, subdir)) {
-    passed("GetParent");
-  }
+  ASSERT_TRUE(TestInvalidFileName(base, "a/b"));
+  ASSERT_TRUE(TestParent(base, subdir));
 
   // Test file creation
-  if (TestCreate(base, "file.txt", nsIFile::NORMAL_FILE_TYPE, 0600)) {
-    passed("Create file");
-  }
-  if (TestRemove(base, "file.txt", false)) {
-    passed("Remove file");
-  }
+  ASSERT_TRUE(TestCreate(base, "file.txt", nsIFile::NORMAL_FILE_TYPE, 0600));
+  ASSERT_TRUE(TestRemove(base, "file.txt", false));
 
   // Test directory creation
-  if (TestCreate(base, "subdir", nsIFile::DIRECTORY_TYPE, 0700)) {
-    passed("Create directory");
-  }
+  ASSERT_TRUE(TestCreate(base, "subdir", nsIFile::DIRECTORY_TYPE, 0700));
 
   // Test move and copy in the base directory
-  if (TestCreate(base, "file.txt", nsIFile::NORMAL_FILE_TYPE, 0600) &&
-      TestMove(base, base, "file.txt", "file2.txt")) {
-    passed("MoveTo rename file");
-  }
-  if (TestCopy(base, base, "file2.txt", "file3.txt")) {
-    passed("CopyTo copy file");
-  }
+  ASSERT_TRUE(TestCreate(base, "file.txt", nsIFile::NORMAL_FILE_TYPE, 0600));
+  ASSERT_TRUE(TestMove(base, base, "file.txt", "file2.txt"));
+  ASSERT_TRUE(TestCopy(base, base, "file2.txt", "file3.txt"));
+
   // Test moving across directories
-  if (TestMove(base, subdir, "file2.txt", "file2.txt")) {
-    passed("MoveTo move file");
-  }
+  ASSERT_TRUE(TestMove(base, subdir, "file2.txt", "file2.txt"));
+
   // Test moving across directories and renaming at the same time
-  if (TestMove(subdir, base, "file2.txt", "file4.txt")) {
-    passed("MoveTo move and rename file");
-  }
+  ASSERT_TRUE(TestMove(subdir, base, "file2.txt", "file4.txt"));
+
   // Test copying across directoreis
-  if (TestCopy(base, subdir, "file4.txt", "file5.txt")) {
-    passed("CopyTo copy file across directories");
-  }
+  ASSERT_TRUE(TestCopy(base, subdir, "file4.txt", "file5.txt"));
 
   // Run normalization tests while the directory exists
-  if (TestNormalizeNativePath(base, subdir)) {
-    passed("Normalize with native paths");
-  }
+  ASSERT_TRUE(TestNormalizeNativePath(base, subdir));
 
   // Test recursive directory removal
-  if (TestRemove(base, "subdir", true)) {
-    passed("Remove directory");
-  }
+  ASSERT_TRUE(TestRemove(base, "subdir", true));
 
-  if (TestCreateUnique(base, "foo", nsIFile::NORMAL_FILE_TYPE, 0600) &&
-      TestCreateUnique(base, "foo", nsIFile::NORMAL_FILE_TYPE, 0600)) {
-    passed("CreateUnique file");
-  }
-  if (TestCreateUnique(base, "bar.xx", nsIFile::DIRECTORY_TYPE, 0700) &&
-      TestCreateUnique(base, "bar.xx", nsIFile::DIRECTORY_TYPE, 0700)) {
-    passed("CreateUnique directory");
-  }
+  ASSERT_TRUE(TestCreateUnique(base, "foo", nsIFile::NORMAL_FILE_TYPE, 0600));
+  ASSERT_TRUE(TestCreateUnique(base, "foo", nsIFile::NORMAL_FILE_TYPE, 0600));
+  ASSERT_TRUE(TestCreateUnique(base, "bar.xx", nsIFile::DIRECTORY_TYPE, 0700));
+  ASSERT_TRUE(TestCreateUnique(base, "bar.xx", nsIFile::DIRECTORY_TYPE, 0700));
 
-  if (TestDeleteOnClose(base, "file7.txt", PR_RDWR | PR_CREATE_FILE, 0600)) {
-    passed("OpenNSPRFileDesc DELETE_ON_CLOSE");
-  }
+  ASSERT_TRUE(TestDeleteOnClose(base, "file7.txt", PR_RDWR | PR_CREATE_FILE, 0600));
 
-  gFunction = "main";
   // Clean up temporary stuff
   rv = base->Remove(true);
   VerifyResult(rv, "Cleaning up temp directory");
-
-  return gFailCount > 0;
 }
