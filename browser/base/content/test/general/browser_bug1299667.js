@@ -35,6 +35,7 @@ add_task(function* () {
 
   var backButton = document.getElementById("back-button");
   var contextMenu = document.getElementById("backForwardMenu");
+  var rect = backButton.getBoundingClientRect();
 
   info("waiting for the history menu to open");
 
