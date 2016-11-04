@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gtest/gtest.h"
+#include "TestHarness.h"
 
 #include "nsServiceManagerUtils.h"
 #include "nsStringGlue.h"
@@ -15,12 +15,14 @@
 void
 ConvertBufToPlainText(nsString &aConBuf, int aFlag)
 {
-  nsCOMPtr<nsIParserUtils> utils = do_GetService(NS_PARSERUTILS_CONTRACTID);
+  nsCOMPtr<nsIParserUtils> utils =
+    do_GetService(NS_PARSERUTILS_CONTRACTID);
   utils->ConvertToPlainText(aConBuf, aFlag, 72, aConBuf);
 }
 
 // Test for ASCII with format=flowed; delsp=yes
-TEST(PlainTextSerializer, ASCIIWithFlowedDelSp)
+nsresult
+TestASCIIWithFlowedDelSp()
 {
   nsString test;
   nsString result;
@@ -42,12 +44,19 @@ TEST(PlainTextSerializer, ASCIIWithFlowedDelSp)
                        "Firefox Firefox Firefox Firefox "
                        "Firefox  \r\nFirefox Firefox Firefox\r\n");
 
-  ASSERT_TRUE(test.Equals(result)) <<
-    "Wrong HTML to ASCII text serialization with format=flowed; delsp=yes";
+  if (!test.Equals(result)) {
+    fail("Wrong HTML to ASCII text serialization with format=flowed; delsp=yes");
+    return NS_ERROR_FAILURE;
+  }
+
+  passed("HTML to ASCII text serialization with format=flowed; delsp=yes");
+
+  return NS_OK;
 }
 
 // Test for CJK with format=flowed; delsp=yes
-TEST(PlainTextSerializer, CJKWithFlowedDelSp)
+nsresult
+TestCJKWithFlowedDelSp()
 {
   nsString test;
   nsString result;
@@ -75,12 +84,19 @@ TEST(PlainTextSerializer, CJKWithFlowedDelSp)
   }
   result.AppendLiteral("\r\n");
 
-  ASSERT_TRUE(test.Equals(result)) <<
-    "Wrong HTML to CJK text serialization with format=flowed; delsp=yes";
+  if (!test.Equals(result)) {
+    fail("Wrong HTML to CJK text serialization with format=flowed; delsp=yes");
+    return NS_ERROR_FAILURE;
+  }
+
+  passed("HTML to CJK text serialization with format=flowed; delsp=yes");
+
+  return NS_OK;
 }
 
 // Test for CJK with DisallowLineBreaking
-TEST(PlainTextSerializer, CJKWithDisallowLineBreaking)
+nsresult
+TestCJKWithDisallowLineBreaking()
 {
   nsString test;
   nsString result;
@@ -104,12 +120,19 @@ TEST(PlainTextSerializer, CJKWithDisallowLineBreaking)
   }
   result.AppendLiteral("\r\n");
 
-  ASSERT_TRUE(test.Equals(result)) <<
-    "Wrong HTML to CJK text serialization with OutputDisallowLineBreaking";
+  if (!test.Equals(result)) {
+    fail("Wrong HTML to CJK text serialization with OutputDisallowLineBreaking");
+    return NS_ERROR_FAILURE;
+  }
+
+  passed("HTML to CJK text serialization with OutputDisallowLineBreaking");
+
+  return NS_OK;
 }
 
 // Test for ASCII with format=flowed; and quoted lines in preformatted span.
-TEST(PlainTextSerializer, PreformatFlowedQuotes)
+nsresult
+TestPreformatFlowedQuotes()
 {
   nsString test;
   nsString result;
@@ -134,13 +157,18 @@ TEST(PlainTextSerializer, PreformatFlowedQuotes)
                        ">\r\n"
                        ">> Firefox Firefox Firefox Firefox \r\n"
                        ">> Firefox Firefox Firefox Firefox\r\n");
+  if (!test.Equals(result)) {
+    fail("Wrong HTML to ASCII text serialization with format=flowed; and quoted lines");
+    return NS_ERROR_FAILURE;
+  }
 
-  ASSERT_TRUE(test.Equals(result)) <<
-    "Wrong HTML to ASCII text serialization with format=flowed; and quoted "
-    "lines";
+  passed("HTML to ASCII text serialization with format=flowed; and quoted lines");
+
+  return NS_OK;
 }
 
-TEST(PlainTextSerializer, PrettyPrintedHtml)
+nsresult
+TestPrettyPrintedHtml()
 {
   nsString test;
   test.AppendLiteral(
@@ -151,11 +179,17 @@ TEST(PlainTextSerializer, PrettyPrintedHtml)
     "</body>" NS_LINEBREAK "</html>");
 
   ConvertBufToPlainText(test, 0);
-  ASSERT_TRUE(test.EqualsLiteral("first" NS_LINEBREAK "second" NS_LINEBREAK)) <<
-    "Wrong prettyprinted html to text serialization";
+  if (!test.EqualsLiteral("first" NS_LINEBREAK "second" NS_LINEBREAK)) {
+    fail("Wrong prettyprinted html to text serialization");
+    return NS_ERROR_FAILURE;
+  }
+
+  passed("prettyprinted HTML to text serialization test");
+  return NS_OK;
 }
 
-TEST(PlainTextSerializer, PreElement)
+nsresult
+TestPreElement()
 {
   nsString test;
   test.AppendLiteral(
@@ -168,12 +202,17 @@ TEST(PlainTextSerializer, PreElement)
     "</body>" NS_LINEBREAK "</html>");
 
   ConvertBufToPlainText(test, 0);
-  ASSERT_TRUE(test.EqualsLiteral("  first" NS_LINEBREAK
-                                 "  second" NS_LINEBREAK NS_LINEBREAK)) <<
-    "Wrong prettyprinted html to text serialization";
+  if (!test.EqualsLiteral("  first" NS_LINEBREAK "  second" NS_LINEBREAK NS_LINEBREAK)) {
+    fail("Wrong prettyprinted html to text serialization");
+    return NS_ERROR_FAILURE;
+  }
+
+  passed("prettyprinted HTML to text serialization test");
+  return NS_OK;
 }
 
-TEST(PlainTextSerializer, BlockElement)
+nsresult
+TestBlockElement()
 {
   nsString test;
   test.AppendLiteral(
@@ -188,11 +227,17 @@ TEST(PlainTextSerializer, BlockElement)
     "</body>" NS_LINEBREAK "</html>");
 
   ConvertBufToPlainText(test, 0);
-  ASSERT_TRUE(test.EqualsLiteral("first" NS_LINEBREAK "second" NS_LINEBREAK)) <<
-    "Wrong prettyprinted html to text serialization";
+  if (!test.EqualsLiteral("first" NS_LINEBREAK "second" NS_LINEBREAK)) {
+    fail("Wrong prettyprinted html to text serialization");
+    return NS_ERROR_FAILURE;
+  }
+
+  passed("prettyprinted HTML to text serialization test");
+  return NS_OK;
 }
 
-TEST(PlainTextSerializer, PreWrapElementForThunderbird)
+nsresult
+TestPreWrapElementForThunderbird()
 {
   // This test examines the magic pre-wrap setup that Thunderbird relies on.
   nsString test;
@@ -207,25 +252,75 @@ TEST(PlainTextSerializer, PreWrapElementForThunderbird)
 
   ConvertBufToPlainText(test, nsIDocumentEncoder::OutputWrap);
   // "\n\n  first\nline is\ntoo long\n  second\nline is\neven\nloooonger\n\n\n"
-  ASSERT_TRUE(test.EqualsLiteral(NS_LINEBREAK NS_LINEBREAK
-                                 "  first" NS_LINEBREAK
-                                 "line is" NS_LINEBREAK
-                                 "too long" NS_LINEBREAK
-                                 "  second" NS_LINEBREAK
-                                 "line is" NS_LINEBREAK
-                                 "even" NS_LINEBREAK
-                                 "loooonger" NS_LINEBREAK
-                                 NS_LINEBREAK NS_LINEBREAK)) <<
-    "Wrong prettyprinted html to text serialization";
+  if (!test.EqualsLiteral(NS_LINEBREAK NS_LINEBREAK
+                          "  first" NS_LINEBREAK
+                          "line is" NS_LINEBREAK
+                          "too long" NS_LINEBREAK
+                          "  second" NS_LINEBREAK
+                          "line is" NS_LINEBREAK
+                          "even" NS_LINEBREAK
+                          "loooonger" NS_LINEBREAK
+                          NS_LINEBREAK NS_LINEBREAK)) {
+    fail("Wrong prettyprinted html to text serialization");
+    return NS_ERROR_FAILURE;
+  }
+
+  passed("prettyprinted HTML to text serialization test");
+  return NS_OK;
 }
 
-TEST(PlainTextSerializer, Simple)
+nsresult
+TestPlainTextSerializer()
 {
   nsString test;
   test.AppendLiteral("<html><base>base</base><head><span>span</span></head>"
                      "<body>body</body></html>");
   ConvertBufToPlainText(test, 0);
-  ASSERT_TRUE(test.EqualsLiteral("basespanbody")) <<
-    "Wrong html to text serialization";
+  if (!test.EqualsLiteral("basespanbody")) {
+    fail("Wrong html to text serialization");
+    return NS_ERROR_FAILURE;
+  }
+
+  passed("HTML to text serialization test");
+
+  nsresult rv = TestASCIIWithFlowedDelSp();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TestCJKWithFlowedDelSp();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TestPrettyPrintedHtml();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TestPreElement();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TestBlockElement();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TestPreWrapElementForThunderbird();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TestCJKWithDisallowLineBreaking();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TestPreformatFlowedQuotes();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Add new tests here...
+  return NS_OK;
 }
 
+int main(int argc, char** argv)
+{
+  ScopedXPCOM xpcom("PlainTextSerializer");
+  if (xpcom.failed())
+    return 1;
+
+  int retval = 0;
+  if (NS_FAILED(TestPlainTextSerializer())) {
+    retval = 1;
+  }
+
+  return retval;
+}
