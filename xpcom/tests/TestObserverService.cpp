@@ -18,135 +18,135 @@
 static nsIObserverService *anObserverService = nullptr;
 
 static void testResult( nsresult rv ) {
-    if ( NS_SUCCEEDED( rv ) ) {
-        printf("...ok\n");
-    } else {
-        printf("...failed, rv=0x%x\n", (int)rv);
-    }
-    return;
+  if ( NS_SUCCEEDED( rv ) ) {
+    printf("...ok\n");
+  } else {
+    printf("...failed, rv=0x%x\n", (int)rv);
+  }
+  return;
 }
 
 void printString(nsString &str) {
-    printf("%s", NS_ConvertUTF16toUTF8(str).get());
+  printf("%s", NS_ConvertUTF16toUTF8(str).get());
 }
 
 class TestObserver final : public nsIObserver,
-                           public nsSupportsWeakReference
+  public nsSupportsWeakReference
 {
 public:
-    explicit TestObserver( const nsAString &name )
-        : mName( name ) {
+  explicit TestObserver( const nsAString &name )
+    : mName( name ) {
     }
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
     nsString mName;
 
 private:
-    ~TestObserver() {}
+  ~TestObserver() {}
 };
 
 NS_IMPL_ISUPPORTS( TestObserver, nsIObserver, nsISupportsWeakReference )
 
 NS_IMETHODIMP
-TestObserver::Observe( nsISupports     *aSubject,
-                       const char *aTopic,
-                       const char16_t *someData ) {
-    nsCString topic( aTopic );
-    nsString data( someData );
-    	/*
-    		The annoying double-cast below is to work around an annoying bug in
-    		the compiler currently used on wensleydale.  This is a test.
-    	*/
-    printString(mName);
-    printf(" has observed something: subject@%p", (void*)aSubject);
-    printf(" name=");
-    printString(reinterpret_cast<TestObserver*>(reinterpret_cast<void*>(aSubject))->mName);
-    printf(" aTopic=%s", topic.get());
-    printf(" someData=");
-    printString(data);
-    printf("\n");
-    return NS_OK;
+TestObserver::Observe(nsISupports *aSubject,
+    const char *aTopic,
+    const char16_t *someData ) {
+  nsCString topic( aTopic );
+  nsString data( someData );
+  /*
+     The annoying double-cast below is to work around an annoying bug in
+     the compiler currently used on wensleydale.  This is a test.
+  */
+  printString(mName);
+  printf(" has observed something: subject@%p", (void*)aSubject);
+  printf(" name=");
+  printString(reinterpret_cast<TestObserver*>(reinterpret_cast<void*>(aSubject))->mName);
+  printf(" aTopic=%s", topic.get());
+  printf(" someData=");
+  printString(data);
+  printf("\n");
+  return NS_OK;
 }
 
 int main(int argc, char *argv[])
 {
-    nsCString topicA; topicA.Assign( "topic-A" );
-    nsCString topicB; topicB.Assign( "topic-B" );
-    nsresult rv;
+  nsCString topicA; topicA.Assign( "topic-A" );
+  nsCString topicB; topicB.Assign( "topic-B" );
+  nsresult rv;
 
-    nsresult res = CallCreateInstance("@mozilla.org/observer-service;1", &anObserverService);
-	
-    if (res == NS_OK) {
+  nsresult res = CallCreateInstance("@mozilla.org/observer-service;1", &anObserverService);
 
-        nsIObserver *aObserver = new TestObserver(NS_LITERAL_STRING("Observer-A"));
-        aObserver->AddRef();
-        nsIObserver *bObserver = new TestObserver(NS_LITERAL_STRING("Observer-B"));
-        bObserver->AddRef();
-            
-        printf("Adding Observer-A as observer of topic-A...\n");
-        rv = anObserverService->AddObserver(aObserver, topicA.get(), false);
-        testResult(rv);
- 
-        printf("Adding Observer-B as observer of topic-A...\n");
-        rv = anObserverService->AddObserver(bObserver, topicA.get(), false);
-        testResult(rv);
- 
-        printf("Adding Observer-B as observer of topic-B...\n");
-        rv = anObserverService->AddObserver(bObserver, topicB.get(), false);
-        testResult(rv);
+  if (res == NS_OK) {
 
-        printf("Testing Notify(observer-A, topic-A)...\n");
-        rv = anObserverService->NotifyObservers( aObserver,
-                                   topicA.get(),
-                                   u"Testing Notify(observer-A, topic-A)" );
-        testResult(rv);
+    nsIObserver *aObserver = new TestObserver(NS_LITERAL_STRING("Observer-A"));
+    aObserver->AddRef();
+    nsIObserver *bObserver = new TestObserver(NS_LITERAL_STRING("Observer-B"));
+    bObserver->AddRef();
 
-        printf("Testing Notify(observer-B, topic-B)...\n");
-        rv = anObserverService->NotifyObservers( bObserver,
-                                   topicB.get(),
-                                   u"Testing Notify(observer-B, topic-B)" );
-        testResult(rv);
- 
-        printf("Testing EnumerateObserverList (for topic-A)...\n");
-        nsCOMPtr<nsISimpleEnumerator> e;
-        rv = anObserverService->EnumerateObservers(topicA.get(), getter_AddRefs(e));
+    printf("Adding Observer-A as observer of topic-A...\n");
+    rv = anObserverService->AddObserver(aObserver, topicA.get(), false);
+    testResult(rv);
 
-        testResult(rv);
+    printf("Adding Observer-B as observer of topic-A...\n");
+    rv = anObserverService->AddObserver(bObserver, topicA.get(), false);
+    testResult(rv);
 
-        printf("Enumerating observers of topic-A...\n");
-        if ( e ) {
-          nsCOMPtr<nsIObserver> observer;
-          bool loop = true;
-          while( NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop) 
-          {
-              nsCOMPtr<nsISupports> supports;
-              e->GetNext(getter_AddRefs(supports));
-              observer = do_QueryInterface(supports);
-              printf("Calling observe on enumerated observer ");
-              printString(reinterpret_cast<TestObserver*>
-                                          (reinterpret_cast<void*>(observer.get()))->mName);
-              printf("...\n");
-              rv = observer->Observe( observer, 
-                                      topicA.get(), 
-                                      u"during enumeration" );
-              testResult(rv);
-          }
-        }
-        printf("...done enumerating observers of topic-A\n");
+    printf("Adding Observer-B as observer of topic-B...\n");
+    rv = anObserverService->AddObserver(bObserver, topicB.get(), false);
+    testResult(rv);
 
-        printf("Removing Observer-A...\n");
-        rv = anObserverService->RemoveObserver(aObserver, topicA.get());
-        testResult(rv);
+    printf("Testing Notify(observer-A, topic-A)...\n");
+    rv = anObserverService->NotifyObservers( aObserver,
+        topicA.get(),
+        u"Testing Notify(observer-A, topic-A)" );
+    testResult(rv);
 
+    printf("Testing Notify(observer-B, topic-B)...\n");
+    rv = anObserverService->NotifyObservers( bObserver,
+        topicB.get(),
+        u"Testing Notify(observer-B, topic-B)" );
+    testResult(rv);
 
-        printf("Removing Observer-B (topic-A)...\n");
-        rv = anObserverService->RemoveObserver(bObserver, topicB.get());
+    printf("Testing EnumerateObserverList (for topic-A)...\n");
+    nsCOMPtr<nsISimpleEnumerator> e;
+    rv = anObserverService->EnumerateObservers(topicA.get(), getter_AddRefs(e));
+
+    testResult(rv);
+
+    printf("Enumerating observers of topic-A...\n");
+    if ( e ) {
+      nsCOMPtr<nsIObserver> observer;
+      bool loop = true;
+      while( NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop)
+      {
+        nsCOMPtr<nsISupports> supports;
+        e->GetNext(getter_AddRefs(supports));
+        observer = do_QueryInterface(supports);
+        printf("Calling observe on enumerated observer ");
+        printString(reinterpret_cast<TestObserver*>
+            (reinterpret_cast<void*>(observer.get()))->mName);
+        printf("...\n");
+        rv = observer->Observe( observer,
+            topicA.get(),
+            u"during enumeration" );
         testResult(rv);
-        printf("Removing Observer-B (topic-B)...\n");
-        rv = anObserverService->RemoveObserver(bObserver, topicA.get());
-        testResult(rv);
-       
+      }
     }
-    return 0;
+    printf("...done enumerating observers of topic-A\n");
+
+    printf("Removing Observer-A...\n");
+    rv = anObserverService->RemoveObserver(aObserver, topicA.get());
+    testResult(rv);
+
+
+    printf("Removing Observer-B (topic-A)...\n");
+    rv = anObserverService->RemoveObserver(bObserver, topicB.get());
+    testResult(rv);
+    printf("Removing Observer-B (topic-B)...\n");
+    rv = anObserverService->RemoveObserver(bObserver, topicA.get());
+    testResult(rv);
+
+  }
+  return 0;
 }
