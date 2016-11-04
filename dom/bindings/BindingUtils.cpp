@@ -1916,7 +1916,7 @@ XrayDeleteNamedProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   const NativePropertyHooks* nativePropertyHooks =
     GetNativePropertyHooks(cx, obj, type);
   if (!IsInstance(type) || !nativePropertyHooks->mDeleteNamedProperty) {
-    return true;
+    return opresult.succeed();
   }
   return nativePropertyHooks->mDeleteNamedProperty(cx, wrapper, obj, id,
                                                    opresult);

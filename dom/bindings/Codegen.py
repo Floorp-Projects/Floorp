@@ -11438,10 +11438,10 @@ class CGDeleteNamedProperty(CGAbstractStaticMethod):
             bool deleteSucceeded;
             bool found = false;
             $*{namedBody}
-            if (found) {
-              return deleteSucceeded ? opresult.succeed() : opresult.failCantDelete();
+            if (!found || deleteSucceeded) {
+              return opresult.succeed();
             }
-            return true;
+            return opresult.failCantDelete();
             """,
             namedBody=getDeleterBody(self.descriptor, "Named", foundVar="found"))
 
