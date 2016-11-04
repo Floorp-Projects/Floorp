@@ -10,6 +10,7 @@ UNIFIED_SOURCES += [
     'TestAutoPtr.cpp',
     'TestAutoRef.cpp',
     'TestCloneInputStream.cpp',
+    'TestCOMArray.cpp',
     'TestCRT.cpp',
     'TestEncoding.cpp',
     'TestEscapeURL.cpp',
