@@ -3365,28 +3365,34 @@ class MNewArrayDynamicLength
     }
 };
 
-class MNewTypedArray
-  : public MUnaryInstruction,
-    public NoTypePolicy::Data
+class MNewTypedArray : public MNullaryInstruction
 {
+    CompilerGCPointer<TypedArrayObject*> templateObject_;
     gc::InitialHeap initialHeap_;
 
-    MNewTypedArray(CompilerConstraintList* constraints, MConstant* templateConst,
+    MNewTypedArray(CompilerConstraintList* constraints, TypedArrayObject* templateObject,
                    gc::InitialHeap initialHeap)
-      : MUnaryInstruction(templateConst),
+      : templateObject_(templateObject),
         initialHeap_(initialHeap)
     {
-        MOZ_ASSERT(!templateObject()->isSingleton());
+        MOZ_ASSERT(!templateObject->isSingleton());
         setResultType(MIRType::Object);
-        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject()));
+        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
     }
 
   public:
     INSTRUCTION_HEADER(NewTypedArray)
-    TRIVIAL_NEW_WRAPPERS
+
+    static MNewTypedArray* New(TempAllocator& alloc,
+                               CompilerConstraintList* constraints,
+                               TypedArrayObject* templateObject,
+                               gc::InitialHeap initialHeap)
+    {
+        return new(alloc) MNewTypedArray(constraints, templateObject, initialHeap);
+    }
 
     TypedArrayObject* templateObject() const {
-        return &getOperand(0)->toConstant()->toObject().as<TypedArrayObject>();
+        return templateObject_;
     }
 
     gc::InitialHeap initialHeap() const {
@@ -3397,9 +3403,8 @@ class MNewTypedArray
         return AliasSet::None();
     }
 
-    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
-    bool canRecoverOnBailout() const override {
-        return true;
+    bool appendRoots(MRootList& roots) const override {
+        return roots.append(templateObject_);
     }
 };
 
