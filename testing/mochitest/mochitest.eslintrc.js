@@ -3,6 +3,7 @@ module.exports = {
   rules: {
     "mozilla/import-headjs-globals": 1,
     "mozilla/mark-test-function-used": 1,
+    "no-shadow": 2,
   },
 
   "env": {

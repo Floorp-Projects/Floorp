@@ -23,11 +23,11 @@ add_task(function* test_http_autofill() {
     let tab = yield BrowserTestUtils
       .openNewForegroundTab(gBrowser, `${scheme}${TEST_URL_PATH}form_basic.html`);
 
-    let {username, password} = yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+    let [username, password] = yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
       let doc = content.document;
-      let username = doc.getElementById("form-basic-username").value;
-      let password = doc.getElementById("form-basic-password").value;
-      return { username, password };
+      let contentUsername = doc.getElementById("form-basic-username").value;
+      let contentPassword = doc.getElementById("form-basic-password").value;
+      return [contentUsername, contentPassword];
     });
 
     is(username, scheme == "http" ? "" : "username", "Username filled correctly");
@@ -42,12 +42,12 @@ add_task(function* test_iframe_in_http_autofill() {
     let tab = yield BrowserTestUtils
       .openNewForegroundTab(gBrowser, `${scheme}${TEST_URL_PATH}form_basic_iframe.html`);
 
-    let {username, password} = yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+    let [username, password] = yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
       let doc = content.document;
       let iframe = doc.getElementById("test-iframe");
-      let username = iframe.contentWindow.document.getElementById("form-basic-username").value;
-      let password = iframe.contentWindow.document.getElementById("form-basic-password").value;
-      return { username, password };
+      let contentUsername = iframe.contentWindow.document.getElementById("form-basic-username").value;
+      let contentPassword = iframe.contentWindow.document.getElementById("form-basic-password").value;
+      return [contentUsername, contentPassword];
     });
 
     is(username, scheme == "http" ? "" : "username", "Username filled correctly");
@@ -62,11 +62,11 @@ add_task(function* test_http_action_autofill() {
     let tab = yield BrowserTestUtils
       .openNewForegroundTab(gBrowser, `https${TEST_URL_PATH}form_cross_origin_${type}_action.html`);
 
-    let {username, password} = yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+    let [username, password] = yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
       let doc = content.document;
-      let username = doc.getElementById("form-basic-username").value;
-      let password = doc.getElementById("form-basic-password").value;
-      return { username, password };
+      let contentUsername = doc.getElementById("form-basic-username").value;
+      let contentPassword = doc.getElementById("form-basic-password").value;
+      return [contentUsername, contentPassword];
     });
 
     is(username, type == "insecure" ? "" : "username", "Username filled correctly");

@@ -46,8 +46,8 @@
 let files, testFile, blob, file, uploads;
 add_task(function* test_setup() {
   files = yield new Promise(resolve => {
-    SpecialPowers.createFiles([{name: "testFile.pdf", data: "Not really a PDF file :)", "type": "application/x-pdf"}], (files) => {
-      resolve(files);
+    SpecialPowers.createFiles([{name: "testFile.pdf", data: "Not really a PDF file :)", "type": "application/x-pdf"}], (result) => {
+      resolve(result);
     });
   });
   testFile = files[0];

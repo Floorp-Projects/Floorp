@@ -5,10 +5,10 @@ function* test_decoder_doctor_notification(type, notificationMessage, options) {
     let awaitNotificationBar =
       BrowserTestUtils.waitForNotificationBar(gBrowser, browser, "decoder-doctor-notification");
 
-    yield ContentTask.spawn(browser, type, function*(type) {
+    yield ContentTask.spawn(browser, type, function*(aType) {
       Services.obs.notifyObservers(content.window,
                                    "decoder-doctor-notification",
-                                   JSON.stringify({type: type,
+                                   JSON.stringify({type: aType,
                                                    isSolved: false,
                                                    decoderDoctorReportId: "test",
                                                    formats: "test"}));
