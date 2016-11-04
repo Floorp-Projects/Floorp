@@ -20,6 +20,7 @@ UNIFIED_SOURCES += [
     'TestID.cpp',
     'TestNSPRLogModulesParser.cpp',
     'TestObserverArray.cpp',
+    'TestObserverService.cpp',
     'TestPipes.cpp',
     'TestPLDHash.cpp',
     'TestPriorityQueue.cpp',
