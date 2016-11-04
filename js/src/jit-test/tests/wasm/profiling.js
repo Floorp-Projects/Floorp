@@ -218,7 +218,7 @@ WebAssembly.RuntimeError,
     enableSPSProfiling();
     enableSingleStepProfiling();
     assertEq(e2.bar(), 42);
-    assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", "0,0,>", "0,>", ">", ""]);
+    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
     disableSPSProfiling();
     assertEq(e2.bar(), 42);
 
@@ -228,7 +228,7 @@ WebAssembly.RuntimeError,
     var e4 = new Instance(m2, {a:e3}).exports;
     enableSingleStepProfiling();
     assertEq(e4.bar(), 42);
-    assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", "0,0,>", "0,>", ">", ""]);
+    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
     disableSPSProfiling();
     assertEq(e4.bar(), 42);
 })();

@@ -777,7 +777,7 @@ class CallSiteDesc
     uint32_t kind_ : 2;
   public:
     enum Kind {
-        FuncDef,   // pc-relative call to a specific function
+        Func,      // pc-relative call to a specific function
         Dynamic,   // dynamic callee called via register
         Symbolic,  // call to a single symbolic callee
         TrapExit   // call to a trap exit
@@ -833,12 +833,12 @@ class CallSiteAndTarget : public CallSite
     explicit CallSiteAndTarget(CallSite cs)
       : CallSite(cs)
     {
-        MOZ_ASSERT(cs.kind() != FuncDef);
+        MOZ_ASSERT(cs.kind() != Func);
     }
-    CallSiteAndTarget(CallSite cs, uint32_t funcDefIndex)
-      : CallSite(cs), index_(funcDefIndex)
+    CallSiteAndTarget(CallSite cs, uint32_t funcIndex)
+      : CallSite(cs), index_(funcIndex)
     {
-        MOZ_ASSERT(cs.kind() == FuncDef);
+        MOZ_ASSERT(cs.kind() == Func);
     }
     CallSiteAndTarget(CallSite cs, Trap trap)
       : CallSite(cs),
@@ -847,7 +847,7 @@ class CallSiteAndTarget : public CallSite
         MOZ_ASSERT(cs.kind() == TrapExit);
     }
 
-    uint32_t funcDefIndex() const { MOZ_ASSERT(kind() == FuncDef); return index_; }
+    uint32_t funcIndex() const { MOZ_ASSERT(kind() == Func); return index_; }
     Trap trap() const { MOZ_ASSERT(kind() == TrapExit); return Trap(index_); }
 };
 
@@ -1099,7 +1099,7 @@ class CalleeDesc
   public:
     enum Which {
         // Calls a function defined in the same module by its index.
-        Definition,
+        Func,
 
         // Calls the import identified by the offset of its FuncImportTls in
         // thread-local data.
@@ -1123,7 +1123,7 @@ class CalleeDesc
     Which which_;
     union U {
         U() {}
-        uint32_t funcDefIndex_;
+        uint32_t funcIndex_;
         struct {
             uint32_t globalDataOffset_;
         } import;
@@ -1137,10 +1137,10 @@ class CalleeDesc
 
   public:
     CalleeDesc() {}
-    static CalleeDesc definition(uint32_t funcDefIndex) {
+    static CalleeDesc function(uint32_t funcIndex) {
         CalleeDesc c;
-        c.which_ = Definition;
-        c.u.funcDefIndex_ = funcDefIndex;
+        c.which_ = Func;
+        c.u.funcIndex_ = funcIndex;
         return c;
     }
     static CalleeDesc import(uint32_t globalDataOffset) {
@@ -1178,9 +1178,9 @@ class CalleeDesc
     Which which() const {
         return which_;
     }
-    uint32_t funcDefIndex() const {
-        MOZ_ASSERT(which_ == Definition);
-        return u.funcDefIndex_;
+    uint32_t funcIndex() const {
+        MOZ_ASSERT(which_ == Func);
+        return u.funcIndex_;
     }
     uint32_t importGlobalDataOffset() const {
         MOZ_ASSERT(which_ == Import);
@@ -1388,6 +1388,18 @@ static const unsigned MaxDataSegments             =       64 * 1024;
 static const unsigned MaxElemSegments             =       64 * 1024;
 static const unsigned MaxArgsPerFunc              =        4 * 1024;
 static const unsigned MaxBrTableElems             = 4 * 1024 * 1024;
+
+// To be able to assign function indices during compilation while the number of
+// imports is still unknown, asm.js sets a maximum number of imports so it can
+// immediately start handing out function indices starting at the maximum + 1.
+// this means that there is a "hole" between the last import and the first
+// definition, but that's fine.
+
+static const unsigned AsmJSMaxImports             = 4 * 1024;
+static const unsigned AsmJSFirstDefFuncIndex      = AsmJSMaxImports + 1;
+
+static_assert(AsmJSMaxImports <= MaxImports, "conservative");
+static_assert(AsmJSFirstDefFuncIndex < MaxFuncs, "conservative");
 
 } // namespace wasm
 } // namespace js

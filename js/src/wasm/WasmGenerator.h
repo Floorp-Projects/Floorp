@@ -36,28 +36,16 @@ class FunctionGenerator;
 // any given datum before being read by a background thread. In particular,
 // once created, the Vectors are never resized.
 
-struct FuncImportGenDesc
-{
-    const SigWithId* sig;
-    uint32_t globalDataOffset;
-
-    FuncImportGenDesc() : sig(nullptr), globalDataOffset(0) {}
-    explicit FuncImportGenDesc(const SigWithId* sig) : sig(sig), globalDataOffset(0) {}
-};
-
-typedef Vector<FuncImportGenDesc, 0, SystemAllocPolicy> FuncImportGenDescVector;
-
 struct ModuleGeneratorData
 {
     ModuleKind                kind;
     MemoryUsage               memoryUsage;
     mozilla::Atomic<uint32_t> minMemoryLength;
     Maybe<uint32_t>           maxMemoryLength;
-    uint32_t                  firstFuncDefIndex;
 
     SigWithIdVector           sigs;
-    SigWithIdPtrVector        funcDefSigs;
-    FuncImportGenDescVector   funcImports;
+    SigWithIdPtrVector        funcSigs;
+    Uint32Vector              funcImportGlobalDataOffsets;
     GlobalDescVector          globals;
     TableDescVector           tables;
     Uint32Vector              asmJSSigToTableIndex;
@@ -65,12 +53,14 @@ struct ModuleGeneratorData
     explicit ModuleGeneratorData(ModuleKind kind = ModuleKind::Wasm)
       : kind(kind),
         memoryUsage(MemoryUsage::None),
-        minMemoryLength(0),
-        firstFuncDefIndex(0)
+        minMemoryLength(0)
     {}
 
     bool isAsmJS() const {
         return kind == ModuleKind::AsmJS;
+    }
+    bool funcIsImport(uint32_t funcIndex) const {
+        return funcIndex < funcImportGlobalDataOffsets.length();
     }
 };
 
@@ -109,8 +99,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     jit::JitContext                 jcx_;
     jit::TempAllocator              masmAlloc_;
     jit::MacroAssembler             masm_;
-    Uint32Vector                    funcDefIndexToCodeRange_;
-    Uint32Set                       exportedFuncDefs_;
+    Uint32Vector                    funcToCodeRange_;
+    Uint32Set                       exportedFuncs_;
     uint32_t                        lastPatchedCallsite_;
     uint32_t                        startOfUnpatchedCallsites_;
 
@@ -124,15 +114,15 @@ class MOZ_STACK_CLASS ModuleGenerator
     DebugOnly<FunctionGenerator*>   activeFuncDef_;
     DebugOnly<bool>                 startedFuncDefs_;
     DebugOnly<bool>                 finishedFuncDefs_;
+    DebugOnly<uint32_t>             numFinishedFuncDefs_;
 
     MOZ_MUST_USE bool finishOutstandingTask();
-    bool funcIndexIsDef(uint32_t funcIndex) const;
-    uint32_t funcIndexToDef(uint32_t funcIndex) const;
-    bool funcIsDefined(uint32_t funcDefIndex) const;
-    const CodeRange& funcDefCodeRange(uint32_t funcDefIndex) const;
+    bool funcIsImport(uint32_t funcIndex) const;
+    bool funcIsCompiled(uint32_t funcIndex) const;
+    const CodeRange& funcCodeRange(uint32_t funcIndex) const;
     MOZ_MUST_USE bool patchCallSites(TrapExitOffsetArray* maybeTrapExits = nullptr);
     MOZ_MUST_USE bool finishTask(IonCompileTask* task);
-    MOZ_MUST_USE bool finishFuncDefExports();
+    MOZ_MUST_USE bool finishFuncExports();
     MOZ_MUST_USE bool finishCodegen();
     MOZ_MUST_USE bool finishLinkData(Bytes& code);
     MOZ_MUST_USE bool addFuncImport(const Sig& sig, uint32_t globalDataOffset);
@@ -160,24 +150,18 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Signatures:
     uint32_t numSigs() const { return numSigs_; }
     const SigWithId& sig(uint32_t sigIndex) const;
-
-    // Function declarations:
-    uint32_t numFuncDefs() const { return shared_->funcDefSigs.length(); }
-    const SigWithId& funcDefSig(uint32_t funcDefIndex) const;
+    const SigWithId& funcSig(uint32_t funcIndex) const;
 
     // Globals:
     const GlobalDescVector& globals() const { return shared_->globals; }
 
-    // Imports:
+    // Functions declarations:
     uint32_t numFuncImports() const;
-    const FuncImportGenDesc& funcImport(uint32_t funcImportIndex) const;
-
-    // Function index space:
+    uint32_t numFuncDefs() const;
     uint32_t numFuncs() const;
-    const SigWithId& funcSig(uint32_t funcIndex) const;
 
     // Exports:
-    MOZ_MUST_USE bool addFuncDefExport(UniqueChars fieldName, uint32_t funcIndex);
+    MOZ_MUST_USE bool addFuncExport(UniqueChars fieldName, uint32_t funcIndex);
     MOZ_MUST_USE bool addTableExport(UniqueChars fieldName);
     MOZ_MUST_USE bool addMemoryExport(UniqueChars fieldName);
     MOZ_MUST_USE bool addGlobalExport(UniqueChars fieldName, uint32_t globalIndex);
@@ -185,7 +169,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Function definitions:
     MOZ_MUST_USE bool startFuncDefs();
     MOZ_MUST_USE bool startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg);
-    MOZ_MUST_USE bool finishFuncDef(uint32_t funcDefIndex, FunctionGenerator* fg);
+    MOZ_MUST_USE bool finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg);
     MOZ_MUST_USE bool finishFuncDefs();
 
     // Start function:
@@ -200,10 +184,10 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // asm.js lazy initialization:
     void initSig(uint32_t sigIndex, Sig&& sig);
-    void initFuncDefSig(uint32_t funcIndex, uint32_t sigIndex);
-    MOZ_MUST_USE bool initImport(uint32_t importIndex, uint32_t sigIndex);
+    void initFuncSig(uint32_t funcIndex, uint32_t sigIndex);
+    MOZ_MUST_USE bool initImport(uint32_t funcIndex, uint32_t sigIndex);
     MOZ_MUST_USE bool initSigTableLength(uint32_t sigIndex, uint32_t length);
-    MOZ_MUST_USE bool initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncDefIndices);
+    MOZ_MUST_USE bool initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices);
     void initMemoryUsage(MemoryUsage memoryUsage);
     void bumpMinMemoryLength(uint32_t newMinMemoryLength);
     MOZ_MUST_USE bool addGlobal(ValType type, bool isConst, uint32_t* index);

@@ -1974,7 +1974,7 @@ class BaseCompiler
     void beginFunction() {
         JitSpew(JitSpew_Codegen, "# Emitting wasm baseline code");
 
-        SigIdDesc sigId = mg_.funcDefSigs[func_.defIndex()]->id;
+        SigIdDesc sigId = mg_.funcSigs[func_.index()]->id;
         GenerateFunctionPrologue(masm, localSize_, sigId, prologueTrapOffset_,
                                  &compileResults_.offsets());
 
@@ -2306,10 +2306,10 @@ class BaseCompiler
         }
     }
 
-    void callDefinition(uint32_t funcDefIndex, const FunctionCall& call)
+    void callDefinition(uint32_t funcIndex, const FunctionCall& call)
     {
-        CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::FuncDef);
-        masm.call(desc, funcDefIndex);
+        CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Func);
+        masm.call(desc, funcIndex);
     }
 
     void callSymbolic(SymbolicAddress callee, const FunctionCall& call) {
@@ -3592,9 +3592,7 @@ class BaseCompiler
     MOZ_MUST_USE bool emitBrTable();
     MOZ_MUST_USE bool emitReturn();
     MOZ_MUST_USE bool emitCallArgs(const ValTypeVector& args, FunctionCall& baselineCall);
-    MOZ_MUST_USE bool emitCallImportCommon(uint32_t lineOrBytecode, uint32_t funcImportIndex);
     MOZ_MUST_USE bool emitCall();
-    MOZ_MUST_USE bool emitOldCallImport();
     MOZ_MUST_USE bool emitCallIndirect(bool oldStyle);
     MOZ_MUST_USE bool emitCommonMathCall(uint32_t lineOrBytecode, SymbolicAddress callee,
                                          ValTypeVector& signature, ExprType retType);
@@ -5349,71 +5347,27 @@ BaseCompiler::pushReturned(const FunctionCall& call, ExprType type)
 // for outgoing arguments.  A sync() is just simpler.
 
 bool
-BaseCompiler::emitCallImportCommon(uint32_t lineOrBytecode, uint32_t funcImportIndex)
-{
-    const FuncImportGenDesc& funcImport = mg_.funcImports[funcImportIndex];
-    const Sig& sig = *funcImport.sig;
-
-    if (deadCode_)
-        return true;
-
-    sync();
-
-    uint32_t numArgs = sig.args().length();
-    size_t stackSpace = stackConsumed(numArgs);
-
-    FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, UseABI::Wasm, InterModule::True);
-
-    if (!emitCallArgs(sig.args(), baselineCall))
-        return false;
-
-    if (!iter_.readCallReturn(sig.ret()))
-        return false;
-
-    callImport(funcImport.globalDataOffset, baselineCall);
-
-    endCall(baselineCall);
-
-    // TODO / OPTIMIZE: It would be better to merge this freeStack()
-    // into the one in endCall, if we can.
-
-    popValueStackBy(numArgs);
-    masm.freeStack(stackSpace);
-
-    if (!IsVoid(sig.ret()))
-        pushReturned(baselineCall, sig.ret());
-
-    return true;
-}
-
-bool
 BaseCompiler::emitCall()
 {
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
-    uint32_t calleeIndex;
-    if (!iter_.readCall(&calleeIndex))
+    uint32_t funcIndex;
+    if (!iter_.readCall(&funcIndex))
         return false;
-
-    // For asm.js, imports are not part of the function index space so in
-    // these cases firstFuncDefIndex is fixed to 0, even if there are
-    // function imports.
-    if (calleeIndex < mg_.firstFuncDefIndex)
-        return emitCallImportCommon(lineOrBytecode, calleeIndex);
 
     if (deadCode_)
         return true;
 
     sync();
 
-    uint32_t funcDefIndex = calleeIndex - mg_.firstFuncDefIndex;
-    const Sig& sig = *mg_.funcDefSigs[funcDefIndex];
+    const Sig& sig = *mg_.funcSigs[funcIndex];
+    bool import = mg_.funcIsImport(funcIndex);
+
     uint32_t numArgs = sig.args().length();
     size_t stackSpace = stackConsumed(numArgs);
 
     FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, UseABI::Wasm, InterModule::False);
+    beginCall(baselineCall, UseABI::Wasm, import ? InterModule::True : InterModule::False);
 
     if (!emitCallArgs(sig.args(), baselineCall))
         return false;
@@ -5421,7 +5375,10 @@ BaseCompiler::emitCall()
     if (!iter_.readCallReturn(sig.ret()))
         return false;
 
-    callDefinition(funcDefIndex, baselineCall);
+    if (import)
+        callImport(mg_.funcImportGlobalDataOffsets[funcIndex], baselineCall);
+    else
+        callDefinition(funcIndex, baselineCall);
 
     endCall(baselineCall);
 
@@ -5435,23 +5392,6 @@ BaseCompiler::emitCall()
         pushReturned(baselineCall, sig.ret());
 
     return true;
-}
-
-bool
-BaseCompiler::emitOldCallImport()
-{
-    MOZ_ASSERT(!mg_.firstFuncDefIndex);
-
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
-    uint32_t funcImportIndex;
-    if (!iter_.readCall(&funcImportIndex))
-        return false;
-
-    if (deadCode_)
-        return true;
-
-    return emitCallImportCommon(lineOrBytecode, funcImportIndex);
 }
 
 bool
@@ -6671,8 +6611,6 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitCallIndirect(/* oldStyle = */ false));
           case Expr::OldCallIndirect:
             CHECK_NEXT(emitCallIndirect(/* oldStyle = */ true));
-          case Expr::OldCallImport:
-            CHECK_NEXT(emitOldCallImport());
 
           // Locals and globals
           case Expr::GetLocal:

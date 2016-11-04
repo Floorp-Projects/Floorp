@@ -389,11 +389,6 @@ enum class Expr : uint32_t // fix type so we can cast from any u16 in decoder
     // asm.js-style call_indirect with the callee evaluated first.
     OldCallIndirect,
 
-    // asm.js-style call to an import; asm.js imports are not (and cannot be,
-    // due to streaming compilation and lazy discovery) injected into the
-    // function index space so Expr::Call cannot be used.
-    OldCallImport,
-
     // Atomics
     I32AtomicsCompareExchange,
     I32AtomicsExchange,

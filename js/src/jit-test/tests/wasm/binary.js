@@ -368,15 +368,16 @@ function runStackTraceTest(namesContent, expectedName) {
     assertEq(result, expectedName);
 };
 
-runStackTraceTest(null, 'wasm-function[0]');
-runStackTraceTest([{name: 'test'}], 'test');
-runStackTraceTest([{name: 'test', locals: [{name: 'var1'}, {name: 'var2'}]}], 'test');
-runStackTraceTest([{name: 'test', locals: [{name: 'var1'}, {name: 'var2'}]}], 'test');
-runStackTraceTest([{name: 'test1'}, {name: 'test2'}], 'test1');
-runStackTraceTest([{name: 'test☃'}], 'test☃');
-runStackTraceTest([{name: 'te\xE0\xFF'}], 'te\xE0\xFF');
-runStackTraceTest([], 'wasm-function[0]');
+runStackTraceTest(null, 'wasm-function[1]');
+runStackTraceTest([{name:'blah'}, {name: 'test'}], 'test');
+runStackTraceTest([{name:'blah'}, {name: 'test', locals: [{name: 'var1'}, {name: 'var2'}]}], 'test');
+runStackTraceTest([{name:'blah'}, {name: 'test', locals: [{name: 'var1'}, {name: 'var2'}]}], 'test');
+runStackTraceTest([{name:'blah'}, {name: 'test1'}, {name: 'test2'}], 'test1');
+runStackTraceTest([{name:'blah'}, {name: 'test☃'}], 'test☃');
+runStackTraceTest([{name:'blah'}, {name: 'te\xE0\xFF'}], 'te\xE0\xFF');
+runStackTraceTest([{name:'blah'}], 'wasm-function[1]');
+runStackTraceTest([], 'wasm-function[1]');
 // Notice that invalid names section content shall not fail the parsing
-runStackTraceTest([{nameLen: 100, name: 'test'}], 'wasm-function[0]'); // invalid name size
-runStackTraceTest([{name: 'test', locals: [{nameLen: 40, name: 'var1'}]}], 'wasm-function[0]'); // invalid variable name size
-runStackTraceTest([{name: ''}], 'wasm-function[0]'); // empty name
+runStackTraceTest([{name:'blah'}, {nameLen: 100, name: 'test'}], 'wasm-function[1]'); // invalid name size
+runStackTraceTest([{name:'blah'}, {name: 'test', locals: [{nameLen: 40, name: 'var1'}]}], 'wasm-function[1]'); // invalid variable name size
+runStackTraceTest([{name:'blah'}, {name: ''}], 'wasm-function[1]'); // empty name

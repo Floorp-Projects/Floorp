@@ -353,7 +353,6 @@ wasm::Classify(Expr expr)
       case Expr::TeeGlobal:
         return ExprKind::TeeGlobal;
       case Expr::Call:
-      case Expr::OldCallImport:
         return ExprKind::Call;
       case Expr::CallIndirect:
         return ExprKind::CallIndirect;

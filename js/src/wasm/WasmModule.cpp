@@ -538,8 +538,8 @@ Module::extractCode(JSContext* cx, MutableHandleValue vp)
         if (!JS_DefineProperty(cx, segment, "kind", value, JSPROP_ENUMERATE))
             return false;
         if (p->isFunction()) {
-            value.setNumber((uint32_t)p->funcDefIndex());
-            if (!JS_DefineProperty(cx, segment, "funcDefIndex", value, JSPROP_ENUMERATE))
+            value.setNumber((uint32_t)p->funcIndex());
+            if (!JS_DefineProperty(cx, segment, "funcIndex", value, JSPROP_ENUMERATE))
                 return false;
             value.setNumber((uint32_t)p->funcNonProfilingEntry());
             if (!JS_DefineProperty(cx, segment, "funcBodyBegin", value, JSPROP_ENUMERATE))
@@ -693,11 +693,11 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
         if (!IsExportedFunction(f) || ExportedFunctionToInstance(f).isAsmJS())
             continue;
 
-        uint32_t funcDefIndex = ExportedFunctionToDefinitionIndex(f);
+        uint32_t funcIndex = ExportedFunctionToFuncIndex(f);
         Instance& instance = ExportedFunctionToInstance(f);
-        const FuncDefExport& funcDefExport = instance.metadata().lookupFuncDefExport(funcDefIndex);
+        const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
 
-        if (funcDefExport.sig() != metadata_->funcImports[i].sig()) {
+        if (funcExport.sig() != metadata_->funcImports[i].sig()) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG);
             return false;
         }
@@ -834,10 +834,8 @@ GetFunctionExport(JSContext* cx,
         return true;
     }
 
-    uint32_t funcDefIndex = exp.funcIndex() - funcImports.length();
-
     RootedFunction fun(cx);
-    if (!instanceObj->getExportedFunction(cx, instanceObj, funcDefIndex, &fun))
+    if (!instanceObj->getExportedFunction(cx, instanceObj, exp.funcIndex(), &fun))
         return false;
 
     val.setObject(*fun);
@@ -1052,8 +1050,7 @@ Module::instantiate(JSContext* cx,
             if (!Call(cx, fval, thisv, args, &rval))
                 return false;
         } else {
-            uint32_t funcDefIndex = startFuncIndex - funcImports.length();
-            if (!instance->instance().callExport(cx, funcDefIndex, args))
+            if (!instance->instance().callExport(cx, startFuncIndex, args))
                 return false;
         }
     }
