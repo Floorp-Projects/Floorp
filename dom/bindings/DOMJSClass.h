@@ -74,6 +74,11 @@ typedef bool
                            JS::Handle<JSObject*> obj,
                            JS::AutoIdVector& props);
 
+typedef bool
+(* DeleteNamedProperty)(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                        JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                        JS::ObjectOpResult& opresult);
+
 // Returns true if the given global is of a type whose bit is set in
 // aNonExposedGlobals.
 bool
@@ -276,6 +281,15 @@ struct NativePropertyHooks
   // The hook to call for enumerating indexed or named properties. May be null
   // if there can't be any.
   EnumerateOwnProperties mEnumerateOwnProperties;
+  // The hook to call to delete a named property.  May be null if there are no
+  // named properties or no named property deleter.  On success (true return)
+  // the "found" argument will be set to true if there was in fact such a named
+  // property and false otherwise.  If it's set to false, the caller is expected
+  // to proceed with whatever deletion behavior it would have if there were no
+  // named properties involved at all (i.e. if the hook were null).  If it's set
+  // to true, it will indicate via opresult whether the delete actually
+  // succeeded.
+  DeleteNamedProperty mDeleteNamedProperty;
 
   // The property arrays for this interface.
   NativePropertiesHolder mNativeProperties;
