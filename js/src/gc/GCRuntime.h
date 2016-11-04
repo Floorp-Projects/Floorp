@@ -917,7 +917,8 @@ class GCRuntime
     friend class ArenaLists;
     Chunk* pickChunk(const AutoLockGC& lock,
                      AutoMaybeStartBackgroundAllocation& maybeStartBGAlloc);
-    Arena* allocateArena(Chunk* chunk, Zone* zone, AllocKind kind, const AutoLockGC& lock);
+    Arena* allocateArena(Chunk* chunk, Zone* zone, AllocKind kind,
+                         ShouldCheckThresholds checkThresholds, const AutoLockGC& lock);
     void arenaAllocatedDuringGC(JS::Zone* zone, Arena* arena);
 
     // Allocator internals
