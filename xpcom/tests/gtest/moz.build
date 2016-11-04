@@ -16,6 +16,7 @@ UNIFIED_SOURCES += [
     'TestEncoding.cpp',
     'TestEscapeURL.cpp',
     'TestExpirationTracker.cpp',
+    'TestFile.cpp',
     'TestNSPRLogModulesParser.cpp',
     'TestPipes.cpp',
     'TestPLDHash.cpp',
