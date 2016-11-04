@@ -390,17 +390,8 @@ class ObjectForConstPtr
 
 RefPtr<Foo> gFoop;
 
-int
-main()
+void AddRefAndRelease()
 {
-  printf(">>main()\n");
-
-  printf("sizeof(RefPtr<Foo>) --> %u\n", unsigned(sizeof(RefPtr<Foo>)));
-
-  TestBloat_Raw_Unsafe();
-  TestBloat_Smart();
-
-
   {
     printf("\n### Test  1: will a |nsCOMPtr| call |AddRef| on a pointer assigned into it?\n");
     RefPtr<Foo> foop( do_QueryObject(new Foo) );
@@ -427,11 +418,26 @@ main()
   }
 
   {
+    printf("\n### setup for Test 24\n");
+    RefPtr<Foo> fooP( do_QueryObject(new Foo) );
+
+    printf("### Test 24: does |forget| avoid an AddRef/Release when assigning to another nsCOMPtr?\n");
+    RefPtr<Foo> fooP2( fooP.forget() );
+  }
+  printf("### End Test 24\n");
+}
+
+void VirtualDestructor()
+{
+  {
     printf("\n### Test  6: will a |nsCOMPtr| call the correct destructor?\n");
     RefPtr<Foo> foop( do_QueryObject(new Bar) );
     mozilla::Unused << foop;
   }
+}
 
+void Equality()
+{
   {
     printf("\n### Test  7: can you compare one |nsCOMPtr| with another [!=]?\n");
 
@@ -512,7 +518,10 @@ main()
 
     printf("\n### Test 14: how about when two |nsCOMPtr|s referring to the same object go out of scope?\n");
   }
+}
 
+void AddRefHelpers()
+{
   {
     printf("\n### Test 15,16 ...setup...\n");
     Foo* raw_foo1p = new Foo;
@@ -529,12 +538,6 @@ main()
     RefPtr<Foo> foo2p;
     foo2p = dont_AddRef(raw_foo2p);
   }
-
-
-
-
-
-
 
   {
     printf("\n### setup for Test 17\n");
@@ -564,7 +567,10 @@ main()
     foop = return_a_Foo();
   }
   printf("### End Test 19, 20\n");
+}
 
+void QueryInterface()
+{
   {
     printf("\n### setup for Test 21\n");
     RefPtr<Foo> fooP;
@@ -597,17 +603,10 @@ main()
       printf("an Bar* is an Foo*\n");
   }
   printf("### End Test 23\n");
+}
 
-
-  {
-    printf("\n### setup for Test 24\n");
-    RefPtr<Foo> fooP( do_QueryObject(new Foo) );
-
-    printf("### Test 24: does |forget| avoid an AddRef/Release when assigning to another nsCOMPtr?\n");
-    RefPtr<Foo> fooP2( fooP.forget() );
-  }
-  printf("### End Test 24\n");
-
+void TestsThatWillBeDeleted()
+{
   {
     RefPtr<Foo> fooP;
 
@@ -631,7 +630,6 @@ main()
     // [Shouldn't compile] Is it a compile time error to construct an |RefPtr<T> from an |RefPtr<const T>|?
     //RefPtr<Foo> otherFooP(constFooP);
   }
-
 
   printf("\n### Test 26: will a static |nsCOMPtr| |Release| before program termination?\n");
   gFoop = do_QueryObject(new Foo);
@@ -660,7 +658,22 @@ main()
     (foop3->*fCPtr2)(test, &test, test);
     printf("### End Test 28\n");
   }
+}
 
+int
+main()
+{
+  printf(">>main()\n");
+
+  printf("sizeof(RefPtr<Foo>) --> %u\n", unsigned(sizeof(RefPtr<Foo>)));
+
+  TestBloat_Raw_Unsafe();
+  TestBloat_Smart();
+  AddRefAndRelease();
+  VirtualDestructor();
+  Equality();
+  AddRefHelpers();
+  QueryInterface();
 
   printf("<<main()\n");
   return 0;
