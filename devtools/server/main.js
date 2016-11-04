@@ -715,7 +715,7 @@ var DebuggerServer = {
     return this._onConnection(transport, prefix, true);
   },
 
-  connectToContent(connection, mm) {
+  connectToContent(connection, mm, onDestroy) {
     let deferred = SyncPromise.defer();
 
     let prefix = connection.allocID("content-process");
@@ -763,6 +763,10 @@ var DebuggerServer = {
         } catch (e) {
           // Nothing to do
         }
+      }
+
+      if (onDestroy) {
+        onDestroy(mm);
       }
     }
 

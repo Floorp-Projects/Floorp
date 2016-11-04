@@ -97,9 +97,21 @@ function runTests() {
           text: "var a = 42; a"
         }, function (response) {
           ok(response.result, 42, "console.eval worked");
-          cleanup();
+
+          getProcessAgain(actor, content.id);
         });
       });
+    });
+  }
+
+  // Assert that calling client.getProcess against the same process id is
+  // returning the same actor.
+  function getProcessAgain(firstActor, id) {
+    client.getProcess(id).then(response => {
+      let actor = response.form;
+      is(actor, firstActor,
+         "Second call to getProcess with the same id returns the same form");
+      cleanup();
     });
   }
 
