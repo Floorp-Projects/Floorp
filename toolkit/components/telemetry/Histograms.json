@@ -3885,6 +3885,14 @@
     "bug_numbers": [1305801],
     "description": "An error was encountered while parsing a partial update returned by a Safe Browsing V4 server (0 = addition of an already existing prefix, 1 = parser got into an infinite loop, 2 = removal index out of bounds, 3 = checksum mismatch, 4 = missing checksum)"
   },
+  "URLCLASSIFIER_PREFIX_MATCH": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "58",
+    "kind": "enumerated",
+    "n_values": 4,
+    "bug_numbers": [1298257],
+    "description": "Classifier prefix matching result (0 = no match, 1 = match only V2, 2 = match only V4, 3 = match both V2 and V4)"
+  },
   "CSP_DOCUMENTS_COUNT": {
     "alert_emails": ["seceng@mozilla.com"],
     "bug_numbers": [1252829],

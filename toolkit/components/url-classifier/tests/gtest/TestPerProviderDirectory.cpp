@@ -2,9 +2,7 @@
 #include "LookupCacheV4.h"
 #include "HashStore.h"
 #include "gtest/gtest.h"
-#include "nsIThread.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace safebrowsing {
