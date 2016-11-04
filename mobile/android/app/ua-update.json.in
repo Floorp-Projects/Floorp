@@ -3,11 +3,6 @@
 // Send these sites a custom user-agent. Bugs should be included with an entry.
 // NOTE: trailing commas are not valid JSON and will prevent the CDN from syncing.
 {
-  // bug 1177298, yahoo.co.jp properties
-  "www.yahoo.co.jp": "Mozilla/5.0 (Linux; Android 5.0.2; Galaxy Nexus Build/IMM76B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.93 Mobile Safari/537.36",
-  // send override to m. in addition to www. to prevent infinite 302 loop
-  "m.yahoo.co.jp": "Mozilla/5.0 (Linux; Android 5.0.2; Galaxy Nexus Build/IMM76B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.93 Mobile Safari/537.36",
-  "finance.yahoo.co.jp": "Mozilla/5.0 (Linux; Android 5.0.2; Galaxy Nexus Build/IMM76B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.93 Mobile Safari/537.36",
   "weather.yahoo.co.jp": "Mozilla/5.0 (Linux; Android 5.0.2; Galaxy Nexus Build/IMM76B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.93 Mobile Safari/537.36",
   // bug 1177298, lohaco.jp
   "lohaco.jp": "Mozilla/5.0 (Linux; Android 5.0.2; Galaxy Nexus Build/IMM76B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.93 Mobile Safari/537.36",

@@ -106,7 +106,7 @@ function sendAllApis() {
       let val = obj[key];
       if (typeof val == "object" && val !== null && mayRecurse(key, val)) {
         diveDeeper(`${path}.${key}`, val);
-      } else {
+      } else if (val !== undefined) {
         results.push(`${path}.${key}`);
       }
     }

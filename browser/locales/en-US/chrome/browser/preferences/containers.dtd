@@ -1,0 +1,24 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!ENTITY label.label          "Name">
+<!ENTITY addButton.label      "Add New Container">
+<!ENTITY addButton.accesskey  "A">
+<!-- &#171; is &laquo; however it's not defined in XML -->
+<!ENTITY backLink.label       "&#171; Go Back to Privacy">
+
+<!ENTITY window.title         "Add New Container">
+<!ENTITY window.width         "45em">
+
+<!ENTITY name.label           "Name:">
+<!ENTITY name.accesskey       "N">
+<!ENTITY icon.label           "Icon:">
+<!ENTITY icon.accesskey       "I">
+<!ENTITY color.label          "Color:">
+<!ENTITY color.accesskey      "o">
+<!ENTITY windowClose.key      "w">
+
+<!ENTITY button.ok.label      "Done">
+<!ENTITY button.ok.accesskey  "D">
+

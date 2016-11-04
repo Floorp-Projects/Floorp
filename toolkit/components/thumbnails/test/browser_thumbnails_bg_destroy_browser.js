@@ -2,6 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function* runTests() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.processCount", 1]]
+  });
+
   let url1 = "http://example.com/1";
   ok(!thumbnailExists(url1), "First file should not exist yet.");
 

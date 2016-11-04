@@ -74,5 +74,6 @@ PRUint16 tls13_EncodeDraftVersion(SSL3ProtocolVersion version);
 PRUint16 tls13_DecodeDraftVersion(PRUint16 version);
 SECStatus tls13_NegotiateVersion(sslSocket *ss,
                                  const TLSExtension *supported_versions);
+SECStatus tls13_SendNewSessionTicket(sslSocket *ss);
 
 #endif /* __tls13con_h_ */

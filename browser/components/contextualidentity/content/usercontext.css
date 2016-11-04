@@ -1,3 +1,63 @@
+[data-identity-color="blue"] {
+  --identity-tab-color: #0996f8;
+  --identity-icon-color: #00a7e0;
+}
+
+[data-identity-color="turquoise"] {
+  --identity-tab-color: #01bdad;
+  --identity-icon-color: #01bdad;
+}
+
+[data-identity-color="green"] {
+  --identity-tab-color: #57bd35;
+  --identity-icon-color:  #7dc14c;
+}
+
+[data-identity-color="yellow"] {
+  --identity-tab-color: #ffcb00;
+  --identity-icon-color: #ffcb00;
+}
+
+[data-identity-color="orange"] {
+  --identity-tab-color: #ff9216;
+  --identity-icon-color: #ff9216;
+}
+
+[data-identity-color="red"] {
+  --identity-tab-color: #d92215;
+  --identity-icon-color: #d92215;
+}
+
+[data-identity-color="pink"] {
+  --identity-tab-color: #ea385e;
+  --identity-icon-color: #ee5195;
+}
+
+[data-identity-color="purple"] {
+  --identity-tab-color: #7a2f7a;
+  --identity-icon-color: #7a2f7a;
+}
+
+[data-identity-icon="fingerprint"] {
+  --identity-icon: url("chrome://browser/content/usercontext.svg#fingerprint");
+}
+
+[data-identity-icon="briefcase"] {
+  --identity-icon: url("chrome://browser/content/usercontext.svg#briefcase");
+}
+
+[data-identity-icon="dollar"] {
+  --identity-icon: url("chrome://browser/content/usercontext.svg#dollar");
+}
+
+[data-identity-icon="cart"] {
+  --identity-icon: url("chrome://browser/content/usercontext.svg#cart");
+}
+
+[data-identity-icon="circle"] {
+  --identity-icon: url("chrome://browser/content/usercontext.svg#circle");
+}
+
 #userContext-indicator {
   height: 16px;
   width: 16px;
@@ -5,9 +65,27 @@
 
 #userContext-label {
   margin-inline-end: 3px;
-  color: #909090;
+  color: var(--identity-tab-color);
 }
 
 #userContext-icons {
   -moz-box-align: center;
+}
+
+.tabbrowser-tab[usercontextid] {
+  background-image: linear-gradient(to right, transparent 20%, var(--identity-tab-color) 30%, var(--identity-tab-color) 70%, transparent 80%);
+  background-size: auto 2px;
+  background-repeat: no-repeat;
+}
+
+.userContext-icon,
+.menuitem-iconic[data-usercontextid] > .menu-iconic-left > .menu-iconic-icon,
+.subviewbutton[usercontextid] > .toolbarbutton-icon,
+#userContext-indicator {
+  background-image: var(--identity-icon);
+  filter: url(chrome://browser/skin/filters.svg#fill);
+  fill: var(--identity-icon-color);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
 }

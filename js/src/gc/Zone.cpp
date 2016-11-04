@@ -48,6 +48,7 @@ JS::Zone::Zone(JSRuntime* rt)
     gcScheduled_(false),
     gcPreserveCode_(false),
     jitUsingBarriers_(false),
+    keepShapeTables_(false),
     listNext_(NotOnList)
 {
     /* Ensure that there are no vtables to mess us up here. */

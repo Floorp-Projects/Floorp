@@ -408,7 +408,7 @@ CodeGeneratorMIPS::visitDivOrModI64(LDivOrModI64* lir)
     masm.passABIArg(rhs.high);
     masm.passABIArg(rhs.low);
 
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     if (lir->mir()->isMod())
         masm.callWithABI(wasm::SymbolicAddress::ModI64);
     else
@@ -447,7 +447,7 @@ CodeGeneratorMIPS::visitUDivOrModI64(LUDivOrModI64* lir)
     masm.passABIArg(rhs.high);
     masm.passABIArg(rhs.low);
 
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     if (lir->mir()->isMod())
         masm.callWithABI(wasm::SymbolicAddress::UModI64);
     else
@@ -645,7 +645,7 @@ CodeGeneratorMIPS::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
 }
 
 void
-CodeGeneratorMIPS::visitAsmSelectI64(LAsmSelectI64* lir)
+CodeGeneratorMIPS::visitWasmSelectI64(LWasmSelectI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
     Register cond = ToRegister(lir->condExpr());
@@ -669,7 +669,7 @@ CodeGeneratorMIPS::visitAsmSelectI64(LAsmSelectI64* lir)
 }
 
 void
-CodeGeneratorMIPS::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
+CodeGeneratorMIPS::visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
     MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Int64);
@@ -681,7 +681,7 @@ CodeGeneratorMIPS::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
 }
 
 void
-CodeGeneratorMIPS::visitAsmReinterpretToI64(LAsmReinterpretToI64* lir)
+CodeGeneratorMIPS::visitWasmReinterpretToI64(LWasmReinterpretToI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
     MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Double);

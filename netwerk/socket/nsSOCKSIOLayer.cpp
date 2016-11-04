@@ -14,6 +14,7 @@
 #include "nsIDNSRecord.h"
 #include "nsISOCKSSocketInfo.h"
 #include "nsISocketProvider.h"
+#include "nsNamedPipeIOLayer.h"
 #include "nsSOCKSIOLayer.h"
 #include "nsNetCID.h"
 #include "nsIDNSListener.h"
@@ -84,9 +85,14 @@ public:
     int16_t GetPollFlags() const;
     bool IsConnected() const { return mState == SOCKS_CONNECTED; }
     void ForgetFD() { mFD = nullptr; }
+    void SetNamedPipeFD(PRFileDesc *fd) { mFD = fd; }
 
 private:
-    virtual ~nsSOCKSSocketInfo() { HandshakeFinished(); }
+    virtual ~nsSOCKSSocketInfo()
+    {
+        ForgetFD();
+        HandshakeFinished();
+    }
 
     void HandshakeFinished(PRErrorCode err = 0);
     PRStatus StartDNS(PRFileDesc *fd);
@@ -114,19 +120,15 @@ private:
     PRStatus ReadFromSocket(PRFileDesc *fd);
     PRStatus WriteToSocket(PRFileDesc *fd);
 
-    bool IsHostDomainSocket()
+    bool IsLocalProxy()
     {
-#ifdef XP_UNIX
         nsAutoCString proxyHost;
         mProxy->GetHost(proxyHost);
-        return Substring(proxyHost, 0, 5) == "file:";
-#else
-        return false;
-#endif // XP_UNIX
+        return IsHostLocalTarget(proxyHost);
     }
 
-    nsresult SetDomainSocketPath(const nsACString& aDomainSocketPath,
-                             NetAddr* aProxyAddr)
+    nsresult SetLocalProxyPath(const nsACString& aLocalProxyPath,
+                               NetAddr* aProxyAddr)
     {
 #ifdef XP_UNIX
         nsresult rv;
@@ -145,7 +147,7 @@ private:
         }
 
         nsCOMPtr<nsIFile> socketFile;
-        rv = fileHandler->GetFileFromURLSpec(aDomainSocketPath,
+        rv = fileHandler->GetFileFromURLSpec(aLocalProxyPath,
                                              getter_AddRefs(socketFile));
         if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
@@ -165,11 +167,36 @@ private:
         strcpy(aProxyAddr->local.path, path.get());
 
         return NS_OK;
+#elif defined(XP_WIN)
+        MOZ_ASSERT(aProxyAddr);
+
+        if (sizeof(aProxyAddr->local.path) <= aLocalProxyPath.Length()) {
+            NS_WARNING("pipe path too long.");
+            return NS_ERROR_FAILURE;
+        }
+
+        aProxyAddr->raw.family = AF_LOCAL;
+        strcpy(aProxyAddr->local.path, PromiseFlatCString(aLocalProxyPath).get());
+        return NS_OK;
 #else
+        mozilla::Unused << aLocalProxyPath;
         mozilla::Unused << aProxyAddr;
-        mozilla::Unused << aDomainSocketPath;
         return NS_ERROR_NOT_IMPLEMENTED;
 #endif
+    }
+
+    bool
+    SetupNamedPipeLayer(PRFileDesc *fd)
+    {
+#if defined(XP_WIN)
+        if (IsLocalProxy()) {
+            // nsSOCKSIOLayer handshaking only works under blocking mode
+            // unfortunately. Remember named pipe's FD to switch between modes.
+            SetNamedPipeFD(fd->lower);
+            return true;
+        }
+#endif
+        return false;
     }
 
 private:
@@ -398,6 +425,14 @@ nsSOCKSSocketInfo::HandshakeFinished(PRErrorCode err)
 {
     if (err == 0) {
         mState = SOCKS_CONNECTED;
+        // Switch back to nonblocking mode after finishing handshaking.
+        if (mFD) {
+            PRSocketOptionData opt_nonblock;
+            opt_nonblock.option = PR_SockOpt_Nonblocking;
+            opt_nonblock.value.non_blocking = PR_TRUE;
+            PR_SetSocketOption(mFD, &opt_nonblock);
+            mFD = nullptr;
+        }
     } else {
         mState = SOCKS_FAILED;
         PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -489,12 +524,12 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
 
     int32_t addresses = 0;
     do {
-        if (IsHostDomainSocket()) {
-            rv = SetDomainSocketPath(proxyHost, &mInternalProxyAddr);
+        if (IsLocalProxy()) {
+            rv = SetLocalProxyPath(proxyHost, &mInternalProxyAddr);
             if (NS_FAILED(rv)) {
                 LOGERROR(("socks: unable to connect to SOCKS proxy, %s",
                          proxyHost.get()));
-              return PR_FAILURE;
+                return PR_FAILURE;
             }
         } else {
             if (addresses++) {
@@ -529,7 +564,7 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
             if (c == PR_WOULD_BLOCK_ERROR || c == PR_IN_PROGRESS_ERROR) {
                 mState = SOCKS_CONNECTING_TO_PROXY;
                 return status;
-            } else if (IsHostDomainSocket()) {
+            } else if (IsLocalProxy()) {
                 LOGERROR(("socks: connect to domain socket failed (%d)", c));
                 PR_SetError(PR_CONNECT_REFUSED_ERROR, 0);
                 mState = SOCKS_FAILED;
@@ -537,6 +572,14 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
             }
         }
     } while (status != PR_SUCCESS);
+
+    // Switch to blocking mode during handshaking
+    if (mFD) {
+        PRSocketOptionData opt_nonblock;
+        opt_nonblock.option = PR_SockOpt_Nonblocking;
+        opt_nonblock.value.non_blocking = PR_FALSE;
+        PR_SetSocketOption(mFD, &opt_nonblock);
+    }
 
     // Connected now, start SOCKS
     if (mVersion == 4)
@@ -570,11 +613,18 @@ nsSOCKSSocketInfo::FixupAddressFamily(PRFileDesc *fd, NetAddr *proxy)
         // mDestinationFamily should not be updated
         return;
     }
+    // There's no PR_NSPR_IO_LAYER required when using named pipe,
+    // we simply ignore the TCP family here.
+    if (SetupNamedPipeLayer(fd)) {
+        return;
+    }
+
     // Get an OS native handle from a specified FileDesc
     PROsfd osfd = PR_FileDesc2NativeHandle(fd);
     if (osfd == -1) {
         return;
     }
+
     // Create a new FileDesc with a specified family
     PRFileDesc *tmpfd = PR_OpenTCPSocket(proxyFamily);
     if (!tmpfd) {
@@ -1049,7 +1099,7 @@ nsSOCKSSocketInfo::DoHandshake(PRFileDesc *fd, int16_t oflags)
 
     switch (mState) {
         case SOCKS_INITIAL:
-            if (IsHostDomainSocket()) {
+            if (IsLocalProxy()) {
                 mState = SOCKS_DNS_COMPLETE;
                 mLookupStatus = NS_OK;
                 return ConnectToProxy(fd);
@@ -1522,7 +1572,16 @@ nsSOCKSIOLayerAddToSocket(int32_t family,
     NS_ADDREF(infoObject);
     infoObject->Init(socksVersion, family, proxy, host, flags);
     layer->secret = (PRFilePrivate*) infoObject;
-    rv = PR_PushIOLayer(fd, PR_GetLayersIdentity(fd), layer);
+
+    PRDescIdentity fdIdentity = PR_GetLayersIdentity(fd);
+#if defined(XP_WIN)
+    if (fdIdentity == mozilla::net::nsNamedPipeLayerIdentity) {
+        // remember named pipe fd on the info object so that we can switch
+        // blocking and non-blocking mode on the pipe later.
+        infoObject->SetNamedPipeFD(fd);
+    }
+#endif
+    rv = PR_PushIOLayer(fd, fdIdentity, layer);
 
     if (rv == PR_FAILURE) {
         LOGERROR(("PR_PushIOLayer() failed. rv = %x.", rv));
@@ -1534,4 +1593,16 @@ nsSOCKSIOLayerAddToSocket(int32_t family,
     *info = static_cast<nsISOCKSSocketInfo*>(infoObject);
     NS_ADDREF(*info);
     return NS_OK;
+}
+
+bool
+IsHostLocalTarget(const nsACString& aHost)
+{
+#if defined(XP_UNIX)
+    return StringBeginsWith(aHost, NS_LITERAL_CSTRING("file:"));
+#elif defined(XP_WIN)
+    return IsNamedPipePath(aHost);
+#else
+    return false;
+#endif // XP_UNIX
 }

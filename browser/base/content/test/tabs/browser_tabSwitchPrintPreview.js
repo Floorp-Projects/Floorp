@@ -1,6 +1,12 @@
 const kURL1 = "data:text/html,Should I stay or should I go?";
 const kURL2 = "data:text/html,I shouldn't be here!";
 
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.processCount", 1]]
+  });
+});
+
 /**
  * Verify that if we open a new tab and try to make it the selected tab while
  * print preview is up, that doesn't happen.

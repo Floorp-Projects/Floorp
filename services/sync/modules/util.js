@@ -734,6 +734,18 @@ this.Utils = {
 
   getDeviceType() {
     return Svc.Prefs.get("client.type", DEVICE_TYPE_DESKTOP);
+  },
+
+  formatTimestamp(date) {
+    // Format timestamp as: "%Y-%m-%d %H:%M:%S"
+    let year = String(date.getFullYear());
+    let month = String(date.getMonth() + 1).padStart(2, "0");
+    let day = String(date.getDate()).padStart(2, "0");
+    let hours = String(date.getHours()).padStart(2, "0");
+    let minutes = String(date.getMinutes()).padStart(2, "0");
+    let seconds = String(date.getSeconds()).padStart(2, "0");
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
 };
 

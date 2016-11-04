@@ -557,4 +557,26 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   ASSERT_NE(initialTicket, c2->extension());
 }
 
+// Check that resumption works after receiving two NST messages.
+TEST_F(TlsConnectTest, TestTls13ResumptionDuplicateNST) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  Connect();
+
+  // Clear the session ticket keys to invalidate the old ticket.
+  SSLInt_ClearSessionTicketKey();
+  SSLInt_SendNewSessionTicket(server_->ssl_fd());
+
+  SendReceive();  // Need to read so that we absorb the session tickets.
+  CheckKeys();
+
+  // Resume the connection.
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  ExpectResumption(RESUME_TICKET);
+  Connect();
+  SendReceive();
+}
+
 }  // namespace nss_test

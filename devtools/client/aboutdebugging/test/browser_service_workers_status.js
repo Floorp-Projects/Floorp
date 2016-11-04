@@ -18,6 +18,7 @@ add_task(function* () {
       ["dom.serviceWorkers.testing.enabled", true],
       ["dom.serviceWorkers.idle_timeout", SW_TIMEOUT],
       ["dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT],
+      ["dom.ipc.processCount", 1],
     ]
   });
 

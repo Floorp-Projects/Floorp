@@ -15,26 +15,27 @@
 
 add_task(function* test_contentscript() {
   function background() {
-    browser.runtime.onMessage.addListener(([msg, expectedState, readyState], sender) => {
+    browser.runtime.onMessage.addListener(([msg, expectedStates, readyState], sender) => {
       if (msg == "chrome-namespace-ok") {
         browser.test.sendMessage(msg);
         return;
       }
 
-      browser.test.assertEq(msg, "script-run", "message type is correct");
-      browser.test.assertEq(readyState, expectedState, "readyState is correct");
-      browser.test.sendMessage("script-run-" + expectedState);
+      browser.test.assertEq("script-run", msg, "message type is correct");
+      browser.test.assertTrue(expectedStates.includes(readyState),
+                              `readyState "${readyState}" is one of [${expectedStates}]`);
+      browser.test.sendMessage("script-run-" + expectedStates[0]);
     });
   }
 
   function contentScriptStart() {
-    browser.runtime.sendMessage(["script-run", "loading", document.readyState]);
+    browser.runtime.sendMessage(["script-run", ["loading"], document.readyState]);
   }
   function contentScriptEnd() {
-    browser.runtime.sendMessage(["script-run", "interactive", document.readyState]);
+    browser.runtime.sendMessage(["script-run", ["interactive", "complete"], document.readyState]);
   }
   function contentScriptIdle() {
-    browser.runtime.sendMessage(["script-run", "complete", document.readyState]);
+    browser.runtime.sendMessage(["script-run", ["complete"], document.readyState]);
   }
 
   function contentScript() {

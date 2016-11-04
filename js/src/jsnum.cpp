@@ -1578,47 +1578,38 @@ js::ToNumberSlow(ExclusiveContext* cx, HandleValue v_, double* out)
 {
     RootedValue v(cx, v_);
     MOZ_ASSERT(!v.isNumber());
-    goto skip_int_double;
-    for (;;) {
-        if (v.isNumber()) {
-            *out = v.toNumber();
-            return true;
-        }
 
-      skip_int_double:
-        if (!v.isObject()) {
-            if (v.isString())
-                return StringToNumber(cx, v.toString(), out);
-            if (v.isBoolean()) {
-                *out = v.toBoolean() ? 1.0 : 0.0;
-                return true;
-            }
-            if (v.isNull()) {
-                *out = 0.0;
-                return true;
-            }
-            if (v.isSymbol()) {
-                if (cx->isJSContext()) {
-                    JS_ReportErrorNumberASCII(cx->asJSContext(), GetErrorMessage, nullptr,
-                                              JSMSG_SYMBOL_TO_NUMBER);
-                }
-                return false;
-            }
-
-            MOZ_ASSERT(v.isUndefined());
-            *out = GenericNaN();
-            return true;
-        }
-
+    if (!v.isPrimitive()) {
         if (!cx->isJSContext())
             return false;
 
         if (!ToPrimitive(cx->asJSContext(), JSTYPE_NUMBER, &v))
             return false;
-        if (v.isObject())
-            break;
+
+        if (v.isNumber()) {
+            *out = v.toNumber();
+            return true;
+        }
+    }
+    if (v.isString())
+        return StringToNumber(cx, v.toString(), out);
+    if (v.isBoolean()) {
+        *out = v.toBoolean() ? 1.0 : 0.0;
+        return true;
+    }
+    if (v.isNull()) {
+        *out = 0.0;
+        return true;
+    }
+    if (v.isSymbol()) {
+        if (cx->isJSContext()) {
+            JS_ReportErrorNumberASCII(cx->asJSContext(), GetErrorMessage, nullptr,
+                                      JSMSG_SYMBOL_TO_NUMBER);
+        }
+        return false;
     }
 
+    MOZ_ASSERT(v.isUndefined());
     *out = GenericNaN();
     return true;
 }

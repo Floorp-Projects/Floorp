@@ -1499,7 +1499,7 @@ OptimizeMIR(MIRGenerator* mir)
     if (mir->shouldCancel("Start"))
         return false;
 
-    if (!mir->compilingAsmJS()) {
+    if (!mir->compilingWasm()) {
         if (!MakeMRegExpHoistable(mir, graph))
             return false;
 
@@ -1510,7 +1510,7 @@ OptimizeMIR(MIRGenerator* mir)
     gs.spewPass("BuildSSA");
     AssertBasicGraphCoherency(graph);
 
-    if (!JitOptions.disablePgo && !mir->compilingAsmJS()) {
+    if (!JitOptions.disablePgo && !mir->compilingWasm()) {
         AutoTraceLog log(logger, TraceLogger_PruneUnusedBranches);
         if (!PruneUnusedBranches(mir, graph))
             return false;
@@ -1600,7 +1600,7 @@ OptimizeMIR(MIRGenerator* mir)
             return false;
     }
 
-    if (!mir->compilingAsmJS()) {
+    if (!mir->compilingWasm()) {
         AutoTraceLog log(logger, TraceLogger_ApplyTypes);
         if (!ApplyTypeInformation(mir, graph))
             return false;
@@ -1662,7 +1662,7 @@ OptimizeMIR(MIRGenerator* mir)
                 return false;
         }
 
-        if (!mir->compilingAsmJS()) {
+        if (!mir->compilingWasm()) {
             // Eliminating dead resume point operands requires basic block
             // instructions to be numbered. Reuse the numbering computed during
             // alias analysis.
@@ -1889,7 +1889,7 @@ OptimizeMIR(MIRGenerator* mir)
         AssertGraphCoherency(graph);
     }
 
-    if (!mir->compilingAsmJS()) {
+    if (!mir->compilingWasm()) {
         AutoTraceLog log(logger, TraceLogger_AddKeepAliveInstructions);
         if (!AddKeepAliveInstructions(graph))
             return false;
@@ -1897,7 +1897,7 @@ OptimizeMIR(MIRGenerator* mir)
         AssertGraphCoherency(graph);
     }
 
-    if (mir->compilingAsmJS()) {
+    if (mir->compilingWasm()) {
         if (!EliminateBoundsChecks(mir, graph))
             return false;
         gs.spewPass("Redundant Bounds Check Elimination");
