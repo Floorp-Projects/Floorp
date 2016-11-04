@@ -17,6 +17,7 @@ UNIFIED_SOURCES += [
     'TestEscapeURL.cpp',
     'TestExpirationTracker.cpp',
     'TestFile.cpp',
+    'TestID.cpp',
     'TestNSPRLogModulesParser.cpp',
     'TestPipes.cpp',
     'TestPLDHash.cpp',
