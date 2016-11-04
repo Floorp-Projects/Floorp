@@ -58,7 +58,17 @@ NewConsoleOutputWrapper.prototype = {
         openLink: url => this.jsterm.hud.owner.openLink.call(this.jsterm.hud.owner, url),
         createElement: nodename => {
           return this.document.createElementNS("http://www.w3.org/1999/xhtml", nodename);
-        }
+        },
+        highlightDomElement: (grip, options = {}) => {
+          return this.toolbox && this.toolbox.highlighterUtils
+            ? this.toolbox.highlighterUtils.highlightDomValueGrip(grip, options)
+            : null;
+        },
+        unHighlightDomElement: (forceHide = false) => {
+          return this.toolbox && this.toolbox.highlighterUtils
+            ? this.toolbox.highlighterUtils.unhighlight(forceHide)
+            : null;
+        },
       }
     });
     let filterBar = FilterBar({
