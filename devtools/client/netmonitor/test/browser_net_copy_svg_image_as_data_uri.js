@@ -28,7 +28,7 @@ add_task(function* () {
   RequestsMenu.selectedItem = requestItem;
 
   yield waitForClipboardPromise(function setup() {
-    RequestsMenu.copyImageAsDataUri();
+    RequestsMenu.contextMenu.copyImageAsDataUri();
   }, function check(text) {
     return text.startsWith("data:") && !/undefined/.test(text);
   });

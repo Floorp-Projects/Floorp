@@ -26,7 +26,7 @@ add_task(function* () {
   RequestsMenu.selectedItem = requestItem;
 
   let onTabOpen = once(gBrowser.tabContainer, "TabOpen", false);
-  RequestsMenu.openRequestInTab();
+  RequestsMenu.contextMenu.openRequestInTab();
   yield onTabOpen;
 
   ok(true, "A new tab has been opened");

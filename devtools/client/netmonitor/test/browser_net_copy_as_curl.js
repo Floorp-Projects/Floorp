@@ -55,7 +55,7 @@ add_task(function* () {
   RequestsMenu.selectedItem = requestItem;
 
   yield waitForClipboardPromise(function setup() {
-    RequestsMenu.copyAsCurl();
+    RequestsMenu.contextMenu.copyAsCurl();
   }, function validate(result) {
     if (typeof result !== "string") {
       return false;

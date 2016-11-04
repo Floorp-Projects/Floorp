@@ -20,6 +20,7 @@ DevToolsModules(
     'panel.js',
     'performance-statistics-view.js',
     'prefs.js',
+    'request-list-context-menu.js',
     'request-utils.js',
     'requests-menu-view.js',
     'sort-predicates.js',
