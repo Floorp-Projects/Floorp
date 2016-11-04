@@ -28,12 +28,14 @@ public:
 protected:
   ~ExtensionProtocolHandler() {}
 
-  bool ResolveSpecialCases(const nsACString& aHost,
-                           const nsACString& aPath,
-                           const nsACString& aPathname,
-                           nsACString& aResult) override;
+  MOZ_MUST_USE bool ResolveSpecialCases(const nsACString& aHost,
+                                        const nsACString& aPath,
+                                        const nsACString& aPathname,
+                                        nsACString& aResult) override;
 
-  virtual nsresult SubstituteChannel(nsIURI* uri, nsILoadInfo* aLoadInfo, nsIChannel** result) override;
+  virtual MOZ_MUST_USE nsresult SubstituteChannel(nsIURI* uri,
+                                                  nsILoadInfo* aLoadInfo,
+                                                  nsIChannel** result) override;
 };
 
 } // namespace net
