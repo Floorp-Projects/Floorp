@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PLDHashTable.h"
+#include "nsCOMPtr.h"
+#include "nsServiceManagerUtils.h"
 #include "gtest/gtest.h"
 
 // This test mostly focuses on edge cases. But more coverage of normal
