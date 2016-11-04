@@ -54,8 +54,6 @@ const DEFAULT_SORT_KEY = "TITLE";
 var prevSortDir = null;
 var prevSortKey = null;
 
-// /////////////////////////////////////////////////////////////////////////////
-
 /**
  * Ensures that the sort of aTree is aSortingMode and aSortingAnno.
  *
@@ -229,8 +227,6 @@ function testSortByDir(aOrganizerWin, aPlaceContentTree, aUnsortFirst) {
     checkSort(aPlaceContentTree, expectedSortMode, "");
   });
 }
-
-// /////////////////////////////////////////////////////////////////////////////
 
 function test() {
   waitForExplicitFinish();

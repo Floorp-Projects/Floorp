@@ -7,7 +7,8 @@ const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
 
-const TEST_SITE = "http://mochi.test:8888";
+const TEST_SITE = "http://example.net";
+const TEST_THIRD_PARTY_SITE = "http://mochi.test:8888";
 
 const TEST_PAGE = TEST_SITE + "/browser/browser/components/originattributes/" +
                   "test/browser/file_favicon.html";
@@ -15,6 +16,8 @@ const FAVICON_URI = TEST_SITE + "/browser/browser/components/originattributes/" 
                     "test/browser/file_favicon.png";
 const TEST_THIRD_PARTY_PAGE = "http://example.com/browser/browser/components/" +
                               "originattributes/test/browser/file_favicon_thirdParty.html";
+const THIRD_PARTY_FAVICON_URI = TEST_THIRD_PARTY_SITE + "/browser/browser/components/" +
+                                "originattributes/test/browser/file_favicon.png";
 
 const USER_CONTEXT_ID_PERSONAL = 1;
 const USER_CONTEXT_ID_WORK     = 2;
@@ -49,8 +52,8 @@ function clearAllPlacesFavicons() {
   });
 }
 
-function FaviconObserver(aUserContextId, aExpectedCookie, aPageURI) {
-  this.reset(aUserContextId, aExpectedCookie, aPageURI);
+function FaviconObserver(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL) {
+  this.reset(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL);
 }
 
 FaviconObserver.prototype = {
@@ -70,7 +73,7 @@ FaviconObserver.prototype = {
       let triggeringPrincipal;
 
       // Make sure this is a favicon request.
-      if (httpChannel.URI.spec !== FAVICON_URI) {
+      if (httpChannel.URI.spec !== this._faviconURL) {
         return;
       }
 
@@ -105,13 +108,14 @@ FaviconObserver.prototype = {
     }
   },
 
-  reset(aUserContextId, aExpectedCookie, aPageURI) {
+  reset(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL) {
     this._curUserContextId = aUserContextId;
     this._expectedCookie = aExpectedCookie;
     this._expectedPrincipal = Services.scriptSecurityManager
                                       .createCodebasePrincipal(aPageURI, { userContextId: aUserContextId });
     this._faviconReqXUL = false;
     this._faviconReqPlaces = false;
+    this._faviconURL = aFaviconURL;
     this._faviconLoaded = new Promise.defer();
   },
 
@@ -137,15 +141,15 @@ function waitOnFaviconLoaded(aFaviconURL) {
   });
 }
 
-function* generateCookies() {
+function* generateCookies(aHost) {
   // we generate two different cookies for two userContextIds.
   let cookies = [];
   cookies.push(Math.random().toString());
   cookies.push(Math.random().toString());
 
   // Then, we add cookies into the site for 'personal' and 'work'.
-  let tabInfoA = yield openTabInUserContext(TEST_SITE, USER_CONTEXT_ID_PERSONAL);
-  let tabInfoB = yield openTabInUserContext(TEST_SITE, USER_CONTEXT_ID_WORK);
+  let tabInfoA = yield openTabInUserContext(aHost, USER_CONTEXT_ID_PERSONAL);
+  let tabInfoB = yield openTabInUserContext(aHost, USER_CONTEXT_ID_WORK);
 
   yield ContentTask.spawn(tabInfoA.browser, cookies[0], function* (value) {
     content.document.cookie = value;
@@ -161,13 +165,16 @@ function* generateCookies() {
   return cookies;
 }
 
-function* doTest(aTestPage) {
-  let cookies = yield generateCookies();
+function* doTest(aTestPage, aFaviconHost, aFaviconURL) {
+  let cookies = yield generateCookies(aFaviconHost);
   let pageURI = makeURI(aTestPage);
 
   // Create the observer object for observing request channels of the personal
   // container.
-  let observer = new FaviconObserver(USER_CONTEXT_ID_PERSONAL, cookies[0], pageURI);
+  let observer = new FaviconObserver(USER_CONTEXT_ID_PERSONAL, cookies[0], pageURI, aFaviconURL);
+
+  // Add the observer earlier in case we miss it.
+  let promiseWaitOnFaviconLoaded = waitOnFaviconLoaded(aFaviconURL);
 
   Services.obs.addObserver(observer, "http-on-modify-request", false);
 
@@ -177,13 +184,13 @@ function* doTest(aTestPage) {
   // Waiting for favicon requests are all made.
   yield observer.promise;
   // Waiting for favicon loaded.
-  yield waitOnFaviconLoaded(FAVICON_URI);
+  yield promiseWaitOnFaviconLoaded;
 
   // Close the tab.
   yield BrowserTestUtils.removeTab(tabInfo.tab);
 
   // Reset the observer for observing requests for the work container.
-  observer.reset(USER_CONTEXT_ID_WORK, cookies[1], pageURI);
+  observer.reset(USER_CONTEXT_ID_WORK, cookies[1], pageURI, aFaviconURL);
   tabInfo = yield openTabInUserContext(aTestPage, USER_CONTEXT_ID_WORK);
 
   // Waiting for favicon requests are all made.
@@ -231,7 +238,7 @@ add_task(function* test_favicon_userContextId() {
   // Clear Places favicon caches.
   yield clearAllPlacesFavicons();
 
-  yield doTest(TEST_PAGE);
+  yield doTest(TEST_PAGE, TEST_SITE, FAVICON_URI);
 });
 
 add_task(function* test_thirdPartyFavicon_userContextId() {
@@ -246,5 +253,5 @@ add_task(function* test_thirdPartyFavicon_userContextId() {
   // Clear Places favicon caches.
   yield clearAllPlacesFavicons();
 
-  yield doTest(TEST_THIRD_PARTY_PAGE);
+  yield doTest(TEST_THIRD_PARTY_PAGE, TEST_THIRD_PARTY_SITE, THIRD_PARTY_FAVICON_URI);
 });

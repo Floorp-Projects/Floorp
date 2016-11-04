@@ -4,16 +4,14 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 XPCOMUtils.defineLazyModuleGetter(this,  "OSCrypto",
                                   "resource://gre/modules/OSCrypto.jsm");
 
 var crypto = new OSCrypto();
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 add_task(function test_getIELoginHash()
 {

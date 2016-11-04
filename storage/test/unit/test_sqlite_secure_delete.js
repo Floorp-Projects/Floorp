@@ -9,8 +9,7 @@
  * SQLITE_SECURE_DELETE=1.
  */
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Helper Methods
+// Helper Methods
 
 /**
  * Reads the contents of a file and returns it as a string.
@@ -31,8 +30,7 @@ function getFileContents(aFile)
   return bstream.readBytes(bstream.available());
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 add_test(function test_delete_removes_data() {
   const TEST_STRING = "SomeRandomStringToFind";

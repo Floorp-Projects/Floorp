@@ -5,11 +5,10 @@
 
 package org.mozilla.gecko.toolbar;
 
-import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
@@ -141,7 +140,7 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
         }
         mPageActionList.add(insertAt, pageAction);
 
-        BitmapUtils.getDrawable(mContext, imageData, new BitmapUtils.BitmapLoader() {
+        ResourceDrawableUtils.getDrawable(mContext, imageData, new ResourceDrawableUtils.BitmapLoader() {
             @Override
             public void onBitmapFound(final Drawable d) {
                 if (mPageActionList.contains(pageAction)) {

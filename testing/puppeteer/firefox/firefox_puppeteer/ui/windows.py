@@ -106,12 +106,7 @@ class Windows(BaseLib):
                 # Retrieve window type to determine the type of chrome window
                 if handle != self.marionette.current_chrome_window_handle:
                     self.switch_to(handle)
-
-                window_type = Wait(self.marionette).until(
-                    lambda mn: mn.get_window_type(),
-                    message='Cannot get window type for chrome window handle "%s"' % handle
-                )
-
+                window_type = self.marionette.get_window_type()
             finally:
                 # Ensure to switch back to the original window
                 if handle != current_handle:
@@ -120,8 +115,7 @@ class Windows(BaseLib):
             if window_type in self.windows_map:
                 window = self.windows_map[window_type](lambda: self.marionette, handle)
             else:
-                raise errors.UnknownWindowError('Unknown window type "%s" for handle: "%s"' %
-                                                (window_type, handle))
+                window = BaseWindow(lambda: self.marionette, handle)
 
             if expected_class is not None and type(window) is not expected_class:
                 raise errors.UnexpectedWindowTypeError('Expected window "%s" but got "%s"' %

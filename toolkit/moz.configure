@@ -92,11 +92,11 @@ option('--with-l10n-base', nargs=1, env='L10NBASEDIR',
        help='Path to l10n repositories')
 
 @depends('--with-l10n-base')
-@imports('os')
+@imports(_from='os.path', _import='isdir')
 def l10n_base(value):
     if value:
         path = value[0]
-        if not os.path.isdir(path):
+        if not isdir(path):
             die("Invalid value --with-l10n-base, %s doesn't exist", path)
         return os.path.realpath(os.path.abspath(path))
 

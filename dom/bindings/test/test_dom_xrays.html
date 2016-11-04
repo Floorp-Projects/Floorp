@@ -148,20 +148,6 @@ function test()
   // ECMAScript-defined properties live on the prototype, overriding any named properties.
   checkXrayProperty(coll, "toString", [ undefined, undefined, win.Object.prototype.toString ]);
 
-  // NavigatorProperty things should come from the target compartment, always.
-  var contacts = win.navigator.mozContacts;
-  isnot(contacts, undefined,
-        "Must have a mozContacts for this to work.  Find another " +
-        "NavigatorProperty, or remove all this NavigatorProperty code")
-  ok(Cu.isXrayWrapper(contacts),
-     "Should have an Xray for the underlying value, not a value newly " +
-     "created for us");
-  is(Cu.getGlobalForObject(contacts), win,
-     "contacts should come from the underlying window");
-  // Unfortunately, I can't figure out a decent way to test that we're not
-  // creating a separate thing from the thing content sees, because none of the
-  // NavigatorProperty things are available to content.
-
   // Frozen arrays should come from our compartment, not the target one.
   var languages1 = win.navigator.languages;
   isnot(languages1, undefined, "Must have .languages");

@@ -7,12 +7,12 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.util.Log;
-import android.util.TypedValue;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -78,15 +78,15 @@ public final class ThumbnailHelper {
         mHeight = -1;
     }
 
-    public void getAndProcessThumbnailFor(final int tabId, final BitmapUtils.BitmapLoader loader) {
+    public void getAndProcessThumbnailFor(final int tabId, final ResourceDrawableUtils.BitmapLoader loader) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab != null) {
             getAndProcessThumbnailFor(tab, loader);
         }
     }
 
-    public void getAndProcessThumbnailFor(final Tab tab, final BitmapUtils.BitmapLoader loader) {
-        BitmapUtils.runOnBitmapFoundOnUiThread(loader, tab.getThumbnail());
+    public void getAndProcessThumbnailFor(final Tab tab, final ResourceDrawableUtils.BitmapLoader loader) {
+        ResourceDrawableUtils.runOnBitmapFoundOnUiThread(loader, tab.getThumbnail());
 
         Tabs.registerOnTabsChangedListener(new Tabs.OnTabsChangedListener() {
                 @Override
@@ -95,7 +95,7 @@ public final class ThumbnailHelper {
                         return;
                     }
                     Tabs.unregisterOnTabsChangedListener(this);
-                    BitmapUtils.runOnBitmapFoundOnUiThread(loader, t.getThumbnail());
+                    ResourceDrawableUtils.runOnBitmapFoundOnUiThread(loader, t.getThumbnail());
                 }
             });
         getAndProcessThumbnailFor(tab);

@@ -106,7 +106,6 @@ var gUpdateWizard = {
     this._setUpButton("cancel", aCancelButton, aCancelButtonIsDisabled);
   },
 
-  // ///////////////////////////////////////////////////////////////////////////
   // Update Errors
   errorItems: [],
 
@@ -278,7 +277,6 @@ var gVersionInfoPage = {
     }
   },
 
-  // ///////////////////////////////////////////////////////////////////////////
   // UpdateListener
   onUpdateFinished: function(aAddon, status) {
     ++this._completeCount;
@@ -377,7 +375,6 @@ var gUpdatePage = {
     document.documentElement.currentPage = nextPage;
   },
 
-  // ///////////////////////////////////////////////////////////////////////////
   // UpdateListener
   onUpdateAvailable: function(aAddon, aInstall) {
     logger.debug("UpdatePage got an update for " + aAddon.id + ": " + aAddon.version);
@@ -551,7 +548,6 @@ var gInstallingPage = {
     install.install();
   },
 
-  // ///////////////////////////////////////////////////////////////////////////
   // InstallListener
   onDownloadStarted: function(aInstall) {
     if (gUpdateWizard.shuttingDown) {

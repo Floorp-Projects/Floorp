@@ -4,8 +4,7 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Constants
+// Constants
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -13,16 +12,14 @@ const Cr = Components.results;
 const DOWNLOAD_MANAGER_URL = "chrome://mozapps/content/downloads/downloads.xul";
 const PREF_FLASH_COUNT = "browser.download.manager.flashCount";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // nsDownloadManagerUI class
+// nsDownloadManagerUI class
 
 function nsDownloadManagerUI() {}
 
 nsDownloadManagerUI.prototype = {
   classID: Components.ID("7dfdf0d1-aff6-4a34-bad1-d0fe74601642"),
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsIDownloadManagerUI
+  // nsIDownloadManagerUI
 
   show: function show(aWindowContext, aDownload, aReason, aUsePrivateUI)
   {
@@ -90,8 +87,7 @@ nsDownloadManagerUI.prototype = {
     win.getAttentionWithCycleCount(flashCount);
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsDownloadManagerUI
+  // nsDownloadManagerUI
 
   get recentWindow() {
     var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
@@ -99,14 +95,12 @@ nsDownloadManagerUI.prototype = {
     return wm.getMostRecentWindow("Download:Manager");
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsISupports
+  // nsISupports
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDownloadManagerUI])
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Module
+// Module
 
 var components = [nsDownloadManagerUI];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
