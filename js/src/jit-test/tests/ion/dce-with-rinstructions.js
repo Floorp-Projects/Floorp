@@ -3,7 +3,6 @@ setJitCompilerOption("ion.warmup.trigger", 20);
 var i;
 
 var config = getBuildConfiguration();
-var max = 200;
 
 // Check that we are able to remove the operation inside recover test functions (denoted by "rop..."),
 // when we inline the first version of uceFault, and ensure that the bailout is correct
@@ -1292,12 +1291,23 @@ function rhypot_object_4args(i) {
 var uceFault_random = eval(uneval(uceFault).replace('uceFault', 'uceFault_random'));
 function rrandom(i) {
     // setRNGState() exists only in debug builds
-    if(config.debug) setRNGState(2, 1+i);
 
-    var x = Math.random();
-    if (uceFault_random(i) || uceFault_random(i))
-        assertEq(x, config.debug ? setRNGState(2, 1+i) || Math.random() : x);
-    assertRecoveredOnBailout(x, true);
+    if(config.debug) {
+        setRNGState(2, 0);
+        var x = Math.random();
+        if (uceFault_random(i) || uceFault_random(i)) {
+            setRNGState(2, 0);
+            assertEq(x, Math.random());
+        }
+        assertRecoveredOnBailout(x, true);
+    } else {
+        var x = Math.random();
+        if (uceFault_random(i) || uceFault_random(i)) {
+            Math.random();
+        }
+        assertRecoveredOnBailout(x, true);
+    }
+
     return i;
 }
 
@@ -1343,8 +1353,7 @@ function rlog_object(i) {
     return i;
 }
 
-for (j = 100 - max; j < 100; j++) {
-    let i = j < 0 ? Math.abs(j) % 50 : j;
+for (i = 0; i < 100; i++) {
     rbitnot_number(i);
     rbitnot_object(i);
     rbitand_number(i);

@@ -6224,15 +6224,6 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
             JitSpew(js::jit::JitSpew_IonScripts, "IonBuilder: Disable non-IC optimizations.");
         }
         break;
-      case JSJITCOMPILER_ION_CHECK_RANGE_ANALYSIS:
-        if (value == 0) {
-            jit::JitOptions.checkRangeAnalysis = false;
-            JitSpew(js::jit::JitSpew_IonScripts, "IonBuilder: Enable range analysis checks.");
-        } else {
-            jit::JitOptions.checkRangeAnalysis = true;
-            JitSpew(js::jit::JitSpew_IonScripts, "IonBuilder: Disable range analysis checks.");
-        }
-        break;
       case JSJITCOMPILER_ION_ENABLE:
         if (value == 1) {
             JS::ContextOptionsRef(cx).setIon(true);
@@ -6303,9 +6294,6 @@ JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t* 
         break;
       case JSJITCOMPILER_ION_FORCE_IC:
         *valueOut = jit::JitOptions.forceInlineCaches;
-        break;
-      case JSJITCOMPILER_ION_CHECK_RANGE_ANALYSIS:
-        *valueOut = jit::JitOptions.checkRangeAnalysis;
         break;
       case JSJITCOMPILER_ION_ENABLE:
         *valueOut = JS::ContextOptionsRef(cx).ion();
