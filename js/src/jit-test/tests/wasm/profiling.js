@@ -62,11 +62,11 @@ function assertEqStacks(got, expect)
     }
 }
 
-function test(code, expect)
+function test(code, importObj, expect)
 {
     enableSPSProfiling();
 
-    var f = wasmEvalText(code).exports[""];
+    var f = wasmEvalText(code, importObj).exports[""];
     enableSingleStepProfiling();
     f();
     assertEqStacks(disableSingleStepProfiling(), expect);
@@ -79,6 +79,7 @@ test(
     (func (result i32) (i32.const 42))
     (export "" 0)
 )`,
+{},
 ["", ">", "0,>", ">", ""]);
 
 test(
@@ -87,6 +88,7 @@ test(
     (func (result i32) (i32.const 42))
     (export "" 0)
 )`,
+{},
 ["", ">", "0,>", "1,0,>", "0,>", ">", ""]);
 
 test(
@@ -96,7 +98,18 @@ test(
     (table anyfunc (elem $bar))
     (export "" $foo)
 )`,
+{},
 ["", ">", "0,>", "1,0,>", "0,>", ">", ""]);
+
+test(
+`(module
+    (import $foo "" "foo")
+    (table anyfunc (elem $foo))
+    (func $bar (call_indirect 0 (i32.const 0)))
+    (export "" $bar)
+)`,
+{"":{foo:()=>{}}},
+["", ">", "1,>", "0,1,>", "<,0,1,>", "0,1,>", "1,>", ">", ""]);
 
 function testError(code, error, expect)
 {
