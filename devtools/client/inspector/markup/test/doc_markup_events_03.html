@@ -8,10 +8,7 @@
     #anon-generator,
     #named-function-expression,
     #anon-function-expression,
-    #returned-function,
-    #constructed-function,
-    #constructed-function-with-body-string,
-    #multiple-assignment {
+    #returned-function {
       border: 1px solid #000;
       width: 200px;
       min-height: 1em;
@@ -34,19 +31,10 @@
         }
       })();
 
-      let constructedFunc = new Function();
-
-      let constructedFuncWithBodyString =
-        new Function('a', 'b', 'c', 'alert("constructedFuncWithBodyString");');
-
-      let multipleAssignment = foo = bar = function multi() {
-        alert("multipleAssignment");
-      }
-
       function init() {
-        let he = new handleEventClick();
+        let em = new Es6Method();
         let es6Method = document.getElementById("es6-method");
-        es6Method.addEventListener("click", he.es6Method);
+        es6Method.addEventListener("click", em.es6Method);
 
         let generatorNode = document.getElementById("generator");
         generatorNode.addEventListener("click", generator);
@@ -68,28 +56,29 @@
 
         let returnedFunctionNode = document.getElementById("returned-function");
         returnedFunctionNode.addEventListener("click", returnedFunction);
-
-        let constructedFunctionNode =
-          document.getElementById("constructed-function");
-        constructedFunctionNode.addEventListener("click", constructedFunc);
-
-        let constructedFunctionWithBodyStringNode =
-          document.getElementById("constructed-function-with-body-string");
-        constructedFunctionWithBodyStringNode
-          .addEventListener("click", constructedFuncWithBodyString);
-
-        let multipleAssignmentNode =
-          document.getElementById("multiple-assignment");
-        multipleAssignmentNode.addEventListener("click", multipleAssignment);
       }
 
-      function handleEventClick(hehe) {
+      function Es6Method(hehe) {
 
       }
 
-      handleEventClick.prototype = {
-        es6Method() {
+      Es6Method.prototype = {
+        es6Method(foo, bar) {
           alert("obj.es6Method");
+        }
+      };
+
+      function HandleEvent() {
+        let handleEventNode = document.getElementById("handleEvent");
+        handleEventNode.addEventListener("click", this);
+      }
+
+      HandleEvent.prototype = {
+        handleEvent: function(event) {
+          switch (event.type) {
+            case "click":
+              alert("handleEvent click");
+          }
         }
       };
 
@@ -106,10 +95,5 @@
     <div id="named-function-expression">Named Function Expression</div>
     <div id="anon-function-expression">Anonymous Function Expression</div>
     <div id="returned-function">Returned Function</div>
-    <div id="constructed-function">Constructed Function</div>
-    <div id="constructed-function-with-body-string">
-      Constructed Function with body string
-    </div>
-    <div id="multiple-assignment">Multiple Assignment</div>
   </body>
 </html>

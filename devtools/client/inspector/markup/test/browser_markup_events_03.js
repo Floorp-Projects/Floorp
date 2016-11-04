@@ -8,7 +8,7 @@
 // Test that markup view event bubbles show the correct event info for DOM
 // events.
 
-const TEST_URL = URL_ROOT + "doc_markup_events3.html";
+const TEST_URL = URL_ROOT + "doc_markup_events_03.html";
 
 loadHelperScript("helper_events_test_runner.js");
 
@@ -18,12 +18,12 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":91",
+        filename: TEST_URL + ":66",
         attributes: [
           "Bubbling",
           "DOM2"
         ],
-        handler: "es6Method() {\n" +
+        handler: "function es6Method(foo, bar) {\n" +
                  "  alert(\"obj.es6Method\");\n" +
                  "}"
       }
@@ -34,7 +34,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":96",
+        filename: TEST_URL + ":85",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -50,7 +50,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":55",
+        filename: TEST_URL + ":43",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -66,15 +66,14 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":23",
+        filename: TEST_URL + ":20",
         attributes: [
           "Bubbling",
           "DOM2"
         ],
-        handler: "let namedFunctionExpression =\n" +
-                 "  function foo() {\n" +
-                 "    alert(\"namedFunctionExpression\");\n" +
-                 "  }"
+        handler: "function foo() {\n" +
+                 "  alert(\"namedFunctionExpression\");\n" +
+                 "}"
       }
     ]
   },
@@ -83,12 +82,12 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":27",
+        filename: TEST_URL + ":24",
         attributes: [
           "Bubbling",
           "DOM2"
         ],
-        handler: "let anonFunctionExpression = function() {\n" +
+        handler: "function() {\n" +
                  "  alert(\"anonFunctionExpression\");\n" +
                  "}"
       }
@@ -99,57 +98,13 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":32",
+        filename: TEST_URL + ":29",
         attributes: [
           "Bubbling",
           "DOM2"
         ],
         handler: "function bar() {\n" +
                  "  alert(\"returnedFunction\");\n" +
-                 "}"
-      }
-    ]
-  },
-  {
-    selector: "#constructed-function",
-    expected: [
-      {
-        type: "click",
-        filename: TEST_URL + ":0",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: ""
-      }
-    ]
-  },
-  {
-    selector: "#constructed-function-with-body-string",
-    expected: [
-      {
-        type: "click",
-        filename: TEST_URL + ":0",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: "alert(\"constructedFuncWithBodyString\");"
-      }
-    ]
-  },
-  {
-    selector: "#multiple-assignment",
-    expected: [
-      {
-        type: "click",
-        filename: TEST_URL + ":42",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: "let multipleAssignment = foo = bar = function multi() {\n" +
-                 "  alert(\"multipleAssignment\");\n" +
                  "}"
       }
     ]

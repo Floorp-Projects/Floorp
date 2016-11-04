@@ -8,7 +8,7 @@
 // Test that markup view event bubbles show the correct event info for DOM
 // events.
 
-const TEST_URL = URL_ROOT + "doc_markup_events1.html";
+const TEST_URL = URL_ROOT + "doc_markup_events_01.html";
 
 loadHelperScript("helper_events_test_runner.js");
 
@@ -23,7 +23,9 @@ const TEST_DATA = [ // eslint-disable-line
           "Bubbling",
           "DOM0"
         ],
-        handler: "init();"
+        handler: "function onload(event) {\n" +
+                 "  init();\n" +
+                 "}"
       }
     ]
   },
@@ -122,7 +124,9 @@ const TEST_DATA = [ // eslint-disable-line
           "Bubbling",
           "DOM0"
         ],
-        handler: "alert('DOM0')"
+        handler: "function onclick(event) {\n" +
+                 "  alert('DOM0')\n" +
+                 "}"
       }
     ]
   },
@@ -136,7 +140,7 @@ const TEST_DATA = [ // eslint-disable-line
           "Bubbling",
           "DOM2"
         ],
-        handler: "handleEvent: function(blah) {\n" +
+        handler: "function(blah) {\n" +
                  "  alert(\"handleEvent\");\n" +
                  "}"
       }
