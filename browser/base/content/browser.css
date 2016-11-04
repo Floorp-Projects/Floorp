@@ -472,15 +472,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   list-style-image: none;
 }
 
-#urlbar:not([actiontype="switchtab"]):not([actiontype="extension"]) > #urlbar-display-box {
-  display: none;
-}
-
-#urlbar:not([actiontype="switchtab"]) > #urlbar-display-box > #switchtab {
-  display: none;
-}
-
-#urlbar:not([actiontype="extension"]) > #urlbar-display-box > #extension {
+#urlbar:not([actiontype="switchtab"]) > #urlbar-display-box {
   display: none;
 }
 
