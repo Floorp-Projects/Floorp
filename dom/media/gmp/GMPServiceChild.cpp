@@ -16,6 +16,8 @@
 #include "mozilla/SyncRunnable.h"
 #include "runnable_utils.h"
 #include "base/task.h"
+#include "nsIObserverService.h"
+#include "nsComponentManagerUtils.h"
 
 namespace mozilla {
 
@@ -206,13 +208,20 @@ GeckoMediaPluginServiceChild::UpdateGMPCapabilities(nsTArray<GMPCapabilityData>&
   }
 
   LOGD(("UpdateGMPCapabilities {%s}", GMPCapabilitiesToString().get()));
+
+  // Fire a notification so that any MediaKeySystemAccess
+  // requests waiting on a CDM to download will retry.
+  nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
+  MOZ_ASSERT(obsService);
+  if (obsService) {
+    obsService->NotifyObservers(nullptr, "gmp-changed", nullptr);
+  }
 }
 
 NS_IMETHODIMP
-GeckoMediaPluginServiceChild::GetPluginVersionForAPI(const nsACString& aAPI,
-                                                     nsTArray<nsCString>* aTags,
-                                                     bool* aHasPlugin,
-                                                     nsACString& aOutVersion)
+GeckoMediaPluginServiceChild::HasPluginForAPI(const nsACString& aAPI,
+                                              nsTArray<nsCString>* aTags,
+                                              bool* aHasPlugin)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!sGMPCapabilities) {
@@ -223,7 +232,6 @@ GeckoMediaPluginServiceChild::GetPluginVersionForAPI(const nsACString& aAPI,
   nsCString api(aAPI);
   for (const GMPCapabilityAndVersion& plugin : *sGMPCapabilities) {
     if (GMPCapability::Supports(plugin.mCapabilities, api, *aTags)) {
-      aOutVersion = plugin.mVersion;
       *aHasPlugin = true;
       return NS_OK;
     }

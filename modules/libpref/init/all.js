@@ -311,6 +311,13 @@ pref("dom.MediaError.message.enabled", false);
 pref("dom.MediaError.message.enabled", true);
 #endif
 
+// Enabled on nightly only until we fix mochitest failures.
+#ifdef NIGHTLY_BUILD
+pref("media.dormant-on-pause-timeout-ms", 5000);
+#else
+pref("media.dormant-on-pause-timeout-ms", -1);
+#endif
+
 // Media cache size in kilobytes
 pref("media.cache_size", 512000);
 // When a network connection is suspended, don't resume it until the
@@ -333,9 +340,6 @@ pref("media.play-stand-alone", true);
 
 pref("media.hardware-video-decoding.enabled", true);
 pref("media.hardware-video-decoding.force-enabled", false);
-
-pref("media.decoder.heuristic.dormant.enabled", true);
-pref("media.decoder.heuristic.dormant.timeout", 10000);
 
 #ifdef MOZ_DIRECTSHOW
 pref("media.directshow.enabled", true);

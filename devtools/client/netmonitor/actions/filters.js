@@ -4,8 +4,9 @@
 "use strict";
 
 const {
-  TOGGLE_FILTER,
-  ENABLE_FILTER_ONLY,
+  TOGGLE_FILTER_TYPE,
+  ENABLE_FILTER_TYPE_ONLY,
+  SET_FILTER_TEXT,
 } = require("../constants");
 
 /**
@@ -15,9 +16,9 @@ const {
  *
  * @param {string} filter - A filter type is going to be updated
  */
-function toggleFilter(filter) {
+function toggleFilterType(filter) {
   return {
-    type: TOGGLE_FILTER,
+    type: TOGGLE_FILTER_TYPE,
     filter,
   };
 }
@@ -30,14 +31,27 @@ function toggleFilter(filter) {
  *
  * @param {string} filter - A filter type is going to be updated
  */
-function enableFilterOnly(filter) {
+function enableFilterTypeOnly(filter) {
   return {
-    type: ENABLE_FILTER_ONLY,
+    type: ENABLE_FILTER_TYPE_ONLY,
     filter,
   };
 }
 
+/**
+ * Set filter text.
+ *
+ * @param {string} url - A filter text is going to be set
+ */
+function setFilterText(url) {
+  return {
+    type: SET_FILTER_TEXT,
+    url,
+  };
+}
+
 module.exports = {
-  toggleFilter,
-  enableFilterOnly,
+  toggleFilterType,
+  enableFilterTypeOnly,
+  setFilterText,
 };

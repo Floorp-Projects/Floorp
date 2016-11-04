@@ -30,8 +30,6 @@ public:
 
   static already_AddRefed<Presentation> Create(nsPIDOMWindowInner* aWindow);
 
-  static bool HasReceiverSupport(JSContext* aCx, JSObject* aGlobal);
-
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
@@ -55,6 +53,8 @@ private:
   explicit Presentation(nsPIDOMWindowInner* aWindow);
 
   virtual ~Presentation();
+
+  bool HasReceiverSupport() const;
 
   bool IsInPresentedContent() const;
 

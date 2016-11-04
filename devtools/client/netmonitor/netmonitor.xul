@@ -18,7 +18,7 @@
   <deck id="body"
         class="theme-sidebar"
         flex="1"
-        data-localization-bundle="devtools/locale/netmonitor.properties">
+        data-localization-bundle="devtools/client/locales/netmonitor.properties">
 
     <vbox id="network-inspector-view" flex="1">
       <hbox id="netmonitor-toolbar" class="devtools-toolbar">
@@ -31,11 +31,10 @@
         <toolbarbutton id="requests-menu-network-summary-button"
                        class="devtools-toolbarbutton icon-and-text"
                        data-localization="tooltiptext=netmonitor.toolbar.perf"/>
-        <textbox id="requests-menu-filter-freetext-text"
-                 class="devtools-filterinput"
-                 type="search"
-                 required="true"
-                 data-localization="placeholder=netmonitor.toolbar.filterFreetext.label"/>
+        <html:div xmlns="http://www.w3.org/1999/xhtml"
+                  id="react-details-pane-toggle-hook"/>
+        <html:div xmlns="http://www.w3.org/1999/xhtml"
+                  id="react-search-box-hook"/>
         <html:div xmlns="http://www.w3.org/1999/xhtml"
                   id="react-details-pane-toggle-hook"/>
       </hbox>
