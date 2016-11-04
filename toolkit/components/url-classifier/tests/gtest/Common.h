@@ -19,3 +19,8 @@ void ApplyUpdate(nsTArray<TableUpdate*>& updates);
 
 void ApplyUpdate(TableUpdate* update);
 
+// This function converts lexigraphic-sorted prefixes to a hashtable
+// which key is prefix size and value is concatenated prefix string.
+void PrefixArrayToPrefixStringMap(const nsTArray<nsCString>& prefixArray,
+                                  PrefixStringMap& out);
+
