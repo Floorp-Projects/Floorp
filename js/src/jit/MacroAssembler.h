@@ -931,6 +931,17 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void popcnt64(Register64 src, Register64 dest, Register temp) PER_ARCH;
 
     // ===============================================================
+    // Condition functions
+
+    template <typename T1, typename T2>
+    inline void cmp32Set(Condition cond, T1 lhs, T2 rhs, Register dest)
+        DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
+
+    template <typename T1, typename T2>
+    inline void cmpPtrSet(Condition cond, T1 lhs, T2 rhs, Register dest)
+        PER_ARCH;
+
+    // ===============================================================
     // Branch functions
 
     template <class L>
