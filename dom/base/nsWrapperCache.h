@@ -265,7 +265,8 @@ protected:
   void PoisonWrapper()
   {
     if (mWrapper) {
-      // See setToCrashOnTouch() in RootingAPI.h
+      // Set the pointer to a value that will cause a crash if it is
+      // dereferenced.
       mWrapper = reinterpret_cast<JSObject*>(1);
     }
   }
