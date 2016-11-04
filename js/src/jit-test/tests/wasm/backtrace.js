@@ -13,7 +13,7 @@ var mod = wasmEvalText(code, {
        // The middle one is for the wasm function.
        var s = getBacktrace();
        assertEq(s.split('\n').length, 4);
-       assertEq(s.split('\n')[1].startsWith("1 wasm-function[0]("), true);
+       assertEq(s.split('\n')[1].startsWith("1 wasm-function[1]("), true);
 
        // Let's also run DumpBacktrace() to check if we are not crashing.
        backtrace();

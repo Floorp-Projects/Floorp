@@ -358,10 +358,13 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod
     ScriptSource* maybeScriptSource() const override {
         return scriptSource.get();
     }
-    bool getFuncDefName(JSContext* cx, const Bytes*, uint32_t funcDefIndex,
-                        TwoByteName* name) const override
+    bool getFuncName(JSContext* cx, const Bytes*, uint32_t funcIndex,
+                     TwoByteName* name) const override
     {
-        const char* p = asmJSFuncNames[funcDefIndex].get();
+        // asm.js doesn't allow exporting imports or putting imports in tables
+        MOZ_ASSERT(funcIndex >= AsmJSFirstDefFuncIndex);
+
+        const char* p = asmJSFuncNames[funcIndex - AsmJSFirstDefFuncIndex].get();
         UTF8Chars utf8(p, strlen(p));
 
         size_t twoByteLength;
@@ -1840,8 +1843,8 @@ class MOZ_STACK_CLASS ModuleValidator
         auto genData = MakeUnique<ModuleGeneratorData>(ModuleKind::AsmJS);
         if (!genData ||
             !genData->sigs.resize(MaxSigs) ||
-            !genData->funcDefSigs.resize(MaxFuncs) ||
-            !genData->funcImports.resize(MaxImports) ||
+            !genData->funcSigs.resize(MaxFuncs) ||
+            !genData->funcImportGlobalDataOffsets.resize(AsmJSMaxImports) ||
             !genData->tables.resize(MaxTables) ||
             !genData->asmJSSigToTableIndex.resize(MaxSigs))
         {
@@ -2137,8 +2140,8 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
 
         // Declare which function is exported which gives us an index into the
-        // module FuncDefExportVector.
-        if (!mg_.addFuncDefExport(Move(fieldChars), mg_.numFuncImports() + func.index()))
+        // module FuncExportVector.
+        if (!mg_.addFuncExport(Move(fieldChars), func.index()))
             return false;
 
         // The exported function might have already been exported in which case
@@ -2151,10 +2154,10 @@ class MOZ_STACK_CLASS ModuleValidator
         uint32_t sigIndex;
         if (!declareSig(Move(sig), &sigIndex))
             return false;
-        uint32_t funcIndex = numFunctions();
+        uint32_t funcIndex = AsmJSFirstDefFuncIndex + numFunctions();
         if (funcIndex >= MaxFuncs)
             return failCurrentOffset("too many functions");
-        mg_.initFuncDefSig(funcIndex, sigIndex);
+        mg_.initFuncSig(funcIndex, sigIndex);
         Global* global = validationLifo_.new_<Global>(Global::Function);
         if (!global)
             return false;
@@ -2190,23 +2193,23 @@ class MOZ_STACK_CLASS ModuleValidator
         table.define();
         return mg_.initSigTableElems(table.sigIndex(), Move(elems));
     }
-    bool declareImport(PropertyName* name, Sig&& sig, unsigned ffiIndex, uint32_t* importIndex) {
+    bool declareImport(PropertyName* name, Sig&& sig, unsigned ffiIndex, uint32_t* funcIndex) {
         ImportMap::AddPtr p = importMap_.lookupForAdd(NamedSig::Lookup(name, sig));
         if (p) {
-            *importIndex = p->value();
+            *funcIndex = p->value();
             return true;
         }
-        *importIndex = asmJSMetadata_->asmJSImports.length();
-        if (*importIndex >= MaxImports)
+        *funcIndex = asmJSMetadata_->asmJSImports.length();
+        if (*funcIndex > AsmJSMaxImports)
             return failCurrentOffset("too many imports");
         if (!asmJSMetadata_->asmJSImports.emplaceBack(ffiIndex))
             return false;
         uint32_t sigIndex;
         if (!declareSig(Move(sig), &sigIndex))
             return false;
-        if (!mg_.initImport(*importIndex, sigIndex))
+        if (!mg_.initImport(*funcIndex, sigIndex))
             return false;
-        return importMap_.add(p, NamedSig(name, mg_.sig(sigIndex)), *importIndex);
+        return importMap_.add(p, NamedSig(name, mg_.sig(sigIndex)), *funcIndex);
     }
 
     bool tryConstantAccess(uint64_t start, uint64_t width) {
@@ -2313,8 +2316,10 @@ class MOZ_STACK_CLASS ModuleValidator
     Func* lookupFunction(PropertyName* name) {
         if (GlobalMap::Ptr p = globalMap_.lookup(name)) {
             Global* value = p->value();
-            if (value->which() == Global::Function)
-                return functions_[value->funcIndex()];
+            if (value->which() == Global::Function) {
+                MOZ_ASSERT(value->funcIndex() >= AsmJSFirstDefFuncIndex);
+                return functions_[value->funcIndex() - AsmJSFirstDefFuncIndex];
+            }
         }
         return nullptr;
     }
@@ -4753,7 +4758,7 @@ CheckFunctionSignature(ModuleValidator& m, ParseNode* usepn, Sig&& sig, Property
         return m.addFunction(name, usepn->pn_pos.begin, Move(sig), func);
     }
 
-    if (!CheckSignatureAgainstExisting(m, usepn, sig, m.mg().funcDefSig(existing->index())))
+    if (!CheckSignatureAgainstExisting(m, usepn, sig, m.mg().funcSig(existing->index())))
         return false;
 
     *func = existing;
@@ -4790,7 +4795,6 @@ CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calle
     if (!f.writeCall(callNode, Expr::Call))
         return false;
 
-    // Function's index, to find out the function's entry
     if (!f.encoder().writeVarU32(callee->index()))
         return false;
 
@@ -4908,15 +4912,14 @@ CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, Type 
 
     Sig sig(Move(args), ret.canonicalToExprType());
 
-    uint32_t importIndex;
-    if (!f.m().declareImport(calleeName, Move(sig), ffiIndex, &importIndex))
+    uint32_t funcIndex;
+    if (!f.m().declareImport(calleeName, Move(sig), ffiIndex, &funcIndex))
         return false;
 
-    if (!f.writeCall(callNode, Expr::OldCallImport))
+    if (!f.writeCall(callNode, Expr::Call))
         return false;
 
-    // Import index
-    if (!f.encoder().writeVarU32(importIndex))
+    if (!f.encoder().writeVarU32(funcIndex))
         return false;
 
     *type = Type::ret(ret);
@@ -7208,7 +7211,7 @@ CheckFuncPtrTable(ModuleValidator& m, ParseNode* var)
         if (!func)
             return m.fail(elem, "function-pointer table's elements must be names of functions");
 
-        const Sig& funcSig = m.mg().funcDefSig(func->index());
+        const Sig& funcSig = m.mg().funcSig(func->index());
         if (sig) {
             if (*sig != funcSig)
                 return m.fail(elem, "all functions in table must have same signature");
@@ -7268,14 +7271,11 @@ CheckModuleExportFunction(ModuleValidator& m, ParseNode* pn, PropertyName* maybe
         return m.fail(pn, "expected name of exported function");
 
     PropertyName* funcName = pn->name();
-    const ModuleValidator::Global* global = m.lookupGlobal(funcName);
-    if (!global)
-        return m.failName(pn, "exported function name '%s' not found", funcName);
+    const ModuleValidator::Func* func = m.lookupFunction(funcName);
+    if (!func)
+        return m.failName(pn, "function '%s' not found", funcName);
 
-    if (global->which() != ModuleValidator::Global::Function)
-        return m.failName(pn, "'%s' is not a function", funcName);
-
-    return m.addExportField(pn, m.function(global->funcIndex()), maybeFieldName);
+    return m.addExportField(pn, *func, maybeFieldName);
 }
 
 static bool
@@ -8929,7 +8929,7 @@ js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun)
     MOZ_ASSERT(IsAsmJSFunction(fun));
 
     const AsmJSMetadata& metadata = ExportedFunctionToInstance(fun).metadata().asAsmJS();
-    const AsmJSExport& f = metadata.lookupAsmJSExport(ExportedFunctionToDefinitionIndex(fun));
+    const AsmJSExport& f = metadata.lookupAsmJSExport(ExportedFunctionToFuncIndex(fun));
 
     uint32_t begin = metadata.srcStart + f.startOffsetInModule();
     uint32_t end = metadata.srcStart + f.endOffsetInModule();

@@ -97,7 +97,7 @@ extern WasmInstanceObject*
 ExportedFunctionToInstanceObject(JSFunction* fun);
 
 extern uint32_t
-ExportedFunctionToDefinitionIndex(JSFunction* fun);
+ExportedFunctionToFuncIndex(JSFunction* fun);
 
 } // namespace wasm
 
