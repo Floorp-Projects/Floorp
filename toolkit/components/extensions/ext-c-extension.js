@@ -23,6 +23,7 @@ function extensionApiFactory(context) {
 
 extensions.registerSchemaAPI("extension", "addon_child", extensionApiFactory);
 extensions.registerSchemaAPI("extension", "content_child", extensionApiFactory);
+extensions.registerSchemaAPI("extension", "devtools_child", extensionApiFactory);
 extensions.registerSchemaAPI("extension", "addon_child", context => {
   return {
     extension: {

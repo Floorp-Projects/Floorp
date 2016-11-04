@@ -66,3 +66,4 @@ function storageApiFactory(context) {
 }
 extensions.registerSchemaAPI("storage", "addon_parent", storageApiFactory);
 extensions.registerSchemaAPI("storage", "content_parent", storageApiFactory);
+extensions.registerSchemaAPI("storage", "devtools_parent", storageApiFactory);

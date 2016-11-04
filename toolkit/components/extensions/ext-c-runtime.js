@@ -91,3 +91,4 @@ function runtimeApiFactory(context) {
 
 extensions.registerSchemaAPI("runtime", "addon_child", runtimeApiFactory);
 extensions.registerSchemaAPI("runtime", "content_child", runtimeApiFactory);
+extensions.registerSchemaAPI("runtime", "devtools_child", runtimeApiFactory);

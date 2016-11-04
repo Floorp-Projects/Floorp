@@ -5,13 +5,13 @@
 [
   {
     "namespace": "extension",
-    "allowedContexts": ["content"],
+    "allowedContexts": ["content", "devtools"],
     "description": "The <code>browser.extension</code> API has utilities that can be used by any extension page. It includes support for exchanging messages between an extension and its content scripts or between extensions, as described in detail in $(topic:messaging)[Message Passing].",
     "properties": {
       "lastError": {
         "type": "object",
         "optional": true,
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "Set for the lifetime of a callback if an ansychronous extension api has resulted in an error. If no error has occured lastError will be <var>undefined</var>.",
         "properties": {
           "message": { "type": "string", "description": "Description of the error that has taken place." }
@@ -23,7 +23,7 @@
       "inIncognitoContext": {
         "type": "boolean",
         "optional": true,
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "True for content scripts running inside incognito tabs, and for extension pages running inside an incognito process. The latter only applies to extensions with 'split' incognito_behavior."
       }
     },
@@ -39,7 +39,7 @@
       {
         "name": "getURL",
         "type": "function",
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "Converts a relative path within an extension install directory to a fully-qualified URL.",
         "parameters": [
           {
