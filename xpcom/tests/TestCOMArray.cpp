@@ -126,14 +126,8 @@ Bar::Release(void)
   return mRefCnt;
 }
 
-
-int main(int argc, char **argv)
+void Sizing()
 {
-  ScopedXPCOM xpcom("nsCOMArrayTests");
-  if (xpcom.failed()) {
-    return 1;
-  }
-
   int rv = 0;
 
   Array arr;
@@ -178,6 +172,10 @@ int main(int argc, char **argv)
     }
   }
 
+}
+
+void ObjectFunctions()
+{
   int32_t base;
   {
     Array2 arr2;
@@ -259,7 +257,11 @@ int main(int argc, char **argv)
       fail("Release called multiple times for Clear");
     }
   }
+}
 
+void ElementFunctions()
+{
+  int32_t base;
   {
     Array2 arr2;
 
@@ -340,7 +342,11 @@ int main(int argc, char **argv)
       fail("Release called multiple times for Clear");
     }
   }
+}
 
+void Destructor()
+{
+  int32_t base;
   Bar::sReleaseCalled = 0;
 
   {
@@ -358,6 +364,19 @@ int main(int argc, char **argv)
   if (Bar::sReleaseCalled != base + 20) {
     fail("Release called multiple times for nsCOMArray::~nsCOMArray");
   }
+}
 
-  return rv;
+int main(int argc, char **argv)
+{
+  ScopedXPCOM xpcom("nsCOMArrayTests");
+  if (xpcom.failed()) {
+    return 1;
+  }
+
+  Sizing();
+  ObjectFunctions();
+  ElementFunctions();
+  Destructor();
+
+  return 0;
 }
