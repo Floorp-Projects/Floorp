@@ -836,7 +836,7 @@ ModuleGenerator::setStartFunction(uint32_t funcIndex)
             return false;
     }
 
-    metadata_->initStartFuncIndex(funcIndex);
+    metadata_->startFuncIndex.emplace(funcIndex);
     return true;
 }
 
