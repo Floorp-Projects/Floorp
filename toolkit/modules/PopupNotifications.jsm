@@ -419,7 +419,7 @@ PopupNotifications.prototype = {
     let notifications = this._getNotificationsForBrowser(browser);
     notifications.push(notification);
 
-    let isActiveBrowser = browser.docShellIsActive;
+    let isActiveBrowser = this._isActiveBrowser(browser);
     let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
     let isActiveWindow = fm.activeWindow == this.window;
 
@@ -495,7 +495,7 @@ PopupNotifications.prototype = {
 
     this._setNotificationsForBrowser(aBrowser, notifications);
 
-    if (aBrowser.docShellIsActive) {
+    if (this._isActiveBrowser(aBrowser)) {
       // get the anchor element if the browser has defined one so it will
       // _update will handle both the tabs iconBox and non-tab permission
       // anchors.
@@ -512,7 +512,7 @@ PopupNotifications.prototype = {
   remove: function PopupNotifications_remove(notification) {
     this._remove(notification);
 
-    if (notification.browser.docShellIsActive) {
+    if (this._isActiveBrowser(notification.browser)) {
       let notifications = this._getNotificationsForBrowser(notification.browser);
       this._update(notifications);
     }
@@ -570,7 +570,7 @@ PopupNotifications.prototype = {
     if (index == -1)
       return;
 
-    if (notification.browser.docShellIsActive)
+    if (this._isActiveBrowser(notification.browser))
       notification.anchorElement.removeAttribute(ICON_ATTRIBUTE_SHOWING);
 
     // remove the notification
@@ -1051,6 +1051,25 @@ PopupNotifications.prototype = {
     if (defaultAnchor && !anchors.size)
       anchors.add(defaultAnchor);
     return anchors;
+  },
+
+  _isActiveBrowser: function (browser) {
+    // We compare on frameLoader instead of just comparing the
+    // selectedBrowser and browser directly because browser tabs in
+    // Responsive Design Mode put the actual web content into a
+    // mozbrowser iframe and proxy property read/write and method
+    // calls from the tab to that iframe. This is so that attempts
+    // to reload the tab end up reloading the content in
+    // Responsive Design Mode, and not the Responsive Design Mode
+    // viewer itself.
+    //
+    // This means that PopupNotifications can come up from a browser
+    // in Responsive Design Mode, but the selectedBrowser will not match
+    // the browser being passed into this function, despite the browser
+    // actually being within the selected tab. We workaround this by
+    // comparing frameLoader instead, which is proxied from the outer
+    // <xul:browser> to the inner mozbrowser <iframe>.
+    return this.tabbrowser.selectedBrowser.frameLoader == browser.frameLoader;
   },
 
   _onIconBoxCommand: function PopupNotifications_onIconBoxCommand(event) {

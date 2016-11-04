@@ -81,12 +81,17 @@ private:
   // Decrement the decoder limit and resolve a promise if available.
   void ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock);
 
+  // Protect access to Instance().
+  static StaticMutex sMutex;
+
   ReentrantMonitor mMonitor;
   // The number of decoders available for creation.
   int mDecoderLimit;
   // Requests to acquire tokens.
   std::queue<RefPtr<PromisePrivate>> mPromises;
 };
+
+StaticMutex DecoderAllocPolicy::sMutex;
 
 class DecoderAllocPolicy::AutoDeallocToken : public Token
 {
@@ -115,8 +120,7 @@ DecoderAllocPolicy::~DecoderAllocPolicy()
 DecoderAllocPolicy&
 DecoderAllocPolicy::Instance()
 {
-  // Note: Function-static initialization is not thread-safe in VS 2013.
-  // Don't uplift this code to 45esr.
+  StaticMutexAutoLock lock(sMutex);
   static auto sPolicy = new DecoderAllocPolicy();
   return *sPolicy;
 }

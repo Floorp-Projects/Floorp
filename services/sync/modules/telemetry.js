@@ -177,8 +177,9 @@ class EngineRecord {
       log.error(`Multiple validations occurred for engine ${this.name}!`);
       return;
     }
-    let { problems, duration, recordCount } = validationResult;
+    let { problems, version, duration, recordCount } = validationResult;
     let validation = {
+      version: version || 0,
       checked: recordCount || 0,
     };
     if (duration > 0) {

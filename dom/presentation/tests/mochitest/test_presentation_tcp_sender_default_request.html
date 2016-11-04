@@ -82,7 +82,7 @@ function testStartConnection() {
       gScript.sendAsyncMessage('trigger-incoming-answer');
     });
 
-    ok(!navigator.presentation.receiver, "Sender shouldn't get a presentation receiver instance.");
+    is(navigator.presentation.receiver, undefined, "Sender shouldn't get a presentation receiver instance.");
 
     navigator.presentation.defaultRequest.onconnectionavailable = function(aEvent) {
       navigator.presentation.defaultRequest.onconnectionavailable = null;
@@ -142,6 +142,7 @@ function runTests() {
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
                                     ["dom.presentation.controller.enabled", true],
+                                    ["dom.presentation.receiver.enabled", false],
                                     ["dom.presentation.session_transport.data_channel.enable", false]]},
                           runTests);
 

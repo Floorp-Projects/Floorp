@@ -44,6 +44,7 @@ user_pref("media.preload.auto", 3); // auto = enough
 user_pref("media.cache_size", 1000);
 user_pref("media.volume_scale", "0.01");
 user_pref("media.test.dumpDebugInfo", true);
+user_pref("media.dormant-on-pause-timeout-ms", -1); // Disable dormant for it breaks some tests.
 user_pref("security.warn_viewing_mixed", false);
 user_pref("app.update.enabled", false);
 user_pref("app.update.staging.enabled", false);
@@ -311,10 +312,6 @@ user_pref("browser.selfsupport.url", "https://%(server)s/selfsupport-dummy/");
 user_pref("media.eme.enabled", true);
 
 user_pref("media.autoplay.enabled", true);
-
-#if defined(XP_WIN)
-user_pref("media.decoder.heuristic.dormant.timeout", 0);
-#endif
 
 // Don't use auto-enabled e10s
 user_pref("browser.tabs.remote.autostart.1", false);

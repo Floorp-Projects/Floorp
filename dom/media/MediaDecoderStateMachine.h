@@ -180,9 +180,6 @@ public:
       this, &MediaDecoderStateMachine::SetPlaybackRate, aPlaybackRate));
   }
 
-  // Set/Unset dormant state.
-  void DispatchSetDormant(bool aDormant);
-
   RefPtr<ShutdownPromise> BeginShutdown();
 
   // Notifies the state machine that should minimize the number of samples

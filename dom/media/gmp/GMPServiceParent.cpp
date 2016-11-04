@@ -839,9 +839,6 @@ GeckoMediaPluginServiceParent::PathRunnable::Run()
   mService->UpdateContentProcessGMPCapabilities();
 
 #ifndef MOZ_WIDGET_GONK // Bug 1214967: disabled on B2G due to inscrutable test failures.
-  // For e10s, we must fire a notification so that all ContentParents notify
-  // their children to update the codecs that the GMPDecoderModule can use.
-  NS_DispatchToMainThread(new NotifyObserversTask("gmp-changed"), NS_DISPATCH_NORMAL);
   // For non-e10s, and for decoding in the chrome process, must update GMP
   // PDM's codecs list directly.
   NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
@@ -895,6 +892,14 @@ GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities()
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
     Unused << cp->SendGMPsChanged(caps);
   }
+
+  // For non-e10s, we must fire a notification so that any MediaKeySystemAccess
+  // requests waiting on a CDM to download will retry.
+  nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
+  MOZ_ASSERT(obsService);
+  if (obsService) {
+    obsService->NotifyObservers(nullptr, "gmp-changed", nullptr);
+  }
 }
 
 RefPtr<GenericPromise>
@@ -913,13 +918,6 @@ GeckoMediaPluginServiceParent::AsyncAddPluginDirectory(const nsAString& aDirecto
         LOGD(("GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s succeeded",
               NS_ConvertUTF16toUTF8(dir).get()));
         MOZ_ASSERT(NS_IsMainThread());
-        // For e10s, we must fire a notification so that all ContentParents notify
-        // their children to update the codecs that the GMPDecoderModule can use.
-        nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
-        MOZ_ASSERT(obsService);
-        if (obsService) {
-          obsService->NotifyObservers(nullptr, "gmp-changed", nullptr);
-        }
         self->UpdateContentProcessGMPCapabilities();
         // For non-e10s, and for decoding in the chrome process, must update GMP
         // PDM's codecs list directly.
@@ -961,14 +959,12 @@ GeckoMediaPluginServiceParent::RemoveAndDeletePluginDirectory(
 }
 
 NS_IMETHODIMP
-GeckoMediaPluginServiceParent::GetPluginVersionForAPI(const nsACString& aAPI,
-                                                      nsTArray<nsCString>* aTags,
-                                                      bool* aHasPlugin,
-                                                      nsACString& aOutVersion)
+GeckoMediaPluginServiceParent::HasPluginForAPI(const nsACString& aAPI,
+                                               nsTArray<nsCString>* aTags,
+                                               bool* aHasPlugin)
 {
   NS_ENSURE_ARG(aTags && aTags->Length() > 0);
   NS_ENSURE_ARG(aHasPlugin);
-  NS_ENSURE_ARG(aOutVersion.IsEmpty());
 
   nsresult rv = EnsurePluginsOnDiskScanned();
   if (NS_FAILED(rv)) {
@@ -981,12 +977,7 @@ GeckoMediaPluginServiceParent::GetPluginVersionForAPI(const nsACString& aAPI,
     nsCString api(aAPI);
     size_t index = 0;
     RefPtr<GMPParent> gmp = FindPluginForAPIFrom(index, api, *aTags, &index);
-    if (gmp) {
-      *aHasPlugin = true;
-      aOutVersion = gmp->GetVersion();
-    } else {
-      *aHasPlugin = false;
-    }
+    *aHasPlugin = !!gmp;
   }
 
   return NS_OK;

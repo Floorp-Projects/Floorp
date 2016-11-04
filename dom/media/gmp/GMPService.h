@@ -69,8 +69,6 @@ public:
 
   // mozIGeckoMediaPluginService
   NS_IMETHOD GetThread(nsIThread** aThread) override;
-  NS_IMETHOD HasPluginForAPI(const nsACString& aAPI, nsTArray<nsCString>* aTags,
-                             bool *aRetVal) override;
   NS_IMETHOD GetGMPVideoDecoder(GMPCrashHelper* aHelper,
                                 nsTArray<nsCString>* aTags,
                                 const nsACString& aNodeId,

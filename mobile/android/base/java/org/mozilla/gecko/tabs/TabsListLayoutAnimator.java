@@ -5,149 +5,61 @@
 
 package org.mozilla.gecko.tabs;
 
-import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.widget.DefaultItemAnimatorBase;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.support.v4.animation.AnimatorCompatHelper;
-import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.view.ViewPropertyAnimator;
 
-import java.util.ArrayList;
-import java.util.List;
-
-// This is a light rewrite of DefaultItemAnimator to support a non-default remove animation.
-class TabsListLayoutAnimator extends DefaultItemAnimator {
-    private List<RecyclerView.ViewHolder> pendingRemovals = new ArrayList<>();
-    // ViewHolders on which remove animations are currently being run.
-    private List<RecyclerView.ViewHolder> removeAnimations = new ArrayList<>();
-
-    @Override
-    public void runPendingAnimations() {
-        if (pendingRemovals.isEmpty()) {
-            super.runPendingAnimations();
-            return;
-        }
-
-        for (RecyclerView.ViewHolder holder : pendingRemovals) {
-            animateRemoveImpl(holder);
-        }
-        pendingRemovals.clear();
-
-        // Run remaining default animations, but only after the remove animations finish.
-        ThreadUtils.postDelayedToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                TabsListLayoutAnimator.super.runPendingAnimations();
-            }
-        }, getRemoveDuration());
+class TabsListLayoutAnimator extends DefaultItemAnimatorBase {
+    public TabsListLayoutAnimator(int animationDuration) {
+        setRemoveDuration(animationDuration);
+        setAddDuration(animationDuration);
+        // A fade in/out each time the title/thumbnail/etc. gets updated isn't helpful, so disable
+        // the change animation.
+        setSupportsChangeAnimations(false);
     }
 
     @Override
-    public boolean animateRemove(RecyclerView.ViewHolder holder) {
+    protected boolean preAnimateRemoveImpl(final RecyclerView.ViewHolder holder) {
         // If the view isn't at full alpha then we were closed by a swipe which an
         // ItemTouchHelper is animating for us, so just return without animating the remove and
         // let runPendingAnimations pick up the rest.
         if (holder.itemView.getAlpha() < 1) {
-            dispatchRemoveFinished(holder);
             return false;
         }
         resetAnimation(holder);
-        pendingRemovals.add(holder);
         return true;
     }
 
-    private void animateRemoveImpl(final RecyclerView.ViewHolder holder) {
-        final TabsLayoutItemView itemView = (TabsLayoutItemView) holder.itemView;
-        removeAnimations.add(holder);
-        final ViewPropertyAnimator animator = itemView.animate();
-        animator.translationX(itemView.getWidth())
-                .alpha(0)
+    @Override
+    protected void animateRemoveImpl(final RecyclerView.ViewHolder holder) {
+        final View itemView = holder.itemView;
+        ViewCompat.animate(itemView)
                 .setDuration(getRemoveDuration())
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-                        dispatchRemoveStarting(holder);
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        animator.setListener(null);
-                        itemView.setAlpha(1);
-                        itemView.setTranslationX(0);
-                        dispatchRemoveFinished(holder);
-                        removeAnimations.remove(holder);
-                        dispatchFinishedWhenDone();
-                    }
-                }).start();
+                .translationX(itemView.getWidth())
+                .alpha(0)
+                .setListener(new DefaultRemoveVpaListener(holder))
+                .start();
     }
 
     @Override
-    public void endAnimation(RecyclerView.ViewHolder item) {
-        final View view = item.itemView;
-        // This will trigger end callback which should set properties to their target values.
-        view.animate().cancel();
-        if (pendingRemovals.remove(item)) {
-            view.setAlpha(1);
-            view.setTranslationX(0);
-            dispatchRemoveFinished(item);
-        }
-
-        if (isRunning()) {
-            super.endAnimation(item);
-        } else {
-            dispatchAnimationsFinished();
-        }
-    }
-
-    private void resetAnimation(RecyclerView.ViewHolder holder) {
-        AnimatorCompatHelper.clearInterpolator(holder.itemView);
-        endAnimation(holder);
+    protected boolean preAnimateAddImpl(RecyclerView.ViewHolder holder) {
+        resetAnimation(holder);
+        final View itemView = holder.itemView;
+        itemView.setTranslationX(itemView.getWidth());
+        itemView.setAlpha(0);
+        return true;
     }
 
     @Override
-    public boolean isRunning() {
-        return (!pendingRemovals.isEmpty() ||
-                !removeAnimations.isEmpty() ||
-                super.isRunning());
-    }
-
-    /**
-     * Check the state of currently pending and running animations. If there are none
-     * pending/running, call {@link #dispatchAnimationsFinished()} to notify any
-     * listeners.
-     */
-    private void dispatchFinishedWhenDone() {
-        if (!isRunning()) {
-            dispatchAnimationsFinished();
-        }
-    }
-
-    @Override
-    public void endAnimations() {
-        final int count = pendingRemovals.size();
-        for (int i = count - 1; i >= 0; i--) {
-            final RecyclerView.ViewHolder item = pendingRemovals.get(i);
-            dispatchRemoveFinished(item);
-            pendingRemovals.remove(i);
-        }
-
-        if (!isRunning()) {
-            dispatchAnimationsFinished();
-            return;
-        }
-
-        cancelAll(removeAnimations);
-
-        // We're relying on super.endAnimations() to call dispatchAnimationsFinished() here.
-        super.endAnimations();
-    }
-
-    void cancelAll(List<RecyclerView.ViewHolder> viewHolders) {
-        for (int i = viewHolders.size() - 1; i >= 0; i--) {
-            viewHolders.get(i).itemView.animate().cancel();
-        }
+    protected void animateAddImpl(final RecyclerView.ViewHolder holder) {
+        final View itemView = holder.itemView;
+        ViewCompat.animate(itemView)
+                .setDuration(getAddDuration())
+                .translationX(0)
+                .alpha(1)
+                .setListener(new DefaultAddVpaListener(holder))
+                .start();
     }
 }

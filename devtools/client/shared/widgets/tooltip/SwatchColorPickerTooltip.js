@@ -9,7 +9,7 @@ const {colorUtils} = require("devtools/shared/css/color");
 const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
 const SwatchBasedEditorTooltip = require("devtools/client/shared/widgets/tooltip/SwatchBasedEditorTooltip");
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/locale/inspector.properties");
+const L10N = new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 const Heritage = require("sdk/core/heritage");
 

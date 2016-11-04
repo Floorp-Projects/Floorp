@@ -13,12 +13,7 @@ const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
  * requires; other requires should not be passed to this.  See
  * https://github.com/webpack/raw-loader.
  */
-function requireRawId(id, require) {
-  // Add the chrome:// protocol for properties files if missing (see Bug 1294220)
-  if (id.endsWith(".properties") && !id.startsWith("raw!chrome://")) {
-    id = id.replace("raw!", "raw!chrome://");
-  }
-
+this.requireRawId = function (id, require) {
   let uri = require.resolve(id.slice(4));
   // If the original string did not end with ".js", then
   // require.resolve might have added the suffix.  We don't want to
@@ -27,7 +22,6 @@ function requireRawId(id, require) {
   if (!id.endsWith(".js") && uri.endsWith(".js")) {
     uri = uri.slice(0, -3);
   }
-
 
   let stream = NetUtil.newChannel({
     uri: NetUtil.newURI(uri, "UTF-8"),
@@ -43,6 +37,6 @@ function requireRawId(id, require) {
   // For the time being it doesn't seem worthwhile to cache the
   // result here.
   return data;
-}
+};
 
 this.EXPORTED_SYMBOLS = ["requireRawId"];
