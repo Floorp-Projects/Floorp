@@ -263,7 +263,7 @@ case "$target" in
             break
         fi
     done
-    if test "$android_build_tools_version" == ""; then
+    if test "$android_build_tools_version" = ""; then
         version=$(echo $2 | cut -d" " -f1)
         AC_MSG_ERROR([You must install the Android build-tools version $version.  Try |mach bootstrap|.  (Looked for "$android_build_tools_base"/$version)])
     fi

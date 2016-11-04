@@ -642,7 +642,7 @@ HttpChannelParent::RecvSuspend()
   LOG(("HttpChannelParent::RecvSuspend [this=%p]\n", this));
 
   if (mChannel) {
-    mChannel->SuspendInternal();
+    mChannel->Suspend();
   }
   return true;
 }
@@ -653,7 +653,7 @@ HttpChannelParent::RecvResume()
   LOG(("HttpChannelParent::RecvResume [this=%p]\n", this));
 
   if (mChannel) {
-    mChannel->ResumeInternal();
+    mChannel->Resume();
   }
   return true;
 }
@@ -1436,6 +1436,10 @@ HttpChannelParent::SuspendForDiversion()
     return NS_ERROR_UNEXPECTED;
   }
 
+  // MessageDiversionStarted call will suspend mEventQ as many times as the
+  // channel has been suspended, so that channel and this queue are in sync.
+  mChannel->MessageDiversionStarted(this);
+
   nsresult rv = NS_OK;
 
   // Try suspending the channel. Allow it to fail, since OnStopRequest may have
@@ -1443,6 +1447,13 @@ HttpChannelParent::SuspendForDiversion()
   // automatically suspended after synthesizing the response, then we don't
   // need to suspend again here.
   if (!mSuspendAfterSynthesizeResponse) {
+    // We need to suspend only nsHttpChannel (i.e. we should not suspend
+    // mEventQ). Therefore we call mChannel->SuspendInternal() and not
+    // mChannel->Suspend().
+    // We are suspending only nsHttpChannel here because we want to stop
+    // OnDataAvailable until diversion is over. At the same time we should
+    // send the diverted OnDataAvailable-s to the listeners and not queue them
+    // in mEventQ.
     rv = mChannel->SuspendInternal();
     MOZ_ASSERT(NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_AVAILABLE);
     mSuspendedForDiversion = NS_SUCCEEDED(rv);
@@ -1450,6 +1461,12 @@ HttpChannelParent::SuspendForDiversion()
     // Take ownership of the automatic suspend that occurred after synthesizing
     // the response.
     mSuspendedForDiversion = true;
+
+    // If mSuspendAfterSynthesizeResponse is true channel has been already
+    // suspended. From comment above mSuspendedForDiversion takes the ownership
+    // of this suspend, therefore mEventQ should not be suspened so we need to
+    // resume it once.
+    mEventQ->Resume();
   }
 
   rv = mParentListener->SuspendForDiversion();
@@ -1459,7 +1476,6 @@ HttpChannelParent::SuspendForDiversion()
   // to the child.
   mDivertingFromChild = true;
 
-  mChannel->MessageDiversionStarted(this);
   return NS_OK;
 }
 

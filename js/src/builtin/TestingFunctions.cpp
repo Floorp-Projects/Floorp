@@ -1476,8 +1476,14 @@ GetWaitForAllPromise(JSContext* cx, unsigned argc, Value* vp)
     if (!promises.resize(count))
         return false;
 
-    for (uint32_t i = 0; i < count; i++)
-        promises[i].set(&list->getDenseElement(i).toObject());
+    for (uint32_t i = 0; i < count; i++) {
+        RootedValue elem(cx, list->getDenseElement(i));
+        if (!elem.isObject() || !elem.toObject().is<PromiseObject>()) {
+            JS_ReportErrorASCII(cx, "Each entry in the passed-in Array must be a Promise");
+            return false;
+        }
+        promises[i].set(&elem.toObject());
+    }
 
     RootedObject resultPromise(cx, JS::GetWaitForAllPromise(cx, promises));
     if (!resultPromise)
@@ -1485,6 +1491,60 @@ GetWaitForAllPromise(JSContext* cx, unsigned argc, Value* vp)
 
     args.rval().set(ObjectValue(*resultPromise));
     return true;
+}
+
+static bool
+ResolvePromise(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "resolvePromise", 2))
+        return false;
+    if (!args[0].isObject() || !UncheckedUnwrap(&args[0].toObject())->is<PromiseObject>()) {
+        JS_ReportErrorASCII(cx, "first argument must be a maybe-wrapped Promise object");
+        return false;
+    }
+
+    RootedObject promise(cx, &args[0].toObject());
+    RootedValue resolution(cx, args[1]);
+    mozilla::Maybe<AutoCompartment> ac;
+    if (IsWrapper(promise)) {
+        promise = UncheckedUnwrap(promise);
+        ac.emplace(cx, promise);
+        if (!cx->compartment()->wrap(cx, &resolution))
+            return false;
+    }
+
+    bool result = JS::ResolvePromise(cx, promise, resolution);
+    if (result)
+        args.rval().setUndefined();
+    return result;
+}
+
+static bool
+RejectPromise(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "rejectPromise", 2))
+        return false;
+    if (!args[0].isObject() || !UncheckedUnwrap(&args[0].toObject())->is<PromiseObject>()) {
+        JS_ReportErrorASCII(cx, "first argument must be a maybe-wrapped Promise object");
+        return false;
+    }
+
+    RootedObject promise(cx, &args[0].toObject());
+    RootedValue reason(cx, args[1]);
+    mozilla::Maybe<AutoCompartment> ac;
+    if (IsWrapper(promise)) {
+        promise = UncheckedUnwrap(promise);
+        ac.emplace(cx, promise);
+        if (!cx->compartment()->wrap(cx, &reason))
+            return false;
+    }
+
+    bool result = JS::RejectPromise(cx, promise, reason);
+    if (result)
+        args.rval().setUndefined();
+    return result;
 }
 
 #else
@@ -4142,6 +4202,12 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "getWaitForAllPromise(densePromisesArray)",
 "  Calls the 'GetWaitForAllPromise' JSAPI function and returns the result\n"
 "  Promise."),
+JS_FN_HELP("resolvePromise", ResolvePromise, 2, 0,
+"resolvePromise(promise, resolution)",
+"  Resolve a Promise by calling the JSAPI function JS::ResolvePromise."),
+JS_FN_HELP("rejectPromise", RejectPromise, 2, 0,
+"rejectPromise(promise, reason)",
+"  Reject a Promise by calling the JSAPI function JS::RejectPromise."),
 #else
     JS_FN_HELP("makeFakePromise", MakeFakePromise, 0, 0,
 "makeFakePromise()",

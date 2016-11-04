@@ -65,11 +65,16 @@ class GetEntryHelper final : public PromiseNativeHandler
 public:
   NS_DECL_ISUPPORTS
 
-  GetEntryHelper(nsIGlobalObject* aGlobalObject,
+  GetEntryHelper(FileSystemDirectoryEntry* aParentEntry,
+                 Directory* aDirectory,
+                 nsTArray<nsString>& aParts,
                  FileSystem* aFileSystem,
                  FileSystemEntryCallback* aSuccessCallback,
                  ErrorCallback* aErrorCallback,
                  FileSystemDirectoryEntry::GetInternalType aType);
+
+  void
+  Run();
 
   virtual void
   ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
@@ -83,11 +88,29 @@ private:
   void
   Error(nsresult aError);
 
-  nsCOMPtr<nsIGlobalObject> mGlobal;
+  void
+  ContinueRunning(JSObject* aObj);
+
+  void
+  CompleteOperation(JSObject* aObj);
+
+  RefPtr<FileSystemDirectoryEntry> mParentEntry;
+  RefPtr<Directory> mDirectory;
+  nsTArray<nsString> mParts;
   RefPtr<FileSystem> mFileSystem;
+
   RefPtr<FileSystemEntryCallback> mSuccessCallback;
   RefPtr<ErrorCallback> mErrorCallback;
+
   FileSystemDirectoryEntry::GetInternalType mType;
+};
+
+class FileSystemEntryCallbackHelper
+{
+public:
+  static void
+  Call(const Optional<OwningNonNull<FileSystemEntryCallback>>& aEntryCallback,
+       FileSystemEntry* aEntry);
 };
 
 class ErrorCallbackHelper

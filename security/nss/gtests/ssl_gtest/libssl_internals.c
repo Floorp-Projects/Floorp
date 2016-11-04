@@ -210,6 +210,26 @@ PRBool SSLInt_SendAlert(PRFileDesc *fd, uint8_t level, uint8_t type) {
   return PR_TRUE;
 }
 
+PRBool SSLInt_SendNewSessionTicket(PRFileDesc *fd) {
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return PR_FALSE;
+  }
+
+  ssl_GetSSL3HandshakeLock(ss);
+  ssl_GetXmitBufLock(ss);
+
+  SECStatus rv = tls13_SendNewSessionTicket(ss);
+  if (rv == SECSuccess) {
+    rv = ssl3_FlushHandshake(ss, 0);
+  }
+
+  ssl_ReleaseXmitBufLock(ss);
+  ssl_ReleaseSSL3HandshakeLock(ss);
+
+  return rv == SECSuccess;
+}
+
 SECStatus SSLInt_AdvanceReadSeqNum(PRFileDesc *fd, PRUint64 to) {
   PRUint64 epoch;
   sslSocket *ss;

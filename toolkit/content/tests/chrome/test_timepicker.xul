@@ -43,7 +43,8 @@ function testtag_timepicker()
   testtag_comparetime(tp, testid + "set value", thour, tminute, tsecond);
 
   var numberOrder = /^(\D*)\s*(\d+)(\D*)(\d+)(\D*)(\d+)\s*(\D*)$/;
-  var fdt = new Date(2000,0,1,16,7,9).toLocaleFormat("%X");
+  var locale = Intl.DateTimeFormat().resolvedOptions().locale + "-u-ca-gregory-nu-latn";
+  var fdt = new Date(2000,0,1,16,7,9).toLocaleTimeString(locale);
   is(tp.is24HourClock, Number(fdt.match(numberOrder)[2]) > 12, "is24HourClock");
 
   // check that setting the dateValue property works

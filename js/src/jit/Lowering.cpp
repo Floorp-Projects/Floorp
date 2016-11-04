@@ -133,7 +133,7 @@ TryToUseImplicitInterruptCheck(MIRGraph& graph, MBasicBlock* backedge)
 void
 LIRGenerator::visitGoto(MGoto* ins)
 {
-    if (!gen->compilingAsmJS() && ins->block()->isLoopBackedge())
+    if (!gen->compilingWasm() && ins->block()->isLoopBackedge())
         TryToUseImplicitInterruptCheck(graph, ins->block());
 
     add(new(alloc()) LGoto(ins->target()));
@@ -2546,14 +2546,14 @@ LIRGenerator::visitWasmTrap(MWasmTrap* ins)
 }
 
 void
-LIRGenerator::visitAsmReinterpret(MAsmReinterpret* ins)
+LIRGenerator::visitWasmReinterpret(MWasmReinterpret* ins)
 {
     if (ins->type() == MIRType::Int64)
-        defineInt64(new(alloc()) LAsmReinterpretToI64(useRegisterAtStart(ins->input())), ins);
+        defineInt64(new(alloc()) LWasmReinterpretToI64(useRegisterAtStart(ins->input())), ins);
     else if (ins->input()->type() == MIRType::Int64)
-        define(new(alloc()) LAsmReinterpretFromI64(useInt64RegisterAtStart(ins->input())), ins);
+        define(new(alloc()) LWasmReinterpretFromI64(useInt64RegisterAtStart(ins->input())), ins);
     else
-        define(new(alloc()) LAsmReinterpret(useRegisterAtStart(ins->input())), ins);
+        define(new(alloc()) LWasmReinterpret(useRegisterAtStart(ins->input())), ins);
 }
 
 void
@@ -4192,24 +4192,24 @@ LIRGenerator::visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins)
 }
 
 void
-LIRGenerator::visitAsmJSParameter(MAsmJSParameter* ins)
+LIRGenerator::visitWasmParameter(MWasmParameter* ins)
 {
     ABIArg abi = ins->abi();
     if (abi.argInRegister()) {
 #if defined(JS_NUNBOX32)
         if (abi.isGeneralRegPair()) {
-            defineInt64Fixed(new(alloc()) LAsmJSParameterI64, ins,
+            defineInt64Fixed(new(alloc()) LWasmParameterI64, ins,
                 LInt64Allocation(LAllocation(AnyRegister(abi.gpr64().high)),
                                  LAllocation(AnyRegister(abi.gpr64().low))));
             return;
         }
 #endif
-        defineFixed(new(alloc()) LAsmJSParameter, ins, LAllocation(abi.reg()));
+        defineFixed(new(alloc()) LWasmParameter, ins, LAllocation(abi.reg()));
         return;
     }
     if (ins->type() == MIRType::Int64) {
         MOZ_ASSERT(!abi.argInRegister());
-        defineInt64Fixed(new(alloc()) LAsmJSParameterI64, ins,
+        defineInt64Fixed(new(alloc()) LWasmParameterI64, ins,
 #if defined(JS_NUNBOX32)
             LInt64Allocation(LArgument(abi.offsetFromArgBase() + INT64HIGH_OFFSET),
                              LArgument(abi.offsetFromArgBase() + INT64LOW_OFFSET))
@@ -4219,17 +4219,17 @@ LIRGenerator::visitAsmJSParameter(MAsmJSParameter* ins)
         );
     } else {
         MOZ_ASSERT(IsNumberType(ins->type()) || IsSimdType(ins->type()));
-        defineFixed(new(alloc()) LAsmJSParameter, ins, LArgument(abi.offsetFromArgBase()));
+        defineFixed(new(alloc()) LWasmParameter, ins, LArgument(abi.offsetFromArgBase()));
     }
 }
 
 void
-LIRGenerator::visitAsmJSReturn(MAsmJSReturn* ins)
+LIRGenerator::visitWasmReturn(MWasmReturn* ins)
 {
     MDefinition* rval = ins->getOperand(0);
 
     if (rval->type() == MIRType::Int64) {
-        LAsmJSReturnI64* lir = new(alloc()) LAsmJSReturnI64(useInt64Fixed(rval, ReturnReg64));
+        LWasmReturnI64* lir = new(alloc()) LWasmReturnI64(useInt64Fixed(rval, ReturnReg64));
 
         // Preserve the TLS pointer we were passed in `WasmTlsReg`.
         MDefinition* tlsPtr = ins->getOperand(1);
@@ -4239,7 +4239,7 @@ LIRGenerator::visitAsmJSReturn(MAsmJSReturn* ins)
         return;
     }
 
-    LAsmJSReturn* lir = new(alloc()) LAsmJSReturn;
+    LWasmReturn* lir = new(alloc()) LWasmReturn;
     if (rval->type() == MIRType::Float32)
         lir->setOperand(0, useFixed(rval, ReturnFloat32Reg));
     else if (rval->type() == MIRType::Double)
@@ -4259,9 +4259,9 @@ LIRGenerator::visitAsmJSReturn(MAsmJSReturn* ins)
 }
 
 void
-LIRGenerator::visitAsmJSVoidReturn(MAsmJSVoidReturn* ins)
+LIRGenerator::visitWasmReturnVoid(MWasmReturnVoid* ins)
 {
-    auto* lir = new(alloc()) LAsmJSVoidReturn;
+    auto* lir = new(alloc()) LWasmReturnVoid;
 
     // Preserve the TLS pointer we were passed in `WasmTlsReg`.
     MDefinition* tlsPtr = ins->getOperand(0);
@@ -4271,15 +4271,15 @@ LIRGenerator::visitAsmJSVoidReturn(MAsmJSVoidReturn* ins)
 }
 
 void
-LIRGenerator::visitAsmJSPassStackArg(MAsmJSPassStackArg* ins)
+LIRGenerator::visitWasmStackArg(MWasmStackArg* ins)
 {
     if (ins->arg()->type() == MIRType::Int64) {
-        add(new(alloc()) LAsmJSPassStackArgI64(useInt64OrConstantAtStart(ins->arg())), ins);
+        add(new(alloc()) LWasmStackArgI64(useInt64OrConstantAtStart(ins->arg())), ins);
     } else if (IsFloatingPointType(ins->arg()->type()) || IsSimdType(ins->arg()->type())) {
         MOZ_ASSERT(!ins->arg()->isEmittedAtUses());
-        add(new(alloc()) LAsmJSPassStackArg(useRegisterAtStart(ins->arg())), ins);
+        add(new(alloc()) LWasmStackArg(useRegisterAtStart(ins->arg())), ins);
     } else {
-        add(new(alloc()) LAsmJSPassStackArg(useRegisterOrConstantAtStart(ins->arg())), ins);
+        add(new(alloc()) LWasmStackArg(useRegisterOrConstantAtStart(ins->arg())), ins);
     }
 }
 
@@ -4443,7 +4443,7 @@ LIRGenerator::visitSimdConvert(MSimdConvert* ins)
         switch (ins->signedness()) {
           case SimdSign::Signed: {
               LFloat32x4ToInt32x4* lir = new(alloc()) LFloat32x4ToInt32x4(use, temp());
-              if (!gen->compilingAsmJS())
+              if (!gen->compilingWasm())
                   assignSnapshot(lir, Bailout_BoundsCheck);
               define(lir, ins);
               break;
@@ -4451,7 +4451,7 @@ LIRGenerator::visitSimdConvert(MSimdConvert* ins)
           case SimdSign::Unsigned: {
               LFloat32x4ToUint32x4* lir =
                 new (alloc()) LFloat32x4ToUint32x4(use, temp(), temp(LDefinition::SIMD128INT));
-              if (!gen->compilingAsmJS())
+              if (!gen->compilingWasm())
                   assignSnapshot(lir, Bailout_BoundsCheck);
               define(lir, ins);
               break;
@@ -4786,7 +4786,7 @@ LIRGenerator::updateResumeState(MBasicBlock* block)
     //
     // Note: RangeAnalysis can flag blocks as unreachable, but they are only
     // removed iff GVN (including UCE) is enabled.
-    MOZ_ASSERT_IF(!mir()->compilingAsmJS() && !block->unreachable(), block->entryResumePoint());
+    MOZ_ASSERT_IF(!mir()->compilingWasm() && !block->unreachable(), block->entryResumePoint());
     MOZ_ASSERT_IF(block->unreachable(), block->graph().osrBlock() ||
                   !mir()->optimizationInfo().gvnEnabled());
     lastResumePoint_ = block->entryResumePoint();

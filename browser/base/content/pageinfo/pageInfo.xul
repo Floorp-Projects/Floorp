@@ -88,7 +88,6 @@
   <deck id="mainDeck" flex="1">
     <!-- General page information -->
     <vbox id="generalPanel">
-      <textbox class="header" readonly="true" id="titletext"/>
       <grid id="generalGrid">
         <columns>
           <column/>
@@ -96,6 +95,11 @@
           <column flex="1"/>
         </columns>
         <rows id="generalRows">
+          <row id="generalTitle">
+            <label control="titletext" value="&generalTitle;"/>
+            <separator/>
+            <textbox readonly="true" id="titletext"/>
+          </row>
           <row id="generalURLRow">
             <label control="urltext" value="&generalURL;"/>
             <separator/>

@@ -114,8 +114,14 @@ VsyncBridgeChild::Close()
   if (!mProcessToken) {
     return;
   }
-  PVsyncBridgeChild::Close();
+
+  // Clear the process token so we don't notify the GPUProcessManager. It already
+  // knows we're closed since it manually called Close, and in fact the GPM could
+  // have already been destroyed during shutdown.
   mProcessToken = 0;
+
+  // Close the underlying IPC channel.
+  PVsyncBridgeChild::Close();
 }
 
 void

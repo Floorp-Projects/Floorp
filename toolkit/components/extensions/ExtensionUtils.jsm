@@ -204,6 +204,8 @@ class BaseContext {
     this.messageManager = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIContentFrameMessageManager);
 
+    MessageChannel.setupMessageManagers([this.messageManager]);
+
     let onPageShow = event => {
       if (!event || event.target === document) {
         this.docShell = docShell;
@@ -1439,8 +1441,6 @@ function Messenger(context, messageManagers, sender, filter, optionalFilter) {
   this.sender = sender;
   this.filter = filter;
   this.optionalFilter = optionalFilter;
-
-  MessageChannel.setupMessageManagers(messageManagers);
 }
 
 Messenger.prototype = {
@@ -2042,16 +2042,14 @@ class SchemaAPIManager extends EventEmitter {
       wantXrays: false,
       sandboxName: `Namespace of ext-*.js scripts for ${this.processType}`,
     });
-    Object.defineProperty(global, "console", {get() { return console; }});
-    global.extensions = this;
-    global.global = global;
-    global.Cc = Cc;
-    global.Ci = Ci;
-    global.Cu = Cu;
-    global.Cr = Cr;
+
+    Object.assign(global, {global, Cc, Ci, Cu, Cr, XPCOMUtils, extensions: this});
+
+    XPCOMUtils.defineLazyGetter(global, "console", getConsole);
+
     XPCOMUtils.defineLazyModuleGetter(global, "require",
                                       "resource://devtools/shared/Loader.jsm");
-    global.XPCOMUtils = XPCOMUtils;
+
     return global;
   }
 
@@ -2172,7 +2170,49 @@ const stylesheetMap = new DefaultMap(url => {
   return styleSheetService.preloadSheet(uri, styleSheetService.AGENT_SHEET);
 });
 
+/**
+ * Defines a lazy getter for the given property on the given object. The
+ * first time the property is accessed, the return value of the getter
+ * is defined on the current `this` object with the given property name.
+ * Importantly, this means that a lazy getter defined on an object
+ * prototype will be invoked separately for each object instance that
+ * it's accessed on.
+ *
+ * @param {object} object
+ *        The prototype object on which to define the getter.
+ * @param {string|Symbol} prop
+ *        The property name for which to define the getter.
+ * @param {function} getter
+ *        The function to call in order to generate the final property
+ *        value.
+ */
+function defineLazyGetter(object, prop, getter) {
+  let redefine = (obj, value) => {
+    Object.defineProperty(obj, prop, {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value,
+    });
+    return value;
+  };
+
+  Object.defineProperty(object, prop, {
+    enumerable: true,
+    configurable: true,
+
+    get() {
+      return redefine(this, getter.call(this));
+    },
+
+    set(value) {
+      redefine(this, value);
+    },
+  });
+}
+
 this.ExtensionUtils = {
+  defineLazyGetter,
   detectLanguage,
   extend,
   flushJarCache,
@@ -2192,6 +2232,7 @@ this.ExtensionUtils = {
   runSafeWithoutClone,
   stylesheetMap,
   BaseContext,
+  DefaultMap,
   DefaultWeakMap,
   EventEmitter,
   EventManager,

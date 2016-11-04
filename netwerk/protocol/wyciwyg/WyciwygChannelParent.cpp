@@ -145,6 +145,7 @@ WyciwygChannelParent::SetupAppData(const IPC::SerializedLoadContext& loadContext
   const char* error = NeckoParent::CreateChannelLoadContext(aParent,
                                                             Manager()->Manager(),
                                                             loadContext,
+                                                            nullptr,
                                                             mLoadContext);
   if (error) {
     printf_stderr("WyciwygChannelParent::SetupAppData: FATAL ERROR: %s\n",

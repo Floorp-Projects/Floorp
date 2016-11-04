@@ -196,7 +196,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitFunctionEnvironment(MFunctionEnvironment* ins);
     void visitInterruptCheck(MInterruptCheck* ins);
     void visitWasmTrap(MWasmTrap* ins);
-    void visitAsmReinterpret(MAsmReinterpret* ins);
+    void visitWasmReinterpret(MWasmReinterpret* ins);
     void visitStoreSlot(MStoreSlot* ins);
     void visitFilterTypeSet(MFilterTypeSet* ins);
     void visitTypeBarrier(MTypeBarrier* ins);
@@ -291,10 +291,10 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitWasmBoundsCheck(MWasmBoundsCheck* ins);
     void visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins);
     void visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins);
-    void visitAsmJSParameter(MAsmJSParameter* ins);
-    void visitAsmJSReturn(MAsmJSReturn* ins);
-    void visitAsmJSVoidReturn(MAsmJSVoidReturn* ins);
-    void visitAsmJSPassStackArg(MAsmJSPassStackArg* ins);
+    void visitWasmParameter(MWasmParameter* ins);
+    void visitWasmReturn(MWasmReturn* ins);
+    void visitWasmReturnVoid(MWasmReturnVoid* ins);
+    void visitWasmStackArg(MWasmStackArg* ins);
     void visitWasmCall(MWasmCall* ins);
     void visitSetDOMProperty(MSetDOMProperty* ins);
     void visitGetDOMProperty(MGetDOMProperty* ins);
