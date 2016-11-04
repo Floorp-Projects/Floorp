@@ -131,25 +131,6 @@ public:
   bool
   IsControlled(nsIDocument* aDocument, ErrorResult& aRv);
 
-  // Return true if the given content process could potentially be executing
-  // service worker code with the given principal.  At the current time, this
-  // just means that we have any registration for the origin, regardless of
-  // scope.  This is a very weak guarantee but is the best we can do when push
-  // notifications can currently spin up a service worker in content processes
-  // without our involvement in the parent process.
-  //
-  // In the future when there is only a single ServiceWorkerManager in the
-  // parent process that is entirely in control of spawning and running service
-  // worker code, we will be able to authoritatively indicate whether there is
-  // an activate service worker in the given content process.  At that time we
-  // will rename this method HasActiveServiceWorkerInstance and provide
-  // semantics that ensure this method returns true until the worker is known to
-  // have shut down in order to allow the caller to induce a crash for security
-  // reasons without having to worry about shutdown races with the worker.
-  bool
-  MayHaveActiveServiceWorkerInstance(ContentParent* aContent,
-                                     nsIPrincipal* aPrincipal);
-
   void
   DispatchFetchEvent(const PrincipalOriginAttributes& aOriginAttributes,
                      nsIDocument* aDoc,
@@ -287,8 +268,8 @@ public:
   static already_AddRefed<ServiceWorkerManager>
   GetInstance();
 
-  void
-  LoadRegistration(const ServiceWorkerRegistrationData& aRegistration);
+ void
+ LoadRegistration(const ServiceWorkerRegistrationData& aRegistration);
 
   void
   LoadRegistrations(const nsTArray<ServiceWorkerRegistrationData>& aRegistrations);
