@@ -874,6 +874,13 @@ class FullParseHandler
         return nullptr;
     }
 
+    bool nameIsUnparenthesizedAsync(ParseNode* node, ExclusiveContext* cx) {
+        MOZ_ASSERT(isNameAnyParentheses(node),
+                   "must only call this function on known names");
+
+        return node->pn_atom == cx->names().async;
+    }
+
     bool isCall(ParseNode* pn) {
         return pn->isKind(PNK_CALL);
     }

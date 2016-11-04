@@ -4,6 +4,12 @@
 
 "use strict";
 
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.processCount", 1]]
+  });
+});
+
 // Check that the duration, iterationCount and delay are retrieved correctly for
 // multiple animations.
 

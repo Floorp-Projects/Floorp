@@ -14,17 +14,47 @@ namespace mozilla {
 class ServoDeclarationBlock final : public DeclarationBlock
 {
 public:
+  ServoDeclarationBlock()
+    : ServoDeclarationBlock(Servo_DeclarationBlock_CreateEmpty().Consume()) {}
+
+  ServoDeclarationBlock(const ServoDeclarationBlock& aCopy)
+    : DeclarationBlock(aCopy)
+    , mRaw(Servo_DeclarationBlock_Clone(aCopy.mRaw).Consume()) {}
+
   NS_INLINE_DECL_REFCOUNTING(ServoDeclarationBlock)
 
   static already_AddRefed<ServoDeclarationBlock>
-  FromStyleAttribute(const nsAString& aString);
+  FromCssText(const nsAString& aCssText);
 
+  RawServoDeclarationBlock* Raw() const { return mRaw; }
   RawServoDeclarationBlock* const* RefRaw() const {
     static_assert(sizeof(RefPtr<RawServoDeclarationBlock>) ==
                   sizeof(RawServoDeclarationBlock*),
                   "RefPtr should just be a pointer");
     return reinterpret_cast<RawServoDeclarationBlock* const*>(&mRaw);
   }
+
+  void ToString(nsAString& aResult) const {
+    Servo_DeclarationBlock_GetCssText(mRaw, &aResult);
+  }
+
+  uint32_t Count() const {
+    return Servo_DeclarationBlock_Count(mRaw);
+  }
+  bool GetNthProperty(uint32_t aIndex, nsAString& aReturn) const {
+    aReturn.Truncate();
+    return Servo_DeclarationBlock_GetNthProperty(mRaw, aIndex, &aReturn);
+  }
+
+  void GetPropertyValue(const nsAString& aProperty, nsAString& aValue) const;
+  void GetPropertyValueByID(nsCSSPropertyID aPropID, nsAString& aValue) const;
+  void GetAuthoredPropertyValue(const nsAString& aProperty,
+                                nsAString& aValue) const {
+    GetPropertyValue(aProperty, aValue);
+  }
+  bool GetPropertyIsImportant(const nsAString& aProperty) const;
+  void RemoveProperty(const nsAString& aProperty);
+  void RemovePropertyByID(nsCSSPropertyID aPropID);
 
 protected:
   explicit ServoDeclarationBlock(

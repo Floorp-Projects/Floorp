@@ -73,10 +73,7 @@ public:
 
   void AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
                         nsIAtom* aAttribute, int32_t aModType,
-                        const nsAttrValue* aOldValue)
-  {
-    MOZ_ASSERT(SnapshotForElement(aElement)->HasAttrs());
-  }
+                        const nsAttrValue* aOldValue);
 
   nsresult ReparentStyleContext(nsIFrame* aFrame);
 

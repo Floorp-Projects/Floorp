@@ -168,7 +168,7 @@ CodeGenerator::CodeGenerator(MIRGenerator* gen, LIRGraph* graph, MacroAssembler*
 
 CodeGenerator::~CodeGenerator()
 {
-    MOZ_ASSERT_IF(!gen->compilingAsmJS(), masm.numAsmJSAbsoluteAddresses() == 0);
+    MOZ_ASSERT_IF(!gen->compilingWasm(), masm.numAsmJSAbsoluteAddresses() == 0);
     js_delete(scriptCounts_);
 }
 
@@ -5067,7 +5067,7 @@ CodeGenerator::generateBody()
 
 #if defined(JS_ION_PERF)
     PerfSpewer* perfSpewer = &perfSpewer_;
-    if (gen->compilingAsmJS())
+    if (gen->compilingWasm())
         perfSpewer = &gen->perfSpewer();
 #endif
 
@@ -6737,7 +6737,7 @@ CodeGenerator::visitModD(LModD* ins)
     masm.passABIArg(lhs, MoveOp::DOUBLE);
     masm.passABIArg(rhs, MoveOp::DOUBLE);
 
-    if (gen->compilingAsmJS())
+    if (gen->compilingWasm())
         masm.callWithABI(wasm::SymbolicAddress::ModD, MoveOp::DOUBLE);
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NumberMod), MoveOp::DOUBLE);
@@ -11479,25 +11479,17 @@ CodeGenerator::visitHasClass(LHasClass* ins)
 }
 
 void
-CodeGenerator::visitAsmJSParameter(LAsmJSParameter* lir)
+CodeGenerator::visitWasmParameter(LWasmParameter* lir)
 {
 }
 
 void
-CodeGenerator::visitAsmJSParameterI64(LAsmJSParameterI64* lir)
+CodeGenerator::visitWasmParameterI64(LWasmParameterI64* lir)
 {
 }
 
 void
-CodeGenerator::visitAsmJSReturn(LAsmJSReturn* lir)
-{
-    // Don't emit a jump to the return label if this is the last block.
-    if (current->mir() != *gen->graph().poBegin())
-        masm.jump(&returnLabel_);
-}
-
-void
-CodeGenerator::visitAsmJSReturnI64(LAsmJSReturnI64* lir)
+CodeGenerator::visitWasmReturn(LWasmReturn* lir)
 {
     // Don't emit a jump to the return label if this is the last block.
     if (current->mir() != *gen->graph().poBegin())
@@ -11505,7 +11497,15 @@ CodeGenerator::visitAsmJSReturnI64(LAsmJSReturnI64* lir)
 }
 
 void
-CodeGenerator::visitAsmJSVoidReturn(LAsmJSVoidReturn* lir)
+CodeGenerator::visitWasmReturnI64(LWasmReturnI64* lir)
+{
+    // Don't emit a jump to the return label if this is the last block.
+    if (current->mir() != *gen->graph().poBegin())
+        masm.jump(&returnLabel_);
+}
+
+void
+CodeGenerator::visitWasmReturnVoid(LWasmReturnVoid* lir)
 {
     // Don't emit a jump to the return label if this is the last block.
     if (current->mir() != *gen->graph().poBegin())
@@ -11726,7 +11726,7 @@ CodeGenerator::visitInterruptCheck(LInterruptCheck* lir)
 void
 CodeGenerator::visitWasmTrap(LWasmTrap* lir)
 {
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     const MWasmTrap* mir = lir->mir();
 
     masm.jump(trap(mir, mir->trap()));

@@ -23,7 +23,7 @@ NS_INTERFACE_MAP_END_INHERITING(FileSystemDirectoryEntry)
 FileSystemRootDirectoryEntry::FileSystemRootDirectoryEntry(nsIGlobalObject* aGlobal,
                                                            const Sequence<RefPtr<FileSystemEntry>>& aEntries,
                                                            FileSystem* aFileSystem)
-  : FileSystemDirectoryEntry(aGlobal, nullptr, aFileSystem)
+  : FileSystemDirectoryEntry(aGlobal, nullptr, nullptr, aFileSystem)
   , mEntries(aEntries)
 {
   MOZ_ASSERT(aGlobal);
@@ -45,11 +45,10 @@ FileSystemRootDirectoryEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) co
 }
 
 already_AddRefed<FileSystemDirectoryReader>
-FileSystemRootDirectoryEntry::CreateReader() const
+FileSystemRootDirectoryEntry::CreateReader()
 {
   RefPtr<FileSystemDirectoryReader> reader =
-    new FileSystemRootDirectoryReader(GetParentObject(), Filesystem(),
-                                      mEntries);
+    new FileSystemRootDirectoryReader(this, Filesystem(), mEntries);
   return reader.forget();
 }
 
@@ -58,7 +57,7 @@ FileSystemRootDirectoryEntry::GetInternal(const nsAString& aPath,
                                           const FileSystemFlags& aFlag,
                                           const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
                                           const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-                                          GetInternalType aType) const
+                                          GetInternalType aType)
 {
   if (!aSuccessCallback.WasPassed() && !aErrorCallback.WasPassed()) {
     return;

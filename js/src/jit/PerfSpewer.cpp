@@ -9,7 +9,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SizePrintfMacros.h"
 
-#if defined(__linux__)
+#ifdef XP_UNIX
 # include <unistd.h>
 #endif
 
@@ -19,6 +19,8 @@
 # include "jit/MIR.h"
 # include "jit/MIRGraph.h"
 #endif
+
+#include "vm/MutexIDs.h"
 
 // perf expects its data to be in a file /tmp/perf-PID.map, but for Android
 // and B2G the map files are written to /data/local/tmp/perf-PID.map
@@ -94,7 +96,7 @@ js::jit::CheckPerf() {
         }
 
         if (PerfMode != PERF_MODE_NONE) {
-            PerfMutex = js_new<js::Mutex>();
+            PerfMutex = js_new<js::Mutex>(mutexid::PerfSpewer);
             if (!PerfMutex)
                 MOZ_CRASH("failed to allocate PerfMutex");
 

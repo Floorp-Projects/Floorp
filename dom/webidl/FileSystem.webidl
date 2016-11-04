@@ -19,11 +19,10 @@ callback interface VoidCallback {
 };
 
 callback interface ErrorCallback {
-    // This should be FileError but we are implementing just a subset of this API.
-    void handleEvent(DOMError error);
+    void handleEvent(DOMException err);
 };
 
 interface FileSystem {
-    readonly    attribute DOMString name;
+    readonly    attribute USVString name;
     readonly    attribute FileSystemDirectoryEntry root;
 };

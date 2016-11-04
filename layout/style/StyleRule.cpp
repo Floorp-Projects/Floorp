@@ -11,6 +11,7 @@
 
 #include "mozilla/css/StyleRule.h"
 
+#include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/GroupRule.h"
@@ -1062,8 +1063,8 @@ public:
 
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent) override;
   void DropReference(void);
-  virtual css::Declaration* GetCSSDeclaration(Operation aOperation) override;
-  virtual nsresult SetCSSDeclaration(css::Declaration* aDecl) override;
+  virtual DeclarationBlock* GetCSSDeclaration(Operation aOperation) override;
+  virtual nsresult SetCSSDeclaration(DeclarationBlock* aDecl) override;
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) override;
   virtual nsIDocument* DocToUpdate() override;
 
@@ -1166,7 +1167,7 @@ DOMCSSDeclarationImpl::DropReference(void)
   mRule = nullptr;
 }
 
-css::Declaration*
+DeclarationBlock*
 DOMCSSDeclarationImpl::GetCSSDeclaration(Operation aOperation)
 {
   if (mRule) {
@@ -1203,7 +1204,7 @@ DOMCSSDeclarationImpl::GetParentRule(nsIDOMCSSRule **aParent)
 }
 
 nsresult
-DOMCSSDeclarationImpl::SetCSSDeclaration(css::Declaration* aDecl)
+DOMCSSDeclarationImpl::SetCSSDeclaration(DeclarationBlock* aDecl)
 {
   NS_PRECONDITION(mRule,
          "can only be called when |GetCSSDeclaration| returned a declaration");
@@ -1216,7 +1217,7 @@ DOMCSSDeclarationImpl::SetCSSDeclaration(css::Declaration* aDecl)
 
   mozAutoDocUpdate updateBatch(owningDoc, UPDATE_STYLE, true);
 
-  mRule->SetDeclaration(aDecl);
+  mRule->SetDeclaration(aDecl->AsGecko());
 
   if (sheet) {
     sheet->DidDirty();

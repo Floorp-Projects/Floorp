@@ -93,6 +93,12 @@
  * property tree Shapes never change, but shape tables for dictionary mode
  * Shapes can grow and shrink.
  *
+ * To save memory, shape tables can be discarded on GC and recreated when
+ * needed. AutoKeepShapeTables can be used to avoid discarding shape tables
+ * for a particular zone. Methods operating on ShapeTables take either an
+ * AutoCheckCannotGC or AutoKeepShapeTables argument, to help ensure tables
+ * are not purged while we're using them.
+ *
  * There used to be a long, math-heavy comment here explaining why property
  * trees are more space-efficient than alternatives.  This was removed in bug
  * 631138; see that bug for the full details.
@@ -119,6 +125,8 @@ static const uint32_t SHAPE_INVALID_SLOT = JS_BIT(24) - 1;
 static const uint32_t SHAPE_MAXIMUM_SLOT = JS_BIT(24) - 2;
 
 enum class MaybeAdding { Adding = true, NotAdding = false };
+
+class AutoKeepShapeTables;
 
 /*
  * Shapes use multiplicative hashing, but specialized to
@@ -189,6 +197,9 @@ class ShapeTable {
 
     Entry*          entries_;          /* table of ptrs to shared tree nodes */
 
+    template<MaybeAdding Adding>
+    Entry& searchUnchecked(jsid id);
+
   public:
     explicit ShapeTable(uint32_t nentries)
       : hashShift_(HASH_BITS - MIN_SIZE_LOG2),
@@ -224,7 +235,14 @@ class ShapeTable {
     bool change(ExclusiveContext* cx, int log2Delta);
 
     template<MaybeAdding Adding>
-    Entry& search(jsid id);
+    MOZ_ALWAYS_INLINE Entry& search(jsid id, const AutoKeepShapeTables&) {
+        return searchUnchecked<Adding>(id);
+    }
+
+    template<MaybeAdding Adding>
+    MOZ_ALWAYS_INLINE Entry& search(jsid id, const JS::AutoCheckCannotGC&) {
+        return searchUnchecked<Adding>(id);
+    }
 
     void trace(JSTracer* trc);
 #ifdef JSGC_HASH_TABLE_CHECKS
@@ -264,6 +282,20 @@ class ShapeTable {
      * table invalid.  Don't call this unless needsToGrow() is true.
      */
     bool grow(ExclusiveContext* cx);
+};
+
+// Ensures no shape tables are purged in the current zone.
+class MOZ_RAII AutoKeepShapeTables
+{
+    ExclusiveContext* cx_;
+    bool prev_;
+
+    AutoKeepShapeTables(const AutoKeepShapeTables&) = delete;
+    void operator=(const AutoKeepShapeTables&) = delete;
+
+  public:
+    explicit inline AutoKeepShapeTables(ExclusiveContext* cx);
+    inline ~AutoKeepShapeTables();
 };
 
 /*
@@ -414,8 +446,22 @@ class BaseShape : public gc::TenuredCell
     uint32_t getObjectFlags() const { return flags & OBJECT_FLAG_MASK; }
 
     bool hasTable() const { MOZ_ASSERT_IF(table_, isOwned()); return table_ != nullptr; }
-    ShapeTable& table() const { MOZ_ASSERT(table_ && isOwned()); return *table_; }
     void setTable(ShapeTable* table) { MOZ_ASSERT(isOwned()); table_ = table; }
+
+    ShapeTable* maybeTable(const AutoKeepShapeTables&) const {
+        MOZ_ASSERT_IF(table_, isOwned());
+        return table_;
+    }
+    ShapeTable* maybeTable(const JS::AutoCheckCannotGC&) const {
+        MOZ_ASSERT_IF(table_, isOwned());
+        return table_;
+    }
+    void maybePurgeTable() {
+        if (table_ && table_->freeList() == SHAPE_INVALID_SLOT) {
+            js_delete(table_);
+            table_ = nullptr;
+        }
+    }
 
     uint32_t slotSpan() const { MOZ_ASSERT(isOwned()); return slotSpan_; }
     void setSlotSpan(uint32_t slotSpan) { MOZ_ASSERT(isOwned()); slotSpan_ = slotSpan; }
@@ -580,8 +626,13 @@ class Shape : public gc::TenuredCell
     };
 
     template<MaybeAdding Adding = MaybeAdding::NotAdding>
-    static inline Shape* search(ExclusiveContext* cx, Shape* start, jsid id,
-                                ShapeTable::Entry** pentry);
+    static inline Shape* search(ExclusiveContext* cx, Shape* start, jsid id);
+
+    template<MaybeAdding Adding = MaybeAdding::NotAdding>
+    static inline MOZ_MUST_USE bool search(ExclusiveContext* cx, Shape* start, jsid id,
+                                           const AutoKeepShapeTables&,
+                                           Shape** pshape, ShapeTable::Entry** pentry);
+
     static inline Shape* searchNoHashify(Shape* start, jsid id);
 
     void removeFromDictionary(NativeObject* obj);
@@ -618,18 +669,39 @@ class Shape : public gc::TenuredCell
 
     bool makeOwnBaseShape(ExclusiveContext* cx);
 
+    MOZ_ALWAYS_INLINE MOZ_MUST_USE bool maybeCreateTableForLookup(ExclusiveContext* cx);
+
   public:
     bool hasTable() const { return base()->hasTable(); }
-    ShapeTable& table() const { return base()->table(); }
+
+    ShapeTable* maybeTable(const AutoKeepShapeTables& keep) const {
+        return base()->maybeTable(keep);
+    }
+    ShapeTable* maybeTable(const JS::AutoCheckCannotGC& check) const {
+        return base()->maybeTable(check);
+    }
+
+    template <typename T>
+    MOZ_MUST_USE ShapeTable* ensureTableForDictionary(ExclusiveContext* cx, const T& nogc) {
+        MOZ_ASSERT(inDictionary());
+        if (ShapeTable* table = maybeTable(nogc))
+            return table;
+        if (!hashify(cx, this))
+            return nullptr;
+        ShapeTable* table = maybeTable(nogc);
+        MOZ_ASSERT(table);
+        return table;
+    }
 
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 JS::ShapeInfo* info) const
     {
-        if (hasTable()) {
+        JS::AutoCheckCannotGC nogc;
+        if (ShapeTable* table = maybeTable(nogc)) {
             if (inDictionary())
-                info->shapesMallocHeapDictTables += table().sizeOfIncludingThis(mallocSizeOf);
+                info->shapesMallocHeapDictTables += table->sizeOfIncludingThis(mallocSizeOf);
             else
-                info->shapesMallocHeapTreeTables += table().sizeOfIncludingThis(mallocSizeOf);
+                info->shapesMallocHeapTreeTables += table->sizeOfIncludingThis(mallocSizeOf);
         }
 
         if (!inDictionary() && kids.isHash())
@@ -892,8 +964,9 @@ class Shape : public gc::TenuredCell
     bool hasShadowable() const { return attrs & JSPROP_SHADOWABLE; }
 
     uint32_t entryCount() {
-        if (hasTable())
-            return table().entryCount();
+        JS::AutoCheckCannotGC nogc;
+        if (ShapeTable* table = maybeTable(nogc))
+            return table->entryCount();
         uint32_t count = 0;
         for (Shape::Range<NoGC> r(this); !r.empty(); r.popFront())
             ++count;
@@ -913,7 +986,6 @@ class Shape : public gc::TenuredCell
 
   public:
     bool isBigEnoughForAShapeTable() {
-        MOZ_ASSERT(!inDictionary());
         MOZ_ASSERT(!hasTable());
 
         // isBigEnoughForAShapeTableSlow is pretty inefficient so we only call
@@ -948,7 +1020,7 @@ class Shape : public gc::TenuredCell
     void traceChildren(JSTracer* trc);
 
     inline Shape* search(ExclusiveContext* cx, jsid id);
-    inline Shape* searchLinear(jsid id);
+    MOZ_ALWAYS_INLINE Shape* searchLinear(jsid id);
 
     void fixupAfterMovingGC();
     void fixupGetterSetterForBarrier(JSTracer* trc);
@@ -1416,14 +1488,6 @@ Shape::initDictionaryShape(const StackShape& child, uint32_t nfixed, GCPtrShape*
 inline Shape*
 Shape::searchLinear(jsid id)
 {
-    /*
-     * Non-dictionary shapes can acquire a table at any point the main thread
-     * is operating on it, so other threads inspecting such shapes can't use
-     * their table without racing. This function can be called from any thread
-     * on any non-dictionary shape.
-     */
-    MOZ_ASSERT(!inDictionary());
-
     for (Shape* shape = this; shape; ) {
         if (shape->propidRef() == id)
             return shape;
@@ -1444,8 +1508,9 @@ Shape::searchNoHashify(Shape* start, jsid id)
      * If we have a table, search in the shape table, else do a linear
      * search. We never hashify into a table in parallel.
      */
-    if (start->hasTable()) {
-        ShapeTable::Entry& entry = start->table().search<MaybeAdding::NotAdding>(id);
+    JS::AutoCheckCannotGC nogc;
+    if (ShapeTable* table = start->maybeTable(nogc)) {
+        ShapeTable::Entry& entry = table->search<MaybeAdding::NotAdding>(id, nogc);
         return entry.shape();
     }
 

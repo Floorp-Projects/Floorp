@@ -559,7 +559,7 @@ nsComputedDOMStyle::GetPresShellForContent(nsIContent* aContent)
 // nsDOMCSSDeclaration abstract methods which should never be called
 // on a nsComputedDOMStyle object, but must be defined to avoid
 // compile errors.
-css::Declaration*
+DeclarationBlock*
 nsComputedDOMStyle::GetCSSDeclaration(Operation)
 {
   NS_RUNTIMEABORT("called nsComputedDOMStyle::GetCSSDeclaration");
@@ -567,7 +567,7 @@ nsComputedDOMStyle::GetCSSDeclaration(Operation)
 }
 
 nsresult
-nsComputedDOMStyle::SetCSSDeclaration(css::Declaration*)
+nsComputedDOMStyle::SetCSSDeclaration(DeclarationBlock*)
 {
   NS_RUNTIMEABORT("called nsComputedDOMStyle::SetCSSDeclaration");
   return NS_ERROR_FAILURE;
@@ -2086,7 +2086,7 @@ nsComputedDOMStyle::SetValueToStyleImage(const nsStyleImage& aStyleImage,
       if (!req) {
         // XXXheycam If we had some problem resolving the imgRequestProxy,
         // maybe we should just use the URL stored in the nsStyleImage's
-        // mImageValue?
+        // mImageValue?  (Similarly in DoGetListStyleImage.)
         aValue->SetIdent(eCSSKeyword_none);
         break;
       }
@@ -3504,13 +3504,16 @@ nsComputedDOMStyle::DoGetListStyleImage()
 
   const nsStyleList* list = StyleList();
 
-  if (!list->GetListStyleImage()) {
+  // XXXheycam As in SetValueToStyleImage, we might want to use the
+  // URL stored in the nsStyleImageRequest's mImageValue if we
+  // failed to resolve the imgRequestProxy.
+
+  imgRequestProxy* image = list->GetListStyleImage();
+  if (!image) {
     val->SetIdent(eCSSKeyword_none);
   } else {
     nsCOMPtr<nsIURI> uri;
-    if (list->GetListStyleImage()) {
-      list->GetListStyleImage()->GetURI(getter_AddRefs(uri));
-    }
+    image->GetURI(getter_AddRefs(uri));
     val->SetURI(uri);
   }
 

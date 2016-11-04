@@ -229,6 +229,19 @@ function testResolve3() {
   ).then(nextTest);
 }
 
+function testResolve4() {
+  var p = new win.Promise((res, rej) => {});
+  Components.utils.getJSTestingFunctions().resolvePromise(p, 42);
+  p.then(
+    function(arg) {
+      is(arg, 42, "Resolving an Xray to a promise with TestingFunctions resolvePromise should work");
+    },
+    function(e) {
+      ok(false, "Resolving an Xray to a promise with TestingFunctions resolvePromise should not fail");
+    }
+  ).then(nextTest);
+}
+
 function testReject1() {
   var p = win.Promise.reject(5);
   ok(p instanceof win.Promise, "Promise.reject should return a promise");
@@ -238,6 +251,19 @@ function testReject1() {
     },
     function(e) {
       is(e, 5, "Should get correct Promise.reject value");
+    }
+  ).then(nextTest);
+}
+
+function testReject2() {
+  var p = new win.Promise((res, rej) => {});
+  Components.utils.getJSTestingFunctions().rejectPromise(p, 42);
+  p.then(
+    function(arg) {
+      ok(false, "Rejecting an Xray to a promise with TestingFunctions rejectPromise should trigger catch handler");
+    },
+    function(e) {
+      is(e, 42, "Rejecting an Xray to a promise with TestingFunctions rejectPromise should work");
     }
   ).then(nextTest);
 }
@@ -314,7 +340,9 @@ var tests = [
   testResolve1,
   testResolve2,
   testResolve3,
+  testResolve4,
   testReject1,
+  testReject2,
   testThen1,
   testThen2,
   testCatch1,

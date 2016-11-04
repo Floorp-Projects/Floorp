@@ -406,24 +406,22 @@ LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
 }
 
 void
-LIRGeneratorMIPSShared::visitAsmSelect(MAsmSelect* ins)
+LIRGeneratorMIPSShared::visitWasmSelect(MWasmSelect* ins)
 {
     if (ins->type() == MIRType::Int64) {
-        auto* lir = new(alloc()) LAsmSelectI64(useInt64RegisterAtStart(ins->trueExpr()),
-                                               useInt64(ins->falseExpr()),
-                                               useRegister(ins->condExpr())
-                                              );
+        auto* lir = new(alloc()) LWasmSelectI64(useInt64RegisterAtStart(ins->trueExpr()),
+                                                useInt64(ins->falseExpr()),
+                                                useRegister(ins->condExpr()));
 
-        defineInt64ReuseInput(lir, ins, LAsmSelectI64::TrueExprIndex);
+        defineInt64ReuseInput(lir, ins, LWasmSelectI64::TrueExprIndex);
         return;
     }
 
-    auto* lir = new(alloc()) LAsmSelect(useRegisterAtStart(ins->trueExpr()),
-                                        use(ins->falseExpr()),
-                                        useRegister(ins->condExpr())
-                                       );
+    auto* lir = new(alloc()) LWasmSelect(useRegisterAtStart(ins->trueExpr()),
+                                         use(ins->falseExpr()),
+                                         useRegister(ins->condExpr()));
 
-    defineReuseInput(lir, ins, LAsmSelect::TrueExprIndex);
+    defineReuseInput(lir, ins, LWasmSelect::TrueExprIndex);
 }
 
 void
@@ -457,18 +455,18 @@ LIRGeneratorMIPSShared::lowerUMod(MMod* mod)
 }
 
 void
-LIRGeneratorMIPSShared::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble* ins)
+LIRGeneratorMIPSShared::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins)
 {
     MOZ_ASSERT(ins->input()->type() == MIRType::Int32);
-    LAsmJSUInt32ToDouble* lir = new(alloc()) LAsmJSUInt32ToDouble(useRegisterAtStart(ins->input()));
+    LWasmUint32ToDouble* lir = new(alloc()) LWasmUint32ToDouble(useRegisterAtStart(ins->input()));
     define(lir, ins);
 }
 
 void
-LIRGeneratorMIPSShared::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins)
+LIRGeneratorMIPSShared::visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins)
 {
     MOZ_ASSERT(ins->input()->type() == MIRType::Int32);
-    LAsmJSUInt32ToFloat32* lir = new(alloc()) LAsmJSUInt32ToFloat32(useRegisterAtStart(ins->input()));
+    LWasmUint32ToFloat32* lir = new(alloc()) LWasmUint32ToFloat32(useRegisterAtStart(ins->input()));
     define(lir, ins);
 }
 

@@ -88,7 +88,7 @@ class MIRGenerator
     }
 
     bool isProfilerInstrumentationEnabled() {
-        return !compilingAsmJS() && instrumentedProfiling();
+        return !compilingWasm() && instrumentedProfiling();
     }
 
     bool isOptimizationTrackingEnabled() {
@@ -126,16 +126,16 @@ class MIRGenerator
         return abortReason_;
     }
 
-    bool compilingAsmJS() const {
-        return info_->compilingAsmJS();
+    bool compilingWasm() const {
+        return info_->compilingWasm();
     }
 
     uint32_t wasmMaxStackArgBytes() const {
-        MOZ_ASSERT(compilingAsmJS());
+        MOZ_ASSERT(compilingWasm());
         return wasmMaxStackArgBytes_;
     }
     void initWasmMaxStackArgBytes(uint32_t n) {
-        MOZ_ASSERT(compilingAsmJS());
+        MOZ_ASSERT(compilingWasm());
         MOZ_ASSERT(wasmMaxStackArgBytes_ == 0);
         wasmMaxStackArgBytes_ = n;
     }

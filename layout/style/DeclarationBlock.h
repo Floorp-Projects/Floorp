@@ -15,6 +15,8 @@
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleBackendType.h"
 
+#include "nsCSSPropertyID.h"
+
 class nsHTMLCSSStyleSheet;
 
 namespace mozilla {
@@ -41,6 +43,8 @@ public:
   inline MozExternalRefCountType AddRef();
   inline MozExternalRefCountType Release();
 
+  inline already_AddRefed<DeclarationBlock> Clone() const;
+
   /**
    * Return whether |this| may be modified.
    */
@@ -60,6 +64,11 @@ public:
    * be called from ToString.
    */
   void SetImmutable() const { mImmutable = true; }
+
+  /**
+   * Copy |this|, if necessary to ensure that it can be modified.
+   */
+  inline already_AddRefed<DeclarationBlock> EnsureMutable();
 
   void SetOwningRule(css::Rule* aRule) {
     MOZ_ASSERT(!mContainer.mOwningRule || !aRule,
@@ -91,6 +100,21 @@ public:
     c.mRaw &= ~uintptr_t(1);
     return c.mHTMLCSSStyleSheet;
   }
+
+  inline void ToString(nsAString& aString) const;
+
+  inline uint32_t Count() const;
+  inline bool GetNthProperty(uint32_t aIndex, nsAString& aReturn) const;
+
+  inline void GetPropertyValue(const nsAString& aProperty,
+                               nsAString& aValue) const;
+  inline void GetPropertyValueByID(nsCSSPropertyID aPropID,
+                                   nsAString& aValue) const;
+  inline void GetAuthoredPropertyValue(const nsAString& aProperty,
+                                       nsAString& aValue) const;
+  inline bool GetPropertyIsImportant(const nsAString& aProperty) const;
+  inline void RemoveProperty(const nsAString& aProperty);
+  inline void RemovePropertyByID(nsCSSPropertyID aProperty);
 
 private:
   union {
