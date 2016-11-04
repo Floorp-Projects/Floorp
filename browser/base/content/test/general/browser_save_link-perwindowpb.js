@@ -64,9 +64,9 @@ function triggerSave(aWindow, aCallback) {
     info("popup hidden");
   }
 
-  function onTransferComplete(aWindow, downloadSuccess, destDir) {
+  function onTransferComplete(aWindow2, downloadSuccess, destDir) {
     ok(downloadSuccess, "Link should have been downloaded successfully");
-    aWindow.close();
+    aWindow2.close();
 
     executeSoon(() => aCallback());
   }
@@ -86,10 +86,10 @@ function test() {
 
   function whenDelayedStartupFinished(aWindow, aCallback) {
     info("whenDelayedStartupFinished");
-    Services.obs.addObserver(function observer(aSubject, aTopic) {
+    Services.obs.addObserver(function obs(aSubject, aTopic) {
       info("whenDelayedStartupFinished, got topic: " + aTopic + ", got subject: " + aSubject + ", waiting for " + aWindow);
       if (aWindow == aSubject) {
-        Services.obs.removeObserver(observer, aTopic);
+        Services.obs.removeObserver(obs, aTopic);
         executeSoon(aCallback);
         info("whenDelayedStartupFinished found our window");
       }
@@ -170,8 +170,8 @@ function test() {
       is(gNumSet, 1, "1 cookie should be set");
 
       // The second save from a private window also sets a cookie.
-      testOnWindow({private: true}, function(win) {
-        triggerSave(win, function() {
+      testOnWindow({private: true}, function(win2) {
+        triggerSave(win2, function() {
           is(gNumSet, 2, "2 cookies should be set");
           finish();
         });

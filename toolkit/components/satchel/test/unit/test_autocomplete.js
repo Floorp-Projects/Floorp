@@ -74,7 +74,7 @@ add_test(function test0() {
 add_test(function test1() {
     do_log_info("Check initial state is as expected");
 
-    countEntries(null, null, function (count) {
+    countEntries(null, null, function () {
       countEntries("field1", null, function (count) {
         do_check_true(count > 0);
         run_next_test();

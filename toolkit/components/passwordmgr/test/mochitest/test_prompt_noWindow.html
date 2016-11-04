@@ -58,10 +58,10 @@ add_task(function* test_sandbox_xhr() {
   let url = new URL("authenticate.sjs?user=mochiuser1&pass=mochipass1", window.location.href);
   let sandboxConstructor = SpecialPowers.Cu.Sandbox;
   let sandbox = new sandboxConstructor(this, {wantXrays: true});
-  function sandboxedRequest(url) {
+  function sandboxedRequest(sandboxedUrl) {
     let req = SpecialPowers.Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                            .createInstance(SpecialPowers.Ci.nsIXMLHttpRequest);
-    req.open("GET", url, true);
+    req.open("GET", sandboxedUrl, true);
     req.send(null);
   }
 

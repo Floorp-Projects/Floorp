@@ -258,13 +258,13 @@ function* test_contextmenu(selector, menuItems, options={}) {
 
   if (!options.skipFocusChange) {
     yield ContentTask.spawn(gBrowser.selectedBrowser,
-                            {lastElementSelector, selector},
-                            function*({lastElementSelector, selector}) {
-      if (lastElementSelector) {
-        let lastElement = content.document.querySelector(lastElementSelector);
-        lastElement.blur();
+                            [lastElementSelector, selector],
+                            function*([contentLastElementSelector, contentSelector]) {
+      if (contentLastElementSelector) {
+        let contentLastElement = content.document.querySelector(contentLastElementSelector);
+        contentLastElement.blur();
       }
-      let element = content.document.querySelector(selector);
+      let element = content.document.querySelector(contentSelector);
       element.focus();
     });
     lastElementSelector = selector;
@@ -278,9 +278,9 @@ function* test_contextmenu(selector, menuItems, options={}) {
 
   if (options.waitForSpellCheck) {
     info("Waiting for spell check");
-    yield ContentTask.spawn(gBrowser.selectedBrowser, selector, function*(selector) {
+    yield ContentTask.spawn(gBrowser.selectedBrowser, selector, function*(contentSelector) {
       let {onSpellCheck} = Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", {});
-      let element = content.document.querySelector(selector);
+      let element = content.document.querySelector(contentSelector);
       yield new Promise(resolve => onSpellCheck(element, resolve));
       info("Spell check running");
     });

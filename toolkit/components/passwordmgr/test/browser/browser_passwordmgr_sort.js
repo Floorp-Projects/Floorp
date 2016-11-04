@@ -78,10 +78,10 @@ function test() {
                     if (aTopic == "domwindowclosed")
                         Services.ww.unregisterNotification(arguments.callee);
                     else if (aTopic == "domwindowopened") {
-                        let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+                        let targetWin = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
                         SimpleTest.waitForFocus(function() {
-                            EventUtils.sendKey("RETURN", win);
-                        }, win);
+                            EventUtils.sendKey("RETURN", targetWin);
+                        }, targetWin);
                     }
                 });
             }
