@@ -10,6 +10,9 @@
 #include "mozilla/dom/PVideoDecoderManagerChild.h"
 
 namespace mozilla {
+namespace gfx {
+class SourceSurface;
+}
 namespace dom {
 
 class VideoDecoderManagerChild final : public PVideoDecoderManagerChild
@@ -27,6 +30,7 @@ public:
 
   // Can be called from any thread, dispatches the request to the IPDL thread internally
   // and will be ignored if the IPDL actor has been destroyed.
+  already_AddRefed<gfx::SourceSurface> Readback(const SurfaceDescriptorGPUVideo& aSD);
   void DeallocateSurfaceDescriptorGPUVideo(const SurfaceDescriptorGPUVideo& aSD);
 
   bool AllocShmem(size_t aSize,

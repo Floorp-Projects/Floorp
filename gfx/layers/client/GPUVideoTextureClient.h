@@ -9,6 +9,9 @@
 #include "mozilla/layers/TextureClient.h"
 
 namespace mozilla {
+namespace gfx {
+class SourceSurface;
+}
 namespace dom {
 class VideoDecoderManagerChild;
 }
@@ -33,6 +36,13 @@ public:
   virtual void Deallocate(LayersIPCChannel* aAllocator) override;
 
   virtual void Forget(LayersIPCChannel* aAllocator) override;
+
+  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface();
+
+  virtual GPUVideoTextureData* AsGPUVideoTextureData() override
+  {
+    return this;
+  }
 
 protected:
   RefPtr<dom::VideoDecoderManagerChild> mManager;
