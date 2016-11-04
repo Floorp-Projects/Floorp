@@ -151,17 +151,18 @@ ScaledFontBase::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *a
 }
 
 void
-ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, BackendType aBackendType, const Matrix *aTransformHint)
+ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, const Matrix *aTransformHint)
 {
+  BackendType backendType = aBuilder->GetBackendType();
 #ifdef USE_SKIA
-  if (aBackendType == BackendType::SKIA) {
+  if (backendType == BackendType::SKIA) {
     PathBuilderSkia *builder = static_cast<PathBuilderSkia*>(aBuilder);
     builder->AppendPath(GetSkiaPathForGlyphs(aBuffer));
     return;
   }
 #endif
 #ifdef USE_CAIRO
-  if (aBackendType == BackendType::CAIRO) {
+  if (backendType == BackendType::CAIRO) {
     MOZ_ASSERT(mScaledFont);
 
     PathBuilderCairo* builder = static_cast<PathBuilderCairo*>(aBuilder);
@@ -191,8 +192,6 @@ ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBu
     return;
   }
 #endif
-
-  MOZ_CRASH("GFX: The specified backend type is not supported by CopyGlyphsToBuilder");
 }
 
 void
