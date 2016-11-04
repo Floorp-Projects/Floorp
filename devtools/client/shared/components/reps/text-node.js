@@ -44,9 +44,22 @@ define(function (require, exports, module) {
       let grip = this.props.object;
       let mode = this.props.mode || "short";
 
+      let baseConfig = {className: "objectBox objectBox-textNode"};
+      if (this.props.onDOMNodeMouseOver) {
+        Object.assign(baseConfig, {
+          onMouseOver: _ => this.props.onDOMNodeMouseOver(grip)
+        });
+      }
+
+      if (this.props.onDOMNodeMouseOut) {
+        Object.assign(baseConfig, {
+          onMouseOut: this.props.onDOMNodeMouseOut
+        });
+      }
+
       if (mode == "short" || mode == "tiny") {
         return (
-          DOM.span({className: "objectBox objectBox-textNode"},
+          DOM.span(baseConfig,
             this.getTitle(grip),
             DOM.span({className: "nodeValue"},
               "\"" + this.getTextContent(grip) + "\""
@@ -57,7 +70,7 @@ define(function (require, exports, module) {
 
       let objectLink = this.props.objectLink || DOM.span;
       return (
-        DOM.span({className: "objectBox objectBox-textNode"},
+        DOM.span(baseConfig,
           this.getTitle(grip),
           objectLink({
             object: grip
