@@ -32,7 +32,7 @@ SetupLookupCacheV4(const _PrefixArray& prefixArray)
 
   file->AppendNative(GTEST_SAFEBROWSING_DIR);
 
-  UniquePtr<LookupCacheV4> cache = MakeUnique<LookupCacheV4>(GTEST_TABLE, file);
+  UniquePtr<LookupCacheV4> cache = MakeUnique<LookupCacheV4>(GTEST_TABLE, EmptyCString(), file);
   nsresult rv = cache->Init();
   EXPECT_EQ(rv, NS_OK);
 

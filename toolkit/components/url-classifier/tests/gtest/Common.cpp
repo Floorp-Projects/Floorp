@@ -5,6 +5,7 @@
 #include "nsTArray.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
+#include "nsUrlClassifierUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::safebrowsing;
@@ -40,6 +41,16 @@ void ApplyUpdate(nsTArray<TableUpdate*>& updates)
 
   UniquePtr<Classifier> classifier(new Classifier());
   classifier->Open(*file);
+
+  {
+    // Force nsIUrlClassifierUtils loading on main thread
+    // because nsIUrlClassifierDBService will not run in advance
+    // in gtest.
+    nsresult rv;
+    nsCOMPtr<nsIUrlClassifierUtils> dummy =
+      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID, &rv);
+      ASSERT_TRUE(NS_SUCCEEDED(rv));
+  }
 
   RunTestInNewThread([&] () -> void {
     classifier->ApplyUpdates(&updates);

@@ -42,9 +42,12 @@ namespace safebrowsing {
 
 const int LookupCacheV2::VER = 2;
 
-LookupCache::LookupCache(const nsACString& aTableName, nsIFile* aRootStoreDir)
+LookupCache::LookupCache(const nsACString& aTableName,
+                         const nsACString& aProvider,
+                         nsIFile* aRootStoreDir)
   : mPrimed(false)
   , mTableName(aTableName)
+  , mProvider(aProvider)
   , mRootStoreDirectory(aRootStoreDir)
 {
   UpdateRootDirHandle(mRootStoreDirectory);
@@ -72,6 +75,7 @@ LookupCache::UpdateRootDirHandle(nsIFile* aNewRootStoreDirectory)
 
   rv = Classifier::GetPrivateStoreDirectory(mRootStoreDirectory,
                                             mTableName,
+                                            mProvider,
                                             getter_AddRefs(mStoreDirectory));
 
   if (NS_FAILED(rv)) {
@@ -478,7 +482,7 @@ LookupCacheV2::GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes)
 nsresult
 LookupCacheV2::ReadCompletions()
 {
-  HashStore store(mTableName, mRootStoreDirectory);
+  HashStore store(mTableName, mProvider, mRootStoreDirectory);
 
   nsresult rv = store.Open();
   NS_ENSURE_SUCCESS(rv, rv);
