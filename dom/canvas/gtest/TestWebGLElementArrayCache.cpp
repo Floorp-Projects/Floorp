@@ -6,28 +6,12 @@
 
 #include "mozilla/Assertions.h"
 
-#include "WebGLElementArrayCache.cpp"
+#include "WebGLElementArrayCache.h"
 
 #include <cstdio>
 #include <cstdlib>
 #include "nscore.h"
 #include "nsTArray.h"
-
-int gTestsPassed = 0;
-
-void
-VerifyImplFunction(bool condition, const char* file, int line)
-{
-  if (condition) {
-    gTestsPassed++;
-  } else {
-    std::fprintf(stderr, "Test failed at %s:%d\n", file, line);
-    abort();
-  }
-}
-
-#define VERIFY(condition) \
-    VerifyImplFunction((condition), __FILE__, __LINE__)
 
 void
 MakeRandomVector(nsTArray<uint8_t>& a, size_t size)
@@ -57,7 +41,7 @@ GLType()
   case 2:  return LOCAL_GL_UNSIGNED_SHORT;
   case 1:  return LOCAL_GL_UNSIGNED_BYTE;
   default:
-    VERIFY(false);
+    MOZ_RELEASE_ASSERT(false);
     return 0;
   }
 }
@@ -67,7 +51,7 @@ CheckValidate(bool expectSuccess, mozilla::WebGLElementArrayCache& c, GLenum typ
               uint32_t maxAllowed, size_t first, size_t count)
 {
   const bool success = c.Validate(type, maxAllowed, first, count);
-  VERIFY(success == expectSuccess);
+  ASSERT_TRUE(success == expectSuccess);
 }
 
 template<typename T>
@@ -110,7 +94,7 @@ CheckSanity()
                         // ensure we exercise some nontrivial tree-walking
   T data[numElems] = {1,0,3,1,2,6,5,4}; // intentionally specify only 8 elements for now
   size_t numBytes = numElems * sizeof(T);
-  MOZ_RELEASE_ASSERT(numBytes == sizeof(data), "GFX: number of bytes from size of each element * number of elements equals size of data.");
+  ASSERT_TRUE(numBytes == sizeof(data));
 
   GLenum type = GLType<T>();
 
@@ -134,7 +118,7 @@ CheckSanity()
   CheckValidate(true,  c, type, numElems,     0, numElems);
   CheckValidate(false, c, type, numElems - 1, 0, numElems);
 
-  MOZ_RELEASE_ASSERT(numElems > 10, "GFX: Less than 10 elements in array cache");
+  ASSERT_TRUE(numElems > 10);
   CheckValidate(true,  c, type, numElems - 10, 10, numElems - 10);
   CheckValidate(false, c, type, numElems - 11, 10, numElems - 10);
 }
@@ -151,7 +135,7 @@ CheckUintOverflow()
                               // ensure we exercise some nontrivial tree-walking
   T data[numElems];
   size_t numBytes = numElems * sizeof(T);
-  MOZ_RELEASE_ASSERT(numBytes == sizeof(data), "GFX: size of data doesnt equal number of bytes of each element multiplied by number of elements.");
+  ASSERT_TRUE(numBytes == sizeof(data));
 
   GLenum type = GLType<T>();
 
@@ -168,8 +152,7 @@ CheckUintOverflow()
   CheckValidate(false, c, type,                        0, 0, numElems);
 }
 
-int
-main(int argc, char* argv[])
+TEST(WebGLElementArrayCache, Test)
 {
   srand(0); // do not want a random seed here.
 
@@ -219,8 +202,5 @@ main(int argc, char* argv[])
       } // j
     } // i
   } // maxBufferSize
-
-  std::fprintf(stderr, "%s: all %d tests passed\n", argv[0], gTestsPassed);
-  return 0;
 }
 
