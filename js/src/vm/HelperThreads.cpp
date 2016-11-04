@@ -1153,6 +1153,7 @@ js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& locked)
 {
     {
         AutoUnlockHelperThreadState parallelSection(locked);
+        gc::AutoSetThreadIsPerformingGC performingGC;
         uint64_t timeStart = PRMJ_Now();
         run();
         duration_ = PRMJ_Now() - timeStart;

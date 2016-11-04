@@ -1744,7 +1744,7 @@ NPObjWrapper_ObjectMoved(JSObject *obj, const JSObject *old)
   auto entry =
     static_cast<NPObjWrapperHashEntry*>(sNPObjWrappers->Search(npobj));
   MOZ_ASSERT(entry && entry->mJSObj);
-  MOZ_ASSERT(entry->mJSObj == old);
+  MOZ_ASSERT(entry->mJSObj.unbarrieredGetPtr() == old);
   entry->mJSObj = obj;
 }
 

@@ -3505,7 +3505,7 @@ PreliminaryObjectArrayWithTemplate::writeBarrierPre(PreliminaryObjectArrayWithTe
 {
     Shape* shape = objects->shape();
 
-    if (!shape || shape->runtimeFromAnyThread()->isHeapCollecting())
+    if (!shape)
         return;
 
     JS::Zone* zone = shape->zoneFromAnyThread();

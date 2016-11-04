@@ -94,6 +94,7 @@ PerThreadData::PerThreadData(JSRuntime* runtime)
 #ifdef DEBUG
   , ionCompiling(false)
   , ionCompilingSafeForMinorGC(false)
+  , performingGC(false)
   , gcSweeping(false)
 #endif
 {}
@@ -849,7 +850,7 @@ JSRuntime::clearUsedByExclusiveThread(Zone* zone)
 }
 
 bool
-js::CurrentThreadCanAccessRuntime(JSRuntime* rt)
+js::CurrentThreadCanAccessRuntime(const JSRuntime* rt)
 {
     return rt->ownerThread_ == js::ThisThread::GetId();
 }
@@ -865,6 +866,14 @@ js::CurrentThreadCanAccessZone(Zone* zone)
     // is imperfect.
     return zone->usedByExclusiveThread;
 }
+
+#ifdef DEBUG
+bool
+js::CurrentThreadIsPerformingGC()
+{
+    return TlsPerThreadData.get()->performingGC;
+}
+#endif
 
 JS_FRIEND_API(void)
 JS::UpdateJSContextProfilerSampleBufferGen(JSContext* cx, uint32_t generation,

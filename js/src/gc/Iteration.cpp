@@ -35,7 +35,7 @@ IterateCompartmentsArenasCells(JSContext* cx, Zone* zone, void* data,
         for (ArenaIter aiter(zone, thingKind); !aiter.done(); aiter.next()) {
             Arena* arena = aiter.get();
             (*arenaCallback)(cx, data, arena, traceKind, thingSize);
-            for (ArenaCellIterUnderGC iter(arena); !iter.done(); iter.next())
+            for (ArenaCellIter iter(arena); !iter.done(); iter.next())
                 (*cellCallback)(cx, data, iter.getCell(), traceKind, thingSize);
         }
     }

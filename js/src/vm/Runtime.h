@@ -298,7 +298,15 @@ class PerThreadData
     // any pointers into the nursery.
     bool ionCompilingSafeForMinorGC;
 
-    // Whether this thread is currently sweeping GC things.
+    // Whether this thread is currently performing GC.  This thread could be the
+    // main thread or a helper thread while the main thread is running the
+    // collector.
+    bool performingGC;
+
+    // Whether this thread is currently sweeping GC things.  This thread could
+    // be the main thread or a helper thread while the main thread is running
+    // the mutator.  This is used to assert that destruction of GCPtr only
+    // happens when we are sweeping.
     bool gcSweeping;
 #endif
 
@@ -701,7 +709,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* See comment for JS_AbortIfWrongThread in jsapi.h. */
     js::Thread::Id ownerThread_;
     size_t ownerThreadNative_;
-    friend bool js::CurrentThreadCanAccessRuntime(JSRuntime* rt);
+    friend bool js::CurrentThreadCanAccessRuntime(const JSRuntime* rt);
   public:
 
     size_t ownerThreadNative() const {
@@ -1286,6 +1294,10 @@ struct JSRuntime : public JS::shadow::Runtime,
         MOZ_ASSERT(format != js::StackFormat::Default);
         stackFormat_ = format;
     }
+
+    // For inherited heap state accessors.
+    friend class js::gc::AutoTraceSession;
+    friend class JS::AutoEnterCycleCollection;
 };
 
 namespace js {
@@ -1635,6 +1647,29 @@ class MOZ_RAII AutoEnterIonCompilation
 };
 
 namespace gc {
+
+// In debug builds, set/unset the performing GC flag for the current thread.
+struct MOZ_RAII AutoSetThreadIsPerformingGC
+{
+#ifdef DEBUG
+    AutoSetThreadIsPerformingGC()
+      : threadData_(js::TlsPerThreadData.get())
+    {
+        MOZ_ASSERT(!threadData_->performingGC);
+        threadData_->performingGC = true;
+    }
+
+    ~AutoSetThreadIsPerformingGC() {
+        MOZ_ASSERT(threadData_->performingGC);
+        threadData_->performingGC = false;
+    }
+
+  private:
+    PerThreadData* threadData_;
+#else
+    AutoSetThreadIsPerformingGC() {}
+#endif
+};
 
 // In debug builds, set/unset the GC sweeping flag for the current thread.
 struct MOZ_RAII AutoSetThreadIsSweeping
