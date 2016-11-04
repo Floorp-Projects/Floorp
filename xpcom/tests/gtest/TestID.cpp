@@ -2,9 +2,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include <stdio.h>
-#include "plstr.h"
+
 #include "nsID.h"
+
+#include "gtest/gtest.h"
 
 static const char* const ids[] = {
   "5C347B10-D55C-11D1-89B7-006008911B81",
@@ -19,25 +20,17 @@ static const char* const ids[] = {
 };
 #define NUM_IDS ((int) (sizeof(ids) / sizeof(ids[0])))
 
-int main(int argc, char** argv)
+TEST(nsID, StringConversion)
 {
   nsID id;
   for (int i = 0; i < NUM_IDS; i++) {
     const char* idstr = ids[i];
-    if (!id.Parse(idstr)) {
-      fprintf(stderr, "TestID: Parse failed on test #%d\n", i);
-      return -1;
-    }
-    char* cp = id.ToString();
-    if (nullptr == cp) {
-      fprintf(stderr, "TestID: ToString failed on test #%d\n", i);
-      return -1;
-    }
-    if (0 != PL_strcmp(cp, ids[4*(i/4) + 3])) {
-      fprintf(stderr, "TestID: compare of ToString failed on test #%d\n", i);
-      return -1;
-    }
-  }
+    ASSERT_TRUE(id.Parse(idstr));
 
-  return 0;
+    char* cp = id.ToString();
+    ASSERT_NE(cp, nullptr);
+    ASSERT_STREQ(cp, ids[4*(i/4) + 3]);
+
+    free(cp);
+  }
 }
