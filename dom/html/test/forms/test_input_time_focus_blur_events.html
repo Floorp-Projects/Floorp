@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1301306
+-->
+<head>
+<title>Test for Bug 1301306</title>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1301306">Mozilla Bug 722599</a>
+<p id="display"></p>
+<div id="content">
+<input type="time" id="input_time" onfocus="++focusEvent" onblur="++blurEvent"
+       onfocusin="++focusInEvent" onfocusout="++focusOutEvent">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/**
+ * Test for Bug 1301306.
+ * This test checks that when moving inside the time input element, e.g. jumping
+ * through the inner text boxes, does not fire extra focus/blur events.
+ **/
+
+var focusEvent = 0;
+var focusInEvent = 0;
+var focusOutEvent = 0;
+var blurEvent = 0;
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+function test() {
+  var time = document.getElementById("input_time");
+  time.focus();
+  is(focusEvent, 1, "time input element should have dispatched focus event.");
+  is(focusInEvent, 1, "time input element should have dispatched focusin event.");
+  is(focusOutEvent, 0, "time input element should not have dispatched focusout event.");
+  is(blurEvent, 0, "time input element should not have dispatched blur event.");
+
+  // Move around inside the input element's input box.
+  synthesizeKey("VK_TAB", {});
+  is(focusEvent, 1, "time input element should not have dispatched focus event.");
+  is(focusInEvent, 1, "time input element should have dispatched focusin event.");
+  is(focusOutEvent, 0, "time input element should not have dispatched focusout event.");
+  is(blurEvent, 0, "time input element should not have dispatched blur event.");
+
+  synthesizeKey("VK_RIGHT", {});
+  is(focusEvent, 1, "time input element should not have dispatched focus event.");
+  is(focusInEvent, 1, "time input element should have dispatched focusin event.");
+  is(focusOutEvent, 0, "time input element should not have dispatched focusout event.");
+  is(blurEvent, 0, "time input element should not have dispatched blur event.");
+
+  synthesizeKey("VK_LEFT", {});
+  is(focusEvent, 1, "time input element should not have dispatched focus event.");
+  is(focusInEvent, 1, "time input element should have dispatched focusin event.");
+  is(focusOutEvent, 0, "time input element should not have dispatched focusout event.");
+  is(blurEvent, 0, "time input element should not have dispatched blur event.");
+
+  synthesizeKey("VK_RIGHT", {});
+  is(focusEvent, 1, "time input element should not have dispatched focus event.");
+  is(focusInEvent, 1, "time input element should have dispatched focusin event.");
+  is(focusOutEvent, 0, "time input element should not have dispatched focusout event.");
+  is(blurEvent, 0, "time input element should not have dispatched blur event.");
+
+  time.blur();
+  is(focusEvent, 1, "time input element should not have dispatched focus event.");
+  is(focusInEvent, 1, "time input element should have dispatched focusin event.");
+  is(focusOutEvent, 1, "time input element should not have dispatched focusout event.");
+  is(blurEvent, 1, "time input element should have dispatched blur event.");
+}
+
+</script>
+</pre>
+</body>
+</html>
