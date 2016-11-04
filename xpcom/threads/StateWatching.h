@@ -8,7 +8,6 @@
 #define StateWatching_h_
 
 #include "mozilla/AbstractThread.h"
-#include "mozilla/Logging.h"
 #include "mozilla/TaskDispatcher.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
