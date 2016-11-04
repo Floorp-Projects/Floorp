@@ -199,15 +199,13 @@ public final class GeckoLoader {
             }
         }
 
-        if (AppConstants.MOZ_LINKER_EXTRACT) {
-            putenv("MOZ_LINKER_EXTRACT=1");
-            // Ensure that the cache dir is world-writable
-            File cacheDir = new File(linkerCache);
-            if (cacheDir.isDirectory()) {
-                cacheDir.setWritable(true, false);
-                cacheDir.setExecutable(true, false);
-                cacheDir.setReadable(true, false);
-            }
+        putenv("MOZ_LINKER_EXTRACT=1");
+        // Ensure that the cache dir is world-writable
+        File cacheDir = new File(linkerCache);
+        if (cacheDir.isDirectory()) {
+            cacheDir.setWritable(true, false);
+            cacheDir.setExecutable(true, false);
+            cacheDir.setReadable(true, false);
         }
     }
 
