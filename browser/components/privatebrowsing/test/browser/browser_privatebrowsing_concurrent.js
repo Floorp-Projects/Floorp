@@ -11,6 +11,12 @@
 // Step 3: load a page in the tab from step 1 that checks the value of test2 is value2 and the total count in non-private storage is 1
 // Step 4: load a page in the tab from step 2 that checks the value of test is value and the total count in private storage is 1
 
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.processCount", 1]]
+  });
+});
+
 add_task(function test() {
   let prefix = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/browser_privatebrowsing_concurrent_page.html';
 

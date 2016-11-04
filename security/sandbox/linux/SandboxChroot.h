@@ -14,7 +14,7 @@
 // This class uses the chroot(2) system call and Linux namespaces to
 // revoke the process's access to the filesystem.  It requires that
 // the process be able to create user namespaces; this is the
-// kHasUserNamespaces in common/SandboxInfo.h.
+// kHasUserNamespaces in SandboxInfo.h.
 //
 // Usage: call Prepare() from a thread with CAP_SYS_CHROOT in its
 // effective capability set, then later call Invoke() when ready to

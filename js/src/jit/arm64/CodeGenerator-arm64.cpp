@@ -518,15 +518,15 @@ CodeGeneratorARM64::visitBitAndAndBranch(LBitAndAndBranch* baab)
 }
 
 void
-CodeGeneratorARM64::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir)
+CodeGeneratorARM64::visitWasmUint32ToDouble(LWasmUint32ToDouble* lir)
 {
-    MOZ_CRASH("visitAsmJSUInt32ToDouble");
+    MOZ_CRASH("visitWasmUint32ToDouble");
 }
 
 void
-CodeGeneratorARM64::visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32* lir)
+CodeGeneratorARM64::visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir)
 {
-    MOZ_CRASH("visitAsmJSUInt32ToFloat32");
+    MOZ_CRASH("visitWasmUint32ToFloat32");
 }
 
 void
@@ -674,9 +674,9 @@ CodeGeneratorARM64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 }
 
 void
-CodeGeneratorARM64::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
+CodeGeneratorARM64::visitWasmStackArg(LWasmStackArg* ins)
 {
-    MOZ_CRASH("visitAsmJSPassStackArg");
+    MOZ_CRASH("visitWasmStackArg");
 }
 
 void

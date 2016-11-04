@@ -21,6 +21,7 @@
 #include "mozilla/LookAndFeel.h" // for system colors
 
 #include "nsString.h"
+#include "nsStaticAtom.h"
 #include "nsStaticNameTable.h"
 
 #include "mozilla/Preferences.h"
@@ -711,6 +712,49 @@ nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc)
     static nsDependentCString sNullStr("");
     return sNullStr;
   }
+}
+
+#define CSS_PROP(name_, id_, ...) nsICSSProperty* nsCSSProps::id_;
+#define CSS_PROP_SHORTHAND(name_, id_, ...) CSS_PROP(name_, id_, ...)
+#define CSS_PROP_LIST_INCLUDE_LOGICAL
+#include "nsCSSPropList.h"
+#undef CSS_PROP_LIST_INCLUDE_LOGICAL
+#undef CSS_PROP_SHORTHAND
+#undef CSS_PROP
+
+#define CSS_PROP(name_, id_, ...) NS_STATIC_ATOM_BUFFER(id_##_buffer, #name_)
+#define CSS_PROP_SHORTHAND(name_, id_, ...) CSS_PROP(name_, id_, ...)
+#define CSS_PROP_LIST_INCLUDE_LOGICAL
+#include "nsCSSPropList.h"
+#undef CSS_PROP_LIST_INCLUDE_LOGICAL
+#undef CSS_PROP_SHORTHAND
+#undef CSS_PROP
+
+static const nsStaticAtom CSSProps_info[] = {
+#define CSS_PROP(name_, id_, ...) \
+  NS_STATIC_ATOM(id_##_buffer, (nsIAtom**)&nsCSSProps::id_),
+#define CSS_PROP_SHORTHAND(name_, id_, ...) CSS_PROP(name_, id_, __VA_ARGS__)
+#define CSS_PROP_LIST_INCLUDE_LOGICAL
+#include "nsCSSPropList.h"
+#undef CSS_PROP_LIST_INCLUDE_LOGICAL
+#undef CSS_PROP_SHORTHAND
+#undef CSS_PROP
+};
+
+nsICSSProperty* nsCSSProps::gPropertyAtomTable[eCSSProperty_COUNT];
+
+/* static */ void
+nsCSSProps::AddRefAtoms()
+{
+  NS_RegisterStaticAtoms(CSSProps_info);
+#define CSS_PROP(name_, id_, ...) \
+  gPropertyAtomTable[eCSSProperty_##id_] = nsCSSProps::id_;
+#define CSS_PROP_SHORTHAND(name_, id_, ...) CSS_PROP(name_, id_, ...)
+#define CSS_PROP_LIST_INCLUDE_LOGICAL
+#include "nsCSSPropList.h"
+#undef CSS_PROP_LIST_INCLUDE_LOGICAL
+#undef CSS_PROP_SHORTHAND
+#undef CSS_PROP
 }
 
 /***************************************************************************/

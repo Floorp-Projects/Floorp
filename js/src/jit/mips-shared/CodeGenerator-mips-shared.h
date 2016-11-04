@@ -169,8 +169,8 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     virtual void visitCompareDAndBranch(LCompareDAndBranch* comp);
     virtual void visitCompareFAndBranch(LCompareFAndBranch* comp);
     virtual void visitBitAndAndBranch(LBitAndAndBranch* lir);
-    virtual void visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir);
-    virtual void visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32* lir);
+    virtual void visitWasmUint32ToDouble(LWasmUint32ToDouble* lir);
+    virtual void visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir);
     virtual void visitNotI(LNotI* ins);
     virtual void visitNotD(LNotD* ins);
     virtual void visitNotF(LNotF* ins);
@@ -229,10 +229,10 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins);
     void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins);
 
-    void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
-    void visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins);
-    void visitAsmSelect(LAsmSelect* ins);
-    void visitAsmReinterpret(LAsmReinterpret* ins);
+    void visitWasmStackArg(LWasmStackArg* ins);
+    void visitWasmStackArgI64(LWasmStackArgI64* ins);
+    void visitWasmSelect(LWasmSelect* ins);
+    void visitWasmReinterpret(LWasmReinterpret* ins);
 
     void visitMemoryBarrier(LMemoryBarrier* ins);
     void visitAtomicTypedArrayElementBinop(LAtomicTypedArrayElementBinop* lir);

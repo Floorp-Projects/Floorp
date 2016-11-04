@@ -35,6 +35,8 @@ using mozilla::DebugOnly;
 using mozilla::PodZero;
 using mozilla::RotateLeft;
 
+using JS::AutoCheckCannotGC;
+
 Shape* const ShapeTable::Entry::SHAPE_REMOVED = (Shape*)ShapeTable::Entry::SHAPE_COLLISION;
 
 bool
@@ -57,7 +59,7 @@ ShapeTable::init(ExclusiveContext* cx, Shape* lastProp)
 
     for (Shape::Range<NoGC> r(lastProp); !r.empty(); r.popFront()) {
         Shape& shape = r.front();
-        Entry& entry = search<MaybeAdding::Adding>(shape.propid());
+        Entry& entry = searchUnchecked<MaybeAdding::Adding>(shape.propid());
 
         /*
          * Beware duplicate args and arg vs. var conflicts: the youngest shape
@@ -185,7 +187,7 @@ Hash2(HashNumber hash0, uint32_t log2, uint32_t shift)
 
 template<MaybeAdding Adding>
 ShapeTable::Entry&
-ShapeTable::search(jsid id)
+ShapeTable::searchUnchecked(jsid id)
 {
     MOZ_ASSERT(entries_);
     MOZ_ASSERT(!JSID_IS_EMPTY(id));
@@ -260,8 +262,8 @@ ShapeTable::search(jsid id)
     MOZ_CRASH("Shape::search failed to find an expected entry.");
 }
 
-template ShapeTable::Entry& ShapeTable::search<MaybeAdding::Adding>(jsid id);
-template ShapeTable::Entry& ShapeTable::search<MaybeAdding::NotAdding>(jsid id);
+template ShapeTable::Entry& ShapeTable::searchUnchecked<MaybeAdding::Adding>(jsid id);
+template ShapeTable::Entry& ShapeTable::searchUnchecked<MaybeAdding::NotAdding>(jsid id);
 
 bool
 ShapeTable::change(ExclusiveContext* cx, int log2Delta)
@@ -288,9 +290,10 @@ ShapeTable::change(ExclusiveContext* cx, int log2Delta)
     entries_ = newTable;
 
     /* Copy only live entries, leaving removed and free ones behind. */
+    AutoCheckCannotGC nogc;
     for (Entry* oldEntry = oldTable; oldSize != 0; oldEntry++) {
         if (Shape* shape = oldEntry->shape()) {
-            Entry& entry = search<MaybeAdding::Adding>(shape->propid());
+            Entry& entry = search<MaybeAdding::Adding>(shape->propid(), nogc);
             MOZ_ASSERT(entry.isFree());
             entry.setShape(shape);
         }
@@ -533,12 +536,17 @@ NativeObject::addProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId
         return nullptr;
     }
 
+    AutoKeepShapeTables keep(cx);
     ShapeTable::Entry* entry = nullptr;
-    if (obj->inDictionaryMode())
-        entry = &obj->lastProperty()->table().search<MaybeAdding::Adding>(id);
+    if (obj->inDictionaryMode()) {
+        ShapeTable* table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
+        if (!table)
+            return nullptr;
+        entry = &table->search<MaybeAdding::Adding>(id, keep);
+    }
 
     return addPropertyInternal(cx, obj, id, getter, setter, slot, attrs, flags, entry,
-                               allowDictionary);
+                               allowDictionary, keep);
 }
 
 static bool
@@ -559,7 +567,7 @@ NativeObject::addPropertyInternal(ExclusiveContext* cx,
                                   GetterOp getter, SetterOp setter,
                                   uint32_t slot, unsigned attrs,
                                   unsigned flags, ShapeTable::Entry* entry,
-                                  bool allowDictionary)
+                                  bool allowDictionary, const AutoKeepShapeTables& keep)
 {
     MOZ_ASSERT_IF(!allowDictionary, !obj->inDictionaryMode());
     MOZ_ASSERT(getter != JS_PropertyStub);
@@ -584,15 +592,17 @@ NativeObject::addPropertyInternal(ExclusiveContext* cx,
         {
             if (!obj->toDictionaryMode(cx))
                 return nullptr;
-            table = &obj->lastProperty()->table();
-            entry = &table->search<MaybeAdding::Adding>(id);
+            table = obj->lastProperty()->maybeTable(keep);
+            entry = &table->search<MaybeAdding::Adding>(id, keep);
         }
     } else {
-        table = &obj->lastProperty()->table();
+        table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
+        if (!table)
+            return nullptr;
         if (table->needsToGrow()) {
             if (!table->grow(cx))
                 return nullptr;
-            entry = &table->search<MaybeAdding::Adding>(id);
+            entry = &table->search<MaybeAdding::Adding>(id, keep);
             MOZ_ASSERT(!entry->shape());
         }
     }
@@ -632,7 +642,7 @@ NativeObject::addPropertyInternal(ExclusiveContext* cx,
             table->incEntryCount();
 
             /* Pass the table along to the new last property, namely shape. */
-            MOZ_ASSERT(&shape->parent->table() == table);
+            MOZ_ASSERT(shape->parent->maybeTable(keep) == table);
             shape->parent->handoffTableTo(shape);
         }
 
@@ -752,8 +762,15 @@ NativeObject::putProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId
      * locally. Only for those objects we can try to claim an entry in its
      * shape table.
      */
+    AutoKeepShapeTables keep(cx);
     ShapeTable::Entry* entry;
-    RootedShape shape(cx, Shape::search<MaybeAdding::Adding>(cx, obj->lastProperty(), id, &entry));
+    RootedShape shape(cx);
+    if (!Shape::search<MaybeAdding::Adding>(cx, obj->lastProperty(), id, keep,
+                                            shape.address(), &entry))
+    {
+        return nullptr;
+    }
+
     if (!shape) {
         /*
          * You can't add properties to a non-extensible object, but you can change
@@ -771,7 +788,7 @@ NativeObject::putProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId
         }
 
         return addPropertyInternal(cx, obj, id, getter, setter, slot, attrs, flags,
-                                   entry, true);
+                                   entry, true, keep);
     }
 
     /* Property exists: search must have returned a valid entry. */
@@ -817,7 +834,9 @@ NativeObject::putProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId
     if (shape != obj->lastProperty() && !obj->inDictionaryMode()) {
         if (!obj->toDictionaryMode(cx))
             return nullptr;
-        entry = &obj->lastProperty()->table().search<MaybeAdding::NotAdding>(shape->propid());
+        ShapeTable* table = obj->lastProperty()->maybeTable(keep);
+        MOZ_ASSERT(table);
+        entry = &table->search<MaybeAdding::NotAdding>(shape->propid(), keep);
         shape = entry->shape();
     }
 
@@ -901,7 +920,7 @@ NativeObject::putProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId
      */
     if (hadSlot && !shape->hasSlot()) {
         if (oldSlot < obj->slotSpan())
-            obj->freeSlot(oldSlot);
+            obj->freeSlot(cx, oldSlot);
         /* Note: The optimization based on propertyRemovals is only relevant to the main thread. */
         if (cx->isJSContext())
             ++cx->asJSContext()->runtime()->propertyRemovals;
@@ -953,8 +972,12 @@ NativeObject::removeProperty(ExclusiveContext* cx, jsid id_)
     RootedId id(cx, id_);
     RootedNativeObject self(cx, this);
 
+    AutoKeepShapeTables keep(cx);
     ShapeTable::Entry* entry;
-    RootedShape shape(cx, Shape::search(cx, lastProperty(), id, &entry));
+    RootedShape shape(cx);
+    if (!Shape::search(cx, lastProperty(), id, keep, shape.address(), &entry))
+        return false;
+
     if (!shape)
         return true;
 
@@ -965,7 +988,9 @@ NativeObject::removeProperty(ExclusiveContext* cx, jsid id_)
     if (!self->inDictionaryMode() && (shape != self->lastProperty() || !self->canRemoveLastProperty())) {
         if (!self->toDictionaryMode(cx))
             return false;
-        entry = &self->lastProperty()->table().search<MaybeAdding::NotAdding>(shape->propid());
+        ShapeTable* table = self->lastProperty()->maybeTable(keep);
+        MOZ_ASSERT(table);
+        entry = &table->search<MaybeAdding::NotAdding>(shape->propid(), keep);
         shape = entry->shape();
     }
 
@@ -1001,7 +1026,7 @@ NativeObject::removeProperty(ExclusiveContext* cx, jsid id_)
 
     /* If shape has a slot, free its slot number. */
     if (shape->hasSlot()) {
-        self->freeSlot(shape->slot());
+        self->freeSlot(cx, shape->slot());
         if (cx->isJSContext())
             ++cx->asJSContext()->runtime()->propertyRemovals;
     }
@@ -1012,15 +1037,16 @@ NativeObject::removeProperty(ExclusiveContext* cx, jsid id_)
      * list and hash in place.
      */
     if (self->inDictionaryMode()) {
-        ShapeTable& table = self->lastProperty()->table();
+        ShapeTable* table = self->lastProperty()->maybeTable(keep);
+        MOZ_ASSERT(table);
 
         if (entry->hadCollision()) {
             entry->setRemoved();
-            table.decEntryCount();
-            table.incRemovedCount();
+            table->decEntryCount();
+            table->incRemovedCount();
         } else {
             entry->setFree();
-            table.decEntryCount();
+            table->decEntryCount();
 
 #ifdef DEBUG
             /*
@@ -1047,9 +1073,9 @@ NativeObject::removeProperty(ExclusiveContext* cx, jsid id_)
         JS_ALWAYS_TRUE(self->generateOwnShape(cx, spare));
 
         /* Consider shrinking table if its load factor is <= .25. */
-        uint32_t size = table.capacity();
-        if (size > ShapeTable::MIN_SIZE && table.entryCount() <= size >> 2)
-            (void) table.change(cx, -1);
+        uint32_t size = table->capacity();
+        if (size > ShapeTable::MIN_SIZE && table->entryCount() <= size >> 2)
+            (void) table->change(cx, -1);
     } else {
         /*
          * Non-dictionary-mode shape tables are shared immutables, so all we
@@ -1145,10 +1171,14 @@ NativeObject::replaceWithNewEquivalentShape(ExclusiveContext* cx, Shape* oldShap
         oldShape = oldRoot;
     }
 
-    ShapeTable& table = self->lastProperty()->table();
+    AutoCheckCannotGC nogc;
+    ShapeTable* table = self->lastProperty()->ensureTableForDictionary(cx, nogc);
+    if (!table)
+        return nullptr;
+
     ShapeTable::Entry* entry = oldShape->isEmptyShape()
-                               ? nullptr
-                               : &table.search<MaybeAdding::NotAdding>(oldShape->propidRef());
+        ? nullptr
+        : &table->search<MaybeAdding::NotAdding>(oldShape->propidRef(), nogc);
 
     /*
      * Splice the new shape into the same position as the old shape, preserving
@@ -1283,10 +1313,8 @@ BaseShape::adoptUnowned(UnownedBaseShape* other)
     MOZ_ASSERT(isOwned());
 
     uint32_t span = slotSpan();
-    ShapeTable* table = &this->table();
 
     BaseShape::copyFromUnowned(*this, *other);
-    setTable(table);
     setSlotSpan(span);
 
     assertConsistency();
@@ -1350,8 +1378,9 @@ BaseShape::traceChildrenSkipShapeTable(JSTracer* trc)
 void
 BaseShape::traceShapeTable(JSTracer* trc)
 {
-    if (hasTable())
-        table().trace(trc);
+    AutoCheckCannotGC nogc;
+    if (ShapeTable* table = maybeTable(nogc))
+        table->trace(trc);
 }
 
 #ifdef DEBUG
@@ -1361,18 +1390,20 @@ BaseShape::canSkipMarkingShapeTable(Shape* lastShape)
     // Check that every shape in the shape table will be marked by marking
     // |lastShape|.
 
-    if (!hasTable())
+    AutoCheckCannotGC nogc;
+    ShapeTable* table = maybeTable(nogc);
+    if (!table)
         return true;
 
     uint32_t count = 0;
     for (Shape::Range<NoGC> r(lastShape); !r.empty(); r.popFront()) {
         Shape* shape = &r.front();
-        ShapeTable::Entry& entry = table().search<MaybeAdding::NotAdding>(shape->propid());
+        ShapeTable::Entry& entry = table->search<MaybeAdding::NotAdding>(shape->propid(), nogc);
         if (entry.isLive())
             count++;
     }
 
-    return count == table().entryCount();
+    return count == table->entryCount();
 }
 #endif
 
@@ -1732,8 +1763,9 @@ JS::ubi::Concrete<js::Shape>::size(mozilla::MallocSizeOf mallocSizeOf) const
 {
     Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());
 
-    if (get().hasTable())
-        size += get().table().sizeOfIncludingThis(mallocSizeOf);
+    AutoCheckCannotGC nogc;
+    if (ShapeTable* table = get().maybeTable(nogc))
+        size += table->sizeOfIncludingThis(mallocSizeOf);
 
     if (!get().inDictionary() && get().kids.isHash())
         size += get().kids.toHash()->sizeOfIncludingThis(mallocSizeOf);

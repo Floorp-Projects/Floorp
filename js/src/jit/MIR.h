@@ -1579,11 +1579,11 @@ class MConstant : public MNullaryInstruction
                           CompilerConstraintList* constraints = nullptr);
     static MConstant* New(TempAllocator::Fallible alloc, const Value& v,
                           CompilerConstraintList* constraints = nullptr);
+    static MConstant* New(TempAllocator& alloc, const Value& v, MIRType type);
     static MConstant* New(TempAllocator& alloc, wasm::RawF32 bits);
     static MConstant* New(TempAllocator& alloc, wasm::RawF64 bits);
     static MConstant* NewFloat32(TempAllocator& alloc, double d);
     static MConstant* NewInt64(TempAllocator& alloc, int64_t i);
-    static MConstant* NewAsmJS(TempAllocator& alloc, const Value& v, MIRType type);
     static MConstant* NewConstraintlessObject(TempAllocator& alloc, JSObject* v);
     static MConstant* Copy(TempAllocator& alloc, MConstant* src) {
         return new(alloc) MConstant(*src);
@@ -3035,8 +3035,8 @@ class MGoto
     static MGoto* New(TempAllocator& alloc, MBasicBlock* target);
     static MGoto* New(TempAllocator::Fallible alloc, MBasicBlock* target);
 
-    // Factory for asm, which may patch the target later.
-    static MGoto* NewAsm(TempAllocator& alloc);
+    // Variant that may patch the target later.
+    static MGoto* New(TempAllocator& alloc);
 
     static const size_t TargetIndex = 0;
 
@@ -3075,13 +3075,15 @@ class MTest
         setSuccessor(1, falseBranch);
     }
 
+    // Variant which may patch the ifTrue branch later.
+    MTest(MDefinition* ins, MBasicBlock* falseBranch)
+      : MTest(ins, nullptr, falseBranch)
+    {}
+
   public:
     INSTRUCTION_HEADER(Test)
     TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, input))
-
-    // Factory for asm, which may patch the ifTrue branch later.
-    static MTest* NewAsm(TempAllocator& alloc, MDefinition* ins, MBasicBlock* ifFalse);
 
     static const size_t TrueBranchIndex = 0;
 
@@ -4577,11 +4579,20 @@ class MCompare
         setMovable();
     }
 
+    MCompare(MDefinition* left, MDefinition* right, JSOp jsop, CompareType compareType)
+      : MCompare(left, right, jsop)
+    {
+        MOZ_ASSERT(compareType == Compare_Int32 || compareType == Compare_UInt32 ||
+                   compareType == Compare_Int64 || compareType == Compare_UInt64 ||
+                   compareType == Compare_Double || compareType == Compare_Float32);
+        compareType_ = compareType;
+        operandMightEmulateUndefined_ = false;
+        setResultType(MIRType::Int32);
+    }
+
   public:
     INSTRUCTION_HEADER(Compare)
     TRIVIAL_NEW_WRAPPERS
-    static MCompare* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right, JSOp op,
-                              CompareType compareType);
 
     MOZ_MUST_USE bool tryFold(bool* result);
     MOZ_MUST_USE bool evaluateConstantOperands(TempAllocator& alloc, bool* result);
@@ -5205,10 +5216,6 @@ class MToDouble
     INSTRUCTION_HEADER(ToDouble)
     TRIVIAL_NEW_WRAPPERS
 
-    static MToDouble* NewAsmJS(TempAllocator& alloc, MDefinition* def) {
-        return new(alloc) MToDouble(def);
-    }
-
     MDefinition* foldsTo(TempAllocator& alloc) override;
     bool congruentTo(const MDefinition* ins) const override {
         if (!ins->isToDouble() || ins->toToDouble()->conversion() != conversion())
@@ -5269,15 +5276,15 @@ class MToFloat32
             setGuard();
     }
 
+    explicit MToFloat32(MDefinition* def, bool mustPreserveNaN)
+      : MToFloat32(def)
+    {
+        mustPreserveNaN_ = mustPreserveNaN;
+    }
+
   public:
     INSTRUCTION_HEADER(ToFloat32)
     TRIVIAL_NEW_WRAPPERS
-
-    static MToFloat32* NewAsmJS(TempAllocator& alloc, MDefinition* def, bool mustPreserveNaN) {
-        auto* ret = MToFloat32::New(alloc, def, NonStringPrimitives);
-        ret->mustPreserveNaN_ = mustPreserveNaN;
-        return ret;
-    }
 
     virtual MDefinition* foldsTo(TempAllocator& alloc) override;
     bool congruentTo(const MDefinition* ins) const override {
@@ -5305,11 +5312,11 @@ class MToFloat32
 };
 
 // Converts a uint32 to a double (coming from asm.js).
-class MAsmJSUnsignedToDouble
+class MWasmUnsignedToDouble
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    explicit MAsmJSUnsignedToDouble(MDefinition* def)
+    explicit MWasmUnsignedToDouble(MDefinition* def)
       : MUnaryInstruction(def)
     {
         setResultType(MIRType::Double);
@@ -5317,10 +5324,8 @@ class MAsmJSUnsignedToDouble
     }
 
   public:
-    INSTRUCTION_HEADER(AsmJSUnsignedToDouble)
-    static MAsmJSUnsignedToDouble* NewAsmJS(TempAllocator& alloc, MDefinition* def) {
-        return new(alloc) MAsmJSUnsignedToDouble(def);
-    }
+    INSTRUCTION_HEADER(WasmUnsignedToDouble)
+    TRIVIAL_NEW_WRAPPERS
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
     bool congruentTo(const MDefinition* ins) const override {
@@ -5332,11 +5337,11 @@ class MAsmJSUnsignedToDouble
 };
 
 // Converts a uint32 to a float32 (coming from asm.js).
-class MAsmJSUnsignedToFloat32
+class MWasmUnsignedToFloat32
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    explicit MAsmJSUnsignedToFloat32(MDefinition* def)
+    explicit MWasmUnsignedToFloat32(MDefinition* def)
       : MUnaryInstruction(def)
     {
         setResultType(MIRType::Float32);
@@ -5344,10 +5349,8 @@ class MAsmJSUnsignedToFloat32
     }
 
   public:
-    INSTRUCTION_HEADER(AsmJSUnsignedToFloat32)
-    static MAsmJSUnsignedToFloat32* NewAsmJS(TempAllocator& alloc, MDefinition* def) {
-        return new(alloc) MAsmJSUnsignedToFloat32(def);
-    }
+    INSTRUCTION_HEADER(WasmUnsignedToFloat32)
+    TRIVIAL_NEW_WRAPPERS
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
     bool congruentTo(const MDefinition* ins) const override {
@@ -5366,7 +5369,7 @@ class MWrapInt64ToInt32
 {
     bool bottomHalf_;
 
-    explicit MWrapInt64ToInt32(MDefinition* def, bool bottomHalf)
+    explicit MWrapInt64ToInt32(MDefinition* def, bool bottomHalf = true)
       : MUnaryInstruction(def),
         bottomHalf_(bottomHalf)
     {
@@ -5376,11 +5379,7 @@ class MWrapInt64ToInt32
 
   public:
     INSTRUCTION_HEADER(WrapInt64ToInt32)
-    static MWrapInt64ToInt32* NewAsmJS(TempAllocator& alloc, MDefinition* def,
-                                       bool bottomHalf = true)
-    {
-        return new(alloc) MWrapInt64ToInt32(def, bottomHalf);
-    }
+    TRIVIAL_NEW_WRAPPERS
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
     bool congruentTo(const MDefinition* ins) const override {
@@ -5415,9 +5414,7 @@ class MExtendInt32ToInt64
 
   public:
     INSTRUCTION_HEADER(ExtendInt32ToInt64)
-    static MExtendInt32ToInt64* NewAsmJS(TempAllocator& alloc, MDefinition* def, bool isUnsigned) {
-        return new(alloc) MExtendInt32ToInt64(def, isUnsigned);
-    }
+    TRIVIAL_NEW_WRAPPERS
 
     bool isUnsigned() const { return isUnsigned_; }
 
@@ -5453,11 +5450,7 @@ class MWasmTruncateToInt64
 
   public:
     INSTRUCTION_HEADER(WasmTruncateToInt64)
-    static MWasmTruncateToInt64* NewAsmJS(TempAllocator& alloc, MDefinition* def, bool isUnsigned,
-                                          wasm::TrapOffset trapOffset)
-    {
-        return new(alloc) MWasmTruncateToInt64(def, isUnsigned, trapOffset);
-    }
+    TRIVIAL_NEW_WRAPPERS
 
     bool isUnsigned() const { return isUnsigned_; }
     wasm::TrapOffset trapOffset() const { return trapOffset_; }
@@ -5490,12 +5483,7 @@ class MWasmTruncateToInt32
 
   public:
     INSTRUCTION_HEADER(WasmTruncateToInt32)
-
-    static MWasmTruncateToInt32* NewAsmJS(TempAllocator& alloc, MDefinition* def, bool isUnsigned,
-                                          wasm::TrapOffset trapOffset)
-    {
-        return new(alloc) MWasmTruncateToInt32(def, isUnsigned, trapOffset);
-    }
+    TRIVIAL_NEW_WRAPPERS
 
     bool isUnsigned() const {
         return isUnsigned_;
@@ -5533,11 +5521,7 @@ class MInt64ToFloatingPoint
 
   public:
     INSTRUCTION_HEADER(Int64ToFloatingPoint)
-    static MInt64ToFloatingPoint* NewAsmJS(TempAllocator& alloc, MDefinition* def, MIRType type,
-                                           bool isUnsigned)
-    {
-        return new(alloc) MInt64ToFloatingPoint(def, type, isUnsigned);
-    }
+    TRIVIAL_NEW_WRAPPERS
 
     bool isUnsigned() const { return isUnsigned_; }
 
@@ -5638,10 +5622,6 @@ class MTruncateToInt32
   public:
     INSTRUCTION_HEADER(TruncateToInt32)
     TRIVIAL_NEW_WRAPPERS
-
-    static MTruncateToInt32* NewAsmJS(TempAllocator& alloc, MDefinition* def, bool _) {
-        return new(alloc) MTruncateToInt32(def);
-    }
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
 
@@ -5749,7 +5729,7 @@ class MBitNot
     INSTRUCTION_HEADER(BitNot)
     TRIVIAL_NEW_WRAPPERS
 
-    static MBitNot* NewAsmJS(TempAllocator& alloc, MDefinition* input);
+    static MBitNot* NewInt32(TempAllocator& alloc, MDefinition* input);
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
     void setSpecialization(MIRType type) {
@@ -5900,8 +5880,7 @@ class MBitAnd : public MBinaryBitwiseInstruction
   public:
     INSTRUCTION_HEADER(BitAnd)
     static MBitAnd* New(TempAllocator& alloc, MDefinition* left, MDefinition* right);
-    static MBitAnd* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                             MIRType type);
+    static MBitAnd* New(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type);
 
     MDefinition* foldIfZero(size_t operand) override {
         return getOperand(operand); // 0 & x => 0;
@@ -5935,8 +5914,7 @@ class MBitOr : public MBinaryBitwiseInstruction
   public:
     INSTRUCTION_HEADER(BitOr)
     static MBitOr* New(TempAllocator& alloc, MDefinition* left, MDefinition* right);
-    static MBitOr* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                            MIRType type);
+    static MBitOr* New(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type);
 
     MDefinition* foldIfZero(size_t operand) override {
         return getOperand(1 - operand); // 0 | x => x, so if ith is 0, return (1-i)th
@@ -5968,8 +5946,7 @@ class MBitXor : public MBinaryBitwiseInstruction
   public:
     INSTRUCTION_HEADER(BitXor)
     static MBitXor* New(TempAllocator& alloc, MDefinition* left, MDefinition* right);
-    static MBitXor* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                             MIRType type);
+    static MBitXor* New(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type);
 
     MDefinition* foldIfZero(size_t operand) override {
         return getOperand(1 - operand); // 0 ^ x => x
@@ -6023,8 +6000,7 @@ class MLsh : public MShiftInstruction
   public:
     INSTRUCTION_HEADER(Lsh)
     static MLsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right);
-    static MLsh* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                          MIRType type);
+    static MLsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type);
 
     MDefinition* foldIfZero(size_t operand) override {
         // 0 << x => 0
@@ -6050,8 +6026,7 @@ class MRsh : public MShiftInstruction
   public:
     INSTRUCTION_HEADER(Rsh)
     static MRsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right);
-    static MRsh* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                          MIRType type);
+    static MRsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type);
 
     MDefinition* foldIfZero(size_t operand) override {
         // 0 >> x => 0
@@ -6082,8 +6057,7 @@ class MUrsh : public MShiftInstruction
   public:
     INSTRUCTION_HEADER(Ursh)
     static MUrsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right);
-    static MUrsh* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                           MIRType type);
+    static MUrsh* New(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type);
 
     MDefinition* foldIfZero(size_t operand) override {
         // 0 >>> x => 0
@@ -6135,9 +6109,6 @@ class MSignExtend
   public:
     INSTRUCTION_HEADER(SignExtend)
     TRIVIAL_NEW_WRAPPERS
-    static MSignExtend* NewAsmJS(TempAllocator& alloc, MDefinition* op, Mode mode) {
-        return new(alloc) MSignExtend(op, mode);
-    }
 
     Mode mode() { return mode_; }
 
@@ -6299,12 +6270,13 @@ class MAbs
     INSTRUCTION_HEADER(Abs)
     TRIVIAL_NEW_WRAPPERS
 
-    static MAbs* NewAsmJS(TempAllocator& alloc, MDefinition* num, MIRType type) {
+    static MAbs* NewWasm(TempAllocator& alloc, MDefinition* num, MIRType type) {
         auto* ins = new(alloc) MAbs(num, type);
         if (type == MIRType::Int32)
             ins->implicitTruncate_ = true;
         return ins;
     }
+
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -6344,13 +6316,9 @@ class MClz
 
   public:
     INSTRUCTION_HEADER(Clz)
+    TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, num))
-    static MClz* New(TempAllocator& alloc, MDefinition* num) {
-        return new(alloc) MClz(num, MIRType::Int32);
-    }
-    static MClz* NewAsmJS(TempAllocator& alloc, MDefinition* num) {
-        return new(alloc) MClz(num, num->type());
-    }
+
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -6387,13 +6355,9 @@ class MCtz
 
   public:
     INSTRUCTION_HEADER(Ctz)
+    TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, num))
-    static MCtz* New(TempAllocator& alloc, MDefinition* num) {
-        return new(alloc) MCtz(num, MIRType::Int32);
-    }
-    static MCtz* NewAsmJS(TempAllocator& alloc, MDefinition* num) {
-        return new(alloc) MCtz(num, num->type());
-    }
+
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -6427,13 +6391,9 @@ class MPopcnt
 
   public:
     INSTRUCTION_HEADER(Popcnt)
+    TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, num))
-    static MPopcnt* New(TempAllocator& alloc, MDefinition* num) {
-        return new(alloc) MPopcnt(num, MIRType::Int32);
-    }
-    static MPopcnt* NewAsmJS(TempAllocator& alloc, MDefinition* num) {
-        return new(alloc) MPopcnt(num, num->type());
-    }
+
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -6461,13 +6421,8 @@ class MSqrt
 
   public:
     INSTRUCTION_HEADER(Sqrt)
-    static MSqrt* New(TempAllocator& alloc, MDefinition* num) {
-        return new(alloc) MSqrt(num, MIRType::Double);
-    }
-    static MSqrt* NewAsmJS(TempAllocator& alloc, MDefinition* num, MIRType type) {
-        MOZ_ASSERT(IsFloatingPointType(type));
-        return new(alloc) MSqrt(num, type);
-    }
+    TRIVIAL_NEW_WRAPPERS
+
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -6501,12 +6456,7 @@ class MCopySign
 
   public:
     INSTRUCTION_HEADER(CopySign)
-
-    static MCopySign* NewAsmJS(TempAllocator& alloc, MDefinition* lhs, MDefinition* rhs,
-                               MIRType type)
-    {
-        return new(alloc) MCopySign(lhs, rhs, type);
-    }
+    TRIVIAL_NEW_WRAPPERS
 
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
@@ -6824,29 +6774,26 @@ class MMathFunction
 
 class MAdd : public MBinaryArithInstruction
 {
-    // Is this instruction really an int at heart?
     MAdd(MDefinition* left, MDefinition* right)
       : MBinaryArithInstruction(left, right)
     {
         setResultType(MIRType::Value);
     }
 
+    MAdd(MDefinition* left, MDefinition* right, MIRType type)
+      : MAdd(left, right)
+    {
+        specialization_ = type;
+        setResultType(type);
+        if (type == MIRType::Int32) {
+            setTruncateKind(Truncate);
+            setCommutative();
+        }
+    }
+
   public:
     INSTRUCTION_HEADER(Add)
     TRIVIAL_NEW_WRAPPERS
-
-    static MAdd* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                          MIRType type)
-    {
-        auto* add = new(alloc) MAdd(left, right);
-        add->specialization_ = type;
-        add->setResultType(type);
-        if (type == MIRType::Int32) {
-            add->setTruncateKind(Truncate);
-            add->setCommutative();
-        }
-        return add;
-    }
 
     bool isFloat32Commutative() const override { return true; }
 
@@ -6876,21 +6823,19 @@ class MSub : public MBinaryArithInstruction
         setResultType(MIRType::Value);
     }
 
+    MSub(MDefinition* left, MDefinition* right, MIRType type, bool mustPreserveNaN = false)
+      : MSub(left, right)
+    {
+        specialization_ = type;
+        setResultType(type);
+        setMustPreserveNaN(mustPreserveNaN);
+        if (type == MIRType::Int32)
+            setTruncateKind(Truncate);
+    }
+
   public:
     INSTRUCTION_HEADER(Sub)
     TRIVIAL_NEW_WRAPPERS
-
-    static MSub* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                          MIRType type, bool mustPreserveNaN = false)
-    {
-        auto* sub = new(alloc) MSub(left, right);
-        sub->specialization_ = type;
-        sub->setResultType(type);
-        sub->setMustPreserveNaN(mustPreserveNaN);
-        if (type == MIRType::Int32)
-            sub->setTruncateKind(Truncate);
-        return sub;
-    }
 
     double getIdentity() override {
         return 0;
@@ -7058,10 +7003,10 @@ class MDiv : public MBinaryArithInstruction
     static MDiv* New(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type) {
         return new(alloc) MDiv(left, right, type);
     }
-    static MDiv* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                          MIRType type, bool unsignd, bool trapOnError = false,
-                          wasm::TrapOffset trapOffset = wasm::TrapOffset(),
-                          bool mustPreserveNaN = false)
+    static MDiv* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
+                     MIRType type, bool unsignd, bool trapOnError = false,
+                     wasm::TrapOffset trapOffset = wasm::TrapOffset(),
+                     bool mustPreserveNaN = false)
     {
         auto* div = new(alloc) MDiv(left, right, type);
         div->unsigned_ = unsignd;
@@ -7193,9 +7138,9 @@ class MMod : public MBinaryArithInstruction
     static MMod* New(TempAllocator& alloc, MDefinition* left, MDefinition* right) {
         return new(alloc) MMod(left, right, MIRType::Value);
     }
-    static MMod* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                          MIRType type, bool unsignd, bool trapOnError = false,
-                          wasm::TrapOffset trapOffset = wasm::TrapOffset())
+    static MMod* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
+                     MIRType type, bool unsignd, bool trapOnError = false,
+                     wasm::TrapOffset trapOffset = wasm::TrapOffset())
     {
         auto* mod = new(alloc) MMod(left, right, type);
         mod->unsigned_ = unsignd;
@@ -9124,7 +9069,7 @@ class MNot
     void cacheOperandMightEmulateUndefined(CompilerConstraintList* constraints);
 
   public:
-    static MNot* NewAsmJS(TempAllocator& alloc, MDefinition* input) {
+    static MNot* NewInt32(TempAllocator& alloc, MDefinition* input) {
         MOZ_ASSERT(input->type() == MIRType::Int32 || input->type() == MIRType::Int64);
         auto* ins = new(alloc) MNot(input);
         ins->setResultType(MIRType::Int32);
@@ -13539,9 +13484,7 @@ class MAsmJSNeg
 
   public:
     INSTRUCTION_HEADER(AsmJSNeg)
-    static MAsmJSNeg* NewAsmJS(TempAllocator& alloc, MDefinition* op, MIRType type) {
-        return new(alloc) MAsmJSNeg(op, type);
-    }
+    TRIVIAL_NEW_WRAPPERS
 };
 
 class MWasmBoundsCheck
@@ -13900,55 +13843,55 @@ class MWasmStoreGlobalVar
     }
 };
 
-class MAsmJSParameter : public MNullaryInstruction
+class MWasmParameter : public MNullaryInstruction
 {
     ABIArg abi_;
 
-    MAsmJSParameter(ABIArg abi, MIRType mirType)
+    MWasmParameter(ABIArg abi, MIRType mirType)
       : abi_(abi)
     {
         setResultType(mirType);
     }
 
   public:
-    INSTRUCTION_HEADER(AsmJSParameter)
+    INSTRUCTION_HEADER(WasmParameter)
     TRIVIAL_NEW_WRAPPERS
 
     ABIArg abi() const { return abi_; }
 };
 
-class MAsmJSReturn
+class MWasmReturn
   : public MAryControlInstruction<2, 0>,
     public NoTypePolicy::Data
 {
-    explicit MAsmJSReturn(MDefinition* ins, MDefinition* tlsPtr) {
+    explicit MWasmReturn(MDefinition* ins, MDefinition* tlsPtr) {
         initOperand(0, ins);
         initOperand(1, tlsPtr);
     }
 
   public:
-    INSTRUCTION_HEADER(AsmJSReturn)
+    INSTRUCTION_HEADER(WasmReturn)
     TRIVIAL_NEW_WRAPPERS
 };
 
-class MAsmJSVoidReturn
+class MWasmReturnVoid
   : public MAryControlInstruction<1, 0>,
     public NoTypePolicy::Data
 {
-    explicit MAsmJSVoidReturn(MDefinition* tlsPtr) {
+    explicit MWasmReturnVoid(MDefinition* tlsPtr) {
         initOperand(0, tlsPtr);
     }
 
   public:
-    INSTRUCTION_HEADER(AsmJSVoidReturn)
+    INSTRUCTION_HEADER(WasmReturnVoid)
     TRIVIAL_NEW_WRAPPERS
 };
 
-class MAsmJSPassStackArg
+class MWasmStackArg
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    MAsmJSPassStackArg(uint32_t spOffset, MDefinition* ins)
+    MWasmStackArg(uint32_t spOffset, MDefinition* ins)
       : MUnaryInstruction(ins),
         spOffset_(spOffset)
     {}
@@ -13956,7 +13899,7 @@ class MAsmJSPassStackArg
     uint32_t spOffset_;
 
   public:
-    INSTRUCTION_HEADER(AsmJSPassStackArg)
+    INSTRUCTION_HEADER(WasmStackArg)
     TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, arg))
 
@@ -14050,11 +13993,11 @@ class MWasmCall final
     }
 };
 
-class MAsmSelect
+class MWasmSelect
   : public MTernaryInstruction,
     public NoTypePolicy::Data
 {
-    MAsmSelect(MDefinition* trueExpr, MDefinition* falseExpr, MDefinition *condExpr)
+    MWasmSelect(MDefinition* trueExpr, MDefinition* falseExpr, MDefinition *condExpr)
       : MTernaryInstruction(trueExpr, falseExpr, condExpr)
     {
         MOZ_ASSERT(condExpr->type() == MIRType::Int32);
@@ -14064,7 +14007,7 @@ class MAsmSelect
     }
 
   public:
-    INSTRUCTION_HEADER(AsmSelect)
+    INSTRUCTION_HEADER(WasmSelect)
     TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, trueExpr), (1, falseExpr), (2, condExpr))
 
@@ -14076,14 +14019,14 @@ class MAsmSelect
         return congruentIfOperandsEqual(ins);
     }
 
-    ALLOW_CLONE(MAsmSelect)
+    ALLOW_CLONE(MWasmSelect)
 };
 
-class MAsmReinterpret
+class MWasmReinterpret
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    MAsmReinterpret(MDefinition* val, MIRType toType)
+    MWasmReinterpret(MDefinition* val, MIRType toType)
       : MUnaryInstruction(val)
     {
         switch (val->type()) {
@@ -14098,12 +14041,8 @@ class MAsmReinterpret
     }
 
   public:
-    INSTRUCTION_HEADER(AsmReinterpret)
-
-    static MAsmReinterpret* NewAsmJS(TempAllocator& alloc, MDefinition* val, MIRType toType)
-    {
-        return new(alloc) MAsmReinterpret(val, toType);
-    }
+    INSTRUCTION_HEADER(WasmReinterpret)
+    TRIVIAL_NEW_WRAPPERS
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
@@ -14112,7 +14051,7 @@ class MAsmReinterpret
         return congruentIfOperandsEqual(ins);
     }
 
-    ALLOW_CLONE(MAsmReinterpret)
+    ALLOW_CLONE(MWasmReinterpret)
 };
 
 class MRotate
@@ -14130,13 +14069,8 @@ class MRotate
 
   public:
     INSTRUCTION_HEADER(Rotate)
+    TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, input), (1, count))
-
-    static MRotate* NewAsmJS(TempAllocator& alloc, MDefinition* input, MDefinition* count,
-                             MIRType type, bool isLeft)
-    {
-        return new(alloc) MRotate(input, count, type, isLeft);
-    }
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();

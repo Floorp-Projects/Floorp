@@ -72,23 +72,18 @@ function waitForInsecureLoginFormsStateChange(browser, count) {
                                        false, () => --count == 0);
 }
 
-add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({
-    set: [["dom.ipc.processCount", 1]]
-  });
-});
-
 /**
  * Checks that hasInsecureLoginForms is false for a viewer served internally
  * using a "resource:" URI.
  */
 add_task(function* test_streamConverter() {
-  let originalBrowser = gBrowser.selectedBrowser;
+  let originalBrowser = gBrowser.selectedTab.linkedBrowser;
 
   yield ContentTask.spawn(originalBrowser, null, registerConverter);
 
   let tab = gBrowser.addTab("http://example.com/browser/toolkit/components/" +
-                            "passwordmgr/test/browser/streamConverter_content.sjs");
+                            "passwordmgr/test/browser/streamConverter_content.sjs",
+                            { relatedBrowser: originalBrowser.linkedBrowser });
   let browser = tab.linkedBrowser;
   yield Promise.all([
     BrowserTestUtils.switchTab(gBrowser, tab),

@@ -87,7 +87,6 @@ static SECStatus tls13_ClientHandleFinished(sslSocket *ss,
 static SECStatus tls13_ServerHandleFinished(sslSocket *ss,
                                             SSL3Opaque *b, PRUint32 length,
                                             const TLS13CombinedHash *hashes);
-static SECStatus tls13_SendNewSessionTicket(sslSocket *ss);
 static SECStatus tls13_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b,
                                               PRUint32 length);
 static void
@@ -3354,10 +3353,7 @@ tls13_ServerHandleFinished(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
             return SECFailure; /* Error code and alerts handled below */
         }
         ssl_GetXmitBufLock(ss);
-        if (ss->opt.enableSessionTickets &&
-            ss->ssl3.hs.kea_def->authKeyType != ssl_auth_psk) {
-            /* TODO(ekr@rtfm.com): Add support for new tickets in PSK
-             * (bug 1281034).*/
+        if (ss->opt.enableSessionTickets) {
             rv = tls13_SendNewSessionTicket(ss);
             if (rv != SECSuccess) {
                 ssl_ReleaseXmitBufLock(ss);
@@ -3541,7 +3537,7 @@ loser:
  *       TicketExtension extensions<0..2^16-2>;
  *   } NewSessionTicket;
  */
-static SECStatus
+SECStatus
 tls13_SendNewSessionTicket(sslSocket *ss)
 {
     PRUint16 message_length;
@@ -3726,10 +3722,6 @@ tls13_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
         return SECFailure;
     }
 
-    /* TODO(ekr@rtfm.com): Re-enable new tickets when PSK mode is
-     * in use. I believe this works, but I can't test it until the
-     * server side supports it. Bug 1257047.
-     */
     if (!ss->opt.noCache) {
         PORT_Assert(ss->sec.ci.sid);
 
@@ -3754,13 +3746,24 @@ tls13_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
         /* Replace a previous session ticket when
          * we receive a second NewSessionTicket message. */
         if (ss->sec.ci.sid->cached == in_client_cache) {
-            /* Uncache first. */
-            ss->sec.uncache(ss->sec.ci.sid);
+            /* Create a new session ID. */
+            sslSessionID *sid = ssl3_NewSessionID(ss, PR_FALSE);
+            if (!sid) {
+                return SECFailure;
+            }
 
-            /* Then destroy and rebuild the SID. */
+            /* Copy over the peerCert. */
+            PORT_Assert(ss->sec.ci.sid->peerCert);
+            sid->peerCert = CERT_DupCertificate(ss->sec.ci.sid->peerCert);
+            if (!sid->peerCert) {
+                ssl_FreeSID(sid);
+                return SECFailure;
+            }
+
+            /* Destroy the old SID. */
+            ss->sec.uncache(ss->sec.ci.sid);
             ssl_FreeSID(ss->sec.ci.sid);
-            ss->sec.ci.sid = ssl3_NewSessionID(ss, PR_FALSE);
-            ss->sec.ci.sid->cached = never_cached;
+            ss->sec.ci.sid = sid;
         }
 
         ssl3_SetSIDSessionTicket(ss->sec.ci.sid, &ticket);

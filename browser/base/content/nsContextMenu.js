@@ -1867,7 +1867,7 @@ nsContextMenu.prototype = {
   },
 
   createContainerMenu: function(aEvent) {
-    return createUserContextMenu(aEvent, false,
+    return createUserContextMenu(aEvent, true,
                                  gContextMenuContentData.userContextId);
   },
 };

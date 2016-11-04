@@ -26,6 +26,89 @@ DeclarationBlock::Release()
   MOZ_STYLO_FORWARD(Release, ())
 }
 
+already_AddRefed<DeclarationBlock>
+DeclarationBlock::Clone() const
+{
+  RefPtr<DeclarationBlock> result;
+  if (IsGecko()) {
+    result = new css::Declaration(*AsGecko());
+  } else {
+    result = new ServoDeclarationBlock(*AsServo());
+  }
+  return result.forget();
+}
+
+already_AddRefed<DeclarationBlock>
+DeclarationBlock::EnsureMutable()
+{
+#ifdef DEBUG
+  if (IsGecko()) {
+    AsGecko()->AssertNotExpanded();
+  }
+#endif
+  if (!IsMutable()) {
+    return Clone();
+  }
+  return do_AddRef(this);
+}
+
+void
+DeclarationBlock::ToString(nsAString& aString) const
+{
+  MOZ_STYLO_FORWARD(ToString, (aString))
+}
+
+uint32_t
+DeclarationBlock::Count() const
+{
+  MOZ_STYLO_FORWARD(Count, ())
+}
+
+bool
+DeclarationBlock::GetNthProperty(uint32_t aIndex, nsAString& aReturn) const
+{
+  MOZ_STYLO_FORWARD(GetNthProperty, (aIndex, aReturn))
+}
+
+void
+DeclarationBlock::GetPropertyValue(const nsAString& aProperty,
+                                   nsAString& aValue) const
+{
+  MOZ_STYLO_FORWARD(GetPropertyValue, (aProperty, aValue))
+}
+
+void
+DeclarationBlock::GetPropertyValueByID(nsCSSPropertyID aPropID,
+                                       nsAString& aValue) const
+{
+  MOZ_STYLO_FORWARD(GetPropertyValueByID, (aPropID, aValue))
+}
+
+void
+DeclarationBlock::GetAuthoredPropertyValue(const nsAString& aProperty,
+                                           nsAString& aValue) const
+{
+  MOZ_STYLO_FORWARD(GetAuthoredPropertyValue, (aProperty, aValue))
+}
+
+bool
+DeclarationBlock::GetPropertyIsImportant(const nsAString& aProperty) const
+{
+  MOZ_STYLO_FORWARD(GetPropertyIsImportant, (aProperty))
+}
+
+void
+DeclarationBlock::RemoveProperty(const nsAString& aProperty)
+{
+  MOZ_STYLO_FORWARD(RemoveProperty, (aProperty))
+}
+
+void
+DeclarationBlock::RemovePropertyByID(nsCSSPropertyID aProperty)
+{
+  MOZ_STYLO_FORWARD(RemovePropertyByID, (aProperty))
+}
+
 } // namespace mozilla
 
 #endif // mozilla_DeclarationBlockInlines_h

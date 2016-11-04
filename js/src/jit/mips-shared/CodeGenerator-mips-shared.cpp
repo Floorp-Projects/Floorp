@@ -1741,13 +1741,13 @@ CodeGeneratorMIPSShared::visitBitAndAndBranch(LBitAndAndBranch* lir)
 }
 
 void
-CodeGeneratorMIPSShared::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir)
+CodeGeneratorMIPSShared::visitWasmUint32ToDouble(LWasmUint32ToDouble* lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
 }
 
 void
-CodeGeneratorMIPSShared::visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32* lir)
+CodeGeneratorMIPSShared::visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir)
 {
     masm.convertUInt32ToFloat32(ToRegister(lir->input()), ToFloatRegister(lir->output()));
 }
@@ -2308,9 +2308,9 @@ CodeGeneratorMIPSShared::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHea
 }
 
 void
-CodeGeneratorMIPSShared::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
+CodeGeneratorMIPSShared::visitWasmStackArg(LWasmStackArg* ins)
 {
-    const MAsmJSPassStackArg* mir = ins->mir();
+    const MWasmStackArg* mir = ins->mir();
     if (ins->arg()->isConstant()) {
         masm.storePtr(ImmWord(ToInt32(ins->arg())), Address(StackPointer, mir->spOffset()));
     } else {
@@ -2324,9 +2324,9 @@ CodeGeneratorMIPSShared::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
 }
 
 void
-CodeGeneratorMIPSShared::visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins)
+CodeGeneratorMIPSShared::visitWasmStackArgI64(LWasmStackArgI64* ins)
 {
-    const MAsmJSPassStackArg* mir = ins->mir();
+    const MWasmStackArg* mir = ins->mir();
     Address dst(StackPointer, mir->spOffset());
     if (IsConstant(ins->arg()))
         masm.store64(Imm64(ToInt64(ins->arg())), dst);
@@ -2335,7 +2335,7 @@ CodeGeneratorMIPSShared::visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins)
 }
 
 void
-CodeGeneratorMIPSShared::visitAsmSelect(LAsmSelect* ins)
+CodeGeneratorMIPSShared::visitWasmSelect(LWasmSelect* ins)
 {
     MIRType mirType = ins->mir()->type();
 
@@ -2358,7 +2358,7 @@ CodeGeneratorMIPSShared::visitAsmSelect(LAsmSelect* ins)
         else if (mirType == MIRType::Double)
             masm.as_movz(Assembler::DoubleFloat, out, ToFloatRegister(falseExpr), cond);
         else
-            MOZ_CRASH("unhandled type in visitAsmSelect!");
+            MOZ_CRASH("unhandled type in visitWasmSelect!");
     } else {
         Label done;
         masm.ma_b(cond, cond, &done, Assembler::NonZero, ShortJump);
@@ -2368,17 +2368,17 @@ CodeGeneratorMIPSShared::visitAsmSelect(LAsmSelect* ins)
         else if (mirType == MIRType::Double)
             masm.loadDouble(ToAddress(falseExpr), out);
         else
-            MOZ_CRASH("unhandled type in visitAsmSelect!");
+            MOZ_CRASH("unhandled type in visitWasmSelect!");
 
         masm.bind(&done);
     }
 }
 
 void
-CodeGeneratorMIPSShared::visitAsmReinterpret(LAsmReinterpret* lir)
+CodeGeneratorMIPSShared::visitWasmReinterpret(LWasmReinterpret* lir)
 {
-    MOZ_ASSERT(gen->compilingAsmJS());
-    MAsmReinterpret* ins = lir->mir();
+    MOZ_ASSERT(gen->compilingWasm());
+    MWasmReinterpret* ins = lir->mir();
 
     MIRType to = ins->type();
     DebugOnly<MIRType> from = ins->input()->type();
@@ -2396,7 +2396,7 @@ CodeGeneratorMIPSShared::visitAsmReinterpret(LAsmReinterpret* lir)
       case MIRType::Int64:
         MOZ_CRASH("not handled by this LIR opcode");
       default:
-        MOZ_CRASH("unexpected AsmReinterpret");
+        MOZ_CRASH("unexpected WasmReinterpret");
     }
 }
 

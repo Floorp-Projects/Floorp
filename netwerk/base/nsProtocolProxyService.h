@@ -382,7 +382,8 @@ protected:
     nsCString                    mHTTPSProxyHost;
     int32_t                      mHTTPSProxyPort;
 
-    // mSOCKSProxyTarget could be a host or a domain socket path.
+    // mSOCKSProxyTarget could be a host, a domain socket path,
+    // or a named-pipe name.
     nsCString                    mSOCKSProxyTarget;
     int32_t                      mSOCKSProxyPort;
     int32_t                      mSOCKSProxyVersion;

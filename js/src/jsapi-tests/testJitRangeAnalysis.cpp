@@ -134,7 +134,7 @@ BEGIN_TEST(testJitRangeAnalysis_MathSignBeta)
     // {
     //   return Math.sign(p + -0);
     // }
-    MAdd* thenAdd = MAdd::NewAsmJS(func.alloc, p, cm0, MIRType::Double);
+    MAdd* thenAdd = MAdd::New(func.alloc, p, cm0, MIRType::Double);
     thenBlock->add(thenAdd);
     MMathFunction* thenSign = MMathFunction::New(func.alloc, thenAdd, MMathFunction::Sign, &cache);
     thenBlock->add(thenSign);
@@ -152,7 +152,7 @@ BEGIN_TEST(testJitRangeAnalysis_MathSignBeta)
     //   {
     //     return Math.sign(p + -0);
     //   }
-    MAdd* elseThenAdd = MAdd::NewAsmJS(func.alloc, p, cm0, MIRType::Double);
+    MAdd* elseThenAdd = MAdd::New(func.alloc, p, cm0, MIRType::Double);
     elseThenBlock->add(elseThenAdd);
     MMathFunction* elseThenSign = MMathFunction::New(func.alloc, elseThenAdd, MMathFunction::Sign, &cache);
     elseThenBlock->add(elseThenSign);
@@ -164,7 +164,7 @@ BEGIN_TEST(testJitRangeAnalysis_MathSignBeta)
     //     return Math.sign(p + -0);
     //   }
     // }
-    MAdd* elseElseAdd = MAdd::NewAsmJS(func.alloc, p, cm0, MIRType::Double);
+    MAdd* elseElseAdd = MAdd::New(func.alloc, p, cm0, MIRType::Double);
     elseElseBlock->add(elseElseAdd);
     MMathFunction* elseElseSign = MMathFunction::New(func.alloc, elseElseAdd, MMathFunction::Sign, &cache);
     elseElseBlock->add(elseElseSign);
@@ -236,7 +236,7 @@ BEGIN_TEST(testJitRangeAnalysis_StrictCompareBeta)
     // }
     MConstant* cm0 = MConstant::New(func.alloc, DoubleValue(-0.0));
     thenBlock->add(cm0);
-    MAdd* thenAdd = MAdd::NewAsmJS(func.alloc, p, cm0, MIRType::Double);
+    MAdd* thenAdd = MAdd::New(func.alloc, p, cm0, MIRType::Double);
     thenBlock->add(thenAdd);
     MReturn* thenRet = MReturn::New(func.alloc, thenAdd);
     thenBlock->end(thenRet);

@@ -1,0 +1,6 @@
+<!-- file should be loaded (text is blue), but subsequent files shouldn't (text is red)  -->
+<link rel="stylesheet" href="style_importing.css"
+            integrity="sha384-m5Q2GOhAtLrdiv6rCmxY3GjEFMVInALcdTyDnEddUUiDH2uQvJSX5GSJYQiatpTK"
+            onload="parent.postMessage('finish', '*');"
+            onerror="parent.postMessage('finish', '*');">
+<p id="text-for-import-test">blue text</p>

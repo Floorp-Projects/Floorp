@@ -49,6 +49,7 @@ Cu.import("resource://gre/modules/ExtensionChild.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   runSafeSyncWithoutClone,
+  defineLazyGetter,
   BaseContext,
   LocaleData,
   Messenger,
@@ -187,18 +188,38 @@ Script.prototype = {
     }
   },
 
-  tryInject(window, sandbox, shouldRun) {
-    if (!this.matches(window)) {
-      this.deferred.reject({message: "No matching window"});
-      return;
-    }
-
+  /**
+   * Tries to inject this script into the given window and sandbox, if
+   * there are pending operations for the window's current load state.
+   *
+   * @param {Window} window
+   *        The DOM Window to inject the scripts and CSS into.
+   * @param {Sandbox} sandbox
+   *        A Sandbox inheriting from `window` in which to evaluate the
+   *        injected scripts.
+   * @param {function} shouldRun
+   *        A function which, when passed the document load state that a
+   *        script is expected to run at, returns `true` if we should
+   *        currently be injecting scripts for that load state.
+   *
+   *        For initial injection of a script, this function should
+   *        return true if the document is currently in or has already
+   *        passed through the given state. For injections triggered by
+   *        document state changes, it should only return true if the
+   *        given state exactly matches the state that triggered the
+   *        change.
+   * @param {string} when
+   *        The document's current load state, or if triggered by a
+   *        document state change, the new document state that triggered
+   *        the injection.
+   */
+  tryInject(window, sandbox, shouldRun, when) {
     if (shouldRun("document_start")) {
-      let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-
       let {cssURLs} = this;
       if (cssURLs.length > 0) {
+        let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+
         let method = this.remove_css ? winUtils.removeSheetUsingURIString : winUtils.loadSheetUsingURIString;
         for (let url of cssURLs) {
           runSafeSyncWithoutClone(method, url, winUtils.AUTHOR_SHEET);
@@ -217,7 +238,9 @@ Script.prototype = {
         let options = {
           target: sandbox,
           charset: "UTF-8",
-          async: false,
+          // Inject asynchronously unless we're expected to inject before any
+          // page scripts have run, and we haven't already missed that boat.
+          async: this.run_at !== "document_start" || when !== "document_start",
         };
         try {
           result = Services.scriptloader.loadSubScriptWithOptions(url, options);
@@ -274,7 +297,6 @@ class ExtensionContext extends BaseContext {
 
     this.scripts = [];
 
-    let prin;
     let contentPrincipal = contentWindow.document.nodePrincipal;
     let ssm = Services.scriptSecurityManager;
 
@@ -284,12 +306,13 @@ class ExtensionContext extends BaseContext {
     attrs.addonId = this.extension.id;
     let extensionPrincipal = ssm.createCodebasePrincipal(this.extension.baseURI, attrs);
 
+    let principal;
     if (ssm.isSystemPrincipal(contentPrincipal)) {
       // Make sure we don't hand out the system principal by accident.
       // also make sure that the null principal has the right origin attributes
-      prin = ssm.createNullPrincipal(attrs);
+      principal = ssm.createNullPrincipal(attrs);
     } else {
-      prin = [contentPrincipal, extensionPrincipal];
+      principal = [contentPrincipal, extensionPrincipal];
     }
 
     if (isExtensionPage) {
@@ -302,6 +325,7 @@ class ExtensionContext extends BaseContext {
       // into the iframe's window, see Bug 1214658 for rationale)
       this.sandbox = Cu.Sandbox(contentWindow, {
         sandboxPrototype: contentWindow,
+        sameZoneAs: contentWindow,
         wantXrays: false,
         isWebExtensionContentScript: true,
       });
@@ -314,9 +338,10 @@ class ExtensionContext extends BaseContext {
         addonId: attrs.addonId,
       };
 
-      this.sandbox = Cu.Sandbox(prin, {
+      this.sandbox = Cu.Sandbox(principal, {
         metadata,
         sandboxPrototype: contentWindow,
+        sameZoneAs: contentWindow,
         wantXrays: true,
         isWebExtensionContentScript: true,
         wantExportHelpers: true,
@@ -337,32 +362,24 @@ class ExtensionContext extends BaseContext {
       configurable: true,
     });
 
-    let url = contentWindow.location.href;
-    // The |sender| parameter is passed directly to the extension.
-    let sender = {id: this.extension.uuid, frameId, url};
-    let filter = {extensionId: this.extension.id};
-    let optionalFilter = {frameId};
-    this.messenger = new Messenger(this, [this.messageManager], sender, filter, optionalFilter);
+    this.url = contentWindow.location.href;
 
-    this.chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
+    defineLazyGetter(this, "chromeObj", () => {
+      let chromeObj = Cu.createObjectIn(this.sandbox);
 
-    // Sandboxes don't get Xrays for some weird compatibility
-    // reason. However, we waive here anyway in case that changes.
-    Cu.waiveXrays(this.sandbox).chrome = this.chromeObj;
-
-    let localApis = {};
-    apiManager.generateAPIs(this, localApis);
-    this.childManager = new ChildAPIManager(this, this.messageManager, localApis, {
-      envType: "content_parent",
-      url,
+      Schemas.inject(chromeObj, this.childManager);
+      return chromeObj;
     });
 
-    Schemas.inject(this.chromeObj, this.childManager);
+    Schemas.exportLazyGetter(this.sandbox, "browser", () => this.chromeObj);
+    Schemas.exportLazyGetter(this.sandbox, "chrome", () => this.chromeObj);
 
-    // This is an iframe with content script API enabled. (See Bug 1214658 for rationale)
+    // This is an iframe with content script API enabled (bug 1214658)
     if (isExtensionPage) {
-      Cu.waiveXrays(this.contentWindow).chrome = this.chromeObj;
-      Cu.waiveXrays(this.contentWindow).browser = this.chromeObj;
+      Schemas.exportLazyGetter(this.contentWindow,
+                               "browser", () => this.chromeObj);
+      Schemas.exportLazyGetter(this.contentWindow,
+                               "chrome", () => this.chromeObj);
     }
   }
 
@@ -370,13 +387,13 @@ class ExtensionContext extends BaseContext {
     return this.sandbox;
   }
 
-  execute(script, shouldRun) {
-    script.tryInject(this.contentWindow, this.sandbox, shouldRun);
+  execute(script, shouldRun, when) {
+    script.tryInject(this.contentWindow, this.sandbox, shouldRun, when);
   }
 
-  addScript(script) {
+  addScript(script, when) {
     let state = DocumentManager.getWindowState(this.contentWindow);
-    this.execute(script, scheduled => isWhenBeforeOrSame(scheduled, state));
+    this.execute(script, scheduled => isWhenBeforeOrSame(scheduled, state), when);
 
     // Save the script in case it has pending operations in later load
     // states, but only if we're before document_idle, or require cleanup.
@@ -387,7 +404,7 @@ class ExtensionContext extends BaseContext {
 
   triggerScripts(documentState) {
     for (let script of this.scripts) {
-      this.execute(script, scheduled => scheduled == documentState);
+      this.execute(script, scheduled => scheduled == documentState, documentState);
     }
     if (documentState == "document_idle") {
       // Don't bother saving scripts after document_idle.
@@ -397,8 +414,6 @@ class ExtensionContext extends BaseContext {
 
   close() {
     super.unload();
-
-    this.childManager.close();
 
     if (this.contentWindow) {
       for (let script of this.scripts) {
@@ -418,6 +433,29 @@ class ExtensionContext extends BaseContext {
     this.sandbox = null;
   }
 }
+
+defineLazyGetter(ExtensionContext.prototype, "messenger", function() {
+  // The |sender| parameter is passed directly to the extension.
+  let sender = {id: this.extension.uuid, frameId: this.frameId, url: this.url};
+  let filter = {extensionId: this.extension.id};
+  let optionalFilter = {frameId: this.frameId};
+
+  return new Messenger(this, [this.messageManager], sender, filter, optionalFilter);
+});
+
+defineLazyGetter(ExtensionContext.prototype, "childManager", function() {
+  let localApis = {};
+  apiManager.generateAPIs(this, localApis);
+
+  let childManager = new ChildAPIManager(this, this.messageManager, localApis, {
+    envType: "content_parent",
+    url: this.url,
+  });
+
+  this.callOnClose(childManager);
+
+  return childManager;
+});
 
 // Responsible for creating ExtensionContexts and injecting content
 // scripts into them when new documents are created.
@@ -701,14 +739,14 @@ DocumentManager = {
         for (let script of extension.scripts) {
           if (script.matches(window)) {
             let context = this.getContentScriptContext(extension, window);
-            context.addScript(script);
+            context.addScript(script, when);
           }
         }
       }
     } else {
       let contexts = this.contentScriptWindows.get(getInnerWindowID(window)) || new Map();
       for (let context of contexts.values()) {
-        context.triggerScripts(this.getWindowState(window));
+        context.triggerScripts(when);
       }
     }
   },

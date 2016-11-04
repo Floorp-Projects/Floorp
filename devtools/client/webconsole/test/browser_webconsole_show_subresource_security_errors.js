@@ -13,6 +13,12 @@ const TEST_DOC = "https://example.com/browser/devtools/client/webconsole/" +
                  "test/test_bug1092055_shouldwarn.html";
 const SAMPLE_MSG = "specified a header that could not be parsed successfully.";
 
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.processCount", 1]]
+  });
+});
+
 add_task(function* () {
   let { browser } = yield loadTab(TEST_URI);
 

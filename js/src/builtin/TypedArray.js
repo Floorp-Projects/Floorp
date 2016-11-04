@@ -1294,6 +1294,10 @@ function TypedArraySubarray(begin, end) {
     var buffer = TypedArrayBuffer(obj);
     var srcLength = TypedArrayLength(obj);
 
+    // Step 14 (Reordered because otherwise it'd be observable that we reset
+    // the byteOffset to zero when the underlying array buffer gets detached).
+    var srcByteOffset = TypedArrayByteOffset(obj);
+
     // Steps 7-8.
     var relativeBegin = ToInteger(begin);
     var beginIndex = relativeBegin < 0 ? std_Math_max(srcLength + relativeBegin, 0)
@@ -1309,9 +1313,6 @@ function TypedArraySubarray(begin, end) {
 
     // Steps 12-13, altered to use a shift instead of a size for performance.
     var elementShift = TypedArrayElementShift(obj);
-
-    // Step 14.
-    var srcByteOffset = TypedArrayByteOffset(obj);
 
     // Step 15.
     var beginByteOffset = srcByteOffset + (beginIndex << elementShift);

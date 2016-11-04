@@ -40,12 +40,13 @@
         "ClientAuth-SHA1-Fallback-RSA":"We fail when the sig_algs_ext is empty",
         "Downgrade-TLS12-*":"NSS implements downgrade detection",
         "TrailingMessageData-*": "Bug 1304575",
-        "DuplicateKeyShares":"Bug 1304578"
+        "DuplicateKeyShares":"Bug 1304578",
+        "Resume-Server-TLS13-TLS13":"Bug 1314351"
     },
     "ErrorMap" : {
         ":HANDSHAKE_FAILURE_ON_CLIENT_HELLO:":"SSL_ERROR_NO_CYPHER_OVERLAP",
         ":UNKNOWN_CIPHER_RETURNED:":"SSL_ERROR_NO_CYPHER_OVERLAP",
-        ":OLD_SESSION_CIPHER_NOT_RETURNED:":"SSL_ERROR_NO_CYPHER_OVERLAP",
+        ":OLD_SESSION_CIPHER_NOT_RETURNED:":"SSL_ERROR_RX_MALFORMED_SERVER_HELLO",
         ":NO_SHARED_CIPHER:":"SSL_ERROR_NO_CYPHER_OVERLAP",
         ":DIGEST_CHECK_FAILED:":"SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE"
     }

@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/containers.css" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/containers.dtd" >
+
+<window id="ContainersDialog" class="windowDialog"
+        windowtype="Browser:Permissions"
+        title="&window.title;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        style="width: &window.width;;"
+        onload="gContainersManager.onLoad();"
+        onunload="gContainersManager.uninit();"
+        persist="screenX screenY width height"
+        onkeypress="gContainersManager.onWindowKeyPress(event);">
+
+  <script src="chrome://global/content/treeUtils.js"/>
+  <script src="chrome://browser/content/preferences/containers.js"/>
+
+  <stringbundle id="bundlePreferences"
+                src="chrome://browser/locale/preferences/preferences.properties"/>
+
+  <keyset>
+    <key key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
+  </keyset>
+
+  <vbox class="contentPane largeDialogContainer" flex="1" hidden="true" id="containers-content">
+    <description id="permissionsText" control="url"/>
+    <separator class="thin"/>
+    <hbox align="start">
+      <label id="nameLabel" control="url" value="&name.label;" accesskey="&name.accesskey;"/>
+      <textbox id="name" flex="1" onkeyup="gContainersManager.checkForm();" />
+    </hbox>
+    <hbox align="center" id="iconWrapper">
+      <label id="iconLabel" control="url" value="&icon.label;" accesskey="&icon.accesskey;"/>
+    </hbox>
+    <hbox align="center" id="colorWrapper">
+      <label id="colorLabel" control="url" value="&color.label;" accesskey="&color.accesskey;"/>
+    </hbox>
+  </vbox>
+  <vbox>
+    <hbox class="actionButtons" align="right" flex="1">
+      <button id="btnApplyChanges" disabled="true" oncommand="gContainersManager.onApplyChanges();" icon="save"
+              label="&button.ok.label;" accesskey="&button.ok.accesskey;"/>
+    </hbox>
+  </vbox>
+</window>

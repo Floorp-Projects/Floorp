@@ -112,7 +112,119 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
+/**
+ * Acts as a proxy for a message manager or message manager owner, and
+ * tracks docShell swaps so that messages are always sent to the same
+ * receiver, even if it is moved to a different <browser>.
+ *
+ * Currently only proxies message sending functions, and does not handle
+ * transfering listeners in any way.
+ *
+ * @param {nsIMessageSender|Element} target
+ *        The target message manager on which to send messages, or the
+ *        <browser> element which owns it.
+ */
+class MessageManagerProxy {
+  constructor(target) {
+    if (target instanceof Ci.nsIMessageSender) {
+      Object.defineProperty(this, "messageManager", {
+        value: target,
+        configurable: true,
+        writable: true,
+      });
+    } else {
+      this.addListeners(target);
+    }
+  }
 
+  /**
+   * Disposes of the proxy object, removes event listeners, and drops
+   * all references to the underlying message manager.
+   *
+   * Must be called before the last reference to the proxy is dropped,
+   * unless the underlying message manager or <browser> is also being
+   * destroyed.
+   */
+  dispose() {
+    if (this.eventTarget) {
+      this.removeListeners(this.eventTarget);
+      this.eventTarget = null;
+    } else {
+      this.messageManager = null;
+    }
+  }
+
+  /**
+   * Returns true if the given target is the same as, or owns, the given
+   * message manager.
+   *
+   * @param {nsIMessageSender|MessageManagerProxy|Element} target
+   *        The message manager, MessageManagerProxy, or <browser>
+   *        element agaisnt which to match.
+   * @param {nsIMessageSender} messageManager
+   *        The message manager against which to match `target`.
+   *
+   * @returns {boolean}
+   *        True if `messageManager` is the same object as `target`, or
+   *        `target` is a MessageManagerProxy or <browser> element that
+   *        is tied to it.
+   */
+  static matches(target, messageManager) {
+    return target === messageManager || target.messageManager === messageManager;
+  }
+
+  /**
+   * @property {nsIMessageSender|null} messageManager
+   *        The message manager that is currently being proxied. This
+   *        may change during the life of the proxy object, so should
+   *        not be stored elsewhere.
+   */
+  get messageManager() {
+    return this.eventTarget && this.eventTarget.messageManager;
+  }
+
+  /**
+   * Sends a message on the proxied message manager.
+   *
+   * @param {array} args
+   *        Arguments to be passed verbatim to the underlying
+   *        sendAsyncMessage method.
+   * @returns {undefined}
+   */
+  sendAsyncMessage(...args) {
+    return this.messageManager.sendAsyncMessage(...args);
+  }
+
+  /**
+   * @private
+   * Adds docShell swap listeners to the message manager owner.
+   *
+   * @param {Element} target
+   *        The target element.
+   */
+  addListeners(target) {
+    target.addEventListener("SwapDocShells", this);
+    this.eventTarget = target;
+  }
+
+  /**
+   * @private
+   * Removes docShell swap listeners to the message manager owner.
+   *
+   * @param {Element} target
+   *        The target element.
+   */
+  removeListeners(target) {
+    target.removeEventListener("SwapDocShells", this);
+  }
+
+  handleEvent(event) {
+    if (event.type == "SwapDocShells") {
+      this.removeListeners(this.eventTarget);
+      this.addListeners(event.detail);
+    }
+  }
+}
 
 /**
  * Handles the mapping and dispatching of messages to their registered
@@ -610,14 +722,6 @@ this.MessageChannel = {
    * @param {nsIMessageSender|{messageManager:nsIMessageSender}} data.target
    */
   _handleMessage(handlers, data) {
-    // The target passed to `receiveMessage` is sometimes a message manager
-    // owner instead of a message manager, so make sure to convert it to a
-    // message manager first if necessary.
-    let {target} = data;
-    if (!(target instanceof Ci.nsIMessageSender)) {
-      target = target.messageManager;
-    }
-
     if (data.responseType == this.RESPONSE_NONE) {
       handlers.forEach(handler => {
         // The sender expects no reply, so dump any errors to the console.
@@ -630,6 +734,8 @@ this.MessageChannel = {
       // Note: Unhandled messages are silently dropped.
       return;
     }
+
+    let target = new MessageManagerProxy(data.target);
 
     let deferred = {
       sender: data.sender,
@@ -673,6 +779,10 @@ this.MessageChannel = {
         }
 
         target.sendAsyncMessage(MESSAGE_RESPONSE, response);
+      }).catch(e => {
+        Cu.reportError(e);
+      }).then(() => {
+        target.dispose();
       });
 
     this._addPendingResponse(deferred);
@@ -771,7 +881,7 @@ this.MessageChannel = {
    */
   abortMessageManager(target, reason) {
     for (let response of this.pendingResponses) {
-      if (response.messageManager === target) {
+      if (MessageManagerProxy.matches(response.messageManager, target)) {
         response.reject(reason);
       }
     }

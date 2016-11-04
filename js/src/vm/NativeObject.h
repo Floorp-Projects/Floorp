@@ -727,7 +727,7 @@ class NativeObject : public ShapedObject
      * logic across the object vs. shape module wall.
      */
     static bool allocSlot(ExclusiveContext* cx, HandleNativeObject obj, uint32_t* slotp);
-    void freeSlot(uint32_t slot);
+    void freeSlot(ExclusiveContext* cx, uint32_t slot);
 
   private:
     static Shape* getChildPropertyOnDictionary(ExclusiveContext* cx, HandleNativeObject obj,
@@ -782,7 +782,8 @@ class NativeObject : public ShapedObject
     static Shape*
     addPropertyInternal(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
                         JSGetterOp getter, JSSetterOp setter, uint32_t slot, unsigned attrs,
-                        unsigned flags, ShapeTable::Entry* entry, bool allowDictionary);
+                        unsigned flags, ShapeTable::Entry* entry, bool allowDictionary,
+                        const AutoKeepShapeTables& keep);
 
     bool fillInAfterSwap(JSContext* cx, const Vector<Value>& values, void* priv);
 

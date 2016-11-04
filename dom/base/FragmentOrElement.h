@@ -33,9 +33,7 @@ class nsDOMStringMap;
 class nsIURI;
 
 namespace mozilla {
-namespace css {
-class Declaration;
-} // namespace css
+class DeclarationBlock;
 namespace dom {
 class DOMIntersectionObserver;
 class Element;
@@ -284,7 +282,7 @@ public:
     /**
      * Holds any SMIL override style declaration for this element.
      */
-    RefPtr<mozilla::css::Declaration> mSMILOverrideStyleDeclaration;
+    RefPtr<mozilla::DeclarationBlock> mSMILOverrideStyleDeclaration;
 
     /**
      * An object implementing nsIDOMMozNamedAttrMap for this content (attributes)
