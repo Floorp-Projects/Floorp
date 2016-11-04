@@ -13,8 +13,8 @@ const {ReflowFront} = require("devtools/shared/fronts/reflow");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
-const STRINGS_URI = "devtools/locale/shared.properties";
-const STRINGS_INSPECTOR = "devtools-shared/locale/styleinspector.properties";
+const STRINGS_URI = "devtools/client/locales/shared.properties";
+const STRINGS_INSPECTOR = "devtools/shared/locales/styleinspector.properties";
 const SHARED_L10N = new LocalizationHelper(STRINGS_URI);
 const INSPECTOR_L10N = new LocalizationHelper(STRINGS_INSPECTOR);
 const NUMERIC = /^-?[\d\.]+$/;

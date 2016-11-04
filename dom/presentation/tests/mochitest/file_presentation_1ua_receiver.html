@@ -63,6 +63,7 @@ function testConnectionAvailable() {
     info('Receiver: --- testConnectionAvailable ---');
     ok(navigator.presentation, "Receiver: navigator.presentation should be available.");
     ok(navigator.presentation.receiver, "Receiver: navigator.presentation.receiver should be available.");
+    is(navigator.presentation.defaultRequest, null, "Receiver: navigator.presentation.defaultRequest should be null.");
 
     navigator.presentation.receiver.connectionList
     .then((aList) => {

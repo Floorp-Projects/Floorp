@@ -225,7 +225,8 @@ class CommonTestCase(unittest.TestCase):
         return m is not None
 
     @classmethod
-    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars):
+    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette,
+                           httpd, testvars):
         """Add all the tests in the specified file to the specified suite."""
         raise NotImplementedError
 
@@ -252,6 +253,7 @@ class CommonTestCase(unittest.TestCase):
         # proper garbage collection.
         self.start_time = time.time()
         self.marionette = self._marionette_weakref()
+        self.httpd = self._httpd_weakref()
         if self.marionette.session is None:
             self.marionette.start_session()
         self.marionette.reset_timeouts()
@@ -424,19 +426,21 @@ class MarionetteTestCase(CommonTestCase):
 
     match_re = re.compile(r"test_(.*)\.py$")
 
-    def __init__(self, marionette_weakref, methodName='runTest',
+    def __init__(self, marionette_weakref, httpd_weakref, methodName='runTest',
                  filepath='', **kwargs):
         self._marionette_weakref = marionette_weakref
-        self.marionette = None
+        self._httpd_weakref = httpd_weakref
         self.methodName = methodName
         self.filepath = filepath
         self.testvars = kwargs.pop('testvars', None)
+
+        self.marionette = None
 
         super(MarionetteTestCase, self).__init__(methodName, **kwargs)
 
     @classmethod
     def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette,
-                           testvars, **kwargs):
+                           httpd, testvars, **kwargs):
         # since we use imp.load_source to load test modules, if a module
         # is loaded with the same name as another one the module would just be
         # reloaded.
@@ -460,10 +464,11 @@ class MarionetteTestCase(CommonTestCase):
                 testnames = testloader.getTestCaseNames(obj)
                 for testname in testnames:
                     suite.addTest(obj(weakref.ref(marionette),
-                                  methodName=testname,
-                                  filepath=filepath,
-                                  testvars=testvars,
-                                  **kwargs))
+                                      weakref.ref(httpd),
+                                      methodName=testname,
+                                      filepath=filepath,
+                                      testvars=testvars,
+                                      **kwargs))
 
     def setUp(self):
         super(MarionetteTestCase, self).setUp()
@@ -509,9 +514,12 @@ class MarionetteJSTestCase(CommonTestCase):
 
     match_re = re.compile(r"test_(.*)\.js$")
 
-    def __init__(self, marionette_weakref, methodName='runTest', jsFile=None, **kwargs):
+    def __init__(self, marionette_weakref, httpd_weakref, methodName='runTest',
+                 jsFile=None, **kwargs):
         assert(jsFile)
         self.jsFile = jsFile
+        self._httpd_weakref = httpd_weakref
+        self.httpd = None
         self._marionette_weakref = marionette_weakref
         self.marionette = None
 
@@ -519,8 +527,11 @@ class MarionetteJSTestCase(CommonTestCase):
 
     @classmethod
     def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette,
-                           testvars, **kwargs):
-        suite.addTest(cls(weakref.ref(marionette), jsFile=filepath, **kwargs))
+                           httpd, testvars, **kwargs):
+        suite.addTest(cls(weakref.ref(marionette),
+                          weakref.ref(httpd),
+                          jsFile=filepath,
+                          **kwargs))
 
     def runTest(self):
         if self.marionette.session is None:

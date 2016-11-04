@@ -299,7 +299,7 @@ var NetMonitorController = {
       request = NetMonitorView.RequestsMenu.getItemForPredicate(predicate);
       if (!request) {
         // Reset filters so that the request is visible.
-        gStore.dispatch(Actions.toggleFilter("all"));
+        gStore.dispatch(Actions.toggleFilterType("all"));
         request = NetMonitorView.RequestsMenu.getItemForPredicate(predicate);
       }
 

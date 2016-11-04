@@ -134,8 +134,6 @@ devtools/shared/*.js
 !devtools/shared/indentation.js
 !devtools/shared/loader-plugin-raw.jsm
 !devtools/shared/task.js
-devtools/shared/*.jsm
-!devtools/shared/Loader.jsm
 devtools/shared/apps/**
 devtools/shared/client/**
 devtools/shared/discovery/**
@@ -243,7 +241,6 @@ toolkit/components/reader/JSDOMParser.js
 # Uses preprocessing
 toolkit/content/widgets/wizard.xml
 toolkit/components/jsdownloads/src/DownloadIntegration.jsm
-toolkit/components/search/nsSearchService.js
 toolkit/components/url-classifier/**
 toolkit/components/urlformatter/nsURLFormatter.js
 toolkit/identity/FirefoxAccounts.jsm

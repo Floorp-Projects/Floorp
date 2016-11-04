@@ -5,7 +5,7 @@
 "use strict";
 
 const LAYOUT_ERRORS_L10N =
-  new LocalizationHelper("global/locale/layout_errors.properties");
+  new LocalizationHelper("toolkit/locales/layout_errors.properties");
 
 // Test that when an animation is selected, its list of animated properties is
 // displayed below it.
