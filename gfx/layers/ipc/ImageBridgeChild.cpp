@@ -1073,37 +1073,40 @@ ImageBridgeChild::DispatchAllocShmemInternal(size_t aSize,
 
 void
 ImageBridgeChild::ProxyDeallocShmemNow(SynchronousTask* aTask,
-                                       ipc::Shmem* aShmem)
+                                       ipc::Shmem* aShmem,
+                                       bool* aResult)
 {
   AutoCompleteTask complete(aTask);
 
   if (!CanSend()) {
     return;
   }
-  DeallocShmem(*aShmem);
+  *aResult = DeallocShmem(*aShmem);
 }
 
-void
+bool
 ImageBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
 {
   if (InImageBridgeChildThread()) {
     if (!CanSend()) {
-      return;
+      return false;
     }
-    PImageBridgeChild::DeallocShmem(aShmem);
-    return;
+    return PImageBridgeChild::DeallocShmem(aShmem);
   }
 
   SynchronousTask task("AllocatorProxy Dealloc");
+  bool result = false;
 
   RefPtr<Runnable> runnable = WrapRunnable(
     RefPtr<ImageBridgeChild>(this),
     &ImageBridgeChild::ProxyDeallocShmemNow,
     &task,
-    &aShmem);
+    &aShmem,
+    &result);
   GetMessageLoop()->PostTask(runnable.forget());
 
   task.Wait();
+  return result;
 }
 
 PTextureChild*
