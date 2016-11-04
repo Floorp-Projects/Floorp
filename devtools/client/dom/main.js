@@ -20,7 +20,7 @@ XPCOMUtils.defineConstant(this, "require", require);
 
 // Localization
 const { LocalizationHelper } = require("devtools/shared/l10n");
-this.l10n = new LocalizationHelper("devtools/client/locales/dom.properties");
+this.l10n = new LocalizationHelper("devtools/locale/dom.properties");
 
 // Load DOM panel content
 require("./content/dom-view.js");

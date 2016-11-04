@@ -10,7 +10,7 @@ requestLongerTimeout(2);
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 add_task(function* () {
   let tab = yield addTab("about:blank");

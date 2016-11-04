@@ -37,7 +37,7 @@ const { getClientCssProperties } = require("devtools/shared/fronts/css-propertie
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/sourceeditor.properties");
+const L10N = new LocalizationHelper("devtools/locale/sourceeditor.properties");
 
 const { OS } = Services.appinfo;
 

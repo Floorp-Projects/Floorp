@@ -6,7 +6,7 @@
 const { Task } = require("devtools/shared/task");
 var {LocalizationHelper} = require("devtools/shared/l10n");
 
-const DBG_STRINGS_URI = "devtools/client/locales/debugger.properties";
+const DBG_STRINGS_URI = "devtools/locale/debugger.properties";
 var L10N = new LocalizationHelper(DBG_STRINGS_URI);
 
 function DebuggerPanel(iframeWindow, toolbox) {

@@ -40,7 +40,7 @@
  */
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("toolkit/locales/intl.properties");
+const L10N = new LocalizationHelper("global/locale/intl.properties");
 
 // These are the available plural functions that give the appropriate index
 // based on the plural rule number specified. The first element is the number

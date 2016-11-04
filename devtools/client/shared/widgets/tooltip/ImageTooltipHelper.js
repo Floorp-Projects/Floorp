@@ -7,7 +7,7 @@
 "use strict";
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/inspector.properties");
+const L10N = new LocalizationHelper("devtools/locale/inspector.properties");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
