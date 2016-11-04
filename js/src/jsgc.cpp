@@ -5586,30 +5586,13 @@ AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
     MOZ_ASSERT(rt->heapState_ == JS::HeapState::Idle);
     MOZ_ASSERT(heapState != JS::HeapState::Idle);
     MOZ_ASSERT_IF(heapState == JS::HeapState::MajorCollecting, rt->gc.nursery.isEmpty());
-
-    if (rt->exclusiveThreadsPresent()) {
-        // Lock the helper thread state when changing the heap state in the
-        // presence of exclusive threads, to avoid racing with refillFreeList.
-        AutoLockHelperThreadState lock;
-        rt->heapState_ = heapState;
-    } else {
-        rt->heapState_ = heapState;
-    }
+    rt->heapState_ = heapState;
 }
 
 AutoTraceSession::~AutoTraceSession()
 {
     MOZ_ASSERT(runtime->isHeapBusy());
-
-    if (runtime->exclusiveThreadsPresent()) {
-        AutoLockHelperThreadState lock;
-        runtime->heapState_ = prevState;
-
-        // Notify any helper threads waiting for the trace session to end.
-        HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, lock);
-    } else {
-        runtime->heapState_ = prevState;
-    }
+    runtime->heapState_ = prevState;
 }
 
 void
@@ -7098,22 +7081,14 @@ AutoAssertNoNurseryAlloc::~AutoAssertNoNurseryAlloc()
 JS::AutoEnterCycleCollection::AutoEnterCycleCollection(JSContext* cx)
   : runtime(shadow::Runtime::asShadowRuntime(cx->runtime()))
 {
-    if (runtime) {
-        // Lock the helper thread state when changing the heap state in the
-        // presence of exclusive threads, to avoid racing with refillFreeList.
-        AutoLockHelperThreadState lock;
-        MOZ_ASSERT(runtime->heapState_ == HeapState::Idle);
-        runtime->heapState_ = HeapState::CycleCollecting;
-    }
+    MOZ_ASSERT(runtime->heapState_ == HeapState::Idle);
+    runtime->heapState_ = HeapState::CycleCollecting;
 }
 
 JS::AutoEnterCycleCollection::~AutoEnterCycleCollection()
 {
-    if (runtime) {
-        AutoLockHelperThreadState lock;
-        MOZ_ASSERT(runtime->heapState_ == HeapState::CycleCollecting);
-        runtime->heapState_ = HeapState::Idle;
-    }
+    MOZ_ASSERT(runtime->heapState_ == HeapState::CycleCollecting);
+    runtime->heapState_ = HeapState::Idle;
 }
 #endif
 
