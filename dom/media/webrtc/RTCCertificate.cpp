@@ -47,9 +47,9 @@ public:
   GenerateRTCCertificateTask(nsIGlobalObject* aGlobal, JSContext* aCx,
                              const ObjectOrString& aAlgorithm,
                              const Sequence<nsString>& aKeyUsages,
-                             PRTime expires)
+                             PRTime aExpires)
       : GenerateAsymmetricKeyTask(aGlobal, aCx, aAlgorithm, true, aKeyUsages),
-        mExpires(expires),
+        mExpires(aExpires),
         mAuthType(ssl_kea_null),
         mCertificate(nullptr),
         mSignatureAlg(SEC_OID_UNKNOWN)
@@ -239,7 +239,7 @@ ReadExpires(JSContext* aCx, const ObjectOrString& aOptions,
   }
   JS::RootedValue value(aCx, JS::ObjectValue(*aOptions.GetAsObject()));
   if (!expiration.Init(aCx, value)) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    aRv.NoteJSContextException(aCx);
     return 0;
   }
 
