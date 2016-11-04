@@ -495,11 +495,11 @@ function waitForContentMessage(name) {
 /**
  * Open the requestMenu menu and return all of it's items in a flat array
  * @param {netmonitorPanel} netmonitor
- * @param {Object} options to pass into openMenu
+ * @param {Event} event mouse event with screenX and screenX coordinates
  * @return An array of MenuItems
  */
-function openContextMenuAndGetAllItems(netmonitor, options) {
-  let menu = netmonitor.RequestsMenu._openMenu(options);
+function openContextMenuAndGetAllItems(netmonitor, event) {
+  let menu = netmonitor.RequestsMenu.contextMenu.open(event);
 
   // Flatten all menu items into a single array to make searching through it easier
   let allItems = [].concat.apply([], menu.items.map(function addItem(item) {
