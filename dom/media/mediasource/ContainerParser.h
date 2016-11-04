@@ -39,10 +39,11 @@ public:
   virtual MediaResult IsMediaSegmentPresent(MediaByteBuffer* aData);
 
   // Parse aData to extract the start and end frame times from the media
-  // segment.  aData may not start on a parser sync boundary.  Return true
-  // if aStart and aEnd have been updated.
-  virtual bool ParseStartAndEndTimestamps(MediaByteBuffer* aData,
-                                          int64_t& aStart, int64_t& aEnd);
+  // segment.  aData may not start on a parser sync boundary.  Return NS_OK
+  // if aStart and aEnd have been updated and NS_ERROR_NOT_AVAILABLE otherwise
+  // when no error were encountered.
+  virtual MediaResult ParseStartAndEndTimestamps(MediaByteBuffer* aData,
+                                                 int64_t& aStart, int64_t& aEnd);
 
   // Compare aLhs and rHs, considering any error that may exist in the
   // timestamps from the format's base representation.  Return true if aLhs
