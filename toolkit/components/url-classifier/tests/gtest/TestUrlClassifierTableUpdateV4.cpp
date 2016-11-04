@@ -252,7 +252,7 @@ testOpenLookupCache()
   file->AppendNative(GTEST_SAFEBROWSING_DIR);
 
   RunTestInNewThread([&] () -> void {
-    LookupCacheV4 cache(nsCString(GTEST_TABLE), file);
+    LookupCacheV4 cache(nsCString(GTEST_TABLE), EmptyCString(), file);
     nsresult rv = cache.Init();
     ASSERT_EQ(rv, NS_OK);
 

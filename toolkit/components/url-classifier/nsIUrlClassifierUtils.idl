@@ -23,6 +23,15 @@ interface nsIUrlClassifierUtils : nsISupports
   ACString getKeyForURI(in nsIURI uri);
 
   /**
+   * Get the provider by table name.
+   *
+   * @param tableName The table name that we want to lookup
+   *
+   * @returns the provider name that the given table belongs.
+   */
+  ACString getProvider(in ACString tableName);
+
+  /**
    * Get the protocol version for the given provider.
    *
    * @param provider String the provider name. e.g. "google"
