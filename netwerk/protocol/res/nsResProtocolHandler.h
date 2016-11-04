@@ -29,7 +29,7 @@ public:
                                     /* aEnforceFileOrJar = */ false)
     {}
 
-    nsresult Init();
+    MOZ_MUST_USE nsresult Init();
 
     NS_IMETHOD SetSubstitution(const nsACString& aRoot, nsIURI* aBaseURI) override;
 
@@ -49,13 +49,13 @@ public:
     }
 
 protected:
-    nsresult GetSubstitutionInternal(const nsACString& aRoot, nsIURI** aResult) override;
+    MOZ_MUST_USE nsresult GetSubstitutionInternal(const nsACString& aRoot, nsIURI** aResult) override;
     virtual ~nsResProtocolHandler() {}
 
-    bool ResolveSpecialCases(const nsACString& aHost,
-                             const nsACString& aPath,
-                             const nsACString& aPathname,
-                             nsACString& aResult) override;
+    MOZ_MUST_USE bool ResolveSpecialCases(const nsACString& aHost,
+                                          const nsACString& aPath,
+                                          const nsACString& aPathname,
+                                          nsACString& aResult) override;
 
 private:
     nsCString mAppURI;

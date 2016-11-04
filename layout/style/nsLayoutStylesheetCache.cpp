@@ -599,7 +599,10 @@ AnnotateCrashReport(nsIURI* aURI)
       annotation.AppendLiteral("(ResolveURI failed)\n");
     } else {
       nsAutoCString resolvedSpec;
-      handler->ResolveURI(aURI, resolvedSpec);
+      nsresult rv = handler->ResolveURI(aURI, resolvedSpec);
+      if (NS_FAILED(rv)) {
+        annotation.AppendPrintf("(ResolveURI failed with 0x%08x)\n", rv);
+      }
       annotation.Append(NS_ConvertUTF8toUTF16(resolvedSpec));
       annotation.Append('\n');
     }
