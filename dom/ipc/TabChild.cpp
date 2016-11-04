@@ -2449,6 +2449,7 @@ TabChild::RecvSetDocShellIsActive(const bool& aIsActive,
         root->SchedulePaint();
       }
 
+      Telemetry::AutoTimer<Telemetry::TABCHILD_PAINT_TIME> timer;
       // If we need to repaint, let's do that right away. No sense waiting until
       // we get back to the event loop again. We suppress the display port so that
       // we only paint what's visible. This ensures that the tab we're switching

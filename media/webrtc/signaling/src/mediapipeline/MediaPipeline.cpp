@@ -1907,6 +1907,11 @@ class GenericReceiveListener : public MediaStreamListener
     AddListener(source_, this);
   }
 
+  void EndTrack()
+  {
+    source_->EndTrack(track_id_);
+  }
+
 #ifndef USE_FAKE_MEDIA_STREAMS
   // Must be called on the main thread
   void SetPrincipalHandle_m(const PrincipalHandle& principal_handle)
@@ -1942,7 +1947,7 @@ class GenericReceiveListener : public MediaStreamListener
 
  protected:
   SourceMediaStream *source_;
-  TrackID track_id_;
+  const TrackID track_id_;
   TrackTicks played_ticks_;
   PrincipalHandle principal_handle_;
 };
@@ -2104,7 +2109,8 @@ MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
 void MediaPipelineReceiveAudio::DetachMedia()
 {
   ASSERT_ON_THREAD(main_thread_);
-  if (stream_) {
+  if (stream_ && listener_) {
+    listener_->EndTrack();
     stream_->RemoveListener(listener_);
     stream_ = nullptr;
   }
@@ -2335,7 +2341,8 @@ void MediaPipelineReceiveVideo::DetachMedia()
   // avoid cycles, and the render callbacks are invoked from a different
   // thread so simple null-checks would cause TSAN bugs without locks.
   static_cast<VideoSessionConduit*>(conduit_.get())->DetachRenderer();
-  if (stream_) {
+  if (stream_ && listener_) {
+    listener_->EndTrack();
     stream_->RemoveListener(listener_);
     stream_ = nullptr;
   }

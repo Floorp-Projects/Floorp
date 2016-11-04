@@ -2,6 +2,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * The origin of this IDL file is
+ * https://w3c.github.io/presentation-api/#interface-presentation
  */
 
 [Pref="dom.presentation.enabled"]
@@ -13,9 +16,6 @@ interface Presentation {
   * presentation request (as if the controller had called |defaultRequest.start()|).
   *
   * Only used by controlling browsing context (senders).
-  *
-  * The origin of this IDL file is
-  * https://w3c.github.io/presentation-api/#interface-presentation
   */
   [Pref="dom.presentation.controller.enabled"]
   attribute PresentationRequest? defaultRequest;
@@ -25,7 +25,6 @@ interface Presentation {
    * access the controlling browsing context and communicate with them.
    */
   [SameObject,
-   Pref="dom.presentation.receiver.enabled",
-   Func="Presentation::HasReceiverSupport"]
+   Pref="dom.presentation.receiver.enabled"]
   readonly attribute PresentationReceiver? receiver;
 };

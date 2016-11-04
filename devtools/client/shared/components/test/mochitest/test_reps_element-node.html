@@ -1,0 +1,339 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test Element node rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - Element node</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+"use strict";
+
+window.onload = Task.async(function* () {
+  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+  let { ElementNode } = browserRequire("devtools/client/shared/components/reps/element-node");
+
+  try {
+    yield testBodyNode();
+    yield testDocumentElement();
+    yield testNode();
+    yield testNodeWithLeadingAndTrailingSpacesClassName();
+    yield testNodeWithoutAttributes();
+    yield testLotsOfAttributes();
+    yield testSvgNode();
+    yield testSvgNodeInXHTML();
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function testBodyNode() {
+    const stub = getGripStub("testBodyNode");
+    const renderedRep = shallowRenderComponent(Rep, { object: stub });
+    is(renderedRep.type, ElementNode.rep,
+      `Rep correctly selects ${ElementNode.rep.displayName} for body node`);
+
+    const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
+    is(renderedComponent.textContent, `<body id="body-id" class="body-class">`,
+      "Element node rep has expected text content for body node");
+
+    const tinyRenderedComponent = renderComponent(
+      ElementNode.rep, { object: stub, mode: "tiny" });
+    is(tinyRenderedComponent.textContent, `body#body-id.body-class`,
+      "Element node rep has expected text content for body node in tiny mode");
+  }
+
+  function testDocumentElement() {
+    const stub = getGripStub("testDocumentElement");
+    const renderedRep = shallowRenderComponent(Rep, { object: stub });
+    is(renderedRep.type, ElementNode.rep,
+      `Rep correctly selects ${ElementNode.rep.displayName} for document element node`);
+
+    const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
+    is(renderedComponent.textContent, `<html dir="ltr" lang="en-US">`,
+      "Element node rep has expected text content for document element node");
+
+    const tinyRenderedComponent = renderComponent(
+      ElementNode.rep, { object: stub, mode: "tiny" });
+    is(tinyRenderedComponent.textContent, `html`,
+      "Element node rep has expected text content for document element in tiny mode");
+  }
+
+  function testNode() {
+    const stub = getGripStub("testNode");
+    const renderedRep = shallowRenderComponent(Rep, { object: stub });
+    is(renderedRep.type, ElementNode.rep,
+      `Rep correctly selects ${ElementNode.rep.displayName} for element node`);
+
+    const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
+    is(renderedComponent.textContent,
+      `<input id="newtab-customize-button" class="bar baz" dir="ltr" ` +
+      `title="Customize your New Tab page" value="foo" type="button">`,
+      "Element node rep has expected text content for element node");
+
+    const tinyRenderedComponent = renderComponent(
+      ElementNode.rep, { object: stub, mode: "tiny" });
+    is(tinyRenderedComponent.textContent,
+      `input#newtab-customize-button.bar.baz`,
+      "Element node rep has expected text content for element node in tiny mode");
+  }
+
+  function testNodeWithLeadingAndTrailingSpacesClassName() {
+    const stub = getGripStub("testNodeWithLeadingAndTrailingSpacesClassName");
+    const renderedRep = shallowRenderComponent(Rep, { object: stub });
+    is(renderedRep.type, ElementNode.rep,
+      `Rep correctly selects ${ElementNode.rep.displayName} for element node`);
+
+    const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
+    is(renderedComponent.textContent,
+      `<body id="nightly-whatsnew" class="  html-ltr    ">`,
+      "Element node rep output element node with the class trailing spaces");
+
+    const tinyRenderedComponent = renderComponent(
+      ElementNode.rep, { object: stub, mode: "tiny" });
+    is(tinyRenderedComponent.textContent,
+      `body#nightly-whatsnew.html-ltr`,
+      "Element node rep does not show leading nor trailing spaces " +
+      "on class attribute in tiny mode");
+  }
+
+  function testNodeWithoutAttributes() {
+    const stub = getGripStub("testNodeWithoutAttributes");
+
+    const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
+    is(renderedComponent.textContent, "<p>",
+      "Element node rep has expected text content for element node without attributes");
+
+    const tinyRenderedComponent = renderComponent(
+      ElementNode.rep, { object: stub, mode: "tiny" });
+    is(tinyRenderedComponent.textContent, `p`,
+      "Element node rep has expected text content for element node without attributes");
+  }
+
+  function testLotsOfAttributes() {
+    const stub = getGripStub("testLotsOfAttributes");
+
+    const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
+    is(renderedComponent.textContent,
+      '<p id="lots-of-attributes" a="" b="" c="" d="" e="" f="" g="" ' +
+      'h="" i="" j="" k="" l="" m="" n="">',
+      "Element node rep has expected text content for node with lots of attributes");
+
+    const tinyRenderedComponent = renderComponent(
+      ElementNode.rep, { object: stub, mode: "tiny" });
+    is(tinyRenderedComponent.textContent, `p#lots-of-attributes`,
+      "Element node rep has expected text content for node in tiny mode");
+  }
+
+  function testSvgNode() {
+    const stub = getGripStub("testSvgNode");
+
+    const renderedRep = shallowRenderComponent(Rep, { object: stub });
+    is(renderedRep.type, ElementNode.rep,
+      `Rep correctly selects ${ElementNode.rep.displayName} for SVG element node`);
+
+    const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
+    is(renderedComponent.textContent,
+      '<clipPath id="clip" class="svg-element">',
+      "Element node rep has expected text content for SVG element node");
+
+    const tinyRenderedComponent = renderComponent(
+      ElementNode.rep, { object: stub, mode: "tiny" });
+    is(tinyRenderedComponent.textContent, `clipPath#clip.svg-element`,
+      "Element node rep has expected text content for SVG element node in tiny mode");
+  }
+
+  function testSvgNodeInXHTML() {
+    const stub = getGripStub("testSvgNodeInXHTML");
+
+    const renderedRep = shallowRenderComponent(Rep, { object: stub });
+    is(renderedRep.type, ElementNode.rep,
+      `Rep correctly selects ${ElementNode.rep.displayName} for XHTML SVG element node`);
+
+    const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
+    is(renderedComponent.textContent,
+      '<svg:circle class="svg-element" cx="0" cy="0" r="5">',
+      "Element node rep has expected text content for XHTML SVG element node");
+
+    const tinyRenderedComponent = renderComponent(
+      ElementNode.rep, { object: stub, mode: "tiny" });
+    is(tinyRenderedComponent.textContent, `svg:circle.svg-element`,
+      "Element node rep has expected text content for XHTML SVG element in tiny mode");
+  }
+
+  function getGripStub(name) {
+    switch (name) {
+      case "testBodyNode":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj30",
+          "class": "HTMLBodyElement",
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "DOMNode",
+            "nodeType": 1,
+            "nodeName": "body",
+            "attributes": {
+              "class": "body-class",
+              "id": "body-id"
+            },
+            "attributesLength": 2
+          }
+        };
+      case "testDocumentElement":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj40",
+          "class": "HTMLHtmlElement",
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "DOMNode",
+            "nodeType": 1,
+            "nodeName": "html",
+            "attributes": {
+              "dir": "ltr",
+              "lang": "en-US"
+            },
+            "attributesLength": 2
+          }
+        };
+      case "testNode":
+        return {
+          "type": "object",
+          "actor": "server1.conn2.child1/obj116",
+          "class": "HTMLInputElement",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "DOMNode",
+            "nodeType": 1,
+            "nodeName": "input",
+            "attributes": {
+              "id": "newtab-customize-button",
+              "dir": "ltr",
+              "title": "Customize your New Tab page",
+              "class": "bar baz",
+              "value": "foo",
+              "type": "button"
+            },
+            "attributesLength": 6
+          }
+        };
+      case "testNodeWithLeadingAndTrailingSpacesClassName":
+        return {
+          "type": "object",
+          "actor": "server1.conn3.child1/obj59",
+          "class": "HTMLBodyElement",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "DOMNode",
+            "nodeType": 1,
+            "nodeName": "body",
+            "attributes": {
+              "id": "nightly-whatsnew",
+              "class": "  html-ltr    "
+            },
+            "attributesLength": 2
+          }
+        };
+      case "testNodeWithoutAttributes":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj32",
+          "class": "HTMLParagraphElement",
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "DOMNode",
+            "nodeType": 1,
+            "nodeName": "p",
+            "attributes": {},
+            "attributesLength": 1
+          }
+        };
+      case "testLotsOfAttributes":
+        return {
+          "type": "object",
+          "actor": "server1.conn2.child1/obj30",
+          "class": "HTMLParagraphElement",
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "DOMNode",
+            "nodeType": 1,
+            "nodeName": "p",
+            "attributes": {
+              "id": "lots-of-attributes",
+              "a": "",
+              "b": "",
+              "c": "",
+              "d": "",
+              "e": "",
+              "f": "",
+              "g": "",
+              "h": "",
+              "i": "",
+              "j": "",
+              "k": "",
+              "l": "",
+              "m": "",
+              "n": ""
+            },
+            "attributesLength": 15
+          }
+        };
+      case "testSvgNode":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj42",
+          "class": "SVGClipPathElement",
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "DOMNode",
+            "nodeType": 1,
+            "nodeName": "clipPath",
+            "attributes": {
+              "id": "clip",
+              "class": "svg-element"
+            },
+            "attributesLength": 0
+          }
+        };
+      case "testSvgNodeInXHTML":
+        return {
+          "type": "object",
+          "actor": "server1.conn3.child1/obj34",
+          "class": "SVGCircleElement",
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "DOMNode",
+            "nodeType": 1,
+            "nodeName": "svg:circle",
+            "attributes": {
+              "class": "svg-element",
+              "cx": "0",
+              "cy": "0",
+              "r": "5"
+            },
+            "attributesLength": 3
+          }
+        };
+    }
+    return null;
+  }
+});
+</script>
+</pre>
+</body>
+</html>

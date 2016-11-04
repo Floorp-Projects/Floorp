@@ -75,8 +75,8 @@ const EVENTS = {
 XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const STRINGS_URI = "devtools/locale/canvasdebugger.properties";
-const SHARED_STRINGS_URI = "devtools/locale/shared.properties";
+const STRINGS_URI = "devtools/client/locales/canvasdebugger.properties";
+const SHARED_STRINGS_URI = "devtools/client/locales/shared.properties";
 
 const SNAPSHOT_START_RECORDING_DELAY = 10; // ms
 const SNAPSHOT_DATA_EXPORT_MAX_BLOCK = 1000; // ms

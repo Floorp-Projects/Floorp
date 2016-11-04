@@ -50,6 +50,7 @@ Cu.import("resource://gre/modules/NotificationDB.jsm");
   ["TelemetryStopwatch", "resource://gre/modules/TelemetryStopwatch.jsm"],
   ["Translation", "resource:///modules/translation/Translation.jsm"],
   ["UITour", "resource:///modules/UITour.jsm"],
+  ["URLBarZoom", "resource:///modules/URLBarZoom.jsm"],
   ["UpdateUtils", "resource://gre/modules/UpdateUtils.jsm"],
   ["Weave", "resource://services-sync/main.js"],
   ["fxAccounts", "resource://gre/modules/FxAccounts.jsm"],
@@ -4482,16 +4483,13 @@ var XULBrowserWindow = {
       }
 
       URLBarSetURI(aLocationURI);
-
       BookmarkingUI.onLocationChange();
-
       gIdentityHandler.onLocationChange();
-
       SocialUI.updateState();
-
       UITour.onLocationChange(location);
-
       gTabletModePageCounter.inc();
+      ReaderParent.updateReaderButton(gBrowser.selectedBrowser);
+      URLBarZoom.updateZoomButton(gBrowser.selectedBrowser, "browser-fullZoom:location-change");
 
       // Utility functions for disabling find
       var shouldDisableFind = function shouldDisableFind(aDocument) {
@@ -4545,7 +4543,6 @@ var XULBrowserWindow = {
       }
     }
     UpdateBackForwardCommands(gBrowser.webNavigation);
-    ReaderParent.updateReaderButton(gBrowser.selectedBrowser);
 
     gGestureSupport.restoreRotationState();
 

@@ -151,7 +151,7 @@ public:
 
       NS_ENSURE_TRUE_VOID(ok);
 
-      if (size > 0 && durationUs.value() > 0) {
+      if (size > 0) {
         RefPtr<layers::Image> img =
           new SurfaceTextureImage(mDecoder->mSurfaceTexture.get(), mDecoder->mConfig.mDisplay,
                                   gl::OriginPos::BottomLeft);

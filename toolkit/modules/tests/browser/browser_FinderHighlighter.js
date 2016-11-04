@@ -184,31 +184,31 @@ add_task(function* setup() {
 add_task(function* testModalResults() {
   let tests = new Map([
     ["Roland", {
-      rectCount: 1,
+      rectCount: 2,
       insertCalls: [2, 4],
       removeCalls: [0, 1]
     }],
     ["their law might propagate their kind", {
-      rectCount: 0,
-      insertCalls: [28, 31],
-      removeCalls: [28, 30],
+      rectCount: 2,
+      insertCalls: [5, 6],
+      removeCalls: [4, 5],
       extraTest: function(maskNode, outlineNode, rects) {
         Assert.equal(outlineNode.getElementsByTagName("div").length, 2,
           "There should be multiple rects drawn");
       }
     }],
     ["ro", {
-      rectCount: 40,
+      rectCount: 41,
       insertCalls: [1, 4],
       removeCalls: [1, 3]
     }],
     ["new", {
-      rectCount: 1,
+      rectCount: 2,
       insertCalls: [1, 4],
       removeCalls: [0, 2]
     }],
     ["o", {
-      rectCount: 491,
+      rectCount: 492,
       insertCalls: [1, 4],
       removeCalls: [0, 2]
     }]
@@ -249,7 +249,7 @@ add_task(function* testModalSwitching() {
 
     let word = "Roland";
     let expectedResult = {
-      rectCount: 1,
+      rectCount: 2,
       insertCalls: [2, 4],
       removeCalls: [0, 1]
     };
@@ -285,12 +285,13 @@ add_task(function* testDarkPageDetection() {
 
     let word = "Roland";
     let expectedResult = {
-      rectCount: 1,
+      rectCount: 2,
       insertCalls: [1, 3],
       removeCalls: [0, 1]
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult, function(node) {
-      Assert.ok(!node.hasAttribute("brighttext"), "White HTML page shouldn't have 'brighttext' set");
+      Assert.ok(node.style.background.startsWith("rgba(0, 0, 0"),
+        "White HTML page should have a black background color set for the mask");
     });
     yield promiseEnterStringIntoFindField(findbar, word);
     yield promise;
@@ -305,7 +306,7 @@ add_task(function* testDarkPageDetection() {
 
     let word = "Roland";
     let expectedResult = {
-      rectCount: 1,
+      rectCount: 2,
       insertCalls: [2, 4],
       removeCalls: [0, 1]
     };
@@ -324,7 +325,8 @@ add_task(function* testDarkPageDetection() {
     });
 
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult, node => {
-      Assert.ok(node.hasAttribute("brighttext"), "Dark HTML page should have 'brighttext' set");
+      Assert.ok(node.style.background.startsWith("rgba(255, 255, 255"),
+        "Dark HTML page should have a white background color set for the mask");
     });
     yield promiseEnterStringIntoFindField(findbar, word);
     yield promise;
@@ -342,7 +344,7 @@ add_task(function* testHighlightAllToggle() {
 
     let word = "Roland";
     let expectedResult = {
-      rectCount: 1,
+      rectCount: 2,
       insertCalls: [2, 4],
       removeCalls: [0, 1]
     };
@@ -363,7 +365,7 @@ add_task(function* testHighlightAllToggle() {
 
     // For posterity, let's switch back.
     expectedResult = {
-      rectCount: 1,
+      rectCount: 2,
       insertCalls: [1, 3],
       removeCalls: [0, 1]
     };
@@ -408,7 +410,7 @@ add_task(function* testHideOnLocationChange() {
 
   let word = "Roland";
   let expectedResult = {
-    rectCount: 1,
+    rectCount: 2,
     insertCalls: [2, 4],
     removeCalls: [0, 1]
   };
@@ -436,9 +438,9 @@ add_task(function* testHideOnClear() {
 
     let word = "Roland";
     let expectedResult = {
-      rectCount: 1,
+      rectCount: 2,
       insertCalls: [2, 4],
-      removeCalls: [1, 2]
+      removeCalls: [0, 2]
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     yield promiseEnterStringIntoFindField(findbar, word);
