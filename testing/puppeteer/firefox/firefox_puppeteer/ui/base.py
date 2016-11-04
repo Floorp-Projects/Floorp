@@ -35,3 +35,23 @@ class UIBaseLib(BaseLib):
         :returns: :class:`BaseWindow` instance of the chrome window.
         """
         return self._window
+
+
+class DOMElement(HTMLElement):
+    """
+    Class that inherits from HTMLElement and provides a way for subclasses to
+    expose new api's.
+    """
+
+    def __new__(cls, element):
+        instance = object.__new__(cls)
+        instance.__dict__ = element.__dict__.copy()
+        setattr(instance, 'inner', element)
+
+        return instance
+
+    def __init__(self, element):
+        pass
+
+    def get_marionette(self):
+        return self.marionette
