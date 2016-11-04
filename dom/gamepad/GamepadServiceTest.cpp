@@ -122,10 +122,8 @@ GamepadServiceTest::AddGamepad(const nsAString& aID,
     return nullptr;
   }
 
-  // Because GamepadServiceTest::AddGamepad() is opened for Web API,
-  // we need to convert aMapping from uint32_t to GamepadMappingType here.
   GamepadAdded a(nsString(aID), 0,
-                 static_cast<GamepadMappingType>(aMapping),
+                 aMapping,
                  GamepadServiceType::Standard,
                  aNumButtons, aNumAxes);
   GamepadChangeEvent e(a);
