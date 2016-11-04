@@ -204,9 +204,9 @@ var contentPage = "http://mochi.test:8888/chrome/toolkit/components/passwordmgr/
 var testWindows = [];
 
 function whenDelayedStartupFinished(aWindow, aCallback) {
-  Services.obs.addObserver(function observer(aSubject, aTopic) {
+  Services.obs.addObserver(function obs(aSubject, aTopic) {
     if (aWindow == aSubject) {
-      Services.obs.removeObserver(observer, aTopic);
+      Services.obs.removeObserver(obs, aTopic);
       setTimeout(aCallback, 0);
     }
   }, "browser-delayed-startup-finished", false);

@@ -64,7 +64,7 @@ add_task(function* () {
   });
 
   let addon = yield new Promise((resolve, reject) => {
-    AddonManager.getAddonByID(ID, addon => addon ? resolve(addon) : reject());
+    AddonManager.getAddonByID(ID, aAddon => aAddon ? resolve(aAddon) : reject());
   });
 
   ok(addon, `Got the addon wrapper for ${addon.id}`);

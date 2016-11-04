@@ -317,12 +317,12 @@ function* test_browser_swapping(tab, browser) {
     yield BrowserTestUtils.withNewTab({
       gBrowser,
       url: "about:blank",
-    }, newBrowser => test_swapped_browser_while_not_playing(tab, newBrowser));
+    }, secondAboutBlankBrowser => test_swapped_browser_while_not_playing(tab, secondAboutBlankBrowser));
   });
 }
 
 function* test_click_on_pinned_tab_after_mute() {
-  function* test_on_browser(browser) {
+  function* taskFn(browser) {
     let tab = gBrowser.getTabForBrowser(browser);
 
     gBrowser.selectedTab = originallySelectedTab;
@@ -361,12 +361,12 @@ function* test_click_on_pinned_tab_after_mute() {
   yield BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE
-  }, test_on_browser);
+  }, taskFn);
 }
 
 // This test only does something useful in e10s!
 function* test_cross_process_load() {
-  function* test_on_browser(browser) {
+  function* taskFn(browser) {
     let tab = gBrowser.getTabForBrowser(browser);
 
     //   Start playback and wait for it to finish.
@@ -389,7 +389,7 @@ function* test_cross_process_load() {
   yield BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE
-  }, test_on_browser);
+  }, taskFn);
 }
 
 function* test_mute_keybinding() {
@@ -401,7 +401,7 @@ function* test_mute_keybinding() {
     EventUtils.synthesizeKey("m", {ctrlKey: true});
     yield mutedPromise;
   }
-  function* test_on_browser(browser) {
+  function* taskFn(browser) {
     let tab = gBrowser.getTabForBrowser(browser);
 
     // Make sure it's possible to mute before the tab is playing.
@@ -434,7 +434,7 @@ function* test_mute_keybinding() {
   yield BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE
-  }, test_on_browser);
+  }, taskFn);
 }
 
 function* test_on_browser(browser) {
@@ -462,7 +462,7 @@ function* test_on_browser(browser) {
 }
 
 function* test_delayed_tabattr_removal() {
-  function* test_on_browser(browser) {
+  function* taskFn(browser) {
     let tab = gBrowser.getTabForBrowser(browser);
     yield play(tab);
 
@@ -476,7 +476,7 @@ function* test_delayed_tabattr_removal() {
   yield BrowserTestUtils.withNewTab({
     gBrowser,
     url: PAGE
-  }, test_on_browser);
+  }, taskFn);
 }
 
 add_task(function*() {

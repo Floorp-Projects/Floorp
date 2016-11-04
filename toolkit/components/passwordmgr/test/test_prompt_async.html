@@ -189,7 +189,7 @@
             }
         }
 
-        function doTest(testNum)
+        function doTest(testNumber)
         {
             /*
              * These contentDocument variables are located here,
@@ -203,7 +203,7 @@
             var exampleCom = "http://example.com/tests/toolkit/components/passwordmgr/test/";
             var exampleOrg = "http://example.org/tests/toolkit/components/passwordmgr/test/";
 
-            switch (testNum)
+            switch (testNumber)
             {
             case 1:
                 // Load through a single proxy with authentication required 3 different
@@ -356,11 +356,11 @@
             startCallbackTimer();
         }
 
-        function handleDialog(doc, testNum)
+        function handleDialog(doc, testNumber)
         {
             var dialog        = doc.getElementById("commonDialog");
 
-            switch (testNum)
+            switch (testNumber)
             {
                 case 1:
                 case 2:
@@ -403,14 +403,14 @@
                     break;
 
                 default:
-                    ok(false, "Unhandled testNum " + testNum + " in handleDialog");
+                    ok(false, "Unhandled testNum " + testNumber + " in handleDialog");
             }
 
             if (--expectedDialogs > 0)
                 startCallbackTimer();
         }
 
-        function doCheck(testNum)
+        function doCheck(testNumber)
         {
             var iframe1Doc = SpecialPowers.wrap(iframe1).contentDocument;
             var iframe2aDoc = SpecialPowers.wrap(iframe2a).contentDocument;
@@ -418,7 +418,7 @@
             var authok1;
             var proxyok1;
             var footnote;
-            switch (testNum)
+            switch (testNumber)
             {
                 case 1:
                     ok(true, "doCheck testNum 1");
@@ -526,7 +526,7 @@
                     break;
 
                 default:
-                    ok(false, "Unhandled testNum " + testNum + " in doCheck");
+                    ok(false, "Unhandled testNum " + testNumber + " in doCheck");
             }
         }
 

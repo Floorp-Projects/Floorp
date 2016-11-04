@@ -79,14 +79,14 @@ function* testPolicy(customCSP = null) {
     return JSON.parse(cspJSON);
   }
 
-  function background(getCSP) {
+  function background(getCSPFn) {
     browser.test.sendMessage("base-url", browser.extension.getURL("").replace(/\/$/, ""));
 
-    browser.test.sendMessage("background-csp", getCSP(window));
+    browser.test.sendMessage("background-csp", getCSPFn(window));
   }
 
-  function tabScript(getCSP) {
-    browser.test.sendMessage("tab-csp", getCSP(window));
+  function tabScript(getCSPFn) {
+    browser.test.sendMessage("tab-csp", getCSPFn(window));
   }
 
   let extension = ExtensionTestUtils.loadExtension({

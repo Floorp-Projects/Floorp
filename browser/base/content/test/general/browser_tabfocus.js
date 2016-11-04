@@ -63,7 +63,7 @@ function* getFocusedElementForBrowser(browser, dontCheckExtraFocus = false)
 
 function focusInChild()
 {
-  var fm = Components.classes["@mozilla.org/focus-manager;1"].
+  var contentFM = Components.classes["@mozilla.org/focus-manager;1"].
                       getService(Components.interfaces.nsIFocusManager);
 
   function getWindowDocId(target)
@@ -91,24 +91,24 @@ function focusInChild()
 
   addMessageListener("Browser:GetFocusedElement", function getFocusedElement(message) {
     var focusedWindow = {};
-    var node = fm.getFocusedElementForWindow(content, false, focusedWindow);
+    var node = contentFM.getFocusedElementForWindow(content, false, focusedWindow);
     var details = "Focus is " + (node ? node.id : "<none>");
 
     /* Check focus manager properties. Add an error onto the string if they are
        not what is expected which will cause matching to fail in the parent process. */
     let doc = content.document;
     if (!message.data.dontCheckExtraFocus) {
-      if (fm.focusedElement != node) {
+      if (contentFM.focusedElement != node) {
         details += "<ERROR: focusedElement doesn't match>";
       }
-      if (fm.focusedWindow && fm.focusedWindow != content) {
+      if (contentFM.focusedWindow && contentFM.focusedWindow != content) {
         details += "<ERROR: focusedWindow doesn't match>";
       }
-      if ((fm.focusedWindow == content) != doc.hasFocus()) {
+      if ((contentFM.focusedWindow == content) != doc.hasFocus()) {
         details += "<ERROR: child hasFocus() is not correct>";
       }
-      if ((fm.focusedElement && doc.activeElement != fm.focusedElement) ||
-          (!fm.focusedElement && doc.activeElement != doc.body)) {
+      if ((contentFM.focusedElement && doc.activeElement != contentFM.focusedElement) ||
+          (!contentFM.focusedElement && doc.activeElement != doc.body)) {
         details += "<ERROR: child activeElement is not correct>";
       }
     }
@@ -160,7 +160,6 @@ add_task(function*() {
   window.addEventListener("blur", _browser_tabfocus_test_eventOccured, true);
 
   // make sure that the focus initially starts out blank
-  var fm = Services.focus;
   var focusedWindow = {};
 
   let focused = yield getFocusedElementForBrowser(browser1);
@@ -373,19 +372,19 @@ add_task(function*() {
   finish();
 });
 
-function getWindowDocId(target)
-{
-  if (target == browser1.contentWindow || target == browser1.contentDocument) {
-    return "window1";
-  }
-  if (target == browser2.contentWindow || target == browser2.contentDocument) {
-    return "window2";
-  }
-  return "main-window";
-}
-
 function _browser_tabfocus_test_eventOccured(event)
 {
+  function getWindowDocId(target)
+  {
+    if (target == browser1.contentWindow || target == browser1.contentDocument) {
+      return "window1";
+    }
+    if (target == browser2.contentWindow || target == browser2.contentDocument) {
+      return "window2";
+    }
+    return "main-window";
+  }
+
   var id;
 
   // Some focus events from the child bubble up? Ignore them.

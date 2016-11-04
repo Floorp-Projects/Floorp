@@ -53,7 +53,7 @@ function test() {
     allow.doCommand();
     yield promiseWaitForCondition(() =>
       popupTabs.length == 2 &&
-      popupTabs.every(tab => tab.linkedBrowser.currentURI.spec != "about:blank"));
+      popupTabs.every(aTab => aTab.linkedBrowser.currentURI.spec != "about:blank"));
 
     gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen);
 

@@ -136,12 +136,12 @@ function test() {
   getIconFile(function () {
     testOnWindow({}, function(aWin) {
       testNormal(aWin, function () {
-        testOnWindow({}, function(aWin) {
-          testAboutURIBookmarked(aWin, function () {
-            testOnWindow({private: true}, function(aWin) {
-              testPrivateBrowsingBookmarked(aWin, function () {
-                testOnWindow({}, function(aWin) {
-                  testDisabledHistoryBookmarked(aWin, finish);
+        testOnWindow({}, function(aWin2) {
+          testAboutURIBookmarked(aWin2, function () {
+            testOnWindow({private: true}, function(aWin3) {
+              testPrivateBrowsingBookmarked(aWin3, function () {
+                testOnWindow({}, function(aWin4) {
+                  testDisabledHistoryBookmarked(aWin4, finish);
                 });
               });
             });
