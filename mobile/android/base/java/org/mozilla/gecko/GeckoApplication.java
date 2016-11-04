@@ -166,6 +166,8 @@ public class GeckoApplication extends Application
         DownloadsIntegration.init();
         HomePanelsManager.getInstance().init(context);
 
+        GlobalPageMetadata.getInstance().init();
+
         // We need to set the notification client before launching Gecko, since Gecko could start
         // sending notifications immediately after startup, which we don't want to lose/crash on.
         GeckoAppShell.setNotificationListener(new NotificationClient(context));
