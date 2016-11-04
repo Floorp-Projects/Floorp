@@ -23,7 +23,7 @@ GamepadTestChannelParent::RecvGamepadTestEvent(const uint32_t& aID,
     nsCString gamepadID;
     LossyCopyUTF16toASCII(a.id(), gamepadID);
     uint32_t index = service->AddGamepad(gamepadID.get(),
-                                         a.mapping(),
+                                         static_cast<GamepadMappingType>(a.mapping()),
                                          a.num_buttons(),
                                          a.num_axes());
     if (!mShuttingdown) {

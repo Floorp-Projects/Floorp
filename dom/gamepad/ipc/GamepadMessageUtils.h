@@ -3,15 +3,9 @@
 #define mozilla_dom_gamepad_GamepadMessageUtils_h
 
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/dom/Gamepad.h"
+#include "mozilla/dom/GamepadServiceType.h"
 
 namespace IPC {
-
-template<>
-struct ParamTraits<mozilla::dom::GamepadMappingType> :
-  public ContiguousEnumSerializer<mozilla::dom::GamepadMappingType,
-                                  mozilla::dom::GamepadMappingType(mozilla::dom::GamepadMappingType::_empty),
-                                  mozilla::dom::GamepadMappingType(mozilla::dom::GamepadMappingType::EndGuard_)> {};
 
 template<>
 struct ParamTraits<mozilla::dom::GamepadServiceType> :

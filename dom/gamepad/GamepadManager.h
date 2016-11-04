@@ -11,6 +11,7 @@
 #include "nsIObserver.h"
 // Needed for GamepadMappingType
 #include "mozilla/dom/GamepadBinding.h"
+#include "mozilla/dom/GamepadServiceType.h"
 
 class nsGlobalWindow;
 
