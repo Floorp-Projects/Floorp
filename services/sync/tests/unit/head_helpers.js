@@ -276,7 +276,15 @@ function assert_valid_ping(record) {
   // no Syncs - either of them not being true might be an actual problem)
   if (record && (record.why != "shutdown" || record.syncs.length != 0)) {
     if (!SyncPingValidator(record)) {
-      deepEqual([], SyncPingValidator.errors, "Sync telemetry ping validation failed");
+      if (SyncPingValidator.errors.length) {
+        // validation failed - using a simple |deepEqual([], errors)| tends to
+        // truncate the validation errors in the output and doesn't show that
+        // the ping actually was - so be helpful.
+        do_print("telemetry ping validation failed");
+        do_print("the ping data is: " + JSON.stringify(record, undefined, 2));
+        do_print("the validation failures: " + JSON.stringify(SyncPingValidator.errors, undefined, 2));
+        ok(false, "Sync telemetry ping validation failed - see output above for details");
+      }
     }
     equal(record.version, 1);
     record.syncs.forEach(p => {

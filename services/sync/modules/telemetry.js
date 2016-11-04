@@ -45,6 +45,8 @@ const TOPICS = [
   "weave:engine:sync:uploaded",
   "weave:engine:validate:finish",
   "weave:engine:validate:error",
+
+  "weave:telemetry:event",
 ];
 
 const PING_FORMAT_VERSION = 1;
@@ -125,6 +127,44 @@ function timeDeltaFrom(monotonicStartTime) {
     return Math.round(now - monotonicStartTime);
   }
   return -1;
+}
+
+// This function validates the payload of a telemetry "event" - this can be
+// removed once there are APIs available for the telemetry modules to collect
+// these events (bug 1329530) - but for now we simulate that planned API as
+// best we can.
+function validateTelemetryEvent(eventDetails) {
+  let { object, method, value, extra } = eventDetails;
+  // Do do basic validation of the params - everything except "extra" must
+  // be a string. method and object are required.
+  if (typeof method != "string" || typeof object != "string" ||
+      (value && typeof value != "string") ||
+      (extra && typeof extra != "object")) {
+    log.warn("Invalid event parameters - wrong types", eventDetails);
+    return false;
+  }
+  // length checks.
+  if (method.length > 20 || object.length > 20 ||
+      (value && value.length > 80)) {
+    log.warn("Invalid event parameters - wrong lengths", eventDetails);
+    return false;
+  }
+
+  // extra can be falsey, or an object with string names and values.
+  if (extra) {
+    if (Object.keys(extra).length > 10) {
+      log.warn("Invalid event parameters - too many extra keys", eventDetails);
+      return false;
+    }
+    for (let [ename, evalue] of Object.entries(extra)) {
+      if (typeof ename != "string" || ename.length > 15 ||
+          typeof evalue != "string" || evalue.length > 85) {
+        log.warn(`Invalid event parameters: extra item "${ename} is invalid`, eventDetails);
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 class EngineRecord {
@@ -416,6 +456,8 @@ class SyncTelemetryImpl {
 
     this.payloads = [];
     this.discarded = 0;
+    this.events = [];
+    this.maxEventsCount = Svc.Prefs.get("telemetry.maxEventsCount", 1000);
     this.maxPayloadCount = Svc.Prefs.get("telemetry.maxPayloadCount");
     this.submissionInterval = Svc.Prefs.get("telemetry.submissionInterval") * 1000;
     this.lastSubmissionTime = Telemetry.msSinceProcessStart();
@@ -431,6 +473,7 @@ class SyncTelemetryImpl {
       syncs: this.payloads.slice(),
       uid: this.lastUID,
       deviceID: this.lastDeviceID,
+      events: this.events.length == 0 ? undefined : this.events,
     };
   }
 
@@ -440,6 +483,7 @@ class SyncTelemetryImpl {
     let result = this.getPingJSON(reason);
     this.payloads = [];
     this.discarded = 0;
+    this.events = [];
     this.submit(result);
   }
 
@@ -530,6 +574,39 @@ class SyncTelemetryImpl {
     }
   }
 
+  _recordEvent(eventDetails) {
+    if (this.events.length >= this.maxEventsCount) {
+      log.warn("discarding event - already queued our maximum", eventDetails);
+      return;
+    }
+
+    if (!validateTelemetryEvent(eventDetails)) {
+      // we've already logged what the problem is...
+      return;
+    }
+    log.debug("recording event", eventDetails);
+
+    let { object, method, value, extra } = eventDetails;
+    let category = "sync";
+    let ts = Math.floor(tryGetMonotonicTimestamp());
+
+    // An event record is a simple array with at least 4 items.
+    let event = [ts, category, method, object];
+    // It may have up to 6 elements if |extra| is defined
+    if (value) {
+      event.push(value);
+      if (extra) {
+        event.push(extra);
+      }
+    } else {
+      if (extra) {
+        event.push(null); // a null for the empty value.
+        event.push(extra);
+      }
+    }
+    this.events.push(event);
+  }
+
   observe(subject, topic, data) {
     log.trace(`observed ${topic} ${data}`);
 
@@ -596,6 +673,10 @@ class SyncTelemetryImpl {
         if (this._checkCurrent(topic)) {
           this.current.onEngineValidateError(data, subject || "Unknown");
         }
+        break;
+
+      case "weave:telemetry:event":
+        this._recordEvent(subject);
         break;
 
       default:
