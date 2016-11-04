@@ -390,6 +390,20 @@ ModuleGenerator::finishTask(IonCompileTask* task)
 bool
 ModuleGenerator::finishFuncExports()
 {
+    // In addition to all the functions that were explicitly exported, any
+    // element of an exported table is also exported.
+
+    for (ElemSegment& elems : elemSegments_) {
+        if (shared_->tables[elems.tableIndex].external) {
+            for (uint32_t funcIndex : elems.elemFuncIndices) {
+                if (funcIsImport(funcIndex))
+                    continue;
+                if (!exportedFuncs_.put(funcIndex))
+                    return false;
+            }
+        }
+    }
+
     // ModuleGenerator::exportedFuncs_ is an unordered HashSet. The
     // FuncExportVector stored in Metadata needs to be stored sorted by
     // function index to allow O(log(n)) lookup at runtime.
@@ -555,8 +569,8 @@ ModuleGenerator::finishLinkData(Bytes& code)
     linkData_.globalDataLength = AlignBytes(linkData_.globalDataLength, gc::SystemPageSize());
 
     // Add links to absolute addresses identified symbolically.
-    for (size_t i = 0; i < masm_.numWasmSymbolicAccesses(); i++) {
-        SymbolicAccess src = masm_.wasmSymbolicAccess(i);
+    for (size_t i = 0; i < masm_.numSymbolicAccesses(); i++) {
+        SymbolicAccess src = masm_.symbolicAccess(i);
         if (!linkData_.symbolicLinks[src.target].append(src.patchAt.offset()))
             return false;
     }
@@ -853,23 +867,6 @@ ModuleGenerator::startFuncDefs()
     MOZ_ASSERT(!startedFuncDefs_);
     MOZ_ASSERT(!finishedFuncDefs_);
 
-    // Now that it is known whether tables are internal or external, mark the
-    // elements of any external table as exported since they may be called from
-    // outside the module.
-
-    for (ElemSegment& elems : elemSegments_) {
-        if (!shared_->tables[elems.tableIndex].external)
-            continue;
-
-        for (uint32_t funcIndex : elems.elemFuncIndices) {
-            if (funcIsImport(funcIndex))
-                continue;
-
-            if (!exportedFuncs_.put(funcIndex))
-                return false;
-        }
-    }
-
     // The wasmCompilationInProgress atomic ensures that there is only one
     // parallel compilation in progress at a time. In the special case of
     // asm.js, where the ModuleGenerator itself can be on a helper thread, this
@@ -1082,11 +1079,6 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     MOZ_ASSERT(!activeFuncDef_);
     MOZ_ASSERT(finishedFuncDefs_);
 
-    // Now that all asm.js tables have been created and the compiler threads are
-    // done, shrink the (no longer shared) tables vector down to size.
-    if (isAsmJS() && !shared_->tables.resize(numTables_))
-        return nullptr;
-
     if (!finishFuncExports())
         return nullptr;
 
@@ -1139,6 +1131,11 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     metadata_->codeRanges.podResizeToFit();
     metadata_->callSites.podResizeToFit();
     metadata_->callThunks.podResizeToFit();
+
+    // For asm.js, the tables vector is over-allocated (to avoid resize during
+    // parallel copilation). Shrink it back down to fit.
+    if (isAsmJS() && !metadata_->tables.resize(numTables_))
+        return nullptr;
 
     // Assert CodeRanges are sorted.
 #ifdef DEBUG
