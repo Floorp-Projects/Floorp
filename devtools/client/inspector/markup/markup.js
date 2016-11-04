@@ -26,8 +26,7 @@ const MarkupReadOnlyContainer = require("devtools/client/inspector/markup/views/
 const MarkupTextContainer = require("devtools/client/inspector/markup/views/text-container");
 const RootContainer = require("devtools/client/inspector/markup/views/root-container");
 
-const INSPECTOR_L10N =
-      new LocalizationHelper("devtools/client/locales/inspector.properties");
+const INSPECTOR_L10N = new LocalizationHelper("devtools/locale/inspector.properties");
 
 // Page size for pageup/pagedown
 const PAGE_SIZE = 10;

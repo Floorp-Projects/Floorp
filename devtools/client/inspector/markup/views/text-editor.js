@@ -9,8 +9,7 @@ const {editableField} = require("devtools/client/shared/inplace-editor");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 
-const INSPECTOR_L10N =
-      new LocalizationHelper("devtools/client/locales/inspector.properties");
+const INSPECTOR_L10N = new LocalizationHelper("devtools/locale/inspector.properties");
 
 /**
  * Creates a simple text editor node, used for TEXT and COMMENT

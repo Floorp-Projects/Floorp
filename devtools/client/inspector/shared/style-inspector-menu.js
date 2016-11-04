@@ -16,7 +16,7 @@ const MenuItem = require("devtools/client/framework/menu-item");
 const overlays = require("devtools/client/inspector/shared/style-inspector-overlays");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
-const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
+const STYLE_INSPECTOR_PROPERTIES = "devtools-shared/locale/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 

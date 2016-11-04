@@ -8,7 +8,7 @@ const protocol = require("devtools/shared/protocol");
 const {custom} = protocol;
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/shared/locales/csscoverage.properties");
+const L10N = new LocalizationHelper("devtools-shared/locale/csscoverage.properties");
 
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 

@@ -13,7 +13,7 @@
  */
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const MENUS_L10N = new LocalizationHelper("devtools/client/locales/menus.properties");
+const MENUS_L10N = new LocalizationHelper("devtools/locale/menus.properties");
 
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
