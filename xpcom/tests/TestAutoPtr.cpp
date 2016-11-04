@@ -10,77 +10,77 @@
 #include "mozilla/Attributes.h"
 
 class TestObjectBaseA {
-    public:
-        // Virtual dtor for deleting through base class pointer
-        virtual ~TestObjectBaseA() { }
-        void MemberFunction( int, int*, int& )
-        {
-          printf("member function is invoked.\n");
-        }
-        virtual void VirtualMemberFunction(int, int*, int&) { };
-        virtual void VirtualConstMemberFunction(int, int*, int&) const { };
-        int fooA;
+  public:
+    // Virtual dtor for deleting through base class pointer
+    virtual ~TestObjectBaseA() { }
+    void MemberFunction(int, int*, int&)
+    {
+      printf("member function is invoked.\n");
+    }
+    virtual void VirtualMemberFunction(int, int*, int&) { };
+    virtual void VirtualConstMemberFunction(int, int*, int&) const { };
+    int fooA;
 };
 
 class TestObjectBaseB {
-    public:
-        // Virtual dtor for deleting through base class pointer
-        virtual ~TestObjectBaseB() { }
-        int fooB;
+  public:
+    // Virtual dtor for deleting through base class pointer
+    virtual ~TestObjectBaseB() { }
+    int fooB;
 };
 
 class TestObject : public TestObjectBaseA, public TestObjectBaseB {
-    public:
-        TestObject()
-        {
-            printf("  Creating TestObject %p.\n",
-                   static_cast<void*>(this));
-        }
+  public:
+    TestObject()
+    {
+      printf("  Creating TestObject %p.\n",
+          static_cast<void*>(this));
+    }
 
-        // Virtual dtor for deleting through base class pointer
-        virtual ~TestObject()
-        {
-            printf("  Destroying TestObject %p.\n",
-                   static_cast<void*>(this));
-        }
+    // Virtual dtor for deleting through base class pointer
+    virtual ~TestObject()
+    {
+      printf("  Destroying TestObject %p.\n",
+          static_cast<void*>(this));
+    }
 
-        virtual void VirtualMemberFunction(int, int*, int&) override
-        {
-          printf("override virtual member function is invoked.\n");
-        }
-        virtual void VirtualConstMemberFunction(int, int*, int&) const override
-        {
-          printf("override virtual const member function is invoked.\n");
-        }
+    virtual void VirtualMemberFunction(int, int*, int&) override
+    {
+      printf("override virtual member function is invoked.\n");
+    }
+    virtual void VirtualConstMemberFunction(int, int*, int&) const override
+    {
+      printf("override virtual const member function is invoked.\n");
+    }
 };
 
 static void CreateTestObject(TestObject **aResult)
 {
-    *aResult = new TestObject();
+  *aResult = new TestObject();
 }
 
 static void DoSomethingWithTestObject(TestObject *aIn)
 {
-    printf("  Doing something with |TestObject| %p.\n",
-           static_cast<void*>(aIn));
+  printf("  Doing something with |TestObject| %p.\n",
+      static_cast<void*>(aIn));
 }
 
 static void DoSomethingWithConstTestObject(const TestObject *aIn)
 {
-    printf("  Doing something with |const TestObject| %p.\n",
-           static_cast<const void*>(aIn));
+  printf("  Doing something with |const TestObject| %p.\n",
+      static_cast<const void*>(aIn));
 }
 
 static void DoSomethingWithTestObjectBaseB(TestObjectBaseB *aIn)
 {
-    printf("  Doing something with |TestObjectBaseB| %p.\n",
-           static_cast<void*>(aIn));
+  printf("  Doing something with |TestObjectBaseB| %p.\n",
+      static_cast<void*>(aIn));
 }
 
 static void DoSomethingWithConstTestObjectBaseB(const TestObjectBaseB *aIn)
 {
-    printf("  Doing something with |const TestObjectBaseB| %p.\n",
-           static_cast<const void*>(aIn));
+  printf("  Doing something with |const TestObjectBaseB| %p.\n",
+      static_cast<const void*>(aIn));
 }
 
 void test_assignment()
