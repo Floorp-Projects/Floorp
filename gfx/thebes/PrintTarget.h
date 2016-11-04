@@ -131,7 +131,7 @@ public:
    * returned DrawTarget it is still valid to use after EndPage() has been
    * called.
    */
-  virtual already_AddRefed<DrawTarget> GetReferenceDrawTarget();
+  virtual already_AddRefed<DrawTarget> GetReferenceDrawTarget(DrawEventRecorder* aRecorder);
 
 protected:
 
