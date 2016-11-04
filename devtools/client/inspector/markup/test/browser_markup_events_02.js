@@ -8,7 +8,7 @@
 // Test that markup view event bubbles show the correct event info for DOM
 // events.
 
-const TEST_URL = URL_ROOT + "doc_markup_events2.html";
+const TEST_URL = URL_ROOT + "doc_markup_events_02.html";
 
 loadHelperScript("helper_events_test_runner.js");
 
@@ -70,7 +70,7 @@ const TEST_DATA = [ // eslint-disable-line
           "Bubbling",
           "DOM2"
         ],
-        handler: "function boundClickHandler(event) {\n" +
+        handler: "function(event) {\n" +
                  "  alert(\"Bound event\");\n" +
                  "}"
       }
@@ -86,7 +86,7 @@ const TEST_DATA = [ // eslint-disable-line
           "Bubbling",
           "DOM2"
         ],
-        handler: "handleEvent: function() {\n" +
+        handler: "function() {\n" +
                  "  alert(\"boundHandleEvent\");\n" +
                  "}"
       }
@@ -134,7 +134,7 @@ const TEST_DATA = [ // eslint-disable-line
           "Bubbling",
           "DOM2"
         ],
-        handler: "anonObjectMethod: function() {\n" +
+        handler: "function() {\n" +
                  "  alert(\"obj.anonObjectMethod\");\n" +
                  "}"
       }
@@ -150,7 +150,7 @@ const TEST_DATA = [ // eslint-disable-line
           "Bubbling",
           "DOM2"
         ],
-        handler: "objectMethod: function kay() {\n" +
+        handler: "function kay() {\n" +
                  "  alert(\"obj.objectMethod\");\n" +
                  "}"
       }
