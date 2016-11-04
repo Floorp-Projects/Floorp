@@ -41,22 +41,21 @@ add_task(function* test_correct_errors_are_thrown() {
   // Start a session by calling handleSearch with the registered keyword.
   ExtensionSearchHandler.handleSearch(keyword, `${keyword} test`, () => {});
 
+  // Try providing suggestions for an unregistered keyword.
+  Assert.throws(() => ExtensionSearchHandler.addSuggestions(unregisteredKeyword, 0, []));
+
+  // Try providing suggestions for an inactive keyword.
+  Assert.throws(() => ExtensionSearchHandler.addSuggestions(anotherKeyword, 0, []));
+
   // Try calling handleSearch for an inactive keyword
   Assert.throws(() => ExtensionSearchHandler.handleSearch(anotherKeyword, `${anotherKeyword} `, () => {}));
 
-  // Try providing suggestions for an unregistered keyword.
-  Assert.throws(() => ExtensionSearchHandler.addSuggestions(unregisteredKeyword, 1, []));
+  // Try providing suggestions with inactive callback IDs.
+  Assert.ok(!ExtensionSearchHandler.addSuggestions(keyword, 0, []));
+  Assert.ok(!ExtensionSearchHandler.addSuggestions(keyword, 2, []));
 
-  // Try providing suggestions for an inactive keyword.
-  Assert.throws(() => ExtensionSearchHandler.addSuggestions(anotherKeyword, 1, []));
-
-  // Try providing suggestions with an inactive callback ID.
-  Assert.throws(() => ExtensionSearchHandler.addSuggestions(keyword, 0, []));
-
-  // Try providing suggestions with another inactive callback ID.
-  Assert.throws(() => ExtensionSearchHandler.addSuggestions(keyword, 2, []));
-
-  ExtensionSearchHandler.addSuggestions(keyword, 1, []);
+  // Add suggestions for a valid callback ID.
+  Assert.ok(ExtensionSearchHandler.addSuggestions(keyword, 1, []));
 
   // End the input session by calling handleInputCancelled.
   ExtensionSearchHandler.handleInputCancelled();
