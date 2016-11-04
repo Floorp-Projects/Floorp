@@ -4611,6 +4611,7 @@ pref("layers.offmainthreadcomposition.log-animations", false);
 pref("layers.bufferrotation.enabled", true);
 
 pref("layers.componentalpha.enabled", true);
+pref("layers.draw-mask-debug", false);
 
 // Use the DT-backend implemented PushLayer
 pref("gfx.content.use-native-pushlayer", false);
