@@ -54,6 +54,7 @@ class Image;
 class PTextureChild;
 class TextureChild;
 class TextureData;
+class GPUVideoTextureData;
 struct RawTextureBuffer;
 class RawYCbCrTextureBuffer;
 class TextureClient;
@@ -297,6 +298,8 @@ public:
 #endif
 
   virtual BufferTextureData* AsBufferTextureData() { return nullptr; }
+
+  virtual GPUVideoTextureData* AsGPUVideoTextureData() { return nullptr; }
 };
 
 /**

@@ -44,6 +44,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"          // for StaticRefPtr
 #include "mozilla/layers/TextureClient.h"
+#include "SynchronousTask.h"
 
 namespace mozilla {
 namespace ipc {
@@ -259,54 +260,6 @@ ImageBridgeChild::CancelWaitForRecycle(uint64_t aTextureId)
 static StaticMutex sImageBridgeSingletonLock;
 static StaticRefPtr<ImageBridgeChild> sImageBridgeChildSingleton;
 static Thread *sImageBridgeChildThread = nullptr;
-
-// Helper that creates a monitor and a "done" flag, then enters the monitor.
-// This can go away when we switch ImageBridge to an XPCOM thread.
-class MOZ_STACK_CLASS SynchronousTask
-{
-  friend class AutoCompleteTask;
-
-public:
-  explicit SynchronousTask(const char* name)
-   : mMonitor(name),
-     mAutoEnter(mMonitor),
-     mDone(false)
-  {}
-
-  void Wait() {
-    while (!mDone) {
-      mMonitor.Wait();
-    }
-  }
-
-private:
-  void Complete() {
-    mDone = true;
-    mMonitor.NotifyAll();
-  }
-
-private:
-  ReentrantMonitor mMonitor;
-  ReentrantMonitorAutoEnter mAutoEnter;
-  bool mDone;
-};
-
-class MOZ_STACK_CLASS AutoCompleteTask
-{
-public:
-  explicit AutoCompleteTask(SynchronousTask* aTask)
-   : mTask(aTask),
-     mAutoEnter(aTask->mMonitor)
-  {
-  }
-  ~AutoCompleteTask() {
-    mTask->Complete();
-  }
-
-private:
-  SynchronousTask* mTask;
-  ReentrantMonitorAutoEnter mAutoEnter;
-};
 
 // dispatched function
 void

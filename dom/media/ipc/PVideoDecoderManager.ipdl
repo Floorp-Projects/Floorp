@@ -10,11 +10,13 @@ include "mozilla/dom/MediaIPCUtils.h";
 namespace mozilla {
 namespace dom {
 
-async protocol PVideoDecoderManager
+sync protocol PVideoDecoderManager
 {
   manages PVideoDecoder;
 parent:
   async PVideoDecoder();
+
+  sync Readback(SurfaceDescriptorGPUVideo sd) returns (SurfaceDescriptor aResult);
 
   async DeallocateSurfaceDescriptorGPUVideo(SurfaceDescriptorGPUVideo sd);
 };

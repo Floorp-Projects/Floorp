@@ -45,9 +45,14 @@ public:
 
   gfx::IntSize GetSize() override { return mSize; }
 
-  // TODO: We really want to be able to support this, but it's complex, since we need to readback
-  // in the other process and send it across.
-  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override { return nullptr; }
+  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override
+  {
+    if (!mTextureClient) {
+      return nullptr;
+    }
+    GPUVideoTextureData* data = mTextureClient->GetInternalData()->AsGPUVideoTextureData();
+    return data->GetAsSourceSurface();
+  }
 
   virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override
   {

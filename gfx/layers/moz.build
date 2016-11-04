@@ -185,6 +185,7 @@ EXPORTS.mozilla.layers += [
     'ipc/ShadowLayers.h',
     'ipc/SharedPlanarYCbCrImage.h',
     'ipc/SharedRGBImage.h',
+    'ipc/SynchronousTask.h',
     'ipc/TextureForwarder.h',
     'ipc/VideoBridgeChild.h',
     'ipc/VideoBridgeParent.h',

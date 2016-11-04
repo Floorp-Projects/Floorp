@@ -16,6 +16,7 @@
 #include "ImageContainer.h"
 #include "mozilla/layers/VideoBridgeChild.h"
 #include "mozilla/SharedThreadPool.h"
+#include "mozilla/layers/ImageDataSerializer.h"
 
 #if XP_WIN
 #include <objbase.h>
@@ -30,8 +31,9 @@ using namespace layers;
 using namespace gfx;
 
 SurfaceDescriptorGPUVideo
-VideoDecoderManagerParent::StoreImage(TextureClient* aTexture)
+VideoDecoderManagerParent::StoreImage(Image* aImage, TextureClient* aTexture)
 {
+  mImageMap[aTexture->GetSerial()] = aImage;
   mTextureMap[aTexture->GetSerial()] = aTexture;
   return SurfaceDescriptorGPUVideo(aTexture->GetSerial());
 }
@@ -173,8 +175,51 @@ VideoDecoderManagerParent::DeallocPVideoDecoderManagerParent()
 }
 
 bool
+VideoDecoderManagerParent::RecvReadback(const SurfaceDescriptorGPUVideo& aSD, SurfaceDescriptor* aResult)
+{
+  RefPtr<Image> image = mImageMap[aSD.handle()];
+  if (!image) {
+    *aResult = null_t();
+    return true;
+  }
+
+  RefPtr<SourceSurface> source = image->GetAsSourceSurface();
+  if (!image) {
+    *aResult = null_t();
+    return true;
+  }
+
+  SurfaceFormat format = source->GetFormat();
+  IntSize size = source->GetSize();
+  size_t length = ImageDataSerializer::ComputeRGBBufferSize(size, format);
+
+  Shmem buffer;
+  if (!length || !AllocShmem(length, Shmem::SharedMemory::TYPE_BASIC, &buffer)) {
+    *aResult = null_t();
+    return true;
+  }
+
+  RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(gfx::BackendType::CAIRO,
+                                                           buffer.get<uint8_t>(), size,
+                                                           ImageDataSerializer::ComputeRGBStride(format, size.width),
+                                                           format);
+  if (!dt) {
+    DeallocShmem(buffer);
+    *aResult = null_t();
+    return true;
+  }
+
+  dt->CopySurface(source, IntRect(0, 0, size.width, size.height), IntPoint());
+  dt->Flush();
+
+  *aResult = SurfaceDescriptorBuffer(RGBDescriptor(size, format, true), MemoryOrShmem(buffer));
+  return true;
+}
+
+bool
 VideoDecoderManagerParent::RecvDeallocateSurfaceDescriptorGPUVideo(const SurfaceDescriptorGPUVideo& aSD)
 {
+  mImageMap.erase(aSD.handle());
   mTextureMap.erase(aSD.handle());
   return true;
 }
