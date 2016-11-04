@@ -239,8 +239,7 @@ var Service = {
 // extensionURIToAddonID, which ensures that we don't inject our
 // API into webAccessibleResources or remote web pages.
 function getAddonIdForWindow(window) {
-  let principal = window.document.nodePrincipal;
-  return principal.originAttributes.addonId;
+  return Cu.getObjectPrincipal(window).originAttributes.addonId;
 }
 
 const API_LEVELS = Object.freeze({

@@ -241,8 +241,8 @@ EdgeInclusiveIntersection(const nsRect& aRect, const nsRect& aOtherRect)
 void
 DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time)
 {
-  Element* root;
-  nsIFrame* rootFrame;
+  Element* root = nullptr;
+  nsIFrame* rootFrame = nullptr;
   nsRect rootRect;
 
   if (mRoot) {

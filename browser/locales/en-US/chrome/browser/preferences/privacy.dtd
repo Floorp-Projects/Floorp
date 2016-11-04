@@ -109,3 +109,5 @@
 <!ENTITY  browserContainersLearnMore.label      "Learn more">
 <!ENTITY  browserContainersEnabled.label        "Enable Container Tabs">
 <!ENTITY  browserContainersEnabled.accesskey    "n">
+<!ENTITY  browserContainersSettings.label        "Settings…">
+<!ENTITY  browserContainersSettings.accesskey    "i">

@@ -369,11 +369,11 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitIsObject(LIsObject* lir);
     void visitIsObjectAndBranch(LIsObjectAndBranch* lir);
     void visitHasClass(LHasClass* lir);
-    void visitAsmJSParameter(LAsmJSParameter* lir);
-    void visitAsmJSParameterI64(LAsmJSParameterI64* lir);
-    void visitAsmJSReturn(LAsmJSReturn* ret);
-    void visitAsmJSReturnI64(LAsmJSReturnI64* ret);
-    void visitAsmJSVoidReturn(LAsmJSVoidReturn* ret);
+    void visitWasmParameter(LWasmParameter* lir);
+    void visitWasmParameterI64(LWasmParameterI64* lir);
+    void visitWasmReturn(LWasmReturn* ret);
+    void visitWasmReturnI64(LWasmReturnI64* ret);
+    void visitWasmReturnVoid(LWasmReturnVoid* ret);
     void visitLexicalCheck(LLexicalCheck* ins);
     void visitThrowRuntimeLexicalError(LThrowRuntimeLexicalError* ins);
     void visitGlobalNameConflictsCheck(LGlobalNameConflictsCheck* ins);

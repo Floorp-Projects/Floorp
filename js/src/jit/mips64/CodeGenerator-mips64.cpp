@@ -559,7 +559,7 @@ CodeGeneratorMIPS64::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
 }
 
 void
-CodeGeneratorMIPS64::visitAsmSelectI64(LAsmSelectI64* lir)
+CodeGeneratorMIPS64::visitWasmSelectI64(LWasmSelectI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
 
@@ -580,7 +580,7 @@ CodeGeneratorMIPS64::visitAsmSelectI64(LAsmSelectI64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
+CodeGeneratorMIPS64::visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
     MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Int64);
@@ -588,7 +588,7 @@ CodeGeneratorMIPS64::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
 }
 
 void
-CodeGeneratorMIPS64::visitAsmReinterpretToI64(LAsmReinterpretToI64* lir)
+CodeGeneratorMIPS64::visitWasmReinterpretToI64(LWasmReinterpretToI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
     MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Double);

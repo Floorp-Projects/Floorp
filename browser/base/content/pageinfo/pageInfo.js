@@ -529,7 +529,7 @@ function openCacheEntry(key, cb)
 
 function makeGeneralTab(metaViewRows, docInfo)
 {
-  var title = (docInfo.title) ? gBundle.getFormattedString("pageTitle", [docInfo.title]) : gBundle.getString("noPageTitle");
+  var title = (docInfo.title) ? docInfo.title : gBundle.getString("noPageTitle");
   document.getElementById("titletext").value = title;
 
   var url = docInfo.location;

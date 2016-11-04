@@ -43,8 +43,8 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitCompareBAndBranch(LCompareBAndBranch* lir);
     void visitCompareBitwise(LCompareBitwise* lir);
     void visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir);
-    void visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir);
-    void visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32* lir);
+    void visitWasmUint32ToDouble(LWasmUint32ToDouble* lir);
+    void visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir);
     void visitTruncateDToInt32(LTruncateDToInt32* ins);
     void visitTruncateFToInt32(LTruncateFToInt32* ins);
     void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);
@@ -74,9 +74,9 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitCompareI64AndBranch(LCompareI64AndBranch* lir);
     void visitDivOrModI64(LDivOrModI64* lir);
     void visitUDivOrModI64(LUDivOrModI64* lir);
-    void visitAsmSelectI64(LAsmSelectI64* lir);
-    void visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir);
-    void visitAsmReinterpretToI64(LAsmReinterpretToI64* lir);
+    void visitWasmSelectI64(LWasmSelectI64* lir);
+    void visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir);
+    void visitWasmReinterpretToI64(LWasmReinterpretToI64* lir);
     void visitExtendInt32ToInt64(LExtendInt32ToInt64* lir);
     void visitWrapInt64ToInt32(LWrapInt64ToInt32* lir);
     void visitClzI64(LClzI64* lir);

@@ -624,7 +624,7 @@ CodeGeneratorARM::visitSoftDivI(LSoftDivI* ins)
     masm.setupAlignedABICall();
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    if (gen->compilingAsmJS())
+    if (gen->compilingWasm())
         masm.callWithABI(wasm::SymbolicAddress::aeabi_idivmod);
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod));
@@ -805,7 +805,7 @@ CodeGeneratorARM::visitSoftModI(LSoftModI* ins)
     masm.setupAlignedABICall();
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    if (gen->compilingAsmJS())
+    if (gen->compilingWasm())
         masm.callWithABI(wasm::SymbolicAddress::aeabi_idivmod);
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod));
@@ -1633,13 +1633,13 @@ CodeGeneratorARM::visitBitAndAndBranch(LBitAndAndBranch* baab)
 }
 
 void
-CodeGeneratorARM::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir)
+CodeGeneratorARM::visitWasmUint32ToDouble(LWasmUint32ToDouble* lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
 }
 
 void
-CodeGeneratorARM::visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32* lir)
+CodeGeneratorARM::visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir)
 {
     masm.convertUInt32ToFloat32(ToRegister(lir->input()), ToFloatRegister(lir->output()));
 }
@@ -2171,7 +2171,7 @@ CodeGeneratorARM::visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayEl
 }
 
 void
-CodeGeneratorARM::visitAsmSelect(LAsmSelect* ins)
+CodeGeneratorARM::visitWasmSelect(LWasmSelect* ins)
 {
     MIRType mirType = ins->mir()->type();
 
@@ -2196,14 +2196,14 @@ CodeGeneratorARM::visitAsmSelect(LAsmSelect* ins)
     else if (mirType == MIRType::Float32)
         masm.moveFloat32(falseExpr, out, Assembler::Zero);
     else
-        MOZ_CRASH("unhandled type in visitAsmSelect!");
+        MOZ_CRASH("unhandled type in visitWasmSelect!");
 }
 
 void
-CodeGeneratorARM::visitAsmReinterpret(LAsmReinterpret* lir)
+CodeGeneratorARM::visitWasmReinterpret(LWasmReinterpret* lir)
 {
-    MOZ_ASSERT(gen->compilingAsmJS());
-    MAsmReinterpret* ins = lir->mir();
+    MOZ_ASSERT(gen->compilingWasm());
+    MWasmReinterpret* ins = lir->mir();
 
     MIRType to = ins->type();
     DebugOnly<MIRType> from = ins->input()->type();
@@ -2221,7 +2221,7 @@ CodeGeneratorARM::visitAsmReinterpret(LAsmReinterpret* lir)
       case MIRType::Int64:
         MOZ_CRASH("not handled by this LIR opcode");
       default:
-        MOZ_CRASH("unexpected AsmReinterpret");
+        MOZ_CRASH("unexpected WasmReinterpret");
     }
 }
 
@@ -2918,9 +2918,9 @@ CodeGeneratorARM::visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins)
 }
 
 void
-CodeGeneratorARM::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
+CodeGeneratorARM::visitWasmStackArg(LWasmStackArg* ins)
 {
-    const MAsmJSPassStackArg* mir = ins->mir();
+    const MWasmStackArg* mir = ins->mir();
     Address dst(StackPointer, mir->spOffset());
     ScratchRegisterScope scratch(masm);
     SecondScratchRegisterScope scratch2(masm);
@@ -3047,7 +3047,7 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod* ins)
     masm.setupAlignedABICall();
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    if (gen->compilingAsmJS())
+    if (gen->compilingWasm())
         masm.callWithABI(wasm::SymbolicAddress::aeabi_uidivmod);
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_uidivmod));
@@ -3406,7 +3406,7 @@ CodeGeneratorARM::visitDivOrModI64(LDivOrModI64* lir)
     masm.passABIArg(rhs.high);
     masm.passABIArg(rhs.low);
 
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     if (lir->mir()->isMod())
         masm.callWithABI(wasm::SymbolicAddress::ModI64);
     else
@@ -3446,7 +3446,7 @@ CodeGeneratorARM::visitUDivOrModI64(LUDivOrModI64* lir)
     masm.passABIArg(rhs.high);
     masm.passABIArg(rhs.low);
 
-    MOZ_ASSERT(gen->compilingAsmJS());
+    MOZ_ASSERT(gen->compilingWasm());
     if (lir->mir()->isMod())
         masm.callWithABI(wasm::SymbolicAddress::UModI64);
     else
@@ -3622,9 +3622,9 @@ CodeGeneratorARM::visitRotateI64(LRotateI64* lir)
 }
 
 void
-CodeGeneratorARM::visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins)
+CodeGeneratorARM::visitWasmStackArgI64(LWasmStackArgI64* ins)
 {
-    const MAsmJSPassStackArg* mir = ins->mir();
+    const MWasmStackArg* mir = ins->mir();
     Address dst(StackPointer, mir->spOffset());
     if (IsConstant(ins->arg()))
         masm.store64(Imm64(ToInt64(ins->arg())), dst);
@@ -3633,7 +3633,7 @@ CodeGeneratorARM::visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins)
 }
 
 void
-CodeGeneratorARM::visitAsmSelectI64(LAsmSelectI64* lir)
+CodeGeneratorARM::visitWasmSelectI64(LWasmSelectI64* lir)
 {
     Register cond = ToRegister(lir->condExpr());
     const LInt64Allocation falseExpr = lir->falseExpr();
@@ -3653,7 +3653,7 @@ CodeGeneratorARM::visitAsmSelectI64(LAsmSelectI64* lir)
 }
 
 void
-CodeGeneratorARM::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
+CodeGeneratorARM::visitWasmReinterpretFromI64(LWasmReinterpretFromI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
     MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Int64);
@@ -3664,7 +3664,7 @@ CodeGeneratorARM::visitAsmReinterpretFromI64(LAsmReinterpretFromI64* lir)
 }
 
 void
-CodeGeneratorARM::visitAsmReinterpretToI64(LAsmReinterpretToI64* lir)
+CodeGeneratorARM::visitWasmReinterpretToI64(LWasmReinterpretToI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
     MOZ_ASSERT(lir->mir()->input()->type() == MIRType::Double);

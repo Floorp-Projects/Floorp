@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/FileSystemBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
@@ -60,6 +61,10 @@ public:
   virtual void
   GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const = 0;
 
+  void
+  GetParent(const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
+            const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback);
+
   FileSystem*
   Filesystem() const
   {
@@ -68,11 +73,13 @@ public:
 
 protected:
   FileSystemEntry(nsIGlobalObject* aGlobalObject,
+                  FileSystemEntry* aParentEntry,
                   FileSystem* aFileSystem);
   virtual ~FileSystemEntry();
 
 private:
   nsCOMPtr<nsIGlobalObject> mParent;
+  RefPtr<FileSystemEntry> mParentEntry;
   RefPtr<FileSystem> mFileSystem;
 };
 

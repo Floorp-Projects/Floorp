@@ -171,8 +171,92 @@ public:
   { }
 
   template <class ErrorResult>
-  bool ValidateEvent(AudioTimelineEvent& aEvent,
-                     ErrorResult& aRv);
+  bool ValidateEvent(AudioTimelineEvent& aEvent, ErrorResult& aRv)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    auto TimeOf = [](const AudioTimelineEvent& aEvent) -> double {
+      return aEvent.template Time<double>();
+    };
+
+    // Validate the event itself
+    if (!WebAudioUtils::IsTimeValid(TimeOf(aEvent)) ||
+        !WebAudioUtils::IsTimeValid(aEvent.mTimeConstant)) {
+      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return false;
+    }
+
+    if (aEvent.mType == AudioTimelineEvent::SetValueCurve) {
+      if (!aEvent.mCurve || !aEvent.mCurveLength) {
+        aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+        return false;
+      }
+      for (uint32_t i = 0; i < aEvent.mCurveLength; ++i) {
+        if (!IsValid(aEvent.mCurve[i])) {
+          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+          return false;
+        }
+      }
+    }
+
+    bool timeAndValueValid = IsValid(aEvent.mValue) &&
+                             IsValid(aEvent.mDuration);
+    if (!timeAndValueValid) {
+      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return false;
+    }
+
+    // Make sure that non-curve events don't fall within the duration of a
+    // curve event.
+    for (unsigned i = 0; i < mEvents.Length(); ++i) {
+      if (mEvents[i].mType == AudioTimelineEvent::SetValueCurve &&
+          !(aEvent.mType == AudioTimelineEvent::SetValueCurve &&
+            TimeOf(aEvent) == TimeOf(mEvents[i])) &&
+          TimeOf(mEvents[i]) <= TimeOf(aEvent) &&
+          TimeOf(mEvents[i]) + mEvents[i].mDuration >= TimeOf(aEvent)) {
+        aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+        return false;
+      }
+    }
+
+    // Make sure that curve events don't fall in a range which includes other
+    // events.
+    if (aEvent.mType == AudioTimelineEvent::SetValueCurve) {
+      for (unsigned i = 0; i < mEvents.Length(); ++i) {
+        // In case we have two curve at the same time
+        if (mEvents[i].mType == AudioTimelineEvent::SetValueCurve &&
+            TimeOf(mEvents[i]) == TimeOf(aEvent)) {
+          continue;
+        }
+        if (TimeOf(mEvents[i]) > TimeOf(aEvent) &&
+            TimeOf(mEvents[i]) < TimeOf(aEvent) + aEvent.mDuration) {
+          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+          return false;
+        }
+      }
+    }
+
+    // Make sure that invalid values are not used for exponential curves
+    if (aEvent.mType == AudioTimelineEvent::ExponentialRamp) {
+      if (aEvent.mValue <= 0.f) {
+        aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+        return false;
+      }
+      const AudioTimelineEvent* previousEvent = GetPreviousEvent(TimeOf(aEvent));
+      if (previousEvent) {
+        if (previousEvent->mValue <= 0.f) {
+          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+          return false;
+        }
+      } else {
+        if (mValue <= 0.f) {
+          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 
   template<typename TimeType>
   void InsertEvent(const AudioTimelineEvent& aEvent)

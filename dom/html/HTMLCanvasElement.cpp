@@ -806,7 +806,7 @@ HTMLCanvasElement::ToDataURLImpl(JSContext* aCx,
 
 void
 HTMLCanvasElement::ToBlob(JSContext* aCx,
-                          FileCallback& aCallback,
+                          BlobCallback& aCallback,
                           const nsAString& aType,
                           JS::Handle<JS::Value> aParams,
                           ErrorResult& aRv)

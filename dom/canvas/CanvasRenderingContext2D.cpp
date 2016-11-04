@@ -2704,7 +2704,7 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
   // parsed (including having line-height removed).  (Older drafts of
   // the spec required font sizes be converted to pixels, but that no
   // longer seems to be required.)
-  decl->GetValue(eCSSProperty_font, aOutUsedFont);
+  decl->GetPropertyValueByID(eCSSProperty_font, aOutUsedFont);
 
   return sc.forget();
 }

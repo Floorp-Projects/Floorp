@@ -219,7 +219,7 @@ BEGIN_TEST(testJitFoldsTo_UnsignedDiv)
     block->add(c0);
     MConstant* c1 = MConstant::New(func.alloc, Int32Value(0xffffffff));
     block->add(c1);
-    MDiv* div = MDiv::NewAsmJS(func.alloc, c0, c1, MIRType::Int32, /*unsignd=*/true);
+    MDiv* div = MDiv::New(func.alloc, c0, c1, MIRType::Int32, /*unsignd=*/true);
     block->add(div);
     MReturn* ret = MReturn::New(func.alloc, div);
     block->end(ret);
@@ -244,7 +244,7 @@ BEGIN_TEST(testJitFoldsTo_UnsignedMod)
     block->add(c0);
     MConstant* c1 = MConstant::New(func.alloc, Int32Value(0xffffffff));
     block->add(c1);
-    MMod* mod = MMod::NewAsmJS(func.alloc, c0, c1, MIRType::Int32, /*unsignd=*/true);
+    MMod* mod = MMod::New(func.alloc, c0, c1, MIRType::Int32, /*unsignd=*/true);
     block->add(mod);
     MReturn* ret = MReturn::New(func.alloc, mod);
     block->end(ret);

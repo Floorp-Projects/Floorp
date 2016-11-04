@@ -210,7 +210,6 @@
     _(Float32ToInt32)               \
     _(TruncateDToInt32)             \
     _(TruncateFToInt32)             \
-    _(WasmTruncateToInt32)          \
     _(WrapInt64ToInt32)             \
     _(ExtendInt32ToInt64)           \
     _(BooleanToString)              \
@@ -373,10 +372,6 @@
     _(InstanceOfV)                  \
     _(CallInstanceOf)               \
     _(InterruptCheck)               \
-    _(WasmTrap)                     \
-    _(AsmReinterpret)               \
-    _(AsmReinterpretToI64)          \
-    _(AsmReinterpretFromI64)        \
     _(Rotate)                       \
     _(RotateI64)                    \
     _(GetDOMProperty)               \
@@ -389,35 +384,6 @@
     _(IsObject)                     \
     _(IsObjectAndBranch)            \
     _(HasClass)                     \
-    _(AsmSelect)                    \
-    _(AsmSelectI64)                 \
-    _(WasmBoundsCheck)              \
-    _(WasmAddOffset)                \
-    _(WasmLoad)                     \
-    _(WasmLoadI64)                  \
-    _(WasmStore)                    \
-    _(WasmStoreI64)                 \
-    _(WasmLoadGlobalVar)            \
-    _(WasmLoadGlobalVarI64)         \
-    _(WasmStoreGlobalVar)           \
-    _(WasmStoreGlobalVarI64)        \
-    _(AsmJSLoadHeap)                \
-    _(AsmJSStoreHeap)               \
-    _(AsmJSParameter)               \
-    _(AsmJSParameterI64)            \
-    _(AsmJSReturn)                  \
-    _(AsmJSReturnI64)               \
-    _(AsmJSVoidReturn)              \
-    _(AsmJSPassStackArg)            \
-    _(AsmJSPassStackArgI64)         \
-    _(WasmCall)                     \
-    _(WasmCallI64)                  \
-    _(AsmJSCompareExchangeHeap)     \
-    _(AsmJSAtomicExchangeHeap)      \
-    _(AsmJSAtomicBinopHeap)         \
-    _(AsmJSAtomicBinopHeapForEffect)\
-    _(AsmJSUInt32ToDouble)          \
-    _(AsmJSUInt32ToFloat32)         \
     _(RecompileCheck)               \
     _(MemoryBarrier)                \
     _(AssertRangeI)                 \
@@ -435,6 +401,40 @@
     _(CheckReturn)                  \
     _(CheckIsObj)                   \
     _(CheckObjCoercible)            \
-    _(DebugCheckSelfHosted)
+    _(DebugCheckSelfHosted)         \
+    _(AsmJSLoadHeap)                \
+    _(AsmJSStoreHeap)               \
+    _(AsmJSCompareExchangeHeap)     \
+    _(AsmJSAtomicExchangeHeap)      \
+    _(AsmJSAtomicBinopHeap)         \
+    _(AsmJSAtomicBinopHeapForEffect)\
+    _(WasmTruncateToInt32)          \
+    _(WasmTrap)                     \
+    _(WasmReinterpret)              \
+    _(WasmReinterpretToI64)         \
+    _(WasmReinterpretFromI64)       \
+    _(WasmSelect)                   \
+    _(WasmSelectI64)                \
+    _(WasmBoundsCheck)              \
+    _(WasmAddOffset)                \
+    _(WasmLoad)                     \
+    _(WasmLoadI64)                  \
+    _(WasmStore)                    \
+    _(WasmStoreI64)                 \
+    _(WasmLoadGlobalVar)            \
+    _(WasmLoadGlobalVarI64)         \
+    _(WasmStoreGlobalVar)           \
+    _(WasmStoreGlobalVarI64)        \
+    _(WasmParameter)                \
+    _(WasmParameterI64)             \
+    _(WasmReturn)                   \
+    _(WasmReturnI64)                \
+    _(WasmReturnVoid)               \
+    _(WasmStackArg)                 \
+    _(WasmStackArgI64)              \
+    _(WasmCall)                     \
+    _(WasmCallI64)                  \
+    _(WasmUint32ToDouble)           \
+    _(WasmUint32ToFloat32)
 
 #endif /* jit_shared_LOpcodes_shared_h */

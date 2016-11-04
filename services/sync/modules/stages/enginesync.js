@@ -206,7 +206,7 @@ EngineSynchronizer.prototype = {
       Svc.Prefs.reset("firstSync");
 
       let syncTime = ((Date.now() - startTime) / 1000).toFixed(2);
-      let dateStr = new Date().toLocaleFormat(LOG_DATE_FORMAT);
+      let dateStr = Utils.formatTimestamp(new Date());
       this._log.info("Sync completed at " + dateStr
                      + " after " + syncTime + " secs.");
     }
