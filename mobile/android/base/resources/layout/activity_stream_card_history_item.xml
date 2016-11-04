@@ -38,6 +38,7 @@
             android:layout_alignParentTop="true"
             android:layout_gravity="right|top"
             android:padding="2dp"
+            android:contentDescription="@string/menu"
             android:layout_marginLeft="@dimen/activity_stream_base_margin"
             android:layout_marginBottom="@dimen/activity_stream_base_margin"
             android:src="@drawable/menu" />
