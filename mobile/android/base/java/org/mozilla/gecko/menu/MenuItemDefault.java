@@ -5,6 +5,7 @@
 package org.mozilla.gecko.menu;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ResourceDrawableUtils;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -102,7 +103,7 @@ public class MenuItemDefault extends TextView
     }
 
     void setIcon(int icon) {
-        setIcon((icon == 0) ? null : getResources().getDrawable(icon));
+        setIcon((icon == 0) ? null : ResourceDrawableUtils.getDrawable(getContext(), icon));
     }
 
     void setTitle(CharSequence title) {

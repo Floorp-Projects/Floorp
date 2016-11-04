@@ -267,8 +267,7 @@ function getTableRowCount(aTableName)
   return currentRows;
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Promise-Returning Functions
+// Promise-Returning Functions
 
 function asyncClone(db, readOnly) {
   let deferred = Promise.defer();

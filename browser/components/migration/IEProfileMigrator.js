@@ -32,9 +32,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
 
 Cu.importGlobalProperties(["URL"]);
 
-// //////////////////////////////////////////////////////////////////////////////
 // Resources
-
 
 function History() {
 }
@@ -464,9 +462,6 @@ Settings.prototype = {
     }
   }
 };
-
-// //////////////////////////////////////////////////////////////////////////////
-// // Migrator
 
 function IEProfileMigrator()
 {

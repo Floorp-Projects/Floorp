@@ -24,9 +24,7 @@ loader.lazyServiceGetter(this, "gActivityDistributor",
                          "nsIHttpActivityDistributor");
 const {NetworkThrottleManager} = require("devtools/shared/webconsole/throttle");
 
-// /////////////////////////////////////////////////////////////////////////////
 // Network logging
-// /////////////////////////////////////////////////////////////////////////////
 
 // The maximum uint32 value.
 const PR_UINT32_MAX = 4294967295;

@@ -5,7 +5,7 @@
 Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-//* ******* define a js object to implement nsITreeView
+// define a js object to implement nsITreeView
 function pageInfoTreeView(treeid, copycol)
 {
   // copycol is the index number for the column that we want to add to
@@ -636,7 +636,7 @@ function addImage(imageViewRow)
   }
 }
 
-//* ******* Link Stuff
+// Link Stuff
 function openURL(target)
 {
   var url = target.parentNode.childNodes[2].value;
@@ -668,7 +668,7 @@ function onBeginLinkDrag(event, urlField, descField)
   dt.setData("text/plain", url);
 }
 
-//* ******* Image Stuff
+// Image Stuff
 function getSelectedRows(tree)
 {
   var start = { };

@@ -14,9 +14,8 @@ from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
     docker_worker_add_workspace_cache,
     docker_worker_setup_secrets,
-    docker_worker_add_tc_vcs_cache,
-    docker_worker_add_gecko_vcs_env_vars,
-    docker_worker_add_public_artifacts
+    docker_worker_add_public_artifacts,
+    docker_worker_support_vcs_checkout,
 )
 
 haz_run_schema = Schema({
@@ -48,11 +47,10 @@ def docker_worker_hazard(config, job, taskdesc):
     worker['artifacts'] = []
     worker['caches'] = []
 
-    docker_worker_add_tc_vcs_cache(config, job, taskdesc)
     docker_worker_add_public_artifacts(config, job, taskdesc)
     docker_worker_add_workspace_cache(config, job, taskdesc)
     docker_worker_setup_secrets(config, job, taskdesc)
-    docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
+    docker_worker_support_vcs_checkout(config, job, taskdesc)
 
     env = worker['env']
     env.update({
@@ -80,4 +78,15 @@ def docker_worker_hazard(config, job, taskdesc):
     env['TOOLTOOL_REPO'] = 'https://github.com/mozilla/build-tooltool'
     env['TOOLTOOL_REV'] = 'master'
 
-    worker['command'] = ["/bin/bash", "-c", run['command']]
+    # build-haz-linux.sh needs this otherwise it assumes the checkout is in
+    # the workspace.
+    env['GECKO_DIR'] = '/home/worker/checkouts/gecko'
+
+    worker['command'] = [
+        '/home/worker/bin/run-task',
+        '--chown-recursive', '/home/worker/tooltool-cache',
+        '--chown-recursive', '/home/worker/workspace',
+        '--vcs-checkout', '/home/worker/checkouts/gecko',
+        '--',
+        '/bin/bash', '-c', run['command']
+    ]

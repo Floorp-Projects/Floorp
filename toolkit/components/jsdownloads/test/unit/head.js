@@ -9,8 +9,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
@@ -90,8 +89,7 @@ function run_test()
   run_next_test();
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Support functions
+// Support functions
 
 /**
  * HttpServer object initialized before tests start.
@@ -676,8 +674,7 @@ function isValidDate(aDate) {
  */
 var gMostRecentFirstBytePos;
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Initialization functions common to all tests
+// Initialization functions common to all tests
 
 add_task(function test_common_initialize()
 {

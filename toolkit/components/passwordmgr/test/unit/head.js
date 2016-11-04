@@ -4,8 +4,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 let { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
@@ -44,8 +43,7 @@ function run_test()
   run_next_test();
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Global helpers
+// Global helpers
 
 // Some of these functions are already implemented in other parts of the source
 // tree, see bug 946708 about sharing more code.
@@ -90,15 +88,13 @@ function getTempFile(aLeafName)
   return file;
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-
 const RecipeHelpers = {
   initNewParent() {
     return (new LoginRecipesParent({ defaults: null })).initializationPromise;
   },
 };
 
-// // Initialization functions common to all tests
+// Initialization functions common to all tests
 
 add_task(function* test_common_initialize()
 {

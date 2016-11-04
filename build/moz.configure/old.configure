@@ -15,7 +15,7 @@ option(env='AUTOCONF', nargs=1, help='Path to autoconf 2.13')
 
 @depends(mozconfig, 'AUTOCONF')
 @checking('for autoconf')
-@imports('os')
+@imports(_from='os.path', _import='exists')
 @imports('re')
 def autoconf(mozconfig, autoconf):
     mozconfig_autoconf = None
@@ -51,7 +51,7 @@ def autoconf(mozconfig, autoconf):
     if not autoconf:
         die('Could not find autoconf 2.13')
 
-    if not os.path.exists(autoconf):
+    if not exists(autoconf):
         die('Could not find autoconf 2.13 at %s', autoconf)
 
     return autoconf
@@ -65,10 +65,10 @@ set_config('AUTOCONF', autoconf)
 @imports(_from='__builtin__', _import='print')
 @imports('glob')
 @imports('itertools')
-@imports('os')
 @imports('subprocess')
 # Import getmtime without overwriting the sandbox os.path.
 @imports(_from='os.path', _import='getmtime')
+@imports(_from='os.path', _import='exists')
 @imports(_from='mozbuild.shellutil', _import='quote')
 def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
                       old_configure_assignments, build_project):
@@ -79,12 +79,12 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
     old_configure = os.path.abspath(old_configure[0])
     if build_project == 'js':
         old_configure_dir = os.path.dirname(old_configure)
-        if not old_configure_dir.replace(os.sep, '/').endswith('/js/src'):
+        if not old_configure_dir.endswith('/js/src'):
             old_configure = os.path.join(old_configure_dir, 'js', 'src',
                                          os.path.basename(old_configure))
 
     refresh = True
-    if os.path.exists(old_configure):
+    if exists(old_configure):
         mtime = getmtime(old_configure)
         aclocal = os.path.join(build_env.topsrcdir, 'build', 'autoconf',
                                '*.m4')

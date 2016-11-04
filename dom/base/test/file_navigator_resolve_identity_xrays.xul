@@ -23,11 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=985827
     var nav = document.getElementById("t").contentWindow.navigator;
 
     ok(Components.utils.isXrayWrapper(nav), "Should have an Xray here");
-
-    // Test WebIDL NavigatorProperty objects
-    is(typeof nav.mozContacts, "object", "Should have a mozContacts object");
-    is(nav.mozContacts, nav.mozContacts,
-       "Should have gotten the same mozContacts object again");
   });
 
   ]]>

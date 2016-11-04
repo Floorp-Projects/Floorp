@@ -104,12 +104,10 @@ add_task(function* test2a() {
   });
 });
 
-add_task(function* test2b() {
-  yield createPrivateWindow(gHttpTestRoot + "plugin_test.html");
-});
-
 add_task(function* test2c() {
-  yield TestUtils.topicObserved("PopupNotifications-updateNotShowing");
+  let topicObserved = TestUtils.topicObserved("PopupNotifications-updateNotShowing");
+  yield createPrivateWindow(gHttpTestRoot + "plugin_test.html");
+  yield topicObserved;
 
   let popupNotification = gPrivateWindow.PopupNotifications.getNotification("click-to-play-plugins", gPrivateBrowser);
   ok(popupNotification, "Test 2c, Should have a click-to-play notification");
@@ -161,12 +159,11 @@ add_task(function* test3a() {
   });
 });
 
-add_task(function* test3b() {
-  yield createPrivateWindow(gHttpTestRoot + "plugin_test.html");
-});
-
 add_task(function* test3c() {
-  yield TestUtils.topicObserved("PopupNotifications-updateNotShowing");
+  let topicObserved = TestUtils.topicObserved("PopupNotifications-updateNotShowing");
+  yield createPrivateWindow(gHttpTestRoot + "plugin_test.html");
+  yield topicObserved;
+
   let popupNotification = gPrivateWindow.PopupNotifications.getNotification("click-to-play-plugins", gPrivateBrowser);
   ok(popupNotification, "Test 3c, Should have a click-to-play notification");
 

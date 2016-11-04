@@ -15,8 +15,7 @@ this.EXPORTED_SYMBOLS = [
   "LoginImport",
 ];
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -33,8 +32,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
-// //////////////////////////////////////////////////////////////////////////////
-// // LoginImport
+// LoginImport
 
 /**
  * Provides an object that has a method to import login-related data from the
