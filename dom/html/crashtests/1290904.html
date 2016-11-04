@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <fieldset id="outer">
+      <fieldset id="inner">
+      </fieldset>
+    </fieldset>
+  </body>
+</html>
+<script>
+function appendTextareaToFieldset(fieldset) {
+  var textarea = document.createElement("textarea");
+  textarea.setAttribute("required", "");
+  fieldset.appendChild(textarea);
+}
+
+var innerFieldset = document.getElementById('inner');
+var outerFieldset = document.getElementById('outer');
+
+var fieldset = document.createElement('fieldset');
+appendTextareaToFieldset(fieldset);
+appendTextareaToFieldset(fieldset);
+appendTextareaToFieldset(fieldset);
+appendTextareaToFieldset(fieldset);
+
+// Adding a fieldset to a nested fieldset.
+innerFieldset.appendChild(fieldset);
+appendTextareaToFieldset(fieldset);
+appendTextareaToFieldset(fieldset);
+// This triggers mInvalidElementsCount checks in outer fieldset.
+appendTextareaToFieldset(outerFieldset);
+
+// Removing a fieldset from a nested fieldset.
+innerFieldset.removeChild(fieldset);
+// This triggers mInvalidElementsCount checks in outer fieldset.
+appendTextareaToFieldset(outerFieldset);
+</script>
