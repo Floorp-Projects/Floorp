@@ -124,7 +124,7 @@ fails-if(OSX||winWidget) HTTP(../../..) == css-multicol-1/multicol-rule-003.xht 
 HTTP(../../..) == css-multicol-1/multicol-rule-004.xht css-multicol-1/multicol-rule-004-ref.xht
 fails-if(OSX||winWidget) HTTP(../../..) == css-multicol-1/multicol-rule-color-001.xht css-multicol-1/multicol-rule-color-001-ref.xht
 HTTP(../../..) == css-multicol-1/multicol-rule-color-inherit-001.xht css-multicol-1/multicol-rule-color-inherit-001-ref.xht
-fails HTTP(../../..) == css-multicol-1/multicol-rule-color-inherit-002.xht css-multicol-1/multicol-rule-color-inherit-001-ref.xht
+HTTP(../../..) == css-multicol-1/multicol-rule-color-inherit-002.xht css-multicol-1/multicol-rule-color-inherit-001-ref.xht
 fuzzy(106,354) HTTP(../../..) == css-multicol-1/multicol-rule-dashed-000.xht css-multicol-1/multicol-rule-dashed-000-ref.xht
 fuzzy(106,354) HTTP(../../..) == css-multicol-1/multicol-rule-dotted-000.xht css-multicol-1/multicol-rule-dotted-000-ref.xht
 fuzzy(106,354) HTTP(../../..) == css-multicol-1/multicol-rule-double-000.xht css-multicol-1/multicol-rule-double-000-ref.xht

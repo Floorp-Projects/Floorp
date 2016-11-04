@@ -155,9 +155,6 @@ fails css-multicol-1/multicol-zero-height-001.xht
 fuzzy(225,13600) css-multicol-1/multicol-nested-column-rule-001.xht
 fuzzy(94,256) css-multicol-1/multicol-rule-none-000.xht
 
-#Fails because of regression (Bug 1306769)
-fails css-multicol-1/multicol-rule-color-inherit-002.xht
-
 #This test seems to pass only on Linux-opt build, fails on everything else
 #Therefore using fuzzy annotation as a catch all
 fuzzy(255,2808) css-multicol-1/multicol-rule-large-001.xht
