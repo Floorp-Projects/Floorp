@@ -224,14 +224,8 @@ HTMLFieldSetElement::AddElement(nsGenericHTMLFormElement* aElement)
   // invalid elements in aElement are also invalid elements of this.
   HTMLFieldSetElement* fieldSet = FromContent(aElement);
   if (fieldSet) {
-    if (fieldSet->mInvalidElementsCount > 0) {
-      // The order we call UpdateValidity and adjust mInvalidElementsCount is
-      // important. We need to first call UpdateValidity in case
-      // mInvalidElementsCount was 0 before the call and will be incremented to
-      // 1 and so we need to change state to invalid. After that is done, we
-      // are free to increment mInvalidElementsCount to the correct amount.
+    for (int32_t i = 0; i < fieldSet->mInvalidElementsCount; i++) {
       UpdateValidity(false);
-      mInvalidElementsCount += fieldSet->mInvalidElementsCount - 1;
     }
     return;
   }
@@ -272,12 +266,7 @@ HTMLFieldSetElement::RemoveElement(nsGenericHTMLFormElement* aElement)
   // invalid elements in aElement are also removed from this.
   HTMLFieldSetElement* fieldSet = FromContent(aElement);
   if (fieldSet) {
-    if (fieldSet->mInvalidElementsCount > 0) {
-      // The order we update mInvalidElementsCount and call UpdateValidity is
-      // important. We need to first decrement mInvalidElementsCount and then
-      // call UpdateValidity, in case mInvalidElementsCount hits 0 in the call
-      // of UpdateValidity and we have to change state to valid.
-      mInvalidElementsCount -= fieldSet->mInvalidElementsCount - 1;
+    for (int32_t i = 0; i < fieldSet->mInvalidElementsCount; i++) {
       UpdateValidity(true);
     }
     return;
