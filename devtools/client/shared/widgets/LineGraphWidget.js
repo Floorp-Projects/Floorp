@@ -6,7 +6,7 @@ const { AbstractCanvasGraph, CanvasGraphUtils } = require("devtools/client/share
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const L10N = new LocalizationHelper("devtools/client/locales/graphs.properties");
+const L10N = new LocalizationHelper("devtools/locale/graphs.properties");
 
 // Line graph constants.
 

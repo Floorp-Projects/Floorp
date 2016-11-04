@@ -9,8 +9,8 @@ const { getSourceNames, parseURL,
         isScratchpadScheme, getSourceMappedFile } = require("devtools/client/shared/source-utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
-const l10n = new LocalizationHelper("devtools/client/locales/components.properties");
-const webl10n = new LocalizationHelper("devtools/client/locales/webconsole.properties");
+const l10n = new LocalizationHelper("devtools/locale/components.properties");
+const webl10n = new LocalizationHelper("devtools/locale/webconsole.properties");
 
 module.exports = createClass({
   displayName: "Frame",

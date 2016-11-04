@@ -12,7 +12,7 @@ const URL = "data:text/html;charset=utf8,test page";
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 function getZoomValue() {
   return parseFloat(Services.prefs.getCharPref("devtools.toolbox.zoomValue"));

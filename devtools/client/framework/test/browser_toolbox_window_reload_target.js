@@ -12,7 +12,7 @@ const TEST_URL = "data:text/html;charset=utf-8," +
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 var target, toolbox, description, reloadsSent, toolIDs;
 

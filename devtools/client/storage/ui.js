@@ -24,7 +24,7 @@ loader.lazyImporter(this, "VariablesView",
 /**
  * Localization convenience methods.
  */
-const STORAGE_STRINGS = "devtools/client/locales/storage.properties";
+const STORAGE_STRINGS = "devtools/locale/storage.properties";
 const L10N = new LocalizationHelper(STORAGE_STRINGS);
 
 const GENERIC_VARIABLES_VIEW_SETTINGS = {

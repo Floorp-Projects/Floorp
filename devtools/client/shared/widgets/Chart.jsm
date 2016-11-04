@@ -7,7 +7,7 @@
 
 const Cu = Components.utils;
 
-const NET_STRINGS_URI = "devtools/client/locales/netmonitor.properties";
+const NET_STRINGS_URI = "devtools/locale/netmonitor.properties";
 const SVG_NS = "http://www.w3.org/2000/svg";
 const PI = Math.PI;
 const TAU = PI * 2;
