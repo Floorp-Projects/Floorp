@@ -1201,8 +1201,6 @@ protected:
   // Can't be inline because we can't include nsStyleSet.h.
   bool HasCachedStyleData();
 
-  bool IsChromeSlow() const;
-
   // Creates a one-shot timer with the given aCallback & aDelay.
   // Returns a refcounted pointer to the timer (or nullptr on failure).
   already_AddRefed<nsITimer> CreateTimer(nsTimerCallbackFunc aCallback,
