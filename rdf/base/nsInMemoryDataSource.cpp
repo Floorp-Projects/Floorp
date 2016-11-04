@@ -1584,21 +1584,20 @@ InMemoryDataSource::GetAllCmds(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
-InMemoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+InMemoryDataSource::IsCommandEnabled(nsISupports* aSources,
                                      nsIRDFResource*   aCommand,
-                                     nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                     nsISupports* aArguments,
                                      bool* aResult)
 {
-    *aResult = false;
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-InMemoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+InMemoryDataSource::DoCommand(nsISupports* aSources,
                               nsIRDFResource*   aCommand,
-                              nsISupportsArray/*<nsIRDFResource>*/* aArguments)
+                              nsISupports* aArguments)
 {
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -1883,7 +1882,7 @@ InMemoryDataSource::VisitAllSubjects(rdfITripleVisitor *aVisitor)
     // Lock datasource against writes
     ++mReadCount;
 
-    // Enumerate all of our entries into an nsISupportsArray.
+    // Enumerate all of our entries.
     nsresult rv = NS_OK;
     for (auto iter = mForwardArcs.Iter(); !iter.Done(); iter.Next()) {
         auto entry = static_cast<Entry*>(iter.Get());
@@ -1911,7 +1910,7 @@ InMemoryDataSource::VisitAllTriples(rdfITripleVisitor *aVisitor)
     // Lock datasource against writes
     ++mReadCount;
 
-    // Enumerate all of our entries into an nsISupportsArray.
+    // Enumerate all of our entries.
     nsresult rv = NS_OK;
     for (auto iter = mForwardArcs.Iter(); !iter.Done(); iter.Next()) {
         auto entry = static_cast<Entry*>(iter.Get());

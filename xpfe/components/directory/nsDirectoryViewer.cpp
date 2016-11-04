@@ -1188,27 +1188,17 @@ nsHTTPIndex::GetAllResources(nsISimpleEnumerator **_retval)
 }
 
 NS_IMETHODIMP
-nsHTTPIndex::IsCommandEnabled(nsISupportsArray *aSources, nsIRDFResource *aCommand,
-				nsISupportsArray *aArguments, bool *_retval)
+nsHTTPIndex::IsCommandEnabled(nsISupports *aSources, nsIRDFResource *aCommand,
+				nsISupports *aArguments, bool *_retval)
 {
-	nsresult	rv = NS_ERROR_UNEXPECTED;
-	if (mInner)
-	{
-		rv = mInner->IsCommandEnabled(aSources, aCommand, aArguments, _retval);
-	}
-	return(rv);
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsHTTPIndex::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aCommand,
-				nsISupportsArray *aArguments)
+nsHTTPIndex::DoCommand(nsISupports *aSources, nsIRDFResource *aCommand,
+				nsISupports *aArguments)
 {
-	nsresult	rv = NS_ERROR_UNEXPECTED;
-	if (mInner)
-	{
-		rv = mInner->DoCommand(aSources, aCommand, aArguments);
-	}
-	return(rv);
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
