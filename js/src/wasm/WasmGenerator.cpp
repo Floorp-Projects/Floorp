@@ -225,12 +225,6 @@ ModuleGenerator::finishOutstandingTask()
 }
 
 bool
-ModuleGenerator::funcIsImport(uint32_t funcIndex) const
-{
-    return funcIndex < shared_->funcImportGlobalDataOffsets.length();
-}
-
-bool
 ModuleGenerator::funcIsCompiled(uint32_t funcIndex) const
 {
     return funcToCodeRange_[funcIndex] != BAD_CODE_RANGE;
@@ -396,8 +390,6 @@ ModuleGenerator::finishFuncExports()
     for (ElemSegment& elems : elemSegments_) {
         if (shared_->tables[elems.tableIndex].external) {
             for (uint32_t funcIndex : elems.elemFuncIndices) {
-                if (funcIsImport(funcIndex))
-                    continue;
                 if (!exportedFuncs_.put(funcIndex))
                     return false;
             }
@@ -473,8 +465,8 @@ ModuleGenerator::finishCodegen()
         if (!jitExits.resize(numFuncImports()))
             return false;
         for (uint32_t i = 0; i < numFuncImports(); i++) {
-            interpExits[i] = GenerateInterpExit(masm, metadata_->funcImports[i], i, &throwLabel);
-            jitExits[i] = GenerateJitExit(masm, metadata_->funcImports[i], &throwLabel);
+            interpExits[i] = GenerateImportInterpExit(masm, metadata_->funcImports[i], i, &throwLabel);
+            jitExits[i] = GenerateImportJitExit(masm, metadata_->funcImports[i], &throwLabel);
         }
 
         for (Trap trap : MakeEnumeratedRange(Trap::Limit))
@@ -619,6 +611,8 @@ ModuleGenerator::finishLinkData(Bytes& code)
 bool
 ModuleGenerator::addFuncImport(const Sig& sig, uint32_t globalDataOffset)
 {
+    MOZ_ASSERT(!finishedFuncDefs_);
+
     Sig copy;
     if (!copy.clone(sig))
         return false;
@@ -796,12 +790,8 @@ ModuleGenerator::funcSig(uint32_t funcIndex) const
 bool
 ModuleGenerator::addFuncExport(UniqueChars fieldName, uint32_t funcIndex)
 {
-    if (!funcIsImport(funcIndex)) {
-       if (!exportedFuncs_.put(funcIndex))
-           return false;
-    }
-
-    return exports_.emplaceBack(Move(fieldName), funcIndex, DefinitionKind::Function);
+    return exportedFuncs_.put(funcIndex) &&
+           exports_.emplaceBack(Move(fieldName), funcIndex, DefinitionKind::Function);
 }
 
 bool
@@ -828,13 +818,8 @@ ModuleGenerator::addGlobalExport(UniqueChars fieldName, uint32_t globalIndex)
 bool
 ModuleGenerator::setStartFunction(uint32_t funcIndex)
 {
-    if (!funcIsImport(funcIndex)) {
-        if (!exportedFuncs_.put(funcIndex))
-            return false;
-    }
-
     metadata_->startFuncIndex.emplace(funcIndex);
-    return true;
+    return exportedFuncs_.put(funcIndex);
 }
 
 bool
@@ -845,7 +830,7 @@ ModuleGenerator::addElemSegment(InitExpr offset, Uint32Vector&& elemFuncIndices)
     MOZ_ASSERT(shared_->tables.length() == 1);
 
     for (uint32_t funcIndex : elemFuncIndices) {
-        if (funcIsImport(funcIndex)) {
+        if (funcIndex < numFuncImports()) {
             shared_->tables[0].external = true;
             break;
         }
@@ -985,7 +970,30 @@ ModuleGenerator::finishFuncDefs()
     linkData_.functionCodeLength = masm_.size();
     finishedFuncDefs_ = true;
 
-    // In this patch, imports never have an associated code range.
+    // Generate wrapper functions for every import. These wrappers turn imports
+    // into plain functions so they can be put into tables and re-exported.
+    // asm.js cannot do either and so no wrappers are generated.
+
+    if (!isAsmJS()) {
+        for (size_t funcIndex = 0; funcIndex < numFuncImports(); funcIndex++) {
+            const FuncImport& funcImport = metadata_->funcImports[funcIndex];
+            const SigWithId& sig = funcSig(funcIndex);
+
+            FuncOffsets offsets = GenerateImportFunction(masm_, funcImport, sig.id);
+            if (masm_.oom())
+                return false;
+
+            uint32_t codeRangeIndex = metadata_->codeRanges.length();
+            if (!metadata_->codeRanges.emplaceBack(funcIndex, /* bytecodeOffset = */ 0, offsets))
+                return false;
+
+            MOZ_ASSERT(!funcIsCompiled(funcIndex));
+            funcToCodeRange_[funcIndex] = codeRangeIndex;
+        }
+    }
+
+    // All function indices should have an associated code range at this point
+    // (except in asm.js, which doesn't have import wrapper functions).
 
 #ifdef DEBUG
     if (isAsmJS()) {
@@ -996,9 +1004,7 @@ ModuleGenerator::finishFuncDefs()
             MOZ_ASSERT(funcCodeRange(i).funcIndex() == i);
     } else {
         MOZ_ASSERT(numFinishedFuncDefs_ == numFuncDefs());
-        for (uint32_t i = 0; i < numFuncImports(); i++)
-            MOZ_ASSERT(funcToCodeRange_[i] == BAD_CODE_RANGE);
-        for (uint32_t i = numFuncImports(); i < numFuncs(); i++)
+        for (uint32_t i = 0; i < numFuncs(); i++)
             MOZ_ASSERT(funcCodeRange(i).funcIndex() == i);
     }
 #endif
@@ -1013,14 +1019,8 @@ ModuleGenerator::finishFuncDefs()
         if (!codeRangeIndices.reserve(elems.elemFuncIndices.length()))
             return false;
 
-        for (uint32_t funcIndex : elems.elemFuncIndices) {
-            if (funcIsImport(funcIndex)) {
-                codeRangeIndices.infallibleAppend(UINT32_MAX);
-                continue;
-            }
-
+        for (uint32_t funcIndex : elems.elemFuncIndices)
             codeRangeIndices.infallibleAppend(funcToCodeRange_[funcIndex]);
-        }
     }
 
     return true;

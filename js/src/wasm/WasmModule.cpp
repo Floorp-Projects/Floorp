@@ -599,17 +599,6 @@ Module::initSegments(JSContext* cx,
                                       "elem", "table");
             return false;
         }
-
-        for (uint32_t elemFuncIndex : seg.elemFuncIndices) {
-            if (elemFuncIndex < funcImports.length()) {
-                HandleFunction f = funcImports[elemFuncIndex];
-                if (!IsExportedWasmFunction(f)) {
-                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                              JSMSG_WASM_BAD_TABLE_VALUE);
-                    return false;
-                }
-            }
-        }
     }
 
     if (memoryObj) {
@@ -641,20 +630,17 @@ Module::initSegments(JSContext* cx,
         uint8_t* codeBase = instance.codeBase();
 
         for (uint32_t i = 0; i < seg.elemCodeRangeIndices.length(); i++) {
-            uint32_t elemFuncIndex = seg.elemFuncIndices[i];
-            if (elemFuncIndex < funcImports.length()) {
+            uint32_t funcIndex = seg.elemFuncIndices[i];
+            if (funcIndex < funcImports.length() && IsExportedWasmFunction(funcImports[funcIndex])) {
                 MOZ_ASSERT(!metadata().isAsmJS());
                 MOZ_ASSERT(!table.isTypedFunction());
-                MOZ_ASSERT(seg.elemCodeRangeIndices[i] == UINT32_MAX);
 
-                HandleFunction f = funcImports[elemFuncIndex];
+                HandleFunction f = funcImports[funcIndex];
                 WasmInstanceObject* exportInstanceObj = ExportedFunctionToInstanceObject(f);
                 const CodeRange& cr = exportInstanceObj->getExportedFunctionCodeRange(f);
                 Instance& exportInstance = exportInstanceObj->instance();
                 table.set(offset + i, exportInstance.codeBase() + cr.funcTableEntry(), exportInstance);
             } else {
-                MOZ_ASSERT(seg.elemCodeRangeIndices[i] != UINT32_MAX);
-
                 const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices[i]];
                 uint32_t entryOffset = table.isTypedFunction()
                                        ? profilingEnabled
@@ -829,7 +815,9 @@ GetFunctionExport(JSContext* cx,
                   const Export& exp,
                   MutableHandleValue val)
 {
-    if (exp.funcIndex() < funcImports.length()) {
+    if (exp.funcIndex() < funcImports.length() &&
+        IsExportedWasmFunction(funcImports[exp.funcIndex()]))
+    {
         val.setObject(*funcImports[exp.funcIndex()]);
         return true;
     }
@@ -1041,18 +1029,9 @@ Module::instantiate(JSContext* cx,
     // still be live via edges created by initSegments or the start function.
 
     if (metadata_->startFuncIndex) {
-        uint32_t startFuncIndex = *metadata_->startFuncIndex;
         FixedInvokeArgs<0> args(cx);
-        if (startFuncIndex < funcImports.length()) {
-            RootedValue fval(cx, ObjectValue(*funcImports[startFuncIndex]));
-            RootedValue thisv(cx);
-            RootedValue rval(cx);
-            if (!Call(cx, fval, thisv, args, &rval))
-                return false;
-        } else {
-            if (!instance->instance().callExport(cx, startFuncIndex, args))
-                return false;
-        }
+        if (!instance->instance().callExport(cx, *metadata_->startFuncIndex, args))
+            return false;
     }
 
     uint32_t mode = uint32_t(metadata().isAsmJS() ? Telemetry::ASMJS : Telemetry::WASM);

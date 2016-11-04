@@ -33,12 +33,15 @@ class FuncImport;
 extern Offsets
 GenerateEntry(jit::MacroAssembler& masm, const FuncExport& fe);
 
-extern ProfilingOffsets
-GenerateInterpExit(jit::MacroAssembler& masm, const FuncImport& fi, uint32_t funcImportIndex,
-                   jit::Label* throwLabel);
+extern FuncOffsets
+GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, SigIdDesc sigId);
 
 extern ProfilingOffsets
-GenerateJitExit(jit::MacroAssembler& masm, const FuncImport& fi, jit::Label* throwLabel);
+GenerateImportInterpExit(jit::MacroAssembler& masm, const FuncImport& fi, uint32_t funcImportIndex,
+                         jit::Label* throwLabel);
+
+extern ProfilingOffsets
+GenerateImportJitExit(jit::MacroAssembler& masm, const FuncImport& fi, jit::Label* throwLabel);
 
 extern ProfilingOffsets
 GenerateTrapExit(jit::MacroAssembler& masm, Trap trap, jit::Label* throwLabel);

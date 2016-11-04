@@ -116,7 +116,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     DebugOnly<bool>                 finishedFuncDefs_;
     DebugOnly<uint32_t>             numFinishedFuncDefs_;
 
-    bool funcIsImport(uint32_t funcIndex) const;
     bool funcIsCompiled(uint32_t funcIndex) const;
     const CodeRange& funcCodeRange(uint32_t funcIndex) const;
     MOZ_MUST_USE bool patchCallSites(TrapExitOffsetArray* maybeTrapExits = nullptr);

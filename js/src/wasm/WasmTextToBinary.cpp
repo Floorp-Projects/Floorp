@@ -1588,7 +1588,7 @@ ParseBlock(WasmParseContext& c, Expr expr, bool inParens)
         return nullptr;
 
     if (!inParens) {
-        if (!c.ts.getIf(WasmToken::End))
+        if (!c.ts.match(WasmToken::End, c.error))
             return nullptr;
     }
 
@@ -1683,7 +1683,11 @@ ParseCallIndirect(WasmParseContext& c, bool inParens)
     if (inParens) {
         if (!ParseArgs(c, &args))
             return nullptr;
-        index = args.popCopy();
+
+        if (args.empty())
+            index = new(c.lifo) AstPop();
+        else
+            index = args.popCopy();
     } else {
         index = new(c.lifo) AstPop();
     }
