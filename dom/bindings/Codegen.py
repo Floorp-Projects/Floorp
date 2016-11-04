@@ -10990,20 +10990,6 @@ class CGProxyIndexedSetter(CGProxyIndexedOperation):
                                          argumentHandleValue=argumentHandleValue)
 
 
-class CGProxyIndexedDeleter(CGProxyIndexedOperation):
-    """
-    Class to generate a call to an indexed deleter.
-
-    resultVar: See the docstring for CGCallGenerator.
-
-    foundVar: See the docstring for CGProxySpecialOperation.
-    """
-    def __init__(self, descriptor, resultVar=None, foundVar=None):
-        CGProxyIndexedOperation.__init__(self, descriptor, 'IndexedDeleter',
-                                         resultVar=resultVar,
-                                         foundVar=foundVar)
-
-
 class CGProxyNamedOperation(CGProxySpecialOperation):
     """
     Class to generate a call to a named operation.
@@ -11389,6 +11375,8 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
             assert type in ("Named", "Indexed")
             deleter = self.descriptor.operations[type + 'Deleter']
             if deleter:
+                assert type == "Named"
+                assert foundVar is not None
                 if self.descriptor.hasUnforgeableMembers:
                     raise TypeError("Can't handle a deleter on an interface "
                                     "that has unforgeables.  Figure out how "
@@ -11396,13 +11384,9 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
                 # See if the deleter method is fallible.
                 t = deleter.signatures()[0][0]
                 if t.isPrimitive() and not t.nullable() and t.tag() == IDLType.Tags.bool:
-                    # The deleter method has a boolean out-parameter. When a
-                    # property is found, the out-param indicates whether it was
-                    # successfully deleted.
-                    decls = ""
-                    if foundVar is None:
-                        foundVar = "found"
-                        decls += "bool found = false;\n"
+                    # The deleter method has a boolean return value. When a
+                    # property is found, the return value indicates whether it
+                    # was successfully deleted.
                     setDS = fill(
                         """
                         if (!${foundVar}) {
@@ -11411,15 +11395,13 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
                         """,
                         foundVar=foundVar)
                 else:
-                    # No boolean out-parameter: if a property is found,
+                    # No boolean return value: if a property is found,
                     # deleting it always succeeds.
-                    decls = ""
                     setDS = "deleteSucceeded = true;\n"
 
-                deleterClass = globals()["CGProxy%sDeleter" % type]
-                body = (decls +
-                        deleterClass(self.descriptor, resultVar="deleteSucceeded",
-                                     foundVar=foundVar).define() +
+                body = (CGProxyNamedDeleter(self.descriptor,
+                                            resultVar="deleteSucceeded",
+                                            foundVar=foundVar).define() +
                         setDS)
             elif getattr(self.descriptor, "supports%sProperties" % type)():
                 presenceCheckerClass = globals()["CGProxy%sPresenceChecker" % type]
