@@ -8,6 +8,11 @@
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for splitting";
 
 function test() {
+  waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 1]]}, runTest);
+}
+
+function runTest() {
   // Test is slow on Linux EC2 instances - Bug 962931
   requestLongerTimeout(2);
 

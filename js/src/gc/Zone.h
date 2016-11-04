@@ -516,6 +516,13 @@ struct Zone : public JS::shadow::Zone,
     void checkUniqueIdTableAfterMovingGC();
 #endif
 
+    bool keepShapeTables() const {
+        return keepShapeTables_;
+    }
+    void setKeepShapeTables(bool b) {
+        keepShapeTables_ = b;
+    }
+
   private:
     js::jit::JitZone* jitZone_;
 
@@ -523,6 +530,7 @@ struct Zone : public JS::shadow::Zone,
     bool gcScheduled_;
     bool gcPreserveCode_;
     bool jitUsingBarriers_;
+    bool keepShapeTables_;
 
     // Allow zones to be linked into a list
     friend class js::gc::ZoneList;

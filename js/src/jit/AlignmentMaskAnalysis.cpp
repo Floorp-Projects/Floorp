@@ -36,7 +36,7 @@ AnalyzeAsmHeapAddress(MDefinition* ptr, MIRGraph& graph)
     //
     // Putting the add on the outside might seem like it exposes other users of
     // the expression to the possibility of i32 overflow, if we aren't in asm.js
-    // and they aren't naturally truncating. However, since we use MAdd::NewAsmJS
+    // and they aren't naturally truncating. However, since we use MAdd::New
     // with MIRType::Int32, we make sure that the value is truncated, just as it
     // would be by the MBitAnd.
 
@@ -65,9 +65,9 @@ AnalyzeAsmHeapAddress(MDefinition* ptr, MIRGraph& graph)
         return;
 
     // The pattern was matched! Produce the replacement expression.
-    MInstruction* and_ = MBitAnd::NewAsmJS(graph.alloc(), op0, rhs, MIRType::Int32);
+    MInstruction* and_ = MBitAnd::New(graph.alloc(), op0, rhs, MIRType::Int32);
     ptr->block()->insertBefore(ptr->toBitAnd(), and_);
-    MInstruction* add = MAdd::NewAsmJS(graph.alloc(), and_, op1, MIRType::Int32);
+    MInstruction* add = MAdd::New(graph.alloc(), and_, op1, MIRType::Int32);
     ptr->block()->insertBefore(ptr->toBitAnd(), add);
     ptr->replaceAllUsesWith(add);
     ptr->block()->discard(ptr->toBitAnd());

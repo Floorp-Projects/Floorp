@@ -283,9 +283,9 @@ CodeGeneratorX86Shared::visitCompareFAndBranch(LCompareFAndBranch* comp)
 }
 
 void
-CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
+CodeGeneratorX86Shared::visitWasmStackArg(LWasmStackArg* ins)
 {
-    const MAsmJSPassStackArg* mir = ins->mir();
+    const MWasmStackArg* mir = ins->mir();
     Address dst(StackPointer, mir->spOffset());
     if (ins->arg()->isConstant()) {
         masm.storePtr(ImmWord(ToInt32(ins->arg())), dst);
@@ -308,14 +308,14 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
             return;
           default: break;
         }
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected mir type in AsmJSPassStackArg");
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected mir type in WasmStackArg");
     }
 }
 
 void
-CodeGeneratorX86Shared::visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins)
+CodeGeneratorX86Shared::visitWasmStackArgI64(LWasmStackArgI64* ins)
 {
-    const MAsmJSPassStackArg* mir = ins->mir();
+    const MWasmStackArg* mir = ins->mir();
     Address dst(StackPointer, mir->spOffset());
     if (IsConstant(ins->arg()))
         masm.store64(Imm64(ToInt64(ins->arg())), dst);
@@ -324,7 +324,7 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArgI64(LAsmJSPassStackArgI64* ins)
 }
 
 void
-CodeGeneratorX86Shared::visitAsmSelect(LAsmSelect* ins)
+CodeGeneratorX86Shared::visitWasmSelect(LWasmSelect* ins)
 {
     MIRType mirType = ins->mir()->type();
 
@@ -357,7 +357,7 @@ CodeGeneratorX86Shared::visitAsmSelect(LAsmSelect* ins)
         else
             masm.loadDouble(falseExpr, out);
     } else {
-        MOZ_CRASH("unhandled type in visitAsmSelect!");
+        MOZ_CRASH("unhandled type in visitWasmSelect!");
     }
 
     masm.bind(&done);
@@ -365,10 +365,10 @@ CodeGeneratorX86Shared::visitAsmSelect(LAsmSelect* ins)
 }
 
 void
-CodeGeneratorX86Shared::visitAsmReinterpret(LAsmReinterpret* lir)
+CodeGeneratorX86Shared::visitWasmReinterpret(LWasmReinterpret* lir)
 {
-    MOZ_ASSERT(gen->compilingAsmJS());
-    MAsmReinterpret* ins = lir->mir();
+    MOZ_ASSERT(gen->compilingWasm());
+    MWasmReinterpret* ins = lir->mir();
 
     MIRType to = ins->type();
 #ifdef DEBUG
@@ -388,7 +388,7 @@ CodeGeneratorX86Shared::visitAsmReinterpret(LAsmReinterpret* lir)
       case MIRType::Int64:
         MOZ_CRASH("not handled by this LIR opcode");
       default:
-        MOZ_CRASH("unexpected AsmReinterpret");
+        MOZ_CRASH("unexpected WasmReinterpret");
     }
 }
 
@@ -2500,7 +2500,7 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
 
     masm.jump(ool->rejoin());
 
-    if (gen->compilingAsmJS()) {
+    if (gen->compilingWasm()) {
         masm.bindLater(&onConversionError, trap(ool, wasm::Trap::ImpreciseSimdConversion));
     } else {
         masm.bind(&onConversionError);
@@ -2580,7 +2580,7 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     masm.vmovmskps(scratch, temp);
     masm.cmp32(temp, Imm32(0));
 
-    if (gen->compilingAsmJS())
+    if (gen->compilingWasm())
         masm.j(Assembler::NotEqual, trap(mir, wasm::Trap::ImpreciseSimdConversion));
     else
         bailoutIf(Assembler::NotEqual, ins->snapshot());
@@ -2850,7 +2850,7 @@ CodeGeneratorX86Shared::visitSimdExtractElementF(LSimdExtractElementF* ins)
     // when we extract an element into a "regular" scalar JS value, we have to
     // canonicalize. In asm.js code, we can skip this, as asm.js only has to
     // canonicalize NaNs at FFI boundaries.
-    if (!gen->compilingAsmJS())
+    if (!gen->compilingWasm())
         masm.canonicalizeFloat(output);
 }
 

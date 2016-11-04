@@ -19,8 +19,19 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
+  DefaultMap,
   instanceOf,
 } = ExtensionUtils;
+
+class DeepMap extends DefaultMap {
+  constructor() {
+    super(() => new DeepMap());
+  }
+
+  getPath(...keys) {
+    return keys.reduce((map, prop) => map.get(prop), this);
+  }
+}
 
 XPCOMUtils.defineLazyServiceGetter(this, "contentPolicyService",
                                    "@mozilla.org/addons/content-policy;1",
@@ -54,6 +65,58 @@ function readJSON(url) {
         reject(e);
       }
     });
+  });
+}
+
+/**
+ * Defines a lazy getter for the given property on the given object. Any
+ * security wrappers are waived on the object before the property is
+ * defined, and the getter and setter methods are wrapped for the target
+ * scope.
+ *
+ * The given getter function is guaranteed to be called only once, even
+ * if the target scope retrieves the wrapped getter from the property
+ * descriptor and calls it directly.
+ *
+ * @param {object} object
+ *        The object on which to define the getter.
+ * @param {string|Symbol} prop
+ *        The property name for which to define the getter.
+ * @param {function} getter
+ *        The function to call in order to generate the final property
+ *        value.
+ */
+function exportLazyGetter(object, prop, getter) {
+  object = Cu.waiveXrays(object);
+
+  let redefine = value => {
+    if (value === undefined) {
+      delete object[prop];
+    } else {
+      Object.defineProperty(object, prop, {
+        enumerable: true,
+        configurable: true,
+        writable: true,
+        value,
+      });
+    }
+
+    getter = null;
+
+    return value;
+  };
+
+  Object.defineProperty(object, prop, {
+    enumerable: true,
+    configurable: true,
+
+    get: Cu.exportFunction(function() {
+      return redefine(getter.call(this));
+    }, object),
+
+    set: Cu.exportFunction(value => {
+      redefine(value);
+    }, object),
   });
 }
 
@@ -542,13 +605,12 @@ class Entry {
    * `context` is used to call the actual implementation
    * of a given function or event.
    *
-   * @param {SchemaAPIInterface} apiImpl The implementation of the API.
    * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
    * @param {string} name The method name, e.g. "get".
    * @param {object} dest The object where `path`.`name` should be stored.
    * @param {InjectionContext} context
    */
-  inject(apiImpl, path, name, dest, context) {
+  inject(path, name, dest, context) {
   }
 }
 
@@ -872,13 +934,15 @@ class StringType extends Type {
     return baseType == "string";
   }
 
-  inject(apiImpl, path, name, dest, context) {
+  inject(path, name, dest, context) {
     if (this.enumeration) {
-      let obj = Cu.createObjectIn(dest, {defineAs: name});
-      for (let e of this.enumeration) {
-        let key = e.toUpperCase();
-        obj[key] = e;
-      }
+      exportLazyGetter(dest, name, () => {
+        let obj = Cu.createObjectIn(dest);
+        for (let e of this.enumeration) {
+          obj[e.toUpperCase()] = e;
+        }
+        return obj;
+      });
     }
   }
 }
@@ -1349,7 +1413,7 @@ class ValueProperty extends Entry {
     this.value = value;
   }
 
-  inject(apiImpl, path, name, dest, context) {
+  inject(path, name, dest, context) {
     dest[name] = this.value;
   }
 }
@@ -1369,10 +1433,12 @@ class TypeProperty extends Entry {
     throw context.makeError(`${msg} for ${this.namespaceName}.${this.name}.`);
   }
 
-  inject(apiImpl, path, name, dest, context) {
+  inject(path, name, dest, context) {
     if (this.unsupported) {
       return;
     }
+
+    let apiImpl = context.getImplementation(path.join("."), name);
 
     let getStub = () => {
       this.checkDeprecated(context);
@@ -1422,32 +1488,35 @@ class SubModuleProperty extends Entry {
     this.properties = properties;
   }
 
-  inject(apiImpl, path, name, dest, context) {
-    let obj = Cu.createObjectIn(dest, {defineAs: name});
+  inject(path, name, dest, context) {
+    exportLazyGetter(dest, name, () => {
+      let obj = Cu.createObjectIn(dest);
 
-    let ns = Schemas.namespaces.get(this.namespaceName);
-    let type = ns.get(this.reference);
-    if (!type && this.reference.includes(".")) {
-      let [namespaceName, ref] = this.reference.split(".");
-      ns = Schemas.namespaces.get(namespaceName);
-      type = ns.get(ref);
-    }
-    if (!type || !(type instanceof SubModuleType)) {
-      throw new Error(`Internal error: ${this.namespaceName}.${this.reference} is not a sub-module`);
-    }
-
-    let functions = type.functions;
-    for (let fun of functions) {
-      let subpath = path.concat(name);
-      let namespace = subpath.join(".");
-      let allowedContexts = fun.allowedContexts.length ? fun.allowedContexts : ns.defaultContexts;
-      if (context.shouldInject(namespace, fun.name, allowedContexts)) {
-        let apiImpl = context.getImplementation(namespace, fun.name);
-        fun.inject(apiImpl, subpath, fun.name, obj, context);
+      let ns = Schemas.namespaces.get(this.namespaceName);
+      let type = ns.get(this.reference);
+      if (!type && this.reference.includes(".")) {
+        let [namespaceName, ref] = this.reference.split(".");
+        ns = Schemas.namespaces.get(namespaceName);
+        type = ns.get(ref);
       }
-    }
+      if (!type || !(type instanceof SubModuleType)) {
+        throw new Error(`Internal error: ${this.namespaceName}.${this.reference} is not a sub-module`);
+      }
 
-    // TODO: Inject this.properties.
+      let functions = type.functions;
+      for (let fun of functions) {
+        let subpath = path.concat(name);
+        let namespace = subpath.join(".");
+        let allowedContexts = fun.allowedContexts.length ? fun.allowedContexts : ns.defaultContexts;
+        if (context.shouldInject(namespace, fun.name, allowedContexts)) {
+          fun.inject(subpath, fun.name, obj, context);
+        }
+      }
+
+      // TODO: Inject this.properties.
+
+      return obj;
+    });
   }
 }
 
@@ -1553,7 +1622,7 @@ class FunctionEntry extends CallEntry {
     this.hasAsyncCallback = type.hasAsyncCallback;
   }
 
-  inject(apiImpl, path, name, dest, context) {
+  inject(path, name, dest, context) {
     if (this.unsupported) {
       return;
     }
@@ -1562,37 +1631,41 @@ class FunctionEntry extends CallEntry {
       return;
     }
 
-    let stub;
-    if (this.isAsync) {
-      stub = (...args) => {
-        this.checkDeprecated(context);
-        let actuals = this.checkParameters(args, context);
-        let callback = null;
-        if (this.hasAsyncCallback) {
-          callback = actuals.pop();
-        }
-        if (callback === null && context.isChromeCompat) {
-          // We pass an empty stub function as a default callback for
-          // the `chrome` API, so promise objects are not returned,
-          // and lastError values are reported immediately.
-          callback = () => {};
-        }
-        return apiImpl.callAsyncFunction(actuals, callback);
-      };
-    } else if (!this.returns) {
-      stub = (...args) => {
-        this.checkDeprecated(context);
-        let actuals = this.checkParameters(args, context);
-        return apiImpl.callFunctionNoReturn(actuals);
-      };
-    } else {
-      stub = (...args) => {
-        this.checkDeprecated(context);
-        let actuals = this.checkParameters(args, context);
-        return apiImpl.callFunction(actuals);
-      };
-    }
-    Cu.exportFunction(stub, dest, {defineAs: name});
+    exportLazyGetter(dest, name, () => {
+      let apiImpl = context.getImplementation(path.join("."), name);
+
+      let stub;
+      if (this.isAsync) {
+        stub = (...args) => {
+          this.checkDeprecated(context);
+          let actuals = this.checkParameters(args, context);
+          let callback = null;
+          if (this.hasAsyncCallback) {
+            callback = actuals.pop();
+          }
+          if (callback === null && context.isChromeCompat) {
+            // We pass an empty stub function as a default callback for
+            // the `chrome` API, so promise objects are not returned,
+            // and lastError values are reported immediately.
+            callback = () => {};
+          }
+          return apiImpl.callAsyncFunction(actuals, callback);
+        };
+      } else if (!this.returns) {
+        stub = (...args) => {
+          this.checkDeprecated(context);
+          let actuals = this.checkParameters(args, context);
+          return apiImpl.callFunctionNoReturn(actuals);
+        };
+      } else {
+        stub = (...args) => {
+          this.checkDeprecated(context);
+          let actuals = this.checkParameters(args, context);
+          return apiImpl.callFunction(actuals);
+        };
+      }
+      return Cu.exportFunction(stub, dest);
+    });
   }
 }
 
@@ -1613,7 +1686,7 @@ class Event extends CallEntry {
     return r.value;
   }
 
-  inject(apiImpl, path, name, dest, context) {
+  inject(path, name, dest, context) {
     if (this.unsupported) {
       return;
     }
@@ -1622,26 +1695,33 @@ class Event extends CallEntry {
       return;
     }
 
-    let addStub = (listener, ...args) => {
-      listener = this.checkListener(listener, context);
-      let actuals = this.checkParameters(args, context);
-      apiImpl.addListener(listener, actuals);
-    };
+    exportLazyGetter(dest, name, () => {
+      let apiImpl = context.getImplementation(path.join("."), name);
 
-    let removeStub = (listener) => {
-      listener = this.checkListener(listener, context);
-      apiImpl.removeListener(listener);
-    };
+      let addStub = (listener, ...args) => {
+        listener = this.checkListener(listener, context);
+        let actuals = this.checkParameters(args, context);
+        apiImpl.addListener(listener, actuals);
+      };
 
-    let hasStub = (listener) => {
-      listener = this.checkListener(listener, context);
-      return apiImpl.hasListener(listener);
-    };
+      let removeStub = (listener) => {
+        listener = this.checkListener(listener, context);
+        apiImpl.removeListener(listener);
+      };
 
-    let obj = Cu.createObjectIn(dest, {defineAs: name});
-    Cu.exportFunction(addStub, obj, {defineAs: "addListener"});
-    Cu.exportFunction(removeStub, obj, {defineAs: "removeListener"});
-    Cu.exportFunction(hasStub, obj, {defineAs: "hasListener"});
+      let hasStub = (listener) => {
+        listener = this.checkListener(listener, context);
+        return apiImpl.hasListener(listener);
+      };
+
+      let obj = Cu.createObjectIn(dest);
+
+      Cu.exportFunction(addStub, obj, {defineAs: "addListener"});
+      Cu.exportFunction(removeStub, obj, {defineAs: "removeListener"});
+      Cu.exportFunction(hasStub, obj, {defineAs: "hasListener"});
+
+      return obj;
+    });
   }
 }
 
@@ -1671,6 +1751,7 @@ this.Schemas = {
     let ns = this.namespaces.get(namespaceName);
     if (!ns) {
       ns = new Map();
+      ns.name = namespaceName;
       ns.permissions = null;
       ns.allowedContexts = [];
       ns.defaultContexts = [];
@@ -1921,6 +2002,8 @@ this.Schemas = {
     return true;
   },
 
+  exportLazyGetter,
+
   /**
    * Inject registered extension APIs into `dest`.
    *
@@ -1932,53 +2015,65 @@ this.Schemas = {
   inject(dest, wrapperFuncs) {
     let context = new InjectionContext(wrapperFuncs);
 
-    for (let [namespace, ns] of this.namespaces) {
-      if (ns.permissions && !ns.permissions.some(perm => context.hasPermission(perm))) {
-        continue;
-      }
+    let createNamespace = ns => {
+      let obj = Cu.createObjectIn(dest);
 
-      if (!wrapperFuncs.shouldInject(namespace, null, ns.allowedContexts)) {
-        continue;
-      }
-
-      let obj = Cu.createObjectIn(dest, {defineAs: namespace});
       for (let [name, entry] of ns) {
-        let allowedContexts = entry.allowedContexts.length ? entry.allowedContexts : ns.defaultContexts;
-        if (context.shouldInject(namespace, name, allowedContexts)) {
-          let apiImpl = context.getImplementation(namespace, name);
-          entry.inject(apiImpl, [namespace], name, obj, context);
+        let allowedContexts = entry.allowedContexts;
+        if (!allowedContexts.length) {
+          allowedContexts = ns.defaultContexts;
+        }
+
+        if (context.shouldInject(ns.name, name, allowedContexts)) {
+          entry.inject([ns.name], name, obj, context);
         }
       }
 
       // Remove the namespace object if it is empty
-      if (!Object.keys(obj).length) {
-        delete dest[namespace];
-        // process the next namespace.
+      if (Object.keys(obj).length) {
+        return obj;
+      }
+    };
+
+    let createNestedNamespaces = (parent, namespaces) => {
+      for (let [prop, namespace] of namespaces) {
+        if (namespace instanceof DeepMap) {
+          exportLazyGetter(parent, prop, () => {
+            let obj = Cu.createObjectIn(parent);
+            createNestedNamespaces(obj, namespace);
+            return obj;
+          });
+        } else {
+          exportLazyGetter(parent, prop,
+                           () => createNamespace(namespace));
+        }
+      }
+    };
+
+    let nestedNamespaces = new DeepMap();
+    for (let ns of this.namespaces.values()) {
+      if (ns.permissions && !ns.permissions.some(perm => context.hasPermission(perm))) {
         continue;
       }
 
-      // If the nested namespaced API object (e.g devtools.inspectedWindow) is not empty,
-      // then turn `dest["nested.namespace"]` into `dest["nested"]["namespace"]`.
-      if (namespace.includes(".")) {
-        let apiObj = dest[namespace];
-        delete dest[namespace];
+      if (!wrapperFuncs.shouldInject(ns.name, null, ns.allowedContexts)) {
+        continue;
+      }
 
-        let nsLevels = namespace.split(".");
-        let currentObj = dest;
-        for (let nsLevel of nsLevels.slice(0, -1)) {
-          if (!currentObj[nsLevel]) {
-            // Create the namespace level if it doesn't exist yet.
-            currentObj = Cu.createObjectIn(currentObj, {defineAs: nsLevel});
-          } else {
-            // Move currentObj to the nested object if it already exists.
-            currentObj = currentObj[nsLevel];
-          }
-        }
+      if (ns.name.includes(".")) {
+        let path = ns.name.split(".");
+        let leafName = path.pop();
 
-        // Copy the apiObj as the final nested level.
-        currentObj[nsLevels.pop()] = apiObj;
+        let parent = nestedNamespaces.getPath(...path);
+
+        parent.set(leafName, ns);
+      } else {
+        exportLazyGetter(dest, ns.name,
+                         () => createNamespace(ns));
       }
     }
+
+    createNestedNamespaces(dest, nestedNamespaces);
   },
 
   /**

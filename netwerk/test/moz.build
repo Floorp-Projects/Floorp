@@ -45,6 +45,11 @@ CppUnitTests([
     'TestUDPSocket',
 ])
 
+if CONFIG['OS_TARGET'] == 'WINNT':
+    CppUnitTests([
+        'TestNamedPipeService'
+    ])
+
 RESOURCE_FILES += [
     'urlparse.dat',
     'urlparse_unx.dat',

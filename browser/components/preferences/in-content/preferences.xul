@@ -13,6 +13,7 @@
   href="chrome://browser/content/preferences/handlers.css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/applications.css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/in-content/search.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/in-content/containers.css"?>
 
 <!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
@@ -26,6 +27,8 @@
 <!ENTITY % syncDTD SYSTEM "chrome://browser/locale/preferences/sync.dtd">
 <!ENTITY % securityDTD SYSTEM
   "chrome://browser/locale/preferences/security.dtd">
+<!ENTITY % containersDTD SYSTEM
+  "chrome://browser/locale/preferences/containers.dtd">
 <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
 <!ENTITY % mainDTD SYSTEM "chrome://browser/locale/preferences/main.dtd">
 <!ENTITY % aboutHomeDTD SYSTEM "chrome://browser/locale/aboutHome.dtd">
@@ -43,6 +46,7 @@
 %syncBrandDTD;
 %syncDTD;
 %securityDTD;
+%containersDTD;
 %sanitizeDTD;
 %mainDTD;
 %aboutHomeDTD;
@@ -137,6 +141,12 @@
         <label class="category-name" flex="1">&panePrivacy.title;</label>
       </richlistitem>
 
+      <richlistitem id="category-containers"
+                    class="category"
+                    value="paneContainers"
+                    helpTopic="prefs-containers"
+                    hidden="true"/>
+
       <richlistitem id="category-security"
                     class="category"
                     value="paneSecurity"
@@ -173,6 +183,7 @@
 #include main.xul
 #include search.xul
 #include privacy.xul
+#include containers.xul
 #include advanced.xul
 #include applications.xul
 #include content.xul

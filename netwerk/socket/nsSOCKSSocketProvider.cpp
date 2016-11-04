@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIServiceManager.h"
+#include "nsNamedPipeIOLayer.h"
 #include "nsSOCKSSocketProvider.h"
 #include "nsSOCKSIOLayer.h"
 #include "nsCOMPtr.h"
@@ -51,10 +52,20 @@ nsSOCKSSocketProvider::NewSocket(int32_t family,
                                  nsISupports **socksInfo)
 {
     PRFileDesc *sock;
-    
-    sock = PR_OpenTCPSocket(family);
-    if (!sock)
-        return NS_ERROR_OUT_OF_MEMORY;
+
+#if defined(XP_WIN)
+    nsAutoCString proxyHost;
+    proxy->GetHost(proxyHost);
+    if (IsNamedPipePath(proxyHost)) {
+        sock = CreateNamedPipeLayer();
+    } else
+#endif
+    {
+        sock = PR_OpenTCPSocket(family);
+        if (!sock) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
 
     nsresult rv = nsSOCKSIOLayerAddToSocket(family,
                                             host, 

@@ -20,6 +20,7 @@ add_task(function* () {
     let options = { "set": [
       // Accept workers from mochitest's http.
       ["dom.serviceWorkers.testing.enabled", true],
+      ["dom.ipc.processCount", 1],
     ]};
     SpecialPowers.pushPrefEnv(options, done);
   });

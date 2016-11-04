@@ -39,6 +39,9 @@ interface mozIJSSubScriptLoader : nsISupports
      *                      - charset: specifying the character encoding of the file (default: ASCII)
      *                      - target:  an object to evaluate onto (default: global object of the caller)
      *                      - ignoreCache: if set to true, will bypass the cache for reading the file.
+     *                      - async: if set to true, the script will be loaded
+     *                        asynchronously, and a Promise is returned which
+     *                        resolves to its result when execution is complete.
      * @retval rv the value returned by the sub-script
      */
     [implicit_jscontext]

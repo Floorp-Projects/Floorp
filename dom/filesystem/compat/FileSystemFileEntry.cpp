@@ -14,10 +14,10 @@ namespace dom {
 
 namespace {
 
-class BlobCallbackRunnable final : public Runnable
+class FileCallbackRunnable final : public Runnable
 {
 public:
-  BlobCallbackRunnable(BlobCallback* aCallback, File* aFile)
+  FileCallbackRunnable(FileCallback* aCallback, File* aFile)
     : mCallback(aCallback)
     , mFile(aFile)
   {
@@ -28,12 +28,12 @@ public:
   NS_IMETHOD
   Run() override
   {
-    mCallback->HandleEvent(mFile);
+    mCallback->HandleEvent(*mFile);
     return NS_OK;
   }
 
 private:
-  RefPtr<BlobCallback> mCallback;
+  RefPtr<FileCallback> mCallback;
   RefPtr<File> mFile;
 };
 
@@ -49,8 +49,9 @@ NS_INTERFACE_MAP_END_INHERITING(FileSystemEntry)
 
 FileSystemFileEntry::FileSystemFileEntry(nsIGlobalObject* aGlobal,
                                          File* aFile,
+                                         FileSystemDirectoryEntry* aParentEntry,
                                          FileSystem* aFileSystem)
-  : FileSystemEntry(aGlobal, aFileSystem)
+  : FileSystemEntry(aGlobal, aParentEntry, aFileSystem)
   , mFile(aFile)
 {
   MOZ_ASSERT(aGlobal);
@@ -98,11 +99,11 @@ FileSystemFileEntry::CreateWriter(VoidCallback& aSuccessCallback,
 }
 
 void
-FileSystemFileEntry::GetFile(BlobCallback& aSuccessCallback,
+FileSystemFileEntry::GetFile(FileCallback& aSuccessCallback,
                              const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
 {
-  RefPtr<BlobCallbackRunnable> runnable =
-    new BlobCallbackRunnable(&aSuccessCallback, mFile);
+  RefPtr<FileCallbackRunnable> runnable =
+    new FileCallbackRunnable(&aSuccessCallback, mFile);
   DebugOnly<nsresult> rv = NS_DispatchToMainThread(runnable);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
 }

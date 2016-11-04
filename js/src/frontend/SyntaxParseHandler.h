@@ -94,6 +94,7 @@ class SyntaxParseHandler
 
         // Nodes representing unparenthesized names.
         NodeUnparenthesizedArgumentsName,
+        NodeUnparenthesizedAsyncName,
         NodeUnparenthesizedEvalName,
         NodeUnparenthesizedName,
 
@@ -182,6 +183,8 @@ class SyntaxParseHandler
         lastAtom = name;
         if (name == cx->names().arguments)
             return NodeUnparenthesizedArgumentsName;
+        if (name == cx->names().async)
+            return NodeUnparenthesizedAsyncName;
         if (name == cx->names().eval)
             return NodeUnparenthesizedEvalName;
         return NodeUnparenthesizedName;
@@ -488,7 +491,7 @@ class SyntaxParseHandler
             return NodeParenthesizedArgumentsName;
         if (node == NodeUnparenthesizedEvalName)
             return NodeParenthesizedEvalName;
-        if (node == NodeUnparenthesizedName)
+        if (node == NodeUnparenthesizedName || node == NodeUnparenthesizedAsyncName)
             return NodeParenthesizedName;
 
         if (node == NodeUnparenthesizedArray)
@@ -519,6 +522,7 @@ class SyntaxParseHandler
 
     bool isUnparenthesizedName(Node node) {
         return node == NodeUnparenthesizedArgumentsName ||
+               node == NodeUnparenthesizedAsyncName ||
                node == NodeUnparenthesizedEvalName ||
                node == NodeUnparenthesizedName;
     }
@@ -546,6 +550,12 @@ class SyntaxParseHandler
         if (node == NodeUnparenthesizedArgumentsName || node == NodeParenthesizedArgumentsName)
             return js_arguments_str;
         return nullptr;
+    }
+
+    bool nameIsUnparenthesizedAsync(Node node, ExclusiveContext* cx) {
+        MOZ_ASSERT(isNameAnyParentheses(node),
+                   "must only call this function on known names");
+        return node == NodeUnparenthesizedAsyncName;
     }
 
     PropertyName* maybeDottedProperty(Node node) {

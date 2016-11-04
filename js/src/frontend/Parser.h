@@ -1252,7 +1252,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     Node arrayComprehension(uint32_t begin);
     Node generatorComprehension(uint32_t begin);
 
-    bool argumentList(YieldHandling yieldHandling, Node listNode, bool* isSpread);
+    bool argumentList(YieldHandling yieldHandling, Node listNode, bool* isSpread,
+                      PossibleError* possibleError = nullptr);
     Node destructuringDeclaration(DeclarationKind kind, YieldHandling yieldHandling,
                                   TokenKind tt);
     Node destructuringDeclarationWithoutYieldOrAwait(DeclarationKind kind, YieldHandling yieldHandling,

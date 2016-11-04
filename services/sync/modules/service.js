@@ -1291,7 +1291,7 @@ Sync11Service.prototype = {
   },
 
   sync: function sync(engineNamesToSync) {
-    let dateStr = new Date().toLocaleFormat(LOG_DATE_FORMAT);
+    let dateStr = Utils.formatTimestamp(new Date());
     this._log.debug("User-Agent: " + Utils.userAgent);
     this._log.info("Starting sync at " + dateStr);
     this._catch(function () {

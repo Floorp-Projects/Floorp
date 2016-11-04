@@ -1016,7 +1016,7 @@ static MOZ_MUST_USE bool
 AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
                    Handle<PromiseReactionRecord*> reaction);
 
-static MOZ_MUST_USE bool BlockOnPromise(JSContext* cx, HandleObject promise,
+static MOZ_MUST_USE bool BlockOnPromise(JSContext* cx, HandleValue promise,
                                         HandleObject blockedPromise,
                                         HandleValue onFulfilled, HandleValue onRejected);
 
@@ -1039,8 +1039,11 @@ GetResolveFunctionFromPromise(PromiseObject* promise)
     if (rejectFunVal.isUndefined())
         return nullptr;
     JSObject* rejectFunObj = &rejectFunVal.toObject();
+
+    // We can safely unwrap it because all we want is to get the resolve
+    // function.
     if (IsWrapper(rejectFunObj))
-        rejectFunObj = CheckedUnwrap(rejectFunObj);
+        rejectFunObj = UncheckedUnwrap(rejectFunObj);
 
     if (!rejectFunObj->is<JSFunction>())
         return nullptr;
@@ -1190,11 +1193,11 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedObject proto(cx);
-    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+    if (!GetPrototypeFromConstructor(cx, needsWrapping ? newTarget : originalNewTarget, &proto))
         return false;
     if (needsWrapping && !cx->compartment()->wrap(cx, &proto))
         return false;
-    Rooted<PromiseObject*> promise(cx, PromiseObject::create(cx, executor, proto));
+    Rooted<PromiseObject*> promise(cx, PromiseObject::create(cx, executor, proto, needsWrapping));
     if (!promise)
         return false;
 
@@ -1207,18 +1210,18 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
 
 // ES2016, 25.4.3.1. steps 3-11.
 /* static */ PromiseObject*
-PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /* = nullptr */)
+PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /* = nullptr */,
+                      bool needsWrapping /* = false */)
 {
     MOZ_ASSERT(executor->isCallable());
 
     RootedObject usedProto(cx, proto);
-    bool wrappedProto = false;
     // If the proto is wrapped, that means the current function is running
     // with a different compartment active from the one the Promise instance
     // is to be created in.
     // See the comment in PromiseConstructor for details.
-    if (proto && IsWrapper(proto)) {
-        wrappedProto = true;
+    if (needsWrapping) {
+        MOZ_ASSERT(proto);
         usedProto = CheckedUnwrap(proto);
         if (!usedProto)
             return nullptr;
@@ -1226,13 +1229,13 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
 
 
     // Steps 3-7.
-    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectInternal(cx, usedProto, wrappedProto,
+    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectInternal(cx, usedProto, needsWrapping,
                                                                    false));
     if (!promise)
         return nullptr;
 
     RootedValue promiseVal(cx, ObjectValue(*promise));
-    if (wrappedProto && !cx->compartment()->wrap(cx, &promiseVal))
+    if (needsWrapping && !cx->compartment()->wrap(cx, &promiseVal))
         return nullptr;
 
     // Step 8.
@@ -1245,7 +1248,7 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
         return nullptr;
 
     // Need to wrap the resolution functions before storing them on the Promise.
-    if (wrappedProto) {
+    if (needsWrapping) {
         AutoCompartment ac(cx, promise);
         RootedValue wrappedRejectVal(cx, rejectVal);
         if (!cx->compartment()->wrap(cx, &wrappedRejectVal))
@@ -1656,9 +1659,8 @@ PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
         dataHolder->increaseRemainingCount();
 
         // Step q.
-        RootedObject nextPromiseObj(cx, &nextPromise.toObject());
         RootedValue resolveFunVal(cx, ObjectValue(*resolveFunc));
-        if (!BlockOnPromise(cx, nextPromiseObj, promiseObj, resolveFunVal, rejectFunVal))
+        if (!BlockOnPromise(cx, nextPromise, promiseObj, resolveFunVal, rejectFunVal))
             return false;
 
         // Step r.
@@ -1845,8 +1847,7 @@ PerformPromiseRace(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
             return false;
 
         // Step i.
-        RootedObject nextPromiseObj(cx, &nextPromise.toObject());
-        if (!BlockOnPromise(cx, nextPromiseObj, promiseObj, resolveFunVal, rejectFunVal))
+        if (!BlockOnPromise(cx, nextPromise, promiseObj, resolveFunVal, rejectFunVal))
             return false;
     }
 
@@ -2176,14 +2177,18 @@ PerformPromiseThen(JSContext* cx, Handle<PromiseObject*> promise, HandleValue on
  * and thus creating a new promise that would not be observable by content.
  */
 static MOZ_MUST_USE bool
-BlockOnPromise(JSContext* cx, HandleObject promiseObj, HandleObject blockedPromise_,
+BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromise_,
                HandleValue onFulfilled, HandleValue onRejected)
 {
     RootedValue thenVal(cx);
-    if (!GetProperty(cx, promiseObj, promiseObj, cx->names().then, &thenVal))
+    if (!GetProperty(cx, promiseVal, cx->names().then, &thenVal))
         return false;
 
-    if (promiseObj->is<PromiseObject>() && IsNativeFunction(thenVal, Promise_then)) {
+    RootedObject promiseObj(cx);
+    if (promiseVal.isObject())
+        promiseObj = &promiseVal.toObject();
+
+    if (promiseObj && promiseObj->is<PromiseObject>() && IsNativeFunction(thenVal, Promise_then)) {
         // |promise| is an unwrapped Promise, and |then| is the original
         // |Promise.prototype.then|, inline it here.
         // 25.4.5.3., step 3.
@@ -2224,11 +2229,18 @@ BlockOnPromise(JSContext* cx, HandleObject promiseObj, HandleObject blockedPromi
             return true;
     } else {
         // Optimization failed, do the normal call.
-        RootedValue promiseVal(cx, ObjectValue(*promiseObj));
         RootedValue rval(cx);
         if (!Call(cx, thenVal, promiseVal, onFulfilled, onRejected, &rval))
             return false;
     }
+
+    // In case the value to depend on isn't an object at all, there's nothing
+    // more to do here: we can only add reactions to Promise objects
+    // (potentially after unwrapping them), and non-object values can't be
+    // Promise objects. This can happen if Promise.all is called on an object
+    // with a `resolve` method that returns primitives.
+    if (!promiseObj)
+        return true;
 
     // The object created by the |promise.then| call or the inlined version
     // of it above is visible to content (either because |promise.then| was

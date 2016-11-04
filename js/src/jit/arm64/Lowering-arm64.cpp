@@ -222,9 +222,9 @@ LIRGeneratorARM64::visitAsmJSNeg(MAsmJSNeg* ins)
 }
 
 void
-LIRGeneratorARM64::visitAsmSelect(MAsmSelect* ins)
+LIRGeneratorARM64::visitWasmSelect(MWasmSelect* ins)
 {
-    MOZ_CRASH("visitAsmSelect");
+    MOZ_CRASH("visitWasmSelect");
 }
 
 void
@@ -240,15 +240,15 @@ LIRGeneratorARM64::lowerUMod(MMod* mod)
 }
 
 void
-LIRGeneratorARM64::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble* ins)
+LIRGeneratorARM64::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins)
 {
-    MOZ_CRASH("visitAsmJSUnsignedToDouble");
+    MOZ_CRASH("visitWasmUnsignedToDouble");
 }
 
 void
-LIRGeneratorARM64::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins)
+LIRGeneratorARM64::visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins)
 {
-    MOZ_CRASH("visitAsmJSUnsignedToFloat32");
+    MOZ_CRASH("visitWasmUnsignedToFloat32");
 }
 
 void

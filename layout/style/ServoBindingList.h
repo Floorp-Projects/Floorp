@@ -62,6 +62,10 @@ SERVO_BINDING_FUNC(Servo_RestyleWithAddedDeclaration,
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, RawServoDeclarationBlockStrong,
                    const nsACString* data)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_CreateEmpty,
+                   RawServoDeclarationBlockStrong)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_Clone, RawServoDeclarationBlockStrong,
+                   RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_AddRef, void,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Release, void,
@@ -69,9 +73,30 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_Release, void,
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Equals, bool,
                    RawServoDeclarationBlockBorrowed a,
                    RawServoDeclarationBlockBorrowed b)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetCssText, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsAString* result)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SerializeOneValue, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsString* buffer)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_Count, uint32_t,
+                   RawServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetNthProperty, bool,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   uint32_t index, nsAString* result)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetPropertyValue, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsIAtom* property, bool is_custom, nsAString* value)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetPropertyIsImportant, bool,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsIAtom* property, bool is_custom)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetProperty, bool,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsIAtom* property, bool is_custom,
+                   nsACString* value, bool is_important)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemoveProperty, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsIAtom* property, bool is_custom)
 
 // CSS supports()
 SERVO_BINDING_FUNC(Servo_CSSSupports, bool,

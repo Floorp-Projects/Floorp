@@ -50,14 +50,14 @@ struct MinimalFunc : MinimalAlloc
 
     MBasicBlock* createEntryBlock()
     {
-        MBasicBlock* block = MBasicBlock::NewAsmJS(graph, info, nullptr, MBasicBlock::NORMAL);
+        MBasicBlock* block = MBasicBlock::New(graph, info, nullptr, MBasicBlock::NORMAL);
         graph.addBlock(block);
         return block;
     }
 
     MBasicBlock* createOsrEntryBlock()
     {
-        MBasicBlock* block = MBasicBlock::NewAsmJS(graph, info, nullptr, MBasicBlock::NORMAL);
+        MBasicBlock* block = MBasicBlock::New(graph, info, nullptr, MBasicBlock::NORMAL);
         graph.addBlock(block);
         graph.setOsrBlock(block);
         return block;
@@ -65,7 +65,7 @@ struct MinimalFunc : MinimalAlloc
 
     MBasicBlock* createBlock(MBasicBlock* pred)
     {
-        MBasicBlock* block = MBasicBlock::NewAsmJS(graph, info, pred, MBasicBlock::NORMAL);
+        MBasicBlock* block = MBasicBlock::New(graph, info, pred, MBasicBlock::NORMAL);
         graph.addBlock(block);
         return block;
     }
