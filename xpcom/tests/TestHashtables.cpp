@@ -15,7 +15,7 @@
 #include "nsCOMArray.h"
 #include "mozilla/Attributes.h"
 
-#include "gtest/gtest.h"
+#include <stdio.h>
 
 namespace TestHashtables {
 
@@ -24,11 +24,13 @@ class TestUniChar // for nsClassHashtable
 public:
   explicit TestUniChar(uint32_t aWord)
   {
+    printf("    TestUniChar::TestUniChar() %u\n", aWord);
     mWord = aWord;
   }
 
   ~TestUniChar()
   {
+    printf("    TestUniChar::~TestUniChar() %u\n", mWord);
   }
 
   uint32_t GetChar() const { return mWord; }
@@ -86,6 +88,9 @@ nsTIterPrint(nsTHashtable<EntityToUnicodeEntry>& hash)
 {
   uint32_t n = 0;
   for (auto iter = hash.Iter(); !iter.Done(); iter.Next()) {
+    EntityToUnicodeEntry* entry = iter.Get();
+    printf("  enumerated \"%s\" = %u\n",
+           entry->mNode->mStr, entry->mNode->mUnicode);
     n++;
   }
   return n;
@@ -96,6 +101,9 @@ nsTIterPrintRemove(nsTHashtable<EntityToUnicodeEntry>& hash)
 {
   uint32_t n = 0;
   for (auto iter = hash.Iter(); !iter.Done(); iter.Next()) {
+    EntityToUnicodeEntry* entry = iter.Get();
+    printf("  enumerated \"%s\" = %u\n",
+           entry->mNode->mStr, entry->mNode->mUnicode);
     iter.Remove();
     n++;
   }
@@ -104,31 +112,62 @@ nsTIterPrintRemove(nsTHashtable<EntityToUnicodeEntry>& hash)
 
 void
 testTHashtable(nsTHashtable<EntityToUnicodeEntry>& hash, uint32_t numEntries) {
+  printf("Filling hash with %d entries.\n", numEntries);
+
   uint32_t i;
   for (i = 0; i < numEntries; ++i) {
+    printf("  Putting entry \"%s\"...", gEntities[i].mStr);
     EntityToUnicodeEntry* entry =
       hash.PutEntry(gEntities[i].mStr);
 
-    EXPECT_TRUE(entry);
+    if (!entry) {
+      printf("FAILED\n");
+      exit (2);
+    }
+    printf("OK...");
 
-    EXPECT_FALSE(entry->mNode);
+    if (entry->mNode) {
+      printf("entry already exists!\n");
+      exit (3);
+    }
+    printf("\n");
+
     entry->mNode = &gEntities[i];
   }
 
+  printf("Testing Get:\n");
+
   for (i = 0; i < numEntries; ++i) {
+    printf("  Getting entry \"%s\"...", gEntities[i].mStr);
     EntityToUnicodeEntry* entry =
       hash.GetEntry(gEntities[i].mStr);
 
-    EXPECT_TRUE(entry);
+    if (!entry) {
+      printf("FAILED\n");
+      exit (4);
+    }
+
+    printf("Found %u\n", entry->mNode->mUnicode);
   }
+
+  printf("Testing nonexistent entries...");
 
   EntityToUnicodeEntry* entry =
     hash.GetEntry("xxxy");
 
-  EXPECT_FALSE(entry);
+  if (entry) {
+    printf("FOUND! BAD!\n");
+    exit (5);
+  }
 
+  printf("not found; good.\n");
+
+  printf("Enumerating:\n");
   uint32_t count = nsTIterPrint(hash);
-  EXPECT_EQ(count, numEntries);
+  if (count != numEntries) {
+    printf("  Bad count!\n");
+    exit (6);
+  }
 }
 
 //
@@ -173,23 +212,31 @@ unsigned int IFoo::total_destructions_;
 void
 IFoo::print_totals()
   {
+    printf("total constructions/destructions --> %d/%d\n",
+           total_constructions_, total_destructions_);
   }
 
 IFoo::IFoo()
     : refcount_(0)
   {
     ++total_constructions_;
+    printf("  new IFoo@%p [#%d]\n",
+           static_cast<void*>(this), total_constructions_);
   }
 
 IFoo::~IFoo()
   {
     ++total_destructions_;
+    printf("IFoo@%p::~IFoo() [#%d]\n",
+           static_cast<void*>(this), total_destructions_);
   }
 
 MozExternalRefCountType
 IFoo::AddRef()
   {
     ++refcount_;
+    printf("IFoo@%p::AddRef(), refcount --> %d\n", 
+           static_cast<void*>(this), refcount_);
     return refcount_;
   }
 
@@ -198,7 +245,15 @@ IFoo::Release()
   {
     int newcount = --refcount_;
     if ( newcount == 0 )
+      printf(">>");
+
+    printf("IFoo@%p::Release(), refcount --> %d\n",
+           static_cast<void*>(this), refcount_);
+
+    if ( newcount == 0 )
       {
+        printf("  delete IFoo@%p\n", static_cast<void*>(this));
+        printf("<<IFoo@%p::Release()\n", static_cast<void*>(this));
         delete this;
       }
 
@@ -208,6 +263,7 @@ IFoo::Release()
 nsresult
 IFoo::QueryInterface( const nsIID& aIID, void** aResult )
   {
+    printf("IFoo@%p::QueryInterface()\n", static_cast<void*>(this));
     nsISupports* rawPtr = 0;
     nsresult status = NS_OK;
 
@@ -246,11 +302,14 @@ nsresult
 CreateIFoo( IFoo** result )
     // a typical factory function (that calls AddRef)
   {
+    printf("    >>CreateIFoo() --> ");
     IFoo* foop = new IFoo();
+    printf("IFoo@%p\n", static_cast<void*>(foop));
 
     foop->AddRef();
     *result = foop;
 
+    printf("<<CreateIFoo()\n");
     return NS_OK;
   }
 
@@ -258,101 +317,198 @@ CreateIFoo( IFoo** result )
 
 using namespace TestHashtables;
 
-TEST(Hashtable, THashtable)
-{
+int
+main(void) {
   // check an nsTHashtable
+  printf("Initializing nsTHashtable...");
   nsTHashtable<EntityToUnicodeEntry> EntityToUnicode(ENTITY_COUNT);
+  printf("OK\n");
 
+  printf("Partially filling nsTHashtable:\n");
   testTHashtable(EntityToUnicode, 5);
 
+  printf("Enumerate-removing...\n");
   uint32_t count = nsTIterPrintRemove(EntityToUnicode);
-  ASSERT_EQ(count, uint32_t(5));
+  if (count != 5) {
+    printf("wrong count\n");
+    exit (7);
+  }
+  printf("OK\n");
 
+  printf("Check enumeration...");
   count = nsTIterPrint(EntityToUnicode);
-  ASSERT_EQ(count, uint32_t(0));
+  if (count != 0) {
+    printf("entries remain in table!\n");
+    exit (8);
+  }
+  printf("OK\n");
 
+  printf("Filling nsTHashtable:\n");
   testTHashtable(EntityToUnicode, ENTITY_COUNT);
 
+  printf("Clearing...");
   EntityToUnicode.Clear();
+  printf("OK\n");
 
+  printf("Check enumeration...");
   count = nsTIterPrint(EntityToUnicode);
-  ASSERT_EQ(count, uint32_t(0));
-}
+  if (count != 0) {
+    printf("entries remain in table!\n");
+    exit (9);
+  }
+  printf("OK\n");
 
-TEST(Hashtables, DataHashtable)
-{
-  // check a data-hashtable
+  //
+  // now check a data-hashtable
+  //
+
+  printf("Initializing nsDataHashtable...");
   nsDataHashtable<nsUint32HashKey,const char*> UniToEntity(ENTITY_COUNT);
+  printf("OK\n");
 
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
+  printf("Filling hash with %u entries.\n", ENTITY_COUNT);
+
+  uint32_t i;
+  for (i = 0; i < ENTITY_COUNT; ++i) {
+    printf("  Putting entry %u...", gEntities[i].mUnicode);
     UniToEntity.Put(gEntities[i].mUnicode, gEntities[i].mStr);
+    printf("OK...\n");
   }
 
+  printf("Testing Get:\n");
   const char* str;
 
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
-    ASSERT_TRUE(UniToEntity.Get(gEntities[i].mUnicode, &str));
+  for (i = 0; i < ENTITY_COUNT; ++i) {
+    printf("  Getting entry %u...", gEntities[i].mUnicode);
+    if (!UniToEntity.Get(gEntities[i].mUnicode, &str)) {
+      printf("FAILED\n");
+      exit (12);
+    }
+
+    printf("Found %s\n", str);
   }
 
-  ASSERT_FALSE(UniToEntity.Get(99446, &str));
+  printf("Testing nonexistent entries...");
+  if (UniToEntity.Get(99446, &str)) {
+    printf("FOUND! BAD!\n");
+    exit (13);
+  }
 
-  uint32_t count = 0;
+  printf("not found; good.\n");
+
+  printf("Enumerating:\n");
+
+  count = 0;
   for (auto iter = UniToEntity.Iter(); !iter.Done(); iter.Next()) {
+    printf("  enumerated %u = \"%s\"\n", iter.Key(), iter.UserData());
     count++;
   }
-  ASSERT_EQ(count, ENTITY_COUNT);
+  if (count != ENTITY_COUNT) {
+    printf("  Bad count!\n");
+    exit (14);
+  }
 
+  printf("Clearing...");
   UniToEntity.Clear();
+  printf("OK\n");
 
+  printf("Checking count...");
   count = 0;
   for (auto iter = UniToEntity.Iter(); !iter.Done(); iter.Next()) {
     printf("  enumerated %u = \"%s\"\n", iter.Key(), iter.Data());
     count++;
   }
-  ASSERT_EQ(count, uint32_t(0));
-}
-
-TEST(Hashtables, ClassHashtable)
-{
-  // check a class-hashtable
-  nsClassHashtable<nsCStringHashKey,TestUniChar> EntToUniClass(ENTITY_COUNT);
-
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
-    TestUniChar* temp = new TestUniChar(gEntities[i].mUnicode);
-    EntToUniClass.Put(nsDependentCString(gEntities[i].mStr), temp);
+  if (count != 0) {
+    printf("  Clear did not remove all entries.\n");
+    exit (15);
   }
 
+  printf("OK\n");
+
+  //
+  // now check a class-hashtable
+  //
+
+  printf("Initializing nsClassHashtable...");
+  nsClassHashtable<nsCStringHashKey,TestUniChar> EntToUniClass(ENTITY_COUNT);
+  printf("OK\n");
+
+  printf("Filling hash with %u entries.\n", ENTITY_COUNT);
+
+  for (i = 0; i < ENTITY_COUNT; ++i) {
+    printf("  Putting entry %u...", gEntities[i].mUnicode);
+    TestUniChar* temp = new TestUniChar(gEntities[i].mUnicode);
+
+    EntToUniClass.Put(nsDependentCString(gEntities[i].mStr), temp);
+    printf("OK...\n");
+  }
+
+  printf("Testing Get:\n");
   TestUniChar* myChar;
 
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
-    ASSERT_TRUE(EntToUniClass.Get(nsDependentCString(gEntities[i].mStr), &myChar));
+  for (i = 0; i < ENTITY_COUNT; ++i) {
+    printf("  Getting entry %s...", gEntities[i].mStr);
+    if (!EntToUniClass.Get(nsDependentCString(gEntities[i].mStr), &myChar)) {
+      printf("FAILED\n");
+      exit (18);
+    }
+
+    printf("Found %c\n", myChar->GetChar());
   }
 
-  ASSERT_FALSE(EntToUniClass.Get(NS_LITERAL_CSTRING("xxxx"), &myChar));
-
-  uint32_t count = 0;
-  for (auto iter = EntToUniClass.Iter(); !iter.Done(); iter.Next()) {
-    count++;
+  printf("Testing nonexistent entries...");
+  if (EntToUniClass.Get(NS_LITERAL_CSTRING("xxxx"), &myChar)) {
+    printf("FOUND! BAD!\n");
+    exit (19);
   }
-  ASSERT_EQ(count, ENTITY_COUNT);
 
-  EntToUniClass.Clear();
+  printf("not found; good.\n");
+
+  printf("Enumerating:\n");
 
   count = 0;
   for (auto iter = EntToUniClass.Iter(); !iter.Done(); iter.Next()) {
+    printf("  enumerated \"%s\" = %c\n",
+           PromiseFlatCString(iter.Key()).get(), iter.UserData()->GetChar());
     count++;
   }
-  ASSERT_EQ(count, uint32_t(0));
-}
+  if (count != ENTITY_COUNT) {
+    printf("  Bad count!\n");
+    exit (20);
+  }
 
-TEST(Hashtables, DataHashtableWithInterfaceKey)
-{
-  // check a data-hashtable with an interface key
+  printf("Clearing...\n");
+  EntToUniClass.Clear();
+  printf("  Clearing OK\n");
+
+  printf("Checking count...");
+  count = 0;
+  for (auto iter = EntToUniClass.Iter(); !iter.Done(); iter.Next()) {
+    printf("  enumerated \"%s\" = %c\n",
+           PromiseFlatCString(iter.Key()).get(), iter.Data()->GetChar());
+    count++;
+  }
+  if (count != 0) {
+    printf("  Clear did not remove all entries.\n");
+    exit (21);
+  }
+
+  printf("OK\n");
+
+  //
+  // now check a data-hashtable with an interface key
+  //
+
+  printf("Initializing nsDataHashtable with interface key...");
   nsDataHashtable<nsISupportsHashKey,uint32_t> EntToUniClass2(ENTITY_COUNT);
+  printf("OK\n");
+
+  printf("Filling hash with %u entries.\n", ENTITY_COUNT);
 
   nsCOMArray<IFoo> fooArray;
 
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
+  for (i = 0; i < ENTITY_COUNT; ++i) {
+    printf("  Putting entry %u...", gEntities[i].mUnicode);
     nsCOMPtr<IFoo> foo;
     CreateIFoo(getter_AddRefs(foo));
     foo->SetString(nsDependentCString(gEntities[i].mStr));
@@ -360,76 +516,143 @@ TEST(Hashtables, DataHashtableWithInterfaceKey)
     fooArray.InsertObjectAt(foo, i);
 
     EntToUniClass2.Put(foo, gEntities[i].mUnicode);
+    printf("OK...\n");
   }
 
+  printf("Testing Get:\n");
   uint32_t myChar2;
 
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
-    ASSERT_TRUE(EntToUniClass2.Get(fooArray[i], &myChar2));
+  for (i = 0; i < ENTITY_COUNT; ++i) {
+    printf("  Getting entry %s...", gEntities[i].mStr);
+
+    if (!EntToUniClass2.Get(fooArray[i], &myChar2)) {
+      printf("FAILED\n");
+      exit (24);
+    }
+
+    printf("Found %c\n", myChar2);
   }
 
-  ASSERT_FALSE(EntToUniClass2.Get((nsISupports*) 0x55443316, &myChar2));
-
-  uint32_t count = 0;
-  for (auto iter = EntToUniClass2.Iter(); !iter.Done(); iter.Next()) {
-    nsAutoCString s;
-    nsCOMPtr<IFoo> foo = do_QueryInterface(iter.Key());
-    foo->GetString(s);
-    count++;
+  printf("Testing nonexistent entries...");
+  if (EntToUniClass2.Get((nsISupports*) 0x55443316, &myChar2)) {
+    printf("FOUND! BAD!\n");
+    exit (25);
   }
-  ASSERT_EQ(count, ENTITY_COUNT);
 
-  EntToUniClass2.Clear();
+  printf("not found; good.\n");
+
+  printf("Enumerating:\n");
 
   count = 0;
   for (auto iter = EntToUniClass2.Iter(); !iter.Done(); iter.Next()) {
     nsAutoCString s;
     nsCOMPtr<IFoo> foo = do_QueryInterface(iter.Key());
     foo->GetString(s);
+    printf("  enumerated \"%s\" = %u\n", s.get(), iter.UserData());
     count++;
   }
-  ASSERT_EQ(count, uint32_t(0));
-}
+  if (count != ENTITY_COUNT) {
+    printf("  Bad count!\n");
+    exit (26);
+  }
 
-TEST(Hashtables, InterfaceHashtable)
-{
-  // check an interface-hashtable with an uint32_t key
+  printf("Clearing...\n");
+  EntToUniClass2.Clear();
+  printf("  Clearing OK\n");
+
+  printf("Checking count...");
+  count = 0;
+  for (auto iter = EntToUniClass2.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoCString s;
+    nsCOMPtr<IFoo> foo = do_QueryInterface(iter.Key());
+    foo->GetString(s);
+    printf("  enumerated \"%s\" = %u\n", s.get(), iter.Data());
+    count++;
+  }
+  if (count != 0) {
+    printf("  Clear did not remove all entries.\n");
+    exit (27);
+  }
+
+  printf("OK\n");
+
+  //
+  // now check an interface-hashtable with an uint32_t key
+  //
+
+  printf("Initializing nsInterfaceHashtable...");
   nsInterfaceHashtable<nsUint32HashKey,IFoo> UniToEntClass2(ENTITY_COUNT);
+  printf("OK\n");
 
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
+  printf("Filling hash with %u entries.\n", ENTITY_COUNT);
+
+  for (i = 0; i < ENTITY_COUNT; ++i) {
+    printf("  Putting entry %u...", gEntities[i].mUnicode);
     nsCOMPtr<IFoo> foo;
     CreateIFoo(getter_AddRefs(foo));
     foo->SetString(nsDependentCString(gEntities[i].mStr));
 
     UniToEntClass2.Put(gEntities[i].mUnicode, foo);
+    printf("OK...\n");
   }
 
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
+  printf("Testing Get:\n");
+
+  for (i = 0; i < ENTITY_COUNT; ++i) {
+    printf("  Getting entry %s...", gEntities[i].mStr);
+
     nsCOMPtr<IFoo> myEnt;
-    ASSERT_TRUE(UniToEntClass2.Get(gEntities[i].mUnicode, getter_AddRefs(myEnt)));
+    if (!UniToEntClass2.Get(gEntities[i].mUnicode, getter_AddRefs(myEnt))) {
+      printf("FAILED\n");
+      exit (30);
+    }
 
     nsAutoCString myEntStr;
     myEnt->GetString(myEntStr);
+    printf("Found %s\n", myEntStr.get());
   }
 
+  printf("Testing nonexistent entries...");
   nsCOMPtr<IFoo> myEnt;
-  ASSERT_FALSE(UniToEntClass2.Get(9462, getter_AddRefs(myEnt)));
-
-  uint32_t count = 0;
-  for (auto iter = UniToEntClass2.Iter(); !iter.Done(); iter.Next()) {
-    nsAutoCString s;
-    iter.UserData()->GetString(s);
-    count++;
+  if (UniToEntClass2.Get(9462, getter_AddRefs(myEnt))) {
+    printf("FOUND! BAD!\n");
+    exit (31);
   }
-  ASSERT_EQ(count, ENTITY_COUNT);
 
-  UniToEntClass2.Clear();
+  printf("not found; good.\n");
+
+  printf("Enumerating:\n");
 
   count = 0;
   for (auto iter = UniToEntClass2.Iter(); !iter.Done(); iter.Next()) {
     nsAutoCString s;
-    iter.Data()->GetString(s);
+    iter.UserData()->GetString(s);
+    printf("  enumerated %u = \"%s\"\n", iter.Key(), s.get());
     count++;
   }
-  ASSERT_EQ(count, uint32_t(0));
+  if (count != ENTITY_COUNT) {
+    printf("  Bad count!\n");
+    exit (32);
+  }
+
+  printf("Clearing...\n");
+  UniToEntClass2.Clear();
+  printf("  Clearing OK\n");
+
+  printf("Checking count...");
+  count = 0;
+  for (auto iter = UniToEntClass2.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoCString s;
+    iter.Data()->GetString(s);
+    printf("  enumerated %u = \"%s\"\n", iter.Key(), s.get());
+    count++;
+  }
+  if (count != 0) {
+    printf("  Clear did not remove all entries.\n");
+    exit (33);
+  }
+
+  printf("OK\n");
+
+  return 0;
 }
