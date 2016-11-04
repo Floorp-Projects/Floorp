@@ -438,8 +438,8 @@ assertErrorMessage(() => i2v(5), Error, signatureMismatch);
 
     disableSPSProfiling();
 
-    var inner = stack.indexOf("wasm-function[0]");
-    var outer = stack.indexOf("wasm-function[2]");
+    var inner = stack.indexOf("wasm-function[1]");
+    var outer = stack.indexOf("wasm-function[3]");
     assertEq(inner === -1, false);
     assertEq(outer === -1, false);
     assertEq(inner < outer, true);

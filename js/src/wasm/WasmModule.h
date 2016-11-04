@@ -101,7 +101,7 @@ typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
 
 // Export describes the export of a definition in a Module to a field in the
 // export object. For functions, Export stores an index into the
-// FuncDefExportVector in Metadata. For memory and table exports, there is
+// FuncExportVector in Metadata. For memory and table exports, there is
 // at most one (default) memory/table so no index is needed. Note: a single
 // definition can be exported by multiple Exports in the ExportVector.
 //

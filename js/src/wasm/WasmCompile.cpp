@@ -105,17 +105,17 @@ DecodeCallReturn(FunctionDecoder& f, const Sig& sig)
 static bool
 DecodeCall(FunctionDecoder& f)
 {
-    uint32_t calleeIndex;
-    if (!f.iter().readCall(&calleeIndex))
+    uint32_t funcIndex;
+    if (!f.iter().readCall(&funcIndex))
         return false;
 
-    if (calleeIndex >= f.mg().numFuncs())
+    if (funcIndex >= f.mg().numFuncs())
         return f.iter().fail("callee index out of range");
 
     if (!f.iter().inReachableCode())
         return true;
 
-    const Sig* sig = &f.mg().funcSig(calleeIndex);
+    const Sig* sig = &f.mg().funcSig(funcIndex);
 
     return DecodeCallArgs(f, *sig) &&
            DecodeCallReturn(f, *sig);
@@ -527,15 +527,19 @@ DecodeFunctionSection(Decoder& d, ModuleGeneratorData* init)
     if (!d.readVarU32(&numDefs))
         return d.fail("expected number of function definitions");
 
-    if (numDefs > MaxFuncs)
+    uint32_t numFuncs = init->funcSigs.length() + numDefs;
+    if (numFuncs > MaxFuncs)
         return d.fail("too many functions");
 
-    if (!init->funcDefSigs.resize(numDefs))
+    if (!init->funcSigs.reserve(numFuncs))
         return false;
 
     for (uint32_t i = 0; i < numDefs; i++) {
-        if (!DecodeSignatureIndex(d, *init, &init->funcDefSigs[i]))
+        const SigWithId* sig;
+        if (!DecodeSignatureIndex(d, *init, &sig))
             return false;
+
+        init->funcSigs.infallibleAppend(sig);
     }
 
     if (!d.finishSection(sectionStart, sectionSize, "function"))
@@ -640,7 +644,7 @@ DecodeImport(Decoder& d, ModuleGeneratorData* init, ImportVector* imports)
         const SigWithId* sig = nullptr;
         if (!DecodeSignatureIndex(d, *init, &sig))
             return false;
-        if (!init->funcImports.emplaceBack(sig))
+        if (!init->funcSigs.emplaceBack(sig))
             return false;
         break;
       }
@@ -692,6 +696,10 @@ DecodeImportSection(Decoder& d, ModuleGeneratorData* init, ImportVector* imports
         if (!DecodeImport(d, init, imports))
             return false;
     }
+
+    // The global data offsets will be filled in by ModuleGenerator::init.
+    if (!init->funcImportGlobalDataOffsets.resize(init->funcSigs.length()))
+        return false;
 
     if (!d.finishSection(sectionStart, sectionSize, "import"))
         return false;
@@ -820,7 +828,7 @@ DecodeExport(Decoder& d, ModuleGenerator& mg, CStringSet* dupSet)
         if (funcIndex >= mg.numFuncs())
             return d.fail("exported function index out of bounds");
 
-        return mg.addFuncDefExport(Move(fieldName), funcIndex);
+        return mg.addFuncExport(Move(fieldName), funcIndex);
       }
       case DefinitionKind::Table: {
         uint32_t tableIndex;
@@ -895,7 +903,7 @@ DecodeExportSection(Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
-DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcDefIndex)
+DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 {
     uint32_t bodySize;
     if (!d.readVarU32(&bodySize))
@@ -912,7 +920,7 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcDefIndex)
         return false;
 
     ValTypeVector locals;
-    const Sig& sig = mg.funcDefSig(funcDefIndex);
+    const Sig& sig = mg.funcSig(funcIndex);
     if (!locals.appendAll(sig.args()))
         return false;
 
@@ -943,7 +951,7 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcDefIndex)
 
     memcpy(fg.bytes().begin(), bodyBegin, bodySize);
 
-    return mg.finishFuncDef(funcDefIndex, &fg);
+    return mg.finishFuncDef(funcIndex, &fg);
 }
 
 static bool
@@ -1002,8 +1010,8 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
     if (numFuncDefs != mg.numFuncDefs())
         return d.fail("function body count does not match function signature count");
 
-    for (uint32_t i = 0; i < numFuncDefs; i++) {
-        if (!DecodeFunctionBody(d, mg, i))
+    for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
+        if (!DecodeFunctionBody(d, mg, mg.numFuncImports() + funcDefIndex))
             return false;
     }
 
