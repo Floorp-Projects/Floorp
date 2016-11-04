@@ -1260,7 +1260,32 @@ BlobImplTemporaryBlob::GetInternalStream(nsIInputStream** aStream,
 ////////////////////////////////////////////////////////////////////////////
 // BlobImplStream implementation
 
-NS_IMPL_ISUPPORTS_INHERITED0(BlobImplStream, BlobImpl)
+NS_IMPL_ISUPPORTS_INHERITED(BlobImplStream, BlobImpl, nsIMemoryReporter)
+
+/* static */ already_AddRefed<BlobImplStream>
+BlobImplStream::Create(nsIInputStream* aInputStream,
+                       const nsAString& aContentType,
+                       uint64_t aLength)
+{
+  RefPtr<BlobImplStream> blobImplStream =
+    new BlobImplStream(aInputStream, aContentType, aLength);
+  blobImplStream->MaybeRegisterMemoryReporter();
+  return blobImplStream.forget();
+}
+
+/* static */ already_AddRefed<BlobImplStream>
+BlobImplStream::Create(nsIInputStream* aInputStream,
+                       const nsAString& aName,
+                       const nsAString& aContentType,
+                       int64_t aLastModifiedDate,
+                       uint64_t aLength)
+{
+  RefPtr<BlobImplStream> blobImplStream =
+    new BlobImplStream(aInputStream, aName, aContentType, aLastModifiedDate,
+                       aLength);
+  blobImplStream->MaybeRegisterMemoryReporter();
+  return blobImplStream.forget();
+}
 
 BlobImplStream::BlobImplStream(nsIInputStream* aInputStream,
                                const nsAString& aContentType,
@@ -1292,7 +1317,9 @@ BlobImplStream::BlobImplStream(nsIInputStream* aInputStream,
 }
 
 BlobImplStream::~BlobImplStream()
-{}
+{
+  UnregisterWeakMemoryReporter(this);
+}
 
 void
 BlobImplStream::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
@@ -1325,6 +1352,37 @@ BlobImplStream::CreateSlice(uint64_t aStart, uint64_t aLength,
   RefPtr<BlobImpl> impl =
     new BlobImplStream(this, aContentType, aStart, aLength);
   return impl.forget();
+}
+
+void
+BlobImplStream::MaybeRegisterMemoryReporter()
+{
+  // We report only stringInputStream.
+  nsCOMPtr<nsIStringInputStream> stringInputStream =
+    do_QueryInterface(mInputStream);
+  if (!stringInputStream) {
+    return;
+  }
+
+  RegisterWeakMemoryReporter(this);
+}
+
+NS_IMETHODIMP
+BlobImplStream::CollectReports(nsIHandleReportCallback* aHandleReport,
+                               nsISupports* aData, bool aAnonymize)
+{
+  uint64_t size;
+  nsresult rv = mInputStream->Available(&size);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_COLLECT_REPORT(
+    "explicit/dom/memory-file-data/stream", KIND_HEAP, UNITS_BYTES,
+    size,
+    "Memory used to back a File/Blob based on an input stream.");
+
+  return NS_OK;
 }
 
 } // namespace dom
