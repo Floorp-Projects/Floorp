@@ -19,7 +19,6 @@ function storageApiFactory(context) {
     // it is not allowed to access properties of `items`.
     // So we enumerate all properties and sanitize each value individually.
     let sanitized = {};
-    Cu.reportError(`princ: ${context.principal.origin}`);
     for (let [key, value] of Object.entries(items)) {
       sanitized[key] = ExtensionStorage.sanitize(value, context);
     }
