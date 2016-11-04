@@ -452,9 +452,9 @@ JitcodeGlobalTable::lookupForSamplerInfallible(void* ptr, JSRuntime* rt, uint32_
     // JitcodeGlobalEntries are marked at the end of the mark phase. A read
     // barrier is not needed. Any JS frames sampled during the sweep phase of
     // the GC must be on stack, and on-stack frames must already be marked at
-    // the beginning of the sweep phase. This assumption is verified below.
-    MOZ_ASSERT_IF(rt->isHeapBusy() && entry->jitcode()->zoneFromAnyThread()->isGCSweeping(),
-                  entry->isMarkedFromAnyThread(rt));
+    // the beginning of the sweep phase. It's not possible to assert this here
+    // as we may not be running on the main thread when called from the gecko
+    // profiler.
 
     return *entry;
 }

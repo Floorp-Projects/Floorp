@@ -1961,13 +1961,13 @@ RelocateArena(Arena* arena, SliceBudget& sliceBudget)
     AllocKind thingKind = arena->getAllocKind();
     size_t thingSize = arena->getThingSize();
 
-    for (ArenaCellIterUnderFinalize i(arena); !i.done(); i.next()) {
+    for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
         RelocateCell(zone, i.getCell(), thingKind, thingSize);
         sliceBudget.step();
     }
 
 #ifdef DEBUG
-    for (ArenaCellIterUnderFinalize i(arena); !i.done(); i.next()) {
+    for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
         TenuredCell* src = i.getCell();
         MOZ_ASSERT(RelocationOverlay::isCellForwarded(src));
         TenuredCell* dest = Forwarded(src);
@@ -3584,7 +3584,7 @@ ArenaLists::checkEmptyArenaList(AllocKind kind)
         if (env && *env)
             max_cells = atol(env);
         for (Arena* current = arenaLists[kind].head(); current; current = current->next) {
-            for (ArenaCellIterUnderFinalize i(current); !i.done(); i.next()) {
+            for (ArenaCellIterUnderGC i(current); !i.done(); i.next()) {
                 Cell* t = i.get<Cell>();
                 MOZ_ASSERT(t->asTenured().isMarked(), "unmarked cells should have been finalized");
                 if (++num_live <= max_cells) {
@@ -4810,10 +4810,6 @@ GCRuntime::endMarkingZoneGroup()
 
 class GCSweepTask : public GCParallelTask
 {
-    virtual void runFromHelperThread(AutoLockHelperThreadState& locked) override {
-        AutoSetThreadIsSweeping threadIsSweeping;
-        GCParallelTask::runFromHelperThread(locked);
-    }
     GCSweepTask(const GCSweepTask&) = delete;
 
   protected:
@@ -5580,19 +5576,19 @@ HeapStateToLabel(JS::HeapState heapState)
 AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
   : lock(rt),
     runtime(rt),
-    prevState(rt->heapState_),
+    prevState(rt->heapState()),
     pseudoFrame(rt, HeapStateToLabel(heapState), ProfileEntry::Category::GC)
 {
-    MOZ_ASSERT(rt->heapState_ == JS::HeapState::Idle);
+    MOZ_ASSERT(prevState == JS::HeapState::Idle);
     MOZ_ASSERT(heapState != JS::HeapState::Idle);
     MOZ_ASSERT_IF(heapState == JS::HeapState::MajorCollecting, rt->gc.nursery.isEmpty());
-    rt->heapState_ = heapState;
+    rt->setHeapState(heapState);
 }
 
 AutoTraceSession::~AutoTraceSession()
 {
     MOZ_ASSERT(runtime->isHeapBusy());
-    runtime->heapState_ = prevState;
+    runtime->setHeapState(prevState);
 }
 
 void
@@ -5718,6 +5714,7 @@ class AutoGCSlice {
 
   private:
     JSRuntime* runtime;
+    AutoSetThreadIsPerformingGC performingGC;
 };
 
 } /* anonymous namespace */
@@ -7079,16 +7076,16 @@ AutoAssertNoNurseryAlloc::~AutoAssertNoNurseryAlloc()
 }
 
 JS::AutoEnterCycleCollection::AutoEnterCycleCollection(JSContext* cx)
-  : runtime(shadow::Runtime::asShadowRuntime(cx->runtime()))
+  : runtime(cx->runtime())
 {
-    MOZ_ASSERT(runtime->heapState_ == HeapState::Idle);
-    runtime->heapState_ = HeapState::CycleCollecting;
+    MOZ_ASSERT(!runtime->isHeapBusy());
+    runtime->setHeapState(HeapState::CycleCollecting);
 }
 
 JS::AutoEnterCycleCollection::~AutoEnterCycleCollection()
 {
-    MOZ_ASSERT(runtime->heapState_ == HeapState::CycleCollecting);
-    runtime->heapState_ = HeapState::Idle;
+    MOZ_ASSERT(runtime->isCycleCollecting());
+    runtime->setHeapState(HeapState::Idle);
 }
 #endif
 

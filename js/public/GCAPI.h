@@ -632,15 +632,20 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
 {
     MOZ_ASSERT(thing.kind() != JS::TraceKind::Shape);
 
-    /*
-     * GC things residing in the nursery cannot be gray: they have no mark bits.
-     * All live objects in the nursery are moved to tenured at the beginning of
-     * each GC slice, so the gray marker never sees nursery things.
-     */
+    // GC things residing in the nursery cannot be gray: they have no mark bits.
+    // All live objects in the nursery are moved to tenured at the beginning of
+    // each GC slice, so the gray marker never sees nursery things.
     if (IsInsideNursery(thing.asCell()))
         return;
+
+    // There's nothing to do for permanent GC things that might be owned by
+    // another runtime.
+    if (thing.mayBeOwnedByOtherRuntime())
+        return;
+
     JS::shadow::Runtime* rt = detail::GetGCThingRuntime(thing.unsafeAsUIntPtr());
     MOZ_DIAGNOSTIC_ASSERT(rt->allowGCBarriers());
+
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))
         JS::IncrementalReferenceBarrier(thing);
     else if (JS::GCThingIsMarkedGray(thing))
@@ -650,13 +655,19 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
 static MOZ_ALWAYS_INLINE void
 MarkGCThingAsLive(JSRuntime* aRt, JS::GCCellPtr thing)
 {
-    JS::shadow::Runtime* rt = JS::shadow::Runtime::asShadowRuntime(aRt);
-    MOZ_DIAGNOSTIC_ASSERT(rt->allowGCBarriers());
-    /*
-     * Any object in the nursery will not be freed during any GC running at that time.
-     */
+    // Any object in the nursery will not be freed during any GC running at that
+    // time.
     if (IsInsideNursery(thing.asCell()))
         return;
+
+    // There's nothing to do for permanent GC things that might be owned by
+    // another runtime.
+    if (thing.mayBeOwnedByOtherRuntime())
+        return;
+
+    JS::shadow::Runtime* rt = JS::shadow::Runtime::asShadowRuntime(aRt);
+    MOZ_DIAGNOSTIC_ASSERT(rt->allowGCBarriers());
+
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))
         JS::IncrementalReferenceBarrier(thing);
 }
