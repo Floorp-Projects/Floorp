@@ -252,6 +252,7 @@ defineLazyGetter(ExtensionContext.prototype, "childManager", function() {
     envType: "addon_parent",
     viewType: this.viewType,
     url: this.uri.spec,
+    incognito: this.incognito,
   });
 
   this.callOnClose(childManager);
