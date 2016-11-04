@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/TabGroup.h"
 
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
@@ -22,6 +24,7 @@ static StaticRefPtr<TabGroup> sChromeTabGroup;
 
 TabGroup::TabGroup(bool aIsChrome)
  : mLastWindowLeft(false)
+ , mThrottledQueuesInitialized(false)
 {
   for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
     TaskCategory category = static_cast<TaskCategory>(i);
@@ -36,6 +39,29 @@ TabGroup::TabGroup(bool aIsChrome)
     return;
   }
 
+  // This constructor can be called from the IPC I/O thread. In that case, we
+  // won't actually use the TabGroup on the main thread until GetFromWindowActor
+  // is called, so we initialize the throttled queues there.
+  if (NS_IsMainThread()) {
+    EnsureThrottledEventQueues();
+  }
+}
+
+TabGroup::~TabGroup()
+{
+  MOZ_ASSERT(mDocGroups.IsEmpty());
+  MOZ_ASSERT(mWindows.IsEmpty());
+}
+
+void
+TabGroup::EnsureThrottledEventQueues()
+{
+  if (mThrottledQueuesInitialized) {
+    return;
+  }
+
+  mThrottledQueuesInitialized = true;
+
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
   MOZ_DIAGNOSTIC_ASSERT(mainThread);
@@ -43,12 +69,6 @@ TabGroup::TabGroup(bool aIsChrome)
   // This may return nullptr during xpcom shutdown.  This is ok as we
   // do not guarantee a ThrottledEventQueue will be present.
   mThrottledEventQueue = ThrottledEventQueue::Create(mainThread);
-}
-
-TabGroup::~TabGroup()
-{
-  MOZ_ASSERT(mDocGroups.IsEmpty());
-  MOZ_ASSERT(mWindows.IsEmpty());
 }
 
 TabGroup*
@@ -59,6 +79,36 @@ TabGroup::GetChromeTabGroup()
     ClearOnShutdown(&sChromeTabGroup);
   }
   return sChromeTabGroup;
+}
+
+/* static */ TabGroup*
+TabGroup::GetFromWindowActor(mozIDOMWindowProxy* aWindow)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  TabChild* tabChild = TabChild::GetFrom(aWindow);
+  if (!tabChild) {
+    return nullptr;
+  }
+
+  ContentChild* cc = ContentChild::GetSingleton();
+  nsCOMPtr<nsIEventTarget> target = cc->GetActorEventTarget(tabChild);
+  if (!target) {
+    return nullptr;
+  }
+
+  // We have an event target. We assume the IPC code created it via
+  // TabGroup::CreateEventTarget.
+  RefPtr<Dispatcher> dispatcher = Dispatcher::FromEventTarget(target);
+  MOZ_RELEASE_ASSERT(dispatcher);
+  auto tabGroup = dispatcher->AsTabGroup();
+  MOZ_RELEASE_ASSERT(tabGroup);
+
+  // We delay creating the event targets until now since the TabGroup
+  // constructor ran off the main thread.
+  tabGroup->EnsureThrottledEventQueues();
+
+  return tabGroup;
 }
 
 already_AddRefed<DocGroup>
@@ -176,6 +226,8 @@ TabGroup::GetTopLevelWindows()
 ThrottledEventQueue*
 TabGroup::GetThrottledEventQueue() const
 {
+  MOZ_RELEASE_ASSERT(mThrottledQueuesInitialized || this == GetChromeTabGroup());
+  MOZ_RELEASE_ASSERT(!mLastWindowLeft);
   return mThrottledEventQueue;
 }
 
