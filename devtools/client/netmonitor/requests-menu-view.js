@@ -24,17 +24,15 @@ const {Sorters} = require("./sort-predicates");
 const {L10N, WEBCONSOLE_L10N} = require("./l10n");
 const {formDataURI,
        writeHeaderText,
+       decodeUnicodeUrl,
        getKeyWithEvent,
        getAbbreviatedMimeType,
-       getUriNameWithQuery,
-       getUriHostPort,
-       getUriHost,
+       getUrlBaseNameWithQuery,
+       getUrlHost,
+       getUrlHostName,
        loadCauseString} = require("./request-utils");
 const Actions = require("./actions/index");
 const RequestListContextMenu = require("./request-list-context-menu");
-
-loader.lazyRequireGetter(this, "NetworkHelper",
-  "devtools/shared/webconsole/network-helper");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const EPSILON = 0.001;
@@ -925,17 +923,10 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         break;
       }
       case "url": {
-        let uri;
-        try {
-          uri = NetworkHelper.nsIURL(value);
-        } catch (e) {
-          // User input may not make a well-formed url yet.
-          break;
-        }
-        let nameWithQuery = getUriNameWithQuery(uri);
-        let hostPort = getUriHostPort(uri);
-        let host = getUriHost(uri);
-        let unicodeUrl = NetworkHelper.convertToUnicode(unescape(uri.spec));
+        let nameWithQuery = getUrlBaseNameWithQuery(value);
+        let hostPort = getUrlHost(value);
+        let host = getUrlHostName(value);
+        let unicodeUrl = decodeUnicodeUrl(value);
 
         let file = $(".requests-menu-file", target);
         file.setAttribute("value", nameWithQuery);

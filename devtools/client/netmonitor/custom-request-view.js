@@ -4,11 +4,13 @@
 /* globals window, dumpn, gNetwork, $, EVENTS, NetMonitorView */
 "use strict";
 
-const {Task} = require("devtools/shared/task");
-const {writeHeaderText, getKeyWithEvent} = require("./request-utils");
-
-loader.lazyRequireGetter(this, "NetworkHelper",
-  "devtools/shared/webconsole/network-helper");
+const { Task } = require("devtools/shared/task");
+const {
+  writeHeaderText,
+  getKeyWithEvent,
+  getUrlQuery,
+  parseQueryString,
+} = require("./request-utils");
 
 /**
  * Functions handling the custom request view.
@@ -112,8 +114,7 @@ CustomRequestView.prototype = {
    *        The URL to extract query string from.
    */
   updateCustomQuery: function (url) {
-    let paramsArray = NetworkHelper.parseQueryString(
-      NetworkHelper.nsIURL(url).query);
+    const paramsArray = parseQueryString(getUrlQuery(url));
 
     if (!paramsArray) {
       $("#custom-query").hidden = true;
@@ -135,7 +136,7 @@ CustomRequestView.prototype = {
     let queryString = writeQueryString(params);
 
     let url = $("#custom-url-value").value;
-    let oldQuery = NetworkHelper.nsIURL(url).query;
+    let oldQuery = getUrlQuery(url);
     let path = url.replace(oldQuery, queryString);
 
     $("#custom-url-value").value = path;
