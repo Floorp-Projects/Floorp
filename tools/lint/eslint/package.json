@@ -10,6 +10,7 @@
     "escope": "^3.6.0",
     "espree": "^3.2.0",
     "estraverse": "^4.2.0",
+    "ini-parser": "^0.0.2",
     "sax": "^1.1.4"
   }
 }
