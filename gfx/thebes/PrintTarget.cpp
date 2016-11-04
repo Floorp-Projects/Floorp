@@ -90,7 +90,7 @@ PrintTarget::MakeDrawTarget(const IntSize& aSize,
 }
 
 already_AddRefed<DrawTarget>
-PrintTarget::GetReferenceDrawTarget()
+PrintTarget::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
 {
   if (!mRefDT) {
     const IntSize size(1, 1);
@@ -130,6 +130,13 @@ PrintTarget::GetReferenceDrawTarget()
 
     if (!dt || !dt->IsValid()) {
       return nullptr;
+    }
+
+    if (aRecorder) {
+      dt = CreateRecordingDrawTarget(aRecorder, dt);
+      if (!dt || !dt->IsValid()) {
+        return nullptr;
+      }
     }
 
     mRefDT = dt.forget();
