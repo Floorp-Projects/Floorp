@@ -971,6 +971,18 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
                                        aParams.builder);
   basic->SetTarget(oldCtx);
 
+  if (gfxPrefs::DrawMaskLayer()) {
+    gfxContextAutoSaveRestore saver(&context);
+
+    context.NewPath();
+    gfxRect drawingRect =
+      nsLayoutUtils::RectToGfxRect(aParams.borderArea,
+                                   frame->PresContext()->AppUnitsPerDevPixel());
+    context.Rectangle(drawingRect, true);
+    context.SetColor(Color(0.0, 1.0, 0.0, 1.0));
+    context.Fill();
+  }
+
   if (maskUsage.shouldApplyClipPath || maskUsage.shouldApplyBasicShape) {
     context.PopClip();
   }

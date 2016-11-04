@@ -7118,6 +7118,10 @@ bool nsDisplayMask::ShouldPaintOnMaskLayer(LayerManager* aManager)
     }
   }
 
+  if (gfxPrefs::DrawMaskLayer()) {
+    return false;
+  }
+
   return true;
 }
 
