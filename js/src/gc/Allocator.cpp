@@ -288,34 +288,25 @@ GCRuntime::refillFreeListFromAnyThread(ExclusiveContext* cx, AllocKind thingKind
 /* static */ TenuredCell*
 GCRuntime::refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind, size_t thingSize)
 {
-    ArenaLists *arenas = cx->arenas();
+    // It should not be possible to allocate on the main thread while we are
+    // inside a GC.
     Zone *zone = cx->zone();
     MOZ_ASSERT(!cx->runtime()->isHeapBusy(), "allocating while under GC");
 
     AutoMaybeStartBackgroundAllocation maybeStartBGAlloc;
-
-    return arenas->allocateFromArena(zone, thingKind, maybeStartBGAlloc);
+    return cx->arenas()->allocateFromArena(zone, thingKind, maybeStartBGAlloc);
 }
 
 /* static */ TenuredCell*
 GCRuntime::refillFreeListOffMainThread(ExclusiveContext* cx, AllocKind thingKind)
 {
-    ArenaLists* arenas = cx->arenas();
+    // A GC may be happening on the main thread, but zones used by exclusive
+    // contexts are never collected.
     Zone* zone = cx->zone();
-    JSRuntime* rt = zone->runtimeFromAnyThread();
+    MOZ_ASSERT(!zone->wasGCStarted());
 
     AutoMaybeStartBackgroundAllocation maybeStartBGAlloc;
-
-    // If we're off the main thread, we try to allocate once and return
-    // whatever value we get. We need to first ensure the main thread is not in
-    // a GC session.
-    AutoLockHelperThreadState lock;
-    while (rt->isHeapCollecting()) {
-        HelperThreadState().wait(lock, GlobalHelperThreadState::PRODUCER);
-        HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
-    }
-
-    return arenas->allocateFromArena(zone, thingKind, maybeStartBGAlloc);
+    return cx->arenas()->allocateFromArena(zone, thingKind, maybeStartBGAlloc);
 }
 
 /* static */ TenuredCell*
