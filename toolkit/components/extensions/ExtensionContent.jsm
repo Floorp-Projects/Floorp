@@ -366,7 +366,7 @@ class ContentScriptContextChild extends BaseContext {
       // the tab holding the content page.
       let metadata = {
         "inner-window-id": this.innerWindowID,
-        addonId: attrs.addonId,
+        addonId: extensionPrincipal.addonId,
       };
 
       this.sandbox = Cu.Sandbox(principal, {
