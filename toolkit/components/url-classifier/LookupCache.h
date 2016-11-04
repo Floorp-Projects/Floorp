@@ -96,7 +96,9 @@ public:
   static nsresult GetHostKeys(const nsACString& aSpec,
                               nsTArray<nsCString>* aHostKeys);
 
-  LookupCache(const nsACString& aTableName, nsIFile* aStoreFile);
+  LookupCache(const nsACString& aTableName,
+              const nsACString& aProvider,
+              nsIFile* aStoreFile);
   virtual ~LookupCache() {}
 
   const nsCString &TableName() const { return mTableName; }
@@ -146,6 +148,7 @@ private:
 protected:
   bool mPrimed;
   nsCString mTableName;
+  nsCString mProvider;
   nsCOMPtr<nsIFile> mRootStoreDirectory;
   nsCOMPtr<nsIFile> mStoreDirectory;
 
@@ -159,8 +162,10 @@ protected:
 class LookupCacheV2 final : public LookupCache
 {
 public:
-  explicit LookupCacheV2(const nsACString& aTableName, nsIFile* aStoreFile)
-    : LookupCache(aTableName, aStoreFile) {}
+  explicit LookupCacheV2(const nsACString& aTableName,
+                         const nsACString& aProvider,
+                         nsIFile* aStoreFile)
+    : LookupCache(aTableName, aProvider, aStoreFile) {}
   ~LookupCacheV2() {}
 
   virtual nsresult Init() override;
