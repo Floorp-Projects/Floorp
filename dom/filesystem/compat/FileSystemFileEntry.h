@@ -42,10 +42,6 @@ public:
   GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const override;
 
   void
-  CreateWriter(VoidCallback& aSuccessCallback,
-               const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const;
-
-  void
   GetFile(FileCallback& aSuccessCallback,
           const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const;
 
