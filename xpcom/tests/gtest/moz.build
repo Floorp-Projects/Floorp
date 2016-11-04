@@ -44,6 +44,7 @@ SOURCES += [
     'TestAllocReplacement.cpp',
     'TestCOMPtr.cpp', # Redefines IFoo and IBar
     'TestHashtables.cpp', # Redefines IFoo
+    'TestNsRefPtr.cpp', # Redefines Foo
 ]
 
 LOCAL_INCLUDES += [
