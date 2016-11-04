@@ -9,6 +9,7 @@ const { createClass, PropTypes, DOM } = require("devtools/client/shared/vendor/r
 const { L10N } = require("../l10n");
 const { div, span, button } = DOM;
 const { connect } = require("devtools/client/shared/vendor/react-redux");
+const Actions = require("../actions/index");
 
 /**
  * UI displayed when the request list is empty. Contains instructions on reloading
@@ -59,7 +60,7 @@ const RequestListEmptyNotice = createClass({
 module.exports = connect(
   undefined,
   dispatch => ({
-    onPerfClick: e => NetMonitorView.toggleFrontendMode(),
+    onPerfClick: e => dispatch(Actions.openStatistics(true)),
     onReloadClick: e => NetMonitorView.reloadPage(),
   })
 )(RequestListEmptyNotice);
