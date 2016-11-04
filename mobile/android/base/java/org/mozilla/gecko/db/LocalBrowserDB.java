@@ -37,6 +37,7 @@ import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.BrowserContract.Highlights;
+import org.mozilla.gecko.db.BrowserContract.PageMetadata;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
 import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
@@ -46,6 +47,7 @@ import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.StringUtils;
 
+import android.content.ContentProviderClient;
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -58,6 +60,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
@@ -120,6 +123,7 @@ public class LocalBrowserDB extends BrowserDB {
     private final Uri mHighlightsUriWithProfile;
     private final Uri mSearchHistoryUri;
     private final Uri mActivityStreamBlockedUriWithProfile;
+    private final Uri mPageMetadataWithProfile;
 
     private LocalSearches searches;
     private LocalTabsAccessor tabsAccessor;
@@ -148,6 +152,8 @@ public class LocalBrowserDB extends BrowserDB {
         mHighlightsUriWithProfile = DBUtils.appendProfile(profile, Highlights.CONTENT_URI);
         mThumbnailsUriWithProfile = DBUtils.appendProfile(profile, Thumbnails.CONTENT_URI);
         mActivityStreamBlockedUriWithProfile = DBUtils.appendProfile(profile, ActivityStreamBlocklist.CONTENT_URI);
+
+        mPageMetadataWithProfile = DBUtils.appendProfile(profile, PageMetadata.CONTENT_URI);
 
         mSearchHistoryUri = BrowserContract.SearchHistory.CONTENT_URI;
 
@@ -507,6 +513,81 @@ public class LocalBrowserDB extends BrowserDB {
 
         Log.e(LOGTAG, "Failed to find favicon resource ID for " + name);
         return FAVICON_ID_NOT_FOUND;
+    }
+
+    @Override
+    public boolean insertPageMetadata(ContentProviderClient contentProviderClient, String pageUrl, boolean hasImage, String metadataJSON) {
+        final String historyGUID = lookupHistoryGUIDByPageUri(contentProviderClient, pageUrl);
+
+        if (historyGUID == null) {
+            return false;
+        }
+
+        // We have the GUID, insert the metadata.
+        final ContentValues cv = new ContentValues();
+        cv.put(PageMetadata.HISTORY_GUID, historyGUID);
+        cv.put(PageMetadata.HAS_IMAGE, hasImage);
+        cv.put(PageMetadata.JSON, metadataJSON);
+
+        try {
+            contentProviderClient.insert(mPageMetadataWithProfile, cv);
+        } catch (RemoteException e) {
+            throw new IllegalStateException("Unexpected RemoteException", e);
+        }
+
+        return true;
+    }
+
+    @Override
+    public int deletePageMetadata(ContentProviderClient contentProviderClient, String pageUrl) {
+        final String historyGUID = lookupHistoryGUIDByPageUri(contentProviderClient, pageUrl);
+
+        if (historyGUID == null) {
+            return 0;
+        }
+
+        try {
+            return contentProviderClient.delete(mPageMetadataWithProfile, PageMetadata.HISTORY_GUID + " = ?", new String[]{historyGUID});
+        } catch (RemoteException e) {
+            throw new IllegalStateException("Unexpected RemoteException", e);
+        }
+    }
+
+    @Nullable
+    private String lookupHistoryGUIDByPageUri(ContentProviderClient contentProviderClient, String uri) {
+        // Unfortunately we might have duplicate history records for the same URL.
+        final Cursor cursor;
+        try {
+            cursor = contentProviderClient.query(
+                    mHistoryUriWithProfile
+                            .buildUpon()
+                            .appendQueryParameter(BrowserContract.PARAM_LIMIT, "1")
+                            .build(),
+                    new String[]{
+                            History.GUID,
+                    },
+                    History.URL + "= ?",
+                    new String[]{uri}, History.DATE_LAST_VISITED + " DESC"
+            );
+        } catch (RemoteException e) {
+            // Won't happen, we control the implementation.
+            throw new IllegalStateException("Unexpected RemoteException", e);
+        }
+
+        if (cursor == null) {
+            return null;
+        }
+
+        try {
+            if (!cursor.moveToFirst()) {
+                return null;
+            }
+
+            final int historyGUIDCol = cursor.getColumnIndexOrThrow(History.GUID);
+            return cursor.getString(historyGUIDCol);
+        } finally {
+            cursor.close();
+        }
     }
 
     /**
