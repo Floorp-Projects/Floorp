@@ -4,20 +4,16 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.gfx.BitmapUtils.BitmapLoader;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
+import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.ActionModeCompat.Callback;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.view.Menu;
 import android.view.MenuItem;
 
 import org.json.JSONArray;
@@ -208,7 +204,7 @@ class ActionBarTextSelection implements TextSelection, GeckoEventListener {
                     menuitem.setShowAsAction(actionEnum, R.attr.menuItemActionModeStyle);
 
                     final String iconString = obj.optString("icon");
-                    BitmapUtils.getDrawable(context, iconString, new BitmapLoader() {
+                    ResourceDrawableUtils.getDrawable(context, iconString, new ResourceDrawableUtils.BitmapLoader() {
                         @Override
                         public void onBitmapFound(Drawable d) {
                             if (d != null) {

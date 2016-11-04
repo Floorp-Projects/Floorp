@@ -2,27 +2,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette import MarionetteTestCase
+from marionette import MarionetteTestCase, WindowManagerMixin
 from marionette_driver.by import By
 
 
-class TestSelectedChrome(MarionetteTestCase):
+class TestSelectedChrome(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
-        MarionetteTestCase.setUp(self)
+        super(TestSelectedChrome, self).setUp()
+
         self.marionette.set_context("chrome")
-        self.win = self.marionette.current_window_handle
-        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', '_blank', 'chrome,centerscreen');")
+
+        def open_window_with_js():
+            self.marionette.execute_script("""
+              window.open('chrome://marionette/content/test.xul',
+                          '_blank', 'chrome,centerscreen');
+            """)
+
+        new_window = self.open_window(trigger=open_window_with_js)
+        self.marionette.switch_to_window(new_window)
 
     def tearDown(self):
-        self.marionette.execute_script("window.close();")
-        self.marionette.switch_to_window(self.win)
-        MarionetteTestCase.tearDown(self)
+        try:
+            self.close_all_windows()
+        finally:
+            super(TestSelectedChrome, self).tearDown()
 
     def test_selected(self):
-        wins = self.marionette.window_handles
-        wins.remove(self.win)
-        newWin = wins.pop()
-        self.marionette.switch_to_window(newWin)
         box = self.marionette.find_element(By.ID, "testBox")
         self.assertFalse(box.is_selected())
         self.assertFalse(self.marionette.execute_script("arguments[0].checked = true;", [box]))

@@ -2,15 +2,13 @@
  * This file tests the async history API exposed by mozIAsyncHistory.
  */
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const TEST_DOMAIN = "http://mozilla.org/";
 const URI_VISIT_SAVED = "uri-visit-saved";
 const RECENT_EVENT_THRESHOLD = 15 * 60 * 1000000;
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Helpers
+// Helpers
 /**
  * Object that represents a mozIVisitInfo object.
  *
@@ -136,8 +134,7 @@ function do_check_title_for_uri(aURI,
   stmt.finalize();
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Test Functions
+// Test Functions
 
 add_task(function* test_interface_exists() {
   let history = Cc["@mozilla.org/browser/history;1"].getService(Ci.nsISupports);

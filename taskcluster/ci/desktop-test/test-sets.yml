@@ -96,3 +96,4 @@ ccov-code-coverage-tests:
 
 jsdcov-code-coverage-tests:
     - mochitest-browser-chrome
+    - mochitest-devtools-chrome

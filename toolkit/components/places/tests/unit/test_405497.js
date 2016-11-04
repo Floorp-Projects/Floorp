@@ -25,8 +25,7 @@ function callback(aService)
   this.service = aService;
 }
 callback.prototype = {
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsINavHistoryBatchCallback
+  // nsINavHistoryBatchCallback
 
   runBatched: function(aUserData)
   {
@@ -42,8 +41,7 @@ callback.prototype = {
     do_test_finished();
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsISupports
+  // nsISupports
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryBatchCallback])
 };

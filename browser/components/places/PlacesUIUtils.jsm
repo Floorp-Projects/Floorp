@@ -1720,8 +1720,7 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ptm", function() {
       return new PlacesSetItemAnnotationTransaction(aItemId, annoObj);
     },
 
-    // //////////////////////////////////////////////////////////////////////////
-    // // nsITransactionManager forwarders.
+    // nsITransactionManager forwarders.
 
     beginBatch: () =>
       PlacesUtils.transactionManager.beginBatch(null),

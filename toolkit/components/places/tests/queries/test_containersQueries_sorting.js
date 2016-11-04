@@ -12,8 +12,7 @@
  * This test is for global testing sorting containers queries.
  */
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals and Constants
+// Globals and Constants
 
 var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
          getService(Ci.nsINavHistoryService);
@@ -54,8 +53,7 @@ var tags = [
   "test",
 ];
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Test Runner
+// Test Runner
 
 /**
  * Enumerates all the sequences of the cartesian product of the arrays contained
@@ -381,8 +379,7 @@ function check_children_sorting(aRootNode, aExpectedSortingMode) {
   }
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Main
+// Main
 
 function run_test()
 {

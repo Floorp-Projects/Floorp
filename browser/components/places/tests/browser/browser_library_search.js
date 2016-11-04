@@ -47,8 +47,6 @@ var testCases = [
   },
 ];
 
-// /////////////////////////////////////////////////////////////////////////////
-
 /**
  * Returns the default search scope for a given folder.
  *
@@ -159,8 +157,6 @@ function onLibraryAvailable() {
   PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
   PlacesTestUtils.clearHistory().then(finish);
 }
-
-// /////////////////////////////////////////////////////////////////////////////
 
 function test() {
   waitForExplicitFinish();

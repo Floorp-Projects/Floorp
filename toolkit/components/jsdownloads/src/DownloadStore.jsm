@@ -34,8 +34,7 @@ this.EXPORTED_SYMBOLS = [
   "DownloadStore",
 ];
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -59,8 +58,7 @@ XPCOMUtils.defineLazyGetter(this, "gTextEncoder", function () {
   return new TextEncoder();
 });
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadStore
+// DownloadStore
 
 /**
  * Handles serialization of Download objects and persistence into a file, so

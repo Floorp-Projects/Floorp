@@ -14,8 +14,7 @@ this.EXPORTED_SYMBOLS = [
   "DownloadUIHelper",
 ];
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -44,8 +43,7 @@ const kStringsRequiringFormatting = {
   leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple2: true
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadUIHelper
+// DownloadUIHelper
 
 /**
  * Provides functions to handle status and messages in the user interface.
@@ -97,8 +95,7 @@ XPCOMUtils.defineLazyGetter(DownloadUIHelper, "strings", function () {
   return strings;
 });
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadPrompter
+// DownloadPrompter
 
 /**
  * Allows displaying prompts related to downloads.

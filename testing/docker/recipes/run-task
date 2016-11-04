@@ -135,19 +135,6 @@ def vcs_checkout(source_repo, dest, store_path,
     if res:
         sys.exit(res)
 
-    # Meant to be temporary to flush out what's going on in bug 1292071.
-    print_line(b'vcs', b'verifying working directory is clean\n')
-    status = subprocess.check_output([b'/usr/bin/hg', b'status', b'--all'],
-                                     cwd=dest, stderr=subprocess.STDOUT)
-    status = status.strip()
-    status_lines = [l for l in status.splitlines() if not l.startswith(b'C ')]
-    if status_lines:
-        print_line(b'vcs', b'Error: checkout is not pristine! '
-                           b'Report this in bug 1292071\n')
-        for line in status_lines:
-            print_line(b'vcs', b'%s\n' % line)
-        sys.exit(1)
-
     # Update the current revision hash and ensure that it is well formed.
     revision = subprocess.check_output(
         [b'/usr/bin/hg', b'log',

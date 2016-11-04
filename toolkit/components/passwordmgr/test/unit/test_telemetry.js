@@ -9,8 +9,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -102,8 +101,7 @@ function testHistogram(histogramId, expectedNonZeroRanges) {
               JSON.stringify(expectedNonZeroRanges));
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 /**
  * Enable local telemetry recording for the duration of the tests, and prepare

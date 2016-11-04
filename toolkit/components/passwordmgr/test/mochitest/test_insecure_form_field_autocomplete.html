@@ -1,0 +1,854 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test basic login autocomplete</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: multiple login autocomplete
+
+<script>
+var chromeScript = runChecksAfterCommonInit();
+
+var setupScript = runInParent(function setup() {
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  // Create some logins just for this form, since we'll be deleting them.
+  var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                           Ci.nsILoginInfo, "init");
+  assert.ok(nsLoginInfo != null, "nsLoginInfo constructor");
+
+  // login0 has no username, so should be filtered out from the autocomplete list.
+  var login0 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+                               "", "user0pass", "", "pword");
+
+  var login1 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+                               "tempuser1", "temppass1", "uname", "pword");
+
+  var login2 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+                               "testuser2", "testpass2", "uname", "pword");
+
+  var login3 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+                               "testuser3", "testpass3", "uname", "pword");
+
+  var login4 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
+                               "zzzuser4", "zzzpass4", "uname", "pword");
+
+  // login 5 only used in the single-user forms
+  var login5 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete2", null,
+                               "singleuser5", "singlepass5", "uname", "pword");
+
+  var login6A = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete3", null,
+                                "form7user1", "form7pass1", "uname", "pword");
+  var login6B = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete3", null,
+                                "form7user2", "form7pass2", "uname", "pword");
+
+  var login7  = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete4", null,
+                                "form8user", "form8pass", "uname", "pword");
+
+  var login8A = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
+                                "form9userAB", "form9pass", "uname", "pword");
+  var login8B = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
+                                "form9userAAB", "form9pass", "uname", "pword");
+  var login8C = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
+                                "form9userAABzz", "form9pass", "uname", "pword");
+
+  var login10 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete7", null,
+                                "testuser10", "testpass10", "uname", "pword");
+
+
+  // try/catch in case someone runs the tests manually, twice.
+  try {
+    Services.logins.addLogin(login0);
+    Services.logins.addLogin(login1);
+    Services.logins.addLogin(login2);
+    Services.logins.addLogin(login3);
+    Services.logins.addLogin(login4);
+    Services.logins.addLogin(login5);
+    Services.logins.addLogin(login6A);
+    Services.logins.addLogin(login6B);
+    Services.logins.addLogin(login7);
+    Services.logins.addLogin(login8A);
+    Services.logins.addLogin(login8B);
+    // login8C is added later
+    Services.logins.addLogin(login10);
+  } catch (e) {
+    assert.ok(false, "addLogin threw: " + e);
+  }
+
+  addMessageListener("addLogin", loginVariableName => {
+    let login = eval(loginVariableName);
+    assert.ok(!!login, "Login to add is defined: " + loginVariableName);
+    Services.logins.addLogin(login);
+  });
+  addMessageListener("removeLogin", loginVariableName => {
+    let login = eval(loginVariableName);
+    assert.ok(!!login, "Login to delete is defined: " + loginVariableName);
+    Services.logins.removeLogin(login);
+  });
+});
+</script>
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+
+  <!-- form1 tests multiple matching logins -->
+  <form id="form1" action="http://autocomplete:8888/formtest.js" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- other forms test single logins, with autocomplete=off set -->
+  <form id="form2" action="http://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword" autocomplete="off">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form3" action="http://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname" autocomplete="off">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form4" action="http://autocomplete2" onsubmit="return false;" autocomplete="off">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form5" action="http://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname" autocomplete="off">
+    <input  type="password"   name="pword" autocomplete="off">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- control -->
+  <form id="form6" action="http://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- This form will be manipulated to insert a different username field. -->
+  <form id="form7" action="http://autocomplete3" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- test for no autofill after onblur with blank username -->
+  <form id="form8" action="http://autocomplete4" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- test autocomplete dropdown -->
+  <form id="form9" action="http://autocomplete5" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- test for onUsernameInput recipe testing -->
+  <form id="form11" action="http://autocomplete7" onsubmit="return false;">
+    <input  type="text"   name="1">
+    <input  type="text"   name="2">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- tests <form>-less autocomplete -->
+  <div id="form12">
+     <input  type="text"       name="uname" id="uname">
+     <input  type="password"   name="pword" id="pword">
+     <button type="submit">Submit</button>
+   </div>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: multiple login autocomplete. **/
+
+var uname = $_(1, "uname");
+var pword = $_(1, "pword");
+const shiftModifier = SpecialPowers.Ci.nsIDOMEvent.SHIFT_MASK;
+
+// Restore the form to the default state.
+function restoreForm() {
+  uname.value = "";
+  pword.value = "";
+  uname.focus();
+}
+
+// Check for expected username/password in form.
+function checkACForm(expectedUsername, expectedPassword) {
+  var formID = uname.parentNode.id;
+  is(uname.value, expectedUsername, "Checking " + formID + " username is: " + expectedUsername);
+  is(pword.value, expectedPassword, "Checking " + formID + " password is: " + expectedPassword);
+}
+
+function sendFakeAutocompleteEvent(element) {
+  var acEvent = document.createEvent("HTMLEvents");
+  acEvent.initEvent("DOMAutoComplete", true, false);
+  element.dispatchEvent(acEvent);
+}
+
+function spinEventLoop() {
+  return Promise.resolve();
+}
+
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", true]]});
+  listenForUnexpectedPopupShown();
+});
+
+add_task(function* test_form1_initial_empty() {
+  yield SimpleTest.promiseFocus(window);
+
+  // Make sure initial form is empty.
+  checkACForm("", "");
+  let popupState = yield getPopupState();
+  is(popupState.open, false, "Check popup is initially closed");
+});
+
+add_task(function* test_form1_warning_entry() {
+  yield SimpleTest.promiseFocus(window);
+  // Trigger autocomplete popup
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  let popupState = yield getPopupState();
+  is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
+
+  doKey("down"); // select insecure warning
+  checkACForm("", ""); // value shouldn't update just by selecting
+  doKey("return"); // not "enter"!
+  yield spinEventLoop(); // let focus happen
+  checkACForm("", "");
+});
+
+add_task(function* test_form1_first_entry() {
+  yield SimpleTest.promiseFocus(window);
+  // Trigger autocomplete popup
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  let popupState = yield getPopupState();
+  is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
+
+  doKey("down"); // skip insecure warning
+  doKey("down"); // first
+  checkACForm("", ""); // value shouldn't update just by selecting
+  doKey("return"); // not "enter"!
+  yield promiseFormsProcessed();
+  checkACForm("tempuser1", "temppass1");
+});
+
+add_task(function* test_form1_second_entry() {
+  // Trigger autocomplete popup
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  doKey("down"); // first
+  doKey("down"); // second
+  doKey("return"); // not "enter"!
+  yield promiseFormsProcessed();
+  checkACForm("testuser2", "testpass2");
+});
+
+add_task(function* test_form1_third_entry() {
+  // Trigger autocomplete popup
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  doKey("down"); // first
+  doKey("down"); // second
+  doKey("down"); // third
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("testuser3", "testpass3");
+});
+
+add_task(function* test_form1_fourth_entry() {
+  // Trigger autocomplete popup
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  doKey("down"); // first
+  doKey("down"); // second
+  doKey("down"); // third
+  doKey("down"); // fourth
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("zzzuser4", "zzzpass4");
+});
+
+add_task(function* test_form1_wraparound_first_entry() {
+  // Trigger autocomplete popup
+  restoreForm();
+  yield spinEventLoop(); // let focus happen
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  doKey("down"); // first
+  doKey("down"); // second
+  doKey("down"); // third
+  doKey("down"); // fourth
+  doKey("down"); // deselects
+  doKey("down"); // skip insecure warning
+  doKey("down"); // first
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("tempuser1", "temppass1");
+});
+
+add_task(function* test_form1_wraparound_up_last_entry() {
+  // Trigger autocomplete popup
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("up"); // last (fourth)
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("zzzuser4", "zzzpass4");
+});
+
+add_task(function* test_form1_wraparound_down_up_up() {
+  // Trigger autocomplete popup
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // select first entry
+  doKey("up");   // selects nothing!
+  doKey("up");   // select last entry
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("zzzuser4", "zzzpass4");
+});
+
+add_task(function* test_form1_wraparound_up_last() {
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down");
+  doKey("up"); // deselects
+  doKey("up"); // last entry
+  doKey("up");
+  doKey("up");
+  doKey("up"); // skip insecure warning
+  doKey("up"); // first entry
+  doKey("up"); // deselects
+  doKey("up"); // last entry
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("zzzuser4", "zzzpass4");
+});
+
+add_task(function* test_form1_fill_username_without_autofill_right() {
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  // Set first entry w/o triggering autocomplete
+  doKey("down"); // skip insecure warning
+  doKey("down"); // first
+  doKey("right");
+  yield spinEventLoop();
+  checkACForm("tempuser1", ""); // empty password
+});
+
+add_task(function* test_form1_fill_username_without_autofill_left() {
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  // Set first entry w/o triggering autocomplete
+  doKey("down"); // skip insecure warning
+  doKey("down"); // first
+  doKey("left");
+  checkACForm("tempuser1", ""); // empty password
+});
+
+add_task(function* test_form1_pageup_first() {
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  // Check first entry (page up)
+  doKey("down"); // first
+  doKey("down"); // second
+  doKey("page_up"); // first
+  doKey("down"); // skip insecure warning
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("tempuser1", "temppass1");
+});
+
+add_task(function* test_form1_pagedown_last() {
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  // test 13
+  // Check last entry (page down)
+  doKey("down"); // first
+  doKey("page_down"); // last
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("zzzuser4", "zzzpass4");
+});
+
+add_task(function* test_form1_untrusted_event() {
+  restoreForm();
+  yield spinEventLoop();
+
+  // Send a fake (untrusted) event.
+  checkACForm("", "");
+  uname.value = "zzzuser4";
+  sendFakeAutocompleteEvent(uname);
+  yield spinEventLoop();
+  checkACForm("zzzuser4", "");
+});
+
+add_task(function* test_form1_delete() {
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  // XXX tried sending character "t" before/during dropdown to test
+  // filtering, but had no luck. Seemed like the character was getting lost.
+  // Setting uname.value didn't seem to work either. This works with a human
+  // driver, so I'm not sure what's up.
+
+  doKey("down"); // skip insecure warning
+  // Delete the first entry (of 4), "tempuser1"
+  doKey("down");
+  var numLogins;
+  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  is(numLogins, 5, "Correct number of logins before deleting one");
+
+  let countChangedPromise = notifyMenuChanged(4);
+  var deletionPromise = promiseStorageChanged(["removeLogin"]);
+  // On OS X, shift-backspace and shift-delete work, just delete does not.
+  // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
+  doKey("delete", shiftModifier);
+  yield deletionPromise;
+
+  checkACForm("", "");
+  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  is(numLogins, 4, "Correct number of logins after deleting one");
+  yield countChangedPromise;
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("testuser2", "testpass2");
+});
+
+add_task(function* test_form1_first_after_deletion() {
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  // Check the new first entry (of 3)
+  doKey("down");
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("testuser2", "testpass2");
+});
+
+add_task(function* test_form1_delete_second() {
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  // Delete the second entry (of 3), "testuser3"
+  doKey("down");
+  doKey("down");
+  doKey("delete", shiftModifier);
+  checkACForm("", "");
+  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  is(numLogins, 3, "Correct number of logins after deleting one");
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("zzzuser4", "zzzpass4");
+});
+
+add_task(function* test_form1_first_after_deletion2() {
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  // Check the new first entry (of 2)
+  doKey("down");
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("testuser2", "testpass2");
+});
+
+add_task(function* test_form1_delete_last() {
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  // test 54
+  // Delete the last entry (of 2), "zzzuser4"
+  doKey("down");
+  doKey("down");
+  doKey("delete", shiftModifier);
+  checkACForm("", "");
+  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  is(numLogins, 2, "Correct number of logins after deleting one");
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("testuser2", "testpass2");
+});
+
+add_task(function* test_form1_first_after_3_deletions() {
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  // Check the only remaining entry
+  doKey("down");
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("testuser2", "testpass2");
+});
+
+add_task(function* test_form1_check_only_entry_remaining() {
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  // test 56
+  // Delete the only remaining entry, "testuser2"
+  doKey("down");
+  doKey("delete", shiftModifier);
+  checkACForm("", "");
+  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  is(numLogins, 1, "Correct number of logins after deleting one");
+
+  // remove the login that's not shown in the list.
+  setupScript.sendSyncMessage("removeLogin", "login0");
+});
+
+// Tests for single-user forms for ignoring autocomplete=off
+add_task(function* test_form2() {
+  // Turn our attention to form2
+  uname = $_(2, "uname");
+  pword = $_(2, "pword");
+  checkACForm("singleuser5", "singlepass5");
+
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  // Check first entry
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  yield promiseFormsProcessed();
+  checkACForm("singleuser5", "singlepass5");
+});
+
+add_task(function* test_form3() {
+  uname = $_(3, "uname");
+  pword = $_(3, "pword");
+  checkACForm("singleuser5", "singlepass5");
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  // Check first entry
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  yield promiseFormsProcessed();
+  checkACForm("singleuser5", "singlepass5");
+});
+
+add_task(function* test_form4() {
+  uname = $_(4, "uname");
+  pword = $_(4, "pword");
+  checkACForm("singleuser5", "singlepass5");
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  // Check first entry
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  yield promiseFormsProcessed();
+  checkACForm("singleuser5", "singlepass5");
+});
+
+add_task(function* test_form5() {
+  uname = $_(5, "uname");
+  pword = $_(5, "pword");
+  checkACForm("singleuser5", "singlepass5");
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  // Check first entry
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  yield promiseFormsProcessed();
+  checkACForm("singleuser5", "singlepass5");
+});
+
+add_task(function* test_form6() {
+  // (this is a control, w/o autocomplete=off, to ensure the login
+  // that was being suppressed would have been filled in otherwise)
+  uname = $_(6, "uname");
+  pword = $_(6, "pword");
+  checkACForm("singleuser5", "singlepass5");
+});
+
+add_task(function* test_form6_changeUsername() {
+  // Test that the password field remains filled in after changing
+  // the username.
+  uname.focus();
+  doKey("right");
+  sendChar("X");
+  // Trigger the 'blur' event on uname
+  pword.focus();
+  yield spinEventLoop();
+  checkACForm("singleuser5X", "singlepass5");
+
+  setupScript.sendSyncMessage("removeLogin", "login5");
+});
+
+add_task(function* test_form7() {
+  uname = $_(7, "uname");
+  pword = $_(7, "pword");
+  checkACForm("", "");
+
+  // Insert a new username field into the form. We'll then make sure
+  // that invoking the autocomplete doesn't try to fill the form.
+  var newField = document.createElement("input");
+  newField.setAttribute("type", "text");
+  newField.setAttribute("name", "uname2");
+  pword.parentNode.insertBefore(newField, pword);
+  is($_(7, "uname2").value, "", "Verifying empty uname2");
+
+  // Delete login6B. It was created just to prevent filling in a login
+  // automatically, removing it makes it more likely that we'll catch a
+  // future regression with form filling here.
+  setupScript.sendSyncMessage("removeLogin", "login6B");
+});
+
+add_task(function* test_form7_2() {
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  // Check first entry
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  // The form changes, so we expect the old username field to get the
+  // selected autocomplete value, but neither the new username field nor
+  // the password field should have any values filled in.
+  yield spinEventLoop();
+  checkACForm("form7user1", "");
+  is($_(7, "uname2").value, "", "Verifying empty uname2");
+  restoreForm(); // clear field, so reloading test doesn't fail
+
+  setupScript.sendSyncMessage("removeLogin", "login6A");
+});
+
+add_task(function* test_form8() {
+  uname = $_(8, "uname");
+  pword = $_(8, "pword");
+  checkACForm("form8user", "form8pass");
+  restoreForm();
+});
+
+add_task(function* test_form8_blur() {
+  checkACForm("", "");
+  // Focus the previous form to trigger a blur.
+  $_(7, "uname").focus();
+});
+
+add_task(function* test_form8_2() {
+  checkACForm("", "");
+  restoreForm();
+});
+
+add_task(function* test_form8_3() {
+  checkACForm("", "");
+  setupScript.sendSyncMessage("removeLogin", "login7");
+});
+
+add_task(function* test_form9_filtering() {
+  // Turn our attention to form9 to test the dropdown - bug 497541
+  uname = $_(9, "uname");
+  pword = $_(9, "pword");
+  uname.focus();
+  let shownPromise = promiseACShown();
+  sendString("form9userAB");
+  yield shownPromise;
+
+  checkACForm("form9userAB", "");
+  uname.focus();
+  doKey("left");
+  shownPromise = promiseACShown();
+  sendChar("A");
+  let results = yield shownPromise;
+
+  checkACForm("form9userAAB", "");
+  checkArrayValues(results, ["This connection is not secure. Logins entered here could be compromised.", "form9userAAB"],
+                            "Check dropdown is updated after inserting 'A'");
+  doKey("down"); // skip insecure warning
+  doKey("down");
+  doKey("return");
+  yield promiseFormsProcessed();
+  checkACForm("form9userAAB", "form9pass");
+});
+
+add_task(function* test_form9_autocomplete_cache() {
+  // Note that this addLogin call will only be seen by the autocomplete
+  // attempt for the sendChar if we do not successfully cache the
+  // autocomplete results.
+  setupScript.sendSyncMessage("addLogin", "login8C");
+  uname.focus();
+  let promise0 = notifyMenuChanged(1);
+  let shownPromise = promiseACShown();
+  sendChar("z");
+  yield promise0;
+  yield shownPromise;
+  let popupState = yield getPopupState();
+  is(popupState.open, true, "Check popup should open");
+
+  // check that empty results are cached - bug 496466
+  promise0 = notifyMenuChanged(1);
+  sendChar("z");
+  yield promise0;
+  popupState = yield getPopupState();
+  is(popupState.open, true, "Check popup stays opened due to cached empty result");
+});
+
+add_task(function* test_form11_recipes() {
+  yield loadRecipes({
+    siteRecipes: [{
+      "hosts": ["mochi.test:8888"],
+      "usernameSelector": "input[name='1']",
+      "passwordSelector": "input[name='2']"
+    }],
+  });
+  uname = $_(11, "1");
+  pword = $_(11, "2");
+
+  // First test DOMAutocomplete
+  // Switch the password field to type=password so _fillForm marks the username
+  // field for autocomplete.
+  pword.type = "password";
+  yield promiseFormsProcessed();
+  restoreForm();
+  checkACForm("", "");
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  yield promiseFormsProcessed();
+  checkACForm("testuser10", "testpass10");
+
+  // Now test recipes with blur on the username field.
+  restoreForm();
+  checkACForm("", "");
+  uname.value = "testuser10";
+  checkACForm("testuser10", "");
+  doKey("tab");
+  yield promiseFormsProcessed();
+  checkACForm("testuser10", "testpass10");
+  yield resetRecipes();
+});
+
+add_task(function* test_form12_formless() {
+  // Test form-less autocomplete
+  uname = $_(12, "uname");
+  pword = $_(12, "pword");
+  restoreForm();
+  checkACForm("", "");
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  doKey("down"); // skip insecure warning
+  // Trigger autocomplete
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  let processedPromise = promiseFormsProcessed();
+  doKey("return"); // not "enter"!
+  yield processedPromise;
+  checkACForm("testuser", "testpass");
+});
+</script>
+</pre>
+</body>
+</html>

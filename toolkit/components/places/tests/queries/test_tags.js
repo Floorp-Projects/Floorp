@@ -534,8 +534,6 @@ const QUERY_KEY_NOT_TAGS = "!tags";
 
 const TEST_URI = uri("http://example.com/");
 
-// /////////////////////////////////////////////////////////////////////////////
-
 /**
  * Adds a bookmark.
  *
@@ -739,8 +737,6 @@ function setsAreEqual(aArr1, aArr2, aIsOrdered) {
     aArr2.forEach(u => do_check_true(aArr1.indexOf(u) >= 0));
   }
 }
-
-// /////////////////////////////////////////////////////////////////////////////
 
 function run_test() {
   run_next_test();
