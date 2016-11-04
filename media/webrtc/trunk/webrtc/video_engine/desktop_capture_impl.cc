@@ -187,6 +187,9 @@ int32_t AppDeviceInfoImpl::GetDeviceName(uint32_t deviceNumber,
              deviceUniqueId,
              len);
     }
+    if (pid) {
+      *pid = desktopApplication.getProcessId();
+    }
   }
   return 0;
 }
