@@ -423,37 +423,19 @@ typedef Vector<char16_t, 64> TwoByteName;
 // Metadata is built incrementally by ModuleGenerator and then shared immutably
 // between modules.
 
-class MetadataCacheablePod
+struct MetadataCacheablePod
 {
-    static const uint32_t NO_START_FUNCTION = UINT32_MAX;
-    static_assert(NO_START_FUNCTION > MaxFuncs, "sentinel value");
-
-    uint32_t              startFuncIndex_;
-
-  public:
     ModuleKind            kind;
     MemoryUsage           memoryUsage;
     uint32_t              minMemoryLength;
     Maybe<uint32_t>       maxMemoryLength;
+    Maybe<uint32_t>       startFuncIndex;
 
-    explicit MetadataCacheablePod(ModuleKind kind) {
-        mozilla::PodZero(this);
-        startFuncIndex_ = NO_START_FUNCTION;
-        this->kind = kind;
-    }
-
-    bool hasStartFunction() const {
-        return startFuncIndex_ != NO_START_FUNCTION;
-    }
-    void initStartFuncIndex(uint32_t i) {
-        MOZ_ASSERT(!hasStartFunction());
-        startFuncIndex_ = i;
-        MOZ_ASSERT(hasStartFunction());
-    }
-    uint32_t startFuncIndex() const {
-        MOZ_ASSERT(hasStartFunction());
-        return startFuncIndex_;
-    }
+    explicit MetadataCacheablePod(ModuleKind kind)
+      : kind(kind),
+        memoryUsage(MemoryUsage::None),
+        minMemoryLength(0)
+    {}
 };
 
 struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod

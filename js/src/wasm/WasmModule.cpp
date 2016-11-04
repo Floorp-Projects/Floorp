@@ -1042,8 +1042,8 @@ Module::instantiate(JSContext* cx,
     // Note that failure may cause instantiation to throw, but the instance may
     // still be live via edges created by initSegments or the start function.
 
-    if (metadata_->hasStartFunction()) {
-        uint32_t startFuncIndex = metadata_->startFuncIndex();
+    if (metadata_->startFuncIndex) {
+        uint32_t startFuncIndex = *metadata_->startFuncIndex;
         FixedInvokeArgs<0> args(cx);
         if (startFuncIndex < funcImports.length()) {
             RootedValue fval(cx, ObjectValue(*funcImports[startFuncIndex]));
