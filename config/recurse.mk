@@ -172,6 +172,9 @@ ifeq ($(MOZ_REPLACE_MALLOC_LINKAGE),dummy library)
 mozglue/build/target memory/replace/logalloc/replay/target: memory/replace/dummy/target
 endif
 endif
+ifeq (,$(MOZ_SYSTEM_NSS)$(MOZ_FOLD_LIBS))
+config/external/nss/target: config/external/nspr/pr/target config/external/nspr/ds/target config/external/nspr/libc/target
+endif
 # Most things are built during compile (target/host), but some things happen during export
 # Those need to depend on config/export for system wrappers.
 $(addprefix build/unix/stdc++compat/,target host) build/clang-plugin/target: config/export
