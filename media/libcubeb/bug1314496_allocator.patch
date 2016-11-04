@@ -1,0 +1,131 @@
+diff --git a/media/libcubeb/src/cubeb_audiounit.cpp b/media/libcubeb/src/cubeb_audiounit.cpp
+--- a/media/libcubeb/src/cubeb_audiounit.cpp
++++ b/media/libcubeb/src/cubeb_audiounit.cpp
+@@ -1784,20 +1784,20 @@ audiounit_strref_to_cstr_utf8(CFStringRe
+   CFIndex len, size;
+   char * ret;
+   if (strref == NULL) {
+     return NULL;
+   }
+ 
+   len = CFStringGetLength(strref);
+   size = CFStringGetMaximumSizeForEncoding(len, kCFStringEncodingUTF8);
+-  ret = new char[size];
++  ret = static_cast<char *>(malloc(size));
+ 
+   if (!CFStringGetCString(strref, ret, size, kCFStringEncodingUTF8)) {
+-    delete [] ret;
++    free(ret);
+     ret = NULL;
+   }
+ 
+   return ret;
+ }
+ 
+ static uint32_t
+ audiounit_get_channel_count(AudioObjectID devid, AudioObjectPropertyScope scope)
+@@ -2072,17 +2072,17 @@ audiounit_get_devices_of_type(cubeb_devi
+     /* For device in the given scope channel must be > 0. */
+     if (audiounit_get_channel_count(devices[i], scope) > 0) {
+       devices_in_scope[dev_count] = devices[i];
+       ++dev_count;
+     }
+   }
+ 
+   if (devid_array && dev_count > 0) {
+-    *devid_array = static_cast<AudioObjectID *>(calloc(dev_count, sizeof(AudioObjectID)));
++    *devid_array = new AudioObjectID[dev_count];
+     assert(*devid_array);
+     memcpy(*devid_array, &devices_in_scope, dev_count * sizeof(AudioObjectID));
+   }
+   return dev_count;
+ }
+ 
+ static uint32_t
+ audiounit_equal_arrays(AudioObjectID * left, AudioObjectID * right, uint32_t size)
+diff --git a/media/libcubeb/src/cubeb_wasapi.cpp b/media/libcubeb/src/cubeb_wasapi.cpp
+--- a/media/libcubeb/src/cubeb_wasapi.cpp
++++ b/media/libcubeb/src/cubeb_wasapi.cpp
+@@ -111,17 +111,17 @@ typedef BOOL (WINAPI *revert_mm_thread_c
+ 
+ extern cubeb_ops const wasapi_ops;
+ 
+ int wasapi_stream_stop(cubeb_stream * stm);
+ int wasapi_stream_start(cubeb_stream * stm);
+ void close_wasapi_stream(cubeb_stream * stm);
+ int setup_wasapi_stream(cubeb_stream * stm);
+ static char * wstr_to_utf8(const wchar_t * str);
+-static const wchar_t * utf8_to_wstr(char* str);
++static std::unique_ptr<const wchar_t[]> utf8_to_wstr(char* str);
+ 
+ }
+ 
+ struct cubeb
+ {
+   cubeb_ops const * ops;
+   /* Library dynamically opened to increase the render thread priority, and
+      the two function pointers we need. */
+@@ -1383,18 +1383,17 @@ int setup_wasapi_stream_one_side(cubeb_s
+ {
+   IMMDevice * device;
+   WAVEFORMATEX * mix_format;
+   HRESULT hr;
+ 
+   stm->stream_reset_lock.assert_current_thread_owns();
+ 
+   if (devid) {
+-    std::unique_ptr<const wchar_t> id;
+-    id.reset(utf8_to_wstr(reinterpret_cast<char*>(devid)));
++    std::unique_ptr<const wchar_t[]> id(utf8_to_wstr(reinterpret_cast<char*>(devid)));
+     hr = get_endpoint(&device, id.get());
+     if (FAILED(hr)) {
+       LOG("Could not get %s endpoint, error: %x\n", DIRECTION_NAME, hr);
+       return CUBEB_ERROR;
+     }
+   } else {
+     hr = get_default_endpoint(&device, direction);
+     if (FAILED(hr)) {
+@@ -1935,36 +1934,36 @@ int wasapi_stream_set_volume(cubeb_strea
+ static char *
+ wstr_to_utf8(LPCWSTR str)
+ {
+   char * ret = NULL;
+   int size;
+ 
+   size = ::WideCharToMultiByte(CP_UTF8, 0, str, -1, ret, 0, NULL, NULL);
+   if (size > 0) {
+-    ret =  new char[size];
++    ret = static_cast<char *>(malloc(size));
+     ::WideCharToMultiByte(CP_UTF8, 0, str, -1, ret, size, NULL, NULL);
+   }
+ 
+   return ret;
+ }
+ 
+-static const wchar_t *
++static std::unique_ptr<const wchar_t[]>
+ utf8_to_wstr(char* str)
+ {
+-  wchar_t * ret = nullptr;
++  std::unique_ptr<wchar_t[]> ret;
+   int size;
+ 
+-  size = ::MultiByteToWideChar(CP_UTF8, 0, str, -1, ret, 0);
++  size = ::MultiByteToWideChar(CP_UTF8, 0, str, -1, nullptr, 0);
+   if (size > 0) {
+-    ret = new wchar_t[size];
+-    ::MultiByteToWideChar(CP_UTF8, 0, str, -1, ret, size);
++    ret.reset(new wchar_t[size]);
++    ::MultiByteToWideChar(CP_UTF8, 0, str, -1, ret.get(), size);
+   }
+ 
+-  return ret;
++  return std::move(ret);
+ }
+ 
+ static IMMDevice *
+ wasapi_get_device_node(IMMDeviceEnumerator * enumerator, IMMDevice * dev)
+ {
+   IMMDevice * ret = NULL;
+   IDeviceTopology * devtopo = NULL;
+   IConnector * connector = NULL;

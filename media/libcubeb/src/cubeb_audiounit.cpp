@@ -1789,10 +1789,10 @@ audiounit_strref_to_cstr_utf8(CFStringRef strref)
 
   len = CFStringGetLength(strref);
   size = CFStringGetMaximumSizeForEncoding(len, kCFStringEncodingUTF8);
-  ret = new char[size];
+  ret = static_cast<char *>(malloc(size));
 
   if (!CFStringGetCString(strref, ret, size, kCFStringEncodingUTF8)) {
-    delete [] ret;
+    free(ret);
     ret = NULL;
   }
 
@@ -2077,7 +2077,7 @@ audiounit_get_devices_of_type(cubeb_device_type devtype, AudioObjectID ** devid_
   }
 
   if (devid_array && dev_count > 0) {
-    *devid_array = static_cast<AudioObjectID *>(calloc(dev_count, sizeof(AudioObjectID)));
+    *devid_array = new AudioObjectID[dev_count];
     assert(*devid_array);
     memcpy(*devid_array, &devices_in_scope, dev_count * sizeof(AudioObjectID));
   }

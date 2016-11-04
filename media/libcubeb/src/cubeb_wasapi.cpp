@@ -116,7 +116,7 @@ int wasapi_stream_start(cubeb_stream * stm);
 void close_wasapi_stream(cubeb_stream * stm);
 int setup_wasapi_stream(cubeb_stream * stm);
 static char * wstr_to_utf8(const wchar_t * str);
-static const wchar_t * utf8_to_wstr(char* str);
+static std::unique_ptr<const wchar_t[]> utf8_to_wstr(char* str);
 
 }
 
@@ -1388,8 +1388,7 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
   stm->stream_reset_lock.assert_current_thread_owns();
 
   if (devid) {
-    std::unique_ptr<const wchar_t> id;
-    id.reset(utf8_to_wstr(reinterpret_cast<char*>(devid)));
+    std::unique_ptr<const wchar_t[]> id(utf8_to_wstr(reinterpret_cast<char*>(devid)));
     hr = get_endpoint(&device, id.get());
     if (FAILED(hr)) {
       LOG("Could not get %s endpoint, error: %x\n", DIRECTION_NAME, hr);
@@ -1940,26 +1939,26 @@ wstr_to_utf8(LPCWSTR str)
 
   size = ::WideCharToMultiByte(CP_UTF8, 0, str, -1, ret, 0, NULL, NULL);
   if (size > 0) {
-    ret =  new char[size];
+    ret = static_cast<char *>(malloc(size));
     ::WideCharToMultiByte(CP_UTF8, 0, str, -1, ret, size, NULL, NULL);
   }
 
   return ret;
 }
 
-static const wchar_t *
+static std::unique_ptr<const wchar_t[]>
 utf8_to_wstr(char* str)
 {
-  wchar_t * ret = nullptr;
+  std::unique_ptr<wchar_t[]> ret;
   int size;
 
-  size = ::MultiByteToWideChar(CP_UTF8, 0, str, -1, ret, 0);
+  size = ::MultiByteToWideChar(CP_UTF8, 0, str, -1, nullptr, 0);
   if (size > 0) {
-    ret = new wchar_t[size];
-    ::MultiByteToWideChar(CP_UTF8, 0, str, -1, ret, size);
+    ret.reset(new wchar_t[size]);
+    ::MultiByteToWideChar(CP_UTF8, 0, str, -1, ret.get(), size);
   }
 
-  return ret;
+  return std::move(ret);
 }
 
 static IMMDevice *
