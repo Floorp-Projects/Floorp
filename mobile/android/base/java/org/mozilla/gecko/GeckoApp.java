@@ -2409,6 +2409,10 @@ public abstract class GeckoApp
         }
     }
 
+    protected void onDone() {
+        moveTaskToBack(true);
+    }
+
     @Override
     public void onBackPressed() {
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
@@ -2439,7 +2443,7 @@ public abstract class GeckoApp
         final Tabs tabs = Tabs.getInstance();
         final Tab tab = tabs.getSelectedTab();
         if (tab == null) {
-            moveTaskToBack(true);
+            onDone();
             return;
         }
 
@@ -2469,7 +2473,7 @@ public abstract class GeckoApp
                         }
 
                         if (tab.isExternal()) {
-                            moveTaskToBack(true);
+                            onDone();
                             Tab nextSelectedTab = Tabs.getInstance().getNextTab(tab);
                             if (nextSelectedTab != null) {
                                 int nextSelectedTabId = nextSelectedTab.getId();
@@ -2487,7 +2491,7 @@ public abstract class GeckoApp
                             return;
                         }
 
-                        moveTaskToBack(true);
+                        onDone();
                     }
                 });
             }
