@@ -103,6 +103,7 @@ function RootActor(aConnection, aParameters) {
   this.conn.addActorPool(this._globalActorPool);
 
   this._chromeActor = null;
+  this._processActors = new Map();
 }
 
 RootActor.prototype = {
@@ -230,6 +231,7 @@ RootActor.prototype = {
     this._globalActorPool = null;
     this._parameters = null;
     this._chromeActor = null;
+    this._processActors.clear();
   },
 
   /* The 'listTabs' request and the 'tabListChanged' notification. */
@@ -471,13 +473,24 @@ RootActor.prototype = {
 
       return { form: this._chromeActor.form() };
     } else {
-      let mm = ppmm.getChildAt(aRequest.id);
+      let { id } = aRequest;
+      let mm = ppmm.getChildAt(id);
       if (!mm) {
         return { error: "noProcess",
-                 message: "There is no process with id '" + aRequest.id + "'." };
+                 message: "There is no process with id '" + id + "'." };
       }
-      return DebuggerServer.connectToContent(this.conn, mm)
-                           .then(form => ({ form }));
+      let form = this._processActors.get(id);
+      if (form) {
+        return { form };
+      }
+      let onDestroy = () => {
+        this._processActors.delete(id);
+      };
+      return DebuggerServer.connectToContent(this.conn, mm, onDestroy)
+        .then(form => {
+          this._processActors.set(id, form);
+          return { form };
+        });
     }
   },
 
