@@ -3117,6 +3117,14 @@ TabChildSHistoryListener::SHistoryDidUpdate(bool aTruncate /* = false */)
   return NS_OK;
 }
 
+mozilla::dom::TabGroup*
+TabChild::TabGroup()
+{
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
+  MOZ_ASSERT(window);
+  return window->TabGroup();
+}
+
 /*******************************************************************************
  * nsISHistoryListener
  ******************************************************************************/

@@ -68,6 +68,7 @@ class PluginWidgetChild;
 namespace dom {
 
 class TabChild;
+class TabGroup;
 class ClonedMessageData;
 class TabChildBase;
 
@@ -664,6 +665,8 @@ public:
   }
 
   already_AddRefed<nsISHistory> GetRelatedSHistory();
+
+  mozilla::dom::TabGroup* TabGroup();
 
 protected:
   virtual ~TabChild();
