@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
     'TestAutoRef.cpp',
     'TestCloneInputStream.cpp',
     'TestCOMArray.cpp',
+    'TestCOMPtrEq.cpp',
     'TestCRT.cpp',
     'TestEncoding.cpp',
     'TestEscapeURL.cpp',
