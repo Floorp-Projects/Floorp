@@ -51,7 +51,7 @@
 #ifdef XP_WIN
 #include "nsCExternalHandlerService.h"
 #include "nsEscape.h"
-#include "nsIMimeInfo.h"
+#include "nsIMIMEInfo.h"
 #include "nsIMIMEService.h"
 #include "nsIURL.h"
 #include "nsReadableUtils.h"
