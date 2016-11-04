@@ -100,9 +100,9 @@
   <form id="form15" onsubmit="return checkSubmit(15)">
     <script type="text/javascript">
       var form = document.getElementById('form15');
-      for (let i = 0; i != 10; i++)
+      for (var i = 0; i != 10; i++)
       {
-        let input = document.createElement('input');
+        var input = document.createElement('input');
         input.type = 'text';
         input.name = 'test' + (i + 1);
         form.appendChild(input);
@@ -115,9 +115,9 @@
   <form id="form16" onsubmit="return checkSubmit(16)">
     <script type="text/javascript">
       form = document.getElementById('form16');
-      for (let i = 0; i != 10; i++)
+      for (i = 0; i != 10; i++)
       {
-        let input = document.createElement('input');
+        input = document.createElement('input');
         input.type = 'text';
         input.name = 'test' + (i + 1);
         form.appendChild(input);
@@ -217,9 +217,9 @@
   <form id="form107" onsubmit="return checkSubmit(107)">
     <script type="text/javascript">
       form = document.getElementById('form107');
-      for (let i = 0; i != 10; i++)
+      for (i = 0; i != 10; i++)
       {
-        let input = document.createElement('input');
+        input = document.createElement('input');
         input.type = 'text';
         input.name = 'test7_' + (i + 1);
         form.appendChild(input);
@@ -233,9 +233,9 @@
   <form id="form108" onsubmit="return checkSubmit(108)">
     <script type="text/javascript">
       form = document.getElementById('form108');
-      for (let i = 0; i != 10; i++)
+      for (i = 0; i != 10; i++)
       {
-        let input = document.createElement('input');
+        input = document.createElement('input');
         input.type = 'text';
         input.name = 'test8_' + (i + 1);
         form.appendChild(input);
@@ -313,7 +313,7 @@ function startTest() {
   $_(6, "test1").value = "dontSaveThis";
   // Form 7 deliberately left untouched.
   // Form 8 has an input with no name or input attribute.
-  let input = document.getElementById("form8").elements[0];
+  var input = document.getElementById("form8").elements[0];
   is(input.type, "text", "checking we got unidentified input");
   input.value = "dontSaveThis";
   // Form 9 has nothing to modify.
@@ -325,12 +325,12 @@ function startTest() {
   $_(14, "test1").value = "dontSaveThis";
 
   var testData = ccNumbers.valid16;
-  for (let i = 0; i != testData.length; i++) {
+  for (var i = 0; i != testData.length; i++) {
     $_(15, "test" + (i + 1)).value = testData[i];
   }
 
   testData = ccNumbers.valid15;
-  for (let i = 0; i != testData.length; i++) {
+  for (i = 0; i != testData.length; i++) {
     $_(16, "test" + (i + 1)).value = testData[i];
   }
   $_(17, "test1").value = "001064088";
@@ -349,12 +349,12 @@ function startTest() {
   $_(106, "test6").value = "00000000109181";
 
   testData = ccNumbers.invalid16;
-  for (let i = 0; i != testData.length; i++) {
+  for (i = 0; i != testData.length; i++) {
     $_(107, "test7_" + (i + 1)).value = testData[i];
   }
 
   testData = ccNumbers.invalid15;
-  for (let i = 0; i != testData.length; i++) {
+  for (i = 0; i != testData.length; i++) {
     $_(108, "test8_" + (i + 1)).value = testData[i];
   }
 
@@ -430,12 +430,12 @@ function checkSubmit(formNum) {
         checkForSave("test6", "00000000109181", "checking saved value");
         break;
     case 107:
-        for (let i = 0; i != ccNumbers.invalid16.length; i++) {
+        for (var i = 0; i != ccNumbers.invalid16.length; i++) {
           checkForSave("test7_" + (i + 1), ccNumbers.invalid16[i], "checking saved value");
         }
         break;
     case 108:
-        for (let i = 0; i != ccNumbers.invalid15.length; i++) {
+        for (i = 0; i != ccNumbers.invalid15.length; i++) {
           checkForSave("test8_" + (i + 1), ccNumbers.invalid15[i], "checking saved value");
         }
         break;

@@ -18,14 +18,14 @@ add_task(function* () {
     feeds[aFeed.href] = true;
   }
 
-  yield ContentTask.spawn(browser, feeds, function* (contentFeeds) {
+  yield ContentTask.spawn(browser, feeds, function* (feeds) {
     for (let aLink of content.document.getElementsByTagName("link")) {
       // ignore real stylesheets, and anything without an href property
       if (aLink.type != "text/css" && aLink.href) {
         if (/bogus/i.test(aLink.title)) {
-          ok(!contentFeeds[aLink.href], "don't discover " + aLink.href);
+          ok(!feeds[aLink.href], "don't discover " + aLink.href);
         } else {
-          ok(contentFeeds[aLink.href], "should discover " + aLink.href);
+          ok(feeds[aLink.href], "should discover " + aLink.href);
         }
       }
     }

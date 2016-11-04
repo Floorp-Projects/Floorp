@@ -31,7 +31,7 @@ add_task(function* test_corrupt_database() {
   let corruptBookmark = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.toolbarGuid,
                                                              url: "http://test.mozilla.org",
                                                              title: "We love belugas" });
-  yield PlacesUtils.withConnectionWrapper("test", Task.async(function*(db) {
+  let db = yield PlacesUtils.withConnectionWrapper("test", Task.async(function*(db) {
     yield db.execute("UPDATE moz_bookmarks SET fk = NULL WHERE guid = :guid",
                      { guid: corruptBookmark.guid });
   }));

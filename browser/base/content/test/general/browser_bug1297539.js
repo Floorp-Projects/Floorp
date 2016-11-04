@@ -42,11 +42,11 @@ function* cutCurrentSelection(elementQueryString, property, browser) {
   yield BrowserTestUtils.synthesizeKey("x", {accelKey: true}, browser);
 
   // The editor should be empty after cut.
-  yield ContentTask.spawn(browser, [elementQueryString, property],
-    function* ([contentElementQueryString, contentProperty]) {
-      let element = content.document.querySelector(contentElementQueryString);
-      is(element[contentProperty], "",
-        `${contentElementQueryString} should be empty after cut (superkey + x)`);
+  yield ContentTask.spawn(browser, {elementQueryString, property},
+    function* ({elementQueryString, property}) {
+      let element = content.document.querySelector(elementQueryString);
+      is(element[property], "",
+        `${elementQueryString} should be empty after cut (superkey + x)`);
     });
 }
 

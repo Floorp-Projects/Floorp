@@ -57,11 +57,11 @@ function test() {
   testOnWindow({}, function(aWin) {
     doTest(false, aWin, function() {
       // then test when on private mode
-      testOnWindow({private: true}, function(aWin2) {
-        doTest(true, aWin2, function() {
+      testOnWindow({private: true}, function(aWin) {
+        doTest(true, aWin, function() {
           // then test again when not on private mode
-          testOnWindow({}, function(aWin3) {
-            doTest(false, aWin3, finish);
+          testOnWindow({}, function(aWin) {
+            doTest(false, aWin, finish);
           });
         });
       });

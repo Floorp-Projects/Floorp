@@ -13,8 +13,8 @@ const { REQUIRE_SIGNING } = Cu.import("resource://gre/modules/addons/AddonConsta
 const { Task } = Cu.import("resource://gre/modules/Task.jsm");
 
 var rootDir = getRootDirectory(gTestPath);
-var rootPath = rootDir.split('/');
-var chromeName = rootPath[0] + '//' + rootPath[2];
+var path = rootDir.split('/');
+var chromeName = path[0] + '//' + path[2];
 var croot = chromeName + "/content/browser/toolkit/mozapps/extensions/test/xpinstall/";
 var jar = getJar(croot);
 if (jar) {
@@ -455,8 +455,8 @@ function test_restartless() {
     is(installs.length, 0, "Should be no pending installs");
 
     let addon = yield new Promise(resolve => {
-      AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", result => {
-        resolve(result);
+      AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", addon => {
+        resolve(addon);
       });
     });
     addon.uninstall();
@@ -499,8 +499,8 @@ function test_multiple() {
     installs[0].cancel();
 
     let addon = yield new Promise(resolve => {
-      AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", function (result) {
-        resolve(result);
+      AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", function (addon) {
+        resolve(addon);
       });
     });
     addon.uninstall();
@@ -676,8 +676,8 @@ function test_allUnverified() {
     yield notificationPromise;
 
     let addon = yield new Promise(resolve => {
-      AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", function(result) {
-        resolve(result);
+      AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", function(addon) {
+        resolve(addon);
       });
     });
     addon.uninstall();
@@ -919,8 +919,8 @@ function test_theme() {
        "Should have seen the right message");
 
     let addon = yield new Promise(resolve => {
-      AddonManager.getAddonByID("{972ce4c6-7e08-4474-a285-3208198ce6fd}", function(result) {
-        resolve(result);
+      AddonManager.getAddonByID("{972ce4c6-7e08-4474-a285-3208198ce6fd}", function(addon) {
+        resolve(addon);
       });
     });
     ok(addon.userDisabled, "Should be switching away from the default theme.");
@@ -928,8 +928,8 @@ function test_theme() {
     addon.userDisabled = false;
 
     addon = yield new Promise(resolve => {
-      AddonManager.getAddonByID("theme-xpi@tests.mozilla.org", function(result) {
-        resolve(result);
+      AddonManager.getAddonByID("theme-xpi@tests.mozilla.org", function(addon) {
+        resolve(addon);
       });
     });
     isnot(addon, null, "Test theme will have been installed");

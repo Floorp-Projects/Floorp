@@ -62,7 +62,7 @@ function* test_promisedHelper() {
 
   uri = NetUtil.newURI("http://www.helper_non_existent_example.tld");
   try {
-    yield PlacesUtils.promisePlaceInfo(uri);
+    let placeInfo = yield PlacesUtils.promisePlaceInfo(uri);
     do_throw("PlacesUtils.promisePlaceInfo should have rejected the promise");
   }
   catch (ex) { }

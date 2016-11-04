@@ -40,11 +40,11 @@ add_task(function* test_save_change() {
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
                                                        "popupshown",
                                                        (event) => event.target == PopupNotifications.panel);
-      yield ContentTask.spawn(browser, [username, password],
-        function* ([contentUsername, contentPassword]) {
+      yield ContentTask.spawn(browser, { username, password },
+        function* ({ username, password }) {
           let doc = content.document;
-          doc.getElementById("form-basic-username").value = contentUsername;
-          doc.getElementById("form-basic-password").value = contentPassword;
+          doc.getElementById("form-basic-username").value = username;
+          doc.getElementById("form-basic-password").value = password;
           doc.getElementById("form-basic").submit();
         });
       yield promiseShown;

@@ -18,6 +18,7 @@
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
+var state, action;
 var iframe = document.getElementById("iframe");
 
 // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
@@ -79,7 +80,7 @@ runInParent(() => {
 });
 
 add_task(function* test_iframe() {
-  let state = {
+  state = {
     msg         : "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest”",
     title       : "Authentication Required",
     textValue   : "mochiuser1",
@@ -94,7 +95,7 @@ add_task(function* test_iframe() {
     focused     : "textField",
     defButton   : "button0",
   };
-  let action = {
+  action = {
     buttonClick : "ok",
   };
   promptDone = handlePrompt(state, action);

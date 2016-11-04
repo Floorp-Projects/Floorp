@@ -44,9 +44,9 @@ function checkBroadcasterVisible(broadcasterId) {
 
 function promiseObserver(topic) {
   return new Promise(resolve => {
-    let obs = (aSubject, aTopic, aData) => {
-      Services.obs.removeObserver(obs, aTopic);
-      resolve(aSubject);
+    let obs = (subject, topic, data) => {
+      Services.obs.removeObserver(obs, topic);
+      resolve(subject);
     }
     Services.obs.addObserver(obs, topic, false);
   });

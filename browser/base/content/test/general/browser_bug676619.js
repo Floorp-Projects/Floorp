@@ -12,8 +12,8 @@ function test () {
         next();
       });
 
-      ContentTask.spawn(gBrowser.selectedBrowser, link, contentLink => {
-        content.document.getElementById(contentLink).click();
+      ContentTask.spawn(gBrowser.selectedBrowser, link, link => {
+        content.document.getElementById(link).click();
       });
     }
 
@@ -29,8 +29,8 @@ function test () {
         });
       });
 
-      ContentTask.spawn(gBrowser.selectedBrowser, link, contentLink => {
-        content.document.getElementById(contentLink).click();
+      ContentTask.spawn(gBrowser.selectedBrowser, link, link => {
+        content.document.getElementById(link).click();
       });
     }
 

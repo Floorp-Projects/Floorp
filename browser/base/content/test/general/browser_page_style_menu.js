@@ -50,8 +50,8 @@ add_task(function*() {
     checked: el.getAttribute("checked") == "true",
   }));
 
-  let validLinks = yield ContentTask.spawn(gBrowser.selectedBrowser, items, function(contentItems) {
-    let contentValidLinks = 0;
+  let validLinks = yield ContentTask.spawn(gBrowser.selectedBrowser, items, function(items) {
+    let validLinks = 0;
     Array.forEach(content.document.querySelectorAll("link, style"), function (el) {
       var title = el.getAttribute("title");
       var rel = el.getAttribute("rel");
@@ -60,7 +60,7 @@ add_task(function*() {
                      " with rel=\"" + rel + "\"" +
                      (media ? " and media=\"" + media + "\"" : "");
 
-      var item = contentItems.filter(aItem => aItem.label == title);
+      var item = items.filter(item => item.label == title);
       var found = item.length == 1;
       var checked = found && item[0].checked;
 
@@ -69,17 +69,17 @@ add_task(function*() {
           ok(!found, idstring + " should not show up in page style menu");
           break;
         case "0-todo":
-          contentValidLinks++;
+          validLinks++;
           todo(!found, idstring + " should not show up in page style menu");
           ok(!checked, idstring + " should not be selected");
           break;
         case "1":
-          contentValidLinks++;
+          validLinks++;
           ok(found, idstring + " should show up in page style menu");
           ok(!checked, idstring + " should not be selected");
           break;
         case "2":
-          contentValidLinks++;
+          validLinks++;
           ok(found, idstring + " should show up in page style menu");
           ok(checked, idstring + " should be selected");
           break;
@@ -87,7 +87,7 @@ add_task(function*() {
           throw "data-state attribute is missing or has invalid value";
       }
     });
-    return contentValidLinks;
+    return validLinks;
   });
 
   ok(items.length, "At least one item in the menu");
