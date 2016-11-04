@@ -72,8 +72,7 @@ public:
   void ProcessMouseEvent(const WidgetMouseEvent& aEvent,
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId);
-  void ProcessAPZStateChange(const nsCOMPtr<nsIDocument>& aDocument,
-                             ViewID aViewId,
+  void ProcessAPZStateChange(ViewID aViewId,
                              APZStateChange aChange,
                              int aArg);
   void ProcessClusterHit();
@@ -95,7 +94,6 @@ private:
   uint64_t mPendingTouchPreventedBlockId;
   bool mEndTouchIsClick;
   bool mTouchEndCancelled;
-  int mActiveAPZTransforms;
   int32_t mLastTouchIdentifier;
 };
 
