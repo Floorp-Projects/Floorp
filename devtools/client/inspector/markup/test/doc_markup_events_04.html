@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+    #constructed-function,
+    #constructed-function-with-body-string,
+    #multiple-assignment,
+    #promise,
+    #arraysort,
+    #handleEvent {
+      border: 1px solid #000;
+      width: 200px;
+      min-height: 1em;
+      cursor: pointer;
+    }
+    </style>
+    <script type="application/javascript;version=1.8">
+      let constructedFunc = new Function();
+
+      let constructedFuncWithBodyString =
+        new Function('a', 'b', 'c', 'alert("constructedFuncWithBodyString");');
+
+      let multipleAssignment = foo = bar = function multi() {
+        alert("multipleAssignment");
+      }
+
+      function init() {
+        let constructedFunctionNode =
+          document.getElementById("constructed-function");
+        constructedFunctionNode.addEventListener("click", constructedFunc);
+
+        let constructedFunctionWithBodyStringNode =
+          document.getElementById("constructed-function-with-body-string");
+        constructedFunctionWithBodyStringNode
+          .addEventListener("click", constructedFuncWithBodyString);
+
+        let multipleAssignmentNode =
+          document.getElementById("multiple-assignment");
+        multipleAssignmentNode.addEventListener("click", multipleAssignment);
+
+        let promiseNode = document.getElementById("promise");
+        new Promise((resolve, reject) => {
+          promiseNode.addEventListener("click", resolve);
+        });
+
+        let arraySortNode = document.getElementById("arraysort");
+        arraySortNode.addEventListener("click", Array.sort);
+
+        new HandleEvent();
+
+        document.addEventListener("click", function(foo, bar) {
+          alert("document event listener clicked");
+        });
+
+        document.documentElement.addEventListener("click", function(foo2, bar2) {
+          alert("documentElement event listener clicked");
+        });
+      }
+
+      function Es6Method(hehe) {
+
+      }
+
+      Es6Method.prototype = {
+        es6Method(foo, bar) {
+          alert("obj.es6Method");
+        }
+      };
+
+      function HandleEvent() {
+        let handleEventNode = document.getElementById("handleEvent");
+        handleEventNode.addEventListener("click", this);
+      }
+
+      HandleEvent.prototype = {
+        handleEvent: function(event) {
+          switch (event.type) {
+            case "click":
+              alert("handleEvent click");
+          }
+        }
+      };
+
+      function* generator() {
+        alert("generator");
+      }
+    </script>
+  </head>
+  <body onload="init();">
+    <h1>Events test 4</h1>
+    <div id="constructed-function">Constructed Function</div>
+    <div id="constructed-function-with-body-string">
+      Constructed Function with body string
+    </div>
+    <div id="multiple-assignment">Multiple Assignment</div>
+    <div id="promise">Promise</div>
+    <div id="arraysort">Array.sort</div>
+    <div id="handleEvent">HandleEvent</div>
+  </body>
+</html>
