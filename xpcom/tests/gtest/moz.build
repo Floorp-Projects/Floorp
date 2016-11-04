@@ -32,6 +32,7 @@ UNIFIED_SOURCES += [
     'TestStringStream.cpp',
     'TestSynchronization.cpp',
     'TestTArray.cpp',
+    'TestTArray2.cpp',
     'TestThreadPool.cpp',
     'TestThreads.cpp',
     'TestTimeStamp.cpp',
@@ -47,6 +48,7 @@ SOURCES += [
     'TestCOMPtr.cpp', # Redefines IFoo and IBar
     'TestHashtables.cpp', # Redefines IFoo
     'TestNsRefPtr.cpp', # Redefines Foo
+    #'TestTArray2.cpp',
 ]
 
 LOCAL_INCLUDES += [

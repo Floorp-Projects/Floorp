@@ -12,13 +12,14 @@
 #include <iostream>
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsXPCOM.h"
 #include "nsIFile.h"
-#include "TestHarness.h"
+
+#include "gtest/gtest.h"
 
 using namespace mozilla;
 
@@ -170,24 +171,24 @@ static bool test_basic_array(ElementType *data,
   return true;
 }
 
-static bool test_int_array() {
+TEST(TArray, test_int_array) {
   int data[] = {4,6,8,2,4,1,5,7,3};
-  return test_basic_array(data, ArrayLength(data), int(14));
+  ASSERT_TRUE(test_basic_array(data, ArrayLength(data), int(14)));
 }
 
-static bool test_int64_array() {
+TEST(TArray, test_int64_array) {
   int64_t data[] = {4,6,8,2,4,1,5,7,3};
-  return test_basic_array(data, ArrayLength(data), int64_t(14));
+  ASSERT_TRUE(test_basic_array(data, ArrayLength(data), int64_t(14)));
 }
 
-static bool test_char_array() {
+TEST(TArray, test_char_array) {
   char data[] = {4,6,8,2,4,1,5,7,3};
-  return test_basic_array(data, ArrayLength(data), char(14));
+  ASSERT_TRUE(test_basic_array(data, ArrayLength(data), char(14)));
 }
 
-static bool test_uint32_array() {
+TEST(TArray, test_uint32_array) {
   uint32_t data[] = {4,6,8,2,4,1,5,7,3};
-  return test_basic_array(data, ArrayLength(data), uint32_t(14));
+  ASSERT_TRUE(test_basic_array(data, ArrayLength(data), uint32_t(14)));
 }
 
 //----
@@ -214,7 +215,7 @@ class Object {
 
     bool operator<(const Object& other) const {
       // sort based on mStr only
-      return mStr.Compare(other.mStr) < 0;
+      return mStr.Compare(other.mStr.get()) < 0;
     }
 
     const char *Str() const { return mStr.get(); }
@@ -225,35 +226,30 @@ class Object {
     uint32_t  mNum;
 };
 
-static bool test_object_array() {
+TEST(TArray, test_object_array) {
   nsTArray<Object> objArray;
   const char kdata[] = "hello world";
   size_t i;
   for (i = 0; i < ArrayLength(kdata); ++i) {
     char x[] = {kdata[i],'\0'};
-    if (!objArray.AppendElement(Object(x, i)))
-      return false;
+    ASSERT_TRUE(objArray.AppendElement(Object(x, i)));
   }
   for (i = 0; i < ArrayLength(kdata); ++i) {
-    if (objArray[i].Str()[0] != kdata[i])
-      return false;
-    if (objArray[i].Num() != i)
-      return false;
+    ASSERT_EQ(objArray[i].Str()[0], kdata[i]);
+    ASSERT_EQ(objArray[i].Num(), i);
   }
   objArray.Sort();
   const char ksorted[] = "\0 dehllloorw";
   for (i = 0; i < ArrayLength(kdata)-1; ++i) {
-    if (objArray[i].Str()[0] != ksorted[i])
-      return false;
+    ASSERT_EQ(objArray[i].Str()[0], ksorted[i]);
   }
-  return true;
 }
 
 class Countable {
-  static uint32_t sCount;
+  static int sCount;
 
   public:
-    Countable() 
+    Countable()
     {
       sCount++;
     }
@@ -263,11 +259,11 @@ class Countable {
       sCount++;
     }
 
-    static uint32_t Count() { return sCount; }
+    static int Count() { return sCount; }
 };
 
 class Moveable {
-  static uint32_t sCount;
+  static int sCount;
 
   public:
     Moveable()
@@ -285,53 +281,47 @@ class Moveable {
       // Do not increment sCount
     }
 
-    static uint32_t Count() { return sCount; }
+    static int Count() { return sCount; }
 };
 
-/* static */ uint32_t Countable::sCount = 0;
-/* static */ uint32_t Moveable::sCount = 0;
+/* static */ int Countable::sCount = 0;
+/* static */ int Moveable::sCount = 0;
 
 static nsTArray<int> returns_by_value() {
   nsTArray<int> result;
   return result;
 }
 
-static bool test_return_by_value() {
+TEST(TArray, test_return_by_value) {
   nsTArray<int> result = returns_by_value();
-  return true;
+  ASSERT_TRUE(true); // This is just a compilation test.
 }
 
-static bool test_move_array() {
+TEST(TArray, test_move_array) {
   nsTArray<Countable> countableArray;
   uint32_t i;
   for (i = 0; i < 4; ++i) {
-    if (!countableArray.AppendElement(Countable()))
-      return false;
+    ASSERT_TRUE(countableArray.AppendElement(Countable()));
   }
 
-  if (Countable::Count() != 8)
-    return false;
+  ASSERT_EQ(Countable::Count(), 8);
 
   const nsTArray<Countable>& constRefCountableArray = countableArray;
 
-  if (Countable::Count() != 8)
-    return false;
+  ASSERT_EQ(Countable::Count(), 8);
 
   nsTArray<Countable> copyCountableArray(constRefCountableArray);
 
-  if (Countable::Count() != 12)
-    return false;
+  ASSERT_EQ(Countable::Count(), 12);
 
   nsTArray<Countable>&& moveRefCountableArray = Move(countableArray);
   moveRefCountableArray.Length(); // Make compilers happy.
 
-  if (Countable::Count() != 12)
-    return false;
+  ASSERT_EQ(Countable::Count(), 12);
 
   nsTArray<Countable> movedCountableArray(Move(countableArray));
 
-  if (Countable::Count() != 12)
-    return false;
+  ASSERT_EQ(Countable::Count(), 12);
 
   // Test ctor
   FallibleTArray<Countable> differentAllocatorCountableArray(Move(copyCountableArray));
@@ -349,38 +339,31 @@ static bool test_move_array() {
   AutoTArray<Countable, 4> autoCountableArray2(Move(differentAllocatorCountableArray2));
   differentAllocatorCountableArray2 = Move(autoCountableArray2);
 
-  if (Countable::Count() != 12)
-    return false;
+  ASSERT_EQ(Countable::Count(), 12);
 
   nsTArray<Moveable> moveableArray;
   for (i = 0; i < 4; ++i) {
-    if (!moveableArray.AppendElement(Moveable()))
-      return false;
+    ASSERT_TRUE(moveableArray.AppendElement(Moveable()));
   }
 
-  if (Moveable::Count() != 4)
-    return false;
+  ASSERT_EQ(Moveable::Count(), 4);
 
   const nsTArray<Moveable>& constRefMoveableArray = moveableArray;
 
-  if (Moveable::Count() != 4)
-    return false;
+  ASSERT_EQ(Moveable::Count(), 4);
 
   nsTArray<Moveable> copyMoveableArray(constRefMoveableArray);
 
-  if (Moveable::Count() != 8)
-    return false;
+  ASSERT_EQ(Moveable::Count(), 8);
 
   nsTArray<Moveable>&& moveRefMoveableArray = Move(moveableArray);
   moveRefMoveableArray.Length(); // Make compilers happy.
 
-  if (Moveable::Count() != 8)
-    return false;
+  ASSERT_EQ(Moveable::Count(), 8);
 
   nsTArray<Moveable> movedMoveableArray(Move(moveableArray));
 
-  if (Moveable::Count() != 8)
-    return false;
+  ASSERT_EQ(Moveable::Count(), 8);
 
   // Test ctor
   FallibleTArray<Moveable> differentAllocatorMoveableArray(Move(copyMoveableArray));
@@ -398,84 +381,51 @@ static bool test_move_array() {
   AutoTArray<Moveable, 4> autoMoveableArray2(Move(differentAllocatorMoveableArray2));
   differentAllocatorMoveableArray2 = Move(autoMoveableArray2);
 
-  if (Moveable::Count() != 8)
-    return false;
-
-  return true;
+  ASSERT_EQ(Moveable::Count(), 8);
 }
-
-// nsTArray<nsAutoPtr<T>> is not supported
-#if 0
-static bool test_autoptr_array() {
-  nsTArray< nsAutoPtr<Object> > objArray;
-  const char kdata[] = "hello world";
-  for (size_t i = 0; i < ArrayLength(kdata); ++i) {
-    char x[] = {kdata[i],'\0'};
-    nsAutoPtr<Object> obj(new Object(x,i));
-    if (!objArray.AppendElement(obj))  // XXX does not call copy-constructor for nsAutoPtr!!!
-      return false;
-    if (obj.get() == nullptr)
-      return false;
-    obj.forget();  // the array now owns the reference
-  }
-  for (size_t i = 0; i < ArrayLength(kdata); ++i) {
-    if (objArray[i]->Str()[0] != kdata[i])
-      return false;
-    if (objArray[i]->Num() != i)
-      return false;
-  }
-  return true;
-}
-#endif
 
 //----
 
-static bool test_string_array() {
+TEST(TArray, test_string_array) {
   nsTArray<nsCString> strArray;
   const char kdata[] = "hello world";
   size_t i;
   for (i = 0; i < ArrayLength(kdata); ++i) {
     nsCString str;
     str.Assign(kdata[i]);
-    if (!strArray.AppendElement(str))
-      return false;
+    ASSERT_TRUE(strArray.AppendElement(str));
   }
   for (i = 0; i < ArrayLength(kdata); ++i) {
-    if (strArray[i].CharAt(0) != kdata[i])
-      return false;
+    ASSERT_EQ(strArray[i].CharAt(0), kdata[i]);
   }
 
   const char kextra[] = "foo bar";
   size_t oldLen = strArray.Length();
-  if (!strArray.AppendElement(kextra))
-    return false;
+  ASSERT_TRUE(strArray.AppendElement(kextra));
   strArray.RemoveElement(kextra);
-  if (oldLen != strArray.Length())
-    return false;
+  ASSERT_EQ(oldLen, strArray.Length());
 
-  if (strArray.IndexOf("e") != 1)
-    return false;
+  ASSERT_EQ(strArray.IndexOf("e"), size_t(1));
 
   strArray.Sort();
   const char ksorted[] = "\0 dehllloorw";
   for (i = ArrayLength(kdata); i--; ) {
-    if (strArray[i].CharAt(0) != ksorted[i])
-      return false;
+    ASSERT_EQ(strArray[i].CharAt(0), ksorted[i]);
     if (i > 0 && strArray[i] == strArray[i - 1])
       strArray.RemoveElementAt(i);
   }
   for (i = 0; i < strArray.Length(); ++i) {
-    if (strArray.BinaryIndexOf(strArray[i]) != i)
-      return false;
+    ASSERT_EQ(strArray.BinaryIndexOf(strArray[i]), i);
   }
-  if (strArray.BinaryIndexOf(EmptyCString()) != strArray.NoIndex)
-    return false;
+  auto no_index = strArray.NoIndex; // Fixes gtest compilation error
+  ASSERT_EQ(strArray.BinaryIndexOf(EmptyCString()), no_index);
 
   nsCString rawArray[MOZ_ARRAY_LENGTH(kdata) - 1];
   for (i = 0; i < ArrayLength(rawArray); ++i)
     rawArray[i].Assign(kdata + i);  // substrings of kdata
-  return test_basic_array(rawArray, ArrayLength(rawArray),
-                          nsCString("foopy"));
+
+  ASSERT_TRUE(test_basic_array(rawArray, ArrayLength(rawArray),
+                               nsCString("foopy")));
 }
 
 //----
@@ -491,11 +441,10 @@ class nsFileNameComparator {
     }
 };
 
-static bool test_comptr_array() {
+TEST(TArray, test_comptr_array) {
   FilePointer tmpDir;
   NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpDir));
-  if (!tmpDir)
-    return false;
+  ASSERT_TRUE(tmpDir);
   const char *kNames[] = {
     "foo.txt", "bar.html", "baz.gif"
   };
@@ -504,19 +453,16 @@ static bool test_comptr_array() {
   for (i = 0; i < ArrayLength(kNames); ++i) {
     FilePointer f;
     tmpDir->Clone(getter_AddRefs(f));
-    if (!f)
-      return false;
-    if (NS_FAILED(f->AppendNative(nsDependentCString(kNames[i]))))
-      return false;
+    ASSERT_TRUE(f);
+    ASSERT_FALSE(NS_FAILED(f->AppendNative(nsDependentCString(kNames[i]))));
     fileArray.AppendElement(f);
   }
 
-  if (fileArray.IndexOf(kNames[1], 0, nsFileNameComparator()) != 1)
-    return false;
+  ASSERT_EQ(fileArray.IndexOf(kNames[1], 0, nsFileNameComparator()), size_t(1));
 
   // It's unclear what 'operator<' means for nsCOMPtr, but whatever...
-  return test_basic_array(fileArray.Elements(), fileArray.Length(), 
-                          tmpDir);
+  ASSERT_TRUE(test_basic_array(fileArray.Elements(), fileArray.Length(),
+                               tmpDir));
 }
 
 //----
@@ -536,9 +482,7 @@ class RefcountedObject {
     int32_t rc;
 };
 
-static bool test_refptr_array() {
-  bool rv = true;
-
+TEST(TArray, test_refptr_array) {
   nsTArray< RefPtr<RefcountedObject> > objArray;
 
   RefcountedObject *a = new RefcountedObject(); a->AddRef();
@@ -549,44 +493,36 @@ static bool test_refptr_array() {
   objArray.AppendElement(b);
   objArray.AppendElement(c);
 
-  if (objArray.IndexOf(b) != 1)
-    rv = false;
+  ASSERT_EQ(objArray.IndexOf(b), size_t(1));
 
   a->Release();
   b->Release();
   c->Release();
-  return rv;
 }
 
 //----
 
-static bool test_ptrarray() {
+TEST(TArray, test_ptrarray) {
   nsTArray<uint32_t*> ary;
-  if (ary.SafeElementAt(0) != nullptr)
-    return false;
-  if (ary.SafeElementAt(1000) != nullptr)
-    return false;
+  ASSERT_EQ(ary.SafeElementAt(0), nullptr);
+  ASSERT_EQ(ary.SafeElementAt(1000), nullptr);
+
   uint32_t a = 10;
   ary.AppendElement(&a);
-  if (*ary[0] != a)
-    return false;
-  if (*ary.SafeElementAt(0) != a)
-    return false;
+  ASSERT_EQ(*ary[0], a);
+  ASSERT_EQ(*ary.SafeElementAt(0), a);
 
   nsTArray<const uint32_t*> cary;
-  if (cary.SafeElementAt(0) != nullptr)
-    return false;
-  if (cary.SafeElementAt(1000) != nullptr)
-    return false;
+  ASSERT_EQ(cary.SafeElementAt(0), nullptr);
+  ASSERT_EQ(cary.SafeElementAt(1000), nullptr);
+
   const uint32_t b = 14;
   cary.AppendElement(&a);
   cary.AppendElement(&b);
-  if (*cary[0] != a || *cary[1] != b)
-    return false;
-  if (*cary.SafeElementAt(0) != a || *cary.SafeElementAt(1) != b)
-    return false;
-
-  return true;
+  ASSERT_EQ(*cary[0], a);
+  ASSERT_EQ(*cary[1], b);
+  ASSERT_EQ(*cary.SafeElementAt(0), a);
+  ASSERT_EQ(*cary.SafeElementAt(1), b);
 }
 
 //----
@@ -594,68 +530,53 @@ static bool test_ptrarray() {
 // This test relies too heavily on the existence of DebugGetHeader to be
 // useful in non-debug builds.
 #ifdef DEBUG
-static bool test_autoarray() {
+TEST(TArray, test_autoarray) {
   uint32_t data[] = {4,6,8,2,4,1,5,7,3};
   AutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data)> array;
 
   void* hdr = array.DebugGetHeader();
-  if (hdr == nsTArray<uint32_t>().DebugGetHeader())
-    return false;
-  if (hdr == AutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data)>().DebugGetHeader())
-    return false;
+  ASSERT_NE(hdr, nsTArray<uint32_t>().DebugGetHeader());
+  ASSERT_NE(hdr, (AutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data)>().DebugGetHeader()));
 
   array.AppendElement(1u);
-  if (hdr != array.DebugGetHeader())
-    return false;
+  ASSERT_EQ(hdr, array.DebugGetHeader());
 
   array.RemoveElement(1u);
   array.AppendElements(data, ArrayLength(data));
-  if (hdr != array.DebugGetHeader())
-    return false;
+  ASSERT_EQ(hdr, array.DebugGetHeader());
 
   array.AppendElement(2u);
-  if (hdr == array.DebugGetHeader())
-    return false;
+  ASSERT_NE(hdr, array.DebugGetHeader());
 
   array.Clear();
   array.Compact();
-  if (hdr != array.DebugGetHeader())
-    return false;
+  ASSERT_EQ(hdr, array.DebugGetHeader());
   array.AppendElements(data, ArrayLength(data));
-  if (hdr != array.DebugGetHeader())
-    return false;
+  ASSERT_EQ(hdr, array.DebugGetHeader());
 
   nsTArray<uint32_t> array2;
   void* emptyHdr = array2.DebugGetHeader();
   array.SwapElements(array2);
-  if (emptyHdr == array.DebugGetHeader())
-    return false;
-  if (hdr == array2.DebugGetHeader())
-    return false;
+  ASSERT_NE(emptyHdr, array.DebugGetHeader());
+  ASSERT_NE(hdr, array2.DebugGetHeader());
   size_t i;
   for (i = 0; i < ArrayLength(data); ++i) {
-    if (array2[i] != data[i])
-      return false;
+    ASSERT_EQ(array2[i], data[i]);
   }
-  if (!array.IsEmpty())
-    return false;
+  ASSERT_TRUE(array.IsEmpty());
 
   array.Compact();
   array.AppendElements(data, ArrayLength(data));
   uint32_t data3[] = {5, 7, 11};
   AutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data3)> array3;
-  array3.AppendElements(data3, ArrayLength(data3));  
+  array3.AppendElements(data3, ArrayLength(data3));
   array.SwapElements(array3);
   for (i = 0; i < ArrayLength(data); ++i) {
-    if (array3[i] != data[i])
-      return false;
+    ASSERT_EQ(array3[i], data[i]);
   }
   for (i = 0; i < ArrayLength(data3); ++i) {
-    if (array[i] != data3[i])
-      return false;
+    ASSERT_EQ(array[i], data3[i]);
   }
-
-  return true;
 }
 #endif
 
@@ -664,14 +585,15 @@ static bool test_autoarray() {
 // IndexOf used to potentially scan beyond the end of the array.  Test for
 // this incorrect behavior by adding a value (5), removing it, then seeing
 // if IndexOf finds it.
-static bool test_indexof() {
+TEST(TArray, test_indexof) {
   nsTArray<int> array;
   array.AppendElement(0);
   // add and remove the 5
   array.AppendElement(5);
   array.RemoveElementAt(1);
   // we should not find the 5!
-  return array.IndexOf(5, 1) == array.NoIndex;
+  auto no_index = array.NoIndex; // Fixes gtest compilation error.
+  ASSERT_EQ(array.IndexOf(5, 1), no_index);
 }
 
 //----
@@ -698,41 +620,23 @@ static bool is_heap(const Array& ary, size_t len) {
 
 #define CHECK_IS_USING_AUTO(arr) \
   do {                                                    \
-    if (!(IS_USING_AUTO(arr))) {                          \
-      printf("%s:%d CHECK_IS_USING_AUTO(%s) failed.\n",   \
-             __FILE__, __LINE__, #arr);                   \
-      return false;                                    \
-    }                                                     \
+    ASSERT_TRUE(IS_USING_AUTO(arr));                      \
   } while(0)
 
 #define CHECK_NOT_USING_AUTO(arr) \
   do {                                                    \
-    if (IS_USING_AUTO(arr)) {                             \
-      printf("%s:%d CHECK_NOT_USING_AUTO(%s) failed.\n",  \
-             __FILE__, __LINE__, #arr);                   \
-      return false;                                    \
-    }                                                     \
+    ASSERT_FALSE(IS_USING_AUTO(arr));                     \
   } while(0)
 
 #define CHECK_USES_SHARED_EMPTY_HDR(arr) \
   do {                                                    \
     nsTArray<int> _empty;                                 \
-    if (_empty.Elements() != arr.Elements()) {            \
-      printf("%s:%d CHECK_USES_EMPTY_HDR(%s) failed.\n",  \
-             __FILE__, __LINE__, #arr);                   \
-      return false;                                    \
-    }                                                     \
+    ASSERT_EQ(_empty.Elements(), arr.Elements());         \
   } while(0)
 
 #define CHECK_EQ_INT(actual, expected) \
   do {                                                                       \
-    if ((actual) != (expected)) {                                            \
-      std::cout << __FILE__ << ":" << __LINE__ << " CHECK_EQ_INT("             \
-                << #actual << "=" << (actual) << ", "                        \
-                << #expected << "=" << (expected) << ") failed."             \
-                << std::endl;                                                \
-      return false;                                                          \
-    }                                                                        \
+    ASSERT_EQ((actual), (expected));                                         \
   } while(0)
 
 #define CHECK_ARRAY(arr, data) \
@@ -743,7 +647,7 @@ static bool is_heap(const Array& ary, size_t len) {
     }                                                           \
   } while(0)
 
-static bool test_swap() {
+TEST(TArray, test_swap) {
   // Test nsTArray::SwapElements.  Unfortunately there are many cases.
   int data1[] = {8, 6, 7, 5};
   int data2[] = {3, 0, 9};
@@ -849,7 +753,7 @@ static bool test_swap() {
     a.SwapElements(b);
 
     CHECK_ARRAY(a, data2);
-    CHECK_EQ_INT(b.Length(), 0);
+    CHECK_EQ_INT(b.Length(), size_t(0));
     CHECK_IS_USING_AUTO(b);
   }
 
@@ -872,8 +776,8 @@ static bool test_swap() {
     CHECK_IS_USING_AUTO(a);
     CHECK_IS_USING_AUTO(b);
 
-    CHECK_EQ_INT(a.Length(), size);
-    CHECK_EQ_INT(b.Length(), size);
+    CHECK_EQ_INT(a.Length(), size_t(size));
+    CHECK_EQ_INT(b.Length(), size_t(size));
 
     for (unsigned i = 0; i < size; i++) {
       CHECK_EQ_INT(a[i], i + 1);
@@ -888,15 +792,15 @@ static bool test_swap() {
     nsTArray<int> b;
     b.AppendElements(data2, ArrayLength(data2));
 
-    CHECK_EQ_INT(a.Capacity(), 0);
+    CHECK_EQ_INT(a.Capacity(), size_t(0));
     size_t bCapacity = b.Capacity();
 
     a.SwapElements(b);
 
     // Make sure that we didn't increase the capacity of either array.
     CHECK_ARRAY(a, data2);
-    CHECK_EQ_INT(b.Length(), 0);
-    CHECK_EQ_INT(b.Capacity(), 0);
+    CHECK_EQ_INT(b.Length(), size_t(0));
+    CHECK_EQ_INT(b.Capacity(), size_t(0));
     CHECK_EQ_INT(a.Capacity(), bCapacity);
   }
 
@@ -910,7 +814,7 @@ static bool test_swap() {
 
     a.SwapElements(b);
 
-    CHECK_EQ_INT(a.Length(), 0);
+    CHECK_EQ_INT(a.Length(), size_t(0));
     CHECK_ARRAY(b, data1);
 
     b.Clear();
@@ -928,7 +832,7 @@ static bool test_swap() {
 
     a.SwapElements(b);
 
-    CHECK_EQ_INT(a.Length(), 0);
+    CHECK_EQ_INT(a.Length(), size_t(0));
     CHECK_ARRAY(b, data1);
 
     b.Clear();
@@ -946,8 +850,8 @@ static bool test_swap() {
 
     CHECK_IS_USING_AUTO(a);
     CHECK_NOT_USING_AUTO(b);
-    CHECK_EQ_INT(a.Length(), 0);
-    CHECK_EQ_INT(b.Length(), 0);
+    CHECK_EQ_INT(a.Length(), size_t(0));
+    CHECK_EQ_INT(b.Length(), size_t(0));
   }
 
   // Swap empty auto array with non-empty AutoTArray using malloc'ed storage.
@@ -963,13 +867,13 @@ static bool test_swap() {
     CHECK_IS_USING_AUTO(a);
     CHECK_NOT_USING_AUTO(b);
     CHECK_ARRAY(b, data1);
-    CHECK_EQ_INT(a.Length(), 0);
+    CHECK_EQ_INT(a.Length(), size_t(0));
   }
-
-  return true;
 }
 
-static bool test_fallible()
+// Bug 1171296: Disabled on andoid due to crashes.
+#if !defined(ANDROID)
+TEST(TArray, test_fallible)
 {
   // Test that FallibleTArray works properly; that is, it never OOMs, but
   // instead eventually returns false.
@@ -977,7 +881,8 @@ static bool test_fallible()
   // This test is only meaningful on 32-bit systems.  On a 64-bit system, we
   // might never OOM.
   if (sizeof(void*) > 4) {
-    return true;
+    ASSERT_TRUE(true);
+    return;
   }
 
   // Allocate a bunch of 128MB arrays.  Larger allocations will fail on some
@@ -986,6 +891,7 @@ static bool test_fallible()
   // 36 * 128MB > 4GB, so we should definitely OOM by the 36th array.
   const unsigned numArrays = 36;
   FallibleTArray<char> arrays[numArrays];
+  bool oomed = false;
   for (size_t i = 0; i < numArrays; i++) {
     // SetCapacity allocates the requested capacity + a header, and we want to
     // avoid allocating more than 128MB overall because of the size padding it
@@ -995,21 +901,17 @@ static bool test_fallible()
     bool success = arrays[i].SetCapacity(128 * 1024 * 1024 - 1024, fallible);
     if (!success) {
       // We got our OOM.  Check that it didn't come too early.
-      if (i < 8) {
-        printf("test_fallible: Got OOM on iteration %d.  Too early!\n", int(i));
-        return false;
-      }
-      return true;
+      oomed = true;
+      ASSERT_GE(i, size_t(8)) << "Got OOM on iteration " << i << ". Too early!";
     }
   }
 
-  // No OOM?  That's...weird.
-  printf("test_fallible: Didn't OOM or crash?  nsTArray::SetCapacity "
-         "must be lying.\n");
-  return false;
+  ASSERT_TRUE(oomed) << "Didn't OOM or crash?  nsTArray::SetCapacity"
+                        "must be lying.";
 }
+#endif
 
-static bool test_conversion_operator() {
+TEST(TArray, test_conversion_operator) {
   FallibleTArray<int> f;
   const FallibleTArray<int> fconst;
 
@@ -1021,24 +923,24 @@ static bool test_conversion_operator() {
   AutoTArray<int, 8> tauto;
   const AutoTArray<int, 8> tautoconst;
 
-#define CHECK_ARRAY_CAST(type)                                 \
-  do {                                                         \
-    const type<int>& z1 = f;                                   \
-    if ((void*)&z1 != (void*)&f) return false;                 \
-    const type<int>& z2 = fconst;                              \
-    if ((void*)&z2 != (void*)&fconst) return false;            \
-    const type<int>& z5 = i;                                   \
-    if ((void*)&z5 != (void*)&i) return false;                 \
-    const type<int>& z6 = iconst;                              \
-    if ((void*)&z6 != (void*)&iconst) return false;            \
-    const type<int>& z9 = t;                                   \
-    if ((void*)&z9 != (void*)&t) return false;                 \
-    const type<int>& z10 = tconst;                             \
-    if ((void*)&z10 != (void*)&tconst) return false;           \
-    const type<int>& z11 = tauto;                              \
-    if ((void*)&z11 != (void*)&tauto) return false;            \
-    const type<int>& z12 = tautoconst;                         \
-    if ((void*)&z12 != (void*)&tautoconst) return false;       \
+#define CHECK_ARRAY_CAST(type)                        \
+  do {                                                \
+    const type<int>& z1 = f;                          \
+    ASSERT_EQ((void*)&z1, (void*)&f);                 \
+    const type<int>& z2 = fconst;                     \
+    ASSERT_EQ((void*)&z2, (void*)&fconst);            \
+    const type<int>& z5 = i;                          \
+    ASSERT_EQ((void*)&z5, (void*)&i);                 \
+    const type<int>& z6 = iconst;                     \
+    ASSERT_EQ((void*)&z6, (void*)&iconst);            \
+    const type<int>& z9 = t;                          \
+    ASSERT_EQ((void*)&z9, (void*)&t);                 \
+    const type<int>& z10 = tconst;                    \
+    ASSERT_EQ((void*)&z10, (void*)&tconst);           \
+    const type<int>& z11 = tauto;                     \
+    ASSERT_EQ((void*)&z11, (void*)&tauto);            \
+    const type<int>& z12 = tautoconst;                \
+    ASSERT_EQ((void*)&z12, (void*)&tautoconst);       \
   } while (0)
 
   CHECK_ARRAY_CAST(FallibleTArray);
@@ -1046,8 +948,6 @@ static bool test_conversion_operator() {
   CHECK_ARRAY_CAST(nsTArray);
 
 #undef CHECK_ARRAY_CAST
-
-  return true;
 }
 
 template<class T>
@@ -1056,7 +956,7 @@ struct BufAccessor : public T
   void* GetHdr() { return T::mHdr; }
 };
 
-static bool test_SetLengthAndRetainStorage_no_ctor() {
+TEST(TArray, test_SetLengthAndRetainStorage_no_ctor) {
   // 1050 because sizeof(int)*1050 is more than a page typically.
   const int N = 1050;
   FallibleTArray<int> f;
@@ -1095,12 +995,18 @@ static bool test_SetLengthAndRetainStorage_no_ctor() {
   FOR_EACH(;, .SetLengthAndRetainStorage(8));
   FOR_EACH(;, .SetLengthAndRetainStorage(12));
   for (int n = 0; n < 12; ++n) {
-    FOR_EACH(if LPAREN, [n] != n RPAREN return false);
+    ASSERT_EQ(f[n], n);
+    ASSERT_EQ(i[n], n);
+    ASSERT_EQ(t[n], n);
+    ASSERT_EQ(tauto[n], n);
   }
   FOR_EACH(;, .SetLengthAndRetainStorage(0));
   FOR_EACH(;, .SetLengthAndRetainStorage(N));
   for (int n = 0; n < N; ++n) {
-    FOR_EACH(if LPAREN, [n] != n RPAREN return false);
+    ASSERT_EQ(f[n], n);
+    ASSERT_EQ(i[n], n);
+    ASSERT_EQ(t[n], n);
+    ASSERT_EQ(tauto[n], n);
   }
 
   void* current_Hdrs[] = {
@@ -1113,72 +1019,15 @@ static bool test_SetLengthAndRetainStorage_no_ctor() {
 
   // SetLengthAndRetainStorage(n) should NOT have reallocated the internal
   // memory.
-  if (sizeof(initial_Hdrs) != sizeof(current_Hdrs)) return false;
+  ASSERT_EQ(sizeof(initial_Hdrs), sizeof(current_Hdrs));
   for (size_t n = 0; n < sizeof(current_Hdrs) / sizeof(current_Hdrs[0]); ++n) {
-    if (current_Hdrs[n] != initial_Hdrs[n]) {
-      return false;
-    }
+    ASSERT_EQ(current_Hdrs[n], initial_Hdrs[n]);
   }
 
 
 #undef FOR_EACH
 #undef LPAREN
 #undef RPAREN
-
-  return true;
 }
-
-//----
-
-typedef bool (*TestFunc)();
-#define DECL_TEST(name) { #name, name }
-
-static const struct Test {
-  const char* name;
-  TestFunc    func;
-} tests[] = {
-  DECL_TEST(test_int_array),
-  DECL_TEST(test_int64_array),
-  DECL_TEST(test_char_array),
-  DECL_TEST(test_uint32_array),
-  DECL_TEST(test_object_array),
-  DECL_TEST(test_return_by_value),
-  DECL_TEST(test_move_array),
-  DECL_TEST(test_string_array),
-  DECL_TEST(test_comptr_array),
-  DECL_TEST(test_refptr_array),
-  DECL_TEST(test_ptrarray),
-#ifdef DEBUG
-  DECL_TEST(test_autoarray),
-#endif
-  DECL_TEST(test_indexof),
-  DECL_TEST(test_swap),
-  DECL_TEST(test_fallible),
-  DECL_TEST(test_conversion_operator),
-  DECL_TEST(test_SetLengthAndRetainStorage_no_ctor),
-  { nullptr, nullptr }
-};
 
 } // namespace TestTArray
-
-using namespace TestTArray;
-
-int main(int argc, char **argv) {
-  int count = 1;
-  if (argc > 1)
-    count = atoi(argv[1]);
-
-  ScopedXPCOM xpcom("TestTArray");
-
-  bool success = true;
-  while (count--) {
-    for (const Test* t = tests; t->name != nullptr; ++t) {
-      bool test_result = t->func();
-      printf("%25s : %s\n", t->name, test_result ? "SUCCESS" : "FAILURE");
-      if (!test_result)
-        success = false;
-    }
-  }
-
-  return success ? 0 : -1;
-}
