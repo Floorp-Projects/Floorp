@@ -1675,18 +1675,14 @@ js::RegExpInstanceOptimizable(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-js::RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* rx, JSObject* proto, uint8_t* result)
+js::RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* obj, JSObject* proto, uint8_t* result)
 {
     JS::AutoCheckCannotGC nogc;
-    if (!rx->isNative()) {
-        *result = false;
-        return true;
-    }
 
-    NativeObject* nobj = static_cast<NativeObject*>(rx);
+    RegExpObject* rx = &obj->as<RegExpObject>();
 
     Shape* shape = cx->compartment()->regExps.getOptimizableRegExpInstanceShape();
-    if (shape == nobj->lastProperty()) {
+    if (shape == rx->lastProperty()) {
         *result = true;
         return true;
     }
@@ -1701,12 +1697,12 @@ js::RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* rx, JSObject* proto, u
         return true;
     }
 
-    if (!RegExpObject::isInitialShape(nobj)) {
+    if (!RegExpObject::isInitialShape(rx)) {
         *result = false;
         return true;
     }
 
-    cx->compartment()->regExps.setOptimizableRegExpInstanceShape(nobj->lastProperty());
+    cx->compartment()->regExps.setOptimizableRegExpInstanceShape(rx->lastProperty());
     *result = true;
     return true;
 }
