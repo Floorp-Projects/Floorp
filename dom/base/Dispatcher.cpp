@@ -7,6 +7,7 @@
 #include "mozilla/dom/Dispatcher.h"
 #include "mozilla/Move.h"
 #include "nsINamed.h"
+#include "nsQueryObject.h"
 
 using namespace mozilla;
 
@@ -37,12 +38,18 @@ DispatcherTrait::EventTargetFor(TaskCategory aCategory) const
 
 namespace {
 
+#define NS_DISPATCHEREVENTTARGET_IID \
+{ 0xbf4e36c8, 0x7d04, 0x4ef4, \
+  { 0xbb, 0xd8, 0x11, 0x09, 0x0a, 0xdb, 0x4d, 0xf7 } }
+
 class DispatcherEventTarget final : public nsIEventTarget
 {
   RefPtr<dom::Dispatcher> mDispatcher;
   TaskCategory mCategory;
 
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DISPATCHEREVENTTARGET_IID)
+
   DispatcherEventTarget(dom::Dispatcher* aDispatcher, TaskCategory aCategory)
    : mDispatcher(aDispatcher)
    , mCategory(aCategory)
@@ -57,9 +64,11 @@ private:
   virtual ~DispatcherEventTarget() {}
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(DispatcherEventTarget, NS_DISPATCHEREVENTTARGET_IID)
+
 } // namespace
 
-NS_IMPL_ISUPPORTS(DispatcherEventTarget, nsIEventTarget)
+NS_IMPL_ISUPPORTS(DispatcherEventTarget, DispatcherEventTarget, nsIEventTarget)
 
 NS_IMETHODIMP
 DispatcherEventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags)
@@ -95,4 +104,14 @@ Dispatcher::CreateEventTargetFor(TaskCategory aCategory)
   RefPtr<DispatcherEventTarget> target =
     new DispatcherEventTarget(this, aCategory);
   return target.forget();
+}
+
+/* static */ Dispatcher*
+Dispatcher::FromEventTarget(nsIEventTarget* aEventTarget)
+{
+  RefPtr<DispatcherEventTarget> target = do_QueryObject(aEventTarget);
+  if (!target) {
+    return nullptr;
+  }
+  return target->Dispatcher();
 }

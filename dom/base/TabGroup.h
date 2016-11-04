@@ -60,6 +60,14 @@ public:
   static TabGroup*
   GetChromeTabGroup();
 
+  // Checks if the PBrowserChild associated with aWindow already has a TabGroup
+  // assigned to it in IPDL. Returns this TabGroup if it does. This could happen
+  // if the parent process created the PBrowser and we needed to assign a
+  // TabGroup immediately upon receiving the IPDL message. This method is main
+  // thread only.
+  static TabGroup*
+  GetFromWindowActor(mozIDOMWindowProxy* aWindow);
+
   explicit TabGroup(bool aIsChrome = false);
 
   // Get the docgroup for the corresponding doc group key.
@@ -113,11 +121,16 @@ public:
   virtual already_AddRefed<nsIEventTarget>
   EventTargetFor(TaskCategory aCategory) const override;
 
+  TabGroup* AsTabGroup() override { return this; }
+
 private:
+  void EnsureThrottledEventQueues();
+
   ~TabGroup();
   DocGroupMap mDocGroups;
   bool mLastWindowLeft;
   nsTArray<nsPIDOMWindowOuter*> mWindows;
+  bool mThrottledQueuesInitialized;
   RefPtr<ThrottledEventQueue> mThrottledEventQueue;
   nsCOMPtr<nsIEventTarget> mEventTargets[size_t(TaskCategory::Count)];
 };
