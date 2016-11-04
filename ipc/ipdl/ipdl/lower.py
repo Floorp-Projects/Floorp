@@ -4445,6 +4445,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             stmts.append(StmtExpr(ExprCall(
                 ExprSelect(var, '->', 'set_interrupt'))))
 
+        if md.decl.type.isCtor():
+            stmts.append(StmtExpr(ExprCall(
+                ExprSelect(var, '->', 'set_constructor'))))
+
         if reply:
             stmts.append(StmtExpr(ExprCall(
                 ExprSelect(var, '->', 'set_reply'))))
