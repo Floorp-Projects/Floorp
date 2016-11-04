@@ -378,7 +378,7 @@ static const JSPropertySpec function_properties[] = {
 static bool
 ResolveInterpretedFunctionPrototype(JSContext* cx, HandleFunction fun, HandleId id)
 {
-    MOZ_ASSERT(fun->isInterpreted() || fun->isWasmNative());
+    MOZ_ASSERT(fun->isInterpreted() || fun->isAsmJSNative());
     MOZ_ASSERT(id == NameToId(cx->names().prototype));
 
     // Assert that fun is not a compiler-created function object, which
