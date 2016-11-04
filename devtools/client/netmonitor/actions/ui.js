@@ -6,6 +6,7 @@
 
 const {
   OPEN_SIDEBAR,
+  OPEN_STATISTICS,
   WATERFALL_RESIZE,
 } = require("../constants");
 
@@ -22,10 +23,15 @@ function openSidebar(open) {
 }
 
 /**
- * Toggle sidebar open state.
+ * Change performance statistics view open state.
+ *
+ * @param {boolean} visible - expected sidebar open state
  */
-function toggleSidebar() {
-  return (dispatch, getState) => dispatch(openSidebar(!getState().ui.sidebarOpen));
+function openStatistics(open) {
+  return {
+    type: OPEN_STATISTICS,
+    open,
+  };
 }
 
 /**
@@ -38,8 +44,24 @@ function resizeWaterfall(width) {
   };
 }
 
+/**
+ * Toggle sidebar open state.
+ */
+function toggleSidebar() {
+  return (dispatch, getState) => dispatch(openSidebar(!getState().ui.sidebarOpen));
+}
+
+/**
+ * Toggle to show/hide performance statistics view.
+ */
+function toggleStatistics() {
+  return (dispatch, getState) => dispatch(openStatistics(!getState().ui.statisticsOpen));
+}
+
 module.exports = {
   openSidebar,
-  toggleSidebar,
+  openStatistics,
   resizeWaterfall,
+  toggleSidebar,
+  toggleStatistics,
 };

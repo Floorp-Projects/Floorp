@@ -12,9 +12,11 @@ add_task(function* () {
   info("Starting test... ");
 
   let panel = monitor.panelWin;
-  let { $, $all, EVENTS, NetMonitorView } = panel;
+  let { $, $all, EVENTS, NetMonitorView, gStore, windowRequire } = panel;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+
   is(NetMonitorView.currentFrontendMode, "network-inspector-view",
-    "The initial frontend mode is correct.");
+   "The initial frontend mode is correct.");
 
   is($("#primed-cache-chart").childNodes.length, 0,
     "There should be no primed cache chart created yet.");
@@ -28,9 +30,9 @@ add_task(function* () {
   let onPlaceholderDisplayed = panel.once(EVENTS.PLACEHOLDER_CHARTS_DISPLAYED);
 
   info("Displaying statistics view");
-  NetMonitorView.toggleFrontendMode();
+  gStore.dispatch(Actions.openStatistics(true));
   is(NetMonitorView.currentFrontendMode, "network-statistics-view",
-    "The current frontend mode is correct.");
+   "The current frontend mode is correct.");
 
   info("Waiting for placeholder to display");
   yield onPlaceholderDisplayed;
