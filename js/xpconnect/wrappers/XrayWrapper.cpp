@@ -2183,7 +2183,13 @@ XrayWrapper<Base, Traits>::delete_(JSContext* cx, HandleObject wrapper,
 
     if (expando) {
         JSAutoCompartment ac(cx, expando);
-        return JS_DeletePropertyById(cx, expando, id, result);
+        bool hasProp;
+        if (!JS_HasPropertyById(cx, expando, id, &hasProp)) {
+            return false;
+        }
+        if (hasProp) {
+            return JS_DeletePropertyById(cx, expando, id, result);
+        }
     }
 
     return Traits::singleton.delete_(cx, wrapper, id, result);
