@@ -312,22 +312,8 @@ TestBloat_Smart()
   return result;
 }
 
-
-
-
-nsCOMPtr<IFoo> gFoop;
-
-int
-main()
+void AddRefAndRelease()
 {
-  printf(">>main()\n");
-
-  printf("sizeof(nsCOMPtr<IFoo>) --> %u\n", unsigned(sizeof(nsCOMPtr<IFoo>)));
-
-  TestBloat_Raw_Unsafe();
-  TestBloat_Smart();
-
-
   {
     printf("\n### Test  1: will a |nsCOMPtr| call |AddRef| on a pointer assigned into it?\n");
     nsCOMPtr<IFoo> foop( do_QueryInterface(new IFoo) );
@@ -358,7 +344,10 @@ main()
     nsCOMPtr<IFoo> foop( do_QueryInterface(new IBar) );
     mozilla::Unused << foop;
   }
+}
 
+void Comparison()
+{
   {
     printf("\n### Test  7: can you compare one |nsCOMPtr| with another [!=]?\n");
 
@@ -423,7 +412,10 @@ main()
 
     printf("\n### Test 13: how about when two |nsCOMPtr|s referring to the same object go out of scope?\n");
   }
+}
 
+void DontAddRef()
+{
   {
     printf("\n### Test 14,15 ...setup...\n");
     IFoo* raw_foo1p = new IFoo;
@@ -440,13 +432,10 @@ main()
     nsCOMPtr<IFoo> foo2p;
     foo2p = dont_AddRef(raw_foo2p);
   }
+}
 
-
-
-
-
-
-
+void AssignmentHelpers()
+{
   {
     printf("\n### setup for Test 16\n");
     nsCOMPtr<IFoo> foop;
@@ -476,6 +465,18 @@ main()
   }
   printf("### End Test 18, 19\n");
 
+  {
+    printf("\n### setup for Test 23\n");
+    nsCOMPtr<IFoo> fooP( do_QueryInterface(new IFoo) );
+
+    printf("### Test 23: does |forget| avoid an AddRef/Release when assigning to another nsCOMPtr?\n");
+    nsCOMPtr<IFoo> fooP2( fooP.forget() );
+  }
+  printf("### End Test 23\n");
+}
+
+void QueryInterface()
+{
   {
     printf("\n### setup for Test 20\n");
     nsCOMPtr<IFoo> fooP;
@@ -508,17 +509,10 @@ main()
       printf("an IBar* is an IFoo*\n");
   }
   printf("### End Test 22\n");
+}
 
-
-  {
-    printf("\n### setup for Test 23\n");
-    nsCOMPtr<IFoo> fooP( do_QueryInterface(new IFoo) );
-
-    printf("### Test 23: does |forget| avoid an AddRef/Release when assigning to another nsCOMPtr?\n");
-    nsCOMPtr<IFoo> fooP2( fooP.forget() );
-  }
-  printf("### End Test 23\n");
-
+void GetterConversions()
+{
   {
     nsCOMPtr<IFoo> fooP;
 
@@ -533,7 +527,26 @@ main()
     AVoidPtrPtrContext( getter_AddRefs(supportsP) );
     AnISupportsPtrPtrContext( getter_AddRefs(supportsP) );
   }
+}
 
+nsCOMPtr<IFoo> gFoop;
+
+int
+main()
+{
+  printf(">>main()\n");
+
+  printf("sizeof(nsCOMPtr<IFoo>) --> %u\n", unsigned(sizeof(nsCOMPtr<IFoo>)));
+
+  TestBloat_Raw_Unsafe();
+  TestBloat_Smart();
+
+  AddRefAndRelease();
+  Comparison();
+  DontAddRef();
+  AssignmentHelpers();
+  QueryInterface();
+  GetterConversions();
 
   printf("\n### Test 24: will a static |nsCOMPtr| |Release| before program termination?\n");
   gFoop = do_QueryInterface(new IFoo);
