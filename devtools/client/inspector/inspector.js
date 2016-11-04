@@ -8,8 +8,6 @@
 
 "use strict";
 
-var Cu = Components.utils;
-var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var Services = require("Services");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
@@ -415,26 +413,21 @@ Inspector.prototype = {
   },
 
   get React() {
-    return this._toolbox.React;
+    return require("devtools/client/shared/vendor/react");
   },
 
   get ReactDOM() {
-    return this._toolbox.ReactDOM;
+    return require("devtools/client/shared/vendor/react-dom");
   },
 
   get ReactRedux() {
-    return this._toolbox.ReactRedux;
-  },
-
-  get browserRequire() {
-    return this._toolbox.browserRequire;
+    return require("devtools/client/shared/vendor/react-redux");
   },
 
   get InspectorTabPanel() {
     if (!this._InspectorTabPanel) {
       this._InspectorTabPanel =
-        this.React.createFactory(this.browserRequire(
-        "devtools/client/inspector/components/inspector-tab-panel"));
+        this.React.createFactory(require("devtools/client/inspector/components/inspector-tab-panel"));
     }
     return this._InspectorTabPanel;
   },
@@ -454,8 +447,7 @@ Inspector.prototype = {
    * the Inspector panel.
    */
   setupSplitter: function () {
-    let SplitBox = this.React.createFactory(this.browserRequire(
-      "devtools/client/shared/components/splitter/split-box"));
+    let SplitBox = this.React.createFactory(require("devtools/client/shared/components/splitter/split-box"));
 
     let splitter = SplitBox({
       className: "inspector-sidebar-splitter",
@@ -574,7 +566,7 @@ Inspector.prototype = {
         defaultTab == "layoutview"
       );
 
-      const {LayoutView} = this.browserRequire("devtools/client/inspector/layout/layout");
+      const {LayoutView} = require("devtools/client/inspector/layout/layout");
       this.layoutview = new LayoutView(this, this.panelWin);
     }
 
@@ -622,8 +614,7 @@ Inspector.prototype = {
     this.teardownToolbar();
 
     // Setup the sidebar toggle button.
-    let SidebarToggle = this.React.createFactory(this.browserRequire(
-      "devtools/client/shared/components/sidebar-toggle"));
+    let SidebarToggle = this.React.createFactory(require("devtools/client/shared/components/sidebar-toggle"));
 
     let sidebarToggle = SidebarToggle({
       onClick: this.onPaneToggleButtonClicked,
@@ -1862,6 +1853,7 @@ let url = new window.URL(href);
 if (url.search.length > 1) {
   const { targetFromURL } = require("devtools/client/framework/target-from-url");
   const { attachThread } = require("devtools/client/framework/attach-thread");
+  const Cu = Components.utils;
   const { BrowserLoader } =
     Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 
