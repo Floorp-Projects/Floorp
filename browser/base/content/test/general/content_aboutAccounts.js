@@ -30,17 +30,17 @@ addEventListener("DOMContentLoaded", function domContentLoaded(event) {
   }
   // We use DOMContentLoaded here as that fires for our iframe even when we've
   // arranged for the URL in the iframe to cause an error.
-  addEventListener("DOMContentLoaded", function iframeLoaded(dclEvent) {
+  addEventListener("DOMContentLoaded", function iframeLoaded(event) {
     if (iframe.contentWindow.location.href == "about:blank" ||
-        dclEvent.target != iframe.contentDocument) {
+        event.target != iframe.contentDocument) {
       return;
     }
     removeEventListener("DOMContentLoaded", iframeLoaded, true);
     sendAsyncMessage("test:iframe:load", {url: iframe.contentDocument.location.href});
     // And an event listener for the test responses, which we send to the test
     // via a message.
-    iframe.contentWindow.addEventListener("FirefoxAccountsTestResponse", function (fxAccountsEvent) {
-      sendAsyncMessage("test:response", {data: fxAccountsEvent.detail.data});
+    iframe.contentWindow.addEventListener("FirefoxAccountsTestResponse", function (event) {
+      sendAsyncMessage("test:response", {data: event.detail.data});
     }, true);
   }, true);
 }, true);
@@ -72,9 +72,9 @@ addMessageListener("test:load-with-mocked-profile-path", function (message) {
     content.getDefaultProfilePath = () => message.data.profilePath;
     // now wait for the iframe to load.
     let iframe = content.document.getElementById("remote");
-    iframe.addEventListener("load", function iframeLoaded(loadEvent) {
+    iframe.addEventListener("load", function iframeLoaded(event) {
       if (iframe.contentWindow.location.href == "about:blank" ||
-          loadEvent.target != iframe) {
+          event.target != iframe) {
         return;
       }
       iframe.removeEventListener("load", iframeLoaded, true);

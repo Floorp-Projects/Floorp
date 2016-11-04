@@ -130,8 +130,8 @@ add_task(function* test_i18n() {
         },
       },
 
-      "content.js": "new " + function(runTestsFn) {
-        runTestsFn((...args) => {
+      "content.js": "new " + function(runTests) {
+        runTests((...args) => {
           browser.runtime.sendMessage(["assertEq", ...args]);
         });
 
@@ -139,7 +139,7 @@ add_task(function* test_i18n() {
       } + `(${runTests})`,
     },
 
-    background: "new " + function(runTestsFn) {
+    background: "new " + function(runTests) {
       browser.runtime.onMessage.addListener(([msg, ...args]) => {
         if (msg == "assertEq") {
           browser.test.assertEq(...args);
@@ -148,7 +148,7 @@ add_task(function* test_i18n() {
         }
       });
 
-      runTestsFn(browser.test.assertEq.bind(browser.test));
+      runTests(browser.test.assertEq.bind(browser.test));
     } + `(${runTests})`,
   });
 
@@ -248,7 +248,7 @@ add_task(function* test_get_ui_language() {
     };
   }
 
-  function background(getResultsFn) {
+  function background(getResults) {
     function checkResults(source, results, expected) {
       browser.test.assertEq(
         expected,
@@ -267,7 +267,7 @@ add_task(function* test_get_ui_language() {
     browser.test.onMessage.addListener(([msg, expected]) => {
       browser.tabs.sendMessage(tabId, "get-results", result => {
         checkResults("contentScript", result, expected);
-        checkResults("background", getResultsFn(), expected);
+        checkResults("background", getResults(), expected);
 
         browser.test.sendMessage("done");
       });
@@ -279,9 +279,9 @@ add_task(function* test_get_ui_language() {
     });
   }
 
-  function content(getResultsFn) {
+  function content(getResults) {
     browser.runtime.onMessage.addListener((msg, sender, respond) => {
-      respond(getResultsFn());
+      respond(getResults());
     });
   }
 

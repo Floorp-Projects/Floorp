@@ -5,7 +5,7 @@ const ids = {
   CHANGE_INPUT_ID: "input2",
 };
 
-function task(contentIds) {
+function task(ids) {
   let resolve;
   let promise = new Promise(r => { resolve = r; });
 
@@ -31,40 +31,40 @@ function task(contentIds) {
     addEventListener("DOMFormHasPassword", test_inputAddHandler, false);
     let input = gDoc.createElementNS("http://www.w3.org/1999/xhtml", "input");
     input.setAttribute("type", "password");
-    input.setAttribute("id", contentIds.INPUT_ID);
+    input.setAttribute("id", ids.INPUT_ID);
     input.setAttribute("data-test", "unique-attribute");
-    gDoc.getElementById(contentIds.FORM1_ID).appendChild(input);
+    gDoc.getElementById(ids.FORM1_ID).appendChild(input);
   }
 
   function test_inputAddHandler(evt) {
     removeEventListener(evt.type, test_inputAddHandler, false);
-    is(evt.target.id, contentIds.FORM1_ID,
+    is(evt.target.id, ids.FORM1_ID,
        evt.type + " event targets correct form element (added password element)");
     gDoc.defaultView.setTimeout(test_inputChangeForm, 0);
   }
 
   function test_inputChangeForm() {
     addEventListener("DOMFormHasPassword", test_inputChangeFormHandler, false);
-    let input = gDoc.getElementById(contentIds.INPUT_ID);
-    input.setAttribute("form", contentIds.FORM2_ID);
+    let input = gDoc.getElementById(ids.INPUT_ID);
+    input.setAttribute("form", ids.FORM2_ID);
   }
 
   function test_inputChangeFormHandler(evt) {
     removeEventListener(evt.type, test_inputChangeFormHandler, false);
-    is(evt.target.id, contentIds.FORM2_ID,
+    is(evt.target.id, ids.FORM2_ID,
        evt.type + " event targets correct form element (changed form)");
     gDoc.defaultView.setTimeout(test_inputChangesType, 0);
   }
 
   function test_inputChangesType() {
     addEventListener("DOMFormHasPassword", test_inputChangesTypeHandler, false);
-    let input = gDoc.getElementById(contentIds.CHANGE_INPUT_ID);
+    let input = gDoc.getElementById(ids.CHANGE_INPUT_ID);
     input.setAttribute("type", "password");
   }
 
   function test_inputChangesTypeHandler(evt) {
     removeEventListener(evt.type, test_inputChangesTypeHandler, false);
-    is(evt.target.id, contentIds.FORM1_ID,
+    is(evt.target.id, ids.FORM1_ID,
        evt.type + " event targets correct form element (changed type)");
     gDoc.defaultView.setTimeout(finish, 0);
   }

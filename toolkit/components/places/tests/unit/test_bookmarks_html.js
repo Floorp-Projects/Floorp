@@ -204,7 +204,7 @@ add_task(function* test_import_chromefavicon()
 
   let data = yield new Promise(resolve => {
     PlacesUtils.favicons.getFaviconDataForPage(
-      PAGE_URI, (uri, dataLen, faviconData, mimeType) => resolve(faviconData));
+      PAGE_URI, (uri, dataLen, data, mimeType) => resolve(data));
   });
 
   let base64Icon = "data:image/png;base64," +

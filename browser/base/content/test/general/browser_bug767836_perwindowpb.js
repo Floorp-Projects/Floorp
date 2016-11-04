@@ -64,8 +64,8 @@ function test() {
   testOnWindow(false, function(aWindow) {
     doTest(false, aWindow, function() {
       // test private mode
-      testOnWindow(true, function(aWindow2) {
-        doTest(true, aWindow2, function() {
+      testOnWindow(true, function(aWindow) {
+        doTest(true, aWindow, function() {
           finish();
         });
       });

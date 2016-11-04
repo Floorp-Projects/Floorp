@@ -406,12 +406,12 @@ function test()
   waitForExplicitFinish();
 
   Task.spawn(function* () {
-    for (let testCase of gTests) {
-      info(testCase.desc);
+    for (let test of gTests) {
+      info(test.desc);
       try {
-        yield testCase.run();
+        yield test.run();
       } finally {
-        yield testCase.teardown();
+        yield test.teardown();
       }
     }
 

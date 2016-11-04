@@ -270,17 +270,17 @@ add_task(function*() {
   for (let stepIndex = 0; stepIndex < steps.length; stepIndex++) {
     let step = steps[stepIndex];
 
-    yield ContentTask.spawn(gBrowser.selectedBrowser, step, function*(contentStep) {
+    yield ContentTask.spawn(gBrowser.selectedBrowser, step, function*(step) {
       return new Promise(resolve => {
         let changedWin = content;
 
         let elem;
-        if (contentStep[0] == "select") {
+        if (step[0] == "select") {
           changedWin = content.document.getElementById("frame").contentWindow;
           elem = changedWin.document.getElementById("select");
         }
         else {
-          elem = content.document.getElementById(contentStep[0]);
+          elem = content.document.getElementById(step[0]);
         }
 
         changedWin.addEventListener("MozAfterPaint", function onPaint() {
@@ -288,7 +288,7 @@ add_task(function*() {
           resolve();
         });
 
-        elem.style = contentStep[1];
+        elem.style = step[1];
       });
     });
 
@@ -297,9 +297,9 @@ add_task(function*() {
     expectedX += step[2];
     expectedY += step[3];
 
-    let popupRect = selectPopup.getBoundingClientRect();
-    is(popupRect.left, expectedX, "step " + (stepIndex + 1) + " x");
-    is(popupRect.top, expectedY, "step " + (stepIndex + 1) + " y");
+    let rect = selectPopup.getBoundingClientRect();
+    is(rect.left, expectedX, "step " + (stepIndex + 1) + " x");
+    is(rect.top, expectedY, "step " + (stepIndex + 1) + " y");
 
     yield hideSelectPopup(selectPopup);
   }
@@ -365,12 +365,14 @@ add_task(function* test_event_order() {
       let expected = mode == "enter" ? expectedEnter : expectedClick;
       yield openSelectPopup(selectPopup, true, mode == "enter" ? "#one" : "#two");
 
-      let eventsPromise = ContentTask.spawn(browser, [mode, expected], function*([contentMode, contentExpected]) {
+      let eventsPromise = ContentTask.spawn(browser, { mode, expected }, function*(args) {
+        let expected = args.expected;
+
         return new Promise((resolve) => {
           function onEvent(event) {
             select.removeEventListener(event.type, onEvent);
-            Assert.ok(contentExpected.length, "Unexpected event " + event.type);
-            let expectation = contentExpected.shift();
+            Assert.ok(expected.length, "Unexpected event " + event.type);
+            let expectation = expected.shift();
             Assert.equal(event.type, expectation.type,
                          "Expected the right event order");
             Assert.ok(event.bubbles, "All of these events should bubble");
@@ -379,12 +381,12 @@ add_task(function* test_event_order() {
             Assert.equal(event.target.localName,
                          expectation.targetIsOption ? "option" : "select",
                          "Target matches");
-            if (!contentExpected.length) {
+            if (!expected.length) {
               resolve();
             }
           }
 
-          let select = content.document.getElementById(contentMode == "enter" ? "one" : "two");
+          let select = content.document.getElementById(args.mode == "enter" ? "one" : "two");
           for (let event of ["input", "change", "mousedown", "mouseup", "click"]) {
             select.addEventListener(event, onEvent);
           }
@@ -448,9 +450,9 @@ function* performLargePopupTests(win)
     }
 
     let contentPainted = BrowserTestUtils.contentPainted(browser);
-    yield ContentTask.spawn(browser, position, function*(contentPosition) {
+    yield ContentTask.spawn(browser, position, function*(position) {
       let select = content.document.getElementById("one");
-      select.setAttribute("style", contentPosition);
+      select.setAttribute("style", position);
     });
     yield contentPainted;
   }

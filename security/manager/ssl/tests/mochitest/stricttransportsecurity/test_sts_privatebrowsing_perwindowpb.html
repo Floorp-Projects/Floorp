@@ -97,10 +97,10 @@
     let browser = win.gBrowser.selectedBrowser;
     let src = "https://example.com" + STSPATH + "/" + round + "_bootstrap.html";
 
-    ContentTask.spawn(browser, src, function* (contentSrc) {
+    ContentTask.spawn(browser, src, function* (src) {
       let frame = content.document.createElement("iframe");
       frame.setAttribute('id', 'ifr_bootstrap');
-      frame.setAttribute('src', contentSrc);
+      frame.setAttribute('src', src);
 
       return new Promise(resolve => {
         frame.addEventListener("load", resolve);
@@ -126,10 +126,10 @@
     let src = test.url + '?id=' + testName;
     let browser = win.gBrowser.selectedBrowser;
 
-    ContentTask.spawn(browser, [id, src], function* ([contentId, contentSrc]) {
+    ContentTask.spawn(browser, [id, src], function* ([id, src]) {
       let frame = content.document.createElement("iframe");
-      frame.setAttribute('id', contentId);
-      frame.setAttribute('src', contentSrc);
+      frame.setAttribute('id', id);
+      frame.setAttribute('src', src);
 
       return new Promise(resolve => {
         frame.addEventListener("load", () => {
@@ -182,10 +182,10 @@
       SimpleTest.info("DONE WITH ROUND " + currentround);
       // remove all the iframes in the document
       let browser = win.gBrowser.selectedBrowser;
-      ContentTask.spawn(browser, testframes, function* (contentTestFrames) {
+      ContentTask.spawn(browser, testframes, function* (testframes) {
         content.document.body.removeChild(
           content.document.getElementById('ifr_bootstrap'));
-        for (let test in contentTestFrames) {
+        for (let test in testframes) {
           content.document.body.removeChild(
             content.document.getElementById('ifr_' + test));
         }

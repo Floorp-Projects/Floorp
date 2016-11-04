@@ -61,8 +61,8 @@ add_task(function* test_simple() {
       });
   }
 
-  function background(runTestsFn) {
-    runTestsFn("bg").then(() => {
+  function background(runTests) {
+    runTests("bg").then(() => {
       browser.test.notifyPass("permission_xhr");
     });
   }
@@ -77,8 +77,8 @@ add_task(function* test_simple() {
       }],
     },
     files: {
-      "content.js": "new " + function(runTestsFn) {
-        runTestsFn("content").then(() => {
+      "content.js": "new " + function(runTests) {
+        runTests("content").then(() => {
           window.wrappedJSObject.privilegedFetch = fetch;
           window.wrappedJSObject.privilegedXHR = XMLHttpRequest;
 

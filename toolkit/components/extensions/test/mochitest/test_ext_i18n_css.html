@@ -16,7 +16,7 @@
 add_task(function* test_i18n_css() {
   let extension = ExtensionTestUtils.loadExtension({
     background: function() {
-      function backgroundFetch(url) {
+      function fetch(url) {
         return new Promise((resolve, reject) => {
           let xhr = new XMLHttpRequest();
           xhr.open("GET", url);
@@ -26,7 +26,7 @@ add_task(function* test_i18n_css() {
         });
       }
 
-      Promise.all([backgroundFetch("foo.css"), backgroundFetch("bar.CsS?x#y"), backgroundFetch("foo.txt")]).then(results => {
+      Promise.all([fetch("foo.css"), fetch("bar.CsS?x#y"), fetch("foo.txt")]).then(results => {
         browser.test.assertEq("body { max-width: 42px; }", results[0], "CSS file localized");
         browser.test.assertEq("body { max-width: 42px; }", results[1], "CSS file localized");
 

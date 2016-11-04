@@ -80,9 +80,9 @@ function triggerSave(aWindow, aCallback) {
     ok(false, "No Unknown Content Type dialog yet?");
   }
 
-  function onTransferComplete(aWindow2, downloadSuccess) {
+  function onTransferComplete(aWindow, downloadSuccess, destDir) {
     ok(downloadSuccess, "Link should have been downloaded successfully");
-    aWindow2.close();
+    aWindow.close();
 
     executeSoon(aCallback);
   }
@@ -163,8 +163,8 @@ function test() {
     triggerSave(win, function() {
       windowGonePromise.then(function() {
         Services.prefs.setBoolPref(SAVE_PER_SITE_PREF, false);
-        testOnWindow(undefined, function(win2) {
-          triggerSave(win2, finish);
+        testOnWindow(undefined, function(win) {
+          triggerSave(win, finish);
         });
       });
     });

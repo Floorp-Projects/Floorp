@@ -35,9 +35,9 @@ function contentScript() {
 
   let globalChanges = {};
 
-  browser.storage.onChanged.addListener((aChanges, aStorage) => {
-    browser.test.assertEq("local", aStorage, "storage is local");
-    Object.assign(globalChanges, aChanges);
+  browser.storage.onChanged.addListener((changes, storage) => {
+    browser.test.assertEq("local", storage, "storage is local");
+    Object.assign(globalChanges, changes);
   });
 
   function checkChanges(changes) {

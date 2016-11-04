@@ -365,8 +365,8 @@ function compareEdge(anchor, popup, edge, offsetX, offsetY, testname)
   var spaceIdx = edge.indexOf(" ");
   if (spaceIdx > 0) {
     let cornerX, cornerY;
-    let [position, align] = edge.split(" ");
-    switch (position) {
+    let [anchor, align] = edge.split(" ");
+    switch (anchor) {
       case "topleft": cornerX = anchorrect.left; cornerY = anchorrect.top; break;
       case "topcenter": cornerX = anchorrect.left + anchorrect.width / 2; cornerY = anchorrect.top; break;
       case "topright": cornerX = anchorrect.right; cornerY = anchorrect.top; break;
