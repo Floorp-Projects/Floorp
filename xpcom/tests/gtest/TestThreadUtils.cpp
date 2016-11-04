@@ -2,8 +2,9 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http:mozilla.org/MPL/2.0/. */
 
-#include "TestHarness.h"
 #include "nsThreadUtils.h"
+
+#include "gtest/gtest.h"
 
 using namespace mozilla;
 
@@ -157,20 +158,13 @@ struct TestCopyMove
   int* mMoveCounter;
 };
 
-static int Expect(const char* aContext, int aCounter, int aMaxExpected)
+static void Expect(const char* aContext, int aCounter, int aMaxExpected)
 {
-  if (aCounter > aMaxExpected) {
-    fail("%s: expected %d max, got %d", aContext, aMaxExpected, aCounter);
-    return 1;
-  }
-  passed("%s: got %d <= %d as expected", aContext, aCounter, aMaxExpected);
-  return 0;
+  EXPECT_LE(aCounter, aMaxExpected) << aContext;
 }
 
-int TestNS_NewRunnableFunction()
+TEST(ThreadUtils, NewRunnableFunction)
 {
-  int result = 0;
-
   // Test NS_NewRunnableFunction with copyable-only function object.
   {
     int copyCounter = 0;
@@ -184,8 +178,8 @@ int TestNS_NewRunnableFunction()
       // Verify that the runnable contains a non-destroyed function object.
       trackedRunnable->Run();
     }
-    result |= Expect("NS_NewRunnableFunction with copyable-only (and no move) function, copies",
-                     copyCounter, 1);
+    Expect("NS_NewRunnableFunction with copyable-only (and no move) function, copies",
+           copyCounter, 1);
   }
   {
     int copyCounter = 0;
@@ -198,8 +192,8 @@ int TestNS_NewRunnableFunction()
       }
       trackedRunnable->Run();
     }
-    result |= Expect("NS_NewRunnableFunction with copyable-only (and no move) function rvalue, copies",
-                     copyCounter, 1);
+    Expect("NS_NewRunnableFunction with copyable-only (and no move) function rvalue, copies",
+           copyCounter, 1);
   }
   {
     int copyCounter = 0;
@@ -211,8 +205,8 @@ int TestNS_NewRunnableFunction()
       }
       trackedRunnable->Run();
     }
-    result |= Expect("NS_NewRunnableFunction with copyable-only (and deleted move) function, copies",
-                     copyCounter, 1);
+    Expect("NS_NewRunnableFunction with copyable-only (and deleted move) function, copies",
+           copyCounter, 1);
   }
 
   // Test NS_NewRunnableFunction with movable-only function object.
@@ -226,8 +220,8 @@ int TestNS_NewRunnableFunction()
       }
       trackedRunnable->Run();
     }
-    result |= Expect("NS_NewRunnableFunction with movable-only function, moves",
-                     moveCounter, 1);
+    Expect("NS_NewRunnableFunction with movable-only function, moves",
+           moveCounter, 1);
   }
   {
     int moveCounter = 0;
@@ -238,8 +232,8 @@ int TestNS_NewRunnableFunction()
       }
       trackedRunnable->Run();
     }
-    result |= Expect("NS_NewRunnableFunction with movable-only function rvalue, moves",
-                     moveCounter, 1);
+    Expect("NS_NewRunnableFunction with movable-only function rvalue, moves",
+           moveCounter, 1);
   }
 
   // Test NS_NewRunnableFunction with copyable&movable function object.
@@ -254,10 +248,10 @@ int TestNS_NewRunnableFunction()
       }
       trackedRunnable->Run();
     }
-    result |= Expect("NS_NewRunnableFunction with copyable&movable function, copies",
-                     copyCounter, 0);
-    result |= Expect("NS_NewRunnableFunction with copyable&movable function, moves",
-                     moveCounter, 1);
+    Expect("NS_NewRunnableFunction with copyable&movable function, copies",
+           copyCounter, 0);
+    Expect("NS_NewRunnableFunction with copyable&movable function, moves",
+           moveCounter, 1);
   }
   {
     int copyCounter = 0;
@@ -270,10 +264,10 @@ int TestNS_NewRunnableFunction()
       }
       trackedRunnable->Run();
     }
-    result |= Expect("NS_NewRunnableFunction with copyable&movable function rvalue, copies",
-                     copyCounter, 0);
-    result |= Expect("NS_NewRunnableFunction with copyable&movable function rvalue, moves",
-                     moveCounter, 1);
+    Expect("NS_NewRunnableFunction with copyable&movable function rvalue, copies",
+           copyCounter, 0);
+    Expect("NS_NewRunnableFunction with copyable&movable function rvalue, moves",
+           moveCounter, 1);
   }
 
   // Test NS_NewRunnableFunction with copyable-only lambda capture.
@@ -288,8 +282,8 @@ int TestNS_NewRunnableFunction()
       }
       trackedRunnable->Run();
     }
-    result |= Expect("NS_NewRunnableFunction with copyable-only (and no move) capture, copies",
-                     copyCounter, 2);
+    Expect("NS_NewRunnableFunction with copyable-only (and no move) capture, copies",
+           copyCounter, 2);
   }
   {
     int copyCounter = 0;
@@ -302,8 +296,8 @@ int TestNS_NewRunnableFunction()
       }
       trackedRunnable->Run();
     }
-    result |= Expect("NS_NewRunnableFunction with copyable-only (and deleted move) capture, copies",
-                     copyCounter, 2);
+    Expect("NS_NewRunnableFunction with copyable-only (and deleted move) capture, copies",
+           copyCounter, 2);
   }
 
   // Note: Not possible to use move-only captures.
@@ -322,22 +316,15 @@ int TestNS_NewRunnableFunction()
       }
       trackedRunnable->Run();
     }
-    result |= Expect("NS_NewRunnableFunction with copyable&movable capture, copies",
-                     copyCounter, 1);
-    result |= Expect("NS_NewRunnableFunction with copyable&movable capture, moves",
-                     moveCounter, 1);
+    Expect("NS_NewRunnableFunction with copyable&movable capture, copies",
+           copyCounter, 1);
+    Expect("NS_NewRunnableFunction with copyable&movable capture, moves",
+           moveCounter, 1);
   }
-
-  return result;
 }
 
-int main(int argc, char** argv)
+TEST(ThreadUtils, RunnableMethod)
 {
-  int result = TestNS_NewRunnableFunction();
-
-  ScopedXPCOM xpcom("ThreadUtils");
-  NS_ENSURE_FALSE(xpcom.failed(), 1);
-
   memset(gRunnableExecuted, false, MAX_TESTS * sizeof(bool));
   // Scope the smart ptrs so that the runnables need to hold on to whatever they need
   {
@@ -379,20 +366,13 @@ int main(int argc, char** argv)
   // Now test a suicidal event in NS_New(Named)Thread
   nsCOMPtr<nsIThread> thread;
   NS_NewNamedThread("SuicideThread", getter_AddRefs(thread), new TestSuicide());
-  MOZ_RELEASE_ASSERT(thread);
+  ASSERT_TRUE(thread);
 
   while (!gRunnableExecuted[TEST_CALL_NEWTHREAD_SUICIDAL]) {
     NS_ProcessPendingEvents(nullptr);
   }
 
   for (uint32_t i = 0; i < MAX_TESTS; i++) {
-    if (gRunnableExecuted[i]) {
-      passed("Test %d passed",i);
-    } else {
-      fail("Error in test %d", i);
-      result = 1;
-    }
+    EXPECT_TRUE(gRunnableExecuted[i]) << "Error in test " << i;
   }
-
-  return result;
 }
