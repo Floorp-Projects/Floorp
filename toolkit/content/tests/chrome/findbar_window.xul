@@ -21,6 +21,7 @@
 
   <script type="application/javascript"><![CDATA[
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
+    Cu.import("resource://gre/modules/AppConstants.jsm");
     Cu.import("resource://gre/modules/Task.jsm");
     Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
@@ -136,7 +137,7 @@
       if (gHasFindClipboard) {
         yield testStatusText();
       }
-      if (!gBrowser.hasAttribute("remote")) {
+      if (!gBrowser.hasAttribute("remote") && !AppConstants.DEBUG) {
         yield testFindCountUI();
         gFindBar.close();
         ok(gFindBar.hidden, "Failed to close findbar after testFindCountUI");
