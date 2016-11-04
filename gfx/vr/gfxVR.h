@@ -15,7 +15,6 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypedEnumBits.h"
-#include "mozilla/dom/GamepadBinding.h"
 
 namespace mozilla {
 namespace layers {
@@ -216,14 +215,14 @@ struct VRControllerInfo
   VRDeviceType GetType() const { return mType; }
   uint32_t GetControllerID() const { return mControllerID; }
   const nsCString& GetControllerName() const { return mControllerName; }
-  dom::GamepadMappingType GetMappingType() const { return mMappingType; }
+  uint32_t GetMappingType() const { return mMappingType; }
   uint32_t GetNumButtons() const { return mNumButtons; }
   uint32_t GetNumAxes() const { return mNumAxes; }
 
   uint32_t mControllerID;
   VRDeviceType mType;
   nsCString mControllerName;
-  dom::GamepadMappingType mMappingType;
+  uint32_t mMappingType;
   uint32_t mNumButtons;
   uint32_t mNumAxes;
 
@@ -253,7 +252,7 @@ public:
   virtual void ScanForDevices() = 0;
   void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed);
   void NewAxisMove(uint32_t aIndex, uint32_t aAxis, double aValue);
-  void AddGamepad(const char* aID, dom::GamepadMappingType aMapping,
+  void AddGamepad(const char* aID, uint32_t aMapping,
                   uint32_t aNumButtons, uint32_t aNumAxes);
   void RemoveGamepad(uint32_t aIndex);
 
