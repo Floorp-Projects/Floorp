@@ -46,7 +46,6 @@ if CONFIG['WRAP_STL_INCLUDES'] and not CONFIG['CLANG_CL']:
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 GeckoCppUnitTests([
-    'TestTextFormatter',
     'TestThreadUtils',
     'TestTimers'
 ])

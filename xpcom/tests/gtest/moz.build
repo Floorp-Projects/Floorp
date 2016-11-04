@@ -33,6 +33,7 @@ UNIFIED_SOURCES += [
     'TestSynchronization.cpp',
     'TestTArray.cpp',
     'TestTArray2.cpp',
+    'TestTextFormatter.cpp',
     'TestThreadPool.cpp',
     'TestThreads.cpp',
     'TestTimeStamp.cpp',
