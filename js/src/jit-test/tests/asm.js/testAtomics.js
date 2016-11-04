@@ -1,4 +1,4 @@
-if (!this.SharedArrayBuffer || !this.Atomics)
+if (!this.SharedArrayBuffer || !this.Atomics || !isAsmJSCompilationAvailable())
     quit();
 
 // The code duplication below is very far from elegant but provides
