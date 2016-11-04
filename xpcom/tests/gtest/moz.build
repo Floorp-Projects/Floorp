@@ -39,6 +39,7 @@ UNIFIED_SOURCES += [
 # the global namespace for other files.
 SOURCES += [
     'TestAllocReplacement.cpp',
+    'TestCOMPtr.cpp', # Redefines IFoo and IBar
 ]
 
 LOCAL_INCLUDES += [
