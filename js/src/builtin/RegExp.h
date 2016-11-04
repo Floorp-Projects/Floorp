@@ -119,7 +119,7 @@ extern MOZ_MUST_USE bool
 RegExpInstanceOptimizable(JSContext* cx, unsigned argc, Value* vp);
 
 extern MOZ_MUST_USE bool
-RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* rx, JSObject* proto, uint8_t* result);
+RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* obj, JSObject* proto, uint8_t* result);
 
 extern MOZ_MUST_USE bool
 RegExpGetSubstitution(JSContext* cx, HandleLinearString matched, HandleLinearString string,
