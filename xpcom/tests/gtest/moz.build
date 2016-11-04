@@ -8,6 +8,7 @@ UNIFIED_SOURCES += [
     'Helpers.cpp',
     'TestAtoms.cpp',
     'TestAutoPtr.cpp',
+    'TestAutoRef.cpp',
     'TestCloneInputStream.cpp',
     'TestCRT.cpp',
     'TestEncoding.cpp',
