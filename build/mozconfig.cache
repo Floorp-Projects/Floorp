@@ -29,7 +29,7 @@ if test -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$MOZ_PGO_IS_SET" -a -z 
             ;;
         esac
         ;;
-    mozilla-inbound|fx-team)
+    mozilla-inbound)
         case "${master}" in
         *use1.mozilla.com*)
             bucket=mozilla-releng-s3-cache-us-east-1-prod
@@ -60,7 +60,7 @@ elif test -z "$CCACHE_DIR" -a -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$
             *hg.mozilla.org/try*)
                 bucket=taskcluster-level-1-sccache-${region}
                 ;;
-            *hg.mozilla.org/integration/mozilla-inbound*|*hg.mozilla.org/integration/fx-team*)
+            *hg.mozilla.org/integration/mozilla-inbound*)
                 bucket=taskcluster-level-3-sccache-${region}
                 ;;
             esac
