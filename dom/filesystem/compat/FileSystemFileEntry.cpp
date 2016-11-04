@@ -91,14 +91,6 @@ FileSystemFileEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
 }
 
 void
-FileSystemFileEntry::CreateWriter(VoidCallback& aSuccessCallback,
-                                  const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
-{
-  ErrorCallbackHelper::Call(GetParentObject(), aErrorCallback,
-                            NS_ERROR_DOM_SECURITY_ERR);
-}
-
-void
 FileSystemFileEntry::GetFile(FileCallback& aSuccessCallback,
                              const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
 {

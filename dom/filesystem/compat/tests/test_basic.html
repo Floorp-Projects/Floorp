@@ -71,15 +71,6 @@ function test_fileEntry_file() {
   });
 }
 
-function test_fileEntry_createWriter() {
-  fileEntry.createWriter(function(file) {
-    ok(false, "Something when wrong!");
-  }, function() {
-    ok(true, "We don't support createWrite");
-    next();
-  });
-}
-
 function test_fileEntry_getParent() {
   fileEntry.getParent(function(entry) {
     is(fileEntry.fullPath, entry.fullPath, "Top level FileEntry should return itself as parent.");
@@ -425,7 +416,6 @@ var tests = [
 
   test_fileEntry,
   test_fileEntry_file,
-  test_fileEntry_createWriter,
   test_fileEntry_getParent,
 
   test_directoryEntry,
