@@ -249,8 +249,6 @@ public:
   NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final;
   NS_IMETHOD GetPrivateBrowsingId(uint32_t* aPrivateBrowsingId) final;
 
-  bool EqualsIgnoringAddonId(nsIPrincipal *aOther);
-
   virtual bool AddonHasPermission(const nsAString& aPerm);
 
   virtual bool IsCodebasePrincipal() const { return false; };
