@@ -982,6 +982,12 @@ nsThread::RegisterIdlePeriod(already_AddRefed<nsIIdlePeriod> aIdlePeriod)
 NS_IMETHODIMP
 nsThread::IdleDispatch(already_AddRefed<nsIRunnable> aEvent)
 {
+  // Currently the only supported idle dispatch is from the same
+  // thread. To support idle dispatch from another thread we need to
+  // support waking threads that are waiting for an event queue that
+  // isn't mIdleEvents.
+  MOZ_ASSERT(PR_GetCurrentThread() == mThread);
+
   MutexAutoLock lock(mLock);
   LeakRefPtr<nsIRunnable> event(Move(aEvent));
 
