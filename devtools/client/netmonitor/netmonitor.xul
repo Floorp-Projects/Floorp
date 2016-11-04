@@ -32,8 +32,6 @@
                        class="devtools-toolbarbutton icon-and-text"
                        data-localization="tooltiptext=netmonitor.toolbar.perf"/>
         <html:div xmlns="http://www.w3.org/1999/xhtml"
-                  id="react-details-pane-toggle-hook"/>
-        <html:div xmlns="http://www.w3.org/1999/xhtml"
                   id="react-search-box-hook"/>
         <html:div xmlns="http://www.w3.org/1999/xhtml"
                   id="react-details-pane-toggle-hook"/>
