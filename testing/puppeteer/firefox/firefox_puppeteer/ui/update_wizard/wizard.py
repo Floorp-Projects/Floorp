@@ -4,7 +4,7 @@
 
 from marionette_driver import By, Wait
 
-from firefox_puppeteer.ui_base_lib import UIBaseLib
+from firefox_puppeteer.ui.base import UIBaseLib
 from firefox_puppeteer.ui.deck import Panel
 
 

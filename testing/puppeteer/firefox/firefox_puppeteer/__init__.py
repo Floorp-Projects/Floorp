@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_driver.marionette import HTMLElement
-
 from decorators import use_class_as_property
 
 
@@ -90,23 +88,3 @@ class Puppeteer(object):
 
         See the :class:`~ui.window.Windows` reference.
         """
-
-
-class DOMElement(HTMLElement):
-    """
-    Class that inherits from HTMLElement and provides a way for subclasses to
-    expose new api's.
-    """
-
-    def __new__(cls, element):
-        instance = object.__new__(cls)
-        instance.__dict__ = element.__dict__.copy()
-        setattr(instance, 'inner', element)
-
-        return instance
-
-    def __init__(self, element):
-        pass
-
-    def get_marionette(self):
-        return self.marionette
