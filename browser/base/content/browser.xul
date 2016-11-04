@@ -760,8 +760,7 @@
                 </hbox>
               </box>
               <box id="urlbar-display-box" align="center">
-                <label id="switchtab" class="urlbar-display urlbar-display-switchtab" value="&urlbar.switchToTab.label;"/>
-                <label id="extension" class="urlbar-display urlbar-display-extension" value="&urlbar.extension.label;"/>
+                <label class="urlbar-display urlbar-display-switchtab" value="&urlbar.switchToTab.label;"/>
               </box>
               <hbox id="urlbar-icons">
                 <image id="page-report-button"
