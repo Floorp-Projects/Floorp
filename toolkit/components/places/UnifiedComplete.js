@@ -69,11 +69,6 @@ const FRECENCY_DEFAULT = 1000;
 // always try to have at least MINIMUM_LOCAL_MATCHES local matches.
 const MINIMUM_LOCAL_MATCHES = 6;
 
-// Extensions are allowed to add suggestions if they have registered a keyword
-// with the omnibox API. This is the maximum number of suggestions an extension
-// is allowed to add for a given search string.
-const MAXIMUM_ALLOWED_EXTENSION_MATCHES = 6;
-
 // A regex that matches "single word" hostnames for whitelisting purposes.
 // The hostname will already have been checked for general validity, so we
 // don't need to be exhaustive here, so allow dashes anywhere.
@@ -269,8 +264,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionSearchHandler",
-                                  "resource://gre/modules/ExtensionSearchHandler.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesSearchAutocompleteProvider",
@@ -722,15 +715,11 @@ function Search(searchString, searchParam, autocompleteListener,
 
   // The index to insert remote matches at.
   this._remoteMatchesStartIndex = 0;
-  // The index to insert local matches at.
-  this._localMatchesStartIndex = 0;
 
   // Counts the number of inserted local matches.
   this._localMatchesCount = 0;
   // Counts the number of inserted remote matches.
   this._remoteMatchesCount = 0;
-  // Counts the number of inserted extension matches.
-  this._extensionMatchesCount = 0;
 }
 
 Search.prototype = {
@@ -953,17 +942,6 @@ Search.prototype = {
       }
     }
 
-    // Only add extension suggestions if the first token is a registered keyword
-    // and the search string has characters after the first token.
-    if (ExtensionSearchHandler.isKeywordRegistered(this._searchTokens[0]) &&
-        this._originalSearchString.length > this._searchTokens[0].length) {
-      // We don't yield here because, unlike the other calls, the extension can add
-      // suggestions until either the input changes or the urlbar blurs.
-      this._matchExtensionSuggestions();
-    } else if (ExtensionSearchHandler.hasActiveInputSession()) {
-      ExtensionSearchHandler.handleInputCancelled();
-    }
-
     // Ensure to fill any remaining space.
     yield Promise.all(this._remoteMatchesPromises);
   }),
@@ -972,15 +950,7 @@ Search.prototype = {
     // We always try to make the first result a special "heuristic" result.  The
     // heuristics below determine what type of result it will be, if any.
 
-    let hasSearchTerms = this._searchTokens.length > 0;
-
-    if (hasSearchTerms) {
-      // It may be a keyword registered by an extension.
-      let matched = yield this._matchExtensionHeuristicResult();
-      if (matched) {
-        return true;
-      }
-    }
+    let hasSearchTerms = this._searchTokens.length > 0 ;
 
     if (this._enableActions && hasSearchTerms) {
       // It may be a search engine with an alias - which works like a keyword.
@@ -1154,16 +1124,6 @@ Search.prototype = {
     return gotResult;
   },
 
-  _matchExtensionHeuristicResult: function* () {
-    if (ExtensionSearchHandler.isKeywordRegistered(this._searchTokens[0]) &&
-        this._originalSearchString.length > this._searchTokens[0].length) {
-      let description = ExtensionSearchHandler.getDescription(this._searchTokens[0]);
-      this._addExtensionMatch(this._originalSearchString, description);
-      return true;
-    }
-    return false;
-  },
-
   _matchPlacesKeyword: function* () {
     // The first word could be a keyword, so that's what we'll search.
     let keyword = this._searchTokens[0];
@@ -1276,24 +1236,6 @@ Search.prototype = {
     return true;
   },
 
-  _addExtensionMatch(content, comment) {
-    if (this._extensionMatchesCount >= MAXIMUM_ALLOWED_EXTENSION_MATCHES) {
-      return;
-    }
-
-    this._addMatch({
-      value: PlacesUtils.mozActionURI("extension", {
-        content,
-        keyword: this._searchTokens[0]
-      }),
-      comment,
-      icon: "chrome://browser/content/extension.svg",
-      style: "action extension",
-      frecency: FRECENCY_DEFAULT,
-      extension: true,
-    });
-  },
-
   _addSearchEngineMatch(match, query, suggestion) {
     let actionURLParams = {
       engineName: match.engineName,
@@ -1315,17 +1257,6 @@ Search.prototype = {
       frecency: FRECENCY_DEFAULT,
       remote: !!suggestion
     });
-  },
-
-  _matchExtensionSuggestions() {
-    ExtensionSearchHandler.handleSearch(this._searchTokens[0], this._originalSearchString,
-      suggestions => {
-        suggestions.forEach(suggestion => {
-          let content = `${this._searchTokens[0]} ${suggestion.content}`;
-          this._addExtensionMatch(content, suggestion.description);
-        });
-      }
-    );
   },
 
   *_matchRemoteTabs() {
@@ -1533,11 +1464,6 @@ Search.prototype = {
       // Append after local matches.
       index = this._remoteMatchesStartIndex + this._remoteMatchesCount;
       this._remoteMatchesCount++;
-    } else if (match.extension) {
-      index = this._localMatchesStartIndex;
-      this._localMatchesStartIndex++;
-      this._remoteMatchesStartIndex++;
-      this._extensionMatchesCount++;
     } else {
       // This is a local match.
       if (match.frecency > FRECENCY_DEFAULT ||

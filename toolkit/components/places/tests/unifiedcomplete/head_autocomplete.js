@@ -415,22 +415,6 @@ function makeSwitchToTabMatch(url, extra = {}) {
   }
 }
 
-function makeExtensionMatch(extra = {}) {
-  let style = [ "action", "extension" ];
-  if (extra.heuristic) {
-    style.push("heuristic");
-  }
-
-  return {
-    uri: makeActionURI("extension", {
-      content: extra.content,
-      keyword: extra.keyword,
-    }),
-    title: extra.description,
-    style,
-  };
-}
-
 function setFaviconForHref(href, iconHref) {
   return new Promise(resolve => {
     PlacesUtils.favicons.setAndFetchFaviconForPage(

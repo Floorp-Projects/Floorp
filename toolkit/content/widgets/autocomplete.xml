@@ -2125,10 +2125,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               titleLooksLikeUrl = true;
               let visitStr = this._stringBundle.GetStringFromName("visit");
               this._setUpDescription(this._actionText, visitStr, true);
-            } else if (action.type == "extension") {
-              let content = action.params.content;
-              displayUrl = content;
-              this._setUpDescription(this._actionText, content, true);
             }
           }
 
