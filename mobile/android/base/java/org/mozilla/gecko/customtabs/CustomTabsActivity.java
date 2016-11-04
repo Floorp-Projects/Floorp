@@ -28,40 +28,7 @@ public class CustomTabsActivity extends GeckoApp {
     }
 
     @Override
-    public void onBackPressed() {
-        final Tabs tabs = Tabs.getInstance();
-        final Tab tab = tabs.getSelectedTab();
-
-        // Give Gecko a chance to handle the back press first, then fallback to the Java UI.
-        GeckoAppShell.sendRequestToGecko(new GeckoRequest("Browser:OnBackPressed", null) {
-            @Override
-            public void onResponse(NativeJSObject nativeJSObject) {
-                if (!nativeJSObject.getBoolean("handled")) {
-                    // Default behavior is Gecko didn't prevent.
-                    onDefault();
-                }
-            }
-
-            @Override
-            public void onError(NativeJSObject error) {
-                // Default behavior is Gecko didn't prevent, via failure.
-                onDefault();
-            }
-
-            // Return from Gecko thread, then back-press through the Java UI.
-            private void onDefault() {
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (tab.doBack()) {
-                            return;
-                        }
-
-                        tabs.closeTab(tab);
-                        finish();
-                    }
-                });
-            }
-        });
+    protected void onDone() {
+        finish();
     }
 }
