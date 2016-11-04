@@ -9,6 +9,7 @@
 #include "MediaPrefs.h"
 #include "nsThreadUtils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/layers/ISurfaceAllocator.h"
 
 namespace mozilla {
 namespace dom {
@@ -151,6 +152,23 @@ void
 VideoDecoderManagerChild::DeallocPVideoDecoderManagerChild()
 {
   Release();
+}
+
+bool
+VideoDecoderManagerChild::DeallocShmem(mozilla::ipc::Shmem& aShmem)
+{
+  if (NS_GetCurrentThread() != sVideoDecoderChildThread) {
+    RefPtr<VideoDecoderManagerChild> self = this;
+    mozilla::ipc::Shmem shmem = aShmem;
+    sVideoDecoderChildThread->Dispatch(NS_NewRunnableFunction([self, shmem]() {
+      if (self->mCanSend) {
+        mozilla::ipc::Shmem shmemCopy = shmem;
+        self->DeallocShmem(shmemCopy);
+      }
+    }), NS_DISPATCH_NORMAL);
+    return true;
+  }
+  return PVideoDecoderManagerChild::DeallocShmem(aShmem);
 }
 
 void

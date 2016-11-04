@@ -1031,13 +1031,13 @@ CompositorBridgeChild::AllocShmem(size_t aSize,
   return PCompositorBridgeChild::AllocShmem(aSize, aType, aShmem);
 }
 
-void
+bool
 CompositorBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
 {
   if (!mCanSend) {
-    return;
+    return false;
   }
-  PCompositorBridgeChild::DeallocShmem(aShmem);
+  return PCompositorBridgeChild::DeallocShmem(aShmem);
 }
 
 widget::PCompositorWidgetChild*

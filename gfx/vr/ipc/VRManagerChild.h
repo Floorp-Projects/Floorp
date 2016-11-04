@@ -130,7 +130,7 @@ protected:
                                 ipc::SharedMemory::SharedMemoryType aType,
                                 ipc::Shmem* aShmem) override;
 
-  virtual void DeallocShmem(ipc::Shmem& aShmem) override;
+  virtual bool DeallocShmem(ipc::Shmem& aShmem) override;
 
   virtual bool IsSameProcess() const override
   {

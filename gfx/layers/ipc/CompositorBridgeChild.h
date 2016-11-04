@@ -210,7 +210,7 @@ public:
   virtual bool AllocShmem(size_t aSize,
                           mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
                           mozilla::ipc::Shmem* aShmem) override;
-  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
+  virtual bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   PCompositorWidgetChild* AllocPCompositorWidgetChild(const CompositorWidgetInitData& aInitData) override;
   bool DeallocPCompositorWidgetChild(PCompositorWidgetChild* aActor) override;
