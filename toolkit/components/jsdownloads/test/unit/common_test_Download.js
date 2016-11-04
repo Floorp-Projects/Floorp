@@ -11,8 +11,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const kDeleteTempFileOnExit = "browser.helperApps.deleteTempFileOnExit";
 
@@ -169,8 +168,7 @@ function waitForDirectoryShown() {
   });
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 /**
  * Executes a download and checks its basic properties after construction.

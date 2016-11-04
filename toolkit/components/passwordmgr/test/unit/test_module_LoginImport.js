@@ -9,8 +9,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 Cu.import("resource://gre/modules/Task.jsm");
 
@@ -107,8 +106,7 @@ function promiseInsertDisabledHost(aConnection, aHostname)
                              "VALUES (?)", [aHostname]);
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 /**
  * Imports login data from a SQLite file constructed using the test data.

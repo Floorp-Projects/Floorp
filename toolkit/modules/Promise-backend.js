@@ -19,8 +19,7 @@
  * More documentation can be found in the Promise.jsm module.
  */
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 // Obtain an instance of Cu. How this instance is obtained depends on how this
 // file is loaded.
@@ -77,7 +76,7 @@ const N_INTERNALS = "{private:internals:" + salt + "}";
 // We use DOM Promise for scheduling the walker loop.
 const DOMPromise = Cu ? Promise : null;
 
-// ///// Warn-upon-finalization mechanism
+// Warn-upon-finalization mechanism
 //
 // One of the difficult problems with promises is locating uncaught
 // rejections. We adopt the following strategy: if a promise is rejected
@@ -320,14 +319,13 @@ PendingErrors.addObserver(function(details) {
 });
 
 
-// /////// Additional warnings for developers
+// Additional warnings for developers
 //
 // The following error types are considered programmer errors, which should be
 // reported (possibly redundantly) so as to let programmers fix their code.
 const ERRORS_TO_REPORT = ["EvalError", "RangeError", "ReferenceError", "TypeError"];
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Promise
+// Promise
 
 /**
  * The Promise constructor. Creates a new promise given an executor callback.
@@ -661,8 +659,7 @@ if (this.module) {
   module.exports = Promise;
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // PromiseWalker
+// PromiseWalker
 
 /**
  * This singleton object invokes the handlers registered on resolved and
@@ -821,8 +818,7 @@ this.PromiseWalker = {
 // Bind the function to the singleton once.
 PromiseWalker.walkerLoop = PromiseWalker.walkerLoop.bind(PromiseWalker);
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Deferred
+// Deferred
 
 /**
  * Returned by "Promise.defer" to provide a new promise along with methods to
@@ -883,8 +879,7 @@ Deferred.prototype = {
   reject: null,
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Handler
+// Handler
 
 /**
  * Handler registered on a promise by the "then" function.

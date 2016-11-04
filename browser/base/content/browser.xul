@@ -157,7 +157,8 @@
            noautofocus="true"
            hidden="true"
            flip="none"
-           level="parent"/>
+           level="parent"
+           overflowpadding="30" />
 
     <panel id="DateTimePickerPanel"
            type="arrow"

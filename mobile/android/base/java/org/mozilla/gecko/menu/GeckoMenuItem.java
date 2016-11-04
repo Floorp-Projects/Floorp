@@ -5,6 +5,7 @@
 package org.mozilla.gecko.menu;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import android.content.Intent;
@@ -155,7 +156,7 @@ public class GeckoMenuItem implements MenuItem {
     public Drawable getIcon() {
         if (mIcon == null) {
             if (mIconRes != 0)
-                return mMenu.getResources().getDrawable(mIconRes);
+                return ResourceDrawableUtils.getDrawable(mMenu.getContext(), mIconRes);
             else
                 return null;
         } else {

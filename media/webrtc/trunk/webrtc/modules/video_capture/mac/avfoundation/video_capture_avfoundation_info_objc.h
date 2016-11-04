@@ -29,6 +29,7 @@
     NSArray*                            _observers;
     NSLock*                             _lock;
     webrtc::videocapturemodule::VideoCaptureMacAVFoundationInfo* _owner;
+    NSMutableDictionary*                _capabilityMaps;
 
 }
 

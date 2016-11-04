@@ -4,8 +4,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const PREF_BDM_CLOSEWHENDONE = "browser.download.manager.closeWhenDone";
 const PREF_BDM_ALERTONEXEOPEN = "browser.download.manager.alertOnEXEOpen";
@@ -85,8 +84,7 @@ var gStr = {
 // The statement to query for downloads that are active or match the search
 var gStmt = null;
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Start/Stop Observers
+// Start/Stop Observers
 
 function downloadCompleted(aDownload)
 {
@@ -173,8 +171,7 @@ function gCloseDownloadManager()
   window.close();
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Download Event Handlers
+// Download Event Handlers
 
 function cancelDownload(aDownload)
 {
@@ -404,8 +401,7 @@ function onUpdateProgress()
   }
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Startup, Shutdown
+// Startup, Shutdown
 
 function Startup()
 {
@@ -495,8 +491,7 @@ var gDownloadObserver = {
   }
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // View Context Menus
+// View Context Menus
 
 var gContextMenus = [
   // DOWNLOAD_DOWNLOADING
@@ -636,8 +631,7 @@ function buildContextMenu(aEvent)
 
   return false;
 }
-// //////////////////////////////////////////////////////////////////////////////
-// // Drag and Drop
+// Drag and Drop
 var gDownloadDNDObserver =
 {
   onDragStart: function (aEvent)
@@ -712,8 +706,7 @@ function pasteHandler() {
   } catch (ex) {}
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Command Updating and Command Handlers
+// Command Updating and Command Handlers
 
 var gDownloadViewController = {
   isCommandEnabled: function(aCommand, aItem)
@@ -859,8 +852,7 @@ function openExternal(aFile)
   return;
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Utility Functions
+// Utility Functions
 
 /**
  * Create a download richlistitem with the provided attributes. Some attributes

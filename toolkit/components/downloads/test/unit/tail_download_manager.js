@@ -10,8 +10,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Termination functions common to all tests
+// Termination functions common to all tests
 
 add_task(function* test_common_terminate()
 {

@@ -32,8 +32,7 @@ this.EXPORTED_SYMBOLS = [
   "JSONFile",
 ];
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
@@ -67,8 +66,7 @@ const FileInputStream =
  */
 const kSaveDelayMs = 1500;
 
-// //////////////////////////////////////////////////////////////////////////////
-// // JSONFile
+// JSONFile
 
 /**
  * Handles serialization of the data and persistence into a file.

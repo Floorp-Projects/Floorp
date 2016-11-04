@@ -11,8 +11,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 function* reloadAndCheckLoginsGen(aExpectedLogins)
 {
@@ -21,8 +20,7 @@ function* reloadAndCheckLoginsGen(aExpectedLogins)
   LoginTestUtils.clearData();
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 /**
  * Tests addLogin with valid non-ASCII characters.

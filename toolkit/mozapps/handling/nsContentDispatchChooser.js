@@ -4,8 +4,7 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Constants
+// Constants
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -14,8 +13,7 @@ const Cr = Components.results;
 const CONTENT_HANDLING_URL = "chrome://mozapps/content/handling/dialog.xul";
 const STRINGBUNDLE_URL = "chrome://mozapps/locale/handling/handling.properties";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // nsContentDispatchChooser class
+// nsContentDispatchChooser class
 
 function nsContentDispatchChooser()
 {
@@ -25,8 +23,7 @@ nsContentDispatchChooser.prototype =
 {
   classID: Components.ID("e35d5067-95bc-4029-8432-e8f1e431148d"),
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsIContentDispatchChooser
+  // nsIContentDispatchChooser
 
   ask: function ask(aHandler, aWindowContext, aURI, aReason)
   {
@@ -76,14 +73,12 @@ nsContentDispatchChooser.prototype =
                   params);
   },
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsISupports
+  // nsISupports
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentDispatchChooser])
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Module
+// Module
 
 var components = [nsContentDispatchChooser];
 

@@ -57,8 +57,6 @@
 #include "mozilla/dom/PMemoryReportRequestParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
-#include "mozilla/dom/icc/IccParent.h"
-#include "mozilla/dom/mobileconnection/MobileConnectionParent.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/PresentationParent.h"
@@ -278,9 +276,7 @@ using mozilla::ProfileGatherer;
 using namespace CrashReporter;
 #endif
 using namespace mozilla::dom::devicestorage;
-using namespace mozilla::dom::icc;
 using namespace mozilla::dom::power;
-using namespace mozilla::dom::mobileconnection;
 using namespace mozilla::media;
 using namespace mozilla::embedding;
 using namespace mozilla::gfx;
@@ -561,7 +557,6 @@ static const char* sObserverTopics[] = {
   "profiler-subprocess-gather",
   "profiler-subprocess",
 #endif
-  "gmp-changed",
   "cacheservice:empty-cache",
 };
 
@@ -2846,9 +2841,6 @@ ContentParent::Observe(nsISupports* aSubject,
     Unused << SendPauseProfiler(false);
   }
 #endif
-  else if (!strcmp(aTopic, "gmp-changed")) {
-    Unused << SendNotifyGMPsChanged();
-  }
   else if (!strcmp(aTopic, "cacheservice:empty-cache")) {
     Unused << SendNotifyEmptyHTTPCache();
   }
@@ -3205,27 +3197,6 @@ ContentParent::DeallocPHeapSnapshotTempFileHelperParent(
   return true;
 }
 
-PIccParent*
-ContentParent::AllocPIccParent(const uint32_t& aServiceId)
-{
-  if (!AssertAppProcessPermission(this, "mobileconnection")) {
-    return nullptr;
-  }
-  IccParent* parent = new IccParent(aServiceId);
-  // We release this ref in DeallocPIccParent().
-  parent->AddRef();
-
-  return parent;
-}
-
-bool
-ContentParent::DeallocPIccParent(PIccParent* aActor)
-{
-  // IccParent is refcounted, must not be freed manually.
-  static_cast<IccParent*>(aActor)->Release();
-  return true;
-}
-
 PMemoryReportRequestParent*
 ContentParent::AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
                                                const bool &aAnonymize,
@@ -3281,32 +3252,6 @@ ContentParent::DeallocPTestShellParent(PTestShellParent* shell)
 {
   delete shell;
   return true;
-}
-
-PMobileConnectionParent*
-ContentParent::AllocPMobileConnectionParent(const uint32_t& aClientId)
-{
-#ifdef MOZ_B2G_RIL
-  RefPtr<MobileConnectionParent> parent = new MobileConnectionParent(aClientId);
-  // We release this ref in DeallocPMobileConnectionParent().
-  parent->AddRef();
-
-  return parent;
-#else
-  MOZ_CRASH("No support for mobileconnection on this platform!");
-#endif
-}
-
-bool
-ContentParent::DeallocPMobileConnectionParent(PMobileConnectionParent* aActor)
-{
-#ifdef MOZ_B2G_RIL
-  // MobileConnectionParent is refcounted, must not be freed manually.
-  static_cast<MobileConnectionParent*>(aActor)->Release();
-  return true;
-#else
-  MOZ_CRASH("No support for mobileconnection on this platform!");
-#endif
 }
 
 PNeckoParent*

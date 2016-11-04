@@ -159,7 +159,7 @@ function promiseIsURIVisited(aURI) {
 
 function promiseBookmarksNotification(notification, conditionFn) {
   info(`promiseBookmarksNotification: waiting for ${notification}`);
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     let proxifiedObserver = new Proxy({}, {
       get: (target, name) => {
         if (name == "QueryInterface")
@@ -168,7 +168,6 @@ function promiseBookmarksNotification(notification, conditionFn) {
         if (name == notification)
           return (...args) => {
             if (conditionFn.apply(this, args)) {
-              clearTimeout(timeout);
               PlacesUtils.bookmarks.removeObserver(proxifiedObserver, false);
               executeSoon(resolve);
             } else {
@@ -179,16 +178,12 @@ function promiseBookmarksNotification(notification, conditionFn) {
       }
     });
     PlacesUtils.bookmarks.addObserver(proxifiedObserver, false);
-    let timeout = setTimeout(() => {
-      PlacesUtils.bookmarks.removeObserver(proxifiedObserver, false);
-      reject(new Error("Timed out while waiting for bookmarks notification"));
-    }, 2000);
   });
 }
 
 function promiseHistoryNotification(notification, conditionFn) {
   info(`Waiting for ${notification}`);
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     let proxifiedObserver = new Proxy({}, {
       get: (target, name) => {
         if (name == "QueryInterface")
@@ -196,7 +191,6 @@ function promiseHistoryNotification(notification, conditionFn) {
         if (name == notification)
           return (...args) => {
             if (conditionFn.apply(this, args)) {
-              clearTimeout(timeout);
               PlacesUtils.history.removeObserver(proxifiedObserver, false);
               executeSoon(resolve);
             }
@@ -205,10 +199,6 @@ function promiseHistoryNotification(notification, conditionFn) {
       }
     });
     PlacesUtils.history.addObserver(proxifiedObserver, false);
-    let timeout = setTimeout(() => {
-      PlacesUtils.history.removeObserver(proxifiedObserver, false);
-      reject(new Error("Timed out while waiting for history notification"));
-    }, 2000);
   });
 }
 

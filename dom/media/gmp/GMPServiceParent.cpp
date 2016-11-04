@@ -837,14 +837,6 @@ GeckoMediaPluginServiceParent::PathRunnable::Run()
                               mDefer);
 
   mService->UpdateContentProcessGMPCapabilities();
-
-#ifndef MOZ_WIDGET_GONK // Bug 1214967: disabled on B2G due to inscrutable test failures.
-  // For non-e10s, and for decoding in the chrome process, must update GMP
-  // PDM's codecs list directly.
-  NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
-    GMPDecoderModule::UpdateUsableCodecs();
-  }));
-#endif
   return NS_OK;
 }
 
@@ -919,9 +911,6 @@ GeckoMediaPluginServiceParent::AsyncAddPluginDirectory(const nsAString& aDirecto
               NS_ConvertUTF16toUTF8(dir).get()));
         MOZ_ASSERT(NS_IsMainThread());
         self->UpdateContentProcessGMPCapabilities();
-        // For non-e10s, and for decoding in the chrome process, must update GMP
-        // PDM's codecs list directly.
-        GMPDecoderModule::UpdateUsableCodecs();
       },
       [dir]() -> void {
         LOGD(("GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s failed",

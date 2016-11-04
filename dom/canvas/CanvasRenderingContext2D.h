@@ -66,13 +66,13 @@ class CanvasRenderingContext2D final :
   virtual ~CanvasRenderingContext2D();
 
 public:
-  CanvasRenderingContext2D();
+  explicit CanvasRenderingContext2D(layers::LayersBackend aCompositorBackend);
 
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   HTMLCanvasElement* GetCanvas() const
   {
-    if (mCanvasElement->IsInNativeAnonymousSubtree()) {
+    if (!mCanvasElement || mCanvasElement->IsInNativeAnonymousSubtree()) {
       return nullptr;
     }
 
@@ -538,6 +538,10 @@ public:
   bool GetHitRegionRect(Element* aElement, nsRect& aRect) override;
 
   void OnShutdown();
+
+  // Check the global setup, as well as the compositor type:
+  bool AllowOpenGLCanvas() const;
+
 protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
                              uint32_t aWidth, uint32_t aHeight,
@@ -732,6 +736,8 @@ protected:
   static void RemoveDemotableContext(CanvasRenderingContext2D* aContext);
 
   RenderingMode mRenderingMode;
+
+  layers::LayersBackend mCompositorBackend;
 
   // Member vars
   int32_t mWidth, mHeight;

@@ -255,6 +255,7 @@ public:
   void NewAxisMove(uint32_t aIndex, uint32_t aAxis, double aValue);
   void AddGamepad(const char* aID, dom::GamepadMappingType aMapping,
                   uint32_t aNumButtons, uint32_t aNumAxes);
+  void RemoveGamepad(uint32_t aIndex);
 
 protected:
   VRControllerManager() : mInstalled(false), mControllerCount(0) {}

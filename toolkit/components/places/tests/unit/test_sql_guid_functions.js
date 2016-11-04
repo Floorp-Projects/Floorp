@@ -19,8 +19,7 @@ function check_invariants(aGuid)
   do_check_valid_places_guid(aGuid);
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Test Functions
+// Test Functions
 
 function test_guid_invariants()
 {
@@ -94,8 +93,7 @@ function test_guid_on_background()
   stmt.finalize();
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Test Runner
+// Test Runner
 
 [
   test_guid_invariants,

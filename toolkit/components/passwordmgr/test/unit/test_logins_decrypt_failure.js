@@ -9,8 +9,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 /**
  * Resets the token used to decrypt logins.  This is equivalent to resetting the
@@ -24,8 +23,7 @@ function resetMasterPassword()
   token.changePassword("", "");
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 /**
  * Resets the master password after some logins were added to the database.

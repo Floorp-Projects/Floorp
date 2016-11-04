@@ -1227,6 +1227,8 @@ pref("security.insecure_password.ui.enabled", true);
 pref("security.insecure_password.ui.enabled", false);
 #endif
 
+pref("security.insecure_field_warning.contextual.enabled", false);
+
 // 1 = allow MITM for certificate pinning checks.
 pref("security.cert_pinning.enforcement_level", 1);
 
