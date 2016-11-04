@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TestHarness.h"
 #include "nsTObserverArray.h"
+#include "gtest/gtest.h"
 
 using namespace mozilla;
 
@@ -20,31 +20,14 @@ typedef nsTObserverArray<int> IntArray;
       _code                                                           \
       int next = iter.GetNext();                                      \
       int expected = _exp[count++];                                   \
-      if (next != expected) {                                         \
-        fail("During test %d at position %d got %d expected %d\n",    \
-             testNum, count-1, next, expected);                       \
-        rv = 1;                                                       \
-      }                                                               \
+      ASSERT_EQ(next, expected) << "During test " << testNum << " at position " << count - 1;  \
     }                                                                 \
-    if (iter.HasMore()) {                                             \
-      fail("During test %d, iterator ran over", testNum);             \
-      rv = 1;                                                         \
-    }                                                                 \
-    if (count != ArrayLength(_exp)) {                             \
-      fail("During test %d, iterator finished too early", testNum);   \
-      rv = 1;                                                         \
-    }                                                                 \
+    ASSERT_FALSE(iter.HasMore()) << "During test " << testNum << ", iterator ran over"; \
+    ASSERT_EQ(count, ArrayLength(_exp)) << "During test " << testNum << ", iterator finished too early"; \
   } while (0)
 
-int main(int argc, char **argv)
+TEST(ObserverArray, Tests)
 {
-  ScopedXPCOM xpcom("nsTObserverArrayTests");
-  if (xpcom.failed()) {
-    return 1;
-  }
-
-  int rv = 0;
-
   IntArray arr;
   arr.AppendElement(3);
   arr.AppendElement(4);
@@ -181,5 +164,4 @@ int main(int argc, char **argv)
    * In that case BackwardIterator does not traverse the newly prepended Element
    */
 
-  return rv;
 }
