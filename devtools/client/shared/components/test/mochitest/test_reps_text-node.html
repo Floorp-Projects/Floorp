@@ -49,6 +49,9 @@ window.onload = Task.async(function* () {
 
     yield testRendering();
     yield testRenderingWithEOL();
+
+    yield testOnMouseOver();
+    yield testOnMouseOut();
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -107,6 +110,35 @@ window.onload = Task.async(function* () {
     ];
 
     testRepRenderModes(modeTests, "testRenderingWithEOL", TextNode, stub);
+  }
+
+  function testOnMouseOver() {
+    const stub = gripStubs.get("testRendering");
+
+    let mouseOverValue;
+    let onDOMNodeMouseOver = (object) => {
+      mouseOverValue = object;
+    };
+    const renderedComponent = renderComponent(
+      TextNode.rep, {object: stub, onDOMNodeMouseOver});
+
+    TestUtils.Simulate.mouseOver(renderedComponent);
+    is(mouseOverValue, stub, "onDOMNodeMouseOver is called with the expected argument " +
+      "when mouseover is fired on the Rep");
+  }
+
+  function testOnMouseOut() {
+    const stub = gripStubs.get("testRendering");
+
+    let called = false;
+    let onDOMNodeMouseOut = (object) => {
+      called = true;
+    };
+    const renderedComponent = renderComponent(
+      TextNode.rep, {object: stub, onDOMNodeMouseOut});
+
+    TestUtils.Simulate.mouseOut(renderedComponent);
+    is(called, true, "onDOMNodeMouseOut is called when mouseout is fired on the Rep");
   }
 });
 </script>
