@@ -1691,6 +1691,14 @@ DOMXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper, Handl
 }
 
 bool
+DOMXrayTraits::delete_(JSContext* cx, JS::HandleObject wrapper,
+                       JS::HandleId id, JS::ObjectOpResult& result)
+{
+    RootedObject target(cx, getTargetObject(wrapper));
+    return XrayDeleteNamedProperty(cx, wrapper, target, id, result);
+}
+
+bool
 DOMXrayTraits::defineProperty(JSContext* cx, HandleObject wrapper, HandleId id,
                               Handle<PropertyDescriptor> desc,
                               Handle<PropertyDescriptor> existingDesc,

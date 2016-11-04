@@ -2401,6 +2401,19 @@ const JSClass*
 XrayGetExpandoClass(JSContext* cx, JS::Handle<JSObject*> obj);
 
 /**
+ * Delete a named property, if any.  Return value is false if exception thrown,
+ * true otherwise.  The caller should not do any more work after calling this
+ * function, because it has no way whether a deletion was performed and hence
+ * opresult already has state set on it.  If callers ever need to change that,
+ * add a "bool* found" argument and change the generated DeleteNamedProperty to
+ * use it instead of a local variable.
+ */
+bool
+XrayDeleteNamedProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                        JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                        JS::ObjectOpResult& opresult);
+
+/**
  * Get the object which should be used to cache the return value of a property
  * getter in the case of a [Cached] or [StoreInSlot] property.  `obj` is the
  * `this` value for our property getter that we're working with.
