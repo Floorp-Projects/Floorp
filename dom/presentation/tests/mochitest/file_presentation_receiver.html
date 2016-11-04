@@ -55,17 +55,10 @@ function testConnectionAvailable() {
   });
 }
 
-function testDefauleRequestIsNull() {
+function testDefaultRequestIsUndefined() {
   return new Promise(function(aResolve, aReject) {
-    navigator.presentation.defaultRequest = new PresentationRequest("http://example.com");
-    if (navigator.presentation.defaultRequest === null) {
-      ok(true, "defaultRequest should be null.");
-      aResolve();
-    }
-    else {
-      ok(false, "defaultRequest should be null.");
-      aReject();
-    }
+    is(navigator.presentation.defaultRequest, undefined, "navigator.presentation.defaultRequest should not be available in receiving UA");
+    aResolve();
   });
 }
 
@@ -134,7 +127,7 @@ function testCloseConnection() {
 }
 
 testConnectionAvailable().
-then(testDefauleRequestIsNull).
+then(testDefaultRequestIsUndefined).
 then(testConnectionAvailableSameOriginInnerIframe).
 then(testConnectionUnavailableDiffOriginInnerIframe).
 then(testConnectionListSameObject).

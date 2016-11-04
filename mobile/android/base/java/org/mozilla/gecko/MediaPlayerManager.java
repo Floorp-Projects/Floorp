@@ -35,13 +35,20 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
      * Create a new instance of DetailsFragment, initialized to
      * show the text at 'index'.
      */
+
+    private static MediaPlayerManager instance = null;
+
     @ReflectionTarget
-    public static MediaPlayerManager newInstance() {
-        if (Versions.feature17Plus) {
-            return new PresentationMediaPlayerManager();
-        } else {
-            return new MediaPlayerManager();
+    public static MediaPlayerManager getInstance() {
+        if (instance != null) {
+            return instance;
         }
+        if (Versions.feature17Plus) {
+            instance = (MediaPlayerManager) new PresentationMediaPlayerManager();
+        } else {
+            instance = new MediaPlayerManager();
+        }
+        return instance;
     }
 
     private static final String LOGTAG = "GeckoMediaPlayerManager";
@@ -146,10 +153,8 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
 
             if ("AndroidCastDevice:Start".equals(event)) {
                 display.start(callback);
-                isPresentationMode = true;
             } else if ("AndroidCastDevice:Stop".equals(event)) {
                 display.stop(callback);
-                isPresentationMode = false;
             }
         }
     }
@@ -292,6 +297,10 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
             .addControlCategory(CastMediaControlIntent.categoryForCast(ChromeCastDisplay.REMOTE_DISPLAY_APP_ID))
             .build();
         mediaRouter.addCallback(selectorBuilder, callback, MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
+    }
+
+    public void setPresentationMode(boolean isPresentationMode) {
+        this.isPresentationMode = isPresentationMode;
     }
 
     protected void updatePresentation() { /* Overridden in sub-classes. */ }

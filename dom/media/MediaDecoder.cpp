@@ -41,9 +41,6 @@ using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::media;
 
-// Default timeout msecs until try to enter dormant state by heuristic.
-static const int DEFAULT_HEURISTIC_DORMANT_TIMEOUT_MSECS = 10000;
-
 namespace mozilla {
 
 // The amount of instability we tollerate in calls to
@@ -298,120 +295,7 @@ MediaDecoder::NotifyOwnerActivityChanged(bool aIsVisible)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsShutdown());
-
   SetElementVisibility(aIsVisible);
-
-  UpdateDormantState(false /* aDormantTimeout */, false /* aActivity */);
-  // Start dormant timer if necessary
-  StartDormantTimer();
-}
-
-bool
-MediaDecoder::IsHeuristicDormantSupported() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // We disallow dormant for encrypted media until bug 1181864 is fixed.
-  return mInfo &&
-         !mInfo->IsEncrypted() &&
-         mIsHeuristicDormantSupported;
-}
-
-void
-MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!IsShutdown());
-
-  if (!mDecoderStateMachine ||
-      !mOwner->GetVideoFrameContainer() ||
-      (mOwner->GetMediaElement() && mOwner->GetMediaElement()->IsBeingDestroyed()) ||
-      !mDormantSupported)
-  {
-    return;
-  }
-
-  DECODER_LOG("UpdateDormantState aTimeout=%d aActivity=%d mIsDormant=%d "
-              "ownerActive=%d mIsVisible=%d mIsHeuristicDormant=%d "
-              "mPlayState=%s encrypted=%s",
-              aDormantTimeout, aActivity, mIsDormant, mOwner->IsActive(),
-              mIsVisible.Ref(), mIsHeuristicDormant, PlayStateStr(),
-              (!mInfo ? "Unknown" : (mInfo->IsEncrypted() ? "1" : "0")));
-
-  bool prevDormant = mIsDormant;
-  mIsDormant = false;
-#ifdef MOZ_WIDGET_GONK
-  if (mOwner->IsHidden()) {
-    mIsDormant = true;
-  }
-#endif
-
-  // Try to enable dormant by idle heuristic, when the owner is hidden.
-  bool prevHeuristicDormant = mIsHeuristicDormant;
-  mIsHeuristicDormant = false;
-  if (IsHeuristicDormantSupported() && !mIsVisible) {
-    // Do not enter dormant when MediaDecoder is not paused nor ended.
-    if ((aDormantTimeout || !mOwner->IsActive()) && !aActivity &&
-        (mPlayState == PLAY_STATE_PAUSED || IsEnded())) {
-      // Enable heuristic dormant
-      mIsHeuristicDormant = true;
-    } else if(prevHeuristicDormant && !aActivity) {
-      // Continue heuristic dormant
-      mIsHeuristicDormant = true;
-    }
-
-    if (mIsHeuristicDormant) {
-      mIsDormant = true;
-    }
-  }
-
-  if (prevDormant == mIsDormant) {
-    // No update to dormant state
-    return;
-  }
-
-  DECODER_LOG("UpdateDormantState() %s DORMANT state", mIsDormant ? "entering" : "exiting");
-  mDecoderStateMachine->DispatchSetDormant(mIsDormant);
-}
-
-void
-MediaDecoder::DormantTimerExpired(nsITimer* aTimer, void* aClosure)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aClosure);
-  MediaDecoder* decoder = static_cast<MediaDecoder*>(aClosure);
-  decoder->UpdateDormantState(true /* aDormantTimeout */,
-                              false /* aActivity */);
-}
-
-void
-MediaDecoder::StartDormantTimer()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!IsHeuristicDormantSupported() ||
-      mIsHeuristicDormant ||
-      mIsVisible ||
-      (mPlayState != PLAY_STATE_PAUSED && !IsEnded())) {
-    return;
-  }
-
-  if (!mDormantTimer) {
-    mDormantTimer = do_CreateInstance("@mozilla.org/timer;1");
-  }
-  mDormantTimer->InitWithFuncCallback(&MediaDecoder::DormantTimerExpired,
-                                      this,
-                                      mHeuristicDormantTimeout,
-                                      nsITimer::TYPE_ONE_SHOT);
-}
-
-void
-MediaDecoder::CancelDormantTimer()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mDormantTimer) {
-    mDormantTimer->Cancel();
-  }
 }
 
 void
@@ -487,7 +371,6 @@ MediaDecoder::IsInfinite() const
 
 MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   : mWatchManager(this, AbstractThread::MainThread())
-  , mDormantSupported(false)
   , mLogicalPosition(0.0)
   , mDuration(std::numeric_limits<double>::quiet_NaN())
   , mResourceCallback(new ResourceCallback())
@@ -504,13 +387,6 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mFiredMetadataLoaded(false)
   , mElementVisible(!aOwner->IsHidden())
   , mForcedHidden(false)
-  , mIsDormant(false)
-  , mIsHeuristicDormantSupported(
-      Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
-  , mHeuristicDormantTimeout(
-      Preferences::GetInt("media.decoder.heuristic.dormant.timeout",
-                          DEFAULT_HEURISTIC_DORMANT_TIMEOUT_MSECS))
-  , mIsHeuristicDormant(false)
   , INIT_MIRROR(mStateMachineIsShutdown, true)
   , INIT_MIRROR(mBuffered, TimeIntervals())
   , INIT_MIRROR(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED)
@@ -622,8 +498,6 @@ MediaDecoder::Shutdown()
   if (mResource) {
     mResource->Close();
   }
-
-  CancelDormantTimer();
 
   ChangeState(PLAY_STATE_SHUTDOWN);
   mOwner = nullptr;
@@ -790,7 +664,6 @@ nsresult
 MediaDecoder::Play()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  UpdateDormantState(false /* aDormantTimeout */, true /* aActivity */);
 
   NS_ASSERTION(mDecoderStateMachine != nullptr, "Should have state machine.");
   if (mPlaybackRate == 0) {
@@ -814,9 +687,6 @@ MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType, dom::Promise* aProm
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsShutdown());
 
-  UpdateDormantState(false /* aDormantTimeout */, true /* aActivity */);
-
-  MOZ_ASSERT(!mIsDormant, "should be out of dormant by now");
   MOZ_ASSERT(aTime >= 0.0, "Cannot seek to a negative value.");
 
   int64_t timeUsecs = TimeUnit::FromSeconds(aTime).ToMicroseconds();
@@ -990,9 +860,9 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsShutdown());
 
-  DECODER_LOG("FirstFrameLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d mPlayState=%s mIsDormant=%d",
+  DECODER_LOG("FirstFrameLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d mPlayState=%s",
               aInfo->mAudio.mChannels, aInfo->mAudio.mRate,
-              aInfo->HasAudio(), aInfo->HasVideo(), PlayStateStr(), mIsDormant);
+              aInfo->HasAudio(), aInfo->HasVideo(), PlayStateStr());
 
   mInfo = aInfo.forget();
 
@@ -1005,7 +875,7 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
   // before reaching here, so only change the
   // state if we're still set to the original
   // loading state.
-  if (mPlayState == PLAY_STATE_LOADING && !mIsDormant) {
+  if (mPlayState == PLAY_STATE_LOADING) {
     ChangeState(mNextState);
   }
 
@@ -1318,10 +1188,6 @@ MediaDecoder::ChangeState(PlayState aState)
   } else if (IsEnded()) {
     RemoveMediaTracks();
   }
-
-  CancelDormantTimer();
-  // Start dormant timer if necessary
-  StartDormantTimer();
 }
 
 void
@@ -1890,10 +1756,10 @@ MediaDecoder::DumpDebugInfo()
 {
   MOZ_ASSERT(!IsShutdown());
   DUMP_LOG("metadata: channels=%u rate=%u hasAudio=%d hasVideo=%d, "
-           "state: mPlayState=%s mIsDormant=%d, mdsm=%p",
+           "state: mPlayState=%s mdsm=%p",
            mInfo ? mInfo->mAudio.mChannels : 0, mInfo ? mInfo->mAudio.mRate : 0,
            mInfo ? mInfo->HasAudio() : 0, mInfo ? mInfo->HasVideo() : 0,
-           PlayStateStr(), mIsDormant, GetStateMachine());
+           PlayStateStr(), GetStateMachine());
 
   nsString str;
   GetMozDebugReaderData(str);

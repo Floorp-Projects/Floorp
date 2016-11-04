@@ -80,11 +80,14 @@ public class RemotePresentationService extends CastRemoteDisplayLocalService {
             presentation.dismiss();
             presentation = null;
             ScreenManagerHelper.removeDisplay(screenId);
+            MediaPlayerManager.getInstance().setPresentationMode(false);
         }
     }
 
     private void createPresentation() {
         dismissPresentation();
+
+        MediaPlayerManager.getInstance().setPresentationMode(true);
 
         DisplayMetrics metrics = new DisplayMetrics();
         getDisplay().getMetrics(metrics);

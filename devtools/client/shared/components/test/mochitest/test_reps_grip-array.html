@@ -33,8 +33,8 @@ window.onload = Task.async(function* () {
     yield testMoreThanLongMaxProps();
     yield testRecursiveArray();
     yield testPreviewLimit();
-
     yield testNamedNodeMap();
+    yield testNodeList();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -220,6 +220,33 @@ window.onload = Task.async(function* () {
     const testName = "testNamedNodeMap";
 
     const defaultOutput = `NamedNodeMap [ class="myclass", cellpadding="7", border="3" ]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[3]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testNodeList() {
+    const testName = "testNodeList";
+    const defaultOutput = "NodeList [ button#btn-1.btn.btn-log, " +
+      "button#btn-2.btn.btn-err, button#btn-3.btn.btn-count ]";
 
     const modeTests = [
       {
@@ -444,6 +471,82 @@ window.onload = Task.async(function* () {
               ]
             }
           };
+      case "testNodeList":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj51",
+          "class": "NodeList",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 3,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 3,
+            "items": [
+              {
+                "type": "object",
+                "actor": "server1.conn1.child1/obj52",
+                "class": "HTMLButtonElement",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 1,
+                  "nodeName": "button",
+                  "attributes": {
+                    "id": "btn-1",
+                    "class": "btn btn-log",
+                    "type": "button"
+                  },
+                  "attributesLength": 3
+                }
+              },
+              {
+                "type": "object",
+                "actor": "server1.conn1.child1/obj53",
+                "class": "HTMLButtonElement",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 1,
+                  "nodeName": "button",
+                  "attributes": {
+                    "id": "btn-2",
+                    "class": "btn btn-err",
+                    "type": "button"
+                  },
+                  "attributesLength": 3
+                }
+              },
+              {
+                "type": "object",
+                "actor": "server1.conn1.child1/obj54",
+                "class": "HTMLButtonElement",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 1,
+                  "nodeName": "button",
+                  "attributes": {
+                    "id": "btn-3",
+                    "class": "btn btn-count",
+                    "type": "button"
+                  },
+                  "attributesLength": 3
+                }
+              }
+            ]
+          }
+        };
     }
   }
 });

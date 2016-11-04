@@ -14,6 +14,31 @@ function wait_for_event(browser, event) {
   });
 }
 
+function check_audio_onplay() {
+  var list = content.document.getElementsByTagName('audio');
+  if (list.length != 1) {
+    ok(false, "There should be only one audio element in page!")
+  }
+
+  var audio = list[0];
+  return new Promise((resolve, reject) => {
+    audio.onplay = () => {
+      ok(needToReceiveOnPlay, "Should not receive play event!");
+      this.onplay = null;
+      reject();
+    };
+
+    audio.pause();
+    audio.play();
+
+    setTimeout(() => {
+      ok(true, "Doesn't receive play event when media was blocked.");
+      audio.onplay = null;
+      resolve();
+    }, 1000)
+  });
+}
+
 function check_audio_suspended(suspendedType) {
   var list = content.document.getElementsByTagName('audio');
   if (list.length != 1) {
@@ -120,6 +145,8 @@ function* suspended_block(url, browser) {
   browser.blockMedia();
   yield ContentTask.spawn(browser, SuspendedType.SUSPENDED_BLOCK,
                                    check_audio_suspended);
+  yield ContentTask.spawn(browser, null,
+                                   check_audio_onplay);
 
   info("- resume blocked audio -");
   browser.resumeMedia();
