@@ -262,7 +262,7 @@ class UpdateTestCase(FirefoxTestCase):
                                     dialog.wizard.selected_panel))
 
             finally:
-                prefs.restore_pref(self.PREF_APP_UPDATE_ALTWINDOWTYPE)
+                self.marionette.clear_pref(self.PREF_APP_UPDATE_ALTWINDOWTYPE)
 
         # The old update wizard dialog has to be handled differently. It's necessary
         # for fallback updates and invalid add-on versions.
