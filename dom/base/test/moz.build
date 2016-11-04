@@ -9,12 +9,6 @@ XPCSHELL_TESTS_MANIFESTS += [
     'unit_ipc/xpcshell.ini',
 ]
 
-GeckoCppUnitTests([
-    'TestGetURL',
-    'TestNativeXMLHttpRequest',
-    'TestPlainTextSerializer',
-])
-
 MOCHITEST_MANIFESTS += [
     'mochitest.ini',
     'websocket_hybi/mochitest.ini',
