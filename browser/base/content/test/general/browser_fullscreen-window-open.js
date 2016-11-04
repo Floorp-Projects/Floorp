@@ -49,9 +49,9 @@ var gTests = [
 ];
 
 function runNextTest () {
-  let testCase = gTests.shift();
-  if (testCase) {
-    executeSoon(testCase);
+  let test = gTests.shift();
+  if (test) {
+    executeSoon(test);
   }
   else {
     finish();

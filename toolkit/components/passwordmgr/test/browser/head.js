@@ -11,7 +11,7 @@ registerCleanupFunction(function* cleanup_removeAllLoginsAndResetRecipes() {
     // No need to reset the recipes if the recipe module wasn't even loaded.
     return;
   }
-  yield recipeParent.then(recipeParentResult => recipeParentResult.reset());
+  yield recipeParent.then(recipeParent => recipeParent.reset());
 });
 
 /**

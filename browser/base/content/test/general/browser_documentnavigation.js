@@ -30,34 +30,34 @@ function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent
     messageManager.addMessageListener("BrowserTest:FocusChanged", focusChangedListener);
 
     yield ContentTask.spawn(gBrowser.selectedBrowser, { expectedElementId: expectedElement }, function* (arg) {
-      let contentExpectedElement = content.document.getElementById(arg.expectedElementId);
-      if (!contentExpectedElement) {
+      let expectedElement = content.document.getElementById(arg.expectedElementId);
+      if (!expectedElement) {
         // Element not found, so look in the child frames.
         for (let f = 0; f < content.frames.length; f++) {
           if (content.frames[f].document.getElementById(arg.expectedElementId)) {
-            contentExpectedElement = content.frames[f].document;
+            expectedElement = content.frames[f].document;
             break;
           }
         }
       }
-      else if (contentExpectedElement.localName == "html") {
-        contentExpectedElement = contentExpectedElement.ownerDocument;
+      else if (expectedElement.localName == "html") {
+        expectedElement = expectedElement.ownerDocument;
       }
 
-      if (!contentExpectedElement) {
+      if (!expectedElement) {
         sendSyncMessage("BrowserTest:FocusChanged",
                         { details : "expected element " + arg.expectedElementId + " not found" });
         return;
       }
 
-      contentExpectedElement.addEventListener("focus", function focusReceived() {
-        contentExpectedElement.removeEventListener("focus", focusReceived, true);
+      expectedElement.addEventListener("focus", function focusReceived() {
+        expectedElement.removeEventListener("focus", focusReceived, true);
 
-        const contentFM = Components.classes["@mozilla.org/focus-manager;1"].
-                            getService(Components.interfaces.nsIFocusManager);
-        let details = contentFM.focusedWindow.document.documentElement.id;
-        if (contentFM.focusedElement) {
-          details += "," + contentFM.focusedElement.id;
+        const fm = Components.classes["@mozilla.org/focus-manager;1"].
+                              getService(Components.interfaces.nsIFocusManager);
+        let details = fm.focusedWindow.document.documentElement.id;
+        if (fm.focusedElement) {
+          details += "," + fm.focusedElement.id;
         }
 
         sendSyncMessage("BrowserTest:FocusChanged", { details : details });

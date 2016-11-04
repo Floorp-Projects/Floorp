@@ -6,7 +6,7 @@
 const TEST_PAGE = "http://example.org/browser/browser/base/content/test/general/zoom_test.html";
 const TEST_VIDEO = "http://example.org/browser/browser/base/content/test/general/video.ogg";
 
-var gTab1, gTab2, gLevel1;
+var gTab1, gTab2, gLevel1, gLevel2;
 
 function test() {
   waitForExplicitFinish();
@@ -44,9 +44,9 @@ function zoomTab2() {
     is(gBrowser.selectedTab, gTab2, "Tab 2 is selected");
 
     FullZoom.reduce();
-    let level2 = ZoomManager.getZoomForBrowser(gBrowser.getBrowserForTab(gTab2));
+    let gLevel2 = ZoomManager.getZoomForBrowser(gBrowser.getBrowserForTab(gTab2));
 
-    ok(level2 < 1, "New zoom for tab 2 should be less than 1");
+    ok(gLevel2 < 1, "New zoom for tab 2 should be less than 1");
     FullZoomHelper.zoomTest(gTab1, gLevel1, "Zooming tab 2 should not affect tab 1");
 
     yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab1);

@@ -71,7 +71,7 @@ add_task(function* test_execute()
   PlacesUtils.history.removePagesFromHost("www.test.com", false);
 
   // check that all pages in www.test.com have been removed
-  for (let i = 0; i < TOTAL_SITES; i++) {
+  for (var i = 0; i < TOTAL_SITES; i++) {
     let site = "http://www.test.com/" + i + "/";
     let testURI = uri(site);
     do_check_false(uri_in_db(testURI));

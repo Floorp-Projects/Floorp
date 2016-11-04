@@ -199,9 +199,9 @@ function test() {
   waitForExplicitFinish();
 
   Task.spawn(function* () {
-    for (let testCase of gTests) {
-      info("Running: " + testCase.desc);
-      yield testCase.run();
+    for (let test of gTests) {
+      info("Running: " + test.desc);
+      yield test.run();
     }
   }).then(finish, ex => {
     Assert.ok(false, "Unexpected Exception: " + ex);

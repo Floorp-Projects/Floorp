@@ -13,8 +13,9 @@
 "use strict";
 
 add_task(function* test_downloads_saveAs() {
+
   function background() {
-    const url = URL.createObjectURL(new Blob(["file content"]));
+    const url = URL.createObjectURL(new Blob(['file content']));
     browser.test.onMessage.addListener(() =>
       browser.downloads.download({url, saveAs: true})
         .then(id => browser.downloads.onChanged.addListener(delta => {

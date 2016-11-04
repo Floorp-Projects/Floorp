@@ -32,11 +32,12 @@ add_task(function*() {
     const utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                          .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
+    const modifier = arg.modifier;
     function sendKey(key) {
-      if (utils.sendKeyEvent("keydown", key, 0, arg.modifier)) {
-        utils.sendKeyEvent("keypress", key, key.charCodeAt(0), arg.modifier);
+      if (utils.sendKeyEvent("keydown", key, 0, modifier)) {
+        utils.sendKeyEvent("keypress", key, key.charCodeAt(0), modifier);
       }
-      utils.sendKeyEvent("keyup", key, 0, arg.modifier);
+      utils.sendKeyEvent("keyup", key, 0, modifier);
     }
 
     // Select an area of the text.
@@ -157,10 +158,11 @@ add_task(function*() {
       const utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                            .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
-      if (utils.sendKeyEvent("keydown", "v", 0, arg.modifier)) {
-        utils.sendKeyEvent("keypress", "v", "v".charCodeAt(0), arg.modifier);
+      const modifier = arg.modifier;
+      if (utils.sendKeyEvent("keydown", "v", 0, modifier)) {
+        utils.sendKeyEvent("keypress", "v", "v".charCodeAt(0), modifier);
       }
-      utils.sendKeyEvent("keyup", "v", 0, arg.modifier);
+      utils.sendKeyEvent("keyup", "v", 0, modifier);
     });
 
     // The new content should now include an image.

@@ -209,9 +209,9 @@ add_task(function* test_web_accessible_resources_csp() {
 
     testImageLoading(browser.extension.getURL("image.png"), "loaded");
 
-    let testScriptElement = document.createElement("script");
-    testScriptElement.setAttribute("src", browser.extension.getURL("test_script.js"));
-    document.head.appendChild(testScriptElement);
+    let testScript = document.createElement("script");
+    testScript.setAttribute("src", browser.extension.getURL("test_script.js"));
+    document.head.appendChild(testScript);
     browser.runtime.sendMessage("script-loaded");
   }
 
@@ -301,9 +301,9 @@ add_task(function* test_web_accessible_resources_mixed_content() {
     testImageLoading("http://example.com/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png", "blocked");
     testImageLoading(browser.extension.getURL("image.png"), "loaded");
 
-    let testScriptElement = document.createElement("script");
-    testScriptElement.setAttribute("src", browser.extension.getURL("test_script.js"));
-    document.head.appendChild(testScriptElement);
+    let testScript = document.createElement("script");
+    testScript.setAttribute("src", browser.extension.getURL("test_script.js"));
+    document.head.appendChild(testScript);
 
     window.addEventListener("message", event => {
       browser.runtime.sendMessage(event.data);
