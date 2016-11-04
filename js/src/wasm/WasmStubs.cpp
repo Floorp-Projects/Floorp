@@ -322,6 +322,30 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
     return offsets;
 }
 
+static void
+StackCopy(MacroAssembler& masm, MIRType type, Register scratch, Address src, Address dst)
+{
+    if (type == MIRType::Int32) {
+        masm.load32(src, scratch);
+        masm.store32(scratch, dst);
+    } else if (type == MIRType::Int64) {
+#if JS_BITS_PER_WORD == 32
+        masm.load32(Address(src.base, src.offset + INT64LOW_OFFSET), scratch);
+        masm.store32(scratch, Address(dst.base, dst.offset + INT64LOW_OFFSET));
+        masm.load32(Address(src.base, src.offset + INT64HIGH_OFFSET), scratch);
+        masm.store32(scratch, Address(dst.base, dst.offset + INT64HIGH_OFFSET));
+#else
+        Register64 scratch64(scratch);
+        masm.load64(src, scratch64);
+        masm.store64(scratch64, dst);
+#endif
+    } else {
+        MOZ_ASSERT(IsFloatingPointType(type));
+        masm.loadDouble(src, ScratchDoubleReg);
+        masm.storeDouble(ScratchDoubleReg, dst);
+    }
+}
+
 typedef bool ToValue;
 
 static void
@@ -329,22 +353,22 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
                   unsigned offsetToCallerStackArgs, Register scratch, ToValue toValue)
 {
     for (ABIArgValTypeIter i(args); !i.done(); i++) {
-        Address dstAddr(masm.getStackPointer(), argOffset + i.index() * sizeof(Value));
+        Address dst(masm.getStackPointer(), argOffset + i.index() * sizeof(Value));
 
         MIRType type = i.mirType();
         switch (i->kind()) {
           case ABIArg::GPR:
             if (type == MIRType::Int32) {
                 if (toValue)
-                    masm.storeValue(JSVAL_TYPE_INT32, i->gpr(), dstAddr);
+                    masm.storeValue(JSVAL_TYPE_INT32, i->gpr(), dst);
                 else
-                    masm.store32(i->gpr(), dstAddr);
+                    masm.store32(i->gpr(), dst);
             } else if (type == MIRType::Int64) {
                 // We can't box int64 into Values (yet).
                 if (toValue)
                     masm.breakpoint();
                 else
-                    masm.store64(i->gpr64(), dstAddr);
+                    masm.store64(i->gpr64(), dst);
             } else {
                 MOZ_CRASH("unexpected input type?");
             }
@@ -352,7 +376,7 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
 #ifdef JS_CODEGEN_REGISTER_PAIR
           case ABIArg::GPR_PAIR:
             if (type == MIRType::Int64)
-                masm.store64(i->gpr64(), dstAddr);
+                masm.store64(i->gpr64(), dst);
             else
                 MOZ_CRASH("wasm uses hardfp for function calls.");
             break;
@@ -367,52 +391,34 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
                     srcReg = ScratchDoubleReg;
                     masm.canonicalizeDouble(srcReg);
                 }
-                masm.storeDouble(srcReg, dstAddr);
+                masm.storeDouble(srcReg, dst);
             } else {
                 MOZ_ASSERT(type == MIRType::Float32);
                 if (toValue) {
                     // JS::Values can't store Float32, so convert to a Double.
                     masm.convertFloat32ToDouble(srcReg, ScratchDoubleReg);
                     masm.canonicalizeDouble(ScratchDoubleReg);
-                    masm.storeDouble(ScratchDoubleReg, dstAddr);
+                    masm.storeDouble(ScratchDoubleReg, dst);
                 } else {
                     // Preserve the NaN pattern in the input.
                     masm.moveFloat32(srcReg, ScratchFloat32Reg);
                     masm.canonicalizeFloat(ScratchFloat32Reg);
-                    masm.storeFloat32(ScratchFloat32Reg, dstAddr);
+                    masm.storeFloat32(ScratchFloat32Reg, dst);
                 }
             }
             break;
           }
-          case ABIArg::Stack:
-            if (type == MIRType::Int32) {
-                Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
-                masm.load32(src, scratch);
-                if (toValue)
-                    masm.storeValue(JSVAL_TYPE_INT32, scratch, dstAddr);
-                else
-                    masm.store32(scratch, dstAddr);
-            } else if (type == MIRType::Int64) {
-                // We can't box int64 into Values (yet).
-                if (toValue) {
+          case ABIArg::Stack: {
+            Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
+            if (toValue) {
+                if (type == MIRType::Int32) {
+                    masm.load32(src, scratch);
+                    masm.storeValue(JSVAL_TYPE_INT32, scratch, dst);
+                } else if (type == MIRType::Int64) {
+                    // We can't box int64 into Values (yet).
                     masm.breakpoint();
                 } else {
-                    Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
-#if JS_BITS_PER_WORD == 32
-                    masm.load32(Address(src.base, src.offset + INT64LOW_OFFSET), scratch);
-                    masm.store32(scratch, Address(dstAddr.base, dstAddr.offset + INT64LOW_OFFSET));
-                    masm.load32(Address(src.base, src.offset + INT64HIGH_OFFSET), scratch);
-                    masm.store32(scratch, Address(dstAddr.base, dstAddr.offset + INT64HIGH_OFFSET));
-#else
-                    Register64 scratch64(scratch);
-                    masm.load64(src, scratch64);
-                    masm.store64(scratch64, dstAddr);
-#endif
-                }
-            } else {
-                MOZ_ASSERT(IsFloatingPointType(type));
-                Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
-                if (toValue) {
+                    MOZ_ASSERT(IsFloatingPointType(type));
                     if (type == MIRType::Float32) {
                         masm.loadFloat32(src, ScratchFloat32Reg);
                         masm.convertFloat32ToDouble(ScratchFloat32Reg, ScratchDoubleReg);
@@ -420,22 +426,74 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
                         masm.loadDouble(src, ScratchDoubleReg);
                     }
                     masm.canonicalizeDouble(ScratchDoubleReg);
-                } else {
-                    masm.loadDouble(src, ScratchDoubleReg);
+                    masm.storeDouble(ScratchDoubleReg, dst);
                 }
-                masm.storeDouble(ScratchDoubleReg, dstAddr);
+            } else {
+                StackCopy(masm, type, scratch, src, dst);
             }
             break;
+          }
         }
     }
+}
+
+// Generate a wrapper function with the standard intra-wasm call ABI which simply
+// calls an import. This wrapper function allows any import to be treated like a
+// normal wasm function for the purposes of exports and table calls. In
+// particular, the wrapper function provides:
+//  - a table entry, so JS imports can be put into tables
+//  - normal (non-)profiling entries, so that, if the import is re-exported,
+//    an entry stub can be generated and called without any special cases
+FuncOffsets
+wasm::GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, SigIdDesc sigId)
+{
+    masm.setFramePushed(0);
+
+    unsigned tlsBytes = sizeof(void*);
+    unsigned framePushed = StackDecrementForCall(masm, WasmStackAlignment, fi.sig().args(), tlsBytes);
+
+    FuncOffsets offsets;
+    GenerateFunctionPrologue(masm, framePushed, sigId, &offsets);
+
+    // The argument register state is already setup by our caller. We just need
+    // to be sure not to clobber it before the call.
+    Register scratch = ABINonArgReg0;
+
+    // Copy our frame's stack arguments to the callee frame's stack argument.
+    unsigned offsetToCallerStackArgs = sizeof(Frame) + masm.framePushed();
+    ABIArgValTypeIter i(fi.sig().args());
+    for (; !i.done(); i++) {
+        if (i->kind() != ABIArg::Stack)
+            continue;
+
+        Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
+        Address dst(masm.getStackPointer(), i->offsetFromArgBase());
+        StackCopy(masm, i.mirType(), scratch, src, dst);
+    }
+
+    // Save the TLS register so it can be restored later.
+    uint32_t tlsStackOffset = i.stackBytesConsumedSoFar();
+    masm.storePtr(WasmTlsReg, Address(masm.getStackPointer(), tlsStackOffset));
+
+    // Call the import exit stub.
+    CallSiteDesc desc(CallSiteDesc::Dynamic);
+    masm.wasmCallImport(desc, CalleeDesc::import(fi.tlsDataOffset()));
+
+    // Restore the TLS register and pinned regs, per wasm function ABI.
+    masm.loadPtr(Address(masm.getStackPointer(), tlsStackOffset), WasmTlsReg);
+    masm.loadWasmPinnedRegsFromTls();
+
+    GenerateFunctionEpilogue(masm, framePushed, &offsets);
+    offsets.end = masm.currentOffset();
+    return offsets;
 }
 
 // Generate a stub that is called via the internal ABI derived from the
 // signature of the import and calls into an appropriate callImport C++
 // function, having boxed all the ABI arguments into a homogeneous Value array.
 ProfilingOffsets
-wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t funcImportIndex,
-                         Label* throwLabel)
+wasm::GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t funcImportIndex,
+                               Label* throwLabel)
 {
     masm.setFramePushed(0);
 
@@ -567,7 +625,7 @@ static const unsigned SavedTlsReg = sizeof(void*);
 // signature of the import and calls into a compatible JIT function,
 // having boxed all the ABI arguments into the JIT stack frame layout.
 ProfilingOffsets
-wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLabel)
+wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLabel)
 {
     masm.setFramePushed(0);
 
