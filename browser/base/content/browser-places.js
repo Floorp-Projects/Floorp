@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// //////////////////////////////////////////////////////////////////////////////
-// // StarUI
-
 var StarUI = {
   _itemId: -1,
   uri: null,
@@ -345,9 +342,6 @@ var StarUI = {
   }
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // PlacesCommandHook
-
 var PlacesCommandHook = {
   /**
    * Adds a bookmark to the page loaded in the given browser.
@@ -672,9 +666,6 @@ var PlacesCommandHook = {
   }
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // HistoryMenu
-
 XPCOMUtils.defineLazyModuleGetter(this, "RecentlyClosedTabsAndWindowsMenuUtils",
   "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm");
 
@@ -808,9 +799,6 @@ HistoryMenu.prototype = {
   }
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // BookmarksEventHandler
-
 /**
  * Functions for handling events in the Bookmarks Toolbar and menu.
  */
@@ -936,9 +924,6 @@ var BookmarksEventHandler = {
     return true;
   }
 };
-
-// //////////////////////////////////////////////////////////////////////////////
-// // PlacesMenuDNDHandler
 
 // Handles special drag and drop functionality for Places menus that are not
 // part of a Places view (e.g. the bookmarks menu in the menubar).
@@ -1067,9 +1052,6 @@ var PlacesMenuDNDHandler = {
     event.stopPropagation();
   }
 };
-
-// //////////////////////////////////////////////////////////////////////////////
-// // PlacesToolbarHelper
 
 /**
  * This object handles the initialization and uninitialization of the bookmarks
@@ -1214,9 +1196,6 @@ var PlacesToolbarHelper = {
     }
   },
 };
-
-// //////////////////////////////////////////////////////////////////////////////
-// // BookmarkingUI
 
 /**
  * Handles the bookmarks menu-button in the toolbar.

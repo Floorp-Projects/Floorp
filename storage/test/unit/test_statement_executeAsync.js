@@ -874,9 +874,7 @@ function test_multiple_results()
   run_next_test();
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Test Runner
-
+// Test Runner
 
 const TEST_PASS_SYNC = 0;
 const TEST_PASS_ASYNC = 1;

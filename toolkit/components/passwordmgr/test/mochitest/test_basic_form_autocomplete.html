@@ -209,6 +209,7 @@ function spinEventLoop() {
 }
 
 add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", false]]});
   listenForUnexpectedPopupShown();
 });
 

@@ -9,8 +9,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 /**
  * Tests that the createDownload function exists and can be called.  More

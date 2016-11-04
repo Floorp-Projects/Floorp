@@ -4,7 +4,6 @@
 
 "use strict";
 
-//* ***************************************************************************//
 // Constants & Enumeration Values
 
 Components.utils.import('resource://gre/modules/Services.jsm');
@@ -76,7 +75,6 @@ const ICON_URL_APP = AppConstants.platform == "linux" ?
 // was set by us to a custom handler icon and CSS should not try to override it.
 const APP_ICON_ATTR_NAME = "appHandlerIcon";
 
-//* ***************************************************************************//
 // Utilities
 
 function getFileDisplayName(file) {
@@ -134,7 +132,6 @@ function isFeedType(t) {
   return t == TYPE_MAYBE_FEED || t == TYPE_MAYBE_VIDEO_FEED || t == TYPE_MAYBE_AUDIO_FEED;
 }
 
-//* ***************************************************************************//
 // HandlerInfoWrapper
 
 /**
@@ -164,7 +161,6 @@ HandlerInfoWrapper.prototype = {
   wrappedHandlerInfo: null,
 
 
-  //* *************************************************************************//
   // Convenience Utils
 
   _handlerSvc: Cc["@mozilla.org/uriloader/handler-service;1"].
@@ -181,7 +177,6 @@ HandlerInfoWrapper.prototype = {
   },
 
 
-  //* *************************************************************************//
   // nsIHandlerInfo
 
   // The MIME type or protocol scheme.
@@ -322,7 +317,6 @@ HandlerInfoWrapper.prototype = {
   },
 
 
-  //* *************************************************************************//
   // nsIMIMEInfo
 
   // The primary file extension associated with this type, if any.
@@ -341,7 +335,6 @@ HandlerInfoWrapper.prototype = {
   },
 
 
-  //* *************************************************************************//
   // Plugin Handling
 
   // A plugin that can handle this type, if any.
@@ -417,7 +410,6 @@ HandlerInfoWrapper.prototype = {
   },
 
 
-  //* *************************************************************************//
   // Storage
 
   store: function() {
@@ -425,7 +417,6 @@ HandlerInfoWrapper.prototype = {
   },
 
 
-  //* *************************************************************************//
   // Icons
 
   get smallIcon() {
@@ -447,7 +438,6 @@ HandlerInfoWrapper.prototype = {
 };
 
 
-//* ***************************************************************************//
 // Feed Handler Info
 
 /**
@@ -471,7 +461,6 @@ function FeedHandlerInfo(aMIMEType) {
 FeedHandlerInfo.prototype = {
   __proto__: HandlerInfoWrapper.prototype,
 
-  //* *************************************************************************//
   // Convenience Utils
 
   _converterSvc:
@@ -480,7 +469,6 @@ FeedHandlerInfo.prototype = {
 
   _shellSvc: AppConstants.HAVE_SHELL_SERVICE ? getShellService() : null,
 
-  //* *************************************************************************//
   // nsIHandlerInfo
 
   get description() {
@@ -723,7 +711,6 @@ FeedHandlerInfo.prototype = {
   _storingAction: false,
 
 
-  //* *************************************************************************//
   // nsIMIMEInfo
 
   get primaryExtension() {
@@ -731,7 +718,6 @@ FeedHandlerInfo.prototype = {
   },
 
 
-  //* *************************************************************************//
   // Storage
 
   // Changes to the preferred action and handler take effect immediately
@@ -759,7 +745,6 @@ FeedHandlerInfo.prototype = {
   },
 
 
-  //* *************************************************************************//
   // Icons
 
   get smallIcon() {
@@ -839,7 +824,6 @@ var pdfHandlerInfo = {
 };
 
 
-//* ***************************************************************************//
 // Prefpane Controller
 
 var gApplicationsPane = {
@@ -863,7 +847,6 @@ var gApplicationsPane = {
   _visibleTypeDescriptionCount: {},
 
 
-  //* *************************************************************************//
   // Convenience & Performance Shortcuts
 
   // These get defined by init().
@@ -888,7 +871,6 @@ var gApplicationsPane = {
                   getService(Ci.nsIIOService),
 
 
-  //* *************************************************************************//
   // Initialization & Destruction
 
   init: function() {
@@ -991,7 +973,6 @@ var gApplicationsPane = {
   },
 
 
-  //* *************************************************************************//
   // nsISupports
 
   QueryInterface: function(aIID) {
@@ -1004,7 +985,6 @@ var gApplicationsPane = {
   },
 
 
-  //* *************************************************************************//
   // nsIObserver
 
   observe: function (aSubject, aTopic, aData) {
@@ -1026,7 +1006,6 @@ var gApplicationsPane = {
   },
 
 
-  //* *************************************************************************//
   // nsIDOMEventListener
 
   handleEvent: function(aEvent) {
@@ -1036,7 +1015,6 @@ var gApplicationsPane = {
   },
 
 
-  //* *************************************************************************//
   // Composed Model Construction
 
   _loadData: function() {
@@ -1131,7 +1109,6 @@ var gApplicationsPane = {
   },
 
 
-  //* *************************************************************************//
   // View Construction
 
   _rebuildVisibleTypes: function() {
@@ -1555,7 +1532,6 @@ var gApplicationsPane = {
   },
 
 
-  //* *************************************************************************//
   // Sorting & Filtering
 
   _sortColumn: null,
@@ -1628,7 +1604,6 @@ var gApplicationsPane = {
   },
 
 
-  //* *************************************************************************//
   // Changes
 
   onSelectAction: function(aActionItem) {

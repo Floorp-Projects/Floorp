@@ -16,16 +16,14 @@ this.EXPORTED_SYMBOLS = [
   "LoginHelper",
 ];
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-// //////////////////////////////////////////////////////////////////////////////
-// // LoginHelper
+// LoginHelper
 
 /**
  * Contains functions shared by different Login Manager components.

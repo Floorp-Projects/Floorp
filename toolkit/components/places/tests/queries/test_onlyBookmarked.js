@@ -74,10 +74,7 @@ add_task(function* test_onlyBookmarked()
   compareArrayToResult(testData, root);
   do_print("end first test");
 
-  /* ******************
-  Test live-update
-  ********************/
-
+  // Test live-update
   var liveUpdateTestData = [
     // Add a bookmark that should show up
     { isBookmark: true,
