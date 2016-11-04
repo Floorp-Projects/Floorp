@@ -62,11 +62,11 @@ ContainerParser::IsMediaSegmentPresent(MediaByteBuffer* aData)
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-bool
+MediaResult
 ContainerParser::ParseStartAndEndTimestamps(MediaByteBuffer* aData,
                                             int64_t& aStart, int64_t& aEnd)
 {
-  return false;
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 bool
@@ -180,8 +180,9 @@ public:
     return MediaResult(NS_ERROR_FAILURE, RESULT_DETAIL("Invalid webm content"));
   }
 
-  bool ParseStartAndEndTimestamps(MediaByteBuffer* aData,
-                                  int64_t& aStart, int64_t& aEnd) override
+  MediaResult ParseStartAndEndTimestamps(MediaByteBuffer* aData,
+                                         int64_t& aStart,
+                                         int64_t& aEnd) override
   {
     bool initSegment = NS_SUCCEEDED(IsInitSegmentPresent(aData));
 
@@ -195,7 +196,7 @@ public:
                                                   mOffset);
       mLastMapping.reset();
       MSE_DEBUG(WebMContainerParser, "New cluster found at start, ending previous one");
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
 
     if (initSegment) {
@@ -227,7 +228,7 @@ public:
         MOZ_ASSERT(mParser.mInitEndOffset <= mResource->GetLength());
         if (!mInitData->SetLength(mParser.mInitEndOffset, fallible)) {
           // Super unlikely OOM
-          return false;
+          return NS_ERROR_OUT_OF_MEMORY;
         }
         mCompleteInitSegmentRange = MediaByteRange(0, mParser.mInitEndOffset);
         char* buffer = reinterpret_cast<char*>(mInitData->Elements());
@@ -243,7 +244,7 @@ public:
     mOffset += aData->Length();
 
     if (mapping.IsEmpty()) {
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
 
     // Calculate media range for first media segment.
@@ -269,7 +270,7 @@ public:
 
     if (completeIdx < 0) {
       mLastMapping.reset();
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
 
     if (mCompleteMediaHeaderRange.IsEmpty()) {
@@ -304,7 +305,7 @@ public:
     if (!previousMapping && completeIdx + 1u >= mapping.Length()) {
       // We have no previous nor next block available,
       // so we can't estimate this block's duration.
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
 
     uint64_t frameDuration = (completeIdx + 1u < mapping.Length())
@@ -318,7 +319,7 @@ public:
               mapping[completeIdx].mEndOffset, mapping.Length(), completeIdx,
               mCompleteMediaSegmentRange.mEnd);
 
-    return true;
+    return NS_OK;
   }
 
   int64_t GetRoundingError() override
@@ -460,8 +461,9 @@ private:
   };
 
 public:
-  bool ParseStartAndEndTimestamps(MediaByteBuffer* aData,
-                                  int64_t& aStart, int64_t& aEnd) override
+  MediaResult ParseStartAndEndTimestamps(MediaByteBuffer* aData,
+                                         int64_t& aStart,
+                                         int64_t& aEnd) override
   {
     bool initSegment = NS_SUCCEEDED(IsInitSegmentPresent(aData));
     if (initSegment) {
@@ -474,7 +476,7 @@ public:
       mParser = new mp4_demuxer::MoofParser(mStream, 0, /* aIsAudio = */ false);
       mInitData = new MediaByteBuffer();
     } else if (!mStream || !mParser) {
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
 
     mResource->AppendData(aData);
@@ -489,7 +491,7 @@ public:
         mCompleteInitSegmentRange = range;
         if (!mInitData->SetLength(range.Length(), fallible)) {
           // Super unlikely OOM
-          return false;
+          return NS_ERROR_OUT_OF_MEMORY;
         }
         char* buffer = reinterpret_cast<char*>(mInitData->Elements());
         mResource->ReadFromCache(buffer, range.mStart, range.Length());
@@ -512,17 +514,17 @@ public:
     }
     if (NS_WARN_IF(rv.Failed())) {
       rv.SuppressException();
-      return false;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
 
     if (compositionRange.IsNull()) {
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
     aStart = compositionRange.start;
     aEnd = compositionRange.end;
     MSE_DEBUG(MP4ContainerParser, "[%lld, %lld]",
               aStart, aEnd);
-    return true;
+    return NS_OK;
   }
 
   // Gaps of up to 35ms (marginally longer than a single frame at 30fps) are considered
@@ -639,13 +641,14 @@ public:
     return NS_OK;
   }
 
-  bool ParseStartAndEndTimestamps(MediaByteBuffer* aData,
-                                  int64_t& aStart, int64_t& aEnd) override
+  MediaResult ParseStartAndEndTimestamps(MediaByteBuffer* aData,
+                                         int64_t& aStart,
+                                         int64_t& aEnd) override
   {
     // ADTS header.
     Header header;
     if (!Parse(aData, header)) {
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
     mHasInitData = true;
     mCompleteInitSegmentRange = MediaByteRange(0, int64_t(header.header_length));
@@ -660,7 +663,7 @@ public:
           " in %llu byte buffer.",
           (unsigned long long)header.frame_length,
           (unsigned long long)(aData->Length()));
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
     mCompleteMediaSegmentRange = MediaByteRange(header.header_length,
                                                 header.frame_length);
@@ -672,7 +675,7 @@ public:
     MSE_DEBUG(ADTSContainerParser, "[%lld, %lld]",
               aStart, aEnd);
     // We don't update timestamps, regardless.
-    return false;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Audio shouldn't have gaps.

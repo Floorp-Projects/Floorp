@@ -77,7 +77,7 @@ TEST(ContainerParser, ADTSHeader) {
     << "Found media segment when there was just a header.";
   int64_t start = 0;
   int64_t end = 0;
-  EXPECT_FALSE(parser->ParseStartAndEndTimestamps(header, start, end));
+  EXPECT_TRUE(NS_FAILED(parser->ParseStartAndEndTimestamps(header, start, end)));
 
   EXPECT_TRUE(parser->HasInitData());
   EXPECT_TRUE(parser->HasCompleteInitData());
