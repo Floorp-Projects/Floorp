@@ -14,6 +14,7 @@
 #include "GMPContentParent.h"
 #include "nsXPCOMPrivate.h"
 #include "mozilla/SyncRunnable.h"
+#include "mozilla/StaticMutex.h"
 #include "runnable_utils.h"
 #include "base/task.h"
 #include "nsIObserverService.h"
@@ -179,6 +180,7 @@ struct GMPCapabilityAndVersion
   nsTArray<GMPCapability> mCapabilities;
 };
 
+StaticMutex sGMPCapabilitiesMutex;
 StaticAutoPtr<nsTArray<GMPCapabilityAndVersion>> sGMPCapabilities;
 
 static nsCString
@@ -198,6 +200,7 @@ GMPCapabilitiesToString()
 void
 GeckoMediaPluginServiceChild::UpdateGMPCapabilities(nsTArray<GMPCapabilityData>&& aCapabilities)
 {
+  StaticMutexAutoLock lock(sGMPCapabilitiesMutex);
   if (!sGMPCapabilities) {
     sGMPCapabilities = new nsTArray<GMPCapabilityAndVersion>();
     ClearOnShutdown(&sGMPCapabilities);
@@ -223,7 +226,7 @@ GeckoMediaPluginServiceChild::HasPluginForAPI(const nsACString& aAPI,
                                               nsTArray<nsCString>* aTags,
                                               bool* aHasPlugin)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  StaticMutexAutoLock lock(sGMPCapabilitiesMutex);
   if (!sGMPCapabilities) {
     *aHasPlugin = false;
     return NS_OK;

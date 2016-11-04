@@ -426,7 +426,7 @@ public:
   }
 
   NS_IMETHOD Run() override {
-    MOZ_ASSERT (NS_GetCurrentThread() == mClone->getAsyncExecutionTarget());
+    MOZ_ASSERT (NS_GetCurrentThread() == mConnection->getAsyncExecutionTarget());
 
     nsresult rv = mConnection->initializeClone(mClone, mReadOnly);
     if (NS_FAILED(rv)) {
@@ -1332,7 +1332,10 @@ Connection::AsyncClone(bool aReadOnly,
 
   RefPtr<AsyncInitializeClone> initEvent =
     new AsyncInitializeClone(this, clone, aReadOnly, aCallback);
-  nsCOMPtr<nsIEventTarget> target = clone->getAsyncExecutionTarget();
+  // Dispatch to our async thread, since the originating connection must remain
+  // valid and open for the whole cloning process.  This also ensures we are
+  // properly serialized with a `close` operation, rather than race with it.
+  nsCOMPtr<nsIEventTarget> target = getAsyncExecutionTarget();
   if (!target) {
     return NS_ERROR_UNEXPECTED;
   }

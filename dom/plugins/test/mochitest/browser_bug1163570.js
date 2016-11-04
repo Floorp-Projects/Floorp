@@ -2,22 +2,16 @@ var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content
 
 // simple tab load helper, pilfered from browser plugin tests
 function promiseTabLoad(tab, url, eventType="load") {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     function handle(event) {
       if (event.originalTarget != tab.linkedBrowser.contentDocument ||
           event.target.location.href == "about:blank" ||
           (url && event.target.location.href != url)) {
         return;
       }
-      clearTimeout(timeout);
       tab.linkedBrowser.removeEventListener(eventType, handle, true);
       resolve(event);
     }
-
-    let timeout = setTimeout(() => {
-      tab.linkedBrowser.removeEventListener(eventType, handle, true);
-      reject(new Error("Timed out while waiting for a '" + eventType + "'' event"));
-    }, 30000);
 
     tab.linkedBrowser.addEventListener(eventType, handle, true, true);
     if (url) {

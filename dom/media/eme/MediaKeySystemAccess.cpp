@@ -98,36 +98,10 @@ MediaKeySystemAccess::CreateMediaKeys(ErrorResult& aRv)
 }
 
 static bool
-HaveGMPFor(mozIGeckoMediaPluginService* aGMPService,
-           const nsCString& aKeySystem,
-           const nsCString& aAPI,
-           const nsCString& aTag = EmptyCString())
-{
-  nsTArray<nsCString> tags;
-  tags.AppendElement(aKeySystem);
-  if (!aTag.IsEmpty()) {
-    tags.AppendElement(aTag);
-  }
-  bool hasPlugin = false;
-  if (NS_FAILED(aGMPService->HasPluginForAPI(aAPI,
-                                             &tags,
-                                             &hasPlugin))) {
-    return false;
-  }
-  return hasPlugin;
-}
-
-static bool
 HavePluginForKeySystem(const nsCString& aKeySystem)
 {
-  bool havePlugin = false;
-  nsCOMPtr<mozIGeckoMediaPluginService> mps =
-    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-  if (mps) {
-    havePlugin = HaveGMPFor(mps,
-                            aKeySystem,
-                            NS_LITERAL_CSTRING(GMP_API_DECRYPTOR));
-  }
+  bool havePlugin = HaveGMPFor(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
+                               { aKeySystem });
 #ifdef MOZ_WIDGET_ANDROID
   // Check if we can use MediaDrm for this keysystem.
   if (!havePlugin) {

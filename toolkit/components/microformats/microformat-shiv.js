@@ -2087,7 +2087,7 @@ var Microformats; // jshint ignore:line
                     // add to rel-urls
                     var relUrl = this.getRelProperties(arr[x]);
                     relUrl.rels = items;
-                    // // do not add duplicate rel-urls - based on resolved URLs
+                    // do not add duplicate rel-urls - based on resolved URLs
                     if (url && out['rel-urls'][url] === undefined) {
                         out['rel-urls'][url] = relUrl;
                     }

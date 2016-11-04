@@ -22,6 +22,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
                                   "resource://gre/modules/LoginHelper.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LoginFormFactory",
+                                  "resource://gre/modules/LoginManagerContent.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "InsecurePasswordUtils",
+                                  "resource://gre/modules/InsecurePasswordUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let logger = LoginHelper.createLogger("nsLoginManager");
@@ -478,9 +482,12 @@ LoginManager.prototype = {
     // aPreviousResult is an nsIAutoCompleteResult, aElement is
     // nsIDOMHTMLInputElement
 
+    let form = LoginFormFactory.createFromField(aElement);
+    let isSecure = InsecurePasswordUtils.isFormSecure(form);
+
     if (!this._remember) {
       setTimeout(function() {
-        aCallback.onSearchCompletion(new UserAutoCompleteResult(aSearchString, []));
+        aCallback.onSearchCompletion(new UserAutoCompleteResult(aSearchString, [], {isSecure}));
       }, 0);
       return;
     }
@@ -508,7 +515,10 @@ LoginManager.prototype = {
 
                                this._autoCompleteLookupPromise = null;
                                let results =
-                                 new UserAutoCompleteResult(aSearchString, logins, messageManager);
+                                 new UserAutoCompleteResult(aSearchString, logins, {
+                                   messageManager,
+                                   isSecure,
+                                 });
                                aCallback.onSearchCompletion(results);
                              })
                             .then(null, Cu.reportError);

@@ -50,8 +50,7 @@ this.EXPORTED_SYMBOLS = [
   "DownloadPDFSaver",
 ];
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -142,8 +141,7 @@ function deserializeUnknownProperties(aObject, aSerializable, aFilterFn)
  */
 const kProgressUpdateIntervalMs = 400;
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Download
+// Download
 
 /**
  * Represents a single download, with associated state and actions.  This object
@@ -1249,8 +1247,7 @@ Download.fromSerializable = function (aSerializable) {
   return download;
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadSource
+// DownloadSource
 
 /**
  * Represents the source of a download, for example a document or an URI.
@@ -1376,8 +1373,7 @@ this.DownloadSource.fromSerializable = function (aSerializable) {
   return source;
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadTarget
+// DownloadTarget
 
 /**
  * Represents the target of a download, for example a file in the global
@@ -1505,8 +1501,7 @@ this.DownloadTarget.fromSerializable = function (aSerializable) {
   return target;
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadError
+// DownloadError
 
 /**
  * Provides detailed information about a download failure.
@@ -1701,8 +1696,7 @@ this.DownloadError.fromSerializable = function (aSerializable) {
   return e;
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadSaver
+// DownloadSaver
 
 /**
  * Template for an object that actually transfers the data for the download.
@@ -1860,8 +1854,7 @@ this.DownloadSaver.fromSerializable = function (aSerializable) {
   return saver;
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadCopySaver
+// DownloadCopySaver
 
 /**
  * Saver object that simply copies the entire source file to the target.
@@ -2340,8 +2333,7 @@ this.DownloadCopySaver.fromSerializable = function (aSerializable) {
   return saver;
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadLegacySaver
+// DownloadLegacySaver
 
 /**
  * Saver object that integrates with the legacy nsITransfer interface.
@@ -2724,8 +2716,7 @@ this.DownloadLegacySaver.fromSerializable = function () {
   return new DownloadLegacySaver();
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // DownloadPDFSaver
+// DownloadPDFSaver
 
 /**
  * This DownloadSaver type creates a PDF file from the current document in a

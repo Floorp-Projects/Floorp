@@ -1783,7 +1783,7 @@ var TelemetryStorageImpl = {
   }),
 };
 
-// /// Utility functions
+// Utility functions
 
 function pingFilePath(ping) {
   // Support legacy ping formats, who don't have an "id" field, but a "slug" field.

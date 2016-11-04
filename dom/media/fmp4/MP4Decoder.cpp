@@ -170,6 +170,13 @@ MP4Decoder::IsH264(const nsACString& aMimeType)
 
 /* static */
 bool
+MP4Decoder::IsAAC(const nsACString& aMimeType)
+{
+  return aMimeType.EqualsLiteral("audio/mp4a-latm");
+}
+
+/* static */
+bool
 MP4Decoder::IsEnabled()
 {
   return Preferences::GetBool("media.mp4.enabled", true);

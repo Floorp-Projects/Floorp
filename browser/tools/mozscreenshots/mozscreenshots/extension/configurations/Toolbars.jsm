@@ -45,7 +45,7 @@ this.Toolbars = {
 };
 
 
-// /// helpers /////
+// helpers
 
 function toggleMenubarIfNecessary(visible) {
   let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");

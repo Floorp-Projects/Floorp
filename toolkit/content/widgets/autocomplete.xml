@@ -1407,6 +1407,10 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </setter>
       </property>
 
+      <property name="overflowPadding"
+                onget="return Number(this.getAttribute('overflowpadding'))"
+                readonly="true" />
+
       <method name="selectBy">
         <parameter name="aReverse"/>
         <parameter name="aPage"/>
@@ -1448,6 +1452,79 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       ]]>
       </handler>
     </handlers>
+  </binding>
+
+  <binding id="autocomplete-richlistitem-insecure-field" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-richlistitem">
+    <content align="center"
+             onoverflow="this._onOverflow();"
+             onunderflow="this._onUnderflow();">
+      <xul:image anonid="type-icon"
+                 class="ac-type-icon"
+                 xbl:inherits="selected,current,type"/>
+      <xul:image anonid="site-icon"
+                 class="ac-site-icon"
+                 xbl:inherits="src=image,selected,type"/>
+      <xul:vbox class="ac-title"
+                align="left"
+                xbl:inherits="">
+        <xul:description class="ac-text-overflow-container">
+          <xul:description anonid="title-text"
+                           class="ac-title-text"
+                           xbl:inherits="selected"/>
+        </xul:description>
+        <xul:label id="learnMoreLink" align="left" class="text-link"/>
+      </xul:vbox>
+      <xul:hbox anonid="tags"
+                class="ac-tags"
+                align="center"
+                xbl:inherits="selected">
+        <xul:description class="ac-text-overflow-container">
+          <xul:description anonid="tags-text"
+                           class="ac-tags-text"
+                           xbl:inherits="selected"/>
+        </xul:description>
+      </xul:hbox>
+      <xul:hbox anonid="separator"
+                class="ac-separator"
+                align="center"
+                xbl:inherits="selected,actiontype,type">
+        <xul:description class="ac-separator-text">—</xul:description>
+      </xul:hbox>
+      <xul:hbox class="ac-url"
+                align="center"
+                xbl:inherits="selected,actiontype">
+        <xul:description class="ac-text-overflow-container">
+          <xul:description anonid="url-text"
+                           class="ac-url-text"
+                           xbl:inherits="selected"/>
+        </xul:description>
+      </xul:hbox>
+      <xul:hbox class="ac-action"
+                align="center"
+                xbl:inherits="selected,actiontype">
+        <xul:description class="ac-text-overflow-container">
+          <xul:description anonid="action-text"
+                           class="ac-action-text"
+                           xbl:inherits="selected"/>
+        </xul:description>
+      </xul:hbox>
+    </content>
+    <implementation>
+      <constructor><![CDATA[
+        let learnMoreLink = document.getElementById("learnMoreLink");
+        learnMoreLink.setAttribute("value", this._stringBundle.GetStringFromName("insecureFieldWarningLearnMore"));
+        learnMoreLink.setAttribute("href", Services.urlFormatter.formatURLPref("app.support.baseURL") + "insecure-form-field-warning");
+      ]]></constructor>
+
+      <property name="_stringBundle">
+        <getter><![CDATA[
+          if (!this.__stringBundle) {
+            this.__stringBundle = Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
+          }
+          return this.__stringBundle;
+        ]]></getter>
+      </property>
+    </implementation>
   </binding>
 
   <binding id="autocomplete-richlistitem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
@@ -1687,6 +1764,9 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         <body>
           <![CDATA[
           // Get rid of all previous text
+          if (!aDescriptionElement) {
+            return;
+          }
           while (aDescriptionElement.hasChildNodes())
             aDescriptionElement.removeChild(aDescriptionElement.firstChild);
 
@@ -2199,14 +2279,15 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             separatorRect.width + Math.max(urlRect.width, actionRect.width);
 
           // Total width for the title and URL/action is the width of the item
-          // minus the start of the title text minus a little extra padding.
+          // minus the start of the title text minus a little optional extra padding.
           // This extra padding amount is basically arbitrary but keeps the text
           // from getting too close to the popup's edge.
-          let extraPadding = 30;
           let dir = this.getAttribute("dir");
           let titleStart = dir == "rtl" ? itemRect.right - titleRect.right
                                         : titleRect.left - itemRect.left;
-          let itemWidth = itemRect.width - titleStart - extraPadding;
+
+          let popup = this.parentNode.parentNode;
+          let itemWidth = itemRect.width - titleStart - popup.overflowPadding;
 
           if (this._tags.hasAttribute("empty")) {
             // The tags box is not displayed in this case.

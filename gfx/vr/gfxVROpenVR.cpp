@@ -639,6 +639,10 @@ VRControllerManagerOpenVR::GetControllers(nsTArray<RefPtr<VRControllerHost>>& aC
 void
 VRControllerManagerOpenVR::ScanForDevices()
 {
+  // Remove the existing gamepads
+  for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
+    RemoveGamepad(mOpenVRController[i]->GetIndex());
+  }
   mControllerCount = 0;
   mOpenVRController.Clear();
 

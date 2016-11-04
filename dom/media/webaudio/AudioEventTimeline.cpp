@@ -37,11 +37,12 @@ static float ExtractValueFromCurve(double startTime, float* aCurve, uint32_t aCu
   if (ratio >= 1.0) {
     return aCurve[aCurveLength - 1];
   }
-  uint32_t current = uint32_t(aCurveLength * ratio);
+  uint32_t current = uint32_t(floor((aCurveLength - 1) * ratio));
   uint32_t next = current + 1;
+  double step = duration / double(aCurveLength - 1);
   if (next < aCurveLength) {
-    double t0 = double(current) / double(aCurveLength) * duration ;
-    double t1 = double(next) / double(aCurveLength) * duration ;
+    double t0 = current * step;
+    double t1 = next * step;
     return LinearInterpolate(t0, aCurve[current], t1, aCurve[next], t - startTime);
   } else {
     return aCurve[current];

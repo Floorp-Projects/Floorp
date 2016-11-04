@@ -1,13 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Constants
+// Constants
 
 const TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING = "autocomplete-will-enter-text";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Helpers
+// Helpers
 
 /**
  * Ensures that we have no data in the tables created by ANALYZE.
@@ -47,8 +45,7 @@ function do_check_analyze_ran(aTableName, aRan) {
   }
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 function run_test() {
   run_next_test();

@@ -54,7 +54,7 @@ add_old_configure_assignment('android_ndk', ndk)
 
 @depends(target, android_version, ndk)
 @checking('for android platform directory')
-@imports('os')
+@imports(_from='os.path', _import='isdir')
 def android_platform(target, android_version, ndk):
     if target.os != 'Android':
         return
@@ -80,7 +80,7 @@ def android_platform(target, android_version, ndk):
                                 'android-%s' % platform_version,
                                 'arch-%s' % target_dir_name)
 
-    if not os.path.isdir(platform_dir):
+    if not isdir(platform_dir):
         die("Android platform directory not found. With the current "
             "configuration, it should be in %s" % platform_dir)
 
@@ -98,7 +98,7 @@ def extra_toolchain_flags(platform_dir):
 @depends(target, host, ndk, '--with-android-toolchain',
          '--with-android-gnu-compiler-version')
 @checking('for the Android toolchain directory', lambda x: x or 'not found')
-@imports('os')
+@imports(_from='os.path', _import='isdir')
 @imports(_from='mozbuild.shellutil', _import='quote')
 def android_toolchain(target, host, ndk, toolchain, gnu_compiler_version):
     if not ndk:
@@ -123,11 +123,11 @@ def android_toolchain(target, host, ndk, toolchain, gnu_compiler_version):
             toolchain = toolchain_format % (ndk, target_base, version,
                                             host.kernel.lower(), host.cpu)
             log.debug('Trying %s' % quote(toolchain))
-            if not os.path.isdir(toolchain) and host.cpu == 'x86_64':
+            if not isdir(toolchain) and host.cpu == 'x86_64':
                 toolchain = toolchain_format % (ndk, target_base, version,
                                                 host.kernel.lower(), 'x86')
                 log.debug('Trying %s' % quote(toolchain))
-            if os.path.isdir(toolchain):
+            if isdir(toolchain):
                 return toolchain
         else:
             if gnu_compiler_version:

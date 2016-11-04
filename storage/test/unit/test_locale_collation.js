@@ -24,8 +24,7 @@ var gLocaleCollation;
 // A connection to our in-memory UTF-16-encoded database.
 var gUtf16Conn;
 
-// /////////////////////////////////////////////////////////////////////////////
-// // Helper Functions
+// Helper Functions
 
 /**
  * Since we create a UTF-16 database we have to clean it up, in addition to
@@ -251,8 +250,7 @@ function setup()
   gLocaleCollation = collFact.CreateCollation(localeSvc.getApplicationLocale());
 }
 
-// /////////////////////////////////////////////////////////////////////////////
-// // Test Runs
+// Test Runs
 
 var gTests = [
   {

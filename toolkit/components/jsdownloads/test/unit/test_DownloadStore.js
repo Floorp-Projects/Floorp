@@ -9,8 +9,7 @@
 
 "use strict";
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Globals
+// Globals
 
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadStore",
                                   "resource://gre/modules/DownloadStore.jsm");
@@ -38,8 +37,7 @@ function promiseNewListAndStore(aStorePath)
   });
 }
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Tests
+// Tests
 
 /**
  * Saves downloads to a file, then reloads them.

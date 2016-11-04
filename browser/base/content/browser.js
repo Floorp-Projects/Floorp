@@ -5850,7 +5850,6 @@ var LanguageDetectionListener = {
 var BrowserOffline = {
   _inited: false,
 
-  // ///////////////////////////////////////////////////////////////////////////
   // BrowserOffline Public Methods
   init: function ()
   {
@@ -5883,7 +5882,6 @@ var BrowserOffline = {
     ioService.offline = !ioService.offline;
   },
 
-  // ///////////////////////////////////////////////////////////////////////////
   // nsIObserver
   observe: function (aSubject, aTopic, aState)
   {
@@ -5895,7 +5893,6 @@ var BrowserOffline = {
     this._updateOfflineUI(Services.io.offline);
   },
 
-  // ///////////////////////////////////////////////////////////////////////////
   // BrowserOffline Implementation Methods
   _canGoOffline: function ()
   {

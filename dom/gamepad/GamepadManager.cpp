@@ -177,6 +177,10 @@ GamepadManager::RemoveListener(nsGlobalWindow* aWindow)
     return; // doesn't exist
   }
 
+  for (auto iter = mGamepads.Iter(); !iter.Done(); iter.Next()) {
+      aWindow->RemoveGamepad(iter.Key());
+  }
+
   mListeners.RemoveElement(aWindow);
 
   if (mListeners.IsEmpty()) {
