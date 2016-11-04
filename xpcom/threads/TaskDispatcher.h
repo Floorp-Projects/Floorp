@@ -8,6 +8,7 @@
 #define TaskDispatcher_h_
 
 #include "mozilla/AbstractThread.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 
