@@ -17,7 +17,7 @@ const { CustomRequestView } = require("./custom-request-view");
 const { ToolbarView } = require("./toolbar-view");
 const { SidebarView } = require("./sidebar-view");
 const { DetailsView } = require("./details-view");
-const { PerformanceStatisticsView } = require("./performance-statistics-view");
+const { StatisticsView } = require("./statistics-view");
 const { ACTIVITY_TYPE } = require("./constants");
 const Actions = require("./actions/index");
 const { Prefs } = require("./prefs");
@@ -52,7 +52,15 @@ var NetMonitorView = {
     this.RequestsMenu.initialize(gStore);
     this.NetworkDetails.initialize(gStore);
     this.CustomRequest.initialize();
-    this.PerformanceStatistics.initialize(gStore);
+    this.Statistics.initialize(gStore);
+
+    // Store watcher here is for observing the statisticsOpen state change.
+    // It should be removed once we migrate to react and apply react/redex binding.
+    this.unsubscribeStore = gStore.subscribe(storeWatcher(
+      false,
+      () => gStore.getState().ui.statisticsOpen,
+      this.toggleFrontendMode.bind(this)
+    ));
   },
 
   /**
@@ -64,6 +72,8 @@ var NetMonitorView = {
     this.RequestsMenu.destroy();
     this.NetworkDetails.destroy();
     this.CustomRequest.destroy();
+    this.Statistics.destroy();
+    this.unsubscribeStore();
 
     this._destroyPanes();
   },
@@ -151,10 +161,10 @@ var NetMonitorView = {
    * Toggles between the frontend view modes ("Inspector" vs. "Statistics").
    */
   toggleFrontendMode: function () {
-    if (this.currentFrontendMode != "network-inspector-view") {
-      this.showNetworkInspectorView();
-    } else {
+    if (gStore.getState().ui.statisticsOpen) {
       this.showNetworkStatisticsView();
+    } else {
+      this.showNetworkInspectorView();
     }
   },
 
@@ -173,7 +183,7 @@ var NetMonitorView = {
 
     let controller = NetMonitorController;
     let requestsView = this.RequestsMenu;
-    let statisticsView = this.PerformanceStatistics;
+    let statisticsView = this.Statistics;
 
     Task.spawn(function* () {
       statisticsView.displayPlaceholderCharts();
@@ -270,6 +280,19 @@ function whenDataAvailable(dataStore, mandatoryFields) {
   });
 }
 
+// A smart store watcher to notify store changes as necessary
+function storeWatcher(initialValue, reduceValue, onChange) {
+  let currentValue = initialValue;
+
+  return () => {
+    const newValue = reduceValue();
+    if (newValue !== currentValue) {
+      onChange();
+      currentValue = newValue;
+    }
+  };
+}
+
 /**
  * Preliminary setup for the NetMonitorView object.
  */
@@ -278,6 +301,6 @@ NetMonitorView.Sidebar = new SidebarView();
 NetMonitorView.NetworkDetails = new DetailsView();
 NetMonitorView.RequestsMenu = new RequestsMenuView();
 NetMonitorView.CustomRequest = new CustomRequestView();
-NetMonitorView.PerformanceStatistics = new PerformanceStatisticsView();
+NetMonitorView.Statistics = new StatisticsView();
 
 exports.NetMonitorView = NetMonitorView;
