@@ -5,10 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsAutoRef.h"
-#include "TestHarness.h"
-
-#define TEST(aCondition, aMsg) \
-  if (!(aCondition)) { fail("TestAutoRef: "#aMsg); exit(1); }
+#include "gtest/gtest.h"
 
 struct TestObjectA {
 public:
@@ -16,7 +13,7 @@ public:
   }
 
   ~TestObjectA() {
-    TEST(mRefCnt == 0, "mRefCnt in destructor");
+    EXPECT_EQ(mRefCnt, 0);
   }
 
 public:
@@ -43,20 +40,17 @@ public:
 
 int nsAutoRefTraits<TestObjectA>::mTotalRefsCnt = 0;
 
-int main()
+TEST(AutoRef, Assignment)
 {
   {
     nsCountedRef<TestObjectA> a(new TestObjectA());
-    TEST(a->mRefCnt == 1, "nsCountedRef instantiation with valid RawRef");
+    ASSERT_EQ(a->mRefCnt, 1);
 
     nsCountedRef<TestObjectA> b;
-    TEST(b.get() == nullptr, "nsCountedRef instantiation with invalid RawRef");
+    ASSERT_EQ(b.get(), nullptr);
 
     a.swap(b);
-    TEST(b->mRefCnt, "nsAutoRef::swap() t1");
-    TEST(a.get() == nullptr, "nsAutoRef::swap() t2");
+    ASSERT_EQ(b->mRefCnt, 1);
+    ASSERT_EQ(a.get(), nullptr);
   }
-
-  TEST(true, "All tests pass");
-  return 0;
 }
