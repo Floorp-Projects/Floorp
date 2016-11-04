@@ -39,6 +39,14 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         super(itemView);
     }
 
+    public static class HighlightsTitle extends StreamItem {
+        public static final int LAYOUT_ID = R.layout.activity_stream_main_highlightstitle;
+
+        public HighlightsTitle(View itemView) {
+            super(itemView);
+        }
+    }
+
     public static class TopPanel extends StreamItem {
         public static final int LAYOUT_ID = R.layout.activity_stream_main_toppanel;
 
