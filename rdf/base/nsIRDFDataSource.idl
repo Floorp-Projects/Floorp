@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsISupportsArray.idl"
 #include "nsIRDFResource.idl"
 #include "nsIRDFNode.idl"
 #include "nsISimpleEnumerator.idl"
@@ -138,16 +137,16 @@ interface nsIRDFDataSource : nsISupports
     /**
      * Returns whether a given command is enabled for a set of sources. 
      */
-    boolean IsCommandEnabled(in nsISupportsArray aSources,
+    boolean IsCommandEnabled(in nsISupports aSources,
                              in nsIRDFResource   aCommand,
-                             in nsISupportsArray aArguments);
+                             in nsISupports aArguments);
 
     /**
      * Perform the specified command on set of sources.
      */
-    void DoCommand(in nsISupportsArray aSources,
+    void DoCommand(in nsISupports aSources,
                    in nsIRDFResource   aCommand,
-                   in nsISupportsArray aArguments);
+                   in nsISupports aArguments);
 
     /**
      * Returns the set of all commands defined for a given source.
