@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+#include "Common.h"
 #include "Classifier.h"
 #include "HashStore.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -53,21 +54,6 @@ MergeAndSortArray(const _PrefixArray& array1,
   output.AppendElements(array1);
   output.AppendElements(array2);
   output.Sort();
-}
-
-// This function converts lexigraphic-sorted prefixes to a hashtable
-// which key is prefix size and value is concatenated prefix string.
-static void
-PrefixArrayToPrefixStringMap(const _PrefixArray& prefixArray,
-                             PrefixStringMap& outMap)
-{
-  outMap.Clear();
-
-  for (uint32_t i = 0; i < prefixArray.Length(); i++) {
-    const _Prefix& prefix = prefixArray[i];
-    nsCString* prefixString = outMap.LookupOrAdd(prefix.Length());
-    prefixString->Append(prefix.BeginReading(), prefix.Length());
-  }
 }
 
 static void
