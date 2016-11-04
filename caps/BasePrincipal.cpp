@@ -358,22 +358,6 @@ BasePrincipal::EqualsConsideringDomain(nsIPrincipal *aOther, bool *aResult)
   return NS_OK;
 }
 
-bool
-BasePrincipal::EqualsIgnoringAddonId(nsIPrincipal *aOther)
-{
-  MOZ_ASSERT(aOther);
-
-  // Note that this will not work for expanded principals, nor is it intended
-  // to.
-  if (!dom::ChromeUtils::IsOriginAttributesEqualIgnoringAddonId(
-          OriginAttributesRef(), Cast(aOther)->OriginAttributesRef())) {
-    return false;
-  }
-
-  return SubsumesInternal(aOther, DontConsiderDocumentDomain) &&
-         Cast(aOther)->SubsumesInternal(this, DontConsiderDocumentDomain);
-}
-
 NS_IMETHODIMP
 BasePrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
 {
