@@ -169,6 +169,14 @@ MediaDecoderReaderWrapper::ReadMetadata()
          ->CompletionPromise();
 }
 
+RefPtr<HaveStartTimePromise>
+MediaDecoderReaderWrapper::AwaitStartTime()
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  MOZ_ASSERT(!mShutdown);
+  return mStartTimeRendezvous->AwaitStartTime();
+}
+
 void
 MediaDecoderReaderWrapper::RequestAudioData()
 {
