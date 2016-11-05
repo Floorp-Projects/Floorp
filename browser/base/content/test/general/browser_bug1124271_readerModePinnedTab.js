@@ -6,7 +6,7 @@
 
 const PREF = "reader.parse-on-load.enabled";
 
-const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
+const TEST_PATH = "http://example.com/browser/browser/base/content/test/general/";
 
 var readerButton = document.getElementById("reader-mode-button");
 
@@ -37,9 +37,9 @@ add_task(function* () {
   // Ensure no new tabs are opened when exiting reader mode in a pinned tab
   is(gBrowser.tabs.length, initialTabsCount, "No additional tabs were opened.");
 
-  let pageShownPromise = BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "pageshow");
   readerButton.click();
-  yield pageShownPromise;
+  yield BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "pageshow");
+
   // Ensure no new tabs are opened when exiting reader mode in a pinned tab
   is(gBrowser.tabs.length, initialTabsCount, "No additional tabs were opened.");
 
