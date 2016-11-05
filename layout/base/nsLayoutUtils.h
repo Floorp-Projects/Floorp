@@ -1373,6 +1373,9 @@ public:
    * width, its 'width', 'min-width', and 'max-width' properties (or 'height'
    * variations if that's what matches aAxis) and its padding, border and margin
    * in the corresponding dimension.
+   * @param aMarginBoxMinSizeClamp make the result fit within this margin-box
+   * size by reducing the *content size* (flooring at zero).  This is used for:
+   * https://drafts.csswg.org/css-grid/#min-size-auto
    */
   enum class IntrinsicISizeType { MIN_ISIZE, PREF_ISIZE };
   static const auto MIN_ISIZE = IntrinsicISizeType::MIN_ISIZE;
@@ -1383,11 +1386,13 @@ public:
     MIN_INTRINSIC_ISIZE = 0x04, // use min-width/height instead of width/height
     ADD_PERCENTS = 0x08, // apply AddPercents also for MIN_ISIZE
   };
-  static nscoord IntrinsicForAxis(mozilla::PhysicalAxis aAxis,
-                                  nsRenderingContext*   aRenderingContext,
-                                  nsIFrame*             aFrame,
-                                  IntrinsicISizeType    aType,
-                                  uint32_t              aFlags = 0);
+  static nscoord
+  IntrinsicForAxis(mozilla::PhysicalAxis aAxis,
+                   nsRenderingContext*   aRenderingContext,
+                   nsIFrame*             aFrame,
+                   IntrinsicISizeType    aType,
+                   uint32_t              aFlags = 0,
+                   nscoord               aMarginBoxMinSizeClamp = NS_MAXSIZE);
   /**
    * Calls IntrinsicForAxis with aFrame's parent's inline physical axis.
    */
