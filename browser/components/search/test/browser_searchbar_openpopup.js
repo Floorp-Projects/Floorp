@@ -132,7 +132,6 @@ add_task(function* open_empty() {
   textbox.value = "foo";
 
   promise = promiseEvent(searchPopup, "popuphidden");
-  let clickPromise = promiseEvent(searchIcon, "click");
 
   info("Hiding popup");
   yield synthesizeNativeMouseClick(searchIcon);

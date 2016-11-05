@@ -144,7 +144,7 @@ function test() {
 
   AddonManager.getInstallForURL(TESTROOT + "theme.xpi", function(aInstall) {
     aInstall.addListener({
-      onInstallEnded: function(aInstall, aAddon) {
+      onInstallEnded: function() {
         AddonManager.getAddonByID("theme-xpi@tests.mozilla.org", function(aAddon) {
           isnot(aAddon, null, "Should have installed the test theme.");
 

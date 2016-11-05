@@ -1,6 +1,5 @@
 add_task(function*() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla", {animate: false});
-  yield promiseTabLoaded(tab);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
 
   let uri = NetUtil.newURI("http://bug1060642.example.com/beards/are/pretty/great");
   yield PlacesTestUtils.addVisits([{uri: uri, title: ""}]);

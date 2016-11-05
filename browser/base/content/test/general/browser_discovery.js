@@ -36,13 +36,13 @@ var iconDiscoveryTests = [
 ];
 
 function runIconDiscoveryTest() {
-  var test = iconDiscoveryTests[0];
+  var testCase = iconDiscoveryTests[0];
   var head = doc().getElementById("linkparent");
   var hasSrc = gBrowser.getIcon() != null;
-  if (test.pass)
-    ok(hasSrc, test.text);
+  if (testCase.pass)
+    ok(hasSrc, testCase.text);
   else
-    ok(!hasSrc, test.text);
+    ok(!hasSrc, testCase.text);
 
   head.removeChild(head.getElementsByTagName('link')[0]);
   iconDiscoveryTests.shift();
@@ -55,16 +55,16 @@ function iconDiscovery() {
     gBrowser.setIcon(gBrowser.selectedTab, null,
                      Services.scriptSecurityManager.getSystemPrincipal());
 
-    var test = iconDiscoveryTests[0];
+    var testCase = iconDiscoveryTests[0];
     var head = doc().getElementById("linkparent");
     var link = doc().createElement("link");
 
     var rootDir = getRootDirectory(gTestPath);
-    var rel = test.rel || "icon";
-    var href = test.href || rootDir + "moz.png";
-    var type = test.type || "image/png";
-    if (test.pass == undefined)
-      test.pass = true;
+    var rel = testCase.rel || "icon";
+    var href = testCase.href || rootDir + "moz.png";
+    var type = testCase.type || "image/png";
+    if (testCase.pass == undefined)
+      testCase.pass = true;
 
     link.rel = rel;
     link.href = href;
@@ -92,17 +92,17 @@ var searchDiscoveryTests = [
 ];
 
 function runSearchDiscoveryTest() {
-  var test = searchDiscoveryTests[0];
-  var title = test.title || searchDiscoveryTests.length;
+  var testCase = searchDiscoveryTests[0];
+  var title = testCase.title || searchDiscoveryTests.length;
   if (browser.engines) {
-    var hasEngine = (test.count) ? (browser.engines[0].title == title &&
-                                    browser.engines.length == test.count) :
-                                   (browser.engines[0].title == title);
-    ok(hasEngine, test.text);
+    var hasEngine = (testCase.count) ? (browser.engines[0].title == title &&
+                                        browser.engines.length == testCase.count) :
+                                       (browser.engines[0].title == title);
+    ok(hasEngine, testCase.text);
     browser.engines = null;
   }
   else
-    ok(!test.pass, test.text);
+    ok(!testCase.pass, testCase.text);
 
   searchDiscoveryTests.shift();
   searchDiscovery(); // Run the next test.
@@ -129,15 +129,15 @@ function searchDiscovery() {
 
   if (searchDiscoveryTests.length) {
     setHandlerFunc(runSearchDiscoveryTest);
-    let test = searchDiscoveryTests[0];
+    let testCase = searchDiscoveryTests[0];
     let link = doc().createElement("link");
 
-    let rel = test.rel || "search";
-    let href = test.href || "http://so.not.here.mozilla.com/search.xml";
-    let type = test.type || "application/opensearchdescription+xml";
-    let title = test.title || searchDiscoveryTests.length;
-    if (test.pass == undefined)
-      test.pass = true;
+    let rel = testCase.rel || "search";
+    let href = testCase.href || "http://so.not.here.mozilla.com/search.xml";
+    let type = testCase.type || "application/opensearchdescription+xml";
+    let title = testCase.title || searchDiscoveryTests.length;
+    if (testCase.pass == undefined)
+      testCase.pass = true;
 
     link.rel = rel;
     link.href = href;

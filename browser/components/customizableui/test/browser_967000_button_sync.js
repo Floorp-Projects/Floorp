@@ -194,10 +194,8 @@ add_task(function* () {
 
 // Test the "Sync Now" button
 add_task(function* () {
-  let nSyncs = 0;
   mockedInternal.getTabClients = () => [];
   mockedInternal.syncTabs = () => {
-    nSyncs++;
     return Promise.resolve();
   }
 

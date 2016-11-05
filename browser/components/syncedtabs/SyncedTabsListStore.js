@@ -126,7 +126,6 @@ Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
   moveSelectionUp() {
     let branchRow = this._selectedRow[0];
     let childRow = this._selectedRow[1];
-    let branch = this.data[branchRow];
 
     if (this.filter) {
       this.selectRow(branchRow - 1);
@@ -234,4 +233,3 @@ Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
       .catch(Cu.reportError);
   }
 });
-

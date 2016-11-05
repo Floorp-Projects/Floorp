@@ -35,7 +35,7 @@ function* testURL(url, loadFunc, endFunc) {
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   let browser = gBrowser.selectedBrowser;
 
-  let pageshowPromise = promiseWaitForEvent(browser, "pageshow");
+  let pageshowPromise = BrowserTestUtils.waitForContentEvent(browser, "pageshow");
 
   yield tabSwitchedPromise;
   yield pageshowPromise;
@@ -43,7 +43,7 @@ function* testURL(url, loadFunc, endFunc) {
   let pagePrincipal = gBrowser.contentPrincipal;
   loadFunc(url);
 
-  yield promiseWaitForEvent(browser, "pageshow");
+  yield BrowserTestUtils.waitForContentEvent(browser, "pageshow");
 
   yield ContentTask.spawn(browser, { isRemote: gMultiProcessBrowser },
     function* (arg) {

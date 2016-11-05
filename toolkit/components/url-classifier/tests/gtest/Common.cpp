@@ -51,3 +51,17 @@ void ApplyUpdate(TableUpdate* update)
   nsTArray<TableUpdate*> updates = { update };
   ApplyUpdate(updates);
 }
+
+void
+PrefixArrayToPrefixStringMap(const nsTArray<nsCString>& prefixArray,
+                             PrefixStringMap& out)
+{
+  out.Clear();
+
+  for (uint32_t i = 0; i < prefixArray.Length(); i++) {
+    const nsCString& prefix = prefixArray[i];
+    nsCString* prefixString = out.LookupOrAdd(prefix.Length());
+    prefixString->Append(prefix.BeginReading(), prefix.Length());
+  }
+}
+

@@ -18,6 +18,7 @@ public:
   NS_DECL_NSIIDLEPERIOD
 
   static float GetLongIdlePeriod();
+  static float GetMinIdlePeriod();
 private:
   virtual ~MainThreadIdlePeriod() {}
 };

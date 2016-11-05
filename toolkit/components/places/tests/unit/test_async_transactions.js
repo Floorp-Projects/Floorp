@@ -451,22 +451,22 @@ add_task(function* test_merge_create_folder_and_item() {
                 , title: "Test Bookmark"
                 , index: bmStartIndex };
 
-  let { folderTxn, bkmTxn } = yield PT.batch(function* () {
+  let [folderTxnResult, bkmTxnResult] = yield PT.batch(function* () {
     let folderTxn = PT.NewFolder(folder_info);
     folder_info.guid = bm_info.parentGuid = yield folderTxn.transact();
     let bkmTxn = PT.NewBookmark(bm_info);
     bm_info.guid = yield bkmTxn.transact();
-    return { folderTxn, bkmTxn };
+    return [folderTxn, bkmTxn];
   });
 
   let ensureDo = function* () {
-    ensureUndoState([[bkmTxn, folderTxn]], 0);
+    ensureUndoState([[bkmTxnResult, folderTxnResult]], 0);
     yield ensureItemsAdded(folder_info, bm_info);
     observer.reset();
   };
 
   let ensureUndo = () => {
-    ensureUndoState([[bkmTxn, folderTxn]], 1);
+    ensureUndoState([[bkmTxnResult, folderTxnResult]], 1);
     ensureItemsRemoved(folder_info, bm_info);
     observer.reset();
   };
@@ -491,7 +491,7 @@ add_task(function* test_move_items_to_folder() {
                    , title: "Bookmark B" };
 
   // Test moving items within the same folder.
-  let [folder_a_txn, bkm_a_txn, bkm_b_txn] = yield PT.batch(function* () {
+  let [folder_a_txn_result, bkm_a_txn_result, bkm_b_txn_result] = yield PT.batch(function* () {
     let folder_a_txn = PT.NewFolder(folder_a_info);
 
     folder_a_info.guid = bkm_a_info.parentGuid = bkm_b_info.parentGuid =
@@ -503,14 +503,14 @@ add_task(function* test_move_items_to_folder() {
     return [folder_a_txn, bkm_a_txn, bkm_b_txn];
   });
 
-  ensureUndoState([[bkm_b_txn, bkm_a_txn, folder_a_txn]], 0);
+  ensureUndoState([[bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
 
   let moveTxn = PT.Move({ guid:          bkm_a_info.guid
                         , newParentGuid: folder_a_info.guid });
   yield moveTxn.transact();
 
   let ensureDo = () => {
-    ensureUndoState([[moveTxn], [bkm_b_txn, bkm_a_txn, folder_a_txn]], 0);
+    ensureUndoState([[moveTxn], [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
     ensureItemsMoved({ guid:          bkm_a_info.guid
                      , oldParentGuid: folder_a_info.guid
                      , newParentGuid: folder_a_info.guid
@@ -519,7 +519,7 @@ add_task(function* test_move_items_to_folder() {
     observer.reset();
   };
   let ensureUndo = () => {
-    ensureUndoState([[moveTxn], [bkm_b_txn, bkm_a_txn, folder_a_txn]], 1);
+    ensureUndoState([[moveTxn], [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 1);
     ensureItemsMoved({ guid:          bkm_a_info.guid
                      , oldParentGuid: folder_a_info.guid
                      , newParentGuid: folder_a_info.guid
@@ -537,14 +537,14 @@ add_task(function* test_move_items_to_folder() {
   ensureUndo();
 
   yield PT.clearTransactionsHistory(false, true);
-  ensureUndoState([[bkm_b_txn, bkm_a_txn, folder_a_txn]], 0);
+  ensureUndoState([[bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]], 0);
 
   // Test moving items between folders.
   let folder_b_info = createTestFolderInfo("Folder B");
   let folder_b_txn = PT.NewFolder(folder_b_info);
   folder_b_info.guid = yield folder_b_txn.transact();
   ensureUndoState([ [folder_b_txn]
-                  , [bkm_b_txn, bkm_a_txn, folder_a_txn] ], 0);
+                  , [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 0);
 
   moveTxn = PT.Move({ guid:          bkm_a_info.guid
                     , newParentGuid: folder_b_info.guid
@@ -554,7 +554,7 @@ add_task(function* test_move_items_to_folder() {
   ensureDo = () => {
     ensureUndoState([ [moveTxn]
                     , [folder_b_txn]
-                    , [bkm_b_txn, bkm_a_txn, folder_a_txn] ], 0);
+                    , [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 0);
     ensureItemsMoved({ guid:          bkm_a_info.guid
                      , oldParentGuid: folder_a_info.guid
                      , newParentGuid: folder_b_info.guid
@@ -565,7 +565,7 @@ add_task(function* test_move_items_to_folder() {
   ensureUndo = () => {
     ensureUndoState([ [moveTxn]
                     , [folder_b_txn]
-                    , [bkm_b_txn, bkm_a_txn, folder_a_txn] ], 1);
+                    , [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 1);
     ensureItemsMoved({ guid:          bkm_a_info.guid
                      , oldParentGuid: folder_b_info.guid
                      , newParentGuid: folder_a_info.guid
@@ -588,7 +588,7 @@ add_task(function* test_move_items_to_folder() {
   do_check_eq(observer.itemsRemoved.size, 4);
   ensureUndoState([ [moveTxn]
                   , [folder_b_txn]
-                  , [bkm_b_txn, bkm_a_txn, folder_a_txn] ], 3);
+                  , [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 3);
   yield PT.clearTransactionsHistory();
   ensureUndoState();
 });
@@ -596,8 +596,8 @@ add_task(function* test_move_items_to_folder() {
 add_task(function* test_remove_folder() {
   let folder_level_1_info = createTestFolderInfo("Folder Level 1");
   let folder_level_2_info = { title: "Folder Level 2" };
-  let [folder_level_1_txn,
-       folder_level_2_txn] = yield PT.batch(function* () {
+  let [folder_level_1_txn_result,
+       folder_level_2_txn_result] = yield PT.batch(function* () {
     let folder_level_1_txn  = PT.NewFolder(folder_level_1_info);
     folder_level_1_info.guid = yield folder_level_1_txn.transact();
     folder_level_2_info.parentGuid = folder_level_1_info.guid;
@@ -606,7 +606,7 @@ add_task(function* test_remove_folder() {
     return [folder_level_1_txn, folder_level_2_txn];
   });
 
-  ensureUndoState([[folder_level_2_txn, folder_level_1_txn]]);
+  ensureUndoState([[folder_level_2_txn_result, folder_level_1_txn_result]]);
   yield ensureItemsAdded(folder_level_1_info, folder_level_2_info);
   observer.reset();
 
@@ -614,13 +614,13 @@ add_task(function* test_remove_folder() {
   yield remove_folder_2_txn.transact();
 
   ensureUndoState([ [remove_folder_2_txn]
-                  , [folder_level_2_txn, folder_level_1_txn] ]);
+                  , [folder_level_2_txn_result, folder_level_1_txn_result] ]);
   yield ensureItemsRemoved(folder_level_2_info);
 
   // Undo Remove "Folder Level 2"
   yield PT.undo();
   ensureUndoState([ [remove_folder_2_txn]
-                  , [folder_level_2_txn, folder_level_1_txn] ], 1);
+                  , [folder_level_2_txn_result, folder_level_1_txn_result] ], 1);
   yield ensureItemsAdded(folder_level_2_info);
   ensureTimestampsUpdated(folder_level_2_info.guid, true);
   observer.reset();
@@ -628,14 +628,14 @@ add_task(function* test_remove_folder() {
   // Redo Remove "Folder Level 2"
   yield PT.redo();
   ensureUndoState([ [remove_folder_2_txn]
-                  , [folder_level_2_txn, folder_level_1_txn] ]);
+                  , [folder_level_2_txn_result, folder_level_1_txn_result] ]);
   yield ensureItemsRemoved(folder_level_2_info);
   observer.reset();
 
   // Undo it again
   yield PT.undo();
   ensureUndoState([ [remove_folder_2_txn]
-                  , [folder_level_2_txn, folder_level_1_txn] ], 1);
+                  , [folder_level_2_txn_result, folder_level_1_txn_result] ], 1);
   yield ensureItemsAdded(folder_level_2_info);
   ensureTimestampsUpdated(folder_level_2_info.guid, true);
   observer.reset();
@@ -643,14 +643,14 @@ add_task(function* test_remove_folder() {
   // Undo the creation of both folders
   yield PT.undo();
   ensureUndoState([ [remove_folder_2_txn]
-                  , [folder_level_2_txn, folder_level_1_txn] ], 2);
+                  , [folder_level_2_txn_result, folder_level_1_txn_result] ], 2);
   yield ensureItemsRemoved(folder_level_2_info, folder_level_1_info);
   observer.reset();
 
   // Redo the creation of both folders
   yield PT.redo();
   ensureUndoState([ [remove_folder_2_txn]
-                  , [folder_level_2_txn, folder_level_1_txn] ], 1);
+                  , [folder_level_2_txn_result, folder_level_1_txn_result] ], 1);
   yield ensureItemsAdded(folder_level_1_info, folder_level_2_info);
   ensureTimestampsUpdated(folder_level_1_info.guid, true);
   ensureTimestampsUpdated(folder_level_2_info.guid, true);
@@ -659,20 +659,20 @@ add_task(function* test_remove_folder() {
   // Redo Remove "Folder Level 2"
   yield PT.redo();
   ensureUndoState([ [remove_folder_2_txn]
-                  , [folder_level_2_txn, folder_level_1_txn] ]);
+                  , [folder_level_2_txn_result, folder_level_1_txn_result] ]);
   yield ensureItemsRemoved(folder_level_2_info);
   observer.reset();
 
   // Undo everything one last time
   yield PT.undo();
   ensureUndoState([ [remove_folder_2_txn]
-                  , [folder_level_2_txn, folder_level_1_txn] ], 1);
+                  , [folder_level_2_txn_result, folder_level_1_txn_result] ], 1);
   yield ensureItemsAdded(folder_level_2_info);
   observer.reset();
 
   yield PT.undo();
   ensureUndoState([ [remove_folder_2_txn]
-                  , [folder_level_2_txn, folder_level_1_txn] ], 2);
+                  , [folder_level_2_txn_result, folder_level_1_txn_result] ], 2);
   yield ensureItemsRemoved(folder_level_2_info, folder_level_2_info);
   observer.reset();
 

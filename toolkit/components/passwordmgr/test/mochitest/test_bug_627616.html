@@ -64,7 +64,7 @@
           gCurrentTest.call(this);
         } else {
           mm.sendAsyncMessage("cleanup");
-          mm.addMessageListener("cleanupDone", msg => {
+          mm.addMessageListener("cleanupDone", () => {
             // mm.destroy() is called as a cleanup function by runInParent(), no
             // need to do it here.
             SimpleTest.finish();
@@ -78,43 +78,43 @@
                         {expectedDialogs: 0, test: testAnonymousNoAuth}];
 
     let mm = runInParent(() => {
-      const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+      const { classes: parentCc, interfaces: parentCi, utils: parentCu } = Components;
 
-      Cu.import("resource://gre/modules/Services.jsm");
-      Cu.import("resource://gre/modules/NetUtil.jsm");
-      Cu.import("resource://gre/modules/Timer.jsm");
-      Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+      parentCu.import("resource://gre/modules/Services.jsm");
+      parentCu.import("resource://gre/modules/NetUtil.jsm");
+      parentCu.import("resource://gre/modules/Timer.jsm");
+      parentCu.import("resource://gre/modules/XPCOMUtils.jsm");
 
       let channel = NetUtil.newChannel({
         uri: "http://example.com",
         loadUsingSystemPrincipal: true
       });
 
-      let pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].
-                getService(Ci.nsIProtocolProxyService);
+      let pps = parentCc["@mozilla.org/network/protocol-proxy-service;1"].
+                getService(parentCi.nsIProtocolProxyService);
       pps.asyncResolve(channel, 0, {
         onProxyAvailable(req, uri, pi, status) {
           let mozproxy = "moz-proxy://" + pi.host + ":" + pi.port;
-          let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                      createInstance(Ci.nsILoginInfo);
+          let login = parentCc["@mozilla.org/login-manager/loginInfo;1"].
+                      createInstance(parentCi.nsILoginInfo);
           login.init(mozproxy, null, "proxy_realm", "proxy_user", "proxy_pass",
                      "", "");
           Services.logins.addLogin(login);
 
-          let login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                       createInstance(Ci.nsILoginInfo);
+          let login2 = parentCc["@mozilla.org/login-manager/loginInfo;1"].
+                       createInstance(parentCi.nsILoginInfo);
           login2.init("http://mochi.test:8888", null, "mochirealm", "user1name",
                        "user1pass", "", "");
           Services.logins.addLogin(login2);
 
           sendAsyncMessage("setupDone");
         },
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolProxyCallback]),
+        QueryInterface: XPCOMUtils.generateQI([parentCi.nsIProtocolProxyCallback]),
       });
 
       addMessageListener("prepareForNextTest", message => {
-        Cc["@mozilla.org/network/http-auth-manager;1"].
-          getService(Ci.nsIHttpAuthManager).
+        parentCc["@mozilla.org/network/http-auth-manager;1"].
+          getService(parentCi.nsIHttpAuthManager).
           clearAll();
         sendAsyncMessage("prepareForNextTestDone");
       });
