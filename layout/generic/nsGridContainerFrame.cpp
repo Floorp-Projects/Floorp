@@ -167,8 +167,8 @@ ResolvePercentSizeParts(const nsStyleCoord& aCoord, nscoord aPercentBasis,
 // this is the end edge of the border box.  For a central baseline it's
 // the center of the border box.
 // https://drafts.csswg.org/css-align-3/#synthesize-baselines
-// For a first-baseline the measure is from the border-box start edge and
-// for a last baseline the measure is from the border-box end edge.
+// For a 'first baseline' the measure is from the border-box start edge and
+// for a 'last baseline' the measure is from the border-box end edge.
 static nscoord
 SynthesizeBaselineFromBorderBox(BaselineSharingGroup aGroup,
                                 WritingMode aWM,
@@ -809,13 +809,13 @@ struct nsGridContainerFrame::GridItemInfo
    */
   enum StateBits : uint8_t {
     eIsFlexing =              0x1, // does the item span a flex track?
-    eFirstBaseline =          0x2, // participate in first-baseline alignment?
-    // ditto last baseline, mutually exclusive w. eFirstBaseline
+    eFirstBaseline =          0x2, // participate in 'first baseline' alignment?
+    // ditto 'last baseline', mutually exclusive w. eFirstBaseline
     eLastBaseline =           0x4,
     eIsBaselineAligned = eFirstBaseline | eLastBaseline,
     // One of e[Self|Content]Baseline is set when eIsBaselineAligned is true
-    eSelfBaseline =           0x8, // is it *-self:[last-]baseline alignment?
-    // Ditto *-content:[last-]baseline. Mutually exclusive w. eSelfBaseline.
+    eSelfBaseline =           0x8, // is it *-self:[last ]baseline alignment?
+    // Ditto *-content:[last ]baseline. Mutually exclusive w. eSelfBaseline.
     eContentBaseline =       0x10,
     eAllBaselineBits = eIsBaselineAligned | eSelfBaseline | eContentBaseline,
     // Clamp per https://drafts.csswg.org/css-grid/#min-size-auto
@@ -834,7 +834,7 @@ struct nsGridContainerFrame::GridItemInfo
   }
 
   /**
-   * If the item is [align|justify]-self:[last-]baseline aligned in the given
+   * If the item is [align|justify]-self:[last ]baseline aligned in the given
    * axis then set aBaselineOffset to the baseline offset and return aAlign.
    * Otherwise, return a fallback alignment.
    */
@@ -913,7 +913,7 @@ nsGridContainerFrame::GridItemInfo::Dump() const
       printf("flexing ");
     }
     if (state & ItemState::eFirstBaseline) {
-      printf("baseline %s-alignment ",
+      printf("first baseline %s-alignment ",
              (state & ItemState::eSelfBaseline) ? "self" : "content");
     }
     if (state & ItemState::eLastBaseline) {
@@ -2054,7 +2054,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput
         if (itemInfo.mFrame == childFirstInFlow) {
           auto item = mGridItems.AppendElement(GridItemInfo(child, itemInfo.mArea));
           // Copy the item's baseline data so that the item's last fragment can do
-          // last baseline alignment if necessary.
+          // 'last baseline' alignment if necessary.
           item->mState[0] |= itemInfo.mState[0] & ItemState::eAllBaselineBits;
           item->mState[1] |= itemInfo.mState[1] & ItemState::eAllBaselineBits;
           item->mBaselineOffset[0] = itemInfo.mBaselineOffset[0];
@@ -4131,7 +4131,7 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
     // XXX reversed main/cross axis?
     const bool itemHasBaselineParallelToTrack = isInlineAxis == isOrthogonal;
     if (itemHasBaselineParallelToTrack) {
-      // [align|justify]-self:[last-]baseline.
+      // [align|justify]-self:[last ]baseline.
       auto selfAlignment = isOrthogonal ?
         child->StylePosition()->UsedJustifySelf(containerSC) :
         child->StylePosition()->UsedAlignSelf(containerSC);
@@ -4146,7 +4146,7 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
         baselineTrack = (isInlineAxis ? area.mCols.mEnd : area.mRows.mEnd) - 1;
       }
 
-      // [align|justify]-content:[last-]baseline.
+      // [align|justify]-content:[last ]baseline.
       // https://drafts.csswg.org/css-align-3/#baseline-align-content
       // "[...] and its computed 'align-self' or 'justify-self' (whichever
       // affects its block axis) is 'stretch' or 'self-start' ('self-end').
@@ -4266,7 +4266,7 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
     MOZ_ASSERT((state &
                 (ItemState::eFirstBaseline | ItemState::eLastBaseline)) !=
                (ItemState::eFirstBaseline | ItemState::eLastBaseline),
-               "baseline and last baseline bits are mutually exclusive");
+               "first/last baseline bits are mutually exclusive");
     MOZ_ASSERT((state &
                 (ItemState::eSelfBaseline | ItemState::eContentBaseline)) !=
                (ItemState::eSelfBaseline | ItemState::eContentBaseline),
@@ -4860,7 +4860,7 @@ nsGridContainerFrame::Tracks::AlignJustifyContent(
       }
     }
     if (space == 0 || (space < 0 && overflowSafe)) {
-      // XXX check that this makes sense also for [last-]baseline (bug 1151204).
+      // XXX check that this makes sense also for [last ]baseline (bug 1151204).
       alignment = NS_STYLE_ALIGN_START;
     }
   }
@@ -4871,7 +4871,7 @@ nsGridContainerFrame::Tracks::AlignJustifyContent(
   switch (alignment) {
     case NS_STYLE_ALIGN_BASELINE:
     case NS_STYLE_ALIGN_LAST_BASELINE:
-      NS_WARNING("'NYI: baseline/last baseline' (bug 1151204)"); // XXX
+      NS_WARNING("NYI: 'first/last baseline' (bug 1151204)"); // XXX
       MOZ_FALLTHROUGH;
     case NS_STYLE_ALIGN_START:
       distribute = false;
@@ -5177,7 +5177,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     cb += aContentArea.Origin(wm);
     aState.mRows.AlignBaselineSubtree(*aGridItemInfo);
     aState.mCols.AlignBaselineSubtree(*aGridItemInfo);
-    // Setup [align|justify]-content:[last-]baseline related frame properties.
+    // Setup [align|justify]-content:[last ]baseline related frame properties.
     // These are added to the padding in SizeComputationInput::InitOffsets.
     // (a negative value signals the value is for 'last baseline' and should be
     //  added to the (logical) end padding)
@@ -6178,14 +6178,14 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
                        wm, sz, bp.BStart(wm),
                        bp.BEnd(wm), desiredSize.BSize(wm));
   } else {
-    // Only compute first-baseline if this fragment contains the first track.
+    // Only compute 'first baseline' if this fragment contains the first track.
     // XXXmats maybe remove this condition? bug 1306499
     BaselineSet baselines = BaselineSet::eNone;
     if (gridReflowInput.mStartRow == 0 &&
         gridReflowInput.mStartRow != gridReflowInput.mNextFragmentStartRow) {
       baselines = BaselineSet::eFirst;
     }
-    // Only compute last baseline if this fragment contains the last track.
+    // Only compute 'last baseline' if this fragment contains the last track.
     // XXXmats maybe remove this condition? bug 1306499
     uint32_t len = gridReflowInput.mRows.mSizes.Length();
     if (gridReflowInput.mStartRow != len &&
@@ -6725,7 +6725,7 @@ nsGridContainerFrame::CalculateBaselines(
                          aCBSize,
                          aWM);
   } else {
-    // We have a first-baseline group in the start track in this fragment.
+    // We have a 'first baseline' group in the start track in this fragment.
     // Convert it from track to grid container border-box coordinates.
     MOZ_ASSERT(!aGridItems->IsEmpty());
     nscoord gapBeforeStartTrack = aFragmentStartTrack == 0 ?
@@ -6741,7 +6741,7 @@ nsGridContainerFrame::CalculateBaselines(
       ::SynthesizeBaselineFromBorderBox(BaselineSharingGroup::eLast, aWM,
                                         aCBSize);
   } else if (lastBaseline == NS_INTRINSIC_WIDTH_UNKNOWN) {
-    // For finding items for the last baseline we need to create a reverse
+    // For finding items for the 'last baseline' we need to create a reverse
     // iterator ('aIter' is the forward iterator from the GridReflowInput).
     using Iter = ReverseGridItemCSSOrderIterator;
     auto orderState = aIter->ItemsAreAlreadyInOrder() ?
@@ -6762,7 +6762,7 @@ nsGridContainerFrame::CalculateBaselines(
                          aCBSize,
                          aWM);
   } else {
-    // We have a last baseline group in the end track in this fragment.
+    // We have a 'last baseline' group in the end track in this fragment.
     // Convert it from track to grid container border-box coordinates.
     MOZ_ASSERT(!aGridItems->IsEmpty());
     auto borderBoxStartToEndOfEndTrack = aCBBorderPaddingStart +
