@@ -99,11 +99,18 @@ def windows_toolchain(config, job, taskdesc):
     })
 
     hg = r'c:\Program Files\Mercurial\hg.exe'
+    hg_command = ['"{}"'.format(hg)]
+    hg_command.append('robustcheckout')
+    hg_command.extend(['--sharebase', 'y:\\hg-shared'])
+    hg_command.append('--purge')
+    hg_command.extend(['--upstream', 'https://hg.mozilla.org/mozilla-unified'])
+    hg_command.extend(['--revision', '%GECKO_HEAD_REV%'])
+    hg_command.append('%GECKO_HEAD_REPOSITORY%')
+    hg_command.append('.\\build\\src')
+
     bash = r'c:\mozilla-build\msys\bin\bash'
     worker['command'] = [
-        r'mkdir .\build\src',
-        r'"{}" share c:\builds\hg-shared\mozilla-central .\build\src'.format(hg),
-        r'"{}" pull -u -R .\build\src --rev %GECKO_HEAD_REV% %GECKO_HEAD_REPOSITORY%'.format(hg),
+        ' '.join(hg_command),
         # do something intelligent.
         r'{} -c ./build/src/taskcluster/scripts/misc/{}'.format(bash, run['script'])
     ]
