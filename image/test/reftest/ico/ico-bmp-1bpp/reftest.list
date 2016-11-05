@@ -16,7 +16,7 @@
 == ico-size-31x31-1bpp.ico ico-size-31x31-1bpp.png
 == ico-size-32x32-1bpp.ico ico-size-32x32-1bpp.png
 == ico-size-33x33-1bpp.ico ico-size-33x33-1bpp.png
-skip-if(B2G) == ico-size-256x256-1bpp.ico ico-size-256x256-1bpp.png # bug 773482
+== ico-size-256x256-1bpp.ico ico-size-256x256-1bpp.png
 == ico-partial-transparent-1bpp.ico ico-partial-transparent-1bpp.png
 == ico-transparent-1bpp.ico ico-transparent-1bpp.png
 == ico-not-square-transparent-1bpp.ico ico-not-square-transparent-1bpp.png
