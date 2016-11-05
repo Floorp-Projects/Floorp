@@ -2687,8 +2687,8 @@ MLimitedTruncate::needTruncation(TruncateKind kind)
 bool
 MCompare::needTruncation(TruncateKind kind)
 {
-    // If we're compiling AsmJS, don't try to optimize the comparison type, as
-    // the code presumably is already using the type it wants. Also, AsmJS
+    // If we're compiling wasm, don't try to optimize the comparison type, as
+    // the code presumably is already using the type it wants. Also, wasm
     // doesn't support bailouts, so we woudn't be able to rely on
     // TruncateAfterBailouts to convert our inputs.
     if (block()->info().compilingWasm())
@@ -3099,9 +3099,9 @@ RangeAnalysis::truncate()
 {
     JitSpew(JitSpew_Range, "Do range-base truncation (backward loop)");
 
-    // Automatic truncation is disabled for AsmJS because the truncation logic
+    // Automatic truncation is disabled for wasm because the truncation logic
     // is based on IonMonkey which assumes that we can bailout if the truncation
-    // logic fails. As AsmJS code has no bailout mechanism, it is safer to avoid
+    // logic fails. As wasm code has no bailout mechanism, it is safer to avoid
     // any automatic truncations.
     MOZ_ASSERT(!mir->compilingWasm());
 

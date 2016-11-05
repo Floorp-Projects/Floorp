@@ -626,7 +626,7 @@ MacroAssembler::setupUnalignedABICall(Register scratch)
 }
 
 void
-MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS)
+MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm)
 {
     MOZ_ASSERT(inCall_);
     uint32_t stackForCall = abiArgs_.stackBytesConsumedSoFar();

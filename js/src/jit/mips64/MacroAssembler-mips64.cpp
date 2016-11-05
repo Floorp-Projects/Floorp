@@ -1024,7 +1024,7 @@ MacroAssemblerMIPS64Compat::movePtr(ImmPtr imm, Register dest)
 void
 MacroAssemblerMIPS64Compat::movePtr(wasm::SymbolicAddress imm, Register dest)
 {
-    append(AsmJSAbsoluteAddress(CodeOffset(nextOffset().getOffset()), imm));
+    append(wasm::SymbolicAccess(CodeOffset(nextOffset().getOffset()), imm));
     ma_liPatchable(dest, ImmWord(-1));
 }
 
@@ -2339,7 +2339,7 @@ MacroAssembler::setupUnalignedABICall(Register scratch)
 }
 
 void
-MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS)
+MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm)
 {
     MOZ_ASSERT(inCall_);
     uint32_t stackForCall = abiArgs_.stackBytesConsumedSoFar();
@@ -2350,7 +2350,7 @@ MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS)
     if (dynamicAlignment_) {
         stackForCall += ComputeByteAlignment(stackForCall, ABIStackAlignment);
     } else {
-        uint32_t alignmentAtPrologue = callFromAsmJS ? sizeof(AsmJSFrame) : 0;
+        uint32_t alignmentAtPrologue = callFromWasm ? sizeof(wasm::Frame) : 0;
         stackForCall += ComputeByteAlignment(stackForCall + framePushed() + alignmentAtPrologue,
                                              ABIStackAlignment);
     }

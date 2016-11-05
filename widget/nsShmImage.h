@@ -58,7 +58,6 @@ private:
 
   xcb_pixmap_t                 mPixmap;
   xcb_gcontext_t               mGC;
-  xcb_void_cookie_t            mPutRequest;
   xcb_get_input_focus_cookie_t mSyncRequest;
   bool                         mRequestPending;
 

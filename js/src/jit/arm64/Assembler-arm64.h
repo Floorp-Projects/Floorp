@@ -23,7 +23,6 @@ using vixl::Instruction;
 static const uint32_t AlignmentAtPrologue = 0;
 static const uint32_t AlignmentMidPrologue = 8;
 static const Scale ScalePointer = TimesEight;
-static const uint32_t AlignmentAtAsmJSPrologue = sizeof(void*);
 
 // The MacroAssembler uses scratch registers extensively and unexpectedly.
 // For safety, scratch registers should always be acquired using
@@ -120,17 +119,17 @@ REGISTER_CODE_LIST(IMPORT_VIXL_VREGISTERS)
 static constexpr ValueOperand JSReturnOperand = ValueOperand(JSReturnReg);
 
 // Registers used in the GenerateFFIIonExit Enable Activation block.
-static constexpr Register AsmJSIonExitRegCallee = r8;
-static constexpr Register AsmJSIonExitRegE0 = r0;
-static constexpr Register AsmJSIonExitRegE1 = r1;
+static constexpr Register WasmIonExitRegCallee = r8;
+static constexpr Register WasmIonExitRegE0 = r0;
+static constexpr Register WasmIonExitRegE1 = r1;
 
 // Registers used in the GenerateFFIIonExit Disable Activation block.
 // None of these may be the second scratch register.
-static constexpr Register AsmJSIonExitRegReturnData = r2;
-static constexpr Register AsmJSIonExitRegReturnType = r3;
-static constexpr Register AsmJSIonExitRegD0 = r0;
-static constexpr Register AsmJSIonExitRegD1 = r1;
-static constexpr Register AsmJSIonExitRegD2 = r4;
+static constexpr Register WasmIonExitRegReturnData = r2;
+static constexpr Register WasmIonExitRegReturnType = r3;
+static constexpr Register WasmIonExitRegD0 = r0;
+static constexpr Register WasmIonExitRegD1 = r1;
+static constexpr Register WasmIonExitRegD2 = r4;
 
 // Registerd used in RegExpMatcher instruction (do not use JSReturnOperand).
 static constexpr Register RegExpMatcherRegExpReg = CallTempReg0;
@@ -170,8 +169,8 @@ static_assert(CodeAlignment % SimdMemoryAlignment == 0,
   "the constant sections of the code buffer.  Thus it should be larger than the "
   "alignment for SIMD constants.");
 
-static const uint32_t AsmJSStackAlignment = SimdMemoryAlignment;
-static const int32_t AsmJSGlobalRegBias = 1024;
+static const uint32_t WasmStackAlignment = SimdMemoryAlignment;
+static const int32_t WasmGlobalRegBias = 1024;
 
 // Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
 static constexpr bool SupportsUint32x4FloatConversions = false;
@@ -470,7 +469,7 @@ static constexpr Register ABINonArgReturnReg1 = r9;
 // Preserved by WebAssembly functions.
 static constexpr Register WasmTlsReg = { Registers::x17 };
 
-// Registers used for asm.js/wasm table calls. These registers must be disjoint
+// Registers used for wasm table calls. These registers must be disjoint
 // from the ABI argument registers, WasmTlsReg and each other.
 static constexpr Register WasmTableCallScratchReg = ABINonArgReg0;
 static constexpr Register WasmTableCallSigReg = ABINonArgReg1;

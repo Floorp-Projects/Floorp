@@ -57,7 +57,6 @@ this.Screenshot = {
         break;
       default:
         throw new Error("Unsupported operating system");
-        break;
     }
   },
 

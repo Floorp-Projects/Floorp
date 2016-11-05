@@ -12,7 +12,7 @@
 #include "mozilla/IOInterposer.h"
 
 #ifdef XP_WIN
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 namespace mozilla {

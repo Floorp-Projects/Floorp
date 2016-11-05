@@ -8,7 +8,11 @@
 #include "mozilla/dom/ContentChild.h"
 #include "MediaPrefs.h"
 #include "nsThreadUtils.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/layers/SynchronousTask.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/layers/ISurfaceAllocator.h"
 
 namespace mozilla {
 namespace dom {
@@ -151,6 +155,82 @@ void
 VideoDecoderManagerChild::DeallocPVideoDecoderManagerChild()
 {
   Release();
+}
+
+bool
+VideoDecoderManagerChild::DeallocShmem(mozilla::ipc::Shmem& aShmem)
+{
+  if (NS_GetCurrentThread() != sVideoDecoderChildThread) {
+    RefPtr<VideoDecoderManagerChild> self = this;
+    mozilla::ipc::Shmem shmem = aShmem;
+    sVideoDecoderChildThread->Dispatch(NS_NewRunnableFunction([self, shmem]() {
+      if (self->mCanSend) {
+        mozilla::ipc::Shmem shmemCopy = shmem;
+        self->DeallocShmem(shmemCopy);
+      }
+    }), NS_DISPATCH_NORMAL);
+    return true;
+  }
+  return PVideoDecoderManagerChild::DeallocShmem(aShmem);
+}
+
+struct SurfaceDescriptorUserData
+{
+  SurfaceDescriptorUserData(VideoDecoderManagerChild* aAllocator, SurfaceDescriptor& aSD)
+    : mAllocator(aAllocator)
+    , mSD(aSD)
+  {}
+  ~SurfaceDescriptorUserData()
+  {
+    DestroySurfaceDescriptor(mAllocator, &mSD);
+  }
+
+  RefPtr<VideoDecoderManagerChild> mAllocator;
+  SurfaceDescriptor mSD;
+};
+
+void DeleteSurfaceDescriptorUserData(void* aClosure)
+{
+  SurfaceDescriptorUserData* sd = reinterpret_cast<SurfaceDescriptorUserData*>(aClosure);
+  delete sd;
+}
+
+already_AddRefed<SourceSurface>
+VideoDecoderManagerChild::Readback(const SurfaceDescriptorGPUVideo& aSD)
+{
+  // We can't use NS_DISPATCH_SYNC here since that can spin the event
+  // loop while it waits. This function can be called from JS and we
+  // don't want that to happen.
+  SynchronousTask task("Readback sync");
+
+  RefPtr<VideoDecoderManagerChild> ref = this;
+  SurfaceDescriptor sd;
+  sVideoDecoderChildThread->Dispatch(NS_NewRunnableFunction([&]() {
+    AutoCompleteTask complete(&task);
+    if (ref->mCanSend) {
+      ref->SendReadback(aSD, &sd);
+    }
+  }), NS_DISPATCH_NORMAL);
+
+  task.Wait();
+
+  if (!IsSurfaceDescriptorValid(sd)) {
+    return nullptr;
+  }
+
+  RefPtr<DataSourceSurface> source = GetSurfaceForDescriptor(sd);
+  if (!source) {
+    DestroySurfaceDescriptor(this, &sd);
+    NS_WARNING("Failed to map SurfaceDescriptor in Readback");
+    return nullptr;
+  }
+
+  static UserDataKey sSurfaceDescriptor;
+  source->AddUserData(&sSurfaceDescriptor,
+                      new SurfaceDescriptorUserData(this, sd),
+                      DeleteSurfaceDescriptorUserData);
+
+  return source.forget();
 }
 
 void

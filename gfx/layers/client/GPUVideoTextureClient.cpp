@@ -5,6 +5,7 @@
 
 #include "GPUVideoTextureClient.h"
 #include "mozilla/dom/VideoDecoderManagerChild.h"
+#include "mozilla/gfx/2D.h"
 
 namespace mozilla {
 namespace layers {
@@ -42,6 +43,12 @@ GPUVideoTextureData::FillInfo(TextureData::Info& aInfo) const
   aInfo.hasSynchronization = false;
   aInfo.supportsMoz2D = false;
   aInfo.canExposeMappedData = false;
+}
+
+already_AddRefed<SourceSurface>
+GPUVideoTextureData::GetAsSourceSurface()
+{
+  return mManager->Readback(mSD);
 }
 
 void

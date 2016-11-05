@@ -62,7 +62,6 @@
 #include "jswrapper.h"
 #include "shellmoduleloader.out.h"
 
-#include "asmjs/WasmJS.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/TestingFunctions.h"
 #include "frontend/Parser.h"
@@ -96,6 +95,7 @@
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
+#include "wasm/WasmJS.h"
 
 #include "jscompartmentinlines.h"
 #include "jsobjinlines.h"

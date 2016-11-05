@@ -196,6 +196,9 @@ public:
     virtual bool resolveOwnProperty(JSContext* cx, const js::Wrapper& jsWrapper, JS::HandleObject wrapper,
                                     JS::HandleObject holder, JS::HandleId id,
                                     JS::MutableHandle<JS::PropertyDescriptor> desc) override;
+
+    bool delete_(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id, JS::ObjectOpResult& result);
+
     bool defineProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
                         JS::Handle<JS::PropertyDescriptor> desc,
                         JS::Handle<JS::PropertyDescriptor> existingDesc,

@@ -156,7 +156,7 @@ add_task(function* testAltReturn() {
 // Shift key has no effect for now, so skip it
 add_task(function* testShiftAltReturn() {
   return;
-
+  /*
   yield* prepareTest();
 
   let url = expectedURL(searchBar.value);
@@ -167,6 +167,7 @@ add_task(function* testShiftAltReturn() {
 
   is(gBrowser.tabs.length, preTabNo + 1, "Shift+Alt+Return key added new tab");
   is(gBrowser.currentURI.spec, url, "testShiftAltReturn opened correct search page");
+  */
 });
 
 add_task(function* testLeftClick() {

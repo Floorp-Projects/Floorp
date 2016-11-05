@@ -37,8 +37,6 @@
 #endif
 #include "jswrapper.h"
 
-#include "asmjs/WasmSignalHandlers.h"
-#include "asmjs/WasmTypes.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
@@ -48,6 +46,8 @@
 #include "vm/Interpreter.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/WrapperObject.h"
+#include "wasm/WasmSignalHandlers.h"
+#include "wasm/WasmTypes.h"
 
 #include "jsatominlines.h"
 

@@ -8,7 +8,7 @@
 #define mozilla_mscom_WeakRef_h
 
 #include <guiddef.h>
-#include <Unknwn.h>
+#include <unknwn.h>
 
 #include "mozilla/Mutex.h"
 #include "nsTArray.h"

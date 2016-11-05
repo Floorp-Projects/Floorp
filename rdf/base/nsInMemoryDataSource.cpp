@@ -50,7 +50,6 @@
 #include "nsIRDFPurgeableDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
-#include "nsISupportsArray.h"
 #include "nsCOMArray.h"
 #include "nsEnumeratorUtils.h"
 #include "nsTArray.h"
@@ -375,7 +374,6 @@ private:
     nsIRDFNode*     mValue;
     bool            mTruthValue;
     Assertion*      mNextAssertion;
-    nsCOMPtr<nsISupportsArray> mHashArcs;
 
     virtual ~InMemoryAssertionEnumeratorImpl();
 
@@ -542,7 +540,7 @@ private:
     AutoTArray<nsCOMPtr<nsIRDFResource>, 8> mAlreadyReturned;
     nsIRDFResource*     mCurrent;
     Assertion*          mAssertion;
-    nsCOMPtr<nsISupportsArray> mHashArcs;
+    nsCOMArray<nsIRDFNode>* mHashArcs;
 
     virtual ~InMemoryArcsEnumeratorImpl();
 
@@ -565,7 +563,8 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
     : mDataSource(aDataSource),
       mSource(aSource),
       mTarget(aTarget),
-      mCurrent(nullptr)
+      mCurrent(nullptr),
+      mHashArcs(nullptr)
 {
     NS_ADDREF(mDataSource);
     NS_IF_ADDREF(mSource);
@@ -577,15 +576,12 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
 
         if (mAssertion && mAssertion->mHashEntry) {
             // its our magical HASH_ENTRY forward hash for assertions
-            nsresult rv = NS_NewISupportsArray(getter_AddRefs(mHashArcs));
-            if (NS_SUCCEEDED(rv)) {
-                nsISupportsArray* resources = mHashArcs.get();
-                for (auto i = mAssertion->u.hash.mPropertyHash->Iter();
-                     !i.Done();
-                     i.Next()) {
-                    auto entry = static_cast<Entry*>(i.Get());
-                    resources->AppendElement(entry->mNode);
-                }
+            mHashArcs = new nsCOMArray<nsIRDFNode>();
+            for (auto i = mAssertion->u.hash.mPropertyHash->Iter();
+                 !i.Done();
+                 i.Next()) {
+                auto entry = static_cast<Entry*>(i.Get());
+                mHashArcs->AppendElement(entry->mNode);
             }
             mAssertion = nullptr;
         }
@@ -606,6 +602,7 @@ InMemoryArcsEnumeratorImpl::~InMemoryArcsEnumeratorImpl()
     NS_IF_RELEASE(mSource);
     NS_IF_RELEASE(mTarget);
     NS_IF_RELEASE(mCurrent);
+    delete mHashArcs;
 }
 
 NS_IMPL_ADDREF(InMemoryArcsEnumeratorImpl)
@@ -625,14 +622,11 @@ InMemoryArcsEnumeratorImpl::HasMoreElements(bool* aResult)
     }
 
     if (mHashArcs) {
-        uint32_t    itemCount;
-        nsresult    rv;
-        if (NS_FAILED(rv = mHashArcs->Count(&itemCount)))   return(rv);
-        if (itemCount > 0) {
-            --itemCount;
-            nsCOMPtr<nsIRDFResource> tmp = do_QueryElementAt(mHashArcs, itemCount);
+        if (!mHashArcs->IsEmpty()) {
+            const uint32_t last = mHashArcs->Length() - 1;
+            nsCOMPtr<nsIRDFResource> tmp(do_QueryInterface(mHashArcs->ObjectAt(last)));
             tmp.forget(&mCurrent);
-            mHashArcs->RemoveElementAt(itemCount);
+            mHashArcs->RemoveElementAt(last);
             *aResult = true;
             return NS_OK;
         }
@@ -1584,21 +1578,20 @@ InMemoryDataSource::GetAllCmds(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
-InMemoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+InMemoryDataSource::IsCommandEnabled(nsISupports* aSources,
                                      nsIRDFResource*   aCommand,
-                                     nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                     nsISupports* aArguments,
                                      bool* aResult)
 {
-    *aResult = false;
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-InMemoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+InMemoryDataSource::DoCommand(nsISupports* aSources,
                               nsIRDFResource*   aCommand,
-                              nsISupportsArray/*<nsIRDFResource>*/* aArguments)
+                              nsISupports* aArguments)
 {
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -1883,7 +1876,7 @@ InMemoryDataSource::VisitAllSubjects(rdfITripleVisitor *aVisitor)
     // Lock datasource against writes
     ++mReadCount;
 
-    // Enumerate all of our entries into an nsISupportsArray.
+    // Enumerate all of our entries.
     nsresult rv = NS_OK;
     for (auto iter = mForwardArcs.Iter(); !iter.Done(); iter.Next()) {
         auto entry = static_cast<Entry*>(iter.Get());
@@ -1911,7 +1904,7 @@ InMemoryDataSource::VisitAllTriples(rdfITripleVisitor *aVisitor)
     // Lock datasource against writes
     ++mReadCount;
 
-    // Enumerate all of our entries into an nsISupportsArray.
+    // Enumerate all of our entries.
     nsresult rv = NS_OK;
     for (auto iter = mForwardArcs.Iter(); !iter.Done(); iter.Next()) {
         auto entry = static_cast<Entry*>(iter.Get());

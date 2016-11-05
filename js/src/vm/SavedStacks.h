@@ -301,7 +301,7 @@ class SavedStacks {
     };
 
     // We eagerly Atomize the script source stored in LocationValue because
-    // asm.js does not always have a JSScript and the source might not be
+    // wasm does not always have a JSScript and the source might not be
     // available when we need it later. However, since the JSScript does not
     // actually hold this atom, we have to trace it strongly to keep it alive.
     // Thus, it takes two GC passes to fully clean up this table: the first GC

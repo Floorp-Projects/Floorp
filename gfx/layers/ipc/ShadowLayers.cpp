@@ -853,6 +853,9 @@ GetAddressFromDescriptor(const SurfaceDescriptor& aDescriptor)
 already_AddRefed<gfx::DataSourceSurface>
 GetSurfaceForDescriptor(const SurfaceDescriptor& aDescriptor)
 {
+  if (aDescriptor.type() != SurfaceDescriptor::TSurfaceDescriptorBuffer) {
+    return nullptr;
+  }
   uint8_t* data = GetAddressFromDescriptor(aDescriptor);
   auto rgb = aDescriptor.get_SurfaceDescriptorBuffer().desc().get_RGBDescriptor();
   uint32_t stride = ImageDataSerializer::GetRGBStride(rgb);
@@ -869,6 +872,29 @@ GetDrawTargetForDescriptor(const SurfaceDescriptor& aDescriptor, gfx::BackendTyp
   return gfx::Factory::CreateDrawTargetForData(gfx::BackendType::CAIRO,
                                                data, rgb.size(),
                                                stride, rgb.format());
+}
+
+void
+DestroySurfaceDescriptor(IShmemAllocator* aAllocator, SurfaceDescriptor* aSurface)
+{
+  MOZ_ASSERT(aSurface);
+
+  SurfaceDescriptorBuffer& desc = aSurface->get_SurfaceDescriptorBuffer();
+  switch (desc.data().type()) {
+    case MemoryOrShmem::TShmem: {
+      aAllocator->DeallocShmem(desc.data().get_Shmem());
+      break;
+    }
+    case MemoryOrShmem::Tuintptr_t: {
+      uint8_t* ptr = (uint8_t*)desc.data().get_uintptr_t();
+      GfxMemoryImageReporter::WillFree(ptr);
+      delete [] ptr;
+      break;
+    }
+    default:
+      NS_RUNTIMEABORT("surface type not implemented!");
+  }
+  *aSurface = SurfaceDescriptor();
 }
 
 bool
@@ -942,22 +968,7 @@ ShadowLayerForwarder::DestroySurfaceDescriptor(SurfaceDescriptor* aSurface)
     return;
   }
 
-  SurfaceDescriptorBuffer& desc = aSurface->get_SurfaceDescriptorBuffer();
-  switch (desc.data().type()) {
-    case MemoryOrShmem::TShmem: {
-      GetTextureForwarder()->DeallocShmem(desc.data().get_Shmem());
-      break;
-    }
-    case MemoryOrShmem::Tuintptr_t: {
-      uint8_t* ptr = (uint8_t*)desc.data().get_uintptr_t();
-      GfxMemoryImageReporter::WillFree(ptr);
-      delete [] ptr;
-      break;
-    }
-    default:
-      NS_RUNTIMEABORT("surface type not implemented!");
-  }
-  *aSurface = SurfaceDescriptor();
+  ::mozilla::layers::DestroySurfaceDescriptor(GetTextureForwarder(), aSurface);
 }
 
 void

@@ -276,7 +276,6 @@ function parseRDFManifest(aId, aUpdateKey, aRequest, aManifestData) {
   if (aManifestData.documentElement.namespaceURI != PREFIX_NS_RDF) {
     throw Components.Exception("Update manifest had an unrecognised namespace: " +
                                aManifestData.documentElement.namespaceURI);
-    return undefined;
   }
 
   function EM_R(aProp) {

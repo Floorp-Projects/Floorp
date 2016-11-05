@@ -15,7 +15,6 @@
 #include "jsgc.h"
 #include "jsprf.h"
 
-#include "asmjs/WasmJS.h"
 #include "builtin/ModuleObject.h"
 #include "gc/GCInternals.h"
 #include "gc/Policy.h"
@@ -30,6 +29,7 @@
 #include "vm/Symbol.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/UnboxedObject.h"
+#include "wasm/WasmJS.h"
 
 #include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
@@ -2253,7 +2253,8 @@ js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(StoreBuffer* owner, TenuringTracer
     mozilla::ReentrancyGuard g(*owner);
     MOZ_ASSERT(owner->isEnabled());
     MOZ_ASSERT(stores_.initialized());
-    sinkStore(owner);
+    if (last_)
+        last_.trace(mover);
     for (typename StoreSet::Range r = stores_.all(); !r.empty(); r.popFront())
         r.front().trace(mover);
 }

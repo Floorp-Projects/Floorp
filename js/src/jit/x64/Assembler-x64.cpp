@@ -31,7 +31,7 @@ ABIArgGenerator::next(MIRType type)
     JS_STATIC_ASSERT(NumIntArgRegs == NumFloatArgRegs);
     if (regIndex_ == NumIntArgRegs) {
         if (IsSimdType(type)) {
-            // On Win64, >64 bit args need to be passed by reference, but asm.js
+            // On Win64, >64 bit args need to be passed by reference, but wasm
             // doesn't allow passing SIMD values to FFIs. The only way to reach
             // here is asm to asm calls, so we can break the ABI here.
             stackOffset_ = AlignBytes(stackOffset_, SimdMemoryAlignment);
@@ -62,7 +62,7 @@ ABIArgGenerator::next(MIRType type)
       case MIRType::Bool8x16:
       case MIRType::Bool16x8:
       case MIRType::Bool32x4:
-        // On Win64, >64 bit args need to be passed by reference, but asm.js
+        // On Win64, >64 bit args need to be passed by reference, but wasm
         // doesn't allow passing SIMD values to FFIs. The only way to reach
         // here is asm to asm calls, so we can break the ABI here.
         current_ = ABIArg(FloatArgRegs[regIndex_++].asSimd128());

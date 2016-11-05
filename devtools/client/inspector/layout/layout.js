@@ -4,7 +4,15 @@
 
 "use strict";
 
-function LayoutViewTool(inspector, window) {
+const { createFactory, createElement } =
+  require("devtools/client/shared/vendor/react");
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+const { Provider } = require("devtools/client/shared/vendor/react-redux");
+
+const App = createFactory(require("./components/app"));
+const Store = require("./store");
+
+function LayoutView(inspector, window) {
   this.inspector = inspector;
   this.document = window.document;
   this.store = null;
@@ -12,17 +20,11 @@ function LayoutViewTool(inspector, window) {
   this.init();
 }
 
-LayoutViewTool.prototype = {
+LayoutView.prototype = {
 
   init() {
-    const { React, ReactDOM, ReactRedux, browserRequire } = this.inspector;
-
-    const Store = browserRequire("devtools/client/inspector/layout/store");
-    const App = React.createFactory(
-      browserRequire("devtools/client/inspector/layout/components/App"));
-
     let store = this.store = Store();
-    let provider = React.createElement(ReactRedux.Provider, { store }, App());
+    let provider = createElement(Provider, { store }, App());
     ReactDOM.render(provider, this.document.querySelector("#layoutview-container"));
   },
 
@@ -31,7 +33,7 @@ LayoutViewTool.prototype = {
     this.document = null;
     this.store = null;
   },
-
 };
 
-exports.LayoutViewTool = LayoutViewTool;
+exports.LayoutView = LayoutView;
+

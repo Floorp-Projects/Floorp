@@ -283,7 +283,7 @@ ConvertToBailingBlock(TempAllocator& alloc, MBasicBlock* block)
 bool
 jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
 {
-    MOZ_ASSERT(!mir->compilingWasm(), "AsmJS compilation have no code coverage support.");
+    MOZ_ASSERT(!mir->compilingWasm(), "wasm compilation has no code coverage support.");
 
     // We do a reverse-post-order traversal, marking basic blocks when the block
     // have to be converted into bailing blocks, and flagging block as

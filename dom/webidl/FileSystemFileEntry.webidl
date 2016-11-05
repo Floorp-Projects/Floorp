@@ -9,11 +9,6 @@ callback interface FileCallback {
 };
 
 interface FileSystemFileEntry : FileSystemEntry {
-    // the successCallback should be a FileWriteCallback but this method is not
-    // implemented. ErrorCallback will be called with SecurityError.
-    void createWriter (VoidCallback successCallback,
-                       optional ErrorCallback errorCallback);
-
     [BinaryName="GetFile"]
     void file (FileCallback successCallback,
                optional ErrorCallback errorCallback);

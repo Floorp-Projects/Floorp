@@ -748,11 +748,11 @@ CreateBlobImpl(const BlobDataStream& aStream,
   if (!aMetadata.mHasRecursed && aMetadata.IsFile()) {
     if (length) {
       blobImpl =
-        new BlobImplStream(inputStream,
-                           aMetadata.mName,
-                           aMetadata.mContentType,
-                           aMetadata.mLastModifiedDate,
-                           length);
+        BlobImplStream::Create(inputStream,
+                               aMetadata.mName,
+                               aMetadata.mContentType,
+                               aMetadata.mLastModifiedDate,
+                               length);
     } else {
       blobImpl =
         new EmptyBlobImpl(aMetadata.mName,
@@ -761,8 +761,8 @@ CreateBlobImpl(const BlobDataStream& aStream,
     }
   } else if (length) {
     blobImpl =
-      new BlobImplStream(inputStream, aMetadata.mContentType,
-                         length);
+      BlobImplStream::Create(inputStream, aMetadata.mContentType,
+                             length);
   } else {
     blobImpl = new EmptyBlobImpl(aMetadata.mContentType);
   }
