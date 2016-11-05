@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Clamp 'automatic minimum size' to definite max-sizing for items with specified intrinsic 'width'/'height'</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1300369">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#min-size-auto">
+  <link rel="match" href="grid-item-auto-min-size-clamp-007-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  float: left;
+  position: relative;
+  grid-template-columns: repeat(2,20px);
+  grid-template-rows: repeat(2,20px);
+  align-items: start;
+  justify-items: start;
+  border: 1px dashed;
+  margin-right: 16px;
+  margin-bottom: 14px;
+}
+.c-auto { grid-template-columns: minmax(auto, 15px); }
+.c-min { grid-template-columns: minmax(min-content, 15px); }
+.c-max { grid-template-columns: minmax(max-content, 15px); }
+.r-auto { grid-template-rows: minmax(auto, 15px); }
+.r-min { grid-template-rows: minmax(min-content, 15px); }
+.r-max { grid-template-rows: minmax(max-content, 15px); }
+span {
+  grid-area: 1 / 1;
+  font-size: 48px;
+  background: grey;
+}
+y {
+  position: absolute;
+  grid-area: 2 / 1 / 3 / 2;
+  top:0;left:0;right:0;
+  height: 10px;
+  background: lightgrey;
+}
+
+.min-content {
+  width: -moz-min-content;
+  width: -webkit-min-content;
+  width: min-content;
+}
+.max-content {
+  width: -moz-max-content;
+  width: -webkit-max-content;
+  width: max-content;
+}
+.fit-content {
+  width: -moz-fit-content;
+  width: -webkit-fit-content;
+  width: fit-content;
+}
+.fill {
+  width: -moz-available;
+  width: -webkit-fill;
+  width: fill;
+}
+
+.r .min-content {
+  height: -moz-min-content;
+  height: -webkit-min-content;
+  height: min-content;
+}
+.r .max-content {
+  height: -moz-max-content;
+  height: -webkit-max-content;
+  height: max-content;
+}
+.r .fit-content {
+  height: -moz-fit-content;
+  height: -webkit-fit-content;
+  height: fit-content;
+}
+.r .fill {
+  height: -moz-available;
+  height: -webkit-fill;
+  height: fill;
+}
+.r y {
+  grid-area: 1 / 2 / 2 / 3;
+  top:0;bottom:0;left:0;
+  width: 10px;
+  height: auto;
+}
+br { clear: both; }
+
+x { display:block; width:30px; height:40px; }
+  </style>
+</head>
+<body>
+
+<div class="grid c-auto"><y></y><span><x>X</x></span></div>
+<div class="grid c-auto"><y></y><span class="min-content"><x>X</x></span></div>
+<div class="grid c-auto"><y></y><span class="max-content"><x>X</x></span></div>
+<div class="grid c-auto"><y></y><span class="fit-content"><x>X</x></span></div>
+<div class="grid c-auto"><y></y><span class="fill"><x>X</x></span></div>
+
+<br>
+
+<div class="grid c-min"><y></y><span><x>X</x></span></div>
+<div class="grid c-min"><y></y><span class="min-content"><x>X</x></span></div>
+<div class="grid c-min"><y></y><span class="max-content"><x>X</x></span></div>
+<div class="grid c-min"><y></y><span class="fit-content"><x>X</x></span></div>
+<div class="grid c-min"><y></y><span class="fill"><x>X</x></span></div>
+
+<br>
+
+<div class="grid c-max"><y></y><span><x>X</x></span></div>
+<div class="grid c-max"><y></y><span class="min-content"><x>X</x></span></div>
+<div class="grid c-max"><y></y><span class="max-content"><x>X</x></span></div>
+<div class="grid c-max"><y></y><span class="fit-content"><x>X</x></span></div>
+<div class="grid c-max"><y></y><span class="fill"><x>X</x></span></div>
+
+<br>
+
+<div class="grid r r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r r-auto"><y></y><span class="min-content"><x>X</x></span></div>
+<div class="grid r r-auto"><y></y><span class="max-content"><x>X</x></span></div>
+<div class="grid r r-auto"><y></y><span class="fit-content"><x>X</x></span></div>
+<div class="grid r r-auto"><y></y><span class="fill"><x>X</x></span></div>
+
+<br>
+
+<div class="grid r r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r r-min"><y></y><span class="min-content"><x>X</x></span></div>
+<div class="grid r r-min"><y></y><span class="max-content"><x>X</x></span></div>
+<div class="grid r r-min"><y></y><span class="fit-content"><x>X</x></span></div>
+<div class="grid r r-min"><y></y><span class="fill"><x>X</x></span></div>
+
+<br>
+
+<div class="grid r r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r r-max"><y></y><span class="min-content"><x>X</x></span></div>
+<div class="grid r r-max"><y></y><span class="max-content"><x>X</x></span></div>
+<div class="grid r r-max"><y></y><span class="fit-content"><x>X</x></span></div>
+<div class="grid r r-max"><y></y><span class="fill"><x>X</x></span></div>
+
+<br>
+
+<div class="grid r c-min r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r c-min r-auto"><y></y><span class="min-content"><x>X</x></span></div>
+<div class="grid r c-min r-auto"><y></y><span class="max-content"><x>X</x></span></div>
+<div class="grid r c-min r-auto"><y></y><span class="fit-content"><x>X</x></span></div>
+<div class="grid r c-min r-auto"><y></y><span class="fill"><x>X</x></span></div>
+
+<br>
+
+<div class="grid r c-min r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r c-min r-min"><y></y><span class="min-content"><x>X</x></span></div>
+<div class="grid r c-min r-min"><y></y><span class="max-content"><x>X</x></span></div>
+<div class="grid r c-min r-min"><y></y><span class="fit-content"><x>X</x></span></div>
+<div class="grid r c-min r-min"><y></y><span class="fill"><x>X</x></span></div>
+
+<br>
+
+<div class="grid r c-min r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r c-min r-max"><y></y><span class="min-content"><x>X</x></span></div>
+<div class="grid r c-min r-max"><y></y><span class="max-content"><x>X</x></span></div>
+<div class="grid r c-min r-max"><y></y><span class="fit-content"><x>X</x></span></div>
+<div class="grid r c-min r-max"><y></y><span class="fill"><x>X</x></span></div>
+
+<br>
+
+<div class="grid r c-max r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r c-max r-auto"><y></y><span class="min-content"><x>X</x></span></div>
+<div class="grid r c-max r-auto"><y></y><span class="max-content"><x>X</x></span></div>
+<div class="grid r c-max r-auto"><y></y><span class="fit-content"><x>X</x></span></div>
+<div class="grid r c-max r-auto"><y></y><span class="fill"><x>X</x></span></div>
+
+<br>
+
+<div class="grid r c-max r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r c-max r-min"><y></y><span class="min-content"><x>X</x></span></div>
+<div class="grid r c-max r-min"><y></y><span class="max-content"><x>X</x></span></div>
+<div class="grid r c-max r-min"><y></y><span class="fit-content"><x>X</x></span></div>
+<div class="grid r c-max r-min"><y></y><span class="fill"><x>X</x></span></div>
+
+<br>
+
+<div class="grid r c-max r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r c-max r-max"><y></y><span class="min-content"><x>X</x></span></div>
+<div class="grid r c-max r-max"><y></y><span class="max-content"><x>X</x></span></div>
+<div class="grid r c-max r-max"><y></y><span class="fit-content"><x>X</x></span></div>
+<div class="grid r c-max r-max"><y></y><span class="fill"><x>X</x></span></div>
+
+</body></html>

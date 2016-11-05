@@ -95,6 +95,16 @@ skip-if(Android) == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-p
 == grid-item-intrinsic-ratio-stretch-001.html grid-item-intrinsic-ratio-stretch-001-ref.html
 == grid-item-intrinsic-ratio-stretch-002.html grid-item-intrinsic-ratio-stretch-002-ref.html
 == grid-item-intrinsic-ratio-stretch-003.html grid-item-intrinsic-ratio-stretch-003-ref.html
+== grid-item-intrinsic-ratio-stretch-004.html grid-item-intrinsic-ratio-stretch-004-ref.html
+== grid-item-intrinsic-ratio-stretch-005.html grid-item-intrinsic-ratio-stretch-005-ref.html
+== grid-item-auto-min-size-clamp-001.html grid-item-auto-min-size-clamp-001-ref.html
+== grid-item-auto-min-size-clamp-002.html grid-item-auto-min-size-clamp-002-ref.html
+== grid-item-auto-min-size-clamp-003.html grid-item-auto-min-size-clamp-003-ref.html
+== grid-item-auto-min-size-clamp-004.html grid-item-auto-min-size-clamp-004-ref.html
+== grid-item-auto-min-size-clamp-005.html grid-item-auto-min-size-clamp-005-ref.html
+== grid-item-auto-min-size-clamp-006.html grid-item-auto-min-size-clamp-006-ref.html
+== grid-item-auto-min-size-clamp-007.html grid-item-auto-min-size-clamp-007-ref.html
+== grid-item-canvas-001.html grid-item-canvas-001-ref.html
 == grid-item-self-baseline-001.html grid-item-self-baseline-001-ref.html
 random-if(http.oscpu!="Linux\u0020i686") == grid-item-content-baseline-001.html grid-item-content-baseline-001-ref.html # depends on exact Ahem baseline font metrics which seems to differ between platforms: bug 1310792
 random-if(http.oscpu!="Linux\u0020i686") == grid-item-content-baseline-002.html grid-item-content-baseline-002-ref.html # ditto

@@ -31,7 +31,7 @@ span {
 
 <div class="grid">
   <span>a</span>
-  <span style="width:-moz-min-content">IAmReallyWideAndTheBorderShouldSurroundMe</span>
+  <span style="width:28px">IAmReallyWideAndTheBorderShouldSurroundMe</span>
 </div>
 
 <pre>The border shouldn't shrink-wrap the wide text below, due to definite "width" values:</pre>
@@ -48,7 +48,7 @@ span {
 
 <div class="grid" style="margin-bottom:50px;">
   <span>a</span>
-  <span style="font-size:72px;width:-moz-min-content">IAmReallyTall</span>
+  <span style="font-size:72px;width:28px;height:28px">IAmReallyTall</span>
   <span>c</span>
   <span>d</span>
 </div>
@@ -56,10 +56,10 @@ span {
 The border shouldn't shrink-wrap the wide text below, due to definite "height" values:
 <div class="grid">
   <span>a</span>
-  <span style="font-size:72px; height:10%;width:-moz-min-content">IAmReallyTall</span>
+  <span style="font-size:72px; height:10%;width:28px">IAmReallyTall</span>
   <span>c</span>
-  <span style="font-size:72px; height:10px;width:-moz-min-content">SameHere</span>
-  <span style="font-size:72px; height:40px;width:-moz-min-content">SameHere</span>
+  <span style="font-size:72px; height:10px;width:28px">SameHere</span>
+  <span style="font-size:72px; height:40px;width:28px">SameHere</span>
 </div>
 
 </body>

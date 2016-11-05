@@ -26,6 +26,12 @@ html,body {
   grid: repeat(3,50px) 13px / 60px 60px;
 }
 
+/* don't clamp grid item automatic minimum size */
+.igrid *, .grid * {
+  min-width: 0;
+  min-height: 0;
+}
+
 .a {
   border: 3px solid black;
   background:lime;

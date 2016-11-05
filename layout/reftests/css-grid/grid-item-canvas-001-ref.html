@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: stretching canvas item</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1176775">
+  <style type="text/css">
+body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
+
+.block {
+  float: left;
+  border:1px solid;
+  line-height:0;
+}
+canvas:nth-child(1n) { background: blue; }
+canvas:nth-child(2n) { background: grey; }
+canvas:nth-child(3n) { background: tan; }
+canvas:nth-child(4n) { background: black; }
+.sz > canvas {
+  width:20px; height:10px;
+}
+.sz.t2 > canvas {
+  width:10px; height:20px;
+}
+canvas {
+  vertical-align:top;
+}
+  </style>
+</head>
+<body>
+
+<div class="block sz">
+<canvas></canvas><canvas style="margin-left:-5px"></canvas><canvas style="margin-left:5px"></canvas><canvas style="margin-left:15px"></canvas><canvas style="margin-left:5px"></canvas><canvas style="margin-left:-5px"></canvas><canvas style="margin-left:5px"></canvas><canvas style="margin-left:15px"></canvas><canvas style="margin-left:5px"></canvas><canvas style="margin-left:5px"></canvas><canvas style="margin-left:5px"></canvas><canvas style="margin-left:5px"></canvas></div>
+
+<div class="block sz t2">
+<canvas></canvas><canvas style="margin-left:5px"></canvas><canvas style="margin-left:25px"></canvas><canvas style="margin-left:25px"></canvas><canvas style="margin-left:5px"></canvas><canvas style="margin-left:5px"></canvas><canvas style="margin-left:25px"></canvas><canvas style="margin-left:25px"></canvas><canvas style="margin-left:5px"></canvas><canvas style="margin-left:5px"></canvas><canvas style="margin-left:5px"></canvas><canvas style="margin-left:5px"></canvas></div>
+
+<div class="block" style="height:150px; width:215px">
+<canvas style="width:10px;height:5px;"></canvas><canvas style="width:30px;height:15px;margin-left:5px"></canvas><canvas style="width:10px;height:5px;margin-left:5px"></canvas><canvas style="width:30px;height:15px;margin-left:5px"></canvas><canvas style="width:10px;height:5px;vertical-align:bottom;margin-top:145px;margin-left:5px"></canvas><canvas style="width:30px;height:15px;vertical-align:bottom;margin-top:135px;margin-left:5px"></canvas><canvas style="width:10px;height:5px;vertical-align:bottom;margin-top:145px;margin-left:5px"></canvas><canvas style="width:30px;height:15px;vertical-align:bottom;margin-top:135px;margin-left:5px"></canvas></div>
+
+<div class="block" style="height:300px; width:600px"><canvas style="width:300px;height:150px"></canvas><canvas style="width:300px;height:150px"></canvas><canvas style="width:300px;height:150px"></canvas><canvas style="width:300px;height:150px"></canvas></div>
+
+<div class="block" style="height:60px; width:600px">
+<canvas style="height:30px"></canvas><canvas style="height:30px;margin-left:480px"></canvas><canvas style="height:30px"></canvas><canvas style="height:30px;margin-left:480px"></canvas></div>
+
+</body>
+</html>
