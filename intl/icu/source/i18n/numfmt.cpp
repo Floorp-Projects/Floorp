@@ -1,3 +1,5 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 * Copyright (C) 1997-2015, International Business Machines Corporation and
@@ -276,7 +278,8 @@ NumberFormat::operator=(const NumberFormat& rhs)
         fMaxFractionDigits = rhs.fMaxFractionDigits;
         fMinFractionDigits = rhs.fMinFractionDigits;
         fParseIntegerOnly = rhs.fParseIntegerOnly;
-        u_strncpy(fCurrency, rhs.fCurrency, 4);
+        u_strncpy(fCurrency, rhs.fCurrency, 3);
+        fCurrency[3] = 0;
         fLenient = rhs.fLenient;
         fCapitalizationContext = rhs.fCapitalizationContext;
     }
@@ -449,7 +452,7 @@ NumberFormat::format(int64_t number,
 //       XXXFormat::format(double
 
 UnicodeString&
-NumberFormat::format(const StringPiece &decimalNum,
+NumberFormat::format(StringPiece decimalNum,
                      UnicodeString& toAppendTo,
                      FieldPositionIterator* fpi,
                      UErrorCode& status) const
@@ -682,7 +685,7 @@ NumberFormat::parseObject(const UnicodeString& source,
 UnicodeString&
 NumberFormat::format(double number, UnicodeString& appendTo) const
 {
-    FieldPosition pos(0);
+    FieldPosition pos(FieldPosition::DONT_CARE);
     return format(number, appendTo, pos);
 }
 
@@ -692,7 +695,7 @@ NumberFormat::format(double number, UnicodeString& appendTo) const
 UnicodeString&
 NumberFormat::format(int32_t number, UnicodeString& appendTo) const
 {
-    FieldPosition pos(0);
+    FieldPosition pos(FieldPosition::DONT_CARE);
     return format(number, appendTo, pos);
 }
 
@@ -702,7 +705,7 @@ NumberFormat::format(int32_t number, UnicodeString& appendTo) const
 UnicodeString&
 NumberFormat::format(int64_t number, UnicodeString& appendTo) const
 {
-    FieldPosition pos(0);
+    FieldPosition pos(FieldPosition::DONT_CARE);
     return format(number, appendTo, pos);
 }
 

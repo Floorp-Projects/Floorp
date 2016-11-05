@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/si.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 si{
     AuxExemplarCharacters{"[\u200B\u200C\u200D ඎ ඏ ඐ ඦ ෳ]"}
     Ellipsis{
@@ -24,6 +18,10 @@ si{
     ExemplarCharactersIndex{
         "[අ ආ ඇ ඈ ඉ ඊ උ ඌ ඍ එ ඒ ඓ ඔ ඕ ඖ ක ඛ ග ඝ ඞ ඟ ච ඡ ජ ඣ ඥ ඤ ට ඨ ඩ ඪ ණ ඬ ත ථ ද ධ න"
         " ඳ ප ඵ බ භ ම ඹ ය ර ල ව ශ ෂ ස හ ළ ෆ]"
+    }
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
+        "″]"
     }
     MoreInformation{"?"}
     NumberElements{
@@ -211,7 +209,7 @@ si{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.20.4"}
+    Version{"2.1.28.79"}
     calendar{
         generic{
             DateTimePatterns{
@@ -410,6 +408,10 @@ si{
                 MEd{"M-d, E"}
                 MMM{"LLL"}
                 MMMEd{"MMM d E"}
+                MMMMW{
+                    one{"MMM සතිය W"}
+                    other{"MMM සතිය W"}
+                }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"M-d"}
@@ -430,6 +432,10 @@ si{
                 yMd{"y-M-d"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
+                yw{
+                    one{"y සතිය w"}
+                    other{"y සතිය w"}
+                }
             }
             dayNames{
                 format{
@@ -556,16 +562,16 @@ si{
                         pm{"ප.ව."}
                     }
                     narrow{
-                        afternoon1{"ද"}
-                        am{"පෙ"}
-                        evening1{"හ"}
-                        midnight{"මැ"}
-                        morning1{"පා"}
-                        morning2{"උ"}
+                        afternoon1{"දවල්"}
+                        am{"පෙ.ව."}
+                        evening1{"හවස"}
+                        midnight{"මැදියම"}
+                        morning1{"පාන්දර"}
+                        morning2{"උදේ"}
                         night1{"රෑ"}
-                        night2{"මැ"}
-                        noon{"ද"}
-                        pm{"ප"}
+                        night2{"මැදියමට පසු"}
+                        noon{"මධ්‍යාහ්නය"}
+                        pm{"ප.ව."}
                     }
                     wide{
                         afternoon1{"දවල්"}
@@ -828,6 +834,92 @@ si{
             }
         }
     }
+    characterLabel{
+        activities{"කාර්යය"}
+        african_scripts{"අප්රිකානු සිද්ධි මාලා"}
+        american_scripts{"ඇමරිකානු සිද්ධි මාලා"}
+        animal{"සතා"}
+        animals_nature{"සත්වයින් සහ ස්වභාවදර්මය"}
+        arrows{"ඊතල"}
+        body{"ශරීරය"}
+        box_drawing{"පෙට්ටි ඇදීම"}
+        braille{"බ්‍රේල්"}
+        building{"ගොඩනැඟිල්ල"}
+        bullets_stars{"උන්ඩ/තරු"}
+        consonantal_jamo{"ව්‍යංජනාක්ෂර සම්බන්ධී ජාමො"}
+        currency_symbols{"මුදල් සංකේත"}
+        dash_connector{"කෙටි ඉර/සම්බන්ධකය"}
+        digits{"සංඛ්‍යා"}
+        dingbats{"ඩින්බැට්ස්"}
+        divination_symbols{"අවලෝකන සංකේත"}
+        downwards_arrows{"පහලටවූ ඊතල"}
+        downwards_upwards_arrows{"පහලටවූ ඉහලටවූ ඊතල"}
+        east_asian_scripts{"නැගෙනහිර ආසියානු පිටපත්"}
+        emoji{"එමෝටිකොන්"}
+        european_scripts{"යුරෝපීය"}
+        female{"ගැහැණු"}
+        flag{"කොඩිය"}
+        flags{"කොඩි"}
+        food_drink{"කෑම සහ බීම"}
+        format{"ආකෘතිය"}
+        format_whitespace{"හැඩතලය සහ සුදු හිස්තැන"}
+        full_width_form_variant{"පුන්-පුළුල් වෙනස් පෝරම්"}
+        geometric_shapes{"ජ්‍යාමිතික හැඩයන්"}
+        half_width_form_variant{"පුළුල් වෙනස් පෝරම්"}
+        han_characters{"හැන් අක්ෂර"}
+        han_radicals{"හැන් ඛණ්ඩක"}
+        hanja{"හන්ජා"}
+        hanzi_simplified{"හන්සි (සුළු කළ)"}
+        hanzi_traditional{"හන්සි (සාම්ප්‍රදායික)"}
+        heart{"හදවත"}
+        historic_scripts{"ඵෙතිහාසික පිටපත්"}
+        ideographic_desc_characters{"රූපමය විස්තරාත්මක අක්ෂර"}
+        japanese_kana{"ජපාන කානා"}
+        kanbun{"කන්බුන්"}
+        kanji{"කන්ජි"}
+        keycap{"පියන"}
+        leftwards_arrows{"වම් ඊතල"}
+        leftwards_rightwards_arrows{"වම් දකුනු ඊතල"}
+        letterlike_symbols{"අකුරු වැනි සංකේත"}
+        limited_use{"සීමිත භාවිතය"}
+        male{"පිරිමි"}
+        math_symbols{"ගණිත සංකේත"}
+        middle_eastern_scripts{"මධ්‍යම නැගෙනහිර පිටපත්"}
+        miscellaneous{"විවිධ"}
+        modern_scripts{"නව පිටපත්"}
+        modifier{"විකරණකාරකය"}
+        musical_symbols{"සංගීත සංකේත"}
+        nature{"සොබාදහම"}
+        nonspacing{"ඉඩ නොතැබීම"}
+        numbers{"සංඛ්‍යා"}
+        objects{"වස්තු"}
+        other{"වෙනත්"}
+        paired{"යුගලවූ"}
+        person{"පුද්ගලයා"}
+        phonetic_alphabet{"ශ්රව්යඅක්ශර වින්‍යාසය"}
+        pictographs{"පින්තූරමය සංකේත"}
+        place{"තැන"}
+        plant{"පැලය"}
+        punctuation{"විරාම ලක්ෂණ"}
+        rightwards_arrows{"දකුනු ඊතල"}
+        sign_standard_symbols{"සලකුණ/සම්මත සංකේත"}
+        small_form_variant{"කුඩා වෙනස් පෝරම්"}
+        smiley{"හිනාව"}
+        smileys_people{"සිනහවන් සහ මිනිසුන්"}
+        south_asian_scripts{"දකුණු ආසියානු පිටපත්"}
+        southeast_asian_scripts{"ගිනිකොන් ආසියානු පිටපත්"}
+        spacing{"ඉඩ තබනවා"}
+        sport{"ක්‍රීඩාව"}
+        symbols{"සංකේත"}
+        technical_symbols{"තාක්ෂණික සංකේත"}
+        tone_marks{"නාද සලකුණු"}
+        travel{"සංචාරය"}
+        upwards_arrows{"උඩු ඊතල"}
+        vocalic_jamo{"වොකාලික් ජාමො"}
+        weather{"කාලගුණය"}
+        western_asian_scripts{"බටහිර ආසියානු පිටපත්"}
+        whitespace{"සුදු ඉඩ"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -850,8 +942,8 @@ si{
                     other{"දින {0}න්"}
                 }
                 past{
-                    one{"දින {0} ට පෙර"}
-                    other{"දින {0} ට පෙර"}
+                    one{"දින {0}කට පෙර"}
+                    other{"දින {0}කට පෙර"}
                 }
             }
         }
@@ -863,8 +955,8 @@ si{
                     other{"දින {0}න්"}
                 }
                 past{
-                    one{"දින {0} ට පෙර"}
-                    other{"දින {0} ට පෙර"}
+                    one{"දින {0}කට පෙර"}
+                    other{"දින {0}කට පෙර"}
                 }
             }
         }
@@ -876,8 +968,8 @@ si{
                     other{"දින {0}න්"}
                 }
                 past{
-                    one{"දින {0} ට පෙර"}
-                    other{"දින {0} ට පෙර"}
+                    one{"දින {0}කට පෙර"}
+                    other{"දින {0}කට පෙර"}
                 }
             }
         }
@@ -893,12 +985,32 @@ si{
                 "0"{"මේ සිකුරාදා"}
                 "1"{"ඊළඟ සිකුරාදා"}
             }
+            relativeTime{
+                future{
+                    one{"+{0} සිකුරදාවකින්"}
+                    other{"සිකුරදාවන් +{0} කින්"}
+                }
+                past{
+                    one{"{0} සිකුරදාවකට පෙර"}
+                    other{"සිකුරදාවන් {0} කට පෙර"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"පසුගිය සිකුරාදා"}
                 "0"{"මේ සිකුරාදා"}
                 "1"{"ඊළඟ සිකුරාදා"}
+            }
+            relativeTime{
+                future{
+                    one{"සිකුරදාවන් +{0} කින්"}
+                    other{"සිකුරදාවන් +{0} කින්"}
+                }
+                past{
+                    one{"සිකුරදාවන් {0} කට පෙර"}
+                    other{"සිකුරදාවන් {0} කට පෙර"}
+                }
             }
         }
         fri-short{
@@ -907,17 +1019,30 @@ si{
                 "0"{"මේ සිකුරාදා"}
                 "1"{"ඊළඟ සිකුරාදා"}
             }
+            relativeTime{
+                future{
+                    one{"සිකුරදාවන් +{0} කින්"}
+                    other{"සිකුරදාවන් +{0} කින්"}
+                }
+                past{
+                    one{"සිකුරදාවන් {0} කට පෙර"}
+                    other{"සිකුරදාවන් {0} කට පෙර"}
+                }
+            }
         }
         hour{
             dn{"පැය"}
+            relative{
+                "0"{"මෙම පැය"}
+            }
             relativeTime{
                 future{
-                    one{"පැය {0} කින්"}
-                    other{"පැය {0} කින්"}
+                    one{"පැය {0}කින්"}
+                    other{"පැය {0}කින්"}
                 }
                 past{
-                    one{"පැය {0}ට පෙර"}
-                    other{"පැය {0}ට පෙර"}
+                    one{"පැය {0}කට පෙර"}
+                    other{"පැය {0}කට පෙර"}
                 }
             }
         }
@@ -925,12 +1050,12 @@ si{
             dn{"පැ"}
             relativeTime{
                 future{
-                    one{"පැය {0} කින්"}
-                    other{"පැය {0} කින්"}
+                    one{"පැය {0}කින්"}
+                    other{"පැය {0}කින්"}
                 }
                 past{
-                    one{"පැය {0}ට පෙර"}
-                    other{"පැය {0}ට පෙර"}
+                    one{"පැය {0}කට පෙර"}
+                    other{"පැය {0}කට පෙර"}
                 }
             }
         }
@@ -938,25 +1063,28 @@ si{
             dn{"පැය"}
             relativeTime{
                 future{
-                    one{"පැය {0} කින්"}
-                    other{"පැය {0} කින්"}
+                    one{"පැය {0}කින්"}
+                    other{"පැය {0}කින්"}
                 }
                 past{
-                    one{"පැය {0}ට පෙර"}
-                    other{"පැය {0}ට පෙර"}
+                    one{"පැය {0}කට පෙර"}
+                    other{"පැය {0}කට පෙර"}
                 }
             }
         }
         minute{
             dn{"මිනිත්තුව"}
+            relative{
+                "0"{"මෙම මිනිත්තුව"}
+            }
             relativeTime{
                 future{
-                    one{"මිනිත්තු {0} කින්"}
-                    other{"මිනිත්තු {0} කින්"}
+                    one{"මිනිත්තු {0}කින්"}
+                    other{"මිනිත්තු {0}කින්"}
                 }
                 past{
-                    one{"මිනිත්තු {0}ට පෙර"}
-                    other{"මිනිත්තු {0}ට පෙර"}
+                    one{"මිනිත්තු {0}කට පෙර"}
+                    other{"මිනිත්තු {0}කට පෙර"}
                 }
             }
         }
@@ -964,12 +1092,12 @@ si{
             dn{"මි"}
             relativeTime{
                 future{
-                    one{"මිනිත්තු {0} කින්"}
-                    other{"මිනිත්තු {0} කින්"}
+                    one{"මිනිත්තු {0}කින්"}
+                    other{"මිනිත්තු {0}කින්"}
                 }
                 past{
-                    one{"මිනිත්තු {0}ට පෙර"}
-                    other{"මිනිත්තු {0}ට පෙර"}
+                    one{"මිනිත්තු {0}කට පෙර"}
+                    other{"මිනිත්තු {0}කට පෙර"}
                 }
             }
         }
@@ -977,12 +1105,12 @@ si{
             dn{"මිනි."}
             relativeTime{
                 future{
-                    one{"මිනිත්තු {0} කින්"}
-                    other{"මිනිත්තු {0} කින්"}
+                    one{"මිනිත්තු {0}කින්"}
+                    other{"මිනිත්තු {0}කින්"}
                 }
                 past{
-                    one{"මිනිත්තු {0}ට පෙර"}
-                    other{"මිනිත්තු {0}ට පෙර"}
+                    one{"මිනිත්තු {0}කට පෙර"}
+                    other{"මිනිත්තු {0}කට පෙර"}
                 }
             }
         }
@@ -992,6 +1120,16 @@ si{
                 "0"{"මේ සඳුදා"}
                 "1"{"ඊළඟ සඳුදා"}
             }
+            relativeTime{
+                future{
+                    one{"{0} සඳුදාවකින්"}
+                    other{"සඳුදාවන් {0} කින්"}
+                }
+                past{
+                    one{"{0} සඳුදාවකට පෙර"}
+                    other{"සඳුදාවන් {0} කට පෙර"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -999,12 +1137,32 @@ si{
                 "0"{"මේ සඳුදා"}
                 "1"{"ඊළඟ සඳුදා"}
             }
+            relativeTime{
+                future{
+                    one{"සඳුදාවන් {0} කින්"}
+                    other{"සඳුදාවන් {0} කින්"}
+                }
+                past{
+                    one{"සඳුදාවන් {0} කට පෙර"}
+                    other{"සඳුදාවන් {0} කට පෙර"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"පසුගිය සඳුදා"}
                 "0"{"මේ සඳුදා"}
                 "1"{"ඊළඟ සඳුදා"}
+            }
+            relativeTime{
+                future{
+                    one{"සඳුදාවන් {0} කින්"}
+                    other{"සඳුදාවන් {0} කින්"}
+                }
+                past{
+                    one{"සඳුදාවන් {0} කට පෙර"}
+                    other{"සඳුදාවන් {0} කට පෙර"}
+                }
             }
         }
         month{
@@ -1070,12 +1228,12 @@ si{
             }
             relativeTime{
                 future{
-                    one{"කාර්තුව {0} කින්"}
-                    other{"කාර්තුව {0} කින්"}
+                    one{"කාර්තු {0}කින්"}
+                    other{"කාර්තු {0}කින්"}
                 }
                 past{
-                    one{"කාර්තුව {0} ට පෙර"}
-                    other{"කාර්තුව {0} ට පෙර"}
+                    one{"කාර්තු {0}කට පෙර"}
+                    other{"කාර්තු {0}කට පෙර"}
                 }
             }
         }
@@ -1088,12 +1246,12 @@ si{
             }
             relativeTime{
                 future{
-                    one{"කාර්. {0} කින්"}
-                    other{"කාර්. {0} කින්"}
+                    one{"කාර්. {0}කින්"}
+                    other{"කාර්. {0}කින්"}
                 }
                 past{
-                    one{"කාර්. {0} ට පෙර"}
-                    other{"කාර්. {0} ට පෙර"}
+                    one{"කාර්. {0}කට පෙර"}
+                    other{"කාර්. {0}කට පෙර"}
                 }
             }
         }
@@ -1106,12 +1264,12 @@ si{
             }
             relativeTime{
                 future{
-                    one{"කාර්. {0} කින්"}
-                    other{"කාර්. {0} කින්"}
+                    one{"කාර්. {0}කින්"}
+                    other{"කාර්. {0}කින්"}
                 }
                 past{
-                    one{"කාර්. {0} ට පෙර"}
-                    other{"කාර්. {0} ට පෙර"}
+                    one{"කාර්. {0}කට පෙර"}
+                    other{"කාර්. {0}කට පෙර"}
                 }
             }
         }
@@ -1121,6 +1279,16 @@ si{
                 "0"{"මේ සෙනසුරාදා"}
                 "1"{"ඊළඟ සෙනසුරාදා"}
             }
+            relativeTime{
+                future{
+                    one{"සෙනසුරාදා +{0} කින්"}
+                    other{"සෙනසුරාදාවන් +{0} කින්"}
+                }
+                past{
+                    one{"සෙනසුරාදා {0} කට පෙර"}
+                    other{"සෙනසුරාදාවන් {0} කට පෙර"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1128,12 +1296,32 @@ si{
                 "0"{"මේ සෙනසුරාදා"}
                 "1"{"ඊළඟ සෙනසුරාදා"}
             }
+            relativeTime{
+                future{
+                    one{"සෙනසුරාදාවන් +{0} කින්"}
+                    other{"සෙනසුරාදාවන් +{0} කින්"}
+                }
+                past{
+                    one{"සෙනසුරාදාවන් {0} කට පෙර"}
+                    other{"සෙනසුරාදාවන් {0} කට පෙර"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"පසුගිය සෙනසුරාදා"}
                 "0"{"මේ සෙනසුරාදා"}
                 "1"{"ඊළඟ සෙනසුරාදා"}
+            }
+            relativeTime{
+                future{
+                    one{"සෙනසුරාදාවන් +{0} කින්"}
+                    other{"සෙනසුරාදාවන් +{0} කින්"}
+                }
+                past{
+                    one{"සෙනසුරාදාවන් {0} කට පෙර"}
+                    other{"සෙනසුරාදාවන් {0} කට පෙර"}
+                }
             }
         }
         second{
@@ -1143,8 +1331,8 @@ si{
             }
             relativeTime{
                 future{
-                    one{"තත්පර {0} කින්"}
-                    other{"තත්පර {0} කින්"}
+                    one{"තත්පර {0}කින්"}
+                    other{"තත්පර {0}කින්"}
                 }
                 past{
                     one{"තත්පර {0}කට පෙර"}
@@ -1156,8 +1344,8 @@ si{
             dn{"ත"}
             relativeTime{
                 future{
-                    one{"තත්පර {0} කින්"}
-                    other{"තත්පර {0} කින්"}
+                    one{"තත්පර {0}කින්"}
+                    other{"තත්පර {0}කින්"}
                 }
                 past{
                     one{"තත්පර {0}කට පෙර"}
@@ -1169,8 +1357,8 @@ si{
             dn{"තත්."}
             relativeTime{
                 future{
-                    one{"තත්පර {0} කින්"}
-                    other{"තත්පර {0} කින්"}
+                    one{"තත්පර {0}කින්"}
+                    other{"තත්පර {0}කින්"}
                 }
                 past{
                     one{"තත්පර {0}කට පෙර"}
@@ -1184,12 +1372,32 @@ si{
                 "0"{"මේ ඉරිදා"}
                 "1"{"ඊළඟ ඉරිදා"}
             }
+            relativeTime{
+                future{
+                    one{"{0} ඉරිදාවකින්"}
+                    other{"ඉරිදාවන් {0} කින්"}
+                }
+                past{
+                    one{"{0} ඉරිදාවකට පෙර"}
+                    other{"ඉරිදාවන් {0} කට පෙර"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"පසුගිය ඉරිදා"}
                 "0"{"මේ ඉරිදා"}
                 "1"{"ඊළඟ ඉරිදා"}
+            }
+            relativeTime{
+                future{
+                    one{"ඉරිදාවන් {0} කින්"}
+                    other{"ඉරිදාවන් {0} කින්"}
+                }
+                past{
+                    one{"ඉරිදාවන් {0} කට පෙර"}
+                    other{"ඉරිදාවන් {0} කට පෙර"}
+                }
             }
         }
         sun-short{
@@ -1198,12 +1406,32 @@ si{
                 "0"{"මේ ඉරිදා"}
                 "1"{"ඊළඟ ඉරිදා"}
             }
+            relativeTime{
+                future{
+                    one{"ඉරිදාවන් {0} කින්"}
+                    other{"ඉරිදාවන් {0} කින්"}
+                }
+                past{
+                    one{"ඉරිදාවන් {0} කට පෙර"}
+                    other{"ඉරිදාවන් {0} කට පෙර"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"පසුගිය බ්‍රහස්පතින්දා"}
                 "0"{"මේ බ්‍රහස්පතින්දා"}
                 "1"{"ඊළඟ බ්‍රහස්පතින්දා"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} බ්‍රහස්පතින්දාවකින්"}
+                    other{"බ්‍රහස්පතින්දාවන් {0} කින්"}
+                }
+                past{
+                    one{"{0} බ්‍රහස්පතින්දාවකට පෙර"}
+                    other{"බ්‍රහස්පතින්දාවන් {0} කට පෙර"}
+                }
             }
         }
         thu-narrow{
@@ -1212,12 +1440,32 @@ si{
                 "0"{"මේ බ්‍රහස්පතින්දා"}
                 "1"{"ඊළඟ බ්‍රහස්පතින්දා"}
             }
+            relativeTime{
+                future{
+                    one{"බ්‍රහස්පතින්දාවන් {0} කින්"}
+                    other{"බ්‍රහස්පතින්දාවන් {0} කින්"}
+                }
+                past{
+                    one{"බ්‍රහස්පතින්දාවන් {0} කට පෙර"}
+                    other{"බ්‍රහස්පතින්දාවන් {0} කට පෙර"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"පසුගිය බ්‍රහස්පතින්දා"}
                 "0"{"මේ බ්‍රහස්පතින්දා"}
                 "1"{"ඊළඟ බ්‍රහස්පතින්දා"}
+            }
+            relativeTime{
+                future{
+                    one{"බ්‍රහස්පතින්දාවන් {0} කින්"}
+                    other{"බ්‍රහස්පතින්දාවන් {0} කින්"}
+                }
+                past{
+                    one{"බ්‍රහස්පතින්දාවන් {0} කට පෙර"}
+                    other{"බ්‍රහස්පතින්දාවන් {0} කට පෙර"}
+                }
             }
         }
         tue{
@@ -1226,12 +1474,32 @@ si{
                 "0"{"මේ අඟහරුවාදා"}
                 "1"{"ඊළඟ අඟහරුවාදා"}
             }
+            relativeTime{
+                future{
+                    one{"{0} අඟහරුවාදාවකින්"}
+                    other{"අඟහරුවාදාවන් {0} කින්"}
+                }
+                past{
+                    one{"{0} අඟහරුවාදාවකට පෙර"}
+                    other{"අඟහරුවාදාවන් {0} කට පෙර"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"පසුගිය අඟහරුවාදා"}
                 "0"{"මේ අඟහරුවාදා"}
                 "1"{"ඊළඟ අඟහරුවාදා"}
+            }
+            relativeTime{
+                future{
+                    one{"අඟහරුවාදාවන් {0} කින්"}
+                    other{"අඟහරුවාදාවන් {0} කින්"}
+                }
+                past{
+                    one{"අඟහරුවාදාවන් {0} කට පෙර"}
+                    other{"අඟහරුවාදාවන් {0} කට පෙර"}
+                }
             }
         }
         tue-short{
@@ -1240,12 +1508,32 @@ si{
                 "0"{"මේ අඟහරුවාදා"}
                 "1"{"ඊළඟ අඟහරුවාදා"}
             }
+            relativeTime{
+                future{
+                    one{"අඟහරුවාදාවන් {0} කින්"}
+                    other{"අඟහරුවාදාවන් {0} කින්"}
+                }
+                past{
+                    one{"අඟහරුවාදාවන් {0} කට පෙර"}
+                    other{"අඟහරුවාදාවන් {0} කට පෙර"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"පසුගිය බදාදා"}
                 "0"{"මේ බදාදා"}
                 "1"{"ඊළඟ බදාදා"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} බදාදාවකින්"}
+                    other{"බදාදාවන් {0} කින්"}
+                }
+                past{
+                    one{"{0} බදාදාවකට පෙර"}
+                    other{"බදාදාවන් {0} කට පෙර"}
+                }
             }
         }
         wed-narrow{
@@ -1254,12 +1542,32 @@ si{
                 "0"{"මේ බදාදා"}
                 "1"{"ඊළඟ බදාදා"}
             }
+            relativeTime{
+                future{
+                    one{"බදාදාවන් {0} කින්"}
+                    other{"බදාදාවන් {0} කින්"}
+                }
+                past{
+                    one{"බදාදාවන් {0} කට පෙර"}
+                    other{"බදාදාවන් {0} කට පෙර"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"පසුගිය බදාදා"}
                 "0"{"මේ බදාදා"}
                 "1"{"ඊළඟ බදාදා"}
+            }
+            relativeTime{
+                future{
+                    one{"බදාදාවන් {0} කින්"}
+                    other{"බදාදාවන් {0} කින්"}
+                }
+                past{
+                    one{"බදාදාවන් {0} කට පෙර"}
+                    other{"බදාදාවන් {0} කට පෙර"}
+                }
             }
         }
         week{
@@ -1269,10 +1577,11 @@ si{
                 "0"{"මෙම සතිය"}
                 "1"{"ඊළඟ සතිය"}
             }
+            relativePeriod{"{0} වෙනි සතිය"}
             relativeTime{
                 future{
-                    one{"සති {0} කින්"}
-                    other{"සති {0} කින්"}
+                    one{"සති {0}කින්"}
+                    other{"සති {0}කින්"}
                 }
                 past{
                     one{"සති {0}කට පෙර"}
@@ -1287,10 +1596,11 @@ si{
                 "0"{"මෙම සති."}
                 "1"{"ඊළඟ සති."}
             }
+            relativePeriod{"{0} වෙනි සතිය"}
             relativeTime{
                 future{
-                    one{"සති {0} කින්"}
-                    other{"සති {0} කින්"}
+                    one{"සති {0}කින්"}
+                    other{"සති {0}කින්"}
                 }
                 past{
                     one{"සති {0}කට පෙර"}
@@ -1305,10 +1615,11 @@ si{
                 "0"{"මෙම සති."}
                 "1"{"ඊළඟ සති."}
             }
+            relativePeriod{"{0} වෙනි සතිය"}
             relativeTime{
                 future{
-                    one{"සති {0} කින්"}
-                    other{"සති {0} කින්"}
+                    one{"සති {0}කින්"}
+                    other{"සති {0}කින්"}
                 }
                 past{
                     one{"සති {0}කට පෙර"}
@@ -1328,12 +1639,12 @@ si{
             }
             relativeTime{
                 future{
-                    one{"වසර {0} කින්"}
-                    other{"වසර {0} කින්"}
+                    one{"වසර {0}කින්"}
+                    other{"වසර {0}කින්"}
                 }
                 past{
-                    one{"වසර {0}ට පෙර"}
-                    other{"වසර {0}ට පෙර"}
+                    one{"වසර {0}කට පෙර"}
+                    other{"වසර {0}කට පෙර"}
                 }
             }
         }
@@ -1346,12 +1657,12 @@ si{
             }
             relativeTime{
                 future{
-                    one{"වසර {0} කින්"}
-                    other{"වසර {0} කින්"}
+                    one{"වසර {0}කින්"}
+                    other{"වසර {0}කින්"}
                 }
                 past{
-                    one{"වසර {0}ට පෙර"}
-                    other{"වසර {0}ට පෙර"}
+                    one{"වසර {0}කට පෙර"}
+                    other{"වසර {0}කට පෙර"}
                 }
             }
         }
@@ -1364,12 +1675,12 @@ si{
             }
             relativeTime{
                 future{
-                    one{"වසර {0} කින්"}
-                    other{"වසර {0} කින්"}
+                    one{"වසර {0}කින්"}
+                    other{"වසර {0}කින්"}
                 }
                 past{
-                    one{"වසර {0}ට පෙර"}
-                    other{"වසර {0}ට පෙර"}
+                    one{"වසර {0}කට පෙර"}
+                    other{"වසර {0}කට පෙර"}
                 }
             }
         }
@@ -1379,6 +1690,12 @@ si{
     }
     listPattern{
         standard{
+            2{"{0} සහ {1}"}
+            end{"{0}, සහ {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
             2{"{0} සහ {1}"}
             end{"{0}, සහ {1}"}
             middle{"{0}, {1}"}

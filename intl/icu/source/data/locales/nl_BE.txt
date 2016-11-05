@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/nl_BE.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 nl_BE{
     NumberElements{
         latn{
@@ -14,7 +8,7 @@ nl_BE{
             }
         }
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.27.40"}
     calendar{
         generic{
             DateTimePatterns{
@@ -27,10 +21,41 @@ nl_BE{
                 "d MMM y G",
                 "d/MM/yy GGGGG",
                 "{1} {0}",
+                "{1} 'om' {0}",
+                "{1} 'om' {0}",
                 "{1} {0}",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+            }
+            availableFormats{
+                MEd{"E d/M"}
+                Md{"d/M"}
+                yyyyM{"M/y GGGGG"}
+                yyyyMEd{"E d/M/y GGGGG"}
+                yyyyMd{"d/M/y GGGGG"}
+            }
+            intervalFormats{
+                MEd{
+                    M{"E d/MM – E d/MM"}
+                    d{"E d/MM – E d/MM"}
+                }
+                Md{
+                    M{"d/MM – d/MM"}
+                    d{"d/MM – d/MM"}
+                }
+                yM{
+                    M{"MM/y – MM/y G"}
+                    y{"MM/y – MM/y G"}
+                }
+                yMEd{
+                    M{"E d/MM/y – E d/MM/y G"}
+                    d{"E d/MM/y – E d/MM/y G"}
+                    y{"E d/MM/y – E d/MM/y G"}
+                }
+                yMd{
+                    M{"d/MM/y – d/MM/y G"}
+                    d{"d/MM/y – d/MM/y G"}
+                    y{"d/MM/y – d/MM/y G"}
+                }
             }
         }
         gregorian{
@@ -44,10 +69,41 @@ nl_BE{
                 "d MMM y",
                 "d/MM/yy",
                 "{1} {0}",
+                "{1} 'om' {0}",
+                "{1} 'om' {0}",
                 "{1} {0}",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+            }
+            availableFormats{
+                MEd{"E d/M"}
+                Md{"d/M"}
+                yM{"M/y"}
+                yMEd{"E d/M/y"}
+                yMd{"d/M/y"}
+            }
+            intervalFormats{
+                MEd{
+                    M{"E d/MM – E d/MM"}
+                    d{"E d/MM – E d/MM"}
+                }
+                Md{
+                    M{"d/MM – d/MM"}
+                    d{"d/MM – d/MM"}
+                }
+                yM{
+                    M{"MM/y – MM/y"}
+                    y{"MM/y – MM/y"}
+                }
+                yMEd{
+                    M{"E d/MM/y – E d/MM/y"}
+                    d{"E d/MM/y – E d/MM/y"}
+                    y{"E d/MM/y – E d/MM/y"}
+                }
+                yMd{
+                    M{"d/MM/y – d/MM/y"}
+                    d{"d/MM/y – d/MM/y"}
+                    y{"d/MM/y – d/MM/y"}
+                }
             }
         }
     }

@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/es.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 es{
-    AuxExemplarCharacters{"[ª à ă â å ä ã ā æ ç è ĕ ê ë ē ì ĭ î ï ī º ò ŏ ô ö ø ō œ ù ŭ û ū ÿ]"}
+    AuxExemplarCharacters{"[ª à ă â å ä ã ā æ ç è ĕ ê ë ē ì ĭ î ī º ò ŏ ô ö ø ō œ ù ŭ û ū ÿ]"}
     Ellipsis{
         final{"{0}…"}
         initial{"… {0}"}
@@ -16,7 +10,7 @@ es{
         word-initial{"… {0}"}
         word-medial{"{0}… {1}"}
     }
-    ExemplarCharacters{"[a á b c d e é f g h i í j k l m n ñ o ó p q r s t u ú ü v w x y z]"}
+    ExemplarCharacters{"[a á b c d e é f g h i í ï j k l m n ñ o ó p q r s t u ú ü v w x y ý z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N Ñ O P Q R S T U V W X Y Z]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ¡ ? ¿ . … ' ‘ ’ \u0022 “ ” « » ( ) \\[ \\] § @ * / "
@@ -209,7 +203,7 @@ es{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.20.15"}
+    Version{"2.1.28.80"}
     calendar{
         buddhist{
             eras{
@@ -472,6 +466,10 @@ es{
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMEd{"E, d 'de' MMMM"}
+                MMMMW{
+                    one{"'semana' W 'de' MMM"}
+                    other{"'semana' W 'de' MMM"}
+                }
                 MMMMd{"d 'de' MMMM"}
                 MMMd{"d MMM"}
                 MMd{"d/M"}
@@ -498,6 +496,10 @@ es{
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ 'de' y"}
+                yw{
+                    one{"'semana' w 'de' y"}
+                    other{"'semana' w 'de' y"}
+                }
             }
             dayNames{
                 format{
@@ -935,6 +937,94 @@ es{
             }
         }
     }
+    characterLabel{
+        activities{"Actividades"}
+        african_scripts{"Sistemas de escritura africanos"}
+        american_scripts{"Sistemas de escritura americanos"}
+        animal{"animal"}
+        animals_nature{"Animales y naturaleza"}
+        arrows{"Flechas"}
+        body{"cuerpo"}
+        box_drawing{"Composición de cuadros"}
+        braille{"Braille"}
+        building{"edificio"}
+        bullets_stars{"Viñetas y asteriscos"}
+        consonantal_jamo{"Jamo consonánticos"}
+        currency_symbols{"Símbolos de divisas"}
+        dash_connector{"Guiones y conectores"}
+        digits{"Dígitos"}
+        dingbats{"Florituras"}
+        divination_symbols{"Símbolos de adivinación"}
+        downwards_arrows{"Flechas hacia abajo"}
+        downwards_upwards_arrows{"Flechas hacia abajo y arriba"}
+        east_asian_scripts{"Sistemas de escritura de Asia Oriental"}
+        emoji{"Emojis"}
+        european_scripts{"Sistemas de escritura europeos"}
+        female{"mujer"}
+        flag{"bandera"}
+        flags{"Banderas"}
+        food_drink{"Comida y bebida"}
+        format{"Formato"}
+        format_whitespace{"Formato y espacio duro"}
+        full_width_form_variant{"Variantes de ancho completo"}
+        geometric_shapes{"Figuras geométricas"}
+        half_width_form_variant{"Variantes de ancho medio"}
+        han_characters{"Caracteres han"}
+        han_radicals{"Radicales han"}
+        hanja{"Hanja"}
+        hanzi_simplified{"Hanzi (simplificados)"}
+        hanzi_traditional{"Hanzi (tradicionales)"}
+        heart{"corazón"}
+        historic_scripts{"Sistemas de escritura históricos"}
+        ideographic_desc_characters{"Caracteres de descripción ideográfica"}
+        japanese_kana{"Kana japoneses"}
+        kanbun{"Kanbun"}
+        kanji{"Kanji"}
+        keycap{"tecla 10"}
+        leftwards_arrows{"Flechas hacia la izquierda"}
+        leftwards_rightwards_arrows{"Flechas hacia la izquierda y la derecha"}
+        letterlike_symbols{"Símbolos con letras"}
+        limited_use{"Uso limitado"}
+        male{"hombre"}
+        math_symbols{"Símbolos matemáticos"}
+        middle_eastern_scripts{"Sistemas de escritura de Oriente Medio"}
+        miscellaneous{"Varios"}
+        modern_scripts{"Sistemas de escritura modernos"}
+        modifier{"Modificador"}
+        musical_symbols{"Símbolos musicales"}
+        nature{"naturaleza"}
+        nonspacing{"Sin espaciado"}
+        numbers{"Números"}
+        objects{"Objetos"}
+        other{"Otros"}
+        paired{"Parejas"}
+        person{"persona"}
+        phonetic_alphabet{"Alfabeto fonético"}
+        pictographs{"Pictogramas"}
+        place{"lugar"}
+        plant{"planta"}
+        punctuation{"Puntuación"}
+        rightwards_arrows{"Flechas hacia la derecha"}
+        sign_standard_symbols{"Símbolos de señales/estándar"}
+        small_form_variant{"Variantes pequeñas"}
+        smiley{"cara sonriente"}
+        smileys_people{"Emoticonos y personas"}
+        south_asian_scripts{"Sistemas de escritura de Asia Meridional"}
+        southeast_asian_scripts{"Sistemas de escritura de Asia Sudoriental"}
+        spacing{"Espaciado"}
+        sport{"deporte"}
+        symbols{"Símbolos"}
+        technical_symbols{"Símbolos técnicos"}
+        tone_marks{"Marcas tonales"}
+        travel{"viaje"}
+        travel_places{"Viajes y destinos"}
+        upwards_arrows{"Flechas hacia arriba"}
+        variant_forms{"Variantes"}
+        vocalic_jamo{"Jamo vocálicos"}
+        weather{"tiempo"}
+        western_asian_scripts{"Sistemas de escritura de Asia Occidental"}
+        whitespace{"Espacio duro"}
+    }
     contextTransforms{
         day-format-except-narrow:intvector{
             1,
@@ -1036,12 +1126,32 @@ es{
                 "0"{"este viernes"}
                 "1"{"el próximo viernes"}
             }
+            relativeTime{
+                future{
+                    one{"dentro de {0} viernes"}
+                    other{"dentro de {0} viernes"}
+                }
+                past{
+                    one{"hace {0} viernes"}
+                    other{"hace {0} viernes"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"el VI pasado"}
                 "0"{"este VI"}
                 "1"{"el próximo VI"}
+            }
+            relativeTime{
+                future{
+                    one{"dentro de {0} VI"}
+                    other{"dentro de {0} VI"}
+                }
+                past{
+                    one{"hace {0} VI"}
+                    other{"hace {0} VI"}
+                }
             }
         }
         fri-short{
@@ -1050,9 +1160,22 @@ es{
                 "0"{"este vie."}
                 "1"{"el próximo vie."}
             }
+            relativeTime{
+                future{
+                    one{"dentro de {0} vie."}
+                    other{"dentro de {0} vie."}
+                }
+                past{
+                    one{"hace {0} vie."}
+                    other{"hace {0} vie."}
+                }
+            }
         }
         hour{
             dn{"hora"}
+            relative{
+                "0"{"esta hora"}
+            }
             relativeTime{
                 future{
                     one{"dentro de {0} hora"}
@@ -1092,6 +1215,9 @@ es{
         }
         minute{
             dn{"minuto"}
+            relative{
+                "0"{"este minuto"}
+            }
             relativeTime{
                 future{
                     one{"dentro de {0} minuto"}
@@ -1135,6 +1261,16 @@ es{
                 "0"{"este lunes"}
                 "1"{"el próximo lunes"}
             }
+            relativeTime{
+                future{
+                    one{"dentro de {0} lunes"}
+                    other{"dentro de {0} lunes"}
+                }
+                past{
+                    one{"hace {0} lunes"}
+                    other{"hace {0} lunes"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -1142,12 +1278,32 @@ es{
                 "0"{"este LU"}
                 "1"{"el próximo LU"}
             }
+            relativeTime{
+                future{
+                    one{"dentro de {0} LU"}
+                    other{"dentro de {0} LU"}
+                }
+                past{
+                    one{"hace {0} LU"}
+                    other{"hace {0} LU"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"el lun. pasado"}
                 "0"{"este lun."}
                 "1"{"el próximo lun."}
+            }
+            relativeTime{
+                future{
+                    one{"dentro de {0} lun."}
+                    other{"dentro de {0} lun."}
+                }
+                past{
+                    one{"hace {0} lun."}
+                    other{"hace {0} lun."}
+                }
             }
         }
         month{
@@ -1206,6 +1362,11 @@ es{
         }
         quarter{
             dn{"trimestre"}
+            relative{
+                "-1"{"el trimestre pasado"}
+                "0"{"este trimestre"}
+                "1"{"el próximo trimestre"}
+            }
             relativeTime{
                 future{
                     one{"dentro de {0} trimestre"}
@@ -1249,6 +1410,16 @@ es{
                 "0"{"este sábado"}
                 "1"{"el próximo sábado"}
             }
+            relativeTime{
+                future{
+                    one{"dentro de {0} sábado"}
+                    other{"dentro de {0} sábados"}
+                }
+                past{
+                    one{"hace {0} sábado"}
+                    other{"hace {0} sábados"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1256,12 +1427,32 @@ es{
                 "0"{"este SA"}
                 "1"{"el próximo SA"}
             }
+            relativeTime{
+                future{
+                    one{"dentro de {0} SA"}
+                    other{"dentro de {0} SA"}
+                }
+                past{
+                    one{"hace {0} SA"}
+                    other{"hace {0} SA"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"el sáb. pasado"}
                 "0"{"este sáb."}
                 "1"{"el próximo sáb."}
+            }
+            relativeTime{
+                future{
+                    one{"dentro de {0} sáb."}
+                    other{"dentro de {0} sáb."}
+                }
+                past{
+                    one{"hace {0} sáb."}
+                    other{"hace {0} sáb."}
+                }
             }
         }
         second{
@@ -1312,12 +1503,32 @@ es{
                 "0"{"este domingo"}
                 "1"{"el próximo domingo"}
             }
+            relativeTime{
+                future{
+                    one{"dentro de {0} domingo"}
+                    other{"dentro de {0} domingos"}
+                }
+                past{
+                    one{"hace {0} domingo"}
+                    other{"hace {0} domingos"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"el DO pasado"}
                 "0"{"este DO"}
                 "1"{"el próximo DO"}
+            }
+            relativeTime{
+                future{
+                    one{"dentro de {0} DO"}
+                    other{"dentro de {0} DO"}
+                }
+                past{
+                    one{"hace {0} DO"}
+                    other{"hace {0} DO"}
+                }
             }
         }
         sun-short{
@@ -1326,12 +1537,32 @@ es{
                 "0"{"este dom."}
                 "1"{"el próximo dom."}
             }
+            relativeTime{
+                future{
+                    one{"dentro de {0} dom."}
+                    other{"dentro de {0} dom."}
+                }
+                past{
+                    one{"hace {0} dom."}
+                    other{"hace {0} dom."}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"el jueves pasado"}
                 "0"{"este jueves"}
                 "1"{"el próximo jueves"}
+            }
+            relativeTime{
+                future{
+                    one{"dentro de {0} jueves"}
+                    other{"dentro de {0} jueves"}
+                }
+                past{
+                    one{"hace {0} jueves"}
+                    other{"hace {0} jueves"}
+                }
             }
         }
         thu-narrow{
@@ -1340,12 +1571,32 @@ es{
                 "0"{"este JU"}
                 "1"{"el próximo JU"}
             }
+            relativeTime{
+                future{
+                    one{"dentro de {0} JU"}
+                    other{"dentro de {0} JU"}
+                }
+                past{
+                    one{"hace {0} JU"}
+                    other{"hace {0} JU"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"el jue. pasado"}
                 "0"{"este jue."}
                 "1"{"el próximo jue."}
+            }
+            relativeTime{
+                future{
+                    one{"dentro de {0} jue."}
+                    other{"dentro de {0} jue."}
+                }
+                past{
+                    one{"hace {0} jue."}
+                    other{"hace {0} jue."}
+                }
             }
         }
         tue{
@@ -1354,12 +1605,32 @@ es{
                 "0"{"este martes"}
                 "1"{"el próximo martes"}
             }
+            relativeTime{
+                future{
+                    one{"dentro de {0} martes"}
+                    other{"dentro de {0} martes"}
+                }
+                past{
+                    one{"hace {0} martes"}
+                    other{"hace {0} martes"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"el MA pasado"}
                 "0"{"este MA"}
                 "1"{"el próximo MA"}
+            }
+            relativeTime{
+                future{
+                    one{"dentro de {0} MA"}
+                    other{"dentro de {0} MA"}
+                }
+                past{
+                    one{"hace {0} MA"}
+                    other{"hace {0} MA"}
+                }
             }
         }
         tue-short{
@@ -1368,12 +1639,32 @@ es{
                 "0"{"este mar."}
                 "1"{"el próximo mar."}
             }
+            relativeTime{
+                future{
+                    one{"dentro de {0} mar."}
+                    other{"dentro de {0} mar."}
+                }
+                past{
+                    one{"hace {0} mar."}
+                    other{"hace {0} mar."}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"el miércoles pasado"}
                 "0"{"este miércoles"}
                 "1"{"el próximo miércoles"}
+            }
+            relativeTime{
+                future{
+                    one{"dentro de {0} miércoles"}
+                    other{"dentro de {0} miércoles"}
+                }
+                past{
+                    one{"hace {0} miércoles"}
+                    other{"hace {0} miércoles"}
+                }
             }
         }
         wed-narrow{
@@ -1382,12 +1673,32 @@ es{
                 "0"{"este MI"}
                 "1"{"el próximo MI"}
             }
+            relativeTime{
+                future{
+                    one{"dentro de {0} MI"}
+                    other{"dentro de {0} MI"}
+                }
+                past{
+                    one{"hace {0} MI"}
+                    other{"hace {0} MI"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"el mié. pasado"}
                 "0"{"este mié."}
                 "1"{"el próximo mié."}
+            }
+            relativeTime{
+                future{
+                    one{"dentro de {0} mié."}
+                    other{"dentro de {0} mié."}
+                }
+                past{
+                    one{"hace {0} mié."}
+                    other{"hace {0} mié."}
+                }
             }
         }
         week{
@@ -1397,6 +1708,7 @@ es{
                 "0"{"esta semana"}
                 "1"{"la próxima semana"}
             }
+            relativePeriod{"la semana del {0}"}
             relativeTime{
                 future{
                     one{"dentro de {0} semana"}
@@ -1410,6 +1722,7 @@ es{
         }
         week-narrow{
             dn{"sem."}
+            relativePeriod{"la sem. del {0}"}
             relativeTime{
                 future{
                     one{"dentro de {0} sem."}
@@ -1423,6 +1736,7 @@ es{
         }
         week-short{
             dn{"sem."}
+            relativePeriod{"la sem. del {0}"}
             relativeTime{
                 future{
                     one{"dentro de {0} sem."}
@@ -1502,6 +1816,12 @@ es{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-short{
+            2{"{0} y {1}"}
+            end{"{0} y {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         unit{
             2{"{0} y {1}"}
             end{"{0} y {1}"}
@@ -1525,17 +1845,5 @@ es{
         UK{"anglosajón"}
         US{"estadounidense"}
         metric{"métrico"}
-    }
-    transformNames{
-        BGN{"BGN"}
-        Numeric{"Numérico"}
-        Tone{"Tono"}
-        UNGEGN{"UNGEGN"}
-        x-Accents{"Acentos"}
-        x-Fullwidth{"Ancho completo"}
-        x-Halfwidth{"Ancho medio"}
-        x-Jamo{"Jamo"}
-        x-Pinyin{"Pinyin"}
-        x-Publishing{"Publicación"}
     }
 }

@@ -1,6 +1,8 @@
+# Copyright (C) 2016 and later: Unicode, Inc. and others.
+# License & terms of use: http://www.unicode.org/copyright.html
 #******************************************************************************
 #
-#   Copyright (C) 1999-2015, International Business Machines
+#   Copyright (C) 1999-2016, International Business Machines
 #   Corporation and others.  All Rights Reserved.
 #
 #******************************************************************************
@@ -49,7 +51,7 @@ tfsmalls.o tmsgfmt.o trcoll.o tscoll.o tsdate.o tsdcfmsy.o tsdtfmsy.o	\
 tsmthred.o tsnmfmt.o tsputil.o tstnrapi.o tstnorm.o tzbdtest.o		\
 tzregts.o tztest.o ucdtest.o usettest.o ustrtest.o strcase.o transtst.o strtest.o thcoll.o \
 bytestrietest.o ucharstrietest.o \
-itrbbi.o rbbiapts.o rbbitst.o ittrans.o transapi.o cpdtrtst.o \
+itrbbi.o rbbiapts.o rbbitst.o rbbimonkeytest.o ittrans.o transapi.o cpdtrtst.o \
 testutil.o transrt.o trnserr.o normconf.o sfwdchit.o \
 jamotest.o srchtest.o reptest.o regextst.o \
 itrbnf.o itrbnfrt.o itrbnfp.o ucaconf.o icusvtst.o \
@@ -57,7 +59,7 @@ uobjtest.o idnaref.o idnaconf.o nptrans.o punyref.o testidn.o testidna.o uts46te
 incaltst.o calcasts.o v32test.o uvectest.o textfile.o tokiter.o utxttest.o \
 windttst.o winnmtst.o winutil.o csdetest.o tzrulets.o tzoffloc.o tzfmttst.o ssearch.o dtifmtts.o \
 tufmtts.o itspoof.o simplethread.o bidiconf.o locnmtst.o dcfmtest.o alphaindextst.o listformattertest.o genderinfotest.o compactdecimalformattest.o regiontst.o \
-reldatefmttest.o simplepatternformattertest.o measfmttest.o numfmtspectest.o unifiedcachetest.o quantityformattertest.o \
+reldatefmttest.o simpleformattertest.o measfmttest.o numfmtspectest.o unifiedcachetest.o quantityformattertest.o \
 scientificnumberformattertest.o datadrivennumberformattestsuite.o \
 numberformattesttuple.o numberformat2test.o pluralmaptest.o
 

@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
-* Copyright (C) 2007-2015, International Business Machines Corporation and
+* Copyright (C) 2007-2016, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 *
@@ -10,10 +12,12 @@
 */
 
 
-#ifndef PLURRULE_IMPLE
-#define PLURRULE_IMPLE
+#ifndef PLURRULE_IMPL
+#define PLURRULE_IMPL
 
 // Internal definitions for the PluralRules implementation.
+
+#include "unicode/utypes.h"
 
 #if !UCONFIG_NO_FORMATTING
 
@@ -21,7 +25,6 @@
 #include "unicode/locid.h"
 #include "unicode/parseerr.h"
 #include "unicode/ures.h"
-#include "unicode/utypes.h"
 #include "uvector.h"
 #include "hash.h"
 
@@ -32,6 +35,7 @@ U_NAMESPACE_BEGIN
 class AndConstraint;
 class RuleChain;
 class DigitInterval;
+class PluralRules;
 class VisibleDigits;
 
 static const UChar DOT             = ((UChar)0x002E);

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
- Copyright (c) 2013-2015 International Business Machines Corporation and others. All rights reserved.
+ Copyright (C) 2016 and later: Unicode, Inc. and others.
+ License & terms of use: http://www.unicode.org/copyright.html
+ Copyright (c) 2013-2016 International Business Machines Corporation and others. All rights reserved.
 -->
 <!DOCTYPE ldml SYSTEM "http://www.unicode.org/repos/cldr/trunk/common/dtd/ldml.dtd">
 <ldml>
@@ -41,6 +43,11 @@
             </ruleset>
             <ruleset type="lenient-parse" access="private">
                 <rbnfrule value="0">&amp; ':' = '.' = ' ' = '-';</rbnfrule>
+            </ruleset>
+        </rulesetGrouping>
+        <rulesetGrouping type="SpelloutRules">
+            <ruleset type="lenient-parse" access="private">
+                <rbnfrule value="0">&amp;[last primary ignorable ] ←← ' ' ←← ',' ←← '-' ←← '­';</rbnfrule>
             </ruleset>
         </rulesetGrouping>
    </rbnf>

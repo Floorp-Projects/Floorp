@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/nus.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 nus{
     ExemplarCharacters{
         "[a ä {a\u0331} b c d e ë {e\u0331} ɛ {ɛ\u0308} {ɛ\u0331} {ɛ\u0331\u0308} f g"
@@ -27,7 +21,7 @@ nus{
             }
         }
     }
-    Version{"2.1.19.38"}
+    Version{"2.1.27.40"}
     calendar{
         generic{
             DateTimePatterns{
@@ -72,6 +66,10 @@ nus{
         }
         gregorian{
             AmPmMarkers{
+                "RW",
+                "TŊ",
+            }
+            AmPmMarkersAbbr{
                 "RW",
                 "TŊ",
             }

@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/zh.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 zh{
-    Version{"2.1.20.31"}
+    Version{"2.1.29.84"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"阿比让"}
@@ -308,6 +302,9 @@ zh{
         }
         "America:El_Salvador"{
             ec{"萨尔瓦多"}
+        }
+        "America:Fort_Nelson"{
+            ec{"纳尔逊堡"}
         }
         "America:Fortaleza"{
             ec{"福塔雷萨"}
@@ -672,6 +669,9 @@ zh{
         "Asia:Bangkok"{
             ec{"曼谷"}
         }
+        "Asia:Barnaul"{
+            ec{"巴尔瑙尔"}
+        }
         "Asia:Beirut"{
             ec{"贝鲁特"}
         }
@@ -849,6 +849,9 @@ zh{
         "Asia:Tokyo"{
             ec{"东京"}
         }
+        "Asia:Tomsk"{
+            ec{"托木斯克"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"乌兰巴托"}
         }
@@ -948,6 +951,9 @@ zh{
         "Europe:Andorra"{
             ec{"安道尔"}
         }
+        "Europe:Astrakhan"{
+            ec{"阿斯特拉罕"}
+        }
         "Europe:Athens"{
             ec{"雅典"}
         }
@@ -1005,6 +1011,9 @@ zh{
         }
         "Europe:Kiev"{
             ec{"基辅"}
+        }
+        "Europe:Kirov"{
+            ec{"基洛夫"}
         }
         "Europe:Lisbon"{
             ec{"里斯本"}
@@ -1081,6 +1090,9 @@ zh{
         }
         "Europe:Tirane"{
             ec{"地拉那"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"乌里扬诺夫斯克"}
         }
         "Europe:Uzhgorod"{
             ec{"乌日哥罗德"}
@@ -1403,7 +1415,7 @@ zh{
             ls{"不丹时间"}
         }
         "meta:Bolivia"{
-            ls{"玻利维亚时间"}
+            ls{"玻利维亚标准时间"}
         }
         "meta:Brasilia"{
             ld{"巴西利亚夏令时间"}
@@ -1480,7 +1492,7 @@ zh{
             ls{"复活节岛标准时间"}
         }
         "meta:Ecuador"{
-            ls{"厄瓜多尔时间"}
+            ls{"厄瓜多尔标准时间"}
         }
         "meta:Europe_Central"{
             ld{"中欧夏令时间"}
@@ -1511,7 +1523,7 @@ zh{
             ls{"斐济标准时间"}
         }
         "meta:French_Guiana"{
-            ls{"法属圭亚那时间"}
+            ls{"法属圭亚那标准时间"}
         }
         "meta:French_Southern"{
             ls{"法属南方和南极领地时间"}
@@ -1783,6 +1795,9 @@ zh{
         }
         "meta:Ponape"{
             ls{"波纳佩时间"}
+        }
+        "meta:Pyongyang"{
+            ls{"平壤时间"}
         }
         "meta:Qyzylorda"{
             ld{"克孜洛尔达夏令时间"}

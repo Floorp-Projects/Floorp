@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/en_AU.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 en_AU{
     %%Parent{"en_001"}
     NumberElements{
@@ -15,7 +9,7 @@ en_AU{
             }
         }
     }
-    Version{"2.1.20.4"}
+    Version{"2.1.30.50"}
     calendar{
         generic{
             availableFormats{
@@ -32,7 +26,7 @@ en_AU{
                     d{"E, d MMM – E, d MMM"}
                 }
                 yMMMEd{
-                    d{"E, d MMM – E, dMMM, y G"}
+                    d{"E, d MMM – E, d MMM y G"}
                 }
             }
         }
@@ -55,18 +49,14 @@ en_AU{
                 "h:mm:ss a",
                 "h:mm a",
                 "EEEE, d MMMM y",
-                "dMMMM,y",
-                "dMMM,y",
+                "d MMMM y",
+                "d MMM y",
                 "d/M/yy",
                 "{1}, {0}",
                 "{1} 'at' {0}",
                 "{1} 'at' {0}",
                 "{1}, {0}",
                 "{1}, {0}",
-            }
-            availableFormats{
-                M{"LL"}
-                yMMMEd{"E, d MMM,y"}
             }
             dayNames{
                 format{
@@ -78,6 +68,15 @@ en_AU{
                         "Thu.",
                         "Fri.",
                         "Sat.",
+                    }
+                    narrow{
+                        "Su.",
+                        "M.",
+                        "Tu.",
+                        "W.",
+                        "Th.",
+                        "F.",
+                        "Sa.",
                     }
                     short{
                         "Su.",
@@ -99,6 +98,15 @@ en_AU{
                         "F.",
                         "Sa.",
                     }
+                    short{
+                        "Su.",
+                        "Mon.",
+                        "Tu.",
+                        "Wed.",
+                        "Th.",
+                        "Fri.",
+                        "Sat.",
+                    }
                 }
             }
             dayPeriod{
@@ -109,6 +117,7 @@ en_AU{
                         midnight{"midnight"}
                         morning1{"morning"}
                         night1{"night"}
+                        noon{"midday"}
                     }
                     narrow{
                         afternoon1{"afternoon"}
@@ -119,19 +128,17 @@ en_AU{
                         noon{"midday"}
                     }
                     wide{
-                        afternoon1{"afternoon"}
-                        evening1{"evening"}
+                        afternoon1{"in the afternoon"}
+                        evening1{"in the evening"}
                         midnight{"midnight"}
-                        morning1{"morning"}
-                        night1{"night"}
+                        morning1{"in the morning"}
+                        night1{"at night"}
                         noon{"midday"}
                     }
                 }
                 stand-alone{
                     abbreviated{
-                        am{"am"}
                         noon{"midday"}
-                        pm{"pm"}
                     }
                     narrow{
                         am{"am"}
@@ -177,81 +184,32 @@ en_AU{
                         "Nov.",
                         "Dec.",
                     }
-                    narrow{
-                        "Jan.",
-                        "Feb.",
-                        "Mar.",
-                        "Apr.",
-                        "May",
-                        "Jun.",
-                        "Jul.",
-                        "Aug.",
-                        "Sep.",
-                        "Oct.",
-                        "Nov.",
-                        "Dec.",
-                    }
                 }
-            }
-        }
-        japanese{
-            availableFormats{
-                yMEd{"E, d/M/y"}
-                yMd{"d/M/y"}
             }
         }
     }
+    characterLabel{
+        nonspacing{"Non-spacing"}
+    }
     fields{
-        day-narrow{
-            relativeTime{
-                past{
-                    other{"{0} days ago"}
-                }
-            }
-        }
-        dayperiod{
-            dn{"am/pm"}
-        }
-        hour-narrow{
-            dn{"h"}
-            relativeTime{
-                future{
-                    other{"in {0} hr."}
-                }
-                past{
-                    other{"{0} hr. ago"}
-                }
-            }
-        }
         hour-short{
             dn{"h"}
         }
-        month-narrow{
-            relativeTime{
-                future{
-                    other{"in {0} mo."}
-                }
-                past{
-                    other{"{0} mo. ago"}
-                }
-            }
-        }
         quarter-narrow{
             relativeTime{
-                future{
-                    other{"in {0} qtrs."}
+                past{
+                    one{"in {0} qtr. ago"}
+                    other{"{0} qtrs. ago"}
                 }
             }
         }
-        year-narrow{
-            relativeTime{
-                future{
-                    other{"in {0} yr."}
-                }
-                past{
-                    other{"{0} yr. ago"}
-                }
-            }
+    }
+    listPattern{
+        standard{
+            end{"{0} and {1}"}
+        }
+        standard-short{
+            end{"{0} and {1}"}
         }
     }
 }

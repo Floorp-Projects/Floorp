@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/zu.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 zu{
     AuxExemplarCharacters{
         "[á à ă â å ä ã ā æ ç é è ĕ ê ë ē í ì ĭ î ï ī ñ ó ò ŏ ô ö ø ō œ ú ù ŭ û ü ū ÿ"
@@ -212,14 +206,14 @@ zu{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.29.22"}
     calendar{
         generic{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE dd MMMM y G",
                 "d MMMM y G",
                 "d MMM y G",
@@ -303,7 +297,7 @@ zu{
                 }
                 MMMd{
                     M{"MMM d – MMM d"}
-                    d{"MMM d–d"}
+                    d{"MMM d – d"}
                 }
                 Md{
                     M{"M/d – M/d"}
@@ -344,7 +338,7 @@ zu{
                     y{"E, M/d/y – E, M/d/y"}
                 }
                 yMMM{
-                    M{"MMM–MMM y"}
+                    M{"MMM – MMM y G"}
                     y{"MMM y – MMM y"}
                 }
                 yMMMEd{
@@ -353,12 +347,12 @@ zu{
                     y{"E, MMM d, y – E, MMM d, y"}
                 }
                 yMMMM{
-                    M{"MMMM–MMMM y"}
+                    M{"MMMM – MMMM y G"}
                     y{"MMMM y – MMMM y"}
                 }
                 yMMMd{
                     M{"MMM d – MMM d, y"}
-                    d{"MMM d–d, y"}
+                    d{"MMM d – d, y G"}
                     y{"MMM d, y – MMM d, y"}
                 }
                 yMd{
@@ -382,10 +376,10 @@ zu{
                 "p",
             }
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, MMMM d, y",
                 "MMMM d, y",
                 "MMM d, y",
@@ -416,12 +410,16 @@ zu{
                 Hmsv{"HH:mm:ss v"}
                 Hmv{"HH:mm v"}
                 M{"L"}
-                MEd{"E, M/d"}
+                MEd{"MM-dd, E"}
                 MMM{"LLL"}
                 MMMEd{"E, MMM d"}
+                MMMMW{
+                    one{"'week' W 'of' MMM"}
+                    other{"'week' W 'of' MMM"}
+                }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
-                Md{"M/d"}
+                Md{"MM-dd"}
                 d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
@@ -430,15 +428,19 @@ zu{
                 hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
-                yM{"M/y"}
-                yMEd{"E, M/d/y"}
+                yM{"y-MM"}
+                yMEd{"y-MM-dd, E"}
                 yMMM{"MMM y"}
                 yMMMEd{"E, MMM d, y"}
                 yMMMM{"MMMM y"}
                 yMMMd{"MMM d, y"}
-                yMd{"M/d/y"}
+                yMd{"y-MM-dd"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"'week' w 'of' y"}
+                    other{"'week' w 'of' y"}
+                }
             }
             dayNames{
                 format{
@@ -521,24 +523,24 @@ zu{
             dayPeriod{
                 format{
                     abbreviated{
-                        afternoon1{"ntambama"}
+                        afternoon1{"emini"}
                         evening1{"ntambama"}
-                        morning1{"ekuseni"}
+                        morning1{"entathakusa"}
                         morning2{"ekuseni"}
                         night1{"ebusuku"}
                     }
                     narrow{
-                        afternoon1{"ntambama"}
+                        afternoon1{"emini"}
                         evening1{"ntambama"}
-                        morning1{"ekuseni"}
+                        morning1{"entathakusa"}
                         morning2{"ekuseni"}
                         night1{"ebusuku"}
                     }
                     wide{
-                        afternoon1{"ntambama"}
+                        afternoon1{"emini"}
                         evening1{"ntambama"}
-                        morning1{"ekuseni"}
-                        morning2{"ekuseni2"}
+                        morning1{"entathakusa"}
+                        morning2{"ekuseni"}
                         night1{"ebusuku"}
                     }
                 }
@@ -546,7 +548,7 @@ zu{
                     abbreviated{
                         afternoon1{"emini"}
                         am{"AM"}
-                        evening1{"ebusuku1"}
+                        evening1{"ntambama"}
                         morning1{"entathakusa"}
                         morning2{"ekuseni"}
                         night1{"ebusuku"}
@@ -555,7 +557,7 @@ zu{
                     narrow{
                         afternoon1{"emini"}
                         am{"a"}
-                        evening1{"ebusuku1"}
+                        evening1{"ntambama"}
                         morning1{"entathakusa"}
                         morning2{"ekuseni"}
                         night1{"ebusuku"}
@@ -564,9 +566,9 @@ zu{
                     wide{
                         afternoon1{"emini"}
                         am{"AM"}
-                        evening1{"ebusuku1"}
+                        evening1{"ntambama"}
                         morning1{"entathakusa"}
-                        morning2{"ekuseni2"}
+                        morning2{"ekuseni"}
                         night1{"ebusuku"}
                         pm{"PM"}
                     }
@@ -592,28 +594,28 @@ zu{
             }
             intervalFormats{
                 H{
-                    H{"HH–HH"}
+                    H{"HH – HH"}
                 }
                 Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
+                    H{"HH:mm – HH:mm"}
+                    m{"HH:mm – HH:mm"}
                 }
                 Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
+                    H{"HH:mm – HH:mm v"}
+                    m{"HH:mm – HH:mm v"}
                 }
                 Hv{
-                    H{"HH–HH v"}
+                    H{"HH – HH v"}
                 }
                 M{
-                    M{"M–M"}
+                    M{"M – M"}
                 }
                 MEd{
                     M{"E, M/d – E, M/d"}
                     d{"E, M/d – E, M/d"}
                 }
                 MMM{
-                    M{"MMM–MMM"}
+                    M{"MMM – MMM"}
                 }
                 MMMEd{
                     M{"E, MMM d – E, MMM d"}
@@ -621,7 +623,7 @@ zu{
                 }
                 MMMd{
                     M{"MMM d – MMM d"}
-                    d{"MMM d–d"}
+                    d{"MMM d – d"}
                 }
                 Md{
                     M{"M/d – M/d"}
@@ -633,21 +635,21 @@ zu{
                 fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
-                    h{"h–h a"}
+                    h{"h – h a"}
                 }
                 hm{
                     a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
+                    h{"h:mm – h:mm a"}
+                    m{"h:mm – h:mm a"}
                 }
                 hmv{
                     a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
+                    h{"h:mm – h:mm a v"}
+                    m{"h:mm – h:mm a v"}
                 }
                 hv{
                     a{"h a – h a v"}
-                    h{"h–h a v"}
+                    h{"h – h a v"}
                 }
                 y{
                     y{"y–y"}
@@ -662,7 +664,7 @@ zu{
                     y{"E, M/d/y – E, M/d/y"}
                 }
                 yMMM{
-                    M{"MMM–MMM y"}
+                    M{"MMM – MMM y"}
                     y{"MMM y – MMM y"}
                 }
                 yMMMEd{
@@ -671,12 +673,12 @@ zu{
                     y{"E, MMM d, y – E, MMM d, y"}
                 }
                 yMMMM{
-                    M{"MMMM–MMMM y"}
+                    M{"MMMM – MMMM y"}
                     y{"MMMM y – MMMM y"}
                 }
                 yMMMd{
                     M{"MMM d – MMM d, y"}
-                    d{"MMM d–d, y"}
+                    d{"MMM d – d, y"}
                     y{"MMM d, y – MMM d, y"}
                 }
                 yMd{
@@ -716,7 +718,7 @@ zu{
                         "D",
                     }
                     wide{
-                        "Januwari",
+                        "UMasingana",
                         "Februwari",
                         "Mashi",
                         "Ephreli",
@@ -819,6 +821,94 @@ zu{
             }
         }
     }
+    characterLabel{
+        activities{"Activities"}
+        african_scripts{"amaskripthi ase-Africa"}
+        american_scripts{"amaskripthi ase-America"}
+        animal{"isilwane"}
+        animals_nature{"izilwane nemvelo"}
+        arrows{"imicibisholo"}
+        body{"umzimba"}
+        box_drawing{"i-Box Drawing"}
+        braille{"i-Braille"}
+        building{"isakhiwo"}
+        bullets_stars{"Amabhulethi/izinkanyezi"}
+        consonantal_jamo{"i-Consonantal Jamo"}
+        currency_symbols{"Amasimbuli emali"}
+        dash_connector{"Dash/Connector"}
+        digits{"Amadijithi"}
+        dingbats{"i-Dingbats"}
+        divination_symbols{"Amasimbuli e-Divination"}
+        downwards_arrows{"Imicibisholo ye-Downwards"}
+        downwards_upwards_arrows{"Downwards Upwards Arrows"}
+        east_asian_scripts{"Amaskripthi ase-East Asia"}
+        emoji{"Ama-Emoji"}
+        european_scripts{"Amaskripthi ase-Europe"}
+        female{"owesfazane"}
+        flag{"ifulegi"}
+        flags{"Amafulegi"}
+        food_drink{"Ukudla neziphuzo"}
+        format{"Ifomethi"}
+        format_whitespace{"Ifomethi ne-Whitespace"}
+        full_width_form_variant{"i-Full-Width Form Variants"}
+        geometric_shapes{"i-Geometric Shapes"}
+        half_width_form_variant{"i-Half-Width Form Variants"}
+        han_characters{"i-Han Characters"}
+        han_radicals{"i-Han Radicals"}
+        hanja{"i-Hanja"}
+        hanzi_simplified{"i-Hanzi (Eyenziwe lula)"}
+        hanzi_traditional{"i-Hanzi (Yendabuko)"}
+        heart{"inhliziyo"}
+        historic_scripts{"Amaskripthi omlando"}
+        ideographic_desc_characters{"i-Ideographic Desc. Characters"}
+        japanese_kana{"i-Japanese Kana"}
+        kanbun{"i-Kanbun"}
+        kanji{"i-Kanji"}
+        keycap{"i-keycap"}
+        leftwards_arrows{"Imicibisholo eya ngakwesokunxele"}
+        leftwards_rightwards_arrows{"Imicibisholo eya ngakwesokunxele nangakwesokudla"}
+        letterlike_symbols{"Amasimbuli ayizinhlamvu"}
+        limited_use{"ukusetshenziswa kwesikhashana"}
+        male{"owesilisa"}
+        math_symbols{"Amasimbuli ezibalo"}
+        middle_eastern_scripts{"Amaskripthi ase-Midlle East"}
+        miscellaneous{"Okuxubile"}
+        modern_scripts{"Amaskripthi esimanje"}
+        modifier{"Okwewashi"}
+        musical_symbols{"Amasimbuli omculo"}
+        nature{"imvelo"}
+        nonspacing{"kungashiyi sikhala"}
+        numbers{"Izinombolo"}
+        objects{"Izinto"}
+        other{"Okunye"}
+        paired{"bhanqiwe"}
+        person{"umuntu"}
+        phonetic_alphabet{"izinhlamvu zefonetiki"}
+        pictographs{"amagrafu ezithombe"}
+        place{"indawo"}
+        plant{"isitshalo"}
+        punctuation{"izimpawu zokubhala"}
+        rightwards_arrows{"Imicibisholo eya ngakwesokudla"}
+        sign_standard_symbols{"Ngena ngemvume/Izimpawu ezivamile"}
+        small_form_variant{"okuncane okwahlukile"}
+        smiley{"okumoyizelayo"}
+        smileys_people{"ukumoyizela nabantu"}
+        south_asian_scripts{"Amaskripthi ase-South Asia"}
+        southeast_asian_scripts{"Amaskripthi ase-South East Asia"}
+        spacing{"ukushiya izikhala"}
+        sport{"umdlalo"}
+        symbols{"Amasimbuli"}
+        technical_symbols{"Amasimbuli okobuchwepheshe"}
+        tone_marks{"Amamaki e-Tone"}
+        travel{"ukuvakasha"}
+        travel_places{"Ukuhamba nezindawo"}
+        upwards_arrows{"Imicibisholo ebheke phezulu"}
+        variant_forms{"Okwehlukahlukene"}
+        vocalic_jamo{"i-Vocalic Jamo"}
+        weather{"isimo sezulu"}
+        western_asian_scripts{"Amaskripthi ase-Western Asia"}
+        whitespace{"i-Whitespace"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -884,12 +974,32 @@ zu{
                 "0"{"kulo Lwesihlanu"}
                 "1"{"uLwesihlanu oluzayo"}
             }
+            relativeTime{
+                future{
+                    one{"ngo {0} Lwesihlanu"}
+                    other{"ngo {0} Lwezihlanu"}
+                }
+                past{
+                    one{"{0} Lwesihlanu oludlule"}
+                    other{"{0} Lwezihlanu oludlule"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"uLwesihlanu oludlule"}
                 "0"{"kulo Lwesihlanu"}
                 "1"{"uLwesihlanu oluzayo"}
+            }
+            relativeTime{
+                future{
+                    one{"ngo {0} Lwezihlanu"}
+                    other{"ngo {0} Lwezihlanu"}
+                }
+                past{
+                    one{"{0} Lwezihlanu oludlule"}
+                    other{"{0} Lwezihlanu oludlule"}
+                }
             }
         }
         fri-short{
@@ -898,9 +1008,22 @@ zu{
                 "0"{"kulo Lwesihlanu"}
                 "1"{"uLwesihlanu oluzayo"}
             }
+            relativeTime{
+                future{
+                    one{"ngo {0} Lwezihlanu"}
+                    other{"ngo {0} Lwezihlanu"}
+                }
+                past{
+                    one{"{0} Lwezihlanu oludlule"}
+                    other{"{0} Lwezihlanu oludlule"}
+                }
+            }
         }
         hour{
             dn{"Ihora"}
+            relative{
+                "0"{"leli hora"}
+            }
             relativeTime{
                 future{
                     one{"ehoreni elingu-{0} elizayo"}
@@ -940,6 +1063,9 @@ zu{
         }
         minute{
             dn{"Iminithi"}
+            relative{
+                "0"{"leli minithi"}
+            }
             relativeTime{
                 future{
                     one{"kuminithi elingu-{0} elizayo"}
@@ -983,6 +1109,16 @@ zu{
                 "0"{"kulo Msombuluko"}
                 "1"{"uMsombuluko ozayo"}
             }
+            relativeTime{
+                future{
+                    one{"ngoMsombuluko o-{0}"}
+                    other{"ngeMisombuluko e-{0}"}
+                }
+                past{
+                    one{"ngoMsombuluko o-{0} odlule"}
+                    other{"ngeMsombuluko e-{0} edlule"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -990,12 +1126,32 @@ zu{
                 "0"{"kulo Msombuluko"}
                 "1"{"uMsombuluko ozayo"}
             }
+            relativeTime{
+                future{
+                    one{"ngeMisombuluko e-{0}"}
+                    other{"ngeMisombuluko e-{0}"}
+                }
+                past{
+                    one{"ngeMsombuluko e-{0} edlule"}
+                    other{"ngeMsombuluko e-{0} edlule"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"uMsombuluko odlule"}
                 "0"{"kulo Msombuluko"}
                 "1"{"uMsombuluko ozayo"}
+            }
+            relativeTime{
+                future{
+                    one{"ngeMisombuluko e-{0}"}
+                    other{"ngeMisombuluko e-{0}"}
+                }
+                past{
+                    one{"ngeMsombuluko e-{0} edlule"}
+                    other{"ngeMsombuluko e-{0} edlule"}
+                }
             }
         }
         month{
@@ -1044,6 +1200,11 @@ zu{
         }
         quarter{
             dn{"Ikota"}
+            relative{
+                "-1"{"ikota edlule"}
+                "0"{"le kota"}
+                "1"{"ikota ezayo"}
+            }
             relativeTime{
                 future{
                     one{"kwikota engu-{0} ezayo"}
@@ -1087,6 +1248,16 @@ zu{
                 "0"{"kulo Mgqibelo"}
                 "1"{"uMgqibelo ozayo"}
             }
+            relativeTime{
+                future{
+                    one{"ngoMgqibelo o-{0}"}
+                    other{"ngeMgqibelo engu-{0}"}
+                }
+                past{
+                    one{"ngoMgqibelo o-{0} odlule"}
+                    other{"ngeMgqibelo engu-{0} edlule"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1094,12 +1265,32 @@ zu{
                 "0"{"kulo Mgqibelo"}
                 "1"{"uMgqibelo ozayo"}
             }
+            relativeTime{
+                future{
+                    one{"ngeMgqibelo engu-{0}"}
+                    other{"ngeMgqibelo engu-{0}"}
+                }
+                past{
+                    one{"ngeMgqibelo engu-{0} edlule"}
+                    other{"ngeMgqibelo engu-{0} edlule"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"uMgqibelo odlule"}
                 "0"{"kulo Mgqibelo"}
                 "1"{"uMgqibelo ozayo"}
+            }
+            relativeTime{
+                future{
+                    one{"ngeMgqibelo engu-{0}"}
+                    other{"ngeMgqibelo engu-{0}"}
+                }
+                past{
+                    one{"ngeMgqibelo engu-{0} edlule"}
+                    other{"ngeMgqibelo engu-{0} edlule"}
+                }
             }
         }
         second{
@@ -1150,12 +1341,32 @@ zu{
                 "0"{"kuleli Sonto"}
                 "1"{"iSonto elizayo"}
             }
+            relativeTime{
+                future{
+                    one{"kwiSonto elingu-{0}"}
+                    other{"kumaSonto angu-{0}"}
+                }
+                past{
+                    one{"{0} iSonto eledlule"}
+                    other{"{0} amaSonto edlule"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"iSonto eledlule"}
                 "0"{"kuleli Sonto"}
                 "1"{"iSonto elizayo"}
+            }
+            relativeTime{
+                future{
+                    one{"kumaSonto angu-{0}"}
+                    other{"kumaSonto angu-{0}"}
+                }
+                past{
+                    one{"{0} amaSonto edlule"}
+                    other{"{0} amaSonto edlule"}
+                }
             }
         }
         sun-short{
@@ -1164,6 +1375,16 @@ zu{
                 "0"{"kuleli Sonto"}
                 "1"{"iSonto elizayo"}
             }
+            relativeTime{
+                future{
+                    one{"kumaSonto angu-{0}"}
+                    other{"kumaSonto angu-{0}"}
+                }
+                past{
+                    one{"{0} amaSonto edlule"}
+                    other{"{0} amaSonto edlule"}
+                }
+            }
         }
         thu{
             relative{
@@ -1171,19 +1392,49 @@ zu{
                 "0"{"kulo Lwesine"}
                 "1"{"uLwesine oluzayo"}
             }
+            relativeTime{
+                future{
+                    one{"ngoLwesine olu-{0}"}
+                    other{"ngoLwezine abangu-{0}"}
+                }
+                past{
+                    one{"ngoLwesine olu-{0} olwedlule"}
+                    other{"ngoLwezine abangu-{0} abedlule"}
+                }
+            }
         }
         thu-narrow{
             relative{
-                "-1"{"uLwesine oludlule"}
+                "-1"{"uLwesine olwedlule"}
                 "0"{"kulo Lwesine"}
                 "1"{"uLwesine oluzayo"}
+            }
+            relativeTime{
+                future{
+                    one{"ngoLwezine abangu-{0}"}
+                    other{"ngoLwezine abangu-{0}"}
+                }
+                past{
+                    one{"ngoLwezine abangu-{0} abedlule"}
+                    other{"ngoLwezine abangu-{0} abedlule"}
+                }
             }
         }
         thu-short{
             relative{
-                "-1"{"uLwesine oludlule"}
+                "-1"{"uLwesine olwedlule"}
                 "0"{"kulo Lwesine"}
                 "1"{"uLwesine oluzayo"}
+            }
+            relativeTime{
+                future{
+                    one{"ngoLwezine abangu-{0}"}
+                    other{"ngoLwezine abangu-{0}"}
+                }
+                past{
+                    one{"ngoLwezine abangu-{0} abedlule"}
+                    other{"ngoLwezine abangu-{0} abedlule"}
+                }
             }
         }
         tue{
@@ -1192,12 +1443,32 @@ zu{
                 "0"{"kulo Lwesibili"}
                 "1"{"uLwesibili oluzayo"}
             }
+            relativeTime{
+                future{
+                    one{"ngoLwesibili olu-{0}"}
+                    other{"ngoLwezibili abangu-{0}"}
+                }
+                past{
+                    one{"ngoLwesibili ongu-{0} owedlule"}
+                    other{"ngoLwezibili abangu-{0} abedlule"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"uLwesibili oludlule"}
                 "0"{"kulo Lwesibili"}
                 "1"{"uLwesibili oluzayo"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ngoLwezibili"}
+                    other{"{0} ngoLwezibili"}
+                }
+                past{
+                    one{"{0} ngoLwezibili olwedlule"}
+                    other{"{0} ngoLwezibili olwedlule"}
+                }
             }
         }
         tue-short{
@@ -1206,12 +1477,32 @@ zu{
                 "0"{"kulo Lwesibili"}
                 "1"{"uLwesibili oluzayo"}
             }
+            relativeTime{
+                future{
+                    one{"{0} ngoLwezibili"}
+                    other{"{0} ngoLwezibili"}
+                }
+                past{
+                    one{"{0} ngoLwezibili olwedlule"}
+                    other{"{0} ngoLwezibili olwedlule"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"uLwesithathu oludlule"}
                 "0"{"kulo Lwesithathu"}
                 "1"{"uLwesithathu oluzayo"}
+            }
+            relativeTime{
+                future{
+                    one{"ngoLwesithathu o-{0}"}
+                    other{"ngoLwezithathu abangu-{0}"}
+                }
+                past{
+                    one{"ngoLwesithathu olungu-{0} olwedlule"}
+                    other{"ngoLwezithathu abangu-{0} abedlule"}
+                }
             }
         }
         wed-narrow{
@@ -1220,12 +1511,32 @@ zu{
                 "0"{"kulo Lwesithathu"}
                 "1"{"uLwesithathu oluzayo"}
             }
+            relativeTime{
+                future{
+                    one{"ngoLwezithathu abangu-{0}"}
+                    other{"ngoLwezithathu abangu-{0}"}
+                }
+                past{
+                    one{"ngoLwezithathu abangu-{0} abedlule"}
+                    other{"ngoLwezithathu abangu-{0} abedlule"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"uLwesithathu oludlule"}
                 "0"{"kulo Lwesithathu"}
                 "1"{"uLwesithathu oluzayo"}
+            }
+            relativeTime{
+                future{
+                    one{"ngoLwezithathu abangu-{0}"}
+                    other{"ngoLwezithathu abangu-{0}"}
+                }
+                past{
+                    one{"ngoLwezithathu abangu-{0} abedlule"}
+                    other{"ngoLwezithathu abangu-{0} abedlule"}
+                }
             }
         }
         week{
@@ -1235,6 +1546,7 @@ zu{
                 "0"{"leli viki"}
                 "1"{"iviki elizayo"}
             }
+            relativePeriod{"evikini le-{0}"}
             relativeTime{
                 future{
                     one{"evikini elingu-{0}"}
@@ -1248,6 +1560,7 @@ zu{
         }
         week-narrow{
             dn{"Iviki"}
+            relativePeriod{"evikini le-{0}"}
             relativeTime{
                 future{
                     one{"emavikini angu-{0} ezayo"}
@@ -1261,6 +1574,7 @@ zu{
         }
         week-short{
             dn{"Iviki"}
+            relativePeriod{"evikini le-{0}"}
             relativeTime{
                 future{
                     one{"evikini elingu-{0} elizayo"}
@@ -1325,7 +1639,13 @@ zu{
     }
     listPattern{
         standard{
-            2{"I-{0} ne-{1}"}
+            2{"{0} ne-{1}"}
+            end{"{0}, ne-{1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
+            2{"{0} ne-{1}"}
             end{"{0}, ne-{1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
@@ -1353,17 +1673,5 @@ zu{
         UK{"i-UK"}
         US{"i-US"}
         metric{"i-Metric"}
-    }
-    transformNames{
-        BGN{"I-BGN"}
-        Numeric{"Okwezinombolo"}
-        Tone{"Ithoni"}
-        UNGEGN{"I-UNGEGN"}
-        x-Accents{"Ama-Accent"}
-        x-Fullwidth{"i-Fullwidth"}
-        x-Halfwidth{"Ubude obuhhafu"}
-        x-Jamo{"i-Jamo"}
-        x-Pinyin{"i-Pinyin"}
-        x-Publishing{"Ukushicilela"}
     }
 }

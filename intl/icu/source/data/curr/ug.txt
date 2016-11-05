@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ug.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ug{
     Currencies{
         ADP{
@@ -224,9 +218,13 @@ ug{
             "BYB",
             "بېلارۇسىيە يېڭى رۇبلىسى (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "بېلارۇسىيە رۇبلىسى",
+        }
         BYR{
             "BYR",
-            "بېلارۇسىيە رۇبلىسى",
+            "بېلارۇسىيە رۇبلىسى (۲۰۰۰–۲۰۱۶)",
         }
         BZD{
             "BZD",
@@ -1414,9 +1412,13 @@ ug{
             one{"بېلارۇسىيە يېڭى رۇبلىسى (1994–1999)"}
             other{"بېلارۇسىيە يېڭى رۇبلىسى (1994–1999)"}
         }
-        BYR{
+        BYN{
             one{"بېلارۇسىيە رۇبلىسى"}
             other{"بېلارۇسىيە رۇبلىسى"}
+        }
+        BYR{
+            one{"بېلارۇسىيە رۇبلىسى (۲۰۰۰–۲۰۱۶)"}
+            other{"بېلارۇسىيە رۇبلىسى (۲۰۰۰–۲۰۱۶)"}
         }
         BZD{
             one{"بېلىز دوللىرى"}
@@ -2391,5 +2393,5 @@ ug{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.76"}
 }

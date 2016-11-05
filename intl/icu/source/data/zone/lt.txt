@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/lt.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 lt{
-    Version{"2.1.19.14"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidžanas"}
@@ -308,6 +302,9 @@ lt{
         }
         "America:El_Salvador"{
             ec{"Salvadoras"}
+        }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelsonas"}
         }
         "America:Fortaleza"{
             ec{"Fortaleza"}
@@ -672,6 +669,9 @@ lt{
         "Asia:Bangkok"{
             ec{"Bankokas"}
         }
+        "Asia:Barnaul"{
+            ec{"Barnaulas"}
+        }
         "Asia:Beirut"{
             ec{"Beirutas"}
         }
@@ -849,6 +849,9 @@ lt{
         "Asia:Tokyo"{
             ec{"Tokijas"}
         }
+        "Asia:Tomsk"{
+            ec{"Tomskas"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"Ulan Batoras"}
         }
@@ -948,6 +951,9 @@ lt{
         "Europe:Andorra"{
             ec{"Andora"}
         }
+        "Europe:Astrakhan"{
+            ec{"Astrachanė"}
+        }
         "Europe:Athens"{
             ec{"Atėnai"}
         }
@@ -1005,6 +1011,9 @@ lt{
         }
         "Europe:Kiev"{
             ec{"Kijevas"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirovas"}
         }
         "Europe:Lisbon"{
             ec{"Lisabona"}
@@ -1081,6 +1090,9 @@ lt{
         }
         "Europe:Tirane"{
             ec{"Tirana"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Uljanovskas"}
         }
         "Europe:Uzhgorod"{
             ec{"Užhorodas"}
@@ -1783,6 +1795,9 @@ lt{
         }
         "meta:Ponape"{
             ls{"Ponapės laikas"}
+        }
+        "meta:Pyongyang"{
+            ls{"Pchenjano laikas"}
         }
         "meta:Qyzylorda"{
             ld{"Kyzylordos vasaros laikas"}

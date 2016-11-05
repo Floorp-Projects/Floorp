@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/brx.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 brx{
     AuxExemplarCharacters{"[\u200C\u200D]"}
     ExemplarCharacters{
@@ -41,7 +35,7 @@ brx{
         }
         native{"deva"}
     }
-    Version{"2.1.19.74"}
+    Version{"2.1.28.76"}
     calendar{
         generic{
             DateTimePatterns{
@@ -89,6 +83,10 @@ brx{
         }
         gregorian{
             AmPmMarkers{
+                "फुं",
+                "बेलासे",
+            }
+            AmPmMarkersAbbr{
                 "फुं",
                 "बेलासे",
             }

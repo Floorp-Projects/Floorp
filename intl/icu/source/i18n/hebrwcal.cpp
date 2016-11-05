@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
-* Copyright (C) 2003-2013, International Business Machines Corporation
+* Copyright (C) 2003-2016, International Business Machines Corporation
 * and others. All Rights Reserved.
 ******************************************************************************
 *
@@ -17,6 +19,7 @@
 
 #if !UCONFIG_NO_FORMATTING
 
+#include "cmemory.h"
 #include "umutex.h"
 #include <float.h>
 #include "gregoimp.h" // Math
@@ -580,7 +583,7 @@ void HebrewCalendar::handleComputeFields(int32_t julianDay, UErrorCode &status) 
     UBool isLeap = isLeapYear(year);
 
     int32_t month = 0;
-    int32_t momax = sizeof(MONTH_START) / (3 * sizeof(MONTH_START[0][0]));
+    int32_t momax = UPRV_LENGTHOF(MONTH_START);
     while (month < momax && dayOfYear > (  isLeap ? LEAP_MONTH_START[month][type] : MONTH_START[month][type] ) ) {
         month++;
     }

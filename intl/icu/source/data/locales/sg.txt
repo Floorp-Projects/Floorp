@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/sg.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 sg{
     AuxExemplarCharacters{"[c q x]"}
     ExemplarCharacters{"[a â ä b d e ê ë f g h i î ï j k l m n o ô ö p r s t u ù û ü v w y z]"}
@@ -21,7 +15,7 @@ sg{
             }
         }
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.27.40"}
     calendar{
         generic{
             DateTimePatterns{
@@ -65,6 +59,10 @@ sg{
                 "ND",
                 "LK",
             }
+            AmPmMarkersAbbr{
+                "ND",
+                "LK",
+            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -79,6 +77,19 @@ sg{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            appendItems{
+                Day{"{0} ({2}: {1})"}
+                Day-Of-Week{"{0} {1}"}
+                Era{"{1} {0}"}
+                Hour{"{0} ({2}: {1})"}
+                Minute{"{0} ({2}: {1})"}
+                Month{"{0} ({2}: {1})"}
+                Quarter{"{0} ({2}: {1})"}
+                Second{"{0} ({2}: {1})"}
+                Timezone{"{0} {1}"}
+                Week{"{0} ({2}: {1})"}
+                Year{"{1} {0}"}
             }
             availableFormats{
                 M{"M"}

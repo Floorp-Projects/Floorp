@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/gd.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 gd{
     Currencies{
         ADP{
@@ -224,9 +218,13 @@ gd{
             "BYB",
             "Rùbal ùr Bealaruiseach (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "Rùbal Bealaruiseach",
+        }
         BYR{
             "BYR",
-            "Rùbal Bealaruiseach",
+            "Rùbal Bealaruiseach (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1210,7 +1208,7 @@ gd{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1623,11 +1621,17 @@ gd{
             other{"rùbal ùr Bealaruiseach (1994–1999)"}
             two{"rùbal ùr Bealaruiseach (1994–1999)"}
         }
-        BYR{
+        BYN{
             few{"rùbalan Bealaruiseach"}
             one{"rùbal Bealaruiseach"}
             other{"rùbal Bealaruiseach"}
             two{"rùbal Bealaruiseach"}
+        }
+        BYR{
+            few{"rùbalan Bealaruiseach (2000–2016)"}
+            one{"rùbal Bealaruiseach (2000–2016)"}
+            other{"rùbal Bealaruiseach (2000–2016)"}
+            two{"rùbal Bealaruiseach (2000–2016)"}
         }
         BZD{
             few{"dolaran Beilìseach"}
@@ -3088,5 +3092,5 @@ gd{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.20.4"}
+    Version{"2.1.28.76"}
 }

@@ -205,6 +205,9 @@ def main(argv):
     if all(['--no-asmjs' in flags for flags in test_flags]):
         options.can_test_also_noasmjs = False
         options.can_test_also_wasm_baseline = False
+    if all(['--no-wasm' in flags for flags in test_flags]):
+        options.can_test_also_noasmjs = False
+        options.can_test_also_wasm_baseline = False
 
     if test_args:
         read_all = False

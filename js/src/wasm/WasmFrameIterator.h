@@ -121,7 +121,7 @@ GenerateExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason
                      ProfilingOffsets* offsets);
 void
 GenerateFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
-                         const TrapOffset& trapOffset, FuncOffsets* offsets);
+                         FuncOffsets* offsets);
 void
 GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets);
 

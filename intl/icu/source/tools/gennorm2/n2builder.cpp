@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2009-2014, International Business Machines
+*   Copyright (C) 2009-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -1247,6 +1249,7 @@ Normalizer2DataBuilder::writeCSourceFile(const char *filename) {
         exit(U_FILE_ACCESS_ERROR);
         return;
     }
+    fputs("#ifdef INCLUDED_FROM_NORMALIZER2_CPP\n\n", f);
     char line[100];
     sprintf(line, "static const UVersionInfo %s_formatVersion={", dataName.data());
     usrc_writeArray(f, line, dataInfo.formatVersion, 8, 4, "};\n");
@@ -1287,6 +1290,7 @@ Normalizer2DataBuilder::writeCSourceFile(const char *filename) {
         line,
         norm16Trie, line2, NULL,
         "};\n");
+    fputs("\n#endif  // INCLUDED_FROM_NORMALIZER2_CPP\n", f);
     fclose(f);
 }
 

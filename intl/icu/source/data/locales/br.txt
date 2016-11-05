@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/br.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 br{
     AuxExemplarCharacters{"[á à ă â å ä ã ā æ c ç é è ĕ ë ē í ì ĭ î ï ī ó ò ŏ ô ö ø ō œ q ú ŭ û ü ū ÿ]"}
     Ellipsis{
@@ -27,18 +21,25 @@ br{
         }
         default{"latn"}
         latn{
+            miscPatterns{
+                atLeast{"⩾{0}"}
+                range{"{0}–{1}"}
+            }
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
+                scientificFormat{"#E0"}
             }
             symbols{
                 decimal{","}
+                exponential{"E"}
                 group{" "}
                 infinity{"∞"}
                 list{";"}
                 minusSign{"-"}
+                nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"+"}
@@ -46,10 +47,118 @@ br{
                 timeSeparator{":"}
             }
         }
+        minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.28.76"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "G y MMMM d, EEEE",
+                "G y MMMM d",
+                "G y MMM d",
+                "GGGGG y-MM-dd",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"d, E"}
+                Gy{"G y"}
+                GyMMM{"G y MMM"}
+                GyMMMEd{"G y MMM d, E"}
+                GyMMMd{"G y MMM d"}
+                M{"L"}
+                MEd{"MM-dd, E"}
+                MMM{"LLL"}
+                MMMEd{"MMM d, E"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
+                Md{"MM-dd"}
+                d{"d"}
+                y{"G y"}
+                yyyy{"G y"}
+                yyyyM{"GGGGG y-MM"}
+                yyyyMEd{"GGGGG y-MM-dd, E"}
+                yyyyMMM{"G y MMM"}
+                yyyyMMMEd{"G y MMM d, E"}
+                yyyyMMMM{"G y MMMM"}
+                yyyyMMMd{"G y MMM d"}
+                yyyyMd{"GGGGG y-MM-dd"}
+                yyyyQQQ{"G y QQQ"}
+                yyyyQQQQ{"G y QQQQ"}
+            }
+            intervalFormats{
+                M{
+                    M{"MM–MM"}
+                }
+                MEd{
+                    M{"MM-dd, E – MM-dd, E"}
+                    d{"MM-dd, E – MM-dd, E"}
+                }
+                MMM{
+                    M{"LLL–LLL"}
+                }
+                MMMEd{
+                    M{"MMM d, E – MMM d, E"}
+                    d{"MMM d, E – MMM d, E"}
+                }
+                MMMd{
+                    M{"MMM d – MMM d"}
+                    d{"MMM d–d"}
+                }
+                Md{
+                    M{"MM-dd – MM-dd"}
+                    d{"MM-dd – MM-dd"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                y{
+                    y{"G y–y"}
+                }
+                yM{
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                yMEd{
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                yMMM{
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                yMMMEd{
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                yMMMM{
+                    M{"G y MMMM–MMMM"}
+                    y{"G y MMMM – y MMMM"}
+                }
+                yMMMd{
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                yMd{
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
+            }
+        }
         gregorian{
             AmPmMarkers{
                 "A.M.",
@@ -88,10 +197,10 @@ br{
                 Ed{"E d"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
-                Gy{"y G"}
-                GyMMM{"MMM y G"}
-                GyMMMEd{"E d MMM y G"}
-                GyMMMd{"d MMM y G"}
+                Gy{"G y"}
+                GyMMM{"G y MMM"}
+                GyMMMEd{"G y MMM d, E"}
+                GyMMMd{"G y MMM d"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -101,6 +210,14 @@ br{
                 MEd{"E dd/MM"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
+                MMMMW{
+                    few{"'week' W 'of' MMM"}
+                    many{"'week' W 'of' MMM"}
+                    one{"'week' W 'of' MMM"}
+                    other{"'week' W 'of' MMM"}
+                    two{"'week' W 'of' MMM"}
+                }
+                MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"dd/MM"}
                 d{"d"}
@@ -115,10 +232,18 @@ br{
                 yMEd{"E dd/MM/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E d MMM y"}
+                yMMMM{"y MMMM"}
                 yMMMd{"d MMM y"}
                 yMd{"dd/MM/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    few{"'week' w 'of' y"}
+                    many{"'week' w 'of' y"}
+                    one{"'week' w 'of' y"}
+                    other{"'week' w 'of' y"}
+                    two{"'week' w 'of' y"}
+                }
             }
             dayNames{
                 format{
@@ -140,6 +265,15 @@ br{
                         "G",
                         "Sa",
                     }
+                    short{
+                        "Sul",
+                        "Lun",
+                        "Meu.",
+                        "Mer.",
+                        "Yaou",
+                        "Gwe.",
+                        "Sad.",
+                    }
                     wide{
                         "Sul",
                         "Lun",
@@ -169,6 +303,15 @@ br{
                         "G",
                         "Sa",
                     }
+                    short{
+                        "Sul",
+                        "Lun",
+                        "Meu.",
+                        "Mer.",
+                        "Yaou",
+                        "Gwe.",
+                        "Sad.",
+                    }
                     wide{
                         "Sul",
                         "Lun",
@@ -182,9 +325,17 @@ br{
             }
             dayPeriod{
                 stand-alone{
+                    abbreviated{
+                        am{"A.M."}
+                        pm{"G.M."}
+                    }
+                    narrow{
+                        am{"A.M."}
+                        pm{"G.M."}
+                    }
                     wide{
-                        am{"a-raok merenn"}
-                        pm{"goude merenn"}
+                        am{"A.M."}
+                        pm{"G.M."}
                     }
                 }
             }
@@ -193,6 +344,10 @@ br{
                     "a-raok J.K.",
                     "goude J.K.",
                 }
+                abbreviated%variant{
+                    "BCE",
+                    "CE",
+                }
                 narrow{
                     "a-raok J.K.",
                     "goude J.K.",
@@ -200,6 +355,10 @@ br{
                 wide{
                     "a-raok Jezuz-Krist",
                     "goude Jezuz-Krist",
+                }
+                wide%variant{
+                    "BCE",
+                    "CE",
                 }
             }
             intervalFormats{
@@ -395,6 +554,12 @@ br{
                         "3e trim.",
                         "4e trim.",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
                     wide{
                         "1añ trimiziad",
                         "2l trimiziad",
@@ -408,6 +573,12 @@ br{
                         "2l trim.",
                         "3e trim.",
                         "4e trim.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
                     }
                     wide{
                         "1añ trimiziad",

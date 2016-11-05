@@ -168,7 +168,7 @@ CodeGenerator::CodeGenerator(MIRGenerator* gen, LIRGraph* graph, MacroAssembler*
 
 CodeGenerator::~CodeGenerator()
 {
-    MOZ_ASSERT_IF(!gen->compilingWasm(), masm.numWasmSymbolicAccesses() == 0);
+    MOZ_ASSERT_IF(!gen->compilingWasm(), masm.numSymbolicAccesses() == 0);
     js_delete(scriptCounts_);
 }
 
@@ -9243,7 +9243,7 @@ CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::TrapOffset trapOffset,
 {
     JitSpew(JitSpew_Codegen, "# Emitting wasm code");
 
-    wasm::GenerateFunctionPrologue(masm, frameSize(), sigId, trapOffset, offsets);
+    wasm::GenerateFunctionPrologue(masm, frameSize(), sigId, offsets);
 
     // Overflow checks are omitted by CodeGenerator in some cases (leaf
     // functions with small framePushed). Perform overflow-checking after

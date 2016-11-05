@@ -2,6 +2,9 @@
 load(libdir + "asm.js");
 load(libdir + "asserts.js");
 
+if (!isAsmJSCompilationAvailable())
+    quit();
+
 var ab = new ArrayBuffer(BUF_MIN);
 
 // Compute a set of interesting indices.

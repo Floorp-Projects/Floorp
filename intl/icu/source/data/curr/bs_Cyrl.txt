@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/bs_Cyrl.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 bs_Cyrl{
     %%Parent{"root"}
     Currencies{
@@ -193,9 +187,13 @@ bs_Cyrl{
             "BYB",
             "Белоруска нова рубља (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "Белоруска рубља",
+        }
         BYR{
             "BYR",
-            "Белоруска рубља",
+            "Белоруска рубља (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1345,10 +1343,15 @@ bs_Cyrl{
             one{"белоруска нова рубља"}
             other{"белоруских нових рубљи"}
         }
-        BYR{
+        BYN{
             few{"белоруске рубље"}
             one{"белоруска рубља"}
             other{"белоруске рубље"}
+        }
+        BYR{
+            few{"белоруске рубље (2000–2016)"}
+            one{"белоруска рубља (2000–2016)"}
+            other{"белоруске рубље (2000–2016)"}
         }
         BZD{
             few{"белизеанска долара"}
@@ -2491,5 +2494,5 @@ bs_Cyrl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.90"}
+    Version{"2.1.28.76"}
 }

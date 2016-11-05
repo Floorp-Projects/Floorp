@@ -870,13 +870,10 @@ nsImageFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     }
   }
 
-  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aWM,
-                            aRenderingContext, this,
-                            intrinsicSize, mIntrinsicRatio,
-                            aCBSize,
-                            aMargin,
-                            aBorder,
-                            aPadding);
+  return ComputeSizeWithIntrinsicDimensions(aRenderingContext, aWM,
+                                            intrinsicSize, mIntrinsicRatio,
+                                            aCBSize, aMargin, aBorder, aPadding,
+                                            aFlags);
 }
 
 // XXXdholbert This function's clients should probably just be calling

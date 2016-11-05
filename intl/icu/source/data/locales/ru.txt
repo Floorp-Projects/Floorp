@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ru.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ru{
     AuxExemplarCharacters{
         "[{а\u0301} {е\u0301} {и\u0301} {о\u0301} {у\u0301} {ы\u0301} {э\u0301} {ю"
@@ -30,8 +24,8 @@ ru{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"{0}+"}
-                range{"{0}-{1}"}
+                atLeast{"⩾{0}"}
+                range{"{0}–{1}"}
             }
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
@@ -284,7 +278,7 @@ ru{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.74"}
+    Version{"2.1.29.20"}
     calendar{
         buddhist{
             eras{
@@ -644,14 +638,14 @@ ru{
                     d{"E, dd.MM – E, dd.MM"}
                 }
                 MMM{
-                    M{"LLL–LLL"}
+                    M{"LLL – LLL"}
                 }
                 MMMEd{
                     M{"ccc, d MMM – ccc, d MMM"}
-                    d{"ccc, d - E, d MMM"}
+                    d{"ccc, d – ccc, d MMM"}
                 }
                 MMMM{
-                    M{"LLLL–LLLL"}
+                    M{"LLLL – LLLL"}
                 }
                 MMMd{
                     M{"d MMM – d MMM"}
@@ -664,7 +658,7 @@ ru{
                 d{
                     d{"d–d"}
                 }
-                fallback{"{0} - {1}"}
+                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -696,22 +690,22 @@ ru{
                     y{"ccc, dd.MM.y – ccc, dd.MM.y G"}
                 }
                 yMMM{
-                    M{"LLL–LLL y 'г'. G"}
-                    y{"LLL y – LLL y 'г'. G"}
+                    M{"LLL – LLL y 'г'. G"}
+                    y{"LLL y 'г'. – LLL y 'г'. G"}
                 }
                 yMMMEd{
                     M{"ccc, d MMM – ccc, d MMM y 'г'. G"}
                     d{"ccc, d – ccc, d MMM y 'г'. G"}
-                    y{"ccc, d MMM y – ccc, d MMM y 'г'. G"}
+                    y{"ccc, d MMM y 'г'. – ccc, d MMM y 'г'. G"}
                 }
                 yMMMM{
-                    M{"LLLL–LLLL y 'г'. G"}
-                    y{"LLLL y – LLLL y 'г'. G"}
+                    M{"LLLL – LLLL y 'г'. G"}
+                    y{"LLLL y 'г'. – LLLL y 'г'. G"}
                 }
                 yMMMd{
                     M{"d MMM – d MMM y 'г'. G"}
                     d{"d–d MMM y 'г'. G"}
-                    y{"d MMM y – d MMM y 'г'. G"}
+                    y{"d MMM y 'г'. – d MMM y 'г'. G"}
                 }
                 yMd{
                     M{"dd.MM.y – dd.MM.y G"}
@@ -741,7 +735,7 @@ ru{
                 "EEEE, d MMMM y 'г'.",
                 "d MMMM y 'г'.",
                 "d MMM y 'г'.",
-                "dd.MM.yy",
+                "dd.MM.y",
                 "{1}, {0}",
                 "{1}, {0}",
                 "{1}, {0}",
@@ -771,6 +765,12 @@ ru{
                 MEd{"E, dd.MM"}
                 MMM{"LLL"}
                 MMMEd{"ccc, d MMM"}
+                MMMMW{
+                    few{"W-'я' 'неделя' MMM"}
+                    many{"W-'я' 'неделя' MMM"}
+                    one{"W-'я' 'неделя' MMM"}
+                    other{"W-'я' 'неделя' MMM"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 MMdd{"dd.MM"}
@@ -793,6 +793,12 @@ ru{
                 yMd{"dd.MM.y"}
                 yQQQ{"QQQ y 'г'."}
                 yQQQQ{"QQQQ y 'г'."}
+                yw{
+                    few{"w-'я' 'неделя' y 'г'."}
+                    many{"w-'я' 'неделя' y 'г'."}
+                    one{"w-'я' 'неделя' y 'г'."}
+                    other{"w-'я' 'неделя' y 'г'."}
+                }
             }
             dayNames{
                 format{
@@ -877,18 +883,18 @@ ru{
                     abbreviated{
                         afternoon1{"дня"}
                         evening1{"вечера"}
-                        midnight{"полночь"}
+                        midnight{"полн."}
                         morning1{"утра"}
                         night1{"ночи"}
-                        noon{"полдень"}
+                        noon{"полд."}
                     }
                     narrow{
                         afternoon1{"дня"}
                         evening1{"вечера"}
-                        midnight{"полночь"}
+                        midnight{"полн."}
                         morning1{"утра"}
                         night1{"ночи"}
-                        noon{"полдень"}
+                        noon{"полд."}
                     }
                     wide{
                         afternoon1{"дня"}
@@ -993,7 +999,7 @@ ru{
                 d{
                     d{"d–d"}
                 }
-                fallback{"{0} - {1}"}
+                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -1025,22 +1031,22 @@ ru{
                     y{"ccc, dd.MM.y – ccc, dd.MM.y"}
                 }
                 yMMM{
-                    M{"LLL–LLL y 'г'."}
-                    y{"LLL y – LLL y 'г'."}
+                    M{"LLL – LLL y 'г'."}
+                    y{"LLL y 'г'. – LLL y 'г'."}
                 }
                 yMMMEd{
                     M{"ccc, d MMM – ccc, d MMM y 'г'."}
                     d{"ccc, d – ccc, d MMM y 'г'."}
-                    y{"ccc, d MMM y – ccc, d MMM y 'г'."}
+                    y{"ccc, d MMM y 'г'. – ccc, d MMM y 'г'."}
                 }
                 yMMMM{
-                    M{"LLLL–LLLL y 'г'."}
-                    y{"LLLL y – LLLL y 'г'."}
+                    M{"LLLL – LLLL y 'г'."}
+                    y{"LLLL y 'г'. – LLLL y 'г'."}
                 }
                 yMMMd{
                     M{"d MMM – d MMM y 'г'."}
                     d{"d–d MMM y 'г'."}
-                    y{"d MMM y – d MMM y 'г'."}
+                    y{"d MMM y 'г'. – d MMM y 'г'."}
                 }
                 yMd{
                     M{"dd.MM.y – dd.MM.y"}
@@ -1738,6 +1744,94 @@ ru{
             }
         }
     }
+    characterLabel{
+        activities{"занятия"}
+        african_scripts{"африканская письменность"}
+        american_scripts{"американская письменность"}
+        animal{"животное"}
+        animals_nature{"животные и природа"}
+        arrows{"стрелки"}
+        body{"тело"}
+        box_drawing{"псевдографика"}
+        braille{"шрифт Брайля"}
+        building{"здание"}
+        bullets_stars{"маркеры списка/звезды"}
+        consonantal_jamo{"согласные джамо"}
+        currency_symbols{"символы валюты"}
+        dash_connector{"тире/связка"}
+        digits{"цифры"}
+        dingbats{"дингбаты"}
+        divination_symbols{"оккультные символы"}
+        downwards_arrows{"стрелки вниз"}
+        downwards_upwards_arrows{"стрелки вверх и вниз"}
+        east_asian_scripts{"восточноазиатская письменность"}
+        emoji{"эмодзи"}
+        european_scripts{"европейская письменность"}
+        female{"женщина"}
+        flag{"флаг"}
+        flags{"флаги"}
+        food_drink{"еда и напитки"}
+        format{"форматирование"}
+        format_whitespace{"форматирование и пробелы"}
+        full_width_form_variant{"варианты формы в полную ширину"}
+        geometric_shapes{"геометрические фигуры"}
+        half_width_form_variant{"варианты формы в половину ширины"}
+        han_characters{"китайские символы"}
+        han_radicals{"иероглифические ключи"}
+        hanja{"ханча"}
+        hanzi_simplified{"упрощенные китайские иероглифы"}
+        hanzi_traditional{"традиционные китайские иероглифы"}
+        heart{"сердце"}
+        historic_scripts{"историческая письменность"}
+        ideographic_desc_characters{"символы описания иероглифов"}
+        japanese_kana{"кана"}
+        kanbun{"камбун"}
+        kanji{"кандзи"}
+        keycap{"клавиша"}
+        leftwards_arrows{"стрелки влево"}
+        leftwards_rightwards_arrows{"стрелки влево и вправо"}
+        letterlike_symbols{"буквенные символы"}
+        limited_use{"ограниченное использование"}
+        male{"мужчина"}
+        math_symbols{"математические символы"}
+        middle_eastern_scripts{"центрально-восточная письменность"}
+        miscellaneous{"разное"}
+        modern_scripts{"современная письменность"}
+        modifier{"модификатор"}
+        musical_symbols{"музыкальные символы"}
+        nature{"природа"}
+        nonspacing{"непротяженные символы"}
+        numbers{"числа"}
+        objects{"объекты"}
+        other{"другое"}
+        paired{"парные символы"}
+        person{"человек"}
+        phonetic_alphabet{"фонетический алфавит"}
+        pictographs{"пиктограммы"}
+        place{"место"}
+        plant{"ростение"}
+        punctuation{"пунктуационные знаки"}
+        rightwards_arrows{"стрелки вправо"}
+        sign_standard_symbols{"знаки/стандартные символы"}
+        small_form_variant{"маленькие варианты формы"}
+        smiley{"смайлик"}
+        smileys_people{"смайлики и люди"}
+        south_asian_scripts{"южноазиатская письменность"}
+        southeast_asian_scripts{"письменность Юго-Восточной Азии"}
+        spacing{"пробелы"}
+        sport{"спорт"}
+        symbols{"символы"}
+        technical_symbols{"технические символы"}
+        tone_marks{"метки тона"}
+        travel{"путешествие"}
+        travel_places{"путешествия и места"}
+        upwards_arrows{"стрелки вверх"}
+        variant_forms{"вариативные формы"}
+        vocalic_jamo{"гласные джамо"}
+        weather{"погода"}
+        western_asian_scripts{"западноазиатская письменность"}
+        whitespace{"пробелы"}
+    }
     contextTransforms{
         currencyName:intvector{
             1,
@@ -1805,7 +1899,7 @@ ru{
                     few{"через {0} дня"}
                     many{"через {0} дней"}
                     one{"через {0} день"}
-                    other{"через {0} дней"}
+                    other{"через {0} дня"}
                 }
                 past{
                     few{"{0} дня назад"}
@@ -1836,16 +1930,16 @@ ru{
             dn{"дн."}
             relativeTime{
                 future{
-                    few{"через {0} д."}
-                    many{"через {0} д."}
+                    few{"через {0} дн."}
+                    many{"через {0} дн."}
                     one{"через {0} д."}
-                    other{"через {0} д."}
+                    other{"через {0} дн."}
                 }
                 past{
-                    few{"{0} д. назад"}
-                    many{"{0} д. назад"}
+                    few{"{0} дн. назад"}
+                    many{"{0} дн. назад"}
                     one{"{0} д. назад"}
-                    other{"{0} д. назад"}
+                    other{"{0} дн. назад"}
                 }
             }
         }
@@ -1861,12 +1955,40 @@ ru{
                 "0"{"в эту пятницу"}
                 "1"{"в следующую пятницу"}
             }
+            relativeTime{
+                future{
+                    few{"через {0} пятницы"}
+                    many{"через {0} пятниц"}
+                    one{"через {0} пятницу"}
+                    other{"через {0} пятницы"}
+                }
+                past{
+                    few{"{0} пятницы назад"}
+                    many{"{0} пятниц назад"}
+                    one{"{0} пятницу назад"}
+                    other{"{0} пятницы назад"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"в прош. пт."}
                 "0"{"в эту пт."}
                 "1"{"в след. пт."}
+            }
+            relativeTime{
+                future{
+                    few{"+{0} пт."}
+                    many{"+{0} пт."}
+                    one{"+{0} пт."}
+                    other{"+{0} пт."}
+                }
+                past{
+                    few{"-{0} пт."}
+                    many{"-{0} пт."}
+                    one{"-{0} пт."}
+                    other{"-{0} пт."}
+                }
             }
         }
         fri-short{
@@ -1875,9 +1997,26 @@ ru{
                 "0"{"в эту пт."}
                 "1"{"в след. пт."}
             }
+            relativeTime{
+                future{
+                    few{"через {0} пт."}
+                    many{"через {0} пт."}
+                    one{"через {0} пт."}
+                    other{"через {0} пт."}
+                }
+                past{
+                    few{"{0} пт. назад"}
+                    many{"{0} пт. назад"}
+                    one{"{0} пт. назад"}
+                    other{"{0} пт. назад"}
+                }
+            }
         }
         hour{
             dn{"час"}
+            relative{
+                "0"{"в этом часе"}
+            }
             relativeTime{
                 future{
                     few{"через {0} часа"}
@@ -1894,7 +2033,7 @@ ru{
             }
         }
         hour-narrow{
-            dn{"ч."}
+            dn{"ч"}
             relativeTime{
                 future{
                     few{"+{0} ч."}
@@ -1929,6 +2068,9 @@ ru{
         }
         minute{
             dn{"минута"}
+            relative{
+                "0"{"в эту минуту"}
+            }
             relativeTime{
                 future{
                     few{"через {0} минуты"}
@@ -1945,7 +2087,7 @@ ru{
             }
         }
         minute-narrow{
-            dn{"мин."}
+            dn{"мин"}
             relativeTime{
                 future{
                     few{"+{0} мин."}
@@ -1984,6 +2126,20 @@ ru{
                 "0"{"в этот понедельник"}
                 "1"{"в следующий понедельник"}
             }
+            relativeTime{
+                future{
+                    few{"через {0} понедельника"}
+                    many{"через {0} понедельников"}
+                    one{"через {0} понедельник"}
+                    other{"через {0} понедельника"}
+                }
+                past{
+                    few{"{0} понедельника назад"}
+                    many{"{0} понедельников назад"}
+                    one{"{0} понедельник назад"}
+                    other{"{0} понедельника назад"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -1991,12 +2147,40 @@ ru{
                 "0"{"в этот пн."}
                 "1"{"в след. пн."}
             }
+            relativeTime{
+                future{
+                    few{"+{0} пн."}
+                    many{"+{0} пн."}
+                    one{"+{0} пн."}
+                    other{"+{0} пн."}
+                }
+                past{
+                    few{"-{0} пн."}
+                    many{"-{0} пн."}
+                    one{"-{0} пн."}
+                    other{"-{0} пн."}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"в прош. пн."}
                 "0"{"в этот пн."}
                 "1"{"в след. пн."}
+            }
+            relativeTime{
+                future{
+                    few{"через {0} пн."}
+                    many{"через {0} пн."}
+                    one{"через {0} пн."}
+                    other{"через {0} пн."}
+                }
+                past{
+                    few{"{0} пн. назад"}
+                    many{"{0} пн. назад"}
+                    one{"{0} пн. назад"}
+                    other{"{0} пн. назад"}
+                }
             }
         }
         month{
@@ -2058,9 +2242,9 @@ ru{
         quarter{
             dn{"квартал"}
             relative{
-                "-1"{"последний квартал"}
-                "0"{"текущий квартал"}
-                "1"{"следующий квартал"}
+                "-1"{"в прошлом квартале"}
+                "0"{"в текущем квартале"}
+                "1"{"в следующем квартале"}
             }
             relativeTime{
                 future{
@@ -2127,6 +2311,20 @@ ru{
                 "0"{"в эту субботу"}
                 "1"{"в следующую субботу"}
             }
+            relativeTime{
+                future{
+                    few{"через {0} субботы"}
+                    many{"через {0} суббот"}
+                    one{"через {0} субботу"}
+                    other{"через {0} субботы"}
+                }
+                past{
+                    few{"{0} субботы назад"}
+                    many{"{0} суббот назад"}
+                    one{"{0} субботу назад"}
+                    other{"{0} субботы назад"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -2134,12 +2332,40 @@ ru{
                 "0"{"в эту сб."}
                 "1"{"в след. сб."}
             }
+            relativeTime{
+                future{
+                    few{"+{0} сб."}
+                    many{"+{0} сб."}
+                    one{"+{0} сб."}
+                    other{"+{0} сб."}
+                }
+                past{
+                    few{"-{0} сб."}
+                    many{"-{0} сб."}
+                    one{"-{0} сб."}
+                    other{"-{0} сб."}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"в прош. сб."}
                 "0"{"в эту сб."}
                 "1"{"в след. сб."}
+            }
+            relativeTime{
+                future{
+                    few{"через {0} сб."}
+                    many{"через {0} сб."}
+                    one{"через {0} сб."}
+                    other{"через {0} сб."}
+                }
+                past{
+                    few{"{0} сб. назад"}
+                    many{"{0} сб. назад"}
+                    one{"{0} сб. назад"}
+                    other{"{0} сб. назад"}
+                }
             }
         }
         second{
@@ -2166,16 +2392,16 @@ ru{
             dn{"с"}
             relativeTime{
                 future{
-                    few{"через {0} с"}
-                    many{"через {0} с"}
-                    one{"через {0} с"}
-                    other{"через {0} с"}
+                    few{"+{0} сек."}
+                    many{"+{0} сек."}
+                    one{"+{0} сек."}
+                    other{"+{0} сек."}
                 }
                 past{
-                    few{"{0} с назад"}
-                    many{"{0} с назад"}
-                    one{"{0} с назад"}
-                    other{"{0} с назад"}
+                    few{"-{0} сек."}
+                    many{"-{0} сек."}
+                    one{"-{0} сек."}
+                    other{"-{0} сек."}
                 }
             }
         }
@@ -2202,12 +2428,40 @@ ru{
                 "0"{"в это воскресенье"}
                 "1"{"в следующее воскресенье"}
             }
+            relativeTime{
+                future{
+                    few{"через {0} воскресенья"}
+                    many{"через {0} воскресений"}
+                    one{"через {0} воскресенье"}
+                    other{"через {0} воскресенья"}
+                }
+                past{
+                    few{"{0} воскресенья назад"}
+                    many{"{0} воскресений назад"}
+                    one{"{0} воскресенье назад"}
+                    other{"{0} воскресенья назад"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"в прош. вс."}
                 "0"{"в это вс."}
                 "1"{"в след. вс."}
+            }
+            relativeTime{
+                future{
+                    few{"+{0} вс."}
+                    many{"+{0} вс."}
+                    one{"+{0} вс."}
+                    other{"+{0} вс."}
+                }
+                past{
+                    few{"-{0} вс."}
+                    many{"-{0} вс."}
+                    one{"-{0} вс."}
+                    other{"-{0} вс."}
+                }
             }
         }
         sun-short{
@@ -2216,12 +2470,40 @@ ru{
                 "0"{"в это вс."}
                 "1"{"в след. вс."}
             }
+            relativeTime{
+                future{
+                    few{"через {0} вс."}
+                    many{"через {0} вс."}
+                    one{"через {0} вс."}
+                    other{"через {0} вс."}
+                }
+                past{
+                    few{"{0} вс. назад"}
+                    many{"{0} вс. назад"}
+                    one{"{0} вс. назад"}
+                    other{"{0} вс. назад"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"в прошлый четверг"}
                 "0"{"в этот четверг"}
                 "1"{"в следующий четверг"}
+            }
+            relativeTime{
+                future{
+                    few{"через {0} четверга"}
+                    many{"через {0} четвергов"}
+                    one{"через {0} четверг"}
+                    other{"через {0} четверга"}
+                }
+                past{
+                    few{"{0} четверга назад"}
+                    many{"{0} четвергов назад"}
+                    one{"{0} четверг назад"}
+                    other{"{0} четверга назад"}
+                }
             }
         }
         thu-narrow{
@@ -2230,12 +2512,40 @@ ru{
                 "0"{"в этот чт."}
                 "1"{"в след. чт."}
             }
+            relativeTime{
+                future{
+                    few{"+{0} чт."}
+                    many{"+{0} чт."}
+                    one{"+{0} чт."}
+                    other{"+{0} чт."}
+                }
+                past{
+                    few{"-{0} чт."}
+                    many{"-{0} чт."}
+                    one{"-{0} чт."}
+                    other{"-{0} чт."}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"в прош. чт."}
                 "0"{"в этот чт."}
                 "1"{"в след. чт."}
+            }
+            relativeTime{
+                future{
+                    few{"через {0} чт."}
+                    many{"через {0} чт."}
+                    one{"через {0} чт."}
+                    other{"через {0} чт."}
+                }
+                past{
+                    few{"{0} чт. назад"}
+                    many{"{0} чт. назад"}
+                    one{"{0} чт. назад"}
+                    other{"{0} чт. назад"}
+                }
             }
         }
         tue{
@@ -2244,12 +2554,40 @@ ru{
                 "0"{"в этот вторник"}
                 "1"{"в следующий вторник"}
             }
+            relativeTime{
+                future{
+                    few{"через {0} вторника"}
+                    many{"через {0} вторников"}
+                    one{"через {0} вторник"}
+                    other{"через {0} вторника"}
+                }
+                past{
+                    few{"{0} вторника назад"}
+                    many{"{0} вторников назад"}
+                    one{"{0} вторник назад"}
+                    other{"{0} вторника назад"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"в прош. вт."}
                 "0"{"в этот вт."}
                 "1"{"в след. вт."}
+            }
+            relativeTime{
+                future{
+                    few{"+{0} вт."}
+                    many{"+{0} вт."}
+                    one{"+{0} вт."}
+                    other{"+{0} вт."}
+                }
+                past{
+                    few{"-{0} вт."}
+                    many{"-{0} вт."}
+                    one{"-{0} вт."}
+                    other{"-{0} вт."}
+                }
             }
         }
         tue-short{
@@ -2258,12 +2596,40 @@ ru{
                 "0"{"в этот вт."}
                 "1"{"в след. вт."}
             }
+            relativeTime{
+                future{
+                    few{"через {0} вт."}
+                    many{"через {0} вт."}
+                    one{"через {0} вт."}
+                    other{"через {0} вт."}
+                }
+                past{
+                    few{"{0} вт. назад"}
+                    many{"{0} вт. назад"}
+                    one{"{0} вт. назад"}
+                    other{"{0} вт. назад"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"в прошлую среду"}
                 "0"{"в эту среду"}
                 "1"{"в следующую среду"}
+            }
+            relativeTime{
+                future{
+                    few{"через {0} среды"}
+                    many{"через {0} сред"}
+                    one{"через {0} среду"}
+                    other{"через {0} среды"}
+                }
+                past{
+                    few{"{0} среды назад"}
+                    many{"{0} сред назад"}
+                    one{"{0} среду назад"}
+                    other{"{0} среды назад"}
+                }
             }
         }
         wed-narrow{
@@ -2272,12 +2638,40 @@ ru{
                 "0"{"в эту ср."}
                 "1"{"в след. ср."}
             }
+            relativeTime{
+                future{
+                    few{"+{0} ср."}
+                    many{"+{0} ср."}
+                    one{"+{0} ср."}
+                    other{"+{0} ср."}
+                }
+                past{
+                    few{"-{0} ср."}
+                    many{"-{0} ср."}
+                    one{"-{0} ср."}
+                    other{"-{0} ср."}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"в прош. ср."}
                 "0"{"в эту ср."}
                 "1"{"в след. ср."}
+            }
+            relativeTime{
+                future{
+                    few{"через {0} ср."}
+                    many{"через {0} ср."}
+                    one{"через {0} ср."}
+                    other{"через {0} ср."}
+                }
+                past{
+                    few{"{0} ср. назад"}
+                    many{"{0} ср. назад"}
+                    one{"{0} ср. назад"}
+                    other{"{0} ср. назад"}
+                }
             }
         }
         week{
@@ -2287,6 +2681,7 @@ ru{
                 "0"{"на этой неделе"}
                 "1"{"на следующей неделе"}
             }
+            relativePeriod{"на неделе {0}"}
             relativeTime{
                 future{
                     few{"через {0} недели"}
@@ -2304,6 +2699,7 @@ ru{
         }
         week-narrow{
             dn{"нед."}
+            relativePeriod{"на нед. {0}"}
             relativeTime{
                 future{
                     few{"+{0} нед."}
@@ -2312,15 +2708,16 @@ ru{
                     other{"+{0} нед."}
                 }
                 past{
-                    few{"{0} нед. назад"}
-                    many{"{0} нед. назад"}
-                    one{"{0} нед. назад"}
-                    other{"{0} нед. назад"}
+                    few{"-{0} нед."}
+                    many{"-{0} нед."}
+                    one{"-{0} нед."}
+                    other{"-{0} нед."}
                 }
             }
         }
         week-short{
             dn{"нед."}
+            relativePeriod{"на нед. {0}"}
             relativeTime{
                 future{
                     few{"через {0} нед."}
@@ -2406,6 +2803,12 @@ ru{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-short{
+            2{"{0} и {1}"}
+            end{"{0} и {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         unit{
             2{"{0} и {1}"}
             end{"{0} и {1}"}
@@ -2429,17 +2832,5 @@ ru{
         UK{"Английская"}
         US{"Англо-американская"}
         metric{"Метрическая"}
-    }
-    transformNames{
-        BGN{"Палата географических названий США"}
-        Numeric{"Числовая"}
-        Tone{"Тоновая"}
-        UNGEGN{"Группа экспертов ООН по географическим названиям"}
-        x-Accents{"Диакритические знаки"}
-        x-Fullwidth{"Широкие символы"}
-        x-Halfwidth{"Краткий формат"}
-        x-Jamo{"Джамо"}
-        x-Pinyin{"Пиньин"}
-        x-Publishing{"Типографская"}
     }
 }

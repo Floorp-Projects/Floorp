@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 2014, International Business Machines
+*   Copyright (C) 2014-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 */
@@ -13,6 +15,7 @@
 #include "umutex.h"
 #include "uresimp.h"
 #include "uvector.h"
+#include "udataswp.h" /* for InvChar functions */
 
 static UHashtable* gLocExtKeyMap = NULL;
 static icu::UInitOnce gLocExtKeyMapInitOnce = U_INITONCE_INITIALIZER;
@@ -24,7 +27,8 @@ static icu::UVector* gLocExtTypeEntries = NULL;
 typedef enum {
     SPECIALTYPE_NONE = 0,
     SPECIALTYPE_CODEPOINTS = 1,
-    SPECIALTYPE_REORDER_CODE = 2
+    SPECIALTYPE_REORDER_CODE = 2,
+    SPECIALTYPE_RG_KEY_VALUE = 4
 } SpecialType;
 
 typedef struct LocExtKeyData {
@@ -215,6 +219,10 @@ initFromResourceBundle(UErrorCode& sts) {
                     specialTypes |= SPECIALTYPE_REORDER_CODE;
                     continue;
                 }
+                if (uprv_strcmp(legacyTypeId, "RG_KEY_VALUE") == 0) {
+                    specialTypes |= SPECIALTYPE_RG_KEY_VALUE;
+                    continue;
+                }
 
                 if (isTZ) {
                     // a timezone key uses a colon instead of a slash in the resource.
@@ -307,7 +315,7 @@ initFromResourceBundle(UErrorCode& sts) {
                             break;
                         }
                         // check if this is an alias of canoncal legacy type
-                        if (uprv_compareInvAscii(NULL, legacyTypeId, -1, to, toLen) == 0) {
+                        if (uprv_compareInvWithUChar(NULL, legacyTypeId, -1, to, toLen) == 0) {
                             const char* from = ures_getKey(typeAliasDataEntry.getAlias());
                             if (isTZ) {
                                 // replace colon with slash if necessary
@@ -357,7 +365,7 @@ initFromResourceBundle(UErrorCode& sts) {
                             break;
                         }
                         // check if this is an alias of bcp type
-                        if (uprv_compareInvAscii(NULL, bcpTypeId, -1, to, toLen) == 0) {
+                        if (uprv_compareInvWithUChar(NULL, bcpTypeId, -1, to, toLen) == 0) {
                             const char* from = ures_getKey(bcpTypeAliasDataEntry.getAlias());
                             uhash_put(typeDataMap, (void*)from, t, &sts);
                         }
@@ -450,6 +458,23 @@ isSpecialTypeReorderCode(const char* val) {
     return (subtagLen >=3 && subtagLen <=8);
 }
 
+static UBool
+isSpecialTypeRgKeyValue(const char* val) {
+    int32_t subtagLen = 0;
+    const char* p = val;
+    while (*p) {
+        if ( (subtagLen < 2 && uprv_isASCIILetter(*p)) ||
+                    (subtagLen >= 2 && (*p == 'Z' || *p == 'z')) ) {
+            subtagLen++;
+        } else {
+            return FALSE;
+        }
+        p++;
+    }
+    return (subtagLen == 6);
+    return TRUE;
+}
+
 U_CFUNC const char*
 ulocimp_toBcpKey(const char* key) {
     if (!init()) {
@@ -506,6 +531,9 @@ ulocimp_toBcpType(const char* key, const char* type, UBool* isKnownKey, UBool* i
             if (!matched && keyData->specialTypes & SPECIALTYPE_REORDER_CODE) {
                 matched = isSpecialTypeReorderCode(type);
             }
+            if (!matched && keyData->specialTypes & SPECIALTYPE_RG_KEY_VALUE) {
+                matched = isSpecialTypeRgKeyValue(type);
+            }
             if (matched) {
                 if (isSpecialType != NULL) {
                     *isSpecialType = TRUE;
@@ -547,6 +575,9 @@ ulocimp_toLegacyType(const char* key, const char* type, UBool* isKnownKey, UBool
             }
             if (!matched && keyData->specialTypes & SPECIALTYPE_REORDER_CODE) {
                 matched = isSpecialTypeReorderCode(type);
+            }
+            if (!matched && keyData->specialTypes & SPECIALTYPE_RG_KEY_VALUE) {
+                matched = isSpecialTypeRgKeyValue(type);
             }
             if (matched) {
                 if (isSpecialType != NULL) {

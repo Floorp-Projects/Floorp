@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/pl.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 pl{
-    Version{"2.1.19.14"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidżan"}
@@ -309,6 +303,9 @@ pl{
         "America:El_Salvador"{
             ec{"Salwador"}
         }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
+        }
         "America:Fortaleza"{
             ec{"Fortaleza"}
         }
@@ -604,10 +601,10 @@ pl{
             ec{"Yellowknife"}
         }
         "Antarctica:Casey"{
-            ec{"Stacja Casey"}
+            ec{"Casey"}
         }
         "Antarctica:Davis"{
-            ec{"Stacja Davis"}
+            ec{"Davis"}
         }
         "Antarctica:DumontDUrville"{
             ec{"Dumont d’Urville"}
@@ -616,19 +613,19 @@ pl{
             ec{"Macquarie"}
         }
         "Antarctica:Mawson"{
-            ec{"Wybrzeże Mawsona"}
+            ec{"Mawson"}
         }
         "Antarctica:McMurdo"{
-            ec{"Mc Murdo"}
+            ec{"McMurdo"}
         }
         "Antarctica:Palmer"{
-            ec{"Archipelag Palmera"}
+            ec{"Palmer"}
         }
         "Antarctica:Rothera"{
-            ec{"Stacja Naukowa Rothera"}
+            ec{"Rothera"}
         }
         "Antarctica:Syowa"{
-            ec{"Stacja Syowa"}
+            ec{"Syowa"}
         }
         "Antarctica:Troll"{
             ec{"Troll"}
@@ -671,6 +668,9 @@ pl{
         }
         "Asia:Bangkok"{
             ec{"Bangkok"}
+        }
+        "Asia:Barnaul"{
+            ec{"Barnauł"}
         }
         "Asia:Beirut"{
             ec{"Bejrut"}
@@ -849,6 +849,9 @@ pl{
         "Asia:Tokyo"{
             ec{"Tokio"}
         }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"Ułan Bator"}
         }
@@ -892,7 +895,7 @@ pl{
             ec{"Madera"}
         }
         "Atlantic:Reykjavik"{
-            ec{"Rejkiawik"}
+            ec{"Reykjavik"}
         }
         "Atlantic:South_Georgia"{
             ec{"Georgia Południowa"}
@@ -940,13 +943,16 @@ pl{
             ec{"Sydney"}
         }
         "Etc:Unknown"{
-            ec{"Nieznane"}
+            ec{"Nieznane miasto"}
         }
         "Europe:Amsterdam"{
             ec{"Amsterdam"}
         }
         "Europe:Andorra"{
             ec{"Andora"}
+        }
+        "Europe:Astrakhan"{
+            ec{"Astrachań"}
         }
         "Europe:Athens"{
             ec{"Ateny"}
@@ -1005,6 +1011,9 @@ pl{
         }
         "Europe:Kiev"{
             ec{"Kijów"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirow"}
         }
         "Europe:Lisbon"{
             ec{"Lizbona"}
@@ -1081,6 +1090,9 @@ pl{
         }
         "Europe:Tirane"{
             ec{"Tirana"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Uljanowsk"}
         }
         "Europe:Uzhgorod"{
             ec{"Użgorod"}
@@ -1230,7 +1242,7 @@ pl{
             ec{"Palau"}
         }
         "Pacific:Pitcairn"{
-            ec{"Wyspy Pitcairn"}
+            ec{"Pitcairn"}
         }
         "Pacific:Ponape"{
             ec{"Pohnpei"}
@@ -1281,7 +1293,7 @@ pl{
         }
         "meta:Alaska"{
             ld{"Alaska (czas letni)"}
-            lg{"Czas Alaska"}
+            lg{"Alaska"}
             ls{"Alaska (czas standardowy)"}
         }
         "meta:Amazon"{
@@ -1326,7 +1338,7 @@ pl{
         }
         "meta:Argentina"{
             ld{"Argentyna (czas letni)"}
-            lg{"Czas argentyński"}
+            lg{"Argentyna"}
             ls{"Argentyna (czas standardowy)"}
         }
         "meta:Argentina_Western"{
@@ -1342,7 +1354,7 @@ pl{
         "meta:Atlantic"{
             ld{"Czas atlantycki letni"}
             lg{"Czas atlantycki"}
-            ls{"Czas standardowy atlantycki"}
+            ls{"Czas atlantycki standardowy"}
         }
         "meta:Australia_Central"{
             ld{"Czas środkowoaustralijski letni"}
@@ -1355,9 +1367,9 @@ pl{
             ls{"Czas środkowo-zachodnioaustralijski standardowy"}
         }
         "meta:Australia_Eastern"{
-            ld{"Czas wschodnioaustraliski letni"}
-            lg{"Czas wschodnioaustraliski"}
-            ls{"Czas standardowy wschodnioaustraliski"}
+            ld{"Czas wschodnioaustralijski letni"}
+            lg{"Czas wschodnioaustralijski"}
+            ls{"Czas wschodnioaustralijski standardowy"}
         }
         "meta:Australia_Western"{
             ld{"Czas zachodnioaustralijski letni"}
@@ -1394,9 +1406,9 @@ pl{
             ls{"Brunei Darussalam"}
         }
         "meta:Cape_Verde"{
-            ld{"Republika Zielonego Przylądka (czas letni)"}
-            lg{"Republika Zielonego Przylądka"}
-            ls{"Republika Zielonego Przylądka (czas standardowy)"}
+            ld{"Wyspy Zielonego Przylądka (czas letni)"}
+            lg{"Wyspy Zielonego Przylądka"}
+            ls{"Wyspy Zielonego Przylądka (czas standardowy)"}
         }
         "meta:Chamorro"{
             ls{"Czamorro"}
@@ -1692,7 +1704,7 @@ pl{
         }
         "meta:Newfoundland"{
             ld{"Nowa Fundlandia (czas letni)"}
-            lg{"Czas nowofunlandzki"}
+            lg{"Nowa Fundlandia"}
             ls{"Nowa Fundlandia (czas standardowy)"}
         }
         "meta:Niue"{
@@ -1755,6 +1767,9 @@ pl{
         }
         "meta:Ponape"{
             ls{"Pohnpei"}
+        }
+        "meta:Pyongyang"{
+            ls{"Pjongjang"}
         }
         "meta:Reunion"{
             ls{"Reunion"}
