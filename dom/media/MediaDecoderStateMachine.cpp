@@ -1296,10 +1296,19 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
   if (Info().mMetadataDuration.isSome()) {
     mMaster->RecomputeDuration();
   } else if (Info().mUnadjustedMetadataEndTime.isSome()) {
-    const TimeUnit unadjusted = Info().mUnadjustedMetadataEndTime.ref();
-    const TimeUnit adjustment = Info().mStartTime;
-    mMaster->mInfo->mMetadataDuration.emplace(unadjusted - adjustment);
-    mMaster->RecomputeDuration();
+    RefPtr<Master> master = mMaster;
+    Reader()->AwaitStartTime()->Then(OwnerThread(), __func__,
+      [master] () {
+        NS_ENSURE_TRUE_VOID(!master->IsShutdown());
+        auto& info = master->mInfo.ref();
+        TimeUnit unadjusted = info.mUnadjustedMetadataEndTime.ref();
+        TimeUnit adjustment = master->mReader->StartTime();
+        info.mMetadataDuration.emplace(unadjusted - adjustment);
+        master->RecomputeDuration();
+      }, [master, this] () {
+        SWARN("Adjusting metadata end time failed");
+      }
+    );
   }
 
   if (mMaster->HasVideo()) {
@@ -1309,11 +1318,22 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
          mMaster->GetAmpleVideoFrames());
   }
 
-  MOZ_ASSERT(mMaster->mDuration.Ref().isSome());
+  // In general, we wait until we know the duration before notifying the decoder.
+  // However, we notify  unconditionally in this case without waiting for the start
+  // time, since the caller might be waiting on metadataloaded to be fired before
+  // feeding in the CDM, which we need to decode the first frame (and
+  // thus get the metadata). We could fix this if we could compute the start
+  // time by demuxing without necessaring decoding.
+  bool waitingForCDM = Info().IsEncrypted() && !mMaster->mCDMProxy;
 
-  mMaster->EnqueueLoadedMetadataEvent();
+  mMaster->mNotifyMetadataBeforeFirstFrame =
+    mMaster->mDuration.Ref().isSome() || waitingForCDM;
 
-  if (Info().IsEncrypted() && !mMaster->mCDMProxy) {
+  if (mMaster->mNotifyMetadataBeforeFirstFrame) {
+    mMaster->EnqueueLoadedMetadataEvent();
+  }
+
+  if (waitingForCDM) {
     // Metadata parsing was successful but we're still waiting for CDM caps
     // to become available so that we can build the correct decryptor/decoder.
     SetState<WaitForCDMState>(mPendingDormant);
@@ -1822,6 +1842,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mAudioCaptured(false),
   INIT_WATCHABLE(mAudioCompleted, false),
   INIT_WATCHABLE(mVideoCompleted, false),
+  mNotifyMetadataBeforeFirstFrame(false),
   mMinimizePreroll(false),
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
@@ -2951,6 +2972,11 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
 
   // Get potentially updated metadata
   mReader->ReadUpdatedMetadata(mInfo.ptr());
+
+  if (!mNotifyMetadataBeforeFirstFrame) {
+    // If we didn't have duration and/or start time before, we should now.
+    EnqueueLoadedMetadataEvent();
+  }
 
   EnqueueFirstFrameLoadedEvent();
 }
