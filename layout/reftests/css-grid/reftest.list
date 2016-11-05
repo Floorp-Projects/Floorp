@@ -56,6 +56,18 @@ fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min
 == grid-auto-min-sizing-intrinsic-002.html grid-auto-min-sizing-intrinsic-002-ref.html
 == grid-auto-min-sizing-intrinsic-003.html grid-auto-min-sizing-intrinsic-003-ref.html
 == grid-auto-min-sizing-intrinsic-004.html grid-auto-min-sizing-intrinsic-004-ref.html
+== grid-auto-min-sizing-transferred-size-001.html grid-auto-min-sizing-transferred-size-001-ref.html
+== grid-auto-min-sizing-transferred-size-002.html grid-auto-min-sizing-transferred-size-002-ref.html
+== grid-auto-min-sizing-transferred-size-003.html grid-auto-min-sizing-transferred-size-003-ref.html
+== grid-auto-min-sizing-transferred-size-004.html grid-auto-min-sizing-transferred-size-004-ref.html
+== grid-auto-min-sizing-min-content-min-size-001.html grid-auto-min-sizing-min-content-min-size-001-ref.html
+== grid-auto-min-sizing-min-content-min-size-002.html grid-auto-min-sizing-min-content-min-size-002-ref.html
+== grid-auto-min-sizing-min-content-min-size-003.html grid-auto-min-sizing-min-content-min-size-003-ref.html
+== grid-auto-min-sizing-min-content-min-size-004.html grid-auto-min-sizing-min-content-min-size-004-ref.html
+== grid-min-content-min-sizing-transferred-size-001.html grid-min-content-min-sizing-transferred-size-001-ref.html
+== grid-min-content-min-sizing-transferred-size-002.html grid-min-content-min-sizing-transferred-size-002-ref.html
+== grid-min-content-min-sizing-transferred-size-003.html grid-min-content-min-sizing-transferred-size-003-ref.html
+== grid-min-content-min-sizing-transferred-size-004.html grid-min-content-min-sizing-transferred-size-004-ref.html
 skip-if(Android) == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-percent-001-ref.html # bug 1305716
 == grid-track-intrinsic-sizing-001.html grid-track-intrinsic-sizing-001-ref.html
 == grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
@@ -80,6 +92,9 @@ skip-if(Android) == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-p
 == grid-item-justify-001.html grid-item-justify-001-ref.html
 == grid-item-justify-002.html grid-item-justify-002-ref.html
 == grid-item-stretch-001.html grid-item-stretch-001-ref.html
+== grid-item-intrinsic-ratio-stretch-001.html grid-item-intrinsic-ratio-stretch-001-ref.html
+== grid-item-intrinsic-ratio-stretch-002.html grid-item-intrinsic-ratio-stretch-002-ref.html
+== grid-item-intrinsic-ratio-stretch-003.html grid-item-intrinsic-ratio-stretch-003-ref.html
 == grid-item-self-baseline-001.html grid-item-self-baseline-001-ref.html
 random-if(http.oscpu!="Linux\u0020i686") == grid-item-content-baseline-001.html grid-item-content-baseline-001-ref.html # depends on exact Ahem baseline font metrics which seems to differ between platforms: bug 1310792
 random-if(http.oscpu!="Linux\u0020i686") == grid-item-content-baseline-002.html grid-item-content-baseline-002-ref.html # ditto
