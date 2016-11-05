@@ -20,6 +20,7 @@ const { takeScreenshot } = require("./actions/screenshot");
 const { updateTouchSimulationEnabled } = require("./actions/touch-simulation");
 const {
   changeDevice,
+  changeViewportPixelRatio,
   resizeViewport,
   rotateViewport
 } = require("./actions/viewports");
@@ -33,6 +34,7 @@ let App = createClass({
 
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
+    displayPixelRatio: PropTypes.number.isRequired,
     location: Types.location.isRequired,
     networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
@@ -60,6 +62,16 @@ let App = createClass({
     }, "*");
     this.props.dispatch(changeDevice(id, device.name));
     this.props.dispatch(updateTouchSimulationEnabled(device.touch));
+    this.props.dispatch(changeViewportPixelRatio(id, device.pixelRatio));
+  },
+
+  onChangeViewportPixelRatio(pixelRatio) {
+    window.postMessage({
+      type: "change-viewport-pixel-ratio",
+      pixelRatio,
+    }, "*");
+
+    this.props.dispatch(changeViewportPixelRatio(0, pixelRatio));
   },
 
   onContentResize({ width, height }) {
@@ -110,6 +122,7 @@ let App = createClass({
   render() {
     let {
       devices,
+      displayPixelRatio,
       location,
       networkThrottling,
       screenshot,
@@ -121,6 +134,7 @@ let App = createClass({
       onBrowserMounted,
       onChangeNetworkThrottling,
       onChangeViewportDevice,
+      onChangeViewportPixelRatio,
       onContentResize,
       onDeviceListUpdate,
       onExit,
@@ -132,15 +146,28 @@ let App = createClass({
       onUpdateTouchSimulation,
     } = this;
 
+    let selectedDevice = "";
+    let selectedPixelRatio = 0;
+
+    if (viewports.length) {
+      selectedDevice = viewports[0].device;
+      selectedPixelRatio = viewports[0].pixelRatio;
+    }
+
     return dom.div(
       {
         id: "app",
       },
       GlobalToolbar({
+        devices,
+        displayPixelRatio,
         networkThrottling,
         screenshot,
+        selectedDevice,
+        selectedPixelRatio,
         touchSimulation,
         onChangeNetworkThrottling,
+        onChangeViewportPixelRatio,
         onExit,
         onScreenshot,
         onUpdateTouchSimulation,
