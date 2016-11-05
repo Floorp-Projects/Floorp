@@ -43,7 +43,6 @@ var gContentPane = {
       }
     }
 
-    let doNotDisturbAlertsEnabled = false;
     if (AlertsServiceDND) {
       let notificationsDoNotDisturbRow =
         document.getElementById("notificationsDoNotDisturbRow");

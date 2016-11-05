@@ -81,10 +81,10 @@ add_task(function* test_edit_password() {
                                                        "popupshown",
                                                        (event) => event.target == PopupNotifications.panel);
       yield ContentTask.spawn(browser, testCase,
-        function* (testCase) {
+        function* (contentTestCase) {
           let doc = content.document;
-          doc.getElementById("form-basic-username").value = testCase.usernameInPage;
-          doc.getElementById("form-basic-password").value = testCase.passwordInPage;
+          doc.getElementById("form-basic-username").value = contentTestCase.usernameInPage;
+          doc.getElementById("form-basic-password").value = contentTestCase.passwordInPage;
           doc.getElementById("form-basic").submit();
         });
       yield promiseShown;

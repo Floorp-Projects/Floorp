@@ -39,7 +39,6 @@ var PanelWideWidgetTracker = {
   onWidgetRemoved: function(aWidgetId, aPrevArea) {
     if (aPrevArea == gPanel) {
       gPanelPlacements = CustomizableUI.getWidgetIdsInArea(gPanel);
-      let pos = gPanelPlacements.indexOf(aWidgetId);
       this.adjustWidgets(aWidgetId, false);
     }
   },

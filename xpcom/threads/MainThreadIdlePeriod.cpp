@@ -11,18 +11,26 @@
 #include "nsRefreshDriver.h"
 
 #define DEFAULT_LONG_IDLE_PERIOD 50.0f
+#define DEFAULT_MIN_IDLE_PERIOD 3.0f
 
 namespace mozilla {
 
 NS_IMETHODIMP
 MainThreadIdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aIdleDeadline);
 
   Maybe<TimeStamp> deadline = nsRefreshDriver::GetIdleDeadlineHint();
 
   if (deadline.isSome()) {
-    *aIdleDeadline = deadline.value();
+    // If the idle period is too small, then just return a null time
+    // to indicate we are busy. Otherwise return the actual deadline.
+    TimeDuration minIdlePeriod =
+      TimeDuration::FromMilliseconds(GetMinIdlePeriod());
+    bool busySoon = deadline.value().IsNull() ||
+                    (TimeStamp::Now() >= (deadline.value() - minIdlePeriod));
+    *aIdleDeadline = busySoon ? TimeStamp() : deadline.value();
   } else {
     *aIdleDeadline =
       TimeStamp::Now() + TimeDuration::FromMilliseconds(GetLongIdlePeriod());
@@ -34,6 +42,8 @@ MainThreadIdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline)
 /* static */ float
 MainThreadIdlePeriod::GetLongIdlePeriod()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   static float sLongIdlePeriod = DEFAULT_LONG_IDLE_PERIOD;
   static bool sInitialized = false;
 
@@ -44,6 +54,23 @@ MainThreadIdlePeriod::GetLongIdlePeriod()
   }
 
   return sLongIdlePeriod;
+}
+
+/* static */ float
+MainThreadIdlePeriod::GetMinIdlePeriod()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  static float sMinIdlePeriod = DEFAULT_MIN_IDLE_PERIOD;
+  static bool sInitialized = false;
+
+  if (!sInitialized && Preferences::IsServiceAvailable()) {
+    sInitialized = true;
+    Preferences::AddFloatVarCache(&sMinIdlePeriod, "idle_queue.min_period",
+                                  DEFAULT_MIN_IDLE_PERIOD);
+  }
+
+  return sMinIdlePeriod;
 }
 
 } // namespace mozilla

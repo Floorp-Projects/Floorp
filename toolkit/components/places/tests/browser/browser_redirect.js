@@ -30,11 +30,11 @@ add_task(function* () {
           fieldForUrl(REDIRECT_URI, "hidden", function (aHidden) {
             is(aHidden, 1, "The redirecting page should be hidden");
 
-            fieldForUrl(TARGET_URI, "frecency", function (aFrecency) {
-              ok(aFrecency != 0, "Frecency of the target page should not be 0");
+            fieldForUrl(TARGET_URI, "frecency", function (aFrecency2) {
+              ok(aFrecency2 != 0, "Frecency of the target page should not be 0");
 
-              fieldForUrl(TARGET_URI, "hidden", function (aHidden) {
-                is(aHidden, 0, "The target page should not be hidden");
+              fieldForUrl(TARGET_URI, "hidden", function (aHidden2) {
+                is(aHidden2, 0, "The target page should not be hidden");
                 resolve();
               });
             });

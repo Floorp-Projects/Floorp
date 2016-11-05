@@ -130,19 +130,19 @@ var gTests = [
         preRedirectChannel.listen(function (id, message, preRedirectSender) {
           if (message.command === "redirecting") {
 
-            postRedirectChannel.listen(function (id, message, postRedirectSender) {
-              is(id, "post_redirect");
-              isnot(message.command, "no_response_expected");
+            postRedirectChannel.listen(function (aId, aMessage, aPostRedirectSender) {
+              is(aId, "post_redirect");
+              isnot(aMessage.command, "no_response_expected");
 
-              if (message.command === "loaded") {
+              if (aMessage.command === "loaded") {
                 // The message should not be received on the preRedirectChannel
                 // because the target window has redirected.
                 preRedirectChannel.send({ command: "no_response_expected" }, preRedirectSender);
-                postRedirectChannel.send({ command: "done" }, postRedirectSender);
-              } else if (message.command === "done") {
+                postRedirectChannel.send({ command: "done" }, aPostRedirectSender);
+              } else if (aMessage.command === "done") {
                 resolve();
               } else {
-                reject(new Error(`Unexpected command ${message.command}`));
+                reject(new Error(`Unexpected command ${aMessage.command}`));
               }
             });
           } else {
@@ -403,9 +403,9 @@ function test() {
   waitForExplicitFinish();
 
   Task.spawn(function* () {
-    for (let test of gTests) {
-      info("Running: " + test.desc);
-      yield test.run();
+    for (let testCase of gTests) {
+      info("Running: " + testCase.desc);
+      yield testCase.run();
     }
   }).then(finish, ex => {
     ok(false, "Unexpected Exception: " + ex);

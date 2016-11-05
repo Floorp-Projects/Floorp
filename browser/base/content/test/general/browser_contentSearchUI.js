@@ -666,12 +666,12 @@ function msg(type, data=null) {
     data: data,
   });
   let deferred = Promise.defer();
-  gMsgMan.addMessageListener(TEST_MSG, function onMsg(msg) {
-    if (msg.data.type != type) {
+  gMsgMan.addMessageListener(TEST_MSG, function onMsg(msgObj) {
+    if (msgObj.data.type != type) {
       return;
     }
     gMsgMan.removeMessageListener(TEST_MSG, onMsg);
-    deferred.resolve(msg.data.data);
+    deferred.resolve(msgObj.data.data);
   });
   return deferred.promise;
 }
@@ -742,11 +742,11 @@ function promiseTab() {
 function promiseMsg(name, type, msgMan) {
   let deferred = Promise.defer();
   info("Waiting for " + name + " message " + type + "...");
-  msgMan.addMessageListener(name, function onMsg(msg) {
-    info("Received " + name + " message " + msg.data.type + "\n");
-    if (msg.data.type == type) {
+  msgMan.addMessageListener(name, function onMsg(msgObj) {
+    info("Received " + name + " message " + msgObj.data.type + "\n");
+    if (msgObj.data.type == type) {
       msgMan.removeMessageListener(name, onMsg);
-      deferred.resolve(msg);
+      deferred.resolve(msgObj);
     }
   });
   return deferred.promise;

@@ -21,6 +21,7 @@
 
   <script type="application/javascript"><![CDATA[
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
+    Cu.import("resource://gre/modules/AppConstants.jsm");
     Cu.import("resource://gre/modules/Task.jsm");
     Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
@@ -137,12 +138,14 @@
         yield testStatusText();
       }
 
-      yield testFindCountUI();
-      gFindBar.close();
-      ok(gFindBar.hidden, "Failed to close findbar after testFindCountUI");
-      yield testFindCountUI(true);
-      gFindBar.close();
-      ok(gFindBar.hidden, "Failed to close findbar after testFindCountUI - linksOnly");
+      if (!AppConstants.DEBUG) {
+        yield testFindCountUI();
+        gFindBar.close();
+        ok(gFindBar.hidden, "Failed to close findbar after testFindCountUI");
+        yield testFindCountUI(true);
+        gFindBar.close();
+        ok(gFindBar.hidden, "Failed to close findbar after testFindCountUI - linksOnly");
+      }
 
       yield openFindbar();
       yield testFindAfterCaseChanged();

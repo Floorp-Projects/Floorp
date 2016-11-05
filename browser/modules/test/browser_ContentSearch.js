@@ -114,7 +114,6 @@ add_task(function* searchInBackgroundTab() {
   // search page should be loaded in the same tab that performed the search, in
   // the background tab.
   yield addTab();
-  let searchBrowser = gBrowser.selectedBrowser;
   let engine = Services.search.currentEngine;
   let data = {
     engineName: engine.name,

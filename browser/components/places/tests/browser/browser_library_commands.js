@@ -138,11 +138,11 @@ add_task(function* test_query_on_toolbar() {
 });
 
 add_task(function* test_search_contents() {
-  let item = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                                  url: "http://example.com/",
-                                                  title: "example page",
-                                                  parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                  index: 0 });
+  yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+                                       url: "http://example.com/",
+                                       title: "example page",
+                                       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                       index: 0 });
 
   let library = yield promiseLibrary();
   info("Ensure query contents can be cut or deleted");
@@ -175,11 +175,11 @@ add_task(function* test_search_contents() {
 });
 
 add_task(function* test_tags() {
-  let item = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-                                                  url: "http://example.com/",
-                                                  title: "example page",
-                                                  parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                  index: 0 });
+  yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+                                       url: "http://example.com/",
+                                       title: "example page",
+                                       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                       index: 0 });
   PlacesUtils.tagging.tagURI(NetUtil.newURI("http://example.com/"), ["test"]);
 
   let library = yield promiseLibrary();

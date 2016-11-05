@@ -7,6 +7,14 @@
 
 #include "SSE.h"
 
+#ifdef HAVE_CPUID_H
+// cpuid.h is available on gcc 4.3 and higher on i386 and x86_64
+#include <cpuid.h>
+#elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))
+// MSVC 2005 or newer on x86-32 or x86-64
+#include <intrin.h>
+#endif
+
 namespace {
 
 // SSE.h has parallel #ifs which declare MOZILLA_SSE_HAVE_CPUID_DETECTION.
@@ -15,9 +23,6 @@ namespace {
 // include both SSE.h and <windows.h>.
 
 #ifdef HAVE_CPUID_H
-
-// cpuid.h is available on gcc 4.3 and higher on i386 and x86_64
-#include <cpuid.h>
 
 enum CPUIDRegister { eax = 0, ebx = 1, ecx = 2, edx = 3 };
 
@@ -44,9 +49,6 @@ static uint64_t xgetbv(uint32_t xcr) {
 }
 
 #elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))
-
-// MSVC 2005 or newer on x86-32 or x86-64
-#include <intrin.h>
 
 enum CPUIDRegister { eax = 0, ebx = 1, ecx = 2, edx = 3 };
 
