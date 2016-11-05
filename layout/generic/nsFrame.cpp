@@ -4864,7 +4864,8 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
                                             const LogicalSize&   aCBSize,
                                             const LogicalSize&   aMargin,
                                             const LogicalSize&   aBorder,
-                                            const LogicalSize&   aPadding)
+                                            const LogicalSize&   aPadding,
+                                            ComputeSizeFlags     aFlags)
 {
   const nsStylePosition* stylePos = StylePosition();
   const nsStyleCoord* inlineStyleCoord = &stylePos->ISize(aWM);

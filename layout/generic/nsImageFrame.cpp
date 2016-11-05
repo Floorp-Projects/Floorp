@@ -872,7 +872,8 @@ nsImageFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
   return ComputeSizeWithIntrinsicDimensions(aRenderingContext, aWM,
                                             intrinsicSize, mIntrinsicRatio,
-                                            aCBSize, aMargin, aBorder, aPadding);
+                                            aCBSize, aMargin, aBorder, aPadding,
+                                            aFlags);
 }
 
 // XXXdholbert This function's clients should probably just be calling

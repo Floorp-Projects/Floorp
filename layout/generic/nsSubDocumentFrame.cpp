@@ -721,7 +721,7 @@ nsSubDocumentFrame::ComputeSize(nsRenderingContext* aRenderingContext,
                                               subDocRoot->GetIntrinsicSize(),
                                               subDocRoot->GetIntrinsicRatio(),
                                               aCBSize, aMargin, aBorder,
-                                              aPadding);
+                                              aPadding, aFlags);
   }
   return nsAtomicContainerFrame::ComputeSize(aRenderingContext, aWM,
                                              aCBSize, aAvailableISize,

@@ -349,7 +349,8 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
   return ComputeSizeWithIntrinsicDimensions(aRenderingContext, aWM,
                                             intrinsicSize, GetIntrinsicRatio(),
-                                            cbSize, aMargin, aBorder, aPadding);
+                                            cbSize, aMargin, aBorder, aPadding,
+                                            aFlags);
 }
 
 void
