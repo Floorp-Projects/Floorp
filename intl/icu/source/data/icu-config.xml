@@ -1,7 +1,9 @@
 <!--
 /*
+* Copyright (C) 2016 and later: Unicode, Inc. and others.
+* License & terms of use: http://www.unicode.org/copyright.html
 *******************************************************************************
-* Copyright (C) 2005-2015, International Business Machines Corporation and    *
+* Copyright (C) 2005-2016, International Business Machines Corporation and    *
 * others. All Rights Reserved.	                                         *
 *******************************************************************************
 */
@@ -51,6 +53,8 @@
 		<include locales="as_IN"/>
 		<include locales="asa"/>
 		<include locales="asa_TZ"/>
+		<include locales="ast"/>
+		<include locales="ast_ES"/>
 		<include locales="az"/>
 		<include locales="az_AZ"/>
 		<include locales="az_Cyrl"/>
@@ -96,6 +100,9 @@
 		<include locales="cgg_UG"/>
 		<include locales="chr"/>
 		<include locales="chr_US"/>
+		<include locales="ckb"/>
+		<include locales="ckb_IQ"/>
+		<include locales="ckb_IR"/>
 		<include locales="cs"/>
 		<include locales="cs_CZ"/>
 		<include locales="cy"/>
@@ -110,6 +117,7 @@
 		<include locales="de_BE"/>
 		<include locales="de_CH"/>
 		<include locales="de_DE"/>
+		<include locales="de_IT"/>
 		<include locales="de_LI"/>
 		<include locales="de_LU"/>
 		<include locales="dje"/>
@@ -243,6 +251,7 @@
 		<include locales="es_419"/>
 		<include locales="es_AR"/>
 		<include locales="es_BO"/>
+		<include locales="es_BR"/>
 		<include locales="es_CL"/>
 		<include locales="es_CO"/>
 		<include locales="es_CR"/>
@@ -507,6 +516,9 @@
 		<include locales="nb_SJ"/>
 		<include locales="nd"/>
 		<include locales="nd_ZW"/>
+		<include locales="nds"/>
+		<include locales="nds_DE"/>
+		<include locales="nds_NL"/>
 		<include locales="ne"/>
 		<include locales="ne_IN"/>
 		<include locales="ne_NP"/>
@@ -552,8 +564,11 @@
 		<include locales="pt"/>
 		<include locales="pt_AO"/>
 		<include locales="pt_BR"/>
+		<include locales="pt_CH"/>
 		<include locales="pt_CV"/>
+		<include locales="pt_GQ"/>
 		<include locales="pt_GW"/>
+		<include locales="pt_LU"/>
 		<include locales="pt_MO"/>
 		<include locales="pt_MZ"/>
 		<include locales="pt_PT"/>
@@ -721,6 +736,8 @@
 		<include locales="yo"/>
 		<include locales="yo_BJ"/>
 		<include locales="yo_NG"/>
+		<include locales="yue"/>
+		<include locales="yue_HK"/>
 		<include locales="zgh"/>
 		<include locales="zgh_MA"/>
 		<include locales="zh"/>

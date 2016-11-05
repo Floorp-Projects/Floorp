@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/dsb.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 dsb{
     AuxExemplarCharacters{
         "[á à ă â å ä ã ą ā æ ç ď đ é è ĕ ê ë ė ę ē ğ í ì ĭ î ï İ ī ı ĺ ľ ň ñ ò ŏ ô ö"
@@ -201,7 +195,7 @@ dsb{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.76"}
     calendar{
         generic{
             DateTimePatterns{
@@ -309,6 +303,10 @@ dsb{
         }
         gregorian{
             AmPmMarkers{
+                "dopołdnja",
+                "wótpołdnja",
+            }
+            AmPmMarkersAbbr{
                 "dopołdnja",
                 "wótpołdnja",
             }

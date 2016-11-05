@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/pl.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 pl{
     Currencies{
         ADP{
@@ -200,9 +194,13 @@ pl{
             "BYB",
             "rubel białoruski (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "rubel białoruski",
+        }
         BYR{
             "BYR",
-            "rubel białoruski",
+            "rubel białoruski (2000–2016)",
         }
         BZD{
             "BZD",
@@ -330,7 +328,7 @@ pl{
         }
         FJD{
             "FJD",
-            "dolar fidżi",
+            "dolar fidżyjski",
         }
         FKP{
             "FKP",
@@ -614,7 +612,7 @@ pl{
         }
         MWK{
             "MWK",
-            "kwacha malawska",
+            "kwacha malawijska",
         }
         MXN{
             "MXN",
@@ -934,11 +932,11 @@ pl{
         }
         VUV{
             "VUV",
-            "vatu Vanuatu",
+            "vatu wanuackie",
         }
         WST{
             "WST",
-            "tala samoańska",
+            "tala samoańskie",
         }
         XAF{
             "FCFA",
@@ -1070,7 +1068,7 @@ pl{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1080,12 +1078,14 @@ pl{
         CUC{"$"}
         CUP{"$"}
         CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
         EGP{"E£"}
         EUR{"€"}
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1119,6 +1119,7 @@ pl{
         NAD{"$"}
         NGN{"₦"}
         NIO{"C$"}
+        NOK{"kr"}
         NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
@@ -1128,6 +1129,7 @@ pl{
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
         SHP{"£"}
         SRD{"$"}
@@ -1149,6 +1151,7 @@ pl{
         ZMW{"ZK"}
     }
     Currencies%variant{
+        GEL{"₾"}
         TRY{"TL"}
     }
     CurrencyPlurals{
@@ -1350,11 +1353,17 @@ pl{
             one{"pula botswańska"}
             other{"puli botswańskiej"}
         }
-        BYR{
+        BYN{
             few{"ruble białoruskie"}
             many{"rubli białoruskich"}
             one{"rubel białoruski"}
             other{"rubla białoruskiego"}
+        }
+        BYR{
+            few{"ruble białoruskie (2000–2016)"}
+            many{"rubli białoruskich (2000–2016)"}
+            one{"rubel białoruski (2000–2016)"}
+            other{"rubla białoruskiego (2000–2016)"}
         }
         BZD{
             few{"dolary belizeńskie"}
@@ -1813,10 +1822,10 @@ pl{
             other{"rupii malediwskiej"}
         }
         MWK{
-            few{"kwacha malawskie"}
-            many{"kwacha malawskich"}
-            one{"kwacha malawska"}
-            other{"kwacha malawskiej"}
+            few{"kwacha malawijskie"}
+            many{"kwacha malawijskich"}
+            one{"kwacha malawijska"}
+            other{"kwacha malawijskiej"}
         }
         MXN{
             few{"pesos meksykańskie"}
@@ -1831,10 +1840,10 @@ pl{
             other{"ringgita malezyjskiego"}
         }
         MZN{
-            few{"meticale mozambijskie"}
-            many{"meticali mozambijskich"}
-            one{"metical mozambijski"}
-            other{"meticala mozambijskiego"}
+            few{"meticale mozambickie"}
+            many{"meticali mozambickich"}
+            one{"metical mozambicki"}
+            other{"meticala mozambickiego"}
         }
         NAD{
             few{"dolary namibijskie"}
@@ -2203,10 +2212,10 @@ pl{
             other{"donga wietnamskiego"}
         }
         VUV{
-            few{"vatu vanuatuańskie"}
-            many{"vatu vanuatuańskich"}
-            one{"vatu vanuatuańskie"}
-            other{"vatu vanuatuańskiego"}
+            few{"vatu wanuackie"}
+            many{"vatu wanuackich"}
+            one{"vatu wanuackie"}
+            other{"vatu wanuackiego"}
         }
         WST{
             few{"tala samoańskie"}
@@ -2275,5 +2284,5 @@ pl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.79"}
 }

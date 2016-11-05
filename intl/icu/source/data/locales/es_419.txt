@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/es_419.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 es_419{
     NumberElements{
         latn{
@@ -16,8 +10,8 @@ es_419{
             patternsShort{
                 decimalFormat{
                     1000{
-                        one{"0"}
-                        other{"0"}
+                        one{"0k"}
+                        other{"0k"}
                     }
                     10000{
                         one{"00k"}
@@ -48,7 +42,7 @@ es_419{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.27.99"}
     calendar{
         generic{
             DateTimePatterns{
@@ -164,15 +158,6 @@ es_419{
                 }
             }
             dayPeriod{
-                format{
-                    narrow{
-                        evening1{"tarde"}
-                        morning1{"madrugada"}
-                        morning2{"mañana"}
-                        night1{"noche"}
-                        noon{"m."}
-                    }
-                }
                 stand-alone{
                     abbreviated{
                         am{"a.m."}
@@ -189,20 +174,6 @@ es_419{
                 }
             }
             intervalFormats{
-                H{
-                    H{"HH – HH"}
-                }
-                Hm{
-                    H{"HH:mm – HH:mm"}
-                    m{"HH:mm – HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm – HH:mm v"}
-                    m{"HH:mm – HH:mm v"}
-                }
-                Hv{
-                    H{"HH – HH v"}
-                }
                 MEd{
                     M{"E, d/M–E, d/M"}
                     d{"E, d/M–E, d/M"}
@@ -296,9 +267,135 @@ es_419{
             }
         }
     }
+    characterLabel{
+        african_scripts{"Símbolos de escritura de África"}
+        american_scripts{"Símbolos de escritura de América"}
+        animals_nature{"Naturaleza y animales"}
+        box_drawing{"Cuadro de dibujo"}
+        consonantal_jamo{"Jamo consonántico"}
+        currency_symbols{"símbolos de monedas"}
+        dash_connector{"Guión/conector"}
+        digits{"dígitos"}
+        dingbats{"Símbolos y viñetas"}
+        downwards_upwards_arrows{"Flechas hacia arriba y hacia abajo"}
+        european_scripts{"Símbolos de escritura de Europa"}
+        flags{"Indicadores"}
+        full_width_form_variant{"Variantes de formato de ancho completo"}
+        geometric_shapes{"Formas geométricas"}
+        half_width_form_variant{"Variantes de formato de ancho medio"}
+        han_characters{"caracteres Han"}
+        han_radicals{"Radicales Han"}
+        hanzi_simplified{"Hanzi (simplificado)"}
+        hanzi_traditional{"Hanzi (tradicional)"}
+        historic_scripts{"Símbolos de escritura históricos"}
+        ideographic_desc_characters{"Caracteres descriptivos ideográficos"}
+        japanese_kana{"Kana japonés"}
+        leftwards_rightwards_arrows{"Flechas hacia la derecha y hacia la izquierda"}
+        middle_eastern_scripts{"Símbolos de escritura de Oriente Medio"}
+        small_form_variant{"Variantes de formato pequeño"}
+        vocalic_jamo{"Jamo vocálico"}
+    }
     fields{
         dayperiod{
             dn{"a.m./p.m."}
+        }
+        fri-narrow{
+            relativeTime{
+                past{
+                    one{"hace {0} viernes"}
+                    other{"hace {0} viernes"}
+                }
+            }
+        }
+        fri-short{
+            relativeTime{
+                past{
+                    one{"hace {0} viernes"}
+                    other{"hace {0} viernes"}
+                }
+            }
+        }
+        mon-narrow{
+            relativeTime{
+                future{
+                    one{"en {0} lunes"}
+                    other{"en {0} lunes"}
+                }
+                past{
+                    one{"hace {0} lunes"}
+                    other{"hace {0} lunes"}
+                }
+            }
+        }
+        mon-short{
+            relativeTime{
+                past{
+                    one{"hace {0} lunes"}
+                    other{"hace {0} lunes"}
+                }
+            }
+        }
+        sat-narrow{
+            relativeTime{
+                past{
+                    one{"hace {0} sábados"}
+                    other{"hace {0} sábados"}
+                }
+            }
+        }
+        sun{
+            relativeTime{
+                future{
+                    one{"en {0} domingo"}
+                    other{"en {0} domingos"}
+                }
+            }
+        }
+        sun-narrow{
+            relativeTime{
+                past{
+                    one{"hace {0} domingo"}
+                    other{"hace {0} domingos"}
+                }
+            }
+        }
+        thu-narrow{
+            relativeTime{
+                past{
+                    one{"hace {0} jueves"}
+                    other{"hace {0} jueves"}
+                }
+            }
+        }
+        tue-short{
+            relativeTime{
+                past{
+                    one{"hace {0} martes"}
+                    other{"hace {0} martes"}
+                }
+            }
+        }
+        wed-narrow{
+            relativeTime{
+                past{
+                    one{"hace {0} miércoles"}
+                    other{"hace {0} miércoles"}
+                }
+            }
+        }
+        wed-short{
+            relativeTime{
+                past{
+                    one{"hace {0} miércoles"}
+                    other{"hace {0} miércoles"}
+                }
+            }
+        }
+        week-narrow{
+            relativePeriod{"la semana del {0}"}
+        }
+        week-short{
+            relativePeriod{"la semana del {0}"}
         }
         zone{
             dn{"Zona horaria"}

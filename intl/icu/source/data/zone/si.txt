@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/si.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 si{
-    Version{"2.1.20.4"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"අබිජාන්"}
@@ -308,6 +302,9 @@ si{
         }
         "America:El_Salvador"{
             ec{"එල්සැල්වදෝර්"}
+        }
+        "America:Fort_Nelson"{
+            ec{"ෆෝට් නෙල්සන්"}
         }
         "America:Fortaleza"{
             ec{"ෆොර්ටලේසා"}
@@ -672,6 +669,9 @@ si{
         "Asia:Bangkok"{
             ec{"බැංකොක්"}
         }
+        "Asia:Barnaul"{
+            ec{"බර්නෞල්"}
+        }
         "Asia:Beirut"{
             ec{"බීරුට්"}
         }
@@ -849,6 +849,9 @@ si{
         "Asia:Tokyo"{
             ec{"ටෝකියෝ"}
         }
+        "Asia:Tomsk"{
+            ec{"ටොම්ස්ක්"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"උලාන්බාටර්"}
         }
@@ -948,6 +951,9 @@ si{
         "Europe:Andorra"{
             ec{"ඇන්ඩෝරාව"}
         }
+        "Europe:Astrakhan"{
+            ec{"අස්ට්‍රඛාන්"}
+        }
         "Europe:Athens"{
             ec{"ඇතැන්ස්"}
         }
@@ -1005,6 +1011,9 @@ si{
         }
         "Europe:Kiev"{
             ec{"කිව්"}
+        }
+        "Europe:Kirov"{
+            ec{"කිරොව්"}
         }
         "Europe:Lisbon"{
             ec{"ලිස්බන්"}
@@ -1081,6 +1090,9 @@ si{
         }
         "Europe:Tirane"{
             ec{"ටිරානේ"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"උල්යනොව්ස්ක්"}
         }
         "Europe:Uzhgorod"{
             ec{"උස්ගොරෝඩ්"}
@@ -1739,6 +1751,9 @@ si{
         }
         "meta:Ponape"{
             ls{"පොනපේ වේලාව"}
+        }
+        "meta:Pyongyang"{
+            ls{"ප්යොන්ග්යන් වේලාව"}
         }
         "meta:Reunion"{
             ls{"රියුනියන් වේලාව"}

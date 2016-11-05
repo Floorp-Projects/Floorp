@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/pt.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 pt{
     Currencies{
         ADP{
@@ -224,9 +218,13 @@ pt{
             "BYB",
             "Rublo novo bielo-russo (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "Rublo bielorrusso",
+        }
         BYR{
             "BYR",
-            "Rublo bielorrusso",
+            "Rublo bielorrusso (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1198,7 +1196,7 @@ pt{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1215,6 +1213,7 @@ pt{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1255,6 +1254,7 @@ pt{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"L"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -1500,9 +1500,13 @@ pt{
             one{"Novo rublo bielorusso (BYB)"}
             other{"Novos rublos bielorussos (BYB)"}
         }
-        BYR{
+        BYN{
             one{"Rublo bielorrusso"}
             other{"Rublos bielorrussos"}
+        }
+        BYR{
+            one{"Rublo bielorrusso (2000–2016)"}
+            other{"Rublos bielorrussos (2000–2016)"}
         }
         BZD{
             one{"Dólar belizenho"}
@@ -2465,5 +2469,5 @@ pt{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
 }

@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2002-2014, International Business Machines
+*   Copyright (C) 2002-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -270,7 +272,11 @@ static const BinaryProperty binProps[UCHAR_BINARY_LIMIT]={
     { UPROPS_SRC_CASE,  0, caseBinaryPropertyContains },  // UCHAR_CHANGES_WHEN_TITLECASED
     { UPROPS_SRC_CASE_AND_NORM,  0, changesWhenCasefolded },
     { UPROPS_SRC_CASE,  0, caseBinaryPropertyContains },  // UCHAR_CHANGES_WHEN_CASEMAPPED
-    { UPROPS_SRC_NFKC_CF, 0, changesWhenNFKC_Casefolded }
+    { UPROPS_SRC_NFKC_CF, 0, changesWhenNFKC_Casefolded },
+    { 2,                U_MASK(UPROPS_2_EMOJI), defaultContains },
+    { 2,                U_MASK(UPROPS_2_EMOJI_PRESENTATION), defaultContains },
+    { 2,                U_MASK(UPROPS_2_EMOJI_MODIFIER), defaultContains },
+    { 2,                U_MASK(UPROPS_2_EMOJI_MODIFIER_BASE), defaultContains },
 };
 
 U_CAPI UBool U_EXPORT2

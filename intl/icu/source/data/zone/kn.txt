@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/kn.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 kn{
-    Version{"2.1.19.77"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"ಅಬಿದ್‌ಜನ್"}
@@ -19,7 +13,7 @@ kn{
             ec{"ಆಡಿಸ್ ಅಬಾಬಾ"}
         }
         "Africa:Algiers"{
-            ec{"ಅಲ್ಗೀರ್ಸ್"}
+            ec{"ಅಲ್ಜೀರ್ಸ್"}
         }
         "Africa:Asmera"{
             ec{"ಅಸ್ಮಾರಾ"}
@@ -82,7 +76,7 @@ kn{
             ec{"ಹರಾರೆ"}
         }
         "Africa:Johannesburg"{
-            ec{"ಜೋಹನ್ಸ್‌ಬರ್ಗ್"}
+            ec{"ಜೋಹಾನ್ಸ್‌ಬರ್ಗ್"}
         }
         "Africa:Juba"{
             ec{"ಜುಬಾ"}
@@ -172,7 +166,7 @@ kn{
             ec{"ಆಂಕರೋಜ್"}
         }
         "America:Anguilla"{
-            ec{"ಅಂಗುಲ್ಲಾ"}
+            ec{"ಆಂಗ್ವಿಲ್ಲಾ"}
         }
         "America:Antigua"{
             ec{"ಆಂಟಿಗುವಾ"}
@@ -259,7 +253,7 @@ kn{
             ec{"ಕೇಮನ್"}
         }
         "America:Chicago"{
-            ec{"ಶಿಕಾಗೋ"}
+            ec{"ಚಿಕಾಗೋ"}
         }
         "America:Chihuahua"{
             ec{"ಚಿವಾವ"}
@@ -308,6 +302,9 @@ kn{
         }
         "America:El_Salvador"{
             ec{"ಎಲ್ ಸಾಲ್ವಡೋರ್"}
+        }
+        "America:Fort_Nelson"{
+            ec{"ಫೋರ್ಟ್ ನೆಲ್ಸನ್"}
         }
         "America:Fortaleza"{
             ec{"ಫೊರ್ಟಲೆಜಾ"}
@@ -595,7 +592,7 @@ kn{
             ec{"ವೈಟ್‌ಹಾರ್ಸ್"}
         }
         "America:Winnipeg"{
-            ec{"ವಿನ್ನಿಪೇಗ್"}
+            ec{"ವಿನ್ನಿಪೆಗ್"}
         }
         "America:Yakutat"{
             ec{"ಯಾಕುಟಾಟ್"}
@@ -637,7 +634,7 @@ kn{
             ec{"ವೋಸ್ಟೋಕ್"}
         }
         "Arctic:Longyearbyen"{
-            ec{"ಲಾಂಗ್‌ಇಯರ್‌ಬೇನ್"}
+            ec{"ಲಾಂಗ್ಯೀರ್ಬೆನ್"}
         }
         "Asia:Aden"{
             ec{"ಏಡನ್"}
@@ -671,6 +668,9 @@ kn{
         }
         "Asia:Bangkok"{
             ec{"ಬ್ಯಾಂಕಾಕ್"}
+        }
+        "Asia:Barnaul"{
+            ec{"ಬಾರ್ನೌಲ್"}
         }
         "Asia:Beirut"{
             ec{"ಬೀರಟ್"}
@@ -721,7 +721,7 @@ kn{
             ec{"ಹೋವ್ಡ್"}
         }
         "Asia:Irkutsk"{
-            ec{"ಇರ್‌ಕುಟ್ಸ್"}
+            ec{"ಇರಕುಟ್ಸ್ಕ್"}
         }
         "Asia:Jakarta"{
             ec{"ಜಕಾರ್ತಾ"}
@@ -736,7 +736,7 @@ kn{
             ec{"ಕಾಬೂಲ್"}
         }
         "Asia:Kamchatka"{
-            ec{"ಕಮ್ಚತ್ಕ"}
+            ec{"ಕಂಚಟ್ಕ್"}
         }
         "Asia:Karachi"{
             ec{"ಕರಾಚಿ"}
@@ -760,7 +760,7 @@ kn{
             ec{"ಕುವೈತ್"}
         }
         "Asia:Macau"{
-            ec{"ಮಖಾವ್"}
+            ec{"ಮಕಾವು"}
         }
         "Asia:Magadan"{
             ec{"ಮಗದನ್‌"}
@@ -772,7 +772,7 @@ kn{
             ec{"ಮನಿಲಾ"}
         }
         "Asia:Muscat"{
-            ec{"ಮಸ್ಕತ್"}
+            ec{"ಮಸ್ಕಟ್"}
         }
         "Asia:Nicosia"{
             ec{"ನಿಕೋಸಿಯಾ"}
@@ -848,6 +848,9 @@ kn{
         }
         "Asia:Tokyo"{
             ec{"ಟೋಕಿಯೊ"}
+        }
+        "Asia:Tomsk"{
+            ec{"ಟೋಮ್‌ಸ್ಕ್"}
         }
         "Asia:Ulaanbaatar"{
             ec{"ಉಲಾನ್‍ಬಾತರ್"}
@@ -928,7 +931,7 @@ kn{
             ec{"ಲಿಂಡಿಮಾನ್"}
         }
         "Australia:Lord_Howe"{
-            ec{"ಲಾರ್ಡ್ ಹೋ"}
+            ec{"ಲಾರ್ಡ್ ಹೋವ್"}
         }
         "Australia:Melbourne"{
             ec{"ಮೆಲ್ಬರ್ನ್"}
@@ -947,6 +950,9 @@ kn{
         }
         "Europe:Andorra"{
             ec{"ಅಂಡೋರಾ"}
+        }
+        "Europe:Astrakhan"{
+            ec{"ಆಸ್ಟ್ರಾಖಾನ್"}
         }
         "Europe:Athens"{
             ec{"ಅಥೆನ್ಸ್"}
@@ -1005,6 +1011,9 @@ kn{
         }
         "Europe:Kiev"{
             ec{"ಕಿವ್"}
+        }
+        "Europe:Kirov"{
+            ec{"ಕಿರಾವ್"}
         }
         "Europe:Lisbon"{
             ec{"ಲಿಸ್ಬನ್"}
@@ -1082,6 +1091,9 @@ kn{
         "Europe:Tirane"{
             ec{"ಟಿರಾನೆ"}
         }
+        "Europe:Ulyanovsk"{
+            ec{"ಉಲ್ಯಾನೊವಸ್ಕ್"}
+        }
         "Europe:Uzhgorod"{
             ec{"ಉಜ್‌ಗೊರೊದ್"}
         }
@@ -1155,7 +1167,7 @@ kn{
             ec{"ಬೌಗೆನ್‍ವಿಲ್ಲೆ"}
         }
         "Pacific:Chatham"{
-            ec{"ಚತಮ್"}
+            ec{"ಚಥಾಮ್"}
         }
         "Pacific:Easter"{
             ec{"ಈಸ್ಟರ್"}
@@ -1512,7 +1524,7 @@ kn{
         }
         "meta:Greenland_Eastern"{
             ld{"ಪೂರ್ವ ಗ್ರೀನ್‌ಲ್ಯಾಂಡ್ ಬೇಸಿಗೆ ಸಮಯ"}
-            lg{"*ಪೂರ್ವ ಗ್ರೀನ್‌ಲ್ಯಾಂಡ್ ಸಮಯ"}
+            lg{"ಪೂರ್ವ ಗ್ರೀನ್‌ಲ್ಯಾಂಡ್ ಸಮಯ"}
             ls{"ಪೂರ್ವ ಗ್ರೀನ್‌ಲ್ಯಾಂಡ್ ಪ್ರಮಾಣಿತ ಸಮಯ"}
         }
         "meta:Greenland_Western"{
@@ -1539,7 +1551,7 @@ kn{
         "meta:Hovd"{
             ld{"ಹವ್ಡ್ ಬೇಸಿಗೆ ಸಮಯ"}
             lg{"ಹವ್ಡ್ ಸಮಯ"}
-            ls{"ಹವ್ಡ್ ಸ್ಟ್ಯಾಂಡರ್ಡ್ ಸಮಯ"}
+            ls{"ಹವ್ಡ್ ಪ್ರಮಾಣಿತ ಸಮಯ"}
         }
         "meta:India"{
             ls{"ಭಾರತೀಯ ಪ್ರಮಾಣಿತ ಸಮಯ"}
@@ -1701,7 +1713,7 @@ kn{
         "meta:Novosibirsk"{
             ld{"ನೊವೊಸಿಬಿರ್‌ಸ್ಕ್ ಬೇಸಿಗೆ ಸಮಯ"}
             lg{"ನೊವೊಸಿಬಿರ್‌ಸ್ಕ್ ಸಮಯ"}
-            ls{"ನೊವೊಸಿಬಿಸ್ಕ್ ಪ್ರಮಾಣಿತ ಸಮಯ"}
+            ls{"ನೊವೊಸಿಬಿರ್‌ಸ್ಕ್ ಪ್ರಮಾಣಿತ ಸಮಯ"}
         }
         "meta:Omsk"{
             ld{"ಒಮಾಸ್ಕ್ ಬೇಸಿಗೆ ಸಮಯ"}
@@ -1747,6 +1759,9 @@ kn{
         }
         "meta:Ponape"{
             ls{"ಪೊನಾಪೆ ಸಮಯ"}
+        }
+        "meta:Pyongyang"{
+            ls{"ಪ್ಯೊಂಗ್ಯಾಂಗ್ ಸಮಯ"}
         }
         "meta:Reunion"{
             ls{"ರಿಯೂನಿಯನ್ ಸಮಯ"}
@@ -1869,7 +1884,7 @@ kn{
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} ಸಮಯ"}
-        regionFormatDaylight{"{0} (+1) ದಿನದ ಸಮಯ"}
-        regionFormatStandard{"{0} (+0) ಪ್ರಮಾಣಿತ ಸಮಯ"}
+        regionFormatDaylight{"{0} ದಿನದ ಸಮಯ"}
+        regionFormatStandard{"{0} ಪ್ರಮಾಣಿತ ಸಮಯ"}
     }
 }

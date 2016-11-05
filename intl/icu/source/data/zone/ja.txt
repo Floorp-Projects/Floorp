@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ja.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ja{
-    Version{"2.1.19.89"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"アビジャン"}
@@ -309,6 +303,9 @@ ja{
         "America:El_Salvador"{
             ec{"エルサルバドル"}
         }
+        "America:Fort_Nelson"{
+            ec{"フォートネルソン"}
+        }
         "America:Fortaleza"{
             ec{"フォルタレザ"}
         }
@@ -328,7 +325,7 @@ ja{
             ec{"グレナダ"}
         }
         "America:Guadeloupe"{
-            ec{"グアダループ"}
+            ec{"グアドループ"}
         }
         "America:Guatemala"{
             ec{"グアテマラ"}
@@ -672,6 +669,9 @@ ja{
         "Asia:Bangkok"{
             ec{"バンコク"}
         }
+        "Asia:Barnaul"{
+            ec{"バルナウル"}
+        }
         "Asia:Beirut"{
             ec{"ベイルート"}
         }
@@ -849,6 +849,9 @@ ja{
         "Asia:Tokyo"{
             ec{"東京"}
         }
+        "Asia:Tomsk"{
+            ec{"トムスク"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"ウランバートル"}
         }
@@ -948,6 +951,9 @@ ja{
         "Europe:Andorra"{
             ec{"アンドラ"}
         }
+        "Europe:Astrakhan"{
+            ec{"アストラハン"}
+        }
         "Europe:Athens"{
             ec{"アテネ"}
         }
@@ -1005,6 +1011,9 @@ ja{
         }
         "Europe:Kiev"{
             ec{"キエフ"}
+        }
+        "Europe:Kirov"{
+            ec{"キーロフ"}
         }
         "Europe:Lisbon"{
             ec{"リスボン"}
@@ -1081,6 +1090,9 @@ ja{
         }
         "Europe:Tirane"{
             ec{"ティラナ"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"ウリヤノフスク"}
         }
         "Europe:Uzhgorod"{
             ec{"ウージュホロド"}
@@ -1786,6 +1798,9 @@ ja{
         }
         "meta:Ponape"{
             ls{"ポナペ時間"}
+        }
+        "meta:Pyongyang"{
+            ls{"平壌時間"}
         }
         "meta:Qyzylorda"{
             ld{"クズロルダ夏時間"}

@@ -1,21 +1,15 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/collation/gl.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 gl{
     Version{"2.1.19.14"}
     collations{
         search{
             Sequence{"[import es-u-co-search]"}
-            Version{"28"}
+            Version{"30.0.2"}
         }
         standard{
             Sequence{"[import es]"}
-            Version{"28"}
+            Version{"30.0.2"}
         }
     }
 }

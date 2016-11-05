@@ -1,19 +1,22 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/es_419.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 es_419{
-    Version{"2.1.19.14"}
+    Version{"2.1.27.99"}
     zoneStrings{
+        "America:St_Johns"{
+            ec{"San Juan de Terranova"}
+        }
+        "America:St_Kitts"{
+            ec{"San Cristóbal"}
+        }
         "Asia:Srednekolymsk"{
             ec{"Srednekolymsk"}
         }
         "Etc:Unknown"{
             ec{"Ciudad desconocida"}
+        }
+        "Pacific:Wake"{
+            ec{"Isla Wake"}
         }
         "meta:Cook"{
             ld{"hora de verano media de las islas Cook"}
@@ -40,6 +43,17 @@ es_419{
         }
         "meta:GMT"{
             ss{"∅∅∅"}
+        }
+        "meta:Hawaii_Aleutian"{
+            ld{"hora de verano de Hawái-Aleutianas"}
+            lg{"hora de Hawái-Aleutianas"}
+            ls{"hora estándar de Hawái-Aleutianas"}
+        }
+        "meta:India"{
+            ls{"hora de India"}
+        }
+        "meta:Pyongyang"{
+            ls{"hora de Pionyang"}
         }
         regionFormatDaylight{"hora de verano de {0}"}
         regionFormatStandard{"hora estándar de {0}"}

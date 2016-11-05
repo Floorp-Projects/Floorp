@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/collation/ps.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ps{
     Version{"2.1.19.14"}
     collations{
@@ -30,7 +24,7 @@ ps{
                 "&ی<<*ىےيېۍ<<یٔ<<<ىٔ<<<ئ"
                 "&\u00A0<<\u200C<<\u200D"
             }
-            Version{"28"}
+            Version{"30.0.2"}
         }
     }
 }

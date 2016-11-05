@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ga.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ga{
     Currencies{
         ADP{
@@ -98,7 +92,7 @@ ga{
         }
         BAD{
             "BAD",
-            "Dínear Bhoisnia-Heirseagaivéin",
+            "Dínear Bhoisnia-Heirseagaivéin (1992–1994)",
         }
         BAM{
             "BAM",
@@ -220,9 +214,13 @@ ga{
             "BYB",
             "Rúbal Nua na Bealarúise (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "Rúbal na Bealarúise",
+        }
         BYR{
             "BYR",
-            "Rúbal na Bealarúise",
+            "Rúbal na Bealarúise (2000–2016)",
         }
         BZD{
             "BZD",
@@ -946,7 +944,7 @@ ga{
         }
         UAK{
             "UAK",
-            "Karbovanetz Úcránach",
+            "Karbovanets Úcránach",
         }
         UGS{
             "UGS",
@@ -1090,11 +1088,11 @@ ga{
         }
         YUD{
             "YUD",
-            "Dínear Crua Iúgslavach",
+            "Dínear Crua Iúgslavach (1966–1990)",
         }
         YUM{
             "YUM",
-            "Noviy Dinar Iúgslavach",
+            "Dínear Nua Iúgslavach (1994–2002)",
         }
         YUN{
             "YUN",
@@ -1130,7 +1128,7 @@ ga{
         }
         ZWD{
             "ZWD",
-            "Dollar Siombábach",
+            "Dollar Siombábach (1980–2008)",
         }
     }
     Currencies%narrow{
@@ -1146,7 +1144,7 @@ ga{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1164,6 +1162,7 @@ ga{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1513,12 +1512,19 @@ ga{
             other{"rúbal nua na Bealarúise (1994–1999)"}
             two{"rúbal nua na Bealarúise (1994–1999)"}
         }
-        BYR{
+        BYN{
             few{"rúbal na Bealarúise"}
             many{"rúbal na Bealarúise"}
             one{"rúbal na Bealarúise"}
             other{"rúbal na Bealarúise"}
             two{"rúbal na Bealarúise"}
+        }
+        BYR{
+            few{"rúbal na Bealarúise (2000–2016)"}
+            many{"rúbal na Bealarúise (2000–2016)"}
+            one{"rúbal na Bealarúise (2000–2016)"}
+            other{"rúbal na Bealarúise (2000–2016)"}
+            two{"rúbal na Bealarúise (2000–2016)"}
         }
         BZD{
             few{"dhollar na Beilíse"}
@@ -2669,5 +2675,5 @@ ga{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
 }

@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
  ************************************************************************************
- * Copyright (C) 2006-2015, International Business Machines Corporation
+ * Copyright (C) 2006-2016, International Business Machines Corporation
  * and others. All Rights Reserved.
  ************************************************************************************
  */
@@ -10,6 +12,7 @@
 #if !UCONFIG_NO_BREAK_ITERATION
 
 #include "brkeng.h"
+#include "cmemory.h"
 #include "dictbe.h"
 #include "unicode/uchar.h"
 #include "unicode/uniset.h"
@@ -56,13 +59,13 @@ LanguageBreakFactory::~LanguageBreakFactory() {
  */
 
 UnhandledEngine::UnhandledEngine(UErrorCode &/*status*/) {
-    for (int32_t i = 0; i < (int32_t)(sizeof(fHandled)/sizeof(fHandled[0])); ++i) {
+    for (int32_t i = 0; i < UPRV_LENGTHOF(fHandled); ++i) {
         fHandled[i] = 0;
     }
 }
 
 UnhandledEngine::~UnhandledEngine() {
-    for (int32_t i = 0; i < (int32_t)(sizeof(fHandled)/sizeof(fHandled[0])); ++i) {
+    for (int32_t i = 0; i < UPRV_LENGTHOF(fHandled); ++i) {
         if (fHandled[i] != 0) {
             delete fHandled[i];
         }
@@ -71,7 +74,7 @@ UnhandledEngine::~UnhandledEngine() {
 
 UBool
 UnhandledEngine::handles(UChar32 c, int32_t breakType) const {
-    return (breakType >= 0 && breakType < (int32_t)(sizeof(fHandled)/sizeof(fHandled[0]))
+    return (breakType >= 0 && breakType < UPRV_LENGTHOF(fHandled)
         && fHandled[breakType] != 0 && fHandled[breakType]->contains(c));
 }
 
@@ -82,7 +85,7 @@ UnhandledEngine::findBreaks( UText *text,
                                  UBool reverse,
                                  int32_t breakType,
                                  UStack &/*foundBreaks*/ ) const {
-    if (breakType >= 0 && breakType < (int32_t)(sizeof(fHandled)/sizeof(fHandled[0]))) {
+    if (breakType >= 0 && breakType < UPRV_LENGTHOF(fHandled)) {
         UChar32 c = utext_current32(text); 
         if (reverse) {
             while((int32_t)utext_getNativeIndex(text) > startPos && fHandled[breakType]->contains(c)) {
@@ -101,7 +104,7 @@ UnhandledEngine::findBreaks( UText *text,
 
 void
 UnhandledEngine::handleCharacter(UChar32 c, int32_t breakType) {
-    if (breakType >= 0 && breakType < (int32_t)(sizeof(fHandled)/sizeof(fHandled[0]))) {
+    if (breakType >= 0 && breakType < UPRV_LENGTHOF(fHandled)) {
         if (fHandled[breakType] == 0) {
             fHandled[breakType] = new UnicodeSet();
             if (fHandled[breakType] == 0) {

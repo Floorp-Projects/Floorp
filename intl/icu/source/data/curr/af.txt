@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/af.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 af{
     Currencies{
         AED{
@@ -100,9 +94,13 @@ af{
             "BWP",
             "Botswana pula",
         }
+        BYN{
+            "BYN",
+            "Belo-Russiese roebel",
+        }
         BYR{
             "BYR",
-            "Belo-Russiese roebel",
+            "Belo-Russiese roebel (2000–2016)",
         }
         BZD{
             "BZD",
@@ -686,7 +684,7 @@ af{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -703,6 +701,7 @@ af{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -865,9 +864,13 @@ af{
             one{"Botswana pula"}
             other{"Botswana pula"}
         }
-        BYR{
+        BYN{
             one{"Belo-Russiese roebel"}
             other{"Belo-Russiese roebel"}
+        }
+        BYR{
+            one{"Belo-Russiese roebel (2000–2016)"}
+            other{"Belo-Russiese roebel (2000–2016)"}
         }
         BZD{
             one{"Beliziese dollar"}
@@ -1402,5 +1405,5 @@ af{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.29.44"}
 }

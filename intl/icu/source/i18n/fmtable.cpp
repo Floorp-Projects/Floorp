@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
-* Copyright (C) 1997-2014, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
+* Copyright (C) 1997-2016, International Business Machines Corporation and
+* others. All Rights Reserved.
 *******************************************************************************
 *
 * File FMTABLE.CPP
@@ -155,7 +157,7 @@ Formattable::Formattable(int64_t value)
 // -------------------------------------
 // Creates a formattable object with a decimal number value from a string.
 
-Formattable::Formattable(const StringPiece &number, UErrorCode &status) {
+Formattable::Formattable(StringPiece number, UErrorCode &status) {
     init();
     setDecimalNumber(number, status);
 }
@@ -431,7 +433,8 @@ Formattable::getLong(UErrorCode& status) const
             return ((const Measure*) fValue.fObject)->
                 getNumber().getLong(status);
         }
-    default: 
+        U_FALLTHROUGH;
+    default:
         status = U_INVALID_FORMAT_ERROR;
         return 0;
     }
@@ -482,7 +485,8 @@ Formattable::getInt64(UErrorCode& status) const
             return ((const Measure*) fValue.fObject)->
                 getNumber().getInt64(status);
         }
-    default: 
+        U_FALLTHROUGH;
+    default:
         status = U_INVALID_FORMAT_ERROR;
         return 0;
     }
@@ -512,7 +516,8 @@ Formattable::getDouble(UErrorCode& status) const
             return ((const Measure*) fValue.fObject)->
                 getNumber().getDouble(status);
         }
-    default: 
+        U_FALLTHROUGH;
+    default:
         status = U_INVALID_FORMAT_ERROR;
         return 0;
     }
@@ -793,7 +798,7 @@ Formattable::adoptDigitList(DigitList *dl) {
 
 // ---------------------------------------
 void
-Formattable::setDecimalNumber(const StringPiece &numberString, UErrorCode &status) {
+Formattable::setDecimalNumber(StringPiece numberString, UErrorCode &status) {
     if (U_FAILURE(status)) {
         return;
     }

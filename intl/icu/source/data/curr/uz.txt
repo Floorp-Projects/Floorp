@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/uz.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 uz{
     Currencies{
         AED{
@@ -14,7 +8,7 @@ uz{
         }
         AFN{
             "AFN",
-            "Afg‘oniston afg‘oni",
+            "Afg‘oniston afg‘oniysi",
         }
         ALL{
             "ALL",
@@ -26,7 +20,7 @@ uz{
         }
         ANG{
             "ANG",
-            "Niderland antil guldeni",
+            "Niderlandiya antil guldeni",
         }
         AOA{
             "AOA",
@@ -100,9 +94,13 @@ uz{
             "BWP",
             "Botsvana pulasi",
         }
+        BYN{
+            "BYN",
+            "Belarus rubli",
+        }
         BYR{
             "BYR",
-            "Belarus rubli",
+            "Belarus rubli (2000–2016)",
         }
         BZD{
             "BZD",
@@ -162,7 +160,7 @@ uz{
         }
         DOP{
             "DOP",
-            "Dominikan pesosi",
+            "Dominikana pesosi",
         }
         DZD{
             "DZD",
@@ -238,7 +236,7 @@ uz{
         }
         HTG{
             "HTG",
-            "Gaiti gurdasi",
+            "Gaiti gurdi",
         }
         HUF{
             "HUF",
@@ -262,7 +260,7 @@ uz{
         }
         IRR{
             "IRR",
-            "Eron riali",
+            "Eron riyoli",
         }
         ISK{
             "ISK",
@@ -286,11 +284,11 @@ uz{
         }
         KGS{
             "KGS",
-            "Qirg‘iziston so‘mi",
+            "Qirg‘iziston somi",
         }
         KHR{
             "KHR",
-            "Kamboja rieli",
+            "Kambodja rieli",
         }
         KMF{
             "KMF",
@@ -306,7 +304,7 @@ uz{
         }
         KWD{
             "KWD",
-            "Quvayt dinori",
+            "Kuvayt dinori",
         }
         KYD{
             "KYD",
@@ -374,7 +372,7 @@ uz{
         }
         MRO{
             "MRO",
-            "Mavritaniya ugiyasi",
+            "Mavritaniya uqiyasi",
         }
         MUR{
             "MUR",
@@ -402,7 +400,7 @@ uz{
         }
         NAD{
             "NAD",
-            "Nambiya dollari",
+            "Namibiya dollari",
         }
         NGN{
             "NGN",
@@ -426,7 +424,7 @@ uz{
         }
         OMR{
             "OMR",
-            "Ummon riali",
+            "Ummon riyoli",
         }
         PAB{
             "PAB",
@@ -458,7 +456,7 @@ uz{
         }
         QAR{
             "QAR",
-            "Qatar riali",
+            "Qatar riyoli",
         }
         RON{
             "RON",
@@ -550,7 +548,7 @@ uz{
         }
         TOP{
             "TOP",
-            "Tonga pangasi",
+            "Tonga paangasi",
         }
         TRY{
             "TRY",
@@ -586,7 +584,7 @@ uz{
         }
         UZS{
             "soʻm",
-            "Oʻzbekiston soʻmi",
+            "O‘zbekiston so‘mi",
         }
         VEF{
             "VEF",
@@ -622,11 +620,11 @@ uz{
         }
         XXX{
             "XXX",
-            "Noma’lum pul birligi",
+            "Noma’lum valyuta",
         }
         YER{
             "YER",
-            "Yaman riali",
+            "Yaman riyoli",
         }
         ZAR{
             "ZAR",
@@ -650,7 +648,7 @@ uz{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -667,6 +665,7 @@ uz{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -741,8 +740,8 @@ uz{
             other{"BAA dirhami"}
         }
         AFN{
-            one{"Afg‘oniston afg‘oni"}
-            other{"Afg‘oniston afg‘oni"}
+            one{"Afg‘oniston afg‘oniysi"}
+            other{"Afg‘oniston afg‘oniysi"}
         }
         ALL{
             one{"Albaniya leki"}
@@ -753,8 +752,8 @@ uz{
             other{"Armaniston drami"}
         }
         ANG{
-            one{"Niderland antil guldeni"}
-            other{"Niderland antil guldeni"}
+            one{"Niderlandiya antil guldeni"}
+            other{"Niderlandiya antil guldeni"}
         }
         AOA{
             one{"Angola kvanzasi"}
@@ -828,9 +827,13 @@ uz{
             one{"Botsvana pulasi"}
             other{"Botsvana pulasi"}
         }
-        BYR{
+        BYN{
             one{"Belarus rubli"}
             other{"Belarus rubli"}
+        }
+        BYR{
+            one{"Belarus rubli (2000–2016)"}
+            other{"Belarus rubli (2000–2016)"}
         }
         BZD{
             one{"Beliz dollari"}
@@ -889,8 +892,8 @@ uz{
             other{"Daniya kronasi"}
         }
         DOP{
-            one{"Dominikan pesosi"}
-            other{"Dominikan pesosi"}
+            one{"Dominikana pesosi"}
+            other{"Dominikana pesosi"}
         }
         DZD{
             one{"Jazoir dinori"}
@@ -937,7 +940,7 @@ uz{
             other{"Gibraltar funti"}
         }
         GMD{
-            one{"Gambiya dalisisi"}
+            one{"Gambiya dalasisi"}
             other{"Gambiya dalasisi"}
         }
         GNF{
@@ -965,8 +968,8 @@ uz{
             other{"Xorvatiya kunasi"}
         }
         HTG{
-            one{"Gaiti gurdasi"}
-            other{"Gaiti gurdasi"}
+            one{"Gaiti gurdi"}
+            other{"Gaiti gurdi"}
         }
         HUF{
             one{"Vengriya forinti"}
@@ -989,8 +992,8 @@ uz{
             other{"Iroq dinori"}
         }
         IRR{
-            one{"Eron riali"}
-            other{"Eron riali"}
+            one{"Eron riyoli"}
+            other{"Eron riyoli"}
         }
         ISK{
             one{"Islandiya kronasi"}
@@ -1013,12 +1016,12 @@ uz{
             other{"Keniya shillingi"}
         }
         KGS{
-            one{"Qirg‘iziston so‘mi"}
-            other{"Qirg‘iziston so‘mi"}
+            one{"Qirg‘iziston somi"}
+            other{"Qirg‘iziston somi"}
         }
         KHR{
-            one{"Kamboja rieli"}
-            other{"Kamboja rieli"}
+            one{"Kambodja rieli"}
+            other{"Kambodja rieli"}
         }
         KMF{
             one{"Komor orollari franki"}
@@ -1033,8 +1036,8 @@ uz{
             other{"Janubiy Koreya voni"}
         }
         KWD{
-            one{"Quvayt dinori"}
-            other{"Quvayt dinori"}
+            one{"Kuvayt dinori"}
+            other{"Kuvayt dinori"}
         }
         KYD{
             one{"Kayman orollari dollari"}
@@ -1101,8 +1104,8 @@ uz{
             other{"Makao patakasi"}
         }
         MRO{
-            one{"Mavritaniya ugiyasi"}
-            other{"Mavritaniya ugiyasi"}
+            one{"Mavritaniya uqiyasi"}
+            other{"Mavritaniya uqiyasi"}
         }
         MUR{
             one{"Mavritaniya rupiyasi"}
@@ -1129,8 +1132,8 @@ uz{
             other{"Mozambik metikali"}
         }
         NAD{
-            one{"Nambiya dollari"}
-            other{"Nambiya dollari"}
+            one{"Namibiya dollari"}
+            other{"Namibiya dollari"}
         }
         NGN{
             one{"Nigeriya nayrasi"}
@@ -1153,8 +1156,8 @@ uz{
             other{"Yangi Zelandiya dollari"}
         }
         OMR{
-            one{"Ummon riali"}
-            other{"Ummon riali"}
+            one{"Ummon riyoli"}
+            other{"Ummon riyoli"}
         }
         PAB{
             one{"Panama balboasi"}
@@ -1185,8 +1188,8 @@ uz{
             other{"Paragvay guaranisi"}
         }
         QAR{
-            one{"Qatar riali"}
-            other{"Qatar riali"}
+            one{"Qatar riyoli"}
+            other{"Qatar riyoli"}
         }
         RON{
             one{"Ruminiya leyi"}
@@ -1277,8 +1280,8 @@ uz{
             other{"Tunis dinori"}
         }
         TOP{
-            one{"Tonga pangasi"}
-            other{"Tonga pangasi"}
+            one{"Tonga paangasi"}
+            other{"Tonga paangasi"}
         }
         TRY{
             one{"Turk lirasi"}
@@ -1313,8 +1316,8 @@ uz{
             other{"Urugvay pesosi"}
         }
         UZS{
-            one{"Oʻzbekiston soʻmi"}
-            other{"Oʻzbekiston soʻmi"}
+            one{"O‘zbekiston so‘mi"}
+            other{"O‘zbekiston so‘mi"}
         }
         VEF{
             one{"Venesuela bolivari"}
@@ -1349,12 +1352,12 @@ uz{
             other{"Fransuz Polineziyasi franki"}
         }
         XXX{
-            one{"(noma’lum pul birligi)"}
-            other{"(noma’lum pul birligi)"}
+            one{"(noma’lum valyuta)"}
+            other{"(noma’lum valyuta)"}
         }
         YER{
-            one{"Yaman riali"}
-            other{"Yaman riali"}
+            one{"Yaman riyoli"}
+            other{"Yaman riyoli"}
         }
         ZAR{
             one{"Janubiy Afrika rendi"}
@@ -1369,5 +1372,5 @@ uz{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.20.4"}
+    Version{"2.1.29.44"}
 }

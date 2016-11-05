@@ -92,7 +92,7 @@ class AstDecodeContext
 
   private:
     AstModule& module_;
-    AstIndexVector funcSigs_;
+    AstIndexVector funcDefSigs_;
     AstDecodeExprIter *iter_;
     AstDecodeStack exprs_;
     DepthStack depths_;
@@ -110,7 +110,7 @@ class AstDecodeContext
        d(d),
        generateNames(generateNames),
        module_(module),
-       funcSigs_(lifo),
+       funcDefSigs_(lifo),
        iter_(nullptr),
        exprs_(lifo),
        depths_(lifo),
@@ -121,7 +121,7 @@ class AstDecodeContext
     {}
 
     AstModule& module() { return module_; }
-    AstIndexVector& funcSigs() { return funcSigs_; }
+    AstIndexVector& funcDefSigs() { return funcDefSigs_; }
     AstDecodeExprIter& iter() { return *iter_; }
     AstDecodeStack& exprs() { return exprs_; }
     DepthStack& depths() { return depths_; }
@@ -322,8 +322,8 @@ AstDecodeDrop(AstDecodeContext& c)
 static bool
 AstDecodeCall(AstDecodeContext& c)
 {
-    uint32_t calleeIndex;
-    if (!c.iter().readCall(&calleeIndex))
+    uint32_t funcIndex;
+    if (!c.iter().readCall(&funcIndex))
         return false;
 
     if (!c.iter().inReachableCode())
@@ -331,18 +331,18 @@ AstDecodeCall(AstDecodeContext& c)
 
     uint32_t sigIndex;
     AstRef funcRef;
-    if (calleeIndex < c.module().funcImportNames().length()) {
-        AstImport* import = c.module().imports()[calleeIndex];
+    if (funcIndex < c.module().funcImportNames().length()) {
+        AstImport* import = c.module().imports()[funcIndex];
         sigIndex = import->funcSig().index();
         funcRef = AstRef(import->name());
     } else {
-        uint32_t funcDefIndex = calleeIndex - c.module().funcImportNames().length();
-        if (funcDefIndex >= c.funcSigs().length())
+        uint32_t funcDefIndex = funcIndex - c.module().funcImportNames().length();
+        if (funcDefIndex >= c.funcDefSigs().length())
             return c.iter().fail("callee index out of range");
 
-        sigIndex = c.funcSigs()[funcDefIndex];
+        sigIndex = c.funcDefSigs()[funcDefIndex];
 
-        if (!AstDecodeGenerateRef(c, AstName(u"func"), calleeIndex, &funcRef))
+        if (!AstDecodeGenerateRef(c, AstName(u"func"), funcIndex, &funcRef))
             return false;
     }
 
@@ -1529,11 +1529,11 @@ AstDecodeFunctionSection(AstDecodeContext& c)
     if (numDecls > MaxFuncs)
         return c.d.fail("too many functions");
 
-    if (!c.funcSigs().resize(numDecls))
+    if (!c.funcDefSigs().resize(numDecls))
         return false;
 
     for (uint32_t i = 0; i < numDecls; i++) {
-        if (!AstDecodeSignatureIndex(c, &c.funcSigs()[i]))
+        if (!AstDecodeSignatureIndex(c, &c.funcDefSigs()[i]))
             return false;
     }
 
@@ -1897,7 +1897,7 @@ AstDecodeExportSection(AstDecodeContext& c)
 }
 
 static bool
-AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
+AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcDefIndex, AstFunc** func)
 {
     uint32_t offset = c.d.currentOffset();
     uint32_t bodySize;
@@ -1912,7 +1912,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
 
     AstDecodeExprIter iter(c.d);
 
-    uint32_t sigIndex = c.funcSigs()[funcIndex];
+    uint32_t sigIndex = c.funcDefSigs()[funcDefIndex];
     const AstSig* sig = c.module().sigs()[sigIndex];
 
     AstValTypeVector vars(c.lifo);
@@ -1930,7 +1930,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
 
     AstName funcName;
     if (!AstDecodeGenerateName(c, AstName(u"func"),
-                               c.module().funcImportNames().length() + funcIndex,
+                               c.module().funcImportNames().length() + funcDefIndex,
                                &funcName))
         return false;
 
@@ -2000,7 +2000,7 @@ AstDecodeCodeSection(AstDecodeContext &c)
         return false;
 
     if (sectionStart == Decoder::NotStarted) {
-        if (c.funcSigs().length() != 0)
+        if (c.funcDefSigs().length() != 0)
             return c.d.fail("expected function bodies");
 
         return false;
@@ -2010,12 +2010,12 @@ AstDecodeCodeSection(AstDecodeContext &c)
     if (!c.d.readVarU32(&numFuncBodies))
         return c.d.fail("expected function body count");
 
-    if (numFuncBodies != c.funcSigs().length())
+    if (numFuncBodies != c.funcDefSigs().length())
         return c.d.fail("function body count does not match function signature count");
 
-    for (uint32_t funcIndex = 0; funcIndex < numFuncBodies; funcIndex++) {
+    for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncBodies; funcDefIndex++) {
         AstFunc* func;
-        if (!AstDecodeFunctionBody(c, funcIndex, &func))
+        if (!AstDecodeFunctionBody(c, funcDefIndex, &func))
             return false;
         if (!c.module().append(func))
             return false;

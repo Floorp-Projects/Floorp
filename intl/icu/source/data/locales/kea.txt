@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/kea.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 kea{
     AuxExemplarCharacters{
         "[á à ă â å ä ã ā æ c ç é è ĕ ê ë ẽ ē í ì ĭ î ï ĩ ī {n\u0308} ó ò ŏ ô ö õ ø ō"
@@ -134,7 +128,7 @@ kea{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.74"}
+    Version{"2.1.27.46"}
     calendar{
         generic{
             DateTimePatterns{
@@ -153,6 +147,7 @@ kea{
                 "{1}, {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E, d"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
@@ -192,6 +187,7 @@ kea{
                 yyyyMEd{"E, dd/MM/y GGGGG"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E, d MMM y G"}
+                yyyyMMMM{"MMMM y G"}
                 yyyyMMMd{"d MMM y G"}
                 yyyyMd{"dd/MM/y GGGGG"}
                 yyyyQQQ{"QQQ y G"}
@@ -298,6 +294,10 @@ kea{
                 "am",
                 "pm",
             }
+            AmPmMarkersAbbr{
+                "am",
+                "pm",
+            }
             AmPmMarkersNarrow{
                 "a",
                 "p",
@@ -328,12 +328,14 @@ kea{
                 Ehm{"E, h:mm a"}
                 Ehms{"E, h:mm:ss a"}
                 Gy{"y G"}
-                GyMMM{"MMM 'di' y G"}
-                GyMMMEd{"E, d 'di' MMM 'di' y G"}
-                GyMMMd{"d 'di' MMM 'di' y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d MMM y G"}
+                GyMMMd{"d MMM y G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss (v)"}
+                Hmv{"HH:mm (v)"}
                 M{"L"}
                 MEd{"E, dd/MM"}
                 MMM{"LLL"}
@@ -347,13 +349,15 @@ kea{
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a (v)"}
+                hmv{"h:mm a (v)"}
                 mmss{"mm:ss"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"MM/y"}
                 yMEd{"E, dd/MM/y"}
                 yMM{"MM/y"}
-                yMMM{"MMM 'di' y"}
+                yMMM{"MMM y"}
                 yMMMEd{"E, d MMM y"}
                 yMMMM{"MMMM 'di' y"}
                 yMMMd{"d MMM y"}
@@ -411,13 +415,13 @@ kea{
                         "sab",
                     }
                     narrow{
-                        "d",
-                        "s",
-                        "t",
-                        "k",
-                        "k",
-                        "s",
-                        "s",
+                        "D",
+                        "S",
+                        "T",
+                        "K",
+                        "K",
+                        "S",
+                        "S",
                     }
                     short{
                         "du",
@@ -435,7 +439,7 @@ kea{
                         "kuarta-fera",
                         "kinta-fera",
                         "sesta-fera",
-                        "sabadu",
+                        "sábadu",
                     }
                 }
             }
@@ -770,6 +774,7 @@ kea{
             }
         }
         hour-narrow{
+            dn{"h"}
             relativeTime{
                 future{
                     other{"di li {0} ora"}
@@ -1165,6 +1170,6 @@ kea{
     measurementSystemNames{
         UK{"Ingles"}
         US{"Merkanu"}
-        metric{"Metriku"}
+        metric{"Métriku"}
     }
 }

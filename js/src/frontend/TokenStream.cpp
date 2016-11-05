@@ -28,10 +28,10 @@
 #include "vm/HelperThreads.h"
 #include "vm/Keywords.h"
 #include "vm/StringBuffer.h"
+#include "vm/Unicode.h"
 
 using namespace js;
 using namespace js::frontend;
-using namespace js::unicode;
 
 using mozilla::Maybe;
 using mozilla::PodAssign;
@@ -106,12 +106,12 @@ IsIdentifier(const CharT* chars, size_t length)
     if (length == 0)
         return false;
 
-    if (!IsIdentifierStart(*chars))
+    if (!unicode::IsIdentifierStart(char16_t(*chars)))
         return false;
 
     const CharT* end = chars + length;
     while (++chars != end) {
-        if (!IsIdentifierPart(*chars))
+        if (!unicode::IsIdentifierPart(char16_t(*chars)))
             return false;
     }
 
@@ -757,42 +757,96 @@ TokenStream::reportAsmJSError(uint32_t offset, unsigned errorNumber, ...)
 }
 
 // We have encountered a '\': check for a Unicode escape sequence after it.
-// Return 'true' and the character code value (by value) if we found a
-// Unicode escape sequence.  Otherwise, return 'false'.  In both cases, do not
-// advance along the buffer.
-bool
-TokenStream::peekUnicodeEscape(int* result)
+// Return the length of the escape sequence and the character code point (by
+// value) if we found a Unicode escape sequence.  Otherwise, return 0.  In both
+// cases, do not advance along the buffer.
+uint32_t
+TokenStream::peekUnicodeEscape(uint32_t* codePoint)
 {
-    char16_t cp[5];
+    int32_t c = getCharIgnoreEOL();
+    if (c != 'u') {
+        ungetCharIgnoreEOL(c);
+        return 0;
+    }
 
-    if (peekChars(5, cp) && cp[0] == 'u' &&
-        JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]) &&
-        JS7_ISHEX(cp[3]) && JS7_ISHEX(cp[4]))
+    char16_t cp[3];
+    uint32_t length;
+    c = getCharIgnoreEOL();
+    if (JS7_ISHEX(c) && peekChars(3, cp) &&
+        JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]))
     {
-        *result = (((((JS7_UNHEX(cp[1]) << 4)
-                + JS7_UNHEX(cp[2])) << 4)
-              + JS7_UNHEX(cp[3])) << 4)
-            + JS7_UNHEX(cp[4]);
-        return true;
+        *codePoint = (JS7_UNHEX(c) << 12) |
+                     (JS7_UNHEX(cp[0]) << 8) |
+                     (JS7_UNHEX(cp[1]) << 4) |
+                     JS7_UNHEX(cp[2]);
+        length = 5;
+    } else if (c == '{') {
+        length = peekExtendedUnicodeEscape(codePoint);
+    } else {
+        length = 0;
     }
-    return false;
+
+    ungetCharIgnoreEOL(c);
+    ungetCharIgnoreEOL('u');
+    return length;
+}
+
+uint32_t
+TokenStream::peekExtendedUnicodeEscape(uint32_t* codePoint)
+{
+    // The opening brace character was already read.
+    int32_t c = getCharIgnoreEOL();
+
+    // Skip leading zeros.
+    uint32_t leadingZeros = 0;
+    while (c == '0') {
+        leadingZeros++;
+        c = getCharIgnoreEOL();
+    }
+
+    char16_t cp[6];
+    size_t i = 0;
+    uint32_t code = 0;
+    while (JS7_ISHEX(c) && i < 6) {
+        cp[i++] = c;
+        code = code << 4 | JS7_UNHEX(c);
+        c = getCharIgnoreEOL();
+    }
+
+    uint32_t length;
+    if (c == '}' && (leadingZeros > 0 || i > 0) && code <= unicode::NonBMPMax) {
+        *codePoint = code;
+        length = leadingZeros + i + 3;
+    } else {
+        length = 0;
+    }
+
+    ungetCharIgnoreEOL(c);
+    while (i--)
+        ungetCharIgnoreEOL(cp[i]);
+    while (leadingZeros--)
+        ungetCharIgnoreEOL('0');
+
+    return length;
+}
+
+uint32_t
+TokenStream::matchUnicodeEscapeIdStart(uint32_t* codePoint)
+{
+    uint32_t length = peekUnicodeEscape(codePoint);
+    if (length > 0 && unicode::IsIdentifierStart(*codePoint)) {
+        skipChars(length);
+        return length;
+    }
+    return 0;
 }
 
 bool
-TokenStream::matchUnicodeEscapeIdStart(int32_t* cp)
+TokenStream::matchUnicodeEscapeIdent(uint32_t* codePoint)
 {
-    if (peekUnicodeEscape(cp) && IsIdentifierStart(*cp)) {
-        skipChars(5);
-        return true;
-    }
-    return false;
-}
-
-bool
-TokenStream::matchUnicodeEscapeIdent(int32_t* cp)
-{
-    if (peekUnicodeEscape(cp) && IsIdentifierPart(*cp)) {
-        skipChars(5);
+    uint32_t length = peekUnicodeEscape(codePoint);
+    if (length > 0 && unicode::IsIdentifierPart(*codePoint)) {
+        skipChars(length);
         return true;
     }
     return false;
@@ -846,7 +900,7 @@ TokenStream::getDirective(bool isMultiline, bool shouldWarnDeprecated,
         skipChars(directiveLength);
         tokenbuf.clear();
 
-        while ((c = peekChar()) && c != EOF && !IsSpaceOrBOM2(c)) {
+        while ((c = peekChar()) && c != EOF && !unicode::IsSpaceOrBOM2(c)) {
             getChar();
             // Debugging directives can occur in both single- and multi-line
             // comments. If we're currently inside a multi-line comment, we also
@@ -941,14 +995,15 @@ IsTokenSane(Token* tp)
 bool
 TokenStream::putIdentInTokenbuf(const char16_t* identStart)
 {
-    int32_t c, qc;
+    int32_t c;
+    uint32_t qc;
     const char16_t* tmp = userbuf.addressOfNextRawChar();
     userbuf.setAddressOfNextRawChar(identStart);
 
     tokenbuf.clear();
     for (;;) {
         c = getCharIgnoreEOL();
-        if (!IsIdentifierPart(c)) {
+        if (!unicode::IsIdentifierPart(char16_t(c))) {
             if (c != '\\' || !matchUnicodeEscapeIdent(&qc))
                 break;
             c = qc;
@@ -1064,7 +1119,8 @@ static_assert(LastCharKind < (1 << (sizeof(firstCharKinds[0]) * 8)),
 bool
 TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
 {
-    int c, qc;
+    int c;
+    uint32_t qc;
     Token* tp;
     FirstCharKind c1kind;
     const char16_t* numStart;
@@ -1095,7 +1151,7 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
     // Chars not in the range 0..127 are rare.  Getting them out of the way
     // early allows subsequent checking to be faster.
     if (MOZ_UNLIKELY(c >= 128)) {
-        if (IsSpaceOrBOM2(c)) {
+        if (unicode::IsSpaceOrBOM2(c)) {
             if (c == LINE_SEPARATOR || c == PARA_SEPARATOR) {
                 updateLineInfoForEOL();
                 updateFlagsForEOL();
@@ -1112,7 +1168,7 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
         static_assert('_' < 128,
                       "IdentifierStart contains '_', but as !IsLetter('_'), "
                       "ensure that '_' is never handled here");
-        if (IsLetter(c)) {
+        if (unicode::IsLetter(c)) {
             identStart = userbuf.addressOfNextRawChar() - 1;
             hadUnicodeEscape = false;
             goto identifier;
@@ -1168,7 +1224,7 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
             c = getCharIgnoreEOL();
             if (c == EOF)
                 break;
-            if (!IsIdentifierPart(c)) {
+            if (!unicode::IsIdentifierPart(char16_t(c))) {
                 if (c != '\\' || !matchUnicodeEscapeIdent(&qc))
                     break;
                 hadUnicodeEscape = true;
@@ -1262,7 +1318,7 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
         }
         ungetCharIgnoreEOL(c);
 
-        if (c != EOF && IsIdentifierStart(c)) {
+        if (c != EOF && unicode::IsIdentifierStart(char16_t(c))) {
             reportError(JSMSG_IDSTART_AFTER_NUMBER);
             goto error;
         }
@@ -1369,7 +1425,7 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
         }
         ungetCharIgnoreEOL(c);
 
-        if (c != EOF && IsIdentifierStart(c)) {
+        if (c != EOF && unicode::IsIdentifierStart(char16_t(c))) {
             reportError(JSMSG_IDSTART_AFTER_NUMBER);
             goto error;
         }
@@ -1422,13 +1478,15 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
             tp->type = matchChar('=') ? TOK_ADDASSIGN : TOK_ADD;
         goto out;
 
-      case '\\':
-        hadUnicodeEscape = matchUnicodeEscapeIdStart(&qc);
-        if (hadUnicodeEscape) {
-            identStart = userbuf.addressOfNextRawChar() - 6;
+      case '\\': {
+        uint32_t escapeLength = matchUnicodeEscapeIdStart(&qc);
+        if (escapeLength > 0) {
+            identStart = userbuf.addressOfNextRawChar() - escapeLength - 1;
+            hadUnicodeEscape = true;
             goto identifier;
         }
         goto badchar;
+      }
 
       case '|':
         if (matchChar('|'))
@@ -1674,7 +1732,7 @@ TokenStream::getBracedUnicode(uint32_t* cp)
             return false;
 
         code = (code << 4) | JS7_UNHEX(c);
-        if (code > 0x10FFFF)
+        if (code > unicode::NonBMPMax)
             return false;
         first = false;
     }
@@ -1727,13 +1785,13 @@ TokenStream::getStringOrTemplateToken(int untilChar, Token** tp)
                         return false;
                     }
 
-                    MOZ_ASSERT(code <= 0x10FFFF);
-                    if (code < 0x10000) {
+                    MOZ_ASSERT(code <= unicode::NonBMPMax);
+                    if (code < unicode::NonBMPMin) {
                         c = code;
                     } else {
-                        if (!tokenbuf.append((code - 0x10000) / 1024 + 0xD800))
+                        if (!tokenbuf.append(unicode::LeadSurrogate(code)))
                             return false;
-                        c = ((code - 0x10000) % 1024) + 0xDC00;
+                        c = unicode::TrailSurrogate(code);
                     }
                     break;
                 }

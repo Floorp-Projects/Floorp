@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
-* Copyright (C) 1996-2015, International Business Machines Corporation and
+* Copyright (C) 1996-2016, International Business Machines Corporation and
 * others. All Rights Reserved.
 ******************************************************************************
 */
@@ -94,12 +96,12 @@ class UVector64;
  * Collator, using data-driven tables. The user can create a customized
  * table-based collation.
  * <p>
- * For more information about the collation service see 
+ * For more information about the collation service see
  * <a href="http://userguide.icu-project.org/collation">the User Guide</a>.
  * <p>
- * Collation service provides correct sorting orders for most locales supported in ICU. 
+ * Collation service provides correct sorting orders for most locales supported in ICU.
  * If specific data for a locale is not available, the orders eventually falls back
- * to the <a href="http://www.unicode.org/reports/tr35/tr35-collation.html#Root_Collation">CLDR root sort order</a>. 
+ * to the <a href="http://www.unicode.org/reports/tr35/tr35-collation.html#Root_Collation">CLDR root sort order</a>.
  * <p>
  * Sort ordering may be customized by providing your own set of rules. For more on
  * this subject see the <a href="http://userguide.icu-project.org/collation/customization">
@@ -161,7 +163,7 @@ public:
                     UColAttributeValue decompositionMode,
                     UErrorCode& status);
 
-#ifndef U_HIDE_INTERNAL_API 
+#ifndef U_HIDE_INTERNAL_API
     /**
      * TODO: document & propose as public API
      * @internal
@@ -180,8 +182,8 @@ public:
 
 
     /** Opens a collator from a collator binary image created using
-    *  cloneBinary. Binary image used in instantiation of the 
-    *  collator remains owned by the user and should stay around for 
+    *  cloneBinary. Binary image used in instantiation of the
+    *  collator remains owned by the user and should stay around for
     *  the lifetime of the collator. The API also takes a base collator
     *  which must be the root collator.
     *  @param bin binary image owned by the user and required through the
@@ -196,8 +198,8 @@ public:
     *  @see cloneBinary
     *  @stable ICU 3.4
     */
-    RuleBasedCollator(const uint8_t *bin, int32_t length, 
-                    const RuleBasedCollator *base, 
+    RuleBasedCollator(const uint8_t *bin, int32_t length,
+                    const RuleBasedCollator *base,
                     UErrorCode &status);
 
     /**
@@ -258,7 +260,7 @@ public:
 
     /**
     * The comparison function compares the character data stored in two
-    * different strings. Returns information about whether a string is less 
+    * different strings. Returns information about whether a string is less
     * than, greater than or equal to another string.
     * @param source the source string to be compared with.
     * @param target the string that is to be compared with the source string.
@@ -273,15 +275,15 @@ public:
                                      UErrorCode &status) const;
 
     /**
-    * Does the same thing as compare but limits the comparison to a specified 
+    * Does the same thing as compare but limits the comparison to a specified
     * length
     * @param source the source string to be compared with.
     * @param target the string that is to be compared with the source string.
     * @param length the length the comparison is limited to
     * @param status possible error code
-    * @return Returns an enum value. UCOL_GREATER if source (up to the specified 
-    *         length) is greater than target; UCOL_EQUAL if source (up to specified 
-    *         length) is equal to target; UCOL_LESS if source (up to the specified 
+    * @return Returns an enum value. UCOL_GREATER if source (up to the specified
+    *         length) is greater than target; UCOL_EQUAL if source (up to specified
+    *         length) is equal to target; UCOL_LESS if source (up to the specified
     *         length) is less  than target.
     * @stable ICU 2.6
     */
@@ -292,7 +294,7 @@ public:
 
     /**
     * The comparison function compares the character data stored in two
-    * different string arrays. Returns information about whether a string array 
+    * different string arrays. Returns information about whether a string array
     * is less than, greater than or equal to another string array.
     * @param source the source string array to be compared with.
     * @param sourceLength the length of the source string array.  If this value
@@ -346,7 +348,7 @@ public:
      * Transforms the string into a series of characters
      * that can be compared with CollationKey.compare().
      *
-     * Note that sort keys are often less efficient than simply doing comparison.  
+     * Note that sort keys are often less efficient than simply doing comparison.
      * For more details, see the ICU User Guide.
      *
      * @param source the source string.
@@ -364,7 +366,7 @@ public:
      * Transforms a specified region of the string into a series of characters
      * that can be compared with CollationKey.compare.
      *
-     * Note that sort keys are often less efficient than simply doing comparison.  
+     * Note that sort keys are often less efficient than simply doing comparison.
      * For more details, see the ICU User Guide.
      *
      * @param source the source string.
@@ -413,7 +415,7 @@ public:
      */
     virtual void getVersion(UVersionInfo info) const;
 
-#ifndef U_HIDE_DEPRECATED_API 
+#ifndef U_HIDE_DEPRECATED_API
     /**
      * Returns the maximum length of any expansion sequences that end with the
      * specified comparison order.
@@ -458,7 +460,7 @@ public:
      */
     static UClassID U_EXPORT2 getStaticClassID(void);
 
-#ifndef U_HIDE_DEPRECATED_API 
+#ifndef U_HIDE_DEPRECATED_API
     /**
      * Do not use this method: The caller and the ICU library might use different heaps.
      * Use cloneBinary() instead which writes to caller-provided memory.
@@ -472,7 +474,7 @@ public:
     uint8_t *cloneRuleData(int32_t &length, UErrorCode &status) const;
 #endif  /* U_HIDE_DEPRECATED_API */
 
-    /** Creates a binary image of a collator. This binary image can be stored and 
+    /** Creates a binary image of a collator. This binary image can be stored and
     *  later used to instantiate a collator using ucol_openBinary.
     *  This API supports preflighting.
     *  @param buffer a fill-in buffer to receive the binary image
@@ -601,10 +603,10 @@ public:
     virtual uint32_t getVariableTop(UErrorCode &status) const;
 
     /**
-     * Get a UnicodeSet that contains all the characters and sequences tailored in 
+     * Get a UnicodeSet that contains all the characters and sequences tailored in
      * this collator.
      * @param status      error code of the operation
-     * @return a pointer to a UnicodeSet object containing all the 
+     * @return a pointer to a UnicodeSet object containing all the
      *         code points and sequences that may sort differently than
      *         in the root collator. The object must be disposed of by using delete
      * @stable ICU 2.4
@@ -614,7 +616,7 @@ public:
     /**
      * Get the sort key as an array of bytes from a UnicodeString.
      *
-     * Note that sort keys are often less efficient than simply doing comparison.  
+     * Note that sort keys are often less efficient than simply doing comparison.
      * For more details, see the ICU User Guide.
      *
      * @param source string to be processed.
@@ -631,7 +633,7 @@ public:
     /**
      * Get the sort key as an array of bytes from a UChar buffer.
      *
-     * Note that sort keys are often less efficient than simply doing comparison.  
+     * Note that sort keys are often less efficient than simply doing comparison.
      * For more details, see the ICU User Guide.
      *
      * @param source string to be processed.
@@ -658,7 +660,7 @@ public:
      * @see ucol_setReorderCodes
      * @see Collator#getEquivalentReorderCodes
      * @see Collator#setReorderCodes
-     * @stable ICU 4.8 
+     * @stable ICU 4.8
      */
      virtual int32_t getReorderCodes(int32_t *dest,
                                      int32_t destCapacity,
@@ -666,14 +668,14 @@ public:
 
     /**
      * Sets the ordering of scripts for this collator.
-     * @param reorderCodes An array of script codes in the new order. This can be NULL if the 
+     * @param reorderCodes An array of script codes in the new order. This can be NULL if the
      * length is also set to 0. An empty array will clear any reordering codes on the collator.
      * @param reorderCodesLength The length of reorderCodes.
      * @param status error code
      * @see ucol_setReorderCodes
      * @see Collator#getReorderCodes
      * @see Collator#getEquivalentReorderCodes
-     * @stable ICU 4.8 
+     * @stable ICU 4.8
      */
      virtual void setReorderCodes(const int32_t* reorderCodes,
                                   int32_t reorderCodesLength,
@@ -689,18 +691,18 @@ public:
             UErrorCode &errorCode) const;
 
     /** Get the short definition string for a collator. This internal API harvests the collator's
-     *  locale and the attribute set and produces a string that can be used for opening 
+     *  locale and the attribute set and produces a string that can be used for opening
      *  a collator with the same attributes using the ucol_openFromShortString API.
      *  This string will be normalized.
      *  The structure and the syntax of the string is defined in the "Naming collators"
-     *  section of the users guide: 
+     *  section of the users guide:
      *  http://userguide.icu-project.org/collation/concepts#TOC-Collator-naming-scheme
      *  This function supports preflighting.
-     * 
+     *
      *  This is internal, and intended to be used with delegate converters.
      *
      *  @param locale a locale that will appear as a collators locale in the resulting
-     *                short string definition. If NULL, the locale will be harvested 
+     *                short string definition. If NULL, the locale will be harvested
      *                from the collator.
      *  @param buffer space to hold the resulting string
      *  @param capacity capacity of the buffer
@@ -724,6 +726,7 @@ public:
             UCharIterator *iter, uint32_t state[2],
             uint8_t *dest, int32_t count, UErrorCode &errorCode) const;
 
+    // Do not enclose the default constructor with #ifndef U_HIDE_INTERNAL_API
     /**
      * Only for use in ucol_openRules().
      * @internal
@@ -853,7 +856,7 @@ private:
      */
     UBool isUnsafe(UChar32 c) const;
 
-    static void computeMaxExpansions(const CollationTailoring *t, UErrorCode &errorCode);
+    static void U_CALLCONV computeMaxExpansions(const CollationTailoring *t, UErrorCode &errorCode);
     UBool initMaxExpansions(UErrorCode &errorCode) const;
 
     void setFastLatinOptions(CollationSettings &ownedSettings) const;

@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
-* Copyright (C) 1997-2015, International Business Machines Corporation and    *
+* Copyright (C) 1997-2016, International Business Machines Corporation and    *
 * others. All Rights Reserved.                                                *
 *******************************************************************************
 *
@@ -59,6 +61,7 @@
 #include "olsontz.h"
 #include "sharedcalendar.h"
 #include "unifiedcache.h"
+#include "ulocimp.h"
 
 #if !UCONFIG_NO_SERVICE
 static icu::ICULocaleService* gService = NULL;
@@ -284,17 +287,10 @@ static ECalType getCalendarTypeForLocale(const char *locid) {
     // when calendar keyword is not available or not supported, read supplementalData
     // to get the default calendar type for the locale's region
     char region[ULOC_COUNTRY_CAPACITY];
-    int32_t regionLen = 0;
-    regionLen = uloc_getCountry(canonicalName, region, sizeof(region) - 1, &status);
-    if (regionLen == 0) {
-        char fullLoc[256];
-        uloc_addLikelySubtags(locid, fullLoc, sizeof(fullLoc) - 1, &status);
-        regionLen = uloc_getCountry(fullLoc, region, sizeof(region) - 1, &status);
-    }
+    (void)ulocimp_getRegionForSupplementalData(canonicalName, TRUE, region, sizeof(region), &status);
     if (U_FAILURE(status)) {
         return CALTYPE_GREGORIAN;
     }
-    region[regionLen] = 0;
     
     // Read preferred calendar values from supplementalData calendarPreference
     UResourceBundle *rb = ures_openDirect(NULL, "supplementalData", &status);
@@ -640,7 +636,9 @@ static const int32_t kCalendarLimits[UCAL_FIELD_COUNT][4] = {
 };
 
 // Resource bundle tags read by this class
+static const char gCalendar[] = "calendar";
 static const char gMonthNames[] = "monthNames";
+static const char gGregorian[] = "gregorian";
 
 // Data flow in Calendar
 // ---------------------
@@ -2131,6 +2129,7 @@ void Calendar::add(UCalendarDateFields field, int32_t amount, UErrorCode& status
         }
       }
       // Fall through into normal handling
+      U_FALLTHROUGH;
     case UCAL_EXTENDED_YEAR:
     case UCAL_MONTH:
       {
@@ -2607,6 +2606,7 @@ Calendar::isWeekend(void) const
                             (millisInDay <  transitionMillis);
                     }
                     // else fall through, return FALSE
+                    U_FALLTHROUGH;
                 }
             default:
                 break;
@@ -3645,7 +3645,7 @@ void Calendar::prepareGetActual(UCalendarDateFields field, UBool isMinimum, UErr
 
     case UCAL_YEAR_WOY:
         set(UCAL_WEEK_OF_YEAR, getGreatestMinimum(UCAL_WEEK_OF_YEAR));
-
+        U_FALLTHROUGH;
     case UCAL_MONTH:
         set(UCAL_DATE, getGreatestMinimum(UCAL_DATE));
         break;
@@ -3795,31 +3795,48 @@ Calendar::setWeekData(const Locale& desiredLocale, const char *type, UErrorCode&
        from the calendar data.  The code used to use the dateTimeElements resource to get first day
        of week data, but this was moved to supplemental data under ticket 7755. (JCE) */
 
-    CalendarData calData(useLocale,type,status);
-    UResourceBundle *monthNames = calData.getByKey(gMonthNames,status);
+    // Get the monthNames resource bundle for the calendar 'type'. Fallback to gregorian if the resource is not
+    // found.
+    LocalUResourceBundlePointer calData(ures_open(NULL, useLocale.getBaseName(), &status));
+    ures_getByKey(calData.getAlias(), gCalendar, calData.getAlias(), &status);
+
+    LocalUResourceBundlePointer monthNames;
+    if (type != NULL && *type != '\0' && uprv_strcmp(type, gGregorian) != 0) {
+        monthNames.adoptInstead(ures_getByKeyWithFallback(calData.getAlias(), type, NULL, &status));
+        ures_getByKeyWithFallback(monthNames.getAlias(), gMonthNames,
+                                  monthNames.getAlias(), &status);
+    }
+
+    if (monthNames.isNull() || status == U_MISSING_RESOURCE_ERROR) {
+        status = U_ZERO_ERROR;
+        monthNames.adoptInstead(ures_getByKeyWithFallback(calData.getAlias(), gGregorian,
+                                                          monthNames.orphan(), &status));
+        ures_getByKeyWithFallback(monthNames.getAlias(), gMonthNames,
+                                  monthNames.getAlias(), &status);
+    }
+
     if (U_SUCCESS(status)) {
         U_LOCALE_BASED(locBased,*this);
-        locBased.setLocaleIDs(ures_getLocaleByType(monthNames, ULOC_VALID_LOCALE, &status),
-                              ures_getLocaleByType(monthNames, ULOC_ACTUAL_LOCALE, &status));
+        locBased.setLocaleIDs(ures_getLocaleByType(monthNames.getAlias(), ULOC_VALID_LOCALE, &status),
+                              ures_getLocaleByType(monthNames.getAlias(), ULOC_ACTUAL_LOCALE, &status));
     } else {
         status = U_USING_FALLBACK_WARNING;
         return;
     }
 
-    
+    char region[ULOC_COUNTRY_CAPACITY];
+    (void)ulocimp_getRegionForSupplementalData(desiredLocale.getName(), TRUE, region, sizeof(region), &status);
+
     // Read week data values from supplementalData week data
     UResourceBundle *rb = ures_openDirect(NULL, "supplementalData", &status);
     ures_getByKey(rb, "weekData", rb, &status);
-    UResourceBundle *weekData = ures_getByKey(rb, useLocale.getCountry(), NULL, &status);
+    UResourceBundle *weekData = ures_getByKey(rb, region, NULL, &status);
     if (status == U_MISSING_RESOURCE_ERROR && rb != NULL) {
         status = U_ZERO_ERROR;
         weekData = ures_getByKey(rb, "001", NULL, &status);
     }
 
     if (U_FAILURE(status)) {
-#if defined (U_DEBUG_CALDATA)
-        fprintf(stderr, " Failure loading weekData from supplemental = %s\n", u_errorName(status));
-#endif
         status = U_USING_FALLBACK_WARNING;
     } else {
         int32_t arrLen;

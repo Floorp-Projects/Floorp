@@ -670,6 +670,7 @@ namespace wasm {
 // Thus, wasm::Frame represents the bytes pushed after the call (which occurred
 // with a WasmStackAlignment-aligned StackPointer) that are not included in
 // masm.framePushed.
+
 struct Frame
 {
     // The caller's saved frame pointer. In non-profiling mode, internal
@@ -689,6 +690,7 @@ static const uint32_t FrameBytesAfterReturnAddress = sizeof(void*);
 // Represents an instruction to be patched and the intended pointee. These
 // links are accumulated in the MacroAssembler, but patching is done outside
 // the MacroAssembler (in Module::staticallyLink).
+
 struct SymbolicAccess
 {
     SymbolicAccess(jit::CodeOffset patchAt, SymbolicAddress target)
@@ -697,6 +699,11 @@ struct SymbolicAccess
     jit::CodeOffset patchAt;
     SymbolicAddress target;
 };
+
+typedef Vector<SymbolicAccess, 0, SystemAllocPolicy> SymbolicAccessVector;
+
+// Describes a single wasm or asm.js memory access for the purpose of generating
+// code and metadata.
 
 class MemoryAccessDesc
 {
@@ -830,7 +837,7 @@ class AssemblerShared
     wasm::MemoryPatchVector memoryPatches_;
     wasm::BoundsCheckVector boundsChecks_;
     wasm::GlobalAccessVector globalAccesses_;
-    Vector<wasm::SymbolicAccess, 0, SystemAllocPolicy> wasmSymbolicAccesses_;
+    wasm::SymbolicAccessVector symbolicAccesses_;
 
   protected:
     Vector<CodeLabel, 0, SystemAllocPolicy> codeLabels_;
@@ -913,9 +920,9 @@ class AssemblerShared
     void append(wasm::GlobalAccess access) { enoughMemory_ &= globalAccesses_.append(access); }
     const wasm::GlobalAccessVector& globalAccesses() const { return globalAccesses_; }
 
-    void append(wasm::SymbolicAccess link) { enoughMemory_ &= wasmSymbolicAccesses_.append(link); }
-    size_t numWasmSymbolicAccesses() const { return wasmSymbolicAccesses_.length(); }
-    wasm::SymbolicAccess wasmSymbolicAccess(size_t i) const { return wasmSymbolicAccesses_[i]; }
+    void append(wasm::SymbolicAccess access) { enoughMemory_ &= symbolicAccesses_.append(access); }
+    size_t numSymbolicAccesses() const { return symbolicAccesses_.length(); }
+    wasm::SymbolicAccess symbolicAccess(size_t i) const { return symbolicAccesses_[i]; }
 
     static bool canUseInSingleByteInstruction(Register reg) { return true; }
 
@@ -964,10 +971,10 @@ class AssemblerShared
         for (; i < globalAccesses_.length(); i++)
             globalAccesses_[i].patchAt.offsetBy(delta);
 
-        i = wasmSymbolicAccesses_.length();
-        enoughMemory_ &= wasmSymbolicAccesses_.appendAll(other.wasmSymbolicAccesses_);
-        for (; i < wasmSymbolicAccesses_.length(); i++)
-            wasmSymbolicAccesses_[i].patchAt.offsetBy(delta);
+        i = symbolicAccesses_.length();
+        enoughMemory_ &= symbolicAccesses_.appendAll(other.symbolicAccesses_);
+        for (; i < symbolicAccesses_.length(); i++)
+            symbolicAccesses_[i].patchAt.offsetBy(delta);
 
         i = codeLabels_.length();
         enoughMemory_ &= codeLabels_.appendAll(other.codeLabels_);

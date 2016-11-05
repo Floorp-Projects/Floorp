@@ -1,13 +1,12 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/numberingSystems.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 numberingSystems:table(nofallback){
     numberingSystems{
+        adlm{
+            algorithmic:int{0}
+            desc{"𞥐𞥑𞥒𞥓𞥔𞥕𞥖𞥗𞥘𞥙"}
+            radix:int{10}
+        }
         ahom{
             algorithmic:int{0}
             desc{"𑜰𑜱𑜲𑜳𑜴𑜵𑜶𑜷𑜸𑜹"}
@@ -41,6 +40,11 @@ numberingSystems:table(nofallback){
         beng{
             algorithmic:int{0}
             desc{"০১২৩৪৫৬৭৮৯"}
+            radix:int{10}
+        }
+        bhks{
+            algorithmic:int{0}
+            desc{"𑱐𑱑𑱒𑱓𑱔𑱕𑱖𑱗𑱘𑱙"}
             radix:int{10}
         }
         brah{
@@ -266,6 +270,11 @@ numberingSystems:table(nofallback){
         mymrtlng{
             algorithmic:int{0}
             desc{"꧰꧱꧲꧳꧴꧵꧶꧷꧸꧹"}
+            radix:int{10}
+        }
+        newa{
+            algorithmic:int{0}
+            desc{"𑑐𑑑𑑒𑑓𑑔𑑕𑑖𑑗𑑘𑑙"}
             radix:int{10}
         }
         nkoo{

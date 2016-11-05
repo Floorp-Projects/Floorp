@@ -1,0 +1,62 @@
+https://ssl.icu-project.org/trac/ticket/12827
+https://ssl.icu-project.org/trac/changeset/39484 (Excluding test-related bits
+because we remove the "test" directory before applying the ICU patches.)
+
+Index: /intl/icu/source/common/ulist.c
+===================================================================
+--- /intl/icu/source/common/ulist.c	(revision 39483)
++++ /intl/icu/source/common/ulist.c	(revision 39484)
+@@ -30,5 +30,4 @@
+     
+     int32_t size;
+-    int32_t currentIndex;
+ };
+ 
+@@ -52,5 +51,4 @@
+     newList->tail = NULL;
+     newList->size = 0;
+-    newList->currentIndex = -1;
+     
+     return newList;
+@@ -81,6 +79,7 @@
+         p->next->previous = p->previous;
+     }
+-    list->curr = NULL;
+-    list->currentIndex = 0;
++    if (p == list->curr) {
++        list->curr = p->next;
++    }
+     --list->size;
+     if (p->forceDelete) {
+@@ -151,5 +150,4 @@
+         list->head->previous = newItem;
+         list->head = newItem;
+-        list->currentIndex++;
+     }
+     
+@@ -194,5 +192,4 @@
+     curr = list->curr;
+     list->curr = curr->next;
+-    list->currentIndex++;
+     
+     return curr->data;
+@@ -210,5 +207,4 @@
+     if (list != NULL) {
+         list->curr = list->head;
+-        list->currentIndex = 0;
+     }
+ }
+@@ -273,3 +269,2 @@
+     return (UList *)(en->context);
+ }
+-
+Index: /intl/icu/source/i18n/ucol_res.cpp
+===================================================================
+--- /intl/icu/source/i18n/ucol_res.cpp	(revision 39483)
++++ /intl/icu/source/i18n/ucol_res.cpp	(revision 39484)
+@@ -681,4 +681,5 @@
+     }
+     memcpy(en, &defaultKeywordValues, sizeof(UEnumeration));
++    ulist_resetList(sink.values);  // Initialize the iterator.
+     en->context = sink.values;
+     sink.values = NULL;  // Avoid deletion in the sink destructor.

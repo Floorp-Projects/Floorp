@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 1997-2014, International Business Machines
+*   Copyright (C) 1997-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -1331,3 +1333,53 @@ Locale::isRightToLeft() const {
 }
 
 U_NAMESPACE_END
+
+// The following must at least allow for rg key value (6) plus terminator (1).
+#define ULOC_RG_BUFLEN 8
+
+U_CAPI int32_t U_EXPORT2
+ulocimp_getRegionForSupplementalData(const char *localeID, UBool inferRegion,
+                                     char *region, int32_t regionCapacity, UErrorCode* status) {
+    if (U_FAILURE(*status)) {
+        return 0;
+    }
+    char rgBuf[ULOC_RG_BUFLEN];
+    UErrorCode rgStatus = U_ZERO_ERROR;
+
+    // First check for rg keyword value
+    int32_t rgLen = uloc_getKeywordValue(localeID, "rg", rgBuf, ULOC_RG_BUFLEN, &rgStatus);
+    if (U_FAILURE(rgStatus) || rgLen != 6) {
+        rgLen = 0;
+    } else {
+        // rgBuf guaranteed to be zero terminated here, with text len 6
+        char *rgPtr = rgBuf;
+        for (; *rgPtr!= 0; rgPtr++) {
+            *rgPtr = uprv_toupper(*rgPtr);
+        }
+        rgLen = (uprv_strcmp(rgBuf+2, "ZZZZ") == 0)? 2: 0;
+    }
+
+    if (rgLen == 0) {
+        // No valid rg keyword value, try for unicode_region_subtag
+        rgLen = uloc_getCountry(localeID, rgBuf, ULOC_RG_BUFLEN, status);
+        if (U_FAILURE(*status)) {
+            rgLen = 0;
+        } else if (rgLen == 0 && inferRegion) {
+            // no unicode_region_subtag but inferRegion TRUE, try likely subtags
+            char locBuf[ULOC_FULLNAME_CAPACITY];
+            rgStatus = U_ZERO_ERROR;
+            (void)uloc_addLikelySubtags(localeID, locBuf, ULOC_FULLNAME_CAPACITY, &rgStatus);
+            if (U_SUCCESS(rgStatus)) {
+                rgLen = uloc_getCountry(locBuf, rgBuf, ULOC_RG_BUFLEN, status);
+                if (U_FAILURE(*status)) {
+                    rgLen = 0;
+                }
+            }
+        }
+    }
+
+    rgBuf[rgLen] = 0;
+    uprv_strncpy(region, rgBuf, regionCapacity);
+    return u_terminateChars(region, regionCapacity, rgLen, status);
+}
+

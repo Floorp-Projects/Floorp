@@ -1507,8 +1507,8 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
     const wasm::CallSiteDesc& desc = mir->desc();
     const wasm::CalleeDesc& callee = mir->callee();
     switch (callee.which()) {
-      case wasm::CalleeDesc::Definition:
-        masm.call(desc, callee.funcDefIndex());
+      case wasm::CalleeDesc::Func:
+        masm.call(desc, callee.funcIndex());
         break;
       case wasm::CalleeDesc::Import:
         masm.wasmCallImport(desc, callee);

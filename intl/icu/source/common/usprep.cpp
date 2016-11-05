@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
  *******************************************************************************
  *
- *   Copyright (C) 2003-2014, International Business Machines
+ *   Copyright (C) 2003-2016, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
  *******************************************************************************
@@ -409,7 +411,7 @@ usprep_openByType(UStringPrepProfileType type,
         return NULL;
     }
     int32_t index = (int32_t)type;
-    if (index < 0 || index >= (int32_t)(sizeof(PROFILE_NAMES)/sizeof(PROFILE_NAMES[0]))) {
+    if (index < 0 || index >= UPRV_LENGTHOF(PROFILE_NAMES)) {
         *status = U_ILLEGAL_ARGUMENT_ERROR;
         return NULL;
     }

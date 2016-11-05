@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIPrincipal;
 interface nsIURI;
 interface nsIInterfaceRequestor;
 
@@ -21,6 +22,8 @@ interface nsISpeculativeConnect : nsISupports
      * to actually open the new channel. 
      *
      * @param aURI the URI of the hinted transaction
+     * @param aPrincipal the principal that will be used for opening the
+     *        channel of the hinted transaction.
      * @param aCallbacks any security callbacks for use with SSL for interfaces
      *        such as nsIBadCertListener. May be null.
      *
@@ -28,8 +31,16 @@ interface nsISpeculativeConnect : nsISupports
     void speculativeConnect(in nsIURI aURI,
                             in nsIInterfaceRequestor aCallbacks);
 
+    void speculativeConnect2(in nsIURI aURI,
+                             in nsIPrincipal aPrincipal,
+                             in nsIInterfaceRequestor aCallbacks);
+
     void speculativeAnonymousConnect(in nsIURI aURI,
                                      in nsIInterfaceRequestor aCallbacks);
+
+    void speculativeAnonymousConnect2(in nsIURI aURI,
+                                      in nsIPrincipal aPrincipal,
+                                      in nsIInterfaceRequestor aCallbacks);
 };
 
 /**

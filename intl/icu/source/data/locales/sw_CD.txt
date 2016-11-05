@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/sw_CD.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 sw_CD{
     AuxExemplarCharacters{"[q x]"}
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p r s t u v w y z]"}
@@ -17,148 +11,13 @@ sw_CD{
             }
         }
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.27.99"}
     calendar{
         generic{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE d MMMM y G",
-                "d MMMM y G",
-                "d MMM y G",
-                "d/M/y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
             availableFormats{
-                MEd{"E d/M"}
                 MMMEd{"E d MMM"}
-                Md{"d/M"}
                 hms{"h:mm:ss a"}
                 ms{"m:ss"}
-                y{"y"}
-                yM{"M/y"}
-                yMEd{"E d/M/y"}
-                yMMM{"MMM y"}
-                yMMMEd{"E d MMM y"}
-                yMMMd{"d MMM y"}
-                yMd{"d/M/y"}
-                yQQQ{"QQQ y"}
-                yQQQQ{"QQQQ y"}
-            }
-        }
-        gregorian{
-            AmPmMarkers{
-                "ya asubuyi",
-                "ya muchana",
-            }
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE d MMMM y",
-                "d MMMM y",
-                "d MMM y",
-                "d/M/y",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            availableFormats{
-                MEd{"E d/M"}
-                MMMEd{"E d MMM"}
-                ms{"m:ss"}
-                yMEd{"E d/M/y"}
-                yMMMEd{"E d MMM y"}
-            }
-            dayNames{
-                format{
-                    abbreviated{
-                        "yen",
-                        "kwa",
-                        "pil",
-                        "tat",
-                        "ine",
-                        "tan",
-                        "sit",
-                    }
-                    wide{
-                        "siku ya yenga",
-                        "siku ya kwanza",
-                        "siku ya pili",
-                        "siku ya tatu",
-                        "siku ya ine",
-                        "siku ya tanu",
-                        "siku ya sita",
-                    }
-                }
-                stand-alone{
-                    narrow{
-                        "y",
-                        "k",
-                        "p",
-                        "t",
-                        "i",
-                        "t",
-                        "s",
-                    }
-                }
-            }
-            monthNames{
-                format{
-                    abbreviated{
-                        "mkw",
-                        "mpi",
-                        "mtu",
-                        "min",
-                        "mtn",
-                        "mst",
-                        "msb",
-                        "mun",
-                        "mts",
-                        "mku",
-                        "mkm",
-                        "mkb",
-                    }
-                    wide{
-                        "mwezi ya kwanja",
-                        "mwezi ya pili",
-                        "mwezi ya tatu",
-                        "mwezi ya ine",
-                        "mwezi ya tanu",
-                        "mwezi ya sita",
-                        "mwezi ya saba",
-                        "mwezi ya munane",
-                        "mwezi ya tisa",
-                        "mwezi ya kumi",
-                        "mwezi ya kumi na moya",
-                        "mwezi ya kumi ya mbili",
-                    }
-                }
-                stand-alone{
-                    narrow{
-                        "k",
-                        "p",
-                        "t",
-                        "i",
-                        "t",
-                        "s",
-                        "s",
-                        "m",
-                        "t",
-                        "k",
-                        "m",
-                        "m",
-                    }
-                }
             }
         }
     }

@@ -1,3 +1,4 @@
+Copyright (C) 2016 and later: Unicode, Inc. and others. License & terms of use: http://www.unicode.org/copyright.html
 Copyright (c) 2002-2011, International Business Machines Corporation and others. All Rights Reserved.
 The genren.pl script is used to generate source/common/unicode/urename.h header file, which is needed for renaming the ICU exported names. 
 

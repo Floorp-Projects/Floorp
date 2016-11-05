@@ -1,4 +1,4 @@
-if (!this.SharedArrayBuffer)
+if (!this.SharedArrayBuffer || !isAsmJSCompilationAvailable())
     quit(0);
 
 load(libdir + "asm.js");

@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ks.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ks{
     Currencies{
         ADP{
@@ -160,9 +154,13 @@ ks{
             "BYB",
             "بِلیروشِیَن نِو رِبٕل",
         }
+        BYN{
+            "BYN",
+            "بِلیروشِیَن رِبٕل",
+        }
         BYR{
             "BYR",
-            "بِلیروشِیَن رِبٕل",
+            "بِلیروشِیَن رِبٕل (۲۰۰۰–۲۰۱۶)",
         }
         BZD{
             "BZD",
@@ -1013,5 +1011,5 @@ ks{
             "زِمبابِیُک ڈالَر",
         }
     }
-    Version{"2.1.19.74"}
+    Version{"2.1.30.6"}
 }

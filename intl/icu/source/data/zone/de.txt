@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/de.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 de{
-    Version{"2.1.19.72"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -308,6 +302,9 @@ de{
         }
         "America:El_Salvador"{
             ec{"El Salvador"}
+        }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
         }
         "America:Fortaleza"{
             ec{"Fortaleza"}
@@ -672,6 +669,9 @@ de{
         "Asia:Bangkok"{
             ec{"Bangkok"}
         }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
+        }
         "Asia:Beirut"{
             ec{"Beirut"}
         }
@@ -849,6 +849,9 @@ de{
         "Asia:Tokyo"{
             ec{"Tokio"}
         }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"Ulaanbaatar"}
         }
@@ -883,7 +886,7 @@ de{
             ec{"Kanaren"}
         }
         "Atlantic:Cape_Verde"{
-            ec{"Kap Verde"}
+            ec{"Cabo Verde"}
         }
         "Atlantic:Faeroe"{
             ec{"Färöer"}
@@ -948,6 +951,9 @@ de{
         "Europe:Andorra"{
             ec{"Andorra"}
         }
+        "Europe:Astrakhan"{
+            ec{"Astrachan"}
+        }
         "Europe:Athens"{
             ec{"Athen"}
         }
@@ -1005,6 +1011,9 @@ de{
         }
         "Europe:Kiev"{
             ec{"Kiew"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirow"}
         }
         "Europe:Lisbon"{
             ec{"Lissabon"}
@@ -1081,6 +1090,9 @@ de{
         }
         "Europe:Tirane"{
             ec{"Tirana"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Uljanowsk"}
         }
         "Europe:Uzhgorod"{
             ec{"Uschgorod"}
@@ -1414,9 +1426,9 @@ de{
             ls{"Brunei-Zeit"}
         }
         "meta:Cape_Verde"{
-            ld{"Kap-Verde-Sommerzeit"}
-            lg{"Kap-Verde-Zeit"}
-            ls{"Kap-Verde-Normalzeit"}
+            ld{"Cabo-Verde-Sommerzeit"}
+            lg{"Cabo-Verde-Zeit"}
+            ls{"Cabo-Verde-Normalzeit"}
         }
         "meta:Casey"{
             ls{"Casey-Zeit"}
@@ -1792,6 +1804,9 @@ de{
         }
         "meta:Ponape"{
             ls{"Ponape-Zeit"}
+        }
+        "meta:Pyongyang"{
+            ls{"Pjöngjang-Zeit"}
         }
         "meta:Qyzylorda"{
             ld{"Qysylorda-Sommerzeit"}

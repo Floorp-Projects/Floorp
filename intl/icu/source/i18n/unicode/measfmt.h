@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-* Copyright (c) 2004-2015, International Business Machines
+* Copyright (c) 2004-2016, International Business Machines
 * Corporation and others.  All Rights Reserved.
 **********************************************************************
 * Author: Alan Liu
@@ -59,11 +61,13 @@ enum UMeasureFormatWidth {
      */
     UMEASFMT_WIDTH_NUMERIC,
 
+#ifndef U_HIDE_DEPRECATED_API
     /**
-     * Count of values in this enum.
-     * @stable ICU 53
+     * One more than the highest normal UMeasureFormatWidth value.
+     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
      */
     UMEASFMT_WIDTH_COUNT = 4
+#endif  // U_HIDE_DEPRECATED_API
 };
 /** @stable ICU 53 */
 typedef enum UMeasureFormatWidth UMeasureFormatWidth; 
@@ -78,7 +82,7 @@ class MeasureFormatCacheData;
 class SharedNumberFormat;
 class SharedPluralRules;
 class QuantityFormatter;
-class SimplePatternFormatter;
+class SimpleFormatter;
 class ListFormatter;
 class DateFormat;
 
@@ -186,7 +190,6 @@ class U_I18N_API MeasureFormat : public Format {
             FieldPosition &pos,
             UErrorCode &status) const;
 
-#ifndef U_HIDE_DRAFT_API
     /**
      * Formats a single measure per unit. An example of such a
      * formatted string is 3.5 meters per second.
@@ -198,7 +201,7 @@ class U_I18N_API MeasureFormat : public Format {
      * @param status the error.
      * @return appendTo reference
      *
-     * @draft ICU 55
+     * @stable ICU 55
      */
     UnicodeString &formatMeasurePerUnit(
             const Measure &measure,
@@ -207,7 +210,21 @@ class U_I18N_API MeasureFormat : public Format {
             FieldPosition &pos,
             UErrorCode &status) const;
 
-#endif  /* U_HIDE_DRAFT_API */
+#ifndef U_HIDE_DRAFT_API
+    /**
+     * Gets the display name of the specified {@link MeasureUnit} corresponding to the current
+     * locale and format width.
+     * @param unit  The unit for which to get a display name.
+     * @param status the error.
+     * @return  The display name in the locale and width specified in
+     *          {@link MeasureFormat#getInstance}, or null if there is no display name available
+     *          for the specified unit.
+     *
+     * @draft ICU 58
+     */
+    UnicodeString getUnitDisplayName(const MeasureUnit& unit, UErrorCode &status) const;
+#endif /* U_HIDE_DRAFT_API */
+
 
     /**
      * Return a formatter for CurrencyAmount objects in the given
@@ -327,17 +344,19 @@ class U_I18N_API MeasureFormat : public Format {
     // shared across instances.
     ListFormatter *listFormatter;
 
-    const QuantityFormatter *getQuantityFormatter(
-            int32_t index,
-            int32_t widthIndex,
-            UErrorCode &status) const;
+    const SimpleFormatter *getFormatterOrNull(
+            const MeasureUnit &unit, UMeasureFormatWidth width, int32_t index) const;
 
-    const SimplePatternFormatter *getPerUnitFormatter(
-            int32_t index,
-            int32_t widthIndex) const;
+    const SimpleFormatter *getFormatter(
+            const MeasureUnit &unit, UMeasureFormatWidth width, int32_t index,
+            UErrorCode &errorCode) const;
 
-    const SimplePatternFormatter *getPerFormatter(
-            int32_t widthIndex,
+    const SimpleFormatter *getPluralFormatter(
+            const MeasureUnit &unit, UMeasureFormatWidth width, int32_t index,
+            UErrorCode &errorCode) const;
+
+    const SimpleFormatter *getPerFormatter(
+            UMeasureFormatWidth width,
             UErrorCode &status) const;
 
     int32_t withPerUnitAndAppend(

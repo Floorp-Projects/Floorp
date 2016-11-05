@@ -1,0 +1,10 @@
+[
+{
+"size": 13958999,
+"visibility": "internal",
+"digest": "ce5c0c20dfa83821284a1b69b226fe13224b82345622fc43d216332484ec8c89a2f171ad3dd2ac83cd5777510306d349bc4fbf00fc692e3542dfb7db70876489",
+"algorithm": "sha512",
+"filename": "node-linux-x64.tar.gz",
+"unpack": true
+}
+]

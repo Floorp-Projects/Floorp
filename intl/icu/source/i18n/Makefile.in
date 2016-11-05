@@ -1,6 +1,8 @@
+# Copyright (C) 2016 and later: Unicode, Inc. and others.
+# License & terms of use: http://www.unicode.org/copyright.html
 #******************************************************************************
 #
-#   Copyright (C) 1998-2015, International Business Machines
+#   Copyright (C) 1998-2016, International Business Machines
 #   Corporation and others.  All Rights Reserved.
 #
 #******************************************************************************
@@ -64,7 +66,7 @@ LIBS = $(LIBICUUC) $(DEFAULT_LIBS)
 
 OBJECTS = ucln_in.o \
 fmtable.o format.o msgfmt.o umsg.o numfmt.o unum.o decimfmt.o decimalformatpattern.o dcfmtsym.o \
-ucurr.o digitlst.o fmtable_cnv.o \
+digitlst.o fmtable_cnv.o \
 choicfmt.o datefmt.o smpdtfmt.o reldtfmt.o dtfmtsym.o udat.o dtptngen.o udatpg.o \
 nfrs.o nfrule.o nfsubs.o rbnf.o numsys.o unumsys.o ucsdet.o \
 ucal.o calendar.o gregocal.o timezone.o simpletz.o olsontz.o \
@@ -88,18 +90,18 @@ regexcmp.o rematch.o repattrn.o regexst.o regextxt.o regeximp.o uregex.o uregexc
 ulocdata.o measfmt.o currfmt.o curramt.o currunit.o measure.o utmscale.o \
 csdetect.o csmatch.o csr2022.o csrecog.o csrmbcs.o csrsbcs.o csrucode.o csrutf8.o inputext.o \
 wintzimpl.o windtfmt.o winnmfmt.o basictz.o dtrule.o rbtz.o tzrule.o tztrans.o vtzone.o zonemeta.o \
-upluralrules.o plurrule.o plurfmt.o selfmt.o dtitvfmt.o dtitvinf.o udateintervalformat.o \
+standardplural.o upluralrules.o plurrule.o plurfmt.o selfmt.o dtitvfmt.o dtitvinf.o udateintervalformat.o \
 tmunit.o tmutamt.o tmutfmt.o currpinf.o \
-uspoof.o uspoof_impl.o uspoof_build.o uspoof_conf.o uspoof_wsconf.o decfmtst.o smpdtfst.o \
-ztrans.o zrule.o vzone.o fphdlimp.o fpositer.o ufieldpositer.o locdspnm.o \
+uspoof.o uspoof_impl.o uspoof_build.o uspoof_conf.o decfmtst.o smpdtfst.o \
+ztrans.o zrule.o vzone.o fphdlimp.o fpositer.o ufieldpositer.o \
 decNumber.o decContext.o alphaindex.o tznames.o tznames_impl.o tzgnames.o \
-tzfmt.o compactdecimalformat.o gender.o region.o scriptset.o identifier_info.o \
+tzfmt.o compactdecimalformat.o gender.o region.o scriptset.o \
 uregion.o reldatefmt.o quantityformatter.o measunit.o \
 sharedbreakiterator.o scientificnumberformatter.o digitgrouping.o \
 digitinterval.o digitformatter.o digitaffix.o valueformatter.o \
 digitaffixesandpadding.o pluralaffix.o precision.o \
 affixpatternparser.o smallintformatter.o decimfmtimpl.o \
-visibledigits.o
+visibledigits.o dayperiodrules.o
 
 ## Header files to install
 HEADERS = $(srcdir)/unicode/*.h

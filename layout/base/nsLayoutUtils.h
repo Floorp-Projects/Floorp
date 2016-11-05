@@ -1373,6 +1373,9 @@ public:
    * width, its 'width', 'min-width', and 'max-width' properties (or 'height'
    * variations if that's what matches aAxis) and its padding, border and margin
    * in the corresponding dimension.
+   * @param aMarginBoxMinSizeClamp make the result fit within this margin-box
+   * size by reducing the *content size* (flooring at zero).  This is used for:
+   * https://drafts.csswg.org/css-grid/#min-size-auto
    */
   enum class IntrinsicISizeType { MIN_ISIZE, PREF_ISIZE };
   static const auto MIN_ISIZE = IntrinsicISizeType::MIN_ISIZE;
@@ -1383,11 +1386,13 @@ public:
     MIN_INTRINSIC_ISIZE = 0x04, // use min-width/height instead of width/height
     ADD_PERCENTS = 0x08, // apply AddPercents also for MIN_ISIZE
   };
-  static nscoord IntrinsicForAxis(mozilla::PhysicalAxis aAxis,
-                                  nsRenderingContext*   aRenderingContext,
-                                  nsIFrame*             aFrame,
-                                  IntrinsicISizeType    aType,
-                                  uint32_t              aFlags = 0);
+  static nscoord
+  IntrinsicForAxis(mozilla::PhysicalAxis aAxis,
+                   nsRenderingContext*   aRenderingContext,
+                   nsIFrame*             aFrame,
+                   IntrinsicISizeType    aType,
+                   uint32_t              aFlags = 0,
+                   nscoord               aMarginBoxMinSizeClamp = NS_MAXSIZE);
   /**
    * Calls IntrinsicForAxis with aFrame's parent's inline physical axis.
    */
@@ -1402,8 +1407,9 @@ public:
    * given axis is vertical), and its padding, border, and margin in the
    * corresponding dimension.  If the 'min-' property is 'auto' (and 'overflow'
    * is 'visible') and the corresponding 'width'/'height' is definite it returns
-   * the "specified / transferred size" for:
+   * the "specified size" for:
    * https://drafts.csswg.org/css-grid/#min-size-auto
+   * Note that the "transferred size" is not handled here; use IntrinsicForAxis.
    * Note that any percentage in 'width'/'height' makes it count as indefinite.
    * If the 'min-' property is 'auto' and 'overflow' is not 'visible', then it
    * calculates the result as if the 'min-' computed value is zero.
@@ -1442,14 +1448,6 @@ public:
    */
   static nscoord ComputeCBDependentValue(nscoord aPercentBasis,
                                          const nsStyleCoord& aCoord);
-
-  static nscoord ComputeISizeValue(
-                   nsRenderingContext* aRenderingContext,
-                   nsIFrame*           aFrame,
-                   nscoord             aContainingBlockISize,
-                   nscoord             aContentEdgeToBoxSizing,
-                   nscoord             aBoxSizingToMarginEdge,
-                   const nsStyleCoord& aCoord);
 
   static nscoord ComputeBSizeDependentValue(
                    nscoord              aContainingBlockBSize,
@@ -1519,21 +1517,6 @@ public:
   static void MarkDescendantsDirty(nsIFrame *aSubtreeRoot);
 
   static void MarkIntrinsicISizesDirtyIfDependentOnBSize(nsIFrame* aFrame);
-
-  /*
-   * Calculate the used values for 'width' and 'height' for a replaced element.
-   *
-   *   http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
-   */
-  static mozilla::LogicalSize
-  ComputeSizeWithIntrinsicDimensions(mozilla::WritingMode aWM,
-                    nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
-                    const mozilla::IntrinsicSize& aIntrinsicSize,
-                    nsSize aIntrinsicRatio,
-                    const mozilla::LogicalSize& aCBSize,
-                    const mozilla::LogicalSize& aMargin,
-                    const mozilla::LogicalSize& aBorder,
-                    const mozilla::LogicalSize& aPadding);
 
   /*
    * Calculate the used values for 'width' and 'height' when width

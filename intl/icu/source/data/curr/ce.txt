@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ce.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ce{
     Currencies{
         AED{
@@ -100,9 +94,13 @@ ce{
             "BWP",
             "Ботсванан пула",
         }
+        BYN{
+            "BYN",
+            "Белоруссин сом",
+        }
         BYR{
             "BYR",
-            "Белоруссин сом",
+            "Белоруссин сом (2000–2016)",
         }
         BZD{
             "BZD",
@@ -642,7 +640,7 @@ ce{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -819,9 +817,13 @@ ce{
             one{"Ботсванан пула"}
             other{"Ботсванан пулаш"}
         }
-        BYR{
+        BYN{
             one{"Белоруссин сом"}
             other{"Белоруссин соьмаш"}
+        }
+        BYR{
+            one{"Белоруссин сом (2000–2016)"}
+            other{"Белоруссин соьмаш (2000–2016)"}
         }
         BZD{
             one{"Белизин доллар"}
@@ -1352,5 +1354,5 @@ ce{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.76"}
 }

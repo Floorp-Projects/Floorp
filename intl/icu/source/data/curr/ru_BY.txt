@@ -1,15 +1,9 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ru_BY.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ru_BY{
     Currencies{
-        BYR{
-            "р.",
+        BYN{
+            "Br",
             "Белорусский рубль",
         }
         RUR{
@@ -17,5 +11,8 @@ ru_BY{
             "Российский рубль (1991–1998)",
         }
     }
-    Version{"2.1.19.14"}
+    Currencies%narrow{
+        BYN{"Br"}
+    }
+    Version{"2.1.30.5"}
 }

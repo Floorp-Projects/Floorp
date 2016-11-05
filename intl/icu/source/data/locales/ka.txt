@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ka.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ka{
     AuxExemplarCharacters{
         "[ⴀ ⴁ ⴂ ⴃ ⴄ ⴅ ⴆ ჱ ⴡ ⴇ ⴈ ⴉ ⴊ ⴋ ⴌ ჲ ⴢ ⴍ ⴎ ⴏ ⴐ ⴑ ⴒ ჳ ⴣ ⴓ ⴔ ⴕ ⴖ ⴗ ⴘ ⴙ ⴚ ⴛ ⴜ ⴝ ⴞ ჴ"
@@ -213,7 +207,7 @@ ka{
         native{"latn"}
         traditional{"geor"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.29.20"}
     calendar{
         generic{
             DateTimePatterns{
@@ -225,11 +219,11 @@ ka{
                 "d MMMM, y G",
                 "d MMM, y G",
                 "dd.MM.y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
                 "{1}, {0}",
                 "{1} {0}",
-                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             availableFormats{
                 E{"ccc"}
@@ -412,6 +406,10 @@ ka{
                 MEd{"E, d.M"}
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
+                MMMMW{
+                    one{"MMM-ის კვირა W"}
+                    other{"MMM-ის კვირა W"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d.M"}
@@ -432,6 +430,10 @@ ka{
                 yMd{"d.M.y"}
                 yQQQ{"QQQ, y"}
                 yQQQQ{"QQQQ, y"}
+                yw{
+                    one{"კვირა w, y"}
+                    other{"კვირა w, y"}
+                }
             }
             dayNames{
                 format{
@@ -522,11 +524,11 @@ ka{
                         noon{"შუადღ."}
                     }
                     narrow{
-                        afternoon1{"ნაშუადღევს"}
-                        evening1{"საღამოს"}
+                        afternoon1{"ნაშუადღ."}
+                        evening1{"საღ."}
                         midnight{"შუაღამეს"}
-                        morning1{"დილას"}
-                        night1{"ღამით"}
+                        morning1{"დილ."}
+                        night1{"ღამ."}
                         noon{"შუადღ."}
                     }
                     wide{
@@ -551,17 +553,17 @@ ka{
                     }
                     narrow{
                         afternoon1{"ნაშუადღევი"}
-                        am{"a"}
+                        am{"AM"}
                         evening1{"საღამო"}
                         midnight{"შუაღამე"}
                         morning1{"დილა"}
                         night1{"ღამე"}
                         noon{"შუადღე"}
-                        pm{"p"}
+                        pm{"PM"}
                     }
                     wide{
                         afternoon1{"ნაშუადღევი"}
-                        am{"შუადღემდე"}
+                        am{"AM"}
                         evening1{"საღამო"}
                         midnight{"შუაღამე"}
                         morning1{"დილა"}
@@ -818,6 +820,94 @@ ka{
             }
         }
     }
+    characterLabel{
+        activities{"აქტივობები"}
+        african_scripts{"აფრიკული დამწერლობები"}
+        american_scripts{"ამერიკული დამწერლობები"}
+        animal{"ცხოველი"}
+        animals_nature{"ფლორა და ფაუნა"}
+        arrows{"ისრები"}
+        body{"სხეული"}
+        box_drawing{"ჩარჩოების სიმბოლოები"}
+        braille{"ბრაილი"}
+        building{"შენობა"}
+        bullets_stars{"ბურთულები/ვარსკვლავები"}
+        consonantal_jamo{"Jamo-თანხმოვნები"}
+        currency_symbols{"ვალუტის სიმბოლოები"}
+        dash_connector{"ტირე/დეფისი"}
+        digits{"ციფრები"}
+        dingbats{"ტიპოგრაფიული ორნამენტები"}
+        divination_symbols{"გაყოფის სიმბოლოები"}
+        downwards_arrows{"ქვემოთ მიმართული ისრები"}
+        downwards_upwards_arrows{"ქვემოთ და ზემოთ მიმართული ისრები"}
+        east_asian_scripts{"აღმოსავლეთ აზიური დამწერლობები"}
+        emoji{"Emoji"}
+        european_scripts{"ევროპული დამწერლობები"}
+        female{"ქალი"}
+        flag{"დროშა"}
+        flags{"დროშები"}
+        food_drink{"სასმელი და საჭმელი"}
+        format{"ფორმატირება"}
+        format_whitespace{"ფორმატირება და შორისები"}
+        full_width_form_variant{"ნახევარი სიგანის ფორმის ვარიანტები"}
+        geometric_shapes{"გეომეტრიული ფიგურები"}
+        half_width_form_variant{"ნახევარი სიგანის ფორმის ვარიანტები"}
+        han_characters{"ჩინური სიმბოლოები"}
+        han_radicals{"იეროგლიფური გასაღებები"}
+        hanja{"ჰანჯა"}
+        hanzi_simplified{"გამარტივებული ჩინური იეროგლიფები"}
+        hanzi_traditional{"ტრადიციული ჩინური იეროგლიფები"}
+        heart{"გული"}
+        historic_scripts{"ისტორიული დამწერლობები"}
+        ideographic_desc_characters{"იეროგლიფების აღმწერი სიმბოლოები"}
+        japanese_kana{"კანა"}
+        kanbun{"კანბუნი"}
+        kanji{"კანჯი"}
+        keycap{"კლავიში"}
+        leftwards_arrows{"მარცხნივ მიმართული ისრები"}
+        leftwards_rightwards_arrows{"მარცხნივ და მარჯვნივ მიმართული ისრები"}
+        letterlike_symbols{"ასოების მაგვარი ნიშნები"}
+        limited_use{"შეზღუდული გამოყენების"}
+        male{"კაცი"}
+        math_symbols{"მათემატიკური ნიშნები"}
+        middle_eastern_scripts{"ახლო აღმოსავლეთის დამწერლობები"}
+        miscellaneous{"სხვადასხვა"}
+        modern_scripts{"თანამედროვე დამწერლობები"}
+        modifier{"მოდიფიკატორი"}
+        musical_symbols{"მუსიკალური სიმბოლოები"}
+        nature{"ბუნება"}
+        nonspacing{"დაცული შორისები"}
+        numbers{"ციფრები"}
+        objects{"ობიექტები"}
+        other{"სხვა"}
+        paired{"დაწყვილებული"}
+        person{"ადამიანი"}
+        phonetic_alphabet{"ფონეტიკური ანბანი"}
+        pictographs{"პიკტოგრამები"}
+        place{"ადგილი"}
+        plant{"მცენარე"}
+        punctuation{"სასვენი ნიშები"}
+        rightwards_arrows{"მერჯვნივ მიმართული ისრები"}
+        sign_standard_symbols{"ნიშნები/სტანდარტული სიმბოლოები"}
+        small_form_variant{"პატარა ფორმის ვარიანტები"}
+        smiley{"სიცილაკი"}
+        smileys_people{"სიცილაკები და ხალხი"}
+        south_asian_scripts{"სამხრეთ აზიური დამწერლობები"}
+        southeast_asian_scripts{"სამხრეთ-აღმოსავლეთ აზიური დამწერლობები"}
+        spacing{"დაშორება"}
+        sport{"სპორტი"}
+        symbols{"სიმბოლოები"}
+        technical_symbols{"ტექნიკური სიმბოლოები"}
+        tone_marks{"ტონის ნიშნები"}
+        travel{"მოგზაურობა"}
+        travel_places{"მოგზაურობა და ადგილები"}
+        upwards_arrows{"ზემოთ მიმართული ისრები"}
+        variant_forms{"ფორმის ვარიანტები"}
+        vocalic_jamo{"Jamo-ხმოვნები"}
+        weather{"ამინდი"}
+        western_asian_scripts{"დასავლეთ აზიური დამწერლობები"}
+        whitespace{"შორისები"}
+    }
     delimiters{
         alternateQuotationEnd{"»"}
         alternateQuotationStart{"«"}
@@ -897,12 +987,32 @@ ka{
                 "0"{"ამ პარასკევს"}
                 "1"{"მომავალ პარასკევს"}
             }
+            relativeTime{
+                future{
+                    one{"{0} პარასკევში"}
+                    other{"{0} პარასკევში"}
+                }
+                past{
+                    one{"{0} პარასკევის წინ"}
+                    other{"{0} პარასკევის წინ"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"წინა პა."}
                 "0"{"ამ პა."}
                 "1"{"მომ. პა."}
+            }
+            relativeTime{
+                future{
+                    one{"{0} პარასკევში"}
+                    other{"{0} პარასკევში"}
+                }
+                past{
+                    one{"{0} პარასკევის წინ"}
+                    other{"{0} პარასკევის წინ"}
+                }
             }
         }
         fri-short{
@@ -911,9 +1021,22 @@ ka{
                 "0"{"ამ პარ."}
                 "1"{"მომ. პარ."}
             }
+            relativeTime{
+                future{
+                    one{"{0} პარასკევში"}
+                    other{"{0} პარასკევში"}
+                }
+                past{
+                    one{"{0} პარასკევის წინ"}
+                    other{"{0} პარასკევის წინ"}
+                }
+            }
         }
         hour{
             dn{"საათი"}
+            relative{
+                "0"{"ამ საათში"}
+            }
             relativeTime{
                 future{
                     one{"{0} საათში"}
@@ -953,6 +1076,9 @@ ka{
         }
         minute{
             dn{"წუთი"}
+            relative{
+                "0"{"ამ წუთში"}
+            }
             relativeTime{
                 future{
                     one{"{0} წუთში"}
@@ -996,6 +1122,16 @@ ka{
                 "0"{"ამ ორშაბათს"}
                 "1"{"მომავალ ორშაბათს"}
             }
+            relativeTime{
+                future{
+                    one{"{0} ორშაბათში"}
+                    other{"{0} ორშაბათში"}
+                }
+                past{
+                    one{"{0} ორშაბათის წინ"}
+                    other{"{0} ორშაბათის წინ"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -1003,12 +1139,32 @@ ka{
                 "0"{"ამ ორ."}
                 "1"{"მომ. ორ."}
             }
+            relativeTime{
+                future{
+                    one{"{0} ორშაბათში"}
+                    other{"{0} ორშაბათში"}
+                }
+                past{
+                    one{"{0} ორშაბათის წინ"}
+                    other{"{0} ორშაბათის წინ"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"წინა ორშ."}
                 "0"{"ამ ორშ."}
                 "1"{"მომ. ორშ."}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ორშაბათში"}
+                    other{"{0} ორშაბათში"}
+                }
+                past{
+                    one{"{0} ორშაბათის წინ"}
+                    other{"{0} ორშაბათის წინ"}
+                }
             }
         }
         month{
@@ -1067,6 +1223,11 @@ ka{
         }
         quarter{
             dn{"კვარტალი"}
+            relative{
+                "-1"{"გასულ კვარტალში"}
+                "0"{"ამ კვარტალში"}
+                "1"{"შემდეგ კვარტალში"}
+            }
             relativeTime{
                 future{
                     one{"{0} კვარტალში"}
@@ -1110,6 +1271,16 @@ ka{
                 "0"{"ამ შაბათს"}
                 "1"{"მომავალ შაბათს"}
             }
+            relativeTime{
+                future{
+                    one{"{0} შაბათში"}
+                    other{"{0} შაბათში"}
+                }
+                past{
+                    one{"{0} შაბათის წინ"}
+                    other{"{0} შაბათის წინ"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1117,12 +1288,32 @@ ka{
                 "0"{"ამ შა."}
                 "1"{"მომ. შბ."}
             }
+            relativeTime{
+                future{
+                    one{"{0} შაბათში"}
+                    other{"{0} შაბათში"}
+                }
+                past{
+                    one{"{0} შაბათის წინ"}
+                    other{"{0} შაბათის წინ"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"წინა შაბ."}
                 "0"{"ამ შაბ."}
                 "1"{"მომ. შაბ."}
+            }
+            relativeTime{
+                future{
+                    one{"{0} შაბათში"}
+                    other{"{0} შაბათში"}
+                }
+                past{
+                    one{"{0} შაბათის წინ"}
+                    other{"{0} შაბათის წინ"}
+                }
             }
         }
         second{
@@ -1173,12 +1364,32 @@ ka{
                 "0"{"ამ კვირას"}
                 "1"{"მომავალ კვირას"}
             }
+            relativeTime{
+                future{
+                    one{"{0} კვირაში"}
+                    other{"{0} კვირაში"}
+                }
+                past{
+                    one{"{0} კვირის წინ"}
+                    other{"{0} კვირი წინ"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"გასულ კვირას"}
                 "0"{"ამ კვირას"}
                 "1"{"მომავალ კვირას"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} კვირაში"}
+                    other{"{0} კვირაში"}
+                }
+                past{
+                    one{"{0} კვირის წინ"}
+                    other{"{0} კვირი წინ"}
+                }
             }
         }
         sun-short{
@@ -1187,12 +1398,32 @@ ka{
                 "0"{"ამ კვირას"}
                 "1"{"მომავალ კვირას"}
             }
+            relativeTime{
+                future{
+                    one{"{0} კვირაში"}
+                    other{"{0} კვირაში"}
+                }
+                past{
+                    one{"{0} კვირის წინ"}
+                    other{"{0} კვირის წინ"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"გასულ ხუთშაბათს"}
                 "0"{"ამ ხუთშაბათს"}
                 "1"{"მომავალ ხუთშაბათს"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ხუთშაბათში"}
+                    other{"{0} ხუთშაბათში"}
+                }
+                past{
+                    one{"{0} ხუთშაბათის წინ"}
+                    other{"{0} ხუთშაბათის წინ"}
+                }
             }
         }
         thu-narrow{
@@ -1201,12 +1432,32 @@ ka{
                 "0"{"ამ ხთ."}
                 "1"{"მომ. ხთ."}
             }
+            relativeTime{
+                future{
+                    one{"{0} ხუთშაბათში"}
+                    other{"{0} ხუთშაბათში"}
+                }
+                past{
+                    one{"{0} ხუთშაბათის წინ"}
+                    other{"{0} ხუთშაბათის წინ"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"წინა ხუთ."}
                 "0"{"ამ ხუთ."}
                 "1"{"მომ. ხუთ."}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ხუთშაბათში"}
+                    other{"{0} ხუთშაბათში"}
+                }
+                past{
+                    one{"{0} ხუთშაბათის წინ"}
+                    other{"{0} ხუთშაბათის წინ"}
+                }
             }
         }
         tue{
@@ -1215,12 +1466,32 @@ ka{
                 "0"{"ამ სამშაბათს"}
                 "1"{"მომავალ სამშაბათს"}
             }
+            relativeTime{
+                future{
+                    one{"{0} სამშაბათში"}
+                    other{"{0} სამშაბათში"}
+                }
+                past{
+                    one{"{0} სამშაბათის წინ"}
+                    other{"{0} სამშაბათის წინ"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"წინ სა."}
                 "0"{"ამ სა."}
                 "1"{"მომმ სა."}
+            }
+            relativeTime{
+                future{
+                    one{"{0} სამშაბათში"}
+                    other{"{0} სამშაბათში"}
+                }
+                past{
+                    one{"{0} სამშაბათის წინ"}
+                    other{"{0} სამშაბათის წინ"}
+                }
             }
         }
         tue-short{
@@ -1229,12 +1500,32 @@ ka{
                 "0"{"ამ სამ."}
                 "1"{"მომ. სამ."}
             }
+            relativeTime{
+                future{
+                    one{"{0} სამშაბათში"}
+                    other{"{0} სამშაბათში"}
+                }
+                past{
+                    one{"{0} სამშაბათის წინ"}
+                    other{"{0} სამშაბათის წინ"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"გასულ ოთხშაბათს"}
                 "0"{"ამ ოთხშაბათს"}
                 "1"{"მომავალ ოთხშაბათს"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ოთხშაბათში"}
+                    other{"{0} ოთხშაბათში"}
+                }
+                past{
+                    one{"{0} ოთხშაბათის წინ"}
+                    other{"{0} ოთხშაბათის წინ"}
+                }
             }
         }
         wed-narrow{
@@ -1243,12 +1534,32 @@ ka{
                 "0"{"ამ ოთ."}
                 "1"{"მომ. ოთ."}
             }
+            relativeTime{
+                future{
+                    one{"{0} ოთხშაბათში"}
+                    other{"{0} ოთხშაბათში"}
+                }
+                past{
+                    one{"{0} ოთხშაბათის წინ"}
+                    other{"{0} ოთხშაბათის წინ"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"წინა ოთხ."}
                 "0"{"ამ ოთხ."}
                 "1"{"მომ. ოთხ."}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ოთხშაბათში"}
+                    other{"{0} ოთხშაბათში"}
+                }
+                past{
+                    one{"{0} ოთხშაბათის წინ"}
+                    other{"{0} ოთხშაბათის წინ"}
+                }
             }
         }
         week{
@@ -1258,6 +1569,7 @@ ka{
                 "0"{"ამ კვირაში"}
                 "1"{"მომავალ კვირაში"}
             }
+            relativePeriod{"{0}-ის კვირაში"}
             relativeTime{
                 future{
                     one{"{0} კვირაში"}
@@ -1276,6 +1588,7 @@ ka{
                 "0"{"ამ კვირაში"}
                 "1"{"მომავალ კვირაში"}
             }
+            relativePeriod{"{0}-ის კვირაში"}
             relativeTime{
                 future{
                     one{"{0} კვირაში"}
@@ -1294,6 +1607,7 @@ ka{
                 "0"{"ამ კვირაში"}
                 "1"{"მომავალ კვირაში"}
             }
+            relativePeriod{"{0}-ის კვირაში"}
             relativeTime{
                 future{
                     one{"{0} კვირაში"}
@@ -1368,6 +1682,12 @@ ka{
     }
     listPattern{
         standard{
+            2{"{0} და {1}"}
+            end{"{0} და {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
             2{"{0} და {1}"}
             end{"{0} და {1}"}
             middle{"{0}, {1}"}

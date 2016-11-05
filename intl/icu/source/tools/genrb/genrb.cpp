@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 1998-2015, International Business Machines
+*   Copyright (C) 1998-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -22,6 +24,7 @@
 #include "unicode/uclean.h"
 #include "unicode/utf16.h"
 #include "charstr.h"
+#include "cmemory.h"
 #include "reslist.h"
 #include "ucmndata.h"  /* TODO: for reading the pool bundle */
 
@@ -126,7 +129,7 @@ main(int argc,
 
     options[JAVA_PACKAGE].value = "com.ibm.icu.impl.data";
     options[BUNDLE_NAME].value = "LocaleElements";
-    argc = u_parseArgs(argc, argv, (int32_t)(sizeof(options)/sizeof(options[0])), options);
+    argc = u_parseArgs(argc, argv, UPRV_LENGTHOF(options), options);
 
     /* error handling, printing usage message */
     if(argc<0) {

@@ -1,5 +1,8 @@
 #! /usr/bin/python
 
+# Copyright (C) 2016 and later: Unicode, Inc. and others.
+# License & terms of use: http://www.unicode.org/copyright.html
+
 # Copyright (C) 2009-2011, International Business Machines Corporation, Google and Others.
 # All rights reserved.
 

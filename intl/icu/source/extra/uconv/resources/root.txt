@@ -1,4 +1,7 @@
 ﻿// -*- Coding: utf-8; -*-  [all uconv resource files]
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
+//
 // Copyright (c) 2000-2004 IBM, Inc. and Others.
 //
 // Root translation file for uconv messages.
