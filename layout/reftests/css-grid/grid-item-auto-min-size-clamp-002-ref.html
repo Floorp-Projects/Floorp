@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Clamp 'automatic minimum size' to definite max-sizing for orthogonal item</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1300369">
+  <style type="text/css">
+body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(auto, 15px));
+  grid-template-rows:    repeat(2,minmax(auto, 10px));
+  grid-gap: 1px;
+  align-items: start;
+  justify-items: start;
+  float: left;
+  border: 1px dashed;
+  margin-left: 16px;
+  margin-bottom: 14px;
+}
+.sz {
+  width: 40px;
+  height: 40px;
+}
+
+.definite {
+  grid-template-columns: repeat(2,15px);
+  grid-template-rows:    repeat(2,10px);
+}
+.min {
+  grid-template-columns: repeat(2,minmax(min-content, 15px));
+  grid-template-rows:    repeat(2,minmax(min-content, 10px));
+}
+.max {
+  grid-template-columns: repeat(2,minmax(max-content, 15px));
+  grid-template-rows:    repeat(2,minmax(max-content, 10px));
+}
+
+.larger .grid {
+  grid-template-columns: repeat(2,minmax(auto, 25px));
+  grid-template-rows:    repeat(2,minmax(auto, 28px));
+}
+.larger .definite {
+  grid-template-columns: repeat(2,25px);
+  grid-template-rows:    repeat(2,28px);
+}
+.larger .min {
+  grid-template-columns: repeat(2,minmax(min-content, 25px));
+  grid-template-rows:    repeat(2,minmax(min-content, 28px));
+}
+.larger .max {
+  grid-template-columns: repeat(2,minmax(max-content, 25px));
+  grid-template-rows:    repeat(2,minmax(max-content, 28px));
+}
+
+.stretch .grid {
+  align-items: stretch;
+  justify-items: stretch;
+}
+.grid.a.max {
+  height:61px;
+}
+.larger .grid.a.max {
+  height:79px;
+}
+
+span {
+  writing-mode: vertical-rl;
+  grid-area: 1 / 1;
+  font-size: 48px;
+  background: grey;
+  background-clip: content-box;
+  border: 1px solid;
+  padding: 1px 3px 5px 7px;
+  margin: 3px 5px 7px 1px;
+  width: 0;
+  height: 0;
+}
+.span2 {
+  grid-area: 1 / 1 / span 2 / span 2;
+  width: 13px;
+  height: 3px;
+}
+.larger .grid span {
+  width: 7px;
+  height: 10px;
+}
+.larger .grid .span2 {
+  font-size: 32px;
+  width: 20px;
+  height: 32px;
+}
+.stretch.larger .grid .span2 {
+  width: 33px;
+  height: 39px;
+}
+.stretch.larger .grid.sz .span2 {
+  width: 22px;
+  height: 32px;
+}
+.stretch.larger .grid.definite .span2 {
+  width: 33px;
+  height: 39px;
+}
+.grid.max span {
+  height:32px;
+}
+
+x {
+  grid-area: 1 / 1;
+  min-width: 0;
+  min-height: 0;
+  align-self: stretch;
+  justify-self: stretch;
+  background: cyan;
+}
+c {
+  display: block;
+  width: 20px;
+  height: 32px;
+}
+
+br {
+  clear: both;
+}
+  </style>
+</head>
+<body>
+
+<div id="tests">
+<div class="grid"><x></x><span><c>X</c></span></div>
+<div class="grid definite"><x></x><span><c>X</c></span></div>
+<div class="grid"><x></x><span class="span2"><c>X</c></span></div>
+<div class="grid definite"><x></x><span class="span2"><c>X</c></span></div>
+
+<div class="grid sz"><x></x><span><c>X</c></span></div>
+<div class="grid sz definite"><x></x><span><c>X</c></span></div>
+<div class="grid sz"><x></x><span class="span2"><c>X</c></span></div>
+<div class="grid sz definite"><x></x><span class="span2"><c>X</c></span></div>
+
+<br>
+
+<div class="grid min"><x></x><span><c>X</c></span></div>
+<div class="grid min"><x></x><span class="span2"><c>X</c></span></div>
+<div class="grid sz min"><x></x><span><c>X</c></span></div>
+<div class="grid sz min"><x></x><span class="span2"><c>X</c></span></div>
+
+<div class="grid a max"><x></x><span><c>X</c></span></div>
+<div class="grid max"><x></x><span class="span2"><c>X</c></span></div>
+<div class="grid sz max"><x></x><span><c>X</c></span></div>
+<div class="grid sz max"><x></x><span class="span2"><c>X</c></span></div>
+
+<br>
+
+</div>
+
+<script>
+var tests = document.getElementById('tests');
+
+var n = tests.cloneNode(true);
+var wrap = document.createElement('div');
+wrap.className = 'larger';
+wrap.appendChild(n);
+document.body.appendChild(wrap);
+
+var n = tests.cloneNode(true);
+var wrap = document.createElement('div');
+wrap.className = 'stretch';
+wrap.appendChild(n);
+document.body.appendChild(wrap);
+
+var n = tests.cloneNode(true);
+var wrap = document.createElement('div');
+wrap.className = 'stretch larger';
+wrap.appendChild(n);
+document.body.appendChild(wrap);
+
+</script>
+
+</body></html>
