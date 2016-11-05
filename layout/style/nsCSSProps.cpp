@@ -1353,7 +1353,7 @@ const KTableEntry nsCSSProps::kAlignAllKeywords[] = {
   { eCSSKeyword_left,          NS_STYLE_ALIGN_LEFT },
   { eCSSKeyword_right,         NS_STYLE_ALIGN_RIGHT },
   { eCSSKeyword_baseline,      NS_STYLE_ALIGN_BASELINE },
-  { eCSSKeyword_last_baseline, NS_STYLE_ALIGN_LAST_BASELINE },
+  // Also "first/last baseline"; see nsCSSValue::AppendAlignJustifyValueToString
   { eCSSKeyword_stretch,       NS_STYLE_ALIGN_STRETCH },
   { eCSSKeyword_self_start,    NS_STYLE_ALIGN_SELF_START },
   { eCSSKeyword_self_end,      NS_STYLE_ALIGN_SELF_END },
@@ -1402,7 +1402,7 @@ const KTableEntry nsCSSProps::kAlignAutoNormalStretchBaseline[] = {
   { eCSSKeyword_normal,        NS_STYLE_ALIGN_NORMAL },
   { eCSSKeyword_stretch,       NS_STYLE_ALIGN_STRETCH },
   { eCSSKeyword_baseline,      NS_STYLE_ALIGN_BASELINE },
-  { eCSSKeyword_last_baseline, NS_STYLE_ALIGN_LAST_BASELINE },
+  // Also "first baseline" & "last baseline"; see CSSParserImpl::ParseAlignEnum
   { eCSSKeyword_UNKNOWN,       -1 }
 };
 
@@ -1410,14 +1410,14 @@ const KTableEntry nsCSSProps::kAlignNormalStretchBaseline[] = {
   { eCSSKeyword_normal,        NS_STYLE_ALIGN_NORMAL },
   { eCSSKeyword_stretch,       NS_STYLE_ALIGN_STRETCH },
   { eCSSKeyword_baseline,      NS_STYLE_ALIGN_BASELINE },
-  { eCSSKeyword_last_baseline, NS_STYLE_ALIGN_LAST_BASELINE },
+  // Also "first baseline" & "last baseline"; see CSSParserImpl::ParseAlignEnum
   { eCSSKeyword_UNKNOWN,       -1 }
 };
 
 const KTableEntry nsCSSProps::kAlignNormalBaseline[] = {
   { eCSSKeyword_normal,        NS_STYLE_ALIGN_NORMAL },
   { eCSSKeyword_baseline,      NS_STYLE_ALIGN_BASELINE },
-  { eCSSKeyword_last_baseline, NS_STYLE_ALIGN_LAST_BASELINE },
+  // Also "first baseline" & "last baseline"; see CSSParserImpl::ParseAlignEnum
   { eCSSKeyword_UNKNOWN,       -1 }
 };
 
