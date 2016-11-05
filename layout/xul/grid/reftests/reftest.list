@@ -1,18 +1,18 @@
-skip-if((B2G&&browserIsRemote)||Mulet) == row-sizing-1.xul row-sizing-1-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == column-sizing-1.xul column-sizing-1-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == row-or-column-sizing-1.xul row-or-column-sizing-2.xul # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == row-or-column-sizing-1.xul row-or-column-sizing-3.xul # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == row-or-column-sizing-1.xul row-or-column-sizing-4.xul # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60000) == z-order-1.xul z-order-1-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60000) == z-order-2.xul z-order-2-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60000) == not-full-basic.xul not-full-basic-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,110000) == not-full-grid-pack-align.xul not-full-basic-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,30000) == not-full-row-group-align.xul not-full-row-group-align-ref.xhtml # does anyone want/need this behavior? # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,10000) == not-full-row-group-pack.xul not-full-row-group-pack-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,50000) == not-full-row-group-direction.xul not-full-row-group-direction-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60000) == not-full-row-leaf-align.xul not-full-basic-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,50000) == not-full-row-leaf-pack.xul not-full-row-leaf-pack-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,80000) == not-full-row-leaf-direction.xul not-full-row-leaf-pack-ref.xhtml
-skip-if(B2G||Mulet) random-if(transparentScrollbars) fuzzy-if(OSX==1010,1,565) == scrollable-columns.xul scrollable-columns-ref.xhtml # bug 650597 # Initial mulet triage: parity with B2G/B2G Desktop
-fails skip-if((B2G&&browserIsRemote)||Mulet) == scrollable-rows.xul scrollable-rows-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == sizing-2d.xul sizing-2d-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
+== row-sizing-1.xul row-sizing-1-ref.xul
+== column-sizing-1.xul column-sizing-1-ref.xul
+== row-or-column-sizing-1.xul row-or-column-sizing-2.xul
+== row-or-column-sizing-1.xul row-or-column-sizing-3.xul
+== row-or-column-sizing-1.xul row-or-column-sizing-4.xul
+fuzzy-if(skiaContent,1,60000) == z-order-1.xul z-order-1-ref.xul
+fuzzy-if(skiaContent,1,60000) == z-order-2.xul z-order-2-ref.xul
+fuzzy-if(skiaContent,1,60000) == not-full-basic.xul not-full-basic-ref.xhtml
+fuzzy-if(skiaContent,1,110000) == not-full-grid-pack-align.xul not-full-basic-ref.xhtml
+fuzzy-if(skiaContent,1,30000) == not-full-row-group-align.xul not-full-row-group-align-ref.xhtml # does anyone want/need this behavior?
+fuzzy-if(skiaContent,1,10000) == not-full-row-group-pack.xul not-full-row-group-pack-ref.xhtml
+fuzzy-if(skiaContent,1,50000) == not-full-row-group-direction.xul not-full-row-group-direction-ref.xhtml
+fuzzy-if(skiaContent,1,60000) == not-full-row-leaf-align.xul not-full-basic-ref.xhtml
+fuzzy-if(skiaContent,1,50000) == not-full-row-leaf-pack.xul not-full-row-leaf-pack-ref.xhtml
+fuzzy-if(skiaContent,1,80000) == not-full-row-leaf-direction.xul not-full-row-leaf-pack-ref.xhtml
+random-if(transparentScrollbars) fuzzy-if(OSX==1010,1,565) == scrollable-columns.xul scrollable-columns-ref.xhtml # bug 650597
+fails == scrollable-rows.xul scrollable-rows-ref.xhtml
+== sizing-2d.xul sizing-2d-ref.xul
