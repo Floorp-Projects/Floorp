@@ -1,3 +1,5 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
 * Copyright (C) 2015, International Business Machines
@@ -26,6 +28,7 @@ SharedObject::addRef(UBool fromWithinCache) const {
         // cache global mutex is locked. In this way, we can be rest assured
         // that data races can't happen if the cache performs some task if
         // the hardRefCount is zero while the global cache mutex is locked.
+        (void)fromWithinCache;   // Suppress unused variable warning in non-debug builds.
         U_ASSERT(fromWithinCache);
         cachePtr->incrementItemsInUse();
     }

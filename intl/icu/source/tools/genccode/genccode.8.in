@@ -2,6 +2,8 @@
 .\"
 .\" genccode.8: manual page for the gennames utility
 .\"
+.\" Copyright (C) 2016 and later: Unicode, Inc. and others.
+.\" License & terms of use: http://www.unicode.org/copyright.html
 .\" Copyright (C) 2003-2004 IBM, Inc. and others.
 .\"
 .TH GENCCODE 8 "11 March 2004" "ICU MANPAGE" "ICU @VERSION@ Manual"

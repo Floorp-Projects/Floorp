@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fo.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fo{
-    Version{"2.1.19.17"}
+    Version{"2.1.28.76"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -309,6 +303,9 @@ fo{
         "America:El_Salvador"{
             ec{"El Salvador"}
         }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
+        }
         "America:Fortaleza"{
             ec{"Fortaleza"}
         }
@@ -550,7 +547,7 @@ fo{
             ec{"Sitka"}
         }
         "America:St_Barthelemy"{
-            ec{"St-Barthélemy"}
+            ec{"St. Barthelemy"}
         }
         "America:St_Johns"{
             ec{"St. John’s"}
@@ -671,6 +668,9 @@ fo{
         }
         "Asia:Bangkok"{
             ec{"Bangkok"}
+        }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
         }
         "Asia:Beirut"{
             ec{"Beirut"}
@@ -849,6 +849,9 @@ fo{
         "Asia:Tokyo"{
             ec{"Tokyo"}
         }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"Ulaanbaatar"}
         }
@@ -948,6 +951,9 @@ fo{
         "Europe:Andorra"{
             ec{"Andorra"}
         }
+        "Europe:Astrakhan"{
+            ec{"Astrakhan"}
+        }
         "Europe:Athens"{
             ec{"Aten"}
         }
@@ -1005,6 +1011,9 @@ fo{
         }
         "Europe:Kiev"{
             ec{"Kiev"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
         }
         "Europe:Lisbon"{
             ec{"Lissabon"}
@@ -1081,6 +1090,9 @@ fo{
         }
         "Europe:Tirane"{
             ec{"Tirane"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Ulyanovsk"}
         }
         "Europe:Uzhgorod"{
             ec{"Uzhgorod"}
@@ -1736,6 +1748,9 @@ fo{
         }
         "meta:Ponape"{
             ls{"Ponape tíð"}
+        }
+        "meta:Pyongyang"{
+            ls{"Pyongyang tíð"}
         }
         "meta:Reunion"{
             ls{"Réunion tíð"}

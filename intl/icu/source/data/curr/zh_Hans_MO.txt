@@ -1,28 +1,14 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/zh_Hans_MO.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hans_MO{
     Currencies{
-        AWG{
-            "AWG",
-            "阿鲁巴弗罗林",
-        }
         CNY{
             "CN¥",
             "人民币",
         }
         MOP{
             "MOP$",
-            "澳门元",
-        }
-        NIO{
-            "NIO",
-            "尼加拉瓜科多巴",
+            "澳门币",
         }
         XAG{
             "XAG",
@@ -43,5 +29,5 @@ zh_Hans_MO{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.19.79"}
+    Version{"2.1.27.99"}
 }

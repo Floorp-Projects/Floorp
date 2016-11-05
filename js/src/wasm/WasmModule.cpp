@@ -538,8 +538,8 @@ Module::extractCode(JSContext* cx, MutableHandleValue vp)
         if (!JS_DefineProperty(cx, segment, "kind", value, JSPROP_ENUMERATE))
             return false;
         if (p->isFunction()) {
-            value.setNumber((uint32_t)p->funcDefIndex());
-            if (!JS_DefineProperty(cx, segment, "funcDefIndex", value, JSPROP_ENUMERATE))
+            value.setNumber((uint32_t)p->funcIndex());
+            if (!JS_DefineProperty(cx, segment, "funcIndex", value, JSPROP_ENUMERATE))
                 return false;
             value.setNumber((uint32_t)p->funcNonProfilingEntry());
             if (!JS_DefineProperty(cx, segment, "funcBodyBegin", value, JSPROP_ENUMERATE))
@@ -599,17 +599,6 @@ Module::initSegments(JSContext* cx,
                                       "elem", "table");
             return false;
         }
-
-        for (uint32_t elemFuncIndex : seg.elemFuncIndices) {
-            if (elemFuncIndex < funcImports.length()) {
-                HandleFunction f = funcImports[elemFuncIndex];
-                if (!IsExportedWasmFunction(f)) {
-                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                              JSMSG_WASM_BAD_TABLE_VALUE);
-                    return false;
-                }
-            }
-        }
     }
 
     if (memoryObj) {
@@ -641,20 +630,17 @@ Module::initSegments(JSContext* cx,
         uint8_t* codeBase = instance.codeBase();
 
         for (uint32_t i = 0; i < seg.elemCodeRangeIndices.length(); i++) {
-            uint32_t elemFuncIndex = seg.elemFuncIndices[i];
-            if (elemFuncIndex < funcImports.length()) {
+            uint32_t funcIndex = seg.elemFuncIndices[i];
+            if (funcIndex < funcImports.length() && IsExportedWasmFunction(funcImports[funcIndex])) {
                 MOZ_ASSERT(!metadata().isAsmJS());
                 MOZ_ASSERT(!table.isTypedFunction());
-                MOZ_ASSERT(seg.elemCodeRangeIndices[i] == UINT32_MAX);
 
-                HandleFunction f = funcImports[elemFuncIndex];
+                HandleFunction f = funcImports[funcIndex];
                 WasmInstanceObject* exportInstanceObj = ExportedFunctionToInstanceObject(f);
                 const CodeRange& cr = exportInstanceObj->getExportedFunctionCodeRange(f);
                 Instance& exportInstance = exportInstanceObj->instance();
                 table.set(offset + i, exportInstance.codeBase() + cr.funcTableEntry(), exportInstance);
             } else {
-                MOZ_ASSERT(seg.elemCodeRangeIndices[i] != UINT32_MAX);
-
                 const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices[i]];
                 uint32_t entryOffset = table.isTypedFunction()
                                        ? profilingEnabled
@@ -693,11 +679,11 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
         if (!IsExportedFunction(f) || ExportedFunctionToInstance(f).isAsmJS())
             continue;
 
-        uint32_t funcDefIndex = ExportedFunctionToDefinitionIndex(f);
+        uint32_t funcIndex = ExportedFunctionToFuncIndex(f);
         Instance& instance = ExportedFunctionToInstance(f);
-        const FuncDefExport& funcDefExport = instance.metadata().lookupFuncDefExport(funcDefIndex);
+        const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
 
-        if (funcDefExport.sig() != metadata_->funcImports[i].sig()) {
+        if (funcExport.sig() != metadata_->funcImports[i].sig()) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG);
             return false;
         }
@@ -829,15 +815,15 @@ GetFunctionExport(JSContext* cx,
                   const Export& exp,
                   MutableHandleValue val)
 {
-    if (exp.funcIndex() < funcImports.length()) {
+    if (exp.funcIndex() < funcImports.length() &&
+        IsExportedWasmFunction(funcImports[exp.funcIndex()]))
+    {
         val.setObject(*funcImports[exp.funcIndex()]);
         return true;
     }
 
-    uint32_t funcDefIndex = exp.funcIndex() - funcImports.length();
-
     RootedFunction fun(cx);
-    if (!instanceObj->getExportedFunction(cx, instanceObj, funcDefIndex, &fun))
+    if (!instanceObj->getExportedFunction(cx, instanceObj, exp.funcIndex(), &fun))
         return false;
 
     val.setObject(*fun);
@@ -1042,20 +1028,10 @@ Module::instantiate(JSContext* cx,
     // Note that failure may cause instantiation to throw, but the instance may
     // still be live via edges created by initSegments or the start function.
 
-    if (metadata_->hasStartFunction()) {
-        uint32_t startFuncIndex = metadata_->startFuncIndex();
+    if (metadata_->startFuncIndex) {
         FixedInvokeArgs<0> args(cx);
-        if (startFuncIndex < funcImports.length()) {
-            RootedValue fval(cx, ObjectValue(*funcImports[startFuncIndex]));
-            RootedValue thisv(cx);
-            RootedValue rval(cx);
-            if (!Call(cx, fval, thisv, args, &rval))
-                return false;
-        } else {
-            uint32_t funcDefIndex = startFuncIndex - funcImports.length();
-            if (!instance->instance().callExport(cx, funcDefIndex, args))
-                return false;
-        }
+        if (!instance->instance().callExport(cx, *metadata_->startFuncIndex, args))
+            return false;
     }
 
     uint32_t mode = uint32_t(metadata().isAsmJS() ? Telemetry::ASMJS : Telemetry::WASM);

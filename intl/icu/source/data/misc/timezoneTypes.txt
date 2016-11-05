@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/bcp47/timezone.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 timezoneTypes:table(nofallback){
     bcpTypeAlias{
         tz{
@@ -53,6 +47,7 @@ timezoneTypes:table(nofallback){
             "Asia:Thimbu"{"Asia/Thimphu"}
             "Asia:Ujung_Pandang"{"Asia/Makassar"}
             "Asia:Ulan_Bator"{"Asia/Ulaanbaatar"}
+            "Asia:Yangon"{"Asia/Rangoon"}
             "Atlantic:Faroe"{"Atlantic/Faeroe"}
             "Atlantic:Jan_Mayen"{"Arctic/Longyearbyen"}
             "Australia:ACT"{"Australia/Sydney"}
@@ -252,6 +247,7 @@ timezoneTypes:table(nofallback){
             "America:Edmonton"{"caedm"}
             "America:Eirunepe"{"brern"}
             "America:El_Salvador"{"svsal"}
+            "America:Fort_Nelson"{"cafne"}
             "America:Fortaleza"{"brfor"}
             "America:Glace_Bay"{"caglb"}
             "America:Godthab"{"glgoh"}
@@ -374,6 +370,7 @@ timezoneTypes:table(nofallback){
             "Asia:Bahrain"{"bhbah"}
             "Asia:Baku"{"azbak"}
             "Asia:Bangkok"{"thbkk"}
+            "Asia:Barnaul"{"rubax"}
             "Asia:Beirut"{"lbbey"}
             "Asia:Bishkek"{"kgfru"}
             "Asia:Brunei"{"bnbwn"}
@@ -433,6 +430,7 @@ timezoneTypes:table(nofallback){
             "Asia:Tehran"{"irthr"}
             "Asia:Thimphu"{"btthi"}
             "Asia:Tokyo"{"jptyo"}
+            "Asia:Tomsk"{"rutof"}
             "Asia:Ulaanbaatar"{"mnuln"}
             "Asia:Urumqi"{"cnurc"}
             "Asia:Ust-Nera"{"ruunera"}
@@ -493,6 +491,7 @@ timezoneTypes:table(nofallback){
             "Etc:Unknown"{"unk"}
             "Europe:Amsterdam"{"nlams"}
             "Europe:Andorra"{"adalv"}
+            "Europe:Astrakhan"{"ruasf"}
             "Europe:Athens"{"grath"}
             "Europe:Belgrade"{"rsbeg"}
             "Europe:Berlin"{"deber"}
@@ -512,6 +511,7 @@ timezoneTypes:table(nofallback){
             "Europe:Jersey"{"jesth"}
             "Europe:Kaliningrad"{"rukgd"}
             "Europe:Kiev"{"uaiev"}
+            "Europe:Kirov"{"rukvx"}
             "Europe:Lisbon"{"ptlis"}
             "Europe:Ljubljana"{"silju"}
             "Europe:London"{"gblon"}
@@ -537,6 +537,7 @@ timezoneTypes:table(nofallback){
             "Europe:Stockholm"{"sesto"}
             "Europe:Tallinn"{"eetll"}
             "Europe:Tirane"{"altia"}
+            "Europe:Ulyanovsk"{"ruuly"}
             "Europe:Uzhgorod"{"uauzh"}
             "Europe:Vaduz"{"livdz"}
             "Europe:Vatican"{"vavat"}

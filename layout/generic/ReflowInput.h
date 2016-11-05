@@ -218,6 +218,8 @@ public:
     uint32_t mShrinkWrap:1; // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
     uint32_t mUseAutoBSize:1; // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
     uint32_t mStaticPosIsCBOrigin:1; // the STATIC_POS_IS_CB_ORIGIN ctor flag
+    uint32_t mIClampMarginBoxMinSize:1; // the I_CLAMP_MARGIN_BOX_MIN_SIZE ctor flag
+    uint32_t mBClampMarginBoxMinSize:1; // the B_CLAMP_MARGIN_BOX_MIN_SIZE ctor flag
 
     // If set, the following two flags indicate that:
     // (1) this frame is absolutely-positioned (or fixed-positioned).
@@ -730,6 +732,12 @@ public:
     // The caller wants the abs.pos. static-position resolved at the origin
     // of the containing block, i.e. at LogicalPoint(0, 0).
     STATIC_POS_IS_CB_ORIGIN = (1<<4),
+
+    // Pass ComputeSizeFlags::eIClampMarginBoxMinSize to ComputeSize().
+    I_CLAMP_MARGIN_BOX_MIN_SIZE = (1<<5),
+
+    // Pass ComputeSizeFlags::eBClampMarginBoxMinSize to ComputeSize().
+    B_CLAMP_MARGIN_BOX_MIN_SIZE = (1<<6),
   };
 
   // This method initializes various data members. It is automatically

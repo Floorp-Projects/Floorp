@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/mzn.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 mzn{
     Currencies{
         AED{
@@ -96,9 +90,13 @@ mzn{
             "BWP",
             "بوتساوانای ِپولا",
         }
+        BYN{
+            "BYN",
+            "بلاروس ِروبل",
+        }
         BYR{
             "BYR",
-            "بلاروس ِروبل",
+            "بلاروس ِروبل (۲۰۰۰–۲۰۱۶)",
         }
         BZD{
             "BZD",
@@ -601,7 +599,7 @@ mzn{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -749,8 +747,11 @@ mzn{
         BWP{
             other{"بوتساوانای ِپولا"}
         }
-        BYR{
+        BYN{
             other{"بلاروس ِروبل"}
+        }
+        BYR{
+            other{"بلاروس ِروبل (۲۰۰۰–۲۰۱۶)"}
         }
         BZD{
             other{"بلیز دلار"}
@@ -1119,5 +1120,5 @@ mzn{
             other{"زامبیای ِکواچا"}
         }
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.76"}
 }

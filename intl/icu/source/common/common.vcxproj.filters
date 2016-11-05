@@ -277,10 +277,16 @@
     <ClCompile Include="dtintrv.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
+    <ClCompile Include="locdspnm.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
     <ClCompile Include="parsepos.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
-    <ClCompile Include="simplepatternformatter.cpp">
+    <ClCompile Include="simpleformatter.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="ucurr.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
     <ClCompile Include="ustrfmt.c">
@@ -343,7 +349,10 @@
     <ClCompile Include="uresbund.cpp">
       <Filter>locales &amp; resources</Filter>
     </ClCompile>
-    <ClCompile Include="uresdata.c">
+    <ClCompile Include="uresdata.cpp">
+      <Filter>locales &amp; resources</Filter>
+    </ClCompile>
+    <ClCompile Include="resource.cpp">
       <Filter>locales &amp; resources</Filter>
     </ClCompile>
     <ClCompile Include="caniter.cpp">
@@ -463,6 +472,9 @@
     <ClCompile Include="cstring.c">
       <Filter>strings</Filter>
     </ClCompile>
+    <ClCompile Include="cstr.cpp">
+      <Filter>strings</Filter>
+    </ClCompile>
     <ClCompile Include="cwchar.c">
       <Filter>strings</Filter>
     </ClCompile>
@@ -574,12 +586,17 @@
     <ClCompile Include="stringtriebuilder.cpp">
       <Filter>collections</Filter>
     </ClCompile>
-    <ClCompile Include="icuplug.cpp" />
     <ClCompile Include="uloc_keytype.cpp">
       <Filter>locales &amp; resources</Filter>
     </ClCompile>
     <ClCompile Include="filteredbrk.cpp">
       <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="icuplug.cpp">
+      <Filter>registration</Filter>
+    </ClCompile>
+    <ClCompile Include="ubiditransform.c">
+      <Filter>bidi</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -745,15 +762,30 @@
     <ClInclude Include="umapfile.h">
       <Filter>data &amp; memory</Filter>
     </ClInclude>
-    <ClInclude Include="simplepatternformatter.h">
+    <CustomBuild Include="unicode\locdspnm.h">
       <Filter>formatting</Filter>
-    </ClInclude>
+    </CustomBuild>
+    <CustomBuild Include="unicode\simpleformatter.h">
+      <Filter>formatting</Filter>
+    </CustomBuild>
     <ClInclude Include="ustrfmt.h">
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="util.h">
       <Filter>formatting</Filter>
     </ClInclude>
+    <CustomBuild Include="unicode\ucurr.h">
+      <Filter>formatting</Filter>
+    </CustomBuild>
+    <ClInclude Include="ucurrimp.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <CustomBuild Include="unicode\udisplaycontext.h">
+      <Filter>formatting</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uldnames.h">
+      <Filter>formatting</Filter>
+    </CustomBuild>
     <ClInclude Include="punycode.h">
       <Filter>idna</Filter>
     </ClInclude>
@@ -767,6 +799,9 @@
       <Filter>locales &amp; resources</Filter>
     </ClInclude>
     <ClInclude Include="uresdata.h">
+      <Filter>locales &amp; resources</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
       <Filter>locales &amp; resources</Filter>
     </ClInclude>
     <ClInclude Include="uresimp.h">
@@ -829,6 +864,9 @@
     <ClInclude Include="cstring.h">
       <Filter>strings</Filter>
     </ClInclude>
+    <ClInclude Include="cstr.h">
+      <Filter>strings</Filter>
+    </ClInclude>
     <ClInclude Include="cwchar.h">
       <Filter>strings</Filter>
     </ClInclude>
@@ -876,6 +914,9 @@
     </ClInclude>
     <ClInclude Include="unicode\filteredbrk.h">
       <Filter>break iteration</Filter>
+    </ClInclude>
+    <ClInclude Include="unicode\ubiditransform.h">
+      <Filter>bidi</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

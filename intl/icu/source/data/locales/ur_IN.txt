@@ -1,32 +1,81 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ur_IN.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ur_IN{
     NumberElements{
+        arabext{
+            patterns{
+                currencyFormat{"¤ #,##,##0.00"}
+            }
+        }
         default{"arabext"}
+        latn{
+            miscPatterns{
+                atLeast{"{0}+"}
+            }
+        }
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.27.79"}
     calendar{
-        generic{
-            DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
-                "EEEE، d MMMM، y G",
-                "d MMMM، y G",
-                "d MMM، y G",
-                "d/M/yy GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+        gregorian{
+            dayNames{
+                format{
+                    abbreviated{
+                        "اتوار",
+                        "پیر",
+                        "منگل",
+                        "بدھ",
+                        "جمعرات",
+                        "جمعہ",
+                        "ہفتہ",
+                    }
+                    short{
+                        "اتوار",
+                        "پیر",
+                        "منگل",
+                        "بدھ",
+                        "جمعرات",
+                        "جمعہ",
+                        "ہفتہ",
+                    }
+                    wide{
+                        "اتوار",
+                        "پیر",
+                        "منگل",
+                        "بدھ",
+                        "جمعرات",
+                        "جمعہ",
+                        "ہفتہ",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "اتوار",
+                        "پیر",
+                        "منگل",
+                        "بدھ",
+                        "جمعرات",
+                        "جمعہ",
+                        "ہفتہ",
+                    }
+                    short{
+                        "اتوار",
+                        "پیر",
+                        "منگل",
+                        "بدھ",
+                        "جمعرات",
+                        "جمعہ",
+                        "ہفتہ",
+                    }
+                    wide{
+                        "اتوار",
+                        "پیر",
+                        "منگل",
+                        "بدھ",
+                        "جمعرات",
+                        "جمعہ",
+                        "ہفتہ",
+                    }
+                }
             }
         }
     }
@@ -53,6 +102,8 @@ ur_IN{
         fri{
             relative{
                 "-1"{"پچھلے جمعہ"}
+                "0"{"اس جمعہ"}
+                "1"{"اگلے جمعہ"}
             }
         }
         hour-narrow{
@@ -98,6 +149,8 @@ ur_IN{
         mon{
             relative{
                 "-1"{"پچھلے سوموار"}
+                "0"{"اس سوموار"}
+                "1"{"اگلے سوموار"}
             }
         }
         month{
@@ -156,21 +209,29 @@ ur_IN{
         thu{
             relative{
                 "-1"{"پچھلے جمعرات"}
+                "0"{"اس جمعرات"}
+                "1"{"اگلے جمعرات"}
             }
         }
         tue{
             relative{
                 "-1"{"پچھلے منگل"}
+                "0"{"اس منگل"}
+                "1"{"اگلے منگل"}
             }
         }
         wed{
             relative{
                 "-1"{"پچھلے بدھ"}
+                "0"{"اس بدھ"}
+                "1"{"اگلے بدھ"}
             }
         }
         week{
             relative{
                 "-1"{"گزشتہ ہفتہ"}
+                "0"{"اس ہفتہ"}
+                "1"{"اگلے ہفتہ"}
             }
             relativeTime{
                 future{

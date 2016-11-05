@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ***************************************************************************
-*   Copyright (C) 1999-2014 International Business Machines Corporation
+*   Copyright (C) 1999-2016 International Business Machines Corporation
 *   and others. All rights reserved.
 ***************************************************************************
 */
@@ -71,21 +73,6 @@ RuleBasedBreakIterator::RuleBasedBreakIterator(RBBIDataHeader* data, UErrorCode 
         return;
     }
 }
-
-/**
- * Same as above but does not adopt memory
- */
-RuleBasedBreakIterator::RuleBasedBreakIterator(const RBBIDataHeader* data, enum EDontAdopt, UErrorCode &status)
-{
-    init();
-    fData = new RBBIDataWrapper(data, RBBIDataWrapper::kDontAdopt, status); // status checked in constructor
-    if (U_FAILURE(status)) {return;}
-    if(fData == 0) {
-        status = U_MEMORY_ALLOCATION_ERROR;
-        return;
-    }
-}
-
 
 //
 //  Construct from precompiled binary rules (tables).  This constructor is public API,
@@ -715,7 +702,7 @@ int32_t RuleBasedBreakIterator::following(int32_t offset) {
     // Move requested offset to a code point start. It might be on a trail surrogate,
     // or on a trail byte if the input is UTF-8.
     utext_setNativeIndex(fText, offset);
-    offset = utext_getNativeIndex(fText);
+    offset = (int32_t)utext_getNativeIndex(fText);
 
     // if we have cached break positions and offset is in the range
     // covered by them, use them
@@ -826,7 +813,7 @@ int32_t RuleBasedBreakIterator::preceding(int32_t offset) {
     // Move requested offset to a code point start. It might be on a trail surrogate,
     // or on a trail byte if the input is UTF-8.
     utext_setNativeIndex(fText, offset);
-    offset = utext_getNativeIndex(fText);
+    offset = (int32_t)utext_getNativeIndex(fText);
 
     // if we have cached break positions and offset is in the range
     // covered by them, use them
@@ -983,6 +970,54 @@ enum RBBIRunMode {
 };
 
 
+// Map from look-ahead break states (corresponds to rules) to boundary positions.
+// Allows multiple lookahead break rules to be in flight at the same time.
+//
+// This is a temporary approach for ICU 57. A better fix is to make the look-ahead numbers
+// in the state table be sequential, then we can just index an array. And the
+// table could also tell us in advance how big that array needs to be.
+//
+// Before ICU 57 there was just a single simple variable for a look-ahead match that
+// was in progress. Two rules at once did not work.
+
+static const int32_t kMaxLookaheads = 8;
+struct LookAheadResults {
+    int32_t    fUsedSlotLimit;
+    int32_t    fPositions[8];
+    int16_t    fKeys[8];
+
+    LookAheadResults() : fUsedSlotLimit(0), fPositions(), fKeys() {};
+
+    int32_t getPosition(int16_t key) {
+        for (int32_t i=0; i<fUsedSlotLimit; ++i) {
+            if (fKeys[i] == key) {
+                return fPositions[i];
+            }
+        }
+        U_ASSERT(FALSE);
+        return -1;
+    }
+
+    void setPosition(int16_t key, int32_t position) {
+        int32_t i;
+        for (i=0; i<fUsedSlotLimit; ++i) {
+            if (fKeys[i] == key) {
+                fPositions[i] = position;
+                return;
+            }
+        }
+        if (i >= kMaxLookaheads) {
+            U_ASSERT(FALSE);
+            i = kMaxLookaheads - 1;
+        }
+        fKeys[i] = key;
+        fPositions[i] = position;
+        U_ASSERT(fUsedSlotLimit == i);
+        fUsedSlotLimit = i + 1;
+    }
+};
+
+
 //-----------------------------------------------------------------------------------
 //
 //  handleNext(stateTable)
@@ -1000,14 +1035,11 @@ int32_t RuleBasedBreakIterator::handleNext(const RBBIStateTable *statetable) {
     
     RBBIStateTableRow  *row;
     UChar32             c;
-    int32_t             lookaheadStatus = 0;
-    int32_t             lookaheadTagIdx = 0;
-    int32_t             result          = 0;
-    int32_t             initialPosition = 0;
-    int32_t             lookaheadResult = 0;
-    UBool               lookAheadHardBreak = (statetable->fFlags & RBBI_LOOKAHEAD_HARD_BREAK) != 0;
-    const char         *tableData       = statetable->fTableData;
-    uint32_t            tableRowLen     = statetable->fRowLen;
+    LookAheadResults    lookAheadMatches;
+    int32_t             result             = 0;
+    int32_t             initialPosition    = 0;
+    const char         *tableData          = statetable->fTableData;
+    uint32_t            tableRowLen        = statetable->fRowLen;
 
     #ifdef RBBI_DEBUG
         if (fTrace) {
@@ -1050,14 +1082,6 @@ int32_t RuleBasedBreakIterator::handleNext(const RBBIStateTable *statetable) {
                 // We have already run the loop one last time with the 
                 //   character set to the psueudo {eof} value.  Now it is time
                 //   to unconditionally bail out.
-                if (lookaheadResult > result) {
-                    // We ran off the end of the string with a pending look-ahead match.
-                    // Treat this as if the look-ahead condition had been met, and return
-                    //  the match at the / position from the look-ahead rule.
-                    result               = lookaheadResult;
-                    fLastRuleStatusIndex = lookaheadTagIdx;
-                    lookaheadStatus = 0;
-                } 
                 break;
             }
             // Run the loop one last time with the fake end-of-input character category.
@@ -1123,38 +1147,23 @@ int32_t RuleBasedBreakIterator::handleNext(const RBBIStateTable *statetable) {
             fLastRuleStatusIndex = row->fTagIdx;   // Remember the break status (tag) values.
         }
 
-        if (row->fLookAhead != 0) {
-            if (lookaheadStatus != 0
-                && row->fAccepting == lookaheadStatus) {
-                // Lookahead match is completed.  
-                result               = lookaheadResult;
-                fLastRuleStatusIndex = lookaheadTagIdx;
-                lookaheadStatus      = 0;
-                // TODO:  make a standalone hard break in a rule work.
-                if (lookAheadHardBreak) {
-                    UTEXT_SETNATIVEINDEX(fText, result);
-                    return result;
-                }
-                // Look-ahead completed, but other rules may match further.  Continue on
-                //  TODO:  junk this feature?  I don't think it's used anywhwere.
-                goto continueOn;
+        int16_t completedRule = row->fAccepting;
+        if (completedRule > 0) {
+            // Lookahead match is completed.  
+            int32_t lookaheadResult = lookAheadMatches.getPosition(completedRule);
+            if (lookaheadResult >= 0) {
+                fLastRuleStatusIndex = row->fTagIdx;
+                UTEXT_SETNATIVEINDEX(fText, lookaheadResult);
+                return lookaheadResult;
             }
-
-            int32_t  r = (int32_t)UTEXT_GETNATIVEINDEX(fText);
-            lookaheadResult = r;
-            lookaheadStatus = row->fLookAhead;
-            lookaheadTagIdx = row->fTagIdx;
-            goto continueOn;
+        }
+        int16_t rule = row->fLookAhead;
+        if (rule != 0) {
+            // At the position of a '/' in a look-ahead match. Record it.
+            int32_t  pos = (int32_t)UTEXT_GETNATIVEINDEX(fText);
+            lookAheadMatches.setPosition(rule, pos);
         }
 
-
-        if (row->fAccepting != 0) {
-            // Because this is an accepting state, any in-progress look-ahead match
-            //   is no longer relavant.  Clear out the pending lookahead status.
-            lookaheadStatus = 0;           // clear out any pending look-ahead match.
-        }
-
-continueOn:
         if (state == STOP_STATE) {
             // This is the normal exit from the lookup state machine.
             // We have advanced through the string until it is certain that no
@@ -1216,11 +1225,9 @@ int32_t RuleBasedBreakIterator::handlePrevious(const RBBIStateTable *statetable)
     RBBIRunMode         mode;
     RBBIStateTableRow  *row;
     UChar32             c;
-    int32_t             lookaheadStatus = 0;
+    LookAheadResults    lookAheadMatches;
     int32_t             result          = 0;
     int32_t             initialPosition = 0;
-    int32_t             lookaheadResult = 0;
-    UBool               lookAheadHardBreak = (statetable->fFlags & RBBI_LOOKAHEAD_HARD_BREAK) != 0;
 
     #ifdef RBBI_DEBUG
         if (fTrace) {
@@ -1266,13 +1273,7 @@ int32_t RuleBasedBreakIterator::handlePrevious(const RBBIStateTable *statetable)
                 // We have already run the loop one last time with the 
                 //   character set to the psueudo {eof} value.  Now it is time
                 //   to unconditionally bail out.
-                if (lookaheadResult < result) {
-                    // We ran off the end of the string with a pending look-ahead match.
-                    // Treat this as if the look-ahead condition had been met, and return
-                    //  the match at the / position from the look-ahead rule.
-                    result               = lookaheadResult;
-                    lookaheadStatus = 0;
-                } else if (result == initialPosition) {
+                if (result == initialPosition) {
                     // Ran off start, no match found.
                     // move one index one (towards the start, since we are doing a previous())
                     UTEXT_SETNATIVEINDEX(fText, initialPosition);
@@ -1338,36 +1339,22 @@ int32_t RuleBasedBreakIterator::handlePrevious(const RBBIStateTable *statetable)
             result = (int32_t)UTEXT_GETNATIVEINDEX(fText);
         }
 
-        if (row->fLookAhead != 0) {
-            if (lookaheadStatus != 0
-                && row->fAccepting == lookaheadStatus) {
-                // Lookahead match is completed.  
-                result               = lookaheadResult;
-                lookaheadStatus      = 0;
-                // TODO:  make a standalone hard break in a rule work.
-                if (lookAheadHardBreak) {
-                    UTEXT_SETNATIVEINDEX(fText, result);
-                    return result;
-                }
-                // Look-ahead completed, but other rules may match further.  Continue on
-                //  TODO:  junk this feature?  I don't think it's used anywhwere.
-                goto continueOn;
+        int16_t completedRule = row->fAccepting;
+        if (completedRule > 0) {
+            // Lookahead match is completed.  
+            int32_t lookaheadResult = lookAheadMatches.getPosition(completedRule);
+            if (lookaheadResult >= 0) {
+                UTEXT_SETNATIVEINDEX(fText, lookaheadResult);
+                return lookaheadResult;
             }
-
-            int32_t  r = (int32_t)UTEXT_GETNATIVEINDEX(fText);
-            lookaheadResult = r;
-            lookaheadStatus = row->fLookAhead;
-            goto continueOn;
+        }
+        int16_t rule = row->fLookAhead;
+        if (rule != 0) {
+            // At the position of a '/' in a look-ahead match. Record it.
+            int32_t  pos = (int32_t)UTEXT_GETNATIVEINDEX(fText);
+            lookAheadMatches.setPosition(rule, pos);
         }
 
-
-        if (row->fAccepting != 0) {
-            // Because this is an accepting state, any in-progress look-ahead match
-            //   is no longer relavant.  Clear out the pending lookahead status.
-            lookaheadStatus = 0;    
-        }
-
-continueOn:
         if (state == STOP_STATE) {
             // This is the normal exit from the lookup state machine.
             // We have advanced through the string until it is certain that no

@@ -1,5 +1,7 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /******************************************************************************
- *   Copyright (C) 2009-2015, International Business Machines
+ *   Copyright (C) 2009-2016, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *******************************************************************************
  */
@@ -126,7 +128,7 @@ static const struct AssemblyType {
         "\t.type %s,%%object\n"
         "%s:\n\n",
 
-        ".long ","",HEX_0X
+        ".long ",".size %s, .-%s\n",HEX_0X
     },
     {"gcc-darwin",
         /*"\t.section __TEXT,__text,regular,pure_instructions\n"
@@ -232,7 +234,7 @@ U_CAPI UBool U_EXPORT2
 checkAssemblyHeaderName(const char* optAssembly) {
     int32_t idx;
     assemblyHeaderIndex = -1;
-    for (idx = 0; idx < (int32_t)(sizeof(assemblyHeader)/sizeof(assemblyHeader[0])); idx++) {
+    for (idx = 0; idx < UPRV_LENGTHOF(assemblyHeader); idx++) {
         if (uprv_strcmp(optAssembly, assemblyHeader[idx].name) == 0) {
             assemblyHeaderIndex = idx;
             hexType = assemblyHeader[idx].hexType; /* set the hex type */
@@ -248,7 +250,7 @@ U_CAPI void U_EXPORT2
 printAssemblyHeadersToStdErr(void) {
     int32_t idx;
     fprintf(stderr, "%s", assemblyHeader[0].name);
-    for (idx = 1; idx < (int32_t)(sizeof(assemblyHeader)/sizeof(assemblyHeader[0])); idx++) {
+    for (idx = 1; idx < UPRV_LENGTHOF(assemblyHeader); idx++) {
         fprintf(stderr, ", %s", assemblyHeader[idx].name);
     }
     fprintf(stderr,

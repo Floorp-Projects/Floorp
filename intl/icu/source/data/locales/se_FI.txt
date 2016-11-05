@@ -1,13 +1,44 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/se_FI.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 se_FI{
-    Version{"2.1.19.14"}
+    Version{"2.1.27.78"}
+    calendar{
+        gregorian{
+            dayNames{
+                format{
+                    narrow{
+                        "S",
+                        "M",
+                        "D",
+                        "G",
+                        "D",
+                        "B",
+                        "L",
+                    }
+                    wide{
+                        "sotnabeaivi",
+                        "vuossárgga",
+                        "maŋŋebárgga",
+                        "gaskavahku",
+                        "duorastaga",
+                        "bearjadaga",
+                        "lávvardaga",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "S",
+                        "M",
+                        "D",
+                        "G",
+                        "D",
+                        "B",
+                        "L",
+                    }
+                }
+            }
+        }
+    }
     fields{
         era{
             dn{"áigodat"}

@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/es_DO.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 es_DO{
     %%Parent{"es_419"}
     NumberElements{
@@ -15,8 +9,9 @@ es_DO{
                 percentFormat{"#,##0%"}
             }
         }
+        minimumGroupingDigits{"2"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.27.99"}
     calendar{
         generic{
             DateTimePatterns{
@@ -36,6 +31,14 @@ es_DO{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "a. m.",
+                "p. m.",
+            }
+            AmPmMarkersAbbr{
+                "a. m.",
+                "p. m.",
+            }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
                 "h:mm:ss a z",
@@ -54,6 +57,19 @@ es_DO{
             availableFormats{
                 yMMMd{"d MMM 'de' y"}
             }
+            dayNames{
+                format{
+                    narrow{
+                        "D",
+                        "L",
+                        "M",
+                        "M",
+                        "J",
+                        "V",
+                        "S",
+                    }
+                }
+            }
             dayPeriod{
                 format{
                     narrow{
@@ -61,11 +77,22 @@ es_DO{
                         morning1{"día"}
                         morning2{"mañana"}
                         night1{"noche"}
+                        noon{"mediodía"}
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
                     narrow{
+                        am{"a. m."}
                         noon{"m."}
+                        pm{"p. m."}
+                    }
+                    wide{
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                 }
             }
@@ -98,6 +125,9 @@ es_DO{
     fields{
         day{
             dn{"Día"}
+        }
+        dayperiod{
+            dn{"a. m./p. m."}
         }
         era{
             dn{"Era"}

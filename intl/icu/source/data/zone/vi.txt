@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/vi.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 vi{
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -308,6 +302,9 @@ vi{
         }
         "America:El_Salvador"{
             ec{"El Salvador"}
+        }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
         }
         "America:Fortaleza"{
             ec{"Fortaleza"}
@@ -672,6 +669,9 @@ vi{
         "Asia:Bangkok"{
             ec{"Bangkok"}
         }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
+        }
         "Asia:Beirut"{
             ec{"Beirut"}
         }
@@ -849,6 +849,9 @@ vi{
         "Asia:Tokyo"{
             ec{"Tokyo"}
         }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"Ulaanbaatar"}
         }
@@ -948,6 +951,9 @@ vi{
         "Europe:Andorra"{
             ec{"Andorra"}
         }
+        "Europe:Astrakhan"{
+            ec{"Astrakhan"}
+        }
         "Europe:Athens"{
             ec{"Athens"}
         }
@@ -1005,6 +1011,9 @@ vi{
         }
         "Europe:Kiev"{
             ec{"Kiev"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
         }
         "Europe:Lisbon"{
             ec{"Lisbon"}
@@ -1082,8 +1091,11 @@ vi{
         "Europe:Tirane"{
             ec{"Tirane"}
         }
+        "Europe:Ulyanovsk"{
+            ec{"Ulyanovsk"}
+        }
         "Europe:Uzhgorod"{
-            ec{"Uzhgorod"}
+            ec{"Uzhhorod"}
         }
         "Europe:Vaduz"{
             ec{"Vaduz"}
@@ -1092,7 +1104,7 @@ vi{
             ec{"Vatican"}
         }
         "Europe:Vienna"{
-            ec{"Viên"}
+            ec{"Vienna"}
         }
         "Europe:Vilnius"{
             ec{"Vilnius"}
@@ -1143,7 +1155,7 @@ vi{
             ec{"Mayotte"}
         }
         "Indian:Reunion"{
-            ec{"Reunion"}
+            ec{"Réunion"}
         }
         "Pacific:Apia"{
             ec{"Apia"}
@@ -1300,22 +1312,22 @@ vi{
             ls{"Giờ Chuẩn Amazon"}
         }
         "meta:America_Central"{
-            ld{"Giờ ban ngày miền trung"}
+            ld{"Giờ mùa hè miền trung"}
             lg{"Giờ miền trung"}
             ls{"Giờ chuẩn miền trung"}
         }
         "meta:America_Eastern"{
-            ld{"Giờ ban ngày miền đông"}
+            ld{"Giờ mùa hè miền đông"}
             lg{"Giờ miền đông"}
             ls{"Giờ chuẩn miền đông"}
         }
         "meta:America_Mountain"{
-            ld{"Giờ ban ngày miền núi"}
+            ld{"Giờ mùa hè miền núi"}
             lg{"Giờ miền núi"}
             ls{"Giờ chuẩn miền núi"}
         }
         "meta:America_Pacific"{
-            ld{"Giờ ban ngày Thái Bình Dương"}
+            ld{"Giờ Mùa hè Thái Bình Dương"}
             lg{"Giờ Thái Bình Dương"}
             ls{"Giờ chuẩn Thái Bình Dương"}
         }
@@ -1325,7 +1337,7 @@ vi{
             ls{"Giờ Chuẩn Anadyr"}
         }
         "meta:Apia"{
-            ld{"Giờ Ban ngày Apia"}
+            ld{"Giờ Mùa Hè Apia"}
             lg{"Giờ Apia"}
             ls{"Giờ Chuẩn Apia"}
         }
@@ -1523,9 +1535,9 @@ vi{
             ls{"Giờ Gambier"}
         }
         "meta:Georgia"{
-            ld{"Giờ Mùa Hè Georgia"}
-            lg{"Giờ Georgia"}
-            ls{"Giờ Chuẩn Georgia"}
+            ld{"Giờ Mùa Hè Gruzia"}
+            lg{"Giờ Gruzia"}
+            ls{"Giờ Chuẩn Gruzia"}
         }
         "meta:Gilbert_Islands"{
             ls{"Giờ Quần Đảo Gilbert"}
@@ -1781,6 +1793,9 @@ vi{
         "meta:Ponape"{
             ls{"Giờ Ponape"}
         }
+        "meta:Pyongyang"{
+            ls{"Giờ Bình Nhưỡng"}
+        }
         "meta:Qyzylorda"{
             ld{"Giờ Mùa Hè Qyzylorda"}
             lg{"Giờ Qyzylorda"}
@@ -1907,7 +1922,7 @@ vi{
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Giờ {0}"}
-        regionFormatDaylight{"Giờ ban ngày {0}"}
+        regionFormatDaylight{"Giờ mùa hè {0}"}
         regionFormatStandard{"Giờ chuẩn {0}"}
     }
 }

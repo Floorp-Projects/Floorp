@@ -1,19 +1,13 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/id.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 id{
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
         }
         "Africa:Accra"{
-            ec{"Akra"}
+            ec{"Accra"}
         }
         "Africa:Addis_Ababa"{
             ec{"Addis Ababa"}
@@ -55,7 +49,7 @@ id{
             ec{"Ceuta"}
         }
         "Africa:Conakry"{
-            ec{"Konakri"}
+            ec{"Conakry"}
         }
         "Africa:Dakar"{
             ec{"Dakar"}
@@ -64,7 +58,7 @@ id{
             ec{"Dar es Salaam"}
         }
         "Africa:Djibouti"{
-            ec{"Jibouti"}
+            ec{"Djibouti"}
         }
         "Africa:Douala"{
             ec{"Douala"}
@@ -91,7 +85,7 @@ id{
             ec{"Kampala"}
         }
         "Africa:Khartoum"{
-            ec{"Khartum"}
+            ec{"Khartoum"}
         }
         "Africa:Kigali"{
             ec{"Kigali"}
@@ -247,7 +241,7 @@ id{
             ec{"Cancun"}
         }
         "America:Caracas"{
-            ec{"Karakas"}
+            ec{"Caracas"}
         }
         "America:Catamarca"{
             ec{"Catamarca"}
@@ -268,7 +262,7 @@ id{
             ec{"Atikokan"}
         }
         "America:Cordoba"{
-            ec{"Kordoba"}
+            ec{"Cordoba"}
         }
         "America:Costa_Rica"{
             ec{"Kosta Rika"}
@@ -308,6 +302,9 @@ id{
         }
         "America:El_Salvador"{
             ec{"El Salvador"}
+        }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
         }
         "America:Fortaleza"{
             ec{"Fortaleza"}
@@ -379,7 +376,7 @@ id{
             ec{"Iqaluit"}
         }
         "America:Jamaica"{
-            ec{"Jamaika"}
+            ec{"Jamaica"}
         }
         "America:Jujuy"{
             ec{"Jujuy"}
@@ -508,7 +505,7 @@ id{
             ec{"Porto Velho"}
         }
         "America:Puerto_Rico"{
-            ec{"Puerto Riko"}
+            ec{"Puerto Rico"}
         }
         "America:Rainy_River"{
             ec{"Rainy River"}
@@ -661,7 +658,7 @@ id{
             ec{"Ashgabat"}
         }
         "Asia:Baghdad"{
-            ec{"Bagdad"}
+            ec{"Baghdad"}
         }
         "Asia:Bahrain"{
             ec{"Bahrain"}
@@ -671,6 +668,9 @@ id{
         }
         "Asia:Bangkok"{
             ec{"Bangkok"}
+        }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
         }
         "Asia:Beirut"{
             ec{"Beirut"}
@@ -808,10 +808,10 @@ id{
             ec{"Rangoon"}
         }
         "Asia:Riyadh"{
-            ec{"Riyad"}
+            ec{"Riyadh"}
         }
         "Asia:Saigon"{
-            ec{"Kota Ho Chi Minh"}
+            ec{"Ho Chi Minh"}
         }
         "Asia:Sakhalin"{
             ec{"Sakhalin"}
@@ -848,6 +848,9 @@ id{
         }
         "Asia:Tokyo"{
             ec{"Tokyo"}
+        }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
         }
         "Asia:Ulaanbaatar"{
             ec{"Ulaanbaatar"}
@@ -948,6 +951,9 @@ id{
         "Europe:Andorra"{
             ec{"Andorra"}
         }
+        "Europe:Astrakhan"{
+            ec{"Astrakhan"}
+        }
         "Europe:Athens"{
             ec{"Athena"}
         }
@@ -961,10 +967,10 @@ id{
             ec{"Bratislava"}
         }
         "Europe:Brussels"{
-            ec{"Brussel"}
+            ec{"Brussels"}
         }
         "Europe:Bucharest"{
-            ec{"Bukares"}
+            ec{"Bucharest"}
         }
         "Europe:Budapest"{
             ec{"Budapest"}
@@ -1006,8 +1012,11 @@ id{
         "Europe:Kiev"{
             ec{"Kiev"}
         }
+        "Europe:Kirov"{
+            ec{"Kirov"}
+        }
         "Europe:Lisbon"{
-            ec{"Lisboa"}
+            ec{"Lisbon"}
         }
         "Europe:Ljubljana"{
             ec{"Ljubljana"}
@@ -1081,6 +1090,9 @@ id{
         }
         "Europe:Tirane"{
             ec{"Tirane"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Ulyanovsk"}
         }
         "Europe:Uzhgorod"{
             ec{"Uzhhorod"}
@@ -1422,7 +1434,7 @@ id{
             ls{"Waktu Casey"}
         }
         "meta:Chamorro"{
-            ls{"Waktu Chamorro"}
+            ls{"Waktu Standar Chamorro"}
         }
         "meta:Chatham"{
             ld{"Waktu Musim Panas Chatham"}
@@ -1435,9 +1447,9 @@ id{
             ls{"Waktu Standar Cile"}
         }
         "meta:China"{
-            ld{"Waktu Terang China"}
-            lg{"Waktu China"}
-            ls{"Waktu Standar China"}
+            ld{"Waktu Musim Panas Tiongkok"}
+            lg{"Waktu Tiongkok"}
+            ls{"Waktu Standar Tiongkok"}
         }
         "meta:Choibalsan"{
             ld{"Waktu Musim Panas Choibalsan"}
@@ -1517,7 +1529,7 @@ id{
             ls{"Waktu Wilayah Selatan dan Antarktika Prancis"}
         }
         "meta:GMT"{
-            ls{"Waktu Rata-rata Greenwich"}
+            ls{"Greenwich Mean Time"}
         }
         "meta:Galapagos"{
             ls{"Waktu Galapagos"}
@@ -1547,7 +1559,7 @@ id{
             ls{"Waktu Guam"}
         }
         "meta:Gulf"{
-            ls{"Waktu Gulf"}
+            ls{"Waktu Standar Teluk"}
         }
         "meta:Guyana"{
             ls{"Waktu Guyana"}
@@ -1787,6 +1799,9 @@ id{
         "meta:Ponape"{
             ls{"Waktu Ponape"}
         }
+        "meta:Pyongyang"{
+            ls{"Waktu Pyongyang"}
+        }
         "meta:Qyzylorda"{
             ld{"Waktu Musim Panas Qyzylorda"}
             lg{"Waktu Qyzylorda"}
@@ -1913,7 +1928,7 @@ id{
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH.mm;-HH.mm"}
         regionFormat{"Waktu {0}"}
-        regionFormatDaylight{"Waktu Terang {0}"}
+        regionFormatDaylight{"Waktu Musim Panas {0}"}
         regionFormatStandard{"Waktu Standar {0}"}
     }
 }

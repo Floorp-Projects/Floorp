@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ksb.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ksb{
     AuxExemplarCharacters{"[q r x]"}
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p s t u v w y z]"}
@@ -17,7 +11,7 @@ ksb{
             }
         }
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.27.40"}
     calendar{
         generic{
             DateTimePatterns{
@@ -61,6 +55,10 @@ ksb{
         }
         gregorian{
             AmPmMarkers{
+                "makeo",
+                "nyiaghuo",
+            }
+            AmPmMarkersAbbr{
                 "makeo",
                 "nyiaghuo",
             }

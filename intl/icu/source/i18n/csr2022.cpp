@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
  **********************************************************************
- *   Copyright (C) 2005-2015, International Business Machines
+ *   Copyright (C) 2005-2016, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  **********************************************************************
  */
@@ -9,14 +11,13 @@
 
 #if !UCONFIG_NO_CONVERSION
 
+#include "cmemory.h"
 #include "cstring.h"
 
 #include "csr2022.h"
 #include "csmatch.h"
 
 U_NAMESPACE_BEGIN
-
-#define ARRAY_SIZE(array) (sizeof array / sizeof array[0])
 
 /**
  * Matching function shared among the 2022 detectors JP, CN and KR
@@ -149,7 +150,7 @@ UBool CharsetRecog_2022JP::match(InputText *textIn, CharsetMatch *results) const
     int32_t confidence = match_2022(textIn->fInputBytes, 
                                     textIn->fInputLen, 
                                     escapeSequences_2022JP, 
-                                    ARRAY_SIZE(escapeSequences_2022JP));
+                                    UPRV_LENGTHOF(escapeSequences_2022JP));
     results->set(textIn, this, confidence);
     return (confidence > 0);
 }
@@ -165,7 +166,7 @@ UBool CharsetRecog_2022KR::match(InputText *textIn, CharsetMatch *results) const
     int32_t confidence = match_2022(textIn->fInputBytes, 
                                     textIn->fInputLen, 
                                     escapeSequences_2022KR, 
-                                    ARRAY_SIZE(escapeSequences_2022KR));
+                                    UPRV_LENGTHOF(escapeSequences_2022KR));
     results->set(textIn, this, confidence);
     return (confidence > 0);
 }
@@ -180,7 +181,7 @@ UBool CharsetRecog_2022CN::match(InputText *textIn, CharsetMatch *results) const
     int32_t confidence = match_2022(textIn->fInputBytes,
                                     textIn->fInputLen,
                                     escapeSequences_2022CN,
-                                    ARRAY_SIZE(escapeSequences_2022CN));
+                                    UPRV_LENGTHOF(escapeSequences_2022CN));
     results->set(textIn, this, confidence);
     return (confidence > 0);
 }

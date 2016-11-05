@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
-*   Copyright (C) 1997-2014, International Business Machines
+*   Copyright (C) 1997-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ******************************************************************************
 *   Date        Name        Description
@@ -83,7 +85,7 @@ static const int32_t PRIMES[] = {
     1073741789, 2147483647 /*, 4294967291 */
 };
 
-#define PRIMES_LENGTH (sizeof(PRIMES) / sizeof(PRIMES[0]))
+#define PRIMES_LENGTH UPRV_LENGTHOF(PRIMES)
 #define DEFAULT_PRIME_INDEX 3
 
 /* These ratios are tuned to the PRIMES array such that a resize

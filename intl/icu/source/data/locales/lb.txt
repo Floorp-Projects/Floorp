@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/lb.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 lb{
     AuxExemplarCharacters{
         "[á à ă â å ã ā æ ç è ĕ ê ē ğ í ì ĭ î ï İ ī ı ñ ó ò ŏ ô ö ø ō œ ş ß ú ù ŭ û ü"
@@ -161,7 +155,7 @@ lb{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.76"}
     calendar{
         buddhist{
             eras{
@@ -335,6 +329,10 @@ lb{
         }
         gregorian{
             AmPmMarkers{
+                "moies",
+                "nomëttes",
+            }
+            AmPmMarkersAbbr{
                 "moies",
                 "nomëttes",
             }

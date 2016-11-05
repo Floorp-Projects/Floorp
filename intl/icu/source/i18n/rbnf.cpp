@@ -1,3 +1,5 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 * Copyright (C) 1997-2015, International Business Machines Corporation
@@ -1260,9 +1262,12 @@ RuleBasedNumberFormat::parse(const UnicodeString& text,
     }
     result = high_result;
     if (result.getType() == Formattable::kDouble) {
-        int32_t r = (int32_t)result.getDouble();
-        if ((double)r == result.getDouble()) {
-            result.setLong(r);
+        double d = result.getDouble();
+        if (!uprv_isNaN(d) && d == uprv_trunc(d) && INT32_MIN <= d && d <= INT32_MAX) {
+            // Note: casting a double to an int when the double is too large or small
+            //       to fit the destination is undefined behavior. The explicit range checks,
+            //       above, are required. Just casting and checking the result value is undefined.
+            result.setLong(static_cast<int32_t>(d));
         }
     }
 }

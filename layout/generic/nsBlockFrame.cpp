@@ -1504,9 +1504,9 @@ nsBlockFrame::CheckForCollapsedBEndMarginFromClearanceLine()
 
 void
 nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
-                               BlockReflowInput&      aState,
-                               ReflowOutput&     aMetrics,
-                               nscoord*                 aBEndEdgeOfChildren)
+                               BlockReflowInput&  aState,
+                               ReflowOutput&      aMetrics,
+                               nscoord*           aBEndEdgeOfChildren)
 {
   WritingMode wm = aState.mReflowInput.GetWritingMode();
   const LogicalMargin& borderPadding = aState.BorderPadding();
@@ -1647,6 +1647,24 @@ nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     nscoord bSize = Properties().Get(FragStretchBSizeProperty(), &found);
     if (found) {
       finalSize.BSize(wm) = std::max(bSize, finalSize.BSize(wm));
+    }
+  }
+
+  // Clamp the content size to fit within the margin-box clamp size, if any.
+  if (MOZ_UNLIKELY(aReflowInput.mFlags.mBClampMarginBoxMinSize) &&
+      NS_FRAME_IS_COMPLETE(aState.mReflowStatus)) {
+    bool found;
+    nscoord cbSize = Properties().Get(BClampMarginBoxMinSizeProperty(), &found);
+    if (found) {
+      auto marginBoxBSize = finalSize.BSize(wm) +
+                            aReflowInput.ComputedLogicalMargin().BStartEnd(wm);
+      auto overflow = marginBoxBSize - cbSize;
+      if (overflow > 0) {
+        auto contentBSize = finalSize.BSize(wm) - borderPadding.BStartEnd(wm);
+        auto newContentBSize = std::max(nscoord(0), contentBSize - overflow);
+        // XXXmats deal with percentages better somehow?
+        finalSize.BSize(wm) -= contentBSize - newContentBSize;
+      }
     }
   }
 

@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2005, International Business Machines
+*   Copyright (C) 2005-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -20,6 +22,7 @@
 #define __PKG_IMP_H__
 
 #include "unicode/utypes.h"
+#include "unicode/udata.h"
 
 /*
  * Read an ICU data item with any platform type,

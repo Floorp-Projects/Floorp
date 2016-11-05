@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/os.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 os{
     Currencies{
         BRL{
@@ -21,7 +15,7 @@ os{
             "Бритайнаг Фунт",
         }
         GEL{
-            "GEL",
+            "₾",
             "Лар",
         }
         RUB{
@@ -71,5 +65,5 @@ os{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.27.40"}
 }

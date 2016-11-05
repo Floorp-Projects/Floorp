@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ur.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ur{
     Currencies{
         AED{
@@ -100,9 +94,13 @@ ur{
             "BWP",
             "بوتسوانا کا پولا",
         }
+        BYN{
+            "BYN",
+            "بیلاروسی روبل",
+        }
         BYR{
             "BYR",
-            "بیلاروسی روبل",
+            "بیلاروسی روبل (۲۰۰۰–۲۰۱۶)",
         }
         BZD{
             "BZD",
@@ -678,7 +676,7 @@ ur{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -695,6 +693,7 @@ ur{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -856,9 +855,13 @@ ur{
             one{"بوتسوانا کا پولا"}
             other{"بوتسوانا کا پولا"}
         }
-        BYR{
+        BYN{
             one{"بیلاروسی روبل"}
             other{"بیلاروسی روبل"}
+        }
+        BYR{
+            one{"بیلاروسی روبل (۲۰۰۰–۲۰۱۶)"}
+            other{"بیلاروسی روبل (۲۰۰۰–۲۰۱۶)"}
         }
         BZD{
             one{"بیلائز ڈالر"}
@@ -1397,5 +1400,5 @@ ur{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
 }

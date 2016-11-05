@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/eu.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 eu{
     Currencies{
         AED{
@@ -42,7 +36,7 @@ eu{
         }
         AWG{
             "AWG",
-            "Arubeko florina",
+            "Arubako florina",
         }
         AZN{
             "AZN",
@@ -100,9 +94,13 @@ eu{
             "BWP",
             "Bosniako pula",
         }
+        BYN{
+            "BYN",
+            "Bielorrusiako errubloa",
+        }
         BYR{
             "BYR",
-            "Bielorrusiako errubloa",
+            "Bielorrusiako errubloa (2000–2016)",
         }
         BZD{
             "BZD",
@@ -154,7 +152,7 @@ eu{
         }
         DJF{
             "DJF",
-            "Djibouteko frankoa",
+            "Djibutiko frankoa",
         }
         DKK{
             "DKK",
@@ -166,7 +164,7 @@ eu{
         }
         DZD{
             "DZD",
-            "Algeriako dinarra",
+            "Aljeriako dinarra",
         }
         EGP{
             "EGP",
@@ -191,7 +189,7 @@ eu{
         }
         EUR{
             "€",
-            "Euroa",
+            "euroa",
         }
         FJD{
             "FJD",
@@ -259,7 +257,7 @@ eu{
         }
         ILS{
             "₪",
-            "Israeleko sheqel berria",
+            "Israelgo shekel berria",
         }
         INR{
             "₹",
@@ -371,7 +369,7 @@ eu{
         }
         MKD{
             "MKD",
-            "Mazedoniako denara",
+            "Mazedoniako dinarra",
         }
         MMK{
             "MMK",
@@ -491,7 +489,7 @@ eu{
         }
         SAR{
             "SAR",
-            "Saudiko riala",
+            "Arabia Saudiko riala",
         }
         SBD{
             "SBD",
@@ -543,7 +541,7 @@ eu{
         }
         SZL{
             "SZL",
-            "Swaziko lilangenia",
+            "Swazilandiako lilangenia",
         }
         THB{
             "฿",
@@ -571,7 +569,7 @@ eu{
         }
         TTD{
             "TTD",
-            "Trinidadeko eta Tobagoko dolarra",
+            "Trinidad eta Tobagoko dolarra",
         }
         TWD{
             "NT$",
@@ -591,7 +589,7 @@ eu{
         }
         USD{
             "US$",
-            "AEBetako dolarra",
+            "AEBko dolarra",
         }
         UYU{
             "UYU",
@@ -619,7 +617,7 @@ eu{
         }
         XAF{
             "FCFA",
-            "Afrika erdialdeko frankoa BEAC",
+            "Afrika erdialdeko CFA frankoa",
         }
         XCD{
             "EC$",
@@ -627,7 +625,7 @@ eu{
         }
         XOF{
             "CFA",
-            "Afrika ekialdeko frankoa BCEAO",
+            "Afrika mendebaldeko CFA frankoa",
         }
         XPF{
             "CFPF",
@@ -655,58 +653,102 @@ eu{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
+        BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
         BMD{"$"}
         BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
-        BYR{"р."}
+        BWP{"P"}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
         CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
         CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
+        EGP{"E£"}
         EUR{"€"}
         FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"₲"}
+        RUB{"₽"}
+        RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
+        SYP{"£"}
         THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
+        VEF{"Bs"}
         VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
+    }
+    Currencies%variant{
+        TRY{"TL"}
     }
     CurrencyPlurals{
         AED{
@@ -742,8 +784,8 @@ eu{
             other{"Australiako dolar"}
         }
         AWG{
-            one{"Arubeko florin"}
-            other{"Arubeko florin"}
+            one{"Arubako florin"}
+            other{"Arubako florin"}
         }
         AZN{
             one{"Azerbaijango manat"}
@@ -801,9 +843,13 @@ eu{
             one{"Bosniako pula"}
             other{"Bosniako pula"}
         }
-        BYR{
+        BYN{
             one{"Bielorrusiako errublo"}
             other{"Bielorrusiako errublo"}
+        }
+        BYR{
+            one{"Bielorrusiako errublo (2000–2016)"}
+            other{"Bielorrusiako errublo (2000–2016)"}
         }
         BZD{
             one{"Belizeko dolar"}
@@ -854,8 +900,8 @@ eu{
             other{"Txekiar Errepublikako koroa"}
         }
         DJF{
-            one{"Djibouteko franko"}
-            other{"Djibouteko franko"}
+            one{"Djibutiko franko"}
+            other{"Djibutiko franko"}
         }
         DKK{
             one{"Danimarkako koroa"}
@@ -866,8 +912,8 @@ eu{
             other{"Dominikar Errepublikako peso"}
         }
         DZD{
-            one{"Algeriako dinar"}
-            other{"Algeriako dinar"}
+            one{"Aljeriako dinar"}
+            other{"Aljeriako dinar"}
         }
         EGP{
             one{"Egiptoko libera"}
@@ -878,8 +924,8 @@ eu{
             other{"Eritreako nakfa"}
         }
         ETB{
-            one{"Etiopiako birra"}
-            other{"Etiopiako birra"}
+            one{"Etiopiako birr"}
+            other{"Etiopiako birr"}
         }
         EUR{
             one{"euro"}
@@ -894,8 +940,8 @@ eu{
             other{"Falkland uharteetako libera"}
         }
         GBP{
-            one{"libera esterlina"}
-            other{"libera esterlina"}
+            one{"Libera esterlina"}
+            other{"Libera esterlina"}
         }
         GEL{
             one{"Georgiako lari"}
@@ -950,8 +996,8 @@ eu{
             other{"Indonesiako errupia"}
         }
         ILS{
-            one{"Israeleko sheqel berri"}
-            other{"Israeleko sheqel berri"}
+            one{"Israelgo shekel berri"}
+            other{"Israelgo shekel berri"}
         }
         INR{
             one{"Indiako errupia"}
@@ -1178,8 +1224,8 @@ eu{
             other{"Ruandako franko"}
         }
         SAR{
-            one{"Saudiko rial"}
-            other{"Saudiko rial"}
+            one{"Arabia Saudiko rial"}
+            other{"Arabia Saudiko rial"}
         }
         SBD{
             one{"Salomon uharteetako dolar"}
@@ -1230,8 +1276,8 @@ eu{
             other{"Siriako libera"}
         }
         SZL{
-            one{"Swaziko lilangeni"}
-            other{"Swaziko lilangeni"}
+            one{"Swazilandiako lilangeni"}
+            other{"Swazilandiako lilangeni"}
         }
         THB{
             one{"Thailandiako baht"}
@@ -1258,8 +1304,8 @@ eu{
             other{"Turkiako lira"}
         }
         TTD{
-            one{"Trinidadeko eta Tobagoko dolar"}
-            other{"Trinidadeko eta Tobagoko dolar"}
+            one{"Trinidad eta Tobagoko dolar"}
+            other{"Trinidad eta Tobagoko dolar"}
         }
         TWD{
             one{"Taiwango dolar berri"}
@@ -1278,8 +1324,8 @@ eu{
             other{"Ugandako txelin"}
         }
         USD{
-            one{"AEBetako dolar"}
-            other{"AEBetako dolar"}
+            one{"AEBko dolar"}
+            other{"AEBko dolar"}
         }
         UYU{
             one{"Uruguaiko peso"}
@@ -1306,16 +1352,16 @@ eu{
             other{"Samoko tala"}
         }
         XAF{
-            one{"Afrika erdialdeko franko BEAC"}
-            other{"Afrika erdialdeko franko BEAC"}
+            one{"Afrika erdialdeko CFA franko"}
+            other{"Afrika erdialdeko CFA franko"}
         }
         XCD{
             one{"Karibe ekialdeko dolar"}
             other{"Karibe ekialdeko dolar"}
         }
         XOF{
-            one{"Afrika ekialdeko franko BCEAO"}
-            other{"Afrika ekialdeko franko BCEAO"}
+            one{"Afrika mendebaldeko CFA franko"}
+            other{"Afrika mendebaldeko CFA franko"}
         }
         XPF{
             one{"CFP franko"}
@@ -1342,5 +1388,5 @@ eu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.29.20"}
 }

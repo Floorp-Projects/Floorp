@@ -1,5 +1,7 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /******************************************************************************
- *   Copyright (C) 2000-2015, International Business Machines
+ *   Copyright (C) 2000-2016, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *******************************************************************************
  *   file name:  pkgdata.cpp
@@ -274,7 +276,7 @@ main(int argc, char* argv[]) {
     options[MODE].value = "common";
 
     /* read command line options */
-    argc=u_parseArgs(argc, argv, sizeof(options)/sizeof(options[0]), options);
+    argc=u_parseArgs(argc, argv, UPRV_LENGTHOF(options), options);
 
     /* error handling, printing usage message */
     /* I've decided to simply print an error and quit. This tool has too
@@ -332,7 +334,7 @@ main(int argc, char* argv[]) {
             progname);
 
         fprintf(stderr, "\n options:\n");
-        for(i=0;i<(sizeof(options)/sizeof(options[0]));i++) {
+        for(i=0;i<UPRV_LENGTHOF(options);i++) {
             fprintf(stderr, "%-5s -%c %s%-10s  %s\n",
                 (i<1?"[REQ]":""),
                 options[i].shortName,
@@ -342,7 +344,7 @@ main(int argc, char* argv[]) {
         }
 
         fprintf(stderr, "modes: (-m option)\n");
-        for(i=0;i<(sizeof(modes)/sizeof(modes[0]));i++) {
+        for(i=0;i<UPRV_LENGTHOF(modes);i++) {
             fprintf(stderr, "   %-9s ", modes[i].name);
             if (modes[i].alt_name) {
                 fprintf(stderr, "/ %-9s", modes[i].alt_name);

@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 1999-2013, International Business Machines
+*   Copyright (C) 1999-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -59,7 +61,7 @@ U_NAMESPACE_BEGIN
  *
  * <p>In order to implement methods such as contains() and indexOf(),
  * UVector needs a way to compare objects for equality.  To do so, it
- * uses a comparison frunction, or "comparer."  If the comparer is not
+ * uses a comparison function, or "comparer."  If the comparer is not
  * set, or is set to zero, then all such methods will act as if the
  * vector contains no element.  That is, indexOf() will always return
  * -1, contains() will always return FALSE, etc.

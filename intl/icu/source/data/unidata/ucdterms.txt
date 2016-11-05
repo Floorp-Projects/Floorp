@@ -13,6 +13,8 @@ DO NOT DOWNLOAD, INSTALL, COPY, DISTRIBUTE OR USE THE DATA FILES OR SOFTWARE.
 
 COPYRIGHT AND PERMISSION NOTICE
 
+Copyright (C) 2016 and later: Unicode, Inc. and others.
+License & terms of use: http://www.unicode.org/copyright.html
 Copyright (c) 1991-2004 Unicode, Inc. All rights reserved. Distributed under the
 Terms of Use in http://www.unicode.org/copyright.html.
 

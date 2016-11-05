@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/te.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 te{
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"అబిడ్జాన్"}
@@ -308,6 +302,9 @@ te{
         }
         "America:El_Salvador"{
             ec{"ఎల్ సాల్వడోర్"}
+        }
+        "America:Fort_Nelson"{
+            ec{"ఫోర్ట్ నెల్సన్"}
         }
         "America:Fortaleza"{
             ec{"ఫార్ట్లెజా"}
@@ -672,6 +669,9 @@ te{
         "Asia:Bangkok"{
             ec{"బ్యాంకాక్"}
         }
+        "Asia:Barnaul"{
+            ec{"బార్నాల్"}
+        }
         "Asia:Beirut"{
             ec{"బీరట్"}
         }
@@ -849,6 +849,9 @@ te{
         "Asia:Tokyo"{
             ec{"టోక్యో"}
         }
+        "Asia:Tomsk"{
+            ec{"టామ్స్క్"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"ఉలాన్బాటర్"}
         }
@@ -948,6 +951,9 @@ te{
         "Europe:Andorra"{
             ec{"అండోరా"}
         }
+        "Europe:Astrakhan"{
+            ec{"అస్ట్రఖాన్"}
+        }
         "Europe:Athens"{
             ec{"ఏథెన్స్"}
         }
@@ -1005,6 +1011,9 @@ te{
         }
         "Europe:Kiev"{
             ec{"కీవ్"}
+        }
+        "Europe:Kirov"{
+            ec{"కిరోవ్"}
         }
         "Europe:Lisbon"{
             ec{"లిస్బన్"}
@@ -1081,6 +1090,9 @@ te{
         }
         "Europe:Tirane"{
             ec{"టిరేన్"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"ఉల్యనోవ్స్క్"}
         }
         "Europe:Uzhgorod"{
             ec{"ఉజుగోరోడ్"}
@@ -1310,9 +1322,9 @@ te{
             ls{"తూర్పు ప్రామాణిక సమయం"}
         }
         "meta:America_Mountain"{
-            ld{"మౌంటేన్ పగటి సమయం"}
-            lg{"మౌంటేన్ సమయం"}
-            ls{"మౌంటేన్ ప్రామాణిక సమయం"}
+            ld{"మౌంటెయిన్ పగటి సమయం"}
+            lg{"మౌంటెయిన్ సమయం"}
+            ls{"మౌంటెయిన్ ప్రామాణిక సమయం"}
         }
         "meta:America_Pacific"{
             ld{"పసిఫిక్ పగటి సమయం"}
@@ -1781,6 +1793,9 @@ te{
         }
         "meta:Ponape"{
             ls{"పొనేప్ సమయం"}
+        }
+        "meta:Pyongyang"{
+            ls{"ప్యోంగాంగ్ సమయం"}
         }
         "meta:Qyzylorda"{
             ld{"కిజిలోర్డా వేసవి సమయం"}

@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/bs_Cyrl.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 bs_Cyrl{
     %%Parent{"root"}
     AuxExemplarCharacters{"[]"}
@@ -165,7 +159,7 @@ bs_Cyrl{
             }
         }
     }
-    Version{"2.1.19.90"}
+    Version{"2.1.28.76"}
     calendar{
         buddhist{
             eras{
@@ -360,6 +354,10 @@ bs_Cyrl{
         }
         gregorian{
             AmPmMarkers{
+                "пре подне",
+                "поподне",
+            }
+            AmPmMarkersAbbr{
                 "пре подне",
                 "поподне",
             }
@@ -1182,17 +1180,5 @@ bs_Cyrl{
         UK{"империјални"}
         US{"САД"}
         metric{"Метрички"}
-    }
-    transformNames{
-        BGN{"БГН (BGN)"}
-        Numeric{"Нумеричка"}
-        Tone{"Тон"}
-        UNGEGN{"УНГЕГН (BGN)"}
-        x-Accents{"Акценти"}
-        x-Fullwidth{"пуна ширина"}
-        x-Halfwidth{"пола ширине"}
-        x-Jamo{"Џамо"}
-        x-Pinyin{"Пинјин"}
-        x-Publishing{"Издавачки"}
     }
 }

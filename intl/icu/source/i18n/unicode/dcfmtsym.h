@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ********************************************************************************
-*   Copyright (C) 1997-2015, International Business Machines
+*   Copyright (C) 1997-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 *
@@ -356,12 +358,12 @@ private:
 public:
 
 #ifndef U_HIDE_INTERNAL_API
-    /** 
-     * @internal For ICU use only 
-     */ 
-    inline UBool isCustomCurrencySymbol() const { 
-        return fIsCustomCurrencySymbol; 
-    } 
+    /**
+     * @internal For ICU use only
+     */
+    inline UBool isCustomCurrencySymbol() const {
+        return fIsCustomCurrencySymbol;
+    }
 
     /**
      * @internal For ICU use only
@@ -425,7 +427,7 @@ private:
 
     UnicodeString currencySpcBeforeSym[UNUM_CURRENCY_SPACING_COUNT];
     UnicodeString currencySpcAfterSym[UNUM_CURRENCY_SPACING_COUNT];
-    UBool fIsCustomCurrencySymbol; 
+    UBool fIsCustomCurrencySymbol;
     UBool fIsCustomIntlCurrencySymbol;
 };
 
@@ -442,8 +444,7 @@ DecimalFormatSymbols::getSymbol(ENumberFormatSymbol symbol) const {
     return *strPtr;
 }
 
-//#ifndef U_HIDE_INTERNAL_API
-// See comments above for this function. Not hidden.
+// See comments above for this function. Not hidden with #ifndef U_HIDE_INTERNAL_API
 inline const UnicodeString &
 DecimalFormatSymbols::getConstSymbol(ENumberFormatSymbol symbol) const {
     const UnicodeString *strPtr;
@@ -455,19 +456,16 @@ DecimalFormatSymbols::getConstSymbol(ENumberFormatSymbol symbol) const {
     return *strPtr;
 }
 
-//#endif  /* U_HIDE_INTERNAL_API */
-
-
 // -------------------------------------
 
 inline void
 DecimalFormatSymbols::setSymbol(ENumberFormatSymbol symbol, const UnicodeString &value, const UBool propogateDigits = TRUE) {
-    if (symbol == kCurrencySymbol) { 
-        fIsCustomCurrencySymbol = TRUE; 
-    } 
-    else if (symbol == kIntlCurrencySymbol) { 
-        fIsCustomIntlCurrencySymbol = TRUE; 
-    } 
+    if (symbol == kCurrencySymbol) {
+        fIsCustomCurrencySymbol = TRUE;
+    }
+    else if (symbol == kIntlCurrencySymbol) {
+        fIsCustomIntlCurrencySymbol = TRUE;
+    }
     if(symbol<kFormatSymbolCount) {
         fSymbols[symbol]=value;
     }

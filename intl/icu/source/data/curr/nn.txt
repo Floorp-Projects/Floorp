@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/nn.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 nn{
     Currencies{
         ADP{
@@ -192,9 +186,13 @@ nn{
             "BYB",
             "kviterussisk ny rubel (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "kviterussisk rubel",
+        }
         BYR{
             "BYR",
-            "kviterussisk rubel",
+            "kviterussisk rubel (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1102,9 +1100,13 @@ nn{
             one{"kviterussisk ny rubel (BYB)"}
             other{"kviterussiske nye rublar (BYB)"}
         }
-        BYR{
+        BYN{
             one{"kviterussisk rubel"}
             other{"kviterussiske rublar"}
+        }
+        BYR{
+            one{"kviterussisk rubel (2000–2016)"}
+            other{"kviterussiske rublar (2000–2016)"}
         }
         BZD{
             one{"belizisk dollar"}
@@ -1919,5 +1921,5 @@ nn{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.76"}
 }

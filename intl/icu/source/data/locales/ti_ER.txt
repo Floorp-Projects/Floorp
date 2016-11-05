@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ti_ER.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ti_ER{
-    Version{"2.1.19.14"}
+    Version{"2.1.27.99"}
     calendar{
         generic{
             DateTimePatterns{
@@ -27,64 +21,27 @@ ti_ER{
             }
         }
         gregorian{
-            DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
-                "EEEE፡ dd MMMM መዓልቲ y G",
-                "dd MMMM y",
-                "dd-MMM-y",
-                "dd/MM/yy",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
             dayNames{
-                format{
-                    wide{
-                        "ሰንበት",
-                        "ሰኑይ",
-                        "ሰሉስ",
-                        "ረቡዕ",
-                        "ሓሙስ",
-                        "ዓርቢ",
-                        "ቀዳም",
+                stand-alone{
+                    narrow{
+                        "ሰ",
+                        "ሰ",
+                        "ሰ",
+                        "ረ",
+                        "ሓ",
+                        "ዓ",
+                        "ቀ",
                     }
                 }
             }
-            monthNames{
-                format{
-                    abbreviated{
-                        "ጥሪ",
-                        "ለካቲ",
-                        "መጋቢ",
-                        "ሚያዝ",
-                        "ግንቦ",
-                        "ሰነ",
-                        "ሓምለ",
-                        "ነሓሰ",
-                        "መስከ",
-                        "ጥቅም",
-                        "ሕዳር",
-                        "ታሕሳ",
-                    }
-                    wide{
-                        "ጥሪ",
-                        "ለካቲት",
-                        "መጋቢት",
-                        "ሚያዝያ",
-                        "ግንቦት",
-                        "ሰነ",
-                        "ሓምለ",
-                        "ነሓሰ",
-                        "መስከረም",
-                        "ጥቅምቲ",
-                        "ሕዳር",
-                        "ታሕሳስ",
-                    }
+            eras{
+                wide{
+                    "ዓመተ ዓለም",
+                    "ዓመተ ምህረት",
+                }
+                wide%variant{
+                    "ቅድሚ ልደተ ክርስቶስ",
+                    "ድሕሪ ልደተ ክርስቶስ",
                 }
             }
         }

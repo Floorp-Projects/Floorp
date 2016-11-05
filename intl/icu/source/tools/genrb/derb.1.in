@@ -2,6 +2,8 @@
 .\"
 .\" derb.1: manual page for the derb utility
 .\"
+.\" Copyright (C) 2016 and later: Unicode, Inc. and others.
+.\" License & terms of use: http://www.unicode.org/copyright.html
 .\" Copyright (C) 2000-2014 IBM, Inc. and others.
 .\"
 .TH DERB 1 "7 Mar 2014" "ICU MANPAGE" "ICU @VERSION@ Manual"

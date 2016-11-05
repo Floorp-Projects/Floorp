@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1998-2015, International Business Machines
+*   Copyright (C) 1998-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -1061,7 +1063,7 @@ _fromUnicodeWithCallback(UConverterFromUnicodeArgs *pArgs, UErrorCode *err) {
 
                         length=(int32_t)(pArgs->sourceLimit-pArgs->source);
                         if(length>0) {
-                            uprv_memcpy(cnv->preFromU, pArgs->source, length*U_SIZEOF_UCHAR);
+                            u_memcpy(cnv->preFromU, pArgs->source, length);
                             cnv->preFromULength=(int8_t)-length;
                         }
 
@@ -1817,7 +1819,7 @@ ucnv_toUChars(UConverter *cnv,
         {
             UChar buffer[1024];
 
-            destLimit=buffer+sizeof(buffer)/U_SIZEOF_UCHAR;
+            destLimit=buffer+UPRV_LENGTHOF(buffer);
             do {
                 dest=buffer;
                 *pErrorCode=U_ZERO_ERROR;
@@ -2646,7 +2648,7 @@ static const UAmbiguousConverter *ucnv_getAmbiguous(const UConverter *cnv)
         return NULL;
     }
 
-    for(i=0; i<(int32_t)(sizeof(ambiguousConverters)/sizeof(UAmbiguousConverter)); ++i)
+    for(i=0; i<UPRV_LENGTHOF(ambiguousConverters); ++i)
     {
         if(0==uprv_strcmp(name, ambiguousConverters[i].name))
         {
@@ -2743,7 +2745,7 @@ ucnv_getInvalidUChars (const UConverter * converter,
     }
     if ((*len = converter->invalidUCharLength) > 0)
     {
-        uprv_memcpy (errChars, converter->invalidUCharBuffer, sizeof(UChar) * (*len));
+        u_memcpy (errChars, converter->invalidUCharBuffer, *len);
     }
 }
 

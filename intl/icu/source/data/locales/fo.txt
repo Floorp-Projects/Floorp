@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fo.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fo{
     AuxExemplarCharacters{"[c q w x z]"}
     Ellipsis{
@@ -206,7 +200,7 @@ fo{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.28.76"}
     calendar{
         generic{
             DateTimePatterns{
@@ -413,6 +407,10 @@ fo{
                 MEd{"E dd.MM"}
                 MMM{"LLL"}
                 MMMEd{"E d. MMM"}
+                MMMMW{
+                    one{"W. 'vika' 'í' MMM"}
+                    other{"W. 'vika' 'í' MMM"}
+                }
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
                 Md{"dd.MM"}
@@ -433,6 +431,10 @@ fo{
                 yMd{"dd.MM.y"}
                 yQQQ{"QQQ 'í' y"}
                 yQQQQ{"QQQQ 'í' y"}
+                yw{
+                    one{"w. 'vika' 'í' y"}
+                    other{"w. 'vika' 'í' y"}
+                }
             }
             dayNames{
                 format{
@@ -783,6 +785,78 @@ fo{
             }
         }
     }
+    characterLabel{
+        activities{"Virksemi"}
+        african_scripts{"Afrikanskar skriftir"}
+        american_scripts{"Amerikanskar skriftir"}
+        animals_nature{"Djór og náttúra"}
+        arrows{"Pílar"}
+        box_drawing{"Kassatekning"}
+        braille{"Blindaskrift"}
+        bullets_stars{"Prikkar/Stjørnur"}
+        consonantal_jamo{"Jamo hjáljóð"}
+        currency_symbols{"Gjaldoyra tekin"}
+        dash_connector{"Bindistrika/sambindari"}
+        digits{"Talstavir"}
+        dingbats{"Dingbats"}
+        divination_symbols{"Spádóms tekin"}
+        downwards_arrows{"Pílar peikandi niðureftir"}
+        downwards_upwards_arrows{"Pílar peikandi niður og uppeftir"}
+        east_asian_scripts{"Eysturasiatiskar skriftir"}
+        emoji{"Emoji"}
+        european_scripts{"Evropeiskar skriftir"}
+        flags{"Fløgg"}
+        food_drink{"Matur og drekka"}
+        format{"Forsniða"}
+        format_whitespace{"Forsnið og hvíttglopp"}
+        full_width_form_variant{"Full breidd avbrigdir formur"}
+        geometric_shapes{"Mátingarfrøðiligir formar"}
+        half_width_form_variant{"Hálv breidd avbrigdir formur"}
+        han_characters{"Han bókstavar"}
+        han_radicals{"Han rótmerkir"}
+        hanja{"Hanja"}
+        hanzi_simplified{"Hanzi (einkult)"}
+        hanzi_traditional{"Hanzi (vanligt)"}
+        historic_scripts{"Søguligar skriftir"}
+        ideographic_desc_characters{"Hugtaksskrift eftirkomandi bókstavar"}
+        japanese_kana{"Japanskt kana"}
+        kanbun{"Kanbun"}
+        kanji{"Kanji"}
+        leftwards_arrows{"Pílar peikandi til vinstru"}
+        leftwards_rightwards_arrows{"Pílar peikandi til vinstru og høgru"}
+        letterlike_symbols{"Bókstavalíknandi tekin"}
+        limited_use{"Avmarkað brúk"}
+        math_symbols{"Støddfrøðilig tekin"}
+        middle_eastern_scripts{"Miðeystur skiftir"}
+        miscellaneous{"Ymiskt"}
+        modern_scripts{"Nútíðar skriftir"}
+        modifier{"Laga eftir"}
+        musical_symbols{"Tónleika tekin"}
+        nonspacing{"Einki glopp"}
+        numbers{"Tøl"}
+        objects{"Lutir"}
+        other{"Annað"}
+        paired{"Greipa saman"}
+        phonetic_alphabet{"Ljóðstavrað"}
+        pictographs{"Myndatekin"}
+        punctuation{"Teknseting"}
+        rightwards_arrows{"Pílar peikandi til høgru"}
+        sign_standard_symbols{"Tekn/vanlig tekin"}
+        small_form_variant{"Lítil avbrigdir formur"}
+        smileys_people{"Brostekin og fólk"}
+        south_asian_scripts{"Suðurasiatiskar skriftir"}
+        southeast_asian_scripts{"Útsynningsasiatiskar skriftir"}
+        spacing{"Regluglopp"}
+        symbols{"Tekin"}
+        technical_symbols{"Tøknilig tekin"}
+        tone_marks{"Litdámt merkir"}
+        travel_places{"Ferðing og støð"}
+        upwards_arrows{"Pílar peikandi uppeftir"}
+        variant_forms{"Frábrigdi formar"}
+        vocalic_jamo{"Jamo sjálvljóð"}
+        western_asian_scripts{"Vesturasiatiskar skriftir"}
+        whitespace{"Hvíttglopp"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -848,12 +922,32 @@ fo{
                 "0"{"næsta fríggjadag"}
                 "1"{"fríggjadagin í næstu viku"}
             }
+            relativeTime{
+                future{
+                    one{"um {0} fríggjadag"}
+                    other{"um {0} fríggjadagar"}
+                }
+                past{
+                    one{"{0} fríggjadag síðani"}
+                    other{"{0} fríggjadagar síðani"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"seinasta fr."}
                 "0"{"næsta fr."}
                 "1"{"fr. í næstu viku"}
+            }
+            relativeTime{
+                future{
+                    one{"um {0} fr."}
+                    other{"um {0} fr."}
+                }
+                past{
+                    one{"{0} fr. síðani"}
+                    other{"{0} fr. síðani"}
+                }
             }
         }
         fri-short{
@@ -862,9 +956,22 @@ fo{
                 "0"{"næsta frí."}
                 "1"{"frí. í næstu viku"}
             }
+            relativeTime{
+                future{
+                    one{"um {0} frí."}
+                    other{"um {0} frí."}
+                }
+                past{
+                    one{"{0} frí. síðani"}
+                    other{"{0} frí. síðani"}
+                }
+            }
         }
         hour{
             dn{"tími"}
+            relative{
+                "0"{"hendan tíman"}
+            }
             relativeTime{
                 future{
                     one{"um {0} tíma"}
@@ -904,6 +1011,9 @@ fo{
         }
         minute{
             dn{"minuttur"}
+            relative{
+                "0"{"hendan minuttin"}
+            }
             relativeTime{
                 future{
                     one{"um {0} minutt"}
@@ -947,6 +1057,16 @@ fo{
                 "0"{"næsta mánadag"}
                 "1"{"mánadagin í næstu viku"}
             }
+            relativeTime{
+                future{
+                    one{"um {0} mánadag"}
+                    other{"um {0} mánadagar"}
+                }
+                past{
+                    one{"{0} mánadag síðani"}
+                    other{"{0} mánadagar síðani"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -954,12 +1074,32 @@ fo{
                 "0"{"næsta má."}
                 "1"{"má. í næstu viku"}
             }
+            relativeTime{
+                future{
+                    one{"um {0} má."}
+                    other{"um {0} má."}
+                }
+                past{
+                    one{"{0} má. síðani"}
+                    other{"{0} má. síðani"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"seinasta mán."}
                 "0"{"næsta mán."}
                 "1"{"mán. í næstu viku"}
+            }
+            relativeTime{
+                future{
+                    one{"um {0} mán."}
+                    other{"um {0} mán."}
+                }
+                past{
+                    one{"{0} mán. síðani"}
+                    other{"{0} mán. síðani"}
+                }
             }
         }
         month{
@@ -1008,6 +1148,11 @@ fo{
         }
         quarter{
             dn{"ársfjórðingur"}
+            relative{
+                "-1"{"seinasta ársfjórðing"}
+                "0"{"hendan ársfjórðingin"}
+                "1"{"næsta ársfjórðing"}
+            }
             relativeTime{
                 future{
                     one{"um {0} ársfjórðing"}
@@ -1051,12 +1196,32 @@ fo{
                 "0"{"næsta leygardag"}
                 "1"{"leygardagin í næstu viku"}
             }
+            relativeTime{
+                future{
+                    one{"um {0} leygardag"}
+                    other{"um {0} leygardagar"}
+                }
+                past{
+                    one{"{0} leygardag síðani"}
+                    other{"{0} leygardagar síðani"}
+                }
+            }
         }
         sat-narrow{
             relative{
                 "-1"{"seinasta le."}
                 "0"{"næsta le."}
                 "1"{"le. í næstu viku"}
+            }
+            relativeTime{
+                future{
+                    one{"um {0} le."}
+                    other{"um {0} le."}
+                }
+                past{
+                    one{"{0} le. síðani"}
+                    other{"{0} le. síðani"}
+                }
             }
         }
         sat-short{
@@ -1065,9 +1230,22 @@ fo{
                 "0"{"næsta ley."}
                 "1"{"ley. í næstu viku"}
             }
+            relativeTime{
+                future{
+                    one{"um {0} ley."}
+                    other{"um {0} ley."}
+                }
+                past{
+                    one{"{0} ley. síðani"}
+                    other{"{0} ley. síðani"}
+                }
+            }
         }
         second{
             dn{"sekund"}
+            relative{
+                "0"{"nú"}
+            }
             relativeTime{
                 future{
                     one{"um {0} sekund"}
@@ -1111,12 +1289,32 @@ fo{
                 "0"{"næsta sunnudag"}
                 "1"{"sunnudagin í næstu viku"}
             }
+            relativeTime{
+                future{
+                    one{"um {0} sunnudag"}
+                    other{"um {0} sunnudagar"}
+                }
+                past{
+                    one{"{0} sunnudag síðani"}
+                    other{"{0} sunnudagar síðani"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"seinasta su."}
                 "0"{"næsta su."}
                 "1"{"su. í næstu viku"}
+            }
+            relativeTime{
+                future{
+                    one{"um {0} su."}
+                    other{"um {0} su."}
+                }
+                past{
+                    one{"{0} su. síðani"}
+                    other{"{0} su. síðani"}
+                }
             }
         }
         sun-short{
@@ -1125,12 +1323,32 @@ fo{
                 "0"{"næsta sun."}
                 "1"{"sun. í næstu viku"}
             }
+            relativeTime{
+                future{
+                    one{"um {0} sun."}
+                    other{"um {0} sun."}
+                }
+                past{
+                    one{"{0} sun. síðani"}
+                    other{"{0} sun. síðani"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"seinasta hósdag"}
                 "0"{"næsta hósdag"}
                 "1"{"hósdagin í næstu viku"}
+            }
+            relativeTime{
+                future{
+                    one{"um {0} hósdag"}
+                    other{"um {0} hósdagar"}
+                }
+                past{
+                    one{"{0} hósdag síðani"}
+                    other{"{0} hósdagar síðani"}
+                }
             }
         }
         thu-narrow{
@@ -1139,12 +1357,32 @@ fo{
                 "0"{"næsta hó."}
                 "1"{"hó. í næstu viku"}
             }
+            relativeTime{
+                future{
+                    one{"um {0} hó."}
+                    other{"um {0} hó."}
+                }
+                past{
+                    one{"{0} hó. síðani"}
+                    other{"{0} hó. síðani"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"seinasta hós."}
                 "0"{"næsta hós."}
                 "1"{"hós. í næstu viku"}
+            }
+            relativeTime{
+                future{
+                    one{"um {0} hós."}
+                    other{"um {0} hós."}
+                }
+                past{
+                    one{"{0} hós. síðani"}
+                    other{"{0} hós. síðani"}
+                }
             }
         }
         tue{
@@ -1153,12 +1391,32 @@ fo{
                 "0"{"næsta týsdag"}
                 "1"{"týsdagin í næstu viku"}
             }
+            relativeTime{
+                future{
+                    one{"um {0} týsdag"}
+                    other{"um {0} týsdagar"}
+                }
+                past{
+                    one{"{0} týsdag síðani"}
+                    other{"{0} týsdagar síðani"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"seinasta tý."}
                 "0"{"næsta tý."}
                 "1"{"tý. í næstu viku"}
+            }
+            relativeTime{
+                future{
+                    one{"um {0} tý."}
+                    other{"um {0} tý."}
+                }
+                past{
+                    one{"{0} tý. síðani"}
+                    other{"{0} tý. síðani"}
+                }
             }
         }
         tue-short{
@@ -1167,12 +1425,32 @@ fo{
                 "0"{"næsta týs."}
                 "1"{"týs. í næstu viku"}
             }
+            relativeTime{
+                future{
+                    one{"um {0} týs."}
+                    other{"um {0} týs."}
+                }
+                past{
+                    one{"{0} týs. síðani"}
+                    other{"{0} týs. síðani"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"seinasta mikudag"}
                 "0"{"næsta mikudag"}
                 "1"{"mikudagin í næstu viku"}
+            }
+            relativeTime{
+                future{
+                    one{"um {0} mikudag"}
+                    other{"um {0} mikudagar"}
+                }
+                past{
+                    one{"{0} mikudag síðani"}
+                    other{"{0} mikudagar síðani"}
+                }
             }
         }
         wed-narrow{
@@ -1181,12 +1459,32 @@ fo{
                 "0"{"næsta mi."}
                 "1"{"mi. í næstu viku"}
             }
+            relativeTime{
+                future{
+                    one{"um {0} mi."}
+                    other{"um {0} mi."}
+                }
+                past{
+                    one{"{0} mi. síðani"}
+                    other{"{0} mi. síðani"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"seinasta mik."}
                 "0"{"næsta mik."}
                 "1"{"mik. í næstu viku"}
+            }
+            relativeTime{
+                future{
+                    one{"um {0} mik."}
+                    other{"um {0} mik."}
+                }
+                past{
+                    one{"{0} mik. síðani"}
+                    other{"{0} mik. síðani"}
+                }
             }
         }
         week{
@@ -1196,6 +1494,7 @@ fo{
                 "0"{"hesu viku"}
                 "1"{"næstu viku"}
             }
+            relativePeriod{"vika nummar {0}"}
             relativeTime{
                 future{
                     one{"um {0} viku"}
@@ -1209,6 +1508,7 @@ fo{
         }
         week-narrow{
             dn{"v."}
+            relativePeriod{"vika nummar {0}"}
             relativeTime{
                 future{
                     one{"um {0} v."}
@@ -1222,6 +1522,7 @@ fo{
         }
         week-short{
             dn{"vi."}
+            relativePeriod{"vika nummar {0}"}
             relativeTime{
                 future{
                     one{"um {0} vi."}
@@ -1286,6 +1587,12 @@ fo{
     }
     listPattern{
         standard{
+            2{"{0} og {1}"}
+            end{"{0} og {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
             2{"{0} og {1}"}
             end{"{0} og {1}"}
             middle{"{0}, {1}"}

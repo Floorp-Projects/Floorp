@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ee.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ee{
     Currencies{
         ADP{
@@ -224,9 +218,13 @@ ee{
             "BYB",
             "belarusiaga ruble yeytɔ (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "belarusiaga ruble",
+        }
         BYR{
             "BYR",
-            "belarusiaga ruble",
+            "belarusiaga ruble (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1396,9 +1394,13 @@ ee{
             one{"belarusiaga ruble yeytɔ (1994–1999)"}
             other{"belarusiaga ruble yeyetɔ (1994–1999)"}
         }
-        BYR{
+        BYN{
             one{"belarusiaga ruble"}
             other{"belarusiaga rublewo"}
+        }
+        BYR{
+            one{"belarusiaga ruble (2000–2016)"}
+            other{"belarusiaga rublewo (2000–2016)"}
         }
         BZD{
             one{"belizega dollar"}
@@ -2329,5 +2331,5 @@ ee{
         one{"{1} {0}"}
         other{"{1} {0}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.76"}
 }

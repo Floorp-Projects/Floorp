@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/zh_Hant_HK.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hant_HK{
-    Version{"2.1.19.94"}
+    Version{"2.1.27.99"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"阿比贊"}
@@ -330,9 +324,6 @@ zh_Hant_HK{
         "Asia:Hebron"{
             ec{"希伯侖"}
         }
-        "Asia:Hong_Kong"{
-            ec{"香港"}
-        }
         "Asia:Irkutsk"{
             ec{"伊爾庫茨克"}
         }
@@ -341,9 +332,6 @@ zh_Hant_HK{
         }
         "Asia:Karachi"{
             ec{"卡拉奇"}
-        }
-        "Asia:Macau"{
-            ec{"澳門"}
         }
         "Asia:Makassar"{
             ec{"錫江"}

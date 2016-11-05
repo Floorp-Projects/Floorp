@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/sk.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 sk{
     Currencies{
         ADP{
@@ -188,9 +182,13 @@ sk{
             "BYB",
             "Bieloruský nový rubeľ (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "bieloruský rubeľ",
+        }
         BYR{
             "BYR",
-            "bieloruský rubeľ",
+            "bieloruský rubeľ (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1038,7 +1036,7 @@ sk{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1055,6 +1053,7 @@ sk{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1095,6 +1094,7 @@ sk{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -1275,11 +1275,17 @@ sk{
             one{"bieloruský nový rubeľ (1994–1999)"}
             other{"bieloruských nových rubľov (1994–1999)"}
         }
-        BYR{
+        BYN{
             few{"bieloruské ruble"}
             many{"bieloruského rubľa"}
             one{"bieloruský rubeľ"}
             other{"bieloruských rubľov"}
+        }
+        BYR{
+            few{"bieloruské ruble (2000–2016)"}
+            many{"bieloruského rubľa (2000–2016)"}
+            one{"bieloruský rubeľ (2000–2016)"}
+            other{"bieloruských rubľov (2000–2016)"}
         }
         BZD{
             few{"belizské doláre"}
@@ -2182,5 +2188,5 @@ sk{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.79"}
 }
