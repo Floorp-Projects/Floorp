@@ -1,7 +1,7 @@
 add_task(function* test_switchtab_decodeuri() {
   info("Opening first tab");
-  let tab = gBrowser.addTab("http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html#test%7C1");
-  yield promiseTabLoadEvent(tab);
+  const TEST_URL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html#test%7C1";
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   info("Opening and selecting second tab");
   gBrowser.selectedTab = gBrowser.addTab();

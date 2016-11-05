@@ -14,13 +14,11 @@ const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 
 const chromeScript = SpecialPowers.loadChromeScript(_ => {
-  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  Components.utils.import("resource://gre/modules/Timer.jsm");
 
-  Cu.import("resource://gre/modules/Services.jsm");
-  Cu.import("resource://gre/modules/Timer.jsm");
-
-  const alertService = Cc["@mozilla.org/alerts-service;1"]
-                         .getService(Ci.nsIAlertsService);
+  const alertService = Components.classes["@mozilla.org/alerts-service;1"]
+                                 .getService(Components.interfaces.nsIAlertsService);
 
   addMessageListener("waitForPosition", function() {
     var timer = setTimeout(function() {
@@ -38,7 +36,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
 
       Services.ww.unregisterNotification(windowObserver);
 
-      var win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      var win = aSubject.QueryInterface(Components.interfaces.nsIDOMWindow);
       win.addEventListener("pageshow", function onPageShow() {
         win.removeEventListener("pageshow", onPageShow, false);
 

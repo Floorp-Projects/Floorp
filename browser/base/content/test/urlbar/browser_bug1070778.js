@@ -27,8 +27,7 @@ add_task(function*() {
     }
   });
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla", {animate: false});
-  yield promiseTabLoaded(tab);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
   yield promiseAutocompleteResultPopup("keyword a");
 
   // First item should already be selected
@@ -48,7 +47,7 @@ add_task(function*() {
   let result = gURLBar.popup.richlistbox.firstChild;
   isnot(result, null, "Should have first item");
   let uri = NetUtil.newURI(result.getAttribute("url"));
-  is(uri.spec, makeActionURI("keyword", {url: "http://example.com/?q=ab", input: "keyword ab"}).spec, "Expect correct url");
+  is(uri.spec, PlacesUtils.mozActionURI("keyword", {url: "http://example.com/?q=ab", input: "keyword ab"}), "Expect correct url");
 
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   yield promisePopupHidden(gURLBar.popup);

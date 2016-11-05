@@ -117,7 +117,6 @@ add_task(function*() {
   let shownPromise = popupShown(contextMenu);
   let urlBarContainer = document.getElementById("urlbar-container");
   // Need to make sure not to click within an edit field.
-  let urlbarRect = urlBarContainer.getBoundingClientRect();
   EventUtils.synthesizeMouse(urlBarContainer, 100, 1, {type: "contextmenu", button: 2 });
   yield shownPromise;
 

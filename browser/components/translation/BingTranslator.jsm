@@ -419,7 +419,7 @@ var BingTokenManager = {
     };
 
     this._pendingRequest = deferred.promise;
-    let request = httpRequest(url, options);
+    httpRequest(url, options);
 
     return deferred.promise;
   }

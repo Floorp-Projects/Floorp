@@ -6,8 +6,7 @@ const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 add_task(function* switchToTab() {
-  let tab = gBrowser.addTab("about:about");
-  yield promiseTabLoaded(tab);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:about");
 
   yield promiseAutocompleteResultPopup("% about");
 

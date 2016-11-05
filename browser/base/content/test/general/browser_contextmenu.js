@@ -902,11 +902,12 @@ add_task(function* test_plaintext_sendpagetodevice() {
   }
   const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
 
-  let plainTextItems = ["context-navigation",   null,
-                        ["context-back",         false,
-                         "context-forward",      false,
-                         "context-reload",       true,
-                         "context-bookmarkpage", true], null,
+  let plainTextItemsWithSendPage =
+                    ["context-navigation",   null,
+                      ["context-back",         false,
+                        "context-forward",      false,
+                        "context-reload",       true,
+                        "context-bookmarkpage", true], null,
                     "---",                  null,
                     "context-savepage",     true,
                     ...(hasPocket ? ["context-pocket", true] : []),
@@ -923,7 +924,7 @@ add_task(function* test_plaintext_sendpagetodevice() {
                     "context-viewsource",   true,
                     "context-viewinfo",     true
                    ];
-  yield test_contextmenu("#test-text", plainTextItems, {
+  yield test_contextmenu("#test-text", plainTextItemsWithSendPage, {
       *onContextMenuShown() {
         yield openMenuItemSubmenu("context-sendpagetodevice");
       }
@@ -980,13 +981,13 @@ add_task(function* test_cleanup_html() {
  *        the element that will be referenced.
  */
 function* selectText(selector) {
-  yield ContentTask.spawn(gBrowser.selectedBrowser, selector, function*(selector) {
-    info(`Selecting text of ${selector}`);
+  yield ContentTask.spawn(gBrowser.selectedBrowser, selector, function*(contentSelector) {
+    info(`Selecting text of ${contentSelector}`);
     let doc = content.document;
     let win = doc.defaultView;
     win.getSelection().removeAllRanges();
     let div = doc.createRange();
-    let element = doc.querySelector(selector);
+    let element = doc.querySelector(contentSelector);
     Assert.ok(element, "Found element to select text from");
     div.setStartBefore(element);
     div.setEndAfter(element);

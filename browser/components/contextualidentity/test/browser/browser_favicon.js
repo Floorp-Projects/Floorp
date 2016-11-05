@@ -113,7 +113,6 @@ add_task(function* test() {
 
     // Load the page in 3 different contexts and set a cookie
     // which should only be visible in that context.
-    let value = USER_CONTEXTS[userContextId];
 
     // Open our tab in the given user context.
     let tabInfo = yield* openTabInUserContext(testURL, userContextId);

@@ -174,13 +174,17 @@ add_task(function* searchWith() {
 add_task(function* oneOffClick() {
   gBrowser.selectedTab = gBrowser.addTab();
 
-  let typedValue = "foo";
+  // We are explicitly using something that looks like a url, to make the test
+  // stricter. Even if it looks like a url, we should search.
+  let typedValue = "foo.bar";
   yield promiseAutocompleteResultPopup(typedValue);
 
   assertState(0, -1, typedValue);
 
   let oneOffs = gURLBar.popup.oneOffSearchButtons.getSelectableButtons(true);
-  let resultsPromise = promiseSearchResultsLoaded();
+  let resultsPromise =
+    BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
+                                   "http://mochi.test:8888/");
   EventUtils.synthesizeMouseAtCenter(oneOffs[0], {});
   yield resultsPromise;
 
@@ -191,7 +195,9 @@ add_task(function* oneOffClick() {
 add_task(function* oneOffReturn() {
   gBrowser.selectedTab = gBrowser.addTab();
 
-  let typedValue = "foo";
+  // We are explicitly using something that looks like a url, to make the test
+  // stricter. Even if it looks like a url, we should search.
+  let typedValue = "foo.bar";
   yield promiseAutocompleteResultPopup(typedValue, window, true);
 
   assertState(0, -1, typedValue);
@@ -200,7 +206,9 @@ add_task(function* oneOffReturn() {
   EventUtils.synthesizeKey("VK_DOWN", { altKey: true })
   assertState(0, 0, typedValue);
 
-  let resultsPromise = promiseSearchResultsLoaded();
+  let resultsPromise =
+    BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
+                                   "http://mochi.test:8888/");
   EventUtils.synthesizeKey("VK_RETURN", {})
   yield resultsPromise;
 
@@ -221,13 +229,4 @@ function assertState(result, oneOff, textValue = undefined) {
 function* hidePopup() {
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   yield promisePopupHidden(gURLBar.popup);
-}
-
-function promiseSearchResultsLoaded() {
-  let tab = gBrowser.selectedTab;
-  return promiseTabLoadEvent(tab).then(() => {
-    Assert.equal(tab.linkedBrowser.currentURI.spec,
-                 "http://mochi.test:8888/",
-                 'Expected "search results" page loaded');
-  });
 }

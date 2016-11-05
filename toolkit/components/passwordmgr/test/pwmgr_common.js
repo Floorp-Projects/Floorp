@@ -188,8 +188,8 @@ function registerRunTests() {
       SpecialPowers.removeObserver(observer, "passwordmgr-processed-form");
       formLikeRoot.remove();
       SimpleTest.executeSoon(() => {
-        var event = new Event("runTests");
-        window.dispatchEvent(event);
+        var runTestEvent = new Event("runTests");
+        window.dispatchEvent(runTestEvent);
       });
     });
     SpecialPowers.addObserver(observer, "passwordmgr-processed-form", false);
@@ -401,14 +401,13 @@ if (this.addMessageListener) {
     sendAsyncMessage("doneSetup");
   });
 
-  addMessageListener("loadRecipes", Task.async(function* loadRecipes(recipes) {
-
+  addMessageListener("loadRecipes", Task.async(function*(recipes) {
     var recipeParent = yield LoginManagerParent.recipeParentPromise;
     yield recipeParent.load(recipes);
     sendAsyncMessage("loadedRecipes", recipes);
   }));
 
-  addMessageListener("resetRecipes", Task.async(function* resetRecipes() {
+  addMessageListener("resetRecipes", Task.async(function*() {
     let recipeParent = yield LoginManagerParent.recipeParentPromise;
     yield recipeParent.reset();
     sendAsyncMessage("recipesReset");

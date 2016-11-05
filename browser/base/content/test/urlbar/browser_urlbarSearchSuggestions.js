@@ -22,7 +22,7 @@ add_task(function* prepare() {
 });
 
 add_task(function* clickSuggestion() {
-  gBrowser.selectedTab = gBrowser.addTab();
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
   gURLBar.focus();
   yield promiseAutocompleteResultPopup("foo");
   let [idx, suggestion, engineName] = yield promiseFirstSuggestion();
@@ -30,13 +30,13 @@ add_task(function* clickSuggestion() {
                "browser_searchSuggestionEngine%20searchSuggestionEngine.xml",
                "Expected suggestion engine");
   let item = gURLBar.popup.richlistbox.getItemAtIndex(idx);
-  let loadPromise = promiseTabLoaded(gBrowser.selectedTab);
+
+  let uri = Services.search.currentEngine.getSubmission(suggestion).uri;
+  let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
+                                                   false, uri.spec);
   item.click();
   yield loadPromise;
-  let uri = Services.search.currentEngine.getSubmission(suggestion).uri;
-  Assert.ok(uri.equals(gBrowser.currentURI),
-            "The search results page should have loaded");
-  gBrowser.removeTab(gBrowser.selectedTab);
+  yield BrowserTestUtils.removeTab(tab);
 });
 
 function getFirstSuggestion() {
@@ -53,15 +53,14 @@ function getFirstSuggestion() {
       }
     }
   }
-  return [-1, null];
+  return [-1, null, null];
 }
 
-function promiseFirstSuggestion() {
-  return new Promise(resolve => {
-    let tuple;
-    waitForCondition(() => {
-      tuple = getFirstSuggestion();
-      return tuple[0] >= 0;
-    }, () => resolve(tuple));
+function* promiseFirstSuggestion() {
+  let tuple = [-1, null, null];
+  yield BrowserTestUtils.waitForCondition(() => {
+    tuple = getFirstSuggestion();
+    return tuple[0] >= 0;
   });
+  return tuple;
 }

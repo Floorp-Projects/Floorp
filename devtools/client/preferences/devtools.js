@@ -362,10 +362,5 @@ pref("devtools.jsonview.enabled", false);
 pref("devtools.jsonview.enabled", true);
 #endif
 
-// Enable the HTML responsive design tool in Nightly only.  Disabled by default for all
-// other channels.
-#ifdef NIGHTLY_BUILD
+// Enable the HTML responsive design mode for all channels.
 pref("devtools.responsive.html.enabled", true);
-#else
-pref("devtools.responsive.html.enabled", false);
-#endif

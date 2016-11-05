@@ -89,10 +89,10 @@ function test() {
                     if (aTopic == "domwindowclosed")
                         Services.ww.unregisterNotification(arguments.callee);
                     else if (aTopic == "domwindowopened") {
-                        let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+                        let targetWin = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
                         SimpleTest.waitForFocus(function() {
-                            EventUtils.sendKey("RETURN", win);
-                        }, win);
+                            EventUtils.sendKey("RETURN", targetWin);
+                        }, targetWin);
                     }
                 });
             }
@@ -115,24 +115,24 @@ function test() {
                 filter.doCommand();
             }
 
-            function runOneTest(test) {
+            function runOneTest(testCase) {
                 function tester() {
-                    is(view.rowCount, expected, expected + " logins should match '" + test.filter + "'");
+                    is(view.rowCount, expected, expected + " logins should match '" + testCase.filter + "'");
                 }
 
                 let expected;
                 switch (mode) {
                 case 1: // without showing passwords
-                    expected = test.count;
+                    expected = testCase.count;
                     break;
                 case 2: // showing passwords
-                    expected = ("count2" in test) ? test.count2 : test.count;
+                    expected = ("count2" in testCase) ? testCase.count2 : testCase.count;
                     break;
                 case 3: // toggle
-                    expected = test.count;
+                    expected = testCase.count;
                     tester();
                     toggleShowPasswords(function () {
-                        expected = ("count2" in test) ? test.count2 : test.count;
+                        expected = ("count2" in testCase) ? testCase.count2 : testCase.count;
                         tester();
                         toggleShowPasswords(proceed);
                     });
@@ -151,9 +151,9 @@ function test() {
             }
 
             function runNextTest() {
-                let test = tests[testCounter++];
-                setFilter(test.filter);
-                setTimeout(runOneTest, 0, test);
+                let testCase = tests[testCounter++];
+                setFilter(testCase.filter);
+                setTimeout(runOneTest, 0, testCase);
             }
 
             runNextTest();

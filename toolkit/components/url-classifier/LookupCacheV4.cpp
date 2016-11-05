@@ -78,12 +78,28 @@ LookupCacheV4::Init()
   return NS_OK;
 }
 
-// TODO : Bug 1298257, Implement url matching for variable-length prefix set
 nsresult
 LookupCacheV4::Has(const Completion& aCompletion,
                    bool* aHas, bool* aComplete)
 {
   *aHas = false;
+
+  uint32_t length = 0;
+  nsDependentCSubstring fullhash;
+  fullhash.Rebind((const char *)aCompletion.buf, COMPLETE_SIZE);
+
+  nsresult rv = mVLPrefixSet->Matches(fullhash, &length);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aHas = length >= PREFIX_SIZE;
+  *aComplete = length == COMPLETE_SIZE;
+
+  if (LOG_ENABLED()) {
+    uint32_t prefix = aCompletion.ToUint32();
+    LOG(("Probe in V4 %s: %X, found %d, complete %d", mTableName.get(),
+          prefix, *aHas, *aComplete));
+  }
+
   return NS_OK;
 }
 
@@ -149,6 +165,17 @@ AppendPrefixToMap(PrefixStringMap& prefixes, nsDependentCSubstring& prefix)
 
   nsCString* prefixString = prefixes.LookupOrAdd(prefix.Length());
   prefixString->Append(prefix.BeginReading(), prefix.Length());
+}
+
+// Read prefix into a buffer and also update the hash which
+// keeps track of the checksum
+static void
+UpdateChecksum(nsICryptoHash* aCrypto, const nsACString& aPrefix)
+{
+  MOZ_ASSERT(aCrypto);
+  aCrypto->Update(reinterpret_cast<uint8_t*>(const_cast<char*>(
+                  aPrefix.BeginReading())),
+                  aPrefix.Length());
 }
 
 // Please see https://bug1287058.bmoattachments.org/attachment.cgi?id=8795366
@@ -232,18 +259,12 @@ LookupCacheV4::ApplyUpdate(TableUpdateV4* aTableUpdate,
         removalIndex++;
       } else {
         AppendPrefixToMap(aOutputMap, smallestOldPrefix);
-
-        crypto->Update(reinterpret_cast<uint8_t*>(const_cast<char*>(
-                       smallestOldPrefix.BeginReading())),
-                       smallestOldPrefix.Length());
+        UpdateChecksum(crypto, smallestOldPrefix);
       }
       smallestOldPrefix.SetLength(0);
     } else {
       AppendPrefixToMap(aOutputMap, smallestAddPrefix);
-
-      crypto->Update(reinterpret_cast<uint8_t*>(const_cast<char*>(
-                     smallestAddPrefix.BeginReading())),
-                     smallestAddPrefix.Length());
+      UpdateChecksum(crypto, smallestAddPrefix);
 
       smallestAddPrefix.SetLength(0);
     }
@@ -297,7 +318,7 @@ LookupCacheV4::InitCrypto(nsCOMPtr<nsICryptoHash>& aCrypto)
   }
 
   rv = aCrypto->Init(nsICryptoHash::SHA256);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InitCrypto failed");
 
   return rv;
 }
@@ -321,9 +342,7 @@ LookupCacheV4::VerifyChecksum(const nsACString& aChecksum)
     if (!loadPSet.GetSmallestPrefix(prefix)) {
       break;
     }
-    crypto->Update(reinterpret_cast<uint8_t*>(const_cast<char*>(
-                   prefix.BeginReading())),
-                   prefix.Length());
+    UpdateChecksum(crypto, prefix);
   }
 
   nsAutoCString checksum;

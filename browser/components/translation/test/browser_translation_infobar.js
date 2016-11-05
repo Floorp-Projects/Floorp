@@ -194,7 +194,6 @@ function run_tests(aFinishCallback) {
 
   info("Reopen to check the 'Not Now' button closes the notification.");
   notif = showTranslationUI("fr");
-  let notificationBox = gBrowser.getNotificationBox();
   is(hasTranslationInfoBar(), true, "there's a 'translate' notification");
   notif._getAnonElt("notNow").click();
   is(hasTranslationInfoBar(), false, "no 'translate' notification after clicking 'not now'");

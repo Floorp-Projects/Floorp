@@ -40,8 +40,8 @@ add_task(function* test_multiple_pages() {
     let storage = browser.storage.local;
 
     browser.test.log("create");
-    browser.tabs.create({url: "tab.html"}).then(tab => {
-      tabId = tab.id;
+    browser.tabs.create({url: "tab.html"}).then(tabObj => {
+      tabId = tabObj.id;
 
       return tabReady;
     }).then(() => {

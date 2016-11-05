@@ -131,8 +131,8 @@ function* loadURI(browser, uri) {
 function* clickLink(browser, uri) {
   info("Clicking link");
 
-  function frame_script(uri) {
-    let link = content.document.querySelector("a[href='" + uri + "']");
+  function frame_script(frameUri) {
+    let link = content.document.querySelector("a[href='" + frameUri + "']");
     link.click();
   }
 

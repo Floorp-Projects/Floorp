@@ -44,17 +44,17 @@ add_task(function* test_remove_single() {
       observer = {
         onBeginUpdateBatch: function() {},
         onEndUpdateBatch: function() {},
-        onVisit: function(uri) {
-          reject(new Error("Unexpected call to onVisit " + uri.spec));
+        onVisit: function(aUri) {
+          reject(new Error("Unexpected call to onVisit " + aUri.spec));
         },
-        onTitleChanged: function(uri) {
-          reject(new Error("Unexpected call to onTitleChanged " + uri.spec));
+        onTitleChanged: function(aUri) {
+          reject(new Error("Unexpected call to onTitleChanged " + aUri.spec));
         },
         onClearHistory: function() {
           reject("Unexpected call to onClearHistory");
         },
-        onPageChanged: function(uri) {
-          reject(new Error("Unexpected call to onPageChanged " + uri.spec));
+        onPageChanged: function(aUri) {
+          reject(new Error("Unexpected call to onPageChanged " + aUri.spec));
         },
         onFrecencyChanged: function(aURI) {
           try {

@@ -11,6 +11,8 @@ function test() {
   // Bug 992270: Ignore uncaught about:home exceptions (related to snippets from IndexedDB)
   ignoreAllUncaughtExceptions(true);
 
+  let previouslySelectedEngine = Services.search.currentEngine;
+
   function replaceUrl(base) {
     return base;
   }
@@ -21,7 +23,6 @@ function test() {
     let engine = Services.search.getEngineByName(engine_name);
     ok(engine, engine_name + " is installed");
 
-    let previouslySelectedEngine = Services.search.currentEngine;
     Services.search.currentEngine = engine;
 
     // load about:home, but remove the listener first so it doesn't
@@ -128,6 +129,7 @@ function test() {
   }
 
   registerCleanupFunction(function () {
+    Services.search.currentEngine = previouslySelectedEngine;
     gBrowser.removeProgressListener(listener);
     gBrowser.removeTab(tab);
     if (gMutationObserver)
