@@ -358,6 +358,29 @@ mozHunspell::LoadDictionaryList(bool aNotifyChildProcesses)
     }
   }
 
+  // find dictionaries in DICPATH
+  char* dicEnv = PR_GetEnv("DICPATH");
+  if (dicEnv) {
+    // do a two-pass dance so dictionaries are loaded right-to-left as preference
+    nsTArray<nsCOMPtr<nsIFile>> dirs;
+    nsAutoCString env(dicEnv); // assume dicEnv is UTF-8
+
+    char* currPath = nullptr;
+    char* nextPaths = env.BeginWriting();
+    while ((currPath = NS_strtok(":", &nextPaths))) {
+      nsCOMPtr<nsIFile> dir;
+      rv = NS_NewNativeLocalFile(nsCString(currPath), true, getter_AddRefs(dir));
+      if (NS_SUCCEEDED(rv)) {
+        dirs.AppendElement(dir);
+      }
+    }
+
+    // load them in reverse order so they override each other properly
+    for (int32_t i = dirs.Length() - 1; i >= 0; i--) {
+      LoadDictionariesFromDir(dirs[i]);
+    }
+  }
+
   // find dictionaries from extensions requiring restart
   nsCOMPtr<nsISimpleEnumerator> dictDirs;
   rv = dirSvc->Get(DICTIONARY_SEARCH_DIRECTORY_LIST,

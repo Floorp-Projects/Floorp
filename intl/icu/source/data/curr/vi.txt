@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/vi.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 vi{
     Currencies{
         ADP{
@@ -220,9 +214,13 @@ vi{
             "BYB",
             "Đồng Rúp Mới của Belarus (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "Rúp Belarus",
+        }
         BYR{
             "BYR",
-            "Rúp Belarus",
+            "Rúp Belarus (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1182,7 +1180,7 @@ vi{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1199,6 +1197,7 @@ vi{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1337,8 +1336,11 @@ vi{
         BWP{
             other{"Pula Botswana"}
         }
-        BYR{
+        BYN{
             other{"Rúp Belarus"}
+        }
+        BYR{
+            other{"Rúp Belarus (2000–2016)"}
         }
         BZD{
             other{"Đô la Belize"}
@@ -1746,5 +1748,5 @@ vi{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
 }

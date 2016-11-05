@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ta.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ta{
     AuxExemplarCharacters{"[\u200C\u200D]"}
     Ellipsis{
@@ -210,9 +204,28 @@ ta{
         }
         minimumGroupingDigits{"1"}
         native{"tamldec"}
+        tamldec{
+            patterns{
+                currencyFormat{"¤ #,##,##0.00"}
+                percentFormat{"#,##,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
         traditional{"taml"}
     }
-    Version{"2.1.19.55"}
+    Version{"2.1.28.79"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -330,7 +343,7 @@ ta{
                 "EEEE, d MMMM, y G",
                 "d MMMM, y G",
                 "d MMM, y G",
-                "d-M-y GGGGG",
+                "d/M/y GGGGG",
                 "{1}, {0}",
                 "{1} அன்று {0}",
                 "{1} {0}",
@@ -389,14 +402,14 @@ ta{
                     H{"HH–HH v"}
                 }
                 M{
-                    M{"M–M"}
+                    M{"M – M"}
                 }
                 MEd{
                     M{"E, d/M – E, d/M"}
                     d{"E, d/M – E, d/M"}
                 }
                 MMM{
-                    M{"MMM–MMM"}
+                    M{"MMM – MMM"}
                 }
                 MMMEd{
                     M{"E, d MMM – E, d MMM"}
@@ -404,14 +417,14 @@ ta{
                 }
                 MMMd{
                     M{"d MMM – d MMM"}
-                    d{"d–d MMM"}
+                    d{"d – d MMM"}
                 }
                 Md{
                     M{"d/M – d/M"}
                     d{"d/M – d/M"}
                 }
                 d{
-                    d{"d–d"}
+                    d{"d – d"}
                 }
                 fallback{"{0} – {1}"}
                 h{
@@ -433,7 +446,7 @@ ta{
                     h{"a h–h v"}
                 }
                 y{
-                    y{"y–y G"}
+                    y{"y – y G"}
                 }
                 yM{
                     M{"M/y – M/y G"}
@@ -445,7 +458,7 @@ ta{
                     y{"E, d/M/y – E, d/M/y G"}
                 }
                 yMMM{
-                    M{"MMM–MMM y G"}
+                    M{"MMM – MMM y G"}
                     y{"MMM y – MMM y G"}
                 }
                 yMMMEd{
@@ -459,7 +472,7 @@ ta{
                 }
                 yMMMd{
                     M{"d MMM – d MMM, y G"}
-                    d{"d–d MMM, y G"}
+                    d{"d – d MMM, y G"}
                     y{"d MMM, y – d MMM, y G"}
                 }
                 yMd{
@@ -517,9 +530,13 @@ ta{
                 Hmsv{"HH:mm:ss v"}
                 Hmv{"HH:mm v"}
                 M{"L"}
-                MEd{"MM-dd, E"}
+                MEd{"dd-MM, E"}
                 MMM{"LLL"}
                 MMMEd{"MMM d, E"}
+                MMMMW{
+                    one{"MMM W -ஆம் வாரம்"}
+                    other{"MMM W -ஆம் வாரம்"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"MMM d"}
                 MMdd{"dd-MM"}
@@ -542,6 +559,10 @@ ta{
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"y ஆம் ஆண்டின் w -ஆம் வாரம்"}
+                    other{"y ஆம் ஆண்டின் w -ஆம் வாரம்"}
+                }
             }
             dayNames{
                 format{
@@ -894,7 +915,7 @@ ta{
                         "மே",
                         "ஜூன்",
                         "ஜூலை",
-                        "ஆகஸ்டு",
+                        "ஆகஸ்ட்",
                         "செப்டம்பர்",
                         "அக்டோபர்",
                         "நவம்பர்",
@@ -917,10 +938,10 @@ ta{
                         "4",
                     }
                     wide{
-                        "1ஆம் காலாண்டு",
-                        "2ஆம் காலாண்டு",
-                        "3ஆம் காலாண்டு",
-                        "4ஆம் காலாண்டு",
+                        "ஒன்றாம் காலாண்டு",
+                        "இரண்டாம் காலாண்டு",
+                        "மூன்றாம் காலாண்டு",
+                        "நான்காம் காலாண்டு",
                     }
                 }
                 stand-alone{
@@ -937,14 +958,102 @@ ta{
                         "4",
                     }
                     wide{
-                        "1ஆம் காலாண்டு",
-                        "2ஆம் காலாண்டு",
-                        "3ஆம் காலாண்டு",
-                        "4ஆம் காலாண்டு",
+                        "ஒன்றாம் காலாண்டு",
+                        "இரண்டாம் காலாண்டு",
+                        "மூன்றாம் காலாண்டு",
+                        "நான்காம் காலாண்டு",
                     }
                 }
             }
         }
+    }
+    characterLabel{
+        activities{"செயல்பாடுகள்"}
+        african_scripts{"ஆப்பிரிக்க ஸ்கிரிப்டுகள்"}
+        american_scripts{"அமெரிக்க ஸ்கிரிப்டுகள்"}
+        animal{"விலங்கு"}
+        animals_nature{"விலங்குகள் & இயற்கை"}
+        arrows{"அம்புகள்"}
+        body{"உடல்"}
+        box_drawing{"பெட்டி வரைபடம்"}
+        braille{"பிரெய்லி"}
+        building{"கட்டிடம்"}
+        bullets_stars{"புல்லட்கள்/நட்சத்திரங்கள்"}
+        consonantal_jamo{"மெய்யெழுத்து ஜாமோ"}
+        currency_symbols{"நாணயச் சின்னங்கள்"}
+        dash_connector{"கோடு/இணைப்பான்"}
+        digits{"இலக்கங்கள்"}
+        dingbats{"டிங்பேட்கள்"}
+        divination_symbols{"தெய்வீகச் சின்னங்கள்"}
+        downwards_arrows{"கீழ்நோக்கிய அம்புகள்"}
+        downwards_upwards_arrows{"கீழ்நோக்கிய மேல்நோக்கிய அம்புகள்"}
+        east_asian_scripts{"கிழக்காசிய ஸ்கிரிப்டுகள்"}
+        emoji{"எமோஜி"}
+        european_scripts{"ஐரோப்பிய ஸ்கிரிப்டுகள்"}
+        female{"பெண்"}
+        flag{"கொடி"}
+        flags{"கொடிகள்"}
+        food_drink{"உணவு & பானம்"}
+        format{"வடிவமைப்பு"}
+        format_whitespace{"வடிவமைப்பு & வெள்ளை இடைவெளி"}
+        full_width_form_variant{"முழு-அகல வடிவ மாறிகள்"}
+        geometric_shapes{"வடிவியல் வடிவங்கள்"}
+        half_width_form_variant{"அரை-அகல வடிவ மாறிகள்"}
+        han_characters{"ஹன் எழுத்துருக்கள்"}
+        han_radicals{"ஹன் ரேடிகல்கள்"}
+        hanja{"ஹன்ஜா"}
+        hanzi_simplified{"ஹன்சி (எளிதாக்கப்பட்டது)"}
+        hanzi_traditional{"ஹன்சி (பாரம்பரியமானது)"}
+        heart{"இதயம்"}
+        historic_scripts{"வரலாற்று ஸ்கிரிப்டுகள்"}
+        ideographic_desc_characters{"ஐடியோகிராஃபிக் விளக்க. எழுத்துருக்கள்"}
+        japanese_kana{"ஜப்பானிய கானா"}
+        kanbun{"கன்புன்"}
+        kanji{"காஞ்சி"}
+        keycap{"விசை"}
+        leftwards_arrows{"இடதுபுறம் நோக்கிய அம்புகள்"}
+        leftwards_rightwards_arrows{"இடதுபுறம் வலதுபுறம் நோக்கிய அம்புகள்"}
+        letterlike_symbols{"எழுத்துக்களைப் போன்ற சின்னங்கள்"}
+        limited_use{"குறிப்பிட்ட பயன்பாட்டுக்கானவை"}
+        male{"ஆண்"}
+        math_symbols{"கணிதச் சின்னங்கள்"}
+        middle_eastern_scripts{"மத்திய கிழக்கு ஸ்கிரிப்டுகள்"}
+        miscellaneous{"மற்றவை"}
+        modern_scripts{"நவீன ஸ்கிரிப்டுகள்"}
+        modifier{"உருமாற்றி"}
+        musical_symbols{"இசைச் சின்னங்கள்"}
+        nature{"இயற்கை"}
+        nonspacing{"இடைவெளியற்ற"}
+        numbers{"எண்கள்"}
+        objects{"பொருட்கள்"}
+        other{"பிற"}
+        paired{"இணைக்கப்பட்டவை"}
+        person{"நபர்"}
+        phonetic_alphabet{"ஒலி அகர வரிசை"}
+        pictographs{"சொற்படங்கள்"}
+        place{"இடம்"}
+        plant{"செடி"}
+        punctuation{"நிறுத்தக்குறி"}
+        rightwards_arrows{"வலதுபுறம் நோக்கிய அம்புகள்"}
+        sign_standard_symbols{"சைகை/நிலையான சின்னங்கள்"}
+        small_form_variant{"சிறு வடிவ மாறிகள்"}
+        smiley{"ஸ்மைலி"}
+        smileys_people{"ஸ்மைலிகள் & மக்கள்"}
+        south_asian_scripts{"தெற்காசிய ஸ்கிரிப்டுகள்"}
+        southeast_asian_scripts{"தென்கிழக்காசிய ஸ்கிரிப்டுகள்"}
+        spacing{"இடைவெளி"}
+        sport{"விளையாட்டு"}
+        symbols{"சின்னங்கள்"}
+        technical_symbols{"தொழில்நுட்பச் சின்னங்கள்"}
+        tone_marks{"தொனிக் குறியீடுகள்"}
+        travel{"பயணம்"}
+        travel_places{"பயணம் & இடங்கள்"}
+        upwards_arrows{"மேல்நோக்கிய அம்புகள்"}
+        variant_forms{"மாறி வடிவங்கள்"}
+        vocalic_jamo{"உயிரெழுத்து ஜாமோ"}
+        weather{"வானிலை"}
+        western_asian_scripts{"மேற்காசிய ஸ்கிரிப்டுகள்"}
+        whitespace{"வெள்ளை இடைவெளி"}
     }
     delimiters{
         alternateQuotationEnd{"’"}
@@ -968,7 +1077,7 @@ ta{
                     other{"{0} நாட்களில்"}
                 }
                 past{
-                    one{"{0} நாளைக்கு முன்"}
+                    one{"{0} நாளுக்கு முன்"}
                     other{"{0} நாட்களுக்கு முன்"}
                 }
             }
@@ -976,7 +1085,10 @@ ta{
         day-narrow{
             dn{"நா."}
             relative{
+                "-1"{"நேற்று"}
                 "-2"{"நேற்று முன் தினம்"}
+                "0"{"இன்று"}
+                "1"{"நாளை"}
                 "2"{"நாளை மறுநாள்"}
             }
             relativeTime{
@@ -993,7 +1105,10 @@ ta{
         day-short{
             dn{"நாள்"}
             relative{
+                "-1"{"நேற்று"}
                 "-2"{"நேற்று முன் தினம்"}
+                "0"{"இன்று"}
+                "1"{"நாளை"}
                 "2"{"நாளை மறுநாள்"}
             }
             relativeTime{
@@ -1002,7 +1117,7 @@ ta{
                     other{"{0} நாட்களில்"}
                 }
                 past{
-                    one{"0} நாளுக்கு முன்"}
+                    one{"{0} நாளுக்கு முன்"}
                     other{"{0} நாட்களுக்கு முன்"}
                 }
             }
@@ -1019,12 +1134,32 @@ ta{
                 "0"{"இந்த வெள்ளி"}
                 "1"{"அடுத்த வெள்ளி"}
             }
+            relativeTime{
+                future{
+                    one{"{0} வெள்ளியில்"}
+                    other{"{0} வெள்ளிகளில்"}
+                }
+                past{
+                    one{"{0} வெள்ளிக்கு முன்"}
+                    other{"{0} வெள்ளிகளுக்கு முன்"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"கடந்த வெள்."}
                 "0"{"இந்த வெள்."}
                 "1"{"அடுத்த வெள்."}
+            }
+            relativeTime{
+                future{
+                    one{"{0} வெள்."}
+                    other{"{0} வெள்."}
+                }
+                past{
+                    one{"{0} வெள். முன்"}
+                    other{"{0} வெள். முன்"}
+                }
             }
         }
         fri-short{
@@ -1033,9 +1168,22 @@ ta{
                 "0"{"இந்த வெள்."}
                 "1"{"அடுத்த வெள்."}
             }
+            relativeTime{
+                future{
+                    one{"{0} வெள்."}
+                    other{"{0} வெள்."}
+                }
+                past{
+                    one{"{0} வெள். முன்"}
+                    other{"{0} வெள். முன்"}
+                }
+            }
         }
         hour{
             dn{"மணி"}
+            relative{
+                "0"{"இந்த ஒரு மணிநேரத்தில்"}
+            }
             relativeTime{
                 future{
                     one{"{0} மணிநேரத்தில்"}
@@ -1075,6 +1223,9 @@ ta{
         }
         minute{
             dn{"நிமிடம்"}
+            relative{
+                "0"{"இந்த ஒரு நிமிடத்தில்"}
+            }
             relativeTime{
                 future{
                     one{"{0} நிமிடத்தில்"}
@@ -1118,6 +1269,16 @@ ta{
                 "0"{"இந்த திங்கள்"}
                 "1"{"அடுத்த திங்கள்"}
             }
+            relativeTime{
+                future{
+                    one{"{0} திங்களில்"}
+                    other{"{0} திங்கள்களில்"}
+                }
+                past{
+                    one{"{0} திங்களுக்கு முன்"}
+                    other{"{0} திங்கள்களுக்கு முன்"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -1125,12 +1286,32 @@ ta{
                 "0"{"இந்த திங்."}
                 "1"{"அடுத்த திங்."}
             }
+            relativeTime{
+                future{
+                    one{"{0} திங்."}
+                    other{"{0} திங்."}
+                }
+                past{
+                    one{"{0} திங். முன்"}
+                    other{"{0} திங். முன்"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"கடந்த திங்."}
                 "0"{"இந்த திங்."}
                 "1"{"அடுத்த திங்."}
+            }
+            relativeTime{
+                future{
+                    one{"{0} திங்."}
+                    other{"{0} திங்."}
+                }
+                past{
+                    one{"{0} திங். முன்"}
+                    other{"{0} திங். முன்"}
+                }
             }
         }
         month{
@@ -1170,7 +1351,7 @@ ta{
             }
         }
         month-short{
-            dn{"மாதம்"}
+            dn{"மாத."}
             relative{
                 "-1"{"கடந்த மாதம்"}
                 "0"{"இந்த மாதம்"}
@@ -1190,7 +1371,7 @@ ta{
         quarter{
             dn{"காலாண்டு"}
             relative{
-                "-1"{"இறுதி காலாண்டு"}
+                "-1"{"கடந்த காலாண்டு"}
                 "0"{"இந்த காலாண்டு"}
                 "1"{"அடுத்த காலாண்டு"}
             }
@@ -1206,7 +1387,7 @@ ta{
             }
         }
         quarter-narrow{
-            dn{"காலாண்டு"}
+            dn{"கா."}
             relative{
                 "-1"{"இறுதி காலாண்டு"}
                 "0"{"இந்த காலாண்டு"}
@@ -1224,7 +1405,7 @@ ta{
             }
         }
         quarter-short{
-            dn{"காலாண்டு"}
+            dn{"காலா."}
             relative{
                 "-1"{"இறுதி காலாண்டு"}
                 "0"{"இந்த காலாண்டு"}
@@ -1247,6 +1428,16 @@ ta{
                 "0"{"இந்த சனி"}
                 "1"{"அடுத்த சனி"}
             }
+            relativeTime{
+                future{
+                    one{"{0} சனியில்"}
+                    other{"{0} சனிகளில்"}
+                }
+                past{
+                    one{"{0} சனிக்கு முன்"}
+                    other{"{0} சனிகளுக்கு முன்"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1254,12 +1445,32 @@ ta{
                 "0"{"இந்த சனி"}
                 "1"{"அடுத்த சனி"}
             }
+            relativeTime{
+                future{
+                    one{"{0} சனி."}
+                    other{"{0} சனி."}
+                }
+                past{
+                    one{"{0} சனி. முன்"}
+                    other{"{0} சனி. முன்"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"கடந்த சனி"}
                 "0"{"இந்த சனி"}
                 "1"{"அடுத்த சனி"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} சனி."}
+                    other{"{0} சனி."}
+                }
+                past{
+                    one{"{0} சனி. முன்"}
+                    other{"{0} சனி. முன்"}
+                }
             }
         }
         second{
@@ -1310,12 +1521,32 @@ ta{
                 "0"{"இந்த ஞாயிறு"}
                 "1"{"அடுத்த ஞாயிறு"}
             }
+            relativeTime{
+                future{
+                    one{"{0} ஞாயிறில்"}
+                    other{"{0} ஞாயிறுகளில்"}
+                }
+                past{
+                    one{"{0} ஞாயிறுக்கு முன்பு"}
+                    other{"{0} ஞாயிறுகளுக்கு முன்பு"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"கடந்த ஞா."}
                 "0"{"இந்த ஞா."}
                 "1"{"அடுத்த ஞா."}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ஞா."}
+                    other{"{0} ஞா."}
+                }
+                past{
+                    one{"{0} ஞா. முன்"}
+                    other{"{0} ஞா. முன்"}
+                }
             }
         }
         sun-short{
@@ -1324,12 +1555,32 @@ ta{
                 "0"{"இந்த ஞாயி."}
                 "1"{"அடுத்த ஞாயி."}
             }
+            relativeTime{
+                future{
+                    one{"{0} ஞாயி."}
+                    other{"{0} ஞாயி."}
+                }
+                past{
+                    one{"{0} ஞாயி. முன்"}
+                    other{"{0} ஞாயி. முன்"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"கடந்த வியாழன்"}
                 "0"{"இந்த வியாழன்"}
                 "1"{"அடுத்த வியாழன்"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} வியாழனில்"}
+                    other{"{0} வியாழன்களில்"}
+                }
+                past{
+                    one{"{0} வியாழனுக்கு முன்"}
+                    other{"{0} வியாழன்களுக்கு முன்"}
+                }
             }
         }
         thu-narrow{
@@ -1338,12 +1589,32 @@ ta{
                 "0"{"இந்த வியா."}
                 "1"{"அடுத்த வியா."}
             }
+            relativeTime{
+                future{
+                    one{"{0} வியா."}
+                    other{"{0} வியா."}
+                }
+                past{
+                    one{"{0} வியா. முன்"}
+                    other{"{0} வியா. முன்"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"கடந்த வியா."}
                 "0"{"இந்த வியா."}
                 "1"{"அடுத்த வியா."}
+            }
+            relativeTime{
+                future{
+                    one{"{0} வியா."}
+                    other{"{0} வியா."}
+                }
+                past{
+                    one{"{0} வியா. முன்"}
+                    other{"{0} வியா. முன்"}
+                }
             }
         }
         tue{
@@ -1352,12 +1623,32 @@ ta{
                 "0"{"இந்த செவ்வாய்"}
                 "1"{"அடுத்த செவ்வாய்"}
             }
+            relativeTime{
+                future{
+                    one{"{0} செவ்வாயில்"}
+                    other{"{0} செவ்வாய்களில்"}
+                }
+                past{
+                    one{"{0} செவ்வாய் முன்பு"}
+                    other{"{0} செவ்வாய்கள் முன்பு"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"கடந்த செவ்."}
                 "0"{"இந்த செவ்."}
                 "1"{"அடுத்த செவ்."}
+            }
+            relativeTime{
+                future{
+                    one{"{0} செவ்."}
+                    other{"{0} செவ்வாய்களில்"}
+                }
+                past{
+                    one{"{0} செவ்வாய்களுக்கு முன்"}
+                    other{"{0} செவ். முன்பு"}
+                }
             }
         }
         tue-short{
@@ -1366,12 +1657,32 @@ ta{
                 "0"{"இந்த செவ்."}
                 "1"{"அடுத்த செவ்."}
             }
+            relativeTime{
+                future{
+                    one{"{0} செவ்."}
+                    other{"{0} செவ்."}
+                }
+                past{
+                    one{"{0} செவ்வாய்களுக்கு முன்"}
+                    other{"{0} செவ்வாய்களுக்கு முன்"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"கடந்த புதன்"}
                 "0"{"இந்த புதன்"}
                 "1"{"அடுத்த புதன்"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} புதனில்"}
+                    other{"{0} புதன்களில்"}
+                }
+                past{
+                    one{"{0} புதனுக்கு முன்"}
+                    other{"{0} புதன்களுக்கு முன்"}
+                }
             }
         }
         wed-narrow{
@@ -1380,12 +1691,32 @@ ta{
                 "0"{"இந்த புத."}
                 "1"{"அடுத்த புத."}
             }
+            relativeTime{
+                future{
+                    one{"{0} புத."}
+                    other{"{0} புத."}
+                }
+                past{
+                    one{"{0} புத. முன்"}
+                    other{"{0} புத. முன்"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"கடந்த புத."}
                 "0"{"இந்த புத."}
                 "1"{"அடுத்த புத."}
+            }
+            relativeTime{
+                future{
+                    one{"{0} புத."}
+                    other{"{0} புத."}
+                }
+                past{
+                    one{"{0} புதன்களுக்கு முன்"}
+                    other{"{0} புதன்களுக்கு முன்"}
+                }
             }
         }
         week{
@@ -1395,6 +1726,7 @@ ta{
                 "0"{"இந்த வாரம்"}
                 "1"{"அடுத்த வாரம்"}
             }
+            relativePeriod{"{0} -இன் வாரம்"}
             relativeTime{
                 future{
                     one{"{0} வாரத்தில்"}
@@ -1413,6 +1745,7 @@ ta{
                 "0"{"இந்த வாரம்"}
                 "1"{"அடுத்த வாரம்"}
             }
+            relativePeriod{"{0} -இன் வாரம்"}
             relativeTime{
                 future{
                     one{"{0} வா."}
@@ -1431,6 +1764,7 @@ ta{
                 "0"{"இந்த வாரம்"}
                 "1"{"அடுத்த வாரம்"}
             }
+            relativePeriod{"{0} -இன் வாரம்"}
             relativeTime{
                 future{
                     one{"{0} வார."}
@@ -1510,6 +1844,12 @@ ta{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-short{
+            2{"{0} மற்றும் {1}"}
+            end{"{0} மற்றும் {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         unit{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
@@ -1533,17 +1873,5 @@ ta{
         UK{"யூகே"}
         US{"யூஎஸ்"}
         metric{"மெட்ரிக்"}
-    }
-    transformNames{
-        BGN{"BGN"}
-        Numeric{"எண்"}
-        Tone{"டோன்"}
-        UNGEGN{"UNGEGN"}
-        x-Accents{"ஒலிப்புகள்"}
-        x-Fullwidth{"முழு அகலம்"}
-        x-Halfwidth{"அரை அகலம்"}
-        x-Jamo{"ஜமோ"}
-        x-Pinyin{"பின்யின்"}
-        x-Publishing{"வெளியிடுகிறது"}
     }
 }

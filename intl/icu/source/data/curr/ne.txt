@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ne.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ne{
     Currencies{
         AED{
@@ -104,9 +98,13 @@ ne{
             "BWP",
             "बोट्सवानान पुला",
         }
+        BYN{
+            "BYN",
+            "बेलारूसी रूबल",
+        }
         BYR{
             "BYR",
-            "बेलारूसी रूबल",
+            "बेलारूसी रूबल (2000–2016)",
         }
         BZD{
             "BZD",
@@ -653,11 +651,12 @@ ne{
         BBD{"$"}
         BDT{"৳"}
         BMD{"$"}
+        BND{"$"}
         BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -674,6 +673,7 @@ ne{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -682,29 +682,35 @@ ne{
         HNL{"L"}
         HRK{"kn"}
         HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
         ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
+        KHR{"៛"}
         KMF{"CF"}
         KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
+        LAK{"₭"}
         LBP{"L£"}
         LKR{"Rs"}
         LRD{"$"}
         MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
         MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
         NIO{"C$"}
         NOK{"kr"}
-        NPR{"Rs"}
+        NPR{"रू"}
         NZD{"$"}
+        PHP{"₱"}
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
@@ -734,6 +740,7 @@ ne{
     }
     Currencies%variant{
         GEL{"₾"}
+        NPR{"Rs"}
         TRY{"TL"}
     }
     CurrencyPlurals{
@@ -829,9 +836,13 @@ ne{
             one{"बोट्सवानान पुला"}
             other{"बोट्सवानान पुला"}
         }
-        BYR{
+        BYN{
             one{"बेलारूसी रूबल"}
             other{"बेलारूसी रूबल"}
+        }
+        BYR{
+            one{"बेलारूसी रूबल (2000–2016)"}
+            other{"बेलारूसी रूबल (2000–2016)"}
         }
         BZD{
             one{"वेलिज डलर"}
@@ -1370,5 +1381,5 @@ ne{
             other{"जाम्बियाली क्वाचा"}
         }
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.29.20"}
 }

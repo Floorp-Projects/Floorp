@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ur.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ur{
     AuxExemplarCharacters{
         "[؀؁؂؃\u200C\u200D\u200E\u200F \u064B \u064C \u064D \u064E \u064F \u0650 "
@@ -31,15 +25,24 @@ ur{
     MoreInformation{"؟"}
     NumberElements{
         arabext{
+            patterns{
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
             symbols{
                 decimal{"."}
+                exponential{"×۱۰^"}
                 group{","}
                 infinity{"∞"}
                 list{";"}
                 minusSign{"‎-‎"}
+                nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"‎+‎"}
+                superscriptingExponent{"×"}
             }
         }
         default{"latn"}
@@ -227,7 +230,7 @@ ur{
         minimumGroupingDigits{"1"}
         native{"arabext"}
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
     calendar{
         generic{
             DateTimePatterns{
@@ -377,8 +380,8 @@ ur{
         }
         gregorian{
             AmPmMarkers{
-                "قبل دوپہر",
-                "بعد دوپہر",
+                "AM",
+                "PM",
             }
             AmPmMarkersAbbr{
                 "AM",
@@ -395,7 +398,7 @@ ur{
                 "h:mm a",
                 "EEEE، d MMMM، y",
                 "d MMMM، y",
-                "d MMM، y",
+                "y MMM d",
                 "d/M/yy",
                 "{1} {0}",
                 "{1} {0}",
@@ -426,6 +429,10 @@ ur{
                 MEd{"E، d/M"}
                 MMM{"LLL"}
                 MMMEd{"E، d MMM"}
+                MMMMW{
+                    one{"MMM کے W ہفتے"}
+                    other{"MMM کے W ہفتے"}
+                }
                 MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
@@ -446,6 +453,10 @@ ur{
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"y کا w ہفتہ"}
+                    other{"y کا w ہفتہ"}
+                }
             }
             dayNames{
                 format{
@@ -566,12 +577,12 @@ ur{
                     narrow{
                         afternoon1{"دوپہر"}
                         afternoon2{"سہ پہر"}
-                        am{"a"}
+                        am{"AM"}
                         evening1{"شام"}
                         midnight{"آدھی رات"}
                         morning1{"صبح"}
                         night1{"رات"}
-                        pm{"p"}
+                        pm{"PM"}
                     }
                     wide{
                         afternoon1{"دوپہر"}
@@ -590,9 +601,17 @@ ur{
                     "قبل مسیح",
                     "عیسوی",
                 }
+                abbreviated%variant{
+                    "BCE",
+                    "CE",
+                }
                 wide{
                     "قبل مسیح",
                     "عیسوی",
+                }
+                wide%variant{
+                    "عام دور سے قبل",
+                    "عام دور",
                 }
             }
             intervalFormats{
@@ -844,6 +863,93 @@ ur{
             }
         }
     }
+    characterLabel{
+        activities{"سرگرمیاں"}
+        african_scripts{"افریقی سکرپٹس"}
+        american_scripts{"امریکی سکرپٹس"}
+        animal{"جانور"}
+        animals_nature{"حیوانات و فطرت"}
+        arrows{"تیر کے نشانات"}
+        body{"جسم"}
+        box_drawing{"ڈرائنگ باکس"}
+        braille{"بریل"}
+        building{"عمارت"}
+        bullets_stars{"بلیٹس/اسٹار"}
+        consonantal_jamo{"کونسونینٹل جامو"}
+        currency_symbols{"کرنسی کی علامات"}
+        dash_connector{"ڈیش/کنکٹر"}
+        digits{"اعداد"}
+        dingbats{"ڈنگ بیٹس"}
+        divination_symbols{"غیب دانی کی علامات"}
+        downwards_arrows{"نیچے کی جانب تیر کا نشان"}
+        downwards_upwards_arrows{"نیچے اوپر کی جانب تیر کا نشان"}
+        east_asian_scripts{"وسطی ایشیائی اسکرپٹس"}
+        emoji{"ایموجی"}
+        european_scripts{"یوروپی اسکرپٹس"}
+        female{"عورت"}
+        flag{"پرچم"}
+        flags{"پرچم"}
+        food_drink{"غذا اور مشروب"}
+        format{"فارمیٹ"}
+        format_whitespace{"فارمیٹ اور خالی جگہ"}
+        full_width_form_variant{"مکمل صورت کے متغیرات"}
+        geometric_shapes{"جیومیٹری کی اشکال"}
+        half_width_form_variant{"آدھی صورت کے متغیرات"}
+        han_characters{"ہین کیرکٹر"}
+        han_radicals{"ہین ریڈیکلز"}
+        hanja{"ہنجا"}
+        hanzi_simplified{"ہنزی (آسان کردہ)"}
+        hanzi_traditional{"ہنزی (روایتی)"}
+        heart{"دل"}
+        historic_scripts{"تاریخی اسکرپٹ"}
+        ideographic_desc_characters{"تصور نگاری نزولی حروف"}
+        japanese_kana{"چاپانی کانا"}
+        kanbun{"کانبون"}
+        kanji{"کانجی"}
+        keycap{"کی کیپ"}
+        leftwards_arrows{"بائیں جانب تیر کا نشان"}
+        leftwards_rightwards_arrows{"بائیں دائیں جانب تیر کا نشان"}
+        letterlike_symbols{"حروف کے جیسی علامات"}
+        limited_use{"محدود استعمال"}
+        male{"مرد"}
+        math_symbols{"ریاضی کی علامات"}
+        middle_eastern_scripts{"مشرقی وسطی اسکرپٹ"}
+        miscellaneous{"متفرق"}
+        modern_scripts{"جدید ترین اسکرپٹ"}
+        modifier{"ترمیم کار"}
+        musical_symbols{"موسیقی کی علامات"}
+        nature{"قدرت"}
+        nonspacing{"غیر فاصلہ کاری"}
+        numbers{"اعداد"}
+        objects{"آبجیکٹس"}
+        other{"دیگر"}
+        paired{"جوڑی"}
+        person{"شخص"}
+        phonetic_alphabet{"صوتیاتی حروف"}
+        pictographs{"پکٹوگراف"}
+        place{"جگہ"}
+        plant{"پلانٹ"}
+        punctuation{"رموز اوقاف"}
+        rightwards_arrows{"دائیں جانب تیر کا نشان"}
+        sign_standard_symbols{"نشان/معیاری علامات"}
+        small_form_variant{"چھوٹی صورت کے متغیرات"}
+        smiley{"مُسکراتا ہوا"}
+        smileys_people{"اسمالیز اور لوگ"}
+        south_asian_scripts{"جنوبی ایشیائی اسکرپٹس"}
+        southeast_asian_scripts{"جنوب مشرقی ایشیائی اسکرپٹس"}
+        spacing{"فاصلہ بندی"}
+        sport{"کھیل"}
+        symbols{"علامات"}
+        tone_marks{"ٹون مارکس"}
+        travel{"سفر"}
+        travel_places{"سفر اور مقامات"}
+        upwards_arrows{"اوپر کی جانب تیر کا نشان"}
+        variant_forms{"مختلف صورتیں"}
+        vocalic_jamo{"مصوتی جامو"}
+        weather{"موسم"}
+        western_asian_scripts{"مغربی ایشیائی اسکرپٹس"}
+        whitespace{"خالی جگہ"}
+    }
     delimiters{
         alternateQuotationEnd{"‘"}
         alternateQuotationStart{"’"}
@@ -874,7 +980,10 @@ ur{
         day-narrow{
             dn{"دن"}
             relative{
+                "-1"{"گزشتہ کل"}
                 "-2"{"گزشتہ پرسوں"}
+                "0"{"آج"}
+                "1"{"آئندہ کل"}
                 "2"{"آنے والا پرسوں"}
             }
             relativeTime{
@@ -891,7 +1000,10 @@ ur{
         day-short{
             dn{"دن"}
             relative{
+                "-1"{"گزشتہ کل"}
                 "-2"{"گزشتہ پرسوں"}
+                "0"{"آج"}
+                "1"{"آئندہ کل"}
                 "2"{"آنے والا پرسوں"}
             }
             relativeTime{
@@ -917,12 +1029,32 @@ ur{
                 "0"{"اس جمعہ"}
                 "1"{"اگلے جمعہ"}
             }
+            relativeTime{
+                future{
+                    one{"{0} جمعہ میں"}
+                    other{"{0} جمعہ میں"}
+                }
+                past{
+                    one{"{0} جمعہ قبل"}
+                    other{"{0} جمعہ قبل"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"گزشتہ جمعہ"}
                 "0"{"اس جمعہ"}
                 "1"{"اگلے جمعہ"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} جمعہ میں"}
+                    other{"{0} جمعہ میں"}
+                }
+                past{
+                    one{"{0} جمعہ قبل"}
+                    other{"{0} جمعہ قبل"}
+                }
             }
         }
         fri-short{
@@ -931,9 +1063,22 @@ ur{
                 "0"{"اس جمعہ"}
                 "1"{"اگلے جمعہ"}
             }
+            relativeTime{
+                future{
+                    one{"{0} جمعہ میں"}
+                    other{"{0} جمعہ میں"}
+                }
+                past{
+                    one{"{0} جمعہ قبل"}
+                    other{"{0} جمعہ قبل"}
+                }
+            }
         }
         hour{
             dn{"گھنٹہ"}
+            relative{
+                "0"{"اس گھنٹے"}
+            }
             relativeTime{
                 future{
                     one{"{0} گھنٹہ میں"}
@@ -973,6 +1118,9 @@ ur{
         }
         minute{
             dn{"منٹ"}
+            relative{
+                "0"{"اس منٹ"}
+            }
             relativeTime{
                 future{
                     one{"{0} منٹ میں"}
@@ -1016,6 +1164,16 @@ ur{
                 "0"{"اس سوموار"}
                 "1"{"اگلے سوموار"}
             }
+            relativeTime{
+                future{
+                    one{"{0} پیر میں"}
+                    other{"{0} پیر میں"}
+                }
+                past{
+                    one{"{0} پیر قبل"}
+                    other{"{0} پیر قبل"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -1023,12 +1181,32 @@ ur{
                 "0"{"اس سوموار"}
                 "1"{"اگلے سوموار"}
             }
+            relativeTime{
+                future{
+                    one{"{0} پیر میں"}
+                    other{"{0} پیر میں"}
+                }
+                past{
+                    one{"{0} پیر قبل"}
+                    other{"{0} پیر قبل"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"گزشتہ سوموار"}
                 "0"{"اس سوموار"}
                 "1"{"اگلے سوموار"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} سوموار میں"}
+                    other{"{0} پیر میں"}
+                }
+                past{
+                    one{"{0} پیر قبل"}
+                    other{"{0} پیر قبل"}
+                }
             }
         }
         month{
@@ -1054,7 +1232,7 @@ ur{
             relativeTime{
                 future{
                     one{"+{0} ماہ میں"}
-                    other{"+{0} ماہ میں"}
+                    other{"{0} ماہ میں"}
                 }
                 past{
                     one{"{0} ماہ پہلے"}
@@ -1082,6 +1260,11 @@ ur{
         }
         quarter{
             dn{"سہ ماہی"}
+            relative{
+                "-1"{"گزشتہ سہ ماہی"}
+                "0"{"اس سہ ماہی"}
+                "1"{"اگلے سہ ماہی"}
+            }
             relativeTime{
                 future{
                     one{"+{0} سہ ماہی"}
@@ -1125,6 +1308,16 @@ ur{
                 "0"{"اس سنیچر"}
                 "1"{"اگلے سنیچر"}
             }
+            relativeTime{
+                future{
+                    one{"{0} سنیچر میں"}
+                    other{"{0} سنیچر میں"}
+                }
+                past{
+                    one{"{0} سنیچر قبل"}
+                    other{"{0} سنیچر قبل"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1132,12 +1325,32 @@ ur{
                 "0"{"اس سنیچر"}
                 "1"{"اگلے سنیچر"}
             }
+            relativeTime{
+                future{
+                    one{"{0} سنیچر میں"}
+                    other{"{0} سنیچر میں"}
+                }
+                past{
+                    one{"{0} سنیچر قبل"}
+                    other{"{0} سنیچر قبل"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"گزشتہ سنیچر"}
                 "0"{"اس سنیچر"}
                 "1"{"اگلے سنیچر"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} سنیچر میں"}
+                    other{"{0} سنیچر میں"}
+                }
+                past{
+                    one{"{0} سنیچر قبل"}
+                    other{"{0} سنیچر قبل"}
+                }
             }
         }
         second{
@@ -1188,12 +1401,32 @@ ur{
                 "0"{"اس اتوار"}
                 "1"{"اگلے اتوار"}
             }
+            relativeTime{
+                future{
+                    one{"{0} اتوار میں"}
+                    other{"{0} اتوار میں"}
+                }
+                past{
+                    one{"{0} اتوار قبل"}
+                    other{"{0} اتوار قبل"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"گزشتہ اتوار"}
                 "0"{"اس اتوار"}
                 "1"{"اگلے اتوار"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} اتوار میں"}
+                    other{"{0} اتوار میں"}
+                }
+                past{
+                    one{"{0} اتوار قبل"}
+                    other{"{0} اتوار قبل"}
+                }
             }
         }
         sun-short{
@@ -1202,12 +1435,32 @@ ur{
                 "0"{"اس اتوار"}
                 "1"{"اگلے اتوار"}
             }
+            relativeTime{
+                future{
+                    one{"{0} اتوار میں"}
+                    other{"{0} اتوار میں"}
+                }
+                past{
+                    one{"{0} اتوار قبل"}
+                    other{"{0} اتوار قبل"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"گزشتہ جمعرات"}
                 "0"{"اس جمعرات"}
                 "1"{"اگلے جمعرات"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} جمعرات میں"}
+                    other{"{0} جمعرات میں"}
+                }
+                past{
+                    one{"{0} جمعرات قبل"}
+                    other{"{0} جمعرات قبل"}
+                }
             }
         }
         thu-narrow{
@@ -1216,12 +1469,32 @@ ur{
                 "0"{"اس جمعرات"}
                 "1"{"اگلی جمعرات"}
             }
+            relativeTime{
+                future{
+                    one{"{0} جمعرات میں"}
+                    other{"{0} جمعرات میں"}
+                }
+                past{
+                    one{"{0} جمعرات قبل"}
+                    other{"{0} جمعرات قبل"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"گزشتہ جمعرات"}
                 "0"{"اس جمعرات"}
-                "1"{"اگلی جمعرات"}
+                "1"{"اگلے جمعرات"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} جمعرات میں"}
+                    other{"{0} جمعرات میں"}
+                }
+                past{
+                    one{"{0} جمعرات قبل"}
+                    other{"{0} جمعرات قبل"}
+                }
             }
         }
         tue{
@@ -1230,12 +1503,32 @@ ur{
                 "0"{"اس منگل"}
                 "1"{"اگلے منگل"}
             }
+            relativeTime{
+                future{
+                    one{"{0} منگل میں"}
+                    other{"{0} منگل میں"}
+                }
+                past{
+                    one{"{0} منگل قبل"}
+                    other{"{0} منگل قبل"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"گزشتہ منگل"}
                 "0"{"اس منگل"}
                 "1"{"اگلے منگل"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} منگل میں"}
+                    other{"{0} منگل میں"}
+                }
+                past{
+                    one{"{0} منگل قبل"}
+                    other{"{0} منگل قبل"}
+                }
             }
         }
         tue-short{
@@ -1244,12 +1537,32 @@ ur{
                 "0"{"اس منگل"}
                 "1"{"اگلے منگل"}
             }
+            relativeTime{
+                future{
+                    one{"{0} منگل میں"}
+                    other{"{0} منگل میں"}
+                }
+                past{
+                    one{"{0} منگل قبل"}
+                    other{"{0} منگل قبل"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"گزشتہ بدھ"}
                 "0"{"اس بدھ"}
                 "1"{"اگلے بدھ"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} بدھ میں"}
+                    other{"{0} بدھ میں"}
+                }
+                past{
+                    one{"{0} بدھ قبل"}
+                    other{"{0} بدھ قبل"}
+                }
             }
         }
         wed-narrow{
@@ -1258,12 +1571,32 @@ ur{
                 "0"{"اس بدھ"}
                 "1"{"اگلے بدھ"}
             }
+            relativeTime{
+                future{
+                    one{"{0} بدھ میں"}
+                    other{"{0} بدھ میں"}
+                }
+                past{
+                    one{"{0} بدھ قبل"}
+                    other{"{0} بدھ قبل"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"گزشتہ بدھ"}
                 "0"{"اس بدھ"}
                 "1"{"اگلے بدھ"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} بدھ میں"}
+                    other{"{0} بدھ میں"}
+                }
+                past{
+                    one{"{0} بدھ قبل"}
+                    other{"{0} بدھ قبل"}
+                }
             }
         }
         week{
@@ -1273,6 +1606,7 @@ ur{
                 "0"{"اس ہفتہ"}
                 "1"{"اگلے ہفتہ"}
             }
+            relativePeriod{"{0} کے ہفتے"}
             relativeTime{
                 future{
                     one{"{0} ہفتہ میں"}
@@ -1291,6 +1625,7 @@ ur{
                 "0"{"اس ہفتہ"}
                 "1"{"اگلے ہفتہ"}
             }
+            relativePeriod{"{0} کے ہفتے"}
             relativeTime{
                 future{
                     one{"{0} ہفتہ میں"}
@@ -1309,6 +1644,7 @@ ur{
                 "0"{"اس ہفتہ"}
                 "1"{"اگلے ہفتہ"}
             }
+            relativePeriod{"{0} کے ہفتے"}
             relativeTime{
                 future{
                     one{"{0} ہفتے میں"}
@@ -1350,12 +1686,12 @@ ur{
             }
             relativeTime{
                 future{
-                    one{"+{0} سال میں"}
-                    other{"+{0} سال میں"}
+                    one{"{0} سال میں"}
+                    other{"{0} سال میں"}
                 }
                 past{
-                    one{"-{0} سال پہلے"}
-                    other{"-{0} سال پہلے"}
+                    one{"{0} سال پہلے"}
+                    other{"{0} سال پہلے"}
                 }
             }
         }
@@ -1391,6 +1727,12 @@ ur{
             middle{"{0}، {1}"}
             start{"{0}، {1}"}
         }
+        standard-short{
+            2{"{0} اور {1}"}
+            end{"{0}، اور {1}"}
+            middle{"{0}، {1}"}
+            start{"{0}، {1}"}
+        }
         unit{
             2{"{0} اور {1}"}
             end{"{0}، اور {1}"}
@@ -1414,17 +1756,5 @@ ur{
         UK{"سلطنت متحدہ"}
         US{"ریاستہائے متحدہ"}
         metric{"میٹرک"}
-    }
-    transformNames{
-        BGN{"BGN"}
-        Numeric{"عددی"}
-        Tone{"ٹون"}
-        UNGEGN{"UNGEGN"}
-        x-Accents{"لہجے"}
-        x-Fullwidth{"پورا عرض"}
-        x-Halfwidth{"نصف عرض"}
-        x-Jamo{"جامو"}
-        x-Pinyin{"پن یِن"}
-        x-Publishing{"اشاعت"}
     }
 }

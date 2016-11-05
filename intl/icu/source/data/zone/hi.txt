@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/hi.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 hi{
-    Version{"2.1.19.47"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"अबिदजान"}
@@ -190,10 +184,10 @@ hi{
             ec{"साल्टा"}
         }
         "America:Argentina:San_Juan"{
-            ec{"सान जुआन"}
+            ec{"सैन ह्वान"}
         }
         "America:Argentina:San_Luis"{
-            ec{"सान लुईस"}
+            ec{"सैन लूई"}
         }
         "America:Argentina:Tucuman"{
             ec{"टोकूमन"}
@@ -309,17 +303,20 @@ hi{
         "America:El_Salvador"{
             ec{"अल सल्वाडोर"}
         }
+        "America:Fort_Nelson"{
+            ec{"फ़ोर्ट नेल्सन"}
+        }
         "America:Fortaleza"{
             ec{"फ़ोर्टालेज़ा"}
         }
         "America:Glace_Bay"{
-            ec{"ग्लेस खा़ड़ी"}
+            ec{"ग्लेस खाड़ी"}
         }
         "America:Godthab"{
             ec{"नुक"}
         }
         "America:Goose_Bay"{
-            ec{"गूस खा़ड़ी"}
+            ec{"गूस खाड़ी"}
         }
         "America:Grand_Turk"{
             ec{"ग्रांड टर्क"}
@@ -544,7 +541,7 @@ hi{
             ec{"साओ पाउलो"}
         }
         "America:Scoresbysund"{
-            ec{"इटोकोर्टोरमियाट"}
+            ec{"इटोकोर्टोरमिट"}
         }
         "America:Sitka"{
             ec{"सिट्का"}
@@ -671,6 +668,9 @@ hi{
         }
         "Asia:Bangkok"{
             ec{"बैंकॉक"}
+        }
+        "Asia:Barnaul"{
+            ec{"बर्नोल"}
         }
         "Asia:Beirut"{
             ec{"बेरुत"}
@@ -849,6 +849,9 @@ hi{
         "Asia:Tokyo"{
             ec{"टोक्यो"}
         }
+        "Asia:Tomsk"{
+            ec{"तोम्स्क"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"उलानबातर"}
         }
@@ -948,6 +951,9 @@ hi{
         "Europe:Andorra"{
             ec{"अंडोरा"}
         }
+        "Europe:Astrakhan"{
+            ec{"आस्ट्राखान"}
+        }
         "Europe:Athens"{
             ec{"एथेंस"}
         }
@@ -1005,6 +1011,9 @@ hi{
         }
         "Europe:Kiev"{
             ec{"कीव"}
+        }
+        "Europe:Kirov"{
+            ec{"किरोव"}
         }
         "Europe:Lisbon"{
             ec{"लिस्बन"}
@@ -1081,6 +1090,9 @@ hi{
         }
         "Europe:Tirane"{
             ec{"टाइरेन"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Ulyanovsk"}
         }
         "Europe:Uzhgorod"{
             ec{"अज़्गोरोद"}
@@ -1391,7 +1403,7 @@ hi{
             ls{"ब्राजीलिया मानक समय"}
         }
         "meta:Brunei"{
-            ls{"ब्रूनेई दारूस्सलाम समय"}
+            ls{"ब्रूनेई दारूस्सलम समय"}
         }
         "meta:Cape_Verde"{
             ld{"केप वर्ड ग्रीष्मकालीन समय"}
@@ -1747,6 +1759,9 @@ hi{
         }
         "meta:Ponape"{
             ls{"पोनापे समय"}
+        }
+        "meta:Pyongyang"{
+            ls{"प्योंगयांग समय"}
         }
         "meta:Reunion"{
             ls{"रीयूनियन समय"}

@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fr_CH.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fr_CH{
     NumberElements{
         latn{
@@ -18,7 +12,7 @@ fr_CH{
             }
         }
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.27.96"}
     calendar{
         generic{
             DateTimePatterns{
@@ -29,12 +23,67 @@ fr_CH{
                 "EEEE, d MMMM y G",
                 "d MMMM y G",
                 "d MMM y G",
-                "dd.MM.yy GGGGG",
+                "dd.MM.y GGGGG",
                 "{1} {0}",
                 "{1} 'à' {0}",
                 "{1} 'à' {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            availableFormats{
+                MEd{"E, dd.MM."}
+                MMdd{"dd.MM"}
+                Md{"dd.MM."}
+                yM{"MM.y GGGGG"}
+                yMEd{"E, dd.MM.y GGGGG"}
+                yMd{"dd.MM.y GGGGG"}
+            }
+            intervalFormats{
+                M{
+                    M{"M–M"}
+                }
+                MEd{
+                    M{"E, dd.MM – E, dd.MM"}
+                    d{"E, dd.MM – E, dd.MM"}
+                }
+                MMMEd{
+                    M{"E, d MMM 'au' E, d MMM"}
+                    d{"E, d 'au' E, d MMM"}
+                }
+                MMMd{
+                    M{"d MMM 'au' d MMM"}
+                }
+                Md{
+                    M{"dd.MM – dd.MM"}
+                    d{"dd.MM – dd.MM"}
+                }
+                fallback{"du {0} au {1}"}
+                yM{
+                    M{"MM.y – MM.y GGGGG"}
+                    y{"MM.y – MM.y GGGGG"}
+                }
+                yMEd{
+                    M{"E, dd.MM.y – E, dd.MM.y GGGGG"}
+                    d{"E, dd.MM.y – E, dd.MM.y GGGGG"}
+                    y{"E, dd.MM.y – E, dd.MM.y GGGGG"}
+                }
+                yMMM{
+                    y{"MMM y 'a'` MMM y G"}
+                }
+                yMMMEd{
+                    M{"E, d MMM 'au' E, d MMM y G"}
+                    d{"E, d 'au' E, d MMM y G"}
+                    y{"E, d MMM y 'au' E, d MMM y G"}
+                }
+                yMMMd{
+                    M{"d MMM 'au' d MMM y G"}
+                    y{"d MMM y 'au' d MMM y G"}
+                }
+                yMd{
+                    M{"dd.MM.y – dd.MM.y GGGGG"}
+                    d{"dd.MM.y – dd.MM.y GGGGG"}
+                    y{"dd.MM.y – dd.MM.y GGGGG"}
+                }
             }
         }
         gregorian{
@@ -52,6 +101,74 @@ fr_CH{
                 "{1} 'à' {0}",
                 "{1} 'à' {0}",
                 "{1} {0}",
+            }
+            availableFormats{
+                MEd{"E, dd.MM."}
+                MMdd{"dd.MM"}
+                Md{"dd.MM."}
+                yM{"MM.y"}
+                yMEd{"E, dd.MM.y"}
+                yMd{"dd.MM.y"}
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"de l’ap.m."}
+                        evening1{"du soir"}
+                        midnight{"min."}
+                        morning1{"du mat."}
+                        night1{"du mat."}
+                        noon{"midi"}
+                    }
+                    narrow{
+                        afternoon1{"de l’ap.m."}
+                        evening1{"du soir"}
+                        midnight{"min."}
+                        morning1{"du mat."}
+                        night1{"du mat."}
+                        noon{"midi"}
+                    }
+                    wide{
+                        afternoon1{"de l’après-midi"}
+                        evening1{"du soir"}
+                        midnight{"minuit"}
+                        morning1{"du matin"}
+                        night1{"du matin"}
+                        noon{"midi"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        midnight{"min."}
+                    }
+                    narrow{
+                        midnight{"min."}
+                    }
+                }
+            }
+            intervalFormats{
+                MEd{
+                    M{"E, dd.MM – E, dd.MM"}
+                    d{"E, dd.MM – E, dd.MM"}
+                }
+                Md{
+                    M{"dd.MM – dd.MM"}
+                    d{"dd.MM – dd.MM"}
+                }
+                yM{
+                    M{"MM.y – MM.y"}
+                    y{"MM.y – MM.y"}
+                }
+                yMEd{
+                    M{"E, dd.MM.y – E, dd.MM.y"}
+                    d{"E, dd.MM.y – E, dd.MM.y"}
+                    y{"E, dd.MM.y – E, dd.MM.y"}
+                }
+                yMd{
+                    M{"dd.MM.y – dd.MM.y"}
+                    d{"dd.MM.y – dd.MM.y"}
+                    y{"dd.MM.y – dd.MM.y"}
+                }
             }
         }
     }

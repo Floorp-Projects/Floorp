@@ -1,4 +1,6 @@
 ## Makefile.in for ICU data
+## Copyright (C) 2016 and later: Unicode, Inc. and others.
+## License & terms of use: http://www.unicode.org/copyright.html
 ## Copyright (c) 1999-2015, International Business Machines Corporation and
 ## others. All Rights Reserved.
 
@@ -101,6 +103,8 @@ TRANSLITBLDDIR=$(BUILDDIR)/translit
 MISCSRCDIR=$(SRCDATADIR)/misc
 BRKSRCDIR=$(SRCDATADIR)/brkitr
 BRKBLDDIR=$(BUILDDIR)/brkitr
+DICTSRCDIR=$(BRKSRCDIR)/dictionaries
+BRKRULESRCDIR=$(BRKSRCDIR)/rules
 MISCSRCDIR=$(SRCDATADIR)/misc
 UCMSRCDIR=$(SRCDATADIR)/mappings
 SPREPSRCDIR=$(SRCDATADIR)/sprep
@@ -541,7 +545,7 @@ $(BUILDDIR)/%.spp: $(SPREPSRCDIR)/%.txt $(TOOLBINDIR)/gensprep$(TOOLEXEEXT) $(BU
 ####################################################    BRK
 # BRK FILES
 
-$(BRKBLDDIR)/%.brk: $(BRKSRCDIR)/%.txt $(TOOLBINDIR)/genbrk$(TOOLEXEEXT) $(DAT_FILES)
+$(BRKBLDDIR)/%.brk: $(BRKRULESRCDIR)/%.txt $(TOOLBINDIR)/genbrk$(TOOLEXEEXT) $(DAT_FILES)
 	$(INVOKE) $(TOOLBINDIR)/genbrk -c -i $(BUILDDIR) -r $< -o $@
 
 ####################################################    DICT
@@ -550,20 +554,20 @@ $(BRKBLDDIR)/%.brk: $(BRKSRCDIR)/%.txt $(TOOLBINDIR)/genbrk$(TOOLEXEEXT) $(DAT_F
 # .dict file generated regardless of whether dictionary file exists
 
 $(BRKBLDDIR)/%.dict: $(TOOLBINDIR)/gendict$(TOOLEXEEXT) $(DAT_FILES)
-	$(INVOKE) $(TOOLBINDIR)/gendict --uchars -c -i $(BUILDDIR) $(BRKSRCDIR)/$(*F).txt $@
+	$(INVOKE) $(TOOLBINDIR)/gendict --uchars -c -i $(BUILDDIR) $(DICTSRCDIR)/$(*F).txt $@
 
 $(BRKBLDDIR)/thaidict.dict: $(TOOLBINDIR)/gendict$(TOOLEXEEXT) $(DAT_FILES)
-	$(INVOKE) $(TOOLBINDIR)/gendict --bytes --transform offset-0x0e00 -c -i $(BUILDDIR) $(BRKSRCDIR)/thaidict.txt $(BRKBLDDIR)/thaidict.dict
+	$(INVOKE) $(TOOLBINDIR)/gendict --bytes --transform offset-0x0e00 -c -i $(BUILDDIR) $(DICTSRCDIR)/thaidict.txt $(BRKBLDDIR)/thaidict.dict
 
 $(BRKBLDDIR)/laodict.dict: $(TOOLBINDIR)/gendict$(TOOLEXEEXT) $(DAT_FILES)
-	$(INVOKE) $(TOOLBINDIR)/gendict --bytes --transform offset-0x0e80 -c -i $(BUILDDIR) $(BRKSRCDIR)/laodict.txt $(BRKBLDDIR)/laodict.dict
+	$(INVOKE) $(TOOLBINDIR)/gendict --bytes --transform offset-0x0e80 -c -i $(BUILDDIR) $(DICTSRCDIR)/laodict.txt $(BRKBLDDIR)/laodict.dict
 
 $(BRKBLDDIR)/burmesedict.dict: $(TOOLBINDIR)/gendict$(TOOLEXEEXT) $(DAT_FILES)
-	$(INVOKE) $(TOOLBINDIR)/gendict --bytes --transform offset-0x1000 -c -i $(BUILDDIR) $(BRKSRCDIR)/burmesedict.txt $(BRKBLDDIR)/burmesedict.dict
+	$(INVOKE) $(TOOLBINDIR)/gendict --bytes --transform offset-0x1000 -c -i $(BUILDDIR) $(DICTSRCDIR)/burmesedict.txt $(BRKBLDDIR)/burmesedict.dict
 
 # TODO: figure out why combining characters are here?
 $(BRKBLDDIR)/khmerdict.dict: $(TOOLBINDIR)/gendict$(TOOLEXEEXT) $(DAT_FILES)
-	$(INVOKE) $(TOOLBINDIR)/gendict --bytes --transform offset-0x1780 -c -i $(BUILDDIR) $(BRKSRCDIR)/khmerdict.txt $(BRKBLDDIR)/khmerdict.dict
+	$(INVOKE) $(TOOLBINDIR)/gendict --bytes --transform offset-0x1780 -c -i $(BUILDDIR) $(DICTSRCDIR)/khmerdict.txt $(BRKBLDDIR)/khmerdict.dict
 
 ####################################################    CFU
 # CFU FILES

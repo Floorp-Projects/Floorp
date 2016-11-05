@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/gsw.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 gsw{
     Currencies{
         ADP{
@@ -190,11 +184,15 @@ gsw{
         }
         BYB{
             "BYB",
-            "Belarus-Rubel (alt)",
+            "Belarus-Rubel (1994–1999)",
+        }
+        BYN{
+            "BYN",
+            "Belarus Rubel",
         }
         BYR{
             "BYR",
-            "Belarus Rubel (nöi)",
+            "Belarus Rubel (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1255,12 +1253,16 @@ gsw{
             other{"Botswanischi Pula"}
         }
         BYB{
-            one{"Belarus-Rubel (alt)"}
-            other{"Belarus-Rubel (alt)"}
+            one{"Belarus-Rubel (1994–1999)"}
+            other{"Belarus-Rubel (1994–1999)"}
+        }
+        BYN{
+            one{"Belarus-Rubel"}
+            other{"Belarus-Rubel"}
         }
         BYR{
-            one{"Belarus-Rubel (nöi)"}
-            other{"Belarus-Rubel (nöi)"}
+            one{"Belarus-Rubel (2000–2016)"}
+            other{"Belarus-Rubel (2000–2016)"}
         }
         CAD{
             one{"Kanadische Dollar"}
@@ -2135,5 +2137,5 @@ gsw{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.74"}
+    Version{"2.1.28.76"}
 }

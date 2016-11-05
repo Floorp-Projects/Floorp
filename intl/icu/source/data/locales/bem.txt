@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/bem.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 bem{
     AuxExemplarCharacters{"[d h q r v x z]"}
     ExemplarCharacters{"[a b c e f g i j k l m n o p s {sh} t u w y]"}
@@ -18,7 +12,7 @@ bem{
             }
         }
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.27.40"}
     calendar{
         generic{
             DateTimePatterns{
@@ -64,6 +58,10 @@ bem{
         }
         gregorian{
             AmPmMarkers{
+                "uluchelo",
+                "akasuba",
+            }
+            AmPmMarkersAbbr{
                 "uluchelo",
                 "akasuba",
             }

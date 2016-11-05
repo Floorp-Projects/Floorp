@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
-* Copyright (C) 1997-2015, International Business Machines Corporation and
+* Copyright (C) 1997-2016, International Business Machines Corporation and
 * others. All Rights Reserved.
 ******************************************************************************
 *
@@ -267,7 +269,7 @@ static UBool U_CALLCONV ures_cleanup(void)
 }
 
 /** INTERNAL: Initializes the cache for resources */
-static void createCache(UErrorCode &status) {
+static void U_CALLCONV createCache(UErrorCode &status) {
     U_ASSERT(cache == NULL);
     cache = uhash_open(hashEntry, compareEntries, NULL, &status);
     ucln_common_registerCleanup(UCLN_COMMON_URES, ures_cleanup);
@@ -1485,7 +1487,8 @@ U_CAPI const UChar* U_EXPORT2 ures_getNextString(UResourceBundle *resB, int32_t*
     case URES_BINARY:
     case URES_INT_VECTOR:
         *status = U_RESOURCE_TYPE_MISMATCH;
-    default: /*fall through*/
+        U_FALLTHROUGH;
+    default:
       return NULL;
     }
   }
@@ -1882,6 +1885,97 @@ ures_getByKeyWithFallback(const UResourceBundle *resB,
     return fillIn;
 }
 
+namespace {
+
+void getAllItemsWithFallback(
+        const UResourceBundle *bundle, ResourceDataValue &value,
+        ResourceSink &sink,
+        UErrorCode &errorCode) {
+    if (U_FAILURE(errorCode)) { return; }
+    // We recursively enumerate child-first,
+    // only storing parent items in the absence of child items.
+    // The sink needs to store a placeholder value for the no-fallback/no-inheritance marker
+    // to prevent a parent item from being stored.
+    //
+    // It would be possible to recursively enumerate parent-first,
+    // overriding parent items with child items.
+    // When the sink sees the no-fallback/no-inheritance marker,
+    // then it would remove the parent's item.
+    // We would deserialize parent values even though they are overridden in a child bundle.
+    value.pResData = &bundle->fResData;
+    UResourceDataEntry *parentEntry = bundle->fData->fParent;
+    UBool hasParent = parentEntry != NULL && U_SUCCESS(parentEntry->fBogus);
+    value.setResource(bundle->fRes);
+    sink.put(bundle->fKey, value, !hasParent, errorCode);
+    if (hasParent) {
+        // We might try to query the sink whether
+        // any fallback from the parent bundle is still possible.
+
+        // Turn the parent UResourceDataEntry into a UResourceBundle,
+        // much like in ures_openWithType().
+        // TODO: See if we can refactor ures_getByKeyWithFallback()
+        // and pull out an inner function that takes and returns a UResourceDataEntry
+        // so that we need not create UResourceBundle objects.
+        UResourceBundle parentBundle;
+        ures_initStackObject(&parentBundle);
+        parentBundle.fTopLevelData = parentBundle.fData = parentEntry;
+        // TODO: What is the difference between bundle fData and fTopLevelData?
+        uprv_memcpy(&parentBundle.fResData, &parentEntry->fData, sizeof(ResourceData));
+        // TODO: Try to replace bundle.fResData with just using bundle.fData->fData.
+        parentBundle.fHasFallback = !parentBundle.fResData.noFallback;
+        parentBundle.fIsTopLevel = TRUE;
+        parentBundle.fRes = parentBundle.fResData.rootRes;
+        parentBundle.fSize = res_countArrayItems(&(parentBundle.fResData), parentBundle.fRes);
+        parentBundle.fIndex = -1;
+        entryIncrease(parentEntry);
+
+        // Look up the container item in the parent bundle.
+        UResourceBundle containerBundle;
+        ures_initStackObject(&containerBundle);
+        const UResourceBundle *rb;
+        UErrorCode pathErrorCode = U_ZERO_ERROR;  // Ignore if parents up to root do not have this path.
+        if (bundle->fResPath == NULL || *bundle->fResPath == 0) {
+            rb = &parentBundle;
+        } else {
+            rb = ures_getByKeyWithFallback(&parentBundle, bundle->fResPath,
+                                           &containerBundle, &pathErrorCode);
+        }
+        if (U_SUCCESS(pathErrorCode)) {
+            getAllItemsWithFallback(rb, value, sink, errorCode);
+        }
+        ures_close(&containerBundle);
+        ures_close(&parentBundle);
+    }
+}
+
+}  // namespace
+
+U_CAPI void U_EXPORT2
+ures_getAllItemsWithFallback(const UResourceBundle *bundle, const char *path,
+                             icu::ResourceSink &sink, UErrorCode &errorCode) {
+    if (U_FAILURE(errorCode)) { return; }
+    if (path == NULL) {
+        errorCode = U_ILLEGAL_ARGUMENT_ERROR;
+        return;
+    }
+    UResourceBundle stackBundle;
+    ures_initStackObject(&stackBundle);
+    const UResourceBundle *rb;
+    if (*path == 0) {
+        // empty path
+        rb = bundle;
+    } else {
+        rb = ures_getByKeyWithFallback(bundle, path, &stackBundle, &errorCode);
+        if (U_FAILURE(errorCode)) {
+            ures_close(&stackBundle);
+            return;
+        }
+    }
+    // Get all table items with fallback.
+    ResourceDataValue value;
+    getAllItemsWithFallback(rb, value, sink, errorCode);
+    ures_close(&stackBundle);
+}
 
 U_CAPI UResourceBundle* U_EXPORT2 ures_getByKey(const UResourceBundle *resB, const char* inKey, UResourceBundle *fillIn, UErrorCode *status) {
     Resource res = RES_BOGUS;
@@ -2314,7 +2408,10 @@ ures_loc_countLocales(UEnumeration *en, UErrorCode * /*status*/) {
     return ures_getSize(&ctx->installed);
 }
 
-static const char* U_CALLCONV 
+U_CDECL_BEGIN
+
+
+static const char * U_CALLCONV
 ures_loc_nextLocale(UEnumeration* en,
                     int32_t* resultLength,
                     UErrorCode* status) {
@@ -2340,6 +2437,7 @@ ures_loc_resetLocales(UEnumeration* en,
     ures_resetIterator(res);
 }
 
+U_CDECL_END
 
 static const UEnumeration gLocalesEnum = {
     NULL,

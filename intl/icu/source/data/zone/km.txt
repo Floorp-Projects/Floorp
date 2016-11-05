@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/km.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 km{
-    Version{"2.1.19.94"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"អាប៊ីដ្យាន"}
@@ -308,6 +302,9 @@ km{
         }
         "America:El_Salvador"{
             ec{"អែលសាល់វ៉ាឌ័រ"}
+        }
+        "America:Fort_Nelson"{
+            ec{"ហ្វតណេលសាន់"}
         }
         "America:Fortaleza"{
             ec{"ហ្វ័រតាឡេហ្សារ"}
@@ -672,6 +669,9 @@ km{
         "Asia:Bangkok"{
             ec{"បាងកក"}
         }
+        "Asia:Barnaul"{
+            ec{"បានូល"}
+        }
         "Asia:Beirut"{
             ec{"បេរូត"}
         }
@@ -849,6 +849,9 @@ km{
         "Asia:Tokyo"{
             ec{"តូក្យូ"}
         }
+        "Asia:Tomsk"{
+            ec{"ថមស៍"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"អ៊ូឡង់បាទ័រ"}
         }
@@ -948,6 +951,9 @@ km{
         "Europe:Andorra"{
             ec{"អង់ដូរ៉ា"}
         }
+        "Europe:Astrakhan"{
+            ec{"អាស្ត្រាខាន់"}
+        }
         "Europe:Athens"{
             ec{"អាថែន"}
         }
@@ -1005,6 +1011,9 @@ km{
         }
         "Europe:Kiev"{
             ec{"កៀវ"}
+        }
+        "Europe:Kirov"{
+            ec{"គីរ៉ូវ"}
         }
         "Europe:Lisbon"{
             ec{"លីសបោន"}
@@ -1082,6 +1091,9 @@ km{
         "Europe:Tirane"{
             ec{"ទីរ៉ាណេ"}
         }
+        "Europe:Ulyanovsk"{
+            ec{"អុលយ៉ានូវស៍"}
+        }
         "Europe:Uzhgorod"{
             ec{"អ៊ុយហ្គោរ៉ូដ"}
         }
@@ -1110,7 +1122,7 @@ km{
             ec{"ហ្សាប៉ូរ៉ូហ្ស៊ីយ៉េ"}
         }
         "Europe:Zurich"{
-            ec{"សូរីច"}
+            ec{"ហ៊្សូរីច"}
         }
         "Indian:Antananarivo"{
             ec{"អង់តាណាណារីវ"}
@@ -1736,6 +1748,9 @@ km{
         }
         "meta:Ponape"{
             ls{"ម៉ោង​នៅ​ប៉ូណាប់"}
+        }
+        "meta:Pyongyang"{
+            ls{"ម៉ោងនៅព្យុងយ៉ាង"}
         }
         "meta:Reunion"{
             ls{"ម៉ោងនៅរេអ៊ុយ៉ុង"}

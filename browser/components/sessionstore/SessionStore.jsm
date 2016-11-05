@@ -125,7 +125,7 @@ const CLOSED_MESSAGES = new Set([
 
 // These are tab events that we listen to.
 const TAB_EVENTS = [
-  "TabOpen", "TabBrowserCreated", "TabClose", "TabSelect", "TabShow", "TabHide", "TabPinned",
+  "TabOpen", "TabBrowserInserted", "TabClose", "TabSelect", "TabShow", "TabHide", "TabPinned",
   "TabUnpinned"
 ];
 
@@ -935,8 +935,8 @@ var SessionStoreInternal = {
       case "TabOpen":
         this.onTabAdd(win);
         break;
-      case "TabBrowserCreated":
-        this.onTabBrowserCreated(win, target);
+      case "TabBrowserInserted":
+        this.onTabBrowserInserted(win, target);
         break;
       case "TabClose":
         // `adoptedBy` will be set if the tab was closed because it is being
@@ -1028,7 +1028,7 @@ var SessionStoreInternal = {
 
     // add tab change listeners to all already existing tabs
     for (let i = 0; i < tabbrowser.tabs.length; i++) {
-      this.onTabBrowserCreated(aWindow, tabbrowser.tabs[i]);
+      this.onTabBrowserInserted(aWindow, tabbrowser.tabs[i]);
     }
     // notification of tab add/remove/selection/show/hide
     TAB_EVENTS.forEach(function(aEvent) {
@@ -1768,7 +1768,7 @@ var SessionStoreInternal = {
    * @param aTab
    *        Tab reference
    */
-  onTabBrowserCreated: function ssi_onTabBrowserCreated(aWindow, aTab) {
+  onTabBrowserInserted: function ssi_onTabBrowserInserted(aWindow, aTab) {
     let browser = aTab.linkedBrowser;
     browser.addEventListener("SwapDocShells", this);
     browser.addEventListener("oop-browser-crashed", this);

@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/sr_Latn.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 sr_Latn{
     %%Parent{"root"}
     Currencies{
@@ -118,7 +112,7 @@ sr_Latn{
             "Bugarski tvrdi lev",
         }
         BGN{
-            "[BGN]",
+            "BGN",
             "Bugarski lev",
         }
         BHD{
@@ -193,9 +187,13 @@ sr_Latn{
             "BYB",
             "Beloruska nova rublja (1994–1999)",
         }
-        BYR{
-            "[BYR]",
+        BYN{
+            "BYN",
             "Beloruska rublja",
+        }
+        BYR{
+            "BYR",
+            "Beloruska rublja (2000–2016)",
         }
         BZD{
             "BZD",
@@ -515,7 +513,7 @@ sr_Latn{
         }
         KRW{
             "KRW",
-            "Južnokorejski Von",
+            "Južnokorejski von",
         }
         KWD{
             "KWD",
@@ -879,7 +877,7 @@ sr_Latn{
         }
         TJS{
             "TJS",
-            "Tadžihistanski somon",
+            "Tadžikistanski somon",
         }
         TMM{
             "TMM",
@@ -1135,7 +1133,7 @@ sr_Latn{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"r."}
+        BYN{"r."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1152,6 +1150,7 @@ sr_Latn{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"ლ"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1192,7 +1191,7 @@ sr_Latn{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
-        RUB{"rub"}
+        RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
         SEK{"kr"}
@@ -1203,6 +1202,7 @@ sr_Latn{
         STD{"Db"}
         SYP{"£"}
         THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
@@ -1450,10 +1450,15 @@ sr_Latn{
             one{"beloruska nova rublja (1994–1999)"}
             other{"beloruskih novih rublji (1994–1999)"}
         }
-        BYR{
+        BYN{
             few{"beloruske rublje"}
             one{"beloruska rublja"}
             other{"beloruskih rublji"}
+        }
+        BYR{
+            few{"beloruske rublje (2000–2016)"}
+            one{"beloruska rublja (2000–2016)"}
+            other{"beloruskih rublji (2000–2016)"}
         }
         BZD{
             few{"beliska dolara"}
@@ -1681,7 +1686,7 @@ sr_Latn{
             other{"gibraltarskih funti"}
         }
         GMD{
-            few{"gambijska dalasa"}
+            few{"gambijskih dalasija"}
             one{"gambijski dalasi"}
             other{"gambijskih dalasija"}
         }
@@ -1951,9 +1956,9 @@ sr_Latn{
             other{"moldavskih leja"}
         }
         MGA{
-            few{"malagasijska ariarija"}
-            one{"malagasijski ariari"}
-            other{"malagasijskih ariarija"}
+            few{"madagaskarska ariarija"}
+            one{"madagaskarski ariari"}
+            other{"madagaskarskih ariarija"}
         }
         MGF{
             few{"malagašajska franka"}
@@ -2361,7 +2366,7 @@ sr_Latn{
             other{"tanzanijskih šilinga"}
         }
         UAH{
-            few{"ukrajinske hrivnje"}
+            few{"ukrajinske grivne"}
             one{"ukrajinska hrivnja"}
             other{"ukrajinskih hrivnji"}
         }
@@ -2616,5 +2621,5 @@ sr_Latn{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.20.4"}
+    Version{"2.1.29.33"}
 }

@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
-* Copyright (C) 2009-2013, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
+* Copyright (C) 2009-2016, International Business Machines Corporation and
+* others. All Rights Reserved.
 *******************************************************************************
 *
 * This file contains the class DecimalFormatStaticSets
@@ -141,11 +143,11 @@ DecimalFormatStaticSets::DecimalFormatStaticSets(UErrorCode &status)
 
     initUnicodeSet(
             gMinusSigns,
-            sizeof(gMinusSigns) / sizeof(gMinusSigns[0]),
+            UPRV_LENGTHOF(gMinusSigns),
             fMinusSigns);
     initUnicodeSet(
             gPlusSigns,
-            sizeof(gPlusSigns) / sizeof(gPlusSigns[0]),
+            UPRV_LENGTHOF(gPlusSigns),
             fPlusSigns);
 
     // Freeze all the sets

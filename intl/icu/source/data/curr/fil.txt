@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fil.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fil{
     Currencies{
         AED{
@@ -100,9 +94,13 @@ fil{
             "BWP",
             "Botswanan Pula",
         }
+        BYN{
+            "BYN",
+            "Belarusian Ruble",
+        }
         BYR{
             "BYR",
-            "Belarusian Ruble",
+            "Belarusian Ruble (2000–2016)",
         }
         BZD{
             "BZD",
@@ -682,7 +680,7 @@ fil{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -699,6 +697,7 @@ fil{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -860,9 +859,13 @@ fil{
             one{"Botswanan pula"}
             other{"Botswanan pulas"}
         }
-        BYR{
+        BYN{
             one{"Belarusian ruble"}
             other{"Belarusian rubles"}
+        }
+        BYR{
+            one{"Belarusian ruble (2000–2016)"}
+            other{"Belarusian rubles (2000–2016)"}
         }
         BZD{
             one{"dolyar ng Belize"}
@@ -1250,7 +1253,7 @@ fil{
         }
         SDG{
             one{"pound ng Sudan"}
-            other{"Sudanese pounds"}
+            other{"pounds ng Sudan"}
         }
         SEK{
             one{"Swedish krona"}
@@ -1381,7 +1384,7 @@ fil{
             other{"CFP francs"}
         }
         XXX{
-            one{"(hindi kilalang uri ng pera)"}
+            one{"(hindi kilalang unit ng currency)"}
             other{"(hindi kilalang pera)"}
         }
         YER{
@@ -1401,5 +1404,5 @@ fil{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.28.79"}
 }

@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/el.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 el{
     AuxExemplarCharacters{
         "[ἀ ἄ ἂ ἆ ἁ ἅ ἃ ἇ ὰ ᾶ ἐ ἔ ἒ ἑ ἕ ἓ ὲ ἠ ἤ ἢ ἦ ἡ ἥ ἣ ἧ ὴ ῆ ἰ ἴ ἲ ἶ ἱ ἵ ἳ ἷ ὶ ῖ ῒ"
@@ -210,7 +204,7 @@ el{
         native{"latn"}
         traditional{"grek"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.28.79"}
     calendar{
         buddhist{
             eras{
@@ -415,9 +409,13 @@ el{
                 Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, d/M"}
-                MMM{"LLL"}
+                MMM{"MMM"}
                 MMMEd{"E, d MMM"}
                 MMMMEd{"E, d MMMM"}
+                MMMMW{
+                    one{"εβδομάδα W του MMM"}
+                    other{"εβδομάδα W του MMM"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
@@ -433,11 +431,15 @@ el{
                 yMEd{"E, d/M/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E, d MMM y"}
-                yMMMM{"MMMM y"}
+                yMMMM{"LLLL y"}
                 yMMMd{"d MMM y"}
                 yMd{"d/M/y"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
+                yw{
+                    one{"εβδομάδα w του y"}
+                    other{"εβδομάδα w του y"}
+                }
             }
             dayNames{
                 format{
@@ -548,9 +550,9 @@ el{
                         pm{"μ.μ."}
                     }
                     narrow{
-                        afternoon1{"μεσημέρι"}
+                        afternoon1{"μεσημ."}
                         am{"π.μ."}
-                        evening1{"απόγευμα"}
+                        evening1{"απόγ."}
                         morning1{"πρωί"}
                         night1{"βράδυ"}
                         pm{"μ.μ."}
@@ -864,6 +866,94 @@ el{
             }
         }
     }
+    characterLabel{
+        activities{"Δραστηριότητες"}
+        african_scripts{"Αφρικανικές γραφές"}
+        american_scripts{"Αμερικανικές γραφές"}
+        animal{"ζώο"}
+        animals_nature{"Ζώα και φύση"}
+        arrows{"Βέλη"}
+        body{"σώμα"}
+        box_drawing{"Σχεδίαση πλαισίων"}
+        braille{"Μπράιγ"}
+        building{"κτίριο"}
+        bullets_stars{"Κουκκίδες/Αστέρια"}
+        consonantal_jamo{"Συμφωνογραφικά Τζάμο"}
+        currency_symbols{"Σύμβολα νομισμάτων"}
+        dash_connector{"Παύλα/Σύνδεσμος"}
+        digits{"Ψηφία"}
+        dingbats{"Χαρακτήρες Dingbat"}
+        divination_symbols{"Σύμβολα μαντείας"}
+        downwards_arrows{"Βέλη κάτω"}
+        downwards_upwards_arrows{"Βέλη κάτω-πάνω"}
+        east_asian_scripts{"Γραφές Ανατολικής Ασίας"}
+        emoji{"Emoji"}
+        european_scripts{"Ευρωπαϊκές γραφές"}
+        female{"γυναίκα"}
+        flag{"σημαία"}
+        flags{"Σημαίες"}
+        food_drink{"Φαγητό και ποτό"}
+        format{"Μορφή"}
+        format_whitespace{"Μορφοποίηση και κενό διάστημα"}
+        full_width_form_variant{"Παραλλαγές πλήρους πλάτους"}
+        geometric_shapes{"Γεωμετρικά σχήματα"}
+        half_width_form_variant{"Παραλλαγές μισού πλάτους"}
+        han_characters{"Χαρακτήρες Χαν"}
+        han_radicals{"Ριζικά Χαν"}
+        hanja{"Χαντζά"}
+        hanzi_simplified{"Χάνζι (Απλοποιημένα)"}
+        hanzi_traditional{"Χάνζι (Παραδοσιακά)"}
+        heart{"καρδιά"}
+        historic_scripts{"Ιστορικές γραφές"}
+        ideographic_desc_characters{"Ιδεογραφικοί περιγραφικοί χαρακτήρες"}
+        japanese_kana{"Ιαπωνικά Κάνα"}
+        kanbun{"Κανμπούν"}
+        kanji{"Κάντζι"}
+        keycap{"πλήκτρο"}
+        leftwards_arrows{"Βέλη αριστερά"}
+        leftwards_rightwards_arrows{"Βέλη αριστερά-δεξιά"}
+        letterlike_symbols{"Σύμβολα με μορφή γραμμάτων"}
+        limited_use{"Περιορισμένης χρήσης"}
+        male{"άντρας"}
+        math_symbols{"Μαθηματικά σύμβολα"}
+        middle_eastern_scripts{"Γραφές Μέσης Ανατολής"}
+        miscellaneous{"Διάφορα"}
+        modern_scripts{"Σύγχρονες γραφές"}
+        modifier{"Τροποποιητής"}
+        musical_symbols{"Μουσικά σύμβολα"}
+        nature{"φύση"}
+        nonspacing{"Δεν καταλαμβάνει διάστημα"}
+        numbers{"Αριθμοί"}
+        objects{"Αντικείμενα"}
+        other{"Άλλα"}
+        paired{"Με ζεύξη"}
+        person{"άνθρωπος"}
+        phonetic_alphabet{"Φωνητικό αλφάβητο"}
+        pictographs{"Εικονογράμματα"}
+        place{"τοποθεσία"}
+        plant{"φυτό"}
+        punctuation{"Στίξη"}
+        rightwards_arrows{"Βέλη δεξιά"}
+        sign_standard_symbols{"Σήματα / Τυπικά σύμβολα"}
+        small_form_variant{"Παραλλαγές μικρού μεγέθους"}
+        smiley{"χαμόγελο"}
+        smileys_people{"Φατσούλες και άτομα"}
+        south_asian_scripts{"Γραφές Νότιας Ασίας"}
+        southeast_asian_scripts{"Γραφές Νοτιοανατολικής Ασίας"}
+        spacing{"Διαστήματα"}
+        sport{"άθληση"}
+        symbols{"Σύμβολα"}
+        technical_symbols{"Τεχνικά σύμβολα"}
+        tone_marks{"Σημάδια τόνου"}
+        travel{"ταξίδι"}
+        travel_places{"Ταξίδια και μέρη"}
+        upwards_arrows{"Βέλη πάνω"}
+        variant_forms{"Παραλλαγές"}
+        vocalic_jamo{"Φωνηεντικά Τζάμο"}
+        weather{"καιρός"}
+        western_asian_scripts{"Γραφές Δυτικής Ασίας"}
+        whitespace{"Κενό διάστημα"}
+    }
     contextTransforms{
         relative:intvector{
             1,
@@ -871,8 +961,8 @@ el{
         }
     }
     delimiters{
-        alternateQuotationEnd{"\u0022"}
-        alternateQuotationStart{"\u0022"}
+        alternateQuotationEnd{"”"}
+        alternateQuotationStart{"“"}
         quotationEnd{"»"}
         quotationStart{"«"}
     }
@@ -935,12 +1025,32 @@ el{
                 "0"{"αυτήν την Παρασκευή"}
                 "1"{"επόμενη Παρασκευή"}
             }
+            relativeTime{
+                future{
+                    one{"σε {0} Παρασκευή"}
+                    other{"σε {0} Παρασκευές"}
+                }
+                past{
+                    one{"πριν από {0} Παρασκευή"}
+                    other{"πριν από {0} Παρασκευές"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"προηγ. Πα"}
                 "0"{"αυτήν την Πα"}
                 "1"{"επόμ. Πα"}
+            }
+            relativeTime{
+                future{
+                    one{"σε {0} Πα"}
+                    other{"σε {0} Πα"}
+                }
+                past{
+                    one{"{0} Πα πριν"}
+                    other{"{0} Πα πριν"}
+                }
             }
         }
         fri-short{
@@ -949,9 +1059,22 @@ el{
                 "0"{"αυτήν την Παρ."}
                 "1"{"επόμ. Παρ."}
             }
+            relativeTime{
+                future{
+                    one{"σε {0} Παρ."}
+                    other{"σε {0} Παρ."}
+                }
+                past{
+                    one{"πριν από {0} Παρ."}
+                    other{"πριν από {0} Παρ."}
+                }
+            }
         }
         hour{
             dn{"ώρα"}
+            relative{
+                "0"{"αυτήν την ώρα"}
+            }
             relativeTime{
                 future{
                     one{"σε {0} ώρα"}
@@ -991,6 +1114,9 @@ el{
         }
         minute{
             dn{"λεπτό"}
+            relative{
+                "0"{"αυτό το λεπτό"}
+            }
             relativeTime{
                 future{
                     one{"σε {0} λεπτό"}
@@ -1034,6 +1160,16 @@ el{
                 "0"{"αυτήν τη Δευτέρα"}
                 "1"{"επόμενη Δευτέρα"}
             }
+            relativeTime{
+                future{
+                    one{"σε {0} Δευτέρα"}
+                    other{"σε {0} Δευτέρες"}
+                }
+                past{
+                    one{"πριν από {0} Δευτέρα"}
+                    other{"πριν από {0} Δευτέρες"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -1041,12 +1177,32 @@ el{
                 "0"{"αυτήν τη Δε"}
                 "1"{"επόμ. Δε"}
             }
+            relativeTime{
+                future{
+                    one{"σε {0} Δε"}
+                    other{"σε {0} Δε"}
+                }
+                past{
+                    one{"{0} Δε πριν"}
+                    other{"{0} Δε πριν"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"προηγ. Δευτ."}
                 "0"{"αυτήν τη Δευτ."}
                 "1"{"επόμ. Δευτ."}
+            }
+            relativeTime{
+                future{
+                    one{"σε {0} Δευτ."}
+                    other{"σε {0} Δευτ."}
+                }
+                past{
+                    one{"πριν από {0} Δευτ."}
+                    other{"πριν από {0} Δευτ."}
+                }
             }
         }
         month{
@@ -1153,6 +1309,16 @@ el{
                 "0"{"αυτό το Σάββατο"}
                 "1"{"επόμενο Σάββατο"}
             }
+            relativeTime{
+                future{
+                    one{"σε {0} Σάββατο"}
+                    other{"σε {0} Σάββατα"}
+                }
+                past{
+                    one{"{0} Σάββατο πριν"}
+                    other{"{0} Σάββατα πριν"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1160,12 +1326,32 @@ el{
                 "0"{"αυτό το Σά"}
                 "1"{"επόμ. Σά"}
             }
+            relativeTime{
+                future{
+                    one{"σε {0} Σά"}
+                    other{"σε {0} Σά"}
+                }
+                past{
+                    one{"{0} Σά πριν"}
+                    other{"{0} Σά πριν"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"προηγ. Σάβ."}
                 "0"{"αυτό το Σάβ."}
                 "1"{"επόμ. Σάβ."}
+            }
+            relativeTime{
+                future{
+                    one{"σε {0} Σάβ."}
+                    other{"σε {0} Σάβ."}
+                }
+                past{
+                    one{"πριν από {0} Σάβ."}
+                    other{"πριν από {0} Σάβ."}
+                }
             }
         }
         second{
@@ -1216,12 +1402,32 @@ el{
                 "0"{"αυτήν την Κυριακή"}
                 "1"{"επόμενη Κυριακή"}
             }
+            relativeTime{
+                future{
+                    one{"σε {0} Κυριακή"}
+                    other{"σε {0} Κυριακές"}
+                }
+                past{
+                    one{"πριν από {0} Κυριακή"}
+                    other{"πριν από {0} Κυριακές"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"προηγ. Κυ"}
                 "0"{"αυτήν την Κυ"}
                 "1"{"επόμ. Κυ"}
+            }
+            relativeTime{
+                future{
+                    one{"σε {0} Κυ"}
+                    other{"σε {0} Κυ"}
+                }
+                past{
+                    one{"{0} Κυ πριν"}
+                    other{"{0} Κυ πριν"}
+                }
             }
         }
         sun-short{
@@ -1230,12 +1436,32 @@ el{
                 "0"{"αυτήν την Κυρ."}
                 "1"{"επόμ. Κυρ."}
             }
+            relativeTime{
+                future{
+                    one{"σε {0} Κυρ."}
+                    other{"σε {0} Κυρ."}
+                }
+                past{
+                    one{"πριν από {0} Κυρ."}
+                    other{"πριν από {0} Κυρ."}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"προηγούμενη Πέμπτη"}
                 "0"{"αυτήν την Πέμπτη"}
                 "1"{"επόμενη Πέμπτη"}
+            }
+            relativeTime{
+                future{
+                    one{"σε {0} Πέμπτη"}
+                    other{"σε {0} Πέμπτες"}
+                }
+                past{
+                    one{"πριν από {0} Πέμπτη"}
+                    other{"πριν από {0} Πέμπτες"}
+                }
             }
         }
         thu-narrow{
@@ -1244,12 +1470,32 @@ el{
                 "0"{"αυτήν την Πέ"}
                 "1"{"επόμ. Πέ"}
             }
+            relativeTime{
+                future{
+                    one{"σε {0} Πέ"}
+                    other{"σε {0} Πέ"}
+                }
+                past{
+                    one{"{0} Πέ πριν"}
+                    other{"{0} Πέ πριν"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"προηγ. Πέμ."}
                 "0"{"αυτήν την Πέμ."}
                 "1"{"επόμ. Πέμ."}
+            }
+            relativeTime{
+                future{
+                    one{"σε {0} Πέμ."}
+                    other{"σε {0} Πέμ."}
+                }
+                past{
+                    one{"πριν από {0} Πέμ."}
+                    other{"πριν από {0} Πέμ."}
+                }
             }
         }
         tue{
@@ -1258,12 +1504,32 @@ el{
                 "0"{"αυτήν την Τρίτη"}
                 "1"{"επόμενη Τρίτη"}
             }
+            relativeTime{
+                future{
+                    one{"σε {0} Τρίτη"}
+                    other{"σε {0} Τρίτες"}
+                }
+                past{
+                    one{"πριν από {0} Τρίτη"}
+                    other{"πριν από {0} Τρίτες"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"προηγ. Τρ"}
                 "0"{"αυτήν την Τρ"}
                 "1"{"επόμ. Τρ"}
+            }
+            relativeTime{
+                future{
+                    one{"σε {0} Τρ"}
+                    other{"σε {0} Τρ"}
+                }
+                past{
+                    one{"{0} Τρ πριν"}
+                    other{"{0} Τρ πριν"}
+                }
             }
         }
         tue-short{
@@ -1272,12 +1538,32 @@ el{
                 "0"{"αυτήν την Τρ."}
                 "1"{"επόμ. Τρ."}
             }
+            relativeTime{
+                future{
+                    one{"σε {0} Τρ."}
+                    other{"σε {0} Τρ."}
+                }
+                past{
+                    one{"πριν από {0} Τρ."}
+                    other{"πριν από {0} Τρ."}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"προηγούμενη Τετάρτη"}
                 "0"{"αυτήν την Τετάρτη"}
                 "1"{"επόμενη Τετάρτη"}
+            }
+            relativeTime{
+                future{
+                    one{"σε {0} Τετάρτη"}
+                    other{"σε {0} Τετάρτες"}
+                }
+                past{
+                    one{"πριν από {0} Τετάρτη"}
+                    other{"πριν από {0} Τετάρτες"}
+                }
             }
         }
         wed-narrow{
@@ -1286,12 +1572,32 @@ el{
                 "0"{"αυτήν την Τε"}
                 "1"{"επόμ. Τε"}
             }
+            relativeTime{
+                future{
+                    one{"σε {0} Τε"}
+                    other{"σε {0} Τε"}
+                }
+                past{
+                    one{"{0} Τε πριν"}
+                    other{"{0} Τε πριν"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"προηγ. Τετ."}
                 "0"{"αυτήν την Τετ."}
                 "1"{"επόμ. Τετ."}
+            }
+            relativeTime{
+                future{
+                    one{"σε {0} Τετ."}
+                    other{"σε {0} Τετ."}
+                }
+                past{
+                    one{"πριν από {0} Τετ."}
+                    other{"πριν από {0} Τετ."}
+                }
             }
         }
         week{
@@ -1301,6 +1607,7 @@ el{
                 "0"{"αυτήν την εβδομάδα"}
                 "1"{"επόμενη εβδομάδα"}
             }
+            relativePeriod{"την εβδομάδα {0}"}
             relativeTime{
                 future{
                     one{"σε {0} εβδομάδα"}
@@ -1314,6 +1621,7 @@ el{
         }
         week-narrow{
             dn{"εβδ."}
+            relativePeriod{"την εβδομάδα {0}"}
             relativeTime{
                 future{
                     one{"σε {0} εβδ."}
@@ -1327,6 +1635,7 @@ el{
         }
         week-short{
             dn{"εβδ."}
+            relativePeriod{"την εβδομάδα {0}"}
             relativeTime{
                 future{
                     one{"σε {0} εβδ."}
@@ -1406,6 +1715,12 @@ el{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-short{
+            2{"{0} και {1}"}
+            end{"{0} και {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         unit{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
@@ -1426,20 +1741,8 @@ el{
         }
     }
     measurementSystemNames{
-        UK{"Βρετανικό"}
-        US{"Αγγλοσαξωνικό"}
+        UK{"Αγγλοσαξονικό"}
+        US{"Αμερικανικό"}
         metric{"Μετρικό"}
-    }
-    transformNames{
-        BGN{"BGN"}
-        Numeric{"Αριθμητικό"}
-        Tone{"Τόνος"}
-        UNGEGN{"UNGEGN"}
-        x-Accents{"Σημεία τονισμού"}
-        x-Fullwidth{"Πλήρους πλάτους"}
-        x-Halfwidth{"Μισού πλάτους"}
-        x-Jamo{"Τζάμο [Jamo]"}
-        x-Pinyin{"Πινγίν"}
-        x-Publishing{"Έκδοση"}
     }
 }

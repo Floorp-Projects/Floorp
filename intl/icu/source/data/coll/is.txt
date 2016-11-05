@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/collation/is.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 is{
     Version{"2.1.19.14"}
     collations{
@@ -14,7 +8,7 @@ is{
                 "[import und-u-co-search]"
                 "[import is-u-co-standard]"
             }
-            Version{"28"}
+            Version{"30.0.2"}
         }
         standard{
             Sequence{
@@ -27,7 +21,7 @@ is{
                 "&[before 1]z<ý<<<Ý"
                 "&[before 1]ǀ<æ<<<Æ<<ä<<<Ä<ö<<<Ö<<ø<<<Ø<å<<<Å"
             }
-            Version{"28"}
+            Version{"30.0.2"}
         }
     }
 }

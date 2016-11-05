@@ -8,12 +8,19 @@ UNIFIED_SOURCES += [
     'Helpers.cpp',
     'TestAtoms.cpp',
     'TestAutoPtr.cpp',
+    'TestAutoRef.cpp',
     'TestCloneInputStream.cpp',
+    'TestCOMArray.cpp',
+    'TestCOMPtrEq.cpp',
     'TestCRT.cpp',
     'TestEncoding.cpp',
     'TestEscapeURL.cpp',
     'TestExpirationTracker.cpp',
+    'TestFile.cpp',
+    'TestID.cpp',
     'TestNSPRLogModulesParser.cpp',
+    'TestObserverArray.cpp',
+    'TestObserverService.cpp',
     'TestPipes.cpp',
     'TestPLDHash.cpp',
     'TestPriorityQueue.cpp',
@@ -25,8 +32,11 @@ UNIFIED_SOURCES += [
     'TestStringStream.cpp',
     'TestSynchronization.cpp',
     'TestTArray.cpp',
+    'TestTArray2.cpp',
+    'TestTextFormatter.cpp',
     'TestThreadPool.cpp',
     'TestThreads.cpp',
+    'TestThreadUtils.cpp',
     'TestTimeStamp.cpp',
     'TestTokenizer.cpp',
     'TestUTF.cpp',
@@ -37,6 +47,10 @@ UNIFIED_SOURCES += [
 # the global namespace for other files.
 SOURCES += [
     'TestAllocReplacement.cpp',
+    'TestCOMPtr.cpp', # Redefines IFoo and IBar
+    'TestHashtables.cpp', # Redefines IFoo
+    'TestNsRefPtr.cpp', # Redefines Foo
+    #'TestTArray2.cpp',
 ]
 
 LOCAL_INCLUDES += [

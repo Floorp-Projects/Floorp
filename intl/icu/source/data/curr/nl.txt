@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/nl.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 nl{
     Currencies{
         ADP{
@@ -224,9 +218,13 @@ nl{
             "BYB",
             "Wit-Russische nieuwe roebel (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "Wit-Russische roebel",
+        }
         BYR{
             "BYR",
-            "Wit-Russische roebel",
+            "Wit-Russische roebel (2000–2016)",
         }
         BZD{
             "BZD",
@@ -570,7 +568,7 @@ nl{
         }
         KYD{
             "KYD",
-            "Caymaneilandse dollar",
+            "Kaaimaneilandse dollar",
         }
         KZT{
             "KZT",
@@ -1210,7 +1208,7 @@ nl{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1228,6 +1226,7 @@ nl{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1514,9 +1513,13 @@ nl{
             one{"Wit-Russische nieuwe roebel (1994–1999)"}
             other{"Wit-Russische nieuwe roebel (1994–1999)"}
         }
-        BYR{
+        BYN{
             one{"Wit-Russische roebel"}
             other{"Wit-Russische roebel"}
+        }
+        BYR{
+            one{"Wit-Russische roebel (2000–2016)"}
+            other{"Wit-Russische roebel (2000–2016)"}
         }
         BZD{
             one{"Belizaanse dollar"}
@@ -1859,8 +1862,8 @@ nl{
             other{"Koeweitse dinar"}
         }
         KYD{
-            one{"Caymaneilandse dollar"}
-            other{"Caymaneilandse dollar"}
+            one{"Kaaimaneilandse dollar"}
+            other{"Kaaimaneilandse dollar"}
         }
         KZT{
             one{"Kazachse tenge"}
@@ -2491,5 +2494,5 @@ nl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.96"}
+    Version{"2.1.28.79"}
 }

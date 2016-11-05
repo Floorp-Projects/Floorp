@@ -1026,6 +1026,9 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(FragStretchBSizeProperty, nscoord)
 
+  // The block-axis margin-box size associated with eBClampMarginBoxMinSize.
+  NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BClampMarginBoxMinSizeProperty, nscoord)
+
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(IBaselinePadProperty, nscoord)
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BBaselinePadProperty, nscoord)
 
@@ -1972,7 +1975,7 @@ public:
 
   virtual mozilla::IntrinsicSize GetIntrinsicSize() = 0;
 
-  /*
+  /**
    * Get the intrinsic ratio of this element, or nsSize(0,0) if it has
    * no intrinsic ratio.  The intrinsic ratio is the ratio of the
    * height/width of a box with an intrinsic size or the intrinsic
@@ -1988,14 +1991,25 @@ public:
    */
   enum ComputeSizeFlags {
     eDefault =           0,
-    /* Set if the frame is in a context where non-replaced blocks should
+    /**
+     * Set if the frame is in a context where non-replaced blocks should
      * shrink-wrap (e.g., it's floating, absolutely positioned, or
-     * inline-block). */
+     * inline-block).
+     */
     eShrinkWrap =        1 << 0,
-    /* Set if we'd like to compute our 'auto' bsize, regardless of our actual
+    /**
+     * Set if we'd like to compute our 'auto' bsize, regardless of our actual
      * corresponding computed value. (e.g. to get an intrinsic height for flex
-     * items with "min-height: auto" to use during flexbox layout.) */
-    eUseAutoBSize =      1 << 1
+     * items with "min-height: auto" to use during flexbox layout.)
+     */
+    eUseAutoBSize =      1 << 1,
+    /**
+     * Indicates that we should clamp the margin-box min-size to the given CB
+     * size.  This is used for implementing the grid area clamping here:
+     * https://drafts.csswg.org/css-grid/#min-size-auto
+     */
+    eIClampMarginBoxMinSize = 1 << 2, // clamp in our inline axis
+    eBClampMarginBoxMinSize = 1 << 3, // clamp in our block axis
   };
 
   /**
@@ -3363,6 +3377,15 @@ public:
                                            int32_t aIncrement,
                                            bool aForCounting) { return false; }
 
+  /**
+   * Helper function - computes the content-box inline size for aCoord.
+   */
+  nscoord ComputeISizeValue(nsRenderingContext* aRenderingContext,
+                            nscoord             aContainingBlockISize,
+                            nscoord             aContentEdgeToBoxSizing,
+                            nscoord             aBoxSizingToMarginEdge,
+                            const nsStyleCoord& aCoord,
+                            ComputeSizeFlags    aFlags = eDefault);
 protected:
   // Members
   nsRect           mRect;

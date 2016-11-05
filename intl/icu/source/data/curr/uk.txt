@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/uk.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 uk{
     Currencies{
         ADP{
@@ -192,9 +186,13 @@ uk{
             "BYB",
             "білоруський новий рубль (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "білоруський рубль",
+        }
         BYR{
             "BYR",
-            "білоруський рубль",
+            "білоруський рубль (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1118,7 +1116,7 @@ uk{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1135,6 +1133,7 @@ uk{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1385,11 +1384,17 @@ uk{
             one{"білоруський новий рубль (1994–1999)"}
             other{"білоруського нового рубля (1994–1999)"}
         }
-        BYR{
+        BYN{
             few{"білоруські рублі"}
             many{"білоруських рублів"}
             one{"білоруський рубль"}
             other{"білоруського рубля"}
+        }
+        BYR{
+            few{"білоруські рублі (2000–2016)"}
+            many{"білоруських рублів (2000–2016)"}
+            one{"білоруський рубль (2000–2016)"}
+            other{"білоруського рубля (2000–2016)"}
         }
         BZD{
             few{"белізькі долари"}
@@ -2262,5 +2267,5 @@ uk{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.29.38"}
 }

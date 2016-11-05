@@ -1088,7 +1088,21 @@ EditorEventListener::Focus(nsIDOMEvent* aEvent)
 
       nsCOMPtr<nsIDOMElement> element;
       fm->GetFocusedElement(getter_AddRefs(element));
-      if (!SameCOMIdentity(element, target)) {
+      if (!element) {
+        return NS_OK;
+      }
+
+      nsCOMPtr<nsIDOMEventTarget> originalTarget;
+      aEvent->GetOriginalTarget(getter_AddRefs(originalTarget));
+
+      nsCOMPtr<nsIContent> originalTargetAsContent =
+        do_QueryInterface(originalTarget);
+      nsCOMPtr<nsIContent> focusedElementAsContent =
+        do_QueryInterface(element);
+
+      if (!SameCOMIdentity(
+            focusedElementAsContent->FindFirstNonChromeOnlyAccessContent(),
+            originalTargetAsContent->FindFirstNonChromeOnlyAccessContent())) {
         return NS_OK;
       }
     }

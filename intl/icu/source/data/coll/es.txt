@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/collation/es.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 es{
     Version{"2.1.19.14"}
     collations{
@@ -14,11 +8,11 @@ es{
                 "[import und-u-co-search]"
                 "&N<ñ<<<Ñ"
             }
-            Version{"28"}
+            Version{"30.0.2"}
         }
         standard{
             Sequence{"&N<ñ<<<Ñ"}
-            Version{"28"}
+            Version{"30.0.2"}
         }
         traditional{
             Sequence{
@@ -26,7 +20,7 @@ es{
                 "&C<ch<<<Ch<<<CH"
                 "&l<ll<<<Ll<<<LL"
             }
-            Version{"28"}
+            Version{"30.0.2"}
         }
     }
 }

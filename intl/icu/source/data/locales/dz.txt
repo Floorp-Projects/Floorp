@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/dz.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 dz{
     AuxExemplarCharacters{
         "[\u0F84 ཊ ཋ ཌ ཎ \u0F7E ཥ \u0F80 \u0F7B \u0F7D \u0F9A \u0F9B \u0F9C \u0F9E "
@@ -97,7 +91,7 @@ dz{
                 exponential{"E"}
                 group{","}
                 infinity{"གྲངས་མེད"}
-                list{"དང་"}
+                list{";"}
                 minusSign{"-"}
                 nan{"ཨང་མད"}
                 perMille{"‰"}
@@ -106,7 +100,7 @@ dz{
             }
         }
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.29.61"}
     calendar{
         generic{
             DateTimePatterns{
@@ -253,6 +247,10 @@ dz{
         }
         gregorian{
             AmPmMarkers{
+                "སྔ་ཆ་",
+                "ཕྱི་ཆ་",
+            }
+            AmPmMarkersAbbr{
                 "སྔ་ཆ་",
                 "ཕྱི་ཆ་",
             }

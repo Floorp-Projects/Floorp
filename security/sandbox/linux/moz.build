@@ -64,6 +64,7 @@ SOURCES += [
     'SandboxChroot.cpp',
     'SandboxFilter.cpp',
     'SandboxFilterUtil.cpp',
+    'SandboxHooks.cpp',
     'SandboxInfo.cpp',
     'SandboxLogging.cpp',
     'SandboxUtil.cpp',
@@ -108,7 +109,6 @@ if CONFIG['OS_TARGET'] != 'Android':
 DIRS += [
     'broker',
     'glue',
-    'interpose',
 ]
 
 TEST_DIRS += [

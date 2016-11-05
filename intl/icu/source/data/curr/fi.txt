@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fi.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fi{
     Currencies{
         ADP{
@@ -224,9 +218,13 @@ fi{
             "BYB",
             "Valko-Venäjän uusi rupla (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "Valko-Venäjän rupla",
+        }
         BYR{
             "BYR",
-            "Valko-Venäjän rupla",
+            "Valko-Venäjän rupla (2000–2016)",
         }
         BZD{
             "BZD",
@@ -270,7 +268,7 @@ fi{
         }
         CNY{
             "CNY",
-            "Kiinan yuan",
+            "Kiinan juan",
         }
         COP{
             "COP",
@@ -746,11 +744,11 @@ fi{
         }
         NIC{
             "NIC",
-            "Nicaraguan cordoba (1988–1991)",
+            "Nicaraguan córdoba (1988–1991)",
         }
         NIO{
             "NIO",
-            "Nicaraguan cordoba",
+            "Nicaraguan córdoba",
         }
         NLG{
             "NLG",
@@ -902,11 +900,11 @@ fi{
         }
         SRD{
             "SRD",
-            "Surinamin dollari",
+            "Surinamen dollari",
         }
         SRG{
             "SRG",
-            "Surinamin guldeni",
+            "Surinamen guldeni",
         }
         SSP{
             "SSP",
@@ -1198,102 +1196,104 @@ fi{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
-        ARS{"$"}
-        AUD{"$"}
+        AOA{"AOA"}
+        ARS{"ARS"}
+        AUD{"AUD"}
         BAM{"KM"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
-        BSD{"$"}
-        BWP{"P"}
-        BYR{"р."}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUC{"$"}
-        CUP{"$"}
-        CZK{"Kč"}
-        DKK{"kr"}
-        DOP{"$"}
-        EGP{"E£"}
+        BBD{"BBD"}
+        BDT{"BDT"}
+        BMD{"BMD"}
+        BND{"BND"}
+        BOB{"BOB"}
+        BRL{"BRL"}
+        BSD{"BSD"}
+        BWP{"BWP"}
+        BYN{"BYN"}
+        BZD{"BZD"}
+        CAD{"CAD"}
+        CLP{"CLP"}
+        CNY{"CNY"}
+        COP{"COP"}
+        CRC{"CRC"}
+        CUC{"CUC"}
+        CUP{"CUP"}
+        CZK{"CZK"}
+        DKK{"DKK"}
+        DOP{"DOP"}
+        EGP{"EGP"}
+        ESP{"ESP"}
         EUR{"€"}
-        FJD{"$"}
-        FKP{"£"}
+        FJD{"FJD"}
+        FKP{"FKP"}
         GBP{"£"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
-        GYD{"$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
+        GEL{"GEL"}
+        GIP{"GIP"}
+        GNF{"GNF"}
+        GTQ{"GTQ"}
+        GYD{"GYD"}
+        HKD{"HKD"}
+        HNL{"HNL"}
+        HRK{"HRK"}
+        HUF{"HUF"}
+        IDR{"IDR"}
+        ILS{"ILS"}
+        INR{"INR"}
+        ISK{"ISK"}
+        JMD{"JMD"}
         JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
-        LRD{"$"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
-        MXN{"$"}
-        MYR{"RM"}
-        NAD{"$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
-        NZD{"$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
+        KHR{"KHR"}
+        KMF{"KMF"}
+        KPW{"KPW"}
+        KRW{"KRW"}
+        KYD{"KYD"}
+        KZT{"KZT"}
+        LAK{"LAK"}
+        LBP{"LBP"}
+        LKR{"LKR"}
+        LRD{"LRD"}
+        LTL{"LTL"}
+        LVL{"LVL"}
+        MGA{"MGA"}
+        MMK{"MMK"}
+        MNT{"MNT"}
+        MUR{"MUR"}
+        MXN{"MXN"}
+        MYR{"MYR"}
+        NAD{"NAD"}
+        NGN{"NGN"}
+        NIO{"NIO"}
+        NOK{"NOK"}
+        NPR{"NPR"}
+        NZD{"NZD"}
+        PHP{"PHP"}
+        PKR{"PKR"}
+        PLN{"PLN"}
+        PYG{"PYG"}
+        RON{"RON"}
         RUB{"₽"}
-        RWF{"RF"}
-        SBD{"$"}
-        SEK{"kr"}
-        SGD{"$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
-        STD{"Db"}
-        SYP{"£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
-        TWD{"NT$"}
-        UAH{"₴"}
+        RUR{"RUR"}
+        RWF{"RWF"}
+        SBD{"SBD"}
+        SEK{"SEK"}
+        SGD{"SGD"}
+        SHP{"SHP"}
+        SRD{"SRD"}
+        SSP{"SSP"}
+        STD{"STD"}
+        SYP{"SYP"}
+        THB{"THB"}
+        TOP{"TOP"}
+        TRY{"TRY"}
+        TTD{"TTD"}
+        TWD{"TWD"}
+        UAH{"UAH"}
         USD{"$"}
-        UYU{"$U"}
-        VEF{"Bs"}
-        VND{"₫"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
-    }
-    Currencies%variant{
-        GEL{"₾"}
-        TRY{"TL"}
+        UYU{"UYU"}
+        VEF{"VEF"}
+        VND{"VND"}
+        XCD{"XCD"}
+        ZAR{"ZAR"}
+        ZMW{"ZMW"}
     }
     CurrencyPlurals{
         ADP{
@@ -1512,9 +1512,13 @@ fi{
             one{"Valko-Venäjän uusi rupla (1994–1999)"}
             other{"Valko-Venäjän uutta ruplaa (1994–1999)"}
         }
-        BYR{
+        BYN{
             one{"Valko-Venäjän rupla"}
             other{"Valko-Venäjän ruplaa"}
+        }
+        BYR{
+            one{"Valko-Venäjän rupla (2000–2016)"}
+            other{"Valko-Venäjän ruplaa (2000–2016)"}
         }
         BZD{
             one{"Belizen dollari"}
@@ -1557,8 +1561,8 @@ fi{
             other{"Kiinan kansanpankin dollaria"}
         }
         CNY{
-            one{"Kiinan yuan"}
-            other{"Kiinan yuania"}
+            one{"Kiinan juan"}
+            other{"Kiinan juania"}
         }
         COP{
             one{"Kolumbian peso"}
@@ -2033,12 +2037,12 @@ fi{
             other{"Nigerian nairaa"}
         }
         NIC{
-            one{"Nicaraguan cordoba (1988–1991)"}
-            other{"Nicaraguan cordobaa (1988–1991)"}
+            one{"Nicaraguan córdoba (1988–1991)"}
+            other{"Nicaraguan córdobaa (1988–1991)"}
         }
         NIO{
-            one{"Nicaraguan cordoba"}
-            other{"Nicaraguan cordobaa"}
+            one{"Nicaraguan córdoba"}
+            other{"Nicaraguan córdobaa"}
         }
         NLG{
             one{"Alankomaiden guldeni"}
@@ -2189,12 +2193,12 @@ fi{
             other{"Somalian šillinkiä"}
         }
         SRD{
-            one{"Surinamin dollari"}
-            other{"Surinamin dollaria"}
+            one{"Surinamen dollari"}
+            other{"Surinamen dollaria"}
         }
         SRG{
-            one{"Surinamin guldeni"}
-            other{"Surinamin guldenia"}
+            one{"Surinamen guldeni"}
+            other{"Surinamen guldeni"}
         }
         SSP{
             one{"Etelä-Sudanin punta"}
@@ -2489,5 +2493,5 @@ fi{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.29.88"}
 }

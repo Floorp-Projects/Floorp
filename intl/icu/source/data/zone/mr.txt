@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/mr.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 mr{
-    Version{"2.1.19.53"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"अबिद्जान"}
@@ -193,7 +187,7 @@ mr{
             ec{"सान जुआन"}
         }
         "America:Argentina:San_Luis"{
-            ec{"सॅन लुईस"}
+            ec{"सान ल्युइस"}
         }
         "America:Argentina:Tucuman"{
             ec{"टुकुमान"}
@@ -277,7 +271,7 @@ mr{
             ec{"क्रेस्टन"}
         }
         "America:Cuiaba"{
-            ec{"कुइबा"}
+            ec{"कुयाबा"}
         }
         "America:Curacao"{
             ec{"क्युरासाओ"}
@@ -309,6 +303,9 @@ mr{
         "America:El_Salvador"{
             ec{"एल साल्वाडोर"}
         }
+        "America:Fort_Nelson"{
+            ec{"फोर्ट नेल्सन"}
+        }
         "America:Fortaleza"{
             ec{"फोर्टालेझा"}
         }
@@ -334,7 +331,7 @@ mr{
             ec{"ग्वाटेमाला"}
         }
         "America:Guayaquil"{
-            ec{"गुआयाक्विल"}
+            ec{"गयाक्विल"}
         }
         "America:Guyana"{
             ec{"गयाना"}
@@ -849,6 +846,9 @@ mr{
         "Asia:Tokyo"{
             ec{"टोकियो"}
         }
+        "Asia:Tomsk"{
+            ec{"तोमसक"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"उलानबातर"}
         }
@@ -948,6 +948,9 @@ mr{
         "Europe:Andorra"{
             ec{"अँडोरा"}
         }
+        "Europe:Astrakhan"{
+            ec{"आस्त्राखान"}
+        }
         "Europe:Athens"{
             ec{"अथेन्स"}
         }
@@ -1005,6 +1008,9 @@ mr{
         }
         "Europe:Kiev"{
             ec{"कीव"}
+        }
+        "Europe:Kirov"{
+            ec{"किरोव"}
         }
         "Europe:Lisbon"{
             ec{"लिस्बन"}
@@ -1081,6 +1087,9 @@ mr{
         }
         "Europe:Tirane"{
             ec{"टिराने"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"उल्यानोव्स्क"}
         }
         "Europe:Uzhgorod"{
             ec{"उझहोरोड"}
@@ -1490,7 +1499,7 @@ mr{
             ls{"पूर्व युरोपियन प्रमाण वेळ"}
         }
         "meta:Europe_Further_Eastern"{
-            ls{"अग्र पुर्व यूरोपीयन वेळ"}
+            ls{"अग्र-पौर्वात्य यूरोपीयन वेळ"}
         }
         "meta:Europe_Western"{
             ld{"पश्चिम युरोपियन उन्हाळी वेळ"}
@@ -1781,6 +1790,9 @@ mr{
         }
         "meta:Ponape"{
             ls{"पोनॅपे वेळ"}
+        }
+        "meta:Pyongyang"{
+            ls{"प्योंगयंँग वेळ"}
         }
         "meta:Qyzylorda"{
             ld{"क़िझीलोर्डा ग्रीष्मकालीन वेळ"}

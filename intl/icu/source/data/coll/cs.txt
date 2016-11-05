@@ -1,33 +1,8 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/collation/cs.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 cs{
-    Version{"2.1.19.14"}
+    Version{"2.1.28.26"}
     collations{
-        search{
-            Sequence{
-                "[import und-u-co-search]"
-                "&A<á<<<Á"
-                "&C<č<<<Č"
-                "&D<ď<<<Ď"
-                "&E<é<<<É<ě<<<Ě"
-                "&I<í<<<Í"
-                "&N<ň<<<Ň"
-                "&O<ó<<<Ó"
-                "&R<ř<<<Ř"
-                "&S<š<<<Š"
-                "&T<ť<<<Ť"
-                "&U<ú<<<Ú<ů<<<Ů"
-                "&Y<ý<<<Ý"
-                "&Z<ž<<<Ž"
-            }
-            Version{"28"}
-        }
         standard{
             Sequence{
                 "&C<č<<<Č"
@@ -36,7 +11,7 @@ cs{
                 "&S<š<<<Š"
                 "&Z<ž<<<Ž"
             }
-            Version{"28"}
+            Version{"30.0.2"}
         }
     }
 }

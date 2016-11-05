@@ -1,11 +1,36 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fr_RE.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fr_RE{
-    Version{"2.1.19.14"}
+    NumberElements{
+        latn{
+            miscPatterns{
+                atLeast{"au moins {0}"}
+            }
+        }
+    }
+    Version{"2.1.27.99"}
+    calendar{
+        gregorian{
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"ap.m."}
+                        evening1{"soir"}
+                        midnight{"min."}
+                        morning1{"mat."}
+                        night1{"nuit"}
+                        noon{"midi"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        midnight{"min."}
+                    }
+                    narrow{
+                        midnight{"min."}
+                    }
+                }
+            }
+        }
+    }
 }

@@ -1,6 +1,9 @@
 load(libdir + "asm.js");
 load(libdir + "asserts.js");
 
+if (!isAsmJSCompilationAvailable())
+    quit();
+
 var code = USE_ASM + "var i32 = new stdlib.Int32Array(buf); function f() { return i32[0]|0 } return f";
 
 var ab = new ArrayBuffer(BUF_MIN);

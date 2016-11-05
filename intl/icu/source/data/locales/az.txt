@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/az.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 az{
     AuxExemplarCharacters{"[w]"}
     Ellipsis{
@@ -209,7 +203,7 @@ az{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.83"}
+    Version{"2.1.28.79"}
     calendar{
         generic{
             DateTimePatterns{
@@ -323,6 +317,10 @@ az{
                 "AM",
                 "PM",
             }
+            AmPmMarkersAbbr{
+                "AM",
+                "PM",
+            }
             AmPmMarkersNarrow{
                 "a",
                 "p",
@@ -365,6 +363,10 @@ az{
                 MEd{"dd.MM, E"}
                 MMM{"LLL"}
                 MMMEd{"d MMM, E"}
+                MMMMW{
+                    one{"MMM, W 'həftə'"}
+                    other{"MMM, W 'həftə'"}
+                }
                 MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"dd.MM"}
@@ -385,6 +387,10 @@ az{
                 yMd{"dd.MM.y"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
+                yw{
+                    one{"y, w 'həftə'"}
+                    other{"y, w 'həftə'"}
+                }
             }
             dayNames{
                 format{
@@ -466,6 +472,16 @@ az{
             }
             dayPeriod{
                 format{
+                    abbreviated{
+                        afternoon1{"gündüz"}
+                        evening1{"axşamüstü"}
+                        midnight{"gecəyarı"}
+                        morning1{"sübh"}
+                        morning2{"səhər"}
+                        night1{"axşam"}
+                        night2{"gecə"}
+                        noon{"günorta"}
+                    }
                     narrow{
                         afternoon1{"gündüz"}
                         evening1{"axşamüstü"}
@@ -500,6 +516,18 @@ az{
                         noon{"günorta"}
                         pm{"PM"}
                     }
+                    narrow{
+                        afternoon1{"gündüz"}
+                        am{"AM"}
+                        evening1{"axşamüstü"}
+                        midnight{"gecəyarı"}
+                        morning1{"sübh"}
+                        morning2{"səhər"}
+                        night1{"axşam"}
+                        night2{"gecə"}
+                        noon{"günorta"}
+                        pm{"PM"}
+                    }
                     wide{
                         afternoon1{"gündüz"}
                         am{"AM"}
@@ -517,19 +545,19 @@ az{
             eras{
                 abbreviated{
                     "e.ə.",
-                    "b.e.",
+                    "y.e.",
                 }
                 abbreviated%variant{
-                    "ü.e.ö.",
-                    "ü.e.",
+                    "b.e.ə.",
+                    "b.e.",
                 }
                 wide{
                     "eramızdan əvvəl",
-                    "eramız",
+                    "yeni era",
                 }
                 wide%variant{
-                    "ümumi eradan öncə",
-                    "ümumi era",
+                    "bizim eradan əvvəl",
+                    "bizim era",
                 }
             }
             intervalFormats{
@@ -761,6 +789,94 @@ az{
             }
         }
     }
+    characterLabel{
+        activities{"Aktivitələr"}
+        african_scripts{"Afrika Yazıları"}
+        american_scripts{"Amerika Yazıları"}
+        animal{"heyvan"}
+        animals_nature{"Heyvanlar və Təbiət"}
+        arrows{"Oxlar"}
+        body{"bədən"}
+        box_drawing{"Qutu Çəkmək"}
+        braille{"Brayl"}
+        building{"bina"}
+        bullets_stars{"Marker/Ulduz"}
+        consonantal_jamo{"Samit Jamo"}
+        currency_symbols{"Valyuta Simvolları"}
+        dash_connector{"Tire/Bağlayıcı"}
+        digits{"Rəqəmlər"}
+        dingbats{"Dinqbatlar"}
+        divination_symbols{"Divinasiya Simvolları"}
+        downwards_arrows{"Aşağıya Oxlar"}
+        downwards_upwards_arrows{"Aşağıya Yuxarıya Oxlar"}
+        east_asian_scripts{"Şərqi Asiya Yazıları"}
+        emoji{"Emoji"}
+        european_scripts{"Avropa Yazıları"}
+        female{"qadın"}
+        flag{"bayraq"}
+        flags{"Bayraqlar"}
+        food_drink{"Yemək-içmək"}
+        format{"Format"}
+        format_whitespace{"Format və Boşluq"}
+        full_width_form_variant{"Tam Genişlik Formalı Variant"}
+        geometric_shapes{"Həndəsi Fiqurlar"}
+        half_width_form_variant{"Genişlik Formalı Variant"}
+        han_characters{"Han Simvolları"}
+        han_radicals{"Han Radikalları"}
+        hanja{"Hanja"}
+        hanzi_simplified{"Hanzi (Sadələşmiş)"}
+        hanzi_traditional{"Hanzi (Ənənəvi)"}
+        heart{"ürək"}
+        historic_scripts{"Tarixi Yazılar"}
+        ideographic_desc_characters{"İdeoqrafik Simvollar"}
+        japanese_kana{"Yapon Kanası"}
+        kanbun{"Kanbun"}
+        kanji{"Kanji"}
+        keycap{"klaviatura qapağı"}
+        leftwards_arrows{"Sola Oxlar"}
+        leftwards_rightwards_arrows{"Sola Sağa Oxlar"}
+        letterlike_symbols{"Hərfəbənzər Simvollar"}
+        limited_use{"Limitli İstifadə"}
+        male{"kişi"}
+        math_symbols{"Riyazi Simvollar"}
+        middle_eastern_scripts{"Yaxın Şərq Yazıları"}
+        miscellaneous{"Qarışıq"}
+        modern_scripts{"Çağdaş Yazılar"}
+        modifier{"Modifikator"}
+        musical_symbols{"Musiqi Simvolları"}
+        nature{"təbiət"}
+        nonspacing{"Boşluqsuz"}
+        numbers{"Saylar"}
+        objects{"Obyektlər"}
+        other{"Digər"}
+        paired{"Cüt"}
+        person{"şəxs"}
+        phonetic_alphabet{"Fonetik Əlifba"}
+        pictographs{"Piktoqram"}
+        place{"yer"}
+        plant{"bitki"}
+        punctuation{"Durğu"}
+        rightwards_arrows{"Sağa Oxlar"}
+        sign_standard_symbols{"İşarə/Standart Simvollar"}
+        small_form_variant{"Kiçik Forma Variantları"}
+        smiley{"smayli"}
+        smileys_people{"Gülüş və Camaat"}
+        south_asian_scripts{"Cənubi Asiya Yazıları"}
+        southeast_asian_scripts{"Cənub-Şərqi Asiya Yazıları"}
+        spacing{"Boşluq"}
+        sport{"idman"}
+        symbols{"Simvollar"}
+        technical_symbols{"Texniki Simvollar"}
+        tone_marks{"Ton Qeydləri"}
+        travel{"səyahət"}
+        travel_places{"Səyahət və Yerlər"}
+        upwards_arrows{"Yuxarıya Oxlar"}
+        variant_forms{"Variant Formaları"}
+        vocalic_jamo{"Vokal Jamo"}
+        weather{"hava"}
+        western_asian_scripts{"Qərbi Asiya Yazıları"}
+        whitespace{"Boşluq"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -824,12 +940,32 @@ az{
                 "0"{"bu cümə"}
                 "1"{"gələn cümə"}
             }
+            relativeTime{
+                future{
+                    one{"{0} cümə ərzində"}
+                    other{"{0} cümə ərzində"}
+                }
+                past{
+                    one{"{0} cümə öncə"}
+                    other{"{0} cümə öncə"}
+                }
+            }
         }
         fri-narrow{
             relative{
-                "-1"{"keçən cümə"}
-                "0"{"bu cümə"}
-                "1"{"gələn cümə"}
+                "-1"{"keçən C"}
+                "0"{"bu C"}
+                "1"{"gələn C"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} cümə ərzində"}
+                    other{"{0} cümə ərzində"}
+                }
+                past{
+                    one{"{0} cümə öncə"}
+                    other{"{0} cümə öncə"}
+                }
             }
         }
         fri-short{
@@ -838,9 +974,22 @@ az{
                 "0"{"bu cümə"}
                 "1"{"gələn cümə"}
             }
+            relativeTime{
+                future{
+                    one{"{0} cümə ərzində"}
+                    other{"{0} cümə ərzində"}
+                }
+                past{
+                    one{"{0} cümə öncə"}
+                    other{"{0} cümə öncə"}
+                }
+            }
         }
         hour{
             dn{"Saat"}
+            relative{
+                "0"{"bu saat"}
+            }
             relativeTime{
                 future{
                     one{"{0} saat ərzində"}
@@ -880,6 +1029,9 @@ az{
         }
         minute{
             dn{"Dəqiqə"}
+            relative{
+                "0"{"bu dəqiqə"}
+            }
             relativeTime{
                 future{
                     one{"{0} dəqiqə ərzində"}
@@ -923,12 +1075,32 @@ az{
                 "0"{"bu bazar ertəsi"}
                 "1"{"gələn bazar ertəsi"}
             }
+            relativeTime{
+                future{
+                    one{"{0} bazar ertəsi ərzində"}
+                    other{"{0} bazar ertəsi əzrində"}
+                }
+                past{
+                    one{"{0} bazar ertəsi öncə"}
+                    other{"{0} bazar ertəsi öncə"}
+                }
+            }
         }
         mon-narrow{
             relative{
-                "-1"{"keçən bazar ertəsi"}
-                "0"{"bu bazar ertəsi"}
-                "1"{"gələn bazar ertəsi"}
+                "-1"{"keçən BE"}
+                "0"{"bu BE"}
+                "1"{"gələn BE"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} bazar ertəsi əzrində"}
+                    other{"{0} bazar ertəsi əzrində"}
+                }
+                past{
+                    one{"{0} bazar ertəsi öncə"}
+                    other{"{0} bazar ertəsi öncə"}
+                }
             }
         }
         mon-short{
@@ -936,6 +1108,16 @@ az{
                 "-1"{"keçən bazar ertəsi"}
                 "0"{"bu bazar ertəsi"}
                 "1"{"gələn bazar ertəsi"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} bazar ertəsi əzrində"}
+                    other{"{0} bazar ertəsi əzrində"}
+                }
+                past{
+                    one{"{0} bazar ertəsi öncə"}
+                    other{"{0} bazar ertəsi öncə"}
+                }
             }
         }
         month{
@@ -984,6 +1166,11 @@ az{
         }
         quarter{
             dn{"Rüb"}
+            relative{
+                "-1"{"keçən rüb"}
+                "0"{"bu rüb"}
+                "1"{"gələn rüb"}
+            }
             relativeTime{
                 future{
                     one{"{0} rüb ərzində"}
@@ -1027,12 +1214,32 @@ az{
                 "0"{"bu şənbə"}
                 "1"{"gələn şənbə"}
             }
+            relativeTime{
+                future{
+                    one{"{0} şənbə ərzində"}
+                    other{"{0} şənbə ərzində"}
+                }
+                past{
+                    one{"{0} şənbə öncə"}
+                    other{"{0} şənbə öncə"}
+                }
+            }
         }
         sat-narrow{
             relative{
-                "-1"{"keçən şənbə"}
-                "0"{"bu şənbə"}
-                "1"{"gələn şənbə"}
+                "-1"{"keçən Ş"}
+                "0"{"bu Ş"}
+                "1"{"gələn Ş"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} şənbə ərzində"}
+                    other{"{0} şənbə ərzində"}
+                }
+                past{
+                    one{"{0} şənbə öncə"}
+                    other{"{0} şənbə öncə"}
+                }
             }
         }
         sat-short{
@@ -1040,6 +1247,16 @@ az{
                 "-1"{"keçən şənbə"}
                 "0"{"bu şənbə"}
                 "1"{"gələn şənbə"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} şənbə ərzində"}
+                    other{"{0} şənbə ərzində"}
+                }
+                past{
+                    one{"{0} şənbə öncə"}
+                    other{"{0} şənbə öncə"}
+                }
             }
         }
         second{
@@ -1090,12 +1307,32 @@ az{
                 "0"{"bu bazar"}
                 "1"{"gələn bazar"}
             }
+            relativeTime{
+                future{
+                    one{"{0} bazar ərzində"}
+                    other{"{0} bazar ərzində"}
+                }
+                past{
+                    one{"{0} bazar öncə"}
+                    other{"{0} bazar öncə"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"keçən bazar"}
                 "0"{"bu bazar"}
                 "1"{"gələn bazar"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} bazar ərzində"}
+                    other{"{0} bazar ərzində"}
+                }
+                past{
+                    one{"{0} bazar öncə"}
+                    other{"{0} bazar öncə"}
+                }
             }
         }
         sun-short{
@@ -1104,6 +1341,16 @@ az{
                 "0"{"bu bazar"}
                 "1"{"gələn bazar"}
             }
+            relativeTime{
+                future{
+                    one{"{0} bazar ərzində"}
+                    other{"{0} bazar ərzində"}
+                }
+                past{
+                    one{"{0} bazar öncə"}
+                    other{"{0} bazar öncə"}
+                }
+            }
         }
         thu{
             relative{
@@ -1111,12 +1358,32 @@ az{
                 "0"{"bu cümə axşamı"}
                 "1"{"gələn cümə axşamı"}
             }
+            relativeTime{
+                future{
+                    one{"{0} cümə axşamı ərzində"}
+                    other{"{0} cümə axşamı ərzində"}
+                }
+                past{
+                    one{"{0} cümə axşamı öncə"}
+                    other{"{0} cümə axşamı öncə"}
+                }
+            }
         }
         thu-narrow{
             relative{
-                "-1"{"keçən cümə axşamı"}
-                "0"{"bu cümə axşamı"}
-                "1"{"gələn cümə axşamı"}
+                "-1"{"keçən CA"}
+                "0"{"bu CA"}
+                "1"{"gələn CA"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} cümə axşamı ərzində"}
+                    other{"{0} cümə axşamı ərzində"}
+                }
+                past{
+                    one{"{0} cümə axşamı öncə"}
+                    other{"{0} cümə axşamı öncə"}
+                }
             }
         }
         thu-short{
@@ -1125,6 +1392,16 @@ az{
                 "0"{"bu cümə axşamı"}
                 "1"{"gələn cümə axşamı"}
             }
+            relativeTime{
+                future{
+                    one{"{0} cümə axşamı ərzində"}
+                    other{"{0} cümə axşamı ərzində"}
+                }
+                past{
+                    one{"{0} cümə axşamı öncə"}
+                    other{"{0} cümə axşamı öncə"}
+                }
+            }
         }
         tue{
             relative{
@@ -1132,19 +1409,49 @@ az{
                 "0"{"bu çərşənbə axşamı"}
                 "1"{"gələn çərşənbə axşamı"}
             }
+            relativeTime{
+                future{
+                    one{"{0} çərşənbə axşamı ərzində"}
+                    other{"{0} çərşənbə axşamı ərzində"}
+                }
+                past{
+                    one{"{0} çərşənbə axşamı öncə"}
+                    other{"{0} çərşənbə axşamı öncə"}
+                }
+            }
         }
         tue-narrow{
             relative{
-                "-1"{"keçən çərşənbə axşamı"}
-                "0"{"bu çərşənbə axşamı"}
-                "1"{"gələn çərşənbə axşamı"}
+                "-1"{"keçən ÇƏ"}
+                "0"{"bu ÇƏ"}
+                "1"{"gələn ÇƏ"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} çərşənbə axşamı ərzində"}
+                    other{"{0} çərşənbə axşamı ərzində"}
+                }
+                past{
+                    one{"{0} çərşənbə axşamı öncə"}
+                    other{"{0} çərşənbə axşamı öncə"}
+                }
             }
         }
         tue-short{
             relative{
-                "-1"{"keçən çərşənbə axşamı"}
-                "0"{"bu çərşənbə axşamı"}
-                "1"{"gələn çərşənbə axşamı"}
+                "-1"{"keçən ÇƏ"}
+                "0"{"bu ÇƏ"}
+                "1"{"gələn ÇƏ"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} çərşənbə axşamı ərzində"}
+                    other{"{0} çərşənbə axşamı ərzində"}
+                }
+                past{
+                    one{"{0} çərşənbə axşamı öncə"}
+                    other{"{0} çərşənbə axşamı öncə"}
+                }
             }
         }
         wed{
@@ -1153,12 +1460,32 @@ az{
                 "0"{"bu çərşənbə"}
                 "1"{"gələn çərşənbə"}
             }
+            relativeTime{
+                future{
+                    one{"{0} çərşənbə ərzində"}
+                    other{"{0} çərşənbə ərzində"}
+                }
+                past{
+                    one{"{0} çərşənbə öncə"}
+                    other{"{0} çərşənbə öncə"}
+                }
+            }
         }
         wed-narrow{
             relative{
-                "-1"{"keçən çərşənbə"}
-                "0"{"bu çərşənbə"}
-                "1"{"gələn çərşənbə"}
+                "-1"{"keçən Ç"}
+                "0"{"bu Ç"}
+                "1"{"gələn Ç"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} çərşənbə ərzində"}
+                    other{"{0} çərşənbə ərzində"}
+                }
+                past{
+                    one{"{0} çərşənbə öncə"}
+                    other{"{0} çərşənbə öncə"}
+                }
             }
         }
         wed-short{
@@ -1166,6 +1493,16 @@ az{
                 "-1"{"keçən çərşənbə"}
                 "0"{"bu çərşənbə"}
                 "1"{"gələn çərşənbə"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} çərşənbə ərzində"}
+                    other{"{0} çərşənbə ərzində"}
+                }
+                past{
+                    one{"{0} çərşənbə öncə"}
+                    other{"{0} çərşənbə öncə"}
+                }
             }
         }
         week{
@@ -1175,6 +1512,7 @@ az{
                 "0"{"bu həftə"}
                 "1"{"gələn həftə"}
             }
+            relativePeriod{"{0} həftəsi"}
             relativeTime{
                 future{
                     one{"{0} həftə ərzində"}
@@ -1188,6 +1526,7 @@ az{
         }
         week-narrow{
             dn{"həftə"}
+            relativePeriod{"{0} həftəsi"}
             relativeTime{
                 future{
                     one{"{0} həftə ərzində"}
@@ -1201,6 +1540,7 @@ az{
         }
         week-short{
             dn{"həftə"}
+            relativePeriod{"{0} həftəsi"}
             relativeTime{
                 future{
                     one{"{0} həftə ərzində"}
@@ -1270,9 +1610,15 @@ az{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
-        unit{
+        standard-short{
             2{"{0} və {1}"}
             end{"{0} və {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }

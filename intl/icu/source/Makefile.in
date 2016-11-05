@@ -1,6 +1,8 @@
+# Copyright (C) 2016 and later: Unicode, Inc. and others.
+# License & terms of use: http://www.unicode.org/copyright.html
 #******************************************************************************
 #
-#   Copyright (C) 1998-2015, International Business Machines
+#   Copyright (C) 1998-2016, International Business Machines
 #   Corporation and others.  All Rights Reserved.
 #
 #******************************************************************************
@@ -29,7 +31,6 @@ subdir = .
 #AUTOCONF = @AUTOCONF@
 
 ## Optional directory setup
-@LAYOUT_TRUE@LAYOUT = layout
 @LAYOUTEX_TRUE@LAYOUTEX = layoutex
 @ICUIO_TRUE@ICUIO = io
 @EXTRAS_TRUE@EXTRA = extra
@@ -39,7 +40,6 @@ subdir = .
 
 ## pkgconfig setup. Always have uc and i18n. Others are optional.
 ALL_PKGCONFIG_SUFFIX=uc i18n
-@LAYOUT_TRUE@ALL_PKGCONFIG_SUFFIX+= le
 @LAYOUTEX_TRUE@ALL_PKGCONFIG_SUFFIX+= lx
 @ICUIO_TRUE@ALL_PKGCONFIG_SUFFIX+= io
 
@@ -58,7 +58,7 @@ INSTALLED_BUILT_FILES = $(top_builddir)/config/Makefile.inc $(top_builddir)/conf
 LOCAL_BUILT_FILES = icudefs.mk config/icucross.mk config/icucross.inc
 
 DOCDIRS = common i18n
-SUBDIRS =  stubdata common i18n $(LAYOUT) $(LAYOUTEX) $(ICUIO) $(TOOLS) data $(EXTRA) $(SAMPLE) $(TEST)
+SUBDIRS =  stubdata common i18n $(LAYOUTEX) $(ICUIO) $(TOOLS) data $(EXTRA) $(SAMPLE) $(TEST)
 
 SECTION = 1
 
@@ -113,13 +113,13 @@ doc doc-searchengine:
 else
 doc: doc/html/index.html
 
-doc-searchengine: Doxyfile $(wildcard ./common/unicode/platform.h $(srcdir)/common/unicode/*.h $(srcdir)/i18n/unicode/*.h $(srcdir)/layout/unicode/*.h $(srcdir)/io/unicode/*.h)
+doc-searchengine: Doxyfile $(wildcard ./common/unicode/platform.h $(srcdir)/common/unicode/*.h $(srcdir)/i18n/unicode/*.h $(srcdir)/io/unicode/*.h)
 	sed < Doxyfile -e 's%[^#]*SEARCHENGINE.*%SEARCHENGINE=YES%' | $(DOXYGEN) -
 	@echo adding links from non-namespaced class files
 	find doc/html -name 'classicu_1_1*' -print | sed -e 's%^\(.*class\)icu_1_1\(.*\)$$%ln & \1\2%' | sh
 	@echo Docs created - WARNING, probably contains non-GPL .js files
 
-doc/html/index.html: Doxyfile $(wildcard ./common/unicode/platform.h $(srcdir)/common/unicode/*.h $(srcdir)/i18n/unicode/*.h $(srcdir)/layout/unicode/*.h $(srcdir)/io/unicode/*.h)
+doc/html/index.html: Doxyfile $(wildcard ./common/unicode/platform.h $(srcdir)/common/unicode/*.h $(srcdir)/i18n/unicode/*.h $(srcdir)/io/unicode/*.h)
 	$(DOXYGEN)
 	@echo adding links from non-namespaced class files
 	find doc/html -name 'classicu_1_1*' -print | sed -e 's%^\(.*class\)icu_1_1\(.*\)$$%ln & \1\2%' | sh
@@ -184,7 +184,7 @@ install-icu: $(INSTALLED_BUILT_FILES)
 	$(INSTALL_SCRIPT) $(top_srcdir)/install-sh $(DESTDIR)$(pkgdatadir)/install-sh
 	@$(MKINSTALLDIRS) $(DESTDIR)$(libdir)/pkgconfig
 	$(INSTALL_DATA) $(ALL_PKGCONFIG_FILES) $(DESTDIR)$(libdir)/pkgconfig/
-	$(INSTALL_DATA) $(top_srcdir)/../license.html $(DESTDIR)$(pkgdatadir)/license.html
+	$(INSTALL_DATA) $(top_srcdir)/../LICENSE $(DESTDIR)$(pkgdatadir)/LICENSE
 	$(INSTALL_SCRIPT) $(top_builddir)/config/icu-config $(DESTDIR)$(bindir)/icu-config
 	$(INSTALL_DATA) $(top_builddir)/config/Makefile.inc $(DESTDIR)$(pkglibdir)/Makefile.inc
 	$(INSTALL_DATA) $(top_builddir)/config/pkgdata.inc $(DESTDIR)$(pkglibdir)/pkgdata.inc
@@ -285,14 +285,6 @@ config/icu-io.pc: config/icu.pc Makefile icudefs.mk
 	@echo "Name: $(PACKAGE)-io" >> $@
 	@echo "Requires: icu-i18n" >> $@
 	@echo "Libs:" "${ICULIBS_IO}" >> $@
-	@echo $@ updated.
-
-config/icu-le.pc: config/icu.pc Makefile icudefs.mk
-	@cat config/icu.pc > $@
-	@echo "Description: $(PACKAGE_ICU_DESCRIPTION): Layout library" >> $@
-	@echo "Name: $(PACKAGE)-le" >> $@
-	@echo "Requires: icu-uc" >> $@
-	@echo "Libs:" "${ICULIBS_LE}" >> $@
 	@echo $@ updated.
 
 ICULEHB_LIBS=@ICULEHB_LIBS@

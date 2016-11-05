@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2002-2012, International Business Machines
+*   Copyright (C) 2002-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -86,8 +88,15 @@ enum {
      * ((ntv>>2)-0xbf) * 60^((ntv&3)+1) = (1..9)*(60^1..60^4)
      */
     UPROPS_NTV_BASE60_START=0x300,
+    /**
+     * Fraction-20 values:
+     * frac20 = ntv-0x324 = 0..0x17 -> 1|3|5|7 / 20|40|80|160|320|640
+     * numerator: num = 2*(frac20&3)+1
+     * denominator: den = 20<<(frac20>>2)
+     */
+    UPROPS_NTV_FRACTION20_START=UPROPS_NTV_BASE60_START+36,  // 0x300+9*4=0x324
     /** No numeric value (yet). */
-    UPROPS_NTV_RESERVED_START=UPROPS_NTV_BASE60_START+36,  /* 0x300+9*4=0x324 */
+    UPROPS_NTV_RESERVED_START=UPROPS_NTV_FRACTION20_START+24,  // 0x324+6*4=0x34c
 
     UPROPS_NTV_MAX_SMALL_INT=UPROPS_NTV_FRACTION_START-UPROPS_NTV_NUMERIC_START-1
 };
@@ -187,13 +196,21 @@ enum {
 /*
  * Properties in vector word 2
  * Bits
- * 31..26   reserved
+ * 31..28   http://www.unicode.org/reports/tr51/#Emoji_Properties
+ * 27..26   reserved
  * 25..20   Line Break
  * 19..15   Sentence Break
  * 14..10   Word Break
  *  9.. 5   Grapheme Cluster Break
  *  4.. 0   Decomposition Type
  */
+enum {
+    UPROPS_2_EMOJI=28,
+    UPROPS_2_EMOJI_PRESENTATION,
+    UPROPS_2_EMOJI_MODIFIER,
+    UPROPS_2_EMOJI_MODIFIER_BASE
+};
+
 #define UPROPS_LB_MASK          0x03f00000
 #define UPROPS_LB_SHIFT         20
 

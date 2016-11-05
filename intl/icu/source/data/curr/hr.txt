@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/hr.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 hr{
     Currencies{
         ADP{
@@ -224,9 +218,13 @@ hr{
             "BYB",
             "bjeloruska nova rublja (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "bjeloruska rublja",
+        }
         BYR{
             "BYR",
-            "bjeloruska rublja",
+            "bjeloruska rublja (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1046,7 +1044,7 @@ hr{
         }
         VUV{
             "VUV",
-            "vanuatuški vatu",
+            "vanuatski vatu",
         }
         WST{
             "WST",
@@ -1210,7 +1208,7 @@ hr{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1228,6 +1226,7 @@ hr{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1563,10 +1562,15 @@ hr{
             one{"bjeloruska nova rublja (1994–1999)"}
             other{"bjeloruskih novih rublji (1994–1999)"}
         }
-        BYR{
+        BYN{
             few{"bjeloruske rublje"}
             one{"bjeloruska rublja"}
             other{"bjeloruskih rublji"}
+        }
+        BYR{
+            few{"bjeloruske rublje (2000–2016)"}
+            one{"bjeloruska rublja (2000–2016)"}
+            other{"bjeloruskih rublji (2000–2016)"}
         }
         BZD{
             few{"belizeanska dolara"}
@@ -2779,5 +2783,5 @@ hr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.79"}
 }
