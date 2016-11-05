@@ -52,6 +52,7 @@ public:
 
   media::TimeUnit StartTime() const;
   RefPtr<MetadataPromise> ReadMetadata();
+  RefPtr<HaveStartTimePromise> AwaitStartTime();
 
   decltype(mAudioCallback)& AudioCallback() { return mAudioCallback; }
   decltype(mVideoCallback)& VideoCallback() { return mVideoCallback; }
