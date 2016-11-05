@@ -83,6 +83,18 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_MEMORY']:
 # Omit unused functions to save some library footprint.
 DEFINES['SQLITE_OMIT_DEPRECATED'] = True
 DEFINES['SQLITE_OMIT_BUILTIN_TEST'] = True
+DEFINES['SQLITE_OMIT_DECLTYPE'] = True
+
+# Try to use a MEMORY temp store when possible. That allows for better
+# performance and doesn't suffer from a full separate tmp partition.
+# Exclude 32bit platforms due to address space fragmentation issues.
+# System Sqlite is managed through a PRAGMA instead.
+if CONFIG['OS_TARGET'] == 'Android':
+    # On Android there's no tmp partition, so always use a MEMORY temp store.
+    DEFINES['SQLITE_TEMP_STORE'] = 3
+elif CONFIG['HAVE_64BIT_BUILD']:
+    # On 64bit platforms default to a MEMORY temp store for performance.
+    DEFINES['SQLITE_TEMP_STORE'] = 2
 
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:

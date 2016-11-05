@@ -430,6 +430,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'GeckoService.java',
     'GeckoUpdateReceiver.java',
     'GlobalHistory.java',
+    'GlobalPageMetadata.java',
     'GuestSession.java',
     'health/HealthRecorder.java',
     'health/SessionInformation.java',

@@ -6,12 +6,12 @@ load 83804-1.gif
 load 89341-1.gif
 load 463696.bmp
 load 570451.png
-skip-if(Android||B2G) load 694165-1.xhtml # Bug 876275
+skip-if(Android) load 694165-1.xhtml
 load 681190.html
 load 732319-1.html
 load 844403-1.html
 load 856616.gif
-skip-if(B2G) load 944353.jpg
+load 944353.jpg
 load 1205923-1.html
 # Ensure we handle detecting that an image is animated, then failing to decode
 # it. (See bug 1210745.)
@@ -28,8 +28,8 @@ load colormap-range.gif
 HTTP load delayedframe.sjs # A 3-frame animated GIF with an inordinate delay between the second and third frame
 
 # Animated gifs with a very large canvas, but tiny actual content.
-skip-if(B2G) load delaytest.html?523528-1.gif
-skip-if(B2G) load delaytest.html?523528-2.gif
+load delaytest.html?523528-1.gif
+load delaytest.html?523528-2.gif
 
 # Bug 1160801 - Ensure that we handle invalid disposal types.
 load invalid-disposal-method-1.gif

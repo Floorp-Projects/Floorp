@@ -44,7 +44,7 @@ load 455451-1.html
 load 457537-1.html
 load 457537-2.html
 load 478219-1.xhtml
-skip-if(B2G) load 498698-1.html # bug 833371
+load 498698-1.html
 load 513113-1.html
 load 538062-1.xhtml
 load 570624-1.html

@@ -38,7 +38,7 @@ load 393822-1.html
 load 394384-1.html
 load 394246-1.html
 load 394246-2.html
-skip-if(Android||B2G) load 394751.xhtml # bug 922976
+skip-if(Android) load 394751.xhtml # bug 922976
 load 395335-1.xhtml
 load 395458-1.html
 load 396321-1.svg
@@ -112,7 +112,7 @@ load 783041-3.html
 load 783041-4.html
 load 798853.html # bug 868792
 load 805760-1.html
-skip-if(Android||B2G) load 815489.html # bug 871763, 1216304
+skip-if(Android) load 815489.html # bug 1216304
 load 836225-1.html
 load 839745-1.html
 load 856784-1.html

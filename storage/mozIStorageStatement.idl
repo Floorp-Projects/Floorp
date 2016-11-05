@@ -66,16 +66,6 @@ interface mozIStorageStatement : mozIStorageBaseStatement {
   unsigned long getColumnIndex(in AUTF8String aName);
 
   /**
-   * Obtains the declared column type of a prepared statement.
-   *
-   * @param aParamIndex
-   *        The zero-based index of the column who's declared type we are
-   *        interested in.
-   * @return the declared index type.
-   */
-  AUTF8String getColumnDecltype(in unsigned long aParamIndex);
-
-  /**
    * Reset parameters/statement execution
    */
   void reset();
