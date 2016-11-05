@@ -260,25 +260,13 @@ nsCSSToken::AppendToString(nsString& aBuffer) const
     case eCSSToken_Bad_URL:
       aBuffer.AppendLiteral("url(");
       if (mSymbol != char16_t(0)) {
-        if (mType == eCSSToken_URL) {
-          nsStyleUtil::AppendEscapedCSSString(mIdent, aBuffer, mSymbol);
-        } else {
-          // Only things up to mInteger were part of the string.
-          nsStyleUtil::AppendEscapedCSSString(StringHead(mIdent, mInteger),
-                                              aBuffer, mSymbol);
-          MOZ_ASSERT(mInteger2 == 0 || mInteger2 == 1);
-          if (mInteger2 == 1) {
-            // This was a Bad_String; strip off the closing quote.
-            aBuffer.Truncate(aBuffer.Length() - 1);
-          }
-
-          // Now append the remaining garbage.
-          aBuffer.Append(Substring(mIdent, mInteger));
-        }
+        nsStyleUtil::AppendEscapedCSSString(mIdent, aBuffer, mSymbol);
       } else {
         aBuffer.Append(mIdent);
       }
-      aBuffer.Append(char16_t(')'));
+      if (mType == eCSSToken_URL) {
+        aBuffer.Append(char16_t(')'));
+      }
       break;
 
     case eCSSToken_Number:
@@ -1182,9 +1170,6 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
     ScanString(aToken);
     if (MOZ_UNLIKELY(aToken.mType == eCSSToken_Bad_String)) {
       aToken.mType = eCSSToken_Bad_URL;
-      // Flag us as having been a Bad_String.
-      aToken.mInteger2 = 1;
-      ConsumeBadURLRemnants(aToken);
       return;
     }
     MOZ_ASSERT(aToken.mType == eCSSToken_String, "unexpected token type");
@@ -1208,44 +1193,7 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
   } else {
     mSeenBadToken = true;
     aToken.mType = eCSSToken_Bad_URL;
-    if (aToken.mSymbol != 0) {
-      // Flag us as having been a String, not a Bad_String.
-      aToken.mInteger2 = 0;
-    }
-    ConsumeBadURLRemnants(aToken);
   }
-}
-
-void
-nsCSSScanner::ConsumeBadURLRemnants(nsCSSToken& aToken)
-{
-  aToken.mInteger = aToken.mIdent.Length();
-  int32_t ch = Peek();
-  do {
-    if (ch < 0) {
-      AddEOFCharacters(eEOFCharacters_CloseParen);
-      break;
-    }
-
-    if (ch == '\\' && GatherEscape(aToken.mIdent, false)) {
-      // Nothing else needs to be done here for the moment; we've consumed the
-      // backslash and following escape.
-    } else {
-      // We always want to consume this character.
-      if (IsVertSpace(ch)) {
-        AdvanceLine();
-      } else {
-        Advance();
-      }
-      if (ch == 0) {
-        aToken.mIdent.Append(UCS2_REPLACEMENT_CHAR);
-      } else {
-        aToken.mIdent.Append(ch);
-      }
-    }
-
-    ch = Peek();
-  } while (ch != ')');
 }
 
 /**
