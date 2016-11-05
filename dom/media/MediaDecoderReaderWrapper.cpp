@@ -153,7 +153,7 @@ MediaDecoderReaderWrapper::StartTime() const
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
-  return mStartTime.ref();
+  return media::TimeUnit::FromMicroseconds(mStartTimeRendezvous->StartTime());
 }
 
 RefPtr<MediaDecoderReaderWrapper::MetadataPromise>
@@ -186,6 +186,13 @@ MediaDecoderReaderWrapper::RequestAudioData()
   auto p = InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
                        &MediaDecoderReader::RequestAudioData);
 
+  if (!mStartTimeRendezvous->HaveStartTime()) {
+    p = p->Then(mOwnerThread, __func__, mStartTimeRendezvous.get(),
+                &StartTimeRendezvous::ProcessFirstSample<MediaData::AUDIO_DATA>,
+                &StartTimeRendezvous::FirstSampleRejected<MediaData::AUDIO_DATA>)
+         ->CompletionPromise();
+  }
+
   RefPtr<MediaDecoderReaderWrapper> self = this;
   mAudioDataRequest.Begin(p->Then(mOwnerThread, __func__,
     [self] (MediaData* aAudioSample) {
@@ -210,13 +217,21 @@ MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
   // a TimeStamp as its second parameter.
   TimeStamp videoDecodeStartTime = TimeStamp::Now();
 
-  if (aTimeThreshold.ToMicroseconds() > 0) {
+  if (aTimeThreshold.ToMicroseconds() > 0 &&
+      mStartTimeRendezvous->HaveStartTime()) {
     aTimeThreshold += StartTime();
   }
 
   auto p = InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
                        &MediaDecoderReader::RequestVideoData,
                        aSkipToNextKeyframe, aTimeThreshold.ToMicroseconds());
+
+  if (!mStartTimeRendezvous->HaveStartTime()) {
+    p = p->Then(mOwnerThread, __func__, mStartTimeRendezvous.get(),
+                &StartTimeRendezvous::ProcessFirstSample<MediaData::VIDEO_DATA>,
+                &StartTimeRendezvous::FirstSampleRejected<MediaData::VIDEO_DATA>)
+         ->CompletionPromise();
+  }
 
   RefPtr<MediaDecoderReaderWrapper> self = this;
   mVideoDataRequest.Begin(p->Then(mOwnerThread, __func__,
@@ -374,13 +389,23 @@ MediaDecoderReaderWrapper::OnMetadataRead(MetadataHolder* aMetadata)
   if (mShutdown) {
     return;
   }
+  // Set up the start time rendezvous if it doesn't already exist (which is
+  // generally the case, unless we're coming out of dormant mode).
+  if (!mStartTimeRendezvous) {
+    mStartTimeRendezvous = new StartTimeRendezvous(
+      mOwnerThread, aMetadata->mInfo.HasAudio(),
+      aMetadata->mInfo.HasVideo(), mForceZeroStartTime);
 
-  if (mStartTime.isNothing()) {
-    mStartTime.emplace(aMetadata->mInfo.mStartTime);
-    // Note: MFR should be able to setup its start time by itself without going
-    // through here. MediaDecoderReader::DispatchSetStartTime() will be removed
-    // once we remove all the legacy readers' code in the following bugs.
-    mReader->DispatchSetStartTime(StartTime().ToMicroseconds());
+    RefPtr<MediaDecoderReaderWrapper> self = this;
+    mStartTimeRendezvous->AwaitStartTime()->Then(
+      mOwnerThread, __func__,
+      [self] ()  {
+        NS_ENSURE_TRUE_VOID(!self->mShutdown);
+        self->mReader->DispatchSetStartTime(self->StartTime().ToMicroseconds());
+      },
+      [] () {
+        NS_WARNING("Setting start time on reader failed");
+      });
   }
 }
 
