@@ -1947,8 +1947,16 @@ MediaFormatReader::SetSeekTarget(const SeekTarget& aTarget)
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  mOriginalSeekTarget = aTarget;
-  mFallbackSeekTime = mPendingSeekTime = Some(aTarget.GetTime());
+  SeekTarget target = aTarget;
+
+  // Transform the seek target time to the demuxer timeline.
+  if (!ForceZeroStartTime()) {
+    target.SetTime(aTarget.GetTime() - TimeUnit::FromMicroseconds(StartTime())
+                   + mInfo.mStartTime);
+  }
+
+  mOriginalSeekTarget = target;
+  mFallbackSeekTime = mPendingSeekTime = Some(target.GetTime());
 }
 
 void
