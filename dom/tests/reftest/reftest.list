@@ -3,11 +3,11 @@
 == bug456008.xhtml bug456008-ref.html
 fuzzy-if(skiaContent,2,3) == bug439965.html bug439965-ref.html
 == bug427779.xml bug427779-ref.xml
-skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,5) == bug559996.html bug559996-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == bug591981-1.html bug591981-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(skiaContent,1,5) == bug559996.html bug559996-ref.html
+== bug591981-1.html bug591981-ref.html
 == bug591981-2.html bug591981-ref.html
 == bug592366-1.html bug592366-ref.html
-skip-if(B2G||Mulet) == bug592366-2.html bug592366-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == bug592366-1.xhtml bug592366-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == bug592366-2.xhtml bug592366-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
+== bug592366-2.html bug592366-ref.html
+== bug592366-1.xhtml bug592366-ref.xhtml
+== bug592366-2.xhtml bug592366-ref.xhtml
 == bug798068.xhtml bug798068-ref.xhtml
