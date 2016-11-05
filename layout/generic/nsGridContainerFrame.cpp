@@ -43,6 +43,7 @@ const uint32_t nsGridContainerFrame::kTranslatedMaxLine =
 const uint32_t nsGridContainerFrame::kAutoLine = kTranslatedMaxLine + 3457U;
 typedef nsTHashtable< nsPtrHashKey<nsIFrame> > FrameHashtable;
 typedef mozilla::CSSAlignUtils::AlignJustifyFlags AlignJustifyFlags;
+typedef nsLayoutUtils::IntrinsicISizeType IntrinsicISizeType;
 
 // https://drafts.csswg.org/css-sizing/#constraints
 enum class SizingConstraint
@@ -223,6 +224,10 @@ struct nsGridContainerFrame::TrackSize
   {
     return aCoord.GetUnit() == eStyleUnit_Enumerated &&
       aCoord.GetIntValue() == NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT;
+  }
+  static bool IsDefiniteMaxSizing(StateBits aStateBits)
+  {
+    return (aStateBits & (eIntrinsicMaxSizing | eFlexMaxSizing)) == 0;
   }
 
   nscoord mBase;
@@ -842,6 +847,30 @@ struct nsGridContainerFrame::GridItemInfo
     }
     *aBaselineOffset = mBaselineOffset[aAxis];
     return aAlign;
+  }
+
+  // Return true if we should we clamp this item's Automatic Minimum Size.
+  // https://drafts.csswg.org/css-grid/#min-size-auto
+  bool ShouldClampMinSize(WritingMode aContainerWM,
+                          LogicalAxis aContainerAxis,
+                          nscoord aPercentageBasis) const
+  {
+    const auto pos = mFrame->StylePosition();
+    const auto& size = aContainerAxis == eLogicalAxisInline ?
+      pos->ISize(aContainerWM) : pos->BSize(aContainerWM);
+    // NOTE: if we have a definite or 'max-content' size then our automatic
+    // minimum size can't affect our size.  Excluding these simplifies applying
+    // the clamping in the right cases later.
+    if (size.GetUnit() == eStyleUnit_Auto ||
+        ::IsPercentOfIndefiniteSize(size, aPercentageBasis) || // same as 'auto'
+        (size.GetUnit() == eStyleUnit_Enumerated &&
+         size.GetIntValue() != NS_STYLE_WIDTH_MAX_CONTENT)) {
+      const auto& minSize = aContainerAxis == eLogicalAxisInline ?
+        pos->MinISize(aContainerWM) : pos->MinBSize(aContainerWM);
+      return minSize.GetUnit() == eStyleUnit_Auto &&
+             mFrame->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE;
+    }
+    return false;
   }
 
 #ifdef DEBUG
@@ -3698,19 +3727,21 @@ MeasuringReflow(nsIFrame*                aChild,
  * the child's margin-box) in aAxis.
  */
 static nscoord
-ContentContribution(const GridItemInfo&               aGridItem,
-                    const GridReflowInput&            aState,
-                    nsRenderingContext*               aRC,
-                    WritingMode                       aCBWM,
-                    LogicalAxis                       aAxis,
-                    nsLayoutUtils::IntrinsicISizeType aConstraint,
-                    uint32_t                          aFlags = 0)
+ContentContribution(const GridItemInfo&    aGridItem,
+                    const GridReflowInput& aState,
+                    nsRenderingContext*    aRC,
+                    WritingMode            aCBWM,
+                    LogicalAxis            aAxis,
+                    IntrinsicISizeType     aConstraint,
+                    nscoord                aMinSizeClamp = NS_MAXSIZE,
+                    uint32_t               aFlags = 0)
 {
   nsIFrame* child = aGridItem.mFrame;
   PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
   nscoord size = nsLayoutUtils::IntrinsicForAxis(axis, aRC, child, aConstraint,
                    aFlags | nsLayoutUtils::BAIL_IF_REFLOW_NEEDED |
-                            nsLayoutUtils::ADD_PERCENTS);
+                            nsLayoutUtils::ADD_PERCENTS,
+                   aMinSizeClamp);
   if (size == NS_INTRINSIC_WIDTH_UNKNOWN) {
     // We need to reflow the child to find its BSize contribution.
     // XXX this will give mostly correct results for now (until bug 1174569).
@@ -3737,6 +3768,13 @@ ContentContribution(const GridItemInfo&               aGridItem,
       percent += offsets.hPctPadding;
     }
     size = nsLayoutUtils::AddPercents(size, percent);
+    nscoord overflow = size - aMinSizeClamp;
+    if (MOZ_UNLIKELY(overflow > 0)) {
+      nscoord contentSize = child->ContentBSize(childWM);
+      nscoord newContentSize = std::max(nscoord(0), contentSize - overflow);
+      // XXXmats deal with percentages better, see bug 1300369 comment 27.
+      size -= contentSize - newContentSize;
+    }
   }
   MOZ_ASSERT(aGridItem.mBaselineOffset[aAxis] >= 0,
              "baseline offset should be non-negative at this point");
@@ -3752,6 +3790,13 @@ struct CachedIntrinsicSizes
   Maybe<nscoord> mMinSize;
   Maybe<nscoord> mMinContentContribution;
   Maybe<nscoord> mMaxContentContribution;
+  // "if the grid item spans only grid tracks that have a fixed max track
+  // sizing function, its automatic minimum size in that dimension is
+  // further clamped to less than or equal to the size necessary to fit its
+  // margin box within the resulting grid area (flooring at zero)"
+  // https://drafts.csswg.org/css-grid/#min-size-auto
+  // This is the clamp value to use for that:
+  nscoord mMinSizeClamp = NS_MAXSIZE;
 };
 
 static nscoord
@@ -3766,7 +3811,8 @@ MinContentContribution(const GridItemInfo&    aGridItem,
     return aCache->mMinContentContribution.value();
   }
   nscoord s = ContentContribution(aGridItem, aState, aRC, aCBWM, aAxis,
-                                  nsLayoutUtils::MIN_ISIZE);
+                                  nsLayoutUtils::MIN_ISIZE,
+                                  aCache->mMinSizeClamp);
   aCache->mMinContentContribution.emplace(s);
   return s;
 }
@@ -3783,7 +3829,8 @@ MaxContentContribution(const GridItemInfo&    aGridItem,
     return aCache->mMaxContentContribution.value();
   }
   nscoord s = ContentContribution(aGridItem, aState, aRC, aCBWM, aAxis,
-                                  nsLayoutUtils::PREF_ISIZE);
+                                  nsLayoutUtils::PREF_ISIZE,
+                                  aCache->mMinSizeClamp);
   aCache->mMaxContentContribution.emplace(s);
   return s;
 }
@@ -3837,6 +3884,7 @@ MinSize(const GridItemInfo&    aGridItem,
     MOZ_ASSERT(unit != eStyleUnit_Enumerated || sz == NS_UNCONSTRAINEDSIZE);
     sz = std::min(sz, ContentContribution(aGridItem, aState, aRC, aCBWM, aAxis,
                                           nsLayoutUtils::MIN_ISIZE,
+                                          aCache->mMinSizeClamp,
                                           nsLayoutUtils::MIN_INTRINSIC_ISIZE));
   }
   aCache->mMinSize.emplace(sz);
@@ -3907,6 +3955,13 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   TrackSize& sz = mSizes[aRange.mStart];
   WritingMode wm = aState.mWM;
   nsRenderingContext* rc = &aState.mRenderingContext;
+  if ((sz.mState & TrackSize::eIntrinsicMinSizing) &&
+      TrackSize::IsDefiniteMaxSizing(sz.mState) &&
+      aGridItem.ShouldClampMinSize(wm, mAxis)) {
+    auto maxCoord = aFunctions.MaxSizingFor(aRange.mStart);
+    cache.mMinSizeClamp =
+      nsRuleNode::ComputeCoordPercentCalc(maxCoord, aPercentageBasis);
+  }
   if (sz.mState & TrackSize::eAutoMinSizing) {
     nscoord s;
     if (aConstraint == SizingConstraint::eMinContent) {
@@ -4315,6 +4370,18 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         }
         stateBitsPerSpan[span] |= state;
         CachedIntrinsicSizes cache;
+        if ((state & TrackSize::eIntrinsicMinSizing) &&
+            TrackSize::IsDefiniteMaxSizing(state) &&
+            gridItem.ShouldClampMinSize(wm, mAxis)) {
+          nscoord minSizeClamp = 0;
+          for (auto i = lineRange.mStart, end = lineRange.mEnd; i < end; ++i) {
+            auto maxCoord = aFunctions.MaxSizingFor(i);
+            minSizeClamp +=
+              nsRuleNode::ComputeCoordPercentCalc(maxCoord, aPercentageBasis);
+          }
+          minSizeClamp += mGridGap * (span - 1);
+          cache.mMinSizeClamp = minSizeClamp;
+        }
         nscoord minSize = 0;
         if (state & (TrackSize::eIntrinsicMinSizing |   // for 2.1
                      TrackSize::eIntrinsicMaxSizing)) { // for 2.5
