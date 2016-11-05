@@ -1748,10 +1748,13 @@ void close_wasapi_stream(cubeb_stream * stm)
   SafeRelease(stm->output_client);
   stm->output_client = NULL;
   SafeRelease(stm->input_client);
-  stm->capture_client = NULL;
+  stm->input_client = NULL;
 
   SafeRelease(stm->render_client);
   stm->render_client = NULL;
+
+  SafeRelease(stm->capture_client);
+  stm->capture_client = NULL;
 
   SafeRelease(stm->audio_stream_volume);
   stm->audio_stream_volume = NULL;

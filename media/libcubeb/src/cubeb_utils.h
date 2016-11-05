@@ -212,18 +212,4 @@ private:
   owned_critical_section & lock;
 };
 
-struct auto_unlock {
-  explicit auto_unlock(owned_critical_section & lock)
-    : lock(lock)
-  {
-    lock.leave();
-  }
-  ~auto_unlock()
-  {
-    lock.enter();
-  }
-private:
-  owned_critical_section & lock;
-};
-
 #endif /* CUBEB_UTILS */
