@@ -5426,20 +5426,15 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
                    const mozilla::LogicalSize& aPadding)
 {
   const nsStylePosition* stylePos = aFrame->StylePosition();
-
-  // If we're a flex item, we'll compute our size a bit differently.
-  bool isVertical = aWM.IsVertical();
   const nsStyleCoord* inlineStyleCoord = &stylePos->ISize(aWM);
   const nsStyleCoord* blockStyleCoord = &stylePos->BSize(aWM);
-
-  nsIAtom* parentFrameType =
+  const nsIAtom* parentFrameType =
     aFrame->GetParent() ? aFrame->GetParent()->GetType() : nullptr;
   const bool isGridItem = (parentFrameType == nsGkAtoms::gridContainerFrame &&
                            !(aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW));
   const bool isFlexItem = (parentFrameType == nsGkAtoms::flexContainerFrame &&
                            !(aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW));
   bool isInlineFlexItem = false;
-
   Maybe<nsStyleCoord> imposedMainSizeStyleCoord;
 
   // If this is a flex item, and we're measuring its cross size after flexing
@@ -5605,6 +5600,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
   NS_ASSERTION(aCBSize.ISize(aWM) != NS_UNCONSTRAINEDSIZE,
                "Our containing block must not have unconstrained inline-size!");
 
+  const bool isVertical = aWM.IsVertical();
   const nsStyleCoord& isizeCoord =
     isVertical ? aIntrinsicSize.height : aIntrinsicSize.width;
   const nsStyleCoord& bsizeCoord =
