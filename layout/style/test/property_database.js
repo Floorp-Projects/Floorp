@@ -4486,13 +4486,13 @@ var gCSSProperties = {
     initial_values: [ "normal" ],
     other_values: [ "start", "end", "flex-start", "flex-end", "center", "left",
                     "right", "space-between", "space-around", "space-evenly",
-                    "baseline", "last-baseline", "stretch", "start safe",
+                    "first baseline", "last baseline", "baseline", "stretch", "start safe",
                     "unsafe end", "unsafe end stretch", "end safe space-evenly" ],
     invalid_values: [ "none", "5", "self-end", "safe", "normal unsafe", "unsafe safe",
                       "safe baseline", "baseline unsafe", "baseline end", "end normal",
                       "safe end unsafe start", "safe end unsafe", "normal safe start",
                       "unsafe end start", "end start safe", "space-between unsafe",
-                      "stretch safe", "auto" ]
+                      "stretch safe", "auto", "first", "last" ]
   },
   "align-items": {
     domProp: "alignItems",
@@ -4501,8 +4501,8 @@ var gCSSProperties = {
     initial_values: [ "normal" ],
     // Can't test 'left'/'right' here since that computes to 'start' for blocks.
     other_values: [ "end", "flex-start", "flex-end", "self-start", "self-end",
-                    "center", "stretch", "baseline", "unsafe left", "start",
-                    "center unsafe", "safe right", "center safe" ],
+                    "center", "stretch", "first baseline", "last baseline", "baseline",
+                    "unsafe left", "start", "center unsafe", "safe right", "center safe" ],
     invalid_values: [ "space-between", "abc", "5%", "legacy", "legacy end",
                       "end legacy", "unsafe", "unsafe baseline", "normal unsafe",
                       "safe left unsafe", "safe stretch", "end end", "auto" ]
@@ -4513,8 +4513,8 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "auto" ],
     other_values: [ "normal", "start", "flex-start", "flex-end", "center", "stretch",
-                    "baseline", "last-baseline", "right safe", "unsafe center",
-                    "self-start", "self-end safe" ],
+                    "first baseline", "last baseline", "baseline", "right safe",
+                    "unsafe center", "self-start", "self-end safe" ],
     invalid_values: [ "space-between", "abc", "30px", "stretch safe", "safe" ]
   },
   "justify-content": {
@@ -4524,13 +4524,13 @@ var gCSSProperties = {
     initial_values: [ "normal" ],
     other_values: [ "start", "end", "flex-start", "flex-end", "center", "left",
                     "right", "space-between", "space-around", "space-evenly",
-                    "baseline", "last-baseline", "stretch", "start safe",
+                    "first baseline", "last baseline", "baseline", "stretch", "start safe",
                     "unsafe end", "unsafe end stretch", "end safe space-evenly" ],
     invalid_values: [ "30px", "5%", "self-end", "safe", "normal unsafe", "unsafe safe",
                       "safe baseline", "baseline unsafe", "baseline end", "normal end",
                       "safe end unsafe start", "safe end unsafe", "normal safe start",
                       "unsafe end start", "end start safe", "space-around unsafe",
-                      "safe stretch", "auto" ]
+                      "safe stretch", "auto", "first", "last" ]
   },
   "justify-items": {
     domProp: "justifyItems",
@@ -4538,14 +4538,15 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "auto", "normal" ],
     other_values: [ "end", "flex-start", "flex-end", "self-start", "self-end",
-                    "center", "left", "right", "baseline", "stretch", "start",
-                    "legacy left", "right legacy", "legacy center",
-                    "unsafe right", "left unsafe", "safe right", "center safe" ],
+                    "center", "left", "right", "first baseline", "last baseline",
+                    "baseline", "stretch", "start", "legacy left", "right legacy",
+                    "legacy center", "unsafe right", "left unsafe", "safe right",
+                    "center safe" ],
     invalid_values: [ "space-between", "abc", "30px", "legacy", "legacy start",
                       "end legacy", "legacy baseline", "legacy legacy", "unsafe",
                       "safe legacy left", "legacy left safe", "legacy safe left",
                       "safe left legacy", "legacy left legacy", "baseline unsafe",
-                      "safe unsafe", "safe left unsafe", "safe stretch" ]
+                      "safe unsafe", "safe left unsafe", "safe stretch", "last" ]
   },
   "justify-self": {
     domProp: "justifySelf",
@@ -4553,11 +4554,11 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "auto" ],
     other_values: [ "normal", "start", "end", "flex-start", "flex-end", "self-start",
-                    "self-end", "center", "left", "right", "baseline",
-                    "last-baseline", "stretch", "left unsafe", "unsafe right",
+                    "self-end", "center", "left", "right", "baseline", "first baseline",
+                    "last baseline", "stretch", "left unsafe", "unsafe right",
                     "safe right", "center safe" ],
-    invalid_values: [ "space-between", "abc", "30px", "none",
-                      "legacy left", "right legacy" ]
+    invalid_values: [ "space-between", "abc", "30px", "none", "first", "last",
+                      "legacy left", "right legacy", "baseline first", "baseline last" ]
   },
   "flex": {
     domProp: "flex",
