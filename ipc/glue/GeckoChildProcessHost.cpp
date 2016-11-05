@@ -841,6 +841,27 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   }
 #endif // MOZ_WIDGET_GONK
 
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+  // Preload libmozsandbox.so so that sandbox-related interpositions
+  // can be defined there instead of in the executable.
+  // (This could be made conditional on intent to use sandboxing, but
+  // it's harmless for non-sandboxed processes.)
+  {
+    nsAutoCString preload;
+    // Prepend this, because people can and do preload libpthread.
+    // (See bug 1222500.)
+    preload.AssignLiteral("libmozsandbox.so");
+    if (const char* oldPreload = PR_GetEnv("LD_PRELOAD")) {
+      // Doesn't matter if oldPreload is ""; extra separators are ignored.
+      preload.Append(' ');
+      preload.Append(oldPreload);
+    }
+    // Explicitly construct the std::string to make it clear that this
+    // isn't retaining a pointer to the nsCString's buffer.
+    newEnvVars["LD_PRELOAD"] = std::string(preload.get());
+  }
+#endif
+
   // remap the IPC socket fd to a well-known int, as the OS does for
   // STDOUT_FILENO, for example
   int srcChannelFd, dstChannelFd;

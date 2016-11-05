@@ -13,7 +13,7 @@
 #include <stdlib.h>
 
 // Signal number used to enable seccomp on each thread.
-extern MOZ_EXPORT int gSeccompTsyncBroadcastSignum;
+extern int gSeccompTsyncBroadcastSignum;
 
 // This file defines a hook for sigprocmask() and pthread_sigmask().
 // Bug 1176099: some threads block SIGSYS signal which breaks our seccomp-bpf
