@@ -93,7 +93,8 @@ function initializeDefaultPreferences() {
   "useOnlyCssZoom": false,
   "externalLinkTarget": 0,
   "enhanceTextSelection": false,
-  "renderInteractiveForms": false
+  "renderInteractiveForms": false,
+  "disablePageLabels": false
 }
 
 
