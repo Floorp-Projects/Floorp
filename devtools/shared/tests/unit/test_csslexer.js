@@ -128,9 +128,8 @@ var LEX_TESTS = [
              ["url:http://example.com"]],
   // In CSS Level 3, this is an ordinary URL, not a BAD_URL.
   ["url(http://example.com", ["url:http://example.com"]],
-  // We end up losing the whitespace before the '@' because it's skipped by the
-  // lexer before we discover we have a BAD_URL token.
-  ["url(http://example.com @", ["bad_url:http://example.com@"]],
+  // See bug 1153981 to understand why this gets a SYMBOL token.
+  ["url(http://example.com @", ["bad_url:http://example.com", "symbol:@"]],
   ["quo\\ting", ["ident:quoting"]],
   ["'bad string\n", ["bad_string:bad string", "whitespace"]],
   ["~=", ["includes"]],
