@@ -200,6 +200,45 @@ const JNINativeMethod CodecProxy::NativeCallbacks::Natives<Impl>::methods[] = {
             ::template Wrap<&Impl::OnOutputFormatChanged>)
 };
 
+template<class Impl>
+class MediaDrmProxy::NativeMediaDrmProxyCallbacks::Natives : public mozilla::jni::NativeImpl<NativeMediaDrmProxyCallbacks, Impl>
+{
+public:
+    static const JNINativeMethod methods[7];
+};
+
+template<class Impl>
+const JNINativeMethod MediaDrmProxy::NativeMediaDrmProxyCallbacks::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnRejectPromise_t>(
+            mozilla::jni::NativeStub<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnRejectPromise_t, Impl>
+            ::template Wrap<&Impl::OnRejectPromise>),
+
+    mozilla::jni::MakeNativeMethod<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnSessionBatchedKeyChanged_t>(
+            mozilla::jni::NativeStub<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnSessionBatchedKeyChanged_t, Impl>
+            ::template Wrap<&Impl::OnSessionBatchedKeyChanged>),
+
+    mozilla::jni::MakeNativeMethod<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnSessionClosed_t>(
+            mozilla::jni::NativeStub<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnSessionClosed_t, Impl>
+            ::template Wrap<&Impl::OnSessionClosed>),
+
+    mozilla::jni::MakeNativeMethod<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnSessionCreated_t>(
+            mozilla::jni::NativeStub<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnSessionCreated_t, Impl>
+            ::template Wrap<&Impl::OnSessionCreated>),
+
+    mozilla::jni::MakeNativeMethod<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnSessionError_t>(
+            mozilla::jni::NativeStub<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnSessionError_t, Impl>
+            ::template Wrap<&Impl::OnSessionError>),
+
+    mozilla::jni::MakeNativeMethod<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnSessionMessage_t>(
+            mozilla::jni::NativeStub<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnSessionMessage_t, Impl>
+            ::template Wrap<&Impl::OnSessionMessage>),
+
+    mozilla::jni::MakeNativeMethod<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnSessionUpdated_t>(
+            mozilla::jni::NativeStub<MediaDrmProxy::NativeMediaDrmProxyCallbacks::OnSessionUpdated_t, Impl>
+            ::template Wrap<&Impl::OnSessionUpdated>)
+};
+
 } /* java */
 } /* mozilla */
 #endif // FennecJNINatives_h

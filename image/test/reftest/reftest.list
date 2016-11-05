@@ -6,18 +6,18 @@ skip-if(Android) == colordepth.html about:blank
 #
 # http://www.schaik.com/pngsuite/pngsuite.html
 # http://www.libpng.org/pub/png/pngsuite.html
-skip-if(B2G) include pngsuite-basic-n/reftest.list      # bug 783632
-skip-if(B2G) include pngsuite-basic-i/reftest.list      # bug 783632
-skip-if(B2G) include pngsuite-ancillary/reftest.list    # bug 783632
-skip-if(B2G) include pngsuite-background/reftest.list   # bug 783632
-skip-if(B2G) include pngsuite-chunkorder/reftest.list   # bug 783632
-skip-if(B2G) include pngsuite-corrupted/reftest.list    # bug 783632
-skip-if(B2G) include pngsuite-filtering/reftest.list    # bug 783632
-skip-if(B2G) include pngsuite-gamma/reftest.list        # bug 783632
-skip-if(B2G) include pngsuite-oddsizes/reftest.list     # bug 783632
-skip-if(B2G) include pngsuite-palettes/reftest.list     # bug 783632
-skip-if(B2G) include pngsuite-transparency/reftest.list # bug 783632
-skip-if(B2G) include pngsuite-zlib/reftest.list         # bug 783632
+include pngsuite-basic-n/reftest.list
+include pngsuite-basic-i/reftest.list
+include pngsuite-ancillary/reftest.list
+include pngsuite-background/reftest.list
+include pngsuite-chunkorder/reftest.list
+include pngsuite-corrupted/reftest.list
+include pngsuite-filtering/reftest.list
+include pngsuite-gamma/reftest.list
+include pngsuite-oddsizes/reftest.list
+include pngsuite-palettes/reftest.list
+include pngsuite-transparency/reftest.list
+include pngsuite-zlib/reftest.list
 
 # BMP tests
 skip-if(Android) include bmp/reftest.list
@@ -47,4 +47,4 @@ include downscaling/reftest.list
 include blob/reftest.list
 
 # Lossless encoders
-skip-if(Android||B2G) include encoders-lossless/reftest.list # bug 783621
+skip-if(Android) include encoders-lossless/reftest.list

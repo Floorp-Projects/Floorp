@@ -46,10 +46,10 @@
 == dir_auto-pre-N-EN.html dir_auto-pre-N-EN-ref.html
 == dir_auto-R.html dir_auto-R-ref.html
 == dir_auto-textarea-mixed.html dir_auto-textarea-mixed-ref.html
-fails-if(B2G||Mulet||(Android&&asyncPan)) == dir_auto-textarea-N-between-Rs.html dir_auto-textarea-N-between-Rs-ref.html # B2G scrollbar on opposite side
+fails-if(Android&&asyncPan) == dir_auto-textarea-N-between-Rs.html dir_auto-textarea-N-between-Rs-ref.html
 == dir_auto-textarea-N-EN.html dir_auto-textarea-N-EN-ref.html
 == dir_auto-textarea-script-mixed.html dir_auto-textarea-script-mixed-ref.html
-fails-if(B2G||Mulet||(Android&&asyncPan)) == dir_auto-textarea-script-N-between-Rs.html dir_auto-textarea-script-N-between-Rs-ref.html # B2G scrollbar on reference only
+fails-if(Android&&asyncPan) == dir_auto-textarea-script-N-between-Rs.html dir_auto-textarea-script-N-between-Rs-ref.html
 == dir_auto-textarea-script-N-EN.html dir_auto-textarea-script-N-EN-ref.html
 == lang-xyzzy.html lang-xyzzy-ref.html
 == lang-xmllang-01.html lang-xmllang-01-ref.html

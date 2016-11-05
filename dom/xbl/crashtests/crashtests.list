@@ -4,7 +4,7 @@ load 226744-1.xhtml
 load 232095-1.xul
 load 277523-1.xhtml
 load 277950-1.xhtml
-skip-if(Android||B2G) load 336744-1.html # bug 1268050
+skip-if(Android) load 336744-1.html # bug 1268050
 load 336960-1.html
 load 342954-1.xhtml
 load 342954-2.xhtml

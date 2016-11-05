@@ -89,9 +89,9 @@ verifySdp: function(desc, expectedType, offerConstraintsList, offerOptions,
   ok(!desc.sdp.includes(LOOPBACK_ADDR), "loopback interface is absent from SDP");
   var requiresTrickleIce = !desc.sdp.includes("a=candidate");
   if (requiresTrickleIce) {
-    info("at least one ICE candidate is present in SDP");
-  } else {
     info("No ICE candidate in SDP -> requiring trickle ICE");
+  } else {
+    info("at least one ICE candidate is present in SDP");
   }
 
   //TODO: how can we check for absence/presence of m=application?
