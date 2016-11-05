@@ -45,7 +45,7 @@ const patterns = [
   // _URL
   { i: "x{ url('<t>')}",   o: "declaration but found \u2018url('<s>')\u2019." },
   // _Bad_URL
-  { i: "x{ url('<t>'.)}" , o: "declaration but found \u2018url('<s>'.)\u2019." }
+  { i: "x{ url('<t>'.)}" , o: "declaration but found \u2018url('<s>'\u2019." }
 ];
 
 // Blocks of characters to test, and how they should be escaped when
