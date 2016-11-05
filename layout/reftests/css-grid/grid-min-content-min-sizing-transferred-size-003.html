@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     https://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Testing track 'min-content' min-sizing function with 'min-height:auto' on an item with an intrinsic aspect ratio</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1218178">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#min-size-auto">
+  <link rel="match" href="grid-min-content-min-sizing-transferred-size-003-ref.html">
+  <style type="text/css">
+html,body { color:black; background-color:white; font:12px monospace; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  float: left;
+  border: 1px solid;
+  align-items: start;
+  justify-items: start;
+  margin-bottom: 1em;
+}
+
+.row { grid-template-rows:min-content; }
+.row img { min-width:0; }
+
+br { clear:both; }
+
+  </style>
+</head>
+<body>
+
+<script>
+var rowtest = [
+"width:12px; max-height:48px", "width:12px; height:48px", "width:4px; height:12px",
+"height:12px", "max-height:48px", "max-height:12px", "width:1px", "max-width:1px",
+"width:1px; height:20px", "min-width:3px", "min-width:5px; max-height:30px"
+];
+
+var h3 = document.createElement('h3');
+h3.appendChild(document.createTextNode("grid-template-rows:min-content"));
+document.body.appendChild(h3);
+for (var i = 0; i < rowtest.length; ++i) {
+  var grid = document.createElement('div');
+  grid.setAttribute("class","grid row");
+  var img = document.createElement('img');
+  img.setAttribute("src","support/lime-2x24.png");
+  img.setAttribute("style",rowtest[i]);
+  grid.appendChild(img);
+  document.body.appendChild(document.createTextNode("2x24.png -- "+rowtest[i]+'\n'));
+  document.body.appendChild(document.createElement('br'));
+  document.body.appendChild(grid);
+  document.body.appendChild(document.createElement('br'));
+}
+</script>
+
+</body>
+</html>
