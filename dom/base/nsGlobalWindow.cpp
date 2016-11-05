@@ -48,6 +48,7 @@
 #include "nsFrameSelection.h"
 #include "nsNetUtil.h"
 #include "nsVariant.h"
+#include "nsPrintfCString.h"
 
 // Helper Classes
 #include "nsJSUtils.h"
@@ -8340,6 +8341,35 @@ nsGlobalWindow::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessa
     MOZ_ASSERT(principal);
 
     PrincipalOriginAttributes attrs = BasePrincipal::Cast(principal)->OriginAttributesRef();
+    if (principal->GetIsSystemPrincipal()) {
+      auto targetPrincipal = BasePrincipal::Cast(GetPrincipal());
+
+      if (attrs != targetPrincipal->OriginAttributesRef()) {
+        nsCOMPtr<nsIURI> targetURI;
+        nsAutoCString targetURL;
+        nsAutoCString sourceOrigin;
+        nsAutoCString targetOrigin;
+
+        if (NS_FAILED(targetPrincipal->GetURI(getter_AddRefs(targetURI))) ||
+            NS_FAILED(targetURI->GetAsciiSpec(targetURL)) ||
+            NS_FAILED(targetPrincipal->GetOrigin(targetOrigin)) ||
+            NS_FAILED(principal->GetOrigin(sourceOrigin))) {
+          NS_WARNING("Failed to get source and target origins");
+          return;
+        }
+
+        nsContentUtils::LogSimpleConsoleError(
+          NS_ConvertUTF8toUTF16(nsPrintfCString(
+            "Attempting to post a message to window with url \"%s\" and "
+            "origin \"%s\" from a system principal scope with mismatched "
+            "origin \"%s\".",
+            targetURL.get(), targetOrigin.get(), sourceOrigin.get())),
+          "DOM");
+
+        attrs = targetPrincipal->OriginAttributesRef();
+      }
+    }
+
     // Create a nsIPrincipal inheriting the app/browser attributes from the
     // caller.
     providedPrincipal = BasePrincipal::CreateCodebasePrincipal(originURI, attrs);
