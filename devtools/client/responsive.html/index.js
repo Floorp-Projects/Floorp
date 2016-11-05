@@ -26,6 +26,7 @@ const message = require("./utils/message");
 const App = createFactory(require("./app"));
 const Store = require("./store");
 const { changeLocation } = require("./actions/location");
+const { changeDisplayPixelRatio } = require("./actions/display-pixel-ratio");
 const { addViewport, resizeViewport } = require("./actions/viewports");
 const { loadDevices } = require("./actions/devices");
 
@@ -89,12 +90,30 @@ Object.defineProperty(window, "store", {
   enumerable: true,
 });
 
+// Dispatch a `changeDisplayPixelRatio` action when the browser's pixel ratio is changing.
+// This is usually triggered when the user changes the monitor resolution, or when the
+// browser's window is dragged to a different display with a different pixel ratio.
+function onDPRChange() {
+  let dpr = window.devicePixelRatio;
+  let mql = window.matchMedia(`(resolution: ${dpr}dppx)`);
+
+  function listener() {
+    bootstrap.dispatch(changeDisplayPixelRatio(window.devicePixelRatio));
+    mql.removeListener(listener);
+    onDPRChange();
+  }
+
+  mql.addListener(listener);
+}
+
 /**
  * Called by manager.js to add the initial viewport based on the original page.
  */
 window.addInitialViewport = contentURI => {
   try {
+    onDPRChange();
     bootstrap.dispatch(changeLocation(contentURI));
+    bootstrap.dispatch(changeDisplayPixelRatio(window.devicePixelRatio));
     bootstrap.dispatch(addViewport());
   } catch (e) {
     console.error(e);

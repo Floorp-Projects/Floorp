@@ -452,6 +452,9 @@ ResponsiveUI.prototype = {
       case "change-viewport-device":
         this.onChangeViewportDevice(event);
         break;
+      case "change-viewport-pixel-ratio":
+        this.updateDPPX(event.data.pixelRatio);
+        break;
       case "content-resize":
         this.onContentResize(event);
         break;
