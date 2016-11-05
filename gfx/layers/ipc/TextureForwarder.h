@@ -14,6 +14,9 @@
 #include "mozilla/layers/KnowsCompositor.h"
 
 namespace mozilla {
+namespace ipc {
+class IShmemAllocator;
+}
 namespace layers {
 
 /**
@@ -31,7 +34,8 @@ public:
  * Has their own MessageLoop for message dispatch, and can allocate
  * shmem.
  */
-class LayersIPCChannel : public LayersIPCActor {
+class LayersIPCChannel : public LayersIPCActor
+                       , public mozilla::ipc::IShmemAllocator {
 public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void) = 0;
   NS_IMETHOD_(MozExternalRefCountType) Release(void) = 0;
@@ -47,14 +51,6 @@ public:
   virtual FixedSizeSmallShmemSectionAllocator* GetTileLockAllocator() { return nullptr; }
 
   virtual void CancelWaitForRecycle(uint64_t aTextureId) = 0;
-
-  virtual bool AllocShmem(size_t aSize,
-                          mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
-                          mozilla::ipc::Shmem* aShmem) = 0;
-  virtual bool AllocUnsafeShmem(size_t aSize,
-                                mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
-                                mozilla::ipc::Shmem* aShmem) = 0;
-  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) = 0;
 
 protected:
   virtual ~LayersIPCChannel() {}

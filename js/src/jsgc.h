@@ -598,6 +598,12 @@ class SortedArenaList
     }
 };
 
+enum ShouldCheckThresholds
+{
+    DontCheckThresholds = 0,
+    CheckThresholds = 1
+};
+
 class ArenaLists
 {
     JSRuntime* runtime_;
@@ -805,6 +811,7 @@ class ArenaLists
     inline void mergeSweptArenas(AllocKind thingKind);
 
     TenuredCell* allocateFromArena(JS::Zone* zone, AllocKind thingKind,
+                                   ShouldCheckThresholds checkThresholds,
                                    AutoMaybeStartBackgroundAllocation& maybeStartBGAlloc);
     inline TenuredCell* allocateFromArenaInner(JS::Zone* zone, Arena* arena, AllocKind kind);
 
@@ -989,7 +996,7 @@ class GCParallelTask
     // This should be friended to HelperThread, but cannot be because it
     // would introduce several circular dependencies.
   public:
-    virtual void runFromHelperThread(AutoLockHelperThreadState& locked);
+    void runFromHelperThread(AutoLockHelperThreadState& locked);
 };
 
 typedef void (*IterateChunkCallback)(JSRuntime* rt, void* data, gc::Chunk* chunk);

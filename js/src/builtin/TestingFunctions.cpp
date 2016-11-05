@@ -21,13 +21,6 @@
 #include "jsprf.h"
 #include "jswrapper.h"
 
-#include "asmjs/AsmJS.h"
-#include "asmjs/WasmBinaryToExperimentalText.h"
-#include "asmjs/WasmBinaryToText.h"
-#include "asmjs/WasmJS.h"
-#include "asmjs/WasmModule.h"
-#include "asmjs/WasmSignalHandlers.h"
-#include "asmjs/WasmTextToBinary.h"
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
 #ifdef DEBUG
@@ -53,6 +46,13 @@
 #include "vm/Stack.h"
 #include "vm/StringBuffer.h"
 #include "vm/TraceLogging.h"
+#include "wasm/AsmJS.h"
+#include "wasm/WasmBinaryToExperimentalText.h"
+#include "wasm/WasmBinaryToText.h"
+#include "wasm/WasmJS.h"
+#include "wasm/WasmModule.h"
+#include "wasm/WasmSignalHandlers.h"
+#include "wasm/WasmTextToBinary.h"
 
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
@@ -1768,8 +1768,8 @@ ReadSPSProfilingStack(JSContext* cx, unsigned argc, Value* vp)
               case JS::ProfilingFrameIterator::Frame_Ion:
                 frameKindStr = "ion";
                 break;
-              case JS::ProfilingFrameIterator::Frame_AsmJS:
-                frameKindStr = "asmjs";
+              case JS::ProfilingFrameIterator::Frame_Wasm:
+                frameKindStr = "wasm";
                 break;
               default:
                 frameKindStr = "unknown";
@@ -4427,7 +4427,7 @@ gc::ZealModeHelpText),
 "setIonCheckGraphCoherency(bool)",
 "  Set whether Ion should perform graph consistency (DEBUG-only) assertions. These assertions\n"
 "  are valuable and should be generally enabled, however they can be very expensive for large\n"
-"  (asm.js) programs."),
+"  (wasm) programs."),
 
     JS_FN_HELP("serialize", Serialize, 1, 0,
 "serialize(data, [transferables, [policy]])",

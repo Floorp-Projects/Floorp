@@ -262,6 +262,9 @@ function RegExpLocalMatchOpt(rx, S, sticky) {
 //   * exec
 //   * lastIndex
 function IsRegExpMethodOptimizable(rx) {
+    if (!IsRegExpObject(rx))
+        return false;
+
     var RegExpProto = GetBuiltinPrototype("RegExp");
     // If RegExpPrototypeOptimizable and RegExpInstanceOptimizable succeed,
     // `RegExpProto.exec` is guaranteed to be data properties.

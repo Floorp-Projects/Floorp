@@ -150,7 +150,7 @@ JSONSpewer::beginFunction(JSScript* script)
     if (script)
         stringProperty("name", "%s:%" PRIuSIZE, script->filename(), script->lineno());
     else
-        stringProperty("name", "asm.js compilation");
+        stringProperty("name", "wasm compilation");
     beginListProperty("passes");
 }
 

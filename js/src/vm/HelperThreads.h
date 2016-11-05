@@ -87,7 +87,7 @@ class GlobalHelperThreadState
     wasm::IonCompileTaskPtrVector wasmWorklist_, wasmFinishedList_;
 
   public:
-    // For now, only allow a single parallel asm.js compilation to happen at a
+    // For now, only allow a single parallel wasm compilation to happen at a
     // time. This avoids race conditions on wasmWorklist/wasmFinishedList/etc.
     mozilla::Atomic<bool> wasmCompilationInProgress;
 

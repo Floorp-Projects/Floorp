@@ -6,7 +6,7 @@
 #ifndef mozilla_netwerk_socket_nsNamedPipeService_h
 #define mozilla_netwerk_socket_nsNamedPipeService_h
 
-#include <Windows.h>
+#include <windows.h>
 #include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
 #include "nsINamedPipeService.h"

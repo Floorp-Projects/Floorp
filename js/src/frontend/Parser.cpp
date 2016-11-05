@@ -27,12 +27,12 @@
 #include "jsscript.h"
 #include "jstypes.h"
 
-#include "asmjs/AsmJS.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/SelfHostingDefines.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/TokenStream.h"
+#include "wasm/AsmJS.h"
 
 #include "jsatominlines.h"
 #include "jsscriptinlines.h"

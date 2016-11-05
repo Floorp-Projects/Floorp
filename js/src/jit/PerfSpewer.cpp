@@ -321,7 +321,7 @@ js::jit::writePerfSpewerJitCodeProfile(JitCode* code, const char* msg)
 }
 
 void
-js::jit::writePerfSpewerAsmJSFunctionMap(uintptr_t base, uintptr_t size,
+js::jit::writePerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
                                          const char* filename, unsigned lineno, unsigned colIndex,
                                          const char* funcName)
 {

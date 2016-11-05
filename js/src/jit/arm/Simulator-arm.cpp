@@ -35,14 +35,14 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/SizePrintfMacros.h"
 
-#include "asmjs/WasmInstance.h"
-#include "asmjs/WasmSignalHandlers.h"
 #include "jit/arm/Assembler-arm.h"
 #include "jit/arm/disasm/Constants-arm.h"
 #include "jit/AtomicOperations.h"
 #include "threading/LockGuard.h"
 #include "vm/Runtime.h"
 #include "vm/SharedMem.h"
+#include "wasm/WasmInstance.h"
+#include "wasm/WasmSignalHandlers.h"
 
 extern "C" {
 
@@ -4737,7 +4737,7 @@ Simulator::execute()
 
             int32_t rpc = resume_pc_;
             if (MOZ_UNLIKELY(rpc != 0)) {
-                // AsmJS signal handler ran and we have to adjust the pc.
+                // wasm signal handler ran and we have to adjust the pc.
                 JSRuntime::innermostWasmActivation()->setResumePC((void*)get_pc());
                 set_pc(rpc);
                 resume_pc_ = 0;

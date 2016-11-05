@@ -40,7 +40,7 @@ class JSFunction : public js::NativeObject
         ClassConstructor,
         Getter,
         Setter,
-        AsmJS,                      /* function is an asm.js module or exported function */
+        Wasm,                       /* function is wasm module or exported function */
         FunctionKindLimit
     };
 
@@ -66,7 +66,7 @@ class JSFunction : public js::NativeObject
         FUNCTION_KIND_SHIFT = 13,
         FUNCTION_KIND_MASK  = 0x7 << FUNCTION_KIND_SHIFT,
 
-        ASMJS_KIND = AsmJS << FUNCTION_KIND_SHIFT,
+        WASM_KIND = Wasm << FUNCTION_KIND_SHIFT,
         ARROW_KIND = Arrow << FUNCTION_KIND_SHIFT,
         METHOD_KIND = Method << FUNCTION_KIND_SHIFT,
         CLASSCONSTRUCTOR_KIND = ClassConstructor << FUNCTION_KIND_SHIFT,
@@ -77,8 +77,8 @@ class JSFunction : public js::NativeObject
         NATIVE_FUN = 0,
         NATIVE_CTOR = NATIVE_FUN | CONSTRUCTOR,
         NATIVE_CLASS_CTOR = NATIVE_FUN | CONSTRUCTOR | CLASSCONSTRUCTOR_KIND,
-        ASMJS_CTOR = ASMJS_KIND | NATIVE_CTOR,
-        ASMJS_LAMBDA_CTOR = ASMJS_KIND | NATIVE_CTOR | LAMBDA,
+        WASM_CTOR = WASM_KIND | NATIVE_CTOR,
+        ASMJS_LAMBDA_CTOR = WASM_KIND | NATIVE_CTOR | LAMBDA,
         INTERPRETED_METHOD = INTERPRETED | METHOD_KIND,
         INTERPRETED_METHOD_GENERATOR = INTERPRETED | METHOD_KIND,
         INTERPRETED_CLASS_CONSTRUCTOR = INTERPRETED | CLASSCONSTRUCTOR_KIND | CONSTRUCTOR,
@@ -173,7 +173,7 @@ class JSFunction : public js::NativeObject
     bool isConstructor()            const { return flags() & CONSTRUCTOR; }
 
     /* Possible attributes of a native function: */
-    bool isAsmJSNative()            const { return kind() == AsmJS; }
+    bool isWasmNative()            const { return kind() == Wasm; }
 
     /* Possible attributes of an interpreted function: */
     bool isExprBody()               const { return flags() & EXPR_BODY; }
@@ -215,7 +215,7 @@ class JSFunction : public js::NativeObject
 
     /* Compound attributes: */
     bool isBuiltin() const {
-        return (isNative() && !isAsmJSNative()) || isSelfHostedBuiltin();
+        return (isNative() && !isWasmNative()) || isSelfHostedBuiltin();
     }
 
     bool isNamedLambda() const {

@@ -14,9 +14,6 @@
 #include "jsobj.h"
 #include "jsscript.h"
 
-#include "asmjs/WasmInstance.h"
-#include "asmjs/WasmJS.h"
-#include "asmjs/WasmModule.h"
 #include "gc/Heap.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
@@ -26,6 +23,9 @@
 #include "vm/String.h"
 #include "vm/Symbol.h"
 #include "vm/WrapperObject.h"
+#include "wasm/WasmInstance.h"
+#include "wasm/WasmJS.h"
+#include "wasm/WasmModule.h"
 
 using mozilla::DebugOnly;
 using mozilla::MallocSizeOf;

@@ -277,18 +277,6 @@ class Heap : public js::HeapBase<T>
         return bool(js::BarrierMethods<T>::asGCThingOrNull(ptr));
     }
 
-    /*
-     * Set the pointer to a value which will cause a crash if it is
-     * dereferenced.
-     */
-    void setToCrashOnTouch() {
-        ptr = reinterpret_cast<T>(crashOnTouchPointer);
-    }
-
-    bool isSetToCrashOnTouch() {
-        return ptr == crashOnTouchPointer;
-    }
-
   private:
     void init(const T& newPtr) {
         ptr = newPtr;
@@ -304,10 +292,6 @@ class Heap : public js::HeapBase<T>
     void post(const T& prev, const T& next) {
         js::BarrierMethods<T>::postBarrier(&ptr, prev, next);
     }
-
-    enum {
-        crashOnTouchPointer = 1
-    };
 
     T ptr;
 };

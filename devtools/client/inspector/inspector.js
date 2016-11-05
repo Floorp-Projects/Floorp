@@ -29,7 +29,6 @@ const {ComputedViewTool} = require("devtools/client/inspector/computed/computed"
 const {FontInspector} = require("devtools/client/inspector/fonts/fonts");
 const {HTMLBreadcrumbs} = require("devtools/client/inspector/breadcrumbs");
 const {InspectorSearch} = require("devtools/client/inspector/inspector-search");
-const {LayoutViewTool} = require("devtools/client/inspector/layout/layout");
 const MarkupView = require("devtools/client/inspector/markup/markup");
 const {RuleViewTool} = require("devtools/client/inspector/rules/rules");
 const {ToolSidebar} = require("devtools/client/inspector/toolsidebar");
@@ -577,7 +576,8 @@ Inspector.prototype = {
         defaultTab == "layoutview"
       );
 
-      this.layoutview = new LayoutViewTool(this, this.panelWin);
+      const {LayoutView} = this.browserRequire("devtools/client/inspector/layout/layout");
+      this.layoutview = new LayoutView(this, this.panelWin);
     }
 
     if (this.target.form.animationsActor) {

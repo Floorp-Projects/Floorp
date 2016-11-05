@@ -3356,7 +3356,7 @@ Simulator::execute()
 
             int32_t rpc = resume_pc_;
             if (MOZ_UNLIKELY(rpc != 0)) {
-                // AsmJS signal handler ran and we have to adjust the pc.
+                // wasm signal handler ran and we have to adjust the pc.
                 activation->setResumePC((void*)get_pc());
                 set_pc(rpc);
                 resume_pc_ = 0;

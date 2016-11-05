@@ -377,10 +377,10 @@ VRManagerChild::AllocUnsafeShmem(size_t aSize,
   return PVRManagerChild::AllocUnsafeShmem(aSize, aType, aShmem);
 }
 
-void
+bool
 VRManagerChild::DeallocShmem(ipc::Shmem& aShmem)
 {
-  PVRManagerChild::DeallocShmem(aShmem);
+  return PVRManagerChild::DeallocShmem(aShmem);
 }
 
 PVRLayerChild*

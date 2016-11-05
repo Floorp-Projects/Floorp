@@ -16,7 +16,6 @@
 #include "jsscript.h"
 #include "jsutil.h"
 
-#include "asmjs/WasmFrameIterator.h"
 #include "gc/Rooting.h"
 #include "jit/JitFrameIterator.h"
 #ifdef CHECK_OSIPOINT_REGISTERS
@@ -25,6 +24,7 @@
 #include "js/RootingAPI.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/SavedFrame.h"
+#include "wasm/WasmFrameIterator.h"
 
 struct JSCompartment;
 
@@ -1677,11 +1677,11 @@ class WasmActivation : public Activation
         return true;
     }
 
-    // Returns a pointer to the base of the innermost stack frame of asm.js code
+    // Returns a pointer to the base of the innermost stack frame of wasm code
     // in this activation.
     uint8_t* fp() const { return fp_; }
 
-    // Returns the reason why asm.js code called out of asm.js code.
+    // Returns the reason why wasm code called out of wasm code.
     wasm::ExitReason exitReason() const { return exitReason_; }
 
     // Read by JIT code:
@@ -1710,7 +1710,7 @@ class WasmActivation : public Activation
 // Additionally, there are derived FrameIter types that automatically skip
 // certain frames:
 //  - ScriptFrameIter only shows frames that have an associated JSScript
-//    (currently everything other than asm.js stack frames). When !hasScript(),
+//    (currently everything other than wasm stack frames). When !hasScript(),
 //    clients must stick to the portion of the
 //    interface marked below.
 //  - NonBuiltinScriptFrameIter additionally filters out builtin (self-hosted)

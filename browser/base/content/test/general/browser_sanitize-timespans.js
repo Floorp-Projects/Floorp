@@ -59,8 +59,8 @@ function countEntries(name, message, check) {
   let count;
   FormHistory.count(obj, { handleResult: result => count = result,
                            handleError: function (error) {
-                             throw new Error("Error occurred searching form history: " + error);
                              deferred.reject(error)
+                             throw new Error("Error occurred searching form history: " + error);
                            },
                            handleCompletion: function (reason) {
                              if (!reason) {
@@ -494,8 +494,8 @@ function* setupFormHistory() {
     let results = [];
     FormHistory.search(terms, params, { handleResult: result => results.push(result),
                                         handleError: function (error) {
-                                          throw new Error("Error occurred searching form history: " + error);
                                           deferred.reject(error);
+                                          throw new Error("Error occurred searching form history: " + error);
                                         },
                                         handleCompletion: function (reason) { deferred.resolve(results); }
                                       });
@@ -506,8 +506,8 @@ function* setupFormHistory() {
   {
     let deferred = Promise.defer();
     FormHistory.update(changes, { handleError: function (error) {
-                                    throw new Error("Error occurred searching form history: " + error);
                                     deferred.reject(error);
+                                    throw new Error("Error occurred searching form history: " + error);
                                   },
                                   handleCompletion: function (reason) { deferred.resolve(); }
                                 });

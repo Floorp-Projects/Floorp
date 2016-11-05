@@ -88,7 +88,7 @@ class ABIArgGenerator
 
     // ARM can either use HardFp (use float registers for float arguments), or
     // SoftFp (use general registers for float arguments) ABI.  We keep this
-    // switch as a runtime switch because AsmJS always use the HardFp back-end
+    // switch as a runtime switch because wasm always use the HardFp back-end
     // while the calls to native functions have to use the one provided by the
     // system.
     bool useHardFp_;
@@ -119,7 +119,7 @@ static constexpr Register ABINonArgReturnReg1 = r5;
 // Preserved by WebAssembly functions.
 static constexpr Register WasmTlsReg = r9;
 
-// Registers used for asm.js/wasm table calls. These registers must be disjoint
+// Registers used for wasm table calls. These registers must be disjoint
 // from the ABI argument registers, WasmTlsReg and each other.
 static constexpr Register WasmTableCallScratchReg = ABINonArgReg0;
 static constexpr Register WasmTableCallSigReg = ABINonArgReg1;
@@ -161,20 +161,20 @@ struct ScratchDoubleScope : public AutoFloatRegisterScope
 // A bias applied to the GlobalReg to allow the use of instructions with small
 // negative immediate offsets which doubles the range of global data that can be
 // accessed with a single instruction.
-static const int32_t AsmJSGlobalRegBias = 1024;
+static const int32_t WasmGlobalRegBias = 1024;
 
 // Registers used in the GenerateFFIIonExit Enable Activation block.
-static constexpr Register AsmJSIonExitRegCallee = r4;
-static constexpr Register AsmJSIonExitRegE0 = r0;
-static constexpr Register AsmJSIonExitRegE1 = r1;
+static constexpr Register WasmIonExitRegCallee = r4;
+static constexpr Register WasmIonExitRegE0 = r0;
+static constexpr Register WasmIonExitRegE1 = r1;
 
 // Registers used in the GenerateFFIIonExit Disable Activation block.
 // None of these may be the second scratch register (lr).
-static constexpr Register AsmJSIonExitRegReturnData = r2;
-static constexpr Register AsmJSIonExitRegReturnType = r3;
-static constexpr Register AsmJSIonExitRegD0 = r0;
-static constexpr Register AsmJSIonExitRegD1 = r1;
-static constexpr Register AsmJSIonExitRegD2 = r4;
+static constexpr Register WasmIonExitRegReturnData = r2;
+static constexpr Register WasmIonExitRegReturnType = r3;
+static constexpr Register WasmIonExitRegD0 = r0;
+static constexpr Register WasmIonExitRegD1 = r1;
+static constexpr Register WasmIonExitRegD2 = r4;
 
 // Registerd used in RegExpMatcher instruction (do not use JSReturnOperand).
 static constexpr Register RegExpMatcherRegExpReg = CallTempReg0;
@@ -232,7 +232,7 @@ static_assert(JitStackAlignment % SimdMemoryAlignment == 0,
   "Stack alignment should be larger than any of the alignments which are used for "
   "spilled values.  Thus it should be larger than the alignment for SIMD accesses.");
 
-static const uint32_t AsmJSStackAlignment = SimdMemoryAlignment;
+static const uint32_t WasmStackAlignment = SimdMemoryAlignment;
 
 // Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
 static constexpr bool SupportsUint32x4FloatConversions = false;

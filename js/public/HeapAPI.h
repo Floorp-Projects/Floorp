@@ -17,11 +17,6 @@
 /* These values are private to the JS engine. */
 namespace js {
 
-// Whether the current thread is permitted access to any part of the specified
-// runtime or zone.
-JS_FRIEND_API(bool)
-CurrentThreadCanAccessRuntime(JSRuntime* rt);
-
 JS_FRIEND_API(bool)
 CurrentThreadCanAccessZone(JS::Zone* zone);
 
@@ -384,8 +379,11 @@ IsIncrementalBarrierNeededOnTenuredGCThing(JS::shadow::Runtime* rt, const JS::GC
 {
     MOZ_ASSERT(thing);
     MOZ_ASSERT(!js::gc::IsInsideNursery(thing.asCell()));
-    if (rt->isHeapCollecting())
-        return false;
+
+    // TODO: I'd like to assert !isHeapBusy() here but this gets called while we
+    // are tracing the heap, e.g. during memory reporting (see bug 1313318).
+    MOZ_ASSERT(!rt->isHeapCollecting());
+
     JS::Zone* zone = JS::GetTenuredGCThingZone(thing);
     return JS::shadow::Zone::asShadowZone(zone)->needsIncrementalBarrier();
 }
