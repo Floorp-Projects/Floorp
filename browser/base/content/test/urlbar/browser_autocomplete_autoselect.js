@@ -42,8 +42,7 @@ add_task(function*() {
   });
   yield PlacesTestUtils.addVisits(visits);
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla", {animate: false});
-  yield promiseTabLoaded(tab);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
   yield promiseAutocompleteResultPopup("example.com/autocomplete");
 
   let popup = gURLBar.popup;

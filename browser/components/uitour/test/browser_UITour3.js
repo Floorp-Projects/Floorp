@@ -119,7 +119,6 @@ add_UITour_task(function* test_info_buttons_2() {
 }),
 
 add_UITour_task(function* test_info_close_button() {
-  let popup = document.getElementById("UITourTooltip");
   let closeButton = document.getElementById("UITourTooltipClose");
 
   yield showInfoPromise("urlbar", "Close me", "X marks the spot", null, null, "makeInfoOptions");

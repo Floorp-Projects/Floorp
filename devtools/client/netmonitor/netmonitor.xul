@@ -32,8 +32,6 @@
                        class="devtools-toolbarbutton icon-and-text"
                        data-localization="tooltiptext=netmonitor.toolbar.perf"/>
         <html:div xmlns="http://www.w3.org/1999/xhtml"
-                  id="react-details-pane-toggle-hook"/>
-        <html:div xmlns="http://www.w3.org/1999/xhtml"
                   id="react-search-box-hook"/>
         <html:div xmlns="http://www.w3.org/1999/xhtml"
                   id="react-details-pane-toggle-hook"/>
@@ -147,7 +145,7 @@
                   <box id="requests-menu-waterfall-label-wrapper">
                     <label id="requests-menu-waterfall-label"
                            class="plain requests-menu-waterfall"
-                           data-localization="label=netmonitor.toolbar.waterfall"/>
+                           data-localization="value=netmonitor.toolbar.waterfall"/>
                   </box>
                 </button>
               </hbox>

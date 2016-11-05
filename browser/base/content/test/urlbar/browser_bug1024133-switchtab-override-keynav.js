@@ -6,10 +6,7 @@ add_task(function* test_switchtab_override_keynav() {
   let testURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
 
   info("Opening first tab");
-  let tab = gBrowser.addTab(testURL);
-  let tabLoadDeferred = Promise.defer();
-  whenTabLoaded(tab, tabLoadDeferred.resolve);
-  yield tabLoadDeferred.promise;
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, testURL);
 
   info("Opening and selecting second tab");
   let secondTab = gBrowser.selectedTab = gBrowser.addTab();

@@ -156,7 +156,7 @@ Service::CollectReports(nsIHandleReportCallback *aHandleReport,
         "to this database.");
       ReportConn(aHandleReport, aData, conn, pathHead,
                  NS_LITERAL_CSTRING("cache"), cacheDesc,
-                 SQLITE_DBSTATUS_CACHE_USED, &totalConnSize);
+                 SQLITE_DBSTATUS_CACHE_USED_SHARED, &totalConnSize);
 
       NS_NAMED_LITERAL_CSTRING(schemaDesc,
         "Memory (approximate) used to store the schema for all databases "

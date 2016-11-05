@@ -34,7 +34,6 @@ AreaPositionManager.prototype = {
   _wideCache: null,
 
   update: function(aContainer) {
-    let window = aContainer.ownerGlobal;
     this._nodePositionStore = new WeakMap();
     this._wideCache = new Set();
     let last = null;
@@ -419,4 +418,3 @@ var DragPositionManager = {
 };
 
 Object.freeze(DragPositionManager);
-

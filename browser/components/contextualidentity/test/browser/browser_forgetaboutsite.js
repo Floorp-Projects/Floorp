@@ -180,8 +180,8 @@ function* test_cache_cleared() {
 
   // Check that caches have been set correctly.
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
-    let mem = getCacheStorage("memory");
-    let disk = getCacheStorage("disk");
+    let mem = getCacheStorage("memory", LoadContextInfo.custom(false, {userContextId}));
+    let disk = getCacheStorage("disk", LoadContextInfo.custom(false, {userContextId}));
 
     Assert.ok(mem.exists(createURI("http://" + TEST_HOST + "/"), ""), "The memory cache has been set correctly");
     Assert.ok(disk.exists(createURI("http://" + TEST_HOST + "/"), ""), "The disk cache has been set correctly");
@@ -192,8 +192,8 @@ function* test_cache_cleared() {
 
   // Check that do caches be removed or not?
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
-    let mem = getCacheStorage("memory");
-    let disk = getCacheStorage("disk");
+    let mem = getCacheStorage("memory", LoadContextInfo.custom(false, {userContextId}));
+    let disk = getCacheStorage("disk", LoadContextInfo.custom(false, {userContextId}));
 
     Assert.ok(!mem.exists(createURI("http://" + TEST_HOST + "/"), ""), "The memory cache is cleared");
     Assert.ok(!disk.exists(createURI("http://" + TEST_HOST + "/"), ""), "The disk cache is cleared");
@@ -304,7 +304,7 @@ function* test_storage_cleared() {
         };
       });
       try {
-        let transaction = db.transaction(["obj"], "readonly");
+        db.transaction(["obj"], "readonly");
         Assert.ok(false, "The indexedDB should not exist");
       } catch (e) {
         Assert.equal(e.name, "NotFoundError", "The indexedDB does not exist as expected");

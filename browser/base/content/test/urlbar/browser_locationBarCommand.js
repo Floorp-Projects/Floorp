@@ -54,7 +54,7 @@ add_task(function* shift_left_click_test() {
   is(win.gURLBar.textValue, TEST_VALUE, "New URL is loaded in new window");
 
   // Cleanup.
-  yield promiseWindowClosed(win);
+  yield BrowserTestUtils.closeWindow(win);
 });
 
 add_task(function* right_click_test() {

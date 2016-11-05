@@ -122,8 +122,6 @@ function validate(aNode) {
   PlacesUtils.asContainer(folderNode);
   folderNode.containerOpen = true;
   is(folderNode.childCount, 2, "confirm child count match");
-  var bookmarkNode = folderNode.getChild(0);
-  var separatorNode = folderNode.getChild(1);
   folderNode.containerOpen = false;
   aNode.containerOpen = false;
 }

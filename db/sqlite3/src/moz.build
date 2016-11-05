@@ -80,6 +80,10 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_MEMORY']:
     DEFINES['HAVE_MALLOC_USABLE_SIZE'] = True
     DEFINES['SQLITE_WITHOUT_MSIZE'] = True
 
+# Omit unused functions to save some library footprint.
+DEFINES['SQLITE_OMIT_DEPRECATED'] = True
+DEFINES['SQLITE_OMIT_BUILTIN_TEST'] = True
+
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:
     CFLAGS += [

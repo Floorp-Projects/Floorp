@@ -1448,9 +1448,9 @@ BrowserGlue.prototype = {
                       }
                     ];
 
-      let notification = notifyBox.appendNotification(text, "post-update-notification",
-                                                      null, notifyBox.PRIORITY_INFO_LOW,
-                                                      buttons);
+      notifyBox.appendNotification(text, "post-update-notification",
+                                   null, notifyBox.PRIORITY_INFO_LOW,
+                                   buttons);
     }
 
     if (actions.indexOf("showAlert") == -1)

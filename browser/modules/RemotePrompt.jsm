@@ -37,7 +37,6 @@ var RemotePrompt = {
   openTabPrompt: function(args, browser) {
     let window = browser.ownerGlobal;
     let tabPrompt = window.gBrowser.getTabModalPromptBox(browser)
-    let callbackInvoked = false;
     let newPrompt;
     let needRemove = false;
     let promptId = args._remoteId;

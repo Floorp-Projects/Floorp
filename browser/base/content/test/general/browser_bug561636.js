@@ -74,7 +74,7 @@ function* blurChildElement(browser)
 function* checkChildFocus(browser, message)
 {
   yield ContentTask.spawn(browser, [message, testId], function* (args) {
-    let [msg, testId] = args;
+    let [msg, id] = args;
     var focused = content.document.activeElement == content.document.getElementById('i');
 
     var validMsg = true;
@@ -82,8 +82,8 @@ function* checkChildFocus(browser, message)
       validMsg = (msg == content.document.getElementById('i').validationMessage);
     }
 
-    Assert.equal(focused, true, "Test " + testId + " First invalid element should be focused");
-    Assert.equal(validMsg, true, "Test " + testId + " The panel should show the message from validationMessage");
+    Assert.equal(focused, true, "Test " + id + " First invalid element should be focused");
+    Assert.equal(validMsg, true, "Test " + id + " The panel should show the message from validationMessage");
   });
 }
 

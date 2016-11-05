@@ -484,10 +484,6 @@ FeedWriter.prototype = {
 
     enclosuresDiv.appendChild(this._document.createTextNode(this._getString("mediaLabel")));
 
-    let roundme = function(n) {
-      return (Math.round(n * 100) / 100).toLocaleString();
-    }
-
     for (let i_enc = 0; i_enc < entry.enclosures.length; ++i_enc) {
       let enc = entry.enclosures.queryElementAt(i_enc, Ci.nsIWritablePropertyBag2);
 
@@ -519,8 +515,9 @@ FeedWriter.prototype = {
       if (enc.hasKey("length") && /^[0-9]+$/.test(enc.get("length"))) {
         let enc_size = convertByteUnits(parseInt(enc.get("length")));
 
-        let size_text = this._getFormattedString("enclosureSizeText",
-                             [enc_size[0], this._getString(enc_size[1])]);
+        size_text = this._getFormattedString("enclosureSizeText",
+                                             [enc_size[0],
+                                             this._getString(enc_size[1])]);
       }
 
       let iconimg = this._document.createElementNS(HTML_NS, "img");
@@ -1061,7 +1058,6 @@ FeedWriter.prototype = {
     let feedType = this._getFeedType();
 
     // Subscribe to the feed using the selected handler and save prefs
-    let prefs = Services.prefs;
     let defaultHandler = "reader";
     let useAsDefault = this._document.getElementById("alwaysUse").getAttribute("checked");
 
@@ -1084,7 +1080,7 @@ FeedWriter.prototype = {
           this._window.location.href = handler.getHandlerURI(this._window.location.href);
         }
       } else {
-        let prefReader = null;
+        let feedReader = null;
         switch (selectedItem.id) {
           case "selectedAppMenuItem":
             feedReader = "client";

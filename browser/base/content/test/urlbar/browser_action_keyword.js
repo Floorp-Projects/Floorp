@@ -20,7 +20,7 @@ add_task(function*() {
     yield PlacesUtils.bookmarks.remove(bm);
   });
 
-  yield promiseTabLoadEvent(tab);
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 url: "http://example.com/?q=%s",
@@ -39,7 +39,7 @@ add_task(function*() {
   // We need to make a real URI out of this to ensure it's normalised for
   // comparison.
   let uri = NetUtil.newURI(result.getAttribute("url"));
-  is(uri.spec, makeActionURI("keyword", {url: "http://example.com/?q=something", input: "keyword something"}).spec, "Expect correct url");
+  is(uri.spec, PlacesUtils.mozActionURI("keyword", {url: "http://example.com/?q=something", input: "keyword something"}), "Expect correct url");
 
   let titleHbox = result._titleText.parentNode.parentNode;
   ok(titleHbox.classList.contains("ac-title"), "Title hbox element sanity check");
@@ -57,7 +57,7 @@ add_task(function*() {
 
   // Click on the result
   info("Normal click on result");
-  let tabPromise = promiseTabLoadEvent(tab);
+  let tabPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   EventUtils.synthesizeMouseAtCenter(result, {});
   yield tabPromise;
   is(tab.linkedBrowser.currentURI.spec, "http://example.com/?q=something", "Tab should have loaded from clicking on result");
@@ -69,13 +69,13 @@ add_task(function*() {
   // We need to make a real URI out of this to ensure it's normalised for
   // comparison.
   uri = NetUtil.newURI(result.getAttribute("url"));
-  is(uri.spec, makeActionURI("keyword", {url: "http://example.com/?q=somethingmore", input: "keyword somethingmore"}).spec, "Expect correct url");
+  is(uri.spec, PlacesUtils.mozActionURI("keyword", {url: "http://example.com/?q=somethingmore", input: "keyword somethingmore"}), "Expect correct url");
 
   tabPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
   EventUtils.synthesizeMouseAtCenter(result, {button: 1});
   let tabOpenEvent = yield tabPromise;
   let newTab = tabOpenEvent.target;
   tabs.push(newTab);
-  yield promiseTabLoadEvent(newTab);
+  yield BrowserTestUtils.browserLoaded(newTab.linkedBrowser);
   is(newTab.linkedBrowser.currentURI.spec, "http://example.com/?q=somethingmore", "Tab should have loaded from middle-clicking on result");
 });
