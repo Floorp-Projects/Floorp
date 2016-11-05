@@ -9,10 +9,10 @@ load 729116.html
 load 745699-1.html
 load 746813-1.html
 load 743499-negative-size.html
-skip-if(Android||B2G) load 745818-large-source.html # Bug XXX - Crashes Android/B2G mid-run w/o a stack
+skip-if(Android) load 745818-large-source.html # Bug XXX - Crashes Android mid-run w/o a stack
 load 767337-1.html
-skip-if(Android||B2G) load 780392-1.html # bug 833371 for B2G
-skip-if(Android||B2G) skip-if(gtkWidget&&isDebugBuild) load 789933-1.html # bug 833371 for B2G, bug 1155252 for linux
+skip-if(Android) load 780392-1.html
+skip-if(Android) skip-if(gtkWidget&&isDebugBuild) load 789933-1.html # bug 1155252 for linux
 load 794463-1.html
 load 802926-1.html
 load 896047-1.html
