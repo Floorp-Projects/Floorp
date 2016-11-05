@@ -70,6 +70,12 @@ function* doTest() {
   EventUtils.synthesizeMouseAtCenter(searchInNewTabMenuItem, {});
   let tab = yield promise;
 
+  // By default the search will open in the background and the popup will stay open:
+  promise = promiseEvent(searchPopup, "popuphidden");
+  info("Closing search panel");
+  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  yield promise;
+
   // Check the loaded tab.
   Assert.equal(tab.linkedBrowser.currentURI.spec,
                "http://mochi.test:8888/browser/browser/components/search/test/",
