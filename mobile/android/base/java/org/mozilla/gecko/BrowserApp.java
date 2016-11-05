@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.DownloadManager;
+import android.content.ContentProviderClient;
 import android.os.Environment;
 import android.os.Process;
 import android.support.annotation.CheckResult;
@@ -1928,7 +1929,29 @@ public class BrowserApp extends GeckoApp
                 final NativeJSObject metadata = message.getObject("metadata");
                 final String location = message.getString("location");
 
-                // TODO: Store metadata (Bug 1301717)
+                final boolean hasImage = !TextUtils.isEmpty(metadata.optString("image_url", null));
+                final String metadataJSON = metadata.toString();
+
+                ThreadUtils.postToBackgroundThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final ContentProviderClient contentProviderClient = getContentResolver()
+                                .acquireContentProviderClient(BrowserContract.PageMetadata.CONTENT_URI);
+                        if (contentProviderClient == null) {
+                            Log.w(LOGTAG, "Failed to obtain content provider client for: " + BrowserContract.PageMetadata.CONTENT_URI);
+                            return;
+                        }
+                        try {
+                            GlobalPageMetadata.getInstance().add(
+                                    BrowserDB.from(getProfile()),
+                                    contentProviderClient,
+                                    location, hasImage, metadataJSON);
+                        } finally {
+                            contentProviderClient.release();
+                        }
+                    }
+                });
+
                 break;
 
             default:

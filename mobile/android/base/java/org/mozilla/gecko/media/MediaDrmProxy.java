@@ -5,8 +5,10 @@
 
 package org.mozilla.gecko.media;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
+import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants;
 
@@ -36,6 +38,11 @@ public final class MediaDrmProxy {
     private static final String VP9 = "video/x-vnd.on2.vp9";
     @WrapForJNI
     private static final String OPUS = "audio/opus";
+
+    // A flag to avoid using the native object that has been destroyed.
+    private boolean mDestroyed;
+    private GeckoMediaDrm mImpl;
+    public static ArrayList<MediaDrmProxy> mProxyList = new ArrayList<MediaDrmProxy>();
 
     private static boolean isSystemSupported() {
         // Support versions >= LOLLIPOP
@@ -87,5 +94,211 @@ public final class MediaDrmProxy {
         }
         if (DEBUG) Log.d(LOGTAG, "cannot decode mimetype = " + mimeType);
         return false;
+    }
+
+     // Interface for callback to native.
+    public interface Callbacks {
+        void onSessionCreated(int createSessionToken,
+                              int promiseId,
+                              byte[] sessionId,
+                              byte[] request);
+
+        void onSessionUpdated(int promiseId, byte[] sessionId);
+
+        void onSessionClosed(int promiseId, byte[] sessionId);
+
+        void onSessionMessage(byte[] sessionId,
+                              int sessionMessageType,
+                              byte[] request);
+
+       void onSessionError(byte[] sessionId,
+                           String message);
+
+        // MediaDrm.KeyStatus is available in API level 23(M)
+        // https://developer.android.com/reference/android/media/MediaDrm.KeyStatus.html
+        // For compatibility between L and M above, we'll unwrap the KeyStatus structure
+        // and store the keyid and status into SessionKeyInfo and pass to native(MediaDrmCDMProxy).
+        void onSessionBatchedKeyChanged(byte[] sessionId,
+                                        SessionKeyInfo[] keyInfos);
+
+        void onRejectPromise(int promiseId,
+                             String message);
+    } // Callbacks
+
+    public static class NativeMediaDrmProxyCallbacks extends JNIObject implements Callbacks {
+        @WrapForJNI(calledFrom = "gecko")
+        NativeMediaDrmProxyCallbacks() {}
+
+        @Override
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void onSessionCreated(int createSessionToken,
+                                            int promiseId,
+                                            byte[] sessionId,
+                                            byte[] request);
+
+        @Override
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void onSessionUpdated(int promiseId, byte[] sessionId);
+
+        @Override
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void onSessionClosed(int promiseId, byte[] sessionId);
+
+        @Override
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void onSessionMessage(byte[] sessionId,
+                                            int sessionMessageType,
+                                            byte[] request);
+
+        @Override
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void onSessionError(byte[] sessionId,
+                                          String message);
+
+        @Override
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void onSessionBatchedKeyChanged(byte[] sessionId,
+                                                      SessionKeyInfo[] keyInfos);
+
+        @Override
+        @WrapForJNI(dispatchTo = "gecko")
+        public native void onRejectPromise(int promiseId,
+                                           String message);
+
+        @Override // JNIObject
+        protected void disposeNative() {
+            throw new UnsupportedOperationException();
+        }
+    } // NativeMediaDrmProxyCallbacks
+
+    // A proxy to callback from LocalMediaDrmBridge to native instance.
+    public static class MediaDrmProxyCallbacks implements GeckoMediaDrm.Callbacks {
+        private final Callbacks mNativeCallbacks;
+        private final MediaDrmProxy mProxy;
+
+        public MediaDrmProxyCallbacks(MediaDrmProxy proxy, Callbacks callbacks) {
+            mNativeCallbacks = callbacks;
+            mProxy = proxy;
+        }
+
+        @Override
+        public void onSessionCreated(int createSessionToken,
+                                     int promiseId,
+                                     byte[] sessionId,
+                                     byte[] request) {
+            if (!mProxy.isDestroyed()) {
+                mNativeCallbacks.onSessionCreated(createSessionToken,
+                                                  promiseId,
+                                                  sessionId,
+                                                  request);
+            }
+        }
+
+        @Override
+        public void onSessionUpdated(int promiseId, byte[] sessionId) {
+            if (!mProxy.isDestroyed()) {
+                mNativeCallbacks.onSessionUpdated(promiseId, sessionId);
+            }
+        }
+
+        @Override
+        public void onSessionClosed(int promiseId, byte[] sessionId) {
+            if (!mProxy.isDestroyed()) {
+                mNativeCallbacks.onSessionClosed(promiseId, sessionId);
+            }
+        }
+
+        @Override
+        public void onSessionMessage(byte[] sessionId,
+                                     int sessionMessageType,
+                                     byte[] request) {
+            if (!mProxy.isDestroyed()) {
+                mNativeCallbacks.onSessionMessage(sessionId, sessionMessageType, request);
+            }
+        }
+
+        @Override
+        public void onSessionError(byte[] sessionId,
+                                   String message) {
+            if (!mProxy.isDestroyed()) {
+                mNativeCallbacks.onSessionError(sessionId, message);
+            }
+        }
+
+        @Override
+        public void onSessionBatchedKeyChanged(byte[] sessionId,
+                                               SessionKeyInfo[] keyInfos) {
+            if (!mProxy.isDestroyed()) {
+                mNativeCallbacks.onSessionBatchedKeyChanged(sessionId, keyInfos);
+            }
+        }
+
+        @Override
+        public void onRejectPromise(int promiseId,
+                                    String message) {
+            if (!mProxy.isDestroyed()) {
+                mNativeCallbacks.onRejectPromise(promiseId, message);
+            }
+        }
+    } // MediaDrmProxyCallbacks
+
+    public boolean isDestroyed() {
+        return mDestroyed;
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
+    public static MediaDrmProxy create(String keySystem,
+                                       Callbacks nativeCallbacks) {
+        MediaDrmProxy proxy = new MediaDrmProxy(keySystem, nativeCallbacks);
+        return proxy;
+    }
+
+    MediaDrmProxy(String keySystem, Callbacks nativeCallbacks) {
+        if (DEBUG) Log.d(LOGTAG, "Constructing MediaDrmProxy");
+        // TODO: Bug 1306185 will implement the LocalMediaDrmBridge as an impl
+        // of GeckoMediaDrm for in-process decoding mode.
+        //mImpl = new LocalMediaDrmBridge(keySystem);
+        mImpl.setCallbacks(new MediaDrmProxyCallbacks(this, nativeCallbacks));
+        mProxyList.add(this);
+    }
+
+    @WrapForJNI
+    private void createSession(int createSessionToken,
+                               int promiseId,
+                               String initDataType,
+                               byte[] initData) {
+        if (DEBUG) Log.d(LOGTAG, "createSession, promiseId = " + promiseId);
+        mImpl.createSession(createSessionToken,
+                            promiseId,
+                            initDataType,
+                            initData);
+    }
+
+    @WrapForJNI
+    private void updateSession(int promiseId, String sessionId, byte[] response) {
+        if (DEBUG) Log.d(LOGTAG, "updateSession, primiseId(" + promiseId  + "sessionId(" + sessionId + ")");
+        mImpl.updateSession(promiseId, sessionId, response);
+    }
+
+    @WrapForJNI
+    private void closeSession(int promiseId, String sessionId) {
+        if (DEBUG) Log.d(LOGTAG, "closeSession, primiseId(" + promiseId  + "sessionId(" + sessionId + ")");
+        mImpl.closeSession(promiseId, sessionId);
+    }
+
+    @WrapForJNI // Called when natvie object is destroyed.
+    private void destroy() {
+        if (DEBUG) Log.d(LOGTAG, "destroy!! Native object is destroyed.");
+        if (mDestroyed) {
+            return;
+        }
+        mDestroyed = true;
+        release();
+    }
+
+    private void release() {
+        if (DEBUG) Log.d(LOGTAG, "release");
+        mProxyList.remove(this);
+        mImpl.release();
     }
 }

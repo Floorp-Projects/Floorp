@@ -20,7 +20,14 @@ var WebsiteMetadata = {
    */
   parseAsynchronously: function(doc) {
     Task.spawn(function() {
-      let metadata = getMetadata(doc, doc.location.href);
+      let metadata = getMetadata(doc, doc.location.href, {
+        image_url: metadataRules['image_url']
+      });
+
+      // No metadata was extracted, so don't bother sending it.
+      if (Object.keys(metadata).length === 0) {
+        return;
+      }
 
       let msg = {
         type: 'Website:Metadata',

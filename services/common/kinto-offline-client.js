@@ -20,7 +20,7 @@
 this.EXPORTED_SYMBOLS = ["loadKinto"];
 
 /*
- * Version 5.0.0 - 63b7632
+ * Version 5.1.0 - 8beb61d
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.loadKinto = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
@@ -157,12 +157,16 @@ const currentSchemaVersion = 1;
 class FirefoxAdapter extends _base2.default {
   constructor(collection, options = {}) {
     super();
+    const { sqliteHandle = null } = options;
     this.collection = collection;
-    this._connection = null;
+    this._connection = sqliteHandle;
     this._options = options;
   }
 
-  _init(connection) {
+  // We need to be capable of calling this from "outside" the adapter
+  // so that someone can initialize a connection and pass it to us in
+  // adapterOptions.
+  static _init(connection) {
     return Task.spawn(function* () {
       yield connection.executeTransaction(function* doSetup() {
         const schema = yield connection.getSchemaVersion();
@@ -192,10 +196,10 @@ class FirefoxAdapter extends _base2.default {
   open() {
     const self = this;
     return Task.spawn(function* () {
-      const path = self._options.path || SQLITE_PATH;
-      const opts = { path, sharedMemoryCache: false };
       if (!self._connection) {
-        self._connection = yield Sqlite.openConnection(opts).then(self._init);
+        const path = self._options.path || SQLITE_PATH;
+        const opts = { path, sharedMemoryCache: false };
+        self._connection = yield Sqlite.openConnection(opts).then(FirefoxAdapter._init);
       }
     });
   }

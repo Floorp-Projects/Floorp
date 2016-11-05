@@ -26,8 +26,6 @@ sqlite3_column_blob
 sqlite3_column_bytes
 sqlite3_column_bytes16
 sqlite3_column_count
-sqlite3_column_decltype
-sqlite3_column_decltype16
 sqlite3_column_double
 sqlite3_column_int
 sqlite3_column_int64

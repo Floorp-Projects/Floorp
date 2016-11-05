@@ -28,6 +28,7 @@ import org.mozilla.gecko.db.BrowserContract.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations;
+import org.mozilla.gecko.db.BrowserContract.PageMetadata;
 import org.mozilla.gecko.db.DBUtils.UpdateOperation;
 import org.mozilla.gecko.icons.IconsHelper;
 import org.mozilla.gecko.sync.Utils;
@@ -87,6 +88,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final String TABLE_TABS = Tabs.TABLE_NAME;
     static final String TABLE_URL_ANNOTATIONS = UrlAnnotations.TABLE_NAME;
     static final String TABLE_ACTIVITY_STREAM_BLOCKLIST = ActivityStreamBlocklist.TABLE_NAME;
+    static final String TABLE_PAGE_METADATA = PageMetadata.TABLE_NAME;
 
     static final String VIEW_COMBINED = Combined.VIEW_NAME;
     static final String VIEW_BOOKMARKS_WITH_FAVICONS = Bookmarks.VIEW_WITH_FAVICONS;
@@ -138,6 +140,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
     static final int ACTIVITY_STREAM_BLOCKLIST = 1400;
 
+    static final int PAGE_METADATA = 1500;
+
     static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.TYPE
             + " ASC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
             + " ASC";
@@ -155,6 +159,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final Map<String, String> THUMBNAILS_PROJECTION_MAP;
     static final Map<String, String> URL_ANNOTATIONS_PROJECTION_MAP;
     static final Map<String, String> VISIT_PROJECTION_MAP;
+    static final Map<String, String> PAGE_METADATA_PROJECTION_MAP;
     static final Table[] sTables;
 
     static {
@@ -280,6 +285,16 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         map.put(Combined.LOCAL_VISITS_COUNT, Combined.LOCAL_VISITS_COUNT);
         map.put(Combined.REMOTE_VISITS_COUNT, Combined.REMOTE_VISITS_COUNT);
         COMBINED_PROJECTION_MAP = Collections.unmodifiableMap(map);
+
+        map = new HashMap<>();
+        map.put(PageMetadata._ID, PageMetadata._ID);
+        map.put(PageMetadata.HISTORY_GUID, PageMetadata.HISTORY_GUID);
+        map.put(PageMetadata.DATE_CREATED, PageMetadata.DATE_CREATED);
+        map.put(PageMetadata.HAS_IMAGE, PageMetadata.HAS_IMAGE);
+        map.put(PageMetadata.JSON, PageMetadata.JSON);
+        PAGE_METADATA_PROJECTION_MAP = Collections.unmodifiableMap(map);
+
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "page_metadata", PAGE_METADATA);
 
         // Schema
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "schema", SCHEMA);
@@ -558,10 +573,13 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                  * period of time (e.g. 20 days).
                  * See {@link SharedBrowserDatabaseProvider#cleanUpSomeDeletedRecords(Uri, String)}.
                  */
+                final ArrayList<String> historyGUIDs = getHistoryGUIDsFromSelection(db, uri, selection, selectionArgs);
+
                 if (!isCallerSync(uri)) {
-                    deleteVisitsForHistory(uri, selection, selectionArgs);
+                    deleteVisitsForHistory(db, historyGUIDs);
                 }
-                deleted = deleteHistory(uri, selection, selectionArgs);
+                deletePageMetadataForHistory(db, historyGUIDs);
+                deleted = deleteHistory(db, uri, selection, selectionArgs);
                 deleteUnusedImages(uri);
                 break;
             }
@@ -619,6 +637,11 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case URL_ANNOTATIONS:
                 trace("Delete on URL_ANNOTATIONS: " + uri);
                 deleteUrlAnnotation(uri, selection, selectionArgs);
+                break;
+
+            case PAGE_METADATA:
+                trace("Delete on PAGE_METADATA: " + uri);
+                deleted = deletePageMetadata(uri, selection, selectionArgs);
                 break;
 
             default: {
@@ -684,6 +707,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case ACTIVITY_STREAM_BLOCKLIST: {
                 trace("Insert on ACTIVITY_STREAM_BLOCKLIST: " + uri);
                 id = insertActivityStreamBlocklistSite(uri, values);
+                break;
+            }
+
+            case PAGE_METADATA: {
+                trace("Insert on PAGE_METADATA: " + uri);
+                id = insertPageMetadata(uri, values);
                 break;
             }
 
@@ -1417,6 +1446,14 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 return getHighlights(db, limit);
             }
 
+            case PAGE_METADATA: {
+                debug("PageMetadata query: " + uri);
+
+                qb.setProjectionMap(PAGE_METADATA_PROJECTION_MAP);
+                qb.setTables(TABLE_PAGE_METADATA);
+                break;
+            }
+
             default: {
                 Table table = findTableFor(match);
                 if (table == null) {
@@ -1932,6 +1969,21 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return db.insertOrThrow(TABLE_ACTIVITY_STREAM_BLOCKLIST, null, values);
     }
 
+    private long insertPageMetadata(final Uri uri, final ContentValues values) {
+        final SQLiteDatabase db = getWritableDatabase(uri);
+
+        if (!values.containsKey(PageMetadata.DATE_CREATED)) {
+            values.put(PageMetadata.DATE_CREATED, System.currentTimeMillis());
+        }
+
+        beginWrite(db);
+
+        // Perform INSERT OR REPLACE, there might be page metadata present and we want to replace it.
+        // Depends on a conflict arising from unique foreign key (history_guid) constraint violation.
+        return db.insertWithOnConflict(
+                TABLE_PAGE_METADATA, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
     private long insertUrlAnnotation(final Uri uri, final ContentValues values) {
         final String url = values.getAsString(UrlAnnotations.URL);
         trace("Inserting url annotations for URL: " + url);
@@ -1946,6 +1998,13 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         final SQLiteDatabase db = getWritableDatabase(uri);
         db.delete(TABLE_URL_ANNOTATIONS, selection, selectionArgs);
+    }
+
+    private int deletePageMetadata(final Uri uri, final String selection, final String[] selectionArgs) {
+        trace("Deleting page metadata for URI: " + uri);
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        return db.delete(TABLE_PAGE_METADATA, selection, selectionArgs);
     }
 
     private void updateUrlAnnotation(final Uri uri, final ContentValues values, final String selection, final String[] selectionArgs) {
@@ -1993,10 +2052,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
      * transaction will guarantee that a read does not need to be upgraded to
      * a write.
      */
-    private int deleteHistory(Uri uri, String selection, String[] selectionArgs) {
+    private int deleteHistory(SQLiteDatabase db, Uri uri, String selection, String[] selectionArgs) {
         debug("Deleting history entry for URI: " + uri);
-
-        final SQLiteDatabase db = getWritableDatabase(uri);
 
         if (isCallerSync(uri)) {
             return db.delete(TABLE_HISTORY, selection, selectionArgs);
@@ -2031,22 +2088,21 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return updated;
     }
 
-    private int deleteVisitsForHistory(Uri uri, String selection, String[] selectionArgs) {
-        final SQLiteDatabase db = getWritableDatabase(uri);
+    private ArrayList<String> getHistoryGUIDsFromSelection(SQLiteDatabase db, Uri uri, String selection, String[] selectionArgs) {
+        final ArrayList<String> historyGUIDs = new ArrayList<>();
 
         final Cursor cursor = db.query(
                 History.TABLE_NAME, new String[] {History.GUID}, selection, selectionArgs,
                 null, null, null);
         if (cursor == null) {
             Log.e(LOGTAG, "Null cursor while trying to delete visits for history URI: " + uri);
-            return 0;
+            return historyGUIDs;
         }
 
-        ArrayList<String> historyGUIDs = new ArrayList<>();
         try {
             if (!cursor.moveToFirst()) {
                 trace("No history items for which to remove visits matched for URI: " + uri);
-                return 0;
+                return historyGUIDs;
             }
             final int historyColumn = cursor.getColumnIndexOrThrow(History.GUID);
             while (!cursor.isAfterLast()) {
@@ -2057,6 +2113,18 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             cursor.close();
         }
 
+        return historyGUIDs;
+    }
+
+    private int deletePageMetadataForHistory(SQLiteDatabase db, ArrayList<String> historyGUIDs) {
+        return bulkDeleteByHistoryGUID(db, historyGUIDs, PageMetadata.TABLE_NAME, PageMetadata.HISTORY_GUID);
+    }
+
+    private int deleteVisitsForHistory(SQLiteDatabase db, ArrayList<String> historyGUIDs) {
+        return bulkDeleteByHistoryGUID(db, historyGUIDs, Visits.TABLE_NAME, Visits.HISTORY_GUID);
+    }
+
+    private int bulkDeleteByHistoryGUID(SQLiteDatabase db, ArrayList<String> historyGUIDs, String table, String historyGUIDColumn) {
         // Due to SQLite's maximum variable limitation, we need to chunk our delete statements.
         // For example, if there were 1200 GUIDs, this will perform 2 delete statements.
         int deleted = 0;
@@ -2068,8 +2136,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             }
             final List<String> chunkGUIDs = historyGUIDs.subList(chunkStart, chunkEnd);
             deleted += db.delete(
-                    Visits.TABLE_NAME,
-                    DBUtils.computeSQLInClause(chunkGUIDs.size(), Visits.HISTORY_GUID),
+                    table,
+                    DBUtils.computeSQLInClause(chunkGUIDs.size(), historyGUIDColumn),
                     chunkGUIDs.toArray(new String[chunkGUIDs.size()])
             );
         }

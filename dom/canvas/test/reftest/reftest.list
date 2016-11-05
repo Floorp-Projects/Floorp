@@ -127,17 +127,18 @@ skip-if(Android) pref(webgl.force-layers-readback,true)  == webgl-hanging-scisso
 
 # Check that our experimental prefs still work:
 
-# 16bpp for Android/B2G: [16bpp] * PowerSet([readback, premult, alpha])
+# 16bpp for Android: [16bpp] * PowerSet([readback, premult, alpha])
 # RGB565 dithers 127 to [123,132]. (Max error: 5)
 # RGBA4444 dithers 128 to [119,136], and 191 to [192]. (Max error: 9)
-fuzzy(5,30000) skip-if(!(Android||B2G)) skip-if(Android) pref(webgl.prefer-16bpp,true)                                         == webgl-color-test.html?16bpp&________&_______&_____  wrapper.html?colors-no-alpha.png
-fuzzy(5,30000) skip-if(!(Android||B2G)) skip-if(Android) pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?16bpp&readback&_______&_____  wrapper.html?colors-no-alpha.png
-fuzzy(5,30000) skip-if(!(Android||B2G)) skip-if(Android) pref(webgl.prefer-16bpp,true)                                         == webgl-color-test.html?16bpp&________&premult&_____  wrapper.html?colors-no-alpha.png
-fuzzy(5,30000) skip-if(!(Android||B2G)) skip-if(Android) pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?16bpp&readback&premult&_____  wrapper.html?colors-no-alpha.png
-fuzzy(9,40000) skip-if(!(Android||B2G)) skip-if(Android) pref(webgl.prefer-16bpp,true)                                         == webgl-color-test.html?16bpp&________&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(9,40000) skip-if(!(Android||B2G)) skip-if(Android) pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?16bpp&readback&_______&alpha  wrapper.html?colors-non-premult.png
-fuzzy(9,40000) skip-if(!(Android||B2G)) skip-if(Android) pref(webgl.prefer-16bpp,true)                                         == webgl-color-test.html?16bpp&________&premult&alpha  wrapper.html?colors-premult.png
-fuzzy(9,40000) skip-if(!(Android||B2G)) skip-if(Android) pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?16bpp&readback&premult&alpha  wrapper.html?colors-premult.png
+# Bug 1285531 - tests disabled for memory corruption
+fuzzy(5,30000) skip pref(webgl.prefer-16bpp,true)                                         == webgl-color-test.html?16bpp&________&_______&_____  wrapper.html?colors-no-alpha.png
+fuzzy(5,30000) skip pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?16bpp&readback&_______&_____  wrapper.html?colors-no-alpha.png
+fuzzy(5,30000) skip pref(webgl.prefer-16bpp,true)                                         == webgl-color-test.html?16bpp&________&premult&_____  wrapper.html?colors-no-alpha.png
+fuzzy(5,30000) skip pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?16bpp&readback&premult&_____  wrapper.html?colors-no-alpha.png
+fuzzy(9,40000) skip pref(webgl.prefer-16bpp,true)                                         == webgl-color-test.html?16bpp&________&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(9,40000) skip pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?16bpp&readback&_______&alpha  wrapper.html?colors-non-premult.png
+fuzzy(9,40000) skip pref(webgl.prefer-16bpp,true)                                         == webgl-color-test.html?16bpp&________&premult&alpha  wrapper.html?colors-premult.png
+fuzzy(9,40000) skip pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?16bpp&readback&premult&alpha  wrapper.html?colors-premult.png
 
 # Force native GL (Windows):
 skip-if(!winWidget) pref(webgl.disable-angle,true)  == webgl-color-test.html?native-gl  wrapper.html?colors-no-alpha.png
@@ -156,8 +157,8 @@ skip-if(!winWidget) pref(webgl.disable-angle,true)  == webgl-color-test.html?nat
 == stroketext-shadow.html stroketext-shadow-ref.html
 
 # focus rings
-pref(canvas.focusring.enabled,true) skip-if(B2G) skip-if(cocoaWidget) skip-if(winWidget) needs-focus == drawFocusIfNeeded.html drawFocusIfNeeded-ref.html
-pref(canvas.customfocusring.enabled,true) skip-if(B2G) skip-if(cocoaWidget) skip-if(Android) skip-if(winWidget) fuzzy-if(gtkWidget,64,410) needs-focus == drawCustomFocusRing.html drawCustomFocusRing-ref.html
+pref(canvas.focusring.enabled,true) skip-if(cocoaWidget) skip-if(winWidget) needs-focus == drawFocusIfNeeded.html drawFocusIfNeeded-ref.html
+pref(canvas.customfocusring.enabled,true) skip-if(Android||cocoaWidget||winWidget) fuzzy-if(gtkWidget,64,410) needs-focus == drawCustomFocusRing.html drawCustomFocusRing-ref.html
 
 # Check that captureStream() displays in a local video element
 == capturestream.html wrapper.html?green.png

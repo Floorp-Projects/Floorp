@@ -47,7 +47,6 @@ DIRS += [
     'cache',
     'canvas',
     'crypto',
-    'phonenumberutils',
     'devicestorage',
     'encoding',
     'events',
