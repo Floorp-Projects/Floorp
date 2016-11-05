@@ -4999,18 +4999,25 @@ nsLayoutUtils::IntrinsicForAxis(PhysicalAxis        aAxis,
     ++gNoiseIndent;
 #endif
     if (MOZ_UNLIKELY(aAxis != ourInlineAxis)) {
-      // We need aFrame's block-dir size.
-      if (aFlags & BAIL_IF_REFLOW_NEEDED) {
-        return NS_INTRINSIC_WIDTH_UNKNOWN;
+      IntrinsicSize intrinsicSize = aFrame->GetIntrinsicSize();
+      const nsStyleCoord intrinsicBCoord =
+        horizontalAxis ? intrinsicSize.width : intrinsicSize.height;
+      if (intrinsicBCoord.GetUnit() == eStyleUnit_Coord) {
+        result = intrinsicBCoord.GetCoordValue();
+      } else {
+        // We don't have an intrinsic bsize and we need aFrame's block-dir size.
+        if (aFlags & BAIL_IF_REFLOW_NEEDED) {
+          return NS_INTRINSIC_WIDTH_UNKNOWN;
+        }
+        // XXX Unfortunately, we probably don't know this yet, so this is wrong...
+        // but it's not clear what we should do. If aFrame's inline size hasn't
+        // been determined yet, we can't necessarily figure out its block size
+        // either. For now, authors who put orthogonal elements into things like
+        // buttons or table cells may have to explicitly provide sizes rather
+        // than expecting intrinsic sizing to work "perfectly" in underspecified
+        // cases.
+        result = aFrame->BSize();
       }
-      // XXX Unfortunately, we probably don't know this yet, so this is wrong...
-      // but it's not clear what we should do. If aFrame's inline size hasn't
-      // been determined yet, we can't necessarily figure out its block size
-      // either. For now, authors who put orthogonal elements into things like
-      // buttons or table cells may have to explicitly provide sizes rather
-      // than expecting intrinsic sizing to work "perfectly" in underspecified
-      // cases.
-      result = aFrame->BSize();
     } else {
       result = aType == MIN_ISIZE
                ? aFrame->GetMinISize(aRenderingContext)
@@ -5056,6 +5063,9 @@ nsLayoutUtils::IntrinsicForAxis(PhysicalAxis        aAxis,
           GetBSizeTakenByBoxSizing(boxSizing, aFrame, horizontalAxis,
                                    aFlags & IGNORE_PADDING);
 
+        // NOTE: This is only the minContentSize if we've been passed MIN_INTRINSIC_ISIZE
+        // (which is fine, because this should only be used inside a check for that flag).
+        nscoord minContentSize = result;
         nscoord h;
         if (GetAbsoluteCoord(styleBSize, h) ||
             GetPercentBSize(styleBSize, aFrame, horizontalAxis, h)) {
@@ -5067,16 +5077,30 @@ nsLayoutUtils::IntrinsicForAxis(PhysicalAxis        aAxis,
             GetPercentBSize(styleMaxBSize, aFrame, horizontalAxis, h)) {
           h = std::max(0, h - bSizeTakenByBoxSizing);
           nscoord maxISize = NSCoordMulDiv(h, ratioISize, ratioBSize);
-          if (maxISize < result)
+          if (maxISize < result) {
             result = maxISize;
+          }
+          if (maxISize < minContentSize) {
+            minContentSize = maxISize;
+          }
         }
 
         if (GetAbsoluteCoord(styleMinBSize, h) ||
             GetPercentBSize(styleMinBSize, aFrame, horizontalAxis, h)) {
           h = std::max(0, h - bSizeTakenByBoxSizing);
           nscoord minISize = NSCoordMulDiv(h, ratioISize, ratioBSize);
-          if (minISize > result)
+          if (minISize > result) {
             result = minISize;
+          }
+          if (minISize > minContentSize) {
+            minContentSize = minISize;
+          }
+        }
+        if (MOZ_UNLIKELY(aFlags & nsLayoutUtils::MIN_INTRINSIC_ISIZE)) {
+          // This is the 'min-width/height:auto' "transferred size" piece of:
+          // https://www.w3.org/TR/css-flexbox-1/#min-width-automatic-minimum-size
+          // https://drafts.csswg.org/css-grid/#min-size-auto
+          result = std::min(result, minContentSize);
         }
       }
     }
@@ -5161,7 +5185,7 @@ nsLayoutUtils::MinSizeContributionForAxis(PhysicalAxis        aAxis,
         // https://drafts.csswg.org/css-grid/#min-size-auto
         fixedMinSize = &minSize;
       }
-      // XXX the "transferred size" piece is missing (bug 1218178)
+      // fall through - the caller will have to deal with "transferred size"
     } else {
       // min-[width|height]:auto with overflow != visible computes to zero.
       minSize = 0;
