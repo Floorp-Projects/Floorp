@@ -717,14 +717,11 @@ nsSubDocumentFrame::ComputeSize(nsRenderingContext* aRenderingContext,
 {
   nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
   if (subDocRoot) {
-    return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aWM,
-                            aRenderingContext, this,
-                            subDocRoot->GetIntrinsicSize(),
-                            subDocRoot->GetIntrinsicRatio(),
-                            aCBSize,
-                            aMargin,
-                            aBorder,
-                            aPadding);
+    return ComputeSizeWithIntrinsicDimensions(aRenderingContext, aWM,
+                                              subDocRoot->GetIntrinsicSize(),
+                                              subDocRoot->GetIntrinsicRatio(),
+                                              aCBSize, aMargin, aBorder,
+                                              aPadding);
   }
   return nsAtomicContainerFrame::ComputeSize(aRenderingContext, aWM,
                                              aCBSize, aAvailableISize,
