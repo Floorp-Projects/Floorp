@@ -1464,7 +1464,7 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
 // -------------------------------------------------------------
 // Indicates whether the cross-size property is set to something definite.
 // The logic here should be similar to the logic for isAutoWidth/isAutoHeight
-// in nsLayoutUtils::ComputeSizeWithIntrinsicDimensions().
+// in nsFrame::ComputeSizeWithIntrinsicDimensions().
 static bool
 IsCrossSizeDefinite(const ReflowInput& aItemReflowInput,
                     const FlexboxAxisTracker& aAxisTracker)
@@ -4089,7 +4089,7 @@ private:
 
 // Class to let us temporarily provide an override value for the the main-size
 // CSS property ('width' or 'height') on a flex item, for use in
-// nsLayoutUtils::ComputeSizeWithIntrinsicDimensions.
+// nsFrame::ComputeSizeWithIntrinsicDimensions.
 // (We could use this overridden size more broadly, too, but it's probably
 // better to avoid property-table accesses.  So, where possible, we communicate
 // the resolved main-size to the child via modifying its reflow state directly,

@@ -1527,21 +1527,6 @@ public:
   static void MarkIntrinsicISizesDirtyIfDependentOnBSize(nsIFrame* aFrame);
 
   /*
-   * Calculate the used values for 'width' and 'height' for a replaced element.
-   *
-   *   http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
-   */
-  static mozilla::LogicalSize
-  ComputeSizeWithIntrinsicDimensions(mozilla::WritingMode aWM,
-                    nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
-                    const mozilla::IntrinsicSize& aIntrinsicSize,
-                    nsSize aIntrinsicRatio,
-                    const mozilla::LogicalSize& aCBSize,
-                    const mozilla::LogicalSize& aMargin,
-                    const mozilla::LogicalSize& aBorder,
-                    const mozilla::LogicalSize& aPadding);
-
-  /*
    * Calculate the used values for 'width' and 'height' when width
    * and height are 'auto'. The tentWidth and tentHeight arguments should be
    * the result of applying the rules for computing intrinsic sizes and ratios.

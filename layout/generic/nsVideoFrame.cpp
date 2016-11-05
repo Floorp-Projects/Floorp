@@ -535,15 +535,9 @@ nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   // Only video elements have an intrinsic ratio.
   nsSize intrinsicRatio = HasVideoElement() ? size : nsSize(0, 0);
 
-  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(aWM,
-                                                           aRenderingContext,
-                                                           this,
-                                                           intrinsicSize,
-                                                           intrinsicRatio,
-                                                           aCBSize,
-                                                           aMargin,
-                                                           aBorder,
-                                                           aPadding);
+  return ComputeSizeWithIntrinsicDimensions(aRenderingContext, aWM,
+                                            intrinsicSize, intrinsicRatio,
+                                            aCBSize, aMargin, aBorder, aPadding);
 }
 
 nscoord nsVideoFrame::GetMinISize(nsRenderingContext *aRenderingContext)
