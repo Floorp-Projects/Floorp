@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from ../../../../../testing/marionette/harness/marionette/atoms/b2g_update_test.js */
+
 const TEST_URL = "http://localhost";
 
 setPref("b2g.update.apply-idle-timeout", 0);
