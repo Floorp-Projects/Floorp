@@ -1402,8 +1402,9 @@ public:
    * given axis is vertical), and its padding, border, and margin in the
    * corresponding dimension.  If the 'min-' property is 'auto' (and 'overflow'
    * is 'visible') and the corresponding 'width'/'height' is definite it returns
-   * the "specified / transferred size" for:
+   * the "specified size" for:
    * https://drafts.csswg.org/css-grid/#min-size-auto
+   * Note that the "transferred size" is not handled here; use IntrinsicForAxis.
    * Note that any percentage in 'width'/'height' makes it count as indefinite.
    * If the 'min-' property is 'auto' and 'overflow' is not 'visible', then it
    * calculates the result as if the 'min-' computed value is zero.
