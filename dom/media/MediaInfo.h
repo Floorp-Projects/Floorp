@@ -503,10 +503,6 @@ public:
   bool mMediaSeekableOnlyInBufferedRanges = false;
 
   EncryptionInfo mCrypto;
-
-  // The minimum of start times of audio and video tracks.
-  // Use to map the zero time on the media timeline to the first frame.
-  media::TimeUnit mStartTime;
 };
 
 class SharedTrackInfo {
