@@ -436,9 +436,11 @@ partial interface Document {
 };
 
 // Extension to give chrome and XBL JS the ability to determine whether
-// the document is sandboxed without permission to run scripts.
+// the document is sandboxed without permission to run scripts
+// and whether inline scripts are blocked by the document's CSP.
 partial interface Document {
   [Func="IsChromeOrXBL"] readonly attribute boolean hasScriptsBlockedBySandbox;
+  [Func="IsChromeOrXBL"] readonly attribute boolean inlineScriptAllowedByCSP;
 };
 
 Document implements XPathEvaluator;
