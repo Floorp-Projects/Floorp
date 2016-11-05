@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "_focusManager",
 
 
 // Constants
-const TAB_EVENTS = ["TabBrowserCreated", "TabSelect", "TabRemotenessChange"];
+const TAB_EVENTS = ["TabBrowserInserted", "TabSelect", "TabRemotenessChange"];
 const WINDOW_EVENTS = ["activate", "unload"];
 // lower value means higher priority
 const PRIORITY_DELTA = Ci.nsISupportsPriority.PRIORITY_NORMAL - Ci.nsISupportsPriority.PRIORITY_LOW;
@@ -49,7 +49,7 @@ this.trackBrowserWindow = function trackBrowserWindow(aWindow) {
 // Global methods
 function _handleEvent(aEvent) {
   switch (aEvent.type) {
-    case "TabBrowserCreated":
+    case "TabBrowserInserted":
       BrowserHelper.onOpen(aEvent.target.linkedBrowser);
       break;
     case "TabSelect":
