@@ -395,14 +395,14 @@ ChildShrinkWrapISize(nsRenderingContext *aRenderingContext,
 
 /* virtual */
 LogicalSize
-nsTableWrapperFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                                     WritingMode aWM,
-                                     const LogicalSize& aCBSize,
-                                     nscoord aAvailableISize,
-                                     const LogicalSize& aMargin,
-                                     const LogicalSize& aBorder,
-                                     const LogicalSize& aPadding,
-                                     bool aShrinkWrap)
+nsTableWrapperFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
+                                     WritingMode         aWM,
+                                     const LogicalSize&  aCBSize,
+                                     nscoord             aAvailableISize,
+                                     const LogicalSize&  aMargin,
+                                     const LogicalSize&  aBorder,
+                                     const LogicalSize&  aPadding,
+                                     ComputeSizeFlags    aFlags)
 {
   nscoord kidAvailableISize = aAvailableISize - aMargin.ISize(aWM);
   NS_ASSERTION(aBorder.IsAllZero() && aPadding.IsAllZero(),
