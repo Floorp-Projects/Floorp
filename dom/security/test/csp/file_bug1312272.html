@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>marquee inline script tests for Bug 1312272</title>
+</head>
+<body>
+<marquee id="m" onstart="parent.postMessage('csp-violation-marquee-onstart', '*')">bug 1312272</marquee>
+<script src="file_bug1312272.js"></script>
+</body>
+</html>
