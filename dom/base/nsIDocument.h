@@ -2859,6 +2859,8 @@ public:
 
   bool HasScriptsBlockedBySandbox();
 
+  bool InlineScriptAllowedByCSP();
+
   void ReportHasScrollLinkedEffect();
   bool HasScrollLinkedEffect() const
   {
