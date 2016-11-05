@@ -1,18 +1,18 @@
-<script>
-// HACK: This is not an ideal way to deliver chrome messages
-// to a innef frame content but seems only way that would
-// make `event.source` an this (outer frame) window.
-window.onmessage = function(event) {
-  var frame = document.querySelector("iframe");
-  var content = frame.contentWindow;
-  // If message is posted from chrome it has no `event.source`.
-  if (event.source === null)
-    content.postMessage(event.data, "*");
-};
-// Hack: Ideally we would have used srcdoc on iframe, but in
-// that case origin of document is either content which is unable
-// to load add-on resources or a chrome to which add-on resource
-// can not send messages back.
-document.documentElement.style.overflow = "hidden";
-document.documentElement.innerHTML = atob(location.hash.substr(1));
-</script>
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      // HACK: This is not an ideal way to deliver chrome messages
+      // to an inner frame content but seems only way that would
+      // make `event.source` this (outer frame) window.
+      window.onmessage = function(event) {
+        var frame = document.querySelector("iframe");
+        var content = frame.contentWindow;
+        // If message is posted from chrome it has no `event.source`.
+        if (event.source === null)
+          content.postMessage(event.data, "*");
+      };
+    </script>
+  </head>
+  <body style="overflow: hidden"></body>
+</html>
