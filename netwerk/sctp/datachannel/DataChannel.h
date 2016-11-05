@@ -376,7 +376,7 @@ public:
       ENSURE_DATACONNECTION_RET(false);
 
       if (mStream != INVALID_STREAM)
-        return (mConnection->SendBlob(mStream, aBlob) > 0);
+        return (mConnection->SendBlob(mStream, aBlob) == 0);
       else
         return false;
     }
