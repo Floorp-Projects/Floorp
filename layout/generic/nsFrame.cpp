@@ -4714,6 +4714,23 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
       ComputeISizeValue(aRenderingContext, aCBSize.ISize(aWM),
                         boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
                         *inlineStyleCoord, aFlags);
+  } else if (MOZ_UNLIKELY(isGridItem) &&
+             !IS_TRUE_OVERFLOW_CONTAINER(this)) {
+    if (!(aFlags & nsIFrame::eShrinkWrap) &&
+        !StyleMargin()->HasInlineAxisAuto(aWM)) {
+      // 'auto' inline-size for grid-level box - apply 'stretch' as needed:
+      auto inlineAxisAlignment =
+        aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
+          StylePosition()->UsedAlignSelf(GetParent()->StyleContext()) :
+          StylePosition()->UsedJustifySelf(GetParent()->StyleContext());
+      if (inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
+          inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+        result.ISize(aWM) = std::max(nscoord(0), aCBSize.ISize(aWM) -
+                                                 aPadding.ISize(aWM) -
+                                                 aBorder.ISize(aWM) -
+                                                 aMargin.ISize(aWM));
+      }
+    }
   }
 
   // Flex items ignore their min & max sizing properties in their
