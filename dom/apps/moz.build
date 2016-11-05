@@ -6,10 +6,6 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-MOCHITEST_CHROME_MANIFESTS += [
-    'tests/chrome.ini'
-]
-
 EXTRA_COMPONENTS += [
     'AppsService.js',
     'AppsService.manifest',
