@@ -793,7 +793,6 @@ interface TestExampleInterface {
 
 interface TestExampleProxyInterface {
   getter long longIndexedGetter(unsigned long ix);
-  deleter void (unsigned long ix);
   setter creator void longIndexedSetter(unsigned long y, long z);
   stringifier DOMString myStringifier();
   getter short shortNameGetter(DOMString nom);

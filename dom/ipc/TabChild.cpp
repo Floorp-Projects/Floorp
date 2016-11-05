@@ -1523,7 +1523,7 @@ TabChild::NotifyAPZStateChange(const ViewID& aViewId,
                                const layers::GeckoContentController::APZStateChange& aChange,
                                const int& aArg)
 {
-  mAPZEventState->ProcessAPZStateChange(GetDocument(), aViewId, aChange, aArg);
+  mAPZEventState->ProcessAPZStateChange(aViewId, aChange, aArg);
   if (aChange == layers::GeckoContentController::APZStateChange::eTransformEnd) {
     // This is used by tests to determine when the APZ is done doing whatever
     // it's doing. XXX generify this as needed when writing additional tests.

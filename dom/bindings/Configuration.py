@@ -653,6 +653,8 @@ class Descriptor(DescriptorProvider):
                 self.interface.identifier.name not in ["HTMLObjectElement",
                                                        "HTMLEmbedElement",
                                                        "HTMLAppletElement"])
+    def needsXrayNamedDeleterHook(self):
+        return self.operations["NamedDeleter"] is not None
 
     def needsSpecialGenericOps(self):
         """

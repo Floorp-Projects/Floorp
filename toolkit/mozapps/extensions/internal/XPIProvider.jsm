@@ -1762,10 +1762,8 @@ function getSignedStatus(aRv, aCert, aAddonID) {
       return /preliminary/i.test(aCert.organizationalUnit)
                ? AddonManager.SIGNEDSTATE_PRELIMINARY
                : AddonManager.SIGNEDSTATE_SIGNED;
-      break;
     case Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED:
       return AddonManager.SIGNEDSTATE_MISSING;
-      break;
     case Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID:
     case Cr.NS_ERROR_SIGNED_JAR_ENTRY_INVALID:
     case Cr.NS_ERROR_SIGNED_JAR_ENTRY_MISSING:
@@ -1773,12 +1771,10 @@ function getSignedStatus(aRv, aCert, aAddonID) {
     case Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY:
     case Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY:
       return AddonManager.SIGNEDSTATE_BROKEN;
-      break;
     default:
       // Any other error indicates that either the add-on isn't signed or it
       // is signed by a signature that doesn't chain to the trusted root.
       return AddonManager.SIGNEDSTATE_UNKNOWN;
-      break;
   }
 }
 

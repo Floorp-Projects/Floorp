@@ -66,10 +66,10 @@ VideoBridgeChild::AllocShmem(size_t aSize,
   return PVideoBridgeChild::AllocShmem(aSize, aType, aShmem);
 }
 
-void
+bool
 VideoBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
 {
-  PVideoBridgeChild::DeallocShmem(aShmem);
+  return PVideoBridgeChild::DeallocShmem(aShmem);
 }
 
 PTextureChild*

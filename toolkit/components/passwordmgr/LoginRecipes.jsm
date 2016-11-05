@@ -100,7 +100,6 @@ LoginRecipesParent.prototype = {
           NetUtil.asyncFetch(channel, function (stream, result) {
             if (!Components.isSuccessCode(result)) {
               throw new Error("Error fetching recipe file:" + result);
-              return;
             }
             let count = stream.available();
             let data = NetUtil.readInputStreamToString(stream, count, { charset: "UTF-8" });

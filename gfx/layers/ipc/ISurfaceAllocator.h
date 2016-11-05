@@ -20,6 +20,7 @@
 namespace mozilla {
 namespace ipc {
 class Shmem;
+class IShmemAllocator;
 } // namespace ipc
 namespace gfx {
 class DataSourceSurface;
@@ -201,6 +202,9 @@ public:
   virtual void DestroySurfaceDescriptor(SurfaceDescriptor* aSurface) = 0;
 };
 
+bool
+IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface);
+
 already_AddRefed<gfx::DrawTarget>
 GetDrawTargetForDescriptor(const SurfaceDescriptor& aDescriptor, gfx::BackendType aBackend);
 
@@ -209,6 +213,9 @@ GetSurfaceForDescriptor(const SurfaceDescriptor& aDescriptor);
 
 uint8_t*
 GetAddressFromDescriptor(const SurfaceDescriptor& aDescriptor);
+
+void
+DestroySurfaceDescriptor(mozilla::ipc::IShmemAllocator* aAllocator, SurfaceDescriptor* aSurface);
 
 class GfxMemoryImageReporter final : public nsIMemoryReporter
 {

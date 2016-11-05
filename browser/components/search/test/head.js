@@ -37,8 +37,6 @@ function getLocalizedPref(aPrefName, aDefault) {
   } catch (ex) {
     return aDefault;
   }
-
-  return aDefault;
 }
 
 function promiseEvent(aTarget, aEventName, aPreventDefault) {

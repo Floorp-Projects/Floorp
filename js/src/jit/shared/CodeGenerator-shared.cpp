@@ -80,7 +80,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph, Mac
         masm.enableProfilingInstrumentation();
 
     if (gen->compilingWasm()) {
-        // Since asm.js uses the system ABI which does not necessarily use a
+        // Since wasm uses the system ABI which does not necessarily use a
         // regular array where all slots are sizeof(Value), it maintains the max
         // argument stack depth separately.
         MOZ_ASSERT(graph->argumentSlotCount() == 0);
@@ -89,23 +89,23 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph, Mac
         if (gen->usesSimd()) {
             // If the function uses any SIMD then we may need to insert padding
             // so that local slots are aligned for SIMD.
-            frameInitialAdjustment_ = ComputeByteAlignment(sizeof(AsmJSFrame),
-                                                           AsmJSStackAlignment);
+            frameInitialAdjustment_ = ComputeByteAlignment(sizeof(wasm::Frame),
+                                                           WasmStackAlignment);
             frameDepth_ += frameInitialAdjustment_;
             // Keep the stack aligned. Some SIMD sequences build values on the
             // stack and need the stack aligned.
-            frameDepth_ += ComputeByteAlignment(sizeof(AsmJSFrame) + frameDepth_,
-                                                AsmJSStackAlignment);
+            frameDepth_ += ComputeByteAlignment(sizeof(wasm::Frame) + frameDepth_,
+                                                WasmStackAlignment);
         } else if (gen->performsCall()) {
             // An MWasmCall does not align the stack pointer at calls sites but
             // instead relies on the a priori stack adjustment. This must be the
             // last adjustment of frameDepth_.
-            frameDepth_ += ComputeByteAlignment(sizeof(AsmJSFrame) + frameDepth_,
-                                                AsmJSStackAlignment);
+            frameDepth_ += ComputeByteAlignment(sizeof(wasm::Frame) + frameDepth_,
+                                                WasmStackAlignment);
         }
 
         // FrameSizeClass is only used for bailing, which cannot happen in
-        // asm.js code.
+        // wasm code.
         frameClass_ = FrameSizeClass::None();
     } else {
         frameClass_ = FrameSizeClass::FromDepth(frameDepth_);
@@ -165,7 +165,7 @@ CodeGeneratorShared::generateOutOfLineCode()
 {
     for (size_t i = 0; i < outOfLineCode_.length(); i++) {
         // Add native => bytecode mapping entries for OOL sites.
-        // Not enabled on asm.js yet since asm doesn't contain bytecode mappings.
+        // Not enabled on wasm yet since it doesn't contain bytecode mappings.
         if (!gen->compilingWasm()) {
             if (!addNativeToBytecodeEntry(outOfLineCode_[i]->bytecodeSite()))
                 return false;
@@ -1487,14 +1487,14 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
     if (mir->spIncrement())
         masm.freeStack(mir->spIncrement());
 
-    MOZ_ASSERT((sizeof(AsmJSFrame) + masm.framePushed()) % AsmJSStackAlignment == 0);
-    static_assert(AsmJSStackAlignment >= ABIStackAlignment &&
-                  AsmJSStackAlignment % ABIStackAlignment == 0,
-                  "The asm.js stack alignment should subsume the ABI-required alignment");
+    MOZ_ASSERT((sizeof(wasm::Frame) + masm.framePushed()) % WasmStackAlignment == 0);
+    static_assert(WasmStackAlignment >= ABIStackAlignment &&
+                  WasmStackAlignment % ABIStackAlignment == 0,
+                  "The wasm stack alignment should subsume the ABI-required alignment");
 
 #ifdef DEBUG
     Label ok;
-    masm.branchTestStackPtr(Assembler::Zero, Imm32(AsmJSStackAlignment - 1), &ok);
+    masm.branchTestStackPtr(Assembler::Zero, Imm32(WasmStackAlignment - 1), &ok);
     masm.breakpoint();
     masm.bind(&ok);
 #endif
@@ -1558,7 +1558,7 @@ CodeGeneratorShared::labelForBackedgeWithImplicitCheck(MBasicBlock* mir)
 {
     // If this is a loop backedge to a loop header with an implicit interrupt
     // check, use a patchable jump. Skip this search if compiling without a
-    // script for asm.js, as there will be no interrupt check instruction.
+    // script for wasm, as there will be no interrupt check instruction.
     // Due to critical edge unsplitting there may no longer be unique loop
     // backedges, so just look for any edge going to an earlier block in RPO.
     if (!gen->compilingWasm() && mir->isLoopHeader() && mir->id() <= current->mir()->id()) {

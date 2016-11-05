@@ -102,7 +102,6 @@ APZEventState::APZEventState(nsIWidget* aWidget,
   , mPendingTouchPreventedBlockId(0)
   , mEndTouchIsClick(false)
   , mTouchEndCancelled(false)
-  , mActiveAPZTransforms(0)
   , mLastTouchIdentifier(0)
 {
   nsresult rv;
@@ -406,8 +405,7 @@ APZEventState::ProcessMouseEvent(const WidgetMouseEvent& aEvent,
 }
 
 void
-APZEventState::ProcessAPZStateChange(const nsCOMPtr<nsIDocument>& aDocument,
-                                     ViewID aViewId,
+APZEventState::ProcessAPZStateChange(ViewID aViewId,
                                      APZStateChange aChange,
                                      int aArg)
 {
@@ -424,19 +422,17 @@ APZEventState::ProcessAPZStateChange(const nsCOMPtr<nsIDocument>& aDocument,
       scrollbarMediator->ScrollbarActivityStarted();
     }
 
-    if (aDocument && mActiveAPZTransforms == 0) {
-      nsCOMPtr<nsIDocShell> docshell(aDocument->GetDocShell());
-      if (docshell && sf) {
-        nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());
-        nsdocshell->NotifyAsyncPanZoomStarted();
-      }
+    nsIContent* content = nsLayoutUtils::FindContentFor(aViewId);
+    nsIDocument* doc = content ? content->GetComposedDoc() : nullptr;
+    nsCOMPtr<nsIDocShell> docshell(doc ? doc->GetDocShell() : nullptr);
+    if (docshell && sf) {
+      nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());
+      nsdocshell->NotifyAsyncPanZoomStarted();
     }
-    mActiveAPZTransforms++;
     break;
   }
   case APZStateChange::eTransformEnd:
   {
-    mActiveAPZTransforms--;
     nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
     if (sf) {
       sf->SetTransformingByAPZ(false);
@@ -446,12 +442,12 @@ APZEventState::ProcessAPZStateChange(const nsCOMPtr<nsIDocument>& aDocument,
       scrollbarMediator->ScrollbarActivityStopped();
     }
 
-    if (aDocument && mActiveAPZTransforms == 0) {
-      nsCOMPtr<nsIDocShell> docshell(aDocument->GetDocShell());
-      if (docshell && sf) {
-        nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());
-        nsdocshell->NotifyAsyncPanZoomStopped();
-      }
+    nsIContent* content = nsLayoutUtils::FindContentFor(aViewId);
+    nsIDocument* doc = content ? content->GetComposedDoc() : nullptr;
+    nsCOMPtr<nsIDocShell> docshell(doc ? doc->GetDocShell() : nullptr);
+    if (docshell && sf) {
+      nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());
+      nsdocshell->NotifyAsyncPanZoomStopped();
     }
     break;
   }

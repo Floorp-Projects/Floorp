@@ -29,8 +29,8 @@ using mozilla::CountLeadingZeroes32;
 
 void dbg_break() {}
 
-// The ABIArgGenerator is used for making system ABI calls and for inter-AsmJS
-// calls. The system ABI can either be SoftFp or HardFp, and inter-AsmJS calls
+// The ABIArgGenerator is used for making system ABI calls and for inter-wasm
+// calls. The system ABI can either be SoftFp or HardFp, and inter-wasm calls
 // are always HardFp calls. The initialization defaults to HardFp, and the ABI
 // choice is made before any system ABI calls with the method "setUseHardFp".
 ABIArgGenerator::ABIArgGenerator()

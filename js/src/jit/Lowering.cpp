@@ -8,11 +8,11 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "asmjs/WasmSignalHandlers.h"
 #include "jit/JitSpewer.h"
 #include "jit/LIR.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
+#include "wasm/WasmSignalHandlers.h"
 
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
@@ -93,7 +93,7 @@ LIRGenerator::visitIsConstructing(MIsConstructing* ins)
 static void
 TryToUseImplicitInterruptCheck(MIRGraph& graph, MBasicBlock* backedge)
 {
-    // Implicit interrupt checks require asm.js signal handlers to be installed.
+    // Implicit interrupt checks require wasm signal handlers to be installed.
     if (!wasm::HaveSignalHandlers() || JitOptions.ionInterruptWithoutSignals)
         return;
 
@@ -4249,7 +4249,7 @@ LIRGenerator::visitWasmReturn(MWasmReturn* ins)
     else if (rval->type() == MIRType::Int32)
         lir->setOperand(0, useFixed(rval, ReturnReg));
     else
-        MOZ_CRASH("Unexpected asm.js return type");
+        MOZ_CRASH("Unexpected wasm return type");
 
     // Preserve the TLS pointer we were passed in `WasmTlsReg`.
     MDefinition* tlsPtr = ins->getOperand(1);

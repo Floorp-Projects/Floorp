@@ -168,7 +168,6 @@ protected:
 
   SharedMutex mMutex;
   mozilla::CondVar mCondVar;
-  mozilla::CondVar mMemoryReportCondVar;
 
   // Protected by mMutex.
   RefPtr<EventTarget> mEventTarget;
@@ -984,8 +983,6 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mTimerRunning;
   bool mRunningExpiredTimeouts;
   bool mPendingEventQueueClearing;
-  bool mMemoryReporterRunning;
-  bool mBlockedForMemoryReporter;
   bool mCancelAllPendingRunnables;
   bool mPeriodicGCTimerRunning;
   bool mIdleGCTimerRunning;
@@ -1208,7 +1205,7 @@ public:
   ScheduleDeletion(WorkerRanOrNot aRanOrNot);
 
   bool
-  BlockAndCollectRuntimeStats(JS::RuntimeStats* aRtStats, bool aAnonymize);
+  CollectRuntimeStats(JS::RuntimeStats* aRtStats, bool aAnonymize);
 
 #ifdef JS_GC_ZEAL
   void

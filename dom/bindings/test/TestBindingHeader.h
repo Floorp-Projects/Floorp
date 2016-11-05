@@ -1307,40 +1307,6 @@ public:
   int32_t Volatile();
 };
 
-class TestIndexedDeleterInterface : public nsISupports,
-                                    public nsWrapperCache
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  // We need a GetParentObject to make binding codegen happy
-  virtual nsISupports* GetParentObject();
-
-  void IndexedDeleter(uint32_t, bool&);
-  void IndexedDeleter(uint32_t) = delete;
-  long IndexedGetter(uint32_t, bool&);
-  uint32_t Length();
-  void DelItem(uint32_t);
-  void DelItem(uint32_t, bool&) = delete;
-};
-
-class TestIndexedDeleterWithRetvalInterface : public nsISupports,
-                                              public nsWrapperCache
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  // We need a GetParentObject to make binding codegen happy
-  virtual nsISupports* GetParentObject();
-
-  bool IndexedDeleter(uint32_t, bool&);
-  bool IndexedDeleter(uint32_t) = delete;
-  long IndexedGetter(uint32_t, bool&);
-  uint32_t Length();
-  bool DelItem(uint32_t);
-  bool DelItem(uint32_t, bool&) = delete;
-};
-
 class TestNamedDeleterInterface : public nsISupports,
                                   public nsWrapperCache
 {
@@ -1369,27 +1335,6 @@ public:
   long NamedGetter(const nsAString&, bool&);
   bool DelNamedItem(const nsAString&);
   bool DelNamedItem(const nsAString&, bool&) = delete;
-  void GetSupportedNames(nsTArray<nsString>&);
-};
-
-class TestIndexedAndNamedDeleterInterface : public nsISupports,
-                                            public nsWrapperCache
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  // We need a GetParentObject to make binding codegen happy
-  virtual nsISupports* GetParentObject();
-
-  void IndexedDeleter(uint32_t, bool&);
-  long IndexedGetter(uint32_t, bool&);
-  uint32_t Length();
-
-  void NamedDeleter(const nsAString&, bool&);
-  void NamedDeleter(const nsAString&) = delete;
-  long NamedGetter(const nsAString&, bool&);
-  void DelNamedItem(const nsAString&);
-  void DelNamedItem(const nsAString&, bool&) = delete;
   void GetSupportedNames(nsTArray<nsString>&);
 };
 

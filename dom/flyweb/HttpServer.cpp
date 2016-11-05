@@ -1052,7 +1052,7 @@ StreamCopier::FillOutputBuffer(char* aBuffer,
                                uint32_t aCount,
                                uint32_t* aCountRead)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   while (mChunked && mSeparator.IsEmpty() && !mChunkRemaining &&
          !mAddedFinalSeparator) {
     uint64_t avail;

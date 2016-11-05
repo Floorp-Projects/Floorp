@@ -526,7 +526,6 @@
             default:
               // Delegate to browser.xml.
               return this._receiveMessage(aMessage);
-              break;
           }
           return undefined;
         ]]></body>

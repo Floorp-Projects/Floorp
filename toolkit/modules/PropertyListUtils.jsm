@@ -145,7 +145,6 @@ this.PropertyListUtils = Object.freeze({
     catch (ex) {
       throw new Error("aBuffer cannot be parsed as a DOM document: " + ex);
     }
-    return null;
   },
 
   TYPE_PRIMITIVE:    0,

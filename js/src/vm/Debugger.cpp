@@ -20,7 +20,6 @@
 #include "jsprf.h"
 #include "jswrapper.h"
 
-#include "asmjs/WasmInstance.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "gc/Marking.h"
@@ -37,6 +36,7 @@
 #include "vm/SPSProfiler.h"
 #include "vm/TraceLogging.h"
 #include "vm/WrapperObject.h"
+#include "wasm/WasmInstance.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
@@ -2783,10 +2783,10 @@ Debugger::updateObservesAsmJSOnDebuggees(IsObserving observing)
         GlobalObject* global = r.front();
         JSCompartment* comp = global->compartment();
 
-        if (comp->debuggerObservesAsmJS() == observing)
+        if (comp->debuggerObservesWasm() == observing)
             continue;
 
-        comp->updateDebuggerObservesAsmJS();
+        comp->updateDebuggerObservesWasm();
     }
 }
 
@@ -3479,7 +3479,7 @@ Debugger::setAllowUnobservedAsmJS(JSContext* cx, unsigned argc, Value* vp)
     for (WeakGlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
         GlobalObject* global = r.front();
         JSCompartment* comp = global->compartment();
-        comp->updateDebuggerObservesAsmJS();
+        comp->updateDebuggerObservesWasm();
     }
 
     args.rval().setUndefined();
@@ -3931,7 +3931,7 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
     // (6)
     AutoRestoreCompartmentDebugMode debugModeGuard(debuggeeCompartment);
     debuggeeCompartment->setIsDebuggee();
-    debuggeeCompartment->updateDebuggerObservesAsmJS();
+    debuggeeCompartment->updateDebuggerObservesWasm();
     debuggeeCompartment->updateDebuggerObservesCoverage();
     if (observesAllExecution() && !ensureExecutionObservabilityOfCompartment(cx, debuggeeCompartment))
         return false;
@@ -4047,7 +4047,7 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
         global->compartment()->unsetIsDebuggee();
     } else {
         global->compartment()->updateDebuggerObservesAllExecution();
-        global->compartment()->updateDebuggerObservesAsmJS();
+        global->compartment()->updateDebuggerObservesWasm();
         global->compartment()->updateDebuggerObservesCoverage();
     }
 }
@@ -5626,7 +5626,7 @@ DebuggerScript_getChildScripts(JSContext* cx, unsigned argc, Value* vp)
             obj = objects->vector[i];
             if (obj->is<JSFunction>()) {
                 fun = &obj->as<JSFunction>();
-                // The inner function could be an asm.js native.
+                // The inner function could be a wasm native.
                 if (fun->isNative())
                     continue;
                 funScript = GetOrCreateFunctionScript(cx, fun);

@@ -712,7 +712,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
     void movePtr(wasm::SymbolicAddress imm, Register dest) {
         BufferOffset off = movePatchablePtr(ImmWord(0xffffffffffffffffULL), dest);
-        append(AsmJSAbsoluteAddress(CodeOffset(off.getOffset()), imm));
+        append(wasm::SymbolicAccess(CodeOffset(off.getOffset()), imm));
     }
     void movePtr(ImmGCPtr imm, Register dest) {
         BufferOffset load = movePatchablePtr(ImmPtr(imm.value), dest);
@@ -2305,12 +2305,12 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
 
     void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
-        loadPtr(Address(GlobalReg, globalDataOffset - AsmJSGlobalRegBias), dest);
+        loadPtr(Address(GlobalReg, globalDataOffset - WasmGlobalRegBias), dest);
     }
     void loadWasmPinnedRegsFromTls() {
         loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
         loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, globalData)), GlobalReg);
-        adds32(Imm32(AsmJSGlobalRegBias), GlobalReg);
+        adds32(Imm32(WasmGlobalRegBias), GlobalReg);
     }
 
     // Overwrites the payload bits of a dest register containing a Value.

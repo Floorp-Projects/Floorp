@@ -1537,13 +1537,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
-        loadPtr(Address(GlobalReg, globalDataOffset - AsmJSGlobalRegBias), dest);
+        loadPtr(Address(GlobalReg, globalDataOffset - WasmGlobalRegBias), dest);
     }
     void loadWasmPinnedRegsFromTls() {
         ScratchRegisterScope scratch(asMasm());
         ma_ldr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg, scratch);
         ma_ldr(Address(WasmTlsReg, offsetof(wasm::TlsData, globalData)), GlobalReg, scratch);
-        ma_add(Imm32(AsmJSGlobalRegBias), GlobalReg, scratch);
+        ma_add(Imm32(WasmGlobalRegBias), GlobalReg, scratch);
     }
 
     // Instrumentation for entering and leaving the profiler.

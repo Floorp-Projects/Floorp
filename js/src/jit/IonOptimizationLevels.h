@@ -21,7 +21,7 @@ namespace jit {
 enum class OptimizationLevel : uint8_t
 {
     Normal,
-    AsmJS,
+    Wasm,
     Count,
     DontCompile
 };
@@ -35,8 +35,8 @@ OptimizationLevelString(OptimizationLevel level)
         return "Optimization_DontCompile";
       case OptimizationLevel::Normal:
         return "Optimization_Normal";
-      case OptimizationLevel::AsmJS:
-        return "Optimization_AsmJS";
+      case OptimizationLevel::Wasm:
+        return "Optimization_Wasm";
       case OptimizationLevel::Count:;
     }
     MOZ_CRASH("Invalid OptimizationLevel");
@@ -154,7 +154,7 @@ class OptimizationInfo
     { }
 
     void initNormalOptimizationInfo();
-    void initAsmjsOptimizationInfo();
+    void initWasmOptimizationInfo();
 
     OptimizationLevel level() const {
         return level_;

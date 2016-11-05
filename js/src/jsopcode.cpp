@@ -2160,7 +2160,7 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
                     continue;
                 JSFunction& fun = obj->as<JSFunction>();
 
-                // Let's skip asm.js for now.
+                // Let's skip wasm for now.
                 if (!fun.isInterpreted())
                     continue;
 

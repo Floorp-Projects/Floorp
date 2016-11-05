@@ -141,7 +141,6 @@ var SysInfo = {
       return this._genuine.getProperty(name);
     } catch (ex) {
       throw ex;
-      Assert.ok(false, "Mock SysInfo: oops for " + name + ": " + ex);
     }
   },
 

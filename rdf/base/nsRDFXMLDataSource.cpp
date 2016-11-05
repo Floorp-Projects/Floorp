@@ -249,19 +249,17 @@ public:
         return mInner->GetAllCmds(source, commands);
     }
 
-    NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+    NS_IMETHOD IsCommandEnabled(nsISupports* aSources,
                                 nsIRDFResource*   aCommand,
-                                nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                nsISupports* aArguments,
                                 bool* aResult) override {
-        return mInner->IsCommandEnabled(aSources, aCommand, aArguments, aResult);
+        return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+    NS_IMETHOD DoCommand(nsISupports* aSources,
                          nsIRDFResource*   aCommand,
-                         nsISupportsArray/*<nsIRDFResource>*/* aArguments) override {
-        // XXX Uh oh, this could cause problems wrt. the "dirty" flag
-        // if it changes the in-memory store's internal state.
-        return mInner->DoCommand(aSources, aCommand, aArguments);
+                         nsISupports* aArguments) override {
+        return NS_ERROR_NOT_IMPLEMENTED;
     }
 
     NS_IMETHOD BeginUpdateBatch() override {

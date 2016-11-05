@@ -110,18 +110,18 @@ static constexpr FloatRegister ScratchSimd128Reg = InvalidFloatReg;
 // A bias applied to the GlobalReg to allow the use of instructions with small
 // negative immediate offsets which doubles the range of global data that can be
 // accessed with a single instruction.
-static const int32_t AsmJSGlobalRegBias = 32768;
+static const int32_t WasmGlobalRegBias = 32768;
 
 // Registers used in the GenerateFFIIonExit Enable Activation block.
-static constexpr Register AsmJSIonExitRegCallee = t0;
-static constexpr Register AsmJSIonExitRegE0 = a0;
-static constexpr Register AsmJSIonExitRegE1 = a1;
+static constexpr Register WasmIonExitRegCallee = t0;
+static constexpr Register WasmIonExitRegE0 = a0;
+static constexpr Register WasmIonExitRegE1 = a1;
 
 // Registers used in the GenerateFFIIonExit Disable Activation block.
 // None of these may be the second scratch register (t8).
-static constexpr Register AsmJSIonExitRegD0 = a0;
-static constexpr Register AsmJSIonExitRegD1 = a1;
-static constexpr Register AsmJSIonExitRegD2 = t0;
+static constexpr Register WasmIonExitRegD0 = a0;
+static constexpr Register WasmIonExitRegD1 = a1;
+static constexpr Register WasmIonExitRegD2 = t0;
 
 // Registerd used in RegExpMatcher instruction (do not use JSReturnOperand).
 static constexpr Register RegExpMatcherRegExpReg = CallTempReg0;

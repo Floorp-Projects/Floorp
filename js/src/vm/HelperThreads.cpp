@@ -12,7 +12,6 @@
 #include "jsnativestack.h"
 #include "jsnum.h" // For FIX_FPU()
 
-#include "asmjs/WasmIonCompile.h"
 #include "builtin/Promise.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
@@ -21,6 +20,7 @@
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
+#include "wasm/WasmIonCompile.h"
 
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
@@ -881,9 +881,9 @@ GlobalHelperThreadState::maxParseThreads() const
         return 1;
 
     // Don't allow simultaneous off thread parses, to reduce contention on the
-    // atoms table. Note that asm.js compilation depends on this to avoid
+    // atoms table. Note that wasm compilation depends on this to avoid
     // stalling the helper thread, as off thread parse tasks can trigger and
-    // block on other off thread asm.js compilation tasks.
+    // block on other off thread wasm compilation tasks.
     return 1;
 }
 
@@ -1153,6 +1153,7 @@ js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& locked)
 {
     {
         AutoUnlockHelperThreadState parallelSection(locked);
+        gc::AutoSetThreadIsPerformingGC performingGC;
         uint64_t timeStart = PRMJ_Now();
         run();
         duration_ = PRMJ_Now() - timeStart;
