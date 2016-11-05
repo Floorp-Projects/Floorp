@@ -537,7 +537,8 @@ nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
   return ComputeSizeWithIntrinsicDimensions(aRenderingContext, aWM,
                                             intrinsicSize, intrinsicRatio,
-                                            aCBSize, aMargin, aBorder, aPadding);
+                                            aCBSize, aMargin, aBorder, aPadding,
+                                            aFlags);
 }
 
 nscoord nsVideoFrame::GetMinISize(nsRenderingContext *aRenderingContext)
