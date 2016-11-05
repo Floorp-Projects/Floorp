@@ -18,9 +18,5 @@ EXTRA_JS_MODULES.reader = [
   'ReaderWorker.jsm'
 ]
 
-BROWSER_CHROME_MANIFESTS += [
-  'test/browser.ini'
-]
-
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Reader Mode')
