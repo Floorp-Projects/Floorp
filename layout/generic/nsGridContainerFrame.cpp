@@ -808,16 +808,18 @@ struct nsGridContainerFrame::GridItemInfo
    * Item state per axis.
    */
   enum StateBits : uint8_t {
-    eIsFlexing =            0x1, // does the item span a flex track?
-    eFirstBaseline =        0x2, // participate in first-baseline alignment?
+    eIsFlexing =              0x1, // does the item span a flex track?
+    eFirstBaseline =          0x2, // participate in first-baseline alignment?
     // ditto last-baseline, mutually exclusive w. eFirstBaseline
-    eLastBaseline =         0x4,
+    eLastBaseline =           0x4,
     eIsBaselineAligned = eFirstBaseline | eLastBaseline,
     // One of e[Self|Content]Baseline is set when eIsBaselineAligned is true
-    eSelfBaseline =         0x8, // is it *-self:[last-]baseline alignment?
+    eSelfBaseline =           0x8, // is it *-self:[last-]baseline alignment?
     // Ditto *-content:[last-]baseline. Mutually exclusive w. eSelfBaseline.
-    eContentBaseline =     0x10,
+    eContentBaseline =       0x10,
     eAllBaselineBits = eIsBaselineAligned | eSelfBaseline | eContentBaseline,
+    // Clamp per https://drafts.csswg.org/css-grid/#min-size-auto
+    eClampMarginBoxMinSize = 0x20,
   };
 
   explicit GridItemInfo(nsIFrame* aFrame,
@@ -888,7 +890,7 @@ struct nsGridContainerFrame::GridItemInfo
   // the start edge when eFirstBaseline is set, end edge otherwise. It's mutable
   // since we update the value fairly late (just before reflowing the item).
   mutable nscoord mBaselineOffset[2];
-  StateBits mState[2]; // state bits per axis (LogicalAxis index)
+  mutable StateBits mState[2]; // state bits per axis (LogicalAxis index)
   static_assert(mozilla::eLogicalAxisBlock == 0, "unexpected index value");
   static_assert(mozilla::eLogicalAxisInline == 1, "unexpected index value");
 };
@@ -3683,10 +3685,12 @@ nsGridContainerFrame::Tracks::Initialize(
  * Reflow aChild in the given aAvailableSize.
  */
 static nscoord
-MeasuringReflow(nsIFrame*                aChild,
-                const ReflowInput* aReflowInput,
-                nsRenderingContext*      aRC,
-                const LogicalSize&       aAvailableSize)
+MeasuringReflow(nsIFrame*           aChild,
+                const ReflowInput*  aReflowInput,
+                nsRenderingContext* aRC,
+                const LogicalSize&  aAvailableSize,
+                nscoord             aIMinSizeClamp = NS_MAXSIZE,
+                nscoord             aBMinSizeClamp = NS_MAXSIZE)
 {
   nsContainerFrame* parent = aChild->GetParent();
   nsPresContext* pc = aChild->PresContext();
@@ -3705,9 +3709,19 @@ MeasuringReflow(nsIFrame*                aChild,
   parent->Properties().Set(
     nsContainerFrame::DebugReflowingWithInfiniteISize(), true);
 #endif
-  ReflowInput childRI(pc, *rs, aChild, aAvailableSize, nullptr,
-                            ReflowInput::COMPUTE_SIZE_SHRINK_WRAP |
-                            ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE);
+  uint32_t riFlags = ReflowInput::COMPUTE_SIZE_SHRINK_WRAP |
+                     ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE;
+  if (aIMinSizeClamp != NS_MAXSIZE) {
+    riFlags |= ReflowInput::I_CLAMP_MARGIN_BOX_MIN_SIZE;
+  }
+  if (aBMinSizeClamp != NS_MAXSIZE) {
+    riFlags |= ReflowInput::B_CLAMP_MARGIN_BOX_MIN_SIZE;
+    aChild->Properties().Set(nsIFrame::BClampMarginBoxMinSizeProperty(),
+                             aBMinSizeClamp);
+  } else {
+    aChild->Properties().Delete(nsIFrame::BClampMarginBoxMinSizeProperty());
+  }
+  ReflowInput childRI(pc, *rs, aChild, aAvailableSize, nullptr, riFlags);
   ReflowOutput childSize(childRI);
   nsReflowStatus childStatus;
   const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
@@ -3748,16 +3762,32 @@ ContentContribution(const GridItemInfo&    aGridItem,
     nscoord cbISize = INFINITE_ISIZE_COORD;
     nscoord cbBSize = NS_UNCONSTRAINEDSIZE;
     auto childWM = child->GetWritingMode();
+    const bool isOrthogonal = childWM.IsOrthogonalTo(aCBWM);
+    // The next two variables are MinSizeClamp values in the child's axes.
+    nscoord iMinSizeClamp = NS_MAXSIZE;
+    nscoord bMinSizeClamp = NS_MAXSIZE;
     if (aState.mCols.mCanResolveLineRangeSize) {
       nscoord sz = aState.mCols.ResolveSize(aGridItem.mArea.mCols);
-      if (childWM.IsOrthogonalTo(aCBWM)) {
+      if (isOrthogonal) {
         cbBSize = sz;
+        if (aGridItem.mState[aAxis] & ItemState::eClampMarginBoxMinSize) {
+          bMinSizeClamp = sz;
+        }
       } else {
         cbISize = sz;
+        if (aGridItem.mState[aAxis] & ItemState::eClampMarginBoxMinSize) {
+          iMinSizeClamp = sz;
+        }
       }
     }
+    if (isOrthogonal == (aAxis == eLogicalAxisInline)) {
+      bMinSizeClamp = aMinSizeClamp;
+    } else {
+      iMinSizeClamp = aMinSizeClamp;
+    }
     LogicalSize availableSize(childWM, cbISize, cbBSize);
-    size = ::MeasuringReflow(child, aState.mReflowInput, aRC, availableSize);
+    size = ::MeasuringReflow(child, aState.mReflowInput, aRC, availableSize,
+                             iMinSizeClamp, bMinSizeClamp);
     nsIFrame::IntrinsicISizeOffsetData offsets = child->IntrinsicBSizeOffsets();
     size += offsets.hMargin;
     auto percent = offsets.hPctMargin;
@@ -3951,17 +3981,22 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   const GridItemInfo&         aGridItem)
 {
   CachedIntrinsicSizes cache;
-  // min sizing
   TrackSize& sz = mSizes[aRange.mStart];
   WritingMode wm = aState.mWM;
-  nsRenderingContext* rc = &aState.mRenderingContext;
-  if ((sz.mState & TrackSize::eIntrinsicMinSizing) &&
-      TrackSize::IsDefiniteMaxSizing(sz.mState) &&
-      aGridItem.ShouldClampMinSize(wm, mAxis)) {
-    auto maxCoord = aFunctions.MaxSizingFor(aRange.mStart);
-    cache.mMinSizeClamp =
-      nsRuleNode::ComputeCoordPercentCalc(maxCoord, aPercentageBasis);
+  // Calculate data for "Automatic Minimum Size" clamping, if needed.
+  bool needed = ((sz.mState & TrackSize::eIntrinsicMinSizing) ||
+                 aConstraint == SizingConstraint::eNoConstraint);
+  if (needed && TrackSize::IsDefiniteMaxSizing(sz.mState) &&
+      aGridItem.ShouldClampMinSize(wm, mAxis, aPercentageBasis)) {
+    if (sz.mState & TrackSize::eIntrinsicMinSizing) {
+      auto maxCoord = aFunctions.MaxSizingFor(aRange.mStart);
+      cache.mMinSizeClamp =
+        nsRuleNode::ComputeCoordPercentCalc(maxCoord, aPercentageBasis);
+    }
+    aGridItem.mState[mAxis] |= ItemState::eClampMarginBoxMinSize;
   }
+  // min sizing
+  nsRenderingContext* rc = &aState.mRenderingContext;
   if (sz.mState & TrackSize::eAutoMinSizing) {
     nscoord s;
     if (aConstraint == SizingConstraint::eMinContent) {
@@ -4370,9 +4405,11 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         }
         stateBitsPerSpan[span] |= state;
         CachedIntrinsicSizes cache;
-        if ((state & TrackSize::eIntrinsicMinSizing) &&
-            TrackSize::IsDefiniteMaxSizing(state) &&
-            gridItem.ShouldClampMinSize(wm, mAxis)) {
+        // Calculate data for "Automatic Minimum Size" clamping, if needed.
+        bool needed = ((state & TrackSize::eIntrinsicMinSizing) ||
+                       aConstraint == SizingConstraint::eNoConstraint);
+        if (needed && TrackSize::IsDefiniteMaxSizing(state) &&
+            gridItem.ShouldClampMinSize(wm, mAxis, aPercentageBasis)) {
           nscoord minSizeClamp = 0;
           for (auto i = lineRange.mStart, end = lineRange.mEnd; i < end; ++i) {
             auto maxCoord = aFunctions.MaxSizingFor(i);
@@ -4381,7 +4418,9 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
           }
           minSizeClamp += mGridGap * (span - 1);
           cache.mMinSizeClamp = minSizeClamp;
+          gridItem.mState[mAxis] |= ItemState::eClampMarginBoxMinSize;
         }
+        // Collect the various grid item size contributions we need.
         nscoord minSize = 0;
         if (state & (TrackSize::eIntrinsicMinSizing |   // for 2.1
                      TrackSize::eIntrinsicMaxSizing)) { // for 2.5
@@ -4401,8 +4440,14 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         step2Items.AppendElement(
           Step2ItemData({span, state, lineRange, minSize,
                          minContent, maxContent, *iter}));
-      } else if (state & TrackSize::eFlexMaxSizing) {
-        gridItem.mState[mAxis] |= ItemState::eIsFlexing;
+      } else {
+        if (state & TrackSize::eFlexMaxSizing) {
+          gridItem.mState[mAxis] |= ItemState::eIsFlexing;
+        } else if (aConstraint == SizingConstraint::eNoConstraint &&
+                   TrackSize::IsDefiniteMaxSizing(state) &&
+                   gridItem.ShouldClampMinSize(wm, mAxis, aPercentageBasis)) {
+          gridItem.mState[mAxis] |= ItemState::eClampMarginBoxMinSize;
+        }
       }
     }
   }
@@ -5169,13 +5214,30 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     reflowSize.BSize(wm) = toFragmentainerEnd;
   }
   LogicalSize childCBSize = reflowSize.ConvertTo(childWM, wm);
+
+  // Setup the ClampMarginBoxMinSize reflow flags and property, if needed.
+  uint32_t flags = 0;
+  if (aGridItemInfo) {
+    auto childIAxis = isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline;
+    if (aGridItemInfo->mState[childIAxis] & ItemState::eClampMarginBoxMinSize) {
+      flags |= ReflowInput::I_CLAMP_MARGIN_BOX_MIN_SIZE;
+    }
+    auto childBAxis = GetOrthogonalAxis(childIAxis);
+    if (aGridItemInfo->mState[childBAxis] & ItemState::eClampMarginBoxMinSize) {
+      flags |= ReflowInput::B_CLAMP_MARGIN_BOX_MIN_SIZE;
+      aChild->Properties().Set(BClampMarginBoxMinSizeProperty(),
+                               childCBSize.BSize(childWM));
+    } else {
+      aChild->Properties().Delete(BClampMarginBoxMinSizeProperty());
+    }
+  }
+
   if (!isConstrainedBSize) {
     childCBSize.BSize(childWM) = NS_UNCONSTRAINEDSIZE;
   }
-
   LogicalSize percentBasis(cb.Size(wm).ConvertTo(childWM, wm));
   ReflowInput childRI(pc, *aState.mReflowInput, aChild, childCBSize,
-                            &percentBasis);
+                      &percentBasis, flags);
   childRI.mFlags.mIsTopOfPage = aFragmentainer ? aFragmentainer->mIsTopOfPage : false;
 
   // If the child is stretching in its block axis, and we might be fragmenting
