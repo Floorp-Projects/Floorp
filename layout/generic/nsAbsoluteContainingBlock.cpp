@@ -442,7 +442,7 @@ OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
   }
 
   // (baselineAdjust is unused. CSSAlignmentForAbsPosChild() should've
-  // converted 'baseline'/'last-baseline' enums to their fallback values.)
+  // converted 'baseline'/'last baseline' enums to their fallback values.)
   const nscoord baselineAdjust = nscoord(0);
 
   // AlignJustifySelf operates in the kid's writing mode, so we need to
