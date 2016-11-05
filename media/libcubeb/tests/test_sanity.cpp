@@ -471,6 +471,21 @@ test_stream_position(void)
     delay(500);
   }
 
+  /* test that the position is valid even when starting and
+   * stopping the stream.  */
+  for (i = 0; i < 5; ++i) {
+    r = cubeb_stream_stop(stream);
+    assert(r == 0);
+    r = cubeb_stream_get_position(stream, &position);
+    assert(r == 0);
+    assert(last_position < position);
+    last_position = position;
+    delay(500);
+    r = cubeb_stream_start(stream);
+    assert(r == 0);
+    delay(500);
+  }
+
   assert(last_position != 0);
 
   /* stream position should not advance after stopping playback */

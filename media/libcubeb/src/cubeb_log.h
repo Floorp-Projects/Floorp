@@ -12,8 +12,14 @@
 extern "C" {
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+#define PRINTF_FORMAT(fmt, args) __attribute__((format(printf, fmt, args)))
+#else
+#define PRINTF_FORMAT(fmt, args)
+#endif
+
 extern cubeb_log_level g_log_level;
-extern cubeb_log_callback g_log_callback;
+extern cubeb_log_callback g_log_callback PRINTF_FORMAT(1, 2);
 
 #ifdef __cplusplus
 }
