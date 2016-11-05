@@ -227,7 +227,8 @@ int32_t DeviceInfoLinux::GetDeviceName(
                                          char* deviceUniqueIdUTF8,
                                          uint32_t deviceUniqueIdUTF8Length,
                                          char* /*productUniqueIdUTF8*/,
-                                         uint32_t /*productUniqueIdUTF8Length*/)
+                                         uint32_t /*productUniqueIdUTF8Length*/,
+                                         pid_t* pid)
 {
     WEBRTC_TRACE(webrtc::kTraceApiCall, webrtc::kTraceVideoCapture, _id, "%s", __FUNCTION__);
 
