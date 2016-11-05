@@ -506,8 +506,7 @@ add_task(function* test_shutdown_while_not_showing() {
 
   UnsubmittedCrashHandler.uninit();
   Assert.throws(() => {
-    let shutdownWhileShowing =
-      UnsubmittedCrashHandler.prefs.getBoolPref("shutdownWhileShowing");
+    UnsubmittedCrashHandler.prefs.getBoolPref("shutdownWhileShowing");
   }, "We should have noticed that the notification had closed before " +
      "uninitting.");
   UnsubmittedCrashHandler.init();

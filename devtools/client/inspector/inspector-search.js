@@ -112,11 +112,9 @@ InspectorSearch.prototype = {
   _onInput: function () {
     if (this.searchBox.value.length === 0) {
       this.searchClearButton.hidden = true;
-      this.searchBox.removeAttribute("filled");
       this._onSearch();
     } else {
       this.searchClearButton.hidden = false;
-      this.searchBox.setAttribute("filled", true);
     }
   },
 

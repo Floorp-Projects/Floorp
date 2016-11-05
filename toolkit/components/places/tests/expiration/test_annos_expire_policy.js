@@ -82,11 +82,11 @@ add_task(function* test_annos_expire_policy() {
   // Expire all expirable pages.
   setMaxPages(0);
 
-  let now = getExpirablePRTime();
+  let now_specific_to_test = getExpirablePRTime();
   // Add some bookmarked page and timed annotations for each.
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://item_anno." + i + ".mozilla.org/");
-    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
+    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now_specific_to_test++ });
     let bm = yield PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url: pageURI,
@@ -139,7 +139,7 @@ add_task(function* test_annos_expire_policy() {
   // Add some visited page and timed annotations for each.
   for (let i = 0; i < 5; i++) {
     let pageURI = uri("http://page_anno." + i + ".mozilla.org/");
-    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now++ });
+    yield PlacesTestUtils.addVisits({ uri: pageURI, visitDate: now_specific_to_test++ });
     // Add a 6 days old anno.
     add_old_anno(pageURI, "persist_days", "test", as.EXPIRE_DAYS, 6);
     // Add a 8 days old anno, modified 5 days ago.

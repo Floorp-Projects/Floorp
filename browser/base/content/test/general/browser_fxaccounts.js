@@ -183,10 +183,10 @@ function configureProfileURL(profile, responseStatus = 200) {
 
 function promiseObserver(topic, count = 1) {
   return new Promise(resolve => {
-    let obs = (subject, topic, data) => {
+    let obs = (aSubject, aTopic, aData) => {
       if (--count == 0) {
-        Services.obs.removeObserver(obs, topic);
-        resolve(subject);
+        Services.obs.removeObserver(obs, aTopic);
+        resolve(aSubject);
       }
     }
     Services.obs.addObserver(obs, topic, false);

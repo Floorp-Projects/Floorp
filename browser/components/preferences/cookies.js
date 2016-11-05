@@ -471,8 +471,6 @@ var gCookiesWindow = {
   },
 
   _makeCookieObject: function (aStrippedHost, aCookie) {
-    var host = aCookie.host;
-    var formattedHost = host.charAt(0) == "." ? host.substring(1, host.length) : host;
     var c = { name            : aCookie.name,
               value           : aCookie.value,
               isDomain        : aCookie.isDomain,

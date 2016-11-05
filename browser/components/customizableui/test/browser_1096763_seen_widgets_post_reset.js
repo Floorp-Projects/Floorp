@@ -3,7 +3,7 @@
 const BUTTONID = "test-seenwidget-post-reset";
 
 add_task(function*() {
-  let widget = CustomizableUI.createWidget({
+  CustomizableUI.createWidget({
     id: BUTTONID,
     label: "Test widget seen post reset",
     defaultArea: CustomizableUI.AREA_NAVBAR

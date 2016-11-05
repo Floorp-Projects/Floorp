@@ -70,15 +70,12 @@ function onPageLoad() {
 }
 
 function test() {
-  var osString = Cc["@mozilla.org/xre/app-info;1"].
-                 getService(Ci.nsIXULRuntime).OS;
-
   try {
     // If GSettings is available, then the GConf tests
     // will fail
-    var gsettings = Cc["@mozilla.org/gsettings-service;1"].
-                    getService(Ci.nsIGSettingsService).
-                    getCollectionForSchema("org.gnome.desktop.background");
+    Cc["@mozilla.org/gsettings-service;1"].
+      getService(Ci.nsIGSettingsService).
+      getCollectionForSchema("org.gnome.desktop.background");
     todo(false, "This test doesn't work when GSettings is available");
     return;
   } catch (e) { }

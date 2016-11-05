@@ -484,7 +484,6 @@ const CustomizableWidgets = [
       }
     },
     _createTabElement(doc, tabInfo) {
-      let win = doc.defaultView;
       let item = doc.createElementNS(kNSXUL, "toolbarbutton");
       let tooltipText = (tabInfo.title ? tabInfo.title + "\n" : "") + tabInfo.url;
       item.setAttribute("itemtype", "tab");
@@ -549,7 +548,6 @@ const CustomizableWidgets = [
       // sidebar menu. We skip menu elements, because the menu panel has no way
       // of dealing with those right now.
       let doc = aEvent.target.ownerDocument;
-      let win = doc.defaultView;
       let menu = doc.getElementById("viewSidebarMenu");
 
       // First clear any existing menuitems then populate. Add it to the

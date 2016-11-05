@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 "use strict";
 
 var notificationObserver;
@@ -131,7 +128,9 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
     const pref = "browser.fixup.domainwhitelist.localhost";
     let win;
     if (isPrivate) {
-      win = yield promiseOpenAndLoadWindow({private: true}, true);
+      let promiseWin = BrowserTestUtils.waitForNewWindow();
+      win = OpenBrowserWindow({private: true});
+      yield promiseWin;
       let deferredOpenFocus = Promise.defer();
       waitForFocus(deferredOpenFocus.resolve, win);
       yield deferredOpenFocus.promise;
@@ -139,8 +138,7 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
       win = window;
     }
     let browser = win.gBrowser;
-    let tab = browser.selectedTab = browser.addTab("about:blank");
-    yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    let tab = yield BrowserTestUtils.openNewForegroundTab(browser);
 
     Services.prefs.setBoolPref(pref, false);
     yield* runURLBarSearchTest({
@@ -175,7 +173,7 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
     browser.removeTab(tab);
     if (isPrivate) {
       info("Waiting for private window to close");
-      yield promiseWindowClosed(win);
+      yield BrowserTestUtils.closeWindow(win);
       let deferredFocus = Promise.defer();
       info("Waiting for focus");
       waitForFocus(deferredFocus.resolve, window);

@@ -117,7 +117,7 @@ add_task(function* test() {
     let res = {};
 
     // Insert the media key.
-    let result = yield new Promise(resolve => {
+    yield new Promise(resolve => {
       session.addEventListener("message", function(event) {
         session.update(aKeyInfo.keyObj).then(
           () => { resolve(); }

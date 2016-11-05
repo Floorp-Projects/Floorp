@@ -2693,7 +2693,7 @@ pref("layout.idle_period.required_quiescent_frames", 2);
 
 // The amount of time (milliseconds) needed between an idle period's
 // end and the start of the next tick to avoid jank.
-pref("layout.idle_period.time_limit", 3);
+pref("layout.idle_period.time_limit", 1);
 
 // Is support for the Web Animations API enabled?
 // Before enabling this by default, make sure also CSSPseudoElement interface
@@ -2749,6 +2749,14 @@ pref("dom.idle_period.throttled_length", 10000);
 
 // The amount of idle time (milliseconds) reserved for a long idle period
 pref("idle_queue.long_period", 50);
+
+// The minimum amount of time (milliseconds) required for an idle
+// period to be scheduled on the main thread. N.B. that
+// layout.idle_period.time_limit adds padding at the end of the idle
+// period, which makes the point in time that we expect to become busy
+// again be:
+// now + idle_queue.min_period + layout.idle_period.time_limit
+pref("idle_queue.min_period", 3);
 
 // Hang monitor timeout after which we kill the browser, in seconds
 // (0 is disabled)
