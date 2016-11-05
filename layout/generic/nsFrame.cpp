@@ -4968,20 +4968,26 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
     MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(this));
     // 'auto' inline-size for grid-level box - apply 'stretch' as needed:
     auto cbSize = aCBSize.ISize(aWM);
-    if (cbSize != NS_UNCONSTRAINEDSIZE &&
-        !StyleMargin()->HasInlineAxisAuto(aWM)) {
-      auto inlineAxisAlignment =
-        aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
-          stylePos->UsedAlignSelf(GetParent()->StyleContext()) :
-          stylePos->UsedJustifySelf(GetParent()->StyleContext());
-      stretchI = inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-                 inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH;
-      if (stretchI) {
+    if (cbSize != NS_UNCONSTRAINEDSIZE) {
+      if (!StyleMargin()->HasInlineAxisAuto(aWM)) {
+        auto inlineAxisAlignment =
+          aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
+            stylePos->UsedAlignSelf(GetParent()->StyleContext()) :
+            stylePos->UsedJustifySelf(GetParent()->StyleContext());
+        stretchI = inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
+                   inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+      }
+      if (stretchI ||
+          (aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize)) {
         iSize = std::max(nscoord(0), cbSize -
                                      aPadding.ISize(aWM) -
                                      aBorder.ISize(aWM) -
                                      aMargin.ISize(aWM));
       }
+    } else {
+      // Reset this flag to avoid applying the clamping below.
+      aFlags = ComputeSizeFlags(aFlags &
+                                ~ComputeSizeFlags::eIClampMarginBoxMinSize);
     }
   }
 
@@ -5024,20 +5030,26 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
     MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(this));
     // 'auto' block-size for grid-level box - apply 'stretch' as needed:
     auto cbSize = aCBSize.BSize(aWM);
-    if (cbSize != NS_AUTOHEIGHT &&
-        !StyleMargin()->HasBlockAxisAuto(aWM)) {
-      auto blockAxisAlignment =
-        !aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
-          stylePos->UsedAlignSelf(GetParent()->StyleContext()) :
-          stylePos->UsedJustifySelf(GetParent()->StyleContext());
-      stretchB = blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-                 blockAxisAlignment == NS_STYLE_ALIGN_STRETCH;
-      if (stretchB) {
+    if (cbSize != NS_AUTOHEIGHT) {
+      if (!StyleMargin()->HasBlockAxisAuto(aWM)) {
+        auto blockAxisAlignment =
+          !aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
+            stylePos->UsedAlignSelf(GetParent()->StyleContext()) :
+            stylePos->UsedJustifySelf(GetParent()->StyleContext());
+        stretchB = blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
+                   blockAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+      }
+      if (stretchB ||
+          (aFlags & ComputeSizeFlags::eBClampMarginBoxMinSize)) {
         bSize = std::max(nscoord(0), cbSize -
                                      aPadding.BSize(aWM) -
                                      aBorder.BSize(aWM) -
                                      aMargin.BSize(aWM));
       }
+    } else {
+      // Reset this flag to avoid applying the clamping below.
+      aFlags = ComputeSizeFlags(aFlags &
+                                ~ComputeSizeFlags::eBClampMarginBoxMinSize);
     }
   }
 
@@ -5125,12 +5137,22 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
         tentISize = nsPresContext::CSSPixelsToAppUnits(300);
       }
 
+      if ((aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize) &&
+          tentISize > iSize) {
+        stretchI = true;
+      }
+
       if (hasIntrinsicBSize) {
         tentBSize = intrinsicBSize;
       } else if (logicalRatio.ISize(aWM) > 0) {
         tentBSize = NSCoordMulDiv(tentISize, logicalRatio.BSize(aWM), logicalRatio.ISize(aWM));
       } else {
         tentBSize = nsPresContext::CSSPixelsToAppUnits(150);
+      }
+
+      if ((aFlags & ComputeSizeFlags::eBClampMarginBoxMinSize) &&
+          tentBSize > bSize) {
+        stretchB = true;
       }
 
       if (aIntrinsicRatio != nsSize(0, 0)) {
