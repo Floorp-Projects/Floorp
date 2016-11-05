@@ -237,7 +237,7 @@ assertEq(e[""] instanceof Table, true);
 
 // Table export function identity
 
-var code = wasmTextToBinary(`(module
+var text = `(module
     (func $f (result i32) (i32.const 1))
     (func $g (result i32) (i32.const 2))
     (func $h (result i32) (i32.const 3))
@@ -249,9 +249,11 @@ var code = wasmTextToBinary(`(module
     (export "f2" $f)
     (export "tbl2" table)
     (export "f3" $h)
-)`);
-var e = new Instance(new Module(code)).exports;
-assertEq(String(Object.keys(e)), "f1,tbl1,f2,tbl2,f3");
+    (func (export "run") (result i32) (call_indirect 0 (i32.const 2)))
+)`;
+wasmFullPass(text, 2);
+var e = new Instance(new Module(wasmTextToBinary(text))).exports;
+assertEq(String(Object.keys(e)), "f1,tbl1,f2,tbl2,f3,run");
 assertEq(e.f1, e.f2);
 assertEq(e.f1(), 1);
 assertEq(e.f3(), 3);
@@ -271,6 +273,42 @@ e.tbl1.set(1, null);
 assertEq(e.tbl1.get(1), null);
 e.tbl1.set(3, e.f1);
 assertEq(e.tbl1.get(0), e.tbl1.get(3));
+
+// JS re-exports
+
+var args;
+var m = new Module(wasmTextToBinary(`(module
+    (export "a" $a) (import $a "" "a" (param f32))
+    (export "b" $b) (import $b "" "b" (param i32) (result i32))
+    (export "c" $c) (import $c "" "c" (result i32))
+    (export "d" $d) (import $d "" "d")
+)`));
+var js = function() { args = arguments; return 42 }
+var e = new Instance(m, {"":{a:js, b:js, c:js, d:js}}).exports;
+assertEq(e.a.length, 1);
+assertEq(e.a(), undefined);
+assertEq(args.length, 1);
+assertEq(args[0], NaN);
+assertEq(e.a(99.5), undefined);
+assertEq(args.length, 1);
+assertEq(args[0], 99.5);
+assertEq(e.b.length, 1);
+assertEq(e.b(), 42);
+assertEq(args.length, 1);
+assertEq(args[0], 0);
+assertEq(e.b(99.5), 42);
+assertEq(args.length, 1);
+assertEq(args[0], 99);
+assertEq(e.c.length, 0);
+assertEq(e.c(), 42);
+assertEq(args.length, 0);
+assertEq(e.c(99), 42);
+assertEq(args.length, 0);
+assertEq(e.d.length, 0);
+assertEq(e.d(), undefined);
+assertEq(args.length, 0);
+assertEq(e.d(99), undefined);
+assertEq(args.length, 0);
 
 // Re-exports and Identity:
 
@@ -298,20 +336,56 @@ assertEq(e1.foo, tbl.get(1));
 assertEq(tbl.get(0) === e1.foo, false);
 assertEq(e1.foo === e2.foo, false);
 
-var code = wasmTextToBinary('(module (table 2 2 anyfunc) (import $foo "a" "b" (result i32)) (func $bar (result i32) (i32.const 13)) (elem (i32.const 0) $foo $bar) (export "foo" $foo) (export "bar" $bar) (export "tbl" table))');
-var foo = new Instance(new Module(wasmTextToBinary('(module (func (result i32) (i32.const 42)) (export "foo" 0))'))).exports.foo;
-var e1 = new Instance(new Module(code), {a:{b:foo}}).exports;
-assertEq(foo, e1.foo);
-assertEq(foo, e1.tbl.get(0));
+var m = new Module(wasmTextToBinary(`(module
+    (table 3 anyfunc)
+    (import $foo "" "foo" (result i32))
+    (import $bar "" "bar" (result i32))
+    (func $baz (result i32) (i32.const 13))
+    (elem (i32.const 0) $foo $bar $baz)
+    (export "foo" $foo)
+    (export "bar" $bar)
+    (export "baz" $baz)
+    (export "tbl" table)
+)`));
+var jsFun = () => 83;
+var wasmFun = new Instance(new Module(wasmTextToBinary('(module (func (result i32) (i32.const 42)) (export "foo" 0))'))).exports.foo;
+var e1 = new Instance(m, {"":{foo:jsFun, bar:wasmFun}}).exports;
+assertEq(jsFun === e1.foo, false);
+assertEq(wasmFun, e1.bar);
+assertEq(e1.foo, e1.tbl.get(0));
 assertEq(e1.bar, e1.tbl.get(1));
-assertEq(e1.tbl.get(0)(), 42);
-assertEq(e1.tbl.get(1)(), 13);
-var e2 = new Instance(new Module(code), {a:{b:foo}}).exports;
-assertEq(e1.foo, e2.foo);
-assertEq(e1.bar === e2.bar, false);
-assertEq(e1.tbl === e2.tbl, false);
-assertEq(e1.tbl.get(0), e2.tbl.get(0));
-assertEq(e1.tbl.get(1) === e2.tbl.get(1), false);
+assertEq(e1.baz, e1.tbl.get(2));
+assertEq(e1.tbl.get(0)(), 83);
+assertEq(e1.tbl.get(1)(), 42);
+assertEq(e1.tbl.get(2)(), 13);
+var e2 = new Instance(m, {"":{foo:jsFun, bar:jsFun}}).exports;
+assertEq(jsFun === e2.foo, false);
+assertEq(jsFun === e2.bar, false);
+assertEq(e2.foo === e1.foo, false);
+assertEq(e2.bar === e1.bar, false);
+assertEq(e2.baz === e1.baz, false);
+assertEq(e2.tbl === e1.tbl, false);
+assertEq(e2.foo, e2.tbl.get(0));
+assertEq(e2.bar, e2.tbl.get(1));
+assertEq(e2.baz, e2.tbl.get(2));
+var e3 = new Instance(m, {"":{foo:wasmFun, bar:wasmFun}}).exports;
+assertEq(wasmFun, e3.foo);
+assertEq(wasmFun, e3.bar);
+assertEq(e3.baz === e3.foo, false);
+assertEq(e3.baz === e1.baz, false);
+assertEq(e3.tbl === e1.tbl, false);
+assertEq(e3.foo, e3.tbl.get(0));
+assertEq(e3.bar, e3.tbl.get(1));
+assertEq(e3.baz, e3.tbl.get(2));
+var e4 = new Instance(m, {"":{foo:e1.foo, bar:e1.foo}}).exports;
+assertEq(e4.foo, e1.foo);
+assertEq(e4.bar, e1.foo);
+assertEq(e4.baz === e4.foo, false);
+assertEq(e4.baz === e1.baz, false);
+assertEq(e4.tbl === e1.tbl, false);
+assertEq(e4.foo, e4.tbl.get(0));
+assertEq(e4.foo, e4.tbl.get(1));
+assertEq(e4.baz, e4.tbl.get(2));
 
 // i64 is fully allowed for imported wasm functions
 
@@ -430,7 +504,7 @@ assertEq(mem8[npages*64*1024-1], 2);
 assertEq(tbl.get(0), i.exports.f);
 assertEq(tbl.get(1), i.exports.g);
 
-// Elem segments on imports
+// Elem segments on imported tables
 
 var m = new Module(wasmTextToBinary(`
     (module
@@ -454,18 +528,22 @@ for (var i = 5; i < 10; i++)
 
 var m = new Module(wasmTextToBinary(`
     (module
-        (func $their (import "" "func"))
-        (table (import "" "table") 3 anyfunc)
-        (func $my)
+        (func $their1 (import "" "func") (result i32))
+        (func $their2 (import "" "func"))
+        (table (import "" "table") 4 anyfunc)
+        (func $my (result i32) i32.const 13)
         (elem (i32.const 1) $my)
-        (elem (i32.const 2) $their)
+        (elem (i32.const 2) $their1)
+        (elem (i32.const 3) $their2)
     )
 `));
-var tbl = new Table({initial:3, element:"anyfunc"});
-assertErrorMessage(() => new Instance(m, { "": { table: tbl, func: () => {}} }), TypeError, /can only assign WebAssembly exported functions to Table/);
-for (var i = 0; i < 3; i++) {
-    assertEq(tbl.get(i), null);
-}
+var tbl = new Table({initial:4, element:"anyfunc"});
+var f = () => 42;
+new Instance(m, { "": { table: tbl, func: f} });
+assertEq(tbl.get(0), null);
+assertEq(tbl.get(1)(), 13);
+assertEq(tbl.get(2)(), 42);
+assertEq(tbl.get(3)(), undefined);
 
 // Cross-instance calls
 

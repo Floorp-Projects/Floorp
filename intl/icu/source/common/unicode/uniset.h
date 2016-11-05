@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ***************************************************************************
-* Copyright (C) 1999-2015, International Business Machines Corporation
+* Copyright (C) 1999-2016, International Business Machines Corporation
 * and others. All Rights Reserved.
 ***************************************************************************
 *   Date        Name        Description
@@ -307,12 +309,12 @@ public:
      * A bogus set has no value. It is different from an empty set.
      * It can be used to indicate that no set value is available.
      *
-     * @return TRUE if the set is valid, FALSE otherwise
+     * @return TRUE if the set is bogus/invalid, FALSE otherwise
      * @see setToBogus()
      * @stable ICU 4.0
      */
     inline UBool isBogus(void) const;
-    
+
     /**
      * Make this UnicodeSet object invalid.
      * The string will test TRUE with isBogus().
@@ -360,7 +362,7 @@ public:
     UnicodeSet();
 
     /**
-     * Constructs a set containing the given range. If <code>end >
+     * Constructs a set containing the given range. If <code>end <
      * start</code> then an empty set is created.
      *
      * @param start first character, inclusive, of range

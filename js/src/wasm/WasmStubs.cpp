@@ -96,7 +96,7 @@ static const unsigned FramePushedForEntrySP = FramePushedAfterSave + sizeof(void
 // function has an ABI derived from its specific signature, so this function
 // must map from the ABI of ExportFuncPtr to the export's signature's ABI.
 Offsets
-wasm::GenerateEntry(MacroAssembler& masm, const FuncDefExport& func)
+wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
 {
     masm.haltingAlign(CodeAlignment);
 
@@ -160,11 +160,11 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncDefExport& func)
     masm.andToStackPtr(Imm32(~(WasmStackAlignment - 1)));
 
     // Bump the stack for the call.
-    masm.reserveStack(AlignBytes(StackArgBytes(func.sig().args()), WasmStackAlignment));
+    masm.reserveStack(AlignBytes(StackArgBytes(fe.sig().args()), WasmStackAlignment));
 
     // Copy parameters out of argv and into the registers/stack-slots specified by
     // the system ABI.
-    for (ABIArgValTypeIter iter(func.sig().args()); !iter.done(); iter++) {
+    for (ABIArgValTypeIter iter(fe.sig().args()); !iter.done(); iter++) {
         unsigned argOffset = iter.index() * sizeof(ExportArg);
         Address src(argv, argOffset);
         MIRType type = iter.mirType();
@@ -264,7 +264,7 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncDefExport& func)
 
     // Call into the real function.
     masm.assertStackAlignment(WasmStackAlignment);
-    masm.call(CallSiteDesc(CallSiteDesc::FuncDef), func.funcDefIndex());
+    masm.call(CallSiteDesc(CallSiteDesc::Func), fe.funcIndex());
 
     // Recover the stack pointer value before dynamic alignment.
     masm.loadWasmActivationFromTls(scratch);
@@ -275,7 +275,7 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncDefExport& func)
     masm.Pop(argv);
 
     // Store the return value in argv[0]
-    switch (func.sig().ret()) {
+    switch (fe.sig().ret()) {
       case ExprType::Void:
         break;
       case ExprType::I32:
@@ -322,6 +322,30 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncDefExport& func)
     return offsets;
 }
 
+static void
+StackCopy(MacroAssembler& masm, MIRType type, Register scratch, Address src, Address dst)
+{
+    if (type == MIRType::Int32) {
+        masm.load32(src, scratch);
+        masm.store32(scratch, dst);
+    } else if (type == MIRType::Int64) {
+#if JS_BITS_PER_WORD == 32
+        masm.load32(Address(src.base, src.offset + INT64LOW_OFFSET), scratch);
+        masm.store32(scratch, Address(dst.base, dst.offset + INT64LOW_OFFSET));
+        masm.load32(Address(src.base, src.offset + INT64HIGH_OFFSET), scratch);
+        masm.store32(scratch, Address(dst.base, dst.offset + INT64HIGH_OFFSET));
+#else
+        Register64 scratch64(scratch);
+        masm.load64(src, scratch64);
+        masm.store64(scratch64, dst);
+#endif
+    } else {
+        MOZ_ASSERT(IsFloatingPointType(type));
+        masm.loadDouble(src, ScratchDoubleReg);
+        masm.storeDouble(ScratchDoubleReg, dst);
+    }
+}
+
 typedef bool ToValue;
 
 static void
@@ -329,22 +353,22 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
                   unsigned offsetToCallerStackArgs, Register scratch, ToValue toValue)
 {
     for (ABIArgValTypeIter i(args); !i.done(); i++) {
-        Address dstAddr(masm.getStackPointer(), argOffset + i.index() * sizeof(Value));
+        Address dst(masm.getStackPointer(), argOffset + i.index() * sizeof(Value));
 
         MIRType type = i.mirType();
         switch (i->kind()) {
           case ABIArg::GPR:
             if (type == MIRType::Int32) {
                 if (toValue)
-                    masm.storeValue(JSVAL_TYPE_INT32, i->gpr(), dstAddr);
+                    masm.storeValue(JSVAL_TYPE_INT32, i->gpr(), dst);
                 else
-                    masm.store32(i->gpr(), dstAddr);
+                    masm.store32(i->gpr(), dst);
             } else if (type == MIRType::Int64) {
                 // We can't box int64 into Values (yet).
                 if (toValue)
                     masm.breakpoint();
                 else
-                    masm.store64(i->gpr64(), dstAddr);
+                    masm.store64(i->gpr64(), dst);
             } else {
                 MOZ_CRASH("unexpected input type?");
             }
@@ -352,9 +376,9 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
 #ifdef JS_CODEGEN_REGISTER_PAIR
           case ABIArg::GPR_PAIR:
             if (type == MIRType::Int64)
-                masm.store64(i->gpr64(), dstAddr);
+                masm.store64(i->gpr64(), dst);
             else
-                MOZ_CRASH("AsmJS uses hardfp for function calls.");
+                MOZ_CRASH("wasm uses hardfp for function calls.");
             break;
 #endif
           case ABIArg::FPU: {
@@ -367,52 +391,34 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
                     srcReg = ScratchDoubleReg;
                     masm.canonicalizeDouble(srcReg);
                 }
-                masm.storeDouble(srcReg, dstAddr);
+                masm.storeDouble(srcReg, dst);
             } else {
                 MOZ_ASSERT(type == MIRType::Float32);
                 if (toValue) {
                     // JS::Values can't store Float32, so convert to a Double.
                     masm.convertFloat32ToDouble(srcReg, ScratchDoubleReg);
                     masm.canonicalizeDouble(ScratchDoubleReg);
-                    masm.storeDouble(ScratchDoubleReg, dstAddr);
+                    masm.storeDouble(ScratchDoubleReg, dst);
                 } else {
                     // Preserve the NaN pattern in the input.
                     masm.moveFloat32(srcReg, ScratchFloat32Reg);
                     masm.canonicalizeFloat(ScratchFloat32Reg);
-                    masm.storeFloat32(ScratchFloat32Reg, dstAddr);
+                    masm.storeFloat32(ScratchFloat32Reg, dst);
                 }
             }
             break;
           }
-          case ABIArg::Stack:
-            if (type == MIRType::Int32) {
-                Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
-                masm.load32(src, scratch);
-                if (toValue)
-                    masm.storeValue(JSVAL_TYPE_INT32, scratch, dstAddr);
-                else
-                    masm.store32(scratch, dstAddr);
-            } else if (type == MIRType::Int64) {
-                // We can't box int64 into Values (yet).
-                if (toValue) {
+          case ABIArg::Stack: {
+            Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
+            if (toValue) {
+                if (type == MIRType::Int32) {
+                    masm.load32(src, scratch);
+                    masm.storeValue(JSVAL_TYPE_INT32, scratch, dst);
+                } else if (type == MIRType::Int64) {
+                    // We can't box int64 into Values (yet).
                     masm.breakpoint();
                 } else {
-                    Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
-#if JS_BITS_PER_WORD == 32
-                    masm.load32(Address(src.base, src.offset + INT64LOW_OFFSET), scratch);
-                    masm.store32(scratch, Address(dstAddr.base, dstAddr.offset + INT64LOW_OFFSET));
-                    masm.load32(Address(src.base, src.offset + INT64HIGH_OFFSET), scratch);
-                    masm.store32(scratch, Address(dstAddr.base, dstAddr.offset + INT64HIGH_OFFSET));
-#else
-                    Register64 scratch64(scratch);
-                    masm.load64(src, scratch64);
-                    masm.store64(scratch64, dstAddr);
-#endif
-                }
-            } else {
-                MOZ_ASSERT(IsFloatingPointType(type));
-                Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
-                if (toValue) {
+                    MOZ_ASSERT(IsFloatingPointType(type));
                     if (type == MIRType::Float32) {
                         masm.loadFloat32(src, ScratchFloat32Reg);
                         masm.convertFloat32ToDouble(ScratchFloat32Reg, ScratchDoubleReg);
@@ -420,25 +426,75 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
                         masm.loadDouble(src, ScratchDoubleReg);
                     }
                     masm.canonicalizeDouble(ScratchDoubleReg);
-                } else {
-                    masm.loadDouble(src, ScratchDoubleReg);
+                    masm.storeDouble(ScratchDoubleReg, dst);
                 }
-                masm.storeDouble(ScratchDoubleReg, dstAddr);
+            } else {
+                StackCopy(masm, type, scratch, src, dst);
             }
             break;
+          }
         }
     }
+}
+
+// Generate a wrapper function with the standard intra-wasm call ABI which simply
+// calls an import. This wrapper function allows any import to be treated like a
+// normal wasm function for the purposes of exports and table calls. In
+// particular, the wrapper function provides:
+//  - a table entry, so JS imports can be put into tables
+//  - normal (non-)profiling entries, so that, if the import is re-exported,
+//    an entry stub can be generated and called without any special cases
+FuncOffsets
+wasm::GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, SigIdDesc sigId)
+{
+    masm.setFramePushed(0);
+
+    unsigned tlsBytes = sizeof(void*);
+    unsigned framePushed = StackDecrementForCall(masm, WasmStackAlignment, fi.sig().args(), tlsBytes);
+
+    FuncOffsets offsets;
+    GenerateFunctionPrologue(masm, framePushed, sigId, &offsets);
+
+    // The argument register state is already setup by our caller. We just need
+    // to be sure not to clobber it before the call.
+    Register scratch = ABINonArgReg0;
+
+    // Copy our frame's stack arguments to the callee frame's stack argument.
+    unsigned offsetToCallerStackArgs = sizeof(Frame) + masm.framePushed();
+    ABIArgValTypeIter i(fi.sig().args());
+    for (; !i.done(); i++) {
+        if (i->kind() != ABIArg::Stack)
+            continue;
+
+        Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
+        Address dst(masm.getStackPointer(), i->offsetFromArgBase());
+        StackCopy(masm, i.mirType(), scratch, src, dst);
+    }
+
+    // Save the TLS register so it can be restored later.
+    uint32_t tlsStackOffset = i.stackBytesConsumedSoFar();
+    masm.storePtr(WasmTlsReg, Address(masm.getStackPointer(), tlsStackOffset));
+
+    // Call the import exit stub.
+    CallSiteDesc desc(CallSiteDesc::Dynamic);
+    masm.wasmCallImport(desc, CalleeDesc::import(fi.tlsDataOffset()));
+
+    // Restore the TLS register and pinned regs, per wasm function ABI.
+    masm.loadPtr(Address(masm.getStackPointer(), tlsStackOffset), WasmTlsReg);
+    masm.loadWasmPinnedRegsFromTls();
+
+    GenerateFunctionEpilogue(masm, framePushed, &offsets);
+    offsets.end = masm.currentOffset();
+    return offsets;
 }
 
 // Generate a stub that is called via the internal ABI derived from the
 // signature of the import and calls into an appropriate callImport C++
 // function, having boxed all the ABI arguments into a homogeneous Value array.
 ProfilingOffsets
-wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t funcImportIndex,
-                         Label* throwLabel)
+wasm::GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t funcImportIndex,
+                               Label* throwLabel)
 {
-    const Sig& sig = fi.sig();
-
     masm.setFramePushed(0);
 
     // Argument types for Module::callImport_*:
@@ -454,7 +510,7 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
     // The padding between stack args and argv ensures that argv is aligned. The
     // padding between argv and retaddr ensures that sp is aligned.
     unsigned argOffset = AlignBytes(StackArgBytes(invokeArgTypes), sizeof(double));
-    unsigned argBytes = Max<size_t>(1, sig.args().length()) * sizeof(Value);
+    unsigned argBytes = Max<size_t>(1, fi.sig().args().length()) * sizeof(Value);
     unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, argOffset + argBytes);
 
     ProfilingOffsets offsets;
@@ -463,7 +519,7 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
     // Fill the argument array.
     unsigned offsetToCallerStackArgs = sizeof(Frame) + masm.framePushed();
     Register scratch = ABINonArgReturnReg0;
-    FillArgumentArray(masm, sig.args(), argOffset, offsetToCallerStackArgs, scratch, ToValue(false));
+    FillArgumentArray(masm, fi.sig().args(), argOffset, offsetToCallerStackArgs, scratch, ToValue(false));
 
     // Prepare the arguments for the call to Module::callImport_*.
     ABIArgMIRTypeIter i(invokeArgTypes);
@@ -486,7 +542,7 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
     i++;
 
     // argument 2: argc
-    unsigned argc = sig.args().length();
+    unsigned argc = fi.sig().args().length();
     if (i->kind() == ABIArg::GPR)
         masm.mov(ImmWord(argc), i->gpr());
     else
@@ -506,7 +562,7 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
 
     // Make the call, test whether it succeeded, and extract the return value.
     AssertStackAlignment(masm, ABIStackAlignment);
-    switch (sig.ret()) {
+    switch (fi.sig().ret()) {
       case ExprType::Void:
         masm.call(SymbolicAddress::CallImport_Void);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
@@ -569,10 +625,8 @@ static const unsigned SavedTlsReg = sizeof(void*);
 // signature of the import and calls into a compatible JIT function,
 // having boxed all the ABI arguments into the JIT stack frame layout.
 ProfilingOffsets
-wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLabel)
+wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLabel)
 {
-    const Sig& sig = fi.sig();
-
     masm.setFramePushed(0);
 
     // JIT calls use the following stack layout (sp grows to the left):
@@ -583,7 +637,7 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
     // the return address.
     static_assert(WasmStackAlignment >= JitStackAlignment, "subsumes");
     unsigned sizeOfRetAddr = sizeof(void*);
-    unsigned jitFrameBytes = 3 * sizeof(void*) + (1 + sig.args().length()) * sizeof(Value);
+    unsigned jitFrameBytes = 3 * sizeof(void*) + (1 + fi.sig().args().length()) * sizeof(Value);
     unsigned totalJitFrameBytes = sizeOfRetAddr + jitFrameBytes + SavedTlsReg;
     unsigned jitFramePushed = StackDecrementForCall(masm, JitStackAlignment, totalJitFrameBytes) -
                               sizeOfRetAddr;
@@ -614,7 +668,7 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
     masm.loadBaselineOrIonNoArgCheck(callee, callee, nullptr);
 
     // 3. Argc
-    unsigned argc = sig.args().length();
+    unsigned argc = fi.sig().args().length();
     masm.storePtr(ImmWord(uintptr_t(argc)), Address(masm.getStackPointer(), argOffset));
     argOffset += sizeof(size_t);
 
@@ -624,8 +678,8 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
 
     // 5. Fill the arguments
     unsigned offsetToCallerStackArgs = jitFramePushed + sizeof(Frame);
-    FillArgumentArray(masm, sig.args(), argOffset, offsetToCallerStackArgs, scratch, ToValue(true));
-    argOffset += sig.args().length() * sizeof(Value);
+    FillArgumentArray(masm, fi.sig().args(), argOffset, offsetToCallerStackArgs, scratch, ToValue(true));
+    argOffset += fi.sig().args().length() * sizeof(Value);
     MOZ_ASSERT(argOffset == jitFrameBytes);
 
     // 6. Jit code will clobber all registers, even non-volatiles. WasmTlsReg
@@ -704,7 +758,7 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
     masm.branchTestMagic(Assembler::Equal, JSReturnOperand, throwLabel);
 
     Label oolConvert;
-    switch (sig.ret()) {
+    switch (fi.sig().ret()) {
       case ExprType::Void:
         break;
       case ExprType::I32:
@@ -774,7 +828,7 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
 
         // Call coercion function
         AssertStackAlignment(masm, ABIStackAlignment);
-        switch (sig.ret()) {
+        switch (fi.sig().ret()) {
           case ExprType::I32:
             masm.call(SymbolicAddress::CoerceInPlace_ToInt32);
             masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);

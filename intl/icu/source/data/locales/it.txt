@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/it.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 it{
     AuxExemplarCharacters{"[ª á â å ä ã æ ç ê ë í î ï ñ º ô ö õ ø œ ß ú û ü ÿ]"}
     Ellipsis{
@@ -37,7 +31,7 @@ it{
             patternsLong{
                 decimalFormat{
                     1000{
-                        one{"0 mille"}
+                        one{"0 mila"}
                         other{"0 mila"}
                     }
                     10000{
@@ -73,7 +67,7 @@ it{
                         other{"000 miliardi"}
                     }
                     1000000000000{
-                        one{"0 mille miliardi"}
+                        one{"0 mila miliardi"}
                         other{"0 mila miliardi"}
                     }
                     10000000000000{
@@ -89,16 +83,16 @@ it{
             patternsShort{
                 currencyFormat{
                     1000{
-                        one{"0 ¤"}
-                        other{"0 ¤"}
+                        one{"0"}
+                        other{"0"}
                     }
                     10000{
-                        one{"00 ¤"}
-                        other{"00 ¤"}
+                        one{"0"}
+                        other{"0"}
                     }
                     100000{
-                        one{"000 ¤"}
-                        other{"000 ¤"}
+                        one{"0"}
+                        other{"0"}
                     }
                     1000000{
                         one{"0 Mio ¤"}
@@ -206,7 +200,7 @@ it{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
     calendar{
         buddhist{
             eras{
@@ -429,6 +423,10 @@ it{
                 MEd{"E d/M"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
+                MMMMW{
+                    one{"'settimana' W 'di' MMM"}
+                    other{"'settimana' W 'di' MMM"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
@@ -449,6 +447,10 @@ it{
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"'settimana' w 'del' y"}
+                    other{"'settimana' w 'del' y"}
+                }
             }
             dayNames{
                 format{
@@ -518,24 +520,24 @@ it{
                         "sab",
                     }
                     wide{
-                        "Domenica",
-                        "Lunedì",
-                        "Martedì",
-                        "Mercoledì",
-                        "Giovedì",
-                        "Venerdì",
-                        "Sabato",
+                        "domenica",
+                        "lunedì",
+                        "martedì",
+                        "mercoledì",
+                        "giovedì",
+                        "venerdì",
+                        "sabato",
                     }
                 }
             }
             dayPeriod{
                 format{
                     abbreviated{
-                        afternoon1{"pomeriggio"}
-                        evening1{"sera"}
+                        afternoon1{"del pomeriggio"}
+                        evening1{"di sera"}
                         midnight{"mezzanotte"}
-                        morning1{"mattina"}
-                        night1{"notte"}
+                        morning1{"di mattina"}
+                        night1{"di notte"}
                         noon{"mezzogiorno"}
                     }
                     narrow{
@@ -547,11 +549,11 @@ it{
                         noon{"mezzogiorno"}
                     }
                     wide{
-                        afternoon1{"pomeriggio"}
-                        evening1{"sera"}
+                        afternoon1{"del pomeriggio"}
+                        evening1{"di sera"}
                         midnight{"mezzanotte"}
-                        morning1{"mattina"}
-                        night1{"notte"}
+                        morning1{"di mattina"}
+                        night1{"di notte"}
                         noon{"mezzogiorno"}
                     }
                 }
@@ -606,8 +608,8 @@ it{
                     "CE",
                 }
                 wide{
-                    "a.C.",
-                    "d.C.",
+                    "avanti Cristo",
+                    "dopo Cristo",
                 }
                 wide%variant{
                     "avanti Era Volgare",
@@ -784,18 +786,18 @@ it{
                         "D",
                     }
                     wide{
-                        "Gennaio",
-                        "Febbraio",
-                        "Marzo",
-                        "Aprile",
-                        "Maggio",
-                        "Giugno",
-                        "Luglio",
-                        "Agosto",
-                        "Settembre",
-                        "Ottobre",
-                        "Novembre",
-                        "Dicembre",
+                        "gennaio",
+                        "febbraio",
+                        "marzo",
+                        "aprile",
+                        "maggio",
+                        "giugno",
+                        "luglio",
+                        "agosto",
+                        "settembre",
+                        "ottobre",
+                        "novembre",
+                        "dicembre",
                     }
                 }
             }
@@ -881,6 +883,90 @@ it{
                 }
             }
         }
+    }
+    characterLabel{
+        activities{"Attività"}
+        african_scripts{"Alfabeti africani"}
+        american_scripts{"Alfabeti americani"}
+        animal{"animale"}
+        animals_nature{"Animali e natura"}
+        arrows{"Frecce"}
+        body{"corpo"}
+        box_drawing{"Caratteri linea"}
+        braille{"Braille"}
+        building{"edificio"}
+        bullets_stars{"Punti/stelle"}
+        consonantal_jamo{"jamo consonantico"}
+        currency_symbols{"Simboli di valuta"}
+        dash_connector{"Trattino/connettore"}
+        digits{"Cifre"}
+        dingbats{"Dingbat"}
+        divination_symbols{"Simboli divinatori"}
+        downwards_arrows{"Frecce verso il basso"}
+        downwards_upwards_arrows{"Frecce verticali"}
+        east_asian_scripts{"Alfabeti dell’Asia orientale"}
+        emoji{"Emoji"}
+        european_scripts{"Alfabeti europei"}
+        female{"femmina"}
+        flag{"bandiera"}
+        flags{"Bandiere"}
+        food_drink{"Cibo e bevande"}
+        format{"Formato"}
+        format_whitespace{"Formato e spaziatura"}
+        full_width_form_variant{"Varianti a larghezza completa"}
+        geometric_shapes{"Forme geometriche"}
+        half_width_form_variant{"Varianti a mezza larghezza"}
+        han_characters{"Caratteri han"}
+        han_radicals{"Radicali han"}
+        hanja{"Hanja"}
+        hanzi_simplified{"Caratteri cinesi semplificati"}
+        hanzi_traditional{"Caratteri cinesi tradizionali"}
+        heart{"cuore"}
+        historic_scripts{"Alfabeti storici"}
+        ideographic_desc_characters{"Caratteri ideografici di descrizione"}
+        japanese_kana{"Kana giapponesi"}
+        kanbun{"Kanbun"}
+        kanji{"Kanji"}
+        keycap{"tasto"}
+        leftwards_arrows{"Frecce a sinistra"}
+        leftwards_rightwards_arrows{"Frecce orizzontali"}
+        limited_use{"Uso limitato"}
+        male{"maschio"}
+        math_symbols{"Simboli matematici"}
+        middle_eastern_scripts{"Alfabeti mediorientali"}
+        miscellaneous{"Miscellanea"}
+        modern_scripts{"Alfabeti moderni"}
+        modifier{"Modificatore"}
+        musical_symbols{"Simboli musicali"}
+        nature{"natura"}
+        numbers{"Numeri"}
+        objects{"Oggetti"}
+        other{"Altro"}
+        paired{"Doppio"}
+        person{"persona"}
+        phonetic_alphabet{"Alfabeto fonetico"}
+        pictographs{"Pittogrammi"}
+        place{"posto"}
+        plant{"pianta"}
+        punctuation{"Punteggiatura"}
+        rightwards_arrows{"Frecce a destra"}
+        sign_standard_symbols{"Segni/simboli standard"}
+        smiley{"smiley"}
+        smileys_people{"Smiley e persone"}
+        south_asian_scripts{"Alfabeti dell’Asia meridionale"}
+        southeast_asian_scripts{"Alfabeti del sudest asiatico"}
+        spacing{"Spaziatura"}
+        sport{"sport"}
+        symbols{"Simboli"}
+        technical_symbols{"Simboli tecnici"}
+        tone_marks{"Accenti tonali"}
+        travel{"viaggio"}
+        travel_places{"Viaggi e luoghi"}
+        upwards_arrows{"Frecce verso l’alto"}
+        vocalic_jamo{"jamo vocalico"}
+        weather{"meteo"}
+        western_asian_scripts{"Alfabeti dell’Asia occidentale"}
+        whitespace{"Spazio"}
     }
     contextTransforms{
         day-format-except-narrow:intvector{
@@ -969,6 +1055,16 @@ it{
                 "0"{"questo venerdì"}
                 "1"{"venerdì prossimo"}
             }
+            relativeTime{
+                future{
+                    one{"tra {0} venerdì"}
+                    other{"tra {0} venerdì"}
+                }
+                past{
+                    one{"{0} venerdì fa"}
+                    other{"{0} venerdì fa"}
+                }
+            }
         }
         fri-narrow{
             relative{
@@ -983,9 +1079,22 @@ it{
                 "0"{"questo ven."}
                 "1"{"ven. prossimo"}
             }
+            relativeTime{
+                future{
+                    one{"tra {0} ven."}
+                    other{"tra {0} ven."}
+                }
+                past{
+                    one{"{0} ven. fa"}
+                    other{"{0} ven. fa"}
+                }
+            }
         }
         hour{
             dn{"ora"}
+            relative{
+                "0"{"quest’ora"}
+            }
             relativeTime{
                 future{
                     one{"tra {0} ora"}
@@ -1025,6 +1134,9 @@ it{
         }
         minute{
             dn{"minuto"}
+            relative{
+                "0"{"questo minuto"}
+            }
             relativeTime{
                 future{
                     one{"tra {0} minuto"}
@@ -1068,6 +1180,16 @@ it{
                 "0"{"questo lunedì"}
                 "1"{"lunedì prossimo"}
             }
+            relativeTime{
+                future{
+                    one{"tra {0} lunedì"}
+                    other{"tra {0} lunedì"}
+                }
+                past{
+                    one{"{0} lunedì fa"}
+                    other{"{0} lunedì fa"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -1081,6 +1203,16 @@ it{
                 "-1"{"lun. scorso"}
                 "0"{"questo lun."}
                 "1"{"lun. prossimo"}
+            }
+            relativeTime{
+                future{
+                    one{"tra {0} lun."}
+                    other{"tra {0} lun."}
+                }
+                past{
+                    one{"{0} lun. fa"}
+                    other{"{0} lun. fa"}
+                }
             }
         }
         month{
@@ -1129,6 +1261,11 @@ it{
         }
         quarter{
             dn{"trimestre"}
+            relative{
+                "-1"{"trimestre scorso"}
+                "0"{"questo trimestre"}
+                "1"{"trimestre prossimo"}
+            }
             relativeTime{
                 future{
                     one{"tra {0} trimestre"}
@@ -1172,6 +1309,16 @@ it{
                 "0"{"questo sabato"}
                 "1"{"sabato prossimo"}
             }
+            relativeTime{
+                future{
+                    one{"tra {0} sabato"}
+                    other{"tra {0} sabati"}
+                }
+                past{
+                    one{"{0} sabato fa"}
+                    other{"{0} sabati fa"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1186,9 +1333,19 @@ it{
                 "0"{"questo sab."}
                 "1"{"sab. prossimo"}
             }
+            relativeTime{
+                future{
+                    one{"tra {0} sab."}
+                    other{"tra {0} sab."}
+                }
+                past{
+                    one{"{0} sab. fa"}
+                    other{"{0} sab. fa"}
+                }
+            }
         }
         second{
-            dn{"Secondo"}
+            dn{"secondo"}
             relative{
                 "0"{"ora"}
             }
@@ -1235,6 +1392,16 @@ it{
                 "0"{"questa domenica"}
                 "1"{"domenica prossima"}
             }
+            relativeTime{
+                future{
+                    one{"tra {0} domenica"}
+                    other{"tra {0} domeniche"}
+                }
+                past{
+                    one{"{0} domenica fa"}
+                    other{"{0} domeniche fa"}
+                }
+            }
         }
         sun-narrow{
             relative{
@@ -1249,12 +1416,32 @@ it{
                 "0"{"questa dom."}
                 "1"{"dom. prossima"}
             }
+            relativeTime{
+                future{
+                    one{"tra {0} dom."}
+                    other{"tra {0} dom."}
+                }
+                past{
+                    one{"{0} dom. fa"}
+                    other{"{0} dom. fa"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"giovedì scorso"}
                 "0"{"questo giovedì"}
                 "1"{"giovedì prossimo"}
+            }
+            relativeTime{
+                future{
+                    one{"tra {0} giovedì"}
+                    other{"tra {0} giovedì"}
+                }
+                past{
+                    one{"{0} giovedì fa"}
+                    other{"{0} giovedì fa"}
+                }
             }
         }
         thu-narrow{
@@ -1270,12 +1457,32 @@ it{
                 "0"{"questo gio."}
                 "1"{"gio. prossimo"}
             }
+            relativeTime{
+                future{
+                    one{"tra {0} gio."}
+                    other{"tra {0} gio."}
+                }
+                past{
+                    one{"{0} gio. fa"}
+                    other{"{0} gio. fa"}
+                }
+            }
         }
         tue{
             relative{
                 "-1"{"martedì scorso"}
                 "0"{"questo martedì"}
                 "1"{"martedì prossimo"}
+            }
+            relativeTime{
+                future{
+                    one{"tra {0} martedì"}
+                    other{"tra {0} martedì"}
+                }
+                past{
+                    one{"{0} martedì fa"}
+                    other{"{0} martedì fa"}
+                }
             }
         }
         tue-narrow{
@@ -1291,12 +1498,32 @@ it{
                 "0"{"questo mar."}
                 "1"{"mar. prossimo"}
             }
+            relativeTime{
+                future{
+                    one{"tra {0} mar."}
+                    other{"tra {0} mar."}
+                }
+                past{
+                    one{"{0} mar. fa"}
+                    other{"{0} mar. fa"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"mercoledì scorso"}
                 "0"{"questo mercoledì"}
                 "1"{"mercoledì prossimo"}
+            }
+            relativeTime{
+                future{
+                    one{"tra {0} mercoledì"}
+                    other{"tra {0} mercoledì"}
+                }
+                past{
+                    one{"{0} mercoledì fa"}
+                    other{"{0} mercoledì fa"}
+                }
             }
         }
         wed-narrow{
@@ -1312,6 +1539,16 @@ it{
                 "0"{"questo mer."}
                 "1"{"mer. prossimo"}
             }
+            relativeTime{
+                future{
+                    one{"tra {0} mer."}
+                    other{"tra {0} mer."}
+                }
+                past{
+                    one{"{0} mer. fa"}
+                    other{"{0} mer. fa"}
+                }
+            }
         }
         week{
             dn{"settimana"}
@@ -1320,6 +1557,7 @@ it{
                 "0"{"questa settimana"}
                 "1"{"settimana prossima"}
             }
+            relativePeriod{"la settimana del {0}"}
             relativeTime{
                 future{
                     one{"tra {0} settimana"}
@@ -1333,6 +1571,7 @@ it{
         }
         week-narrow{
             dn{"sett."}
+            relativePeriod{"la settimana del {0}"}
             relativeTime{
                 future{
                     one{"tra {0} sett."}
@@ -1346,6 +1585,7 @@ it{
         }
         week-short{
             dn{"sett."}
+            relativePeriod{"la settimana del {0}"}
             relativeTime{
                 future{
                     one{"tra {0} sett."}
@@ -1415,6 +1655,12 @@ it{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-short{
+            2{"{0} e {1}"}
+            end{"{0} e {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         unit{
             2{"{0} e {1}"}
             end{"{0} e {1}"}
@@ -1438,17 +1684,5 @@ it{
         UK{"britannico"}
         US{"USA"}
         metric{"metrico"}
-    }
-    transformNames{
-        BGN{"BGN"}
-        Numeric{"Numerica"}
-        Tone{"Tono"}
-        UNGEGN{"UNGEGN"}
-        x-Accents{"Accenti"}
-        x-Fullwidth{"Larghezza intera"}
-        x-Halfwidth{"Metà larghezza"}
-        x-Jamo{"Jamo"}
-        x-Pinyin{"Pinyin"}
-        x-Publishing{"Pubblicazione"}
     }
 }

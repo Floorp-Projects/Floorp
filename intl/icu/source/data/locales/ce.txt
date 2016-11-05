@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ce.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ce{
     ExemplarCharacters{
         "[а {аь} б в г {гӏ} д е ё ж з и {ий} й к {кк} {ккх} {кх} {кь} {кӏ} л м н о {о"
@@ -198,7 +192,7 @@ ce{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.76"}
     calendar{
         generic{
             DateTimePatterns{

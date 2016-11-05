@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/twq.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 twq{
     AuxExemplarCharacters{"[v]"}
     ExemplarCharacters{"[a ã b c d e ẽ f g h i j k l m n ɲ ŋ o õ p q r s š t u w x y z ž]"}
@@ -22,7 +16,7 @@ twq{
             }
         }
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.27.40"}
     calendar{
         generic{
             DateTimePatterns{
@@ -67,6 +61,10 @@ twq{
         }
         gregorian{
             AmPmMarkers{
+                "Subbaahi",
+                "Zaarikay b",
+            }
+            AmPmMarkersAbbr{
                 "Subbaahi",
                 "Zaarikay b",
             }

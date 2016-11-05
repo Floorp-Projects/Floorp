@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: stretching/clamping button item</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1314206">
+  <link rel="help" href="https://drafts.csswg.org/css-align-3/#valdef-justify-self-stretch">
+  <link rel="match" href="grid-item-button-001-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  float: left;
+  grid: auto-flow auto / 10px 30px 10px 30px 10px 30px 10px 30px auto auto auto auto;
+  grid-gap: 5px;
+  margin-bottom:20px;
+  margin-right:20px;
+  border:1px solid;
+}
+button {
+  border: 1px solid;
+  padding: 0;
+  margin: 0;
+}
+button:nth-child(1n) { background: blue; }
+button:nth-child(2n) { background: grey; }
+button:nth-child(3n) { background: tan; }
+button:nth-child(4n) { background: silver; }
+.sz > button {
+  width:20px; height:10px;
+}
+.mw > button {
+  min-width:15px;
+}
+.mw40 > button {
+  min-width:40px;
+}
+.max40 > button {
+  max-width:40px;
+  max-height:40px;
+}
+.sz.t2 > button {
+  width:10px; height:20px;
+}
+
+.jend { justify-self: end; }
+.aend { align-self: end; }
+.end { justify-self: end; align-self: end; }
+  </style>
+</head>
+<body>
+
+<div class="grid sz">
+<button>AB</button>
+<button>AB</button>
+<button class="jend">AB</button>
+<button class="jend">AB</button>
+<button class="aend">AB</button>
+<button class="aend">AB</button>
+<button class="end">AB</button>
+<button class="end">AB</button>
+<button>AB</button>
+<button class="jend">AB</button>
+<button class="aend">AB</button>
+<button class="end">AB</button>
+</div>
+
+<div class="grid sz t2">
+<button>AB</button>
+<button>AB</button>
+<button class="jend">AB</button>
+<button class="jend">AB</button>
+<button class="aend">AB</button>
+<button class="aend">AB</button>
+<button class="end">AB</button>
+<button class="end">AB</button>
+<button>AB</button>
+<button class="jend">AB</button>
+<button class="aend">AB</button>
+<button class="end">AB</button>
+</div>
+
+<div class="grid">
+<button>AB</button>
+<button>AB</button>
+<button class="jend">AB</button>
+<button class="jend">AB</button>
+<button class="aend">AB</button>
+<button class="aend">AB</button>
+<button class="end">AB</button>
+<button class="end">AB</button>
+</div>
+
+<div class="grid" style="grid:auto/auto auto">
+<button>AB</button>
+<button class="jend">AB</button>
+<button class="aend">AB</button>
+<button class="end">AB</button>
+</div>
+
+<div class="grid" style="grid:50px 50px/50px 50px">
+<button>AB</button>
+<button class="jend">&nbsp;&nbsp;</button>
+<button class="aend">AB</button>
+<button class="end">&nbsp;&nbsp;</button>
+</div>
+
+<div class="grid" style="grid:minmax(auto,20px) 20px/auto auto">
+<button>AB</button>
+<button class="jend">AB</button>
+<button class="aend">AB</button>
+<button class="end">AB</button>
+</div>
+
+<div class="grid sz t2 mw">
+<button>AB</button>
+<button>AB</button>
+<button class="jend">AB</button>
+<button class="jend">AB</button>
+<button class="aend">AB</button>
+<button class="aend">AB</button>
+<button class="end">AB</button>
+<button class="end">AB</button>
+<button>AB</button>
+<button class="jend">AB</button>
+<button class="aend">AB</button>
+<button class="end">AB</button>
+</div>
+
+<div class="grid mw40">
+<button>AB</button>
+<button>AB</button>
+<button class="jend">AB</button>
+<button class="jend">AB</button>
+<button class="aend">AB</button>
+<button class="aend">AB</button>
+<button class="end">AB</button>
+<button class="end">AB</button>
+</div>
+
+<div class="grid max40" style="grid:50px 50px/50px 50px">
+<button>AB</button>
+<button class="jend">&nbsp;&nbsp;</button>
+<button class="aend">AB</button>
+<button class="end">&nbsp;&nbsp;</button>
+</div>
+
+</body>
+</html>

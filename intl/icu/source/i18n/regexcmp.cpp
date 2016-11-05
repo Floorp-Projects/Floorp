@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 //
 //  file:  regexcmp.cpp
 //
-//  Copyright (C) 2002-2015 International Business Machines Corporation and others.
+//  Copyright (C) 2002-2016 International Business Machines Corporation and others.
 //  All Rights Reserved.
 //
 //  This file contains the ICU regular expression compiler, which is responsible
@@ -71,6 +73,7 @@ RegexCompile::RegexCompile(RegexPattern *rxp, UErrorCode &status) :
     fMatchOpenParen   = -1;
     fMatchCloseParen  = -1;
     fCaptureName      = NULL;
+    fLastSetLiteral   = U_SENTINEL;
 
     if (U_SUCCESS(status) && U_FAILURE(rxp->fDeferredStatus)) {
         status = rxp->fDeferredStatus;
@@ -1757,7 +1760,7 @@ UBool RegexCompile::doParseActions(int32_t action)
         //        and ICU UnicodeSet behavior.
         {
             UChar32  c = scanNamedChar();
-            if (U_SUCCESS(*fStatus) && fLastSetLiteral > c) {
+            if (U_SUCCESS(*fStatus) && (fLastSetLiteral == U_SENTINEL || fLastSetLiteral > c)) {
                 error(U_REGEX_INVALID_RANGE);
             }
             UnicodeSet *s = (UnicodeSet *)fSetStack.peek();
@@ -1826,7 +1829,8 @@ UBool RegexCompile::doParseActions(int32_t action)
         // Lower Limit > Upper limit being an error matches both Java
         //        and ICU UnicodeSet behavior.
         {
-        if (fLastSetLiteral > fC.fChar) {
+
+        if (fLastSetLiteral == U_SENTINEL || fLastSetLiteral > fC.fChar) {
             error(U_REGEX_INVALID_RANGE);
         }
         UnicodeSet *s = (UnicodeSet *)fSetStack.peek();
@@ -2601,7 +2605,11 @@ void  RegexCompile::findCaseInsensitiveStarters(UChar32 c, UnicodeSet *starterCh
 
 // End of machine generated data.
 
-    if (u_hasBinaryProperty(c, UCHAR_CASE_SENSITIVE)) {
+    if (c < UCHAR_MIN_VALUE || c > UCHAR_MAX_VALUE) {
+        // This function should never be called with an invalid input character.
+        U_ASSERT(FALSE);
+        starterChars->clear();
+    } else if (u_hasBinaryProperty(c, UCHAR_CASE_SENSITIVE)) {
         UChar32 caseFoldedC  = u_foldCase(c, U_FOLD_CASE_DEFAULT);
         starterChars->set(caseFoldedC, caseFoldedC);
 
@@ -2894,6 +2902,7 @@ void   RegexCompile::matchStartType() {
 
         case URX_JMPX:
             loc++;             // Except for extra operand on URX_JMPX, same as URX_JMP.
+            U_FALLTHROUGH;
         case URX_JMP:
             {
                 int32_t  jmpDest = URX_VAL(op);
@@ -3256,6 +3265,7 @@ int32_t   RegexCompile::minMatchLength(int32_t start, int32_t end) {
         case URX_JMPX:
             loc++;              // URX_JMPX has an extra operand, ignored here,
                                 //   otherwise processed identically to URX_JMP.
+            U_FALLTHROUGH;
         case URX_JMP:
             {
                 int32_t  jmpDest = URX_VAL(op);

@@ -764,14 +764,14 @@ nsRangeFrame::AttributeChanged(int32_t  aNameSpaceID,
 }
 
 LogicalSize
-nsRangeFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                              WritingMode aWM,
-                              const LogicalSize& aCBSize,
-                              nscoord aAvailableISize,
-                              const LogicalSize& aMargin,
-                              const LogicalSize& aBorder,
-                              const LogicalSize& aPadding,
-                              bool aShrinkWrap)
+nsRangeFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
+                              WritingMode         aWM,
+                              const LogicalSize&  aCBSize,
+                              nscoord             aAvailableISize,
+                              const LogicalSize&  aMargin,
+                              const LogicalSize&  aBorder,
+                              const LogicalSize&  aPadding,
+                              ComputeSizeFlags    aFlags)
 {
   nscoord oneEm = NSToCoordRound(StyleFont()->mFont.size *
                                  nsLayoutUtils::FontSizeInflationFor(this)); // 1em

@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: stretching/clamping button item</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1314206">
+  <style type="text/css">
+body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
+
+.grid {
+  display: block;
+  float: left;
+  margin-bottom:20px;
+  margin-right:20px;
+  border:1px solid;
+  line-height: 0;
+}
+button {
+  border: 1px solid;
+  padding: 0;
+  margin: 0;
+  vertical-align:top;
+}
+button:nth-child(1n) { background: blue; }
+button:nth-child(2n) { background: grey; }
+button:nth-child(3n) { background: tan; }
+button:nth-child(4n) { background: silver; }
+.sz > button {
+  width:20px; height:10px;
+}
+.mw > button {
+  min-width:15px;
+}
+.mw40 > button {
+  min-width:40px;
+}
+.sz.t2 > button {
+  width:10px; height:20px;
+}
+a30 {
+  display: inline-block;
+  height: 0;
+  width: 30px;
+  margin-left: 5px;
+  text-align: right;
+}
+.rel > button {
+  position:absolute;
+}
+  </style>
+</head>
+<body>
+
+<div class="grid sz">
+<button>AB</button><button style="margin-left:-5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:15px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:-5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:15px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button></div>
+
+<div class="grid sz t2">
+<button>AB</button><button style="margin-left:5px">AB</button><button style="margin-left:25px">AB</button><button style="margin-left:25px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:25px">AB</button><button style="margin-left:25px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button></div>
+
+<div class="grid" style="width:215px">
+<button style="width:10px">AB</button><button style="width:30px;margin-left:5px">AB</button><button style="width:10px;margin-left:5px">AB</button><a30><button style="background:silver">AB</button></a30><button style="width:10px;margin-left:5px">AB</button><button style="width:30px;margin-left:5px">AB</button><button style="width:10px;margin-left:5px">AB</button><a30><button style="background:silver;">AB</button></a30></div>
+
+<div class="grid">
+<button>AB</button><button>AB</button><br><button style="background:tan">AB</button><button style="background:silver">AB</button></div>
+
+<div class="grid rel" style="width:100px; height:100px; position:relative">
+<button style="top:0;width:50px;height:50px">AB</button><button style="top:0;right:0;height:50px">&nbsp;&nbsp;</button><button style="bottom:0;width:50px;">AB</button><button style="bottom:0;right:0">&nbsp;&nbsp;</button></div>
+
+<div class="grid rel" style="height:40px; position:relative">
+<button style="left:0;top:0;height:20px">AB</button><button style="top:0;right:0;height:20px">AB</button><button style="left:0;bottom:0;">AB</button><button style="bottom:0;right:0">AB</button><button style="position:static;visibility:hidden">AB</button><button style="position:static;visibility:hidden">AB</button>
+</div>
+
+<div class="grid sz t2 mw">
+<button>AB</button><button>AB</button><button style="margin-left:15px">AB</button><button style="margin-left:20px">AB</button><button style="margin-left:5px">AB</button><button>AB</button><button style="margin-left:15px">AB</button><button style="margin-left:20px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:5px">AB</button></div>
+
+<div class="grid mw40" style="width:215px">
+<button>AB</button><button style="margin-left:-25px">AB</button><button style="margin-left:-35px">AB</button><button style="margin-left:-5px">AB</button><button style="margin-left:5px">AB</button><button style="margin-left:-25px">AB</button><button style="margin-left:-35px">AB</button><button style="margin-left:-5px">AB</button></div>
+
+<div class="grid rel" style="width:100px; height:100px; position:relative">
+<button style="top:0;width:40px;height:40px">AB</button><button style="top:0;right:0;height:40px">&nbsp;&nbsp;</button><button style="bottom:0;width:40px;">AB</button><button style="bottom:0;right:0">&nbsp;&nbsp;</button></div>
+
+</body>
+</html>

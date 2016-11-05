@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/lb.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 lb{
     Currencies{
         ADP{
@@ -196,9 +190,13 @@ lb{
             "BYB",
             "Wäissrussesche Rubel (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "Wäissrussesche Rubel",
+        }
         BYR{
             "BYR",
-            "Wäissrussesche Rubel",
+            "Wäissrussesche Rubel (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1310,9 +1308,13 @@ lb{
             one{"Wäissrussesche Rubel (1994–1999)"}
             other{"Wäissrussesch Rubel (1994–1999)"}
         }
-        BYR{
+        BYN{
             one{"Wäissrussesche Rubel"}
             other{"Wäissrussesch Rubel"}
+        }
+        BYR{
+            one{"Wäissrussesche Rubel (2000–2016)"}
+            other{"Wäissrussesch Rubel (2000–2016)"}
         }
         BZD{
             one{"Belize-Dollar"}
@@ -2223,5 +2225,5 @@ lb{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.76"}
 }

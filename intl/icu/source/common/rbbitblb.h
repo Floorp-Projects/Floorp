@@ -1,10 +1,12 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 //
 //  rbbitblb.h
 //
 
 /*
 **********************************************************************
-*   Copyright (c) 2002-2005, International Business Machines
+*   Copyright (c) 2002-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 */
@@ -57,6 +59,8 @@ private:
     void     flagLookAheadStates();
     void     flagTaggedStates();
     void     mergeRuleStatusVals();
+
+    void     addRuleRootNodes(UVector *dest, RBBINode *node);
 
     // Set functions for UVector.
     //   TODO:  make a USet subclass of UVector

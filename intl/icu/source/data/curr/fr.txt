@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fr.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fr{
     Currencies{
         ADP{
@@ -196,9 +190,13 @@ fr{
             "BYB",
             "nouveau rouble biélorusse (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "rouble biélorusse",
+        }
         BYR{
             "BYR",
-            "rouble biélorusse",
+            "rouble biélorusse (2000–2016)",
         }
         BZD{
             "$BZ",
@@ -1126,7 +1124,7 @@ fr{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1143,6 +1141,7 @@ fr{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1183,6 +1182,7 @@ fr{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"L"}
         RUB{"₽"}
         RWF{"FR"}
         SBD{"$"}
@@ -1400,9 +1400,13 @@ fr{
             one{"nouveau rouble biélorusse (1994–1999)"}
             other{"nouveaux roubles biélorusses (1994–1999)"}
         }
-        BYR{
+        BYN{
             one{"rouble biélorusse"}
             other{"roubles biélorusses"}
+        }
+        BYR{
+            one{"rouble biélorusse (2000–2016)"}
+            other{"roubles biélorusses (2000–2016)"}
         }
         BZD{
             one{"dollar bélizéen"}
@@ -2317,5 +2321,5 @@ fr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.20.4"}
+    Version{"2.1.28.79"}
 }

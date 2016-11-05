@@ -480,8 +480,10 @@ enum UDateFormatField {
     UDAT_TIMEZONE_ISO_FIELD = 32,
     UDAT_TIMEZONE_ISO_LOCAL_FIELD = 33,
     UDAT_RELATED_YEAR_FIELD = 34,
-    UDAT_TIME_SEPARATOR_FIELD = 35,
-    UDAT_FIELD_COUNT = 36
+    UDAT_AM_PM_MIDNIGHT_NOON_FIELD = 35,
+    UDAT_FLEXIBLE_DAY_PERIOD_FIELD = 36,
+    UDAT_TIME_SEPARATOR_FIELD = 37,
+    UDAT_FIELD_COUNT = 38
 };
 
 enum UDateFormatStyle {
@@ -2375,6 +2377,10 @@ GetFieldTypeForFormatField(UDateFormatField fieldName)
       case UDAT_RELATED_YEAR_FIELD:
 #endif
 #ifndef U_HIDE_DRAFT_API
+      case UDAT_AM_PM_MIDNIGHT_NOON_FIELD:
+      case UDAT_FLEXIBLE_DAY_PERIOD_FIELD:
+#endif
+#ifndef U_HIDE_INTERNAL_API
       case UDAT_TIME_SEPARATOR_FIELD:
 #endif
         // These fields are all unsupported.

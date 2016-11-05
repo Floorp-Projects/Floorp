@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/yo_BJ.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 yo_BJ{
     Currencies{
         AED{
@@ -71,10 +65,6 @@ yo_BJ{
         ETB{
             "ETB",
             "Biri ti Orílɛ́ède Eutopia",
-        }
-        EUR{
-            "€",
-            "Uro",
         }
         GBP{
             "£",
@@ -176,10 +166,6 @@ yo_BJ{
             "SHP",
             "Pɔɔun ti Orílɛ́ède ̣Elena",
         }
-        SLL{
-            "SLL",
-            "Lioni",
-        }
         SOS{
             "SOS",
             "Sile ti Orílɛ́ède Somali",
@@ -187,10 +173,6 @@ yo_BJ{
         STD{
             "STD",
             "Dobira ti Orílɛ́ède Sao tome Ati Pirisipe",
-        }
-        SZL{
-            "SZL",
-            "Lilangeni",
         }
         TND{
             "TND",
@@ -233,5 +215,5 @@ yo_BJ{
             "Dɔla ti Orílɛ́ède Siibabuwe",
         }
     }
-    Version{"2.1.19.80"}
+    Version{"2.1.29.54"}
 }

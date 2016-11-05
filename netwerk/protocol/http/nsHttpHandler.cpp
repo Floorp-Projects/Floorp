@@ -2208,13 +2208,16 @@ nsHttpHandler::Observe(nsISupports *subject,
 
 nsresult
 nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
+                                          nsIPrincipal *aPrincipal,
                                           nsIInterfaceRequestor *aCallbacks,
                                           bool anonymous)
 {
     if (IsNeckoChild()) {
         ipc::URIParams params;
         SerializeURI(aURI, params);
-        gNeckoChild->SendSpeculativeConnect(params, anonymous);
+        gNeckoChild->SendSpeculativeConnect(params,
+                                            IPC::Principal(aPrincipal),
+                                            anonymous);
         return NS_OK;
     }
 
@@ -2297,10 +2300,16 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
     aURI->GetUsername(username);
 
     NeckoOriginAttributes neckoOriginAttributes;
-    if (loadContext) {
-      DocShellOriginAttributes docshellOriginAttributes;
-      loadContext->GetOriginAttributes(docshellOriginAttributes);
-      neckoOriginAttributes.InheritFromDocShellToNecko(docshellOriginAttributes);
+    // If the principal is given, we use the originAttributes from this
+    // principal. Otherwise, we use the originAttributes from the
+    // loadContext.
+    if (aPrincipal) {
+        neckoOriginAttributes.InheritFromDocToNecko(
+            BasePrincipal::Cast(aPrincipal)->OriginAttributesRef());
+    } else if (loadContext) {
+        DocShellOriginAttributes docshellOriginAttributes;
+        loadContext->GetOriginAttributes(docshellOriginAttributes);
+        neckoOriginAttributes.InheritFromDocShellToNecko(docshellOriginAttributes);
     }
 
     auto *ci =
@@ -2315,14 +2324,30 @@ NS_IMETHODIMP
 nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
                                   nsIInterfaceRequestor *aCallbacks)
 {
-    return SpeculativeConnectInternal(aURI, aCallbacks, false);
+    return SpeculativeConnectInternal(aURI, nullptr, aCallbacks, false);
+}
+
+NS_IMETHODIMP
+nsHttpHandler::SpeculativeConnect2(nsIURI *aURI,
+                                   nsIPrincipal *aPrincipal,
+                                   nsIInterfaceRequestor *aCallbacks)
+{
+    return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, false);
 }
 
 NS_IMETHODIMP
 nsHttpHandler::SpeculativeAnonymousConnect(nsIURI *aURI,
                                            nsIInterfaceRequestor *aCallbacks)
 {
-    return SpeculativeConnectInternal(aURI, aCallbacks, true);
+    return SpeculativeConnectInternal(aURI, nullptr, aCallbacks, true);
+}
+
+NS_IMETHODIMP
+nsHttpHandler::SpeculativeAnonymousConnect2(nsIURI *aURI,
+                                            nsIPrincipal *aPrincipal,
+                                            nsIInterfaceRequestor *aCallbacks)
+{
+    return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, true);
 }
 
 void

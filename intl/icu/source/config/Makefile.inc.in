@@ -1,3 +1,5 @@
+# Copyright (C) 2016 and later: Unicode, Inc. and others.
+# License & terms of use: http://www.unicode.org/copyright.html
 ## -*-makefile-*-
 #******************************************************************************
 #   Copyright (C) 1999-2014, International Business Machines
@@ -90,7 +92,6 @@ endif
 DATA_STUBNAME = data
 COMMON_STUBNAME = uc
 I18N_STUBNAME = i18n
-LAYOUT_STUBNAME = le
 LAYOUTEX_STUBNAME = lx
 IO_STUBNAME = io
 TOOLUTIL_STUBNAME = tu
@@ -103,7 +104,6 @@ CTESTFW_STUBNAME = test
 # 2. link with $(ICULIBS)
 # 3. optionally, add one or more of:
 #    - $(ICULIBS_I18N)    - i18n library, formatting, etc.
-#    - $(ICULIBS_LAYOUT)  - ICU layout library. 
 #    - $(ICULIBS_ICUIO)   - ICU stdio equivalent library
 
 ICULIBS_COMMON = -l$(ICUPREFIX)uc$(ICULIBSUFFIX)$(ICULIBSUFFIX_VERSION)
@@ -113,7 +113,6 @@ ICULIBS_TOOLUTIL = -l$(ICUPREFIX)tu$(ICULIBSUFFIX)$(ICULIBSUFFIX_VERSION)
 ICULIBS_CTESTFW = -l$(ICUPREFIX)ctestfw$(ICULIBSUFFIX)$(ICULIBSUFFIX_VERSION)
 ICULIBS_ICUIO = -l$(ICUPREFIX)io$(ICULIBSUFFIX)$(ICULIBSUFFIX_VERSION)
 ICULIBS_OBSOLETE = -l$(ICUPREFIX)obsolete$(ICULIBSUFFIX)$(ICULIBSUFFIX_VERSION)
-ICULIBS_LAYOUT = -l$(ICUPREFIX)le$(ICULIBSUFFIX)$(ICULIBSUFFIX_VERSION)
 ICULIBS_LAYOUTEX = -l$(ICUPREFIX)lx$(ICULIBSUFFIX)$(ICULIBSUFFIX_VERSION)
 ICULIBS_BASE = -L$(libdir)
 

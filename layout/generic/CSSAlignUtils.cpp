@@ -104,7 +104,7 @@ CSSAlignUtils::AlignJustifySelf(uint8_t aAlignment, LogicalAxis aAxis,
     nscoord space = SpaceToFill(wm, aChildSize, marginStart + marginEnd,
                                 aAxis, aCBSize);
     // XXX we might want to include == 0 here as an optimization -
-    // I need to see what the baseline/last-baseline code looks like first.
+    // I need to see what the baseline/last baseline code looks like first.
     if (space < 0) {
       // "Overflowing elements ignore their auto margins and overflow
       // in the end directions"

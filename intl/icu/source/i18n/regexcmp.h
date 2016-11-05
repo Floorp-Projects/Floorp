@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 //
 //  regexcmp.h
 //
-//  Copyright (C) 2002-2015, International Business Machines Corporation and others.
+//  Copyright (C) 2002-2016, International Business Machines Corporation and others.
 //  All Rights Reserved.
 //
 //  This file contains declarations for the class RegexCompile
@@ -17,9 +19,10 @@
 #include "unicode/utypes.h"
 #if !UCONFIG_NO_REGULAR_EXPRESSIONS
 
-#include "unicode/uobject.h"
-#include "unicode/uniset.h"
 #include "unicode/parseerr.h"
+#include "unicode/uniset.h"
+#include "unicode/uobject.h"
+#include "unicode/utext.h"
 #include "uhash.h"
 #include "uvector.h"
 #include "uvectr32.h"

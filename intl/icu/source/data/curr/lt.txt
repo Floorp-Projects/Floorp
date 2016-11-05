@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/lt.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 lt{
     Currencies{
         ADP{
@@ -224,9 +218,13 @@ lt{
             "BYB",
             "Baltarusijos naujasis rublis (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "Baltarusijos rublis",
+        }
         BYR{
             "BYR",
-            "Baltarusijos rublis",
+            "Baltarusijos rublis (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1210,7 +1208,7 @@ lt{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"Br"}
+        BYN{"Br"}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1227,6 +1225,7 @@ lt{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1267,6 +1266,7 @@ lt{
         PKR{"Rs"}
         PLN{"zl"}
         PYG{"Gs"}
+        RON{"lei"}
         RUB{"rb"}
         RWF{"RF"}
         SBD{"$"}
@@ -1292,6 +1292,7 @@ lt{
         ZMW{"ZK"}
     }
     Currencies%variant{
+        GEL{"₾"}
         RUB{"₽"}
         TRY{"TL"}
     }
@@ -1620,11 +1621,17 @@ lt{
             one{"Baltarusijos naujasis rublis (1994–1999)"}
             other{"Baltarusijos naujųjų rublių"}
         }
-        BYR{
+        BYN{
             few{"Baltarusijos rubliai"}
             many{"Baltarusijos rublio"}
             one{"Baltarusijos rublis"}
             other{"Baltarusijos rublių"}
+        }
+        BYR{
+            few{"Baltarusijos rubliai (2000–2016)"}
+            many{"Baltarusijos rublio (2000–2016)"}
+            one{"Baltarusijos rublis (2000–2016)"}
+            other{"Baltarusijos rublių (2000–2016)"}
         }
         BZD{
             few{"Belizo doleriai"}
@@ -3079,5 +3086,5 @@ lt{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.28.79"}
 }

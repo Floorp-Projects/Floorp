@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/bg.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 bg{
     AuxExemplarCharacters{"[{а\u0300} ѐ ё ѝ {о\u0300} {у\u0300} {ъ\u0300} ы ѣ э {ю\u0300} {я\u0300} ѫ]"}
     Ellipsis{
@@ -28,8 +22,8 @@ bg{
                 range{"{0} – {1}"}
             }
             patterns{
-                accountingFormat{"#,##0.00 ¤;(#,##0.00 ¤)"}
-                currencyFormat{"#,##0.00 ¤"}
+                accountingFormat{"#0.00 ¤;(#0.00 ¤)"}
+                currencyFormat{"#0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -37,7 +31,7 @@ bg{
             patternsLong{
                 decimalFormat{
                     1000{
-                        one{"0 хиляда"}
+                        one{"0 хил'.'"}
                         other{"0 хиляди"}
                     }
                     10000{
@@ -91,6 +85,50 @@ bg{
                     1000{
                         one{"0 хил'.' ¤"}
                         other{"0 хил'.' ¤"}
+                    }
+                    10000{
+                        one{"00 хил'.' ¤"}
+                        other{"00 хил'.' ¤"}
+                    }
+                    100000{
+                        one{"000 хил'.' ¤"}
+                        other{"000 хил'.' ¤"}
+                    }
+                    1000000{
+                        one{"0 млн'.' ¤"}
+                        other{"0 млн'.' ¤"}
+                    }
+                    10000000{
+                        one{"00 млн'.' ¤"}
+                        other{"00 млн'.' ¤"}
+                    }
+                    100000000{
+                        one{"000 млн'.' ¤"}
+                        other{"000 млн'.' ¤"}
+                    }
+                    1000000000{
+                        one{"0 млрд'.' ¤"}
+                        other{"0 млрд'.' ¤"}
+                    }
+                    10000000000{
+                        one{"00 млрд'.' ¤"}
+                        other{"00 млрд'.' ¤"}
+                    }
+                    100000000000{
+                        one{"000 млрд'.' ¤"}
+                        other{"000 млрд'.' ¤"}
+                    }
+                    1000000000000{
+                        one{"0 трлн'.' ¤"}
+                        other{"0 трлн'.' ¤"}
+                    }
+                    10000000000000{
+                        one{"00 трлн'.' ¤"}
+                        other{"00 трлн'.' ¤"}
+                    }
+                    100000000000000{
+                        one{"000 трлн'.' ¤"}
+                        other{"000 трлн'.' ¤"}
                     }
                 }
                 decimalFormat{
@@ -155,14 +193,14 @@ bg{
                 perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"+"}
-                superscriptingExponent{"."}
+                superscriptingExponent{"·"}
                 timeSeparator{":"}
             }
         }
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.30.6"}
     calendar{
         generic{
             DateTimePatterns{
@@ -343,9 +381,13 @@ bg{
                 "пр.об.",
                 "сл.об.",
             }
+            AmPmMarkersAbbr{
+                "am",
+                "pm",
+            }
             AmPmMarkersNarrow{
-                "пр.об.",
-                "сл.об.",
+                "am",
+                "pm",
             }
             DateTimePatterns{
                 "H:mm:ss zzzz",
@@ -390,6 +432,10 @@ bg{
                 MMMEd{"E, d.MM"}
                 MMMM{"LLLL"}
                 MMMMEd{"E, d MMMM"}
+                MMMMW{
+                    one{"'седмица' W 'от' MMM"}
+                    other{"'седмица' W 'от' MMM"}
+                }
                 MMMMd{"d MMMM"}
                 MMMMdd{"d MMMM"}
                 MMMd{"d.MM"}
@@ -402,7 +448,7 @@ bg{
                 hmv{"h:mm a v"}
                 ms{"m:ss"}
                 y{"y 'г'."}
-                yM{"M.y 'г'."}
+                yM{"MM.y 'г'."}
                 yMEd{"E, d.MM.y 'г'."}
                 yMMM{"MM.y 'г'."}
                 yMMMEd{"E, d.MM.y 'г'."}
@@ -413,6 +459,10 @@ bg{
                 yMd{"d.MM.y 'г'."}
                 yQQQ{"QQQ y 'г'."}
                 yQQQQ{"QQQQ y 'г'."}
+                yw{
+                    one{"'седмица' w 'от' y 'г'."}
+                    other{"'седмица' w 'от' y 'г'."}
+                }
             }
             dayNames{
                 format{
@@ -502,6 +552,14 @@ bg{
                         morning2{"на обед"}
                         night1{"през нощта"}
                     }
+                    narrow{
+                        afternoon1{"следобед"}
+                        evening1{"вечерта"}
+                        midnight{"полунощ"}
+                        morning1{"сутринта"}
+                        morning2{"на обед"}
+                        night1{"през нощта"}
+                    }
                     wide{
                         afternoon1{"следобед"}
                         evening1{"вечерта"}
@@ -514,33 +572,33 @@ bg{
                 stand-alone{
                     abbreviated{
                         afternoon1{"следобед"}
-                        am{"пр.об."}
-                        evening1{"вечер"}
-                        midnight{"полунощ"}
-                        morning1{"сутрин"}
-                        morning2{"на обед"}
-                        night1{"нощ"}
-                        pm{"сл.об."}
-                    }
-                    narrow{
-                        afternoon1{"следобед"}
-                        am{"пр.об."}
-                        evening1{"вечер"}
-                        midnight{"полунощ"}
-                        morning1{"сутрин"}
-                        morning2{"на обед"}
-                        night1{"нощ"}
-                        pm{"сл.об."}
-                    }
-                    wide{
-                        afternoon1{"следобед"}
-                        am{"пр.об."}
+                        am{"am"}
                         evening1{"вечерта"}
                         midnight{"полунощ"}
                         morning1{"сутринта"}
                         morning2{"на обед"}
-                        night1{"нощ"}
-                        pm{"сл.об."}
+                        night1{"през нощта"}
+                        pm{"pm"}
+                    }
+                    narrow{
+                        afternoon1{"следобед"}
+                        am{"am"}
+                        evening1{"вечерта"}
+                        midnight{"полунощ"}
+                        morning1{"сутринта"}
+                        morning2{"на обед"}
+                        night1{"през нощта"}
+                        pm{"pm"}
+                    }
+                    wide{
+                        afternoon1{"следобед"}
+                        am{"am"}
+                        evening1{"вечерта"}
+                        midnight{"полунощ"}
+                        morning1{"сутринта"}
+                        morning2{"на обед"}
+                        night1{"през нощта"}
+                        pm{"pm"}
                     }
                 }
             }
@@ -874,6 +932,94 @@ bg{
             }
         }
     }
+    characterLabel{
+        activities{"Дейности"}
+        african_scripts{"Африкански писмени знаци"}
+        american_scripts{"Американски писмени знаци"}
+        animal{"животно"}
+        animals_nature{"Животни и природа"}
+        arrows{"Стрелки"}
+        body{"тяло"}
+        box_drawing{"Чертаене на линии"}
+        braille{"Брайлово писмо"}
+        building{"сграда"}
+        bullets_stars{"Водещи символи/звезди"}
+        consonantal_jamo{"Джамо за съгласни"}
+        currency_symbols{"Символи на валути"}
+        dash_connector{"Тирета/съединители"}
+        digits{"Цифри"}
+        dingbats{"Знаци от Dingbat"}
+        divination_symbols{"Гадателски символи"}
+        downwards_arrows{"Сочещи надолу стрелки"}
+        downwards_upwards_arrows{"Сочещи надолу и сочещи нагоре стрелки"}
+        east_asian_scripts{"Източноазиатски писмени знаци"}
+        emoji{"Емотикони"}
+        european_scripts{"Европейски писмени знаци"}
+        female{"жена"}
+        flag{"знаме"}
+        flags{"Флагове"}
+        food_drink{"Храна и напитки"}
+        format{"Формат"}
+        format_whitespace{"Форматиране и интервали"}
+        full_width_form_variant{"Варианти на форми с пълна ширина"}
+        geometric_shapes{"Геометрични фигури"}
+        half_width_form_variant{"Варианти на форми с половин ширина"}
+        han_characters{"Хан логограми"}
+        han_radicals{"Хан радикали"}
+        hanja{"Ханджа"}
+        hanzi_simplified{"Ханзи (опростен)"}
+        hanzi_traditional{"Ханзи (традиционен)"}
+        heart{"сърце"}
+        historic_scripts{"Исторически писмени знаци"}
+        ideographic_desc_characters{"Идеографски описателни знаци"}
+        japanese_kana{"Японска писменост кана"}
+        kanbun{"Канбун"}
+        kanji{"Канджи"}
+        keycap{"клавиш"}
+        leftwards_arrows{"Сочещи наляво стрелки"}
+        leftwards_rightwards_arrows{"Сочещи наляво и сочещи надясно стрелки"}
+        letterlike_symbols{"Буквоподобни символи"}
+        limited_use{"Ограничена употреба"}
+        male{"мъж"}
+        math_symbols{"Математически символи"}
+        middle_eastern_scripts{"Средноевропейски писмени знаци"}
+        miscellaneous{"Разни"}
+        modern_scripts{"Модерни писмени знаци"}
+        modifier{"Модификатори"}
+        musical_symbols{"Музикални символи"}
+        nature{"природа"}
+        nonspacing{"Знаци с нулева ширина"}
+        numbers{"Числа"}
+        objects{"Предмети"}
+        other{"Други"}
+        paired{"Двойни"}
+        person{"човек"}
+        phonetic_alphabet{"Фонетична азбука"}
+        pictographs{"Пиктограми"}
+        place{"място"}
+        plant{"растение"}
+        punctuation{"Препинателни знаци"}
+        rightwards_arrows{"Сочещи надясно стрелки"}
+        sign_standard_symbols{"Знак/стандартен символ"}
+        small_form_variant{"Варианти на малки форми"}
+        smiley{"усмихнато лице"}
+        smileys_people{"Емотикони и хора"}
+        south_asian_scripts{"Южноазиатски писмености"}
+        southeast_asian_scripts{"Югоизточноазиатски писмени знаци"}
+        spacing{"Знаци с ненулева ширина"}
+        sport{"спорт"}
+        symbols{"Символи"}
+        technical_symbols{"Технически символи"}
+        tone_marks{"Маркирания на тонове"}
+        travel{"пътуване"}
+        travel_places{"Пътувания и места"}
+        upwards_arrows{"Сочещи нагоре стрелки"}
+        variant_forms{"Форми с варианти"}
+        vocalic_jamo{"Джамо за гласни"}
+        weather{"времето"}
+        western_asian_scripts{"Западноазиатски писмени знаци"}
+        whitespace{"Бели полета"}
+    }
     delimiters{
         alternateQuotationEnd{"“"}
         alternateQuotationStart{"„"}
@@ -932,12 +1078,12 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"след {0} д"}
-                    other{"след {0} д"}
+                    one{"след {0} ден"}
+                    other{"след {0} дни"}
                 }
                 past{
-                    one{"преди {0} д"}
-                    other{"преди {0} д"}
+                    one{"преди {0} ден"}
+                    other{"преди {0} дни"}
                 }
             }
         }
@@ -949,27 +1095,60 @@ bg{
         }
         fri{
             relative{
-                "-1"{"миналият петък"}
+                "-1"{"предходният петък"}
                 "0"{"този петък"}
                 "1"{"следващият петък"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} петък"}
+                    other{"след {0} петъка"}
+                }
+                past{
+                    one{"преди {0} петък"}
+                    other{"преди {0} петъка"}
+                }
             }
         }
         fri-narrow{
             relative{
-                "-1"{"мин. пт"}
+                "-1"{"предх. пт"}
                 "0"{"този пт"}
                 "1"{"следв. пт"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} петък"}
+                    other{"след {0} петъка"}
+                }
+                past{
+                    one{"преди {0} петък"}
+                    other{"преди {0} петъка"}
+                }
             }
         }
         fri-short{
             relative{
-                "-1"{"миналият пт"}
+                "-1"{"предходният петък"}
                 "0"{"този пт"}
                 "1"{"следващият пт"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} петък"}
+                    other{"след {0} петъка"}
+                }
+                past{
+                    one{"преди {0} петък"}
+                    other{"преди {0} петъка"}
+                }
             }
         }
         hour{
             dn{"час"}
+            relative{
+                "0"{"в този час"}
+            }
             relativeTime{
                 future{
                     one{"след {0} час"}
@@ -1009,6 +1188,9 @@ bg{
         }
         minute{
             dn{"минута"}
+            relative{
+                "0"{"в тази минута"}
+            }
             relativeTime{
                 future{
                     one{"след {0} минута"}
@@ -1048,31 +1230,61 @@ bg{
         }
         mon{
             relative{
-                "-1"{"миналият понеделник"}
+                "-1"{"предходният понеделник"}
                 "0"{"този понеделник"}
                 "1"{"следващият понеделник"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} понеделник"}
+                    other{"след {0} понеделника"}
+                }
+                past{
+                    one{"преди {0} понеделник"}
+                    other{"преди {0} понеделника"}
+                }
             }
         }
         mon-narrow{
             relative{
-                "-1"{"мин. пн"}
+                "-1"{"предх. пн"}
                 "0"{"този пн"}
                 "1"{"следв. пн"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} понеделник"}
+                    other{"след {0} понеделника"}
+                }
+                past{
+                    one{"преди {0} понеделник"}
+                    other{"преди {0} понеделника"}
+                }
             }
         }
         mon-short{
             relative{
-                "-1"{"миналият пн"}
+                "-1"{"предходният пн"}
                 "0"{"този пн"}
                 "1"{"следващият пн"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} понеделник"}
+                    other{"след {0} понеделника"}
+                }
+                past{
+                    one{"преди {0} понеделник"}
+                    other{"преди {0} понеделника"}
+                }
             }
         }
         month{
             dn{"месец"}
             relative{
-                "-1"{"миналият месец"}
+                "-1"{"предходен месец"}
                 "0"{"този месец"}
-                "1"{"следващият месец"}
+                "1"{"следващ месец"}
             }
             relativeTime{
                 future{
@@ -1112,21 +1324,21 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"сл. {0} м."}
-                    other{"сл. {0} м."}
+                    one{"след {0} м."}
+                    other{"след {0} м."}
                 }
                 past{
-                    one{"пр. {0} м."}
-                    other{"пр. {0} м."}
+                    one{"преди {0} м."}
+                    other{"преди {0} м."}
                 }
             }
         }
         quarter{
             dn{"тримесечие"}
             relative{
-                "-1"{"миналото тримесечие"}
+                "-1"{"предходно тримесечие"}
                 "0"{"това тримесечие"}
-                "1"{"следващото тримесечие"}
+                "1"{"следващо тримесечие"}
             }
             relativeTime{
                 future{
@@ -1177,23 +1389,53 @@ bg{
         }
         sat{
             relative{
-                "-1"{"миналата събота"}
+                "-1"{"предходната събота"}
                 "0"{"тази събота"}
                 "1"{"следващата събота"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} събота"}
+                    other{"след {0} съботи"}
+                }
+                past{
+                    one{"преди {0} събота"}
+                    other{"преди {0} съботи"}
+                }
             }
         }
         sat-narrow{
             relative{
-                "-1"{"мин. сб"}
+                "-1"{"предх. сб"}
                 "0"{"тази сб"}
                 "1"{"следв. сб"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} събота"}
+                    other{"след {0} съботи"}
+                }
+                past{
+                    one{"преди {0} събота"}
+                    other{"преди {0} съботи"}
+                }
             }
         }
         sat-short{
             relative{
-                "-1"{"миналата сб"}
+                "-1"{"предходната сб"}
                 "0"{"тази сб"}
                 "1"{"следващата сб"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} събота"}
+                    other{"след {0} съботи"}
+                }
+                past{
+                    one{"преди {0} събота"}
+                    other{"преди {0} съботи"}
+                }
             }
         }
         second{
@@ -1216,12 +1458,12 @@ bg{
             dn{"с"}
             relativeTime{
                 future{
-                    one{"сл. {0} с"}
-                    other{"сл. {0} с"}
+                    one{"сл. {0} сек"}
+                    other{"сл. {0} сек"}
                 }
                 past{
-                    one{"пр. {0} с"}
-                    other{"пр. {0} с"}
+                    one{"пр. {0} сек"}
+                    other{"пр. {0} сек"}
                 }
             }
         }
@@ -1229,106 +1471,227 @@ bg{
             dn{"с"}
             relativeTime{
                 future{
-                    one{"след {0} с"}
-                    other{"след {0} с"}
+                    one{"след {0} сек"}
+                    other{"след {0} сек"}
                 }
                 past{
-                    one{"преди {0} с"}
-                    other{"преди {0} с"}
+                    one{"преди {0} сек"}
+                    other{"преди {0} сек"}
                 }
             }
         }
         sun{
             relative{
-                "-1"{"миналата неделя"}
+                "-1"{"предходната неделя"}
                 "0"{"тази неделя"}
                 "1"{"следващата неделя"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} неделя"}
+                    other{"след {0} недели"}
+                }
+                past{
+                    one{"преди {0} неделя"}
+                    other{"преди {0} недели"}
+                }
             }
         }
         sun-narrow{
             relative{
-                "-1"{"мин. нд"}
+                "-1"{"предх. нд"}
                 "0"{"тази нд"}
                 "1"{"следв. нд"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} неделя"}
+                    other{"след {0} недели"}
+                }
+                past{
+                    one{"преди {0} неделя"}
+                    other{"преди {0} недели"}
+                }
             }
         }
         sun-short{
             relative{
-                "-1"{"миналата нд"}
+                "-1"{"предходната нд"}
                 "0"{"тази нд"}
                 "1"{"следващата нд"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} неделя"}
+                    other{"след {0} недели"}
+                }
+                past{
+                    one{"преди {0} неделя"}
+                    other{"преди {0} недели"}
+                }
             }
         }
         thu{
             relative{
-                "-1"{"миналият четвъртък"}
+                "-1"{"предходният четвъртък"}
                 "0"{"този четвъртък"}
                 "1"{"следващият четвъртък"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} четвъртък"}
+                    other{"след {0} четвъртъка"}
+                }
+                past{
+                    one{"преди {0} четвъртък"}
+                    other{"преди {0} четвъртъка"}
+                }
             }
         }
         thu-narrow{
             relative{
-                "-1"{"мин. чт"}
+                "-1"{"предх. чт"}
                 "0"{"този чт"}
                 "1"{"следв. чт"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} четвъртък"}
+                    other{"след {0} четвъртъка"}
+                }
+                past{
+                    one{"преди {0} четвъртък"}
+                    other{"преди {0} четвъртъка"}
+                }
             }
         }
         thu-short{
             relative{
-                "-1"{"миналият чт"}
+                "-1"{"предходният четвъртък"}
                 "0"{"този чт"}
                 "1"{"следващият чт"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} четвъртък"}
+                    other{"след {0} четвъртъка"}
+                }
+                past{
+                    one{"преди {0} четвъртък"}
+                    other{"преди {0} четвъртъка"}
+                }
             }
         }
         tue{
             relative{
-                "-1"{"миналият вторник"}
+                "-1"{"предходният вторник"}
                 "0"{"този вторник"}
                 "1"{"следващият вторник"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} вторник"}
+                    other{"след {0} вторника"}
+                }
+                past{
+                    one{"преди {0} вторник"}
+                    other{"преди {0} вторника"}
+                }
             }
         }
         tue-narrow{
             relative{
-                "-1"{"мин. вт"}
+                "-1"{"предх. вт"}
                 "0"{"този вт"}
                 "1"{"следв. вт"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} вторник"}
+                    other{"след {0} вторника"}
+                }
+                past{
+                    one{"преди {0} вторник"}
+                    other{"преди {0} вторника"}
+                }
             }
         }
         tue-short{
             relative{
-                "-1"{"миналият вт"}
+                "-1"{"предходният вт"}
                 "0"{"този вт"}
                 "1"{"следващият вт"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} вторник"}
+                    other{"след {0} вторника"}
+                }
+                past{
+                    one{"преди {0} вторник"}
+                    other{"преди {0} вторника"}
+                }
             }
         }
         wed{
             relative{
-                "-1"{"миналата сряда"}
+                "-1"{"предходната сряда"}
                 "0"{"тази сряда"}
                 "1"{"следващата сряда"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} сряда"}
+                    other{"след {0} среди"}
+                }
+                past{
+                    one{"преди {0} сряда"}
+                    other{"преди {0} среди"}
+                }
             }
         }
         wed-narrow{
             relative{
-                "-1"{"мин. ср"}
+                "-1"{"предх. ср"}
                 "0"{"тази ср"}
                 "1"{"следв. ср"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} сряда"}
+                    other{"след {0} среди"}
+                }
+                past{
+                    one{"преди {0} сряда"}
+                    other{"преди {0} среди"}
+                }
             }
         }
         wed-short{
             relative{
-                "-1"{"миналата ср"}
+                "-1"{"предходната ср"}
                 "0"{"тази ср"}
                 "1"{"следващата ср"}
+            }
+            relativeTime{
+                future{
+                    one{"след {0} сряда"}
+                    other{"след {0} среди"}
+                }
+                past{
+                    one{"преди {0} сряда"}
+                    other{"преди {0} среди"}
+                }
             }
         }
         week{
             dn{"седмица"}
             relative{
-                "-1"{"миналата седмица"}
+                "-1"{"предходната седмица"}
                 "0"{"тази седмица"}
                 "1"{"следващата седмица"}
             }
+            relativePeriod{"седмицата от {0}"}
             relativeTime{
                 future{
                     one{"след {0} седмица"}
@@ -1347,6 +1710,7 @@ bg{
                 "0"{"тази седм."}
                 "1"{"сл. седм."}
             }
+            relativePeriod{"седмицата от {0}"}
             relativeTime{
                 future{
                     one{"сл. {0} седм."}
@@ -1365,6 +1729,7 @@ bg{
                 "0"{"тази седм."}
                 "1"{"следв. седм."}
             }
+            relativePeriod{"седмицата от {0}"}
             relativeTime{
                 future{
                     one{"след {0} седм."}
@@ -1424,12 +1789,12 @@ bg{
             }
             relativeTime{
                 future{
-                    one{"сл. {0} г."}
-                    other{"сл. {0} г."}
+                    one{"след {0} г."}
+                    other{"след {0} г."}
                 }
                 past{
-                    one{"пр. {0} г."}
-                    other{"пр. {0} г."}
+                    one{"преди {0} г."}
+                    other{"преди {0} г."}
                 }
             }
         }
@@ -1440,6 +1805,12 @@ bg{
     listPattern{
         standard{
             2{"{0} и {1}"}
+            end{"{0} и {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
+            2{"{0} и{1}"}
             end{"{0} и {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
@@ -1467,17 +1838,5 @@ bg{
         UK{"имперска"}
         US{"американска"}
         metric{"метрична"}
-    }
-    transformNames{
-        BGN{"АКГН (BGN)"}
-        Numeric{"Цифрови"}
-        Tone{"Интонация"}
-        UNGEGN{"ГЕСГИООН (UNGEGN)"}
-        x-Accents{"Диакритични знаци"}
-        x-Fullwidth{"С пълна ширина"}
-        x-Halfwidth{"С половин ширина"}
-        x-Jamo{"Джамо"}
-        x-Pinyin{"Пинин"}
-        x-Publishing{"Типографски"}
     }
 }

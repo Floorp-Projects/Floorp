@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/cs.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 cs{
-    Version{"2.1.20.4"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidžan"}
@@ -308,6 +302,9 @@ cs{
         }
         "America:El_Salvador"{
             ec{"Salvador"}
+        }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
         }
         "America:Fortaleza"{
             ec{"Fortaleza"}
@@ -672,6 +669,9 @@ cs{
         "Asia:Bangkok"{
             ec{"Bangkok"}
         }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
+        }
         "Asia:Beirut"{
             ec{"Bejrút"}
         }
@@ -849,6 +849,9 @@ cs{
         "Asia:Tokyo"{
             ec{"Tokio"}
         }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"Ulánbátar"}
         }
@@ -948,6 +951,9 @@ cs{
         "Europe:Andorra"{
             ec{"Andorra"}
         }
+        "Europe:Astrakhan"{
+            ec{"Astrachaň"}
+        }
         "Europe:Athens"{
             ec{"Athény"}
         }
@@ -1005,6 +1011,9 @@ cs{
         }
         "Europe:Kiev"{
             ec{"Kyjev"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
         }
         "Europe:Lisbon"{
             ec{"Lisabon"}
@@ -1081,6 +1090,9 @@ cs{
         }
         "Europe:Tirane"{
             ec{"Tirana"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Uljanovsk"}
         }
         "Europe:Uzhgorod"{
             ec{"Užhorod"}
@@ -1786,6 +1798,9 @@ cs{
         }
         "meta:Ponape"{
             ls{"Ponapský čas"}
+        }
+        "meta:Pyongyang"{
+            ls{"Pchjongjangský čas"}
         }
         "meta:Qyzylorda"{
             ld{"Kyzylordský letní čas"}

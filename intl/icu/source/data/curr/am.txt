@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/am.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 am{
     Currencies{
         AED{
@@ -100,9 +94,13 @@ am{
             "BWP",
             "የቦትስዋና ፑላ",
         }
+        BYN{
+            "BYN",
+            "የቤላሩስያ ሩብል",
+        }
         BYR{
             "BYR",
-            "የቤላሩስያ ሩብል",
+            "የቤላሩስያ ሩብል (2000–2016)",
         }
         BZD{
             "BZD",
@@ -370,7 +368,7 @@ am{
         }
         MMK{
             "MMK",
-            "ምያንማ ክያት",
+            "የማያናማር ክያት",
         }
         MNT{
             "MNT",
@@ -618,7 +616,7 @@ am{
         }
         XAF{
             "FCFA",
-            "ሴኤፍአ ፍራንክ ቤእአሴ",
+            "የመካከለኛው አፍሪካ ሴፋ ፍራንክ",
         }
         XCD{
             "EC$",
@@ -626,7 +624,7 @@ am{
         }
         XOF{
             "CFA",
-            "ሴኤፍአ ፍራንክ ቤሴእአኦ",
+            "የምዕራብ አፍሪካ ሴፋ ፍራንክ",
         }
         XPF{
             "CFPF",
@@ -670,7 +668,7 @@ am{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -687,6 +685,7 @@ am{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -727,6 +726,7 @@ am{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -848,9 +848,13 @@ am{
             one{"የቦትስዋና ፑላ"}
             other{"የቦትስዋና ፑላ"}
         }
-        BYR{
+        BYN{
             one{"የቤላሩስያ ሩብል"}
             other{"የቤላሩስያ ሩብል"}
+        }
+        BYR{
+            one{"የቤላሩስያ ሩብል (2000–2016)"}
+            other{"የቤላሩስያ ሩብል (2000–2016)"}
         }
         BZD{
             one{"የቤሊዝ ዶላር"}
@@ -1109,8 +1113,8 @@ am{
             other{"የሜቆድንያ ዲናር"}
         }
         MMK{
-            one{"ምያንማ ክያት"}
-            other{"ምያንማ ክያት"}
+            one{"የማያናማር ክያት"}
+            other{"የማያናማር ክያት"}
         }
         MNT{
             one{"የሞንጎሊያን ቱግሪክ"}
@@ -1353,16 +1357,16 @@ am{
             other{"ሳሞአን ታላ"}
         }
         XAF{
-            one{"ሴኤፍአ ፍራንክ ቤእአሴ"}
-            other{"ሴኤፍአ ፍራንክ ቤእአሴ"}
+            one{"የመካከለኛው አፍሪካ ሴፋ ፍራንክ"}
+            other{"የመካከለኛው አፍሪካ ሴፋ ፍራንክ"}
         }
         XCD{
             one{"የምዕራብ ካሪብያን ዶላር"}
             other{"የምዕራብ ካሪብያን ዶላር"}
         }
         XOF{
-            one{"ሴኤፍአ ፍራንክ ቤሴእአኦ"}
-            other{"ሴኤፍአ ፍራንክ ቤሴእአኦ"}
+            one{"የምዕራብ አፍሪካ ሴፋ ፍራንክ"}
+            other{"የምዕራብ አፍሪካ ሴፋ ፍራንክ"}
         }
         XPF{
             one{"ሲ ኤፍ ፒ ፍራንክ"}
@@ -1393,5 +1397,5 @@ am{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.96"}
+    Version{"2.1.28.79"}
 }

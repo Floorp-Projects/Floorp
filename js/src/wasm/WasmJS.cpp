@@ -46,6 +46,9 @@ using mozilla::Nothing;
 bool
 wasm::HasCompilerSupport(ExclusiveContext* cx)
 {
+    if (!cx->options().wasm())
+        return false;
+
     if (gc::SystemPageSize() > wasm::PageSize)
         return false;
 
@@ -753,34 +756,34 @@ WasmCall(JSContext* cx, unsigned argc, Value* vp)
     RootedFunction callee(cx, &args.callee().as<JSFunction>());
 
     Instance& instance = ExportedFunctionToInstance(callee);
-    uint32_t funcDefIndex = ExportedFunctionToDefinitionIndex(callee);
-    return instance.callExport(cx, funcDefIndex, args);
+    uint32_t funcIndex = ExportedFunctionToFuncIndex(callee);
+    return instance.callExport(cx, funcIndex, args);
 }
 
 /* static */ bool
 WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject instanceObj,
-                                        uint32_t funcDefIndex, MutableHandleFunction fun)
+                                        uint32_t funcIndex, MutableHandleFunction fun)
 {
-    if (ExportMap::Ptr p = instanceObj->exports().lookup(funcDefIndex)) {
+    if (ExportMap::Ptr p = instanceObj->exports().lookup(funcIndex)) {
         fun.set(p->value());
         return true;
     }
 
     const Instance& instance = instanceObj->instance();
-    RootedAtom name(cx, instance.code().getFuncDefAtom(cx, funcDefIndex));
+    RootedAtom name(cx, instance.code().getFuncAtom(cx, funcIndex));
     if (!name)
         return false;
 
-    unsigned numArgs = instance.metadata().lookupFuncDefExport(funcDefIndex).sig().args().length();
+    unsigned numArgs = instance.metadata().lookupFuncExport(funcIndex).sig().args().length();
     fun.set(NewNativeConstructor(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED,
                                  SingletonObject, JSFunction::WASM_CTOR));
     if (!fun)
         return false;
 
     fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT, ObjectValue(*instanceObj));
-    fun->setExtendedSlot(FunctionExtended::WASM_FUNC_DEF_INDEX_SLOT, Int32Value(funcDefIndex));
+    fun->setExtendedSlot(FunctionExtended::WASM_FUNC_INDEX_SLOT, Int32Value(funcIndex));
 
-    if (!instanceObj->exports().putNew(funcDefIndex, fun)) {
+    if (!instanceObj->exports().putNew(funcIndex, fun)) {
         ReportOutOfMemory(cx);
         return false;
     }
@@ -791,10 +794,10 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
 const CodeRange&
 WasmInstanceObject::getExportedFunctionCodeRange(HandleFunction fun)
 {
-    uint32_t funcDefIndex = ExportedFunctionToDefinitionIndex(fun);
-    MOZ_ASSERT(exports().lookup(funcDefIndex)->value() == fun);
+    uint32_t funcIndex = ExportedFunctionToFuncIndex(fun);
+    MOZ_ASSERT(exports().lookup(funcIndex)->value() == fun);
     const Metadata& metadata = instance().metadata();
-    return metadata.codeRanges[metadata.lookupFuncDefExport(funcDefIndex).codeRangeIndex()];
+    return metadata.codeRanges[metadata.lookupFuncExport(funcIndex).codeRangeIndex()];
 }
 
 bool
@@ -838,10 +841,10 @@ wasm::ExportedFunctionToInstanceObject(JSFunction* fun)
 }
 
 uint32_t
-wasm::ExportedFunctionToDefinitionIndex(JSFunction* fun)
+wasm::ExportedFunctionToFuncIndex(JSFunction* fun)
 {
     MOZ_ASSERT(IsExportedFunction(fun));
-    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_FUNC_DEF_INDEX_SLOT);
+    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_FUNC_INDEX_SLOT);
     return v.toInt32();
 }
 
@@ -1276,7 +1279,7 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
 
     RootedWasmInstanceObject instanceObj(cx, instance.object());
     RootedFunction fun(cx);
-    if (!instanceObj->getExportedFunction(cx, instanceObj, codeRange.funcDefIndex(), &fun))
+    if (!instanceObj->getExportedFunction(cx, instanceObj, codeRange.funcIndex(), &fun))
         return false;
 
     args.rval().setObject(*fun);
@@ -1311,17 +1314,17 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
 
     if (value) {
         RootedWasmInstanceObject instanceObj(cx, ExportedFunctionToInstanceObject(value));
-        uint32_t funcDefIndex = ExportedFunctionToDefinitionIndex(value);
+        uint32_t funcIndex = ExportedFunctionToFuncIndex(value);
 
 #ifdef DEBUG
         RootedFunction f(cx);
-        MOZ_ASSERT(instanceObj->getExportedFunction(cx, instanceObj, funcDefIndex, &f));
+        MOZ_ASSERT(instanceObj->getExportedFunction(cx, instanceObj, funcIndex, &f));
         MOZ_ASSERT(value == f);
 #endif
 
         Instance& instance = instanceObj->instance();
-        const FuncDefExport& funcDefExport = instance.metadata().lookupFuncDefExport(funcDefIndex);
-        const CodeRange& codeRange = instance.metadata().codeRanges[funcDefExport.codeRangeIndex()];
+        const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
+        const CodeRange& codeRange = instance.metadata().codeRanges[funcExport.codeRangeIndex()];
         void* code = instance.codeSegment().base() + codeRange.funcTableEntry();
         table.set(index, code, instance);
     } else {
@@ -1618,7 +1621,6 @@ JSObject*
 js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
 {
     MOZ_RELEASE_ASSERT(HasCompilerSupport(cx));
-    MOZ_ASSERT(cx->options().wasm());
 
     Handle<GlobalObject*> global = obj.as<GlobalObject>();
     MOZ_ASSERT(!global->isStandardClassResolved(JSProto_WebAssembly));

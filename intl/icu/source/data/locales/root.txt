@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/root.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 /**
  * ICU <specials> source: <path>/common/main/root.xml
  */
@@ -24,17 +18,22 @@ root{
     MoreInformation{"?"}
     NumberElements{
         arab{
+            patterns{
+                accountingFormat:alias{"/LOCALE/NumberElements/arab/patterns/currencyFormat"}
+                currencyFormat{"#,##0.00 ¤"}
+                percentFormat{"#,##0 %"}
+            }
             symbols{
                 decimal{"٫"}
                 exponential{"اس"}
                 group{"٬"}
                 infinity{"∞"}
                 list{"؛"}
-                minusSign{"‏-"}
+                minusSign{"؜-"}
                 nan{"NaN"}
                 perMille{"؉"}
-                percentSign{"٪"}
-                plusSign{"‏+"}
+                percentSign{"٪؜"}
+                plusSign{"؜+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -55,92 +54,7 @@ root{
                 timeSeparator{"٫"}
             }
         }
-        bali{
-            symbols{
-                alias{""}
-            }
-        }
-        beng{
-            symbols{
-                alias{""}
-            }
-        }
-        brah{
-            symbols{
-                alias{""}
-            }
-        }
-        cakm{
-            symbols{
-                alias{""}
-            }
-        }
-        cham{
-            symbols{
-                alias{""}
-            }
-        }
         default{"latn"}
-        deva{
-            symbols{
-                alias{""}
-            }
-        }
-        fullwide{
-            symbols{
-                alias{""}
-            }
-        }
-        gujr{
-            symbols{
-                alias{""}
-            }
-        }
-        guru{
-            symbols{
-                alias{""}
-            }
-        }
-        hanidec{
-            symbols{
-                alias{""}
-            }
-        }
-        java{
-            symbols{
-                alias{""}
-            }
-        }
-        kali{
-            symbols{
-                alias{""}
-            }
-        }
-        khmr{
-            symbols{
-                alias{""}
-            }
-        }
-        knda{
-            symbols{
-                alias{""}
-            }
-        }
-        lana{
-            symbols{
-                alias{""}
-            }
-        }
-        lanatham{
-            symbols{
-                alias{""}
-            }
-        }
-        laoo{
-            symbols{
-                alias{""}
-            }
-        }
         latn{
             miscPatterns{
                 atLeast{"⩾{0}"}
@@ -246,120 +160,10 @@ root{
                 timeSeparator{":"}
             }
         }
-        lepc{
-            symbols{
-                alias{""}
-            }
-        }
-        limb{
-            symbols{
-                alias{""}
-            }
-        }
         minimumGroupingDigits{"1"}
-        mlym{
-            symbols{
-                alias{""}
-            }
-        }
-        mong{
-            symbols{
-                alias{""}
-            }
-        }
-        mtei{
-            symbols{
-                alias{""}
-            }
-        }
-        mymr{
-            symbols{
-                alias{""}
-            }
-        }
-        mymrshan{
-            symbols{
-                alias{""}
-            }
-        }
         native{"latn"}
-        nkoo{
-            symbols{
-                alias{""}
-            }
-        }
-        olck{
-            symbols{
-                alias{""}
-            }
-        }
-        orya{
-            symbols{
-                alias{""}
-            }
-        }
-        osma{
-            symbols{
-                alias{""}
-            }
-        }
-        saur{
-            symbols{
-                alias{""}
-            }
-        }
-        shrd{
-            symbols{
-                alias{""}
-            }
-        }
-        sora{
-            symbols{
-                alias{""}
-            }
-        }
-        sund{
-            symbols{
-                alias{""}
-            }
-        }
-        takr{
-            symbols{
-                alias{""}
-            }
-        }
-        talu{
-            symbols{
-                alias{""}
-            }
-        }
-        tamldec{
-            symbols{
-                alias{""}
-            }
-        }
-        telu{
-            symbols{
-                alias{""}
-            }
-        }
-        thai{
-            symbols{
-                alias{""}
-            }
-        }
-        tibt{
-            symbols{
-                alias{""}
-            }
-        }
-        vaii{
-            symbols{
-                alias{""}
-            }
-        }
     }
-    Version{"2.1.19.19"}
+    Version{"2.1.30.58"}
     calendar{
         buddhist{
             AmPmMarkers:alias{"/LOCALE/calendar/gregorian/AmPmMarkers"}
@@ -1173,6 +977,9 @@ root{
                 MEd{"MM-dd, E"}
                 MMM{"LLL"}
                 MMMEd{"MMM d, E"}
+                MMMMW{
+                    other{"'week' W 'of' MMMM"}
+                }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"MM-dd"}
@@ -1193,6 +1000,9 @@ root{
                 yMd{"y-MM-dd"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
+                yw{
+                    other{"'week' w 'of' y"}
+                }
             }
             dayNames{
                 format{
@@ -1654,13 +1464,13 @@ root{
                     "Yōrō (717–724)",
                     "Jinki (724–729)",
                     "Tenpyō (729–749)",
-                    "Tenpyō-kampō (749-749)",
-                    "Tenpyō-shōhō (749-757)",
-                    "Tenpyō-hōji (757-765)",
-                    "Tenpyō-jingo (765-767)",
-                    "Jingo-keiun (767-770)",
+                    "Tenpyō-kampō (749–749)",
+                    "Tenpyō-shōhō (749–757)",
+                    "Tenpyō-hōji (757–765)",
+                    "Tenpyō-jingo (765–767)",
+                    "Jingo-keiun (767–770)",
                     "Hōki (770–780)",
-                    "Ten-ō (781-782)",
+                    "Ten-ō (781–782)",
                     "Enryaku (782–806)",
                     "Daidō (806–810)",
                     "Kōnin (810–824)",
@@ -1669,7 +1479,7 @@ root{
                     "Kajō (848–851)",
                     "Ninju (851–854)",
                     "Saikō (854–857)",
-                    "Ten-an (857-859)",
+                    "Ten-an (857–859)",
                     "Jōgan (859–877)",
                     "Gangyō (877–885)",
                     "Ninna (885–889)",
@@ -1721,7 +1531,7 @@ root{
                     "Chōji (1104–1106)",
                     "Kashō (1106–1108)",
                     "Tennin (1108–1110)",
-                    "Ten-ei (1110-1113)",
+                    "Ten-ei (1110–1113)",
                     "Eikyū (1113–1118)",
                     "Gen’ei (1118–1120)",
                     "Hōan (1120–1124)",
@@ -1892,13 +1702,13 @@ root{
                     "Yōrō (717–724)",
                     "Jinki (724–729)",
                     "Tenpyō (729–749)",
-                    "Tenpyō-kampō (749-749)",
-                    "Tenpyō-shōhō (749-757)",
-                    "Tenpyō-hōji (757-765)",
-                    "Tenpyō-jingo (765-767)",
-                    "Jingo-keiun (767-770)",
+                    "Tenpyō-kampō (749–749)",
+                    "Tenpyō-shōhō (749–757)",
+                    "Tenpyō-hōji (757–765)",
+                    "Tenpyō-jingo (765–767)",
+                    "Jingo-keiun (767–770)",
                     "Hōki (770–780)",
-                    "Ten-ō (781-782)",
+                    "Ten-ō (781–782)",
                     "Enryaku (782–806)",
                     "Daidō (806–810)",
                     "Kōnin (810–824)",
@@ -1907,7 +1717,7 @@ root{
                     "Kajō (848–851)",
                     "Ninju (851–854)",
                     "Saikō (854–857)",
-                    "Ten-an (857-859)",
+                    "Ten-an (857–859)",
                     "Jōgan (859–877)",
                     "Gangyō (877–885)",
                     "Ninna (885–889)",
@@ -1959,7 +1769,7 @@ root{
                     "Chōji (1104–1106)",
                     "Kashō (1106–1108)",
                     "Tennin (1108–1110)",
-                    "Ten-ei (1110-1113)",
+                    "Ten-ei (1110–1113)",
                     "Eikyū (1113–1118)",
                     "Gen’ei (1118–1120)",
                     "Hōan (1120–1124)",
@@ -2203,6 +2013,94 @@ root{
             quarters:alias{"/LOCALE/calendar/gregorian/quarters"}
         }
     }
+    characterLabel{
+        activities{"activity"}
+        african_scripts{"African script"}
+        american_scripts{"American script"}
+        animal{"animal"}
+        animals_nature{"animal or nature"}
+        arrows{"arrow"}
+        body{"body"}
+        box_drawing{"box drawing"}
+        braille{"braille"}
+        building{"building"}
+        bullets_stars{"bullet or star"}
+        consonantal_jamo{"consonantal jamo"}
+        currency_symbols{"currency symbol"}
+        dash_connector{"dash or connector"}
+        digits{"digit"}
+        dingbats{"dingbat"}
+        divination_symbols{"divination symbol"}
+        downwards_arrows{"downwards arrow"}
+        downwards_upwards_arrows{"downwards upwards arrow"}
+        east_asian_scripts{"East Asian script"}
+        emoji{"emoji"}
+        european_scripts{"European script"}
+        female{"female"}
+        flag{"flag"}
+        flags{"flags"}
+        food_drink{"food & drink"}
+        format{"format"}
+        format_whitespace{"format & whitespace"}
+        full_width_form_variant{"full-width variant"}
+        geometric_shapes{"geometric shape"}
+        half_width_form_variant{"half-width variant"}
+        han_characters{"Han character"}
+        han_radicals{"Han radical"}
+        hanja{"hanja"}
+        hanzi_simplified{"Hanzi (simplified)"}
+        hanzi_traditional{"Hanzi (traditional)"}
+        heart{"heart"}
+        historic_scripts{"historic script"}
+        ideographic_desc_characters{"ideographic desc. character"}
+        japanese_kana{"Japanese kana"}
+        kanbun{"kanbun"}
+        kanji{"kanji"}
+        keycap{"keycap"}
+        leftwards_arrows{"leftwards arrow"}
+        leftwards_rightwards_arrows{"leftwards rightwards arrow"}
+        letterlike_symbols{"letterlike symbol"}
+        limited_use{"limited-use"}
+        male{"male"}
+        math_symbols{"math symbol"}
+        middle_eastern_scripts{"Middle Eastern script"}
+        miscellaneous{"miscellaneous"}
+        modern_scripts{"modern script"}
+        modifier{"modifier"}
+        musical_symbols{"musical symbol"}
+        nature{"nature"}
+        nonspacing{"nonspacing"}
+        numbers{"numbers"}
+        objects{"object"}
+        other{"other"}
+        paired{"paired"}
+        person{"person"}
+        phonetic_alphabet{"phonetic alphabet"}
+        pictographs{"pictograph"}
+        place{"place"}
+        plant{"plant"}
+        punctuation{"punctuation"}
+        rightwards_arrows{"rightwards arrow"}
+        sign_standard_symbols{"sign or symbol"}
+        small_form_variant{"small variants"}
+        smiley{"smiley"}
+        smileys_people{"smiley or person"}
+        south_asian_scripts{"South Asian script"}
+        southeast_asian_scripts{"Southeast Asian script"}
+        spacing{"spacing"}
+        sport{"sport"}
+        symbols{"symbol"}
+        technical_symbols{"technical symbol"}
+        tone_marks{"tone mark"}
+        travel{"travel"}
+        travel_places{"travel or place"}
+        upwards_arrows{"upwards arrows"}
+        variant_forms{"variant"}
+        vocalic_jamo{"vocalic jamo"}
+        weather{"weather"}
+        western_asian_scripts{"Western Asian script"}
+        whitespace{"whitespace"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -2240,11 +2138,22 @@ root{
                 "0"{"this Friday"}
                 "1"{"next Friday"}
             }
+            relativeTime{
+                future{
+                    other{"+{0} Fridays"}
+                }
+                past{
+                    other{"-{0} Fridays"}
+                }
+            }
         }
         fri-narrow:alias{"/LOCALE/fields/fri-short"}
         fri-short:alias{"/LOCALE/fields/fri"}
         hour{
             dn{"Hour"}
+            relative{
+                "0"{"this hour"}
+            }
             relativeTime{
                 future{
                     other{"+{0} h"}
@@ -2258,6 +2167,9 @@ root{
         hour-short:alias{"/LOCALE/fields/hour"}
         minute{
             dn{"Minute"}
+            relative{
+                "0"{"this minute"}
+            }
             relativeTime{
                 future{
                     other{"+{0} min"}
@@ -2274,6 +2186,14 @@ root{
                 "-1"{"last Monday"}
                 "0"{"this Monday"}
                 "1"{"next Monday"}
+            }
+            relativeTime{
+                future{
+                    other{"+{0} Mondays"}
+                }
+                past{
+                    other{"-{0} Mondays"}
+                }
             }
         }
         mon-narrow:alias{"/LOCALE/fields/mon-short"}
@@ -2320,6 +2240,14 @@ root{
                 "0"{"this Saturday"}
                 "1"{"next Saturday"}
             }
+            relativeTime{
+                future{
+                    other{"+{0} Saturdays"}
+                }
+                past{
+                    other{"-{0} Saturdays"}
+                }
+            }
         }
         sat-narrow:alias{"/LOCALE/fields/sat-short"}
         sat-short:alias{"/LOCALE/fields/sat"}
@@ -2345,6 +2273,14 @@ root{
                 "0"{"this Sunday"}
                 "1"{"next Sunday"}
             }
+            relativeTime{
+                future{
+                    other{"+{0} Sundays"}
+                }
+                past{
+                    other{"-{0} Sundays"}
+                }
+            }
         }
         sun-narrow:alias{"/LOCALE/fields/sun-short"}
         sun-short:alias{"/LOCALE/fields/sun"}
@@ -2353,6 +2289,14 @@ root{
                 "-1"{"last Thursday"}
                 "0"{"this Thursday"}
                 "1"{"next Thursday"}
+            }
+            relativeTime{
+                future{
+                    other{"+{0} Thursdays"}
+                }
+                past{
+                    other{"-{0} Thursdays"}
+                }
             }
         }
         thu-narrow:alias{"/LOCALE/fields/thu-short"}
@@ -2363,6 +2307,14 @@ root{
                 "0"{"this Tuesday"}
                 "1"{"next Tuesday"}
             }
+            relativeTime{
+                future{
+                    other{"+{0} Tuesdays"}
+                }
+                past{
+                    other{"-{0} Tuesdays"}
+                }
+            }
         }
         tue-narrow:alias{"/LOCALE/fields/tue-short"}
         tue-short:alias{"/LOCALE/fields/tue"}
@@ -2371,6 +2323,14 @@ root{
                 "-1"{"last Wednesday"}
                 "0"{"this Wednesday"}
                 "1"{"next Wednesday"}
+            }
+            relativeTime{
+                future{
+                    other{"+{0} Wednesdays"}
+                }
+                past{
+                    other{"-{0} Wednesdays"}
+                }
             }
         }
         wed-narrow:alias{"/LOCALE/fields/wed-short"}
@@ -2382,6 +2342,7 @@ root{
                 "0"{"this week"}
                 "1"{"next week"}
             }
+            relativePeriod{"the week of {0}"}
             relativeTime{
                 future{
                     other{"+{0} w"}
@@ -2428,6 +2389,12 @@ root{
             end{"{0}, {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
+        }
+        standard-short{
+            2:alias{"/LOCALE/listPattern/standard/2"}
+            end:alias{"/LOCALE/listPattern/standard/end"}
+            middle:alias{"/LOCALE/listPattern/standard/middle"}
+            start:alias{"/LOCALE/listPattern/standard/start"}
         }
         unit{
             2:alias{"/LOCALE/listPattern/unit-short/2"}

@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/eu.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 eu{
-    Version{"2.1.19.14"}
+    Version{"2.1.29.20"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -172,7 +166,7 @@ eu{
             ec{"Anchorage"}
         }
         "America:Anguilla"{
-            ec{"Anguilla"}
+            ec{"Aingira"}
         }
         "America:Antigua"{
             ec{"Antigua"}
@@ -256,7 +250,7 @@ eu{
             ec{"Cayenne"}
         }
         "America:Cayman"{
-            ec{"Cayman"}
+            ec{"Kaiman"}
         }
         "America:Chicago"{
             ec{"Chicago"}
@@ -559,7 +553,7 @@ eu{
             ec{"St. Kitts"}
         }
         "America:St_Lucia"{
-            ec{"St. Lucia"}
+            ec{"Santa Luzia"}
         }
         "America:St_Thomas"{
             ec{"St. Thomas"}
@@ -843,6 +837,9 @@ eu{
         "Asia:Tokyo"{
             ec{"Tokio"}
         }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"Ulan Bator"}
         }
@@ -974,7 +971,7 @@ eu{
         }
         "Europe:Dublin"{
             ec{"Dublin"}
-            ld{"Dublingo udako ordua"}
+            ld{"Irlandako ordutegi estandarra"}
         }
         "Europe:Gibraltar"{
             ec{"Gibraltar"}
@@ -999,6 +996,9 @@ eu{
         }
         "Europe:Kiev"{
             ec{"Kiev"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
         }
         "Europe:Lisbon"{
             ec{"Lisboa"}
@@ -1077,7 +1077,7 @@ eu{
             ec{"Tirana"}
         }
         "Europe:Uzhgorod"{
-            ec{"Uzhgorod"}
+            ec{"Uzhhorod"}
         }
         "Europe:Vaduz"{
             ec{"Vaduz"}
@@ -1271,34 +1271,34 @@ eu{
             ls{"Afrika mendebaldeko ordu estandarra"}
         }
         "meta:Alaska"{
-            ld{"Alaskako udako ordua"}
-            lg{"Alaskako ordua"}
-            ls{"Alaskako ordu estandarra"}
+            ld{"Alaskako udako ordutegia"}
+            lg{"Alaskako ordutegia"}
+            ls{"Alaskako ordutegi estandarra"}
         }
         "meta:Amazon"{
-            ld{"Amazoniako udako ordua"}
-            lg{"Amazoniako ordua"}
-            ls{"Amazoniako ordu estandarra"}
+            ld{"Amazoniako udako ordutegia"}
+            lg{"Amazoniako ordutegia"}
+            ls{"Amazoniako ordutegi estandarra"}
         }
         "meta:America_Central"{
-            ld{"Ipar Amerikako erdialdeko udako ordua"}
-            lg{"Ipar Amerikako erdialdeko ordua"}
+            ld{"Ipar Amerikako erdialdeko udako ordutegia"}
+            lg{"Ipar Amerikako erdialdeko ordutegia"}
             ls{"Ipar Amerikako erdialdeko ordu estandarra"}
         }
         "meta:America_Eastern"{
-            ld{"Ipar Amerikako ekialdeko udako ordua"}
-            lg{"Ipar Amerikako ekialdeko ordua"}
-            ls{"Ipar Amerikako ekialdeko ordu estandarra"}
+            ld{"Ipar Amerikako ekialdeko udako ordutegia"}
+            lg{"Ipar Amerikako ekialdeko ordutegia"}
+            ls{"Ipar Amerikako ekialdeko ordutegi estandarra"}
         }
         "meta:America_Mountain"{
-            ld{"Ipar Amerikako mendialdeko udako ordua"}
-            lg{"Ipar Amerikako mendialdeko ordua"}
-            ls{"Ipar Amerikako mendialdeko ordu estandarra"}
+            ld{"Ipar Amerikako mendialdeko udako ordutegia"}
+            lg{"Ipar Amerikako mendialdeko ordutegia"}
+            ls{"Ipar Amerikako mendialdeko ordutegi estandarra"}
         }
         "meta:America_Pacific"{
-            ld{"Ipar Amerikako Pazifikoko udako ordua"}
-            lg{"Ipar Amerikako Pazifikoko ordua"}
-            ls{"Ipar Amerikako Pazifikoko ordu estandarra"}
+            ld{"Ipar Amerikako Pazifikoko udako ordutegia"}
+            lg{"Ipar Amerikako Pazifikoko ordutegia"}
+            ls{"Ipar Amerikako Pazifikoko ordutegi estandarra"}
         }
         "meta:Anadyr"{
             ld{"Anadyrreko udako ordua"}
@@ -1316,14 +1316,14 @@ eu{
             ls{"Arabiako ordu estandarra"}
         }
         "meta:Argentina"{
-            ld{"Argentinako udako ordua"}
-            lg{"Argentinako ordua"}
-            ls{"Argentinako ordu estandarra"}
+            ld{"Argentinako udako ordutegia"}
+            lg{"Argentinako ordutegia"}
+            ls{"Argentinako ordutegi estandarra"}
         }
         "meta:Argentina_Western"{
-            ld{"Argentina mendebaldeko udako ordua"}
-            lg{"Argentina mendebaldeko ordua"}
-            ls{"Argentina mendebaldeko ordu estandarra"}
+            ld{"Argentina mendebaldeko udako ordutegia"}
+            lg{"Argentina mendebaldeko ordutegia"}
+            ls{"Argentina mendebaldeko ordutegia estandarra"}
         }
         "meta:Armenia"{
             ld{"Armeniako udako ordua"}
@@ -1331,9 +1331,9 @@ eu{
             ls{"Armeniako ordu estandarra"}
         }
         "meta:Atlantic"{
-            ld{"Atlantikoko udako ordua"}
-            lg{"Atlantikoko ordua"}
-            ls{"Atlantikoko ordu estandarra"}
+            ld{"Atlantikoko udako ordutegia"}
+            lg{"Atlantikoko ordutegia"}
+            ls{"Atlantikoko ordutegi estandarra"}
         }
         "meta:Australia_Central"{
             ld{"Australia erdialdeko udako ordua"}
@@ -1374,7 +1374,7 @@ eu{
             ls{"Bhutango ordua"}
         }
         "meta:Bolivia"{
-            ls{"Boliviako ordua"}
+            ls{"Boliviako ordutegia"}
         }
         "meta:Brasilia"{
             ld{"Brasiliako udako ordua"}
@@ -1429,9 +1429,9 @@ eu{
             ls{"Cook uharteetako ordu estandarra"}
         }
         "meta:Cuba"{
-            ld{"Kubako udako ordua"}
-            lg{"Kubako ordua"}
-            ls{"Kubako ordu estandarra"}
+            ld{"Kubako udako ordutegia"}
+            lg{"Kubako ordutegia"}
+            ls{"Kubako ordutegi estandarra"}
         }
         "meta:Davis"{
             ls{"Daviseko ordua"}
@@ -1491,7 +1491,7 @@ eu{
             ls{"Guyana Frantseseko ordua"}
         }
         "meta:French_Southern"{
-            ls{"Frantziaren lurralde austral eta antartikoetako ordua"}
+            ls{"Frantziaren lurralde austral eta antartikoetako ordutegia"}
         }
         "meta:GMT"{
             ls{"Greenwich meridianoko ordua"}
@@ -1512,14 +1512,14 @@ eu{
             ls{"Gilbert uharteetako ordua"}
         }
         "meta:Greenland_Eastern"{
-            ld{"Groenlandia ekialdeko udako ordua"}
-            lg{"Groenlandia ekialdeko ordua"}
-            ls{"Groenlandia ekialdeko ordu estandarra"}
+            ld{"Groenlandia ekialdeko udako ordutegia"}
+            lg{"Groenlandia ekialdeko ordutegia"}
+            ls{"Groenlandia ekialdeko ordutegi estandarra"}
         }
         "meta:Greenland_Western"{
-            ld{"Groenlandia mendebaldeko udako ordua"}
-            lg{"Groenlandia mendebaldeko ordua"}
-            ls{"Groenlandia mendebaldeko ordu estandarra"}
+            ld{"Groenlandia mendebaldeko udako ordutegia"}
+            lg{"Groenlandia mendebaldeko ordutegia"}
+            ls{"Groenlandia mendebaldeko ordutegi estandarra"}
         }
         "meta:Gulf"{
             ls{"Golkoko ordu estandarra"}
@@ -1528,9 +1528,9 @@ eu{
             ls{"Guyanako ordua"}
         }
         "meta:Hawaii_Aleutian"{
-            ld{"Hawaii-Aleutiar uharteetako udako ordua"}
-            lg{"Hawaii-Aleutiar uharteetako ordua"}
-            ls{"Hawaii-Aleutiar uharteetako ordu estandarra"}
+            ld{"Hawaii-Aleutiar uharteetako udako ordutegia"}
+            lg{"Hawaii-Aleutiar uharteetako ordutegia"}
+            ls{"Hawaii-Aleutiar uharteetako ordutegi estandarra"}
         }
         "meta:Hong_Kong"{
             ld{"Hong Kongo udako ordua"}
@@ -1567,7 +1567,7 @@ eu{
         }
         "meta:Irkutsk"{
             ld{"Irkutskeko udako ordua"}
-            lg{"Irkutskeko ordua"}
+            lg{"Irkutskeko ordutegia"}
             ls{"Irkutskeko ordu estandarra"}
         }
         "meta:Israel"{
@@ -1601,7 +1601,7 @@ eu{
         }
         "meta:Krasnoyarsk"{
             ld{"Krasnoyarskeko udako ordua"}
-            lg{"Krasnoyarskeko ordua"}
+            lg{"Krasnoiarskeko ordutegia"}
             ls{"Krasnoyarskeko ordu estandarra"}
         }
         "meta:Kyrgystan"{
@@ -1620,7 +1620,7 @@ eu{
         }
         "meta:Magadan"{
             ld{"Magadango udako ordua"}
-            lg{"Magadako ordua"}
+            lg{"Magadango ordutegia"}
             ls{"Magadango ordu estandarra"}
         }
         "meta:Malaysia"{
@@ -1644,14 +1644,14 @@ eu{
             ls{"Mawsoneko ordua"}
         }
         "meta:Mexico_Northwest"{
-            ld{"Mexikoko ipar-ekialdeko udako ordua"}
-            lg{"Mexikoko ipar-ekialdeko ordua"}
-            ls{"Mexikoko ipar-ekialdeko ordu estandarra"}
+            ld{"Mexikoko ipar-ekialdeko udako ordutegia"}
+            lg{"Mexikoko ipar-ekialdeko ordutegia"}
+            ls{"Mexikoko ipar-ekialdeko ordutegi estandarra"}
         }
         "meta:Mexico_Pacific"{
-            ld{"Mexikoko Pazifikoko udako ordua"}
-            lg{"Mexikoko Pazifikoko ordua"}
-            ls{"Mexikoko Pazifikoko ordu estandarra"}
+            ld{"Mexikoko Pazifikoko udako ordutegia"}
+            lg{"Mexikoko Pazifikoko ordutegia"}
+            ls{"Mexikoko Pazifikoko ordutegi estandarra"}
         }
         "meta:Mongolia"{
             ld{"Ulan Batorreko udako ordua"}
@@ -1683,9 +1683,9 @@ eu{
             ls{"Zeelanda Berriko ordu estandarra"}
         }
         "meta:Newfoundland"{
-            ld{"Ternuako udako ordua"}
-            lg{"Ternuako ordua"}
-            ls{"Ternuako ordu estandarra"}
+            ld{"Ternuako udako ordutegia"}
+            lg{"Ternuako ordutegia"}
+            ls{"Ternuako ordutegi estandarra"}
         }
         "meta:Niue"{
             ls{"Niueko ordua"}
@@ -1700,12 +1700,12 @@ eu{
         }
         "meta:Novosibirsk"{
             ld{"Novosibirskeko udako ordua"}
-            lg{"Novosibirskeko ordua"}
+            lg{"Novosibirskeko ordutegia"}
             ls{"Novosibirskeko ordu estandarra"}
         }
         "meta:Omsk"{
             ld{"Omskeko udako ordua"}
-            lg{"Omskeko ordua"}
+            lg{"Omskeko ordutegia"}
             ls{"Omskeko ordu estandarra"}
         }
         "meta:Pakistan"{
@@ -1738,15 +1738,18 @@ eu{
             ls{"Phoenix uharteetako ordua"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"Saint-Pierre eta Mikeluneko udako ordua"}
-            lg{"Saint-Pierre eta Mikeluneko ordua"}
-            ls{"Saint-Pierre eta Mikeluneko ordu estandarra"}
+            ld{"Saint-Pierre eta Mikeluneko udako ordutegia"}
+            lg{"Saint-Pierre eta Mikeluneko ordutegia"}
+            ls{"Saint-Pierre eta Mikeluneko ordutegi estandarra"}
         }
         "meta:Pitcairn"{
             ls{"Pitcairneko ordua"}
         }
         "meta:Ponape"{
             ls{"Ponapeko ordua"}
+        }
+        "meta:Pyongyang"{
+            ls{"Piongiangeko ordua"}
         }
         "meta:Reunion"{
             ls{"Reunion uharteetako ordua"}
@@ -1756,7 +1759,7 @@ eu{
         }
         "meta:Sakhalin"{
             ld{"Sakhalingo udako ordua"}
-            lg{"Sakhalingo ordua"}
+            lg{"Sakhalingo ordutegia"}
             ls{"Sakhalingo ordu estandarra"}
         }
         "meta:Samara"{
@@ -1837,7 +1840,7 @@ eu{
         }
         "meta:Vladivostok"{
             ld{"Vladivostokeko udako ordua"}
-            lg{"Vladivostokeko ordua"}
+            lg{"Vladivostokeko ordutegia"}
             ls{"Vladivostokeko ordu estandarra"}
         }
         "meta:Volgograd"{
@@ -1852,24 +1855,24 @@ eu{
             ls{"Wake uharteko ordua"}
         }
         "meta:Wallis"{
-            ls{"Wallis eta Futunako ordua"}
+            ls{"Wallis eta Futunako ordutegia"}
         }
         "meta:Yakutsk"{
             ld{"Yakutskeko udako ordua"}
-            lg{"Yakutskeko ordua"}
+            lg{"Jakutskeko ordutegia"}
             ls{"Yakutskeko ordu estandarra"}
         }
         "meta:Yekaterinburg"{
             ld{"Yekaterinburgeko udako ordua"}
-            lg{"Yekaterinburgeko ordua"}
+            lg{"Jekaterinburgeko ordutegia"}
             ls{"Jekaterinburgeko ordu estandarra"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0}"}
-        regionFormatDaylight{"{0} (udako ordua)"}
-        regionFormatStandard{"{0} (ordu estandarra)"}
+        regionFormat{"{0} aldeko ordutegia"}
+        regionFormatDaylight{"{0} (udako ordutegia)"}
+        regionFormatStandard{"{0} ordutegi estandarra"}
     }
 }

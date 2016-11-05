@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/br.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 br{
     Currencies{
         ADP{
@@ -224,9 +218,13 @@ br{
             "BYB",
             "roubl nevez Belarus (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "roubl Belarus",
+        }
         BYR{
             "BYR",
-            "roubl Belarus",
+            "roubl Belarus (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1204,7 +1202,7 @@ br{
         BOB{"Bs"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CNY{"¥"}
@@ -1580,12 +1578,19 @@ br{
             other{"roubl nevez Belarus (1994–1999)"}
             two{"roubl nevez Belarus (1994–1999)"}
         }
-        BYR{
+        BYN{
             few{"roubl Belarus"}
             many{"a roubloù Belarus"}
             one{"roubl Belarus"}
             other{"roubl Belarus"}
             two{"roubl Belarus"}
+        }
+        BYR{
+            few{"roubl Belarus (2000–2016)"}
+            many{"a roubloù Belarus (2000–2016)"}
+            one{"roubl Belarus (2000–2016)"}
+            other{"roubl Belarus (2000–2016)"}
+            two{"roubl Belarus (2000–2016)"}
         }
         BZD{
             few{"dollar Belize"}
@@ -3100,5 +3105,5 @@ br{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.28.76"}
 }

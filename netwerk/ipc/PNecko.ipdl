@@ -88,7 +88,7 @@ parent:
                   uint32_t reason, SerializedLoadContext loadContext);
   async PredReset();
 
-  async SpeculativeConnect(URIParams uri, bool anonymous);
+  async SpeculativeConnect(URIParams uri, Principal principal, bool anonymous);
   async HTMLDNSPrefetch(nsString hostname, uint16_t flags);
   async CancelHTMLDNSPrefetch(nsString hostname, uint16_t flags, nsresult reason);
 

@@ -191,7 +191,7 @@ FrameIterator::functionDisplayAtom() const
 
     MOZ_ASSERT(codeRange_);
 
-    JSAtom* atom = code_->getFuncDefAtom(cx, codeRange_->funcDefIndex());
+    JSAtom* atom = code_->getFuncAtom(cx, codeRange_->funcIndex());
     if (!atom) {
         cx->clearPendingException();
         return cx->names().empty;
@@ -364,7 +364,7 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason
 // profiling or non-profiling entry point.
 void
 wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
-                               const TrapOffset& trapOffset, FuncOffsets* offsets)
+                               FuncOffsets* offsets)
 {
 #if defined(JS_CODEGEN_ARM)
     // Flush pending pools so they do not get dumped between the 'begin' and
@@ -381,6 +381,7 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
     // Generate table entry thunk:
     masm.haltingAlign(CodeAlignment);
     offsets->tableEntry = masm.currentOffset();
+    TrapOffset trapOffset(0);  // ignored by masm.wasmEmitTrapOutOfLineCode
     TrapDesc trap(trapOffset, Trap::IndirectCallBadSig, masm.framePushed());
     switch (sigId.kind()) {
       case SigIdDesc::Kind::Global: {
@@ -785,7 +786,7 @@ ProfilingFrameIterator::label() const
     }
 
     switch (codeRange_->kind()) {
-      case CodeRange::Function:         return code_->profilingLabel(codeRange_->funcDefIndex());
+      case CodeRange::Function:         return code_->profilingLabel(codeRange_->funcIndex());
       case CodeRange::Entry:            return "entry trampoline (in asm.js)";
       case CodeRange::ImportJitExit:    return importJitDescription;
       case CodeRange::ImportInterpExit: return importInterpDescription;
@@ -803,7 +804,7 @@ ProfilingFrameIterator::label() const
 void
 wasm::ToggleProfiling(const Code& code, const CallSite& callSite, bool enabled)
 {
-    if (callSite.kind() != CallSite::FuncDef)
+    if (callSite.kind() != CallSite::Func)
         return;
 
     uint8_t* callerRetAddr = code.segment().base() + callSite.returnAddressOffset();

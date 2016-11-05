@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/dyo.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 dyo{
     AuxExemplarCharacters{"[z]"}
     ExemplarCharacters{"[a á b c d e é f g h i í j k l m n ñ ŋ o ó p q r s t u ú v w x y]"}
@@ -23,7 +17,7 @@ dyo{
             }
         }
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.27.40"}
     calendar{
         generic{
             DateTimePatterns{

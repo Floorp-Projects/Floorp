@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/zu.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 zu{
     Currencies{
         AED{
@@ -100,9 +94,13 @@ zu{
             "BWP",
             "i-Botswana Pula",
         }
+        BYN{
+            "BYN",
+            "i-Belarusian Ruble",
+        }
         BYR{
             "BYR",
-            "i-Belarusian Ruble",
+            "i-Belarusian Ruble (2000–2016)",
         }
         BZD{
             "BZD",
@@ -610,7 +608,7 @@ zu{
         }
         XAF{
             "FCFA",
-            "i-CFA Franc BCEA",
+            "i-Central African CFA Franc",
         }
         XCD{
             "EC$",
@@ -618,7 +616,7 @@ zu{
         }
         XOF{
             "CFA",
-            "i-CFA Franc BCEAO",
+            "i-West African CFA Franc",
         }
         XPF{
             "CFPF",
@@ -658,7 +656,7 @@ zu{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"P."}
+        BYN{"P."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -675,6 +673,7 @@ zu{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -836,9 +835,13 @@ zu{
             one{"i-Botswana Pula"}
             other{"i-Botswana Pula"}
         }
-        BYR{
+        BYN{
             one{"i-Belarusian Ruble"}
             other{"i-Belarusian Ruble"}
+        }
+        BYR{
+            one{"i-Belarusian Ruble (2000–2016)"}
+            other{"i-Belarusian Ruble (2000–2016)"}
         }
         BZD{
             one{"i-Belize Dollar"}
@@ -882,7 +885,7 @@ zu{
         }
         CVE{
             one{"i-Cape Verdean Escudo"}
-            other{"i-Cape Verdean Escudo"}
+            other{"i-Cape Verdean escudos"}
         }
         CZK{
             one{"i-Czech Republic Koruna"}
@@ -938,7 +941,7 @@ zu{
         }
         GHS{
             one{"i-Ghanaian Cedi"}
-            other{"i-Ghanaian Cedi"}
+            other{"i-Ghanaian cedis"}
         }
         GIP{
             one{"i-Gibraltar Pound"}
@@ -946,11 +949,11 @@ zu{
         }
         GMD{
             one{"i-Gambian Dalasi"}
-            other{"i-Gambian Dalasi"}
+            other{"i-Gambian dalasis"}
         }
         GNF{
             one{"i-Gunean Franc"}
-            other{"i-Gunean Franc"}
+            other{"i-Guinean francs"}
         }
         GTQ{
             one{"i-Guatemalan Quetzal"}
@@ -1286,7 +1289,7 @@ zu{
         }
         TTD{
             one{"i-Trinidad and Tobago dollar"}
-            other{"i-Trinidad and Tobago dollars"}
+            other{"i-Trinidad & Tobago dollars"}
         }
         TWD{
             one{"i-New Taiwan Dollar"}
@@ -1341,8 +1344,8 @@ zu{
             other{"i-East Caribbean Dollar"}
         }
         XOF{
-            one{"i-CFA Franc BCEAO"}
-            other{"i-CFA Franc BCEAO"}
+            one{"i-West African CFA Franc"}
+            other{"i-West African CFA francs"}
         }
         XPF{
             one{"i-CFP Franc"}
@@ -1369,5 +1372,5 @@ zu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.29.22"}
 }

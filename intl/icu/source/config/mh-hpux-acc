@@ -1,4 +1,6 @@
 ## -*-makefile-*-
+## Copyright (C) 2016 and later: Unicode, Inc. and others.
+## License & terms of use: http://www.unicode.org/copyright.html
 ## HP/UX-specific setup using aCC
 ## Copyright (c) 1999-2012, International Business Machines Corporation and
 ## others. All Rights Reserved.

@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/hr.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 hr{
-    Version{"2.1.19.14"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -308,6 +302,9 @@ hr{
         }
         "America:El_Salvador"{
             ec{"El Salvador"}
+        }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
         }
         "America:Fortaleza"{
             ec{"Fortaleza"}
@@ -672,6 +669,9 @@ hr{
         "Asia:Bangkok"{
             ec{"Bangkok"}
         }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
+        }
         "Asia:Beirut"{
             ec{"Beirut"}
         }
@@ -849,6 +849,9 @@ hr{
         "Asia:Tokyo"{
             ec{"Tokio"}
         }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"Ulan Bator"}
         }
@@ -948,6 +951,9 @@ hr{
         "Europe:Andorra"{
             ec{"Andora"}
         }
+        "Europe:Astrakhan"{
+            ec{"Astrakhan"}
+        }
         "Europe:Athens"{
             ec{"Atena"}
         }
@@ -1005,6 +1011,9 @@ hr{
         }
         "Europe:Kiev"{
             ec{"Kijev"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
         }
         "Europe:Lisbon"{
             ec{"Lisabon"}
@@ -1081,6 +1090,9 @@ hr{
         }
         "Europe:Tirane"{
             ec{"Tirana"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Uljanovsk"}
         }
         "Europe:Uzhgorod"{
             ec{"Uzgorod"}
@@ -1499,7 +1511,7 @@ hr{
             ss{"EET"}
         }
         "meta:Europe_Further_Eastern"{
-            ls{"daljeistočno europsko vrijeme"}
+            ls{"dalekoistočno europsko vrijeme"}
         }
         "meta:Europe_Western"{
             ld{"zapadnoeuropsko ljetno vrijeme"}
@@ -1793,6 +1805,9 @@ hr{
         }
         "meta:Ponape"{
             ls{"vrijeme Ponapea"}
+        }
+        "meta:Pyongyang"{
+            ls{"pjongjanško vrijeme"}
         }
         "meta:Qyzylorda"{
             ld{"ljetno vrijeme grada Kizilorde"}

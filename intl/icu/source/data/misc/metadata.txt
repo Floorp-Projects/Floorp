@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/supplementalMetadata.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 metadata:table(nofallback){
     alias{
         language{
@@ -125,9 +119,13 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"bn"}
             }
+            bh{
+                reason{"macrolanguage"}
+                replacement{"bho"}
+            }
             bih{
                 reason{"overlong"}
-                replacement{"bh"}
+                replacement{"bho"}
             }
             bis{
                 reason{"overlong"}
@@ -937,6 +935,10 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"pt"}
             }
+            prs{
+                reason{"overlong"}
+                replacement{"fa_AF"}
+            }
             pus{
                 reason{"overlong"}
                 replacement{"ps"}
@@ -1100,6 +1102,10 @@ metadata:table(nofallback){
             swa{
                 reason{"overlong"}
                 replacement{"sw"}
+            }
+            swc{
+                reason{"overlong"}
+                replacement{"sw_CD"}
             }
             swe{
                 reason{"overlong"}
@@ -1401,6 +1407,26 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"YT"}
             }
+            LA-XN{
+                reason{"deprecated"}
+                replacement{"LA-XS"}
+            }
+            LU-D{
+                reason{"deprecated"}
+                replacement{"LU-CL LU-DI LU-RD LU-VD LU-WI"}
+            }
+            LU-G{
+                reason{"deprecated"}
+                replacement{"LU-EC LU-GR LU-RM"}
+            }
+            LU-L{
+                reason{"deprecated"}
+                replacement{"LU-CA LU-ES LU-LU LU-ME"}
+            }
+            MR-NKC{
+                reason{"deprecated"}
+                replacement{"MR-13 MR-14 MR-15"}
+            }
             NL-AW{
                 reason{"overlong"}
                 replacement{"AW"}
@@ -1412,6 +1438,50 @@ metadata:table(nofallback){
             NL-SX{
                 reason{"overlong"}
                 replacement{"SX"}
+            }
+            NZ-N{
+                reason{"deprecated"}
+                replacement{"NZ-AUK NZ-BOP NZ-GIS NZ-HKB NZ-MWT NZ-NTL NZ-TKI NZ-WGN NZ-WKO"}
+            }
+            NZ-S{
+                reason{"deprecated"}
+                replacement{"NZ-CAN NZ-MBH NZ-NSN NZ-OTA NZ-STL NZ-TAS NZ-WTC"}
+            }
+            OM-BA{
+                reason{"deprecated"}
+                replacement{"OM-BJ OM-BS"}
+            }
+            OM-SH{
+                reason{"deprecated"}
+                replacement{"OM-SJ OM-SS"}
+            }
+            TT-ETO{
+                reason{"deprecated"}
+                replacement{"TT-TOB"}
+            }
+            TT-RCM{
+                reason{"deprecated"}
+                replacement{"TT-MRC"}
+            }
+            TT-WTO{
+                reason{"deprecated"}
+                replacement{"TT-TOB"}
+            }
+            TW-KHQ{
+                reason{"deprecated"}
+                replacement{"TW-KHH"}
+            }
+            TW-TNQ{
+                reason{"deprecated"}
+                replacement{"TW-TNN"}
+            }
+            TW-TPQ{
+                reason{"deprecated"}
+                replacement{"TW-NWT"}
+            }
+            TW-TXQ{
+                reason{"deprecated"}
+                replacement{"TW-TXG"}
             }
             US-AS{
                 reason{"overlong"}
@@ -4166,6 +4236,7 @@ metadata:table(nofallback){
         "ml_IN",
         "mn_MN",
         "mn_Mong_CN",
+        "mni_IN",
         "moh_CA",
         "mr_IN",
         "ms_Arab_MY",
@@ -4282,6 +4353,7 @@ metadata:table(nofallback){
         "yav_CM",
         "yi_001",
         "yo_NG",
+        "yue_HK",
         "zgh_MA",
         "zh_Hans",
         "zh_Hans_CN",

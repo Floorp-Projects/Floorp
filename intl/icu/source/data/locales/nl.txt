@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/nl.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 nl{
     AuxExemplarCharacters{"[à â å ã æ ç è ê î ñ ô ø œ ù û ÿ]"}
     Ellipsis{
@@ -27,6 +21,39 @@ nl{
     }
     MoreInformation{"?"}
     NumberElements{
+        arab{
+            patterns{
+                currencyFormat{"#,##0.00 ¤"}
+                percentFormat{"#,##0 %"}
+            }
+            symbols{
+                decimal{"٫"}
+                exponential{"اس"}
+                group{"٬"}
+                infinity{"∞"}
+                list{"؛"}
+                nan{"NaN"}
+                perMille{"؉"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        arabext{
+            symbols{
+                decimal{"٫"}
+                exponential{"×۱۰^"}
+                group{"٬"}
+                infinity{"∞"}
+                list{"؛"}
+                minusSign{"‎-‎"}
+                nan{"NaN"}
+                perMille{"؉"}
+                percentSign{"٪"}
+                plusSign{"‎+‎"}
+                superscriptingExponent{"×"}
+                timeSeparator{"٫"}
+            }
+        }
         default{"latn"}
         latn{
             miscPatterns{
@@ -212,7 +239,7 @@ nl{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.96"}
+    Version{"2.1.28.79"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -225,8 +252,8 @@ nl{
                 "d MMM y G",
                 "dd-MM-yy GGGGG",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'om' {0}",
+                "{1} 'om' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -943,8 +970,8 @@ nl{
                 "d MMM y G",
                 "dd-MM-yy GGGGG",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'om' {0}",
+                "{1} 'om' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -1104,8 +1131,8 @@ nl{
                 "d MMM y",
                 "dd-MM-yy",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'om' {0}",
+                "{1} 'om' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -1132,6 +1159,10 @@ nl{
                 MEd{"E d-M"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
+                MMMMW{
+                    one{"'week' W 'van' MMM"}
+                    other{"'week' W 'van' MMM"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d-M"}
@@ -1152,6 +1183,10 @@ nl{
                 yMd{"d-M-y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"'week' w 'in' y"}
+                    other{"'week' w 'in' y"}
+                }
             }
             dayNames{
                 format{
@@ -1241,18 +1276,18 @@ nl{
                         night1{"nacht"}
                     }
                     narrow{
-                        afternoon1{"middag"}
-                        evening1{"avond"}
+                        afternoon1{"‘s middags"}
+                        evening1{"‘s avonds"}
                         midnight{"middernacht"}
-                        morning1{"ochtend"}
-                        night1{"nacht"}
+                        morning1{"‘s ochtends"}
+                        night1{"‘s nachts"}
                     }
                     wide{
-                        afternoon1{"middag"}
-                        evening1{"avond"}
+                        afternoon1{"‘s middags"}
+                        evening1{"‘s avonds"}
                         midnight{"middernacht"}
-                        morning1{"ochtend"}
-                        night1{"nacht"}
+                        morning1{"‘s ochtends"}
+                        night1{"‘s nachts"}
                     }
                 }
                 stand-alone{
@@ -1553,8 +1588,8 @@ nl{
                 "d MMM y G",
                 "dd-MM-yy GGGGG",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'om' {0}",
+                "{1} 'om' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -1774,8 +1809,8 @@ nl{
                 "d MMM y G",
                 "dd-MM-yy GGGGG",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'om' {0}",
+                "{1} 'om' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -2292,8 +2327,8 @@ nl{
                 "d MMM y G",
                 "dd-MM-yy GGGGG",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'om' {0}",
+                "{1} 'om' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -2330,6 +2365,94 @@ nl{
                 }
             }
         }
+    }
+    characterLabel{
+        activities{"activiteiten"}
+        african_scripts{"Afrikaanse schriften"}
+        american_scripts{"Amerikaanse schriften"}
+        animal{"dier"}
+        animals_nature{"dieren en natuur"}
+        arrows{"pijlen"}
+        body{"lichaam"}
+        box_drawing{"box-drawing"}
+        braille{"braille"}
+        building{"gebouw"}
+        bullets_stars{"bullets/sterren"}
+        consonantal_jamo{"medeklinker-jamo"}
+        currency_symbols{"valutasymbolen"}
+        dash_connector{"gedachte-/verbindingsstreepje"}
+        digits{"cijfers"}
+        dingbats{"dingbats"}
+        divination_symbols{"divinatiesymbolen"}
+        downwards_arrows{"pijlen omlaag"}
+        downwards_upwards_arrows{"pijlen omlaag en omhoog"}
+        east_asian_scripts{"Oost-Aziatische schriften"}
+        emoji{"emoji"}
+        european_scripts{"Europese schriften"}
+        female{"vrouwelijk"}
+        flag{"vlag"}
+        flags{"vlaggen"}
+        food_drink{"eten en drinken"}
+        format{"formaat"}
+        format_whitespace{"formaat en witruimte"}
+        full_width_form_variant{"brede vormvariant"}
+        geometric_shapes{"geometrische vormen"}
+        half_width_form_variant{"brede vormvarianten"}
+        han_characters{"Han-karakters"}
+        han_radicals{"Han-radicalen"}
+        hanja{"Hanja"}
+        hanzi_simplified{"Hanzi (vereenvoudigd)"}
+        hanzi_traditional{"Hanzi (traditioneel)"}
+        heart{"hart"}
+        historic_scripts{"historische schriften"}
+        ideographic_desc_characters{"ideografische beschr. karakters"}
+        japanese_kana{"Japanse Kana"}
+        kanbun{"Kanbun"}
+        kanji{"Kanji"}
+        keycap{"toets"}
+        leftwards_arrows{"Pijlen naar links"}
+        leftwards_rightwards_arrows{"Pijlen naar links en naar rechts"}
+        letterlike_symbols{"letterachtige symbolen"}
+        limited_use{"beperkt gebruik"}
+        male{"mannelijk"}
+        math_symbols{"mathematische symbolen"}
+        middle_eastern_scripts{"Midden-Oosterse schriften"}
+        miscellaneous{"diverse"}
+        modern_scripts{"moderne schriften"}
+        modifier{"modificator"}
+        musical_symbols{"muzieksymbolen"}
+        nature{"natuur"}
+        nonspacing{"niet-gespatieerd"}
+        numbers{"cijfers"}
+        objects{"objecten"}
+        other{"overige"}
+        paired{"gepaard"}
+        person{"persoon"}
+        phonetic_alphabet{"fonetisch alfabet"}
+        pictographs{"pictogrammen"}
+        place{"plaats"}
+        plant{"plant"}
+        punctuation{"interpunctie"}
+        rightwards_arrows{"pijlen naar rechts"}
+        sign_standard_symbols{"teken-/standaardsymbolen"}
+        small_form_variant{"kleine vormvarianten"}
+        smiley{"smiley"}
+        smileys_people{"smileys en mensen"}
+        south_asian_scripts{"Zuid-Aziatische schriften"}
+        southeast_asian_scripts{"Zuidoost-Aziatische schriften"}
+        spacing{"spatiëring"}
+        sport{"sport"}
+        symbols{"symbolen"}
+        technical_symbols{"technische symbolen"}
+        tone_marks{"toonmarkeringen"}
+        travel{"reizen"}
+        travel_places{"reizen en plaatsen"}
+        upwards_arrows{"pijlen omhoog"}
+        variant_forms{"variantvormen"}
+        vocalic_jamo{"klinker-jamo"}
+        weather{"weer"}
+        western_asian_scripts{"West-Aziatische schriften"}
+        whitespace{"witruimte"}
     }
     contextTransforms{
         day-format-except-narrow:intvector{
@@ -2421,7 +2544,7 @@ nl{
             }
         }
         dayperiod{
-            dn{"a.m./p.m."}
+            dn{"dagdeel"}
         }
         era{
             dn{"tijdperk"}
@@ -2432,12 +2555,32 @@ nl{
                 "0"{"deze vrijdag"}
                 "1"{"volgende week vrijdag"}
             }
+            relativeTime{
+                future{
+                    one{"over {0} vrijdag"}
+                    other{"over {0} vrijdagen"}
+                }
+                past{
+                    one{"{0} vrijdag geleden"}
+                    other{"{0} vrijdagen geleden"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"afgelopen vr"}
                 "0"{"deze vr"}
                 "1"{"volgende week vr"}
+            }
+            relativeTime{
+                future{
+                    one{"over {0} vr"}
+                    other{"over {0} vr"}
+                }
+                past{
+                    one{"{0} vr geleden"}
+                    other{"{0} vr geleden"}
+                }
             }
         }
         fri-short{
@@ -2446,9 +2589,22 @@ nl{
                 "0"{"deze vrij."}
                 "1"{"volgende week vrij."}
             }
+            relativeTime{
+                future{
+                    one{"over {0} vrij."}
+                    other{"over {0} vrij."}
+                }
+                past{
+                    one{"{0} vrij. geleden"}
+                    other{"{0} vrij. geleden"}
+                }
+            }
         }
         hour{
-            dn{"Uur"}
+            dn{"uur"}
+            relative{
+                "0"{"binnen een uur"}
+            }
             relativeTime{
                 future{
                     one{"over {0} uur"}
@@ -2461,7 +2617,7 @@ nl{
             }
         }
         hour-narrow{
-            dn{"u"}
+            dn{"uur"}
             relativeTime{
                 future{
                     one{"over {0} uur"}
@@ -2488,6 +2644,9 @@ nl{
         }
         minute{
             dn{"minuut"}
+            relative{
+                "0"{"binnen een minuut"}
+            }
             relativeTime{
                 future{
                     one{"over {0} minuut"}
@@ -2500,7 +2659,7 @@ nl{
             }
         }
         minute-narrow{
-            dn{"m"}
+            dn{"min"}
             relativeTime{
                 future{
                     one{"over {0} min."}
@@ -2513,7 +2672,7 @@ nl{
             }
         }
         minute-short{
-            dn{"min."}
+            dn{"min"}
             relativeTime{
                 future{
                     one{"over {0} min."}
@@ -2531,6 +2690,16 @@ nl{
                 "0"{"deze maandag"}
                 "1"{"volgende week maandag"}
             }
+            relativeTime{
+                future{
+                    one{"over {0} maandag"}
+                    other{"over {0} maandagen"}
+                }
+                past{
+                    one{"{0} maandag geleden"}
+                    other{"{0} maandagen geleden"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -2538,12 +2707,32 @@ nl{
                 "0"{"deze ma"}
                 "1"{"volgende week ma"}
             }
+            relativeTime{
+                future{
+                    one{"over {0} ma"}
+                    other{"over {0} ma"}
+                }
+                past{
+                    one{"{0} ma geleden"}
+                    other{"{0} ma geleden"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"afgelopen maan."}
                 "0"{"deze maan."}
                 "1"{"volgende week maan."}
+            }
+            relativeTime{
+                future{
+                    one{"over {0} maan."}
+                    other{"over {0} maan."}
+                }
+                past{
+                    one{"{0} maan. geleden"}
+                    other{"{0} maan. geleden"}
+                }
             }
         }
         month{
@@ -2660,6 +2849,16 @@ nl{
                 "0"{"deze zaterdag"}
                 "1"{"volgende week zaterdag"}
             }
+            relativeTime{
+                future{
+                    one{"over {0} zaterdag"}
+                    other{"over {0} zaterdagen"}
+                }
+                past{
+                    one{"{0} zaterdag geleden"}
+                    other{"{0} zaterdagen geleden"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -2667,12 +2866,32 @@ nl{
                 "0"{"deze za"}
                 "1"{"volgende week za"}
             }
+            relativeTime{
+                future{
+                    one{"over {0} za"}
+                    other{"over {0} za"}
+                }
+                past{
+                    one{"{0} za geleden"}
+                    other{"{0} za geleden"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"afgelopen zater."}
                 "0"{"deze zater."}
                 "1"{"volgende week zater."}
+            }
+            relativeTime{
+                future{
+                    one{"over {0} zater."}
+                    other{"over {0} zater."}
+                }
+                past{
+                    one{"{0} zater. geleden"}
+                    other{"{0} zater. geleden"}
+                }
             }
         }
         second{
@@ -2708,7 +2927,7 @@ nl{
             }
         }
         second-short{
-            dn{"sec."}
+            dn{"sec"}
             relative{
                 "0"{"nu"}
             }
@@ -2729,12 +2948,32 @@ nl{
                 "0"{"deze zondag"}
                 "1"{"volgende week zondag"}
             }
+            relativeTime{
+                future{
+                    one{"over {0} zondag"}
+                    other{"over {0} zondagen"}
+                }
+                past{
+                    one{"{0} zondag geleden"}
+                    other{"{0} zondagen geleden"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"afgelopen zo"}
                 "0"{"deze zo"}
                 "1"{"volgende week zo"}
+            }
+            relativeTime{
+                future{
+                    one{"over {0} zo"}
+                    other{"over {0} zo"}
+                }
+                past{
+                    one{"{0} zo geleden"}
+                    other{"{0} zo geleden"}
+                }
             }
         }
         sun-short{
@@ -2743,12 +2982,32 @@ nl{
                 "0"{"deze zon."}
                 "1"{"volgende week zon."}
             }
+            relativeTime{
+                future{
+                    one{"over {0} zon."}
+                    other{"over {0} zon."}
+                }
+                past{
+                    one{"{0} zon. geleden"}
+                    other{"{0} zon. geleden"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"afgelopen donderdag"}
                 "0"{"deze donderdag"}
                 "1"{"volgende week donderdag"}
+            }
+            relativeTime{
+                future{
+                    one{"over {0} donderdag"}
+                    other{"over {0} donderdagen"}
+                }
+                past{
+                    one{"{0} donderdag geleden"}
+                    other{"{0} donderdagen geleden"}
+                }
             }
         }
         thu-narrow{
@@ -2757,12 +3016,32 @@ nl{
                 "0"{"deze do"}
                 "1"{"volgende week do"}
             }
+            relativeTime{
+                future{
+                    one{"over {0} do"}
+                    other{"over {0} do"}
+                }
+                past{
+                    one{"{0} do geleden"}
+                    other{"{0} do geleden"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"afgelopen donder."}
                 "0"{"deze donder."}
                 "1"{"volgende week donder."}
+            }
+            relativeTime{
+                future{
+                    one{"over {0} donder."}
+                    other{"over {0} donder."}
+                }
+                past{
+                    one{"{0} donder. geleden"}
+                    other{"{0} donder. geleden"}
+                }
             }
         }
         tue{
@@ -2771,12 +3050,32 @@ nl{
                 "0"{"deze dinsdag"}
                 "1"{"volgende week dinsdag"}
             }
+            relativeTime{
+                future{
+                    one{"over {0} dinsdag"}
+                    other{"over {0} dinsdagen"}
+                }
+                past{
+                    one{"{0} dinsdag geleden"}
+                    other{"{0} dinsdagen geleden"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"afgelopen di"}
                 "0"{"deze di"}
                 "1"{"volgende week di"}
+            }
+            relativeTime{
+                future{
+                    one{"over {0} di"}
+                    other{"over {0} di"}
+                }
+                past{
+                    one{"{0} di geleden"}
+                    other{"{0} di geleden"}
+                }
             }
         }
         tue-short{
@@ -2785,12 +3084,32 @@ nl{
                 "0"{"deze dins."}
                 "1"{"volgende week dins."}
             }
+            relativeTime{
+                future{
+                    one{"over {0} dins."}
+                    other{"over {0} dins."}
+                }
+                past{
+                    one{"{0} dins. geleden"}
+                    other{"{0} dins. geleden"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"afgelopen woensdag"}
                 "0"{"deze woensdag"}
                 "1"{"volgende week woensdag"}
+            }
+            relativeTime{
+                future{
+                    one{"over {0} woensdag"}
+                    other{"over {0} woensdagen"}
+                }
+                past{
+                    one{"{0} woensdag geleden"}
+                    other{"{0} woensdagen geleden"}
+                }
             }
         }
         wed-narrow{
@@ -2799,12 +3118,32 @@ nl{
                 "0"{"deze wo"}
                 "1"{"volgende week wo"}
             }
+            relativeTime{
+                future{
+                    one{"over {0} wo"}
+                    other{"over {0} wo"}
+                }
+                past{
+                    one{"{0} wo geleden"}
+                    other{"{0} wo geleden"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"afgelopen woens."}
                 "0"{"deze woens."}
                 "1"{"volgende week woens."}
+            }
+            relativeTime{
+                future{
+                    one{"over {0} woens."}
+                    other{"over {0} woens."}
+                }
+                past{
+                    one{"{0} woens. geleden"}
+                    other{"{0} woens. geleden"}
+                }
             }
         }
         week{
@@ -2814,6 +3153,7 @@ nl{
                 "0"{"deze week"}
                 "1"{"volgende week"}
             }
+            relativePeriod{"de week van {0}"}
             relativeTime{
                 future{
                     one{"over {0} week"}
@@ -2832,6 +3172,7 @@ nl{
                 "0"{"deze week"}
                 "1"{"volgende week"}
             }
+            relativePeriod{"de week van {0}"}
             relativeTime{
                 future{
                     one{"over {0} week"}
@@ -2850,6 +3191,7 @@ nl{
                 "0"{"deze week"}
                 "1"{"volgende week"}
             }
+            relativePeriod{"de week van {0}"}
             relativeTime{
                 future{
                     one{"over {0} week"}
@@ -2883,7 +3225,7 @@ nl{
             }
         }
         year-narrow{
-            dn{"jr."}
+            dn{"jr"}
             relative{
                 "-1"{"vorig jaar"}
                 "0"{"dit jaar"}
@@ -2901,7 +3243,7 @@ nl{
             }
         }
         year-short{
-            dn{"jr."}
+            dn{"jr"}
             relative{
                 "-1"{"vorig jaar"}
                 "0"{"dit jaar"}
@@ -2924,6 +3266,12 @@ nl{
     }
     listPattern{
         standard{
+            2{"{0} en {1}"}
+            end{"{0} en {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
             2{"{0} en {1}"}
             end{"{0} en {1}"}
             middle{"{0}, {1}"}
@@ -2952,17 +3300,5 @@ nl{
         UK{"Brits"}
         US{"Amerikaans"}
         metric{"metriek"}
-    }
-    transformNames{
-        BGN{"BGN"}
-        Numeric{"Numeriek"}
-        Tone{"Toon"}
-        UNGEGN{"UNGEGN"}
-        x-Accents{"Accenten"}
-        x-Fullwidth{"Volledige breedte"}
-        x-Halfwidth{"Halve breedte"}
-        x-Jamo{"Jamo"}
-        x-Pinyin{"Pinyin"}
-        x-Publishing{"Publicatie"}
     }
 }

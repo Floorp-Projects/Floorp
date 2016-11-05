@@ -802,7 +802,8 @@ FormatFrame(JSContext* cx, const FrameIter& iter, char* buf, int num,
     RootedValue thisVal(cx);
     if (iter.hasUsableAbstractFramePtr() &&
         iter.isFunctionFrame() &&
-        fun && !fun->isArrow() && !fun->isDerivedClassConstructor())
+        fun && !fun->isArrow() && !fun->isDerivedClassConstructor() &&
+        !(fun->isBoundFunction() && iter.isConstructing()))
     {
         if (!GetFunctionThis(cx, iter.abstractFramePtr(), &thisVal))
             return nullptr;

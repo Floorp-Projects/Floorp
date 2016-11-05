@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ro.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ro{
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -130,7 +124,7 @@ ro{
             ec{"Mbabane"}
         }
         "Africa:Mogadishu"{
-            ec{"Mogadishu"}
+            ec{"Mogadiscio"}
         }
         "Africa:Monrovia"{
             ec{"Monrovia"}
@@ -154,7 +148,7 @@ ro{
             ec{"Porto-Novo"}
         }
         "Africa:Sao_Tome"{
-            ec{"São Tomé"}
+            ec{"Sao Tomé"}
         }
         "Africa:Tripoli"{
             ec{"Tripoli"}
@@ -308,6 +302,9 @@ ro{
         }
         "America:El_Salvador"{
             ec{"El Salvador"}
+        }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
         }
         "America:Fortaleza"{
             ec{"Fortaleza"}
@@ -672,6 +669,9 @@ ro{
         "Asia:Bangkok"{
             ec{"Bangkok"}
         }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
+        }
         "Asia:Beirut"{
             ec{"Beirut"}
         }
@@ -820,7 +820,7 @@ ro{
             ec{"Samarkand"}
         }
         "Asia:Seoul"{
-            ec{"Seul"}
+            ec{"Seoul"}
         }
         "Asia:Shanghai"{
             ec{"Shanghai"}
@@ -848,6 +848,9 @@ ro{
         }
         "Asia:Tokyo"{
             ec{"Tokyo"}
+        }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
         }
         "Asia:Ulaanbaatar"{
             ec{"Ulan Bator"}
@@ -948,6 +951,9 @@ ro{
         "Europe:Andorra"{
             ec{"Andorra"}
         }
+        "Europe:Astrakhan"{
+            ec{"Astrahan"}
+        }
         "Europe:Athens"{
             ec{"Atena"}
         }
@@ -1005,6 +1011,9 @@ ro{
         }
         "Europe:Kiev"{
             ec{"Kiev"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
         }
         "Europe:Lisbon"{
             ec{"Lisabona"}
@@ -1082,6 +1091,9 @@ ro{
         "Europe:Tirane"{
             ec{"Tirana"}
         }
+        "Europe:Ulyanovsk"{
+            ec{"Ulianovsk"}
+        }
         "Europe:Uzhgorod"{
             ec{"Ujhorod"}
         }
@@ -1119,7 +1131,7 @@ ro{
             ec{"Chagos"}
         }
         "Indian:Christmas"{
-            ec{"Insula Crăciunului"}
+            ec{"Christmas"}
         }
         "Indian:Cocos"{
             ec{"Cocos"}
@@ -1502,7 +1514,7 @@ ro{
             ls{"Ora standard din Fiji"}
         }
         "meta:French_Guiana"{
-            ls{"Ora Guianei Franceze"}
+            ls{"Ora din Guyana Franceză"}
         }
         "meta:French_Southern"{
             ls{"Ora din Teritoriile Australe și Antarctice Franceze"}
@@ -1761,6 +1773,9 @@ ro{
         }
         "meta:Ponape"{
             ls{"Ora din Ponape"}
+        }
+        "meta:Pyongyang"{
+            ls{"Ora din Pyongyang"}
         }
         "meta:Reunion"{
             ls{"Ora din Reunion"}

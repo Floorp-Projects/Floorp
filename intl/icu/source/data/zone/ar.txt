@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ar.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ar{
-    Version{"2.1.19.94"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"أبيدجان"}
@@ -308,6 +302,9 @@ ar{
         }
         "America:El_Salvador"{
             ec{"السلفادور"}
+        }
+        "America:Fort_Nelson"{
+            ec{"فورت نيلسون"}
         }
         "America:Fortaleza"{
             ec{"فورتاليزا"}
@@ -672,6 +669,9 @@ ar{
         "Asia:Bangkok"{
             ec{"بانكوك"}
         }
+        "Asia:Barnaul"{
+            ec{"بارناول"}
+        }
         "Asia:Beirut"{
             ec{"بيروت"}
         }
@@ -849,6 +849,9 @@ ar{
         "Asia:Tokyo"{
             ec{"طوكيو"}
         }
+        "Asia:Tomsk"{
+            ec{"تومسك"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"آلانباتار"}
         }
@@ -948,6 +951,9 @@ ar{
         "Europe:Andorra"{
             ec{"أندورا"}
         }
+        "Europe:Astrakhan"{
+            ec{"أستراخان"}
+        }
         "Europe:Athens"{
             ec{"أثينا"}
         }
@@ -1005,6 +1011,9 @@ ar{
         }
         "Europe:Kiev"{
             ec{"كييف"}
+        }
+        "Europe:Kirov"{
+            ec{"كيروف"}
         }
         "Europe:Lisbon"{
             ec{"لشبونة"}
@@ -1081,6 +1090,9 @@ ar{
         }
         "Europe:Tirane"{
             ec{"تيرانا"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"أوليانوفسك"}
         }
         "Europe:Uzhgorod"{
             ec{"أوزجرود"}
@@ -1752,6 +1764,9 @@ ar{
         }
         "meta:Ponape"{
             ls{"توقيت بونابي"}
+        }
+        "meta:Pyongyang"{
+            ls{"توقيت بيونغ يانغ"}
         }
         "meta:Reunion"{
             ls{"توقيت ريونيون"}
