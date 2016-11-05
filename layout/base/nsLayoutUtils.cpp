@@ -5276,67 +5276,6 @@ nsLayoutUtils::ComputeCBDependentValue(nscoord aPercentBasis,
 }
 
 /* static */ nscoord
-nsLayoutUtils::ComputeISizeValue(
-                 nsRenderingContext* aRenderingContext,
-                 nsIFrame*            aFrame,
-                 nscoord              aContainingBlockISize,
-                 nscoord              aContentEdgeToBoxSizing,
-                 nscoord              aBoxSizingToMarginEdge,
-                 const nsStyleCoord&  aCoord)
-{
-  NS_PRECONDITION(aFrame, "non-null frame expected");
-  NS_PRECONDITION(aRenderingContext, "non-null rendering context expected");
-  LAYOUT_WARN_IF_FALSE(aContainingBlockISize != NS_UNCONSTRAINEDSIZE,
-                       "have unconstrained inline-size; this should only result from "
-                       "very large sizes, not attempts at intrinsic inline-size "
-                       "calculation");
-  NS_PRECONDITION(aContainingBlockISize >= 0,
-                  "inline-size less than zero");
-
-  nscoord result;
-  if (aCoord.IsCoordPercentCalcUnit()) {
-    result = nsRuleNode::ComputeCoordPercentCalc(aCoord,
-                                                 aContainingBlockISize);
-    // The result of a calc() expression might be less than 0; we
-    // should clamp at runtime (below).  (Percentages and coords that
-    // are less than 0 have already been dropped by the parser.)
-    result -= aContentEdgeToBoxSizing;
-  } else {
-    MOZ_ASSERT(eStyleUnit_Enumerated == aCoord.GetUnit());
-    // If aFrame is a container for font size inflation, then shrink
-    // wrapping inside of it should not apply font size inflation.
-    AutoMaybeDisableFontInflation an(aFrame);
-
-    int32_t val = aCoord.GetIntValue();
-    switch (val) {
-      case NS_STYLE_WIDTH_MAX_CONTENT:
-        result = aFrame->GetPrefISize(aRenderingContext);
-        NS_ASSERTION(result >= 0, "inline-size less than zero");
-        break;
-      case NS_STYLE_WIDTH_MIN_CONTENT:
-        result = aFrame->GetMinISize(aRenderingContext);
-        NS_ASSERTION(result >= 0, "inline-size less than zero");
-        break;
-      case NS_STYLE_WIDTH_FIT_CONTENT:
-        {
-          nscoord pref = aFrame->GetPrefISize(aRenderingContext),
-                   min = aFrame->GetMinISize(aRenderingContext),
-                  fill = aContainingBlockISize -
-                         (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
-          result = std::max(min, std::min(pref, fill));
-          NS_ASSERTION(result >= 0, "inline-size less than zero");
-        }
-        break;
-      case NS_STYLE_WIDTH_AVAILABLE:
-        result = aContainingBlockISize -
-                 (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
-    }
-  }
-
-  return std::max(0, result);
-}
-
-/* static */ nscoord
 nsLayoutUtils::ComputeBSizeDependentValue(
                  nscoord              aContainingBlockBSize,
                  const nsStyleCoord&  aCoord)

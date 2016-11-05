@@ -3377,6 +3377,14 @@ public:
                                            int32_t aIncrement,
                                            bool aForCounting) { return false; }
 
+  /**
+   * Helper function - computes the content-box inline size for aCoord.
+   */
+  nscoord ComputeISizeValue(nsRenderingContext* aRenderingContext,
+                            nscoord             aContainingBlockISize,
+                            nscoord             aContentEdgeToBoxSizing,
+                            nscoord             aBoxSizingToMarginEdge,
+                            const nsStyleCoord& aCoord);
 protected:
   // Members
   nsRect           mRect;
