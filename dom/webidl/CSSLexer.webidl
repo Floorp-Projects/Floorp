@@ -36,10 +36,8 @@ enum CSSTokenType {
   "bad_string",
   // A URL.  |text| holds the URL.
   "url",
-  // A "bad URL".  This is a URL that either contains a bad_string or contains
-  // garbage after the string or unquoted URL test.  |text| holds the URL and
-  // potentially whatever garbage came after it, up to but not including the
-  // following ')'.
+  // A "bad URL".  This is a URL that is unterminated at EOF.  |text|
+  // holds the URL.
   "bad_url",
   // A "symbol" is any one-character symbol.  This corresponds to the
   // DELIM token in the CSS specification.
