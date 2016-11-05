@@ -267,4 +267,7 @@ config = {
     "minidump_stackwalk_path": "macosx64-minidump_stackwalk",
     "minidump_tooltool_manifest_path": "config/tooltool-manifests/macosx64/releng.manifest",
     "tooltool_cache": "/builds/tooltool_cache",
+    "download_nodejs": True,
+    "nodejs_path": "node-osx/bin/node",
+    "nodejs_tooltool_manifest_path": "config/tooltool-manifests/macosx64/nodejs.manifest",
 }

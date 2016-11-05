@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ro.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ro{
     AuxExemplarCharacters{"[á à å ä ç é è ê ë ñ ö q ş ţ ü w y]"}
     Ellipsis{
@@ -24,7 +18,7 @@ ro{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{">{0}"}
+                atLeast{"⩾{0}"}
                 range{"{0} - {1}"}
             }
             patterns{
@@ -242,7 +236,7 @@ ro{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.17"}
+    Version{"2.1.28.79"}
     calendar{
         buddhist{
             eras{
@@ -516,6 +510,11 @@ ro{
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMEd{"E, d MMMM"}
+                MMMMW{
+                    few{"'săptămâna' W 'din' MMM"}
+                    one{"'săptămâna' W 'din' MMM"}
+                    other{"'săptămâna' W 'din' MMM"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 MMdd{"dd.MM"}
@@ -538,6 +537,11 @@ ro{
                 yMd{"dd.MM.y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    few{"'săptămâna' w 'din' y"}
+                    one{"'săptămâna' w 'din' y"}
+                    other{"'săptămâna' w 'din' y"}
+                }
             }
             dayNames{
                 format{
@@ -564,7 +568,7 @@ ro{
                         "lu.",
                         "ma.",
                         "mi.",
-                        "jo.",
+                        "joi",
                         "vi.",
                         "sâ.",
                     }
@@ -598,13 +602,13 @@ ro{
                         "S",
                     }
                     short{
-                        "du",
-                        "lu",
-                        "ma",
-                        "mi",
-                        "jo",
-                        "vi",
-                        "sâ",
+                        "du.",
+                        "lu.",
+                        "ma.",
+                        "mi.",
+                        "joi",
+                        "vi.",
+                        "sâ.",
                     }
                     wide{
                         "duminică",
@@ -629,11 +633,11 @@ ro{
                     }
                     narrow{
                         afternoon1{"după-amiază"}
-                        evening1{"seară"}
+                        evening1{"seara"}
                         midnight{"miezul nopții"}
                         morning1{"dimineață"}
-                        night1{"noapte"}
-                        noon{"prânz"}
+                        night1{"noaptea"}
+                        noon{"amiază"}
                     }
                     wide{
                         afternoon1{"după-amiaza"}
@@ -646,23 +650,32 @@ ro{
                 }
                 stand-alone{
                     abbreviated{
+                        afternoon1{"după-amiaza"}
                         am{"a.m."}
+                        evening1{"seara"}
                         midnight{"miezul nopții"}
+                        morning1{"dimineața"}
+                        night1{"noaptea"}
                         noon{"amiază"}
                         pm{"p.m."}
                     }
                     narrow{
+                        afternoon1{"după-amiaza"}
                         am{"a.m."}
+                        evening1{"seara"}
                         midnight{"miezul nopții"}
+                        morning1{"dimineața"}
+                        night1{"noaptea"}
+                        noon{"amiază"}
                         pm{"p.m."}
                     }
                     wide{
-                        afternoon1{"după-amiază"}
+                        afternoon1{"după-amiaza"}
                         am{"a.m."}
-                        evening1{"seară"}
+                        evening1{"seara"}
                         midnight{"la miezul nopții"}
-                        morning1{"dimineață"}
-                        night1{"noapte"}
+                        morning1{"dimineața"}
+                        night1{"noaptea"}
                         noon{"la amiază"}
                         pm{"p.m."}
                     }
@@ -880,10 +893,10 @@ ro{
                         "trim. IV",
                     }
                     narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
+                        "I",
+                        "II",
+                        "III",
+                        "IV",
                     }
                     wide{
                         "trimestrul I",
@@ -894,22 +907,22 @@ ro{
                 }
                 stand-alone{
                     abbreviated{
-                        "Trim. I",
-                        "Trim. II",
-                        "Trim. III",
-                        "Trim. IV",
+                        "trim. I",
+                        "trim. II",
+                        "trim. III",
+                        "trim. IV",
                     }
                     narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
+                        "I",
+                        "II",
+                        "III",
+                        "IV",
                     }
                     wide{
-                        "Trimestrul I",
-                        "Trimestrul al II-lea",
-                        "Trimestrul al III-lea",
-                        "Trimestrul al IV-lea",
+                        "trimestrul I",
+                        "trimestrul al II-lea",
+                        "trimestrul al III-lea",
+                        "trimestrul al IV-lea",
                     }
                 }
             }
@@ -994,6 +1007,94 @@ ro{
             }
         }
     }
+    characterLabel{
+        activities{"Activități"}
+        african_scripts{"Scrieri africane"}
+        american_scripts{"Scrieri americane"}
+        animal{"animal"}
+        animals_nature{"Animale și natură"}
+        arrows{"Săgeți"}
+        body{"corp"}
+        box_drawing{"Desen casetă"}
+        braille{"Braille"}
+        building{"construcție"}
+        bullets_stars{"Marcatori/stele"}
+        consonantal_jamo{"Jamo consonantic"}
+        currency_symbols{"Simboluri monetare"}
+        dash_connector{"Liniuță/conector"}
+        digits{"Cifre"}
+        dingbats{"Ornamente"}
+        divination_symbols{"Simboluri divinație"}
+        downwards_arrows{"Săgeți în jos"}
+        downwards_upwards_arrows{"Săgeți în sus și în jos"}
+        east_asian_scripts{"Scrieri est-asiatice"}
+        emoji{"Emoji"}
+        european_scripts{"Scrieri europene"}
+        female{"femeie"}
+        flag{"steag"}
+        flags{"Steaguri"}
+        food_drink{"Mâncare și băutură"}
+        format{"Formatare"}
+        format_whitespace{"Formatare și spații albe"}
+        full_width_form_variant{"Variantă de formă cu lățime completă"}
+        geometric_shapes{"Forme geometrice"}
+        half_width_form_variant{"Variante de formă cu semilățime"}
+        han_characters{"Caractere han"}
+        han_radicals{"Radicali han"}
+        hanja{"Hanja"}
+        hanzi_simplified{"Hanzi (simplificată)"}
+        hanzi_traditional{"Hanzi (tradițională)"}
+        heart{"inimă"}
+        historic_scripts{"Scrieri istorice"}
+        ideographic_desc_characters{"Caractere desc. ideografice"}
+        japanese_kana{"Kana japoneză"}
+        kanbun{"Kanbun"}
+        kanji{"Kanji"}
+        keycap{"tastă"}
+        leftwards_arrows{"Săgeți spre stânga"}
+        leftwards_rightwards_arrows{"Săgeți spre stânga și spre dreapta"}
+        letterlike_symbols{"Simboluri asemănătoare literelor"}
+        limited_use{"Utilizare limitată"}
+        male{"bărbat"}
+        math_symbols{"Simboluri matematice"}
+        middle_eastern_scripts{"Scrieri mijlociu-orientale"}
+        miscellaneous{"Diverse"}
+        modern_scripts{"Scrieri moderne"}
+        modifier{"Modificator"}
+        musical_symbols{"Simboluri muzicale"}
+        nature{"natură"}
+        nonspacing{"Fără spațiere"}
+        numbers{"Numere"}
+        objects{"Obiecte"}
+        other{"Altele"}
+        paired{"Asociate"}
+        person{"persoană"}
+        phonetic_alphabet{"Alfabet fonetic"}
+        pictographs{"Pictografe"}
+        place{"loc"}
+        plant{"plantă"}
+        punctuation{"Punctuație"}
+        rightwards_arrows{"Săgeți spre dreapta"}
+        sign_standard_symbols{"Semne/simboluri standard"}
+        small_form_variant{"Variante de forme mici"}
+        smiley{"smiley"}
+        smileys_people{"Emoticoane și persoane"}
+        south_asian_scripts{"Scrieri sud-asiatice"}
+        southeast_asian_scripts{"Scrieri sud-est asiatice"}
+        spacing{"Spațiere"}
+        sport{"sport"}
+        symbols{"Simboluri"}
+        technical_symbols{"Simboluri tehnice"}
+        tone_marks{"Marcaje de ton"}
+        travel{"călătorii"}
+        travel_places{"Călătorii și locuri"}
+        upwards_arrows{"Săgeți în sus"}
+        variant_forms{"Variante de forme"}
+        vocalic_jamo{"Jamo vocalic"}
+        weather{"vreme"}
+        western_asian_scripts{"Scrieri vest-asiatice"}
+        whitespace{"Spațiu alb"}
+    }
     delimiters{
         alternateQuotationEnd{"»"}
         alternateQuotationStart{"«"}
@@ -1002,7 +1103,7 @@ ro{
     }
     fields{
         day{
-            dn{"Zi"}
+            dn{"zi"}
             relative{
                 "-1"{"ieri"}
                 "-2"{"alaltăieri"}
@@ -1057,7 +1158,7 @@ ro{
             dn{"a.m/p.m."}
         }
         era{
-            dn{"Eră"}
+            dn{"eră"}
         }
         fri{
             relative{
@@ -1065,12 +1166,36 @@ ro{
                 "0"{"vinerea aceasta"}
                 "1"{"vinerea viitoare"}
             }
+            relativeTime{
+                future{
+                    few{"vineri, peste {0} săptămâni"}
+                    one{"vineri, peste {0} săptămână"}
+                    other{"vineri, peste {0} de săptămâni"}
+                }
+                past{
+                    few{"vineri, acum {0} săptămâni"}
+                    one{"vineri, acum {0} săptămână"}
+                    other{"vineri, acum {0} de săptămâni"}
+                }
+            }
         }
         fri-narrow{
             relative{
-                "-1"{"V (trecută)"}
-                "0"{"V (aceasta)"}
-                "1"{"V (viitoare)"}
+                "-1"{"vi. trecută"}
+                "0"{"vi. aceasta"}
+                "1"{"vi. viitoare"}
+            }
+            relativeTime{
+                future{
+                    few{"vi. +{0} săpt."}
+                    one{"vi. +{0} săpt."}
+                    other{"vi. +{0} săpt."}
+                }
+                past{
+                    few{"vi. -{0} săpt."}
+                    one{"vi. -{0} săpt."}
+                    other{"vi. -{0} săpt."}
+                }
             }
         }
         fri-short{
@@ -1079,9 +1204,24 @@ ro{
                 "0"{"vin. aceasta"}
                 "1"{"vin. viitoare"}
             }
+            relativeTime{
+                future{
+                    few{"vineri, peste {0} săpt."}
+                    one{"vineri, peste {0} săpt."}
+                    other{"vineri, peste {0} săpt."}
+                }
+                past{
+                    few{"vineri, acum {0} săpt."}
+                    one{"vineri, acum {0} săpt."}
+                    other{"vineri, acum {0} săpt."}
+                }
+            }
         }
         hour{
-            dn{"Oră"}
+            dn{"oră"}
+            relative{
+                "0"{"ora aceasta"}
+            }
             relativeTime{
                 future{
                     few{"peste {0} ore"}
@@ -1126,7 +1266,10 @@ ro{
             }
         }
         minute{
-            dn{"Minut"}
+            dn{"minut"}
+            relative{
+                "0"{"minutul acesta"}
+            }
             relativeTime{
                 future{
                     few{"peste {0} minute"}
@@ -1176,12 +1319,36 @@ ro{
                 "0"{"lunea aceasta"}
                 "1"{"lunea viitoare"}
             }
+            relativeTime{
+                future{
+                    few{"luni, peste {0} săptămâni"}
+                    one{"luni, peste {0} săptămână"}
+                    other{"luni, peste {0} de săptămâni"}
+                }
+                past{
+                    few{"luni, acum {0} săptămâni"}
+                    one{"luni, acum {0} săptămână"}
+                    other{"luni, acum {0} de săptămâni"}
+                }
+            }
         }
         mon-narrow{
             relative{
-                "-1"{"L (trecută)"}
-                "0"{"L (aceasta)"}
-                "1"{"L (viitoare)"}
+                "-1"{"lu. trecută"}
+                "0"{"lu. aceasta"}
+                "1"{"lu. viitoare"}
+            }
+            relativeTime{
+                future{
+                    few{"lu. +{0} săpt."}
+                    one{"lu. +{0} săpt."}
+                    other{"lu. +{0} săpt."}
+                }
+                past{
+                    few{"lu. -{0} săpt."}
+                    one{"lu. -{0} săpt."}
+                    other{"lu. -{0} săpt."}
+                }
             }
         }
         mon-short{
@@ -1190,9 +1357,21 @@ ro{
                 "0"{"lun. aceasta"}
                 "1"{"lun. viitoare"}
             }
+            relativeTime{
+                future{
+                    few{"luni, peste {0} săpt."}
+                    one{"luni, peste {0} săpt."}
+                    other{"luni, peste {0} săpt."}
+                }
+                past{
+                    few{"luni, acum {0} săpt."}
+                    one{"luni, acum {0} săpt."}
+                    other{"luni, acum {0} săpt."}
+                }
+            }
         }
         month{
-            dn{"Lună"}
+            dn{"lună"}
             relative{
                 "-1"{"luna trecută"}
                 "0"{"luna aceasta"}
@@ -1242,7 +1421,7 @@ ro{
             }
         }
         quarter{
-            dn{"Trimestru"}
+            dn{"trimestru"}
             relative{
                 "-1"{"trimestrul trecut"}
                 "0"{"trimestrul acesta"}
@@ -1307,12 +1486,36 @@ ro{
                 "0"{"sâmbăta aceasta"}
                 "1"{"sâmbăta viitoare"}
             }
+            relativeTime{
+                future{
+                    few{"sâmbătă, peste {0} săptămâni"}
+                    one{"sâmbătă, peste {0} săptămână"}
+                    other{"sâmbătă, peste {0} de săptămâni"}
+                }
+                past{
+                    few{"sâmbătă, acum {0} săptămâni"}
+                    one{"sâmbătă, acum {0} săptămână"}
+                    other{"sâmbătă, acum de {0} săptămâni"}
+                }
+            }
         }
         sat-narrow{
             relative{
-                "-1"{"S (trecută)"}
-                "0"{"S (aceasta)"}
-                "1"{"S (viitoare)"}
+                "-1"{"sâ. trecută"}
+                "0"{"sâ. aceasta"}
+                "1"{"sâ. viitoare"}
+            }
+            relativeTime{
+                future{
+                    few{"sâ. +{0} săpt."}
+                    one{"sâ. +{0} săpt."}
+                    other{"sâ. +{0} săpt."}
+                }
+                past{
+                    few{"sâ. -{0} săpt."}
+                    one{"sâ. -{0} săpt."}
+                    other{"sâ. -{0} săpt."}
+                }
             }
         }
         sat-short{
@@ -1321,9 +1524,21 @@ ro{
                 "0"{"sâm. aceasta"}
                 "1"{"sâm. viitoare"}
             }
+            relativeTime{
+                future{
+                    few{"sâmbătă, peste {0} săpt."}
+                    one{"sâmbătă, peste {0} săpt."}
+                    other{"sâmbătă, peste {0} săpt."}
+                }
+                past{
+                    few{"sâmbătă, acum {0} săpt."}
+                    one{"sâmbătă, acum {0} săpt."}
+                    other{"sâmbătă, acum {0} săpt."}
+                }
+            }
         }
         second{
-            dn{"Secundă"}
+            dn{"secundă"}
             relative{
                 "0"{"acum"}
             }
@@ -1376,12 +1591,36 @@ ro{
                 "0"{"duminica aceasta"}
                 "1"{"duminica viitoare"}
             }
+            relativeTime{
+                future{
+                    few{"duminică, peste {0} săptămâni"}
+                    one{"duminică, peste {0} săptămână"}
+                    other{"duminică, peste {0} de săptămâni"}
+                }
+                past{
+                    few{"duminică, acum {0} săptămâni"}
+                    one{"duminică, acum {0} săptămână"}
+                    other{"duminică, acum {0} de săptămâni"}
+                }
+            }
         }
         sun-narrow{
             relative{
-                "-1"{"D (trecută)"}
-                "0"{"D (aceasta)"}
-                "1"{"D (viitoare)"}
+                "-1"{"du. trecută"}
+                "0"{"du. aceasta"}
+                "1"{"du. viitoare"}
+            }
+            relativeTime{
+                future{
+                    few{"du. +{0} săpt."}
+                    one{"du. +{0} săpt."}
+                    other{"du. +{0} săpt."}
+                }
+                past{
+                    few{"du. -{0} săpt."}
+                    one{"du. -{0} săpt."}
+                    other{"du. -{0} săpt."}
+                }
             }
         }
         sun-short{
@@ -1390,6 +1629,18 @@ ro{
                 "0"{"dum. aceasta"}
                 "1"{"dum. viitoare"}
             }
+            relativeTime{
+                future{
+                    few{"duminică, peste {0} săpt."}
+                    one{"duminică, peste {0} săpt."}
+                    other{"duminică, peste {0} săpt."}
+                }
+                past{
+                    few{"duminică, acum {0} săpt."}
+                    one{"duminică, acum {0} săpt."}
+                    other{"duminică, acum {0} săpt."}
+                }
+            }
         }
         thu{
             relative{
@@ -1397,19 +1648,55 @@ ro{
                 "0"{"joia aceasta"}
                 "1"{"joia viitoare"}
             }
+            relativeTime{
+                future{
+                    few{"joi, peste {0} săptămâni"}
+                    one{"joi, peste {0} săptămână"}
+                    other{"joi, peste {0} de săptămâni"}
+                }
+                past{
+                    few{"joi, acum {0} săptămâni"}
+                    one{"joi, acum {0} săptămână"}
+                    other{"joi, acum {0} de săptămâni"}
+                }
+            }
         }
         thu-narrow{
             relative{
-                "-1"{"J (trecută)"}
-                "0"{"J (aceasta)"}
-                "1"{"J (viitoare)"}
+                "-1"{"jo. trecută"}
+                "0"{"jo. aceasta"}
+                "1"{"jo. viitoare"}
+            }
+            relativeTime{
+                future{
+                    few{"jo. +{0} săpt."}
+                    one{"jo. +{0} săpt."}
+                    other{"jo. +{0} săpt."}
+                }
+                past{
+                    few{"jo. -{0} săpt."}
+                    one{"jo. -{0} săpt."}
+                    other{"jo. -{0} săpt."}
+                }
             }
         }
         thu-short{
             relative{
-                "-1"{"joia trecută"}
-                "0"{"joia aceasta"}
+                "-1"{"joi trecută"}
+                "0"{"joi aceasta"}
                 "1"{"joia viitoare"}
+            }
+            relativeTime{
+                future{
+                    few{"joi, peste {0} săpt."}
+                    one{"joi, peste {0} săpt."}
+                    other{"joi, peste {0} săpt."}
+                }
+                past{
+                    few{"joi, acum {0} săpt."}
+                    one{"joi, acum {0} săpt."}
+                    other{"joi, acum {0} săpt."}
+                }
             }
         }
         tue{
@@ -1418,12 +1705,36 @@ ro{
                 "0"{"marțea aceasta"}
                 "1"{"marțea viitoare"}
             }
+            relativeTime{
+                future{
+                    few{"marți, peste {0} săptămâni"}
+                    one{"marți, peste {0} săptămână"}
+                    other{"marți, peste {0} de săptămâni"}
+                }
+                past{
+                    few{"marți, acum {0} săptămâni"}
+                    one{"marți, acum {0} săptămână"}
+                    other{"marți, acum {0} de săptămâni"}
+                }
+            }
         }
         tue-narrow{
             relative{
-                "-1"{"Ma (trecută)"}
-                "0"{"Ma (aceasta)"}
-                "1"{"Ma (viitoare)"}
+                "-1"{"ma. trecută"}
+                "0"{"ma. aceasta"}
+                "1"{"ma. viitoare"}
+            }
+            relativeTime{
+                future{
+                    few{"ma. +{0} săpt."}
+                    one{"ma. +{0} săpt."}
+                    other{"ma. +{0} săpt."}
+                }
+                past{
+                    few{"ma. -{0} săpt."}
+                    one{"ma. -{0} săpt."}
+                    other{"ma. -{0} săpt."}
+                }
             }
         }
         tue-short{
@@ -1432,6 +1743,18 @@ ro{
                 "0"{"mar. aceasta"}
                 "1"{"mar. viitoare"}
             }
+            relativeTime{
+                future{
+                    few{"marți, peste {0} săpt."}
+                    one{"marți, peste {0} săpt."}
+                    other{"marți, peste {0} săpt."}
+                }
+                past{
+                    few{"marți, acum {0} săpt."}
+                    one{"marți, acum {0} săpt."}
+                    other{"marți, acum {0} săpt."}
+                }
+            }
         }
         wed{
             relative{
@@ -1439,12 +1762,36 @@ ro{
                 "0"{"miercurea aceasta"}
                 "1"{"miercurea viitoare"}
             }
+            relativeTime{
+                future{
+                    few{"miercuri, peste {0} săptămâni"}
+                    one{"miercuri, peste {0} săptămână"}
+                    other{"miercuri, peste {0} de săptămâni"}
+                }
+                past{
+                    few{"miercuri, acum {0} săptămâni"}
+                    one{"miercuri, acum {0} săptămână"}
+                    other{"miercuri, acum {0} de săptămâni"}
+                }
+            }
         }
         wed-narrow{
             relative{
-                "-1"{"Mi (trecută)"}
-                "0"{"Mi (aceasta)"}
-                "1"{"Mi (viitoare)"}
+                "-1"{"mi. trecută"}
+                "0"{"mi. aceasta"}
+                "1"{"mi. viitoare"}
+            }
+            relativeTime{
+                future{
+                    few{"mi. +{0} săpt."}
+                    one{"mi. +{0} săpt."}
+                    other{"mi. +{0} săpt."}
+                }
+                past{
+                    few{"mi. -{0} săpt."}
+                    one{"mi. -{0} săpt."}
+                    other{"mi. -{0} săpt."}
+                }
             }
         }
         wed-short{
@@ -1453,14 +1800,27 @@ ro{
                 "0"{"mie. aceasta"}
                 "1"{"mie. viitoare"}
             }
+            relativeTime{
+                future{
+                    few{"miercuri, peste {0} săpt."}
+                    one{"miercuri, peste {0} săpt."}
+                    other{"miercuri, peste {0} săpt."}
+                }
+                past{
+                    few{"miercuri, acum {0} săpt."}
+                    one{"miercuri, acum {0} săpt."}
+                    other{"miercuri, acum {0} săpt."}
+                }
+            }
         }
         week{
-            dn{"Săptămână"}
+            dn{"săptămână"}
             relative{
                 "-1"{"săptămâna trecută"}
                 "0"{"săptămâna aceasta"}
                 "1"{"săptămâna viitoare"}
             }
+            relativePeriod{"săptămâna cu {0}"}
             relativeTime{
                 future{
                     few{"peste {0} săptămâni"}
@@ -1476,6 +1836,7 @@ ro{
         }
         week-narrow{
             dn{"săpt."}
+            relativePeriod{"săpt. cu {0}"}
             relativeTime{
                 future{
                     few{"+{0} săpt."}
@@ -1491,6 +1852,7 @@ ro{
         }
         week-short{
             dn{"săpt."}
+            relativePeriod{"săpt. cu {0}"}
             relativeTime{
                 future{
                     few{"peste {0} săpt."}
@@ -1508,7 +1870,7 @@ ro{
             dn{"Zi a săptămânii"}
         }
         year{
-            dn{"An"}
+            dn{"an"}
             relative{
                 "-1"{"anul trecut"}
                 "0"{"anul acesta"}
@@ -1558,11 +1920,17 @@ ro{
             }
         }
         zone{
-            dn{"Fus orar"}
+            dn{"fus orar"}
         }
     }
     listPattern{
         standard{
+            2{"{0} și {1}"}
+            end{"{0} și {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
             2{"{0} și {1}"}
             end{"{0} și {1}"}
             middle{"{0}, {1}"}
@@ -1591,17 +1959,5 @@ ro{
         UK{"britanic"}
         US{"american"}
         metric{"metric"}
-    }
-    transformNames{
-        BGN{"BGN"}
-        Numeric{"Numeric"}
-        Tone{"Ton"}
-        UNGEGN{"UNGEGN"}
-        x-Accents{"Accente"}
-        x-Fullwidth{"Cu lățime întreagă"}
-        x-Halfwidth{"Cu jumătate de lățime"}
-        x-Jamo{"Jamo"}
-        x-Pinyin{"Pinyin"}
-        x-Publishing{"Publicare"}
     }
 }

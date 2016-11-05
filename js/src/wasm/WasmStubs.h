@@ -27,18 +27,21 @@ namespace jit { class MacroAssembler; class Label; }
 
 namespace wasm {
 
-class FuncDefExport;
+class FuncExport;
 class FuncImport;
 
 extern Offsets
-GenerateEntry(jit::MacroAssembler& masm, const FuncDefExport& func);
+GenerateEntry(jit::MacroAssembler& masm, const FuncExport& fe);
+
+extern FuncOffsets
+GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, SigIdDesc sigId);
 
 extern ProfilingOffsets
-GenerateInterpExit(jit::MacroAssembler& masm, const FuncImport& fi, uint32_t funcImportIndex,
-                   jit::Label* throwLabel);
+GenerateImportInterpExit(jit::MacroAssembler& masm, const FuncImport& fi, uint32_t funcImportIndex,
+                         jit::Label* throwLabel);
 
 extern ProfilingOffsets
-GenerateJitExit(jit::MacroAssembler& masm, const FuncImport& fi, jit::Label* throwLabel);
+GenerateImportJitExit(jit::MacroAssembler& masm, const FuncImport& fi, jit::Label* throwLabel);
 
 extern ProfilingOffsets
 GenerateTrapExit(jit::MacroAssembler& masm, Trap trap, jit::Label* throwLabel);

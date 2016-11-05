@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 1998-2015, International Business Machines
+*   Copyright (C) 1998-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *
@@ -22,8 +24,8 @@
 #define UNISTR_H
 
 /**
- * \file 
- * \brief C++ API: Unicode String 
+ * \file
+ * \brief C++ API: Unicode String
  */
 
 #include "unicode/utypes.h"
@@ -74,7 +76,9 @@ UStringCaseMapper(const UCaseMap *csm,
 
 U_NAMESPACE_BEGIN
 
+#if !UCONFIG_NO_BREAK_ITERATION
 class BreakIterator;        // unicode/brkiter.h
+#endif
 class Locale;               // unicode/locid.h
 class StringCharacterIterator;
 class UnicodeStringAppendable;  // unicode/appendable.h
@@ -172,8 +176,6 @@ class UnicodeStringAppendable;  // unicode/appendable.h
 # endif
 #endif
 
-/* Cannot make the following #ifndef U_HIDE_INTERNAL_API,
-   it is used to construct other non-internal constants */
 /**
  * \def UNISTR_OBJECT_SIZE
  * Desired sizeof(UnicodeString) in bytes.
@@ -205,7 +207,7 @@ class UnicodeStringAppendable;  // unicode/appendable.h
  * and the internal buffer would hold up to 11 UChars in that case.
  *
  * @see U16_MAX_LENGTH
- * @draft ICU 56
+ * @stable ICU 56
  */
 #ifndef UNISTR_OBJECT_SIZE
 # define UNISTR_OBJECT_SIZE 64
@@ -234,7 +236,7 @@ class UnicodeStringAppendable;  // unicode/appendable.h
  * <p>In ICU, a Unicode string consists of 16-bit Unicode <em>code units</em>.
  * A Unicode character may be stored with either one code unit
  * (the most common case) or with a matched pair of special code units
- * ("surrogates"). The data type for code units is UChar. 
+ * ("surrogates"). The data type for code units is UChar.
  * For single-character handling, a Unicode character code <em>point</em> is a value
  * in the range 0..0x10ffff. ICU uses the UChar32 type for code points.</p>
  *
@@ -1529,7 +1531,7 @@ public:
               UnicodeString& target) const;
 
   /**
-   * Copy the characters in the range 
+   * Copy the characters in the range
    * [<tt>start</TT>, <tt>start + startLength</TT>) into an array of characters.
    * All characters must be invariant (see utypes.h).
    * Use US_INV as the last, signature-distinguishing parameter.
@@ -1902,7 +1904,6 @@ public:
    */
   UnicodeString &fastCopyFrom(const UnicodeString &src);
 
-#ifndef U_HIDE_DRAFT_API
 #if U_HAVE_RVALUE_REFERENCES
   /**
    * Move assignment operator, might leave src in bogus state.
@@ -1910,12 +1911,13 @@ public:
    * The behavior is undefined if *this and src are the same object.
    * @param src source string
    * @return *this
-   * @draft ICU 56
+   * @stable ICU 56
    */
   UnicodeString &operator=(UnicodeString &&src) U_NOEXCEPT {
     return moveFrom(src);
   }
 #endif
+  // do not use #ifndef U_HIDE_DRAFT_API for moveFrom, needed by non-draft API
   /**
    * Move assignment, might leave src in bogus state.
    * This string will have the same contents and state that the source string had.
@@ -1931,7 +1933,7 @@ public:
   /**
    * Swap strings.
    * @param other other string
-   * @draft ICU 56
+   * @stable ICU 56
    */
   void swap(UnicodeString &other) U_NOEXCEPT;
 
@@ -1939,13 +1941,12 @@ public:
    * Non-member UnicodeString swap function.
    * @param s1 will get s2's contents and state
    * @param s2 will get s1's contents and state
-   * @draft ICU 56
+   * @stable ICU 56
    */
   friend U_COMMON_API inline void U_EXPORT2
   swap(UnicodeString &s1, UnicodeString &s2) U_NOEXCEPT {
     s1.swap(s2);
   }
-#endif  /* U_HIDE_DRAFT_API */
 
   /**
    * Assignment operator.  Replace the characters in this UnicodeString
@@ -3212,17 +3213,15 @@ public:
    */
   UnicodeString(const UnicodeString& that);
 
-#ifndef U_HIDE_DRAFT_API
 #if U_HAVE_RVALUE_REFERENCES
   /**
    * Move constructor, might leave src in bogus state.
    * This string will have the same contents and state that the source string had.
    * @param src source string
-   * @draft ICU 56
+   * @stable ICU 56
    */
   UnicodeString(UnicodeString &&src) U_NOEXCEPT;
 #endif
-#endif  /* U_HIDE_DRAFT_API */
 
   /**
    * 'Substring' constructor from tail of source string.
@@ -3277,7 +3276,7 @@ public:
    * @see toUTF8String
    * @stable ICU 4.2
    */
-  static UnicodeString fromUTF8(const StringPiece &utf8);
+  static UnicodeString fromUTF8(StringPiece utf8);
 
   /**
    * Create a UnicodeString from a UTF-32 string.
@@ -3392,7 +3391,7 @@ protected:
 
 private:
   // For char* constructors. Could be made public.
-  UnicodeString &setToUTF8(const StringPiece &utf8);
+  UnicodeString &setToUTF8(StringPiece utf8);
   // For extract(char*).
   // We could make a toUTF8(target, capacity, errorCode) public but not
   // this version: New API will be cleaner if we make callers create substrings
@@ -3617,7 +3616,6 @@ private:
      */
     US_STACKBUF_SIZE=(int32_t)(UNISTR_OBJECT_SIZE-sizeof(void *)-2)/U_SIZEOF_UCHAR,
     kInvalidUChar=0xffff, // U+FFFF returned by charAt(invalid index)
-    kGrowSize=128, // grow size for this buffer
     kInvalidHashCode=0, // invalid hash code
     kEmptyHashCode=1, // hash code for empty string
 

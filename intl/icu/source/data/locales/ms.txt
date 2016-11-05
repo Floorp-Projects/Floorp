@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ms.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ms{
     AuxExemplarCharacters{"[]"}
     Ellipsis{
@@ -21,6 +15,10 @@ ms{
         "sy} t {ts} u {ua} v w x y z]"
     }
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
+        "″]"
+    }
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
@@ -172,7 +170,7 @@ ms{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.28.79"}
     calendar{
         buddhist{
             eras{
@@ -313,7 +311,6 @@ ms{
                 GyMMMd{"d MMM y G"}
                 H{"HH"}
                 Hm{"HH:mm"}
-                Hmm{"H:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
                 MEd{"E, d/M"}
@@ -333,7 +330,7 @@ ms{
                 yyyyMEd{"E, d/M/y G"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E, d MMM y G"}
-                yyyyMMMM{"G y MMMM"}
+                yyyyMMMM{"MMMM y G"}
                 yyyyMMMd{"d MMM y G"}
                 yyyyMd{"d/M/y G"}
                 yyyyQQQ{"QQQ y G"}
@@ -479,7 +476,6 @@ ms{
                 GyMMMd{"G y MMM d"}
                 H{"HH"}
                 Hm{"HH:mm"}
-                Hmm{"H:mm"}
                 Hms{"HH:mm:ss"}
                 Hmsv{"HH:mm:ss v"}
                 Hmv{"HH:mm v"}
@@ -487,6 +483,9 @@ ms{
                 MEd{"E, d-M"}
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
+                MMMMW{
+                    other{"'week' W 'of' MMM"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 MMdd{"dd/MM"}
@@ -508,6 +507,9 @@ ms{
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    other{"'week' w 'of' y"}
+                }
             }
             dayNames{
                 format{
@@ -592,21 +594,21 @@ ms{
                     abbreviated{
                         afternoon1{"tengah hari"}
                         evening1{"petang"}
-                        morning1{"tengah malam"}
+                        morning1{"pagi"}
                         morning2{"pagi"}
                         night1{"malam"}
                     }
                     narrow{
                         afternoon1{"tengah hari"}
                         evening1{"petang"}
-                        morning1{"tengah malam"}
+                        morning1{"pagi"}
                         morning2{"pagi"}
                         night1{"malam"}
                     }
                     wide{
                         afternoon1{"tengah hari"}
                         evening1{"petang"}
-                        morning1{"tengah malam"}
+                        morning1{"pagi"}
                         morning2{"pagi"}
                         night1{"malam"}
                     }
@@ -625,7 +627,7 @@ ms{
                         afternoon1{"tengah hari"}
                         am{"a"}
                         evening1{"petang"}
-                        morning1{"tengah malam"}
+                        morning1{"pagi"}
                         morning2{"pagi"}
                         night1{"malam"}
                         pm{"p"}
@@ -912,6 +914,94 @@ ms{
             }
         }
     }
+    characterLabel{
+        activities{"Aktiviti"}
+        african_scripts{"Skrip Afrika"}
+        american_scripts{"Skrip Amerika"}
+        animal{"haiwan"}
+        animals_nature{"Haiwan & Alam Semula Jadi"}
+        arrows{"Anak Panah"}
+        body{"tubuh"}
+        box_drawing{"Lukisan Kotak"}
+        braille{"Braille"}
+        building{"bangunan"}
+        bullets_stars{"Bulet/Bintang"}
+        consonantal_jamo{"Consonantal Jamo"}
+        currency_symbols{"Simbol Mata Wang"}
+        dash_connector{"Sempang/Penyambung"}
+        digits{"Digit"}
+        dingbats{"Dingbat"}
+        divination_symbols{"Simbol Tilikan"}
+        downwards_arrows{"Anak Panah Bawah"}
+        downwards_upwards_arrows{"Anak Panah Bawah Atas"}
+        east_asian_scripts{"Skrip Asia Timur"}
+        emoji{"Emoji"}
+        european_scripts{"Skrip Eropah"}
+        female{"perempuan"}
+        flag{"bendera"}
+        flags{"Bendera"}
+        food_drink{"Makanan & Minuman"}
+        format{"Format"}
+        format_whitespace{"Format & Ruang Putih"}
+        full_width_form_variant{"Varian Bentuk Lebar Penuh"}
+        geometric_shapes{"Bentuk Geometri"}
+        half_width_form_variant{"Varian Bentuk Lebar Separa"}
+        han_characters{"Aksara Han"}
+        han_radicals{"Radikal Han"}
+        hanja{"Hanja"}
+        hanzi_simplified{"Hanzi Mudah"}
+        hanzi_traditional{"Hanzi (Tradisional)"}
+        heart{"hati"}
+        historic_scripts{"Skrip Lama"}
+        ideographic_desc_characters{"Aksara Unsur Ideografi"}
+        japanese_kana{"Kana Jepun"}
+        kanbun{"Kanbun"}
+        kanji{"Kanji"}
+        keycap{"keycap"}
+        leftwards_arrows{"Anak Panah Hala Kiri"}
+        leftwards_rightwards_arrows{"Anak Panah Hala Kanan Hala Kiri"}
+        letterlike_symbols{"Simbol Ala Huruf"}
+        limited_use{"Kegunaan Terhad"}
+        male{"lelaki"}
+        math_symbols{"Simbol Matematik"}
+        middle_eastern_scripts{"Tulisan Timur Tengah"}
+        miscellaneous{"Pelbagai"}
+        modern_scripts{"Tulisan Moden"}
+        modifier{"Pengubahsuai"}
+        musical_symbols{"Simbol Muzikal"}
+        nature{"alam semula jadi"}
+        nonspacing{"Tanpa ruang"}
+        numbers{"Angka"}
+        objects{"Objek"}
+        other{"Lain-lain"}
+        paired{"Bergandingan"}
+        person{"orang"}
+        phonetic_alphabet{"Huruf Fonetik"}
+        pictographs{"Piktograf"}
+        place{"tempat"}
+        plant{"tumbuh-tumbuhan"}
+        punctuation{"Tanda baca"}
+        rightwards_arrows{"Anak Panah Hala Kanan"}
+        sign_standard_symbols{"Simbol Isyarat/Standard"}
+        small_form_variant{"Varian Huruf Kecil"}
+        smiley{"smiley"}
+        smileys_people{"Smiley & Manusia"}
+        south_asian_scripts{"Tulisan Asia Selatan"}
+        southeast_asian_scripts{"Tulisan Asia Tenggara"}
+        spacing{"Ruang"}
+        sport{"sukan"}
+        symbols{"Simbol"}
+        technical_symbols{"Simbol Teknikal"}
+        tone_marks{"Tanda Nadaan"}
+        travel{"perjalanan"}
+        travel_places{"Pelancongan & Tempat"}
+        upwards_arrows{"Anak Panah Hala Ke Atas"}
+        variant_forms{"Bentuk Varian"}
+        vocalic_jamo{"Jamo Vokal"}
+        weather{"cuaca"}
+        western_asian_scripts{"Tiulisan Asia Barat"}
+        whitespace{"Ruang putih"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -951,7 +1041,7 @@ ms{
                     other{"dlm {0} hari"}
                 }
                 past{
-                    other{"{0} hari yg lalu"}
+                    other{"{0} hari lalu"}
                 }
             }
         }
@@ -969,7 +1059,7 @@ ms{
                     other{"dlm {0} hari"}
                 }
                 past{
-                    other{"{0} hari yg lalu"}
+                    other{"{0} hari lalu"}
                 }
             }
         }
@@ -985,12 +1075,28 @@ ms{
                 "0"{"Jumaat ini"}
                 "1"{"Jumaat depan"}
             }
+            relativeTime{
+                future{
+                    other{"pada {0} Jumaat"}
+                }
+                past{
+                    other{"pada {0} Jumaat lalu"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"Jum lalu"}
                 "0"{"Jum ini"}
                 "1"{"Jum depan"}
+            }
+            relativeTime{
+                future{
+                    other{"pada {0} Jumaat"}
+                }
+                past{
+                    other{"pada {0} Jumaat lalu"}
+                }
             }
         }
         fri-short{
@@ -999,15 +1105,26 @@ ms{
                 "0"{"Jum ini"}
                 "1"{"Jum depan"}
             }
+            relativeTime{
+                future{
+                    other{"pada {0} Jumaat"}
+                }
+                past{
+                    other{"pada {0} Jumaat lalu"}
+                }
+            }
         }
         hour{
             dn{"Jam"}
+            relative{
+                "0"{"jam ini"}
+            }
             relativeTime{
                 future{
                     other{"dalam {0} jam"}
                 }
                 past{
-                    other{"{0} jam yang lalu"}
+                    other{"{0} jam lalu"}
                 }
             }
         }
@@ -1018,7 +1135,7 @@ ms{
                     other{"dlm {0} jam"}
                 }
                 past{
-                    other{"{0} jam yg lalu"}
+                    other{"{0} jam lalu"}
                 }
             }
         }
@@ -1029,18 +1146,21 @@ ms{
                     other{"dlm {0} jam"}
                 }
                 past{
-                    other{"{0} jam yg lalu"}
+                    other{"{0} jam lalu"}
                 }
             }
         }
         minute{
             dn{"Minit"}
+            relative{
+                "0"{"pada minit ini"}
+            }
             relativeTime{
                 future{
                     other{"dalam {0} minit"}
                 }
                 past{
-                    other{"{0} minit yang lalu"}
+                    other{"{0} minit lalu"}
                 }
             }
         }
@@ -1051,7 +1171,7 @@ ms{
                     other{"dlm {0} min"}
                 }
                 past{
-                    other{"{0} min yg lalu"}
+                    other{"{0} min lalu"}
                 }
             }
         }
@@ -1062,7 +1182,7 @@ ms{
                     other{"dlm {0} min"}
                 }
                 past{
-                    other{"{0} min yg lalu"}
+                    other{"{0} min lalu"}
                 }
             }
         }
@@ -1072,6 +1192,14 @@ ms{
                 "0"{"Isnin ini"}
                 "1"{"Isnin depan"}
             }
+            relativeTime{
+                future{
+                    other{"pada {0} Isnin"}
+                }
+                past{
+                    other{"pada {0} Isnin lalu"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -1079,12 +1207,28 @@ ms{
                 "0"{"Isn ini"}
                 "1"{"Isn depan"}
             }
+            relativeTime{
+                future{
+                    other{"pada {0} Isnin"}
+                }
+                past{
+                    other{"pada {0} Isnin lalu"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"Isn lalu"}
                 "0"{"Isn ini"}
                 "1"{"Isn depan"}
+            }
+            relativeTime{
+                future{
+                    other{"pada {0} Isnin"}
+                }
+                past{
+                    other{"pada {0} Isnin lalu"}
+                }
             }
         }
         month{
@@ -1112,7 +1256,7 @@ ms{
             }
             relativeTime{
                 future{
-                    other{"dalam {0} bln lalu"}
+                    other{"dlm {0} bln"}
                 }
                 past{
                     other{"{0} bulan lalu"}
@@ -1138,16 +1282,16 @@ ms{
         quarter{
             dn{"Suku Tahun"}
             relative{
-                "-1"{"suku lepas"}
-                "0"{"suku ini"}
-                "1"{"suku seterusnya"}
+                "-1"{"suku tahun lalu"}
+                "0"{"suku tahun ini"}
+                "1"{"suku tahun seterusnya"}
             }
             relativeTime{
                 future{
-                    other{"dalam {0} suku"}
+                    other{"dalam {0} suku tahun"}
                 }
                 past{
-                    other{"{0} suku lalu"}
+                    other{"{0} suku tahun lalu"}
                 }
             }
         }
@@ -1160,10 +1304,10 @@ ms{
             }
             relativeTime{
                 future{
-                    other{"dlm {0} suku"}
+                    other{"dlm {0} suku tahun"}
                 }
                 past{
-                    other{"{0} suku lalu"}
+                    other{"{0} suku tahun lalu"}
                 }
             }
         }
@@ -1176,10 +1320,10 @@ ms{
             }
             relativeTime{
                 future{
-                    other{"dlm {0} suku"}
+                    other{"dlm {0} suku tahun"}
                 }
                 past{
-                    other{"{0} suku lalu"}
+                    other{"{0} suku tahun lalu"}
                 }
             }
         }
@@ -1189,6 +1333,14 @@ ms{
                 "0"{"Sabtu ini"}
                 "1"{"Sabtu depan"}
             }
+            relativeTime{
+                future{
+                    other{"pada {0} Sabtu"}
+                }
+                past{
+                    other{"pada {0} Sabtu lalu"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1196,12 +1348,28 @@ ms{
                 "0"{"Sab ini"}
                 "1"{"Sab depan"}
             }
+            relativeTime{
+                future{
+                    other{"pada {0} Sabtu"}
+                }
+                past{
+                    other{"pada {0} Sabtu lalu"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"Sab lalu"}
                 "0"{"Sab ini"}
                 "1"{"Sab depan"}
+            }
+            relativeTime{
+                future{
+                    other{"pada {0} Sabtu"}
+                }
+                past{
+                    other{"pada {0} Sabtu lalu"}
+                }
             }
         }
         second{
@@ -1225,7 +1393,7 @@ ms{
                     other{"dlm {0} saat"}
                 }
                 past{
-                    other{"{0} saat yg lalu"}
+                    other{"{0} saat lalu"}
                 }
             }
         }
@@ -1236,7 +1404,7 @@ ms{
                     other{"dlm {0} saat"}
                 }
                 past{
-                    other{"{0} saat yg lalu"}
+                    other{"{0} saat lalu"}
                 }
             }
         }
@@ -1246,12 +1414,28 @@ ms{
                 "0"{"Ahad ini"}
                 "1"{"Ahad depan"}
             }
+            relativeTime{
+                future{
+                    other{"pada {0} Ahad"}
+                }
+                past{
+                    other{"pada {0} Ahad lalu"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"Ahd lalu"}
                 "0"{"Ahd ini"}
                 "1"{"Ahd depan"}
+            }
+            relativeTime{
+                future{
+                    other{"pada {0} Ahad"}
+                }
+                past{
+                    other{"pada {0} Ahad lalu"}
+                }
             }
         }
         sun-short{
@@ -1260,12 +1444,28 @@ ms{
                 "0"{"Aha ini"}
                 "1"{"Aha depan"}
             }
+            relativeTime{
+                future{
+                    other{"pada {0} Ahad"}
+                }
+                past{
+                    other{"pada {0} Ahad lalu"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"Khamis lalu"}
                 "0"{"Khamis ini"}
                 "1"{"Khamis depan"}
+            }
+            relativeTime{
+                future{
+                    other{"pada {0} Khamis"}
+                }
+                past{
+                    other{"pada {0} Khamis lalu"}
+                }
             }
         }
         thu-narrow{
@@ -1274,12 +1474,28 @@ ms{
                 "0"{"Kha ini"}
                 "1"{"Kha depan"}
             }
+            relativeTime{
+                future{
+                    other{"pada {0} Khamis"}
+                }
+                past{
+                    other{"pada {0} Khamis lalu"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"Kha lalu"}
                 "0"{"Kha ini"}
                 "1"{"Kha depan"}
+            }
+            relativeTime{
+                future{
+                    other{"pada {0} Khamis"}
+                }
+                past{
+                    other{"pada {0} Khamis lalu"}
+                }
             }
         }
         tue{
@@ -1288,12 +1504,28 @@ ms{
                 "0"{"Selasa ini"}
                 "1"{"Selasa depan"}
             }
+            relativeTime{
+                future{
+                    other{"pada {0} Selasa"}
+                }
+                past{
+                    other{"pada {0} Selasa lalu"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"Sel lalu"}
                 "0"{"Sel ini"}
                 "1"{"Sel depan"}
+            }
+            relativeTime{
+                future{
+                    other{"pada {0} Selasa"}
+                }
+                past{
+                    other{"pada {0} Selasa lalu"}
+                }
             }
         }
         tue-short{
@@ -1302,12 +1534,28 @@ ms{
                 "0"{"Sel ini"}
                 "1"{"Sel depan"}
             }
+            relativeTime{
+                future{
+                    other{"pada {0} Selasa"}
+                }
+                past{
+                    other{"pada {0} Selasa lalu"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"Rabu lalu"}
                 "0"{"Rabu ini"}
                 "1"{"Rabu depan"}
+            }
+            relativeTime{
+                future{
+                    other{"pada {0} Rabu"}
+                }
+                past{
+                    other{"pada {0} Rabu lalu"}
+                }
             }
         }
         wed-narrow{
@@ -1316,6 +1564,14 @@ ms{
                 "0"{"Rab ini"}
                 "1"{"Rab depan"}
             }
+            relativeTime{
+                future{
+                    other{"pada {0} Rabu"}
+                }
+                past{
+                    other{"pada {0} Rabu lalu"}
+                }
+            }
         }
         wed-short{
             relative{
@@ -1323,14 +1579,23 @@ ms{
                 "0"{"Rab ini"}
                 "1"{"Rab depan"}
             }
+            relativeTime{
+                future{
+                    other{"pada {0} Rabu"}
+                }
+                past{
+                    other{"pada {0} Rabu lalu"}
+                }
+            }
         }
         week{
             dn{"Minggu"}
             relative{
-                "-1"{"minggu lepas"}
+                "-1"{"minggu lalu"}
                 "0"{"minggu ini"}
                 "1"{"minggu depan"}
             }
+            relativePeriod{"minggu ke-{0}"}
             relativeTime{
                 future{
                     other{"dalam {0} minggu"}
@@ -1347,6 +1612,7 @@ ms{
                 "0"{"mng ini"}
                 "1"{"mng depan"}
             }
+            relativePeriod{"minggu ke-{0}"}
             relativeTime{
                 future{
                     other{"dlm {0} mgu"}
@@ -1363,12 +1629,13 @@ ms{
                 "0"{"mng ini"}
                 "1"{"mng depan"}
             }
+            relativePeriod{"minggu ke-{0}"}
             relativeTime{
                 future{
                     other{"dlm {0} mgu"}
                 }
                 past{
-                    other{"{0} mng lalu"}
+                    other{"{0} mgu lalu"}
                 }
             }
         }
@@ -1378,7 +1645,7 @@ ms{
         year{
             dn{"Tahun"}
             relative{
-                "-1"{"tahun lepas"}
+                "-1"{"tahun lalu"}
                 "0"{"tahun ini"}
                 "1"{"tahun depan"}
             }
@@ -1434,6 +1701,12 @@ ms{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-short{
+            2{"{0} dan {1}"}
+            end{"{0} dan {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         unit{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
@@ -1447,8 +1720,8 @@ ms{
             start{"{0} {1}"}
         }
         unit-short{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
+            2{"{0} dan {1}"}
+            end{"{0} dan {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
@@ -1457,17 +1730,5 @@ ms{
         UK{"UK"}
         US{"AS"}
         metric{"Metrik"}
-    }
-    transformNames{
-        BGN{"BGN"}
-        Numeric{"Bernombor"}
-        Tone{"Nada"}
-        UNGEGN{"UNGEGN"}
-        x-Accents{"Aksen"}
-        x-Fullwidth{"Kelebaran penuh"}
-        x-Halfwidth{"Kelebaran separa"}
-        x-Jamo{"Jamo"}
-        x-Pinyin{"Pinyin"}
-        x-Publishing{"Penerbitan"}
     }
 }

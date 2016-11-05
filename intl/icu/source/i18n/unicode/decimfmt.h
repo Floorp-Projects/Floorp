@@ -1,6 +1,8 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ********************************************************************************
-*   Copyright (C) 1997-2015, International Business Machines
+*   Copyright (C) 1997-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 *
@@ -54,7 +56,6 @@
 U_NAMESPACE_BEGIN
 
 class DigitList;
-class ChoiceFormat;
 class CurrencyPluralInfo;
 class Hashtable;
 class UnicodeSet;
@@ -808,7 +809,7 @@ public:
     virtual int32_t getAttribute( UNumberFormatAttribute attr,
                                   UErrorCode &status) const;
 
-    
+
     /**
      * Set whether or not grouping will be used in this format.
      * @param newValue    True, grouping will be used in this format.
@@ -832,7 +833,7 @@ public:
      * @param value The UDisplayContext value to set.
      * @param status Input/output status. If at entry this indicates a failure
      *               status, the function will do nothing; otherwise this will be
-     *               updated with any new status from the function. 
+     *               updated with any new status from the function.
      * @stable ICU 53
      */
     virtual void setContext(UDisplayContext value, UErrorCode& status);
@@ -969,7 +970,7 @@ public:
      *                  Can be NULL.
      * @param status    Output param filled with success/failure status.
      * @return          Reference to 'appendTo' parameter.
-     * @stable 4.4
+     * @stable ICU 4.4
      */
     virtual UnicodeString& format(double number,
                                   UnicodeString& appendTo,
@@ -1018,7 +1019,7 @@ public:
      *                  Can be NULL.
      * @param status    Output param filled with success/failure status.
      * @return          Reference to 'appendTo' parameter.
-     * @stable 4.4
+     * @stable ICU 4.4
      */
     virtual UnicodeString& format(int32_t number,
                                   UnicodeString& appendTo,
@@ -1067,7 +1068,7 @@ public:
      *                  Can be NULL.
      * @param status    Output param filled with success/failure status.
      * @return          Reference to 'appendTo' parameter.
-     * @stable 4.4
+     * @stable ICU 4.4
      */
     virtual UnicodeString& format(int64_t number,
                                   UnicodeString& appendTo,
@@ -1088,9 +1089,9 @@ public:
      *                  Can be NULL.
      * @param status    Output param filled with success/failure status.
      * @return          Reference to 'appendTo' parameter.
-     * @stable 4.4
+     * @stable ICU 4.4
      */
-    virtual UnicodeString& format(const StringPiece &number,
+    virtual UnicodeString& format(StringPiece number,
                                   UnicodeString& appendTo,
                                   FieldPositionIterator* posIter,
                                   UErrorCode& status) const;
@@ -1674,6 +1675,9 @@ public:
      */
     int32_t getMinimumGroupingDigits() const;
 
+#endif  /* U_HIDE_INTERNAL_API */
+
+	/* Cannot use #ifndef U_HIDE_INTERNAL_API for the following draft method since it is virtual. */
     /**
      * Sets the minimum grouping digits. Setting to a value less than or
      * equal to 1 turns off minimum grouping digits.
@@ -1684,7 +1688,6 @@ public:
      */
     virtual void setMinimumGroupingDigits(int32_t newValue);
 
-#endif  /* U_HIDE_INTERNAL_API */
 
     /**
      * Allows you to get the behavior of the decimal separator with integers.
@@ -1716,7 +1719,7 @@ public:
 
     /**
      * Allows you to set the behavior of the pattern decimal mark.
-     * 
+     *
      * if TRUE, the input must have a decimal mark if one was specified in the pattern. When
      * FALSE the decimal mark may be omitted from the input.
      *
@@ -1970,8 +1973,8 @@ public:
     /**
      * Sets the <tt>Currency Context</tt> object used to display currency.
      * This takes effect immediately, if this format is a
-     * currency format.  
-     * @param currencyContext new currency context object to use.  
+     * currency format.
+     * @param currencyContext new currency context object to use.
      * @stable ICU 54
      */
     void setCurrencyUsage(UCurrencyUsage newUsage, UErrorCode* ec);
@@ -2100,6 +2103,8 @@ private:
                    DecimalFormatSymbols*    symbolsToAdopt = 0
                    );
 
+    void handleCurrencySignInPattern(UErrorCode& status);
+
     void parse(const UnicodeString& text,
                Formattable& result,
                ParsePosition& pos,
@@ -2192,7 +2197,7 @@ private:
     // get the currency rounding with respect to currency usage
     double getCurrencyRounding(const UChar* currency,
                                UErrorCode* ec) const;
-	
+
     // get the currency fraction with respect to currency usage
     int getCurrencyFractionDigits(const UChar* currency,
                                   UErrorCode* ec) const;
@@ -2247,7 +2252,7 @@ private:
 
     // Decimal Format Static Sets singleton.
     const DecimalFormatStaticSets *fStaticSets;
-	
+
 protected:
 
 #ifndef U_HIDE_INTERNAL_API

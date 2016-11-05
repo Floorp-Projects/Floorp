@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/bg.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 bg{
     Currencies{
         ADP{
@@ -192,9 +186,13 @@ bg{
             "BYB",
             "Беларуска нова рубла (1994–1999)",
         }
+        BYN{
+            "BYN",
+            "Беларуска рубла",
+        }
         BYR{
             "BYR",
-            "Беларуска рубла",
+            "Беларуска рубла (2000–2016)",
         }
         BZD{
             "BZD",
@@ -1074,61 +1072,102 @@ bg{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"ARS"}
         AUD{"AUD"}
+        BAM{"KM"}
         BBD{"BBD"}
         BDT{"BDT"}
         BMD{"BMD"}
         BND{"BND"}
+        BOB{"Bs"}
         BRL{"BRL"}
         BSD{"BSD"}
-        BYR{"BYR"}
+        BWP{"P"}
+        BYN{"BYN"}
         BZD{"BZD"}
         CAD{"CAD"}
         CLP{"CLP"}
         CNY{"CNY"}
         COP{"COP"}
         CRC{"CRC"}
+        CUC{"$"}
         CUP{"CUP"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"DOP"}
+        EGP{"E£"}
         EUR{"€"}
         FJD{"FJD"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"GIP"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"GYD"}
         HKD{"HKD"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"ILS"}
         INR{"INR"}
+        ISK{"kr"}
         JMD{"JMD"}
         JPY{"¥"}
         KHR{"KHR"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"KRW"}
         KYD{"KYD"}
         KZT{"KZT"}
         LAK{"LAK"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"LRD"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"MNT"}
+        MUR{"Rs"}
         MXN{"MXN"}
+        MYR{"RM"}
         NAD{"NAD"}
         NGN{"NGN"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"NZD"}
         PHP{"PHP"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"PYG"}
+        RUB{"₽"}
+        RWF{"RF"}
         SBD{"SBD"}
+        SEK{"kr"}
         SGD{"SGD"}
+        SHP{"£"}
         SRD{"SRD"}
         SSP{"SSP"}
+        STD{"Db"}
+        SYP{"£"}
         THB{"฿"}
+        TOP{"T$"}
         TRY{"TRY"}
         TTD{"TTD"}
         TWD{"TWD"}
         UAH{"UAH"}
         USD{"$"}
         UYU{"UYU"}
+        VEF{"Bs"}
         VND{"VND"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
     }
     Currencies%variant{
         GEL{"₾"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1295,9 +1334,13 @@ bg{
             one{"беларуска нова рубла (1994–1999)"}
             other{"беларуски нови рубли (1994–1999)"}
         }
-        BYR{
+        BYN{
             one{"беларуска рубла"}
             other{"беларуски рубли"}
+        }
+        BYR{
+            one{"беларуска рубла (2000–2016)"}
+            other{"беларуски рубли (2000–2016)"}
         }
         BZD{
             one{"белизийски долар"}
@@ -2052,5 +2095,5 @@ bg{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.30.6"}
 }

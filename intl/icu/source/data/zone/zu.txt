@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/zu.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 zu{
-    Version{"2.1.19.14"}
+    Version{"2.1.29.22"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"i-Abidjan"}
@@ -308,6 +302,9 @@ zu{
         }
         "America:El_Salvador"{
             ec{"i-El Salvador"}
+        }
+        "America:Fort_Nelson"{
+            ec{"i-Fort Nelson"}
         }
         "America:Fortaleza"{
             ec{"i-Fortaleza"}
@@ -672,6 +669,9 @@ zu{
         "Asia:Bangkok"{
             ec{"i-Bangkok"}
         }
+        "Asia:Barnaul"{
+            ec{"i-Barnaul"}
+        }
         "Asia:Beirut"{
             ec{"i-Beirut"}
         }
@@ -849,6 +849,9 @@ zu{
         "Asia:Tokyo"{
             ec{"i-Tokyo"}
         }
+        "Asia:Tomsk"{
+            ec{"i-Tomsk"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"i-Ulaanbaatar"}
         }
@@ -948,6 +951,9 @@ zu{
         "Europe:Andorra"{
             ec{"i-Andorra"}
         }
+        "Europe:Astrakhan"{
+            ec{"i-Astrakhan"}
+        }
         "Europe:Athens"{
             ec{"i-Athens"}
         }
@@ -1005,6 +1011,9 @@ zu{
         }
         "Europe:Kiev"{
             ec{"i-Kiev"}
+        }
+        "Europe:Kirov"{
+            ec{"i-Kirov"}
         }
         "Europe:Lisbon"{
             ec{"i-Lisbon"}
@@ -1081,6 +1090,9 @@ zu{
         }
         "Europe:Tirane"{
             ec{"i-Tirane"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"i-Ulyanovsk"}
         }
         "Europe:Uzhgorod"{
             ec{"i-Uzhhorod"}
@@ -1263,7 +1275,7 @@ zu{
             ec{"i-Wallis"}
         }
         "meta:Afghanistan"{
-            ls{"esase-Afghanistan Time"}
+            ls{"Isikhathi sase-Afghanistan"}
         }
         "meta:Africa_Central"{
             ls{"Isikhathi sase-Central Africa"}
@@ -1281,8 +1293,8 @@ zu{
         }
         "meta:Alaska"{
             ld{"Isikhathi sase-Alaska sasemini"}
-            lg{"isikhathi sase-Alaska"}
-            ls{"isikhathi sase-Alaska esijwayelekile"}
+            lg{"Isikhathi sase-Alaska"}
+            ls{"Isikhathi sase-Alaska esijwayelekile"}
         }
         "meta:Amazon"{
             ld{"Isikhathi sase-Amazon sasehlobo"}
@@ -1290,24 +1302,24 @@ zu{
             ls{"Isikhathi sase-Amazon esijwayelekile"}
         }
         "meta:America_Central"{
-            ld{"isikhathi sase-North American Central sasemini"}
-            lg{"isikhathi sase-North American Central"}
-            ls{"isikhathi sase-North American Central esijwayelekile"}
+            ld{"Isikhathi sase-North American Central sasemini"}
+            lg{"Isikhathi sase-North American Central"}
+            ls{"Isikhathi sase-North American Central esijwayelekile"}
         }
         "meta:America_Eastern"{
-            ld{"isikhathi sase-North American East sasemini"}
-            lg{"isikhathi sase-North American East"}
-            ls{"isikhathi sase-North American East esijwayelekile"}
+            ld{"Isikhathi sase-North American East sasemini"}
+            lg{"Isikhathi sase-North American East"}
+            ls{"Isikhathi sase-North American East esijwayelekile"}
         }
         "meta:America_Mountain"{
-            ld{"isikhathi sase-North American Mountain sasemini"}
-            lg{"isikhathi sase-North American Mountain"}
-            ls{"isikhathi sase-North American Mountain esijwayelekile"}
+            ld{"Isikhathi sase-North American Mountain sasemini"}
+            lg{"Isikhathi sase-North American Mountain"}
+            ls{"Isikhathi sase-North American Mountain esijwayelekile"}
         }
         "meta:America_Pacific"{
-            ld{"isikhathi sase-North American Pacific sasemini"}
-            lg{"isikhathi sase-North American Pacific"}
-            ls{"isikhathi sase-North American Pacific esijwayelekile"}
+            ld{"Isikhathi sase-North American Pacific sasemini"}
+            lg{"Isikhathi sase-North American Pacific"}
+            ls{"Isikhathi sase-North American Pacific esijwayelekile"}
         }
         "meta:Anadyr"{
             ld{"esase-Anadyr Summer Time"}
@@ -1315,9 +1327,9 @@ zu{
             ls{"esase-Anadyr Standard Time"}
         }
         "meta:Apia"{
-            ld{"esase-Apia Daylight Time"}
-            lg{"esase-Apia Time"}
-            ls{"esase-Apia Standard Time"}
+            ld{"Isikhathi sase-Apia sasemini"}
+            lg{"Isikhathi sase-Apia"}
+            ls{"Isikhathi sase-Apia esivamile"}
         }
         "meta:Arabian"{
             ld{"Isikhathi semini sase-Arabian"}
@@ -1340,14 +1352,14 @@ zu{
             ls{"Isikhathi esezingeni sase-Armenia"}
         }
         "meta:Atlantic"{
-            ld{"isikhathi sase-Atlantic sasemini"}
-            lg{"isikhathi sase-Atlantic"}
-            ls{"isikhathi sase-Atlantic esijwayelekile"}
+            ld{"Isikhathi sase-Atlantic sasemini"}
+            lg{"Isikhathi sase-Atlantic"}
+            ls{"Isikhathi sase-Atlantic esijwayelekile"}
         }
         "meta:Australia_Central"{
-            ld{"esase-Austrilian Central Daylight Time"}
-            lg{"esase-Central Australia Time"}
-            ls{"esase-Austrilian Central Standard Time"}
+            ld{"Isikhathi sase-Australian Central sasemini"}
+            lg{"Isikhathi sase-Central Australia"}
+            ls{"Isikhathi sase-Australian Central esivamile"}
         }
         "meta:Australia_CentralWestern"{
             ld{"Isikhathi sasemini sase-Australian Central West"}
@@ -1360,9 +1372,9 @@ zu{
             ls{"Isikhathi esivamile sase-Australian East"}
         }
         "meta:Australia_Western"{
-            ld{"I-Australian Western Daylight Time"}
+            ld{"Isikhathi sase-Australian Western sasemini"}
             lg{"Isikhathi sase-Western Australia"}
-            ls{"I-Australian Western Standard Time"}
+            ls{"Isikhathi sase-Australian Western esivamile"}
         }
         "meta:Azerbaijan"{
             ld{"Isikhathi sehlobo sase-Azerbaijan"}
@@ -1375,12 +1387,12 @@ zu{
             ls{"Isikhathi esijwayelekile sase-Azores"}
         }
         "meta:Bangladesh"{
-            ld{"esase-Bangladesh Summer Time"}
-            lg{"esase-Bangladesh Time"}
-            ls{"esase-Bangladesh Standard Time"}
+            ld{"Isikhathi sase-Bangladesh sasehlobo"}
+            lg{"Isikhathi sase-Bangladesh"}
+            ls{"Isikhathi sase-Bangladesh esivamile"}
         }
         "meta:Bhutan"{
-            ls{"esase-Bhutan Time"}
+            ls{"Isikhathi sase-Bhutan"}
         }
         "meta:Bolivia"{
             ls{"Isikhathi sase-Bolivia"}
@@ -1402,7 +1414,7 @@ zu{
             ls{"Isikhathi esijwayelekile sase-Chamorro"}
         }
         "meta:Chatham"{
-            ld{"Isikhathi semini sase-Chatham"}
+            ld{"Isikhathi sasemini sase-Chatham"}
             lg{"Isikhathi sase-Chatham"}
             ls{"Isikhathi esivamile sase-Chatham"}
         }
@@ -1417,7 +1429,7 @@ zu{
             ls{"Isikhathi esivamile sase-China"}
         }
         "meta:Choibalsan"{
-            ld{"esase-Choibalsan Summer Time"}
+            ld{"Isikhathi sehlobo e-Choibalsan"}
             lg{"Isikhathi sase-Choibalsan"}
             ls{"Isikhathi Esimisiwe sase-Choibalsan"}
         }
@@ -1438,9 +1450,9 @@ zu{
             ls{"Isikhathi esivamile sase-Cook Islands"}
         }
         "meta:Cuba"{
-            ld{"isikhathi sase-Cuba sasemini"}
-            lg{"isikhathi sase-Cuba"}
-            ls{"isikhathi sase-Cuba esijwayelekile"}
+            ld{"Isikhathi sase-Cuba sasemini"}
+            lg{"Isikhathi sase-Cuba"}
+            ls{"Isikhathi sase-Cuba esijwayelekile"}
         }
         "meta:Davis"{
             ls{"Isikhathi sase-Davis"}
@@ -1491,7 +1503,7 @@ zu{
             ls{"Isikhathi sase-French Guiana"}
         }
         "meta:French_Southern"{
-            ls{"Isikhathi sase-French Southern and Antarctic"}
+            ls{"Isikhathi sase-French Southern nase-Antarctic"}
         }
         "meta:GMT"{
             ls{"Isikhathi sase-Greenwich Mean"}
@@ -1511,14 +1523,14 @@ zu{
             ls{"Isikhathi sase-Gilbert Islands"}
         }
         "meta:Greenland_Eastern"{
-            ld{"isikhathi sase-East Greenland sasemini"}
-            lg{"isikhathi sase-East Greenland"}
-            ls{"isikhathi sase-East Greenland esijwayelekile"}
+            ld{"Isikhathi sase-East Greenland sasemini"}
+            lg{"Isikhathi sase-East Greenland"}
+            ls{"Isikhathi sase-East Greenland esijwayelekile"}
         }
         "meta:Greenland_Western"{
-            ld{"isikhathi sase-West Greenland sasemini"}
-            lg{"isikhathi sase-West Greenland"}
-            ls{"isikhathi sase-West Greenland esijwayelekile"}
+            ld{"Isikhathi sase-West Greenland sasehlobo"}
+            lg{"Isikhathi sase-West Greenland"}
+            ls{"Isikhathi sase-West Greenland esijwayelekile"}
         }
         "meta:Gulf"{
             ls{"Isikhathi esivamile sase-Gulf"}
@@ -1527,9 +1539,9 @@ zu{
             ls{"Isikhathi sase-Guyana"}
         }
         "meta:Hawaii_Aleutian"{
-            ld{"isikhathi sase-Hawaii-Aleutia sasemini"}
-            lg{"isikhathi sase-Hawaii-Aleutia"}
-            ls{"isikhathi sase-Hawaii-Aleutia esijwayelekile"}
+            ld{"Isikhathi sase-Hawaii-Aleutia sasemini"}
+            lg{"Isikhathi sase-Hawaii-Aleutia"}
+            ls{"Isikhathi sase-Hawaii-Aleutia esijwayelekile"}
         }
         "meta:Hong_Kong"{
             ld{"Isikhathi sehlobo sase-Hong Kong"}
@@ -1537,12 +1549,12 @@ zu{
             ls{"Isikhathi esivamile sase-Hong Kong"}
         }
         "meta:Hovd"{
-            ld{"esase-Hovd Summer Time"}
+            ld{"Isikhathi sehlobo e-Hovd"}
             lg{"Isikhathi sase-Hovd"}
             ls{"Isikhathi Esimisiwe sase-Hovd"}
         }
         "meta:India"{
-            ls{"esase-India Standard Time"}
+            ls{"Isikhathi sase-India esivamile"}
         }
         "meta:Indian_Ocean"{
             ls{"Isikhathi sase-Indian Ocean"}
@@ -1560,17 +1572,17 @@ zu{
             ls{"Isikhathi sase-Western Indonesia"}
         }
         "meta:Iran"{
-            ld{"esase-Iran Daylight Time"}
-            lg{"esase-Iran Time"}
-            ls{"esase-Iran Standard Time"}
+            ld{"Isikhathi sase-Iran sasemini"}
+            lg{"Isikhathi sase-Iran"}
+            ls{"Isikhathi sase-Iran esivamile"}
         }
         "meta:Irkutsk"{
-            ld{"esase-Irkutsk Summer Time"}
+            ld{"Isikhathi sasehlobo e-Irkutsk"}
             lg{"Isikhathi sase-Irkutsk"}
             ls{"Isikhathi Esimisiwe sase-Irkutsk"}
         }
         "meta:Israel"{
-            ld{"Isikhathi sasemini sase-Israel"}
+            ld{"Isikhathi sasemini sakwa-Israel"}
             lg{"Isikhathi sase-Israel"}
             ls{"Isikhathi esivamile sase-Israel"}
         }
@@ -1599,7 +1611,7 @@ zu{
             ls{"Isikhathi sase-Kosrae"}
         }
         "meta:Krasnoyarsk"{
-            ld{"Isikhathi sase-Krasnoyarsk sasehlobo"}
+            ld{"Isikhathi sasehlobo e-Krasnoyarsk"}
             lg{"Isikhathi sase-Krasnoyarsk"}
             ls{"Isikhathi Esimisiwe sase-Krasnoyarsk"}
         }
@@ -1618,7 +1630,7 @@ zu{
             ls{"Isikhathi sase-Macquarie Island"}
         }
         "meta:Magadan"{
-            ld{"esase-Magadan Summer Time"}
+            ld{"Isikhathi sasehlobo e-Magadan"}
             lg{"Isikhathi sase-Magadan"}
             ls{"Isikhathi Esimisiwe sase-Magadan"}
         }
@@ -1626,7 +1638,7 @@ zu{
             ls{"Isikhathi sase-Malaysia"}
         }
         "meta:Maldives"{
-            ls{"esase-Maldives Time"}
+            ls{"Isikhathi sase-Maldives"}
         }
         "meta:Marquesas"{
             ls{"Isikhathi sase-Marquesas"}
@@ -1643,24 +1655,24 @@ zu{
             ls{"Isikhathi sase-Mawson"}
         }
         "meta:Mexico_Northwest"{
-            ld{"isikhathi sase-Northwest Mexico sasemini"}
-            lg{"isikhathi sase-Northwest Mexico"}
-            ls{"isikhathi sase-Northwest Mexico esijwayelekile"}
+            ld{"Isikhathi sase-Northwest Mexico sasemini"}
+            lg{"Isikhathi sase-Northwest Mexico"}
+            ls{"Isikhathi sase-Northwest Mexico esijwayelekile"}
         }
         "meta:Mexico_Pacific"{
-            ld{"isikhathi sase-Mexican Pacific sasemini"}
-            lg{"isikhathi sase-Mexican Pacific"}
-            ls{"isikhathi sase-Mexican Pacific esijwayelekile"}
+            ld{"Isikhathi sase-Mexican Pacific sasemini"}
+            lg{"Isikhathi sase-Mexican Pacific"}
+            ls{"Isikhathi sase-Mexican Pacific esijwayelekile"}
         }
         "meta:Mongolia"{
-            ld{"esase-Ulan Bator Summer Time"}
+            ld{"Isikhathi sehlobo e-Ulan Bator"}
             lg{"Isikhathi sase-Ulan Bator"}
             ls{"Isikhathi Esimisiwe sase-Ulan Bator"}
         }
         "meta:Moscow"{
-            ld{"esase-Moscow Summer Time"}
-            lg{"esase-Moscow Time"}
-            ls{"esase-Moscow Standard Time"}
+            ld{"Isikhathi sasehlobo e-Moscow"}
+            lg{"Isikhathi sase-Moscow"}
+            ls{"Isikhathi sase-Moscow esijwayelekile"}
         }
         "meta:Myanmar"{
             ls{"Isikhathi sase-Myanmar"}
@@ -1669,7 +1681,7 @@ zu{
             ls{"Isikhathi sase-Nauru"}
         }
         "meta:Nepal"{
-            ls{"esase-Nepal Time"}
+            ls{"Isikhathi sase-Nepal"}
         }
         "meta:New_Caledonia"{
             ld{"Isikhathi sase-New Caledonia sasehlobo"}
@@ -1682,9 +1694,9 @@ zu{
             ls{"Isikhathi esivamile sase-New Zealand"}
         }
         "meta:Newfoundland"{
-            ld{"isikhathi sase-Newfoundland sasemini"}
-            lg{"isikhathi sase-Newfoundland"}
-            ls{"isikhathi sase-Newfoundland esijwayelekile"}
+            ld{"Isikhathi sase-Newfoundland sasemini"}
+            lg{"Isikhathi sase-Newfoundland"}
+            ls{"Isikhathi sase-Newfoundland esijwayelekile"}
         }
         "meta:Niue"{
             ls{"Isikhathi sase-Niue"}
@@ -1698,19 +1710,19 @@ zu{
             ls{"Isikhathi sase-Fernando de Noronha esijwayelekile"}
         }
         "meta:Novosibirsk"{
-            ld{"esase-Novosibirsk Summer Time"}
+            ld{"Isikhathi sasehlobo sase-Novosibirsk"}
             lg{"Isikhathi sase-Novosibirsk"}
             ls{"Isikhathi Esimisiwe sase-Novosibirsk"}
         }
         "meta:Omsk"{
-            ld{"esase-Omsk Summer Time"}
+            ld{"Isikhathi sasehlobo sase-Omsk"}
             lg{"Isikhathi sase-Omsk"}
             ls{"Isikhathi Esimisiwe sase-Omsk"}
         }
         "meta:Pakistan"{
-            ld{"esase-Pakistan Summer Time"}
-            lg{"esase-Pakistan Time"}
-            ls{"esase-Pakistan Standard Time"}
+            ld{"Isikhathi sase-Pakistan sasehlobo"}
+            lg{"Isikhathi sase-Pakistan"}
+            ls{"Isikhathi sase-Pakistan esivamile"}
         }
         "meta:Palau"{
             ls{"Isikhathi sase-Palau"}
@@ -1737,15 +1749,18 @@ zu{
             ls{"Isikhathi sase-Phoenix Islands"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"isikhathi sase-Saint Pierre nase-Miquelon sasemini"}
-            lg{"isikhathi sase-Saint Pierre nase-Miquelon"}
-            ls{"isikhathi sase-Saint Pierre nase-Miquelon esijwayelekile"}
+            ld{"Isikhathi sase-Saint Pierre nase-Miquelon sasemini"}
+            lg{"Isikhathi sase-Saint Pierre nase-Miquelon"}
+            ls{"Iikhathi sase-Saint Pierre nase-Miquelon esijwayelekile"}
         }
         "meta:Pitcairn"{
             ls{"Isikhathi sase-Pitcairn"}
         }
         "meta:Ponape"{
             ls{"Isikhathi sase-Ponape"}
+        }
+        "meta:Pyongyang"{
+            ls{"Isikhathi sase-Pyongyang"}
         }
         "meta:Reunion"{
             ls{"Isikhathi sase-Reunion"}
@@ -1754,7 +1769,7 @@ zu{
             ls{"Isikhathi sase-Rothera"}
         }
         "meta:Sakhalin"{
-            ld{"esase-Sakhalin Summer Time"}
+            ld{"Isikhathi sasehlobo e-Sakhalin"}
             lg{"Isikhathi sase-Sakhalin"}
             ls{"Isikhathi Esimisiwe sase-Sakhalin"}
         }
@@ -1835,12 +1850,12 @@ zu{
             ls{"Isikhathi sase-Venezuela"}
         }
         "meta:Vladivostok"{
-            ld{"esase-Vladivostok Summer Time"}
+            ld{"Isikhathi sasehlobo e-Vladivostok"}
             lg{"Isikhathi sase-Vladivostok"}
             ls{"Isikhathi Esimisiwe sase-Vladivostok"}
         }
         "meta:Volgograd"{
-            ld{"esase-Volgograd Summer Time"}
+            ld{"Isikhathi sase-Volgograd sasehlobo"}
             lg{"Isikhathi sase-Volgograd"}
             ls{"Isikhathi Esimisiwe sase-Volgograd"}
         }
@@ -1851,15 +1866,15 @@ zu{
             ls{"Isikhathi sase-Wake Island"}
         }
         "meta:Wallis"{
-            ls{"Isikhathi sase-Wallis and Futuna"}
+            ls{"Isikhathi sase-Wallis nase-Futuna"}
         }
         "meta:Yakutsk"{
-            ld{"esase-Yakutsk Summer Time"}
+            ld{"Isikhathi sasehlobo e-Yakutsk"}
             lg{"Isikhathi sase-Yakutsk"}
             ls{"Isikhathi Esimisiwe sase-Yakutsk"}
         }
         "meta:Yekaterinburg"{
-            ld{"esase-Yekaterinburg Summer Time"}
+            ld{"Isikhathi sasehlobo e-Yekaterinburg"}
             lg{"Isikhathi sase-Yekaterinburg"}
             ls{"Isikhathi Esimisiwe sase-Yekaterinburg"}
         }

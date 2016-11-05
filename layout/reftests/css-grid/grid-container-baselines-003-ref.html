@@ -52,7 +52,12 @@ span.i { font-size:12px; grid-column:2; }
   border: 1px solid;
   margin: 1px;
 }
-.slb { align-self:last-baseline; align-content:self-end; }
+/* don't clamp grid item automatic minimum size */
+* {
+  min-width: 0;
+  min-height: 0;
+}
+.slb { align-self:last baseline; align-content:self-end; }
 
 </style>
 </head>
@@ -60,20 +65,20 @@ span.i { font-size:12px; grid-column:2; }
 
 A<div class="ib">
   <div class="ib" style="height:120px; width:56px;"><span
-     class="a f" style="width:1em; padding-bottom:5px;">A<br>B</span>
+     class="a f" style="width:30px; padding-bottom:5px;">A<br>B</span>
   </div><span class="i a f" style="width:54px">C<br>D</span>
 </div></div>
 
 <div class="ib" style="width:180px;">
   <div class="ib" style="height:120px; width:56px;"><span
-     class="a f" style="width:1em; padding-top:5px; margin-top:7px">A<br>B</span>
+     class="a f" style="width:30px; padding-top:5px; margin-top:7px">A<br>B</span>
   </div><span class="i a f" style="width:54px">C<br>D</span><span
      class="a f" style="width:54px; padding-top:20px">E<br>F</span>
 </div>
 
 <div class="ib" style="width:180px;">
   <div class="ib" style="height:120px; width:56px;"><span
-     class="a" style="width:1em; margin-top:7px; padding-top:5px; padding-bottom:18px;">A<br>B</span>
+     class="a f" style="width:30px; margin-top:7px; padding-top:5px; padding-bottom:18px;">A<br>B</span>
   </div><span class="i a f" style="width:54px">C<br>D</span><span
      class="a f" style="width:54px; padding-top:20px">E<br>F</span>
 </div>
@@ -81,23 +86,23 @@ A<div class="ib">
 
 <div class="ib" style="width:200px;">
   <div class="ib" style="height:120px; width:76px; white-space:nowrap"><span
-     class="a" style="width:32px; margin-top:7px; padding-top:5px; padding-bottom:18px;">A<br>B</span><span
-     class="a" style="float:right; width:36px; margin-right:-2px; padding-bottom:22px; margin-top:-100px">A<br>B</span>
+     class="a f" style="width:30px; margin-top:7px; padding-top:5px; padding-bottom:18px;">A<br>B</span><span
+     class="a f" style="float:right; width:30px; position:relative; left:-4px; padding-bottom:22px; margin-top:-100px">A<br>B</span>
   </div><span class="i a f" style="width:54px">C<br>D</span><span
      class="a f" style="width:54px; padding-top:20px;">E<br>F</span>
 </div>
 
 <br>
 
-<x style="position:relative; top:-33px">A</x><div class="ib" style="width:200px">
+<x style="position:relative; top:-64px">A</x><div class="ib" style="width:200px;margin-top:32px">
   <div class="ib vl" style="height:70px; width:196px;">
-    <span class="a" style="display:block; padding-block-end:15px; height:-moz-min-content">A<br>B</span>
+    <span class="a" style="display:block; padding-block-end:15px; height:1px">A<br>B</span>
   </div>
 </div><div class="ib" style="width:200px">
   <div class="ib vl" style="height:70px; width:196px;">
-    <span class="a" style="display:block; padding-block-end:15px; width:148px; height:-moz-min-content">A<br>B</span>
+    <span class="a" style="display:block; padding-block-end:15px; width:148px; height:1px">A<br>B</span>
   </div>
-</div><div class="ib" style="width:200px">
+</div><div class="ib" style="width:200px;position:relative; top:-31px">
   <div class="ib vl" style="height:70px; width:196px;">
     <span class="a" style="display:block; height:-moz-min-content; padding-block-end:15px; width:148px; height:-moz-min-content">A<br>B</span>
   </div>

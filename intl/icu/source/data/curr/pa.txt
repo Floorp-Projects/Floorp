@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/pa.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 pa{
     Currencies{
         AED{
@@ -152,9 +146,13 @@ pa{
             "BWP",
             "ਬੋਟਸਵਾਨਾ ਪੁਲਾ",
         }
+        BYN{
+            "BYN",
+            "ਬੇਲਾਰੂਸੀ ਰੂਬਲ",
+        }
         BYR{
             "BYR",
-            "ਬੇਲਾਰੂਸੀ ਰੂਬਲ",
+            "ਬੇਲਾਰੂਸੀ ਰੂਬਲ (2000–2016)",
         }
         BZD{
             "BZD",
@@ -690,7 +688,7 @@ pa{
         }
         XAF{
             "FCFA",
-            "ਫ੍ਰੈਂਕ (CFA BEAC)",
+            "ਕੇਂਦਰੀ ਅਫ਼ਰੀਕੀ [CFA] ਫ੍ਰੈਂਕ",
         }
         XAG{
             "XAG",
@@ -762,7 +760,7 @@ pa{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYR{"р."}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -779,6 +777,7 @@ pa{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -993,9 +992,13 @@ pa{
             one{"ਬੋਟਸਵਾਨਾ ਪੁਲਾ"}
             other{"ਬੋਟਸਵਾਨਾ ਪੁਲਾ"}
         }
-        BYR{
+        BYN{
             one{"ਬੇਲਾਰੂਸੀ ਰੂਬਲ"}
             other{"ਬੇਲਾਰੂਸੀ ਰੂਬਲ"}
+        }
+        BYR{
+            one{"ਬੇਲਾਰੂਸੀ ਰੂਬਲ (2000–2016)"}
+            other{"ਬੇਲਾਰੂਸੀ ਰੂਬਲ (2000–2016)"}
         }
         BZD{
             one{"ਬੇਲੀਜ਼ ਡਾਲਰ"}
@@ -1526,8 +1529,8 @@ pa{
             other{"ਸਾਮੋਆਈ ਤਾਲਾ"}
         }
         XAF{
-            one{"ਫ੍ਰੈਂਕ (CFA BEAC)"}
-            other{"ਫ੍ਰੈਂਕ (CFA BEAC)"}
+            one{"ਕੇਂਦਰੀ ਅਫ਼ਰੀਕੀ [CFA] ਫ੍ਰੈਂਕ"}
+            other{"ਕੇਂਦਰੀ ਅਫ਼ਰੀਕੀ [CFA] ਫ੍ਰੈਂਕ"}
         }
         XAG{
             one{"ਚਾਂਦੀ ਦਾ ਟਰੌਏ ਔਂਸ"}
@@ -1550,8 +1553,8 @@ pa{
             other{"ਯੂਰਪੀ ਮੁਦਰਾ ਇਕਾਈ"}
         }
         XOF{
-            one{"ਫ੍ਰੈਂਕ (CFA BCEAO)"}
-            other{"ਫ੍ਰੈਂਕ (CFA BCEAO)"}
+            one{"ਪੱਛਮੀ ਅਫ਼ਰੀਕੀ (CFA) ਫ੍ਰੈਂਕ"}
+            other{"ਪੱਛਮੀ ਅਫ਼ਰੀਕੀ (CFA) ਫ੍ਰੈਂਕ"}
         }
         XPF{
             one{"ਫ੍ਰੈਂਕ (CFP)"}
@@ -1578,5 +1581,5 @@ pa{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.20.4"}
+    Version{"2.1.28.79"}
 }

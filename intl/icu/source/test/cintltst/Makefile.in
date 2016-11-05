@@ -1,6 +1,8 @@
+# Copyright (C) 2016 and later: Unicode, Inc. and others.
+# License & terms of use: http://www.unicode.org/copyright.html
 #******************************************************************************
 #
-#   Copyright (C) 1999-2015, International Business Machines
+#   Copyright (C) 1999-2016, International Business Machines
 #   Corporation and others.  All Rights Reserved.
 #
 #******************************************************************************
@@ -42,7 +44,7 @@ ccaltst.o ucnvseltst.o cctest.o ccapitst.o ccolltst.o encoll.o cconvtst.o ccurrt
 cdateintervalformattest.o cdattst.o cdetst.o cdtdptst.o cdtrgtst.o cestst.o cfintst.o \
 cformtst.o cfrtst.o cg7coll.o chashtst.o cintltst.o citertst.o cjaptst.o cloctst.o \
 cmsccoll.o cmsgtst.o cpluralrulestest.o cposxtst.o cldrtest.o \
-cnmdptst.o cnormtst.o cnumtst.o crestst.o creststn.o cturtst.o \
+cnmdptst.o cnormtst.o cnumtst.o crelativedateformattest.o crestst.o creststn.o cturtst.o \
 cucdapi.o cucdtst.o custrtst.o cstrcase.o cutiltst.o nucnvtst.o nccbtst.o bocu1tst.o \
 cbiditst.o cbididat.o eurocreg.o udatatst.o utf16tst.o utransts.o \
 ncnvfbts.o ncnvtst.o putiltst.o cstrtest.o udatpg_test.o utf8tst.o \
@@ -51,6 +53,7 @@ uenumtst.o utmstest.o currtest.o \
 idnatest.o nfsprep.o spreptst.o sprpdata.o \
 hpmufn.o tracetst.o reapits.o uregiontest.o ulistfmttest.o\
 utexttst.o ucsdetst.o spooftest.o \
+cbiditransformtst.o \
 cgendtst.o
 
 DEPS = $(OBJECTS:.o=.d)

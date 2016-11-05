@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/om_KE.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 om_KE{
-    Version{"2.1.19.14"}
+    Version{"2.1.27.99"}
     calendar{
         gregorian{
             DateTimePatterns{
@@ -24,6 +18,57 @@ om_KE{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            dayNames{
+                stand-alone{
+                    narrow{
+                        "D",
+                        "W",
+                        "Q",
+                        "R",
+                        "K",
+                        "J",
+                        "S",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "KD",
+                    "CE",
+                }
+                abbreviated%variant{
+                    "BCE",
+                    "KB",
+                }
+            }
+            monthNames{
+                stand-alone{
+                    narrow{
+                        "A",
+                        "G",
+                        "B",
+                        "E",
+                        "C",
+                        "W",
+                        "A",
+                        "H",
+                        "F",
+                        "O",
+                        "S",
+                        "M",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "K1",
+                        "K2",
+                        "K3",
+                        "K4",
+                    }
+                }
             }
         }
     }

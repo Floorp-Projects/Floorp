@@ -1,9 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
-*                                                                            *
-* Copyright (C) 2001-2014, International Business Machines                   *
-*                Corporation and others. All Rights Reserved.                *
-*                                                                            *
+* Copyright (C) 2001-2016, International Business Machines
+*                Corporation and others. All Rights Reserved.
 ******************************************************************************
 *   file name:  ucln_cmn.h
 *   encoding:   US-ASCII
@@ -41,6 +41,7 @@ typedef enum ECleanupCommonType {
     UCLN_COMMON_LOCALE,
     UCLN_COMMON_LOCALE_AVAILABLE,
     UCLN_COMMON_ULOC,
+    UCLN_COMMON_CURRENCY,
     UCLN_COMMON_LOADED_NORMALIZER2,
     UCLN_COMMON_NORMALIZER2,
     UCLN_COMMON_USET,

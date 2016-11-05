@@ -143,8 +143,7 @@ GetISizeInfo(nsRenderingContext *aRenderingContext,
         // isize, it will (in some cases) subtract the box-sizing edges.
         // We prevent this unwanted behavior by calling it with
         // aContentEdgeToBoxSizing and aBoxSizingToMarginEdge set to 0.
-        nscoord c = nsLayoutUtils::ComputeISizeValue(aRenderingContext,
-                                                     aFrame, 0, 0, 0, iSize);
+        nscoord c = aFrame->ComputeISizeValue(aRenderingContext, 0, 0, 0, iSize);
         // Quirk: A cell with "nowrap" set and a coord value for the
         // isize which is bigger than the intrinsic minimum isize uses
         // that coord value as the minimum isize.
@@ -191,9 +190,8 @@ GetISizeInfo(nsRenderingContext *aRenderingContext,
     // XXX To really implement 'max-inline-size' well, we'd need to store
     // it separately on the columns.
     if (maxISize.ConvertsToLength() || unit == eStyleUnit_Enumerated) {
-        nscoord c =
-            nsLayoutUtils::ComputeISizeValue(aRenderingContext, aFrame,
-                                             0, 0, 0, maxISize);
+        nscoord c = aFrame->ComputeISizeValue(aRenderingContext,
+                                              0, 0, 0, maxISize);
         minCoord = std::min(c, minCoord);
         prefCoord = std::min(c, prefCoord);
     } else if (unit == eStyleUnit_Percent) {
@@ -217,9 +215,8 @@ GetISizeInfo(nsRenderingContext *aRenderingContext,
     }
     unit = minISize.GetUnit();
     if (minISize.ConvertsToLength() || unit == eStyleUnit_Enumerated) {
-        nscoord c =
-            nsLayoutUtils::ComputeISizeValue(aRenderingContext, aFrame,
-                                             0, 0, 0, minISize);
+        nscoord c = aFrame->ComputeISizeValue(aRenderingContext,
+                                              0, 0, 0, minISize);
         minCoord = std::max(c, minCoord);
         prefCoord = std::max(c, prefCoord);
     } else if (unit == eStyleUnit_Percent) {

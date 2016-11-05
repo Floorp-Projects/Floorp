@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fil.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fil{
-    Version{"2.1.19.94"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -308,6 +302,9 @@ fil{
         }
         "America:El_Salvador"{
             ec{"El Salvador"}
+        }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
         }
         "America:Fortaleza"{
             ec{"Fortaleza"}
@@ -672,6 +669,9 @@ fil{
         "Asia:Bangkok"{
             ec{"Bangkok"}
         }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
+        }
         "Asia:Beirut"{
             ec{"Beirut"}
         }
@@ -849,6 +849,9 @@ fil{
         "Asia:Tokyo"{
             ec{"Tokyo"}
         }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
+        }
         "Asia:Ulaanbaatar"{
             ec{"Ulaanbaatar"}
         }
@@ -948,6 +951,9 @@ fil{
         "Europe:Andorra"{
             ec{"Andorra"}
         }
+        "Europe:Astrakhan"{
+            ec{"Astrakhan"}
+        }
         "Europe:Athens"{
             ec{"Athens"}
         }
@@ -1005,6 +1011,9 @@ fil{
         }
         "Europe:Kiev"{
             ec{"Kiev"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
         }
         "Europe:Lisbon"{
             ec{"Lisbon"}
@@ -1081,6 +1090,9 @@ fil{
         }
         "Europe:Tirane"{
             ec{"Tirane"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Ulyanovsk"}
         }
         "Europe:Uzhgorod"{
             ec{"Uzhgorod"}
@@ -1292,7 +1304,7 @@ fil{
         "meta:America_Central"{
             ld{"Sentral na Daylight Time"}
             lg{"Sentral na Oras"}
-            ls{"Sentral na Standard na Oras"}
+            ls{"Sentral na Karaniwang Oras"}
         }
         "meta:America_Eastern"{
             ld{"Eastern Daylight Time"}
@@ -1302,7 +1314,7 @@ fil{
         "meta:America_Mountain"{
             ld{"Daylight Time sa Bundok"}
             lg{"Oras sa Bundok"}
-            ls{"Standard na Oras sa Bundok"}
+            ls{"Karaniwang Oras sa Bundok"}
         }
         "meta:America_Pacific"{
             ld{"Daylight Time sa Pasipiko"}
@@ -1317,7 +1329,7 @@ fil{
         "meta:Apia"{
             ld{"Apia Daylight Time"}
             lg{"Oras sa Apia"}
-            ls{"Apia Standard Time"}
+            ls{"Standard na Oras sa Apia"}
         }
         "meta:Arabian"{
             ld{"Daylight Time sa Arabia"}
@@ -1361,7 +1373,7 @@ fil{
         }
         "meta:Australia_Western"{
             ld{"Daylight Time sa Kanlurang Australya"}
-            lg{"Oras ng Kanlurang Australya"}
+            lg{"Oras sa Kanlurang Australya"}
             ls{"Standard Time ng Kanlurang Australya"}
         }
         "meta:Azerbaijan"{
@@ -1746,6 +1758,9 @@ fil{
         }
         "meta:Ponape"{
             ls{"Oras sa Ponape"}
+        }
+        "meta:Pyongyang"{
+            ls{"Oras sa Pyongyang"}
         }
         "meta:Reunion"{
             ls{"Oras sa Reunion"}

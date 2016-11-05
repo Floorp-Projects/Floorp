@@ -1,7 +1,9 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
  ********************************************************************
  * COPYRIGHT:
- * Copyright (c) 1996-2015, International Business Machines Corporation and
+ * Copyright (c) 1996-2016, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************
  *
@@ -385,7 +387,7 @@ getAlgorithmicTypeFromName(const char *realName)
 
     /* do a binary search for the alias */
     start = 0;
-    limit = sizeof(cnvNameType)/sizeof(cnvNameType[0]);
+    limit = UPRV_LENGTHOF(cnvNameType);
     mid = limit;
     lastMid = UINT32_MAX;
 

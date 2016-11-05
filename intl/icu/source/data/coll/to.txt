@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/collation/to.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 to{
     Version{"2.1.19.14"}
     collations{
@@ -19,7 +13,7 @@ to{
                 "&o<<ó<<<Ó<<ō<<<Ō"
                 "&u<<ú<<<Ú<<ū<<<Ū"
             }
-            Version{"28"}
+            Version{"30.0.2"}
         }
     }
 }

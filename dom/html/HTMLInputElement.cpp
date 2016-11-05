@@ -4087,6 +4087,26 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     }
   }
 
+  // Stop the event if the related target's first non-native ancestor is the
+  // same as the original target's first non-native ancestor (we are moving
+  // inside of the same element).
+  if (mType == NS_FORM_INPUT_TIME && !IsExperimentalMobileType(mType) &&
+      (aVisitor.mEvent->mMessage == eFocus ||
+       aVisitor.mEvent->mMessage == eFocusIn ||
+       aVisitor.mEvent->mMessage == eFocusOut ||
+       aVisitor.mEvent->mMessage == eBlur)) {
+    nsCOMPtr<nsIContent> originalTarget =
+      do_QueryInterface(aVisitor.mEvent->AsFocusEvent()->mRelatedTarget);
+    nsCOMPtr<nsIContent> relatedTarget =
+      do_QueryInterface(aVisitor.mEvent->AsFocusEvent()->mRelatedTarget);
+
+    if (originalTarget && relatedTarget &&
+        originalTarget->FindFirstNonChromeOnlyAccessContent() ==
+        relatedTarget->FindFirstNonChromeOnlyAccessContent()) {
+      aVisitor.mCanHandle = false;
+    }
+  }
+
   return rv;
 }
 

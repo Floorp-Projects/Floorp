@@ -1,5 +1,7 @@
 ## -*-sh-*-
 ## BEGIN of icu-config-bottom.
+## Copyright (C) 2016 and later: Unicode, Inc. and others.
+## License & terms of use: http://www.unicode.org/copyright.html
 ## Copyright (c) 2002-2013, International Business Machines Corporation and
 ## others. All Rights Reserved.
 
@@ -44,7 +46,6 @@ allflags()
     echo "  --invoke               Print commands to invoke an ICU program"
     echo "  --invoke=<prog>        Print commands to invoke an ICU program named <prog> (ex: genrb)"
     echo "  --ldflags              Print -L search path and -l libraries to link with ICU [LDFLAGS].  This is for the data, uc (common), and i18n libraries only.  "
-    echo "  --ldflags-layout       Print ICU layout engine link directive. Use in addition to --ldflags"
     echo "  --ldflags-libsonly     Same as --ldflags, but only the -l directives"
     echo "  --ldflags-searchpath   Print only -L (search path) directive"
     echo "  --ldflags-system       Print only system libs ICU links with (-lpthread, -lm)"
@@ -279,7 +280,8 @@ do
 	    ;;
 
 	--ldflags-layout)
-	    echo $ECHO_N "${ICULIBS_LAYOUT} ${ICULIBS_LAYOUTEX} ${ECHO_C}"
+            echo ${ME}: ERROR: the old layout engine has been removed. use HarfBuzz.
+            exit 1
 	    ;;
 
 	--ldflags-searchpath)

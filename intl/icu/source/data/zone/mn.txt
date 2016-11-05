@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/mn.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 mn{
-    Version{"2.1.19.14"}
+    Version{"2.1.28.79"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абижан"}
@@ -64,7 +58,7 @@ mn{
             ec{"Дар-эс-Салам"}
         }
         "Africa:Djibouti"{
-            ec{"Жибоути"}
+            ec{"Жибути"}
         }
         "Africa:Douala"{
             ec{"Дуала"}
@@ -133,7 +127,7 @@ mn{
             ec{"Могадишу"}
         }
         "Africa:Monrovia"{
-            ec{"Монрова"}
+            ec{"Монровиа"}
         }
         "Africa:Nairobi"{
             ec{"Найроби"}
@@ -235,10 +229,10 @@ mn{
             ec{"Боисе"}
         }
         "America:Buenos_Aires"{
-            ec{"Буэнос-Айрес"}
+            ec{"Буэнос Айрес"}
         }
         "America:Cambridge_Bay"{
-            ec{"Кэмбриж бэй"}
+            ec{"Кэмбрижийн булан"}
         }
         "America:Campo_Grande"{
             ec{"Кампо-Гранде"}
@@ -309,17 +303,20 @@ mn{
         "America:El_Salvador"{
             ec{"Эль Сальвадор"}
         }
+        "America:Fort_Nelson"{
+            ec{"Форт Нэльсон"}
+        }
         "America:Fortaleza"{
             ec{"Форталеза"}
         }
         "America:Glace_Bay"{
-            ec{"Глейс бэй"}
+            ec{"Глейс булан"}
         }
         "America:Godthab"{
             ec{"Нүүк"}
         }
         "America:Goose_Bay"{
-            ec{"Гуус бэй"}
+            ec{"Гуус булан"}
         }
         "America:Grand_Turk"{
             ec{"Гранд Турк"}
@@ -502,13 +499,13 @@ mn{
             ec{"Порт-о-Принс"}
         }
         "America:Port_of_Spain"{
-            ec{"Порт-оф-Спейн"}
+            ec{"Испаний боомт"}
         }
         "America:Porto_Velho"{
             ec{"Порто-Велью"}
         }
         "America:Puerto_Rico"{
-            ec{"Пуэрто-Рико"}
+            ec{"Пуэрто Рико"}
         }
         "America:Rainy_River"{
             ec{"Рейни Ривер"}
@@ -538,7 +535,7 @@ mn{
             ec{"Сантьяго"}
         }
         "America:Santo_Domingo"{
-            ec{"Санта Доминго"}
+            ec{"Санто Доминго"}
         }
         "America:Sao_Paulo"{
             ec{"Сан-Паулу"}
@@ -619,7 +616,7 @@ mn{
             ec{"Моусон"}
         }
         "Antarctica:McMurdo"{
-            ec{"Мак-Мёрдо"}
+            ec{"Мак-Мөрдо"}
         }
         "Antarctica:Palmer"{
             ec{"Палмер"}
@@ -628,7 +625,7 @@ mn{
             ec{"Ротера"}
         }
         "Antarctica:Syowa"{
-            ec{"Сьёва"}
+            ec{"Сёва"}
         }
         "Antarctica:Troll"{
             ec{"Тролл"}
@@ -637,7 +634,7 @@ mn{
             ec{"Восток"}
         }
         "Arctic:Longyearbyen"{
-            ec{"Лонгирбюен"}
+            ec{"Лонгирбайен"}
         }
         "Asia:Aden"{
             ec{"Аден"}
@@ -672,6 +669,9 @@ mn{
         "Asia:Bangkok"{
             ec{"Бангкок"}
         }
+        "Asia:Barnaul"{
+            ec{"Барнаул"}
+        }
         "Asia:Beirut"{
             ec{"Бейрут"}
         }
@@ -683,6 +683,9 @@ mn{
         }
         "Asia:Calcutta"{
             ec{"Калькутта"}
+        }
+        "Asia:Chita"{
+            ec{"Чита"}
         }
         "Asia:Choibalsan"{
             ec{"Чойбалсан"}
@@ -742,7 +745,7 @@ mn{
             ec{"Катманду"}
         }
         "Asia:Khandyga"{
-            ec{"Кандяга"}
+            ec{"Кандыга"}
         }
         "Asia:Krasnoyarsk"{
             ec{"Красноярск"}
@@ -808,7 +811,7 @@ mn{
             ec{"Рияд"}
         }
         "Asia:Saigon"{
-            ec{"Хо Ши Мин"}
+            ec{"Хо Ши Мин хот"}
         }
         "Asia:Sakhalin"{
             ec{"Сахалин"}
@@ -824,6 +827,9 @@ mn{
         }
         "Asia:Singapore"{
             ec{"Сингапур"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"Среднеколымск"}
         }
         "Asia:Taipei"{
             ec{"Тайпей"}
@@ -842,6 +848,9 @@ mn{
         }
         "Asia:Tokyo"{
             ec{"Токио"}
+        }
+        "Asia:Tomsk"{
+            ec{"Томск"}
         }
         "Asia:Ulaanbaatar"{
             ec{"Улаанбаатар"}
@@ -871,7 +880,7 @@ mn{
             ec{"Азор"}
         }
         "Atlantic:Bermuda"{
-            ec{"Бермуда"}
+            ec{"Бермуд"}
         }
         "Atlantic:Canary"{
             ec{"Канари"}
@@ -895,7 +904,7 @@ mn{
             ec{"Сент Хелена"}
         }
         "Atlantic:Stanley"{
-            ec{"Стэнлей"}
+            ec{"Стэнли"}
         }
         "Australia:Adelaide"{
             ec{"Аделэйд"}
@@ -922,7 +931,7 @@ mn{
             ec{"Линдемэн"}
         }
         "Australia:Lord_Howe"{
-            ec{"Лорд Хау"}
+            ec{"Лорд Хоу"}
         }
         "Australia:Melbourne"{
             ec{"Мельбурн"}
@@ -941,6 +950,9 @@ mn{
         }
         "Europe:Andorra"{
             ec{"Андорра"}
+        }
+        "Europe:Astrakhan"{
+            ec{"Астрахань"}
         }
         "Europe:Athens"{
             ec{"Афин"}
@@ -1000,6 +1012,9 @@ mn{
         "Europe:Kiev"{
             ec{"Киев"}
         }
+        "Europe:Kirov"{
+            ec{"Киров"}
+        }
         "Europe:Lisbon"{
             ec{"Лисбон"}
         }
@@ -1020,7 +1035,7 @@ mn{
             ec{"Мальта"}
         }
         "Europe:Mariehamn"{
-            ec{"Мариехамн"}
+            ec{"Марихамн"}
         }
         "Europe:Minsk"{
             ec{"Минск"}
@@ -1053,7 +1068,7 @@ mn{
             ec{"Самара"}
         }
         "Europe:San_Marino"{
-            ec{"Сан-Марино"}
+            ec{"Сан Марино"}
         }
         "Europe:Sarajevo"{
             ec{"Сараево"}
@@ -1075,6 +1090,9 @@ mn{
         }
         "Europe:Tirane"{
             ec{"Тирана"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Ульяновск"}
         }
         "Europe:Uzhgorod"{
             ec{"Ужгород"}
@@ -1143,7 +1161,10 @@ mn{
             ec{"Апиа"}
         }
         "Pacific:Auckland"{
-            ec{"Оклэнд"}
+            ec{"Оуклэнд"}
+        }
+        "Pacific:Bougainville"{
+            ec{"Бугенвиль"}
         }
         "Pacific:Chatham"{
             ec{"Чатем"}
@@ -1188,7 +1209,7 @@ mn{
             ec{"Киритимати"}
         }
         "Pacific:Kosrae"{
-            ec{"Косраэ"}
+            ec{"Косрэ"}
         }
         "Pacific:Kwajalein"{
             ec{"Кважалейн"}
@@ -1388,9 +1409,9 @@ mn{
             ls{"Чаморрогийн цаг"}
         }
         "meta:Chatham"{
-            ld{"Чэтамын зуны цаг"}
-            lg{"Чэтамын цаг"}
-            ls{"Чэтамын стандарт цаг"}
+            ld{"Чатемын зуны цаг"}
+            lg{"Чатемын цаг"}
+            ls{"Чатемын стандарт цаг"}
         }
         "meta:Chile"{
             ld{"Чилийн зуны цаг"}
@@ -1438,9 +1459,9 @@ mn{
             ls{"Зүүн Тиморын цаг"}
         }
         "meta:Easter"{
-            ld{"Истерын Арлын зуны цаг"}
-            lg{"Истерын Арлын цаг"}
-            ls{"Истерын Арлын стандарт цаг"}
+            ld{"Зүүн Исландын зуны цаг"}
+            lg{"Зүүн Исландын цаг"}
+            ls{"Зүүн Исландын стандарт цаг"}
         }
         "meta:Ecuador"{
             ls{"Эквадорын цаг"}
@@ -1518,9 +1539,9 @@ mn{
             ls{"Хавай-Алеутын стандарт цаг"}
         }
         "meta:Hong_Kong"{
-            ld{"Хонг Конгын зуны цаг"}
-            lg{"Хонг Конгын цаг"}
-            ls{"Хонг Конгын стандарт цаг"}
+            ld{"Хонг Конгийн зуны цаг"}
+            lg{"Хонг Конгийн цаг"}
+            ls{"Хонг Конгийн стандарт цаг"}
         }
         "meta:Hovd"{
             ld{"Ховдын зуны цаг"}
@@ -1577,7 +1598,7 @@ mn{
             ls{"Солонгосын стандарт цаг"}
         }
         "meta:Kosrae"{
-            ls{"Косраегийн цаг"}
+            ls{"Косрэгийн цаг"}
         }
         "meta:Krasnoyarsk"{
             ld{"Красноярскийн зуны цаг"}
@@ -1591,9 +1612,9 @@ mn{
             ls{"Лайн арлын цаг"}
         }
         "meta:Lord_Howe"{
-            ld{"Лорд Хаугийн зуны цаг"}
-            lg{"Лорд Хаугийн цаг"}
-            ls{"Лорд Хаугийн стандарт цаг"}
+            ld{"Лорд Хоугийн зуны цаг"}
+            lg{"Лорд Хоугийн цаг"}
+            ls{"Лорд Хоугийн стандарт цаг"}
         }
         "meta:Macquarie"{
             ls{"Маккуори Арлын цаг"}
@@ -1604,7 +1625,7 @@ mn{
             ls{"Магаданы стандарт цаг"}
         }
         "meta:Malaysia"{
-            ls{"Малайзийн цаг"}
+            ls{"Малайзын цаг"}
         }
         "meta:Maldives"{
             ls{"Мальдивийн цаг"}
@@ -1671,7 +1692,7 @@ mn{
             ls{"Ниуэгийн цаг"}
         }
         "meta:Norfolk"{
-            ls{"Норфолк Арлын цаг"}
+            ls{"Норфолк арлын цаг"}
         }
         "meta:Noronha"{
             ld{"Фернандо де Норонагийн зуны цаг"}
@@ -1718,8 +1739,8 @@ mn{
             ls{"Феникс арлын цаг"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"Сент-Пьерре ба Микелоны зуны цаг"}
-            lg{"Сент-Пьерре ба Микелоны цаг"}
+            ld{"Сент-Пьер ба Микелоны зуны цаг"}
+            lg{"Сент-Пьер ба Микелоны цаг"}
             ls{"Сент-Пьерре ба Микелоны стандарт цаг"}
         }
         "meta:Pitcairn"{
@@ -1727,6 +1748,9 @@ mn{
         }
         "meta:Ponape"{
             ls{"Понапегийн цаг"}
+        }
+        "meta:Pyongyang"{
+            ls{"Пхеньяны цаг"}
         }
         "meta:Reunion"{
             ls{"Реюньоны цаг"}
@@ -1751,7 +1775,7 @@ mn{
             ls{"Сингапурын цаг"}
         }
         "meta:Solomon"{
-            ls{"Соломоны Арлуудын цаг"}
+            ls{"Соломоны арлуудын цаг"}
         }
         "meta:South_Georgia"{
             ls{"Өмнөд Жоржийн цаг"}

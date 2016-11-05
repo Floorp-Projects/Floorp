@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/fi.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 fi{
     AuxExemplarCharacters{
         "[á à ă â ã ą ā ć č ċ ç ď ð đ é è ê ě ë ė ę ē ğ ǧ ģ ǥ ȟ ħ í î ï İ į ī ı ǩ ķ ĺ"
@@ -18,7 +12,7 @@ fi{
         medial{"{0}…{1}"}
         word-final{"{0}…"}
         word-initial{"…{0}"}
-        word-medial{"{0}… {1}"}
+        word-medial{"{0}…{1}"}
     }
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s š t u v w x y z ž å ä ö]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z Å Ä Ö]"}
@@ -210,7 +204,7 @@ fi{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.29.88"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -496,6 +490,10 @@ fi{
                 MEd{"E d.M."}
                 MMM{"LLL"}
                 MMMEd{"ccc d. MMM"}
+                MMMMW{
+                    one{"LLLL'n' W. 'viikko'"}
+                    other{"LLLL'n' W. 'viikko'"}
+                }
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
                 Md{"d.M."}
@@ -518,6 +516,10 @@ fi{
                 yMd{"d.M.y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"'vuoden' y 'viikko' w"}
+                    other{"'vuoden' y 'viikko' w"}
+                }
             }
             dayNames{
                 format{
@@ -601,20 +603,20 @@ fi{
                 format{
                     abbreviated{
                         afternoon1{"iltap."}
-                        evening1{"ilta"}
-                        midnight{"keskiyö"}
-                        morning1{"aamu"}
+                        evening1{"illalla"}
+                        midnight{"keskiyöllä"}
+                        morning1{"aamulla"}
                         morning2{"aamup."}
-                        night1{"yö"}
+                        night1{"yöllä"}
                         noon{"keskip."}
                     }
                     narrow{
                         afternoon1{"ip."}
-                        evening1{"ilta"}
+                        evening1{"illalla"}
                         midnight{"ky."}
-                        morning1{"aamu"}
+                        morning1{"aamulla"}
                         morning2{"ap."}
-                        night1{"yö"}
+                        night1{"yöllä"}
                         noon{"kp."}
                     }
                     wide{
@@ -673,8 +675,8 @@ fi{
                     "jaa.",
                 }
                 narrow{
-                    "eK",
-                    "jK",
+                    "eKr",
+                    "jKr",
                 }
                 narrow%variant{
                     "eaa",
@@ -790,18 +792,18 @@ fi{
             monthNames{
                 format{
                     abbreviated{
-                        "tammikuuta",
-                        "helmikuuta",
-                        "maaliskuuta",
-                        "huhtikuuta",
-                        "toukokuuta",
-                        "kesäkuuta",
-                        "heinäkuuta",
-                        "elokuuta",
-                        "syyskuuta",
-                        "lokakuuta",
-                        "marraskuuta",
-                        "joulukuuta",
+                        "tammik.",
+                        "helmik.",
+                        "maalisk.",
+                        "huhtik.",
+                        "toukok.",
+                        "kesäk.",
+                        "heinäk.",
+                        "elok.",
+                        "syysk.",
+                        "lokak.",
+                        "marrask.",
+                        "jouluk.",
                     }
                     narrow{
                         "T",
@@ -1054,6 +1056,94 @@ fi{
             }
         }
     }
+    characterLabel{
+        activities{"Toiminnot"}
+        african_scripts{"Afrikkalaiset kirjoitusjärjestelmät"}
+        american_scripts{"Amerikkalaiset kirjoitusjärjestelmät"}
+        animal{"eläin"}
+        animals_nature{"Eläimet ja luonto"}
+        arrows{"Nuolet"}
+        body{"keho"}
+        box_drawing{"Viivapiirrosmerkit"}
+        braille{"Pistekirjoitus"}
+        building{"rakennus"}
+        bullets_stars{"Luettelomerkit/tähdet"}
+        consonantal_jamo{"Jamo-konsonanttielementit"}
+        currency_symbols{"Valuuttamerkit"}
+        dash_connector{"Yhdysmerkit"}
+        digits{"Numerot"}
+        dingbats{"Ornamentit"}
+        divination_symbols{"Ennustussymbolit"}
+        downwards_arrows{"Alaspäin osoittavat nuolet"}
+        downwards_upwards_arrows{"Alas- ja ylöspäin osoittavat nuolet"}
+        east_asian_scripts{"Itäaasialaiset kirjoitusjärjestelmät"}
+        emoji{"Emojit"}
+        european_scripts{"Eurooppalaiset kirjoitusjärjestelmät"}
+        female{"naissukupuolinen"}
+        flag{"lippu"}
+        flags{"Liput"}
+        food_drink{"Ruoka ja juoma"}
+        format{"Muotoilu"}
+        format_whitespace{"Muotoilu ja tyhjämerkit"}
+        full_width_form_variant{"Ideografin levyiset muotovariantit"}
+        geometric_shapes{"Geometriset kuviot"}
+        half_width_form_variant{"Ideografin puolikkaan levyiset muotovariantit"}
+        han_characters{"Han-merkit"}
+        han_radicals{"Han-radikaalit"}
+        hanja{"Hanja"}
+        hanzi_simplified{"Hanzi (yksinkertaistettu)"}
+        hanzi_traditional{"Hanzi (perinteinen)"}
+        heart{"sydän"}
+        historic_scripts{"Historialliset kirjoitusjärjestelmät"}
+        ideographic_desc_characters{"Ideogrammien kuvausmerkit"}
+        japanese_kana{"Japanilainen Kana-kirjoitusjärjestelmä"}
+        kanbun{"Kanbun"}
+        kanji{"Kanji"}
+        keycap{"näppäin"}
+        leftwards_arrows{"Vasemmalle osoittavat nuolet"}
+        leftwards_rightwards_arrows{"Vasemmalle ja oikealle osoittavat nuolet"}
+        letterlike_symbols{"Kirjainsymbolit"}
+        limited_use{"Rajoitettu käyttö"}
+        male{"miessukupuolinen"}
+        math_symbols{"Matemaattiset symbolit"}
+        middle_eastern_scripts{"Lähi-idän kirjoitusjärjestelmät"}
+        miscellaneous{"Sekalaiset"}
+        modern_scripts{"Nykyaikaiset kirjoitusjärjestelmät"}
+        modifier{"Tarkkeenomaiset merkit"}
+        musical_symbols{"Musiikkisymbolit"}
+        nature{"luonto"}
+        nonspacing{"Välittömästi yhdistyvät merkit"}
+        numbers{"Numerot"}
+        objects{"Objektit"}
+        other{"Muu"}
+        paired{"Merkkiparit"}
+        person{"henkilö"}
+        phonetic_alphabet{"Foneettinen aakkosto"}
+        pictographs{"Kuvakirjoitus"}
+        place{"paikka"}
+        plant{"kasvi"}
+        punctuation{"Välimerkit"}
+        rightwards_arrows{"Oikealle osoittavat nuolet"}
+        sign_standard_symbols{"Vakiosymbolit"}
+        small_form_variant{"Vähäiset muotovariantit"}
+        smiley{"hymiö"}
+        smileys_people{"Hymiöt ja ihmiset"}
+        south_asian_scripts{"Etelä-Aasian kirjoitusjärjestelmät"}
+        southeast_asian_scripts{"Kaakkois-Aasian kirjoitusjärjestelmät"}
+        spacing{"Välistys"}
+        sport{"urheilu"}
+        symbols{"Symbolit"}
+        technical_symbols{"Tekniset symbolit"}
+        tone_marks{"Toonimerkit"}
+        travel{"matka"}
+        travel_places{"Matkustus ja paikat"}
+        upwards_arrows{"Ylöspäin osoittavat nuolet"}
+        variant_forms{"Varianttimuodot"}
+        vocalic_jamo{"Jamo-vokaalilementit"}
+        weather{"sää"}
+        western_asian_scripts{"Länsiaasialaiset kirjoitusjärjestelmät"}
+        whitespace{"Tyhjämerkit"}
+    }
     contextTransforms{
         languages:intvector{
             1,
@@ -1143,12 +1233,32 @@ fi{
                 "0"{"tänä perjantaina"}
                 "1"{"ensi perjantaina"}
             }
+            relativeTime{
+                future{
+                    one{"{0} perjantain päästä"}
+                    other{"{0} perjantain päästä"}
+                }
+                past{
+                    one{"{0} perjantai sitten"}
+                    other{"{0} perjantaita sitten"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"viime pe"}
                 "0"{"tänä pe"}
                 "1"{"ensi pe"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} pe päästä"}
+                    other{"{0} pe päästä"}
+                }
+                past{
+                    one{"{0} pe sitten"}
+                    other{"{0} pe sitten"}
+                }
             }
         }
         fri-short{
@@ -1157,9 +1267,22 @@ fi{
                 "0"{"tänä pe"}
                 "1"{"ensi pe"}
             }
+            relativeTime{
+                future{
+                    one{"{0} pe päästä"}
+                    other{"{0} pe päästä"}
+                }
+                past{
+                    one{"{0} pe sitten"}
+                    other{"{0} pe sitten"}
+                }
+            }
         }
         hour{
             dn{"tunti"}
+            relative{
+                "0"{"tämän tunnin aikana"}
+            }
             relativeTime{
                 future{
                     one{"{0} tunnin päästä"}
@@ -1173,6 +1296,9 @@ fi{
         }
         hour-narrow{
             dn{"t"}
+            relative{
+                "0"{"tunnin sisällä"}
+            }
             relativeTime{
                 future{
                     one{"{0} t päästä"}
@@ -1186,6 +1312,9 @@ fi{
         }
         hour-short{
             dn{"t"}
+            relative{
+                "0"{"tunnin sisällä"}
+            }
             relativeTime{
                 future{
                     one{"{0} t päästä"}
@@ -1199,6 +1328,9 @@ fi{
         }
         minute{
             dn{"minuutti"}
+            relative{
+                "0"{"tämän minuutin aikana"}
+            }
             relativeTime{
                 future{
                     one{"{0} minuutin päästä"}
@@ -1212,6 +1344,9 @@ fi{
         }
         minute-narrow{
             dn{"min"}
+            relative{
+                "0"{"minuutin sisällä"}
+            }
             relativeTime{
                 future{
                     one{"{0} min päästä"}
@@ -1225,6 +1360,9 @@ fi{
         }
         minute-short{
             dn{"min"}
+            relative{
+                "0"{"minuutin sisällä"}
+            }
             relativeTime{
                 future{
                     one{"{0} min päästä"}
@@ -1242,6 +1380,16 @@ fi{
                 "0"{"tänä maanantaina"}
                 "1"{"ensi maanantaina"}
             }
+            relativeTime{
+                future{
+                    one{"{0} maanantain päästä"}
+                    other{"{0} maanantain päästä"}
+                }
+                past{
+                    one{"{0} maanantai sitten"}
+                    other{"{0} maanantaita sitten"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -1249,12 +1397,32 @@ fi{
                 "0"{"tänä ma"}
                 "1"{"ensi ma"}
             }
+            relativeTime{
+                future{
+                    one{"{0} ma päästä"}
+                    other{"{0} ma päästä"}
+                }
+                past{
+                    one{"{0} ma sitten"}
+                    other{"{0} ma sitten"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"viime ma"}
                 "0"{"tänä ma"}
                 "1"{"ensi ma"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ma päästä"}
+                    other{"{0} ma päästä"}
+                }
+                past{
+                    one{"{0} ma sitten"}
+                    other{"{0} ma sitten"}
+                }
             }
         }
         month{
@@ -1361,7 +1529,7 @@ fi{
                 }
                 past{
                     one{"{0} neljännes sitten"}
-                    other{"{0} neljännes sitten"}
+                    other{"{0} neljännestä sitten"}
                 }
             }
         }
@@ -1371,6 +1539,16 @@ fi{
                 "0"{"tänä lauantaina"}
                 "1"{"ensi lauantaina"}
             }
+            relativeTime{
+                future{
+                    one{"{0} lauantain päästä"}
+                    other{"{0} lauantain päästä"}
+                }
+                past{
+                    one{"{0} lauantai sitten"}
+                    other{"{0} lauantaita sitten"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1378,12 +1556,32 @@ fi{
                 "0"{"tänä la"}
                 "1"{"ensi la"}
             }
+            relativeTime{
+                future{
+                    one{"{0} la päästä"}
+                    other{"{0} la päästä"}
+                }
+                past{
+                    one{"{0} la sitten"}
+                    other{"{0} la sitten"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"viime la"}
                 "0"{"tänä la"}
                 "1"{"ensi la"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} la päästä"}
+                    other{"{0} la päästä"}
+                }
+                past{
+                    one{"{0} la sitten"}
+                    other{"{0} la sitten"}
+                }
             }
         }
         second{
@@ -1440,12 +1638,32 @@ fi{
                 "0"{"tänä sunnuntaina"}
                 "1"{"ensi sunnuntaina"}
             }
+            relativeTime{
+                future{
+                    one{"{0} sunnuntain päästä"}
+                    other{"{0} sunnuntain päästä"}
+                }
+                past{
+                    one{"{0} sunnuntai sitten"}
+                    other{"{0} sunnuntaita sitten"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"viime su"}
                 "0"{"tänä su"}
                 "1"{"ensi su"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} su päästä"}
+                    other{"{0} su päästä"}
+                }
+                past{
+                    one{"{0} su sitten"}
+                    other{"{0} su sitten"}
+                }
             }
         }
         sun-short{
@@ -1454,12 +1672,32 @@ fi{
                 "0"{"tänä su"}
                 "1"{"ensi su"}
             }
+            relativeTime{
+                future{
+                    one{"{0} su päästä"}
+                    other{"{0} su päästä"}
+                }
+                past{
+                    one{"{0} su sitten"}
+                    other{"{0} su sitten"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"viime torstaina"}
                 "0"{"tänä torstaina"}
                 "1"{"ensi torstaina"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} torstain päästä"}
+                    other{"{0} torstain päästä"}
+                }
+                past{
+                    one{"{0} torstai sitten"}
+                    other{"{0} torstaita sitten"}
+                }
             }
         }
         thu-narrow{
@@ -1468,12 +1706,32 @@ fi{
                 "0"{"tänä to"}
                 "1"{"ensi to"}
             }
+            relativeTime{
+                future{
+                    one{"{0} to päästä"}
+                    other{"{0} to päästä"}
+                }
+                past{
+                    one{"{0} to sitten"}
+                    other{"{0} to sitten"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"viime to"}
                 "0"{"tänä to"}
                 "1"{"ensi to"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} to päästä"}
+                    other{"{0} to päästä"}
+                }
+                past{
+                    one{"{0} to sitten"}
+                    other{"{0} to sitten"}
+                }
             }
         }
         tue{
@@ -1482,12 +1740,32 @@ fi{
                 "0"{"tänä tiistaina"}
                 "1"{"ensi tiistaina"}
             }
+            relativeTime{
+                future{
+                    one{"{0} tiistain päästä"}
+                    other{"{0} tiistain päästä"}
+                }
+                past{
+                    one{"{0} tiistai sitten"}
+                    other{"{0} tiistaita sitten"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"viime ti"}
                 "0"{"tänä ti"}
                 "1"{"ensi ti"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ti päästä"}
+                    other{"{0} ti päästä"}
+                }
+                past{
+                    one{"{0} ti sitten"}
+                    other{"{0} ti sitten"}
+                }
             }
         }
         tue-short{
@@ -1496,12 +1774,32 @@ fi{
                 "0"{"tänä ti"}
                 "1"{"ensi ti"}
             }
+            relativeTime{
+                future{
+                    one{"{0} ti päästä"}
+                    other{"{0} ti päästä"}
+                }
+                past{
+                    one{"{0} ti sitten"}
+                    other{"{0} ti sitten"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"viime keskiviikkona"}
                 "0"{"tänä keskiviikkona"}
                 "1"{"ensi keskiviikkona"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} keskiviikon päästä"}
+                    other{"{0} keskiviikon päästä"}
+                }
+                past{
+                    one{"{0} keskiviikko sitten"}
+                    other{"{0} keskiviikkoa sitten"}
+                }
             }
         }
         wed-narrow{
@@ -1510,12 +1808,32 @@ fi{
                 "0"{"tänä ke"}
                 "1"{"ensi ke"}
             }
+            relativeTime{
+                future{
+                    one{"{0} ke päästä"}
+                    other{"{0} ke päästä"}
+                }
+                past{
+                    one{"{0} ke sitten"}
+                    other{"{0} ke sitten"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"viime ke"}
                 "0"{"tänä ke"}
                 "1"{"ensi ke"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ke päästä"}
+                    other{"{0} ke päästä"}
+                }
+                past{
+                    one{"{0} ke sitten"}
+                    other{"{0} ke sitten"}
+                }
             }
         }
         week{
@@ -1525,6 +1843,7 @@ fi{
                 "0"{"tällä viikolla"}
                 "1"{"ensi viikolla"}
             }
+            relativePeriod{"päivän {0} viikolla"}
             relativeTime{
                 future{
                     one{"{0} viikon päästä"}
@@ -1543,6 +1862,7 @@ fi{
                 "0"{"tällä vk"}
                 "1"{"ensi vk"}
             }
+            relativePeriod{"päivän {0} viikolla"}
             relativeTime{
                 future{
                     one{"{0} vk päästä"}
@@ -1561,6 +1881,7 @@ fi{
                 "0"{"tällä vk"}
                 "1"{"ensi vk"}
             }
+            relativePeriod{"päivän {0} viikolla"}
             relativeTime{
                 future{
                     one{"{0} vk päästä"}
@@ -1640,6 +1961,12 @@ fi{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-short{
+            2{"{0} ja {1}"}
+            end{"{0} ja {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         unit{
             2{"{0} ja {1}"}
             end{"{0} ja {1}"}
@@ -1663,17 +1990,5 @@ fi{
         UK{"brittiläinen"}
         US{"amerikkalainen"}
         metric{"metrinen"}
-    }
-    transformNames{
-        BGN{"BGN-latinaistus"}
-        Numeric{"numeerinen muunnos"}
-        Tone{"tooni"}
-        UNGEGN{"UNGEGN-latinaistus"}
-        x-Accents{"aksenttimerkit"}
-        x-Fullwidth{"ideogrammin levyinen"}
-        x-Halfwidth{"ideogrammin puolikkaan levyinen"}
-        x-Jamo{"jamo"}
-        x-Pinyin{"pinyin-latinaistus"}
-        x-Publishing{"julkaisuvalinta"}
     }
 }

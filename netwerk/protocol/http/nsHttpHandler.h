@@ -639,6 +639,7 @@ private:
 
 private:
     nsresult SpeculativeConnectInternal(nsIURI *aURI,
+                                        nsIPrincipal *aPrincipal,
                                         nsIInterfaceRequestor *aCallbacks,
                                         bool anonymous);
 

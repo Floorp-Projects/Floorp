@@ -2731,6 +2731,17 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
                values.AppendElement(opaqueAttributeValue);
            }
         }
+
+      // Update the flashvar bgcolor if it's not set, fixes a rendering problem with
+      // async plugin painting and transparent flash.
+      if (supportsAsyncRender) {
+        NS_NAMED_LITERAL_CSTRING(bgcolorAttributeName, "bgcolor");
+        NS_NAMED_LITERAL_CSTRING(bgcolorAttributeDefault, "#FFFFFF");
+        if (!names.Contains(bgcolorAttributeName)) {
+          names.AppendElement(bgcolorAttributeName);
+          values.AppendElement(bgcolorAttributeDefault);
+        }
+      }
 #endif
     }
 

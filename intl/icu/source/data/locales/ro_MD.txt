@@ -1,13 +1,7 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ro_MD.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ro_MD{
-    Version{"2.1.19.14"}
+    Version{"2.1.27.99"}
     calendar{
         gregorian{
             dayNames{
@@ -86,6 +80,18 @@ ro_MD{
                         midnight{"miezul nopții"}
                         morning1{"dimineața"}
                         night1{"noaptea"}
+                        noon{"amiază"}
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        afternoon1{"după-amiază"}
+                        evening1{"seară"}
+                        morning1{"dimineață"}
+                        night1{"noapte"}
+                    }
+                    wide{
+                        midnight{"miezul nopții"}
                         noon{"amiază"}
                     }
                 }

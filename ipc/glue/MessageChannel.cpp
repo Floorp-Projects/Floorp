@@ -2265,14 +2265,18 @@ MessageChannel::Close()
             return;
         }
 
-        if (ChannelConnected != mChannelState) {
+        if (ChannelClosed == mChannelState) {
             // XXX be strict about this until there's a compelling reason
             // to relax
             NS_RUNTIMEABORT("Close() called on closed channel!");
         }
 
-        // notify the other side that we're about to close our socket
-        mLink->SendMessage(new GoodbyeMessage());
+        // Notify the other side that we're about to close our socket. If we've
+        // already received a Goodbye from the other side (and our state is
+        // ChannelClosing), there's no reason to send one.
+        if (ChannelConnected == mChannelState) {
+          mLink->SendMessage(new GoodbyeMessage());
+        }
         SynchronouslyClose();
     }
 

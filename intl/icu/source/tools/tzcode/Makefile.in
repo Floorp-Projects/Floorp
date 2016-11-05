@@ -1,3 +1,5 @@
+# Copyright (C) 2016 and later: Unicode, Inc. and others.
+# License & terms of use: http://www.unicode.org/copyright.html
 # Some Portions Copyright (c) 2006-2012 IBM and others. All Rights Reserved.
 
 srcdir = @srcdir@

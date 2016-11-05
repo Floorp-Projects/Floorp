@@ -68,6 +68,15 @@ struct CharFlag {
 const char16_t BYTE_ORDER_MARK2 = 0xFFFE;
 const char16_t NO_BREAK_SPACE  = 0x00A0;
 
+const char16_t LeadSurrogateMin = 0xD800;
+const char16_t LeadSurrogateMax = 0xDBFF;
+const char16_t TrailSurrogateMin = 0xDC00;
+const char16_t TrailSurrogateMax = 0xDFFF;
+
+const uint32_t UTF16Max = 0xFFFF;
+const uint32_t NonBMPMin = 0x10000;
+const uint32_t NonBMPMax = 0x10FFFF;
+
 class CharacterInfo {
     /*
      * upperCase and lowerCase normally store the delta between two
@@ -136,6 +145,13 @@ IsIdentifierStart(char16_t ch)
 }
 
 inline bool
+IsIdentifierStart(uint32_t codePoint)
+{
+    // TODO: Supplemental code points not yet supported (bug 1197230).
+    return codePoint <= UTF16Max && IsIdentifierStart(char16_t(codePoint));
+}
+
+inline bool
 IsIdentifierPart(char16_t ch)
 {
     /* Matches ES5 7.6 IdentifierPart. */
@@ -144,6 +160,13 @@ IsIdentifierPart(char16_t ch)
         return js_isident[ch];
 
     return CharInfo(ch).isIdentifierPart();
+}
+
+inline bool
+IsIdentifierPart(uint32_t codePoint)
+{
+    // TODO: Supplemental code points not yet supported (bug 1197230).
+    return codePoint <= UTF16Max && IsIdentifierPart(char16_t(codePoint));
 }
 
 inline bool
@@ -398,42 +421,67 @@ ReverseFoldCase3(char16_t ch)
     return uint16_t(ch) + info.reverse3;
 }
 
-const size_t LeadSurrogateMin = 0xD800;
-const size_t LeadSurrogateMax = 0xDBFF;
-const size_t TrailSurrogateMin = 0xDC00;
-const size_t TrailSurrogateMax = 0xDFFF;
-const size_t UTF16Max = 0xFFFF;
-const size_t NonBMPMin = 0x10000;
-const size_t NonBMPMax = 0x10FFFF;
-
 inline bool
-IsLeadSurrogate(size_t value)
+IsSupplementary(uint32_t codePoint)
 {
-    return value >= LeadSurrogateMin && value <= LeadSurrogateMax;
+    return codePoint >= NonBMPMin && codePoint <= NonBMPMax;
 }
 
 inline bool
-IsTrailSurrogate(size_t value)
+IsLeadSurrogate(uint32_t codePoint)
 {
-    return value >= TrailSurrogateMin && value <= TrailSurrogateMax;
+    return codePoint >= LeadSurrogateMin && codePoint <= LeadSurrogateMax;
+}
+
+inline bool
+IsTrailSurrogate(uint32_t codePoint)
+{
+    return codePoint >= TrailSurrogateMin && codePoint <= TrailSurrogateMax;
+}
+
+inline char16_t
+LeadSurrogate(uint32_t codePoint)
+{
+    MOZ_ASSERT(IsSupplementary(codePoint));
+
+    return char16_t((codePoint >> 10) + (LeadSurrogateMin - (NonBMPMin >> 10)));
+}
+
+inline char16_t
+TrailSurrogate(uint32_t codePoint)
+{
+    MOZ_ASSERT(IsSupplementary(codePoint));
+
+    return char16_t((codePoint & 0x3FF) | TrailSurrogateMin);
 }
 
 inline void
-UTF16Encode(size_t cp, size_t* lead, size_t* trail)
+UTF16Encode(uint32_t codePoint, char16_t* lead, char16_t* trail)
 {
-    MOZ_ASSERT(cp >= NonBMPMin && cp <= NonBMPMax);
+    MOZ_ASSERT(IsSupplementary(codePoint));
 
-    *lead = (cp - NonBMPMin) / 1024 + LeadSurrogateMin;
-    *trail = ((cp - NonBMPMin) % 1024) + TrailSurrogateMin;
+    *lead = LeadSurrogate(codePoint);
+    *trail = TrailSurrogate(codePoint);
 }
 
-inline size_t
-UTF16Decode(size_t lead, size_t trail)
+static inline void
+UTF16Encode(uint32_t codePoint, char16_t* elements, unsigned* index)
+{
+    if (!IsSupplementary(codePoint)) {
+        elements[(*index)++] = char16_t(codePoint);
+    } else {
+        elements[(*index)++] = LeadSurrogate(codePoint);
+        elements[(*index)++] = TrailSurrogate(codePoint);
+    }
+}
+
+inline uint32_t
+UTF16Decode(char16_t lead, char16_t trail)
 {
     MOZ_ASSERT(IsLeadSurrogate(lead));
     MOZ_ASSERT(IsTrailSurrogate(trail));
 
-    return (lead - LeadSurrogateMin) * 1024 + (trail - TrailSurrogateMin) + NonBMPMin;
+    return (lead << 10) + trail + (NonBMPMin - (LeadSurrogateMin << 10) - TrailSurrogateMin);
 }
 
 } /* namespace unicode */

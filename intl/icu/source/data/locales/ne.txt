@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ne.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ne{
     AuxExemplarCharacters{"[\u200C\u200D]"}
     Ellipsis{
@@ -226,10 +220,10 @@ ne{
                 timeSeparator{":"}
             }
         }
-        minimumGroupingDigits{"१"}
+        minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.19.14"}
+    Version{"2.1.29.20"}
     calendar{
         generic{
             DateTimePatterns{
@@ -241,11 +235,11 @@ ne{
                 "G y MMMM d",
                 "G y MMM d",
                 "GGGGG y-MM-dd",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1},{0}",
+                "{1}{0}मा",
+                "{1}{0}मा",
+                "{1},{0}",
+                "{1},{0}",
             }
             availableFormats{
                 E{"ccc"}
@@ -343,9 +337,13 @@ ne{
                 "पूर्वाह्न",
                 "अपराह्न",
             }
+            AmPmMarkersAbbr{
+                "पूर्वाह्न",
+                "अपराह्न",
+            }
             AmPmMarkersNarrow{
-                "a",
-                "p",
+                "पूर्वाह्न",
+                "अपराह्न",
             }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -385,6 +383,10 @@ ne{
                 MEd{"MM-dd, E"}
                 MMM{"LLL"}
                 MMMEd{"MMM d, E"}
+                MMMMW{
+                    one{"'week' W 'of' MMM"}
+                    other{"'week' W 'of' MMM"}
+                }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"MM-dd"}
@@ -405,6 +407,10 @@ ne{
                 yMd{"y-MM-dd"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
+                yw{
+                    one{"'week' w 'of' y"}
+                    other{"'week' w 'of' y"}
+                }
             }
             dayNames{
                 format{
@@ -413,7 +419,7 @@ ne{
                         "सोम",
                         "मङ्गल",
                         "बुध",
-                        "बिही",
+                        "बिहि",
                         "शुक्र",
                         "शनि",
                     }
@@ -431,7 +437,7 @@ ne{
                         "सोम",
                         "मङ्गल",
                         "बुध",
-                        "बिही",
+                        "बिहि",
                         "शुक्र",
                         "शनि",
                     }
@@ -451,7 +457,7 @@ ne{
                         "सोम",
                         "मङ्गल",
                         "बुध",
-                        "बिही",
+                        "बिहि",
                         "शुक्र",
                         "शनि",
                     }
@@ -469,7 +475,7 @@ ne{
                         "सोम",
                         "मङ्गल",
                         "बुध",
-                        "बिही",
+                        "बिहि",
                         "शुक्र",
                         "शनि",
                     }
@@ -488,8 +494,8 @@ ne{
                 format{
                     abbreviated{
                         afternoon1{"अपरान्ह"}
-                        afternoon2{"बेलुका"}
-                        evening1{"साँझ"}
+                        afternoon2{"साँझ"}
+                        evening1{"बेलुका"}
                         midnight{"मध्यरात"}
                         morning1{"बिहान"}
                         night1{"रात"}
@@ -497,17 +503,17 @@ ne{
                     }
                     narrow{
                         afternoon1{"अपरान्ह"}
-                        afternoon2{"बेलुका"}
-                        evening1{"साँझ"}
+                        afternoon2{"साँझ"}
+                        evening1{"बेलुका"}
                         midnight{"मध्यरात"}
                         morning1{"बिहान"}
                         night1{"रात"}
-                        noon{"n"}
+                        noon{"मध्यान्ह"}
                     }
                     wide{
                         afternoon1{"अपरान्ह"}
-                        afternoon2{"बेलुका"}
-                        evening1{"साँझ"}
+                        afternoon2{"साँझ"}
+                        evening1{"बेलुका"}
                         midnight{"मध्यरात"}
                         morning1{"बिहान"}
                         night1{"रात"}
@@ -515,6 +521,17 @@ ne{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        afternoon1{"अपरान्ह"}
+                        afternoon2{"साँझ"}
+                        am{"पूर्वाह्न"}
+                        evening1{"बेलुका"}
+                        midnight{"मध्यरात"}
+                        morning1{"बिहान"}
+                        night1{"रात"}
+                        noon{"मध्यान्ह"}
+                        pm{"अपराह्न"}
+                    }
                     narrow{
                         afternoon1{"अपरान्ह"}
                         afternoon2{"साँझ"}
@@ -529,11 +546,13 @@ ne{
                     wide{
                         afternoon1{"अपरान्ह"}
                         afternoon2{"साँझ"}
+                        am{"पूर्वाह्न"}
                         evening1{"बेलुका"}
                         midnight{"मध्यरात"}
-                        morning1{"विहान"}
+                        morning1{"बिहान"}
                         night1{"रात"}
                         noon{"मध्यान्ह"}
+                        pm{"अपराह्न"}
                     }
                 }
             }
@@ -544,11 +563,15 @@ ne{
                 }
                 abbreviated%variant{
                     "इस्वीपूर्व",
-                    "सिइ",
+                    "ईसा काल",
+                }
+                wide{
+                    "ईसा पूर्व",
+                    "सन्",
                 }
                 wide%variant{
                     "इस्वीपूर्व",
-                    "सिइ",
+                    "ईसा काल",
                 }
             }
             intervalFormats{
@@ -800,6 +823,94 @@ ne{
             }
         }
     }
+    characterLabel{
+        activities{"गतिविधिहरू"}
+        african_scripts{"अफ्रिकी लिपिहरू"}
+        american_scripts{"अमेरिकी लिपिहरू"}
+        animal{"जनावर"}
+        animals_nature{"जनावर तथा प्रकृति"}
+        arrows{"बाँणहरू"}
+        body{"शरीर"}
+        box_drawing{"बाकस चित्र"}
+        braille{"ब्रेल"}
+        building{"भवन"}
+        bullets_stars{"गोली/तारा"}
+        consonantal_jamo{"व्यञ्जनीय जामो"}
+        currency_symbols{"मुद्रा चिन्हहरू"}
+        dash_connector{"ड्याश/योजक"}
+        digits{"अङ्कहरू"}
+        dingbats{"डिङब्याटहरू"}
+        divination_symbols{"डिभाइनेसन चिन्हहरू"}
+        downwards_arrows{"तलतिरका बाँणहरू"}
+        downwards_upwards_arrows{"तलतिर माथितिरका बाँणहरू"}
+        east_asian_scripts{"पूर्वी एशियाली लिपिहरू"}
+        emoji{"इमोजी"}
+        european_scripts{"युरोपेली लिपिहरू"}
+        female{"महिला"}
+        flag{"झण्डा"}
+        flags{"झण्डाहरू"}
+        food_drink{"खाना तथा पेय"}
+        format{"फर्म्याट"}
+        format_whitespace{"फर्म्याट तथा ह्वाइटस्पेस"}
+        full_width_form_variant{"पूर्ण-चौडाइ फाराम भ्यारियन्टहरू"}
+        geometric_shapes{"ज्यामितिय आकारहरू"}
+        half_width_form_variant{"अर्ध-चौंडाइ फाराम भ्यारियन्टहरू"}
+        han_characters{"हान वर्णहरू"}
+        han_radicals{"हान र्याडिकलहरू"}
+        hanja{"हान्जा"}
+        hanzi_simplified{"हान्जी (सरलीकृत)"}
+        hanzi_traditional{"हान्जी (परम्परागत)"}
+        heart{"मुटु"}
+        historic_scripts{"ऐतिहासिक लिपिहरू"}
+        ideographic_desc_characters{"आइडियोग्राफिक डिस्सेन्डिङ वर्णहरू"}
+        japanese_kana{"जापानी काना"}
+        kanbun{"कानबुन"}
+        kanji{"कान्जी"}
+        keycap{"किक्याप"}
+        leftwards_arrows{"बायाँतर्फी बाँणहरू"}
+        leftwards_rightwards_arrows{"बायाँतर्फी दायाँतर्फी बाँणहरू"}
+        letterlike_symbols{"वर्ण जस्ता चिन्हहरू"}
+        limited_use{"सीमित प्रयोग"}
+        male{"पुरूष"}
+        math_symbols{"गणित चिन्हहरू"}
+        middle_eastern_scripts{"मध्यपूर्वी लिपिहरू"}
+        miscellaneous{"विविध"}
+        modern_scripts{"आधुनिक लिपिहरू"}
+        modifier{"परिमार्जक"}
+        musical_symbols{"सांगीतिक चिन्हहरू"}
+        nature{"प्रकृति"}
+        nonspacing{"ननस्पेसिङ"}
+        numbers{"संख्याहरू"}
+        objects{"वस्तुहरू"}
+        other{"अन्य"}
+        paired{"जोडा मिलाइएको"}
+        person{"व्यक्ति"}
+        phonetic_alphabet{"फोनेटिक वर्णमाला"}
+        pictographs{"पिक्टोग्राफहरू"}
+        place{"ठाउँ"}
+        plant{"बिरूवा"}
+        punctuation{"विराम"}
+        rightwards_arrows{"दायाँतर्फी बाँणहरू"}
+        sign_standard_symbols{"संकेत/मानक चिन्हहरू"}
+        small_form_variant{"सानो फाराम भ्यारियन्टहरू"}
+        smiley{"स्माइली"}
+        smileys_people{"स्माइली तथा व्यक्तिहरू"}
+        south_asian_scripts{"दक्षिण एशियाली लिपिहरू"}
+        southeast_asian_scripts{"दक्षिण पूर्वी एशियाली लिपिहरू"}
+        spacing{"स्पेसिङ"}
+        sport{"खेलकुुद"}
+        symbols{"चिन्हहरू"}
+        technical_symbols{"प्राविधिक चिन्हहरू"}
+        tone_marks{"टोन मार्कहरू"}
+        travel{"यात्रा"}
+        travel_places{"यात्रा तथा ठाउँहरू"}
+        upwards_arrows{"माथितिरका बाँणहरू"}
+        variant_forms{"भ्यारियन्ट फारामहरू"}
+        vocalic_jamo{"भोकालिक जामोहरू"}
+        weather{"मौंसम"}
+        western_asian_scripts{"पश्चिमी एशियाली लिपिहरू"}
+        whitespace{"ह्वाइटस्पेस"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -865,12 +976,32 @@ ne{
                 "0"{"यो शुक्रबार"}
                 "1"{"अर्को शुक्रबार"}
             }
+            relativeTime{
+                future{
+                    one{"{0}शुक्रबारमा"}
+                    other{"{0}शुक्रबारहरूमा"}
+                }
+                past{
+                    one{"{0}शुक्रबार पहिले"}
+                    other{"{0}शुक्रबारहरू पहिले"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"गत शुक्रबार"}
                 "0"{"यो शुक्रबार"}
                 "1"{"अर्को शुक्रबार"}
+            }
+            relativeTime{
+                future{
+                    one{"{0}शुक्रबारहरूमा"}
+                    other{"{0}शुक्रबारहरूमा"}
+                }
+                past{
+                    one{"{0}शुक्रबारहरू पहिले"}
+                    other{"{0}शुक्रबारहरू पहिले"}
+                }
             }
         }
         fri-short{
@@ -879,9 +1010,22 @@ ne{
                 "0"{"यो शुक्रबार"}
                 "1"{"अर्को शुक्रबार"}
             }
+            relativeTime{
+                future{
+                    one{"{0}शुक्रबारहरूमा"}
+                    other{"{0}शुक्रबारहरूमा"}
+                }
+                past{
+                    one{"{0}शुक्रबारहरू पहिले"}
+                    other{"{0}शुक्रबारहरू पहिले"}
+                }
+            }
         }
         hour{
             dn{"घण्टा"}
+            relative{
+                "0"{"यो घडीमा"}
+            }
             relativeTime{
                 future{
                     one{"{0} घण्टामा"}
@@ -921,6 +1065,9 @@ ne{
         }
         minute{
             dn{"मिनेट"}
+            relative{
+                "0"{"यही मिनेटमा"}
+            }
             relativeTime{
                 future{
                     one{"{0} मिनेटमा"}
@@ -964,12 +1111,32 @@ ne{
                 "0"{"यो सोमबार"}
                 "1"{"अर्को सोमबार"}
             }
+            relativeTime{
+                future{
+                    one{"{0} सोमबारहरूमा"}
+                    other{"{0}सोमबारहरूमा"}
+                }
+                past{
+                    one{"{0}सोमबारहरूमा"}
+                    other{"{0}सोमबारहरूमा"}
+                }
+            }
         }
         mon-narrow{
             relative{
                 "-1"{"गत सोमबार"}
                 "0"{"यो सोमबार"}
                 "1"{"अर्को सोमबार"}
+            }
+            relativeTime{
+                future{
+                    one{"{0}सोमबारहरूमा"}
+                    other{"{0}सोमबारहरूमा"}
+                }
+                past{
+                    one{"{0}सोमबारहरू पहिले"}
+                    other{"{0}सोमबारहरू पहिले"}
+                }
             }
         }
         mon-short{
@@ -978,11 +1145,21 @@ ne{
                 "0"{"यो सोमबार"}
                 "1"{"अर्को सोमबार"}
             }
+            relativeTime{
+                future{
+                    one{"{0}सोमबारहरूमा"}
+                    other{"{0}सोमबारहरूमा"}
+                }
+                past{
+                    one{"{0}सोमबारहरू पहिले"}
+                    other{"{0}सोमबारहरू पहिले"}
+                }
+            }
         }
         month{
             dn{"महिना"}
             relative{
-                "-1"{"गएको महिना"}
+                "-1"{"गत महिना"}
                 "0"{"यो महिना"}
                 "1"{"अर्को महिना"}
             }
@@ -1025,6 +1202,11 @@ ne{
         }
         quarter{
             dn{"सत्र"}
+            relative{
+                "-1"{"अघिल्लो सत्र"}
+                "0"{"यो सत्र"}
+                "1"{"अर्को सत्र"}
+            }
             relativeTime{
                 future{
                     one{"+{0} सत्रमा"}
@@ -1056,6 +1238,10 @@ ne{
                     one{"{0}सत्रमा"}
                     other{"{0}सत्रमा"}
                 }
+                past{
+                    one{"{0}सत्र अघि"}
+                    other{"{0}सत्र अघि"}
+                }
             }
         }
         sat{
@@ -1064,6 +1250,16 @@ ne{
                 "0"{"यो शनिबार"}
                 "1"{"अर्को शनिबार"}
             }
+            relativeTime{
+                future{
+                    one{"{0}शनिबारमा"}
+                    other{"{0}शनिबारहरूमा"}
+                }
+                past{
+                    one{"{0}शनिबार पहिले"}
+                    other{"{0}शनिबारहरू पहिले"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1071,12 +1267,32 @@ ne{
                 "0"{"यो शनिबार"}
                 "1"{"अर्को शनिबार"}
             }
+            relativeTime{
+                future{
+                    one{"{0}शनिबारहरूमा"}
+                    other{"{0}शनिबारहरूमा"}
+                }
+                past{
+                    one{"{0}शनिबारहरू पहिले"}
+                    other{"{0}शनिबारहरू पहिले"}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"गत शनिबार"}
                 "0"{"यो शनिबार"}
                 "1"{"अर्को शनिबार"}
+            }
+            relativeTime{
+                future{
+                    one{"{0}शनिबारहरूमा"}
+                    other{"{0}शनिबारहरूमा"}
+                }
+                past{
+                    one{"{0}शनिबारहरू पहिले"}
+                    other{"{0}शनिबारहरू पहिले"}
+                }
             }
         }
         second{
@@ -1096,6 +1312,7 @@ ne{
             }
         }
         second-narrow{
+            dn{"सेकेन्ड"}
             relativeTime{
                 future{
                     one{"{0} सेकेण्डमा"}
@@ -1108,6 +1325,7 @@ ne{
             }
         }
         second-short{
+            dn{"सेकेन्ड"}
             relativeTime{
                 future{
                     one{"{0} सेकेण्डमा"}
@@ -1125,12 +1343,32 @@ ne{
                 "0"{"यो आइतबार"}
                 "1"{"अर्को आइतबार"}
             }
+            relativeTime{
+                future{
+                    one{"{0} आइतबारमा"}
+                    other{"{0} आइतबारहरूमा"}
+                }
+                past{
+                    one{"{0}आइतबार पहिले"}
+                    other{"{0} आइतबारहरू पहिले"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"गत आइतबार"}
                 "0"{"यो आइतबार"}
                 "1"{"अर्को आइतबार"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} आइतबारहरूमा"}
+                    other{"{0} आइतबारहरूमा"}
+                }
+                past{
+                    one{"{0} आइतबारहरू पहिले"}
+                    other{"{0} आइतबारहरू पहिले"}
+                }
             }
         }
         sun-short{
@@ -1139,12 +1377,32 @@ ne{
                 "0"{"यो आइतबार"}
                 "1"{"अर्को आइतबार"}
             }
+            relativeTime{
+                future{
+                    one{"{0} आइतबारहरूमा"}
+                    other{"{0} आइतबारहरूमा"}
+                }
+                past{
+                    one{"{0} आइतबारहरू पहिले"}
+                    other{"{0} आइतबारहरू पहिले"}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"गत बिहिबार"}
                 "0"{"यो बिहिबार"}
                 "1"{"अर्को बिहिबार"}
+            }
+            relativeTime{
+                future{
+                    one{"{0}बिहिबारहरूमा"}
+                    other{"{0}बिहिबारहरूमा"}
+                }
+                past{
+                    one{"{0}बिहिबार पहिले"}
+                    other{"{0}बिहिबारहरू पहिले"}
+                }
             }
         }
         thu-narrow{
@@ -1153,12 +1411,32 @@ ne{
                 "0"{"यो बिहिबार"}
                 "1"{"अर्को बिहिबार"}
             }
+            relativeTime{
+                future{
+                    one{"{0}बिहिबारहरूमा"}
+                    other{"{0}बिहिबारहरूमा"}
+                }
+                past{
+                    one{"{0}बिहिबारहरू पहिले"}
+                    other{"{0}बिहिबारहरू पहिले"}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"गत बिहिबार"}
                 "0"{"यो बिहिबार"}
                 "1"{"अर्को बिहिबार"}
+            }
+            relativeTime{
+                future{
+                    one{"{0}बिहिबारहरूमा"}
+                    other{"{0}बिहिबारहरूमा"}
+                }
+                past{
+                    one{"{0}बिहिबारहरू पहिले"}
+                    other{"{0}बिहिबारहरू पहिले"}
+                }
             }
         }
         tue{
@@ -1167,12 +1445,32 @@ ne{
                 "0"{"यो मंगलबार"}
                 "1"{"अर्को मंगलबार"}
             }
+            relativeTime{
+                future{
+                    one{"{0}मंगलबारमा"}
+                    other{"{0} मंगलबारहरूमा"}
+                }
+                past{
+                    one{"{0}मंगलबार पहिले"}
+                    other{"{0} मंगलबार पहिले"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"गत मंगलबार"}
                 "0"{"यो मंगलबार"}
                 "1"{"अर्को मंगलबार"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} मंगलबारहरूमा"}
+                    other{"{0} मंगलबारहरूमा"}
+                }
+                past{
+                    one{"{0} मंगलबारहरू पहिले"}
+                    other{"{0} मंगलबारहरू पहिले"}
+                }
             }
         }
         tue-short{
@@ -1181,12 +1479,32 @@ ne{
                 "0"{"यो मंगलबार"}
                 "1"{"अर्को मंगलबार"}
             }
+            relativeTime{
+                future{
+                    one{"{0} मंगलबारहरूमा"}
+                    other{"{0} मंगलबारहरूमा"}
+                }
+                past{
+                    one{"{0} मंगलबार पहिले"}
+                    other{"{0} मंगलबारहरू पहिले"}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"गत बुधबार"}
                 "0"{"यो बुधबार"}
                 "1"{"अर्को बुधबार"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} बुधबारमा"}
+                    other{"{0} बुधबारमाहरूमा"}
+                }
+                past{
+                    one{"{0}बुधबार पहिले"}
+                    other{"{0}बुधबारहरू पहिले"}
+                }
             }
         }
         wed-narrow{
@@ -1195,6 +1513,16 @@ ne{
                 "0"{"यो बुधबार"}
                 "1"{"अर्को बुधबार"}
             }
+            relativeTime{
+                future{
+                    one{"{0}बुधबारहरूमा"}
+                    other{"{0}बुधबारहरूमा"}
+                }
+                past{
+                    one{"{0}बुधबारहरू पहिले"}
+                    other{"{0}बुधबारहरू पहिले"}
+                }
+            }
         }
         wed-short{
             relative{
@@ -1202,14 +1530,25 @@ ne{
                 "0"{"यो बुधबार"}
                 "1"{"अर्को बुधबार"}
             }
+            relativeTime{
+                future{
+                    one{"{0} बुधबारहरूमा"}
+                    other{"{0}बुधबारहरूमा"}
+                }
+                past{
+                    one{"{0}बुधबारहरू पहिले"}
+                    other{"{0}बुधबारहरू पहिले"}
+                }
+            }
         }
         week{
             dn{"हप्ता"}
             relative{
-                "-1"{"गएको हप्ता"}
+                "-1"{"गत हप्ता"}
                 "0"{"यो हप्ता"}
                 "1"{"आउने हप्ता"}
             }
+            relativePeriod{"{0}को हप्ता"}
             relativeTime{
                 future{
                     one{"{0} हप्तामा"}
@@ -1223,6 +1562,7 @@ ne{
         }
         week-narrow{
             dn{"हप्ता"}
+            relativePeriod{"{0} को हप्ता"}
             relativeTime{
                 future{
                     one{"{0} हप्तामा"}
@@ -1236,6 +1576,7 @@ ne{
         }
         week-short{
             dn{"हप्ता"}
+            relativePeriod{"{0} को हप्ता"}
             relativeTime{
                 future{
                     one{"{0} हप्तामा"}
@@ -1253,7 +1594,7 @@ ne{
         year{
             dn{"वर्ष"}
             relative{
-                "-1"{"पहिलो वर्ष"}
+                "-1"{"गत वर्ष"}
                 "0"{"यो वर्ष"}
                 "1"{"अर्को वर्ष"}
             }
@@ -1303,25 +1644,31 @@ ne{
             2{"{0} र {1}"}
             end{"{0} र {1}"}
             middle{"{0}, {1}"}
-            start{"{0} र {1}"}
+            start{"{0},{1}"}
+        }
+        standard-short{
+            2{"{0} र {1}"}
+            end{"{0} र {1}"}
+            middle{"{0}, {1}"}
+            start{"{0},{1}"}
         }
         unit{
-            2{"{0} {1}"}
-            end{"{0} {1}"}
+            2{"{0},{1}"}
+            end{"{0},{1}"}
             middle{"{0}, {1}"}
-            start{"{0} {1}"}
+            start{"{0},{1}"}
         }
         unit-narrow{
             2{"{0} {1}"}
             end{"{0} {1}"}
-            middle{"{0}, {1}"}
+            middle{"{0}{1}"}
             start{"{0} {1}"}
         }
         unit-short{
             2{"{0} {1}"}
-            end{"{0} {1}"}
+            end{"{0},{1}"}
             middle{"{0}, {1}"}
-            start{"{0} {1}"}
+            start{"{0},{1}"}
         }
     }
     measurementSystemNames{

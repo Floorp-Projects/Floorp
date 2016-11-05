@@ -1,11 +1,5 @@
-﻿// ***************************************************************************
-// *
-// * Copyright (C) 2015 International Business Machines
-// * Corporation and others. All Rights Reserved.
-// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/common/main/ar.xml
-// *
-// ***************************************************************************
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
 ar{
     AuxExemplarCharacters{"[\u200C\u200D\u200E\u200F پ چ ژ ڜ ڢ ڤ ڥ ٯ ڧ ڨ ک گ ی]"}
     Ellipsis{
@@ -26,9 +20,9 @@ ar{
     NumberElements{
         arab{
             patterns{
-                currencyFormat{"¤ #,##0.00"}
+                currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
+                percentFormat{"#,##0 %"}
                 scientificFormat{"#E0"}
             }
             symbols{
@@ -37,11 +31,11 @@ ar{
                 group{"٬"}
                 infinity{"∞"}
                 list{"؛"}
-                minusSign{"‏-"}
+                minusSign{"؜-"}
                 nan{"ليس رقم"}
                 perMille{"؉"}
-                percentSign{"٪"}
-                plusSign{"‏+"}
+                percentSign{"٪؜"}
+                plusSign{"؜+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -366,7 +360,7 @@ ar{
                 minusSign{"‎-"}
                 nan{"ليس رقمًا"}
                 perMille{"‰"}
-                percentSign{"٪"}
+                percentSign{"‎%‎"}
                 plusSign{"‎+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
@@ -375,7 +369,7 @@ ar{
         minimumGroupingDigits{"1"}
         native{"arab"}
     }
-    Version{"2.1.19.94"}
+    Version{"2.1.28.79"}
     calendar{
         buddhist{
             eras{
@@ -539,7 +533,7 @@ ar{
                 MEd{"E، d/M"}
                 MMM{"LLL"}
                 MMMEd{"E، d MMM"}
-                MMMMd{"MMMM d"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/‏M"}
                 d{"d"}
@@ -710,6 +704,14 @@ ar{
                 MMM{"LLL"}
                 MMMEd{"E، d MMM"}
                 MMMMEd{"E، d MMMM"}
+                MMMMW{
+                    few{"الأسبوع W من MMM"}
+                    many{"الأسبوع W من MMM"}
+                    one{"الأسبوع W من MMM"}
+                    other{"الأسبوع W من MMM"}
+                    two{"الأسبوع W من MMM"}
+                    zero{"الأسبوع W من MMM"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 MMdd{"dd‏/MM"}
@@ -732,6 +734,14 @@ ar{
                 yMd{"d‏/M‏/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    few{"الأسبوع w من سنة y"}
+                    many{"الأسبوع w من سنة y"}
+                    one{"الأسبوع w من سنة y"}
+                    other{"الأسبوع w من سنة y"}
+                    two{"الأسبوع w من سنة y"}
+                    zero{"الأسبوع w من سنة y"}
+                }
             }
             dayNames{
                 format{
@@ -818,15 +828,15 @@ ar{
                         afternoon2{"بعد الظهر"}
                         evening1{"مساءً"}
                         morning1{"فجرا"}
-                        morning2{"صباحًا"}
+                        morning2{"ص"}
                         night1{"منتصف الليل"}
-                        night2{"ليلاً"}
+                        night2{"ل"}
                     }
                     narrow{
                         afternoon1{"ظهرًا"}
                         afternoon2{"بعد الظهر"}
                         evening1{"مساءً"}
-                        morning1{"فجرا"}
+                        morning1{"فجرًا"}
                         morning2{"صباحًا"}
                         night1{"منتصف الليل"}
                         night2{"ليلاً"}
@@ -835,7 +845,7 @@ ar{
                         afternoon1{"ظهرًا"}
                         afternoon2{"بعد الظهر"}
                         evening1{"مساءً"}
-                        morning1{"فجرا"}
+                        morning1{"فجرًا"}
                         morning2{"صباحًا"}
                         night1{"منتصف الليل"}
                         night2{"ليلاً"}
@@ -848,7 +858,7 @@ ar{
                         am{"ص"}
                         evening1{"مساءً"}
                         morning1{"فجرا"}
-                        morning2{"صباحًا"}
+                        morning2{"ص"}
                         night1{"منتصف الليل"}
                         night2{"ليلاً"}
                         pm{"م"}
@@ -869,7 +879,7 @@ ar{
                         afternoon2{"بعد الظهر"}
                         am{"صباحًا"}
                         evening1{"مساءً"}
-                        morning1{"فجرا"}
+                        morning1{"فجرًا"}
                         morning2{"صباحًا"}
                         night1{"منتصف الليل"}
                         night2{"ليلاً"}
@@ -1245,7 +1255,7 @@ ar{
                 MEd{"E، d/M"}
                 MMM{"LLL"}
                 MMMEd{"E، d MMM"}
-                MMMMd{"MMMM d"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/‏M"}
                 d{"d"}
@@ -1633,6 +1643,94 @@ ar{
             }
         }
     }
+    characterLabel{
+        activities{"أنشطة"}
+        african_scripts{"أنظمة كتابة إفريقية"}
+        american_scripts{"أنظمة كتابة أمريكية"}
+        animal{"حيوان"}
+        animals_nature{"حيوانات وطبيعة"}
+        arrows{"أسهم"}
+        body{"جسد"}
+        box_drawing{"رسم مربع"}
+        braille{"برايل"}
+        building{"مبنى"}
+        bullets_stars{"نقاط/نجوم"}
+        consonantal_jamo{"جامو ساكن"}
+        currency_symbols{"رموز عملات"}
+        dash_connector{"شرطة/واصلة"}
+        digits{"أرقام"}
+        dingbats{"زخارف"}
+        divination_symbols{"رموز تنجيم"}
+        downwards_arrows{"أسهم لأسفل"}
+        downwards_upwards_arrows{"أسهم لأعلى وأسفل"}
+        east_asian_scripts{"أنظمة كتابة شرق آسيا"}
+        emoji{"إيموجي"}
+        european_scripts{"أنظمة كتابة أوروبية"}
+        female{"أنثى"}
+        flag{"علم"}
+        flags{"أعلام"}
+        food_drink{"طعام وشراب"}
+        format{"تنسيق"}
+        format_whitespace{"تنسيق ومسافة بيضاء"}
+        full_width_form_variant{"متنوعات نموذج أحرف العرض الكامل"}
+        geometric_shapes{"أشكال هندسية"}
+        half_width_form_variant{"متنوعات نموذج أحرف نصف العرض"}
+        han_characters{"أحرف هان"}
+        han_radicals{"جذور هانغولية"}
+        hanja{"هانجا"}
+        hanzi_simplified{"هانزي (مبسطة)"}
+        hanzi_traditional{"هانزي (تقليدية)"}
+        heart{"قلب"}
+        historic_scripts{"أنظمة كتابة تاريخية"}
+        ideographic_desc_characters{"أحرف الوصف الرمزي"}
+        japanese_kana{"كانا يابانية"}
+        kanbun{"كانبون"}
+        kanji{"كانجي"}
+        keycap{"مفتاح"}
+        leftwards_arrows{"أسهم لليسار"}
+        leftwards_rightwards_arrows{"أسهم لليمين واليسار"}
+        letterlike_symbols{"رموز على هيئة أحرف"}
+        limited_use{"استخدام محدود"}
+        male{"ذكر"}
+        math_symbols{"رموز الرياضيات"}
+        middle_eastern_scripts{"أنظمة كتابة الشرق الأوسط"}
+        miscellaneous{"متنوع"}
+        modern_scripts{"برامج نصية حديثة"}
+        modifier{"معدل"}
+        musical_symbols{"رموز موسيقية"}
+        nature{"طبيعة"}
+        nonspacing{"بلا مسافات"}
+        numbers{"أعداد"}
+        objects{"كائنات"}
+        other{"أخرى"}
+        paired{"مقترنة"}
+        person{"شخص"}
+        phonetic_alphabet{"أبجدية صوتية"}
+        pictographs{"كتابات بالصور"}
+        place{"مكان"}
+        plant{"نبات"}
+        punctuation{"علامات ترقيم"}
+        rightwards_arrows{"أسهم لليمين"}
+        sign_standard_symbols{"رموز إشارة/قياسية"}
+        small_form_variant{"تنويعات نموذج أحرف صغيرة"}
+        smiley{"ابتسامة"}
+        smileys_people{"أشكال تعبيرية وأشخاص"}
+        south_asian_scripts{"أنظمة كتابة جنوب آسيا"}
+        southeast_asian_scripts{"أنظمة كتابة جنوب شرق آسيا"}
+        spacing{"مسافات"}
+        sport{"رياضة"}
+        symbols{"رموز"}
+        technical_symbols{"رموز تقنية"}
+        tone_marks{"علامات الإعراب"}
+        travel{"سفر"}
+        travel_places{"سفر وأماكن"}
+        upwards_arrows{"أسهم لأعلى"}
+        variant_forms{"نماذج متنوعة"}
+        vocalic_jamo{"جامو حروف العلة"}
+        weather{"طقس"}
+        western_asian_scripts{"أنظمة كتابة غرب آسيا"}
+        whitespace{"مسافة بيضاء"}
+    }
     delimiters{
         alternateQuotationEnd{"‘"}
         alternateQuotationStart{"’"}
@@ -1739,6 +1837,9 @@ ar{
         }
         hour{
             dn{"الساعات"}
+            relative{
+                "0"{"الساعة الحالية"}
+            }
             relativeTime{
                 future{
                     few{"خلال {0} ساعات"}
@@ -1802,6 +1903,9 @@ ar{
         }
         minute{
             dn{"الدقائق"}
+            relative{
+                "0"{"هذه الدقيقة"}
+            }
             relativeTime{
                 future{
                     few{"خلال {0} دقائق"}
@@ -1872,16 +1976,16 @@ ar{
         }
         mon-narrow{
             relative{
-                "-1"{"الاثنين الماضي"}
-                "0"{"الاثنين الحالي"}
-                "1"{"الاثنين القادم"}
+                "-1"{"الإثنين الماضي"}
+                "0"{"الإثنين الحالي"}
+                "1"{"الإثنين القادم"}
             }
         }
         mon-short{
             relative{
                 "-1"{"الاثنين الماضي"}
                 "0"{"الاثنين الحالي"}
-                "1"{"الاثنين القادم"}
+                "1"{"الإثنين القادم"}
             }
         }
         month{
@@ -1889,7 +1993,7 @@ ar{
             relative{
                 "-1"{"الشهر الماضي"}
                 "0"{"هذا الشهر"}
-                "1"{"الشهر التالي"}
+                "1"{"الشهر القادم"}
             }
             relativeTime{
                 future{
@@ -2058,7 +2162,7 @@ ar{
             }
             relativeTime{
                 future{
-                    few{"خلال {0} ثوانِ"}
+                    few{"خلال {0} ثوانٍ"}
                     many{"خلال {0} ثانية"}
                     one{"خلال ثانية واحدة"}
                     other{"خلال {0} ثانية"}
@@ -2206,8 +2310,9 @@ ar{
             relative{
                 "-1"{"الأسبوع الماضي"}
                 "0"{"هذا الأسبوع"}
-                "1"{"الأسبوع التالي"}
+                "1"{"الأسبوع القادم"}
             }
+            relativePeriod{"أسبوع {0}"}
             relativeTime{
                 future{
                     few{"خلال {0} أسابيع"}
@@ -2229,6 +2334,7 @@ ar{
         }
         week-narrow{
             dn{"الأسبوع"}
+            relativePeriod{"أسبوع {0}"}
             relativeTime{
                 future{
                     few{"خلال {0} أسابيع"}
@@ -2250,6 +2356,7 @@ ar{
         }
         week-short{
             dn{"الأسبوع"}
+            relativePeriod{"أسبوع {0}"}
             relativeTime{
                 future{
                     few{"خلال {0} أسابيع"}
@@ -2277,7 +2384,7 @@ ar{
             relative{
                 "-1"{"السنة الماضية"}
                 "0"{"السنة الحالية"}
-                "1"{"السنة التالية"}
+                "1"{"السنة القادمة"}
             }
             relativeTime{
                 future{
@@ -2354,40 +2461,34 @@ ar{
             middle{"{0}، {1}"}
             start{"{0}، {1}"}
         }
+        standard-short{
+            2{"{0} و{1}"}
+            end{"{0}، و{1}"}
+            middle{"{0}، و{1}"}
+            start{"{0}، و{1}"}
+        }
         unit{
             2{"{0} و{1}"}
             end{"{0}، و{1}"}
-            middle{"{0}، {1}"}
-            start{"{0}، {1}"}
+            middle{"{0}، و{1}"}
+            start{"{0}، و{1}"}
         }
         unit-narrow{
-            2{"{0} و{1}"}
-            end{"{0}، و{1}"}
+            2{"{0}، {1}"}
+            end{"{0}، {1}"}
             middle{"{0}، {1}"}
             start{"{0}، {1}"}
         }
         unit-short{
             2{"{0} و{1}"}
             end{"{0}، و{1}"}
-            middle{"{0}، {1}"}
-            start{"{0}، {1}"}
+            middle{"{0}، و{1}"}
+            start{"{0}، و{1}"}
         }
     }
     measurementSystemNames{
         UK{"المملكة المتحدة"}
         US{"النظام الأمريكي"}
         metric{"النظام المتري"}
-    }
-    transformNames{
-        BGN{"بي جي إن"}
-        Numeric{"رقمي"}
-        Tone{"أسلوب"}
-        UNGEGN{"يو إن جي إي جي إن"}
-        x-Accents{"اللكنات"}
-        x-Fullwidth{"عرض كامل"}
-        x-Halfwidth{"نصف العرض"}
-        x-Jamo{"جامو"}
-        x-Pinyin{"بن يين"}
-        x-Publishing{"نشر"}
     }
 }
