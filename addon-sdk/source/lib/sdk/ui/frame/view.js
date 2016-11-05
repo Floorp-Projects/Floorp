@@ -63,20 +63,8 @@ const registerFrame = ({id, url}) => {
       view.setAttribute("id", id);
       view.setAttribute("flex", 2);
 
-      let innerFrame = document.createElementNS(HTML_NS, "iframe");
-      innerFrame.setAttribute("id", id);
-      innerFrame.setAttribute("src", url);
-      innerFrame.setAttribute("seamless", "seamless");
-      innerFrame.setAttribute("sandbox", "allow-scripts");
-      innerFrame.setAttribute("scrolling", "no");
-      innerFrame.setAttribute("data-is-sdk-inner-frame", true);
-      innerFrame.setAttribute("style", [ "border:none",
-        "position:absolute", "width:100%", "top: 0",
-        "left: 0", "overflow: hidden"].join(";"));
-
       let outerFrame = document.createElementNS(XUL_NS, "iframe");
-      outerFrame.setAttribute("src", OUTER_FRAME_URI + "#" +
-                                     encode(innerFrame.outerHTML));
+      outerFrame.setAttribute("src", OUTER_FRAME_URI);
       outerFrame.setAttribute("id", "outer-" + id);
       outerFrame.setAttribute("data-is-sdk-outer-frame", true);
       outerFrame.setAttribute("type", "content");
@@ -86,6 +74,24 @@ const registerFrame = ({id, url}) => {
       outerFrame.setAttribute("scrolling", "no");
       outerFrame.setAttribute("disablehistory", true);
       outerFrame.setAttribute("seamless", "seamless");
+      outerFrame.addEventListener("load", function onload() {
+        outerFrame.removeEventListener("load", onload, true);
+
+        let doc = outerFrame.contentDocument;
+
+        let innerFrame = doc.createElementNS(HTML_NS, "iframe");
+        innerFrame.setAttribute("id", id);
+        innerFrame.setAttribute("src", url);
+        innerFrame.setAttribute("seamless", "seamless");
+        innerFrame.setAttribute("sandbox", "allow-scripts");
+        innerFrame.setAttribute("scrolling", "no");
+        innerFrame.setAttribute("data-is-sdk-inner-frame", true);
+        innerFrame.setAttribute("style", [ "border:none",
+          "position:absolute", "width:100%", "top: 0",
+          "left: 0", "overflow: hidden"].join(";"));
+
+        doc.body.appendChild(innerFrame);
+      }, true);
 
       view.appendChild(outerFrame);
 
