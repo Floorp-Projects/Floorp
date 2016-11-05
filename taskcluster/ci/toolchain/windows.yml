@@ -20,3 +20,4 @@ win32-clang-cl/opt:
         files-changed:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/build-clang-windows.sh'
+            - 'taskcluster/taskgraph/transforms/job/toolchain.py'
