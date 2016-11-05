@@ -230,14 +230,14 @@ nsProgressFrame::AttributeChanged(int32_t  aNameSpaceID,
 }
 
 LogicalSize
-nsProgressFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                                 WritingMode aWM,
-                                 const LogicalSize& aCBSize,
-                                 nscoord aAvailableISize,
-                                 const LogicalSize& aMargin,
-                                 const LogicalSize& aBorder,
-                                 const LogicalSize& aPadding,
-                                 bool aShrinkWrap)
+nsProgressFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
+                                 WritingMode         aWM,
+                                 const LogicalSize&  aCBSize,
+                                 nscoord             aAvailableISize,
+                                 const LogicalSize&  aMargin,
+                                 const LogicalSize&  aBorder,
+                                 const LogicalSize&  aPadding,
+                                 ComputeSizeFlags    aFlags)
 {
   const WritingMode wm = GetWritingMode();
   LogicalSize autoSize(wm);

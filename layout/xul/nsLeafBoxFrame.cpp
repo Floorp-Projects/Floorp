@@ -175,19 +175,19 @@ nsLeafBoxFrame::GetIntrinsicISize()
 }
 
 LogicalSize
-nsLeafBoxFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                                WritingMode aWM,
-                                const LogicalSize& aCBSize,
-                                nscoord aAvailableISize,
-                                const LogicalSize& aMargin,
-                                const LogicalSize& aBorder,
-                                const LogicalSize& aPadding,
-                                bool aShrinkWrap)
+nsLeafBoxFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
+                                WritingMode         aWM,
+                                const LogicalSize&  aCBSize,
+                                nscoord             aAvailableISize,
+                                const LogicalSize&  aMargin,
+                                const LogicalSize&  aBorder,
+                                const LogicalSize&  aPadding,
+                                ComputeSizeFlags    aFlags)
 {
   // Important: NOT calling our direct superclass here!
   return nsFrame::ComputeAutoSize(aRenderingContext, aWM,
                                   aCBSize, aAvailableISize,
-                                  aMargin, aBorder, aPadding, aShrinkWrap);
+                                  aMargin, aBorder, aPadding, aFlags);
 }
 
 void
