@@ -32,7 +32,6 @@ add_task(function*() {
 
   // move the add-on button in the Panel Menu
   CustomizableUI.addWidgetToArea(kButton, CustomizableUI.AREA_PANEL);
-  let addonButtonInNavbar = navBar.getElementsByAttribute("id", kButton);
   ok(!navBar.contains(addonButton), "Addon button was removed from the browser bar");
 
   // check the addon button's functionality in the Panel Menu

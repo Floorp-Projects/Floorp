@@ -1,6 +1,5 @@
 add_task(function*() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla", {animate: false});
-  yield promiseTabLoaded(tab);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
   yield promiseAutocompleteResultPopup("www.mozilla.org");
 
   gURLBar.selectTextRange(4, 4);

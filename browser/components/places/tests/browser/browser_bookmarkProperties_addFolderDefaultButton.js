@@ -17,7 +17,6 @@ add_task(function* () {
 
   yield withSidebarTree("bookmarks", function* (tree) {
     // Select the new bookmark in the sidebar.
-    let itemId = PlacesUIUtils.leftPaneQueries["UnfiledBookmarks"];
     tree.selectItems([newBookmarkId]);
     ok(tree.controller.isCommandEnabled("placesCmd_new:folder"),
        "'placesCmd_new:folder' on current selected node is enabled");

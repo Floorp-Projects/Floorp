@@ -104,13 +104,13 @@ function test()
   requestLongerTimeout(10);
 
   Task.spawn(function* () {
-    for (let test of gTests) {
-      info(test.desc);
-      yield test.setup();
+    for (let testCase of gTests) {
+      info(testCase.desc);
+      yield testCase.setup();
 
       let iframe = yield promiseNewTabLoadEvent("about:healthreport");
 
-      yield test.run(iframe);
+      yield testCase.run(iframe);
 
       gBrowser.removeCurrentTab();
     }

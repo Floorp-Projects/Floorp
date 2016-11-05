@@ -296,9 +296,9 @@ var gMainPane = {
   setHomePageToBookmark: function ()
   {
     var rv = { urls: null, names: null };
-    var dialog = gSubDialog.open("chrome://browser/content/preferences/selectBookmark.xul",
-                                 "resizable=yes, modal=yes", rv,
-                                 this._setHomePageToBookmarkClosed.bind(this, rv));
+    gSubDialog.open("chrome://browser/content/preferences/selectBookmark.xul",
+                    "resizable=yes, modal=yes", rv,
+                    this._setHomePageToBookmarkClosed.bind(this, rv));
   },
 
   _setHomePageToBookmarkClosed: function(rv, aEvent) {

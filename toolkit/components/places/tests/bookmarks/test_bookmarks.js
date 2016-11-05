@@ -185,7 +185,7 @@ add_task(function* test_bookmarks() {
 
   // get item title bad input
   try {
-    let title = bs.getItemTitle(-3);
+    bs.getItemTitle(-3);
     do_throw("getItemTitle accepted bad input");
   } catch (ex) {}
 
@@ -370,8 +370,8 @@ add_task(function* test_bookmarks() {
 
   // test bookmark id in query output
   try {
-    let options = hs.getNewQueryOptions();
-    let query = hs.getNewQuery();
+    options = hs.getNewQueryOptions();
+    query = hs.getNewQuery();
     query.setFolders([testRoot], 1);
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
@@ -409,8 +409,8 @@ add_task(function* test_bookmarks() {
     bs.insertBookmark(testFolder, mURI, bs.DEFAULT_INDEX, "title 2");
 
     // query
-    let options = hs.getNewQueryOptions();
-    let query = hs.getNewQuery();
+    options = hs.getNewQueryOptions();
+    query = hs.getNewQuery();
     query.setFolders([testFolder], 1);
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
@@ -499,10 +499,10 @@ add_task(function* test_bookmarks() {
 
   // test search on bookmark title ZZZXXXYYY
   try {
-    let options = hs.getNewQueryOptions();
+    options = hs.getNewQueryOptions();
     options.excludeQueries = 1;
     options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-    let query = hs.getNewQuery();
+    query = hs.getNewQuery();
     query.searchTerms = "ZZZXXXYYY";
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
@@ -521,10 +521,10 @@ add_task(function* test_bookmarks() {
   // test dateAdded and lastModified properties
   // for a search query
   try {
-    let options = hs.getNewQueryOptions();
+    options = hs.getNewQueryOptions();
     options.excludeQueries = 1;
     options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-    let query = hs.getNewQuery();
+    query = hs.getNewQuery();
     query.searchTerms = "ZZZXXXYYY";
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
@@ -548,8 +548,8 @@ add_task(function* test_bookmarks() {
   // test dateAdded and lastModified properties
   // for a folder query
   try {
-    let options = hs.getNewQueryOptions();
-    let query = hs.getNewQuery();
+    options = hs.getNewQueryOptions();
+    query = hs.getNewQuery();
     query.setFolders([testRoot], 1);
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;

@@ -21,9 +21,6 @@ function test() {
   is(gFuturePlacements.size, 0,
      "No change to future placements initially.");
 
-  let currentVersion = CustomizableUIBSPass.kVersion;
-
-
   // Add our widget to the defaults:
   let testWidgetNew = {
     id: "test-messing-with-default-placements-new-pref",
@@ -79,4 +76,3 @@ function test() {
   gPalette.delete(testWidgetNew.id);
   CustomizableUI.reset();
 }
-

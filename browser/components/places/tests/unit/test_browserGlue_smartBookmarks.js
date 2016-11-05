@@ -37,7 +37,7 @@ function countFolderChildren(aFolderItemId) {
 
 add_task(function* setup() {
   // Initialize browserGlue, but remove it's listener to places-init-complete.
-  let bg = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver);
+  Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver);
 
   // Initialize Places.
   PlacesUtils.history;

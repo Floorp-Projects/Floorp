@@ -14,7 +14,7 @@ add_task(function* () {
   yield BrowserTestUtils.browserLoaded(browser);
 
   info("Create a HTMLAnchorElement...");
-  let position = yield ContentTask.spawn(browser, URI,
+  yield ContentTask.spawn(browser, URI,
     function(URI) {
       let anchor = content.document.createElement("a");
       anchor.setAttribute('id', 'clickMe');
