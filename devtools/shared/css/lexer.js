@@ -1073,9 +1073,6 @@ Scanner.prototype = {
       this.ScanString(aToken);
       if (aToken.mType == eCSSToken_Bad_String) {
         aToken.mType = eCSSToken_Bad_URL;
-        // Flag us as having been a Bad_String.
-        aToken.mInteger2 = 1;
-        this.ConsumeBadURLRemnants(aToken);
         return;
       }
     } else {
@@ -1096,42 +1093,7 @@ Scanner.prototype = {
       }
     } else {
       aToken.mType = eCSSToken_Bad_URL;
-      if (aToken.mSymbol != 0) {
-        // Flag us as having been a String, not a Bad_String.
-        aToken.mInteger2 = 0;
-      }
-      this.ConsumeBadURLRemnants(aToken);
     }
-  },
-
-  ConsumeBadURLRemnants: function (aToken) {
-    aToken.mInteger = aToken.mIdent.length;
-    let ch = this.Peek();
-    do {
-      if (ch < 0) {
-        this.AddEOFCharacters(eEOFCharacters_CloseParen);
-        break;
-      }
-
-      if (ch == REVERSE_SOLIDUS && this.GatherEscape(aToken.mIdent, false)) {
-        // Nothing else needs to be done here for the moment; we've consumed the
-        // backslash and following escape.
-      } else {
-        // We always want to consume this character.
-        if (IsVertSpace(ch)) {
-          this.AdvanceLine();
-        } else {
-          this.Advance();
-        }
-        if (ch == 0) {
-          aToken.mIdent.push(UCS2_REPLACEMENT_CHAR);
-        } else {
-          aToken.mIdent.push(ch);
-        }
-      }
-
-      ch = this.Peek();
-    } while (ch != RIGHT_PARENTHESIS);
   },
 
   /**
