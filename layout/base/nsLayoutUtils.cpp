@@ -5501,7 +5501,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
   // or (a * b) / c (which are equivalent).
 
   const bool isAutoISize = inlineStyleCoord->GetUnit() == eStyleUnit_Auto;
-  bool isAutoBSize = IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM));
+  const bool isAutoBSize = IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM));
 
   LogicalSize boxSizingAdjust(aWM);
   if (stylePos->mBoxSizing == StyleBoxSizing::Border) {
@@ -5512,11 +5512,34 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
       boxSizingAdjust.ISize(aWM);
 
   nscoord iSize, minISize, maxISize, bSize, minBSize, maxBSize;
+  // true if we are stretching a Grid item in the inline dimension
+  bool stretchI = false;
+  // true if we are stretching a Grid item in the block dimension
+  bool stretchB = false;
 
   if (!isAutoISize) {
     iSize = nsLayoutUtils::ComputeISizeValue(aRenderingContext,
               aFrame, aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
               boxSizingToMarginEdgeISize, *inlineStyleCoord);
+  } else if (MOZ_UNLIKELY(isGridItem)) {
+    MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(aFrame));
+    // 'auto' inline-size for grid-level box - apply 'stretch' as needed:
+    auto cbSize = aCBSize.ISize(aWM);
+    if (cbSize != NS_UNCONSTRAINEDSIZE &&
+        !aFrame->StyleMargin()->HasInlineAxisAuto(aWM)) {
+      auto inlineAxisAlignment =
+        aWM.IsOrthogonalTo(aFrame->GetParent()->GetWritingMode()) ?
+          stylePos->UsedAlignSelf(aFrame->GetParent()->StyleContext()) :
+          stylePos->UsedJustifySelf(aFrame->GetParent()->StyleContext());
+      stretchI = inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
+                 inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+      if (stretchI) {
+        iSize = std::max(nscoord(0), cbSize -
+                                     aPadding.ISize(aWM) -
+                                     aBorder.ISize(aWM) -
+                                     aMargin.ISize(aWM));
+      }
+    }
   }
 
   const nsStyleCoord& maxISizeCoord = stylePos->MaxISize(aWM);
@@ -5562,15 +5585,15 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
         !aFrame->StyleMargin()->HasBlockAxisAuto(aWM)) {
       auto blockAxisAlignment =
         !aWM.IsOrthogonalTo(aFrame->GetParent()->GetWritingMode()) ?
-          stylePos->UsedAlignSelf(aFrame->StyleContext()->GetParent()) :
-          stylePos->UsedJustifySelf(aFrame->StyleContext()->GetParent());
-      if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-          blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+          stylePos->UsedAlignSelf(aFrame->GetParent()->StyleContext()) :
+          stylePos->UsedJustifySelf(aFrame->GetParent()->StyleContext());
+      stretchB = blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
+                 blockAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+      if (stretchB) {
         bSize = std::max(nscoord(0), cbSize -
                                      aPadding.BSize(aWM) -
                                      aBorder.BSize(aWM) -
                                      aMargin.BSize(aWM));
-        isAutoBSize = false;
       }
     }
   }
@@ -5668,6 +5691,30 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
       }
 
       if (aIntrinsicRatio != nsSize(0, 0)) {
+        if (stretchI || stretchB) {
+          // Stretch within the CB size with preserved intrinsic ratio.
+          if (stretchI && tentISize != iSize) {
+            tentISize = iSize;  // fill the CB iSize
+            if (logicalRatio.ISize(aWM) > 0) {
+              tentBSize = NSCoordMulDiv(iSize, logicalRatio.BSize(aWM), logicalRatio.ISize(aWM));
+              if (tentBSize > bSize && stretchB) {
+                // We're stretching in both dimensions and the bSize calculated
+                // from the iSize / ratio would overflow the CB bSize, so stretch
+                // the bSize instead and derive the iSize which will then fit.
+                tentBSize = bSize;  // fill the CB bSize
+                if (logicalRatio.BSize(aWM) > 0) {
+                  tentISize = NSCoordMulDiv(bSize, logicalRatio.ISize(aWM), logicalRatio.BSize(aWM));
+                }
+              }
+            }
+          } else if (stretchB && tentBSize != bSize) {
+            tentBSize = bSize;  // fill the CB bSize
+            if (logicalRatio.BSize(aWM) > 0) {
+              tentISize = NSCoordMulDiv(bSize, logicalRatio.ISize(aWM), logicalRatio.BSize(aWM));
+            }
+          }
+        }
+
         nsSize autoSize =
           ComputeAutoSizeWithIntrinsicDimensions(minISize, minBSize,
                                                  maxISize, maxBSize,
