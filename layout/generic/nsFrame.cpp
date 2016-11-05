@@ -4713,7 +4713,7 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
     result.ISize(aWM) =
       ComputeISizeValue(aRenderingContext, aCBSize.ISize(aWM),
                         boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
-                        *inlineStyleCoord);
+                        *inlineStyleCoord, aFlags);
   }
 
   // Flex items ignore their min & max sizing properties in their
@@ -4726,7 +4726,7 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
     maxISize =
       ComputeISizeValue(aRenderingContext, aCBSize.ISize(aWM),
                         boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
-                        maxISizeCoord);
+                        maxISizeCoord, aFlags);
     result.ISize(aWM) = std::min(maxISize, result.ISize(aWM));
   }
 
@@ -4737,7 +4737,7 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
     minISize =
       ComputeISizeValue(aRenderingContext, aCBSize.ISize(aWM),
                         boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
-                        minISizeCoord);
+                        minISizeCoord, aFlags);
   } else if (MOZ_UNLIKELY(isGridItem)) {
     // This implements "Implied Minimum Size of Grid Items".
     // https://drafts.csswg.org/css-grid/#min-size-auto
@@ -4964,7 +4964,7 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
   if (!isAutoISize) {
     iSize = ComputeISizeValue(aRenderingContext,
               aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
-              boxSizingToMarginEdgeISize, *inlineStyleCoord);
+              boxSizingToMarginEdgeISize, *inlineStyleCoord, aFlags);
   } else if (MOZ_UNLIKELY(isGridItem)) {
     MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(this));
     // 'auto' inline-size for grid-level box - apply 'stretch' as needed:
@@ -4998,7 +4998,7 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
       !(isFlexItem && isInlineFlexItem)) {
     maxISize = ComputeISizeValue(aRenderingContext,
                  aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
-                 boxSizingToMarginEdgeISize, maxISizeCoord);
+                 boxSizingToMarginEdgeISize, maxISizeCoord, aFlags);
   } else {
     maxISize = nscoord_MAX;
   }
@@ -5013,7 +5013,7 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
       !(isFlexItem && isInlineFlexItem)) {
     minISize = ComputeISizeValue(aRenderingContext,
                  aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
-                 boxSizingToMarginEdgeISize, minISizeCoord);
+                 boxSizingToMarginEdgeISize, minISizeCoord, aFlags);
   } else {
     // Treat "min-width: auto" as 0.
     // NOTE: Technically, "auto" is supposed to behave like "min-content" on
@@ -5330,7 +5330,8 @@ nsIFrame::ComputeISizeValue(nsRenderingContext* aRenderingContext,
                             nscoord             aContainingBlockISize,
                             nscoord             aContentEdgeToBoxSizing,
                             nscoord             aBoxSizingToMarginEdge,
-                            const nsStyleCoord& aCoord)
+                            const nsStyleCoord& aCoord,
+                            ComputeSizeFlags    aFlags)
 {
   NS_PRECONDITION(aRenderingContext, "non-null rendering context expected");
   LAYOUT_WARN_IF_FALSE(aContainingBlockISize != NS_UNCONSTRAINEDSIZE,
