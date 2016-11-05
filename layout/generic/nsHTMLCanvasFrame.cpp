@@ -236,14 +236,9 @@ nsHTMLCanvasFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
   nsSize intrinsicRatio = GetIntrinsicRatio(); // won't actually be used
 
-  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
-                            aWM,
-                            aRenderingContext, this,
-                            intrinsicSize, intrinsicRatio,
-                            aCBSize,
-                            aMargin,
-                            aBorder,
-                            aPadding);
+  return ComputeSizeWithIntrinsicDimensions(aRenderingContext, aWM,
+                                            intrinsicSize, intrinsicRatio,
+                                            aCBSize, aMargin, aBorder, aPadding);
 }
 
 void

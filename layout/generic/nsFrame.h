@@ -275,6 +275,21 @@ public:
               const mozilla::LogicalSize& aPadding,
               ComputeSizeFlags            aFlags) override;
 
+  /**
+   * Calculate the used values for 'width' and 'height' for a replaced element.
+   *   http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
+   */
+  mozilla::LogicalSize
+  ComputeSizeWithIntrinsicDimensions(
+              nsRenderingContext*           aRenderingContext,
+              mozilla::WritingMode          aWM,
+              const mozilla::IntrinsicSize& aIntrinsicSize,
+              nsSize                        aIntrinsicRatio,
+              const mozilla::LogicalSize&   aCBSize,
+              const mozilla::LogicalSize&   aMargin,
+              const mozilla::LogicalSize&   aBorder,
+              const mozilla::LogicalSize&   aPadding);
+
   // Compute tight bounds assuming this frame honours its border, background
   // and outline, its children's tight bounds, and nothing else.
   nsRect ComputeSimpleTightBounds(mozilla::gfx::DrawTarget* aDrawTarget) const;
