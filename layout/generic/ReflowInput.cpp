@@ -265,11 +265,11 @@ SizeComputationInput::ComputeISizeValue(nscoord aContainingBlockISize,
                                     nscoord aBoxSizingToMarginEdge,
                                     const nsStyleCoord& aCoord) const
 {
-  return nsLayoutUtils::ComputeISizeValue(mRenderingContext, mFrame,
-                                          aContainingBlockISize,
-                                          aContentEdgeToBoxSizing,
-                                          aBoxSizingToMarginEdge,
-                                          aCoord);
+  return mFrame->ComputeISizeValue(mRenderingContext,
+                                   aContainingBlockISize,
+                                   aContentEdgeToBoxSizing,
+                                   aBoxSizingToMarginEdge,
+                                   aCoord);
 }
 
 nscoord

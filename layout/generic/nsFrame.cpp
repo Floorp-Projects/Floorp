@@ -41,6 +41,7 @@
 #include "mozilla/Sprintf.h"
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
+#include "LayoutLogging.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerHandle.h"
 #include "mozilla/RestyleManagerHandleInlines.h"
@@ -4710,9 +4711,9 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
 
   if (inlineStyleCoord->GetUnit() != eStyleUnit_Auto) {
     result.ISize(aWM) =
-      nsLayoutUtils::ComputeISizeValue(aRenderingContext, this,
-        aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
-        *inlineStyleCoord);
+      ComputeISizeValue(aRenderingContext, aCBSize.ISize(aWM),
+                        boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
+                        *inlineStyleCoord);
   }
 
   // Flex items ignore their min & max sizing properties in their
@@ -4723,9 +4724,9 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
   if (maxISizeCoord.GetUnit() != eStyleUnit_None &&
       !(isFlexItem && isInlineFlexItem)) {
     maxISize =
-      nsLayoutUtils::ComputeISizeValue(aRenderingContext, this,
-        aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
-        maxISizeCoord);
+      ComputeISizeValue(aRenderingContext, aCBSize.ISize(aWM),
+                        boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
+                        maxISizeCoord);
     result.ISize(aWM) = std::min(maxISize, result.ISize(aWM));
   }
 
@@ -4734,9 +4735,9 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
   if (minISizeCoord.GetUnit() != eStyleUnit_Auto &&
       !(isFlexItem && isInlineFlexItem)) {
     minISize =
-      nsLayoutUtils::ComputeISizeValue(aRenderingContext, this,
-        aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
-        minISizeCoord);
+      ComputeISizeValue(aRenderingContext, aCBSize.ISize(aWM),
+                        boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
+                        minISizeCoord);
   } else if (MOZ_UNLIKELY(isGridItem)) {
     // This implements "Implied Minimum Size of Grid Items".
     // https://drafts.csswg.org/css-grid/#min-size-auto
@@ -4961,8 +4962,8 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
   bool stretchB = false;
 
   if (!isAutoISize) {
-    iSize = nsLayoutUtils::ComputeISizeValue(aRenderingContext,
-              this, aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
+    iSize = ComputeISizeValue(aRenderingContext,
+              aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
               boxSizingToMarginEdgeISize, *inlineStyleCoord);
   } else if (MOZ_UNLIKELY(isGridItem)) {
     MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(this));
@@ -4995,8 +4996,8 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
 
   if (maxISizeCoord.GetUnit() != eStyleUnit_None &&
       !(isFlexItem && isInlineFlexItem)) {
-    maxISize = nsLayoutUtils::ComputeISizeValue(aRenderingContext,
-                 this, aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
+    maxISize = ComputeISizeValue(aRenderingContext,
+                 aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
                  boxSizingToMarginEdgeISize, maxISizeCoord);
   } else {
     maxISize = nscoord_MAX;
@@ -5010,8 +5011,8 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
 
   if (minISizeCoord.GetUnit() != eStyleUnit_Auto &&
       !(isFlexItem && isInlineFlexItem)) {
-    minISize = nsLayoutUtils::ComputeISizeValue(aRenderingContext,
-                 this, aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
+    minISize = ComputeISizeValue(aRenderingContext,
+                 aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
                  boxSizingToMarginEdgeISize, minISizeCoord);
   } else {
     // Treat "min-width: auto" as 0.
@@ -5322,6 +5323,64 @@ nsFrame::ShrinkWidthToFit(nsRenderingContext* aRenderingContext,
     }
   }
   return result;
+}
+
+nscoord
+nsIFrame::ComputeISizeValue(nsRenderingContext* aRenderingContext,
+                            nscoord             aContainingBlockISize,
+                            nscoord             aContentEdgeToBoxSizing,
+                            nscoord             aBoxSizingToMarginEdge,
+                            const nsStyleCoord& aCoord)
+{
+  NS_PRECONDITION(aRenderingContext, "non-null rendering context expected");
+  LAYOUT_WARN_IF_FALSE(aContainingBlockISize != NS_UNCONSTRAINEDSIZE,
+                       "have unconstrained inline-size; this should only result from "
+                       "very large sizes, not attempts at intrinsic inline-size "
+                       "calculation");
+  NS_PRECONDITION(aContainingBlockISize >= 0,
+                  "inline-size less than zero");
+
+  nscoord result;
+  if (aCoord.IsCoordPercentCalcUnit()) {
+    result = nsRuleNode::ComputeCoordPercentCalc(aCoord,
+                                                 aContainingBlockISize);
+    // The result of a calc() expression might be less than 0; we
+    // should clamp at runtime (below).  (Percentages and coords that
+    // are less than 0 have already been dropped by the parser.)
+    result -= aContentEdgeToBoxSizing;
+  } else {
+    MOZ_ASSERT(eStyleUnit_Enumerated == aCoord.GetUnit());
+    // If 'this' is a container for font size inflation, then shrink
+    // wrapping inside of it should not apply font size inflation.
+    AutoMaybeDisableFontInflation an(this);
+
+    int32_t val = aCoord.GetIntValue();
+    switch (val) {
+      case NS_STYLE_WIDTH_MAX_CONTENT:
+        result = GetPrefISize(aRenderingContext);
+        NS_ASSERTION(result >= 0, "inline-size less than zero");
+        break;
+      case NS_STYLE_WIDTH_MIN_CONTENT:
+        result = GetMinISize(aRenderingContext);
+        NS_ASSERTION(result >= 0, "inline-size less than zero");
+        break;
+      case NS_STYLE_WIDTH_FIT_CONTENT:
+        {
+          nscoord pref = GetPrefISize(aRenderingContext),
+                   min = GetMinISize(aRenderingContext),
+                  fill = aContainingBlockISize -
+                         (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
+          result = std::max(min, std::min(pref, fill));
+          NS_ASSERTION(result >= 0, "inline-size less than zero");
+        }
+        break;
+      case NS_STYLE_WIDTH_AVAILABLE:
+        result = aContainingBlockISize -
+                 (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
+    }
+  }
+
+  return std::max(0, result);
 }
 
 void

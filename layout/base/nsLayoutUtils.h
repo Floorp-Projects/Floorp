@@ -1449,14 +1449,6 @@ public:
   static nscoord ComputeCBDependentValue(nscoord aPercentBasis,
                                          const nsStyleCoord& aCoord);
 
-  static nscoord ComputeISizeValue(
-                   nsRenderingContext* aRenderingContext,
-                   nsIFrame*           aFrame,
-                   nscoord             aContainingBlockISize,
-                   nscoord             aContentEdgeToBoxSizing,
-                   nscoord             aBoxSizingToMarginEdge,
-                   const nsStyleCoord& aCoord);
-
   static nscoord ComputeBSizeDependentValue(
                    nscoord              aContainingBlockBSize,
                    const nsStyleCoord&  aCoord);
