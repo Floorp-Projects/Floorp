@@ -105,6 +105,7 @@ skip-if(Android) == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-p
 == grid-item-auto-min-size-clamp-006.html grid-item-auto-min-size-clamp-006-ref.html
 == grid-item-auto-min-size-clamp-007.html grid-item-auto-min-size-clamp-007-ref.html
 == grid-item-canvas-001.html grid-item-canvas-001-ref.html
+skip-if(Android) == grid-item-button-001.html grid-item-button-001-ref.html
 == grid-item-self-baseline-001.html grid-item-self-baseline-001-ref.html
 random-if(http.oscpu!="Linux\u0020i686") == grid-item-content-baseline-001.html grid-item-content-baseline-001-ref.html # depends on exact Ahem baseline font metrics which seems to differ between platforms: bug 1310792
 random-if(http.oscpu!="Linux\u0020i686") == grid-item-content-baseline-002.html grid-item-content-baseline-002-ref.html # ditto
