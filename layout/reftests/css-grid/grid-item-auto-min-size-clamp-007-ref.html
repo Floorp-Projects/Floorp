@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Clamp 'automatic minimum size' to definite max-sizing for items with specified intrinsic 'width'/'height'</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1300369">
+  <style type="text/css">
+body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  float: left;
+  position: relative;
+  grid-template-columns: repeat(2,20px);
+  grid-template-rows: repeat(2,20px);
+  align-items: start;
+  justify-items: start;
+  border: 1px dashed;
+  margin-right: 16px;
+  margin-bottom: 14px;
+}
+.c-auto { grid-template-columns: 15px; width: 15px; }
+.c-min { grid-template-columns: 15px; width: 15px; }
+.c-max { grid-template-columns: 15px; width: 15px; }
+.c-1530 { grid-template-columns: 15px; width: 30px; }
+.c-30 { grid-template-columns: 30px; width: 30px; }
+.r-auto { grid-template-rows: 15px; height: 15px; }
+.r-min { grid-template-rows: 15px; height: 15px; }
+.r-max { grid-template-rows: 15px; height: 15px; }
+span {
+  grid-area: 1 / 1;
+  font-size: 48px;
+  background: grey;
+}
+y {
+  position: absolute;
+  grid-area: 2 / 1 / 3 / 2;
+  top:0;left:0;right:0;
+  height: 10px;
+  background: lightgrey;
+}
+.r y {
+  grid-area: 1 / 2 / 2 / 3;
+  top:0;bottom:0;left:0;
+  width: 10px;
+  height: auto;
+}
+br { clear: both; }
+
+x { display:block; width:30px; height:40px; }
+span { width:15px; }
+.r span { width:20px; }
+.grid.c-30 span, .r.grid.c-30 span { width:30px; }
+.r span { height:15px; }
+  </style>
+</head>
+<body>
+
+<div class="grid c-1530"><y></y><span><x>X</x></span></div>
+<div class="grid c-auto"><y></y><span><x>X</x></span></div>
+<div class="grid c-30"><y style="width:30px"></y><span><x>X</x></span></div>
+<div class="grid c-1530"><y></y><span><x>X</x></span></div>
+<div class="grid c-1530"><y></y><span><x>X</x></span></div>
+
+<br>
+
+<div class="grid c-min"><y></y><span><x>X</x></span></div>
+<div class="grid c-min"><y></y><span><x>X</x></span></div>
+<div class="grid c-30" style="width:30px"><y style="width:30px"></y><span><x>X</x></span></div>
+<div class="grid c-min"><y></y><span><x>X</x></span></div>
+<div class="grid c-min"><y></y><span><x>X</x></span></div>
+
+<br>
+
+<div class="grid c-30"><y></y><span><x>X</x></span></div>
+<div class="grid c-max"><y></y><span><x>X</x></span></div>
+<div class="grid c-30"><y></y><span><x>X</x></span></div>
+<div class="grid c-30"><y></y><span><x>X</x></span></div>
+<div class="grid c-30"><y></y><span><x>X</x></span></div>
+
+<br>
+
+<div class="grid r r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r r-auto"><y></y><span><x>X</x></span></div>
+
+<br>
+
+<div class="grid r r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r r-min"><y></y><span><x>X</x></span></div>
+
+<br>
+
+<div class="grid r r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r r-max"><y></y><span><x>X</x></span></div>
+
+<br>
+
+<div class="grid r c-min r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r c-min r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r c-30 r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r c-min r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r c-min r-auto"><y></y><span><x>X</x></span></div>
+
+<br>
+
+<div class="grid r c-min r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r c-min r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r c-30 r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r c-min r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r c-min r-min"><y></y><span><x>X</x></span></div>
+
+<br>
+
+<div class="grid r c-min r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r c-min r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r c-30 r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r c-min r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r c-min r-max"><y></y><span><x>X</x></span></div>
+
+<br>
+
+<div class="grid r c-30 r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r c-max r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r c-30 r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r c-30 r-auto"><y></y><span><x>X</x></span></div>
+<div class="grid r c-30 r-auto"><y></y><span><x>X</x></span></div>
+
+<br>
+
+<div class="grid r c-30 r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r c-max r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r c-30 r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r c-30 r-min"><y></y><span><x>X</x></span></div>
+<div class="grid r c-30 r-min"><y></y><span><x>X</x></span></div>
+
+<br>
+
+<div class="grid r c-30 r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r c-max r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r c-30 r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r c-30 r-max"><y></y><span><x>X</x></span></div>
+<div class="grid r c-30 r-max"><y></y><span><x>X</x></span></div>
+
+</body></html>

@@ -5,20 +5,16 @@
 -->
 <html><head>
   <meta charset="utf-8">
-  <title>CSS Grid Test: stretching intrinsic ratio item with min/max-size:0</title>
-  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1176775">
-  <link rel="help" href="https://drafts.csswg.org/css-align-3/#valdef-justify-self-stretch">
-  <link rel="match" href="grid-item-intrinsic-ratio-stretch-001-ref.html">
+  <title>CSS Grid Test: stretching intrinsic ratio item with min/max-size:auto and automatic minimum size clamping</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1218178">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#min-size-auto">
+  <link rel="match" href="grid-item-intrinsic-ratio-stretch-004-ref.html">
   <style type="text/css">
 body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
 .grid {
   display: inline-grid;
   border: 1px solid;
   margin: 5px;
-}
-.grid > * {
-  min-width: 0;
-  min-height: 0;
 }
 .vertical-tests img { writing-mode: vertical-rl; }
 .vertical-tests div { vertical-align:bottom }
