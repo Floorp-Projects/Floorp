@@ -5364,6 +5364,11 @@ nsIFrame::ComputeISizeValue(nsRenderingContext* aRenderingContext,
       case NS_STYLE_WIDTH_MIN_CONTENT:
         result = GetMinISize(aRenderingContext);
         NS_ASSERTION(result >= 0, "inline-size less than zero");
+        if (MOZ_UNLIKELY(aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize)) {
+          auto available = aContainingBlockISize -
+                           (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
+          result = std::min(available, result);
+        }
         break;
       case NS_STYLE_WIDTH_FIT_CONTENT:
         {
@@ -5371,6 +5376,9 @@ nsIFrame::ComputeISizeValue(nsRenderingContext* aRenderingContext,
                    min = GetMinISize(aRenderingContext),
                   fill = aContainingBlockISize -
                          (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
+          if (MOZ_UNLIKELY(aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize)) {
+            min = std::min(min, fill);
+          }
           result = std::max(min, std::min(pref, fill));
           NS_ASSERTION(result >= 0, "inline-size less than zero");
         }
