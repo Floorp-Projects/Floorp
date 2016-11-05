@@ -34,14 +34,14 @@ nsLeafFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 
 /* virtual */
 LogicalSize
-nsLeafFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                             WritingMode aWM,
-                             const LogicalSize& aCBSize,
-                             nscoord aAvailableISize,
-                             const LogicalSize& aMargin,
-                             const LogicalSize& aBorder,
-                             const LogicalSize& aPadding,
-                             bool aShrinkWrap)
+nsLeafFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
+                             WritingMode         aWM,
+                             const LogicalSize&  aCBSize,
+                             nscoord             aAvailableISize,
+                             const LogicalSize&  aMargin,
+                             const LogicalSize&  aBorder,
+                             const LogicalSize&  aPadding,
+                             ComputeSizeFlags    aFlags)
 {
   const WritingMode wm = GetWritingMode();
   LogicalSize result(wm, GetIntrinsicISize(), GetIntrinsicBSize());
