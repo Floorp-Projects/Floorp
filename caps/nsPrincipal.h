@@ -25,6 +25,7 @@ public:
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
+  NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
   bool IsCodebasePrincipal() const override { return true; }
   nsresult GetOriginInternal(nsACString& aOrigin) override;
 
@@ -56,6 +57,9 @@ protected:
 
   bool SubsumesInternal(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration) override;
   bool MayLoadInternal(nsIURI* aURI) override;
+
+private:
+  mozilla::Maybe<nsString> mAddonIdCache;
 };
 
 #define NS_PRINCIPAL_CONTRACTID "@mozilla.org/principal;1"
