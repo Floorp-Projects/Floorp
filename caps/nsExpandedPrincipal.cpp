@@ -160,6 +160,13 @@ nsExpandedPrincipal::GetBaseDomain(nsACString& aBaseDomain)
   return NS_ERROR_NOT_AVAILABLE;
 }
 
+NS_IMETHODIMP
+nsExpandedPrincipal::GetAddonId(nsAString& aAddonId)
+{
+  aAddonId.Truncate();
+  return NS_OK;
+};
+
 bool
 nsExpandedPrincipal::AddonHasPermission(const nsAString& aPerm)
 {

@@ -113,6 +113,13 @@ nsSystemPrincipal::GetBaseDomain(nsACString& aBaseDomain)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSystemPrincipal::GetAddonId(nsAString& aAddonId)
+{
+  aAddonId.Truncate();
+  return NS_OK;
+};
+
 //////////////////////////////////////////
 // Methods implementing nsISerializable //
 //////////////////////////////////////////

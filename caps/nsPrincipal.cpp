@@ -27,6 +27,7 @@
 
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/HashFunctions.h"
 
@@ -42,6 +43,19 @@ static bool URIIsImmutable(nsIURI* aURI)
     mutableObj &&
     NS_SUCCEEDED(mutableObj->GetMutable(&isMutable)) &&
     !isMutable;
+}
+
+static nsIAddonPolicyService*
+GetAddonPolicyService(nsresult* aRv)
+{
+  static nsCOMPtr<nsIAddonPolicyService> addonPolicyService;
+
+  *aRv = NS_OK;
+  if (!addonPolicyService) {
+    addonPolicyService = do_GetService("@mozilla.org/addons/policy-service;1", aRv);
+    ClearOnShutdown(&addonPolicyService);
+  }
+  return addonPolicyService;
 }
 
 NS_IMPL_CLASSINFO(nsPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
@@ -377,6 +391,35 @@ nsPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPrincipal::GetAddonId(nsAString& aAddonId)
+{
+  if (mAddonIdCache.isSome()) {
+    aAddonId.Assign(mAddonIdCache.ref());
+    return NS_OK;
+  }
+
+  NS_ENSURE_TRUE(mCodebase, NS_ERROR_FAILURE);
+
+  nsresult rv;
+  bool isMozExt;
+  if (NS_SUCCEEDED(mCodebase->SchemeIs("moz-extension", &isMozExt)) && isMozExt) {
+    nsIAddonPolicyService* addonPolicyService = GetAddonPolicyService(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString addonId;
+    rv = addonPolicyService->ExtensionURIToAddonId(mCodebase, addonId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mAddonIdCache.emplace(addonId);
+  } else {
+    mAddonIdCache.emplace();
+  }
+
+  aAddonId.Assign(mAddonIdCache.ref());
+  return NS_OK;
+};
 
 NS_IMETHODIMP
 nsPrincipal::Read(nsIObjectInputStream* aStream)

@@ -156,6 +156,13 @@ nsNullPrincipal::GetBaseDomain(nsACString& aBaseDomain)
   return mURI->GetPath(aBaseDomain);
 }
 
+NS_IMETHODIMP
+nsNullPrincipal::GetAddonId(nsAString& aAddonId)
+{
+  aAddonId.Truncate();
+  return NS_OK;
+};
+
 /**
  * nsISerializable implementation
  */

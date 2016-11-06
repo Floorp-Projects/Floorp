@@ -29,6 +29,7 @@ public:
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
+  NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
   virtual bool AddonHasPermission(const nsAString& aPerm) override;
   virtual nsresult GetScriptLocation(nsACString &aStr) override;
   nsresult GetOriginInternal(nsACString& aOrigin) override;
