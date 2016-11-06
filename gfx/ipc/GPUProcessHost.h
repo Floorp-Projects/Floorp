@@ -43,6 +43,9 @@ public:
     // Shutdown().
     virtual void OnProcessUnexpectedShutdown(GPUProcessHost* aHost)
     {}
+
+    virtual void OnProcessDeviceReset(GPUProcessHost* aHost)
+    {}
   };
 
 public:
