@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Worklet</title>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+setupTest();
+
+var worklet = window.createWorklet();
+ok(!!worklet, "We have a Worklet");
+
+worklet.import("common.js")
+.then(() => {
+  ok(true, "Import should load a resource.");
+})
+.then(() => {
+  return worklet.import("404.js");
+})
+.then(() => {
+  ok(false, "The loading should fail.");
+}, () => {
+  ok(true, "The loading should fail.");
+}).then(() => {
+  SimpleTest.finish();
+});
+
+</script>
+</body>
+</html>
