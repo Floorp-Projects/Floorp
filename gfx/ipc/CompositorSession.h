@@ -7,6 +7,8 @@
 #define _include_mozilla_gfx_ipc_CompositorSession_h_
 
 #include "base/basictypes.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/CompositorTypes.h"
 #include "nsISupportsImpl.h"
 
 class nsIWidget;
@@ -41,6 +43,9 @@ protected:
 
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorSession)
+
+  virtual bool Reset(const nsTArray<LayersBackend>& aBackendHints,
+                     TextureFactoryIdentifier* aOutIdentifier) = 0;
 
   virtual void Shutdown() = 0;
 
