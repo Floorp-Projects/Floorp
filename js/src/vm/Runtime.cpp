@@ -581,7 +581,7 @@ InvokeInterruptCallback(JSContext* cx)
     const char16_t* chars;
     AutoStableStringChars stableChars(cx);
     if (flat && stableChars.initTwoByte(cx, flat))
-        chars = stableChars.twoByteRange().start().get();
+        chars = stableChars.twoByteRange().begin().get();
     else
         chars = u"(stack not available)";
     JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,

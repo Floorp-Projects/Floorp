@@ -276,12 +276,12 @@ Unescape(StringBuffer& sb, const mozilla::Range<const CharT> chars)
                 building = true;                             \
                 if (!sb.reserve(length))                     \
                     return false;                            \
-                sb.infallibleAppend(chars.start().get(), k); \
+                sb.infallibleAppend(chars.begin().get(), k); \
             }                                                \
         } while(false);
 
         /* Step 10-13. */
-        if (Unhex4(chars.start() + k + 2, &c)) {
+        if (Unhex4(chars.begin() + k + 2, &c)) {
             ENSURE_BUILDING;
             k += 5;
             goto step_18;
@@ -293,7 +293,7 @@ Unescape(StringBuffer& sb, const mozilla::Range<const CharT> chars)
             goto step_18;
 
         /* Step 15-17. */
-        if (Unhex2(chars.start() + k + 1, &c)) {
+        if (Unhex2(chars.begin() + k + 1, &c)) {
             ENSURE_BUILDING;
             k += 2;
         }
@@ -974,7 +974,7 @@ js::str_normalize(JSContext* cx, unsigned argc, Value* vp)
 
     static const size_t INLINE_CAPACITY = 32;
 
-    const UChar* srcChars = Char16ToUChar(stableChars.twoByteRange().start().get());
+    const UChar* srcChars = Char16ToUChar(stableChars.twoByteRange().begin().get());
     int32_t srcLen = AssertedCast<int32_t>(str->length());
     Vector<char16_t, INLINE_CAPACITY> chars(cx);
     if (!chars.resize(INLINE_CAPACITY))

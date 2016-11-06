@@ -188,7 +188,7 @@ js::ParseDecimalNumber(const mozilla::Range<const CharT> chars)
 {
     MOZ_ASSERT(chars.length() > 0);
     uint64_t dec = 0;
-    RangedPtr<const CharT> s = chars.start(), end = chars.end();
+    RangedPtr<const CharT> s = chars.begin(), end = chars.end();
     do {
         CharT c = *s;
         MOZ_ASSERT('0' <= c && c <= '9');
