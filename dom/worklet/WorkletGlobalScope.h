@@ -12,20 +12,28 @@
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
 
+#define WORKLET_IID \
+  { 0x1b3f62e7, 0xe357, 0x44be, \
+    { 0xbf, 0xe0, 0xdf, 0x85, 0xe6, 0x56, 0x85, 0xac } }
+
 class nsIPrincipal;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
+
+class Console;
 
 class WorkletGlobalScope final : public nsIGlobalObject
                                , public nsWrapperCache
 {
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(WORKLET_IID)
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WorkletGlobalScope)
 
-  WorkletGlobalScope()
-  {}
+  explicit WorkletGlobalScope(nsPIDOMWindowInner* aWindow);
 
   nsIGlobalObject* GetParentObject() const
   {
@@ -45,10 +53,17 @@ public:
     return GetWrapper();
   }
 
+  Console*
+  GetConsole(ErrorResult& aRv);
+
 private:
-  ~WorkletGlobalScope()
-  {}
+  ~WorkletGlobalScope();
+
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
+  RefPtr<Console> mConsole;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(WorkletGlobalScope, WORKLET_IID)
 
 } // namespace dom
 } // namespace mozilla

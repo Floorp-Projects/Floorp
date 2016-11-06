@@ -32,7 +32,11 @@ public:
   static already_AddRefed<Promise>
   Fetch(Worklet* aWorklet, const nsAString& aModuleURL, ErrorResult& aRv)
   {
-    RefPtr<Promise> promise = Promise::Create(aWorklet->GetParentObject(), aRv);
+    nsCOMPtr<nsIGlobalObject> global =
+      do_QueryInterface(aWorklet->GetParentObject());
+    MOZ_ASSERT(global);
+
+    RefPtr<Promise> promise = Promise::Create(global, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -42,8 +46,7 @@ public:
 
     RequestInit init;
 
-    RefPtr<Promise> fetchPromise =
-      FetchRequest(aWorklet->GetParentObject(), request, init, aRv);
+    RefPtr<Promise> fetchPromise = FetchRequest(global, request, init, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       promise->MaybeReject(aRv);
       return promise.forget();
@@ -205,7 +208,7 @@ NS_IMPL_ISUPPORTS(WorkletFetchHandler, nsIStreamLoaderObserver)
 
 } // anonymous namespace
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Worklet, mGlobal, mScope)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Worklet, mWindow, mScope)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Worklet)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Worklet)
 
@@ -214,10 +217,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Worklet)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Worklet::Worklet(nsIGlobalObject* aGlobal, nsIPrincipal* aPrincipal)
-  : mGlobal(aGlobal)
+Worklet::Worklet(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
+  : mWindow(aWindow)
   , mPrincipal(aPrincipal)
-{}
+{
+  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aPrincipal);
+}
 
 Worklet::~Worklet()
 {}
@@ -238,7 +244,7 @@ WorkletGlobalScope*
 Worklet::GetOrCreateGlobalScope(JSContext* aCx)
 {
   if (!mScope) {
-    mScope = new WorkletGlobalScope();
+    mScope = new WorkletGlobalScope(mWindow);
 
     JS::Rooted<JSObject*> global(aCx);
     NS_ENSURE_TRUE(mScope->WrapGlobalObject(aCx, mPrincipal, &global), nullptr);
