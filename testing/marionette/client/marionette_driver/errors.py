@@ -55,6 +55,10 @@ class ElementNotSelectableException(MarionetteException):
     status = "element not selectable"
 
 
+class InsecureCertificateException(MarionetteException):
+    status = "insecure certificate"
+
+
 class InvalidArgumentException(MarionetteException):
     status = "invalid argument"
 
