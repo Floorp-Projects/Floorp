@@ -136,6 +136,7 @@ class WakeLock;
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
 class WindowOrientationObserver;
 #endif
+class Worklet;
 namespace cache {
 class CacheStorage;
 } // namespace cache
@@ -925,6 +926,10 @@ public:
                         nsAString::const_iterator aEnd);
   static void
   ConvertDialogOptions(const nsAString& aOptions, nsAString& aResult);
+
+  // Exposed only for testing
+  already_AddRefed<mozilla::dom::Worklet>
+  CreateWorklet(mozilla::ErrorResult& aRv);
 
 protected:
   bool AlertOrConfirm(bool aAlert, const nsAString& aMessage,
