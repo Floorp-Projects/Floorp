@@ -243,6 +243,19 @@ public class testInputConnection extends JavascriptBridgeTest {
             ic.deleteSurroundingText(0, 2);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
 
+            // Bug 1123514 - exception due to incorrect text replacement offsets.
+            getJS().syncCall("test_bug1123514");
+            // Gecko will change text to 'abc' when we input 'b', potentially causing
+            // incorrect calculation of text replacement offsets.
+            ic.commitText("b", 1);
+            // We don't assert text here because this test only works for input/textarea,
+            // so an assertion would fail for contentEditable/designMode.
+            processGeckoEvents();
+            processInputConnectionEvents();
+
+            ic.deleteSurroundingText(2, 1);
+            assertTextAndSelectionAt("Can clear text", ic, "", 0);
+
             // Make sure we don't leave behind stale events for the following test.
             processGeckoEvents();
             processInputConnectionEvents();
