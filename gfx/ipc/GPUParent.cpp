@@ -114,6 +114,30 @@ GPUParent::Init(base::ProcessId aParentPid,
   return true;
 }
 
+void
+GPUParent::NotifyDeviceReset()
+{
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction([] () -> void {
+      GPUParent::GetSingleton()->NotifyDeviceReset();
+    }));
+    return;
+  }
+
+  // Reset and reinitialize the compositor devices
+#ifdef XP_WIN
+  if (!DeviceManagerDx::Get()->MaybeResetAndReacquireDevices()) {
+    // If the device doesn't need to be reset then the device
+    // has already been reset by a previous NotifyDeviceReset message.
+    return;
+  }
+#endif
+
+  // Notify the main process that there's been a device reset
+  // and that they should reset their compositors and repaint
+  Unused << SendNotifyDeviceReset();
+}
+
 bool
 GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
                     nsTArray<GfxVarUpdate>&& vars,

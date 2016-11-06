@@ -80,6 +80,11 @@ public:
   // a failure.
   bool GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason);
 
+  // Reset and reacquire the devices if a reset has happened.
+  // Returns whether a reset occurred not whether reacquiring
+  // was successful.
+  bool MaybeResetAndReacquireDevices();
+
   // Test whether we can acquire a DXGI 1.2-compatible adapter. This should
   // only be called on startup before devices are initialized.
   bool CheckRemotePresentSupport();
