@@ -205,7 +205,7 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase
     JSONParser(JSContext* cx, mozilla::Range<const CharT> data,
                ErrorHandling errorHandling = RaiseError)
       : JSONParserBase(cx, errorHandling),
-        current(data.start()),
+        current(data.begin()),
         begin(current),
         end(data.end())
     {

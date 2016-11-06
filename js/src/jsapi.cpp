@@ -5136,7 +5136,7 @@ JS_CopyStringChars(JSContext* cx, mozilla::Range<char16_t> dest, JSString* str)
         return false;
 
     MOZ_ASSERT(linear->length() <= dest.length());
-    CopyChars(dest.start().get(), *linear);
+    CopyChars(dest.begin().get(), *linear);
     return true;
 }
 
@@ -6350,7 +6350,7 @@ JS_IndexToId(JSContext* cx, uint32_t index, MutableHandleId id)
 JS_PUBLIC_API(bool)
 JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, MutableHandleId idp)
 {
-    RootedAtom atom(cx, AtomizeChars(cx, chars.start().get(), chars.length()));
+    RootedAtom atom(cx, AtomizeChars(cx, chars.begin().get(), chars.length()));
     if (!atom)
         return false;
 #ifdef DEBUG

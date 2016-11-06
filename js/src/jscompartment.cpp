@@ -276,8 +276,8 @@ CopyStringPure(JSContext* cx, JSString* str)
             return nullptr;
 
         return chars.isLatin1()
-               ? NewStringCopyN<CanGC>(cx, chars.latin1Range().start().get(), len)
-               : NewStringCopyNDontDeflate<CanGC>(cx, chars.twoByteRange().start().get(), len);
+               ? NewStringCopyN<CanGC>(cx, chars.latin1Range().begin().get(), len)
+               : NewStringCopyNDontDeflate<CanGC>(cx, chars.twoByteRange().begin().get(), len);
     }
 
     if (str->hasLatin1Chars()) {

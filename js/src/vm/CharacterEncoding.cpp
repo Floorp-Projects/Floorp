@@ -156,7 +156,7 @@ UTF8CharsZ
 JS::CharsToNewUTF8CharsZ(js::ExclusiveContext* maybeCx, const mozilla::Range<CharT> chars)
 {
     /* Get required buffer size. */
-    const CharT* str = chars.start().get();
+    const CharT* str = chars.begin().get();
     size_t len = ::GetDeflatedUTF8StringLength(str, chars.length());
 
     /* Allocate buffer. */
