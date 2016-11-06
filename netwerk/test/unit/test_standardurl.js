@@ -179,9 +179,9 @@ add_test(function test_ipv6()
 
   url = stringToURL("http://example.com");
   url.hostPort = "2001:1";
-  do_check_eq(url.host, "2001");
+  do_check_eq(url.host, "0.0.7.209");
   do_check_eq(url.port, 1);
-  do_check_eq(url.hostPort, "2001:1");
+  do_check_eq(url.hostPort, "0.0.7.209:1");
   run_next_test();
 });
 

@@ -1928,6 +1928,12 @@ nsStandardURL::SetHost(const nsACString &input)
         return rv;
     }
 
+    nsAutoCString ipString;
+    rv = NormalizeIPv4(hostBuf, ipString);
+    if (NS_SUCCEEDED(rv)) {
+      hostBuf = ipString;
+    }
+
     // NormalizeIDN always copies if the call was successful
     host = hostBuf.get();
     len = hostBuf.Length();
