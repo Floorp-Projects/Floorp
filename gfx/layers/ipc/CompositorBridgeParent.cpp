@@ -682,6 +682,22 @@ CompositorBridgeParent::Initialize()
   mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
 }
 
+bool
+CompositorBridgeParent::RecvReset(nsTArray<LayersBackend>&& aBackendHints, bool* aResult, TextureFactoryIdentifier* aOutIdentifier)
+{
+  Maybe<TextureFactoryIdentifier> newIdentifier;
+  ResetCompositorTask(aBackendHints, &newIdentifier);
+  
+  if (newIdentifier) {
+    *aResult = true;
+    *aOutIdentifier = newIdentifier.value();
+  } else {
+    *aResult = false;
+  }
+
+  return true;
+}
+
 uint64_t
 CompositorBridgeParent::RootLayerTreeId()
 {
@@ -2007,6 +2023,7 @@ public:
 
   // FIXME/bug 774388: work out what shutdown protocol we need.
   virtual bool RecvInitialize(const uint64_t& aRootLayerTreeId) override { return false; }
+  virtual bool RecvReset(nsTArray<LayersBackend>&& aBackendHints, bool* aResult, TextureFactoryIdentifier* aOutIdentifier) override { return false; }
   virtual bool RecvRequestOverfill() override { return true; }
   virtual bool RecvWillClose() override { return true; }
   virtual bool RecvPause() override { return true; }
