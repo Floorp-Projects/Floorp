@@ -34,6 +34,7 @@ public:
   NS_IMETHOD GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP) override;
   NS_IMETHOD EnsurePreloadCSP(nsIDOMDocument* aDocument, nsIContentSecurityPolicy** aCSP) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
+  NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
   nsresult GetOriginInternal(nsACString& aOrigin) override;
 
   nsSystemPrincipal() {}
