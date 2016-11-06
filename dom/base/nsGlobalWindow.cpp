@@ -14852,7 +14852,12 @@ nsGlobalWindow::TemporarilyDisableDialogs::~TemporarilyDisableDialogs()
 already_AddRefed<Worklet>
 nsGlobalWindow::CreateWorklet(ErrorResult& aRv)
 {
-  RefPtr<Worklet> worklet = new Worklet(this);
+  if (!mDoc) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  RefPtr<Worklet> worklet = new Worklet(this, mDoc->NodePrincipal());
   return worklet.forget();
 }
 
