@@ -1199,7 +1199,9 @@ public:
   }
 
   void OverrideWithSynthesizedResponse() {
-    mNewChannel->OverrideWithSynthesizedResponse(mHead, mInput, mListener);
+    if (mNewChannel) {
+      mNewChannel->OverrideWithSynthesizedResponse(mHead, mInput, mListener);
+    }
   }
 };
 
@@ -1695,9 +1697,10 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
 
   if (mRedirectingForSubsequentSynthesizedResponse) {
     nsCOMPtr<nsIHttpChannelChild> httpChannelChild = do_QueryInterface(mRedirectChannelChild);
-    MOZ_ASSERT(httpChannelChild);
     RefPtr<HttpChannelChild> redirectedChannel =
         static_cast<HttpChannelChild*>(httpChannelChild.get());
+    // redirectChannel will be NULL if mRedirectChannelChild isn't a
+    // nsIHttpChannelChild (it could be a DataChannelChild).
 
     RefPtr<InterceptStreamListener> streamListener =
         new InterceptStreamListener(redirectedChannel, mListenerContext);
