@@ -152,10 +152,6 @@ public:
 
   void Destroy();
 
-  void Detach();
-
-  void Attach(nsFrameLoader* aFrameLoader);
-
   void RemoveWindowListeners();
 
   void AddWindowListeners();
@@ -681,8 +677,6 @@ private:
   bool mMarkedDestroying;
   // When true, the TabParent is invalid and we should not send IPC messages anymore.
   bool mIsDestroyed;
-  // When true, the TabParent is detached from the frame loader.
-  bool mIsDetached;
 
   uint32_t mChromeFlags;
 

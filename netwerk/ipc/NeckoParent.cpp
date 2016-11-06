@@ -191,11 +191,6 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
       continue;
     }
 
-    if (!aSerialized.mOriginAttributes.mSignedPkg.IsEmpty() &&
-        aSerialized.mOriginAttributes.mSignedPkg != tabContext.OriginAttributesRef().mSignedPkg) {
-      debugString.Append("s,");
-      continue;
-    }
     if (aSerialized.mOriginAttributes.mUserContextId != tabContext.OriginAttributesRef().mUserContextId) {
       debugString.Append("(");
       debugString.AppendInt(aSerialized.mOriginAttributes.mUserContextId);
@@ -207,7 +202,6 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
     aAttrs = DocShellOriginAttributes();
     aAttrs.mAppId = appId;
     aAttrs.mInIsolatedMozBrowser = inBrowserElement;
-    aAttrs.mSignedPkg = aSerialized.mOriginAttributes.mSignedPkg;
     aAttrs.mUserContextId = aSerialized.mOriginAttributes.mUserContextId;
     aAttrs.mPrivateBrowsingId = aSerialized.mOriginAttributes.mPrivateBrowsingId;
     aAttrs.mFirstPartyDomain = aSerialized.mOriginAttributes.mFirstPartyDomain;

@@ -55,15 +55,6 @@ interface nsIFrameLoader : nsISupports
   void loadURI(in nsIURI aURI);
 
   /**
-   * Loads the specified URI in this frame but using a different process.
-   * Behaves identically to loadURI, except that this method only works
-   * with remote frame. For a signed package, we need to specifiy the
-   * package identifier.
-   * Throws an exception with non-remote frames.
-   */
-  void switchProcessAndLoadURI(in nsIURI aURI, in ACString aPackageId);
-
-  /**
    * Puts the frameloader in prerendering mode.
    */
   void setIsPrerendered();

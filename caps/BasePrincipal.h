@@ -36,7 +36,6 @@ public:
            mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
            mAddonId == aOther.mAddonId &&
            mUserContextId == aOther.mUserContextId &&
-           mSignedPkg == aOther.mSignedPkg &&
            mPrivateBrowsingId == aOther.mPrivateBrowsingId &&
            mFirstPartyDomain == aOther.mFirstPartyDomain;
   }
@@ -191,10 +190,6 @@ public:
       return false;
     }
 
-    if (mSignedPkg.WasPassed() && mSignedPkg.Value() != aAttrs.mSignedPkg) {
-      return false;
-    }
-
     if (mPrivateBrowsingId.WasPassed() && mPrivateBrowsingId.Value() != aAttrs.mPrivateBrowsingId) {
       return false;
     }
@@ -226,11 +221,6 @@ public:
 
     if (mUserContextId.WasPassed() && aOther.mUserContextId.WasPassed() &&
         mUserContextId.Value() != aOther.mUserContextId.Value()) {
-      return false;
-    }
-
-    if (mSignedPkg.WasPassed() && aOther.mSignedPkg.WasPassed() &&
-        mSignedPkg.Value() != aOther.mSignedPkg.Value()) {
       return false;
     }
 

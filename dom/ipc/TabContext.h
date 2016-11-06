@@ -127,12 +127,6 @@ public:
   const DocShellOriginAttributes& OriginAttributesRef() const;
 
   /**
-   * Returns the origin associated with the tab (w/o suffix) if this tab owns
-   * a signed packaged content.
-   */
-  const nsACString& SignedPkgOriginNoSuffix() const;
-
-  /**
    * Returns the presentation URL associated with the tab if this tab is
    * created for presented content
    */
@@ -177,7 +171,6 @@ protected:
                      UIStateChangeType aShowAccelerators,
                      UIStateChangeType aShowFocusRings,
                      const DocShellOriginAttributes& aOriginAttributes,
-                     const nsACString& aSignedPkgOriginNoSuffix,
                      const nsAString& aPresentationURL);
 
   /**
@@ -234,14 +227,6 @@ private:
   DocShellOriginAttributes mOriginAttributes;
 
   /**
-   * The signed package origin without suffix. Since the signed packaged
-   * web content is always loaded in a separate process, it makes sense
-   * that we store this immutable value in TabContext. If the TabContext
-   * doesn't own a signed package, this value would be empty.
-   */
-  nsCString mSignedPkgOriginNoSuffix;
-
-  /**
    * The requested presentation URL.
    */
   nsString mPresentationURL;
@@ -274,7 +259,6 @@ public:
                 UIStateChangeType aShowAccelerators,
                 UIStateChangeType aShowFocusRings,
                 const DocShellOriginAttributes& aOriginAttributes,
-                const nsACString& aSignedPkgOriginNoSuffix = EmptyCString(),
                 const nsAString& aPresentationURL = EmptyString())
   {
     return TabContext::SetTabContext(aIsMozBrowserElement,
@@ -284,7 +268,6 @@ public:
                                      aShowAccelerators,
                                      aShowFocusRings,
                                      aOriginAttributes,
-                                     aSignedPkgOriginNoSuffix,
                                      aPresentationURL);
   }
 };
