@@ -14852,12 +14852,14 @@ nsGlobalWindow::TemporarilyDisableDialogs::~TemporarilyDisableDialogs()
 already_AddRefed<Worklet>
 nsGlobalWindow::CreateWorklet(ErrorResult& aRv)
 {
+  MOZ_RELEASE_ASSERT(IsInnerWindow());
+
   if (!mDoc) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  RefPtr<Worklet> worklet = new Worklet(this, mDoc->NodePrincipal());
+  RefPtr<Worklet> worklet = new Worklet(AsInner(), mDoc->NodePrincipal());
   return worklet.forget();
 }
 
