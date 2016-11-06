@@ -25,6 +25,7 @@ public:
   bool Init(base::ProcessId aParentPid,
             MessageLoop* aIOLoop,
             IPC::Channel* aChannel);
+  void NotifyDeviceReset();
 
   bool RecvInit(nsTArray<GfxPrefSetting>&& prefs,
                 nsTArray<GfxVarUpdate>&& vars,

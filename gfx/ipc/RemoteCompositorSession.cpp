@@ -39,6 +39,13 @@ RemoteCompositorSession::~RemoteCompositorSession()
 }
 
 void
+RemoteCompositorSession::NotifyDeviceReset()
+{
+  MOZ_ASSERT(mWidget);
+  mWidget->OnRenderingDeviceReset();
+}
+
+void
 RemoteCompositorSession::NotifySessionLost()
 {
   // Re-entrancy should be impossible: when we are being notified of a lost

@@ -121,6 +121,7 @@ public:
 
   void OnProcessLaunchComplete(GPUProcessHost* aHost) override;
   void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) override;
+  void OnProcessDeviceReset(GPUProcessHost* aHost) override;
 
   // Notify the GPUProcessManager that a top-level PGPU protocol has been
   // terminated. This may be called from any thread.
