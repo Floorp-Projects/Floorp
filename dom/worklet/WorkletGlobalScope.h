@@ -4,56 +4,53 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_Worklet_h
-#define mozilla_dom_Worklet_h
+#ifndef mozilla_dom_WorkletGlobalScope_h
+#define mozilla_dom_WorkletGlobalScope_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
-#include "nsCOMPtr.h"
 
-class nsIGlobalObject;
 class nsIPrincipal;
 
 namespace mozilla {
 namespace dom {
 
-class Promise;
-class WorkletGlobalScope;
-
-class Worklet final : public nsISupports
-                    , public nsWrapperCache
+class WorkletGlobalScope final : public nsIGlobalObject
+                               , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Worklet)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WorkletGlobalScope)
 
-  Worklet(nsIGlobalObject* aGlobal, nsIPrincipal* aPrincipal);
+  WorkletGlobalScope()
+  {}
 
   nsIGlobalObject* GetParentObject() const
   {
-    return mGlobal;
+    return nullptr;
   }
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  already_AddRefed<Promise>
-  Import(const nsAString& aModuleURL, ErrorResult& aRv);
+  bool
+  WrapGlobalObject(JSContext* aCx, nsIPrincipal* aPrincipal,
+                   JS::MutableHandle<JSObject*> aReflector);
 
-  WorkletGlobalScope*
-  GetOrCreateGlobalScope(JSContext* aCx);
+  virtual JSObject*
+  GetGlobalJSObject() override
+  {
+    return GetWrapper();
+  }
 
 private:
-  ~Worklet();
-
-  nsCOMPtr<nsIGlobalObject> mGlobal;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-
-  RefPtr<WorkletGlobalScope> mScope;
+  ~WorkletGlobalScope()
+  {}
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_Worklet_h
+#endif // mozilla_dom_WorkletGlobalScope_h

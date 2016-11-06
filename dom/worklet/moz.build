@@ -5,11 +5,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    'Worklet.h'
+    'Worklet.h',
+    'WorkletGlobalScope.h',
 ]
 
 UNIFIED_SOURCES += [
     'Worklet.cpp',
+    'WorkletGlobalScope.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/js/xpconnect/src',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
