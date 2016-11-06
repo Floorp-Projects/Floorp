@@ -327,6 +327,10 @@ Worklet::Worklet(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aPrincipal);
+
+#ifdef RELEASE_OR_BETA
+  MOZ_CRASH("This code should not go to release/beta yet!");
+#endif
 }
 
 Worklet::~Worklet()
