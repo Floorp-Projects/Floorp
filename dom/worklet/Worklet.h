@@ -12,7 +12,7 @@
 #include "nsWrapperCache.h"
 #include "nsCOMPtr.h"
 
-class nsIGlobalObject;
+class nsPIDOMWindowInner;
 class nsIPrincipal;
 
 namespace mozilla {
@@ -28,11 +28,11 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Worklet)
 
-  Worklet(nsIGlobalObject* aGlobal, nsIPrincipal* aPrincipal);
+  Worklet(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
 
-  nsIGlobalObject* GetParentObject() const
+  nsPIDOMWindowInner* GetParentObject() const
   {
-    return mGlobal;
+    return mWindow;
   }
 
   virtual JSObject*
@@ -47,7 +47,7 @@ public:
 private:
   ~Worklet();
 
-  nsCOMPtr<nsIGlobalObject> mGlobal;
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   RefPtr<WorkletGlobalScope> mScope;
