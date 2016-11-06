@@ -581,6 +581,7 @@ WEBIDL_FILES = [
     'WorkerGlobalScope.webidl',
     'WorkerLocation.webidl',
     'WorkerNavigator.webidl',
+    'Worklet.webidl',
     'XMLDocument.webidl',
     'XMLHttpRequest.webidl',
     'XMLHttpRequestEventTarget.webidl',
