@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
 
@@ -55,6 +56,9 @@ public:
 
   Console*
   GetConsole(ErrorResult& aRv);
+
+  void
+  Dump(const Optional<nsAString>& aString) const;
 
 private:
   ~WorkletGlobalScope();

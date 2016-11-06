@@ -7,6 +7,7 @@
 #include "WorkletGlobalScope.h"
 #include "mozilla/dom/WorkletGlobalScopeBinding.h"
 #include "mozilla/dom/Console.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -78,6 +79,27 @@ WorkletGlobalScope::GetConsole(ErrorResult& aRv)
   }
 
   return mConsole;
+}
+
+void
+WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const
+{
+  if (!nsContentUtils::DOMWindowDumpEnabled()) {
+    return;
+  }
+
+  if (!aString.WasPassed()) {
+    return;
+  }
+
+  NS_ConvertUTF16toUTF8 str(aString.Value());
+
+#ifdef ANDROID
+  __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", str.get());
+#endif
+
+  fputs(str.get(), stdout);
+  fflush(stdout);
 }
 
 } // dom namespace
