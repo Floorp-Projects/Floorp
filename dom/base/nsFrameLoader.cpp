@@ -329,30 +329,6 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
 }
 
 NS_IMETHODIMP
-nsFrameLoader::SwitchProcessAndLoadURI(nsIURI* aURI, const nsACString& aPackageId)
-{
-  RefPtr<TabParent> tp = nullptr;
-
-  MutableTabContext context;
-  nsresult rv = GetNewTabContext(&context, aURI, aPackageId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<Element> ownerElement = mOwnerContent;
-  tp = ContentParent::CreateBrowserOrApp(context, ownerElement, nullptr);
-  if (!tp) {
-    return NS_ERROR_FAILURE;
-  }
-  mRemoteBrowserShown = false;
-
-  rv = SwapRemoteBrowser(tp);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  LoadURI(aURI);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFrameLoader::SetIsPrerendered()
 {
   MOZ_ASSERT(!mDocShell, "Please call SetIsPrerendered before docShell is created");
@@ -3093,52 +3069,6 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
   ShowRemoteFrame(ScreenIntSize(0, 0));
 }
 
-nsresult
-nsFrameLoader::SwapRemoteBrowser(nsITabParent* aTabParent)
-{
-  RefPtr<TabParent> newParent = TabParent::GetFrom(aTabParent);
-  if (!newParent || !mRemoteBrowser) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-  if (!IsRemoteFrame()) {
-    NS_WARNING("Switching from in-process to out-of-process is not supported.");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  if (!OwnerIsMozBrowserOrAppFrame()) {
-    NS_WARNING("Switching process for non-mozbrowser/app frame is not supported.");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  if (newParent == mRemoteBrowser) {
-    return NS_OK;
-  }
-
-  MaybeUpdatePrimaryTabParent(eTabParentRemoved);
-  mRemoteBrowser->CacheFrameLoader(nullptr);
-  mRemoteBrowser->SetOwnerElement(nullptr);
-  mRemoteBrowser->Detach();
-  mRemoteBrowser->Destroy();
-
-  mRemoteBrowser = newParent;
-  mRemoteBrowser->Attach(this);
-  mChildID = mRemoteBrowser->Manager()->ChildID();
-
-  MaybeUpdatePrimaryTabParent(eTabParentChanged);
-
-  // Force the new remote frame manager to load pending scripts
-  mMessageManager->LoadPendingScripts();
-
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
-                        "remote-browser-swapped", nullptr);
-  }
-  if (!mRemoteBrowserShown) {
-    ShowRemoteFrame(ScreenIntSize(0, 0));
-  }
-
-  return NS_OK;
-}
-
 void
 nsFrameLoader::SetDetachedSubdocFrame(nsIFrame* aDetachedFrame,
                                       nsIDocument* aContainerDoc)
@@ -3462,21 +3392,13 @@ nsFrameLoader::MaybeUpdatePrimaryTabParent(TabParentChange aChange)
 
 nsresult
 nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
-                                nsIURI* aURI,
-                                const nsACString& aPackageId)
+                                nsIURI* aURI)
 {
   nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
   nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
   DocShellOriginAttributes attrs;
   attrs.mInIsolatedMozBrowser = OwnerIsIsolatedMozBrowserFrame();
   nsresult rv;
-
-  nsCString signedPkgOrigin;
-  if (!aPackageId.IsEmpty()) {
-    // Only when aPackageId is not empty would signed package origin
-    // be meaningful.
-    nsPrincipal::GetOriginForURI(aURI, signedPkgOrigin);
-  }
 
   // Get the AppId from ownApp
   uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
@@ -3490,9 +3412,6 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
     NS_ENSURE_STATE(appId != nsIScriptSecurityManager::NO_APP_ID);
   }
   attrs.mAppId = appId;
-
-  // Populate packageId to signedPkg.
-  attrs.mSignedPkg = NS_ConvertUTF8toUTF16(aPackageId);
 
   // set the userContextId on the attrs before we pass them into
   // the tab context
@@ -3532,7 +3451,6 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
                                showAccelerators,
                                showFocusRings,
                                attrs,
-                               signedPkgOrigin,
                                presentationURLStr);
   NS_ENSURE_STATE(tabContextUpdated);
 
