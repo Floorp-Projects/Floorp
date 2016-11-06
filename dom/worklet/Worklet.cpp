@@ -21,7 +21,8 @@
 namespace mozilla {
 namespace dom {
 
-namespace {
+// ---------------------------------------------------------------------------
+// WorkletFetchHandler
 
 class WorkletFetchHandler : public PromiseNativeHandler
                           , public nsIStreamLoaderObserver
@@ -32,6 +33,8 @@ public:
   static already_AddRefed<Promise>
   Fetch(Worklet* aWorklet, const nsAString& aModuleURL, ErrorResult& aRv)
   {
+    MOZ_ASSERT(aWorklet);
+
     nsCOMPtr<nsIGlobalObject> global =
       do_QueryInterface(aWorklet->GetParentObject());
     MOZ_ASSERT(global);
@@ -39,6 +42,40 @@ public:
     RefPtr<Promise> promise = Promise::Create(global, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
+    }
+
+    nsCOMPtr<nsPIDOMWindowInner> window = aWorklet->GetParentObject();
+    MOZ_ASSERT(window);
+
+    nsCOMPtr<nsIDocument> doc;
+    doc = window->GetExtantDoc();
+    if (!doc) {
+      promise->MaybeReject(NS_ERROR_FAILURE);
+      return promise.forget();
+    }
+
+    nsCOMPtr<nsIURI> baseURI = doc->GetBaseURI();
+    nsCOMPtr<nsIURI> resolvedURI;
+    nsresult rv = NS_NewURI(getter_AddRefs(resolvedURI), aModuleURL, nullptr, baseURI);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      promise->MaybeReject(rv);
+      return promise.forget();
+    }
+
+    nsAutoCString spec;
+    rv = resolvedURI->GetSpec(spec);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      promise->MaybeReject(rv);
+      return promise.forget();
+    }
+
+    // Maybe we already have an handler for this URI
+    {
+      WorkletFetchHandler* handler = aWorklet->GetImportFetchHandler(spec);
+      if (handler) {
+        handler->AddPromise(promise);
+        return promise.forget();
+      }
     }
 
     RequestOrUSVString request;
@@ -56,6 +93,7 @@ public:
       new WorkletFetchHandler(aWorklet, aModuleURL, promise);
     fetchPromise->AppendNativeHandler(handler);
 
+    aWorklet->AddImportFetchHandler(spec, handler);
     return promise.forget();
   }
 
@@ -63,46 +101,46 @@ public:
   ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
   {
     if (!aValue.isObject()) {
-      mPromise->MaybeReject(NS_ERROR_FAILURE);
+      RejectPromises(NS_ERROR_FAILURE);
       return;
     }
 
     RefPtr<Response> response;
     nsresult rv = UNWRAP_OBJECT(Response, &aValue.toObject(), response);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      mPromise->MaybeReject(rv);
+      RejectPromises(NS_ERROR_FAILURE);
       return;
     }
 
     if (!response->Ok()) {
-      mPromise->MaybeReject(NS_ERROR_DOM_NETWORK_ERR);
+      RejectPromises(NS_ERROR_DOM_NETWORK_ERR);
       return;
     }
 
     nsCOMPtr<nsIInputStream> inputStream;
     response->GetBody(getter_AddRefs(inputStream));
     if (!inputStream) {
-      mPromise->MaybeReject(NS_ERROR_DOM_NETWORK_ERR);
+      RejectPromises(NS_ERROR_DOM_NETWORK_ERR);
       return;
     }
 
     nsCOMPtr<nsIInputStreamPump> pump;
     rv = NS_NewInputStreamPump(getter_AddRefs(pump), inputStream);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      mPromise->MaybeReject(rv);
+      RejectPromises(rv);
       return;
     }
 
     nsCOMPtr<nsIStreamLoader> loader;
     rv = NS_NewStreamLoader(getter_AddRefs(loader), this);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      mPromise->MaybeReject(rv);
+      RejectPromises(rv);
       return;
     }
 
     rv = pump->AsyncRead(loader, nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      mPromise->MaybeReject(rv);
+      RejectPromises(rv);
       return;
     }
 
@@ -125,7 +163,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     if (NS_FAILED(aStatus)) {
-      mPromise->MaybeReject(aStatus);
+      RejectPromises(aStatus);
       return NS_OK;
     }
 
@@ -136,7 +174,7 @@ public:
                                      NS_LITERAL_STRING("UTF-8"), nullptr,
                                      scriptTextBuf, scriptTextLength);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      mPromise->MaybeReject(rv);
+      RejectPromises(rv);
       return NS_OK;
     }
 
@@ -172,41 +210,107 @@ public:
     if (!JS::Evaluate(cx, compileOptions, buffer, &unused)) {
       ErrorResult error;
       error.StealExceptionFromJSContext(cx);
-      mPromise->MaybeReject(error);
+      RejectPromises(error.StealNSResult());
       return NS_OK;
     }
 
     // All done.
-    mPromise->MaybeResolveWithUndefined();
+    ResolvePromises();
     return NS_OK;
   }
 
   virtual void
   RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
   {
-    mPromise->MaybeReject(aCx, aValue);
+    RejectPromises(NS_ERROR_DOM_NETWORK_ERR);
   }
 
 private:
   WorkletFetchHandler(Worklet* aWorklet, const nsAString& aURL,
                       Promise* aPromise)
     : mWorklet(aWorklet)
-    , mPromise(aPromise)
+    , mStatus(ePending)
+    , mErrorStatus(NS_OK)
     , mURL(aURL)
-  {}
+  {
+    MOZ_ASSERT(aWorklet);
+    MOZ_ASSERT(aPromise);
+
+    mPromises.AppendElement(aPromise);
+  }
 
   ~WorkletFetchHandler()
   {}
 
+  void
+  AddPromise(Promise* aPromise)
+  {
+    MOZ_ASSERT(aPromise);
+
+    switch (mStatus) {
+      case ePending:
+        mPromises.AppendElement(aPromise);
+        return;
+
+      case eRejected:
+        MOZ_ASSERT(NS_FAILED(mErrorStatus));
+        aPromise->MaybeReject(mErrorStatus);
+        return;
+
+      case eResolved:
+        aPromise->MaybeResolveWithUndefined();
+        return;
+    }
+  }
+
+  void
+  RejectPromises(nsresult aResult)
+  {
+    MOZ_ASSERT(mStatus == ePending);
+    MOZ_ASSERT(NS_FAILED(aResult));
+
+    for (uint32_t i = 0; i < mPromises.Length(); ++i) {
+      mPromises[i]->MaybeReject(aResult);
+    }
+    mPromises.Clear();
+
+    mStatus = eRejected;
+    mErrorStatus = aResult;
+    mWorklet = nullptr;
+  }
+
+  void
+  ResolvePromises()
+  {
+    MOZ_ASSERT(mStatus == ePending);
+
+    for (uint32_t i = 0; i < mPromises.Length(); ++i) {
+      mPromises[i]->MaybeResolveWithUndefined();
+    }
+    mPromises.Clear();
+
+    mStatus = eResolved;
+    mWorklet = nullptr;
+  }
+
   RefPtr<Worklet> mWorklet;
-  RefPtr<Promise> mPromise;
+  nsTArray<RefPtr<Promise>> mPromises;
+
+  enum {
+    ePending,
+    eRejected,
+    eResolved
+  } mStatus;
+
+  nsresult mErrorStatus;
 
   nsString mURL;
 };
 
 NS_IMPL_ISUPPORTS(WorkletFetchHandler, nsIStreamLoaderObserver)
 
-} // anonymous namespace
+// ---------------------------------------------------------------------------
+// Worklet
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Worklet, mWindow, mScope)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Worklet)
@@ -261,6 +365,22 @@ Worklet::GetOrCreateGlobalScope(JSContext* aCx)
   }
 
   return mScope;
+}
+
+WorkletFetchHandler*
+Worklet::GetImportFetchHandler(const nsACString& aURI)
+{
+  return mImportHandlers.GetWeak(aURI);
+}
+
+void
+Worklet::AddImportFetchHandler(const nsACString& aURI,
+                               WorkletFetchHandler* aHandler)
+{
+  MOZ_ASSERT(aHandler);
+  MOZ_ASSERT(!mImportHandlers.GetWeak(aURI));
+
+  mImportHandlers.Put(aURI, aHandler);
 }
 
 } // dom namespace

@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 #include "nsCOMPtr.h"
 
@@ -20,6 +21,7 @@ namespace dom {
 
 class Promise;
 class WorkletGlobalScope;
+class WorkletFetchHandler;
 
 class Worklet final : public nsISupports
                     , public nsWrapperCache
@@ -47,10 +49,19 @@ public:
 private:
   ~Worklet();
 
+  WorkletFetchHandler*
+  GetImportFetchHandler(const nsACString& aURI);
+
+  void
+  AddImportFetchHandler(const nsACString& aURI, WorkletFetchHandler* aHandler);
+
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   RefPtr<WorkletGlobalScope> mScope;
+  nsRefPtrHashtable<nsCStringHashKey, WorkletFetchHandler> mImportHandlers;
+
+  friend class WorkletFetchHandler;
 };
 
 } // namespace dom
