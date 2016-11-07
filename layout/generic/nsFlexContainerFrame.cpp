@@ -456,7 +456,7 @@ public:
   nscoord GetCrossSize() const     { return mCrossSize;  }
   nscoord GetCrossPosition() const { return mCrossPosn; }
 
-  nscoord ResolvedAscent() const {
+  nscoord ResolvedAscent(bool aUseFirstBaseline) const {
     if (mAscent == ReflowOutput::ASK_FOR_BASELINE) {
       // XXXdholbert We should probably be using the *container's* writing-mode
       // here, instead of the item's -- though it doesn't much matter right
@@ -465,8 +465,13 @@ public:
       // will matter more (& can be expanded/tested) once we officially support
       // logical directions & vertical writing-modes in flexbox, in bug 1079155
       // or a dependency.
-      // Use GetFirstLineBaseline(), or just GetBaseline() if that fails.
-      if (!nsLayoutUtils::GetFirstLineBaseline(mWM, mFrame, &mAscent)) {
+      // Use GetFirstLineBaseline() or GetLastLineBaseline() as appropriate,
+      // or just GetLogicalBaseline() if that fails.
+      bool found = aUseFirstBaseline ?
+        nsLayoutUtils::GetFirstLineBaseline(mWM, mFrame, &mAscent) :
+        nsLayoutUtils::GetLastLineBaseline(mWM, mFrame, &mAscent);
+
+      if (!found) {
         mAscent = mFrame->GetLogicalBaseline(mWM);
       }
     }
@@ -492,7 +497,8 @@ public:
   // from, so that it can look up the appropriate components from mMargin.)
   nscoord GetBaselineOffsetFromOuterCrossEdge(
     AxisEdgeType aEdge,
-    const FlexboxAxisTracker& aAxisTracker) const;
+    const FlexboxAxisTracker& aAxisTracker,
+    bool aUseFirstLineBaseline) const;
 
   float GetShareOfWeightSoFar() const { return mShareOfWeightSoFar; }
 
@@ -826,7 +832,8 @@ public:
     mTotalInnerHypotheticalMainSize(0),
     mTotalOuterHypotheticalMainSize(0),
     mLineCrossSize(0),
-    mBaselineOffset(nscoord_MIN)
+    mFirstBaselineOffset(nscoord_MIN),
+    mLastBaselineOffset(nscoord_MIN)
   {}
 
   // Returns the sum of our FlexItems' outer hypothetical main sizes.
@@ -925,8 +932,22 @@ public:
    *
    * If there are no baseline-aligned FlexItems, returns nscoord_MIN.
    */
-  nscoord GetBaselineOffset() const {
-    return mBaselineOffset;
+  nscoord GetFirstBaselineOffset() const {
+    return mFirstBaselineOffset;
+  }
+
+  /**
+   * Returns the offset within this line where any last baseline-aligned
+   * FlexItems should place their baseline. Opposite the case of the first
+   * baseline offset, this represents a distance from the line's cross-end
+   * edge (since last baseline-aligned items are flush to the cross-end edge).
+   * If we're internally reversing the axes, this instead represents the
+   * distance from the line's cross-start edge.
+   *
+   * If there are no last baseline-aligned FlexItems, returns nscoord_MIN.
+   */
+  nscoord GetLastBaselineOffset() const {
+    return mLastBaselineOffset;
   }
 
   // Runs the "Resolving Flexible Lengths" algorithm from section 9.7 of the
@@ -965,7 +986,8 @@ private:
   nscoord mTotalInnerHypotheticalMainSize;
   nscoord mTotalOuterHypotheticalMainSize;
   nscoord mLineCrossSize;
-  nscoord mBaselineOffset;
+  nscoord mFirstBaselineOffset;
+  nscoord mLastBaselineOffset;
 };
 
 // Information about a strut left behind by a FlexItem that's been collapsed
@@ -1896,10 +1918,14 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
   // the main axis of the container. If that's the case, we just directly
   // convert our align-self value here, so that we don't have to handle this
   // with special cases elsewhere.
+  // We are treating this case as one where it is appropriate to use the
+  // fallback values defined at https://www.w3.org/TR/css-align-3/#baseline
   if (aAxisTracker.IsRowOriented() ==
       aAxisTracker.GetWritingMode().IsOrthogonalTo(mWM)) {
     if (mAlignSelf == NS_STYLE_ALIGN_BASELINE) {
       mAlignSelf = NS_STYLE_ALIGN_FLEX_START;
+    } else if (mAlignSelf == NS_STYLE_ALIGN_LAST_BASELINE) {
+      mAlignSelf = NS_STYLE_ALIGN_FLEX_END;
     }
   }
 }
@@ -1973,7 +1999,8 @@ FlexItem::CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowInput,
 nscoord
 FlexItem::GetBaselineOffsetFromOuterCrossEdge(
   AxisEdgeType aEdge,
-  const FlexboxAxisTracker& aAxisTracker) const
+  const FlexboxAxisTracker& aAxisTracker,
+  bool aUseFirstLineBaseline) const
 {
   // NOTE: Currently, 'mAscent' (taken from reflow) is an inherently vertical
   // measurement -- it's the distance from the border-top edge of this FlexItem
@@ -1987,7 +2014,8 @@ FlexItem::GetBaselineOffsetFromOuterCrossEdge(
   AxisOrientationType crossAxis = aAxisTracker.GetCrossAxis();
   mozilla::Side sideToMeasureFrom = kAxisOrientationToSidesMap[crossAxis][aEdge];
 
-  nscoord marginTopToBaseline = ResolvedAscent() + mMargin.top;
+  nscoord marginTopToBaseline = ResolvedAscent(aUseFirstLineBaseline) +
+                                mMargin.top;
 
   if (sideToMeasureFrom == eSideTop) {
     // Measuring from top (normal case): the distance from the margin-box top
@@ -3086,15 +3114,19 @@ SingleLineCrossAxisPositionTracker::
 void
 FlexLine::ComputeCrossSizeAndBaseline(const FlexboxAxisTracker& aAxisTracker)
 {
-  nscoord crossStartToFurthestBaseline = nscoord_MIN;
-  nscoord crossEndToFurthestBaseline = nscoord_MIN;
+  nscoord crossStartToFurthestFirstBaseline = nscoord_MIN;
+  nscoord crossEndToFurthestFirstBaseline = nscoord_MIN;
+  nscoord crossStartToFurthestLastBaseline = nscoord_MIN;
+  nscoord crossEndToFurthestLastBaseline = nscoord_MIN;
   nscoord largestOuterCrossSize = 0;
   for (const FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
     nscoord curOuterCrossSize =
       item->GetOuterCrossSize(aAxisTracker.GetCrossAxis());
 
-    if (item->GetAlignSelf() == NS_STYLE_ALIGN_BASELINE &&
+    if ((item->GetAlignSelf() == NS_STYLE_ALIGN_BASELINE ||
+        item->GetAlignSelf() == NS_STYLE_ALIGN_LAST_BASELINE) &&
         item->GetNumAutoMarginsInAxis(aAxisTracker.GetCrossAxis()) == 0) {
+      const bool useFirst = (item->GetAlignSelf() == NS_STYLE_ALIGN_BASELINE);
       // FIXME: Once we support "writing-mode", we'll have to do baseline
       // alignment in vertical flex containers here (w/ horizontal cross-axes).
 
@@ -3126,16 +3158,24 @@ FlexLine::ComputeCrossSizeAndBaseline(const FlexboxAxisTracker& aAxisTracker)
 
       nscoord crossStartToBaseline =
         item->GetBaselineOffsetFromOuterCrossEdge(eAxisEdge_Start,
-                                                  aAxisTracker);
+                                                  aAxisTracker,
+                                                  useFirst);
       nscoord crossEndToBaseline = curOuterCrossSize - crossStartToBaseline;
 
       // Now, update our "largest" values for these (across all the flex items
       // in this flex line), so we can use them in computing the line's cross
       // size below:
-      crossStartToFurthestBaseline = std::max(crossStartToFurthestBaseline,
-                                              crossStartToBaseline);
-      crossEndToFurthestBaseline = std::max(crossEndToFurthestBaseline,
-                                            crossEndToBaseline);
+      if (useFirst) {
+        crossStartToFurthestFirstBaseline =
+          std::max(crossStartToFurthestFirstBaseline, crossStartToBaseline);
+        crossEndToFurthestFirstBaseline =
+          std::max(crossEndToFurthestFirstBaseline, crossEndToBaseline);
+      } else {
+        crossStartToFurthestLastBaseline =
+          std::max(crossStartToFurthestLastBaseline, crossStartToBaseline);
+        crossEndToFurthestLastBaseline =
+          std::max(crossEndToFurthestLastBaseline, crossEndToBaseline);
+      }
     } else {
       largestOuterCrossSize = std::max(largestOuterCrossSize, curOuterCrossSize);
     }
@@ -3145,17 +3185,24 @@ FlexLine::ComputeCrossSizeAndBaseline(const FlexboxAxisTracker& aAxisTracker)
   // end, depending on whether we've flipped the axes) to the furthest
   // item-baseline. The item(s) with that baseline will be exactly aligned with
   // the line's edge.
-  mBaselineOffset = aAxisTracker.AreAxesInternallyReversed() ?
-    crossEndToFurthestBaseline : crossStartToFurthestBaseline;
+  mFirstBaselineOffset = aAxisTracker.AreAxesInternallyReversed() ?
+    crossEndToFurthestFirstBaseline : crossStartToFurthestFirstBaseline;
+
+  mLastBaselineOffset = aAxisTracker.AreAxesInternallyReversed() ?
+    crossStartToFurthestLastBaseline : crossEndToFurthestLastBaseline;
 
   // The line's cross-size is the larger of:
   //  (a) [largest cross-start-to-baseline + largest baseline-to-cross-end] of
   //      all baseline-aligned items with no cross-axis auto margins...
   // and
-  //  (b) largest cross-size of all other children.
-  mLineCrossSize = std::max(crossStartToFurthestBaseline +
-                            crossEndToFurthestBaseline,
-                            largestOuterCrossSize);
+  //  (b) [largest cross-start-to-baseline + largest baseline-to-cross-end] of
+  //      all last baseline-aligned items with no cross-axis auto margins...
+  // and
+  //  (c) largest cross-size of all other children.
+  mLineCrossSize = std::max(
+    std::max(crossStartToFurthestFirstBaseline + crossEndToFurthestFirstBaseline,
+             crossStartToFurthestLastBaseline + crossEndToFurthestLastBaseline),
+    largestOuterCrossSize);
 }
 
 void
@@ -3285,8 +3332,7 @@ SingleLineCrossAxisPositionTracker::
   switch (alignSelf) {
     case NS_STYLE_ALIGN_SELF_START:
     case NS_STYLE_ALIGN_SELF_END:
-    case NS_STYLE_ALIGN_LAST_BASELINE:
-      NS_WARNING("NYI: align-items/align-self:left/right/self-start/self-end/last baseline");
+      NS_WARNING("NYI: align-items/align-self:left/right/self-start/self-end");
       MOZ_FALLTHROUGH;
     case NS_STYLE_ALIGN_FLEX_START:
       // No space to skip over -- we're done.
@@ -3299,19 +3345,25 @@ SingleLineCrossAxisPositionTracker::
       mPosition +=
         (aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mAxis)) / 2;
       break;
-    case NS_STYLE_ALIGN_BASELINE: {
+    case NS_STYLE_ALIGN_BASELINE:
+    case NS_STYLE_ALIGN_LAST_BASELINE: {
+      const bool useFirst = (alignSelf == NS_STYLE_ALIGN_BASELINE);
+
       // Normally, baseline-aligned items are collectively aligned with the
       // line's cross-start edge; however, if our cross axis is (internally)
       // reversed, we instead align them with the cross-end edge.
+      // A similar logic holds for last baseline-aligned items, but in reverse.
       AxisEdgeType baselineAlignEdge =
-        aAxisTracker.AreAxesInternallyReversed() ?
+        aAxisTracker.AreAxesInternallyReversed() == useFirst ?
         eAxisEdge_End : eAxisEdge_Start;
 
       nscoord itemBaselineOffset =
         aItem.GetBaselineOffsetFromOuterCrossEdge(baselineAlignEdge,
-                                                  aAxisTracker);
+                                                  aAxisTracker,
+                                                  useFirst);
 
-      nscoord lineBaselineOffset = aLine.GetBaselineOffset();
+      nscoord lineBaselineOffset = useFirst ? aLine.GetFirstBaselineOffset()
+                                            : aLine.GetLastBaselineOffset();
 
       NS_ASSERTION(lineBaselineOffset >= itemBaselineOffset,
                    "failed at finding largest baseline offset");
@@ -3320,7 +3372,7 @@ SingleLineCrossAxisPositionTracker::
       // to get the item's baseline to hit the line's baseline offset:
       nscoord baselineDiff = lineBaselineOffset - itemBaselineOffset;
 
-      if (aAxisTracker.AreAxesInternallyReversed()) {
+      if (aAxisTracker.AreAxesInternallyReversed() == useFirst) {
         // Advance to align item w/ line's flex-end edge (as in FLEX_END case):
         mPosition += aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mAxis);
         // ...and step *back* by the baseline adjustment:
@@ -4273,7 +4325,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   // measured from):
   nscoord flexContainerAscent;
   if (!aAxisTracker.AreAxesInternallyReversed()) {
-    nscoord firstLineBaselineOffset = lines.getFirst()->GetBaselineOffset();
+    nscoord firstLineBaselineOffset = lines.getFirst()->GetFirstBaselineOffset();
     if (firstLineBaselineOffset == nscoord_MIN) {
       // No baseline-aligned items in line. Use sentinel value to prompt us to
       // get baseline from the first FlexItem after we've reflowed it.
@@ -4310,7 +4362,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   // at the cross-end edge of that line, which the line's baseline offset is
   // measured from):
   if (aAxisTracker.AreAxesInternallyReversed()) {
-    nscoord lastLineBaselineOffset = lines.getLast()->GetBaselineOffset();
+    nscoord lastLineBaselineOffset = lines.getLast()->GetFirstBaselineOffset();
     if (lastLineBaselineOffset == nscoord_MIN) {
       // No baseline-aligned items in line. Use sentinel value to prompt us to
       // get baseline from the last FlexItem after we've reflowed it.
@@ -4409,10 +4461,11 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
       // If this is our first item and we haven't established a baseline for
       // the container yet (i.e. if we don't have 'align-self: baseline' on any
-      // children), then use this child's baseline as the container's baseline.
+      // children), then use this child's first baseline as the container's
+      // baseline.
       if (item == firstItem &&
           flexContainerAscent == nscoord_MIN) {
-        flexContainerAscent = itemNormalBPos + item->ResolvedAscent();
+        flexContainerAscent = itemNormalBPos + item->ResolvedAscent(true);
       }
     }
   }
