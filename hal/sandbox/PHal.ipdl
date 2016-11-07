@@ -18,9 +18,6 @@ using mozilla::hal::SwitchDevice from "mozilla/HalTypes.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
 using nsIntRect from "nsRect.h";
 using PRTime from "prtime.h";
-using mozilla::hal::FMRadioCountry from "mozilla/HalTypes.h";
-using mozilla::hal::FMRadioOperation from "mozilla/HalTypes.h";
-using mozilla::hal::FMRadioOperationStatus from "mozilla/HalTypes.h";
 
 namespace mozilla {
 
@@ -62,27 +59,6 @@ struct ScreenConfiguration {
   uint16_t angle;
   uint32_t colorDepth;
   uint32_t pixelDepth;
-};
-
-struct FMRadioOperationInformation {
-  FMRadioOperation operation;
-  FMRadioOperationStatus status;
-  uint32_t frequency;
-};
-
-struct FMRadioRDSGroup {
-  uint16_t blockA;
-  uint16_t blockB;
-  uint16_t blockC;
-  uint16_t blockD;
-};
-
-struct FMRadioSettings {
-  FMRadioCountry country;
-  uint32_t upperLimit;
-  uint32_t lowerLimit;
-  uint32_t spaceType;
-  uint32_t preEmphasis;
 };
 
 struct SystemTimezoneChangeInformation {
