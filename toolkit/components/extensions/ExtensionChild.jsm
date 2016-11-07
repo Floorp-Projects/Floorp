@@ -76,14 +76,15 @@ var apiManager = new class extends SchemaAPIManager {
 // 2) APIs without a local implementation and marked as incompatible with the
 //    out-of-process model fall back to directly invoking the parent methods.
 // TODO(robwu): Remove this when all APIs have migrated.
-class WannabeChildAPIManager extends ChildAPIManager {
-  createProxyContextInConstructor(data) {
+class PseudoChildAPIManager extends ChildAPIManager {
+  createProxyContextInConstructor(originalData) {
     // Create a structured clone to simulate IPC.
-    data = Object.assign({}, data);
-    let {principal} = data;  // Not structurally cloneable.
-    delete data.principal;
+    let data = Object.assign({}, originalData, {principal: null});
     data = Cu.cloneInto(data, {});
-    data.principal = principal;
+    // Principals can be structured cloned by message managers, but not
+    // by cloneInto.
+    data.principal = originalData.principal;
+
     let name = "API:CreateProxyContext";
     // The <browser> that receives messages from `this.messageManager`.
     let target = this.context.contentWindow
@@ -105,7 +106,7 @@ class WannabeChildAPIManager extends ChildAPIManager {
     });
 
     // Synchronously unload the ProxyContext because we synchronously create it.
-    this.context.callOnClose({close: proxyContext.unload.bind(proxyContext)});
+    this.context.callOnClose(proxyContext);
   }
 
   getFallbackImplementation(namespace, name) {
@@ -248,7 +249,7 @@ defineLazyGetter(ExtensionContext.prototype, "childManager", function() {
     apiManager.global.initializeBackgroundPage(this.contentWindow);
   }
 
-  let childManager = new WannabeChildAPIManager(this, this.messageManager, localApis, {
+  let childManager = new PseudoChildAPIManager(this, this.messageManager, localApis, {
     envType: "addon_parent",
     viewType: this.viewType,
     url: this.uri.spec,
