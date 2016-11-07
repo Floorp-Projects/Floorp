@@ -133,8 +133,6 @@ public:
 
 private:
 
-  bool IsInPrivateBrowsing();
-
   // Removes promise from mPromises, and returns it.
   already_AddRefed<DetailedPromise> RetrievePromise(PromiseId aId);
 
