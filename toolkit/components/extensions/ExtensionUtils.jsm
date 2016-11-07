@@ -502,6 +502,13 @@ class BaseContext {
       obj.close();
     }
   }
+
+  /**
+   * A simple proxy for unload(), for use with callOnClose().
+   */
+  close() {
+    this.unload();
+  }
 }
 
 // Manages icon details for toolbar buttons in the |pageAction| and
