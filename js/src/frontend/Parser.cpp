@@ -3757,10 +3757,10 @@ Parser<FullParseHandler>::asmJS(Node list)
  */
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::maybeParseDirective(Node list, Node pn, bool* cont)
+Parser<ParseHandler>::maybeParseDirective(Node list, Node possibleDirective, bool* cont)
 {
     TokenPos directivePos;
-    JSAtom* directive = handler.isStringExprStatement(pn, &directivePos);
+    JSAtom* directive = handler.isStringExprStatement(possibleDirective, &directivePos);
 
     *cont = !!directive;
     if (!*cont)
@@ -3777,7 +3777,7 @@ Parser<ParseHandler>::maybeParseDirective(Node list, Node pn, bool* cont)
         // directive in the future. We don't want to interfere with people
         // taking advantage of directive-prologue-enabled features that appear
         // in other browsers first.
-        handler.setPrologue(pn);
+        handler.setInDirectivePrologue(possibleDirective);
 
         if (directive == context->names().useStrict) {
             // Functions with non-simple parameter lists (destructuring,
@@ -3813,7 +3813,8 @@ Parser<ParseHandler>::maybeParseDirective(Node list, Node pn, bool* cont)
         } else if (directive == context->names().useAsm) {
             if (pc->isFunctionBox())
                 return asmJS(list);
-            return reportWithNode(ParseWarning, false, pn, JSMSG_USE_ASM_DIRECTIVE_FAIL);
+            return reportWithOffset(ParseWarning, false, directivePos.begin,
+                                    JSMSG_USE_ASM_DIRECTIVE_FAIL);
         }
     }
     return true;
