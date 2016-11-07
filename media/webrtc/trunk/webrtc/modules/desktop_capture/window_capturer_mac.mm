@@ -100,6 +100,8 @@ bool WindowCapturerMac::GetWindowList(WindowList* windows) {
         CFDictionaryGetValue(window, kCGWindowName));
     CFNumberRef window_id = reinterpret_cast<CFNumberRef>(
         CFDictionaryGetValue(window, kCGWindowNumber));
+    CFNumberRef window_pid = reinterpret_cast<CFNumberRef>(
+        CFDictionaryGetValue(window, kCGWindowOwnerPID));
     CFNumberRef window_layer = reinterpret_cast<CFNumberRef>(
         CFDictionaryGetValue(window, kCGWindowLayer));
     if (window_title && window_id && window_layer) {
@@ -123,8 +125,11 @@ bool WindowCapturerMac::GetWindowList(WindowList* windows) {
 
       int id;
       CFNumberGetValue(window_id, kCFNumberIntType, &id);
+      pid_t pid = 0;
+      CFNumberGetValue(window_pid, kCFNumberIntType, &pid);
       WindowCapturer::Window window;
       window.id = id;
+      window.pid = pid;
       if (!rtc::ToUtf8(window_title, &(window.title)) ||
           window.title.empty()) {
         continue;

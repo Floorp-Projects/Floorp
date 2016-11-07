@@ -33,9 +33,6 @@ SOURCES += [
 # be overridden on a per-platform basis through the use of the PREF_TS_PAGESIZE
 # hidden preference.  If that preference is missing or invalid then this value
 # will be used.
-# -DSQLITE_MAX_SCHEMA_RETRY increases the times SQLite may try to reparse
-# statements when the schema changes. This is important when supporting lots of
-# concurrent connections, especially when they use shared cache.
 # Note: Be sure to update the configure.in checks when these change!
 for var in ('SQLITE_SECURE_DELETE', 'SQLITE_THREADSAFE', 'SQLITE_CORE',
             'SQLITE_ENABLE_FTS3', 'SQLITE_ENABLE_UNLOCK_NOTIFY',
@@ -44,7 +41,6 @@ for var in ('SQLITE_SECURE_DELETE', 'SQLITE_THREADSAFE', 'SQLITE_CORE',
 
 DEFINES['SQLITE_DEFAULT_PAGE_SIZE'] = 32768
 DEFINES['SQLITE_MAX_DEFAULT_PAGE_SIZE'] = 32768
-DEFINES['SQLITE_MAX_SCHEMA_RETRY'] = 25
 
 # -DSQLITE_WIN32_GETVERSIONEX=0 avoids using deprecated functions.
 # SQLite will just assume we are running on NT kinds of Windows. That's fine
