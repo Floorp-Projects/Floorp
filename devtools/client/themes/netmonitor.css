@@ -8,6 +8,7 @@
 }
 
 #react-clear-button-hook,
+#react-summary-button-hook,
 #react-details-pane-toggle-hook {
   display: flex;
 }
@@ -46,7 +47,7 @@
   #toolbar-spacer,
   #details-pane-toggle,
   .requests-menu-waterfall,
-  #requests-menu-network-summary-button > .toolbarbutton-text {
+  #requests-menu-network-summary-button > .summary-info-text {
     display: none;
   }
 }
@@ -743,14 +744,26 @@
 /* Performance analysis buttons */
 
 #requests-menu-network-summary-button {
+  display: flex;
+  align-items: center;
   background: none;
   box-shadow: none;
   border-color: transparent;
-  list-style-image: url(images/profiler-stopwatch.svg);
   padding-inline-end: 0;
   cursor: pointer;
   margin-inline-end: 1em;
   min-width: 0;
+}
+
+#requests-menu-network-summary-button > .summary-info-icon {
+  background-image: url(images/profiler-stopwatch.svg);
+  filter: var(--icon-filter);
+  width: 16px;
+  height: 16px;
+}
+
+#requests-menu-network-summary-button > .summary-info-text {
+  margin-inline-start: 0.5em;
 }
 
 /* Performance analysis view */

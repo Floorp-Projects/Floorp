@@ -125,7 +125,6 @@ var NetMonitorView = {
     if (!Prefs.statistics) {
       $("#request-menu-context-perf").hidden = true;
       $("#notice-perf-message").hidden = true;
-      $("#requests-menu-network-summary-button").hidden = true;
     }
   },
 
@@ -171,10 +170,10 @@ var NetMonitorView = {
 
     if (flags.visible) {
       this._body.classList.remove("pane-collapsed");
-      gStore.dispatch(Actions.showSidebar(true));
+      gStore.dispatch(Actions.openSidebar(true));
     } else {
       this._body.classList.add("pane-collapsed");
-      gStore.dispatch(Actions.showSidebar(false));
+      gStore.dispatch(Actions.openSidebar(false));
     }
 
     if (tabIndex !== undefined) {
