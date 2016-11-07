@@ -191,7 +191,7 @@ static const Register StackPointer = RealStackPointer;
 // temp register for load/store that has a single-byte persona.
 static const Register ScratchRegX86 = ebx;
 
-# define QUOT_REM_I64_CALLOUT
+# define INT_DIV_I64_CALLOUT
 #endif
 
 #ifdef JS_CODEGEN_ARM
@@ -206,7 +206,7 @@ static const Register FuncPtrCallTemp = CallTempReg1;
 // worth it yet.  CallTempReg2 seems safe.
 static const Register ScratchRegARM = CallTempReg2;
 
-# define QUOT_REM_I64_CALLOUT
+# define INT_DIV_I64_CALLOUT
 # define I64_TO_FLOAT_CALLOUT
 # define FLOAT_TO_I64_CALLOUT
 #endif
@@ -945,11 +945,7 @@ class BaseCompiler
     }
 
     RegI32 fromI64(RegI64 r) {
-#ifdef JS_PUNBOX64
-        return RegI32(r.reg.reg);
-#else
-        return RegI32(r.reg.low);
-#endif
+        return RegI32(lowPart(r));
     }
 
     RegI64 widenI32(RegI32 r) {
@@ -1000,8 +996,6 @@ class BaseCompiler
         freeI64(r);
         needI32(except);
 #endif
-
-
     }
 
     void freeF64(RegF64 r) {
@@ -2522,19 +2516,10 @@ class BaseCompiler
         }
     }
 
-    void checkDivideByZeroI64(RegI64 rhs, RegI64 srcDest, Label* done) {
+    void checkDivideByZeroI64(RegI64 r) {
         MOZ_ASSERT(!isCompilingAsmJS());
-#if defined(JS_CODEGEN_X64)
-        masm.testq(rhs.reg.reg, rhs.reg.reg);
-        masm.j(Assembler::Zero, trap(Trap::IntegerDivideByZero));
-#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-        Label nonZero;
-        masm.branchTest32(Assembler::NonZero, rhs.reg.low, rhs.reg.low, &nonZero);
-        masm.branchTest32(Assembler::Zero, rhs.reg.high, rhs.reg.high, trap(Trap::IntegerDivideByZero));
-        masm.bind(&nonZero);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: checkDivideByZeroI64");
-#endif
+        ScratchI32 scratch(*this);
+        masm.branchTest64(Assembler::Zero, r.reg, r.reg, scratch, trap(Trap::IntegerDivideByZero));
     }
 
     void checkDivideSignedOverflowI32(RegI32 rhs, RegI32 srcDest, Label* done, bool zeroOnOverflow) {
@@ -2554,7 +2539,6 @@ class BaseCompiler
     }
 
     void checkDivideSignedOverflowI64(RegI64 rhs, RegI64 srcDest, Label* done, bool zeroOnOverflow) {
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
         MOZ_ASSERT(!isCompilingAsmJS());
         Label notmin;
         masm.branch64(Assembler::NotEqual, srcDest.reg, Imm64(INT64_MIN), &notmin);
@@ -2566,16 +2550,13 @@ class BaseCompiler
             masm.jump(trap(Trap::IntegerOverflow));
         }
         masm.bind(&notmin);
-#else
-        MOZ_CRASH("BaseCompiler platform hook: checkDivideSignedOverflowI64");
-#endif
     }
 
-#ifndef QUOT_REM_I64_CALLOUT
+#ifndef INT_DIV_I64_CALLOUT
     void quotientI64(RegI64 rhs, RegI64 srcDest, IsUnsigned isUnsigned) {
         Label done;
 
-        checkDivideByZeroI64(rhs, srcDest, &done);
+        checkDivideByZeroI64(rhs);
 
         if (!isUnsigned)
             checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(false));
@@ -2600,7 +2581,7 @@ class BaseCompiler
     void remainderI64(RegI64 rhs, RegI64 srcDest, IsUnsigned isUnsigned) {
         Label done;
 
-        checkDivideByZeroI64(rhs, srcDest, &done);
+        checkDivideByZeroI64(rhs);
 
         if (!isUnsigned)
             checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(true));
@@ -2623,7 +2604,7 @@ class BaseCompiler
 # endif
         masm.bind(&done);
     }
-#endif
+#endif // INT_DIV_I64_CALLOUT
 
     void pop2xI32ForShiftOrRotate(RegI32* r0, RegI32* r1) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
@@ -2712,7 +2693,20 @@ class BaseCompiler
 #endif
     }
 
-    void extendI32ToI64(RegI32 src, RegI64 dest) {
+    RegI64 popI32ForSignExtendI64() {
+#if defined(JS_CODEGEN_X86)
+        need2xI32(specific_edx, specific_eax);
+        RegI32 r0 = popI32ToSpecific(specific_eax);
+        RegI64 x0 = RegI64(Register64(specific_edx.reg, specific_eax.reg));
+        (void)r0;               // x0 is the widening of r0
+#else
+        RegI32 r0 = popI32();
+        RegI64 x0 = widenI32(r0);
+#endif
+        return x0;
+    }
+
+    void signExtendI32ToI64(RegI32 src, RegI64 dest) {
 #if defined(JS_CODEGEN_X64)
         masm.movslq(src.reg, dest.reg.reg);
 #elif defined(JS_CODEGEN_X86)
@@ -2724,7 +2718,7 @@ class BaseCompiler
         masm.ma_mov(src.reg, dest.reg.low);
         masm.ma_asr(Imm32(31), src.reg, dest.reg.high);
 #else
-        MOZ_CRASH("BaseCompiler platform hook: extendI32ToI64");
+        MOZ_CRASH("BaseCompiler platform hook: signExtendI32ToI64");
 #endif
     }
 
@@ -2923,7 +2917,7 @@ class BaseCompiler
 # endif
         return true;
     }
-#endif
+#endif // FLOAT_TO_I64_CALLOUT
 
 #ifndef I64_TO_FLOAT_CALLOUT
     bool convertI64ToFloatNeedsTemp(bool isUnsigned) const {
@@ -2955,7 +2949,7 @@ class BaseCompiler
         MOZ_CRASH("BaseCompiler platform hook: convertI64ToF64");
 # endif
     }
-#endif
+#endif // I64_TO_FLOAT_CALLOUT
 
     void cmp64Set(Assembler::Condition cond, RegI64 lhs, RegI64 rhs, RegI32 dest) {
 #if defined(JS_CODEGEN_X64)
@@ -3186,17 +3180,14 @@ class BaseCompiler
     };
 #endif
 
-  private:
     void checkOffset(MemoryAccessDesc* access, RegI32 ptr) {
         if (access->offset() >= OffsetGuardLimit) {
-            masm.branchAdd32(Assembler::CarrySet,
-                             Imm32(access->offset()), ptr.reg,
+            masm.branchAdd32(Assembler::CarrySet, Imm32(access->offset()), ptr.reg,
                              trap(Trap::OutOfBounds));
             access->clearOffset();
         }
     }
 
-  public:
     // This is the temp register passed as the last argument to load()
     MOZ_MUST_USE size_t loadStoreTemps(MemoryAccessDesc& access) {
 #if defined(JS_CODEGEN_ARM)
@@ -3505,7 +3496,7 @@ class BaseCompiler
             masm.append(access, st.getOffset(), masm.framePushed());
         }
     }
-#endif
+#endif // JS_CODEGEN_ARM
 
     ////////////////////////////////////////////////////////////
 
@@ -3597,7 +3588,7 @@ class BaseCompiler
                                          ValTypeVector& signature, ExprType retType);
     MOZ_MUST_USE bool emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandType);
     MOZ_MUST_USE bool emitBinaryMathBuiltinCall(SymbolicAddress callee, ValType operandType);
-#ifdef QUOT_REM_I64_CALLOUT
+#ifdef INT_DIV_I64_CALLOUT
     MOZ_MUST_USE bool emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operandType);
 #endif
     MOZ_MUST_USE bool emitGetLocal();
@@ -3641,7 +3632,7 @@ class BaseCompiler
     void emitQuotientU32();
     void emitRemainderI32();
     void emitRemainderU32();
-#ifndef QUOT_REM_I64_CALLOUT
+#ifndef INT_DIV_I64_CALLOUT
     void emitQuotientI64();
     void emitQuotientU64();
     void emitRemainderI64();
@@ -3693,7 +3684,10 @@ class BaseCompiler
     void emitSqrtF64();
     template<bool isUnsigned> MOZ_MUST_USE bool emitTruncateF32ToI32();
     template<bool isUnsigned> MOZ_MUST_USE bool emitTruncateF64ToI32();
-#ifndef FLOAT_TO_I64_CALLOUT
+#ifdef FLOAT_TO_I64_CALLOUT
+    MOZ_MUST_USE bool emitConvertFloatingToInt64Callout(SymbolicAddress callee, ValType operandType,
+                                                        ValType resultType);
+#else
     template<bool isUnsigned> MOZ_MUST_USE bool emitTruncateF32ToI64();
     template<bool isUnsigned> MOZ_MUST_USE bool emitTruncateF64ToI64();
 #endif
@@ -3708,7 +3702,10 @@ class BaseCompiler
     void emitConvertF32ToF64();
     void emitConvertI32ToF64();
     void emitConvertU32ToF64();
-#ifndef I64_TO_FLOAT_CALLOUT
+#ifdef I64_TO_FLOAT_CALLOUT
+    MOZ_MUST_USE bool emitConvertInt64ToFloatingCallout(SymbolicAddress callee, ValType operandType,
+                                                        ValType resultType);
+#else
     void emitConvertI64ToF32();
     void emitConvertU64ToF32();
     void emitConvertI64ToF64();
@@ -3718,14 +3715,6 @@ class BaseCompiler
     void emitReinterpretI64AsF64();
     MOZ_MUST_USE bool emitGrowMemory();
     MOZ_MUST_USE bool emitCurrentMemory();
-#ifdef I64_TO_FLOAT_CALLOUT
-    MOZ_MUST_USE bool emitConvertInt64ToFloatingCallout(SymbolicAddress callee, ValType operandType,
-                                                        ValType resultType);
-#endif
-#ifdef FLOAT_TO_I64_CALLOUT
-    MOZ_MUST_USE bool emitConvertFloatingToInt64Callout(SymbolicAddress callee, ValType operandType,
-                                                        ValType resultType);
-#endif
 };
 
 void
@@ -3910,36 +3899,6 @@ BaseCompiler::emitQuotientU32()
     pushI32(r0);
 }
 
-#ifndef QUOT_REM_I64_CALLOUT
-void
-BaseCompiler::emitQuotientI64()
-{
-# ifdef JS_PUNBOX64
-    RegI64 r0, r1;
-    pop2xI64ForIntDiv(&r0, &r1);
-    quotientI64(r1, r0, IsUnsigned(false));
-    freeI64(r1);
-    pushI64(r0);
-# else
-    MOZ_CRASH("BaseCompiler platform hook: emitQuotientI64");
-# endif
-}
-
-void
-BaseCompiler::emitQuotientU64()
-{
-# ifdef JS_PUNBOX64
-    RegI64 r0, r1;
-    pop2xI64ForIntDiv(&r0, &r1);
-    quotientI64(r1, r0, IsUnsigned(true));
-    freeI64(r1);
-    pushI64(r0);
-# else
-    MOZ_CRASH("BaseCompiler platform hook: emitQuotientU64");
-# endif
-}
-#endif
-
 void
 BaseCompiler::emitRemainderI32()
 {
@@ -3973,7 +3932,35 @@ BaseCompiler::emitRemainderU32()
     pushI32(r0);
 }
 
-#ifndef QUOT_REM_I64_CALLOUT
+#ifndef INT_DIV_I64_CALLOUT
+void
+BaseCompiler::emitQuotientI64()
+{
+# ifdef JS_PUNBOX64
+    RegI64 r0, r1;
+    pop2xI64ForIntDiv(&r0, &r1);
+    quotientI64(r1, r0, IsUnsigned(false));
+    freeI64(r1);
+    pushI64(r0);
+# else
+    MOZ_CRASH("BaseCompiler platform hook: emitQuotientI64");
+# endif
+}
+
+void
+BaseCompiler::emitQuotientU64()
+{
+# ifdef JS_PUNBOX64
+    RegI64 r0, r1;
+    pop2xI64ForIntDiv(&r0, &r1);
+    quotientI64(r1, r0, IsUnsigned(true));
+    freeI64(r1);
+    pushI64(r0);
+# else
+    MOZ_CRASH("BaseCompiler platform hook: emitQuotientU64");
+# endif
+}
+
 void
 BaseCompiler::emitRemainderI64()
 {
@@ -4001,7 +3988,7 @@ BaseCompiler::emitRemainderU64()
     MOZ_CRASH("BaseCompiler platform hook: emitRemainderU64");
 # endif
 }
-#endif
+#endif // INT_DIV_I64_CALLOUT
 
 void
 BaseCompiler::emitDivideF32()
@@ -4579,7 +4566,7 @@ BaseCompiler::emitTruncateF64ToI64()
     pushI64(x0);
     return true;
 }
-#endif
+#endif // FLOAT_TO_I64_CALLOUT
 
 void
 BaseCompiler::emitWrapI64ToI32()
@@ -4594,15 +4581,9 @@ BaseCompiler::emitWrapI64ToI32()
 void
 BaseCompiler::emitExtendI32ToI64()
 {
-#if defined(JS_CODEGEN_X86)
-    need2xI32(specific_edx, specific_eax);
-    RegI32 r0 = popI32ToSpecific(specific_eax);
-    RegI64 x0 = RegI64(Register64(specific_edx.reg, specific_eax.reg));
-#else
-    RegI32 r0 = popI32();
-    RegI64 x0 = widenI32(r0);
-#endif
-    extendI32ToI64(r0, x0);
+    RegI64 x0 = popI32ForSignExtendI64();
+    RegI32 r0 = RegI32(lowPart(x0));
+    signExtendI32ToI64(r0, x0);
     pushI64(x0);
     // Note: no need to free r0, since it is part of x0
 }
@@ -4749,7 +4730,7 @@ BaseCompiler::emitConvertU64ToF64()
     freeI64(r0);
     pushF64(d0);
 }
-#endif
+#endif // I64_TO_FLOAT_CALLOUT
 
 void
 BaseCompiler::emitReinterpretI32AsF32()
@@ -5525,7 +5506,7 @@ BaseCompiler::emitBinaryMathBuiltinCall(SymbolicAddress callee, ValType operandT
     return emitCommonMathCall(lineOrBytecode, callee, SigDD_, ExprType::F64);
 }
 
-#ifdef QUOT_REM_I64_CALLOUT
+#ifdef INT_DIV_I64_CALLOUT
 bool
 BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operandType)
 {
@@ -5544,7 +5525,7 @@ BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operand
 
     Label done;
 
-    checkDivideByZeroI64(rhs, srcDest, &done);
+    checkDivideByZeroI64(rhs);
 
     if (callee == SymbolicAddress::DivI64)
         checkDivideSignedOverflowI64(rhs, srcDest, &done, ZeroOnOverflow(false));
@@ -5566,7 +5547,7 @@ BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee, ValType operand
 
     return true;
 }
-#endif
+#endif // INT_DIV_I64_CALLOUT
 
 #ifdef I64_TO_FLOAT_CALLOUT
 bool
@@ -5605,7 +5586,7 @@ BaseCompiler::emitConvertInt64ToFloatingCallout(SymbolicAddress callee, ValType 
 
     return true;
 }
-#endif
+#endif // I64_TO_FLOAT_CALLOUT
 
 #ifdef FLOAT_TO_I64_CALLOUT
 // `Callee` always takes a double, so a float32 input must be converted.
@@ -5662,7 +5643,7 @@ BaseCompiler::emitConvertFloatingToInt64Callout(SymbolicAddress callee, ValType 
 
     return true;
 }
-#endif
+#endif // FLOAT_TO_I64_CALLOUT
 
 bool
 BaseCompiler::emitGetLocal()
@@ -6735,25 +6716,25 @@ BaseCompiler::emitBody()
           case Expr::I64Mul:
             CHECK_NEXT(emitBinary(emitMultiplyI64, ValType::I64));
           case Expr::I64DivS:
-#ifdef QUOT_REM_I64_CALLOUT
+#ifdef INT_DIV_I64_CALLOUT
             CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::DivI64, ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitQuotientI64, ValType::I64));
 #endif
           case Expr::I64DivU:
-#ifdef QUOT_REM_I64_CALLOUT
+#ifdef INT_DIV_I64_CALLOUT
             CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::UDivI64, ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitQuotientU64, ValType::I64));
 #endif
           case Expr::I64RemS:
-#ifdef QUOT_REM_I64_CALLOUT
+#ifdef INT_DIV_I64_CALLOUT
             CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::ModI64, ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitRemainderI64, ValType::I64));
 #endif
           case Expr::I64RemU:
-#ifdef QUOT_REM_I64_CALLOUT
+#ifdef INT_DIV_I64_CALLOUT
             CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::UModI64, ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitRemainderU64, ValType::I64));
@@ -7197,13 +7178,6 @@ BaseCompiler::emitFunction()
     if (!pushControl(&functionEnd))
         return false;
 
-#ifdef JS_CODEGEN_ARM64
-    // FIXME: There is a hack up at the top to allow the baseline
-    // compiler to compile on ARM64 (by defining StackPointer), but
-    // the resulting code cannot run.  So prevent it from running.
-    MOZ_CRASH("Several adjustments required for ARM64 operation");
-#endif
-
     if (!emitBody())
         return false;
 
@@ -7463,6 +7437,6 @@ js::wasm::BaselineCompileFunction(IonCompileTask* task)
     return true;
 }
 
-#undef QUOT_REM_I64_CALLOUT
+#undef INT_DIV_I64_CALLOUT
 #undef I64_TO_FLOAT_CALLOUT
 #undef FLOAT_TO_I64_CALLOUT
