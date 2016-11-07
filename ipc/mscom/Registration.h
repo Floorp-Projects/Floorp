@@ -81,21 +81,30 @@ UniquePtr<RegisteredProxy> RegisterTypelib(const wchar_t* aLeafName,
  */
 struct ArrayData
 {
+  enum class Flag
+  {
+    eNone = 0,
+    eAllocatedByServer = 1 // This implies an extra level of indirection
+  };
+
   ArrayData(REFIID aIid, ULONG aMethodIndex, ULONG aArrayParamIndex,
             VARTYPE aArrayParamType, REFIID aArrayParamIid,
-            ULONG aLengthParamIndex)
+            ULONG aLengthParamIndex, Flag aFlag = Flag::eNone)
     : mIid(aIid)
     , mMethodIndex(aMethodIndex)
     , mArrayParamIndex(aArrayParamIndex)
     , mArrayParamType(aArrayParamType)
     , mArrayParamIid(aArrayParamIid)
     , mLengthParamIndex(aLengthParamIndex)
+    , mFlag(aFlag)
   {
   }
+
   ArrayData(const ArrayData& aOther)
   {
     *this = aOther;
   }
+
   ArrayData& operator=(const ArrayData& aOther)
   {
     mIid = aOther.mIid;
@@ -104,14 +113,17 @@ struct ArrayData
     mArrayParamType = aOther.mArrayParamType;
     mArrayParamIid = aOther.mArrayParamIid;
     mLengthParamIndex = aOther.mLengthParamIndex;
+    mFlag = aOther.mFlag;
     return *this;
   }
+
   IID     mIid;
   ULONG   mMethodIndex;
   ULONG   mArrayParamIndex;
   VARTYPE mArrayParamType;
   IID     mArrayParamIid;
   ULONG   mLengthParamIndex;
+  Flag    mFlag;
 };
 
 void RegisterArrayData(const ArrayData* aArrayData, size_t aLength);
