@@ -7,9 +7,11 @@
 #ifndef nsThreadSyncDispatch_h_
 #define nsThreadSyncDispatch_h_
 
+#include "mozilla/Atomics.h"
+#include "mozilla/DebugOnly.h"
+
 #include "nsThreadUtils.h"
 #include "LeakRefPtr.h"
-#include "mozilla/DebugOnly.h"
 
 class nsThreadSyncDispatch : public mozilla::Runnable
 {
@@ -17,27 +19,37 @@ public:
   nsThreadSyncDispatch(nsIThread* aOrigin, already_AddRefed<nsIRunnable>&& aTask)
     : mOrigin(aOrigin)
     , mSyncTask(mozilla::Move(aTask))
+    , mIsPending(true)
   {
   }
 
   bool IsPending()
   {
-    return !!mSyncTask;
+    // This is an atomic acquire on the origin thread.
+    return mIsPending;
   }
 
 private:
   NS_IMETHOD Run() override
   {
-    if (nsIRunnable* task = mSyncTask.get()) {
+    if (nsCOMPtr<nsIRunnable> task = mSyncTask.take()) {
+      MOZ_ASSERT(!mSyncTask);
+
       mozilla::DebugOnly<nsresult> result = task->Run();
       MOZ_ASSERT(NS_SUCCEEDED(result),
                  "task in sync dispatch should not fail");
+
       // We must release the task here to ensure that when the original
       // thread is unblocked, this task has been released.
-      mSyncTask.release();
+      task = nullptr;
+
+      // This is an atomic release on the target thread.
+      mIsPending = false;
+
       // unblock the origin thread
       mOrigin->Dispatch(this, NS_DISPATCH_NORMAL);
     }
+
     return NS_OK;
   }
 
@@ -45,6 +57,7 @@ private:
   // The task is leaked by default when Run() is not called, because
   // otherwise we may release it in an incorrect thread.
   mozilla::LeakRefPtr<nsIRunnable> mSyncTask;
+  mozilla::Atomic<bool, mozilla::ReleaseAcquire> mIsPending;
 };
 
 #endif // nsThreadSyncDispatch_h_
