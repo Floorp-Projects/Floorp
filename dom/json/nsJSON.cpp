@@ -531,7 +531,7 @@ nsJSONListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 
   JS::ConstTwoByteChars chars(reinterpret_cast<const char16_t*>(mBufferedChars.Elements()),
                               mBufferedChars.Length());
-  bool ok = JS_ParseJSONWithReviver(mCx, chars.start().get(),
+  bool ok = JS_ParseJSONWithReviver(mCx, chars.begin().get(),
                                       uint32_t(mBufferedChars.Length()),
                                       reviver, &value);
 

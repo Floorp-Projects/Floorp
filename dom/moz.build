@@ -101,6 +101,7 @@ DIRS += [
     'console',
     'performance',
     'xhr',
+    'worklet',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
