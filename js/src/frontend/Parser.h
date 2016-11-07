@@ -769,13 +769,13 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
      *
      * Ex:
      *   PossibleError possibleError(*this);
-     *   possibleError.setPendingExpressionError(pn, JSMSG_BAD_PROP_ID);
+     *   possibleError.setPendingExpressionErrorAt(pos, JSMSG_BAD_PROP_ID);
      *   // A JSMSG_BAD_PROP_ID ParseError is reported, returns false.
      *   if (!possibleError.checkForExpressionError())
      *       return false; // we reach this point with a pending exception
      *
      *   PossibleError possibleError(*this);
-     *   possibleError.setPendingExpressionError(pn, JSMSG_BAD_PROP_ID);
+     *   possibleError.setPendingExpressionErrorAt(pos, JSMSG_BAD_PROP_ID);
      *   // Returns true, no error is reported.
      *   if (!possibleError.checkForDestructuringError())
      *       return false; // not reached, no pending exception
@@ -815,7 +815,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
         // Set a pending error. Only a single error may be set per instance and
         // error kind.
-        void setPending(ErrorKind kind, Node pn, unsigned errorNumber);
+        void setPending(ErrorKind kind, const TokenPos& pos, unsigned errorNumber);
 
         // If there is a pending error, report it and return false, otherwise
         // return true.
@@ -830,12 +830,12 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
         // Set a pending destructuring error. Only a single error may be set
         // per instance, i.e. subsequent calls to this method are ignored and
         // won't overwrite the existing pending error.
-        void setPendingDestructuringError(Node pn, unsigned errorNumber);
+        void setPendingDestructuringErrorAt(const TokenPos& pos, unsigned errorNumber);
 
         // Set a pending expression error. Only a single error may be set per
         // instance, i.e. subsequent calls to this method are ignored and won't
         // overwrite the existing pending error.
-        void setPendingExpressionError(Node pn, unsigned errorNumber);
+        void setPendingExpressionErrorAt(const TokenPos& pos, unsigned errorNumber);
 
         // If there is a pending destructuring error, report it and return
         // false, otherwise return true. Clears any pending expression error.
