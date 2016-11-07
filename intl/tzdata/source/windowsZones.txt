@@ -156,6 +156,7 @@ windowsZones:table(nofallback){
         }
         "Central Pacific Standard Time"{
             001{"Pacific/Guadalcanal"}
+            AQ{"Antarctica/Casey"}
             AU{"Antarctica/Macquarie"}
             FM{"Pacific/Ponape Pacific/Kosrae"}
             NC{"Pacific/Noumea"}
