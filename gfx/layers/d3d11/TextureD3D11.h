@@ -19,6 +19,18 @@
 namespace mozilla {
 namespace layers {
 
+class AutoTextureLock
+{
+public:
+  AutoTextureLock(IDXGIKeyedMutex* aMutex, HRESULT& aResult,
+                  uint32_t aTimeout = 0);
+  ~AutoTextureLock();
+
+private:
+  RefPtr<IDXGIKeyedMutex> mMutex;
+  HRESULT mResult;
+};
+
 class CompositorD3D11;
 
 class DXGITextureData : public TextureData
