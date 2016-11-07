@@ -601,6 +601,17 @@ Parser<ParseHandler>::zeport(ParseReportKind kind, bool strict, unsigned errorNu
 
 template <typename ParseHandler>
 bool
+Parser<ParseHandler>::strictModeError(unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+    bool res = reportHelper(ParseStrictError, pc->sc()->strict(), pos().begin, errorNumber, args);
+    va_end(args);
+    return res;
+}
+
+template <typename ParseHandler>
+bool
 Parser<ParseHandler>::reportWithNode(ParseReportKind kind, bool strict, Node pn, unsigned errorNumber, ...)
 {
     uint32_t offset = (pn ? handler.getPosition(pn) : pos()).begin;
@@ -955,7 +966,7 @@ Parser<ParseHandler>::notePositionalFormalParameter(Node fn, HandlePropertyName 
             JSAutoByteString bytes;
             if (!AtomToPrintableString(context, name, &bytes))
                 return false;
-            if (!zeport(ParseStrictError, pc->sc()->strict(), JSMSG_DUPLICATE_FORMAL, bytes.ptr()))
+            if (!strictModeError(JSMSG_DUPLICATE_FORMAL, bytes.ptr()))
                 return false;
         }
 
@@ -6102,14 +6113,13 @@ Parser<ParseHandler>::withStatement(YieldHandling yieldHandling)
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_WITH));
     uint32_t begin = pos().begin;
 
-    // In most cases, we want the constructs forbidden in strict mode code to be
-    // a subset of those that JSOPTION_EXTRA_WARNINGS warns about, and we should
-    // use reportStrictModeError.  However, 'with' is the sole instance of a
-    // construct that is forbidden in strict mode code, but doesn't even merit a
-    // warning under JSOPTION_EXTRA_WARNINGS.  See
+    // Usually we want the constructs forbidden in strict mode code to be a
+    // subset of those that ContextOptions::extraWarnings() warns about, and we
+    // use strictModeError directly.  But while 'with' is forbidden in strict
+    // mode code, it doesn't even merit a warning in non-strict code.  See
     // https://bugzilla.mozilla.org/show_bug.cgi?id=514576#c1.
     if (pc->sc()->strict()) {
-        if (!zeport(ParseStrictError, true, JSMSG_STRICT_CODE_WITH))
+        if (!strictModeError(JSMSG_STRICT_CODE_WITH))
             return null();
     }
 
