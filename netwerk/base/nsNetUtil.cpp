@@ -2128,7 +2128,7 @@ void net_EnsurePSMInit()
 {
     nsresult rv;
     nsCOMPtr<nsISupports> psm = do_GetService(PSM_COMPONENT_CONTRACTID, &rv);
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 bool NS_IsAboutBlank(nsIURI *uri)
