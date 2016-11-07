@@ -13,7 +13,6 @@ import re
 import urllib2
 import json
 import socket
-import errno
 
 from mozharness.base.errors import BaseErrorList
 from mozharness.base.log import FATAL, WARNING
@@ -758,15 +757,7 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
             abs_minidump_path = os.path.join(dirs['abs_work_dir'],
                                              minidump_stackwalk_path)
             if os.path.exists(abs_minidump_path):
-                try:
-                    self.chmod(abs_minidump_path, 0755)
-                except OSError as e:
-                    # docker image for Linux tests on Taskcluster already
-                    # ship minidump stackwalk. If mozharness finds it, it
-                    # won't have permission to modify bits. It is harmless,
-                    # however, because it already has executable permission.
-                    if e.errno != errno.EPERM:
-                        raise
+                self.chmod(abs_minidump_path, 0755)
                 self.minidump_stackwalk_path = abs_minidump_path
             else:
                 self.warning("minidump stackwalk path was given but couldn't be found. "
