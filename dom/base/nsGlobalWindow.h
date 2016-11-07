@@ -1708,6 +1708,12 @@ private:
   friend class nsPIDOMWindow<mozIDOMWindow>;
   friend class nsPIDOMWindow<nsISupports>;
 
+  // Apply back pressure to the window if the TabGroup ThrottledEventQueue
+  // exists and has too many runnables waiting to run.  For example, suspend
+  // timers until we have a chance to catch up, etc.
+  void
+  MaybeApplyBackPressure();
+
   mozilla::dom::TabGroup* TabGroupInner();
   mozilla::dom::TabGroup* TabGroupOuter();
 
