@@ -797,7 +797,7 @@ StripURIForReporting(nsIURI* aURI,
  *        source line number of the violation (if available)
  */
 nsresult
-nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
+nsCSPContext::SendReports(nsIURI* aBlockedURI,
                           nsIURI* aOriginalURI,
                           nsAString& aViolatedDirective,
                           uint32_t aViolatedPolicyIndex,
@@ -820,26 +820,11 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
   nsresult rv;
 
   // blocked-uri
-  if (aBlockedContentSource) {
+  if (aBlockedURI) {
     nsAutoCString reportBlockedURI;
-    nsCOMPtr<nsIURI> uri = do_QueryInterface(aBlockedContentSource);
-    // could be a string or URI
-    if (uri) {
-      StripURIForReporting(uri, mSelfURI, reportBlockedURI);
-    } else {
-      nsCOMPtr<nsISupportsCString> cstr = do_QueryInterface(aBlockedContentSource);
-      if (cstr) {
-        cstr->GetData(reportBlockedURI);
-      }
-    }
-    if (reportBlockedURI.IsEmpty()) {
-      // this can happen for frame-ancestors violation where the violating
-      // ancestor is cross-origin.
-      NS_WARNING("No blocked URI (null aBlockedContentSource) for CSP violation report.");
-    }
+    StripURIForReporting(aBlockedURI, mSelfURI, reportBlockedURI);
     report.mCsp_report.mBlocked_uri = NS_ConvertUTF8toUTF16(reportBlockedURI);
   }
-
   // document-uri
   nsAutoCString reportDocumentURI;
   StripURIForReporting(mSelfURI, mSelfURI, reportDocumentURI);
@@ -1076,13 +1061,14 @@ class CSPReportSenderRunnable final : public Runnable
       NS_ENSURE_SUCCESS(rv, rv);
 
       // 2) send reports for the policy that was violated
-      mCSPContext->SendReports(mBlockedContentSource, mOriginalURI,
+      nsCOMPtr<nsIURI> blockedURI = do_QueryInterface(mBlockedContentSource);
+      mCSPContext->SendReports(blockedURI, mOriginalURI,
                                mViolatedDirective, mViolatedPolicyIndex,
                                mSourceFile, mScriptSample, mLineNum);
 
       // 3) log to console (one per policy violation)
       // mBlockedContentSource could be a URI or a string.
-      nsCOMPtr<nsIURI> blockedURI = do_QueryInterface(mBlockedContentSource);
+
       // if mBlockedContentSource is not a URI, it could be a string
       nsCOMPtr<nsISupportsCString> blockedString = do_QueryInterface(mBlockedContentSource);
 
