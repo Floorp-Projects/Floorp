@@ -8,6 +8,7 @@
 #define mozilla_Range_h
 
 #include "mozilla/RangedPtr.h"
+#include "mozilla/TypeTraits.h"
 
 #include <stddef.h>
 
@@ -34,6 +35,14 @@ public:
     aStart.checkIdenticalRange(aEnd);
     MOZ_ASSERT(aStart <= aEnd);
   }
+
+  template<typename U,
+           class = typename EnableIf<IsConvertible<U (*)[], T (*)[]>::value,
+                                     int>::Type>
+  Range(const Range<U>& aOther)
+    : mStart(aOther.mStart),
+      mEnd(aOther.mEnd)
+  {}
 
   RangedPtr<T> begin() const { return mStart; }
   RangedPtr<T> end() const { return mEnd; }
