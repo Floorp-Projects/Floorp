@@ -296,6 +296,7 @@ class BaseMarionetteArguments(ArgumentParser):
                                "'file.ini:section' to specify a particular section.")
         self.add_argument('--addon',
                           action='append',
+                          dest='addons',
                           help="addon to install; repeat for multiple addons.")
         self.add_argument('--repeat',
                           type=int,
