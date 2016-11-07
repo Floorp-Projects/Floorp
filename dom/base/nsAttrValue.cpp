@@ -644,11 +644,8 @@ nsAttrValue::ToString(nsAString& aResult) const
     {
       aResult.Truncate();
       MiscContainer *container = GetMiscContainer();
-      DeclarationBlock* decl = container->mValue.mCSSDeclaration;
-      // XXXheycam Once we support CSSOM access to them, we should
-      // probably serialize ServoDeclarationBlock like this too.
-      if (decl && decl->IsGecko()) {
-        decl->AsGecko()->ToString(aResult);
+      if (DeclarationBlock* decl = container->mValue.mCSSDeclaration) {
+        decl->ToString(aResult);
       }
       const_cast<nsAttrValue*>(this)->SetMiscAtomOrString(&aResult);
 
