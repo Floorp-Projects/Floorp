@@ -56,11 +56,6 @@ TEST_SUITES = {
         'mach_command': 'crashtest',
         'kwargs': {'test_file': None},
     },
-    'crashtest-ipc': {
-        'aliases': ('Cipc', 'cipc'),
-        'mach_command': 'crashtest-ipc',
-        'kwargs': {'test_file': None},
-    },
     'firefox-ui-functional': {
         'aliases': ('Fxfn',),
         'mach_command': 'firefox-ui-functional',
@@ -111,11 +106,6 @@ TEST_SUITES = {
         'aliases': ('RR', 'rr', 'Rr'),
         'mach_command': 'reftest',
         'kwargs': {'tests': None},
-    },
-    'reftest-ipc': {
-        'aliases': ('Ripc',),
-        'mach_command': 'reftest-ipc',
-        'kwargs': {'test_file': None},
     },
     'web-platform-tests': {
         'aliases': ('wpt',),

@@ -206,10 +206,6 @@ config = {
     },
     # local reftest suites
     "all_reftest_suites": {
-        "reftest": {
-            "options": ["--suite=reftest"],
-            "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
-        },
         "crashtest": {
             "options": ["--suite=crashtest"],
             "tests": ["tests/reftest/tests/testing/crashtest/crashtests.list"]
@@ -219,34 +215,14 @@ config = {
                        "--suite=jstestbrowser"],
             "tests": ["tests/jsreftest/tests/jstests.list"]
         },
-        "reftest-ipc": {
-            "env": {
-                "MOZ_OMTC_ENABLED": "1",
-                "MOZ_DISABLE_CONTEXT_SHARING_GLX": "1"
-            },
-            "options": ["--suite=reftest",
-                        "--setpref=browser.tabs.remote=true",
-                        "--setpref=browser.tabs.remote.autostart=true",
-                        "--setpref=extensions.e10sBlocksEnabling=false",
-                        "--setpref=layers.async-pan-zoom.enabled=true"],
-            "tests": ["tests/reftest/tests/layout/reftests/reftest-sanity/reftest.list"]
+        "reftest": {
+            "options": ["--suite=reftest"],
+            "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
         },
         "reftest-no-accel": {
             "options": ["--suite=reftest",
                         "--setpref=layers.acceleration.force-enabled=disabled"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]},
-        "crashtest-ipc": {
-            "env": {
-                "MOZ_OMTC_ENABLED": "1",
-                "MOZ_DISABLE_CONTEXT_SHARING_GLX": "1"
-            },
-            "options": ["--suite=crashtest",
-                        "--setpref=browser.tabs.remote=true",
-                        "--setpref=browser.tabs.remote.autostart=true",
-                        "--setpref=extensions.e10sBlocksEnabling=false",
-                        "--setpref=layers.async-pan-zoom.enabled=true"],
-            "tests": ["tests/reftest/tests/testing/crashtest/crashtests.list"]
-        },
     },
     "all_xpcshell_suites": {
         "xpcshell": {
