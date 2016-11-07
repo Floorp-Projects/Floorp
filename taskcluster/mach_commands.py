@@ -274,11 +274,17 @@ class TaskClusterImagesProvider(object):
              description='Build a Docker image')
     @CommandArgument('image_name',
                      help='Name of the image to build')
-    def build_image(self, image_name):
-        from taskgraph.docker import build_image
-
+    @CommandArgument('--context-only',
+                     help="File name the context tarball should be written to."
+                          "with this option it will only build the context.tar.",
+                     metavar='context.tar')
+    def build_image(self, image_name, context_only):
+        from taskgraph.docker import build_image, build_context
         try:
-            build_image(image_name)
+            if context_only is None:
+                build_image(image_name)
+            else:
+                build_context(image_name, context_only)
         except Exception:
             traceback.print_exc()
             sys.exit(1)

@@ -10,45 +10,54 @@ task:
     source: '{{source}}'
     owner: mozilla-taskcluster-maintenance@mozilla.com
   tags:
-    createdForUser: {{owner}}
+    createdForUser: '{{owner}}'
 
   workerType: taskcluster-images
   provisionerId: aws-provisioner-v1
   schedulerId: task-graph-scheduler
 
   routes:
-      - index.docker.images.v1.{{project}}.{{image_name}}.latest
-      - index.docker.images.v1.{{project}}.{{image_name}}.pushdate.{{year}}.{{month}}-{{day}}-{{pushtime}}
-      - index.docker.images.v1.{{project}}.{{image_name}}.hash.{{context_hash}}
+      # Indexing routes to avoid building the same image twice
+      - index.{{index_image_prefix}}.level-{{level}}.{{image_name}}.latest
+      - index.{{index_image_prefix}}.level-{{level}}.{{image_name}}.pushdate.{{year}}.{{month}}-{{day}}-{{pushtime}}
+      - index.{{index_image_prefix}}.level-{{level}}.{{image_name}}.hash.{{context_hash}}
+      # Treeherder routes
       - tc-treeherder.v2.{{project}}.{{head_rev}}.{{pushlog_id}}
       - tc-treeherder-stage.v2.{{project}}.{{head_rev}}.{{pushlog_id}}
+
+  scopes:
+      - secrets:get:project/taskcluster/gecko/hgfingerprint
+      - docker-worker:cache:level-{{level}}-imagebuilder-v1
 
   payload:
     env:
       HASH: '{{context_hash}}'
       PROJECT: '{{project}}'
       CONTEXT_URL: '{{context_url}}'
-      CONTEXT_PATH: '{{context_path}}'
-      BASE_REPOSITORY: '{{base_repository}}'
-      HEAD_REPOSITORY: '{{head_repository}}'
-      HEAD_REV: '{{head_rev}}'
-      HEAD_REF: '{{head_ref}}'
+      IMAGE_NAME: '{{image_name}}'
+      GECKO_BASE_REPOSITORY: '{{base_repository}}'
+      GECKO_HEAD_REPOSITORY: '{{head_repository}}'
+      GECKO_HEAD_REV: '{{head_rev}}'
+      HG_STORE_PATH: '/home/worker/checkouts/hg-store'
+    cache:
+      'level-{{level}}-imagebuilder-v1': '/home/worker/checkouts'
     features:
       dind: true
       chainOfTrust: true
+      taskclusterProxy: true
     image: '{{#docker_image}}image_builder{{/docker_image}}'
-    command:
-      - /bin/bash
-      - -c
-      - /home/worker/bin/build_image.sh
     maxRunTime: 3600
     artifacts:
       '{{artifact_path}}':
         type: 'file'
-        path: '/artifacts/image.tar'
+        path: '/home/worker/workspace/artifacts/image.tar.zst'
         expires:
           relative-datestamp: "1 year"
   extra:
+    imageMeta: # Useful when converting back from JSON in action tasks
+      level: '{{level}}'
+      contextHash: '{{context_hash}}'
+      imageName: '{{image_name}}'
     treeherderEnv:
       - staging
       - production
@@ -57,4 +66,3 @@ task:
       build:
         platform: 'taskcluster-images'
       symbol: 'I'
-
