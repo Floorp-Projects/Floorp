@@ -796,9 +796,6 @@ ValueNumberer::visitDefinition(MDefinition* def)
         // needed, so we can clear |def|'s guard flag and let it be discarded.
         def->setNotGuardUnchecked();
 
-        if (def->isGuardRangeBailouts())
-            sim->setGuardRangeBailoutsUnchecked();
-
         if (DeadIfUnused(def)) {
             if (!discardDefsRecursively(def))
                 return false;
