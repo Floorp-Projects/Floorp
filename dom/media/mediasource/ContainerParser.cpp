@@ -38,7 +38,7 @@ ContainerParser::ContainerParser(const nsACString& aType)
 
 ContainerParser::~ContainerParser() = default;
 
-bool
+MediaResult
 ContainerParser::IsInitSegmentPresent(MediaByteBuffer* aData)
 {
   MSE_DEBUG(ContainerParser, "aLength=%u [%x%x%x%x]",
@@ -47,10 +47,10 @@ ContainerParser::IsInitSegmentPresent(MediaByteBuffer* aData)
             aData->Length() > 1 ? (*aData)[1] : 0,
             aData->Length() > 2 ? (*aData)[2] : 0,
             aData->Length() > 3 ? (*aData)[3] : 0);
-  return false;
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
-bool
+MediaResult
 ContainerParser::IsMediaSegmentPresent(MediaByteBuffer* aData)
 {
   MSE_DEBUG(ContainerParser, "aLength=%u [%x%x%x%x]",
@@ -59,14 +59,14 @@ ContainerParser::IsMediaSegmentPresent(MediaByteBuffer* aData)
             aData->Length() > 1 ? (*aData)[1] : 0,
             aData->Length() > 2 ? (*aData)[2] : 0,
             aData->Length() > 3 ? (*aData)[3] : 0);
-  return false;
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
-bool
+MediaResult
 ContainerParser::ParseStartAndEndTimestamps(MediaByteBuffer* aData,
                                             int64_t& aStart, int64_t& aEnd)
 {
-  return false;
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 bool
@@ -123,7 +123,7 @@ public:
   static const unsigned NS_PER_USEC = 1000;
   static const unsigned USEC_PER_SEC = 1000000;
 
-  bool IsInitSegmentPresent(MediaByteBuffer* aData) override
+  MediaResult IsInitSegmentPresent(MediaByteBuffer* aData) override
   {
     ContainerParser::IsInitSegmentPresent(aData);
     // XXX: This is overly primitive, needs to collect data as it's appended
@@ -140,15 +140,17 @@ public:
     // 0x1654ae6b // -> One or more Tracks
 
     // 0x1a45dfa3 // EBML
-    if (aData->Length() >= 4 &&
-        (*aData)[0] == 0x1a && (*aData)[1] == 0x45 && (*aData)[2] == 0xdf &&
-        (*aData)[3] == 0xa3) {
-      return true;
+    if (aData->Length() < 4) {
+      return NS_ERROR_NOT_AVAILABLE;
     }
-    return false;
+    if ((*aData)[0] == 0x1a && (*aData)[1] == 0x45 && (*aData)[2] == 0xdf &&
+        (*aData)[3] == 0xa3) {
+      return NS_OK;
+    }
+    return MediaResult(NS_ERROR_FAILURE, RESULT_DETAIL("Invalid webm content"));
   }
 
-  bool IsMediaSegmentPresent(MediaByteBuffer* aData) override
+  MediaResult IsMediaSegmentPresent(MediaByteBuffer* aData) override
   {
     ContainerParser::IsMediaSegmentPresent(aData);
     // XXX: This is overly primitive, needs to collect data as it's appended
@@ -163,26 +165,29 @@ public:
     // 0x1654ae6b // -> One or more Tracks
 
     // 0x1f43b675 // Cluster
-    if (aData->Length() >= 4 &&
-        (*aData)[0] == 0x1f && (*aData)[1] == 0x43 && (*aData)[2] == 0xb6 &&
+    if (aData->Length() < 4) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    if ((*aData)[0] == 0x1f && (*aData)[1] == 0x43 && (*aData)[2] == 0xb6 &&
         (*aData)[3] == 0x75) {
-      return true;
+      return NS_OK;
     }
     // 0x1c53bb6b // Cues
-    if (aData->Length() >= 4 &&
-        (*aData)[0] == 0x1c && (*aData)[1] == 0x53 && (*aData)[2] == 0xbb &&
+    if ((*aData)[0] == 0x1c && (*aData)[1] == 0x53 && (*aData)[2] == 0xbb &&
         (*aData)[3] == 0x6b) {
-      return true;
+      return NS_OK;
     }
-    return false;
+    return MediaResult(NS_ERROR_FAILURE, RESULT_DETAIL("Invalid webm content"));
   }
 
-  bool ParseStartAndEndTimestamps(MediaByteBuffer* aData,
-                                  int64_t& aStart, int64_t& aEnd) override
+  MediaResult ParseStartAndEndTimestamps(MediaByteBuffer* aData,
+                                         int64_t& aStart,
+                                         int64_t& aEnd) override
   {
-    bool initSegment = IsInitSegmentPresent(aData);
+    bool initSegment = NS_SUCCEEDED(IsInitSegmentPresent(aData));
 
-    if (mLastMapping && (initSegment || IsMediaSegmentPresent(aData))) {
+    if (mLastMapping &&
+        (initSegment || NS_SUCCEEDED(IsMediaSegmentPresent(aData)))) {
       // The last data contained a complete cluster but we can only detect it
       // now that a new one is starting.
       // We use mOffset as end position to ensure that any blocks not reported
@@ -191,7 +196,7 @@ public:
                                                   mOffset);
       mLastMapping.reset();
       MSE_DEBUG(WebMContainerParser, "New cluster found at start, ending previous one");
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
 
     if (initSegment) {
@@ -223,7 +228,7 @@ public:
         MOZ_ASSERT(mParser.mInitEndOffset <= mResource->GetLength());
         if (!mInitData->SetLength(mParser.mInitEndOffset, fallible)) {
           // Super unlikely OOM
-          return false;
+          return NS_ERROR_OUT_OF_MEMORY;
         }
         mCompleteInitSegmentRange = MediaByteRange(0, mParser.mInitEndOffset);
         char* buffer = reinterpret_cast<char*>(mInitData->Elements());
@@ -239,7 +244,7 @@ public:
     mOffset += aData->Length();
 
     if (mapping.IsEmpty()) {
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
 
     // Calculate media range for first media segment.
@@ -265,7 +270,7 @@ public:
 
     if (completeIdx < 0) {
       mLastMapping.reset();
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
 
     if (mCompleteMediaHeaderRange.IsEmpty()) {
@@ -300,7 +305,7 @@ public:
     if (!previousMapping && completeIdx + 1u >= mapping.Length()) {
       // We have no previous nor next block available,
       // so we can't estimate this block's duration.
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
 
     uint64_t frameDuration = (completeIdx + 1u < mapping.Length())
@@ -314,7 +319,7 @@ public:
               mapping[completeIdx].mEndOffset, mapping.Length(), completeIdx,
               mCompleteMediaSegmentRange.mEnd);
 
-    return true;
+    return NS_OK;
   }
 
   int64_t GetRoundingError() override
@@ -337,20 +342,30 @@ public:
     : ContainerParser(aType)
   {}
 
-  bool IsInitSegmentPresent(MediaByteBuffer* aData) override
+  MediaResult IsInitSegmentPresent(MediaByteBuffer* aData) override
   {
     ContainerParser::IsInitSegmentPresent(aData);
     // Each MP4 atom has a chunk size and chunk type. The root chunk in an MP4
     // file is the 'ftyp' atom followed by a file type. We just check for a
     // vaguely valid 'ftyp' atom.
     AtomParser parser(mType, aData);
-    return parser.StartWithInitSegment();
+    if (!parser.IsValid()) {
+      return MediaResult(
+        NS_ERROR_FAILURE,
+        RESULT_DETAIL("Invalid Box:%s", parser.LastInvalidBox()));
+    }
+    return parser.StartWithInitSegment() ? NS_OK : NS_ERROR_NOT_AVAILABLE;
   }
 
-  bool IsMediaSegmentPresent(MediaByteBuffer* aData) override
+  MediaResult IsMediaSegmentPresent(MediaByteBuffer* aData) override
   {
     AtomParser parser(mType, aData);
-    return parser.StartWithMediaSegment();
+    if (!parser.IsValid()) {
+      return MediaResult(
+        NS_ERROR_FAILURE,
+        RESULT_DETAIL("Invalid Box:%s", parser.LastInvalidBox()));
+    }
+    return parser.StartWithMediaSegment() ? NS_OK : NS_ERROR_NOT_AVAILABLE;
   }
 
 private:
@@ -363,13 +378,38 @@ private:
       mp4_demuxer::AtomType initAtom("ftyp");
       mp4_demuxer::AtomType mediaAtom("moof");
 
+      // Valid top-level boxes defined in ISO/IEC 14496-12 (Table 1)
+      static const mp4_demuxer::AtomType validBoxes[] = {
+        "ftyp", "moov", // init segment
+        "pdin", "free", "sidx", // optional prior moov box
+        "styp", "moof", "mdat", // media segment
+        "mfra", "skip", "meta", "meco", "ssix", "prft" // others.
+        "pssh", // optional with encrypted EME, though ignored.
+      };
+
       while (reader.Remaining() >= 8) {
         uint64_t size = reader.ReadU32();
         const uint8_t* typec = reader.Peek(4);
-        uint32_t type = reader.ReadU32();
+        mp4_demuxer::AtomType type(reader.ReadU32());
         MSE_DEBUGV(AtomParser ,"Checking atom:'%c%c%c%c' @ %u",
                    typec[0], typec[1], typec[2], typec[3],
                    (uint32_t)reader.Offset() - 8);
+
+        for (const auto& boxType : validBoxes) {
+          if (type == boxType) {
+            mValid = true;
+            break;
+          }
+        }
+        if (!mValid) {
+          // No point continuing.
+          mLastInvalidBox[0] = typec[3];
+          mLastInvalidBox[1] = typec[2];
+          mLastInvalidBox[2] = typec[1];
+          mLastInvalidBox[3] = typec[0];
+          mLastInvalidBox[4] = '\0';
+          break;
+        }
         if (mInitOffset.isNothing() &&
             mp4_demuxer::AtomType(type) == initAtom) {
           mInitOffset = Some(reader.Offset());
@@ -401,26 +441,31 @@ private:
       }
     }
 
-    bool StartWithInitSegment()
+    bool StartWithInitSegment() const
     {
       return mInitOffset.isSome() &&
         (mMediaOffset.isNothing() || mInitOffset.ref() < mMediaOffset.ref());
     }
-    bool StartWithMediaSegment()
+    bool StartWithMediaSegment() const
     {
       return mMediaOffset.isSome() &&
         (mInitOffset.isNothing() || mMediaOffset.ref() < mInitOffset.ref());
     }
+    bool IsValid() const { return mValid; }
+    const char* LastInvalidBox() const { return mLastInvalidBox; }
   private:
     Maybe<size_t> mInitOffset;
     Maybe<size_t> mMediaOffset;
+    bool mValid = false;
+    char mLastInvalidBox[5];
   };
 
 public:
-  bool ParseStartAndEndTimestamps(MediaByteBuffer* aData,
-                                  int64_t& aStart, int64_t& aEnd) override
+  MediaResult ParseStartAndEndTimestamps(MediaByteBuffer* aData,
+                                         int64_t& aStart,
+                                         int64_t& aEnd) override
   {
-    bool initSegment = IsInitSegmentPresent(aData);
+    bool initSegment = NS_SUCCEEDED(IsInitSegmentPresent(aData));
     if (initSegment) {
       mResource = new SourceBufferResource(NS_LITERAL_CSTRING("video/mp4"));
       mStream = new MP4Stream(mResource);
@@ -431,7 +476,7 @@ public:
       mParser = new mp4_demuxer::MoofParser(mStream, 0, /* aIsAudio = */ false);
       mInitData = new MediaByteBuffer();
     } else if (!mStream || !mParser) {
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
 
     mResource->AppendData(aData);
@@ -446,7 +491,7 @@ public:
         mCompleteInitSegmentRange = range;
         if (!mInitData->SetLength(range.Length(), fallible)) {
           // Super unlikely OOM
-          return false;
+          return NS_ERROR_OUT_OF_MEMORY;
         }
         char* buffer = reinterpret_cast<char*>(mInitData->Elements());
         mResource->ReadFromCache(buffer, range.mStart, range.Length());
@@ -469,17 +514,17 @@ public:
     }
     if (NS_WARN_IF(rv.Failed())) {
       rv.SuppressException();
-      return false;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
 
     if (compositionRange.IsNull()) {
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
     aStart = compositionRange.start;
     aEnd = compositionRange.end;
     MSE_DEBUG(MP4ContainerParser, "[%lld, %lld]",
               aStart, aEnd);
-    return true;
+    return NS_OK;
   }
 
   // Gaps of up to 35ms (marginally longer than a single frame at 30fps) are considered
@@ -554,24 +599,24 @@ public:
     return true;
   }
 
-  bool IsInitSegmentPresent(MediaByteBuffer* aData) override
+  MediaResult IsInitSegmentPresent(MediaByteBuffer* aData) override
   {
     // Call superclass for logging.
     ContainerParser::IsInitSegmentPresent(aData);
 
     Header header;
     if (!Parse(aData, header)) {
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
 
     MSE_DEBUGV(ADTSContainerParser, "%llu byte frame %d aac frames%s",
         (unsigned long long)header.frame_length, (int)header.aac_frames,
         header.have_crc ? " crc" : "");
 
-    return true;
+    return NS_OK;
   }
 
-  bool IsMediaSegmentPresent(MediaByteBuffer* aData) override
+  MediaResult IsMediaSegmentPresent(MediaByteBuffer* aData) override
   {
     // Call superclass for logging.
     ContainerParser::IsMediaSegmentPresent(aData);
@@ -583,26 +628,27 @@ public:
     // mInitData if we need to handle separate media segments.
     Header header;
     if (!Parse(aData, header)) {
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
     // We're supposed to return true as long as aData contains the
     // start of a media segment, whether or not it's complete. So
     // return true if we have any data beyond the header.
     if (aData->Length() <= header.header_length) {
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
 
     // We should have at least a partial frame.
-    return true;
+    return NS_OK;
   }
 
-  bool ParseStartAndEndTimestamps(MediaByteBuffer* aData,
-                                  int64_t& aStart, int64_t& aEnd) override
+  MediaResult ParseStartAndEndTimestamps(MediaByteBuffer* aData,
+                                         int64_t& aStart,
+                                         int64_t& aEnd) override
   {
     // ADTS header.
     Header header;
     if (!Parse(aData, header)) {
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
     mHasInitData = true;
     mCompleteInitSegmentRange = MediaByteRange(0, int64_t(header.header_length));
@@ -617,7 +663,7 @@ public:
           " in %llu byte buffer.",
           (unsigned long long)header.frame_length,
           (unsigned long long)(aData->Length()));
-      return false;
+      return NS_ERROR_NOT_AVAILABLE;
     }
     mCompleteMediaSegmentRange = MediaByteRange(header.header_length,
                                                 header.frame_length);
@@ -629,7 +675,7 @@ public:
     MSE_DEBUG(ADTSContainerParser, "[%lld, %lld]",
               aStart, aEnd);
     // We don't update timestamps, regardless.
-    return false;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Audio shouldn't have gaps.

@@ -78,6 +78,16 @@ function check_mp4(v, enabled) {
   check("audio/x-m4a; codecs=mp4a.40.5", "probably");
   // HE-AAC v2
   check("audio/mp4; codecs=\"mp4a.40.29\"", "probably");
+
+  // Opus
+  check("audio/mp4; codecs=\"opus\"", "probably");
+  check("audio/mp4; codecs=opus", "probably");
+
+  // Flac.
+  // Not available on Android yet.
+  var expectedResult = IsSupportedAndroid() ? "" : "probably";
+  check("audio/mp4; codecs=\"flac\"", expectedResult);
+  check("audio/mp4; codecs=flac", expectedResult);
 }
 
 function check_mp3(v, enabled) {
