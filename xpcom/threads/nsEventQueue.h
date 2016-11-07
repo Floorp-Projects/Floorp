@@ -53,7 +53,7 @@ public:
     return GetEvent(false, aRunnable, aProofOfLock);
   }
 
-  size_t Count(MutexAutoLock&);
+  size_t Count(MutexAutoLock&) const;
 
 private:
   bool IsEmpty()
