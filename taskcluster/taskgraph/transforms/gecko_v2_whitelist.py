@@ -47,7 +47,6 @@ JOB_NAME_WHITELIST = set([
     'macosx64-st-an-opt',
     'nexus-5-l-eng-debug',
     'nexus-5-l-eng-opt',
-    'osx-10-10',
     'shell-haz-debug',
     'sm-arm64-sim-debug',
     'sm-arm-sim-debug',

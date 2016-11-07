@@ -106,7 +106,6 @@ test_description_schema = Schema({
     # test platform.
     Optional('worker-implementation'): Any(
         'docker-worker',
-        'macosx-engine',
         'generic-worker',
         # coming soon:
         'docker-engine',
@@ -168,9 +167,6 @@ test_description_schema = Schema({
         # This mozharness script also runs in Buildbot and tries to read a
         # buildbot config file, so tell it not to do so in TaskCluster
         Required('no-read-buildbot-config', default=False): bool,
-
-        # Add --blob-upload-branch=<project> mozharness parameter
-        Optional('include-blob-upload-branch'): bool,
 
         # The setting for --download-symbols (if omitted, the option will not
         # be passed to mozharness)
