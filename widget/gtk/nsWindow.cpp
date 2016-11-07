@@ -2146,10 +2146,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     LayoutDeviceIntRegion region = exposeRegion;
     region.ScaleRoundOut(scale, scale);
 
-    ClientLayerManager *clientLayers =
-        (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT)
-        ? static_cast<ClientLayerManager*>(GetLayerManager())
-        : nullptr;
+    ClientLayerManager *clientLayers = GetLayerManager()->AsClientLayerManager();
 
     if (clientLayers && mCompositorSession) {
         // We need to paint to the screen even if nothing changed, since if we
