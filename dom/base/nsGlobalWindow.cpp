@@ -14811,7 +14811,7 @@ nsGlobalWindow::TabGroupOuter()
   if (!mIsValidatingTabGroup) {
     mIsValidatingTabGroup = true;
     // We only need to do this check if we aren't in the chrome tab group
-    if (GetDocShell()->ItemType() == nsIDocShellTreeItem::typeChrome) {
+    if (mIsChrome) {
       MOZ_ASSERT(mTabGroup == TabGroup::GetChromeTabGroup());
     } else {
       // Sanity check that our tabgroup matches our opener or parent.
