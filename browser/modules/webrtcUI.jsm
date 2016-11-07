@@ -485,10 +485,12 @@ function prompt(aBrowser, aRequest) {
         // Build the list of 'devices'.
         let monitorIndex = 1;
         for (let i = 0; i < devices.length; ++i) {
+          let device = devices[i];
+
           let name;
           // Building screen list from available screens.
           if (type == "screen") {
-            if (devices[i].name == "Primary Monitor") {
+            if (device.name == "Primary Monitor") {
               name = stringBundle.getString("getUserMedia.shareEntireScreen.label");
             } else {
               name = stringBundle.getFormattedString("getUserMedia.shareMonitor.label",
@@ -497,7 +499,7 @@ function prompt(aBrowser, aRequest) {
             }
           }
           else {
-            name = devices[i].name;
+            name = device.name;
             if (type == "application") {
               // The application names returned by the platform are of the form:
               // <window count>\x1e<application name>
@@ -510,7 +512,9 @@ function prompt(aBrowser, aRequest) {
             }
           }
           let item = addDeviceToList(menupopup, name, i, typeName);
-          item.deviceId = devices[i].id;
+          item.deviceId = device.id;
+          if (device.scary)
+            item.scary = true;
         }
 
         // Always re-select the "No <type>" item.
@@ -530,6 +534,36 @@ function prompt(aBrowser, aRequest) {
             return;
           }
 
+          let scary = event.target.scary;
+          let warning = chromeDoc.getElementById("webRTC-previewWarning");
+          warning.hidden = !scary;
+          let chromeWin = chromeDoc.defaultView;
+          if (scary) {
+            warning.hidden = false;
+            let string;
+            let bundle = chromeWin.gNavigatorBundle;
+
+            let learnMoreText =
+              bundle.getString("getUserMedia.shareScreen.learnMoreLabel");
+            let baseURL =
+              Services.urlFormatter.formatURLPref("app.support.baseURL");
+            let learnMore =
+              "<label class='text-link' href='" + baseURL + "screenshare-safety'>" +
+              learnMoreText + "</label>";
+
+            if (type == "screen") {
+              string = bundle.getFormattedString("getUserMedia.shareScreenWarning.message",
+                                                 [learnMore]);
+            }
+            else {
+              let brand =
+                chromeDoc.getElementById("bundle_brand").getString("brandShortName");
+              string = bundle.getFormattedString("getUserMedia.shareFirefoxWarning.message",
+                                                 [brand, learnMore]);
+            }
+            warning.innerHTML = string;
+          }
+
           let perms = Services.perms;
           let chromeUri = Services.io.newURI(chromeDoc.documentURI, null, null);
           perms.add(chromeUri, "MediaManagerVideo", perms.ALLOW_ACTION,
@@ -537,7 +571,6 @@ function prompt(aBrowser, aRequest) {
 
           video.deviceId = deviceId;
           let constraints = { video: { mediaSource: type, deviceId: {exact: deviceId } } };
-          let chromeWin = chromeDoc.defaultView;
           chromeWin.navigator.mediaDevices.getUserMedia(constraints).then(stream => {
             if (video.deviceId != deviceId) {
               // The user has selected a different device or closed the panel

@@ -155,11 +155,32 @@
   list-style-image: url(chrome://browser/skin/notification-icons.svg#screen-blocked);
 }
 
+#webRTC-preview:not([hidden]) {
+  display: -moz-stack;
+  border-radius: 4px;
+  border: 1px solid GrayText;
+  overflow: hidden;
+  min-width: 300px;
+  min-height: 10em;
+}
+
 html|*#webRTC-previewVideo {
   width: 300px;
   /* If we don't set the min-width, width is ignored. */
   min-width: 300px;
   max-height: 200px;
+}
+
+#webRTC-previewWarning {
+  background: rgba(255, 217, 99, .8) url("chrome://browser/skin/warning-white.svg") no-repeat .75em .75em;
+  margin: 0;
+  padding: .5em;
+  padding-inline-start: calc(1.5em + 16px);
+  border-top: 1px solid GrayText;
+}
+
+#webRTC-previewWarning > .text-link {
+  margin-inline-start: 0;
 }
 
 /* This icon has a block sign in it, so we don't need a blocked version. */

@@ -30,6 +30,10 @@
 
       <popupnotificationcontent id="webRTC-preview" hidden="true">
         <html:video id="webRTC-previewVideo"/>
+        <vbox id="webRTC-previewWarningBox">
+          <spacer flex="1"/>
+          <description id="webRTC-previewWarning"/>
+        </vbox>
       </popupnotificationcontent>
 
       <popupnotificationcontent id="webRTC-selectMicrophone" orient="vertical">

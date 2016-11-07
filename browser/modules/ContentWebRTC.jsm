@@ -178,8 +178,11 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
         // Verify that if we got a camera, we haven't requested a screen share,
         // or that if we requested a screen share we aren't getting a camera.
         if (video && (device.mediaSource == "camera") != sharingScreen) {
-          videoDevices.push({name: device.name, deviceIndex: devices.length,
-                             id: device.rawId, mediaSource: device.mediaSource});
+          let deviceObject = {name: device.name, deviceIndex: devices.length,
+                              id: device.rawId, mediaSource: device.mediaSource};
+          if (device.scary)
+            deviceObject.scary = true;
+          videoDevices.push(deviceObject);
           devices.push(device);
         }
         break;
