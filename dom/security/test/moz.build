@@ -8,9 +8,9 @@ XPCSHELL_TESTS_MANIFESTS += [
     'unit/xpcshell.ini',
 ]
 
-GeckoCppUnitTests([
-     'TestCSPParser',
-])
+TEST_DIRS += [
+    'gtest',
+]
 
 MOCHITEST_MANIFESTS += [
     'cors/mochitest.ini',

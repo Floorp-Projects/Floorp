@@ -1371,15 +1371,15 @@ NS_IMETHODIMP
 BlobImplStream::CollectReports(nsIHandleReportCallback* aHandleReport,
                                nsISupports* aData, bool aAnonymize)
 {
-  uint64_t size;
-  nsresult rv = mInputStream->Available(&size);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  nsCOMPtr<nsIStringInputStream> stringInputStream =
+    do_QueryInterface(mInputStream);
+  if (!stringInputStream) {
+    return NS_OK;
   }
 
   MOZ_COLLECT_REPORT(
     "explicit/dom/memory-file-data/stream", KIND_HEAP, UNITS_BYTES,
-    size,
+    stringInputStream->SizeOfIncludingThis(MallocSizeOf),
     "Memory used to back a File/Blob based on an input stream.");
 
   return NS_OK;

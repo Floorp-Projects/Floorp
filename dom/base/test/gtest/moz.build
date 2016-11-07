@@ -5,7 +5,9 @@
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    'TestNativeXMLHttpRequest.cpp',
     'TestParserDialogOptions.cpp',
+    'TestPlainTextSerializer.cpp',
 ]
 
 LOCAL_INCLUDES += [
