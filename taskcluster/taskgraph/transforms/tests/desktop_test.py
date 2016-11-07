@@ -21,7 +21,12 @@ transforms = TransformSequence()
 @transforms.add
 def set_defaults(config, tests):
     for test in tests:
-        test['mozharness']['build-artifact-name'] = 'public/build/target.tar.bz2'
+        build_platform = test['build-platform']
+        if build_platform.startswith('macosx'):
+            target = 'target.dmg'
+        else:
+            target = 'target.tar.bz2'
+        test['mozharness']['build-artifact-name'] = 'public/build/' + target
         # all desktop tests want to run the bits that require node
         test['mozharness']['set-moz-node-path'] = True
         yield test
@@ -35,7 +40,9 @@ def set_treeherder_machine_platform(config, tests):
     # platforms
     translation = {
         'linux64-asan/opt': 'linux64/asan',
-        'linux64-pgo/opt': 'linux64/pgo'
+        'linux64-pgo/opt': 'linux64/pgo',
+        'macosx64/debug': 'osx-10-10/debug',
+        'macosx64/opt': 'osx-10-10/opt',
     }
     for test in tests:
         build_platform = test['build-platform']
