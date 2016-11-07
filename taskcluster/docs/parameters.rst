@@ -89,20 +89,9 @@ those in the target set, recursively.  In a decision task, this set can be
 specified programmatically using one of a variety of methods (e.g., parsing try
 syntax or reading a project-specific configuration file).
 
-The decision task writes its task set to the ``target_tasks.json`` artifact,
-and this can be copied into ``parameters.target_tasks`` and
-``parameters.target_tasks_method`` set to ``"from_parameters"`` for debugging
-with other ``mach taskgraph`` commands.
-
 ``target_tasks_method``
-   (optional) The method to use to determine the target task set.  This is the
-   suffix of one of the functions in ``tascluster/taskgraph/target_tasks.py``.
-   If omitted, all tasks are targeted.
-
-``target_tasks``
-   (optional) The target set method ``from_parameters`` reads the target set, as
-   a list of task labels, from this parameter.
+    The method to use to determine the target task set.  This is the suffix of
+    one of the functions in ``tascluster/taskgraph/target_tasks.py``.
 
 ``optimize_target_tasks``
-   (optional; default True) If true, then target tasks are eligible for
-   optimization.
+   If true, then target tasks are eligible for optimization.
