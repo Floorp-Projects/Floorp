@@ -637,6 +637,17 @@ Parser<ParseHandler>::strictModeError(unsigned errorNumber, ...)
 
 template <typename ParseHandler>
 bool
+Parser<ParseHandler>::strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+    bool res = reportHelper(ParseStrictError, pc->sc()->strict(), offset, errorNumber, args);
+    va_end(args);
+    return res;
+}
+
+template <typename ParseHandler>
+bool
 Parser<ParseHandler>::reportWithNode(ParseReportKind kind, bool strict, Node pn, unsigned errorNumber, ...)
 {
     uint32_t offset = (pn ? handler.getPosition(pn) : pos()).begin;
@@ -7975,6 +7986,10 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
       }
 
       case TOK_DELETE: {
+        uint32_t exprOffset;
+        if (!tokenStream.peekOffset(&exprOffset, TokenStream::Operand))
+            return null();
+
         Node expr = unaryExpr(yieldHandling, TripledotProhibited);
         if (!expr)
             return null();
@@ -7982,9 +7997,9 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
         // Per spec, deleting any unary expression is valid -- it simply
         // returns true -- except for one case that is illegal in strict mode.
         if (handler.isNameAnyParentheses(expr)) {
-            bool strict = pc->sc()->strict();
-            if (!reportWithNode(ParseStrictError, strict, expr, JSMSG_DEPRECATED_DELETE_OPERAND))
+            if (!strictModeErrorAt(exprOffset, JSMSG_DEPRECATED_DELETE_OPERAND))
                 return null();
+
             pc->sc()->setBindingsAccessedDynamically();
         }
 
