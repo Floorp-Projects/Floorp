@@ -129,6 +129,10 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
         codecMimes.AppendElement(NS_LITERAL_CSTRING("audio/mpeg"));
         continue;
       }
+      if (codec.EqualsLiteral("opus")) {
+        codecMimes.AppendElement(NS_LITERAL_CSTRING("audio/opus"));
+        continue;
+      }
       // Note: Only accept H.264 in a video content type, not in an audio
       // content type.
       if (IsWhitelistedH264Codec(codec) && isMP4Video) {
