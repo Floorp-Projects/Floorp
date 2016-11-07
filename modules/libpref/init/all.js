@@ -5031,13 +5031,6 @@ pref("dom.mozInputMethod.enabled", false);
 
 pref("dom.flyweb.enabled", false);
 
-// ICC API
-#ifdef MOZ_B2G_RIL
-pref("dom.icc.enabled", true);
-#else
-pref("dom.icc.enabled", false);
-#endif
-
 // Enable mapped array buffer by default.
 pref("dom.mapped_arraybuffer.enabled", true);
 
