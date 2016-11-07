@@ -165,6 +165,8 @@ var gPlayTests = [
   { name:"wavedata_alaw.wav", type:"audio/x-wav", duration:1.0 },
   // uLaw compressed wave file
   { name:"wavedata_ulaw.wav", type:"audio/x-wav", duration:1.0 },
+  // Data length 0xFFFFFFFF
+  { name:"bug1301226.wav", type:"audio/x-wav", duration:0.003673 },
 
   // Ogg stream without eof marker
   { name:"bug461281.ogg", type:"application/ogg", duration:2.208 },
