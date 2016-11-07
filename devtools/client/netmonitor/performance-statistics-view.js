@@ -144,7 +144,7 @@ PerformanceStatisticsView.prototype = {
 
     chart.on("click", (_, item) => {
       // Reset FilterButtons and enable one filter exclusively
-      this.store.dispatch(Actions.enableFilterOnly(item.label));
+      this.store.dispatch(Actions.enableFilterTypeOnly(item.label));
       NetMonitorView.showNetworkInspectorView();
     });
 
