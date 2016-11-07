@@ -2854,8 +2854,8 @@ CloneString(JSContext* cx, JSFlatString* selfHostedString)
         return nullptr;
 
     return chars.isLatin1()
-           ? NewStringCopyN<CanGC>(cx, chars.latin1Range().start().get(), len)
-           : NewStringCopyNDontDeflate<CanGC>(cx, chars.twoByteRange().start().get(), len);
+           ? NewStringCopyN<CanGC>(cx, chars.latin1Range().begin().get(), len)
+           : NewStringCopyNDontDeflate<CanGC>(cx, chars.twoByteRange().begin().get(), len);
 }
 
 static JSObject*

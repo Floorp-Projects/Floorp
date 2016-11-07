@@ -309,7 +309,7 @@ this.IsolationTestTools = {
       for (let tabSettingB of [0, 1]) {
         // Give the test a chance to set up before each case is run.
         if (aBeforeFunc) {
-          yield aBeforeFunc();
+          yield aBeforeFunc(aMode);
         }
 
         // Create Tabs.

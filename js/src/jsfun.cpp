@@ -930,7 +930,7 @@ js::FindBody(JSContext* cx, HandleFunction fun, HandleLinearString src, size_t* 
         return false;
 
     const mozilla::Range<const char16_t> srcChars = stableChars.twoByteRange();
-    TokenStream ts(cx, options, srcChars.start().get(), srcChars.length(), nullptr);
+    TokenStream ts(cx, options, srcChars.begin().get(), srcChars.length(), nullptr);
     int nest = 0;
     bool onward = true;
     // Skip arguments list.
@@ -975,7 +975,7 @@ js::FindBody(JSContext* cx, HandleFunction fun, HandleLinearString src, size_t* 
         for (; unicode::IsSpaceOrBOM2(end[-1]); end--)
             ;
     }
-    *bodyEnd = end - srcChars.start();
+    *bodyEnd = end - srcChars.begin();
     MOZ_ASSERT(*bodyStart <= *bodyEnd);
     return true;
 }
@@ -1900,7 +1900,7 @@ FunctionConstructor(JSContext* cx, unsigned argc, Value* vp, GeneratorKind gener
                                               ? SourceBufferHolder::GiveOwnership
                                               : SourceBufferHolder::NoOwnership;
     bool ok;
-    SourceBufferHolder srcBuf(chars.start().get(), chars.length(), ownership);
+    SourceBufferHolder srcBuf(chars.begin().get(), chars.length(), ownership);
     if (isAsync)
         ok = frontend::CompileAsyncFunctionBody(cx, &fun, options, formals, srcBuf);
     else if (isStarGenerator)

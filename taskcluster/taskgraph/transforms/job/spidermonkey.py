@@ -7,7 +7,6 @@ Support for running spidermonkey jobs via dedicated scripts
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import time
 from voluptuous import Schema, Required, Optional, Any
 
 from taskgraph.transforms.job import run_job_using
@@ -52,7 +51,7 @@ def docker_worker_spidermonkey(config, job, taskdesc, schema=sm_run_schema):
     env.update({
         'MOZHARNESS_DISABLE': 'true',
         'SPIDERMONKEY_VARIANT': run['spidermonkey-variant'],
-        'MOZ_BUILD_DATE': time.strftime("%Y%m%d%H%M%S", time.gmtime(config.params['pushdate'])),
+        'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
     })
 

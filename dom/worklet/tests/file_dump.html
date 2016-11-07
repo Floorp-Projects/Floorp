@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Worklet</title>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+setupTest();
+
+var worklet = window.createWorklet();
+ok(!!worklet, "We have a Worklet");
+worklet.import("worklet_dump.js")
+.then(() => {
+  SimpleTest.finish();
+});
+
+</script>
+</body>
+</html>

@@ -384,10 +384,98 @@ int cubeb_stream_register_device_changed_callback(cubeb_stream * stream,
   return stream->context->ops->stream_register_device_changed_callback(stream, device_changed_callback);
 }
 
+static
+void log_device(cubeb_device_info * device_info)
+{
+  char devfmts[128] = "";
+  const char * devtype, * devstate, * devdeffmt;
+
+  switch (device_info->type) {
+    case CUBEB_DEVICE_TYPE_INPUT:
+      devtype = "input";
+      break;
+    case CUBEB_DEVICE_TYPE_OUTPUT:
+      devtype = "output";
+      break;
+    case CUBEB_DEVICE_TYPE_UNKNOWN:
+    default:
+      devtype = "unknown?";
+      break;
+  };
+
+  switch (device_info->state) {
+    case CUBEB_DEVICE_STATE_DISABLED:
+      devstate = "disabled";
+      break;
+    case CUBEB_DEVICE_STATE_UNPLUGGED:
+      devstate = "unplugged";
+      break;
+    case CUBEB_DEVICE_STATE_ENABLED:
+      devstate = "enabled";
+      break;
+    default:
+      devstate = "unknown?";
+      break;
+  };
+
+  switch (device_info->default_format) {
+    case CUBEB_DEVICE_FMT_S16LE:
+      devdeffmt = "S16LE";
+      break;
+    case CUBEB_DEVICE_FMT_S16BE:
+      devdeffmt = "S16BE";
+      break;
+    case CUBEB_DEVICE_FMT_F32LE:
+      devdeffmt = "F32LE";
+      break;
+    case CUBEB_DEVICE_FMT_F32BE:
+      devdeffmt = "F32BE";
+      break;
+    default:
+      devdeffmt = "unknown?";
+      break;
+  };
+
+  if (device_info->format & CUBEB_DEVICE_FMT_S16LE) {
+    strcat(devfmts, " S16LE");
+  }
+  if (device_info->format & CUBEB_DEVICE_FMT_S16BE) {
+    strcat(devfmts, " S16BE");
+  }
+  if (device_info->format & CUBEB_DEVICE_FMT_F32LE) {
+    strcat(devfmts, " F32LE");
+  }
+  if (device_info->format & CUBEB_DEVICE_FMT_F32BE) {
+    strcat(devfmts, " F32BE");
+  }
+
+  LOG("DeviceID: \"%s\"%s\n"
+      "\tName:\t\"%s\"\n"
+      "\tGroup:\t\"%s\"\n"
+      "\tVendor:\t\"%s\"\n"
+      "\tType:\t%s\n"
+      "\tState:\t%s\n"
+      "\tMaximum channels:\t%u\n"
+      "\tFormat:\t%s (0x%x) (default: %s)\n"
+      "\tRate:\t[%u, %u] (default: %u)\n"
+      "\tLatency: lo %u frames, hi %u frames",
+      device_info->device_id, device_info->preferred ? " (PREFERRED)" : "",
+      device_info->friendly_name,
+      device_info->group_id,
+      device_info->vendor_name,
+      devtype,
+      devstate,
+      device_info->max_channels,
+      (devfmts[0] == '\0') ? devfmts : devfmts + 1, (unsigned int)device_info->format, devdeffmt,
+      device_info->min_rate, device_info->max_rate, device_info->default_rate,
+      device_info->latency_lo, device_info->latency_hi);
+}
+
 int cubeb_enumerate_devices(cubeb * context,
                             cubeb_device_type devtype,
                             cubeb_device_collection ** collection)
 {
+  int rv;
   if ((devtype & (CUBEB_DEVICE_TYPE_INPUT | CUBEB_DEVICE_TYPE_OUTPUT)) == 0)
     return CUBEB_ERROR_INVALID_PARAMETER;
   if (collection == NULL)
@@ -395,7 +483,15 @@ int cubeb_enumerate_devices(cubeb * context,
   if (!context->ops->enumerate_devices)
     return CUBEB_ERROR_NOT_SUPPORTED;
 
-  return context->ops->enumerate_devices(context, devtype, collection);
+  rv = context->ops->enumerate_devices(context, devtype, collection);
+
+  if (g_log_callback) {
+    for (uint32_t i = 0; i < (*collection)->count; i++) {
+      log_device((*collection)->device[i]);
+    }
+  }
+
+  return rv;
 }
 
 int cubeb_device_collection_destroy(cubeb_device_collection * collection)

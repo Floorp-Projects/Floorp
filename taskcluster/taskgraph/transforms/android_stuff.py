@@ -7,7 +7,6 @@ Set dynamic task description properties of the android stuff.  Temporary!
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import time
 from taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
@@ -23,8 +22,7 @@ def setup_task(config, tasks):
             'GECKO_HEAD_REF': config.params['head_rev'],
             'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
             'GECKO_HEAD_REV': config.params['head_rev'],
-            'MOZ_BUILD_DATE': time.strftime("%Y%m%d%H%M%S",
-                                            time.gmtime(config.params['pushdate'])),
+            'MOZ_BUILD_DATE': config.params['moz_build_date'],
             'MOZ_SCM_LEVEL': config.params['level'],
             'MH_BRANCH': config.params['project'],
         })

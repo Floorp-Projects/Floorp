@@ -7,7 +7,6 @@ Support for running toolchain-building jobs via dedicated scripts
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import time
 from voluptuous import Schema, Required
 
 from taskgraph.transforms.job import run_job_using
@@ -43,7 +42,7 @@ def docker_worker_toolchain(config, job, taskdesc):
 
     env = worker['env']
     env.update({
-        'MOZ_BUILD_DATE': time.strftime("%Y%m%d%H%M%S", time.gmtime(config.params['pushdate'])),
+        'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
         'TOOLS_DISABLE': 'true',
     })
@@ -92,7 +91,7 @@ def windows_toolchain(config, job, taskdesc):
 
     env = worker['env']
     env.update({
-        'MOZ_BUILD_DATE': time.strftime("%Y%m%d%H%M%S", time.gmtime(config.params['pushdate'])),
+        'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
         'TOOLTOOL_REPO': 'https://github.com/mozilla/build-tooltool',
         'TOOLTOOL_REV': 'master',

@@ -158,7 +158,7 @@ EvalStringMightBeJSON(const mozilla::Range<const CharT> chars)
         // eval, we simply don't use the JSON parser when either character
         // appears in the provided string.  See bug 657367.
         if (sizeof(CharT) > 1) {
-            for (RangedPtr<const CharT> cp = chars.start() + 1, end = chars.end() - 1;
+            for (RangedPtr<const CharT> cp = chars.begin() + 1, end = chars.end() - 1;
                  cp < end;
                  cp++)
             {
@@ -183,7 +183,7 @@ ParseEvalStringAsJSON(JSContext* cx, const mozilla::Range<const CharT> chars, Mu
 
     auto jsonChars = (chars[0] == '[')
                      ? chars
-                     : mozilla::Range<const CharT>(chars.start().get() + 1U, len - 2);
+                     : mozilla::Range<const CharT>(chars.begin().get() + 1U, len - 2);
 
     Rooted<JSONParser<CharT>> parser(cx, JSONParser<CharT>(cx, jsonChars, JSONParserBase::NoError));
     if (!parser.parse(rval))
@@ -308,7 +308,7 @@ EvalKernel(JSContext* cx, HandleValue v, EvalType evalType, AbstractFramePtr cal
         if (!linearChars.initTwoByte(cx, linearStr))
             return false;
 
-        const char16_t* chars = linearChars.twoByteRange().start().get();
+        const char16_t* chars = linearChars.twoByteRange().begin().get();
         SourceBufferHolder::Ownership ownership = linearChars.maybeGiveOwnershipToCaller()
                                                   ? SourceBufferHolder::GiveOwnership
                                                   : SourceBufferHolder::NoOwnership;
@@ -389,7 +389,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
         if (!linearChars.initTwoByte(cx, linearStr))
             return false;
 
-        const char16_t* chars = linearChars.twoByteRange().start().get();
+        const char16_t* chars = linearChars.twoByteRange().begin().get();
         SourceBufferHolder::Ownership ownership = linearChars.maybeGiveOwnershipToCaller()
                                                   ? SourceBufferHolder::GiveOwnership
                                                   : SourceBufferHolder::NoOwnership;

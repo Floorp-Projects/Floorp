@@ -14,6 +14,7 @@
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/WorkletGlobalScope.h"
 #include "mozilla/Maybe.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDocument.h"
@@ -2363,8 +2364,35 @@ Console::IsShuttingDown() const
 /* static */ already_AddRefed<Console>
 Console::GetConsole(const GlobalObject& aGlobal)
 {
-  RefPtr<Console> console;
+  ErrorResult rv;
+  RefPtr<Console> console = GetConsoleInternal(aGlobal, rv);
+  if (NS_WARN_IF(rv.Failed()) || !console) {
+    rv.SuppressException();
+    return nullptr;
+  }
 
+  console->AssertIsOnOwningThread();
+
+  if (console->IsShuttingDown()) {
+    return nullptr;
+  }
+
+  return console.forget();
+}
+
+/* static */ Console*
+Console::GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult& aRv)
+{
+  // Worklet
+  if (NS_IsMainThread()) {
+    nsCOMPtr<WorkletGlobalScope> workletScope =
+      do_QueryInterface(aGlobal.GetAsSupports());
+    if (workletScope) {
+      return workletScope->GetConsole(aRv);
+    }
+  }
+
+  // Window
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> innerWindow =
       do_QueryInterface(aGlobal.GetAsSupports());
@@ -2373,57 +2401,39 @@ Console::GetConsole(const GlobalObject& aGlobal)
     }
 
     nsGlobalWindow* window = nsGlobalWindow::Cast(innerWindow);
-
-    ErrorResult rv;
-    console = window->GetConsole(rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      rv.SuppressException();
-      return nullptr;
-    }
-  } else {
-    JSContext* cx = aGlobal.Context();
-    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
-    MOZ_ASSERT(workerPrivate);
-
-    nsCOMPtr<nsIGlobalObject> global =
-      do_QueryInterface(aGlobal.GetAsSupports());
-    if (NS_WARN_IF(!global)) {
-      return nullptr;
-    }
-
-    WorkerGlobalScope* scope = workerPrivate->GlobalScope();
-    MOZ_ASSERT(scope);
-
-    // Normal worker scope.
-    ErrorResult rv;
-    if (scope == global) {
-      console = scope->GetConsole(rv);
-    }
-
-    // Debugger worker scope
-    else {
-      WorkerDebuggerGlobalScope* debuggerScope =
-        workerPrivate->DebuggerGlobalScope();
-      MOZ_ASSERT(debuggerScope);
-      MOZ_ASSERT(debuggerScope == global, "Which kind of global do we have?");
-
-      console = debuggerScope->GetConsole(rv);
-    }
-
-    if (NS_WARN_IF(rv.Failed())) {
-      rv.SuppressException();
-      return nullptr;
-    }
+    return window->GetConsole(aRv);
   }
 
-  MOZ_ASSERT(console);
-  console->AssertIsOnOwningThread();
+  // Workers
+  MOZ_ASSERT(!NS_IsMainThread());
 
-  if (console->IsShuttingDown()) {
+  JSContext* cx = aGlobal.Context();
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
+  MOZ_ASSERT(workerPrivate);
+
+  nsCOMPtr<nsIGlobalObject> global =
+    do_QueryInterface(aGlobal.GetAsSupports());
+  if (NS_WARN_IF(!global)) {
     return nullptr;
   }
 
-  return console.forget();
+  WorkerGlobalScope* scope = workerPrivate->GlobalScope();
+  MOZ_ASSERT(scope);
+
+  // Normal worker scope.
+  if (scope == global) {
+    return scope->GetConsole(aRv);
+  }
+
+  // Debugger worker scope
+  else {
+    WorkerDebuggerGlobalScope* debuggerScope =
+      workerPrivate->DebuggerGlobalScope();
+    MOZ_ASSERT(debuggerScope);
+    MOZ_ASSERT(debuggerScope == global, "Which kind of global do we have?");
+
+    return debuggerScope->GetConsole(aRv);
+  }
 }
 
 } // namespace dom
