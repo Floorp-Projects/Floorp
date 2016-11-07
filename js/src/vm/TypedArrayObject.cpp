@@ -305,6 +305,11 @@ GetPrototypeForInstance(JSContext* cx, HandleObject newTarget, MutableHandleObje
     return true;
 }
 
+enum class SpeciesConstructorOverride {
+    None,
+    ArrayBuffer
+};
+
 template<typename NativeType>
 class TypedArrayObjectTemplate : public TypedArrayObject
 {
@@ -941,6 +946,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     static bool
     CloneArrayBufferNoCopy(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> srcBuffer,
                            bool isWrapped, uint32_t srcByteOffset, uint32_t srcLength,
+                           SpeciesConstructorOverride override,
                            MutableHandle<ArrayBufferObject*> buffer);
 
     static JSObject*
@@ -1060,17 +1066,17 @@ IsArrayBufferSpecies(JSContext* cx, HandleObject origBuffer)
 }
 
 static bool
-GetSpeciesConstructor(JSContext* cx, HandleObject obj, bool isWrapped, MutableHandleValue ctor)
+GetSpeciesConstructor(JSContext* cx, HandleObject obj, bool isWrapped,
+                      SpeciesConstructorOverride override, MutableHandleValue ctor)
 {
     if (!isWrapped) {
         if (!GlobalObject::ensureConstructor(cx, cx->global(), JSProto_ArrayBuffer))
             return false;
         RootedValue defaultCtor(cx, cx->global()->getConstructor(JSProto_ArrayBuffer));
-        if (IsArrayBufferSpecies(cx, obj)) {
+        // The second disjunct is an optimization.
+        if (override == SpeciesConstructorOverride::ArrayBuffer || IsArrayBufferSpecies(cx, obj))
             ctor.set(defaultCtor);
-            return true;
-        }
-        if (!SpeciesConstructor(cx, obj, defaultCtor, ctor))
+        else if (!SpeciesConstructor(cx, obj, defaultCtor, ctor))
             return false;
 
         return true;
@@ -1081,7 +1087,9 @@ GetSpeciesConstructor(JSContext* cx, HandleObject obj, bool isWrapped, MutableHa
         if (!GlobalObject::ensureConstructor(cx, cx->global(), JSProto_ArrayBuffer))
             return false;
         RootedValue defaultCtor(cx, cx->global()->getConstructor(JSProto_ArrayBuffer));
-        if (!SpeciesConstructor(cx, obj, defaultCtor, ctor))
+        if (override == SpeciesConstructorOverride::ArrayBuffer)
+            ctor.set(defaultCtor);
+        else if (!SpeciesConstructor(cx, obj, defaultCtor, ctor))
             return false;
     }
 
@@ -1095,13 +1103,14 @@ TypedArrayObjectTemplate<T>::CloneArrayBufferNoCopy(JSContext* cx,
                                                     Handle<ArrayBufferObjectMaybeShared*> srcBuffer,
                                                     bool isWrapped, uint32_t srcByteOffset,
                                                     uint32_t srcLength,
+                                                    SpeciesConstructorOverride override,
                                                     MutableHandle<ArrayBufferObject*> buffer)
 {
     // Step 1 (skipped).
 
     // Step 2.a.
     RootedValue cloneCtor(cx);
-    if (!GetSpeciesConstructor(cx, srcBuffer, isWrapped, &cloneCtor))
+    if (!GetSpeciesConstructor(cx, srcBuffer, isWrapped, override, &cloneCtor))
         return false;
 
     // Step 2.b.
@@ -1203,19 +1212,27 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
     // Step 14.
     uint32_t srcByteOffset = srcArray->byteOffset();
 
+    // Step 17, modified for SharedArrayBuffer.
+    bool isShared = srcArray->isSharedMemory();
+    SpeciesConstructorOverride override = isShared ? SpeciesConstructorOverride::ArrayBuffer
+                                                   : SpeciesConstructorOverride::None;
+
     // Steps 8-9, 17.
     Rooted<ArrayBufferObject*> buffer(cx);
     if (ArrayTypeID() == srcType) {
         // Step 17.a.
         uint32_t srcLength = srcArray->byteLength();
 
-        // Step 17.b.
-        if (!CloneArrayBufferNoCopy(cx, srcData, isWrapped, srcByteOffset, srcLength, &buffer))
+        // Step 17.b, modified for SharedArrayBuffer
+        if (!CloneArrayBufferNoCopy(cx, srcData, isWrapped, srcByteOffset, srcLength, override,
+                                    &buffer))
+        {
             return nullptr;
+        }
     } else {
-        // Step 18.a.
+        // Step 18.a, modified for SharedArrayBuffer
         RootedValue bufferCtor(cx);
-        if (!GetSpeciesConstructor(cx, srcData, isWrapped, &bufferCtor))
+        if (!GetSpeciesConstructor(cx, srcData, isWrapped, override, &bufferCtor))
             return nullptr;
 
         // Step 15-16, 18.b.
