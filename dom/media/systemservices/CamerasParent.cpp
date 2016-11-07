@@ -21,6 +21,11 @@
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 
+#if defined(_WIN32)
+#include <process.h>
+#define getpid() _getpid()
+#endif
+
 #undef LOG
 #undef LOG_ENABLED
 mozilla::LazyLogModule gCamerasParentLog("CamerasParent");
@@ -680,20 +685,22 @@ CamerasParent::RecvGetCaptureDevice(const CaptureEngine& aCapEngine,
       char deviceUniqueId[MediaEngineSource::kMaxUniqueIdLength];
       nsCString name;
       nsCString uniqueId;
+      int devicePid = 0;
       int error = -1;
       if (self->EnsureInitialized(aCapEngine)) {
           error = self->mEngines[aCapEngine].mPtrViECapture->GetCaptureDevice(aListNumber,
                                                                               deviceName,
                                                                               sizeof(deviceName),
                                                                               deviceUniqueId,
-                                                                              sizeof(deviceUniqueId));
+                                                                              sizeof(deviceUniqueId),
+                                                                              &devicePid);
       }
       if (!error) {
         name.Assign(deviceName);
         uniqueId.Assign(deviceUniqueId);
       }
       RefPtr<nsIRunnable> ipc_runnable =
-        media::NewRunnableFrom([self, error, name, uniqueId]() -> nsresult {
+        media::NewRunnableFrom([self, error, name, uniqueId, devicePid]() {
           if (self->IsShuttingDown()) {
             return NS_ERROR_FAILURE;
           }
@@ -702,9 +709,11 @@ CamerasParent::RecvGetCaptureDevice(const CaptureEngine& aCapEngine,
             Unused << self->SendReplyFailure();
             return NS_ERROR_FAILURE;
           }
+          bool scary = (devicePid == getpid());
 
-          LOG(("Returning %s name %s id", name.get(), uniqueId.get()));
-          Unused << self->SendReplyGetCaptureDevice(name, uniqueId);
+          LOG(("Returning %s name %s id (pid = %d)%s", name.get(),
+               uniqueId.get(), devicePid, (scary? " (scary)" : "")));
+          Unused << self->SendReplyGetCaptureDevice(name, uniqueId, scary);
           return NS_OK;
         });
       self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);

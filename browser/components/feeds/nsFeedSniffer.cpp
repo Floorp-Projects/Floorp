@@ -135,7 +135,7 @@ FindChar(char c, const char *begin, const char *end)
  * it's possible that someone embedded one of these tags inside a document of
  * another type, e.g. a HTML document, and we don't want to show the preview
  * page if the document isn't actually a feed.
- * 
+ *
  * @param   start
  *          The beginning of the data being sniffed
  * @param   end
