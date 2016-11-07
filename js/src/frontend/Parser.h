@@ -922,6 +922,13 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
      */
     MOZ_MUST_USE bool strictModeError(unsigned errorNumber, ...);
 
+    /*
+     * Handle a strict mode error at the given offset.  Report an error if in
+     * strict mode code, or warn if not, using the given error number and
+     * arguments.
+     */
+    MOZ_MUST_USE bool strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...);
+
     /* Report the given warning at the current offset. */
     MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
 
