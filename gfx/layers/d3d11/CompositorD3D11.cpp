@@ -1066,24 +1066,25 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     mAttachments->mSyncTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
 
     MOZ_ASSERT(mutex);
-    HRESULT hr = mutex->AcquireSync(0, 10000);
-    if (hr == WAIT_TIMEOUT) {
-      hr = mDevice->GetDeviceRemovedReason();
-      if (hr == S_OK) {
-        // There is no driver-removed event. Crash with this timeout.
-        MOZ_CRASH("GFX: D3D11 normal status timeout");
+    {
+      HRESULT hr;
+      AutoTextureLock lock(mutex, hr, 10000);
+      if (hr == WAIT_TIMEOUT) {
+        hr = mDevice->GetDeviceRemovedReason();
+        if (hr == S_OK) {
+          // There is no driver-removed event. Crash with this timeout.
+          MOZ_CRASH("GFX: D3D11 normal status timeout");
+        }
+
+        // Since the timeout is related to the driver-removed, clear the
+        // render-bounding size to skip this frame.
+        gfxCriticalNote << "GFX: D3D11 timeout with device-removed:" << gfx::hexa(hr);
+        *aRenderBoundsOut = IntRect();
+        return;
+      } else if (hr == WAIT_ABANDONED) {
+        gfxCriticalNote << "GFX: D3D11 abandoned sync";
       }
-
-      // Since the timeout is related to the driver-removed, clear the
-      // render-bounding size to skip this frame.
-      gfxCriticalNote << "GFX: D3D11 timeout with device-removed:" << gfx::hexa(hr);
-      *aRenderBoundsOut = IntRect();
-      return;
-    } else if (hr == WAIT_ABANDONED) {
-      gfxCriticalNote << "GFX: D3D11 abandoned sync";
     }
-
-    mutex->ReleaseSync(0);
   }
 }
 

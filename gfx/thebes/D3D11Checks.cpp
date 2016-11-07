@@ -10,6 +10,7 @@
 #include "gfxWindowsPlatform.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/layers/TextureD3D11.h"
 #include "nsIGfxInfo.h"
 #include <dxgi.h>
 #include <dxgi1_2.h>
@@ -20,6 +21,7 @@ namespace mozilla {
 namespace gfx {
 
 using namespace mozilla::widget;
+using mozilla::layers::AutoTextureLock;
 
 /* static */ bool
 D3D11Checks::DoesRenderTargetViewNeedRecreating(ID3D11Device *aDevice)
@@ -73,51 +75,53 @@ D3D11Checks::DoesRenderTargetViewNeedRecreating(ID3D11Device *aDevice)
         return false;
     }
 
-    // Acquire and clear
-    keyedMutex->AcquireSync(0, INFINITE);
-    FLOAT color1[4] = { 1, 1, 0.5, 1 };
-    deviceContext->ClearRenderTargetView(offscreenRTView, color1);
-    keyedMutex->ReleaseSync(0);
-
-
-    keyedMutex->AcquireSync(0, INFINITE);
-    FLOAT color2[4] = { 1, 1, 0, 1 };
-
-    deviceContext->ClearRenderTargetView(offscreenRTView, color2);
-    D3D11_TEXTURE2D_DESC desc;
-
-    offscreenTexture->GetDesc(&desc);
-    desc.Usage = D3D11_USAGE_STAGING;
-    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-    desc.MiscFlags = 0;
-    desc.BindFlags = 0;
-    RefPtr<ID3D11Texture2D> cpuTexture;
-    hr = aDevice->CreateTexture2D(&desc, NULL, getter_AddRefs(cpuTexture));
-    if (FAILED(hr)) {
-        gfxCriticalNote << "DoesRecreatingCreateCPUTextureFailed";
-        return false;
+    {
+        // Acquire and clear
+        HRESULT hr;
+        AutoTextureLock lock(keyedMutex, hr, INFINITE);
+        FLOAT color1[4] = { 1, 1, 0.5, 1 };
+        deviceContext->ClearRenderTargetView(offscreenRTView, color1);
     }
 
-    deviceContext->CopyResource(cpuTexture, offscreenTexture);
+    {
+        HRESULT hr;
+        AutoTextureLock lock(keyedMutex, hr, INFINITE);
+        FLOAT color2[4] = { 1, 1, 0, 1 };
 
-    D3D11_MAPPED_SUBRESOURCE mapped;
-    hr = deviceContext->Map(cpuTexture, 0, D3D11_MAP_READ, 0, &mapped);
-    if (FAILED(hr)) {
-        gfxCriticalNote << "DoesRecreatingMapFailed " << hexa(hr);
-        return false;
+        deviceContext->ClearRenderTargetView(offscreenRTView, color2);
+        D3D11_TEXTURE2D_DESC desc;
+
+        offscreenTexture->GetDesc(&desc);
+        desc.Usage = D3D11_USAGE_STAGING;
+        desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+        desc.MiscFlags = 0;
+        desc.BindFlags = 0;
+        RefPtr<ID3D11Texture2D> cpuTexture;
+        hr = aDevice->CreateTexture2D(&desc, NULL, getter_AddRefs(cpuTexture));
+        if (FAILED(hr)) {
+            gfxCriticalNote << "DoesRecreatingCreateCPUTextureFailed";
+            return false;
+        }
+
+        deviceContext->CopyResource(cpuTexture, offscreenTexture);
+
+        D3D11_MAPPED_SUBRESOURCE mapped;
+        hr = deviceContext->Map(cpuTexture, 0, D3D11_MAP_READ, 0, &mapped);
+        if (FAILED(hr)) {
+            gfxCriticalNote << "DoesRecreatingMapFailed " << hexa(hr);
+            return false;
+        }
+        int resultColor = *(int*)mapped.pData;
+        deviceContext->Unmap(cpuTexture, 0);
+        cpuTexture = nullptr;
+
+        // XXX on some drivers resultColor will not have changed to
+        // match the clear
+        if (resultColor != 0xffffff00) {
+            gfxCriticalNote << "RenderTargetViewNeedsRecreating";
+            result = true;
+        }
     }
-    int resultColor = *(int*)mapped.pData;
-    deviceContext->Unmap(cpuTexture, 0);
-    cpuTexture = nullptr;
-
-    // XXX on some drivers resultColor will not have changed to
-    // match the clear
-    if (resultColor != 0xffffff00) {
-        gfxCriticalNote << "RenderTargetViewNeedsRecreating";
-        result = true;
-    }
-
-    keyedMutex->ReleaseSync(0);
     return result;
 }
 
@@ -303,17 +307,21 @@ DoesTextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bi
 
   RefPtr<IDXGIKeyedMutex> sharedMutex;
   sharedResource->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)getter_AddRefs(sharedMutex));
-  if (FAILED(sharedMutex->AcquireSync(0, 30*1000))) {
-    gfxCriticalError() << "DoesD3D11TextureSharingWork_AcquireSyncTimeout";
-    // only wait for 30 seconds
-    return false;
+  {
+    HRESULT hr;
+    AutoTextureLock lock(sharedMutex, hr, 30*1000);
+    if (FAILED(hr)) {
+      gfxCriticalError() << "DoesD3D11TextureSharingWork_AcquireSyncTimeout";
+      // only wait for 30 seconds
+      return false;
+    }
+
+    // Copy to the cpu texture so that we can readback
+    deviceContext->CopyResource(cpuTexture, sharedTexture);
+
+    // We only need to hold on to the mutex during the copy.
+    sharedMutex->ReleaseSync(0);
   }
-
-  // Copy to the cpu texture so that we can readback
-  deviceContext->CopyResource(cpuTexture, sharedTexture);
-
-  // We only need to hold on to the mutex during the copy.
-  sharedMutex->ReleaseSync(0);
 
   D3D11_MAPPED_SUBRESOURCE mapped;
   uint32_t resultColor = 0;
