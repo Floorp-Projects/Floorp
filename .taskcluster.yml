@@ -119,10 +119,6 @@ tasks:
             type: 'directory'
             path: '/home/worker/artifacts'
             expires: '{{#from_now}}364 days{{/from_now}}'
-          'public/docker_image_contexts':
-            type: 'directory'
-            path: '/home/worker/docker_image_contexts'
-            expires: '{{#from_now}}7 days{{/from_now}}'
 
       extra:
         treeherder:
