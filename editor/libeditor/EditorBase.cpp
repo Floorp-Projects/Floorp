@@ -2000,26 +2000,31 @@ EditorBase::StopPreservingSelection()
   mSavedSel.MakeEmpty();
 }
 
-void
+bool
 EditorBase::EnsureComposition(WidgetCompositionEvent* aCompositionEvent)
 {
   if (mComposition) {
-    return;
+    return true;
   }
   // The compositionstart event must cause creating new TextComposition
   // instance at being dispatched by IMEStateManager.
   mComposition = IMEStateManager::GetTextCompositionFor(aCompositionEvent);
   if (!mComposition) {
-    MOZ_CRASH("IMEStateManager doesn't return proper composition");
+    // However, TextComposition may be committed before the composition
+    // event comes here.
+    return false;
   }
   mComposition->StartHandlingComposition(this);
+  return true;
 }
 
 nsresult
 EditorBase::BeginIMEComposition(WidgetCompositionEvent* aCompositionEvent)
 {
   MOZ_ASSERT(!mComposition, "There is composition already");
-  EnsureComposition(aCompositionEvent);
+  if (!EnsureComposition(aCompositionEvent)) {
+    return NS_OK;
+  }
   if (mPhonetic) {
     mPhonetic->Truncate(0);
   }

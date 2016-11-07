@@ -844,7 +844,9 @@ TextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   MOZ_ASSERT(compositionChangeEvent->mMessage == eCompositionChange,
              "The internal event should be eCompositionChange");
 
-  EnsureComposition(compositionChangeEvent);
+  if (!EnsureComposition(compositionChangeEvent)) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
