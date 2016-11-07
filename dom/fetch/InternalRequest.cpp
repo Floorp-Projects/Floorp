@@ -19,18 +19,16 @@
 
 namespace mozilla {
 namespace dom {
-
 // The global is used to extract the principal.
 already_AddRefed<InternalRequest>
 InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult& aRv) const
 {
   MOZ_RELEASE_ASSERT(!mURLList.IsEmpty(), "Internal Request's urlList should not be empty when copied from constructor.");
-
-  RefPtr<InternalRequest> copy = new InternalRequest(mURLList.LastElement());
+  RefPtr<InternalRequest> copy = new InternalRequest(mURLList.LastElement(),
+                                                     mFragment);
   copy->SetMethod(mMethod);
   copy->mHeaders = new InternalHeaders(*mHeaders);
   copy->SetUnsafeRequest();
-
   copy->mBodyStream = mBodyStream;
   copy->mForceOriginHeader = true;
   // The "client" is not stored in our implementation. Fetch API users should
@@ -75,11 +73,10 @@ InternalRequest::Clone()
   if (replacementBody) {
     mBodyStream.swap(replacementBody);
   }
-
   return clone.forget();
 }
-
-InternalRequest::InternalRequest(const nsACString& aURL)
+InternalRequest::InternalRequest(const nsACString& aURL,
+                                 const nsACString& aFragment)
   : mMethod("GET")
   , mHeaders(new InternalHeaders(HeadersGuardEnum::None))
   , mContentPolicyType(nsIContentPolicy::TYPE_FETCH)
@@ -105,10 +102,10 @@ InternalRequest::InternalRequest(const nsACString& aURL)
   , mUseURLCredentials(false)
 {
   MOZ_ASSERT(!aURL.IsEmpty());
-  AddURL(aURL);
+  AddURL(aURL, aFragment);
 }
-
 InternalRequest::InternalRequest(const nsACString& aURL,
+                                 const nsACString& aFragment,
                                  const nsACString& aMethod,
                                  already_AddRefed<InternalHeaders> aHeaders,
                                  RequestCache aCacheMode,
@@ -142,9 +139,8 @@ InternalRequest::InternalRequest(const nsACString& aURL,
   , mUseURLCredentials(false)
 {
   MOZ_ASSERT(!aURL.IsEmpty());
-  AddURL(aURL);
+  AddURL(aURL, aFragment);
 }
-
 InternalRequest::InternalRequest(const InternalRequest& aOther)
   : mMethod(aOther.mMethod)
   , mURLList(aOther.mURLList)
@@ -159,6 +155,7 @@ InternalRequest::InternalRequest(const InternalRequest& aOther)
   , mCacheMode(aOther.mCacheMode)
   , mRedirectMode(aOther.mRedirectMode)
   , mIntegrity(aOther.mIntegrity)
+  , mFragment(aOther.mFragment)
   , mAuthenticationFlag(aOther.mAuthenticationFlag)
   , mForceOriginHeader(aOther.mForceOriginHeader)
   , mPreserveContentCodings(aOther.mPreserveContentCodings)
