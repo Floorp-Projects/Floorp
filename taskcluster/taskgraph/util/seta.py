@@ -11,7 +11,7 @@ headers = {
 
 # It's a list of project name which SETA is useful on
 SETA_PROJECTS = ['mozilla-inbound', 'autoland']
-SETA_ENDPOINT = "http://seta.herokuapp.com/data/setadetails/?branch=%s"
+SETA_ENDPOINT = "https://seta.herokuapp.com/data/setadetails/?branch=%s"
 
 
 class SETA(object):
@@ -44,6 +44,10 @@ class SETA(object):
             task_list = json.loads(response.content).get('jobtypes', '')
             if len(task_list) > 0:
                 low_value_tasks = task_list.values()[0]
+
+            # Bug 1315145, disable SETA for tier-1 platforms until backfill is implemented.
+            low_value_tasks = [x for x in low_value_tasks if x.find('debug') == -1]
+            low_value_tasks = [x for x in low_value_tasks if x.find('asan') == -1]
 
         # In the event of request times out, requests will raise a TimeoutError.
         except exceptions.Timeout:
