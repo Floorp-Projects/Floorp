@@ -4041,7 +4041,7 @@ Parser<FullParseHandler>::checkDestructuringName(ParseNode* expr, Maybe<Declarat
         }
 
         RootedPropertyName name(context, expr->name());
-        return noteDeclaredName(name, *maybeDecl, handler.getPosition(expr));
+        return noteDeclaredName(name, *maybeDecl, expr->pn_pos);
     }
 
     // Otherwise this is an expression in destructuring outside a declaration.
