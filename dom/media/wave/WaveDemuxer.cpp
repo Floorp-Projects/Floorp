@@ -133,8 +133,11 @@ WAVTrackDemuxer::Init()
       }
       break;
     } else {
+      mOffset += aChunkSize; // Skip other irrelevant chunks.
+    }
+    if (mOffset & 1) {
       // Wave files are 2-byte aligned so we need to round up
-      mOffset += (aChunkSize + 1) & ~1; // Skip other irrelevant chunks.
+      mOffset += 1;
     }
     mHeaderParser.Reset();
   }
