@@ -3641,6 +3641,47 @@ nsGlobalWindow::DefineArgumentsProperty(nsIArray *aArguments)
   return ctx->SetProperty(obj, "arguments", aArguments);
 }
 
+void
+nsGlobalWindow::MaybeApplyBackPressure()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // If we are already suspended, then we don't need to apply back
+  // pressure for ThrottledEventQueue reasons.  This also avoids repeatedly
+  // calling SuspendTimeout() if this routine is executed many times
+  // before dropping below the backpressure threshold.
+  if (IsSuspended()) {
+    return;
+  }
+
+  RefPtr<ThrottledEventQueue> taskQueue = TabGroup()->GetThrottledEventQueue();
+  if (!taskQueue) {
+    return;
+  }
+
+  // Only stop the window if it has greatly fallen behind the main thread.
+  // This is a somewhat arbitrary threshold chosen such that it should
+  // rarely fire under normaly circumstances.  Its low enough, though,
+  // that we should avoid hitting an OOM from the backed up runnables in
+  // the queue.
+  static const uint32_t kThrottledEventQueueBackPressure = 5000;
+  if (taskQueue->Length() < kThrottledEventQueueBackPressure) {
+    return;
+  }
+
+  // First attempt to queue a runnable to resume running timeouts.  We do
+  // this first in order to verify we can dispatch successfully.
+  nsCOMPtr<nsIRunnable> r = NewRunnableMethod(this, &nsGlobalWindow::Resume);
+  nsresult rv = taskQueue->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  // Since the resume is dispatched we can go ahead and suspend the window
+  // now.  Once the task queue drains the resume will automatically get
+  // executed balancing this suspend.
+  // TODO: Consider suppressing event handling as well.
+  Suspend();
+}
+
 //*****************************************************************************
 // nsGlobalWindow::nsIScriptObjectPrincipal
 //*****************************************************************************
@@ -13071,6 +13112,8 @@ nsGlobalWindow::RunTimeout(Timeout* aTimeout)
   MOZ_ASSERT(dummy_timeout->HasRefCntOne(), "dummy_timeout may leak");
 
   mTimeoutInsertionPoint = last_insertion_point;
+
+  MaybeApplyBackPressure();
 }
 
 void
