@@ -471,9 +471,6 @@ extensions.registerSchemaAPI("browserAction", "addon_parent", context => {
       setIcon: function(details) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
 
-        // Note: the caller in the child process has already normalized
-        // `details` to not contain an `imageData` property, so the icon can
-        // safely be normalized here without errors.
         let icon = IconDetails.normalize(details, extension, context);
         BrowserAction.for(extension).setProperty(tab, "icon", icon);
       },

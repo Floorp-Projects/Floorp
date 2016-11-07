@@ -12,9 +12,7 @@ category webextension-scripts utils chrome://browser/content/ext-utils.js
 category webextension-scripts windows chrome://browser/content/ext-windows.js
 
 # scripts that must run in the same process as addon code.
-category webextension-scripts-addon browserAction chrome://browser/content/ext-c-browserAction.js
 category webextension-scripts-addon contextMenus chrome://browser/content/ext-c-contextMenus.js
-category webextension-scripts-addon pageAction chrome://browser/content/ext-c-pageAction.js
 category webextension-scripts-addon tabs chrome://browser/content/ext-c-tabs.js
 
 # schemas

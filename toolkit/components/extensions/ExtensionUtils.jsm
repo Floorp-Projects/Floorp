@@ -530,12 +530,7 @@ let IconDetails = {
       if (details.imageData) {
         let imageData = details.imageData;
 
-        // The global might actually be from Schema.jsm, which
-        // normalizes most of our arguments. In that case it won't have
-        // an ImageData property. But Schema.jsm doesn't normalize
-        // actual ImageData objects, so they will come from a global
-        // with the right property.
-        if (instanceOf(imageData, "ImageData")) {
+        if (typeof imageData == "string") {
           imageData = {"19": imageData};
         }
 
@@ -543,7 +538,7 @@ let IconDetails = {
           if (!INTEGER.test(size)) {
             throw new Error(`Invalid icon size ${size}, must be an integer`);
           }
-          result[size] = this.convertImageDataToDataURL(imageData[size], context);
+          result[size] = imageData[size];
         }
       }
 
@@ -642,16 +637,6 @@ let IconDetails = {
       image.onerror = reject;
       image.src = imageURL;
     });
-  },
-
-  convertImageDataToDataURL(imageData, context) {
-    let document = context.contentWindow.document;
-    let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    canvas.width = imageData.width;
-    canvas.height = imageData.height;
-    canvas.getContext("2d").putImageData(imageData, 0, 0);
-
-    return canvas.toDataURL("image/png");
   },
 };
 
