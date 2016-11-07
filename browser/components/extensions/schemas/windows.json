@@ -78,7 +78,6 @@
             "description": "Whether the window is set to be always on top."
           },
           "sessionId": {
-            "unsupported": true,
             "type": "string",
             "optional": true,
             "description": "The session ID used to uniquely identify a Window obtained from the $(ref:sessions) API."

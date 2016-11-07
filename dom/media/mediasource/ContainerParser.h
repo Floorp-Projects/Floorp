@@ -10,6 +10,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsString.h"
 #include "MediaResource.h"
+#include "MediaResult.h"
 
 namespace mozilla {
 
@@ -24,18 +25,25 @@ public:
   // Return true if aData starts with an initialization segment.
   // The base implementation exists only for debug logging and is expected
   // to be called first from the overriding implementation.
-  virtual bool IsInitSegmentPresent(MediaByteBuffer* aData);
+  // Return NS_OK if segment is present, NS_ERROR_NOT_AVAILABLE if no sufficient
+  // data is currently available to make a determination. Any other value
+  // indicates an error.
+  virtual MediaResult IsInitSegmentPresent(MediaByteBuffer* aData);
 
   // Return true if aData starts with a media segment.
   // The base implementation exists only for debug logging and is expected
   // to be called first from the overriding implementation.
-  virtual bool IsMediaSegmentPresent(MediaByteBuffer* aData);
+  // Return NS_OK if segment is present, NS_ERROR_NOT_AVAILABLE if no sufficient
+  // data is currently available to make a determination. Any other value
+  // indicates an error.
+  virtual MediaResult IsMediaSegmentPresent(MediaByteBuffer* aData);
 
   // Parse aData to extract the start and end frame times from the media
-  // segment.  aData may not start on a parser sync boundary.  Return true
-  // if aStart and aEnd have been updated.
-  virtual bool ParseStartAndEndTimestamps(MediaByteBuffer* aData,
-                                          int64_t& aStart, int64_t& aEnd);
+  // segment.  aData may not start on a parser sync boundary.  Return NS_OK
+  // if aStart and aEnd have been updated and NS_ERROR_NOT_AVAILABLE otherwise
+  // when no error were encountered.
+  virtual MediaResult ParseStartAndEndTimestamps(MediaByteBuffer* aData,
+                                                 int64_t& aStart, int64_t& aEnd);
 
   // Compare aLhs and rHs, considering any error that may exist in the
   // timestamps from the format's base representation.  Return true if aLhs
