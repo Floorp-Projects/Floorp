@@ -9,9 +9,9 @@ function getBrowserAction(extension) {
   return browserActionFor(ext);
 }
 
-function* testInArea(area) {
-  let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
+let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
 
+function* testInArea(area) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "background": {
@@ -233,6 +233,7 @@ add_task(function* testBrowserActionClickCanceled() {
         "default_popup": "popup.html",
         "browser_style": true,
       },
+      "permissions": ["activeTab"],
     },
 
     files: {
@@ -248,6 +249,7 @@ add_task(function* testBrowserActionClickCanceled() {
   let browserAction = browserActionFor(ext);
 
   let widget = getBrowserActionWidget(extension).forWindow(window);
+  let tab = window.gBrowser.selectedTab;
 
   // Test canceled click.
   EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, window);
@@ -257,10 +259,16 @@ add_task(function* testBrowserActionClickCanceled() {
 
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
 
+  is(browserAction.tabToRevokeDuringClearPopup, tab, "Tab to revoke was saved");
+  is(browserAction.tabManager.hasActiveTabPermission(tab), true, "Active tab was granted permission");
+
   EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mouseup", button: 0}, window);
 
   is(browserAction.pendingPopup, null, "Pending popup was cleared");
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
+
+  is(browserAction.tabToRevokeDuringClearPopup, null, "Tab to revoke was removed");
+  is(browserAction.tabManager.hasActiveTabPermission(tab), false, "Permission was revoked from tab");
 
   // Test completed click.
   EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, window);
@@ -361,4 +369,45 @@ add_task(function* testBrowserActionDisabled() {
   yield new Promise(resolve => setTimeout(resolve, 250));
 
   yield extension.unload();
+});
+
+add_task(function* testBrowserActionTabPopulation() {
+  // Note: This test relates to https://bugzilla.mozilla.org/show_bug.cgi?id=1310019
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "browser_action": {
+        "default_popup": "popup.html",
+        "browser_style": true,
+      },
+      "permissions": ["activeTab"],
+    },
+
+    files: {
+      "popup.html": scriptPage("popup.js"),
+      "popup.js": function() {
+        browser.tabs.query({active: true, currentWindow: true}).then(tabs => {
+          browser.test.assertEq("mochitest index /",
+                                tabs[0].title,
+                                "Tab has the expected title on first click");
+          browser.test.sendMessage("tabTitle");
+        });
+      },
+    },
+  });
+
+  let win = yield BrowserTestUtils.openNewBrowserWindow();
+  yield BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "http://example.com/");
+  yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+
+  yield extension.startup();
+
+  let widget = getBrowserActionWidget(extension).forWindow(win);
+  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, win);
+
+  yield extension.awaitMessage("tabTitle");
+
+  EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mouseup", button: 0}, win);
+
+  yield extension.unload();
+  yield BrowserTestUtils.closeWindow(win);
 });
