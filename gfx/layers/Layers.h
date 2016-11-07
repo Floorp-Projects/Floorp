@@ -1821,6 +1821,8 @@ protected:
    */
   gfx::Matrix4x4 SnapTransformTranslation(const gfx::Matrix4x4& aTransform,
                                           gfx::Matrix* aResidualTransform);
+  gfx::Matrix4x4 SnapTransformTranslation3D(const gfx::Matrix4x4& aTransform,
+                                            gfx::Matrix* aResidualTransform);
   /**
    * See comment for SnapTransformTranslation.
    * This function implements type 2 snapping. If aTransform is a translation
