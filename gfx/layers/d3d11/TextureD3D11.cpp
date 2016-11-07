@@ -113,6 +113,22 @@ GetTileRectD3D11(uint32_t aID, IntSize aSize, uint32_t aMaxSize)
                  verticalTile < (verticalTiles - 1) ? aMaxSize : aSize.height % aMaxSize);
 }
 
+AutoTextureLock::AutoTextureLock(IDXGIKeyedMutex* aMutex,
+                                 HRESULT& aResult,
+                                 uint32_t aTimeout)
+{
+  mMutex = aMutex;
+  mResult = mMutex->AcquireSync(0, aTimeout);
+  aResult = mResult;
+}
+
+AutoTextureLock::~AutoTextureLock()
+{
+  if (!FAILED(mResult)) {
+    mMutex->ReleaseSync(0);
+  }
+}
+
 ID3D11ShaderResourceView*
 TextureSourceD3D11::GetShaderResourceView()
 {
@@ -1218,36 +1234,36 @@ SyncObjectD3D11::FinalizeFrame()
   if (mD3D11SyncedTextures.size()) {
     RefPtr<IDXGIKeyedMutex> mutex;
     hr = mD3D11Texture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
-    hr = mutex->AcquireSync(0, 20000);
+    {
+      AutoTextureLock(mutex, hr, 20000);
 
-    if (hr == WAIT_TIMEOUT) {
-      if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
-        gfxWarning() << "AcquireSync timed out because of device reset.";
-        return;
+      if (hr == WAIT_TIMEOUT) {
+        if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+          gfxWarning() << "AcquireSync timed out because of device reset.";
+          return;
+        }
+        gfxDevCrash(LogReason::D3D11SyncLock) << "Timeout on the D3D11 sync lock";
       }
-      gfxDevCrash(LogReason::D3D11SyncLock) << "Timeout on the D3D11 sync lock";
-    }
 
-    D3D11_BOX box;
-    box.front = box.top = box.left = 0;
-    box.back = box.bottom = box.right = 1;
+      D3D11_BOX box;
+      box.front = box.top = box.left = 0;
+      box.back = box.bottom = box.right = 1;
 
-    RefPtr<ID3D11Device> dev = DeviceManagerDx::Get()->GetContentDevice();
-    if (!dev) {
-      if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
-        return;
+      RefPtr<ID3D11Device> dev = DeviceManagerDx::Get()->GetContentDevice();
+      if (!dev) {
+        if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+          return;
+        }
+        MOZ_CRASH("GFX: Invalid D3D11 content device");
       }
-      MOZ_CRASH("GFX: Invalid D3D11 content device");
+
+      RefPtr<ID3D11DeviceContext> ctx;
+      dev->GetImmediateContext(getter_AddRefs(ctx));
+
+      for (auto iter = mD3D11SyncedTextures.begin(); iter != mD3D11SyncedTextures.end(); iter++) {
+        ctx->CopySubresourceRegion(mD3D11Texture, 0, 0, 0, 0, *iter, 0, &box);
+      }
     }
-
-    RefPtr<ID3D11DeviceContext> ctx;
-    dev->GetImmediateContext(getter_AddRefs(ctx));
-
-    for (auto iter = mD3D11SyncedTextures.begin(); iter != mD3D11SyncedTextures.end(); iter++) {
-      ctx->CopySubresourceRegion(mD3D11Texture, 0, 0, 0, 0, *iter, 0, &box);
-    }
-
-    mutex->ReleaseSync(0);
 
     mD3D11SyncedTextures.clear();
   }
