@@ -17,19 +17,19 @@
     <style>
       .container {
         display: flex;
-        align-items: baseline;
         border: 1px dashed blue;
         font: 14px sans-serif;
         height: 50px;
       }
 
-      div   { display: inline-block; }
-      table { display: inline-table; }
+      .base     { align-items: baseline; }
+      .lastbase { align-items: last baseline; }
 
       .ortho  { writing-mode: vertical-rl;
-                width: 17px; }
-      .offset { margin-top: 10px; }
-
+                width: 17px;
+                height: 40px; }
+      .offset { margin-top: 10px;
+                margin-bottom: 3px; }
 
       .lime   { background: lime;   }
       .yellow { background: yellow; }
@@ -38,7 +38,13 @@
     </style>
   </head>
   <body>
-    <div class="container">
+    <div class="container base">
+      <div class="lime ortho">ortho</div>
+      <div class="yellow">one line</div>
+      <div class="orange">two<br/>lines</div>
+      <div class="pink offset">offset</div>
+    </div>
+    <div class="container lastbase">
       <div class="lime ortho">ortho</div>
       <div class="yellow">one line</div>
       <div class="orange">two<br/>lines</div>
