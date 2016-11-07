@@ -2527,6 +2527,11 @@ metaZones:table(nofallback){
             {
                 "Australia_Western",
                 "2012-02-21 17:00",
+                "2016-10-21 16:00",
+            }
+            {
+                "Casey",
+                "2016-10-21 16:00",
                 "9999-12-31 23:59",
             }
         }
@@ -2840,6 +2845,13 @@ metaZones:table(nofallback){
                 "Tajikistan",
                 "1991-09-08 21:00",
                 "9999-12-31 23:59",
+            }
+        }
+        "Asia:Famagusta"{
+            {
+                "Europe_Eastern",
+                "1970-01-01 00:00",
+                "2016-09-07 21:00",
             }
         }
         "Asia:Gaza"{
