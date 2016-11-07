@@ -26,7 +26,7 @@ class TabBar(UIBaseLib):
 
         :returns: :class:`MenuPanel` instance.
         """
-        return MenuPanel(lambda: self.marionette, self.window)
+        return MenuPanel(self.marionette, self.window)
 
     @property
     def newtab_button(self):
@@ -44,7 +44,7 @@ class TabBar(UIBaseLib):
         """
         tabs = self.toolbar.find_elements(By.TAG_NAME, 'tab')
 
-        return [Tab(lambda: self.marionette, self.window, tab) for tab in tabs]
+        return [Tab(self.marionette, self.window, tab) for tab in tabs]
 
     @property
     def toolbar(self):
@@ -206,10 +206,10 @@ class TabBar(UIBaseLib):
 class Tab(UIBaseLib):
     """Wraps a tab DOM element."""
 
-    def __init__(self, marionette_getter, window, element):
-        UIBaseLib.__init__(self, marionette_getter, window, element)
+    def __init__(self, marionette, window, element):
+        UIBaseLib.__init__(self, marionette, window, element)
 
-        self._security = Security(lambda: self.marionette)
+        self._security = Security(self.marionette)
         self._handle = None
 
     # Properties for visual elements of tabs #

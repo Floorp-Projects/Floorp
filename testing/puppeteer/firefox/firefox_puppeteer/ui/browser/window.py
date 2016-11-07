@@ -4,6 +4,7 @@
 
 from marionette_driver import By, Wait
 from marionette_driver.errors import NoSuchElementException
+
 from firefox_puppeteer.ui.about_window.window import AboutWindow
 from firefox_puppeteer.ui.browser.notifications import (
     AddOnInstallBlockedNotification,
@@ -79,7 +80,7 @@ class BrowserWindow(BaseWindow):
 
         if not self._navbar:
             navbar = self.window_element.find_element(By.ID, 'nav-bar')
-            self._navbar = NavBar(lambda: self.marionette, self, navbar)
+            self._navbar = NavBar(self.marionette, self, navbar)
 
         return self._navbar
 
@@ -101,7 +102,7 @@ class BrowserWindow(BaseWindow):
 
             notification_id = notification.get_attribute('id')
             return notifications_map.get(notification_id, BaseNotification)(
-                lambda: self.marionette, self, notification)
+                self.marionette, self, notification)
 
         except NoSuchElementException:
             return None  # no notification is displayed
@@ -142,7 +143,7 @@ class BrowserWindow(BaseWindow):
 
         if not self._tabbar:
             tabbrowser = self.window_element.find_element(By.ID, 'tabbrowser-tabs')
-            self._tabbar = TabBar(lambda: self.marionette, self, tabbrowser)
+            self._tabbar = TabBar(self.marionette, self, tabbrowser)
 
         return self._tabbar
 

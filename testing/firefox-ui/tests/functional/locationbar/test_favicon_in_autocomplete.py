@@ -16,10 +16,10 @@ class TestFaviconInAutocomplete(FirefoxTestCase):
         FirefoxTestCase.setUp(self)
 
         # Disable suggestions for searches and bookmarks to get results only for history
-        self.prefs.set_pref(self.PREF_SUGGEST_SEARCHES, False)
-        self.prefs.set_pref(self.PREF_SUGGEST_BOOKMARK, False)
+        self.puppeteer.prefs.set_pref(self.PREF_SUGGEST_SEARCHES, False)
+        self.puppeteer.prefs.set_pref(self.PREF_SUGGEST_BOOKMARK, False)
 
-        self.places.remove_all_history()
+        self.puppeteer.places.remove_all_history()
 
         self.test_urls = [self.marionette.absolute_url('layout/mozilla.html')]
 
@@ -41,7 +41,7 @@ class TestFaviconInAutocomplete(FirefoxTestCase):
         def load_urls():
             with self.marionette.using_context('content'):
                 self.marionette.navigate(self.test_urls[0])
-        self.places.wait_for_visited(self.test_urls, load_urls)
+        self.puppeteer.places.wait_for_visited(self.test_urls, load_urls)
 
         locationbar = self.browser.navbar.locationbar
 

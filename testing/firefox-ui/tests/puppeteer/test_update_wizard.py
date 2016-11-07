@@ -24,7 +24,7 @@ class TestUpdateWizard(FirefoxTestCase):
 
     def tearDown(self):
         try:
-            self.windows.close_all([self.browser])
+            self.puppeteer.windows.close_all([self.browser])
         finally:
             FirefoxTestCase.tearDown(self)
 

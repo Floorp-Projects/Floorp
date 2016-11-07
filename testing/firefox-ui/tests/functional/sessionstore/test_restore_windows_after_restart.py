@@ -64,7 +64,7 @@ class TestRestoreWindowsAfterRestart(FirefoxTestCase):
 
         self.restart()
 
-        windows = self.windows.all
+        windows = self.puppeteer.windows.all
 
         # There's no guarantee that Marionette will return us an
         # iterator for the opened windows that will match the
