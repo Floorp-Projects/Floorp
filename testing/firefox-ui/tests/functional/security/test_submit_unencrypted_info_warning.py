@@ -18,7 +18,7 @@ class TestSubmitUnencryptedInfoWarning(FirefoxTestCase):
         self.url = 'https://ssl-dv.mozqa.com/data/firefox/security/unencryptedsearch.html'
         self.test_string = 'mozilla'
 
-        self.prefs.set_pref('security.warn_submit_insecure', True)
+        self.puppeteer.prefs.set_pref('security.warn_submit_insecure', True)
 
     def tearDown(self):
         try:

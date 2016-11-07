@@ -82,8 +82,8 @@ class MARChannels(BaseLib):
     INI_SECTION = 'Settings'
     INI_OPTION = 'ACCEPTED_MAR_CHANNEL_IDS'
 
-    def __init__(self, marionette_getter):
-        BaseLib.__init__(self, marionette_getter)
+    def __init__(self, marionette):
+        BaseLib.__init__(self, marionette)
 
         self._ini_file_path = self.marionette.execute_script("""
           Components.utils.import('resource://gre/modules/Services.jsm');
@@ -168,15 +168,15 @@ class SoftwareUpdate(BaseLib):
     PREF_APP_UPDATE_URL_OVERRIDE = 'app.update.url.override'
     PREF_DISABLED_ADDONS = 'extensions.disabledAddons'
 
-    def __init__(self, marionette_getter):
-        BaseLib.__init__(self, marionette_getter)
+    def __init__(self, marionette):
+        BaseLib.__init__(self, marionette)
 
-        self.app_info = AppInfo(marionette_getter)
-        self.prefs = Preferences(marionette_getter)
+        self.app_info = AppInfo(marionette)
+        self.prefs = Preferences(marionette)
 
-        self._update_channel = UpdateChannel(marionette_getter)
-        self._mar_channels = MARChannels(marionette_getter)
-        self._active_update = ActiveUpdate(marionette_getter)
+        self._update_channel = UpdateChannel(marionette)
+        self._mar_channels = MARChannels(marionette)
+        self._active_update = ActiveUpdate(marionette)
 
     @property
     def ABI(self):
@@ -378,10 +378,10 @@ class UpdateChannel(BaseLib):
     """Class to handle the update channel as listed in channel-prefs.js"""
     REGEX_UPDATE_CHANNEL = re.compile(r'("app\.update\.channel", ")([^"].*)(?=")')
 
-    def __init__(self, marionette_getter):
-        BaseLib.__init__(self, marionette_getter)
+    def __init__(self, marionette):
+        BaseLib.__init__(self, marionette)
 
-        self.prefs = Preferences(marionette_getter)
+        self.prefs = Preferences(marionette)
 
         self.file_path = self.marionette.execute_script("""
           Components.utils.import('resource://gre/modules/Services.jsm');
