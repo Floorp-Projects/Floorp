@@ -1163,12 +1163,12 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
         tp = newToken(-1);
 
         static_assert('$' < 128,
-                      "IdentifierStart contains '$', but as !IsLetter('$'), "
+                      "IdentifierStart contains '$', but as !IsUnicodeIDStart('$'), "
                       "ensure that '$' is never handled here");
         static_assert('_' < 128,
-                      "IdentifierStart contains '_', but as !IsLetter('_'), "
+                      "IdentifierStart contains '_', but as !IsUnicodeIDStart('_'), "
                       "ensure that '_' is never handled here");
-        if (unicode::IsLetter(c)) {
+        if (unicode::IsUnicodeIDStart(c)) {
             identStart = userbuf.addressOfNextRawChar() - 1;
             hadUnicodeEscape = false;
             goto identifier;
