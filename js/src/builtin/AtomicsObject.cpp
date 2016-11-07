@@ -339,18 +339,20 @@ ExchangeOrStore(JSContext* cx, unsigned argc, Value* vp)
     uint32_t offset;
     if (!GetTypedArrayIndex(cx, idxv, view, &offset))
         return false;
-    int32_t numberValue;
-    if (!ToInt32(cx, valv, &numberValue))
+    double integerValue;
+    if (!ToInteger(cx, valv, &integerValue))
         return false;
 
     bool badType = false;
-    int32_t result = ExchangeOrStore<op>(view->type(), numberValue, view->viewDataShared(), offset,
-                                         &badType);
+    int32_t result = ExchangeOrStore<op>(view->type(), JS::ToInt32(integerValue),
+                                         view->viewDataShared(), offset, &badType);
 
     if (badType)
         return ReportBadArrayType(cx);
 
-    if (view->type() == Scalar::Uint32)
+    if (op == DoStore)
+        r.setNumber(integerValue);
+    else if (view->type() == Scalar::Uint32)
         r.setNumber((double)(uint32_t)result);
     else
         r.setInt32(result);

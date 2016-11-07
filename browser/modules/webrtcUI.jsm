@@ -368,10 +368,28 @@ function prompt(aBrowser, aRequest) {
         if (requestTypes.length == 1 && (requestTypes[0] == "Microphone" ||
                                          requestTypes[0] == "AudioCapture"))
           popupId = "Microphone";
-        if (requestTypes.indexOf("Screen") != -1)
+        if (requestTypes.includes("Screen"))
           popupId = "Screen";
         chromeDoc.getElementById("webRTC-shareDevices-notification")
                  .setAttribute("popupid", "webRTC-share" + popupId);
+      }
+
+      // Clean-up video streams of screensharing previews.
+      if ((aTopic == "dismissed" || aTopic == "removed") &&
+          requestTypes.includes("Screen")) {
+        let video = chromeDoc.getElementById("webRTC-previewVideo");
+        video.deviceId = undefined;
+        if (video.stream) {
+          video.stream.getTracks().forEach(t => t.stop());
+          video.stream = null;
+          video.src = null;
+          chromeDoc.getElementById("webRTC-preview").hidden = true;
+        }
+        let menupopup = chromeDoc.getElementById("webRTC-selectWindow-menupopup");
+        if (menupopup._commandEventListener) {
+          menupopup.removeEventListener("command", menupopup._commandEventListener);
+          menupopup._commandEventListener = null;
+        }
       }
 
       if (aTopic != "showing")
@@ -467,10 +485,12 @@ function prompt(aBrowser, aRequest) {
         // Build the list of 'devices'.
         let monitorIndex = 1;
         for (let i = 0; i < devices.length; ++i) {
+          let device = devices[i];
+
           let name;
           // Building screen list from available screens.
           if (type == "screen") {
-            if (devices[i].name == "Primary Monitor") {
+            if (device.name == "Primary Monitor") {
               name = stringBundle.getString("getUserMedia.shareEntireScreen.label");
             } else {
               name = stringBundle.getFormattedString("getUserMedia.shareMonitor.label",
@@ -479,7 +499,7 @@ function prompt(aBrowser, aRequest) {
             }
           }
           else {
-            name = devices[i].name;
+            name = device.name;
             if (type == "application") {
               // The application names returned by the platform are of the form:
               // <window count>\x1e<application name>
@@ -491,12 +511,82 @@ function prompt(aBrowser, aRequest) {
                                .replace("#2", count);
             }
           }
-          addDeviceToList(menupopup, name, i, typeName);
+          let item = addDeviceToList(menupopup, name, i, typeName);
+          item.deviceId = device.id;
+          if (device.scary)
+            item.scary = true;
         }
 
         // Always re-select the "No <type>" item.
         chromeDoc.getElementById("webRTC-selectWindow-menulist").removeAttribute("value");
         chromeDoc.getElementById("webRTC-all-windows-shared").hidden = true;
+        menupopup._commandEventListener = event => {
+          let video = chromeDoc.getElementById("webRTC-previewVideo");
+          if (video.stream) {
+            video.stream.getTracks().forEach(t => t.stop());
+            video.stream = null;
+          }
+
+          let deviceId = event.target.deviceId;
+          if (deviceId == undefined) {
+            chromeDoc.getElementById("webRTC-preview").hidden = true;
+            video.src = null;
+            return;
+          }
+
+          let scary = event.target.scary;
+          let warning = chromeDoc.getElementById("webRTC-previewWarning");
+          warning.hidden = !scary;
+          let chromeWin = chromeDoc.defaultView;
+          if (scary) {
+            warning.hidden = false;
+            let string;
+            let bundle = chromeWin.gNavigatorBundle;
+
+            let learnMoreText =
+              bundle.getString("getUserMedia.shareScreen.learnMoreLabel");
+            let baseURL =
+              Services.urlFormatter.formatURLPref("app.support.baseURL");
+            let learnMore =
+              "<label class='text-link' href='" + baseURL + "screenshare-safety'>" +
+              learnMoreText + "</label>";
+
+            if (type == "screen") {
+              string = bundle.getFormattedString("getUserMedia.shareScreenWarning.message",
+                                                 [learnMore]);
+            }
+            else {
+              let brand =
+                chromeDoc.getElementById("bundle_brand").getString("brandShortName");
+              string = bundle.getFormattedString("getUserMedia.shareFirefoxWarning.message",
+                                                 [brand, learnMore]);
+            }
+            warning.innerHTML = string;
+          }
+
+          let perms = Services.perms;
+          let chromeUri = Services.io.newURI(chromeDoc.documentURI, null, null);
+          perms.add(chromeUri, "MediaManagerVideo", perms.ALLOW_ACTION,
+                    perms.EXPIRE_SESSION);
+
+          video.deviceId = deviceId;
+          let constraints = { video: { mediaSource: type, deviceId: {exact: deviceId } } };
+          chromeWin.navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+            if (video.deviceId != deviceId) {
+              // The user has selected a different device or closed the panel
+              // before getUserMedia finished.
+              stream.getTracks().forEach(t => t.stop());
+              return;
+            }
+            video.src = chromeWin.URL.createObjectURL(stream);
+            video.stream = stream;
+            chromeDoc.getElementById("webRTC-preview").hidden = false;
+            video.onloadedmetadata = function(e) {
+              video.play();
+            };
+          });
+        };
+        menupopup.addEventListener("command", menupopup._commandEventListener);
       }
 
       function addDeviceToList(menupopup, deviceName, deviceIndex, type) {
@@ -507,6 +597,7 @@ function prompt(aBrowser, aRequest) {
         if (type)
           menuitem.setAttribute("devicetype", type);
         menupopup.appendChild(menuitem);
+        return menuitem;
       }
 
       chromeDoc.getElementById("webRTC-selectCamera").hidden = !videoDevices.length || sharingScreen;
@@ -583,7 +674,7 @@ function prompt(aBrowser, aRequest) {
   let anchorId = "webRTC-shareDevices-notification-icon";
   if (requestTypes.length == 1 && requestTypes[0] == "Microphone")
     anchorId = "webRTC-shareMicrophone-notification-icon";
-  if (requestTypes.indexOf("Screen") != -1)
+  if (requestTypes.includes("Screen"))
     anchorId = "webRTC-shareScreen-notification-icon";
   notification =
     chromeWin.PopupNotifications.show(aBrowser, "webRTC-shareDevices", message,
