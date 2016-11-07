@@ -921,6 +921,15 @@ cargo_build_flags += --manifest-path $(CARGO_FILE)
 cargo_build_flags += --target=$(RUST_TARGET)
 cargo_build_flags += --verbose
 
+# Enable color output if original stdout was a TTY and color settings
+# aren't already present. This essentially restores the default behavior
+# of cargo when running via `mach`.
+ifdef MACH_STDOUT_ISATTY
+ifeq (,$(findstring --color,$(cargo_build_flags)))
+cargo_build_flags += --color=always
+endif
+endif
+
 # Assume any system libraries rustc links against are already in the target's LIBS.
 #
 # We need to run cargo unconditionally, because cargo is the only thing that
