@@ -18,6 +18,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "MediaInfo.h"
+#include "MediaPrefs.h"
 #include "mozilla/Logging.h"
 #include "nsWindowsHelpers.h"
 #include "gfx2DGlue.h"
@@ -66,7 +67,7 @@ const CLSID CLSID_WebmMfVpxDec =
 };
 
 namespace mozilla {
-  
+
 LayersBackend
 GetCompositorBackendType(layers::KnowsCompositor* aKnowsCompositor)
 {
@@ -180,8 +181,8 @@ FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingC
     ClearOnShutdown(&aDLLBlacklistingCache);
   }
 
-  if (aBlacklist.IsEmpty()) {
-    // Empty blacklist -> No blacklisting.
+  if (aBlacklist.IsEmpty() || MediaPrefs::PDMWMFSkipBlacklist()) {
+    // Empty blacklist, or "media.wmf.skip-blacklist"=true -> No blacklisting.
     aDLLBlacklistingCache->mBlacklistPref.SetLength(0);
     aDLLBlacklistingCache->mBlacklistedDLL.SetLength(0);
     return aDLLBlacklistingCache->mBlacklistedDLL;
