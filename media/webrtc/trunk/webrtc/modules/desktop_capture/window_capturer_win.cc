@@ -61,6 +61,10 @@ BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
   WindowCapturer::Window window;
   window.id = reinterpret_cast<WindowCapturer::WindowId>(hwnd);
 
+  DWORD pid;
+  GetWindowThreadProcessId(hwnd, &pid);
+  window.pid = (pid_t)pid;
+
   const size_t kTitleLength = 500;
   WCHAR window_title[kTitleLength];
   // Truncate the title if it's longer than kTitleLength.

@@ -58,6 +58,7 @@ class VideoCaptureModule: public RefCountedModule {
     //                      Otherwise same as deviceNameUTF8.
     // productUniqueIdUTF8 - Unique product id if it exist.
     //                       Null terminated otherwise.
+    // pid                 - Owning process id (pid).
     virtual int32_t GetDeviceName(
         uint32_t deviceNumber,
         char* deviceNameUTF8,
@@ -65,7 +66,8 @@ class VideoCaptureModule: public RefCountedModule {
         char* deviceUniqueIdUTF8,
         uint32_t deviceUniqueIdUTF8Length,
         char* productUniqueIdUTF8 = 0,
-        uint32_t productUniqueIdUTF8Length = 0) = 0;
+        uint32_t productUniqueIdUTF8Length = 0,
+        pid_t* pid = 0) = 0;
 
 
     // Returns the number of capabilities this device.
