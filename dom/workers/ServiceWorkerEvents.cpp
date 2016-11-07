@@ -237,23 +237,19 @@ public:
 
     return rv;
   }
-
   bool CSPPermitsResponse(nsILoadInfo* aLoadInfo)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aLoadInfo);
-
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
-    nsAutoCString url;
-    mInternalResponse->GetUnfilteredURL(url);
+    nsCString url = mInternalResponse->GetUnfilteredURL();
     if (url.IsEmpty()) {
       // Synthetic response. The buck stops at the worker script.
       url = mScriptSpec;
     }
     rv = NS_NewURI(getter_AddRefs(uri), url, nullptr, nullptr);
     NS_ENSURE_SUCCESS(rv, false);
-
     int16_t decision = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(aLoadInfo->InternalContentPolicyType(), uri,
                                    aLoadInfo->LoadingPrincipal(),
@@ -635,18 +631,16 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   if (NS_WARN_IF(!ir)) {
     return;
   }
-
   // When an opaque response is encountered, we need the original channel's principal
   // to reflect the final URL. Non-opaque responses are either same-origin or CORS-enabled
   // cross-origin responses, which are treated as same-origin by consumers.
   nsCString responseURL;
   if (response->Type() == ResponseType::Opaque) {
-    ir->GetUnfilteredURL(responseURL);
+    responseURL = ir->GetUnfilteredURL();
     if (NS_WARN_IF(responseURL.IsEmpty())) {
       return;
     }
   }
-
   nsAutoPtr<RespondWithClosure> closure(new RespondWithClosure(mInterceptedChannel,
                                                                mRegistration, ir,
                                                                worker->GetChannelInfo(),
