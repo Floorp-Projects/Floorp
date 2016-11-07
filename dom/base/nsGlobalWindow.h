@@ -1498,7 +1498,6 @@ public:
   // Insert aTimeout into the list, before all timeouts that would
   // fire after it, but no earlier than mTimeoutInsertionPoint, if any.
   void InsertTimeoutIntoList(mozilla::dom::Timeout* aTimeout);
-  static void TimerCallback(nsITimer *aTimer, void *aClosure);
   uint32_t GetTimeoutId(mozilla::dom::Timeout::Reason aReason);
 
   // Helper Functions
