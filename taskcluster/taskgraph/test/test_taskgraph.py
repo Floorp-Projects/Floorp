@@ -11,11 +11,24 @@ from ..task.docker_image import DockerImageTask
 from ..task.transform import TransformTask
 from ..taskgraph import TaskGraph
 from mozunit import main
+from taskgraph.util.docker import INDEX_PREFIX
 
 
 class TestTargetTasks(unittest.TestCase):
 
     def test_from_json(self):
+        task = {
+            "routes": [],
+            "extra": {
+                "imageMeta": {
+                    "contextHash": "<hash>",
+                    "imageName": "<image>",
+                    "level": "1"
+                }
+            }
+        }
+        index_paths = ["{}.level-{}.<image>.hash.<hash>".format(INDEX_PREFIX, level)
+                       for level in range(1, 4)]
         graph = TaskGraph(tasks={
             'a': TransformTask(
                 kind='fancy',
@@ -29,8 +42,8 @@ class TestTargetTasks(unittest.TestCase):
             'b': DockerImageTask(kind='docker-image',
                                  label='b',
                                  attributes={},
-                                 task={"routes": []},
-                                 index_paths=[]),
+                                 task=task,
+                                 index_paths=index_paths),
         }, graph=Graph(nodes={'a', 'b'}, edges=set()))
 
         tasks, new_graph = TaskGraph.from_json(graph.to_json())

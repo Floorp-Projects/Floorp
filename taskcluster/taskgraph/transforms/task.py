@@ -349,7 +349,7 @@ def build_docker_worker_payload(config, task, task_def):
         docker_image_task = 'build-docker-image-' + image['in-tree']
         task.setdefault('dependencies', {})['docker-image'] = docker_image_task
         image = {
-            "path": "public/image.tar",
+            "path": "public/image.tar.zst",
             "taskId": {"task-reference": "<docker-image>"},
             "type": "task-image",
         }
