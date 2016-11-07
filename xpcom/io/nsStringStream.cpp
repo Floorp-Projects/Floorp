@@ -194,6 +194,14 @@ nsStringInputStream::ShareData(const char* aData, int32_t aDataLen)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(size_t)
+nsStringInputStream::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
+{
+  size_t n = aMallocSizeOf(this);
+  n += mData.SizeOfIncludingThisIfUnshared(aMallocSizeOf);
+  return n;
+}
+
 /////////
 // nsIInputStream implementation
 /////////
