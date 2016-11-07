@@ -11,6 +11,11 @@ a full parameters file as one of its output artifacts.  The other ``mach
 taskgraph`` commands can take this file as input.  This can be very helpful
 when working on a change to the task graph.
 
+When experimenting with local runs of the task-graph generation, it is always
+best to find a recent decision task's ``parameters.yml`` file, and modify that
+file if necessary, rather than starting from scratch.  This ensures you have a
+complete set of parameters.
+
 The properties of the parameters object are described here, divided rougly by
 topic.
 
@@ -66,9 +71,10 @@ Tree Information
    ``cedar``.
 
 ``level``
-   The SCM level associated with this tree.  This dictates the names
-   of resources used in the generated tasks, and those tasks will fail if it
-   is incorrect.
+   The `SCM level
+   <https://www.mozilla.org/en-US/about/governance/policies/commit/access-policy/>`_
+   associated with this tree.  This dictates the names of resources used in the
+   generated tasks, and those tasks will fail if it is incorrect.
 
 Target Set
 ----------
