@@ -48,21 +48,16 @@ public:
   {
     return mInternalResponse->Type();
   }
-
   void
   GetUrl(nsAString& aUrl) const
   {
-    nsCString url;
-    mInternalResponse->GetURL(url);
-    CopyUTF8toUTF16(url, aUrl);
+    CopyUTF8toUTF16(mInternalResponse->GetURL(), aUrl);
   }
-
   bool
   Redirected() const
   {
     return mInternalResponse->IsRedirected();
   }
-
   uint16_t
   Status() const
   {
