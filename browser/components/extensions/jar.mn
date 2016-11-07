@@ -19,6 +19,7 @@ browser.jar:
     content/browser/ext-desktop-runtime.js
     content/browser/ext-history.js
     content/browser/ext-pageAction.js
+    content/browser/ext-sessions.js
     content/browser/ext-tabs.js
     content/browser/ext-utils.js
     content/browser/ext-windows.js
