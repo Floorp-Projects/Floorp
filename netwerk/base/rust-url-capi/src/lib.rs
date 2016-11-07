@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 extern crate url;
 use url::{Url, ParseError, ParseOptions};
 use url::quirks;
@@ -320,7 +324,9 @@ pub unsafe extern "C" fn rusturl_set_path(urlptr: rusturl_ptr, path: *mut libc::
     None => return ParseError::InvalidDomainCharacter.error_code() // utf-8 failed
   };
 
-  quirks::set_pathname(url, path_).error_code()
+  quirks::set_pathname(url, path_);
+  NSError::OK.error_code()
+
 }
 
 #[no_mangle]
@@ -336,7 +342,8 @@ pub unsafe extern "C" fn rusturl_set_query(urlptr: rusturl_ptr, query: *mut libc
     None => return ParseError::InvalidDomainCharacter.error_code() // utf-8 failed
   };
 
-  quirks::set_search(url, query_).error_code()
+  quirks::set_search(url, query_);
+  NSError::OK.error_code()
 }
 
 #[no_mangle]
@@ -352,7 +359,8 @@ pub unsafe extern "C" fn rusturl_set_fragment(urlptr: rusturl_ptr, fragment: *mu
     None => return ParseError::InvalidDomainCharacter.error_code() // utf-8 failed
   };
 
-  quirks::set_hash(url, fragment_).error_code()
+  quirks::set_hash(url, fragment_);
+  NSError::OK.error_code()
 }
 
 #[no_mangle]
@@ -475,3 +483,7 @@ pub unsafe extern "C" fn rusturl_relative_spec(urlptr1: rusturl_ptr, urlptr2: ru
   return cont.assign(&buffer);
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn sizeof_rusturl() -> size_t {
+  mem::size_of::<Url>()
+}
