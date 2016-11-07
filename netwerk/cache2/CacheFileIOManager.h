@@ -7,7 +7,6 @@
 
 #include "CacheIOThread.h"
 #include "CacheStorageService.h"
-#include "CacheHashUtils.h"
 #include "nsIEventTarget.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
@@ -331,8 +330,9 @@ public:
                                  bool aPinning);
 
   static nsresult InitIndexEntry(CacheFileHandle *aHandle,
-                                 OriginAttrsHash  aOriginAttrsHash,
+                                 uint32_t         aAppId,
                                  bool             aAnonymous,
+                                 bool             aInIsolatedMozBrowser,
                                  bool             aPinning);
   static nsresult UpdateIndexEntry(CacheFileHandle *aHandle,
                                    const uint32_t  *aFrecency,
