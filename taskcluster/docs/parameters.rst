@@ -22,6 +22,10 @@ topic.
 Push Information
 ----------------
 
+``triggered_by``
+   The event that precipitated this decision task; one of ``"nightly"`` or
+   ``"push"``.
+
 ``base_repository``
    The repository from which to do an initial clone, utilizing any available
    caching.
