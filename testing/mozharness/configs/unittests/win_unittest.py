@@ -196,6 +196,11 @@ config = {
             'options': ["--suite=reftest"],
             'tests': ["tests/reftest/tests/layout/reftests/reftest.list"]
         },
+        "reftest-gpu": {
+            'options': ["--suite=reftest",
+                        "--setpref=layers.gpu-process.force-enabled=true"],
+            'tests': ["tests/reftest/tests/layout/reftests/reftest.list"]
+        },
         "reftest-no-accel": {
             "options": ["--suite=reftest",
                         "--setpref=gfx.direct2d.disabled=true",
