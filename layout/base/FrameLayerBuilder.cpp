@@ -1518,6 +1518,26 @@ struct MaskLayerUserData : public LayerUserData
     , mScaleY(-1.0f)
     , mAppUnitsPerDevPixel(-1)
   { }
+  MaskLayerUserData(const DisplayItemClip& aClip,
+                    uint32_t aRoundedRectClipCount,
+                    int32_t aAppUnitsPerDevPixel,
+                    const ContainerLayerParameters& aParams)
+    : mScaleX(aParams.mXScale)
+    , mScaleY(aParams.mYScale)
+    , mOffset(aParams.mOffset)
+    , mAppUnitsPerDevPixel(aAppUnitsPerDevPixel)
+  {
+    aClip.AppendRoundedRects(&mRoundedClipRects, aRoundedRectClipCount);
+  }
+
+  void operator=(MaskLayerUserData&& aOther)
+  {
+    mScaleX = aOther.mScaleX;
+    mScaleY = aOther.mScaleY;
+    mOffset = aOther.mOffset;
+    mAppUnitsPerDevPixel = aOther.mAppUnitsPerDevPixel;
+    mRoundedClipRects.SwapElements(aOther.mRoundedClipRects);
+  }
 
   bool
   operator== (const MaskLayerUserData& aOther) const
@@ -6231,13 +6251,8 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
     );
   MaskLayerUserData* userData = GetMaskLayerUserData(maskLayer);
 
-  MaskLayerUserData newData;
-  aClip.AppendRoundedRects(&newData.mRoundedClipRects, aRoundedRectClipCount);
-  newData.mScaleX = mParameters.mXScale;
-  newData.mScaleY = mParameters.mYScale;
-  newData.mOffset = mParameters.mOffset;
-  newData.mAppUnitsPerDevPixel = mContainerFrame->PresContext()->AppUnitsPerDevPixel();
-
+  int32_t A2D = mContainerFrame->PresContext()->AppUnitsPerDevPixel();
+  MaskLayerUserData newData(aClip, aRoundedRectClipCount, A2D, mParameters);
   if (*userData == newData) {
     return maskLayer.forget();
   }
@@ -6333,11 +6348,7 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
   maskLayer->SetBaseTransform(matrix);
 
   // save the details of the clip in user data
-  userData->mScaleX = newData.mScaleX;
-  userData->mScaleY = newData.mScaleY;
-  userData->mOffset = newData.mOffset;
-  userData->mAppUnitsPerDevPixel = newData.mAppUnitsPerDevPixel;
-  userData->mRoundedClipRects.SwapElements(newData.mRoundedClipRects);
+  *userData = Move(newData);
   userData->mImageKey.Reset(lookupKey);
 
   return maskLayer.forget();
