@@ -24,11 +24,9 @@ using namespace mozilla::layers;
 
 namespace media {
 
-// For badly muxed files, if we try to set a timeout to discard expired
-// frames, but the start time of the next frame is less than the clock time,
-// we instead just set a timeout FAILOVER_UPDATE_INTERVAL_US in the future,
-// and run UpdateRenderedVideoFrames() then.
-static const int64_t FAILOVER_UPDATE_INTERVAL_US = 1000000 / 30;
+// Minimum update frequency is 1/120th of a second, i.e. half the
+// duration of a 60-fps frame.
+static const int64_t MIN_UPDATE_INTERVAL_US = 1000000 / (60 * 2);
 
 VideoSink::VideoSink(AbstractThread* aThread,
                      MediaSink* aAudioSink,
@@ -447,8 +445,7 @@ VideoSink::UpdateRenderedVideoFrames()
   }
 
   int64_t nextFrameTime = frames[1]->mTime;
-  int64_t delta = (nextFrameTime > clockTime) ? (nextFrameTime - clockTime)
-                                              : FAILOVER_UPDATE_INTERVAL_US;
+  int64_t delta = std::max<int64_t>((nextFrameTime - clockTime), MIN_UPDATE_INTERVAL_US);
   TimeStamp target = nowTime + TimeDuration::FromMicroseconds(
      delta / mAudioSink->GetPlaybackParams().mPlaybackRate);
 
