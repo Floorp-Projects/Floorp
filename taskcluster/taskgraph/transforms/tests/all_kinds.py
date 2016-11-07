@@ -26,8 +26,6 @@ def set_worker_implementation(config, tests):
     for test in tests:
         if test['test-platform'].startswith('win'):
             test['worker-implementation'] = 'generic-worker'
-        elif test['test-platform'].startswith('macosx'):
-            test['worker-implementation'] = 'macosx-engine'
         else:
             test['worker-implementation'] = 'docker-worker'
         yield test
