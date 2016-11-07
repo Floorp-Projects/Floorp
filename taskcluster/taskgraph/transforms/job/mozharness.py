@@ -10,7 +10,6 @@ way, and certainly anything using mozharness should use this approach.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import time
 from voluptuous import Schema, Required, Optional, Any
 
 from taskgraph.transforms.job import run_job_using
@@ -100,7 +99,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         'MOZHARNESS_SCRIPT': run['script'],
         'MH_BRANCH': config.params['project'],
         'MH_BUILD_POOL': 'taskcluster',
-        'MOZ_BUILD_DATE': time.strftime("%Y%m%d%H%M%S", time.gmtime(config.params['pushdate'])),
+        'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
     })
 
@@ -197,7 +196,7 @@ def mozharness_on_windows(config, job, taskdesc):
 
     env = worker['env']
     env.update({
-        'MOZ_BUILD_DATE': time.strftime("%Y%m%d%H%M%S", time.gmtime(config.params['pushdate'])),
+        'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
         'TOOLTOOL_REPO': 'https://github.com/mozilla/build-tooltool',
         'TOOLTOOL_REV': 'master',

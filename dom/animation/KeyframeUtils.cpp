@@ -1468,16 +1468,16 @@ static void
 DistributeRange(const Range<Keyframe>& aSpacingRange,
                 const Range<Keyframe>& aRangeToAdjust)
 {
-  MOZ_ASSERT(aRangeToAdjust.start() >= aSpacingRange.start() &&
+  MOZ_ASSERT(aRangeToAdjust.begin() >= aSpacingRange.begin() &&
              aRangeToAdjust.end() <= aSpacingRange.end(),
              "Out of range");
   const size_t n = aSpacingRange.length() - 1;
   const double startOffset = aSpacingRange[0].mComputedOffset;
   const double diffOffset = aSpacingRange[n].mComputedOffset - startOffset;
-  for (auto iter = aRangeToAdjust.start();
+  for (auto iter = aRangeToAdjust.begin();
        iter != aRangeToAdjust.end();
        ++iter) {
-    size_t index = iter - aSpacingRange.start();
+    size_t index = iter - aSpacingRange.begin();
     iter->mComputedOffset = startOffset + double(index) / n * diffOffset;
   }
 }
@@ -1494,7 +1494,7 @@ DistributeRange(const Range<Keyframe>& aSpacingRange)
 {
   // We don't need to apply distribute spacing to keyframe A and keyframe B.
   DistributeRange(aSpacingRange,
-                  Range<Keyframe>(aSpacingRange.start() + 1,
+                  Range<Keyframe>(aSpacingRange.begin() + 1,
                                   aSpacingRange.end() - 1));
 }
 
@@ -1525,7 +1525,7 @@ PaceRange(const Range<Keyframe>& aKeyframes,
     return;
   }
 
-  const double distA = *(aCumulativeDistances.start());
+  const double distA = *(aCumulativeDistances.begin());
   const double distB = *(aCumulativeDistances.end() - 1);
   MOZ_ASSERT(distA != kNotPaceable && distB != kNotPaceable,
              "Both Paced A and Paced B should be paceable");
@@ -1537,7 +1537,7 @@ PaceRange(const Range<Keyframe>& aKeyframes,
     return;
   }
 
-  const RangedPtr<Keyframe> pacedA = aKeyframes.start();
+  const RangedPtr<Keyframe> pacedA = aKeyframes.begin();
   const RangedPtr<Keyframe> pacedB = aKeyframes.end() - 1;
   MOZ_ASSERT(pacedA->mComputedOffset != Keyframe::kComputedOffsetNotSet &&
              pacedB->mComputedOffset != Keyframe::kComputedOffsetNotSet,
@@ -1549,7 +1549,7 @@ PaceRange(const Range<Keyframe>& aKeyframes,
   const double initialDist = distA;
   const double totalDist   = distB - initialDist;
   for (auto iter = pacedA + 1; iter != pacedB; ++iter) {
-    size_t k = iter - aKeyframes.start();
+    size_t k = iter - aKeyframes.begin();
     if (aCumulativeDistances[k] == kNotPaceable) {
       continue;
     }
