@@ -2390,8 +2390,7 @@ MPhi::foldsTernary(TempAllocator& alloc)
     // - fold testArg ? testArg : 0 to testArg
     // - fold testArg ? 0 : testArg to 0
     if (testArg->type() == MIRType::Int32 && c->numberToDouble() == 0) {
-        if (DeadIfUnused(testArg))
-            testArg->setGuardRangeBailoutsUnchecked();
+        testArg->setGuardRangeBailoutsUnchecked();
 
         // When folding to the constant we need to hoist it.
         if (trueDef == c && !c->block()->dominates(block()))
@@ -4394,8 +4393,7 @@ MCompare::tryFoldEqualOperands(bool* result)
             return false;
     }
 
-    if (DeadIfUnused(lhs()))
-        lhs()->setGuardRangeBailoutsUnchecked();
+    lhs()->setGuardRangeBailoutsUnchecked();
 
     *result = (jsop() == JSOP_STRICTEQ);
     return true;
