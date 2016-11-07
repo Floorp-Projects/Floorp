@@ -1070,9 +1070,13 @@ RNaNToZero::recover(JSContext* cx, SnapshotIterator& iter) const
 {
     RootedValue v(cx, iter.read());
     RootedValue result(cx);
+    MOZ_ASSERT(v.isDouble() || v.isInt32());
 
-    MOZ_ASSERT(v.isDouble());
-    result.setDouble((mozilla::IsNaN(v.toDouble()) || mozilla::IsNegativeZero(v.toDouble())) ? 0.0 : v.toDouble());
+    // x ? x : 0.0
+    if (ToBoolean(v))
+        result = v;
+    else
+        result.setDouble(0.0);
 
     iter.storeInstructionResult(result);
     return true;

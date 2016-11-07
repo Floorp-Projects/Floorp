@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Worklet</title>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+setupTest();
+
+var worklet = window.createWorklet();
+ok(!!worklet, "We have a Worklet");
+
+function loading() {
+  worklet.import("server_import_with_cache.sjs")
+  .then(() => {
+    ok(true, "Import should load a resource.");
+  }, () => {
+    ok(false, "Import should load a resource.");
+  })
+  .then(() => {
+    done();
+  });
+}
+
+var count = 0;
+const MAX = 10;
+
+function done() {
+  if (++count == MAX) {
+    SimpleTest.finish();
+  }
+}
+
+for (var i = 0; i < MAX; ++i) {
+  loading();
+}
+
+</script>
+</body>
+</html>

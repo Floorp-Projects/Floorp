@@ -161,6 +161,9 @@ private:
   static already_AddRefed<Console>
   GetConsole(const GlobalObject& aGlobal);
 
+  static Console*
+  GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult &aRv);
+
   static void
   ProfileMethod(const GlobalObject& aGlobal, const nsAString& aAction,
                 const Sequence<JS::Value>& aData);

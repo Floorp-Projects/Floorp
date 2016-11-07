@@ -1326,7 +1326,7 @@ NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8)
 {
     JS::SmallestEncoding encoding = JS::FindSmallestEncoding(utf8);
     if (encoding == JS::SmallestEncoding::ASCII)
-        return NewStringCopyN<allowGC>(cx, utf8.start().get(), utf8.length());
+        return NewStringCopyN<allowGC>(cx, utf8.begin().get(), utf8.length());
 
     size_t length;
     if (encoding == JS::SmallestEncoding::Latin1) {

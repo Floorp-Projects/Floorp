@@ -35,7 +35,7 @@ public:
     MOZ_ASSERT(aStart <= aEnd);
   }
 
-  RangedPtr<T> start() const { return mStart; }
+  RangedPtr<T> begin() const { return mStart; }
   RangedPtr<T> end() const { return mEnd; }
   size_t length() const { return mEnd - mStart; }
 

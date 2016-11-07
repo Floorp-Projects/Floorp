@@ -132,7 +132,7 @@ template <typename CharT>
 static bool
 ArgsAndBodySubstring(mozilla::Range<const CharT> chars, size_t* outOffset, size_t* outLen)
 {
-    const CharT* const start = chars.start().get();
+    const CharT* const start = chars.begin().get();
     const CharT* const end = chars.end().get();
     const CharT* s = start;
 

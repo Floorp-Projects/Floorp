@@ -486,6 +486,12 @@ partial interface Window {
   attribute EventHandler onvrdisplaypresentchange;
 };
 
+// For testing worklet only
+partial interface Window {
+  [Pref="dom.worklet.testing.enabled", Throws]
+  Worklet createWorklet();
+};
+
 Window implements ChromeWindow;
 Window implements WindowOrWorkerGlobalScope;
 
