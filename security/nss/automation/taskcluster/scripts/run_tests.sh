@@ -14,4 +14,4 @@ fi
 fetch_dist
 
 # Run tests.
-cd nss/tests && ./all.sh
+cd nss/tests && ./run.sh

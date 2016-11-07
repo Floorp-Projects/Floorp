@@ -176,12 +176,12 @@ add_task(function* test_user_defined_commands() {
   yield extension.startup();
   yield extension.awaitMessage("ready");
 
-  function* runTest() {
+  function* runTest(window) {
     for (let testCommand of testCommands) {
       if (testCommand.shortcutMac && !testCommand.shortcut && !isMac) {
         continue;
       }
-      EventUtils.synthesizeKey(testCommand.key, testCommand.modifiers);
+      EventUtils.synthesizeKey(testCommand.key, testCommand.modifiers, window);
       let message = yield extension.awaitMessage("oncommand");
       is(message, testCommand.name, `Expected onCommand listener to fire with the correct name: ${testCommand.name}`);
     }
@@ -189,7 +189,7 @@ add_task(function* test_user_defined_commands() {
 
   // Create another window after the extension is loaded.
   let win2 = yield BrowserTestUtils.openNewBrowserWindow();
-  yield BrowserTestUtils.loadURI(win2.gBrowser.selectedBrowser, "about:config");
+  yield BrowserTestUtils.loadURI(win2.gBrowser.selectedBrowser, "about:robots");
   yield BrowserTestUtils.browserLoaded(win2.gBrowser.selectedBrowser);
 
   let totalTestCommands = Object.keys(testCommands).length;
@@ -207,10 +207,10 @@ add_task(function* test_user_defined_commands() {
 
   // Confirm that the commands are registered to both windows.
   yield focusWindow(win1);
-  yield runTest();
+  yield runTest(win1);
 
   yield focusWindow(win2);
-  yield runTest();
+  yield runTest(win2);
 
   yield extension.unload();
 

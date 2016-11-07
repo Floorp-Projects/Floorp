@@ -20,9 +20,10 @@ class ShadowableLayer;
 class ShadowLayerChild : public PLayerChild
 {
 public:
-  explicit ShadowLayerChild(ShadowableLayer* aLayer);
+  ShadowLayerChild();
   virtual ~ShadowLayerChild();
 
+  void SetShadowableLayer(ShadowableLayer* aLayer);
   ShadowableLayer* layer() const { return mLayer; }
 
 protected:

@@ -63,6 +63,11 @@
             'NSS_SSL_ENABLE_ZLIB',
           ],
         }],
+        [ 'fuzz==1', {
+          'defines': [
+            'UNSAFE_FUZZER_MODE',
+          ],
+        }],
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',

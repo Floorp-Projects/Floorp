@@ -5,13 +5,19 @@
 
 #include "nsIInputStream.idl"
 
+%{C++
+#include "mozilla/MemoryReporting.h"
+%}
+
+native MallocSizeOf(mozilla::MallocSizeOf);
+
 /**
  * nsIStringInputStream
  *
  * Provides scriptable and specialized C++-only methods for initializing a
  * nsIInputStream implementation with a simple character array.
  */
-[scriptable, uuid(450cd2d4-f0fd-424d-b365-b1251f80fd53)]
+[scriptable, builtinclass, uuid(450cd2d4-f0fd-424d-b365-b1251f80fd53)]
 interface nsIStringInputStream : nsIInputStream
 {
     /**
@@ -54,4 +60,7 @@ interface nsIStringInputStream : nsIInputStream
      * @param dataLen   - stream data length (-1 if length should be computed)
      */
     [noscript] void shareData(in string data, in long dataLen);
+
+    [noscript, notxpcom]
+    size_t SizeOfIncludingThis(in MallocSizeOf aMallocSizeOf);
 };

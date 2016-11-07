@@ -906,6 +906,12 @@ void
 WebGLProgram::GetUniformIndices(const dom::Sequence<nsString>& uniformNames,
                                 dom::Nullable< nsTArray<GLuint> >& retval) const
 {
+    const char funcName[] = "getUniformIndices";
+    if (!IsLinked()) {
+        mContext->ErrorInvalidOperation("%s: `program` must be linked.", funcName);
+        return;
+    }
+
     size_t count = uniformNames.Length();
     nsTArray<GLuint>& arr = retval.SetValue();
 

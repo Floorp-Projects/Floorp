@@ -749,7 +749,14 @@ ShadowLayerForwarder::ConstructShadowFor(ShadowableLayer* aLayer)
   if (!IPCOpen()) {
     return nullptr;
   }
-  return mShadowManager->SendPLayerConstructor(new ShadowLayerChild(aLayer));
+
+  ShadowLayerChild* child = new ShadowLayerChild();
+  if (!mShadowManager->SendPLayerConstructor(child)) {
+    return nullptr;
+  }
+
+  child->SetShadowableLayer(aLayer);
+  return child;
 }
 
 #if !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)

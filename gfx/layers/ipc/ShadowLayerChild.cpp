@@ -12,12 +12,19 @@
 namespace mozilla {
 namespace layers {
 
-ShadowLayerChild::ShadowLayerChild(ShadowableLayer* aLayer)
-  : mLayer(aLayer)
+ShadowLayerChild::ShadowLayerChild()
+  : mLayer(nullptr)
 { }
 
 ShadowLayerChild::~ShadowLayerChild()
 { }
+
+void
+ShadowLayerChild::SetShadowableLayer(ShadowableLayer* aLayer)
+{
+  MOZ_ASSERT(!mLayer);
+  mLayer = aLayer;
+}
 
 void
 ShadowLayerChild::ActorDestroy(ActorDestroyReason why)
@@ -25,7 +32,7 @@ ShadowLayerChild::ActorDestroy(ActorDestroyReason why)
   MOZ_ASSERT(AncestorDeletion != why,
              "shadowable layer should have been cleaned up by now");
 
-  if (AbnormalShutdown == why) {
+  if (AbnormalShutdown == why && mLayer) {
     // This is last-ditch emergency shutdown.  Just have the layer
     // forget its IPDL resources; IPDL-generated code will clean up
     // automatically in this case.

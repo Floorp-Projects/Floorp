@@ -126,7 +126,7 @@ else
 NSPR_PREFIX = $$(topsrcdir)/../dist/$(OBJDIR_NAME)
 endif
 
-ifndef NSS_GYP
+ifndef NSS_GYP_PREFIX
 $(NSPR_CONFIG_STATUS): $(NSPR_CONFIGURE)
 	mkdir -p $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME)
 	cd $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME) ; \
@@ -140,7 +140,7 @@ $(NSPR_CONFIG_STATUS): $(NSPR_CONFIGURE)
 	cd $(CORE_DEPTH)/../nspr/$(OBJDIR_NAME) ; \
 	$(NSPR_CONFIGURE_ENV) sh ../configure \
 	$(NSPR_CONFIGURE_OPTS) \
-	--prefix='$(NSPR_PREFIX)'
+	--prefix='$(NSS_GYP_PREFIX)'
 endif
 
 build_nspr: $(NSPR_CONFIG_STATUS)

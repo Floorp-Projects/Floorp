@@ -440,6 +440,10 @@ SSL_ClearSessionCache(void)
 PRUint32
 ssl_Time(void)
 {
+#ifdef UNSAFE_FUZZER_MODE
+    return 1234;
+#endif
+
     PRUint32 myTime;
 #if defined(XP_UNIX) || defined(XP_WIN) || defined(_WINDOWS) || defined(XP_BEOS)
     myTime = time(NULL); /* accurate until the year 2038. */

@@ -23,6 +23,7 @@ CPPSRCS = \
       ssl_ecdh_unittest.cc \
       ssl_ems_unittest.cc \
       ssl_extension_unittest.cc \
+      ssl_fuzz_unittest.cc \
       ssl_gtest.cc \
       ssl_hrr_unittest.cc \
       ssl_loopback_unittest.cc \

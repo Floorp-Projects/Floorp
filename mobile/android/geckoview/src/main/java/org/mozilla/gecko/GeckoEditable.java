@@ -1220,13 +1220,14 @@ final class GeckoEditable extends JNIObject
 
                 // Then replace part of the text after the sequence.
                 final int actionStart = indexInText + start;
-                final int actionEnd = actionStart + action.mEnd - action.mStart;
+                final int delta = actionStart - action.mStart;
+                final int actionEnd = delta + action.mEnd;
 
                 final Spanned currentText = mText.getCurrentText();
                 final boolean resetSelStart = Selection.getSelectionStart(currentText) == actionEnd;
                 final boolean resetSelEnd = Selection.getSelectionEnd(currentText) == actionEnd;
 
-                mText.currentReplace(actionEnd, oldEnd, text.subSequence(
+                mText.currentReplace(actionEnd, delta + oldEnd, text.subSequence(
                         indexInText + action.mSequence.length(), text.length()));
 
                 // The replacement above may have shifted our selection, if the selection
