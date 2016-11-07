@@ -15,7 +15,6 @@ if not CONFIG['JS_STANDALONE']:
 if CONFIG['MOZ_MEMORY']:
     DIRS += [
         'build',
-        'gtest',
         'mozjemalloc',
     ]
 
