@@ -73,17 +73,6 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-# set paths
-cwd=$(cd $(dirname $0); pwd -P)
-obj_dir=$(USE_64=$build_64 make -s -C "$cwd" platform)
-dist_dir="$cwd/../dist/$obj_dir"
-
-# -c = clean first
-if [ "$clean" = 1 ]; then
-    rm -rf "$cwd/out"
-    rm -rf "$cwd/../nspr/$obj_dir"
-fi
-
 if [ "$opt_build" = "1" ]; then
     target=Release
 else
@@ -95,7 +84,28 @@ if [ "$build_64" == "1" ]; then
 else
     gyp_params+=(-Dtarget_arch=ia32)
 fi
+
+# set paths
+cwd=$(cd $(dirname $0); pwd -P)
+dist_dir="$cwd/../dist"
 target_dir="$cwd/out/$target"
+
+# get the realpath of $dist_dir
+dist_dir=$(mkdir -p $dist_dir; cd $dist_dir; pwd -P)
+
+# save the chosen target
+echo $target > $dist_dir/latest
+
+# get object directory
+obj_dir="$dist_dir/$target"
+gyp_params+=(-Dnss_dist_dir=$dist_dir)
+gyp_params+=(-Dnss_dist_obj_dir=$obj_dir)
+
+# -c = clean first
+if [ "$clean" = 1 ]; then
+    rm -rf "$cwd/out"
+    rm -rf "$cwd/../nspr/$target"
+fi
 
 # figure out the scan-build string
 if [ "${#scanbuild[@]}" -gt 0 ]; then
@@ -111,10 +121,10 @@ if [ "${#scanbuild[@]}" -gt 0 ]; then
 # Force a redo with -g.
 if [ "$rebuild_gyp" = 1 -o ! -d "$target_dir" ]; then
     # Build NSPR.
-    make "${nspr_env[@]}" -C "$cwd" NSS_GYP=1 install_nspr
+    make "${nspr_env[@]}" -C "$cwd" NSS_GYP_PREFIX=$obj_dir install_nspr
 
     # Run gyp.
-    PKG_CONFIG_PATH="$cwd/../nspr/$obj_dir/config" \
+    PKG_CONFIG_PATH="$obj_dir/lib/pkgconfig" \
         "${scanbuild[@]}" gyp -f ninja "${gyp_params[@]}" --depth="$cwd" \
           --generator-output="." "$cwd/nss.gyp"
 fi
