@@ -16,6 +16,7 @@
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {
+class ThrottledEventQueue;
 namespace dom {
 
 // Two browsing contexts are considered "related" if they are reachable from one
@@ -58,7 +59,7 @@ public:
   static TabGroup*
   GetChromeTabGroup();
 
-  TabGroup();
+  explicit TabGroup(bool aIsChrome = false);
 
   // Get the docgroup for the corresponding doc group key.
   // Returns null if the given key hasn't been seen yet.
@@ -99,10 +100,16 @@ public:
 
   nsTArray<nsPIDOMWindowOuter*> GetTopLevelWindows();
 
+  // Get the event queue that associated windows can use to issue runnables to
+  // the main thread.  This may return nullptr during browser shutdown.
+  ThrottledEventQueue*
+  GetThrottledEventQueue() const;
+
 private:
   ~TabGroup();
   DocGroupMap mDocGroups;
   nsTArray<nsPIDOMWindowOuter*> mWindows;
+  RefPtr<ThrottledEventQueue> mThrottledEventQueue;
 };
 
 } // namespace dom
