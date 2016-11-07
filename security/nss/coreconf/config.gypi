@@ -30,8 +30,6 @@
           #XXX: gyp breaks if these are empty!
           'nspr_lib_dir%': ' ',
           'nspr_include_dir%': ' ',
-          'nss_dist_obj_dir%': ' ',
-          'nss_dist_dir%': ' ',
           'zlib_libs%': [],
           #TODO
           'moz_debug_flags%': '',
@@ -41,8 +39,6 @@
           'nspr_libs%': ['-lplds4', '-lplc4', '-lnspr4'],
           'nspr_lib_dir%': '<!(<(python) <(DEPTH)/coreconf/pkg_config.py . --libs nspr)',
           'nspr_include_dir%': '<!(<(python) <(DEPTH)/coreconf/pkg_config.py . --cflags nspr)',
-          'nss_dist_obj_dir%': '<!(<(python) <(DEPTH)/coreconf/pkg_config.py ../.. --cflags nspr)',
-          'nss_dist_dir%': '<!(<(python) <(DEPTH)/coreconf/pkg_config.py ../../.. --cflags nspr)',
           'use_system_zlib%': 1,
         }],
         ['OS=="linux" or OS=="android"', {
@@ -84,8 +80,6 @@
     'nspr_libs%': ['<@(nspr_libs)'],
     'nspr_lib_dir%': '<(nspr_lib_dir)',
     'nspr_include_dir%': '<(nspr_include_dir)',
-    'nss_dist_obj_dir%': '<(nss_dist_obj_dir)',
-    'nss_dist_dir%': '<(nss_dist_dir)',
     'use_system_sqlite%': '<(use_system_sqlite)',
     'sqlite_libs%': ['-lsqlite3'],
     'dll_prefix': '<(dll_prefix)',

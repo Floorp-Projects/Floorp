@@ -127,6 +127,17 @@
           setSelection(3); // Offsets that testInputConnection.java expects.
         },
 
+        test_bug1123514: function() {
+          document.activeElement.addEventListener('input', function test_bug1123514_listener() {
+            this.removeEventListener('input', test_bug1123514_listener);
+
+            // Only works on input and textarea.
+            if (this.value === 'b') {
+              this.value = 'abc';
+            }
+          });
+        },
+
         focus_resetting_input: function(val) {
           resetting_input.value = val;
           resetting_input.focus();
