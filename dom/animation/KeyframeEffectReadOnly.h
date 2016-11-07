@@ -347,6 +347,11 @@ protected:
                           KeyframeEffectReadOnly& aSource,
                           ErrorResult& aRv);
 
+  // Build properties by recalculating from |mKeyframes| using |aStyleContext|
+  // to resolve specified values. This function also applies paced spacing if
+  // needed.
+  nsTArray<AnimationProperty> BuildProperties(nsStyleContext* aStyleContext);
+
   // This effect is registered with its target element so long as:
   //
   // (a) It has a target element, and
