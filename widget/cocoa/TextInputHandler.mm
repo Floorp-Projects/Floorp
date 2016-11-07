@@ -3272,6 +3272,10 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
   // In such case, we should use mIMECompositionString since if the composition
   // string is handled by a remote process, the content cache may be out of
   // date.
+  // XXX Should we set composition string attributes?  Although, Blink claims
+  //     that some attributes of marked text are supported, but they return
+  //     just marked string without any style.  So, let's keep current behavior
+  //     at least for now.
   NSUInteger compositionLength =
     mIMECompositionString ? [mIMECompositionString length] : 0;
   if (mIMECompositionStart != UINT32_MAX &&
@@ -3593,6 +3597,10 @@ IMEInputHandler::CharacterIndexForPoint(NSPoint& aPoint)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSNotFound);
 }
 
+extern "C" {
+extern NSString *NSTextInputReplacementRangeAttributeName;
+}
+
 NSArray*
 IMEInputHandler::GetValidAttributesForMarkedText()
 {
@@ -3601,14 +3609,16 @@ IMEInputHandler::GetValidAttributesForMarkedText()
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::GetValidAttributesForMarkedText", this));
 
-  //RefPtr<IMEInputHandler> kungFuDeathGrip(this);
-
-  //return [NSArray arrayWithObjects:NSUnderlineStyleAttributeName,
-  //                                 NSMarkedClauseSegmentAttributeName,
-  //                                 NSTextInputReplacementRangeAttributeName,
-  //                                 nil];
-  // empty array; we don't support any attributes right now
-  return [NSArray array];
+  // Return same attributes as Chromium (see render_widget_host_view_mac.mm)
+  // because most IMEs must be tested with Safari (OS default) and Chrome
+  // (having most market share).  Therefore, we need to follow their behavior.
+  // XXX It might be better to reuse an array instance for this result because
+  //     this may be called a lot.  Note that Chromium does so.
+  return [NSArray arrayWithObjects:NSUnderlineStyleAttributeName,
+                                   NSUnderlineColorAttributeName,
+                                   NSMarkedClauseSegmentAttributeName,
+                                   NSTextInputReplacementRangeAttributeName,
+                                   nil];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
