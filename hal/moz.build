@@ -48,7 +48,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     UNIFIED_SOURCES += [
         'gonk/GonkDiskSpaceWatcher.cpp',
-        'gonk/GonkFMRadio.cpp',
         'gonk/GonkSensor.cpp',
         'gonk/GonkSensorsHelpers.cpp',
         'gonk/GonkSensorsInterface.cpp',
@@ -136,7 +135,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     UNIFIED_SOURCES += [
         'fallback/FallbackDiskSpaceWatcher.cpp',
         'fallback/FallbackFactoryReset.cpp',
-        'fallback/FallbackFMRadio.cpp',
         'fallback/FallbackProcessPriority.cpp',
         'fallback/FallbackScreenPower.cpp',
         'fallback/FallbackSwitch.cpp',
