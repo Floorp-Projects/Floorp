@@ -103,7 +103,6 @@
       },
       {
         "name": "restore",
-        "unsupported": true,
         "type": "function",
         "description": "Reopens a $(ref:windows.Window) or $(ref:tabs.Tab), with an optional callback to run when the entry has been restored.",
         "async": "callback",
