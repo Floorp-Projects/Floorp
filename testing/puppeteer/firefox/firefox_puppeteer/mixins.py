@@ -2,28 +2,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import unittest
-
-from firefox_puppeteer import Puppeteer
+from firefox_puppeteer.puppeteer import Puppeteer
 from firefox_puppeteer.ui.browser.window import BrowserWindow
 
 
-class BaseFirefoxTestCase(unittest.TestCase, Puppeteer):
-    """Base TestCase class for Firefox Desktop tests.
+class PuppeteerMixin(object):
+    """Mix-in class for Firefox specific API modules exposed to test scope.
 
-    This is designed to enhance MarionetteTestCase by inserting the Puppeteer
-    mixin class (so Firefox specific API modules are exposed to test scope) and
-    providing common set-up and tear-down code for Firefox tests.
+    It also provides common set-up and tear-down code for Firefox tests.
 
-    Child classes are expected to also subclass MarionetteTestCase such that
-    MarionetteTestCase is inserted into the MRO after FirefoxTestCase but before
-    unittest.TestCase.
+    Child test case classes are expected to also subclass MarionetteTestCase such
+    that PuppeteerMixin is followed by MarionetteTestCase. This will insert the
+    Puppeteer mixin before the MarionetteTestCase into the MRO.
 
     example:
-    `class AwesomeTestCase(FirefoxTestCase, MarionetteTestCase)`
+    `class MyTestCase(PuppeteerMixin, MarionetteTestCase)`
 
     The key role of MarionetteTestCase is to set self.marionette appropriately
-    in `__init__`. Any TestCase class that satisfies this requirement is
+    in `setUp()`. Any TestCase class that satisfies this requirement is
     compatible with this class.
 
     If you're extending the inheritance tree further to make specialized
@@ -31,9 +27,6 @@ class BaseFirefoxTestCase(unittest.TestCase, Puppeteer):
     parent class.
 
     """
-    def __init__(self, *args, **kwargs):
-        super(BaseFirefoxTestCase, self).__init__(*args, **kwargs)
-
     def _check_and_fix_leaked_handles(self):
         handle_count = len(self.marionette.window_handles)
         url = []
@@ -55,11 +48,12 @@ class BaseFirefoxTestCase(unittest.TestCase, Puppeteer):
             if not self.browser or self.browser.closed:
                 # Find a proper replacement browser window
                 # TODO: We have to make this less error prone in case no browser is open.
-                self.browser = self.windows.switch_to(lambda win: type(win) is BrowserWindow)
+                self.browser = self.puppeteer.windows.switch_to(
+                    lambda win: type(win) is BrowserWindow)
 
             # Ensure to close all the remaining chrome windows to give following
             # tests a proper start condition and make them not fail.
-            self.windows.close_all([self.browser])
+            self.puppeteer.windows.close_all([self.browser])
             self.browser.focus()
 
             # Also close all remaining tabs
@@ -74,20 +68,21 @@ class BaseFirefoxTestCase(unittest.TestCase, Puppeteer):
         self.marionette.restart(in_app=not kwargs.get('clean'), **kwargs)
 
         # Ensure that we always have a valid browser instance available
-        self.browser = self.windows.switch_to(lambda win: type(win) is BrowserWindow)
+        self.browser = self.puppeteer.windows.switch_to(lambda win: type(win) is BrowserWindow)
 
     def setUp(self, *args, **kwargs):
-        super(BaseFirefoxTestCase, self).setUp(*args, **kwargs)
+        super(PuppeteerMixin, self).setUp(*args, **kwargs)
 
         self._start_handle_count = len(self.marionette.window_handles)
         self._init_tab_handles = self.marionette.window_handles
         self.marionette.set_context('chrome')
 
-        self.browser = self.windows.current
+        self.puppeteer = Puppeteer(self.marionette)
+        self.browser = self.puppeteer.windows.current
         self.browser.focus()
         with self.marionette.using_context(self.marionette.CONTEXT_CONTENT):
             # Ensure that we have a default page opened
-            self.marionette.navigate(self.prefs.get_pref('browser.newtab.url'))
+            self.marionette.navigate(self.puppeteer.prefs.get_pref('browser.newtab.url'))
 
     def tearDown(self, *args, **kwargs):
         self.marionette.set_context('chrome')
@@ -98,4 +93,4 @@ class BaseFirefoxTestCase(unittest.TestCase, Puppeteer):
             # in a state that is more inconsistent than necessary.
             self._check_and_fix_leaked_handles()
         finally:
-            super(BaseFirefoxTestCase, self).tearDown(*args, **kwargs)
+            super(PuppeteerMixin, self).tearDown(*args, **kwargs)

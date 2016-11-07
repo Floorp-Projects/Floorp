@@ -33,7 +33,7 @@ class PageInfoWindow(BaseWindow):
         :returns: Reference to the deck.
         """
         deck = self.window_element.find_element(By.ID, 'mainDeck')
-        return Deck(lambda: self.marionette, self, deck)
+        return Deck(self.marionette, self, deck)
 
     def close(self, trigger='shortcut', force=False):
         """Closes the current page info window by using the specified trigger.
