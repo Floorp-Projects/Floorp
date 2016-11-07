@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Worklet - Console</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {"set": [["dom.worklet.testing.enabled", true],
+           ["dom.worklet.enabled", true]]},
+  function() { loadTest("file_dump.html"); });
+
+</script>
+</body>
+</html>

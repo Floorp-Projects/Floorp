@@ -1136,10 +1136,10 @@ RegExpShared::execute(JSContext* cx, HandleLinearString input, size_t start,
 
     RegExpRunStatus result;
     if (inputChars.isLatin1()) {
-        const Latin1Char* chars = inputChars.latin1Range().start().get();
+        const Latin1Char* chars = inputChars.latin1Range().begin().get();
         result = irregexp::InterpretCode(cx, byteCode, chars, start, length, matches, endIndex);
     } else {
-        const char16_t* chars = inputChars.twoByteRange().start().get();
+        const char16_t* chars = inputChars.twoByteRange().begin().get();
         result = irregexp::InterpretCode(cx, byteCode, chars, start, length, matches, endIndex);
     }
 

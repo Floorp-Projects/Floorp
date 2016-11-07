@@ -3695,7 +3695,7 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
     UsedNameTracker usedNames(cx);
     if (!usedNames.init())
         return false;
-    Parser<FullParseHandler> parser(cx, cx->tempLifoAlloc(), options, chars.start().get(),
+    Parser<FullParseHandler> parser(cx, cx->tempLifoAlloc(), options, chars.begin().get(),
                                     chars.length(), /* foldConstants = */ false, usedNames,
                                     nullptr, nullptr);
     if (!parser.checkOptions())
