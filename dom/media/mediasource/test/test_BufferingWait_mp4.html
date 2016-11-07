@@ -20,19 +20,6 @@ runWithMSE(function(ms, v) {
     var sb = ms.addSourceBuffer("video/mp4");
     ok(sb, "Create a SourceBuffer");
 
-    function waitUntilTime(targetTime) {
-      return new Promise(function(resolve, reject) {
-        v.addEventListener("waiting", function onwaiting() {
-          info("Got a waiting event at " + v.currentTime);
-          if (v.currentTime >= targetTime) {
-            ok(true, "Reached target time of: " + targetTime);
-            v.removeEventListener("waiting", onwaiting);
-            resolve();
-          }
-        });
-      });
-    }
-
     sb.addEventListener('error', (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
     fetchAndLoad(sb, 'bipbop/bipbop', ['init'], '.mp4')
     .then(fetchAndLoad.bind(null, sb, 'bipbop/bipbop', ['1'], '.m4s'))
@@ -42,7 +29,7 @@ runWithMSE(function(ms, v) {
     .then(fetchAndLoad.bind(null, sb, 'bipbop/bipbop', ['5'], '.m4s'))
     .then(function() {
         // last audio sample has a start time of 1.578956s
-        var promise = waitUntilTime(1.57895);
+        var promise = waitUntilTime(v, 1.57895);
         info("Playing video. It should play for a bit, then fire 'waiting'");
         v.play();
         return promise;
@@ -50,7 +37,7 @@ runWithMSE(function(ms, v) {
         window.firstStop = Date.now();
         fetchAndLoad(sb, 'bipbop/bipbop', ['3'], '.m4s');
         // last audio sample has a start time of 2.368435
-        return waitUntilTime(2.36843);
+        return waitUntilTime(v, 2.36843);
       }).then(function() {
         var waitDuration = (Date.now() - window.firstStop) / 1000;
         ok(waitDuration < 15, "Should not spend an inordinate amount of time buffering: " + waitDuration);
