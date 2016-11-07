@@ -10,6 +10,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/PodOperations.h"
 
+#include <string.h>
+
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
 
@@ -856,29 +858,25 @@ class FullParseHandler
         return node->isKind(PNK_NAME);
     }
 
-    bool nameIsEvalAnyParentheses(ParseNode* node, ExclusiveContext* cx) {
-        MOZ_ASSERT(isNameAnyParentheses(node),
-                   "must only call this function on known names");
-
-        return node->pn_atom == cx->names().eval;
+    bool isEvalAnyParentheses(ParseNode* node, ExclusiveContext* cx) {
+        return node->isKind(PNK_NAME) && node->pn_atom == cx->names().eval;
     }
 
     const char* nameIsArgumentsEvalAnyParentheses(ParseNode* node, ExclusiveContext* cx) {
         MOZ_ASSERT(isNameAnyParentheses(node),
                    "must only call this function on known names");
 
-        if (nameIsEvalAnyParentheses(node, cx))
+        if (isEvalAnyParentheses(node, cx))
             return js_eval_str;
         if (node->pn_atom == cx->names().arguments)
             return js_arguments_str;
         return nullptr;
     }
 
-    bool nameIsUnparenthesizedAsync(ParseNode* node, ExclusiveContext* cx) {
-        MOZ_ASSERT(isNameAnyParentheses(node),
-                   "must only call this function on known names");
-
-        return node->pn_atom == cx->names().async;
+    bool isAsyncKeyword(ParseNode* node, ExclusiveContext* cx) {
+        return node->isKind(PNK_NAME) &&
+               node->pn_pos.begin + strlen("async") == node->pn_pos.end &&
+               node->pn_atom == cx->names().async;
     }
 
     bool isCall(ParseNode* pn) {
