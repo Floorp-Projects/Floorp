@@ -103,6 +103,7 @@ class nsWindowSizes;
 
 namespace mozilla {
 class DOMEventTargetHelper;
+class ThrottledEventQueue;
 namespace dom {
 class BarProp;
 struct ChannelPixelLayout;
@@ -1156,6 +1157,8 @@ public:
                       nsISupports* aExtraArgument,
                       nsPIDOMWindowOuter** _retval) override;
   nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) override;
+
+  mozilla::ThrottledEventQueue* GetThrottledEventQueue() override;
 
   already_AddRefed<nsPIDOMWindowOuter>
     GetContentInternal(mozilla::ErrorResult& aError, bool aUnprivilegedCaller);
