@@ -248,7 +248,10 @@ public final class MediaDrmProxy {
 
     @WrapForJNI(calledFrom = "gecko")
     public static MediaDrmProxy create(String keySystem,
-                                       Callbacks nativeCallbacks) {
+                                       Callbacks nativeCallbacks,
+                                       boolean isRemote) {
+        // TODO: Will implement {Local,Remote}MediaDrmBridge instantiation by
+        // '''isRemote''' flag in Bug 1307818.
         MediaDrmProxy proxy = new MediaDrmProxy(keySystem, nativeCallbacks);
         return proxy;
     }
