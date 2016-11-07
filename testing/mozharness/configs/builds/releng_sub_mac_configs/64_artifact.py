@@ -30,6 +30,7 @@ config = {
     'enable_talos_sendchange': False,
     # allows triggering of test jobs when --artifact try syntax is detected on buildbot
     'enable_unittest_sendchange': True,
+    'perfherder_extra_options': ['artifact'],
     #########################################################################
 
 

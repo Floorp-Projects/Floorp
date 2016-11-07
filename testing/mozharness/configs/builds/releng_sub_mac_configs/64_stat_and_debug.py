@@ -24,6 +24,7 @@ clang.manifest",
     'enable_talos_sendchange': False,
     'enable_unittest_sendchange': False,
     'objdir': MOZ_OBJDIR,
+    'perfherder_extra_options': ['static-analysis'],
     #### 64 bit build specific #####
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),

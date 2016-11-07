@@ -53,6 +53,7 @@ config = {
     # allows triggering of test jobs when --artifact try syntax is detected on buildbot
     'enable_unittest_sendchange': True,
     'max_build_output_timeout': 60 * 80,
+    'perfherder_extra_options': ['artifact'],
     #########################################################################
 
 
