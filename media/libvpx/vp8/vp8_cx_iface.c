@@ -922,7 +922,7 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t  *ctx,
             res = image2yuvconfig(img, &sd);
 
             if (sd.y_width != ctx->cfg.g_w || sd.y_height != ctx->cfg.g_h) {
-                /* from vp8_encoder.h for g_w/g_h:
+                /* from vpx_encoder.h for g_w/g_h:
                    "Note that the frames passed as input to the encoder must have this resolution"
                 */
                 ctx->base.err_detail = "Invalid input frame resolution";
