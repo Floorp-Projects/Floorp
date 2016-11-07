@@ -231,16 +231,14 @@ function testMethod() {
   } catch(e) {
     is(e.name, "TypeError", "HEAD/GET request cannot have a body");
   }
-
   // Non HEAD/GET should not throw.
   var r = new Request("", { method: "patch", body: "hello" });
 }
-
 function testUrlFragment() {
   var req = new Request("./request#withfragment");
-  is(req.url, (new URL("./request", self.location.href)).href, "request.url should be serialized with exclude fragment flag set");
+  is(req.url, (new URL("./request#withfragment", self.location.href)).href,
+     "request.url should be serialized without exclude fragment flag set");
 }
-
 function testUrlMalformed() {
   try {
     var req = new Request("http:// example.com");
