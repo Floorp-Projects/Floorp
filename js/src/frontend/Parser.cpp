@@ -9180,8 +9180,7 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
                 // __proto__: v mutates [[Prototype]].  Getters, setters,
                 // method/generator definitions, computed property name
                 // versions of all of these, and shorthands do not.
-                uint32_t begin = handler.getPosition(propName).begin;
-                if (!handler.addPrototypeMutation(literal, begin, propExpr))
+                if (!handler.addPrototypeMutation(literal, namePos.begin, propExpr))
                     return null();
             } else {
                 if (!handler.isConstant(propExpr))
