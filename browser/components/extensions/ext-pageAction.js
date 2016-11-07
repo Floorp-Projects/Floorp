@@ -260,9 +260,6 @@ extensions.registerSchemaAPI("pageAction", "addon_parent", context => {
       setIcon(details) {
         let tab = TabManager.getTab(details.tabId, context);
 
-        // Note: the caller in the child process has already normalized
-        // `details` to not contain an `imageData` property, so the icon can
-        // safely be normalized here without errors.
         let icon = IconDetails.normalize(details, extension, context);
         PageAction.for(extension).setProperty(tab, "icon", icon);
       },
