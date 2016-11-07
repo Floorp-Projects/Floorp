@@ -54,7 +54,6 @@ if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT'):
     # FIXME bug 523392: TestDeadlockDetector doesn't like Windows
     # FIXME bug 523378: also fails on OS X
     GeckoCppUnitTests([
-        'TestDeadlockDetector',
         'TestDeadlockDetectorScalability',
     ])
 
