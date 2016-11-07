@@ -29,6 +29,7 @@ class WindowCapturer : public DesktopCapturer {
 
   struct Window {
     WindowId id;
+    pid_t pid;
 
     // Title of the window in UTF-8 encoding.
     std::string title;

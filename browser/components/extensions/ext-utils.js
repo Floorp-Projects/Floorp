@@ -598,6 +598,10 @@ ExtensionTabManager.prototype = {
     }
   },
 
+  revokeActiveTabPermission(tab = TabManager.activeTab) {
+    this.hasTabPermissionFor.delete(tab);
+  },
+
   // Returns true if the extension has the "activeTab" permission for this tab.
   // This is somewhat more permissive than the generic "tabs" permission, as
   // checked by |hasTabPermission|, in that it also allows programmatic script
