@@ -14,6 +14,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
                                    "@mozilla.org/mediaManagerService;1",
                                    "nsIMediaManagerService");
 
+const kBrowserURL = "chrome://browser/content/browser.xul";
+
 this.ContentWebRTC = {
   _initialized: false,
 
@@ -168,7 +170,7 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
         // getting a microphone instead.
         if (audio && (device.mediaSource == "microphone") != sharingAudio) {
           audioDevices.push({name: device.name, deviceIndex: devices.length,
-                             mediaSource: device.mediaSource});
+                             id: device.rawId, mediaSource: device.mediaSource});
           devices.push(device);
         }
         break;
@@ -177,7 +179,7 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
         // or that if we requested a screen share we aren't getting a camera.
         if (video && (device.mediaSource == "camera") != sharingScreen) {
           videoDevices.push({name: device.name, deviceIndex: devices.length,
-                             mediaSource: device.mediaSource});
+                             id: device.rawId, mediaSource: device.mediaSource});
           devices.push(device);
         }
         break;
@@ -260,7 +262,13 @@ function forgetPendingListsEventually(aContentWindow) {
   aContentWindow.removeEventListener("unload", ContentWebRTC);
 }
 
-function updateIndicators() {
+function updateIndicators(aSubject, aTopic, aData) {
+  if (aSubject instanceof Ci.nsIPropertyBag &&
+      aSubject.getProperty("requestURL") == kBrowserURL) {
+    // Ignore notifications caused by the browser UI showing previews.
+    return;
+  }
+
   let contentWindowArray = MediaManagerService.activeMediaCaptureWindows;
   let count = contentWindowArray.length;
 
@@ -284,6 +292,11 @@ function updateIndicators() {
   }
 
   for (let contentWindow of contentWindows) {
+    if (contentWindow.document.documentURI == kBrowserURL) {
+      // There may be a preview shown at the same time as other streams.
+      continue;
+    }
+
     let tabState = getTabStateForContentWindow(contentWindow);
     if (tabState.camera)
       state.showCameraIndicator = true;
@@ -315,6 +328,11 @@ function updateIndicators() {
 
 function removeBrowserSpecificIndicator(aSubject, aTopic, aData) {
   let contentWindow = Services.wm.getOuterWindowWithId(aData).top;
+  if (contentWindow.document.documentURI == kBrowserURL) {
+    // Ignore notifications caused by the browser UI showing previews.
+    return;
+  }
+
   let tabState = getTabStateForContentWindow(contentWindow);
   if (!tabState.camera && !tabState.microphone && !tabState.screen)
     tabState = {windowId: tabState.windowId};
