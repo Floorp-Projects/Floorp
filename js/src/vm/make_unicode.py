@@ -82,10 +82,6 @@ unicode_version_message = """\
 /* Unicode version: {0} */
 """
 
-casefold_version_message = """\
-/* Casefold Unicode version: {0} */
-"""
-
 def read_unicode_data(unicode_data):
     """
         If you want to understand how this wonderful file format works checkout
@@ -392,7 +388,7 @@ def process_case_folding(case_folding):
         folding_tests
     )
 
-def make_non_bmp_file(version, casefold_version,
+def make_non_bmp_file(version,
                       non_bmp_lower_map, non_bmp_upper_map,
                       non_bmp_folding_map, non_bmp_rev_folding_map):
     file_name = 'UnicodeNonBMP.h';
@@ -401,7 +397,6 @@ def make_non_bmp_file(version, casefold_version,
         non_bmp_file.write('\n')
         non_bmp_file.write(warning_message)
         non_bmp_file.write(unicode_version_message.format(version))
-        non_bmp_file.write(casefold_version_message.format(casefold_version))
         non_bmp_file.write("""
 #ifndef vm_UnicodeNonBMP_h
 #define vm_UnicodeNonBMP_h
@@ -516,7 +511,7 @@ if (typeof reportCompare === "function")
     reportCompare(true, true);
 """)
 
-def make_unicode_file(version, casefold_version,
+def make_unicode_file(version,
                       table, index,
                       same_upper_table, same_upper_index,
                       folding_table, folding_index):
@@ -632,7 +627,6 @@ def make_unicode_file(version, casefold_version,
     with io.open(file_name, 'wb') as data_file:
         data_file.write(warning_message)
         data_file.write(unicode_version_message.format(version))
-        data_file.write(casefold_version_message.format(casefold_version))
         data_file.write(public_domain)
         data_file.write('#include "vm/Unicode.h"\n\n')
         data_file.write('using namespace js;\n')
@@ -749,42 +743,28 @@ def splitbins(t):
 def update_unicode(args):
     import urllib2
 
-    def to_download_url(version):
+    version = args.version
+    if version is not None:
         baseurl = 'http://unicode.org/Public'
-        if version is 'UNIDATA':
-            return '%s/%s' % (baseurl, version)
-        return '%s/%s/ucd' % (baseurl, version)
-
-    unicode_info = {
-        'name': 'Unicode',
-        'version': args.version,
-        'url': to_download_url(args.version),
-    }
-    # TODO: Remove this dict and use a single Unicode version when bug 1230490 has relanded.
-    casefold_info = {
-        'name': 'Casefold Unicode',
-        'version': args.casefold_version,
-        'url': to_download_url(args.casefold_version),
-    }
-
-    def print_info(info):
-        if info['version'] is not None:
-            print('\t%s version: %s' % (info['name'], info['version']))
-            print('\t%s download url: %s' % (info['name'], info['url']))
+        if version == 'UNIDATA':
+            url = '%s/%s' % (baseurl, version)
         else:
-            print('\t%s uses local files.' % info['name'])
-            print('\tAlways make sure you have the newest Unicode files!')
+            url = '%s/%s/ucd' % (baseurl, version)
 
     print('Arguments:')
-    print_info(unicode_info)
-    print_info(casefold_info)
+    if version is not None:
+        print('\tVersion: %s' % version)
+        print('\tDownload url: %s' % url)
+    else:
+        print('\tUsing local files.')
+        print('\tAlways make sure you have the newest Unicode files!')
     print('')
 
-    def download_or_open(info, fname):
+    def download_or_open(fname):
         tfile_path = os.path.join(os.getcwd(), fname)
-        if info['version'] is not None:
+        if version is not None:
             print('Downloading %s...' % fname)
-            unicode_data_url = '%s/%s' % (info['url'], fname)
+            unicode_data_url = '%s/%s' % (url, fname)
             with closing(urllib2.urlopen(unicode_data_url)) as reader:
                 data = reader.read()
             tfile = io.open(tfile_path, 'w+b')
@@ -799,14 +779,12 @@ def update_unicode(args):
 
     def version_from_file(f, fname):
         pat_version = re.compile(r"# %s-(?P<version>\d+\.\d+\.\d+).txt" % fname)
-        (unicode_version) = pat_version.match(f.readline()).group("version")
-        return unicode_version
+        return pat_version.match(f.readline()).group("version")
 
-    with download_or_open(unicode_info, 'UnicodeData.txt') as unicode_data, \
-         download_or_open(casefold_info, 'CaseFolding.txt') as case_folding, \
-         download_or_open(unicode_info, 'DerivedCoreProperties.txt') as derived_core_properties:
-        version = version_from_file(derived_core_properties, 'DerivedCoreProperties')
-        casefold_version = version_from_file(case_folding, 'CaseFolding')
+    with download_or_open('UnicodeData.txt') as unicode_data, \
+         download_or_open('CaseFolding.txt') as case_folding, \
+         download_or_open('DerivedCoreProperties.txt') as derived_core_properties:
+        unicode_version = version_from_file(derived_core_properties, 'DerivedCoreProperties')
 
         print('Processing...')
         (
@@ -822,18 +800,18 @@ def update_unicode(args):
         ) = process_case_folding(case_folding)
 
     print('Generating...')
-    make_unicode_file(version, casefold_version,
+    make_unicode_file(unicode_version,
                       table, index,
                       same_upper_table, same_upper_index,
                       folding_table, folding_index)
-    make_non_bmp_file(version, casefold_version,
+    make_non_bmp_file(unicode_version,
                       non_bmp_lower_map, non_bmp_upper_map,
                       non_bmp_folding_map, non_bmp_rev_folding_map)
 
-    make_bmp_mapping_test(version, test_table)
-    make_non_bmp_mapping_test(version, non_bmp_upper_map, non_bmp_lower_map)
-    make_space_test(version, test_space_table)
-    make_icase_test(casefold_version, folding_tests)
+    make_bmp_mapping_test(unicode_version, test_table)
+    make_non_bmp_mapping_test(unicode_version, non_bmp_upper_map, non_bmp_lower_map)
+    make_space_test(unicode_version, test_space_table)
+    make_icase_test(unicode_version, folding_tests)
 
 if __name__ == '__main__':
     import argparse
@@ -841,13 +819,6 @@ if __name__ == '__main__':
     # This script must be run from js/src/vm to work correctly.
     if '/'.join(os.path.normpath(os.getcwd()).split(os.sep)[-3:]) != 'js/src/vm':
         raise RuntimeError('%s must be run from js/src/vm' % sys.argv[0])
-
-    # !!! IMPORTANT !!!
-    # We currently use two different Unicode versions (6.2 and 8.0) for
-    # separate parts of the engine. This is all just temporary until
-    # bug 1230490 has relanded. As soon as bug 1230490 has relanded, this
-    # script can be simplified by removing all logic to handle different
-    # Unicode versions.
 
     parser = argparse.ArgumentParser(description='Update Unicode data.')
 
@@ -858,10 +829,6 @@ if __name__ == '__main__':
                               number must match a published Unicode version, e.g. use\
                               "--version=8.0.0" to download Unicode 8 files. Alternatively use\
                               "--version=UNIDATA" to download the latest published version.')
-    # TODO: Remove this parameter when bug 1230490 has relanded.
-    parser.add_argument('--casefold-version',
-                        help='Unicode version number for case-folding data. Has the same meaning\
-                        as --version, except only used for case-folding data.')
 
     parser.set_defaults(func=update_unicode)
 
