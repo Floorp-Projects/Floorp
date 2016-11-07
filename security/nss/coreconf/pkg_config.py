@@ -17,7 +17,7 @@ def main():
     elif sys.argv[2] == '--cflags':
         part_prefix = '-I'
     else:
-        raise 'Specify either --libs or --cflags as the second argument.'
+        raise Exception('Specify either --libs or --cflags as the second argument.')
 
     try:
         process = subprocess.Popen(['pkg-config'] + sys.argv[2:], stdout=stdout, stderr=open(os.devnull, 'wb'))

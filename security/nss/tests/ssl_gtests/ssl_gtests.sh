@@ -127,7 +127,8 @@ ssl_gtest_start()
   SSLGTESTREPORT="${SSLGTESTDIR}/report.xml"
   PARSED_REPORT="${SSLGTESTDIR}/report.parsed"
   echo "executing ssl_gtest"
-  ${BINDIR}/ssl_gtest -d "${SSLGTESTDIR}" --gtest_output=xml:"${SSLGTESTREPORT}"
+  ${BINDIR}/ssl_gtest -d "${SSLGTESTDIR}" --gtest_output=xml:"${SSLGTESTREPORT}" \
+                                          --gtest_filter="${GTESTFILTER-*}"
   html_msg $? 0 "ssl_gtest run successfully"
   echo "executing sed to parse the xml report"
   sed -f ${COMMON}/parsegtestreport.sed "${SSLGTESTREPORT}" > "${PARSED_REPORT}"
