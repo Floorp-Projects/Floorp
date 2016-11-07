@@ -113,6 +113,18 @@
     {0x93, 0x99, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
+// compoenent implementing nsIStandardURL, nsIURI, nsIURL
+// future replacement for nsStandardURL
+#define NS_RUSTURL_CONTRACTID \
+    "@mozilla.org/network/rust-url;1"
+#define NS_RUSTURL_CID                               \
+{ /* fd2d9f76-b34a-459e-b80e-447b03a1283a */         \
+    0xfd2d9f76,                                      \
+    0xb34a,                                          \
+    0x459e,                                          \
+    {0xb8, 0x0e, 0x44, 0x7b, 0x03, 0xa1, 0x28, 0x3a} \
+}
+
 // service implementing nsIURLParser that assumes the URL will NOT contain an
 // authority section.
 #define NS_NOAUTHURLPARSER_CONTRACTID \
