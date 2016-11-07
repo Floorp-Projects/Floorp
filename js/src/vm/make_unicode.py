@@ -54,8 +54,8 @@ compatibility_identifier_part = [
 ]
 
 FLAG_SPACE = 1 << 0
-FLAG_LETTER = 1 << 1
-FLAG_IDENTIFIER_PART = 1 << 2
+FLAG_UNICODE_ID_START = 1 << 1
+FLAG_UNICODE_ID_CONTINUE_ONLY = 1 << 2
 
 MAX_BMP = 0xffff
 
@@ -123,6 +123,20 @@ def read_case_folding(case_folding):
         row[2] = int(row[2], 16)
         yield row
 
+def read_derived_core_properties(derived_core_properties):
+    for line in derived_core_properties:
+        if line == '\n' or line.startswith('#'):
+            continue
+        row = line.split('#')[0].split(';')
+        char_range = row[0].strip()
+        char_property = row[1].strip()
+        if '..' not in char_range:
+            yield (int(char_range, 16), char_property)
+        else:
+            [start, end] = char_range.split('..')
+            for char in range(int(start, 16), int(end, 16) + 1):
+                yield (char, char_property)
+
 def utf16_encode(code):
     NonBMPMin = 0x10000
     LeadSurrogateMin = 0xD800
@@ -165,7 +179,19 @@ def make_non_bmp_convert_macro(out_file, name, convert_map):
     out_file.write(' \\\n'.join(lines))
     out_file.write('\n')
 
-def process_unicode_data(unicode_data):
+def process_derived_core_properties(derived_core_properties):
+    id_start = set()
+    id_continue = set()
+
+    for (char, prop) in read_derived_core_properties(derived_core_properties):
+        if prop == 'ID_Start':
+            id_start.add(char)
+        if prop == 'ID_Continue':
+            id_continue.add(char)
+
+    return (id_start, id_continue)
+
+def process_unicode_data(unicode_data, derived_core_properties):
     dummy = (0, 0, 0)
     table = [dummy]
     cache = {dummy: 0}
@@ -181,6 +207,8 @@ def process_unicode_data(unicode_data):
 
     non_bmp_lower_map = {}
     non_bmp_upper_map = {}
+
+    (id_start, id_continue) = process_derived_core_properties(derived_core_properties)
 
     for row in read_unicode_data(unicode_data):
         code = row[0]
@@ -218,13 +246,13 @@ def process_unicode_data(unicode_data):
             flags |= FLAG_SPACE
             test_space_table.append(code)
 
-        # §7.6 (UnicodeLetter)
-        if category in ['Lu', 'Ll', 'Lt', 'Lm', 'Lo', 'Nl']:
-            flags |= FLAG_LETTER
+        # §11.6 (IdentifierStart)
+        if code in id_start:
+            flags |= FLAG_UNICODE_ID_START
 
-        # §7.6 (IdentifierPart)
-        if category in ['Mn', 'Mc', 'Nd', 'Pc'] or code in compatibility_identifier_part:
-            flags |= FLAG_IDENTIFIER_PART
+        # §11.6 (IdentifierPart)
+        elif code in id_continue or code in compatibility_identifier_part:
+            flags |= FLAG_UNICODE_ID_CONTINUE_ONLY
 
         test_table[code] = (upper, lower, name, alias)
 
@@ -786,7 +814,7 @@ def update_unicode(args):
             same_upper_table, same_upper_index,
             non_bmp_lower_map, non_bmp_upper_map,
             test_table, test_space_table
-        ) = process_unicode_data(unicode_data)
+        ) = process_unicode_data(unicode_data, derived_core_properties)
         (
             folding_table, folding_index,
             non_bmp_folding_map, non_bmp_rev_folding_map,

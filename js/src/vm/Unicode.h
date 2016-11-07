@@ -18,52 +18,50 @@ namespace js {
 namespace unicode {
 
 /*
- * This enum contains the all the knowledge required to handle
- * Unicode in JavaScript.
+ * This namespace contains all the knowledge required to handle Unicode
+ * characters in JavaScript.
  *
  * SPACE
- *   Every character that is either in the ECMA-262 5th Edition
- *   class WhiteSpace or LineTerminator.
+ *   Every character that is either in the ECMAScript class WhiteSpace
+ *   (ES2016, § 11.2) or in LineTerminator (ES2016, § 11.3).
  *
  *   WhiteSpace
  *    \u0009, \u000B, \u000C, \u0020, \u00A0 and \uFEFF
  *    and every other Unicode character with the General Category "Zs".
- *    In pratice this is every character with the value "Zs" as the third
- *    field (after the char code in hex, and the name) called General_Category
- *    (see http://www.unicode.org/reports/tr44/#UnicodeData.txt)
- *     in the file UnicodeData.txt.
+ *    See <http://www.unicode.org/reports/tr44/#UnicodeData.txt> for more
+ *    information about General Categories and the UnicodeData.txt file.
  *
  *   LineTerminator
  *    \u000A, \u000D, \u2028, \u2029
  *
- * LETTER
- *   This are all characters included UnicodeLetter from ECMA-262.
- *   This includes the category 'Lu', 'Ll', 'Lt', 'Lm', 'Lo', 'Nl'
+ * UNICODE_ID_START
+ *   These are all characters with the Unicode property «ID_Start».
  *
- * IDENTIFIER_PART
- *   This is UnicodeCombiningMark, UnicodeDigit, UnicodeConnectorPunctuation.
- *   Aka categories Mn/Mc, Md, Nd, Pc
- *   And <ZWNJ> and <ZWJ>.
- *   Attention: FLAG_LETTER is _not_ IdentifierStart, but you could build
+ * UNICODE_ID_CONTINUE_ONLY
+ *   These are all characters with the Unicode property «ID_Continue» minus all
+ *   characters with the Unicode property «ID_Start».
+ *   And additionally <ZWNJ> and <ZWJ>. (ES2016, § 11.6)
+ *
+ * UNICODE_ID_CONTINUE
+ *   These are all characters with the Unicode property «ID_Continue».
+ *   And additionally <ZWNJ> and <ZWJ>. (ES2016, § 11.6)
+ *
+ *   Attention: UNICODE_ID_START is _not_ IdentifierStart, but you could build
  *   a matcher for the real IdentifierPart like this:
  *
- *   if isEscapeSequence():
- *      handleEscapeSequence()
- *      return True
  *   if char in ['$', '_']:
  *      return True
- *   if GetFlag(char) & (FLAG_IDENTIFIER_PART | FLAG_LETTER):
+ *   if GetFlag(char) & UNICODE_ID_CONTINUE:
  *      return True
  *
  */
 
-struct CharFlag {
-    enum temp {
-        SPACE  = 1 << 0,
-        LETTER = 1 << 1,
-        IDENTIFIER_PART = 1 << 2,
-    };
-};
+namespace CharFlag {
+    const uint8_t SPACE = 1 << 0;
+    const uint8_t UNICODE_ID_START = 1 << 1;
+    const uint8_t UNICODE_ID_CONTINUE_ONLY = 1 << 2;
+    const uint8_t UNICODE_ID_CONTINUE = UNICODE_ID_START + UNICODE_ID_CONTINUE_ONLY;
+}
 
 const char16_t BYTE_ORDER_MARK2 = 0xFFFE;
 const char16_t NO_BREAK_SPACE  = 0x00A0;
@@ -103,12 +101,13 @@ class CharacterInfo {
         return flags & CharFlag::SPACE;
     }
 
-    inline bool isLetter() const {
-        return flags & CharFlag::LETTER;
+    inline bool isUnicodeIDStart() const {
+        return flags & CharFlag::UNICODE_ID_START;
     }
 
-    inline bool isIdentifierPart() const {
-        return flags & (CharFlag::IDENTIFIER_PART | CharFlag::LETTER);
+    inline bool isUnicodeIDContinue() const {
+        // Also matches <ZWNJ> and <ZWJ>!
+        return flags & CharFlag::UNICODE_ID_CONTINUE;
     }
 };
 
@@ -130,10 +129,10 @@ inline bool
 IsIdentifierStart(char16_t ch)
 {
     /*
-     * ES5 7.6 IdentifierStart
+     * ES2016 11.6 IdentifierStart
      *  $ (dollar sign)
      *  _ (underscore)
-     *  or any UnicodeLetter.
+     *  or any character with the Unicode property «ID_Start».
      *
      * We use a lookup table for small and thus common characters for speed.
      */
@@ -141,7 +140,7 @@ IsIdentifierStart(char16_t ch)
     if (ch < 128)
         return js_isidstart[ch];
 
-    return CharInfo(ch).isLetter();
+    return CharInfo(ch).isUnicodeIDStart();
 }
 
 inline bool
@@ -154,12 +153,21 @@ IsIdentifierStart(uint32_t codePoint)
 inline bool
 IsIdentifierPart(char16_t ch)
 {
-    /* Matches ES5 7.6 IdentifierPart. */
+    /*
+     * ES2016 11.6 IdentifierPart
+     *  $ (dollar sign)
+     *  _ (underscore)
+     *  <ZWNJ>
+     *  <ZWJ>
+     *  or any character with the Unicode property «ID_Continue».
+     *
+     * We use a lookup table for small and thus common characters for speed.
+     */
 
     if (ch < 128)
         return js_isident[ch];
 
-    return CharInfo(ch).isIdentifierPart();
+    return CharInfo(ch).isUnicodeIDContinue();
 }
 
 inline bool
@@ -170,9 +178,9 @@ IsIdentifierPart(uint32_t codePoint)
 }
 
 inline bool
-IsLetter(char16_t ch)
+IsUnicodeIDStart(char16_t ch)
 {
-    return CharInfo(ch).isLetter();
+    return CharInfo(ch).isUnicodeIDStart();
 }
 
 inline bool
@@ -180,7 +188,7 @@ IsSpace(char16_t ch)
 {
     /*
      * IsSpace checks if some character is included in the merged set
-     * of WhiteSpace and LineTerminator, specified by ES5 7.2 and 7.3.
+     * of WhiteSpace and LineTerminator, specified by ES2016 11.2 and 11.3.
      * We combined them, because in practice nearly every
      * calling function wants this, except some code in the tokenizer.
      *
