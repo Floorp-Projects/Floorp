@@ -34,8 +34,6 @@ LayerTransactionChild::Destroy()
   // When it happens, IPCOpen() is still true.
   // See bug 1004191.
   mDestroyed = true;
-  MOZ_ASSERT(0 == ManagedPLayerChild().Count(),
-             "layers should have been cleaned up by now");
 
   SendShutdown();
 }

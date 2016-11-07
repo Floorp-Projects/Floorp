@@ -327,6 +327,20 @@ SharedArrayBufferObject::addSizeOfExcludingThis(JSObject* obj, mozilla::MallocSi
         buf.byteLength() / buf.rawBufferObject()->refcount();
 }
 
+/* static */ void
+SharedArrayBufferObject::copyData(Handle<SharedArrayBufferObject*> toBuffer,
+                                  Handle<SharedArrayBufferObject*> fromBuffer,
+                                  uint32_t fromIndex, uint32_t count)
+{
+    MOZ_ASSERT(toBuffer->byteLength() >= count);
+    MOZ_ASSERT(fromBuffer->byteLength() >= fromIndex);
+    MOZ_ASSERT(fromBuffer->byteLength() >= fromIndex + count);
+
+    jit::AtomicOperations::memcpySafeWhenRacy(toBuffer->dataPointerShared(),
+                                              fromBuffer->dataPointerShared() + fromIndex,
+                                              count);
+}
+
 static const ClassSpec SharedArrayBufferObjectProtoClassSpec = {
     DELEGATED_CLASSSPEC(SharedArrayBufferObject::class_.spec),
     nullptr,
@@ -371,15 +385,18 @@ static const JSFunctionSpec static_functions[] = {
 };
 
 static const JSPropertySpec static_properties[] = {
+    JS_SELF_HOSTED_SYM_GET(species, "SharedArrayBufferSpecies", 0),
     JS_PS_END
 };
 
 static const JSFunctionSpec prototype_functions[] = {
+    JS_SELF_HOSTED_FN("slice", "SharedArrayBufferSlice", 2, 0),
     JS_FS_END
 };
 
 static const JSPropertySpec prototype_properties[] = {
     JS_PSG("byteLength", SharedArrayBufferObject::byteLengthGetter, 0),
+    JS_STRING_SYM_PS(toStringTag, "SharedArrayBuffer", JSPROP_READONLY),
     JS_PS_END
 };
 

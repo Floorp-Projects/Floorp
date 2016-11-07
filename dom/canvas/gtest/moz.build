@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     'TestImageBitmapColorUtils.cpp',
+    'TestWebGLElementArrayCache.cpp',
 ]
 
 LOCAL_INCLUDES += [
