@@ -56,7 +56,8 @@ public:
                       char* deviceUniqueIdUTF8,
                       uint32_t deviceUniqueIdUTF8Length,
                       char* productUniqueIdUTF8,
-                      uint32_t productUniqueIdUTF8Length);
+                      uint32_t productUniqueIdUTF8Length,
+                      pid_t* pid);
 
     /*
      * Display OS /capture device specific settings dialog
@@ -93,7 +94,8 @@ protected:
                           char* deviceUniqueIdUTF8,
                           uint32_t deviceUniqueIdUTF8Length,
                           char* productUniqueIdUTF8,
-                          uint32_t productUniqueIdUTF8Length);
+                          uint32_t productUniqueIdUTF8Length,
+                          pid_t* pid);
 
     virtual int32_t
         CreateCapabilityMap(const char* deviceUniqueIdUTF8);

@@ -36,7 +36,7 @@ child:
   async ReplyNumberOfCapabilities(int numdev);
   async ReplyAllocateCaptureDevice(int numdev);
   async ReplyGetCaptureCapability(CaptureCapability cap);
-  async ReplyGetCaptureDevice(nsCString device_name, nsCString device_id);
+  async ReplyGetCaptureDevice(nsCString device_name, nsCString device_id, bool scary);
   async ReplyFailure();
   async ReplySuccess();
   async __delete__();
