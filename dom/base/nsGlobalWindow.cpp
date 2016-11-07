@@ -11882,7 +11882,7 @@ nsGlobalWindow::Resume()
       continue;
     }
 
-    nsresult rv = t->InitTimer(delay);
+    nsresult rv = t->InitTimer(GetThrottledEventQueue(), delay);
     if (NS_FAILED(rv)) {
       t->mTimer = nullptr;
       t->remove();
@@ -12601,7 +12601,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsITimeoutHandler* aHandler,
 
     RefPtr<Timeout> copy = timeout;
 
-    rv = timeout->InitTimer(realInterval);
+    rv = timeout->InitTimer(GetThrottledEventQueue(), realInterval);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -12874,7 +12874,8 @@ nsGlobalWindow::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now,
 
   // Reschedule the OS timer. Don't bother returning any error codes if
   // this fails since the callers of this method don't care about them.
-  nsresult rv = aTimeout->InitTimer(delay.ToMilliseconds());
+  nsresult rv = aTimeout->InitTimer(GetThrottledEventQueue(),
+                                    delay.ToMilliseconds());
 
   if (NS_FAILED(rv)) {
     NS_ERROR("Error initializing timer for DOM timeout!");
@@ -12949,6 +12950,20 @@ nsGlobalWindow::RunTimeout(Timeout* aTimeout)
       // firing depth so that we can reentrantly run timeouts
       timeout->mFiringDepth = firingDepth;
       last_expired_timeout = timeout;
+
+      // Run available timers until we see our target timer.  After
+      // that, however, stop coalescing timers so we can yield the
+      // main thread.  Further timers that are ready will get picked
+      // up by their own nsITimer runnables when they execute.
+      //
+      // For chrome windows, however, we do coalesce all timers and
+      // do not yield the main thread.  This is partly because we
+      // trust chrome windows not to misbehave and partly because a
+      // number of browser chrome tests have races that depend on this
+      // coalescing.
+      if (timeout == aTimeout && !IsChromeWindow()) {
+        break;
+      }
     }
   }
 
@@ -13167,7 +13182,8 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
       timeout->mFiringDepth = firingDepth;
       timeout->Release();
 
-      nsresult rv = timeout->InitTimer(delay.ToMilliseconds());
+      nsresult rv = timeout->InitTimer(GetThrottledEventQueue(),
+                                       delay.ToMilliseconds());
 
       if (NS_FAILED(rv)) {
         NS_WARNING("Error resetting non background timer for DOM timeout!");
@@ -13254,15 +13270,6 @@ nsGlobalWindow::InsertTimeoutIntoList(Timeout* aTimeout)
   // Increment the timeout's reference count since it's now held on to
   // by the list
   aTimeout->AddRef();
-}
-
-// static
-void
-nsGlobalWindow::TimerCallback(nsITimer *aTimer, void *aClosure)
-{
-  RefPtr<Timeout> timeout = (Timeout*)aClosure;
-
-  timeout->mWindow->RunTimeout(timeout);
 }
 
 //*****************************************************************************

@@ -34,12 +34,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(Timeout)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(Timeout)
 
-  nsresult InitTimer(uint32_t aDelay);
+  // The target may be specified to use a particular event queue for the
+  // resulting timer runnable.  A nullptr target will result in the
+  // default main thread being used.
+  nsresult InitTimer(nsIEventTarget* aTarget, uint32_t aDelay);
 
   enum class Reason { eTimeoutOrInterval, eIdleCallbackTimeout };
-
-  static void TimerNameCallback(nsITimer* aTimer, void* aClosure, char* aBuf,
-                                size_t aLen);
 
 #ifdef DEBUG
   bool HasRefCntOne() const;
