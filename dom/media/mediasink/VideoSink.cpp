@@ -24,6 +24,10 @@ using namespace mozilla::layers;
 
 namespace media {
 
+// Minimum update frequency is 1/120th of a second, i.e. half the
+// duration of a 60-fps frame.
+static const int64_t MIN_UPDATE_INTERVAL_US = 1000000 / (60 * 2);
+
 VideoSink::VideoSink(AbstractThread* aThread,
                      MediaSink* aAudioSink,
                      MediaQueue<MediaData>& aVideoQueue,
@@ -441,8 +445,9 @@ VideoSink::UpdateRenderedVideoFrames()
   }
 
   int64_t nextFrameTime = frames[1]->mTime;
+  int64_t delta = std::max<int64_t>((nextFrameTime - clockTime), MIN_UPDATE_INTERVAL_US);
   TimeStamp target = nowTime + TimeDuration::FromMicroseconds(
-    (nextFrameTime - clockTime) / mAudioSink->GetPlaybackParams().mPlaybackRate);
+     delta / mAudioSink->GetPlaybackParams().mPlaybackRate);
 
   RefPtr<VideoSink> self = this;
   mUpdateScheduler.Ensure(target, [self] () {
