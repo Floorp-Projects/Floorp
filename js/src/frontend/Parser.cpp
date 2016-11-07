@@ -5817,8 +5817,10 @@ Parser<ParseHandler>::continueStatement(YieldHandling yieldHandling)
         for (;;) {
             stmt = ParseContext::Statement::findNearest(stmt, isLoop);
             if (!stmt) {
-                report(ParseError, false, null(),
-                       foundLoop ? JSMSG_LABEL_NOT_FOUND : JSMSG_BAD_CONTINUE);
+                if (foundLoop)
+                    report(ParseError, false, null(), JSMSG_LABEL_NOT_FOUND);
+                else
+                    reportWithOffset(ParseError, false, begin, JSMSG_BAD_CONTINUE);
                 return null();
             }
 
