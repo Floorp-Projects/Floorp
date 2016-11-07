@@ -36,7 +36,7 @@ void CubebLogCallback(const char* aFmt, ...)
   va_list arglist;
   va_start(arglist, aFmt);
   VsprintfLiteral (buffer, aFmt, arglist);
-  MOZ_LOG(gCubebLog, LogLevel::Verbose, ("%s", buffer));
+  MOZ_LOG(gCubebLog, LogLevel::Error, ("%s", buffer));
   va_end(arglist);
 }
 
