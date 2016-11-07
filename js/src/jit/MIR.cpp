@@ -2799,11 +2799,10 @@ MBinaryBitwiseInstruction::foldUnnecessaryBitop()
     // the only use is an unsigned modulo. Thus, the expression
     // |(x >>> 0) % y| becomes |x % y|.
     if (isUrsh() && hasOneDefUse() && IsUint32Type(this)) {
-        for (MUseDefIterator use(this); use; use++) {
-            if (use.def()->isMod() && use.def()->toMod()->isUnsigned())
-                return getOperand(0);
-            break;
-        }
+        MUseDefIterator use(this);
+        if (use.def()->isMod() && use.def()->toMod()->isUnsigned())
+            return getOperand(0);
+        MOZ_ASSERT(!(++use));
     }
 
     // Eliminate bitwise operations that are no-ops when used on integer
