@@ -17,6 +17,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(
     this, "cookieManager", "@mozilla.org/cookiemanager;1", "nsICookieManager2");
 
+Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/browser.js");
 Cu.import("chrome://marionette/content/element.js");
@@ -484,6 +485,14 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
 
   this.newSessionCommandId = cmd.id;
   this.setSessionCapabilities(cmd.parameters.capabilities);
+  // If we are testing accessibility with marionette, start a11y service in
+  // chrome first. This will ensure that we do not have any content-only
+  // services hanging around.
+  if (this.sessionCapabilities.raisesAccessibilityExceptions &&
+      accessibility.service) {
+    logger.info("Preemptively starting accessibility service in Chrome");
+  }
+
   this.scriptTimeout = 10000;
 
   let registerBrowsers = this.registerPromise();
