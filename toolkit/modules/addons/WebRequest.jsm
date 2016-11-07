@@ -22,14 +22,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
-                                  "resource://gre/modules/ExtensionUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebRequestCommon",
                                   "resource://gre/modules/WebRequestCommon.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebRequestUpload",
                                   "resource://gre/modules/WebRequestUpload.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "ExtensionError", () => ExtensionUtils.ExtensionError);
 
 function attachToChannel(channel, key, data) {
   if (channel instanceof Ci.nsIWritablePropertyBag2) {
@@ -84,7 +80,7 @@ function parseExtra(extra, allowed = []) {
   if (extra) {
     for (let ex of extra) {
       if (allowed.indexOf(ex) == -1) {
-        throw new ExtensionError(`Invalid option ${ex}`);
+        throw new Error(`Invalid option ${ex}`);
       }
     }
   }
