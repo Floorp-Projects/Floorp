@@ -89,8 +89,7 @@ MP4Decoder::CanHandleMediaType(const MediaContentType& aType,
   // the web, as opposed to what we use internally (i.e. what our demuxers
   // etc output).
   const bool isMP4Audio = aType.GetMIMEType().EqualsASCII("audio/mp4") ||
-                          aType.GetMIMEType().EqualsASCII("audio/x-m4a") ||
-                          aType.GetMIMEType().EqualsASCII("audio/opus");
+                          aType.GetMIMEType().EqualsASCII("audio/x-m4a");
   const bool isMP4Video =
   // On B2G, treat 3GPP as MP4 when Gonk PDM is available.
 #ifdef MOZ_GONK_MEDIACODEC
@@ -105,7 +104,7 @@ MP4Decoder::CanHandleMediaType(const MediaContentType& aType,
 
   nsTArray<UniquePtr<TrackInfo>> trackInfos;
   if (aType.GetCodecs().IsEmpty()) {
-    // No codecs specified. Assume AAC/H.264
+    // No codecs specified. Assume H.264
     if (isMP4Audio) {
       trackInfos.AppendElement(
         CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
