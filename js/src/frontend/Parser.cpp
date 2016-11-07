@@ -601,6 +601,17 @@ Parser<ParseHandler>::qeport(ParseReportKind kind, unsigned errorNumber, ...)
 
 template <typename ParseHandler>
 bool
+Parser<ParseHandler>::extraWarning(unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+    bool result = reportHelper(ParseExtraWarning, false, pos().begin, errorNumber, args);
+    va_end(args);
+    return result;
+}
+
+template <typename ParseHandler>
+bool
 Parser<ParseHandler>::strictModeError(unsigned errorNumber, ...)
 {
     va_list args;
@@ -3867,7 +3878,7 @@ Parser<ParseHandler>::condition(InHandling inHandling, YieldHandling yieldHandli
 
     /* Check for (a = b) and warn about possible (a == b) mistype. */
     if (handler.isUnparenthesizedAssignment(pn)) {
-        if (!qeport(ParseExtraWarning, JSMSG_EQUAL_AS_ASSIGN))
+        if (!extraWarning(JSMSG_EQUAL_AS_ASSIGN))
             return null();
     }
     return pn;
@@ -5247,7 +5258,7 @@ Parser<ParseHandler>::ifStatement(YieldHandling yieldHandling)
         if (!tokenStream.peekToken(&tt, TokenStream::Operand))
             return null();
         if (tt == TOK_SEMI) {
-            if (!qeport(ParseExtraWarning, JSMSG_EMPTY_CONSEQUENT))
+            if (!extraWarning(JSMSG_EMPTY_CONSEQUENT))
                 return null();
         }
 
@@ -8201,7 +8212,7 @@ Parser<ParseHandler>::comprehensionIf(GeneratorKind comprehensionKind)
 
     /* Check for (a = b) and warn about possible (a == b) mistype. */
     if (handler.isUnparenthesizedAssignment(cond)) {
-        if (!qeport(ParseExtraWarning, JSMSG_EQUAL_AS_ASSIGN))
+        if (!extraWarning(JSMSG_EQUAL_AS_ASSIGN))
             return null();
     }
 
