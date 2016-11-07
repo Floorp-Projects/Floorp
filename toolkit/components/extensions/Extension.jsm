@@ -83,13 +83,13 @@ if (!AppConstants.RELEASE_OR_BETA) {
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   BaseContext,
-  defineLazyGetter,
   EventEmitter,
-  SchemaAPIManager,
-  LocaleData,
-  instanceOf,
   LocalAPIImplementation,
+  LocaleData,
+  SchemaAPIManager,
+  defineLazyGetter,
   flushJarCache,
+  instanceOf,
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
@@ -242,8 +242,7 @@ let ProxyMessenger = {
     if (extensionId) {
       // TODO(robwu): map the extensionId to the addon parent process's message
       // manager when they run in a separate process.
-      let pipmm = Services.ppmm.getChildAt(0);
-      return pipmm;
+      return Services.ppmm.getChildAt(0);
     }
 
     return null;
@@ -290,8 +289,8 @@ class ProxyContext extends BaseContext {
     // message manager object may change when `xulBrowser` swaps docshells, e.g.
     // when a tab is moved to a different window.
     this.currentMessageManager = xulBrowser.messageManager;
-    this._docShellTracker = new BrowserDocshellFollower(xulBrowser,
-        this.onBrowserChange.bind(this));
+    this._docShellTracker = new BrowserDocshellFollower(
+      xulBrowser, this.onBrowserChange.bind(this));
 
     Object.defineProperty(this, "principal", {
       value: principal, enumerable: true, configurable: true,
@@ -459,13 +458,12 @@ ParentAPIManager = {
   createProxyContext(data, target) {
     let {envType, extensionId, childId, principal} = data;
     if (this.proxyContexts.has(childId)) {
-      Cu.reportError("A WebExtension context with the given ID already exists!");
-      return;
+      throw new Error("A WebExtension context with the given ID already exists!");
     }
+
     let extension = GlobalManager.getExtension(extensionId);
     if (!extension) {
-      Cu.reportError(`No WebExtension found with ID ${extensionId}`);
-      return;
+      throw new Error(`No WebExtension found with ID ${extensionId}`);
     }
 
     let context;
@@ -474,15 +472,13 @@ ParentAPIManager = {
       // frame is also the same addon.
       if (principal.URI.prePath != extension.baseURI.prePath ||
           !target.contentPrincipal.subsumes(principal)) {
-        Cu.reportError(`Refused to create privileged WebExtension context for ${principal.URI.spec}`);
-        return;
+        throw new Error(`Refused to create privileged WebExtension context for ${principal.URI.spec}`);
       }
       context = new ExtensionChildProxyContext(envType, extension, data, target);
     } else if (envType == "content_parent") {
       context = new ProxyContext(envType, extension, data, target, principal);
     } else {
-      Cu.reportError(`Invalid WebExtension context envType: ${envType}`);
-      return;
+      throw new Error(`Invalid WebExtension context envType: ${envType}`);
     }
     this.proxyContexts.set(childId, context);
   },
