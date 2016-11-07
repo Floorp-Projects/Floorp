@@ -453,7 +453,6 @@ def build_generic_worker_payload(config, task, task_def):
     if 'retry-exit-status' in worker:
         raise Exception("retry-exit-status not supported in generic-worker")
 
-
 @payload_builder('macosx-engine')
 def build_macosx_engine_payload(config, task, task_def):
     worker = task['worker']

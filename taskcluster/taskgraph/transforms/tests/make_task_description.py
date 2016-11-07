@@ -378,7 +378,6 @@ def generic_worker_setup(config, test, taskdesc):
         'copy /y logs\\*.* public\\logs\\'
     ]
 
-
 @worker_setup_function("macosx-engine")
 def macosx_engine_setup(config, test, taskdesc):
     mozharness = test['mozharness']
@@ -401,7 +400,7 @@ def macosx_engine_setup(config, test, taskdesc):
         'type': 'directory',
     } for (prefix, path) in ARTIFACTS]
 
-    worker['env'] = {
+    env = worker['env'] = {
         'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
         'GECKO_HEAD_REV': config.params['head_rev'],
         'MOZHARNESS_CONFIG': ' '.join(mozharness['config']),
