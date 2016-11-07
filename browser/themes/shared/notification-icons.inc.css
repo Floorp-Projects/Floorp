@@ -155,6 +155,13 @@
   list-style-image: url(chrome://browser/skin/notification-icons.svg#screen-blocked);
 }
 
+html|*#webRTC-previewVideo {
+  width: 300px;
+  /* If we don't set the min-width, width is ignored. */
+  min-width: 300px;
+  max-height: 200px;
+}
+
 /* This icon has a block sign in it, so we don't need a blocked version. */
 .popup-icon {
   list-style-image: url("chrome://browser/skin/notification-icons.svg#popup");
