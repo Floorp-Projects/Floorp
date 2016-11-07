@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<!-- The child page, used by browser_cache.js -->
+<body>
+<div>thirdPartyChild.html</div>
+<script>
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "http://example.net/browser/browser/components/originattributes/test/browser/file_thirdPartyChild.xhr.html", true);
+  xhr.send();
+  var worker = new Worker("http://example.net/browser/browser/components/originattributes/test/browser/file_thirdPartyChild.worker.js");
+  var sharedWorker = new SharedWorker("http://example.net/browser/browser/components/originattributes/test/browser/file_thirdPartyChild.sharedworker.js");
+
+  fetch("file_thirdPartyChild.fetch.html", {cache: "force-cache"} );
+  fetch(new Request("file_thirdPartyChild.request.html"), {cache: "force-cache"} );
+</script>
+</body>
+</html>
