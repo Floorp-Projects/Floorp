@@ -5105,7 +5105,10 @@ Parser<FullParseHandler>::exportDeclaration()
                 return null();
             break;
           default: {
-            if (tt == TOK_NAME && tokenStream.currentName() == context->names().async) {
+            if (tt == TOK_NAME &&
+                tokenStream.currentName() == context->names().async &&
+                !tokenStream.currentToken().nameContainsEscape())
+            {
                 TokenKind nextSameLine = TOK_EOF;
                 if (!tokenStream.peekTokenSameLine(&nextSameLine))
                     return null();
@@ -7065,20 +7068,21 @@ Parser<ParseHandler>::statementListItem(YieldHandling yieldHandling,
         if (!tokenStream.peekToken(&next))
             return null();
 
-        if (!tokenStream.currentToken().nameContainsEscape() &&
-            tokenStream.currentName() == context->names().let &&
-            nextTokenContinuesLetDeclaration(next, yieldHandling))
-        {
-            return lexicalDeclaration(yieldHandling, /* isConst = */ false);
-        }
+        if (!tokenStream.currentToken().nameContainsEscape()) {
+            if (tokenStream.currentName() == context->names().let &&
+                nextTokenContinuesLetDeclaration(next, yieldHandling))
+            {
+                return lexicalDeclaration(yieldHandling, /* isConst = */ false);
+            }
 
-        if (tokenStream.currentName() == context->names().async) {
-            TokenKind nextSameLine = TOK_EOF;
-            if (!tokenStream.peekTokenSameLine(&nextSameLine))
-                return null();
-            if (nextSameLine == TOK_FUNCTION) {
-                tokenStream.consumeKnownToken(TOK_FUNCTION);
-                return functionStmt(yieldHandling, NameRequired, AsyncFunction);
+            if (tokenStream.currentName() == context->names().async) {
+                TokenKind nextSameLine = TOK_EOF;
+                if (!tokenStream.peekTokenSameLine(&nextSameLine))
+                    return null();
+                if (nextSameLine == TOK_FUNCTION) {
+                    tokenStream.consumeKnownToken(TOK_FUNCTION);
+                    return functionStmt(yieldHandling, NameRequired, AsyncFunction);
+                }
             }
         }
 
@@ -7573,7 +7577,10 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
         return yieldExpression(inHandling);
 
     bool maybeAsyncArrow = false;
-    if (tt == TOK_NAME && tokenStream.currentName() == context->names().async) {
+    if (tt == TOK_NAME &&
+        tokenStream.currentName() == context->names().async &&
+        !tokenStream.currentToken().nameContainsEscape())
+    {
         TokenKind nextSameLine = TOK_EOF;
         if (!tokenStream.peekTokenSameLine(&nextSameLine))
             return null();
@@ -7594,6 +7601,7 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
     if (maybeAsyncArrow) {
         tokenStream.consumeKnownToken(TOK_NAME, TokenStream::Operand);
         MOZ_ASSERT(tokenStream.currentName() == context->names().async);
+        MOZ_ASSERT(!tokenStream.currentToken().nameContainsEscape());
 
         TokenKind tt;
         if (!tokenStream.getToken(&tt))
@@ -7669,7 +7677,9 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
         if (next == TOK_NAME) {
             tokenStream.consumeKnownToken(next, TokenStream::Operand);
 
-            if (tokenStream.currentName() == context->names().async) {
+            if (tokenStream.currentName() == context->names().async &&
+                !tokenStream.currentToken().nameContainsEscape())
+            {
                 TokenKind nextSameLine = TOK_EOF;
                 if (!tokenStream.peekTokenSameLine(&nextSameLine))
                     return null();
@@ -8544,8 +8554,26 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
 
                 JSOp op = JSOP_CALL;
                 bool maybeAsyncArrow = false;
-                if (tt == TOK_LP && handler.isNameAnyParentheses(lhs)) {
-                    if (handler.nameIsEvalAnyParentheses(lhs, context)) {
+                if (PropertyName* prop = handler.maybeDottedProperty(lhs)) {
+                    // Use the JSOP_FUN{APPLY,CALL} optimizations given the
+                    // right syntax.
+                    if (prop == context->names().apply) {
+                        op = JSOP_FUNAPPLY;
+                        if (pc->isFunctionBox())
+                            pc->functionBox()->usesApply = true;
+                    } else if (prop == context->names().call) {
+                        op = JSOP_FUNCALL;
+                    }
+                } else if (tt == TOK_LP) {
+                    if (handler.isAsyncKeyword(lhs, context)) {
+                        // |async (| can be the start of an async arrow
+                        // function, so we need to defer reporting possible
+                        // errors from destructuring syntax. To give better
+                        // error messages, we only allow the AsyncArrowHead
+                        // part of the CoverCallExpressionAndAsyncArrowHead
+                        // syntax when the initial name is "async".
+                        maybeAsyncArrow = true;
+                    } else if (handler.isEvalAnyParentheses(lhs, context)) {
                         // Select the right EVAL op and flag pc as having a
                         // direct eval.
                         op = pc->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
@@ -8562,24 +8590,6 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
                         // it. (If we're not in a method, that's fine, so
                         // ignore the return value.)
                         checkAndMarkSuperScope();
-                    } else if (handler.nameIsUnparenthesizedAsync(lhs, context)) {
-                        // |async (| can be the start of an async arrow
-                        // function, so we need to defer reporting possible
-                        // errors from destructuring syntax. To give better
-                        // error messages, we only allow the AsyncArrowHead
-                        // part of the CoverCallExpressionAndAsyncArrowHead
-                        // syntax when the initial name is "async".
-                        maybeAsyncArrow = true;
-                    }
-                } else if (PropertyName* prop = handler.maybeDottedProperty(lhs)) {
-                    // Use the JSOP_FUN{APPLY,CALL} optimizations given the
-                    // right syntax.
-                    if (prop == context->names().apply) {
-                        op = JSOP_FUNAPPLY;
-                        if (pc->isFunctionBox())
-                            pc->functionBox()->usesApply = true;
-                    } else if (prop == context->names().call) {
-                        op = JSOP_FUNCALL;
                     }
                 }
 
@@ -8912,7 +8922,10 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
             return null();
     }
 
-    if (ltok == TOK_NAME && tokenStream.currentName() == context->names().async) {
+    if (ltok == TOK_NAME &&
+        tokenStream.currentName() == context->names().async &&
+        !tokenStream.currentToken().nameContainsEscape())
+    {
         TokenKind tt;
         if (!tokenStream.getToken(&tt, TokenStream::KeywordIsName))
             return null();
@@ -9432,7 +9445,9 @@ Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TripledotHandling
 
       case TOK_YIELD:
       case TOK_NAME: {
-        if (tokenStream.currentName() == context->names().async) {
+        if (tokenStream.currentName() == context->names().async &&
+            !tokenStream.currentToken().nameContainsEscape())
+        {
             TokenKind nextSameLine = TOK_EOF;
             if (!tokenStream.peekTokenSameLine(&nextSameLine))
                 return null();
