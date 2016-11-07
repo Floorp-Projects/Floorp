@@ -80,6 +80,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/ProcessHangMonitor.h"
+#include "mozilla/ThrottledEventQueue.h"
 #include "AudioChannelService.h"
 #include "nsAboutProtocolUtils.h"
 #include "nsCharTraits.h" // NS_IS_HIGH/LOW_SURROGATE
@@ -9514,6 +9515,18 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, in
   }
 
   return NS_OK;
+}
+
+ThrottledEventQueue*
+nsGlobalWindow::GetThrottledEventQueue()
+{
+  // We must have an outer to access the TabGroup.
+  nsGlobalWindow* outer = GetOuterWindowInternal();
+  if (!outer) {
+    return nullptr;
+  }
+
+  return TabGroup()->GetThrottledEventQueue();
 }
 
 Selection*
