@@ -57,7 +57,7 @@ class nsCSPContext : public nsIContentSecurityPolicy
                       uint32_t aColumnNumber,
                       uint32_t aSeverityFlag);
 
-    nsresult SendReports(nsISupports* aBlockedContentSource,
+    nsresult SendReports(nsIURI* aBlockedURI,
                          nsIURI* aOriginalURI,
                          nsAString& aViolatedDirective,
                          uint32_t aViolatedPolicyIndex,
