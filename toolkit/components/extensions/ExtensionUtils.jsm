@@ -50,6 +50,12 @@ function getConsole() {
 
 XPCOMUtils.defineLazyGetter(this, "console", getConsole);
 
+/**
+ * An Error subclass for which complete error messages are always passed
+ * to extensions, rather than being interpreted as an unknown error.
+ */
+class ExtensionError extends Error {}
+
 function filterStack(error) {
   return String(error.stack).replace(/(^.*(Task\.jsm|Promise-backend\.js).*\n)+/gm, "<Promise Chain>\n");
 }
@@ -368,7 +374,7 @@ class BaseContext {
       return error;
     }
     let message;
-    if (instanceOf(error, "Object")) {
+    if (instanceOf(error, "Object") || error instanceof ExtensionError) {
       message = error.message;
     } else if (typeof error == "object" &&
         this.principal.subsumes(Cu.getObjectPrincipal(error))) {
@@ -1748,7 +1754,11 @@ class LocalAPIImplementation extends SchemaAPIInterface {
   }
 
   addListener(listener, args) {
-    this.pathObj[this.name].addListener.call(null, listener, ...args);
+    try {
+      this.pathObj[this.name].addListener.call(null, listener, ...args);
+    } catch (e) {
+      throw this.context.normalizeError(e);
+    }
   }
 
   hasListener(listener) {
@@ -2236,6 +2246,7 @@ this.ExtensionUtils = {
   DefaultWeakMap,
   EventEmitter,
   EventManager,
+  ExtensionError,
   IconDetails,
   LocalAPIImplementation,
   LocaleData,
