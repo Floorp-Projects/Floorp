@@ -33,29 +33,29 @@ InProcessCompositorWidget::InProcessCompositorWidget(nsBaseWidget* aWidget)
 }
 
 bool
-InProcessCompositorWidget::PreRender(layers::LayerManagerComposite* aManager)
+InProcessCompositorWidget::PreRender(WidgetRenderingContext* aContext)
 {
-  return mWidget->PreRender(aManager);
+  return mWidget->PreRender(aContext);
 }
 
 void
-InProcessCompositorWidget::PostRender(layers::LayerManagerComposite* aManager)
+InProcessCompositorWidget::PostRender(WidgetRenderingContext* aContext)
 {
-  mWidget->PostRender(aManager);
+  mWidget->PostRender(aContext);
 }
 
 void
-InProcessCompositorWidget::DrawWindowUnderlay(layers::LayerManagerComposite* aManager,
-                                          LayoutDeviceIntRect aRect)
+InProcessCompositorWidget::DrawWindowUnderlay(WidgetRenderingContext* aContext,
+                                              LayoutDeviceIntRect aRect)
 {
-  mWidget->DrawWindowUnderlay(aManager, aRect);
+  mWidget->DrawWindowUnderlay(aContext, aRect);
 }
 
 void
-InProcessCompositorWidget::DrawWindowOverlay(layers::LayerManagerComposite* aManager,
-                                         LayoutDeviceIntRect aRect)
+InProcessCompositorWidget::DrawWindowOverlay(WidgetRenderingContext* aContext,
+                                             LayoutDeviceIntRect aRect)
 {
-  mWidget->DrawWindowOverlay(aManager, aRect);
+  mWidget->DrawWindowOverlay(aContext, aRect);
 }
 
 already_AddRefed<gfx::DrawTarget>

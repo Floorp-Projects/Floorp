@@ -47,6 +47,11 @@ public:
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
               ErrorResult& aRv);
 
+  static already_AddRefed<KeyframeEffect>
+  Constructor(const GlobalObject& aGlobal,
+              KeyframeEffectReadOnly& aSource,
+              ErrorResult& aRv);
+
   // Variant of Constructor that accepts a KeyframeAnimationOptions object
   // for use with for Animatable.animate.
   // Not exposed to content.

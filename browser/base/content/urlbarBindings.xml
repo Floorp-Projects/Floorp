@@ -444,7 +444,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 break;
               case "keyword":
                 if (action.params.postData) {
-                  postData = getPostDataStream(postData);
+                  postData = getPostDataStream(action.params.postData);
                 }
                 mayInheritPrincipal = true;
                 url = action.params.url;

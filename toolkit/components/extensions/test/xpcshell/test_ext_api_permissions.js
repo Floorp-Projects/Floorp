@@ -32,7 +32,7 @@ add_task(function* test_storage_api_without_permissions() {
   // Force API initialization.
   void context.apiObj;
 
-  ok(!("storage" in context._unwrappedAPIs),
+  ok(!("storage" in context.apiObj),
      "The storage API should not be initialized");
 
   yield extension.unload();
@@ -57,7 +57,7 @@ add_task(function* test_storage_api_with_permissions() {
   // Force API initialization.
   void context.apiObj;
 
-  equal(typeof context._unwrappedAPIs.storage, "object",
+  equal(typeof context.apiObj.storage, "object",
         "The storage API should be initialized");
 
   yield extension.unload();

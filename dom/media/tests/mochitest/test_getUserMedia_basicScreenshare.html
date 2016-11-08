@@ -11,10 +11,6 @@
     bug: "1211656"
   });
 
-  var mustFailWith = (msg, reason, f) =>
-    f().then(() => ok(false, msg + " must fail"),
-             e => is(e.name, reason, msg + " must fail: " + e.message));
-
   var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
 
   /**
@@ -63,15 +59,9 @@
       }
     ];
     return Promise.resolve()
+      // Screensharing must work even without "mochi.test," in allowed_domains
       .then(() => pushPrefs(["media.getusermedia.screensharing.allowed_domains",
                              "mozilla.github.io,*.bugzilla.mozilla.org"]))
-      .then(() => mustFailWith("Screensharing if absent in allowed_domains",
-                               "NotAllowedError",
-                               () => navigator.mediaDevices.getUserMedia({
-                                 video: videoConstraints[0], fake: false
-                               })))
-      .then(() => pushPrefs(["media.getusermedia.screensharing.allowed_domains",
-                             "mozilla.github.io,mochi.test,*.bugzilla.mozilla.org"]))
       .then(() => getUserMedia(constraints).then(stream => {
         var playback = new LocalMediaStreamPlayback(testVideo, stream);
         return playback.playMediaWithDeprecatedStreamStop(false);

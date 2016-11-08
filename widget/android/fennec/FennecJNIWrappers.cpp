@@ -278,9 +278,9 @@ auto MediaDrmProxy::CloseSession(int32_t a0, mozilla::jni::String::Param a1) con
 constexpr char MediaDrmProxy::Create_t::name[];
 constexpr char MediaDrmProxy::Create_t::signature[];
 
-auto MediaDrmProxy::Create(mozilla::jni::String::Param a0, mozilla::jni::Object::Param a1) -> MediaDrmProxy::LocalRef
+auto MediaDrmProxy::Create(mozilla::jni::String::Param a0, mozilla::jni::Object::Param a1, bool a2) -> MediaDrmProxy::LocalRef
 {
-    return mozilla::jni::Method<Create_t>::Call(MediaDrmProxy::Context(), nullptr, a0, a1);
+    return mozilla::jni::Method<Create_t>::Call(MediaDrmProxy::Context(), nullptr, a0, a1, a2);
 }
 
 constexpr char MediaDrmProxy::CreateSession_t::name[];

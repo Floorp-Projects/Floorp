@@ -55,6 +55,9 @@ class SyncPreference extends Preference {
                         // Cancel any pending task.
                         Picasso.with(mContext).cancelRequest(profileAvatarTarget);
                         // Clear previously set icon.
+                        // Bug 1312719 - IconDrawable is prior to IconResId, drawable must be set null before setIcon(resId)
+                        // http://androidxref.com/5.1.1_r6/xref/frameworks/base/core/java/android/preference/Preference.java#562
+                        setIcon(null);
                         setIcon(R.drawable.sync_avatar_default);
                 }
             });

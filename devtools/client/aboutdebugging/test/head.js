@@ -3,7 +3,7 @@
 
 /* eslint-env browser */
 /* exported openAboutDebugging, changeAboutDebuggingHash, closeAboutDebugging,
-   installAddon, uninstallAddon, waitForMutation, assertHasTarget,
+   installAddon, uninstallAddon, waitForMutation, waitForContentMutation, assertHasTarget,
    getServiceWorkerList, getTabList, openPanel, waitForInitialAddonList,
    waitForServiceWorkerRegistered, unregisterServiceWorker,
    waitForDelayedStartupFinished, setupTestAboutDebuggingWebExtension,
@@ -226,6 +226,22 @@ function waitForMutation(target, mutationOptions) {
       resolve();
     });
     observer.observe(target, mutationOptions);
+  });
+}
+
+/**
+ * Returns a promise that will resolve after receiving a mutation in the subtree of the
+ * provided target. Depending on the current React implementation, a text change might be
+ * observable as a childList mutation or a characterData mutation.
+ *
+ * @param {Node} target
+ * @return {Promise}
+ */
+function waitForContentMutation(target) {
+  return waitForMutation(target, {
+    characterData: true,
+    childList: true,
+    subtree: true
   });
 }
 

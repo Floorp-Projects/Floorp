@@ -60,14 +60,16 @@
 
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="@dimen/activity_stream_contextmenu_max_menu_height">
+        android:layout_height="wrap_content">
 
         <android.support.design.widget.NavigationView
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/menu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:theme="@style/ActivityStreamContextMenuStyle"
             app:itemTextAppearance="@style/ActivityStreamContextMenuText"
+            android:theme="@style/ActivityStreamContextMenuStyle"
             app:menu="@menu/activitystream_contextmenu"/>
 
     </android.support.v4.widget.NestedScrollView>

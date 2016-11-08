@@ -1518,6 +1518,8 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     return false;
   }
 
+  // Insert empty line to the log for easier to read.
+  MOZ_LOG(gLog, LogLevel::Info, (""));
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TextInputHandler::HandleKeyDownEvent, aNativeEvent=%p, "
      "type=%s, keyCode=%lld (0x%X), modifierFlags=0x%X, characters=\"%s\", "
@@ -1686,6 +1688,8 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
      this, TrueOrFalse(currentKeyEvent->mKeyDownHandled),
      TrueOrFalse(currentKeyEvent->mKeyPressHandled),
      TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents)));
+  // Insert empty line to the log for easier to read.
+  MOZ_LOG(gLog, LogLevel::Info, (""));
   return currentKeyEvent->IsDefaultPrevented();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
@@ -2188,10 +2192,20 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     return;
   }
 
-  // If this is not caused by pressing a key or there is a composition, let's
+  bool isReplacingSpecifiedRange =
+    isEditable && aReplacementRange &&
+    aReplacementRange->location != NSNotFound &&
+    !NSEqualRanges(selectedRange, *aReplacementRange);
+
+  // If this is not caused by pressing a key, there is a composition or
+  // replacing a range which is different from current selection, let's
   // insert the text as committing a composition.
-  if (!currentKeyEvent || IsIMEComposing()) {
+  if (!currentKeyEvent || IsIMEComposing() || isReplacingSpecifiedRange) {
     InsertTextAsCommittingComposition(aAttrString, aReplacementRange);
+    if (currentKeyEvent) {
+      currentKeyEvent->mKeyPressHandled = true;
+      currentKeyEvent->mKeyPressDispatched = true;
+    }
     return;
   }
 
@@ -2201,16 +2215,8 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     return;
   }
 
+  // XXX Shouldn't we hold mDispatcher instead of mWidget?
   RefPtr<nsChildView> widget(mWidget);
-
-  // If the replacement range is specified, select the range.  Then, the
-  // selection will be replaced by the later keypress event.
-  if (isEditable &&
-      aReplacementRange && aReplacementRange->location != NSNotFound &&
-      !NSEqualRanges(selectedRange, *aReplacementRange)) {
-    NS_ENSURE_TRUE_VOID(SetSelection(*aReplacementRange));
-  }
-
   nsresult rv = mDispatcher->BeginNativeInputTransaction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
       MOZ_LOG(gLog, LogLevel::Error,
@@ -3143,19 +3149,37 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  KeyEventState* currentKeyEvent = GetCurrentKeyEvent();
+
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::SetMarkedText, "
      "aAttrString=\"%s\", aSelectedRange={ location=%llu, length=%llu }, "
      "aReplacementRange=%p { location=%llu, length=%llu }, "
      "Destroyed()=%s, IgnoreIMEComposition()=%s, IsIMEComposing()=%s, "
-     "mMarkedRange={ location=%llu, length=%llu }",
+     "mMarkedRange={ location=%llu, length=%llu }, keyevent=%p, "
+     "keydownHandled=%s, keypressDispatched=%s, causedOtherKeyEvents=%s",
      this, GetCharacters([aAttrString string]),
      aSelectedRange.location, aSelectedRange.length, aReplacementRange,
      aReplacementRange ? aReplacementRange->location : 0,
      aReplacementRange ? aReplacementRange->length : 0,
      TrueOrFalse(Destroyed()), TrueOrFalse(IgnoreIMEComposition()),
      TrueOrFalse(IsIMEComposing()),
-     mMarkedRange.location, mMarkedRange.length));
+     mMarkedRange.location, mMarkedRange.length,
+     currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr,
+     currentKeyEvent ?
+       TrueOrFalse(currentKeyEvent->mKeyDownHandled) : "N/A",
+     currentKeyEvent ?
+       TrueOrFalse(currentKeyEvent->mKeyPressDispatched) : "N/A",
+     currentKeyEvent ?
+       TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A"));
+
+  // If SetMarkedText() is called during composition, that means that
+  // the key event caused this composition.  So, keypress event shouldn't
+  // be dispatched later, let's consume it here.
+  if (currentKeyEvent) {
+    currentKeyEvent->mKeyPressHandled = true;
+    currentKeyEvent->mKeyPressDispatched = true;
+  }
 
   if (Destroyed() || IgnoreIMEComposition()) {
     return;
@@ -3248,6 +3272,10 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
   // In such case, we should use mIMECompositionString since if the composition
   // string is handled by a remote process, the content cache may be out of
   // date.
+  // XXX Should we set composition string attributes?  Although, Blink claims
+  //     that some attributes of marked text are supported, but they return
+  //     just marked string without any style.  So, let's keep current behavior
+  //     at least for now.
   NSUInteger compositionLength =
     mIMECompositionString ? [mIMECompositionString length] : 0;
   if (mIMECompositionStart != UINT32_MAX &&
@@ -3569,6 +3597,10 @@ IMEInputHandler::CharacterIndexForPoint(NSPoint& aPoint)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSNotFound);
 }
 
+extern "C" {
+extern NSString *NSTextInputReplacementRangeAttributeName;
+}
+
 NSArray*
 IMEInputHandler::GetValidAttributesForMarkedText()
 {
@@ -3577,14 +3609,16 @@ IMEInputHandler::GetValidAttributesForMarkedText()
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::GetValidAttributesForMarkedText", this));
 
-  //RefPtr<IMEInputHandler> kungFuDeathGrip(this);
-
-  //return [NSArray arrayWithObjects:NSUnderlineStyleAttributeName,
-  //                                 NSMarkedClauseSegmentAttributeName,
-  //                                 NSTextInputReplacementRangeAttributeName,
-  //                                 nil];
-  // empty array; we don't support any attributes right now
-  return [NSArray array];
+  // Return same attributes as Chromium (see render_widget_host_view_mac.mm)
+  // because most IMEs must be tested with Safari (OS default) and Chrome
+  // (having most market share).  Therefore, we need to follow their behavior.
+  // XXX It might be better to reuse an array instance for this result because
+  //     this may be called a lot.  Note that Chromium does so.
+  return [NSArray arrayWithObjects:NSUnderlineStyleAttributeName,
+                                   NSUnderlineColorAttributeName,
+                                   NSMarkedClauseSegmentAttributeName,
+                                   NSTextInputReplacementRangeAttributeName,
+                                   nil];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }

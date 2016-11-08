@@ -26,11 +26,6 @@ class FakeTryOptionSyntax(object):
 
 class TestTargetTasks(unittest.TestCase):
 
-    def test_from_parameters(self):
-        method = target_tasks.get_method('from_parameters')
-        self.assertEqual(method(None, {'target_tasks': ['a', 'b']}),
-                         ['a', 'b'])
-
     def default_matches(self, run_on_projects, project):
         method = target_tasks.get_method('default')
         graph = TaskGraph(tasks={

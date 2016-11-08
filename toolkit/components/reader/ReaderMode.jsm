@@ -205,13 +205,14 @@ this.ReaderMode = {
    * @resolves JS object representing the article, or null if no article is found.
    */
   parseDocument: Task.async(function* (doc) {
-    let uri = Services.io.newURI(doc.documentURI, null, null);
-    if (!this._shouldCheckUri(uri)) {
+    let documentURI = Services.io.newURI(doc.documentURI, null, null);
+    let baseURI = Services.io.newURI(doc.baseURI, null, null);
+    if (!this._shouldCheckUri(documentURI) || !this._shouldCheckUri(baseURI, true)) {
       this.log("Reader mode disabled for URI");
       return null;
     }
 
-    return yield this._readerParse(uri, doc);
+    return yield this._readerParse(baseURI, doc);
   }),
 
   /**
@@ -222,8 +223,13 @@ this.ReaderMode = {
    * @resolves JS object representing the article, or null if no article is found.
    */
   downloadAndParseDocument: Task.async(function* (url) {
-    let uri = Services.io.newURI(url, null, null);
     let doc = yield this._downloadDocument(url);
+    let uri = Services.io.newURI(doc.baseURI, null, null);
+    if (!this._shouldCheckUri(uri, true)) {
+      this.log("Reader mode disabled for URI");
+      return null;
+    }
+
     return yield this._readerParse(uri, doc);
   }),
 
@@ -376,7 +382,7 @@ this.ReaderMode = {
     "youtube.com",
   ],
 
-  _shouldCheckUri: function (uri) {
+  _shouldCheckUri: function (uri, isBaseUri = false) {
     if (!(uri.schemeIs("http") || uri.schemeIs("https"))) {
       this.log("Not parsing URI scheme: " + uri.scheme);
       return false;
@@ -390,11 +396,11 @@ this.ReaderMode = {
     }
     // Sadly, some high-profile pages have false positives, so bail early for those:
     let asciiHost = uri.asciiHost;
-    if (this._blockedHosts.some(blockedHost => asciiHost.endsWith(blockedHost))) {
+    if (!isBaseUri && this._blockedHosts.some(blockedHost => asciiHost.endsWith(blockedHost))) {
       return false;
     }
 
-    if (!uri.filePath || uri.filePath == "/") {
+    if (!isBaseUri && (!uri.filePath || uri.filePath == "/")) {
       this.log("Not parsing home page: " + uri.spec);
       return false;
     }
@@ -406,7 +412,7 @@ this.ReaderMode = {
    * Attempts to parse a document into an article. Heavy lifting happens
    * in readerWorker.js.
    *
-   * @param uri The article URI.
+   * @param uri The base URI of the article.
    * @param doc The document to parse.
    * @return {Promise}
    * @resolves JS object representing the article, or null if no article is found.

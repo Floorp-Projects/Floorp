@@ -174,15 +174,6 @@ MediaDecoder::ResourceCallback::SetInfinite(bool aInfinite)
 }
 
 void
-MediaDecoder::ResourceCallback::SetMediaSeekable(bool aMediaSeekable)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mDecoder) {
-    mDecoder->SetMediaSeekable(aMediaSeekable);
-  }
-}
-
-void
 MediaDecoder::ResourceCallback::NotifyNetworkError()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -421,8 +412,6 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , INIT_CANONICAL(mPlaybackBytesPerSecond, 0.0)
   , INIT_CANONICAL(mPlaybackRateReliable, true)
   , INIT_CANONICAL(mDecoderPosition, 0)
-  , INIT_CANONICAL(mMediaSeekable, true)
-  , INIT_CANONICAL(mMediaSeekableOnlyInBufferedRanges, false)
   , INIT_CANONICAL(mIsVisible, !aOwner->IsHidden())
   , mTelemetryReported(false)
 {
@@ -806,8 +795,8 @@ MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
               aInfo->mAudio.mChannels, aInfo->mAudio.mRate,
               aInfo->HasAudio(), aInfo->HasVideo());
 
-  SetMediaSeekable(aInfo->mMediaSeekable);
-  SetMediaSeekableOnlyInBufferedRanges(aInfo->mMediaSeekableOnlyInBufferedRanges);
+  mMediaSeekable = aInfo->mMediaSeekable;
+  mMediaSeekableOnlyInBufferedRanges = aInfo->mMediaSeekableOnlyInBufferedRanges;
   mInfo = aInfo.forget();
   ConstructMediaTracks();
 
@@ -1301,18 +1290,6 @@ MediaDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
   mEstimatedDuration = Some(TimeUnit::FromMicroseconds(aDuration));
 }
 
-void
-MediaDecoder::SetMediaSeekable(bool aMediaSeekable) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mMediaSeekable = aMediaSeekable;
-}
-
-void
-MediaDecoder::SetMediaSeekableOnlyInBufferedRanges(bool aMediaSeekableOnlyInBufferedRanges){
-  MOZ_ASSERT(NS_IsMainThread());
-  mMediaSeekableOnlyInBufferedRanges = aMediaSeekableOnlyInBufferedRanges;
-}
-
 bool
 MediaDecoder::IsTransportSeekable()
 {
@@ -1328,13 +1305,6 @@ MediaDecoder::IsMediaSeekable()
   return mMediaSeekable;
 }
 
-bool
-MediaDecoder::IsMediaSeekableOnlyInBufferedRanges()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return mMediaSeekableOnlyInBufferedRanges;
-}
-
 media::TimeIntervals
 MediaDecoder::GetSeekable()
 {
@@ -1348,7 +1318,7 @@ MediaDecoder::GetSeekable()
   // We can seek in buffered range if the media is seekable. Also, we can seek
   // in unbuffered ranges if the transport level is seekable (local file or the
   // server supports range requests, etc.) or in cue-less WebMs
-  if (IsMediaSeekableOnlyInBufferedRanges()) {
+  if (mMediaSeekableOnlyInBufferedRanges) {
     return GetBuffered();
   } else if (!IsMediaSeekable()) {
     return media::TimeIntervals();

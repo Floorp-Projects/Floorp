@@ -74,6 +74,8 @@ protected:
   virtual ~BasicLayerManager();
 
 public:
+  BasicLayerManager* AsBasicLayerManager() override { return this; }
+
   /**
    * Set the default target context that will be used when BeginTransaction
    * is called. This can only be called outside a transaction.

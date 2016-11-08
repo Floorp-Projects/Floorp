@@ -24,8 +24,8 @@ const { require } = BrowserLoader({
   window
 });
 
-const { createFactory, render, unmountComponentAtNode } =
-  require("devtools/client/shared/vendor/react");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
 
 const AboutDebuggingApp = createFactory(require("./components/aboutdebugging"));
 

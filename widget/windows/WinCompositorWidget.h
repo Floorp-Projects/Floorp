@@ -45,8 +45,8 @@ class WinCompositorWidget
 public:
   WinCompositorWidget(const CompositorWidgetInitData& aInitData);
 
-  bool PreRender(layers::LayerManagerComposite*) override;
-  void PostRender(layers::LayerManagerComposite*) override;
+  bool PreRender(WidgetRenderingContext*) override;
+  void PostRender(WidgetRenderingContext*) override;
   already_AddRefed<gfx::DrawTarget> StartRemoteDrawing() override;
   void EndRemoteDrawing() override;
   bool NeedsToDeferEndRemoteDrawing() override;
