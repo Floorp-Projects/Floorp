@@ -639,6 +639,12 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   font-weight: bold;
 }
 
+.bookmark-item > label {
+  /* ensure we use the direction of the bookmarks label instead of the
+   * browser locale */
+  unicode-bidi: plaintext;
+}
+
 toolbarbutton.bookmark-item {
   max-width: 13em;
 }
