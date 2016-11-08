@@ -526,28 +526,37 @@ Module::extractCode(JSContext* cx, MutableHandleValue vp)
     if (!segments)
         return false;
 
-    for (auto p = metadata_->codeRanges.begin(); p != metadata_->codeRanges.end(); p++) {
+    for (const CodeRange& p : metadata_->codeRanges) {
         RootedObject segment(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
-        value.setNumber((uint32_t)p->begin());
+        if (!segment)
+            return false;
+
+        value.setNumber((uint32_t)p.begin());
         if (!JS_DefineProperty(cx, segment, "begin", value, JSPROP_ENUMERATE))
             return false;
-        value.setNumber((uint32_t)p->end());
+
+        value.setNumber((uint32_t)p.end());
         if (!JS_DefineProperty(cx, segment, "end", value, JSPROP_ENUMERATE))
             return false;
-        value.setNumber((uint32_t)p->kind());
+
+        value.setNumber((uint32_t)p.kind());
         if (!JS_DefineProperty(cx, segment, "kind", value, JSPROP_ENUMERATE))
             return false;
-        if (p->isFunction()) {
-            value.setNumber((uint32_t)p->funcIndex());
+
+        if (p.isFunction()) {
+            value.setNumber((uint32_t)p.funcIndex());
             if (!JS_DefineProperty(cx, segment, "funcIndex", value, JSPROP_ENUMERATE))
                 return false;
-            value.setNumber((uint32_t)p->funcNonProfilingEntry());
+
+            value.setNumber((uint32_t)p.funcNonProfilingEntry());
             if (!JS_DefineProperty(cx, segment, "funcBodyBegin", value, JSPROP_ENUMERATE))
                 return false;
-            value.setNumber((uint32_t)p->funcProfilingEpilogue());
+
+            value.setNumber((uint32_t)p.funcProfilingEpilogue());
             if (!JS_DefineProperty(cx, segment, "funcBodyEnd", value, JSPROP_ENUMERATE))
                 return false;
         }
+
         if (!NewbornArrayPush(cx, segments, ObjectValue(*segment)))
             return false;
     }
