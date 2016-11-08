@@ -116,6 +116,22 @@ public:
   }
 
   /**
+   * Add key to the table if not already present, and return a reference to its
+   * value.  If key is not already in the table then the value is default
+   * constructed.
+   */
+  DataType& GetOrInsert(const KeyType& aKey)
+  {
+    EntryType* ent = this->GetEntry(aKey);
+    if (ent) {
+      return ent->mData;
+    }
+
+    ent = this->PutEntry(aKey);
+    return ent->mData;
+  }
+
+  /**
    * put a new value for the associated key
    * @param aKey the key to put
    * @param aData the new data
