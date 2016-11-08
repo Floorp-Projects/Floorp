@@ -4486,6 +4486,21 @@ nsBlockFrame::PlaceLine(BlockReflowInput& aState,
                oldFloatAvailableSpace.BStart(wm), "yikes");
   // Restore the BSize to the position of the next band.
   aFloatAvailableSpace.BSize(wm) = oldFloatAvailableSpace.BSize(wm);
+
+  // Enforce both IStart() and IEnd() never move outwards to prevent
+  // infinite grow-shrink loops.
+  const nscoord iStartDiff =
+    aFloatAvailableSpace.IStart(wm) - oldFloatAvailableSpace.IStart(wm);
+  const nscoord iEndDiff =
+    aFloatAvailableSpace.IEnd(wm) - oldFloatAvailableSpace.IEnd(wm);
+  if (iStartDiff < 0) {
+    aFloatAvailableSpace.IStart(wm) -= iStartDiff;
+    aFloatAvailableSpace.ISize(wm) += iStartDiff;
+  }
+  if (iEndDiff > 0) {
+    aFloatAvailableSpace.ISize(wm) -= iEndDiff;
+  }
+
   // If the available space between the floats is smaller now that we
   // know the BSize, return false (and cause another pass with
   // LineReflowStatus::RedoMoreFloats).  We ensure aAvailableSpaceBSize
