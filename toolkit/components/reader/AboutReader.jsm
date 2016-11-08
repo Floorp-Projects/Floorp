@@ -796,6 +796,8 @@ AboutReader.prototype = {
     this._requestFavicon();
     this._doc.body.classList.add("loaded");
 
+    this._goToReference(articleUri.ref);
+
     Services.obs.notifyObservers(this._win, "AboutReader:Ready", "");
 
     this._doc.dispatchEvent(
@@ -981,6 +983,15 @@ AboutReader.prototype = {
     // Trigger BackPressListener cleanup in Android.
     if (openDropdowns.length) {
       this._mm.sendAsyncMessage("Reader:DropdownClosed", this.viewId);
+    }
+  },
+
+  /*
+   * Scroll reader view to a reference
+   */
+  _goToReference(ref) {
+    if (ref) {
+      this._win.location.hash = ref;
     }
   }
 };

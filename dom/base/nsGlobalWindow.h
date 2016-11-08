@@ -103,6 +103,7 @@ class nsWindowSizes;
 
 namespace mozilla {
 class DOMEventTargetHelper;
+class ThrottledEventQueue;
 namespace dom {
 class BarProp;
 struct ChannelPixelLayout;
@@ -1157,6 +1158,8 @@ public:
                       nsPIDOMWindowOuter** _retval) override;
   nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) override;
 
+  mozilla::ThrottledEventQueue* GetThrottledEventQueue() override;
+
   already_AddRefed<nsPIDOMWindowOuter>
     GetContentInternal(mozilla::ErrorResult& aError, bool aUnprivilegedCaller);
   void GetContentOuter(JSContext* aCx,
@@ -1495,7 +1498,6 @@ public:
   // Insert aTimeout into the list, before all timeouts that would
   // fire after it, but no earlier than mTimeoutInsertionPoint, if any.
   void InsertTimeoutIntoList(mozilla::dom::Timeout* aTimeout);
-  static void TimerCallback(nsITimer *aTimer, void *aClosure);
   uint32_t GetTimeoutId(mozilla::dom::Timeout::Reason aReason);
 
   // Helper Functions
@@ -1705,6 +1707,12 @@ private:
   friend class nsPIDOMWindow<mozIDOMWindowProxy>;
   friend class nsPIDOMWindow<mozIDOMWindow>;
   friend class nsPIDOMWindow<nsISupports>;
+
+  // Apply back pressure to the window if the TabGroup ThrottledEventQueue
+  // exists and has too many runnables waiting to run.  For example, suspend
+  // timers until we have a chance to catch up, etc.
+  void
+  MaybeApplyBackPressure();
 
   mozilla::dom::TabGroup* TabGroupInner();
   mozilla::dom::TabGroup* TabGroupOuter();

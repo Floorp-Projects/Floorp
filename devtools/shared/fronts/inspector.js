@@ -5,6 +5,7 @@
 
 require("devtools/shared/fronts/styles");
 require("devtools/shared/fronts/highlighters");
+require("devtools/shared/fronts/layout");
 const { SimpleStringFront } = require("devtools/shared/fronts/string");
 const {
   Front,

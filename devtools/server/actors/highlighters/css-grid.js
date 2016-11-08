@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
+const Services = require("Services");
 const { extend } = require("sdk/core/heritage");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
@@ -17,7 +17,7 @@ const {
   getCurrentZoom,
   setIgnoreLayoutChanges
 } = require("devtools/shared/layout/utils");
-const Services = require("Services");
+const { stringifyGridFragments } = require("devtools/server/actors/utils/css-grid-utils");
 
 const CSS_GRID_ENABLED_PREF = "layout.css.grid.enabled";
 const ROWS = "rows";
@@ -718,42 +718,5 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   },
 
 });
+
 exports.CssGridHighlighter = CssGridHighlighter;
-
-/**
- * Stringify CSS Grid data as returned by node.getGridFragments.
- * This is useful to compare grid state at each update and redraw the highlighter if
- * needed.
- *
- * @param  {Object} Grid Fragments
- * @return {String} representation of the CSS grid fragment data.
- */
-function stringifyGridFragments(fragments = []) {
-  if (fragments[0] && Cu.isDeadWrapper(fragments[0])) {
-    return {};
-  }
-
-  return JSON.stringify(fragments.map(getStringifiableFragment));
-}
-
-function getStringifiableFragment(fragment) {
-  return {
-    cols: getStringifiableDimension(fragment.cols),
-    rows: getStringifiableDimension(fragment.rows)
-  };
-}
-
-function getStringifiableDimension(dimension) {
-  return {
-    lines: [...dimension.lines].map(getStringifiableLine),
-    tracks: [...dimension.tracks].map(getStringifiableTrack),
-  };
-}
-
-function getStringifiableLine({ breadth, number, start, names }) {
-  return { breadth, number, start, names };
-}
-
-function getStringifiableTrack({ breadth, start, state, type }) {
-  return { breadth, start, state, type };
-}

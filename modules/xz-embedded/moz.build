@@ -18,12 +18,14 @@ UNIFIED_SOURCES += [
 
 ALLOW_COMPILER_WARNINGS = True
 
-if CONFIG['TARGET_CPU'] == 'arm':
+if CONFIG['TARGET_CPU'].startswith('arm'):
+    # Accept arm, armv7, etc.
     if CONFIG['MOZ_THUMB2']:
         DEFINES['XZ_DEC_ARMTHUMB'] = 1
     else:
         DEFINES['XZ_DEC_ARM'] = 1
-elif CONFIG['TARGET_CPU'] == 'x86':
+elif '86' in CONFIG['TARGET_CPU']:
+    # Accept x86, x86_64, i386, i686, etc.
     DEFINES['XZ_DEC_X86'] = 1
 
 DEFINES['XZ_USE_CRC64'] = 1

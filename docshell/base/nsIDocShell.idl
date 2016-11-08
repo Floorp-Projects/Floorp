@@ -132,35 +132,25 @@ interface nsIDocShell : nsIDocShellTreeItem
    *                               ignored.
    * @param aReferrer            - Referring URI
    * @param aReferrerPolicy      - Referrer policy
-   * @param aTriggeringPrincipal - Principal that initiated that load. If passing
-   *                               null for this argument, then internally a
-   *                               principal is created from aReferrer. If
-   *                               aReferrer is also null, then the
-   *                               triggeringPrincipal defaults to the
-   *                               SystemPrincipal. Please note that this is the
-   *                               principal that is used for security checks. If
-   *                               the argument aURI is provided by the web, then
-   *                               please pass an explicit triggeringPrincipal to
-   *                               avoid the fallback to SystemPrincipal and
-   *                               hence a potential security risk.
-   *                               If aTriggeringPrincipal is null then either
-   *                               aPrincipalToInherit is null or it's
-   *                               a NullPrincipal.
-   * @param aPrincipalToInherit  - Principal to be inherited for that load. If
-   *                               passing null for this argument, then internally
-   *                               the triggeringPrincipal is also used for the
-   *                               principalToInherit. There are cases where those
-   *                               two principals need to be different though.
-   *                               E.g. the system might initiate a load for
-   *                               'about:blank', hence SystemPrincipal is passed
-   *                               for aTriggeringPrincipal. But the principal to
-   *                               be inherited for that load should be a
-   *                               NullPrincipal and not the SystemPrincipal.
-   *                               In that case, please pass a non null
-   *                               principalToInherit.
-   *                               If aPrincipalToInherit is null then either
-   *                               aTriggeringPrincipal is null or
-   *                               INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL is set.
+   * @param aTriggeringPrincipal - A non-null principal that initiated that load.
+   *                               Please note that this is the principal that is
+   *                               used for security checks. If the argument aURI
+   *                               is provided by the web, then please do not pass
+   *                               a SystemPrincipal as the triggeringPrincipal.
+   * @param aPrincipalToInherit  - Principal to be inherited for that load. If this
+   *                               argument is null then principalToInherit is
+   *                               computed as follows:
+   *                               a) If INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL, and
+   *                                  aLoadType is not LOAD_NORMAL_EXTERNAL, and the
+   *                                  URI would normally inherit a principal, then
+   *                                  principalToInherit is set to the current
+   *                                  document's principal, or parent document if
+   *                                  there is not a current document.
+   *                               b) If principalToInherit is still null (e.g. if
+   *                                  some of the conditions of (a) were not satisfied),
+   *                                  then no inheritance of any sort will happen: the
+   *                                  load will just get a principal based on the URI
+   *                                  being loaded.
    * @param aFlags               - Any of the load flags defined within above.
    * @param aStopActiveDoc       - Flag indicating whether loading the current
    *                               document should be stopped.
