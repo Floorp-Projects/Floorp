@@ -169,15 +169,40 @@ class JitTest:
 
     COOKIE = '|jit-test|'
     CacheDir = JS_CACHE_DIR
+    Directives = {}
+
+    @classmethod
+    def find_directives(cls, file_name):
+        meta = ''
+        line = open(file_name).readline()
+        i = line.find(cls.COOKIE)
+        if i != -1:
+            meta = ';' + line[i + len(cls.COOKIE):].strip('\n')
+        return meta
 
     @classmethod
     def from_file(cls, path, options):
         test = cls(path)
 
-        line = open(path).readline()
-        i = line.find(cls.COOKIE)
-        if i != -1:
-            meta = line[i + len(cls.COOKIE):].strip('\n')
+        # If directives.txt exists in the test's directory then it may
+        # contain metainformation that will be catenated with
+        # whatever's in the test file.  The form of the directive in
+        # the directive file is the same as in the test file.  Only
+        # the first line is considered, just as for the test file.
+
+        dir_meta = ''
+        dir_name = os.path.dirname(path)
+        if dir_name in cls.Directives:
+            dir_meta = cls.Directives[dir_name]
+        else:
+            meta_file_name = os.path.join(dir_name, "directives.txt")
+            if os.path.exists(meta_file_name):
+                dir_meta = cls.find_directives(meta_file_name)
+            cls.Directives[dir_name] = dir_meta
+
+        meta = cls.find_directives(path)
+        if meta != '' or dir_meta != '':
+            meta = meta + dir_meta
             parts = meta.split(';')
             for part in parts:
                 part = part.strip()
