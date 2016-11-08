@@ -552,9 +552,6 @@ function _execute_test() {
     // has already been logged so there is no need to log it again. It's
     // possible that this will mask an NS_ERROR_ABORT that happens after a
     // do_check failure though.
-    if (coverageCollector != null) {
-      coverageCollector.recordTestCoverage(_TEST_FILE[0]);
-    }
 
     if (!_quit || e != Components.results.NS_ERROR_ABORT) {
       let extra = {};
@@ -572,10 +569,10 @@ function _execute_test() {
       }
       _testLogger.error(message, extra);
     }
-  }
-
-  if (coverageCollector != null) {
-    coverageCollector.finalize();
+  } finally {
+    if (coverageCollector != null) {
+      coverageCollector.finalize();
+    }
   }
 
   // Execute all of our cleanup functions.
