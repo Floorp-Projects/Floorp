@@ -1,4 +1,3 @@
-// |jit-test| test-also-noasmjs
 if (!this.Atomics)
     quit();
 
