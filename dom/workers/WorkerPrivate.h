@@ -60,7 +60,7 @@ struct RuntimeStats;
 } // namespace JS
 
 namespace mozilla {
-class TaskQueue;
+class ThrottledEventQueue;
 namespace dom {
 class Function;
 class MessagePort;
@@ -942,7 +942,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   nsTObserverArray<WorkerHolder*> mHolders;
   nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
   uint32_t mDebuggerEventLoopLevel;
-  RefPtr<TaskQueue> mMainThreadTaskQueue;
+  RefPtr<ThrottledEventQueue> mMainThreadThrottledEventQueue;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 
   struct SyncLoopInfo
@@ -1369,7 +1369,7 @@ public:
 
   // Get the event target to use when dispatching to the main thread
   // from this Worker thread.  This may be the main thread itself or
-  // a TaskQueue throttling runnables to the main thread.
+  // a ThrottledEventQueue to the main thread.
   nsIEventTarget*
   MainThreadEventTarget();
 

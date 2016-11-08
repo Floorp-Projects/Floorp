@@ -13,6 +13,7 @@
 #include "nsIRunnable.h"
 #include "nsCOMPtr.h"
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/UniquePtr.h"
 
 class nsThreadPool;
 
@@ -22,7 +23,13 @@ class nsEventQueue
 public:
   typedef mozilla::MutexAutoLock MutexAutoLock;
 
-  explicit nsEventQueue(mozilla::Mutex& aLock);
+  enum EventQueueType
+  {
+    eNormalQueue,
+    eSharedCondVarQueue
+  };
+
+  nsEventQueue(mozilla::CondVar& aCondVar, EventQueueType aType);
   ~nsEventQueue();
 
   // This method adds a new event to the pending event queue.  The queue holds
@@ -53,7 +60,7 @@ public:
     return GetEvent(false, aRunnable, aProofOfLock);
   }
 
-  size_t Count(MutexAutoLock&);
+  size_t Count(MutexAutoLock&) const;
 
 private:
   bool IsEmpty()
@@ -92,7 +99,9 @@ private:
 
   uint16_t mOffsetHead;  // offset into mHead where next item is removed
   uint16_t mOffsetTail;  // offset into mTail where next item is added
-  mozilla::CondVar mEventsAvailable;
+  mozilla::CondVar& mEventsAvailable;
+
+  EventQueueType mType;
 
   // These methods are made available to nsThreadPool as a hack, since
   // nsThreadPool needs to have its threads sleep for fixed amounts of
@@ -101,10 +110,12 @@ private:
   friend class nsThreadPool;
   void Wait(PRIntervalTime aInterval)
   {
+    MOZ_ASSERT(mType == eNormalQueue);
     mEventsAvailable.Wait(aInterval);
   }
   void NotifyAll()
   {
+    MOZ_ASSERT(mType == eNormalQueue);
     mEventsAvailable.NotifyAll();
   }
 };

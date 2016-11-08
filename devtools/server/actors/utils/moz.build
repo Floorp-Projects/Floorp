@@ -8,6 +8,7 @@ DevToolsModules(
     'actor-registry-utils.js',
     'audionodes.json',
     'automation-timeline.js',
+    'css-grid-utils.js',
     'make-debugger.js',
     'map-uri-to-addon-id.js',
     'stack.js',

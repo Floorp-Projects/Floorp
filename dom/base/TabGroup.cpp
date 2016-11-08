@@ -1,17 +1,43 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "mozilla/dom/TabGroup.h"
+
 #include "mozilla/dom/DocGroup.h"
-#include "mozilla/Telemetry.h"
-#include "nsIURI.h"
-#include "nsIEffectiveTLDService.h"
-#include "mozilla/StaticPtr.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/ThrottledEventQueue.h"
 #include "nsIDocShell.h"
+#include "nsIEffectiveTLDService.h"
+#include "nsIURI.h"
 
 namespace mozilla {
 namespace dom {
 
-TabGroup::TabGroup()
-{}
+static StaticRefPtr<TabGroup> sChromeTabGroup;
+
+TabGroup::TabGroup(bool aIsChrome)
+{
+  // Do not throttle runnables from chrome windows.  In theory we should
+  // not have abuse issues from these windows and many browser chrome
+  // tests have races that fail if we do throttle chrome runnables.
+  if (aIsChrome) {
+    MOZ_ASSERT(!sChromeTabGroup);
+    return;
+  }
+
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+  MOZ_DIAGNOSTIC_ASSERT(mainThread);
+
+  // This may return nullptr during xpcom shutdown.  This is ok as we
+  // do not guarantee a ThrottledEventQueue will be present.
+  mThrottledEventQueue = ThrottledEventQueue::Create(mainThread);
+}
 
 TabGroup::~TabGroup()
 {
@@ -19,13 +45,11 @@ TabGroup::~TabGroup()
   MOZ_ASSERT(mWindows.IsEmpty());
 }
 
-static StaticRefPtr<TabGroup> sChromeTabGroup;
-
 TabGroup*
 TabGroup::GetChromeTabGroup()
 {
   if (!sChromeTabGroup) {
-    sChromeTabGroup = new TabGroup();
+    sChromeTabGroup = new TabGroup(true /* chrome tab group */);
     ClearOnShutdown(&sChromeTabGroup);
   }
   return sChromeTabGroup;
@@ -128,6 +152,12 @@ TabGroup::GetTopLevelWindows()
   }
 
   return array;
+}
+
+ThrottledEventQueue*
+TabGroup::GetThrottledEventQueue() const
+{
+  return mThrottledEventQueue;
 }
 
 NS_IMPL_ISUPPORTS(TabGroup, nsISupports)

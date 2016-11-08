@@ -12432,6 +12432,20 @@ nsDocument::NotifyIntersectionObservers()
   }
 }
 
+static bool
+NotifyLayerManagerRecreatedCallback(nsIDocument* aDocument, void* aData)
+{
+  aDocument->NotifyLayerManagerRecreated();
+  return true;
+}
+
+void
+nsDocument::NotifyLayerManagerRecreated()
+{
+  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
+  EnumerateSubDocuments(NotifyLayerManagerRecreatedCallback, nullptr);
+}
+
 XPathEvaluator*
 nsIDocument::XPathEvaluator()
 {

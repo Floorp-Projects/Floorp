@@ -2130,6 +2130,8 @@ PerformPromiseThen(JSContext* cx, Handle<PromiseObject*> promise, HandleValue on
                                                                   onFulfilled, onRejected,
                                                                   resolve, reject,
                                                                   incumbentGlobal));
+    if (!reaction)
+        return false;
 
     JS::PromiseState state = promise->state();
     int32_t flags = promise->getFixedSlot(PromiseSlot_Flags).toInt32();

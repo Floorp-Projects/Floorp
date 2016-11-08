@@ -226,9 +226,14 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
   rv = PrincipalToPrincipalInfo(aLoadInfo->TriggeringPrincipal(),
                                 &triggeringPrincipalInfo);
 
-  PrincipalInfo principalToInheritInfo;
-  rv = PrincipalToPrincipalInfo(aLoadInfo->PrincipalToInherit(),
-                                &principalToInheritInfo);
+  OptionalPrincipalInfo principalToInheritInfo = mozilla::void_t();
+  if (aLoadInfo->PrincipalToInherit()) {
+    PrincipalInfo principalToInheritInfoTemp;
+    rv = PrincipalToPrincipalInfo(aLoadInfo->PrincipalToInherit(),
+                                  &principalToInheritInfoTemp);
+    NS_ENSURE_SUCCESS(rv, rv);
+    principalToInheritInfo = principalToInheritInfoTemp;
+  }
 
   nsTArray<PrincipalInfo> redirectChainIncludingInternalRedirects;
   for (const nsCOMPtr<nsIPrincipal>& principal : aLoadInfo->RedirectChainIncludingInternalRedirects()) {
@@ -297,9 +302,11 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
     PrincipalInfoToPrincipal(loadInfoArgs.triggeringPrincipalInfo(), &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrincipal> principalToInherit =
-  PrincipalInfoToPrincipal(loadInfoArgs.principalToInheritInfo(), &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPrincipal> principalToInherit;
+  if (loadInfoArgs.principalToInheritInfo().type() != OptionalPrincipalInfo::Tvoid_t) {
+    principalToInherit = PrincipalInfoToPrincipal(loadInfoArgs.principalToInheritInfo(), &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   nsTArray<nsCOMPtr<nsIPrincipal>> redirectChainIncludingInternalRedirects;
   for (const PrincipalInfo& principalInfo : loadInfoArgs.redirectChainIncludingInternalRedirects()) {

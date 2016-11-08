@@ -13,6 +13,7 @@ const {
 const { nodeSpec } = require("devtools/shared/specs/node");
 require("devtools/shared/specs/styles");
 require("devtools/shared/specs/highlighters");
+require("devtools/shared/specs/layout");
 
 exports.nodeSpec = nodeSpec;
 
@@ -365,6 +366,12 @@ const walkerSpec = generateActorSpec({
       },
       response: {
         node: RetVal("nullable:disconnectedNode")
+      }
+    },
+    getLayoutInspector: {
+      request: {},
+      response: {
+        actor: RetVal("layout")
       }
     }
   }

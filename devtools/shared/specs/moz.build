@@ -25,6 +25,7 @@ DevToolsModules(
     'heap-snapshot-file.js',
     'highlighters.js',
     'inspector.js',
+    'layout.js',
     'memory.js',
     'node.js',
     'performance-entries.js',

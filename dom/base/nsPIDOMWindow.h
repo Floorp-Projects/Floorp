@@ -40,6 +40,7 @@ class nsXBLPrototypeHandler;
 typedef uint32_t SuspendTypes;
 
 namespace mozilla {
+class ThrottledEventQueue;
 namespace dom {
 class AudioContext;
 class DocGroup;
@@ -580,6 +581,8 @@ public:
   mozilla::dom::TabGroup* TabGroup();
 
   mozilla::dom::DocGroup* GetDocGroup();
+
+  virtual mozilla::ThrottledEventQueue* GetThrottledEventQueue() = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
