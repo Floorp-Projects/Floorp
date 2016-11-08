@@ -361,6 +361,11 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv[0]);
   MOZ_ASSERT(aChildData);
 
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+    // This has to happen while we're still single-threaded.
+    mozilla::SandboxEarlyInit(XRE_GetProcessType());
+#endif
+
 #ifdef MOZ_JPROF
   // Call the code to install our handler
   setupProfilingStuff();
