@@ -3,7 +3,7 @@
 "use strict";
 
 add_task(function* test_sendMessage_error() {
-  function background() {
+  async function background() {
     let circ = {};
     circ.circ = circ;
     let testCases = [
@@ -35,21 +35,18 @@ add_task(function* test_sendMessage_error() {
       testCases.push([args, expectedError]);
     }
 
-    function next() {
-      if (!testCases.length) {
-        browser.test.notifyPass("sendMessage parameter validation");
-        return;
-      }
-      let [args, expectedError] = testCases.shift();
+    for (let [args, expectedError] of testCases) {
       let description = `runtime.sendMessage(${args.map(String).join(", ")})`;
-      return browser.runtime.sendMessage(...args)
+
+      await browser.runtime.sendMessage(...args)
         .then(() => {
           browser.test.fail(`Unexpectedly got no error for ${description}`);
         }, err => {
           browser.test.assertEq(expectedError, err.message, `expected error message for ${description}`);
-        }).then(next);
+        });
     }
-    next();
+
+    browser.test.notifyPass("sendMessage parameter validation");
   }
   let extensionData = {
     background,

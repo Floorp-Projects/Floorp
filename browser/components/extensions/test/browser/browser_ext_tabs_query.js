@@ -139,11 +139,11 @@ add_task(function* () {
     },
 
     background: function() {
-      browser.test.onMessage.addListener((msg) => {
-        browser.tabs.query({active: true}).then(tabs => {
-          browser.test.assertEq(tabs.length, 1, "should have one tab");
-          browser.test.sendMessage("dims", {width: tabs[0].width, height: tabs[0].height});
-        });
+      browser.test.onMessage.addListener(async msg => {
+        let tabs = await browser.tabs.query({active: true});
+
+        browser.test.assertEq(tabs.length, 1, "should have one tab");
+        browser.test.sendMessage("dims", {width: tabs[0].width, height: tabs[0].height});
       });
       browser.test.sendMessage("ready");
     },
@@ -182,13 +182,14 @@ add_task(function* testQueryPermissions() {
       "permissions": [],
     },
 
-    background: function(x) {
-      browser.tabs.query({currentWindow: true, active: true}).then((tabs) => {
+    async background() {
+      try {
+        let tabs = await browser.tabs.query({currentWindow: true, active: true});
         browser.test.assertEq(tabs.length, 1, "Expect query to return tabs");
         browser.test.notifyPass("queryPermissions");
-      }).catch((e) => {
+      } catch (e) {
         browser.test.notifyFail("queryPermissions");
-      });
+      }
     },
   });
 
@@ -205,7 +206,7 @@ add_task(function* testQueryWithURLPermissions() {
       "permissions": [],
     },
 
-    background: function(x) {
+    background: function() {
       browser.tabs.query({"url": "http://www.bbc.com/"}).then(() => {
         browser.test.notifyFail("queryWithURLPermissions");
       }).catch((e) => {

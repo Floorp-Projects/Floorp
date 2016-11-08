@@ -31,13 +31,13 @@ add_task(function* test_legacy_extension_context() {
 
     let port;
 
-    browser.test.onMessage.addListener(msg => {
+    browser.test.onMessage.addListener(async msg => {
       if (msg == "do-send-message") {
-        browser.runtime.sendMessage("webextension -> legacy_extension message").then(reply => {
-          browser.test.assertEq("legacy_extension -> webextension reply", reply,
-                                "Got the expected message from the LegacyExtensionContext");
-          browser.test.sendMessage("got-reply-message");
-        });
+        let reply = await browser.runtime.sendMessage("webextension -> legacy_extension message");
+
+        browser.test.assertEq("legacy_extension -> webextension reply", reply,
+                              "Got the expected message from the LegacyExtensionContext");
+        browser.test.sendMessage("got-reply-message");
       } else if (msg == "do-connect") {
         port = browser.runtime.connect();
 

@@ -183,17 +183,14 @@ add_task(function* test_get_accept_languages() {
       browser.test.sendMessage("ready");
     });
 
-    browser.test.onMessage.addListener(([msg, expected]) => {
-      Promise.all([
-        new Promise(
-          resolve => browser.tabs.sendMessage(tabId, "get-results", resolve)),
-        browser.i18n.getAcceptLanguages(),
-      ]).then(([contentResults, backgroundResults]) => {
-        checkResults("contentScript", contentResults, expected);
-        checkResults("background", backgroundResults, expected);
+    browser.test.onMessage.addListener(async ([msg, expected]) => {
+      let contentResults = await browser.tabs.sendMessage(tabId, "get-results");
+      let backgroundResults = await browser.i18n.getAcceptLanguages();
 
-        browser.test.sendMessage("done");
-      });
+      checkResults("contentScript", contentResults, expected);
+      checkResults("background", backgroundResults, expected);
+
+      browser.test.sendMessage("done");
     });
   }
 
@@ -357,17 +354,14 @@ add_task(function* test_detect_language() {
       browser.test.sendMessage("ready");
     });
 
-    browser.test.onMessage.addListener(([msg, expected]) => {
-      Promise.all([
-        browser.i18n.detectLanguage(msg),
-        new Promise(
-          resolve => browser.tabs.sendMessage(tabId, msg, resolve)),
-      ]).then(([backgroundResults, contentResults]) => {
-        checkResult("background", backgroundResults, expected);
-        checkResult("contentScript", contentResults, expected);
+    browser.test.onMessage.addListener(async ([msg, expected]) => {
+      let backgroundResults = await browser.i18n.detectLanguage(msg);
+      let contentResults = await browser.tabs.sendMessage(tabId, msg);
 
-        browser.test.sendMessage("done");
-      });
+      checkResult("background", backgroundResults, expected);
+      checkResult("contentScript", contentResults, expected);
+
+      browser.test.sendMessage("done");
     });
   }
 

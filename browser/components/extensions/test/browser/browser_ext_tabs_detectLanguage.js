@@ -8,38 +8,34 @@ add_task(function* testDetectLanguage() {
       "permissions": ["tabs"],
     },
 
-    background() {
+    background: async function() {
       const BASE_PATH = "browser/browser/components/extensions/test/browser";
 
       function loadTab(url) {
         return browser.tabs.create({url});
       }
 
-      loadTab(`http://example.co.jp/${BASE_PATH}/file_language_ja.html`).then(tab => {
-        return browser.tabs.detectLanguage(tab.id).then(lang => {
-          browser.test.assertEq("ja", lang, "Japanese document should be detected as Japanese");
-          return browser.tabs.remove(tab.id);
-        });
-      }).then(() => {
-        return loadTab(`http://example.co.jp/${BASE_PATH}/file_language_fr_en.html`);
-      }).then(tab => {
-        return browser.tabs.detectLanguage(tab.id).then(lang => {
-          browser.test.assertEq("fr", lang, "French/English document should be detected as primarily French");
-          return browser.tabs.remove(tab.id);
-        });
-      }).then(() => {
-        return loadTab(`http://example.co.jp/${BASE_PATH}/file_language_tlh.html`);
-      }).then(tab => {
-        return browser.tabs.detectLanguage(tab.id).then(lang => {
-          browser.test.assertEq("und", lang, "Klingon document should not be detected, should return 'und'");
-          return browser.tabs.remove(tab.id);
-        });
-      }).then(() => {
+      try {
+        let tab = await loadTab(`http://example.co.jp/${BASE_PATH}/file_language_ja.html`);
+        let lang = await browser.tabs.detectLanguage(tab.id);
+        browser.test.assertEq("ja", lang, "Japanese document should be detected as Japanese");
+        await browser.tabs.remove(tab.id);
+
+        tab = await loadTab(`http://example.co.jp/${BASE_PATH}/file_language_fr_en.html`);
+        lang = await browser.tabs.detectLanguage(tab.id);
+        browser.test.assertEq("fr", lang, "French/English document should be detected as primarily French");
+        await browser.tabs.remove(tab.id);
+
+        tab = await loadTab(`http://example.co.jp/${BASE_PATH}/file_language_tlh.html`);
+        lang = await browser.tabs.detectLanguage(tab.id);
+        browser.test.assertEq("und", lang, "Klingon document should not be detected, should return 'und'");
+        await browser.tabs.remove(tab.id);
+
         browser.test.notifyPass("detectLanguage");
-      }).catch(e => {
+      } catch (e) {
         browser.test.fail(`Error: ${e} :: ${e.stack}`);
         browser.test.notifyFail("detectLanguage");
-      });
+      }
     },
   });
 

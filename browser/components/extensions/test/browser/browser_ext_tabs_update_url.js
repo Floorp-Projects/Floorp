@@ -24,31 +24,21 @@ function* testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
     background: function() {
       browser.test.sendMessage("ready", browser.runtime.getURL("tab.html"));
 
-      browser.test.onMessage.addListener((msg, tabsUpdateURL, isErrorExpected) => {
-        let onTabsUpdated = (tab) => {
-          if (isErrorExpected) {
-            browser.test.fail(`tabs.update with URL ${tabsUpdateURL} should be rejected`);
-          } else {
-            browser.test.assertTrue(tab, "on success the tab should be defined");
-          }
-        };
+      browser.test.onMessage.addListener(async (msg, tabsUpdateURL, isErrorExpected) => {
+        let tabs = await browser.tabs.query({lastFocusedWindow: true});
 
-        let onTabsUpdateError = (error) => {
-          if (!isErrorExpected) {
-            browser.test.fails(`tabs.update with URL ${tabsUpdateURL} should not be rejected`);
-          } else {
-            browser.test.assertTrue(/^Illegal URL/.test(error.message),
-                                    "tabs.update should be rejected with the expected error message");
-          }
-        };
+        try {
+          let tab = await browser.tabs.update(tabs[1].id, {url: tabsUpdateURL});
 
-        let onTabsUpdateDone = () => browser.test.sendMessage("done");
+          browser.test.assertFalse(isErrorExpected, `tabs.update with URL ${tabsUpdateURL} should be rejected`);
+          browser.test.assertTrue(tab, "on success the tab should be defined");
+        } catch (error) {
+          browser.test.assertTrue(isErrorExpected, `tabs.update with URL ${tabsUpdateURL} should not be rejected`);
+          browser.test.assertTrue(/^Illegal URL/.test(error.message),
+                                  "tabs.update should be rejected with the expected error message");
+        }
 
-        browser.tabs.query({lastFocusedWindow: true}, (tabs) => {
-          browser.tabs.update(tabs[1].id, {url: tabsUpdateURL})
-                      .then(onTabsUpdated, onTabsUpdateError)
-                      .then(onTabsUpdateDone);
-        });
+        browser.test.sendMessage("done");
       });
     },
   });
