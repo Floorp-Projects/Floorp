@@ -90,7 +90,7 @@ add_task(function* () {
             },
           ];
 
-          async function nextTest() {
+          function nextTest() {
             if (!tests.length) {
               browser.test.notifyPass("tabs.create");
               return;
@@ -119,29 +119,33 @@ add_task(function* () {
               browser.tabs.onCreated.addListener(onCreated);
             });
 
-            let [tab] = await Promise.all([
+            let tabId;
+            Promise.all([
               browser.tabs.create(test.create),
               createdPromise,
-            ]);
-            let tabId = tab.id;
+            ]).then(([tab]) => {
+              tabId = tab.id;
 
-            for (let key of Object.keys(expected)) {
-              if (key === "url") {
-                // FIXME: This doesn't get updated until later in the load cycle.
-                continue;
+              for (let key of Object.keys(expected)) {
+                if (key === "url") {
+                  // FIXME: This doesn't get updated until later in the load cycle.
+                  continue;
+                }
+
+                browser.test.assertEq(expected[key], tab[key], `Expected value for tab.${key}`);
               }
 
-              browser.test.assertEq(expected[key], tab[key], `Expected value for tab.${key}`);
-            }
+              return updatedPromise;
+            }).then(updated => {
+              browser.test.assertEq(tabId, updated.tabId, `Expected value for tab.id`);
+              browser.test.assertEq(expected.url, updated.url, `Expected value for tab.url`);
 
-            let updated = await updatedPromise;
-            browser.test.assertEq(tabId, updated.tabId, `Expected value for tab.id`);
-            browser.test.assertEq(expected.url, updated.url, `Expected value for tab.url`);
-
-            await browser.tabs.remove(tabId);
-            await browser.tabs.update(activeTab, {active: true});
-
-            nextTest();
+              return browser.tabs.remove(tabId);
+            }).then(() => {
+              return browser.tabs.update(activeTab, {active: true});
+            }).then(() => {
+              nextTest();
+            });
           }
 
           nextTest();

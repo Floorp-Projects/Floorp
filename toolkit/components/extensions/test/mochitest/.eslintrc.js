@@ -20,8 +20,4 @@ module.exports = { // eslint-disable-line no-undef
     "webrequest_test": false,
     "XPCOMUtils": true,
   },
-
-  "rules": {
-    "no-shadow": 0,
-  },
 };

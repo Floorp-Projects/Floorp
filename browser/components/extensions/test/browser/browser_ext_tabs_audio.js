@@ -8,7 +8,17 @@ add_task(function* () {
 
   gBrowser.selectedTab = tab1;
 
-  async function background() {
+  function background() {
+    // Wrap API methods in promise-based variants.
+    let promiseTabs = {};
+    Object.keys(browser.tabs).forEach(method => {
+      promiseTabs[method] = (...args) => {
+        return new Promise(resolve => {
+          browser.tabs[method](...args, resolve);
+        });
+      };
+    });
+
     function promiseUpdated(tabId, attr) {
       return new Promise(resolve => {
         let onUpdated = (tabId_, changeInfo, tab) => {
@@ -37,8 +47,9 @@ add_task(function* () {
     }
 
 
-    try {
-      let tabs = await browser.tabs.query({lastFocusedWindow: true});
+    let windowId;
+    let tabIds;
+    promiseTabs.query({lastFocusedWindow: true}).then(tabs => {
       browser.test.assertEq(tabs.length, 3, "We have three tabs");
 
       for (let tab of tabs) {
@@ -49,15 +60,17 @@ add_task(function* () {
         browser.test.assertEq(false, tab.audible, "Tab is not audible");
       }
 
-      let windowId = tabs[0].windowId;
-      let tabIds = [tabs[1].id, tabs[2].id];
+      windowId = tabs[0].windowId;
+      tabIds = [tabs[1].id, tabs[2].id];
 
       browser.test.log("Test initial queries for muted and audible return no tabs");
-      let silent = await browser.tabs.query({windowId, audible: false});
-      let audible = await browser.tabs.query({windowId, audible: true});
-      let muted = await browser.tabs.query({windowId, muted: true});
-      let nonMuted = await browser.tabs.query({windowId, muted: false});
-
+      return Promise.all([
+        promiseTabs.query({windowId, audible: false}),
+        promiseTabs.query({windowId, audible: true}),
+        promiseTabs.query({windowId, muted: true}),
+        promiseTabs.query({windowId, muted: false}),
+      ]);
+    }).then(([silent, audible, muted, nonMuted]) => {
       browser.test.assertEq(3, silent.length, "Three silent tabs");
       browser.test.assertEq(0, audible.length, "No audible tabs");
 
@@ -65,13 +78,13 @@ add_task(function* () {
       browser.test.assertEq(3, nonMuted.length, "Three non-muted tabs");
 
       browser.test.log("Toggle muted and audible externally on one tab each, and check results");
-      [muted, audible] = await Promise.all([
+      return Promise.all([
         promiseUpdated(tabIds[0], "mutedInfo"),
         promiseUpdated(tabIds[1], "audible"),
         changeTab(tabIds[0], "muted", true),
         changeTab(tabIds[1], "audible", true),
       ]);
-
+    }).then(([muted, audible]) => {
       for (let obj of [muted.changeInfo, muted.tab]) {
         browser.test.assertEq(true, obj.mutedInfo.muted, "Tab is muted");
         browser.test.assertEq("user", obj.mutedInfo.reason, "Tab was muted by the user");
@@ -81,11 +94,13 @@ add_task(function* () {
       browser.test.assertEq(true, audible.tab.audible, "Tab is audible");
 
       browser.test.log("Re-check queries. Expect one audible and one muted tab");
-      silent = await browser.tabs.query({windowId, audible: false});
-      audible = await browser.tabs.query({windowId, audible: true});
-      muted = await browser.tabs.query({windowId, muted: true});
-      nonMuted = await browser.tabs.query({windowId, muted: false});
-
+      return Promise.all([
+        promiseTabs.query({windowId, audible: false}),
+        promiseTabs.query({windowId, audible: true}),
+        promiseTabs.query({windowId, muted: true}),
+        promiseTabs.query({windowId, muted: false}),
+      ]);
+    }).then(([silent, audible, muted, nonMuted]) => {
       browser.test.assertEq(2, silent.length, "Two silent tabs");
       browser.test.assertEq(1, audible.length, "One audible tab");
 
@@ -98,21 +113,21 @@ add_task(function* () {
       browser.test.assertEq(true, audible[0].audible, "Tab is audible");
 
       browser.test.log("Toggle muted internally on two tabs, and check results");
-      [nonMuted, muted] = await Promise.all([
+      return Promise.all([
         promiseUpdated(tabIds[0], "mutedInfo"),
         promiseUpdated(tabIds[1], "mutedInfo"),
-        browser.tabs.update(tabIds[0], {muted: false}),
-        browser.tabs.update(tabIds[1], {muted: true}),
+        promiseTabs.update(tabIds[0], {muted: false}),
+        promiseTabs.update(tabIds[1], {muted: true}),
       ]);
-
-      for (let obj of [nonMuted.changeInfo, nonMuted.tab]) {
+    }).then(([unmuted, muted]) => {
+      for (let obj of [unmuted.changeInfo, unmuted.tab]) {
         browser.test.assertEq(false, obj.mutedInfo.muted, "Tab is not muted");
       }
       for (let obj of [muted.changeInfo, muted.tab]) {
         browser.test.assertEq(true, obj.mutedInfo.muted, "Tab is muted");
       }
 
-      for (let obj of [nonMuted.changeInfo, nonMuted.tab, muted.changeInfo, muted.tab]) {
+      for (let obj of [unmuted.changeInfo, unmuted.tab, muted.changeInfo, muted.tab]) {
         browser.test.assertEq("extension", obj.mutedInfo.reason, "Mute state changed by extension");
 
         // FIXME: browser.runtime.id is currently broken.
@@ -122,8 +137,8 @@ add_task(function* () {
       }
 
       browser.test.log("Test that mutedInfo is preserved by sessionstore");
-      let tab = await changeTab(tabIds[1], "duplicate").then(browser.tabs.get);
-
+      return changeTab(tabIds[1], "duplicate").then(promiseTabs.get);
+    }).then(tab => {
       browser.test.assertEq(true, tab.mutedInfo.muted, "Tab is muted");
 
       browser.test.assertEq("extension", tab.mutedInfo.reason, "Mute state changed by extension");
@@ -134,22 +149,22 @@ add_task(function* () {
                             "Mute state changed by extension");
 
       browser.test.log("Unmute externally, and check results");
-      [nonMuted] = await Promise.all([
+      return Promise.all([
         promiseUpdated(tabIds[1], "mutedInfo"),
         changeTab(tabIds[1], "muted", false),
-        browser.tabs.remove(tab.id),
+        promiseTabs.remove(tab.id),
       ]);
-
-      for (let obj of [nonMuted.changeInfo, nonMuted.tab]) {
+    }).then(([unmuted]) => {
+      for (let obj of [unmuted.changeInfo, unmuted.tab]) {
         browser.test.assertEq(false, obj.mutedInfo.muted, "Tab is not muted");
         browser.test.assertEq("user", obj.mutedInfo.reason, "Mute state changed by user");
       }
 
       browser.test.notifyPass("tab-audio");
-    } catch (e) {
+    }).catch(e => {
       browser.test.fail(`${e} :: ${e.stack}`);
       browser.test.notifyFail("tab-audio");
-    }
+    });
   }
 
   let extension = ExtensionTestUtils.loadExtension({

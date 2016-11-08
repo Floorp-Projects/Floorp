@@ -4,10 +4,11 @@
 
 let getExtension = () => {
   return ExtensionTestUtils.loadExtension({
-    background: async function() {
-      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
-      await browser.pageAction.show(tab.id);
-      browser.test.sendMessage("pageAction ready");
+    background() {
+      browser.tabs.query({active: true, currentWindow: true}, tabs => {
+        browser.pageAction.show(tabs[0].id)
+          .then(() => { browser.test.sendMessage("pageAction ready"); });
+      });
     },
 
     manifest: {

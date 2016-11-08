@@ -84,46 +84,47 @@ add_task(function* testTabSwitchContext() {
           browser.test.log("Initial state. No icon visible.");
           expect(null);
         },
-        async expect => {
+        expect => {
           browser.test.log("Show the icon on the first tab, expect default properties.");
-          await browser.pageAction.show(tabs[0]);
-          expect(details[0]);
+          browser.pageAction.show(tabs[0]).then(() => {
+            expect(details[0]);
+          });
         },
         expect => {
           browser.test.log("Change the icon. Expect default properties excluding the icon.");
           browser.pageAction.setIcon({tabId: tabs[0], path: "1.png"});
           expect(details[1]);
         },
-        async expect => {
+        expect => {
           browser.test.log("Create a new tab. No icon visible.");
-          let tab = await browser.tabs.create({active: true, url: "about:blank?0"});
-          tabs.push(tab.id);
-          expect(null);
+          browser.tabs.create({active: true, url: "about:blank?0"}, tab => {
+            tabs.push(tab.id);
+            expect(null);
+          });
         },
         expect => {
           browser.test.log("Await tab load. No icon visible.");
           expect(null);
         },
-        async expect => {
+        expect => {
           browser.test.log("Change properties. Expect new properties.");
           let tabId = tabs[1];
+          browser.pageAction.show(tabId).then(() => {
+            browser.pageAction.setIcon({tabId, path: "2.png"});
+            browser.pageAction.setPopup({tabId, popup: "2.html"});
+            browser.pageAction.setTitle({tabId, title: "Title 2"});
 
-          await browser.pageAction.show(tabId);
-          browser.pageAction.setIcon({tabId, path: "2.png"});
-          browser.pageAction.setPopup({tabId, popup: "2.html"});
-          browser.pageAction.setTitle({tabId, title: "Title 2"});
-
-          expect(details[2]);
+            expect(details[2]);
+          });
         },
-        async expect => {
+        expect => {
           browser.test.log("Change the hash. Expect same properties.");
 
-          let promise = promiseTabLoad({id: tabs[1], url: "about:blank?0#ref"});
+          promiseTabLoad({id: tabs[1], url: "about:blank?0#ref"}).then(() => {
+            expect(details[2]);
+          });
 
           browser.tabs.update(tabs[1], {url: "about:blank?0#ref"});
-
-          await promise;
-          expect(details[2]);
         },
         expect => {
           browser.test.log("Clear the title. Expect default title.");
@@ -131,43 +132,48 @@ add_task(function* testTabSwitchContext() {
 
           expect(details[3]);
         },
-        async expect => {
+        expect => {
           browser.test.log("Navigate to a new page. Expect icon hidden.");
 
           // TODO: This listener should not be necessary, but the |tabs.update|
           // callback currently fires too early in e10s windows.
-          let promise = promiseTabLoad({id: tabs[1], url: "about:blank?1"});
+          promiseTabLoad({id: tabs[1], url: "about:blank?1"}).then(() => {
+            expect(null);
+          });
 
           browser.tabs.update(tabs[1], {url: "about:blank?1"});
-
-          await promise;
-          expect(null);
         },
-        async expect => {
+        expect => {
           browser.test.log("Show the icon. Expect default properties again.");
-          await browser.pageAction.show(tabs[1]);
-          expect(details[0]);
+          browser.pageAction.show(tabs[1]).then(() => {
+            expect(details[0]);
+          });
         },
-        async expect => {
+        expect => {
           browser.test.log("Switch back to the first tab. Expect previously set properties.");
-          await browser.tabs.update(tabs[0], {active: true});
-          expect(details[1]);
+          browser.tabs.update(tabs[0], {active: true}, () => {
+            expect(details[1]);
+          });
         },
-        async expect => {
+        expect => {
           browser.test.log("Hide the icon on tab 2. Switch back, expect hidden.");
-          await browser.pageAction.hide(tabs[1]);
-          await browser.tabs.update(tabs[1], {active: true});
-          expect(null);
+          browser.pageAction.hide(tabs[1]).then(() => {
+            browser.tabs.update(tabs[1], {active: true}, () => {
+              expect(null);
+            });
+          });
         },
-        async expect => {
+        expect => {
           browser.test.log("Switch back to tab 1. Expect previous results again.");
-          await browser.tabs.remove(tabs[1]);
-          expect(details[1]);
+          browser.tabs.remove(tabs[1], () => {
+            expect(details[1]);
+          });
         },
-        async expect => {
+        expect => {
           browser.test.log("Hide the icon. Expect hidden.");
-          await browser.pageAction.hide(tabs[0]);
-          expect(null);
+          browser.pageAction.hide(tabs[0]).then(() => {
+            expect(null);
+          });
         },
       ];
     },
@@ -205,10 +211,11 @@ add_task(function* testDefaultTitle() {
           browser.test.log("Initial state. No icon visible.");
           expect(null);
         },
-        async expect => {
+        expect => {
           browser.test.log("Show the icon on the first tab, expect extension title as default title.");
-          await browser.pageAction.show(tabs[0]);
-          expect(details[0]);
+          browser.pageAction.show(tabs[0]).then(() => {
+            expect(details[0]);
+          });
         },
         expect => {
           browser.test.log("Change the title. Expect new title.");

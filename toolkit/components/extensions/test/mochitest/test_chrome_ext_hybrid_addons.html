@@ -100,12 +100,13 @@ add_task(function* test_sdk_hybrid_addon_with_jpm_module_loader() {
     });
   }
 
-  async function sdkMainScript() {
+  function sdkMainScript() {
     /* globals require */
     const webext = require("sdk/webextension");
-    let {browser} = await webext.startup();
-    browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
-      sendReply(`sdk received message: ${msg}`);
+    webext.startup().then(({browser}) => {
+      browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
+        sendReply(`sdk received message: ${msg}`);
+      });
     });
   }
 
