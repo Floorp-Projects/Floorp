@@ -87,8 +87,8 @@ js::ReportNotObject(JSContext* cx, const Value& v)
                                    bytes.get());
 }
 
-const char*
-js::InformalValueTypeName(const Value& v)
+JS_PUBLIC_API(const char*)
+JS::InformalValueTypeName(const Value& v)
 {
     if (v.isObject())
         return v.toObject().getClass()->name;
