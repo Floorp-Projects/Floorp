@@ -77,28 +77,6 @@ struct LinkData : LinkDataCacheablePod
 typedef UniquePtr<LinkData> UniqueLinkData;
 typedef UniquePtr<const LinkData> UniqueConstLinkData;
 
-// Import describes a single wasm import. An ImportVector describes all
-// of a single module's imports.
-//
-// ImportVector is built incrementally by ModuleGenerator and then stored
-// immutably by Module.
-
-struct Import
-{
-    CacheableChars module;
-    CacheableChars field;
-    DefinitionKind kind;
-
-    Import() = default;
-    Import(UniqueChars&& module, UniqueChars&& field, DefinitionKind kind)
-      : module(Move(module)), field(Move(field)), kind(kind)
-    {}
-
-    WASM_DECLARE_SERIALIZABLE(Import)
-};
-
-typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
-
 // Export describes the export of a definition in a Module to a field in the
 // export object. For functions, Export stores an index into the
 // FuncExportVector in Metadata. For memory and table exports, there is

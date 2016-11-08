@@ -551,6 +551,40 @@ class InitExpr
     }
 };
 
+// CacheableChars is used to cacheably store UniqueChars.
+
+struct CacheableChars : UniqueChars
+{
+    CacheableChars() = default;
+    explicit CacheableChars(char* ptr) : UniqueChars(ptr) {}
+    MOZ_IMPLICIT CacheableChars(UniqueChars&& rhs) : UniqueChars(Move(rhs)) {}
+    WASM_DECLARE_SERIALIZABLE(CacheableChars)
+};
+
+typedef Vector<CacheableChars, 0, SystemAllocPolicy> CacheableCharsVector;
+
+// Import describes a single wasm import. An ImportVector describes all
+// of a single module's imports.
+//
+// ImportVector is built incrementally by ModuleGenerator and then stored
+// immutably by Module.
+
+struct Import
+{
+    CacheableChars module;
+    CacheableChars field;
+    DefinitionKind kind;
+
+    Import() = default;
+    Import(UniqueChars&& module, UniqueChars&& field, DefinitionKind kind)
+      : module(Move(module)), field(Move(field)), kind(kind)
+    {}
+
+    WASM_DECLARE_SERIALIZABLE(Import)
+};
+
+typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
+
 // A GlobalDesc describes a single global variable. Currently, asm.js and wasm
 // exposes mutable and immutable private globals, but can't import nor export
 // mutable globals.
