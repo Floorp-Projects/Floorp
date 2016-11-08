@@ -3087,6 +3087,24 @@ JS_DefineConstIntegers(JSContext* cx, HandleObject obj, const JSConstIntegerSpec
     return DefineConstScalar(cx, obj, cis);
 }
 
+bool
+JSPropertySpec::getValue(JSContext* cx, MutableHandleValue vp) const
+{
+    MOZ_ASSERT(!isAccessor());
+
+    if (value.type == JSVAL_TYPE_STRING) {
+        RootedAtom atom(cx, Atomize(cx, value.string, strlen(value.string)));
+        if (!atom)
+            return false;
+        vp.setString(atom);
+    } else {
+        MOZ_ASSERT(value.type == JSVAL_TYPE_INT32);
+        vp.setInt32(value.int32);
+    }
+
+    return true;
+}
+
 static JS::SymbolCode
 PropertySpecNameToSymbolCode(const char* name)
 {
@@ -3149,11 +3167,10 @@ JS_DefineProperties(JSContext* cx, HandleObject obj, const JSPropertySpec* ps)
                 }
             }
         } else {
-            RootedAtom atom(cx, Atomize(cx, ps->string.value, strlen(ps->string.value)));
-            if (!atom)
+            RootedValue v(cx);
+            if (!ps->getValue(cx, &v))
                 return false;
 
-            RootedValue v(cx, StringValue(atom));
             if (!DefinePropertyById(cx, obj, id, v, NativeOpWrapper(nullptr),
                                     NativeOpWrapper(nullptr), ps->flags & ~JSPROP_INTERNAL_USE_BIT, 0))
             {
