@@ -24,13 +24,13 @@ IsWrappedAsyncFunction(JSFunction* fun);
 JSObject*
 WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped);
 
-bool
-AsyncFunctionAwaitedFulfilled(JSContext* cx, HandleValue value, HandleValue generatorVal,
-                              MutableHandleValue rval);
+MOZ_MUST_USE bool
+AsyncFunctionAwaitedFulfilled(JSContext* cx, Handle<PromiseObject*> resultPromise,
+                              HandleValue generatorVal, HandleValue value);
 
-bool
-AsyncFunctionAwaitedRejected(JSContext* cx, HandleValue reason, HandleValue generatorVal,
-                             MutableHandleValue rval);
+MOZ_MUST_USE bool
+AsyncFunctionAwaitedRejected(JSContext* cx, Handle<PromiseObject*> resultPromise,
+                             HandleValue generatorVal, HandleValue reason);
 
 } // namespace js
 
