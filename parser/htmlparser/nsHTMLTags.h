@@ -18,8 +18,7 @@ class nsIAtom;
    To change the list of tags, see nsHTMLTagList.h
 
  */
-#define HTML_TAG(_tag, _classname) eHTMLTag_##_tag,
-#define HTML_HTMLELEMENT_TAG(_tag) eHTMLTag_##_tag,
+#define HTML_TAG(_tag, _classname, _interfacename) eHTMLTag_##_tag,
 #define HTML_OTHER(_tag) eHTMLTag_##_tag,
 enum nsHTMLTag {
   /* this enum must be first and must be zero */
@@ -31,7 +30,6 @@ enum nsHTMLTag {
   eHTMLTag_userdefined
 };
 #undef HTML_TAG
-#undef HTML_HTMLELEMENT_TAG
 #undef HTML_OTHER
 
 // All tags before eHTMLTag_text are HTML tags
