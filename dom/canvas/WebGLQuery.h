@@ -27,13 +27,14 @@ public:
     const GLuint mGLName;
 private:
     GLenum mTarget;
-    bool mIsActive;
+    WebGLRefPtr<WebGLQuery>* mActiveSlot;
 
     bool mCanBeAvailable; // Track whether the event loop has spun
 
     ////
 public:
-    bool IsActive() const { return mIsActive; }
+    GLenum Target() const { return mTarget; }
+    bool IsActive() const { return bool(mActiveSlot); }
 
     ////
 
@@ -56,7 +57,7 @@ public:
 
     ////
 
-    bool BeginQuery(GLenum target);
+    void BeginQuery(GLenum target, WebGLRefPtr<WebGLQuery>& slot);
     void DeleteQuery();
     void EndQuery();
     void GetQueryParameter(GLenum pname, JS::MutableHandleValue retval) const;
