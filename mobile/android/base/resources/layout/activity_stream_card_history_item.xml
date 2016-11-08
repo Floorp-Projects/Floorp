@@ -19,7 +19,8 @@
         android:layout_width="fill_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
-        android:padding="10dp">
+        android:padding="10dp"
+        android:background="?android:attr/selectableItemBackground">
 
         <org.mozilla.gecko.widget.FaviconView
             android:id="@+id/icon"
