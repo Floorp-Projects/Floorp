@@ -584,6 +584,22 @@ const Services = {
       }
     },
   },
+
+  /**
+   * An implementation of Services.wm that provides a shim for
+   * getMostRecentWindow.
+   */
+  wm: {
+    getMostRecentWindow: function () {
+      // Having the returned object implement openUILinkIn is
+      // sufficient for our purposes.
+      return {
+        openUILinkIn: function (url) {
+          window.open(url, "_blank");
+        },
+      };
+    },
+  },
 };
 
 /**

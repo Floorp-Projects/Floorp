@@ -1,1 +1,1 @@
-mozrunner >= 6.12
+mozrunner >= 6.13

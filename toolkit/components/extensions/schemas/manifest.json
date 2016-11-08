@@ -349,18 +349,18 @@
           {
             "type": "object",
             "patternProperties": {
-              "^[1-9]\\d*$": {
-                "type": "object",
-                "isInstanceOf": "ImageData"
-              }
+              "^[1-9]\\d*$": { "$ref": "ImageData" }
             },
             "additionalProperties": false
           },
-          {
-            "type": "object",
-            "isInstanceOf": "ImageData"
-          }
+          { "$ref": "ImageData" }
         ]
+      },
+      {
+        "id": "ImageData",
+        "type": "object",
+        "isInstanceOf": "ImageData",
+        "postprocess": "convertImageDataToURL"
       },
       {
         "id": "UnrecognizedProperty",

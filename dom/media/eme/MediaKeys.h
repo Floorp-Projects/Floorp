@@ -133,7 +133,9 @@ public:
 
 private:
 
-  bool IsInPrivateBrowsing();
+  // Instantiate CDMProxy instance.
+  // It could be MediaDrmCDMProxy (Widevine on Fennec) or GMPCDMProxy (the rest).
+  already_AddRefed<CDMProxy> CreateCDMProxy();
 
   // Removes promise from mPromises, and returns it.
   already_AddRefed<DetailedPromise> RetrievePromise(PromiseId aId);

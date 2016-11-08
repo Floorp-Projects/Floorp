@@ -21,9 +21,6 @@
 #include "AudioManager.h"
 
 #include "nsIObserverService.h"
-#ifdef MOZ_B2G_RIL
-#include "nsIRadioInterfaceLayer.h"
-#endif
 #include "nsISettingsService.h"
 #include "nsPrintfCString.h"
 
@@ -694,9 +691,6 @@ AudioManager::AudioManager()
   , mA2dpSwitchDone(true)
 #endif
   , mObserver(new HeadphoneSwitchObserver())
-#ifdef MOZ_B2G_RIL
-  , mMuteCallToRIL(false)
-#endif
 {
   for (uint32_t idx = 0; idx < MOZ_ARRAY_LENGTH(kAudioDeviceInfos); ++idx) {
     mAudioDeviceTableIdMaps.Put(kAudioDeviceInfos[idx].value, idx);
@@ -754,13 +748,6 @@ AudioManager::AudioManager()
     NS_WARNING("Failed to add audio-channel-process-changed observer!");
   }
 
-#ifdef MOZ_B2G_RIL
-  char value[PROPERTY_VALUE_MAX];
-  property_get("ro.moz.mute.call.to_ril", value, "false");
-  if (!strcmp(value, "true")) {
-    mMuteCallToRIL = true;
-  }
-#endif
 }
 
 AudioManager::~AudioManager() {
@@ -815,13 +802,6 @@ AudioManager::GetInstance()
 NS_IMETHODIMP
 AudioManager::GetMicrophoneMuted(bool* aMicrophoneMuted)
 {
-#ifdef MOZ_B2G_RIL
-  if (mMuteCallToRIL) {
-    // Simply return cached mIsMicMuted if mute call go via RIL.
-    *aMicrophoneMuted = mIsMicMuted;
-    return NS_OK;
-  }
-#endif
 
   if (AudioSystem::isMicrophoneMuted(aMicrophoneMuted)) {
     return NS_ERROR_FAILURE;
@@ -833,15 +813,6 @@ NS_IMETHODIMP
 AudioManager::SetMicrophoneMuted(bool aMicrophoneMuted)
 {
   if (!AudioSystem::muteMicrophone(aMicrophoneMuted)) {
-#ifdef MOZ_B2G_RIL
-    if (mMuteCallToRIL) {
-      // Extra mute request to RIL for specific platform.
-      nsCOMPtr<nsIRadioInterfaceLayer> ril = do_GetService("@mozilla.org/ril;1");
-      NS_ENSURE_TRUE(ril, NS_ERROR_FAILURE);
-      ril->SetMicrophoneMuted(aMicrophoneMuted);
-      mIsMicMuted = aMicrophoneMuted;
-    }
-#endif
     return NS_OK;
   }
   return NS_ERROR_FAILURE;

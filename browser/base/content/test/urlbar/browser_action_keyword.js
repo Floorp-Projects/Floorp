@@ -1,8 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
-var gOnSearchComplete = null;
-
 function* promise_first_result(inputText) {
   yield promiseAutocompleteResultPopup(inputText);
 
@@ -10,41 +5,47 @@ function* promise_first_result(inputText) {
   return firstResult;
 }
 
+const TEST_URL = "http://mochi.test:8888/browser/browser/base/content/test/urlbar/print_postdata.sjs";
 
-add_task(function*() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla");
-  let tabs = [tab];
+add_task(function* setup() {
+  yield PlacesUtils.keywords.insert({ keyword: "get",
+                                      url: TEST_URL + "?q=%s" });
+  yield PlacesUtils.keywords.insert({ keyword: "post",
+                                      url: TEST_URL,
+                                      postData: "q=%s" });
   registerCleanupFunction(function* () {
-    for (let tab of tabs)
-      gBrowser.removeTab(tab);
-    yield PlacesUtils.bookmarks.remove(bm);
+    yield PlacesUtils.keywords.remove("get");
+    yield PlacesUtils.keywords.remove("post");
+    while (gBrowser.tabs.length > 1) {
+      yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    }
   });
+});
 
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+add_task(function* get_keyword() {
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
 
-  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                url: "http://example.com/?q=%s",
-                                                title: "test" });
-  yield PlacesUtils.keywords.insert({ keyword: "keyword",
-                                      url: "http://example.com/?q=%s" });
-
-  let result = yield promise_first_result("keyword something");
+  let result = yield promise_first_result("get something");
   isnot(result, null, "Expect a keyword result");
 
   let types = new Set(result.getAttribute("type").split(/\s+/));
   Assert.ok(types.has("keyword"));
   is(result.getAttribute("actiontype"), "keyword", "Expect correct `actiontype` attribute");
-  is(result.getAttribute("title"), "example.com", "Expect correct title");
+  is(result.getAttribute("title"), "mochi.test:8888", "Expect correct title");
 
   // We need to make a real URI out of this to ensure it's normalised for
   // comparison.
   let uri = NetUtil.newURI(result.getAttribute("url"));
-  is(uri.spec, PlacesUtils.mozActionURI("keyword", {url: "http://example.com/?q=something", input: "keyword something"}), "Expect correct url");
+  is(uri.spec, PlacesUtils.mozActionURI("keyword",
+                                        { url: TEST_URL + "?q=something",
+                                          input: "get something"}),
+     "Expect correct url");
 
   let titleHbox = result._titleText.parentNode.parentNode;
   ok(titleHbox.classList.contains("ac-title"), "Title hbox element sanity check");
   is_element_visible(titleHbox, "Title element should be visible");
-  is(result._titleText.textContent, "example.com: something", "Node should contain the name of the bookmark and query");
+  is(result._titleText.textContent, "mochi.test:8888: something",
+     "Node should contain the name of the bookmark and query");
 
   let urlHbox = result._urlText.parentNode.parentNode;
   ok(urlHbox.classList.contains("ac-url"), "URL hbox element sanity check");
@@ -60,22 +61,59 @@ add_task(function*() {
   let tabPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   EventUtils.synthesizeMouseAtCenter(result, {});
   yield tabPromise;
-  is(tab.linkedBrowser.currentURI.spec, "http://example.com/?q=something", "Tab should have loaded from clicking on result");
+  is(tab.linkedBrowser.currentURI.spec, TEST_URL + "?q=something",
+     "Tab should have loaded from clicking on result");
 
   // Middle-click on the result
   info("Middle-click on result");
-  result = yield promise_first_result("keyword somethingmore");
+  result = yield promise_first_result("get somethingmore");
   isnot(result, null, "Expect a keyword result");
   // We need to make a real URI out of this to ensure it's normalised for
   // comparison.
   uri = NetUtil.newURI(result.getAttribute("url"));
-  is(uri.spec, PlacesUtils.mozActionURI("keyword", {url: "http://example.com/?q=somethingmore", input: "keyword somethingmore"}), "Expect correct url");
+  is(uri.spec, PlacesUtils.mozActionURI("keyword",
+                                        { url: TEST_URL + "?q=somethingmore",
+                                          input: "get somethingmore" }),
+     "Expect correct url");
 
   tabPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
   EventUtils.synthesizeMouseAtCenter(result, {button: 1});
   let tabOpenEvent = yield tabPromise;
   let newTab = tabOpenEvent.target;
-  tabs.push(newTab);
   yield BrowserTestUtils.browserLoaded(newTab.linkedBrowser);
-  is(newTab.linkedBrowser.currentURI.spec, "http://example.com/?q=somethingmore", "Tab should have loaded from middle-clicking on result");
+  is(newTab.linkedBrowser.currentURI.spec,
+     TEST_URL + "?q=somethingmore",
+     "Tab should have loaded from middle-clicking on result");
+});
+
+
+add_task(function* post_keyword() {
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
+
+  let result = yield promise_first_result("post something");
+  isnot(result, null, "Expect a keyword result");
+
+  let types = new Set(result.getAttribute("type").split(/\s+/));
+  Assert.ok(types.has("keyword"));
+  is(result.getAttribute("actiontype"), "keyword", "Expect correct `actiontype` attribute");
+  is(result.getAttribute("title"), "mochi.test:8888", "Expect correct title");
+
+  is(result.getAttribute("url"),
+     PlacesUtils.mozActionURI("keyword", { url: TEST_URL,
+                                           input: "post something",
+                                           "postData": "q=something" }),
+     "Expect correct url");
+
+  // Click on the result
+  info("Normal click on result");
+  let tabPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  EventUtils.synthesizeMouseAtCenter(result, {});
+  yield tabPromise;
+  is(tab.linkedBrowser.currentURI.spec, TEST_URL,
+     "Tab should have loaded from clicking on result");
+
+  let postData = yield ContentTask.spawn(tab.linkedBrowser, null, function* () {
+    return content.document.body.textContent;
+  });
+  is(postData, "q=something", "post data was submitted correctly");
 });

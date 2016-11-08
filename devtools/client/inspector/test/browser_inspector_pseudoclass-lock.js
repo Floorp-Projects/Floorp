@@ -31,14 +31,28 @@ add_task(function* () {
   yield selectNode("#div-1", inspector);
 
   yield togglePseudoClass(inspector);
-  yield assertPseudoAddedToNode(inspector, testActor, view);
+  yield assertPseudoAddedToNode(inspector, testActor, view, "#div-1");
 
   yield togglePseudoClass(inspector);
-  yield assertPseudoRemovedFromNode(testActor);
-  yield assertPseudoRemovedFromView(inspector, testActor, view);
+  yield assertPseudoRemovedFromNode(testActor, "#div-1");
+  yield assertPseudoRemovedFromView(inspector, testActor, view, "#div-1");
 
   yield togglePseudoClass(inspector);
   yield testNavigate(inspector, testActor, view);
+
+  info("Toggle pseudo on the parent and ensure everything is toggled off");
+  yield selectNode("#parent-div", inspector);
+  yield togglePseudoClass(inspector);
+  yield assertPseudoRemovedFromNode(testActor, "#div-1");
+  yield assertPseudoRemovedFromView(inspector, testActor, view, "#div-1");
+
+  yield togglePseudoClass(inspector);
+  info("Assert pseudo is dismissed when toggling it on a sibling node");
+  yield selectNode("#div-2", inspector);
+  yield togglePseudoClass(inspector);
+  yield assertPseudoAddedToNode(inspector, testActor, view, "#div-2");
+  let hasLock = yield testActor.hasPseudoClassLock("#div-1", PSEUDO);
+  ok(!hasLock, "pseudo-class lock has been removed for the previous locked node");
 
   info("Destroying the toolbox");
   let tab = toolbox.target.tab;
@@ -47,7 +61,8 @@ add_task(function* () {
   // As the toolbox get detroyed, we need to fetch a new test-actor
   testActor = yield getTestActorWithoutToolbox(tab);
 
-  yield assertPseudoRemovedFromNode(testActor);
+  yield assertPseudoRemovedFromNode(testActor, "#div-1");
+  yield assertPseudoRemovedFromNode(testActor, "#div-2");
 });
 
 function* togglePseudoClass(inspector) {
@@ -75,17 +90,14 @@ function* testNavigate(inspector, testActor, ruleview) {
   ok((yield testActor.hasPseudoClassLock("#div-1", PSEUDO)),
      "pseudo-class lock is still applied after inspecting ancestor");
 
-  let onPseudo = inspector.selection.once("pseudoclass");
   yield selectNode("#div-2", inspector);
-  yield onPseudo;
 
-  info("Make sure the pseudoclass is removed after navigating to a " +
+  info("Make sure the pseudoclass is still set after navigating to a " +
        "non-hierarchy node");
-  ok(!(yield testActor.hasPseudoClassLock("#div-1", PSEUDO)),
-     "pseudo-class lock is removed after inspecting sibling node");
+  ok(yield testActor.hasPseudoClassLock("#div-1", PSEUDO),
+     "pseudo-class lock is still on after inspecting sibling node");
 
   yield selectNode("#div-1", inspector);
-  yield togglePseudoClass(inspector);
 }
 
 function* showPickerOn(selector, inspector) {
@@ -93,10 +105,10 @@ function* showPickerOn(selector, inspector) {
   yield inspector.highlighter.showBoxModel(nodeFront);
 }
 
-function* assertPseudoAddedToNode(inspector, testActor, ruleview) {
-  info("Make sure the pseudoclass lock is applied to #div-1 and its ancestors");
+function* assertPseudoAddedToNode(inspector, testActor, ruleview, selector) {
+  info("Make sure the pseudoclass lock is applied to " + selector + " and its ancestors");
 
-  let hasLock = yield testActor.hasPseudoClassLock("#div-1", PSEUDO);
+  let hasLock = yield testActor.hasPseudoClassLock(selector, PSEUDO);
   ok(hasLock, "pseudo-class lock has been applied");
   hasLock = yield testActor.hasPseudoClassLock("#parent-div", PSEUDO);
   ok(hasLock, "pseudo-class lock has been applied");
@@ -111,8 +123,8 @@ function* assertPseudoAddedToNode(inspector, testActor, ruleview) {
   is(rules[1]._ruleEditor.rule.selectorText, "div:hover",
      "rule view is showing " + PSEUDO + " rule");
 
-  info("Show the highlighter on #div-1");
-  yield showPickerOn("#div-1", inspector);
+  info("Show the highlighter on " + selector);
+  yield showPickerOn(selector, inspector);
 
   info("Check that the infobar selector contains the pseudo-class");
   let value = yield testActor.getHighlighterNodeTextContent(
@@ -121,11 +133,11 @@ function* assertPseudoAddedToNode(inspector, testActor, ruleview) {
   yield inspector.highlighter.hideBoxModel();
 }
 
-function* assertPseudoRemovedFromNode(testActor) {
+function* assertPseudoRemovedFromNode(testActor, selector) {
   info("Make sure the pseudoclass lock is removed from #div-1 and its " +
        "ancestors");
 
-  let hasLock = yield testActor.hasPseudoClassLock("#div-1", PSEUDO);
+  let hasLock = yield testActor.hasPseudoClassLock(selector, PSEUDO);
   ok(!hasLock, "pseudo-class lock has been removed");
   hasLock = yield testActor.hasPseudoClassLock("#parent-div", PSEUDO);
   ok(!hasLock, "pseudo-class lock has been removed");
@@ -133,13 +145,13 @@ function* assertPseudoRemovedFromNode(testActor) {
   ok(!hasLock, "pseudo-class lock has been removed");
 }
 
-function* assertPseudoRemovedFromView(inspector, testActor, ruleview) {
+function* assertPseudoRemovedFromView(inspector, testActor, ruleview, selector) {
   info("Check that the ruleview no longer contains the pseudo-class rule");
   let rules = ruleview.element.querySelectorAll(
     ".ruleview-rule.theme-separator");
   is(rules.length, 2, "rule view is showing 2 rules after removing lock");
 
-  yield showPickerOn("#div-1", inspector);
+  yield showPickerOn(selector, inspector);
 
   let value = yield testActor.getHighlighterNodeTextContent(
     "box-model-infobar-pseudo-classes");

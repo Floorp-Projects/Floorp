@@ -17,6 +17,9 @@ cppunit:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -41,6 +44,9 @@ crashtest:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -77,7 +83,8 @@ firefox-ui-functional-local:
             - firefox_ui_tests/taskcluster.py
             - remove_executables.py
         extra-options:
-            - "--tag local"
+            - "--tag"
+            - "local"
 
 firefox-ui-functional-remote:
     description: "Firefox-ui-tests functional run"
@@ -92,7 +99,8 @@ firefox-ui-functional-remote:
             - firefox_ui_tests/taskcluster.py
             - remove_executables.py
         extra-options:
-            - "--tag remote"
+            - "--tag"
+            - "remote"
 
 gtest:
     description: "GTests run"
@@ -107,6 +115,9 @@ gtest:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -129,6 +140,9 @@ jittest:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -150,6 +164,9 @@ jsreftest:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -183,6 +200,7 @@ mochitest:
             default: ['all']
     chunks:
         by-test-platform:
+            macosx.*: 5
             win.*: 5
             default: 10
     e10s:
@@ -198,6 +216,9 @@ mochitest:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -226,6 +247,9 @@ mochitest-a11y:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -267,6 +291,9 @@ mochitest-browser-chrome:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -292,7 +319,10 @@ mochitest-chrome:
     suite: mochitest/chrome
     treeherder-symbol: tc-M(c)
     loopback-video: true
-    chunks: 3
+    chunks:
+      by-test-platform:
+        macosx.*: 1
+        default: 3
     e10s: false
     mozharness:
         script: desktop_unittest.py
@@ -301,6 +331,9 @@ mochitest-chrome:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -321,6 +354,9 @@ mochitest-clipboard:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -359,6 +395,9 @@ mochitest-devtools-chrome:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -396,6 +435,9 @@ mochitest-gpu:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -417,6 +459,9 @@ mochitest-jetpack:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -440,11 +485,36 @@ mochitest-media:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
             - --mochitest-suite=mochitest-media
+
+mochitest-other:
+    description: "Mochitest other"
+    suite: mochitest/other
+    treeherder-symbol: tc-M(oth)
+    e10s: false
+    max-run-time: 5400
+    mozharness:
+        script: mozharness/scripts/desktop_unittest.py
+        no-read-buildbot-config: true
+        include-blob-upload-branch: true
+        chunked: true
+        config:
+          by-test-platform:
+            macosx.*:
+              - remove_executables.py
+              - unittests/mac_unittest.py
+            default:
+              - unittests/linux_unittest.py
+              - remove_executables.py
+        extra-options:
+            - --mochitest-suite=chrome,a11y
 
 mochitest-webgl:
     description: "Mochitest webgl run"
@@ -460,6 +530,9 @@ mochitest-webgl:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -472,8 +545,11 @@ reftest:
     description: "Reftest run"
     suite: reftest/reftest
     treeherder-symbol: tc-R(R)
-    chunks: 8
     docker-image: {"in-tree": "desktop1604-test"}
+    chunks:
+      by-test-platform:
+        macosx.*: 1
+        default: 8
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
@@ -481,6 +557,9 @@ reftest:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -491,8 +570,11 @@ reftest-no-accel:
     description: "Reftest not accelerated run"
     suite: reftest/reftest-no-accel
     treeherder-symbol: tc-R(Ru)
-    chunks: 8
     docker-image: {"in-tree": "desktop1604-test"}
+    chunks:
+      by-test-platform:
+        macosx.*: 1
+        default: 8
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
@@ -500,6 +582,9 @@ reftest-no-accel:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -510,7 +595,10 @@ web-platform-tests:
     description: "Web platform test run"
     suite: web-platform-tests
     treeherder-symbol: tc-W()
-    chunks: 12
+    chunks:
+      by-test-platform:
+        macosx.*: 5
+        default: 12
     max-run-time: 7200
     instance-size: xlarge
     docker-image: {"in-tree": "desktop1604-test"}
@@ -581,6 +669,7 @@ xpcshell:
     chunks:
         by-test-platform:
             # win.*: 1
+            macosx.*: 1
             linux64/debug: 10
             default: 8
     max-run-time: 5400
@@ -592,6 +681,9 @@ xpcshell:
             by-test-platform:
                 win.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py

@@ -27,7 +27,7 @@ def mach_parsed_kwargs(logger):
     """
     return {
         'adb_path': None,
-        'addon': None,
+        'addons': None,
         'address': None,
         'app': None,
         'app_args': [],

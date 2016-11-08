@@ -75,7 +75,7 @@ def check_for_crashes(dump_directory,
     If `quiet` is set, no PROCESS-CRASH message will be printed to stdout if a
     crash is detected.
 
-    Returns True if any minidumps were found, False otherwise.
+    Returns number of minidump files found.
     """
 
     # try to get the caller's filename if no test name is given
@@ -91,7 +91,9 @@ def check_for_crashes(dump_directory,
     if not crash_info.has_dumps:
         return False
 
+    crash_count = 0
     for info in crash_info:
+        crash_count += 1
         if not quiet:
             stackwalk_output = ["Crash dump filename: %s" % info.minidump_path]
             if info.stackwalk_stderr:
@@ -108,7 +110,7 @@ def check_for_crashes(dump_directory,
             print '\n'.join(stackwalk_output)
             print '\n'.join(info.stackwalk_errors)
 
-    return True
+    return crash_count
 
 
 def log_crashes(logger,

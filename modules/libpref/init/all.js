@@ -433,7 +433,7 @@ pref("media.navigator.video.use_tmmbr", false);
 pref("media.navigator.audio.use_fec", true);
 pref("media.navigator.video.red_ulpfec_enabled", false);
 
-pref("media.peerconnection.dtmf.enabled", false);
+pref("media.peerconnection.dtmf.enabled", true);
 
 pref("media.webrtc.debug.trace_mask", 0);
 pref("media.webrtc.debug.multi_log", false);
@@ -5031,13 +5031,6 @@ pref("dom.forms.inputmode", true);
 pref("dom.mozInputMethod.enabled", false);
 
 pref("dom.flyweb.enabled", false);
-
-// ICC API
-#ifdef MOZ_B2G_RIL
-pref("dom.icc.enabled", true);
-#else
-pref("dom.icc.enabled", false);
-#endif
 
 // Enable mapped array buffer by default.
 pref("dom.mapped_arraybuffer.enabled", true);
