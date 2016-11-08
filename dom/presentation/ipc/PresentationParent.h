@@ -57,9 +57,11 @@ public:
 
   virtual bool Recv__delete__() override;
 
-  virtual bool RecvRegisterAvailabilityHandler() override;
+  virtual bool RecvRegisterAvailabilityHandler(
+                             nsTArray<nsString>&& aAvailabilityUrls) override;
 
-  virtual bool RecvUnregisterAvailabilityHandler() override;
+  virtual bool RecvUnregisterAvailabilityHandler(
+                             nsTArray<nsString>&& aAvailabilityUrls) override;
 
   virtual bool RecvRegisterSessionHandler(const nsString& aSessionId,
                                           const uint8_t& aRole) override;
@@ -88,6 +90,7 @@ private:
   nsTArray<nsString> mSessionIdsAtReceiver;
   nsTArray<uint64_t> mWindowIds;
   ContentParentId mChildId;
+  nsTArray<nsString> mContentAvailabilityUrls;
 };
 
 class PresentationRequestParent final : public PPresentationRequestParent

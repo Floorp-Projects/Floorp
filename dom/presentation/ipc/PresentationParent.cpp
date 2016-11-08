@@ -134,7 +134,9 @@ PresentationParent::ActorDestroy(ActorDestroyReason aWhy)
   }
   mWindowIds.Clear();
 
-  mService->UnregisterAvailabilityListener(this);
+  if (!mContentAvailabilityUrls.IsEmpty()) {
+    mService->UnregisterAvailabilityListener(mContentAvailabilityUrls, this);
+  }
   mService = nullptr;
 }
 
@@ -212,18 +214,30 @@ PresentationParent::Recv__delete__()
 }
 
 bool
-PresentationParent::RecvRegisterAvailabilityHandler()
+PresentationParent::RecvRegisterAvailabilityHandler(
+                                       nsTArray<nsString>&& aAvailabilityUrls)
 {
   MOZ_ASSERT(mService);
-  Unused << NS_WARN_IF(NS_FAILED(mService->RegisterAvailabilityListener(this)));
+
+  Unused << NS_WARN_IF(NS_FAILED(mService->RegisterAvailabilityListener(
+                                                             aAvailabilityUrls,
+                                                             this)));
+  mContentAvailabilityUrls.AppendElements(aAvailabilityUrls);
   return true;
 }
 
 bool
-PresentationParent::RecvUnregisterAvailabilityHandler()
+PresentationParent::RecvUnregisterAvailabilityHandler(
+                                        nsTArray<nsString>&& aAvailabilityUrls)
 {
   MOZ_ASSERT(mService);
-  Unused << NS_WARN_IF(NS_FAILED(mService->UnregisterAvailabilityListener(this)));
+
+  Unused << NS_WARN_IF(NS_FAILED(mService->UnregisterAvailabilityListener(
+                                                             aAvailabilityUrls,
+                                                             this)));
+  for (const auto& url : aAvailabilityUrls) {
+    mContentAvailabilityUrls.RemoveElement(url);
+  }
   return true;
 }
 
@@ -283,9 +297,12 @@ PresentationParent::RecvUnregisterRespondingHandler(const uint64_t& aWindowId)
 }
 
 NS_IMETHODIMP
-PresentationParent::NotifyAvailableChange(bool aAvailable)
+PresentationParent::NotifyAvailableChange(const nsTArray<nsString>& aAvailabilityUrls,
+                                          bool aAvailable)
 {
-  if (NS_WARN_IF(mActorDestroyed || !SendNotifyAvailableChange(aAvailable))) {
+  if (NS_WARN_IF(mActorDestroyed ||
+                 !SendNotifyAvailableChange(aAvailabilityUrls,
+                                            aAvailable))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
