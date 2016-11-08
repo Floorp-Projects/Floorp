@@ -1893,10 +1893,10 @@ class ChildAPIManager {
 
       case "API:CallResult":
         let deferred = this.callPromises.get(data.callId);
-        if (data.lastError) {
-          deferred.reject({message: data.lastError});
+        if ("error" in data) {
+          deferred.reject(data.error);
         } else {
-          deferred.resolve(new SpreadArgs(data.args));
+          deferred.resolve(new SpreadArgs(data.result));
         }
         this.callPromises.delete(data.callId);
         break;
