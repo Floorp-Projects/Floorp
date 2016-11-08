@@ -207,8 +207,7 @@ CompositorBridgeChild::InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoi
     NS_RUNTIMEABORT("Couldn't Open() Compositor channel.");
     return false;
   }
-
-  child->mCanSend = true;
+  child->InitIPDL();
 
   // We release this ref in DeferredDestroyCompositor.
   sCompositorBridge = child;
@@ -245,11 +244,12 @@ CompositorBridgeChild::InitSameProcess(widget::CompositorWidget* aWidget,
   mCompositorBridgeParent =
     new CompositorBridgeParent(aScale, vsyncRate, aUseExternalSurface, aSurfaceSize);
 
-  mCanSend = Open(mCompositorBridgeParent->GetIPCChannel(),
-                  CompositorThreadHolder::Loop(),
-                  ipc::ChildSide);
-  MOZ_RELEASE_ASSERT(mCanSend);
+  bool ok = Open(mCompositorBridgeParent->GetIPCChannel(),
+                 CompositorThreadHolder::Loop(),
+                 ipc::ChildSide);
+  MOZ_RELEASE_ASSERT(ok);
 
+  InitIPDL();
   mCompositorBridgeParent->InitSameProcess(aWidget, aLayerTreeId, aUseAPZ);
   return mCompositorBridgeParent;
 }
@@ -263,10 +263,22 @@ CompositorBridgeChild::CreateRemote(const uint64_t& aProcessToken,
   if (!aEndpoint.Bind(child)) {
     return nullptr;
   }
-
-  child->mCanSend = true;
+  child->InitIPDL();
   child->mProcessToken = aProcessToken;
   return child;
+}
+
+void
+CompositorBridgeChild::InitIPDL()
+{
+  mCanSend = true;
+  AddRef();
+}
+
+void
+CompositorBridgeChild::DeallocPCompositorBridgeChild()
+{
+  Release();
 }
 
 /*static*/ CompositorBridgeChild*
@@ -573,19 +585,12 @@ void
 CompositorBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   if (aWhy == AbnormalShutdown) {
-#ifdef MOZ_B2G
-  // Due to poor lifetime management of gralloc (and possibly shmems) we will
-  // crash at some point in the future when we get destroyed due to abnormal
-  // shutdown. Its better just to crash here. On desktop though, we have a chance
-  // of recovering.
-    NS_RUNTIMEABORT("ActorDestroy by IPC channel failure at CompositorBridgeChild");
-#endif
-
     // If the parent side runs into a problem then the actor will be destroyed.
     // There is nothing we can do in the child side, here sets mCanSend as false.
-    mCanSend = false;
     gfxCriticalNote << "Receive IPC close with reason=AbnormalShutdown";
   }
+
+  mCanSend = false;
 
   if (mProcessToken && XRE_IsParentProcess()) {
     GPUProcessManager::Get()->NotifyRemoteActorDestroyed(mProcessToken);
