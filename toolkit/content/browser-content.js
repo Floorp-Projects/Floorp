@@ -1644,7 +1644,10 @@ let DateTimePickerListener = {
    */
   getBoundingContentRect: function(aElement) {
     return BrowserUtils.getElementBoundingRect(aElement);
-    // return BrowserUtils.getElementBoundingScreenRect(aElement);
+  },
+
+  getTimePickerPref: function() {
+    return Services.prefs.getBoolPref("dom.forms.datetime.timepicker");
   },
 
   /**
@@ -1672,7 +1675,9 @@ let DateTimePickerListener = {
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "MozOpenDateTimePicker": {
-        if (!(aEvent.originalTarget instanceof content.HTMLInputElement)) {
+        // Time picker is disabled when preffed off
+        if (!(aEvent.originalTarget instanceof content.HTMLInputElement) ||
+            (aEvent.originalTarget.type == "time" && !this.getTimePickerPref())) {
           return;
         }
         this._inputElement = aEvent.originalTarget;
