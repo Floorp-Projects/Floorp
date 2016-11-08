@@ -366,6 +366,15 @@ ServoRestyleManager::ProcessPendingRestyles()
       ServoElementSnapshot* snapshot = iter.UserData();
       Element* element = iter.Key();
 
+      // The element is no longer in the document, so don't bother computing
+      // a final restyle hint for it.
+      //
+      // XXXheycam RestyleTracker checks that the element's GetComposedDoc()
+      // matches the document we're restyling.  Do we need to do that too?
+      if (!element->IsInComposedDoc()) {
+        continue;
+      }
+
       // TODO: avoid the ComputeRestyleHint call if we already have the highest
       // explicit restyle hint?
       nsRestyleHint hint = styleSet->ComputeRestyleHint(element, snapshot);
