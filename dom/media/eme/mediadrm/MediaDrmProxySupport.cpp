@@ -199,12 +199,11 @@ MediaDrmProxySupport::MediaDrmProxySupport(const nsAString& aKeySystem)
   : mKeySystem(aKeySystem), mDestroyed(false)
 {
   mJavaCallbacks = MediaDrmProxy::NativeMediaDrmProxyCallbacks::New();
-  // TODO: Bug 1306196 will check the pref to determine if it is oop case.
-  // Follow the pref flag PDMAndroidRemoteCodecEnabled returned to determine
-  // it is crossing process CDM or not.
+
   mBridgeProxy =
     MediaDrmProxy::Create(mKeySystem,
-                          mJavaCallbacks);
+                          mJavaCallbacks,
+                          MediaPrefs::PDMAndroidRemoteCodecEnabled());
 }
 
 MediaDrmProxySupport::~MediaDrmProxySupport()

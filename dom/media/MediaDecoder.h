@@ -82,7 +82,6 @@ public:
     /* MediaResourceCallback functions */
     MediaDecoderOwner* GetMediaOwner() const override;
     void SetInfinite(bool aInfinite) override;
-    void SetMediaSeekable(bool aMediaSeekable) override;
     void NotifyNetworkError() override;
     void NotifyDecodeError() override;
     void NotifyDataArrived() override;
@@ -252,17 +251,9 @@ protected:
   void UpdateEstimatedMediaDuration(int64_t aDuration) override;
 
 public:
-  // Set a flag indicating whether random seeking is supported
-  void SetMediaSeekable(bool aMediaSeekable);
-  // Set a flag indicating whether seeking is supported only in buffered ranges
-  void SetMediaSeekableOnlyInBufferedRanges(bool aMediaSeekableOnlyInBufferedRanges);
-
   // Returns true if this media supports random seeking. False for example with
   // chained ogg files.
   bool IsMediaSeekable();
-  // Returns true if this media supports seeking only in buffered ranges. True
-  // for example in WebMs with no cues
-  bool IsMediaSeekableOnlyInBufferedRanges();
   // Returns true if seeking is supported on a transport level (e.g. the server
   // supports range requests, we are playing a file, etc.).
   bool IsTransportSeekable();
@@ -576,7 +567,7 @@ private:
 
   void OnMediaNotSeekable()
   {
-    SetMediaSeekable(false);
+    mMediaSeekable = false;
   }
 
   void FinishShutdown();
@@ -672,6 +663,13 @@ protected:
 
   // True if we've already fired metadataloaded.
   bool mFiredMetadataLoaded;
+
+  // True if the media is seekable (i.e. supports random access).
+  bool mMediaSeekable = true;
+
+  // True if the media is only seekable within its buffered ranges
+  // like WebMs with no cues.
+  bool mMediaSeekableOnlyInBufferedRanges = false;
 
   // Stores media info, including info of audio tracks and video tracks, should
   // only be accessed from main thread.
@@ -772,12 +770,6 @@ protected:
   // back again.
   Canonical<int64_t> mDecoderPosition;
 
-  // True if the media is seekable (i.e. supports random access).
-  Canonical<bool> mMediaSeekable;
-
-  // True if the media is only seekable within its buffered ranges.
-  Canonical<bool> mMediaSeekableOnlyInBufferedRanges;
-
   // True if the decoder is visible.
   Canonical<bool> mIsVisible;
 
@@ -818,12 +810,6 @@ public:
   }
   AbstractCanonical<int64_t>* CanonicalDecoderPosition() {
     return &mDecoderPosition;
-  }
-  AbstractCanonical<bool>* CanonicalMediaSeekable() {
-    return &mMediaSeekable;
-  }
-  AbstractCanonical<bool>* CanonicalMediaSeekableOnlyInBufferedRanges() {
-    return &mMediaSeekableOnlyInBufferedRanges;
   }
   AbstractCanonical<bool>* CanonicalIsVisible() {
     return &mIsVisible;

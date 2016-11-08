@@ -125,13 +125,23 @@ class TcpTransport(object):
         """
         self.addr = addr
         self.port = port
-        self.socket_timeout = socket_timeout
+        self._socket_timeout = socket_timeout
 
         self.protocol = 1
         self.application_type = None
         self.last_id = 0
         self.expected_response = None
         self.sock = None
+
+    @property
+    def socket_timeout(self):
+        return self._socket_timeout
+
+    @socket_timeout.setter
+    def socket_timeout(self, value):
+        if self.sock:
+            self.sock.settimeout(value)
+        self._socket_timeout = value
 
     def _unmarshal(self, packet):
         msg = None
@@ -276,7 +286,13 @@ class TcpTransport(object):
     def close(self):
         """Close the socket."""
         if self.sock:
-            self.sock.shutdown(socket.SHUT_RDWR)
+            try:
+                self.sock.shutdown(socket.SHUT_RDWR)
+            except IOError as exc:
+                # Errno 57 is "socket not connected", which we don't care about here.
+                if exc.errno != 57:
+                    raise
+
             self.sock.close()
             self.sock = None
 

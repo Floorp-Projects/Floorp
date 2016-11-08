@@ -89,43 +89,6 @@ EXTRA_JS_MODULES += [
     'systemlibs.js',
 ]
 
-if CONFIG['MOZ_B2G_RIL']:
-    EXPORTS += [
-         'mozstumbler/MozStumbler.h',
-    ]
-    UNIFIED_SOURCES += [
-          'mozstumbler/MozStumbler.cpp',
-          'mozstumbler/StumblerLogging.cpp',
-          'mozstumbler/UploadStumbleRunnable.cpp',
-          'mozstumbler/WriteStumbleOnThread.cpp'
-    ]
-    XPIDL_SOURCES += [
-        'nsIDataCallInterfaceService.idl',
-        'nsIDataCallManager.idl',
-        'nsIGonkDataCallInterfaceService.idl',
-        'nsIRadioInterfaceLayer.idl',
-    ]
-    EXTRA_COMPONENTS += [
-        'DataCallManager.js',
-        'DataCallManager.manifest',
-        'RILSystemMessengerHelper.js',
-        'RILSystemMessengerHelper.manifest',
-    ]
-    EXTRA_JS_MODULES += [
-        'ril_consts.js',
-        'ril_worker.js',
-        'ril_worker_buf_object.js',
-        'ril_worker_telephony_request_queue.js',
-        'RILSystemMessenger.jsm',
-    ]
-    if not CONFIG['DISABLE_MOZ_RIL_GEOLOC']:
-        EXTRA_COMPONENTS += [
-            'DataCallInterfaceService.js',
-            'DataCallInterfaceService.manifest',
-            'RadioInterfaceLayer.js',
-            'RadioInterfaceLayer.manifest',
-        ]
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 DEFINES['HAVE_ANDROID_OS'] = True

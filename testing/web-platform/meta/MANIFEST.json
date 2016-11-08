@@ -38719,6 +38719,18 @@
             "url": "/web-animations/animation-model/animation-types/spacing-keyframes-shapes.html"
           }
         ],
+        "web-animations/interfaces/KeyframeEffect/copy-contructor.html": [
+          {
+            "path": "web-animations/interfaces/KeyframeEffect/copy-contructor.html",
+            "url": "/web-animations/interfaces/KeyframeEffect/copy-contructor.html"
+          }
+        ],
+        "web-animations/interfaces/KeyframeEffectReadOnly/copy-contructor.html": [
+          {
+            "path": "web-animations/interfaces/KeyframeEffectReadOnly/copy-contructor.html",
+            "url": "/web-animations/interfaces/KeyframeEffectReadOnly/copy-contructor.html"
+          }
+        ],
         "webaudio/the-audio-api/the-constantsourcenode-interface/test-constantsourcenode.html": [
           {
             "path": "webaudio/the-audio-api/the-constantsourcenode-interface/test-constantsourcenode.html",

@@ -39,7 +39,7 @@ add_task(function* () {
   // Then wait for title update, but on slow test runner, the title may already
   // be set to the expected value
   if (newTabTarget.textContent != "foo") {
-    yield waitForMutation(newTabTarget, { childList: true });
+    yield waitForContentMutation(newTabTarget);
   }
 
   // Check that the new tab appears in the UI

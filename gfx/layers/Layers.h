@@ -77,6 +77,7 @@ class Animation;
 class AnimationData;
 class AsyncCanvasRenderer;
 class AsyncPanZoomController;
+class BasicLayerManager;
 class ClientLayerManager;
 class Layer;
 class LayerMetricsWrapper;
@@ -194,6 +195,9 @@ public:
   { return nullptr; }
 
   virtual ClientLayerManager* AsClientLayerManager()
+  { return nullptr; }
+
+  virtual BasicLayerManager* AsBasicLayerManager()
   { return nullptr; }
 
   /**

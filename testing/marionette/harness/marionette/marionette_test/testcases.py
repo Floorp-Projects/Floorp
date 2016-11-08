@@ -6,7 +6,6 @@ import imp
 import os
 import re
 import sys
-import socket
 import time
 import types
 import unittest
@@ -274,13 +273,9 @@ class CommonTestCase(unittest.TestCase):
                     self.loglines = [['Error getting log: {}'.format(inst)]]
                 try:
                     self.marionette.delete_session()
-                except (socket.error, MarionetteException, IOError):
+                except IOError:
                     # Gecko has crashed?
-                    self.marionette.session = None
-                    try:
-                        self.marionette.client.close()
-                    except socket.error:
-                        pass
+                    pass
         self.marionette = None
 
     def setup_SpecialPowers_observer(self):
@@ -484,7 +479,7 @@ class MarionetteTestCase(CommonTestCase):
         if not self.marionette.session:
             self.marionette.start_session()
 
-        if not self.marionette.check_for_crash():
+        if not self.marionette.crashed:
             try:
                 self.marionette.clear_imported_scripts()
                 self.marionette.execute_script("log('TEST-END: {0}:{1}')"

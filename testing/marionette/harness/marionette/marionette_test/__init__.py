@@ -8,6 +8,7 @@ __version__ = '3.1.0'
 from .decorators import (
     expectedFailure,
     parameterized,
+    run_if_e10s,
     skip,
     skip_if_chrome,
     skip_if_desktop,
