@@ -3133,7 +3133,7 @@ js::GetThisValueForDebuggerMaybeOptimizedOut(JSContext* cx, AbstractFramePtr fra
             }
 
             if (loc.kind() == BindingLocation::Kind::Frame && ei.withinInitialFrame())
-                res.set(frame.unaliasedLocal(bi.location().slot()));
+                res.set(frame.unaliasedLocal(loc.slot()));
             else
                 res.setMagic(JS_OPTIMIZED_OUT);
 
