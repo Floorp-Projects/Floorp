@@ -255,7 +255,7 @@ function do_cleanup() {
   Services.obs.removeObserver(Observer, "http-on-examine-response");
 }
 
-function SetupPrefTestEnvironment(which) {
+function SetupPrefTestEnvironment(which, additional_prefs) {
   which_test = which;
   clear_sts_data();
 
@@ -265,14 +265,24 @@ function SetupPrefTestEnvironment(which) {
   // priming counts how many tests were finished
   settings.finished= {};
 
-  SpecialPowers.pushPrefEnv({'set': [["security.mixed_content.block_active_content",
-                                      settings.block_active],
-                                     ["security.mixed_content.block_display_content",
-                                      settings.block_display],
-                                     ["security.mixed_content.use_hsts",
-                                      settings.use_hsts],
-                                     ["security.mixed_content.send_hsts_priming",
-                                      settings.send_hsts_priming]]});
+  var prefs = [["security.mixed_content.block_active_content",
+                settings.block_active],
+               ["security.mixed_content.block_display_content",
+                settings.block_display],
+               ["security.mixed_content.use_hsts",
+                settings.use_hsts],
+               ["security.mixed_content.send_hsts_priming",
+                settings.send_hsts_priming]];
+
+  if (additional_prefs) {
+    for (let idx in additional_prefs) {
+      prefs.push(additional_prefs[idx]);
+    }
+  }
+
+  console.log("prefs=%s", prefs);
+
+  SpecialPowers.pushPrefEnv({'set': prefs});
 }
 
 // make the top-level test uri
