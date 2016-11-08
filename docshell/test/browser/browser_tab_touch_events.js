@@ -4,11 +4,15 @@
 "use strict";
 
 add_task(function*() {
-  yield openUrl("data:text/html;charset=utf-8,<iframe id='test-iframe'></iframe>");
+  const URI = "data:text/html;charset=utf-8,<iframe id='test-iframe'></iframe>";
 
-  let docshell = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocShell);
+  yield BrowserTestUtils.withNewTab({ gBrowser, url: URI }, function* (browser) {
+    yield ContentTask.spawn(browser, null, test_body);
+  });
+});
+
+function* test_body() {
+  let docshell = docShell;
 
   is(docshell.touchEventsOverride, Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_NONE,
     "touchEventsOverride flag should be initially set to NONE");
@@ -35,33 +39,11 @@ add_task(function*() {
     "Newly created frames should use the new touchEventsOverride flag");
 
   newFrameWin.location.reload();
-  yield waitForEvent(newFrameWin, "load");
+  yield ContentTaskUtils.waitForEvent(newFrameWin, "load");
 
   docshell = newFrameWin.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIWebNavigation)
                         .QueryInterface(Ci.nsIDocShell);
   is(docshell.touchEventsOverride, Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_DISABLED,
     "New touchEventsOverride flag should persist across reloads");
-
-  gBrowser.removeCurrentTab();
-});
-
-function waitForEvent(target, event) {
-  return new Promise(function(resolve) {
-    target.addEventListener(event, resolve);
-  });
-}
-
-function openUrl(url) {
-  return new Promise(function(resolve, reject) {
-    window.focus();
-
-    let tab = window.gBrowser.selectedTab = window.gBrowser.addTab(url);
-    let linkedBrowser = tab.linkedBrowser;
-
-    linkedBrowser.addEventListener("load", function onload() {
-      linkedBrowser.removeEventListener("load", onload, true);
-      resolve(tab);
-    }, true);
-  });
 }

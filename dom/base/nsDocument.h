@@ -784,6 +784,8 @@ public:
   virtual void ScheduleIntersectionObserverNotification() override;
   virtual void NotifyIntersectionObservers() override;
 
+  virtual void NotifyLayerManagerRecreated() override;
+
 
 private:
   void AddOnDemandBuiltInUASheet(mozilla::StyleSheet* aSheet);

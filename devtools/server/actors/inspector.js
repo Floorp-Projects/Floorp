@@ -53,6 +53,7 @@
 const {Cc, Ci, Cu} = require("chrome");
 const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
+const {LayoutActor} = require("devtools/server/actors/layout");
 const {LongStringActor} = require("devtools/server/actors/string");
 const promise = require("promise");
 const {Task} = require("devtools/shared/task");
@@ -915,6 +916,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
       this.onMutations = null;
 
+      this.layoutActor = null;
       this.tabActor = null;
 
       events.emit(this, "destroyed");
@@ -2596,6 +2598,20 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     return this.attachElement(obj);
+  },
+
+  /**
+   * Returns an instance of the LayoutActor that is used to retrieve CSS layout-related
+   * information.
+   *
+   * @return {LayoutActor}
+   */
+  getLayoutInspector: function () {
+    if (!this.layoutActor) {
+      this.layoutActor = new LayoutActor(this.conn, this.tabActor, this);
+    }
+
+    return this.layoutActor;
   },
 });
 

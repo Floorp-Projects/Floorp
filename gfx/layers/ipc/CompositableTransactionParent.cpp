@@ -60,15 +60,6 @@ ScheduleComposition(CompositableHost* aCompositable)
   return true;
 }
 
-#if defined(DEBUG)
-static bool ValidatePictureRect(const mozilla::gfx::IntSize& aSize,
-                                const nsIntRect& aPictureRect)
-{
-  return nsIntRect(0, 0, aSize.width, aSize.height).Contains(aPictureRect) &&
-      !aPictureRect.IsEmpty();
-}
-#endif
-
 bool
 CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation& aEdit,
                                                      EditReplyVector& replyv)
@@ -172,7 +163,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         t->mFrameID = timedTexture.frameID();
         t->mProducerID = timedTexture.producerID();
         t->mTexture->DeserializeReadLock(timedTexture.sharedLock(), this);
-        MOZ_ASSERT(ValidatePictureRect(t->mTexture->GetSize(), t->mPictureRect));
       }
       if (textures.Length() > 0) {
         compositable->UseTextureHost(textures);

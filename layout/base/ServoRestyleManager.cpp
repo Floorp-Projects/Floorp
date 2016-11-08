@@ -38,7 +38,8 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
   // XXX This is a temporary hack to make style attribute change works.
   //     In the future, we should be able to use this hint directly.
   if (aRestyleHint & eRestyle_StyleAttribute) {
-    aRestyleHint |= eRestyle_Subtree;
+    aRestyleHint &= ~eRestyle_StyleAttribute;
+    aRestyleHint |= eRestyle_Self | eRestyle_Subtree;
   }
 
   // Note that unlike in Servo, we don't mark elements as dirty until we process
