@@ -639,6 +639,12 @@ MOZ_MUST_USE bool
 DecodePreamble(Decoder& d);
 
 MOZ_MUST_USE bool
+CheckValType(Decoder& d, ValType type);
+
+MOZ_MUST_USE bool
+DecodeTypeSection(Decoder& d, SigWithIdVector* sigs);
+
+MOZ_MUST_USE bool
 EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
 
 MOZ_MUST_USE bool
