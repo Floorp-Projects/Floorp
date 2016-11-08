@@ -21,7 +21,7 @@ MessagePortChild::RecvStopSendingDataConfirmed()
 }
 
 mozilla::ipc::IPCResult
-MessagePortChild::RecvEntangled(nsTArray<MessagePortMessage>&& aMessages)
+MessagePortChild::RecvEntangled(nsTArray<ClonedMessageData>&& aMessages)
 {
   if (mPort) {
     mPort->Entangled(aMessages);
@@ -30,7 +30,7 @@ MessagePortChild::RecvEntangled(nsTArray<MessagePortMessage>&& aMessages)
 }
 
 mozilla::ipc::IPCResult
-MessagePortChild::RecvReceiveData(nsTArray<MessagePortMessage>&& aMessages)
+MessagePortChild::RecvReceiveData(nsTArray<ClonedMessageData>&& aMessages)
 {
   if (mPort) {
     mPort->MessagesReceived(aMessages);
