@@ -795,7 +795,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this.onFrameUnload = this.onFrameUnload.bind(this);
 
     events.on(tabActor, "will-navigate", this.onFrameUnload);
-    events.on(tabActor, "navigate", this.onFrameLoad);
+    events.on(tabActor, "window-ready", this.onFrameLoad);
 
     // Ensure that the root document node actor is ready and
     // managed.
@@ -886,7 +886,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       this._refMap = null;
 
       events.off(this.tabActor, "will-navigate", this.onFrameUnload);
-      events.off(this.tabActor, "navigate", this.onFrameLoad);
+      events.off(this.tabActor, "window-ready", this.onFrameLoad);
 
       this.onFrameLoad = null;
       this.onFrameUnload = null;
@@ -2347,6 +2347,13 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   onFrameLoad: function ({ window, isTopLevel }) {
+    let { readyState } = window.document;
+    if (readyState != "interactive" && readyState != "complete") {
+      window.addEventListener("DOMContentLoaded",
+        this.onFrameLoad.bind(this, { window, isTopLevel }),
+        { once: true });
+      return;
+    }
     if (isTopLevel) {
       // If we initialize the inspector while the document is loading,
       // we may already have a root document set in the constructor.
