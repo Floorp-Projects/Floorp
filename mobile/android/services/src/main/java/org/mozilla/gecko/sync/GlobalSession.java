@@ -74,6 +74,8 @@ public class GlobalSession implements HttpResponseObserver {
   protected final Context context;
   protected final ClientsDataDelegate clientsDelegate;
 
+  private long syncDeadline;
+
   /**
    * Map from engine name to new settings for an updated meta/global record.
    * Engines to remove will have <code>null</code> EngineSettings.
@@ -234,6 +236,10 @@ public class GlobalSession implements HttpResponseObserver {
     return out;
   }
 
+  public long getSyncDeadline() {
+    return syncDeadline;
+  }
+
   /**
    * Advance and loop around the stages of a sync.
    * @param current
@@ -293,10 +299,14 @@ public class GlobalSession implements HttpResponseObserver {
    *
    * @throws AlreadySyncingException
    */
-  public void start() throws AlreadySyncingException {
+  public void start(final long syncDeadline) throws AlreadySyncingException {
     if (this.currentState != GlobalSyncStage.Stage.idle) {
       throw new AlreadySyncingException(this.currentState);
     }
+
+    // Make the deadline value available to stages via its getter.
+    this.syncDeadline = syncDeadline;
+
     installAsHttpResponseObserver(); // Uninstalled by completeSync or abort.
     this.advance();
   }
@@ -311,7 +321,8 @@ public class GlobalSession implements HttpResponseObserver {
       this.callback.handleAborted(this, "Told to back off.");
       return;
     }
-    this.start();
+    // Restart with the same deadline as before.
+    this.start(syncDeadline);
   }
 
   /**

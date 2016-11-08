@@ -60,6 +60,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
   private static final String LOG_TAG = FxAccountSyncAdapter.class.getSimpleName();
@@ -73,6 +74,11 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
   // successfully synced within this duration.
   private static final int MINIMUM_SYNC_DELAY_MILLIS = 15 * 1000;        // 15 seconds.
   private volatile long lastSyncRealtimeMillis;
+
+  // Non-user initiated sync can't take longer than 30 minutes.
+  // To ensure we're not churning through device's battery/resources, we limit sync to 10 minutes,
+  // and request a re-sync if we hit that deadline.
+  private static final long SYNC_DEADLINE_DELTA_MILLIS = TimeUnit.MINUTES.toMillis(10);
 
   protected final ExecutorService executor;
   protected final FxAccountNotificationManager notificationManager;
@@ -231,8 +237,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     return forced;
   }
 
-  protected void syncWithAssertion(final String audience,
-                                   final String assertion,
+  protected void syncWithAssertion(final String assertion,
                                    final URI tokenServerEndpointURI,
                                    final BackoffHandler tokenBackoffHandler,
                                    final SharedPreferences sharedPrefs,
@@ -240,7 +245,8 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
                                    final String clientState,
                                    final SessionCallback callback,
                                    final Bundle extras,
-                                   final AndroidFxAccount fxAccount) {
+                                   final AndroidFxAccount fxAccount,
+                                   final long syncDeadline) {
     final TokenServerClientDelegate delegate = new TokenServerClientDelegate() {
       private boolean didReceiveBackoff = false;
 
@@ -321,7 +327,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           syncConfig.setClusterURL(storageServerURI);
 
           globalSession = new GlobalSession(syncConfig, callback, context, clientsDataDelegate);
-          globalSession.start();
+          globalSession.start(syncDeadline);
         } catch (Exception e) {
           callback.handleError(globalSession, e);
           return;
@@ -385,6 +391,10 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     final Context context = getContext();
     final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+
+    // NB: we use elapsedRealtime which is time since boot, to ensure our clock is monotonic and isn't
+    // paused while CPU is in the power-saving mode.
+    final long syncDeadline = SystemClock.elapsedRealtime() + SYNC_DEADLINE_DELTA_MILLIS;
 
     Logger.info(LOG_TAG, "Syncing FxAccount" +
         " account named like " + Utils.obfuscateEmail(account.name) +
@@ -536,7 +546,9 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
             final SessionCallback sessionCallback = new SessionCallback(syncDelegate, schedulePolicy);
             final KeyBundle syncKeyBundle = married.getSyncKeyBundle();
             final String clientState = married.getClientState();
-            syncWithAssertion(audience, assertion, tokenServerEndpointURI, tokenBackoffHandler, sharedPrefs, syncKeyBundle, clientState, sessionCallback, extras, fxAccount);
+            syncWithAssertion(
+                    assertion, tokenServerEndpointURI, tokenBackoffHandler, sharedPrefs,
+                    syncKeyBundle, clientState, sessionCallback, extras, fxAccount, syncDeadline);
 
             // Register the device if necessary (asynchronous, in another thread)
             if (fxAccount.getDeviceRegistrationVersion() != FxAccountDeviceRegistrator.DEVICE_REGISTRATION_VERSION
