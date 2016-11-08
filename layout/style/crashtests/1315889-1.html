@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<style>
+.x { color: blue; }
+</style>
+<div class=x>hello</div>
+<script>
+document.body.offsetWidth;
+var x = document.querySelector(".x");
+x.className = "";
+x.remove();
+document.body.offsetWidth;
+</script>
