@@ -1028,7 +1028,7 @@ add_task(function* test_pluginsWatch_Remove() {
   }
 
   // Find the test plugin.
-  let plugin = gInstalledPlugins.find(plugin => (plugin.name == PLUGIN2_NAME));
+  let plugin = gInstalledPlugins.find(p => (p.name == PLUGIN2_NAME));
   Assert.ok(plugin, "The test plugin must exist.");
 
   // Remove it from the PluginHost.
@@ -1397,16 +1397,16 @@ add_task(function* test_defaultSearchEngine() {
     TelemetryEnvironment.registerChangeListener("testWatch_SearchDefault", resolve);
   });
   let engine = yield new Promise((resolve, reject) => {
-    Services.obs.addObserver(function obs(subject, topic, data) {
+    Services.obs.addObserver(function obs(obsSubject, obsTopic, obsData) {
       try {
-        let engine = subject.QueryInterface(Ci.nsISearchEngine);
-        do_print("Observed " + data + " for " + engine.name);
-        if (data != "engine-added" || engine.name != "engine-telemetry") {
+        let searchEngine = obsSubject.QueryInterface(Ci.nsISearchEngine);
+        do_print("Observed " + obsData + " for " + searchEngine.name);
+        if (obsData != "engine-added" || searchEngine.name != "engine-telemetry") {
           return;
         }
 
         Services.obs.removeObserver(obs, "browser-search-engine-modified");
-        resolve(engine);
+        resolve(searchEngine);
       } catch (ex) {
         reject(ex);
       }

@@ -33,18 +33,18 @@ function waitForBookmarkNotification(aNotification, aCallback, aProperty)
     onItemRemoved: function onItemRemoved() {
       return this.validate(arguments.callee.name, arguments);
     },
-    onItemChanged: function onItemChanged(aItemId, aProperty, aIsAnno,
-                                          aNewValue, aLastModified, aItemType)
+    onItemChanged: function onItemChanged(id, property, aIsAnno,
+                                          aNewValue, aLastModified, type)
     {
       return this.validate(arguments.callee.name,
-                           { id: aItemId,
+                           { id,
                              get index() {
                                return PlacesUtils.bookmarks.getItemIndex(this.id);
                              },
-                             type: aItemType,
-                             property: aProperty,
+                             type,
+                             property,
                              get url() {
-                               return aItemType == PlacesUtils.bookmarks.TYPE_BOOKMARK ?
+                               return type == PlacesUtils.bookmarks.TYPE_BOOKMARK ?
                                       PlacesUtils.bookmarks.getBookmarkURI(this.id).spec :
                                       null;
                              },
@@ -121,30 +121,30 @@ add_test(function test_container()
 {
   const TEST_TITLE = "Places folder"
 
-  waitForBookmarkNotification("onItemChanged", function(aData)
+  waitForBookmarkNotification("onItemChanged", function(aChangedData)
   {
-    do_check_eq(aData.title, TEST_TITLE);
-    do_check_eq(aData.type, PlacesUtils.bookmarks.TYPE_FOLDER);
-    do_check_eq(aData.index, 1);
+    do_check_eq(aChangedData.title, TEST_TITLE);
+    do_check_eq(aChangedData.type, PlacesUtils.bookmarks.TYPE_FOLDER);
+    do_check_eq(aChangedData.index, 1);
 
-    waitForBookmarkNotification("onItemAdded", function(aData)
+    waitForBookmarkNotification("onItemAdded", function(aAddedData)
     {
-      do_check_eq(aData.title, TEST_TITLE);
-      do_check_eq(aData.type, PlacesUtils.bookmarks.TYPE_FOLDER);
-      do_check_eq(aData.index, 2);
-      let id = aData.id;
+      do_check_eq(aAddedData.title, TEST_TITLE);
+      do_check_eq(aAddedData.type, PlacesUtils.bookmarks.TYPE_FOLDER);
+      do_check_eq(aAddedData.index, 2);
+      let id = aAddedData.id;
 
-      waitForBookmarkNotification("onItemMoved", function(aData)
+      waitForBookmarkNotification("onItemMoved", function(aMovedData)
       {
-        do_check_eq(aData.id, id);
-        do_check_eq(aData.type, PlacesUtils.bookmarks.TYPE_FOLDER);
-        do_check_eq(aData.index, 1);
+        do_check_eq(aMovedData.id, id);
+        do_check_eq(aMovedData.type, PlacesUtils.bookmarks.TYPE_FOLDER);
+        do_check_eq(aMovedData.index, 1);
 
         run_next_test();
       });
 
       let txn = PlacesUIUtils.makeTransaction(
-        wrapNodeByIdAndParent(aData.id, PlacesUtils.unfiledBookmarksFolderId),
+        wrapNodeByIdAndParent(aAddedData.id, PlacesUtils.unfiledBookmarksFolderId),
         0, // Unused for real nodes.
         PlacesUtils.unfiledBookmarksFolderId,
         1, // Move to position 1.
@@ -155,7 +155,7 @@ add_test(function test_container()
 
     try {
     let txn = PlacesUIUtils.makeTransaction(
-      wrapNodeByIdAndParent(aData.id, PlacesUtils.unfiledBookmarksFolderId),
+      wrapNodeByIdAndParent(aChangedData.id, PlacesUtils.unfiledBookmarksFolderId),
       0, // Unused for real nodes.
       PlacesUtils.unfiledBookmarksFolderId,
       PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -181,28 +181,28 @@ add_test(function test_container()
 
 add_test(function test_separator()
 {
-  waitForBookmarkNotification("onItemChanged", function(aData)
+  waitForBookmarkNotification("onItemChanged", function(aChangedData)
   {
-    do_check_eq(aData.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
-    do_check_eq(aData.index, 3);
+    do_check_eq(aChangedData.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
+    do_check_eq(aChangedData.index, 3);
 
-    waitForBookmarkNotification("onItemAdded", function(aData)
+    waitForBookmarkNotification("onItemAdded", function(aAddedData)
     {
-      do_check_eq(aData.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
-      do_check_eq(aData.index, 4);
-      let id = aData.id;
+      do_check_eq(aAddedData.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
+      do_check_eq(aAddedData.index, 4);
+      let id = aAddedData.id;
 
-      waitForBookmarkNotification("onItemMoved", function(aData)
+      waitForBookmarkNotification("onItemMoved", function(aMovedData)
       {
-        do_check_eq(aData.id, id);
-        do_check_eq(aData.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
-        do_check_eq(aData.index, 1);
+        do_check_eq(aMovedData.id, id);
+        do_check_eq(aMovedData.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
+        do_check_eq(aMovedData.index, 1);
 
         run_next_test();
       });
 
       let txn = PlacesUIUtils.makeTransaction(
-        wrapNodeByIdAndParent(aData.id, PlacesUtils.unfiledBookmarksFolderId),
+        wrapNodeByIdAndParent(aAddedData.id, PlacesUtils.unfiledBookmarksFolderId),
         0, // Unused for real nodes.
         PlacesUtils.unfiledBookmarksFolderId,
         1, // Move to position 1.
@@ -213,7 +213,7 @@ add_test(function test_separator()
 
     try {
     let txn = PlacesUIUtils.makeTransaction(
-      wrapNodeByIdAndParent(aData.id, PlacesUtils.unfiledBookmarksFolderId),
+      wrapNodeByIdAndParent(aChangedData.id, PlacesUtils.unfiledBookmarksFolderId),
       0, // Unused for real nodes.
       PlacesUtils.unfiledBookmarksFolderId,
       PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -237,32 +237,32 @@ add_test(function test_bookmark()
   const TEST_URL = "http://places.moz.org/"
   const TEST_TITLE = "Places bookmark"
 
-  waitForBookmarkNotification("onItemChanged", function(aData)
+  waitForBookmarkNotification("onItemChanged", function(aChangedData)
   {
-    do_check_eq(aData.title, TEST_TITLE);
-    do_check_eq(aData.url, TEST_URL);
-    do_check_eq(aData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-    do_check_eq(aData.index, 5);
+    do_check_eq(aChangedData.title, TEST_TITLE);
+    do_check_eq(aChangedData.url, TEST_URL);
+    do_check_eq(aChangedData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+    do_check_eq(aChangedData.index, 5);
 
-    waitForBookmarkNotification("onItemAdded", function(aData)
+    waitForBookmarkNotification("onItemAdded", function(aAddedData)
     {
-      do_check_eq(aData.title, TEST_TITLE);
-      do_check_eq(aData.url, TEST_URL);
-      do_check_eq(aData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-      do_check_eq(aData.index, 6);
-      let id = aData.id;
+      do_check_eq(aAddedData.title, TEST_TITLE);
+      do_check_eq(aAddedData.url, TEST_URL);
+      do_check_eq(aAddedData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+      do_check_eq(aAddedData.index, 6);
+      let id = aAddedData.id;
 
-      waitForBookmarkNotification("onItemMoved", function(aData)
+      waitForBookmarkNotification("onItemMoved", function(aMovedData)
       {
-        do_check_eq(aData.id, id);
-        do_check_eq(aData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-        do_check_eq(aData.index, 1);
+        do_check_eq(aMovedData.id, id);
+        do_check_eq(aMovedData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+        do_check_eq(aMovedData.index, 1);
 
         run_next_test();
       });
 
       let txn = PlacesUIUtils.makeTransaction(
-        wrapNodeByIdAndParent(aData.id, PlacesUtils.unfiledBookmarksFolderId),
+        wrapNodeByIdAndParent(aAddedData.id, PlacesUtils.unfiledBookmarksFolderId),
         0, // Unused for real nodes.
         PlacesUtils.unfiledBookmarksFolderId,
         1, // Move to position 1.
@@ -273,7 +273,7 @@ add_test(function test_bookmark()
 
     try {
     let txn = PlacesUIUtils.makeTransaction(
-      wrapNodeByIdAndParent(aData.id, PlacesUtils.unfiledBookmarksFolderId),
+      wrapNodeByIdAndParent(aChangedData.id, PlacesUtils.unfiledBookmarksFolderId),
       0, // Unused for real nodes.
       PlacesUtils.unfiledBookmarksFolderId,
       PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -302,24 +302,24 @@ add_test(function test_visit()
   const TEST_URL = "http://places.moz.org/"
   const TEST_TITLE = "Places bookmark"
 
-  waitForBookmarkNotification("onItemAdded", function(aData)
+  waitForBookmarkNotification("onItemAdded", function(aAddedData)
   {
-    do_check_eq(aData.title, TEST_TITLE);
-    do_check_eq(aData.url, TEST_URL);
-    do_check_eq(aData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-    do_check_eq(aData.index, 7);
+    do_check_eq(aAddedData.title, TEST_TITLE);
+    do_check_eq(aAddedData.url, TEST_URL);
+    do_check_eq(aAddedData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+    do_check_eq(aAddedData.index, 7);
 
-    waitForBookmarkNotification("onItemAdded", function(aData)
+    waitForBookmarkNotification("onItemAdded", function(aAddedData2)
     {
-      do_check_eq(aData.title, TEST_TITLE);
-      do_check_eq(aData.url, TEST_URL);
-      do_check_eq(aData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-      do_check_eq(aData.index, 8);
+      do_check_eq(aAddedData2.title, TEST_TITLE);
+      do_check_eq(aAddedData2.url, TEST_URL);
+      do_check_eq(aAddedData2.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+      do_check_eq(aAddedData2.index, 8);
       run_next_test();
     });
 
     try {
-    let node = wrapNodeByIdAndParent(aData.id, PlacesUtils.unfiledBookmarksFolderId);
+    let node = wrapNodeByIdAndParent(aAddedData.id, PlacesUtils.unfiledBookmarksFolderId);
     // Simulate a not-bookmarked node, will copy it to a new bookmark.
     node.id = -1;
     let txn = PlacesUIUtils.makeTransaction(
