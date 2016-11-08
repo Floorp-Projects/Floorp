@@ -18,6 +18,6 @@ module.exports = { // eslint-disable-line no-undef
   },
 
   "rules": {
-    "mozilla/import-headjs-globals": 1
+    "mozilla/import-headjs-globals": "warn"
   }
 };

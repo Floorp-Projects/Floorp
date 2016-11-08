@@ -6,8 +6,8 @@ module.exports = { // eslint-disable-line no-undef
     "../../../../testing/mochitest/chrome.eslintrc.js"
   ],
   "rules": {
-    "brace-style": 0,
-    "no-undef": 0,
-    "no-unused-vars": 0,
+    "brace-style": "off",
+    "no-undef": "off",
+    "no-unused-vars": "off",
   },
 };
