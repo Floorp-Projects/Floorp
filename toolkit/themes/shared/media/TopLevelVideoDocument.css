@@ -8,6 +8,5 @@ body {
 }
 
 video {
-  border: 1px #000000 solid;
-  box-shadow: 0 0 5px rgba(0,0,0,0.6);
+  box-shadow: 0 0 15px #000;
 }
