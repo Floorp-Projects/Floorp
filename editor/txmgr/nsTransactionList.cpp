@@ -19,7 +19,7 @@ NS_IMPL_ISUPPORTS(nsTransactionList, nsITransactionList)
 
 nsTransactionList::nsTransactionList(nsITransactionManager *aTxnMgr, nsTransactionStack *aTxnStack)
   : mTxnStack(aTxnStack)
-  , mTxnItem(0)
+  , mTxnItem(nullptr)
 {
   if (aTxnMgr)
     mTxnMgr = do_GetWeakReference(aTxnMgr);
@@ -36,7 +36,7 @@ nsTransactionList::nsTransactionList(nsITransactionManager *aTxnMgr, nsTransacti
 nsTransactionList::~nsTransactionList()
 {
   mTxnStack = 0;
-  mTxnItem  = 0;
+  mTxnItem  = nullptr;
 }
 
 NS_IMETHODIMP nsTransactionList::GetNumItems(int32_t *aNumItems)

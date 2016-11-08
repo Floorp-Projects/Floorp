@@ -913,7 +913,7 @@ nsMultiMixedConv::SendStop(nsresult aStatus) {
             (void) loadGroup->RemoveRequest(mPartChannel, mContext, aStatus);
     }
 
-    mPartChannel = 0;
+    mPartChannel = nullptr;
     return rv;
 }
 
