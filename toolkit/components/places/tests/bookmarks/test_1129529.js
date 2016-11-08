@@ -61,7 +61,7 @@ add_task(function* () {
   let uri = "data:" + contentType + "," + JSON.stringify(aData);
   yield BookmarkJSONUtils.importFromURL(uri, false);
 
-  let [bookmarks, count] = yield PlacesBackups.getBookmarksTree();
+  let [bookmarks] = yield PlacesBackups.getBookmarksTree();
   let unsortedBookmarks = bookmarks.children[2].children;
   Assert.equal(unsortedBookmarks.length, 3);
 

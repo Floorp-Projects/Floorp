@@ -164,7 +164,7 @@ function* task_populateDB(aArray)
           data.lastModified = new Date(qdata.lastModified / 1000);
         }
 
-        let item = yield PlacesUtils.bookmarks.insert(data);
+        yield PlacesUtils.bookmarks.insert(data);
 
         if (qdata.keyword) {
           yield PlacesUtils.keywords.insert({ url: qdata.uri,

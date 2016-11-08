@@ -23,6 +23,6 @@ function run_test()
   dbFile.copyTo(profD, "places.sqlite");
 
   // Now get the bookmarks service.  This will crash when the bug exists.
-  let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-           getService(Ci.nsINavBookmarksService);
+  Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+    getService(Ci.nsINavBookmarksService);
 }

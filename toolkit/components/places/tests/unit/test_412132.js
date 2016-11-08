@@ -77,10 +77,10 @@ add_task(function* changeuri_bookmark_still_bookmarked()
                                                  TEST_URI,
                                                  PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                  "bookmark 1 title");
-  let id2 = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                                 TEST_URI,
-                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                                 "bookmark 2 title");
+  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                       TEST_URI,
+                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                       "bookmark 2 title");
 
   yield PlacesTestUtils.promiseAsyncUpdates();
 
