@@ -18,16 +18,15 @@ const BASE = "http://mochi.test:8888/chrome/toolkit/components/extensions/test/m
 
 add_task(function* test_contentscript() {
   function background() {
-    browser.runtime.onMessage.addListener((msg) => {
+    browser.runtime.onMessage.addListener(async (msg) => {
       if (msg == "loaded") {
-        browser.tabs.query({active: true, currentWindow: true}).then((tabs) => {
-          // NOTE: we're removing the tab from here because doing a win.close()
-          // from the chrome test code is raising a "TypeError: can 't access
-          // dead object" exception.
-          browser.tabs.remove(tabs[0].id);
+        // NOTE: we're removing the tab from here because doing a win.close()
+        // from the chrome test code is raising a "TypeError: can't access
+        // dead object" exception.
+        let tabs = await browser.tabs.query({active: true, currentWindow: true});
+        await browser.tabs.remove(tabs[0].id);
 
-          browser.test.notifyPass("content-script-loaded");
-        });
+        browser.test.notifyPass("content-script-loaded");
       }
     });
   }

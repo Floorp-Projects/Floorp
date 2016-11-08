@@ -51,7 +51,7 @@ add_task(function* () {
 
 add_task(function* testWindowUpdate() {
   let extension = ExtensionTestUtils.loadExtension({
-    background() {
+    async background() {
       let _checkWindowPromise;
       browser.test.onMessage.addListener(msg => {
         if (msg == "checked-window") {
@@ -69,39 +69,43 @@ add_task(function* testWindowUpdate() {
       }
 
       let currentWindowId;
-      function updateWindow(windowId, params, expected) {
-        return browser.windows.update(windowId, params).then(window => {
-          browser.test.assertEq(currentWindowId, window.id, "Expected WINDOW_ID_CURRENT to refer to the same window");
-          for (let key of Object.keys(params)) {
-            if (key == "state" && os == "mac" && params.state == "normal") {
-              // OS-X doesn't have a hard distinction between "normal" and
-              // "maximized" states.
-              browser.test.assertTrue(window.state == "normal" || window.state == "maximized",
-                                      `Expected window.state (currently ${window.state}) to be "normal" but will accept "maximized"`);
-            } else {
-              browser.test.assertEq(params[key], window[key], `Got expected value for window.${key}`);
-            }
-          }
+      async function updateWindow(windowId, params, expected) {
+        let window = await browser.windows.update(windowId, params);
 
-          return checkWindow(expected);
-        });
+        browser.test.assertEq(currentWindowId, window.id, "Expected WINDOW_ID_CURRENT to refer to the same window");
+        for (let key of Object.keys(params)) {
+          if (key == "state" && os == "mac" && params.state == "normal") {
+            // OS-X doesn't have a hard distinction between "normal" and
+            // "maximized" states.
+            browser.test.assertTrue(window.state == "normal" || window.state == "maximized",
+                                    `Expected window.state (currently ${window.state}) to be "normal" but will accept "maximized"`);
+          } else {
+            browser.test.assertEq(params[key], window[key], `Got expected value for window.${key}`);
+          }
+        }
+
+        return checkWindow(expected);
       }
 
-      let windowId = browser.windows.WINDOW_ID_CURRENT;
+      try {
+        let windowId = browser.windows.WINDOW_ID_CURRENT;
 
-      browser.runtime.getPlatformInfo().then(info => { os = info.os; })
-      .then(() => browser.windows.getCurrent().then(window => { currentWindowId = window.id; }))
-      .then(() => updateWindow(windowId, {state: "maximized"}, {state: "STATE_MAXIMIZED"}))
-      .then(() => updateWindow(windowId, {state: "minimized"}, {state: "STATE_MINIMIZED"}))
-      .then(() => updateWindow(windowId, {state: "normal"}, {state: "STATE_NORMAL"}))
-      .then(() => updateWindow(windowId, {state: "fullscreen"}, {state: "STATE_FULLSCREEN"}))
-      .then(() => updateWindow(windowId, {state: "normal"}, {state: "STATE_NORMAL"}))
-      .then(() => {
+        ({os} = await browser.runtime.getPlatformInfo());
+
+        let window = await browser.windows.getCurrent();
+        currentWindowId = window.id;
+
+        await updateWindow(windowId, {state: "maximized"}, {state: "STATE_MAXIMIZED"});
+        await updateWindow(windowId, {state: "minimized"}, {state: "STATE_MINIMIZED"});
+        await updateWindow(windowId, {state: "normal"}, {state: "STATE_NORMAL"});
+        await updateWindow(windowId, {state: "fullscreen"}, {state: "STATE_FULLSCREEN"});
+        await updateWindow(windowId, {state: "normal"}, {state: "STATE_NORMAL"});
+
         browser.test.notifyPass("window-update");
-      }).catch(e => {
+      } catch (e) {
         browser.test.fail(`${e} :: ${e.stack}`);
         browser.test.notifyFail("window-update");
-      });
+      }
     },
   });
 
@@ -157,7 +161,7 @@ add_task(function* () {
 // Tests that incompatible parameters can't be used together.
 add_task(function* testWindowUpdateParams() {
   let extension = ExtensionTestUtils.loadExtension({
-    background() {
+    async background() {
       function* getCalls() {
         for (let state of ["minimized", "maximized", "fullscreen"]) {
           for (let param of ["left", "top", "width", "height"]) {
@@ -177,12 +181,13 @@ add_task(function* testWindowUpdateParams() {
         }
       }
 
-      Promise.all(getCalls()).then(() => {
+      try {
+        await Promise.all(getCalls());
         browser.test.notifyPass("window-update-params");
-      }).catch(e => {
+      } catch (e) {
         browser.test.fail(`${e} :: ${e.stack}`);
         browser.test.notifyFail("window-update-params");
-      });
+      }
     },
   });
 
