@@ -43,7 +43,7 @@ addRDMTask(TEST_URL, function* ({ ui, manager }) {
   testViewportSelectLabel(ui, "no device selected");
 
   // Test device with custom properties
-  yield switchDevice(ui, "Fake Phone RDM Test");
+  yield selectDevice(ui, "Fake Phone RDM Test");
   yield waitForViewportResizeTo(ui, testDevice.width, testDevice.height);
   yield testUserAgent(ui, testDevice.userAgent);
   yield testDevicePixelRatio(ui, testDevice.pixelRatio);
@@ -60,7 +60,7 @@ addRDMTask(TEST_URL, function* ({ ui, manager }) {
   testViewportSelectLabel(ui, "no device selected");
 
   // Test device with generic properties
-  yield switchDevice(ui, "Laptop (1366 x 768)");
+  yield selectDevice(ui, "Laptop (1366 x 768)");
   yield waitForViewportResizeTo(ui, 1366, 768);
   yield testUserAgent(ui, DEFAULT_UA);
   yield testDevicePixelRatio(ui, 1);

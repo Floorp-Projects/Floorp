@@ -26,7 +26,7 @@ add_task(function* () {
   RequestsMenu.selectedItem = requestItem;
 
   yield waitForClipboardPromise(function setup() {
-    RequestsMenu.copyImageAsDataUri();
+    RequestsMenu.contextMenu.copyImageAsDataUri();
   }, TEST_IMAGE_DATA_URI);
 
   ok(true, "Clipboard contains the currently selected image as data uri.");

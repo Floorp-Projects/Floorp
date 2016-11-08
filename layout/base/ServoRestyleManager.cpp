@@ -141,7 +141,11 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
 
     // The frame reconstruction step (if needed) will ask for the descendants'
     // style correctly. If not needed, we're done too.
-    if (!primaryFrame) {
+    //
+    // Note that we must leave the old style on an existing frame that is
+    // about to be reframed, since some frame constructor code wants to
+    // inspect the old style to work out what to do.
+    if (!primaryFrame || (changeHint & nsChangeHint_ReconstructFrame)) {
       aContent->UnsetIsDirtyForServo();
       return;
     }

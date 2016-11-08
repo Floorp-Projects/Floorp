@@ -177,7 +177,6 @@ var PocketContextMenu = {
   observe: function(aSubject, aTopic, aData) {
     let subject = aSubject.wrappedJSObject;
     let document = subject.menu.ownerDocument;
-    let window = document.defaultView;
     let pocketEnabled = CustomizableUI.getPlacementOfWidget("pocket-button");
 
     let showSaveCurrentPageToPocket = !(subject.onTextInput || subject.onLink ||

@@ -28,8 +28,18 @@ createEnum([
   // directly entering a new URL, navigating with links, etc.
   "CHANGE_LOCATION",
 
+  // The pixel ratio of the display has changed. This may be triggered by the user
+  // when changing the monitor resolution, or when the window is dragged to a different
+  // display with a different pixel ratio.
+  "CHANGE_DISPLAY_PIXEL_RATIO",
+
   // Change the network throttling profile.
   "CHANGE_NETWORK_THROTTLING",
+
+  // The pixel ratio of the viewport has changed. This may be triggered by the user
+  // when changing the device displayed in the viewport, or when a pixel ratio is
+  // selected from the DPR dropdown.
+  "CHANGE_VIEWPORT_PIXEL_RATIO",
 
   // Indicates that the device list is being loaded
   "LOAD_DEVICE_LIST_START",
