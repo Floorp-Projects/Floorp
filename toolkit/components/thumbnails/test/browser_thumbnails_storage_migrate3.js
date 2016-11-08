@@ -22,14 +22,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDirSvc",
  * directory and should just apply to Linux.
  */
 function* runTests() {
-  let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
-                 .getService(Ci.nsIProperties);
-
   // Prepare a local profile directory.
   let localProfile = FileUtils.getDir("ProfD", ["local-test"], true);
   changeLocation("ProfLD", localProfile);
 
-  let local = FileUtils.getDir("ProfLD", [THUMBNAIL_DIRECTORY], true);
   let roaming = FileUtils.getDir("ProfD", [THUMBNAIL_DIRECTORY], true);
 
   // Set up some data in the roaming profile.

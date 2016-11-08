@@ -41,15 +41,6 @@ add_task(function* init() {
     addon.uninstall()
   });
 
-
-  let freezeThreshold = Preferences.get("browser.addon-watch.freeze-threshold-micros", /* 5 seconds */ 5000000);
-  let jankThreshold = Preferences.get("browser.addon-watch.jank-threshold-micros", /* 256 ms == 8 frames*/ 256000);
-  let occurrencesBetweenAlerts = Preferences.get("browser.addon-watch.occurrences-between-alerts", 3);
-  let delayBetweenAlerts = Preferences.get("browser.addon-watch.delay-between-alerts-ms", 6 * 3600 * 1000 /* 6h */);
-  let delayBetweenFreezeAlerts = Preferences.get("browser.addon-watch.delay-between-freeze-alerts-ms", 2 * 60 * 1000 /* 2 min */);
-  let prescriptionDelay = Preferences.get("browser.addon-watch.prescription-delay", 5 * 60 * 1000 /* 5 minutes */);
-  let highestNumberOfAddonsToReport = Preferences.get("browser.addon-watch.max-simultaneous-reports", 1);
-
   Preferences.set("browser.addon-watch.warmup-ms", 0);
   Preferences.set("browser.addon-watch.freeze-threshold-micros", 0);
   Preferences.set("browser.addon-watch.jank-threshold-micros", 0);

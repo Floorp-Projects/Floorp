@@ -98,7 +98,6 @@ add_task(function* test_require_interaction() {
 
   var actualSequence = [];
 
-  var sequenceIdx = 0;
   function createAlertListener(name, showCallback, finishCallback) {
     return (subject, topic, data) => {
       if (topic == "alertshow") {

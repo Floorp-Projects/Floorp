@@ -820,11 +820,6 @@ add_task(function test_common_initialize()
     },
   }));
 
-  // Get a reference to nsIComponentRegistrar, and ensure that is is freed
-  // before the XPCOM shutdown.
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  do_register_cleanup(() => registrar = null);
-
   // Make sure that downloads started using nsIExternalHelperAppService are
   // saved to disk without asking for a destination interactively.
   let mock = {
