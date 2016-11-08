@@ -160,6 +160,10 @@ public:
 
   virtual bool RecvAppendAppNotes(const nsCString& aData) override;
 
+  virtual mozilla::ipc::IProtocol*
+  CloneProtocol(Channel* aChannel,
+                mozilla::ipc::ProtocolCloneContext *aCtx) override;
+
 #ifdef MOZ_CRASHREPORTER
   void
   NotifyCrashService();

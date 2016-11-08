@@ -54,8 +54,8 @@ CacheOpParent::Execute(ManagerId* aManagerId)
   MOZ_ASSERT(!mManager);
   MOZ_ASSERT(!mVerifier);
 
-  RefPtr<cache::Manager> manager;
-  nsresult rv = cache::Manager::GetOrCreate(aManagerId, getter_AddRefs(manager));
+  RefPtr<Manager> manager;
+  nsresult rv = Manager::GetOrCreate(aManagerId, getter_AddRefs(manager));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ErrorResult result(rv);
     Unused << Send__delete__(this, result, void_t());
@@ -67,7 +67,7 @@ CacheOpParent::Execute(ManagerId* aManagerId)
 }
 
 void
-CacheOpParent::Execute(cache::Manager* aManager)
+CacheOpParent::Execute(Manager* aManager)
 {
   NS_ASSERT_OWNINGTHREAD(CacheOpParent);
   MOZ_ASSERT(!mManager);

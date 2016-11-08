@@ -38,7 +38,7 @@ public:
     return true;
   }
 
-  typedef ipc::IProtocol::ActorDestroyReason Why;
+  typedef ipc::IProtocolManager<ipc::IProtocol>::ActorDestroyReason Why;
 
   virtual void ActorDestroy(Why) override {
     DestroyIfNeeded();
