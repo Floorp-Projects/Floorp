@@ -232,6 +232,17 @@ function handleRequest(request, response) {
         doubleGzipCompressString(data, observer);
         break;
       }
+      case "br": {
+        response.setStatusLine(request.httpVersion, status, "Connected");
+        response.setHeader("Content-Type", "text/plain", false);
+        response.setHeader("Content-Encoding", "br", false);
+        setCacheHeaders();
+        response.setHeader("Content-Length", "10", false);
+        // Use static data since we cannot encode brotli.
+        response.write("\x1b\x3f\x00\x00\x24\xb0\xe2\x99\x80\x12");
+        response.finish();
+        break;
+      }
       case "hls-m3u8": {
         response.setStatusLine(request.httpVersion, status, "OK");
         response.setHeader("Content-Type", "application/x-mpegurl", false);

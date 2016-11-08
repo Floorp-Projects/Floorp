@@ -931,6 +931,17 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void popcnt64(Register64 src, Register64 dest, Register temp) PER_ARCH;
 
     // ===============================================================
+    // Condition functions
+
+    template <typename T1, typename T2>
+    inline void cmp32Set(Condition cond, T1 lhs, T2 rhs, Register dest)
+        DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
+
+    template <typename T1, typename T2>
+    inline void cmpPtrSet(Condition cond, T1 lhs, T2 rhs, Register dest)
+        PER_ARCH;
+
+    // ===============================================================
     // Branch functions
 
     template <class L>
@@ -965,7 +976,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // When a fail label is not defined it will fall through to next instruction,
     // else jump to the fail label.
     inline void branch64(Condition cond, Register64 lhs, Imm64 val, Label* success,
-                         Label* fail = nullptr) DEFINED_ON(x86, x64, arm, mips32, mips64);
+                         Label* fail = nullptr) PER_ARCH;
     inline void branch64(Condition cond, Register64 lhs, Register64 rhs, Label* success,
                          Label* fail = nullptr) DEFINED_ON(x86, x64, arm, mips32, mips64);
     // On x86 and x64 NotEqual and Equal conditions are allowed for the branch64 variants

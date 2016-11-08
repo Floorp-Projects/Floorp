@@ -207,7 +207,8 @@
           if (this.isEmpty(this.mHourField.value) ||
               this.isEmpty(this.mMinuteField.value) ||
               (this.mDayPeriodField && this.isEmpty(this.mDayPeriodField.value)) ||
-              (this.mSecondField && this.isEmpty(this.mSecondField.value))) {
+              (this.mSecondField && this.isEmpty(this.mSecondField.value)) ||
+              (this.mMillisecField && this.isEmpty(this.mMillisecField.value))) {
             // We still need to notify picker in case any of the field has
             // changed. If we can set input element value, then notifyPicker
             // will be called in setFieldsFromInputValue().
@@ -328,7 +329,7 @@
               value = now.getMinutes();
             } else if (aTargetField == this.mSecondField) {
               value = now.getSeconds();
-            } else if (aTargetField == this.mMillisecondsField) {
+            } else if (aTargetField == this.mMillisecField) {
               value = now.getMilliseconds();
             } else {
               this.log("Field not supported in incrementFieldValue.");

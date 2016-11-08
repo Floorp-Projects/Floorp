@@ -982,19 +982,9 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     // convert it to double. Else, branch to failure.
     void ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure);
 
-    template <typename T1, typename T2>
-    void cmpPtrSet(Assembler::Condition cond, T1 lhs, T2 rhs, Register dest)
-    {
-        ma_cmp_set(dest, lhs, rhs, cond);
-    }
     void cmpPtrSet(Assembler::Condition cond, Address lhs, ImmPtr rhs, Register dest);
     void cmpPtrSet(Assembler::Condition cond, Register lhs, Address rhs, Register dest);
 
-    template <typename T1, typename T2>
-    void cmp32Set(Assembler::Condition cond, T1 lhs, T2 rhs, Register dest)
-    {
-        ma_cmp_set(dest, lhs, rhs, cond);
-    }
     void cmp32Set(Assembler::Condition cond, Register lhs, Address rhs, Register dest);
 
     void cmp64Set(Assembler::Condition cond, Register lhs, Imm32 rhs, Register dest)

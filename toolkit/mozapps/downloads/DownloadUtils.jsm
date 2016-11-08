@@ -355,6 +355,14 @@ this.DownloadUtils = {
     // Figure out when today begins
     let today = new Date(aNow.getFullYear(), aNow.getMonth(), aNow.getDate());
 
+    // Get locale to use for date/time formatting
+    // TODO: Remove Intl fallback when bug 1215247 is fixed.
+    const locale = typeof Intl === "undefined"
+                   ? undefined
+                   : Cc["@mozilla.org/chrome/chrome-registry;1"]
+                       .getService(Ci.nsIXULChromeRegistry)
+                       .getSelectedLocale("global", true);
+
     // Figure out if the time is from today, yesterday, this week, etc.
     let dateTimeCompact;
     if (aDate >= today) {
@@ -369,12 +377,15 @@ this.DownloadUtils = {
       dateTimeCompact = gBundle.GetStringFromName(gStr.yesterday);
     } else if (today - aDate < (6 * 24 * 60 * 60 * 1000)) {
       // After last week started, show day of week
-      dateTimeCompact = aDate.toLocaleFormat("%A");
+      dateTimeCompact = typeof Intl === "undefined"
+                        ? aDate.toLocaleFormat("%A")
+                        : aDate.toLocaleDateString(locale, { weekday: "long" });
     } else {
       // Show month/day
-      let month = aDate.toLocaleFormat("%B");
-      // Remove leading 0 by converting the date string to a number
-      let date = Number(aDate.toLocaleFormat("%d"));
+      let month = typeof Intl === "undefined"
+                  ? aDate.toLocaleFormat("%B")
+                  : aDate.toLocaleDateString(locale, { month: "long" });
+      let date = aDate.getDate();
       dateTimeCompact = gBundle.formatStringFromName(gStr.monthDate, [month, date], 2);
     }
 
