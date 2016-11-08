@@ -17,36 +17,37 @@
 add_task(function* testExecuteScript() {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank", true);
 
-  async function background() {
+  function background() {
     let tab;
 
     const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
     const URL = BASE + "file_iframe_document.sjs";
 
     const MAX_TRIES = 10;
+    let tries = 0;
 
-    try {
-      [tab] = await browser.tabs.query({active: true, currentWindow: true});
+    function again() {
+      if (tries++ == MAX_TRIES) {
+        return Promise.reject(new Error("Max tries exceeded"));
+      }
 
-      let success = false;
-      for (let tries = 0; !success && tries < MAX_TRIES; tries++) {
-        let url = `${URL}?r=${Math.random()}`;
+      let url = `${URL}?r=${Math.random()}`;
 
-        let loadingPromise = new Promise(resolve => {
-          browser.tabs.onUpdated.addListener(function listener(tabId, changed, tab_) {
-            if (tabId == tab.id && changed.status == "loading" && tab_.url == url) {
-              browser.tabs.onUpdated.removeListener(listener);
-              resolve();
-            }
-          });
+      let loadingPromise = new Promise(resolve => {
+        browser.tabs.onUpdated.addListener(function listener(tabId, changed, tab_) {
+          if (tabId == tab.id && changed.status == "loading" && tab_.url == url) {
+            browser.tabs.onUpdated.removeListener(listener);
+            resolve();
+          }
         });
+      });
 
-        // TODO: Test allFrames and frameId.
+      // TODO: Test allFrames and frameId.
 
-        await browser.tabs.update({url});
-        await loadingPromise;
-
-        let states = await Promise.all([
+      return browser.tabs.update({url}).then(() => {
+        return loadingPromise;
+      }).then(() => {
+        return Promise.all([
           // Send the executeScript requests in the reverse order that we expect
           // them to execute in, to avoid them passing only because of timing
           // races.
@@ -63,7 +64,7 @@ add_task(function* testExecuteScript() {
             runAt: "document_start",
           }),
         ].reverse());
-
+      }).then(states => {
         browser.test.log(`Got states: ${states}`);
 
         // Make sure that none of our scripts executed earlier than expected,
@@ -75,18 +76,22 @@ add_task(function* testExecuteScript() {
 
         // If we have the earliest valid states for each script, we're done.
         // Otherwise, try again.
-        success = (states[0] == "loading" &&
-                   states[1] == "interactive" &&
-                   states[2] == "complete");
-      }
+        if (states[0] != "loading" || states[1] != "interactive" || states[2] != "complete") {
+          return again();
+        }
+      });
+    }
 
-      browser.test.assertTrue(success, "Got the earliest expected states at least once");
+    browser.tabs.query({active: true, currentWindow: true}).then(tabs => {
+      tab = tabs[0];
 
+      return again();
+    }).then(() => {
       browser.test.notifyPass("executeScript-runAt");
-    } catch (e) {
+    }).catch(e => {
       browser.test.fail(`Error: ${e} :: ${e.stack}`);
       browser.test.notifyFail("executeScript-runAt");
-    }
+    });
   }
 
   let extension = ExtensionTestUtils.loadExtension({

@@ -45,7 +45,7 @@ function setup() {
 
 function backgroundScript() {
   let blobUrl;
-  browser.test.onMessage.addListener(async (msg, ...args) => {
+  browser.test.onMessage.addListener((msg, ...args) => {
     if (msg == "download.request") {
       let options = args[0];
 
@@ -55,12 +55,15 @@ function backgroundScript() {
         blobUrl = options.url = window.URL.createObjectURL(blob);
       }
 
-      try {
-        let id = await browser.downloads.download(options);
-        browser.test.sendMessage("download.done", {status: "success", id});
-      } catch (error) {
-        browser.test.sendMessage("download.done", {status: "error", errmsg: error.message});
-      }
+      // download() throws on bad arguments, we can remove the extra
+      // promise when bug 1250223 is fixed.
+      return Promise.resolve().then(() => browser.downloads.download(options))
+                    .then(id => {
+                      browser.test.sendMessage("download.done", {status: "success", id});
+                    })
+                    .catch(error => {
+                      browser.test.sendMessage("download.done", {status: "error", errmsg: error.message});
+                    });
     } else if (msg == "killTheBlob") {
       window.URL.revokeObjectURL(blobUrl);
       blobUrl = null;
@@ -74,12 +77,13 @@ function backgroundScript() {
 // the browser knows about and waits for all active downloads to complete.
 // But we only start one at a time and only do a handful in total, so
 // this lets us test download() without depending on anything else.
-async function waitForDownloads() {
-  let list = await Downloads.getList(Downloads.ALL);
-  let downloads = await list.getAll();
-
-  let inprogress = downloads.filter(dl => !dl.stopped);
-  return Promise.all(inprogress.map(dl => dl.whenSucceeded()));
+function waitForDownloads() {
+  return Downloads.getList(Downloads.ALL)
+                  .then(list => list.getAll())
+                  .then(downloads => {
+                    let inprogress = downloads.filter(dl => !dl.stopped);
+                    return Promise.all(inprogress.map(dl => dl.whenSucceeded()));
+                  });
 }
 
 // Create a file in the downloads directory.
@@ -111,18 +115,17 @@ add_task(function* test_downloads() {
     return extension.awaitMessage("download.done");
   }
 
-  async function testDownload(options, localFile, expectedSize, description) {
-    let msg = await download(options);
-    equal(msg.status, "success", `downloads.download() works with ${description}`);
-
-    await waitForDownloads();
-
-    let localPath = downloadDir.clone();
-    let parts = Array.isArray(localFile) ? localFile : [localFile];
-
-    parts.map(p => localPath.append(p));
-    equal(localPath.fileSize, expectedSize, "Downloaded file has expected size");
-    localPath.remove(false);
+  function testDownload(options, localFile, expectedSize, description) {
+    return download(options).then(msg => {
+      equal(msg.status, "success", `downloads.download() works with ${description}`);
+      return waitForDownloads();
+    }).then(() => {
+      let localPath = downloadDir.clone();
+      let parts = Array.isArray(localFile) ? localFile : [localFile];
+      parts.map(p => localPath.append(p));
+      equal(localPath.fileSize, expectedSize, "Downloaded file has expected size");
+      localPath.remove(false);
+    });
   }
 
   yield extension.startup();
@@ -279,12 +282,10 @@ add_task(function* test_download_post() {
   }
 
   function background() {
-    browser.test.onMessage.addListener(async options => {
-      try {
-        await browser.downloads.download(options);
-      } catch (err) {
-        browser.test.sendMessage("done", {err: err.message});
-      }
+    browser.test.onMessage.addListener(options => {
+      Promise.resolve()
+        .then(() => browser.downloads.download(options))
+        .catch(err => browser.test.sendMessage("done", {err: err.message}));
     });
     browser.downloads.onChanged.addListener(({state}) => {
       if (state && state.current === "complete") {

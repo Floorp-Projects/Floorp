@@ -12,27 +12,32 @@ add_task(function* () {
       "permissions": ["tabs"],
     },
 
-    async background() {
-      let tabs = await browser.tabs.query({url: "<all_urls>"});
-      let destination = tabs[0];
-      let source = tabs[1]; // skip over about:blank in window1
+    background: function() {
+      browser.tabs.query({
+        url: "<all_urls>",
+      }, function(tabs) {
+        let destination = tabs[0];
+        let source = tabs[1]; // skip over about:blank in window1
+        browser.tabs.move(source.id, {windowId: destination.windowId, index: 0});
 
-      // Assuming that this windowId does not exist.
-      await browser.tabs.move(source.id, {windowId: 123144576, index: 0}).then(
-        tabs => {
-          browser.test.fail("Promise should not resolve");
-        },
-        e => {
-          browser.test.assertTrue(/Invalid window/.test(e),
-                                  "Invalid window should be in error");
-        });
+        browser.tabs.query(
+          {url: "<all_urls>"},
+          tabs => {
+            browser.test.assertEq(tabs[0].url, "http://example.com/");
+            browser.test.assertEq(tabs[0].windowId, destination.windowId);
+            browser.test.notifyPass("tabs.move.window");
+          });
 
-      browser.tabs.move(source.id, {windowId: destination.windowId, index: 0});
-
-      tabs = await browser.tabs.query({url: "<all_urls>"});
-      browser.test.assertEq(tabs[0].url, "http://example.com/");
-      browser.test.assertEq(tabs[0].windowId, destination.windowId);
-      browser.test.notifyPass("tabs.move.window");
+        // Assuming that this windowId does not exist.
+        browser.tabs.move(source.id, {windowId: 123144576, index: 0})
+        .then(
+          tabs => { browser.test.fail("Promise should not resolve"); },
+          e => {
+            browser.test.assertTrue(/Invalid window/.test(e),
+                                    "Invalid window should be in error");
+          }
+        );
+      });
     },
   });
 
@@ -61,23 +66,23 @@ add_task(function* test_currentWindowAfterTabMoved() {
     },
   };
 
-  async function background() {
+  function background() {
     let tabId;
-
     const url = browser.extension.getURL("current.html");
-
-    browser.test.onMessage.addListener(async msg => {
+    browser.tabs.create({url}).then(tab => {
+      tabId = tab.id;
+    });
+    browser.test.onMessage.addListener(msg => {
       if (msg === "move") {
-        await browser.windows.create({tabId});
-        browser.test.sendMessage("moved");
+        browser.windows.create({tabId}).then(() => {
+          browser.test.sendMessage("moved");
+        });
       } else if (msg === "close") {
-        await browser.tabs.remove(tabId);
-        browser.test.sendMessage("done");
+        browser.tabs.remove(tabId).then(() => {
+          browser.test.sendMessage("done");
+        });
       }
     });
-
-    let tab = await browser.tabs.create({url});
-    tabId = tab.id;
   }
 
   const extension = ExtensionTestUtils.loadExtension({files, background});
