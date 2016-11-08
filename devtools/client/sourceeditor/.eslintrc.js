@@ -10,6 +10,6 @@ module.exports = {
     // code. Some files here disable this rule still. The
     // goal is to enable the rule globally on all files.
     /* eslint-disable max-len */
-    "mozilla/reject-some-requires": [2, "^(chrome|chrome:.*|resource:.*|devtools/server/.*|.*\\.jsm)$"],
+    "mozilla/reject-some-requires": ["error", "^(chrome|chrome:.*|resource:.*|devtools/server/.*|.*\\.jsm)$"],
   },
 };
