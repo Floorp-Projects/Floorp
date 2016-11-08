@@ -1187,6 +1187,9 @@ pref("dom.forms.color", true);
 // default, disabled.
 pref("dom.forms.datetime", false);
 
+// Enable time picker UI. By default, disabled.
+pref("dom.forms.datetime.timepicker", false);
+
 // Support for new @autocomplete values
 pref("dom.forms.autocomplete.experimental", false);
 
