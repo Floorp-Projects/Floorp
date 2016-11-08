@@ -27,6 +27,7 @@ import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.util.DrawableUtil;
+import org.mozilla.gecko.util.ViewUtil;
 import org.mozilla.gecko.util.TouchTargetUtil;
 import org.mozilla.gecko.widget.FaviconView;
 
@@ -124,6 +125,8 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
                             vIconView.getWidth(), vIconView.getHeight());
                 }
             });
+
+            ViewUtil.enableTouchRipple(menuButton);
         }
 
         public void bind(Cursor cursor, int tilesWidth, int tilesHeight) {
