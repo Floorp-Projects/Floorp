@@ -68,6 +68,7 @@ if CONFIG['GNU_CC']:
     CFLAGS += ['-std=gnu99']
 
 DEFINES['abort'] = 'moz_abort'
+DEFINES['MOZ_HAS_MOZGLUE'] = True
 
 LOCAL_INCLUDES += [
     '!src/include',

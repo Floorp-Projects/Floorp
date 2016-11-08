@@ -28,6 +28,7 @@ if CONFIG['MOZ_UPDATE_CHANNEL'] not in ('release', 'esr'):
 
 DEFINES['abort'] = 'moz_abort'
 
+DEFINES['MOZ_HAS_MOZGLUE'] = True
 DEFINES['MOZ_JEMALLOC_IMPL'] = True
 
 #XXX: PGO on Linux causes problems here
