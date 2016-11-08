@@ -51,7 +51,7 @@ add_task(function* testContext() {
   inUserData.data = 123;
 
   var alert = makeAlert(null, imageServerURL + "?f=image.png");
-  var [ready, request, userData] = yield promiseImage(alert, 0, inUserData);
+  var [ready, , userData] = yield promiseImage(alert, 0, inUserData);
   ok(ready, "Should load requested image");
   is(userData.QueryInterface(Ci.nsISupportsPRInt64).data, 123,
      "Should pass user data for loaded image");

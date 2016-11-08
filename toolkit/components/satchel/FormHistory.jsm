@@ -782,7 +782,6 @@ this.FormHistory = {
 
     let handlers = {
       handleResult : function(aResultSet) {
-        let formHistoryFields = dbSchema.tables.moz_formhistory;
         for (let row = aResultSet.getNextRow(); row; row = aResultSet.getNextRow()) {
           let result = {};
           for (let field of aSelectTerms) {

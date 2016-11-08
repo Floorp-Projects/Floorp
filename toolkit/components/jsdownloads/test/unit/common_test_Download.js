@@ -2380,11 +2380,11 @@ add_task(function* test_platform_integration()
     let download;
     if (gUseLegacySaver) {
       download = yield promiseStartLegacyDownload(httpUrl("source.txt"),
-                                                  { targetFile: targetFile });
+                                                  { isPrivate, targetFile });
     }
     else {
       download = yield Downloads.createDownload({
-        source: httpUrl("source.txt"),
+        source: { url: httpUrl("source.txt"), isPrivate },
         target: targetFile,
       });
       download.start().catch(() => {});

@@ -852,7 +852,6 @@ var PageThumbsExpiration = {
   },
 
   expireThumbnails: function Expiration_expireThumbnails(aURLsToKeep) {
-    let path = this.path;
     let keep = aURLsToKeep.map(url => PageThumbsStorage.getLeafNameForURL(url));
     let msg = [
       PageThumbsStorage.path,

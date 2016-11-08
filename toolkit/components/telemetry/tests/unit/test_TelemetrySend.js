@@ -177,7 +177,7 @@ add_task(function* test_sendPendingPings() {
 });
 
 add_task(function* test_sendDateHeader() {
-  let now = fakeNow(new Date(Date.UTC(2011, 1, 1, 11, 0, 0)));
+  fakeNow(new Date(Date.UTC(2011, 1, 1, 11, 0, 0)));
   yield TelemetrySend.reset();
 
   let pingId = yield TelemetryController.submitExternalPing("test-send-date-header", {});

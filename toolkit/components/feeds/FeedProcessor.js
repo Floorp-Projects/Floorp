@@ -970,8 +970,6 @@ ExtensionHandler.prototype = {
   },
   startElement: function EH_startElement(uri, localName, qName, attrs) {
     ++this._depth;
-    var prefix = gNamespaces[uri] ? gNamespaces[uri] + ":" : "";
-    var key =  prefix + localName;
 
     if (this._depth == 1) {
       this._uri = uri;
@@ -1498,7 +1496,7 @@ FeedProcessor.prototype = {
   // attributes and child elements.
   _processComplexElement:
   function FP__processComplexElement(elementInfo, attributes) {
-    var obj, key, prefix;
+    var obj;
 
     // If the container is an entry/item, it'll need to have its
     // more esoteric properties put in the 'fields' property bag.

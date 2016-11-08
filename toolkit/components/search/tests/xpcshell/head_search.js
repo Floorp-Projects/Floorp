@@ -59,8 +59,6 @@ function dumpn(text)
  */
 function configureToLoadJarEngines()
 {
-  let defaultBranch = Services.prefs.getDefaultBranch(null);
-
   let url = "chrome://testsearchplugin/locale/searchplugins/";
   let resProt = Services.io.getProtocolHandler("resource")
                         .QueryInterface(Ci.nsIResProtocolHandler);

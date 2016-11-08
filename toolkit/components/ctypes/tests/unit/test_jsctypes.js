@@ -1437,7 +1437,6 @@ function run_StructType_tests() {
   do_check_eq(g_t.array().name, name + "[]");
   do_check_eq(g_t.array(5).name, name + "[5]");
 
-  let h_t = ctypes.StructType("h_t", [{ a: ctypes.int32_t }, { b: ctypes.int16_t }]);
   let s_t = new ctypes.StructType("s_t", [{ a: ctypes.int32_t }, { b: g_t }, { c: ctypes.int8_t }]);
 
   let fields = [{ a: ctypes.int32_t }, { b: ctypes.int8_t }, { c: g_t }, { d: ctypes.int8_t }];
@@ -1845,7 +1844,6 @@ function run_FunctionType_tests() {
   }, Error);
 
   let g_t = ctypes.StructType("g_t", [{ a: ctypes.int32_t }, { b: ctypes.double }]);
-  let g = g_t(1, 2);
 
   let f_t = ctypes.FunctionType(ctypes.default_abi, g_t);
   let name = "g_t()";
@@ -2172,7 +2170,6 @@ function run_cast_tests() {
   // Test casting between special types.
   let g_t = ctypes.StructType("g_t", [{ a: ctypes.int32_t }, { b: ctypes.double }]);
   let a_t = ctypes.ArrayType(g_t, 4);
-  let p_t = ctypes.PointerType(g_t);
   let f_t = ctypes.FunctionType(ctypes.default_abi, ctypes.void_t).ptr;
 
   let a = a_t();
@@ -2184,7 +2181,6 @@ function run_cast_tests() {
   let a2 = ctypes.cast(g, g_t.array(1));
   do_check_eq(ptrValue(a2.address()), ptrValue(g.address()));
   do_check_eq(a2[0].a, g.a);
-  let a3 = ctypes.cast(g, g_t.array(0));
 
   let p = g.address();
   let ip = ctypes.cast(p, ctypes.int32_t.ptr);
@@ -2215,7 +2211,7 @@ function run_void_tests(library) {
     // Win32 (it's all the same on Win64 though).
     if (ctypes.voidptr_t.size == 4) {
       do_check_throws(function() {
-        let test_winapi_t = library.declare("test_void_t_stdcall", ctypes.winapi_abi, ctypes.void_t);
+        library.declare("test_void_t_stdcall", ctypes.winapi_abi, ctypes.void_t);
       }, Error);
     }
   }
