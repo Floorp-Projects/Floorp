@@ -1229,9 +1229,11 @@ protected:
   // Notifies the audio channel agent when the element starts or stops playing.
   void NotifyAudioChannelAgent(bool aPlaying);
 
-  // Creates the audio channel agent in the beginning and this agent would be
-  // used to communicate with the AudioChannelService.
-  void CreateAudioChannelAgent();
+  // True if we create the audio channel agent successfully or we already have
+  // one. The agent is used to communicate with the AudioChannelService. eg.
+  // notify we are playing/audible and receive muted/unmuted/suspend/resume
+  // commands from AudioChannelService.
+  bool MaybeCreateAudioChannelAgent();
 
   // Determine if the element should be paused because of suspend conditions.
   bool ShouldElementBePaused();
