@@ -454,15 +454,19 @@ class MessageChannel : HasResultCodes
   private:
     class MessageTask :
         public CancelableRunnable,
-        public LinkedListElement<RefPtr<MessageTask>>
+        public LinkedListElement<RefPtr<MessageTask>>,
+        public nsIRunnablePriority
     {
     public:
         explicit MessageTask(MessageChannel* aChannel, Message&& aMessage)
           : mChannel(aChannel), mMessage(Move(aMessage)), mScheduled(false)
         {}
 
+        NS_DECL_ISUPPORTS_INHERITED
+
         NS_IMETHOD Run() override;
         nsresult Cancel() override;
+        NS_IMETHOD GetPriority(uint32_t* aPriority) override;
         void Post();
         void Clear();
 
@@ -474,6 +478,7 @@ class MessageChannel : HasResultCodes
     private:
         MessageTask() = delete;
         MessageTask(const MessageTask&) = delete;
+        ~MessageTask() {}
 
         MessageChannel* mChannel;
         Message mMessage;
