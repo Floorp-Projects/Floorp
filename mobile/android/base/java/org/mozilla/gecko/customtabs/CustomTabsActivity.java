@@ -5,21 +5,78 @@
 
 package org.mozilla.gecko.customtabs;
 
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.TextView;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.GeckoRequest;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
-public class CustomTabsActivity extends GeckoApp {
+import java.lang.reflect.Field;
+
+import static android.support.customtabs.CustomTabsIntent.EXTRA_TOOLBAR_COLOR;
+
+public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedListener {
+    private static final String LOGTAG = "CustomTabsActivity";
+    private static final int NO_COLOR = -1;
+    private Toolbar toolbar;
+
+    private ActionBar actionBar;
+    private int tabId = -1;
+    private boolean useDomainTitle = true;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        updateActionBarWithToolbar(toolbar);
+        try {
+            // Since we don't create the Toolbar's TextView ourselves, this seems
+            // to be the only way of changing the ellipsize setting.
+            Field f = toolbar.getClass().getDeclaredField("mTitleTextView");
+            f.setAccessible(true);
+            TextView textView = (TextView) f.get(toolbar);
+            textView.setEllipsize(TextUtils.TruncateAt.START);
+        } catch (Exception e) {
+            // If we can't ellipsize at the start of the title, we shouldn't display the host
+            // so as to avoid displaying a misleadingly truncated host.
+            Log.w(LOGTAG, "Failed to get Toolbar TextView, using default title.");
+            useDomainTitle = false;
+        }
+        actionBar = getSupportActionBar();
+        updateToolbarColor(toolbar);
+
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
+        Tabs.registerOnTabsChangedListener(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     @Override
@@ -28,40 +85,62 @@ public class CustomTabsActivity extends GeckoApp {
     }
 
     @Override
-    public void onBackPressed() {
-        final Tabs tabs = Tabs.getInstance();
-        final Tab tab = tabs.getSelectedTab();
+    protected void onDone() {
+        finish();
+    }
 
-        // Give Gecko a chance to handle the back press first, then fallback to the Java UI.
-        GeckoAppShell.sendRequestToGecko(new GeckoRequest("Browser:OnBackPressed", null) {
-            @Override
-            public void onResponse(NativeJSObject nativeJSObject) {
-                if (!nativeJSObject.getBoolean("handled")) {
-                    // Default behavior is Gecko didn't prevent.
-                    onDefault();
-                }
+    @Override
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
+        if (tab == null) {
+            return;
+        }
+
+        if (tabId >= 0 && tab.getId() != tabId) {
+            return;
+        }
+
+        if (msg == Tabs.TabEvents.LOCATION_CHANGE) {
+            tabId = tab.getId();
+            final Uri uri = Uri.parse(tab.getURL());
+            String title = null;
+            if (uri != null) {
+                title = uri.getHost();
             }
-
-            @Override
-            public void onError(NativeJSObject error) {
-                // Default behavior is Gecko didn't prevent, via failure.
-                onDefault();
+            if (!useDomainTitle || title == null || title.isEmpty()) {
+                actionBar.setTitle(AppConstants.MOZ_APP_BASENAME);
+            } else {
+                actionBar.setTitle(title);
             }
+        }
+    }
 
-            // Return from Gecko thread, then back-press through the Java UI.
-            private void onDefault() {
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (tab.doBack()) {
-                            return;
-                        }
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
-                        tabs.closeTab(tab);
-                        finish();
-                    }
-                });
-            }
-        });
+    private void updateActionBarWithToolbar(final Toolbar toolbar) {
+        setSupportActionBar(toolbar);
+        final ActionBar ab = getSupportActionBar();
+        if (ab != null) {
+            ab.setDisplayHomeAsUpEnabled(true);
+        }
+    }
+
+    private void updateToolbarColor(final Toolbar toolbar) {
+        final int color = getIntent().getIntExtra(EXTRA_TOOLBAR_COLOR, NO_COLOR);
+        if (color == NO_COLOR) {
+            return;
+        }
+        toolbar.setBackgroundColor(color);
+        final Window window = getWindow();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(ColorUtil.darken(color, 0.25));
+        }
     }
 }

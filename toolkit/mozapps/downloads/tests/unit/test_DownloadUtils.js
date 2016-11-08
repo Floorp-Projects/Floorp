@@ -84,6 +84,13 @@ function testAllGetReadableDates()
   const sixdaysago      = new Date(2000, 11, 25, 11, 30, 15);
   const sevendaysago    = new Date(2000, 11, 24, 11, 30, 15);
 
+  // TODO: Remove Intl fallback when bug 1215247 is fixed.
+  const locale = typeof Intl === "undefined"
+                 ? undefined
+                 : Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                                     .getService(Components.interfaces.nsIXULChromeRegistry)
+                                     .getSelectedLocale("global", true);
+
   let dts = Components.classes["@mozilla.org/intl/scriptabledateformat;1"].
             getService(Components.interfaces.nsIScriptableDateFormat);
 
@@ -93,10 +100,19 @@ function testAllGetReadableDates()
                                                    12, 30, 0));
   testGetReadableDates(yesterday_11_30, "Yesterday");
   testGetReadableDates(yesterday_12_30, "Yesterday");
-  testGetReadableDates(twodaysago, twodaysago.toLocaleFormat("%A"));
-  testGetReadableDates(sixdaysago, sixdaysago.toLocaleFormat("%A"));
-  testGetReadableDates(sevendaysago, sevendaysago.toLocaleFormat("%B") + " " +
-                                     sevendaysago.toLocaleFormat("%d"));
+  testGetReadableDates(twodaysago,
+                       typeof Intl === "undefined"
+                       ? twodaysago.toLocaleFormat("%A")
+                       : twodaysago.toLocaleDateString(locale, { weekday: "long" }));
+  testGetReadableDates(sixdaysago,
+                       typeof Intl === "undefined"
+                       ? sixdaysago.toLocaleFormat("%A")
+                       : sixdaysago.toLocaleDateString(locale, { weekday: "long" }));
+  testGetReadableDates(sevendaysago,
+                       (typeof Intl === "undefined"
+                        ? sevendaysago.toLocaleFormat("%B")
+                        : sevendaysago.toLocaleDateString(locale, { month: "long" })) + " " +
+                       sevendaysago.getDate().toString().padStart(2, "0"));
 
   let [, dateTimeFull] = DownloadUtils.getReadableDates(today_11_30);
   do_check_eq(dateTimeFull, dts.FormatDateTime("", dts.dateFormatLong,

@@ -3,7 +3,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root_layout"
     android:orientation="vertical"
     android:layout_width="match_parent"
@@ -14,9 +16,18 @@
         in this tree. In a perfect world this should just include a GeckoView.
     -->
 
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:elevation="4dp"
+        android:background="@color/text_and_tabs_tray_grey"
+        app:layout_scrollFlags="scroll|enterAlways"/>
+
     <view class="org.mozilla.gecko.GeckoApp$MainLayout"
         android:id="@+id/main_layout"
         android:layout_width="match_parent"
+        android:layout_below="@+id/toolbar"
         android:layout_height="match_parent"
         android:background="@android:color/transparent">
 

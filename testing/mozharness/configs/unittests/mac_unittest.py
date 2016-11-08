@@ -171,10 +171,6 @@ config = {
     },
     # local reftest suites
     "all_reftest_suites": {
-        "reftest": {
-            'options': ["--suite=reftest"],
-            'tests': ["tests/reftest/tests/layout/reftests/reftest.list"]
-        },
         "crashtest": {
             'options': ["--suite=crashtest"],
             'tests': ["tests/reftest/tests/testing/crashtest/crashtests.list"]
@@ -183,21 +179,9 @@ config = {
             'options':["--extra-profile-file=tests/jsreftest/tests/user.js"],
             'tests': ["tests/jsreftest/tests/jstests.list"]
         },
-        "reftest-ipc": {
-            'options': ['--suite=reftest',
-                        '--setpref=browser.tabs.remote=true',
-                        '--setpref=browser.tabs.remote.autostart=true',
-                        '--setpref=extensions.e10sBlocksEnabling=false',
-                        '--setpref=layers.async-pan-zoom.enabled=true'],
-            'tests': ['tests/reftest/tests/layout/reftests/reftest-sanity/reftest.list']
-        },
-        "crashtest-ipc": {
-            'options': ['--suite=crashtest',
-                        '--setpref=browser.tabs.remote=true',
-                        '--setpref=browser.tabs.remote.autostart=true',
-                        '--setpref=extensions.e10sBlocksEnabling=false',
-                        '--setpref=layers.async-pan-zoom.enabled=true'],
-            'tests': ['tests/reftest/tests/testing/crashtest/crashtests.list']
+        "reftest": {
+            'options': ["--suite=reftest"],
+            'tests': ["tests/reftest/tests/layout/reftests/reftest.list"]
         },
     },
     "all_xpcshell_suites": {

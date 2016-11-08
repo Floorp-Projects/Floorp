@@ -133,6 +133,12 @@ public:
   // true if the message was sent, false if not.
   bool NotifyGpuObservers(const char* aTopic);
 
+  // Used for tests and diagnostics
+  void KillProcess();
+
+  // Returns -1 if there is no GPU process, or the platform pid for it.
+  base::ProcessId GPUProcessPid();
+
   // Returns access to the PGPU protocol if a GPU process is present.
   GPUChild* GetGPUChild() {
     return mGPUChild;

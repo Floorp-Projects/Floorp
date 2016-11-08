@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(46b44e33-13c2-4eb3-bf80-76a4e0857ccc)]
+[scriptable, uuid(c471d440-004b-4c50-a6f2-747db5f443b6)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1964,6 +1964,16 @@ interface nsIDOMWindowUtils : nsISupports {
    * can be used by tests to force execution of the interrupted reflow codepaths.
    */
   void forceReflowInterrupt();
+
+  /**
+   * Terminate the GPU process. Used for testing GPU process restarts.
+   */
+  void terminateGPUProcess();
+
+  /**
+    * Returns the GPU process pid, or -1 if there is no GPU process.
+    */
+  readonly attribute int32_t gpuProcessPid;
 
   const long MOUSE_BUTTONS_NO_BUTTON = 0x00;
   const long MOUSE_BUTTONS_LEFT_BUTTON = 0x01;
