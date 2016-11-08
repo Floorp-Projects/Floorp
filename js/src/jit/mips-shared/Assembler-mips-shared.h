@@ -494,7 +494,7 @@ class BOffImm16
         MOZ_ASSERT(IsInRange(offset));
     }
     static bool IsInRange(int offset) {
-        if ((offset - 4) < (INT16_MIN << 2))
+        if ((offset - 4) < int(unsigned(INT16_MIN) << 2))
             return false;
         if ((offset - 4) > (INT16_MAX << 2))
             return false;
@@ -636,7 +636,7 @@ class GSImm13
         return value;
     }
     static bool IsInRange(int32_t imm) {
-        return imm >= (-256 << 4) && imm <= (255 << 4);
+        return imm >= int32_t(uint32_t(-256) << 4) && imm <= (255 << 4);
     }
 };
 
