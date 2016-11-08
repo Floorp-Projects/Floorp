@@ -855,9 +855,9 @@ js::math_sin(JSContext* cx, unsigned argc, Value* vp)
 void
 js::math_sincos_uncached(double x, double *sin, double *cos)
 {
-#if defined(__GLIBC__)
+#if defined(HAVE_SINCOS)
     sincos(x, sin, cos);
-#elif defined(HAVE_SINCOS)
+#elif defined(HAVE___SINCOS)
     __sincos(x, sin, cos);
 #else
     *sin = js::math_sin_uncached(x);
