@@ -103,9 +103,6 @@ this.CaptivePortalWatcher = {
       return;
     }
 
-    // The browser is in use - show a notification and add the tab without
-    // selecting it, unless the caller specifically requested selection.
-    this._ensureCaptivePortalTab(win);
     this._showNotification(win);
   },
 
@@ -121,6 +118,7 @@ this.CaptivePortalWatcher = {
     }
 
     this._captivePortalTab = Cu.getWeakReference(tab);
+    win.gBrowser.selectedTab = tab;
     return tab;
   },
 
@@ -143,30 +141,26 @@ this.CaptivePortalWatcher = {
 
     // Trigger a portal recheck. The user may have logged into the portal via
     // another client, or changed networks.
-    let lastChecked = cps.lastChecked;
     cps.recheckCaptivePortal();
+    let requestTime = Date.now();
 
-    // We wait for PORTAL_RECHECK_DELAY_MS after the trigger.
-    // - If the portal is no longer locked, we don't need to add a tab.
-    // - If it is, the delay is chosen to not be extremely noticeable.
-    setTimeout(() => {
-      this._waitingToAddTab = false;
+    let self = this;
+    Services.obs.addObserver(function observer() {
+      Services.obs.removeObserver(observer, "captive-portal-check-complete");
+      self._waitingToAddTab = false;
       if (cps.state != cps.LOCKED_PORTAL) {
         // We're free of the portal!
         return;
       }
 
-      this._showNotification(win);
-      let tab = this._ensureCaptivePortalTab(win);
-
-      // Focus the tab only if the recheck has completed, i.e. we're sure
-      // that the portal is still locked. This way, if the recheck completes
-      // after we add the tab and we're free of the portal, the tab contents
-      // won't flicker.
-      if (cps.lastChecked != lastChecked) {
-        win.gBrowser.selectedTab = tab;
+      self._showNotification(win);
+      if (Date.now() - requestTime <= PORTAL_RECHECK_DELAY_MS) {
+        // The amount of time elapsed since we requested a recheck (i.e. since
+        // the browser window was focused) was small enough that we can add and
+        // focus a tab with the login page with no noticeable delay.
+        self._ensureCaptivePortalTab(win);
       }
-    }, PORTAL_RECHECK_DELAY_MS);
+    }, "captive-portal-check-complete", false);
   },
 
   _captivePortalGone() {
@@ -205,13 +199,6 @@ this.CaptivePortalWatcher = {
     tabbrowser.removeTab(tab);
   },
 
-  get _productName() {
-    delete this._productName;
-    return this._productName =
-      Services.strings.createBundle("chrome://branding/locale/brand.properties")
-                      .GetStringFromName("brandShortName");
-  },
-
   get _browserBundle() {
     delete this._browserBundle;
     return this._browserBundle =
@@ -243,7 +230,7 @@ this.CaptivePortalWatcher = {
       {
         label: this._browserBundle.GetStringFromName("captivePortal.showLoginPage"),
         callback: () => {
-          win.gBrowser.selectedTab = this._ensureCaptivePortalTab(win);
+          this._ensureCaptivePortalTab(win);
 
           // Returning true prevents the notification from closing.
           return true;
@@ -252,8 +239,7 @@ this.CaptivePortalWatcher = {
       },
     ];
 
-    let message = this._browserBundle.formatStringFromName("captivePortal.infoMessage",
-                                                           [this._productName], 1);
+    let message = this._browserBundle.GetStringFromName("captivePortal.infoMessage2");
 
     let closeHandler = (aEventName) => {
       if (aEventName != "removed") {
