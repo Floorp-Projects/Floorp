@@ -6,9 +6,6 @@
 
 DIRS += ['interfaces']
 
-if CONFIG['MOZ_B2G_RIL']:
-    XPCSHELL_TESTS_MANIFESTS += ['tests/unit_stats/xpcshell.ini']
-
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 

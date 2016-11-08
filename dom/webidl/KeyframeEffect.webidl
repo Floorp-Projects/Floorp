@@ -25,9 +25,10 @@ dictionary KeyframeEffectOptions : AnimationEffectTimingProperties {
 // the first argument since we cannot convert a mixin into a union type
 // automatically.
 [Func="nsDocument::IsWebAnimationsEnabled",
- Constructor((Element or CSSPseudoElement)? target,
-             object? keyframes,
-             optional (unrestricted double or KeyframeEffectOptions) options)]
+ Constructor ((Element or CSSPseudoElement)? target,
+              object? keyframes,
+              optional (unrestricted double or KeyframeEffectOptions) options),
+ Constructor (KeyframeEffectReadOnly source)]
 interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
   // Bug 1241783: As with the constructor, we use (Element or CSSPseudoElement)?
   // for the type of |target| instead of Animatable?
@@ -35,9 +36,6 @@ interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
   readonly attribute IterationCompositeOperation iterationComposite;
   readonly attribute CompositeOperation          composite;
   readonly attribute DOMString                   spacing;
-
-  // Not yet implemented:
-  // KeyframeEffect             clone();
 
   // We use object instead of ComputedKeyframe so that we can put the
   // property-value pairs on the object.
@@ -66,7 +64,8 @@ partial interface KeyframeEffectReadOnly {
 [Func="nsDocument::IsWebAnimationsEnabled",
  Constructor ((Element or CSSPseudoElement)? target,
               object? keyframes,
-              optional (unrestricted double or KeyframeEffectOptions) options)]
+              optional (unrestricted double or KeyframeEffectOptions) options),
+ Constructor (KeyframeEffectReadOnly source)]
 interface KeyframeEffect : KeyframeEffectReadOnly {
   inherit attribute (Element or CSSPseudoElement)? target;
   inherit attribute IterationCompositeOperation    iterationComposite;

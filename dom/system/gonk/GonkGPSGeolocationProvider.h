@@ -22,9 +22,6 @@
 #include "nsIGeolocationProvider.h"
 #include "nsIObserver.h"
 #include "nsIDOMGeoPosition.h"
-#ifdef MOZ_B2G_RIL
-#include "nsIRadioInterfaceLayer.h"
-#endif
 #include "nsISettingsService.h"
 
 class nsIThread;
@@ -64,34 +61,14 @@ private:
   static void ReleaseWakelockCallback();
   static pthread_t CreateThreadCallback(const char* name, void (*start)(void*), void* arg);
   static void RequestUtcTimeCallback();
-#ifdef MOZ_B2G_RIL
-  static void AGPSStatusCallback(AGpsStatus* status);
-  static void AGPSRILSetIDCallback(uint32_t flags);
-  static void AGPSRILRefLocCallback(uint32_t flags);
-#endif
 
   static GpsCallbacks mCallbacks;
-#ifdef MOZ_B2G_RIL
-  static AGpsCallbacks mAGPSCallbacks;
-  static AGpsRilCallbacks mAGPSRILCallbacks;
-#endif
 
   void Init();
   void StartGPS();
   void ShutdownGPS();
   void InjectLocation(double latitude, double longitude, float accuracy);
   void RequestSettingValue(const char* aKey);
-#ifdef MOZ_B2G_RIL
-  void UpdateRadioInterface();
-  bool IsValidRilServiceId(uint32_t aServiceId);
-  void SetupAGPS();
-  int32_t GetDataConnectionState();
-  void SetAGpsDataConn(nsAString& aApn);
-  void RequestDataConnection();
-  void ReleaseDataConnection();
-  void RequestSetID(uint32_t flags);
-  void SetReferenceLocation();
-#endif
 
   const GpsInterface* GetGPSInterface();
 
@@ -100,26 +77,11 @@ private:
   bool mStarted;
 
   bool mSupportsScheduling;
-#ifdef MOZ_B2G_RIL
-  bool mSupportsMSB;
-  bool mSupportsMSA;
-  uint32_t mRilDataServiceId;
-  // mNumberOfRilServices indicates how many SIM slots supported on device, and
-  // RadioInterfaceLayer.js takes responsibility to set up the corresponding
-  // preference value.
-  uint32_t mNumberOfRilServices;
-  bool mObservingNetworkConnStateChange;
-#endif
   bool mObservingSettingsChange;
   bool mSupportsSingleShot;
   bool mSupportsTimeInjection;
 
   const GpsInterface* mGpsInterface;
-#ifdef MOZ_B2G_RIL
-  const AGpsInterface* mAGpsInterface;
-  const AGpsRilInterface* mAGpsRilInterface;
-  nsCOMPtr<nsIRadioInterface> mRadioInterface;
-#endif
   nsCOMPtr<nsIGeolocationUpdate> mLocationCallback;
   nsCOMPtr<nsIThread> mInitThread;
   nsCOMPtr<nsIGeolocationProvider> mNetworkLocationProvider;

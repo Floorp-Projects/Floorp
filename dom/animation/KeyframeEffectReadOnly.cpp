@@ -273,40 +273,7 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 {
   MOZ_ASSERT(aStyleContext);
 
-  nsTArray<AnimationProperty> properties;
-  if (mTarget) {
-    // When GetComputedKeyframeValues or GetAnimationPropertiesFromKeyframes
-    // calculate computed values from |mKeyframes|, they could possibly
-    // trigger a subsequent restyle in which we rebuild animations. If that
-    // happens we could find that |mKeyframes| is overwritten while it is
-    // being iterated over. Normally that shouldn't happen but just in case we
-    // make a copy of |mKeyframes| first and iterate over that instead.
-    auto keyframesCopy(mKeyframes);
-
-    nsTArray<ComputedKeyframeValues> computedValues =
-      KeyframeUtils::GetComputedKeyframeValues(keyframesCopy,
-                                               mTarget->mElement,
-                                               aStyleContext);
-
-    if (mEffectOptions.mSpacingMode == SpacingMode::paced) {
-      KeyframeUtils::ApplySpacing(keyframesCopy, SpacingMode::paced,
-                                  mEffectOptions.mPacedProperty,
-                                  computedValues, aStyleContext);
-    }
-
-    properties =
-      KeyframeUtils::GetAnimationPropertiesFromKeyframes(keyframesCopy,
-                                                         computedValues,
-                                                         aStyleContext);
-
-#ifdef DEBUG
-    MOZ_ASSERT(SpecifiedKeyframeArraysAreEqual(mKeyframes, keyframesCopy),
-               "Apart from the computed offset members, the keyframes array"
-               " should not be modified");
-#endif
-
-    mKeyframes.SwapElements(keyframesCopy);
-  }
+  nsTArray<AnimationProperty> properties = BuildProperties(aStyleContext);
 
   if (mProperties == properties) {
     return;
@@ -613,6 +580,87 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
   return effect.forget();
 }
 
+template<class KeyframeEffectType>
+/* static */ already_AddRefed<KeyframeEffectType>
+KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
+                                                KeyframeEffectReadOnly& aSource,
+                                                ErrorResult& aRv)
+{
+  nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
+  if (!doc) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  // Create a new KeyframeEffectReadOnly object with aSource's target,
+  // iteration composite operation, composite operation, and spacing mode.
+  // The constructor creates a new AnimationEffect(ReadOnly) object by
+  // aSource's TimingParams.
+  // Note: we don't need to re-throw exceptions since the value specified on
+  //       aSource's timing object can be assumed valid.
+  RefPtr<KeyframeEffectType> effect =
+    new KeyframeEffectType(doc,
+                           aSource.mTarget,
+                           aSource.SpecifiedTiming(),
+                           aSource.mEffectOptions);
+  // Copy cumulative change hint. mCumulativeChangeHint should be the same as
+  // the source one because both of targets are the same.
+  effect->mCumulativeChangeHint = aSource.mCumulativeChangeHint;
+
+  // Copy aSource's keyframes and animation properties.
+  // Note: We don't call SetKeyframes directly, which might revise the
+  //       computed offsets and rebuild the animation properties.
+  // FIXME: Bug 1314537: We have to make sure SharedKeyframeList is handled
+  //        properly.
+  effect->mKeyframes = aSource.mKeyframes;
+  effect->mProperties = aSource.mProperties;
+  return effect.forget();
+}
+
+nsTArray<AnimationProperty>
+KeyframeEffectReadOnly::BuildProperties(nsStyleContext* aStyleContext)
+{
+  MOZ_ASSERT(aStyleContext);
+
+  nsTArray<AnimationProperty> result;
+  // If mTarget is null, return an empty property array.
+  if (!mTarget) {
+    return result;
+  }
+
+  // When GetComputedKeyframeValues or GetAnimationPropertiesFromKeyframes
+  // calculate computed values from |mKeyframes|, they could possibly
+  // trigger a subsequent restyle in which we rebuild animations. If that
+  // happens we could find that |mKeyframes| is overwritten while it is
+  // being iterated over. Normally that shouldn't happen but just in case we
+  // make a copy of |mKeyframes| first and iterate over that instead.
+  auto keyframesCopy(mKeyframes);
+
+  nsTArray<ComputedKeyframeValues> computedValues =
+    KeyframeUtils::GetComputedKeyframeValues(keyframesCopy,
+                                             mTarget->mElement,
+                                             aStyleContext);
+
+  if (mEffectOptions.mSpacingMode == SpacingMode::paced) {
+    KeyframeUtils::ApplySpacing(keyframesCopy, SpacingMode::paced,
+                                mEffectOptions.mPacedProperty,
+                                computedValues, aStyleContext);
+  }
+
+  result = KeyframeUtils::GetAnimationPropertiesFromKeyframes(keyframesCopy,
+                                                              computedValues,
+                                                              aStyleContext);
+
+#ifdef DEBUG
+  MOZ_ASSERT(SpecifiedKeyframeArraysAreEqual(mKeyframes, keyframesCopy),
+             "Apart from the computed offset members, the keyframes array"
+             " should not be modified");
+#endif
+
+  mKeyframes.SwapElements(keyframesCopy);
+  return result;
+}
+
 void
 KeyframeEffectReadOnly::UpdateTargetRegistration()
 {
@@ -714,6 +762,14 @@ KeyframeEffectReadOnly::Constructor(
   return ConstructKeyframeEffect<KeyframeEffectReadOnly>(aGlobal, aTarget,
                                                          aKeyframes, aOptions,
                                                          aRv);
+}
+
+/* static */ already_AddRefed<KeyframeEffectReadOnly>
+KeyframeEffectReadOnly::Constructor(const GlobalObject& aGlobal,
+                                    KeyframeEffectReadOnly& aSource,
+                                    ErrorResult& aRv)
+{
+  return ConstructKeyframeEffect<KeyframeEffectReadOnly>(aGlobal, aSource, aRv);
 }
 
 void

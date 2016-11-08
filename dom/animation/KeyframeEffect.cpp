@@ -47,6 +47,14 @@ KeyframeEffect::Constructor(
 }
 
 /* static */ already_AddRefed<KeyframeEffect>
+KeyframeEffect::Constructor(const GlobalObject& aGlobal,
+                            KeyframeEffectReadOnly& aSource,
+                            ErrorResult& aRv)
+{
+  return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aSource, aRv);
+}
+
+/* static */ already_AddRefed<KeyframeEffect>
 KeyframeEffect::Constructor(
     const GlobalObject& aGlobal,
     const Nullable<ElementOrCSSPseudoElement>& aTarget,

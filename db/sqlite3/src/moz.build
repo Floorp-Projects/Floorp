@@ -65,6 +65,7 @@ if CONFIG['MOZ_THUNDERBIRD'] or CONFIG['MOZ_SUITE']:
 # Turn on SQLite's assertions in debug builds.
 if CONFIG['MOZ_DEBUG']:
     DEFINES['SQLITE_DEBUG'] = 1
+    DEFINES['SQLITE_ENABLE_API_ARMOR'] = True
 
 if CONFIG['OS_TARGET'] == 'Android':
     # default to user readable only to fit Android security model

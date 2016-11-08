@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script>
+// Silence eslint complaint about the onload below.
+/* eslint-disable no-unused-vars */
+
+"use strict";
+
+function load() {
+  (window.opener || window.parent).hurray();
+  window.close();
+}
+</script>
+</head>
+
+<body onload='load()'>
+</body>
+
+</html>

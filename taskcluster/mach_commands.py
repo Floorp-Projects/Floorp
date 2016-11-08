@@ -217,6 +217,7 @@ class MachCommands(MachCommandBase):
         try:
             self.setup_logging(quiet=options['quiet'], verbose=options['verbose'])
             parameters = taskgraph.parameters.load_parameters_file(options)
+            parameters.check()
 
             target_tasks_method = parameters.get('target_tasks_method', 'all_tasks')
             target_tasks_method = taskgraph.target_tasks.get_method(target_tasks_method)

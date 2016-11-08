@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+                                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                                    android:layout_width="32dp"
+                                    android:layout_height="200dp"
+                                    app:cardElevation="5dp"
+                                    app:cardUseCompatPadding="true">
+
+    <!-- This is mostly a copy of the same menu in activity_stream_contextmenu_bottomsheet.xml,
+         however for the popup menu we don't need to override the dividers, hence we omit the
+         android:theme override -->
+    <android.support.design.widget.NavigationView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/menu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:itemTextAppearance="@style/ActivityStreamContextMenuText"
+        app:menu="@menu/activitystream_contextmenu"/>
+
+</android.support.v7.widget.CardView>

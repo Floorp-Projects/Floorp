@@ -10,10 +10,46 @@ import json
 import yaml
 from mozbuild.util import ReadOnlyDict
 
+# Please keep this list sorted and in sync with taskcluster/docs/parameters.rst
+PARAMETER_NAMES = set([
+    'base_repository',
+    'build_date',
+    'head_ref',
+    'head_repository',
+    'head_rev',
+    'level',
+    'message',
+    'moz_build_date',
+    'optimize_target_tasks',
+    'owner',
+    'project',
+    'pushdate',
+    'pushlog_id',
+    'target_tasks_method',
+    'triggered_by',
+])
+
 
 class Parameters(ReadOnlyDict):
     """An immutable dictionary with nicer KeyError messages on failure"""
+    def check(self):
+        names = set(self)
+        msg = []
+
+        missing = PARAMETER_NAMES - names
+        if missing:
+            msg.append("missing parameters: " + ", ".join(missing))
+
+        extra = names - PARAMETER_NAMES
+        if extra:
+            msg.append("extra parameters: " + ", ".join(extra))
+
+        if msg:
+            raise Exception("; ".join(msg))
+
     def __getitem__(self, k):
+        if k not in PARAMETER_NAMES:
+            raise KeyError("no such parameter {!r}".format(k))
         try:
             return super(Parameters, self).__getitem__(k)
         except KeyError:

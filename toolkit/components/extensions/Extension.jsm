@@ -83,13 +83,13 @@ if (!AppConstants.RELEASE_OR_BETA) {
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   BaseContext,
-  defineLazyGetter,
   EventEmitter,
-  SchemaAPIManager,
   LocaleData,
-  instanceOf,
-  LocalAPIImplementation,
+  SchemaAPIManager,
+  SpreadArgs,
+  defineLazyGetter,
   flushJarCache,
+  instanceOf,
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
@@ -242,8 +242,7 @@ let ProxyMessenger = {
     if (extensionId) {
       // TODO(robwu): map the extensionId to the addon parent process's message
       // manager when they run in a separate process.
-      let pipmm = Services.ppmm.getChildAt(0);
-      return pipmm;
+      return Services.ppmm.getChildAt(0);
     }
 
     return null;
@@ -290,8 +289,8 @@ class ProxyContext extends BaseContext {
     // message manager object may change when `xulBrowser` swaps docshells, e.g.
     // when a tab is moved to a different window.
     this.currentMessageManager = xulBrowser.messageManager;
-    this._docShellTracker = new BrowserDocshellFollower(xulBrowser,
-        this.onBrowserChange.bind(this));
+    this._docShellTracker = new BrowserDocshellFollower(
+      xulBrowser, this.onBrowserChange.bind(this));
 
     Object.defineProperty(this, "principal", {
       value: principal, enumerable: true, configurable: true,
@@ -386,6 +385,7 @@ class ExtensionChildProxyContext extends ProxyContext {
 }
 
 function findPathInObject(obj, path, printErrors = true) {
+  let parent;
   for (let elt of path.split(".")) {
     if (!obj || !(elt in obj)) {
       if (printErrors) {
@@ -394,9 +394,13 @@ function findPathInObject(obj, path, printErrors = true) {
       return null;
     }
 
+    parent = obj;
     obj = obj[elt];
   }
 
+  if (typeof obj === "function") {
+    return obj.bind(parent);
+  }
   return obj;
 }
 
@@ -459,13 +463,12 @@ ParentAPIManager = {
   createProxyContext(data, target) {
     let {envType, extensionId, childId, principal} = data;
     if (this.proxyContexts.has(childId)) {
-      Cu.reportError("A WebExtension context with the given ID already exists!");
-      return;
+      throw new Error("A WebExtension context with the given ID already exists!");
     }
+
     let extension = GlobalManager.getExtension(extensionId);
     if (!extension) {
-      Cu.reportError(`No WebExtension found with ID ${extensionId}`);
-      return;
+      throw new Error(`No WebExtension found with ID ${extensionId}`);
     }
 
     let context;
@@ -474,15 +477,13 @@ ParentAPIManager = {
       // frame is also the same addon.
       if (principal.URI.prePath != extension.baseURI.prePath ||
           !target.contentPrincipal.subsumes(principal)) {
-        Cu.reportError(`Refused to create privileged WebExtension context for ${principal.URI.spec}`);
-        return;
+        throw new Error(`Refused to create privileged WebExtension context for ${principal.URI.spec}`);
       }
       context = new ExtensionChildProxyContext(envType, extension, data, target);
     } else if (envType == "content_parent") {
       context = new ProxyContext(envType, extension, data, target, principal);
     } else {
-      Cu.reportError(`Invalid WebExtension context envType: ${envType}`);
-      return;
+      throw new Error(`Invalid WebExtension context envType: ${envType}`);
     }
     this.proxyContexts.set(childId, context);
   },
@@ -502,31 +503,41 @@ ParentAPIManager = {
       Cu.reportError("WebExtension warning: Message manager unexpectedly changed");
     }
 
-    function callback(...cbArgs) {
-      let lastError = context.lastError;
-
-      context.currentMessageManager.sendAsyncMessage("API:CallResult", {
-        childId: data.childId,
-        callId: data.callId,
-        args: cbArgs,
-        lastError: lastError ? lastError.message : null,
-      });
-    }
-
-    let args = data.args;
-    args = Cu.cloneInto(args, context.sandbox);
-    if (data.callId) {
-      args = args.concat(callback);
-    }
     try {
-      findPathInObject(context.apiObj, data.path)(...args);
+      let args = Cu.cloneInto(data.args, context.sandbox);
+      let result = findPathInObject(context.apiObj, data.path)(...args);
+
+      if (data.callId) {
+        result = result || Promise.resolve();
+
+        result.then(result => {
+          result = result instanceof SpreadArgs ? [...result] : [result];
+
+          context.currentMessageManager.sendAsyncMessage("API:CallResult", {
+            childId: data.childId,
+            callId: data.callId,
+            result,
+          });
+        }, error => {
+          error = context.normalizeError(error);
+          context.currentMessageManager.sendAsyncMessage("API:CallResult", {
+            childId: data.childId,
+            callId: data.callId,
+            error: {message: error.message},
+          });
+        });
+      }
     } catch (e) {
-      let msg = e.message || "API failed";
-      context.currentMessageManager.sendAsyncMessage("API:CallResult", {
-        childId: data.childId,
-        callId: data.callId,
-        lastError: msg,
-      });
+      if (data.callId) {
+        let error = context.normalizeError(e);
+        context.currentMessageManager.sendAsyncMessage("API:CallResult", {
+          childId: data.childId,
+          callId: data.callId,
+          error: {message: error.message},
+        });
+      } else {
+        Cu.reportError(e);
+      }
     }
   },
 
@@ -716,52 +727,8 @@ GlobalManager = {
   },
 
   injectInObject(context, isChromeCompat, dest) {
-    let apis = {
-      extensionTypes: {},
-    };
-    Management.generateAPIs(context, apis);
-    SchemaAPIManager.generateAPIs(context, context.extension.apis, apis);
-
-    // For testing only.
-    context._unwrappedAPIs = apis;
-
-    let schemaWrapper = {
-      isChromeCompat,
-
-      get url() {
-        return context.uri.spec;
-      },
-
-      get principal() {
-        return context.principal;
-      },
-
-      get cloneScope() {
-        return context.cloneScope;
-      },
-
-      hasPermission(permission) {
-        return context.extension.hasPermission(permission);
-      },
-
-      shouldInject(namespace, name, allowedContexts) {
-        // Do not generate content script APIs, unless explicitly allowed.
-        if (context.envType === "content_parent" && !allowedContexts.includes("content")) {
-          return false;
-        }
-        if (context.envType !== "addon_parent" &&
-            allowedContexts.includes("addon_parent_only")) {
-          return false;
-        }
-        return findPathInObject(apis, namespace, false) !== null;
-      },
-
-      getImplementation(namespace, name) {
-        let pathObj = findPathInObject(apis, namespace);
-        return new LocalAPIImplementation(pathObj, name, context);
-      },
-    };
-    Schemas.inject(dest, schemaWrapper);
+    Management.generateAPIs(context, dest);
+    SchemaAPIManager.generateAPIs(context, context.extension.apis, dest);
   },
 };
 
