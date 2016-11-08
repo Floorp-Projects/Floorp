@@ -810,16 +810,16 @@ function check_test_15() {
     do_check_bootstrappedPref(function() {
       restartManager();
 
-      AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
-        do_check_neq(b1, null);
-        do_check_eq(b1.version, "2.0");
-        do_check_false(b1.appDisabled);
-        do_check_true(b1.userDisabled);
-        do_check_false(b1.isActive);
+      AddonManager.getAddonByID(ID1, callback_soon(function(b1_2) {
+        do_check_neq(b1_2, null);
+        do_check_eq(b1_2.version, "2.0");
+        do_check_false(b1_2.appDisabled);
+        do_check_true(b1_2.userDisabled);
+        do_check_false(b1_2.isActive);
         BootstrapMonitor.checkAddonInstalled(ID1, "2.0");
         BootstrapMonitor.checkAddonNotStarted(ID1);
 
-        b1.uninstall();
+        b1_2.uninstall();
 
         run_test_16();
       }));
@@ -849,14 +849,14 @@ function run_test_16() {
       gAppInfo.inSafeMode = true;
       startupManager(false);
 
-      AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
+      AddonManager.getAddonByID(ID1, callback_soon(function(b1_2) {
         // Should still be stopped
         BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
         BootstrapMonitor.checkAddonNotStarted(ID1);
-        do_check_false(b1.isActive);
-        do_check_eq(b1.iconURL, null);
-        do_check_eq(b1.aboutURL, null);
-        do_check_eq(b1.optionsURL, null);
+        do_check_false(b1_2.isActive);
+        do_check_eq(b1_2.iconURL, null);
+        do_check_eq(b1_2.aboutURL, null);
+        do_check_eq(b1_2.optionsURL, null);
 
         shutdownManager();
         gAppInfo.inSafeMode = false;
@@ -866,8 +866,8 @@ function run_test_16() {
         BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
         BootstrapMonitor.checkAddonStarted(ID1, "1.0");
 
-        AddonManager.getAddonByID(ID1, function(b1) {
-          b1.uninstall();
+        AddonManager.getAddonByID(ID1, function(b1_3) {
+          b1_3.uninstall();
 
           do_execute_soon(run_test_17);
         });
@@ -1080,14 +1080,14 @@ function run_test_22() {
 
     startupManager();
 
-    AddonManager.getAddonByID(ID1, function(b1) {
+    AddonManager.getAddonByID(ID1, function(b1_2) {
       // Should have installed and started
       BootstrapMonitor.checkAddonInstalled(ID1, "2.0");
       BootstrapMonitor.checkAddonStarted(ID1, "2.0");
-      do_check_neq(b1, null);
-      do_check_eq(b1.version, "2.0");
-      do_check_true(b1.isActive);
-      do_check_false(b1.isSystem);
+      do_check_neq(b1_2, null);
+      do_check_eq(b1_2.version, "2.0");
+      do_check_true(b1_2.isActive);
+      do_check_false(b1_2.isSystem);
 
       // This won't be set as the bootstrap script was gone so we couldn't
       // uninstall it properly
@@ -1100,7 +1100,7 @@ function run_test_22() {
       do_check_eq(getStartupOldVersion(), undefined);
 
       do_check_bootstrappedPref(function() {
-        b1.uninstall();
+        b1_2.uninstall();
 
         run_test_23();
       });
@@ -1184,8 +1184,8 @@ function check_test_23() {
         do_check_eq(list.length, 0);
 
         restartManager();
-        AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
-          b1.uninstall();
+        AddonManager.getAddonByID(ID1, callback_soon(function(b1_2) {
+          b1_2.uninstall();
           restartManager();
 
           testserver.stop(run_test_24);
@@ -1266,12 +1266,12 @@ function run_test_25() {
           do_check_eq(getUninstallNewVersion(), 4);
           BootstrapMonitor.checkAddonNotStarted(ID1);
 
-          AddonManager.getAddonByID(ID1, function(b1) {
-            do_check_neq(b1, null);
-            do_check_eq(b1.version, "4.0");
-            do_check_true(b1.isActive);
-            do_check_false(b1.isSystem);
-            do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
+          AddonManager.getAddonByID(ID1, function(b1_2) {
+            do_check_neq(b1_2, null);
+            do_check_eq(b1_2.version, "4.0");
+            do_check_true(b1_2.isActive);
+            do_check_false(b1_2.isSystem);
+            do_check_eq(b1_2.pendingOperations, AddonManager.PENDING_NONE);
 
             do_check_bootstrappedPref(run_test_26);
           });
@@ -1305,12 +1305,12 @@ function run_test_26() {
       do_check_eq(getInstallOldVersion(), 4);
       BootstrapMonitor.checkAddonStarted(ID1, "1.0");
 
-      AddonManager.getAddonByID(ID1, function(b1) {
-        do_check_neq(b1, null);
-        do_check_eq(b1.version, "1.0");
-        do_check_true(b1.isActive);
-        do_check_false(b1.isSystem);
-        do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
+      AddonManager.getAddonByID(ID1, function(b1_2) {
+        do_check_neq(b1_2, null);
+        do_check_eq(b1_2.version, "1.0");
+        do_check_true(b1_2.isActive);
+        do_check_false(b1_2.isSystem);
+        do_check_eq(b1_2.pendingOperations, AddonManager.PENDING_NONE);
 
         do_check_bootstrappedPref(run_test_27);
       });
@@ -1337,22 +1337,22 @@ function run_test_27() {
       do_check_eq(getUninstallNewVersion(), 4);
       BootstrapMonitor.checkAddonNotStarted(ID1);
 
-      AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
-        do_check_neq(b1, null);
-        do_check_eq(b1.version, "4.0");
-        do_check_false(b1.isActive);
-        do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
+      AddonManager.getAddonByID(ID1, callback_soon(function(b1_2) {
+        do_check_neq(b1_2, null);
+        do_check_eq(b1_2.version, "4.0");
+        do_check_false(b1_2.isActive);
+        do_check_eq(b1_2.pendingOperations, AddonManager.PENDING_NONE);
 
         restartManager();
 
         BootstrapMonitor.checkAddonNotInstalled(ID1);
         BootstrapMonitor.checkAddonNotStarted(ID1);
 
-        AddonManager.getAddonByID(ID1, function(b1) {
-          do_check_neq(b1, null);
-          do_check_eq(b1.version, "4.0");
-          do_check_false(b1.isActive);
-          do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
+        AddonManager.getAddonByID(ID1, function(b1_3) {
+          do_check_neq(b1_3, null);
+          do_check_eq(b1_3.version, "4.0");
+          do_check_false(b1_3.isActive);
+          do_check_eq(b1_3.pendingOperations, AddonManager.PENDING_NONE);
 
           do_check_bootstrappedPref(run_test_28);
         });
@@ -1384,14 +1384,14 @@ function run_test_28() {
       BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
       BootstrapMonitor.checkAddonNotStarted(ID1);
 
-      AddonManager.getAddonByID(ID1, function(b1) {
-        do_check_neq(b1, null);
-        do_check_true(b1.userDisabled);
-        b1.userDisabled = false;
-        do_check_eq(b1.version, "1.0");
-        do_check_true(b1.isActive);
-        do_check_false(b1.isSystem);
-        do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
+      AddonManager.getAddonByID(ID1, function(b1_2) {
+        do_check_neq(b1_2, null);
+        do_check_true(b1_2.userDisabled);
+        b1_2.userDisabled = false;
+        do_check_eq(b1_2.version, "1.0");
+        do_check_true(b1_2.isActive);
+        do_check_false(b1_2.isSystem);
+        do_check_eq(b1_2.pendingOperations, AddonManager.PENDING_NONE);
         BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
         BootstrapMonitor.checkAddonStarted(ID1, "1.0");
 

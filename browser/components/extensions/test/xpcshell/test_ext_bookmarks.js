@@ -106,15 +106,15 @@ function backgroundScript() {
     collectedEvents.push({event: "onRemoved", id, info});
   });
 
-  browser.bookmarks.get(["not-a-bookmark-guid"]).then(expectedError, error => {
+  browser.bookmarks.get(["not-a-bookmark-guid"]).then(expectedError, invalidGuidError => {
     browser.test.assertTrue(
-      error.message.includes("Invalid value for property 'guid': not-a-bookmark-guid"),
+      invalidGuidError.message.includes("Invalid value for property 'guid': not-a-bookmark-guid"),
       "Expected error thrown when trying to get a bookmark using an invalid guid"
     );
 
-    return browser.bookmarks.get([nonExistentId]).then(expectedError, error => {
+    return browser.bookmarks.get([nonExistentId]).then(expectedError, nonExistentIdError => {
       browser.test.assertTrue(
-        error.message.includes("Bookmark not found"),
+        nonExistentIdError.message.includes("Bookmark not found"),
         "Expected error thrown when trying to get a bookmark using a non-existent Id"
       );
     });
@@ -181,7 +181,7 @@ function backgroundScript() {
     });
   }).then(results => {
     browser.test.assertEq(1, results.length, "getTree returns one result");
-    let bookmark = results[0].children.find(bookmark => bookmark.id == unsortedId);
+    let bookmark = results[0].children.find(bookmarkItem => bookmarkItem.id == unsortedId);
     browser.test.assertEq(
         "Other Bookmarks",
         bookmark.title,
@@ -249,11 +249,11 @@ function backgroundScript() {
       browser.bookmarks.create({title: "Mozilla", url: "http://allizom.org/", parentId: createdFolderId}),
       browser.bookmarks.create({title: "Mozilla Corporation", url: "http://allizom.com/", parentId: createdFolderId}),
       browser.bookmarks.create({title: "Firefox", url: "http://allizom.org/firefox/", parentId: createdFolderId}),
-    ]).then(results => {
+    ]).then(newBookmarks => {
       browser.test.assertEq(3, collectedEvents.length, "3 expected events received");
-      checkOnCreated(results[2].id, createdFolderId, 0, "Firefox", "http://allizom.org/firefox/", results[2].dateAdded);
-      checkOnCreated(results[1].id, createdFolderId, 0, "Mozilla Corporation", "http://allizom.com/", results[1].dateAdded);
-      checkOnCreated(results[0].id, createdFolderId, 0, "Mozilla", "http://allizom.org/", results[0].dateAdded);
+      checkOnCreated(newBookmarks[2].id, createdFolderId, 0, "Firefox", "http://allizom.org/firefox/", newBookmarks[2].dateAdded);
+      checkOnCreated(newBookmarks[1].id, createdFolderId, 0, "Mozilla Corporation", "http://allizom.com/", newBookmarks[1].dateAdded);
+      checkOnCreated(newBookmarks[0].id, createdFolderId, 0, "Mozilla", "http://allizom.org/", newBookmarks[0].dateAdded);
 
       return browser.bookmarks.create({
         title: "About Mozilla",
@@ -267,8 +267,8 @@ function backgroundScript() {
 
       // returns all items on empty object
       return browser.bookmarks.search({});
-    }).then(results => {
-      browser.test.assertTrue(results.length >= 9, "At least as many bookmarks as added were returned by search({})");
+    }).then(bookmarksSearchResults => {
+      browser.test.assertTrue(bookmarksSearchResults.length >= 9, "At least as many bookmarks as added were returned by search({})");
 
       return Promise.resolve().then(() => {
         return browser.bookmarks.remove(createdFolderId);
@@ -525,10 +525,10 @@ function backgroundScript() {
       browser.test.assertEq(1, collectedEvents.length, "1 expected events received");
       checkOnRemoved(createdFolderId, bookmarkGuids.unfiledGuid, 1);
 
-      return browser.bookmarks.search({}).then(results => {
+      return browser.bookmarks.search({}).then(searchResults => {
         browser.test.assertEq(
           startBookmarkCount - 4,
-          results.length,
+          searchResults.length,
           "Expected number of results returned after removeTree");
       });
     });
