@@ -27,11 +27,6 @@
 #include "mozilla/sandboxing/sandboxLogging.h"
 #endif
 
-#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-#include "mozilla/Sandbox.h"
-#include "mozilla/SandboxInfo.h"
-#endif
-
 #ifdef MOZ_WIDGET_GONK
 # include <sys/time.h>
 # include <sys/resource.h> 
@@ -138,13 +133,6 @@ content_process_main(int argc, char* argv[])
 #endif
 
     XRE_SetProcessType(argv[--argc]);
-
-#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-    // This has to happen while we're still single-threaded, and on
-    // B2G that means before the Android Binder library is
-    // initialized.
-    mozilla::SandboxEarlyInit(XRE_GetProcessType());
-#endif
 
 #ifdef MOZ_WIDGET_GONK
     // This creates a ThreadPool for binder ipc. A ThreadPool is necessary to
