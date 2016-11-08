@@ -86,6 +86,11 @@ public:
           LayoutDeviceIntPoint aRefPoint,
           EventMessage aEventMessage) override;
 
+  void
+  OnProcessingError(
+          Result aCode,
+          const char* aReason) override;
+
 protected:
   bool RecvHandleTap(const TapType& aType,
                      const LayoutDevicePoint& aPoint,

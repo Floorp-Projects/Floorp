@@ -87,7 +87,7 @@ public:
   void FireDOMVRDisplayDisconnectEvent();
   void FireDOMVRDisplayPresentChangeEvent();
 
-  virtual void HandleFatalError(const char* aName, const char* aMsg) const override;
+  virtual void FatalError(const char* const aName, const char* const aMsg) const override;
 
 protected:
   explicit VRManagerChild();

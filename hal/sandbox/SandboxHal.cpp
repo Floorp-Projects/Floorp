@@ -901,6 +901,18 @@ public:
     hal::FactoryReset(reason);
     return true;
   }
+
+  virtual mozilla::ipc::IProtocol*
+  CloneProtocol(Channel* aChannel,
+                mozilla::ipc::ProtocolCloneContext* aCtx) override
+  {
+    ContentParent* contentParent = aCtx->GetContentParent();
+    nsAutoPtr<PHalParent> actor(contentParent->AllocPHalParent());
+    if (!actor || !contentParent->RecvPHalConstructor(actor)) {
+      return nullptr;
+    }
+    return actor.forget();
+  }
 };
 
 class HalChild : public PHalChild {
