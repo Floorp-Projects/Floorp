@@ -112,6 +112,21 @@ def target_tasks_ash(full_task_graph, parameters):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
+@_target_task('cedar_tasks')
+def target_tasks_cedar(full_task_graph, parameters):
+    """Target tasks that only run on the cedar branch."""
+    def filter(task):
+        platform = task.attributes.get('build_platform')
+        # only select platforms
+        if platform not in ['linux64'] :
+            return False
+        if task.attributes.get('unittest_suite'):
+            if not (task.attributes['unittest_suite'].startswith('mochitest') or 'xpcshell' in task.attributes['unittest_suite']):
+                return False
+        return True
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
 @_target_task('nightly_fennec')
 def target_tasks_nightly(full_task_graph, parameters):
     """Select the set of tasks required for a nightly build of fennec. The
