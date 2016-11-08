@@ -35,7 +35,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMETEXTTXN_IID)
 
   /**
-   * @param aTextNode           The text content node.
+   * @param aTextNode           The start node of text content.
    * @param aOffset             The location in aTextNode to do the insertion.
    * @param aReplaceLength      The length of text to replace. 0 means not
    *                            replacing existing text.
