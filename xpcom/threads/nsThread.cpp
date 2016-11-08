@@ -596,7 +596,8 @@ nsThread::nsThread(MainThreadFlag aMainThread, uint32_t aStackSize)
   , mScriptObserver(nullptr)
   , mEvents(WrapNotNull(&mEventsRoot))
   , mEventsRoot(mLock)
-  , mIdleEvents(mLock)
+  , mIdleEventsAvailable(mLock, "[nsThread.mEventsAvailable]")
+  , mIdleEvents(mIdleEventsAvailable, nsEventQueue::eNormalQueue)
   , mPriority(PRIORITY_NORMAL)
   , mThread(nullptr)
   , mNestedEventLoopDepth(0)
@@ -765,6 +766,40 @@ nsThread::DispatchInternal(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags
   NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL ||
                aFlags == NS_DISPATCH_AT_END, "unexpected dispatch flags");
   return PutEvent(event.take(), aTarget);
+}
+
+bool
+nsThread::nsChainedEventQueue::GetEvent(bool aMayWait, nsIRunnable** aEvent,
+                                        mozilla::MutexAutoLock& aProofOfLock)
+{
+  bool retVal = false;
+  do {
+    if (mProcessSecondaryQueueRunnable) {
+      MOZ_ASSERT(mSecondaryQueue->HasPendingEvent(aProofOfLock));
+      retVal = mSecondaryQueue->GetEvent(aMayWait, aEvent, aProofOfLock);
+      MOZ_ASSERT(*aEvent);
+      mProcessSecondaryQueueRunnable = false;
+      return retVal;
+    }
+
+    // We don't want to wait if mSecondaryQueue has some events.
+    bool reallyMayWait =
+      aMayWait && !mSecondaryQueue->HasPendingEvent(aProofOfLock);
+    retVal =
+      mNormalQueue->GetEvent(reallyMayWait, aEvent, aProofOfLock);
+
+    // Let's see if we should next time process an event from the secondary
+    // queue.
+    mProcessSecondaryQueueRunnable =
+      mSecondaryQueue->HasPendingEvent(aProofOfLock);
+
+    if (*aEvent) {
+      // We got an event, return early.
+      return retVal;
+    }
+  } while(aMayWait || mProcessSecondaryQueueRunnable);
+
+  return retVal;
 }
 
 //-----------------------------------------------------------------------------

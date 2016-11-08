@@ -79,6 +79,8 @@ class ThrottledEventQueue::Inner final : public nsIObserver
   mutable Mutex mMutex;
   mutable CondVar mIdleCondVar;
 
+  mozilla::CondVar mEventsAvailable;
+
   // any thread, protected by mutex
   nsEventQueue mEventQueue;
 
@@ -97,7 +99,8 @@ class ThrottledEventQueue::Inner final : public nsIObserver
   explicit Inner(nsIEventTarget* aBaseTarget)
     : mMutex("ThrottledEventQueue")
     , mIdleCondVar(mMutex, "ThrottledEventQueue:Idle")
-    , mEventQueue(mMutex)
+    , mEventsAvailable(mMutex, "[ThrottledEventQueue::Inner.mEventsAvailable]")
+    , mEventQueue(mEventsAvailable, nsEventQueue::eNormalQueue)
     , mBaseTarget(aBaseTarget)
     , mExecutionDepth(0)
     , mShutdownStarted(false)
