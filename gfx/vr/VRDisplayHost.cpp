@@ -174,3 +174,15 @@ VRControllerHost::GetIndex()
 {
   return mIndex;
 }
+
+void
+VRControllerHost::SetButtonPressed(uint64_t aBit)
+{
+  mButtonPressed = aBit;
+}
+
+uint64_t
+VRControllerHost::GetButtonPressed()
+{
+  return mButtonPressed;
+}

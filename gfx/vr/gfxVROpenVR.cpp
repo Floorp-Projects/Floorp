@@ -583,9 +583,7 @@ VRControllerManagerOpenVR::HandleInput()
                == vr::TrackedDeviceClass_Controller);
 
     if (mVRSystem->GetControllerState(controller->GetTrackedIndex(), &state)) {
-      if (state.ulButtonPressed) {
-        HandleButtonPress(controller->GetIndex(), state.ulButtonPressed);
-      }
+      HandleButtonPress(controller->GetIndex(), state.ulButtonPressed);
 
       axis = static_cast<uint32_t>(VRControllerAxisType::TrackpadXAxis);
       HandleAxisMove(controller->GetIndex(), axis,
@@ -607,11 +605,26 @@ VRControllerManagerOpenVR::HandleButtonPress(uint32_t aControllerIdx,
                                              uint64_t aButtonPressed)
 {
   uint64_t buttonMask = 0;
+  RefPtr<impl::VRControllerOpenVR> controller;
+  controller = mOpenVRController[aControllerIdx];
+  uint64_t diff = (controller->GetButtonPressed() ^ aButtonPressed);
+
+  if (!diff) {
+    return;
+  }
 
   for (uint32_t i = 0; i < gNumOpenVRButtonMask; ++i) {
     buttonMask = gOpenVRButtonMask[i];
-    NewButtonEvent(aControllerIdx, i, aButtonPressed & buttonMask);
+
+    if (diff & buttonMask) {
+      // diff & aButtonPressed would be true while a new button press
+      // event, otherwise it is an old press event and needs to notify
+      // the button has been released.
+      NewButtonEvent(aControllerIdx, i, diff & aButtonPressed);
+    }
   }
+
+  controller->SetButtonPressed(aButtonPressed);
 }
 
 void
