@@ -1434,69 +1434,26 @@ AstDecodeExpr(AstDecodeContext& c)
 static bool
 AstDecodeTypeSection(AstDecodeContext& c)
 {
-    uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(SectionId::Type, &sectionStart, &sectionSize, "type"))
+    SigWithIdVector sigs;
+    if (!DecodeTypeSection(c.d, &sigs))
         return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
 
-    uint32_t numSigs;
-    if (!c.d.readVarU32(&numSigs))
-        return c.d.fail("expected number of signatures");
-
-    if (numSigs > MaxSigs)
-        return c.d.fail("too many signatures");
-
-    for (uint32_t sigIndex = 0; sigIndex < numSigs; sigIndex++) {
-        uint32_t form;
-        if (!c.d.readVarU32(&form) || form != uint32_t(TypeCode::Func))
-            return c.d.fail("expected function form");
-
-        uint32_t numArgs;
-        if (!c.d.readVarU32(&numArgs))
-            return c.d.fail("bad number of function args");
-
-        if (numArgs > MaxArgsPerFunc)
-            return c.d.fail("too many arguments in signature");
+    for (size_t sigIndex = 0; sigIndex < sigs.length(); sigIndex++) {
+        const Sig& sig = sigs[sigIndex];
 
         AstValTypeVector args(c.lifo);
-        if (!args.resize(numArgs))
+        if (!args.appendAll(sig.args()))
             return false;
 
-        for (uint32_t i = 0; i < numArgs; i++) {
-            if (!c.d.readValType(&args[i]))
-                return c.d.fail("bad value type");
-        }
-
-        uint32_t numRets;
-        if (!c.d.readVarU32(&numRets))
-            return c.d.fail("bad number of function returns");
-
-        if (numRets > 1)
-            return c.d.fail("too many returns in signature");
-
-        ExprType result = ExprType::Void;
-
-        if (numRets == 1) {
-            ValType type;
-            if (!c.d.readValType(&type))
-                return c.d.fail("bad expression type");
-
-            result = ToExprType(type);
-        }
-
-        AstSig sigNoName(Move(args), result);
+        AstSig sigNoName(Move(args), sig.ret());
         AstName sigName;
         if (!AstDecodeGenerateName(c, AstName(u"type"), sigIndex, &sigName))
             return false;
 
-        AstSig* sig = new(c.lifo) AstSig(sigName, Move(sigNoName));
-        if (!sig || !c.module().append(sig))
+        AstSig* astSig = new(c.lifo) AstSig(sigName, Move(sigNoName));
+        if (!astSig || !c.module().append(astSig))
             return false;
     }
-
-    if (!c.d.finishSection(sectionStart, sectionSize, "type"))
-        return false;
 
     return true;
 }
