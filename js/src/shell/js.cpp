@@ -84,6 +84,7 @@
 #include "threading/LockGuard.h"
 #include "threading/Thread.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/AsyncFunction.h"
 #include "vm/Compression.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
@@ -2297,6 +2298,10 @@ ValueToScript(JSContext* cx, HandleValue v, JSFunction** funp = nullptr)
         else
             break;
     }
+
+    // Get unwrapped async function.
+    if (IsWrappedAsyncFunction(fun))
+        fun = GetUnwrappedAsyncFunction(fun);
 
     if (!fun->isInterpreted()) {
         JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_SCRIPTS_ONLY);
