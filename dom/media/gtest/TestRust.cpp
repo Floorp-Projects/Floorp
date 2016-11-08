@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "gtest/gtest.h"
 
 extern "C" uint8_t* test_rust();
 
