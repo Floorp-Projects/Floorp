@@ -39,7 +39,7 @@ add_task(function* () {
   ].join("\n");
 
   yield waitForClipboardPromise(function setup() {
-    RequestsMenu.copyRequestHeaders();
+    RequestsMenu.contextMenu.copyRequestHeaders();
   }, function validate(result) {
     // Sometimes, a "Cookie" header is left over from other tests. Remove it:
     result = String(result).replace(/Cookie: [^\n]+\n/, "");
@@ -58,7 +58,7 @@ add_task(function* () {
   ].join("\n");
 
   yield waitForClipboardPromise(function setup() {
-    RequestsMenu.copyResponseHeaders();
+    RequestsMenu.contextMenu.copyResponseHeaders();
   }, function validate(result) {
     // Fake the "Last-Modified" and "Date" headers because they will vary:
     result = String(result)

@@ -151,7 +151,6 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mDocShellIsActive(false)
   , mMarkedDestroying(false)
   , mIsDestroyed(false)
-  , mIsDetached(true)
   , mChromeFlags(aChromeFlags)
   , mDragValid(false)
   , mInitedByParent(false)
@@ -406,35 +405,6 @@ TabParent::Destroy()
   }
 
   mMarkedDestroying = true;
-}
-
-void
-TabParent::Detach()
-{
-  if (mIsDetached) {
-    return;
-  }
-  RemoveWindowListeners();
-  if (RenderFrameParent* frame = GetRenderFrame()) {
-    RemoveTabParentFromTable(frame->GetLayersId());
-  }
-  mIsDetached = true;
-}
-
-void
-TabParent::Attach(nsFrameLoader* aFrameLoader)
-{
-  MOZ_ASSERT(mIsDetached);
-  if (!mIsDetached) {
-    return;
-  }
-  Element* ownerElement = aFrameLoader->GetOwnerContent();
-  SetOwnerElement(ownerElement);
-  if (RenderFrameParent* frame = GetRenderFrame()) {
-    AddTabParentToTable(frame->GetLayersId(), this);
-    frame->OwnerContentChanged(ownerElement);
-  }
-  mIsDetached = false;
 }
 
 bool

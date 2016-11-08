@@ -20,7 +20,7 @@ add_task(function* () {
   tab.linkedBrowser.reload();
   yield wait;
 
-  yield RequestsMenu.copyAllAsHar();
+  yield RequestsMenu.contextMenu.copyAllAsHar();
 
   let jsonString = SpecialPowers.getClipboardData("text/unicode");
   let har = JSON.parse(jsonString);

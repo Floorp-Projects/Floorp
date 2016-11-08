@@ -1,9 +1,14 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 /* globals document, window, dumpn, $, gNetwork, EVENTS, Prefs,
            NetMonitorController, NetMonitorView */
+
 "use strict";
+
 /* eslint-disable mozilla/reject-some-requires */
 const { Cu } = require("chrome");
-const Services = require("Services");
 const {Task} = require("devtools/shared/task");
 const {DeferredTask} = Cu.import("resource://gre/modules/DeferredTask.jsm", {});
 /* eslint-disable mozilla/reject-some-requires */
@@ -13,16 +18,12 @@ const {setImageTooltip, getImageDimensions} =
   require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
 const {Heritage, WidgetMethods, setNamedTimeout} =
   require("devtools/client/shared/widgets/view-helpers");
-const {gDevTools} = require("devtools/client/framework/devtools");
-const Menu = require("devtools/client/framework/menu");
-const MenuItem = require("devtools/client/framework/menu-item");
-const {Curl, CurlUtils} = require("devtools/client/shared/curl");
+const {CurlUtils} = require("devtools/client/shared/curl");
 const {PluralForm} = require("devtools/shared/plural-form");
 const {Filters, isFreetextMatch} = require("./filter-predicates");
 const {Sorters} = require("./sort-predicates");
 const {L10N, WEBCONSOLE_L10N} = require("./l10n");
-const {getFormDataSections,
-       formDataURI,
+const {formDataURI,
        writeHeaderText,
        getKeyWithEvent,
        getAbbreviatedMimeType,
@@ -31,12 +32,7 @@ const {getFormDataSections,
        getUriHost,
        loadCauseString} = require("./request-utils");
 const Actions = require("./actions/index");
-
-loader.lazyServiceGetter(this, "clipboardHelper",
-  "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
-
-loader.lazyRequireGetter(this, "HarExporter",
-  "devtools/client/netmonitor/har/har-exporter", true);
+const RequestListContextMenu = require("./request-list-context-menu");
 
 loader.lazyRequireGetter(this, "NetworkHelper",
   "devtools/shared/webconsole/network-helper");
@@ -128,6 +124,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     this.store = store;
 
+    this.contextMenu = new RequestListContextMenu();
+
     let widgetParentEl = $("#requests-menu-contents");
     this.widget = new SideMenuWidget(widgetParentEl);
     this._splitter = $("#network-inspector-view-splitter");
@@ -154,13 +152,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.requestsMenuSortEvent = getKeyWithEvent(this.sortBy.bind(this));
     this.requestsMenuSortKeyboardEvent = getKeyWithEvent(this.sortBy.bind(this), true);
     this._onContextMenu = this._onContextMenu.bind(this);
-    this._onContextNewTabCommand = this.openRequestInTab.bind(this);
-    this._onContextCopyUrlCommand = this.copyUrl.bind(this);
-    this._onContextCopyImageAsDataUriCommand =
-      this.copyImageAsDataUri.bind(this);
-    this._onContextCopyResponseCommand = this.copyResponse.bind(this);
-    this._onContextResendCommand = this.cloneSelectedRequest.bind(this);
-    this._onContextToggleRawHeadersCommand = this.toggleRawHeaders.bind(this);
     this._onContextPerfCommand = () => NetMonitorView.toggleFrontendMode();
     this._onReloadCommand = () => NetMonitorView.reloadPage();
     this._flushRequestsTask = new DeferredTask(this._flushRequests,
@@ -346,181 +337,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     this._flushRequestsTask.arm();
     return undefined;
-  },
-
-  /**
-   * Opens selected item in a new tab.
-   */
-  openRequestInTab: function () {
-    let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-    let selected = this.selectedItem.attachment;
-    win.openUILinkIn(selected.url, "tab", { relatedToCurrent: true });
-  },
-
-  /**
-   * Copy the request url from the currently selected item.
-   */
-  copyUrl: function () {
-    let selected = this.selectedItem.attachment;
-    clipboardHelper.copyString(selected.url);
-  },
-
-  /**
-   * Copy the request url query string parameters from the currently
-   * selected item.
-   */
-  copyUrlParams: function () {
-    let selected = this.selectedItem.attachment;
-    let params = NetworkHelper.nsIURL(selected.url).query.split("&");
-    let string = params.join(Services.appinfo.OS === "WINNT" ? "\r\n" : "\n");
-    clipboardHelper.copyString(string);
-  },
-
-  /**
-   * Copy the request form data parameters (or raw payload) from
-   * the currently selected item.
-   */
-  copyPostData: Task.async(function* () {
-    let selected = this.selectedItem.attachment;
-
-    // Try to extract any form data parameters.
-    let formDataSections = yield getFormDataSections(
-      selected.requestHeaders,
-      selected.requestHeadersFromUploadStream,
-      selected.requestPostData,
-      gNetwork.getString.bind(gNetwork));
-
-    let params = [];
-    formDataSections.forEach(section => {
-      let paramsArray = NetworkHelper.parseQueryString(section);
-      if (paramsArray) {
-        params = [...params, ...paramsArray];
-      }
-    });
-
-    let string = params
-      .map(param => param.name + (param.value ? "=" + param.value : ""))
-      .join(Services.appinfo.OS === "WINNT" ? "\r\n" : "\n");
-
-    // Fall back to raw payload.
-    if (!string) {
-      let postData = selected.requestPostData.postData.text;
-      string = yield gNetwork.getString(postData);
-      if (Services.appinfo.OS !== "WINNT") {
-        string = string.replace(/\r/g, "");
-      }
-    }
-
-    clipboardHelper.copyString(string);
-  }),
-
-  /**
-   * Copy a cURL command from the currently selected item.
-   */
-  copyAsCurl: function () {
-    let selected = this.selectedItem.attachment;
-
-    Task.spawn(function* () {
-      // Create a sanitized object for the Curl command generator.
-      let data = {
-        url: selected.url,
-        method: selected.method,
-        headers: [],
-        httpVersion: selected.httpVersion,
-        postDataText: null
-      };
-
-      // Fetch header values.
-      for (let { name, value } of selected.requestHeaders.headers) {
-        let text = yield gNetwork.getString(value);
-        data.headers.push({ name: name, value: text });
-      }
-
-      // Fetch the request payload.
-      if (selected.requestPostData) {
-        let postData = selected.requestPostData.postData.text;
-        data.postDataText = yield gNetwork.getString(postData);
-      }
-
-      clipboardHelper.copyString(Curl.generateCommand(data));
-    });
-  },
-
-  /**
-   * Copy HAR from the network panel content to the clipboard.
-   */
-  copyAllAsHar: function () {
-    let options = this.getDefaultHarOptions();
-    return HarExporter.copy(options);
-  },
-
-  /**
-   * Save HAR from the network panel content to a file.
-   */
-  saveAllAsHar: function () {
-    let options = this.getDefaultHarOptions();
-    return HarExporter.save(options);
-  },
-
-  getDefaultHarOptions: function () {
-    let form = NetMonitorController._target.form;
-    let title = form.title || form.url;
-
-    return {
-      getString: gNetwork.getString.bind(gNetwork),
-      view: this,
-      items: NetMonitorView.RequestsMenu.items,
-      title: title
-    };
-  },
-
-  /**
-   * Copy the raw request headers from the currently selected item.
-   */
-  copyRequestHeaders: function () {
-    let selected = this.selectedItem.attachment;
-    let rawHeaders = selected.requestHeaders.rawHeaders.trim();
-    if (Services.appinfo.OS !== "WINNT") {
-      rawHeaders = rawHeaders.replace(/\r/g, "");
-    }
-    clipboardHelper.copyString(rawHeaders);
-  },
-
-  /**
-   * Copy the raw response headers from the currently selected item.
-   */
-  copyResponseHeaders: function () {
-    let selected = this.selectedItem.attachment;
-    let rawHeaders = selected.responseHeaders.rawHeaders.trim();
-    if (Services.appinfo.OS !== "WINNT") {
-      rawHeaders = rawHeaders.replace(/\r/g, "");
-    }
-    clipboardHelper.copyString(rawHeaders);
-  },
-
-  /**
-   * Copy image as data uri.
-   */
-  copyImageAsDataUri: function () {
-    let selected = this.selectedItem.attachment;
-    let { mimeType, text, encoding } = selected.responseContent.content;
-
-    gNetwork.getString(text).then(string => {
-      let data = formDataURI(mimeType, encoding, string);
-      clipboardHelper.copyString(data);
-    });
-  },
-
-  /**
-   * Copy response data as a string.
-   */
-  copyResponse: function () {
-    let selected = this.selectedItem.attachment;
-    let text = selected.responseContent.content.text;
-
-    gNetwork.getString(text).then(string => {
-      clipboardHelper.copyString(string);
-    });
   },
 
   /**
@@ -1713,157 +1529,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    */
   _onContextMenu: function (e) {
     e.preventDefault();
-    this._openMenu({
-      screenX: e.screenX,
-      screenY: e.screenY,
-      target: e.target,
-    });
-  },
-
-  /**
-   * Handle the context menu opening. Hide items if no request is selected.
-   * Since visible attribute only accept boolean value but the method call may
-   * return undefined, we use !! to force convert any object to boolean
-   */
-  _openMenu: function ({ target, screenX = 0, screenY = 0 } = { }) {
-    let selectedItem = this.selectedItem;
-
-    let menu = new Menu();
-    menu.append(new MenuItem({
-      id: "request-menu-context-copy-url",
-      label: L10N.getStr("netmonitor.context.copyUrl"),
-      accesskey: L10N.getStr("netmonitor.context.copyUrl.accesskey"),
-      visible: !!selectedItem,
-      click: () => this._onContextCopyUrlCommand(),
-    }));
-
-    menu.append(new MenuItem({
-      id: "request-menu-context-copy-url-params",
-      label: L10N.getStr("netmonitor.context.copyUrlParams"),
-      accesskey: L10N.getStr("netmonitor.context.copyUrlParams.accesskey"),
-      visible: !!(selectedItem &&
-               NetworkHelper.nsIURL(selectedItem.attachment.url).query),
-      click: () => this.copyUrlParams(),
-    }));
-
-    menu.append(new MenuItem({
-      id: "request-menu-context-copy-post-data",
-      label: L10N.getStr("netmonitor.context.copyPostData"),
-      accesskey: L10N.getStr("netmonitor.context.copyPostData.accesskey"),
-      visible: !!(selectedItem && selectedItem.attachment.requestPostData),
-      click: () => this.copyPostData(),
-    }));
-
-    menu.append(new MenuItem({
-      id: "request-menu-context-copy-as-curl",
-      label: L10N.getStr("netmonitor.context.copyAsCurl"),
-      accesskey: L10N.getStr("netmonitor.context.copyAsCurl.accesskey"),
-      visible: !!(selectedItem && selectedItem.attachment),
-      click: () => this.copyAsCurl(),
-    }));
-
-    menu.append(new MenuItem({
-      type: "separator",
-      visible: !!selectedItem,
-    }));
-
-    menu.append(new MenuItem({
-      id: "request-menu-context-copy-request-headers",
-      label: L10N.getStr("netmonitor.context.copyRequestHeaders"),
-      accesskey: L10N.getStr("netmonitor.context.copyRequestHeaders.accesskey"),
-      visible: !!(selectedItem && selectedItem.attachment.requestHeaders),
-      click: () => this.copyRequestHeaders(),
-    }));
-
-    menu.append(new MenuItem({
-      id: "response-menu-context-copy-response-headers",
-      label: L10N.getStr("netmonitor.context.copyResponseHeaders"),
-      accesskey: L10N.getStr("netmonitor.context.copyResponseHeaders.accesskey"),
-      visible: !!(selectedItem && selectedItem.attachment.responseHeaders),
-      click: () => this.copyResponseHeaders(),
-    }));
-
-    menu.append(new MenuItem({
-      id: "request-menu-context-copy-response",
-      label: L10N.getStr("netmonitor.context.copyResponse"),
-      accesskey: L10N.getStr("netmonitor.context.copyResponse.accesskey"),
-      visible: !!(selectedItem &&
-               selectedItem.attachment.responseContent &&
-               selectedItem.attachment.responseContent.content.text &&
-               selectedItem.attachment.responseContent.content.text.length !== 0),
-      click: () => this._onContextCopyResponseCommand(),
-    }));
-
-    menu.append(new MenuItem({
-      id: "request-menu-context-copy-image-as-data-uri",
-      label: L10N.getStr("netmonitor.context.copyImageAsDataUri"),
-      accesskey: L10N.getStr("netmonitor.context.copyImageAsDataUri.accesskey"),
-      visible: !!(selectedItem &&
-               selectedItem.attachment.responseContent &&
-               selectedItem.attachment.responseContent.content
-                 .mimeType.includes("image/")),
-      click: () => this._onContextCopyImageAsDataUriCommand(),
-    }));
-
-    menu.append(new MenuItem({
-      type: "separator",
-      visible: !!selectedItem,
-    }));
-
-    menu.append(new MenuItem({
-      id: "request-menu-context-copy-all-as-har",
-      label: L10N.getStr("netmonitor.context.copyAllAsHar"),
-      accesskey: L10N.getStr("netmonitor.context.copyAllAsHar.accesskey"),
-      visible: !!this.items.length,
-      click: () => this.copyAllAsHar(),
-    }));
-
-    menu.append(new MenuItem({
-      id: "request-menu-context-save-all-as-har",
-      label: L10N.getStr("netmonitor.context.saveAllAsHar"),
-      accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
-      visible: !!this.items.length,
-      click: () => this.saveAllAsHar(),
-    }));
-
-    menu.append(new MenuItem({
-      type: "separator",
-      visible: !!selectedItem,
-    }));
-
-    menu.append(new MenuItem({
-      id: "request-menu-context-resend",
-      label: L10N.getStr("netmonitor.context.editAndResend"),
-      accesskey: L10N.getStr("netmonitor.context.editAndResend.accesskey"),
-      visible: !!(NetMonitorController.supportsCustomRequest &&
-               selectedItem &&
-               !selectedItem.attachment.isCustom),
-      click: () => this._onContextResendCommand(),
-    }));
-
-    menu.append(new MenuItem({
-      type: "separator",
-      visible: !!selectedItem,
-    }));
-
-    menu.append(new MenuItem({
-      id: "request-menu-context-newtab",
-      label: L10N.getStr("netmonitor.context.newTab"),
-      accesskey: L10N.getStr("netmonitor.context.newTab.accesskey"),
-      visible: !!selectedItem,
-      click: () => this._onContextNewTabCommand(),
-    }));
-
-    menu.append(new MenuItem({
-      id: "request-menu-context-perf",
-      label: L10N.getStr("netmonitor.context.perfTools"),
-      accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
-      visible: !!NetMonitorController.supportsPerfStats,
-      click: () => this._onContextPerfCommand(),
-    }));
-
-    menu.popup(screenX, screenY, NetMonitorController._toolbox);
-    return menu;
+    this.contextMenu.open(e);
   },
 
   /**
