@@ -245,7 +245,8 @@ config = {
         },
         "xpcshell-coverage": {
             "options": ["--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
-                        "--manifest=tests/xpcshell/tests/xpcshell.ini"],
+                        "--manifest=tests/xpcshell/tests/xpcshell.ini",
+                        "--sequential"],
             "tests": []
         },
     },
