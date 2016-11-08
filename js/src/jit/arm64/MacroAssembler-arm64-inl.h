@@ -674,6 +674,25 @@ MacroAssembler::rshift64Arithmetic(Register shift, Register64 srcDest)
 }
 
 // ===============================================================
+// Condition functions
+
+template <typename T1, typename T2>
+void
+MacroAssembler::cmp32Set(Condition cond, T1 lhs, T2 rhs, Register dest)
+{
+    cmp32(lhs, rhs);
+    emitSet(cond, dest);
+}
+
+template <typename T1, typename T2>
+void
+MacroAssembler::cmpPtrSet(Condition cond, T1 lhs, T2 rhs, Register dest)
+{
+    cmpPtr(lhs, rhs);
+    emitSet(cond, dest);
+}
+
+// ===============================================================
 // Rotation functions
 
 void
@@ -827,6 +846,12 @@ MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, L
     const Register scratch = temps.AcquireX().asUnsized();
     movePtr(lhs, scratch);
     branch32(cond, Address(scratch, 0), rhs, label);
+}
+
+void
+MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* success, Label* fail)
+{
+    MOZ_CRASH("NYI: branch64 reg-imm");
 }
 
 void

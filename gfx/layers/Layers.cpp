@@ -604,14 +604,13 @@ Layer::SnapTransformTranslation(const Matrix4x4& aTransform,
   }
 
   Matrix matrix2D;
-  Matrix4x4 result;
   if (aTransform.CanDraw2D(&matrix2D) &&
       !matrix2D.HasNonTranslation() &&
       matrix2D.HasNonIntegerTranslation()) {
     auto snappedTranslation = IntPoint::Round(matrix2D.GetTranslation());
     Matrix snappedMatrix = Matrix::Translation(snappedTranslation.x,
                                                snappedTranslation.y);
-    result = Matrix4x4::From2D(snappedMatrix);
+    Matrix4x4 result = Matrix4x4::From2D(snappedMatrix);
     if (aResidualTransform) {
       // set aResidualTransform so that aResidual * snappedMatrix == matrix2D.
       // (I.e., appying snappedMatrix after aResidualTransform gives the
@@ -623,6 +622,13 @@ Layer::SnapTransformTranslation(const Matrix4x4& aTransform,
     return result;
   }
 
+  return SnapTransformTranslation3D(aTransform, aResidualTransform);
+}
+
+Matrix4x4
+Layer::SnapTransformTranslation3D(const Matrix4x4& aTransform,
+                                  Matrix* aResidualTransform)
+{
   if(aTransform.IsSingular() ||
      aTransform.HasPerspectiveComponent() ||
      aTransform.HasNonTranslation() ||
@@ -672,7 +678,7 @@ Layer::SnapTransformTranslation(const Matrix4x4& aTransform,
   // Translate transformed origin to transformed snap since the
   // residual transform would trnslate the snap to the origin.
   Point3D transformedShift = transformedSnap - transformedOrigin;
-  result = aTransform;
+  Matrix4x4 result = aTransform;
   result.PostTranslate(transformedShift.x,
                        transformedShift.y,
                        transformedShift.z);

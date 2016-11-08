@@ -663,6 +663,20 @@ MacroAssembler::rotateRight64(Register shift, Register64 src, Register64 dest, R
     bind(&done);
 }
 
+template <typename T1, typename T2>
+void
+MacroAssembler::cmpPtrSet(Condition cond, T1 lhs, T2 rhs, Register dest)
+{
+    ma_cmp_set(dest, lhs, rhs, cond);
+}
+
+template <typename T1, typename T2>
+void
+MacroAssembler::cmp32Set(Condition cond, T1 lhs, T2 rhs, Register dest)
+{
+    ma_cmp_set(dest, lhs, rhs, cond);
+}
+
 // ===============================================================
 // Bit counting functions
 

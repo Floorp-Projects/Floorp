@@ -446,7 +446,7 @@ NetworkResponseListener.prototype = {
         .getService(Ci.nsIStreamConverterService);
       let encodings = encodingHeader.split(/\s*\t*,\s*\t*/);
       let nextListener = this;
-      let acceptedEncodings = ["gzip", "deflate", "x-gzip", "x-deflate"];
+      let acceptedEncodings = ["gzip", "deflate", "br", "x-gzip", "x-deflate"];
       for (let i in encodings) {
         // There can be multiple conversions applied
         let enc = encodings[i].toLowerCase();

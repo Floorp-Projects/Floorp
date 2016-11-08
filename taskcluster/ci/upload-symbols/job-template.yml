@@ -10,10 +10,10 @@ worker:
     implementation: docker-worker
     max-run-time: 600
     command: ["/bin/bash", "bin/upload.sh"]
-    docker-image: taskclusterprivate/upload_symbols:0.0.3
+    docker-image: taskclusterprivate/upload_symbols:0.0.4
     env:
         GECKO_HEAD_REPOSITORY: # see transforms
         GECKO_HEAD_REV: # see transforms
         ARTIFACT_TASKID: {"task-reference": "<build>"}
 scopes:
-    - docker-worker:image:taskclusterprivate/upload_symbols:0.0.3
+    - docker-worker:image:taskclusterprivate/upload_symbols:0.0.4

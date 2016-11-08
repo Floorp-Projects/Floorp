@@ -23,84 +23,84 @@ const MAIN_TIMER_INTERVAL = 1000;  // milliseconds
 const CONSUMER_TIMER_INTERVAL = 1; // seconds
 
 const TESTS = [ {
-  desc            : "Test Timer Callback 1",
-  timerID         : "test1-update-timer",
-  defaultInterval : "bogus",
-  prefInterval    : "test1.timer.interval",
-  contractID      : "@mozilla.org/test1/timercallback;1",
-  method          : "createInstance",
-  classID         : Components.ID("9c7ce81f-98bb-4729-adb4-4d0deb0f59e5"),
-  notified        : false
+  desc: "Test Timer Callback 1",
+  timerID: "test1-update-timer",
+  defaultInterval: "bogus",
+  prefInterval: "test1.timer.interval",
+  contractID: "@mozilla.org/test1/timercallback;1",
+  method: "createInstance",
+  classID: Components.ID("9c7ce81f-98bb-4729-adb4-4d0deb0f59e5"),
+  notified: false
 }, {
-  desc            : "Test Timer Callback 2",
-  timerID         : "test2-update-timer",
-  defaultInterval : 86400,
-  prefInterval    : "test2.timer.interval",
-  contractID      : "@mozilla.org/test2/timercallback;1",
-  method          : "createInstance",
-  classID         : Components.ID("512834f3-05bb-46be-84e0-81d881a140b7"),
-  notified        : false
+  desc: "Test Timer Callback 2",
+  timerID: "test2-update-timer",
+  defaultInterval: 86400,
+  prefInterval: "test2.timer.interval",
+  contractID: "@mozilla.org/test2/timercallback;1",
+  method: "createInstance",
+  classID: Components.ID("512834f3-05bb-46be-84e0-81d881a140b7"),
+  notified: false
 }, {
-  desc            : "Test Timer Callback 3",
-  timerID         : "test3-update-timer",
-  defaultInterval : CONSUMER_TIMER_INTERVAL,
-  prefInterval    : "test3.timer.interval",
-  contractID      : "@mozilla.org/test3/timercallback;1",
-  method          : "createInstance",
-  classID         : Components.ID("c8ac5027-8d11-4471-9d7c-fd692501b437"),
-  notified        : false
+  desc: "Test Timer Callback 3",
+  timerID: "test3-update-timer",
+  defaultInterval: CONSUMER_TIMER_INTERVAL,
+  prefInterval: "test3.timer.interval",
+  contractID: "@mozilla.org/test3/timercallback;1",
+  method: "createInstance",
+  classID: Components.ID("c8ac5027-8d11-4471-9d7c-fd692501b437"),
+  notified: false
 }, {
-  desc            : "Test Timer Callback 4",
-  timerID         : "test4-update-timer",
-  defaultInterval : CONSUMER_TIMER_INTERVAL,
-  prefInterval    : "test4.timer.interval",
-  contractID      : "@mozilla.org/test4/timercallback;1",
-  method          : "createInstance",
-  classID         : Components.ID("6b0e79f3-4ab8-414c-8f14-dde10e185727"),
-  notified        : false
+  desc: "Test Timer Callback 4",
+  timerID: "test4-update-timer",
+  defaultInterval: CONSUMER_TIMER_INTERVAL,
+  prefInterval: "test4.timer.interval",
+  contractID: "@mozilla.org/test4/timercallback;1",
+  method: "createInstance",
+  classID: Components.ID("6b0e79f3-4ab8-414c-8f14-dde10e185727"),
+  notified: false
 }, {
-  desc            : "Test Timer Callback 5",
-  timerID         : "test5-update-timer",
-  defaultInterval : CONSUMER_TIMER_INTERVAL,
-  prefInterval    : "test5.timer.interval",
-  contractID      : "@mozilla.org/test5/timercallback;1",
-  method          : "createInstance",
-  classID         : Components.ID("2f6b7b92-e40f-4874-bfbb-eeb2412c959d"),
-  notified        : false
+  desc: "Test Timer Callback 5",
+  timerID: "test5-update-timer",
+  defaultInterval: CONSUMER_TIMER_INTERVAL,
+  prefInterval: "test5.timer.interval",
+  contractID: "@mozilla.org/test5/timercallback;1",
+  method: "createInstance",
+  classID: Components.ID("2f6b7b92-e40f-4874-bfbb-eeb2412c959d"),
+  notified: false
 }, {
-  desc            : "Test Timer Callback 6",
-  timerID         : "test6-update-timer",
-  defaultInterval : 86400,
-  prefInterval    : "test6.timer.interval",
-  contractID      : "@mozilla.org/test6/timercallback;1",
-  method          : "createInstance",
-  classID         : Components.ID("8a95f611-b2ac-4c7e-8b73-9748c4839731"),
-  notified        : false
+  desc: "Test Timer Callback 6",
+  timerID: "test6-update-timer",
+  defaultInterval: 86400,
+  prefInterval: "test6.timer.interval",
+  contractID: "@mozilla.org/test6/timercallback;1",
+  method: "createInstance",
+  classID: Components.ID("8a95f611-b2ac-4c7e-8b73-9748c4839731"),
+  notified: false
 }, {
-  desc            : "Test Timer Callback 7",
-  timerID         : "test7-update-timer",
-  defaultInterval : CONSUMER_TIMER_INTERVAL,
-  prefInterval    : "test7.timer.interval",
-  contractID      : "@mozilla.org/test7/timercallback;1",
-  method          : "createInstance",
-  classID         : Components.ID("2d091020-e23c-11e2-a28f-0800200c9a66"),
-  notified        : false
+  desc: "Test Timer Callback 7",
+  timerID: "test7-update-timer",
+  defaultInterval: CONSUMER_TIMER_INTERVAL,
+  prefInterval: "test7.timer.interval",
+  contractID: "@mozilla.org/test7/timercallback;1",
+  method: "createInstance",
+  classID: Components.ID("2d091020-e23c-11e2-a28f-0800200c9a66"),
+  notified: false
 }, {
-  desc            : "Test Timer Callback 8",
-  timerID         : "test8-update-timer",
-  defaultInterval : CONSUMER_TIMER_INTERVAL,
-  contractID      : "@mozilla.org/test8/timercallback;1",
-  classID         : Components.ID("af878d4b-1d12-41f6-9a90-4e687367ecc1"),
-  notified        : false,
-  lastUpdateTime  : 0
+  desc: "Test Timer Callback 8",
+  timerID: "test8-update-timer",
+  defaultInterval: CONSUMER_TIMER_INTERVAL,
+  contractID: "@mozilla.org/test8/timercallback;1",
+  classID: Components.ID("af878d4b-1d12-41f6-9a90-4e687367ecc1"),
+  notified: false,
+  lastUpdateTime: 0
 }, {
-  desc            : "Test Timer Callback 9",
-  timerID         : "test9-update-timer",
-  defaultInterval : CONSUMER_TIMER_INTERVAL,
-  contractID      : "@mozilla.org/test9/timercallback;1",
-  classID         : Components.ID("5136b201-d64c-4328-8cf1-1a63491cc117"),
-  notified        : false,
-  lastUpdateTime  : 0
+  desc: "Test Timer Callback 9",
+  timerID: "test9-update-timer",
+  defaultInterval: CONSUMER_TIMER_INTERVAL,
+  contractID: "@mozilla.org/test9/timercallback;1",
+  classID: Components.ID("5136b201-d64c-4328-8cf1-1a63491cc117"),
+  notified: false,
+  lastUpdateTime: 0
 } ];
 
 const DEBUG_TEST = false;
@@ -116,15 +116,170 @@ XPCOMUtils.defineLazyServiceGetter(this, "gCatMan",
                                    "@mozilla.org/categorymanager;1",
                                    "nsICategoryManager");
 
-XPCOMUtils.defineLazyGetter(this, "gCompReg", function() {
+XPCOMUtils.defineLazyGetter(this, "gCompReg", function () {
   return Cm.QueryInterface(Ci.nsIComponentRegistrar);
 });
+
+const gTest1TimerCallback = {
+  notify: function T1CB_notify(aTimer) {
+    do_throw("gTest1TimerCallback notify method should not have been called");
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+};
+
+const gTest1Factory = {
+  createInstance: function (aOuter, aIID) {
+    if (aOuter == null) {
+      return gTest1TimerCallback.QueryInterface(aIID);
+    }
+    throw Cr.NS_ERROR_NO_AGGREGATION;
+  }
+};
+
+const gTest2TimerCallback = {
+  notify: function T2CB_notify(aTimer) {
+    do_throw("gTest2TimerCallback notify method should not have been called");
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimer])
+};
+
+const gTest2Factory = {
+  createInstance: function (aOuter, aIID) {
+    if (aOuter == null) {
+      return gTest2TimerCallback.QueryInterface(aIID);
+    }
+    throw Cr.NS_ERROR_NO_AGGREGATION;
+  }
+};
+
+const gTest3TimerCallback = {
+  notify: function T3CB_notify(aTimer) {
+    do_throw("gTest3TimerCallback notify method should not have been called");
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+};
+
+const gTest3Factory = {
+  createInstance: function (aOuter, aIID) {
+    if (aOuter == null) {
+      return gTest3TimerCallback.QueryInterface(aIID);
+    }
+    throw Cr.NS_ERROR_NO_AGGREGATION;
+  }
+};
+
+const gTest4TimerCallback = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+};
+
+const gTest4Factory = {
+  createInstance: function (aOuter, aIID) {
+    if (aOuter == null) {
+      return gTest4TimerCallback.QueryInterface(aIID);
+    }
+    throw Cr.NS_ERROR_NO_AGGREGATION;
+  }
+};
+
+const gTest5TimerCallback = {
+  notify: function T5CB_notify(aTimer) {
+    gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[4].desc, true);
+    TESTS[4].notified = true;
+    finished_test1thru7();
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+};
+
+const gTest5Factory = {
+  createInstance: function (aOuter, aIID) {
+    if (aOuter == null) {
+      return gTest5TimerCallback.QueryInterface(aIID);
+    }
+    throw Cr.NS_ERROR_NO_AGGREGATION;
+  }
+};
+
+const gTest6TimerCallback = {
+  notify: function T6CB_notify(aTimer) {
+    gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[5].desc, true);
+    TESTS[5].notified = true;
+    finished_test1thru7();
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+};
+
+const gTest6Factory = {
+  createInstance: function (aOuter, aIID) {
+    if (aOuter == null) {
+      return gTest6TimerCallback.QueryInterface(aIID);
+    }
+    throw Cr.NS_ERROR_NO_AGGREGATION;
+  }
+};
+
+const gTest7TimerCallback = {
+  notify: function T7CB_notify(aTimer) {
+    gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[6].desc, true);
+    TESTS[6].notified = true;
+    finished_test1thru7();
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+};
+
+const gTest7Factory = {
+  createInstance: function (aOuter, aIID) {
+    if (aOuter == null) {
+      return gTest7TimerCallback.QueryInterface(aIID);
+    }
+    throw Cr.NS_ERROR_NO_AGGREGATION;
+  }
+};
+
+const gTest8TimerCallback = {
+  notify: function T8CB_notify(aTimer) {
+    TESTS[7].notified = true;
+    TESTS[7].notifyTime = Date.now();
+    do_execute_soon(function () {
+      check_test8(gTest8TimerCallback);
+    });
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+};
+
+const gTest8Factory = {
+  createInstance: function (aOuter, aIID) {
+    if (aOuter == null) {
+      return gTest8TimerCallback.QueryInterface(aIID);
+    }
+    throw Cr.NS_ERROR_NO_AGGREGATION;
+  }
+};
+
+const gTest9TimerCallback = {
+  notify: function T9CB_notify(aTimer) {
+    TESTS[8].notified = true;
+    TESTS[8].notifyTime = Date.now();
+    do_execute_soon(function () {
+      check_test8(gTest9TimerCallback);
+    });
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+};
+
+const gTest9Factory = {
+  createInstance: function (aOuter, aIID) {
+    if (aOuter == null) {
+      return gTest9TimerCallback.QueryInterface(aIID);
+    }
+    throw Cr.NS_ERROR_NO_AGGREGATION;
+  }
+};
 
 function run_test() {
   do_test_pending();
 
   // Set the timer to fire every second
-  gPref.setIntPref(PREF_APP_UPDATE_TIMERMINIMUMDELAY, MAIN_TIMER_INTERVAL/1000);
+  gPref.setIntPref(PREF_APP_UPDATE_TIMERMINIMUMDELAY, MAIN_TIMER_INTERVAL / 1000);
   gPref.setIntPref(PREF_APP_UPDATE_TIMERFIRSTINTERVAL, MAIN_TIMER_INTERVAL);
   gPref.setBoolPref(PREF_APP_UPDATE_LOG_ALL, true);
 
@@ -308,161 +463,6 @@ function check_test8(aTestTimerCallback) {
   end_test();
 }
 
-const gTest1TimerCallback = {
-  notify: function T1CB_notify(aTimer) {
-    do_throw("gTest1TimerCallback notify method should not have been called");
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
-};
-
-const gTest1Factory = {
-  createInstance: function(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest1TimerCallback.QueryInterface(aIID);
-    }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
-};
-
-const gTest2TimerCallback = {
-  notify: function T2CB_notify(aTimer) {
-    do_throw("gTest2TimerCallback notify method should not have been called");
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimer])
-};
-
-const gTest2Factory = {
-  createInstance: function(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest2TimerCallback.QueryInterface(aIID);
-    }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
-};
-
-const gTest3TimerCallback = {
-  notify: function T3CB_notify(aTimer) {
-    do_throw("gTest3TimerCallback notify method should not have been called");
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
-};
-
-const gTest3Factory = {
-  createInstance: function(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest3TimerCallback.QueryInterface(aIID);
-    }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
-};
-
-const gTest4TimerCallback = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
-};
-
-const gTest4Factory = {
-  createInstance: function(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest4TimerCallback.QueryInterface(aIID);
-    }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
-};
-
-const gTest5TimerCallback = {
-  notify: function T5CB_notify(aTimer) {
-    gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[4].desc, true);
-    TESTS[4].notified = true;
-    finished_test1thru7();
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
-};
-
-const gTest5Factory = {
-  createInstance: function(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest5TimerCallback.QueryInterface(aIID);
-    }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
-};
-
-const gTest6TimerCallback = {
-  notify: function T6CB_notify(aTimer) {
-    gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[5].desc, true);
-    TESTS[5].notified = true;
-    finished_test1thru7();
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
-};
-
-const gTest6Factory = {
-  createInstance: function(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest6TimerCallback.QueryInterface(aIID);
-    }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
-};
-
-const gTest7TimerCallback = {
-  notify: function T7CB_notify(aTimer) {
-    gCatMan.deleteCategoryEntry(CATEGORY_UPDATE_TIMER, TESTS[6].desc, true);
-    TESTS[6].notified = true;
-    finished_test1thru7();
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
-};
-
-const gTest7Factory = {
-  createInstance: function(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest7TimerCallback.QueryInterface(aIID);
-    }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
-};
-
-const gTest8TimerCallback = {
-  notify: function T8CB_notify(aTimer) {
-    TESTS[7].notified = true;
-    TESTS[7].notifyTime = Date.now();
-    do_execute_soon(function() {
-      check_test8(gTest8TimerCallback);
-    });
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
-};
-
-const gTest8Factory = {
-  createInstance: function(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest8TimerCallback.QueryInterface(aIID);
-    }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
-};
-
-const gTest9TimerCallback = {
-  notify: function T9CB_notify(aTimer) {
-    TESTS[8].notified = true;
-    TESTS[8].notifyTime = Date.now();
-    do_execute_soon(function() {
-      check_test8(gTest9TimerCallback);
-    });
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
-};
-
-const gTest9Factory = {
-  createInstance: function(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest9TimerCallback.QueryInterface(aIID);
-    }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
-  }
-};
-
 /**
  * Logs TEST-INFO messages.
  *
@@ -474,7 +474,7 @@ const gTest9Factory = {
  */
 function logTestInfo(aText, aCaller) {
   let caller = aCaller ? aCaller : Components.stack.caller;
-  let now = new Date;
+  let now = new Date();
   let hh = now.getHours();
   let mm = now.getMinutes();
   let ss = now.getSeconds();
@@ -484,8 +484,7 @@ function logTestInfo(aText, aCaller) {
              (ss < 10 ? "0" + ss : ss) + ":";
   if (ms < 10) {
     time += "00";
-  }
-  else if (ms < 100) {
+  } else if (ms < 100) {
     time += "0";
   }
   time += ms;

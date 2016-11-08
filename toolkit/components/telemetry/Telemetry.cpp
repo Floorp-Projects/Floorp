@@ -1085,13 +1085,6 @@ TelemetryImpl::AddSQLInfo(JSContext *cx, JS::Handle<JSObject*> rootObj, bool mai
 }
 
 NS_IMETHODIMP
-TelemetryImpl::HistogramFrom(const nsACString &name, const nsACString &existing_name,
-                             JSContext *cx, JS::MutableHandle<JS::Value> ret)
-{
-  return TelemetryHistogram::HistogramFrom(name, existing_name, cx, ret);
-}
-
-NS_IMETHODIMP
 TelemetryImpl::RegisterAddonHistogram(const nsACString &id,
                                       const nsACString &name,
                                       uint32_t histogramType,
