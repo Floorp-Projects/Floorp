@@ -12,8 +12,8 @@ namespace base {
 
 void BaseTimer_Helper::OrphanDelayedTask() {
   if (delayed_task_) {
-    delayed_task_->timer_ = NULL;
-    delayed_task_ = NULL;
+    delayed_task_->timer_ = nullptr;
+    delayed_task_ = nullptr;
   }
 }
 

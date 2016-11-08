@@ -38,7 +38,7 @@ public:
 
 //-----------------------------------------------------------------------------
 
-ObjectWatcher::ObjectWatcher() : watch_(NULL) {
+ObjectWatcher::ObjectWatcher() : watch_(nullptr) {
 }
 
 ObjectWatcher::~ObjectWatcher() {
@@ -99,7 +99,7 @@ bool ObjectWatcher::StopWatching() {
   // anything once it is run.
   watch_->watcher = NULL;
 
-  watch_ = NULL;
+  watch_ = nullptr;
 
   MessageLoop::current()->RemoveDestructionObserver(this);
   return true;
