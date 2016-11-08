@@ -274,9 +274,12 @@ interface nsILoadInfo : nsISupports
   nsIPrincipal binaryTriggeringPrincipal();
 
   /**
-   * The principalToInherit is the principal that is used when the inherit flag
-   * is set. For loads that are not TYPE_DOCUMENT or TYPE_SUBDOCUMENT that
-   * principal is always identical to the triggeringPrincipal.
+   * For non-document loads the principalToInherit is always null. For
+   * loads of type TYPE_DOCUMENT or TYPE_SUBDOCUMENT the principalToInherit
+   * might be null. If it's non null, then this is the principal that is
+   * inherited if a principal needs to be inherited. If the principalToInherit
+   * is null but the inherit flag is set, then the triggeringPrincipal is
+   * the principal that is inherited.
    */
   attribute nsIPrincipal principalToInherit;
 
