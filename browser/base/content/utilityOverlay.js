@@ -373,7 +373,7 @@ function openLinkIn(url, where, params) {
     }
 
     if (aForceAboutBlankViewerInCurrent) {
-      w.gBrowser.selectedBrowser.createAboutBlankContentViewer(aPrincipal);
+      aCurrentBrowser.createAboutBlankContentViewer(aPrincipal);
     }
 
     aCurrentBrowser.loadURIWithFlags(url, {
