@@ -3,11 +3,11 @@
 "use strict";
 
 add_task(function* test_is_allowed_incognito_access() {
-  function background() {
-    browser.extension.isAllowedIncognitoAccess().then(isAllowedIncognitoAccess => {
-      browser.test.assertEq(true, isAllowedIncognitoAccess, "isAllowedIncognitoAccess is true");
-      browser.test.notifyPass("isAllowedIncognitoAccess");
-    });
+  async function background() {
+    let allowed = await browser.extension.isAllowedIncognitoAccess();
+
+    browser.test.assertEq(true, allowed, "isAllowedIncognitoAccess is true");
+    browser.test.notifyPass("isAllowedIncognitoAccess");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -37,11 +37,11 @@ add_task(function* test_in_incognito_context_false() {
 });
 
 add_task(function* test_is_allowed_file_scheme_access() {
-  function background() {
-    browser.extension.isAllowedFileSchemeAccess().then(isAllowedFileSchemeAccess => {
-      browser.test.assertEq(false, isAllowedFileSchemeAccess, "isAllowedFileSchemeAccess is false");
-      browser.test.notifyPass("isAllowedFileSchemeAccess");
-    });
+  async function background() {
+    let allowed = await browser.extension.isAllowedFileSchemeAccess();
+
+    browser.test.assertEq(false, allowed, "isAllowedFileSchemeAccess is false");
+    browser.test.notifyPass("isAllowedFileSchemeAccess");
   }
 
   let extension = ExtensionTestUtils.loadExtension({

@@ -42,97 +42,79 @@ add_task(function* () {
         browser.test.assertEq(data.expectedCookieStoreId, tab.cookieStoreId, "tab should have the correct cookieStoreId");
       }
 
-      function runTest(data) {
-        // Tab Creation
-        browser.tabs.create({windowId: data.privateTab ? this.privateWindowId : this.defaultWindowId,
-                             cookieStoreId: data.cookieStoreId})
+      async function runTest(data) {
+        try {
+          // Tab Creation
+          let tab = await browser.tabs.create({
+            windowId: data.privateTab ? this.privateWindowId : this.defaultWindowId,
+            cookieStoreId: data.cookieStoreId,
+          }).then((tab) => {
+            // Tests for tab creation
+            testTab(data, tab);
+            return tab;
+          }, (error) => {
+            browser.test.assertTrue(!!data.failure, "we want a failure");
+            if (data.failure == "illegal") {
+              browser.test.assertTrue(/Illegal cookieStoreId/.test(error.message),
+                                      "runtime.lastError should report the expected error message");
+            } else if (data.failure == "defaultToPrivate") {
+              browser.test.assertTrue("Illegal to set private cookieStorageId in a non private window",
+                                      error.message,
+                                      "runtime.lastError should report the expected error message");
+            } else if (data.failure == "privateToDefault") {
+              browser.test.assertTrue("Illegal to set non private cookieStorageId in a private window",
+                                      error.message,
+                                      "runtime.lastError should report the expected error message");
+            } else if (data.failure == "exist") {
+              browser.test.assertTrue(/No cookie store exists/.test(error.message),
+                                      "runtime.lastError should report the expected error message");
+            } else {
+              browser.test.fail("The test is broken");
+            }
 
-        // Tests for tab creation
-        .then((tab) => {
-          testTab(data, tab);
-          return tab;
-        }, (error) => {
-          browser.test.assertTrue(!!data.failure, "we want a failure");
-          if (data.failure == "illegal") {
-            browser.test.assertTrue(/Illegal cookieStoreId/.test(error.message),
-                                    "runtime.lastError should report the expected error message");
-          } else if (data.failure == "defaultToPrivate") {
-            browser.test.assertTrue("Illegal to set private cookieStorageId in a non private window",
-                                    error.message,
-                                    "runtime.lastError should report the expected error message");
-          } else if (data.failure == "privateToDefault") {
-            browser.test.assertTrue("Illegal to set non private cookieStorageId in a private window",
-                                    error.message,
-                                    "runtime.lastError should report the expected error message");
-          } else if (data.failure == "exist") {
-            browser.test.assertTrue(/No cookie store exists/.test(error.message),
-                                    "runtime.lastError should report the expected error message");
-          } else {
-            browser.test.fail("The test is broken");
-          }
+            return null;
+          });
 
-          return null;
-        })
-
-        // Tests for tab querying
-        .then((tab) => {
           if (tab) {
-            return browser.tabs.query({windowId: data.privateTab ? this.privateWindowId : this.defaultWindowId,
-                                       cookieStoreId: data.cookieStoreId})
-                   .then((tabs) => {
-                     browser.test.assertTrue(tabs.length >= 1, "Tab found!");
-                     testTab(data, tabs[0]);
-                     return tab;
-                   });
-          }
-        })
+            {
+              // Tests for tab querying
+              let [tab] = await browser.tabs.query({
+                windowId: data.privateTab ? this.privateWindowId : this.defaultWindowId,
+                cookieStoreId: data.cookieStoreId,
+              });
 
-        .then((tab) => {
-          if (tab) {
-            return browser.cookies.getAllCookieStores()
-                   .then(stores => {
-                     let store = stores.find(store => store.id === tab.cookieStoreId);
-                     browser.test.assertTrue(!!store, "We have a store for this tab.");
-                     return tab;
-                   });
-          }
-        })
+              browser.test.assertTrue(tab != undefined, "Tab found!");
+              testTab(data, tab);
+            }
 
-        .then((tab) => {
-          if (tab) {
-            return browser.tabs.remove(tab.id);
-          }
-        })
+            let stores = await browser.cookies.getAllCookieStores();
 
-        .then(() => {
+            let store = stores.find(store => store.id === tab.cookieStoreId);
+            browser.test.assertTrue(!!store, "We have a store for this tab.");
+
+            await browser.tabs.remove(tab.id);
+          }
+
           browser.test.sendMessage("test-done");
-        }, () => {
-          browser.test.fail("An exception has ben thrown");
-        });
+        } catch (e) {
+          browser.test.fail("An exception has been thrown");
+        }
       }
 
-      function initialize() {
-        browser.windows.create({incognito: true})
-        .then((win) => {
-          this.privateWindowId = win.id;
-          return browser.windows.create({incognito: false});
-        })
-        .then((win) => {
-          this.defaultWindowId = win.id;
-        })
-        .then(() => {
-          browser.test.sendMessage("ready");
-        });
+      async function initialize() {
+        let win = await browser.windows.create({incognito: true});
+        this.privateWindowId = win.id;
+
+        win = await browser.windows.create({incognito: false});
+        this.defaultWindowId = win.id;
+
+        browser.test.sendMessage("ready");
       }
 
-      function shutdown() {
-        browser.windows.remove(this.privateWindowId)
-        .then(() => {
-          browser.windows.remove(this.defaultWindowId);
-        })
-        .then(() => {
-          browser.test.sendMessage("gone");
-        });
+      async function shutdown() {
+        await browser.windows.remove(this.privateWindowId);
+        await browser.windows.remove(this.defaultWindowId);
+        browser.test.sendMessage("gone");
       }
 
       // Waiting for messages

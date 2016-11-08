@@ -5,7 +5,7 @@
 function* testHasNoPermission(params) {
   let contentSetup = params.contentSetup || (() => Promise.resolve());
 
-  function background(contentSetup) {
+  async function background(contentSetup) {
     browser.runtime.onMessage.addListener((msg, sender) => {
       browser.test.assertEq(msg, "second script ran", "second script ran");
       browser.test.notifyPass("executeScript");
@@ -30,9 +30,9 @@ function* testHasNoPermission(params) {
       });
     });
 
-    contentSetup().then(() => {
-      browser.test.sendMessage("ready");
-    });
+    await contentSetup();
+
+    browser.test.sendMessage("ready");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -132,14 +132,9 @@ add_task(function* testBadPermissions() {
       "permissions": ["http://example.com/", "activeTab"],
       "page_action": {},
     },
-    contentSetup() {
-      return new Promise(resolve => {
-        browser.tabs.query({active: true, currentWindow: true}, tabs => {
-          browser.pageAction.show(tabs[0].id).then(() => {
-            resolve();
-          });
-        });
-      });
+    async contentSetup() {
+      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
+      await browser.pageAction.show(tab.id);
     },
   });
 
@@ -148,57 +143,55 @@ add_task(function* testBadPermissions() {
 });
 
 add_task(function* testBadURL() {
-  function background() {
-    browser.tabs.query({currentWindow: true}, tabs => {
-      let promises = [
-        new Promise(resolve => {
-          browser.tabs.executeScript({
-            file: "http://example.com/script.js",
-          }, result => {
-            browser.test.assertEq(undefined, result, "Result value");
-
-            browser.test.assertTrue(browser.extension.lastError instanceof Error,
-                                    "runtime.lastError is Error");
-
-            browser.test.assertTrue(browser.runtime.lastError instanceof Error,
-                                    "runtime.lastError is Error");
-
-            browser.test.assertEq(
-              "Files to be injected must be within the extension",
-              browser.extension.lastError && browser.extension.lastError.message,
-              "extension.lastError value");
-
-            browser.test.assertEq(
-              "Files to be injected must be within the extension",
-              browser.runtime.lastError && browser.runtime.lastError.message,
-              "runtime.lastError value");
-
-            resolve();
-          });
-        }),
-
+  async function background() {
+    let promises = [
+      new Promise(resolve => {
         browser.tabs.executeScript({
           file: "http://example.com/script.js",
-        }).catch(error => {
-          browser.test.assertTrue(error instanceof Error, "Error is Error");
+        }, result => {
+          browser.test.assertEq(undefined, result, "Result value");
 
-          browser.test.assertEq(null, browser.extension.lastError,
-                                "extension.lastError value");
+          browser.test.assertTrue(browser.extension.lastError instanceof Error,
+                                  "runtime.lastError is Error");
 
-          browser.test.assertEq(null, browser.runtime.lastError,
-                                "runtime.lastError value");
+          browser.test.assertTrue(browser.runtime.lastError instanceof Error,
+                                  "runtime.lastError is Error");
 
           browser.test.assertEq(
             "Files to be injected must be within the extension",
-            error && error.message,
-            "error value");
-        }),
-      ];
+            browser.extension.lastError && browser.extension.lastError.message,
+            "extension.lastError value");
 
-      Promise.all(promises).then(() => {
-        browser.test.notifyPass("executeScript-lastError");
-      });
-    });
+          browser.test.assertEq(
+            "Files to be injected must be within the extension",
+            browser.runtime.lastError && browser.runtime.lastError.message,
+            "runtime.lastError value");
+
+          resolve();
+        });
+      }),
+
+      browser.tabs.executeScript({
+        file: "http://example.com/script.js",
+      }).catch(error => {
+        browser.test.assertTrue(error instanceof Error, "Error is Error");
+
+        browser.test.assertEq(null, browser.extension.lastError,
+                              "extension.lastError value");
+
+        browser.test.assertEq(null, browser.runtime.lastError,
+                              "runtime.lastError value");
+
+        browser.test.assertEq(
+          "Files to be injected must be within the extension",
+          error && error.message,
+          "error value");
+      }),
+    ];
+
+    await Promise.all(promises);
+
+    browser.test.notifyPass("executeScript-lastError");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
