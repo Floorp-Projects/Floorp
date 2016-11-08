@@ -80,7 +80,6 @@ interface WebGLTexture {
 interface WebGLUniformLocation {
 };
 
-[NoInterfaceObject]
 interface WebGLVertexArrayObjectOES {
 };
 
@@ -1003,7 +1002,6 @@ interface EXT_blend_minmax {
     const GLenum MAX_EXT = 0x8008;
 };
 
-[NoInterfaceObject]
 interface WebGLQuery {
 };
 
