@@ -7,12 +7,12 @@
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Downloads.jsm");
 
-const server = createHttpServer();
-server.registerDirectory("/data/", do_get_file("data"));
+const gServer = createHttpServer();
+gServer.registerDirectory("/data/", do_get_file("data"));
 
 const WINDOWS = AppConstants.platform == "win";
 
-const BASE = `http://localhost:${server.identity.primaryPort}/data`;
+const BASE = `http://localhost:${gServer.identity.primaryPort}/data`;
 const FILE_NAME = "file_download.txt";
 const FILE_URL = BASE + "/" + FILE_NAME;
 const FILE_NAME_UNIQUE = "file_download(1).txt";

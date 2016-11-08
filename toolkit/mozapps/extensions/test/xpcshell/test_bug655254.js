@@ -84,11 +84,11 @@ function run_test_1() {
       onUpdateFinished: function() {
         restartManager();
 
-        AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
-          do_check_neq(a1, null);
-          do_check_false(a1.appDisabled);
-          do_check_true(a1.isActive);
-          do_check_true(isExtensionInAddonsList(userDir, a1.id));
+        AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1_2) {
+          do_check_neq(a1_2, null);
+          do_check_false(a1_2.appDisabled);
+          do_check_true(a1_2.isActive);
+          do_check_true(isExtensionInAddonsList(userDir, a1_2.id));
 
           shutdownManager();
 
@@ -103,16 +103,16 @@ function run_test_1() {
           startupManager(false);
 
           AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                       "addon2@tests.mozilla.org"], function([a1, a2]) {
-            do_check_neq(a1, null);
-            do_check_false(a1.appDisabled);
-            do_check_true(a1.isActive);
-            do_check_true(isExtensionInAddonsList(userDir, a1.id));
+                                       "addon2@tests.mozilla.org"], function([a1_3, a2_3]) {
+            do_check_neq(a1_3, null);
+            do_check_false(a1_3.appDisabled);
+            do_check_true(a1_3.isActive);
+            do_check_true(isExtensionInAddonsList(userDir, a1_3.id));
 
-            do_check_neq(a2, null);
-            do_check_false(a2.appDisabled);
-            do_check_true(a2.isActive);
-            do_check_false(isExtensionInAddonsList(userDir, a2.id));
+            do_check_neq(a2_3, null);
+            do_check_false(a2_3.appDisabled);
+            do_check_true(a2_3.isActive);
+            do_check_false(isExtensionInAddonsList(userDir, a2_3.id));
             do_check_eq(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
 
             do_execute_soon(run_test_2);
@@ -146,16 +146,16 @@ function run_test_2() {
    startupManager(false);
 
    AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                "addon2@tests.mozilla.org"], function([a1, a2]) {
-     do_check_neq(a1, null);
-     do_check_false(a1.appDisabled);
-     do_check_true(a1.isActive);
-     do_check_true(isExtensionInAddonsList(userDir, a1.id));
+                                "addon2@tests.mozilla.org"], function([a1_2, a2_2]) {
+     do_check_neq(a1_2, null);
+     do_check_false(a1_2.appDisabled);
+     do_check_true(a1_2.isActive);
+     do_check_true(isExtensionInAddonsList(userDir, a1_2.id));
 
-     do_check_neq(a2, null);
-     do_check_true(a2.userDisabled);
-     do_check_false(a2.isActive);
-     do_check_false(isExtensionInAddonsList(userDir, a2.id));
+     do_check_neq(a2_2, null);
+     do_check_true(a2_2.userDisabled);
+     do_check_false(a2_2.isActive);
+     do_check_false(isExtensionInAddonsList(userDir, a2_2.id));
      do_check_eq(Services.prefs.getIntPref("bootstraptest.active_version"), 0);
 
      end_test();
