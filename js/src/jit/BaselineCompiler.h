@@ -193,6 +193,7 @@ namespace jit {
     _(JSOP_ARGUMENTS)          \
     _(JSOP_RUNONCE)            \
     _(JSOP_REST)               \
+    _(JSOP_TOASYNC)            \
     _(JSOP_TOID)               \
     _(JSOP_TOSTRING)           \
     _(JSOP_TABLESWITCH)        \
