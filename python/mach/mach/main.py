@@ -342,6 +342,13 @@ To see more help for a specific command, run:
             if stderr.encoding is None:
                 sys.stderr = codecs.getwriter('utf-8')(stderr)
 
+            # Allow invoked processes (which may not have a handle on the
+            # original stdout file descriptor) to know if the original stdout
+            # is a TTY. This provides a mechanism to allow said processes to
+            # enable emitting code codes, for example.
+            if os.isatty(orig_stdout.fileno()):
+                os.environ[b'MACH_STDOUT_ISATTY'] = b'1'
+
             return self._run(argv)
         except KeyboardInterrupt:
             print('mach interrupted by signal or user action. Stopping.')
