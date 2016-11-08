@@ -13,14 +13,6 @@ using struct mozilla::SerializedStructuredCloneBuffer
 namespace mozilla {
 namespace dom {
 
-
-struct MessagePortMessage
-{
-  SerializedStructuredCloneBuffer data;
-  PBlob[] blobs;
-  MessagePortIdentifier[] transferredPorts;
-};
-
 // This protocol is used for the MessageChannel/MessagePort API
 protocol PMessagePort
 {
@@ -40,14 +32,14 @@ protocol PMessagePort
      4. Recv__delete__(); */
 
 parent:
-  async PostMessages(MessagePortMessage[] messages);
-  async Disentangle(MessagePortMessage[] messages);
+  async PostMessages(ClonedMessageData[] messages);
+  async Disentangle(ClonedMessageData[] messages);
   async StopSendingData();
   async Close();
 
 child:
-  async Entangled(MessagePortMessage[] messages);
-  async ReceiveData(MessagePortMessage[] messages);
+  async Entangled(ClonedMessageData[] messages);
+  async ReceiveData(ClonedMessageData[] messages);
   async StopSendingDataConfirmed();
 
   async __delete__();
@@ -55,4 +47,3 @@ child:
 
 } // namespace dom
 } // namespace mozilla
-
