@@ -30,6 +30,8 @@
       //   e - the error code
       //   s - custom CSS class to allow alternate styling/favicons
       //   d - error description
+      //   captive - "true" to indicate we're behind a captive portal.
+      //             Any other value is ignored.
 
       // Note that this file uses document.documentURI to get
       // the URL (with the format from above). This is because
@@ -55,6 +57,10 @@
       function getDescription()
       {
         return searchParams.get("d");
+      }
+
+      function isCaptive() {
+        return searchParams.get("captive") == "true";
       }
 
       function retryThis(buttonEl)
@@ -105,7 +111,7 @@
         });
       }
 
-      function showAdvancedButton(allowOverride) {
+      function setupAdvancedButton(allowOverride) {
         // Get the hostname and add it to the panel
         var panelId = gIsCertError ? "badCertAdvancedPanel" : "weakCryptoAdvancedPanel";
         var panel = document.getElementById(panelId);
@@ -141,19 +147,12 @@
           var overrideLink = document.getElementById("overrideWeakCrypto");
           overrideLink.addEventListener("click", () => doOverride(overrideLink), false);
         }
-      }
 
-      function initPageCertError() {
-        document.body.className = "certerror";
-        document.title = document.getElementById("certErrorPageTitle").textContent;
-        for (let host of document.querySelectorAll(".hostname")) {
-          host.textContent = document.location.hostname;
+        if (!gIsCertError) {
+          return;
         }
 
-        showAdvancedButton(true);
-
-        var cssClass = getCSSClass();
-        if (cssClass == "expertBadCert") {
+        if (getCSSClass() == "expertBadCert") {
           toggleDisplay(document.getElementById("badCertAdvancedPanel"));
           // Toggling the advanced panel must ensure that the debugging
           // information panel is hidden as well, since it's opened by the
@@ -162,27 +161,13 @@
           div.style.display = "none";
         }
 
-        document.getElementById("learnMoreContainer").style.display = "block";
+        disallowCertOverridesIfNeeded();
 
-        var checkbox = document.getElementById("automaticallyReportInFuture");
-        checkbox.addEventListener("change", function({target: {checked}}) {
-          document.dispatchEvent(new CustomEvent("AboutNetErrorSetAutomatic", {
-            detail: checked,
-            bubbles: true
-          }));
-        });
+        document.getElementById("badCertTechnicalInfo").textContent = getDescription();
+      }
 
-        addEventListener("AboutNetErrorOptions", function(event) {
-          var options = JSON.parse(event.detail);
-          if (options && options.enabled) {
-            // Display error reporting UI
-            document.getElementById("certificateErrorReporting").style.display = "block";
-
-            // set the checkbox
-            checkbox.checked = !!options.automatic;
-          }
-        }, true, true);
-
+      function disallowCertOverridesIfNeeded() {
+        var cssClass = getCSSClass();
         // Disallow overrides if this is a Strict-Transport-Security
         // host and the cert is bad (STS Spec section 7.3) or if the
         // certerror is in a frame (bug 633691).
@@ -192,19 +177,17 @@
         if (cssClass == "badStsCert") {
           document.getElementById("badStsCertExplanation").removeAttribute("hidden");
         }
-
-        document.getElementById("badCertTechnicalInfo").textContent = getDescription();
-
-        var event = new CustomEvent("AboutNetErrorLoad", {bubbles:true});
-        document.getElementById("advancedButton").dispatchEvent(event);
-
-        addDomainErrorLinks();
       }
 
       function initPage()
       {
         var err = getErrorCode();
         gIsCertError = (err == "nssBadCert");
+        // Only worry about captive portals if this is a cert error.
+        let showCaptivePortalUI = isCaptive() && gIsCertError;
+        if (showCaptivePortalUI) {
+          err = "captivePortal";
+        }
 
         // if it's an unknown error or there's no title or description
         // defined, get the generic message
@@ -221,16 +204,22 @@
         var sd = document.getElementById("errorShortDescText");
         if (sd) {
           if (gIsCertError) {
-            sd.innerHTML = document.getElementById("ed_nssBadCert").innerHTML;
+            sd.innerHTML = errDesc.innerHTML;
           }
           else {
             sd.textContent = getDescription();
           }
         }
+        if (showCaptivePortalUI) {
+          initPageCaptivePortal();
+          return;
+        }
         if (gIsCertError) {
           initPageCertError();
           return;
         }
+
+        document.body.className = "neterror";
 
         var ld = document.getElementById("errorLongDesc");
         if (ld)
@@ -325,7 +314,7 @@
             }
           }
           if (getErrorCode() == "weakCryptoUsed" || getErrorCode() == "sslv3Used") {
-            showAdvancedButton(getErrorCode() == "weakCryptoUsed");
+            setupAdvancedButton(getErrorCode() == "weakCryptoUsed");
           }
         }.bind(this), true, true);
 
@@ -342,6 +331,55 @@
             span.textContent = document.location.hostname;
           }
         }
+
+        addDomainErrorLinks();
+      }
+
+      function initPageCaptivePortal()
+      {
+        document.body.className = "captiveportal";
+        document.title = document.getElementById("captivePortalPageTitle").textContent;
+
+        document.getElementById("openPortalLoginPageButton")
+                .addEventListener("click", () => {
+          let event = new CustomEvent("AboutNetErrorOpenCaptivePortal", {bubbles:true});
+          document.dispatchEvent(event);
+        });
+
+        setupAdvancedButton(true);
+
+        addDomainErrorLinks();
+      }
+
+      function initPageCertError() {
+        document.body.className = "certerror";
+        document.title = document.getElementById("certErrorPageTitle").textContent;
+
+        setupAdvancedButton(true);
+
+        document.getElementById("learnMoreContainer").style.display = "block";
+
+        let checkbox = document.getElementById("automaticallyReportInFuture");
+        checkbox.addEventListener("change", function({target: {checked}}) {
+          document.dispatchEvent(new CustomEvent("AboutNetErrorSetAutomatic", {
+            detail: checked,
+            bubbles: true
+          }));
+        });
+
+        addEventListener("AboutNetErrorOptions", function(event) {
+          var options = JSON.parse(event.detail);
+          if (options && options.enabled) {
+            // Display error reporting UI
+            document.getElementById("certificateErrorReporting").style.display = "block";
+
+            // set the checkbox
+            checkbox.checked = !!options.automatic;
+          }
+        }, true, true);
+
+        let event = new CustomEvent("AboutNetErrorLoad", {bubbles:true});
+        document.getElementById("advancedButton").dispatchEvent(event);
 
         addDomainErrorLinks();
       }
@@ -476,11 +514,13 @@
   <body dir="&locale.dir;">
     <!-- Contains an alternate page title set on page init for cert errors. -->
     <div id="certErrorPageTitle" style="display: none;">&certerror.pagetitle1;</div>
+    <div id="captivePortalPageTitle" style="display: none;">&captivePortal.title;</div>
 
     <!-- ERROR ITEM CONTAINER (removed during loading to avoid bug 39098) -->
     <div id="errorContainer">
       <div id="errorTitlesContainer">
         <h1 id="et_generic">&generic.title;</h1>
+        <h1 id="et_captivePortal">&captivePortal.title;</h1>
         <h1 id="et_dnsNotFound">&dnsNotFound.title;</h1>
         <h1 id="et_fileNotFound">&fileNotFound.title;</h1>
         <h1 id="et_fileAccessDenied">&fileAccessDenied.title;</h1>
@@ -510,6 +550,7 @@
       </div>
       <div id="errorDescriptionsContainer">
         <div id="ed_generic">&generic.longDesc;</div>
+        <div id="ed_captivePortal">&captivePortal.longDesc;</div>
         <div id="ed_dnsNotFound">&dnsNotFound.longDesc;</div>
         <div id="ed_fileNotFound">&fileNotFound.longDesc;</div>
         <div id="ed_fileAccessDenied">&fileAccessDenied.longDesc;</div>
@@ -572,8 +613,9 @@
           <button id="prefResetButton" class="primary" autocomplete="off">&prefReset.label;</button>
         </div>
 
-        <div id="certErrorButtonContainer" class="button-container">
+        <div id="certErrorAndCaptivePortalButtonContainer" class="button-container">
           <button id="returnButton" class="primary" autocomplete="off" autofocus="true">&returnToPreviousPage.label;</button>
+          <button id="openPortalLoginPageButton" class="primary" autocomplete="off" autofocus="true">&openPortalLoginPage.label;</button>
           <div class="button-spacer"></div>
           <button id="advancedButton" autocomplete="off" autofocus="true">&advanced.label;</button>
         </div>

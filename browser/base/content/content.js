@@ -265,6 +265,7 @@ var AboutNetAndCertErrorListener = {
   init: function(chromeGlobal) {
     addMessageListener("CertErrorDetails", this);
     chromeGlobal.addEventListener('AboutNetErrorLoad', this, false, true);
+    chromeGlobal.addEventListener('AboutNetErrorOpenCaptivePortal', this, false, true);
     chromeGlobal.addEventListener('AboutNetErrorSetAutomatic', this, false, true);
     chromeGlobal.addEventListener('AboutNetErrorOverride', this, false, true);
     chromeGlobal.addEventListener('AboutNetErrorResetPreferences', this, false, true);
@@ -348,6 +349,9 @@ var AboutNetAndCertErrorListener = {
     case "AboutNetErrorLoad":
       this.onPageLoad(aEvent);
       break;
+    case "AboutNetErrorOpenCaptivePortal":
+      this.openCaptivePortalPage(aEvent);
+      break;
     case "AboutNetErrorSetAutomatic":
       this.onSetAutomatic(aEvent);
       break;
@@ -388,6 +392,10 @@ var AboutNetAndCertErrorListener = {
 
     sendAsyncMessage("Browser:SSLErrorReportTelemetry",
                      {reportStatus: TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN});
+  },
+
+  openCaptivePortalPage: function(evt) {
+    sendAsyncMessage("Browser:OpenCaptivePortalPage");
   },
 
 
