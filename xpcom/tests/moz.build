@@ -45,6 +45,10 @@ if CONFIG['WRAP_STL_INCLUDES'] and not CONFIG['CLANG_CL']:
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
+GeckoCppUnitTests([
+    'TestTimers'
+])
+
 if CONFIG['MOZ_MEMORY']:
     GeckoCppUnitTests([
         'TestJemalloc',
@@ -54,6 +58,14 @@ if CONFIG['MOZ_MEMORY']:
 #CPP_UNIT_TESTS += [
 #    'TestStaticAtoms',
 #]
+
+if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT'):
+    # FIXME bug 523392: TestDeadlockDetector doesn't like Windows
+    # FIXME bug 523378: also fails on OS X
+    GeckoCppUnitTests([
+        'TestDeadlockDetector',
+        'TestDeadlockDetectorScalability',
+    ])
 
 if CONFIG['COMPILE_ENVIRONMENT']:
     TEST_HARNESS_FILES.xpcshell.xpcom.tests.unit += [
