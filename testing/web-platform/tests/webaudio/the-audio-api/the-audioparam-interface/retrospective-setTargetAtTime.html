@@ -1,23 +1,20 @@
-<!DOCTYPE html>
-<title>Test setValueAtTime with startTime in the past</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<!doctype html>
+<meta charset=utf-8>
+<title>Test setTargetAtTime with start time in the past</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
 <script>
 function do_test(t, context) {
   var source = context.createConstantSource();
   source.start();
 
-  // Use a ramp of slope 1/sample to measure time.
-  // The end value is the extent of exact precision in single precision float.
-  const rampEnd = Math.pow(2, 24);
-  const rampEndSeconds = rampEnd / context.sampleRate;
   var test = context.createGain();
-  test.gain.setValueAtTime(0.0, 0.5*context.currentTime);
-  test.gain.linearRampToValueAtTime(rampEnd, rampEndSeconds);
+  test.gain.setTargetAtTime(0.1, 0.5*context.currentTime, 0.1);
+  test.gain.linearRampToValueAtTime(0.9, 2.0);
 
   var reference = context.createGain();
-  reference.gain.setValueAtTime(0.0, context.currentTime);
-  reference.gain.linearRampToValueAtTime(rampEnd, rampEndSeconds);
+  reference.gain.setTargetAtTime(0.1, context.currentTime, 0.1);
+  reference.gain.linearRampToValueAtTime(0.9, 2.0);
 
   source.connect(test);
   source.connect(reference);
@@ -37,7 +34,7 @@ function do_test(t, context) {
       var referenceValue = e.inputBuffer.getChannelData(1)[0];
 
       assert_equals(testValue, referenceValue,
-                        "ramp value matches expected");
+                        "value matches expected");
     });
 }
 
