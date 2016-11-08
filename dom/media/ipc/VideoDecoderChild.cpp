@@ -103,16 +103,11 @@ void
 VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   if (aWhy == AbnormalShutdown) {
-    // Defer reporting an error until we've recreated the manager so that
-    // it'll be safe for MediaFormatReader to recreate decoders
-    RefPtr<VideoDecoderChild> ref = this;
-    GetManager()->RunWhenRecreated(NS_NewRunnableFunction([=]() {
-      if (ref->mInitialized) {
-        ref->mCallback->Error(NS_ERROR_DOM_MEDIA_DECODE_ERR);
-      } else {
-        ref->mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
-      }
-    }));
+    if (mInitialized) {
+      mCallback->Error(NS_ERROR_DOM_MEDIA_FATAL_ERR);
+    } else {
+      mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+    }
   }
   mCanSend = false;
 }
@@ -123,15 +118,9 @@ VideoDecoderChild::InitIPDL(MediaDataDecoderCallback* aCallback,
                             layers::KnowsCompositor* aKnowsCompositor)
 {
   RefPtr<VideoDecoderManagerChild> manager = VideoDecoderManagerChild::GetSingleton();
-  // If the manager isn't available, then don't initialize mIPDLSelfRef and leave
-  // us in an error state. We'll then immediately reject the promise when Init()
-  // is called and the caller can try again. Hopefully by then the new manager is
-  // ready, or we've notified the caller of it being no longer available.
-  // If not, then the cycle repeats until we're ready.
-  if (!manager || !manager->CanSend()) {
+  if (!manager) {
     return;
   }
-
   mIPDLSelfRef = this;
   mCallback = aCallback;
   mVideoInfo = aVideoInfo;
@@ -161,15 +150,9 @@ RefPtr<MediaDataDecoder::InitPromise>
 VideoDecoderChild::Init()
 {
   AssertOnManagerThread();
-
-  if (!mIPDLSelfRef) {
+  if (!mCanSend || !SendInit(mVideoInfo, mKnowsCompositor->GetTextureFactoryIdentifier())) {
     return MediaDataDecoder::InitPromise::CreateAndReject(
-      NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
-  }
-  // If we failed to send this, then we'll still resolve the Init promise
-  // as ActorDestroy handles it.
-  if (mCanSend) {
-    SendInit(mVideoInfo, mKnowsCompositor->GetTextureFactoryIdentifier());
+      NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
   return mInitPromise.Ensure(__func__);
 }
@@ -179,6 +162,7 @@ VideoDecoderChild::Input(MediaRawData* aSample)
 {
   AssertOnManagerThread();
   if (!mCanSend) {
+    mCallback->Error(NS_ERROR_DOM_MEDIA_FATAL_ERR);
     return;
   }
 
@@ -187,7 +171,7 @@ VideoDecoderChild::Input(MediaRawData* aSample)
   // into shmem rather than requiring a copy here.
   Shmem buffer;
   if (!AllocShmem(aSample->Size(), Shmem::SharedMemory::TYPE_BASIC, &buffer)) {
-    mCallback->Error(NS_ERROR_DOM_MEDIA_DECODE_ERR);
+    mCallback->Error(NS_ERROR_DOM_MEDIA_FATAL_ERR);
     return;
   }
 
@@ -200,15 +184,17 @@ VideoDecoderChild::Input(MediaRawData* aSample)
                                         aSample->mFrames,
                                         aSample->mKeyframe),
                           buffer);
-  SendInput(sample);
+  if (!SendInput(sample)) {
+    mCallback->Error(NS_ERROR_DOM_MEDIA_FATAL_ERR);
+  }
 }
 
 void
 VideoDecoderChild::Flush()
 {
   AssertOnManagerThread();
-  if (mCanSend) {
-    SendFlush();
+  if (!mCanSend || !SendFlush()) {
+    mCallback->Error(NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
 }
 
@@ -216,8 +202,8 @@ void
 VideoDecoderChild::Drain()
 {
   AssertOnManagerThread();
-  if (mCanSend) {
-    SendDrain();
+  if (!mCanSend || !SendDrain()) {
+    mCallback->Error(NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
 }
 
@@ -225,8 +211,8 @@ void
 VideoDecoderChild::Shutdown()
 {
   AssertOnManagerThread();
-  if (mCanSend) {
-    SendShutdown();
+  if (!mCanSend || !SendShutdown()) {
+    mCallback->Error(NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
   mInitialized = false;
 }
@@ -242,8 +228,8 @@ void
 VideoDecoderChild::SetSeekThreshold(const media::TimeUnit& aTime)
 {
   AssertOnManagerThread();
-  if (mCanSend) {
-    SendSetSeekThreshold(aTime.ToMicroseconds());
+  if (!mCanSend || !SendSetSeekThreshold(aTime.ToMicroseconds())) {
+    mCallback->Error(NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
 }
 
