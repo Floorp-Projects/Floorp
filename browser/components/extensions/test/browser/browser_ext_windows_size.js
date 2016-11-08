@@ -4,7 +4,7 @@
 
 add_task(function* testWindowCreate() {
   let extension = ExtensionTestUtils.loadExtension({
-    async background() {
+    background() {
       let _checkWindowPromise;
       browser.test.onMessage.addListener((msg, arg) => {
         if (msg == "checked-window") {
@@ -28,63 +28,73 @@ add_task(function* testWindowCreate() {
       }
 
       let windowId;
-      async function checkWindow(expected, retries = 5) {
-        let geom = await getWindowSize();
+      function checkWindow(expected, retries = 5) {
+        return getWindowSize().then(geom => {
+          if (retries && KEYS.some(key => expected[key] != geom[key])) {
+            browser.test.log(`Got mismatched size (${JSON.stringify(expected)} != ${JSON.stringify(geom)}). ` +
+                             `Retrying after a short delay.`);
 
-        if (retries && KEYS.some(key => expected[key] != geom[key])) {
-          browser.test.log(`Got mismatched size (${JSON.stringify(expected)} != ${JSON.stringify(geom)}). ` +
-                           `Retrying after a short delay.`);
+            return new Promise(resolve => {
+              setTimeout(resolve, 200);
+            }).then(() => {
+              return checkWindow(expected, retries - 1);
+            });
+          }
 
-          await new Promise(resolve => setTimeout(resolve, 200));
+          browser.test.log(`Check actual window size`);
+          checkGeom(expected, geom);
 
-          return checkWindow(expected, retries - 1);
-        }
-
-        browser.test.log(`Check actual window size`);
-        checkGeom(expected, geom);
-
-        browser.test.log("Check API-reported window size");
-
-        geom = await browser.windows.get(windowId);
-
-        checkGeom(expected, geom);
+          browser.test.log("Check API-reported window size");
+          return browser.windows.get(windowId).then(geom => {
+            checkGeom(expected, geom);
+          });
+        });
       }
 
-      try {
-        let geom = {left: 100, top: 100, width: 500, height: 300};
+      let geom = {left: 100, top: 100, width: 500, height: 300};
 
-        let window = await browser.windows.create(geom);
+      return browser.windows.create(geom).then(window => {
         windowId = window.id;
 
-        await checkWindow(geom);
-
+        return checkWindow(geom);
+      }).then(() => {
         let update = {left: 150, width: 600};
         Object.assign(geom, update);
-        await browser.windows.update(windowId, update);
-        await checkWindow(geom);
 
-        update = {top: 150, height: 400};
+        return browser.windows.update(windowId, update);
+      }).then(() => {
+        return checkWindow(geom);
+      }).then(() => {
+        let update = {top: 150, height: 400};
         Object.assign(geom, update);
-        await browser.windows.update(windowId, update);
-        await checkWindow(geom);
 
+        return browser.windows.update(windowId, update);
+      }).then(() => {
+        return checkWindow(geom);
+      }).then(() => {
         geom = {left: 200, top: 200, width: 800, height: 600};
-        await browser.windows.update(windowId, geom);
-        await checkWindow(geom);
 
-        let platformInfo = await browser.runtime.getPlatformInfo();
+        return browser.windows.update(windowId, geom);
+      }).then(() => {
+        return checkWindow(geom);
+      }).then(() => {
+        return browser.runtime.getPlatformInfo();
+      }).then((platformInfo) => {
         if (platformInfo.os != "linux") {
           geom = {left: -50, top: -50, width: 800, height: 600};
-          await browser.windows.update(windowId, geom);
-          await checkWindow(geom);
-        }
 
-        await browser.windows.remove(windowId);
+          return browser.windows.update(windowId, geom).then(() => {
+            return checkWindow(geom);
+          });
+        }
+      }).then(() => {
+        return browser.windows.remove(windowId);
+      }).then(() => {
         browser.test.notifyPass("window-size");
-      } catch (e) {
+      }).catch(e => {
         browser.test.fail(`${e} :: ${e.stack}`);
         browser.test.notifyFail("window-size");
-      }
+      });
     },
   });
 

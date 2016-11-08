@@ -39,37 +39,42 @@ function backgroundScript() {
     }
   });
 
-  browser.test.onMessage.addListener(async (msg, ...args) => {
+  browser.test.onMessage.addListener(function(msg) {
+    // extension functions throw on bad arguments, we can remove the extra
+    // promise when bug 1250223 is fixed.
     if (msg == "download.request") {
-      try {
-        let id = await browser.downloads.download(args[0]);
-        browser.test.sendMessage("download.done", {status: "success", id});
-      } catch (error) {
-        browser.test.sendMessage("download.done", {status: "error", errmsg: error.message});
-      }
+      Promise.resolve().then(() => browser.downloads.download(arguments[1]))
+                       .then(id => {
+                         browser.test.sendMessage("download.done", {status: "success", id});
+                       })
+                       .catch(error => {
+                         browser.test.sendMessage("download.done", {status: "error", errmsg: error.message});
+                       });
     } else if (msg == "search.request") {
-      try {
-        let downloads = await browser.downloads.search(args[0]);
-        browser.test.sendMessage("search.done", {status: "success", downloads});
-      } catch (error) {
-        browser.test.sendMessage("search.done", {status: "error", errmsg: error.message});
-      }
+      Promise.resolve().then(() => browser.downloads.search(arguments[1]))
+                       .then(downloads => {
+                         browser.test.sendMessage("search.done", {status: "success", downloads});
+                       })
+                       .catch(error => {
+                         browser.test.sendMessage("search.done", {status: "error", errmsg: error.message});
+                       });
     } else if (msg == "waitForComplete.request") {
-      await waitForComplete(args[0]);
-      browser.test.sendMessage("waitForComplete.done");
+      waitForComplete(arguments[1]).then(() => {
+        browser.test.sendMessage("waitForComplete.done");
+      });
     }
   });
 
   browser.test.sendMessage("ready");
 }
 
-async function clearDownloads(callback) {
-  let list = await Downloads.getList(Downloads.ALL);
-  let downloads = await list.getAll();
-
-  await Promise.all(downloads.map(download => list.remove(download)));
-
-  return downloads;
+function clearDownloads(callback) {
+  return Downloads.getList(Downloads.ALL).then(list => {
+    return list.getAll().then(downloads => {
+      return Promise.all(downloads.map(download => list.remove(download)))
+                    .then(() => downloads);
+    });
+  });
 }
 
 add_task(function* test_search() {
@@ -87,11 +92,10 @@ add_task(function* test_search() {
   Services.prefs.setIntPref("browser.download.folderList", 2);
   Services.prefs.setComplexValue("browser.download.dir", nsIFile, downloadDir);
 
-  do_register_cleanup(async () => {
+  do_register_cleanup(() => {
     Services.prefs.clearUserPref("browser.download.folderList");
     Services.prefs.clearUserPref("browser.download.dir");
-    await cleanupDir(downloadDir);
-    await clearDownloads();
+    return cleanupDir(downloadDir).then(clearDownloads);
   });
 
   yield clearDownloads().then(downloads => {
@@ -105,18 +109,19 @@ add_task(function* test_search() {
     },
   });
 
-  async function download(options) {
+  function download(options) {
     extension.sendMessage("download.request", options);
-    let result = await extension.awaitMessage("download.done");
-
-    if (result.status == "success") {
-      do_print(`wait for onChanged event to indicate ${result.id} is complete`);
-      extension.sendMessage("waitForComplete.request", result.id);
-
-      await extension.awaitMessage("waitForComplete.done");
-    }
-
-    return result;
+    return extension.awaitMessage("download.done").then(result => {
+      let promise;
+      if (result.status == "success") {
+        do_print(`wait for onChanged event to indicate ${result.id} is complete`);
+        extension.sendMessage("waitForComplete.request", result.id);
+        promise = extension.awaitMessage("waitForComplete.done");
+      } else {
+        promise = Promise.resolve();
+      }
+      return promise.then(() => result);
+    });
   }
 
   function search(query) {

@@ -14,7 +14,7 @@
 "use strict";
 
 add_task(function* test_multiple_pages() {
-  async function background() {
+  function background() {
     let tabReady = new Promise(resolve => {
       browser.runtime.onMessage.addListener(function listener(msg) {
         browser.test.log("onMessage " + msg);
@@ -37,42 +37,41 @@ add_task(function* test_multiple_pages() {
       });
     });
 
-    try {
-      let storage = browser.storage.local;
+    let storage = browser.storage.local;
 
-      browser.test.log("create");
-      let tab = await browser.tabs.create({url: "tab.html"});
-      tabId = tab.id;
+    browser.test.log("create");
+    browser.tabs.create({url: "tab.html"}).then(tabObj => {
+      tabId = tabObj.id;
 
-      await tabReady;
-
-      let result = await storage.get("key");
+      return tabReady;
+    }).then(() => {
+      return storage.get("key");
+    }).then(result => {
       browser.test.assertEq(undefined, result.key, "Key should be undefined");
 
-      await browser.runtime.sendMessage("tab-set-key");
-
-      result = await storage.get("key");
+      return browser.runtime.sendMessage("tab-set-key");
+    }).then(() => {
+      return storage.get("key");
+    }).then(result => {
       browser.test.assertEq(JSON.stringify({foo: {bar: "baz"}}),
                             JSON.stringify(result.key),
                             "Key should be set to the value from the tab");
-
+    }).then(() => {
       browser.test.log("Remove tab");
-
-      await Promise.all([
-        browser.tabs.remove(tabId),
-        tabRemoved,
-      ]);
-
-      result = await storage.get("key");
+      return Promise.all([browser.tabs.remove(tabId),
+                          tabRemoved]);
+    }).then(() => {
+      return storage.get("key");
+    }).then(result => {
       browser.test.assertEq(JSON.stringify({foo: {bar: "baz"}}),
                             JSON.stringify(result.key),
                             "Key should still be set to the value from the tab");
-
+    }).then(() => {
       browser.test.notifyPass("storage-multiple");
-    } catch (e) {
+    }).catch(e => {
       browser.test.fail(`Error: ${e} :: ${e.stack}`);
       browser.test.notifyFail("storage-multiple");
-    }
+    });
   }
 
   function tab() {

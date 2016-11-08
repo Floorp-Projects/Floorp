@@ -48,7 +48,7 @@ add_task(function* test_inline_options_uninstall() {
       },
     },
 
-    background: async function() {
+    background: function() {
       let _optionsPromise;
       let awaitOptions = () => {
         browser.test.assertFalse(_optionsPromise, "Should not be awaiting options already");
@@ -69,23 +69,24 @@ add_task(function* test_inline_options_uninstall() {
         }
       });
 
-      try {
-        let [firstTab] = await browser.tabs.query({currentWindow: true, active: true});
+      let firstTab;
+      browser.tabs.query({currentWindow: true, active: true}).then(tabs => {
+        firstTab = tabs[0].id;
 
         browser.test.log("Open options page. Expect fresh load.");
-        let [, tab] = await Promise.all([
+        return Promise.all([
           browser.runtime.openOptionsPage(),
           awaitOptions(),
         ]);
-
+      }).then(([, tab]) => {
         browser.test.assertEq("about:addons", tab.url, "Tab contains AddonManager");
         browser.test.assertTrue(tab.active, "Tab is active");
-        browser.test.assertTrue(tab.id != firstTab.id, "Tab is a new tab");
+        browser.test.assertTrue(tab.id != firstTab, "Tab is a new tab");
 
         browser.test.sendMessage("options-ui-open");
-      } catch (error) {
+      }).catch(error => {
         browser.test.fail(`Error: ${error} :: ${error.stack}`);
-      }
+      });
     },
   });
 

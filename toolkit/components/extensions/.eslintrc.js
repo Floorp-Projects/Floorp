@@ -3,10 +3,6 @@
 module.exports = { // eslint-disable-line no-undef
   "extends": "../../.eslintrc.js",
 
-  "parserOptions": {
-    "ecmaVersion": 8,
-  },
-
   "globals": {
     "Cc": true,
     "Ci": true,
@@ -36,7 +32,7 @@ module.exports = { // eslint-disable-line no-undef
   "rules": {
     // Rules from the mozilla plugin
     "mozilla/balanced-listeners": 2,
-    "mozilla/no-aArgs": 2,
+    "mozilla/no-aArgs": 1,
     "mozilla/no-cpows-in-tests": 1,
     "mozilla/var-only-at-top-level": 1,
 
@@ -84,7 +80,7 @@ module.exports = { // eslint-disable-line no-undef
     "comma-style": 2,
 
     // Don't require spaces around computed properties
-    "computed-property-spacing": [2, "never"],
+    "computed-property-spacing": [1, "never"],
 
     // Functions are not required to consistently return something or nothing
     "consistent-return": 0,

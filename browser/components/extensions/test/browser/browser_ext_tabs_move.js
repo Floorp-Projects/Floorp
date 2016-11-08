@@ -65,22 +65,29 @@ add_task(function* () {
       "permissions": ["tabs"],
     },
 
-    async background() {
-      let [, tab] = await browser.tabs.query({lastFocusedWindow: true});
-
-      // Assuming that tab.id of 12345 does not exist.
-      await browser.tabs.move([tab.id, 12345], {index: 0}).then(
+    background: function() {
+      browser.tabs.query(
+        {lastFocusedWindow: true},
         tabs => {
-          browser.test.fail("Promise should not resolve");
-        },
-        e => {
-          browser.test.assertTrue(/Invalid tab/.test(e),
-                                  "Invalid tab should be in error");
+          let tab = tabs[1];
+          // Assuming that tab.id of 12345 does not exist.
+          browser.tabs.move([tab.id, 12345], {index: 0})
+          .then(
+            tabs => { browser.test.fail("Promise should not resolve"); },
+            e => {
+              browser.test.assertTrue(/Invalid tab/.test(e),
+                                      "Invalid tab should be in error");
+            })
+          .then(
+            browser.tabs.query({lastFocusedWindow: true})
+            .then(
+              (tabs) => {
+                browser.test.assertEq(tabs[1].url, tab.url, "should be second tab");
+                browser.test.notifyPass("tabs.move.invalid");
+              }
+            )
+          );
         });
-
-      let tabs = await browser.tabs.query({lastFocusedWindow: true});
-      browser.test.assertEq(tabs[1].url, tab.url, "should be second tab");
-      browser.test.notifyPass("tabs.move.invalid");
     },
   });
 

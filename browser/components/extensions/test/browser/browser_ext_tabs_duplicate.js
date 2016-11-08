@@ -41,7 +41,7 @@ add_task(function* testDuplicateTab() {
 });
 
 add_task(function* testDuplicateTabLazily() {
-  async function background() {
+  function background() {
     let tabLoadComplete = new Promise(resolve => {
       browser.test.onMessage.addListener((message, tabId, result) => {
         if (message == "duplicate-tab-done") {
@@ -61,28 +61,32 @@ add_task(function* testDuplicateTabLazily() {
       });
     }
 
-    try {
-      let url = "http://example.com/browser/browser/components/extensions/test/browser/file_dummy.html";
-      let tab = await browser.tabs.create({url});
-      let startTabId = tab.id;
+    let startTabId;
+    let url = "http://example.com/browser/browser/components/extensions/test/browser/file_dummy.html";
+    browser.tabs.create({url}, tab => {
+      startTabId = tab.id;
 
-      await awaitLoad(startTabId);
-      browser.test.sendMessage("duplicate-tab", startTabId);
+      awaitLoad(startTabId).then(() => {
+        browser.test.sendMessage("duplicate-tab", startTabId);
 
-      let unloadedTabId = await tabLoadComplete;
-      let loadedtab = await browser.tabs.get(startTabId);
-      browser.test.assertEq("Dummy test page", loadedtab.title, "Title should be returned for loaded pages");
-      browser.test.assertEq("complete", loadedtab.status, "Tab status should be complete for loaded pages");
+        tabLoadComplete.then(unloadedTabId => {
+          browser.tabs.get(startTabId, loadedtab => {
+            browser.test.assertEq("Dummy test page", loadedtab.title, "Title should be returned for loaded pages");
+            browser.test.assertEq("complete", loadedtab.status, "Tab status should be complete for loaded pages");
+          });
 
-      let unloadedtab = await browser.tabs.get(unloadedTabId);
-      browser.test.assertEq("Dummy test page", unloadedtab.title, "Title should be returned after page has been unloaded");
+          browser.tabs.get(unloadedTabId, unloadedtab => {
+            browser.test.assertEq("Dummy test page", unloadedtab.title, "Title should be returned after page has been unloaded");
+          });
 
-      await browser.tabs.remove([tab.id, unloadedTabId]);
-      browser.test.notifyPass("tabs.hasCorrectTabTitle");
-    } catch (e) {
-      browser.test.fail(`${e} :: ${e.stack}`);
-      browser.test.notifyFail("tabs.hasCorrectTabTitle");
-    }
+          browser.tabs.remove([tab.id, unloadedTabId]);
+          browser.test.notifyPass("tabs.hasCorrectTabTitle");
+        });
+      }).catch(e => {
+        browser.test.fail(`${e} :: ${e.stack}`);
+        browser.test.notifyFail("tabs.hasCorrectTabTitle");
+      });
+    });
   }
 
   let extension = ExtensionTestUtils.loadExtension({

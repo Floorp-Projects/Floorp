@@ -5,8 +5,8 @@
 add_task(function* testExecuteScript() {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/", true);
 
-  async function background() {
-    let tasks = [
+  function background() {
+    let promises = [
       // Insert CSS file.
       {
         background: "transparent",
@@ -54,23 +54,31 @@ add_task(function* testExecuteScript() {
       return [computedStyle.backgroundColor, computedStyle.color];
     }
 
-    try {
-      for (let {promise, background, foreground} of tasks) {
-        let result = await promise();
-        browser.test.assertEq(undefined, result, "Expected callback result");
-
-        [result] = await browser.tabs.executeScript({
-          code: `(${checkCSS})()`,
-        });
-        browser.test.assertEq(background, result[0], "Expected background color");
-        browser.test.assertEq(foreground, result[1], "Expected foreground color");
+    function next() {
+      if (!promises.length) {
+        return;
       }
 
+      let {promise, background, foreground} = promises.shift();
+      return promise().then(result => {
+        browser.test.assertEq(undefined, result, "Expected callback result");
+
+        return browser.tabs.executeScript({
+          code: `(${checkCSS})()`,
+        });
+      }).then(([result]) => {
+        browser.test.assertEq(background, result[0], "Expected background color");
+        browser.test.assertEq(foreground, result[1], "Expected foreground color");
+        return next();
+      });
+    }
+
+    next().then(() => {
       browser.test.notifyPass("removeCSS");
-    } catch (e) {
+    }).catch(e => {
       browser.test.fail(`Error: ${e} :: ${e.stack}`);
       browser.test.notifyFailure("removeCSS");
-    }
+    });
   }
 
   let extension = ExtensionTestUtils.loadExtension({
