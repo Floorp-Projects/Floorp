@@ -327,9 +327,21 @@ private:
     Maybe<MediaResult> mError;
     bool HasFatalError() const
     {
-      return mError.isSome() &&
-             (mError.ref() != NS_ERROR_DOM_MEDIA_DECODE_ERR ||
-              mNumOfConsecutiveError > mMaxConsecutiveError);
+      if (!mError.isSome()) {
+        return false;
+      }
+      if (mError.ref() == NS_ERROR_DOM_MEDIA_DECODE_ERR) {
+        // Allow decode errors to be non-fatal, but give up
+        // if we have too many.
+        return mNumOfConsecutiveError > mMaxConsecutiveError;
+      } else if (mError.ref() == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER) {
+        // If the caller asked for a new decoder we shouldn't treat
+        // it as fatal.
+        return false;
+      } else {
+        // All other error types are fatal
+        return true;
+      }
     }
 
     // If set, all decoded samples prior mTimeThreshold will be dropped.
