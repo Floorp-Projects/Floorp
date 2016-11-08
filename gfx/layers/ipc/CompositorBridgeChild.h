@@ -231,6 +231,9 @@ private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CompositorBridgeChild();
 
+  void InitIPDL();
+  void DeallocPCompositorBridgeChild() override;
+
   virtual PLayerTransactionChild*
     AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBackendHints,
                                 const uint64_t& aId,
