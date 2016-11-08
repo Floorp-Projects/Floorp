@@ -13,14 +13,14 @@ function run_test() {
 
 add_task(function* test_addBookmarksAndCheckGuids() {
   let folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder", bmsvc.DEFAULT_INDEX);
-  let b1 = bmsvc.insertBookmark(folder, uri("http://test1.com/"),
-                                bmsvc.DEFAULT_INDEX, "1 title");
-  let b2 = bmsvc.insertBookmark(folder, uri("http://test2.com/"),
-                                bmsvc.DEFAULT_INDEX, "2 title");
-  let b3 = bmsvc.insertBookmark(folder, uri("http://test3.com/"),
-                                bmsvc.DEFAULT_INDEX, "3 title");
-  let s1 = bmsvc.insertSeparator(folder, bmsvc.DEFAULT_INDEX);
-  let f1 = bmsvc.createFolder(folder, "test folder 2", bmsvc.DEFAULT_INDEX);
+  bmsvc.insertBookmark(folder, uri("http://test1.com/"),
+                       bmsvc.DEFAULT_INDEX, "1 title");
+  bmsvc.insertBookmark(folder, uri("http://test2.com/"),
+                       bmsvc.DEFAULT_INDEX, "2 title");
+  bmsvc.insertBookmark(folder, uri("http://test3.com/"),
+                       bmsvc.DEFAULT_INDEX, "3 title");
+  bmsvc.insertSeparator(folder, bmsvc.DEFAULT_INDEX);
+  bmsvc.createFolder(folder, "test folder 2", bmsvc.DEFAULT_INDEX);
 
   let root = PlacesUtils.getFolderContents(folder).root;
   do_check_eq(root.childCount, 5);
@@ -90,7 +90,6 @@ add_task(function* test_updateBookmarksAndCheckGuids() {
 
 add_task(function* test_addVisitAndCheckGuid() {
   // add a visit and test page guid and non-existing bookmark guids.
-  let now = Date.now() * 1000;
   let sourceURI = uri("http://test4.com/");
   yield PlacesTestUtils.addVisits({ uri: sourceURI });
   do_check_eq(bmsvc.getBookmarkedURIFor(sourceURI), null);

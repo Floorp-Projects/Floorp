@@ -41,7 +41,7 @@ function test() {
     let stmt = DBConn().createAsyncStatement("SELECT url FROM moz_favicons");
     stmt.executeAsync({
       handleResult: function final_handleResult(aResultSet) {
-        for (let row; (row = aResultSet.getNextRow()); ) {
+        while (aResultSet.getNextRow()) {
           favIconsResultCount++;
         }
       },
@@ -142,7 +142,6 @@ function test() {
 
   function testErrorIcon(aWindow, aCallback) {
     let pageURI = NetUtil.newURI("http://example.com/errorIcon");
-    let places = [{ uri: pageURI, transition: TRANSITION_TYPED }];
     addVisits({ uri: pageURI, transition: TRANSITION_TYPED }, aWindow,
       function () {
         aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI,

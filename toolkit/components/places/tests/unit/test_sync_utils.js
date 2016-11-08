@@ -481,7 +481,7 @@ add_task(function* test_insert() {
 });
 
 add_task(function* test_insert_livemark() {
-  let { server, site, stopServer } = makeLivemarkServer();
+  let { site, stopServer } = makeLivemarkServer();
 
   try {
     do_print("Insert livemark with feed URL");
@@ -531,7 +531,7 @@ add_task(function* test_insert_livemark() {
 });
 
 add_task(function* test_update_livemark() {
-  let { server, site, stopServer } = makeLivemarkServer();
+  let { site, stopServer } = makeLivemarkServer();
   let feedURI = uri(site + "/feed/1");
 
   try {
@@ -715,7 +715,7 @@ add_task(function* test_update_livemark() {
 });
 
 add_task(function* test_insert_tags() {
-  let newItems = yield Promise.all([{
+  yield Promise.all([{
     kind: "bookmark",
     url: "https://example.com",
     syncId: makeGuid(),
@@ -785,7 +785,7 @@ add_task(function* test_insert_tags_whitespace() {
 add_task(function* test_insert_keyword() {
   do_print("Insert item with new keyword");
   {
-    let bookmark = yield PlacesSyncUtils.bookmarks.insert({
+    yield PlacesSyncUtils.bookmarks.insert({
       kind: "bookmark",
       parentSyncId: "menu",
       url: "https://example.com",
@@ -799,7 +799,7 @@ add_task(function* test_insert_keyword() {
 
   do_print("Insert item with existing keyword");
   {
-    let bookmark = yield PlacesSyncUtils.bookmarks.insert({
+    yield PlacesSyncUtils.bookmarks.insert({
       kind: "bookmark",
       parentSyncId: "menu",
       url: "https://mozilla.org",
@@ -923,7 +923,7 @@ add_task(function* test_insert_tag_query() {
 
   do_print("Use the public tagging API to ensure we added the tag correctly");
   {
-    let bookmark = yield PlacesUtils.bookmarks.insert({
+    yield PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
       url: "https://mozilla.org",
@@ -970,7 +970,7 @@ add_task(function* test_insert_orphans() {
 
   do_print("Insert the grandparent");
   {
-    let grandParent = yield PlacesSyncUtils.bookmarks.insert({
+    yield PlacesSyncUtils.bookmarks.insert({
       kind: "folder",
       parentSyncId: "menu",
       syncId: grandParentGuid,
@@ -1116,7 +1116,7 @@ add_task(function* test_fetch() {
 });
 
 add_task(function* test_fetch_livemark() {
-  let { server, site, stopServer } = makeLivemarkServer();
+  let { site, stopServer } = makeLivemarkServer();
 
   try {
     do_print("Create livemark");

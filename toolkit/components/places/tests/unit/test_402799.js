@@ -36,10 +36,10 @@ function run_test() {
   var uri1 = uri("http://foo.bar/");
 
   // create 2 bookmarks on the same uri
-  var bookmark1id = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri1,
-                                         bmsvc.DEFAULT_INDEX, "title 1");
-  var bookmark2id = bmsvc.insertBookmark(bmsvc.toolbarFolder, uri1,
-                                         bmsvc.DEFAULT_INDEX, "title 2");
+  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri1,
+                       bmsvc.DEFAULT_INDEX, "title 1");
+  bmsvc.insertBookmark(bmsvc.toolbarFolder, uri1,
+                       bmsvc.DEFAULT_INDEX, "title 2");
   // add some tags
   tagssvc.tagURI(uri1, ["foo", "bar", "foobar", "foo bar"]);
 

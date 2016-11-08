@@ -22,11 +22,11 @@ add_task(function* test_execute()
   yield PlacesTestUtils.addVisits(TEST_BOOKMARKED_URI);
 
   // create bookmarks on TEST_BOOKMARKED_URI
-  var bm1 = PlacesUtils.bookmarks.insertBookmark(
+  PlacesUtils.bookmarks.insertBookmark(
               PlacesUtils.unfiledBookmarksFolderId,
               TEST_BOOKMARKED_URI, PlacesUtils.bookmarks.DEFAULT_INDEX,
               TEST_BOOKMARKED_URI.spec);
-  var bm2 = PlacesUtils.bookmarks.insertBookmark(
+  PlacesUtils.bookmarks.insertBookmark(
               PlacesUtils.toolbarFolderId,
               TEST_BOOKMARKED_URI, PlacesUtils.bookmarks.DEFAULT_INDEX,
               TEST_BOOKMARKED_URI.spec);

@@ -168,7 +168,7 @@ function* compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
 
 var itemsCount = 0;
 function* new_bookmark(aInfo) {
-  let currentItem = ++itemsCount;
+  ++itemsCount;
   if (!("url" in aInfo))
     aInfo.url = uri("http://test.item." + itemsCount);
 

@@ -52,8 +52,6 @@ function run_test()
 {
   let fs = Cc["@mozilla.org/browser/favicon-service;1"].
            getService(Ci.nsIFaviconService);
-  let ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
 
   // Test that the default icon has the content type of image/png.
   let channel = NetUtil.newChannel({

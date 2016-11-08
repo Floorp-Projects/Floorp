@@ -41,7 +41,7 @@ add_task(function* add_search_engine_match() {
   do_check_eq(null, yield PlacesSearchAutocompleteProvider.findMatchByToken("bacon"));
   Services.search.addEngineWithDetails("bacon", "", "pork", "Search Bacon",
                                        "GET", "http://www.bacon.moz/?search={searchTerms}");
-  yield promiseSearchTopic;
+  yield promiseTopic;
   let match = yield PlacesSearchAutocompleteProvider.findMatchByToken("bacon");
   do_check_eq(match.url, "http://www.bacon.moz");
   do_check_eq(match.engineName, "bacon");
@@ -72,7 +72,7 @@ add_task(function* test_aliased_search_engine_match_upper_case_alias() {
   do_check_eq(null, yield PlacesSearchAutocompleteProvider.findMatchByToken("patch"));
   Services.search.addEngineWithDetails("patch", "", "PR", "Search Patch",
                                        "GET", "http://www.patch.moz/?search={searchTerms}");
-  yield promiseSearchTopic;
+  yield promiseTopic;
   // lower case
   let match = yield PlacesSearchAutocompleteProvider.findMatchByAlias("pr");
   do_check_eq(match.engineName, "patch");

@@ -154,7 +154,6 @@ add_task(function* test_remove_many() {
     let uri = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove?sample=" + i + "&salt=" + Math.random());
     let title = "Visit " + i + ", " + Math.random();
     let hasBookmark = i % 3 == 0;
-    let resolve;
     let page = {
       uri: uri,
       title: title,
