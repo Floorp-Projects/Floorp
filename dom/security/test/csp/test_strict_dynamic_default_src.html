@@ -1,0 +1,136 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1299483 - CSP: Implement 'strict-dynamic'</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.setBoolPref("security.csp.enableStrictDynamic", true);
+
+/* Description of the test:
+ * We load scripts and images with a CSP of 'strict-dynamic' making sure
+ * whitelists get ignored for scripts but not for images when strict-dynamic
+ * appears in default-src.
+ *
+ * Please note that we do not support strict-dynamic within default-src yet,
+ * see Bug 1313937. When updating this test please do not change the
+ * csp policies, but only replace todo_is() with is().
+ */
+
+var tests = [
+  {
+    script_desc: "(test1) script should be allowed because of valid nonce",
+    img_desc: "(test1) img should be allowed because of 'self'",
+    script_result: "allowed",
+    img_result: "allowed",
+    policy: "default-src 'strict-dynamic' 'self'; script-src 'nonce-foo'"
+  },
+  {
+    script_desc: "(test 2) script should be blocked because of invalid nonce",
+    img_desc: "(test 2) img should be allowed because of valid scheme-src",
+    script_result: "blocked",
+    img_result: "allowed",
+    policy: "default-src 'strict-dynamic' http:; script-src 'nonce-bar' http:"
+  },
+  {
+    script_desc: "(test 3) script should be blocked because of invalid nonce",
+    img_desc: "(test 3) img should be allowed because of valid host-src",
+    script_result: "blocked",
+    script_enforced: "",
+    img_result: "allowed",
+    policy: "default-src 'strict-dynamic' mochi.test; script-src 'nonce-bar' http:"
+  },
+  {
+    script_desc: "(test 4) script should be allowed because of valid nonce",
+    img_desc: "(test 4) img should be blocked because of default-src 'strict-dynamic'",
+    script_result: "allowed",
+    img_result: "blocked",
+    policy: "default-src 'strict-dynamic'; script-src 'nonce-foo'"
+  },
+  // some reverse order tests (have script-src appear before default-src)
+  {
+    script_desc: "(test 5) script should be allowed because of valid nonce",
+    img_desc: "(test 5) img should be blocked because of default-src 'strict-dynamic'",
+    script_result: "allowed",
+    img_result: "blocked",
+    policy: "script-src 'nonce-foo'; default-src 'strict-dynamic';"
+  },
+  {
+    script_desc: "(test 6) script should be allowed because of valid nonce",
+    img_desc: "(test 6) img should be blocked because of default-src http:",
+    script_result: "blocked",
+    img_result: "allowed",
+    policy: "script-src 'nonce-bar' http:; default-src 'strict-dynamic' http:;"
+  },
+  {
+    script_desc: "(test 7) script should be allowed because of invalid nonce",
+    img_desc: "(test 7) img should be blocked because of image-src http:",
+    script_result: "blocked",
+    img_result: "allowed",
+    policy: "script-src 'nonce-bar' http:; default-src 'strict-dynamic' http:; img-src http:"
+  },
+];
+
+var counter = 0;
+var curTest;
+
+function loadNextTest() {
+  if (counter == tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  curTest = tests[counter++];
+  var src = "file_testserver.sjs?file=";
+  // append the file that should be served
+  src += escape("tests/dom/security/test/csp/file_strict_dynamic_default_src.html");
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(curTest.policy);
+
+  document.getElementById("testframe").addEventListener("load", checkResults, false);
+  document.getElementById("testframe").src = src;
+}
+
+function checkResults() {
+  try {
+    var testframe = document.getElementById("testframe");
+    testframe.removeEventListener('load', checkResults, false);
+
+    // check if script loaded
+    var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
+    if (curTest.script_result === "blocked") {
+      todo_is(divcontent, curTest.script_result, curTest.script_desc);
+    }
+    else {
+      is(divcontent, curTest.script_result, curTest.script_desc);
+    }
+
+    // check if image loaded
+    var testimg = testframe.contentWindow.document.getElementById("testimage");
+    if (curTest.img_result === "allowed") {
+      ok(testimg.complete, curTest.img_desc);
+    }
+    else {
+      ok((testimg.width == 0) && (testimg.height == 0), curTest.img_desc);
+    }
+  }
+  catch (e) {
+    ok(false, "ERROR: could not access content for test: '" + curTest.script_desc + "'");
+  }
+
+  loadNextTest();
+}
+
+// start running the tests
+loadNextTest();
+
+</script>
+</body>
+</html>
