@@ -12,10 +12,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.mozilla.gecko.BaseGeckoInterface;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.PrefsHelper;
+
+import static org.mozilla.gecko.GeckoView.setGeckoInterface;
 
 public class GeckoViewActivity extends Activity {
     private static final String LOGTAG = "GeckoViewActivity";
@@ -25,6 +28,9 @@ public class GeckoViewActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setGeckoInterface(new BaseGeckoInterface(getApplicationContext()));
+
         setContentView(R.layout.geckoview_activity);
 
         mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
