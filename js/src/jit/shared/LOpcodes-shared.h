@@ -359,6 +359,7 @@
     _(RunOncePrologue)              \
     _(Rest)                         \
     _(TypeOfV)                      \
+    _(ToAsync)                      \
     _(ToIdV)                        \
     _(Floor)                        \
     _(FloorF)                       \
