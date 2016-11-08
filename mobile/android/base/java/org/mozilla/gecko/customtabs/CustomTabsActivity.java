@@ -35,6 +35,8 @@ import static android.support.customtabs.CustomTabsIntent.EXTRA_TOOLBAR_COLOR;
 
 public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "CustomTabsActivity";
+    private static final String SAVED_TOOLBAR_COLOR = "SavedToolbarColor";
+    private static final String SAVED_TOOLBAR_TITLE = "SavedToolbarTitle";
     private static final int NO_COLOR = -1;
     private Toolbar toolbar;
 
@@ -42,9 +44,21 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     private int tabId = -1;
     private boolean useDomainTitle = true;
 
+    private int toolbarColor;
+    private String toolbarTitle;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            toolbarColor = savedInstanceState.getInt(SAVED_TOOLBAR_COLOR, NO_COLOR);
+            toolbarTitle = savedInstanceState.getString(SAVED_TOOLBAR_TITLE, AppConstants.MOZ_APP_BASENAME);
+        } else {
+            toolbarColor = NO_COLOR;
+            toolbarTitle = AppConstants.MOZ_APP_BASENAME;
+        }
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         updateActionBarWithToolbar(toolbar);
         try {
@@ -61,6 +75,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             useDomainTitle = false;
         }
         actionBar = getSupportActionBar();
+        actionBar.setTitle(toolbarTitle);
         updateToolbarColor(toolbar);
 
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -107,11 +122,20 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
                 title = uri.getHost();
             }
             if (!useDomainTitle || title == null || title.isEmpty()) {
-                actionBar.setTitle(AppConstants.MOZ_APP_BASENAME);
+                toolbarTitle = AppConstants.MOZ_APP_BASENAME;
             } else {
-                actionBar.setTitle(title);
+                toolbarTitle = title;
             }
+            actionBar.setTitle(toolbarTitle);
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putInt(SAVED_TOOLBAR_COLOR, toolbarColor);
+        outState.putString(SAVED_TOOLBAR_TITLE, toolbarTitle);
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -132,15 +156,19 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     }
 
     private void updateToolbarColor(final Toolbar toolbar) {
-        final int color = getIntent().getIntExtra(EXTRA_TOOLBAR_COLOR, NO_COLOR);
-        if (color == NO_COLOR) {
-            return;
+        if (toolbarColor == NO_COLOR) {
+            final int color = getIntent().getIntExtra(EXTRA_TOOLBAR_COLOR, NO_COLOR);
+            if (color == NO_COLOR) {
+                return;
+            }
+            toolbarColor = color;
         }
-        toolbar.setBackgroundColor(color);
+
+        toolbar.setBackgroundColor(toolbarColor);
         final Window window = getWindow();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setStatusBarColor(ColorUtil.darken(color, 0.25));
+            window.setStatusBarColor(ColorUtil.darken(toolbarColor, 0.25));
         }
     }
 }
