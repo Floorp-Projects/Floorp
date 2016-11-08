@@ -268,6 +268,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
     promises.push(BrowserTestUtils.waitForMessage(b2.messageManager, 'test:pagehide', msg => pagehide2 = true));
     promises.push(BrowserTestUtils.waitForMessage(b1.messageManager, 'test:pageshow', msg => pagehide1));
     promises.push(BrowserTestUtils.waitForMessage(b2.messageManager, 'test:pageshow', msg => pagehide2));
+
+    // For swapping remote browsers, we'll also receive Content:LocationChange
+    if (b1.isRemoteBrowser) {
+      promises.push(BrowserTestUtils.waitForMessage(b1.messageManager, 'Content:LocationChange'));
+    }
+
     promises.push(Promise.resolve().then(() => {
       let f1 = b1.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
       let f2 = b2.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
@@ -286,6 +292,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
       // For swapping there should be a pagehide followed by a pageshow.
       promises.push(BrowserTestUtils.waitForMessage(browser.messageManager,
         'test:pagehide', msg => pagehide = true));
+
+      // For swapping remote browsers, we'll also receive Content:LocationChange
+      if (browser.isRemoteBrowser) {
+        promises.push(BrowserTestUtils.waitForMessage(browser.messageManager,
+          'Content:LocationChange'));
+      }
     }
     promises.push(BrowserTestUtils.waitForMessage(browser.messageManager,
       'test:pageshow', msg => {

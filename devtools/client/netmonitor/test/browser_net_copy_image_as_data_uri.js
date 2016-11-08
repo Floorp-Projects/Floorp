@@ -16,7 +16,7 @@ add_task(function* () {
 
   RequestsMenu.lazyUpdate = false;
 
-  let wait = waitForNetworkEvents(monitor, 7);
+  let wait = waitForNetworkEvents(monitor, 8);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
     content.wrappedJSObject.performRequests();
   });

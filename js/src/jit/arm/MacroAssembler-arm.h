@@ -1459,19 +1459,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_mov(Imm32(1), dest, cond);
     }
 
-    template <typename T1, typename T2>
-    void cmpPtrSet(Assembler::Condition cond, T1 lhs, T2 rhs, Register dest)
-    {
-        cmpPtr(lhs, rhs);
-        emitSet(cond, dest);
-    }
-    template <typename T1, typename T2>
-    void cmp32Set(Assembler::Condition cond, T1 lhs, T2 rhs, Register dest)
-    {
-        cmp32(lhs, rhs);
-        emitSet(cond, dest);
-    }
-
     void testNullSet(Condition cond, const ValueOperand& value, Register dest) {
         cond = testNull(cond, value);
         emitSet(cond, dest);

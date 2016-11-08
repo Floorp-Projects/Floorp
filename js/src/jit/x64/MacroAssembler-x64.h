@@ -513,13 +513,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         testq(rhs, lhs);
     }
 
-    template <typename T1, typename T2>
-    void cmpPtrSet(Assembler::Condition cond, T1 lhs, T2 rhs, Register dest)
-    {
-        cmpPtr(lhs, rhs);
-        emitSet(cond, dest);
-    }
-
     /////////////////////////////////////////////////////////////////
     // Common interface.
     /////////////////////////////////////////////////////////////////

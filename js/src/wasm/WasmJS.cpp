@@ -775,8 +775,15 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
         return false;
 
     unsigned numArgs = instance.metadata().lookupFuncExport(funcIndex).sig().args().length();
-    fun.set(NewNativeConstructor(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED,
-                                 SingletonObject, JSFunction::WASM_CTOR));
+
+    // asm.js needs to active like a normal JS function which are allowed to be
+    // used as constructors.
+    if (instance.isAsmJS()) {
+        fun.set(NewNativeConstructor(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED,
+                                     SingletonObject, JSFunction::ASMJS_CTOR));
+    } else {
+        fun.set(NewNativeFunction(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED));
+    }
     if (!fun)
         return false;
 

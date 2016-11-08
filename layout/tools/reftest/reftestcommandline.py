@@ -317,20 +317,6 @@ class DesktopArgumentsParser(ReftestArgumentsParser):
                           dest="runTestsInParallel",
                           help="run tests in parallel if possible")
 
-        self.add_argument("--ipc",
-                          action="store_true",
-                          default=False,
-                          help="Run in out-of-processes mode")
-
-    def _prefs_oop(self):
-        import mozinfo
-        prefs = ["layers.async-pan-zoom.enabled=true",
-                 "browser.tabs.remote.autostart=true"]
-        if mozinfo.os == "win":
-            prefs.append("layers.acceleration.disabled=true")
-
-        return prefs
-
     def _prefs_gpu(self):
         if mozinfo.os != "win":
             return ["layers.acceleration.force-enabled=true"]
@@ -338,11 +324,6 @@ class DesktopArgumentsParser(ReftestArgumentsParser):
 
     def validate(self, options, reftest):
         super(DesktopArgumentsParser, self).validate(options, reftest)
-
-        if options.ipc:
-            for item in self._prefs_oop():
-                if item not in options.extraPrefs:
-                    options.extraPrefs.append(item)
 
         if options.runTestsInParallel:
             if options.logFile is not None:
@@ -501,12 +482,6 @@ class B2GArgumentParser(ReftestArgumentsParser):
                           dest="mulet",
                           default=False,
                           help="Run the tests on a B2G desktop build")
-
-        self.add_argument("--enable-oop",
-                          action="store_true",
-                          dest="oop",
-                          default=False,
-                          help="Run the tests out of process")
 
         self.set_defaults(remoteTestRoot=None,
                           logFile="reftest.log",
