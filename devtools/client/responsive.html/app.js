@@ -34,6 +34,7 @@ let App = createClass({
 
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
+    dispatch: PropTypes.func.isRequired,
     displayPixelRatio: PropTypes.number.isRequired,
     location: Types.location.isRequired,
     networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
