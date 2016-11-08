@@ -47,7 +47,7 @@ class HandleValueArray;
 
 class ObjectOpResult;
 
-struct PropertyDescriptor;
+struct JS_PUBLIC_API(PropertyDescriptor);
 } // namespace JS
 
 // Do the importing.
