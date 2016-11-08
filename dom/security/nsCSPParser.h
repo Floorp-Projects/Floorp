@@ -112,6 +112,7 @@ class nsCSPParser {
                 bool aDeliveredViaMetaTag);
 
     static bool sCSPExperimentalEnabled;
+    static bool sStrictDynamicEnabled;
 
     ~nsCSPParser();
 
@@ -236,8 +237,10 @@ class nsCSPParser {
     nsString           mCurToken;
     nsTArray<nsString> mCurDir;
 
-    // cache variables to ignore unsafe-inline if hash or nonce is specified
+    // helpers to allow invalidation of srcs within script-src and style-src
+    // if either 'strict-dynamic' or at least a hash or nonce is present.
     bool               mHasHashOrNonce; // false, if no hash or nonce is defined
+    bool               mStrictDynamic;  // false, if 'strict-dynamic' is not defined
     nsCSPKeywordSrc*   mUnsafeInlineKeywordSrc; // null, otherwise invlidate()
 
     // cache variables for child-src and frame-src directive handling.

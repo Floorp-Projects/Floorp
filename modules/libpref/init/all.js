@@ -2135,6 +2135,7 @@ pref("security.notification_enable_delay", 500);
 
 pref("security.csp.enable", true);
 pref("security.csp.experimentalEnabled", false);
+pref("security.csp.enableStrictDynamic", true);
 
 // Default Content Security Policy to apply to signed contents.
 pref("security.signed_content.CSP.default", "script-src 'self'; style-src 'self'");
