@@ -283,6 +283,8 @@ class ProxyContext extends BaseContext {
 
     this.uri = NetUtil.newURI(params.url);
 
+    this.incognito = params.incognito;
+
     // This message manager is used by ParentAPIManager to send messages and to
     // close the ProxyContext if the underlying message manager closes. This
     // message manager object may change when `xulBrowser` swaps docshells, e.g.

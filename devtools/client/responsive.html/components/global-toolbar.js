@@ -9,16 +9,22 @@ const { DOM: dom, createClass, createFactory, PropTypes, addons } =
 
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
+const DPRSelector = createFactory(require("./dpr-selector"));
 const NetworkThrottlingSelector = createFactory(require("./network-throttling-selector"));
 
 module.exports = createClass({
   displayName: "GlobalToolbar",
 
   propTypes: {
+    devices: PropTypes.shape(Types.devices).isRequired,
+    displayPixelRatio: PropTypes.number.isRequired,
     networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
+    selectedDevice: PropTypes.string.isRequired,
+    selectedPixelRatio: PropTypes.number.isRequired,
     touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
     onChangeNetworkThrottling: PropTypes.func.isRequired,
+    onChangeViewportPixelRatio: PropTypes.func.isRequired,
     onExit: PropTypes.func.isRequired,
     onScreenshot: PropTypes.func.isRequired,
     onUpdateTouchSimulation: PropTypes.func.isRequired,
@@ -28,10 +34,15 @@ module.exports = createClass({
 
   render() {
     let {
+      devices,
+      displayPixelRatio,
       networkThrottling,
       screenshot,
+      selectedDevice,
+      selectedPixelRatio,
       touchSimulation,
       onChangeNetworkThrottling,
+      onChangeViewportPixelRatio,
       onExit,
       onScreenshot,
       onUpdateTouchSimulation
@@ -56,6 +67,13 @@ module.exports = createClass({
       NetworkThrottlingSelector({
         networkThrottling,
         onChangeNetworkThrottling,
+      }),
+      DPRSelector({
+        devices,
+        displayPixelRatio,
+        selectedDevice,
+        selectedPixelRatio,
+        onChangeViewportPixelRatio,
       }),
       dom.button({
         id: "global-touch-simulation-button",

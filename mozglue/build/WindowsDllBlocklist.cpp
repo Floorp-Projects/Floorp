@@ -222,6 +222,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   // Vorbis DirectShow filters, bug 1239690.
   { "vorbis.acm", MAKE_VERSION(0, 0, 3, 6) },
 
+  // AhnLab Internet Security, bug 1311969
+  { "nzbrcom.dll", ALL_VERSIONS },
+
   { nullptr, 0 }
 };
 

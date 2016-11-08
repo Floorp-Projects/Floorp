@@ -30,7 +30,14 @@ add_task(function* () {
   NetMonitorView.toggleFrontendMode();
   yield onEvents;
 
+  is(NetMonitorView.currentFrontendMode, "network-statistics-view",
+    "The frontend mode is switched to the statistics view.");
+
   EventUtils.sendMouseEvent({ type: "click" }, $(".pie-chart-slice"));
+
+  is(NetMonitorView.currentFrontendMode, "network-inspector-view",
+    "The frontend mode is switched back to the inspector view.");
+
   testFilterButtons(monitor, "html");
   info("The correct filtering predicate is used when exiting perf. analysis mode.");
 

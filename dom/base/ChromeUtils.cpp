@@ -178,7 +178,6 @@ ChromeUtils::IsOriginAttributesEqual(dom::GlobalObject& aGlobal,
   return aA.mAddonId == aB.mAddonId &&
          aA.mAppId == aB.mAppId &&
          aA.mInIsolatedMozBrowser == aB.mInIsolatedMozBrowser &&
-         aA.mSignedPkg == aB.mSignedPkg &&
          aA.mUserContextId == aB.mUserContextId &&
          aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
 }
@@ -189,7 +188,6 @@ ChromeUtils::IsOriginAttributesEqualIgnoringAddonId(const dom::OriginAttributesD
 {
   return aA.mAppId == aB.mAppId &&
          aA.mInIsolatedMozBrowser == aB.mInIsolatedMozBrowser &&
-         aA.mSignedPkg == aB.mSignedPkg &&
          aA.mUserContextId == aB.mUserContextId &&
          aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
 }

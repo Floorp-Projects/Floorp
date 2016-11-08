@@ -28,7 +28,7 @@ add_task(function* () {
   RequestsMenu.selectedItem = requestItem;
 
   yield waitForClipboardPromise(function setup() {
-    RequestsMenu.copyResponse();
+    RequestsMenu.contextMenu.copyResponse();
   }, EXPECTED_RESULT);
 
   yield teardown(monitor);

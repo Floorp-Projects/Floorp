@@ -63,8 +63,6 @@ var PKT_SIGNUP_OVERLAY = function (options)
 PKT_SIGNUP_OVERLAY.prototype = {
     create : function()
     {
-        var myself = this;
-
         var controlvariant = window.location.href.match(/controlvariant=([\w|\.]*)&?/);
         if (controlvariant && controlvariant.length > 1)
         {
@@ -193,4 +191,3 @@ $(function()
         window.thePKT_SIGNUP.create();
     });
 });
-
