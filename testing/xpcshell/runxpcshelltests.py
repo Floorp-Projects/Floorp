@@ -1011,7 +1011,7 @@ class XPCShellTests(object):
                 if version >= LooseVersion("5.0.0"):
                     nodeBin = localPath
             except (subprocess.CalledProcessError, OSError), e:
-                self.log.error('Could not retrieve node version: %s' % str(e))
+                self.log.warning('Could not retrieve node version: %s' % str(e))
 
         if os.getenv('MOZ_ASSUME_NODE_RUNNING', None):
             self.log.info('Assuming required node servers are already running')
