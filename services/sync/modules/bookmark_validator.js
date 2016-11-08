@@ -662,9 +662,16 @@ class BookmarkValidator {
       }
       let differences = [];
       let structuralDifferences = [];
-      // We want to treat undefined, null and an empty string as identical
-      if ((client.title || "") !== (server.title || "")) {
-        differences.push('title');
+
+      // Don't bother comparing titles of roots. It's okay if locally it's
+      // "Mobile Bookmarks", but the server thinks it's "mobile".
+      // TODO: We probably should be handing other localized bookmarks (e.g.
+      // default bookmarks) here as well, see bug 1316041.
+      if (!SYNCED_ROOTS.includes(client.guid)) {
+        // We want to treat undefined, null and an empty string as identical
+        if ((client.title || "") !== (server.title || "")) {
+          differences.push("title");
+        }
       }
 
       if (client.parentid || server.parentid) {
