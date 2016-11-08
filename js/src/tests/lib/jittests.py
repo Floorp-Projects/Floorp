@@ -245,10 +245,6 @@ class JitTest:
                     elif name == 'test-also-noasmjs':
                         if options.can_test_also_noasmjs:
                             test.test_also.append(['--no-asmjs'])
-                            # test-also-noasmjs is a sure indicator that the file contains asm.js code;
-                            # in that case we want to test the wasm baseline compiler too, as asm.js
-                            # is translated to wasm
-                            test.test_also.append(['--wasm-always-baseline'])
                     elif name == 'test-also-wasm-baseline':
                         if options.can_test_also_wasm_baseline:
                             test.test_also.append(['--wasm-always-baseline'])
