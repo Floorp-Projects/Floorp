@@ -3568,21 +3568,6 @@ Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling, DefaultHandling 
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FUNCTION));
 
-    // Annex B.3.4 says we can parse function declarations unbraced under if
-    // or else as if it were braced. That is, |if (x) function f() {}| is
-    // parsed as |if (x) { function f() {} }|.
-    Maybe<ParseContext::Statement> synthesizedStmtForAnnexB;
-    Maybe<ParseContext::Scope> synthesizedScopeForAnnexB;
-    if (!pc->sc()->strict()) {
-        ParseContext::Statement* stmt = pc->innermostStatement();
-        if (stmt && stmt->kind() == StatementKind::If) {
-            synthesizedStmtForAnnexB.emplace(pc, StatementKind::Block);
-            synthesizedScopeForAnnexB.emplace(this);
-            if (!synthesizedScopeForAnnexB->init(pc))
-                return null();
-        }
-    }
-
     RootedPropertyName name(context);
     GeneratorKind generatorKind = asyncKind == AsyncFunction ? StarGenerator : NotGenerator;
     TokenKind tt;
@@ -3613,20 +3598,8 @@ Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling, DefaultHandling 
     }
 
     YieldHandling newYieldHandling = GetYieldHandling(generatorKind, asyncKind);
-    Node fun = functionDefinition(InAllowed, newYieldHandling, name, Statement, generatorKind,
-                                  asyncKind, PredictUninvoked);
-    if (!fun)
-        return null();
-
-    if (synthesizedStmtForAnnexB) {
-        Node synthesizedStmtList = handler.newStatementList(handler.getPosition(fun));
-        if (!synthesizedStmtList)
-            return null();
-        handler.addStatementToList(synthesizedStmtList, fun);
-        return finishLexicalScope(*synthesizedScopeForAnnexB, synthesizedStmtList);
-    }
-
-    return fun;
+    return functionDefinition(InAllowed, newYieldHandling, name, Statement, generatorKind,
+                              asyncKind, PredictUninvoked);
 }
 
 template <typename ParseHandler>
@@ -5251,13 +5224,32 @@ Parser<ParseHandler>::consequentOrAlternative(YieldHandling yieldHandling)
         return null();
 
     if (next == TOK_FUNCTION) {
-        // Apply Annex B.3.4 in non-strict code to allow FunctionDeclaration as
-        // the consequent/alternative of an |if| or |else|.  Parser::statement
-        // will report the strict mode error.
+        // Annex B.3.4 says that unbraced function declarations under if/else
+        // in non-strict code act as if they were braced. That is,
+        // |if (x) function f() {}| is parsed as |if (x) { function f() {} }|.
         if (!pc->sc()->strict()) {
             tokenStream.consumeKnownToken(next, TokenStream::Operand);
-            return functionStmt(yieldHandling, NameRequired);
+
+            ParseContext::Statement stmt(pc, StatementKind::Block);
+            ParseContext::Scope scope(this);
+            if (!scope.init(pc))
+                return null();
+
+            TokenPos funcPos = pos();
+            Node fun = functionStmt(yieldHandling, NameRequired);
+            if (!fun)
+                return null();
+
+            Node block = handler.newStatementList(funcPos);
+            if (!block)
+                return null();
+
+            handler.addStatementToList(block, fun);
+            return finishLexicalScope(scope, block);
         }
+
+        // Function declarations are a syntax error in strict mode code.
+        // Parser::statement reports that error.
     }
 
     return statement(yieldHandling);
