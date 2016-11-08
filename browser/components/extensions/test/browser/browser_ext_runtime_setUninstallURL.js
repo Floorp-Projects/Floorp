@@ -30,7 +30,7 @@ function* makeAndInstallXPI(id, backgroundScript, loadedURL) {
 
 
 add_task(function* test_setuninstallurl_badargs() {
-  function backgroundScript() {
+  async function backgroundScript() {
     let promises = [
       browser.runtime.setUninstallURL("this is not a url")
         .then(() => {
@@ -49,8 +49,8 @@ add_task(function* test_setuninstallurl_badargs() {
         }),
     ];
 
-    Promise.all(promises)
-      .then(() => browser.test.notifyPass("setUninstallURL bad params"));
+    await Promise.all(promises);
+    browser.test.notifyPass("setUninstallURL bad params");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -65,9 +65,9 @@ add_task(function* test_setuninstallurl_badargs() {
 // empty string is equivalent to not setting an uninstall URL
 // (i.e., no new tab is opened upon uninstall)
 add_task(function* test_setuninstall_empty_url() {
-  function backgroundScript() {
-    browser.runtime.setUninstallURL("")
-      .then(() => browser.tabs.create({url: "http://example.com/addon_loaded"}));
+  async function backgroundScript() {
+    await browser.runtime.setUninstallURL("");
+    browser.tabs.create({url: "http://example.com/addon_loaded"});
   }
 
   let addon = yield makeAndInstallXPI("test_uinstallurl2@tests.mozilla.org",
@@ -82,9 +82,9 @@ add_task(function* test_setuninstall_empty_url() {
 });
 
 add_task(function* test_setuninstallurl() {
-  function backgroundScript() {
-    browser.runtime.setUninstallURL("http://example.com/addon_uninstalled")
-      .then(() => browser.tabs.create({url: "http://example.com/addon_loaded"}));
+  async function backgroundScript() {
+    await browser.runtime.setUninstallURL("http://example.com/addon_uninstalled");
+    browser.tabs.create({url: "http://example.com/addon_loaded"});
   }
 
   let addon = yield makeAndInstallXPI("test_uinstallurl@tests.mozilla.org",

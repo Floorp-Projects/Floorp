@@ -16,7 +16,7 @@
 /* eslint-disable mozilla/balanced-listeners */
 
 add_task(function* test_simple() {
-  function runTests(cx) {
+  async function runTests(cx) {
     function xhr(XMLHttpRequest) {
       return (url) => {
         return new Promise((resolve, reject) => {
@@ -47,24 +47,24 @@ add_task(function* test_simple() {
       /* eslint-enable no-else-return */
     }
 
-    return run(true, xhr(XMLHttpRequest))
-      .then(() => run(false, xhr(XMLHttpRequest)))
-      .then(() => run(true, xhr(window.XMLHttpRequest)))
-      .then(() => run(false, xhr(window.XMLHttpRequest)))
-      .then(() => run(true, fetch))
-      .then(() => run(false, fetch))
-      .then(() => run(true, window.fetch))
-      .then(() => run(false, window.fetch))
-      .catch(err => {
-        browser.test.fail(`Error: ${err} :: ${err.stack}`);
-        browser.test.notifyFail("permission_xhr");
-      });
+    try {
+      await run(true, xhr(XMLHttpRequest));
+      await run(false, xhr(XMLHttpRequest));
+      await run(true, xhr(window.XMLHttpRequest));
+      await run(false, xhr(window.XMLHttpRequest));
+      await run(true, fetch);
+      await run(false, fetch);
+      await run(true, window.fetch);
+      await run(false, window.fetch);
+    } catch (err) {
+      browser.test.fail(`Error: ${err} :: ${err.stack}`);
+      browser.test.notifyFail("permission_xhr");
+    }
   }
 
-  function background(runTestsFn) {
-    runTestsFn("bg").then(() => {
-      browser.test.notifyPass("permission_xhr");
-    });
+  async function background(runTestsFn) {
+    await runTestsFn("bg");
+    browser.test.notifyPass("permission_xhr");
   }
 
   let extensionData = {
@@ -77,29 +77,29 @@ add_task(function* test_simple() {
       }],
     },
     files: {
-      "content.js": "new " + function(runTestsFn) {
-        runTestsFn("content").then(() => {
-          window.wrappedJSObject.privilegedFetch = fetch;
-          window.wrappedJSObject.privilegedXHR = XMLHttpRequest;
+      "content.js": `(${async runTestsFn => {
+        await runTestsFn("content");
 
-          window.addEventListener("message", function rcv({data}) {
-            switch (data.msg) {
-              case "test":
-                break;
+        window.wrappedJSObject.privilegedFetch = fetch;
+        window.wrappedJSObject.privilegedXHR = XMLHttpRequest;
 
-              case "assertTrue":
-                browser.test.assertTrue(data.condition, data.description);
-                break;
+        window.addEventListener("message", function rcv({data}) {
+          switch (data.msg) {
+            case "test":
+              break;
 
-              case "finish":
-                window.removeEventListener("message", rcv, false);
-                browser.test.sendMessage("content-script-finished");
-                break;
-            }
-          }, false);
-          window.postMessage("test", "*");
-        });
-      } + `(${runTests})`,
+            case "assertTrue":
+              browser.test.assertTrue(data.condition, data.description);
+              break;
+
+            case "finish":
+              window.removeEventListener("message", rcv, false);
+              browser.test.sendMessage("content-script-finished");
+              break;
+          }
+        }, false);
+        window.postMessage("test", "*");
+      }})(${runTests})`,
     },
   };
 

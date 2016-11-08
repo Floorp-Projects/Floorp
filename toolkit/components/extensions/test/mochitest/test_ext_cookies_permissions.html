@@ -19,7 +19,7 @@ function* testCookies(options) {
   // pass an expiration date to the background script.
   options.expiry = Date.now() / 1000 + 3600;
 
-  function background(backgroundOptions) {
+  async function background(backgroundOptions) {
     // Ask the parent scope to change some cookies we may or may not have
     // permission for.
     let awaitChanges = new Promise(resolve => {
@@ -44,25 +44,25 @@ function* testCookies(options) {
       failures++;
     };
 
-    awaitChanges.then(() => {
-      return browser.cookies.get({url, name: "foo"});
-    }).then(cookie => {
+    try {
+      await awaitChanges;
+
+      let cookie = await browser.cookies.get({url, name: "foo"});
       browser.test.assertEq(backgroundOptions.shouldPass, cookie != null, "should pass == get cookie");
 
-      return browser.cookies.getAll({domain});
-    }).then(cookies => {
+      let cookies = await browser.cookies.getAll({domain});
       if (backgroundOptions.shouldPass) {
         browser.test.assertEq(2, cookies.length, "expected number of cookies");
       } else {
         browser.test.assertEq(0, cookies.length, "expected number of cookies");
       }
 
-      return Promise.all([
+      await Promise.all([
         browser.cookies.set({url, domain, secure, name: "foo", "value": "baz", expirationDate: backgroundOptions.expiry}).catch(tallyFailure),
         browser.cookies.set({url, domain, secure, name: "bar", "value": "quux", expirationDate: backgroundOptions.expiry}).catch(tallyFailure),
         browser.cookies.remove({url, name: "deleted"}),
       ]);
-    }).then(() => {
+
       if (backgroundOptions.shouldPass) {
         // The order of eviction events isn't guaranteed, so just check that
         // it's there somewhere.
@@ -80,16 +80,17 @@ function* testCookies(options) {
         browser.test.assertEq("", changed.join(","), "expected no changes");
       }
 
-      browser.test.notifyPass("cookie-permissions");
-    }).then(() => {
       if (!(backgroundOptions.shouldPass || backgroundOptions.shouldWrite)) {
         browser.test.assertEq(2, failures, "Expected failures");
       } else {
         browser.test.assertEq(0, failures, "Expected no failures");
       }
-    }).catch(error => {
+
+      browser.test.notifyPass("cookie-permissions");
+    } catch (error) {
       browser.test.fail(`Error: ${error} :: ${error.stack}`);
-    });
+      browser.test.notifyFail("cookie-permissions");
+    }
   }
 
   let extension = ExtensionTestUtils.loadExtension({
