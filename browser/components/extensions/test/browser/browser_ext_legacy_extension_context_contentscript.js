@@ -27,17 +27,19 @@ add_task(function* test_legacy_extension_context_contentscript_connection() {
     // in a test message.
     let uuid = window.location.hostname;
 
-    browser.test.onMessage.addListener(msg => {
+    browser.test.onMessage.addListener(async msg => {
       if (msg == "open-test-tab") {
-        browser.tabs.create({url: "http://example.com/"})
-          .then(tab => browser.test.sendMessage("get-expected-sender-info", {
-            uuid, tab,
-          }));
+        let tab = await browser.tabs.create({url: "http://example.com/"});
+        browser.test.sendMessage("get-expected-sender-info",
+                                 {uuid, tab});
       } else if (msg == "close-current-tab") {
-        browser.tabs.query({active: true})
-          .then(tabs => browser.tabs.remove(tabs[0].id))
-          .then(() => browser.test.sendMessage("current-tab-closed", true))
-          .catch(() => browser.test.sendMessage("current-tab-closed", false));
+        try {
+          let [tab] = await browser.tabs.query({active: true});
+          await browser.tabs.remove(tab.id);
+          browser.test.sendMessage("current-tab-closed", true);
+        } catch (e) {
+          browser.test.sendMessage("current-tab-closed", false);
+        }
       }
     });
 

@@ -6,7 +6,7 @@ SimpleTest.requestCompleteLog();
 
 add_task(function* testWindowsEvents() {
   function background() {
-    browser.windows.onCreated.addListener(function listener(window) {
+    browser.windows.onCreated.addListener(window => {
       browser.test.log(`onCreated: windowId=${window.id}`);
 
       browser.test.assertTrue(Number.isInteger(window.id),
@@ -17,7 +17,7 @@ add_task(function* testWindowsEvents() {
     });
 
     let lastWindowId, os;
-    browser.windows.onFocusChanged.addListener(function listener(windowId) {
+    browser.windows.onFocusChanged.addListener(async windowId => {
       browser.test.log(`onFocusChange: windowId=${windowId} lastWindowId=${lastWindowId}`);
 
       if (windowId === browser.windows.WINDOW_ID_NONE && os === "linux") {
@@ -32,14 +32,14 @@ add_task(function* testWindowsEvents() {
       browser.test.assertTrue(Number.isInteger(windowId),
                               "windowId is an integer");
 
-      browser.windows.getLastFocused().then(window => {
-        browser.test.assertEq(windowId, window.id,
-                              "Last focused window has the correct id");
-        browser.test.sendMessage(`window-focus-changed`, window.id);
-      });
+      let window = await browser.windows.getLastFocused();
+
+      browser.test.assertEq(windowId, window.id,
+                            "Last focused window has the correct id");
+      browser.test.sendMessage(`window-focus-changed`, window.id);
     });
 
-    browser.windows.onRemoved.addListener(function listener(windowId) {
+    browser.windows.onRemoved.addListener(windowId => {
       browser.test.log(`onRemoved: windowId=${windowId}`);
 
       browser.test.assertTrue(Number.isInteger(windowId),

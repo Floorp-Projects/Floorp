@@ -14,7 +14,7 @@ add_task(function* tabsSendMessageReply() {
       }],
     },
 
-    background: function() {
+    background: async function() {
       let firstTab;
       let promiseResponse = new Promise(resolve => {
         browser.runtime.onMessage.addListener((msg, sender, respond) => {
@@ -66,14 +66,13 @@ add_task(function* tabsSendMessageReply() {
         });
       });
 
-      browser.tabs.query({currentWindow: true, active: true}).then(tabs => {
-        firstTab = tabs[0].id;
-        browser.tabs.create({url: "http://example.com/"});
-      });
+      let tabs = await browser.tabs.query({currentWindow: true, active: true});
+      firstTab = tabs[0].id;
+      browser.tabs.create({url: "http://example.com/"});
     },
 
     files: {
-      "content-script.js": function() {
+      "content-script.js": async function() {
         browser.runtime.onMessage.addListener((msg, sender, respond) => {
           if (msg == "respond-now") {
             respond(msg);
@@ -90,6 +89,7 @@ add_task(function* tabsSendMessageReply() {
             throw new Error(msg);
           }
         });
+
         browser.runtime.onMessage.addListener((msg, sender, respond) => {
           if (msg == "respond-now") {
             respond("hello");
@@ -97,9 +97,9 @@ add_task(function* tabsSendMessageReply() {
             respond(msg);
           }
         });
-        browser.runtime.sendMessage("content-script-ready").then(response => {
-          browser.runtime.sendMessage(["got-response", response]);
-        });
+
+        let response = await browser.runtime.sendMessage("content-script-ready");
+        browser.runtime.sendMessage(["got-response", response]);
       },
     },
   });
@@ -124,7 +124,7 @@ add_task(function* tabsSendHidden() {
       }],
     },
 
-    background: function() {
+    background: async function() {
       let resolveContent;
       browser.runtime.onMessage.addListener((msg, sender) => {
         if (msg[0] == "content-ready") {
@@ -140,36 +140,34 @@ add_task(function* tabsSendHidden() {
         });
       };
 
-      const URL1 = "http://example.com/content1.html";
-      const URL2 = "http://example.com/content2.html";
-      browser.tabs.create({url: URL1}).then(tab => {
-        return awaitContent(URL1).then(() => {
-          return browser.tabs.sendMessage(tab.id, URL1);
-        }).then(url => {
-          browser.test.assertEq(URL1, url, "Should get response from expected content window");
+      try {
+        const URL1 = "http://example.com/content1.html";
+        const URL2 = "http://example.com/content2.html";
 
-          return browser.tabs.update(tab.id, {url: URL2});
-        }).then(() => {
-          return awaitContent(URL2);
-        }).then(() => {
-          return browser.tabs.sendMessage(tab.id, URL2);
-        }).then(url => {
-          browser.test.assertEq(URL2, url, "Should get response from expected content window");
+        let tab = await browser.tabs.create({url: URL1});
+        await awaitContent(URL1);
 
-          // Repeat once just to be sure the first message was processed by all
-          // listeners before we exit the test.
-          return browser.tabs.sendMessage(tab.id, URL2);
-        }).then(url => {
-          browser.test.assertEq(URL2, url, "Should get response from expected content window");
+        let url = await browser.tabs.sendMessage(tab.id, URL1);
+        browser.test.assertEq(URL1, url, "Should get response from expected content window");
 
-          return browser.tabs.remove(tab.id);
-        });
-      }).then(() => {
+        await browser.tabs.update(tab.id, {url: URL2});
+        await awaitContent(URL2);
+
+        url = await browser.tabs.sendMessage(tab.id, URL2);
+        browser.test.assertEq(URL2, url, "Should get response from expected content window");
+
+        // Repeat once just to be sure the first message was processed by all
+        // listeners before we exit the test.
+        url = await browser.tabs.sendMessage(tab.id, URL2);
+        browser.test.assertEq(URL2, url, "Should get response from expected content window");
+
+        await browser.tabs.remove(tab.id);
+
         browser.test.notifyPass("contentscript-bfcache-window");
-      }).catch(error => {
+      } catch (error) {
         browser.test.fail(`Error: ${error} :: ${error.stack}`);
         browser.test.notifyFail("contentscript-bfcache-window");
-      });
+      }
     },
 
     files: {
@@ -203,22 +201,20 @@ add_task(function* tabsSendMessageNoExceptionOnNonExistentTab() {
       "permissions": ["tabs"],
     },
 
-    background: function() {
+    async background() {
       let url = "http://example.com/mochitest/browser/browser/components/extensions/test/browser/file_dummy.html";
-      browser.tabs.create({url}, tab => {
-        let exception;
-        try {
-          browser.tabs.sendMessage(tab.id, "message");
-          browser.tabs.sendMessage(tab.id + 100, "message");
-        } catch (e) {
-          exception = e;
-        }
+      let tab = await browser.tabs.create({url});
 
-        browser.test.assertEq(undefined, exception, "no exception should be raised on tabs.sendMessage to nonexistent tabs");
-        browser.tabs.remove(tab.id, function() {
-          browser.test.notifyPass("tabs.sendMessage");
-        });
-      });
+      try {
+        browser.tabs.sendMessage(tab.id, "message");
+        browser.tabs.sendMessage(tab.id + 100, "message");
+      } catch (e) {
+        browser.test.fail("no exception should be raised on tabs.sendMessage to nonexistent tabs");
+      }
+
+      await browser.tabs.remove(tab.id);
+
+      browser.test.notifyPass("tabs.sendMessage");
     },
   });
 

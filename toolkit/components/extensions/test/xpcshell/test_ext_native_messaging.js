@@ -175,23 +175,24 @@ if (AppConstants.platform == "win") {
 
 // Test sendNativeMessage()
 add_task(function* test_sendNativeMessage() {
-  function background() {
+  async function background() {
     let MSG = {test: "hello world"};
 
     // Check error handling
-    browser.runtime.sendNativeMessage("nonexistent", MSG).then(() => {
+    await browser.runtime.sendNativeMessage("nonexistent", MSG).then(() => {
       browser.test.fail("sendNativeMessage() to a nonexistent app should have failed");
     }, err => {
       browser.test.succeed("sendNativeMessage() to a nonexistent app failed");
-    }).then(() => {
-      // Check regular message exchange
-      return browser.runtime.sendNativeMessage("echo", MSG);
-    }).then(reply => {
-      let expected = JSON.stringify(MSG);
-      let received = JSON.stringify(reply);
-      browser.test.assertEq(expected, received, "Received echoed native message");
-      browser.test.sendMessage("finished");
     });
+
+    // Check regular message exchange
+    let reply = await browser.runtime.sendNativeMessage("echo", MSG);
+
+    let expected = JSON.stringify(MSG);
+    let received = JSON.stringify(reply);
+    browser.test.assertEq(expected, received, "Received echoed native message");
+
+    browser.test.sendMessage("finished");
   }
 
   let extension = ExtensionTestUtils.loadExtension({

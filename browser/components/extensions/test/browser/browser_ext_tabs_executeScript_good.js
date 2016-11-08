@@ -7,7 +7,7 @@ requestLongerTimeout(2);
 function* testHasPermission(params) {
   let contentSetup = params.contentSetup || (() => Promise.resolve());
 
-  function background(contentSetup) {
+  async function background(contentSetup) {
     browser.runtime.onMessage.addListener((msg, sender) => {
       browser.test.assertEq(msg, "script ran", "script ran");
       browser.test.notifyPass("executeScript");
@@ -21,9 +21,9 @@ function* testHasPermission(params) {
       });
     });
 
-    contentSetup().then(() => {
-      browser.test.sendMessage("ready");
-    });
+    await contentSetup();
+
+    browser.test.sendMessage("ready");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -122,14 +122,9 @@ add_task(function* testGoodPermissions() {
       "permissions": ["activeTab"],
       "page_action": {},
     },
-    contentSetup() {
-      return new Promise(resolve => {
-        browser.tabs.query({active: true, currentWindow: true}, tabs => {
-          browser.pageAction.show(tabs[0].id).then(() => {
-            resolve();
-          });
-        });
-      });
+    contentSetup: async () => {
+      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
+      await browser.pageAction.show(tab.id);
     },
     setup: clickPageAction,
     tearDown: closePageAction,
@@ -141,10 +136,9 @@ add_task(function* testGoodPermissions() {
       "permissions": ["activeTab"],
       "browser_action": {"default_popup": "_blank.html"},
     },
-    setup: extension => {
-      return clickBrowserAction(extension).then(() => {
-        return awaitExtensionPanel(extension, window, "_blank.html");
-      });
+    setup: async extension => {
+      await clickBrowserAction(extension);
+      return awaitExtensionPanel(extension, window, "_blank.html");
     },
     tearDown: closeBrowserAction,
   });
@@ -155,14 +149,9 @@ add_task(function* testGoodPermissions() {
       "permissions": ["activeTab"],
       "page_action": {"default_popup": "_blank.html"},
     },
-    contentSetup() {
-      return new Promise(resolve => {
-        browser.tabs.query({active: true, currentWindow: true}, tabs => {
-          browser.pageAction.show(tabs[0].id).then(() => {
-            resolve();
-          });
-        });
-      });
+    contentSetup: async () => {
+      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
+      await browser.pageAction.show(tab.id);
     },
     setup: clickPageAction,
     tearDown: closePageAction,

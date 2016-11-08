@@ -3,7 +3,7 @@
 "use strict";
 
 add_task(function* testWindowCreate() {
-  function background() {
+  async function background() {
     let promiseTabAttached = () => {
       return new Promise(resolve => {
         browser.tabs.onAttached.addListener(function listener() {
@@ -24,96 +24,92 @@ add_task(function* testWindowCreate() {
       });
     };
 
-    let windowId, tabId;
-    browser.windows.getCurrent().then(window => {
-      windowId = window.id;
+    try {
+      let window = await browser.windows.getCurrent();
+      let windowId = window.id;
 
       browser.test.log("Create additional tab in window 1");
-      return browser.tabs.create({windowId, url: "about:blank"});
-    }).then(tab => {
-      tabId = tab.id;
+      let tab = await browser.tabs.create({windowId, url: "about:blank"});
+      let tabId = tab.id;
+
       browser.test.log("Create a new window, adopting the new tab");
 
       // Note that we want to check against actual boolean values for
       // all of the `incognito` property tests.
       browser.test.assertEq(false, tab.incognito, "Tab is not private");
 
-      return Promise.all([
-        promiseTabAttached(),
-        browser.windows.create({tabId: tabId}),
-      ]);
-    }).then(([, window]) => {
-      browser.test.assertEq(false, window.incognito, "New window is not private");
-      browser.test.assertEq(tabId, window.tabs[0].id, "tabs property populated correctly");
+      {
+        let [, window] = await Promise.all([
+          promiseTabAttached(),
+          browser.windows.create({tabId: tabId}),
+        ]);
+        browser.test.assertEq(false, window.incognito, "New window is not private");
+        browser.test.assertEq(tabId, window.tabs[0].id, "tabs property populated correctly");
 
-      browser.test.log("Close the new window");
-      return browser.windows.remove(window.id);
-    }).then(() => {
-      browser.test.log("Create a new private window");
+        browser.test.log("Close the new window");
+        await browser.windows.remove(window.id);
+      }
 
-      return browser.windows.create({incognito: true});
-    }).then(privateWindow => {
-      browser.test.assertEq(true, privateWindow.incognito, "Private window is private");
+      {
+        browser.test.log("Create a new private window");
+        let privateWindow = await browser.windows.create({incognito: true});
+        browser.test.assertEq(true, privateWindow.incognito, "Private window is private");
 
-      browser.test.log("Create additional tab in private window");
-      return browser.tabs.create({windowId: privateWindow.id}).then(privateTab => {
+        browser.test.log("Create additional tab in private window");
+        let privateTab = await browser.tabs.create({windowId: privateWindow.id});
         browser.test.assertEq(true, privateTab.incognito, "Private tab is private");
 
         browser.test.log("Create a new window, adopting the new private tab");
-
-        return Promise.all([
+        let [, newWindow] = await Promise.all([
           promiseTabAttached(),
           browser.windows.create({tabId: privateTab.id}),
         ]);
-      }).then(([, newWindow]) => {
         browser.test.assertEq(true, newWindow.incognito, "New private window is private");
 
         browser.test.log("Close the new private window");
-        return browser.windows.remove(newWindow.id);
-      }).then(() => {
-        browser.test.log("Close the private window");
-        return browser.windows.remove(privateWindow.id);
-      });
-    }).then(() => {
-      return browser.tabs.query({windowId, active: true});
-    }).then(([tab]) => {
-      browser.test.log("Try to create a window with both a tab and a URL");
+        await browser.windows.remove(newWindow.id);
 
-      return browser.windows.create({tabId: tab.id, url: "http://example.com/"}).then(
+        browser.test.log("Close the private window");
+        await browser.windows.remove(privateWindow.id);
+      }
+
+
+      browser.test.log("Try to create a window with both a tab and a URL");
+      [tab] = await browser.tabs.query({windowId, active: true});
+      await browser.windows.create({tabId: tab.id, url: "http://example.com/"}).then(
         window => {
           browser.test.fail("Create call should have failed");
         },
         error => {
           browser.test.assertTrue(/`tabId` may not be used in conjunction with `url`/.test(error.message),
                                   "Create call failed as expected");
-        }).then(() => {
-          browser.test.log("Try to create a window with both a tab and an invalid incognito setting");
+        });
 
-          return browser.windows.create({tabId: tab.id, incognito: true});
-        }).then(
-          window => {
-            browser.test.fail("Create call should have failed");
-          },
-          error => {
-            browser.test.assertTrue(/`incognito` property must match the incognito state of tab/.test(error.message),
-                                    "Create call failed as expected");
-          });
-    }).then(() => {
+
+      browser.test.log("Try to create a window with both a tab and an invalid incognito setting");
+      await browser.windows.create({tabId: tab.id, incognito: true}).then(
+        window => {
+          browser.test.fail("Create call should have failed");
+        },
+        error => {
+          browser.test.assertTrue(/`incognito` property must match the incognito state of tab/.test(error.message),
+                                  "Create call failed as expected");
+        });
+
+
       browser.test.log("Try to create a window with an invalid tabId");
-
-      return browser.windows.create({tabId: 0}).then(
+      await browser.windows.create({tabId: 0}).then(
         window => {
           browser.test.fail("Create call should have failed");
         },
         error => {
           browser.test.assertTrue(/Invalid tab ID: 0/.test(error.message),
                                   "Create call failed as expected");
-        }
-      );
-    }).then(() => {
-      browser.test.log("Try to create a window with two URLs");
+        });
 
-      return Promise.all([
+
+      browser.test.log("Try to create a window with two URLs");
+      [, , window] = await Promise.all([
         // tabs.onUpdated can be invoked between the call of windows.create and
         // the invocation of its callback/promise, so set up the listeners
         // before creating the window.
@@ -121,23 +117,23 @@ add_task(function* testWindowCreate() {
         promiseTabUpdated("http://example.org/"),
         browser.windows.create({url: ["http://example.com/", "http://example.org/"]}),
       ]);
-    }).then(([, , window]) => {
       browser.test.assertEq(2, window.tabs.length, "2 tabs were opened in new window");
       browser.test.assertEq("about:blank", window.tabs[0].url, "about:blank, page not loaded yet");
       browser.test.assertEq("about:blank", window.tabs[1].url, "about:blank, page not loaded yet");
 
-      return browser.windows.get(window.id, {populate: true});
-    }).then(window => {
+      window = await browser.windows.get(window.id, {populate: true});
+
       browser.test.assertEq(2, window.tabs.length, "2 tabs were opened in new window");
       browser.test.assertEq("http://example.com/", window.tabs[0].url, "Correct URL was loaded in tab 1");
       browser.test.assertEq("http://example.org/", window.tabs[1].url, "Correct URL was loaded in tab 2");
-      return browser.windows.remove(window.id);
-    }).then(() => {
+
+      await browser.windows.remove(window.id);
+
       browser.test.notifyPass("window-create");
-    }).catch(e => {
+    } catch (e) {
       browser.test.fail(`${e} :: ${e.stack}`);
       browser.test.notifyFail("window-create");
-    });
+    }
   }
 
   let extension = ExtensionTestUtils.loadExtension({
