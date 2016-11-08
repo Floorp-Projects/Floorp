@@ -592,6 +592,12 @@ struct BaselineBailoutInfo
     // Number of baseline frames to push on the stack.
     uint32_t numFrames;
 
+    // If Ion bailed out on a global script before it could perform the global
+    // declaration conflicts check. In such cases the baseline script is
+    // resumed at the first pc instead of the prologue, so an extra flag is
+    // needed to perform the check.
+    bool checkGlobalDeclarationConflicts;
+
     // The bailout kind.
     BailoutKind bailoutKind;
 };
