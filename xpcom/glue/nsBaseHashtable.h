@@ -96,19 +96,20 @@ public:
   }
 
   /**
-   * For pointer types, get the value, returning nullptr if the entry is not
-   * present in the table.
+   * Get the value, returning a zero-initialized POD or a default-initialized
+   * object if the entry is not present in the table.
    *
    * @param aKey the key to retrieve
-   * @return The found value, or nullptr if no entry was found with the given key.
-   * @note If nullptr values are stored in the table, it is not possible to
-   *       distinguish between a nullptr value and a missing entry.
+   * @return The found value, or UserDataType{} if no entry was found with the
+   *         given key.
+   * @note If zero/default-initialized values are stored in the table, it is
+   *       not possible to distinguish between such a value and a missing entry.
    */
   UserDataType Get(KeyType aKey) const
   {
     EntryType* ent = this->GetEntry(aKey);
     if (!ent) {
-      return 0;
+      return UserDataType{};
     }
 
     return ent->mData;
