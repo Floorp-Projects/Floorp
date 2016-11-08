@@ -1982,31 +1982,6 @@ MacroAssemblerMIPS64Compat::ensureDouble(const ValueOperand& source, FloatRegist
 }
 
 void
-MacroAssemblerMIPS64Compat::cmpPtrSet(Assembler::Condition cond, Address lhs, ImmPtr rhs,
-                                      Register dest)
-{
-    loadPtr(lhs, ScratchRegister);
-    movePtr(rhs, SecondScratchReg);
-    cmpPtrSet(cond, ScratchRegister, SecondScratchReg, dest);
-}
-
-void
-MacroAssemblerMIPS64Compat::cmpPtrSet(Assembler::Condition cond, Register lhs, Address rhs,
-                                      Register dest)
-{
-    loadPtr(rhs, ScratchRegister);
-    cmpPtrSet(cond, lhs, ScratchRegister, dest);
-}
-
-void
-MacroAssemblerMIPS64Compat::cmp32Set(Assembler::Condition cond, Register lhs, Address rhs,
-                                     Register dest)
-{
-    load32(rhs, ScratchRegister);
-    cmp32Set(cond, lhs, ScratchRegister, dest);
-}
-
-void
 MacroAssemblerMIPS64Compat::checkStackAlignment()
 {
 #ifdef DEBUG
