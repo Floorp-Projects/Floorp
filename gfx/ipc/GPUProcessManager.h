@@ -92,9 +92,8 @@ public:
     base::ProcessId aOtherProcess,
     ipc::Endpoint<PCompositorBridgeChild>* aOutCompositor,
     ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
-    ipc::Endpoint<PVRManagerChild>* aOutVRBridge);
-  bool CreateContentVideoDecoderManager(base::ProcessId aOtherProcess,
-                                        ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndPoint);
+    ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
+    ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager);
 
   // This returns a reference to the APZCTreeManager to which
   // pan/zoom-related events can be sent.
@@ -159,6 +158,8 @@ private:
                                 ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
   bool CreateContentVRManager(base::ProcessId aOtherProcess,
                               ipc::Endpoint<PVRManagerChild>* aOutEndpoint);
+  void CreateContentVideoDecoderManager(base::ProcessId aOtherProcess,
+                                        ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndPoint);
 
   // Called from RemoteCompositorSession. We track remote sessions so we can
   // notify their owning widgets that the session must be restarted.
