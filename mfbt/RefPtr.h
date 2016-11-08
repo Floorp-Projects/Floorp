@@ -112,7 +112,7 @@ public:
     }
   }
 
-  explicit RefPtr(decltype(nullptr))
+  MOZ_IMPLICIT RefPtr(decltype(nullptr))
     : mRawPtr(nullptr)
   {
   }
