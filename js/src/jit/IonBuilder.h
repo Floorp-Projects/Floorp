@@ -769,6 +769,7 @@ class IonBuilder
     MOZ_MUST_USE bool jsop_functionthis();
     MOZ_MUST_USE bool jsop_globalthis();
     MOZ_MUST_USE bool jsop_typeof();
+    MOZ_MUST_USE bool jsop_toasync();
     MOZ_MUST_USE bool jsop_toid();
     MOZ_MUST_USE bool jsop_iter(uint8_t flags);
     MOZ_MUST_USE bool jsop_itermore();

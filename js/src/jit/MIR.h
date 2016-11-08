@@ -5806,6 +5806,21 @@ class MTypeOf
     }
 };
 
+class MToAsync
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+    explicit MToAsync(MDefinition* unwrapped)
+      : MUnaryInstruction(unwrapped)
+    {
+        setResultType(MIRType::Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ToAsync)
+    TRIVIAL_NEW_WRAPPERS
+};
+
 class MToId
   : public MUnaryInstruction,
     public BoxInputsPolicy::Data
