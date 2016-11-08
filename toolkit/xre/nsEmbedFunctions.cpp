@@ -86,6 +86,11 @@
 #include "mozilla/Preferences.h"
 #endif
 
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+#include "mozilla/Sandbox.h"
+#include "mozilla/SandboxInfo.h"
+#endif
+
 #ifdef MOZ_IPDL_TESTS
 #include "mozilla/_ipdltest/IPDLUnitTests.h"
 #include "mozilla/_ipdltest/IPDLUnitTestProcessChild.h"
@@ -323,6 +328,29 @@ AddContentSandboxLevelAnnotation()
 #endif /* MOZ_CONTENT_SANDBOX && !MOZ_WIDGET_GONK */
 #endif /* MOZ_CRASHREPORTER */
 
+#if defined (XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+namespace {
+class LinuxSandboxStarter : public mozilla::gmp::SandboxStarter {
+  LinuxSandboxStarter() { }
+public:
+  static SandboxStarter* Make() {
+    if (mozilla::SandboxInfo::Get().CanSandboxMedia()) {
+      return new LinuxSandboxStarter();
+    } else {
+      // Sandboxing isn't possible, but the parent has already
+      // checked that this plugin doesn't require it.  (Bug 1074561)
+      return nullptr;
+    }
+    return nullptr;
+  }
+  virtual bool Start(const char *aLibPath) override {
+    mozilla::SetMediaPluginSandbox(aLibPath);
+    return true;
+  }
+};
+} // anonymous namespace
+#endif // XP_LINUX && MOZ_GMP_SANDBOX
+
 nsresult
 XRE_InitChildProcess(int aArgc,
                      char* aArgv[],
@@ -338,16 +366,24 @@ XRE_InitChildProcess(int aArgc,
   setupProfilingStuff();
 #endif
 
-#if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GONK)
-  // On non-Fennec Gecko, the GMPLoader code resides in plugin-container,
-  // and we must forward it through to the GMP code here.
-  GMPProcessChild::SetGMPLoader(aChildData->gmpLoader.get());
-#else
+#ifdef XP_LINUX
   // On Fennec, the GMPLoader's code resides inside XUL (because for the time
   // being GMPLoader relies upon NSPR, which we can't use in plugin-container
   // on Android), so we create it here inside XUL and pass it to the GMP code.
-  UniquePtr<GMPLoader> loader = CreateGMPLoader(nullptr);
+  //
+  // On desktop Linux, the sandbox code lives in a shared library, and
+  // the GMPLoader is in libxul instead of executables to avoid unwanted
+  // library dependencies.
+  mozilla::gmp::SandboxStarter* starter = nullptr;
+#ifdef MOZ_GMP_SANDBOX
+  starter = LinuxSandboxStarter::Make();
+#endif
+  UniquePtr<GMPLoader> loader = CreateGMPLoader(starter);
   GMPProcessChild::SetGMPLoader(loader.get());
+#else
+  // On non-Linux platforms, the GMPLoader code resides in plugin-container,
+  // and we must forward it through to the GMP code here.
+  GMPProcessChild::SetGMPLoader(aChildData->gmpLoader.get());
 #endif
 
 #if defined(XP_WIN)

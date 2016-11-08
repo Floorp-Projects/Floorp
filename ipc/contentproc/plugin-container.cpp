@@ -83,26 +83,6 @@ public:
 };
 #endif
 
-#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-class LinuxSandboxStarter : public mozilla::gmp::SandboxStarter {
-    LinuxSandboxStarter() { }
-public:
-    static SandboxStarter* Make() {
-        if (mozilla::SandboxInfo::Get().CanSandboxMedia()) {
-            return new LinuxSandboxStarter();
-        } else {
-            // Sandboxing isn't possible, but the parent has already
-            // checked that this plugin doesn't require it.  (Bug 1074561)
-            return nullptr;
-        }
-    }
-    virtual bool Start(const char *aLibPath) override {
-        mozilla::SetMediaPluginSandbox(aLibPath);
-        return true;
-    }
-};
-#endif
-
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
 class MacSandboxStarter : public mozilla::gmp::SandboxStarter {
 public:
@@ -127,8 +107,6 @@ MakeSandboxStarter()
 {
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
     return new WinSandboxStarter();
-#elif defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-    return LinuxSandboxStarter::Make();
 #elif defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
     return new MacSandboxStarter();
 #else
@@ -186,8 +164,8 @@ content_process_main(int argc, char* argv[])
         SetDllDirectoryW(L"");
     }
 #endif
-#if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GONK) && defined(MOZ_PLUGIN_CONTAINER)
-    // On desktop, the GMPLoader lives in plugin-container, so that its
+#if !defined(XP_LINUX) && defined(MOZ_PLUGIN_CONTAINER)
+    // On Windows and MacOS, the GMPLoader lives in plugin-container, so that its
     // code can be covered by an EME/GMP vendor's voucher.
     nsAutoPtr<mozilla::gmp::SandboxStarter> starter(MakeSandboxStarter());
     if (XRE_GetProcessType() == GeckoProcessType_GMPlugin) {

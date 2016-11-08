@@ -29,7 +29,7 @@ LOCAL_INCLUDES += [
 
 # We link GMPLoader into plugin-container on desktop so that its code is
 # covered by the desktop DRM vendor's voucher.
-if CONFIG['OS_TARGET'] != 'Android':
+if CONFIG['OS_ARCH'] != 'Linux':
     SOURCES += [
         '../../dom/media/gmp/GMPLoader.cpp',
     ]
