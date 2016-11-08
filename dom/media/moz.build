@@ -55,7 +55,6 @@ if CONFIG['MOZ_WEBRTC']:
     DIRS += ['bridge']
 
 TEST_DIRS += [
-    'compiledtest',
     'gtest',
 ]
 
