@@ -39,13 +39,17 @@ add_task(function* setup() {
 add_task(function* () {
   let tab = yield addTab(TEST_URL);
 
+  let tabsInDifferentProcesses = E10S_MULTI_ENABLED &&
+    (gBrowser.tabs[0].linkedBrowser.frameLoader.childID !=
+     gBrowser.tabs[1].linkedBrowser.frameLoader.childID);
+
   info("Open toolbox outside RDM");
   {
     // 0: No DevTools connections yet
     yield checkServerConnectionCount(tab.linkedBrowser, 0,
       "0: No DevTools connections yet");
     let { toolbox } = yield openInspector();
-    if (E10S_MULTI_ENABLED) {
+    if (tabsInDifferentProcesses) {
       // 1: Two tabs open, but only one per content process
       yield checkServerConnectionCount(tab.linkedBrowser, 1,
         "1: Two tabs open, but only one per content process");
@@ -56,7 +60,7 @@ add_task(function* () {
     }
     yield checkToolbox(tab, "outside RDM");
     let { ui } = yield openRDM(tab);
-    if (E10S_MULTI_ENABLED) {
+    if (tabsInDifferentProcesses) {
       // 2: RDM UI adds an extra connection, 1 + 1 = 2
       yield checkServerConnectionCount(ui.getViewportBrowser(), 2,
         "2: RDM UI uses an extra connection");
@@ -67,7 +71,7 @@ add_task(function* () {
     }
     yield checkToolbox(tab, "after opening RDM");
     yield closeRDM(tab);
-    if (E10S_MULTI_ENABLED) {
+    if (tabsInDifferentProcesses) {
       // 1: RDM UI closed, return to previous connection count
       yield checkServerConnectionCount(tab.linkedBrowser, 1,
         "1: RDM UI closed, return to previous connection count");
@@ -93,7 +97,7 @@ add_task(function* () {
     yield checkServerConnectionCount(ui.getViewportBrowser(), 1,
       "1: RDM UI uses an extra connection");
     let { toolbox } = yield openInspector();
-    if (E10S_MULTI_ENABLED) {
+    if (tabsInDifferentProcesses) {
       // 2: Two tabs open, but only one per content process
       yield checkServerConnectionCount(ui.getViewportBrowser(), 2,
         "2: Two tabs open, but only one per content process");
@@ -104,7 +108,7 @@ add_task(function* () {
     }
     yield checkToolbox(tab, ui.getViewportBrowser(), "inside RDM");
     yield closeRDM(tab);
-    if (E10S_MULTI_ENABLED) {
+    if (tabsInDifferentProcesses) {
       // 1: RDM UI closed, one less connection
       yield checkServerConnectionCount(tab.linkedBrowser, 1,
         "1: RDM UI closed, one less connection");
