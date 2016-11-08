@@ -18,14 +18,10 @@ add_task(function* () {
       let source = tabs[1]; // skip over about:blank in window1
 
       // Assuming that this windowId does not exist.
-      await browser.tabs.move(source.id, {windowId: 123144576, index: 0}).then(
-        tabs => {
-          browser.test.fail("Promise should not resolve");
-        },
-        e => {
-          browser.test.assertTrue(/Invalid window/.test(e),
-                                  "Invalid window should be in error");
-        });
+      await browser.test.assertRejects(
+        browser.tabs.move(source.id, {windowId: 123144576, index: 0}),
+        /Invalid window/,
+        "Should receive invalid window error");
 
       browser.tabs.move(source.id, {windowId: destination.windowId, index: 0});
 

@@ -5,27 +5,19 @@
 add_task(function* testWebNavigationGetNonExistentTab() {
   let extension = ExtensionTestUtils.loadExtension({
     background: async function() {
-      let results = [
-        // There is no "tabId = 0" because the id assigned by TabManager (defined in ext-utils.js)
-        // starts from 1.
-        browser.webNavigation.getAllFrames({tabId: 0}).then(() => {
-          browser.test.fail("getAllFrames Promise should be rejected on error");
-        }, (error) => {
-          browser.test.assertEq("Invalid tab ID: 0", error.message,
-                                "getAllFrames rejected Promise should pass the expected error");
-        }),
+      // There is no "tabId = 0" because the id assigned by TabManager (defined in ext-utils.js)
+      // starts from 1.
+      await browser.test.assertRejects(
+        browser.webNavigation.getAllFrames({tabId: 0}),
+        "Invalid tab ID: 0",
+        "getAllFrames rejected Promise should pass the expected error");
 
-        // There is no "tabId = 0" because the id assigned by TabManager (defined in ext-utils.js)
-        // starts from 1, processId is currently marked as optional and it is ignored.
-        browser.webNavigation.getFrame({tabId: 0, frameId: 15, processId: 20}).then(() => {
-          browser.test.fail("getFrame Promise should be rejected on error");
-        }, (error) => {
-          browser.test.assertEq("Invalid tab ID: 0", error.message,
-                                "getFrame rejected Promise should pass the expected error");
-        }),
-      ];
-
-      await Promise.all(results);
+      // There is no "tabId = 0" because the id assigned by TabManager (defined in ext-utils.js)
+      // starts from 1, processId is currently marked as optional and it is ignored.
+      await browser.test.assertRejects(
+        browser.webNavigation.getFrame({tabId: 0, frameId: 15, processId: 20}),
+        "Invalid tab ID: 0",
+        "getFrame rejected Promise should pass the expected error");
 
       browser.test.sendMessage("getNonExistentTab.done");
     },
@@ -79,14 +71,10 @@ add_task(function* testWebNavigationFrames() {
         }
 
         // Check that getFrame Promise is rejected with the expected error message on nonexistent frameId.
-        await browser.webNavigation.getFrame({tabId, frameId: nonExistentFrameId, processId: 20}).then(
-          () => {
-            browser.test.fail("getFrame promise should be rejected for an unexistent frameId");
-          },
-          error => {
-            browser.test.assertEq(`No frame found with frameId: ${nonExistentFrameId}`, error.message,
-                                  "getFrame promise should be rejected with the expected error message on unexistent frameId");
-          });
+        await browser.test.assertRejects(
+          browser.webNavigation.getFrame({tabId, frameId: nonExistentFrameId, processId: 20}),
+          `No frame found with frameId: ${nonExistentFrameId}`,
+          "getFrame promise should be rejected with the expected error message on unexistent frameId");
 
         await browser.tabs.remove(tabId);
         browser.test.sendMessage("webNavigationFrames.done");

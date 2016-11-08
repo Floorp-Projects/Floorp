@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(function* test_sendMessage_to_self_should_not_trigger_onMessage() {
-  function background() {
+  async function background() {
     browser.runtime.onMessage.addListener(msg => {
       browser.test.assertEq("msg from child", msg);
       browser.test.notifyPass("sendMessage did not call same-frame onMessage");
@@ -15,16 +15,13 @@ add_task(function* test_sendMessage_to_self_should_not_trigger_onMessage() {
       browser.runtime.sendMessage("should only reach another frame");
     });
 
-    browser.runtime.sendMessage("should not trigger same-frame onMessage")
-      .then(reply => {
-        browser.test.fail(`Unexpected reply to sendMessage: ${reply}`);
-      }, err => {
-        browser.test.assertEq("Could not establish connection. Receiving end does not exist.", err.message);
+    await browser.test.assertRejects(
+      browser.runtime.sendMessage("should not trigger same-frame onMessage"),
+      "Could not establish connection. Receiving end does not exist.");
 
-        let anotherFrame = document.createElement("iframe");
-        anotherFrame.src = browser.extension.getURL("extensionpage.html");
-        document.body.appendChild(anotherFrame);
-      });
+    let anotherFrame = document.createElement("iframe");
+    anotherFrame.src = browser.extension.getURL("extensionpage.html");
+    document.body.appendChild(anotherFrame);
   }
 
   function lastScript() {

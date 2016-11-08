@@ -3,7 +3,7 @@
 "use strict";
 
 function* runTests(options) {
-  function background(getTests) {
+  async function background(getTests) {
     async function checkDetails(expecting, tabId) {
       let title = await browser.browserAction.getTitle({tabId});
       browser.test.assertEq(expecting.title, title,
@@ -43,19 +43,10 @@ function* runTests(options) {
       ];
 
       for (let call of calls) {
-        let checkError = e => {
-          browser.test.assertTrue(e.message.includes(`Invalid tab ID: ${tabId}`),
-                                  `Expected invalid tab ID error, got ${e}`);
-        };
-        try {
-          call().then(() => {
-            browser.test.fail(`Expected call to fail: ${call}`);
-          }, e => {
-            checkError(e);
-          });
-        } catch (e) {
-          checkError(e);
-        }
+        await browser.test.assertRejects(
+          new Promise(resolve => resolve(call())),
+          RegExp(`Invalid tab ID: ${tabId}`),
+          "Expected invalid tab ID error");
       }
     }
 

@@ -9,6 +9,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var {
   EventManager,
+  ExtensionError,
   IconDetails,
 } = ExtensionUtils;
 
@@ -326,7 +327,7 @@ MenuItem.prototype = {
     }
     for (let item = menuMap.get(parentId); item; item = item.parent) {
       if (item === this) {
-        throw new Error("MenuItem cannot be an ancestor (or self) of its new parent.");
+        throw new ExtensionError("MenuItem cannot be an ancestor (or self) of its new parent.");
       }
     }
   },

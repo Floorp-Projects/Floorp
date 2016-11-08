@@ -38,12 +38,10 @@ add_task(function* test_sendMessage_error() {
     for (let [args, expectedError] of testCases) {
       let description = `runtime.sendMessage(${args.map(String).join(", ")})`;
 
-      await browser.runtime.sendMessage(...args)
-        .then(() => {
-          browser.test.fail(`Unexpectedly got no error for ${description}`);
-        }, err => {
-          browser.test.assertEq(expectedError, err.message, `expected error message for ${description}`);
-        });
+      await browser.test.assertRejects(
+        browser.runtime.sendMessage(...args),
+        expectedError,
+        `expected error message for ${description}`);
     }
 
     browser.test.notifyPass("sendMessage parameter validation");

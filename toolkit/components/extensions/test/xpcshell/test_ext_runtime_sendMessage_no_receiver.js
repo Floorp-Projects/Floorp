@@ -3,14 +3,13 @@
 "use strict";
 
 add_task(function* test_sendMessage_without_listener() {
-  function background() {
-    browser.runtime.sendMessage("msg").then(reply => {
-      browser.test.assertEq(undefined, reply);
-      browser.test.notifyFail("Did not expect a reply to sendMessage");
-    }, error => {
-      browser.test.assertEq("Could not establish connection. Receiving end does not exist.", error.message);
-      browser.test.notifyPass("sendMessage callback was invoked");
-    });
+  async function background() {
+    await browser.test.assertRejects(
+      browser.runtime.sendMessage("msg"),
+      "Could not establish connection. Receiving end does not exist.",
+      "sendMessage callback was invoked");
+
+    browser.test.notifyPass("sendMessage callback was invoked");
   }
   let extensionData = {
     background,
