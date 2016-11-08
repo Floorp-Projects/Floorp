@@ -1622,7 +1622,7 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation, JitFrameIter
         caller = scr;
         callerPC = callPC;
         fun = nextCallee;
-        scr = fun->existingScriptForInlinedFunction();
+        scr = fun->existingScript();
 
         frameNo++;
 
