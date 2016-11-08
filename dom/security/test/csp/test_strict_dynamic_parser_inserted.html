@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1299483 - CSP: Implement 'strict-dynamic'</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.setBoolPref("security.csp.enableStrictDynamic", true);
+
+/* Description of the test:
+ * We loader parser and non parser inserted scripts making sure that
+ * parser inserted scripts are blocked if strict-dynamic is present
+ * and no valid nonce and also making sure that non-parser inserted
+ * scripts are allowed to execute.
+ */
+
+var tests = [
+  {
+    desc: "(parser inserted script) using doc.write(<script>) should be blocked",
+    result: "blocked",
+    file: "file_strict_dynamic_parser_inserted_doc_write.html",
+    policy: "script-src 'strict-dynamic' 'nonce-foo' http:"
+  },
+  {
+    desc: "(parser inserted script with valid nonce) using doc.write(<script>) should be allowed",
+    result: "allowed",
+    file: "file_strict_dynamic_parser_inserted_doc_write_correct_nonce.html",
+    policy: "script-src 'strict-dynamic' 'nonce-foo' https:"
+  },
+  {
+    desc: "(non parser inserted script) using appendChild() should allow external script",
+    result: "allowed",
+    file: "file_strict_dynamic_non_parser_inserted.html",
+    policy: "script-src 'strict-dynamic' 'nonce-foo' https:"
+  },
+  {
+     desc: "(non parser inserted script) using appendChild() should allow inline script",
+     result: "allowed",
+     file: "file_strict_dynamic_non_parser_inserted_inline.html",
+     policy: "script-src 'strict-dynamic' 'nonce-foo' https:"
+  },
+  {
+     desc: "strict-dynamic should not invalidate 'unsafe-eval'",
+     result: "allowed",
+     file: "file_strict_dynamic_unsafe_eval.html",
+     policy: "script-src 'strict-dynamic' 'nonce-foo' 'unsafe-eval'"
+   },
+];
+
+var counter = 0;
+var curTest;
+
+function loadNextTest() {
+  if (counter == tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  curTest = tests[counter++];
+  var src = "file_testserver.sjs?file=";
+  // append the file that should be served
+  src += escape("tests/dom/security/test/csp/" + curTest.file)
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(curTest.policy);
+
+  document.getElementById("testframe").addEventListener("load", test, false);
+  document.getElementById("testframe").src = src;
+}
+
+function test() {
+  try {
+    document.getElementById("testframe").removeEventListener('load', test, false);
+    var testframe = document.getElementById("testframe");
+    var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
+    is(divcontent, curTest.result, curTest.desc);
+  }
+  catch (e) {
+    ok(false, "ERROR: could not access content for test: '" + curTest.desc + "'");
+  }
+  loadNextTest();
+}
+
+// start running the tests
+loadNextTest();
+
+</script>
+</body>
+</html>
