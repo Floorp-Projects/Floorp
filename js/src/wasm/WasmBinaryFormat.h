@@ -644,6 +644,23 @@ CheckValType(Decoder& d, ValType type);
 MOZ_MUST_USE bool
 DecodeTypeSection(Decoder& d, SigWithIdVector* sigs);
 
+UniqueChars
+DecodeName(Decoder& d);
+
+MOZ_MUST_USE bool
+DecodeSignatureIndex(Decoder& d, const SigWithIdVector& sigs, uint32_t* sigIndex);
+
+MOZ_MUST_USE bool
+DecodeTableLimits(Decoder& d, TableDescVector* tables);
+
+MOZ_MUST_USE bool
+GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable);
+
+MOZ_MUST_USE bool
+DecodeImportSection(Decoder& d, const SigWithIdVector& sigs, Uint32Vector* funcSigIndices,
+                    GlobalDescVector* globals, TableDescVector* tables, Maybe<Limits>* memory,
+                    ImportVector* imports);
+
 MOZ_MUST_USE bool
 EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
 

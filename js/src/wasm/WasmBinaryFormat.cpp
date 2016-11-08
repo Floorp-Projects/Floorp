@@ -22,6 +22,8 @@
 
 #include "jsprf.h"
 
+#include "jit/JitOptions.h"
+
 using namespace js;
 using namespace js::wasm;
 
@@ -126,6 +128,168 @@ wasm::DecodeTypeSection(Decoder& d, SigWithIdVector* sigs)
     }
 
     if (!d.finishSection(sectionStart, sectionSize, "type"))
+        return false;
+
+    return true;
+}
+
+UniqueChars
+wasm::DecodeName(Decoder& d)
+{
+    uint32_t numBytes;
+    if (!d.readVarU32(&numBytes))
+        return nullptr;
+
+    const uint8_t* bytes;
+    if (!d.readBytes(numBytes, &bytes))
+        return nullptr;
+
+    UniqueChars name(js_pod_malloc<char>(numBytes + 1));
+    if (!name)
+        return nullptr;
+
+    memcpy(name.get(), bytes, numBytes);
+    name[numBytes] = '\0';
+
+    return name;
+}
+
+bool
+wasm::DecodeSignatureIndex(Decoder& d, const SigWithIdVector& sigs, uint32_t* sigIndex)
+{
+    if (!d.readVarU32(sigIndex))
+        return d.fail("expected signature index");
+
+    if (*sigIndex >= sigs.length())
+        return d.fail("signature index out of range");
+
+    return true;
+}
+
+bool
+wasm::DecodeTableLimits(Decoder& d, TableDescVector* tables)
+{
+    uint32_t elementType;
+    if (!d.readVarU32(&elementType))
+        return d.fail("expected table element type");
+
+    if (elementType != uint32_t(TypeCode::AnyFunc))
+        return d.fail("expected 'anyfunc' element type");
+
+    Limits limits;
+    if (!DecodeLimits(d, &limits))
+        return false;
+
+    if (tables->length())
+        return d.fail("already have default table");
+
+    return tables->emplaceBack(TableKind::AnyFunction, limits);
+}
+
+bool
+wasm::GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable)
+{
+    switch (type) {
+      case ValType::I32:
+      case ValType::F32:
+      case ValType::F64:
+        break;
+      case ValType::I64:
+        if (!jit::JitOptions.wasmTestMode)
+            return d.fail("can't import/export an Int64 global to JS");
+        break;
+      default:
+        return d.fail("unexpected variable type in global import/export");
+    }
+
+    if (isMutable)
+        return d.fail("can't import/export mutable globals in the MVP");
+
+    return true;
+}
+
+static bool
+DecodeImport(Decoder& d, const SigWithIdVector& sigs, Uint32Vector* funcSigIndices,
+             GlobalDescVector* globals, TableDescVector* tables, Maybe<Limits>* memory,
+             ImportVector* imports)
+{
+    UniqueChars moduleName = DecodeName(d);
+    if (!moduleName)
+        return d.fail("expected valid import module name");
+
+    UniqueChars funcName = DecodeName(d);
+    if (!funcName)
+        return d.fail("expected valid import func name");
+
+    uint32_t rawImportKind;
+    if (!d.readVarU32(&rawImportKind))
+        return d.fail("failed to read import kind");
+
+    DefinitionKind importKind = DefinitionKind(rawImportKind);
+
+    switch (importKind) {
+      case DefinitionKind::Function: {
+        uint32_t sigIndex;
+        if (!DecodeSignatureIndex(d, sigs, &sigIndex))
+            return false;
+        if (!funcSigIndices->append(sigIndex))
+            return false;
+        break;
+      }
+      case DefinitionKind::Table: {
+        if (!DecodeTableLimits(d, tables))
+            return false;
+        break;
+      }
+      case DefinitionKind::Memory: {
+        Limits limits;
+        if (!DecodeMemoryLimits(d, !!*memory, &limits))
+            return false;
+        memory->emplace(limits);
+        break;
+      }
+      case DefinitionKind::Global: {
+        ValType type;
+        bool isMutable;
+        if (!DecodeGlobalType(d, &type, &isMutable))
+            return false;
+        if (!GlobalIsJSCompatible(d, type, isMutable))
+            return false;
+        if (!globals->append(GlobalDesc(type, isMutable, globals->length())))
+            return false;
+        break;
+      }
+      default:
+        return d.fail("unsupported import kind");
+    }
+
+    return imports->emplaceBack(Move(moduleName), Move(funcName), importKind);
+}
+
+bool
+wasm::DecodeImportSection(Decoder& d, const SigWithIdVector& sigs, Uint32Vector* funcSigIndices,
+                          GlobalDescVector* globals, TableDescVector* tables, Maybe<Limits>* memory,
+                          ImportVector* imports)
+{
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(SectionId::Import, &sectionStart, &sectionSize, "import"))
+        return false;
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    uint32_t numImports;
+    if (!d.readVarU32(&numImports))
+        return d.fail("failed to read number of imports");
+
+    if (numImports > MaxImports)
+        return d.fail("too many imports");
+
+    for (uint32_t i = 0; i < numImports; i++) {
+        if (!DecodeImport(d, sigs, funcSigIndices, globals, tables, memory, imports))
+            return false;
+    }
+
+    if (!d.finishSection(sectionStart, sectionSize, "import"))
         return false;
 
     return true;
