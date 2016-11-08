@@ -16,14 +16,13 @@ JSFunction*
 GetWrappedAsyncFunction(JSFunction* unwrapped);
 
 JSFunction*
-GetUnwrappedAsyncFunction(JSFunction* wrapper);
+GetUnwrappedAsyncFunction(JSFunction* wrapped);
 
 bool
-IsWrappedAsyncFunction(JSContext* cx, JSFunction* wrapper);
+IsWrappedAsyncFunction(JSFunction* fun);
 
-bool
-CreateAsyncFunction(JSContext* cx, HandleFunction wrapper, HandleFunction unwrapped,
-                    MutableHandleFunction result);
+JSObject*
+WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped);
 
 } // namespace js
 
