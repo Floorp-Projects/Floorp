@@ -119,8 +119,11 @@ WebGLContext::BeginQuery(GLenum target, WebGLQuery* query, const char* funcName)
     if (IsContextLost())
         return;
 
-    if (!ValidateObject(funcName, query))
+    if (!ValidateObjectAllowDeleted(funcName, query))
         return;
+
+    if (query->IsDeleted())
+        return ErrorInvalidOperation("%s: Cannot begin a deleted query.", funcName);
 
     const auto& slot = ValidateQuerySlotByTarget(funcName, target);
     if (!slot)
@@ -175,6 +178,15 @@ WebGLContext::GetQuery(JSContext* cx, GLenum target, GLenum pname,
     switch (pname) {
     case LOCAL_GL_CURRENT_QUERY_EXT:
         {
+            if (IsExtensionEnabled(WebGLExtensionID::EXT_disjoint_timer_query) &&
+                target == LOCAL_GL_TIMESTAMP)
+            {
+                // Doesn't seem illegal to ask about, but is always null.
+                // TIMESTAMP has no slot, so ValidateQuerySlotByTarget would generate
+                // INVALID_ENUM.
+                return;
+            }
+
             const auto& slot = ValidateQuerySlotByTarget(funcName, target);
             if (!slot || !*slot)
                 return;
@@ -227,8 +239,11 @@ WebGLContext::GetQueryParameter(JSContext*, const WebGLQuery* query, GLenum pnam
     if (IsContextLost())
         return;
 
-    if (!ValidateObject(funcName, query))
+    if (!ValidateObjectAllowDeleted(funcName, query))
         return;
+
+    if (query->IsDeleted())
+        return ErrorInvalidOperation("%s: Query must not be deleted.", funcName);
 
     query->GetQueryParameter(pname, retval);
 }
