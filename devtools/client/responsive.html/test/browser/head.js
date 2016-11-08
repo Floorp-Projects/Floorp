@@ -211,29 +211,33 @@ function* testViewportResize(ui, selector, moveBy,
     `The y move of ${selector} is as expected`);
 }
 
-function openDeviceModal(ui) {
-  let { document } = ui.toolWindow;
+function openDeviceModal({toolWindow}) {
+  let { document } = toolWindow;
   let select = document.querySelector(".viewport-device-selector");
   let modal = document.querySelector("#device-modal-wrapper");
-  let editDeviceOption = [...select.options].filter(o => {
-    return o.value === OPEN_DEVICE_MODAL_VALUE;
-  })[0];
 
   info("Checking initial device modal state");
   ok(modal.classList.contains("closed") && !modal.classList.contains("opened"),
     "The device modal is closed by default.");
 
   info("Opening device modal through device selector.");
-  EventUtils.synthesizeMouseAtCenter(select, {type: "mousedown"},
-    ui.toolWindow);
-  EventUtils.synthesizeMouseAtCenter(editDeviceOption, {type: "mouseup"},
-    ui.toolWindow);
+
+  let event = new toolWindow.UIEvent("change", {
+    view: toolWindow,
+    bubbles: true,
+    cancelable: true
+  });
+
+  select.value = OPEN_DEVICE_MODAL_VALUE;
+  select.dispatchEvent(event);
 
   ok(modal.classList.contains("opened") && !modal.classList.contains("closed"),
     "The device modal is displayed.");
 }
 
-function switchSelector({ toolWindow }, selector, value) {
+function changeSelectValue({ toolWindow }, selector, value) {
+  info(`Selecting ${value} in ${selector}.`);
+
   return new Promise(resolve => {
     let select = toolWindow.document.querySelector(selector);
     isnot(select, null, `selector "${selector}" should match an existing element.`);
@@ -258,17 +262,18 @@ function switchSelector({ toolWindow }, selector, value) {
   });
 }
 
-let switchDevice = Task.async(function* (ui, value) {
-  let changed = once(ui, "viewport-device-changed");
-  yield switchSelector(ui, ".viewport-device-selector", value);
-  yield changed;
-});
+const selectDevice = (ui, value) => Promise.all([
+  once(ui, "viewport-device-changed"),
+  changeSelectValue(ui, ".viewport-device-selector", value)
+]);
 
-let switchNetworkThrottling = Task.async(function* (ui, value) {
-  let changed = once(ui, "network-throttling-changed");
-  yield switchSelector(ui, "#global-network-throttling-selector", value);
-  yield changed;
-});
+const selectDPR = (ui, value) =>
+  changeSelectValue(ui, "#global-dpr-selector > select", value);
+
+const selectNetworkThrottling = (ui, value) => Promise.all([
+  once(ui, "network-throttling-changed"),
+  changeSelectValue(ui, "#global-network-throttling-selector", value)
+]);
 
 function getSessionHistory(browser) {
   return ContentTask.spawn(browser, {}, function* () {

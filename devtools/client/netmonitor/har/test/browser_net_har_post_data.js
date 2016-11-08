@@ -25,7 +25,7 @@ add_task(function* () {
   yield wait;
 
   // Copy HAR into the clipboard (asynchronous).
-  let jsonString = yield RequestsMenu.copyAllAsHar();
+  let jsonString = yield RequestsMenu.contextMenu.copyAllAsHar();
   let har = JSON.parse(jsonString);
 
   // Check out the HAR log.

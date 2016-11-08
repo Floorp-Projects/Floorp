@@ -20,19 +20,6 @@ runWithMSE(function(ms, v) {
     var sb = ms.addSourceBuffer("video/webm");
     ok(sb, "Create a SourceBuffer");
 
-    function waitUntilTime(targetTime) {
-      return new Promise(function(resolve, reject) {
-        v.addEventListener("waiting", function onwaiting() {
-          info("Got a waiting event at " + v.currentTime);
-          if (v.currentTime >= targetTime) {
-            ok(true, "Reached target time of: " + targetTime);
-            v.removeEventListener("waiting", onwaiting);
-            resolve();
-          }
-        });
-      });
-    }
-
     fetchWithXHR("seek.webm", function(arrayBuffer) {
       sb.addEventListener('error', (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
       loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 0, 318))().then(
@@ -42,14 +29,14 @@ runWithMSE(function(ms, v) {
       /* Note - Missing |67833, 88966 - 67833| segment here corresponding to (1.2, 1.6]  */
       loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 88966))).then(function() {
         // 0.767 is the time of the last video sample +- 40ms.
-        var promise = waitUntilTime(.767-0.04);
+        var promise = waitUntilTime(v, .767-0.04);
         info("Playing video. It should play for a bit, then fire 'waiting'");
         v.play();
         return promise;
       }).then(function() {
         window.firstStop = Date.now();
         loadSegment(sb, new Uint8Array(arrayBuffer, 46712, 67833 - 46712));
-        return waitUntilTime(1.167-0.04);
+        return waitUntilTime(v, 1.167-0.04);
       }).then(function() {
         var waitDuration = (Date.now() - window.firstStop) / 1000;
         ok(waitDuration < 15, "Should not spend an inordinate amount of time buffering: " + waitDuration);

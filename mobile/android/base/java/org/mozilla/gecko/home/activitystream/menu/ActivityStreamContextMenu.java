@@ -245,6 +245,7 @@ public class ActivityStreamContextMenu
                                         url);
                     }
                 });
+                break;
 
             default:
                 throw new IllegalArgumentException("Menu item with ID=" + item.getItemId() + " not handled");

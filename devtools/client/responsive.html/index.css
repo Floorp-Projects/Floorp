@@ -86,6 +86,7 @@ select {
   background-size: 7px;
   border: none;
   color: var(--viewport-color);
+  height: 100%;
   padding: 0 8px;
   text-align: center;
   text-overflow: ellipsis;
@@ -97,7 +98,7 @@ select.selected {
   color: var(--viewport-active-color);
 }
 
-select:hover {
+select:not(:disabled):hover {
   background-image: var(--viewport-selection-arrow-hovered);
   color: var(--viewport-hover-color);
 }
@@ -186,6 +187,43 @@ select > option.divider {
   height: 15px;
   padding-left: 0;
   width: 103px;
+}
+
+#global-dpr-selector > select {
+  padding: 0 8px 0 0;
+  margin-left: 2px;
+}
+
+#global-dpr-selector {
+  margin: 0 8px;
+  -moz-user-select: none;
+  color: var(--viewport-color);
+  font-size: 11px;
+  height: 15px;
+}
+
+#global-dpr-selector.focused,
+#global-dpr-selector:not(.disabled):hover {
+  color: var(--viewport-hover-color);
+}
+
+#global-dpr-selector:not(.disabled):hover > select {
+  background-image: var(--viewport-selection-arrow-hovered);
+  color: var(--viewport-hover-color);
+}
+
+#global-dpr-selector:focus > select {
+  background-image: var(--viewport-selection-arrow-selected);
+  color: var(--viewport-active-color);
+}
+
+#global-dpr-selector.selected,
+#global-dpr-selector.selected > select {
+  color: var(--viewport-active-color);
+}
+
+#global-dpr-selector > select > option {
+  padding: 5px;
 }
 
 #viewports {

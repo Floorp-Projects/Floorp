@@ -14,7 +14,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
                                   "resource://gre/modules/ExtensionManagement.jsm");
 
 var {
-  ignoreEvent,
   SingletonEventManager,
 } = ExtensionUtils;
 
@@ -22,7 +21,21 @@ extensions.registerSchemaAPI("runtime", "addon_parent", context => {
   let {extension} = context;
   return {
     runtime: {
-      onStartup: ignoreEvent(context, "runtime.onStartup"),
+      onStartup: new SingletonEventManager(context, "runtime.onStartup", fire => {
+        if (context.incognito) {
+          // This event should not fire if we are operating in a private profile.
+          return () => {};
+        }
+        let listener = () => {
+          if (extension.startupReason === "APP_STARTUP") {
+            fire();
+          }
+        };
+        extension.on("startup", listener);
+        return () => {
+          extension.off("startup", listener);
+        };
+      }).api(),
 
       onInstalled: new SingletonEventManager(context, "runtime.onInstalled", fire => {
         let listener = () => {

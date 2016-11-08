@@ -8,7 +8,10 @@ package org.mozilla.gecko.util;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
+
 import org.mozilla.gecko.mozglue.SafeIntent;
 
 import java.util.HashMap;
@@ -86,5 +89,21 @@ public class IntentUtils {
 
     public static boolean getBooleanExtraSafe(final Intent intent, final String name, final boolean defaultValue) {
         return new SafeIntent(intent).getBooleanExtra(name, defaultValue);
+    }
+
+    /**
+     * Gets whether or not we're in automation from the passed in environment variables.
+     *
+     * We need to read environment variables from the intent string
+     * extra because environment variables from our test harness aren't set
+     * until Gecko is loaded, and we need to know this before then.
+     *
+     * The return value of this method should be used early since other
+     * initialization may depend on its results.
+     */
+    @CheckResult
+    public static boolean getIsInAutomationFromEnvironment(final SafeIntent intent) {
+        final HashMap<String, String> envVars = IntentUtils.getEnvVarMap(intent);
+        return !TextUtils.isEmpty(envVars.get(IntentUtils.ENV_VAR_IN_AUTOMATION));
     }
 }
