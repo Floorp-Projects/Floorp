@@ -872,6 +872,7 @@ EventListenerManager::SetEventHandler(nsIAtom* aName,
       bool allowsInlineScript = true;
       rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
                                 EmptyString(), // aNonce
+                                false, // aParserCreated
                                 scriptSample,
                                 0,             // aLineNumber
                                 &allowsInlineScript);
