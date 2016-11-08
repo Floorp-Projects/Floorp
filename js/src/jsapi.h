@@ -3223,8 +3223,8 @@ JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index);
  * This is the closest thing we currently have to the ES6 [[Enumerate]]
  * internal method.
  *
- * The JSIdArray returned by JS_Enumerate must be rooted to protect its
- * contents from garbage collection. Use JS::AutoIdArray.
+ * The array of ids returned by JS_Enumerate must be rooted to protect its
+ * contents from garbage collection. Use JS::Rooted<JS::IdVector>.
  */
 extern JS_PUBLIC_API(bool)
 JS_Enumerate(JSContext* cx, JS::HandleObject obj, JS::MutableHandle<JS::IdVector> props);
