@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1299483 - CSP: Implement 'strict-dynamic'</title>
+</head>
+<body>
+<div id="testdiv">blocked</div>
+
+<script nonce="foo">
+  // generates a *non* parser inserted script and should be allowed
+  var myScript = document.createElement('script');
+  myScript.src = 'http://example.com/tests/dom/security/test/csp/file_strict_dynamic.js';
+  document.head.appendChild(myScript);
+</script>
+
+</body>
+</html>
