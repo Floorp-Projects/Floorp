@@ -20,7 +20,8 @@ namespace jsipc {
 class WrapperOwner : public virtual JavaScriptShared
 {
   public:
-    typedef mozilla::ipc::IProtocol::ActorDestroyReason
+    typedef mozilla::ipc::IProtocolManager<
+                       mozilla::ipc::IProtocol>::ActorDestroyReason
            ActorDestroyReason;
 
     WrapperOwner();

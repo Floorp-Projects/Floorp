@@ -37,7 +37,7 @@ public:
   Execute(ManagerId* aManagerId);
 
   void
-  Execute(cache::Manager* aManager);
+  Execute(Manager* aManager);
 
   void
   WaitForVerification(PrincipalVerifier* aVerifier);
@@ -67,7 +67,7 @@ private:
   const CacheId mCacheId;
   const Namespace mNamespace;
   const CacheOpArgs mOpArgs;
-  RefPtr<cache::Manager> mManager;
+  RefPtr<Manager> mManager;
   RefPtr<PrincipalVerifier> mVerifier;
 
   NS_DECL_OWNINGTHREAD

@@ -1124,7 +1124,7 @@ CompositorBridgeChild::WillEndTransaction()
 }
 
 void
-CompositorBridgeChild::HandleFatalError(const char* aName, const char* aMsg) const
+CompositorBridgeChild::FatalError(const char* const aName, const char* const aMsg) const
 {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
 }

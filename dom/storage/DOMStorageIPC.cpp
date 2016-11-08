@@ -371,6 +371,18 @@ DOMStorageDBParent::~DOMStorageDBParent()
   }
 }
 
+mozilla::ipc::IProtocol*
+DOMStorageDBParent::CloneProtocol(Channel* aChannel,
+                                  mozilla::ipc::ProtocolCloneContext* aCtx)
+{
+  ContentParent* contentParent = aCtx->GetContentParent();
+  nsAutoPtr<PStorageParent> actor(contentParent->AllocPStorageParent());
+  if (!actor || !contentParent->RecvPStorageConstructor(actor)) {
+    return nullptr;
+  }
+  return actor.forget();
+}
+
 DOMStorageDBParent::CacheParentBridge*
 DOMStorageDBParent::NewCache(const nsACString& aOriginSuffix, const nsACString& aOriginNoSuffix)
 {
