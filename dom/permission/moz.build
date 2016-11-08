@@ -31,9 +31,6 @@ XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
-if CONFIG['MOZ_B2G_RIL']:
-    MOCHITEST_MANIFESTS += ['tests/mochitest-ril.ini']
-
 if CONFIG['MOZ_TIME_MANAGER']:
     MOCHITEST_MANIFESTS += ['tests/mochitest-time.ini']
 

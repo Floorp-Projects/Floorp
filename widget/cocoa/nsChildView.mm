@@ -67,6 +67,7 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/BasicCompositor.h"
 #include "mozilla/layers/InputAPZContext.h"
+#include "mozilla/widget/CompositorWidget.h"
 #include "gfxUtils.h"
 #include "gfxPrefs.h"
 #include "mozilla/gfx/2D.h"
@@ -2019,9 +2020,9 @@ nsChildView::CleanupWindowEffects()
 }
 
 bool
-nsChildView::PreRender(LayerManagerComposite* aManager)
+nsChildView::PreRender(WidgetRenderingContext* aContext)
 {
-  UniquePtr<GLManager> manager(GLManager::CreateGLManager(aManager));
+  UniquePtr<GLManager> manager(GLManager::CreateGLManager(aContext->mLayerManager));
   if (!manager) {
     return true;
   }
@@ -2041,9 +2042,9 @@ nsChildView::PreRender(LayerManagerComposite* aManager)
 }
 
 void
-nsChildView::PostRender(LayerManagerComposite* aManager)
+nsChildView::PostRender(WidgetRenderingContext* aContext)
 {
-  UniquePtr<GLManager> manager(GLManager::CreateGLManager(aManager));
+  UniquePtr<GLManager> manager(GLManager::CreateGLManager(aContext->mLayerManager));
   if (!manager) {
     return;
   }
@@ -2053,10 +2054,10 @@ nsChildView::PostRender(LayerManagerComposite* aManager)
 }
 
 void
-nsChildView::DrawWindowOverlay(LayerManagerComposite* aManager,
+nsChildView::DrawWindowOverlay(WidgetRenderingContext* aContext,
                                LayoutDeviceIntRect aRect)
 {
-  mozilla::UniquePtr<GLManager> manager(GLManager::CreateGLManager(aManager));
+  mozilla::UniquePtr<GLManager> manager(GLManager::CreateGLManager(aContext->mLayerManager));
   if (manager) {
     DrawWindowOverlay(manager.get(), aRect);
   }
@@ -4000,9 +4001,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
     }
 
     if ([self isUsingOpenGL]) {
-      if (mGeckoChild->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
-        ClientLayerManager *manager = static_cast<ClientLayerManager*>(mGeckoChild->GetLayerManager());
-        manager->AsShadowForwarder()->WindowOverlayChanged();
+      if (ShadowLayerForwarder* slf = mGeckoChild->GetLayerManager()->AsShadowForwarder()) {
+        slf->WindowOverlayChanged();
       }
     }
 

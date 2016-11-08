@@ -38,5 +38,6 @@ add_task(function* () {
   let console = yield toolbox.selectTool("webconsole");
   let { jsterm } = console.hud;
   let url = yield jsterm.execute("document.location.href");
-  is(url.textContent, URL_2, "The console inspects the second document");
+  // Uses includes as the old console frontend prints a timestamp
+  ok(url.textContent.includes(URL_2), "The console inspects the second document");
 });

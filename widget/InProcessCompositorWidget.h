@@ -17,11 +17,11 @@ class InProcessCompositorWidget : public CompositorWidget
 public:
   explicit InProcessCompositorWidget(nsBaseWidget* aWidget);
 
-  virtual bool PreRender(layers::LayerManagerComposite* aManager) override;
-  virtual void PostRender(layers::LayerManagerComposite* aManager) override;
-  virtual void DrawWindowUnderlay(layers::LayerManagerComposite* aManager,
+  virtual bool PreRender(WidgetRenderingContext* aManager) override;
+  virtual void PostRender(WidgetRenderingContext* aManager) override;
+  virtual void DrawWindowUnderlay(WidgetRenderingContext* aContext,
                                   LayoutDeviceIntRect aRect) override;
-  virtual void DrawWindowOverlay(layers::LayerManagerComposite* aManager,
+  virtual void DrawWindowOverlay(WidgetRenderingContext* aContext,
                                  LayoutDeviceIntRect aRect) override;
   virtual already_AddRefed<gfx::DrawTarget> StartRemoteDrawing() override;
   virtual already_AddRefed<gfx::DrawTarget>

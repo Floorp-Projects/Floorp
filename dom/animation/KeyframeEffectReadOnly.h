@@ -121,14 +121,16 @@ struct AnimationPropertySegment
   StyleAnimationValue mFromValue, mToValue;
   Maybe<ComputedTimingFunction> mTimingFunction;
 
-  bool operator==(const AnimationPropertySegment& aOther) const {
+  bool operator==(const AnimationPropertySegment& aOther) const
+  {
     return mFromKey == aOther.mFromKey &&
            mToKey == aOther.mToKey &&
            mFromValue == aOther.mFromValue &&
            mToValue == aOther.mToValue &&
            mTimingFunction == aOther.mTimingFunction;
   }
-  bool operator!=(const AnimationPropertySegment& aOther) const {
+  bool operator!=(const AnimationPropertySegment& aOther) const
+  {
     return !(*this == aOther);
   }
 };
@@ -152,17 +154,31 @@ struct AnimationProperty
 
   InfallibleTArray<AnimationPropertySegment> mSegments;
 
+  // The copy constructor/assignment doesn't copy mIsRunningOnCompositor and
+  // mPerformanceWarning.
+  AnimationProperty() = default;
+  AnimationProperty(const AnimationProperty& aOther)
+    : mProperty(aOther.mProperty), mSegments(aOther.mSegments) { }
+  AnimationProperty& operator=(const AnimationProperty& aOther)
+  {
+    mProperty = aOther.mProperty;
+    mSegments = aOther.mSegments;
+    return *this;
+  }
+
   // NOTE: This operator does *not* compare the mIsRunningOnCompositor member.
   // This is because AnimationProperty objects are compared when recreating
   // CSS animations to determine if mutation observer change records need to
   // be created or not. However, at the point when these objects are compared
   // the mIsRunningOnCompositor will not have been set on the new objects so
   // we ignore this member to avoid generating spurious change records.
-  bool operator==(const AnimationProperty& aOther) const {
+  bool operator==(const AnimationProperty& aOther) const
+  {
     return mProperty == aOther.mProperty &&
            mSegments == aOther.mSegments;
   }
-  bool operator!=(const AnimationProperty& aOther) const {
+  bool operator!=(const AnimationProperty& aOther) const
+  {
     return !(*this == aOther);
   }
 };
@@ -196,6 +212,11 @@ public:
               const Nullable<ElementOrCSSPseudoElement>& aTarget,
               JS::Handle<JSObject*> aKeyframes,
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
+              ErrorResult& aRv);
+
+  static already_AddRefed<KeyframeEffectReadOnly>
+  Constructor(const GlobalObject& aGlobal,
+              KeyframeEffectReadOnly& aSource,
               ErrorResult& aRv);
 
   void GetTarget(Nullable<OwningElementOrCSSPseudoElement>& aRv) const;
@@ -319,6 +340,17 @@ protected:
                           JS::Handle<JSObject*> aKeyframes,
                           const OptionsType& aOptions,
                           ErrorResult& aRv);
+
+  template<class KeyframeEffectType>
+  static already_AddRefed<KeyframeEffectType>
+  ConstructKeyframeEffect(const GlobalObject& aGlobal,
+                          KeyframeEffectReadOnly& aSource,
+                          ErrorResult& aRv);
+
+  // Build properties by recalculating from |mKeyframes| using |aStyleContext|
+  // to resolve specified values. This function also applies paced spacing if
+  // needed.
+  nsTArray<AnimationProperty> BuildProperties(nsStyleContext* aStyleContext);
 
   // This effect is registered with its target element so long as:
   //

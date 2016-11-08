@@ -147,7 +147,6 @@ let gContainersManager = {
     let icon = document.getElementById("icon").value;
     let color = document.getElementById("color").value;
     let name = document.getElementById("name").value;
-    let userContextId = false;
 
     if (this.icons.indexOf(icon) == -1) {
       throw "Internal error. The icon value doesn't match.";

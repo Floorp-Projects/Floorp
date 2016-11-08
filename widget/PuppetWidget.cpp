@@ -1081,7 +1081,7 @@ PuppetWidget::Paint()
       if (mTabChild) {
         mTabChild->NotifyPainted();
       }
-    } else {
+    } else if (mozilla::layers::LayersBackend::LAYERS_BASIC == mLayerManager->GetBackendType()) {
       RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(mDrawTarget);
       if (!ctx) {
         gfxDevCrash(LogReason::InvalidContext) << "PuppetWidget context problem " << gfx::hexa(mDrawTarget);

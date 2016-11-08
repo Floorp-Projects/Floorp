@@ -8229,8 +8229,8 @@ nsLayoutUtils::DoLogTestDataForPaint(LayerManager* aManager,
                                      const std::string& aKey,
                                      const std::string& aValue)
 {
-  if (aManager->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
-    static_cast<ClientLayerManager*>(aManager)->LogTestDataForCurrentPaint(aScrollId, aKey, aValue);
+  if (ClientLayerManager* mgr = aManager->AsClientLayerManager()) {
+    mgr->LogTestDataForCurrentPaint(aScrollId, aKey, aValue);
   }
 }
 

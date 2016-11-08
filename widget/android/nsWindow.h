@@ -204,9 +204,11 @@ public:
                                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
 
     virtual bool NeedsPaint() override;
-    virtual bool PreRender(LayerManagerComposite* aManager) override;
-    virtual void DrawWindowUnderlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
-    virtual void DrawWindowOverlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
+    virtual bool PreRender(mozilla::widget::WidgetRenderingContext* aContext) override;
+    virtual void DrawWindowUnderlay(mozilla::widget::WidgetRenderingContext* aContext,
+                                    LayoutDeviceIntRect aRect) override;
+    virtual void DrawWindowOverlay(mozilla::widget::WidgetRenderingContext* aContext,
+                                   LayoutDeviceIntRect aRect) override;
 
     virtual bool WidgetPaintsBackground() override;
 

@@ -23,7 +23,6 @@ import mozprofile
 from manifestparser import TestManifest
 from manifestparser.filters import tags
 from marionette_driver.marionette import Marionette
-from mozlog import get_default_logger
 from moztest.adapters.unit import StructuredTestRunner, StructuredTestResult
 from moztest.results import TestResultCollection, TestResult, relevant_line
 import mozversion
@@ -296,6 +295,7 @@ class BaseMarionetteArguments(ArgumentParser):
                                "'file.ini:section' to specify a particular section.")
         self.add_argument('--addon',
                           action='append',
+                          dest='addons',
                           help="addon to install; repeat for multiple addons.")
         self.add_argument('--repeat',
                           type=int,
@@ -567,9 +567,8 @@ class BaseMarionetteTestRunner(object):
                         rv['screenshot'] = marionette.screenshot()
                     with marionette.using_context(marionette.CONTEXT_CONTENT):
                         rv['source'] = marionette.page_source
-                except Exception:
-                    logger = get_default_logger()
-                    logger.warning('Failed to gather test failure debug.', exc_info=True)
+                except Exception as exc:
+                    self.logger.warning('Failed to gather test failure debug: {}'.format(exc))
             return rv
 
         self.result_callbacks.append(gather_debug)
