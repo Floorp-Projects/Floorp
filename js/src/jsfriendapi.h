@@ -644,17 +644,6 @@ GetObjectJSClass(JSObject* obj)
 JS_FRIEND_API(const Class*)
 ProtoKeyToClass(JSProtoKey key);
 
-// Returns true if the standard class identified by |key| inherits from
-// another standard class (in addition to Object) along its proto chain.
-//
-// In practice, this only returns true for Error subtypes.
-inline bool
-StandardClassIsDependent(JSProtoKey key)
-{
-    const Class* clasp = ProtoKeyToClass(key);
-    return clasp && clasp->specDefined() && clasp->specDependent();
-}
-
 // Returns the key for the class inherited by a given standard class (that
 // is to say, the prototype of this standard class's prototype).
 //
@@ -663,15 +652,15 @@ StandardClassIsDependent(JSProtoKey key)
 // cached proto key, except in cases where multiple JSProtoKeys share a
 // JSClass.
 inline JSProtoKey
-ParentKeyForStandardClass(JSProtoKey key)
+InheritanceProtoKeyForStandardClass(JSProtoKey key)
 {
     // [Object] has nothing to inherit from.
     if (key == JSProto_Object)
         return JSProto_Null;
 
-    // If we're dependent, return the key of the class we depend on.
-    if (StandardClassIsDependent(key))
-        return ProtoKeyToClass(key)->specParentKey();
+    // If we're ClassSpec defined return the proto key from that
+    if (ProtoKeyToClass(key)->specDefined())
+        return ProtoKeyToClass(key)->specInheritanceProtoKey();
 
     // Otherwise, we inherit [Object].
     return JSProto_Object;
