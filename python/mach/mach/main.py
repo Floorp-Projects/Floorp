@@ -330,6 +330,8 @@ To see more help for a specific command, run:
         sys.stdout = stdout
         sys.stderr = stderr
 
+        orig_env = dict(os.environ)
+
         try:
             if stdin.encoding is None:
                 sys.stdin = codecs.getreader('utf-8')(stdin)
@@ -362,6 +364,9 @@ To see more help for a specific command, run:
             return 1
 
         finally:
+            os.environ.clear()
+            os.environ.update(orig_env)
+
             sys.stdin = orig_stdin
             sys.stdout = orig_stdout
             sys.stderr = orig_stderr
