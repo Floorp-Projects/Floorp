@@ -54,6 +54,7 @@ public:
     }
     aValues.ComputeLengthAndData();
 
+    aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
     EventInsertionHelper(aRv, AudioTimelineEvent::SetValueCurve,
                          aStartTime, 0.0f, 0.0f, aDuration, aValues.Data(),
                          aValues.Length());
@@ -82,6 +83,7 @@ public:
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return this;
     }
+    aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
     EventInsertionHelper(aRv, AudioTimelineEvent::SetValueAtTime,
                          aStartTime, aValue);
 
@@ -95,6 +97,7 @@ public:
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return this;
     }
+    aEndTime = std::max(aEndTime, GetParentObject()->CurrentTime());
     EventInsertionHelper(aRv, AudioTimelineEvent::LinearRamp, aEndTime, aValue);
     return this;
   }
@@ -106,6 +109,7 @@ public:
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return this;
     }
+    aEndTime = std::max(aEndTime, GetParentObject()->CurrentTime());
     EventInsertionHelper(aRv, AudioTimelineEvent::ExponentialRamp,
                          aEndTime, aValue);
     return this;
@@ -119,6 +123,7 @@ public:
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return this;
     }
+    aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
     EventInsertionHelper(aRv, AudioTimelineEvent::SetTarget,
                          aStartTime, aTarget,
                          aTimeConstant);
@@ -132,6 +137,8 @@ public:
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return this;
     }
+
+    aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
 
     // Remove some events on the main thread copy.
     AudioEventTimeline::CancelScheduledValues(aStartTime);
