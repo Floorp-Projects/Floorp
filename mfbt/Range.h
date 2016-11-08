@@ -39,7 +39,7 @@ public:
   template<typename U,
            class = typename EnableIf<IsConvertible<U (*)[], T (*)[]>::value,
                                      int>::Type>
-  Range(const Range<U>& aOther)
+  MOZ_IMPLICIT Range(const Range<U>& aOther)
     : mStart(aOther.mStart),
       mEnd(aOther.mEnd)
   {}
