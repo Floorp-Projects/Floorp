@@ -53,6 +53,18 @@ class CompositorWidgetChild;
 # define MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
 #endif
 
+class WidgetRenderingContext
+{
+public:
+#if defined(XP_MACOSX)
+  WidgetRenderingContext() : mLayerManager(nullptr) {}
+  layers::LayerManagerComposite* mLayerManager;
+#elif defined(MOZ_WIDGET_ANDROID)
+  WidgetRenderingContext() : mCompositor(nullptr) {}
+  layers::Compositor* mCompositor;
+#endif
+};
+
 /**
  * Access to a widget from the compositor is restricted to these methods.
  */
@@ -74,7 +86,7 @@ public:
    * Always called from the compositing thread, which may be the main-thread if
    * OMTC is not enabled.
    */
-  virtual bool PreRender(layers::LayerManagerComposite* aManager) {
+  virtual bool PreRender(WidgetRenderingContext* aContext) {
     return true;
   }
 
@@ -85,7 +97,7 @@ public:
    * Always called from the compositing thread, which may be the main-thread if
    * OMTC is not enabled.
    */
-  virtual void PostRender(layers::LayerManagerComposite* aManager)
+  virtual void PostRender(WidgetRenderingContext* aContext)
   {}
 
   /**
@@ -93,7 +105,7 @@ public:
    *
    * Always called from the compositing thread.
    */
-  virtual void DrawWindowUnderlay(layers::LayerManagerComposite* aManager,
+  virtual void DrawWindowUnderlay(WidgetRenderingContext* aContext,
                                   LayoutDeviceIntRect aRect)
   {}
 
@@ -102,7 +114,7 @@ public:
    *
    * Always called from the compositing thread.
    */
-  virtual void DrawWindowOverlay(layers::LayerManagerComposite* aManager,
+  virtual void DrawWindowOverlay(WidgetRenderingContext* aContext,
                                  LayoutDeviceIntRect aRect)
   {}
 
