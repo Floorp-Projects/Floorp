@@ -44,7 +44,7 @@ add_task(function* () {
 
   function waitForEvents() {
     return promise.all([
-      waitForNetworkEvents(monitor, 8),
+      waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS),
       monitor.panelWin.once(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED)
     ]);
   }
