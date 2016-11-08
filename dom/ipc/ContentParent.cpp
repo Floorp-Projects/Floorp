@@ -1027,13 +1027,6 @@ ContentParent::RecvFindPlugins(const uint32_t& aPluginEpoch,
   return true;
 }
 
-bool
-ContentParent::RecvInitVideoDecoderManager(Endpoint<PVideoDecoderManagerChild>* aEndpoint)
-{
-  GPUProcessManager::Get()->CreateContentVideoDecoderManager(OtherPid(), aEndpoint);
-  return true;
-}
-
 /*static*/ TabParent*
 ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                                   Element* aFrameElement,
@@ -2227,18 +2220,21 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
       Endpoint<PCompositorBridgeChild> compositor;
       Endpoint<PImageBridgeChild> imageBridge;
       Endpoint<PVRManagerChild> vrBridge;
+      Endpoint<PVideoDecoderManagerChild> videoManager;
 
       DebugOnly<bool> opened = gpm->CreateContentBridges(
         OtherPid(),
         &compositor,
         &imageBridge,
-        &vrBridge);
+        &vrBridge,
+        &videoManager);
       MOZ_ASSERT(opened);
 
       Unused << SendInitRendering(
         Move(compositor),
         Move(imageBridge),
-        Move(vrBridge));
+        Move(vrBridge),
+        Move(videoManager));
 
       gpm->AddListener(this);
     }
@@ -2383,18 +2379,21 @@ ContentParent::OnCompositorUnexpectedShutdown()
   Endpoint<PCompositorBridgeChild> compositor;
   Endpoint<PImageBridgeChild> imageBridge;
   Endpoint<PVRManagerChild> vrBridge;
+  Endpoint<PVideoDecoderManagerChild> videoManager;
 
   DebugOnly<bool> opened = gpm->CreateContentBridges(
     OtherPid(),
     &compositor,
     &imageBridge,
-    &vrBridge);
+    &vrBridge,
+    &videoManager);
   MOZ_ASSERT(opened);
 
   Unused << SendReinitRendering(
     Move(compositor),
     Move(imageBridge),
-    Move(vrBridge));
+    Move(vrBridge),
+    Move(videoManager));
 }
 
 void

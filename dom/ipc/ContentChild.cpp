@@ -25,6 +25,7 @@
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
 #include "mozilla/dom/ContentBridgeChild.h"
 #include "mozilla/dom/ContentBridgeParent.h"
+#include "mozilla/dom/VideoDecoderManagerChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DOMStorageIPC.h"
@@ -1181,7 +1182,8 @@ ContentChild::RecvGMPsChanged(nsTArray<GMPCapabilityData>&& capabilities)
 bool
 ContentChild::RecvInitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
                                 Endpoint<PImageBridgeChild>&& aImageBridge,
-                                Endpoint<PVRManagerChild>&& aVRBridge)
+                                Endpoint<PVRManagerChild>&& aVRBridge,
+                                Endpoint<PVideoDecoderManagerChild>&& aVideoManager)
 {
   if (!CompositorBridgeChild::InitForContent(Move(aCompositor))) {
     return false;
@@ -1192,13 +1194,15 @@ ContentChild::RecvInitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
   if (!gfx::VRManagerChild::InitForContent(Move(aVRBridge))) {
     return false;
   }
+  VideoDecoderManagerChild::InitForContent(Move(aVideoManager));
   return true;
 }
 
 bool
 ContentChild::RecvReinitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
                                   Endpoint<PImageBridgeChild>&& aImageBridge,
-                                  Endpoint<PVRManagerChild>&& aVRBridge)
+                                  Endpoint<PVRManagerChild>&& aVRBridge,
+                                  Endpoint<PVideoDecoderManagerChild>&& aVideoManager)
 {
   nsTArray<RefPtr<TabChild>> tabs = TabChild::GetAll();
 
@@ -1226,6 +1230,8 @@ ContentChild::RecvReinitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor
       tabChild->ReinitRendering();
     }
   }
+
+  VideoDecoderManagerChild::InitForContent(Move(aVideoManager));
   return true;
 }
 
