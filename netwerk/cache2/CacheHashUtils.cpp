@@ -4,6 +4,7 @@
 
 #include "CacheHashUtils.h"
 
+#include "mozilla/BasePrincipal.h"
 #include "plstr.h"
 
 namespace mozilla {
@@ -185,6 +186,20 @@ CacheHash::GetHash16()
 {
   Hash32_t hash = GetHash();
   return (hash & 0xFFFF);
+}
+
+OriginAttrsHash
+GetOriginAttrsHash(const mozilla::OriginAttributes &aOA)
+{
+  nsAutoCString suffix;
+  aOA.CreateSuffix(suffix);
+
+  SHA1Sum sum;
+  SHA1Sum::Hash hash;
+  sum.update(suffix.BeginReading(), suffix.Length());
+  sum.finish(hash);
+
+  return BigEndian::readUint64(&hash);
 }
 
 } // namespace net

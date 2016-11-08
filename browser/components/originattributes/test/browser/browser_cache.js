@@ -221,6 +221,14 @@ function* doCheck(aShouldIsolate, aInputA, aInputB) {
   data = data.concat(yield cacheDataForContext(LoadContextInfo.default));
   data = data.concat(yield cacheDataForContext(LoadContextInfo.private));
   data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(true, {})));
+  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(false, { userContextId: 1 })));
+  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(true, { userContextId: 1 })));
+  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(false, { userContextId: 2 })));
+  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(true, { userContextId: 2 })));
+  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(false, { firstPartyDomain: "example.com" })));
+  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(true, { firstPartyDomain: "example.com" })));
+  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(false, { firstPartyDomain: "example.org" })));
+  data = data.concat(yield cacheDataForContext(LoadContextInfo.custom(true, { firstPartyDomain: "example.org" })));
 
   if (aShouldIsolate) {
     expectedEntryCount = 2;
