@@ -134,10 +134,7 @@ WebGLContext::BeginQuery(GLenum target, WebGLQuery* query, const char* funcName)
 
     ////
 
-    if (!query->BeginQuery(target))
-        return;
-
-    *slot = query;
+    query->BeginQuery(target, *slot);
 }
 
 void
@@ -159,8 +156,6 @@ WebGLContext::EndQuery(GLenum target, const char* funcName)
         return ErrorInvalidOperation("%s: Query target not active.", funcName);
 
     query->EndQuery();
-
-    *slot = nullptr;
 }
 
 void

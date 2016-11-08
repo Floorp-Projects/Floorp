@@ -43,7 +43,7 @@ WebGLQuery::WebGLQuery(WebGLContext* webgl)
     : WebGLContextBoundObject(webgl)
     , mGLName(GenQuery(mContext->gl))
     , mTarget(0)
-    , mIsActive(false)
+    , mActiveSlot(nullptr)
     , mCanBeAvailable(false)
 {
     mContext->mQueries.insertBack(this);
@@ -80,20 +80,21 @@ TargetForDriver(const gl::GLContext* gl, GLenum target)
     return LOCAL_GL_SAMPLES_PASSED;
 }
 
-bool
-WebGLQuery::BeginQuery(GLenum target)
+void
+WebGLQuery::BeginQuery(GLenum target, WebGLRefPtr<WebGLQuery>& slot)
 {
     const char funcName[] = "beginQuery";
 
     if (mTarget && target != mTarget) {
         mContext->ErrorInvalidOperation("%s: Queries cannot change targets.", funcName);
-        return false;
+        return;
     }
 
     ////
 
     mTarget = target;
-    mIsActive = true;
+    mActiveSlot = &slot;
+    *mActiveSlot = this;
 
     ////
 
@@ -102,14 +103,13 @@ WebGLQuery::BeginQuery(GLenum target)
 
     const auto driverTarget = TargetForDriver(gl, mTarget);
     gl->fBeginQuery(driverTarget, mGLName);
-
-    return true;
 }
 
 void
 WebGLQuery::EndQuery()
 {
-    mIsActive = false;
+    *mActiveSlot = nullptr;
+    mActiveSlot = nullptr;
     mCanBeAvailable = false;
 
     ////
@@ -146,7 +146,7 @@ WebGLQuery::GetQueryParameter(GLenum pname, JS::MutableHandleValue retval) const
         return;
     }
 
-    if (mIsActive)
+    if (mActiveSlot)
         return mContext->ErrorInvalidOperation("%s: Query is still active.", funcName);
 
     // End of validation
@@ -226,7 +226,7 @@ WebGLQuery::DeleteQuery()
     if (IsDeleted())
         return;
 
-    if (mIsActive) {
+    if (mActiveSlot) {
         EndQuery();
     }
 
