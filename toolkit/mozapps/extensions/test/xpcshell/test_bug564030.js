@@ -49,13 +49,13 @@ function run_test() {
 
     restartManager();
 
-    AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a) {
-      do_check_neq(a, null);
-      do_check_eq(a.version, "2.0");
-      do_check_false(a.userDisabled);
-      do_check_false(a.appDisabled);
-      do_check_true(a.isActive);
-      do_check_true(isExtensionInAddonsList(profileDir, a.id));
+    AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a2) {
+      do_check_neq(a2, null);
+      do_check_eq(a2.version, "2.0");
+      do_check_false(a2.userDisabled);
+      do_check_false(a2.appDisabled);
+      do_check_true(a2.isActive);
+      do_check_true(isExtensionInAddonsList(profileDir, a2.id));
 
       do_execute_soon(do_test_finished);
     });

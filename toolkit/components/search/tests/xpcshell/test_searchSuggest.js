@@ -27,8 +27,8 @@ function run_test() {
   removeMetadata();
   updateAppInfo();
 
-  let httpServer = useHttpServer();
-  httpServer.registerContentType("sjs", "sjs");
+  let server = useHttpServer();
+  server.registerContentType("sjs", "sjs");
 
   do_register_cleanup(() => Task.spawn(function* cleanup() {
     // Remove added form history entries

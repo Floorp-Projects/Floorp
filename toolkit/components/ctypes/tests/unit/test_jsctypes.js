@@ -304,110 +304,110 @@ function run_Int64_tests() {
   do_check_throws(function() { ctypes.Int64.prototype.toString(); }, TypeError);
   do_check_throws(function() { ctypes.Int64.prototype.toSource(); }, TypeError);
 
-  let i = ctypes.Int64(0);
-  do_check_true(i.__proto__ === ctypes.Int64.prototype);
-  do_check_true(i instanceof ctypes.Int64);
+  let int64 = ctypes.Int64(0);
+  do_check_true(int64.__proto__ === ctypes.Int64.prototype);
+  do_check_true(int64 instanceof ctypes.Int64);
 
   // Test Int64.toString([radix]).
-  do_check_eq(i.toString(), "0");
+  do_check_eq(int64.toString(), "0");
   for (let radix = 2; radix <= 36; ++radix)
-    do_check_eq(i.toString(radix), "0");
-  do_check_throws(function() { i.toString(0); }, RangeError);
-  do_check_throws(function() { i.toString(1); }, RangeError);
-  do_check_throws(function() { i.toString(37); }, RangeError);
-  do_check_throws(function() { i.toString(10, 2); }, TypeError);
+    do_check_eq(int64.toString(radix), "0");
+  do_check_throws(function() { int64.toString(0); }, RangeError);
+  do_check_throws(function() { int64.toString(1); }, RangeError);
+  do_check_throws(function() { int64.toString(37); }, RangeError);
+  do_check_throws(function() { int64.toString(10, 2); }, TypeError);
 
   // Test Int64.toSource().
-  do_check_eq(i.toSource(), "ctypes.Int64(\"0\")");
-  do_check_throws(function() { i.toSource(10); }, TypeError);
+  do_check_eq(int64.toSource(), "ctypes.Int64(\"0\")");
+  do_check_throws(function() { int64.toSource(10); }, TypeError);
 
-  i = ctypes.Int64("0x28590a1c921def71");
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "2907366152271163249");
-  do_check_eq(i.toString(16), "28590a1c921def71");
-  do_check_eq(i.toString(2), "10100001011001000010100001110010010010000111011110111101110001");
-  do_check_eq(i.toSource(), "ctypes.Int64(\"" + i.toString(10) + "\")");
+  int64 = ctypes.Int64("0x28590a1c921def71");
+  do_check_eq(int64.toString(), int64.toString(10));
+  do_check_eq(int64.toString(10), "2907366152271163249");
+  do_check_eq(int64.toString(16), "28590a1c921def71");
+  do_check_eq(int64.toString(2), "10100001011001000010100001110010010010000111011110111101110001");
+  do_check_eq(int64.toSource(), "ctypes.Int64(\"" + int64.toString(10) + "\")");
 
-  i = ctypes.Int64("-0x28590a1c921def71");
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "-2907366152271163249");
-  do_check_eq(i.toString(16), "-28590a1c921def71");
-  do_check_eq(i.toString(2), "-10100001011001000010100001110010010010000111011110111101110001");
-  do_check_eq(i.toSource(), "ctypes.Int64(\"" + i.toString(10) + "\")");
+  int64 = ctypes.Int64("-0x28590a1c921def71");
+  do_check_eq(int64.toString(), int64.toString(10));
+  do_check_eq(int64.toString(10), "-2907366152271163249");
+  do_check_eq(int64.toString(16), "-28590a1c921def71");
+  do_check_eq(int64.toString(2), "-10100001011001000010100001110010010010000111011110111101110001");
+  do_check_eq(int64.toSource(), "ctypes.Int64(\"" + int64.toString(10) + "\")");
 
-  i = ctypes.Int64("-0X28590A1c921DEf71");
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "-2907366152271163249");
-  do_check_eq(i.toString(16), "-28590a1c921def71");
-  do_check_eq(i.toString(2), "-10100001011001000010100001110010010010000111011110111101110001");
-  do_check_eq(i.toSource(), "ctypes.Int64(\"" + i.toString(10) + "\")");
+  int64 = ctypes.Int64("-0X28590A1c921DEf71");
+  do_check_eq(int64.toString(), int64.toString(10));
+  do_check_eq(int64.toString(10), "-2907366152271163249");
+  do_check_eq(int64.toString(16), "-28590a1c921def71");
+  do_check_eq(int64.toString(2), "-10100001011001000010100001110010010010000111011110111101110001");
+  do_check_eq(int64.toSource(), "ctypes.Int64(\"" + int64.toString(10) + "\")");
 
   // Test Int64(primitive double) constructor.
-  i = ctypes.Int64(-0);
-  do_check_eq(i.toString(), "0");
+  int64 = ctypes.Int64(-0);
+  do_check_eq(int64.toString(), "0");
 
-  i = ctypes.Int64(0x7ffffffffffff000);
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "9223372036854771712");
-  do_check_eq(i.toString(16), "7ffffffffffff000");
-  do_check_eq(i.toString(2), "111111111111111111111111111111111111111111111111111000000000000");
+  int64 = ctypes.Int64(0x7ffffffffffff000);
+  do_check_eq(int64.toString(), int64.toString(10));
+  do_check_eq(int64.toString(10), "9223372036854771712");
+  do_check_eq(int64.toString(16), "7ffffffffffff000");
+  do_check_eq(int64.toString(2), "111111111111111111111111111111111111111111111111111000000000000");
 
-  i = ctypes.Int64(-0x8000000000000000);
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "-9223372036854775808");
-  do_check_eq(i.toString(16), "-8000000000000000");
-  do_check_eq(i.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
+  int64 = ctypes.Int64(-0x8000000000000000);
+  do_check_eq(int64.toString(), int64.toString(10));
+  do_check_eq(int64.toString(10), "-9223372036854775808");
+  do_check_eq(int64.toString(16), "-8000000000000000");
+  do_check_eq(int64.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
 
   // Test Int64(string) constructor.
-  i = ctypes.Int64("0x7fffffffffffffff");
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "9223372036854775807");
-  do_check_eq(i.toString(16), "7fffffffffffffff");
-  do_check_eq(i.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
+  int64 = ctypes.Int64("0x7fffffffffffffff");
+  do_check_eq(int64.toString(), int64.toString(10));
+  do_check_eq(int64.toString(10), "9223372036854775807");
+  do_check_eq(int64.toString(16), "7fffffffffffffff");
+  do_check_eq(int64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
 
-  i = ctypes.Int64("-0x8000000000000000");
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "-9223372036854775808");
-  do_check_eq(i.toString(16), "-8000000000000000");
-  do_check_eq(i.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
+  int64 = ctypes.Int64("-0x8000000000000000");
+  do_check_eq(int64.toString(), int64.toString(10));
+  do_check_eq(int64.toString(10), "-9223372036854775808");
+  do_check_eq(int64.toString(16), "-8000000000000000");
+  do_check_eq(int64.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
 
-  i = ctypes.Int64("9223372036854775807");
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "9223372036854775807");
-  do_check_eq(i.toString(16), "7fffffffffffffff");
-  do_check_eq(i.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
+  int64 = ctypes.Int64("9223372036854775807");
+  do_check_eq(int64.toString(), int64.toString(10));
+  do_check_eq(int64.toString(10), "9223372036854775807");
+  do_check_eq(int64.toString(16), "7fffffffffffffff");
+  do_check_eq(int64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
 
-  i = ctypes.Int64("-9223372036854775808");
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "-9223372036854775808");
-  do_check_eq(i.toString(16), "-8000000000000000");
-  do_check_eq(i.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
+  int64 = ctypes.Int64("-9223372036854775808");
+  do_check_eq(int64.toString(), int64.toString(10));
+  do_check_eq(int64.toString(10), "-9223372036854775808");
+  do_check_eq(int64.toString(16), "-8000000000000000");
+  do_check_eq(int64.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
 
   // Test Int64(other Int64) constructor.
-  i = ctypes.Int64(ctypes.Int64(0));
-  do_check_eq(i.toString(), "0");
+  int64 = ctypes.Int64(ctypes.Int64(0));
+  do_check_eq(int64.toString(), "0");
 
-  i = ctypes.Int64(ctypes.Int64("0x7fffffffffffffff"));
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "9223372036854775807");
-  do_check_eq(i.toString(16), "7fffffffffffffff");
-  do_check_eq(i.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
+  int64 = ctypes.Int64(ctypes.Int64("0x7fffffffffffffff"));
+  do_check_eq(int64.toString(), int64.toString(10));
+  do_check_eq(int64.toString(10), "9223372036854775807");
+  do_check_eq(int64.toString(16), "7fffffffffffffff");
+  do_check_eq(int64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
 
-  i = ctypes.Int64(ctypes.Int64("-0x8000000000000000"));
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "-9223372036854775808");
-  do_check_eq(i.toString(16), "-8000000000000000");
-  do_check_eq(i.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
+  int64 = ctypes.Int64(ctypes.Int64("-0x8000000000000000"));
+  do_check_eq(int64.toString(), int64.toString(10));
+  do_check_eq(int64.toString(10), "-9223372036854775808");
+  do_check_eq(int64.toString(16), "-8000000000000000");
+  do_check_eq(int64.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
 
   // Test Int64(other UInt64) constructor.
-  i = ctypes.Int64(ctypes.UInt64(0));
-  do_check_eq(i.toString(), "0");
+  int64 = ctypes.Int64(ctypes.UInt64(0));
+  do_check_eq(int64.toString(), "0");
 
-  i = ctypes.Int64(ctypes.UInt64("0x7fffffffffffffff"));
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "9223372036854775807");
-  do_check_eq(i.toString(16), "7fffffffffffffff");
-  do_check_eq(i.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
+  int64 = ctypes.Int64(ctypes.UInt64("0x7fffffffffffffff"));
+  do_check_eq(int64.toString(), int64.toString(10));
+  do_check_eq(int64.toString(10), "9223372036854775807");
+  do_check_eq(int64.toString(16), "7fffffffffffffff");
+  do_check_eq(int64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
 
   let vals = [-0x8000000000001000, 0x8000000000000000,
               ctypes.UInt64("0x8000000000000000"),
@@ -474,91 +474,91 @@ function run_UInt64_tests() {
   do_check_throws(function() { ctypes.UInt64.prototype.toString(); }, TypeError);
   do_check_throws(function() { ctypes.UInt64.prototype.toSource(); }, TypeError);
 
-  let i = ctypes.UInt64(0);
-  do_check_true(i.__proto__ === ctypes.UInt64.prototype);
-  do_check_true(i instanceof ctypes.UInt64);
+  let uint64 = ctypes.UInt64(0);
+  do_check_true(uint64.__proto__ === ctypes.UInt64.prototype);
+  do_check_true(uint64 instanceof ctypes.UInt64);
 
   // Test UInt64.toString([radix]).
-  do_check_eq(i.toString(), "0");
+  do_check_eq(uint64.toString(), "0");
   for (let radix = 2; radix <= 36; ++radix)
-    do_check_eq(i.toString(radix), "0");
-  do_check_throws(function() { i.toString(0); }, RangeError);
-  do_check_throws(function() { i.toString(1); }, RangeError);
-  do_check_throws(function() { i.toString(37); }, RangeError);
-  do_check_throws(function() { i.toString(10, 2); }, TypeError);
+    do_check_eq(uint64.toString(radix), "0");
+  do_check_throws(function() { uint64.toString(0); }, RangeError);
+  do_check_throws(function() { uint64.toString(1); }, RangeError);
+  do_check_throws(function() { uint64.toString(37); }, RangeError);
+  do_check_throws(function() { uint64.toString(10, 2); }, TypeError);
 
   // Test UInt64.toSource().
-  do_check_eq(i.toSource(), "ctypes.UInt64(\"0\")");
-  do_check_throws(function() { i.toSource(10); }, TypeError);
+  do_check_eq(uint64.toSource(), "ctypes.UInt64(\"0\")");
+  do_check_throws(function() { uint64.toSource(10); }, TypeError);
 
-  i = ctypes.UInt64("0x28590a1c921def71");
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "2907366152271163249");
-  do_check_eq(i.toString(16), "28590a1c921def71");
-  do_check_eq(i.toString(2), "10100001011001000010100001110010010010000111011110111101110001");
-  do_check_eq(i.toSource(), "ctypes.UInt64(\"" + i.toString(10) + "\")");
+  uint64 = ctypes.UInt64("0x28590a1c921def71");
+  do_check_eq(uint64.toString(), uint64.toString(10));
+  do_check_eq(uint64.toString(10), "2907366152271163249");
+  do_check_eq(uint64.toString(16), "28590a1c921def71");
+  do_check_eq(uint64.toString(2), "10100001011001000010100001110010010010000111011110111101110001");
+  do_check_eq(uint64.toSource(), "ctypes.UInt64(\"" + uint64.toString(10) + "\")");
 
-  i = ctypes.UInt64("0X28590A1c921DEf71");
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "2907366152271163249");
-  do_check_eq(i.toString(16), "28590a1c921def71");
-  do_check_eq(i.toString(2), "10100001011001000010100001110010010010000111011110111101110001");
-  do_check_eq(i.toSource(), "ctypes.UInt64(\"" + i.toString(10) + "\")");
+  uint64 = ctypes.UInt64("0X28590A1c921DEf71");
+  do_check_eq(uint64.toString(), uint64.toString(10));
+  do_check_eq(uint64.toString(10), "2907366152271163249");
+  do_check_eq(uint64.toString(16), "28590a1c921def71");
+  do_check_eq(uint64.toString(2), "10100001011001000010100001110010010010000111011110111101110001");
+  do_check_eq(uint64.toSource(), "ctypes.UInt64(\"" + uint64.toString(10) + "\")");
 
   // Test UInt64(primitive double) constructor.
-  i = ctypes.UInt64(-0);
-  do_check_eq(i.toString(), "0");
+  uint64 = ctypes.UInt64(-0);
+  do_check_eq(uint64.toString(), "0");
 
-  i = ctypes.UInt64(0xfffffffffffff000);
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "18446744073709547520");
-  do_check_eq(i.toString(16), "fffffffffffff000");
-  do_check_eq(i.toString(2), "1111111111111111111111111111111111111111111111111111000000000000");
+  uint64 = ctypes.UInt64(0xfffffffffffff000);
+  do_check_eq(uint64.toString(), uint64.toString(10));
+  do_check_eq(uint64.toString(10), "18446744073709547520");
+  do_check_eq(uint64.toString(16), "fffffffffffff000");
+  do_check_eq(uint64.toString(2), "1111111111111111111111111111111111111111111111111111000000000000");
 
   // Test UInt64(string) constructor.
-  i = ctypes.UInt64("0xffffffffffffffff");
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "18446744073709551615");
-  do_check_eq(i.toString(16), "ffffffffffffffff");
-  do_check_eq(i.toString(2), "1111111111111111111111111111111111111111111111111111111111111111");
+  uint64 = ctypes.UInt64("0xffffffffffffffff");
+  do_check_eq(uint64.toString(), uint64.toString(10));
+  do_check_eq(uint64.toString(10), "18446744073709551615");
+  do_check_eq(uint64.toString(16), "ffffffffffffffff");
+  do_check_eq(uint64.toString(2), "1111111111111111111111111111111111111111111111111111111111111111");
 
-  i = ctypes.UInt64("0x0");
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "0");
-  do_check_eq(i.toString(16), "0");
-  do_check_eq(i.toString(2), "0");
+  uint64 = ctypes.UInt64("0x0");
+  do_check_eq(uint64.toString(), uint64.toString(10));
+  do_check_eq(uint64.toString(10), "0");
+  do_check_eq(uint64.toString(16), "0");
+  do_check_eq(uint64.toString(2), "0");
 
-  i = ctypes.UInt64("18446744073709551615");
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "18446744073709551615");
-  do_check_eq(i.toString(16), "ffffffffffffffff");
-  do_check_eq(i.toString(2), "1111111111111111111111111111111111111111111111111111111111111111");
+  uint64 = ctypes.UInt64("18446744073709551615");
+  do_check_eq(uint64.toString(), uint64.toString(10));
+  do_check_eq(uint64.toString(10), "18446744073709551615");
+  do_check_eq(uint64.toString(16), "ffffffffffffffff");
+  do_check_eq(uint64.toString(2), "1111111111111111111111111111111111111111111111111111111111111111");
 
-  i = ctypes.UInt64("0");
-  do_check_eq(i.toString(), "0");
+  uint64 = ctypes.UInt64("0");
+  do_check_eq(uint64.toString(), "0");
 
   // Test UInt64(other UInt64) constructor.
-  i = ctypes.UInt64(ctypes.UInt64(0));
-  do_check_eq(i.toString(), "0");
+  uint64 = ctypes.UInt64(ctypes.UInt64(0));
+  do_check_eq(uint64.toString(), "0");
 
-  i = ctypes.UInt64(ctypes.UInt64("0xffffffffffffffff"));
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "18446744073709551615");
-  do_check_eq(i.toString(16), "ffffffffffffffff");
-  do_check_eq(i.toString(2), "1111111111111111111111111111111111111111111111111111111111111111");
+  uint64 = ctypes.UInt64(ctypes.UInt64("0xffffffffffffffff"));
+  do_check_eq(uint64.toString(), uint64.toString(10));
+  do_check_eq(uint64.toString(10), "18446744073709551615");
+  do_check_eq(uint64.toString(16), "ffffffffffffffff");
+  do_check_eq(uint64.toString(2), "1111111111111111111111111111111111111111111111111111111111111111");
 
-  i = ctypes.UInt64(ctypes.UInt64("0x0"));
-  do_check_eq(i.toString(), "0");
+  uint64 = ctypes.UInt64(ctypes.UInt64("0x0"));
+  do_check_eq(uint64.toString(), "0");
 
   // Test UInt64(other Int64) constructor.
-  i = ctypes.UInt64(ctypes.Int64(0));
-  do_check_eq(i.toString(), "0");
+  uint64 = ctypes.UInt64(ctypes.Int64(0));
+  do_check_eq(uint64.toString(), "0");
 
-  i = ctypes.UInt64(ctypes.Int64("0x7fffffffffffffff"));
-  do_check_eq(i.toString(), i.toString(10));
-  do_check_eq(i.toString(10), "9223372036854775807");
-  do_check_eq(i.toString(16), "7fffffffffffffff");
-  do_check_eq(i.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
+  uint64 = ctypes.UInt64(ctypes.Int64("0x7fffffffffffffff"));
+  do_check_eq(uint64.toString(), uint64.toString(10));
+  do_check_eq(uint64.toString(10), "9223372036854775807");
+  do_check_eq(uint64.toString(16), "7fffffffffffffff");
+  do_check_eq(uint64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
 
   let vals = [-1, 0x10000000000000000, "-1", "-0x1",
               ctypes.Int64("-1"), Infinity, -Infinity, NaN, 0.1,
@@ -951,9 +951,9 @@ function run_float_tests(library, t, name, size) {
     do_check_throws(function () { d.value = vals[i]; }, TypeError);
 
   // Check that values roundtrip through toSource() correctly.
-  function test_roundtrip(t, val)
+  function test_roundtrip(tFn, val)
   {
-    let f1 = t(val);
+    let f1 = tFn(val);
     eval("var f2 = " + f1.toSource());
     do_check_eq(f1.value, f2.value);
   }
@@ -1686,11 +1686,11 @@ function run_PointerType_tests() {
   do_check_eq(ptrValue(v), ptrValue(p));
 
   // Test 'contents'.
-  let i = ctypes.int32_t(9);
-  p = i.address();
-  do_check_eq(p.contents, i.value);
+  let int32_t = ctypes.int32_t(9);
+  p = int32_t.address();
+  do_check_eq(p.contents, int32_t.value);
   p.contents = ctypes.int32_t(12);
-  do_check_eq(i.value, 12);
+  do_check_eq(int32_t.value, 12);
 
   // Test 'isNull'.
   let n = f_t(0);
