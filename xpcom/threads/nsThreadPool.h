@@ -41,6 +41,7 @@ private:
 
   nsCOMArray<nsIThread> mThreads;
   mozilla::Mutex        mMutex;
+  mozilla::CondVar      mEventsAvailable;
   nsEventQueue          mEvents;
   uint32_t              mThreadLimit;
   uint32_t              mIdleThreadLimit;

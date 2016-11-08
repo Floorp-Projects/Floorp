@@ -29,16 +29,15 @@ add_task(function* () {
 
   yield promiseForCondition(function () { return gNumPluginBindingsAttached == 1; });
 
-  // cpows
-  {
+  yield ContentTask.spawn(gTestBrowser, null, () => {
     // Note we add the second plugin in the code farther down, so there's
     // no way we got here with anything but one plugin loaded.
-    let doc = gTestBrowser.contentDocument;
+    let doc = content.document;
     let testplugin = doc.getElementById("test");
     ok(testplugin, "should have test plugin");
     let secondtestplugin = doc.getElementById("secondtest");
     ok(!secondtestplugin, "should not yet have second test plugin");
-  }
+  });
 
   yield promisePopupNotification("click-to-play-plugins");
   let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
@@ -54,14 +53,13 @@ add_task(function* () {
 
   yield promiseForCondition(function () { return gNumPluginBindingsAttached == 2; });
 
-  // cpows
-  {
-    let doc = gTestBrowser.contentDocument;
+  yield ContentTask.spawn(gTestBrowser, null, () => {
+    let doc = content.document;
     let testplugin = doc.getElementById("test");
     ok(testplugin, "should have test plugin");
     let secondtestplugin = doc.getElementById("secondtest");
     ok(secondtestplugin, "should have second test plugin");
-  }
+  });
 
   notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
 

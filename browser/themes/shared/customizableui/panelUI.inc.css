@@ -565,7 +565,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   content: "";
   width: 14px;
   height: 14px;
-  margin-right: 16.5px;
+  margin-inline-end: 16.5px;
   box-shadow: 0px 1px 0px rgba(255,255,255,.2) inset, 0px -1px 0px rgba(0,0,0,.1) inset, 0px 1px 0px rgba(12,27,38,.2);
   border-radius: 2px;
   background-size: contain;

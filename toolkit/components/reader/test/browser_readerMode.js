@@ -10,7 +10,7 @@ const TEST_PREFS = [
   ["reader.parse-on-load.enabled", true],
 ];
 
-const TEST_PATH = "http://example.com/browser/browser/base/content/test/general/";
+const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
 
 var readerButton = document.getElementById("reader-mode-button");
 
@@ -38,10 +38,14 @@ add_task(function* test_reader_button() {
   ok(!Services.prefs.getBoolPref("browser.reader.detectedFirstArticle"),
      "Shouldn't have detected the first article");
 
+  // We're going to show the reader mode intro popup, make sure we wait for it:
+  let tourPopupShownPromise =
+    BrowserTestUtils.waitForEvent(document.getElementById("UITourTooltip"), "popupshown");
   // Point tab to a test page that is reader-able.
   let url = TEST_PATH + "readerModeArticle.html";
   yield promiseTabLoadEvent(tab, url);
   yield promiseWaitForCondition(() => !readerButton.hidden);
+  yield tourPopupShownPromise;
   is_element_visible(readerButton, "Reader mode button is present on a reader-able page");
   ok(UITour.isInfoOnTarget(window, "readerMode-urlBar"),
      "Info panel should be anchored at the reader mode button");

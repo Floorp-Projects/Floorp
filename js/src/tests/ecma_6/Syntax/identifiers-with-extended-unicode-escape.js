@@ -105,7 +105,7 @@ const otherIdContinue = [
     0x19DA,     // NEW TAI LUE THAM DIGIT ONE, Gc=No
 ];
 
-for (let ident of [...idStart, ...otherIdStart_Unicode9]) {
+for (let ident of [...idStart, ...otherIdStart, ...otherIdStart_Unicode9]) {
     for (let count of leadingZeros) {
         let zeros = "0".repeat(count);
         eval(`
@@ -115,8 +115,8 @@ for (let ident of [...idStart, ...otherIdStart_Unicode9]) {
     }
 }
 
-// Move this to the loop above when Bug 917436 is fixed.
-for (let ident of [...idStartSupplemental, ...otherIdStart]) {
+// Move this to the loop above when Bug 1197230 is fixed.
+for (let ident of [...idStartSupplemental]) {
     for (let zeros of leadingZeros) {
         assertThrowsInstanceOf(() => eval(`\\u{${zeros}${ident.toString(16)}}`), SyntaxError);
     }
@@ -128,7 +128,7 @@ for (let ident of [...idContinue, ...idContinueSupplemental, ...otherIdContinue]
     }
 }
 
-for (let ident of [...idStart, ...otherIdStart_Unicode9, ...idContinue]) {
+for (let ident of [...idStart, ...otherIdStart, ...otherIdStart_Unicode9, ...idContinue, ...otherIdContinue]) {
     for (let zeros of leadingZeros) {
         eval(`
             let A\\u{${zeros}${ident.toString(16)}} = 123;
@@ -137,8 +137,8 @@ for (let ident of [...idStart, ...otherIdStart_Unicode9, ...idContinue]) {
     }
 }
 
-// Move this to the loop above when Bug 917436 is fixed.
-for (let ident of [...idStartSupplemental, ...otherIdStart, ...idContinueSupplemental, ...otherIdContinue]) {
+// Move this to the loop above when Bug 1197230 is fixed.
+for (let ident of [...idStartSupplemental, ...idContinueSupplemental]) {
     for (let zeros of leadingZeros) {
         assertThrowsInstanceOf(() => eval(`\\u{${zeros}${ident.toString(16)}}`), SyntaxError);
     }

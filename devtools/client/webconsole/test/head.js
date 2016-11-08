@@ -61,14 +61,7 @@ function loadTab(url) {
 }
 
 function loadBrowser(browser) {
-  let deferred = promise.defer();
-
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    deferred.resolve(null);
-  }, true);
-
-  return deferred.promise;
+  return BrowserTestUtils.browserLoaded(browser);
 }
 
 function closeTab(tab) {
