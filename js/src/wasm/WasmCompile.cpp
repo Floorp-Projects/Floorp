@@ -411,16 +411,29 @@ DecodeFunctionBodyExprs(FunctionDecoder& f)
 }
 
 static bool
-DecodeSignatureIndex(Decoder& d, const ModuleGeneratorData& init, const SigWithId** sig)
+DecodeImportSection(Decoder& d, ModuleGeneratorData* init, ImportVector* imports)
 {
-    uint32_t sigIndex;
-    if (!d.readVarU32(&sigIndex))
-        return d.fail("expected signature index");
+    Maybe<Limits> memory;
+    Uint32Vector funcSigIndices;
+    if (!DecodeImportSection(d, init->sigs, &funcSigIndices, &init->globals, &init->tables, &memory,
+                             imports))
+        return false;
 
-    if (sigIndex >= init.sigs.length())
-        return d.fail("signature index out of range");
+    for (uint32_t sigIndex : funcSigIndices) {
+        if (!init->funcSigs.append(&init->sigs[sigIndex]))
+            return false;
+    }
 
-    *sig = &init.sigs[sigIndex];
+    // The global data offsets will be filled in by ModuleGenerator::init.
+    if (!init->funcImportGlobalDataOffsets.resize(init->funcSigs.length()))
+        return false;
+
+    if (memory) {
+        init->memoryUsage = MemoryUsage::Unshared;
+        init->minMemoryLength = memory->initial;
+        init->maxMemoryLength = memory->maximum;
+    }
+
     return true;
 }
 
@@ -445,173 +458,15 @@ DecodeFunctionSection(Decoder& d, ModuleGeneratorData* init)
         return false;
 
     for (uint32_t i = 0; i < numDefs; i++) {
-        const SigWithId* sig;
-        if (!DecodeSignatureIndex(d, *init, &sig))
+        uint32_t sigIndex;
+        if (!DecodeSignatureIndex(d, init->sigs, &sigIndex))
             return false;
 
+        const SigWithId* sig = &init->sigs[sigIndex];
         init->funcSigs.infallibleAppend(sig);
     }
 
     if (!d.finishSection(sectionStart, sectionSize, "function"))
-        return false;
-
-    return true;
-}
-
-static UniqueChars
-DecodeName(Decoder& d)
-{
-    uint32_t numBytes;
-    if (!d.readVarU32(&numBytes))
-        return nullptr;
-
-    const uint8_t* bytes;
-    if (!d.readBytes(numBytes, &bytes))
-        return nullptr;
-
-    UniqueChars name(js_pod_malloc<char>(numBytes + 1));
-    if (!name)
-        return nullptr;
-
-    memcpy(name.get(), bytes, numBytes);
-    name[numBytes] = '\0';
-
-    return name;
-}
-
-static bool
-DecodeMemoryLimits(Decoder& d, ModuleGeneratorData* init)
-{
-    Limits memory;
-    if (!DecodeMemoryLimits(d, UsesMemory(init->memoryUsage), &memory))
-        return false;
-
-    init->memoryUsage = MemoryUsage::Unshared;
-    init->minMemoryLength = memory.initial;
-    init->maxMemoryLength = memory.maximum;
-    return true;
-}
-
-static bool
-DecodeResizableTable(Decoder& d, ModuleGeneratorData* init)
-{
-    uint32_t elementType;
-    if (!d.readVarU32(&elementType))
-        return d.fail("expected table element type");
-
-    if (elementType != uint32_t(TypeCode::AnyFunc))
-        return d.fail("expected 'anyfunc' element type");
-
-    Limits limits;
-    if (!DecodeLimits(d, &limits))
-        return false;
-
-    if (!init->tables.empty())
-        return d.fail("already have default table");
-
-    return init->tables.emplaceBack(TableKind::AnyFunction, limits);
-}
-
-static bool
-GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable)
-{
-    switch (type) {
-      case ValType::I32:
-      case ValType::F32:
-      case ValType::F64:
-        break;
-      case ValType::I64:
-        if (!JitOptions.wasmTestMode)
-            return d.fail("can't import/export an Int64 global to JS");
-        break;
-      default:
-        return d.fail("unexpected variable type in global import/export");
-    }
-
-    if (isMutable)
-        return d.fail("can't import/export mutable globals in the MVP");
-
-    return true;
-}
-
-static bool
-DecodeImport(Decoder& d, ModuleGeneratorData* init, ImportVector* imports)
-{
-    UniqueChars moduleName = DecodeName(d);
-    if (!moduleName)
-        return d.fail("expected valid import module name");
-
-    UniqueChars funcName = DecodeName(d);
-    if (!funcName)
-        return d.fail("expected valid import func name");
-
-    uint32_t importKind;
-    if (!d.readVarU32(&importKind))
-        return d.fail("failed to read import kind");
-
-    switch (DefinitionKind(importKind)) {
-      case DefinitionKind::Function: {
-        const SigWithId* sig = nullptr;
-        if (!DecodeSignatureIndex(d, *init, &sig))
-            return false;
-        if (!init->funcSigs.emplaceBack(sig))
-            return false;
-        break;
-      }
-      case DefinitionKind::Table: {
-        if (!DecodeResizableTable(d, init))
-            return false;
-        break;
-      }
-      case DefinitionKind::Memory: {
-        if (!DecodeMemoryLimits(d, init))
-            return false;
-        break;
-      }
-      case DefinitionKind::Global: {
-        ValType type;
-        bool isMutable;
-        if (!DecodeGlobalType(d, &type, &isMutable))
-            return false;
-        if (!GlobalIsJSCompatible(d, type, isMutable))
-            return false;
-        if (!init->globals.append(GlobalDesc(type, isMutable, init->globals.length())))
-            return false;
-        break;
-      }
-      default:
-        return d.fail("unsupported import kind");
-    }
-
-    return imports->emplaceBack(Move(moduleName), Move(funcName), DefinitionKind(importKind));
-}
-
-static bool
-DecodeImportSection(Decoder& d, ModuleGeneratorData* init, ImportVector* imports)
-{
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Import, &sectionStart, &sectionSize, "import"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t numImports;
-    if (!d.readVarU32(&numImports))
-        return d.fail("failed to read number of imports");
-
-    if (numImports > MaxImports)
-        return d.fail("too many imports");
-
-    for (uint32_t i = 0; i < numImports; i++) {
-        if (!DecodeImport(d, init, imports))
-            return false;
-    }
-
-    // The global data offsets will be filled in by ModuleGenerator::init.
-    if (!init->funcImportGlobalDataOffsets.resize(init->funcSigs.length()))
-        return false;
-
-    if (!d.finishSection(sectionStart, sectionSize, "import"))
         return false;
 
     return true;
@@ -633,7 +488,7 @@ DecodeTableSection(Decoder& d, ModuleGeneratorData* init, Uint32Vector* oldElems
     if (numTables != 1)
         return d.fail("the number of tables must be exactly one");
 
-    if (!DecodeResizableTable(d, init))
+    if (!DecodeTableLimits(d, &init->tables))
         return false;
 
     if (!d.finishSection(sectionStart, sectionSize, "table"))
@@ -1085,7 +940,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
         return nullptr;
 
     ImportVector imports;
-    if (!DecodeImportSection(d, init.get(), &imports))
+    if (!::DecodeImportSection(d, init.get(), &imports))
         return nullptr;
 
     if (!DecodeFunctionSection(d, init.get()))
