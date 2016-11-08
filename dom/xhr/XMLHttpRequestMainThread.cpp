@@ -3537,6 +3537,11 @@ XMLHttpRequestMainThread::Notify(nsITimer* aTimer)
 void
 XMLHttpRequestMainThread::HandleProgressTimerCallback()
 {
+  // Don't fire the progress event if mLoadTotal is 0, see XHR spec step 6.1
+  if (!mLoadTotal && mLoadTransferred) {
+    return;
+  }
+
   mProgressTimerIsActive = false;
 
   if (!mProgressSinceLastProgressEvent || mErrorLoad) {
