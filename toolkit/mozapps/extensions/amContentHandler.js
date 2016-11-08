@@ -46,13 +46,18 @@ amContentHandler.prototype = {
 
     aRequest.cancel(Cr.NS_BINDING_ABORTED);
 
+    let principalToInherit = aRequest.loadInfo.principalToInherit;
+    if (!principalToInherit) {
+      principalToInherit = aRequest.loadInfo.triggeringPrincipal;
+    }
+
     let installs = {
       uris: [uri.spec],
       hashes: [null],
       names: [null],
       icons: [null],
       mimetype: XPI_CONTENT_TYPE,
-      principalToInherit: aRequest.loadInfo.principalToInherit,
+      principalToInherit: principalToInherit,
       callbackID: -1
     };
 

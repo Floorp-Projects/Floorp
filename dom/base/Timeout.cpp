@@ -55,18 +55,17 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Timeout, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Timeout, Release)
 
-nsresult
-Timeout::InitTimer(uint32_t aDelay)
+namespace {
+
+void
+TimerCallback(nsITimer*, void* aClosure)
 {
-  return mTimer->InitWithNameableFuncCallback(
-    nsGlobalWindow::TimerCallback, this, aDelay,
-    nsITimer::TYPE_ONE_SHOT, Timeout::TimerNameCallback);
+  RefPtr<Timeout> timeout = (Timeout*)aClosure;
+  timeout->mWindow->RunTimeout(timeout);
 }
 
-// static
 void
-Timeout::TimerNameCallback(nsITimer* aTimer, void* aClosure, char* aBuf,
-                           size_t aLen)
+TimerNameCallback(nsITimer* aTimer, void* aClosure, char* aBuf, size_t aLen)
 {
   RefPtr<Timeout> timeout = (Timeout*)aClosure;
 
@@ -76,6 +75,28 @@ Timeout::TimerNameCallback(nsITimer* aTimer, void* aClosure, char* aBuf,
   snprintf(aBuf, aLen, "[content] %s:%u:%u", filename, lineNum, column);
 }
 
+} // anonymous namespace
+
+nsresult
+Timeout::InitTimer(nsIEventTarget* aTarget, uint32_t aDelay)
+{
+  // If the given target does not match the timer's current target
+  // then we need to override it before the Init.  Note that GetTarget()
+  // will return the current thread after setting the target to nullptr.
+  // So we need to special case the nullptr target comparison.
+  nsCOMPtr<nsIEventTarget> currentTarget;
+  MOZ_ALWAYS_SUCCEEDS(mTimer->GetTarget(getter_AddRefs(currentTarget)));
+  if ((aTarget && currentTarget != aTarget) ||
+      (!aTarget && currentTarget != NS_GetCurrentThread())) {
+    // Always call Cancel() in case we are re-using a timer.  Otherwise
+    // the subsequent SetTarget() may fail.
+    MOZ_ALWAYS_SUCCEEDS(mTimer->Cancel());
+    MOZ_ALWAYS_SUCCEEDS(mTimer->SetTarget(aTarget));
+  }
+
+  return mTimer->InitWithNameableFuncCallback(
+    TimerCallback, this, aDelay, nsITimer::TYPE_ONE_SHOT, TimerNameCallback);
+}
 
 // Return true if this timeout has a refcount of 1. This is used to check
 // that dummy_timeout doesn't leak from nsGlobalWindow::RunTimeout.

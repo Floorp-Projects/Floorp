@@ -141,17 +141,26 @@ this.ReaderMode = {
       return null;
     }
 
+    let outerHash = "";
+    try {
+      let uriObj = Services.io.newURI(url, null, null);
+      url = uriObj.specIgnoringRef;
+      outerHash = uriObj.ref;
+    } catch (ex) { /* ignore, use the raw string */ }
+
     let searchParams = new URLSearchParams(url.substring("about:reader?".length));
     if (!searchParams.has("url")) {
       return null;
     }
-    let encodedURL = searchParams.get("url");
-    try {
-      return decodeURIComponent(encodedURL);
-    } catch (e) {
-      Cu.reportError("Error decoding original URL: " + e);
-      return encodedURL;
+    let originalUrl = searchParams.get("url");
+    if (outerHash) {
+      try {
+        let uriObj = Services.io.newURI(originalUrl, null, null);
+        uriObj = Services.io.newURI('#' + outerHash, null, uriObj);
+        originalUrl = uriObj.spec;
+      } catch (ex) {}
     }
+    return originalUrl;
   },
 
   /**

@@ -15,7 +15,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"
 
 #include "js/RootingAPI.h"
