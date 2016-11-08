@@ -67,6 +67,12 @@ struct InterfaceIID<IAccessibleText>
   static REFIID Value() { return IID_IAccessibleText; }
 };
 
+template<>
+struct InterfaceIID<IAccessibleHyperlink>
+{
+  static REFIID Value() { return IID_IAccessibleHyperlink; }
+};
+
 /**
  * Get the COM proxy for this proxy accessible and QueryInterface it with the
  * correct IID
@@ -593,6 +599,50 @@ ProxyAccessible::ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset
                               coordType,
                               static_cast<long>(aX),
                               static_cast<long>(aY));
+}
+
+uint32_t
+ProxyAccessible::StartOffset(bool* aOk)
+{
+  RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
+  if (!acc) {
+    *aOk = false;
+    return 0;
+  }
+
+  long startOffset;
+  *aOk = SUCCEEDED(acc->get_startIndex(&startOffset));
+  return static_cast<uint32_t>(startOffset);
+}
+
+uint32_t
+ProxyAccessible::EndOffset(bool* aOk)
+{
+  RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
+  if (!acc) {
+    *aOk = false;
+    return 0;
+  }
+
+  long endOffset;
+  *aOk = SUCCEEDED(acc->get_endIndex(&endOffset));
+  return static_cast<uint32_t>(endOffset);
+}
+
+bool
+ProxyAccessible::IsLinkValid()
+{
+  RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
+  if (!acc) {
+    return false;
+  }
+
+  boolean valid;
+  if (FAILED(acc->get_valid(&valid))) {
+    return false;
+  }
+
+  return valid;
 }
 
 } // namespace a11y
