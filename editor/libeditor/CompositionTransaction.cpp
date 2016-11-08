@@ -34,6 +34,7 @@ CompositionTransaction::CompositionTransaction(
   , mEditorBase(aEditorBase)
   , mFixed(false)
 {
+  MOZ_ASSERT(mTextNode->TextLength() >= mOffset);
 }
 
 CompositionTransaction::~CompositionTransaction()
@@ -68,10 +69,26 @@ CompositionTransaction::DoTransaction()
       return rv;
     }
   } else {
+    uint32_t replaceableLength = mTextNode->TextLength() - mOffset;
     nsresult rv =
       mTextNode->ReplaceData(mOffset, mReplaceLength, mStringToInsert);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    // If IME text node is multiple node, ReplaceData doesn't remove all IME
+    // text.  So we need remove remained text into other text node.
+    if (replaceableLength < mReplaceLength) {
+      int32_t remainLength = mReplaceLength - replaceableLength;
+      nsCOMPtr<nsINode> node = mTextNode->GetNextSibling();
+      while (node && node->IsNodeOfType(nsINode::eTEXT) &&
+             remainLength > 0) {
+        Text* text = static_cast<Text*>(node.get());
+        uint32_t textLength = text->TextLength();
+        text->DeleteData(0, remainLength);
+        remainLength -= textLength;
+        node = node->GetNextSibling();
+      }
     }
   }
 
