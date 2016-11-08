@@ -3462,13 +3462,13 @@ nsWindow::SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
 }
 
 bool
-nsWindow::PreRender(LayerManagerComposite* aManager)
+nsWindow::PreRender(WidgetRenderingContext* aContext)
 {
     if (Destroyed()) {
         return true;
     }
 
-    layers::Compositor* compositor = aManager->GetCompositor();
+    layers::Compositor* compositor = aContext->mCompositor;
 
     GeckoLayerClient::LocalRef client;
 
@@ -3484,7 +3484,7 @@ nsWindow::PreRender(LayerManagerComposite* aManager)
     return true;
 }
 void
-nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
+nsWindow::DrawWindowUnderlay(WidgetRenderingContext* aContext,
                              LayoutDeviceIntRect aRect)
 {
     if (Destroyed()) {
@@ -3515,7 +3515,7 @@ nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
 }
 
 void
-nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
+nsWindow::DrawWindowOverlay(WidgetRenderingContext* aContext,
                             LayoutDeviceIntRect aRect)
 {
     PROFILER_LABEL("nsWindow", "DrawWindowOverlay",
