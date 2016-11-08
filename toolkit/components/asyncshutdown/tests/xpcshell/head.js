@@ -62,7 +62,7 @@ function makeLock(kind) {
     let name = "test-xpcom-Barrier-" + ++makeLock.counter;
     let barrier = asyncShutdownService.makeBarrier(name);
     return {
-      addBlocker: function(name, condition, state) {
+      addBlocker: function(blockerName, condition, state) {
         if (condition == null) {
           // Slight trick as `null` or `undefined` cannot be used as keys
           // for `xpcomMap`. Note that this has no incidence on the result
@@ -73,7 +73,7 @@ function makeLock(kind) {
         let blocker = makeLock.xpcomMap.get(condition);
         if (!blocker) {
           blocker = {
-            name: name,
+            name: blockerName,
             state: state,
             blockShutdown: function(aBarrierClient) {
               return Task.spawn(function*() {

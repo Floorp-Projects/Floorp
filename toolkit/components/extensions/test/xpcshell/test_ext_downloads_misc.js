@@ -102,14 +102,14 @@ function backgroundScript() {
   // set to false to allow other events and options.inorder can be set to
   // false to allow the events to arrive in any order.
   function waitForEvents(expected, options = {}) {
-    function compare(received, expected) {
-      if (typeof expected == "object" && expected != null) {
-        if (typeof received != "object") {
+    function compare(a, b) {
+      if (typeof b == "object" && b != null) {
+        if (typeof a != "object") {
           return false;
         }
-        return Object.keys(expected).every(fld => compare(received[fld], expected[fld]));
+        return Object.keys(b).every(fld => compare(a[fld], b[fld]));
       }
-      return (received == expected);
+      return (a == b);
     }
 
     const exact = ("exact" in options) ? options.exact : true;

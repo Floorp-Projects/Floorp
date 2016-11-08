@@ -5,10 +5,10 @@
 /* globals chrome */
 
 function* testPermission(options) {
-  function background(options) {
+  function background(bgOptions) {
     browser.test.sendMessage("typeof-namespace", {
-      browser: typeof browser[options.namespace],
-      chrome: typeof chrome[options.namespace],
+      browser: typeof browser[bgOptions.namespace],
+      chrome: typeof chrome[bgOptions.namespace],
     });
   }
 

@@ -63,9 +63,9 @@ add_task(function* test_delete() {
   let visits = [];
   let visitDate = new Date(1999, 9, 9, 9, 9).getTime();
 
-  function pushVisit(visits) {
+  function pushVisit(subvisits) {
     visitDate += 1000;
-    visits.push({date: new Date(visitDate)});
+    subvisits.push({date: new Date(visitDate)});
   }
 
   // Add 5 visits for one uri and 3 visits for 3 others
@@ -166,7 +166,7 @@ add_task(function* test_search() {
     },
   ];
 
-  function background(REFERENCE_DATE) {
+  function background(BGSCRIPT_REFERENCE_DATE) {
     const futureTime = Date.now() + 24 * 60 * 60 * 1000;
 
     browser.test.onMessage.addListener(msg => {
@@ -178,7 +178,7 @@ add_task(function* test_search() {
         return browser.history.search({text: "example.com", maxResults: 1});
       }).then(results => {
         browser.test.sendMessage("max-results-search", results);
-        return browser.history.search({text: "", startTime: REFERENCE_DATE - 2000, endTime: REFERENCE_DATE - 1000});
+        return browser.history.search({text: "", startTime: BGSCRIPT_REFERENCE_DATE - 2000, endTime: BGSCRIPT_REFERENCE_DATE - 1000});
       }).then(results => {
         browser.test.sendMessage("date-range-search", results);
         return browser.history.search({text: "", startTime: futureTime});
