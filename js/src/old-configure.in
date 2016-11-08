@@ -1222,7 +1222,8 @@ esac
 dnl Checks for math functions.
 dnl ========================================================
 AC_CHECK_LIB(m, sin)
-AC_CHECK_LIB(m, __sincos, AC_DEFINE(HAVE_SINCOS))
+AC_CHECK_LIB(m, sincos, AC_DEFINE(HAVE_SINCOS))
+AC_CHECK_LIB(m, __sincos, AC_DEFINE(HAVE___SINCOS))
 
 
 dnl check for wcrtomb/mbrtowc
