@@ -52,7 +52,7 @@ add_task(function* () {
       "permissions": ["contextMenus"],
     },
 
-    background: function() {
+    background: async function() {
       // A generic onclick callback function.
       function genericOnClick(info, tab) {
         browser.test.sendMessage("onclick", {info, tab});
@@ -122,14 +122,12 @@ add_task(function* () {
         id: "ext-without-onclick",
       });
 
-      browser.contextMenus.update(parent, {parentId: child2}).then(
-        () => {
-          browser.test.notifyFail("contextmenus");
-        },
-        () => {
-          browser.test.notifyPass("contextmenus");
-        }
-      );
+      await browser.test.assertRejects(
+        browser.contextMenus.update(parent, {parentId: child2}),
+        /cannot be an ancestor/,
+        "Should not be able to reparent an item as descendent of itself");
+
+      browser.test.notifyPass("contextmenus");
     },
   });
 

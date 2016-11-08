@@ -12,19 +12,16 @@ function* runTests(options) {
 
     // Gets the current details of the page action, and returns a
     // promise that resolves to an object containing them.
-    function getDetails() {
-      return new Promise(resolve => {
-        return browser.tabs.query({active: true, currentWindow: true}, resolve);
-      }).then(([tab]) => {
-        let tabId = tab.id;
-        browser.test.log(`Get details: tab={id: ${tabId}, url: ${JSON.stringify(tab.url)}}`);
-        return Promise.all([
-          browser.pageAction.getTitle({tabId}),
-          browser.pageAction.getPopup({tabId})]);
-      }).then(details => {
-        return Promise.resolve({title: details[0],
-                                popup: details[1]});
-      });
+    async function getDetails() {
+      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
+      let tabId = tab.id;
+
+      browser.test.log(`Get details: tab={id: ${tabId}, url: ${JSON.stringify(tab.url)}}`);
+
+      return {
+        title: await browser.pageAction.getTitle({tabId}),
+        popup: await browser.pageAction.getPopup({tabId}),
+      };
     }
 
 
@@ -33,7 +30,7 @@ function* runTests(options) {
     function nextTest() {
       let test = tests.shift();
 
-      test(expecting => {
+      test(async expecting => {
         function finish() {
           // Check that the actual icon has the expected values, then
           // run the next test.
@@ -43,30 +40,28 @@ function* runTests(options) {
         if (expecting) {
           // Check that the API returns the expected values, and then
           // run the next test.
-          getDetails().then(details => {
-            browser.test.assertEq(expecting.title, details.title,
-                                  "expected value from getTitle");
+          let details = await getDetails();
 
-            browser.test.assertEq(expecting.popup, details.popup,
-                                  "expected value from getPopup");
+          browser.test.assertEq(expecting.title, details.title,
+                                "expected value from getTitle");
 
-            finish();
-          });
-        } else {
-          finish();
+          browser.test.assertEq(expecting.popup, details.popup,
+                                "expected value from getPopup");
         }
+
+        finish();
       });
     }
 
-    function runTests() {
+    async function runTests() {
       tabs = [];
       tests = getTests(tabs);
 
-      browser.tabs.query({active: true, currentWindow: true}, resultTabs => {
-        tabs[0] = resultTabs[0].id;
+      let resultTabs = await browser.tabs.query({active: true, currentWindow: true});
 
-        nextTest();
-      });
+      tabs[0] = resultTabs[0].id;
+
+      nextTest();
     }
 
     browser.test.onMessage.addListener((msg) => {
