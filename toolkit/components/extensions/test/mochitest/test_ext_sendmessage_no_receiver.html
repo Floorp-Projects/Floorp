@@ -29,14 +29,12 @@ function loadContentScriptExtension(contentScript) {
 }
 
 add_task(function* test_content_script_sendMessage_without_listener() {
-  function contentScript() {
-    browser.runtime.sendMessage("msg").then(reply => {
-      browser.test.assertEq(undefined, reply);
-      browser.test.notifyFail("Did not expect a reply to sendMessage");
-    }, error => {
-      browser.test.assertEq("Could not establish connection. Receiving end does not exist.", error.message);
-      browser.test.notifyPass("sendMessage callback was invoked");
-    });
+  async function contentScript() {
+    await browser.test.assertRejects(
+      browser.runtime.sendMessage("msg"),
+      "Could not establish connection. Receiving end does not exist.");
+
+    browser.test.notifyPass("sendMessage callback was invoked");
   }
 
   let extension = loadContentScriptExtension(contentScript);

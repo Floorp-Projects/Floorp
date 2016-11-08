@@ -259,26 +259,15 @@ add_tasks(function* test_options_no_manifest(extraOptions) {
       applications: {gecko: {id: "no_options@tests.mozilla.org"}},
     },
 
-    background: function() {
+    async background() {
       browser.test.log("Try to open options page when not specified in the manifest.");
 
-      browser.runtime.openOptionsPage().then(
-        () => {
-          browser.test.fail("Opening options page without one specified in the manifest generated an error");
-          browser.test.notifyFail("options-no-manifest");
-        },
-        error => {
-          let expected = "No `options_ui` declared";
-          browser.test.assertTrue(
-            error.message.includes(expected),
-            `Got expected error (got: '${error.message}', expected: '${expected}'`);
-        }
-      ).then(() => {
-        browser.test.notifyPass("options-no-manifest");
-      }).catch(error => {
-        browser.test.fail(`Error: ${error} :: ${error.stack}`);
-        browser.test.notifyFail("options-no-manifest");
-      });
+      await browser.test.assertRejects(
+        browser.runtime.openOptionsPage(),
+        /No `options_ui` declared/,
+        "Expected error from openOptionsPage()");
+
+      browser.test.notifyPass("options-no-manifest");
     },
   }));
 

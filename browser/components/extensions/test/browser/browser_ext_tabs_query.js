@@ -206,14 +206,13 @@ add_task(function* testQueryWithURLPermissions() {
       "permissions": [],
     },
 
-    background: function() {
-      browser.tabs.query({"url": "http://www.bbc.com/"}).then(() => {
-        browser.test.notifyFail("queryWithURLPermissions");
-      }).catch((e) => {
-        browser.test.assertEq('The "tabs" permission is required to use the query API with the "url" parameter',
-                              e.message, "Expected permissions error message");
-        browser.test.notifyPass("queryWithURLPermissions");
-      });
+    async background() {
+      await browser.test.assertRejects(
+        browser.tabs.query({"url": "http://www.bbc.com/"}),
+        'The "tabs" permission is required to use the query API with the "url" parameter',
+        "Expected tabs.query with 'url' to fail with permissions error message");
+
+      browser.test.notifyPass("queryWithURLPermissions");
     },
   });
 

@@ -161,15 +161,10 @@ add_task(function* () {
 
 
       browser.test.log("Check that invalid zoom values throw an error");
-      await browser.tabs.setZoom(tabIds[0], 42).then(
-        () => {
-          browser.test.fail("Expected an error");
-        },
-        error => {
-          browser.test.assertTrue(error.message.includes("Zoom value 42 out of range"),
-                                  "Got expected error");
-        });
-
+      await browser.test.assertRejects(
+        browser.tabs.setZoom(tabIds[0], 42),
+        /Zoom value 42 out of range/,
+        "Expected an out of range error");
 
       browser.test.log("Disable site-specific zoom, expect correct scope");
       await msg("site-specific", false);

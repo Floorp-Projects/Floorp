@@ -76,36 +76,23 @@ add_task(function* testWindowCreate() {
 
       browser.test.log("Try to create a window with both a tab and a URL");
       [tab] = await browser.tabs.query({windowId, active: true});
-      await browser.windows.create({tabId: tab.id, url: "http://example.com/"}).then(
-        window => {
-          browser.test.fail("Create call should have failed");
-        },
-        error => {
-          browser.test.assertTrue(/`tabId` may not be used in conjunction with `url`/.test(error.message),
-                                  "Create call failed as expected");
-        });
-
+      await browser.test.assertRejects(
+        browser.windows.create({tabId: tab.id, url: "http://example.com/"}),
+        /`tabId` may not be used in conjunction with `url`/,
+        "Create call failed as expected");
 
       browser.test.log("Try to create a window with both a tab and an invalid incognito setting");
-      await browser.windows.create({tabId: tab.id, incognito: true}).then(
-        window => {
-          browser.test.fail("Create call should have failed");
-        },
-        error => {
-          browser.test.assertTrue(/`incognito` property must match the incognito state of tab/.test(error.message),
-                                  "Create call failed as expected");
-        });
+      await browser.test.assertRejects(
+        browser.windows.create({tabId: tab.id, incognito: true}),
+        /`incognito` property must match the incognito state of tab/,
+        "Create call failed as expected");
 
 
       browser.test.log("Try to create a window with an invalid tabId");
-      await browser.windows.create({tabId: 0}).then(
-        window => {
-          browser.test.fail("Create call should have failed");
-        },
-        error => {
-          browser.test.assertTrue(/Invalid tab ID: 0/.test(error.message),
-                                  "Create call failed as expected");
-        });
+      await browser.test.assertRejects(
+        browser.windows.create({tabId: 0}),
+        /Invalid tab ID: 0/,
+        "Create call failed as expected");
 
 
       browser.test.log("Try to create a window with two URLs");

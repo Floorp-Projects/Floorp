@@ -7,26 +7,17 @@
 add_task(function* testWindowCreateParams() {
   let extension = ExtensionTestUtils.loadExtension({
     async background() {
-      function* getCalls() {
+      try {
         for (let state of ["minimized", "maximized", "fullscreen"]) {
           for (let param of ["left", "top", "width", "height"]) {
             let expected = `"state": "${state}" may not be combined with "left", "top", "width", or "height"`;
 
-            yield browser.windows.create({state, [param]: 100}).then(
-              val => {
-                browser.test.fail(`Expected error but got "${val}" instead`);
-              },
-              error => {
-                browser.test.assertTrue(
-                  error.message.includes(expected),
-                  `Got expected error (got: '${error.message}', expected: '${expected}'`);
-              });
+            await browser.test.assertRejects(
+              browser.windows.create({state, [param]: 100}),
+              RegExp(expected),
+              `Got expected error from create(${param}=100)`);
           }
         }
-      }
-
-      try {
-        await Promise.all(getCalls());
 
         browser.test.notifyPass("window-create-params");
       } catch (e) {
