@@ -3248,8 +3248,8 @@ JS_NewArrayObject(JSContext* cx, size_t length)
     return NewDenseFullyAllocatedArray(cx, length);
 }
 
-JS_PUBLIC_API(bool)
-JS_IsArrayObject(JSContext* cx, JS::HandleObject obj, bool* isArray)
+inline bool
+IsGivenTypeObject(JSContext* cx, JS::HandleObject obj, const ESClass& typeClass, bool* isType)
 {
     assertSameCompartment(cx, obj);
 
@@ -3257,8 +3257,14 @@ JS_IsArrayObject(JSContext* cx, JS::HandleObject obj, bool* isArray)
     if (!GetBuiltinClass(cx, obj, &cls))
         return false;
 
-    *isArray = cls == ESClass::Array;
+    *isType = cls == typeClass;
     return true;
+}
+
+JS_PUBLIC_API(bool)
+JS_IsArrayObject(JSContext* cx, JS::HandleObject obj, bool* isArray)
+{
+    return IsGivenTypeObject(cx, obj, ESClass::Array, isArray);
 }
 
 JS_PUBLIC_API(bool)
@@ -3289,6 +3295,18 @@ JS_SetArrayLength(JSContext* cx, HandleObject obj, uint32_t length)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     return SetLengthProperty(cx, obj, length);
+}
+
+JS_PUBLIC_API(bool)
+JS::IsMapObject(JSContext* cx, JS::HandleObject obj, bool* isMap)
+{
+    return IsGivenTypeObject(cx, obj, ESClass::Map, isMap);
+}
+
+JS_PUBLIC_API(bool)
+JS::IsSetObject(JSContext* cx, JS::HandleObject obj, bool* isSet)
+{
+    return IsGivenTypeObject(cx, obj, ESClass::Set, isSet);
 }
 
 JS_PUBLIC_API(void)

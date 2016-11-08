@@ -3438,6 +3438,30 @@ JS_GetArrayLength(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t* lengthp);
 extern JS_PUBLIC_API(bool)
 JS_SetArrayLength(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t length);
 
+namespace JS {
+
+/**
+ * Returns true and sets |*isMap| indicating whether |obj| is an Map object
+ * or a wrapper around one, otherwise returns false on failure.
+ *
+ * This method returns true with |*isMap == false| when passed a proxy whose
+ * target is an Map, or when passed a revoked proxy.
+ */
+extern JS_PUBLIC_API(bool)
+IsMapObject(JSContext* cx, JS::HandleObject obj, bool* isMap);
+
+/**
+ * Returns true and sets |*isSet| indicating whether |obj| is an Set object
+ * or a wrapper around one, otherwise returns false on failure.
+ *
+ * This method returns true with |*isSet == false| when passed a proxy whose
+ * target is an Set, or when passed a revoked proxy.
+ */
+extern JS_PUBLIC_API(bool)
+IsSetObject(JSContext* cx, JS::HandleObject obj, bool* isSet);
+
+} /* namespace JS */
+
 /**
  * Assign 'undefined' to all of the object's non-reserved slots. Note: this is
  * done for all slots, regardless of the associated property descriptor.
