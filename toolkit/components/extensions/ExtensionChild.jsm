@@ -85,6 +85,8 @@ class PseudoChildAPIManager extends ChildAPIManager {
     // by cloneInto.
     data.principal = originalData.principal;
 
+    this.url = data.url;
+
     let name = "API:CreateProxyContext";
     // The <browser> that receives messages from `this.messageManager`.
     let target = this.context.contentWindow

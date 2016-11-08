@@ -84,9 +84,9 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   BaseContext,
   EventEmitter,
-  LocalAPIImplementation,
   LocaleData,
   SchemaAPIManager,
+  SpreadArgs,
   defineLazyGetter,
   flushJarCache,
   instanceOf,
@@ -385,6 +385,7 @@ class ExtensionChildProxyContext extends ProxyContext {
 }
 
 function findPathInObject(obj, path, printErrors = true) {
+  let parent;
   for (let elt of path.split(".")) {
     if (!obj || !(elt in obj)) {
       if (printErrors) {
@@ -393,9 +394,13 @@ function findPathInObject(obj, path, printErrors = true) {
       return null;
     }
 
+    parent = obj;
     obj = obj[elt];
   }
 
+  if (typeof obj === "function") {
+    return obj.bind(parent);
+  }
   return obj;
 }
 
@@ -498,31 +503,41 @@ ParentAPIManager = {
       Cu.reportError("WebExtension warning: Message manager unexpectedly changed");
     }
 
-    function callback(...cbArgs) {
-      let lastError = context.lastError;
-
-      context.currentMessageManager.sendAsyncMessage("API:CallResult", {
-        childId: data.childId,
-        callId: data.callId,
-        args: cbArgs,
-        lastError: lastError ? lastError.message : null,
-      });
-    }
-
-    let args = data.args;
-    args = Cu.cloneInto(args, context.sandbox);
-    if (data.callId) {
-      args = args.concat(callback);
-    }
     try {
-      findPathInObject(context.apiObj, data.path)(...args);
+      let args = Cu.cloneInto(data.args, context.sandbox);
+      let result = findPathInObject(context.apiObj, data.path)(...args);
+
+      if (data.callId) {
+        result = result || Promise.resolve();
+
+        result.then(result => {
+          result = result instanceof SpreadArgs ? [...result] : [result];
+
+          context.currentMessageManager.sendAsyncMessage("API:CallResult", {
+            childId: data.childId,
+            callId: data.callId,
+            result,
+          });
+        }, error => {
+          error = context.normalizeError(error);
+          context.currentMessageManager.sendAsyncMessage("API:CallResult", {
+            childId: data.childId,
+            callId: data.callId,
+            error: {message: error.message},
+          });
+        });
+      }
     } catch (e) {
-      let msg = e.message || "API failed";
-      context.currentMessageManager.sendAsyncMessage("API:CallResult", {
-        childId: data.childId,
-        callId: data.callId,
-        lastError: msg,
-      });
+      if (data.callId) {
+        let error = context.normalizeError(e);
+        context.currentMessageManager.sendAsyncMessage("API:CallResult", {
+          childId: data.childId,
+          callId: data.callId,
+          error: {message: error.message},
+        });
+      } else {
+        Cu.reportError(e);
+      }
     }
   },
 
@@ -712,52 +727,8 @@ GlobalManager = {
   },
 
   injectInObject(context, isChromeCompat, dest) {
-    let apis = {
-      extensionTypes: {},
-    };
-    Management.generateAPIs(context, apis);
-    SchemaAPIManager.generateAPIs(context, context.extension.apis, apis);
-
-    // For testing only.
-    context._unwrappedAPIs = apis;
-
-    let schemaWrapper = {
-      isChromeCompat,
-
-      get url() {
-        return context.uri.spec;
-      },
-
-      get principal() {
-        return context.principal;
-      },
-
-      get cloneScope() {
-        return context.cloneScope;
-      },
-
-      hasPermission(permission) {
-        return context.extension.hasPermission(permission);
-      },
-
-      shouldInject(namespace, name, allowedContexts) {
-        // Do not generate content script APIs, unless explicitly allowed.
-        if (context.envType === "content_parent" && !allowedContexts.includes("content")) {
-          return false;
-        }
-        if (context.envType !== "addon_parent" &&
-            allowedContexts.includes("addon_parent_only")) {
-          return false;
-        }
-        return findPathInObject(apis, namespace, false) !== null;
-      },
-
-      getImplementation(namespace, name) {
-        let pathObj = findPathInObject(apis, namespace);
-        return new LocalAPIImplementation(pathObj, name, context);
-      },
-    };
-    Schemas.inject(dest, schemaWrapper);
+    Management.generateAPIs(context, dest);
+    SchemaAPIManager.generateAPIs(context, context.extension.apis, dest);
   },
 };
 
