@@ -19,12 +19,13 @@ static LazyLogModule sEventQueueLog("nsEventQueue");
 #endif
 #define LOG(args) MOZ_LOG(sEventQueueLog, mozilla::LogLevel::Debug, args)
 
-nsEventQueue::nsEventQueue(Mutex& aLock)
+nsEventQueue::nsEventQueue(mozilla::CondVar& aCondVar, EventQueueType aType)
   : mHead(nullptr)
   , mTail(nullptr)
   , mOffsetHead(0)
   , mOffsetTail(0)
-  , mEventsAvailable(aLock, "[nsEventQueue.mEventsAvailable]")
+  , mEventsAvailable(aCondVar)
+  , mType(aType)
 {
 }
 
@@ -44,16 +45,24 @@ bool
 nsEventQueue::GetEvent(bool aMayWait, nsIRunnable** aResult,
                        MutexAutoLock& aProofOfLock)
 {
+  if (aResult) {
+    *aResult = nullptr;
+  }
+
   while (IsEmpty()) {
     if (!aMayWait) {
-      if (aResult) {
-        *aResult = nullptr;
-      }
       return false;
     }
     LOG(("EVENTQ(%p): wait begin\n", this));
     mEventsAvailable.Wait();
     LOG(("EVENTQ(%p): wait end\n", this));
+
+    if (mType == eSharedCondVarQueue) {
+      if (IsEmpty()) {
+        return false;
+      }
+      break;
+    }
   }
 
   if (aResult) {
