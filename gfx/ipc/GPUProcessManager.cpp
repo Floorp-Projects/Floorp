@@ -415,7 +415,7 @@ GPUProcessManager::DestroyProcess()
 
 RefPtr<CompositorSession>
 GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
-                                            ClientLayerManager* aLayerManager,
+                                            LayerManager* aLayerManager,
                                             CSSToLayoutDeviceScale aScale,
                                             bool aUseAPZ,
                                             bool aUseExternalSurfaceSize,
@@ -456,7 +456,7 @@ GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
 
 RefPtr<CompositorSession>
 GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
-                                       ClientLayerManager* aLayerManager,
+                                       LayerManager* aLayerManager,
                                        const uint64_t& aRootLayerTreeId,
                                        CSSToLayoutDeviceScale aScale,
                                        bool aUseAPZ,
