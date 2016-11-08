@@ -68,6 +68,8 @@ CONFIGURE_DEFINE_FILES += [
 ]
 
 if not CONFIG['JS_STANDALONE']:
+    LIBRARY_DEFINES['MOZ_HAS_MOZGLUE'] = True
+
     CONFIGURE_SUBST_FILES += [
         '../../config/autoconf-js.mk',
         '../../config/emptyvars-js.mk',
@@ -658,7 +660,6 @@ if CONFIG['ENABLE_INTL_API']:
         ]
 
 USE_LIBS += [
-    'fdlibm',
     'nspr',
     'zlib',
 ]
