@@ -81,6 +81,20 @@ class TestKeyedBy(unittest.TestCase):
         }
         self.assertEqual(get_keyed_by(test, 'option', 'x'), 20)
 
+    def test_by_value_regex(self):
+        test = {
+            'test-name': 'tname',
+            'option': {
+                'by-test-platform': {
+                    'macosx64/.*': 10,
+                    'linux64/debug': 20,
+                    'default': 5,
+                },
+            },
+            'test-platform': 'macosx64/debug',
+        }
+        self.assertEqual(get_keyed_by(test, 'option', 'x'), 10)
+
     def test_by_value_default(self):
         test = {
             'test-name': 'tname',
