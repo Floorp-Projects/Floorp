@@ -29,7 +29,6 @@
 #include "VsyncSource.h"
 #include "mozilla/dom/VideoDecoderManagerChild.h"
 #include "mozilla/dom/VideoDecoderManagerParent.h"
-#include "MediaPrefs.h"
 
 namespace mozilla {
 namespace gfx {
@@ -537,8 +536,7 @@ bool
 GPUProcessManager::CreateContentBridges(base::ProcessId aOtherProcess,
                                         ipc::Endpoint<PCompositorBridgeChild>* aOutCompositor,
                                         ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
-                                        ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
-                                        ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager)
+                                        ipc::Endpoint<PVRManagerChild>* aOutVRBridge)
 {
   if (!CreateContentCompositorBridge(aOtherProcess, aOutCompositor) ||
       !CreateContentImageBridge(aOtherProcess, aOutImageBridge) ||
@@ -546,9 +544,6 @@ GPUProcessManager::CreateContentBridges(base::ProcessId aOtherProcess,
   {
     return false;
   }
-  // VideoDeocderManager is only supported in the GPU process, so we allow this to be
-  // fallible.
-  CreateContentVideoDecoderManager(aOtherProcess, aOutVideoManager);
   return true;
 }
 
@@ -664,12 +659,12 @@ GPUProcessManager::CreateContentVRManager(base::ProcessId aOtherProcess,
   return true;
 }
 
-void
+bool
 GPUProcessManager::CreateContentVideoDecoderManager(base::ProcessId aOtherProcess,
                                                     ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndpoint)
 {
-  if (!mGPUChild || !MediaPrefs::PDMUseGPUDecoder()) {
-    return;
+  if (!mGPUChild) {
+    return false;
   }
 
   ipc::Endpoint<dom::PVideoDecoderManagerParent> parentPipe;
@@ -682,13 +677,13 @@ GPUProcessManager::CreateContentVideoDecoderManager(base::ProcessId aOtherProces
     &childPipe);
   if (NS_FAILED(rv)) {
     gfxCriticalNote << "Could not create content video decoder: " << hexa(int(rv));
-    return;
+    return false;
   }
 
   mGPUChild->SendNewContentVideoDecoderManager(Move(parentPipe));
 
   *aOutEndpoint = Move(childPipe);
-  return;
+  return true;
 }
 
 already_AddRefed<IAPZCTreeManager>
