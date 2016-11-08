@@ -1544,7 +1544,10 @@ MessageChannel::RunMessage(MessageTask& aTask)
         if (task == &aTask) {
             break;
         }
-        MOZ_ASSERT(!ShouldRunMessage(task->Msg()));
+
+        MOZ_ASSERT(!ShouldRunMessage(task->Msg()) ||
+                   aTask.Msg().priority() != task->Msg().priority());
+
     }
 #endif
 
@@ -1568,6 +1571,8 @@ MessageChannel::RunMessage(MessageTask& aTask)
 
     DispatchMessage(Move(msg));
 }
+
+NS_IMPL_ISUPPORTS_INHERITED(MessageChannel::MessageTask, CancelableRunnable, nsIRunnablePriority)
 
 nsresult
 MessageChannel::MessageTask::Run()
@@ -1632,6 +1637,14 @@ MessageChannel::MessageTask::Clear()
     mChannel->AssertWorkerThread();
 
     mChannel = nullptr;
+}
+
+NS_IMETHODIMP
+MessageChannel::MessageTask::GetPriority(uint32_t* aPriority)
+{
+  *aPriority = mMessage.priority() == Message::HIGH_PRIORITY ?
+               PRIORITY_HIGH : PRIORITY_NORMAL;
+  return NS_OK;
 }
 
 void

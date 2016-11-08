@@ -32,7 +32,7 @@ struct LoadInfoArgs
 {
   OptionalPrincipalInfo requestingPrincipalInfo;
   PrincipalInfo         triggeringPrincipalInfo;
-  PrincipalInfo         principalToInheritInfo;
+  OptionalPrincipalInfo principalToInheritInfo;
   uint32_t              securityFlags;
   uint32_t              contentPolicyType;
   uint32_t              tainting;

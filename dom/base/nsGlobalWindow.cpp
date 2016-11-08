@@ -81,6 +81,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/ProcessHangMonitor.h"
+#include "mozilla/ThrottledEventQueue.h"
 #include "AudioChannelService.h"
 #include "nsAboutProtocolUtils.h"
 #include "nsCharTraits.h" // NS_IS_HIGH/LOW_SURROGATE
@@ -3639,6 +3640,47 @@ nsGlobalWindow::DefineArgumentsProperty(nsIArray *aArguments)
 
   JS::Rooted<JSObject*> obj(RootingCx(), GetWrapperPreserveColor());
   return ctx->SetProperty(obj, "arguments", aArguments);
+}
+
+void
+nsGlobalWindow::MaybeApplyBackPressure()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // If we are already suspended, then we don't need to apply back
+  // pressure for ThrottledEventQueue reasons.  This also avoids repeatedly
+  // calling SuspendTimeout() if this routine is executed many times
+  // before dropping below the backpressure threshold.
+  if (IsSuspended()) {
+    return;
+  }
+
+  RefPtr<ThrottledEventQueue> taskQueue = TabGroup()->GetThrottledEventQueue();
+  if (!taskQueue) {
+    return;
+  }
+
+  // Only stop the window if it has greatly fallen behind the main thread.
+  // This is a somewhat arbitrary threshold chosen such that it should
+  // rarely fire under normaly circumstances.  Its low enough, though,
+  // that we should avoid hitting an OOM from the backed up runnables in
+  // the queue.
+  static const uint32_t kThrottledEventQueueBackPressure = 5000;
+  if (taskQueue->Length() < kThrottledEventQueueBackPressure) {
+    return;
+  }
+
+  // First attempt to queue a runnable to resume running timeouts.  We do
+  // this first in order to verify we can dispatch successfully.
+  nsCOMPtr<nsIRunnable> r = NewRunnableMethod(this, &nsGlobalWindow::Resume);
+  nsresult rv = taskQueue->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  // Since the resume is dispatched we can go ahead and suspend the window
+  // now.  Once the task queue drains the resume will automatically get
+  // executed balancing this suspend.
+  // TODO: Consider suppressing event handling as well.
+  Suspend();
 }
 
 //*****************************************************************************
@@ -9546,6 +9588,18 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, in
   return NS_OK;
 }
 
+ThrottledEventQueue*
+nsGlobalWindow::GetThrottledEventQueue()
+{
+  // We must have an outer to access the TabGroup.
+  nsGlobalWindow* outer = GetOuterWindowInternal();
+  if (!outer) {
+    return nullptr;
+  }
+
+  return TabGroup()->GetThrottledEventQueue();
+}
+
 Selection*
 nsGlobalWindow::GetSelectionOuter()
 {
@@ -11899,7 +11953,7 @@ nsGlobalWindow::Resume()
       continue;
     }
 
-    nsresult rv = t->InitTimer(delay);
+    nsresult rv = t->InitTimer(GetThrottledEventQueue(), delay);
     if (NS_FAILED(rv)) {
       t->mTimer = nullptr;
       t->remove();
@@ -12618,7 +12672,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsITimeoutHandler* aHandler,
 
     RefPtr<Timeout> copy = timeout;
 
-    rv = timeout->InitTimer(realInterval);
+    rv = timeout->InitTimer(GetThrottledEventQueue(), realInterval);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -12891,7 +12945,8 @@ nsGlobalWindow::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now,
 
   // Reschedule the OS timer. Don't bother returning any error codes if
   // this fails since the callers of this method don't care about them.
-  nsresult rv = aTimeout->InitTimer(delay.ToMilliseconds());
+  nsresult rv = aTimeout->InitTimer(GetThrottledEventQueue(),
+                                    delay.ToMilliseconds());
 
   if (NS_FAILED(rv)) {
     NS_ERROR("Error initializing timer for DOM timeout!");
@@ -12966,6 +13021,20 @@ nsGlobalWindow::RunTimeout(Timeout* aTimeout)
       // firing depth so that we can reentrantly run timeouts
       timeout->mFiringDepth = firingDepth;
       last_expired_timeout = timeout;
+
+      // Run available timers until we see our target timer.  After
+      // that, however, stop coalescing timers so we can yield the
+      // main thread.  Further timers that are ready will get picked
+      // up by their own nsITimer runnables when they execute.
+      //
+      // For chrome windows, however, we do coalesce all timers and
+      // do not yield the main thread.  This is partly because we
+      // trust chrome windows not to misbehave and partly because a
+      // number of browser chrome tests have races that depend on this
+      // coalescing.
+      if (timeout == aTimeout && !IsChromeWindow()) {
+        break;
+      }
     }
   }
 
@@ -13073,6 +13142,8 @@ nsGlobalWindow::RunTimeout(Timeout* aTimeout)
   MOZ_ASSERT(dummy_timeout->HasRefCntOne(), "dummy_timeout may leak");
 
   mTimeoutInsertionPoint = last_insertion_point;
+
+  MaybeApplyBackPressure();
 }
 
 void
@@ -13184,7 +13255,8 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
       timeout->mFiringDepth = firingDepth;
       timeout->Release();
 
-      nsresult rv = timeout->InitTimer(delay.ToMilliseconds());
+      nsresult rv = timeout->InitTimer(GetThrottledEventQueue(),
+                                       delay.ToMilliseconds());
 
       if (NS_FAILED(rv)) {
         NS_WARNING("Error resetting non background timer for DOM timeout!");
@@ -13271,15 +13343,6 @@ nsGlobalWindow::InsertTimeoutIntoList(Timeout* aTimeout)
   // Increment the timeout's reference count since it's now held on to
   // by the list
   aTimeout->AddRef();
-}
-
-// static
-void
-nsGlobalWindow::TimerCallback(nsITimer *aTimer, void *aClosure)
-{
-  RefPtr<Timeout> timeout = (Timeout*)aClosure;
-
-  timeout->mWindow->RunTimeout(timeout);
 }
 
 //*****************************************************************************
@@ -14778,7 +14841,7 @@ nsGlobalWindow::TabGroupOuter()
   if (!mIsValidatingTabGroup) {
     mIsValidatingTabGroup = true;
     // We only need to do this check if we aren't in the chrome tab group
-    if (GetDocShell()->ItemType() == nsIDocShellTreeItem::typeChrome) {
+    if (mIsChrome) {
       MOZ_ASSERT(mTabGroup == TabGroup::GetChromeTabGroup());
     } else {
       // Sanity check that our tabgroup matches our opener or parent.

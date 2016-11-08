@@ -2995,6 +2995,9 @@ TabChild::ReinitRendering()
     APZChild* apz = ContentProcessController::Create(mUniqueId);
     CompositorBridgeChild::Get()->SendPAPZConstructor(apz, mLayersId);
   }
+
+  nsCOMPtr<nsIDocument> doc(GetDocument());
+  doc->NotifyLayerManagerRecreated();
 }
 
 void

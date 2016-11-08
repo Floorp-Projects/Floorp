@@ -47,6 +47,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Console.h"
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/Exceptions.h"
@@ -70,7 +71,7 @@
 #include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerGlobalScopeBinding.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/TaskQueue.h"
+#include "mozilla/ThrottledEventQueue.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/WorkerTimelineMarker.h"
 #include "nsAlgorithm.h"
@@ -4122,12 +4123,18 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
 
   nsCOMPtr<nsIEventTarget> target;
 
+  // A child worker just inherits the parent workers ThrottledEventQueue
+  // and main thread target for now.  This is mainly due to the restriction
+  // that ThrottledEventQueue can only be created on the main thread at the
+  // moment.
   if (aParent) {
-    target = aParent->MainThreadEventTarget();
+    mMainThreadThrottledEventQueue = aParent->mMainThreadThrottledEventQueue;
+    mMainThreadEventTarget = aParent->mMainThreadEventTarget;
+    return;
   }
 
-  // TODO: If we have a window, try to use its MainThreadTaskQueue as the
-  //       target for our sub-queue.
+  MOZ_ASSERT(NS_IsMainThread());
+  target = GetWindow() ? GetWindow()->GetThrottledEventQueue() : nullptr;
 
   if (!target) {
     nsCOMPtr<nsIThread> mainThread;
@@ -4136,12 +4143,18 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
     target = mainThread;
   }
 
-  // Throttle events to the main thread using a TaskQueue specific to this
-  // worker thread.
-  mMainThreadTaskQueue = new TaskQueue(target.forget());
+  // Throttle events to the main thread using a ThrottledEventQueue specific to
+  // this worker thread.  This may return nullptr during shutdown.
+  mMainThreadThrottledEventQueue = ThrottledEventQueue::Create(target);
 
-  // Expose our task queue as the worker's main thread nsIEventTarget.
-  mMainThreadEventTarget = mMainThreadTaskQueue->WrapAsEventTarget();
+  // If we were able to creat the throttled event queue, then use it for
+  // dispatching our main thread runnables.  Otherwise use our underlying
+  // base target.
+  if (mMainThreadThrottledEventQueue) {
+    mMainThreadEventTarget = mMainThreadThrottledEventQueue;
+  } else {
+    mMainThreadEventTarget = target.forget();
+  }
 }
 
 WorkerPrivate::~WorkerPrivate()
@@ -4681,14 +4694,6 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
           mJSContext = nullptr;
         }
 
-        // Shutdown the main thread TaskQueue and wait for it to drain.  Make
-        // sure to clear our references first, however, so that new runnables
-        // are not dispatched into the closing TaskQueue.
-        mMainThreadEventTarget = do_GetMainThread();
-        RefPtr<TaskQueue> taskQueue = mMainThreadTaskQueue.forget();
-        taskQueue->BeginShutdown();
-        taskQueue->AwaitShutdownAndIdle();
-
         // After mStatus is set to Dead there can be no more
         // WorkerControlRunnables so no need to lock here.
         if (!mControlQueue.IsEmpty()) {
@@ -4758,9 +4763,9 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
     // If the worker thread is spamming the main thread faster than it can
     // process the work, then pause the worker thread until the MT catches
     // up.
-    if (mMainThreadTaskQueue &&
-        mMainThreadTaskQueue->ImpreciseLengthForHeuristics() > 5000) {
-      mMainThreadTaskQueue->AwaitIdle();
+    if (mMainThreadThrottledEventQueue &&
+        mMainThreadThrottledEventQueue->Length() > 5000) {
+      mMainThreadThrottledEventQueue->AwaitIdle();
     }
   }
 

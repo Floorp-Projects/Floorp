@@ -87,7 +87,7 @@ Compositor::NotifyNotUsedAfterComposition(TextureHost* aTextureHost)
   const int thresholdCount = 5;
   const double thresholdSec = 2.0f;
   if (mNotifyNotUsedAfterComposition.Length() > thresholdCount) {
-    TimeDuration duration = TimeStamp::Now() - mLastCompositionEndTime;
+    TimeDuration duration = mLastCompositionEndTime ? TimeStamp::Now() - mLastCompositionEndTime : TimeDuration();
     // Check if we could flush
     if (duration.ToSeconds() > thresholdSec) {
       FlushPendingNotifyNotUsed();

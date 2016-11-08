@@ -19,6 +19,7 @@
 #include "mozilla/NotNull.h"
 #include "nsAutoPtr.h"
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 class CycleCollectedJSContext;
@@ -140,37 +141,65 @@ protected:
   public:
     explicit nsChainedEventQueue(mozilla::Mutex& aLock)
       : mNext(nullptr)
-      , mQueue(aLock)
+      , mEventsAvailable(aLock, "[nsChainedEventQueue.mEventsAvailable]")
+      , mProcessSecondaryQueueRunnable(false)
     {
+      mNormalQueue =
+        mozilla::MakeUnique<nsEventQueue>(mEventsAvailable,
+                                          nsEventQueue::eSharedCondVarQueue);
+      // Both queues need to use the same CondVar!
+      mSecondaryQueue =
+        mozilla::MakeUnique<nsEventQueue>(mEventsAvailable,
+                                          nsEventQueue::eSharedCondVarQueue);
     }
 
     bool GetEvent(bool aMayWait, nsIRunnable** aEvent,
-                  mozilla::MutexAutoLock& aProofOfLock)
-    {
-      return mQueue.GetEvent(aMayWait, aEvent, aProofOfLock);
-    }
+                  mozilla::MutexAutoLock& aProofOfLock);
 
     void PutEvent(nsIRunnable* aEvent, mozilla::MutexAutoLock& aProofOfLock)
     {
-      mQueue.PutEvent(aEvent, aProofOfLock);
+      RefPtr<nsIRunnable> event(aEvent);
+      PutEvent(event.forget(), aProofOfLock);
     }
 
     void PutEvent(already_AddRefed<nsIRunnable> aEvent,
                   mozilla::MutexAutoLock& aProofOfLock)
     {
-      mQueue.PutEvent(mozilla::Move(aEvent), aProofOfLock);
+      RefPtr<nsIRunnable> event(aEvent);
+      nsCOMPtr<nsIRunnablePriority> runnablePrio =
+        do_QueryInterface(event);
+      uint32_t prio = nsIRunnablePriority::PRIORITY_NORMAL;
+      if (runnablePrio) {
+        runnablePrio->GetPriority(&prio);
+      }
+      MOZ_ASSERT(prio == nsIRunnablePriority::PRIORITY_NORMAL ||
+                 prio == nsIRunnablePriority::PRIORITY_HIGH);
+      if (prio == nsIRunnablePriority::PRIORITY_NORMAL) {
+        mNormalQueue->PutEvent(event.forget(), aProofOfLock);
+      } else {
+        mSecondaryQueue->PutEvent(event.forget(), aProofOfLock);
+      }
     }
 
     bool HasPendingEvent(mozilla::MutexAutoLock& aProofOfLock)
     {
-      return mQueue.HasPendingEvent(aProofOfLock);
+      return mNormalQueue->HasPendingEvent(aProofOfLock) ||
+             mSecondaryQueue->HasPendingEvent(aProofOfLock);
     }
 
     nsChainedEventQueue* mNext;
     RefPtr<nsNestedEventTarget> mEventTarget;
 
   private:
-    nsEventQueue mQueue;
+    mozilla::CondVar mEventsAvailable;
+    mozilla::UniquePtr<nsEventQueue> mNormalQueue;
+    mozilla::UniquePtr<nsEventQueue> mSecondaryQueue;
+
+    // Try to process one high priority runnable after each normal
+    // priority runnable. This gives the processing model HTML spec has for
+    // 'Update the rendering' in the case only vsync messages are in the
+    // secondary queue and prevents starving the normal queue.
+    bool mProcessSecondaryQueueRunnable;
   };
 
   class nsNestedEventTarget final : public nsIEventTarget
@@ -223,6 +252,7 @@ protected:
   // mIdlePeriod->GetIdlePeriodHint() will give an estimate of when
   // the current idle period will end.
   nsCOMPtr<nsIIdlePeriod> mIdlePeriod;
+  mozilla::CondVar mIdleEventsAvailable;
   nsEventQueue mIdleEvents;
 
   int32_t   mPriority;

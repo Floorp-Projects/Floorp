@@ -30,6 +30,8 @@ const TEST_DATA = [{
   containerCount: 1
 }];
 
+requestLongerTimeout(5);
+
 add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
   let front = inspector.inspector;

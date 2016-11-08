@@ -337,7 +337,11 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
     // Check whether we have an nsILoadInfo that says what we should do.
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
     if (loadInfo && loadInfo->GetForceInheritPrincipalOverruleOwner()) {
-      NS_ADDREF(*aPrincipal = loadInfo->PrincipalToInherit());
+      nsCOMPtr<nsIPrincipal> principalToInherit = loadInfo->PrincipalToInherit();
+      if (!principalToInherit) {
+        principalToInherit = loadInfo->TriggeringPrincipal();
+      }
+      principalToInherit.forget(aPrincipal);
       return NS_OK;
     }
 
@@ -377,7 +381,11 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
           }
         }
         if (forceInherit) {
-            NS_ADDREF(*aPrincipal = loadInfo->PrincipalToInherit());
+            nsCOMPtr<nsIPrincipal> principalToInherit = loadInfo->PrincipalToInherit();
+            if (!principalToInherit) {
+              principalToInherit = loadInfo->TriggeringPrincipal();
+            }
+            principalToInherit.forget(aPrincipal);
             return NS_OK;
         }
 
@@ -390,6 +398,9 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
             nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
             NS_ENSURE_SUCCESS(rv, rv); 
             nsCOMPtr<nsIPrincipal> principalToInherit = loadInfo->PrincipalToInherit();
+            if (!principalToInherit) {
+              principalToInherit = loadInfo->TriggeringPrincipal();
+            }
             bool inheritForAboutBlank = loadInfo->GetAboutBlankInherits();
 
             if (nsContentUtils::ChannelShouldInheritPrincipal(principalToInherit,

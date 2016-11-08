@@ -72,10 +72,12 @@ function background() {
     "onCompleted":      [{urls: ["<all_urls>"]}, ["responseHeaders"]],
   };
 
+  let requestBodySupported = true;
+
   function onUpload(details) {
     let url = new URL(details.url);
     let upload = url.searchParams.get("upload");
-    if (!upload) {
+    if (!upload || !requestBodySupported) {
       return;
     }
     let requestBody = details.requestBody;
@@ -113,12 +115,18 @@ function background() {
       browser.webRequest[name].addListener(
         listener.bind(null, name), ...args);
     } catch (e) {
+      browser.test.assertTrue(/\brequestBody\b/.test(e.message),
+                              "Request body is unsupported");
+
       // requestBody is disabled in release builds
       if (!/\brequestBody\b/.test(e.message)) {
-        args.pop();
-        browser.webRequest[name].addListener(
-          listener.bind(null, name), ...args);
+        throw e;
       }
+
+      requestBodySupported = false;
+      args.pop();
+      browser.webRequest[name].addListener(
+        listener.bind(null, name), ...args);
     }
   }
 }
