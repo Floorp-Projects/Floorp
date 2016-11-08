@@ -658,7 +658,6 @@ stubPackets.set("console.log('foobar', 'test')", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -692,7 +691,6 @@ stubPackets.set("console.log(undefined)", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -724,7 +722,6 @@ stubPackets.set("console.warn('danger, will robinson!')", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -758,7 +755,6 @@ stubPackets.set("console.log(NaN)", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -792,7 +788,6 @@ stubPackets.set("console.log(null)", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -824,7 +819,6 @@ stubPackets.set("console.log('鼬')", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -854,7 +848,6 @@ stubPackets.set("console.clear()", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -889,7 +882,6 @@ stubPackets.set("console.count('bar')", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -942,7 +934,6 @@ stubPackets.set("console.assert(false, {message: 'foobar'})", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -983,7 +974,6 @@ stubPackets.set("console.log('hello \nfrom \rthe \"string world!')", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1015,7 +1005,6 @@ stubPackets.set("console.log('úṇĩçödê țĕșť')", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1059,7 +1048,6 @@ stubPackets.set("console.dirxml(window)", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1089,7 +1077,6 @@ stubPackets.set("console.trace()", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1144,7 +1131,6 @@ stubPackets.set("console.time('bar')", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1179,7 +1165,6 @@ stubPackets.set("console.timeEnd('bar')", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1214,7 +1199,6 @@ stubPackets.set("console.table('bar')", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1263,7 +1247,6 @@ stubPackets.set("console.table(['a', 'b', 'c'])", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1295,7 +1278,6 @@ stubPackets.set("console.group('bar')", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1327,7 +1309,6 @@ stubPackets.set("console.groupEnd('bar')", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1359,7 +1340,6 @@ stubPackets.set("console.groupCollapsed('foo')", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1391,7 +1371,6 @@ stubPackets.set("console.groupEnd('foo')", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1421,7 +1400,6 @@ stubPackets.set("console.group()", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1451,7 +1429,6 @@ stubPackets.set("console.groupEnd()", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,
@@ -1484,7 +1461,6 @@ stubPackets.set("console.log(%cfoobar)", {
 			"firstPartyDomain": "",
 			"inIsolatedMozBrowser": false,
 			"privateBrowsingId": 0,
-			"signedPkg": "",
 			"userContextId": 0
 		},
 		"private": false,

@@ -177,8 +177,7 @@ TabContext::UpdateTabContextAfterSwap(const TabContext& aContext)
   // must match for the change to be accepted.
   if (aContext.OwnAppId() != OwnAppId() ||
       aContext.mContainingAppId != mContainingAppId ||
-      aContext.mOriginAttributes != mOriginAttributes ||
-      aContext.mSignedPkgOriginNoSuffix != mSignedPkgOriginNoSuffix) {
+      aContext.mOriginAttributes != mOriginAttributes) {
     return false;
   }
 
@@ -190,12 +189,6 @@ const DocShellOriginAttributes&
 TabContext::OriginAttributesRef() const
 {
   return mOriginAttributes;
-}
-
-const nsACString&
-TabContext::SignedPkgOriginNoSuffix() const
-{
-  return mSignedPkgOriginNoSuffix;
 }
 
 const nsAString&
@@ -224,7 +217,6 @@ TabContext::SetTabContext(bool aIsMozBrowserElement,
                           UIStateChangeType aShowAccelerators,
                           UIStateChangeType aShowFocusRings,
                           const DocShellOriginAttributes& aOriginAttributes,
-                          const nsACString& aSignedPkgOriginNoSuffix,
                           const nsAString& aPresentationURL)
 {
   NS_ENSURE_FALSE(mInitialized, false);
@@ -257,7 +249,6 @@ TabContext::SetTabContext(bool aIsMozBrowserElement,
   mContainingAppId = containingAppId;
   mOwnApp = aOwnApp;
   mContainingApp = aAppFrameOwnerApp;
-  mSignedPkgOriginNoSuffix = aSignedPkgOriginNoSuffix;
   mPresentationURL = aPresentationURL;
   mShowAccelerators = aShowAccelerators;
   mShowFocusRings = aShowFocusRings;
@@ -269,7 +260,6 @@ TabContext::AsIPCTabContext() const
 {
   return IPCTabContext(FrameIPCTabContext(mOriginAttributes,
                                           mContainingAppId,
-                                          mSignedPkgOriginNoSuffix,
                                           mIsMozBrowserElement,
                                           mIsPrerendered,
                                           mPresentationURL,
@@ -296,7 +286,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   bool isPrerendered = false;
   uint32_t containingAppId = NO_APP_ID;
   DocShellOriginAttributes originAttributes;
-  nsAutoCString signedPkgOriginNoSuffix;
   nsAutoString presentationURL;
   UIStateChangeType showAccelerators = UIStateChangeType_NoChange;
   UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
@@ -360,7 +349,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       isMozBrowserElement = ipcContext.isMozBrowserElement();
       isPrerendered = ipcContext.isPrerendered();
       containingAppId = ipcContext.frameOwnerAppId();
-      signedPkgOriginNoSuffix = ipcContext.signedPkgOriginNoSuffix();
       presentationURL = ipcContext.presentationURL();
       showAccelerators = ipcContext.showAccelerators();
       showFocusRings = ipcContext.showFocusRings();
@@ -414,7 +402,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
                                  showAccelerators,
                                  showFocusRings,
                                  originAttributes,
-                                 signedPkgOriginNoSuffix,
                                  presentationURL);
   if (!rv) {
     mInvalidReason = "Couldn't initialize TabContext.";
