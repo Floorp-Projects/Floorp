@@ -2504,7 +2504,7 @@ JS_FreezeObject(JSContext* cx, JS::Handle<JSObject*> obj);
 
 namespace JS {
 
-struct PropertyDescriptor {
+struct JS_PUBLIC_API(PropertyDescriptor) {
     JSObject* obj;
     unsigned attrs;
     JSGetterOp getter;
