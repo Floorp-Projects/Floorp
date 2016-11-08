@@ -32,6 +32,8 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Telemetry.h"
 #include "GMPService.h"
+#include "Layers.h"
+#include "mozilla/layers/ShadowLayers.h"
 
 #ifdef MOZ_ANDROID_OMX
 #include "AndroidBridge.h"
@@ -296,6 +298,19 @@ MediaDecoder::NotifyOwnerActivityChanged(bool aIsVisible)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsShutdown());
   SetElementVisibility(aIsVisible);
+
+  MediaDecoderOwner* owner = GetOwner();
+  NS_ENSURE_TRUE_VOID(owner);
+
+  dom::HTMLMediaElement* element = owner->GetMediaElement();
+  NS_ENSURE_TRUE_VOID(element);
+
+  RefPtr<LayerManager> layerManager =
+    nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
+  NS_ENSURE_TRUE_VOID(layerManager);
+
+  RefPtr<KnowsCompositor> knowsCompositor = layerManager->AsShadowForwarder();
+  mCompositorUpdatedEvent.Notify(knowsCompositor);
 }
 
 void
