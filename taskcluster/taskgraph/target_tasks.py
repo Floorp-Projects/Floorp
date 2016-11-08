@@ -118,10 +118,11 @@ def target_tasks_cedar(full_task_graph, parameters):
     def filter(task):
         platform = task.attributes.get('build_platform')
         # only select platforms
-        if platform not in ['linux64'] :
+        if platform not in ['linux64']:
             return False
         if task.attributes.get('unittest_suite'):
-            if not (task.attributes['unittest_suite'].startswith('mochitest') or 'xpcshell' in task.attributes['unittest_suite']):
+            if not (task.attributes['unittest_suite'].startswith('mochitest')
+                    or 'xpcshell' in task.attributes['unittest_suite']):
                 return False
         return True
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
