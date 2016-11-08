@@ -26,9 +26,6 @@
 #include "nsXULAppAPI.h"
 #include "PresentationLog.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-
 namespace mozilla {
 namespace dom {
 
@@ -131,9 +128,6 @@ private:
 };
 
 LazyLogModule gPresentationLog("Presentation");
-
-} // namespace dom
-} // namespace mozilla
 
 NS_IMPL_ISUPPORTS(PresentationDeviceRequest, nsIPresentationDeviceRequest)
 
@@ -276,7 +270,6 @@ NS_IMPL_ISUPPORTS(PresentationService,
                   nsIObserver)
 
 PresentationService::PresentationService()
-  : mIsAvailable(false)
 {
 }
 
@@ -316,13 +309,6 @@ PresentationService::Init()
     return false;
   }
 
-  nsCOMPtr<nsIPresentationDeviceManager> deviceManager =
-    do_GetService(PRESENTATION_DEVICE_MANAGER_CONTRACTID);
-  if (NS_WARN_IF(!deviceManager)) {
-    return false;
-  }
-
-  rv = deviceManager->GetDeviceAvailable(&mIsAvailable);
   return !NS_WARN_IF(NS_FAILED(rv));
 }
 
@@ -335,7 +321,20 @@ PresentationService::Observe(nsISupports* aSubject,
     HandleShutdown();
     return NS_OK;
   } else if (!strcmp(aTopic, PRESENTATION_DEVICE_CHANGE_TOPIC)) {
-    return HandleDeviceChange();
+    // Ignore the "update" case here, since we only care about the arrival and
+    // removal of the device.
+    if (!NS_strcmp(aData, u"add")) {
+      nsCOMPtr<nsIPresentationDevice> device = do_QueryInterface(aSubject);
+      if (NS_WARN_IF(!device)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      return HandleDeviceAdded(device);
+    } else if(!NS_strcmp(aData, u"remove")) {
+      return HandleDeviceRemoved();
+    }
+
+    return NS_OK;
   } else if (!strcmp(aTopic, PRESENTATION_SESSION_REQUEST_TOPIC)) {
     nsCOMPtr<nsIPresentationSessionRequest> request(do_QueryInterface(aSubject));
     if (NS_WARN_IF(!request)) {
@@ -374,7 +373,7 @@ PresentationService::HandleShutdown()
 
   Shutdown();
 
-  mAvailabilityListeners.Clear();
+  mAvailabilityManager.Clear();
   mSessionInfoAtController.Clear();
   mSessionInfoAtReceiver.Clear();
 
@@ -389,28 +388,89 @@ PresentationService::HandleShutdown()
 }
 
 nsresult
-PresentationService::HandleDeviceChange()
+PresentationService::HandleDeviceAdded(nsIPresentationDevice* aDevice)
+{
+  PRES_DEBUG("%s\n", __func__);
+  if (!aDevice) {
+    MOZ_ASSERT(false, "aDevice shoud no be null.");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // Query for only unavailable URLs while device added.
+  nsTArray<nsString> unavailableUrls;
+  mAvailabilityManager.GetAvailbilityUrlByAvailability(unavailableUrls, false);
+
+  nsTArray<nsString> supportedAvailabilityUrl;
+  for (const auto& url : unavailableUrls) {
+     bool isSupported;
+    if (NS_SUCCEEDED(aDevice->IsRequestedUrlSupported(url, &isSupported)) &&
+        isSupported) {
+      supportedAvailabilityUrl.AppendElement(url);
+    }
+  }
+
+  if (!supportedAvailabilityUrl.IsEmpty()) {
+    return mAvailabilityManager.DoNotifyAvailableChange(supportedAvailabilityUrl,
+                                                        true);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+PresentationService::HandleDeviceRemoved()
 {
   PRES_DEBUG("%s\n", __func__);
 
+  // Query for only available URLs while device removed.
+  nsTArray<nsString> availabilityUrls;
+  mAvailabilityManager.GetAvailbilityUrlByAvailability(availabilityUrls, true);
+
+  return UpdateAvailabilityUrlChange(availabilityUrls);
+}
+
+nsresult
+PresentationService::UpdateAvailabilityUrlChange(
+                                   const nsTArray<nsString>& aAvailabilityUrls)
+{
   nsCOMPtr<nsIPresentationDeviceManager> deviceManager =
     do_GetService(PRESENTATION_DEVICE_MANAGER_CONTRACTID);
   if (NS_WARN_IF(!deviceManager)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  bool isAvailable;
-  nsresult rv = deviceManager->GetDeviceAvailable(&isAvailable);
+  nsCOMPtr<nsIArray> devices;
+  nsresult rv = deviceManager->GetAvailableDevices(nullptr,
+                                                   getter_AddRefs(devices));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  if (isAvailable != mIsAvailable) {
-    mIsAvailable = isAvailable;
-    NotifyAvailableChange(mIsAvailable);
+  uint32_t numOfDevices;
+  devices->GetLength(&numOfDevices);
+
+  nsTArray<nsString> supportedAvailabilityUrl;
+  for (const auto& url : aAvailabilityUrls) {
+    for (uint32_t i = 0; i < numOfDevices; ++i) {
+      nsCOMPtr<nsIPresentationDevice> device = do_QueryElementAt(devices, i);
+      if (device) {
+        bool isSupported;
+        if (NS_SUCCEEDED(device->IsRequestedUrlSupported(url, &isSupported)) &&
+            isSupported) {
+          supportedAvailabilityUrl.AppendElement(url);
+          break;
+        }
+      }
+    }
   }
 
-  return NS_OK;
+  if (supportedAvailabilityUrl.IsEmpty()) {
+    return mAvailabilityManager.DoNotifyAvailableChange(aAvailabilityUrls,
+                                                        false);
+  }
+
+  return mAvailabilityManager.DoNotifyAvailableChange(supportedAvailabilityUrl,
+                                                      true);
 }
 
 nsresult
@@ -595,17 +655,6 @@ PresentationService::HandleReconnectRequest(nsIPresentationSessionRequest* aRequ
   }
 
   return HandleSessionRequest(aRequest);
-}
-
-void
-PresentationService::NotifyAvailableChange(bool aIsAvailable)
-{
-  nsTObserverArray<nsCOMPtr<nsIPresentationAvailabilityListener>>::ForwardIterator iter(mAvailabilityListeners);
-  while (iter.HasMore()) {
-    nsCOMPtr<nsIPresentationAvailabilityListener> listener = iter.GetNext();
-    Unused <<
-      NS_WARN_IF(NS_FAILED(listener->NotifyAvailableChange(aIsAvailable)));
-  }
 }
 
 NS_IMETHODIMP
@@ -878,28 +927,26 @@ PresentationService::BuildTransport(const nsAString& aSessionId,
 }
 
 NS_IMETHODIMP
-PresentationService::RegisterAvailabilityListener(nsIPresentationAvailabilityListener* aListener)
+PresentationService::RegisterAvailabilityListener(
+                                const nsTArray<nsString>& aAvailabilityUrls,
+                                nsIPresentationAvailabilityListener* aListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aAvailabilityUrls.IsEmpty());
+  MOZ_ASSERT(aListener);
 
-  if (!mAvailabilityListeners.Contains(aListener)) {
-    mAvailabilityListeners.AppendElement(aListener);
-  }
-
-  // Leverage availablility change notification to assign
-  // the initial value of availability object.
-  Unused <<
-    NS_WARN_IF(NS_FAILED(aListener->NotifyAvailableChange(mIsAvailable)));
-
-  return NS_OK;
+  mAvailabilityManager.AddAvailabilityListener(aAvailabilityUrls, aListener);
+  return UpdateAvailabilityUrlChange(aAvailabilityUrls);
 }
 
 NS_IMETHODIMP
-PresentationService::UnregisterAvailabilityListener(nsIPresentationAvailabilityListener* aListener)
+PresentationService::UnregisterAvailabilityListener(
+                                const nsTArray<nsString>& aAvailabilityUrls,
+                                nsIPresentationAvailabilityListener* aListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mAvailabilityListeners.RemoveElement(aListener);
+  mAvailabilityManager.RemoveAvailabilityListener(aAvailabilityUrls, aListener);
   return NS_OK;
 }
 
@@ -1118,6 +1165,9 @@ PresentationService::IsSessionAccessible(const nsAString& aSessionId,
   }
   return info->IsAccessible(aProcessId);
 }
+
+} // namespace dom
+} // namespace mozilla
 
 already_AddRefed<nsIPresentationService>
 NS_CreatePresentationService()

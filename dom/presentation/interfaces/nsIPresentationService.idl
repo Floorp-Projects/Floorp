@@ -158,15 +158,22 @@ interface nsIPresentationService : nsISupports
   /*
    * Register an availability listener. Must be called from the main thread.
    *
+   * @param availabilityUrls: The Urls that this listener is interested in.
    * @param listener: The listener to register.
    */
-  void registerAvailabilityListener(in nsIPresentationAvailabilityListener listener);
+  [noscript] void registerAvailabilityListener(
+                              in URLArrayRef availabilityUrls,
+                              in nsIPresentationAvailabilityListener listener);
 
   /*
    * Unregister an availability listener. Must be called from the main thread.
+   *
+   * @param availabilityUrls: The Urls that are registered before.
    * @param listener: The listener to unregister.
    */
-  void unregisterAvailabilityListener(in nsIPresentationAvailabilityListener listener);
+  [noscript] void unregisterAvailabilityListener(
+                              in URLArrayRef availabilityUrls,
+                              in nsIPresentationAvailabilityListener listener);
 
   /*
    * Register a session listener. Must be called from the main thread.
