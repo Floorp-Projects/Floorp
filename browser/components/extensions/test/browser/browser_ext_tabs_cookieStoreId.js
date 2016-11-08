@@ -45,15 +45,17 @@ add_task(function* () {
       async function runTest(data) {
         try {
           // Tab Creation
-          let tab = await browser.tabs.create({
-            windowId: data.privateTab ? this.privateWindowId : this.defaultWindowId,
-            cookieStoreId: data.cookieStoreId,
-          }).then((tab) => {
-            // Tests for tab creation
-            testTab(data, tab);
-            return tab;
-          }, (error) => {
+          let tab;
+          try {
+            tab = await browser.tabs.create({
+              windowId: data.privateTab ? this.privateWindowId : this.defaultWindowId,
+              cookieStoreId: data.cookieStoreId,
+            });
+
+            browser.test.assertTrue(!data.failure, "we want a success");
+          } catch (error) {
             browser.test.assertTrue(!!data.failure, "we want a failure");
+
             if (data.failure == "illegal") {
               browser.test.assertTrue(/Illegal cookieStoreId/.test(error.message),
                                       "runtime.lastError should report the expected error message");
@@ -72,28 +74,30 @@ add_task(function* () {
               browser.test.fail("The test is broken");
             }
 
-            return null;
-          });
-
-          if (tab) {
-            {
-              // Tests for tab querying
-              let [tab] = await browser.tabs.query({
-                windowId: data.privateTab ? this.privateWindowId : this.defaultWindowId,
-                cookieStoreId: data.cookieStoreId,
-              });
-
-              browser.test.assertTrue(tab != undefined, "Tab found!");
-              testTab(data, tab);
-            }
-
-            let stores = await browser.cookies.getAllCookieStores();
-
-            let store = stores.find(store => store.id === tab.cookieStoreId);
-            browser.test.assertTrue(!!store, "We have a store for this tab.");
-
-            await browser.tabs.remove(tab.id);
+            browser.test.sendMessage("test-done");
+            return;
           }
+
+          // Tests for tab creation
+          testTab(data, tab);
+
+          {
+            // Tests for tab querying
+            let [tab] = await browser.tabs.query({
+              windowId: data.privateTab ? this.privateWindowId : this.defaultWindowId,
+              cookieStoreId: data.cookieStoreId,
+            });
+
+            browser.test.assertTrue(tab != undefined, "Tab found!");
+            testTab(data, tab);
+          }
+
+          let stores = await browser.cookies.getAllCookieStores();
+
+          let store = stores.find(store => store.id === tab.cookieStoreId);
+          browser.test.assertTrue(!!store, "We have a store for this tab.");
+
+          await browser.tabs.remove(tab.id);
 
           browser.test.sendMessage("test-done");
         } catch (e) {
