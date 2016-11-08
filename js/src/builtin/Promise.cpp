@@ -14,6 +14,7 @@
 
 #include "gc/Heap.h"
 #include "js/Debug.h"
+#include "vm/AsyncFunction.h"
 #include "vm/SelfHosting.h"
 
 #include "jsobjinlines.h"
@@ -32,6 +33,8 @@ MillisecondsSinceStartup()
 
 #define PROMISE_HANDLER_IDENTITY 0
 #define PROMISE_HANDLER_THROWER  1
+#define PROMISE_HANDLER_AWAIT_FULFILLED 2
+#define PROMISE_HANDLER_AWAIT_REJECTED 3
 
 enum ResolutionMode {
     ResolveMode,
@@ -625,6 +628,18 @@ enum GetCapabilitiesExecutorSlots {
     GetCapabilitiesExecutorSlots_Reject
 };
 
+static MOZ_MUST_USE PromiseObject*
+CreatePromiseObjectWithDefaultResolution(JSContext* cx)
+{
+    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectInternal(cx));
+    if (!promise)
+        return nullptr;
+
+    AddPromiseFlags(*promise, PROMISE_FLAG_DEFAULT_RESOLVE_FUNCTION |
+                    PROMISE_FLAG_DEFAULT_REJECT_FUNCTION);
+    return promise;
+}
+
 // ES2016, 25.4.1.5.
 static MOZ_MUST_USE bool
 NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandleObject promise,
@@ -649,12 +664,9 @@ NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandleObject promise,
     // in the list passed to all/race, which (potentially) means exposing them
     // to content.
     if (canOmitResolutionFunctions && IsNativeFunction(cVal, PromiseConstructor)) {
-        promise.set(CreatePromiseObjectInternal(cx));
+        promise.set(CreatePromiseObjectWithDefaultResolution(cx));
         if (!promise)
             return false;
-        AddPromiseFlags(promise->as<PromiseObject>(), PROMISE_FLAG_DEFAULT_RESOLVE_FUNCTION |
-                                                      PROMISE_FLAG_DEFAULT_REJECT_FUNCTION);
-
         return true;
     }
 
@@ -848,11 +860,32 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
         // Step 4.
         if (handlerNum == PROMISE_HANDLER_IDENTITY) {
             handlerResult = argument;
-        } else {
+        } else if (handlerNum == PROMISE_HANDLER_THROWER) {
             // Step 5.
-            MOZ_ASSERT(handlerNum == PROMISE_HANDLER_THROWER);
             resolutionMode = RejectMode;
             handlerResult = argument;
+        } else {
+            MOZ_ASSERT(handlerNum == PROMISE_HANDLER_AWAIT_FULFILLED
+                       || handlerNum == PROMISE_HANDLER_AWAIT_REJECTED);
+
+            Rooted<PromiseObject*> promiseObj(cx, &reaction->promise()->as<PromiseObject>());
+            MOZ_ASSERT(PromiseHasAnyFlag(*promiseObj, PROMISE_FLAG_AWAIT));
+
+            RootedValue generatorVal(cx, promiseObj->getFixedSlot(PromiseSlot_AwaitGenerator));
+
+            // Step 6.
+            // Optimized for await.
+            bool result;
+            if (handlerNum == PROMISE_HANDLER_AWAIT_FULFILLED)
+                result = AsyncFunctionAwaitedFulfilled(cx, argument, generatorVal, &handlerResult);
+            else
+                result = AsyncFunctionAwaitedRejected(cx, argument, generatorVal, &handlerResult);
+
+            if (!result) {
+                resolutionMode = RejectMode;
+                if (!cx->isExceptionPending() || !GetAndClearException(cx, &handlerResult))
+                    return false;
+            }
         }
     } else {
         // Step 6.
@@ -2055,6 +2088,53 @@ js::OriginalPromiseThen(JSContext* cx, Handle<PromiseObject*> promise, HandleVal
     return resultPromise;
 }
 
+static MOZ_MUST_USE bool PerformPromiseThenImpl(JSContext* cx, Handle<PromiseObject*> promise,
+                                                HandleValue onFulfilled,
+                                                HandleValue onRejected,
+                                                HandleObject resultPromise,
+                                                HandleObject resolve,
+                                                HandleObject reject);
+
+// Async Functions proposal 2.3 steps 2-8.
+// Implemented here instead of js/src/builtin/AsyncFunction.cpp
+// to call Promise internal functions
+bool
+js::AsyncFunctionAwait(JSContext* cx, HandleValue generatorVal, HandleValue value,
+                       MutableHandleValue rval)
+{
+    // Step 2.
+    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectWithDefaultResolution(cx));
+    if (!promise)
+        return false;
+
+    // Steps 3.
+    if (!ResolvePromiseInternal(cx, promise, value))
+        return false;
+
+    // Steps 4-5.
+    RootedValue onFulfilled(cx, Int32Value(PROMISE_HANDLER_AWAIT_FULFILLED));
+    RootedValue onRejected(cx, Int32Value(PROMISE_HANDLER_AWAIT_REJECTED));
+
+    // Step 7.
+    Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectWithDefaultResolution(cx));
+    if (!resultPromise)
+        return false;
+
+    // Step 6 (reordered).
+    AddPromiseFlags(*resultPromise, PROMISE_FLAG_AWAIT);
+    resultPromise->setFixedSlot(PromiseSlot_AwaitGenerator, generatorVal);
+
+    // Step 8.
+    if (!PerformPromiseThenImpl(cx, promise, onFulfilled, onRejected, resultPromise,
+                                nullptr, nullptr))
+    {
+        return false;
+    }
+
+    rval.setObject(*resultPromise);
+    return true;
+}
+
 // ES2016, 25.4.5.3.
 bool
 js::Promise_then(JSContext* cx, unsigned argc, Value* vp)
@@ -2121,6 +2201,15 @@ PerformPromiseThen(JSContext* cx, Handle<PromiseObject*> promise, HandleValue on
     if (!IsCallable(onRejected))
         onRejected = Int32Value(PROMISE_HANDLER_THROWER);
 
+    return PerformPromiseThenImpl(cx, promise, onFulfilled, onRejected, resultPromise,
+                                  resolve, reject);
+}
+
+static MOZ_MUST_USE bool
+PerformPromiseThenImpl(JSContext* cx, Handle<PromiseObject*> promise, HandleValue onFulfilled,
+                       HandleValue onRejected, HandleObject resultPromise,
+                       HandleObject resolve, HandleObject reject)
+{
     RootedObject incumbentGlobal(cx);
     if (!GetObjectFromIncumbentGlobal(cx, &incumbentGlobal))
         return false;
@@ -2445,6 +2534,7 @@ PromiseObject::dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> v
 bool
 PromiseObject::resolve(JSContext* cx, HandleValue resolutionValue)
 {
+    MOZ_ASSERT(!PromiseHasAnyFlag(*this, PROMISE_FLAG_AWAIT));
     if (state() != JS::PromiseState::Pending)
         return true;
 
@@ -2467,6 +2557,7 @@ PromiseObject::resolve(JSContext* cx, HandleValue resolutionValue)
 bool
 PromiseObject::reject(JSContext* cx, HandleValue rejectionValue)
 {
+    MOZ_ASSERT(!PromiseHasAnyFlag(*this, PROMISE_FLAG_AWAIT));
     if (state() != JS::PromiseState::Pending)
         return true;
 
