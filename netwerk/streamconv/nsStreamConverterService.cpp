@@ -193,7 +193,7 @@ typedef nsClassHashtable<nsCStringHashKey, BFSTableData> BFSHashTable;
 
 class CStreamConvDeallocator : public nsDequeFunctor {
 public:
-    virtual void* operator()(void* anObject) {
+    void* operator()(void* anObject) override {
         nsCString *string = (nsCString*)anObject;
         delete string;
         return 0;
