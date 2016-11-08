@@ -113,29 +113,9 @@ reftest-b2g:
         $(CHECK_TEST_ERROR); \
 	fi
 
-reftest-ipc: TEST_PATH?=layout/reftests/reftest.list
-reftest-ipc:
-	$(call RUN_REFTEST,'$(topsrcdir)/$(TEST_PATH)' $(OOP_CONTENT))
-	$(CHECK_TEST_ERROR)
-
-reftest-ipc-gpu: TEST_PATH?=layout/reftests/reftest.list
-reftest-ipc-gpu:
-	$(call RUN_REFTEST,'$(topsrcdir)/$(TEST_PATH)' $(OOP_CONTENT) $(GPU_RENDERING))
-	$(CHECK_TEST_ERROR)
-
 crashtest: TEST_PATH?=testing/crashtest/crashtests.list
 crashtest:
 	$(call RUN_REFTEST,'$(topsrcdir)/$(TEST_PATH)')
-	$(CHECK_TEST_ERROR)
-
-crashtest-ipc: TEST_PATH?=testing/crashtest/crashtests.list
-crashtest-ipc:
-	$(call RUN_REFTEST,'$(topsrcdir)/$(TEST_PATH)' $(OOP_CONTENT))
-	$(CHECK_TEST_ERROR)
-
-crashtest-ipc-gpu: TEST_PATH?=testing/crashtest/crashtests.list
-crashtest-ipc-gpu:
-	$(call RUN_REFTEST,'$(topsrcdir)/$(TEST_PATH)' $(OOP_CONTENT) $(GPU_RENDERING))
 	$(CHECK_TEST_ERROR)
 
 jstestbrowser: TESTS_PATH?=test-stage/jsreftest/tests/

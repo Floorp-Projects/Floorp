@@ -110,7 +110,6 @@ function fakeIdleNotification(topic) {
 
 function setupTestData() {
 
-  Telemetry.histogramFrom(IGNORE_CLONED_HISTOGRAM, IGNORE_HISTOGRAM_TO_CLONE);
   Services.startup.interrupted = true;
   Telemetry.registerAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM,
                                    Telemetry.HISTOGRAM_LINEAR,
@@ -333,14 +332,6 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
   }
   Assert.ok(TELEMETRY_TEST_FLAG in payload.histograms);
   Assert.ok(TELEMETRY_TEST_COUNT in payload.histograms);
-
-  let rh = Telemetry.registeredHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, []);
-  for (let name of rh) {
-    if (/SQLITE/.test(name) && name in payload.histograms) {
-      let histogramName = ("STARTUP_" + name);
-      Assert.ok(histogramName in payload.histograms, histogramName + " must be available.");
-    }
-  }
 
   Assert.ok(!(IGNORE_CLONED_HISTOGRAM in payload.histograms));
 

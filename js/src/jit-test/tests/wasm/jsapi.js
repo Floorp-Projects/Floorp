@@ -2,7 +2,7 @@ load(libdir + 'wasm.js');
 
 const WasmPage = 64 * 1024;
 
-const emptyModule = wasmTextToBinary('(module)');
+const moduleBinary = wasmTextToBinary('(module (func (export "f") (result i32) (i32.const 42)))');
 
 // 'WebAssembly' data property on global object
 const wasmDesc = Object.getOwnPropertyDescriptor(this, 'WebAssembly');
@@ -70,8 +70,8 @@ assertErrorMessage(() => new Module(1), TypeError, "first argument must be an Ar
 assertErrorMessage(() => new Module({}), TypeError, "first argument must be an ArrayBuffer or typed array object");
 assertErrorMessage(() => new Module(new Uint8Array()), CompileError, /failed to match magic number/);
 assertErrorMessage(() => new Module(new ArrayBuffer()), CompileError, /failed to match magic number/);
-assertEq(new Module(emptyModule) instanceof Module, true);
-assertEq(new Module(emptyModule.buffer) instanceof Module, true);
+assertEq(new Module(moduleBinary) instanceof Module, true);
+assertEq(new Module(moduleBinary.buffer) instanceof Module, true);
 
 // 'WebAssembly.Module.prototype' data property
 const moduleProtoDesc = Object.getOwnPropertyDescriptor(Module, 'prototype');
@@ -87,7 +87,7 @@ assertEq(String(moduleProto), "[object Object]");
 assertEq(Object.getPrototypeOf(moduleProto), Object.prototype);
 
 // 'WebAssembly.Module' instance objects
-const m1 = new Module(emptyModule);
+const m1 = new Module(moduleBinary);
 assertEq(typeof m1, "object");
 assertEq(String(m1), "[object WebAssembly.Module]");
 assertEq(Object.getPrototypeOf(m1), moduleProto);
@@ -136,6 +136,14 @@ assertEq(typeof exportsDesc.value, "object");
 assertEq(exportsDesc.writable, true);
 assertEq(exportsDesc.enumerable, true);
 assertEq(exportsDesc.configurable, true);
+
+// Exported WebAssembly functions
+const f = i1.exports.f;
+assertEq(f instanceof Function, true);
+assertEq(f.length, 0);
+assertEq('name' in f, true);
+assertEq(Function.prototype.call.call(f), 42);
+assertErrorMessage(() => new f(), TypeError, /is not a constructor/);
 
 // 'WebAssembly.Memory' data property
 const memoryDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'Memory');
@@ -379,5 +387,5 @@ function assertCompileSuccess(bytes) {
     drainJobQueue();
     assertEq(module instanceof Module, true);
 }
-assertCompileSuccess(emptyModule);
-assertCompileSuccess(emptyModule.buffer);
+assertCompileSuccess(moduleBinary);
+assertCompileSuccess(moduleBinary.buffer);

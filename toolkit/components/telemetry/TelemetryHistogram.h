@@ -62,10 +62,6 @@ const char*
 GetHistogramName(mozilla::Telemetry::ID id);
 
 nsresult
-HistogramFrom(const nsACString &name, const nsACString &existing_name,
-              JSContext *cx, JS::MutableHandle<JS::Value> ret);
-
-nsresult
 CreateHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret,
                          bool subsession, bool clearSubsession);
 

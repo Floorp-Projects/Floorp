@@ -656,11 +656,11 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
             return false;
     }
 
-    if (args.isConstructing()) {
-        // By spec, when a function is called as a constructor and this function
-        // returns a primary type, which is the case for all wasm exported
-        // functions, the returned value is discarded and an empty object is
-        // returned instead.
+    if (isAsmJS() && args.isConstructing()) {
+        // By spec, when a JS function is called as a constructor and this
+        // function returns a primary type, which is the case for all asm.js
+        // exported functions, the returned value is discarded and an empty
+        // object is returned instead.
         PlainObject* obj = NewBuiltinClassInstance<PlainObject>(cx);
         if (!obj)
             return false;
