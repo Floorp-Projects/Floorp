@@ -108,9 +108,9 @@ VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy)
     RefPtr<VideoDecoderChild> ref = this;
     GetManager()->RunWhenRecreated(NS_NewRunnableFunction([=]() {
       if (ref->mInitialized) {
-        ref->mCallback->Error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
+        ref->mCallback->Error(NS_ERROR_DOM_MEDIA_DECODE_ERR);
       } else {
-        ref->mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER, __func__);
+        ref->mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
       }
     }));
   }
