@@ -373,6 +373,9 @@ AccessibleWrap::CreateMaiInterfaces(void)
     if (AsTable())
       interfacesBits |= 1 << MAI_INTERFACE_TABLE;
  
+    if (AsTableCell())
+      interfacesBits |= 1 << MAI_INTERFACE_TABLE_CELL;
+
     // Selection interface.
     if (IsSelect()) {
       interfacesBits |= 1 << MAI_INTERFACE_SELECTION;
@@ -1129,6 +1132,9 @@ GetInterfacesForProxy(ProxyAccessible* aProxy, uint32_t aInterfaces)
 
   if (aInterfaces & Interfaces::TABLE)
     interfaces |= 1 << MAI_INTERFACE_TABLE;
+
+  if (aInterfaces & Interfaces::TABLECELL)
+    interfaces |= 1 << MAI_INTERFACE_TABLE_CELL;
 
   if (aInterfaces & Interfaces::IMAGE)
     interfaces |= 1 << MAI_INTERFACE_IMAGE;
