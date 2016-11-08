@@ -24,6 +24,14 @@ IsWrappedAsyncFunction(JSFunction* fun);
 JSObject*
 WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped);
 
+bool
+AsyncFunctionAwaitedFulfilled(JSContext* cx, HandleValue value, HandleValue generatorVal,
+                              MutableHandleValue rval);
+
+bool
+AsyncFunctionAwaitedRejected(JSContext* cx, HandleValue reason, HandleValue generatorVal,
+                             MutableHandleValue rval);
+
 } // namespace js
 
 #endif /* vm_AsyncFunction_h */

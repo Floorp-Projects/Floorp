@@ -161,9 +161,6 @@ AsyncFunctionReturned(JSContext* cx, HandleValue value, MutableHandleValue rval)
     return true;
 }
 
-static bool AsyncFunctionAwait(JSContext* cx, HandleValue generatorVal, HandleValue value,
-                               MutableHandleValue rval);
-
 enum class ResumeKind {
     Normal,
     Throw
@@ -205,88 +202,29 @@ AsyncFunctionStart(JSContext* cx, HandleValue generatorVal, MutableHandleValue r
     return AsyncFunctionResume(cx, generatorVal, ResumeKind::Normal, UndefinedHandleValue, rval);
 }
 
-#define AWAITED_FUNC_GENERATOR_SLOT 0
-
-static bool AsyncFunctionAwaitedFulfilled(JSContext* cx, unsigned argc, Value* vp);
-static bool AsyncFunctionAwaitedRejected(JSContext* cx, unsigned argc, Value* vp);
-
 // Async Functions proposal 2.3 steps 1-8.
-static bool
-AsyncFunctionAwait(JSContext* cx, HandleValue generatorVal, HandleValue value,
-                   MutableHandleValue rval)
+// Implemented in js/src/builtin/Promise.cpp
+
+// Async Functions proposal 2.4.
+bool
+js::AsyncFunctionAwaitedFulfilled(JSContext* cx, HandleValue value, HandleValue generatorVal,
+                                  MutableHandleValue rval)
 {
     // Step 1 (implicit).
 
-    // Steps 2-3.
-    RootedObject resolveObj(cx, PromiseObject::unforgeableResolve(cx, value));
-    if (!resolveObj)
-        return false;
-
-    Rooted<PromiseObject*> resolvePromise(cx, resolveObj.as<PromiseObject>());
-
-    // Step 4.
-    RootedAtom funName(cx, cx->names().empty);
-    RootedFunction onFulfilled(cx, NewNativeFunction(cx, AsyncFunctionAwaitedFulfilled, 1,
-                                                      funName, gc::AllocKind::FUNCTION_EXTENDED,
-                                                      GenericObject));
-    if (!onFulfilled)
-        return false;
-
-    // Step 5.
-    RootedFunction onRejected(cx, NewNativeFunction(cx, AsyncFunctionAwaitedRejected, 1,
-                                                    funName, gc::AllocKind::FUNCTION_EXTENDED,
-                                                    GenericObject));
-    if (!onRejected)
-        return false;
-
-    // Step 6.
-    onFulfilled->setExtendedSlot(AWAITED_FUNC_GENERATOR_SLOT, generatorVal);
-    onRejected->setExtendedSlot(AWAITED_FUNC_GENERATOR_SLOT, generatorVal);
-
-    // Step 8.
-    RootedValue onFulfilledVal(cx, ObjectValue(*onFulfilled));
-    RootedValue onRejectedVal(cx, ObjectValue(*onRejected));
-    RootedObject resultPromise(cx, OriginalPromiseThen(cx, resolvePromise, onFulfilledVal,
-                                                       onRejectedVal));
-    if (!resultPromise)
-        return false;
-
-    rval.setObject(*resultPromise);
-    return true;
-}
-
-// Async Functions proposal 2.4.
-static bool
-AsyncFunctionAwaitedFulfilled(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-
-    RootedFunction F(cx, &args.callee().as<JSFunction>());
-    RootedValue value(cx, args[0]);
-
-    // Step 1.
-    RootedValue generatorVal(cx, F->getExtendedSlot(AWAITED_FUNC_GENERATOR_SLOT));
-
     // Steps 2-7.
-    return AsyncFunctionResume(cx, generatorVal, ResumeKind::Normal, value, args.rval());
+    return AsyncFunctionResume(cx, generatorVal, ResumeKind::Normal, value, rval);
 }
 
 // Async Functions proposal 2.5.
-static bool
-AsyncFunctionAwaitedRejected(JSContext* cx, unsigned argc, Value* vp)
+bool
+js::AsyncFunctionAwaitedRejected(JSContext* cx, HandleValue reason, HandleValue generatorVal,
+                                 MutableHandleValue rval)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-
-    RootedFunction F(cx, &args.callee().as<JSFunction>());
-    RootedValue reason(cx, args[0]);
-
-    // Step 1.
-    RootedValue generatorVal(cx, F->getExtendedSlot(AWAITED_FUNC_GENERATOR_SLOT));
+    // Step 1 (implicit).
 
     // Step 2-7.
-    return AsyncFunctionResume(cx, generatorVal, ResumeKind::Throw, reason, args.rval());
+    return AsyncFunctionResume(cx, generatorVal, ResumeKind::Throw, reason, rval);
 }
 
 JSFunction*
