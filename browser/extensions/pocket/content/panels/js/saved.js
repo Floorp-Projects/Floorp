@@ -28,14 +28,11 @@ var PKT_SAVED_OVERLAY = function (options)
     this.cxt_removed = 0;
     this.justaddedsuggested = false;
     this.fillTagContainer = function(tags, container, tagclass) {
-        var newtagleft = 0;
         container.children().remove();
         for (var i = 0; i < tags.length; i++) {
             var newtag = $('<li><a href="#" class="token_tag ' + tagclass + '">' + tags[i] + '</a></li>');
             container.append(newtag);
-            var templeft = newtag.position().left;
             this.cxt_suggested_available++;
-            newtagleft = templeft;
         }
     };
     this.fillUserTags = function() {
@@ -607,4 +604,3 @@ $(function()
         window.thePKT_SAVED.create();
     });
 });
-

@@ -15,7 +15,7 @@ function extensionApiFactory(context) {
       },
 
       get inIncognitoContext() {
-        return PrivateBrowsingUtils.isContentWindowPrivate(context.contentWindow);
+        return context.incognito;
       },
     },
   };

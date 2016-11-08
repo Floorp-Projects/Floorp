@@ -32,6 +32,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
@@ -194,7 +196,7 @@ class BaseContext {
     this.extension = extension;
     this.jsonSandbox = null;
     this.active = true;
-
+    this.incognito = null;
     this.messageManager = null;
     this.docShell = null;
     this.contentWindow = null;
@@ -209,6 +211,10 @@ class BaseContext {
     this.innerWindowID = getInnerWindowID(contentWindow);
     this.messageManager = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIContentFrameMessageManager);
+
+    if (this.incognito == null) {
+      this.incognito = PrivateBrowsingUtils.isContentWindowPrivate(contentWindow);
+    }
 
     MessageChannel.setupMessageManagers([this.messageManager]);
 

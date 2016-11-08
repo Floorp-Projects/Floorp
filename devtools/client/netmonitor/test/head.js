@@ -386,17 +386,19 @@ function waitFor(subject, eventName) {
 /**
  * Tests if a button for a filter of given type is the only one checked.
  *
- * @param string aFilterType
+ * @param string filterType
  *        The type of the filter that should be the only one checked.
  */
-function testFilterButtons(aMonitor, aFilterType) {
-  let doc = aMonitor.panelWin.document;
-  let target = doc.querySelector("#requests-menu-filter-" + aFilterType + "-button");
-  let buttons = doc.querySelectorAll(".requests-menu-footer-button");
+function testFilterButtons(monitor, filterType) {
+  let doc = monitor.panelWin.document;
+  let target = doc.querySelector("#requests-menu-filter-" + filterType + "-button");
+  ok(target, `Filter button '${filterType}' was found`);
+  let buttons = [...doc.querySelectorAll(".menu-filter-button")];
+  ok(buttons.length > 0, "More than zero filter buttons were found");
 
   // Only target should be checked.
-  let checkStatus = [...buttons].map(button => button == target ? 1 : 0);
-  testFilterButtonsCustom(aMonitor, checkStatus);
+  let checkStatus = buttons.map(button => button == target ? 1 : 0);
+  testFilterButtonsCustom(monitor, checkStatus);
 }
 
 /**
@@ -499,11 +501,11 @@ function waitForContentMessage(name) {
 /**
  * Open the requestMenu menu and return all of it's items in a flat array
  * @param {netmonitorPanel} netmonitor
- * @param {Object} options to pass into openMenu
+ * @param {Event} event mouse event with screenX and screenX coordinates
  * @return An array of MenuItems
  */
-function openContextMenuAndGetAllItems(netmonitor, options) {
-  let menu = netmonitor.RequestsMenu._openMenu(options);
+function openContextMenuAndGetAllItems(netmonitor, event) {
+  let menu = netmonitor.RequestsMenu.contextMenu.open(event);
 
   // Flatten all menu items into a single array to make searching through it easier
   let allItems = [].concat.apply([], menu.items.map(function addItem(item) {

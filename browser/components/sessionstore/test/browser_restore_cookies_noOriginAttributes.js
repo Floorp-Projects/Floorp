@@ -106,7 +106,6 @@ const SESSION_DATA_OA = `
         "addonId": "",
         "appId": 0,
         "inIsolatedMozBrowser": false,
-        "signedPkg": "",
         "userContextId": 0
       }
     }]
