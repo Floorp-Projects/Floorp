@@ -191,6 +191,10 @@ WebGLContext::GetQuery(JSContext* cx, GLenum target, GLenum pname,
             if (!slot || !*slot)
                 return;
 
+            const auto& query = *slot;
+            if (target != query->Target())
+                return;
+
             JS::Rooted<JS::Value> v(cx);
             dom::GetOrCreateDOMReflector(cx, slot->get(), &v);
             retval.set(v);
