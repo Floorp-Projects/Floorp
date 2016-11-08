@@ -6,7 +6,6 @@ function test() {
   // initialization
   waitForExplicitFinish();
   let windowsToClose = [];
-  let testURI = "https://www.mozilla.org/en-US/";
   let initialURL =
     "http://example.com/tests/toolkit/components/places/tests/browser/begin.html";
   let finalURL =

@@ -8,8 +8,6 @@ const TEST_PAGE_URI = NetUtil.newURI("http://example.com/");
 const BOOKMARKED_PAGE_URI = NetUtil.newURI("http://example.com/bookmarked");
 
 add_task(function* test_expireAllFavicons() {
-  const {FAVICON_LOAD_NON_PRIVATE} = PlacesUtils.favicons;
-
   // Add a visited page.
   yield PlacesTestUtils.addVisits({ uri: TEST_PAGE_URI, transition: TRANSITION_TYPED });
 

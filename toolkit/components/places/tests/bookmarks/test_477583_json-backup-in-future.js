@@ -41,7 +41,6 @@ function run_test() {
     do_check_eq((yield PlacesBackups.getBackupFiles()).length, 1);
     let mostRecentBackupFile = yield PlacesBackups.getMostRecentBackup();
     do_check_neq(mostRecentBackupFile, null);
-    let todayFilename = PlacesBackups.getFilenameForDate();
     do_check_true(PlacesBackups.filenamesRegex.test(OS.Path.basename(mostRecentBackupFile)));
 
     // Check that future backup has been removed.

@@ -275,7 +275,6 @@ add_task(function* test_unsetKeyword() {
 });
 
 add_task(function* test_addRemoveBookmark() {
-  let fc = yield foreign_count(URI3);
   let observer = expectNotifications();
 
   let itemId =
