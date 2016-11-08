@@ -489,8 +489,8 @@ add_task(function* log_message_with_params() {
  */
 add_task(function* test_log_err_only() {
   let log = Log.repository.getLogger("error.only");
-  let testFormatter = { format: msg => msg };
-  let appender = new MockAppender(testFormatter);
+  let mockFormatter = { format: msg => msg };
+  let appender = new MockAppender(mockFormatter);
   log.addAppender(appender);
 
   /*
@@ -540,8 +540,8 @@ add_task(function* test_structured_basic() {
  */
 add_task(function* log_message_with_params() {
   let log = Log.repository.getLogger("error.logger");
-  let testFormatter = { format: msg => msg };
-  let appender = new MockAppender(testFormatter);
+  let mockFormatter = { format: msg => msg };
+  let appender = new MockAppender(mockFormatter);
   log.addAppender(appender);
 
   let testParams = {a:1, b:2};

@@ -158,12 +158,12 @@ add_task(function*() {
 });
 
 add_task(function* test_manifest_localization() {
-  const ID = "webextension3@tests.mozilla.org";
+  const extensionId = "webextension3@tests.mozilla.org";
 
   yield promiseInstallAllFiles([do_get_addon("webextension_3")], true);
   yield promiseAddonStartup();
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = yield promiseAddonByID(extensionId);
   addon.userDisabled = true;
 
   equal(addon.name, "Web Extensiøn foo ☹");
@@ -172,7 +172,7 @@ add_task(function* test_manifest_localization() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "fr-FR");
   yield promiseRestartManager();
 
-  addon = yield promiseAddonByID(ID);
+  addon = yield promiseAddonByID(extensionId);
 
   equal(addon.name, "Web Extensiøn le foo ☺");
   equal(addon.description, "Descriptïon le bar ☺ of add-on");
@@ -180,7 +180,7 @@ add_task(function* test_manifest_localization() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "de");
   yield promiseRestartManager();
 
-  addon = yield promiseAddonByID(ID);
+  addon = yield promiseAddonByID(extensionId);
 
   equal(addon.name, "Web Extensiøn foo ☹");
   equal(addon.description, "Descriptïon bar ☹ of add-on");
@@ -262,17 +262,17 @@ add_task(function*() {
 add_task(function* test_options_ui() {
   let OPTIONS_RE = /^moz-extension:\/\/[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}\/options\.html$/;
 
-  const ID = "webextension@tests.mozilla.org";
+  const extensionId = "webextension@tests.mozilla.org";
   yield promiseInstallWebExtension({
     manifest: {
-      applications: {gecko: {id: ID}},
+      applications: {gecko: {id: extensionId}},
       "options_ui": {
         "page": "options.html",
       },
     },
   });
 
-  let addon = yield promiseAddonByID(ID);
+  let addon = yield promiseAddonByID(extensionId);
   equal(addon.optionsType, AddonManager.OPTIONS_TYPE_INLINE_BROWSER,
         "Addon should have an INLINE_BROWSER options type");
 
@@ -333,10 +333,10 @@ add_task(function* test_experiments_api() {
     // Experiments are not enabled on release builds.
     return;
 
-  const ID = "meh@experiments.addons.mozilla.org";
+  const extensionId = "meh@experiments.addons.mozilla.org";
 
   let addonFile = createTempXPIFile({
-    id: ID,
+    id: extensionId,
     type: 256,
     version: "0.1",
     name: "Meh API",
@@ -346,10 +346,10 @@ add_task(function* test_experiments_api() {
 
   let addons = yield new Promise(resolve => AddonManager.getAddonsByTypes(["apiextension"], resolve));
   let addon = addons.pop();
-  equal(addon.id, ID, "Add-on should be installed as an API extension");
+  equal(addon.id, extensionId, "Add-on should be installed as an API extension");
 
   addons = yield new Promise(resolve => AddonManager.getAddonsByTypes(["extension"], resolve));
-  equal(addons.pop().id, ID, "Add-on type should be aliased to extension");
+  equal(addons.pop().id, extensionId, "Add-on type should be aliased to extension");
 
   addon.uninstall();
 });

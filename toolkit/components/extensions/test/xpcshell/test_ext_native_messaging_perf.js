@@ -90,7 +90,7 @@ add_task(function* test_round_trip_perf() {
         }
 
         let count = 0;
-        port.onMessage.addListener(msg => {
+        port.onMessage.addListener(() => {
           if (count == 0) {
             // Skip the first round, since it includes the time it takes
             // the app to start up.

@@ -332,15 +332,15 @@ function add_connection_test(aHost, aExpectedResult,
                              aAfterStreamOpen, aFirstPartyDomain) {
   const REMOTE_PORT = 8443;
 
-  function Connection(aHost) {
-    this.host = aHost;
+  function Connection(host) {
+    this.host = host;
     let threadManager = Cc["@mozilla.org/thread-manager;1"]
                           .getService(Ci.nsIThreadManager);
     this.thread = threadManager.currentThread;
     this.defer = Promise.defer();
     let sts = Cc["@mozilla.org/network/socket-transport-service;1"]
                 .getService(Ci.nsISocketTransportService);
-    this.transport = sts.createTransport(["ssl"], 1, aHost, REMOTE_PORT, null);
+    this.transport = sts.createTransport(["ssl"], 1, host, REMOTE_PORT, null);
     // See bug 1129771 - attempting to connect to [::1] when the server is
     // listening on 127.0.0.1 causes frequent failures on OS X 10.10.
     this.transport.connectionFlags |= Ci.nsISocketTransport.DISABLE_IPV6;
@@ -400,11 +400,11 @@ function add_connection_test(aHost, aExpectedResult,
     }
   };
 
-  /* Returns a promise to connect to aHost that resolves to the result of that
+  /* Returns a promise to connect to host that resolves to the result of that
    * connection */
-  function connectTo(aHost) {
-    Services.prefs.setCharPref("network.dns.localDomains", aHost);
-    let connection = new Connection(aHost);
+  function connectTo(host) {
+    Services.prefs.setCharPref("network.dns.localDomains", host);
+    let connection = new Connection(host);
     return connection.go();
   }
 

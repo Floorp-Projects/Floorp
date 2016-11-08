@@ -55,23 +55,23 @@ add_task(function* test_reloading_a_temp_addon() {
 
   const onReload = new Promise(resolve => {
     const listener = {
-      onUninstalling: (addon) => {
-        if (addon.id === sampleAddon.id) {
+      onUninstalling: (addonObj) => {
+        if (addonObj.id === sampleAddon.id) {
           receivedOnUninstalling = true;
         }
       },
-      onUninstalled: (addon) => {
-        if (addon.id === sampleAddon.id) {
+      onUninstalled: (addonObj) => {
+        if (addonObj.id === sampleAddon.id) {
           receivedOnUninstalled = true;
         }
       },
-      onInstalling: (addon) => {
+      onInstalling: (addonObj) => {
         receivedOnInstalling = true;
-        equal(addon.id, sampleAddon.id);
+        equal(addonObj.id, sampleAddon.id);
       },
-      onInstalled: (addon) => {
+      onInstalled: (addonObj) => {
         receivedOnInstalled = true;
-        equal(addon.id, sampleAddon.id);
+        equal(addonObj.id, sampleAddon.id);
         // This should be the last event called.
         AddonManager.removeAddonListener(listener);
         resolve();

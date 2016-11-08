@@ -74,7 +74,7 @@ function* runTests() {
   // function |getFileForURL| points to the same path as
   // |getFilePathForURL|.
   if ("getFileForURL" in PageThumbsStorage) {
-    let file = PageThumbsStorage.getFileForURL(URL);
+    file = PageThumbsStorage.getFileForURL(URL);
     is(file.path, PageThumbsStorage.getFilePathForURL(URL),
        "Deprecated getFileForURL and getFilePathForURL return the same path");
   }

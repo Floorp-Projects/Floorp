@@ -64,12 +64,12 @@ function setManifestPref(manifest) {
   Services.prefs.setComplexValue("social.manifest." + manifest.origin, Ci.nsISupportsString, string);
 }
 
-function do_wait_observer(topic, cb) {
+function do_wait_observer(obsTopic, cb) {
   function observer(subject, topic, data) {
     Services.obs.removeObserver(observer, topic);
     cb();
   }
-  Services.obs.addObserver(observer, topic, false);
+  Services.obs.addObserver(observer, obsTopic, false);
 }
 
 function do_add_providers(cb) {

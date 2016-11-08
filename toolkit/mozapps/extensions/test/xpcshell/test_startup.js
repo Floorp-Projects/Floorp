@@ -868,31 +868,31 @@ function run_test_12() {
                                  "addon3@tests.mozilla.org",
                                  "addon4@tests.mozilla.org",
                                  "addon5@tests.mozilla.org"],
-                                 function([a1, a2, a3, a4, a5]) {
-      do_check_neq(a1, null);
-      do_check_false(a1.userDisabled);
-      do_check_true(a1.seen);
-      do_check_true(a1.isActive);
+                                 function([a1_2, a2_2, a3_2, a4_2, a5_2]) {
+      do_check_neq(a1_2, null);
+      do_check_false(a1_2.userDisabled);
+      do_check_true(a1_2.seen);
+      do_check_true(a1_2.isActive);
 
-      do_check_neq(a2, null);
-      do_check_false(a2.userDisabled);
-      do_check_true(a2.seen);
-      do_check_true(a2.isActive);
+      do_check_neq(a2_2, null);
+      do_check_false(a2_2.userDisabled);
+      do_check_true(a2_2.seen);
+      do_check_true(a2_2.isActive);
 
-      do_check_neq(a3, null);
-      do_check_true(a3.userDisabled);
-      do_check_false(a3.seen);
-      do_check_false(a3.isActive);
+      do_check_neq(a3_2, null);
+      do_check_true(a3_2.userDisabled);
+      do_check_false(a3_2.seen);
+      do_check_false(a3_2.isActive);
 
-      var dest = profileDir.clone();
-      dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
-      dest.remove(true);
-      dest = userDir.clone();
-      dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
-      dest.remove(true);
-      dest = globalDir.clone();
-      dest.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
-      dest.remove(true);
+      var dest2 = profileDir.clone();
+      dest2.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
+      dest2.remove(true);
+      dest2 = userDir.clone();
+      dest2.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
+      dest2.remove(true);
+      dest2 = globalDir.clone();
+      dest2.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
+      dest2.remove(true);
 
       restartManager();
 
@@ -909,21 +909,21 @@ function run_test_12() {
                                    "addon3@tests.mozilla.org",
                                    "addon4@tests.mozilla.org",
                                    "addon5@tests.mozilla.org"],
-                                   function([a1, a2, a3, a4, a5]) {
-        do_check_neq(a1, null);
-        do_check_false(a1.userDisabled);
-        do_check_true(a1.seen);
-        do_check_true(a1.isActive);
+                                   function([a1_3, a2_3, a3_3, a4_3, a5_3]) {
+        do_check_neq(a1_3, null);
+        do_check_false(a1_3.userDisabled);
+        do_check_true(a1_3.seen);
+        do_check_true(a1_3.isActive);
 
-        do_check_neq(a2, null);
-        do_check_true(a2.userDisabled);
-        do_check_false(a2.seen);
-        do_check_false(a2.isActive);
+        do_check_neq(a2_3, null);
+        do_check_true(a2_3.userDisabled);
+        do_check_false(a2_3.seen);
+        do_check_false(a2_3.isActive);
 
-        do_check_neq(a3, null);
-        do_check_true(a3.userDisabled);
-        do_check_false(a3.seen);
-        do_check_false(a3.isActive);
+        do_check_neq(a3_3, null);
+        do_check_true(a3_3.userDisabled);
+        do_check_false(a3_3.seen);
+        do_check_false(a3_3.isActive);
 
         do_execute_soon(end_test);
       });
