@@ -15,7 +15,7 @@ add_task(function* test() {
   let { RequestsMenu } = NetMonitorView;
   RequestsMenu.lazyUpdate = true;
 
-  let onEvents = waitForNetworkEvents(monitor, 7);
+  let onEvents = waitForNetworkEvents(monitor, 8);
   let onThumbnail = monitor.panelWin.once(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
 
   yield performRequests();

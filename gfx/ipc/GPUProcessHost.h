@@ -96,6 +96,9 @@ public:
 
   void SetListener(Listener* aListener);
 
+  // Used for tests and diagnostics
+  void KillProcess();
+
 private:
   // Called on the main thread.
   void OnChannelConnectedTask();

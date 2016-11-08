@@ -139,10 +139,6 @@ class ReftestRunner(MozbuildObject):
         args.xrePath = xre_path
         args.ignoreWindowSize = True
 
-        # Don't enable oop for crashtest until they run oop in automation
-        if args.suite == 'reftest':
-            args.oop = True
-
         return runreftestb2g.run_test_harness(parser, args)
 
     def run_mulet_test(self, **kwargs):
@@ -170,10 +166,7 @@ class ReftestRunner(MozbuildObject):
 
         args.app = self.get_binary_path()
         args.mulet = True
-        args.oop = True
 
-        if args.oop:
-            args.browser_arg = '-oop'
         if not args.app.endswith('-bin'):
             args.app = '%s-bin' % args.app
         if not os.path.isfile(args.app):
@@ -221,8 +214,6 @@ class ReftestRunner(MozbuildObject):
         args = Namespace(**kwargs)
         if args.suite not in ('reftest', 'crashtest', 'jstestbrowser'):
             raise Exception('None or unrecognized reftest suite type.')
-        if hasattr(args, 'ipc'):
-            raise Exception('IPC tests not supported on Android.')
 
         self._setup_objdir(args)
         import remotereftest
@@ -338,29 +329,11 @@ class MachCommands(MachCommandBase):
         kwargs["suite"] = "jstestbrowser"
         return self._run_reftest(**kwargs)
 
-    @Command('reftest-ipc',
-             category='testing',
-             description='Run IPC reftests (layout and graphics correctness, separate process).',
-             parser=get_parser)
-    def run_ipc(self, **kwargs):
-        kwargs["ipc"] = True
-        kwargs["suite"] = "reftest"
-        return self._run_reftest(**kwargs)
-
     @Command('crashtest',
              category='testing',
              description='Run crashtests (Check if crashes on a page).',
              parser=get_parser)
     def run_crashtest(self, **kwargs):
-        kwargs["suite"] = "crashtest"
-        return self._run_reftest(**kwargs)
-
-    @Command('crashtest-ipc',
-             category='testing',
-             description='Run IPC crashtests (Check if crashes on a page, separate process).',
-             parser=get_parser)
-    def run_crashtest_ipc(self, **kwargs):
-        kwargs["ipc"] = True
         kwargs["suite"] = "crashtest"
         return self._run_reftest(**kwargs)
 

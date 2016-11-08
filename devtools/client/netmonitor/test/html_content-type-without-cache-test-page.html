@@ -35,7 +35,9 @@
                 get("sjs_content-type-test-server.sjs?fmt=bogus", function() {
                   get("test-image.png?v=" + Math.random(), function() {
                     get("sjs_content-type-test-server.sjs?fmt=gzip", function() {
-                      // Done.
+                      get("sjs_content-type-test-server.sjs?fmt=br", function() {
+                        // Done.
+                      });
                     });
                   });
                 });

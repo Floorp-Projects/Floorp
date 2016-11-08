@@ -20,7 +20,7 @@ js/src/ctypes/libffi/
 js/src/dtoa.c
 js/src/jit/arm64/vixl/
 media/gmp-clearkey/0.1/openaes/
-media/kiss_ftt/
+media/kiss_fft/
 media/libav/
 media/libcubeb/
 media/libjpeg/

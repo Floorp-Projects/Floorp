@@ -420,18 +420,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Cset(ARMRegister(dest, 64), cond);
     }
 
-    template <typename T1, typename T2>
-    void cmpPtrSet(Condition cond, T1 lhs, T2 rhs, Register dest) {
-        cmpPtr(lhs, rhs);
-        emitSet(cond, dest);
-    }
-
-    template <typename T1, typename T2>
-    void cmp32Set(Condition cond, T1 lhs, T2 rhs, Register dest) {
-        cmp32(lhs, rhs);
-        emitSet(cond, dest);
-    }
-
     void testNullSet(Condition cond, const ValueOperand& value, Register dest) {
         cond = testNull(cond, value);
         emitSet(cond, dest);

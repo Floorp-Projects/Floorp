@@ -33,6 +33,7 @@ CppUnitTests([
     'TestMaybe',
     'TestNotNull',
     'TestPair',
+    'TestRange',
     'TestRefPtr',
     'TestRollingMean',
     'TestSaturate',
