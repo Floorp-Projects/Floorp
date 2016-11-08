@@ -12,6 +12,7 @@
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Monitor.h"
 
+#include "MediaEventSource.h"
 #include "MediaDataDemuxer.h"
 #include "MediaDecoderReader.h"
 #include "nsAutoPtr.h"
@@ -566,6 +567,11 @@ private:
   void OnVideoSeekFailed(const MediaResult& aError);
   bool mSeekScheduled;
 
+  void NotifyCompositorUpdated(RefPtr<layers::KnowsCompositor> aKnowsCompositor)
+  {
+    mKnowsCompositor = aKnowsCompositor;
+  }
+
   void DoAudioSeek();
   void OnAudioSeekCompleted(media::TimeUnit aTime);
   void OnAudioSeekFailed(const MediaResult& aError);
@@ -587,6 +593,8 @@ private:
 
   class DecoderFactory;
   UniquePtr<DecoderFactory> mDecoderFactory;
+
+  MediaEventListener mCompositorUpdatedListener;
 };
 
 } // namespace mozilla
