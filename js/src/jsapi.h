@@ -953,6 +953,13 @@ JS_DoubleIsInt32(double d, int32_t* ip);
 extern JS_PUBLIC_API(JSType)
 JS_TypeOfValue(JSContext* cx, JS::Handle<JS::Value> v);
 
+namespace JS {
+
+extern JS_PUBLIC_API(const char*)
+InformalValueTypeName(const JS::Value& v);
+
+} /* namespace JS */
+
 extern JS_PUBLIC_API(bool)
 JS_StrictlyEqual(JSContext* cx, JS::Handle<JS::Value> v1, JS::Handle<JS::Value> v2, bool* equal);
 
