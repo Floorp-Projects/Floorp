@@ -23,8 +23,6 @@
         android:layout_height="wrap_content"
         android:textStyle="bold"
         android:textSize="16sp"
-        android:textColor="#FF858585"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:textColor="#FF858585" />
 
 </LinearLayout>
