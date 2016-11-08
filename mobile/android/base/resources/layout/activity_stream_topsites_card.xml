@@ -53,6 +53,7 @@
             android:layout_alignParentTop="true"
             android:layout_gravity="right|top"
             android:padding="6dp"
+            android:contentDescription="@string/menu"
             android:src="@drawable/menu" />
 
     </RelativeLayout>

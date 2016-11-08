@@ -23,7 +23,5 @@ browser.jar:
     content/browser/ext-tabs.js
     content/browser/ext-utils.js
     content/browser/ext-windows.js
-    content/browser/ext-c-browserAction.js
     content/browser/ext-c-contextMenus.js
-    content/browser/ext-c-pageAction.js
     content/browser/ext-c-tabs.js

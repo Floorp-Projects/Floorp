@@ -97,3 +97,23 @@ ccov-code-coverage-tests:
 jsdcov-code-coverage-tests:
     - mochitest-browser-chrome
     - mochitest-devtools-chrome
+
+macosx64-tests:
+    - cppunit
+    - crashtest
+    # - gtest
+    - jsreftest
+    # - marionette
+    # - mochitest
+    # - mochitest-browser-chrome
+    # - mochitest-clipboard
+    # - mochitest-devtools-chrome
+    # - mochitest-gpu
+    # - mochitest-jetpack
+    # - mochitest-media
+    # - mochitest-other
+    - mochitest-webgl
+    # - reftest
+    # - web-platform-tests
+    # - web-platform-tests-reftests
+    # - xpcshell

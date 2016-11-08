@@ -61,6 +61,23 @@ def parameterized(func_suffix, *args, **kwargs):
     return wrapped
 
 
+def run_if_e10s(target):
+    """Decorator which runs a test if e10s mode is active."""
+    def wrapper(self, *args, **kwargs):
+        with self.marionette.using_context('chrome'):
+            multi_process_browser = self.marionette.execute_script("""
+            try {
+              return Services.appinfo.browserTabsRemoteAutostart;
+            } catch (e) {
+              return false;
+            }""")
+
+        if not multi_process_browser:
+            raise SkipTest('skipping due to e10s is disabled')
+        return target(self, *args, **kwargs)
+    return wrapper
+
+
 def skip(reason):
     """Decorator which unconditionally skips a test."""
     def decorator(test_item):

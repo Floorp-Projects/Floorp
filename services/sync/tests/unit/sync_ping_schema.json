@@ -28,7 +28,7 @@
         },
         "devices": {
           "type": "array",
-          "items": { "$ref": "#/definitions/engine" }
+          "items": { "$ref": "#/definitions/device" }
         },
         "deviceID": {
           "type": "string",

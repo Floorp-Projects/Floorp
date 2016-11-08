@@ -623,9 +623,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
     if (mLayerManager) {
         // This layer manager might be used for painting outside of DoDraw(), so we need
         // to set the correct rotation on it.
-        if (mLayerManager->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
-            ClientLayerManager* manager =
-                static_cast<ClientLayerManager*>(mLayerManager.get());
+        if (ClientLayerManager* manager = mLayerManager->AsClientLayerManager()) {
             uint32_t rotation = mScreen->EffectiveScreenRotation();
             manager->SetDefaultTargetConfiguration(mozilla::layers::BufferMode::BUFFER_NONE,
                                                    ScreenRotation(rotation));

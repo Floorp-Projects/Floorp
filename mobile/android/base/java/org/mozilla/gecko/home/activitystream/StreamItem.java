@@ -39,6 +39,14 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         super(itemView);
     }
 
+    public static class HighlightsTitle extends StreamItem {
+        public static final int LAYOUT_ID = R.layout.activity_stream_main_highlightstitle;
+
+        public HighlightsTitle(View itemView) {
+            super(itemView);
+        }
+    }
+
     public static class TopPanel extends StreamItem {
         public static final int LAYOUT_ID = R.layout.activity_stream_main_toppanel;
 
@@ -109,7 +117,9 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
             menuButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ActivityStreamContextMenu.show(v.getContext(), ActivityStreamContextMenu.MenuMode.HIGHLIGHT,
+                    ActivityStreamContextMenu.show(v.getContext(),
+                            menuButton,
+                            ActivityStreamContextMenu.MenuMode.HIGHLIGHT,
                             title, url, onUrlOpenListener, onUrlOpenInBackgroundListener,
                             vIconView.getWidth(), vIconView.getHeight());
                 }

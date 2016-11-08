@@ -15,6 +15,9 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/Telemetry.h"
 #include "GMPCDMProxy.h"
+#ifdef MOZ_WIDGET_ANDROID
+#include "mozilla/MediaDrmCDMProxy.h"
+#endif
 #include "mozilla/EMEUtils.h"
 #include "nsContentUtils.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -325,6 +328,28 @@ private:
   WeakPtr<MediaKeys> mMediaKeys;
 };
 
+already_AddRefed<CDMProxy>
+MediaKeys::CreateCDMProxy()
+{
+  RefPtr<CDMProxy> proxy;
+#ifdef MOZ_WIDGET_ANDROID
+  if (IsWidevineKeySystem(mKeySystem)) {
+    proxy = new MediaDrmCDMProxy(this,
+                                 mKeySystem,
+                                 mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
+                                 mConfig.mPersistentState == MediaKeysRequirement::Required);
+  } else
+#endif
+  {
+    proxy = new GMPCDMProxy(this,
+                            mKeySystem,
+                            new MediaKeysGMPCrashHelper(this),
+                            mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
+                            mConfig.mPersistentState == MediaKeysRequirement::Required);
+  }
+  return proxy.forget();
+}
+
 already_AddRefed<DetailedPromise>
 MediaKeys::Init(ErrorResult& aRv)
 {
@@ -334,11 +359,7 @@ MediaKeys::Init(ErrorResult& aRv)
     return nullptr;
   }
 
-  mProxy = new GMPCDMProxy(this,
-                           mKeySystem,
-                           new MediaKeysGMPCrashHelper(this),
-                           mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-                           mConfig.mPersistentState == MediaKeysRequirement::Required);
+  mProxy = CreateCDMProxy();
 
   // Determine principal (at creation time) of the MediaKeys object.
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(GetParentObject());

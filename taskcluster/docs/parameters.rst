@@ -11,11 +11,20 @@ a full parameters file as one of its output artifacts.  The other ``mach
 taskgraph`` commands can take this file as input.  This can be very helpful
 when working on a change to the task graph.
 
+When experimenting with local runs of the task-graph generation, it is always
+best to find a recent decision task's ``parameters.yml`` file, and modify that
+file if necessary, rather than starting from scratch.  This ensures you have a
+complete set of parameters.
+
 The properties of the parameters object are described here, divided rougly by
 topic.
 
 Push Information
 ----------------
+
+``triggered_by``
+   The event that precipitated this decision task; one of ``"nightly"`` or
+   ``"push"``.
 
 ``base_repository``
    The repository from which to do an initial clone, utilizing any available
@@ -66,9 +75,10 @@ Tree Information
    ``cedar``.
 
 ``level``
-   The SCM level associated with this tree.  This dictates the names
-   of resources used in the generated tasks, and those tasks will fail if it
-   is incorrect.
+   The `SCM level
+   <https://www.mozilla.org/en-US/about/governance/policies/commit/access-policy/>`_
+   associated with this tree.  This dictates the names of resources used in the
+   generated tasks, and those tasks will fail if it is incorrect.
 
 Target Set
 ----------
@@ -79,20 +89,9 @@ those in the target set, recursively.  In a decision task, this set can be
 specified programmatically using one of a variety of methods (e.g., parsing try
 syntax or reading a project-specific configuration file).
 
-The decision task writes its task set to the ``target_tasks.json`` artifact,
-and this can be copied into ``parameters.target_tasks`` and
-``parameters.target_tasks_method`` set to ``"from_parameters"`` for debugging
-with other ``mach taskgraph`` commands.
-
 ``target_tasks_method``
-   (optional) The method to use to determine the target task set.  This is the
-   suffix of one of the functions in ``tascluster/taskgraph/target_tasks.py``.
-   If omitted, all tasks are targeted.
-
-``target_tasks``
-   (optional) The target set method ``from_parameters`` reads the target set, as
-   a list of task labels, from this parameter.
+    The method to use to determine the target task set.  This is the suffix of
+    one of the functions in ``tascluster/taskgraph/target_tasks.py``.
 
 ``optimize_target_tasks``
-   (optional; default True) If true, then target tasks are eligible for
-   optimization.
+   If true, then target tasks are eligible for optimization.

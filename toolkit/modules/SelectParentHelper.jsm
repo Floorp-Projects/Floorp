@@ -8,6 +8,9 @@ this.EXPORTED_SYMBOLS = [
   "SelectParentHelper"
 ];
 
+const {utils: Cu} = Components;
+const { AppConstants } = Cu.import("resource://gre/modules/AppConstants.jsm");
+
 // Maximum number of rows to display in the select dropdown.
 const MAX_ROWS = 20;
 
@@ -57,7 +60,7 @@ this.SelectParentHelper = {
                                      constraintRect.top + win.mozInnerScreenY,
                                      constraintRect.width, constraintRect.height);
     menupopup.setConstraintRect(constraintRect);
-    menupopup.openPopupAtScreenRect("after_start", rect.left, rect.top, rect.width, rect.height, false, false);
+    menupopup.openPopupAtScreenRect(AppConstants.platform == "macosx" ? "selection" : "after_start", rect.left, rect.top, rect.width, rect.height, false, false);
   },
 
   hide: function(menulist, browser) {

@@ -162,7 +162,7 @@ AudioChannelAgent::InitInternal(nsPIDOMWindowInner* aWindow,
   }
 
   if (NS_WARN_IF(!aWindow)) {
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   MOZ_ASSERT(aWindow->IsInnerWindow());
