@@ -431,10 +431,10 @@ TryResolvePropertyFromSpecs(JSContext* cx, HandleId id, HandleObject holder,
             }
             desc.setAttributes(flags);
         } else {
-            RootedString atom(cx, JS_AtomizeString(cx, psMatch->string.value));
-            if (!atom)
+            RootedValue v(cx);
+            if (!psMatch->getValue(cx, &v))
                 return false;
-            desc.value().setString(atom);
+            desc.value().set(v);
             desc.setAttributes(flags & ~JSPROP_INTERNAL_USE_BIT);
         }
 
