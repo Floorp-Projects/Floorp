@@ -10,7 +10,7 @@ add_task(function* () {
 
   gBrowser.selectedTab = tab1;
 
-  function background() {
+  async function background() {
     function promiseUpdated(tabId, attr) {
       return new Promise(resolve => {
         let onUpdated = (tabId_, changeInfo, tab) => {
@@ -50,10 +50,10 @@ add_task(function* () {
       }
     });
 
-    let awaitZoom = (tabId, newValue) => {
+    let awaitZoom = async (tabId, newValue) => {
       let listener;
 
-      return new Promise(resolve => {
+      await new Promise(async resolve => {
         listener = info => {
           if (info.tabId == tabId && info.newZoomFactor == newValue) {
             resolve();
@@ -61,17 +61,16 @@ add_task(function* () {
         };
         browser.tabs.onZoomChange.addListener(listener);
 
-        browser.tabs.getZoom(tabId).then(zoomFactor => {
-          if (zoomFactor == newValue) {
-            resolve();
-          }
-        });
-      }).then(() => {
-        browser.tabs.onZoomChange.removeListener(listener);
+        let zoomFactor = await browser.tabs.getZoom(tabId);
+        if (zoomFactor == newValue) {
+          resolve();
+        }
       });
+
+      browser.tabs.onZoomChange.removeListener(listener);
     };
 
-    let checkZoom = (tabId, newValue, oldValue = null) => {
+    let checkZoom = async (tabId, newValue, oldValue = null) => {
       let awaitEvent;
       if (oldValue != null && !zoomEvents.length) {
         awaitEvent = new Promise(resolve => {
@@ -79,95 +78,90 @@ add_task(function* () {
         });
       }
 
-      return Promise.all([
+      let [apiZoom, realZoom] = await Promise.all([
         browser.tabs.getZoom(tabId),
         msg("get-zoom", tabId),
         awaitEvent,
-      ]).then(([apiZoom, realZoom]) => {
-        browser.test.assertEq(newValue, apiZoom, `Got expected zoom value from API`);
-        browser.test.assertEq(newValue, realZoom, `Got expected zoom value from parent`);
+      ]);
 
-        if (oldValue != null) {
-          let event = zoomEvents.shift();
-          browser.test.assertEq(tabId, event.tabId, `Got expected zoom event tab ID`);
-          browser.test.assertEq(newValue, event.newZoomFactor, `Got expected zoom event zoom factor`);
-          browser.test.assertEq(oldValue, event.oldZoomFactor, `Got expected zoom event old zoom factor`);
+      browser.test.assertEq(newValue, apiZoom, `Got expected zoom value from API`);
+      browser.test.assertEq(newValue, realZoom, `Got expected zoom value from parent`);
 
-          browser.test.assertEq(3, Object.keys(event.zoomSettings).length, `Zoom settings should have 3 keys`);
-          browser.test.assertEq("automatic", event.zoomSettings.mode, `Mode should be "automatic"`);
-          browser.test.assertEq("per-origin", event.zoomSettings.scope, `Scope should be "per-origin"`);
-          browser.test.assertEq(1, event.zoomSettings.defaultZoomFactor, `Default zoom should be 1`);
-        }
-      });
+      if (oldValue != null) {
+        let event = zoomEvents.shift();
+        browser.test.assertEq(tabId, event.tabId, `Got expected zoom event tab ID`);
+        browser.test.assertEq(newValue, event.newZoomFactor, `Got expected zoom event zoom factor`);
+        browser.test.assertEq(oldValue, event.oldZoomFactor, `Got expected zoom event old zoom factor`);
+
+        browser.test.assertEq(3, Object.keys(event.zoomSettings).length, `Zoom settings should have 3 keys`);
+        browser.test.assertEq("automatic", event.zoomSettings.mode, `Mode should be "automatic"`);
+        browser.test.assertEq("per-origin", event.zoomSettings.scope, `Scope should be "per-origin"`);
+        browser.test.assertEq(1, event.zoomSettings.defaultZoomFactor, `Default zoom should be 1`);
+      }
     };
 
-    let tabIds;
-
-    browser.tabs.query({lastFocusedWindow: true}).then(tabs => {
+    try {
+      let tabs = await browser.tabs.query({lastFocusedWindow: true});
       browser.test.assertEq(tabs.length, 3, "We have three tabs");
 
-      tabIds = [tabs[1].id, tabs[2].id];
+      let tabIds = [tabs[1].id, tabs[2].id];
+      await checkZoom(tabIds[0], 1);
 
-      return checkZoom(tabIds[0], 1);
-    }).then(() => {
-      return browser.tabs.setZoom(tabIds[0], 2);
-    }).then(() => {
-      return checkZoom(tabIds[0], 2, 1);
-    }).then(() => {
-      return browser.tabs.getZoomSettings(tabIds[0]);
-    }).then(zoomSettings => {
+      await browser.tabs.setZoom(tabIds[0], 2);
+      await checkZoom(tabIds[0], 2, 1);
+
+      let zoomSettings = await browser.tabs.getZoomSettings(tabIds[0]);
       browser.test.assertEq(3, Object.keys(zoomSettings).length, `Zoom settings should have 3 keys`);
       browser.test.assertEq("automatic", zoomSettings.mode, `Mode should be "automatic"`);
       browser.test.assertEq("per-origin", zoomSettings.scope, `Scope should be "per-origin"`);
       browser.test.assertEq(1, zoomSettings.defaultZoomFactor, `Default zoom should be 1`);
 
+
       browser.test.log(`Switch to tab 2`);
-      return browser.tabs.update(tabIds[1], {active: true});
-    }).then(() => {
-      return checkZoom(tabIds[1], 1);
-    }).then(() => {
+      await browser.tabs.update(tabIds[1], {active: true});
+      await checkZoom(tabIds[1], 1);
+
+
       browser.test.log(`Navigate tab 2 to origin of tab 1`);
       browser.tabs.update(tabIds[1], {url: "http://example.com"});
+      await promiseUpdated(tabIds[1], "url");
+      await checkZoom(tabIds[1], 2, 1);
 
-      return promiseUpdated(tabIds[1], "url");
-    }).then(() => {
-      return checkZoom(tabIds[1], 2, 1);
-    }).then(() => {
+
       browser.test.log(`Update zoom in tab 2, expect changes in both tabs`);
-      return browser.tabs.setZoom(tabIds[1], 1.5);
-    }).then(() => {
-      return checkZoom(tabIds[1], 1.5, 2);
-    }).then(() => {
+      await browser.tabs.setZoom(tabIds[1], 1.5);
+      await checkZoom(tabIds[1], 1.5, 2);
+
+
       browser.test.log(`Switch to tab 1, expect asynchronous zoom change just after the switch`);
-      return Promise.all([
+      await Promise.all([
         awaitZoom(tabIds[0], 1.5),
         browser.tabs.update(tabIds[0], {active: true}),
       ]);
-    }).then(() => {
-      return checkZoom(tabIds[0], 1.5, 2);
-    }).then(() => {
+      await checkZoom(tabIds[0], 1.5, 2);
+
+
       browser.test.log("Set zoom to 0, expect it set to 1");
-      return browser.tabs.setZoom(tabIds[0], 0);
-    }).then(() => {
-      return checkZoom(tabIds[0], 1, 1.5);
-    }).then(() => {
+      await browser.tabs.setZoom(tabIds[0], 0);
+      await checkZoom(tabIds[0], 1, 1.5);
+
+
       browser.test.log("Change zoom externally, expect changes reflected");
-      return msg("enlarge");
-    }).then(() => {
-      return checkZoom(tabIds[0], 1.1, 1);
-    }).then(() => {
-      return Promise.all([
+      await msg("enlarge");
+      await checkZoom(tabIds[0], 1.1, 1);
+
+      await Promise.all([
         browser.tabs.setZoom(tabIds[0], 0),
         browser.tabs.setZoom(tabIds[1], 0),
       ]);
-    }).then(() => {
-      return Promise.all([
+      await Promise.all([
         checkZoom(tabIds[0], 1, 1.1),
         checkZoom(tabIds[1], 1, 1.5),
       ]);
-    }).then(() => {
+
+
       browser.test.log("Check that invalid zoom values throw an error");
-      return browser.tabs.setZoom(tabIds[0], 42).then(
+      await browser.tabs.setZoom(tabIds[0], 42).then(
         () => {
           browser.test.fail("Expected an error");
         },
@@ -175,21 +169,20 @@ add_task(function* () {
           browser.test.assertTrue(error.message.includes("Zoom value 42 out of range"),
                                   "Got expected error");
         });
-    }).then(() => {
+
+
       browser.test.log("Disable site-specific zoom, expect correct scope");
-      return msg("site-specific", false);
-    }).then(() => {
-      return browser.tabs.getZoomSettings(tabIds[0]);
-    }).then(zoomSettings => {
+      await msg("site-specific", false);
+      zoomSettings = await browser.tabs.getZoomSettings(tabIds[0]);
+
       browser.test.assertEq("per-tab", zoomSettings.scope, `Scope should be "per-tab"`);
-    }).then(() => {
-      return msg("site-specific", null);
-    }).then(() => {
+      await msg("site-specific", null);
+
       browser.test.notifyPass("tab-zoom");
-    }).catch(e => {
+    } catch (e) {
       browser.test.fail(`Error: ${e} :: ${e.stack}`);
       browser.test.notifyFail("tab-zoom");
-    });
+    }
   }
 
   let extension = ExtensionTestUtils.loadExtension({

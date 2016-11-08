@@ -6,7 +6,7 @@
 // Tests that incompatible parameters can't be used together.
 add_task(function* testWindowCreateParams() {
   let extension = ExtensionTestUtils.loadExtension({
-    background() {
+    async background() {
       function* getCalls() {
         for (let state of ["minimized", "maximized", "fullscreen"]) {
           for (let param of ["left", "top", "width", "height"]) {
@@ -25,12 +25,14 @@ add_task(function* testWindowCreateParams() {
         }
       }
 
-      Promise.all(getCalls()).then(() => {
+      try {
+        await Promise.all(getCalls());
+
         browser.test.notifyPass("window-create-params");
-      }).catch(e => {
+      } catch (e) {
         browser.test.fail(`${e} :: ${e.stack}`);
         browser.test.notifyFail("window-create-params");
-      });
+      }
     },
   });
 
