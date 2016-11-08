@@ -42,6 +42,96 @@ wasm::DecodePreamble(Decoder& d)
 }
 
 bool
+wasm::CheckValType(Decoder& d, ValType type)
+{
+    switch (type) {
+      case ValType::I32:
+      case ValType::F32:
+      case ValType::F64:
+      case ValType::I64:
+        return true;
+      default:
+        // Note: it's important not to remove this default since readValType()
+        // can return ValType values for which there is no enumerator.
+        break;
+    }
+
+    return d.fail("bad type");
+}
+
+bool
+wasm::DecodeTypeSection(Decoder& d, SigWithIdVector* sigs)
+{
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(SectionId::Type, &sectionStart, &sectionSize, "type"))
+        return false;
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    uint32_t numSigs;
+    if (!d.readVarU32(&numSigs))
+        return d.fail("expected number of signatures");
+
+    if (numSigs > MaxSigs)
+        return d.fail("too many signatures");
+
+    if (!sigs->resize(numSigs))
+        return false;
+
+    for (uint32_t sigIndex = 0; sigIndex < numSigs; sigIndex++) {
+        uint32_t form;
+        if (!d.readVarU32(&form) || form != uint32_t(TypeCode::Func))
+            return d.fail("expected function form");
+
+        uint32_t numArgs;
+        if (!d.readVarU32(&numArgs))
+            return d.fail("bad number of function args");
+
+        if (numArgs > MaxArgsPerFunc)
+            return d.fail("too many arguments in signature");
+
+        ValTypeVector args;
+        if (!args.resize(numArgs))
+            return false;
+
+        for (uint32_t i = 0; i < numArgs; i++) {
+            if (!d.readValType(&args[i]))
+                return d.fail("bad value type");
+
+            if (!CheckValType(d, args[i]))
+                return false;
+        }
+
+        uint32_t numRets;
+        if (!d.readVarU32(&numRets))
+            return d.fail("bad number of function returns");
+
+        if (numRets > 1)
+            return d.fail("too many returns in signature");
+
+        ExprType result = ExprType::Void;
+
+        if (numRets == 1) {
+            ValType type;
+            if (!d.readValType(&type))
+                return d.fail("bad expression type");
+
+            if (!CheckValType(d, type))
+                return false;
+
+            result = ToExprType(type);
+        }
+
+        (*sigs)[sigIndex] = Sig(Move(args), result);
+    }
+
+    if (!d.finishSection(sectionStart, sectionSize, "type"))
+        return false;
+
+    return true;
+}
+
+bool
 wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals)
 {
     uint32_t numLocalEntries = 0;
