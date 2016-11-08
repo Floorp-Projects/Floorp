@@ -7978,10 +7978,12 @@ nsHttpChannel::OnHSTSPrimingFailed(nsresult aError, bool aCached)
                                 HSTSPrimingResult::eHSTS_PRIMING_FAILED_ACCEPT);
     }
 
-    // Don't visit again for at least one day
+    // Don't visit again for at least
+    // security.mixed_content.hsts_priming_cache_timeout seconds.
     nsISiteSecurityService* sss = gHttpHandler->GetSSService();
     NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
-    nsresult rv = sss->CacheNegativeHSTSResult(mURI, 24 * 60 * 60);
+    nsresult rv = sss->CacheNegativeHSTSResult(mURI,
+            nsMixedContentBlocker::sHSTSPrimingCacheTimeout);
     if (NS_FAILED(rv)) {
         NS_ERROR("nsISiteSecurityService::CacheNegativeHSTSResult failed");
     }

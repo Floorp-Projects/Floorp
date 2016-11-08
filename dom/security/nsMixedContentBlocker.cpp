@@ -58,6 +58,8 @@ bool nsMixedContentBlocker::sBlockMixedDisplay = false;
 bool nsMixedContentBlocker::sUseHSTS = false;
 // Do we send an HSTS priming request
 bool nsMixedContentBlocker::sSendHSTSPriming = false;
+// Default HSTS Priming failure timeout to 7 days, in seconds
+uint32_t nsMixedContentBlocker::sHSTSPrimingCacheTimeout = (60 * 24 * 7);
 
 // Fired at the document that attempted to load mixed content.  The UI could
 // handle this event, for example, by displaying an info bar that offers the
@@ -208,6 +210,10 @@ nsMixedContentBlocker::nsMixedContentBlocker()
   // Cache the pref for sending HSTS priming
   Preferences::AddBoolVarCache(&sSendHSTSPriming,
                                "security.mixed_content.send_hsts_priming");
+
+  // Cache the pref for HSTS priming failure cache time
+  Preferences::AddUintVarCache(&sHSTSPrimingCacheTimeout,
+                               "security.mixed_content.hsts_priming_cache_seconds");
 }
 
 nsMixedContentBlocker::~nsMixedContentBlocker()
