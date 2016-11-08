@@ -7241,7 +7241,7 @@ BaseCompiler::BaseCompiler(const ModuleGeneratorData& mg,
 
 #if defined(JS_CODEGEN_X64)
     availGPR_.take(HeapReg);
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_ARM)
     availGPR_.take(HeapReg);
     availGPR_.take(GlobalReg);
     availGPR_.take(ScratchRegARM);
@@ -7251,6 +7251,9 @@ BaseCompiler::BaseCompiler(const ModuleGeneratorData& mg,
     availGPR_.take(GlobalReg);
 #elif defined(JS_CODEGEN_X86)
     availGPR_.take(ScratchRegX86);
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+    availGPR_.take(HeapReg);
+    availGPR_.take(GlobalReg);
 #endif
 
     labelPool_.setAllocator(alloc_);
