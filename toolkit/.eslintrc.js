@@ -154,7 +154,11 @@ module.exports = {
     "no-unreachable": "error",
 
     // No declaring variables that are never used
-    // "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
+    // "no-unused-vars": ["error", {
+    //   "vars": "local",
+    //   "varsIgnorePattern": "^Cc|Ci|Cu|Cr|EXPORTED_SYMBOLS",
+    //   "args": "none",
+    // }],
 
     // No using variables before defined
     // "no-use-before-define": ["error", "nofunc"],

@@ -192,7 +192,7 @@ add_task(function* test_userNotifiedOfCurrentPolicy() {
                  "The default state of the date should have a time of 0 and it should therefore fail");
 
   // Showing the notification bar should make the user notified.
-  let now = fakeNow(2012, 11, 11);
+  fakeNow(2012, 11, 11);
   TelemetryReportingPolicy.testInfobarShown();
   Assert.ok(TelemetryReportingPolicy.testIsUserNotified(),
             "Using the proper API causes user notification to report as true.");

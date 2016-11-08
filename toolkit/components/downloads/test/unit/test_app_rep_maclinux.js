@@ -162,8 +162,6 @@ function processUpdateRequest() {
 function waitForUpdates() {
   let deferred = Promise.defer();
   gHttpServer.registerPathHandler("/downloads", function(request, response) {
-    let buf = NetUtil.readInputStreamToString(request.bodyInputStream,
-      request.bodyInputStream.available());
     let blob = processUpdateRequest();
     response.setHeader("Content-Type",
                        "application/vnd.google.safebrowsing-update", false);

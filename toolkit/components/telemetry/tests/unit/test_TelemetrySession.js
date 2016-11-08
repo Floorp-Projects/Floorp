@@ -1104,9 +1104,6 @@ add_task(function* test_environmentChange() {
     return;
   }
 
-  let timerCallback = null;
-  let timerDelay = null;
-
   yield TelemetryStorage.testClearPendingPings();
   PingServer.clearRequests();
 
@@ -1245,8 +1242,8 @@ add_task(function* test_savedSessionData() {
 
   // Watch a test preference, trigger and environment change and wait for it to propagate.
   // _watchPreferences triggers a subsession notification
-  let now = fakeNow(new Date(2050, 1, 1, 12, 0, 0));
   gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE);
+  fakeNow(new Date(2050, 1, 1, 12, 0, 0));
   TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
   let changePromise = new Promise(resolve =>
     TelemetryEnvironment.registerChangeListener("test_fake_change", resolve));
@@ -1468,7 +1465,7 @@ add_task(function* test_abortedSession_Shutdown() {
             "Telemetry must create the aborted session directory when starting.");
 
   // Fake now again so that the scheduled aborted-session save takes place.
-  now = fakeNow(futureDate(now, ABORTED_SESSION_UPDATE_INTERVAL_MS));
+  fakeNow(futureDate(now, ABORTED_SESSION_UPDATE_INTERVAL_MS));
   // The first aborted session checkpoint must take place right after the initialisation.
   Assert.ok(!!schedulerTickCallback);
   // Execute one scheduler tick.
@@ -1619,7 +1616,7 @@ add_task(function* test_schedulerEnvironmentReschedules() {
   TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
 
   // Set the current time at midnight.
-  let future = fakeNow(futureDate(nowDate, MS_IN_ONE_DAY));
+  fakeNow(futureDate(nowDate, MS_IN_ONE_DAY));
   gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE);
 
   // Trigger the environment change.
@@ -1906,7 +1903,7 @@ add_task(function* test_changeThrottling() {
   Assert.equal(getSubsessionCount(), 1);
 
   // We should get a change notification after the 5min throttling interval.
-  now = fakeNow(futureDate(now, 5 * MILLISECONDS_PER_MINUTE + 1));
+  fakeNow(futureDate(now, 5 * MILLISECONDS_PER_MINUTE + 1));
   gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 5 * MILLISECONDS_PER_MINUTE + 1);
   Preferences.set(PREF_TEST, 2);
   Assert.equal(getSubsessionCount(), 2);
