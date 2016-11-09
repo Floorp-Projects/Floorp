@@ -168,7 +168,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         el = self.marionette.find_element(By.ID, self._input_id)
         sel = SelectionManager(el)
         content_to_add = '!'
-        target_content = sel.content + string.ascii_letters + content_to_add
+        non_target_content = content_to_add + sel.content + string.ascii_letters
 
         el.tap()
         sel.move_cursor_to_end()
@@ -184,10 +184,10 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         dest_x, dest_y = 0, 0
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
 
-        # The content should be inserted at the end of the <input>.
+        # The content should not be inserted at the front of the <input>.
         el.send_keys(content_to_add)
 
-        self.assertEqual(target_content, sel.content)
+        self.assertNotEqual(non_target_content, sel.content)
 
     @parameterized(_input_id, el_id=_input_id)
     @parameterized(_input_padding_id, el_id=_input_padding_id)
