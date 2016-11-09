@@ -115,6 +115,115 @@ function mergeStatus(data, channel, event) {
   }
 }
 
+class HeaderChanger {
+  constructor(channel) {
+    this.channel = channel;
+
+    this.originalHeaders = new Map();
+    this.visitHeaders((name, value) => {
+      this.originalHeaders.set(name.toLowerCase(), value);
+    });
+  }
+
+  toArray() {
+    return Array.from(this.originalHeaders,
+                      ([name, value]) => ({name, value}));
+  }
+
+  validateHeaders(headers) {
+    // We should probably use schema validation for this.
+
+    if (!Array.isArray(headers)) {
+      return false;
+    }
+
+    return headers.every(header => {
+      if (typeof header !== "object" || header === null) {
+        return false;
+      }
+
+      if (typeof header.name !== "string") {
+        return false;
+      }
+
+      return (typeof header.value === "string" ||
+              Array.isArray(header.binaryValue));
+    });
+  }
+
+  applyChanges(headers) {
+    if (!this.validateHeaders(headers)) {
+      /* globals uneval */
+      Cu.reportError(`Invalid header array: ${uneval(headers)}`);
+      return;
+    }
+
+    let newHeaders = new Set(headers.map(
+      ({name}) => name.toLowerCase()));
+
+    // Remove missing headers.
+    for (let name of this.originalHeaders.keys()) {
+      if (!newHeaders.has(name)) {
+        this.setHeader(name, "");
+      }
+    }
+
+    // Set new or changed headers.
+    for (let {name, value, binaryValue} of headers) {
+      if (binaryValue) {
+        value = String.fromCharCode(...binaryValue);
+      }
+      if (value !== this.originalHeaders.get(name.toLowerCase())) {
+        this.setHeader(name, value);
+      }
+    }
+  }
+}
+
+class RequestHeaderChanger extends HeaderChanger {
+  setHeader(name, value) {
+    try {
+      this.channel.setRequestHeader(name, value, false);
+    } catch (e) {
+      Cu.reportError(new Error(`Error setting request header ${name}: ${e}`));
+    }
+  }
+
+  visitHeaders(visitor) {
+    this.channel.visitRequestHeaders(visitor);
+  }
+}
+
+class ResponseHeaderChanger extends HeaderChanger {
+  setHeader(name, value) {
+    try {
+      if (name.toLowerCase() === "content-type" && value) {
+        // The Content-Type header value can't be modified, so we
+        // set the channel's content type directly, instead, and
+        // record that we made the change for the sake of
+        // subsequent observers.
+        this.channel.contentType = value;
+
+        getData(this.channel).contentType = value;
+      } else {
+        this.channel.setResponseHeader(name, value, false);
+      }
+    } catch (e) {
+      Cu.reportError(new Error(`Error setting response header ${name}: ${e}`));
+    }
+  }
+
+  visitHeaders(visitor) {
+    this.channel.visitResponseHeaders((name, value) => {
+      if (name.toLowerCase() === "content-type") {
+        value = getData(this.channel).contentType || value;
+      }
+
+      visitor(name, value);
+    });
+  }
+}
+
 var HttpObserverManager;
 
 var ContentPolicyManager = {
@@ -371,61 +480,6 @@ HttpObserverManager = {
     }
   },
 
-  getHeaders(channel, method, event) {
-    let headers = [];
-    let visitor = {
-      visitHeader(name, value) {
-        try {
-          value = channel.getProperty(`webrequest-header-${name.toLowerCase()}`);
-        } catch (e) {
-          // This will throw if the property does not exist.
-        }
-        headers.push({name, value});
-      },
-
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIHttpHeaderVisitor,
-                                             Ci.nsISupports]),
-    };
-
-    try {
-      channel.QueryInterface(Ci.nsIPropertyBag);
-      channel[method](visitor);
-    } catch (e) {
-      Cu.reportError(`webRequest Error: ${e} trying to perform ${method} in ${event}@${channel.name}`);
-    }
-    return headers;
-  },
-
-  replaceHeaders(headers, originalNames, setHeader) {
-    let failures = new Set();
-    // Start by clearing everything.
-    for (let name of originalNames) {
-      try {
-        setHeader(name, "");
-      } catch (e) {
-        // Let's collect physiological failures in order
-        // to know what is worth reporting.
-        failures.add(name);
-      }
-    }
-    try {
-      for (let {name, value, binaryValue} of headers) {
-        try {
-          if (Array.isArray(binaryValue)) {
-            value = String.fromCharCode.apply(String, binaryValue);
-          }
-          setHeader(name, value);
-        } catch (e) {
-          if (!failures.has(name)) {
-            Cu.reportError(e);
-          }
-        }
-      }
-    } catch (e) {
-      Cu.reportError(e);
-    }
-  },
-
   observe(subject, topic, data) {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     switch (topic) {
@@ -518,9 +572,6 @@ HttpObserverManager = {
                      loadInfo.externalContentPolicyType :
                      Ci.nsIContentPolicy.TYPE_OTHER;
 
-    let requestHeaderNames;
-    let responseHeaderNames;
-
     let requestBody;
 
     let includeStatus = (
@@ -530,8 +581,18 @@ HttpObserverManager = {
                           kind === "onStop"
                         ) && channel instanceof Ci.nsIHttpChannel;
 
+    let requestHeaders = new RequestHeaderChanger(channel);
+    let responseHeaders;
+    try {
+      responseHeaders = new ResponseHeaderChanger(channel);
+    } catch (e) {
+      // Just ignore this for the request phases where response headers
+      // aren't yet available.
+    }
+
     let commonData = null;
     let uri = channel.URI;
+    let handlerResults = [];
     for (let [callback, opts] of listeners.entries()) {
       if (!this.shouldRunListener(policyType, uri, opts.filter)) {
         continue;
@@ -581,15 +642,17 @@ HttpObserverManager = {
           Object.assign(commonData, extraData);
         }
       }
+
       let data = Object.assign({}, commonData);
+
       if (opts.requestHeaders) {
-        data.requestHeaders = this.getHeaders(channel, "visitRequestHeaders", kind);
-        requestHeaderNames = data.requestHeaders.map(h => h.name);
+        data.requestHeaders = requestHeaders.toArray();
       }
-      if (opts.responseHeaders) {
-        data.responseHeaders = this.getHeaders(channel, "visitResponseHeaders", kind);
-        responseHeaderNames = data.responseHeaders.map(h => h.name);
+
+      if (opts.responseHeaders && responseHeaders) {
+        data.responseHeaders = responseHeaders.toArray();
       }
+
       if (opts.requestBody) {
         if (requestBody === undefined) {
           requestBody = WebRequestUpload.createRequestBody(channel);
@@ -598,53 +661,44 @@ HttpObserverManager = {
           data.requestBody = requestBody;
         }
       }
+
       if (includeStatus) {
         mergeStatus(data, channel, kind);
       }
 
-      let result = null;
       try {
-        result = callback(data);
+        let result = callback(data);
+
+        if (result && typeof result === "object" && opts.blocking) {
+          handlerResults.push({opts, result});
+        }
       } catch (e) {
         Cu.reportError(e);
       }
+    }
 
-      if (!result || !opts.blocking) {
-        continue;
-      }
+    for (let {opts, result} of handlerResults) {
       if (result.cancel) {
         channel.cancel(Cr.NS_ERROR_ABORT);
         this.errorCheck(channel, loadContext);
         return false;
       }
-      if (result.redirectUrl) {
-        channel.redirectTo(BrowserUtils.makeURI(result.redirectUrl));
-        return false;
-      }
-      if (opts.requestHeaders && result.requestHeaders) {
-        this.replaceHeaders(
-          result.requestHeaders, requestHeaderNames,
-          (name, value) => channel.setRequestHeader(name, value, false)
-        );
-      }
-      if (opts.responseHeaders && result.responseHeaders) {
-        this.replaceHeaders(
-          result.responseHeaders, responseHeaderNames,
-          (name, value) => {
-            if (name.toLowerCase() === "content-type" && value) {
-              // The Content-Type header value can't be modified, so we
-              // set the channel's content type directly, instead, and
-              // record that we made the change for the sake of
-              // subsequent observers.
-              channel.contentType = value;
 
-              channel.QueryInterface(Ci.nsIWritablePropertyBag);
-              channel.setProperty("webrequest-header-content-type", value);
-            } else {
-              channel.setResponseHeader(name, value, false);
-            }
-          }
-        );
+      if (result.redirectUrl) {
+        try {
+          channel.redirectTo(BrowserUtils.makeURI(result.redirectUrl));
+          return false;
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      }
+
+      if (opts.requestHeaders && result.requestHeaders) {
+        requestHeaders.applyChanges(result.requestHeaders);
+      }
+
+      if (opts.responseHeaders && result.responseHeaders) {
+        responseHeaders.applyChanges(result.responseHeaders);
       }
     }
 
