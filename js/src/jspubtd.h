@@ -147,7 +147,7 @@ namespace JS {
 
 class JS_PUBLIC_API(AutoEnterCycleCollection);
 class JS_PUBLIC_API(AutoAssertOnBarrier);
-struct JS_PUBLIC_API(PropertyDescriptor);
+struct PropertyDescriptor;
 
 typedef void (*OffThreadCompileCallback)(void* token, void* callbackData);
 
