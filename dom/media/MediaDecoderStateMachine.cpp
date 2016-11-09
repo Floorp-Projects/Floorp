@@ -706,6 +706,12 @@ private:
 
   void StartDormantTimer()
   {
+    if (!mMaster->mMediaSeekable) {
+      // Don't enter dormant if the media is not seekable because we need to
+      // seek when exiting dormant.
+      return;
+    }
+
     auto timeout = MediaPrefs::DormantOnPauseTimeout();
     if (timeout < 0) {
       // Disabled when timeout is negative.
