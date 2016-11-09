@@ -489,7 +489,7 @@
     <content>
       <xul:vbox>
         <xul:image class="popup-notification-icon"
-                   xbl:inherits="popupid,src=icon"/>
+                   xbl:inherits="popupid,src=icon,class=iconclass"/>
       </xul:vbox>
       <xul:vbox class="popup-notification-body" xbl:inherits="popupid">
         <xul:hbox align="start">
