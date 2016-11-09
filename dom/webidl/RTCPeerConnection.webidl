@@ -7,7 +7,7 @@
  * http://w3c.github.io/webrtc-pc/#interface-definition
  */
 
-callback RTCSessionDescriptionCallback = void (RTCSessionDescription sdp);
+callback RTCSessionDescriptionCallback = void (RTCSessionDescriptionInit description);
 callback RTCPeerConnectionErrorCallback = void (DOMError error);
 callback VoidFunction = void ();
 callback RTCStatsCallback = void (RTCStatsReport report);
@@ -82,10 +82,10 @@ interface RTCPeerConnection : EventTarget  {
                             optional DOMString username);
   [Pref="media.peerconnection.identity.enabled"]
   Promise<DOMString> getIdentityAssertion();
-  Promise<RTCSessionDescription> createOffer (optional RTCOfferOptions options);
-  Promise<RTCSessionDescription> createAnswer (optional RTCAnswerOptions options);
-  Promise<void> setLocalDescription (RTCSessionDescription description);
-  Promise<void> setRemoteDescription (RTCSessionDescription description);
+  Promise<RTCSessionDescriptionInit> createOffer (optional RTCOfferOptions options);
+  Promise<RTCSessionDescriptionInit> createAnswer (optional RTCAnswerOptions options);
+  Promise<void> setLocalDescription (RTCSessionDescriptionInit description);
+  Promise<void> setRemoteDescription (RTCSessionDescriptionInit description);
   readonly attribute RTCSessionDescription? localDescription;
   readonly attribute RTCSessionDescription? remoteDescription;
   readonly attribute RTCSignalingState signalingState;
@@ -154,10 +154,10 @@ partial interface RTCPeerConnection {
                              optional RTCOfferOptions options);
   Promise<void> createAnswer (RTCSessionDescriptionCallback successCallback,
                               RTCPeerConnectionErrorCallback failureCallback);
-  Promise<void> setLocalDescription (RTCSessionDescription description,
+  Promise<void> setLocalDescription (RTCSessionDescriptionInit description,
                                      VoidFunction successCallback,
                                      RTCPeerConnectionErrorCallback failureCallback);
-  Promise<void> setRemoteDescription (RTCSessionDescription description,
+  Promise<void> setRemoteDescription (RTCSessionDescriptionInit description,
                                       VoidFunction successCallback,
                                       RTCPeerConnectionErrorCallback failureCallback);
   Promise<void> addIceCandidate (RTCIceCandidate candidate,
