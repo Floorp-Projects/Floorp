@@ -90,8 +90,6 @@ function promiseTabLoadEvent(tab, url) {
     return true;
   }
 
-  // Create two promises: one resolved from the content process when the page
-  // loads and one that is rejected if we take too long to load the url.
   let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, handle);
 
   if (url)

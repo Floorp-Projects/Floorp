@@ -12,6 +12,7 @@ SimplePrograms([
 LOCAL_INCLUDES += ['..']
 USE_LIBS += [
     'linker',
+    'mfbt',
 ]
 OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
 DISABLE_STL_WRAPPING = True

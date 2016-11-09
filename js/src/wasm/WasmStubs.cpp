@@ -339,8 +339,11 @@ StackCopy(MacroAssembler& masm, MIRType type, Register scratch, Address src, Add
         masm.load64(src, scratch64);
         masm.store64(scratch64, dst);
 #endif
+    } else if (type == MIRType::Float32) {
+        masm.loadFloat32(src, ScratchFloat32Reg);
+        masm.storeFloat32(ScratchFloat32Reg, dst);
     } else {
-        MOZ_ASSERT(IsFloatingPointType(type));
+        MOZ_ASSERT(type == MIRType::Double);
         masm.loadDouble(src, ScratchDoubleReg);
         masm.storeDouble(ScratchDoubleReg, dst);
     }

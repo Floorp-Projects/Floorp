@@ -16,14 +16,21 @@ JSFunction*
 GetWrappedAsyncFunction(JSFunction* unwrapped);
 
 JSFunction*
-GetUnwrappedAsyncFunction(JSFunction* wrapper);
+GetUnwrappedAsyncFunction(JSFunction* wrapped);
 
 bool
-IsWrappedAsyncFunction(JSContext* cx, JSFunction* wrapper);
+IsWrappedAsyncFunction(JSFunction* fun);
 
-bool
-CreateAsyncFunction(JSContext* cx, HandleFunction wrapper, HandleFunction unwrapped,
-                    MutableHandleFunction result);
+JSObject*
+WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped);
+
+MOZ_MUST_USE bool
+AsyncFunctionAwaitedFulfilled(JSContext* cx, Handle<PromiseObject*> resultPromise,
+                              HandleValue generatorVal, HandleValue value);
+
+MOZ_MUST_USE bool
+AsyncFunctionAwaitedRejected(JSContext* cx, Handle<PromiseObject*> resultPromise,
+                             HandleValue generatorVal, HandleValue reason);
 
 } // namespace js
 

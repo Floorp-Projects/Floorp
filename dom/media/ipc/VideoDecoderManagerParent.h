@@ -33,7 +33,7 @@ protected:
   bool RecvReadback(const SurfaceDescriptorGPUVideo& aSD, SurfaceDescriptor* aResult) override;
   bool RecvDeallocateSurfaceDescriptorGPUVideo(const SurfaceDescriptorGPUVideo& aSD) override;
 
-  void ActorDestroy(mozilla::ipc::IProtocolManager<mozilla::ipc::IProtocol>::ActorDestroyReason) override {}
+  void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override {}
 
   void DeallocPVideoDecoderManagerParent() override;
 

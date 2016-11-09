@@ -89,10 +89,14 @@ PresentationChild::DeallocPPresentationBuilderChild(PPresentationBuilderChild* a
 
 
 bool
-PresentationChild::RecvNotifyAvailableChange(const bool& aAvailable)
+PresentationChild::RecvNotifyAvailableChange(
+                                        nsTArray<nsString>&& aAvailabilityUrls,
+                                        const bool& aAvailable)
 {
   if (mService) {
-    Unused << NS_WARN_IF(NS_FAILED(mService->NotifyAvailableChange(aAvailable)));
+    Unused <<
+      NS_WARN_IF(NS_FAILED(mService->NotifyAvailableChange(aAvailabilityUrls,
+                                                           aAvailable)));
   }
   return true;
 }

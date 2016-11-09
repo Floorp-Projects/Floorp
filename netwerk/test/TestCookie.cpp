@@ -30,6 +30,7 @@ static const char kCookiesLifetimeEnabled[] = "network.cookie.lifetime.enabled";
 static const char kCookiesLifetimeDays[] = "network.cookie.lifetime.days";
 static const char kCookiesLifetimeCurrentSession[] = "network.cookie.lifetime.behavior";
 static const char kCookiesMaxPerHost[] = "network.cookie.maxPerHost";
+static const char kCookieLeaveSecurityAlone[] = "network.cookie.leave-secure-alone";
 
 static char *sBuffer;
 
@@ -213,6 +214,7 @@ InitPrefs(nsIPrefBranch *aPrefBranch)
     aPrefBranch->SetBoolPref(kCookiesLifetimeEnabled, true);
     aPrefBranch->SetIntPref(kCookiesLifetimeCurrentSession, 0);
     aPrefBranch->SetIntPref(kCookiesLifetimeDays, 1);
+    aPrefBranch->SetBoolPref(kCookieLeaveSecurityAlone, true);
     // Set the base domain limit to 50 so we have a known value.
     aPrefBranch->SetIntPref(kCookiesMaxPerHost, 50);
 }
@@ -686,6 +688,49 @@ main(int32_t argc, char *argv[])
 
       allTestsPassed = PrintResult(rv, 7) && allTestsPassed;
 
+      // *** leave-secure-alone tests
+      sBuffer = PR_sprintf_append(sBuffer, "*** Beginning leave-secure-alone tests...\n");
+
+      // testing items 0 & 1 for 3.1 of spec Deprecate modification of ’secure’
+      // cookies from non-secure origins
+      SetACookie(cookieService, "http://www.security.test/", nullptr, "test=non-security; secure", nullptr);
+      GetACookieNoHttp(cookieService, "https://www.security.test/", getter_Copies(cookie));
+      rv[0] = CheckResult(cookie.get(), MUST_BE_NULL);
+      SetACookie(cookieService, "https://www.security.test/path/", nullptr, "test=security; secure; path=/path/", nullptr);
+      GetACookieNoHttp(cookieService, "https://www.security.test/path/", getter_Copies(cookie));
+      rv[1] = CheckResult(cookie.get(), MUST_EQUAL, "test=security");
+      // testing items 2 & 3 & 4 for 3.2 of spec Deprecate modification of ’secure’
+      // cookies from non-secure origins
+      // Secure site can modify cookie value
+      SetACookie(cookieService, "https://www.security.test/path/", nullptr, "test=security2; secure; path=/path/", nullptr);
+      GetACookieNoHttp(cookieService, "https://www.security.test/path/", getter_Copies(cookie));
+      rv[2] = CheckResult(cookie.get(), MUST_EQUAL, "test=security2");
+      // If new cookie contains same name, same host and partially matching path with
+      // an existing security cookie on non-security site, it can't modify an existing
+      // security cookie.
+      SetACookie(cookieService, "http://www.security.test/path/foo/", nullptr, "test=non-security; path=/path/foo", nullptr);
+      GetACookieNoHttp(cookieService, "https://www.security.test/path/foo/", getter_Copies(cookie));
+      rv[3] = CheckResult(cookie.get(), MUST_EQUAL, "test=security2");
+      // Non-secure cookie can set by same name, same host and non-matching path.
+      SetACookie(cookieService, "http://www.security.test/bar/", nullptr, "test=non-security; path=/bar", nullptr);
+      GetACookieNoHttp(cookieService, "http://www.security.test/bar/", getter_Copies(cookie));
+      rv[4] = CheckResult(cookie.get(), MUST_EQUAL, "test=non-security");
+      // Modify value and downgrade secure level.
+      SetACookie(cookieService, "https://www.security.test/", nullptr, "test_modify_cookie=security-cookie; secure; domain=.security.test", nullptr);
+      GetACookieNoHttp(cookieService, "https://www.security.test/", getter_Copies(cookie));
+      rv[5] = CheckResult(cookie.get(), MUST_EQUAL, "test_modify_cookie=security-cookie");
+      SetACookie(cookieService, "https://www.security.test/", nullptr, "test_modify_cookie=non-security-cookie; domain=.security.test", nullptr);
+      GetACookieNoHttp(cookieService, "https://www.security.test/", getter_Copies(cookie));
+      rv[6] = CheckResult(cookie.get(), MUST_EQUAL, "test_modify_cookie=non-security-cookie");
+      // Test the non-security cookie can set when domain or path not same to secure cookie of same name.
+      SetACookie(cookieService, "https://www.security.test/", nullptr, "test=security3", nullptr);
+      GetACookieNoHttp(cookieService, "http://www.security.test/", getter_Copies(cookie));
+      rv[7] = CheckResult(cookie.get(), MUST_CONTAIN, "test=security3");
+      SetACookie(cookieService, "http://www.security.test/", nullptr, "test=non-security2; domain=security.test", nullptr);
+      GetACookieNoHttp(cookieService, "http://www.security.test/", getter_Copies(cookie));
+      rv[8] = CheckResult(cookie.get(), MUST_CONTAIN, "test=non-security2");
+
+      allTestsPassed = PrintResult(rv, 9) && allTestsPassed;
 
       // *** nsICookieManager{2} interface tests
       sBuffer = PR_sprintf_append(sBuffer, "*** Beginning nsICookieManager{2} interface tests...\n");
@@ -817,6 +862,30 @@ main(int32_t argc, char *argv[])
       }
       GetACookie(cookieService, "http://creation.ordering.tests/", nullptr, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, expected.get());
+
+      allTestsPassed = PrintResult(rv, 1) && allTestsPassed;
+
+      // *** eviction and creation ordering tests after enable network.cookie.leave-secure-alone
+      sBuffer = PR_sprintf_append(sBuffer, "*** Beginning eviction and creation tests after enable nework.cookie.leave-secure-alone...\n");
+      // reset cookie
+      cookieMgr->RemoveAll();
+
+      for (int32_t i = 0; i < 60; ++i) {
+        name = NS_LITERAL_CSTRING("test");
+        name.AppendInt(i);
+        name += NS_LITERAL_CSTRING("=delete_non_security");
+
+        // Create 50 cookies that include the secure flag.
+        if (i < 50) {
+          name += NS_LITERAL_CSTRING("; secure");
+          SetACookie(cookieService, "https://creation.ordering.tests/", nullptr, name.get(), nullptr);
+        } else {
+          // non-security cookies will be removed beside the latest cookie that be created.
+          SetACookie(cookieService, "http://creation.ordering.tests/", nullptr, name.get(), nullptr);
+        }
+      }
+      GetACookie(cookieService, "http://creation.ordering.tests/", nullptr, getter_Copies(cookie));
+      rv[0] = CheckResult(cookie.get(), MUST_BE_NULL);
 
       allTestsPassed = PrintResult(rv, 1) && allTestsPassed;
 

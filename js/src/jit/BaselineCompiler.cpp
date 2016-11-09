@@ -22,6 +22,7 @@
 #include "jit/SharedICHelpers.h"
 #include "jit/VMFunctions.h"
 #include "js/UniquePtr.h"
+#include "vm/AsyncFunction.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/Interpreter.h"
 #include "vm/TraceLogging.h"
@@ -3803,6 +3804,27 @@ BaselineCompiler::emit_JSOP_TOID()
 
     masm.bind(&done);
     frame.pop(); // Pop index.
+    frame.push(R0);
+    return true;
+}
+
+typedef JSObject* (*ToAsyncFn)(JSContext*, HandleFunction);
+static const VMFunction ToAsyncInfo = FunctionInfo<ToAsyncFn>(js::WrapAsyncFunction, "ToAsync");
+
+bool
+BaselineCompiler::emit_JSOP_TOASYNC()
+{
+    frame.syncStack(0);
+    masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+
+    prepareVMCall();
+    pushArg(R0.scratchReg());
+
+    if (!callVM(ToAsyncInfo))
+        return false;
+
+    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+    frame.pop();
     frame.push(R0);
     return true;
 }

@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1299483 - CSP: Implement 'strict-dynamic'</title>
+</head>
+<body>
+<div id="testdiv">blocked</div>
+
+<script nonce="foo">
+  document.getElementById("testdiv").innerHTML = "allowed";
+</script>
+
+</body>
+</html>

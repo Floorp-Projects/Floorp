@@ -98,6 +98,107 @@ function testConsecutiveGetAvailability() {
   });
 }
 
+function testUnsupportedDeviceAvailability() {
+  return Promise.race([
+    new Promise(function(aResolve, aReject) {
+      let request = new PresentationRequest("https://test.com");
+      request.getAvailability().then(function(aAvailability) {
+        availability = aAvailability;
+        aAvailability.onchange = function() {
+          availability.onchange = null;
+          ok(false, "Should not get onchange event.");
+          teardown();
+        }
+      });
+      gScript.sendAsyncMessage('trigger-add-unsupport-url-device');
+    }),
+    new Promise(function(aResolve, aReject) {
+      setTimeout(function() {
+        ok(true, "Should not get onchange event.");
+        availability.onchange = null;
+        gScript.sendAsyncMessage('trigger-remove-unsupported-device');
+        aResolve();
+      }, 3000);
+    }),
+  ]);
+}
+
+function testMultipleAvailabilityURLs() {
+  let request1 = new PresentationRequest(["https://example.com",
+                                         "https://example1.com"]);
+  let request2 = new PresentationRequest(["https://example1.com",
+                                         "https://example2.com"]);
+  return Promise.all([
+    request1.getAvailability().then(function(aAvailability) {
+      return new Promise(function(aResolve) {
+        aAvailability.onchange = function() {
+          aAvailability.onchange = null;
+          ok(true, "Should get onchange event.");
+          aResolve();
+        };
+      });
+    }),
+    request2.getAvailability().then(function(aAvailability) {
+      return new Promise(function(aResolve) {
+        aAvailability.onchange = function() {
+          aAvailability.onchange = null;
+          ok(true, "Should get onchange event.");
+          aResolve();
+        };
+      });
+    }),
+    new Promise(function(aResolve) {
+      gScript.sendAsyncMessage('trigger-add-multiple-devices');
+      aResolve();
+    }),
+  ]).then(new Promise(function(aResolve) {
+    gScript.sendAsyncMessage('trigger-remove-multiple-devices');
+    aResolve();
+  }));
+}
+
+function testPartialSupportedDeviceAvailability() {
+  let request1 = new PresentationRequest(["https://supportedUrl.com"]);
+  let request2 = new PresentationRequest(["http://notSupportedUrl.com"]);
+
+  return Promise.all([
+    request1.getAvailability().then(function(aAvailability) {
+      return new Promise(function(aResolve) {
+        aAvailability.onchange = function() {
+          aAvailability.onchange = null;
+          ok(true, "Should get onchange event.");
+          aResolve();
+        };
+      });
+    }),
+    Promise.race([
+      request2.getAvailability().then(function(aAvailability) {
+        return new Promise(function(aResolve) {
+          aAvailability.onchange = function() {
+            aAvailability.onchange = null;
+            ok(false, "Should get onchange event.");
+            aResolve();
+          };
+        });
+      }),
+      new Promise(function(aResolve) {
+        setTimeout(function() {
+          ok(true, "Should not get onchange event.");
+          availability.onchange = null;
+          aResolve();
+        }, 3000);
+      }),
+    ]),
+    new Promise(function(aResolve) {
+      gScript.sendAsyncMessage('trigger-add-https-devices');
+      aResolve();
+    }),
+  ]).then(new Promise(function(aResolve) {
+    gScript.sendAsyncMessage('trigger-remove-https-devices');
+    aResolve();
+  }));
+}
+
 function teardown() {
   request = null;
   availability = null;
@@ -113,10 +214,14 @@ function runTests() {
              .then(testSameObject)
              .then(testOnChangeEvent)
              .then(testConsecutiveGetAvailability)
+             .then(testMultipleAvailabilityURLs)
+             .then(testUnsupportedDeviceAvailability)
+             .then(testPartialSupportedDeviceAvailability)
              .then(teardown);
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout('Test for guarantee not firing async event');
 SpecialPowers.pushPermissions([
   {type: "presentation-device-manage", allow: false, context: document},
 ], function() {

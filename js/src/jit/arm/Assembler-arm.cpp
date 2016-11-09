@@ -134,10 +134,8 @@ ABIArgGenerator::hardNext(MIRType type)
         break;
       case MIRType::Float32:
         if (floatRegIndex_ == NumFloatArgRegs) {
-            static const uint32_t align = sizeof(double) - 1;
-            stackOffset_ = (stackOffset_ + align) & ~align;
             current_ = ABIArg(stackOffset_);
-            stackOffset_ += sizeof(uint64_t);
+            stackOffset_ += sizeof(uint32_t);
             break;
         }
         current_ = ABIArg(VFPRegister(floatRegIndex_, VFPRegister::Single));

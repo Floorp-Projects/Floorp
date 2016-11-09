@@ -35,6 +35,65 @@ var testDevice = {
   listener: null,
 };
 
+var testDevice1 = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
+  id: 'dummyid',
+  name: 'dummyName',
+  type: 'dummyType',
+  establishControlChannel: function(url, presentationId) {
+    return null;
+  },
+  disconnect: function() {},
+  isRequestedUrlSupported: function(requestedUrl) {
+    return true;
+  },
+};
+
+var testDevice2 = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
+  id: 'dummyid',
+  name: 'dummyName',
+  type: 'dummyType',
+  establishControlChannel: function(url, presentationId) {
+    return null;
+  },
+  disconnect: function() {},
+  isRequestedUrlSupported: function(requestedUrl) {
+    return true;
+  },
+};
+
+var mockedDeviceWithoutSupportedURL = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
+  id: 'dummyid',
+  name: 'dummyName',
+  type: 'dummyType',
+  establishControlChannel: function(url, presentationId) {
+    return null;
+  },
+  disconnect: function() {},
+  isRequestedUrlSupported: function(requestedUrl) {
+    return false;
+  },
+};
+
+var mockedDeviceSupportHttpsURL = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
+  id: 'dummyid',
+  name: 'dummyName',
+  type: 'dummyType',
+  establishControlChannel: function(url, presentationId) {
+    return null;
+  },
+  disconnect: function() {},
+  isRequestedUrlSupported: function(requestedUrl) {
+    if (requestedUrl.indexOf("https://") != -1) {
+      return true;
+    }
+    return false;
+  },
+};
+
 addMessageListener('setup', function() {
   manager.addDeviceProvider(testProvider);
 
@@ -48,6 +107,20 @@ addMessageListener('trigger-device-add', function(device) {
   manager.addDevice(testDevice);
 });
 
+addMessageListener('trigger-add-unsupport-url-device', function() {
+  manager.addDevice(mockedDeviceWithoutSupportedURL);
+});
+
+addMessageListener('trigger-add-multiple-devices', function() {
+  manager.addDevice(testDevice1);
+  manager.addDevice(testDevice2);
+});
+
+addMessageListener('trigger-add-https-devices', function() {
+  manager.addDevice(mockedDeviceSupportHttpsURL);
+});
+
+
 addMessageListener('trigger-device-update', function(device) {
   testDevice.id = device.id;
   testDevice.name = device.name;
@@ -57,6 +130,19 @@ addMessageListener('trigger-device-update', function(device) {
 
 addMessageListener('trigger-device-remove', function() {
   manager.removeDevice(testDevice);
+});
+
+addMessageListener('trigger-remove-unsupported-device', function() {
+  manager.removeDevice(mockedDeviceWithoutSupportedURL);
+});
+
+addMessageListener('trigger-remove-multiple-devices', function() {
+  manager.removeDevice(testDevice1);
+  manager.removeDevice(testDevice2);
+});
+
+addMessageListener('trigger-remove-https-devices', function() {
+  manager.removeDevice(mockedDeviceSupportHttpsURL);
 });
 
 addMessageListener('teardown', function() {

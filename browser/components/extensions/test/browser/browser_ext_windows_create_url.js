@@ -8,7 +8,7 @@ add_task(function* testWindowCreate() {
       permissions: ["tabs"],
     },
 
-    background() {
+    background: async function() {
       const EXTENSION_URL = browser.runtime.getURL("test.html");
       const REMOTE_URL = browser.runtime.getURL("test.html");
 
@@ -40,22 +40,22 @@ add_task(function* testWindowCreate() {
         }
       });
 
-      function create(options) {
-        return browser.windows.create(options).then(window => {
-          let win = windows.get(window.id);
+      async function create(options) {
+        let window = await browser.windows.create(options);
+        let win = windows.get(window.id);
 
-          win.expectedTabs = Array.isArray(options.url) ? options.url.length : 1;
+        win.expectedTabs = Array.isArray(options.url) ? options.url.length : 1;
 
-          return win.promise;
-        });
+        return win.promise;
       }
 
-      Promise.all([
-        create({url: REMOTE_URL}),
-        create({url: "test.html"}),
-        create({url: EXTENSION_URL}),
-        create({url: [REMOTE_URL, "test.html", EXTENSION_URL]}),
-      ]).then(windows => {
+      try {
+        let windows = await Promise.all([
+          create({url: REMOTE_URL}),
+          create({url: "test.html"}),
+          create({url: EXTENSION_URL}),
+          create({url: [REMOTE_URL, "test.html", EXTENSION_URL]}),
+        ]);
         browser.test.assertEq(REMOTE_URL, windows[0].tabs.get(0).url, "Single, absolute, remote URL");
 
         browser.test.assertEq(REMOTE_URL, windows[1].tabs.get(0).url, "Single, relative URL");
@@ -65,12 +65,12 @@ add_task(function* testWindowCreate() {
         browser.test.assertEq(REMOTE_URL, windows[3].tabs.get(0).url, "url[0]: Absolute, remote URL");
         browser.test.assertEq(EXTENSION_URL, windows[3].tabs.get(1).url, "url[1]: Relative URL");
         browser.test.assertEq(EXTENSION_URL, windows[3].tabs.get(2).url, "url[2]: Absolute, extension URL");
-      }).then(() => {
+
         browser.test.notifyPass("window-create-url");
-      }).catch(e => {
+      } catch (e) {
         browser.test.fail(`${e} :: ${e.stack}`);
         browser.test.notifyFail("window-create-url");
-      });
+      }
     },
 
     files: {

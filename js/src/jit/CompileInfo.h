@@ -7,6 +7,8 @@
 #ifndef jit_CompileInfo_h
 #define jit_CompileInfo_h
 
+#include "mozilla/Maybe.h"
+
 #include "jsfun.h"
 
 #include "jit/JitAllocPolicy.h"
@@ -221,6 +223,23 @@ class CompileInfo
         nlocals_ = script->nfixed();
         nstack_ = Max<unsigned>(script->nslots() - script->nfixed(), MinJITStackSize);
         nslots_ = nimplicit_ + nargs_ + nlocals_ + nstack_;
+
+        // For derived class constructors, find and cache the frame slot for
+        // the .this binding. This slot is assumed to be always
+        // observable. See isObservableFrameSlot.
+        if (script->isDerivedClassConstructor()) {
+            MOZ_ASSERT(script->functionHasThisBinding());
+            CompileRuntime* runtime = GetJitContext()->runtime;
+            for (BindingIter bi(script); bi; bi++) {
+                if (bi.name() != runtime->names().dotThis)
+                    continue;
+                BindingLocation loc = bi.location();
+                if (loc.kind() == BindingLocation::Kind::Frame) {
+                    thisSlotForDerivedClassConstructor_ = mozilla::Some(localSlot(loc.slot()));
+                    break;
+                }
+            }
+        }
     }
 
     explicit CompileInfo(unsigned nlocals)
@@ -437,6 +456,13 @@ class CompileInfo
         if (slot == thisSlot())
             return true;
 
+        // The |this| frame slot in derived class constructors should never be
+        // optimized out, as a Debugger might need to perform TDZ checks on it
+        // via, e.g., an exceptionUnwind handler. The TDZ check is required
+        // for correctness if the handler decides to continue execution.
+        if (thisSlotForDerivedClassConstructor_ && *thisSlotForDerivedClassConstructor_ == slot)
+            return true;
+
         if (funMaybeLazy()->needsSomeEnvironmentObject() && slot == environmentChainSlot())
             return true;
 
@@ -503,6 +529,7 @@ class CompileInfo
     unsigned nlocals_;
     unsigned nstack_;
     unsigned nslots_;
+    mozilla::Maybe<unsigned> thisSlotForDerivedClassConstructor_;
     JSScript* script_;
     JSFunction* fun_;
     jsbytecode* osrPc_;

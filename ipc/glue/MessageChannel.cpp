@@ -472,7 +472,7 @@ private:
     nsAutoPtr<IPC::Message> mReply;
 };
 
-MessageChannel::MessageChannel(MessageListener *aListener)
+MessageChannel::MessageChannel(IToplevelProtocol *aListener)
   : mListener(aListener),
     mChannelState(ChannelClosed),
     mSide(UnknownSide),
@@ -1857,15 +1857,45 @@ MessageChannel::MaybeUndeferIncall()
 }
 
 void
+MessageChannel::EnteredCxxStack()
+{
+    mListener->EnteredCxxStack();
+}
+
+void
 MessageChannel::ExitedCxxStack()
 {
-    mListener->OnExitedCxxStack();
+    mListener->ExitedCxxStack();
     if (mSawInterruptOutMsg) {
         MonitorAutoLock lock(*mMonitor);
         // see long comment in OnMaybeDequeueOne()
         EnqueuePendingMessages();
         mSawInterruptOutMsg = false;
     }
+}
+
+void
+MessageChannel::EnteredCall()
+{
+    mListener->EnteredCall();
+}
+
+void
+MessageChannel::ExitedCall()
+{
+    mListener->ExitedCall();
+}
+
+void
+MessageChannel::EnteredSyncSend()
+{
+    mListener->OnEnteredSyncSend();
+}
+
+void
+MessageChannel::ExitedSyncSend()
+{
+    mListener->OnExitedSyncSend();
 }
 
 void
@@ -1953,7 +1983,7 @@ MessageChannel::ShouldContinueFromTimeout()
     bool cont;
     {
         MonitorAutoUnlock unlock(*mMonitor);
-        cont = mListener->OnReplyTimeout();
+        cont = mListener->ShouldContinueFromReplyTimeout();
         mListener->ArtificialSleep();
     }
 
@@ -2002,7 +2032,7 @@ void
 MessageChannel::ReportMessageRouteError(const char* channelName) const
 {
     PrintErrorMessage(mSide, channelName, "Need a route");
-    mListener->OnProcessingError(MsgRouteError, "MsgRouteError");
+    mListener->ProcessingError(MsgRouteError, "MsgRouteError");
 }
 
 void
@@ -2044,7 +2074,7 @@ MessageChannel::ReportConnectionError(const char* aChannelName, Message* aMsg) c
     }
 
     MonitorAutoUnlock unlock(*mMonitor);
-    mListener->OnProcessingError(MsgDropped, errorMsg);
+    mListener->ProcessingError(MsgDropped, errorMsg);
 }
 
 bool
@@ -2089,7 +2119,7 @@ MessageChannel::MaybeHandleError(Result code, const Message& aMsg, const char* c
 
     PrintErrorMessage(mSide, channelName, reason);
 
-    mListener->OnProcessingError(code, reason);
+    mListener->ProcessingError(code, reason);
 
     return false;
 }

@@ -100,6 +100,7 @@ namespace jit {
     _(ToFloat32)                                \
     _(TruncateToInt32)                          \
     _(NewObject)                                \
+    _(NewTypedArray)                            \
     _(NewArray)                                 \
     _(NewDerivedTypedObject)                    \
     _(CreateThisWithTemplate)                   \
@@ -561,6 +562,14 @@ class RNewObject final : public RInstruction
 
   public:
     RINSTRUCTION_HEADER_NUM_OP_(NewObject, 1)
+
+    MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const;
+};
+
+class RNewTypedArray final : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_NUM_OP_(NewTypedArray, 1)
 
     MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const;
 };

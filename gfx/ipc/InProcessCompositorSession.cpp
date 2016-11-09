@@ -60,6 +60,12 @@ InProcessCompositorSession::GetAPZCTreeManager() const
   return mCompositorBridgeParent->GetAPZCTreeManager(mRootLayerTreeId);
 }
 
+bool
+InProcessCompositorSession::Reset(const nsTArray<LayersBackend>& aBackendHints, TextureFactoryIdentifier* aOutIdentifier)
+{
+  return mCompositorBridgeParent->ResetCompositor(aBackendHints, aOutIdentifier);
+}
+
 void
 InProcessCompositorSession::Shutdown()
 {

@@ -7,22 +7,21 @@ add_task(function* test_duplicate_alarm_name_replaces_alarm() {
   function backgroundScript() {
     let count = 0;
 
-    browser.alarms.onAlarm.addListener(alarm => {
+    browser.alarms.onAlarm.addListener(async alarm => {
       if (alarm.name === "master alarm") {
         browser.alarms.create("child alarm", {delayInMinutes: 0.05});
-        browser.alarms.getAll().then(results => {
-          browser.test.assertEq(2, results.length, "exactly two alarms exist");
-          browser.test.assertEq("master alarm", results[0].name, "first alarm has the expected name");
-          browser.test.assertEq("child alarm", results[1].name, "second alarm has the expected name");
-        }).then(() => {
-          if (count++ === 3) {
-            browser.alarms.clear("master alarm").then(wasCleared => {
-              return browser.alarms.clear("child alarm");
-            }).then(wasCleared => {
-              browser.test.notifyPass("alarm-duplicate");
-            });
-          }
-        });
+        let results = await browser.alarms.getAll();
+
+        browser.test.assertEq(2, results.length, "exactly two alarms exist");
+        browser.test.assertEq("master alarm", results[0].name, "first alarm has the expected name");
+        browser.test.assertEq("child alarm", results[1].name, "second alarm has the expected name");
+
+        if (count++ === 3) {
+          await browser.alarms.clear("master alarm");
+          await browser.alarms.clear("child alarm");
+
+          browser.test.notifyPass("alarm-duplicate");
+        }
       } else {
         browser.test.fail("duplicate named alarm replaced existing alarm");
         browser.test.notifyFail("alarm-duplicate");
