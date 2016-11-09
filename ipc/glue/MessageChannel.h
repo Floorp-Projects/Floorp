@@ -33,6 +33,7 @@ namespace mozilla {
 namespace ipc {
 
 class MessageChannel;
+class IToplevelProtocol;
 
 class RefCountedMonitor : public Monitor
 {
@@ -60,6 +61,15 @@ enum class SyncSendError {
     ReplyError,
 };
 
+enum ChannelState {
+    ChannelClosed,
+    ChannelOpening,
+    ChannelConnected,
+    ChannelTimeout,
+    ChannelClosing,
+    ChannelError
+};
+
 class AutoEnterTransaction;
 
 class MessageChannel : HasResultCodes
@@ -79,7 +89,7 @@ class MessageChannel : HasResultCodes
     typedef IPC::MessageInfo MessageInfo;
     typedef mozilla::ipc::Transport Transport;
 
-    explicit MessageChannel(MessageListener *aListener);
+    explicit MessageChannel(IToplevelProtocol *aListener);
     ~MessageChannel();
 
     // "Open" from the perspective of the transport layer; the underlying
@@ -328,29 +338,16 @@ class MessageChannel : HasResultCodes
     // This helper class manages mCxxStackDepth on behalf of MessageChannel.
     // When the stack depth is incremented from zero to non-zero, it invokes
     // a callback, and similarly for when the depth goes from non-zero to zero.
-    void EnteredCxxStack() {
-       mListener->OnEnteredCxxStack();
-    }
-
+    void EnteredCxxStack();
     void ExitedCxxStack();
 
-    void EnteredCall() {
-        mListener->OnEnteredCall();
-    }
+    void EnteredCall();
+    void ExitedCall();
 
-    void ExitedCall() {
-        mListener->OnExitedCall();
-    }
+    void EnteredSyncSend();
+    void ExitedSyncSend();
 
-    void EnteredSyncSend() {
-        mListener->OnEnteredSyncSend();
-    }
-
-    void ExitedSyncSend() {
-        mListener->OnExitedSyncSend();
-    }
-
-    MessageListener *Listener() const {
+    IToplevelProtocol *Listener() const {
         return mListener;
     }
 
@@ -495,7 +492,7 @@ class MessageChannel : HasResultCodes
   private:
     // Based on presumption the listener owns and overlives the channel,
     // this is never nullified.
-    MessageListener* mListener;
+    IToplevelProtocol* mListener;
     ChannelState mChannelState;
     RefPtr<RefCountedMonitor> mMonitor;
     Side mSide;

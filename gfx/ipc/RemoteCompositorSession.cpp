@@ -8,6 +8,7 @@
 #include "mozilla/VsyncDispatcher.h"
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/APZCTreeManagerChild.h"
+#include "mozilla/Unused.h"
 #include "nsBaseWidget.h"
 
 namespace mozilla {
@@ -35,6 +36,13 @@ RemoteCompositorSession::~RemoteCompositorSession()
 {
   // This should have been shutdown first.
   MOZ_ASSERT(!mCompositorBridgeChild);
+}
+
+void
+RemoteCompositorSession::NotifyDeviceReset()
+{
+  MOZ_ASSERT(mWidget);
+  mWidget->OnRenderingDeviceReset();
 }
 
 void
@@ -76,6 +84,14 @@ RefPtr<IAPZCTreeManager>
 RemoteCompositorSession::GetAPZCTreeManager() const
 {
   return mAPZ;
+}
+
+bool
+RemoteCompositorSession::Reset(const nsTArray<LayersBackend>& aBackendHints, TextureFactoryIdentifier* aOutIdentifier)
+{
+  bool didReset;
+  Unused << mCompositorBridgeChild->SendReset(aBackendHints, &didReset, aOutIdentifier);
+  return didReset;
 }
 
 void

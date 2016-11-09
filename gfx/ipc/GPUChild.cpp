@@ -7,6 +7,7 @@
 #include "gfxConfig.h"
 #include "gfxPrefs.h"
 #include "GPUProcessHost.h"
+#include "GPUProcessManager.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/CheckerboardReportService.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -148,6 +149,13 @@ bool
 GPUChild::RecvAccumulateChildKeyedHistogram(InfallibleTArray<KeyedAccumulation>&& aAccumulations)
 {
   Telemetry::AccumulateChildKeyed(GeckoProcessType_GPU, aAccumulations);
+  return true;
+}
+
+bool
+GPUChild::RecvNotifyDeviceReset()
+{
+  mHost->mListener->OnProcessDeviceReset(mHost);
   return true;
 }
 

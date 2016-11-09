@@ -89,16 +89,15 @@ ParseURLFromDocument(nsIDocument* aDocument, const nsAString& aInput,
   }
   return resolvedURI.forget();
 }
-
 void
 GetRequestURLFromDocument(nsIDocument* aDocument, const nsAString& aInput,
-                          nsAString& aRequestURL, ErrorResult& aRv)
+                          nsAString& aRequestURL, nsACString& aURLfragment,
+                          ErrorResult& aRv)
 {
   nsCOMPtr<nsIURI> resolvedURI = ParseURLFromDocument(aDocument, aInput, aRv);
   if (aRv.Failed()) {
     return;
   }
-
   // This fails with URIs with weird protocols, even when they are valid,
   // so we ignore the failure
   nsAutoCString credentials;
@@ -115,21 +114,23 @@ GetRequestURLFromDocument(nsIDocument* aDocument, const nsAString& aInput,
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
-
   nsAutoCString spec;
   aRv = resolvedURIClone->GetSpec(spec);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
-
   CopyUTF8toUTF16(spec, aRequestURL);
-}
 
+  // Get the fragment from nsIURI.
+  aRv = resolvedURI->GetRef(aURLfragment);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+}
 already_AddRefed<nsIURI>
 ParseURLFromChrome(const nsAString& aInput, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
   nsCOMPtr<nsIURI> uri;
   aRv = NS_NewURI(getter_AddRefs(uri), aInput, nullptr, nullptr);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -137,16 +138,14 @@ ParseURLFromChrome(const nsAString& aInput, ErrorResult& aRv)
   }
   return uri.forget();
 }
-
 void
 GetRequestURLFromChrome(const nsAString& aInput, nsAString& aRequestURL,
-                        ErrorResult& aRv)
+                        nsACString& aURLfragment, ErrorResult& aRv)
 {
   nsCOMPtr<nsIURI> uri = ParseURLFromChrome(aInput, aRv);
   if (aRv.Failed()) {
     return;
   }
-
   // This fails with URIs with weird protocols, even when they are valid,
   // so we ignore the failure
   nsAutoCString credentials;
@@ -163,16 +162,19 @@ GetRequestURLFromChrome(const nsAString& aInput, nsAString& aRequestURL,
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
-
   nsAutoCString spec;
   aRv = uriClone->GetSpec(spec);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
-
   CopyUTF8toUTF16(spec, aRequestURL);
-}
 
+  // Get the fragment from nsIURI.
+  aRv = uri->GetRef(aURLfragment);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+}
 already_AddRefed<URL>
 ParseURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
                    ErrorResult& aRv)
@@ -188,16 +190,15 @@ ParseURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
   }
   return url.forget();
 }
-
 void
 GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
-                        nsAString& aRequestURL, ErrorResult& aRv)
+                        nsAString& aRequestURL, nsACString& aURLfragment,
+                        ErrorResult& aRv)
 {
   RefPtr<URL> url = ParseURLFromWorker(aGlobal, aInput, aRv);
   if (aRv.Failed()) {
     return;
   }
-
   nsString username;
   url->GetUsername(username, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -209,17 +210,27 @@ GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
-
   if (!username.IsEmpty() || !password.IsEmpty()) {
     aRv.ThrowTypeError<MSG_URL_HAS_CREDENTIALS>(aInput);
     return;
+  }
+  // Get the fragment from URL.
+  nsAutoString fragment;
+  url->GetHash(fragment, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  // Note: URL::GetHash() includes the "#" and we want the fragment with out
+  // the hash symbol.
+  if (!fragment.IsEmpty()) {
+    CopyUTF16toUTF8(Substring(fragment, 1), aURLfragment);
   }
 
   url->SetHash(EmptyString(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
-
   url->Stringify(aRequestURL, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
@@ -284,38 +295,33 @@ Request::Constructor(const GlobalObject& aGlobal,
     }
 
     request = inputReq->GetInternalRequest();
-
   } else {
     // aInput is USVString.
     // We need to get url before we create a InternalRequest.
     nsAutoString input;
     input.Assign(aInput.GetAsUSVString());
-
     nsAutoString requestURL;
+    nsCString fragment;
     if (NS_IsMainThread()) {
       nsIDocument* doc = GetEntryDocument();
       if (doc) {
-        GetRequestURLFromDocument(doc, input, requestURL, aRv);
+        GetRequestURLFromDocument(doc, input, requestURL, fragment, aRv);
       } else {
         // If we don't have a document, we must assume that this is a full URL.
-        GetRequestURLFromChrome(input, requestURL, aRv);
+        GetRequestURLFromChrome(input, requestURL, fragment, aRv);
       }
     } else {
-      GetRequestURLFromWorker(aGlobal, input, requestURL, aRv);
+      GetRequestURLFromWorker(aGlobal, input, requestURL, fragment, aRv);
     }
-
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
-
-    request = new InternalRequest(NS_ConvertUTF16toUTF8(requestURL));
+    request = new InternalRequest(NS_ConvertUTF16toUTF8(requestURL), fragment);
   }
-
   request = request->GetRequestConstructorCopy(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
-
   RequestMode fallbackMode = RequestMode::EndGuard_;
   RequestCredentials fallbackCredentials = RequestCredentials::EndGuard_;
   RequestCache fallbackCache = RequestCache::EndGuard_;

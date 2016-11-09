@@ -14,7 +14,7 @@
 "use strict";
 
 add_task(function* test_cookies() {
-  function background() {
+  async function background() {
     function assertExpected(expected, cookie) {
       for (let key of Object.keys(cookie)) {
         browser.test.assertTrue(key in expected, `found property ${key}`);
@@ -45,171 +45,175 @@ add_task(function* test_cookies() {
       storeId: STORE_ID,
     };
 
-    browser.cookies.set({url: TEST_URL, name: "name1", value: "value1", expirationDate: THE_FUTURE}).then(cookie => {
-      assertExpected(expected, cookie);
-      return browser.cookies.get({url: TEST_URL, name: "name1"});
-    }).then(cookie => {
-      assertExpected(expected, cookie);
-      return browser.cookies.getAll({name: "name1"});
-    }).then(cookies => {
-      browser.test.assertEq(cookies.length, 1, "one cookie found for matching name");
-      assertExpected(expected, cookies[0]);
-      return browser.cookies.getAll({domain: "example.org"});
-    }).then(cookies => {
-      browser.test.assertEq(cookies.length, 1, "one cookie found for matching domain");
-      assertExpected(expected, cookies[0]);
-      return browser.cookies.getAll({domain: "example.net"});
-    }).then(cookies => {
-      browser.test.assertEq(cookies.length, 0, "no cookies found for non-matching domain");
-      return browser.cookies.getAll({secure: false});
-    }).then(cookies => {
-      browser.test.assertEq(cookies.length, 1, "one non-secure cookie found");
-      assertExpected(expected, cookies[0]);
-      return browser.cookies.getAll({secure: true});
-    }).then(cookies => {
-      browser.test.assertEq(cookies.length, 0, "no secure cookies found");
-      return browser.cookies.getAll({storeId: STORE_ID});
-    }).then(cookies => {
-      browser.test.assertEq(cookies.length, 1, "one cookie found for valid storeId");
-      assertExpected(expected, cookies[0]);
-      return browser.cookies.getAll({storeId: "invalid_id"});
-    }).then(cookies => {
-      browser.test.assertEq(cookies.length, 0, "no cookies found for invalid storeId");
-      return browser.cookies.remove({url: TEST_URL, name: "name1"});
-    }).then(details => {
-      assertExpected({url: TEST_URL, name: "name1", storeId: STORE_ID}, details);
-      return browser.cookies.get({url: TEST_URL, name: "name1"});
-    }).then(cookie => {
-      browser.test.assertEq(null, cookie, "removed cookie not found");
-      return browser.cookies.getAllCookieStores();
-    }).then(stores => {
-      browser.test.assertEq(1, stores.length, "expected number of stores returned");
+    let cookie = await browser.cookies.set({url: TEST_URL, name: "name1", value: "value1", expirationDate: THE_FUTURE});
+    assertExpected(expected, cookie);
+
+    cookie = await browser.cookies.get({url: TEST_URL, name: "name1"});
+    assertExpected(expected, cookie);
+
+    let cookies = await browser.cookies.getAll({name: "name1"});
+    browser.test.assertEq(cookies.length, 1, "one cookie found for matching name");
+    assertExpected(expected, cookies[0]);
+
+    cookies = await browser.cookies.getAll({domain: "example.org"});
+    browser.test.assertEq(cookies.length, 1, "one cookie found for matching domain");
+    assertExpected(expected, cookies[0]);
+
+    cookies = await browser.cookies.getAll({domain: "example.net"});
+    browser.test.assertEq(cookies.length, 0, "no cookies found for non-matching domain");
+
+    cookies = await browser.cookies.getAll({secure: false});
+    browser.test.assertEq(cookies.length, 1, "one non-secure cookie found");
+    assertExpected(expected, cookies[0]);
+
+    cookies = await browser.cookies.getAll({secure: true});
+    browser.test.assertEq(cookies.length, 0, "no secure cookies found");
+
+    cookies = await browser.cookies.getAll({storeId: STORE_ID});
+    browser.test.assertEq(cookies.length, 1, "one cookie found for valid storeId");
+    assertExpected(expected, cookies[0]);
+
+    cookies = await browser.cookies.getAll({storeId: "invalid_id"});
+    browser.test.assertEq(cookies.length, 0, "no cookies found for invalid storeId");
+
+    let details = await browser.cookies.remove({url: TEST_URL, name: "name1"});
+    assertExpected({url: TEST_URL, name: "name1", storeId: STORE_ID}, details);
+
+    cookie = await browser.cookies.get({url: TEST_URL, name: "name1"});
+    browser.test.assertEq(null, cookie, "removed cookie not found");
+
+    let stores = await browser.cookies.getAllCookieStores();
+    browser.test.assertEq(1, stores.length, "expected number of stores returned");
+    browser.test.assertEq(STORE_ID, stores[0].id, "expected store id returned");
+    browser.test.assertEq(1, stores[0].tabIds.length, "one tab returned for store");
+
+    {
+      let privateWindow = await browser.windows.create({incognito: true});
+      let stores = await browser.cookies.getAllCookieStores();
+
+      browser.test.assertEq(2, stores.length, "expected number of stores returned");
       browser.test.assertEq(STORE_ID, stores[0].id, "expected store id returned");
       browser.test.assertEq(1, stores[0].tabIds.length, "one tab returned for store");
-      return browser.windows.create({incognito: true});
-    }).then(privateWindow => {
-      return browser.cookies.getAllCookieStores().then(stores => {
-        browser.test.assertEq(2, stores.length, "expected number of stores returned");
-        browser.test.assertEq(STORE_ID, stores[0].id, "expected store id returned");
-        browser.test.assertEq(1, stores[0].tabIds.length, "one tab returned for store");
-        browser.test.assertEq(PRIVATE_STORE_ID, stores[1].id, "expected private store id returned");
-        browser.test.assertEq(1, stores[0].tabIds.length, "one tab returned for private store");
-        return browser.windows.remove(privateWindow.id);
-      });
-    }).then(() => {
-      return browser.cookies.set({url: TEST_URL, name: "name2", domain: ".example.org", expirationDate: THE_FUTURE});
-    }).then(cookie => {
-      browser.test.assertEq(false, cookie.hostOnly, "cookie is not a hostOnly cookie");
-      return browser.cookies.remove({url: TEST_URL, name: "name2"});
-    }).then(details => {
-      assertExpected({url: TEST_URL, name: "name2", storeId: STORE_ID}, details);
-      // Create a session cookie.
-      return browser.cookies.set({url: TEST_URL, name: "name1", value: "value1"});
-    }).then(cookie => {
-      browser.test.assertEq(true, cookie.session, "session cookie set");
-      return browser.cookies.get({url: TEST_URL, name: "name1"});
-    }).then(cookie => {
-      browser.test.assertEq(true, cookie.session, "got session cookie");
-      return browser.cookies.getAll({session: true});
-    }).then(cookies => {
-      browser.test.assertEq(cookies.length, 1, "one session cookie found");
-      browser.test.assertEq(true, cookies[0].session, "found session cookie");
-      return browser.cookies.getAll({session: false});
-    }).then(cookies => {
-      browser.test.assertEq(cookies.length, 0, "no non-session cookies found");
-      return browser.cookies.remove({url: TEST_URL, name: "name1"});
-    }).then(details => {
-      assertExpected({url: TEST_URL, name: "name1", storeId: STORE_ID}, details);
-      return browser.cookies.get({url: TEST_URL, name: "name1"});
-    }).then(cookie => {
-      browser.test.assertEq(null, cookie, "removed cookie not found");
-      return browser.cookies.set({url: TEST_SECURE_URL, name: "name1", value: "value1", secure: true});
-    }).then(cookie => {
-      browser.test.assertEq(true, cookie.secure, "secure cookie set");
-      return browser.cookies.get({url: TEST_SECURE_URL, name: "name1"});
-    }).then(cookie => {
-      browser.test.assertEq(true, cookie.session, "got secure cookie");
-      return browser.cookies.getAll({secure: true});
-    }).then(cookies => {
-      browser.test.assertEq(cookies.length, 1, "one secure cookie found");
-      browser.test.assertEq(true, cookies[0].secure, "found secure cookie");
-      return browser.cookies.getAll({secure: false});
-    }).then(cookies => {
-      browser.test.assertEq(cookies.length, 0, "no non-secure cookies found");
-      return browser.cookies.remove({url: TEST_SECURE_URL, name: "name1"});
-    }).then(details => {
-      assertExpected({url: TEST_SECURE_URL, name: "name1", storeId: STORE_ID}, details);
-      return browser.cookies.get({url: TEST_SECURE_URL, name: "name1"});
-    }).then(cookie => {
-      browser.test.assertEq(null, cookie, "removed cookie not found");
-      return browser.cookies.set({url: TEST_URL_WITH_PATH, path: TEST_COOKIE_PATH, name: "name1", value: "value1", expirationDate: THE_FUTURE});
-    }).then(cookie => {
-      browser.test.assertEq(TEST_COOKIE_PATH, cookie.path, "created cookie with path");
-      return browser.cookies.get({url: TEST_URL_WITH_PATH, name: "name1"});
-    }).then(cookie => {
-      browser.test.assertEq(TEST_COOKIE_PATH, cookie.path, "got cookie with path");
-      return browser.cookies.getAll({path: TEST_COOKIE_PATH});
-    }).then(cookies => {
-      browser.test.assertEq(cookies.length, 1, "one cookie with path found");
-      browser.test.assertEq(TEST_COOKIE_PATH, cookies[0].path, "found cookie with path");
-      return browser.cookies.get({url: TEST_URL + "invalid_path", name: "name1"});
-    }).then(cookie => {
-      browser.test.assertEq(null, cookie, "get with invalid path returns null");
-      return browser.cookies.getAll({path: "/invalid_path"});
-    }).then(cookies => {
-      browser.test.assertEq(cookies.length, 0, "getAll with invalid path returns 0 cookies");
-      return browser.cookies.remove({url: TEST_URL_WITH_PATH, name: "name1"});
-    }).then(details => {
-      assertExpected({url: TEST_URL_WITH_PATH, name: "name1", storeId: STORE_ID}, details);
-      return browser.cookies.set({url: TEST_URL, name: "name1", value: "value1", httpOnly: true});
-    }).then(cookie => {
-      browser.test.assertEq(true, cookie.httpOnly, "httpOnly cookie set");
-      return browser.cookies.set({url: TEST_URL, name: "name1", value: "value1", httpOnly: false});
-    }).then(cookie => {
-      browser.test.assertEq(false, cookie.httpOnly, "non-httpOnly cookie set");
-      return browser.cookies.remove({url: TEST_URL, name: "name1"});
-    }).then(details => {
-      assertExpected({url: TEST_URL, name: "name1", storeId: STORE_ID}, details);
-      return browser.cookies.set({url: TEST_URL});
-    }).then(cookie => {
-      browser.test.assertEq("", cookie.name, "default name set");
-      browser.test.assertEq("", cookie.value, "default value set");
-      browser.test.assertEq(true, cookie.session, "no expiry date created session cookie");
-      return browser.windows.create({incognito: true});
-    }).then(privateWindow => {
+      browser.test.assertEq(PRIVATE_STORE_ID, stores[1].id, "expected private store id returned");
+      browser.test.assertEq(1, stores[0].tabIds.length, "one tab returned for private store");
+
+      await browser.windows.remove(privateWindow.id);
+    }
+
+    cookie = await browser.cookies.set({url: TEST_URL, name: "name2", domain: ".example.org", expirationDate: THE_FUTURE});
+    browser.test.assertEq(false, cookie.hostOnly, "cookie is not a hostOnly cookie");
+
+    details = await browser.cookies.remove({url: TEST_URL, name: "name2"});
+    assertExpected({url: TEST_URL, name: "name2", storeId: STORE_ID}, details);
+
+    // Create a session cookie.
+    cookie = await browser.cookies.set({url: TEST_URL, name: "name1", value: "value1"});
+    browser.test.assertEq(true, cookie.session, "session cookie set");
+
+    cookie = await browser.cookies.get({url: TEST_URL, name: "name1"});
+    browser.test.assertEq(true, cookie.session, "got session cookie");
+
+    cookies = await browser.cookies.getAll({session: true});
+    browser.test.assertEq(cookies.length, 1, "one session cookie found");
+    browser.test.assertEq(true, cookies[0].session, "found session cookie");
+
+    cookies = await browser.cookies.getAll({session: false});
+    browser.test.assertEq(cookies.length, 0, "no non-session cookies found");
+
+    details = await browser.cookies.remove({url: TEST_URL, name: "name1"});
+    assertExpected({url: TEST_URL, name: "name1", storeId: STORE_ID}, details);
+
+    cookie = await browser.cookies.get({url: TEST_URL, name: "name1"});
+    browser.test.assertEq(null, cookie, "removed cookie not found");
+
+    cookie = await browser.cookies.set({url: TEST_SECURE_URL, name: "name1", value: "value1", secure: true});
+    browser.test.assertEq(true, cookie.secure, "secure cookie set");
+
+    cookie = await browser.cookies.get({url: TEST_SECURE_URL, name: "name1"});
+    browser.test.assertEq(true, cookie.session, "got secure cookie");
+
+    cookies = await browser.cookies.getAll({secure: true});
+    browser.test.assertEq(cookies.length, 1, "one secure cookie found");
+    browser.test.assertEq(true, cookies[0].secure, "found secure cookie");
+
+    cookies = await browser.cookies.getAll({secure: false});
+    browser.test.assertEq(cookies.length, 0, "no non-secure cookies found");
+
+    details = await browser.cookies.remove({url: TEST_SECURE_URL, name: "name1"});
+    assertExpected({url: TEST_SECURE_URL, name: "name1", storeId: STORE_ID}, details);
+
+    cookie = await browser.cookies.get({url: TEST_SECURE_URL, name: "name1"});
+    browser.test.assertEq(null, cookie, "removed cookie not found");
+
+    cookie = await browser.cookies.set({url: TEST_URL_WITH_PATH, path: TEST_COOKIE_PATH, name: "name1", value: "value1", expirationDate: THE_FUTURE});
+    browser.test.assertEq(TEST_COOKIE_PATH, cookie.path, "created cookie with path");
+
+    cookie = await browser.cookies.get({url: TEST_URL_WITH_PATH, name: "name1"});
+    browser.test.assertEq(TEST_COOKIE_PATH, cookie.path, "got cookie with path");
+
+    cookies = await browser.cookies.getAll({path: TEST_COOKIE_PATH});
+    browser.test.assertEq(cookies.length, 1, "one cookie with path found");
+    browser.test.assertEq(TEST_COOKIE_PATH, cookies[0].path, "found cookie with path");
+
+    cookie = await browser.cookies.get({url: TEST_URL + "invalid_path", name: "name1"});
+    browser.test.assertEq(null, cookie, "get with invalid path returns null");
+
+    cookies = await browser.cookies.getAll({path: "/invalid_path"});
+    browser.test.assertEq(cookies.length, 0, "getAll with invalid path returns 0 cookies");
+
+    details = await browser.cookies.remove({url: TEST_URL_WITH_PATH, name: "name1"});
+    assertExpected({url: TEST_URL_WITH_PATH, name: "name1", storeId: STORE_ID}, details);
+
+    cookie = await browser.cookies.set({url: TEST_URL, name: "name1", value: "value1", httpOnly: true});
+    browser.test.assertEq(true, cookie.httpOnly, "httpOnly cookie set");
+
+    cookie = await browser.cookies.set({url: TEST_URL, name: "name1", value: "value1", httpOnly: false});
+    browser.test.assertEq(false, cookie.httpOnly, "non-httpOnly cookie set");
+
+    details = await browser.cookies.remove({url: TEST_URL, name: "name1"});
+    assertExpected({url: TEST_URL, name: "name1", storeId: STORE_ID}, details);
+
+    cookie = await browser.cookies.set({url: TEST_URL});
+    browser.test.assertEq("", cookie.name, "default name set");
+    browser.test.assertEq("", cookie.value, "default value set");
+    browser.test.assertEq(true, cookie.session, "no expiry date created session cookie");
+
+    {
+      let privateWindow = await browser.windows.create({incognito: true});
+
       // Hacky work-around for bugzil.la/1309637
-      return new Promise(resolve => setTimeout(resolve, 700, privateWindow));
-    }).then(privateWindow => {
-      return browser.cookies.set({url: TEST_URL, name: "store", value: "private", expirationDate: THE_FUTURE, storeId: PRIVATE_STORE_ID}).then(cookie => {
-        browser.test.assertEq("private", cookie.value, "set the private cookie");
-        return browser.cookies.set({url: TEST_URL, name: "store", value: "default", expirationDate: THE_FUTURE, storeId: STORE_ID});
-      }).then(cookie => {
-        browser.test.assertEq("default", cookie.value, "set the default cookie");
-        return browser.cookies.get({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID});
-      }).then(cookie => {
-        browser.test.assertEq("private", cookie.value, "get the private cookie");
-        browser.test.assertEq(PRIVATE_STORE_ID, cookie.storeId, "get the private cookie storeId");
-        return browser.cookies.get({url: TEST_URL, name: "store", storeId: STORE_ID});
-      }).then(cookie => {
-        browser.test.assertEq("default", cookie.value, "get the default cookie");
-        browser.test.assertEq(STORE_ID, cookie.storeId, "get the default cookie storeId");
-        return browser.cookies.remove({url: TEST_URL, name: "store", storeId: STORE_ID});
-      }).then(details => {
-        assertExpected({url: TEST_URL, name: "store", storeId: STORE_ID}, details);
-        return browser.cookies.get({url: TEST_URL, name: "store", storeId: STORE_ID});
-      }).then(cookie => {
-        browser.test.assertEq(null, cookie, "deleted the default cookie");
-        return browser.cookies.remove({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID});
-      }).then(details => {
-        assertExpected({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID}, details);
-        return browser.cookies.get({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID});
-      }).then(cookie => {
-        browser.test.assertEq(null, cookie, "deleted the private cookie");
-        return browser.windows.remove(privateWindow.id);
-      });
-    }).then(() => {
-      browser.test.notifyPass("cookies");
-    });
+      await new Promise(resolve => setTimeout(resolve, 700));
+
+      let cookie = await browser.cookies.set({url: TEST_URL, name: "store", value: "private", expirationDate: THE_FUTURE, storeId: PRIVATE_STORE_ID});
+      browser.test.assertEq("private", cookie.value, "set the private cookie");
+
+      cookie = await browser.cookies.set({url: TEST_URL, name: "store", value: "default", expirationDate: THE_FUTURE, storeId: STORE_ID});
+      browser.test.assertEq("default", cookie.value, "set the default cookie");
+
+      cookie = await browser.cookies.get({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID});
+      browser.test.assertEq("private", cookie.value, "get the private cookie");
+      browser.test.assertEq(PRIVATE_STORE_ID, cookie.storeId, "get the private cookie storeId");
+
+      cookie = await browser.cookies.get({url: TEST_URL, name: "store", storeId: STORE_ID});
+      browser.test.assertEq("default", cookie.value, "get the default cookie");
+      browser.test.assertEq(STORE_ID, cookie.storeId, "get the default cookie storeId");
+
+      let details = await browser.cookies.remove({url: TEST_URL, name: "store", storeId: STORE_ID});
+      assertExpected({url: TEST_URL, name: "store", storeId: STORE_ID}, details);
+
+      cookie = await browser.cookies.get({url: TEST_URL, name: "store", storeId: STORE_ID});
+      browser.test.assertEq(null, cookie, "deleted the default cookie");
+
+      details = await browser.cookies.remove({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID});
+      assertExpected({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID}, details);
+
+      cookie = await browser.cookies.get({url: TEST_URL, name: "store", storeId: PRIVATE_STORE_ID});
+      browser.test.assertEq(null, cookie, "deleted the private cookie");
+
+      await browser.windows.remove(privateWindow.id);
+    }
+
+    browser.test.notifyPass("cookies");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -220,10 +224,8 @@ add_task(function* test_cookies() {
   });
 
   yield extension.startup();
-  info("extension loaded");
   yield extension.awaitFinish("cookies");
   yield extension.unload();
-  info("extension unloaded");
 });
 
 </script>

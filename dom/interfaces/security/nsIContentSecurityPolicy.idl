@@ -131,6 +131,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    * Whether this policy allows inline script or style.
    * @param aContentPolicyType Either TYPE_SCRIPT or TYPE_STYLESHEET
    * @param aNonce The nonce string to check against the policy
+   * @param aParserCreated If the script element was created by the HTML Parser
    * @param aContent  The content of the inline resource to hash
    *        (and compare to the hashes listed in the policy)
    * @param aLineNumber The line number of the inline resource
@@ -141,6 +142,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   boolean getAllowsInline(in nsContentPolicyType aContentPolicyType,
                           in AString aNonce,
+                          in boolean aParserCreated,
                           in AString aContent,
                           in unsigned long aLineNumber);
 

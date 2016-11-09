@@ -50,12 +50,12 @@ struct HeadersEntry
   nsCString name;
   nsCString value;
 };
-
 struct CacheRequest
 {
   nsCString method;
   nsCString urlWithoutQuery;
   nsCString urlQuery;
+  nsCString urlFragment;
   HeadersEntry[] headers;
   HeadersGuardEnum headersGuard;
   nsString referrer;

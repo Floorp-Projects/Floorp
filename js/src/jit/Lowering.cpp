@@ -1177,6 +1177,14 @@ LIRGenerator::visitTypeOf(MTypeOf* ins)
 }
 
 void
+LIRGenerator::visitToAsync(MToAsync* ins)
+{
+    LToAsync* lir = new(alloc()) LToAsync(useRegisterAtStart(ins->input()));
+    defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitToId(MToId* ins)
 {
     LToIdV* lir = new(alloc()) LToIdV(useBox(ins->input()), tempDouble());

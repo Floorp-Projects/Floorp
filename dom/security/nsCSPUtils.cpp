@@ -424,6 +424,7 @@ CSP_AppendCSPFromHeader(nsIContentSecurityPolicy* aCsp,
 /* ===== nsCSPSrc ============================ */
 
 nsCSPBaseSrc::nsCSPBaseSrc()
+  : mInvalidated(false)
 {
 }
 
@@ -436,7 +437,7 @@ nsCSPBaseSrc::~nsCSPBaseSrc()
 // implementation which will never allow the load.
 bool
 nsCSPBaseSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
-                      bool aReportOnly, bool aUpgradeInsecure) const
+                      bool aReportOnly, bool aUpgradeInsecure, bool aParserCreated) const
 {
   if (CSPUTILSLOGENABLED()) {
     CSPUTILSLOG(("nsCSPBaseSrc::permits, aUri: %s",
@@ -449,7 +450,8 @@ nsCSPBaseSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
 // nsCSPSchemeSrc, nsCSPHostSrc fall back
 // to this base class implementation which will never allow the load.
 bool
-nsCSPBaseSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const
+nsCSPBaseSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
+                     bool aParserCreated) const
 {
   CSPUTILSLOG(("nsCSPBaseSrc::allows, aKeyWord: %s, a HashOrNonce: %s",
               aKeyword == CSP_HASH ? "hash" : CSP_EnumToKeyword(aKeyword),
@@ -471,13 +473,16 @@ nsCSPSchemeSrc::~nsCSPSchemeSrc()
 
 bool
 nsCSPSchemeSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
-                        bool aReportOnly, bool aUpgradeInsecure) const
+                        bool aReportOnly, bool aUpgradeInsecure, bool aParserCreated) const
 {
   if (CSPUTILSLOGENABLED()) {
     CSPUTILSLOG(("nsCSPSchemeSrc::permits, aUri: %s",
                  aUri->GetSpecOrDefault().get()));
   }
   MOZ_ASSERT((!mScheme.EqualsASCII("")), "scheme can not be the empty string");
+  if (mInvalidated) {
+    return false;
+  }
   return permitsScheme(mScheme, aUri, aReportOnly, aUpgradeInsecure);
 }
 
@@ -591,11 +596,15 @@ permitsPort(const nsAString& aEnforcementScheme,
 
 bool
 nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
-                      bool aReportOnly, bool aUpgradeInsecure) const
+                      bool aReportOnly, bool aUpgradeInsecure, bool aParserCreated) const
 {
   if (CSPUTILSLOGENABLED()) {
     CSPUTILSLOG(("nsCSPHostSrc::permits, aUri: %s",
                  aUri->GetSpecOrDefault().get()));
+  }
+
+  if (mInvalidated) {
+    return false;
   }
 
   // we are following the enforcement rules from the spec, see:
@@ -758,7 +767,6 @@ nsCSPHostSrc::appendPath(const nsAString& aPath)
 
 nsCSPKeywordSrc::nsCSPKeywordSrc(enum CSPKeyword aKeyword)
  : mKeyword(aKeyword)
- , mInvalidated(false)
 {
   NS_ASSERTION((aKeyword != CSP_SELF),
                "'self' should have been replaced in the parser");
@@ -769,19 +777,36 @@ nsCSPKeywordSrc::~nsCSPKeywordSrc()
 }
 
 bool
-nsCSPKeywordSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const
+nsCSPKeywordSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
+                         bool aReportOnly, bool aUpgradeInsecure, bool aParserCreated) const
+{
+  // no need to check for invalidated, this will always return false unless
+  // it is an nsCSPKeywordSrc for 'strict-dynamic', which should allow non
+  // parser created scripts.
+  return ((mKeyword == CSP_STRICT_DYNAMIC) && !aParserCreated);
+}
+
+bool
+nsCSPKeywordSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
+                        bool aParserCreated) const
 {
   CSPUTILSLOG(("nsCSPKeywordSrc::allows, aKeyWord: %s, aHashOrNonce: %s, mInvalidated: %s",
               CSP_EnumToKeyword(aKeyword),
+              CSP_EnumToKeyword(mKeyword),
               NS_ConvertUTF16toUTF8(aHashOrNonce).get(),
               mInvalidated ? "yes" : "false"));
-  // if unsafe-inline should be ignored, then bail early
+
   if (mInvalidated) {
-    NS_ASSERTION(mKeyword == CSP_UNSAFE_INLINE,
-                 "should only invalidate unsafe-inline within script-src");
+    // only 'self' and 'unsafe-inline' are keywords that can be ignored. Please note that
+    // the parser already translates 'self' into a uri (see assertion in constructor).
+    MOZ_ASSERT(mKeyword == CSP_UNSAFE_INLINE,
+               "should only invalidate unsafe-inline");
     return false;
   }
-  return mKeyword == aKeyword;
+  // either the keyword allows the load or the policy contains 'strict-dynamic', in which
+  // case we have to make sure the script is not parser created before allowing the load.
+  return ((mKeyword == aKeyword) ||
+          ((mKeyword == CSP_STRICT_DYNAMIC) && !aParserCreated));
 }
 
 bool
@@ -793,20 +818,7 @@ nsCSPKeywordSrc::visit(nsCSPSrcVisitor* aVisitor) const
 void
 nsCSPKeywordSrc::toString(nsAString& outStr) const
 {
-  if (mInvalidated) {
-    MOZ_ASSERT(mKeyword == CSP_UNSAFE_INLINE,
-               "can only ignore 'unsafe-inline' within toString()");
-    return;
-  }
   outStr.AppendASCII(CSP_EnumToKeyword(mKeyword));
-}
-
-void
-nsCSPKeywordSrc::invalidate()
-{
-  mInvalidated = true;
-  MOZ_ASSERT(mKeyword == CSP_UNSAFE_INLINE,
-             "invalidate 'unsafe-inline' only within script-src");
 }
 
 /* ===== nsCSPNonceSrc ==================== */
@@ -822,7 +834,7 @@ nsCSPNonceSrc::~nsCSPNonceSrc()
 
 bool
 nsCSPNonceSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
-                       bool aReportOnly, bool aUpgradeInsecure) const
+                       bool aReportOnly, bool aUpgradeInsecure, bool aParserCreated) const
 {
   if (CSPUTILSLOGENABLED()) {
     CSPUTILSLOG(("nsCSPNonceSrc::permits, aUri: %s, aNonce: %s",
@@ -830,11 +842,13 @@ nsCSPNonceSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirecte
                  NS_ConvertUTF16toUTF8(aNonce).get()));
   }
 
+  // nonces can not be invalidated by strict-dynamic
   return mNonce.Equals(aNonce);
 }
 
 bool
-nsCSPNonceSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const
+nsCSPNonceSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
+                      bool aParserCreated) const
 {
   CSPUTILSLOG(("nsCSPNonceSrc::allows, aKeyWord: %s, a HashOrNonce: %s",
               CSP_EnumToKeyword(aKeyword), NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
@@ -842,6 +856,7 @@ nsCSPNonceSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) c
   if (aKeyword != CSP_NONCE) {
     return false;
   }
+  // nonces can not be invalidated by strict-dynamic
   return mNonce.Equals(aHashOrNonce);
 }
 
@@ -874,7 +889,8 @@ nsCSPHashSrc::~nsCSPHashSrc()
 }
 
 bool
-nsCSPHashSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const
+nsCSPHashSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
+                     bool aParserCreated) const
 {
   CSPUTILSLOG(("nsCSPHashSrc::allows, aKeyWord: %s, a HashOrNonce: %s",
               CSP_EnumToKeyword(aKeyword), NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
@@ -882,6 +898,8 @@ nsCSPHashSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) co
   if (aKeyword != CSP_HASH) {
     return false;
   }
+
+  // hashes can not be invalidated by strict-dynamic
 
   // Convert aHashOrNonce to UTF-8
   NS_ConvertUTF16toUTF8 utf8_hash(aHashOrNonce);
@@ -992,7 +1010,7 @@ nsCSPDirective::~nsCSPDirective()
 
 bool
 nsCSPDirective::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
-                        bool aReportOnly, bool aUpgradeInsecure) const
+                        bool aReportOnly, bool aUpgradeInsecure, bool aParserCreated) const
 {
   if (CSPUTILSLOGENABLED()) {
     CSPUTILSLOG(("nsCSPDirective::permits, aUri: %s",
@@ -1000,7 +1018,7 @@ nsCSPDirective::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirect
   }
 
   for (uint32_t i = 0; i < mSrcs.Length(); i++) {
-    if (mSrcs[i]->permits(aUri, aNonce, aWasRedirected, aReportOnly, aUpgradeInsecure)) {
+    if (mSrcs[i]->permits(aUri, aNonce, aWasRedirected, aReportOnly, aUpgradeInsecure, aParserCreated)) {
       return true;
     }
   }
@@ -1008,13 +1026,14 @@ nsCSPDirective::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirect
 }
 
 bool
-nsCSPDirective::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const
+nsCSPDirective::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
+                       bool aParserCreated) const
 {
   CSPUTILSLOG(("nsCSPDirective::allows, aKeyWord: %s, a HashOrNonce: %s",
               CSP_EnumToKeyword(aKeyword), NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
 
   for (uint32_t i = 0; i < mSrcs.Length(); i++) {
-    if (mSrcs[i]->allows(aKeyword, aHashOrNonce)) {
+    if (mSrcs[i]->allows(aKeyword, aHashOrNonce, aParserCreated)) {
       return true;
     }
   }
@@ -1307,7 +1326,8 @@ nsRequireSRIForDirective::restrictsContentType(const nsContentPolicyType aType) 
 }
 
 bool
-nsRequireSRIForDirective::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const
+nsRequireSRIForDirective::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
+                                 bool aParserCreated) const
 {
   // can only disallow CSP_REQUIRE_SRI_FOR.
   return (aKeyword != CSP_REQUIRE_SRI_FOR);
@@ -1337,7 +1357,7 @@ nsCSPPolicy::permits(CSPDirective aDir,
                      bool aSpecific) const
 {
   nsString outp;
-  return this->permits(aDir, aUri, EmptyString(), false, aSpecific, outp);
+  return this->permits(aDir, aUri, EmptyString(), false, aSpecific, false, outp);
 }
 
 bool
@@ -1346,6 +1366,7 @@ nsCSPPolicy::permits(CSPDirective aDir,
                      const nsAString& aNonce,
                      bool aWasRedirected,
                      bool aSpecific,
+                     bool aParserCreated,
                      nsAString& outViolatedDirective) const
 {
   if (CSPUTILSLOGENABLED()) {
@@ -1363,7 +1384,8 @@ nsCSPPolicy::permits(CSPDirective aDir,
   // These directive arrays are short (1-5 elements), not worth using a hashtable.
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
     if (mDirectives[i]->equals(aDir)) {
-      if (!mDirectives[i]->permits(aUri, aNonce, aWasRedirected, mReportOnly, mUpgradeInsecDir)) {
+      if (!mDirectives[i]->permits(aUri, aNonce, aWasRedirected, mReportOnly,
+                                   mUpgradeInsecDir, aParserCreated)) {
         mDirectives[i]->toString(outViolatedDirective);
         return false;
       }
@@ -1377,7 +1399,8 @@ nsCSPPolicy::permits(CSPDirective aDir,
   // If the above loop runs through, we haven't found a matching directive.
   // Avoid relooping, just store the result of default-src while looping.
   if (!aSpecific && defaultDir) {
-    if (!defaultDir->permits(aUri, aNonce, aWasRedirected, mReportOnly, mUpgradeInsecDir)) {
+    if (!defaultDir->permits(aUri, aNonce, aWasRedirected, mReportOnly,
+                             mUpgradeInsecDir, aParserCreated)) {
       defaultDir->toString(outViolatedDirective);
       return false;
     }
@@ -1392,7 +1415,8 @@ nsCSPPolicy::permits(CSPDirective aDir,
 bool
 nsCSPPolicy::allows(nsContentPolicyType aContentType,
                     enum CSPKeyword aKeyword,
-                    const nsAString& aHashOrNonce) const
+                    const nsAString& aHashOrNonce,
+                    bool aParserCreated) const
 {
   CSPUTILSLOG(("nsCSPPolicy::allows, aKeyWord: %s, a HashOrNonce: %s",
               CSP_EnumToKeyword(aKeyword), NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
@@ -1402,7 +1426,7 @@ nsCSPPolicy::allows(nsContentPolicyType aContentType,
   // Try to find a matching directive
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
     if (mDirectives[i]->restrictsContentType(aContentType)) {
-      if (mDirectives[i]->allows(aKeyword, aHashOrNonce)) {
+      if (mDirectives[i]->allows(aKeyword, aHashOrNonce, aParserCreated)) {
         return true;
       }
       return false;
@@ -1425,7 +1449,7 @@ nsCSPPolicy::allows(nsContentPolicyType aContentType,
   // If the above loop runs through, we haven't found a matching directive.
   // Avoid relooping, just store the result of default-src while looping.
   if (defaultDir) {
-    return defaultDir->allows(aKeyword, aHashOrNonce);
+    return defaultDir->allows(aKeyword, aHashOrNonce, aParserCreated);
   }
 
   // Allowing the load; see Bug 885433
@@ -1440,7 +1464,7 @@ bool
 nsCSPPolicy::allows(nsContentPolicyType aContentType,
                     enum CSPKeyword aKeyword) const
 {
-  return allows(aContentType, aKeyword, NS_LITERAL_STRING(""));
+  return allows(aContentType, aKeyword, NS_LITERAL_STRING(""), false);
 }
 
 void

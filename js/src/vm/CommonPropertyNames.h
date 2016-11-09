@@ -30,7 +30,6 @@
     macro(as, as, "as") \
     macro(Async, Async, "Async") \
     macro(AsyncFunction, AsyncFunction, "AsyncFunction") \
-    macro(AsyncFunction_wrap, AsyncFunction_wrap, "AsyncFunction_wrap") \
     macro(AsyncWrapped, AsyncWrapped, "AsyncWrapped") \
     macro(async, async, "async") \
     macro(await, await, "await") \
@@ -280,6 +279,8 @@
     macro(stack, stack, "stack") \
     macro(star, star, "*") \
     macro(starDefaultStar, starDefaultStar, "*default*") \
+    macro(StarGeneratorNext, StarGeneratorNext, "StarGeneratorNext") \
+    macro(StarGeneratorThrow, StarGeneratorThrow, "StarGeneratorThrow") \
     macro(startTimestamp, startTimestamp, "startTimestamp") \
     macro(state, state, "state") \
     macro(static, static_, "static") \

@@ -18,23 +18,28 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"
 #include "mozilla/StaticAnalysisFunctions.h"
+#include "mozilla/Types.h"
 #ifdef MOZ_DUMP_ASSERTION_STACK
 #include "nsTraceRefcnt.h"
 #endif
 
-#if defined(MOZ_CRASHREPORTER) && defined(MOZILLA_INTERNAL_API) && \
-    !defined(MOZILLA_EXTERNAL_LINKAGE) && defined(__cplusplus)
-namespace CrashReporter {
-// This declaration is present here as well as in nsExceptionHandler.h
-// nsExceptionHandler.h is not directly included in this file as it includes
-// windows.h, which can cause problems when it is imported into some files due
-// to the number of macros defined.
-// XXX If you change this definition - also change the definition in
-// nsExceptionHandler.h
-void AnnotateMozCrashReason(const char* aReason);
-} // namespace CrashReporter
+#if defined(MOZ_HAS_MOZGLUE) || defined(MOZILLA_INTERNAL_API)
+/*
+ * The crash reason set by MOZ_CRASH_ANNOTATE is consumed by the crash reporter
+ * if present. It is declared here (and defined in Assertions.cpp) to make it
+ * available to all code, even libraries that don't link with the crash reporter
+ * directly.
+ */
+MOZ_BEGIN_EXTERN_C
+extern MFBT_DATA const char* gMozCrashReason;
+MOZ_END_EXTERN_C
 
-#  define MOZ_CRASH_ANNOTATE(...) CrashReporter::AnnotateMozCrashReason(__VA_ARGS__)
+static inline void
+AnnotateMozCrashReason(const char* reason)
+{
+  gMozCrashReason = reason;
+}
+#  define MOZ_CRASH_ANNOTATE(...) AnnotateMozCrashReason(__VA_ARGS__)
 #else
 #  define MOZ_CRASH_ANNOTATE(...) do { /* nothing */ } while (0)
 #endif

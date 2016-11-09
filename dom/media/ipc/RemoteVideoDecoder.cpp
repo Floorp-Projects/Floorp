@@ -9,6 +9,7 @@
 #include "mozilla/layers/TextureClient.h"
 #include "base/thread.h"
 #include "MediaInfo.h"
+#include "MediaPrefs.h"
 #include "ImageContainer.h"
 
 namespace mozilla {
@@ -147,7 +148,8 @@ RemoteDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 already_AddRefed<MediaDataDecoder>
 RemoteDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
-  if (!aParams.mKnowsCompositor ||
+  if (!MediaPrefs::PDMUseGPUDecoder() ||
+      !aParams.mKnowsCompositor ||
       aParams.mKnowsCompositor->GetTextureFactoryIdentifier().mParentProcessType != GeckoProcessType_GPU) {
     return nullptr;
   }

@@ -43,7 +43,8 @@ public:
   DeallocPPresentationBuilderChild(PPresentationBuilderChild* aActor) override;
 
   virtual bool
-  RecvNotifyAvailableChange(const bool& aAvailable) override;
+  RecvNotifyAvailableChange(nsTArray<nsString>&& aAvailabilityUrls,
+                            const bool& aAvailable) override;
 
   virtual bool
   RecvNotifySessionStateChange(const nsString& aSessionId,

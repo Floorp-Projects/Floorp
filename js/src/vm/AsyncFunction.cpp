@@ -8,8 +8,9 @@
 
 #include "jscompartment.h"
 
-#include "builtin/SelfHostingDefines.h"
+#include "builtin/Promise.h"
 #include "vm/GlobalObject.h"
+#include "vm/Interpreter.h"
 #include "vm/SelfHosting.h"
 
 using namespace js;
@@ -46,73 +47,188 @@ GlobalObject::initAsyncFunction(JSContext* cx, Handle<GlobalObject*> global)
     return true;
 }
 
+static MOZ_MUST_USE bool AsyncFunctionStart(JSContext* cx, Handle<PromiseObject*> resultPromise,
+                                            HandleValue generatorVal);
+
+#define UNWRAPPED_ASYNC_WRAPPED_SLOT 1
+#define WRAPPED_ASYNC_UNWRAPPED_SLOT 0
+
+// Async Functions proposal 1.1.8 and 1.2.14.
+static bool
+WrappedAsyncFunction(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedFunction wrapped(cx, &args.callee().as<JSFunction>());
+    RootedValue unwrappedVal(cx, wrapped->getExtendedSlot(WRAPPED_ASYNC_UNWRAPPED_SLOT));
+    RootedFunction unwrapped(cx, &unwrappedVal.toObject().as<JSFunction>());
+    RootedValue thisValue(cx, args.thisv());
+
+    // Step 2.
+    // Also does a part of 2.2 steps 1-2.
+    RootedValue generatorVal(cx);
+    InvokeArgs args2(cx);
+    if (!args2.init(cx, argc))
+        return false;
+    for (size_t i = 0, len = argc; i < len; i++)
+        args2[i].set(args[i]);
+    if (Call(cx, unwrappedVal, thisValue, args2, &generatorVal)) {
+        // Step 1.
+        Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectForAsync(cx, generatorVal));
+        if (!resultPromise)
+            return false;
+
+        // Step 3.
+        if (!AsyncFunctionStart(cx, resultPromise, generatorVal))
+            return false;
+
+        // Step 5.
+        args.rval().setObject(*resultPromise);
+        return true;
+    }
+
+    // Steps 1, 4.
+    RootedValue exc(cx);
+    if (!GetAndClearException(cx, &exc))
+        return false;
+    RootedObject rejectPromise(cx, PromiseObject::unforgeableReject(cx, exc));
+    if (!rejectPromise)
+        return false;
+
+    // Step 5.
+    args.rval().setObject(*rejectPromise);
+    return true;
+}
+
+// Async Functions proposal 2.1 steps 1, 3 (partially).
+// In the spec it creates a function, but we create 2 functions `unwrapped` and
+// `wrapped`.  `unwrapped` is a generator that corresponds to
+//  the async function's body, replacing `await` with `yield`.  `wrapped` is a
+// function that is visible to the outside, and handles yielded values.
+JSObject*
+js::WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped)
+{
+    MOZ_ASSERT(unwrapped->isStarGenerator());
+
+    // Create a new function with AsyncFunctionPrototype, reusing the name and
+    // the length of `unwrapped`.
+
+    // Step 1.
+    RootedObject proto(cx, GlobalObject::getOrCreateAsyncFunctionPrototype(cx, cx->global()));
+    if (!proto)
+        return nullptr;
+
+    RootedAtom funName(cx, unwrapped->name());
+    uint16_t length;
+    if (!unwrapped->getLength(cx, &length))
+        return nullptr;
+
+    // Steps 3 (partially).
+    RootedFunction wrapped(cx, NewFunctionWithProto(cx, WrappedAsyncFunction, length,
+                                                    JSFunction::NATIVE_FUN, nullptr,
+                                                    funName, proto,
+                                                    AllocKind::FUNCTION_EXTENDED,
+                                                    TenuredObject));
+    if (!wrapped)
+        return nullptr;
+
+    // Link them to each other to make GetWrappedAsyncFunction and
+    // GetUnwrappedAsyncFunction work.
+    unwrapped->setExtendedSlot(UNWRAPPED_ASYNC_WRAPPED_SLOT, ObjectValue(*wrapped));
+    wrapped->setExtendedSlot(WRAPPED_ASYNC_UNWRAPPED_SLOT, ObjectValue(*unwrapped));
+
+    return wrapped;
+}
+
+enum class ResumeKind {
+    Normal,
+    Throw
+};
+
+// Async Functions proposal 2.2 steps 3.f, 3.g.
+// Async Functions proposal 2.2 steps 3.d-e, 3.g.
+// Implemented in js/src/builtin/Promise.cpp
+
+// Async Functions proposal 2.2 steps 3-8, 2.4 steps 2-7, 2.5 steps 2-7.
+static bool
+AsyncFunctionResume(JSContext* cx, Handle<PromiseObject*> resultPromise, HandleValue generatorVal,
+                    ResumeKind kind, HandleValue valueOrReason)
+{
+    // Execution context switching is handled in generator.
+    HandlePropertyName funName = kind == ResumeKind::Normal
+                                 ? cx->names().StarGeneratorNext
+                                 : cx->names().StarGeneratorThrow;
+    FixedInvokeArgs<1> args(cx);
+    args[0].set(valueOrReason);
+    RootedValue result(cx);
+    if (!CallSelfHostedFunction(cx, funName, generatorVal, args, &result))
+        return AsyncFunctionThrown(cx, resultPromise);
+
+    RootedObject resultObj(cx, &result.toObject());
+    RootedValue doneVal(cx);
+    RootedValue value(cx);
+    if (!GetProperty(cx, resultObj, resultObj, cx->names().done, &doneVal))
+        return false;
+    if (!GetProperty(cx, resultObj, resultObj, cx->names().value, &value))
+        return false;
+
+    if (doneVal.toBoolean())
+        return AsyncFunctionReturned(cx, resultPromise, value);
+
+    return AsyncFunctionAwait(cx, resultPromise, value);
+}
+
+// Async Functions proposal 2.2 steps 3-8.
+static MOZ_MUST_USE bool
+AsyncFunctionStart(JSContext* cx, Handle<PromiseObject*> resultPromise, HandleValue generatorVal)
+{
+    return AsyncFunctionResume(cx, resultPromise, generatorVal, ResumeKind::Normal, UndefinedHandleValue);
+}
+
+// Async Functions proposal 2.3 steps 1-8.
+// Implemented in js/src/builtin/Promise.cpp
+
+// Async Functions proposal 2.4.
+MOZ_MUST_USE bool
+js::AsyncFunctionAwaitedFulfilled(JSContext* cx, Handle<PromiseObject*> resultPromise,
+                                  HandleValue generatorVal, HandleValue value)
+{
+    // Step 1 (implicit).
+
+    // Steps 2-7.
+    return AsyncFunctionResume(cx, resultPromise, generatorVal, ResumeKind::Normal, value);
+}
+
+// Async Functions proposal 2.5.
+MOZ_MUST_USE bool
+js::AsyncFunctionAwaitedRejected(JSContext* cx, Handle<PromiseObject*> resultPromise,
+                                 HandleValue generatorVal, HandleValue reason)
+{
+    // Step 1 (implicit).
+
+    // Step 2-7.
+    return AsyncFunctionResume(cx, resultPromise, generatorVal, ResumeKind::Throw, reason);
+}
+
 JSFunction*
 js::GetWrappedAsyncFunction(JSFunction* unwrapped)
 {
     MOZ_ASSERT(unwrapped->isAsync());
-    return &unwrapped->getExtendedSlot(ASYNC_WRAPPED_SLOT).toObject().as<JSFunction>();
+    return &unwrapped->getExtendedSlot(UNWRAPPED_ASYNC_WRAPPED_SLOT).toObject().as<JSFunction>();
 }
 
 JSFunction*
-js::GetUnwrappedAsyncFunction(JSFunction* wrapper)
+js::GetUnwrappedAsyncFunction(JSFunction* wrapped)
 {
-    JSFunction* unwrapped = &wrapper->getExtendedSlot(ASYNC_UNWRAPPED_SLOT).toObject().as<JSFunction>();
+    MOZ_ASSERT(IsWrappedAsyncFunction(wrapped));
+    JSFunction* unwrapped = &wrapped->getExtendedSlot(WRAPPED_ASYNC_UNWRAPPED_SLOT).toObject().as<JSFunction>();
     MOZ_ASSERT(unwrapped->isAsync());
     return unwrapped;
 }
 
 bool
-js::IsWrappedAsyncFunction(JSContext* cx, JSFunction* wrapper)
+js::IsWrappedAsyncFunction(JSFunction* fun)
 {
-    return IsSelfHostedFunctionWithName(wrapper, cx->names().AsyncWrapped);
+    return fun->maybeNative() == WrappedAsyncFunction;
 }
 
-bool
-js::CreateAsyncFunction(JSContext* cx, HandleFunction wrapper, HandleFunction unwrapped,
-                        MutableHandleFunction result)
-{
-    // Create a new function with AsyncFunctionPrototype, reusing the script
-    // and the environment of `wrapper` function, and the name and the length
-    // of `unwrapped` function.
-    RootedObject proto(cx, GlobalObject::getOrCreateAsyncFunctionPrototype(cx, cx->global()));
-    RootedObject scope(cx, wrapper->environment());
-    RootedAtom atom(cx, unwrapped->name());
-    RootedFunction wrapped(cx, NewFunctionWithProto(cx, nullptr, 0,
-                                                    JSFunction::INTERPRETED_LAMBDA,
-                                                    scope, atom, proto,
-                                                    AllocKind::FUNCTION_EXTENDED, TenuredObject));
-    if (!wrapped)
-        return false;
-
-    wrapped->initScript(wrapper->nonLazyScript());
-
-    // Link them each other to make GetWrappedAsyncFunction and
-    // GetUnwrappedAsyncFunction work.
-    unwrapped->setExtendedSlot(ASYNC_WRAPPED_SLOT, ObjectValue(*wrapped));
-    wrapped->setExtendedSlot(ASYNC_UNWRAPPED_SLOT, ObjectValue(*unwrapped));
-
-    // The script of `wrapper` is self-hosted, so `wrapped` should also be
-    // set as self-hosted function.
-    wrapped->setIsSelfHostedBuiltin();
-
-    // Set LAZY_FUNCTION_NAME_SLOT to "AsyncWrapped" to make it detectable in
-    // IsWrappedAsyncFunction.
-    wrapped->setExtendedSlot(LAZY_FUNCTION_NAME_SLOT, StringValue(cx->names().AsyncWrapped));
-
-    // The length of the script of `wrapper` is different than the length of
-    // `unwrapped`.  We should set actual length as resolved length, to avoid
-    // using the length of the script.
-    uint16_t length;
-    if (!unwrapped->getLength(cx, &length))
-        return false;
-
-    RootedValue lengthValue(cx, NumberValue(length));
-    if (!DefineProperty(cx, wrapped, cx->names().length, lengthValue,
-                        nullptr, nullptr, JSPROP_READONLY))
-    {
-        return false;
-    }
-
-    result.set(wrapped);
-    return true;
-}

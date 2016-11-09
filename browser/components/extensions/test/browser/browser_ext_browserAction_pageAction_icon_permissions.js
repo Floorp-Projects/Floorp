@@ -20,14 +20,10 @@ add_task(function* testInvalidIconSizes() {
           let assertSetIconThrows = function(detail, error, message) {
             detail.tabId = tabId;
             promises.push(
-              browser[api].setIcon(detail).then(
-                () => {
-                  browser.test.fail("Expected an error on invalid icon size.");
-                  browser.test.notifyFail("setIcon with invalid icon size");
-                },
-                error => {
-                  browser.test.succeed("setIcon with invalid icon size");
-                }));
+              browser.test.assertRejects(
+                browser[api].setIcon(detail),
+                /must be an integer/,
+                "setIcon with invalid icon size"));
           };
 
           let imageData = new ImageData(1, 1);
@@ -148,14 +144,10 @@ add_task(function* testSecureURLsDenied() {
         for (let url of urls) {
           for (let api of ["pageAction", "browserAction"]) {
             promises.push(
-              browser[api].setIcon({tabId, path: url}).then(
-                () => {
-                  browser.test.fail(`Load of '${url}' succeeded. Expected failure.`);
-                  browser.test.notifyFail("setIcon security tests");
-                },
-                error => {
-                  browser.test.succeed(`Load of '${url}' failed. Expected failure. ${error}`);
-                }));
+              browser.test.assertRejects(
+                browser[api].setIcon({tabId, path: url}),
+                /Illegal URL/,
+                `Load of '${url}' should fail.`));
           }
         }
 

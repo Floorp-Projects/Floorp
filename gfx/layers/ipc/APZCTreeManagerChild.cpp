@@ -262,13 +262,5 @@ APZCTreeManagerChild::RecvNotifyPinchGesture(const PinchGestureType& aType,
   return true;
 }
 
-void
-APZCTreeManagerChild::OnProcessingError(
-        Result aCode,
-        const char* aReason)
-{
-  MOZ_RELEASE_ASSERT(aCode != MsgDropped);
-}
-
 } // namespace layers
 } // namespace mozilla

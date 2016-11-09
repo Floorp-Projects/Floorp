@@ -429,7 +429,8 @@ child:
     async InitRendering(
       Endpoint<PCompositorBridgeChild> compositor,
       Endpoint<PImageBridgeChild> imageBridge,
-      Endpoint<PVRManagerChild> vr);
+      Endpoint<PVRManagerChild> vr,
+      Endpoint<PVideoDecoderManagerChild> video);
 
     // Re-create the rendering stack using the given endpoints. This is sent
     // after the compositor process has crashed. The new endpoints may be to a
@@ -437,7 +438,8 @@ child:
     async ReinitRendering(
       Endpoint<PCompositorBridgeChild> compositor,
       Endpoint<PImageBridgeChild> bridge,
-      Endpoint<PVRManagerChild> vr);
+      Endpoint<PVRManagerChild> vr,
+      Endpoint<PVideoDecoderManagerChild> video);
 
     /**
      * Enable system-level sandboxing features, if available.  Can
@@ -741,8 +743,6 @@ parent:
     async PDeviceStorageRequest(DeviceStorageParams params);
 
     sync PCrashReporter(NativeThreadId tid, uint32_t processType);
-
-    sync InitVideoDecoderManager() returns (Endpoint<PVideoDecoderManagerChild> endpoint);
 
     /**
      * Is this token compatible with the provided version?

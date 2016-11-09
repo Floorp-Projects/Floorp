@@ -5206,7 +5206,17 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     SetProp(eLogicalAxisInline, isOrthogonal ? BBaselinePadProperty() :
                                                IBaselinePadProperty());
   } else {
-    cb = aContentArea;
+    // By convention, for frames that perform CSS Box Alignment, we position
+    // placeholder children at the start corner of their alignment container,
+    // and in this case that's usually the grid's padding box.
+    // ("Usually" - the exception is when the grid *also* forms the
+    // abs.pos. containing block. In that case, the alignment container isn't
+    // the padding box -- it's some grid area instead.  But that case doesn't
+    // require any special handling here, because we handle it later using a
+    // special flag (STATIC_POS_IS_CB_ORIGIN) which will make us ignore the
+    // placeholder's position entirely.)
+    cb = aContentArea - padStart;
+    aChild->AddStateBits(PLACEHOLDER_STATICPOS_NEEDS_CSSALIGN);
   }
 
   LogicalSize reflowSize(cb.Size(wm));
@@ -5292,10 +5302,8 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     }
     nscoord cbsz = cb.ISize(wm);
     JustifySelf(*aGridItemInfo, justify, cbsz, wm, childRI, size, &childPos);
-  } else {
-    // Put a placeholder at the padding edge, in case an ancestor is its CB.
-    childPos -= padStart;
-  }
+  } // else, nsAbsoluteContainingBlock.cpp will handle align/justify-self.
+
   childRI.ApplyRelativePositioning(&childPos, aContainerSize);
   FinishReflowChild(aChild, pc, childSize, &childRI, childWM, childPos,
                     aContainerSize, 0);
@@ -6630,6 +6638,58 @@ nsGridContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame)
 #endif
 
   nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+}
+
+uint16_t
+nsGridContainerFrame::CSSAlignmentForAbsPosChild(const ReflowInput& aChildRI,
+                                                 LogicalAxis aLogicalAxis) const
+{
+  MOZ_ASSERT(aChildRI.mFrame->IsAbsolutelyPositioned(),
+             "This method should only be called for abspos children");
+
+  uint16_t alignment = (aLogicalAxis == eLogicalAxisInline) ?
+    aChildRI.mStylePosition->UsedJustifySelf(nullptr) :
+    aChildRI.mStylePosition->UsedAlignSelf(nullptr);
+
+  // XXX strip off <overflow-position> bits until we implement it
+  // (bug 1311892)
+  alignment &= ~NS_STYLE_ALIGN_FLAG_BITS;
+
+  // We group 'auto' with 'normal', because the spec says:
+  //    "The 'auto' keyword is interpreted as 'normal'
+  //     if the box is absolutely positioned [...]"
+  // https://drafts.csswg.org/css-align-3/#valdef-align-self-auto
+  // https://drafts.csswg.org/css-align-3/#valdef-justify-self-auto
+  if (alignment == NS_STYLE_ALIGN_AUTO ||
+      alignment == NS_STYLE_ALIGN_NORMAL) {
+    // "the 'normal' keyword behaves as 'start' on replaced
+    // absolutely-positioned boxes, and behaves as 'stretch' on all other
+    // absolutely-positioned boxes."
+    // https://drafts.csswg.org/css-align/#align-abspos
+    // https://drafts.csswg.org/css-align/#justify-abspos
+    alignment = aChildRI.mFrame->IsFrameOfType(nsIFrame::eReplaced) ?
+      NS_STYLE_ALIGN_START : NS_STYLE_ALIGN_STRETCH;
+  } else if (alignment == NS_STYLE_ALIGN_FLEX_START) {
+    alignment = NS_STYLE_ALIGN_START;
+  } else if (alignment == NS_STYLE_ALIGN_FLEX_END) {
+    alignment = NS_STYLE_ALIGN_END;
+  } else if (alignment == NS_STYLE_ALIGN_LEFT ||
+             alignment == NS_STYLE_ALIGN_RIGHT) {
+    if (aLogicalAxis == eLogicalAxisInline) {
+      const bool isLeft = (alignment == NS_STYLE_ALIGN_LEFT);
+      WritingMode wm = GetWritingMode();
+      alignment = (isLeft == wm.IsBidiLTR()) ? NS_STYLE_ALIGN_START
+                                             : NS_STYLE_ALIGN_END;
+    } else {
+      alignment = NS_STYLE_ALIGN_START;
+    }
+  } else if (alignment == NS_STYLE_ALIGN_BASELINE) {
+    alignment = NS_STYLE_ALIGN_START;
+  } else if (alignment == NS_STYLE_ALIGN_LAST_BASELINE) {
+    alignment = NS_STYLE_ALIGN_END;
+  }
+
+  return alignment;
 }
 
 nscoord

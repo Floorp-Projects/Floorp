@@ -262,8 +262,6 @@ public:
                                nsTArray<PluginTag>* aPlugins,
                                uint32_t* aNewPluginEpoch) override;
 
-  virtual bool RecvInitVideoDecoderManager(Endpoint<PVideoDecoderManagerChild>* endpoint) override;
-
   virtual bool RecvUngrabPointer(const uint32_t& aTime) override;
 
   virtual bool RecvRemovePermission(const IPC::Principal& aPrincipal,
