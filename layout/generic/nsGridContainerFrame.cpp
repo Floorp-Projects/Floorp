@@ -5206,7 +5206,17 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     SetProp(eLogicalAxisInline, isOrthogonal ? BBaselinePadProperty() :
                                                IBaselinePadProperty());
   } else {
-    cb = aContentArea;
+    // By convention, for frames that perform CSS Box Alignment, we position
+    // placeholder children at the start corner of their alignment container,
+    // and in this case that's usually the grid's padding box.
+    // ("Usually" - the exception is when the grid *also* forms the
+    // abs.pos. containing block. In that case, the alignment container isn't
+    // the padding box -- it's some grid area instead.  But that case doesn't
+    // require any special handling here, because we handle it later using a
+    // special flag (STATIC_POS_IS_CB_ORIGIN) which will make us ignore the
+    // placeholder's position entirely.)
+    cb = aContentArea - padStart;
+    aChild->AddStateBits(PLACEHOLDER_STATICPOS_NEEDS_CSSALIGN);
   }
 
   LogicalSize reflowSize(cb.Size(wm));
@@ -5292,10 +5302,8 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     }
     nscoord cbsz = cb.ISize(wm);
     JustifySelf(*aGridItemInfo, justify, cbsz, wm, childRI, size, &childPos);
-  } else {
-    // Put a placeholder at the padding edge, in case an ancestor is its CB.
-    childPos -= padStart;
-  }
+  } // else, nsAbsoluteContainingBlock.cpp will handle align/justify-self.
+
   childRI.ApplyRelativePositioning(&childPos, aContainerSize);
   FinishReflowChild(aChild, pc, childSize, &childRI, childWM, childPos,
                     aContainerSize, 0);
