@@ -56,7 +56,6 @@ OriginAttributes::Inherit(const OriginAttributes& aAttrs)
   mAppId = aAttrs.mAppId;
   mInIsolatedMozBrowser = aAttrs.mInIsolatedMozBrowser;
 
-  StripAttributes(STRIP_ADDON_ID);
 
   mUserContextId = aAttrs.mUserContextId;
 
@@ -96,7 +95,7 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
   // Important: While serializing any string-valued attributes, perform a
   // release-mode assertion to make sure that they don't contain characters that
   // will break the quota manager when it uses the serialization for file
-  // naming (see addonId below).
+  // naming.
   //
 
   if (mAppId != nsIScriptSecurityManager::NO_APP_ID) {
@@ -106,17 +105,6 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
 
   if (mInIsolatedMozBrowser) {
     params->Set(NS_LITERAL_STRING("inBrowser"), NS_LITERAL_STRING("1"));
-  }
-
-  if (!mAddonId.IsEmpty()) {
-    if (mAddonId.FindCharInSet(dom::quota::QuotaManager::kReplaceChars) != kNotFound) {
-#ifdef MOZ_CRASHREPORTER
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Crash_AddonId"),
-                                         NS_ConvertUTF16toUTF8(mAddonId));
-#endif
-      MOZ_CRASH();
-    }
-    params->Set(NS_LITERAL_STRING("addonId"), mAddonId);
   }
 
   if (mUserContextId != nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID) {
@@ -204,8 +192,8 @@ public:
     }
 
     if (aName.EqualsLiteral("addonId")) {
-      MOZ_RELEASE_ASSERT(mOriginAttributes->mAddonId.IsEmpty());
-      mOriginAttributes->mAddonId.Assign(aValue);
+      // No longer supported. Silently ignore so that legacy origin strings
+      // don't cause failures.
       return true;
     }
 

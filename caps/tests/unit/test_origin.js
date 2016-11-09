@@ -48,7 +48,6 @@ function printAttrs(name, attrs) {
            "\tappId: " + attrs.appId + ",\n" +
            "\tuserContextId: " + attrs.userContextId + ",\n" +
            "\tinIsolatedMozBrowser: " + attrs.inIsolatedMozBrowser + ",\n" +
-           "\taddonId: '" + attrs.addonId + "',\n" +
            "\tprivateBrowsingId: '" + attrs.privateBrowsingId + "',\n" +
            "\tfirstPartyDomain: '" + attrs.firstPartyDomain + "'\n}");
 }
@@ -61,7 +60,6 @@ function checkValues(attrs, values) {
   do_check_eq(attrs.appId, values.appId || 0);
   do_check_eq(attrs.userContextId, values.userContextId || 0);
   do_check_eq(attrs.inIsolatedMozBrowser, values.inIsolatedMozBrowser || false);
-  do_check_eq(attrs.addonId, values.addonId || '');
   do_check_eq(attrs.privateBrowsingId, values.privateBrowsingId || '');
   do_check_eq(attrs.firstPartyDomain, values.firstPartyDomain || '');
 }
@@ -126,11 +124,6 @@ function run_test() {
   checkOriginAttributes(exampleCom_appBrowser, {appId: 42, inIsolatedMozBrowser: true}, '^appId=42&inBrowser=1');
   do_check_eq(exampleCom_appBrowser.origin, 'https://www.example.com:123^appId=42&inBrowser=1');
 
-  // Addon.
-  var exampleOrg_addon = ssm.createCodebasePrincipal(makeURI('http://example.org'), {addonId: 'dummy'});
-  checkOriginAttributes(exampleOrg_addon, { addonId: "dummy" }, '^addonId=dummy');
-  do_check_eq(exampleOrg_addon.origin, 'http://example.org^addonId=dummy');
-
   // First party Uri
   var exampleOrg_firstPartyDomain = ssm.createCodebasePrincipal(makeURI('http://example.org'), {firstPartyDomain: 'example.org'});
   checkOriginAttributes(exampleOrg_firstPartyDomain, { firstPartyDomain: "example.org" }, '^firstPartyDomain=example.org');
@@ -155,13 +148,6 @@ function run_test() {
   checkOriginAttributes(exampleOrg_userContext, { userContextId: 42 }, '^userContextId=42');
   do_check_eq(exampleOrg_userContext.origin, 'http://example.org^userContextId=42');
 
-  // UserContext and Addon.
-  var exampleOrg_userContextAddon = ssm.createCodebasePrincipal(makeURI('http://example.org'), {addonId: 'dummy', userContextId: 42});
-  var nullPrin_userContextAddon = ssm.createNullPrincipal({addonId: 'dummy', userContextId: 42});
-  checkOriginAttributes(exampleOrg_userContextAddon, {addonId: 'dummy', userContextId: 42}, '^addonId=dummy&userContextId=42');
-  checkOriginAttributes(nullPrin_userContextAddon, {addonId: 'dummy', userContextId: 42}, '^addonId=dummy&userContextId=42');
-  do_check_eq(exampleOrg_userContextAddon.origin, 'http://example.org^addonId=dummy&userContextId=42');
-
   // UserContext and App.
   var exampleOrg_userContextApp = ssm.createCodebasePrincipal(makeURI('http://example.org'), {appId: 24, userContextId: 42});
   var nullPrin_userContextApp = ssm.createNullPrincipal({appId: 24, userContextId: 42});
@@ -185,11 +171,8 @@ function run_test() {
   checkCrossOrigin(exampleOrg_appBrowser, exampleOrg_app);
   checkCrossOrigin(exampleOrg_appBrowser, nullPrin_appBrowser);
   checkCrossOrigin(exampleOrg_appBrowser, exampleCom_appBrowser);
-  checkCrossOrigin(exampleOrg_addon, exampleOrg);
   checkCrossOrigin(exampleOrg_firstPartyDomain, exampleOrg);
   checkCrossOrigin(exampleOrg_userContext, exampleOrg);
-  checkCrossOrigin(exampleOrg_userContextAddon, exampleOrg);
-  checkCrossOrigin(exampleOrg_userContext, exampleOrg_userContextAddon);
   checkCrossOrigin(exampleOrg_userContext, exampleOrg_userContextApp);
 
   // Check Principal kinds.
@@ -218,7 +201,6 @@ function run_test() {
     [ "", {} ],
     [ "^appId=5", {appId: 5} ],
     [ "^userContextId=3", {userContextId: 3} ],
-    [ "^addonId=fooBar", {addonId: "fooBar"} ],
     [ "^inBrowser=1", {inIsolatedMozBrowser: true} ],
     [ "^firstPartyDomain=example.org", {firstPartyDomain: "example.org"} ],
     [ "^appId=3&inBrowser=1&userContextId=6",
