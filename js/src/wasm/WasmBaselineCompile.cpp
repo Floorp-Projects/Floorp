@@ -5090,7 +5090,11 @@ BaseCompiler::emitBrIf()
     if (!IsVoid(type))
         r = popJoinReg();
 
-    masm.branch32(Assembler::NotEqual, rc.reg, Imm32(0), target.label);
+    Label notTaken;
+    masm.branch32(Assembler::Equal, rc.reg, Imm32(0), &notTaken);
+    popStackBeforeBranch(target.framePushed);
+    masm.jump(target.label);
+    masm.bind(&notTaken);
 
     // This register is free in the remainder of the block.
     freeI32(rc);
