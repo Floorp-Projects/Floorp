@@ -275,6 +275,12 @@ nsPluginHost::nsPluginHost()
   // this manually.
   if (XRE_IsParentProcess()) {
     IncrementChromeEpoch();
+  } else {
+    // When NPAPI requests the proxy setting by calling |FindProxyForURL|,
+    // the service is requested and initialized asynchronously, but
+    // |FindProxyForURL| is synchronous, so we should initialize this earlier.
+    nsCOMPtr<nsIProtocolProxyService> proxyService =
+      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID);
   }
 
   // check to see if pref is set at startup to let plugins take over in
