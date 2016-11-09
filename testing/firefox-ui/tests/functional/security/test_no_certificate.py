@@ -23,7 +23,7 @@ class TestNoCertificate(FirefoxTestCase):
         try:
             self.browser.switch_to()
             self.identity_popup.close(force=True)
-            self.windows.close_all([self.browser])
+            self.puppeteer.windows.close_all([self.browser])
         finally:
             FirefoxTestCase.tearDown(self)
 

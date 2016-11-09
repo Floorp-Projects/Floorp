@@ -256,10 +256,18 @@ MainThreadHandoff::FixArrayElements(ICallFrame* aFrame,
       return hr;
     }
     PVOID stackBase = aFrame->GetStackLocation();
-    // We dereference because we need to obtain the value of a parameter
-    // from a stack offset. This pointer is the base of the array.
-    arrayPtr = *reinterpret_cast<PVOID*>(reinterpret_cast<PBYTE>(stackBase) +
-                                         paramInfo.stackOffset);
+    if (aArrayData.mFlag == ArrayData::Flag::eAllocatedByServer) {
+      // In order for the server to allocate the array's buffer and store it in
+      // an outparam, the parameter must be typed as Type***. Since the base
+      // of the array is Type*, we must dereference twice.
+      arrayPtr = **reinterpret_cast<PVOID**>(reinterpret_cast<PBYTE>(stackBase) +
+                                             paramInfo.stackOffset);
+    } else {
+      // We dereference because we need to obtain the value of a parameter
+      // from a stack offset. This pointer is the base of the array.
+      arrayPtr = *reinterpret_cast<PVOID*>(reinterpret_cast<PBYTE>(stackBase) +
+                                           paramInfo.stackOffset);
+    }
   } else if (FAILED(hr)) {
     return hr;
   } else {

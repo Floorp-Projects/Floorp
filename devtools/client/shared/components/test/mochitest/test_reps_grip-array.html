@@ -37,6 +37,7 @@ window.onload = Task.async(function* () {
     yield testPreviewLimit();
     yield testNamedNodeMap();
     yield testNodeList();
+    yield testDocumentFragment();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -272,6 +273,38 @@ window.onload = Task.async(function* () {
     testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
   }
 
+  function testDocumentFragment() {
+    const testName = "testDocumentFragment";
+
+    const defaultOutput = "DocumentFragment [ li#li-0.list-element, " +
+      "li#li-1.list-element, li#li-2.list-element, 2 more… ]";
+
+    const longOutput = "DocumentFragment [ " +
+      "li#li-0.list-element, li#li-1.list-element, li#li-2.list-element, " +
+      "li#li-3.list-element, li#li-4.list-element ]";
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[5]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: longOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
   function getGripStub(functionName) {
     switch (functionName) {
       case "testBasic":
@@ -412,67 +445,68 @@ window.onload = Task.async(function* () {
           }
         };
 
-        case "testNamedNodeMap":
-          return {
-            "type": "object",
-            "class": "NamedNodeMap",
-            "actor": "server1.conn3.obj42",
-            "extensible": true,
-            "frozen": false,
-            "sealed": false,
-            "ownPropertyLength": 6,
-            "preview": {
-              "kind": "ArrayLike",
-              "length": 3,
-              "items": [
-                {
-                  "type": "object",
-                  "class": "Attr",
-                  "actor": "server1.conn3.obj43",
-                  "extensible": true,
-                  "frozen": false,
-                  "sealed": false,
-                  "ownPropertyLength": 0,
-                  "preview": {
-                    "kind": "DOMNode",
-                    "nodeType": 2,
-                    "nodeName": "class",
-                    "value": "myclass"
-                  }
-                },
-                {
-                  "type": "object",
-                  "class": "Attr",
-                  "actor": "server1.conn3.obj44",
-                  "extensible": true,
-                  "frozen": false,
-                  "sealed": false,
-                  "ownPropertyLength": 0,
-                  "preview": {
-                    "kind": "DOMNode",
-                    "nodeType": 2,
-                    "nodeName": "cellpadding",
-                    "value": "7"
-                  }
-                },
-                {
-                  "type": "object",
-                  "class": "Attr",
-                  "actor": "server1.conn3.obj44",
-                  "extensible": true,
-                  "frozen": false,
-                  "sealed": false,
-                  "ownPropertyLength": 0,
-                  "preview": {
-                    "kind": "DOMNode",
-                    "nodeType": 2,
-                    "nodeName": "border",
-                    "value": "3"
-                  }
+      case "testNamedNodeMap":
+        return {
+          "type": "object",
+          "class": "NamedNodeMap",
+          "actor": "server1.conn3.obj42",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 6,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 3,
+            "items": [
+              {
+                "type": "object",
+                "class": "Attr",
+                "actor": "server1.conn3.obj43",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 2,
+                  "nodeName": "class",
+                  "value": "myclass"
                 }
-              ]
-            }
-          };
+              },
+              {
+                "type": "object",
+                "class": "Attr",
+                "actor": "server1.conn3.obj44",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 2,
+                  "nodeName": "cellpadding",
+                  "value": "7"
+                }
+              },
+              {
+                "type": "object",
+                "class": "Attr",
+                "actor": "server1.conn3.obj44",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 2,
+                  "nodeName": "border",
+                  "value": "3"
+                }
+              }
+            ]
+          }
+        };
+
       case "testNodeList":
         return {
           "type": "object",
@@ -549,7 +583,122 @@ window.onload = Task.async(function* () {
             ]
           }
         };
+
+      case "testDocumentFragment":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj45",
+          "class": "DocumentFragment",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "DOMNode",
+            "nodeType": 11,
+            "nodeName": "#document-fragment",
+            "childNodesLength": 5,
+            "childNodes": [
+              {
+                "type": "object",
+                "actor": "server1.conn1.child1/obj46",
+                "class": "HTMLLIElement",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 1,
+                  "nodeName": "li",
+                  "attributes": {
+                    "id": "li-0",
+                    "class": "list-element"
+                  },
+                  "attributesLength": 2
+                }
+              },
+              {
+                "type": "object",
+                "actor": "server1.conn1.child1/obj47",
+                "class": "HTMLLIElement",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 1,
+                  "nodeName": "li",
+                  "attributes": {
+                    "id": "li-1",
+                    "class": "list-element"
+                  },
+                  "attributesLength": 2
+                }
+              },
+              {
+                "type": "object",
+                "actor": "server1.conn1.child1/obj48",
+                "class": "HTMLLIElement",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 1,
+                  "nodeName": "li",
+                  "attributes": {
+                    "id": "li-2",
+                    "class": "list-element"
+                  },
+                  "attributesLength": 2
+                }
+              },
+              {
+                "type": "object",
+                "actor": "server1.conn1.child1/obj49",
+                "class": "HTMLLIElement",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 1,
+                  "nodeName": "li",
+                  "attributes": {
+                    "id": "li-3",
+                    "class": "list-element"
+                  },
+                  "attributesLength": 2
+                }
+              },
+              {
+                "type": "object",
+                "actor": "server1.conn1.child1/obj50",
+                "class": "HTMLLIElement",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 1,
+                  "nodeName": "li",
+                  "attributes": {
+                    "id": "li-4",
+                    "class": "list-element"
+                  },
+                  "attributesLength": 2
+                }
+              }
+            ]
+          }
+        };
     }
+    return null;
   }
 });
 </script>

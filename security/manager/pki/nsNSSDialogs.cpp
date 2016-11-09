@@ -270,38 +270,36 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor* ctx,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, 
-                                    nsAString &_password,
-                                    bool *_retval)
+NS_IMETHODIMP
+nsNSSDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor* ctx,
+                            /*out*/ nsAString& password,
+                            /*out*/ bool* confirmedPassword)
 {
-  nsresult rv;
-  *_retval = true;
+  // |ctx| is allowed to be null.
+  NS_ENSURE_ARG(confirmedPassword);
+
   // Get the parent window for the dialog
   nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
-  nsCOMPtr<nsIDialogParamBlock> block =
-           do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
-  if (!block) return NS_ERROR_FAILURE;
-  // open up the window
-  rv = nsNSSDialogHelper::openDialog(parent,
+  nsCOMPtr<nsIWritablePropertyBag2> retVals = new nsHashPropertyBag();
+  nsresult rv =
+    nsNSSDialogHelper::openDialog(parent,
                                   "chrome://pippki/content/setp12password.xul",
-                                  block);
-  if (NS_FAILED(rv)) return rv;
-  // see if user canceled
-  int32_t status;
-  rv = block->GetInt(1, &status);
-  if (NS_FAILED(rv)) return rv;
-  *_retval = (status == 0) ? false : true;
-  if (*_retval) {
-    // retrieve the password
-    char16_t *pw;
-    rv = block->GetString(2, &pw);
-    if (NS_SUCCEEDED(rv)) {
-      _password = pw;
-      free(pw);
-    }
+                                  retVals);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-  return rv;
+
+  rv = retVals->GetPropertyAsBool(NS_LITERAL_STRING("confirmedPassword"),
+                                  confirmedPassword);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!*confirmedPassword) {
+    return NS_OK;
+  }
+
+  return retVals->GetPropertyAsAString(NS_LITERAL_STRING("password"), password);
 }
 
 NS_IMETHODIMP

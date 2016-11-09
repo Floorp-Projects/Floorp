@@ -27,37 +27,29 @@ struct SeekTarget {
     NextFrame,
   };
   SeekTarget()
-    : mEventVisibility(MediaDecoderEventVisibility::Observable)
-    , mTime(media::TimeUnit::Invalid())
+    : mTime(media::TimeUnit::Invalid())
     , mType(SeekTarget::Invalid)
     , mVideoOnly(false)
   {
   }
   SeekTarget(int64_t aTimeUsecs,
              Type aType,
-             MediaDecoderEventVisibility aEventVisibility =
-               MediaDecoderEventVisibility::Observable,
              bool aVideoOnly = false)
-    : mEventVisibility(aEventVisibility)
-    , mTime(media::TimeUnit::FromMicroseconds(aTimeUsecs))
+    : mTime(media::TimeUnit::FromMicroseconds(aTimeUsecs))
     , mType(aType)
     , mVideoOnly(aVideoOnly)
   {
   }
   SeekTarget(const media::TimeUnit& aTime,
              Type aType,
-             MediaDecoderEventVisibility aEventVisibility =
-               MediaDecoderEventVisibility::Observable,
              bool aVideoOnly = false)
-    : mEventVisibility(aEventVisibility)
-    , mTime(aTime)
+    : mTime(aTime)
     , mType(aType)
     , mVideoOnly(aVideoOnly)
   {
   }
   SeekTarget(const SeekTarget& aOther)
-    : mEventVisibility(aOther.mEventVisibility)
-    , mTime(aOther.mTime)
+    : mTime(aOther.mTime)
     , mType(aOther.mType)
     , mVideoOnly(aOther.mVideoOnly)
   {
@@ -96,8 +88,6 @@ struct SeekTarget {
   bool IsVideoOnly() const {
     return mVideoOnly;
   }
-
-  MediaDecoderEventVisibility mEventVisibility;
 
 private:
   // Seek target time.

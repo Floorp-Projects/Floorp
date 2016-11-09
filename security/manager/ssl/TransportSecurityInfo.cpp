@@ -1056,7 +1056,7 @@ TransportSecurityInfo::SetStatusErrorBits(nsNSSCertificate* cert,
     mSSLStatus = new nsSSLStatus();
   }
 
-  mSSLStatus->SetServerCert(cert, nsNSSCertificate::ev_status_invalid);
+  mSSLStatus->SetServerCert(cert, EVStatus::NotEV);
 
   mSSLStatus->mHaveCertErrorBits = true;
   mSSLStatus->mIsDomainMismatch = 

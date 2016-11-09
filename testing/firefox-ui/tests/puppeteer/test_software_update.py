@@ -13,7 +13,7 @@ class TestSoftwareUpdate(FirefoxTestCase):
 
     def setUp(self):
         FirefoxTestCase.setUp(self)
-        self.software_update = SoftwareUpdate(lambda: self.marionette)
+        self.software_update = SoftwareUpdate(self.marionette)
 
         self.saved_mar_channels = self.software_update.mar_channels.channels
         self.software_update.mar_channels.channels = set(['expected', 'channels'])
@@ -72,7 +72,7 @@ class TestUpdateChannel(FirefoxTestCase):
 
     def setUp(self):
         FirefoxTestCase.setUp(self)
-        self.software_update = SoftwareUpdate(lambda: self.marionette)
+        self.software_update = SoftwareUpdate(self.marionette)
 
         self.saved_channel = self.software_update.update_channel.default_channel
         self.software_update.update_channel.default_channel = 'expected_channel'
@@ -98,7 +98,7 @@ class TestMARChannels(FirefoxTestCase):
 
     def setUp(self):
         FirefoxTestCase.setUp(self)
-        self.software_update = SoftwareUpdate(lambda: self.marionette)
+        self.software_update = SoftwareUpdate(self.marionette)
 
         self.saved_mar_channels = self.software_update.mar_channels.channels
         self.software_update.mar_channels.channels = set(['expected', 'channels'])

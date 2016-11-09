@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from firefox_puppeteer.ui_base_lib import UIBaseLib
+from firefox_puppeteer.ui.base import UIBaseLib
 
 
 class Panel(UIBaseLib):

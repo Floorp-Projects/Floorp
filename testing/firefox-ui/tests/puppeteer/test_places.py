@@ -18,8 +18,8 @@ class TestPlaces(FirefoxTestCase):
 
     def tearDown(self):
         try:
-            self.places.restore_default_bookmarks()
-            self.places.remove_all_history()
+            self.puppeteer.places.restore_default_bookmarks()
+            self.puppeteer.places.remove_all_history()
         finally:
             FirefoxTestCase.tearDown(self)
 
@@ -44,7 +44,7 @@ class TestPlaces(FirefoxTestCase):
 
     def test_plugins(self):
         # TODO: Once we use a plugin, add a test case to verify that the data will be removed
-        self.places.clear_plugin_data()
+        self.puppeteer.places.clear_plugin_data()
 
     def test_bookmarks(self):
         star_button = self.marionette.find_element(By.ID, 'bookmarks-menu-button')
@@ -54,18 +54,19 @@ class TestPlaces(FirefoxTestCase):
             with self.marionette.using_context('content'):
                 self.marionette.navigate(url)
 
-            Wait(self.marionette).until(lambda _: self.places.is_bookmark_star_button_ready())
+            Wait(self.marionette).until(
+                lambda _: self.puppeteer.places.is_bookmark_star_button_ready())
             star_button.click()
-            Wait(self.marionette).until(lambda _: self.places.is_bookmarked(url))
+            Wait(self.marionette).until(lambda _: self.puppeteer.places.is_bookmarked(url))
 
-            ids = self.places.get_folder_ids_for_url(url)
+            ids = self.puppeteer.places.get_folder_ids_for_url(url)
             self.assertEqual(len(ids), 1)
-            self.assertEqual(ids[0], self.places.bookmark_folders.unfiled)
+            self.assertEqual(ids[0], self.puppeteer.places.bookmark_folders.unfiled)
 
         # Restore default bookmarks, so the added URLs are gone
-        self.places.restore_default_bookmarks()
+        self.puppeteer.places.restore_default_bookmarks()
         for url in self.urls:
-            self.assertFalse(self.places.is_bookmarked(url))
+            self.assertFalse(self.puppeteer.places.is_bookmarked(url))
 
     def test_history(self):
         self.assertEqual(len(self.get_all_urls_in_history()), 0)
@@ -75,10 +76,10 @@ class TestPlaces(FirefoxTestCase):
             with self.marionette.using_context('content'):
                 for url in self.urls:
                     self.marionette.navigate(url)
-        self.places.wait_for_visited(self.urls, load_urls)
+        self.puppeteer.places.wait_for_visited(self.urls, load_urls)
 
         self.assertEqual(self.get_all_urls_in_history(), self.urls)
 
         # Check that both pages are no longer in the remove_all_history
-        self.places.remove_all_history()
+        self.puppeteer.places.remove_all_history()
         self.assertEqual(len(self.get_all_urls_in_history()), 0)

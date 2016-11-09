@@ -20,7 +20,7 @@ class InProcessCompositorSession final : public CompositorSession
 public:
   static RefPtr<InProcessCompositorSession> Create(
     nsIWidget* aWidget,
-    ClientLayerManager* aLayerManager,
+    LayerManager* aLayerManager,
     const uint64_t& aRootLayerTreeId,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,

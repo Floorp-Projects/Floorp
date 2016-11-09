@@ -104,15 +104,18 @@
 #include "PSMRunnable.h"
 #include "RootCertificateTelemetryUtils.h"
 #include "ScopedNSSTypes.h"
+#include "SharedCertVerifier.h"
 #include "SharedSSLState.h"
+#include "TransportSecurityInfo.h" // For RememberCertErrorsTable
 #include "cert.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/net/DNS.h"
 #include "mozilla/Unused.h"
+#include "mozilla/net/DNS.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsIBadCertListener2.h"
@@ -120,9 +123,11 @@
 #include "nsISiteSecurityService.h"
 #include "nsISocketProvider.h"
 #include "nsIThreadPool.h"
+#include "nsNSSCertificate.h"
 #include "nsNSSComponent.h"
 #include "nsNSSIOLayer.h"
 #include "nsNSSShutDown.h"
+#include "nsSSLStatus.h"
 #include "nsServiceManagerUtils.h"
 #include "nsURLHelper.h"
 #include "nsXPCOMCIDInternal.h"
@@ -1369,18 +1374,12 @@ AuthCertificate(CertVerifier& certVerifier,
                           pinningTelemetryInfo.certPinningResultBucket);
   }
 
-  RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
-  RefPtr<nsNSSCertificate> nsc;
-
-  if (!status || !status->HasServerCert()) {
-    if (rv == Success) {
-      nsc = nsNSSCertificate::Create(cert.get(), &evOidPolicy);
-    } else {
-      nsc = nsNSSCertificate::Create(cert.get());
-    }
-  }
-
   if (rv == Success) {
+    // Certificate verification succeeded. Delete any potential record of
+    // certificate error bits.
+    RememberCertErrorsTable::GetInstance().RememberCertHasError(infoObject,
+                                                                nullptr,
+                                                                SECSuccess);
     GatherSuccessfulValidationTelemetry(certList);
     GatherCertificateTransparencyTelemetry(certList,
                                            certificateTransparencyInfo);
@@ -1388,34 +1387,24 @@ AuthCertificate(CertVerifier& certVerifier,
     // The connection may get terminated, for example, if the server requires
     // a client cert. Let's provide a minimal SSLStatus
     // to the caller that contains at least the cert and its status.
+    RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
     if (!status) {
       status = new nsSSLStatus();
       infoObject->SetSSLStatus(status);
     }
 
-    if (rv == Success) {
-      // Certificate verification succeeded delete any potential record
-      // of certificate error bits.
-      RememberCertErrorsTable::GetInstance().RememberCertHasError(infoObject,
-                                                                  nullptr,
-                                                                  SECSuccess);
-    } else {
-      // Certificate verification failed, update the status' bits.
-      RememberCertErrorsTable::GetInstance().LookupCertErrorBits(
-        infoObject, status);
-    }
-
-    if (status && !status->HasServerCert()) {
-      nsNSSCertificate::EVStatus evStatus;
-      if (evOidPolicy == SEC_OID_UNKNOWN || rv != Success) {
-        evStatus = nsNSSCertificate::ev_status_invalid;
+    if (!status->HasServerCert()) {
+      EVStatus evStatus;
+      if (evOidPolicy == SEC_OID_UNKNOWN) {
+        evStatus = EVStatus::NotEV;
       } else {
-        evStatus = nsNSSCertificate::ev_status_valid;
+        evStatus = EVStatus::EV;
       }
 
+      RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert.get());
       status->SetServerCert(nsc, evStatus);
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-             ("AuthCertificate setting NEW cert %p\n", nsc.get()));
+              ("AuthCertificate setting NEW cert %p", nsc.get()));
     }
 
     status->SetCertificateTransparencyInfo(certificateTransparencyInfo);

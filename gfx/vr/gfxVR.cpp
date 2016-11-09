@@ -6,7 +6,10 @@
 #include <math.h>
 
 #include "gfxVR.h"
-#include "mozilla/dom/Gamepad.h"
+#ifdef MOZ_GAMEPAD
+#include "mozilla/dom/GamepadEventTypes.h"
+#include "mozilla/dom/GamepadBinding.h"
+#endif
 
 #ifndef M_PI
 # define M_PI 3.14159265358979323846
@@ -65,8 +68,7 @@ VRControllerManager::AllocateControllerID()
 }
 
 void
-VRControllerManager::AddGamepad(const char* aID,
-                                dom::GamepadMappingType aMapping,
+VRControllerManager::AddGamepad(const char* aID, uint32_t aMapping,
                                 uint32_t aNumButtons, uint32_t aNumAxes)
 {
   dom::GamepadAdded a(NS_ConvertUTF8toUTF16(nsDependentCString(aID)), mControllerCount,
