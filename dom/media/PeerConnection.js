@@ -730,8 +730,7 @@ RTCPeerConnection.prototype = {
             this._impl.createOffer(options);
           }));
         p = this._addIdentityAssertion(p, origin);
-        return p.then(
-          sdp => new this._win.RTCSessionDescription({ type: "offer", sdp: sdp }));
+        return p.then(sdp => Cu.cloneInto({ type: "offer", sdp: sdp }, this._win));
       });
     });
   },
@@ -765,9 +764,7 @@ RTCPeerConnection.prototype = {
             this._impl.createAnswer();
           }));
         p = this._addIdentityAssertion(p, origin);
-        return p.then(sdp => {
-          return new this._win.RTCSessionDescription({ type: "answer", sdp: sdp });
-        });
+        return p.then(sdp => Cu.cloneInto({ type: "answer", sdp: sdp }, this._win));
       });
     });
   },
@@ -1129,8 +1126,7 @@ RTCPeerConnection.prototype = {
       return null;
     }
 
-    return new this._win.RTCSessionDescription({ type: this._localType,
-                                                    sdp: sdp });
+    return new this._win.RTCSessionDescription({ type: this._localType, sdp });
   },
 
   get remoteDescription() {
@@ -1139,8 +1135,7 @@ RTCPeerConnection.prototype = {
     if (sdp.length == 0) {
       return null;
     }
-    return new this._win.RTCSessionDescription({ type: this._remoteType,
-                                                    sdp: sdp });
+    return new this._win.RTCSessionDescription({ type: this._remoteType, sdp });
   },
 
   get peerIdentity() { return this._peerIdentity; },
