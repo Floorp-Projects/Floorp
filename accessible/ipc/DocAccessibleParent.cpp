@@ -461,25 +461,24 @@ DocAccessibleParent::GetXPCAccessible(ProxyAccessible* aProxy)
 #if defined(XP_WIN)
 /**
  * @param aCOMProxy COM Proxy to the document in the content process.
- * @param aParentCOMProxy COM Proxy to the OuterDocAccessible that is
- *        the parent of the document. The content process will use this
- *        proxy when traversing up across the content/chrome boundary.
  */
-bool
-DocAccessibleParent::RecvCOMProxy(const IAccessibleHolder& aCOMProxy,
-                                  IAccessibleHolder* aParentCOMProxy)
+void
+DocAccessibleParent::SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy)
 {
-  RefPtr<IAccessible> ptr(aCOMProxy.Get());
-  SetCOMInterface(ptr);
+  SetCOMInterface(aCOMProxy);
 
   Accessible* outerDoc = OuterDocOfRemoteBrowser();
+  MOZ_ASSERT(outerDoc);
+
   IAccessible* rawNative = nullptr;
   if (outerDoc) {
     outerDoc->GetNativeInterface((void**) &rawNative);
+    MOZ_ASSERT(rawNative);
   }
 
-  aParentCOMProxy->Set(IAccessibleHolder::COMPtrType(rawNative));
-  return true;
+  IAccessibleHolder::COMPtrType ptr(rawNative);
+  IAccessibleHolder holder(Move(ptr));
+  Unused << SendParentCOMProxy(holder);
 }
 #endif // defined(XP_WIN)
 
