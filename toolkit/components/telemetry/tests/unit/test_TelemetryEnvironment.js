@@ -635,9 +635,6 @@ function checkSystemSection(data) {
   Assert.equal(typeof gfxData.features, "object");
   Assert.equal(typeof gfxData.features.compositor, "string");
 
-  Assert.equal(typeof gfxData.features.gpuProcess, "object");
-  Assert.equal(typeof gfxData.features.gpuProcess.status, "string");
-
   try {
     // If we've not got nsIGfxInfoDebug, then this will throw and stop us doing
     // this test.
@@ -650,7 +647,6 @@ function checkSystemSection(data) {
 
     let features = gfxInfo.getFeatures();
     Assert.equal(features.compositor, gfxData.features.compositor);
-    Assert.equal(features.gpuProcess.status, gfxData.features.gpuProcess.status);
     Assert.equal(features.opengl, gfxData.features.opengl);
     Assert.equal(features.webgl, gfxData.features.webgl);
   }
