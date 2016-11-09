@@ -339,6 +339,24 @@ class TestConfigure(unittest.TestCase):
         self.assertEquals(sandbox.keys(), ['__builtins__', 'foo'])
         self.assertEquals(sandbox['__builtins__'], ConfigureSandbox.BUILTINS)
 
+        exec_(textwrap.dedent('''
+            @template
+            @imports('sys')
+            def foo():
+                @depends(when=True)
+                def bar():
+                    return sys
+                return bar
+            bar = foo()'''),
+            sandbox
+        )
+
+        with self.assertRaises(NameError) as e:
+            sandbox._depends[sandbox['bar']].result
+
+        self.assertEquals(e.exception.message,
+                          "global name 'sys' is not defined")
+
     def test_apply_imports(self):
         imports = []
 
