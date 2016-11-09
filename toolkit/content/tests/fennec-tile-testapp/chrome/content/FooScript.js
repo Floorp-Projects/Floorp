@@ -109,7 +109,6 @@ BrowserView.prototype = {
 
   scrollboxToViewportRect: function scrollboxToViewportRect(rect, clip) {
     let leftbar  = this._leftbar.getBoundingClientRect();
-    let rightbar = this._rightbar.getBoundingClientRect();
     let topbar   = this._topbar.getBoundingClientRect();
 
     let xtrans = -leftbar.width;

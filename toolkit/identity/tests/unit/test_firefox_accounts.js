@@ -180,8 +180,6 @@ function test_logout() {
 function test_error() {
   do_test_pending();
 
-  let received = [];
-
   // Mock the fxAccountsManager so that getAssertion rejects its promise and
   // triggers our onerror handler.  (This is the method that's used internally
   // by FirefoxAccounts.RP.request().)

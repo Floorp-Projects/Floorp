@@ -175,17 +175,11 @@ function() {
     };
   }
 
-  function clampViewportWH(width, height, visibleRect) {
-    let minW = visibleRect.width;
-    let minH = visibleRect.height;
-    return [Math.max(width, minW), Math.max(height, minH)];
-  }
-
-  function initContainer(container, visibleRect) {
-    container.style.width    = visibleRect.width  + 'px';
-    container.style.height   = visibleRect.height + 'px';
-    container.style.overflow = '-moz-hidden-unscrollable';
-  }
+  // function clampViewportWH(width, height, visibleRect) {
+  //   let minW = visibleRect.width;
+  //   let minH = visibleRect.height;
+  //   return [Math.max(width, minW), Math.max(height, minH)];
+  // }
 
   function resizeContainerToViewport(container, viewportRect) {
     container.style.width  = viewportRect.width  + 'px';
@@ -257,7 +251,6 @@ function() {
 
     setViewportDimensions: function setViewportDimensions(width, height, causedByZoom) {
       let bvs = this._browserViewportState;
-      let vis = this._visibleRect;
 
       if (!bvs)
         return;
@@ -330,9 +323,6 @@ function() {
     },
 
     moveVisibleBy: function moveVisibleBy(dx, dy) {
-      let vr = this._visibleRect;
-      let vs = this._browserViewportState;
-
       this.onBeforeVisibleMove(dx, dy);
       this.onAfterVisibleMove(dx, dy);
     },
@@ -691,4 +681,3 @@ BrowserView.BrowserViewportState.prototype = {
   }
 
 };
-

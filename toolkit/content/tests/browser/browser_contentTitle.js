@@ -2,7 +2,6 @@ var url = "https://example.com/browser/toolkit/content/tests/browser/file_conten
 
 add_task(function*() {
   let tab = gBrowser.selectedTab = gBrowser.addTab(url);
-  let browser = tab.linkedBrowser;
   yield new Promise((resolve) => {
     addEventListener("TestLocationChange", function listener() {
       removeEventListener("TestLocationChange", listener);
