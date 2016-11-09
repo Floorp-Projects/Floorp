@@ -4,16 +4,11 @@
 
 "use strict";
 
-const { createClass, DOM: dom, PropTypes } =
+const { createClass, DOM: dom } =
   require("devtools/client/shared/vendor/react");
 
 module.exports = createClass({
   displayName: "PanelHeader",
-
-  propTypes: {
-    id: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired
-  },
 
   render() {
     let { name, id } = this.props;

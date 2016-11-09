@@ -6,29 +6,16 @@
 
 "use strict";
 
-const { createClass, DOM: dom, PropTypes } =
+const { createClass, DOM: dom } =
   require("devtools/client/shared/vendor/react");
 const { debugWorker } = require("../../modules/worker");
 const Services = require("Services");
-
-loader.lazyRequireGetter(this, "DebuggerClient",
-  "devtools/shared/client/main", true);
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
 module.exports = createClass({
   displayName: "WorkerTarget",
-
-  propTypes: {
-    client: PropTypes.instanceOf(DebuggerClient).isRequired,
-    debugDisabled: PropTypes.bool,
-    target: PropTypes.shape({
-      icon: PropTypes.string,
-      name: PropTypes.string.isRequired,
-      workerActor: PropTypes.string
-    }).isRequired
-  },
 
   debug() {
     let { client, target } = this.props;

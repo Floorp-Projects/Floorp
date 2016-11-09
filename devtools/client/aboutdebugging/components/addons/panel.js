@@ -5,7 +5,7 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-const { createFactory, createClass, DOM: dom, PropTypes } =
+const { createFactory, createClass, DOM: dom } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
 
@@ -13,9 +13,6 @@ const AddonsControls = createFactory(require("./controls"));
 const AddonTarget = createFactory(require("./target"));
 const PanelHeader = createFactory(require("../panel-header"));
 const TargetList = createFactory(require("../target-list"));
-
-loader.lazyRequireGetter(this, "DebuggerClient",
-  "devtools/shared/client/main", true);
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
@@ -26,11 +23,6 @@ const REMOTE_ENABLED_PREF = "devtools.debugger.remote-enabled";
 
 module.exports = createClass({
   displayName: "AddonsPanel",
-
-  propTypes: {
-    client: PropTypes.instanceOf(DebuggerClient).isRequired,
-    id: PropTypes.string.isRequired
-  },
 
   getInitialState() {
     return {
@@ -133,7 +125,6 @@ module.exports = createClass({
     AddonsControls({ debugDisabled }),
     dom.div({ id: "addons" },
       TargetList({
-        id: "extensions",
         name,
         targets,
         client,
