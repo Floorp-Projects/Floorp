@@ -13,6 +13,8 @@ if not CONFIG['JS_STANDALONE']:
     DIRS += ['volatile']
 
 if CONFIG['MOZ_MEMORY']:
+    # NB: gtest dir is included in toolkit/toolkit.build due to its dependency
+    # on libxul.
     DIRS += [
         'build',
         'mozjemalloc',
