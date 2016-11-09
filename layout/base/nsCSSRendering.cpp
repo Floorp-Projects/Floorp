@@ -2719,16 +2719,21 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     }
 
     // Fit the gradient line exactly into the source rect.
+    // aSrc is relative to aIntrinsincSize.
+    // srcRectDev will be relative to srcSize, so in the same coordinate space
+    // as lineStart / lineEnd.
+    gfxRect srcRectDev = nsLayoutUtils::RectToGfxRect(
+      CSSPixel::ToAppUnits(aSrc), appUnitsPerDevPixel);
     if (lineStart.x != lineEnd.x) {
-      rectLen = aPresContext->CSSPixelsToDevPixels(aSrc.width);
-      offset = ((double)aSrc.x - lineStart.x) / lineLength;
-      lineStart.x = aSrc.x;
-      lineEnd.x = aSrc.x + rectLen;
+      rectLen = srcRectDev.width;
+      offset = (srcRectDev.x - lineStart.x) / lineLength;
+      lineStart.x = srcRectDev.x;
+      lineEnd.x = srcRectDev.XMost();
     } else {
-      rectLen = aPresContext->CSSPixelsToDevPixels(aSrc.height);
-      offset = ((double)aSrc.y - lineStart.y) / lineLength;
-      lineStart.y = aSrc.y;
-      lineEnd.y = aSrc.y + rectLen;
+      rectLen = srcRectDev.height;
+      offset = (srcRectDev.y - lineStart.y) / lineLength;
+      lineStart.y = srcRectDev.y;
+      lineEnd.y = srcRectDev.YMost();
     }
 
     // Adjust gradient stop positions for the new gradient line.
