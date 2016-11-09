@@ -73,20 +73,6 @@ enum GMPState {
 
 class GMPContentParent;
 
-class GetGMPContentParentCallback
-{
-public:
-  GetGMPContentParentCallback()
-  {
-    MOZ_COUNT_CTOR(GetGMPContentParentCallback);
-  };
-  virtual ~GetGMPContentParentCallback()
-  {
-    MOZ_COUNT_DTOR(GetGMPContentParentCallback);
-  };
-  virtual void Done(GMPContentParent* aGMPContentParent) = 0;
-};
-
 class GMPParent final : public PGMPParent
 {
 public:
@@ -159,7 +145,7 @@ public:
   // Called when the child process has died.
   void ChildTerminated();
 
-  bool GetGMPContentParent(UniquePtr<GetGMPContentParentCallback>&& aCallback);
+  void GetGMPContentParent(UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>&& aPromiseHolder);
   already_AddRefed<GMPContentParent> ForgetGMPContentParent();
 
   bool EnsureProcessLoaded(base::ProcessId* aID);
@@ -206,6 +192,8 @@ private:
     return mGMPContentChildCount > 0;
   }
 
+  void ResolveGetContentParentPromises();
+  void RejectGetContentParentPromises();
 
   static void AbortWaitingForGMPAsyncShutdown(nsITimer* aTimer, void* aClosure);
   nsresult EnsureAsyncShutdownTimeoutSet();
@@ -239,7 +227,7 @@ private:
   // This is used for GMP content in the parent, there may be more of these in
   // the content processes.
   RefPtr<GMPContentParent> mGMPContentParent;
-  nsTArray<UniquePtr<GetGMPContentParentCallback>> mCallbacks;
+  nsTArray<UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>> mGetContentParentPromises;
   uint32_t mGMPContentChildCount;
 
   bool mAsyncShutdownRequired;
