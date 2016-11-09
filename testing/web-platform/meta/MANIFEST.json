@@ -14816,16 +14816,8 @@
         "url": "/cookies/secure/set-from-dom.https.sub.html"
       },
       {
-        "path": "cookies/secure/set-from-dom.sub.html",
-        "url": "/cookies/secure/set-from-dom.sub.html"
-      },
-      {
         "path": "cookies/secure/set-from-http.https.sub.html",
         "url": "/cookies/secure/set-from-http.https.sub.html"
-      },
-      {
-        "path": "cookies/secure/set-from-http.sub.html",
-        "url": "/cookies/secure/set-from-http.sub.html"
       },
       {
         "path": "cookies/secure/set-from-ws.https.sub.html",
