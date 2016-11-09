@@ -86,8 +86,7 @@ function testMultipleFingerprints() {
           fingerprintSdp(fingerprints.slice(1)) +
           offer.sdp.slice(match.index);
 
-      var desc = new RTCSessionDescription({ type: 'offer', sdp: sdp });
-      return pcStrict.setRemoteDescription(desc);
+      return pcStrict.setRemoteDescription({ type: 'offer', sdp });
     })
     .then(() => {
       ok(true, 'Modified fingerprints were accepted');
