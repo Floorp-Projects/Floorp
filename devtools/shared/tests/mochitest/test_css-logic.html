@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8">
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const CssLogic = require("devtools/shared/inspector/css-logic");
+
+var _tests = [];
+function addTest(test) {
+  _tests.push(test);
+}
+
+function runNextTest() {
+  if (_tests.length == 0) {
+    SimpleTest.finish()
+    return;
+  }
+  _tests.shift()();
+}
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+
+addTest(function findAllCssSelectors() {
+  var nodes = document.querySelectorAll('*');
+  for (var i = 0; i < nodes.length; i++) {
+    var selector = CssLogic.findCssSelector(nodes[i]);
+    var matches = document.querySelectorAll(selector);
+
+    is(matches.length, 1, 'There is a single match: ' + selector);
+    is(matches[0], nodes[i], 'The selector matches the correct node: ' + selector);
+  }
+
+  runNextTest();
+});
+
+addTest(function findCssSelectorNotContainedInDocument() {
+
+  var unattached = document.createElement("div");
+  unattached.id = "unattached";
+  try {
+    CssLogic.findCssSelector(unattached);
+    ok (false, "Unattached node did not throw")
+  } catch(e) {
+    ok(e, "Unattached node throws an exception");
+  }
+
+  var unattachedChild = document.createElement("div");
+  unattached.appendChild(unattachedChild);
+  try {
+    CssLogic.findCssSelector(unattachedChild);
+    ok (false, "Unattached child node did not throw")
+  } catch(e) {
+    ok(e, "Unattached child node throws an exception");
+  }
+
+  var unattachedBody = document.createElement("body");
+  try {
+    CssLogic.findCssSelector(unattachedBody);
+    ok (false, "Unattached body node did not throw")
+  } catch(e) {
+    ok(e, "Unattached body node throws an exception");
+  }
+
+  runNextTest();
+});
+
+addTest(function findCssSelector() {
+
+  let data = [
+    "#one",
+    "#" + CSS.escape("2"),
+    ".three",
+    "." + CSS.escape("4"),
+    "#find-css-selector > div:nth-child(5)",
+    "#find-css-selector > p:nth-child(6)",
+    ".seven",
+    ".eight",
+    ".nine",
+    ".ten",
+    "div.sameclass:nth-child(11)",
+    "div.sameclass:nth-child(12)",
+    "div.sameclass:nth-child(13)",
+    "#" + CSS.escape("!, \", #, $, %, &, ', (, ), *, +, ,, -, ., /, :, ;, <, =, >, ?, @, [, \\, ], ^, `, {, |, }, ~"),
+  ];
+
+  let container = document.querySelector("#find-css-selector");
+  is (container.children.length, data.length, "Container has correct number of children.");
+
+  for (let i = 0; i < data.length; i++) {
+    let node = container.children[i];
+    is (CssLogic.findCssSelector(node), data[i], "matched id for index " + (i-1));
+  }
+
+  runNextTest();
+});
+  </script>
+</head>
+<body>
+  <div id="find-css-selector">
+    <div id="one"></div> <!-- Basic ID -->
+    <div id="2"></div> <!-- Escaped ID -->
+    <div class="three"></div> <!-- Basic Class -->
+    <div class="4"></div> <!-- Escaped Class -->
+    <div attr="5"></div>  <!-- Only an attribute -->
+    <p></p> <!-- Nothing unique -->
+    <div class="seven seven"></div> <!-- Two classes with same name -->
+    <div class="eight eight2"></div> <!-- Two classes with different names -->
+
+    <!-- Two elements with the same id - should not use ID -->
+    <div class="nine" id="nine-and-ten"></div>
+    <div class="ten" id="nine-and-ten"></div>
+
+    <!-- Three elements with the same id - should use class and nth-child instead -->
+    <div class="sameclass" id="11-12-13"></div>
+    <div class="sameclass" id="11-12-13"></div>
+    <div class="sameclass" id="11-12-13"></div>
+
+    <!-- Special characters -->
+    <div id="!, &quot;, #, $, %, &amp;, ', (, ), *, +, ,, -, ., /, :, ;, <, =, >, ?, @, [, \, ], ^, `, {, |, }, ~"></div>
+  </div>
+</body>
+</html>
