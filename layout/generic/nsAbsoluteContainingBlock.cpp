@@ -365,8 +365,9 @@ GetPlaceholderContainer(nsPresContext* aPresContext,
  *
  * @param aKidReflowInput The ReflowInput for the to-be-aligned abspos child.
  * @param aKidSizeInAbsPosCBWM The child frame's size (after it's been given
- *                             the opportunity to reflow), in terms of the
- *                             containing block's WritingMode.
+ *                             the opportunity to reflow), in terms of
+ *                             aAbsPosCBWM.
+ * @param aAbsPosCBSize The abspos CB size, in terms of aAbsPosCBWM.
  * @param aPlaceholderContainer The parent of the child frame's corresponding
  *                              placeholder frame, cast to a nsContainerFrame.
  *                              (This will help us choose which alignment enum
@@ -378,6 +379,7 @@ GetPlaceholderContainer(nsPresContext* aPresContext,
 static nscoord
 OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
                          const LogicalSize& aKidSizeInAbsPosCBWM,
+                         const LogicalSize& aAbsPosCBSize,
                          nsContainerFrame* aPlaceholderContainer,
                          WritingMode aAbsPosCBWM,
                          LogicalAxis aAbsPosCBAxis)
@@ -410,10 +412,30 @@ OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
   nsIAtom* parentType = aPlaceholderContainer->GetType();
   LogicalSize alignAreaSize(pcWM);
   if (parentType == nsGkAtoms::flexContainerFrame) {
+    // The alignment container is the flex container's content box:
     alignAreaSize = aPlaceholderContainer->GetLogicalSize(pcWM);
     LogicalMargin pcBorderPadding =
       aPlaceholderContainer->GetLogicalUsedBorderAndPadding(pcWM);
     alignAreaSize -= pcBorderPadding.Size(pcWM);
+  } else if (parentType == nsGkAtoms::gridContainerFrame) {
+    // This abspos elem's parent is a grid container. Per CSS Grid 10.1 & 10.2:
+    //  - If the grid container *also* generates the abspos containing block (a
+    // grid area) for this abspos child, we use that abspos containing block as
+    // the alignment container, too. (And its size is aAbsPosCBSize.)
+    //  - Otherwise, we use the grid's padding box as the alignment container.
+    // https://drafts.csswg.org/css-grid/#static-position
+    if (aPlaceholderContainer == aKidReflowInput.mCBReflowInput->mFrame) {
+      // The alignment container is the grid area that we're using as the
+      // absolute containing block.
+      alignAreaSize = aAbsPosCBSize.ConvertTo(pcWM, aAbsPosCBWM);
+    } else {
+      // The alignment container is a the grid container's padding box (which
+      // we can get by subtracting away its border from frame's size):
+      alignAreaSize = aPlaceholderContainer->GetLogicalSize(pcWM);
+      LogicalMargin pcBorder =
+        aPlaceholderContainer->GetLogicalUsedBorder(pcWM);
+      alignAreaSize -= pcBorder.Size(pcWM);
+    }
   } else {
     NS_ERROR("Unsupported container for abpsos CSS Box Alignment");
     return 0; // (leave the child at the start of its alignment container)
@@ -522,6 +544,7 @@ nsAbsoluteContainingBlock::ResolveSizeDependentOffsets(
       placeholderContainer = GetPlaceholderContainer(aPresContext,
                                                      aKidReflowInput.mFrame);
       nscoord offset = OffsetToAlignedStaticPos(aKidReflowInput, aKidSize,
+                                                logicalCBSizeOuterWM,
                                                 placeholderContainer,
                                                 outerWM, eLogicalAxisInline);
       // Shift IStart from its current position (at start corner of the
@@ -544,6 +567,7 @@ nsAbsoluteContainingBlock::ResolveSizeDependentOffsets(
                                                        aKidReflowInput.mFrame);
       }
       nscoord offset = OffsetToAlignedStaticPos(aKidReflowInput, aKidSize,
+                                                logicalCBSizeOuterWM,
                                                 placeholderContainer,
                                                 outerWM, eLogicalAxisBlock);
       // Shift BStart from its current position (at start corner of the
