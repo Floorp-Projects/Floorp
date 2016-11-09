@@ -130,6 +130,7 @@ EXPORTS.mozilla.dom += [
     'FontFace.h',
     'FontFaceSet.h',
     'FontFaceSetIterator.h',
+    'MediaList.h',
     'MediaQueryList.h',
 ]
 
@@ -167,6 +168,7 @@ UNIFIED_SOURCES += [
     'IncrementalClearCOMRuleArray.cpp',
     'LayerAnimationInfo.cpp',
     'Loader.cpp',
+    'MediaList.cpp',
     'MediaQueryList.cpp',
     'nsAnimationManager.cpp',
     'nsComputedDOMStyle.cpp',
