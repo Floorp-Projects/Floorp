@@ -7,6 +7,7 @@
 #include "mozilla/StyleSheet.h"
 
 #include "mozilla/dom/CSSRuleList.h"
+#include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/ServoStyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -608,7 +609,7 @@ StyleSheet::List(FILE* out, int32_t aIndent) const
 #endif
 
 void
-StyleSheet::SetMedia(nsMediaList* aMedia)
+StyleSheet::SetMedia(dom::MediaList* aMedia)
 {
   mMedia = aMedia;
 }
@@ -622,7 +623,7 @@ StyleSheet::DropMedia()
   }
 }
 
-nsMediaList*
+dom::MediaList*
 StyleSheet::Media()
 {
   if (!mMedia) {
