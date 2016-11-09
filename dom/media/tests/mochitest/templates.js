@@ -118,7 +118,7 @@ var commandsPeerConnectionInitial = [
       test.setupSignalingClient();
       test.registerSignalingCallback("ice_candidate", function (message) {
         var pc = test.pcRemote ? test.pcRemote : test.pcLocal;
-        pc.storeOrAddIceCandidate(new RTCIceCandidate(message.ice_candidate));
+        pc.storeOrAddIceCandidate(message.ice_candidate);
       });
       test.registerSignalingCallback("end_of_trickle_ice", function (message) {
         test.signalingMessagesFinished();
