@@ -11,6 +11,7 @@
  * and create derivative works of this document.
  */
 
+[Func="nsDocument::IsWebComponentsEnabled"]
 interface HTMLShadowElement : HTMLElement
 {
   readonly attribute ShadowRoot? olderShadowRoot;
