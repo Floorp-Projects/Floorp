@@ -750,11 +750,14 @@ class PseudoChildAPIManager extends ChildAPIManager {
   }
 }
 
-class ExtensionContext extends BaseContext {
+class ExtensionPageContextChild extends BaseContext {
   /**
-   * This ExtensionContext represents a privileged addon execution environment
-   * that has full access to the WebExtensions APIs (provided that the correct
-   * permissions have been requested).
+   * This ExtensionPageContextChild represents a privileged addon
+   * execution environment that has full access to the WebExtensions
+   * APIs (provided that the correct permissions have been requested).
+   *
+   * This is the child side of the ExtensionPageContextParent class
+   * defined in ExtensionParent.jsm.
    *
    * @param {BrowserExtensionContent} extension This context's owner.
    * @param {object} params
@@ -770,7 +773,7 @@ class ExtensionContext extends BaseContext {
     if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
       // This check is temporary. It should be removed once the proxy creation
       // is asynchronous.
-      throw new Error("ExtensionContext cannot be created in child processes");
+      throw new Error("ExtensionPageContextChild cannot be created in child processes");
     }
 
     let {viewType, uri, contentWindow, tabId} = params;
@@ -848,7 +851,7 @@ class ExtensionContext extends BaseContext {
   }
 }
 
-defineLazyGetter(ExtensionContext.prototype, "messenger", function() {
+defineLazyGetter(ExtensionPageContextChild.prototype, "messenger", function() {
   let filter = {extensionId: this.extension.id};
   let optionalFilter = {};
   // Addon-generated messages (not necessarily from the same process as the
@@ -859,7 +862,7 @@ defineLazyGetter(ExtensionContext.prototype, "messenger", function() {
                        filter, optionalFilter);
 });
 
-defineLazyGetter(ExtensionContext.prototype, "childManager", function() {
+defineLazyGetter(ExtensionPageContextChild.prototype, "childManager", function() {
   let localApis = {};
   apiManager.generateAPIs(this, localApis);
 
@@ -981,7 +984,7 @@ ExtensionChild = {
   // Map<nsIContentFrameMessageManager, ContentGlobal>
   contentGlobals: new Map(),
 
-  // Map<innerWindowId, ExtensionContext>
+  // Map<innerWindowId, ExtensionPageContextChild>
   extensionContexts: new Map(),
 
   initOnce() {
@@ -1031,12 +1034,12 @@ ExtensionChild = {
 
     let uri = contentWindow.document.documentURIObject;
 
-    context = new ExtensionContext(extension, {viewType, contentWindow, uri, tabId});
+    context = new ExtensionPageContextChild(extension, {viewType, contentWindow, uri, tabId});
     this.extensionContexts.set(windowId, context);
   },
 
   /**
-   * Close the ExtensionContext belonging to the given window, if any.
+   * Close the ExtensionPageContextChild belonging to the given window, if any.
    *
    * @param {number} windowId The inner window ID of the destroyed context.
    */
