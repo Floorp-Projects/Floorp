@@ -8,7 +8,6 @@
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
 #include "OggDemuxer.h"
-#include "OggReader.h"
 #include "OggDecoder.h"
 #include "nsContentTypeParser.h"
 
@@ -16,16 +15,11 @@ namespace mozilla {
 
 MediaDecoderStateMachine* OggDecoder::CreateStateMachine()
 {
-  bool useFormatDecoder = MediaPrefs::OggFormatReader();
-  RefPtr<OggDemuxer> demuxer =
-    useFormatDecoder ? new OggDemuxer(GetResource()) : nullptr;
-  RefPtr<MediaDecoderReader> reader = useFormatDecoder
-    ? static_cast<MediaDecoderReader*>(new MediaFormatReader(this, demuxer, GetVideoFrameContainer()))
-    : new OggReader(this);
-  if (useFormatDecoder) {
-    demuxer->SetChainingEvents(&reader->TimedMetadataProducer(),
-                               &reader->MediaNotSeekableProducer());
-  }
+  RefPtr<OggDemuxer> demuxer = new OggDemuxer(GetResource());
+  RefPtr<MediaFormatReader> reader =
+    new MediaFormatReader(this, demuxer, GetVideoFrameContainer());
+  demuxer->SetChainingEvents(&reader->TimedMetadataProducer(),
+                             &reader->MediaNotSeekableProducer());
   return new MediaDecoderStateMachine(this, reader);
 }
 
