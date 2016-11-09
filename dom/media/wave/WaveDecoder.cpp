@@ -5,9 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WaveDemuxer.h"
-#include "mozilla/Preferences.h"
 #include "MediaDecoderStateMachine.h"
-#include "WaveReader.h"
 #include "WaveDecoder.h"
 #include "MediaFormatReader.h"
 #include "PDMFactory.h"
@@ -23,13 +21,8 @@ WaveDecoder::Clone(MediaDecoderOwner* aOwner)
 MediaDecoderStateMachine*
 WaveDecoder::CreateStateMachine()
 {
-  if (Preferences::GetBool("media.wave.decoder.enabled", false)) {
-    RefPtr<MediaDecoderReader> reader =
-        new MediaFormatReader(this, new WAVDemuxer(GetResource()));
-    return new MediaDecoderStateMachine(this, reader);
-  } else {
-    return new MediaDecoderStateMachine(this, new WaveReader(this));
-  }
+  return new MediaDecoderStateMachine(
+    this, new MediaFormatReader(this, new WAVDemuxer(GetResource())));
 }
 
 /* static */
@@ -37,9 +30,6 @@ bool
 WaveDecoder::IsEnabled()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!Preferences::GetBool("media.wave.decoder.enabled", false)) {
-    return false;
-  }
   RefPtr<PDMFactory> platform = new PDMFactory();
   return platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/x-wav"),
                                     /* DecoderDoctorDiagnostics* */ nullptr);
@@ -48,7 +38,7 @@ WaveDecoder::IsEnabled()
 /* static */
 bool
 WaveDecoder::CanHandleMediaType(const nsACString& aType,
-                               const nsAString& aCodecs)
+                                const nsAString& aCodecs)
 {
   if (aType.EqualsASCII("audio/wave") || aType.EqualsASCII("audio/x-wav") ||
       aType.EqualsASCII("audio/wav")  || aType.EqualsASCII("audio/x-pn-wav")) {
