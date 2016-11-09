@@ -9,7 +9,6 @@ from __future__ import absolute_import, unicode_literals, print_function
 import argparse
 import errno
 import os
-import shutil
 import sys
 
 from mozlog import structured
@@ -21,24 +20,11 @@ from mozbuild.base import (
 )
 
 from mach.decorators import (
-    CommandArgument,
     CommandProvider,
     Command,
 )
 
-from xpcshellcommandline import parser_desktop, parser_remote, parser_b2g
-
-ADB_NOT_FOUND = '''
-The %s command requires the adb binary to be on your path.
-
-If you have a B2G build, this can be found in
-'%s/out/host/<platform>/bin'.
-'''.lstrip()
-
-BUSYBOX_URLS = {
-    'arm': 'http://www.busybox.net/downloads/binaries/latest/busybox-armv7l',
-    'x86': 'http://www.busybox.net/downloads/binaries/latest/busybox-i686'
-}
+from xpcshellcommandline import parser_desktop, parser_remote
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -46,6 +32,7 @@ if sys.version_info[0] < 3:
     unicode_type = unicode
 else:
     unicode_type = str
+
 
 # This should probably be consolidated with similar classes in other test
 # runners.
@@ -71,7 +58,6 @@ class XPCShellRunner(MozbuildObject):
             sys.path.append(src_build_path)
 
         return self.run_suite(**kwargs)
-
 
     def _run_xpcshell_harness(self, **kwargs):
         # Obtain a reference to the xpcshell test runner.
@@ -156,6 +142,7 @@ class XPCShellRunner(MozbuildObject):
                   "to make sure the failures were not caused by this.")
         return int(not result)
 
+
 class AndroidXPCShellRunner(MozbuildObject):
     """Get specified DeviceManager"""
     def get_devicemanager(self, devicemanager, ip, port, remote_test_root):
@@ -235,118 +222,17 @@ class AndroidXPCShellRunner(MozbuildObject):
 
         return int(not result)
 
-class B2GXPCShellRunner(MozbuildObject):
-    def __init__(self, *args, **kwargs):
-        MozbuildObject.__init__(self, *args, **kwargs)
-
-        # TODO Bug 794506 remove once mach integrates with virtualenv.
-        build_path = os.path.join(self.topobjdir, 'build')
-        if build_path not in sys.path:
-            sys.path.append(build_path)
-
-        build_path = os.path.join(self.topsrcdir, 'build')
-        if build_path not in sys.path:
-            sys.path.append(build_path)
-
-        self.tests_dir = os.path.join(self.topobjdir, '_tests')
-        self.xpcshell_dir = os.path.join(self.tests_dir, 'xpcshell')
-        self.bin_dir = os.path.join(self.distdir, 'bin')
-
-    def _download_busybox(self, b2g_home, emulator):
-        import urllib2
-
-        target_device = 'generic'
-        if emulator == 'x86':
-            target_device = 'generic_x86'
-        system_bin = os.path.join(b2g_home, 'out', 'target', 'product', target_device, 'system', 'bin')
-        busybox_path = os.path.join(system_bin, 'busybox')
-
-        if os.path.isfile(busybox_path):
-            return busybox_path
-
-        if not os.path.isdir(system_bin):
-            os.makedirs(system_bin)
-
-        try:
-            data = urllib2.urlopen(BUSYBOX_URLS[emulator])
-        except urllib2.URLError:
-            print('There was a problem downloading busybox. Proceeding without it,' \
-                  'initial setup will be slow.')
-            return
-
-        with open(busybox_path, 'wb') as f:
-            f.write(data.read())
-        return busybox_path
-
-    def run_test(self, **kwargs):
-        try:
-            import which
-            which.which('adb')
-        except which.WhichError:
-            # TODO Find adb automatically if it isn't on the path
-            print(ADB_NOT_FOUND % ('mochitest-remote', kwargs["b2g_home"]))
-            sys.exit(1)
-
-        import runtestsb2g
-
-        log = kwargs.pop("log")
-        self.log_manager.enable_unstructured()
-
-        if kwargs["device_name"].startswith('emulator') and 'x86' in kwargs["device_name"]:
-            kwargs["emulator"] = 'x86'
-
-        if kwargs["xpcshell"] is None:
-            kwargs["xpcshell"] = "xpcshell"
-        if kwargs["b2g_path"] is None:
-            kwargs["b2g_path"] = kwargs["b2g_home"]
-        if kwargs["busybox"] is None:
-            kwargs["busybox"] = os.environ.get('BUSYBOX')
-        if kwargs["busybox"] is None:
-            kwargs["busybox"] = self._download_busybox(kwargs["b2g_home"], kwargs["emulator"])
-
-        if kwargs["localLib"] is None:
-            kwargs["localLib"] = self.bin_dir
-        if kwargs["localBin"] is None:
-            kwargs["localBin"] = self.bin_dir
-        if kwargs["logdir"] is None:
-            kwargs["logdir"] = self.xpcshell_dir
-        if kwargs["manifest"] is None:
-            kwargs["manifest"] = os.path.join(self.xpcshell_dir, 'xpcshell.ini')
-        if kwargs["mozInfo"] is None:
-            kwargs["mozInfo"] = os.path.join(self.topobjdir, 'mozinfo.json')
-        if kwargs["objdir"] is None:
-            kwargs["objdir"] = self.topobjdir
-        if kwargs["symbolsPath"] is None:
-            kwargs["symbolsPath"] = os.path.join(self.distdir, 'crashreporter-symbols')
-        if kwargs["testingModulesDir"] is None:
-            kwargs["testingModulesDir"] = os.path.join(self.tests_dir, 'modules')
-        if kwargs["use_device_libs"] is None:
-            kwargs["use_device_libs"] = True
-
-        parser = parser_b2g()
-        options = argparse.Namespace(**kwargs)
-        rv = runtestsb2g.run_remote_xpcshell(parser, options, log)
-
-        self.log_manager.disable_unstructured()
-        return rv
 
 def get_parser():
     build_obj = MozbuildObject.from_environment(cwd=here)
     if conditions.is_android(build_obj):
         return parser_remote()
-    elif conditions.is_b2g(build_obj):
-        return parser_b2g()
     else:
         return parser_desktop()
 
+
 @CommandProvider
 class MachCommands(MachCommandBase):
-    def __init__(self, context):
-        MachCommandBase.__init__(self, context)
-
-        for attr in ('b2g_home', 'device_name'):
-            setattr(self, attr, getattr(context, attr, None))
-
     @Command('xpcshell-test', category='testing',
              description='Run XPCOM Shell tests (API direct unit testing)',
              conditions=[lambda *args: True],
@@ -368,7 +254,6 @@ class MachCommands(MachCommandBase):
         # case the tree wasn't built with mach).
         self._ensure_state_subdir_exists('.')
 
-
         params['log'] = structured.commandline.setup_logging("XPCShellTests",
                                                              params,
                                                              {"mach": sys.stdout},
@@ -378,10 +263,6 @@ class MachCommands(MachCommandBase):
             from mozrunner.devices.android_device import verify_android_device
             verify_android_device(self)
             xpcshell = self._spawn(AndroidXPCShellRunner)
-        elif conditions.is_b2g(self):
-            xpcshell = self._spawn(B2GXPCShellRunner)
-            params['b2g_home'] = self.b2g_home
-            params['device_name'] = self.device_name
         else:
             xpcshell = self._spawn(XPCShellRunner)
         xpcshell.cwd = self._mach_context.cwd

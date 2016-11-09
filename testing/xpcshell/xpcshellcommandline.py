@@ -2,6 +2,7 @@ import argparse
 
 from mozlog import commandline
 
+
 def add_common_arguments(parser):
     parser.add_argument("--app-path",
                         type=unicode, dest="appPath", default=None,
@@ -145,45 +146,6 @@ def add_remote_arguments(parser):
     parser.add_argument("--remoteTestRoot", action="store", type=str, dest="remoteTestRoot",
                         help="remote directory to use as test root (eg. /mnt/sdcard/tests or /data/local/tests)")
 
-def add_b2g_arguments(parser):
-    parser.add_argument('--b2gpath', action='store', type=str, dest='b2g_path',
-                        help="Path to B2G repo or qemu dir")
-
-    parser.add_argument('--emupath', action='store', type=str, dest='emu_path',
-                        help="Path to emulator folder (if different "
-                        "from b2gpath")
-
-    parser.add_argument('--no-clean', action='store_false', dest='clean', default=True,
-                        help="Do not clean TESTROOT. Saves [lots of] time")
-
-    parser.add_argument('--emulator', action='store', type=str, dest='emulator',
-                        default="arm", choices=["x86", "arm"],
-                        help="Architecture of emulator to use: x86 or arm")
-
-    parser.add_argument('--no-window', action='store_true', dest='no_window', default=False,
-                        help="Pass --no-window to the emulator")
-
-    parser.add_argument('--adbpath', action='store', type=str, dest='adb_path',
-                        default="adb", help="Path to adb")
-
-    parser.add_argument('--address', action='store', type=str, dest='address',
-                        help="host:port of running Gecko instance to connect to")
-
-    parser.add_argument('--use-device-libs', action='store_true', dest='use_device_libs',
-                        default=None, help="Don't push .so's")
-
-    parser.add_argument("--gecko-path", action="store", type=str, dest="geckoPath",
-                        help="the path to a gecko distribution that should "
-                        "be installed on the emulator prior to test")
-
-    parser.add_argument("--logdir", action="store", type=str, dest="logdir",
-                        help="directory to store log files")
-
-    parser.add_argument('--busybox', action='store', type=str, dest='busybox',
-                        help="Path to busybox binary to install on device")
-
-    parser.set_defaults(remoteTestRoot="/data/local/tests",
-                        dm_trans="adb")
 
 def parser_desktop():
     parser = argparse.ArgumentParser()
@@ -192,24 +154,13 @@ def parser_desktop():
 
     return parser
 
+
 def parser_remote():
     parser = argparse.ArgumentParser()
     common = parser.add_argument_group("Common Options")
     add_common_arguments(common)
     remote = parser.add_argument_group("Remote Options")
     add_remote_arguments(remote)
-    commandline.add_logging_group(parser)
-
-    return parser
-
-def parser_b2g():
-    parser = argparse.ArgumentParser()
-    common = parser.add_argument_group("Common Options")
-    add_common_arguments(common)
-    remote = parser.add_argument_group("Remote Options")
-    add_remote_arguments(remote)
-    b2g = parser.add_argument_group("B2G Options")
-    add_b2g_arguments(b2g)
     commandline.add_logging_group(parser)
 
     return parser
