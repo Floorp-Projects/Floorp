@@ -114,6 +114,7 @@ var MessageListener = {
     "SessionStore:restoreTabContent",
     "SessionStore:resetRestore",
     "SessionStore:flush",
+    "SessionStore:becomeActiveProcess",
   ],
 
   init: function () {
@@ -147,6 +148,18 @@ var MessageListener = {
         break;
       case "SessionStore:flush":
         this.flush(data);
+        break;
+      case "SessionStore:becomeActiveProcess":
+        let shistory = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
+        // Check if we are at the end of the current session history, if we are,
+        // it is safe for us to collect and transmit our session history, so
+        // transmit all of it. Otherwise, we only want to transmit our index changes,
+        // so collect from kLastIndex.
+        if (shistory.globalCount - shistory.globalIndexOffset == shistory.count) {
+          SessionHistoryListener.collect();
+        } else {
+          SessionHistoryListener.collectFrom(kLastIndex);
+        }
         break;
       default:
         debug("received unknown message '" + name + "'");
@@ -255,9 +268,12 @@ var SessionHistoryListener = {
   },
 
   collect: function () {
-    this._fromIdx = kNoIndex;
+    // We want to send down a historychange even for full collects in case our
+    // session history is a partial session history, in which case we don't have
+    // enough information for a full update. collectFrom(-1) tells the collect
+    // function to collect all data avaliable in this process.
     if (docShell) {
-      MessageQueue.push("history", () => SessionHistory.collect(docShell));
+      this.collectFrom(-1);
     }
   },
 
@@ -286,15 +302,7 @@ var SessionHistoryListener = {
         return null;
       }
 
-      let history = SessionHistory.collect(docShell);
-      if (kLastIndex == idx) {
-        history.entries = [];
-      } else {
-        history.entries.splice(0, this._fromIdx + 1);
-      }
-
-      history.fromIdx = this._fromIdx;
-
+      let history = SessionHistory.collect(docShell, this._fromIdx);
       this._fromIdx = kNoIndex;
       return history;
     });
