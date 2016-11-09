@@ -8,16 +8,16 @@
  */
 
 dictionary RTCIceCandidateInit {
-  DOMString? candidate = null;
+  required DOMString candidate;
   DOMString? sdpMid = null;
-  unsigned short sdpMLineIndex;
+  unsigned short? sdpMLineIndex = null;
 };
 
 [Pref="media.peerconnection.enabled",
  JSImplementation="@mozilla.org/dom/rtcicecandidate;1",
- Constructor(optional RTCIceCandidateInit candidateInitDict)]
+ Constructor(RTCIceCandidateInit candidateInitDict)]
 interface RTCIceCandidate {
-  attribute DOMString?      candidate;
+  attribute DOMString       candidate;
   attribute DOMString?      sdpMid;
   attribute unsigned short? sdpMLineIndex;
 
