@@ -13,7 +13,6 @@
 #include "mozilla/Telemetry.h"
 
 #include "OggDecoder.h"
-#include "OggReader.h"
 #include "OggDemuxer.h"
 
 #include "WebMDecoder.h"
@@ -502,11 +501,8 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
     decoderReader = new MediaFormatReader(aDecoder, new FlacDemuxer(aDecoder->GetResource()));
   } else
   if (IsOggSupportedType(aType)) {
-    decoderReader = MediaPrefs::OggFormatReader() ?
-      static_cast<MediaDecoderReader*>(new MediaFormatReader(aDecoder, new OggDemuxer(aDecoder->GetResource()))) :
-      new OggReader(aDecoder);
-  } else
-  if (IsWaveType(aType)) {
+    decoderReader = new MediaFormatReader(aDecoder, new OggDemuxer(aDecoder->GetResource()));
+  } else if (IsWaveType(aType)) {
     decoderReader = new WaveReader(aDecoder);
   } else
 #ifdef MOZ_ANDROID_OMX
