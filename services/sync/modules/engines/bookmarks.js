@@ -46,6 +46,17 @@ const ORGANIZERQUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
 const ALLBOOKMARKS_ANNO = "AllBookmarks";
 const MOBILE_ANNO = "MobileBookmarks";
 
+// Roots that should be deleted from the server, instead of applied locally.
+// This matches `AndroidBrowserBookmarksRepositorySession::forbiddenGUID`,
+// but allows tags because we don't want to reparent tag folders or tag items
+// to "unfiled".
+const FORBIDDEN_INCOMING_IDS = ["pinned", "places", "readinglist"];
+
+// Items with these parents should be deleted from the server. We allow
+// children of the Places root, to avoid orphaning left pane queries and other
+// descendants of custom roots.
+const FORBIDDEN_INCOMING_PARENT_IDS = ["pinned", "readinglist"];
+
 // The tracker ignores changes made by bookmark import and restore, and
 // changes made by Sync. We don't need to exclude `SOURCE_IMPORT`, but both
 // import and restore fire `bookmarks-restore-*` observer notifications, and
@@ -706,6 +717,14 @@ BookmarksEngine.prototype = {
     // Simply adding this (now non-existing) ID to the tracker is enough.
     this._modified.set(localDupeGUID, { modified: now, deleted: true });
   },
+
+  // Cleans up the Places root, reading list items (ignored in bug 762118,
+  // removed in bug 1155684), and pinned sites.
+  _shouldDeleteRemotely(incomingItem) {
+    return FORBIDDEN_INCOMING_IDS.includes(incomingItem.id) ||
+           FORBIDDEN_INCOMING_PARENT_IDS.includes(incomingItem.parentid);
+  },
+
   getValidator() {
     return new BookmarkValidator();
   }
