@@ -279,7 +279,7 @@ RuleHash_MoveEntry(PLDHashTable *table, const PLDHashEntryHdr *from,
   RuleHashTableEntry *oldEntry =
     const_cast<RuleHashTableEntry*>(
       static_cast<const RuleHashTableEntry*>(from));
-  RuleHashTableEntry *newEntry = new (KnownNotNull, to) RuleHashTableEntry();
+  auto* newEntry = new (KnownNotNull, to) RuleHashTableEntry();
   newEntry->mRules.SwapElements(oldEntry->mRules);
   oldEntry->~RuleHashTableEntry();
 }
@@ -316,7 +316,7 @@ RuleHash_TagTable_MoveEntry(PLDHashTable *table, const PLDHashEntryHdr *from,
   RuleHashTagTableEntry *oldEntry =
     const_cast<RuleHashTagTableEntry*>(
       static_cast<const RuleHashTagTableEntry*>(from));
-  RuleHashTagTableEntry *newEntry = new (KnownNotNull, to) RuleHashTagTableEntry();
+  auto* newEntry = new (KnownNotNull, to) RuleHashTagTableEntry();
   newEntry->mTag.swap(oldEntry->mTag);
   newEntry->mRules.SwapElements(oldEntry->mRules);
   oldEntry->~RuleHashTagTableEntry();
@@ -806,7 +806,7 @@ AtomSelector_MoveEntry(PLDHashTable *table, const PLDHashEntryHdr *from,
   NS_PRECONDITION(from != to, "This is not going to work!");
   AtomSelectorEntry *oldEntry =
     const_cast<AtomSelectorEntry*>(static_cast<const AtomSelectorEntry*>(from));
-  AtomSelectorEntry *newEntry = new (KnownNotNull, to) AtomSelectorEntry();
+  auto* newEntry = new (KnownNotNull, to) AtomSelectorEntry();
   newEntry->mAtom = oldEntry->mAtom;
   newEntry->mSelectors.SwapElements(oldEntry->mSelectors);
   oldEntry->~AtomSelectorEntry();
@@ -3606,7 +3606,7 @@ CascadeRuleEnumFunc(css::Rule* aRule, void* aData)
       entry->data.mWeight = weight;
       // entry->data.mRuleSelectorPairs should be linked in forward order;
       // entry->data.mTail is the slot to write to.
-      PerWeightDataListItem *newItem =
+      auto* newItem =
         new (data->mArena) PerWeightDataListItem(styleRule, sel->mSelectors);
       if (newItem) {
         *(entry->data.mTail) = newItem;
