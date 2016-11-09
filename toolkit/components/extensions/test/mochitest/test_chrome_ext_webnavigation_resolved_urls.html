@@ -18,13 +18,12 @@ add_task(function* webnav_unresolved_uri_on_expected_URI_scheme() {
   function background() {
     let checkURLs;
 
-    browser.webNavigation.onCompleted.addListener((msg) => {
+    browser.webNavigation.onCompleted.addListener(async msg => {
       if (checkURLs.length > 0) {
         let expectedURL = checkURLs.shift();
         browser.test.assertEq(expectedURL, msg.url, "Got the expected URL");
-        browser.tabs.remove(msg.tabId).then(() => {
-          browser.test.sendMessage("next");
-        });
+        await browser.tabs.remove(msg.tabId);
+        browser.test.sendMessage("next");
       }
     });
 

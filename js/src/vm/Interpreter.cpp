@@ -38,6 +38,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
+#include "vm/AsyncFunction.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
 #include "vm/Opcodes.h"
@@ -1869,7 +1870,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_NOP_DESTRUCTURING)
-CASE(JSOP_UNUSED149)
 CASE(JSOP_UNUSED182)
 CASE(JSOP_UNUSED183)
 CASE(JSOP_UNUSED187)
@@ -3479,6 +3479,18 @@ CASE(JSOP_LAMBDA_ARROW)
     REGS.sp[-1].setObject(*obj);
 }
 END_CASE(JSOP_LAMBDA_ARROW)
+
+CASE(JSOP_TOASYNC)
+{
+    ReservedRooted<JSFunction*> unwrapped(&rootFunction0,
+                                          &REGS.sp[-1].toObject().as<JSFunction>());
+    JSObject* wrapped = WrapAsyncFunction(cx, unwrapped);
+    if (!wrapped)
+        goto error;
+
+    REGS.sp[-1].setObject(*wrapped);
+}
+END_CASE(JSOP_TOASYNC)
 
 CASE(JSOP_CALLEE)
     MOZ_ASSERT(REGS.fp()->isFunctionFrame());

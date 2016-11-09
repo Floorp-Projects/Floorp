@@ -4,11 +4,17 @@
 // that Scalar Replacement optimization is working well independently of the
 // object representation.
 
+var max = 200;
+
 // Ion eager fails the test below because we have not yet created any
 // template object in baseline before running the content of the top-level
 // function.
-if (getJitCompilerOptions()["ion.warmup.trigger"] <= 90)
-    setJitCompilerOption("ion.warmup.trigger", 90);
+if (getJitCompilerOptions()["ion.warmup.trigger"] <= max - 10)
+    setJitCompilerOption("ion.warmup.trigger", max - 10);
+
+// Force Inlining heuristics to always inline the functions which have the same
+// number of use count.
+setJitCompilerOption("ion.warmup.trigger", getJitCompilerOptions()["ion.warmup.trigger"]);
 
 // This test checks that we are able to remove the getprop & setprop with scalar
 // replacement, so we should not force inline caches, as this would skip the
@@ -18,7 +24,7 @@ if (getJitCompilerOptions()["ion.forceinlineCaches"])
 
 function resumeHere() {}
 var uceFault = function (i) {
-    if (i > 98)
+    if (i > max - 2)
         uceFault = function (i) { return true; };
     return false;
 };
@@ -84,7 +90,7 @@ function notSoEmpty2(i) {
 
 // Check that we can recover objects with their content.
 var argFault_observeArg = function (i) {
-    if (i > 98)
+    if (i > max - 2)
         return inline_observeArg.arguments[0];
     return { test : i };
 };
@@ -135,9 +141,9 @@ function withinIf(i) {
 // Check case where one successor can have multiple times the same predecessor.
 function unknownLoad(i) {
     var obj = { foo: i };
+    // Unknown properties are inlined as undefined.
     assertEq(obj.bar, undefined);
-    // Unknown properties are using GetPropertyCache.
-    assertRecoveredOnBailout(obj, false);
+    assertRecoveredOnBailout(obj, true);
 }
 
 // Check with dynamic slots.
@@ -154,7 +160,7 @@ function dynamicSlots(i) {
     // beginning of the function.
     resumeHere(); bailout();
     assertEq(obj.p0 + obj.p10 + obj.p20 + obj.p30 + obj.p40, 5 * i + 100);
-    assertRecoveredOnBailout(obj, true);
+    assertRecoveredOnBailout(obj, false);
 }
 
 // Check that we can correctly recover allocations of new objects.
@@ -172,7 +178,7 @@ function createThisWithTemplate(i)
     assertRecoveredOnBailout(p, true);
 }
 
-for (var i = 0; i < 100; i++) {
+for (var i = 0; i < max; i++) {
     notSoEmpty1(i);
     notSoEmpty2(i);
     observeArg(i);

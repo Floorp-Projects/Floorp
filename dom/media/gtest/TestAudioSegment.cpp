@@ -5,17 +5,11 @@
 
 #include "AudioSegment.h"
 #include <iostream>
-#include <mozilla/Assertions.h>
+#include "gtest/gtest.h"
 
 using namespace mozilla;
 
-namespace mozilla {
-uint32_t
-GetAudioChannelsSuperset(uint32_t aChannels1, uint32_t aChannels2)
-{
-  return std::max(aChannels1, aChannels2);
-}
-}
+namespace audio_segment {
 
 /* Helper function to give us the maximum and minimum value that don't clip,
  * for a given sample format (integer or floating-point). */
@@ -142,8 +136,8 @@ void TestInterleaveAndConvert()
 
     uint32_t channelIndex = 0;
     for (size_t i = 0; i < arraySize * channels; i++) {
-      MOZ_RELEASE_ASSERT(FuzzyEqual(dst[i],
-                         FloatToAudioSample<DstT>(1. / (channelIndex + 1))));
+      ASSERT_TRUE(FuzzyEqual(dst[i],
+                  FloatToAudioSample<DstT>(1. / (channelIndex + 1))));
       channelIndex++;
       channelIndex %= channels;
     }
@@ -166,8 +160,8 @@ void TestDeinterleaveAndConvert()
 
     for (size_t channel = 0; channel < channels; channel++) {
       for (size_t i = 0; i < arraySize; i++) {
-        MOZ_RELEASE_ASSERT(FuzzyEqual(dst[channel][i],
-                           FloatToAudioSample<DstT>(1. / (channel + 1))));
+        ASSERT_TRUE(FuzzyEqual(dst[channel][i],
+                    FloatToAudioSample<DstT>(1. / (channel + 1))));
       }
     }
 
@@ -201,11 +195,11 @@ void TestUpmixStereo()
   }
   channelsptr[0] = channels[0];
 
-  AudioChannelsUpMix(&channelsptr, 2, ::SilentChannel<T>());
+  AudioChannelsUpMix(&channelsptr, 2, SilentChannel<T>());
 
   for (size_t channel = 0; channel < 2; channel++) {
     for (size_t i = 0; i < arraySize; i++) {
-      MOZ_RELEASE_ASSERT(channelsptr[channel][i] == GetHighValue<T>());
+      ASSERT_TRUE(channelsptr[channel][i] == GetHighValue<T>());
     }
   }
   delete channels[0];
@@ -236,15 +230,16 @@ void TestDownmixStereo()
   AudioChannelsDownMix(inputptr, output, 1, arraySize);
 
   for (size_t i = 0; i < arraySize; i++) {
-    MOZ_RELEASE_ASSERT(output[0][i] == GetSilentValue<T>());
-    MOZ_RELEASE_ASSERT(output[0][i] == GetSilentValue<T>());
+    ASSERT_TRUE(output[0][i] == GetSilentValue<T>());
+    ASSERT_TRUE(output[0][i] == GetSilentValue<T>());
   }
 
   delete output[0];
   delete output;
 }
 
-int main(int argc, char* argv[]) {
+TEST(AudioSegment, Test)
+{
   TestInterleaveAndConvert<float, float>();
   TestInterleaveAndConvert<float, int16_t>();
   TestInterleaveAndConvert<int16_t, float>();
@@ -257,6 +252,6 @@ int main(int argc, char* argv[]) {
   TestUpmixStereo<int16_t>();
   TestDownmixStereo<float>();
   TestDownmixStereo<int16_t>();
-
-  return 0;
 }
+
+} // namespace audio_segment

@@ -4,9 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioMixer.h"
+#include "gtest/gtest.h"
 
 using mozilla::AudioDataValue;
 using mozilla::AudioSampleFormat;
+
+namespace audio_mixer {
 
 struct MixerConsumer : public mozilla::MixerCallbackReceiver
 {
@@ -25,9 +28,7 @@ struct MixerConsumer : public mozilla::MixerCallbackReceiver
         silent = false;
       }
     }
-    if (!silent) {
-      MOZ_CRASH();
-    }
+    ASSERT_TRUE(silent);
   }
 };
 
@@ -67,7 +68,8 @@ void FillBuffer(AudioDataValue* aBuffer, uint32_t aLength, AudioDataValue aValue
   }
 }
 
-int main(int argc, char* argv[]) {
+TEST(AudioMixer, Test)
+{
   const uint32_t CHANNEL_LENGTH = 256;
   const uint32_t AUDIO_RATE = 44100;
   MixerConsumer consumer;
@@ -158,6 +160,6 @@ int main(int argc, char* argv[]) {
     mixer.Mix(b, 2, CHANNEL_LENGTH, AUDIO_RATE);
     mixer.FinishMixing();
   }
-
-  return 0;
 }
+
+} // namespace audio_mixer

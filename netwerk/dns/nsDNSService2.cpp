@@ -398,9 +398,9 @@ public:
         , mMonitor(mon) {}
     virtual ~nsDNSSyncRequest() = default;
 
-    void OnLookupComplete(nsHostResolver *, nsHostRecord *, nsresult);
-    bool EqualsAsyncListener(nsIDNSListener *aListener);
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf) const;
+    void OnLookupComplete(nsHostResolver *, nsHostRecord *, nsresult) override;
+    bool EqualsAsyncListener(nsIDNSListener *aListener) override;
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf) const override;
 
     bool                   mDone;
     nsresult               mStatus;

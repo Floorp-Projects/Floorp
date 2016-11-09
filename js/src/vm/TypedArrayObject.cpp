@@ -357,20 +357,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static bool
-    finishClassInit(JSContext* cx, HandleObject ctor, HandleObject proto)
-    {
-        RootedValue bytesValue(cx, Int32Value(BYTES_PER_ELEMENT));
-        if (!DefineProperty(cx, ctor, cx->names().BYTES_PER_ELEMENT, bytesValue,
-                            nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY) ||
-            !DefineProperty(cx, proto, cx->names().BYTES_PER_ELEMENT, bytesValue,
-                            nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
-        {
-            return false;
-        }
-        return true;
-    }
-
-    static bool
     getOrCreateCreateArrayFromBufferFunction(JSContext* cx, MutableHandleValue fval)
     {
         RootedValue cache(cx, cx->global()->createArrayFromBuffer<NativeType>());
@@ -2632,15 +2618,34 @@ static const ClassExtension TypedArrayClassExtension = {
     TypedArrayObject::objectMoved,
 };
 
+#define IMPL_TYPED_ARRAY_PROPERTIES(_type)                                     \
+{                                                                              \
+JS_INT32_PS("BYTES_PER_ELEMENT", _type##Array::BYTES_PER_ELEMENT,              \
+            JSPROP_READONLY | JSPROP_PERMANENT),                               \
+JS_PS_END                                                                      \
+}
+
+static const JSPropertySpec static_prototype_properties[Scalar::MaxTypedArrayViewType][2] = {
+    IMPL_TYPED_ARRAY_PROPERTIES(Int8),
+    IMPL_TYPED_ARRAY_PROPERTIES(Uint8),
+    IMPL_TYPED_ARRAY_PROPERTIES(Int16),
+    IMPL_TYPED_ARRAY_PROPERTIES(Uint16),
+    IMPL_TYPED_ARRAY_PROPERTIES(Int32),
+    IMPL_TYPED_ARRAY_PROPERTIES(Uint32),
+    IMPL_TYPED_ARRAY_PROPERTIES(Float32),
+    IMPL_TYPED_ARRAY_PROPERTIES(Float64),
+    IMPL_TYPED_ARRAY_PROPERTIES(Uint8Clamped)
+};
+
 #define IMPL_TYPED_ARRAY_CLASS_SPEC(_type)                                     \
 {                                                                              \
     _type##Array::createConstructor,                                           \
     _type##Array::createPrototype,                                             \
     nullptr,                                                                   \
+    static_prototype_properties[Scalar::Type::_type],                          \
     nullptr,                                                                   \
+    static_prototype_properties[Scalar::Type::_type],                          \
     nullptr,                                                                   \
-    nullptr,                                                                   \
-    _type##Array::finishClassInit,                                             \
     JSProto_TypedArray                                                         \
 }
 

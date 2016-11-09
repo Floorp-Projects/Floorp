@@ -6,7 +6,11 @@
 
 UNIFIED_SOURCES += [
     'MockMediaResource.cpp',
+    'TestAudioBuffers.cpp',
     'TestAudioCompactor.cpp',
+    'TestAudioMixer.cpp',
+    'TestAudioPacketizer.cpp',
+    'TestAudioSegment.cpp',
     'TestGMPCrossOrigin.cpp',
     'TestGMPRemoveAndDelete.cpp',
     'TestGMPUtils.cpp',

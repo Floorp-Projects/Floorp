@@ -43,6 +43,7 @@ public:
   void ActorDestroy(ActorDestroyReason aWhy) override;
   bool RecvGraphicsError(const nsCString& aError) override;
   bool RecvNotifyUiObservers(const nsCString& aTopic) override;
+  bool RecvNotifyDeviceReset() override;
 
   static void Destroy(UniquePtr<GPUChild>&& aChild);
 

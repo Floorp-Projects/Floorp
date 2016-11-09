@@ -8,7 +8,7 @@ add_task(function* () {
       "permissions": ["tabs", "<all_urls>"],
     },
 
-    background: function() {
+    async background() {
       const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
       const URL = BASE + "file_bypass_cache.sjs";
 
@@ -23,33 +23,32 @@ add_task(function* () {
         });
       }
 
-      let tabId;
-      browser.tabs.create({url: URL}).then((tab) => {
-        tabId = tab.id;
-        return awaitLoad(tabId);
-      }).then(() => {
-        return browser.tabs.reload(tabId, {bypassCache: false});
-      }).then(() => {
-        return awaitLoad(tabId);
-      }).then(() => {
-        return browser.tabs.executeScript(tabId, {code: "document.body.textContent"});
-      }).then(([textContent]) => {
+      try {
+        let tab = await browser.tabs.create({url: URL});
+        await awaitLoad(tab.id);
+
+        await browser.tabs.reload(tab.id, {bypassCache: false});
+        await awaitLoad(tab.id);
+
+        let [textContent] = await browser.tabs.executeScript(tab.id, {code: "document.body.textContent"});
         browser.test.assertEq("", textContent, "`textContent` should be empty when bypassCache=false");
-        return browser.tabs.reload(tabId, {bypassCache: true});
-      }).then(() => {
-        return awaitLoad(tabId);
-      }).then(() => {
-        return browser.tabs.executeScript(tabId, {code: "document.body.textContent"});
-      }).then(([textContent]) => {
+
+        await browser.tabs.reload(tab.id, {bypassCache: true});
+        await awaitLoad(tab.id);
+
+        [textContent] = await browser.tabs.executeScript(tab.id, {code: "document.body.textContent"});
+
         let [pragma, cacheControl] = textContent.split(":");
         browser.test.assertEq("no-cache", pragma, "`pragma` should be set to `no-cache` when bypassCache is true");
         browser.test.assertEq("no-cache", cacheControl, "`cacheControl` should be set to `no-cache` when bypassCache is true");
-        browser.tabs.remove(tabId);
+
+        await browser.tabs.remove(tab.id);
+
         browser.test.notifyPass("tabs.reload_bypass_cache");
-      }).catch(error => {
+      } catch (error) {
         browser.test.fail(`${error} :: ${error.stack}`);
         browser.test.notifyFail("tabs.reload_bypass_cache");
-      });
+      }
     },
   });
 

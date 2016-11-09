@@ -15,6 +15,11 @@ caches.open(name).then(function(cache) {
   tests.push(another);
   return c.add(another);
 }).then(function() {
+  // Add another cache entry with URL fragment using Cache.add
+  var anotherWithFragment = "//mochi.test:8888/?fragment" + context + "#fragment";
+  tests.push(anotherWithFragment);
+  return c.add(anotherWithFragment);
+}).then(function() {
   return c.keys();
 }).then(function(keys) {
   is(keys.length, tests.length, "Same number of elements");

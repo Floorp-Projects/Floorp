@@ -29,4 +29,8 @@ module.exports = {  // eslint-disable-line no-undef
     "openExtensionContextMenu": true,
     "CustomizableUI": true,
   },
+
+  "rules": {
+    "no-shadow": 0,
+  },
 };

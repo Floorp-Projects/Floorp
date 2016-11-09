@@ -745,18 +745,6 @@ NeckoParent::DeallocPTransportProviderParent(PTransportProviderParent* aActor)
   return true;
 }
 
-mozilla::ipc::IProtocol*
-NeckoParent::CloneProtocol(Channel* aChannel,
-                           mozilla::ipc::ProtocolCloneContext* aCtx)
-{
-  ContentParent* contentParent = aCtx->GetContentParent();
-  nsAutoPtr<PNeckoParent> actor(contentParent->AllocPNeckoParent());
-  if (!actor || !contentParent->RecvPNeckoConstructor(actor)) {
-    return nullptr;
-  }
-  return actor.forget();
-}
-
 namespace {
 std::map<uint64_t, nsCOMPtr<nsIAuthPromptCallback> >&
 CallbackMap()

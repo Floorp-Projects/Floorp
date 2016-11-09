@@ -4,13 +4,16 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(0105f837-4279-4715-9d5b-2dc3f8b65353)]
+[ref] native URLArrayRef(const nsTArray<nsString>);
+
+[uuid(0105f837-4279-4715-9d5b-2dc3f8b65353)]
 interface nsIPresentationAvailabilityListener : nsISupports
 {
   /*
    * Called when device availability changes.
    */
-  void notifyAvailableChange(in bool available);
+  [noscript] void notifyAvailableChange(in URLArrayRef urls,
+                                        in bool available);
 };
 
 [scriptable, uuid(7dd48df8-8f8c-48c7-ac37-7b9fd1acf2f8)]

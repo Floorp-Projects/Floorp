@@ -8,15 +8,15 @@ add_task(function* setup() {
 });
 
 add_task(function* test_getBrowserInfo() {
-  function background() {
-    browser.runtime.getBrowserInfo().then(info => {
-      browser.test.assertEq(info.name, "XPCShell", "name is valid");
-      browser.test.assertEq(info.vendor, "Mozilla", "vendor is Mozilla");
-      browser.test.assertEq(info.version, "48", "version is correct");
-      browser.test.assertEq(info.buildID, "20160315", "buildID is correct");
+  async function background() {
+    let info = await browser.runtime.getBrowserInfo();
 
-      browser.test.notifyPass("runtime.getBrowserInfo");
-    });
+    browser.test.assertEq(info.name, "XPCShell", "name is valid");
+    browser.test.assertEq(info.vendor, "Mozilla", "vendor is Mozilla");
+    browser.test.assertEq(info.version, "48", "version is correct");
+    browser.test.assertEq(info.buildID, "20160315", "buildID is correct");
+
+    browser.test.notifyPass("runtime.getBrowserInfo");
   }
 
   const extension = ExtensionTestUtils.loadExtension({background});

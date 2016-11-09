@@ -23,7 +23,7 @@ let image = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
                  "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=");
 const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
 
-function testImageLoading(src, expectedAction) {
+async function testImageLoading(src, expectedAction) {
   let imageLoadingPromise = new Promise((resolve, reject) => {
     let cleanupListeners;
     let testImage = document.createElement("img");
@@ -50,9 +50,8 @@ function testImageLoading(src, expectedAction) {
     document.body.appendChild(testImage);
   });
 
-  imageLoadingPromise.then(success => {
-    browser.runtime.sendMessage({name: "image-loading", expectedAction, success});
-  });
+  let success = await imageLoadingPromise;
+  browser.runtime.sendMessage({name: "image-loading", expectedAction, success});
 }
 
 add_task(function* test_web_accessible_resources() {
@@ -77,14 +76,10 @@ add_task(function* test_web_accessible_resources() {
       [browser.extension.getURL("wild2.htm"), false],
     ];
 
-    function runTest() {
-      if (!urls.length) {
-        browser.test.notifyPass("web-accessible-resources");
-        return;
-      }
+    async function runTests() {
+      for (let [url, shouldLoad] of urls) {
+        let success = await loadFrame(url);
 
-      let [url, shouldLoad] = urls.shift();
-      return loadFrame(url).then(success => {
         browser.test.assertEq(shouldLoad, success, "Load was successful");
         if (shouldLoad) {
           browser.test.assertEq(url, gotURL, "Got expected url");
@@ -92,15 +87,15 @@ add_task(function* test_web_accessible_resources() {
           browser.test.assertEq(undefined, gotURL, "Got no url");
         }
         gotURL = undefined;
+      }
 
-        return runTest();
-      });
+      browser.test.notifyPass("web-accessible-resources");
     }
 
     browser.runtime.onMessage.addListener(([msg, url], sender) => {
       if (msg == "content-script-ready") {
         tabId = sender.tab.id;
-        runTest();
+        runTests();
       } else if (msg == "page-script") {
         browser.test.assertEq(undefined, gotURL, "Should have gotten only one message");
         browser.test.assertEq("string", typeof(url), "URL should be a string");

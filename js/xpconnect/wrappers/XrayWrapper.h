@@ -277,12 +277,12 @@ public:
         JS::RootedObject holder(cx, ensureHolder(cx, wrapper));
         JSProtoKey key = getProtoKey(holder);
         if (isPrototype(holder)) {
-            JSProtoKey parentKey = js::ParentKeyForStandardClass(key);
-            if (parentKey == JSProto_Null) {
+            JSProtoKey protoKey = js::InheritanceProtoKeyForStandardClass(key);
+            if (protoKey == JSProto_Null) {
                 protop.set(nullptr);
                 return true;
             }
-            key = parentKey;
+            key = protoKey;
         }
 
         {

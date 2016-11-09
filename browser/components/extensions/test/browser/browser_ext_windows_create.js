@@ -4,7 +4,7 @@
 
 add_task(function* testWindowCreate() {
   let extension = ExtensionTestUtils.loadExtension({
-    background() {
+    async background() {
       let _checkWindowPromise;
       browser.test.onMessage.addListener(msg => {
         if (msg == "checked-window") {
@@ -22,59 +22,61 @@ add_task(function* testWindowCreate() {
         });
       }
 
-      function createWindow(params, expected, keep = false) {
-        return browser.windows.create(params).then(window => {
-          for (let key of Object.keys(params)) {
-            if (key == "state" && os == "mac" && params.state == "normal") {
-              // OS-X doesn't have a hard distinction between "normal" and
-              // "maximized" states.
-              browser.test.assertTrue(window.state == "normal" || window.state == "maximized",
-                                      `Expected window.state (currently ${window.state}) to be "normal" but will accept "maximized"`);
-            } else {
-              browser.test.assertEq(params[key], window[key], `Got expected value for window.${key}`);
-            }
-          }
+      async function createWindow(params, expected, keep = false) {
+        let window = await browser.windows.create(params);
 
-          browser.test.assertEq(1, window.tabs.length, "tabs property got populated");
-          return checkWindow(expected).then(() => {
-            if (keep) {
-              return window;
-            }
-            if (params.state == "fullscreen" && os == "win") {
-              // FIXME: Closing a fullscreen window causes a window leak in
-              // Windows tests.
-              return browser.windows.update(window.id, {state: "normal"}).then(() => {
-                return browser.windows.remove(window.id);
-              });
-            }
-            return browser.windows.remove(window.id);
-          });
-        });
+        for (let key of Object.keys(params)) {
+          if (key == "state" && os == "mac" && params.state == "normal") {
+            // OS-X doesn't have a hard distinction between "normal" and
+            // "maximized" states.
+            browser.test.assertTrue(window.state == "normal" || window.state == "maximized",
+                                    `Expected window.state (currently ${window.state}) to be "normal" but will accept "maximized"`);
+          } else {
+            browser.test.assertEq(params[key], window[key], `Got expected value for window.${key}`);
+          }
+        }
+
+        browser.test.assertEq(1, window.tabs.length, "tabs property got populated");
+
+        await checkWindow(expected);
+        if (keep) {
+          return window;
+        }
+
+        if (params.state == "fullscreen" && os == "win") {
+          // FIXME: Closing a fullscreen window causes a window leak in
+          // Windows tests.
+          await browser.windows.update(window.id, {state: "normal"});
+        }
+        await browser.windows.remove(window.id);
       }
 
-      browser.runtime.getPlatformInfo().then(info => { os = info.os; })
-      .then(() => createWindow({state: "maximized"}, {state: "STATE_MAXIMIZED"}))
-      .then(() => createWindow({state: "minimized"}, {state: "STATE_MINIMIZED"}))
-      .then(() => createWindow({state: "normal"}, {state: "STATE_NORMAL", hiddenChrome: []}))
-      .then(() => createWindow({state: "fullscreen"}, {state: "STATE_FULLSCREEN"}))
-      .then(() => {
-        return createWindow({type: "popup"},
-                            {hiddenChrome: ["menubar", "toolbar", "location", "directories", "status", "extrachrome"],
-                             chromeFlags: ["CHROME_OPENAS_DIALOG"]},
-                            true);
-      }).then(window => {
-        return browser.tabs.query({windowType: "popup", active: true}).then(tabs => {
-          browser.test.assertEq(1, tabs.length, "Expected only one popup");
-          browser.test.assertEq(window.id, tabs[0].windowId, "Expected new window to be returned in query");
+      try {
+        ({os} = await browser.runtime.getPlatformInfo());
 
-          return browser.windows.remove(window.id);
-        });
-      }).then(() => {
+        await createWindow({state: "maximized"}, {state: "STATE_MAXIMIZED"});
+        await createWindow({state: "minimized"}, {state: "STATE_MINIMIZED"});
+        await createWindow({state: "normal"}, {state: "STATE_NORMAL", hiddenChrome: []});
+        await createWindow({state: "fullscreen"}, {state: "STATE_FULLSCREEN"});
+
+        let window = await createWindow(
+          {type: "popup"},
+          {hiddenChrome: ["menubar", "toolbar", "location", "directories", "status", "extrachrome"],
+           chromeFlags: ["CHROME_OPENAS_DIALOG"]},
+          true);
+
+        let tabs = await browser.tabs.query({windowType: "popup", active: true});
+
+        browser.test.assertEq(1, tabs.length, "Expected only one popup");
+        browser.test.assertEq(window.id, tabs[0].windowId, "Expected new window to be returned in query");
+
+        await browser.windows.remove(window.id);
+
         browser.test.notifyPass("window-create");
-      }).catch(e => {
+      } catch (e) {
         browser.test.fail(`${e} :: ${e.stack}`);
         browser.test.notifyFail("window-create");
-      });
+      }
     },
   });
 

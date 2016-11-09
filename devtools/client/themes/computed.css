@@ -36,12 +36,12 @@
      they aren't squished together in a small window. Put also
      an extra space after. */
   margin-inline-start: 5px;
-  margin-inline-end: 5px;
-
+  margin-inline-end: 0;
 }
 
 #browser-style-checkbox-label {
-  margin-right: 5px;
+  padding-inline-start: 5px;
+  margin-inline-end: 5px;
 }
 
 #propertyContainer {
