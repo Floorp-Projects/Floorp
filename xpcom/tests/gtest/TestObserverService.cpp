@@ -11,6 +11,7 @@
 #include "nsComponentManagerUtils.h"
 
 #include "nsCOMPtr.h"
+#include "nsString.h"
 #include "nsWeakReference.h"
 
 #include "mozilla/RefPtr.h"
