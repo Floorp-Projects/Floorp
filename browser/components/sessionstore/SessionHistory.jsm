@@ -30,8 +30,8 @@ this.SessionHistory = Object.freeze({
     return SessionHistoryInternal.isEmpty(docShell);
   },
 
-  collect: function (docShell) {
-    return SessionHistoryInternal.collect(docShell);
+  collect: function (docShell, aFromIdx = -1) {
+    return SessionHistoryInternal.collect(docShell, aFromIdx);
   },
 
   restore: function (docShell, tabData) {
@@ -69,11 +69,15 @@ var SessionHistoryInternal = {
    *
    * @param docShell
    *        The docShell that owns the session history.
+   * @param aFromIdx
+   *        The starting local index to collect the history from.
+   * @return An object reprereseting a partial global history update.
    */
-  collect: function (docShell) {
+  collect: function (docShell, aFromIdx = -1) {
     let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory.QueryInterface(Ci.nsISHistoryInternal);
+    let ihistory = history.QueryInterface(Ci.nsISHistory);
 
     let data = {entries: [], userContextId: loadContext.originAttributes.userContextId };
 
@@ -105,6 +109,23 @@ var SessionHistoryInternal = {
         data.entries.push({ url: uri });
         data.index = 1;
       }
+    }
+
+    // Check if we should discard some of the entries which didn't change
+    if (aFromIdx > -1) {
+      data.entries.splice(0, aFromIdx + 1);
+    }
+
+    // Transform the entries from local to global index space.
+    data.index += ihistory.globalIndexOffset;
+    data.fromIdx = aFromIdx + ihistory.globalIndexOffset;
+
+    // If we are not the most recent partialSHistory in our groupedSHistory, we
+    // need to make certain that we don't replace the entries from the following
+    // SHistories - so we replace only the number of entries which our SHistory
+    // takes up.
+    if (ihistory.globalIndexOffset + ihistory.count < ihistory.globalCount) {
+      data.toIdx = data.fromIdx + ihistory.count;
     }
 
     return data;
