@@ -27,8 +27,7 @@
   function testSetLocalDescriptionError() {
     var pc = new RTCPeerConnection();
     info ("Testing setLocalDescription error");
-    return pc.setLocalDescription(new RTCSessionDescription({ sdp: "Picklechips!",
-                                                                 type: "offer" }))
+    return pc.setLocalDescription({ sdp: "Picklechips!", type: "offer" })
     .then(generateErrorCallback("setLocalDescription with nonsense SDP should fail"),
           validateReason);
   };
@@ -36,8 +35,7 @@
   function testSetRemoteDescriptionError() {
     var pc = new RTCPeerConnection();
     info ("Testing setRemoteDescription error");
-    return pc.setRemoteDescription(new RTCSessionDescription({ sdp: "Who?",
-                                                                  type: "offer" }))
+    return pc.setRemoteDescription({ sdp: "Who?", type: "offer" })
     .then(generateErrorCallback("setRemoteDescription with nonsense SDP should fail"),
           validateReason);
   };
