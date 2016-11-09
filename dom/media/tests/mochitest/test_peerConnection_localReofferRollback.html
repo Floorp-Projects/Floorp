@@ -37,10 +37,9 @@
         },
 
         function PC_REMOTE_ROLLBACK(test) {
-          return test.setLocalDescription(
-              test.pcRemote,
-              new RTCSessionDescription({ type: "rollback", sdp: ""}),
-              STABLE);
+          return test.setLocalDescription(test.pcRemote,
+                                          { type: "rollback", sdp: "" },
+                                          STABLE);
         },
 
         // Rolling back should shut down gathering

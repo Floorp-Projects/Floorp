@@ -51,10 +51,8 @@
         },
 
         function PC_REMOTE_ROLLBACK(test) {
-          return test.setRemoteDescription(
-              test.pcRemote,
-              new RTCSessionDescription({ type: "rollback" }),
-              STABLE);
+          return test.setRemoteDescription(test.pcRemote, { type: "rollback" },
+                                           STABLE);
         },
 
         function PC_LOCAL_ROLLBACK(test) {
