@@ -1230,7 +1230,7 @@ ImageBridgeChild::CanSend() const
 }
 
 void
-ImageBridgeChild::FatalError(const char* const aName, const char* const aMsg) const
+ImageBridgeChild::HandleFatalError(const char* aName, const char* aMsg) const
 {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
 }

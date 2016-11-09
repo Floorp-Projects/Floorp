@@ -113,6 +113,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -152,6 +153,8 @@ public abstract class GeckoApp
 
     public static final String EXTRA_STATE_BUNDLE          = "stateBundle";
 
+    public static final String LAST_SELECTED_TAB           = "lastSelectedTab";
+
     public static final String PREFS_ALLOW_STATE_BUNDLE    = "allowStateBundle";
     public static final String PREFS_VERSION_CODE          = "versionCode";
     public static final String PREFS_WAS_STOPPED           = "wasStopped";
@@ -166,6 +169,8 @@ public abstract class GeckoApp
     private static final int CLEANUP_DEFERRAL_SECONDS = 15;
 
     private static boolean sAlreadyLoaded;
+
+    private static WeakReference<GeckoApp> lastActiveGeckoApp;
 
     protected RelativeLayout mRootLayout;
     protected RelativeLayout mMainLayout;
@@ -200,6 +205,8 @@ public abstract class GeckoApp
     private boolean mSessionRestoreParsingFinished = false;
 
     private EventDispatcher eventDispatcher;
+
+    private int lastSelectedTabId = -1;
 
     private static final class LastSessionParser extends SessionParser {
         private JSONArray tabs;
@@ -577,6 +584,12 @@ public abstract class GeckoApp
 
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
+        outState.putInt(LAST_SELECTED_TAB, lastSelectedTabId);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(final Bundle inState) {
+        lastSelectedTabId = inState.getInt(LAST_SELECTED_TAB);
     }
 
     public void addTab() { }
@@ -1998,6 +2011,7 @@ public abstract class GeckoApp
 
         if (ACTION_LOAD.equals(action)) {
             Tabs.getInstance().loadUrl(intent.getDataString());
+            lastSelectedTabId = -1;
         } else if (Intent.ACTION_VIEW.equals(action)) {
             processActionViewIntent(new Runnable() {
                 @Override
@@ -2010,6 +2024,7 @@ public abstract class GeckoApp
                     Tabs.getInstance().loadUrlWithIntentExtras(url, intent, flags);
                 }
             });
+            lastSelectedTabId = -1;
         } else if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
             mLayerView.loadUri(uri, GeckoView.LOAD_SWITCH_TAB);
         } else if (Intent.ACTION_SEARCH.equals(action)) {
@@ -2025,6 +2040,7 @@ public abstract class GeckoApp
         } else if (ACTION_SWITCH_TAB.equals(action)) {
             final int tabId = intent.getIntExtra("TabId", -1);
             Tabs.getInstance().selectTab(tabId);
+            lastSelectedTabId = -1;
         }
 
         recordStartupActionTelemetry(passedUri, action);
@@ -2059,6 +2075,10 @@ public abstract class GeckoApp
         }
 
         GeckoAppShell.setGeckoInterface(this);
+
+        if (lastSelectedTabId >= 0 && (lastActiveGeckoApp == null || lastActiveGeckoApp.get() != this)) {
+            Tabs.getInstance().selectTab(lastSelectedTabId);
+        }
 
         int newOrientation = getResources().getConfiguration().orientation;
         if (GeckoScreenOrientation.getInstance().update(newOrientation)) {
@@ -2133,6 +2153,9 @@ public abstract class GeckoApp
             super.onPause();
             return;
         }
+
+        lastSelectedTabId = Tabs.getInstance().getSelectedTab().getId();
+        lastActiveGeckoApp = new WeakReference<GeckoApp>(this);
 
         final HealthRecorder rec = mHealthRecorder;
         final Context context = this;

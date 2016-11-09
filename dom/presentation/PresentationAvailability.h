@@ -65,6 +65,7 @@ private:
   nsTArray<RefPtr<Promise>> mPromises;
 
   nsTArray<nsString> mUrls;
+  nsTArray<bool> mAvailabilityOfUrl;
 };
 
 } // namespace dom

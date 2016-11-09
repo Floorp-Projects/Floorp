@@ -9,6 +9,7 @@ EXPORTS += [
     'mozmemory_wrap.h',
 ]
 
+DEFINES['MOZ_HAS_MOZGLUE'] = True
 DEFINES['MOZ_MEMORY_IMPL'] = True
 
 if CONFIG['MOZ_REPLACE_MALLOC']:

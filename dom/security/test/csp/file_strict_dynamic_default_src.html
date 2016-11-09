@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1299483 - CSP: Implement 'strict-dynamic'</title>
+</head>
+<body>
+
+<div id="testdiv">blocked</div>
+<script nonce="foo" src="http://mochi.test:8888/tests/dom/security/test/csp/file_strict_dynamic_default_src.js"></script>
+
+<img id="testimage" src="http://mochi.test:8888/tests/image/test/mochitest/blue.png"></img>
+
+</body>
+</html>

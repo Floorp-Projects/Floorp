@@ -2372,7 +2372,9 @@ IonBuilder::inlineTypedArray(CallInfo& callInfo, Native native)
             return InliningStatus_NotInlined;
 
         callInfo.setImplicitlyUsedUnchecked();
-        ins = MNewTypedArray::New(alloc(), constraints(), obj,
+        MConstant* templateConst = MConstant::NewConstraintlessObject(alloc(), obj);
+        current->add(templateConst);
+        ins = MNewTypedArray::New(alloc(), constraints(), templateConst,
                                   obj->group()->initialHeap(constraints()));
     }
 

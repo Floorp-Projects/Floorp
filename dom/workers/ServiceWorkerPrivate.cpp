@@ -1248,6 +1248,7 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable
   nsTArray<nsCString> mHeaderNames;
   nsTArray<nsCString> mHeaderValues;
   nsCString mSpec;
+  nsCString mFragment;
   nsCString mMethod;
   nsString mClientId;
   bool mIsReload;
@@ -1319,18 +1320,17 @@ public:
     nsCOMPtr<nsIURI> uriNoFragment;
     rv = uri->CloneIgnoringRef(getter_AddRefs(uriNoFragment));
     NS_ENSURE_SUCCESS(rv, rv);
-
     rv = uriNoFragment->GetSpec(mSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = uri->GetRef(mFragment);
     NS_ENSURE_SUCCESS(rv, rv);
 
     uint32_t loadFlags;
     rv = channel->GetLoadFlags(&loadFlags);
     NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsILoadInfo> loadInfo;
     rv = channel->GetLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_SUCCESS(rv, rv);
-
     mContentPolicyType = loadInfo->InternalContentPolicyType();
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
@@ -1475,8 +1475,8 @@ private:
       result.SuppressException();
       return false;
     }
-
     RefPtr<InternalRequest> internalReq = new InternalRequest(mSpec,
+                                                              mFragment,
                                                               mMethod,
                                                               internalHeaders.forget(),
                                                               mCacheMode,

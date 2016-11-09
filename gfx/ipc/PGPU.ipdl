@@ -98,6 +98,8 @@ child:
   // Messages for reporting telemetry to the UI process.
   async AccumulateChildHistogram(Accumulation[] accumulations);
   async AccumulateChildKeyedHistogram(KeyedAccumulation[] accumulations);
+
+  async NotifyDeviceReset();
 };
 
 } // namespace gfx

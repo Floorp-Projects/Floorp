@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1299483 - CSP: Implement 'strict-dynamic'</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.setBoolPref("security.csp.enableStrictDynamic", true);
+
+/* Description of the test:
+ * We load scripts with a CSP of 'strict-dynamic' with valid
+ * and invalid nonces and make sure scripts are allowed/blocked
+ * accordingly. Different tests load inline and external scripts
+ * also using a CSP including http: and https: making sure
+ * other srcs are invalided by 'strict-dynamic'.
+ */
+
+var tests = [
+  {
+    desc: "strict-dynamic with valid nonce should be allowed",
+    result: "allowed",
+    file: "file_strict_dynamic_script_extern.html",
+    policy: "script-src 'strict-dynamic' 'nonce-foo' https: 'none' 'self'"
+  },
+  {
+    desc: "strict-dynamic with invalid nonce should be blocked",
+    result: "blocked",
+    file: "file_strict_dynamic_script_extern.html",
+    policy: "script-src 'strict-dynamic' 'nonce-bar' http: http://example.com"
+  },
+  {
+    desc: "strict-dynamic, whitelist and invalid nonce should be blocked",
+    result: "blocked",
+    file: "file_strict_dynamic_script_extern.html",
+    policy: "script-src 'strict-dynamic' 'nonce-bar' 'unsafe-inline' http: http://example.com"
+  },
+  {
+    desc: "strict-dynamic with no 'nonce-' should be blocked",
+    result: "blocked",
+    file: "file_strict_dynamic_script_extern.html",
+    policy: "script-src 'strict-dynamic'"
+  },
+  // inline scripts
+  {
+    desc: "strict-dynamic with valid nonce should be allowed",
+    result: "allowed",
+    file: "file_strict_dynamic_script_inline.html",
+    policy: "script-src 'strict-dynamic' 'nonce-foo' https: 'none' 'self'"
+  },
+  {
+    desc: "strict-dynamic with invalid nonce should be blocked",
+    result: "blocked",
+    file: "file_strict_dynamic_script_inline.html",
+    policy: "script-src 'strict-dynamic' 'nonce-bar' http: http://example.com"
+  },
+  {
+    desc: "strict-dynamic, unsafe-inline and invalid nonce should be blocked",
+    result: "blocked",
+    file: "file_strict_dynamic_script_inline.html",
+    policy: "script-src 'strict-dynamic' 'nonce-bar' 'unsafe-inline' http: http://example.com"
+  },
+  {
+    desc: "strict-dynamic with no 'nonce-' should be blocked",
+    result: "blocked",
+    file: "file_strict_dynamic_script_inline.html",
+    policy: "script-src 'strict-dynamic'"
+  },
+];
+
+var counter = 0;
+var curTest;
+
+function loadNextTest() {
+  if (counter == tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  curTest = tests[counter++];
+  var src = "file_testserver.sjs?file=";
+  // append the file that should be served
+  src += escape("tests/dom/security/test/csp/" + curTest.file)
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(curTest.policy);
+
+  document.getElementById("testframe").addEventListener("load", test, false);
+  document.getElementById("testframe").src = src;
+}
+
+function test() {
+  try {
+    document.getElementById("testframe").removeEventListener('load', test, false);
+    var testframe = document.getElementById("testframe");
+    var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
+    is(divcontent, curTest.result, curTest.desc);
+  }
+  catch (e) {
+    ok(false, "ERROR: could not access content for test: '" + curTest.desc + "'");
+  }
+  loadNextTest();
+}
+
+// start running the tests
+loadNextTest();
+
+</script>
+</body>
+</html>

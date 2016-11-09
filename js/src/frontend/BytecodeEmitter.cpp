@@ -7135,17 +7135,16 @@ BytecodeEmitter::emitAsyncWrapperLambda(unsigned index, bool isArrow) {
 }
 
 bool
-BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject, bool isArrow) {
+BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject, bool isArrow)
+{
     // needsHomeObject can be true for propertyList for extended class.
     // In that case push both unwrapped and wrapped function, in order to
     // initialize home object of unwrapped function, and set wrapped function
     // as a property.
     //
     //   lambda       // unwrapped
-    //   getintrinsic // unwrapped AsyncFunction_wrap
-    //   undefined    // unwrapped AsyncFunction_wrap undefined
-    //   dupat 2      // unwrapped AsyncFunction_wrap undefined unwrapped
-    //   call 1       // unwrapped wrapped
+    //   dup          // unwrapped unwrapped
+    //   toasync      // unwrapped wrapped
     //
     // Emitted code is surrounded by the following code.
     //
@@ -7162,22 +7161,13 @@ BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject, bool isA
     //   pop              // classObj classCtor classProto
     //
     // needsHomeObject is false for other cases, push wrapped function only.
-    if (needsHomeObject) {
-        if (!emitAsyncWrapperLambda(index, isArrow))
-            return false;
-    }
-    if (!emitAtomOp(cx->names().AsyncFunction_wrap, JSOP_GETINTRINSIC))
-        return false;
-    if (!emit1(JSOP_UNDEFINED))
+    if (!emitAsyncWrapperLambda(index, isArrow))
         return false;
     if (needsHomeObject) {
-        if (!emitDupAt(2))
-            return false;
-    } else {
-        if (!emitAsyncWrapperLambda(index, isArrow))
+        if (!emit1(JSOP_DUP))
             return false;
     }
-    if (!emitCall(JSOP_CALL, 1))
+    if (!emit1(JSOP_TOASYNC))
         return false;
     return true;
 }

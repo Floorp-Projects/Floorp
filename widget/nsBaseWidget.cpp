@@ -335,14 +335,9 @@ nsBaseWidget::OnRenderingDeviceReset()
     return;
   }
 
-  RefPtr<CompositorBridgeParent> parent = mCompositorSession->GetInProcessBridge();
-  if (!parent) {
-    return;
-  }
-
   // Recreate the compositor.
   TextureFactoryIdentifier identifier;
-  if (!parent->ResetCompositor(backendHints, &identifier)) {
+  if (!mCompositorSession->Reset(backendHints, &identifier)) {
     // No action was taken, so we don't have to do anything.
     return;
   }

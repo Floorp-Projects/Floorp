@@ -42,7 +42,7 @@ private:
 
   nsresult UpdateState();
 
-  nsIPrincipal* GetPrincipal() const;
+  already_AddRefed<nsIPrincipal> GetPrincipal() const;
 
   void PermissionChanged();
 

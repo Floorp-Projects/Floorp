@@ -147,12 +147,6 @@
   border-top: 1px solid rgba(0,0,0,0.65);
 }
 
-/* Because of -moz-box-align: center above, separators will be invisible unless
-   we set their min-height. See bug 583510 for more information. */
-toolbarseparator {
-  min-height: 22px;
-}
-
 #navigator-toolbox > toolbar:not(#TabsToolbar):not(#nav-bar):not(:-moz-lwtheme) {
   -moz-appearance: none;
   background: url(chrome://browser/skin/Toolbar-background-noise.png) hsl(0,0%,83%);

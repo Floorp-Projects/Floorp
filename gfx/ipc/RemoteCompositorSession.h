@@ -28,8 +28,10 @@ public:
   GeckoContentController* GetContentController();
   nsIWidget* GetWidget();
   RefPtr<IAPZCTreeManager> GetAPZCTreeManager() const override;
+  bool Reset(const nsTArray<LayersBackend>& aBackendHints, TextureFactoryIdentifier* aOutIdentifier) override;
   void Shutdown() override;
 
+  void NotifyDeviceReset();
   void NotifySessionLost();
 
 private:

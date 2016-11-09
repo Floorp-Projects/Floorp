@@ -123,6 +123,7 @@ parent:
 
   // When out-of-process, this must be called to finish initialization.
   sync Initialize(uint64_t rootLayerTreeId);
+  sync Reset(LayersBackend[] aBackendHints) returns (bool aResult, TextureFactoryIdentifier aOutIdentifier);
 
   // Returns whether this Compositor has APZ enabled or not.
   sync AsyncPanZoomEnabled(uint64_t layersId) returns (bool aHasAPZ);
