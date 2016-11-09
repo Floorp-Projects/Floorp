@@ -517,7 +517,7 @@ private:
       }
     }
   private:
-    ~RefreshDriverVsyncObserver() {}
+    ~RefreshDriverVsyncObserver() = default;
 
     void RecordTelemetryProbes(TimeStamp aVsyncTimestamp)
     {
@@ -866,7 +866,7 @@ public:
   }
 
 private:
-  virtual ~VsyncChildCreateCallback() {}
+  virtual ~VsyncChildCreateCallback() = default;
 
   void ActorCreated(PBackgroundChild* aPBackgroundChild) override
   {
