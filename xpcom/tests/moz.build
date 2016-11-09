@@ -20,13 +20,16 @@ EXPORTS.testing += [
 ]
 
 SimplePrograms([
-    'nsIFileEnumerator',
     'TestArguments',
     'TestBlockingProcess',
-    'TestCallTemplates',
-    'TestINIParser',
     'TestPRIntN',
     'TestQuickReturn',
+])
+
+GeckoSimplePrograms([
+    'nsIFileEnumerator',
+    'TestCallTemplates',
+    'TestINIParser',
     'TestRacingServiceManager',
     'TestRegistrationOrder',
     'TestThreadPoolListener',
