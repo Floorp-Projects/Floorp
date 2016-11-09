@@ -993,12 +993,15 @@ RTCPeerConnection.prototype = {
       containsTrickle(topSection) || sections.every(containsTrickle);
   },
 
-
   addIceCandidate: function(c, onSuccess, onError) {
     return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
-      if (!c.candidate && !c.sdpMLineIndex) {
-        throw new this._win.DOMException("Invalid candidate passed to addIceCandidate!",
-                                         "InvalidParameterError");
+      if (!c) {
+        // TODO: Implement processing for end-of-candidates (bug 1318167)
+        return Promise.resolve();
+      }
+      if (c.sdpMid === null && c.sdpMLineIndex === null) {
+        throw new this._win.DOMException("Invalid candidate (both sdpMid and sdpMLineIndex are null).",
+                                         "TypeError");
       }
       return this._chain(() => new this._win.Promise((resolve, reject) => {
         this._onAddIceCandidateSuccess = resolve;
