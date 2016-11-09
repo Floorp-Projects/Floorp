@@ -9,7 +9,7 @@ Iframe for testing multiple host detetion in storage actor
 <body>
 <script>
 "use strict";
-document.cookie = "uc1=foobar; domain=.example.org; path=/; secure=true";
+document.cookie = "uc1=foobar; domain=.example.org; path=/";
 localStorage.setItem("iframe-u-ls1", "foobar");
 sessionStorage.setItem("iframe-u-ss1", "foobar1");
 sessionStorage.setItem("iframe-u-ss2", "foobar2");
