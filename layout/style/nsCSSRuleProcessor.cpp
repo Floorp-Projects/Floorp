@@ -770,9 +770,7 @@ struct SelectorPair
     MOZ_ASSERT(aSelector);
     MOZ_ASSERT(mRightmostSelector);
   }
-  SelectorPair(const SelectorPair& aOther)
-    : mSelector(aOther.mSelector)
-    , mRightmostSelector(aOther.mRightmostSelector) {}
+  SelectorPair(const SelectorPair& aOther) = default;
   nsCSSSelector* const mSelector;
   nsCSSSelector* const mRightmostSelector;
 };
