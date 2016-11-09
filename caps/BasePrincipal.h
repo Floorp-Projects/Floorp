@@ -47,18 +47,13 @@ public:
 
   enum {
     STRIP_FIRST_PARTY_DOMAIN = 0x01,
-    STRIP_ADDON_ID = 0x02,
-    STRIP_USER_CONTEXT_ID = 0x04,
+    STRIP_USER_CONTEXT_ID = 0x02,
   };
 
   inline void StripAttributes(uint32_t aFlags)
   {
     if (aFlags & STRIP_FIRST_PARTY_DOMAIN) {
       mFirstPartyDomain.Truncate();
-    }
-
-    if (aFlags & STRIP_ADDON_ID) {
-      mAddonId.Truncate();
     }
 
     if (aFlags & STRIP_USER_CONTEXT_ID) {
@@ -70,7 +65,6 @@ public:
   {
     return mAppId == aOther.mAppId &&
            mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
-           mAddonId == aOther.mAddonId &&
            mUserContextId == aOther.mUserContextId &&
            mPrivateBrowsingId == aOther.mPrivateBrowsingId &&
            mFirstPartyDomain == aOther.mFirstPartyDomain;
@@ -152,10 +146,6 @@ public:
       return false;
     }
 
-    if (mAddonId.WasPassed() && mAddonId.Value() != aAttrs.mAddonId) {
-      return false;
-    }
-
     if (mUserContextId.WasPassed() && mUserContextId.Value() != aAttrs.mUserContextId) {
       return false;
     }
@@ -181,11 +171,6 @@ public:
     if (mInIsolatedMozBrowser.WasPassed() &&
         aOther.mInIsolatedMozBrowser.WasPassed() &&
         mInIsolatedMozBrowser.Value() != aOther.mInIsolatedMozBrowser.Value()) {
-      return false;
-    }
-
-    if (mAddonId.WasPassed() && aOther.mAddonId.WasPassed() &&
-        mAddonId.Value() != aOther.mAddonId.Value()) {
       return false;
     }
 

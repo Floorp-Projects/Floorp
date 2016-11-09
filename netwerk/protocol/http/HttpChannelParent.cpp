@@ -557,7 +557,6 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     if (setChooseApplicationCache) {
       OriginAttributes attrs;
       NS_GetOriginAttributes(mChannel, attrs);
-      attrs.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
 
       nsCOMPtr<nsIPrincipal> principal =
         BasePrincipal::CreateCodebasePrincipal(uri, attrs);
