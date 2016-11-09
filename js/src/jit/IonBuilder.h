@@ -737,7 +737,7 @@ class IonBuilder
     MOZ_MUST_USE bool jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
                                          MDefinition* object, MDefinition* index,
                                          MDefinition* value, JSValueType unboxedType,
-                                         bool writeHole);
+                                         bool writeHole, bool* emitted);
     MOZ_MUST_USE bool jsop_setelem_typed(ScalarTypeDescr::Type arrayType,
                                          MDefinition* object, MDefinition* index,
                                          MDefinition* value);
