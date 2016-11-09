@@ -126,6 +126,9 @@ public:
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     nsFrameList& aFrameList) override;
   void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  uint16_t CSSAlignmentForAbsPosChild(
+            const ReflowInput& aChildRI,
+            mozilla::LogicalAxis aLogicalAxis) const override;
 
 #ifdef DEBUG
   void SetInitialChildList(ChildListID  aListID,
