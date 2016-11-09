@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import os
 import signal
+import sys
 import traceback
 from collections import defaultdict
 from Queue import Empty
@@ -62,6 +63,8 @@ def _run_worker(*args, **lintargs):
         # it here so it isn't lost.
         traceback.print_exc()
         raise
+    finally:
+        sys.stdout.flush()
 
 
 class LintRoller(object):

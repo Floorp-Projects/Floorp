@@ -99,6 +99,7 @@ public:
                           const char* httpProtocolVariant,
                           const char* pathAndQueryString,
                           const char* httpRequestMethod,
+                          const char* firstPartyDomain,
                           const PRIntervalTime timeout,
                   /*out*/ nsNSSHttpRequestSession** pRequest);
 
@@ -122,6 +123,8 @@ public:
   bool mHasPostData;
   nsCString mPostData;
   nsCString mPostContentType;
+
+  nsCString mFirstPartyDomain;
 
   PRIntervalTime mTimeoutInterval;
 
@@ -156,13 +159,14 @@ public:
                           const char* httpProtocolVariant,
                           const char* pathAndQueryString,
                           const char* httpRequestMethod,
+                          const char* firstPartyDomain,
                           const PRIntervalTime timeout,
                   /*out*/ nsNSSHttpRequestSession** pRequest)
   {
     return nsNSSHttpRequestSession::createFcn(session, httpProtocolVariant,
                                               pathAndQueryString,
-                                              httpRequestMethod, timeout,
-                                              pRequest);
+                                              httpRequestMethod, firstPartyDomain,
+                                              timeout, pRequest);
   }
 
   static Result setPostDataFcn(nsNSSHttpRequestSession* request,

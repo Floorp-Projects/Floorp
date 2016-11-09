@@ -13,7 +13,7 @@ class TestL10n(FirefoxTestCase):
 
     def setUp(self):
         FirefoxTestCase.setUp(self)
-        self.l10n = L10n(lambda: self.marionette)
+        self.l10n = L10n(self.marionette)
 
     def tearDown(self):
         FirefoxTestCase.tearDown(self)

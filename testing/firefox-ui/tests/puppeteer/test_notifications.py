@@ -17,17 +17,17 @@ class TestNotifications(FirefoxTestCase):
     def setUp(self):
         FirefoxTestCase.setUp(self)
 
-        self.prefs.set_pref('extensions.install.requireSecureOrigin', False)
+        self.puppeteer.prefs.set_pref('extensions.install.requireSecureOrigin', False)
 
         self.addons_url = self.marionette.absolute_url('addons/extensions/')
-        self.utils.permissions.add(self.marionette.baseurl, 'install')
+        self.puppeteer.utils.permissions.add(self.marionette.baseurl, 'install')
 
     def tearDown(self):
         try:
             self.marionette.clear_pref('extensions.install.requireSecureOrigin')
             self.marionette.clear_pref('xpinstall.signatures.required')
 
-            self.utils.permissions.remove(self.addons_url, 'install')
+            self.puppeteer.utils.permissions.remove(self.addons_url, 'install')
 
             if self.browser.notification:
                 self.browser.notification.close(force=True)
@@ -69,7 +69,7 @@ class TestNotifications(FirefoxTestCase):
     def test_addon_install_failed_notification(self):
         """Trigger add-on blocked notification using an unsigned add-on"""
         # Ensure that installing unsigned extensions will fail
-        self.prefs.set_pref('xpinstall.signatures.required', True)
+        self.puppeteer.prefs.set_pref('xpinstall.signatures.required', True)
 
         self.trigger_addon_notification(
             'restartless_addon_unsigned.xpi',
