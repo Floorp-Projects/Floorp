@@ -348,7 +348,7 @@ ImportRule::SetSheet(CSSStyleSheet* aSheet)
   aSheet->SetOwnerRule(this);
 
   // set our medialist to be the same as the sheet's medialist
-  mMedia = mChildSheet->Media();
+  mMedia = static_cast<nsMediaList*>(mChildSheet->Media());
 }
 
 uint16_t
@@ -372,6 +372,12 @@ ImportRule::GetCssTextImpl(nsAString& aCssText) const
     }
   }
   aCssText.Append(';');
+}
+
+MediaList*
+ImportRule::Media() const
+{
+  return mMedia;
 }
 
 StyleSheet*
@@ -724,7 +730,7 @@ MediaRule::MediaRule(const MediaRule& aCopy)
   : ConditionRule(aCopy)
 {
   if (aCopy.mMedia) {
-    mMedia = aCopy.mMedia->Clone();
+    mMedia = aCopy.mMedia->Clone().downcast<nsMediaList>();
     // XXXldb This doesn't really make sense.
     mMedia->SetStyleSheet(aCopy.GetStyleSheet());
   }
@@ -819,7 +825,7 @@ MediaRule::Type() const
   return nsIDOMCSSRule::MEDIA_RULE;
 }
 
-nsMediaList*
+MediaList*
 MediaRule::Media() const
 {
   // In practice, if we end up being parsed at all, we have non-null mMedia.  So
