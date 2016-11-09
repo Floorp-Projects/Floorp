@@ -381,7 +381,6 @@ pref("media.raw.enabled", true);
 pref("media.ogg.enabled", true);
 pref("media.opus.enabled", true);
 pref("media.wave.enabled", true);
-pref("media.wave.decoder.enabled", true);
 pref("media.webm.enabled", true);
 
 #ifdef MOZ_APPLEMEDIA
