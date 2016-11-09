@@ -1326,35 +1326,42 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     mInitialZoomConstraints.reset();
   }
 
-  TextureFactoryIdentifier textureFactoryIdentifier;
-  PLayerTransactionChild* shadowManager = nullptr;
-
-  nsTArray<LayersBackend> backendHints;
-  gfxPlatform::GetPlatform()->GetCompositorBackends(ComputeShouldAccelerate(), backendHints);
-
-  bool success = false;
-  if (!backendHints.IsEmpty()) {
-    shadowManager = mCompositorBridgeChild->SendPLayerTransactionConstructor(
-      backendHints, 0, &textureFactoryIdentifier, &success);
-  }
-
   ShadowLayerForwarder* lf = lm->AsShadowForwarder();
+  // As long as we are creating a ClientLayerManager above lf must be non-null.
+  MOZ_ASSERT(lf);
 
-  if (!success || !lf) {
-    NS_WARNING("Failed to create an OMT compositor.");
-    DestroyCompositor();
-    mLayerManager = nullptr;
-    return;
+  if (lf) {
+    TextureFactoryIdentifier textureFactoryIdentifier;
+    PLayerTransactionChild* shadowManager = nullptr;
+
+    nsTArray<LayersBackend> backendHints;
+    gfxPlatform::GetPlatform()->GetCompositorBackends(ComputeShouldAccelerate(), backendHints);
+
+    bool success = false;
+    if (!backendHints.IsEmpty()) {
+      shadowManager = mCompositorBridgeChild->SendPLayerTransactionConstructor(
+        backendHints, 0, &textureFactoryIdentifier, &success);
+    }
+
+    if (!success) {
+      NS_WARNING("Failed to create an OMT compositor.");
+      DestroyCompositor();
+      mLayerManager = nullptr;
+      return;
+    }
+
+    lf->SetShadowManager(shadowManager);
+    if (ClientLayerManager* clm = lm->AsClientLayerManager()) {
+      clm->UpdateTextureFactoryIdentifier(textureFactoryIdentifier);
+    }
+    // Some popup or transparent widgets may use a different backend than the
+    // compositors used with ImageBridge and VR (and more generally web content).
+    if (WidgetTypeSupportsAcceleration()) {
+      ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
+      gfx::VRManagerChild::IdentifyTextureHost(textureFactoryIdentifier);
+    }
   }
 
-  lf->SetShadowManager(shadowManager);
-  lm->UpdateTextureFactoryIdentifier(textureFactoryIdentifier);
-  // Some popup or transparent widgets may use a different backend than the
-  // compositors used with ImageBridge and VR (and more generally web content).
-  if (WidgetTypeSupportsAcceleration()) {
-    ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
-    gfx::VRManagerChild::IdentifyTextureHost(textureFactoryIdentifier);
-  }
   WindowUsesOMTC();
 
   mLayerManager = lm.forget();

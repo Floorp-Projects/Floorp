@@ -3772,6 +3772,15 @@
     "n_buckets": 10,
     "description": "Time spent per dbservice lookup (ms)"
   },
+  "URLCLASSIFIER_SHUTDOWN_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 50,
+    "bug_numbers": [1315140],
+    "description": "Time spent per dbservice shutdown (ms)"
+  },
   "URLCLASSIFIER_CL_CHECK_TIME": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",

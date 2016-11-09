@@ -29,7 +29,7 @@ class AboutWindow(BaseWindow):
         self.switch_to()
 
         deck = self.window_element.find_element(By.ID, 'updateDeck')
-        return Deck(lambda: self.marionette, self, deck)
+        return Deck(self.marionette, self, deck)
 
 
 Windows.register_window(AboutWindow.window_type, AboutWindow)

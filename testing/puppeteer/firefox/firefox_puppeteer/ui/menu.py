@@ -5,8 +5,8 @@
 from marionette_driver import By
 from marionette_driver.errors import NoSuchElementException
 
-from firefox_puppeteer import DOMElement
 from firefox_puppeteer.base import BaseLib
+from firefox_puppeteer.ui.base import DOMElement
 
 
 class MenuBar(BaseLib):

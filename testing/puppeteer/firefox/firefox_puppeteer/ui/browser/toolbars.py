@@ -4,7 +4,7 @@
 
 from marionette_driver import By, keys, Wait
 
-from firefox_puppeteer.ui_base_lib import UIBaseLib
+from firefox_puppeteer.ui.base import UIBaseLib
 
 
 class NavBar(UIBaseLib):
@@ -49,7 +49,7 @@ class NavBar(UIBaseLib):
         """
         if not self._locationbar:
             urlbar = self.marionette.find_element(By.ID, 'urlbar')
-            self._locationbar = LocationBar(lambda: self.marionette, self.window, urlbar)
+            self._locationbar = LocationBar(self.marionette, self.window, urlbar)
 
         return self._locationbar
 
@@ -88,7 +88,7 @@ class LocationBar(UIBaseLib):
         See the :class:`AutocompleteResults` reference."""
         if not self._autocomplete_results:
             popup = self.marionette.find_element(By.ID, 'PopupAutoCompleteRichResult')
-            self._autocomplete_results = AutocompleteResults(lambda: self.marionette,
+            self._autocomplete_results = AutocompleteResults(self.marionette,
                                                              self.window, popup)
 
         return self._autocomplete_results
@@ -212,7 +212,7 @@ class LocationBar(UIBaseLib):
         """
         if not self._identity_popup:
             popup = self.marionette.find_element(By.ID, 'identity-popup')
-            self._identity_popup = IdentityPopup(lambda: self.marionette,
+            self._identity_popup = IdentityPopup(self.marionette,
                                                  self.window, popup)
 
         return self._identity_popup
@@ -452,7 +452,7 @@ class IdentityPopup(UIBaseLib):
         """
         if not self._view:
             view = self.marionette.find_element(By.ID, 'identity-popup-multiView')
-            self._view = IdentityPopupMultiView(lambda: self.marionette, self.window, view)
+            self._view = IdentityPopupMultiView(self.marionette, self.window, view)
 
         return self._view
 
@@ -471,7 +471,7 @@ class IdentityPopupMultiView(UIBaseLib):
                    }
 
         view = self.marionette.find_element(By.ID, view_id)
-        return mapping.get(view_id, IdentityPopupView)(lambda: self.marionette, self.window, view)
+        return mapping.get(view_id, IdentityPopupView)(self.marionette, self.window, view)
 
     @property
     def main(self):

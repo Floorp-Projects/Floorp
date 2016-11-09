@@ -12,7 +12,7 @@ class TestDirectUpdate(UpdateTestCase):
 
     def tearDown(self):
         try:
-            self.windows.close_all([self.browser])
+            self.puppeteer.windows.close_all([self.browser])
         finally:
             UpdateTestCase.tearDown(self)
 

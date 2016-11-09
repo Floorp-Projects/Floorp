@@ -28,10 +28,14 @@ static const mozilla::mscom::ArrayData sPlatformChildArrayData[] = {
   {IID_IEnumVARIANT, 3, 1, VT_DISPATCH, IID_IDispatch, 2},
   {IID_IAccessible2, 30, 1, VT_UNKNOWN | VT_BYREF, IID_IAccessibleRelation, 2},
   {IID_IAccessibleRelation, 7, 1, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 2},
-  {IID_IAccessible2_2, 48, 2, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 3},
-  {IID_IAccessibleTableCell, 4, 0, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 1},
-  {IID_IAccessibleTableCell, 7, 0, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 1},
-  {IID_IAccessibleHypertext2, 25, 0, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 1}
+  {IID_IAccessible2_2, 48, 2, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 3,
+   mozilla::mscom::ArrayData::Flag::eAllocatedByServer},
+  {IID_IAccessibleTableCell, 4, 0, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 1,
+   mozilla::mscom::ArrayData::Flag::eAllocatedByServer},
+  {IID_IAccessibleTableCell, 7, 0, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 1,
+   mozilla::mscom::ArrayData::Flag::eAllocatedByServer},
+  {IID_IAccessibleHypertext2, 25, 0, VT_UNKNOWN | VT_BYREF, IID_IUnknown, 1,
+   mozilla::mscom::ArrayData::Flag::eAllocatedByServer}
 };
 
 // Type libraries are thread-neutral, so we can register those from any

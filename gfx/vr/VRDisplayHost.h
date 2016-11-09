@@ -90,6 +90,8 @@ public:
   const VRControllerInfo& GetControllerInfo() const;
   void SetIndex(uint32_t aIndex);
   uint32_t GetIndex();
+  void SetButtonPressed(uint64_t aBit);
+  uint64_t GetButtonPressed();
 
 protected:
   explicit VRControllerHost(VRDeviceType aType);
@@ -98,6 +100,8 @@ protected:
   VRControllerInfo mControllerInfo;
   // The controller index in VRControllerManager.
   uint32_t mIndex;
+  // The current button pressed bit of button mask.
+  uint64_t mButtonPressed;
 };
 
 } // namespace gfx

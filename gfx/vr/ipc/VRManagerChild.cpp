@@ -15,9 +15,12 @@
 #include "mozilla/dom/VREventObserver.h"
 #include "mozilla/dom/WindowBinding.h" // for FrameRequestCallback
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/GamepadManager.h"
 #include "mozilla/layers/TextureClient.h"
 #include "nsContentUtils.h"
+
+#ifdef MOZ_GAMEPAD
+#include "mozilla/dom/GamepadManager.h"
+#endif
 
 using layers::TextureClient;
 
@@ -470,12 +473,14 @@ VRManagerChild::RecvNotifyVRVSync(const uint32_t& aDisplayID)
 bool
 VRManagerChild::RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
 {
+#ifdef MOZ_GAMEPAD
   // VRManagerChild could be at other processes, but GamepadManager
   // only exists at the content process or the parent process
   // in non-e10s mode.
   if (mGamepadManager) {
       mGamepadManager->Update(aGamepadEvent);
   }
+#endif
 
   return true;
 }

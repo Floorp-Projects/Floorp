@@ -34,7 +34,7 @@ class UpdateWizardDialog(BaseWindow):
         """
         # The deck is also the root element
         wizard = self.marionette.find_element(By.ID, 'updates')
-        return Wizard(lambda: self.marionette, self, wizard)
+        return Wizard(self.marionette, self, wizard)
 
     def select_next_page(self):
         """Clicks on "Next" button, and waits for the next page to show up."""

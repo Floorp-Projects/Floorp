@@ -2621,6 +2621,41 @@ nsStyleImageLayers::HasLayerWithImage() const
   return false;
 }
 
+nsStyleImageLayers&
+nsStyleImageLayers::operator=(const nsStyleImageLayers& aOther)
+{
+  mAttachmentCount = aOther.mAttachmentCount;
+  mClipCount = aOther.mClipCount;
+  mOriginCount = aOther.mOriginCount;
+  mRepeatCount = aOther.mRepeatCount;
+  mPositionXCount = aOther.mPositionXCount;
+  mPositionYCount = aOther.mPositionYCount;
+  mImageCount = aOther.mImageCount;
+  mSizeCount = aOther.mSizeCount;
+  mMaskModeCount = aOther.mMaskModeCount;
+  mBlendModeCount = aOther.mBlendModeCount;
+  mCompositeCount = aOther.mCompositeCount;
+  mLayers = aOther.mLayers;
+
+  uint32_t count = mLayers.Length();
+  if (count != aOther.mLayers.Length()) {
+    NS_WARNING("truncating counts due to out-of-memory");
+    mAttachmentCount = std::max(mAttachmentCount, count);
+    mClipCount = std::max(mClipCount, count);
+    mOriginCount = std::max(mOriginCount, count);
+    mRepeatCount = std::max(mRepeatCount, count);
+    mPositionXCount = std::max(mPositionXCount, count);
+    mPositionYCount = std::max(mPositionYCount, count);
+    mImageCount = std::max(mImageCount, count);
+    mSizeCount = std::max(mSizeCount, count);
+    mMaskModeCount = std::max(mMaskModeCount, count);
+    mBlendModeCount = std::max(mBlendModeCount, count);
+    mCompositeCount = std::max(mCompositeCount, count);
+  }
+
+  return *this;
+}
+
 bool
 nsStyleImageLayers::IsInitialPositionForLayerType(Position aPosition, LayerType aType)
 {

@@ -489,6 +489,9 @@ ConfigSecureServerWithNamedCert(PRFileDesc* fd, const char* certName,
     *keaOut = certKEA;
   }
 
+  SSL_OptionSet(fd, SSL_NO_CACHE, false);
+  SSL_OptionSet(fd, SSL_ENABLE_SESSION_TICKETS, true);
+
   return SECSuccess;
 }
 
