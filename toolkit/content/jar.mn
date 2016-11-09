@@ -45,6 +45,7 @@ toolkit.jar:
    content/global/customizeToolbar.js
    content/global/customizeToolbar.xul
 #endif
+   content/global/datepicker.xhtml
    content/global/devicestorage.properties
 #ifndef MOZ_FENNEC
    content/global/editMenuOverlay.js
@@ -69,8 +70,11 @@ toolkit.jar:
    content/global/bindings/autocomplete.xml    (widgets/autocomplete.xml)
    content/global/bindings/browser.xml         (widgets/browser.xml)
    content/global/bindings/button.xml          (widgets/button.xml)
+   content/global/bindings/calendar.js         (widgets/calendar.js)
    content/global/bindings/checkbox.xml        (widgets/checkbox.xml)
    content/global/bindings/colorpicker.xml     (widgets/colorpicker.xml)
+   content/global/bindings/datekeeper.js       (widgets/datekeeper.js)
+   content/global/bindings/datepicker.js       (widgets/datepicker.js)
    content/global/bindings/datetimepicker.xml  (widgets/datetimepicker.xml)
    content/global/bindings/datetimepopup.xml   (widgets/datetimepopup.xml)
    content/global/bindings/datetimebox.xml     (widgets/datetimebox.xml)
