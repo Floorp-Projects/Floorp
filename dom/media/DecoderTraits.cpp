@@ -38,7 +38,6 @@
 
 #include "WaveDecoder.h"
 #include "WaveDemuxer.h"
-#include "WaveReader.h"
 
 #include "ADTSDecoder.h"
 #include "ADTSDemuxer.h"
@@ -502,8 +501,6 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   } else
   if (IsOggSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new OggDemuxer(aDecoder->GetResource()));
-  } else if (IsWaveType(aType)) {
-    decoderReader = new WaveReader(aDecoder);
   } else
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled() &&
