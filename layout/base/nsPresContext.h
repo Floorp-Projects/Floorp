@@ -793,6 +793,20 @@ public:
    */
   bool IsVisualMode() const { return mIsVisual; }
 
+  enum class InteractionType : uint32_t {
+    eClickInteraction,
+    eKeyInteraction,
+    eMouseMoveInteraction,
+    eScrollInteraction
+  };
+
+  void RecordInteractionTime(InteractionType aType);
+
+  void DisableInteractionTimeRecording()
+  {
+    mInteractionTimeEnabled = false;
+  }
+
 //Mohamed
 
   /**
@@ -1344,6 +1358,15 @@ protected:
   uint64_t              mFramesReflowed;
 
   mozilla::TimeStamp    mReflowStartTime;
+
+  // Time of various first interaction types, used to report time from
+  // first paint of the top level content pres shell to first interaction.
+  mozilla::TimeStamp    mFirstPaintTime;
+  mozilla::TimeStamp    mFirstClickTime;
+  mozilla::TimeStamp    mFirstKeyTime;
+  mozilla::TimeStamp    mFirstMouseMoveTime;
+  mozilla::TimeStamp    mFirstScrollTime;
+  bool                  mInteractionTimeEnabled;
 
   // last time we did a full style flush
   mozilla::TimeStamp    mLastStyleUpdateForAllAnimations;
