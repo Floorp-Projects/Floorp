@@ -229,9 +229,7 @@ GlobalPCList.prototype = {
 };
 var _globalPCList = new GlobalPCList();
 
-function RTCIceCandidate() {
-  this.candidate = this.sdpMid = this.sdpMLineIndex = null;
-}
+function RTCIceCandidate() {}
 RTCIceCandidate.prototype = {
   classDescription: "RTCIceCandidate",
   classID: PC_ICE_CID,
@@ -242,9 +240,7 @@ RTCIceCandidate.prototype = {
   init: function(win) { this._win = win; },
 
   __init: function(dict) {
-    this.candidate = dict.candidate;
-    this.sdpMid = dict.sdpMid;
-    this.sdpMLineIndex = ("sdpMLineIndex" in dict)? dict.sdpMLineIndex : null;
+    Object.assign(this, dict);
   }
 };
 
