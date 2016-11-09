@@ -584,7 +584,7 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
     mLayerManager = new ClientLayerManager(this);
   }
   ShadowLayerForwarder* lf = mLayerManager->AsShadowForwarder();
-  if (!lf->HasShadowManager() && aShadowManager) {
+  if (lf && !lf->HasShadowManager() && aShadowManager) {
     lf->SetShadowManager(aShadowManager);
   }
   return mLayerManager;
@@ -594,7 +594,9 @@ LayerManager*
 PuppetWidget::RecreateLayerManager(PLayerTransactionChild* aShadowManager)
 {
   mLayerManager = new ClientLayerManager(this);
-  mLayerManager->AsShadowForwarder()->SetShadowManager(aShadowManager);
+  if (ShadowLayerForwarder* lf = mLayerManager->AsShadowForwarder()) {
+    lf->SetShadowManager(aShadowManager);
+  }
   return mLayerManager;
 }
 

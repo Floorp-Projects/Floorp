@@ -24,7 +24,11 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
 #include "openvr/openvr.h"
-#include "mozilla/dom/Gamepad.h"
+
+#ifdef MOZ_GAMEPAD
+#include "mozilla/dom/GamepadEventTypes.h"
+#include "mozilla/dom/GamepadBinding.h"
+#endif
 
 #ifndef M_PI
 # define M_PI 3.14159265358979323846
@@ -485,7 +489,11 @@ VRControllerOpenVR::VRControllerOpenVR()
 {
   MOZ_COUNT_CTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
   mControllerInfo.mControllerName.AssignLiteral("OpenVR HMD");
-  mControllerInfo.mMappingType = dom::GamepadMappingType::_empty;
+#ifdef MOZ_GAMEPAD
+  mControllerInfo.mMappingType = static_cast<uint32_t>(dom::GamepadMappingType::_empty);
+#else
+  mControllerInfo.mMappingType = 0;
+#endif
   mControllerInfo.mNumButtons = gNumOpenVRButtonMask;
   mControllerInfo.mNumAxes = gNumOpenVRAxis;
 }
@@ -583,9 +591,7 @@ VRControllerManagerOpenVR::HandleInput()
                == vr::TrackedDeviceClass_Controller);
 
     if (mVRSystem->GetControllerState(controller->GetTrackedIndex(), &state)) {
-      if (state.ulButtonPressed) {
-        HandleButtonPress(controller->GetIndex(), state.ulButtonPressed);
-      }
+      HandleButtonPress(controller->GetIndex(), state.ulButtonPressed);
 
       axis = static_cast<uint32_t>(VRControllerAxisType::TrackpadXAxis);
       HandleAxisMove(controller->GetIndex(), axis,
@@ -607,11 +613,26 @@ VRControllerManagerOpenVR::HandleButtonPress(uint32_t aControllerIdx,
                                              uint64_t aButtonPressed)
 {
   uint64_t buttonMask = 0;
+  RefPtr<impl::VRControllerOpenVR> controller;
+  controller = mOpenVRController[aControllerIdx];
+  uint64_t diff = (controller->GetButtonPressed() ^ aButtonPressed);
+
+  if (!diff) {
+    return;
+  }
 
   for (uint32_t i = 0; i < gNumOpenVRButtonMask; ++i) {
     buttonMask = gOpenVRButtonMask[i];
-    NewButtonEvent(aControllerIdx, i, aButtonPressed & buttonMask);
+
+    if (diff & buttonMask) {
+      // diff & aButtonPressed would be true while a new button press
+      // event, otherwise it is an old press event and needs to notify
+      // the button has been released.
+      NewButtonEvent(aControllerIdx, i, diff & aButtonPressed);
+    }
   }
+
+  controller->SetButtonPressed(aButtonPressed);
 }
 
 void
@@ -665,9 +686,12 @@ VRControllerManagerOpenVR::ScanForDevices()
     openVRController->SetTrackedIndex(trackedDevice);
     mOpenVRController.AppendElement(openVRController);
 
+// Only in MOZ_GAMEPAD platform, We add gamepads.
+#ifdef MOZ_GAMEPAD
     // Not already present, add it.
-    AddGamepad("OpenVR Gamepad", GamepadMappingType::_empty,
+    AddGamepad("OpenVR Gamepad", static_cast<uint32_t>(GamepadMappingType::_empty),
                gNumOpenVRButtonMask, gNumOpenVRAxis);
     ++mControllerCount;
+#endif
   }
 }

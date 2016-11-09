@@ -6,7 +6,7 @@ from abc import ABCMeta
 
 from marionette_driver import By
 
-from firefox_puppeteer.ui_base_lib import UIBaseLib
+from firefox_puppeteer.ui.base import UIBaseLib
 
 
 class BaseNotification(UIBaseLib):

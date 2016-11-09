@@ -4,7 +4,7 @@
 
 from marionette_driver import By, Wait
 
-from firefox_puppeteer.ui_base_lib import UIBaseLib
+from firefox_puppeteer.ui.base import UIBaseLib
 from firefox_puppeteer.ui.deck import Panel
 
 
@@ -42,7 +42,7 @@ class Wizard(UIBaseLib):
                    }
 
         panel = self.element.find_element(By.ID, panel_id)
-        return mapping.get(panel_id, Panel)(lambda: self.marionette, self.window, panel)
+        return mapping.get(panel_id, Panel)(self.marionette, self.window, panel)
 
     # Properties for visual buttons of the wizard #
 

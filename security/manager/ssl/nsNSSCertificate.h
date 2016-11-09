@@ -37,18 +37,10 @@ public:
 
   friend class nsNSSCertificateFakeTransport;
 
-  explicit nsNSSCertificate(CERTCertificate* cert, SECOidTag* evOidPolicy = nullptr);
+  explicit nsNSSCertificate(CERTCertificate* cert);
   nsNSSCertificate();
-  static nsNSSCertificate* Create(CERTCertificate*cert = nullptr,
-                                  SECOidTag* evOidPolicy = nullptr);
+  static nsNSSCertificate* Create(CERTCertificate* cert = nullptr);
   static nsNSSCertificate* ConstructFromDER(char* certDER, int derLen);
-  nsresult GetIsExtendedValidation(bool* aIsEV);
-
-  enum EVStatus {
-    ev_status_invalid = 0,
-    ev_status_valid = 1,
-    ev_status_unknown = 2
-  };
 
   // This is a separate static method so nsNSSComponent can use it during NSS
   // initialization. Other code should probably not use it.
@@ -70,11 +62,6 @@ private:
   bool InitFromDER(char* certDER, int derLen);  // return false on failure
 
   nsresult GetCertificateHash(nsAString& aFingerprint, SECOidTag aHashAlg);
-
-  EVStatus mCachedEVStatus;
-  SECOidTag mCachedEVOidTag;
-  nsresult hasValidEVOidTag(SECOidTag& resultOidTag, bool& validEV);
-  nsresult getValidEVOidTag(SECOidTag& resultOidTag, bool& validEV);
 };
 
 namespace mozilla {

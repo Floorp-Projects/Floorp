@@ -24,6 +24,7 @@ class nsDisplayList;
 class nsDisplayItem;
 class gfxContext;
 class nsDisplayItemGeometry;
+class nsDisplayMask;
 
 namespace mozilla {
 class DisplayItemScrollClip;

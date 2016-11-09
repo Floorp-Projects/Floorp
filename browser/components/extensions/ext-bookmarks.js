@@ -5,11 +5,18 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+const {
+  SingletonEventManager,
+} = ExtensionUtils;
 
+XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
+                                  "resource://devtools/shared/event-emitter.js");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
+
+let listenerCount = 0;
 
 function getTree(rootGuid, onlyChildren) {
   function convert(node, parent) {
@@ -75,6 +82,103 @@ function convert(result) {
   }
 
   return node;
+}
+
+let observer = {
+  skipTags: true,
+  skipDescendantsOnItemRemoval: true,
+
+  onBeginUpdateBatch() {},
+  onEndUpdateBatch() {},
+
+  onItemAdded(id, parentId, index, itemType, uri, title, dateAdded, guid, parentGuid, source) {
+    if (itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR) {
+      return;
+    }
+
+    let bookmark = {
+      id: guid,
+      parentId: parentGuid,
+      index,
+      title,
+      dateAdded: dateAdded / 1000,
+    };
+
+    if (itemType == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
+      bookmark.url = uri.spec;
+    } else {
+      bookmark.dateGroupModified = bookmark.dateAdded;
+    }
+
+    this.emit("created", bookmark);
+  },
+
+  onItemVisited() {},
+
+  onItemMoved(id, oldParentId, oldIndex, newParentId, newIndex, itemType, guid, oldParentGuid, newParentGuid, source) {
+    if (itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR) {
+      return;
+    }
+
+    let info = {
+      parentId: newParentGuid,
+      index: newIndex,
+      oldParentId: oldParentGuid,
+      oldIndex,
+    };
+    this.emit("moved", {guid, info});
+  },
+
+  onItemRemoved(id, parentId, index, itemType, uri, guid, parentGuid, source) {
+    if (itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR) {
+      return;
+    }
+
+    let node = {
+      id: guid,
+      parentId: parentGuid,
+      index,
+    };
+
+    if (itemType == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
+      node.url = uri.spec;
+    }
+
+    this.emit("removed", {guid, info: {parentId: parentGuid, index, node}});
+  },
+
+  onItemChanged(id, prop, isAnno, val, lastMod, itemType, parentId, guid, parentGuid, oldVal, source) {
+    if (itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR) {
+      return;
+    }
+
+    let info = {};
+    if (prop == "title") {
+      info.title = val;
+    } else if (prop == "uri") {
+      info.url = val;
+    } else {
+      // Not defined yet.
+      return;
+    }
+
+    this.emit("changed", {guid, info});
+  },
+};
+EventEmitter.decorate(observer);
+
+function decrementListeners() {
+  listenerCount -= 1;
+  if (!listenerCount) {
+    PlacesUtils.bookmarks.removeObserver(observer);
+  }
+}
+
+function incrementListeners() {
+  listenerCount++;
+  if (listenerCount == 1) {
+    PlacesUtils.bookmarks.addObserver(observer, false);
+  }
 }
 
 extensions.registerSchemaAPI("bookmarks", "addon_parent", context => {
@@ -213,6 +317,58 @@ extensions.registerSchemaAPI("bookmarks", "addon_parent", context => {
           return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
         }
       },
+
+      onCreated: new SingletonEventManager(context, "bookmarks.onCreated", fire => {
+        let listener = (event, bookmark) => {
+          context.runSafe(fire, bookmark.id, bookmark);
+        };
+
+        observer.on("created", listener);
+        incrementListeners();
+        return () => {
+          observer.off("created", listener);
+          decrementListeners();
+        };
+      }).api(),
+
+      onRemoved: new SingletonEventManager(context, "bookmarks.onRemoved", fire => {
+        let listener = (event, data) => {
+          context.runSafe(fire, data.guid, data.info);
+        };
+
+        observer.on("removed", listener);
+        incrementListeners();
+        return () => {
+          observer.off("removed", listener);
+          decrementListeners();
+        };
+      }).api(),
+
+      onChanged: new SingletonEventManager(context, "bookmarks.onChanged", fire => {
+        let listener = (event, data) => {
+          context.runSafe(fire, data.guid, data.info);
+        };
+
+        observer.on("changed", listener);
+        incrementListeners();
+        return () => {
+          observer.off("changed", listener);
+          decrementListeners();
+        };
+      }).api(),
+
+      onMoved: new SingletonEventManager(context, "bookmarks.onMoved", fire => {
+        let listener = (event, data) => {
+          context.runSafe(fire, data.guid, data.info);
+        };
+
+        observer.on("moved", listener);
+        incrementListeners();
+        return () => {
+          observer.off("moved", listener);
+          decrementListeners();
+        };
+      }).api(),
     },
   };
 });

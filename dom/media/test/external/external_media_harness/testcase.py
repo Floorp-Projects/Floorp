@@ -11,7 +11,7 @@ from marionette_driver import Wait
 from marionette_driver.errors import TimeoutException
 from marionette.marionette_test import SkipTest
 
-from firefox_puppeteer.testcases import BaseFirefoxTestCase
+from firefox_puppeteer import PuppeteerMixin
 from external_media_tests.utils import (timestamp_now, verbose_until)
 from external_media_tests.media_utils.video_puppeteer import (
     VideoException,
@@ -19,7 +19,7 @@ from external_media_tests.media_utils.video_puppeteer import (
 )
 
 
-class MediaTestCase(BaseFirefoxTestCase, MarionetteTestCase):
+class MediaTestCase(PuppeteerMixin, MarionetteTestCase):
 
     """
     Necessary methods for MSE playback

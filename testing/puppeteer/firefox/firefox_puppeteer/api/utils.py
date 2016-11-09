@@ -13,7 +13,7 @@ class Utils(BaseLib):
     def __init__(self, *args, **kwargs):
         BaseLib.__init__(self, *args, **kwargs)
 
-        self._permissions = Permissions(lambda: self.marionette)
+        self._permissions = Permissions(self.marionette)
 
     @property
     def permissions(self):

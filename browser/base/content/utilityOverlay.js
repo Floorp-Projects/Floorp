@@ -324,11 +324,11 @@ function openLinkIn(url, where, params) {
     } catch (e) {}
   }
 
-  // NB: we avoid using |w| here because in the 'popup window' case,
+  // We avoid using |w| here because in the 'popup window' case,
   // if we pass a currentBrowser param |w.gBrowser| might not be the
   // tabbrowser that contains |aCurrentBrowser|. We really only care
   // about the tab linked to |aCurrentBrowser|.
-  let tab = aCurrentBrowser.ownerGlobal.gBrowser.getTabForBrowser(aCurrentBrowser);
+  let tab = aCurrentBrowser.getTabBrowser().getTabForBrowser(aCurrentBrowser);
   if (where == "current" && tab.pinned &&
       !aAllowPinnedTabHostChange) {
     try {
@@ -348,6 +348,7 @@ function openLinkIn(url, where, params) {
   // result in a new frontmost window (e.g. "javascript:window.open('');").
   w.focus();
 
+  let browserUsedForLoad = null;
   switch (where) {
   case "current":
     let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -383,12 +384,13 @@ function openLinkIn(url, where, params) {
       postData: aPostData,
       userContextId: aUserContextId
     });
+    browserUsedForLoad = aCurrentBrowser;
     break;
   case "tabshifted":
     loadInBackground = !loadInBackground;
     // fall through
   case "tab":
-    w.gBrowser.loadOneTab(url, {
+    let tabUsedForLoad = w.gBrowser.loadOneTab(url, {
       referrerURI: aReferrerURI,
       referrerPolicy: aReferrerPolicy,
       charset: aCharset,
@@ -402,10 +404,15 @@ function openLinkIn(url, where, params) {
       userContextId: aUserContextId,
       originPrincipal: aPrincipal,
     });
+    browserUsedForLoad = tabUsedForLoad.linkedBrowser;
     break;
   }
 
-  aCurrentBrowser.focus();
+  // Focus the content, but only if the browser used for the load is selected.
+  if (browserUsedForLoad &&
+      browserUsedForLoad == browserUsedForLoad.getTabBrowser().selectedBrowser) {
+    browserUsedForLoad.focus();
+  }
 
   if (!loadInBackground && w.isBlankPageURL(url)) {
     w.focusAndSelectUrlBar();

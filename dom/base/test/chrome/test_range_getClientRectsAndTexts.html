@@ -1,0 +1,60 @@
+<html>
+<head>
+<meta charset="utf-8">
+<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<script>
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests()
+{
+  let range = document.createRange();
+
+  let attempts = [
+    {startNode: "one", start:0, endNode:"one", end:0, textList:[], message:"Empty rect"},
+    {startNode: "one", start:2, endNode:"one", end:6, textList:["l on"], message:"Single line"},
+    {startNode: "implicit", start:6, endNode:"implicit", end:12, textList:["it\nbre"], message:"Implicit break"},
+    {startNode: "two.a", start:1, endNode:"two.b", end:2, textList:["wo", "", "li"], message:"Two lines"},
+    {startNode: "embed.a", start:7, endNode:"embed.b", end:2, textList:["th ", "simple nested", " ", "te"], message:"Simple nested"},
+    {startNode: "deep.a", start:2, endNode:"deep.b", end:2, textList:["ne with ", "complex, more deeply nested", " ", "te"], message:"Complex nested"},
+    {startNode: "image.a", start:7, endNode:"image.b", end:2, textList:["th inline ", "", " ", "im"], message:"Inline image"},
+  ];
+
+  for (let attempt of attempts) {
+    range.setStart(document.getElementById(attempt.startNode).childNodes[0], attempt.start);
+    range.setEnd(document.getElementById(attempt.endNode).childNodes[0], attempt.end);
+
+    let result = range.getClientRectsAndTexts();
+
+    is(result.textList.length, attempt.textList.length, attempt.message + " range has expected number of texts.");
+    let i = 0;
+    for (let text of result.textList) {
+      is(text, attempt.textList[i], attempt.message + " matched text index " + i + ".");
+      i++;
+    }
+  }
+
+  SimpleTest.finish();
+}
+</script>
+</head>
+<body onLoad="runTests()">
+
+<div id="one">All on one line</div>
+
+<div id="implicit">Implicit
+break in one line</div>
+
+<div id="two.a">Two<br/
+><span id="two.b">lines</span></div>
+
+<div id="embed.a">Line with <span>simple nested</span> <span id="embed.b">text</span></div>
+
+<div id="deep.a">Line with <span>complex, <span>more <span>deeply <span>nested</span></span></span></span> <span id="deep.b">text</span></div>
+
+<div id="image.a">Line with inline <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAG0lEQVR42mP8z0A%2BYKJA76jmUc2jmkc1U0EzACKcASfOgGoMAAAAAElFTkSuQmCC" width="20" height="20"/> <span id="image.b">image</span></div>
+
+</body>
+</html>

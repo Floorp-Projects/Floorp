@@ -11,12 +11,12 @@ from firefox_puppeteer.ui.windows import BaseWindow
 class UIBaseLib(BaseLib):
     """A base class for all UI element wrapper classes inside a chrome window."""
 
-    def __init__(self, marionette_getter, window, element):
+    def __init__(self, marionette, window, element):
 
         assert isinstance(window, BaseWindow)
         assert isinstance(element, HTMLElement)
 
-        BaseLib.__init__(self, marionette_getter)
+        BaseLib.__init__(self, marionette)
         self._window = window
         self._element = element
 
@@ -35,3 +35,23 @@ class UIBaseLib(BaseLib):
         :returns: :class:`BaseWindow` instance of the chrome window.
         """
         return self._window
+
+
+class DOMElement(HTMLElement):
+    """
+    Class that inherits from HTMLElement and provides a way for subclasses to
+    expose new api's.
+    """
+
+    def __new__(cls, element):
+        instance = object.__new__(cls)
+        instance.__dict__ = element.__dict__.copy()
+        setattr(instance, 'inner', element)
+
+        return instance
+
+    def __init__(self, element):
+        pass
+
+    def get_marionette(self):
+        return self.marionette

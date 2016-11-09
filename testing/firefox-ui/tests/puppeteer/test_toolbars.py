@@ -19,7 +19,7 @@ class TestNavBar(FirefoxTestCase):
         with self.marionette.using_context('content'):
             self.marionette.navigate('about:blank')
 
-        # TODO: check why self.places.remove_all_history() does not work here
+        # TODO: check why self.puppeteer.places.remove_all_history() does not work here
         self.marionette.execute_script("""
             let count = gBrowser.sessionHistory.count;
             gBrowser.sessionHistory.PurgeHistory(count);

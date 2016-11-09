@@ -542,6 +542,7 @@ public:
                                                   nullptr, nullptr,
                                                   nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                                   nsIContentPolicy::TYPE_OTHER);
+    loadInfo->SetOriginAttributes(mCI->GetOriginAttributes());
 
     RefPtr<nsHttpChannel> chan = new nsHttpChannel();
     nsresult rv;

@@ -1737,6 +1737,8 @@ nsUrlClassifierDBService::Shutdown()
   if (!gDbBackgroundThread)
     return NS_OK;
 
+  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_SHUTDOWN_TIME> timer;
+
   mCompleters.Clear();
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
