@@ -553,8 +553,10 @@ GetClass(uint32_t u)
     /* ZWJ = 42,                          [ZWJ]*/ CLASS_CHARACTER
   };
 
+#if ENABLE_INTL_API
   static_assert(U_LB_COUNT == mozilla::ArrayLength(sUnicodeLineBreakToClass),
                 "Gecko vs ICU LineBreak class mismatch");
+#endif
 
   auto cls = mozilla::unicode::GetLineBreakClass(u);
   MOZ_ASSERT(cls < mozilla::ArrayLength(sUnicodeLineBreakToClass));
