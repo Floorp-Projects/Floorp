@@ -401,7 +401,7 @@ Submitter.prototype = {
     if ("additional_minidumps" in this.extraKeyVals) {
       let names = this.extraKeyVals.additional_minidumps.split(',');
       for (let name of names) {
-        let [dump, extra, memory] = getPendingMinidump(this.id + "-" + name);
+        let [dump /* , extra, memory */] = getPendingMinidump(this.id + "-" + name);
         if (!dump.exists()) {
           this.notifyStatus(FAILED);
           this.cleanup();
@@ -454,8 +454,6 @@ this.CrashSubmit = {
   {
     params = params || {};
     let recordSubmission = false;
-    let submitSuccess = null;
-    let submitError = null;
     let noThrottle = false;
     let extraExtraKeyVals = null;
 
@@ -496,7 +494,7 @@ this.CrashSubmit = {
    */
 
   ignore: function CrashSubmit_ignore(id) {
-    let [dump, extra, mem] = getPendingMinidump(id);
+    let [dump /* , extra, memory */] = getPendingMinidump(id);
     return OS.File.open(dump.path + ".ignore", {create: true},
                         {unixFlags: OS.Constants.libc.O_CREAT})
       .then((file) => { file.close(); });

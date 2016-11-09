@@ -38,13 +38,13 @@ function runTests()
   synthesizeKey("VK_RETURN", {});
   target.value = "";
 
-  var test1 = new nsDoTestsForAutoCompleteWithComposition(
+  new nsDoTestsForAutoCompleteWithComposition(
     "Testing on HTML input (asynchronously search)",
     window, target, formFillController.controller, is,
     function() { return target.value; },
     function() {
       target.setAttribute("timeout", 0);
-      var test2 = new nsDoTestsForAutoCompleteWithComposition(
+      new nsDoTestsForAutoCompleteWithComposition(
         "Testing on HTML input (synchronously search)",
         window, target, formFillController.controller, is,
         function() { return target.value; },

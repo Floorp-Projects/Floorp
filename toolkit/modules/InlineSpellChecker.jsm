@@ -219,7 +219,6 @@ InlineSpellChecker.prototype = {
       var o1 = {}, o2 = {};
       spellchecker.GetDictionaryList(o1, o2);
       list = o1.value;
-      var listcount = o2.value;
       try {
         curlang = spellchecker.GetCurrentDictionary();
       } catch (e) {}
@@ -263,7 +262,7 @@ InlineSpellChecker.prototype = {
     try {
       // Get the display name for this dictionary.
       let languageTagMatch = /^([a-z]{2,3}|[a-z]{4}|[a-z]{5,8})(?:[-_]([a-z]{4}))?(?:[-_]([A-Z]{2}|[0-9]{3}))?((?:[-_](?:[a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*)(?:[-_][a-wy-z0-9](?:[-_][a-z0-9]{2,8})+)*(?:[-_]x(?:[-_][a-z0-9]{1,8})+)?$/i;
-      var [languageTag, languageSubtag, scriptSubtag, regionSubtag, variantSubtags] = dictionaryName.match(languageTagMatch);
+      var [/* languageTag */, languageSubtag, scriptSubtag, regionSubtag, variantSubtags] = dictionaryName.match(languageTagMatch);
     } catch (e) {
       // If we weren't given a valid language tag, just use the raw dictionary name.
       return dictionaryName;

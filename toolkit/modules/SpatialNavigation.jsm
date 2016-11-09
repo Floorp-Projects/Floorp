@@ -249,7 +249,6 @@ function _getRootBounds(windowUtils) {
 function _getBestToFocus(nodes, key, currentlyFocused) {
   let best = null;
   let bestDist;
-  let bestMid;
   let nodeMid;
   let currentlyFocusedMid = _getMidpoint(currentlyFocused);
   let currentlyFocusedRect = currentlyFocused.getBoundingClientRect();

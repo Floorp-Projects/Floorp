@@ -164,4 +164,3 @@ add_task(function*() {
 
   yield promiseRestartManager();
 });
-

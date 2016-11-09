@@ -31,7 +31,7 @@
         ]]>
         </getter>
       </property>
-      
+
       <property name="handleCtrlPageUpDown">
         <setter>
         <![CDATA[
@@ -74,7 +74,7 @@
         ]]>
         </getter>
       </property>
-      
+
       <property name="selectedIndex">
         <getter>
         <![CDATA[
@@ -244,7 +244,7 @@
       <children/>
       <xul:spacer class="tabs-right" flex="1"/>
     </content>
-    
+
     <implementation implements="nsIDOMXULSelectControlElement, nsIDOMXULRelatedElement">
       <constructor>
       <![CDATA[
@@ -299,8 +299,6 @@
 
           // Get linked tab panel by 'linkedpanel' attribute on the given tab
           // element.
-          let linkedPanelElm = null;
-
           let linkedPanelId = aTabElm.linkedPanel;
           if (linkedPanelId) {
             let ownerDoc = this.ownerDocument;
@@ -386,7 +384,7 @@
           return -1;
         ]]>
         </getter>
-        
+
         <setter>
         <![CDATA[
           var tab = this.getItemAtIndex(val);
@@ -551,7 +549,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="insertItemAt">
         <parameter name="index"/>
         <parameter name="label"/>
@@ -889,4 +887,3 @@
   </binding>
 
 </bindings>
-

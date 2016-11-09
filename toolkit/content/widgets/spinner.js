@@ -18,7 +18,6 @@ function Spinner(props, context) {
 }
 
 {
-  const debug = 0 ? console.log.bind(console, "[spinner]") : function() {};
 
   const ITEM_HEIGHT = 2.5,
         VIEWPORT_SIZE = 7,
@@ -96,7 +95,6 @@ function Spinner(props, context) {
      *        }
      */
     setState(newState) {
-      const { spinner } = this.elements;
       const { value, items } = this.state;
       const { value: newValue, items: newItems, isValueSet, isInvalid } = newState;
 
@@ -129,7 +127,7 @@ function Spinner(props, context) {
     _onScroll() {
       const { items, itemsView, isInfiniteScroll } = this.state;
       const { viewportSize, viewportTopOffset } = this.props;
-      const { spinner, itemsViewElements } = this.elements;
+      const { spinner } = this.elements;
 
       this.state.index = this._getIndexByOffset(spinner.scrollTop);
 

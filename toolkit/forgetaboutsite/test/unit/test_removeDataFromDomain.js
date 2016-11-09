@@ -489,7 +489,7 @@ function* test_push_cleared()
 
   do_get_profile();
   setPrefs();
-  const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
+  const {PushService, PushServiceWebSocket} = serviceExports;
   const userAgentID = 'bd744428-f125-436a-b6d0-dd0c9845837f';
   const channelID = '0ef2ad4a-6c49-41ad-af6e-95d2425276bf';
 

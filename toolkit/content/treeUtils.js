@@ -58,7 +58,6 @@ var gTreeUtils = {
     if (aDataSet.length == 0)
       return ascending;
 
-    var numericSort = !isNaN(aDataSet[0][aColumn]);
     var sortFunction = null;
     if (aComparator) {
       sortFunction = function(a, b) { return aComparator(a[aColumn], b[aColumn]); };
@@ -75,4 +74,3 @@ var gTreeUtils = {
     return ascending;
   }
 };
-

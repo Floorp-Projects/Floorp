@@ -227,7 +227,6 @@ function RenameProfile()
 
 function ConfirmDelete()
 {
-  var deleteButton = document.getElementById("delbutton");
   var profileList = document.getElementById( "profiles" );
 
   var selectedItem = profileList.selectedItem;

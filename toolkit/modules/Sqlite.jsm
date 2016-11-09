@@ -427,7 +427,7 @@ ConnectionData.prototype = Object.freeze({
   _finalize: function() {
     this._log.debug("Finalizing connection.");
     // Cancel any pending statements.
-    for (let [k, statement] of this._pendingStatements) {
+    for (let [/* k */, statement] of this._pendingStatements) {
       statement.cancel();
     }
     this._pendingStatements.clear();
@@ -436,12 +436,12 @@ ConnectionData.prototype = Object.freeze({
     this._statementCounter = 0;
 
     // Next we finalize all active statements.
-    for (let [k, statement] of this._anonymousStatements) {
+    for (let [/* k */, statement] of this._anonymousStatements) {
       statement.finalize();
     }
     this._anonymousStatements.clear();
 
-    for (let [k, statement] of this._cachedStatements) {
+    for (let [/* k */, statement] of this._cachedStatements) {
       statement.finalize();
     }
     this._cachedStatements.clear();
@@ -661,7 +661,7 @@ ConnectionData.prototype = Object.freeze({
 
   discardCachedStatements: function() {
     let count = 0;
-    for (let [k, statement] of this._cachedStatements) {
+    for (let [/* k */, statement] of this._cachedStatements) {
       ++count;
       statement.finalize();
     }
@@ -1170,7 +1170,6 @@ OpenedConnection.prototype = Object.freeze({
    * @return Promise<int>
    */
   getSchemaVersion: function() {
-    let self = this;
     return this.execute("PRAGMA user_version").then(
       function onSuccess(result) {
         if (result == null) {

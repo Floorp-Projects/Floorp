@@ -944,7 +944,8 @@
             Components.utils.reportError(e);
           }
           try {
-            var securityUI = this.securityUI;
+            // Ensures the securityUI is initialized.
+            var securityUI = this.securityUI; // eslint-disable-line no-unused-vars
           }
           catch (e) {
           }
@@ -1569,7 +1570,6 @@
         if (!this.droppedLinkHandler || event.defaultPrevented || this.isRemoteBrowser)
           return;
 
-        let name = { };
         let linkHandler = Components.classes["@mozilla.org/content/dropped-link-handler;1"].
                             getService(Components.interfaces.nsIDroppedLinkHandler);
         try {
