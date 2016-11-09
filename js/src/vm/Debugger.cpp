@@ -8636,6 +8636,22 @@ DebuggerObject::errorMessageNameGetter(JSContext *cx, unsigned argc, Value* vp)
 }
 
 /* static */ bool
+DebuggerObject::errorLineNumberGetter(JSContext *cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "get errorLineNumber", args, object)
+
+    return DebuggerObject::getErrorLineNumber(cx, object, args.rval());
+}
+
+/* static */ bool
+DebuggerObject::errorColumnNumberGetter(JSContext *cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "get errorColumnNumber", args, object)
+
+    return DebuggerObject::getErrorColumnNumber(cx, object, args.rval());
+}
+
+/* static */ bool
 DebuggerObject::isProxyGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "get isProxy", args, object)
@@ -9278,6 +9294,8 @@ const JSPropertySpec DebuggerObject::properties_[] = {
     JS_PSG("global", DebuggerObject::globalGetter, 0),
     JS_PSG("allocationSite", DebuggerObject::allocationSiteGetter, 0),
     JS_PSG("errorMessageName", DebuggerObject::errorMessageNameGetter, 0),
+    JS_PSG("errorLineNumber", DebuggerObject::errorLineNumberGetter, 0),
+    JS_PSG("errorColumnNumber", DebuggerObject::errorColumnNumberGetter, 0),
     JS_PSG("isProxy", DebuggerObject::isProxyGetter, 0),
     JS_PSG("proxyTarget", DebuggerObject::proxyTargetGetter, 0),
     JS_PSG("proxyHandler", DebuggerObject::proxyHandlerGetter, 0),
@@ -9598,12 +9616,9 @@ DebuggerObject::getAllocationSite(JSContext* cx, HandleDebuggerObject object,
 }
 
 /* static */ bool
-DebuggerObject::getErrorMessageName(JSContext* cx, HandleDebuggerObject object,
-                                    MutableHandleString result)
+DebuggerObject::getErrorReport(JSContext* cx, HandleObject maybeError, JSErrorReport*& report)
 {
-    RootedObject referent(cx, object->referent());
-
-    JSObject* obj = referent;
+    JSObject* obj = maybeError;
     if (IsCrossCompartmentWrapper(obj))
         obj = CheckedUnwrap(obj);
 
@@ -9612,22 +9627,76 @@ DebuggerObject::getErrorMessageName(JSContext* cx, HandleDebuggerObject object,
         return false;
     }
 
-    if (obj->is<ErrorObject>()) {
-        JSErrorReport* report = obj->as<ErrorObject>().getErrorReport();
-        if (report) {
-            const JSErrorFormatString* efs = GetErrorMessage(nullptr, report->errorNumber);
-            if (efs) {
-                RootedString str(cx, JS_NewStringCopyZ(cx, efs->name));
-                if (!cx->compartment()->wrap(cx, &str))
-                    return false;
-
-                result.set(str);
-                return true;
-            }
-        }
+    if (!obj->is<ErrorObject>()) {
+        report = nullptr;
+        return true;
     }
 
-    result.set(nullptr);
+    report = obj->as<ErrorObject>().getErrorReport();
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::getErrorMessageName(JSContext* cx, HandleDebuggerObject object,
+                                    MutableHandleString result)
+{
+    RootedObject referent(cx, object->referent());
+    JSErrorReport* report;
+    if (!getErrorReport(cx, referent, report))
+        return false;
+
+    if (!report) {
+        result.set(nullptr);
+        return true;
+    }
+
+    const JSErrorFormatString* efs = GetErrorMessage(nullptr, report->errorNumber);
+    if (!efs) {
+        result.set(nullptr);
+        return true;
+    }
+
+    RootedString str(cx, JS_NewStringCopyZ(cx, efs->name));
+    if (!cx->compartment()->wrap(cx, &str))
+        return false;
+
+    result.set(str);
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::getErrorLineNumber(JSContext* cx, HandleDebuggerObject object,
+                                   MutableHandleValue result)
+{
+    RootedObject referent(cx, object->referent());
+    JSErrorReport* report;
+    if (!getErrorReport(cx, referent, report))
+        return false;
+
+    if (!report) {
+        result.setUndefined();
+        return true;
+    }
+
+    result.setNumber(report->lineno);
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::getErrorColumnNumber(JSContext* cx, HandleDebuggerObject object,
+                                     MutableHandleValue result)
+{
+    RootedObject referent(cx, object->referent());
+    JSErrorReport* report;
+    if (!getErrorReport(cx, referent, report))
+        return false;
+
+    if (!report) {
+        result.setUndefined();
+        return true;
+    }
+
+    result.setNumber(report->column);
     return true;
 }
 
