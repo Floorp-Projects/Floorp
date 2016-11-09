@@ -44,6 +44,7 @@ class DocShellOriginAttributes;
 namespace dom {
 class ContentParent;
 class PBrowserParent;
+class Promise;
 class TabParent;
 class MutableTabContext;
 } // namespace dom
@@ -68,6 +69,8 @@ class nsFrameLoader final : public nsIFrameLoader,
 {
   friend class AutoResetInShow;
   friend class AutoResetInFrameSwap;
+  friend class AppendPartialSessionHistoryAndSwapHelper;
+  friend class RequestGroupedHistoryNavigationHelper;
   typedef mozilla::dom::PBrowserParent PBrowserParent;
   typedef mozilla::dom::TabParent TabParent;
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
@@ -306,6 +309,14 @@ private:
   nsresult
   PopulateUserContextIdFromAttribute(mozilla::DocShellOriginAttributes& aAttr);
 
+  // Swap ourselves with the frameloader aOther, and notify chrome code with
+  // a BrowserChangedProcess event.
+  bool SwapBrowsersAndNotify(nsFrameLoader* aOther);
+
+  // Returns a promise which will be resolved once all of the blockers have
+  // resolved which were added during the BrowserWillChangeProcess event.
+  already_AddRefed<mozilla::dom::Promise> FireWillChangeProcessEvent();
+
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   mozilla::dom::Element* mOwnerContent; // WEAK
@@ -340,6 +351,10 @@ private:
 
   nsCOMPtr<nsIPartialSHistory> mPartialSessionHistory;
   nsCOMPtr<nsIGroupedSHistory> mGroupedSessionHistory;
+
+  // A stack-maintained reference to an array of promises which are blocking
+  // grouped history navigation
+  nsTArray<RefPtr<mozilla::dom::Promise>>* mBrowserChangingProcessBlockers;
 
   bool mIsPrerendered : 1;
   bool mDepthTooGreat : 1;
