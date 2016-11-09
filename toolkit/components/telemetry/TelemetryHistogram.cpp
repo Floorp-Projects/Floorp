@@ -340,16 +340,6 @@ HistogramInfo::label_id(const char* label, uint32_t* labelId) const
   return NS_ERROR_FAILURE;
 }
 
-bool
-StringEndsWith(const std::string& name, const std::string& suffix)
-{
-  if (name.size() < suffix.size()) {
-    return false;
-  }
-
-  return name.compare(name.size() - suffix.size(), suffix.size(), suffix) == 0;
-}
-
 void internal_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent)
 {
   nsCOMPtr<nsIRunnable> event(aEvent);
