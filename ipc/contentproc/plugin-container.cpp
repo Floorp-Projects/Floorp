@@ -27,45 +27,6 @@
 #include "mozilla/sandboxing/sandboxLogging.h"
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-# include <sys/time.h>
-# include <sys/resource.h> 
-
-# include <binder/ProcessState.h>
-
-# ifdef LOGE_IF
-#  undef LOGE_IF
-# endif
-
-# include <android/log.h>
-# define LOGE_IF(cond, ...) \
-     ( (CONDITION(cond)) \
-     ? ((void)__android_log_print(ANDROID_LOG_ERROR, \
-       "Gecko:MozillaRntimeMain", __VA_ARGS__)) \
-     : (void)0 )
-
-# ifdef MOZ_CONTENT_SANDBOX
-# include "mozilla/Sandbox.h"
-# endif
-
-#endif // MOZ_WIDGET_GONK
-
-#ifdef MOZ_WIDGET_GONK
-static void
-InitializeBinder(void *aDummy) {
-    // Change thread priority to 0 only during calling ProcessState::self().
-    // The priority is registered to binder driver and used for default Binder
-    // Thread's priority. 
-    // To change the process's priority to small value need's root permission.
-    int curPrio = getpriority(PRIO_PROCESS, 0);
-    int err = setpriority(PRIO_PROCESS, 0, 0);
-    MOZ_ASSERT(!err);
-    LOGE_IF(err, "setpriority failed. Current process needs root permission.");
-    android::ProcessState::self()->startThreadPool();
-    setpriority(PRIO_PROCESS, 0, curPrio);
-}
-#endif
-
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
 class WinSandboxStarter : public mozilla::gmp::SandboxStarter {
 public:
@@ -133,15 +94,6 @@ content_process_main(int argc, char* argv[])
 #endif
 
     XRE_SetProcessType(argv[--argc]);
-
-#ifdef MOZ_WIDGET_GONK
-    // This creates a ThreadPool for binder ipc. A ThreadPool is necessary to
-    // receive binder calls, though not necessary to send binder calls.
-    // ProcessState::Self() also needs to be called once on the main thread to
-    // register the main thread with the binder driver.
-
-    InitializeBinder(nullptr);
-#endif
 
 #ifdef XP_WIN
     // For plugins, this is done in PluginProcessChild::Init, as we need to
