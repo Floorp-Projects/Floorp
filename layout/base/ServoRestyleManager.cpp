@@ -73,6 +73,21 @@ ServoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
   NS_WARNING("stylo: ServoRestyleManager::PostRebuildAllStyleDataEvent not implemented");
 }
 
+static void
+MarkSelfAndDescendantsAsNotDirtyForServo(nsIContent* aContent)
+{
+  aContent->UnsetIsDirtyForServo();
+
+  if (aContent->HasDirtyDescendantsForServo()) {
+    aContent->UnsetHasDirtyDescendantsForServo();
+
+    StyleChildrenIterator it(aContent);
+    for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+      MarkSelfAndDescendantsAsNotDirtyForServo(n);
+    }
+  }
+}
+
 void
 ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
                                            nsStyleContext* aParentContext,
@@ -85,6 +100,7 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
   if (!primaryFrame && !aContent->IsDirtyForServo()) {
     // This happens when, for example, a display: none child of a
     // HAS_DIRTY_DESCENDANTS content is reached as part of the traversal.
+    MarkSelfAndDescendantsAsNotDirtyForServo(aContent);
     return;
   }
 
@@ -145,7 +161,19 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
     // Note that we must leave the old style on an existing frame that is
     // about to be reframed, since some frame constructor code wants to
     // inspect the old style to work out what to do.
-    if (!primaryFrame || (changeHint & nsChangeHint_ReconstructFrame)) {
+    if (changeHint & nsChangeHint_ReconstructFrame) {
+      // Since we might still have some dirty bits set on descendants,
+      // inconsistent with the clearing of HasDirtyDescendants we will do as
+      // we return from these recursive RecreateStyleContexts calls, we
+      // explicitly clear them here.  Otherwise we will trigger assertions
+      // when we soon process the frame reconstruction.
+      MarkSelfAndDescendantsAsNotDirtyForServo(element);
+      return;
+    }
+
+    // If there is no frame, and we didn't generate a ReconstructFrame change
+    // hint, then we don't need to do any more work.
+    if (!primaryFrame) {
       aContent->UnsetIsDirtyForServo();
       return;
     }
