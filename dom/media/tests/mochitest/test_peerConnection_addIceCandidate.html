@@ -19,9 +19,9 @@
 
     test.chain.insertAfter("PC_LOCAL_SET_LOCAL_DESCRIPTION", [
       function PC_LOCAL_ADD_CANDIDATE_EARLY(test) {
-        var candidate = new RTCIceCandidate(
-          {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
-           sdpMLineIndex: 0});
+        var candidate = {
+          candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
+          sdpMLineIndex: 0};
         return test.pcLocal._pc.addIceCandidate(candidate).then(
           generateErrorCallback("addIceCandidate should have failed."),
           err => {
@@ -66,9 +66,9 @@
         );
       },
       function PC_REMOTE_ADD_VALID_CANDIDATE(test) {
-        var candidate = new RTCIceCandidate(
-          {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
-           sdpMLineIndex: 0});
+        var candidate = {
+          candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
+          sdpMLineIndex: 0};
         return test.pcRemote._pc.addIceCandidate(candidate)
         .then(() => ok(true, "Successfully added valid ICE candidate"));
       },
@@ -90,7 +90,7 @@
         .then(() => ok(true, "Successfully added valid ICE candidate"));
       },
       function PC_REMOTE_ADD_MATCHING_MID_AND_LEVEL_CANDIDATE(test) {
-        var candidate = new mozRTCIceCandidate(
+        var candidate = new RTCIceCandidate(
           {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
            sdpMLineIndex: 0,
            sdpMid: "sdparta_0"});
