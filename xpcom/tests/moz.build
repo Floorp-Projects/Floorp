@@ -27,7 +27,6 @@ SimplePrograms([
 ])
 
 GeckoSimplePrograms([
-    'nsIFileEnumerator',
     'TestCallTemplates',
     'TestINIParser',
     'TestRacingServiceManager',
