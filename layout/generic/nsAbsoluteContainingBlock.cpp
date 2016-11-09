@@ -634,8 +634,11 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   uint32_t rsFlags = 0;
   if (aFlags & AbsPosReflowFlags::eIsGridContainerCB) {
     // When a grid container generates the abs.pos. CB for a *child* then
-    // the static-position is the CB origin (i.e. of the grid area rect).
-    // https://drafts.csswg.org/css-grid/#static-position
+    // the static position is determined via CSS Box Alignment within the
+    // abs.pos. CB (a grid area, i.e. a piece of the grid). In this scenario,
+    // due to the multiple coordinate spaces in play, we use a convenience flag
+    // to simply have the child's ReflowInput give it a static position at its
+    // abs.pos. CB origin, and then we'll align & offset it from there.
     nsIFrame* placeholder =
       aPresContext->PresShell()->GetPlaceholderFrameFor(aKidFrame);
     if (placeholder && placeholder->GetParent() == aDelegatingFrame) {
