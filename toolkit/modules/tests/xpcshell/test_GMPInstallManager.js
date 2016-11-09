@@ -549,12 +549,8 @@ add_task(function* test_simpleCheckAndInstall_tooFrequent() {
  * Tests that installing addons when there is no server works as expected
  */
 add_test(function test_installAddon_noServer() {
-  let dir = FileUtils.getDir("TmpD", [], true);
   let zipFileName = "test_GMP.zip";
   let zipURL = URL_HOST + ":0/" + zipFileName;
-
-  let data = "e~=0.5772156649";
-  let zipFile = createNewZipFile(zipFileName, data);
 
   let responseXML =
     "<?xml version=\"1.0\"?>" +

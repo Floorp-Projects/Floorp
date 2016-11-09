@@ -69,7 +69,6 @@ add_task(function* test_canonicalJSON_preserves_data() {
     {'foo': 'bar', 'last_modified': '12345', 'id': '1'},
     {'bar': 'baz', 'last_modified': '45678', 'id': '2'},
   ]
-  const serialized = CanonicalJSON.stringify(records);
   const expected = '[{"foo":"bar","id":"1","last_modified":"12345"},' +
                    '{"bar":"baz","id":"2","last_modified":"45678"}]';
   do_check_eq(CanonicalJSON.stringify(records), expected);

@@ -589,8 +589,6 @@ WidgetStack.prototype = {
       throw "Invalid number of arguments to setViewportBounds";
     }
 
-    let vp = this._viewport;
-
     let dleft = this._viewportBounds.left - oldBounds.left;
     let dright = this._viewportBounds.right - oldBounds.right;
     let dtop = this._viewportBounds.top - oldBounds.top;
@@ -627,7 +625,6 @@ WidgetStack.prototype = {
 
       if (barrier.vpRelative) {
         if (barrier.type == "vertical") {
-          let q = "v barrier moving from " + barrier.x + " to ";
           if (barrier.vpOffsetXBefore) {
             barrier.x += dleft;
           } else {
@@ -635,7 +632,6 @@ WidgetStack.prototype = {
           }
           // log2(q += barrier.x);
         } else if (barrier.type == "horizontal") {
-          let q = "h barrier moving from " + barrier.y + " to ";
           if (barrier.vpOffsetYBefore) {
             barrier.y += dtop;
           } else {
@@ -1240,8 +1236,6 @@ WidgetStack.prototype = {
   _updateWidgets: function() {
     let vp = this._viewport;
 
-    let ofRect = this._viewingRect.clone();
-
     for (let wid in this._widgetState) {
       let state = this._widgetState[wid];
       if (vp && state.vpRelative) {
@@ -1375,8 +1369,6 @@ WidgetStack.prototype = {
     {
       throw "Invalid barrier type: " + t;
     }
-
-    let x, y;
 
     let barrier = {};
     let vp = this._viewport;

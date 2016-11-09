@@ -93,7 +93,6 @@ this.ForgetAboutSite = {
     let promises = [];
     for (let i = 0; i < tags.length; i++) {
       let promise = new Promise(resolve => {
-        let tag = tags[i];
         try {
           ph.clearSiteData(tags[i], aDomain, FLAG_CLEAR_ALL, -1, function(rv) {
             resolve();

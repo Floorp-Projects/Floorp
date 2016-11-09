@@ -8,7 +8,7 @@ function run_test()
   do_check_true(cr.enabled);
 
   try {
-    let su = cr.serverURL;
+    cr.serverURL;
     do_throw("Getting serverURL when not set should have thrown!");
   }
   catch (ex) {

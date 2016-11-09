@@ -319,7 +319,7 @@ function test_nsIDOMXULSelectControlElement_UI(element, testprefix)
   var thirditem = element.appendItem("Third Item", "third");
   var fourthitem = element.appendItem("Fourth Item", "fourth");
   if (behaviourContains(element.localName, "select-extended-keynav")) {
-    var fifthitem = element.appendItem("Fifth Item", "fifth");
+    element.appendItem("Fifth Item", "fifth");
     var sixthitem = element.appendItem("Sixth Item", "sixth");
 
     synthesizeKeyExpectEvent("VK_END", {}, element, "select", testid + "key end");

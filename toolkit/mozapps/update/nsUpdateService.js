@@ -440,7 +440,7 @@ function getCanApplyUpdates() {
           try {
             // KEY_UPDROOT will fail and throw an exception if
             // appDir is not under the Program Files, so we rely on that
-            let dir = Services.dirsvc.get(KEY_UPDROOT, Ci.nsIFile);
+            Services.dirsvc.get(KEY_UPDROOT, Ci.nsIFile);
             // appDir is under Program Files, so check if the user can elevate
             userCanElevate = Services.appinfo.QueryInterface(Ci.nsIWinAppHelper).
                              userCanElevate;

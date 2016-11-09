@@ -169,7 +169,7 @@ var SimpleServiceDiscovery = {
     // to allow for packet loss on noisy networks.
     let timeout = SSDP_DISCOVER_DELAY;
     for (let attempts = 0; attempts < SSDP_DISCOVER_ATTEMPTS; attempts++) {
-      for (let [key, device] of this._devices) {
+      for (let [/* key */, device] of this._devices) {
         let target = device.target;
         setTimeout(function() {
           let msgData = data.replace("%SEARCH_TARGET%", target);
@@ -224,7 +224,7 @@ var SimpleServiceDiscovery = {
       this._searchSocket.close();
 
       // Clean out any stale services
-      for (let [key, service] of this._services) {
+      for (let [/* key */, service] of this._services) {
         if (service.lastPing != this._searchTimestamp) {
           this.removeService(service.uuid);
         }
@@ -305,7 +305,7 @@ var SimpleServiceDiscovery = {
   // Returns an array copy of the active services
   get services() {
     let array = [];
-    for (let [key, service] of this._services) {
+    for (let [/* key */, service] of this._services) {
       let target = this._devices.get(service.deviceID);
       service.extensions = target.extensions;
       service.types = target.types;
@@ -317,7 +317,7 @@ var SimpleServiceDiscovery = {
   // Returns false if the service does not match the device's filters
   _filterService: function _filterService(aService) {
     // Loop over all the devices, looking for one that matches the service
-    for (let [key, device] of this._devices) {
+    for (let [/* key */, device] of this._devices) {
       // First level of match is on the target itself
       if (device.target != aService.target) {
         continue;

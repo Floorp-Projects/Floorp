@@ -57,7 +57,7 @@ add_task(function test_Logger_parent() {
   let childLog = Log.repository.getLogger("grandparent.parent.child");
   do_check_eq(childLog.parent.name, "grandparent");
 
-  let parentLog = Log.repository.getLogger("grandparent.parent");
+  Log.repository.getLogger("grandparent.parent");
   do_check_eq(childLog.parent.name, "grandparent.parent");
 
   // Check that appends are exactly in scope

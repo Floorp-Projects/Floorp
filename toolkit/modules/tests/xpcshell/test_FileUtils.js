@@ -33,7 +33,7 @@ add_test(function test_getFile() {
 
 add_test(function test_getFile_nonexistentDir() {
   do_check_throws(function() {
-    let file = FileUtils.getFile("NonexistentD", ["foobar"]);
+    FileUtils.getFile("NonexistentD", ["foobar"]);
   }, Components.results.NS_ERROR_FAILURE);
 
   run_next_test();
@@ -69,7 +69,7 @@ add_test(function test_getDir() {
 
 add_test(function test_getDir_nonexistentDir() {
   do_check_throws(function() {
-    let file = FileUtils.getDir("NonexistentD", ["foodir"]);
+    FileUtils.getDir("NonexistentD", ["foodir"]);
   }, Components.results.NS_ERROR_FAILURE);
 
   run_next_test();

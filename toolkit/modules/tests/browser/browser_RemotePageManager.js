@@ -100,7 +100,7 @@ add_task(function* init_navigate() {
   port = yield waitForPort(TEST_URL, false);
 
   port.sendAsyncMessage("Ping2");
-  let message = yield waitForMessage(port, "Pong2");
+  yield waitForMessage(port, "Pong2");
   port.destroy();
 
   gBrowser.removeCurrentTab();
