@@ -560,7 +560,7 @@ HttpObserverManager = {
     return errorData;
   },
 
-  runChannelListener(channel, loadContext, kind, extraData = null) {
+  runChannelListener(channel, loadContext = null, kind, extraData = null) {
     if (this.activityInitialized) {
       let channelData = getData(channel);
       if (kind === "onError") {
@@ -573,20 +573,13 @@ HttpObserverManager = {
       }
     }
     let listeners = this.listeners[kind];
-    let browser = loadContext ? loadContext.topFrameElement : null;
+    let browser = loadContext && loadContext.topFrameElement;
     let loadInfo = channel.loadInfo;
-    let policyType = loadInfo ?
-                     loadInfo.externalContentPolicyType :
-                     Ci.nsIContentPolicy.TYPE_OTHER;
+    let policyType = (loadInfo ? loadInfo.externalContentPolicyType
+                               : Ci.nsIContentPolicy.TYPE_OTHER);
 
-    let requestBody;
-
-    let includeStatus = (
-                          kind === "headersReceived" ||
-                          kind === "onRedirect" ||
-                          kind === "onStart" ||
-                          kind === "onStop"
-                        ) && channel instanceof Ci.nsIHttpChannel;
+    let includeStatus = (["headersReceived", "onRedirect", "onStart", "onStop"].includes(kind) &&
+                         channel instanceof Ci.nsIHttpChannel);
 
     let requestHeaders = new RequestHeaderChanger(channel);
     let responseHeaders;
@@ -600,6 +593,7 @@ HttpObserverManager = {
     let commonData = null;
     let uri = channel.URI;
     let handlerResults = [];
+    let requestBody;
     for (let [callback, opts] of listeners.entries()) {
       if (!this.shouldRunListener(policyType, uri, opts.filter)) {
         continue;
@@ -613,28 +607,32 @@ HttpObserverManager = {
           browser: browser,
           type: WebRequestCommon.typeForPolicyType(policyType),
           fromCache: getData(channel).fromCache,
+          windowId: 0,
+          parentWindowId: 0,
         };
 
         if (loadInfo) {
-          let originPrincipal = loadInfo.triggeringPrincipal || loadInfo.loadingPrincipal;
+          let originPrincipal = loadInfo.triggeringPrincipal;
           if (originPrincipal.URI) {
             commonData.originUrl = originPrincipal.URI.spec;
           }
-          Object.assign(commonData, {
-            windowId: loadInfo.frameOuterWindowID ?
-                        loadInfo.frameOuterWindowID : loadInfo.outerWindowID,
-            parentWindowId: loadInfo.frameOuterWindowID ?
-                              loadInfo.outerWindowID : loadInfo.parentOuterWindowID,
-            isSystemPrincipal: Services.scriptSecurityManager
-                                       .isSystemPrincipal(loadInfo.triggeringPrincipal) ||
-                               Services.scriptSecurityManager
-                                       .isSystemPrincipal(loadInfo.loadingPrincipal),
-          });
-        } else {
-          Object.assign(commonData, {
-            windowId: 0,
-            parentWindowId: 0,
-          });
+
+          let {isSystemPrincipal} = Services.scriptSecurityManager;
+
+          commonData.isSystemPrincipal = (isSystemPrincipal(loadInfo.triggeringPrincipal) ||
+                                          isSystemPrincipal(loadInfo.loadingPrincipal));
+
+          if (loadInfo.frameOuterWindowID) {
+            Object.assign(commonData, {
+              windowId: loadInfo.frameOuterWindowID,
+              parentWindowId: loadInfo.outerWindowID,
+            });
+          } else {
+            Object.assign(commonData, {
+              windowId: loadInfo.outerWindowID,
+              parentWindowId: loadInfo.parentOuterWindowID,
+            });
+          }
         }
 
         if (channel instanceof Ci.nsIHttpChannelInternal) {
@@ -645,9 +643,8 @@ HttpObserverManager = {
             // but ip is an optional property so just ignore the exception.
           }
         }
-        if (extraData) {
-          Object.assign(commonData, extraData);
-        }
+
+        Object.assign(commonData, extraData);
       }
 
       let data = Object.assign({}, commonData);
@@ -661,12 +658,8 @@ HttpObserverManager = {
       }
 
       if (opts.requestBody) {
-        if (requestBody === undefined) {
-          requestBody = WebRequestUpload.createRequestBody(channel);
-        }
-        if (requestBody) {
-          data.requestBody = requestBody;
-        }
+        requestBody = requestBody || WebRequestUpload.createRequestBody(channel);
+        data.requestBody = requestBody;
       }
 
       if (includeStatus) {
