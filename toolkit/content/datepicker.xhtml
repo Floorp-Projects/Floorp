@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+]>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<head>
+  <title>Date Picker</title>
+  <link rel="stylesheet" href="chrome://global/skin/timepicker.css"/>
+  <script type="application/javascript" src="chrome://global/content/bindings/datekeeper.js"></script>
+  <script type="application/javascript" src="chrome://global/content/bindings/spinner.js"></script>
+  <script type="application/javascript" src="chrome://global/content/bindings/calendar.js"></script>
+  <script type="application/javascript" src="chrome://global/content/bindings/datepicker.js"></script>
+</head>
+<body>
+  <div id="date-picker">
+    <div class="calendar-container">
+      <div class="nav">
+        <button class="left">&lt;</button>
+        <button class="right">&gt;</button>
+      </div>
+      <div class="week-header"></div>
+      <div class="days-viewport">
+        <div class="days-view"></div>
+      </div>
+    </div>
+    <div class="month-year">
+      <div class="month-year-label"></div>
+      <div class="month-year-arrow"></div>
+    </div>
+    <div class="month-year-view"></div>
+  </div>
+  <template id="spinner-template">
+    <div class="spinner-container">
+      <button class="up"/>
+      <div class="spinner"></div>
+      <button class="down"/>
+    </div>
+  </template>
+  <script type="application/javascript">
+  // We need to hide the scroll bar but maintain its scrolling
+  // capability, so using |overflow: hidden| is not an option.
+  // Instead, we are inserting a user agent stylesheet that is
+  // capable of selecting scrollbars, and do |display: none|.
+  var domWinUtls = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                  getInterface(Components.interfaces.nsIDOMWindowUtils);
+  domWinUtls.loadSheetUsingURIString('data:text/css,@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); scrollbar { display: none; }', domWinUtls.AGENT_SHEET);
+  // Create a DatePicker instance and prepare to be
+  // initialized by the "DatePickerInit" event from datetimepopup.xml
+  const root = document.getElementById("date-picker");
+  new DatePicker({
+    monthYear: root.querySelector(".month-year"),
+    monthYearView: root.querySelector(".month-year-view"),
+    buttonLeft: root.querySelector(".left"),
+    buttonRight: root.querySelector(".right"),
+    weekHeader: root.querySelector(".week-header"),
+    daysView: root.querySelector(".days-view")
+  });
+  </script>
+</body>
+</html>
