@@ -51,25 +51,40 @@ public:
   bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   // Main thread only
-  static void Initialize();
+  static void InitForContent(Endpoint<PVideoDecoderManagerChild>&& aVideoManager);
   static void Shutdown();
 
+  // Run aTask (on the manager thread) when we next attempt to create a new manager
+  // (even if creation fails). Intended to be called from ActorDestroy when we get
+  // notified that the old manager is being destroyed.
+  // Can only be called from the manager thread.
+  void RunWhenRecreated(already_AddRefed<Runnable> aTask);
+
+  bool CanSend();
+
 protected:
+  void InitIPDL();
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeallocPVideoDecoderManagerChild() override;
 
-  void FatalError(const char* const aName, const char* const aMsg) const override;
+  void HandleFatalError(const char* aName, const char* aMsg) const override;
 
   PVideoDecoderChild* AllocPVideoDecoderChild() override;
   bool DeallocPVideoDecoderChild(PVideoDecoderChild* actor) override;
 
 private:
+  // Main thread only
+  static void InitializeThread();
+
   VideoDecoderManagerChild()
     : mCanSend(false)
   {}
   ~VideoDecoderManagerChild() {}
 
-  void Open(Endpoint<PVideoDecoderManagerChild>&& aEndpoint);
+  static void Open(Endpoint<PVideoDecoderManagerChild>&& aEndpoint);
+
+  RefPtr<VideoDecoderManagerChild> mIPDLSelfRef;
 
   // Should only ever be accessed on the manager thread.
   bool mCanSend;

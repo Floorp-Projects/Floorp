@@ -20,33 +20,26 @@ add_task(function* test_popup_sendMessage_reply() {
 
     files: {
       "popup.html": scriptPage("popup.js"),
-      "popup.js": function() {
-        browser.runtime.onMessage.addListener(msg => {
+      "popup.js": async function() {
+        browser.runtime.onMessage.addListener(async msg => {
           if (msg == "popup-ping") {
             return Promise.resolve("popup-pong");
           }
         });
 
-        browser.runtime.sendMessage("background-ping").then(response => {
-          browser.test.sendMessage("background-ping-response", response);
-        });
+        let response = await browser.runtime.sendMessage("background-ping");
+        browser.test.sendMessage("background-ping-response", response);
       },
     },
 
-    background() {
-      browser.tabs.query({active: true, currentWindow: true}).then(([tab]) => {
-        return browser.pageAction.show(tab.id);
-      }).then(() => {
-        browser.test.sendMessage("page-action-ready");
-      });
-
-      browser.runtime.onMessage.addListener(msg => {
+    async background() {
+      browser.runtime.onMessage.addListener(async msg => {
         if (msg == "background-ping") {
-          browser.runtime.sendMessage("popup-ping").then(response => {
-            browser.test.sendMessage("popup-ping-response", response);
-          });
+          let response = await browser.runtime.sendMessage("popup-ping");
 
-          return new Promise(resolve => {
+          browser.test.sendMessage("popup-ping-response", response);
+
+          await new Promise(resolve => {
             // Wait long enough that we're relatively sure the docShells have
             // been swapped. Note that this value is fairly arbitrary. The load
             // event that triggers the swap should happen almost immediately
@@ -54,11 +47,17 @@ add_task(function* test_popup_sendMessage_reply() {
             // enough leeway that we can expect to respond after the swap in the
             // vast majority of cases.
             setTimeout(resolve, 250);
-          }).then(() => {
-            return "background-pong";
           });
+
+          return "background-pong";
         }
       });
+
+      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
+
+      await browser.pageAction.show(tab.id);
+
+      browser.test.sendMessage("page-action-ready");
     },
   });
 

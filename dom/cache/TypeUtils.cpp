@@ -122,18 +122,13 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
                           ErrorResult& aRv)
 {
   MOZ_ASSERT(aIn);
-
   aIn->GetMethod(aOut.method());
-
-  nsAutoCString url;
-  aIn->GetURL(url);
-
+  nsCString url(aIn->GetURLWithoutFragment());
   bool schemeValid;
   ProcessURL(url, &schemeValid, &aOut.urlWithoutQuery(), &aOut.urlQuery(), aRv);
   if (aRv.Failed()) {
     return;
   }
-
   if (!schemeValid) {
     if (aSchemeAction == TypeErrorOnInvalidScheme) {
       NS_ConvertUTF8toUTF16 urlUTF16(url);
@@ -142,10 +137,10 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
       return;
     }
   }
+  aOut.urlFragment() = aIn->GetFragment();
 
   aIn->GetReferrer(aOut.referrer());
   aOut.referrerPolicy() = aIn->ReferrerPolicy_();
-
   RefPtr<InternalHeaders> headers = aIn->Headers();
   MOZ_ASSERT(headers);
   ToHeadersEntryList(aOut.headers(), headers);
@@ -306,17 +301,14 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
   RefPtr<Response> ref = new Response(GetGlobalObject(), ir);
   return ref.forget();
 }
-
 already_AddRefed<InternalRequest>
 TypeUtils::ToInternalRequest(const CacheRequest& aIn)
 {
   nsAutoCString url(aIn.urlWithoutQuery());
   url.Append(aIn.urlQuery());
-
-  RefPtr<InternalRequest> internalRequest = new InternalRequest(url);
-
+  RefPtr<InternalRequest> internalRequest =
+    new InternalRequest(url, aIn.urlFragment());
   internalRequest->SetMethod(aIn.method());
-
   internalRequest->SetReferrer(aIn.referrer());
   internalRequest->SetReferrerPolicy(aIn.referrerPolicy());
   internalRequest->SetMode(aIn.mode());

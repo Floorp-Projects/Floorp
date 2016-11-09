@@ -91,9 +91,8 @@ public:
     base::ProcessId aOtherProcess,
     ipc::Endpoint<PCompositorBridgeChild>* aOutCompositor,
     ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
-    ipc::Endpoint<PVRManagerChild>* aOutVRBridge);
-  bool CreateContentVideoDecoderManager(base::ProcessId aOtherProcess,
-                                        ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndPoint);
+    ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
+    ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager);
 
   // This returns a reference to the APZCTreeManager to which
   // pan/zoom-related events can be sent.
@@ -120,6 +119,7 @@ public:
 
   void OnProcessLaunchComplete(GPUProcessHost* aHost) override;
   void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) override;
+  void OnProcessDeviceReset(GPUProcessHost* aHost) override;
 
   // Notify the GPUProcessManager that a top-level PGPU protocol has been
   // terminated. This may be called from any thread.
@@ -158,6 +158,8 @@ private:
                                 ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
   bool CreateContentVRManager(base::ProcessId aOtherProcess,
                               ipc::Endpoint<PVRManagerChild>* aOutEndpoint);
+  void CreateContentVideoDecoderManager(base::ProcessId aOtherProcess,
+                                        ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndPoint);
 
   // Called from RemoteCompositorSession. We track remote sessions so we can
   // notify their owning widgets that the session must be restarted.

@@ -394,8 +394,9 @@ class JSFunction : public js::NativeObject
     //   use, but has extra checks, requires a cx and may trigger a GC.
     //
     // - For inlined functions which may have a LazyScript but whose JSScript
-    //   is known to exist, existingScriptForInlinedFunction() will get the
-    //   script and delazify the function if necessary.
+    //   is known to exist, existingScript() will get the script and delazify
+    //   the function if necessary. If the function should not be delazified,
+    //   use existingScriptNonDelazifying().
     //
     // - For functions known to have a JSScript, nonLazyScript() will get it.
 
@@ -411,7 +412,7 @@ class JSFunction : public js::NativeObject
         return nonLazyScript();
     }
 
-    JSScript* existingScriptForInlinedFunction() {
+    JSScript* existingScriptNonDelazifying() const {
         MOZ_ASSERT(isInterpreted());
         if (isInterpretedLazy()) {
             // Get the script from the canonical function. Ion used the
@@ -422,11 +423,17 @@ class JSFunction : public js::NativeObject
             js::LazyScript* lazy = lazyScript();
             JSFunction* fun = lazy->functionNonDelazifying();
             MOZ_ASSERT(fun);
-            JSScript* script = fun->nonLazyScript();
+            return fun->nonLazyScript();
+        }
+        return nonLazyScript();
+    }
 
+    JSScript* existingScript() {
+        MOZ_ASSERT(isInterpreted());
+        if (isInterpretedLazy()) {
             if (shadowZone()->needsIncrementalBarrier())
-                js::LazyScript::writeBarrierPre(lazy);
-
+                js::LazyScript::writeBarrierPre(lazyScript());
+            JSScript* script = existingScriptNonDelazifying();
             flags_ &= ~INTERPRETED_LAZY;
             flags_ |= INTERPRETED;
             initScript(script);

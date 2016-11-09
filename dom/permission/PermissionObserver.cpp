@@ -86,7 +86,7 @@ PermissionObserver::Notify(PermissionName aName, nsIPrincipal& aPrincipal)
       continue;
     }
 
-    nsIPrincipal* sinkPrincipal = sink->GetPrincipal();
+    nsCOMPtr<nsIPrincipal> sinkPrincipal = sink->GetPrincipal();
     if (NS_WARN_IF(!sinkPrincipal) || !aPrincipal.Equals(sinkPrincipal)) {
       continue;
     }

@@ -542,7 +542,7 @@ let IconDetails = {
 
         for (let size of Object.keys(imageData)) {
           if (!INTEGER.test(size)) {
-            throw new Error(`Invalid icon size ${size}, must be an integer`);
+            throw new ExtensionError(`Invalid icon size ${size}, must be an integer`);
           }
           result[size] = imageData[size];
         }
@@ -558,7 +558,7 @@ let IconDetails = {
 
         for (let size of Object.keys(path)) {
           if (!INTEGER.test(size)) {
-            throw new Error(`Invalid icon size ${size}, must be an integer`);
+            throw new ExtensionError(`Invalid icon size ${size}, must be an integer`);
           }
 
           let url = baseURI.resolve(path[size]);
@@ -567,9 +567,13 @@ let IconDetails = {
           // relative paths. We currently accept absolute URLs as well,
           // which means we need to check that the extension is allowed
           // to load them. This will throw an error if it's not allowed.
-          Services.scriptSecurityManager.checkLoadURIStrWithPrincipal(
-            extension.principal, url,
-            Services.scriptSecurityManager.DISALLOW_SCRIPT);
+          try {
+            Services.scriptSecurityManager.checkLoadURIStrWithPrincipal(
+              extension.principal, url,
+              Services.scriptSecurityManager.DISALLOW_SCRIPT);
+          } catch (e) {
+            throw new ExtensionError(`Illegal URL ${url}`);
+          }
 
           result[size] = url;
         }

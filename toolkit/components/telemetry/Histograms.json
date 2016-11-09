@@ -7898,6 +7898,14 @@
     "releaseChannelCollection": "opt-out",
     "description": "How often are secure cookies set from non-secure origins, and vice-versa? 0=nonsecure/http, 1=nonsecure/https, 2=secure/http, 3=secure/https"
   },
+  "COOKIE_LEAVE_SECURE_ALONE": {
+    "alert_emails": ["seceng@mozilla.org"],
+    "expires_in_version": "57",
+    "kind": "enumerated",
+    "n_values": 10,
+    "releaseChannelCollection": "opt-out",
+    "description": "Measuring the effects of draft-ietf-httpbis-cookie-alone blocking. 0=blocked http setting secure cookie; 1=blocked http downgrading secure cookie; 2=blocked evicting secure cookie; 3=evicting newer insecure cookie; 4=evicting the oldest insecure cookie; 5=evicting the preferred cookie; 6=evicting the secure blocked"
+  },
   "NTLM_MODULE_USED_2": {
     "expires_in_version": "never",
     "kind": "enumerated",

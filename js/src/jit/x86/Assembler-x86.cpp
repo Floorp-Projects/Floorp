@@ -21,11 +21,11 @@ ABIArgGenerator::next(MIRType type)
 {
     switch (type) {
       case MIRType::Int32:
+      case MIRType::Float32:
       case MIRType::Pointer:
         current_ = ABIArg(stackOffset_);
         stackOffset_ += sizeof(uint32_t);
         break;
-      case MIRType::Float32: // Float32 moves are actually double moves
       case MIRType::Double:
         current_ = ABIArg(stackOffset_);
         stackOffset_ += sizeof(uint64_t);

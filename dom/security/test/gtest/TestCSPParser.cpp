@@ -175,10 +175,14 @@ nsresult runTestSuite(const PolicyTest* aPolicies,
   nsresult rv;
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   bool experimentalEnabledCache = false;
+  bool strictDynamicEnabledCache = false;
   if (prefs)
   {
     prefs->GetBoolPref("security.csp.experimentalEnabled", &experimentalEnabledCache);
     prefs->SetBoolPref("security.csp.experimentalEnabled", true);
+
+    prefs->GetBoolPref("security.csp.enableStrictDynamic", &strictDynamicEnabledCache);
+    prefs->SetBoolPref("security.csp.enableStrictDynamic", true);
   }
 
   for (uint32_t i = 0; i < aPolicyCount; i++) {
@@ -188,6 +192,7 @@ nsresult runTestSuite(const PolicyTest* aPolicies,
 
   if (prefs) {
     prefs->SetBoolPref("security.csp.experimentalEnabled", experimentalEnabledCache);
+    prefs->SetBoolPref("security.csp.enableStrictDynamic", strictDynamicEnabledCache);
   }
 
   return NS_OK;
@@ -226,7 +231,13 @@ TEST(CSPParser, Directives)
     { "referrer no-referrer",
       "referrer no-referrer" },
     { "require-sri-for script style",
-      "require-sri-for script style"}
+      "require-sri-for script style"},
+    { "script-src 'nonce-foo' 'unsafe-inline' ",
+      "script-src 'nonce-foo' 'unsafe-inline'" },
+    { "script-src 'nonce-foo' 'strict-dynamic' 'unsafe-inline' https:  ",
+      "script-src 'nonce-foo' 'strict-dynamic' 'unsafe-inline' https:" },
+    { "default-src 'sha256-siVR8' 'strict-dynamic' 'unsafe-inline' https:  ",
+      "default-src 'sha256-siVR8' 'unsafe-inline' https:" },
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);

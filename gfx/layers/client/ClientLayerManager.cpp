@@ -357,7 +357,6 @@ ClientLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
                                    EndTransactionFlags aFlags)
 {
   if (!mForwarder->IPCOpen()) {
-    mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
     mInTransaction = false;
     return;
   }
@@ -389,7 +388,6 @@ ClientLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
   mInTransaction = false;
 
   if (!mRoot || !mForwarder->IPCOpen()) {
-    mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
     return false;
   }
 

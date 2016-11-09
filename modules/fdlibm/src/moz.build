@@ -8,7 +8,7 @@ EXPORTS += [
     'fdlibm.h',
 ]
 
-FINAL_LIBRARY = 'fdlibm'
+FINAL_LIBRARY = 'js'
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += [

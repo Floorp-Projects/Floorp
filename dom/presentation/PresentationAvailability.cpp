@@ -53,6 +53,9 @@ PresentationAvailability::PresentationAvailability(nsPIDOMWindowInner* aWindow,
   , mIsAvailable(false)
   , mUrls(aUrls)
 {
+  for (uint32_t i = 0; i < mUrls.Length(); ++i) {
+    mAvailabilityOfUrl.AppendElement(false);
+  }
 }
 
 PresentationAvailability::~PresentationAvailability()
@@ -69,7 +72,7 @@ PresentationAvailability::Init(RefPtr<Promise>& aPromise)
     return false;
   }
 
-  nsresult rv = service->RegisterAvailabilityListener(this);
+  nsresult rv = service->RegisterAvailabilityListener(mUrls, this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // If the user agent is unable to monitor available device,
     // Resolve promise with |value| set to false.
@@ -102,7 +105,8 @@ void PresentationAvailability::Shutdown()
   }
 
   Unused <<
-    NS_WARN_IF(NS_FAILED(service->UnregisterAvailabilityListener(this)));
+    NS_WARN_IF(NS_FAILED(service->UnregisterAvailabilityListener(mUrls,
+                                                                 this)));
 }
 
 /* virtual */ void
@@ -157,12 +161,21 @@ PresentationAvailability::Value() const
 }
 
 NS_IMETHODIMP
-PresentationAvailability::NotifyAvailableChange(bool aIsAvailable)
+PresentationAvailability::NotifyAvailableChange(const nsTArray<nsString>& aAvailabilityUrls,
+                                                bool aIsAvailable)
 {
+  bool available = false;
+  for (uint32_t i = 0; i < mUrls.Length(); ++i) {
+    if (aAvailabilityUrls.Contains(mUrls[i])) {
+      mAvailabilityOfUrl[i] = aIsAvailable;
+    }
+    available |= mAvailabilityOfUrl[i];
+  }
+
   return NS_DispatchToCurrentThread(NewRunnableMethod
                                     <bool>(this,
                                            &PresentationAvailability::UpdateAvailabilityAndDispatchEvent,
-                                           aIsAvailable));
+                                           available));
 }
 
 void

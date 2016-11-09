@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <math.h>
 #include "../AudioPacketizer.h"
-#include <mozilla/Assertions.h>
+#include "gtest/gtest.h"
 
 using namespace mozilla;
 
@@ -40,10 +40,8 @@ int16_t Sequence(int16_t* aBuffer, uint32_t aSize, uint32_t aStart = 0)
 void IsSequence(int16_t* aBuffer, uint32_t aSize, uint32_t aStart = 0)
 {
   for (uint32_t i = 0; i < aSize; i++) {
-    if (aBuffer[i] != static_cast<int64_t>(aStart + i)) {
-      fprintf(stderr, "Buffer is not a sequence at offset %u\n", i);
-      MOZ_CRASH("Buffer is not a sequence");
-    }
+    ASSERT_TRUE(aBuffer[i] == static_cast<int64_t>(aStart + i)) <<
+      "Buffer is not a sequence at offset " << i << std::endl;
   }
   // Buffer is a sequence.
 }
@@ -51,18 +49,17 @@ void IsSequence(int16_t* aBuffer, uint32_t aSize, uint32_t aStart = 0)
 void Zero(int16_t* aBuffer, uint32_t aSize)
 {
   for (uint32_t i = 0; i < aSize; i++) {
-    if (aBuffer[i] != 0) {
-      fprintf(stderr, "Buffer is not null at offset %u\n", i);
-      MOZ_CRASH("Buffer is not null");
-    }
+    ASSERT_TRUE(aBuffer[i] == 0) <<
+      "Buffer is not null at offset " << i << std::endl;
   }
 }
 
 double sine(uint32_t aPhase) {
- return sin(aPhase * 2 * M_PI * 440 / 44100);
+  return sin(aPhase * 2 * M_PI * 440 / 44100);
 }
 
-int main() {
+TEST(AudioPacketizer, Test)
+{
   for (int16_t channels = 1; channels < 2; channels++) {
     // Test that the packetizer returns zero on underrun
     {
@@ -157,8 +154,8 @@ int main() {
           int16_t* packet = ap.Output();
           for (uint32_t k = 0; k < ap.PacketSize(); k++) {
             for (int32_t c = 0; c < channels; c++) {
-              MOZ_RELEASE_ASSERT(packet[k * channels + c] ==
-                                 static_cast<int16_t>(((2 << 14) * sine(outPhase))));
+              ASSERT_TRUE(packet[k * channels + c] ==
+                          static_cast<int16_t>(((2 << 14) * sine(outPhase))));
             }
             outPhase++;
           }
@@ -167,7 +164,4 @@ int main() {
       }
     }
   }
-
-  printf("OK\n");
-  return 0;
 }

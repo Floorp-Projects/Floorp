@@ -134,7 +134,7 @@ public:
                                        TextureFlags aFlags,
                                        uint64_t aSerial) override;
 
-  virtual void FatalError(const char* const aName, const char* const aMsg) const override;
+  virtual void HandleFatalError(const char* aName, const char* aMsg) const override;
 
   /**
    * Request that the parent tell us when graphics are ready on GPU.
@@ -230,6 +230,9 @@ public:
 private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CompositorBridgeChild();
+
+  void InitIPDL();
+  void DeallocPCompositorBridgeChild() override;
 
   virtual PLayerTransactionChild*
     AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBackendHints,

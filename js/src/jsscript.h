@@ -1910,7 +1910,9 @@ class LazyScript : public gc::TenuredCell
         uint32_t shouldDeclareArguments : 1;
         uint32_t hasThisBinding : 1;
         uint32_t isAsync : 1;
+        // The number of bits should match to NumClosedOverBindingsLimit.
         uint32_t numClosedOverBindings : 21;
+        // The number of bits should match to NumInnerFunctionsLimit.
         uint32_t numInnerFunctions : 20;
 
         uint32_t generatorKindBits : 2;
@@ -1951,7 +1953,7 @@ class LazyScript : public gc::TenuredCell
                                  uint32_t lineno, uint32_t column);
 
   public:
-    static const uint32_t NumClosedOverBindingsLimit = 1 << 22;
+    static const uint32_t NumClosedOverBindingsLimit = 1 << 21;
     static const uint32_t NumInnerFunctionsLimit = 1 << 20;
 
     // Create a LazyScript and initialize closedOverBindings and innerFunctions

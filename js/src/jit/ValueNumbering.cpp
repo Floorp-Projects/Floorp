@@ -727,7 +727,8 @@ ValueNumberer::visitDefinition(MDefinition* def)
         MResumePoint* rp = nop->resumePoint();
         if (rp && rp->numOperands() > 0 &&
             rp->getOperand(rp->numOperands() - 1) == prev &&
-            !nop->block()->lastIns()->isThrow())
+            !nop->block()->lastIns()->isThrow() &&
+            !prev->isAssertRecoveredOnBailout())
         {
             size_t numOperandsLive = 0;
             for (size_t j = 0; j < prev->numOperands(); j++) {

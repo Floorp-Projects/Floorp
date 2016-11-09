@@ -583,6 +583,32 @@ DeviceManagerDx::ResetDevices()
 }
 
 bool
+DeviceManagerDx::MaybeResetAndReacquireDevices()
+{
+  DeviceResetReason resetReason;
+  if (!GetAnyDeviceRemovedReason(&resetReason)) {
+    return false;
+  }
+
+  Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON, uint32_t(resetReason));
+
+  bool createCompositorDevice = !!mCompositorDevice;
+  bool createContentDevice = !!mContentDevice;
+
+  ResetDevices();
+
+  if (createCompositorDevice && !CreateCompositorDevices()) {
+    // Just stop, don't try anything more
+    return true;
+  }
+  if (createContentDevice) {
+    CreateContentDevices();
+  }
+
+  return true;
+}
+
+bool
 DeviceManagerDx::ContentAdapterIsParentAdapter(ID3D11Device* device)
 {
   DXGI_ADAPTER_DESC desc;

@@ -375,19 +375,15 @@ FetchDriver::HttpFetch()
   // Step 4 onwards of "HTTP Fetch" is handled internally by Necko.
   return NS_OK;
 }
-
 already_AddRefed<InternalResponse>
 FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse,
                                          bool aFoundOpaqueRedirect)
 {
   MOZ_ASSERT(aResponse);
-
   AutoTArray<nsCString, 4> reqURLList;
-  mRequest->GetURLList(reqURLList);
-
+  mRequest->GetURLListWithoutFragment(reqURLList);
   MOZ_ASSERT(!reqURLList.IsEmpty());
   aResponse->SetURLList(reqURLList);
-
   RefPtr<InternalResponse> filteredResponse;
   if (aFoundOpaqueRedirect) {
     filteredResponse = aResponse->OpaqueRedirectResponse();
@@ -808,15 +804,18 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   if(NS_WARN_IF(NS_FAILED(rv))){
     return rv;
   }
-
   nsCString spec;
   rv = uriClone->GetSpec(spec);
   if(NS_WARN_IF(NS_FAILED(rv))){
     return rv;
   }
+  nsCString fragment;
+  rv = uri->GetRef(fragment);
+  if(NS_WARN_IF(NS_FAILED(rv))){
+    return rv;
+  }
 
-  mRequest->AddURL(spec);
-
+  mRequest->AddURL(spec, fragment);
   NS_ConvertUTF8toUTF16 tRPHeaderValue(tRPHeaderCValue);
   // updates request’s associated referrer policy according to the
   // Referrer-Policy header (if any).

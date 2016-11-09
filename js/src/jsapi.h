@@ -1894,9 +1894,12 @@ struct JSPropertySpec {
         const char* funname;
     };
 
-    struct StringValueWrapper {
-        void*       unused;
-        const char* value;
+    struct ValueWrapper {
+        uintptr_t   type;
+        union {
+            const char* string;
+            int32_t     int32;
+        };
     };
 
     const char*                 name;
@@ -1912,12 +1915,13 @@ struct JSPropertySpec {
                 SelfHostedWrapper  selfHosted;
             } setter;
         } accessors;
-        StringValueWrapper         string;
+        ValueWrapper            value;
     };
 
     bool isAccessor() const {
         return !(flags & JSPROP_INTERNAL_USE_BIT);
     }
+    bool getValue(JSContext* cx, JS::MutableHandleValue value) const;
 
     bool isSelfHosted() const {
         MOZ_ASSERT(isAccessor());
@@ -1965,12 +1969,14 @@ template<size_t N>
 inline int
 CheckIsCharacterLiteral(const char (&arr)[N]);
 
+/* NEVER DEFINED, DON'T USE.  For use by JS_CAST_INT32_TO only. */
+inline int CheckIsInt32(int32_t value);
+
 /* NEVER DEFINED, DON'T USE.  For use by JS_PROPERTYOP_GETTER only. */
 inline int CheckIsGetterOp(JSGetterOp op);
 
 /* NEVER DEFINED, DON'T USE.  For use by JS_PROPERTYOP_SETTER only. */
 inline int CheckIsSetterOp(JSSetterOp op);
-
 
 } // namespace detail
 } // namespace JS
@@ -1981,6 +1987,10 @@ inline int CheckIsSetterOp(JSSetterOp op);
 
 #define JS_CAST_STRING_TO(s, To) \
   (static_cast<void>(sizeof(JS::detail::CheckIsCharacterLiteral(s))), \
+   reinterpret_cast<To>(s))
+
+#define JS_CAST_INT32_TO(s, To) \
+  (static_cast<void>(sizeof(JS::detail::CheckIsInt32(s))), \
    reinterpret_cast<To>(s))
 
 #define JS_CHECK_ACCESSOR_FLAGS(flags) \
@@ -2002,14 +2012,16 @@ inline int CheckIsSetterOp(JSSetterOp op);
 #define JS_PS_ACCESSOR_SPEC(name, getter, setter, flags, extraFlags) \
     { name, uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | extraFlags), \
       { {  getter, setter  } } }
-#define JS_PS_STRINGVALUE_SPEC(name, value, flags) \
+#define JS_PS_VALUE_SPEC(name, value, flags) \
     { name, uint8_t(flags | JSPROP_INTERNAL_USE_BIT), \
-      { { STRINGVALUE_WRAPPER(value), JSNATIVE_WRAPPER(nullptr) } } }
+      { { value, JSNATIVE_WRAPPER(nullptr) } } }
 
 #define SELFHOSTED_WRAPPER(name) \
     { { nullptr, JS_CAST_STRING_TO(name, const JSJitInfo*) } }
 #define STRINGVALUE_WRAPPER(value) \
-    { { nullptr, JS_CAST_STRING_TO(value, const JSJitInfo*) } }
+    { { reinterpret_cast<JSNative>(JSVAL_TYPE_STRING), JS_CAST_STRING_TO(value, const JSJitInfo*) } }
+#define INT32VALUE_WRAPPER(value) \
+    { { reinterpret_cast<JSNative>(JSVAL_TYPE_INT32), JS_CAST_INT32_TO(value, const JSJitInfo*) } }
 
 /*
  * JSPropertySpec uses JSNativeWrapper.  These macros encapsulate the definition
@@ -2033,10 +2045,12 @@ inline int CheckIsSetterOp(JSSetterOp op);
                          SELFHOSTED_WRAPPER(getterName), JSNATIVE_WRAPPER(nullptr), flags, \
                          JSPROP_SHARED | JSPROP_GETTER)
 #define JS_STRING_PS(name, string, flags) \
-    JS_PS_STRINGVALUE_SPEC(name, string, flags)
+    JS_PS_VALUE_SPEC(name, STRINGVALUE_WRAPPER(string), flags)
 #define JS_STRING_SYM_PS(symbol, string, flags) \
-    JS_PS_STRINGVALUE_SPEC(reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
-                           string, flags)
+    JS_PS_VALUE_SPEC(reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
+                     STRINGVALUE_WRAPPER(string), flags)
+#define JS_INT32_PS(name, value, flags) \
+    JS_PS_VALUE_SPEC(name, INT32VALUE_WRAPPER(value), flags)
 #define JS_PS_END \
     JS_PS_ACCESSOR_SPEC(nullptr, JSNATIVE_WRAPPER(nullptr), JSNATIVE_WRAPPER(nullptr), 0, 0)
 
@@ -3209,8 +3223,8 @@ JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index);
  * This is the closest thing we currently have to the ES6 [[Enumerate]]
  * internal method.
  *
- * The JSIdArray returned by JS_Enumerate must be rooted to protect its
- * contents from garbage collection. Use JS::AutoIdArray.
+ * The array of ids returned by JS_Enumerate must be rooted to protect its
+ * contents from garbage collection. Use JS::Rooted<JS::IdVector>.
  */
 extern JS_PUBLIC_API(bool)
 JS_Enumerate(JSContext* cx, JS::HandleObject obj, JS::MutableHandle<JS::IdVector> props);
@@ -5736,6 +5750,7 @@ JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
     Register(ION_FORCE_IC, "ion.forceinlineCaches")                        \
     Register(ION_ENABLE, "ion.enable")                                     \
     Register(ION_INTERRUPT_WITHOUT_SIGNAL, "ion.interrupt-without-signals") \
+    Register(ION_CHECK_RANGE_ANALYSIS, "ion.check-range-analysis")         \
     Register(BASELINE_ENABLE, "baseline.enable")                           \
     Register(OFFTHREAD_COMPILATION_ENABLE, "offthread-compilation.enable") \
     Register(JUMP_THRESHOLD, "jump-threshold")                             \
