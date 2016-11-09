@@ -113,15 +113,19 @@ var TabStateCacheInternal = {
     }
 
     let history = data.history;
+    let toIdx = history.entries.length;
+    if ("toIdx" in change) {
+      toIdx = Math.min(toIdx, change.toIdx + 1);
+    }
+
     for (let key of Object.keys(change)) {
       if (key == "entries") {
         if (change.fromIdx != kLastIndex) {
-          history.entries.splice(change.fromIdx + 1);
-          while (change.entries.length) {
-            history.entries.push(change.entries.shift());
-          }
+          let start = change.fromIdx + 1;
+          history.entries.splice.apply(
+            history.entries, [start, toIdx - start].concat(change.entries));
         }
-      } else if (key != "fromIndex") {
+      } else if (key != "fromIdx" && key != "toIdx") {
         history[key] = change[key];
       }
     }
