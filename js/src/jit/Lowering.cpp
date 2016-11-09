@@ -4168,10 +4168,10 @@ LIRGenerator::visitWasmAddOffset(MWasmAddOffset* ins)
 void
 LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins)
 {
-#ifndef DEBUG
-    if (ins->isRedundant())
-        return;
-#endif
+    if (ins->isRedundant()) {
+        if (MOZ_LIKELY(!JitOptions.wasmAlwaysCheckBounds))
+            return;
+    }
 
     MDefinition* input = ins->input();
     MOZ_ASSERT(input->type() == MIRType::Int32);

@@ -243,11 +243,14 @@ class JitTest:
                     elif name == 'tz-pacific':
                         test.tz_pacific = True
                     elif name == 'test-also-noasmjs':
-                        if options.can_test_also_noasmjs:
+                        if options.asmjs_enabled:
                             test.test_also.append(['--no-asmjs'])
                     elif name == 'test-also-wasm-baseline':
-                        if options.can_test_also_wasm_baseline:
+                        if options.wasm_enabled:
                             test.test_also.append(['--wasm-always-baseline'])
+                    elif name == 'test-also-wasm-check-bce':
+                        if options.wasm_enabled:
+                            test.test_also.append(['--wasm-check-bce'])
                     elif name.startswith('test-also='):
                         test.test_also.append([name[len('test-also='):]])
                     elif name.startswith('test-join='):
