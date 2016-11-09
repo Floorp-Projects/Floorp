@@ -86,3 +86,13 @@ partial interface Range {
   DOMRectList? getClientRects();
   DOMRect getBoundingClientRect();
 };
+
+dictionary ClientRectsAndTexts {
+  required DOMRectList rectList;
+  required DOMStringList textList;
+};
+
+partial interface Range {
+  [ChromeOnly, Throws]
+  ClientRectsAndTexts getClientRectsAndTexts();
+};

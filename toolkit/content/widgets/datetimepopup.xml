@@ -15,8 +15,8 @@
       <field name="dateTimePopupFrame">
         this.querySelector("#dateTimePopupFrame");
       </field>
-      <field name="TIME_PICKER_WIDTH" readonly="true">"14em"</field>
-      <field name="TIME_PICKER_HEIGHT" readonly="true">"14em"</field>
+      <field name="TIME_PICKER_WIDTH" readonly="true">"12em"</field>
+      <field name="TIME_PICKER_HEIGHT" readonly="true">"21em"</field>
       <method name="loadPicker">
         <parameter name="type"/>
         <parameter name="detail"/>
@@ -24,6 +24,8 @@
           this.hidden = false;
           this.type = type;
           this.pickerState = {};
+          // TODO: Resize picker according to content zoom level
+          this.style.fontSize = "10px";
           switch (type) {
             case "time": {
               this.detail = detail;

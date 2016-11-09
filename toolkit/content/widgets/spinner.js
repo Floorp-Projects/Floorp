@@ -18,11 +18,12 @@ function Spinner(props, context) {
 }
 
 {
-  const debug = 0 ? console.log.bind(console, '[spinner]') : function() {};
+  const debug = 0 ? console.log.bind(console, "[spinner]") : function() {};
 
-  const ITEM_HEIGHT = 20,
-        VIEWPORT_SIZE = 5,
-        VIEWPORT_COUNT = 5;
+  const ITEM_HEIGHT = 2.5,
+        VIEWPORT_SIZE = 7,
+        VIEWPORT_COUNT = 5,
+        SCROLL_TIMEOUT = 100;
 
   Spinner.prototype = {
     /**
@@ -35,13 +36,14 @@ function Spinner(props, context) {
      *             the parent component.
      *           {Function} getDisplayString: Takes a value, and output it
      *             as localized strings.
-     *           {Number} itemHeight [optional]: Item height in pixels.
      *           {Number} viewportSize [optional]: Number of items in a
      *             viewport.
+     *           {Boolean} hideButtons [optional]: Hide up & down buttons
+     *           {Number} rootFontSize [optional]: Used to support zoom in/out
      *         }
      */
     _init(props) {
-      const { setValue, getDisplayString, itemHeight = ITEM_HEIGHT } = props;
+      const { setValue, getDisplayString, hideButtons, rootFontSize = 10 } = props;
 
       const spinnerTemplate = document.getElementById("spinner-template");
       const spinnerElement = document.importNode(spinnerTemplate.content, true);
@@ -55,18 +57,25 @@ function Spinner(props, context) {
         isScrolling: false
       };
       this.props = {
-        setValue, getDisplayString, itemHeight, viewportSize,
+        setValue, getDisplayString, viewportSize, rootFontSize,
         // We can assume that the viewportSize is an odd number. Calculate how many
         // items we need to insert on top of the spinner so that the selected is at
         // the center. Ex: if viewportSize is 5, we need 2 items on top.
         viewportTopOffset: (viewportSize - 1) / 2
       };
       this.elements = {
+        container: spinnerElement.querySelector(".spinner-container"),
         spinner: spinnerElement.querySelector(".spinner"),
         up: spinnerElement.querySelector(".up"),
         down: spinnerElement.querySelector(".down"),
         itemsViewElements: []
       };
+
+      this.elements.spinner.style.height = (ITEM_HEIGHT * viewportSize) + "rem";
+
+      if (hideButtons) {
+        this.elements.container.classList.add("hide-buttons");
+      }
 
       this.context.appendChild(spinnerElement);
       this._attachEventListeners();
@@ -119,7 +128,7 @@ function Spinner(props, context) {
      */
     _onScroll() {
       const { items, itemsView, isInfiniteScroll } = this.state;
-      const { viewportSize, viewportTopOffset, itemHeight } = this.props;
+      const { viewportSize, viewportTopOffset } = this.props;
       const { spinner, itemsViewElements } = this.elements;
 
       this.state.index = this._getIndexByOffset(spinner.scrollTop);
@@ -148,6 +157,16 @@ function Spinner(props, context) {
           this._scrollTo(this.state.value, true);
         }
       }
+
+      // Use a timer to detect if a scroll event has not fired within some time
+      // (defined in SCROLL_TIMEOUT). This is required because we need to hide
+      // highlight and hover state when user is scrolling.
+      clearTimeout(this.state.scrollTimer);
+      this.elements.spinner.classList.add("scrolling");
+      this.state.scrollTimer = setTimeout(() => {
+        this.elements.spinner.classList.remove("scrolling");
+        this.elements.spinner.dispatchEvent(new CustomEvent("ScrollStop"));
+      }, SCROLL_TIMEOUT);
     },
 
     /**
@@ -191,13 +210,21 @@ function Spinner(props, context) {
      */
     _prepareNodes(length, parent) {
       const diff = length - parent.childElementCount;
-      let count = Math.abs(diff);
+
+      if (!diff) {
+        return;
+      }
 
       if (diff > 0) {
         // Add more elements if length is greater than current
         let frag = document.createDocumentFragment();
 
-        for (let i = 0; i < count; i++) {
+        // Remove margin bottom on the last element before appending
+        if (parent.lastChild) {
+          parent.lastChild.style.marginBottom = "";
+        }
+
+        for (let i = 0; i < diff; i++) {
           let el = document.createElement("div");
           frag.appendChild(el);
           this.elements.itemsViewElements.push(el);
@@ -205,11 +232,14 @@ function Spinner(props, context) {
         parent.appendChild(frag);
       } else if (diff < 0) {
         // Remove elements if length is less than current
-        for (let i = 0; i < count; i++) {
+        for (let i = 0; i < Math.abs(diff); i++) {
           parent.removeChild(parent.lastChild);
         }
         this.elements.itemsViewElements.splice(diff);
       }
+
+      parent.lastChild.style.marginBottom =
+        (ITEM_HEIGHT * this.props.viewportTopOffset) + "rem";
     },
 
     /**
@@ -260,20 +290,24 @@ function Spinner(props, context) {
         case "mousedown": {
           // Use preventDefault to keep focus on input boxes
           event.preventDefault();
+          event.target.setCapture();
           this.state.mouseState = {
             down: true,
             layerX: event.layerX,
             layerY: event.layerY
           };
           if (event.target == up) {
+            // An "active" class is needed to simulate :active pseudo-class
+            // because element is not focused.
+            event.target.classList.add("active");
             this._smoothScrollToIndex(index + 1);
           }
           if (event.target == down) {
+            event.target.classList.add("active");
             this._smoothScrollToIndex(index - 1);
           }
           if (event.target.parentNode == spinner) {
             // Listen to dragging events
-            event.target.setCapture();
             spinner.addEventListener("mousemove", this, { passive: true });
             spinner.addEventListener("mouseleave", this, { passive: true });
           }
@@ -281,6 +315,9 @@ function Spinner(props, context) {
         }
         case "mouseup": {
           this.state.mouseState.down = false;
+          if (event.target == up || event.target == down) {
+            event.target.classList.remove("active");
+          }
           if (event.target.parentNode == spinner) {
             // Check if user clicks or drags, scroll to the item if clicked,
             // otherwise get the current index and smooth scroll there.
@@ -326,7 +363,7 @@ function Spinner(props, context) {
      * @return {Number}  Index number
      */
     _getIndexByOffset(offset) {
-      return Math.round(offset / this.props.itemHeight);
+      return Math.round(offset / (ITEM_HEIGHT * this.props.rootFontSize));
     },
 
     /**
@@ -381,7 +418,7 @@ function Spinner(props, context) {
       // Do nothing if the value is not found
       if (index > -1) {
         this.state.index = index;
-        this.elements.spinner.scrollTop = this.state.index * this.props.itemHeight;
+        this.elements.spinner.scrollTop = this.state.index * ITEM_HEIGHT * this.props.rootFontSize;
       }
     },
 

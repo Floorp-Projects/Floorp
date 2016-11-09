@@ -102,22 +102,26 @@ AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
     AudioSegment output;
     for (uint32_t i = 0; i < inputCount; i++) {
       MediaStream* s = mInputs[i]->GetSource();
-      for (StreamTracks::TrackIter track(s->GetStreamTracks(),
-                                         MediaSegment::AUDIO);
-           !track.IsEnded(); track.Next()) {
+      StreamTracks::TrackIter track(s->GetStreamTracks(), MediaSegment::AUDIO);
+      if (track.IsEnded()) {
+        // No tracks for this input. Still we append data to trigger the mixer.
+        AudioSegment toMix;
+        toMix.AppendNullData(aTo - aFrom);
+        toMix.Mix(mMixer, MONO, Graph()->GraphRate());
+      }
+      for (; !track.IsEnded(); track.Next()) {
         AudioSegment* inputSegment = track->Get<AudioSegment>();
         StreamTime inputStart = s->GraphTimeToStreamTimeWithBlocking(aFrom);
         StreamTime inputEnd = s->GraphTimeToStreamTimeWithBlocking(aTo);
-        if (track->IsEnded() && inputSegment->GetDuration() <= inputEnd) {
-          // If the input track has ended and we have consumed all its data it
-          // can be ignored.
-          continue;
-        }
         AudioSegment toMix;
-        toMix.AppendSlice(*inputSegment, inputStart, inputEnd);
-        // Care for streams blocked in the [aTo, aFrom] range.
-        if (inputEnd - inputStart < aTo - aFrom) {
-          toMix.AppendNullData((aTo - aFrom) - (inputEnd - inputStart));
+        if (track->IsEnded() && inputSegment->GetDuration() <= inputStart) {
+          toMix.AppendNullData(aTo - aFrom);
+        } else {
+          toMix.AppendSlice(*inputSegment, inputStart, inputEnd);
+          // Care for streams blocked in the [aTo, aFrom] range.
+          if (inputEnd - inputStart < aTo - aFrom) {
+            toMix.AppendNullData((aTo - aFrom) - (inputEnd - inputStart));
+          }
         }
         toMix.Mix(mMixer, MONO, Graph()->GraphRate());
       }

@@ -892,6 +892,7 @@ struct nsStyleImageLayers {
                               nsStyleImageLayers::LayerType aType) const;
 
   bool HasLayerWithImage() const;
+  nsStyleImageLayers& operator=(const nsStyleImageLayers& aOther);
 
   static const nsCSSPropertyID kBackgroundLayerTable[];
   static const nsCSSPropertyID kMaskLayerTable[];

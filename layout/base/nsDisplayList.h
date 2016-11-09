@@ -3878,6 +3878,9 @@ protected:
  */
 class nsDisplayMask : public nsDisplaySVGEffects {
 public:
+  typedef mozilla::layers::ImageLayer ImageLayer;
+  typedef class mozilla::gfx::DrawTarget DrawTarget;
+
   nsDisplayMask(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 nsDisplayList* aList, bool aHandleOpacity,
                 const DisplayItemScrollClip* aScrollClip);
@@ -3913,11 +3916,20 @@ public:
                     nsRenderingContext* aCtx,
                     LayerManager* aManager);
 
+  /*
+   * Paint mask onto aMaskContext in mFrame's coordinate space.
+   */
+  bool PaintMask(nsDisplayListBuilder* aBuilder, gfxContext* aMaskContext);
+
   const nsTArray<nsRect>& GetDestRects()
   {
     return mDestRects;
   }
 private:
+  // According to mask property and the capability of aManager, determine
+  // whether paint mask onto a dedicate mask layer.
+  bool ShouldPaintOnMaskLayer(LayerManager* aManager);
+
   nsTArray<nsRect> mDestRects;
 };
 

@@ -20,7 +20,7 @@ class TestSecurity(FirefoxTestCase):
         self.assertEqual(cert['organization'], 'Mozilla Corporation')
         self.assertEqual(cert['issuerOrganization'], 'DigiCert Inc')
 
-        address = self.security.get_address_from_certificate(cert)
+        address = self.puppeteer.security.get_address_from_certificate(cert)
         self.assertIsNotNone(address)
         self.assertIsNotNone(address['city'])
         self.assertIsNotNone(address['country'])

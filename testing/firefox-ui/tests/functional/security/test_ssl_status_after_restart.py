@@ -32,14 +32,14 @@ class TestSSLStatusAfterRestart(FirefoxTestCase):
         )
 
         # Set browser to restore previous session
-        self.prefs.set_pref('browser.startup.page', 3)
+        self.puppeteer.prefs.set_pref('browser.startup.page', 3)
 
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.locationbar.identity_popup
 
     def tearDown(self):
         try:
-            self.windows.close_all([self.browser])
+            self.puppeteer.windows.close_all([self.browser])
             self.browser.tabbar.close_all_tabs([self.browser.tabbar.tabs[0]])
             self.browser.switch_to()
             self.identity_popup.close(force=True)
@@ -101,7 +101,7 @@ class TestSSLStatusAfterRestart(FirefoxTestCase):
         # Verify the domain listed on the security panel
         # If this is a wildcard cert, check only the domain
         if cert['commonName'].startswith('*'):
-            self.assertIn(self.security.get_domain_from_common_name(cert['commonName']),
+            self.assertIn(self.puppeteer.security.get_domain_from_common_name(cert['commonName']),
                           page_info.deck.security.domain.get_attribute('value'),
                           'Expected domain found in certificate for ' + url)
         else:

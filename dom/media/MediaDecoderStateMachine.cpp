@@ -200,7 +200,7 @@ public:
   virtual void HandleWaitingForData() {}
   virtual void HandleAudioCaptured() {}
 
-  virtual RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) = 0;
+  virtual RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget);
 
   virtual RefPtr<ShutdownPromise> HandleShutdown();
 
@@ -217,6 +217,12 @@ private:
   auto ReturnTypeHelper(R(S::*)(As...)) -> R;
 
 protected:
+  enum class EventVisibility : int8_t
+  {
+    Observable,
+    Suppressed
+  };
+
   using Master = MediaDecoderStateMachine;
   explicit StateObject(Master* aPtr) : mMaster(aPtr) {}
   TaskQueue* OwnerThread() const { return mMaster->mTaskQueue; }
@@ -394,8 +400,7 @@ private:
  * Purpose: release decoder resources to save memory and hardware resources.
  *
  * Transition to:
- *   DECODING_FIRSTFRAME when play state changes to PLAYING.
- *   SEEKING if any seek request.
+ *   SEEKING if any seek request or play state changes to PLAYING.
  */
 class MediaDecoderStateMachine::DormantState
   : public MediaDecoderStateMachine::StateObject
@@ -403,12 +408,21 @@ class MediaDecoderStateMachine::DormantState
 public:
   explicit DormantState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter(SeekJob aPendingSeek)
+  void Enter()
   {
-    mPendingSeek = Move(aPendingSeek);
     if (mMaster->IsPlaying()) {
       mMaster->StopPlayback();
     }
+
+    // Calculate the position to seek to when exiting dormant.
+    auto t = mMaster->mMediaSink->IsStarted()
+      ? mMaster->GetClock()
+      : mMaster->GetMediaTime();
+    mPendingSeek.mTarget = SeekTarget(t, SeekTarget::Accurate);
+    // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
+    // need to create the promise even it is not used at all.
+    RefPtr<MediaDecoder::SeekPromise> x = mPendingSeek.mPromise.Ensure(__func__);
+
     mMaster->Reset();
     mMaster->mReader->ReleaseResources();
   }
@@ -424,8 +438,6 @@ public:
   {
     return DECODER_STATE_DORMANT;
   }
-
-  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override;
 
   void HandleVideoSuspendTimeout() override
   {
@@ -581,8 +593,6 @@ public:
     CheckSlowDecoding(aDecodeStart);
   }
 
-  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override;
-
   void HandleEndOfStream() override;
 
   void HandleWaitingForData() override
@@ -686,16 +696,7 @@ private:
 
   void EnterDormant()
   {
-    auto t = mMaster->mMediaSink->IsStarted()
-      ? mMaster->GetClock()
-      : mMaster->GetMediaTime();
-    SeekJob seekJob;
-    seekJob.mTarget = SeekTarget(t, SeekTarget::Accurate,
-                                 MediaDecoderEventVisibility::Suppressed);
-    // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
-    // need to create the promise even it is not used at all.
-    RefPtr<MediaDecoder::SeekPromise> unused = seekJob.mPromise.Ensure(__func__);
-    SetState<DormantState>(Move(seekJob));
+    SetState<DormantState>();
   }
 
   void StartDormantTimer()
@@ -753,7 +754,8 @@ class MediaDecoderStateMachine::SeekingState
 public:
   explicit SeekingState(Master* aPtr) : StateObject(aPtr) {}
 
-  RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob aSeekJob)
+  RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob aSeekJob,
+                                          EventVisibility aVisibility)
   {
     mSeekJob = Move(aSeekJob);
 
@@ -796,8 +798,7 @@ public:
     mMaster->UpdatePlaybackPositionInternal(
       mSeekTask->GetSeekTarget().GetTime().ToMicroseconds());
 
-    if (mSeekJob.mTarget.mEventVisibility ==
-        MediaDecoderEventVisibility::Observable) {
+    if (aVisibility == EventVisibility::Observable) {
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::SeekStarted);
     }
 
@@ -847,8 +848,6 @@ public:
   {
     MOZ_ASSERT(false);
   }
-
-  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override;
 
   void HandleVideoSuspendTimeout() override
   {
@@ -967,8 +966,6 @@ public:
 
   void HandleEndOfStream() override;
 
-  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override;
-
   void HandleVideoSuspendTimeout() override
   {
     if (mMaster->HasVideo()) {
@@ -1059,8 +1056,6 @@ public:
     return DECODER_STATE_COMPLETED;
   }
 
-  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override;
-
   void HandleAudioCaptured() override
   {
     // MediaSink is changed. Schedule Step() to check if we can start playback.
@@ -1134,6 +1129,16 @@ public:
   }
 };
 
+RefPtr<MediaDecoder::SeekPromise>
+MediaDecoderStateMachine::
+StateObject::HandleSeek(SeekTarget aTarget)
+{
+  SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
+  SeekJob seekJob;
+  seekJob.mTarget = aTarget;
+  return SetState<SeekingState>(Move(seekJob), EventVisibility::Observable);
+}
+
 RefPtr<ShutdownPromise>
 MediaDecoderStateMachine::
 StateObject::HandleShutdown()
@@ -1204,10 +1209,9 @@ StateObject::HandleResumeVideoDecoding()
 
   seekJob.mTarget = SeekTarget(mMaster->GetMediaTime(),
                                type,
-                               MediaDecoderEventVisibility::Suppressed,
                                true /* aVideoOnly */);
 
-  SetState<SeekingState>(Move(seekJob))->Then(
+  SetState<SeekingState>(Move(seekJob), EventVisibility::Suppressed)->Then(
     AbstractThread::MainThread(), __func__,
     [start, info, hw](){ ReportRecoveryTelemetry(start, info, hw); },
     [](){});
@@ -1276,17 +1280,6 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
   }
 }
 
-RefPtr<MediaDecoder::SeekPromise>
-MediaDecoderStateMachine::
-DormantState::HandleSeek(SeekTarget aTarget)
-{
-  // Exit dormant when the user wants to seek.
-  mPendingSeek.RejectIfExists(__func__);
-  SeekJob seekJob;
-  seekJob.mTarget = aTarget;
-  return SetState<SeekingState>(Move(seekJob));
-}
-
 void
 MediaDecoderStateMachine::
 DormantState::HandlePlayStateChanged(MediaDecoder::PlayState aPlayState)
@@ -1294,7 +1287,8 @@ DormantState::HandlePlayStateChanged(MediaDecoder::PlayState aPlayState)
   if (aPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
     // Exit dormant when the user wants to play.
     MOZ_ASSERT(!Info().IsEncrypted() || mMaster->mCDMProxy);
-    SetState<DecodingFirstFrameState>(Move(mPendingSeek));
+    MOZ_ASSERT(mMaster->mSentFirstFrameLoadedEvent);
+    SetState<SeekingState>(Move(mPendingSeek), EventVisibility::Suppressed);
   }
 }
 
@@ -1313,7 +1307,7 @@ DecodingFirstFrameState::Enter(SeekJob aPendingSeek)
   if (aPendingSeek.Exists() &&
       (mMaster->mSentFirstFrameLoadedEvent ||
        Reader()->ForceZeroStartTime())) {
-    SetState<SeekingState>(Move(aPendingSeek));
+    SetState<SeekingState>(Move(aPendingSeek), EventVisibility::Observable);
     return;
   }
 
@@ -1350,10 +1344,7 @@ DecodingFirstFrameState::HandleSeek(SeekTarget aTarget)
   // in Enter() if there is any pending seek.
   MOZ_ASSERT(!mPendingSeek.Exists());
 
-  SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
-  SeekJob seekJob;
-  seekJob.mTarget = aTarget;
-  return SetState<SeekingState>(Move(seekJob));
+  return StateObject::HandleSeek(aTarget);
 }
 
 void
@@ -1370,7 +1361,7 @@ DecodingFirstFrameState::MaybeFinishDecodeFirstFrame()
   mMaster->FinishDecodeFirstFrame();
 
   if (mPendingSeek.Exists()) {
-    SetState<SeekingState>(Move(mPendingSeek));
+    SetState<SeekingState>(Move(mPendingSeek), EventVisibility::Observable);
   } else {
     SetState<DecodingState>();
   }
@@ -1408,16 +1399,6 @@ DecodingState::Enter()
   if (mMaster->mPlayState == MediaDecoder::PLAY_STATE_PAUSED) {
     StartDormantTimer();
   }
-}
-
-RefPtr<MediaDecoder::SeekPromise>
-MediaDecoderStateMachine::
-DecodingState::HandleSeek(SeekTarget aTarget)
-{
-  SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
-  SeekJob seekJob;
-  seekJob.mTarget = aTarget;
-  return SetState<SeekingState>(Move(seekJob));
 }
 
 void
@@ -1463,16 +1444,6 @@ DecodingState::MaybeStartBuffering()
   if (shouldBuffer) {
     SetState<BufferingState>();
   }
-}
-
-RefPtr<MediaDecoder::SeekPromise>
-MediaDecoderStateMachine::
-SeekingState::HandleSeek(SeekTarget aTarget)
-{
-  SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
-  SeekJob seekJob;
-  seekJob.mTarget = aTarget;
-  return SetState<SeekingState>(Move(seekJob));
 }
 
 void
@@ -1610,26 +1581,6 @@ BufferingState::HandleEndOfStream()
     // Check if we can exit buffering.
     mMaster->ScheduleStateMachine();
   }
-}
-
-RefPtr<MediaDecoder::SeekPromise>
-MediaDecoderStateMachine::
-BufferingState::HandleSeek(SeekTarget aTarget)
-{
-  SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
-  SeekJob seekJob;
-  seekJob.mTarget = aTarget;
-  return SetState<SeekingState>(Move(seekJob));
-}
-
-RefPtr<MediaDecoder::SeekPromise>
-MediaDecoderStateMachine::
-CompletedState::HandleSeek(SeekTarget aTarget)
-{
-  SLOG("Changed state to SEEKING (to %lld)", aTarget.GetTime().ToMicroseconds());
-  SeekJob seekJob;
-  seekJob.mTarget = aTarget;
-  return SetState<SeekingState>(Move(seekJob));
 }
 
 RefPtr<ShutdownPromise>

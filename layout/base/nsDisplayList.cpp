@@ -7052,12 +7052,73 @@ nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
   return container.forget();
 }
 
+bool
+nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
+                         gfxContext* aMaskContext)
+{
+  MOZ_ASSERT(aMaskContext->GetDrawTarget()->GetFormat() == SurfaceFormat::A8);
+
+  nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  nsSVGIntegrationUtils::PaintFramesParams params(*aMaskContext,
+                                                  mFrame,  mVisibleRect,
+                                                  borderArea, aBuilder,
+                                                  nullptr,
+                                                  mHandleOpacity);
+  ComputeMaskGeometry(params);
+  image::DrawResult result = nsSVGIntegrationUtils::PaintMask(params);
+
+  nsDisplayMaskGeometry::UpdateDrawResult(this, result);
+  return (result == image::DrawResult::SUCCESS) ? true : false;
+}
+
 LayerState
 nsDisplayMask::GetLayerState(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
                              const ContainerLayerParameters& aParameters)
 {
+  if (ShouldPaintOnMaskLayer(aManager)) {
+    return RequiredLayerStateForChildren(aBuilder, aManager, aParameters,
+                                         mList, GetAnimatedGeometryRoot());
+  }
+
   return LAYER_SVG_EFFECTS;
+}
+
+bool nsDisplayMask::ShouldPaintOnMaskLayer(LayerManager* aManager)
+{
+  if (!aManager->IsCompositingCheap()) {
+    return false;
+  }
+
+  nsSVGIntegrationUtils::MaskUsage maskUsage;
+  nsSVGIntegrationUtils::DetermineMaskUsage(mFrame, mHandleOpacity, maskUsage);
+
+  if (!maskUsage.shouldGenerateMaskLayer ||
+      maskUsage.opacity != 1.0 || maskUsage.shouldApplyClipPath ||
+      maskUsage.shouldApplyBasicShape ||
+      maskUsage.shouldGenerateClipMaskLayer) {
+    return false;
+  }
+
+  if (!nsSVGIntegrationUtils::IsMaskResourceReady(mFrame)) {
+    return false;
+  }
+
+  // XXX temporary disable drawing SVG mask onto mask layer before bug 1313877
+  // been fixed.
+  nsIFrame* firstFrame =
+    nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
+  nsSVGEffects::EffectProperties effectProperties =
+    nsSVGEffects::GetEffectProperties(firstFrame);
+  nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
+  for (size_t i = 0; i < maskFrames.Length() ; i++) {
+    nsSVGMaskFrame *maskFrame = maskFrames[i];
+    if (maskFrame) {
+      return false; // Found SVG mask.
+    }
+  }
+
+  return true;
 }
 
 bool nsDisplayMask::ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -7113,6 +7174,8 @@ nsDisplayMask::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                             nsRenderingContext* aCtx,
                             LayerManager* aManager)
 {
+  MOZ_ASSERT(!ShouldPaintOnMaskLayer(aManager));
+
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   nsSVGIntegrationUtils::PaintFramesParams params(*aCtx->ThebesContext(),
                                                   mFrame,  mVisibleRect,
