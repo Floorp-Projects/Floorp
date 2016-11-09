@@ -897,6 +897,7 @@ class BaseCompiler
         Stk() { kind_ = None; }
 
         Kind kind() const { return kind_; }
+        bool isMem() const { return kind_ <= MemLast; }
 
         RegI32   i32reg() const { MOZ_ASSERT(kind_ == RegisterI32); return i32reg_; }
         RegI64   i64reg() const { MOZ_ASSERT(kind_ == RegisterI64); return i64reg_; }
@@ -907,7 +908,7 @@ class BaseCompiler
         RawF32   f32val() const { MOZ_ASSERT(kind_ == ConstF32); return f32val_; }
         RawF64   f64val() const { MOZ_ASSERT(kind_ == ConstF64); return f64val_; }
         uint32_t slot() const { MOZ_ASSERT(kind_ > MemLast && kind_ <= LocalLast); return slot_; }
-        uint32_t offs() const { MOZ_ASSERT(kind_ <= MemLast); return offs_; }
+        uint32_t offs() const { MOZ_ASSERT(isMem()); return offs_; }
 
         void setI32Reg(RegI32 r) { kind_ = RegisterI32; i32reg_ = r; }
         void setI64Reg(RegI64 r) { kind_ = RegisterI64; i64reg_ = r; }
@@ -1273,7 +1274,7 @@ class BaseCompiler
 
         for (size_t i = lim; i > 0; i--) {
             // Memory opcodes are first in the enum, single check against MemLast is fine.
-            if (stk_[i-1].kind() <= Stk::MemLast) {
+            if (stk_[i - 1].kind() <= Stk::MemLast) {
                 start = i;
                 break;
             }
@@ -1807,7 +1808,7 @@ class BaseCompiler
     size_t stackConsumed(size_t numval) {
         size_t size = 0;
         MOZ_ASSERT(numval <= stk_.length());
-        for (uint32_t i = stk_.length()-1; numval > 0; numval--, i--) {
+        for (uint32_t i = stk_.length() - 1; numval > 0; numval--, i--) {
             // The size computations come from the implementation of Push() in
             // MacroAssembler-x86-shared.cpp and MacroAssembler-arm-shared.cpp,
             // and from VFPRegister::size() in Architecture-arm.h.
@@ -1902,6 +1903,11 @@ class BaseCompiler
             else
                 masm.freeStack(frameHere - framePushed);
         }
+    }
+
+    void popStackIfMemory() {
+        if (peek(0).isMem())
+            masm.freeStack(stackConsumed(1));
     }
 
     // Peek at the stack, for calls.
@@ -2033,8 +2039,8 @@ class BaseCompiler
         if (varLow_ < varHigh_) {
             ScratchI32 scratch(*this);
             masm.mov(ImmWord(0), scratch);
-            for (int32_t i = varLow_ ; i < varHigh_ ; i+=4)
-                storeToFrameI32(scratch, i+4);
+            for (int32_t i = varLow_ ; i < varHigh_ ; i += 4)
+                storeToFrameI32(scratch, i + 4);
         }
     }
 
@@ -2050,7 +2056,8 @@ class BaseCompiler
         // ABINonArgReg0 != ScratchReg, which can be used by branchPtr().
 
         masm.movePtr(masm.getStackPointer(), ABINonArgReg0);
-        masm.subPtr(Imm32(maxFramePushed_ - localSize_), ABINonArgReg0);
+        if (maxFramePushed_ - localSize_)
+            masm.subPtr(Imm32(maxFramePushed_ - localSize_), ABINonArgReg0);
         masm.branchPtr(Assembler::Below,
                        Address(WasmTlsReg, offsetof(TlsData, stackLimit)),
                        ABINonArgReg0,
@@ -3580,6 +3587,7 @@ class BaseCompiler
     MOZ_MUST_USE bool emitBr();
     MOZ_MUST_USE bool emitBrIf();
     MOZ_MUST_USE bool emitBrTable();
+    MOZ_MUST_USE bool emitDrop();
     MOZ_MUST_USE bool emitReturn();
     MOZ_MUST_USE bool emitCallArgs(const ValTypeVector& args, FunctionCall& baselineCall);
     MOZ_MUST_USE bool emitCall();
@@ -5199,6 +5207,20 @@ BaseCompiler::emitBrTable()
     return true;
 }
 
+bool
+BaseCompiler::emitDrop()
+{
+    if (!iter_.readDrop())
+        return false;
+
+    if (deadCode_)
+        return true;
+
+    popStackIfMemory();
+    popValueStackBy(1);
+    return true;
+}
+
 void
 BaseCompiler::doReturn(ExprType type)
 {
@@ -6557,10 +6579,7 @@ BaseCompiler::emitBody()
             CHECK(iter_.readNop());
             NEXT();
           case Expr::Drop:
-            CHECK(iter_.readDrop());
-            if (!deadCode_)
-                popValueStackBy(1);
-            NEXT();
+            CHECK_NEXT(emitDrop());
           case Expr::Block:
             CHECK_NEXT(emitBlock());
           case Expr::Loop:
