@@ -30,7 +30,6 @@
         ondialogaccept="return dialog.onOK()"
         ondialogcancel="return dialog.onCancel()">
 
-  <script type="application/javascript" src="chrome://mozapps/content/downloads/helperApps.js"/>
 
   <stringbundle id="strings" src="chrome://mozapps/locale/downloads/unknownContentType.properties"/>
 
