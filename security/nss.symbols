@@ -13,7 +13,7 @@
 PR_*
 PL_*
 #endif
-#include ../../../db/sqlite3/src/sqlite.symbols
+#include ../db/sqlite3/src/sqlite.symbols
 ATOB_AsciiToData
 ATOB_AsciiToData_Util
 ATOB_ConvertAsciiToItem
