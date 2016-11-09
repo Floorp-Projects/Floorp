@@ -701,6 +701,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'DownloadEvent.webidl',
     'ErrorEvent.webidl',
     'FontFaceSetLoadEvent.webidl',
+    'GroupedHistoryEvent.webidl',
     'HashChangeEvent.webidl',
     'HiddenPluginEvent.webidl',
     'ImageCaptureErrorEvent.webidl',
