@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <meta charset="utf-8">
+    <title>CSS Masking: mask invalidation.</title>
+    <style type="text/css">
+      div.outer {
+        background-color: purple;
+        position: absolute;
+        margin: 1px 2px 3px 4px;
+        border: solid purple;
+        width: 40px;
+        height: 20px;
+      }
+
+      div.inner {
+        width: 10px;
+        height: 10px;
+        border: 1px solid transparent;
+        will-change: transform;
+      }
+
+      div.mask {
+        mask-size: 100% 100%;
+        mask-origin: border-box;
+        mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0"  width="100%" height="50%" fill="blue" fill-opacity="1"/><rect x="0" y="50%" width="100%" height="50%" fill="blue" fill-opacity="0"/></svg>');
+      }
+
+      #d1 {
+        top: 10px;
+        left: 10px;
+        mask-clip: padding-box;
+        border-width: 10px;
+        padding: 0px;
+      }
+
+      #d2 {
+        top: 10px;
+        left: 110px;
+        mask-clip: padding-box;
+        border-width: 0px;
+        padding: 10px;
+      }
+
+      #d3 {
+        top: 15px;
+        left: 215px;
+        mask-clip: content-box;
+        border-width: 10px;
+        padding: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="d1" class="outer mask"><div class="inner"></div></div>
+    <div id="d2" class="outer mask"><div class="inner"></div></div>
+    <div id="d3" class="outer mask"><div class="inner"></div></div>
+    <script type="text/javascript">
+      function invalidateMaskedElements()
+      {
+        // Shrink border area, thicken padding area. Keep ths size of this
+        // division unchanged.
+        document.getElementById("d1").style.borderWidth = "5px";
+        document.getElementById("d1").style.padding = "5px";
+
+        // Shrink padding area, thicken border area. Keep ths size of this
+        // division unchanged.
+        document.getElementById("d2").style.borderWidth = "5px";
+        document.getElementById("d2").style.padding = "5px";
+
+        // Shrink border area, thicken content area. Keep ths size of this
+        // division unchanged.
+        document.getElementById("d3").style.width = "50px";
+        document.getElementById("d3").style.height = "30px";
+        document.getElementById("d3").style.borderWidth = "0px";
+
+        document.documentElement.removeAttribute("class");
+      }
+
+      document.addEventListener("MozReftestInvalidate",
+                                invalidateMaskedElements, false);
+    </script>
+  </body>
+</html>
