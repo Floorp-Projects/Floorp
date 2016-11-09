@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OpusDecoder.h"
+#include "OpusParser.h"
 #include "TimeUnits.h"
 #include "VorbisUtils.h"
 #include "VorbisDecoder.h" // For VorbisLayout
@@ -12,8 +13,12 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/SyncRunnable.h"
 
-#include <stdint.h>
 #include <inttypes.h>  // For PRId64
+
+#include "opus/opus.h"
+extern "C" {
+#include "opus/opus_multistream.h"
+}
 
 #define OPUS_DEBUG(arg, ...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, \
     ("OpusDataDecoder(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
