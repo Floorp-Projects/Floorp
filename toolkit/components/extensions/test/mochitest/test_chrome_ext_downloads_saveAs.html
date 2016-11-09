@@ -15,15 +15,18 @@
 add_task(function* test_downloads_saveAs() {
   function background() {
     const url = URL.createObjectURL(new Blob(["file content"]));
-    browser.test.onMessage.addListener(() =>
-      browser.downloads.download({url, saveAs: true})
-        .then(id => browser.downloads.onChanged.addListener(delta => {
+    browser.test.onMessage.addListener(async () => {
+      try {
+        let id = await browser.downloads.download({url, saveAs: true});
+        browser.downloads.onChanged.addListener(delta => {
           if (delta.state.current === "complete") {
             browser.test.sendMessage("done", {ok: true, id});
           }
-        })).catch(({message}) => {
-          browser.test.sendMessage("done", {ok: false, message});
-        }));
+        });
+      } catch ({message}) {
+        browser.test.sendMessage("done", {ok: false, message});
+      }
+    });
     browser.test.sendMessage("ready");
   }
 

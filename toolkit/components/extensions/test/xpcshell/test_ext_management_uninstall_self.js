@@ -107,15 +107,13 @@ add_task(function* test_management_uninstall_prompt_keep() {
   promptService._response = 1;
 
   function background() {
-    browser.test.onMessage.addListener(msg => {
-      browser.management.uninstallSelf({showConfirmDialog: true}).then(() => {
-        browser.test.fail("uninstallSelf rejects when user declines uninstall");
-      }, error => {
-        browser.test.assertEq("User cancelled uninstall of extension",
-                              error.message,
-                              "Expected rejection when user declines uninstall");
-        browser.test.sendMessage("uninstall-rejected");
-      });
+    browser.test.onMessage.addListener(async msg => {
+      await browser.test.assertRejects(
+        browser.management.uninstallSelf({showConfirmDialog: true}),
+        "User cancelled uninstall of extension",
+        "Expected rejection when user declines uninstall");
+
+      browser.test.sendMessage("uninstall-rejected");
     });
   }
 

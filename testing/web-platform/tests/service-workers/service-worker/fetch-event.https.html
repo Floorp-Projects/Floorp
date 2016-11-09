@@ -419,14 +419,13 @@ async_test(function(t) {
       .then(function(frame) {
           assert_equals(
             frame.contentDocument.body.textContent,
-            'Fragment Not Found',
-            'Service worker should not expose URL fragments.');
+            'Fragment Found :' + fragment,
+            'Service worker should expose URL fragments in request.');
           frame.remove();
           return service_worker_unregister_and_done(t, scope);
         })
       .catch(unreached_rejection(t));
   }, 'Service Worker must not expose FetchEvent URL fragments.');
-
 async_test(function(t) {
     var scope = 'resources/simple.html?cache';
     var frame;

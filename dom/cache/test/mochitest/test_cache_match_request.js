@@ -25,7 +25,6 @@ function checkResponse(r, expectedBody) {
     }
   });
 }
-
 fetch(new Request(request)).then(function(r) {
   response = r;
   return response.text();
@@ -39,7 +38,6 @@ fetch(new Request(request)).then(function(r) {
 }).then(function() {
   testDone();
 });
-
 // The request argument can either be a URL string, or a Request object.
 function testRequest(request, unknownRequest, requestWithAlternateQueryString,
                      requestWithDifferentFragment) {

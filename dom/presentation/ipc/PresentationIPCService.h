@@ -8,9 +8,9 @@
 #define mozilla_dom_PresentationIPCService_h
 
 #include "mozilla/dom/PresentationServiceBase.h"
+#include "nsIPresentationListener.h"
 #include "nsIPresentationSessionTransport.h"
 #include "nsIPresentationService.h"
-#include "nsTObserverArray.h"
 
 class nsIDocShell;
 
@@ -22,16 +22,16 @@ class PresentationContentSessionInfo;
 class PresentationResponderLoadingCallback;
 
 class PresentationIPCService final
-  : public nsIPresentationService
+  : public nsIPresentationAvailabilityListener
+  , public nsIPresentationService
   , public PresentationServiceBase<PresentationContentSessionInfo>
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRESENTATIONAVAILABILITYLISTENER
   NS_DECL_NSIPRESENTATIONSERVICE
 
   PresentationIPCService();
-
-  nsresult NotifyAvailableChange(bool aAvailable);
 
   nsresult NotifySessionStateChange(const nsAString& aSessionId,
                                     uint16_t aState,
@@ -62,7 +62,6 @@ private:
   nsresult SendRequest(nsIPresentationServiceCallback* aCallback,
                        const PresentationIPCRequest& aRequest);
 
-  nsTObserverArray<nsCOMPtr<nsIPresentationAvailabilityListener> > mAvailabilityListeners;
   nsRefPtrHashtable<nsStringHashKey,
                     nsIPresentationSessionListener> mSessionListeners;
   nsRefPtrHashtable<nsUint64HashKey,

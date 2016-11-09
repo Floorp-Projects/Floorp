@@ -68,6 +68,8 @@ CONFIGURE_DEFINE_FILES += [
 ]
 
 if not CONFIG['JS_STANDALONE']:
+    LIBRARY_DEFINES['MOZ_HAS_MOZGLUE'] = True
+
     CONFIGURE_SUBST_FILES += [
         '../../config/autoconf-js.mk',
         '../../config/emptyvars-js.mk',
@@ -658,7 +660,6 @@ if CONFIG['ENABLE_INTL_API']:
         ]
 
 USE_LIBS += [
-    'fdlibm',
     'nspr',
     'zlib',
 ]
@@ -750,7 +751,6 @@ selfhosted.inputs = [
     'builtin/SelfHostingDefines.h',
     'builtin/Utilities.js',
     'builtin/Array.js',
-    'builtin/AsyncFunctions.js',
     'builtin/Classes.js',
     'builtin/Date.js',
     'builtin/Error.js',

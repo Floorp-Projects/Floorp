@@ -126,19 +126,71 @@
         ]
       },
       {
-        "name": "assertThrows",
+        "name": "assertRejects",
         "type": "function",
-        "unsupported": true,
+        "async": true,
         "parameters": [
-          {"type": "function", "name": "fn"},
           {
-            "type": "object",
-            "name": "self",
-            "additionalProperties": {"type": "any"},
+            "name": "promise",
+            "$ref": "Promise"
+          },
+          {
+            "name": "expectedError",
+            "$ref": "ExpectedError",
             "optional": true
           },
-          {"type": "array", "items": {"type": "any"}, "name": "args", "optional": true},
-          {"choices": [ {"type": "string"}, {"type": "object", "isInstanceOf": "RegExp"} ], "name": "message", "optional": true}
+          {
+            "name": "message",
+            "type": "string",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "name": "assertThrows",
+        "type": "function",
+        "parameters": [
+          {
+            "name": "func",
+            "type": "function"
+          },
+          {
+            "name": "expectedError",
+            "$ref": "ExpectedError",
+            "optional": true
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "optional": true
+          }
+        ]
+      }
+    ],
+    "types": [
+      {
+        "id": "ExpectedError",
+        "choices": [
+          {"type": "string"},
+          {"type": "object", "isInstanceOf": "RegExp", "additionalProperties": true},
+          {"type": "function"}
+        ]
+      },
+      {
+        "id": "Promise",
+        "choices": [
+          {
+            "type": "object",
+            "properties": {
+              "then": {"type": "function"}
+            },
+            "additionalProperties": true
+          },
+          {
+            "type": "object",
+            "isInstanceOf": "Promise",
+            "additionalProperties": true
+          }
         ]
       }
     ],

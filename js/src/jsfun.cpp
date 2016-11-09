@@ -991,7 +991,7 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen)
     if (IsAsmJSFunction(fun))
         return AsmJSFunctionToString(cx, fun);
 
-    if (IsWrappedAsyncFunction(cx, fun)) {
+    if (IsWrappedAsyncFunction(fun)) {
         RootedFunction unwrapped(cx, GetUnwrappedAsyncFunction(fun));
         return FunctionToString(cx, unwrapped, lambdaParen);
     }
@@ -1930,10 +1930,13 @@ js::AsyncFunctionConstructor(JSContext* cx, unsigned argc, Value* vp)
     if (!FunctionConstructor(cx, argc, vp, StarGenerator, AsyncFunction))
         return false;
 
-    FixedInvokeArgs<1> args2(cx);
-    args2[0].set(args.rval());
-    return CallSelfHostedFunction(cx, cx->names().AsyncFunction_wrap,
-                                  NullHandleValue, args2, args.rval());
+    RootedFunction unwrapped(cx, &args.rval().toObject().as<JSFunction>());
+    RootedObject wrapped(cx, WrapAsyncFunction(cx, unwrapped));
+    if (!wrapped)
+        return false;
+
+    args.rval().setObject(*wrapped);
+    return true;
 }
 
 bool

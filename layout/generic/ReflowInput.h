@@ -234,8 +234,6 @@ public:
     // *containing block's writing-mode*, NOT mFrame's own writing-mode. This
     // is purely for convenience, since that's the writing-mode we're dealing
     // with when we set & react to these bits.
-    // XXXdholbert These new bits will probably make the "mStaticPosIsCBOrigin"
-    // bit obsolete -- consider removing it in bug 1269017.
     uint32_t mIOffsetsNeedCSSAlign:1;
     uint32_t mBOffsetsNeedCSSAlign:1;
   };
@@ -729,8 +727,10 @@ public:
     // will be be passed to ComputeSize()).
     COMPUTE_SIZE_USE_AUTO_BSIZE = (1<<3),
 
-    // The caller wants the abs.pos. static-position resolved at the origin
-    // of the containing block, i.e. at LogicalPoint(0, 0).
+    // The caller wants the abs.pos. static-position resolved at the origin of
+    // the containing block, i.e. at LogicalPoint(0, 0). (Note that this
+    // doesn't necessarily mean that (0, 0) is the *correct* static position
+    // for the frame in question.)
     STATIC_POS_IS_CB_ORIGIN = (1<<4),
 
     // Pass ComputeSizeFlags::eIClampMarginBoxMinSize to ComputeSize().

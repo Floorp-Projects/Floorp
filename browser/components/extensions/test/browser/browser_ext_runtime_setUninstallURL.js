@@ -30,31 +30,22 @@ function* makeAndInstallXPI(id, backgroundScript, loadedURL) {
 
 
 add_task(function* test_setuninstallurl_badargs() {
-  function backgroundScript() {
-    let promises = [
-      browser.runtime.setUninstallURL("this is not a url")
-        .then(() => {
-          browser.test.notifyFail("setUninstallURL should have failed with bad url");
-        })
-        .catch(error => {
-          browser.test.assertTrue(/Invalid URL/.test(error.message), "error message indicates malformed url");
-        }),
+  async function background() {
+    await browser.test.assertRejects(
+      browser.runtime.setUninstallURL("this is not a url"),
+      /Invalid URL/,
+      "setUninstallURL with an invalid URL should fail");
 
-      browser.runtime.setUninstallURL("file:///etc/passwd")
-        .then(() => {
-          browser.test.notifyFail("setUninstallURL should have failed with non-http[s] url");
-        })
-        .catch(error => {
-          browser.test.assertTrue(/must have the scheme http or https/.test(error.message), "error message indicates bad scheme");
-        }),
-    ];
+    await browser.test.assertRejects(
+      browser.runtime.setUninstallURL("file:///etc/passwd"),
+      /must have the scheme http or https/,
+      "setUninstallURL with an illegal URL should fail");
 
-    Promise.all(promises)
-      .then(() => browser.test.notifyPass("setUninstallURL bad params"));
+    browser.test.notifyPass("setUninstallURL bad params");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: "(" + backgroundScript.toString() + ")()",
+    background,
   });
   yield extension.startup();
   yield extension.awaitFinish();
@@ -65,9 +56,9 @@ add_task(function* test_setuninstallurl_badargs() {
 // empty string is equivalent to not setting an uninstall URL
 // (i.e., no new tab is opened upon uninstall)
 add_task(function* test_setuninstall_empty_url() {
-  function backgroundScript() {
-    browser.runtime.setUninstallURL("")
-      .then(() => browser.tabs.create({url: "http://example.com/addon_loaded"}));
+  async function backgroundScript() {
+    await browser.runtime.setUninstallURL("");
+    browser.tabs.create({url: "http://example.com/addon_loaded"});
   }
 
   let addon = yield makeAndInstallXPI("test_uinstallurl2@tests.mozilla.org",
@@ -82,9 +73,9 @@ add_task(function* test_setuninstall_empty_url() {
 });
 
 add_task(function* test_setuninstallurl() {
-  function backgroundScript() {
-    browser.runtime.setUninstallURL("http://example.com/addon_uninstalled")
-      .then(() => browser.tabs.create({url: "http://example.com/addon_loaded"}));
+  async function backgroundScript() {
+    await browser.runtime.setUninstallURL("http://example.com/addon_uninstalled");
+    browser.tabs.create({url: "http://example.com/addon_loaded"});
   }
 
   let addon = yield makeAndInstallXPI("test_uinstallurl@tests.mozilla.org",

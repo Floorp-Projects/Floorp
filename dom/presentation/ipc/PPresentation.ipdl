@@ -77,7 +77,8 @@ sync protocol PPresentation
   manages PPresentationRequest;
 
 child:
-  async NotifyAvailableChange(bool aAvailable);
+  async NotifyAvailableChange(nsString[] aAvailabilityUrls,
+                              bool aAvailable);
   async NotifySessionStateChange(nsString aSessionId,
                                  uint16_t aState,
                                  nsresult aReason);
@@ -92,8 +93,8 @@ child:
 parent:
   async __delete__();
 
-  async RegisterAvailabilityHandler();
-  async UnregisterAvailabilityHandler();
+  async RegisterAvailabilityHandler(nsString[] aAvailabilityUrls);
+  async UnregisterAvailabilityHandler(nsString[] aAvailabilityUrls);
 
   async RegisterSessionHandler(nsString aSessionId, uint8_t aRole);
   async UnregisterSessionHandler(nsString aSessionId, uint8_t aRole);

@@ -29,6 +29,7 @@
 #include "VsyncSource.h"
 #include "mozilla/dom/VideoDecoderManagerChild.h"
 #include "mozilla/dom/VideoDecoderManagerParent.h"
+#include "MediaPrefs.h"
 
 namespace mozilla {
 namespace gfx {
@@ -255,6 +256,14 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
     mappings.AppendElement(LayerTreeIdMapping(aLayersId, aProcessId));
   });
   mGPUChild->SendAddLayerTreeIdMapping(mappings);
+}
+
+void
+GPUProcessManager::OnProcessDeviceReset(GPUProcessHost* aHost)
+{
+  for (auto& session : mRemoteSessions) {
+    session->NotifyDeviceReset();
+  }
 }
 
 void
@@ -536,7 +545,8 @@ bool
 GPUProcessManager::CreateContentBridges(base::ProcessId aOtherProcess,
                                         ipc::Endpoint<PCompositorBridgeChild>* aOutCompositor,
                                         ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
-                                        ipc::Endpoint<PVRManagerChild>* aOutVRBridge)
+                                        ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
+                                        ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager)
 {
   if (!CreateContentCompositorBridge(aOtherProcess, aOutCompositor) ||
       !CreateContentImageBridge(aOtherProcess, aOutImageBridge) ||
@@ -544,6 +554,9 @@ GPUProcessManager::CreateContentBridges(base::ProcessId aOtherProcess,
   {
     return false;
   }
+  // VideoDeocderManager is only supported in the GPU process, so we allow this to be
+  // fallible.
+  CreateContentVideoDecoderManager(aOtherProcess, aOutVideoManager);
   return true;
 }
 
@@ -659,12 +672,12 @@ GPUProcessManager::CreateContentVRManager(base::ProcessId aOtherProcess,
   return true;
 }
 
-bool
+void
 GPUProcessManager::CreateContentVideoDecoderManager(base::ProcessId aOtherProcess,
                                                     ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndpoint)
 {
-  if (!mGPUChild) {
-    return false;
+  if (!mGPUChild || !MediaPrefs::PDMUseGPUDecoder()) {
+    return;
   }
 
   ipc::Endpoint<dom::PVideoDecoderManagerParent> parentPipe;
@@ -677,13 +690,13 @@ GPUProcessManager::CreateContentVideoDecoderManager(base::ProcessId aOtherProces
     &childPipe);
   if (NS_FAILED(rv)) {
     gfxCriticalNote << "Could not create content video decoder: " << hexa(int(rv));
-    return false;
+    return;
   }
 
   mGPUChild->SendNewContentVideoDecoderManager(Move(parentPipe));
 
   *aOutEndpoint = Move(childPipe);
-  return true;
+  return;
 }
 
 already_AddRefed<IAPZCTreeManager>

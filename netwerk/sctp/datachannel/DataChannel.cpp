@@ -2344,7 +2344,7 @@ public:
     : mConnection(aConnection)
     , mStream(aStream) {}
 
-  ~DataChannelBlobSendRunnable()
+  ~DataChannelBlobSendRunnable() override
   {
     if (!NS_IsMainThread() && mConnection) {
       MOZ_ASSERT(false);
