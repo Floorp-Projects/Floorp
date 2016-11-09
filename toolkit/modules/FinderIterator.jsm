@@ -573,7 +573,8 @@ this.FinderIterator = {
       let range = window.document.createRange();
       range.setStart(frameEl, 0);
       range.setEnd(frameEl, 0);
-      if (!finder._fastFind.isRangeVisible(range, this._getDocShell(range), true))
+      // Pass `true` to flush layout.
+      if (!finder._fastFind.isRangeVisible(range, true))
         continue;
       // All conditions pass, so push the current frame and its children on the
       // stack.
