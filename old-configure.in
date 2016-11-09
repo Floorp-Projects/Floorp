@@ -2130,6 +2130,15 @@ if test -n "$MOZ_SYSTEM_NSS"; then
    NSS_LIBS="$NSS_LIBS -lcrmf"
 else
    NSS_CFLAGS="-I${DIST}/include/nss"
+   case "${OS_ARCH}" in
+        # This is to match the conditions in security/generate_mapfile.py,
+        # plus Windows which doesn't run that script.
+        WINNT|Darwin|Linux)
+            ;;
+        *)
+            AC_MSG_ERROR([building in-tree NSS is not supported on this platform. Use --with-system-nss])
+            ;;
+   esac
 fi
 
 if test -z "$SKIP_LIBRARY_CHECKS"; then
