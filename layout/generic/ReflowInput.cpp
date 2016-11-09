@@ -1415,8 +1415,11 @@ ReflowInput::CalculateHypotheticalPosition
   // Second, determine the hypothetical box's mIStart.
   // How we determine the hypothetical box depends on whether the element
   // would have been inline-level or block-level
-  if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
-    // The placeholder represents the left edge of the hypothetical box
+  if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle() ||
+      mFlags.mIOffsetsNeedCSSAlign) {
+    // The placeholder represents the IStart edge of the hypothetical box.
+    // (Or if mFlags.mIOffsetsNeedCSSAlign is set, it represents the IStart
+    // edge of the Alignment Container.)
     aHypotheticalPos.mIStart = placeholderOffset.I(wm);
   } else {
     aHypotheticalPos.mIStart = blockIStartContentEdge;
