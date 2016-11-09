@@ -14,6 +14,7 @@ namespace mozilla { namespace psm {
 
 // The memory returned via |encodedResponse| is owned by the given arena.
 Result DoOCSPRequest(const UniquePLArenaPool& arena, const char* url,
+                     const char* firstPartyDomain,
                      const SECItem* encodedRequest, PRIntervalTime timeout,
                      bool useGET,
              /*out*/ SECItem*& encodedResponse);

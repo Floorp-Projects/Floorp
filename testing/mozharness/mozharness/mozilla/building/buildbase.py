@@ -1203,7 +1203,7 @@ or run without that action (ie: --no-{action})"
             else:
                 self.warning(ERROR_MSGS['comments_undetermined'])
             self.set_buildbot_property('got_revision',
-                                       rev[:12],
+                                       rev,
                                        write_to_file=True)
 
     def _count_ctors(self):

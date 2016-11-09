@@ -6,10 +6,10 @@
 
 #include "mozilla/Casting.h"
 #include "nsSSLStatus.h"
-#include "plstr.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIObjectInputStream.h"
+#include "nsNSSCertificate.h"
 #include "SignedCertificateTimestamp.h"
 #include "ssl.h"
 
@@ -317,24 +317,13 @@ nsSSLStatus::~nsSSLStatus()
 }
 
 void
-nsSSLStatus::SetServerCert(nsNSSCertificate* aServerCert,
-                           nsNSSCertificate::EVStatus aEVStatus)
+nsSSLStatus::SetServerCert(nsNSSCertificate* aServerCert, EVStatus aEVStatus)
 {
+  MOZ_ASSERT(aServerCert);
+
   mServerCert = aServerCert;
-
-  if (aEVStatus != nsNSSCertificate::ev_status_unknown) {
-    mIsEV = (aEVStatus == nsNSSCertificate::ev_status_valid);
-    mHasIsEVStatus = true;
-    return;
-  }
-
-  if (aServerCert) {
-    nsresult rv = aServerCert->GetIsExtendedValidation(&mIsEV);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    mHasIsEVStatus = true;
-  }
+  mIsEV = (aEVStatus == EVStatus::EV);
+  mHasIsEVStatus = true;
 }
 
 void

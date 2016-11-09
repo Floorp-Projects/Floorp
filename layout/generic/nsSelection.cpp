@@ -5886,7 +5886,7 @@ Selection::ContainsPoint(const nsPoint& aPoint)
   PointInRectChecker checker(aPoint);
   for (uint32_t i = 0; i < RangeCount(); i++) {
     nsRange* range = GetRangeAt(i);
-    nsRange::CollectClientRects(&checker, range,
+    nsRange::CollectClientRectsAndText(&checker, nullptr, range,
                                 range->GetStartParent(), range->StartOffset(),
                                 range->GetEndParent(), range->EndOffset(),
                                 true, false);

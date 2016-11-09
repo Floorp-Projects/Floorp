@@ -12,14 +12,23 @@ from marionette import MarionetteTestCase
 from marionette_driver import Wait
 from marionette_driver.errors import NoSuchWindowException
 
+from firefox_puppeteer import PuppeteerMixin
 from firefox_puppeteer.api.prefs import Preferences
 from firefox_puppeteer.api.software_update import SoftwareUpdate
-from firefox_puppeteer.testcases import BaseFirefoxTestCase
 from firefox_puppeteer.ui.update_wizard import UpdateWizardDialog
 
 
-class FirefoxTestCase(BaseFirefoxTestCase, MarionetteTestCase):
-    """ Integrate MarionetteTestCase with BaseFirefoxTestCase by reordering MRO """
+class FirefoxTestCase(PuppeteerMixin, MarionetteTestCase):
+    """Base TestCase class for Firefox Desktop tests.
+
+    This class enhances the MarionetteTestCase class with PuppeteerMixin on top
+    of MarionetteTestCase by reordering the MRO.
+
+    If you're extending the inheritance tree further to make specialized
+    TestCases, favour the use of super() as opposed to explicit calls to a
+    parent class.
+
+    """
     pass
 
 
@@ -55,7 +64,7 @@ class UpdateTestCase(FirefoxTestCase):
     def setUp(self, is_fallback=False):
         super(UpdateTestCase, self).setUp()
 
-        self.software_update = SoftwareUpdate(lambda: self.marionette)
+        self.software_update = SoftwareUpdate(self.marionette)
         self.download_duration = None
 
         # Bug 604364 - Preparation to test multiple update steps
@@ -222,7 +231,7 @@ class UpdateTestCase(FirefoxTestCase):
 
             :param dialog: Instance of :class:`UpdateWizardDialog`.
             """
-            prefs = Preferences(lambda: self.marionette)
+            prefs = Preferences(self.marionette)
             prefs.set_pref(self.PREF_APP_UPDATE_ALTWINDOWTYPE, dialog.window_type)
 
             try:
@@ -234,7 +243,8 @@ class UpdateTestCase(FirefoxTestCase):
 
                 # If incompatible add-on are installed, skip over the wizard page
                 # TODO: Remove once we no longer support version Firefox 45.0ESR
-                if self.utils.compare_version(self.appinfo.version, '49.0a1') == -1:
+                if self.puppeteer.utils.compare_version(self.puppeteer.appinfo.version,
+                                                        '49.0a1') == -1:
                     if dialog.wizard.selected_panel == dialog.wizard.incompatible_list:
                         dialog.select_next_page()
 
@@ -314,7 +324,7 @@ class UpdateTestCase(FirefoxTestCase):
     def download_and_apply_forced_update(self):
         # The update wizard dialog opens automatically after the restart but with a short delay
         dialog = Wait(self.marionette, ignored_exceptions=[NoSuchWindowException]).until(
-            lambda _: self.windows.switch_to(lambda win: type(win) is UpdateWizardDialog)
+            lambda _: self.puppeteer.windows.switch_to(lambda win: type(win) is UpdateWizardDialog)
         )
 
         # In case of a broken complete update the about window has to be used

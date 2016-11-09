@@ -2413,8 +2413,9 @@ TabChild::RecvSetDocShellIsActive(const bool& aIsActive,
   // We send the current layer observer epoch to the compositor so that
   // TabParent knows whether a layer update notification corresponds to the
   // latest SetDocShellIsActive request that was made.
-  ClientLayerManager *manager = mPuppetWidget->GetLayerManager()->AsClientLayerManager();
-  manager->SetLayerObserverEpoch(aLayerObserverEpoch);
+  if (ClientLayerManager* clm = mPuppetWidget->GetLayerManager()->AsClientLayerManager()) {
+    clm->SetLayerObserverEpoch(aLayerObserverEpoch);
+  }
 
   // docshell is consider prerendered only if not active yet
   mIsPrerendered &= !aIsActive;
@@ -2588,34 +2589,40 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       PRenderFrameChild::Send__delete__(remoteFrame);
       return false;
     }
-    nsTArray<LayersBackend> backends;
-    backends.AppendElement(mTextureFactoryIdentifier.mParentBackend);
-    bool success;
-    PLayerTransactionChild* shadowManager =
-        compositorChild->SendPLayerTransactionConstructor(backends,
-                                                          aLayersId, &mTextureFactoryIdentifier, &success);
-    if (!success) {
-      NS_WARNING("failed to properly allocate layer transaction");
-      PRenderFrameChild::Send__delete__(remoteFrame);
-      return false;
-    }
-
-    if (!shadowManager) {
-      NS_WARNING("failed to construct LayersChild");
-      // This results in |remoteFrame| being deleted.
-      PRenderFrameChild::Send__delete__(remoteFrame);
-      return false;
-    }
 
     ShadowLayerForwarder* lf =
         mPuppetWidget->GetLayerManager(
-            shadowManager, mTextureFactoryIdentifier.mParentBackend)
+            nullptr, mTextureFactoryIdentifier.mParentBackend)
                 ->AsShadowForwarder();
-    MOZ_ASSERT(lf && lf->HasShadowManager(),
-               "PuppetWidget should have shadow manager");
-    lf->IdentifyTextureHost(mTextureFactoryIdentifier);
-    ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
-    gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
+    // As long as we are creating a ClientLayerManager for the puppet widget,
+    // lf must be non-null here.
+    MOZ_ASSERT(lf);
+
+    if (lf) {
+      nsTArray<LayersBackend> backends;
+      backends.AppendElement(mTextureFactoryIdentifier.mParentBackend);
+      bool success;
+      PLayerTransactionChild* shadowManager =
+          compositorChild->SendPLayerTransactionConstructor(backends,
+                                                            aLayersId, &mTextureFactoryIdentifier, &success);
+      if (!success) {
+        NS_WARNING("failed to properly allocate layer transaction");
+        PRenderFrameChild::Send__delete__(remoteFrame);
+        return false;
+      }
+
+      if (!shadowManager) {
+        NS_WARNING("failed to construct LayersChild");
+        // This results in |remoteFrame| being deleted.
+        PRenderFrameChild::Send__delete__(remoteFrame);
+        return false;
+      }
+
+      lf->SetShadowManager(shadowManager);
+      lf->IdentifyTextureHost(mTextureFactoryIdentifier);
+      ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
+      gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
+    }
 
     mRemoteFrame = remoteFrame;
     if (aLayersId != 0) {
@@ -3000,6 +3007,7 @@ TabChild::CompositorUpdated(const TextureFactoryIdentifier& aNewIdentifier)
 
   RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
   ClientLayerManager* clm = lm->AsClientLayerManager();
+  MOZ_ASSERT(clm);
 
   mTextureFactoryIdentifier = aNewIdentifier;
   clm->UpdateTextureFactoryIdentifier(aNewIdentifier);

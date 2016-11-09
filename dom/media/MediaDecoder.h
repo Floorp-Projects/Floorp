@@ -59,10 +59,7 @@ class MediaDecoder : public AbstractMediaDecoder
 {
 public:
   struct SeekResolveValue {
-    SeekResolveValue(bool aAtEnd, MediaDecoderEventVisibility aEventVisibility)
-      : mAtEnd(aAtEnd), mEventVisibility(aEventVisibility) {}
     bool mAtEnd;
-    MediaDecoderEventVisibility mEventVisibility;
   };
 
   // Used to register with MediaResource to receive notifications which will
@@ -402,7 +399,7 @@ private:
   // Seeking has started. Inform the element on the main thread.
   void SeekingStarted();
 
-  void UpdateLogicalPositionInternal(MediaDecoderEventVisibility aEventVisibility);
+  void UpdateLogicalPositionInternal();
   void UpdateLogicalPosition()
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -411,7 +408,7 @@ private:
     if (mPlayState == PLAY_STATE_PAUSED || IsSeeking()) {
       return;
     }
-    UpdateLogicalPositionInternal(MediaDecoderEventVisibility::Observable);
+    UpdateLogicalPositionInternal();
   }
 
   // Find the end of the cached data starting at the current decoder

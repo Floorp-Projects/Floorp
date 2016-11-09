@@ -113,9 +113,9 @@ class Windows(BaseLib):
                     self.switch_to(current_handle)
 
             if window_type in self.windows_map:
-                window = self.windows_map[window_type](lambda: self.marionette, handle)
+                window = self.windows_map[window_type](self.marionette, handle)
             else:
-                window = BaseWindow(lambda: self.marionette, handle)
+                window = BaseWindow(self.marionette, handle)
 
             if expected_class is not None and type(window) is not expected_class:
                 raise errors.UnexpectedWindowTypeError('Expected window "%s" but got "%s"' %
@@ -213,11 +213,11 @@ class BaseWindow(BaseLib):
     dtds = []
     properties = []
 
-    def __init__(self, marionette_getter, window_handle):
-        BaseLib.__init__(self, marionette_getter)
-        self._l10n = L10n(self.get_marionette)
-        self._prefs = Preferences(self.get_marionette)
-        self._windows = Windows(self.get_marionette)
+    def __init__(self, marionette, window_handle):
+        BaseLib.__init__(self, marionette)
+        self._l10n = L10n(self.marionette)
+        self._prefs = Preferences(self.marionette)
+        self._windows = Windows(self.marionette)
 
         if window_handle not in self.marionette.chrome_window_handles:
             raise errors.UnknownWindowError('Window with handle "%s" does not exist' %

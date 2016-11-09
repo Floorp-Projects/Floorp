@@ -15,7 +15,7 @@ class TestAboutWindow(FirefoxTestCase):
 
     def tearDown(self):
         try:
-            self.windows.close_all([self.browser])
+            self.puppeteer.windows.close_all([self.browser])
         finally:
             FirefoxTestCase.tearDown(self)
 
@@ -64,5 +64,5 @@ class TestAboutWindow(FirefoxTestCase):
         self.about_window.close()
         for trigger in open_strategies:
             about_window = self.browser.open_about_window(trigger=trigger)
-            self.assertEquals(about_window, self.windows.current)
+            self.assertEquals(about_window, self.puppeteer.windows.current)
             about_window.close()

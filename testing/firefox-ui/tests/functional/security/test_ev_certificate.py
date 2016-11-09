@@ -21,7 +21,7 @@ class TestEVCertificate(FirefoxTestCase):
         try:
             self.browser.switch_to()
             self.identity_popup.close(force=True)
-            self.windows.close_all([self.browser])
+            self.puppeteer.windows.close_all([self.browser])
         finally:
             FirefoxTestCase.tearDown(self)
 
@@ -39,7 +39,7 @@ class TestEVCertificate(FirefoxTestCase):
 
         # Get the information from the certificate
         cert = self.browser.tabbar.selected_tab.certificate
-        address = self.security.get_address_from_certificate(cert)
+        address = self.puppeteer.security.get_address_from_certificate(cert)
 
         # Check the identity popup label displays
         self.assertEqual(self.locationbar.identity_organization_label.get_attribute('value'),
