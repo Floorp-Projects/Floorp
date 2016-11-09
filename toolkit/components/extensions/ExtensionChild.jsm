@@ -26,6 +26,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
                                   "resource://gre/modules/ExtensionParent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
+                                  "resource://gre/modules/NativeMessaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
@@ -102,6 +104,10 @@ class Port {
     MessageChannel.addListener(this.receiverMMs, "Extension:Port:Disconnect", this.disconnectHandler);
 
     this.context.callOnClose(this);
+  }
+
+  static getNextID() {
+    return `${gNextPortId++}-${Services.appinfo.uniqueProcessID}`;
   }
 
   api() {
@@ -261,6 +267,14 @@ class Port {
   }
 }
 
+class NativePort extends Port {
+  postMessage(data) {
+    data = NativeApp.encodeMessage(this.context, data);
+
+    return super.postMessage(data);
+  }
+}
+
 /**
  * Each extension context gets its own Messenger object. It handles the
  * basics of sendMessage, onMessage, connect and onConnect.
@@ -316,6 +330,11 @@ class Messenger {
     return this.context.wrapPromise(promise, responseCallback);
   }
 
+  sendNativeMessage(messageManager, msg, recipient, responseCallback) {
+    msg = NativeApp.encodeMessage(this.context, msg);
+    return this.sendMessage(messageManager, msg, recipient, responseCallback);
+  }
+
   onMessage(name) {
     return new SingletonEventManager(this.context, name, callback => {
       let listener = {
@@ -364,25 +383,38 @@ class Messenger {
     }).api();
   }
 
-  connectGetRawPort(messageManager, name, recipient) {
-    let portId = `${gNextPortId++}-${Services.appinfo.uniqueProcessID}`;
-    let port = new Port(this.context, messageManager, this.messageManagers, name, portId, null, recipient);
-    let msg = {name, portId};
-    this._sendMessage(messageManager, "Extension:Connect", msg, recipient)
-      .catch(e => {
-        if (e.result === MessageChannel.RESULT_NO_HANDLER) {
-          e = {message: "Could not establish connection. Receiving end does not exist."};
-        } else if (e.result === MessageChannel.RESULT_DISCONNECTED) {
-          e = null;
-        }
-        port.disconnectByOtherEnd(e);
-      });
-    return port;
+  _connect(messageManager, port, recipient) {
+    let msg = {
+      name: port.name,
+      portId: port.id,
+    };
+
+    this._sendMessage(messageManager, "Extension:Connect", msg, recipient).catch(error => {
+      if (error.result === MessageChannel.RESULT_NO_HANDLER) {
+        error = {message: "Could not establish connection. Receiving end does not exist."};
+      } else if (error.result === MessageChannel.RESULT_DISCONNECTED) {
+        error = null;
+      }
+      port.disconnectByOtherEnd(error);
+    });
+
+    return port.api();
   }
 
   connect(messageManager, name, recipient) {
-    let port = this.connectGetRawPort(messageManager, name, recipient);
-    return port.api();
+    let portId = Port.getNextID();
+
+    let port = new Port(this.context, messageManager, this.messageManagers, name, portId, null, recipient);
+
+    return this._connect(messageManager, port, recipient);
+  }
+
+  connectNative(messageManager, name, recipient) {
+    let portId = Port.getNextID();
+
+    let port = new NativePort(this.context, messageManager, this.messageManagers, name, portId, null, recipient);
+
+    return this._connect(messageManager, port, recipient);
   }
 
   onConnect(name) {
