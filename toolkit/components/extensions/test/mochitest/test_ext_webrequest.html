@@ -257,7 +257,6 @@ function backgroundScript() {
     }
 
     let modifiedAny = false;
-    browser.test.log(`HEADERS ${JSON.stringify(headers)}`);
     for (let header of headers.filter(h => h.name in modified)) {
       let {name, value} = header;
       if (name.toLowerCase() === "content-type" && skippedRequests.has(details.requestId)) {
