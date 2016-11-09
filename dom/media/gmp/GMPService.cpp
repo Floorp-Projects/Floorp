@@ -295,30 +295,6 @@ GeckoMediaPluginService::GetAbstractGMPThread()
   return mAbstractGMPThread;
 }
 
-class GetGMPContentParentForAudioDecoderDone : public GetGMPContentParentCallback
-{
-public:
-  explicit GetGMPContentParentForAudioDecoderDone(UniquePtr<GetGMPAudioDecoderCallback>&& aCallback,
-                                                  GMPCrashHelper* aHelper)
-   : mCallback(Move(aCallback))
-   , mHelper(aHelper)
-  {
-  }
-
-  void Done(GMPContentParent* aGMPParent) override
-  {
-    GMPAudioDecoderParent* gmpADP = nullptr;
-    if (aGMPParent && NS_SUCCEEDED(aGMPParent->GetGMPAudioDecoder(&gmpADP))) {
-      gmpADP->SetCrashHelper(mHelper);
-    }
-    mCallback->Done(gmpADP);
-  }
-
-private:
-  UniquePtr<GetGMPAudioDecoderCallback> mCallback;
-  RefPtr<GMPCrashHelper> mHelper;
-};
-
 NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPAudioDecoder(GMPCrashHelper* aHelper,
                                             nsTArray<nsCString>* aTags,
@@ -333,47 +309,26 @@ GeckoMediaPluginService::GetGMPAudioDecoder(GMPCrashHelper* aHelper,
     return NS_ERROR_FAILURE;
   }
 
-  UniquePtr<GetGMPContentParentCallback> callback(
-    new GetGMPContentParentForAudioDecoderDone(Move(aCallback), aHelper));
-  if (!GetContentParentFrom(aHelper,
-                            aNodeId,
-                            NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
-                            *aTags,
-                            Move(callback))) {
-    return NS_ERROR_FAILURE;
-  }
+  GetGMPAudioDecoderCallback* rawCallback = aCallback.release();
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  RefPtr<GMPCrashHelper> helper(aHelper);
+  GetContentParent(aHelper, aNodeId, NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER), *aTags)
+    ->Then(thread, __func__,
+      [rawCallback, helper](RefPtr<GMPContentParent> parent) {
+        UniquePtr<GetGMPAudioDecoderCallback> callback(rawCallback);
+        GMPAudioDecoderParent* actor = nullptr;
+        if (parent && NS_SUCCEEDED(parent->GetGMPAudioDecoder(&actor))) {
+          actor->SetCrashHelper(helper);
+        }
+        callback->Done(actor);
+      },
+      [rawCallback] {
+        UniquePtr<GetGMPAudioDecoderCallback> callback(rawCallback);
+        callback->Done(nullptr);
+      });
 
   return NS_OK;
 }
-
-class GetGMPContentParentForVideoDecoderDone : public GetGMPContentParentCallback
-{
-public:
-  explicit GetGMPContentParentForVideoDecoderDone(UniquePtr<GetGMPVideoDecoderCallback>&& aCallback,
-                                                  GMPCrashHelper* aHelper,
-                                                  uint32_t aDecryptorId)
-   : mCallback(Move(aCallback))
-   , mHelper(aHelper)
-   , mDecryptorId(aDecryptorId)
-  {
-  }
-
-  void Done(GMPContentParent* aGMPParent) override
-  {
-    GMPVideoDecoderParent* gmpVDP = nullptr;
-    GMPVideoHostImpl* videoHost = nullptr;
-    if (aGMPParent && NS_SUCCEEDED(aGMPParent->GetGMPVideoDecoder(&gmpVDP, mDecryptorId))) {
-      videoHost = &gmpVDP->Host();
-      gmpVDP->SetCrashHelper(mHelper);
-    }
-    mCallback->Done(gmpVDP, videoHost);
-  }
-
-private:
-  UniquePtr<GetGMPVideoDecoderCallback> mCallback;
-  RefPtr<GMPCrashHelper> mHelper;
-  const uint32_t mDecryptorId;
-};
 
 NS_IMETHODIMP
 GeckoMediaPluginService::GetDecryptingGMPVideoDecoder(GMPCrashHelper* aHelper,
@@ -390,44 +345,28 @@ GeckoMediaPluginService::GetDecryptingGMPVideoDecoder(GMPCrashHelper* aHelper,
     return NS_ERROR_FAILURE;
   }
 
-  UniquePtr<GetGMPContentParentCallback> callback(
-    new GetGMPContentParentForVideoDecoderDone(Move(aCallback), aHelper, aDecryptorId));
-  if (!GetContentParentFrom(aHelper,
-                            aNodeId,
-                            NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                            *aTags,
-                            Move(callback))) {
-    return NS_ERROR_FAILURE;
-  }
+  GetGMPVideoDecoderCallback* rawCallback = aCallback.release();
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  RefPtr<GMPCrashHelper> helper(aHelper);
+  GetContentParent(aHelper, aNodeId, NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER), *aTags)
+    ->Then(thread, __func__,
+      [rawCallback, helper, aDecryptorId](RefPtr<GMPContentParent> parent) {
+        UniquePtr<GetGMPVideoDecoderCallback> callback(rawCallback);
+        GMPVideoDecoderParent* actor = nullptr;
+        GMPVideoHostImpl* host = nullptr;
+        if (parent && NS_SUCCEEDED(parent->GetGMPVideoDecoder(&actor, aDecryptorId))) {
+          host = &(actor->Host());
+          actor->SetCrashHelper(helper);
+        }
+        callback->Done(actor, host);
+      },
+      [rawCallback] {
+        UniquePtr<GetGMPVideoDecoderCallback> callback(rawCallback);
+        callback->Done(nullptr, nullptr);
+      });
 
   return NS_OK;
 }
-
-class GetGMPContentParentForVideoEncoderDone : public GetGMPContentParentCallback
-{
-public:
-  explicit GetGMPContentParentForVideoEncoderDone(UniquePtr<GetGMPVideoEncoderCallback>&& aCallback,
-                                                  GMPCrashHelper* aHelper)
-   : mCallback(Move(aCallback))
-   , mHelper(aHelper)
-  {
-  }
-
-  void Done(GMPContentParent* aGMPParent) override
-  {
-    GMPVideoEncoderParent* gmpVEP = nullptr;
-    GMPVideoHostImpl* videoHost = nullptr;
-    if (aGMPParent && NS_SUCCEEDED(aGMPParent->GetGMPVideoEncoder(&gmpVEP))) {
-      videoHost = &gmpVEP->Host();
-      gmpVEP->SetCrashHelper(mHelper);
-    }
-    mCallback->Done(gmpVEP, videoHost);
-  }
-
-private:
-  UniquePtr<GetGMPVideoEncoderCallback> mCallback;
-  RefPtr<GMPCrashHelper> mHelper;
-};
 
 NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPVideoEncoder(GMPCrashHelper* aHelper,
@@ -443,42 +382,28 @@ GeckoMediaPluginService::GetGMPVideoEncoder(GMPCrashHelper* aHelper,
     return NS_ERROR_FAILURE;
   }
 
-  UniquePtr<GetGMPContentParentCallback> callback(
-    new GetGMPContentParentForVideoEncoderDone(Move(aCallback), aHelper));
-  if (!GetContentParentFrom(aHelper,
-                            aNodeId,
-                            NS_LITERAL_CSTRING(GMP_API_VIDEO_ENCODER),
-                            *aTags,
-                            Move(callback))) {
-    return NS_ERROR_FAILURE;
-  }
+  GetGMPVideoEncoderCallback* rawCallback = aCallback.release();
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  RefPtr<GMPCrashHelper> helper(aHelper);
+  GetContentParent(aHelper, aNodeId, NS_LITERAL_CSTRING(GMP_API_VIDEO_ENCODER), *aTags)
+    ->Then(thread, __func__,
+      [rawCallback, helper](RefPtr<GMPContentParent> parent) {
+        UniquePtr<GetGMPVideoEncoderCallback> callback(rawCallback);
+        GMPVideoEncoderParent* actor = nullptr;
+        GMPVideoHostImpl* host = nullptr;
+        if (parent && NS_SUCCEEDED(parent->GetGMPVideoEncoder(&actor))) {
+          host = &(actor->Host());
+          actor->SetCrashHelper(helper);
+        }
+        callback->Done(actor, host);
+      },
+      [rawCallback] {
+        UniquePtr<GetGMPVideoEncoderCallback> callback(rawCallback);
+        callback->Done(nullptr, nullptr);
+      });
 
   return NS_OK;
 }
-
-class GetGMPContentParentForDecryptorDone : public GetGMPContentParentCallback
-{
-public:
-  explicit GetGMPContentParentForDecryptorDone(UniquePtr<GetGMPDecryptorCallback>&& aCallback,
-                                               GMPCrashHelper* aHelper)
-   : mCallback(Move(aCallback))
-   , mHelper(aHelper)
-  {
-  }
-
-  void Done(GMPContentParent* aGMPParent) override
-  {
-    GMPDecryptorParent* ksp = nullptr;
-    if (aGMPParent && NS_SUCCEEDED(aGMPParent->GetGMPDecryptor(&ksp))) {
-      ksp->SetCrashHelper(mHelper);
-    }
-    mCallback->Done(ksp);
-  }
-
-private:
-  UniquePtr<GetGMPDecryptorCallback> mCallback;
-  RefPtr<GMPCrashHelper> mHelper;
-};
 
 NS_IMETHODIMP
 GeckoMediaPluginService::GetGMPDecryptor(GMPCrashHelper* aHelper,
@@ -502,15 +427,23 @@ GeckoMediaPluginService::GetGMPDecryptor(GMPCrashHelper* aHelper,
     return NS_ERROR_FAILURE;
   }
 
-  UniquePtr<GetGMPContentParentCallback> callback(
-    new GetGMPContentParentForDecryptorDone(Move(aCallback), aHelper));
-  if (!GetContentParentFrom(aHelper,
-                            aNodeId,
-                            NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
-                            *aTags,
-                            Move(callback))) {
-    return NS_ERROR_FAILURE;
-  }
+  GetGMPDecryptorCallback* rawCallback = aCallback.release();
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  RefPtr<GMPCrashHelper> helper(aHelper);
+  GetContentParent(aHelper, aNodeId, NS_LITERAL_CSTRING(GMP_API_DECRYPTOR), *aTags)
+    ->Then(thread, __func__,
+      [rawCallback, helper](RefPtr<GMPContentParent> parent) {
+        UniquePtr<GetGMPDecryptorCallback> callback(rawCallback);
+        GMPDecryptorParent* actor = nullptr;
+        if (parent && NS_SUCCEEDED(parent->GetGMPDecryptor(&actor))) {
+          actor->SetCrashHelper(helper);
+        }
+        callback->Done(actor);
+      },
+      [rawCallback] {
+        UniquePtr<GetGMPDecryptorCallback> callback(rawCallback);
+        callback->Done(nullptr);
+      });
 
   return NS_OK;
 }

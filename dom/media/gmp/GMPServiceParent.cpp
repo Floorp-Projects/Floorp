@@ -529,43 +529,45 @@ GeckoMediaPluginServiceParent::EnsureInitialized() {
   return mInitPromise.Ensure(__func__);
 }
 
-bool
-GeckoMediaPluginServiceParent::GetContentParentFrom(GMPCrashHelper* aHelper,
-                                                    const nsACString& aNodeId,
-                                                    const nsCString& aAPI,
-                                                    const nsTArray<nsCString>& aTags,
-                                                    UniquePtr<GetGMPContentParentCallback>&& aCallback)
+RefPtr<GetGMPContentParentPromise>
+GeckoMediaPluginServiceParent::GetContentParent(GMPCrashHelper* aHelper,
+                                               const nsACString& aNodeId,
+                                               const nsCString& aAPI,
+                                               const nsTArray<nsCString>& aTags)
 {
   RefPtr<AbstractThread> thread(GetAbstractGMPThread());
   if (!thread) {
-    return false;
+    return GetGMPContentParentPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
+  typedef MozPromiseHolder<GetGMPContentParentPromise> PromiseHolder;
+  PromiseHolder* rawHolder = new PromiseHolder();
   RefPtr<GeckoMediaPluginServiceParent> self(this);
+  RefPtr<GetGMPContentParentPromise> promise = rawHolder->Ensure(__func__);
   nsCString nodeId(aNodeId);
   nsTArray<nsCString> tags(aTags);
   nsCString api(aAPI);
-  GetGMPContentParentCallback* rawCallback = aCallback.release();
   RefPtr<GMPCrashHelper> helper(aHelper);
   EnsureInitialized()->Then(thread, __func__,
-    [self, tags, api, nodeId, rawCallback, helper]() -> void {
-      UniquePtr<GetGMPContentParentCallback> callback(rawCallback);
+    [self, tags, api, nodeId, helper, rawHolder]() -> void {
+      UniquePtr<PromiseHolder> holder(rawHolder);
       RefPtr<GMPParent> gmp = self->SelectPluginForAPI(nodeId, api, tags);
       LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)self, (void *)gmp, api.get()));
       if (!gmp) {
         NS_WARNING("GeckoMediaPluginServiceParent::GetContentParentFrom failed");
-        callback->Done(nullptr);
+        holder->Reject(NS_ERROR_FAILURE, __func__);
         return;
       }
       self->ConnectCrashHelper(gmp->GetPluginId(), helper);
-      gmp->GetGMPContentParent(Move(callback));
+      gmp->GetGMPContentParent(Move(holder));
     },
-    [rawCallback]() -> void {
-      UniquePtr<GetGMPContentParentCallback> callback(rawCallback);
+    [rawHolder]() -> void {
+      UniquePtr<PromiseHolder> holder(rawHolder);
       NS_WARNING("GMPService::EnsureInitialized failed.");
-      callback->Done(nullptr);
+      holder->Reject(NS_ERROR_FAILURE, __func__);
     });
-  return true;
+
+  return promise;
 }
 
 void

@@ -126,12 +126,13 @@ protected:
   void InitializePlugins(AbstractThread* aAbstractGMPThread) override;
   RefPtr<GenericPromise::AllPromiseType> LoadFromEnvironment();
   RefPtr<GenericPromise> AddOnGMPThread(nsString aDirectory);
-  bool GetContentParentFrom(GMPCrashHelper* aHelper,
-                            const nsACString& aNodeId,
-                            const nsCString& aAPI,
-                            const nsTArray<nsCString>& aTags,
-                            UniquePtr<GetGMPContentParentCallback>&& aCallback)
-    override;
+
+  virtual RefPtr<GetGMPContentParentPromise>
+  GetContentParent(GMPCrashHelper* aHelper,
+                   const nsACString& aNodeId,
+                   const nsCString& aAPI,
+                   const nsTArray<nsCString>& aTags) override;
+
 private:
   // Creates a copy of aOriginal. Note that the caller is responsible for
   // adding this to GeckoMediaPluginServiceParent::mPlugins.
