@@ -82,7 +82,7 @@ public:
   // Constructors
 
   RefPtr()
-    : mRawPtr(0)
+    : mRawPtr(nullptr)
     // default constructor
   {
   }
@@ -110,6 +110,11 @@ public:
     if (mRawPtr) {
       ConstRemovingRefPtrTraits<T>::AddRef(mRawPtr);
     }
+  }
+
+  explicit RefPtr(decltype(nullptr))
+    : mRawPtr(nullptr)
+  {
   }
 
   template <typename I>
@@ -154,6 +159,13 @@ public:
   MOZ_IMPLICIT RefPtr(const mozilla::StaticRefPtr<U>& aOther);
 
   // Assignment operators
+
+  RefPtr<T>&
+  operator=(decltype(nullptr))
+  {
+    assign_assuming_AddRef(nullptr);
+    return *this;
+  }
 
   RefPtr<T>&
   operator=(const RefPtr<T>& aRhs)
@@ -243,7 +255,7 @@ public:
   // return the value of mRawPtr and null out mRawPtr. Useful for
   // already_AddRefed return values.
   {
-    T* temp = 0;
+    T* temp = nullptr;
     swap(temp);
     return already_AddRefed<T>(temp);
   }
@@ -258,7 +270,7 @@ public:
   {
     MOZ_ASSERT(aRhs, "Null pointer passed to forget!");
     *aRhs = mRawPtr;
-    mRawPtr = 0;
+    mRawPtr = nullptr;
   }
 
   T*
@@ -303,7 +315,7 @@ public:
   T*
   operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
   {
-    MOZ_ASSERT(mRawPtr != 0,
+    MOZ_ASSERT(mRawPtr != nullptr,
                "You can't dereference a NULL RefPtr with operator->().");
     return get();
   }
@@ -330,7 +342,7 @@ public:
   template <typename R, typename... Args>
   Proxy<R, Args...> operator->*(R (T::*aFptr)(Args...)) const
   {
-    MOZ_ASSERT(mRawPtr != 0,
+    MOZ_ASSERT(mRawPtr != nullptr,
                "You can't dereference a NULL RefPtr with operator->*().");
     return Proxy<R, Args...>(get(), aFptr);
   }
@@ -355,7 +367,7 @@ public:
   T&
   operator*() const
   {
-    MOZ_ASSERT(mRawPtr != 0,
+    MOZ_ASSERT(mRawPtr != nullptr,
                "You can't dereference a NULL RefPtr with operator*().");
     return *get();
   }
@@ -363,7 +375,7 @@ public:
   T**
   StartAssignment()
   {
-    assign_assuming_AddRef(0);
+    assign_assuming_AddRef(nullptr);
     return reinterpret_cast<T**>(&mRawPtr);
   }
 private:
