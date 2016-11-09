@@ -37,7 +37,7 @@ class LintSandbox(ConfigureSandbox):
             if (self._help_option in obj.dependencies or
                 obj in (self._always, self._never)):
                 return False
-            func = self._wrapped[obj.func]
+            func, glob = self._wrapped[obj.func]
             # We allow missing --help dependencies for functions that:
             # - don't use @imports
             # - don't have a closure
@@ -46,6 +46,11 @@ class LintSandbox(ConfigureSandbox):
                 return True
             for op, arg in disassemble_as_iter(func):
                 if op in ('LOAD_GLOBAL', 'STORE_GLOBAL'):
+                    # There is a fake os module when one is not imported,
+                    # and it's allowed for functions without a --help
+                    # dependency.
+                    if arg == 'os' and glob.get('os') is self.OS:
+                        continue
                     return True
         return False
 
@@ -69,5 +74,5 @@ class LintSandbox(ConfigureSandbox):
     def _prepare_function(self, func):
         wrapped, glob = super(LintSandbox, self)._prepare_function(func)
         if wrapped not in self._wrapped:
-            self._wrapped[wrapped] = func
+            self._wrapped[wrapped] = func, glob
         return wrapped, glob
