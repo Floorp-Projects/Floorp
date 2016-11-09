@@ -372,6 +372,11 @@ PopupNotifications.prototype = {
    *                     replaced by another 'do nothing' item, so providing at
    *                     least one secondary action is required; and one of the
    *                     actions needs to have the 'dismiss' property set to true.
+   *        popupIconClass:
+   *                     A string. A class (or space separated list of classes)
+   *                     that will be applied to the icon in the popup so that
+   *                     several notifications using the same panel can use
+   *                     different icons.
    *        popupIconURL:
    *                     A string. URL of the image to be displayed in the popup.
    *                     Normally specified in CSS using list-style-image and the
@@ -683,6 +688,10 @@ PopupNotifications.prototype = {
         popupnotification.removeAttribute("closeitemcommand");
       }
 
+      if (n.options.popupIconClass) {
+        let classes = "popup-notification-icon " + n.options.popupIconClass;
+        popupnotification.setAttribute("iconclass", classes);
+      }
       if (n.options.popupIconURL)
         popupnotification.setAttribute("icon", n.options.popupIconURL);
 

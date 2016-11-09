@@ -113,8 +113,7 @@
   list-style-image: url(chrome://browser/skin/notification-icons.svg#login-detailed);
 }
 
-.camera-icon,
-.popup-notification-icon[popupid="webRTC-shareDevices"] {
+.camera-icon {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#camera);
 }
 
@@ -138,11 +137,10 @@
   list-style-image: url(chrome://browser/skin/notification-icons.svg#microphone-blocked);
 }
 
-.popup-notification-icon[popupid="webRTC-shareMicrophone"] {
+.popup-notification-icon.microphone-icon {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#microphone-detailed);
 }
 
-.popup-notification-icon[popupid="webRTC-shareScreen"],
 .screen-icon {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#screen);
 }
