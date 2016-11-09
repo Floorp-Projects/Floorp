@@ -24,29 +24,35 @@ const videoWidth = 320;
 const videoHeight = 240;
 const videoDuration = 3.8329999446868896;
 
-const playButtonWidth = 28;
-const playButtonHeight = 28;
-const muteButtonWidth = 33;
-const muteButtonHeight = 28;
-const durationWidth = 34;
-const fullscreenButtonWidth = 28;
-const fullscreenButtonHeight = 28;
-const volumeSliderWidth = 32;
-const scrubberWidth = videoWidth - playButtonWidth - durationWidth - muteButtonWidth - volumeSliderWidth - fullscreenButtonWidth;
-const scrubberHeight = 28;
+const controlBarMargin = 9;
+
+const playButtonWidth = 30;
+const playButtonHeight = 40;
+const muteButtonWidth = 30;
+const muteButtonHeight = 40;
+const positionAndDurationWidth = 84;
+const fullscreenButtonWidth = 30;
+const fullscreenButtonHeight = 40;
+const volumeSliderWidth = 48;
+const volumeSliderMarginStart = 4;
+const volumeSliderMarginEnd = 6;
+const scrubberMargin = 9;
+const scrubberWidth = videoWidth - controlBarMargin - playButtonWidth - scrubberMargin * 2 - positionAndDurationWidth - muteButtonWidth - volumeSliderMarginStart - volumeSliderWidth - volumeSliderMarginEnd - fullscreenButtonWidth - controlBarMargin;
+const scrubberHeight = 40;
+
 
 // Play button is on the bottom-left
 const playButtonCenterX = 0 + Math.round(playButtonWidth / 2);
 const playButtonCenterY = videoHeight - Math.round(playButtonHeight / 2);
 // Mute button is on the bottom-right before the full screen button and volume slider
-const muteButtonCenterX = videoWidth - Math.round(muteButtonWidth / 2) - volumeSliderWidth - fullscreenButtonWidth;
+const muteButtonCenterX = videoWidth - Math.round(muteButtonWidth / 2) - volumeSliderWidth - fullscreenButtonWidth - controlBarMargin;
 const muteButtonCenterY = videoHeight - Math.round(muteButtonHeight / 2);
 // Fullscreen button is on the bottom-right at the far end
-const fullscreenButtonCenterX = videoWidth - Math.round(fullscreenButtonWidth / 2);
+const fullscreenButtonCenterX = videoWidth - Math.round(fullscreenButtonWidth / 2) - controlBarMargin;
 const fullscreenButtonCenterY = videoHeight - Math.round(fullscreenButtonHeight / 2);
 // Scrubber bar is between the play and mute buttons. We don't need it's
 // X center, just the offset of its box.
-const scrubberOffsetX = 0 + playButtonWidth;
+const scrubberOffsetX = controlBarMargin + playButtonWidth + scrubberMargin;
 const scrubberCenterY = videoHeight - Math.round(scrubberHeight / 2);
 
 var testnum = 1;
@@ -63,14 +69,13 @@ function getButtonByAttribute(aName, aValue) {
 }
 
 function isMuteButtonMuted() {
-  var muteButton = getButtonByAttribute('class', 'muteButton');
+  var muteButton = getButtonByAttribute('anonid', 'muteButton');
   return muteButton.getAttribute('muted') === 'true';
 }
 
 function isVolumeSliderShowingCorrectVolume(expectedVolume) {
-  var volumeButton = getButtonByAttribute('anonid', 'volumeForeground');
-  let expectedPaddingRight = (1 - expectedVolume) * volumeSliderWidth + "px";
-  is(volumeButton.style.paddingRight, expectedPaddingRight,
+  var volumeControl = getButtonByAttribute('anonid', 'volumeControl');
+  is(+volumeControl.value, expectedVolume * 100,
      "volume slider should match expected volume");
 }
 
@@ -229,7 +234,7 @@ function runTest(event) {
       is(event.type, "seeked", "checking event type");
       ok(true, "video position is at " + video.currentTime);
       var expectedTime = videoDuration / 2;
-      ok(Math.abs(video.currentTime - expectedTime) < 0.1, "checking expected playback position");
+      ok(Math.abs(video.currentTime - expectedTime) < 0.25, "checking expected playback position");
 
       SimpleTest.executeSoon(() => {
         synthesizeMouse(video, scrubberOffsetX + (scrubberWidth / 4), scrubberCenterY, { });
