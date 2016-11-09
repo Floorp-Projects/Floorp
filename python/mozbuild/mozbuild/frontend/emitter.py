@@ -101,6 +101,66 @@ from .context import (
 from mozbuild.base import ExecutionSummary
 
 
+ALLOWED_XPCOM_GLUE = {
+    ('test_duplex', 'media/libcubeb/tests'),
+    ('test_resampler', 'media/libcubeb/tests'),
+    ('test_record', 'media/libcubeb/tests'),
+    ('test_tone', 'media/libcubeb/tests'),
+    ('test_utils', 'media/libcubeb/tests'),
+    ('test_audio', 'media/libcubeb/tests'),
+    ('test_latency', 'media/libcubeb/tests'),
+    ('test_sanity', 'media/libcubeb/tests'),
+    ('TestMinStringAPI', 'xpcom/tests/external'),
+    ('testcomponent', 'xpcom/tests/component'),
+    ('test656331', 'xpcom/tests/bug656331_component'),
+    ('testcompnoaslr', 'xpcom/tests/component_no_aslr'),
+    ('TestStreamConv', 'netwerk/streamconv/test'),
+    ('PropertiesTest', 'netwerk/test'),
+    ('ReadNTLM', 'netwerk/test'),
+    ('TestBlockingSocket', 'netwerk/test'),
+    ('TestDNS', 'netwerk/test'),
+    ('TestIncrementalDownload', 'netwerk/test'),
+    ('TestNamedPipeService', 'netwerk/test'),
+    ('TestOpen', 'netwerk/test'),
+    ('TestProtocols', 'netwerk/test'),
+    ('TestServ', 'netwerk/test'),
+    ('TestStreamLoader', 'netwerk/test'),
+    ('TestUpload', 'netwerk/test'),
+    ('TestURLParser', 'netwerk/test'),
+    ('urltest', 'netwerk/test'),
+    ('TestBind', 'netwerk/test'),
+    ('TestCookie', 'netwerk/test'),
+    ('TestUDPSocket', 'netwerk/test'),
+    ('xpcshell', 'js/xpconnect/shell'),
+    ('xpctest', 'js/xpconnect/tests/components/native'),
+    ('test_AsXXX_helpers', 'storage/test'),
+    ('test_async_callbacks_with_spun_event_loops', 'storage/test'),
+    ('test_asyncStatementExecution_transaction', 'storage/test'),
+    ('test_binding_params', 'storage/test'),
+    ('test_deadlock_detector', 'storage/test'),
+    ('test_file_perms', 'storage/test'),
+    ('test_mutex', 'storage/test'),
+    ('test_service_init_background_thread', 'storage/test'),
+    ('test_statement_scoper', 'storage/test'),
+    ('test_StatementCache', 'storage/test'),
+    ('test_transaction_helper', 'storage/test'),
+    ('test_true_async', 'storage/test'),
+    ('test_unlock_notify', 'storage/test'),
+    ('TestTXMgr', 'editor/txmgr/tests'),
+    ('test_IHistory', 'toolkit/components/places/tests/cpp'),
+    ('testcrasher', 'toolkit/crashreporter/test'),
+    ('TestStartupCache', 'startupcache/test'),
+    ('jsep_session_unittest', 'media/webrtc/signaling/test'),
+    ('jsep_track_unittest', 'media/webrtc/signaling/test'),
+    ('mediaconduit_unittests', 'media/webrtc/signaling/test'),
+    ('mediapipeline_unittest', 'media/webrtc/signaling/test'),
+    ('sdp_file_parser', 'media/webrtc/signaling/fuzztest'),
+    ('sdp_unittests', 'media/webrtc/signaling/test'),
+    ('signaling_unittests', 'media/webrtc/signaling/test'),
+    ('TestMailCookie', 'mailnews/base/test'),
+}
+
+
 class TreeMetadataEmitter(LoggingMixin):
     """Converts the executed mozbuild files into data structures.
 
@@ -274,11 +334,15 @@ class TreeMetadataEmitter(LoggingMixin):
         """Add linkage declarations to a given object."""
         assert isinstance(obj, Linkable)
 
+        use_xpcom = False
+
         for path in context.get(variable, []):
             force_static = path.startswith('static:') and obj.KIND == 'target'
             if force_static:
                 path = path[7:]
             name = mozpath.basename(path)
+            if name in ('xpcomglue', 'xpcomglue_s'):
+                use_xpcom = True
             dir = mozpath.dirname(path)
             candidates = [l for l in self._libs[name] if l.KIND == obj.KIND]
             if dir:
@@ -364,6 +428,29 @@ class TreeMetadataEmitter(LoggingMixin):
         # Link system libraries from OS_LIBS/HOST_OS_LIBS.
         for lib in context.get(variable.replace('USE', 'OS'), []):
             obj.link_system_library(lib)
+
+        key = (obj.name, obj.relativedir)
+        substs = context.config.substs
+        extra_allowed = [
+            (substs.get('MOZ_APP_NAME'), '%s/app' % substs.get('MOZ_BUILD_APP')),
+            ('%s-bin' % substs.get('MOZ_APP_NAME'), '%s/app' % substs.get('MOZ_BUILD_APP')),
+        ]
+        if substs.get('MOZ_WIDGET_TOOLKIT') != 'android':
+            extra_allowed.append((substs.get('MOZ_CHILD_PROCESS_NAME'), 'ipc/app'))
+
+        if key in ALLOWED_XPCOM_GLUE or key in extra_allowed:
+            if not use_xpcom:
+                raise SandboxValidationError(
+                    "%s is in the exception list for XPCOM glue dependency but "
+                    "doesn't depend on the XPCOM glue. Please adjust the list "
+                    "in %s." % (obj.name, __file__), context
+                )
+        elif use_xpcom:
+            raise SandboxValidationError(
+                "%s depends on the XPCOM glue. "
+                "No new dependency on the XPCOM glue is allowed."
+                % obj.name, context
+            )
 
     @memoize
     def _get_external_library(self, dir, name, force_static):
