@@ -466,7 +466,7 @@ LexDecFloatLiteral(const char16_t* begin, const char16_t* end, const char16_t** 
 }
 
 static bool
-ConsumeTextByte(const char16_t** curp, const char16_t* end, uint8_t *byte = nullptr)
+ConsumeTextByte(const char16_t** curp, const char16_t* end, uint8_t* byte = nullptr)
 {
     const char16_t*& cur = *curp;
     MOZ_ASSERT(cur != end);
@@ -3213,9 +3213,31 @@ ParseGlobal(WasmParseContext& c, AstModule* module)
 }
 
 static AstModule*
-ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
+ParseBinaryModule(WasmParseContext& c, AstModule* module)
+{
+    // By convention with EncodeBinaryModule, a binary module only contains a
+    // data section containing the raw bytes contained in the module.
+    AstNameVector fragments(c.lifo);
+
+    WasmToken text;
+    while (c.ts.getIf(WasmToken::Text, &text)) {
+        if (!fragments.append(text.text()))
+            return nullptr;
+    }
+
+    auto* data = new(c.lifo) AstDataSegment(nullptr, Move(fragments));
+    if (!data || !module->append(data))
+        return nullptr;
+
+    return module;
+}
+
+static AstModule*
+ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error, bool* binary)
 {
     WasmParseContext c(text, lifo, error);
+
+    *binary = false;
 
     if (!c.ts.match(WasmToken::OpenParen, c.error))
         return nullptr;
@@ -3225,6 +3247,11 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
     auto* module = new(c.lifo) AstModule(c.lifo);
     if (!module || !module->init())
         return nullptr;
+
+    if (c.ts.peek().kind() == WasmToken::Text) {
+        *binary = true;
+        return ParseBinaryModule(c, module);
+    }
 
     while (c.ts.getIf(WasmToken::OpenParen)) {
         WasmToken section = c.ts.get();
@@ -4628,7 +4655,7 @@ EncodeCodeSection(Encoder& e, AstModule& module)
 }
 
 static bool
-EncodeDataSegment(Encoder& e, AstDataSegment& segment)
+EncodeDataSegment(Encoder& e, const AstDataSegment& segment)
 {
     if (!e.writeVarU32(0))  // linear memory index
         return false;
@@ -4656,10 +4683,7 @@ EncodeDataSegment(Encoder& e, AstDataSegment& segment)
         }
     }
 
-    if (!e.writeBytes(bytes.begin(), bytes.length()))
-        return false;
-
-    return true;
+    return e.writeBytes(bytes.begin(), bytes.length());
 }
 
 static bool
@@ -4775,15 +4799,42 @@ EncodeModule(AstModule& module, Bytes* bytes)
     return true;
 }
 
+static bool
+EncodeBinaryModule(const AstModule& module, Bytes* bytes)
+{
+    Encoder e(*bytes);
+
+    const AstDataSegmentVector& dataSegments = module.dataSegments();
+    MOZ_ASSERT(dataSegments.length() == 1);
+
+    for (const AstName& fragment : dataSegments[0]->fragments()) {
+        const char16_t* cur = fragment.begin();
+        const char16_t* end = fragment.end();
+        while (cur != end) {
+            uint8_t byte;
+            MOZ_ALWAYS_TRUE(ConsumeTextByte(&cur, end, &byte));
+            if (!e.writeFixedU8(byte))
+                return false;
+        }
+    }
+
+    return true;
+}
+
 /*****************************************************************************/
 
 bool
 wasm::TextToBinary(const char16_t* text, Bytes* bytes, UniqueChars* error)
 {
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
-    AstModule* module = ParseModule(text, lifo, error);
+
+    bool binary = false;
+    AstModule* module = ParseModule(text, lifo, error, &binary);
     if (!module)
         return false;
+
+    if (binary)
+        return EncodeBinaryModule(*module, bytes);
 
     if (!ResolveModule(lifo, module, error))
         return false;

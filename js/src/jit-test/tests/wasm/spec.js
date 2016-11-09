@@ -397,21 +397,33 @@ function exec(e) {
         return;
     }
 
-    if (exprName === "assert_invalid") {
+    if (exprName === "assert_invalid" || exprName === "assert_malformed") {
         let moduleText = e.list[1].toString();
         let errMsg = e.list[2];
         if (errMsg) {
-            assert(errMsg.quoted, "assert_invalid second argument must be a string");
+            assert(errMsg.quoted, "assert_invalid/malformed second argument must be a string");
             errMsg.quoted = false;
         }
+
         // assert_invalid tests both the decoder *and* the parser itself.
+        let text;
         try {
-            assertEq(WebAssembly.validate(wasmTextToBinary(moduleText)), false, "assert_invalid failed");
+            text = wasmTextToBinary(moduleText);
         } catch(e) {
             if (/wasm text error/.test(e.toString()))
                 return;
-            throw e;
         }
+
+        assertEq(WebAssembly.validate(text), false, "assert_invalid failed");
+
+        let caught = false;
+        try {
+            new WebAssembly.Module(text)
+        } catch (e) {
+            caught = true;
+            debug("Caught", e.toString(), ", expected:", errMsg);
+        }
+        assertEq(caught, true);
         return;
     }
 
