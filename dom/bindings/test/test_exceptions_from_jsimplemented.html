@@ -13,14 +13,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=923010
   try {
     var conn = new RTCPeerConnection();
 
-    var candidate = new RTCIceCandidate({candidate: null });
+    var candidate = new RTCIceCandidate({candidate: "x" });
     conn.addIceCandidate(candidate)
     .then(function() {
       ok(false, "addIceCandidate succeeded when it should have failed");
     }, function(reason) {
       is(reason.lineNumber, 17, "Rejection should have been on line 17");
       is(reason.message,
-         "Invalid candidate passed to addIceCandidate!",
+         "Invalid candidate (both sdpMid and sdpMLineIndex are null).",
          "Should have the rejection we expect");
     })
     .catch(function(reason) {
