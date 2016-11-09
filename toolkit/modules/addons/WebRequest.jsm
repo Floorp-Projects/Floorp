@@ -15,8 +15,9 @@ const Cr = Components.results;
 
 const {nsIHttpActivityObserver, nsISocketTransport} = Ci;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
@@ -113,6 +114,10 @@ function mergeStatus(data, channel, event) {
       Cu.reportError(`webRequest Error: ${e} trying to merge status in ${event}@${channel.name}`);
     }
   }
+}
+
+function isThenable(value) {
+  return value && typeof value === "object" && typeof value.then === "function";
 }
 
 class HeaderChanger {
@@ -484,7 +489,9 @@ HttpObserverManager = {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     switch (topic) {
       case "http-on-modify-request":
-        this.modify(channel, topic, data);
+        let loadContext = this.getLoadContext(channel);
+
+        this.runChannelListener(channel, loadContext, "opening");
         break;
       case "http-on-examine-cached-response":
       case "http-on-examine-merged-response":
@@ -558,11 +565,11 @@ HttpObserverManager = {
       let channelData = getData(channel);
       if (kind === "onError") {
         if (channelData.errorNotified) {
-          return false;
+          return;
         }
         channelData.errorNotified = true;
       } else if (this.errorCheck(channel, loadContext, channelData)) {
-        return false;
+        return;
       }
     }
     let listeners = this.listeners[kind];
@@ -677,42 +684,70 @@ HttpObserverManager = {
       }
     }
 
-    for (let {opts, result} of handlerResults) {
-      if (result.cancel) {
-        channel.cancel(Cr.NS_ERROR_ABORT);
-        this.errorCheck(channel, loadContext);
-        return false;
-      }
+    this.applyChanges(kind, channel, loadContext, handlerResults, requestHeaders, responseHeaders);
+  },
 
-      if (result.redirectUrl) {
-        try {
-          channel.redirectTo(BrowserUtils.makeURI(result.redirectUrl));
-          return false;
-        } catch (e) {
-          Cu.reportError(e);
+  applyChanges: Task.async(function* (kind, channel, loadContext, handlerResults, requestHeaders, responseHeaders) {
+    let asyncHandlers = handlerResults.filter(({result}) => isThenable(result));
+    let isAsync = asyncHandlers.length > 0;
+
+    try {
+      if (isAsync) {
+        channel.suspend();
+
+        for (let value of asyncHandlers) {
+          try {
+            value.result = yield value.result;
+          } catch (e) {
+            Cu.reportError(e);
+            value.result = {};
+          }
         }
       }
 
-      if (opts.requestHeaders && result.requestHeaders) {
-        requestHeaders.applyChanges(result.requestHeaders);
-      }
+      for (let {opts, result} of handlerResults) {
+        if (result.cancel) {
+          channel.cancel(Cr.NS_ERROR_ABORT);
 
-      if (opts.responseHeaders && result.responseHeaders) {
-        responseHeaders.applyChanges(result.responseHeaders);
+          this.errorCheck(channel, loadContext);
+          return;
+        }
+
+        if (result.redirectUrl) {
+          try {
+            if (isAsync) {
+              channel.resume();
+            }
+
+            channel.redirectTo(BrowserUtils.makeURI(result.redirectUrl));
+            return;
+          } catch (e) {
+            Cu.reportError(e);
+          }
+        }
+
+        if (opts.requestHeaders && result.requestHeaders) {
+          requestHeaders.applyChanges(result.requestHeaders);
+        }
+
+        if (opts.responseHeaders && result.responseHeaders) {
+          responseHeaders.applyChanges(result.responseHeaders);
+        }
       }
+    } catch (e) {
+      Cu.reportError(e);
     }
 
-    return true;
-  },
-
-  modify(channel, topic, data) {
-    let loadContext = this.getLoadContext(channel);
-
-    if (this.runChannelListener(channel, loadContext, "opening") &&
-        this.runChannelListener(channel, loadContext, "modify")) {
-      this.runChannelListener(channel, loadContext, "afterModify");
+    if (isAsync) {
+      channel.resume();
     }
-  },
+
+    if (kind === "opening") {
+      return this.runChannelListener(channel, loadContext, "modify");
+    } else if (kind === "modify") {
+      return this.runChannelListener(channel, loadContext, "afterModify");
+    }
+  }),
 
   examine(channel, topic, data) {
     let loadContext = this.getLoadContext(channel);
