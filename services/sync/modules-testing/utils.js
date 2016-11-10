@@ -16,7 +16,8 @@ this.EXPORTED_SYMBOLS = [
   "configureIdentity",
   "SyncTestingInfrastructure",
   "waitForZeroTimer",
-  "Promise", // from a module import
+  "promiseZeroTimer",
+  "promiseNamedTimer",
   "add_identity_test",
   "MockFxaStorageManager",
   "AccountState", // from a module import
@@ -36,7 +37,6 @@ Cu.import("resource://testing-common/services/sync/fakeservices.js");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 // and grab non-exported stuff via a backstage pass.
@@ -94,6 +94,18 @@ this.waitForZeroTimer = function waitForZeroTimer(callback) {
     callback();
   }
   CommonUtils.namedTimer(wait, 150, {}, "timer");
+}
+
+this.promiseZeroTimer = function() {
+  return new Promise(resolve => {
+    waitForZeroTimer(resolve);
+  });
+}
+
+this.promiseNamedTimer = function(wait, thisObj, name) {
+  return new Promise(resolve => {
+    Utils.namedTimer(resolve, wait, thisObj, name);
+  });
 }
 
 /**
@@ -237,7 +249,7 @@ this.configureFxAccountIdentity = function(authService,
   authService._account = config.fxaccount.user.email;
 }
 
-this.configureIdentity = function(identityOverrides) {
+this.configureIdentity = async function(identityOverrides) {
   let config = makeIdentityConfig(identityOverrides);
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
@@ -245,16 +257,13 @@ this.configureIdentity = function(identityOverrides) {
   if (ns.Service.identity instanceof BrowserIDManager) {
     // do the FxAccounts thang...
     configureFxAccountIdentity(ns.Service.identity, config);
-    return ns.Service.identity.initializeWithCurrentIdentity().then(() => {
-      // need to wait until this identity manager is readyToAuthenticate.
-      return ns.Service.identity.whenReadyToAuthenticate.promise;
-    });
+    await ns.Service.identity.initializeWithCurrentIdentity();
+    // need to wait until this identity manager is readyToAuthenticate.
+    await ns.Service.identity.whenReadyToAuthenticate.promise;
+    return;
   }
   // old style identity provider.
   setBasicCredentials(config.username, config.sync.password, config.sync.syncKey);
-  let deferred = Promise.defer();
-  deferred.resolve();
-  return deferred.promise;
 }
 
 this.SyncTestingInfrastructure = function (server, username, password, syncKey) {
@@ -320,19 +329,19 @@ this.add_identity_test = function(test, testFunction) {
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
   // one task for the "old" identity manager.
-  test.add_task(function* () {
+  test.add_task(async function() {
     note("sync");
     let oldIdentity = Status._authManager;
     ensureLegacyIdentityManager();
-    yield testFunction();
+    await testFunction();
     Status.__authManager = ns.Service.identity = oldIdentity;
   });
   // another task for the FxAccounts identity manager.
-  test.add_task(function* () {
+  test.add_task(async function() {
     note("FxAccounts");
     let oldIdentity = Status._authManager;
     Status.__authManager = ns.Service.identity = new BrowserIDManager();
-    yield testFunction();
+    await testFunction();
     Status.__authManager = ns.Service.identity = oldIdentity;
   });
 }

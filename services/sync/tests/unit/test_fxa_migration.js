@@ -3,7 +3,6 @@ Services.prefs.setCharPref("identity.fxaccounts.auth.uri", "http://localhost");
 
 // Test the FxAMigration module
 Cu.import("resource://services-sync/FxaMigrator.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
 
 // Set our username pref early so sync initializes with the legacy provider.
 Services.prefs.setCharPref("services.sync.username", "foo");
@@ -23,24 +22,6 @@ Cu.import("resource://testing-common/services/common/logging.js");
 Cu.import("resource://testing-common/services/sync/rotaryengine.js");
 
 const FXA_USERNAME = "someone@somewhere";
-
-// Utilities
-function promiseOneObserver(topic) {
-  return new Promise((resolve, reject) => {
-    let observer = function(subject, topic, data) {
-      Services.obs.removeObserver(observer, topic);
-      resolve({ subject: subject, data: data });
-    }
-    Services.obs.addObserver(observer, topic, false);
-  });
-}
-
-function promiseStopServer(server) {
-  return new Promise((resolve, reject) => {
-    server.stop(resolve);
-  });
-}
-
 
 // Helpers
 function configureLegacySync() {
@@ -80,7 +61,7 @@ function configureLegacySync() {
   return [engine, server];
 }
 
-add_task(function *testMigrationUnlinks() {
+add_task(async function testMigrationUnlinks() {
 
   // when we do a .startOver we want the new provider.
   let oldValue = Services.prefs.getBoolPref("services.sync-testing.startOverKeepIdentity");
@@ -101,8 +82,8 @@ add_task(function *testMigrationUnlinks() {
   Service.sync();
   _("Finished sync");
 
-  yield promiseStartOver;
-  yield promiseMigration;
+  await promiseStartOver;
+  await promiseMigration;
   // We should have seen the observer and Sync should no longer be configured.
   Assert.ok(!Services.prefs.prefHasUserValue("services.sync.username"));
 });
