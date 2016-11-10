@@ -590,7 +590,7 @@ this.PlacesUIUtils = {
 
     if ("itemGuid" in aData) {
       if (!this.PLACES_FLAVORS.includes(aData.type))
-        throw new Error (`itemGuid unexpectedly set on ${aData.type} data`);
+        throw new Error(`itemGuid unexpectedly set on ${aData.type} data`);
 
       let info = { guid: aData.itemGuid
                  , newParentGuid: aNewParentGuid

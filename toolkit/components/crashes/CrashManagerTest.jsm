@@ -100,7 +100,7 @@ this.TestingCrashManager.prototype = {
     return Task.spawn(function* () {
       let mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR;
       yield OS.File.open(path, {create: true}, {unixMode: mode});
-      dump ("Create ignored dump file: " + path + "\n");
+      dump("Create ignored dump file: " + path + "\n");
     });
   },
 
