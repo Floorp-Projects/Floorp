@@ -331,3 +331,28 @@ wasm::DecodeUnknownSections(Decoder& d)
 
     return true;
 }
+
+bool
+Decoder::fail(const char* msg, ...)
+{
+    va_list ap;
+    va_start(ap, msg);
+    UniqueChars str(JS_vsmprintf(msg, ap));
+    va_end(ap);
+    if (!str)
+        return false;
+
+    return fail(Move(str));
+}
+
+bool
+Decoder::fail(UniqueChars msg)
+{
+    MOZ_ASSERT(error_);
+    UniqueChars strWithOffset(JS_smprintf("at offset %" PRIuSIZE ": %s", currentOffset(), msg.get()));
+    if (!strWithOffset)
+        return false;
+
+    *error_ = Move(strWithOffset);
+    return false;
+}

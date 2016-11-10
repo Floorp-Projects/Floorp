@@ -35,7 +35,7 @@
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "vm/MallocProvider.h"
-#include "wasm/WasmBinary.h"
+#include "wasm/WasmBinaryConstants.h"
 
 namespace js {
 
@@ -82,6 +82,12 @@ using mozilla::Some;
 using mozilla::Unused;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
+typedef Vector<uint8_t, 0, SystemAllocPolicy> Bytes;
+
+typedef int8_t I8x16[16];
+typedef int16_t I16x8[8];
+typedef int32_t I32x4[4];
+typedef float F32x4[4];
 
 class Code;
 class CodeRange;
@@ -144,26 +150,7 @@ struct ShareableBase : RefCounted<T>
     }
 };
 
-// ValType/ExprType utilities
-
-static inline bool
-IsVoid(ExprType et)
-{
-    return et == ExprType::Void;
-}
-
-static inline ValType
-NonVoidToValType(ExprType et)
-{
-    MOZ_ASSERT(!IsVoid(et));
-    return ValType(et);
-}
-
-static inline ExprType
-ToExprType(ValType vt)
-{
-    return ExprType(vt);
-}
+// ValType utilities
 
 static inline bool
 IsSimdType(ValType vt)
@@ -243,12 +230,6 @@ SimdBoolType(ValType vt)
 }
 
 static inline bool
-IsSimdType(ExprType et)
-{
-    return IsVoid(et) ? false : IsSimdType(ValType(et));
-}
-
-static inline bool
 IsSimdBoolType(ValType vt)
 {
     return vt == ValType::B8x16 || vt == ValType::B16x8 || vt == ValType::B32x4;
@@ -271,6 +252,56 @@ ToMIRType(ValType vt)
       case ValType::B32x4: return jit::MIRType::Bool32x4;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
+}
+
+// The ExprType enum represents the type of a WebAssembly expression or return
+// value and may either be a value type or void. Soon, expression types will be
+// generalized to a list of ValType and this enum will go away, replaced,
+// wherever it is used, by a varU32 + list of ValType.
+
+enum class ExprType : uint32_t // fix type so we can cast from any u8 in decoder
+{
+    Void  = uint8_t(TypeCode::BlockVoid),
+
+    I32   = uint8_t(TypeCode::I32),
+    I64   = uint8_t(TypeCode::I64),
+    F32   = uint8_t(TypeCode::F32),
+    F64   = uint8_t(TypeCode::F64),
+
+    I8x16 = uint8_t(TypeCode::I8x16),
+    I16x8 = uint8_t(TypeCode::I16x8),
+    I32x4 = uint8_t(TypeCode::I32x4),
+    F32x4 = uint8_t(TypeCode::F32x4),
+    B8x16 = uint8_t(TypeCode::B8x16),
+    B16x8 = uint8_t(TypeCode::B16x8),
+    B32x4 = uint8_t(TypeCode::B32x4),
+
+    Limit = uint8_t(TypeCode::Limit)
+};
+
+static inline bool
+IsVoid(ExprType et)
+{
+    return et == ExprType::Void;
+}
+
+static inline ValType
+NonVoidToValType(ExprType et)
+{
+    MOZ_ASSERT(!IsVoid(et));
+    return ValType(et);
+}
+
+static inline ExprType
+ToExprType(ValType vt)
+{
+    return ExprType(vt);
+}
+
+static inline bool
+IsSimdType(ExprType et)
+{
+    return IsVoid(et) ? false : IsSimdType(ValType(et));
 }
 
 static inline jit::MIRType
@@ -305,6 +336,41 @@ ToCString(ValType type)
 {
     return ToCString(ToExprType(type));
 }
+
+// Because WebAssembly allows one to define the payload of a NaN value,
+// including the signal/quiet bit (highest order bit of payload), another
+// represenation of floating-point values is required: on some platforms (x86
+// without SSE2), passing a floating-point argument to a function call may use
+// the x87 stack, which has the side-effect of clearing the signal/quiet bit.
+// Because the signal/quiet bit must be preserved (by spec), we use the raw
+// punned integer representation of floating points instead, in function calls.
+//
+// When we leave the WebAssembly sandbox back to JS, NaNs are canonicalized, so
+// this isn't observable from JS.
+
+template<class T>
+class Raw
+{
+    typedef typename mozilla::FloatingPoint<T>::Bits Bits;
+    Bits value_;
+
+  public:
+    Raw() : value_(0) {}
+
+    explicit Raw(T value)
+      : value_(mozilla::BitwiseCast<Bits>(value))
+    {}
+
+    template<class U> MOZ_IMPLICIT Raw(U) = delete;
+
+    static Raw fromBits(Bits bits) { Raw r; r.value_ = bits; return r; }
+
+    Bits bits() const { return value_; }
+    T fp() const { return mozilla::BitwiseCast<T>(value_); }
+};
+
+using RawF64 = Raw<double>;
+using RawF32 = Raw<float>;
 
 // The Val class represents a single WebAssembly value of a given value type,
 // mostly for the purpose of numeric literals and initializers. A Val does not
