@@ -2757,9 +2757,11 @@ nsPresContext::NotifyNonBlankPaint()
 {
   MOZ_ASSERT(!mHadNonBlankPaint);
   mHadNonBlankPaint = true;
-  RefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
-  if (timing) {
-    timing->NotifyNonBlankPaint();
+  if (IsRootContentDocument()) {
+    RefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
+    if (timing) {
+      timing->NotifyNonBlankPaintForRootContentDocument();
+    }
   }
 }
 

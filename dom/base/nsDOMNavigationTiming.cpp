@@ -48,6 +48,7 @@ nsDOMNavigationTiming::Clear()
   mDOMContentLoadedEventStartSet = false;
   mDOMContentLoadedEventEndSet = false;
   mDOMCompleteSet = false;
+  mDocShellHasBeenActiveSinceNavigationStart = false;
 }
 
 DOMTimeMilliSec
@@ -66,10 +67,11 @@ DOMTimeMilliSec nsDOMNavigationTiming::DurationFromStart()
 }
 
 void
-nsDOMNavigationTiming::NotifyNavigationStart()
+nsDOMNavigationTiming::NotifyNavigationStart(DocShellState aDocShellState)
 {
   mNavigationStartHighRes = (double)PR_Now() / PR_USEC_PER_MSEC;
   mNavigationStartTimeStamp = mozilla::TimeStamp::Now();
+  mDocShellHasBeenActiveSinceNavigationStart = (aDocShellState == DocShellState::eActive);
 }
 
 void
@@ -185,7 +187,7 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedEnd(nsIURI* aURI)
 }
 
 void
-nsDOMNavigationTiming::NotifyNonBlankPaint()
+nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mNavigationStartTimeStamp.IsNull());
@@ -202,10 +204,24 @@ nsDOMNavigationTiming::NotifyNonBlankPaint()
     if (mLoadedURI) {
       mLoadedURI->GetSpec(spec);
     }
-    nsPrintfCString marker("Non-blank paint after %dms for URL %s",
-                           int(elapsed.ToMilliseconds()), spec.get());
+    nsPrintfCString marker("Non-blank paint after %dms for URL %s, %s",
+                           int(elapsed.ToMilliseconds()), spec.get(),
+                           mDocShellHasBeenActiveSinceNavigationStart ? "foreground tab" : "this tab was inactive some of the time between navigation start and first non-blank paint");
     PROFILER_MARKER(marker.get());
   }
+
+  if (mDocShellHasBeenActiveSinceNavigationStart) {
+    Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_NON_BLANK_PAINT_MS,
+                                   mNavigationStartTimeStamp,
+                                   mNonBlankPaintTimeStamp);
+  }
+}
+
+void
+nsDOMNavigationTiming::NotifyDocShellStateChanged(DocShellState aDocShellState)
+{
+  mDocShellHasBeenActiveSinceNavigationStart &=
+    (aDocShellState == DocShellState::eActive);
 }
 
 DOMTimeMilliSec
