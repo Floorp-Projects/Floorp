@@ -757,6 +757,9 @@ AddWeightedFilterFunction(double aCoeff1, const nsCSSValueList* aList1,
                           double aCoeff2, const nsCSSValueList* aList2,
                           ColorAdditionType aColorAdditionType);
 
+static inline float
+GetNumberOrPercent(const nsCSSValue &aValue);
+
 // Return false if we cannot compute the distance between these filter
 // functions.
 static bool
@@ -805,12 +808,19 @@ ComputeFilterSquareDistance(const nsCSSValueList* aList1,
     case eCSSKeyword_brightness:
     case eCSSKeyword_contrast:
     case eCSSKeyword_opacity:
-    case eCSSKeyword_saturate:
-      // TODO
+    case eCSSKeyword_saturate: {
+      double diff =
+        EnsureNotNan(GetNumberOrPercent(func2) - GetNumberOrPercent(func1));
+      aSquareDistance = diff * diff;
       break;
-    case eCSSKeyword_hue_rotate:
-      // TODO
+    }
+    case eCSSKeyword_hue_rotate: {
+      nsCSSValue v;
+      AddCSSValueAngle(1.0, func2, -1.0, func1, v);
+      double diff = v.GetAngleValueInRadians();
+      aSquareDistance = diff * diff;
       break;
+    }
     case eCSSKeyword_drop_shadow: {
       MOZ_ASSERT(!func1.GetListValue()->mNext && !func2.GetListValue()->mNext,
                  "drop-shadow filter func doesn't support lists");
@@ -1694,12 +1704,9 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
       return true;
 
     case eUnit_Filter:
-      ComputeFilterListDistance(aStartValue.GetCSSValueListValue(),
-                                aEndValue.GetCSSValueListValue(),
-                                aDistance);
-      // TODO: Remove the setting and return true in the later patch.
-      aDistance = 0.0;
-      return false;
+      return ComputeFilterListDistance(aStartValue.GetCSSValueListValue(),
+                                       aEndValue.GetCSSValueListValue(),
+                                       aDistance);
 
     case eUnit_Transform: {
       // FIXME: We don't have an official spec to define the distance of
