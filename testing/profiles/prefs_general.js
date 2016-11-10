@@ -355,3 +355,7 @@ user_pref("plugin.load_flash_only", false);
 // Don't block old libavcodec libraries when testing, because our test systems
 // cannot easily be upgraded.
 user_pref("media.libavcodec.allow-obsolete", true);
+
+// Disable password capture, so that mochitests that include forms aren't
+// influenced by the presence of the persistent doorhanger notification.
+user_pref("signon.rememberSignons", false);

@@ -5,8 +5,8 @@
 const PROMPT_URL = "chrome://global/content/commonDialog.xul";
 var { interfaces: Ci } = Components;
 
-function test() {
-  waitForExplicitFinish();
+add_task(function* test() {
+  yield new Promise(resolve => {
 
   let tab = gBrowser.addTab();
   isnot(tab, gBrowser.selectedTab, "New tab shouldn't be selected");
@@ -39,4 +39,6 @@ function test() {
     finish();
   }, true);
   tab.linkedBrowser.loadURI("http://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs");
-}
+
+  });
+});
