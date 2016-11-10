@@ -37,7 +37,7 @@ function* task_add_visit(aURI, aVisitType)
       aVisitType != TRANSITION_FRAMED_LINK &&
       aVisitType != TRANSITION_DOWNLOAD &&
       aVisitType != TRANSITION_RELOAD) {
-    visit_count ++;
+    visit_count++;
   }
 
   // Get the place id
