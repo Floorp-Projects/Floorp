@@ -33,7 +33,6 @@ function EvaluationResult(props) {
     level,
     id: messageId,
     exceptionDocURL,
-    frame,
   } = message;
 
   let messageBody;
@@ -56,7 +55,6 @@ function EvaluationResult(props) {
     scrollToMessage: props.autoscroll,
     serviceContainer,
     exceptionDocURL,
-    frame,
   };
   return Message(childProps);
 }
