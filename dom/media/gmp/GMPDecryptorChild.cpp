@@ -73,6 +73,11 @@ GMPDecryptorChild::Init(GMPDecryptor* aSession)
 {
   MOZ_ASSERT(aSession);
   mSession = aSession;
+  // The ID of this decryptor is the IPDL actor ID. Note it's unique inside
+  // the child process, but not necessarily across all gecko processes. However,
+  // since GMPDecryptors are segregated by node ID/origin, we shouldn't end up
+  // with clashes in the content process.
+  SendSetDecryptorId(Id());
 }
 
 void
