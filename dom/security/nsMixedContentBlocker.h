@@ -94,12 +94,8 @@ public:
 
   static bool sBlockMixedScript;
   static bool sBlockMixedDisplay;
-  // Do we move HSTS before mixed-content
   static bool sUseHSTS;
-  // Do we send an HSTS priming request
   static bool sSendHSTSPriming;
-  // Default HSTS Priming failure timeout in seconds
-  static uint32_t sHSTSPrimingCacheTimeout;
 };
 
 #endif /* nsMixedContentBlocker_h___ */
