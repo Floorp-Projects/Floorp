@@ -42,4 +42,6 @@ interface nsIClassOfService : nsISupports
   const unsigned long Speculative = 1 << 2;
   const unsigned long Background = 1 << 3;
   const unsigned long Unblocked = 1 << 4;
+  const unsigned long Throttleable = 1 << 5;
+  const unsigned long UrgentStart = 1 << 6;
 };
