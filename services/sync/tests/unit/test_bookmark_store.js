@@ -21,7 +21,7 @@ tracker.persistChangedIDs = false;
 var fxuri = Utils.makeURI("http://getfirefox.com/");
 var tburi = Utils.makeURI("http://getthunderbird.com/");
 
-add_task(function* test_ignore_specials() {
+add_task(async function test_ignore_specials() {
   _("Ensure that we can't delete bookmark roots.");
 
   // Belt...
@@ -30,7 +30,7 @@ add_task(function* test_ignore_specials() {
   do_check_neq(null, store.idForGUID("toolbar"));
 
   store.applyIncoming(record);
-  yield store.deletePending();
+  await store.deletePending();
 
   // Ensure that the toolbar exists.
   do_check_neq(null, store.idForGUID("toolbar"));
@@ -40,7 +40,7 @@ add_task(function* test_ignore_specials() {
 
   // Braces...
   store.remove(record);
-  yield store.deletePending();
+  await store.deletePending();
   do_check_neq(null, store.idForGUID("toolbar"));
   engine._buildGUIDMap();
 
@@ -244,7 +244,7 @@ add_test(function test_folder_createRecord() {
   }
 });
 
-add_task(function* test_deleted() {
+add_task(async function test_deleted() {
   try {
     _("Create a bookmark that will be deleted.");
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
@@ -256,7 +256,7 @@ add_task(function* test_deleted() {
     let record = new PlacesItem("bookmarks", bmk1_guid);
     record.deleted = true;
     store.applyIncoming(record);
-    yield store.deletePending();
+    await store.deletePending();
     _("Ensure it has been deleted.");
     let error;
     try {
@@ -438,7 +438,7 @@ function assertDeleted(id) {
   equal(error.result, Cr.NS_ERROR_ILLEGAL_VALUE)
 }
 
-add_task(function* test_delete_buffering() {
+add_task(async function test_delete_buffering() {
   store.wipe();
   try {
     _("Create a folder with two bookmarks.");
@@ -508,7 +508,7 @@ add_task(function* test_delete_buffering() {
     ok(!store._atomsToDelete.has(tbRecord.id));
 
     _("Process pending deletions and ensure that the right things are deleted.");
-    let updatedGuids = yield store.deletePending();
+    let updatedGuids = await store.deletePending();
 
     deepEqual(updatedGuids.sort(), ["get-tndrbrd1", "toolbar"]);
 

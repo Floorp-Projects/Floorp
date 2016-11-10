@@ -49,7 +49,7 @@ function shared_setup() {
   return [engine, rotaryColl, clientsColl, keysWBO, global];
 }
 
-add_task(function *hmac_error_during_404() {
+add_task(async function hmac_error_during_404() {
   _("Attempt to replicate the HMAC error setup.");
   let [engine, rotaryColl, clientsColl, keysWBO, global] = shared_setup();
 
@@ -83,14 +83,14 @@ add_task(function *hmac_error_during_404() {
 
   try {
     _("Syncing.");
-    yield sync_and_validate_telem();
+    await sync_and_validate_telem();
 
     _("Partially resetting client, as if after a restart, and forcing redownload.");
     Service.collectionKeys.clear();
     engine.lastSync = 0;        // So that we redownload records.
     key404Counter = 1;
     _("---------------------------");
-    yield sync_and_validate_telem();
+    await sync_and_validate_telem();
     _("---------------------------");
 
     // Two rotary items, one client record... no errors.
@@ -98,7 +98,7 @@ add_task(function *hmac_error_during_404() {
   } finally {
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
-    yield new Promise(resolve => server.stop(resolve));
+    await promiseStopServer(server);
   }
 });
 

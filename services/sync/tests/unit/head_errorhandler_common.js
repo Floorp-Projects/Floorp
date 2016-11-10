@@ -92,15 +92,11 @@ const EHTestsCommon = {
     keys.upload(Service.resource(Service.cryptoKeysURL));
   },
 
-  setUp(server) {
-    return configureIdentity({ username: "johndoe" }).then(
-      () => {
-        Service.serverURL  = server.baseURI + "/";
-        Service.clusterURL = server.baseURI + "/";
-      }
-    ).then(
-      () => EHTestsCommon.generateAndUploadKeys()
-    );
+  async setUp(server) {
+    await configureIdentity({ username: "johndoe" });
+    Service.serverURL  = server.baseURI + "/";
+    Service.clusterURL = server.baseURI + "/";
+    return EHTestsCommon.generateAndUploadKeys()
   },
 
   generateAndUploadKeys() {
