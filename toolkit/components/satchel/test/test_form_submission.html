@@ -454,13 +454,6 @@ function checkSubmit(formNum) {
 
 function submitForm(formNum)
 {
-  // Forms 13 and 14 would trigger a save-password notification. Temporarily
-  // disable pwmgr, then reenable it.
-  if (formNum == 12)
-      SpecialPowers.setBoolPref("signon.rememberSignons", false);
-  if (formNum == 14)
-      SpecialPowers.clearUserPref("signon.rememberSignons");
-
   // Forms 20 and 21 requires browser.formfill.saveHttpsForms to be false
   if (formNum == 19)
     SpecialPowers.setBoolPref("browser.formfill.saveHttpsForms", false);
