@@ -1,4 +1,3 @@
-// |jit-test| test-also-noasmjs
 load(libdir + "asm.js");
 
 if (!isAsmJSCompilationAvailable())

@@ -3540,8 +3540,7 @@ RangeAnalysis::prepareForUCE(bool* shouldRemoveDeadCode)
         if (!constant)
             return false;
 
-        if (DeadIfUnused(condition))
-            condition->setGuardRangeBailoutsUnchecked();
+        condition->setGuardRangeBailoutsUnchecked();
 
         test->block()->insertBefore(test, constant);
 
@@ -3577,13 +3576,14 @@ bool RangeAnalysis::tryRemovingGuards()
     for (size_t i = 0; i < guards.length(); i++) {
         MDefinition* guard = guards[i];
 
-#ifdef DEBUG
-        // There is no need to mark an instructions if there is
-        // already a more restrictive flag on it.
+        // If this ins is a guard even without guardRangeBailouts,
+        // there is no reason in trying to hoist the guardRangeBailouts check.
         guard->setNotGuardRangeBailouts();
-        MOZ_ASSERT(DeadIfUnused(guard));
+        if (!DeadIfUnused(guard)) {
+            guard->setGuardRangeBailouts();
+            continue;
+        }
         guard->setGuardRangeBailouts();
-#endif
 
         if (!guard->isPhi()) {
             if (!guard->range())
@@ -3613,11 +3613,6 @@ bool RangeAnalysis::tryRemovingGuards()
                 continue;
 
             MOZ_ASSERT(!operand->isGuardRangeBailouts());
-
-            // No need to mark as a guard, since it is has already an even more
-            // restrictive flag set.
-            if (!DeadIfUnused(operand))
-                continue;
 
             operand->setInWorklist();
             operand->setGuardRangeBailouts();

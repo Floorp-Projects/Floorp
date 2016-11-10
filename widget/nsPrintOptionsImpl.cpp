@@ -8,6 +8,7 @@
 #include "mozilla/embedding/PPrinting.h"
 #include "mozilla/layout/RemotePrintJobChild.h"
 #include "mozilla/RefPtr.h"
+#include "nsIPrinterEnumerator.h"
 #include "nsPrintingProxy.h"
 #include "nsReadableUtils.h"
 #include "nsPrintSettingsImpl.h"
@@ -34,7 +35,7 @@ using namespace mozilla::embedding;
 
 typedef mozilla::layout::RemotePrintJobChild RemotePrintJobChild;
 
-NS_IMPL_ISUPPORTS(nsPrintOptions, nsIPrintOptions, nsIPrintSettingsService)
+NS_IMPL_ISUPPORTS(nsPrintOptions, nsIPrintSettingsService)
 
 // Pref Constants
 static const char kMarginTop[]       = "print_margin_top";

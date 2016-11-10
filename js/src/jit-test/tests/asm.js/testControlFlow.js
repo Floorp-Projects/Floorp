@@ -1,4 +1,3 @@
-// |jit-test| test-also-noasmjs
 load(libdir + "asm.js");
 
 assertEq(asmLink(asmCompile(USE_ASM + "function f(i,j) { i=i|0;j=+j; if (i) return j; return j+1.0 } return f"))(0, 1.2), 1.2+1.0);

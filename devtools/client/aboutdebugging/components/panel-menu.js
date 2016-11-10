@@ -4,12 +4,23 @@
 
 "use strict";
 
-const { createClass, createFactory, DOM: dom } =
+const { createClass, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const PanelMenuEntry = createFactory(require("./panel-menu-entry"));
 
 module.exports = createClass({
   displayName: "PanelMenu",
+
+  propTypes: {
+    panels: PropTypes.arrayOf(PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      icon: PropTypes.string.isRequired,
+      component: PropTypes.func.isRequired
+    })).isRequired,
+    selectPanel: PropTypes.func.isRequired,
+    selectedPanelId: PropTypes.string
+  },
 
   render() {
     let { panels, selectedPanelId, selectPanel } = this.props;

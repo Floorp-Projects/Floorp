@@ -11,6 +11,9 @@ import android.support.customtabs.CustomTabsService;
 import android.support.customtabs.CustomTabsSessionToken;
 import android.util.Log;
 
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoService;
+
 import java.util.List;
 
 /**
@@ -18,6 +21,7 @@ import java.util.List;
  */
 public class GeckoCustomTabsService extends CustomTabsService {
     private static final String LOGTAG = "GeckoCustomTabsService";
+    private static final boolean DEBUG = false;
 
     @Override
     protected boolean updateVisuals(CustomTabsSessionToken sessionToken, Bundle bundle) {
@@ -28,9 +32,12 @@ public class GeckoCustomTabsService extends CustomTabsService {
 
     @Override
     protected boolean warmup(long flags) {
-        Log.v(LOGTAG, "warmup()");
+        if (DEBUG) {
+            Log.v(LOGTAG, "warming up...");
+        }
 
-        // Pretend warmup was successful
+        GeckoService.startGecko(GeckoProfile.initFromArgs(this, null), null, getApplicationContext());
+
         return true;
     }
 

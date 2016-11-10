@@ -29,10 +29,15 @@
  */
 
 'use strict';
+/* eslint-disable no-undef */
 
 const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr,
         utils: Cu } = Components;
 
+/* global INSTALL_LOCALE, MOZ_APP_NAME, BIN_SUFFIX, MOZ_APP_VENDOR */
+/* global MOZ_APP_BASENAME, APP_BIN_SUFFIX, APP_INFO_NAME, APP_INFO_VENDOR */
+/* global IS_WIN, IS_MACOSX, IS_UNIX, IS_ANDROID, IS_TOOLKIT_GONK */
+/* global MOZ_VERIFY_MAR_SIGNATURE, MOZ_VERIFY_MAR_SIGNATURE, IS_AUTHENTICODE_CHECK_ENABLED */
 load("../data/xpcshellConstantsPP.js");
 
 function getLogSuffix() {
@@ -193,6 +198,7 @@ var gEnvLdLibraryPath;
 var DEBUG_AUS_TEST = true;
 
 const DATA_URI_SPEC = Services.io.newFileURI(do_get_file("../data", false)).spec;
+/* import-globals-from ../data/shared.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
 
 var gTestFiles = [];

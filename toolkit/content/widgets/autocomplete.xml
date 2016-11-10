@@ -659,8 +659,10 @@
 
       <handler event="focus" phase="capturing"><![CDATA[
         this.attachController();
-        if (window.gBrowser) {
-          this.userContextId = window.gBrowser.selectedBrowser.contentPrincipal.originAttributes.userContextId;
+        if (window.gBrowser && window.gBrowser.selectedBrowser.hasAttribute("usercontextid")) {
+          this.userContextId = parseInt(window.gBrowser.selectedBrowser.getAttribute("usercontextid"));
+        } else {
+          this.userContextId = 0;
         }
       ]]></handler>
 

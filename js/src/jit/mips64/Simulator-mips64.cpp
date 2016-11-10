@@ -31,6 +31,7 @@
 
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 
@@ -572,8 +573,8 @@ Simulator::Create(JSContext* cx)
 
     int64_t stopAt;
     char* stopAtStr = getenv("MIPS_SIM_STOP_AT");
-    if (stopAtStr && sscanf(stopAtStr, "%ld", &stopAt) == 1) {
-        fprintf(stderr, "\nStopping simulation at icount %ld\n", stopAt);
+    if (stopAtStr && sscanf(stopAtStr, "%" PRIi64, &stopAt) == 1) {
+        fprintf(stderr, "\nStopping simulation at icount %" PRIi64 "\n", stopAt);
         Simulator::StopSimAt = stopAt;
     }
 
@@ -685,8 +686,8 @@ MipsDebugger::getValue(const char* desc, int64_t* value)
     }
 
     if (strncmp(desc, "0x", 2) == 0)
-        return sscanf(desc, "%lx", reinterpret_cast<uint64_t*>(value)) == 1;
-    return sscanf(desc, "%li", value) == 1;
+        return sscanf(desc, "%" PRIu64, reinterpret_cast<uint64_t*>(value)) == 1;
+    return sscanf(desc, "%" PRIi64, value) == 1;
 }
 
 bool
@@ -736,7 +737,7 @@ MipsDebugger::printAllRegs()
     int64_t value;
     for (uint32_t i = 0; i < Registers::Total; i++) {
         value = getRegisterValue(i);
-        printf("%3s: 0x%016lx %20ld   ", Registers::GetName(i), value, value);
+        printf("%3s: 0x%016" PRIx64 " %20" PRIi64 "   ", Registers::GetName(i), value, value);
 
         if (i % 2)
             printf("\n");
@@ -744,11 +745,11 @@ MipsDebugger::printAllRegs()
     printf("\n");
 
     value = getRegisterValue(Simulator::LO);
-    printf(" LO: 0x%016lx %20ld   ", value, value);
+    printf(" LO: 0x%016" PRIx64 " %20" PRIi64 "   ", value, value);
     value = getRegisterValue(Simulator::HI);
-    printf(" HI: 0x%016lx %20ld\n", value, value);
+    printf(" HI: 0x%016" PRIx64 " %20" PRIi64 "\n", value, value);
     value = getRegisterValue(Simulator::pc);
-    printf(" pc: 0x%016lx\n", value);
+    printf(" pc: 0x%016" PRIx64 "\n", value);
 }
 
 void
@@ -759,7 +760,7 @@ MipsDebugger::printAllRegsIncludingFPU()
     printf("\n\n");
     // f0, f1, f2, ... f31.
     for (uint32_t i = 0; i < FloatRegisters::TotalPhys; i++) {
-        printf("%3s: 0x%016lx\tflt: %-8.4g\tdbl: %-16.4g\n",
+        printf("%3s: 0x%016" PRIi64 "\tflt: %-8.4g\tdbl: %-16.4g\n",
                FloatRegisters::GetName(i),
                getFPURegisterValueLong(i),
                getFPURegisterValueFloat(i),
@@ -907,9 +908,9 @@ MipsDebugger::debug()
                         FloatRegisters::Encoding fReg = FloatRegisters::FromName(arg1);
                         if (reg != InvalidReg) {
                             value = getRegisterValue(reg.code());
-                            printf("%s: 0x%016lx %20ld \n", arg1, value, value);
+                            printf("%s: 0x%016" PRIi64 " %20" PRIi64 " \n", arg1, value, value);
                         } else if (fReg != FloatRegisters::Invalid) {
-                            printf("%3s: 0x%016lx\tflt: %-8.4g\tdbl: %-16.4g\n",
+                            printf("%3s: 0x%016" PRIi64 "\tflt: %-8.4g\tdbl: %-16.4g\n",
                                    FloatRegisters::GetName(fReg),
                                    getFPURegisterValueLong(fReg),
                                    getFPURegisterValueFloat(fReg),
@@ -949,7 +950,7 @@ MipsDebugger::debug()
                 end = cur + words;
 
                 while (cur < end) {
-                    printf("  %p:  0x%016lx %20ld", cur, *cur, *cur);
+                    printf("  %p:  0x%016" PRIx64 " %20" PRIi64, cur, *cur, *cur);
                     printf("\n");
                     cur++;
                 }
@@ -1638,7 +1639,7 @@ Simulator::readHU(uint64_t addr, SimInstruction* instr)
         uint16_t* ptr = reinterpret_cast<uint16_t*>(addr);
         return *ptr;
     }
-    printf("Unaligned unsigned halfword read at 0x%016lx, pc=0x%016lx\n",
+    printf("Unaligned unsigned halfword read at 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
            addr, reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
     return 0;
@@ -1651,7 +1652,7 @@ Simulator::readH(uint64_t addr, SimInstruction* instr)
         int16_t* ptr = reinterpret_cast<int16_t*>(addr);
         return *ptr;
     }
-    printf("Unaligned signed halfword read at 0x%016lx, pc=0x%016lx\n",
+    printf("Unaligned signed halfword read at 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
            addr, reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
     return 0;
@@ -1665,7 +1666,7 @@ Simulator::writeH(uint64_t addr, uint16_t value, SimInstruction* instr)
         *ptr = value;
         return;
     }
-    printf("Unaligned unsigned halfword write at 0x%016lx, pc=0x%016lx\n",
+    printf("Unaligned unsigned halfword write at 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
            addr, reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
 }
@@ -1678,7 +1679,7 @@ Simulator::writeH(uint64_t addr, int16_t value, SimInstruction* instr)
         *ptr = value;
         return;
     }
-    printf("Unaligned halfword write at 0x%016lx, pc=0x%016lx\n",
+    printf("Unaligned halfword write at 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
            addr, reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
 }
@@ -1688,7 +1689,7 @@ Simulator::readWU(uint64_t addr, SimInstruction* instr)
 {
     if (addr < 0x400) {
         // This has to be a NULL-dereference, drop into debugger.
-        printf("Memory read from bad address: 0x%016lx, pc=0x%016lx\n",
+        printf("Memory read from bad address: 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
                addr, reinterpret_cast<intptr_t>(instr));
         MOZ_CRASH();
     }
@@ -1696,7 +1697,7 @@ Simulator::readWU(uint64_t addr, SimInstruction* instr)
         uint32_t* ptr = reinterpret_cast<uint32_t*>(addr);
         return *ptr;
     }
-    printf("Unaligned read at 0x%016lx, pc=0x%016lx\n",
+    printf("Unaligned read at 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
            addr, reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
     return 0;
@@ -1707,7 +1708,7 @@ Simulator::readW(uint64_t addr, SimInstruction* instr)
 {
     if (addr < 0x400) {
         // This has to be a NULL-dereference, drop into debugger.
-        printf("Memory read from bad address: 0x%016lx, pc=0x%016lx\n",
+        printf("Memory read from bad address: 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
                addr, reinterpret_cast<intptr_t>(instr));
         MOZ_CRASH();
     }
@@ -1715,7 +1716,7 @@ Simulator::readW(uint64_t addr, SimInstruction* instr)
         int32_t* ptr = reinterpret_cast<int32_t*>(addr);
         return *ptr;
     }
-    printf("Unaligned read at 0x%016lx, pc=0x%016lx\n",
+    printf("Unaligned read at 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
            addr, reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
     return 0;
@@ -1726,7 +1727,7 @@ Simulator::writeW(uint64_t addr, uint32_t value, SimInstruction* instr)
 {
     if (addr < 0x400) {
         // This has to be a NULL-dereference, drop into debugger.
-        printf("Memory write to bad address: 0x%016lx, pc=0x%016lx\n",
+        printf("Memory write to bad address: 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
                addr, reinterpret_cast<intptr_t>(instr));
         MOZ_CRASH();
     }
@@ -1735,7 +1736,7 @@ Simulator::writeW(uint64_t addr, uint32_t value, SimInstruction* instr)
         *ptr = value;
         return;
     }
-    printf("Unaligned write at 0x%016lx, pc=0x%016lx\n",
+    printf("Unaligned write at 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
            addr, reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
 }
@@ -1745,7 +1746,7 @@ Simulator::writeW(uint64_t addr, int32_t value, SimInstruction* instr)
 {
     if (addr < 0x400) {
         // This has to be a NULL-dereference, drop into debugger.
-        printf("Memory write to bad address: 0x%016lx, pc=0x%016lx\n",
+        printf("Memory write to bad address: 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
                addr, reinterpret_cast<intptr_t>(instr));
         MOZ_CRASH();
     }
@@ -1754,7 +1755,7 @@ Simulator::writeW(uint64_t addr, int32_t value, SimInstruction* instr)
         *ptr = value;
         return;
     }
-    printf("Unaligned write at 0x%016lx, pc=0x%016lx\n",
+    printf("Unaligned write at 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
            addr, reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
 }
@@ -1764,7 +1765,7 @@ Simulator::readDW(uint64_t addr, SimInstruction* instr)
 {
     if (addr < 0x400) {
         // This has to be a NULL-dereference, drop into debugger.
-        printf("Memory read from bad address: 0x%016lx, pc=0x%016lx\n",
+        printf("Memory read from bad address: 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
                addr, reinterpret_cast<intptr_t>(instr));
         MOZ_CRASH();
     }
@@ -1772,7 +1773,7 @@ Simulator::readDW(uint64_t addr, SimInstruction* instr)
         int64_t* ptr = reinterpret_cast<int64_t*>(addr);
         return* ptr;
     }
-    printf("Unaligned read at 0x%016lx, pc=0x%016lx\n",
+    printf("Unaligned read at 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
            addr, reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
     return 0;
@@ -1783,7 +1784,7 @@ Simulator::writeDW(uint64_t addr, int64_t value, SimInstruction* instr)
 {
     if (addr < 0x400) {
         // This has to be a NULL-dereference, drop into debugger.
-        printf("Memory write to bad address: 0x%016lx, pc=0x%016lx\n",
+        printf("Memory write to bad address: 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
                addr, reinterpret_cast<intptr_t>(instr));
         MOZ_CRASH();
     }
@@ -1792,7 +1793,7 @@ Simulator::writeDW(uint64_t addr, int64_t value, SimInstruction* instr)
         *ptr = value;
         return;
     }
-    printf("Unaligned write at 0x%016lx, pc=0x%016lx\n",
+    printf("Unaligned write at 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
            addr, reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
 }
@@ -1804,7 +1805,7 @@ Simulator::readD(uint64_t addr, SimInstruction* instr)
         double* ptr = reinterpret_cast<double*>(addr);
         return *ptr;
     }
-    printf("Unaligned (double) read at 0x%016lx, pc=0x%016lx\n",
+    printf("Unaligned (double) read at 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
            addr, reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
     return 0;
@@ -1818,7 +1819,7 @@ Simulator::writeD(uint64_t addr, double value, SimInstruction* instr)
         *ptr = value;
         return;
     }
-    printf("Unaligned (double) write at 0x%016lx, pc=0x%016lx\n",
+    printf("Unaligned (double) write at 0x%016" PRIx64 ", pc=0x%016" PRIxPTR "\n",
            addr, reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
 }
@@ -2121,7 +2122,7 @@ Simulator::printWatchpoint(uint32_t code)
 {
     MipsDebugger dbg(this);
     ++break_count_;
-    printf("\n---- break %d marker: %20ld  (instr count: %20ld) ----\n",
+    printf("\n---- break %d marker: %20" PRIi64 "  (instr count: %20" PRIi64 ") ----\n",
            code, break_count_, icount_);
     dbg.printAllRegs();  // Print registers and continue running.
 }

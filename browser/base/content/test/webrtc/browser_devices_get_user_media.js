@@ -24,8 +24,9 @@ var gTests = [
     is(PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
        "webRTC-shareDevices-notification-icon", "anchored to device icon");
     checkDeviceSelectors(true, true);
-    is(PopupNotifications.panel.firstChild.getAttribute("popupid"),
-       "webRTC-shareDevices", "panel using devices icon");
+    let iconclass =
+      PopupNotifications.panel.firstChild.getAttribute("iconclass");
+    ok(iconclass.includes("camera-icon"), "panel using devices icon");
 
     let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
@@ -53,8 +54,9 @@ var gTests = [
     is(PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
        "webRTC-shareMicrophone-notification-icon", "anchored to mic icon");
     checkDeviceSelectors(true);
-    is(PopupNotifications.panel.firstChild.getAttribute("popupid"),
-       "webRTC-shareMicrophone", "panel using microphone icon");
+    let iconclass =
+      PopupNotifications.panel.firstChild.getAttribute("iconclass");
+    ok(iconclass.includes("microphone-icon"), "panel using microphone icon");
 
     let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
@@ -82,8 +84,9 @@ var gTests = [
     is(PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
        "webRTC-shareDevices-notification-icon", "anchored to device icon");
     checkDeviceSelectors(false, true);
-    is(PopupNotifications.panel.firstChild.getAttribute("popupid"),
-       "webRTC-shareDevices", "panel using devices icon");
+    let iconclass =
+      PopupNotifications.panel.firstChild.getAttribute("iconclass");
+    ok(iconclass.includes("camera-icon"), "panel using devices icon");
 
     let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {

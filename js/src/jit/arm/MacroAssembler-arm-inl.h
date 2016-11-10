@@ -2121,7 +2121,7 @@ MacroAssembler::wasmPatchBoundsCheck(uint8_t* patchAt, uint32_t limit)
     MOZ_ASSERT(cmp->extractOp2().isImm8());
 
     Imm8 imm8 = Imm8(limit);
-    MOZ_RELEASE_ASSERT(!imm8.invalid);
+    MOZ_RELEASE_ASSERT(!imm8.invalid());
 
     *inst = InstALU(InvalidReg, index, imm8, OpCmp, SetCC, Always);
     // Don't call Auto Flush Cache; the wasm caller has done this for us.

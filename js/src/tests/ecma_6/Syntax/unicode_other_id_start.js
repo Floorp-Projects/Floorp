@@ -4,23 +4,16 @@
 
 // From PropList.txt (Unicode 9):
 const otherIdStart = [
-    // Enable the following lines when Bug 1282724 is fixed.
-    // 0x1885,     // MONGOLIAN LETTER ALI GALI BALUDA, Gc=Mn
-    // 0x1886,     // MONGOLIAN LETTER ALI GALI THREE BALUDA, Gc=Mn
+    0x1885,     // MONGOLIAN LETTER ALI GALI BALUDA, Gc=Mn
+    0x1886,     // MONGOLIAN LETTER ALI GALI THREE BALUDA, Gc=Mn
     0x2118,     // SCRIPT CAPITAL P, Gc=Sm
     0x212E,     // ESTIMATED SYMBOL, Gc=So
     0x309B,     // KATAKANA-HIRAGANA VOICED SOUND MARK, Gc=Sk
     0x309C,     // KATAKANA-HIRAGANA SEMI-VOICED SOUND MARK, Gc=Sk
 ];
 
-// Remove this list when we support Unicode 9 (Bug 1282724).
-const otherIdStart_Unicode9 = [
-    0x1885,     // MONGOLIAN LETTER ALI GALI BALUDA, Gc=Mn
-    0x1886,     // MONGOLIAN LETTER ALI GALI THREE BALUDA, Gc=Mn
-];
-
 // Leading character in identifier.
-for (let ident of [...otherIdStart, ...otherIdStart_Unicode9]) {
+for (let ident of otherIdStart) {
     eval(`
         let ${String.fromCodePoint(ident)} = 123;
         assertEq(${String.fromCodePoint(ident)}, 123);
@@ -36,7 +29,7 @@ for (let ident of [...otherIdStart, ...otherIdStart_Unicode9]) {
 }
 
 // Not leading character in identifier.
-for (let ident of [...otherIdStart, ...otherIdStart_Unicode9]) {
+for (let ident of otherIdStart) {
     eval(`
         let A${String.fromCodePoint(ident)} = 123;
         assertEq(${String.fromCodePoint(0x41, ident)}, 123);

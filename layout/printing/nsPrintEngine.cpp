@@ -26,7 +26,6 @@
 // Print Options
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsService.h"
-#include "nsIPrintOptions.h"
 #include "nsIPrintSession.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
@@ -2615,6 +2614,7 @@ DocHasPrintCallbackCanvas(nsIDocument* aDoc)
 /**
  * Checks to see if the document this print engine is associated with has any
  * canvases that have a mozPrintCallback.
+ * https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement#Properties
  */
 bool
 nsPrintEngine::HasPrintCallbackCanvas()

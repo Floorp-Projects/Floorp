@@ -1,4 +1,3 @@
-// |jit-test| test-also-noasmjs
 setCachingEnabled(true);
 
 (function() {

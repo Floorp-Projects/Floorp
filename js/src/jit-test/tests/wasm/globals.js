@@ -1,4 +1,3 @@
-// |jit-test| test-also-wasm-baseline
 load(libdir + "wasm.js");
 
 const { Instance, Module } = WebAssembly;

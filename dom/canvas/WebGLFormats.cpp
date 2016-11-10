@@ -168,7 +168,7 @@ AddFormatInfo(EffectiveFormat format, const char* name, GLenum sizedFormat,
         MOZ_ASSERT(!r && !g && !b && !a && !d && s);
         break;
 
-    case UnsizedFormat::DS:
+    case UnsizedFormat::DEPTH_STENCIL:
         MOZ_ASSERT(!r && !g && !b && !a && d && s);
         break;
     }
@@ -262,8 +262,8 @@ InitFormatInfo()
     AddFormatInfo(FOO(DEPTH_COMPONENT16 ), 2, 0,0,0,0, 16,0, UnsizedFormat::D , false, ComponentType::NormUInt);
     AddFormatInfo(FOO(DEPTH_COMPONENT24 ), 3, 0,0,0,0, 24,0, UnsizedFormat::D , false, ComponentType::NormUInt);
     AddFormatInfo(FOO(DEPTH_COMPONENT32F), 4, 0,0,0,0, 32,0, UnsizedFormat::D , false, ComponentType::Float);
-    AddFormatInfo(FOO(DEPTH24_STENCIL8  ), 4, 0,0,0,0, 24,8, UnsizedFormat::DS, false, ComponentType::Special);
-    AddFormatInfo(FOO(DEPTH32F_STENCIL8 ), 5, 0,0,0,0, 32,8, UnsizedFormat::DS, false, ComponentType::Special);
+    AddFormatInfo(FOO(DEPTH24_STENCIL8  ), 4, 0,0,0,0, 24,8, UnsizedFormat::DEPTH_STENCIL, false, ComponentType::Special);
+    AddFormatInfo(FOO(DEPTH32F_STENCIL8 ), 5, 0,0,0,0, 32,8, UnsizedFormat::DEPTH_STENCIL, false, ComponentType::Special);
 
     // GLES 3.0.4, p205-206, "Required Renderbuffer Formats"
     AddFormatInfo(FOO(STENCIL_INDEX8), 1, 0,0,0,0, 0,8, UnsizedFormat::S, false, ComponentType::UInt);

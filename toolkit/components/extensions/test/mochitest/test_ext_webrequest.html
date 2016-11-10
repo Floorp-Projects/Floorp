@@ -170,10 +170,10 @@ function backgroundScript() {
         "X-WebRequest-request-binary": "binary",
       },
       modified: {
-        "User-Agent": "WebRequest",
+        "user-agent": "WebRequest",
       },
       deleted: [
-        "Referer",
+        "referer",
       ],
     },
     response: {
@@ -182,11 +182,11 @@ function backgroundScript() {
         "X-WebRequest-response-binary": "binary",
       },
       modified: {
-        "Server": "WebRequest",
-        "Content-Type": "text/html; charset=utf-8",
+        "server": "WebRequest",
+        "content-type": "text/html; charset=utf-8",
       },
       deleted: [
-        "Connection",
+        "connection",
       ],
     },
   };
@@ -200,8 +200,8 @@ function backgroundScript() {
     let headers = details[`${phase}Headers`];
     browser.test.assertTrue(Array.isArray(headers), `${phase}Headers array present`);
 
-    let processedMark = "WebRequest-processed";
-    if (headers.find(h => h.name === processedMark)) {
+    let processedMark = "webrequest-processed";
+    if (headers.find(h => h.name.toLowerCase() === processedMark)) {
       // This may happen because of redirections or cache
       browser.test.log(`${phase}Headers in ${details.requestId} already processed`);
       skippedRequests.add(details.requestId);
@@ -223,15 +223,17 @@ function backgroundScript() {
     }
 
     let modifiedAny = false;
-    for (let header of headers.filter(h => h.name in modified)) {
-      header.value = modified[header.name];
-      modifiedAny = true;
+    for (let header of headers) {
+      if (header.name.toLowerCase() in modified) {
+        header.value = modified[header.name.toLowerCase()];
+        modifiedAny = true;
+      }
     }
     browser.test.assertTrue(modifiedAny, `at least one ${phase}Headers element to modify`);
 
     let deletedAny = false;
     for (let j = headers.length; j-- > 0;) {
-      if (deleted.includes(headers[j].name)) {
+      if (deleted.includes(headers[j].name.toLowerCase())) {
         headers.splice(j, 1);
         deletedAny = true;
       }
@@ -251,11 +253,10 @@ function backgroundScript() {
 
     let {added, modified, deleted} = testHeaders[phase];
     for (let name in added) {
-      browser.test.assertTrue(headers.some(h => h.name === name && h.value === added[name]), `header ${name} correctly injected in ${phase}Headers`);
+      browser.test.assertTrue(headers.some(h => h.name.toLowerCase() === name.toLowerCase() && h.value === added[name]), `header ${name} correctly injected in ${phase}Headers`);
     }
 
     let modifiedAny = false;
-    browser.test.log(`HEADERS ${JSON.stringify(headers)}`);
     for (let header of headers.filter(h => h.name in modified)) {
       let {name, value} = header;
       if (name.toLowerCase() === "content-type" && skippedRequests.has(details.requestId)) {

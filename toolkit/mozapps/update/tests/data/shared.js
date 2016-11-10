@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Shared code for xpcshell and mochitests-chrome */
+/* eslint-disable no-undef */
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -71,6 +72,7 @@ const DEFAULT_UPDATE_VERSION = "999999.0";
 
 var gChannel;
 
+/* import-globals-from ../data/sharedUpdateXML.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "sharedUpdateXML.js", this);
 
 const PERMS_FILE      = FileUtils.PERMS_FILE;
