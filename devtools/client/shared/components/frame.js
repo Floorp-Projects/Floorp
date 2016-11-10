@@ -147,8 +147,14 @@ module.exports = createClass({
 
     let tooltip = long;
 
-    // Exclude all falsy values, including `0`, as line numbers start with 1.
-    if (line) {
+    // If the source is linkable and line > 0
+    const shouldDisplayLine = isLinkable && line;
+
+    // Exclude all falsy values, including `0`, as even
+    // a number 0 for line doesn't make sense, and should not be displayed.
+    // If source isn't linkable, don't attempt to append line and column
+    // info, as this probably doesn't make sense.
+    if (shouldDisplayLine) {
       tooltip += `:${line}`;
       // Intentionally exclude 0
       if (column) {
@@ -187,8 +193,8 @@ module.exports = createClass({
       className: "frame-link-filename",
     }, displaySource));
 
-    // If we have a line number > 0.
-    if (line) {
+    // If source is linkable, and we have a line number > 0
+    if (shouldDisplayLine) {
       let lineInfo = `:${line}`;
       // Add `data-line` attribute for testing
       attributes["data-line"] = line;
