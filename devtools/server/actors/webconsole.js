@@ -888,7 +888,7 @@ WebConsoleActor.prototype =
     let evalResult = evalInfo.result;
     let helperResult = evalInfo.helperResult;
 
-    let result, errorDocURL, errorMessage, errorGrip = null, frame = null;
+    let result, errorDocURL, errorMessage, errorGrip = null;
     if (evalResult) {
       if ("return" in evalResult) {
         result = evalResult.return;
@@ -929,20 +929,6 @@ WebConsoleActor.prototype =
         try {
           errorDocURL = ErrorDocs.GetURL(error);
         } catch (ex) {}
-
-        try {
-          let line = error.errorLineNumber;
-          let column = error.errorColumnNumber;
-
-          if (typeof line === "number" && typeof column === "number") {
-            // Set frame only if we have line/column numbers.
-            frame = {
-              source: "debugger eval code",
-              line,
-              column
-            };
-          }
-        } catch (ex) {}
       }
     }
 
@@ -965,7 +951,6 @@ WebConsoleActor.prototype =
       exception: errorGrip,
       exceptionMessage: this._createStringGrip(errorMessage),
       exceptionDocURL: errorDocURL,
-      frame,
       helperResult: helperResult,
     };
   },
@@ -1218,8 +1203,6 @@ WebConsoleActor.prototype =
    *        in the Inspector (or null, if there is no selection). This is used
    *        for helper functions that make reference to the currently selected
    *        node, like $0.
-   *         - url: the url to evaluate the script as. Defaults to
-   *         "debugger eval code".
    * @return object
    *         An object that holds the following properties:
    *         - dbg: the debugger where the string was evaluated.
@@ -1229,6 +1212,8 @@ WebConsoleActor.prototype =
    *         - result: the result of the evaluation.
    *         - helperResult: any result coming from a Web Console commands
    *         function.
+   *         - url: the url to evaluate the script as. Defaults to
+   *         "debugger eval code".
    */
   evalWithDebugger: function WCA_evalWithDebugger(aString, aOptions = {})
   {
