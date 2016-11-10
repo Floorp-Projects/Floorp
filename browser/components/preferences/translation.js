@@ -140,7 +140,7 @@ var gTranslationExceptions = {
         if (!this._sites.length)
           return;
         let removed = this._sites.splice(0, this._sites.length);
-        this._siteTree.boxObject.rowCountChanged(0, - removed.length);
+        this._siteTree.boxObject.rowCountChanged(0, -removed.length);
       }
       else {
         let perm = aSubject.QueryInterface(Ci.nsIPermission);

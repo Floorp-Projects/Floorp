@@ -275,7 +275,7 @@ IDService.prototype = {
         let idpParams = req.response;
 
         // Verify that the IdP returned a valid configuration
-        if (! (idpParams.provisioning &&
+        if (!(idpParams.provisioning &&
             idpParams.authentication &&
             idpParams['public-key'])) {
           let errStr = "Invalid well-known file from: " + aDomain;

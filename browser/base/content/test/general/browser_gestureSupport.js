@@ -312,8 +312,8 @@ function test_emitLatchedEvents(eventPrefix, initialDelta, cmd)
 
   // Now go back in the opposite direction.
   test_utils.sendSimpleGestureEvent(eventPrefix + "Update", 0, 0, 0,
-				    - initialDelta, 0);
-  cumulativeDelta += - initialDelta;
+				    -initialDelta, 0);
+  cumulativeDelta += -initialDelta;
   if (isIncreasing) {
     expect.dec++;
     checkBoth(3, "Increasing command was triggered", "Decreasing command was not triggered");

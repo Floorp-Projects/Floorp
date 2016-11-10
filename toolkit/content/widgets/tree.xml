@@ -1176,7 +1176,7 @@
           return;
         }
 
-        if (! view.selection.single) {
+        if (!view.selection.single) {
           var augment = this._isAccelPressed(event);
           if (event.shiftKey) {
             view.selection.rangedSelect(-1, cell.row, augment);

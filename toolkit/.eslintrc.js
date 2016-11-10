@@ -185,7 +185,13 @@ module.exports = {
     "space-infix-ops": ["error", { "int32Hint": true }],
 
     // ++ and -- should not need spacing
-    // "space-unary-ops": ["error", { "words": true, "nonwords": false }],
+    "space-unary-ops": ["error", {
+      "words": true,
+      "nonwords": false,
+      "overrides": {
+        "typeof": false // We tend to use typeof as a function call
+      }
+    }],
 
     // Requires or disallows a whitespace (space or tab) beginning a comment
     "spaced-comment": "error",
