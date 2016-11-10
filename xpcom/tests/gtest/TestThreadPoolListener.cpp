@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TestHarness.h"
-
 #include "nsIThread.h"
 #include "nsIThreadPool.h"
 
@@ -18,6 +16,9 @@
 #include "mozilla/Attributes.h"
 
 #include "mozilla/ReentrantMonitor.h"
+
+#include "gtest/gtest.h"
+
 using namespace mozilla;
 
 #define NUMBER_OF_THREADS 4
@@ -25,6 +26,8 @@ using namespace mozilla;
 // One hour... because test boxes can be slow!
 #define IDLE_THREAD_TIMEOUT 3600000
 
+namespace TestThreadPoolListener
+{
 static nsIThread** gCreatedThreadList = nullptr;
 static nsIThread** gShutDownThreadList = nullptr;
 
@@ -49,7 +52,7 @@ NS_IMETHODIMP
 Listener::OnThreadCreated()
 {
   nsCOMPtr<nsIThread> current(do_GetCurrentThread());
-  MOZ_RELEASE_ASSERT(current, "Couldn't get current thread!");
+  EXPECT_TRUE(current) << "Couldn't get current thread!";
 
   ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
@@ -59,7 +62,7 @@ Listener::OnThreadCreated()
 
   for (uint32_t i = 0; i < NUMBER_OF_THREADS; i++) {
     nsIThread* thread = gCreatedThreadList[i];
-    MOZ_RELEASE_ASSERT(thread != current, "Saw the same thread twice!");
+    EXPECT_NE(thread, current) << "Saw the same thread twice!";
 
     if (!thread) {
       gCreatedThreadList[i] = current;
@@ -71,7 +74,7 @@ Listener::OnThreadCreated()
     }
   }
 
-  MOZ_RELEASE_ASSERT(false, "Too many threads!");
+  EXPECT_TRUE(false) << "Too many threads!";
   return NS_ERROR_FAILURE;
 }
 
@@ -79,13 +82,13 @@ NS_IMETHODIMP
 Listener::OnThreadShuttingDown()
 {
   nsCOMPtr<nsIThread> current(do_GetCurrentThread());
-  MOZ_RELEASE_ASSERT(current, "Couldn't get current thread!");
+  EXPECT_TRUE(current) << "Couldn't get current thread!";
 
   ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
   for (uint32_t i = 0; i < NUMBER_OF_THREADS; i++) {
     nsIThread* thread = gShutDownThreadList[i];
-    MOZ_RELEASE_ASSERT(thread != current, "Saw the same thread twice!");
+    EXPECT_NE(thread, current) << "Saw the same thread twice!";
 
     if (!thread) {
       gShutDownThreadList[i] = current;
@@ -97,7 +100,7 @@ Listener::OnThreadShuttingDown()
     }
   }
 
-  MOZ_RELEASE_ASSERT(false, "Too many threads!");
+  EXPECT_TRUE(false) << "Too many threads!";
   return NS_ERROR_FAILURE;
 }
 
@@ -119,11 +122,8 @@ private:
   ReentrantMonitor** mReentrantMonitorPtr;
 };
 
-int main(int argc, char** argv)
+TEST(ThreadPoolListener, Test)
 {
-  ScopedXPCOM xpcom("ThreadPoolListener");
-  NS_ENSURE_FALSE(xpcom.failed(), 1);
-
   nsIThread* createdThreadList[NUMBER_OF_THREADS] = { nullptr };
   gCreatedThreadList = createdThreadList;
 
@@ -131,38 +131,38 @@ int main(int argc, char** argv)
   gShutDownThreadList = shutDownThreadList;
 
   AutoCreateAndDestroyReentrantMonitor newMon(&gReentrantMonitor);
-  NS_ENSURE_TRUE(gReentrantMonitor, 1);
+  ASSERT_TRUE(gReentrantMonitor);
 
   nsresult rv;
 
   nsCOMPtr<nsIThreadPool> pool =
     do_CreateInstance(NS_THREADPOOL_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, 1);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   rv = pool->SetThreadLimit(NUMBER_OF_THREADS);
-  NS_ENSURE_SUCCESS(rv, 1);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   rv = pool->SetIdleThreadLimit(NUMBER_OF_THREADS);
-  NS_ENSURE_SUCCESS(rv, 1);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   rv = pool->SetIdleThreadTimeout(IDLE_THREAD_TIMEOUT);
-  NS_ENSURE_SUCCESS(rv, 1);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   nsCOMPtr<nsIThreadPoolListener> listener = new Listener();
-  NS_ENSURE_TRUE(listener, 1);
+  ASSERT_TRUE(listener);
 
   rv = pool->SetListener(listener);
-  NS_ENSURE_SUCCESS(rv, 1);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   {
     ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
     for (uint32_t i = 0; i < NUMBER_OF_THREADS; i++) {
       nsCOMPtr<nsIRunnable> runnable = new Runnable();
-      NS_ENSURE_TRUE(runnable, 1);
+      ASSERT_TRUE(runnable);
 
       rv = pool->Dispatch(runnable, NS_DISPATCH_NORMAL);
-      NS_ENSURE_SUCCESS(rv, 1);
+      ASSERT_TRUE(NS_SUCCEEDED(rv));
     }
 
     gAllRunnablesPosted = true;
@@ -177,7 +177,7 @@ int main(int argc, char** argv)
   }
 
   rv = pool->Shutdown();
-  NS_ENSURE_SUCCESS(rv, 1);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   {
     ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
@@ -188,12 +188,12 @@ int main(int argc, char** argv)
 
   for (uint32_t i = 0; i < NUMBER_OF_THREADS; i++) {
     nsIThread* created = gCreatedThreadList[i];
-    NS_ENSURE_TRUE(created, 1);
+    ASSERT_TRUE(created);
 
     bool match = false;
     for (uint32_t j = 0; j < NUMBER_OF_THREADS; j++) {
       nsIThread* destroyed = gShutDownThreadList[j];
-      NS_ENSURE_TRUE(destroyed, 1);
+      ASSERT_TRUE(destroyed);
 
       if (destroyed == created) {
         match = true;
@@ -201,8 +201,8 @@ int main(int argc, char** argv)
       }
     }
 
-    NS_ENSURE_TRUE(match, 1);
+    ASSERT_TRUE(match);
   }
-
-  return 0;
 }
+
+} // namespace TestThreadPoolListener
