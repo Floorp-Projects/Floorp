@@ -199,6 +199,21 @@ report_mapping(char *name, void *base, uint32_t len, uint32_t offset)
   info->offset = offset;
 }
 
+extern "C" void
+delete_mapping(const char *name)
+{
+  for (int pos = 0; pos < mapping_count; ++pos) {
+    struct mapping_info *info = &lib_mapping[pos];
+    if (!strcmp(info->name, name)) {
+      struct mapping_info *last = &lib_mapping[mapping_count - 1];
+      free(info->name);
+      *info = *last;
+      --mapping_count;
+      break;
+    }
+  }
+}
+
 static void*
 dlopenAPKLibrary(const char* apkName, const char* libraryName)
 {
