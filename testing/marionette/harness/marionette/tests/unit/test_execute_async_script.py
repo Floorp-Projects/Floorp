@@ -11,7 +11,7 @@ from marionette_driver.errors import ( JavascriptException,
 class TestExecuteAsyncContent(MarionetteTestCase):
     def setUp(self):
         super(TestExecuteAsyncContent, self).setUp()
-        self.marionette.set_script_timeout(1000)
+        self.marionette.timeout.script = 1
 
     def test_execute_async_simple(self):
         self.assertEqual(1, self.marionette.execute_async_script("arguments[arguments.length-1](1);"))
@@ -27,14 +27,14 @@ class TestExecuteAsyncContent(MarionetteTestCase):
         self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "setTimeout(function() {marionetteScriptFinished(3);}, 2000);")
 
     def test_no_timeout(self):
-        self.marionette.set_script_timeout(10000)
+        self.marionette.timeout.script = 10
         self.assertTrue(self.marionette.execute_async_script("""
             var callback = arguments[arguments.length - 1];
             setTimeout(function() { callback(true); }, 500);
             """))
 
     def test_execute_async_unload(self):
-        self.marionette.set_script_timeout(5000)
+        self.marionette.timeout.script = 5
         unload = """
                 window.location.href = "about:blank";
                  """
@@ -141,7 +141,7 @@ marionetteScriptFinished(5);
 
     def test_execute_async_js_exception(self):
         # Javascript exceptions are not propagated in chrome code
-        self.marionette.set_script_timeout(200)
+        self.marionette.timeout.script = 0.2
         self.assertRaises(ScriptTimeoutException,
             self.marionette.execute_async_script, """
             var callback = arguments[arguments.length - 1];

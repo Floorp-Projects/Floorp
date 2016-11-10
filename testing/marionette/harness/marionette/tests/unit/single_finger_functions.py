@@ -47,7 +47,7 @@ def move_element_offset(marionette, wait_for_condition, expected1, expected2):
 def chain(marionette, wait_for_condition, expected1, expected2):
     testAction = marionette.absolute_url("testAction.html")
     marionette.navigate(testAction)
-    marionette.set_search_timeout(15000)
+    marionette.timeout.implicit = 15
     action = Actions(marionette)
     button1 = marionette.find_element(By.ID, "button1")
     action.press(button1).perform()
