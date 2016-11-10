@@ -10,6 +10,12 @@
 #  error "failed to wrap <vector>"
 #endif
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsCOMPtr.h"
+#include "nsICrashReporter.h"
+#include "nsServiceManagerUtils.h"
+#endif
+
 // gcc errors out if we |try ... catch| with -fno-exceptions, but we
 // can still test on windows
 #ifdef _MSC_VER
@@ -23,7 +29,25 @@
 #  define CATCH(e)  if (0)
 #endif
 
-int main() {
+
+#if defined(XP_UNIX)
+extern unsigned int _gdb_sleep_duration;
+#endif
+
+void ShouldAbort()
+{
+#if defined(XP_UNIX)
+    _gdb_sleep_duration = 0;
+#endif
+
+#ifdef MOZ_CRASHREPORTER
+    nsCOMPtr<nsICrashReporter> crashreporter =
+        do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+    if (crashreporter) {
+      crashreporter->SetEnabled(false);
+    }
+#endif
+
     std::vector<int> v;
     int rv = 1;
 
@@ -36,10 +60,19 @@ int main() {
     } CATCH(const std::out_of_range&) {
       fputs("TEST-FAIL | TestSTLWrappers.cpp | caught an exception?\n",
             stderr);
-      return 1;
+      return;
     }
 
     fputs("TEST-FAIL | TestSTLWrappers.cpp | didn't abort()?\n",
           stderr);
-    return rv;
+    return;
+}
+
+#ifdef XP_WIN
+TEST(STLWrapper, DISABLED_ShouldAbortDeathTest)
+#else
+TEST(STLWrapper, ShouldAbortDeathTest)
+#endif
+{
+  ASSERT_DEATH(ShouldAbort(), "terminate called after throwing an instance of 'std::out_of_range'|vector::_M_range_check");
 }

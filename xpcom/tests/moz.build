@@ -27,11 +27,6 @@ SimplePrograms([
     'TestUnicodeArguments',
 ])
 
-if CONFIG['WRAP_STL_INCLUDES'] and not CONFIG['CLANG_CL']:
-    GeckoSimplePrograms([
-        'TestSTLWrappers',
-    ])
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 # FIXME: bug 577500 TestStaticAtoms fails when run in dist/bin
