@@ -179,5 +179,5 @@ The async method works the same way, except it won't return until a special
 
 Beware that running asynchronous scripts can potentially hang the program
 indefinitely if they are not written properly. It is generally a good idea to
-set a script timeout using :func:`~Marionette.set_script_timeout` and handling
+set a script timeout using :func:`~Marionette.timeout.script` and handling
 `ScriptTimeoutException`.
