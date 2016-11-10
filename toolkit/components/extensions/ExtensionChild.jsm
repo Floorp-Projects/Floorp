@@ -761,10 +761,9 @@ class PseudoChildAPIManager extends ChildAPIManagerBase {
   }
 
   getFallbackImplementation(namespace, name) {
-    // This is gross and should be removed ASAP.
     let useDirectParentAPI = (
       // Incompatible APIs are listed here.
-      namespace == "webNavigation" // ChildAPIManager is oblivious to filters.
+      false
     );
 
     if (useDirectParentAPI) {
