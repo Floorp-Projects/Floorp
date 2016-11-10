@@ -12,6 +12,7 @@ Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/rotaryengine.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
 Service.engineManager.clear();
 
@@ -76,7 +77,7 @@ function installNodeHandler(server, next) {
 }
 
 function prepareServer() {
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   configureIdentity({username: "johndoe"}).then(() => {
     let server = new SyncServer();
     server.registerUser("johndoe");
@@ -107,9 +108,9 @@ function getReassigned() {
  * Runs `between` between the two. This can be used to undo deliberate failure
  * setup, detach observers, etc.
  */
-function* syncAndExpectNodeReassignment(server, firstNotification, between,
+async function syncAndExpectNodeReassignment(server, firstNotification, between,
                                        secondNotification, url) {
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   function onwards() {
     let nodeFetched = false;
     function onFirstSync() {
@@ -158,12 +159,12 @@ function* syncAndExpectNodeReassignment(server, firstNotification, between,
     do_check_eq(request.response.status, 401);
     Utils.nextTick(onwards);
   });
-  yield deferred.promise;
+  await deferred.promise;
 }
 
-add_task(function* test_momentary_401_engine() {
+add_task(async function test_momentary_401_engine() {
   _("Test a failure for engine URLs that's resolved by reassignment.");
-  let server = yield prepareServer();
+  let server = await prepareServer();
   let john   = server.user("johndoe");
 
   _("Enabling the Rotary engine.");
@@ -205,7 +206,7 @@ add_task(function* test_momentary_401_engine() {
     Svc.Obs.add("weave:service:login:start", onLoginStart);
   }
 
-  yield syncAndExpectNodeReassignment(server,
+  await syncAndExpectNodeReassignment(server,
                                       "weave:service:sync:finish",
                                       between,
                                       "weave:service:sync:finish",
@@ -213,9 +214,9 @@ add_task(function* test_momentary_401_engine() {
 });
 
 // This test ends up being a failing fetch *after we're already logged in*.
-add_task(function* test_momentary_401_info_collections() {
+add_task(async function test_momentary_401_info_collections() {
   _("Test a failure for info/collections that's resolved by reassignment.");
-  let server = yield prepareServer();
+  let server = await prepareServer();
 
   _("First sync to prepare server contents.");
   Service.sync();
@@ -229,17 +230,17 @@ add_task(function* test_momentary_401_info_collections() {
     server.toplevelHandlers.info = oldHandler;
   }
 
-  yield syncAndExpectNodeReassignment(server,
+  await syncAndExpectNodeReassignment(server,
                                       "weave:service:sync:error",
                                       undo,
                                       "weave:service:sync:finish",
                                       Service.infoURL);
 });
 
-add_task(function* test_momentary_401_storage_loggedin() {
+add_task(async function test_momentary_401_storage_loggedin() {
   _("Test a failure for any storage URL, not just engine parts. " +
     "Resolved by reassignment.");
-  let server = yield prepareServer();
+  let server = await prepareServer();
 
   _("Performing initial sync to ensure we are logged in.")
   Service.sync();
@@ -254,17 +255,17 @@ add_task(function* test_momentary_401_storage_loggedin() {
   }
 
   do_check_true(Service.isLoggedIn, "already logged in");
-  yield syncAndExpectNodeReassignment(server,
+  await syncAndExpectNodeReassignment(server,
                                       "weave:service:sync:error",
                                       undo,
                                       "weave:service:sync:finish",
                                       Service.storageURL + "meta/global");
 });
 
-add_task(function* test_momentary_401_storage_loggedout() {
+add_task(async function test_momentary_401_storage_loggedout() {
   _("Test a failure for any storage URL, not just engine parts. " +
     "Resolved by reassignment.");
-  let server = yield prepareServer();
+  let server = await prepareServer();
 
   // Return a 401 for all storage requests.
   let oldHandler = server.toplevelHandlers.storage;
@@ -276,18 +277,18 @@ add_task(function* test_momentary_401_storage_loggedout() {
   }
 
   do_check_false(Service.isLoggedIn, "not already logged in");
-  yield syncAndExpectNodeReassignment(server,
+  await syncAndExpectNodeReassignment(server,
                                       "weave:service:login:error",
                                       undo,
                                       "weave:service:sync:finish",
                                       Service.storageURL + "meta/global");
 });
 
-add_task(function* test_loop_avoidance_storage() {
+add_task(async function test_loop_avoidance_storage() {
   _("Test that a repeated failure doesn't result in a sync loop " +
     "if node reassignment cannot resolve the failure.");
 
-  let server = yield prepareServer();
+  let server = await prepareServer();
 
   // Return a 401 for all storage requests.
   let oldHandler = server.toplevelHandlers.storage;
@@ -298,7 +299,7 @@ add_task(function* test_loop_avoidance_storage() {
   let thirdNotification  = "weave:service:sync:finish";
 
   let nodeFetched = false;
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
 
   // Track the time. We want to make sure the duration between the first and
   // second sync is small, and then that the duration between second and third
@@ -380,19 +381,19 @@ add_task(function* test_loop_avoidance_storage() {
 
   now = Date.now();
   Service.sync();
-  yield deferred.promise;
+  await deferred.promise;
 });
 
-add_task(function* test_loop_avoidance_engine() {
+add_task(async function test_loop_avoidance_engine() {
   _("Test that a repeated 401 in an engine doesn't result in a sync loop " +
     "if node reassignment cannot resolve the failure.");
-  let server = yield prepareServer();
+  let server = await prepareServer();
   let john   = server.user("johndoe");
 
   _("Enabling the Rotary engine.");
   let engine = Service.engineManager.get("rotary");
   engine.enabled = true;
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
 
   // We need the server to be correctly set up prior to experimenting. Do this
   // through a sync.
@@ -519,5 +520,5 @@ add_task(function* test_loop_avoidance_engine() {
 
   now = Date.now();
   Service.sync();
-  yield deferred.promise;
+  await deferred.promise;
 });
