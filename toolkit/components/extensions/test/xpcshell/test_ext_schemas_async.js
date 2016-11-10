@@ -1,9 +1,9 @@
 "use strict";
 
-Components.utils.import("resource://gre/modules/ExtensionUtils.jsm");
+Components.utils.import("resource://gre/modules/ExtensionCommon.jsm");
 Components.utils.import("resource://gre/modules/Schemas.jsm");
 
-let {BaseContext, LocalAPIImplementation} = ExtensionUtils;
+let {BaseContext, LocalAPIImplementation} = ExtensionCommon;
 
 let schemaJson = [
   {
