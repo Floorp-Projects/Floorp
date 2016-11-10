@@ -210,7 +210,7 @@ class AstDecodeContext
 };
 
 static bool
-AstDecodeGenerateName(AstDecodeContext& c, const AstName& prefix, uint32_t index, AstName* name)
+GenerateName(AstDecodeContext& c, const AstName& prefix, uint32_t index, AstName* name)
 {
     if (!c.generateNames) {
         *name = AstName();
@@ -246,7 +246,7 @@ AstDecodeGenerateName(AstDecodeContext& c, const AstName& prefix, uint32_t index
 }
 
 static bool
-AstDecodeGenerateRef(AstDecodeContext& c, const AstName& prefix, uint32_t index, AstRef* ref)
+GenerateRef(AstDecodeContext& c, const AstName& prefix, uint32_t index, AstRef* ref)
 {
     MOZ_ASSERT(index != AstNoIndex);
 
@@ -256,7 +256,7 @@ AstDecodeGenerateRef(AstDecodeContext& c, const AstName& prefix, uint32_t index,
     }
 
     AstName name;
-    if (!AstDecodeGenerateName(c, prefix, index, &name))
+    if (!GenerateName(c, prefix, index, &name))
         return false;
     MOZ_ASSERT(!name.empty());
 
@@ -342,7 +342,7 @@ AstDecodeCall(AstDecodeContext& c)
 
         sigIndex = c.funcDefSigs()[funcDefIndex];
 
-        if (!AstDecodeGenerateRef(c, AstName(u"func"), funcIndex, &funcRef))
+        if (!GenerateRef(c, AstName(u"func"), funcIndex, &funcRef))
             return false;
     }
 
@@ -385,7 +385,7 @@ AstDecodeCallIndirect(AstDecodeContext& c)
     AstDecodeStackItem index = c.popCopy();
 
     AstRef sigRef;
-    if (!AstDecodeGenerateRef(c, AstName(u"type"), sigIndex, &sigRef))
+    if (!GenerateRef(c, AstName(u"type"), sigIndex, &sigRef))
         return false;
 
     const AstSig* sig = c.module().sigs()[sigIndex];
@@ -422,7 +422,7 @@ AstDecodeGetBlockRef(AstDecodeContext& c, uint32_t depth, AstRef* ref)
 
     uint32_t index = c.blockLabels().length() - depth - 1;
     if (c.blockLabels()[index].empty()) {
-        if (!AstDecodeGenerateName(c, AstName(u"label"), c.nextLabelIndex(), &c.blockLabels()[index]))
+        if (!GenerateName(c, AstName(u"label"), c.nextLabelIndex(), &c.blockLabels()[index]))
             return false;
     }
     *ref = AstRef(c.blockLabels()[index]);
@@ -879,7 +879,7 @@ AstDecodeGetLocal(AstDecodeContext& c)
         return false;
 
     AstRef localRef;
-    if (!AstDecodeGenerateRef(c, AstName(u"var"), getLocalId, &localRef))
+    if (!GenerateRef(c, AstName(u"var"), getLocalId, &localRef))
         return false;
 
     AstGetLocal* getLocal = new(c.lifo) AstGetLocal(localRef);
@@ -902,7 +902,7 @@ AstDecodeSetLocal(AstDecodeContext& c)
     AstDecodeStackItem setLocalValue = c.popCopy();
 
     AstRef localRef;
-    if (!AstDecodeGenerateRef(c, AstName(u"var"), setLocalId, &localRef))
+    if (!GenerateRef(c, AstName(u"var"), setLocalId, &localRef))
         return false;
 
     AstSetLocal* setLocal = new(c.lifo) AstSetLocal(localRef, *setLocalValue.expr);
@@ -929,7 +929,7 @@ AstDecodeTeeLocal(AstDecodeContext& c)
     AstDecodeStackItem teeLocalValue = c.popCopy();
 
     AstRef localRef;
-    if (!AstDecodeGenerateRef(c, AstName(u"var"), teeLocalId, &localRef))
+    if (!GenerateRef(c, AstName(u"var"), teeLocalId, &localRef))
         return false;
 
     AstTeeLocal* teeLocal = new(c.lifo) AstTeeLocal(localRef, *teeLocalValue.expr);
@@ -950,7 +950,7 @@ AstDecodeGetGlobal(AstDecodeContext& c)
         return false;
 
     AstRef globalRef;
-    if (!AstDecodeGenerateRef(c, AstName(u"global"), globalId, &globalRef))
+    if (!GenerateRef(c, AstName(u"global"), globalId, &globalRef))
         return false;
 
     auto* getGlobal = new(c.lifo) AstGetGlobal(globalRef);
@@ -973,7 +973,7 @@ AstDecodeSetGlobal(AstDecodeContext& c)
     AstDecodeStackItem value = c.popCopy();
 
     AstRef globalRef;
-    if (!AstDecodeGenerateRef(c, AstName(u"global"), globalId, &globalRef))
+    if (!GenerateRef(c, AstName(u"global"), globalId, &globalRef))
         return false;
 
     auto* setGlobal = new(c.lifo) AstSetGlobal(globalRef, *value.expr);
@@ -1446,7 +1446,7 @@ AstDecodeTypeSection(AstDecodeContext& c, SigWithIdVector* sigs)
 
         AstSig sigNoName(Move(args), sig.ret());
         AstName sigName;
-        if (!AstDecodeGenerateName(c, AstName(u"type"), sigIndex, &sigName))
+        if (!GenerateName(c, AstName(u"type"), sigIndex, &sigName))
             return false;
 
         AstSig* astSig = new(c.lifo) AstSig(sigName, Move(sigNoName));
@@ -1497,11 +1497,11 @@ AstDecodeImportSection(AstDecodeContext& c, const SigWithIdVector& sigs)
         switch (import.kind) {
           case DefinitionKind::Function: {
             AstName importName;
-            if (!AstDecodeGenerateName(c, AstName(u"import"), lastFunc, &importName))
+            if (!GenerateName(c, AstName(u"import"), lastFunc, &importName))
                 return false;
 
             AstRef sigRef;
-            if (!AstDecodeGenerateRef(c, AstName(u"type"), funcSigIndices[lastFunc], &sigRef))
+            if (!GenerateRef(c, AstName(u"type"), funcSigIndices[lastFunc], &sigRef))
                 return false;
 
             ast = new(c.lifo) AstImport(importName, moduleName, fieldName, sigRef);
@@ -1510,7 +1510,7 @@ AstDecodeImportSection(AstDecodeContext& c, const SigWithIdVector& sigs)
           }
           case DefinitionKind::Global: {
             AstName importName;
-            if (!AstDecodeGenerateName(c, AstName(u"global"), lastGlobal, &importName))
+            if (!GenerateName(c, AstName(u"global"), lastGlobal, &importName))
                 return false;
 
             const GlobalDesc& global = globals[lastGlobal];
@@ -1527,7 +1527,7 @@ AstDecodeImportSection(AstDecodeContext& c, const SigWithIdVector& sigs)
           }
           case DefinitionKind::Table: {
             AstName importName;
-            if (!AstDecodeGenerateName(c, AstName(u"table"), lastTable, &importName))
+            if (!GenerateName(c, AstName(u"table"), lastTable, &importName))
                 return false;
 
             ast = new(c.lifo) AstImport(importName, moduleName, fieldName, DefinitionKind::Table,
@@ -1537,7 +1537,7 @@ AstDecodeImportSection(AstDecodeContext& c, const SigWithIdVector& sigs)
           }
           case DefinitionKind::Memory: {
             AstName importName;
-            if (!AstDecodeGenerateName(c, AstName(u"memory"), lastMemory, &importName))
+            if (!GenerateName(c, AstName(u"memory"), lastMemory, &importName))
                 return false;
 
             ast = new(c.lifo) AstImport(importName, moduleName, fieldName, DefinitionKind::Memory,
@@ -1598,7 +1598,7 @@ AstDecodeTableSection(AstDecodeContext& c)
         return c.d.fail("already have a table");
 
     AstName name;
-    if (!AstDecodeGenerateName(c, AstName(u"table"), c.module().tables().length(), &name))
+    if (!GenerateName(c, AstName(u"table"), c.module().tables().length(), &name))
         return false;
 
     if (!c.module().addTable(name, table))
@@ -1639,7 +1639,7 @@ AstDecodeMemorySection(AstDecodeContext& c)
 
     if (present) {
         AstName name;
-        if (!AstDecodeGenerateName(c, AstName(u"memory"), c.module().memories().length(), &name))
+        if (!GenerateName(c, AstName(u"memory"), c.module().memories().length(), &name))
             return false;
         if (!c.module().addMemory(name, memory))
             return false;
@@ -1657,7 +1657,7 @@ ToAstExpr(AstDecodeContext& c, const InitExpr& initExpr)
       }
       case InitExpr::Kind::GetGlobal: {
         AstRef globalRef;
-        if (!AstDecodeGenerateRef(c, AstName(u"global"), initExpr.globalIndex(), &globalRef))
+        if (!GenerateRef(c, AstName(u"global"), initExpr.globalIndex(), &globalRef))
             return nullptr;
         return new(c.lifo) AstGetGlobal(globalRef);
       }
@@ -1680,7 +1680,7 @@ static bool
 AstDecodeGlobal(AstDecodeContext& c, uint32_t i, AstGlobal* global)
 {
     AstName name;
-    if (!AstDecodeGenerateName(c, AstName(u"global"), i, &name))
+    if (!GenerateName(c, AstName(u"global"), i, &name))
         return false;
 
     ValType type;
@@ -1813,9 +1813,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcDefIndex, AstFunc** func
     c.startFunction(&iter, &locals, sig->ret());
 
     AstName funcName;
-    if (!AstDecodeGenerateName(c, AstName(u"func"),
-                               c.module().numFuncImports() + funcDefIndex,
-                               &funcName))
+    if (!GenerateName(c, AstName(u"func"), c.module().numFuncImports() + funcDefIndex, &funcName))
         return false;
 
     uint32_t numParams = sig->args().length();
@@ -1826,7 +1824,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcDefIndex, AstFunc** func
     }
     for (uint32_t i = 0; i < numLocals; i++) {
         AstName varName;
-        if (!AstDecodeGenerateName(c, AstName(u"var"), i, &varName))
+        if (!GenerateName(c, AstName(u"var"), i, &varName))
             return false;
         if (!localsNames.append(varName))
             return false;
@@ -1865,7 +1863,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcDefIndex, AstFunc** func
         return c.d.fail("function body length mismatch");
 
     AstRef sigRef;
-    if (!AstDecodeGenerateRef(c, AstName(u"type"), sigIndex, &sigRef))
+    if (!GenerateRef(c, AstName(u"type"), sigIndex, &sigRef))
         return false;
 
     *func = new(c.lifo) AstFunc(funcName, sigRef, Move(vars), Move(localsNames), Move(body));
@@ -2017,7 +2015,7 @@ AstDecodeStartSection(AstDecodeContext &c)
         return c.d.fail("failed to read start func index");
 
     AstRef funcRef;
-    if (!AstDecodeGenerateRef(c, AstName(u"func"), funcIndex, &funcRef))
+    if (!GenerateRef(c, AstName(u"func"), funcIndex, &funcRef))
         return false;
 
     c.module().setStartFunc(AstStartFunc(funcRef));
