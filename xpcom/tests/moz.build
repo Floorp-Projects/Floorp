@@ -28,7 +28,6 @@ SimplePrograms([
 
 GeckoSimplePrograms([
     'TestINIParser',
-    'TestRacingServiceManager',
     'TestRegistrationOrder',
     'TestUnicodeArguments',
 ])

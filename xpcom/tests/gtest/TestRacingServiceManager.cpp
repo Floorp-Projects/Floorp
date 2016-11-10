@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TestHarness.h"
-
 #include "nsIFactory.h"
 #include "mozilla/Module.h"
 #include "nsXULAppAPI.h"
@@ -20,6 +18,9 @@
 #include "mozilla/Attributes.h"
 
 #include "mozilla/ReentrantMonitor.h"
+
+#include "gtest/gtest.h"
+
 using namespace mozilla;
 
 /* f93f6bdc-88af-42d7-9d64-1b43c649a3e5 */ 
@@ -45,6 +46,8 @@ NS_DEFINE_CID(kFactoryCID2, FACTORY_CID2);
 #define FACTORY_CONTRACTID                           \
   "TestRacingThreadManager/factory;1"
 
+namespace TestRacingServiceManager
+{
 int32_t gComponent1Count = 0;
 int32_t gComponent2Count = 0;
 
@@ -127,7 +130,7 @@ public:
   Component2() {
     // This is the real test - make sure that only one instance is ever created.
     int32_t count = PR_AtomicIncrement(&gComponent2Count);
-    MOZ_RELEASE_ASSERT(count == 1, "Too many components created!");
+    EXPECT_EQ(count, int32_t(1)) << "Too many components created!";
   }
 };
 
@@ -205,7 +208,7 @@ TestRunnable::Run()
   else {
     component = do_GetService(FACTORY_CONTRACTID, &rv);
   }
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "GetService failed!");
+  EXPECT_TRUE(NS_SUCCEEDED(rv)) << "GetService failed!";
 
   return NS_OK;
 }
@@ -240,23 +243,20 @@ static const mozilla::Module kLocalModule = {
     kLocalContracts
 };
 
-int main(int argc, char** argv)
+TEST(RacingServiceManager, Test)
 {
   nsresult rv;
   XRE_AddStaticComponent(&kLocalModule);
 
-  ScopedXPCOM xpcom("RacingServiceManager");
-  NS_ENSURE_FALSE(xpcom.failed(), 1);
-
   AutoCreateAndDestroyReentrantMonitor mon1(&gReentrantMonitor);
 
   RefPtr<TestRunnable> runnable = new TestRunnable();
-  NS_ENSURE_TRUE(runnable, 1);
+  ASSERT_TRUE(runnable);
 
   // Run the classID test
   nsCOMPtr<nsIThread> newThread;
   rv = NS_NewThread(getter_AddRefs(newThread), runnable);
-  NS_ENSURE_SUCCESS(rv, 1);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   {
     ReentrantMonitorAutoEnter mon2(*gReentrantMonitor);
@@ -270,7 +270,7 @@ int main(int argc, char** argv)
   }
 
   nsCOMPtr<nsISupports> component(do_GetService(kFactoryCID1, &rv));
-  NS_ENSURE_SUCCESS(rv, 1);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   // Reset for the contractID test
   gMainThreadWaiting = gCreateInstanceCalled = false;
@@ -278,7 +278,7 @@ int main(int argc, char** argv)
   component = nullptr;
 
   rv = newThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-  NS_ENSURE_SUCCESS(rv, 1);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   {
     ReentrantMonitorAutoEnter mon3(*gReentrantMonitor);
@@ -292,9 +292,9 @@ int main(int argc, char** argv)
   }
 
   component = do_GetService(FACTORY_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, 1);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   NS_RELEASE(gFactory);
-
-  return 0;
 }
+
+} // namespace TestRacingServiceManager
