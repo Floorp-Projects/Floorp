@@ -3,197 +3,197 @@
 module.exports = {
   "rules": {
     // Braces only needed for multi-line arrow function blocks
-    // "arrow-body-style": [2, "as-needed"],
+    // "arrow-body-style": ["error", "as-needed"],
 
     // Require spacing around =>
-    // "arrow-spacing": 2,
+    // "arrow-spacing": "error",
 
     // Always require spacing around a single line block
-    // "block-spacing": 1,
+    // "block-spacing": "warn",
 
     // No newline before open brace for a block
-    "brace-style": 2,
+    "brace-style": "error",
 
     // No space before always a space after a comma
-    "comma-spacing": [2, {"before": false, "after": true}],
+    "comma-spacing": ["error", {"before": false, "after": true}],
 
     // Commas at the end of the line not the start
-    // "comma-style": 2,
+    // "comma-style": "error",
 
     // Don't require spaces around computed properties
-    // "computed-property-spacing": [2, "never"],
+    // "computed-property-spacing": ["error", "never"],
 
     // Functions must always return something or nothing
-    "consistent-return": 2,
+    "consistent-return": "error",
 
     // Require braces around blocks that start a new line
     // Note that this rule is likely to be overridden on a per-directory basis
     // very frequently.
-    // "curly": [2, "multi-line"],
+    // "curly": ["error", "multi-line"],
 
     // Always require a trailing EOL
-    "eol-last": 2,
+    "eol-last": "error",
 
     // Require function* name()
-    // "generator-star-spacing": [2, {"before": false, "after": true}],
+    // "generator-star-spacing": ["error", {"before": false, "after": true}],
 
     // Two space indent
-    "indent": [2, 2, { "SwitchCase": 1 }],
+    "indent": ["error", 2, { "SwitchCase": 1 }],
 
     // Space after colon not before in property declarations
-    "key-spacing": [2, { "beforeColon": false, "afterColon": true, "mode": "minimum" }],
+    "key-spacing": ["error", { "beforeColon": false, "afterColon": true, "mode": "minimum" }],
 
     // Unix linebreaks
-    "linebreak-style": [2, "unix"],
+    "linebreak-style": ["error", "unix"],
 
     // Always require parenthesis for new calls
-    "new-parens": 2,
+    "new-parens": "error",
 
     // Use [] instead of Array()
-    // "no-array-constructor": 2,
+    // "no-array-constructor": "error",
 
     // No duplicate arguments in function declarations
-    "no-dupe-args": 2,
+    "no-dupe-args": "error",
 
     // No duplicate keys in object declarations
-    "no-dupe-keys": 2,
+    "no-dupe-keys": "error",
 
     // No duplicate cases in switch statements
-    "no-duplicate-case": 2,
+    "no-duplicate-case": "error",
 
     // No labels
-    "no-labels": 2,
+    "no-labels": "error",
 
     // If an if block ends with a return no need for an else block
-    "no-else-return": 2,
+    "no-else-return": "error",
 
     // No empty statements
-    "no-empty": 2,
+    "no-empty": "error",
 
     // No empty character classes in regex
-    "no-empty-character-class": 2,
+    "no-empty-character-class": "error",
 
     // Disallow empty destructuring
-    "no-empty-pattern": 2,
+    "no-empty-pattern": "error",
 
     // No assiging to exception variable
-    // "no-ex-assign": 2,
+    // "no-ex-assign": "error",
 
     // No using !! where casting to boolean is already happening
-    // "no-extra-boolean-cast": 2,
+    // "no-extra-boolean-cast": "error",
 
     // No double semicolon
-    "no-extra-semi": 2,
+    "no-extra-semi": "error",
 
     // No overwriting defined functions
-    "no-func-assign": 2,
+    "no-func-assign": "error",
 
     // Declarations in Program or Function Body
-    "no-inner-declarations": 2,
+    "no-inner-declarations": "error",
 
     // No invalid regular expresions
-    "no-invalid-regexp": 2,
+    "no-invalid-regexp": "error",
 
     // No odd whitespace characters
-    "no-irregular-whitespace": 2,
+    "no-irregular-whitespace": "error",
 
     // No single if block inside an else block
-    "no-lonely-if": 2,
+    "no-lonely-if": "error",
 
     // No mixing spaces and tabs in indent
-    "no-mixed-spaces-and-tabs": [2, "smart-tabs"],
+    "no-mixed-spaces-and-tabs": ["error", "smart-tabs"],
 
     // No unnecessary spacing
-    "no-multi-spaces": [2, { exceptions: { "AssignmentExpression": true, "VariableDeclarator": true, "ArrayExpression": true, "ObjectExpression": true } }],
+    "no-multi-spaces": ["error", { exceptions: { "AssignmentExpression": true, "VariableDeclarator": true, "ArrayExpression": true, "ObjectExpression": true } }],
 
     // No reassigning native JS objects
-    "no-native-reassign": 2,
+    "no-native-reassign": "error",
 
     // No (!foo in bar)
-    "no-negated-in-lhs": 2,
+    "no-negated-in-lhs": "error",
 
     // Nested ternary statements are confusing
-    "no-nested-ternary": 2,
+    "no-nested-ternary": "error",
 
     // Use {} instead of new Object()
-    // "no-new-object": 2,
+    // "no-new-object": "error",
 
     // No Math() or JSON()
-    "no-obj-calls": 2,
+    "no-obj-calls": "error",
 
     // No octal literals
-    "no-octal": 2,
+    "no-octal": "error",
 
     // No redeclaring variables
-    "no-redeclare": 2,
+    "no-redeclare": "error",
 
     // No unnecessary comparisons
-    "no-self-compare": 2,
+    "no-self-compare": "error",
 
     // No declaring variables from an outer scope
-    "no-shadow": 2,
+    "no-shadow": "error",
 
     // No declaring variables that hide things like arguments
-    "no-shadow-restricted-names": 2,
+    "no-shadow-restricted-names": "error",
 
     // No spaces between function name and parentheses
-    "no-spaced-func": 2,
+    "no-spaced-func": "error",
 
     // No trailing whitespace
-    "no-trailing-spaces": 2,
+    "no-trailing-spaces": "error",
 
     // No using undeclared variables
-    // "no-undef": 2,
+    // "no-undef": "error",
 
     // Error on newline where a semicolon is needed
-    "no-unexpected-multiline": 2,
+    "no-unexpected-multiline": "error",
 
     // No unreachable statements
-    "no-unreachable": 2,
+    "no-unreachable": "error",
 
     // No expressions where a statement is expected
-    // "no-unused-expressions": 2,
+    // "no-unused-expressions": "error",
 
     // No declaring variables that are never used
-    "no-unused-vars": [2, {"vars": "all", "args": "none"}],
+    "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
 
     // No using variables before defined
-    // "no-use-before-define": [2, "nofunc"],
+    // "no-use-before-define": ["error", "nofunc"],
 
     // No using with
-    "no-with": 2,
+    "no-with": "error",
 
     // Always require semicolon at end of statement
-    "semi": [2, "always"],
+    "semi": ["error", "always"],
 
     // Require space after keywords
-    "keyword-spacing": 2,
+    "keyword-spacing": "error",
 
     // Require space before blocks
-    "space-before-blocks": 2,
+    "space-before-blocks": "error",
 
     // Never use spaces before function parentheses
-    // "space-before-function-paren": [2, { "anonymous": "always", "named": "never" }],
+    // "space-before-function-paren": ["error", { "anonymous": "always", "named": "never" }],
 
     // Require spaces before finally, catch, etc.
-    // "space-before-keywords": [2, "always"],
+    // "space-before-keywords": ["error", "always"],
 
     // No space padding in parentheses
-    // "space-in-parens": [2, "never"],
+    // "space-in-parens": ["error", "never"],
 
     // Require spaces around operators
-    // "space-infix-ops": 2,
+    // "space-infix-ops": "error",
 
     // Require spaces after return, throw and case
-    // "space-return-throw-case": 2,
+    // "space-return-throw-case": "error",
 
     // ++ and -- should not need spacing
-    // "space-unary-ops": [2, { "words": true, "nonwords": false }],
+    // "space-unary-ops": ["error", { "words": true, "nonwords": false }],
 
     // No comparisons to NaN
-    "use-isnan": 2,
+    "use-isnan": "error",
 
     // Only check typeof against valid results
-    "valid-typeof": 2,
+    "valid-typeof": "error",
   },
 }

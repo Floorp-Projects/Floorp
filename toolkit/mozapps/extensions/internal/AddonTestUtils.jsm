@@ -306,7 +306,28 @@ var AddonTestUtils = {
         testScope.do_print(`Got exception removing addon app dir: ${ex}`);
       }
 
-      var testDir = this.profileDir.clone();
+      // ensure no leftover files in the system addon upgrade location
+      let featuresDir = this.profileDir.clone();
+      featuresDir.append("features");
+      // upgrade directories will be in UUID folders under features/
+      let systemAddonDirs = [];
+      if (featuresDir.exists()) {
+        let featuresDirEntries = featuresDir.directoryEntries
+                                            .QueryInterface(Ci.nsIDirectoryEnumerator);
+        while (featuresDirEntries.hasMoreElements()) {
+          let entry = featuresDirEntries.getNext();
+          entry.QueryInterface(Components.interfaces.nsIFile);
+          systemAddonDirs.push(entry);
+        }
+
+        systemAddonDirs.map(dir => {
+          dir.append("stage");
+          pathShouldntExist(dir);
+        });
+      }
+
+      // ensure no leftover files in the user addon location
+      let testDir = this.profileDir.clone();
       testDir.append("extensions");
       testDir.append("trash");
       pathShouldntExist(testDir);

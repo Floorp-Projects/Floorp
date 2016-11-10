@@ -6,17 +6,17 @@
 
 #include <string.h>
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/EndianUtils.h"
 #include <stdint.h>
 
 #include "nsDebug.h"
-#include "MediaDecoderReader.h"
 #include "OggCodecState.h"
-#include "OggDecoder.h"
-#include "nsISupportsImpl.h"
+#include "OpusParser.h"
 #include "VideoUtils.h"
 #include <algorithm>
+
+#include <opus/opus.h>
+#include "opus/opus_multistream.h"
 
 // On Android JellyBean, the hardware.h header redefines version_major and
 // version_minor, which breaks our build.  See:

@@ -1,4 +1,3 @@
-
 ; This Source Code Form is subject to the terms of the Mozilla Public
 ; License, v. 2.0. If a copy of the MPL was not distributed with this
 ; file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -405,6 +404,8 @@
 @BINPATH@/components/PresentationDataChannelSessionTransport.manifest
 @BINPATH@/components/LegacyProviders.manifest
 @BINPATH@/components/LegacyPresentationControlService.js
+@BINPATH@/components/AndroidCastDeviceProvider.manifest
+@BINPATH@/components/AndroidCastDeviceProvider.js
 
 @BINPATH@/components/TVSimulatorService.js
 @BINPATH@/components/TVSimulatorService.manifest
@@ -531,6 +532,7 @@
 @BINPATH@/components/NSSDialogService.js
 @BINPATH@/components/PersistentNotificationHandler.js
 @BINPATH@/components/PresentationDevicePrompt.js
+@BINPATH@/components/PresentationRequestUIGlue.js
 @BINPATH@/components/PromptService.js
 @BINPATH@/components/SessionStore.js
 @BINPATH@/components/SiteSpecificUserAgent.js

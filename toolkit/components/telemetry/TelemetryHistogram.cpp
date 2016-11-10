@@ -203,9 +203,6 @@ mozilla::Atomic<bool, mozilla::Relaxed> gIPCTimerArming(false);
 StaticAutoPtr<nsTArray<Accumulation>> gAccumulations;
 StaticAutoPtr<nsTArray<KeyedAccumulation>> gKeyedAccumulations;
 
-// Has XPCOM started shutting down?
-mozilla::Atomic<bool, mozilla::Relaxed>  gShuttingDown(false);
-
 } // namespace
 
 
@@ -343,26 +340,17 @@ HistogramInfo::label_id(const char* label, uint32_t* labelId) const
   return NS_ERROR_FAILURE;
 }
 
-struct TelemetryShutdownObserver : public nsIObserver
+void internal_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent)
 {
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Observe(nsISupports*, const char* aTopic, const char16_t*) override
-  {
-    if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) != 0) {
-      return NS_OK;
-    }
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    }
-    gShuttingDown = true;
-    return NS_OK;
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("NS_FAILED DispatchToMainThread. Maybe we're shutting down?");
+    return;
   }
-private:
-  virtual ~TelemetryShutdownObserver() { }
-};
-NS_IMPL_ISUPPORTS(TelemetryShutdownObserver, nsIObserver)
+  thread->Dispatch(event, 0);
+}
 
 } // namespace
 
@@ -1368,8 +1356,8 @@ void internal_armIPCTimer()
   gIPCTimerArming = true;
   if (NS_IsMainThread()) {
     internal_armIPCTimerMainThread();
-  } else if (!gShuttingDown) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+  } else {
+    internal_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
       StaticMutexAutoLock locker(gTelemetryHistogramMutex);
       internal_armIPCTimerMainThread();
     }));
@@ -1391,7 +1379,7 @@ internal_RemoteAccumulate(mozilla::Telemetry::ID aId, uint32_t aSample)
     gAccumulations = new nsTArray<Accumulation>();
   }
   if (gAccumulations->Length() == kAccumulationsArrayHighWaterMark) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+    internal_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
       TelemetryHistogram::IPCTimerFired(nullptr, nullptr);
     }));
   }
@@ -1418,7 +1406,7 @@ internal_RemoteAccumulate(mozilla::Telemetry::ID aId,
     gKeyedAccumulations = new nsTArray<KeyedAccumulation>();
   }
   if (gKeyedAccumulations->Length() == kAccumulationsArrayHighWaterMark) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+    internal_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
       TelemetryHistogram::IPCTimerFired(nullptr, nullptr);
     }));
   }
@@ -2121,10 +2109,6 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
       " was an intentional change, update this assert with its value and update"
       " the n_values for the following in Histograms.json:"
       " STARTUP_MEASUREMENT_ERRORS");
-
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  MOZ_ASSERT(obs);
-  obs->AddObserver(new TelemetryShutdownObserver, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
   gInitDone = true;
 }

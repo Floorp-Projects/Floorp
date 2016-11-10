@@ -40,6 +40,13 @@ public:
                                    nsIPrincipal* aSheetPrincipal,
                                    uint32_t aLineNumber);
 
+  /**
+   * Called instead of ParseSheet to initialize the Servo stylesheet object
+   * for a failed load. Either ParseSheet or LoadFailed must be called before
+   * adding a ServoStyleSheet to a ServoStyleSet.
+   */
+  void LoadFailed();
+
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
 #ifdef DEBUG

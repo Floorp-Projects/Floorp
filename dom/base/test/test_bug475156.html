@@ -257,6 +257,20 @@ var tests = [
       is(xhr.responseText, "a3", "We got the expected file body");
     },
   },
+
+  // Load one last time to reset the state variable in the .sjs file
+  {
+    init: function (xhr) {
+      xhr.open("GET", path + "bug475156.sjs");
+      xhr.setRequestHeader("If-Match", "a1");
+    },
+
+    loading: function (xhr) {
+    },
+
+    done: function (xhr) {
+    },
+  },
 ]
 
 
@@ -280,7 +294,6 @@ function drive(test)
 }
 
 </script>
-</pre>
 </body>
 </html>
 

@@ -1279,3 +1279,68 @@ function writeProxyFileToDir(aDir, aAddon, aId) {
   file.append(aId);
   return file
 }
+
+function* serveSystemUpdate(xml, perform_update, testserver) {
+  testserver.registerPathHandler("/data/update.xml", (request, response) => {
+    response.write(xml);
+  });
+
+  try {
+    yield perform_update();
+  }
+  finally {
+    testserver.registerPathHandler("/data/update.xml", null);
+  }
+}
+
+// Runs an update check making it use the passed in xml string. Uses the direct
+// call to the update function so we get rejections on failure.
+function* installSystemAddons(xml, testserver) {
+  do_print("Triggering system add-on update check.");
+
+  yield serveSystemUpdate(xml, function*() {
+    let { XPIProvider } = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
+    yield XPIProvider.updateSystemAddons();
+  }, testserver);
+}
+
+// Runs a full add-on update check which will in some cases do a system add-on
+// update check. Always succeeds.
+function* updateAllSystemAddons(xml, testserver) {
+  do_print("Triggering full add-on update check.");
+
+  yield serveSystemUpdate(xml, function() {
+    return new Promise(resolve => {
+      Services.obs.addObserver(function() {
+        Services.obs.removeObserver(arguments.callee, "addons-background-update-complete");
+
+        resolve();
+      }, "addons-background-update-complete", false);
+
+      // Trigger the background update timer handler
+      gInternalManager.notify(null);
+    });
+  }, testserver);
+}
+
+// Builds an update.xml file for an update check based on the data passed.
+function* buildSystemAddonUpdates(addons, root) {
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n\n<updates>\n`;
+  if (addons) {
+    xml += `  <addons>\n`;
+    for (let addon of addons) {
+      xml += `    <addon id="${addon.id}" URL="${root + addon.path}" version="${addon.version}"`;
+      if (addon.size)
+        xml += ` size="${addon.size}"`;
+      if (addon.hashFunction)
+        xml += ` hashFunction="${addon.hashFunction}"`;
+      if (addon.hashValue)
+        xml += ` hashValue="${addon.hashValue}"`;
+      xml += `/>\n`;
+    }
+    xml += `  </addons>\n`;
+  }
+  xml += `</updates>\n`;
+
+  return xml;
+}
