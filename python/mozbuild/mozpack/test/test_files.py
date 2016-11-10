@@ -283,7 +283,7 @@ class TestAbsoluteSymlinkFile(TestWithTmpDir):
         if self.symlink_supported:
             self.assertTrue(os.path.islink(dest))
             link = os.readlink(dest)
-            self.assertEqual(link, source)
+            self.assertEqual(link, 'test_path')
         else:
             self.assertTrue(os.path.isfile(dest))
             content = open(dest).read()
@@ -306,7 +306,7 @@ class TestAbsoluteSymlinkFile(TestWithTmpDir):
         if self.symlink_supported:
             self.assertTrue(os.path.islink(dest))
             link = os.readlink(dest)
-            self.assertEqual(link, source)
+            self.assertEqual(link, 'test_path')
         else:
             self.assertTrue(os.path.isfile(dest))
             content = open(dest).read()
@@ -330,7 +330,7 @@ class TestAbsoluteSymlinkFile(TestWithTmpDir):
 
         self.assertTrue(os.path.islink(dest))
         link = os.readlink(dest)
-        self.assertEqual(link, source)
+        self.assertEqual(link, 'source')
 
     def test_noop(self):
         if not hasattr(os, 'symlink'):
@@ -342,15 +342,15 @@ class TestAbsoluteSymlinkFile(TestWithTmpDir):
         with open(source, 'a'):
             pass
 
-        os.symlink(source, dest)
+        os.symlink('source', dest)
         link = os.readlink(dest)
-        self.assertEqual(link, source)
+        self.assertEqual(link, 'source')
 
         s = AbsoluteSymlinkFile(source)
         self.assertFalse(s.copy(dest))
 
         link = os.readlink(dest)
-        self.assertEqual(link, source)
+        self.assertEqual(link, 'source')
 
 class TestPreprocessedFile(TestWithTmpDir):
     def test_preprocess(self):
