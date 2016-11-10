@@ -124,7 +124,7 @@ class TestNavigate(MarionetteTestCase):
 
     def test_error_when_exceeding_page_load_timeout(self):
         with self.assertRaises(TimeoutException):
-            self.marionette.set_page_load_timeout(0)
+            self.marionette.timeout.page_load = 0
             self.marionette.navigate(self.marionette.absolute_url("slow"))
             self.marionette.find_element(By.TAG_NAME, "p")
 
