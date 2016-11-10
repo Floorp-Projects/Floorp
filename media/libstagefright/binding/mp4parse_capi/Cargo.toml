@@ -19,6 +19,7 @@ exclude = [
 ]
 
 [dependencies]
+byteorder = "0.5.0"
 "mp4parse" = {version = "0.6.0", path = "../mp4parse"}
 
 # Somewhat heavy-handed, but we want at least -Z force-overflow-checks=on.
