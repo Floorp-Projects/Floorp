@@ -70,7 +70,6 @@ TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
   , mTailDispatcher(nullptr)
   , mIsRunning(false)
   , mIsShutdown(false)
-  , mIsFlushing(false)
 {
   MOZ_COUNT_CTOR(TaskQueue);
 }
@@ -104,9 +103,6 @@ TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
   }
 
   mQueueMonitor.AssertCurrentThreadOwns();
-  if (mIsFlushing && aMode == AbortIfFlushing) {
-    return NS_ERROR_ABORT;
-  }
   if (mIsShutdown) {
     return NS_ERROR_FAILURE;
   }

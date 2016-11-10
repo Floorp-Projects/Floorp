@@ -189,9 +189,6 @@ protected:
   bool mIsShutdown;
   MozPromiseHolder<ShutdownPromise> mShutdownPromise;
 
-  // True if we're flushing; we reject new tasks if we're flushing.
-  bool mIsFlushing;
-
   class Runner : public Runnable {
   public:
     explicit Runner(TaskQueue* aQueue)
