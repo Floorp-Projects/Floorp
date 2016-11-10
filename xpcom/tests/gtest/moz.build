@@ -9,6 +9,7 @@ UNIFIED_SOURCES += [
     'TestAtoms.cpp',
     'TestAutoPtr.cpp',
     'TestAutoRef.cpp',
+    'TestBase64.cpp',
     'TestCallTemplates.cpp',
     'TestCloneInputStream.cpp',
     'TestCOMArray.cpp',
@@ -62,7 +63,6 @@ SOURCES += [
     'TestCOMPtr.cpp', # Redefines IFoo and IBar
     'TestHashtables.cpp', # Redefines IFoo
     'TestNsRefPtr.cpp', # Redefines Foo
-    #'TestTArray2.cpp',
 ]
 
 LOCAL_INCLUDES += [
