@@ -61,6 +61,7 @@ GPUProcessManager::GPUProcessManager()
  : mTaskFactory(this),
    mNextLayerTreeId(0),
    mNumProcessAttempts(0),
+   mDeviceResetCount(0),
    mProcess(nullptr),
    mGPUChild(nullptr)
 {
@@ -68,6 +69,8 @@ GPUProcessManager::GPUProcessManager()
 
   mObserver = new Observer(this);
   nsContentUtils::RegisterShutdownObserver(mObserver);
+
+  mDeviceResetLastTime = TimeStamp::Now();
 
   LayerTreeOwnerTracker::Initialize();
 }
@@ -258,9 +261,53 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
   mGPUChild->SendAddLayerTreeIdMapping(mappings);
 }
 
+static bool
+ShouldLimitDeviceResets(uint32_t count, int32_t deltaMilliseconds)
+{
+  // We decide to limit by comparing the amount of resets that have happened
+  // and time since the last reset to two prefs. 
+  int32_t timeLimit = gfxPrefs::DeviceResetThresholdMilliseconds();
+  int32_t countLimit = gfxPrefs::DeviceResetLimitCount();
+
+  bool hasTimeLimit = timeLimit != -1;
+  bool hasCountLimit = countLimit != -1;
+
+  bool triggeredTime = deltaMilliseconds < timeLimit;
+  bool triggeredCount = count > (uint32_t)countLimit;
+
+  // If we have both prefs set then it needs to trigger both limits,
+  // otherwise we only test the pref that is set or none
+  if (hasTimeLimit && hasCountLimit) {
+    return triggeredTime && triggeredCount;
+  } else if (hasTimeLimit) {
+    return triggeredTime;
+  } else if (hasCountLimit) {
+    return triggeredCount;
+  }
+
+  return false;
+}
+
 void
 GPUProcessManager::OnProcessDeviceReset(GPUProcessHost* aHost)
 {
+  // Detect whether the device is resetting too quickly or too much
+  // indicating that we should give up and use software
+  mDeviceResetCount++;
+
+  auto newTime = TimeStamp::Now();
+  auto delta = (int32_t)(newTime - mDeviceResetLastTime).ToMilliseconds();
+  mDeviceResetLastTime = newTime;
+
+  if (ShouldLimitDeviceResets(mDeviceResetCount, delta)) {
+    DestroyProcess();
+    DisableGPUProcess("GPU processed experienced too many device resets");
+
+    HandleProcessLost();
+    return;
+  }
+
+  // We're good, do a reset like normal
   for (auto& session : mRemoteSessions) {
     session->NotifyDeviceReset();
   }
@@ -276,6 +323,13 @@ GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost)
   if (mNumProcessAttempts > uint32_t(gfxPrefs::GPUProcessDevMaxRestarts())) {
     DisableGPUProcess("GPU processed crashed too many times");
   }
+
+  HandleProcessLost();
+}
+
+void
+GPUProcessManager::HandleProcessLost()
+{
   if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
     LaunchGPUProcess();
   }

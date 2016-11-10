@@ -176,6 +176,8 @@ private:
   void CleanShutdown();
   void DestroyProcess();
 
+  void HandleProcessLost();
+
   void EnsureVsyncIOThread();
   void ShutdownVsyncIOThread();
 
@@ -215,6 +217,9 @@ private:
 
   nsTArray<RefPtr<RemoteCompositorSession>> mRemoteSessions;
   nsTArray<GPUProcessListener*> mListeners;
+
+  uint32_t mDeviceResetCount;
+  TimeStamp mDeviceResetLastTime;
 
   // Fields that are associated with the current GPU process.
   GPUProcessHost* mProcess;
