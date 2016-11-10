@@ -92,6 +92,66 @@ assertEq(typeof m1, "object");
 assertEq(String(m1), "[object WebAssembly.Module]");
 assertEq(Object.getPrototypeOf(m1), moduleProto);
 
+// 'WebAssembly.Module.imports' data property
+const moduleImportsDesc = Object.getOwnPropertyDescriptor(Module, 'imports');
+assertEq(typeof moduleImportsDesc.value, "function");
+assertEq(moduleImportsDesc.writable, true);
+assertEq(moduleImportsDesc.enumerable, false);
+assertEq(moduleImportsDesc.configurable, true);
+
+// 'WebAssembly.Module.imports' method
+const moduleImports = moduleImportsDesc.value;
+assertEq(moduleImports.length, 1);
+assertErrorMessage(() => moduleImports(), TypeError, /requires more than 0 arguments/);
+assertErrorMessage(() => moduleImports(undefined), TypeError, /first argument must be a WebAssembly.Module/);
+assertErrorMessage(() => moduleImports({}), TypeError, /first argument must be a WebAssembly.Module/);
+var arr = moduleImports(new Module(wasmTextToBinary('(module)')));
+assertEq(arr instanceof Array, true);
+assertEq(arr.length, 0);
+var arr = moduleImports(new Module(wasmTextToBinary('(module (func (import "a" "b")) (memory (import "c" "d") 1) (table (import "e" "f") 1 anyfunc) (global (import "g" "⚡") i32))')));
+assertEq(arr instanceof Array, true);
+assertEq(arr.length, 4);
+assertEq(arr[0].kind, "function");
+assertEq(arr[0].module, "a");
+assertEq(arr[0].name, "b");
+assertEq(arr[1].kind, "memory");
+assertEq(arr[1].module, "c");
+assertEq(arr[1].name, "d");
+assertEq(arr[2].kind, "table");
+assertEq(arr[2].module, "e");
+assertEq(arr[2].name, "f");
+assertEq(arr[3].kind, "global");
+assertEq(arr[3].module, "g");
+assertEq(arr[3].name, "⚡");
+
+// 'WebAssembly.Module.exports' data property
+const moduleExportsDesc = Object.getOwnPropertyDescriptor(Module, 'exports');
+assertEq(typeof moduleExportsDesc.value, "function");
+assertEq(moduleExportsDesc.writable, true);
+assertEq(moduleExportsDesc.enumerable, false);
+assertEq(moduleExportsDesc.configurable, true);
+
+// 'WebAssembly.Module.exports' method
+const moduleExports = moduleExportsDesc.value;
+assertEq(moduleExports.length, 1);
+assertErrorMessage(() => moduleExports(), TypeError, /requires more than 0 arguments/);
+assertErrorMessage(() => moduleExports(undefined), TypeError, /first argument must be a WebAssembly.Module/);
+assertErrorMessage(() => moduleExports({}), TypeError, /first argument must be a WebAssembly.Module/);
+var arr = moduleExports(new Module(wasmTextToBinary('(module)')));
+assertEq(arr instanceof Array, true);
+assertEq(arr.length, 0);
+var arr = moduleExports(new Module(wasmTextToBinary('(module (func (export "a")) (memory (export "b") 1) (table (export "c") 1 anyfunc) (global (export "⚡") i32 (i32.const 0)))')));
+assertEq(arr instanceof Array, true);
+assertEq(arr.length, 4);
+assertEq(arr[0].kind, "function");
+assertEq(arr[0].name, "a");
+assertEq(arr[1].kind, "memory");
+assertEq(arr[1].name, "b");
+assertEq(arr[2].kind, "table");
+assertEq(arr[2].name, "c");
+assertEq(arr[3].kind, "global");
+assertEq(arr[3].name, "⚡");
+
 // 'WebAssembly.Instance' data property
 const instanceDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'Instance');
 assertEq(typeof instanceDesc.value, "function");
@@ -131,11 +191,11 @@ assertEq(String(i1), "[object WebAssembly.Instance]");
 assertEq(Object.getPrototypeOf(i1), instanceProto);
 
 // 'WebAssembly.Instance' 'exports' data property
-const exportsDesc = Object.getOwnPropertyDescriptor(i1, 'exports');
-assertEq(typeof exportsDesc.value, "object");
-assertEq(exportsDesc.writable, true);
-assertEq(exportsDesc.enumerable, true);
-assertEq(exportsDesc.configurable, true);
+const instanceExportsDesc = Object.getOwnPropertyDescriptor(i1, 'exports');
+assertEq(typeof instanceExportsDesc.value, "object");
+assertEq(instanceExportsDesc.writable, true);
+assertEq(instanceExportsDesc.enumerable, true);
+assertEq(instanceExportsDesc.configurable, true);
 
 // Exported WebAssembly functions
 const f = i1.exports.f;

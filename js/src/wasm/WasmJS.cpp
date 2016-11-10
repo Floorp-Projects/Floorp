@@ -26,6 +26,7 @@
 #include "builtin/Promise.h"
 #include "jit/JitOptions.h"
 #include "vm/Interpreter.h"
+#include "vm/String.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmModule.h"
@@ -494,10 +495,190 @@ const JSPropertySpec WasmModuleObject::properties[] =
 const JSFunctionSpec WasmModuleObject::methods[] =
 { JS_FS_END };
 
+const JSFunctionSpec WasmModuleObject::static_methods[] =
+{
+    JS_FN("imports", WasmModuleObject::imports, 1, 0),
+    JS_FN("exports", WasmModuleObject::exports, 1, 0),
+    JS_FS_END
+};
+
 /* static */ void
 WasmModuleObject::finalize(FreeOp* fop, JSObject* obj)
 {
     obj->as<WasmModuleObject>().module().Release();
+}
+
+static bool
+GetModuleArg(JSContext* cx, CallArgs args, const char* name, Module** module)
+{
+    if (!args.requireAtLeast(cx, name, 1))
+        return false;
+
+    if (!args[0].isObject()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MOD_ARG);
+        return false;
+    }
+
+    JSObject* unwrapped = CheckedUnwrap(&args[0].toObject());
+    if (!unwrapped || !unwrapped->is<WasmModuleObject>()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MOD_ARG);
+        return false;
+    }
+
+    *module = &unwrapped->as<WasmModuleObject>().module();
+    return true;
+}
+
+struct KindNames
+{
+    RootedPropertyName kind;
+    RootedPropertyName table;
+    RootedPropertyName memory;
+
+    explicit KindNames(JSContext* cx) : kind(cx), table(cx), memory(cx) {}
+};
+
+static bool
+InitKindNames(JSContext* cx, KindNames* names)
+{
+    JSAtom* kind = Atomize(cx, "kind", strlen("kind"));
+    if (!kind)
+        return false;
+    names->kind = kind->asPropertyName();
+
+    JSAtom* table = Atomize(cx, "table", strlen("table"));
+    if (!table)
+        return false;
+    names->table = table->asPropertyName();
+
+    JSAtom* memory = Atomize(cx, "memory", strlen("memory"));
+    if (!memory)
+        return false;
+    names->memory = memory->asPropertyName();
+
+    return true;
+}
+
+static JSString*
+KindToString(JSContext* cx, const KindNames& names, DefinitionKind kind)
+{
+    switch (kind) {
+      case DefinitionKind::Function:
+        return cx->names().function;
+      case DefinitionKind::Table:
+        return names.table;
+      case DefinitionKind::Memory:
+        return names.memory;
+      case DefinitionKind::Global:
+        return cx->names().global;
+    }
+
+    MOZ_CRASH("invalid kind");
+}
+
+static JSString*
+UTF8CharsToString(JSContext* cx, const char* chars)
+{
+    return NewStringCopyUTF8Z<CanGC>(cx, JS::ConstUTF8CharsZ(chars, strlen(chars)));
+}
+
+/* static */ bool
+WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Module* module;
+    if (!GetModuleArg(cx, args, "WebAssembly.Module.imports", &module))
+        return false;
+
+    KindNames names(cx);
+    if (!InitKindNames(cx, &names))
+        return false;
+
+    AutoValueVector elems(cx);
+    if (!elems.reserve(module->imports().length()))
+        return false;
+
+    for (const Import& import : module->imports()) {
+        Rooted<IdValueVector> props(cx, IdValueVector(cx));
+        if (!props.reserve(3))
+            return false;
+
+        JSString* moduleStr = UTF8CharsToString(cx, import.module.get());
+        if (!moduleStr)
+            return false;
+        props.infallibleAppend(IdValuePair(NameToId(cx->names().module), StringValue(moduleStr)));
+
+        JSString* nameStr = UTF8CharsToString(cx, import.field.get());
+        if (!nameStr)
+            return false;
+        props.infallibleAppend(IdValuePair(NameToId(cx->names().name), StringValue(nameStr)));
+
+        JSString* kindStr = KindToString(cx, names, import.kind);
+        if (!kindStr)
+            return false;
+        props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
+
+        JSObject* obj = ObjectGroup::newPlainObject(cx, props.begin(), props.length(), GenericObject);
+        if (!obj)
+            return false;
+
+        elems.infallibleAppend(ObjectValue(*obj));
+    }
+
+    JSObject* arr = NewDenseCopiedArray(cx, elems.length(), elems.begin());
+    if (!arr)
+        return false;
+
+    args.rval().setObject(*arr);
+    return true;
+}
+
+/* static */ bool
+WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Module* module;
+    if (!GetModuleArg(cx, args, "WebAssembly.Module.exports", &module))
+        return false;
+
+    KindNames names(cx);
+    if (!InitKindNames(cx, &names))
+        return false;
+
+    AutoValueVector elems(cx);
+    if (!elems.reserve(module->exports().length()))
+        return false;
+
+    for (const Export& exp : module->exports()) {
+        Rooted<IdValueVector> props(cx, IdValueVector(cx));
+        if (!props.reserve(2))
+            return false;
+
+        JSString* nameStr = UTF8CharsToString(cx, exp.fieldName());
+        if (!nameStr)
+            return false;
+        props.infallibleAppend(IdValuePair(NameToId(cx->names().name), StringValue(nameStr)));
+
+        JSString* kindStr = KindToString(cx, names, exp.kind());
+        if (!kindStr)
+            return false;
+        props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
+
+        JSObject* obj = ObjectGroup::newPlainObject(cx, props.begin(), props.length(), GenericObject);
+        if (!obj)
+            return false;
+
+        elems.infallibleAppend(ObjectValue(*obj));
+    }
+
+    JSObject* arr = NewDenseCopiedArray(cx, elems.length(), elems.begin());
+    if (!arr)
+        return false;
+
+    args.rval().setObject(*arr);
+    return true;
 }
 
 /* static */ WasmModuleObject*
@@ -626,6 +807,9 @@ const JSPropertySpec WasmInstanceObject::properties[] =
 { JS_PS_END };
 
 const JSFunctionSpec WasmInstanceObject::methods[] =
+{ JS_FS_END };
+
+const JSFunctionSpec WasmInstanceObject::static_methods[] =
 { JS_FS_END };
 
 bool
@@ -998,6 +1182,9 @@ const JSFunctionSpec WasmMemoryObject::methods[] =
     JS_FN("grow", WasmMemoryObject::grow, 1, 0),
     JS_FS_END
 };
+
+const JSFunctionSpec WasmMemoryObject::static_methods[] =
+{ JS_FS_END };
 
 ArrayBufferObjectMaybeShared&
 WasmMemoryObject::buffer() const
@@ -1384,6 +1571,9 @@ const JSFunctionSpec WasmTableObject::methods[] =
     JS_FS_END
 };
 
+const JSFunctionSpec WasmTableObject::static_methods[] =
+{ JS_FS_END };
+
 Table&
 WasmTableObject::table() const
 {
@@ -1597,6 +1787,9 @@ InitConstructor(JSContext* cx, HandleObject wasm, const char* name, MutableHandl
 
     RootedFunction ctor(cx, NewNativeConstructor(cx, Class::construct, 1, className));
     if (!ctor)
+        return false;
+
+    if (!DefinePropertiesAndFunctions(cx, ctor, nullptr, Class::static_methods))
         return false;
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
