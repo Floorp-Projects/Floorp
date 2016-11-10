@@ -98,7 +98,7 @@ function run_test_1() {
         do_throw("Should have seen an available update");
       },
 
-      onUpdateAvailable: function(unused, install) {
+      onUpdateAvailable: function(addon, install) {
         do_check_eq(install.version, "2.0")
       },
 
@@ -124,7 +124,7 @@ function run_test_2() {
         do_throw("Should have seen an available update");
       },
 
-      onUpdateAvailable: function(unused, install) {
+      onUpdateAvailable: function(addon, install) {
         do_check_eq(install.version, "2.0")
       },
 
@@ -146,7 +146,7 @@ function run_test_3() {
         do_throw("Should have not have seen compatibility information");
       },
 
-      onUpdateAvailable: function() {
+      onUpdateAvailable: function(addon, install) {
         do_throw("Should not have seen an available update");
       },
 
@@ -172,7 +172,7 @@ function run_test_4() {
         do_throw("Should have seen an available update");
       },
 
-      onUpdateAvailable: function(unused, install) {
+      onUpdateAvailable: function(addon, install) {
         do_check_eq(install.version, "2.0")
       },
 

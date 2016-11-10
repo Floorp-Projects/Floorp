@@ -59,21 +59,21 @@ function run_test() {
                  "caption TEXT, " +
                  "PRIMARY KEY (addon_internal_id, num)");
 
-  let insertStmt = db.createStatement("INSERT INTO addon (id) VALUES (:id)");
-  insertStmt.params.id = "test1@tests.mozilla.org";
-  insertStmt.execute();
-  insertStmt.finalize();
+  let stmt = db.createStatement("INSERT INTO addon (id) VALUES (:id)");
+  stmt.params.id = "test1@tests.mozilla.org";
+  stmt.execute();
+  stmt.finalize();
 
-  insertStmt = db.createStatement("INSERT INTO screenshot VALUES " +
+  stmt = db.createStatement("INSERT INTO screenshot VALUES " +
                             "(:addon_internal_id, :num, :url, :thumbnailURL, :caption)");
 
-  insertStmt.params.addon_internal_id = 1;
-  insertStmt.params.num = 0;
-  insertStmt.params.url = "http://localhost/full1-1.png";
-  insertStmt.params.thumbnailURL = "http://localhost/thumbnail1-1.png";
-  insertStmt.params.caption = "Caption 1 - 1";
-  insertStmt.execute();
-  insertStmt.finalize();
+  stmt.params.addon_internal_id = 1;
+  stmt.params.num = 0;
+  stmt.params.url = "http://localhost/full1-1.png";
+  stmt.params.thumbnailURL = "http://localhost/thumbnail1-1.png";
+  stmt.params.caption = "Caption 1 - 1";
+  stmt.execute();
+  stmt.finalize();
 
   db.schemaVersion = 1;
   db.close();
@@ -108,15 +108,15 @@ function run_test() {
         let internalID = db.lastInsertRowID;
         db.executeSimpleSQL("INSERT INTO compatibility_override (addon_internal_id, num, type) VALUES('" + internalID + "', '1', 'incompatible')");
 
-        let selectStmt = db.createStatement("SELECT COUNT(*) AS count FROM compatibility_override");
-        selectStmt.executeStep();
-        do_check_eq(selectStmt.row.count, 1);
-        selectStmt.reset();
+        let stmt = db.createStatement("SELECT COUNT(*) AS count FROM compatibility_override");
+        stmt.executeStep();
+        do_check_eq(stmt.row.count, 1);
+        stmt.reset();
 
         db.executeSimpleSQL("DELETE FROM addon");
-        selectStmt.executeStep();
-        do_check_eq(selectStmt.row.count, 0);
-        selectStmt.finalize();
+        stmt.executeStep();
+        do_check_eq(stmt.row.count, 0);
+        stmt.finalize();
 
         db.close();
         do_test_finished();

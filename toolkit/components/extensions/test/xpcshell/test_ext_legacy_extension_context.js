@@ -41,8 +41,8 @@ add_task(function* test_legacy_extension_context() {
       } else if (msg == "do-connect") {
         port = browser.runtime.connect();
 
-        port.onMessage.addListener(portMsg => {
-          browser.test.assertEq("legacy_extension -> webextension port message", portMsg,
+        port.onMessage.addListener(msg => {
+          browser.test.assertEq("legacy_extension -> webextension port message", msg,
                                 "Got the expected message from the LegacyExtensionContext");
           port.postMessage("webextension -> legacy_extension port message");
         });

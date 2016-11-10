@@ -3,7 +3,6 @@ module.exports = {
   rules: {
     "mozilla/import-headjs-globals": "warn",
     "mozilla/mark-test-function-used": "warn",
-    "no-shadow": "error",
   },
 
   // All globals made available in the test environment.
