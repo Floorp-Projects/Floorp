@@ -854,7 +854,7 @@ add_task(function test_DirectoryLinksProvider_needsDownload() {
   do_check_true(DirectoryLinksProvider._needsDownload);
   DirectoryLinksProvider._lastDownloadMS = Date.now();
   do_check_false(DirectoryLinksProvider._needsDownload);
-  DirectoryLinksProvider._lastDownloadMS = Date.now() - (60*60*24 + 1)*1000;
+  DirectoryLinksProvider._lastDownloadMS = Date.now() - (60 * 60 * 24 + 1) * 1000;
   do_check_true(DirectoryLinksProvider._needsDownload);
   DirectoryLinksProvider._lastDownloadMS = 0;
 });
@@ -863,7 +863,7 @@ add_task(function* test_DirectoryLinksProvider_fetchAndCacheLinksIfNecessary() {
   yield DirectoryLinksProvider.init();
   yield cleanJsonFile();
   // explicitly change source url to cause the download during setup
-  yield promiseSetupDirectoryLinksProvider({linksURL: kTestURL+" "});
+  yield promiseSetupDirectoryLinksProvider({linksURL: kTestURL + " "});
   yield DirectoryLinksProvider._fetchAndCacheLinksIfNecessary();
 
   // inspect lastDownloadMS timestamp which should be 5 seconds less then now()
@@ -1322,7 +1322,7 @@ add_task(function test_setupStartEndTime() {
   do_check_eq(link.startTime, currentTime);
 
   // test localtime translation
-  let shiftedDate = new Date(currentTime - dt.getTimezoneOffset()*60*1000);
+  let shiftedDate = new Date(currentTime - dt.getTimezoneOffset() * 60 * 1000);
   link.time_limits.start = shiftedDate.toISOString().replace(/Z$/, "");
 
   DirectoryLinksProvider._setupStartEndTime(link);
@@ -1526,7 +1526,7 @@ add_task(function* test_DirectoryLinksProvider_ClickRemoval() {
         uri: NetUtil.newURI(landingUrl),
         title: "HELLO",
         visits: [{
-          visitDate: Date.now()*1000,
+          visitDate: Date.now() * 1000,
           transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
         }]
       },
@@ -1841,7 +1841,7 @@ add_task(function* test_blockSuggestedTiles() {
   do_check_eq(DirectoryLinksProvider._updateSuggestedTile(), undefined);
 
   // move lastUpdated for suggested tile into the past
-  DirectoryLinksProvider._frequencyCaps["ignore://suggested_block"].lastUpdated = Date.now() - 25*60*60*1000;
+  DirectoryLinksProvider._frequencyCaps["ignore://suggested_block"].lastUpdated = Date.now() - 25 * 60 * 60 * 1000;
   // ensure that suggested tile updates again
   suggestedLink = DirectoryLinksProvider._updateSuggestedTile();
   do_check_true(suggestedLink.frecent_sites);

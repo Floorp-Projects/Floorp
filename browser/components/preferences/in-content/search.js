@@ -349,7 +349,7 @@ EngineStore.prototype = {
   },
 
   _cloneEngine: function ES_cloneEngine(aEngine) {
-    var clonedObj={};
+    var clonedObj = {};
     for (var i in aEngine)
       clonedObj[i] = aEngine[i];
     clonedObj.originalEngine = aEngine;

@@ -28,7 +28,7 @@ const MANIFEST_PREFS = Services.prefs.getBranch("social.manifest.");
 // initApp below).
 const gProfD = do_get_profile();
 
-function createAppInfo(ID, name, version, platformVersion="1.0") {
+function createAppInfo(ID, name, version, platformVersion = "1.0") {
   let tmp = {};
   Cu.import("resource://testing-common/AppInfo.jsm", tmp);
   tmp.updateAppInfo({

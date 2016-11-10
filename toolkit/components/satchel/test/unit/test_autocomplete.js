@@ -59,8 +59,8 @@ add_test(function test0() {
     numRecords = Math.ceil(maxTimeGroupings / bucketSize) * 2;
 
     let changes = [ ];
-    for (let i = 0; i < numRecords; i+=2) {
-        let useDate = now - (i/2 * bucketSize * timeGroupingSize);
+    for (let i = 0; i < numRecords; i += 2) {
+        let useDate = now - (i / 2 * bucketSize * timeGroupingSize);
 
         changes.push({ op : "add", fieldname: "field1", value: "value" + padLeft(numRecords - 1 - i, 2),
                        timesUsed: 1, firstUsed: useDate, lastUsed: useDate });
@@ -99,7 +99,7 @@ add_test(function test3() {
     let lastFound = numRecords;
     fac.autoCompleteSearchAsync("field1", "", null, null, null, {
         onSearchCompletion : function(aResults) {
-            for (let i = 0; i < numRecords; i+=2) {
+            for (let i = 0; i < numRecords; i += 2) {
                 do_check_eq(parseInt(aResults.getValueAt(i + 1).substr(5), 10), --lastFound);
                 do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
             }
@@ -114,7 +114,7 @@ add_test(function test4() {
     let lastFound = numRecords;
     fac.autoCompleteSearchAsync("field1", "v", null, null, null, {
         onSearchCompletion : function(aResults) {
-            for (let i = 0; i < numRecords; i+=2) {
+            for (let i = 0; i < numRecords; i += 2) {
                 do_check_eq(parseInt(aResults.getValueAt(i + 1).substr(5), 10), --lastFound);
                 do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
             }

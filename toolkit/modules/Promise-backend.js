@@ -298,7 +298,7 @@ PendingErrors.addObserver(function(details) {
     dump(generalDescription);
     dump("On: " + details.date + "\n");
     dump("Full message: " + details.message + "\n");
-    dump("Full stack: " + (details.stack||"not available") + "\n");
+    dump("Full stack: " + (details.stack || "not available") + "\n");
     dump("*************************\n");
     return;
   }
@@ -310,7 +310,7 @@ PendingErrors.addObserver(function(details) {
              /* message*/ generalDescription +
              "Date: " + details.date + "\nFull Message: " + message,
              /* sourceName*/ details.fileName,
-             /* sourceLine*/ details.lineNumber?("" + details.lineNumber):0,
+             /* sourceLine*/ details.lineNumber ? ("" + details.lineNumber) : 0,
              /* lineNumber*/ details.lineNumber || 0,
              /* columnNumber*/ 0,
              /* flags*/ Ci.nsIScriptError.errorFlag,
@@ -950,11 +950,11 @@ Handler.prototype = {
 
         dump("*************************\n");
         dump("A coding exception was thrown in a Promise " +
-             ((nextStatus == STATUS_RESOLVED) ? "resolution":"rejection") +
+             ((nextStatus == STATUS_RESOLVED) ? "resolution" : "rejection") +
              " callback.\n");
         dump("See https://developer.mozilla.org/Mozilla/JavaScript_code_modules/Promise.jsm/Promise\n\n");
         dump("Full message: " + ex + "\n");
-        dump("Full stack: " + (("stack" in ex)?ex.stack:"not available") + "\n");
+        dump("Full stack: " + (("stack" in ex) ? ex.stack : "not available") + "\n");
         dump("*************************\n");
 
       }

@@ -324,7 +324,7 @@ add_task(function* test_persistCurrentPingsOnShutdown() {
 
   // Submit new pings that shouldn't be persisted yet.
   let ids = [];
-  for (let i=0; i<5; ++i) {
+  for (let i = 0; i < 5; ++i) {
     ids.push(fakePingId("f", i));
     TelemetryController.submitExternalPing(TEST_TYPE, {});
   }

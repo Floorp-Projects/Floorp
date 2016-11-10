@@ -23,15 +23,15 @@ function readTestData(testFile) {
       hasmore = istream.readLine(line);
 
       if (line.value.indexOf('Description:') > -1) {
-        testcase.desc = line.value.substring(line.value.indexOf(':')+1).trim();
+        testcase.desc = line.value.substring(line.value.indexOf(':') + 1).trim();
       }
 
       if (line.value.indexOf('Expect:') > -1) {
-        testcase.expect = line.value.substring(line.value.indexOf(':')+1).trim();
+        testcase.expect = line.value.substring(line.value.indexOf(':') + 1).trim();
       }
 
       if (line.value.indexOf('Base:') > -1) {
-        testcase.base = NetUtil.newURI(line.value.substring(line.value.indexOf(':')+1).trim());
+        testcase.base = NetUtil.newURI(line.value.substring(line.value.indexOf(':') + 1).trim());
       }
 
       if (testcase.expect && testcase.desc) {

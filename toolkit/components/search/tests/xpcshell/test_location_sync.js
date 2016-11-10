@@ -92,7 +92,7 @@ add_task(function* test_simple() {
           break;
         case Ci.nsITelemetry.HISTOGRAM_EXPONENTIAL:
         case Ci.nsITelemetry.HISTOGRAM_LINEAR:
-          equal(snapshot.counts.reduce((a, b) => a+b), 0, hid);
+          equal(snapshot.counts.reduce((a, b) => a + b), 0, hid);
           break;
         default:
           ok(false, "unknown histogram type " + snapshot.histogram_type + " for " + hid);

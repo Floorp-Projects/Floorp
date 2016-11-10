@@ -286,7 +286,7 @@ var addBookmark = Task.async(function* (aBookmarkObj) {
   }
 });
 
-function addOpenPages(aUri, aCount=1, aUserContextId=0) {
+function addOpenPages(aUri, aCount = 1, aUserContextId = 0) {
   let ac = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
              .getService(Ci.mozIPlacesAutoComplete);
   for (let i = 0; i < aCount; i++) {
@@ -294,7 +294,7 @@ function addOpenPages(aUri, aCount=1, aUserContextId=0) {
   }
 }
 
-function removeOpenPages(aUri, aCount=1, aUserContextId=0) {
+function removeOpenPages(aUri, aCount = 1, aUserContextId = 0) {
   let ac = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
              .getService(Ci.mozIPlacesAutoComplete);
   for (let i = 0; i < aCount; i++) {
@@ -445,14 +445,14 @@ function setFaviconForHref(href, iconHref) {
   });
 }
 
-function makeTestServer(port=-1) {
+function makeTestServer(port = -1) {
   let httpServer = new HttpServer();
   httpServer.start(port);
   do_register_cleanup(() => httpServer.stop(() => {}));
   return httpServer;
 }
 
-function* addTestEngine(basename, httpServer=undefined) {
+function* addTestEngine(basename, httpServer = undefined) {
   httpServer = httpServer || makeTestServer();
   httpServer.registerDirectory("/", do_get_cwd());
   let dataUrl =

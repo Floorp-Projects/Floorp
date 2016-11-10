@@ -397,7 +397,7 @@ var TelemetryScheduler = {
    *                 that the reason field of this payload will be changed.
    * @return {Promise} A promise resolved when the ping is saved.
    */
-  _saveAbortedPing: function(now, competingPayload=null) {
+  _saveAbortedPing: function(now, competingPayload = null) {
     this._lastSessionCheckpointTime = now;
     return Impl._saveAbortedSessionPing(competingPayload)
                 .catch(e => this._log.error("_saveAbortedPing - Failed", e));
@@ -1131,7 +1131,7 @@ var Impl = {
     }
     let b = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_BYTES, n);
     let c = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_COUNT, n);
-    let cc= (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE, n);
+    let cc = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE, n);
     let p = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_PERCENTAGE, n);
 
     b("MEMORY_VSIZE", "vsize");

@@ -101,7 +101,7 @@ function LinksStorage() {
     // Something went wrong in the update process, we can't recover from here,
     // so just clear the storage and start from scratch (dataloss!).
     Components.utils.reportError(
-      "Unable to migrate the newTab storage to the current version. "+
+      "Unable to migrate the newTab storage to the current version. " +
       "Restarting from scratch.\n" + ex);
     this.clear();
   }
@@ -428,10 +428,10 @@ var PinnedLinks = {
     let links = this.links;
     links[index] = null;
     // trim trailing nulls
-    let i=links.length-1;
+    let i = links.length - 1;
     while (i >= 0 && links[i] == null)
       i--;
-    links.splice(i +1);
+    links.splice(i + 1);
     this.save();
   },
 
@@ -1021,7 +1021,7 @@ var Links = {
     * @param aLink The link that will affect siteMap
     * @param increment A boolean for whether to increment or decrement siteMap
     */
-  _adjustSiteMapAndNotify: function(aLink, increment=true) {
+  _adjustSiteMapAndNotify: function(aLink, increment = true) {
     for (let [provider, cache] of this._providers) {
       // We only update siteMap if aLink is already stored in linkMap.
       if (cache.linkMap.get(aLink.url)) {
@@ -1144,7 +1144,7 @@ var Links = {
                    cache in _providers. Defaults to -1 if the provider doesn't know the index
    * @param aDeleted Boolean indicating if the provider has deleted the link.
    */
-  onLinkChanged: function Links_onLinkChanged(aProvider, aLink, aIndex=-1, aDeleted=false) {
+  onLinkChanged: function Links_onLinkChanged(aProvider, aLink, aIndex = -1, aDeleted = false) {
     if (!("url" in aLink))
       throw new Error("Changed links must have a url property");
 

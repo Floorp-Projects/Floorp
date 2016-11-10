@@ -133,8 +133,8 @@
       <method name="centerWindowOnScreen">
         <body>
         <![CDATA[
-          var xOffset = screen.availWidth/2 - window.outerWidth/2;
-          var yOffset = screen.availHeight/2 - window.outerHeight/2;
+          var xOffset = screen.availWidth / 2 - window.outerWidth / 2;
+          var yOffset = screen.availHeight / 2 - window.outerHeight / 2;
 
           xOffset = xOffset > 0 ? xOffset : 0;
           yOffset = yOffset > 0 ? yOffset : 0;
@@ -252,13 +252,13 @@
             // don't override custom labels with pre-defined labels on explicit buttons
             if (!button.hasAttribute("label")) {
               // dialog attributes override the default labels in dialog.properties
-              if (this.hasAttribute("buttonlabel"+dlgtype)) {
-                button.setAttribute("label", this.getAttribute("buttonlabel"+dlgtype));
-                if (this.hasAttribute("buttonaccesskey"+dlgtype))
-                  button.setAttribute("accesskey", this.getAttribute("buttonaccesskey"+dlgtype));
+              if (this.hasAttribute("buttonlabel" + dlgtype)) {
+                button.setAttribute("label", this.getAttribute("buttonlabel" + dlgtype));
+                if (this.hasAttribute("buttonaccesskey" + dlgtype))
+                  button.setAttribute("accesskey", this.getAttribute("buttonaccesskey" + dlgtype));
               } else if (dlgtype != "extra1" && dlgtype != "extra2") {
-                button.setAttribute("label", this.mStrBundle.GetStringFromName("button-"+dlgtype));
-                var accessKey = this.mStrBundle.GetStringFromName("accesskey-"+dlgtype);
+                button.setAttribute("label", this.mStrBundle.GetStringFromName("button-" + dlgtype));
+                var accessKey = this.mStrBundle.GetStringFromName("accesskey-" + dlgtype);
                 if (accessKey)
                   button.setAttribute("accesskey", accessKey);
               }
@@ -266,8 +266,8 @@
             // allow specifying alternate icons in the dialog header
             if (!button.hasAttribute("icon")) {
               // if there's an icon specified, use that
-              if (this.hasAttribute("buttonicon"+dlgtype))
-                button.setAttribute("icon", this.getAttribute("buttonicon"+dlgtype));
+              if (this.hasAttribute("buttonicon" + dlgtype))
+                button.setAttribute("icon", this.getAttribute("buttonicon" + dlgtype));
               // otherwise set defaults
               else
                 switch (dlgtype) {
@@ -311,7 +311,7 @@
             if (/Win/.test(navigator.platform)) {
               var spacer = document.getAnonymousElementByAttribute(this, "anonid", "spacer");
               spacer.removeAttribute("hidden");
-              spacer.setAttribute("flex", shown["extra2"]?"1":"0");
+              spacer.setAttribute("flex", shown["extra2"] ? "1" : "0");
             }
           }
         ]]>
@@ -380,13 +380,13 @@
         <body>
         <![CDATA[
           var event = document.createEvent("Events");
-          event.initEvent("dialog"+aDlgType, true, true);
+          event.initEvent("dialog" + aDlgType, true, true);
 
           // handle dom event handlers
           var noCancel = this.dispatchEvent(event);
 
           // handle any xml attribute event handlers
-          var handler = this.getAttribute("ondialog"+aDlgType);
+          var handler = this.getAttribute("ondialog" + aDlgType);
           if (handler != "") {
             var fn = new Function("event", handler);
             var returned = fn(event);

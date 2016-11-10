@@ -835,7 +835,7 @@ addMessageListener("ContextMenu:SearchFieldBookmarkData", (message) => {
         ((type == "checkbox" || type == "radio") && el.checked)) {
       formData.push(escapeNameValuePair(el.name, el.value, isURLEncoded));
     } else if (el instanceof content.HTMLSelectElement && el.selectedIndex >= 0) {
-      for (let j=0; j < el.options.length; j++) {
+      for (let j = 0; j < el.options.length; j++) {
         if (el.options[j].selected)
           formData.push(escapeNameValuePair(el.name, el.options[j].value,
                                             isURLEncoded));

@@ -19,7 +19,7 @@ function check(aBrowser, aElementName, aBarred, aType) {
          "No tooltip should be shown when the element is barred from constraint validation");
     } else {
       ok(tttp.getNodeText(e, {}, {}),
-         e.tagName + " " +"A tooltip should be shown when the element isn't valid");
+         e.tagName + " " + "A tooltip should be shown when the element isn't valid");
     }
 
     e.setAttribute('title', '');

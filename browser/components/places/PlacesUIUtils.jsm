@@ -1004,7 +1004,7 @@ this.PlacesUIUtils = {
     let window = aView.ownerWindow;
 
     let urlsToOpen = [];
-    for (var i=0; i < aNodes.length; i++) {
+    for (var i = 0; i < aNodes.length; i++) {
       // Skip over separators and folders.
       if (PlacesUtils.nodeIsURI(aNodes[i]))
         urlsToOpen.push({uri: aNodes[i].uri, isBookmark: PlacesUtils.nodeIsBookmark(aNodes[i])});
@@ -1040,7 +1040,7 @@ this.PlacesUIUtils = {
     this._openNodeIn(aNode, aWhere, window, aPrivate);
   },
 
-  _openNodeIn: function PUIU_openNodeIn(aNode, aWhere, aWindow, aPrivate=false) {
+  _openNodeIn: function PUIU_openNodeIn(aNode, aWhere, aWindow, aPrivate = false) {
     if (aNode && PlacesUtils.nodeIsURI(aNode) &&
         this.checkURLSecurity(aNode, aWindow)) {
       let isBookmark = PlacesUtils.nodeIsBookmark(aNode);

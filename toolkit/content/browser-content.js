@@ -1160,10 +1160,10 @@ var ViewSelectionSource = {
     var tmpNode;
     if (canDrawSelection) {
       var i;
-      for (i = startPath ? startPath.length-1 : -1; i >= 0; i--) {
+      for (i = startPath ? startPath.length - 1 : -1; i >= 0; i--) {
         startContainer = startContainer.childNodes.item(startPath[i]);
       }
-      for (i = endPath ? endPath.length-1 : -1; i >= 0; i--) {
+      for (i = endPath ? endPath.length - 1 : -1; i >= 0; i--) {
         endContainer = endContainer.childNodes.item(endPath[i]);
       }
 
@@ -1273,7 +1273,7 @@ var ViewSelectionSource = {
     + '</style>'
     + '</head>'
     + '<body id="viewsource"' + wrapClass
-    +        ' onload="document.title=\''+title+'\'; document.getElementById(\'target\').scrollIntoView(true)">'
+    +        ' onload="document.title=\'' + title + '\'; document.getElementById(\'target\').scrollIntoView(true)">'
     + '<pre>'
     + this.getOuterMarkup(topNode, 0)
     + '</pre></body></html>'

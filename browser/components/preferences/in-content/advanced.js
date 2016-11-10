@@ -650,11 +650,11 @@ var gAdvancedPane = {
       var radiogroup = document.getElementById("updateRadioGroup");
 
       if (!enabledPref.value)   // Don't care for autoPref.value in this case.
-        radiogroup.value="manual";    // 3. Never check for updates.
+        radiogroup.value = "manual";    // 3. Never check for updates.
       else if (autoPref.value)  // enabledPref.value && autoPref.value
-        radiogroup.value="auto";      // 1. Automatically install updates
+        radiogroup.value = "auto";      // 1. Automatically install updates
       else                      // enabledPref.value && !autoPref.value
-        radiogroup.value="checkOnly"; // 2. Check, but let me choose
+        radiogroup.value = "checkOnly"; // 2. Check, but let me choose
 
       var canCheck = Components.classes["@mozilla.org/updates/update-service;1"].
                        getService(Components.interfaces.nsIApplicationUpdateService).

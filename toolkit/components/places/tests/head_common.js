@@ -218,7 +218,7 @@ function compareArrays(aArray1, aArray2) {
   for (let i = 0; i < aArray1.length; i++) {
     if (aArray1[i] != aArray2[i]) {
       print("compareArrays: arrays differ at index " + i + ": " +
-            "(" + aArray1[i] + ") != (" + aArray2[i] +")\n");
+            "(" + aArray1[i] + ") != (" + aArray2[i] + ")\n");
       return false;
     }
   }

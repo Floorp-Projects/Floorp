@@ -40,7 +40,7 @@ function failTestsOnAutoClose(enabled)  {
   Cu.getGlobalForObject(Sqlite).Debugging.failTestsOnAutoClose = enabled;
 }
 
-function getConnection(dbName, extraOptions={}) {
+function getConnection(dbName, extraOptions = {}) {
   let path = dbName + ".sqlite";
   let options = {path: path};
   for (let [k, v] of Object.entries(extraOptions)) {
@@ -50,7 +50,7 @@ function getConnection(dbName, extraOptions={}) {
   return Sqlite.openConnection(options);
 }
 
-function* getDummyDatabase(name, extraOptions={}) {
+function* getDummyDatabase(name, extraOptions = {}) {
   const TABLES = {
     dirs: "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT",
     files: "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT",
@@ -67,7 +67,7 @@ function* getDummyDatabase(name, extraOptions={}) {
   return c;
 }
 
-function* getDummyTempDatabase(name, extraOptions={}) {
+function* getDummyTempDatabase(name, extraOptions = {}) {
   const TABLES = {
     dirs: "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT",
     files: "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT",

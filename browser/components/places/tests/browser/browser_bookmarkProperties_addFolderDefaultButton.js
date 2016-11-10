@@ -31,7 +31,7 @@ add_task(function* () {
       },
       function* test(dialogWin) {
         let promiseTitleChangeNotification = promiseBookmarksNotification(
-          "onItemChanged", (itemId, prop, isAnno, val) => prop == "title" && val =="n");
+          "onItemChanged", (itemId, prop, isAnno, val) => prop == "title" && val == "n");
 
         fillBookmarkTextField("editBMPanel_namePicker", "n", dialogWin, false);
 

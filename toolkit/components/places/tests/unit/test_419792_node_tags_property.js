@@ -27,7 +27,7 @@ function run_test() {
                                         bmsvc.DEFAULT_INDEX, "");
 
   // get the node for the new bookmark
-  var node = toolbarNode.getChild(toolbarNode.childCount-1);
+  var node = toolbarNode.getChild(toolbarNode.childCount - 1);
   do_check_eq(node.itemId, bookmarkId);
 
   // confirm there's no tags via the .tags property

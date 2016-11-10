@@ -39,7 +39,7 @@ var gDataNotificationInfoBar = {
     }
   },
 
-  _getDataReportingNotification: function (name=this._DATA_REPORTING_NOTIFICATION) {
+  _getDataReportingNotification: function (name = this._DATA_REPORTING_NOTIFICATION) {
     return this._notificationBox.getNotificationWithValue(name);
   },
 

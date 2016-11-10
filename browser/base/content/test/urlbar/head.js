@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
  *        progress listener callback.
  * @return promise
  */
-function waitForDocLoadAndStopIt(aExpectedURL, aBrowser=gBrowser.selectedBrowser, aStopFromProgressListener=true) {
+function waitForDocLoadAndStopIt(aExpectedURL, aBrowser = gBrowser.selectedBrowser, aStopFromProgressListener = true) {
   function content_script(aStopFromProgressListener) {
     let { interfaces: Ci, utils: Cu } = Components;
     Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");

@@ -38,7 +38,7 @@ function test() {
       this.folderId =
         PlacesUtils.bookmarks.createFolder(rootId, "foo", IDX);
       this.shortcutId =
-        PlacesUtils.bookmarks.insertBookmark(rootId, makeURI("place:folder="+this.folderId), IDX, "bar");
+        PlacesUtils.bookmarks.insertBookmark(rootId, makeURI("place:folder=" + this.folderId), IDX, "bar");
     },
     validate: function() {
       is(rootNode.childCount, 2,

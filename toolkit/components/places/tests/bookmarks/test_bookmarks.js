@@ -264,7 +264,7 @@ add_task(function* test_bookmarks() {
   do_check_eq(bookmarksObserver._itemChangedProperty, "title");
 
   // insert query item
-  let uri6 = uri("place:domain=google.com&type="+
+  let uri6 = uri("place:domain=google.com&type=" +
                  Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY);
   let newId6 = bs.insertBookmark(testRoot, uri6, bs.DEFAULT_INDEX, "");
   do_check_eq(bookmarksObserver._itemAddedParent, testRoot);
@@ -306,7 +306,7 @@ add_task(function* test_bookmarks() {
   // try to get index of the last item within the new parent folder
   do_check_eq(bs.getIdForItemAt(homeFolder, -1), workFolder);
   // XXX expose FolderCount, and check that the old parent has one less child?
-  do_check_eq(getChildCount(testRoot), oldParentCC-1);
+  do_check_eq(getChildCount(testRoot), oldParentCC - 1);
 
   // move item, appending, to different folder
   bs.moveItem(newId5, testRoot, bs.DEFAULT_INDEX);
@@ -379,7 +379,7 @@ add_task(function* test_bookmarks() {
     let cc = rootNode.childCount;
     do_print("bookmark itemId test: CC = " + cc);
     do_check_true(cc > 0);
-    for (let i=0; i < cc; ++i) {
+    for (let i = 0; i < cc; ++i) {
       let node = rootNode.getChild(i);
       if (node.type == node.RESULT_TYPE_FOLDER ||
           node.type == node.RESULT_TYPE_URI ||

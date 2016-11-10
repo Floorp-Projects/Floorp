@@ -79,7 +79,7 @@ add_task(function* test_searchterms_domain()
   root.containerOpen = true;
 
   do_print("Number of items in result set: " + root.childCount);
-  for (var i=0; i < root.childCount; ++i) {
+  for (var i = 0; i < root.childCount; ++i) {
     do_print("result: " + root.getChild(i).uri + " Title: " + root.getChild(i).title);
   }
 

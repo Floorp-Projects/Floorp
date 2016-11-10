@@ -179,7 +179,7 @@ add_task(function* () {
     }
 
     is(gBrowser.tabContainer.selectedIndex, expectedIndex,
-       "With "+ tabCount +" tabs open and tab " + indexStart
+       "With " + tabCount + " tabs open and tab " + indexStart
        + " selected, Ctrl+Tab*" + tabTimes + " goes " + where);
   }
 });

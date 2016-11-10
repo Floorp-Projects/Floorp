@@ -64,7 +64,7 @@ function test() {
 
 var corpus = [
   {
-    url: baseURL+"opengraph/opengraph.html",
+    url: baseURL + "opengraph/opengraph.html",
     options: {
       // og:title
       title: ">This is my title<",
@@ -83,16 +83,16 @@ var corpus = [
   },
   {
     // tests that og:url doesn't override the page url if it is bad
-    url: baseURL+"opengraph/og_invalid_url.html",
+    url: baseURL + "opengraph/og_invalid_url.html",
     options: {
       description: "A test corpus file for open graph tags passing a bad url",
-      url: baseURL+"opengraph/og_invalid_url.html",
+      url: baseURL + "opengraph/og_invalid_url.html",
       previews: [],
       siteName: "Evil chrome delivering website"
     }
   },
   {
-    url: baseURL+"opengraph/shorturl_link.html",
+    url: baseURL + "opengraph/shorturl_link.html",
     options: {
       previews: ["http://example.com/1234/56789.jpg"],
       url: "http://www.example.com/photos/56789/",
@@ -100,7 +100,7 @@ var corpus = [
     }
   },
   {
-    url: baseURL+"opengraph/shorturl_linkrel.html",
+    url: baseURL + "opengraph/shorturl_linkrel.html",
     options: {
       previews: ["http://example.com/1234/56789.jpg"],
       url: "http://www.example.com/photos/56789/",
@@ -108,7 +108,7 @@ var corpus = [
     }
   },
   {
-    url: baseURL+"opengraph/shortlink_linkrel.html",
+    url: baseURL + "opengraph/shortlink_linkrel.html",
     options: {
       previews: ["http://example.com/1234/56789.jpg"],
       url: "http://www.example.com/photos/56789/",
@@ -120,16 +120,16 @@ var corpus = [
 function hasoptions(testOptions, options) {
   for (let option in testOptions) {
     let data = testOptions[option];
-    info("data: "+JSON.stringify(data));
+    info("data: " + JSON.stringify(data));
     let message_data = options[option];
-    info("message_data: "+JSON.stringify(message_data));
+    info("message_data: " + JSON.stringify(message_data));
     if (Array.isArray(data)) {
       // the message may have more array elements than we are testing for, this
       // is ok since some of those are hard to test. So we just test that
       // anything in our test data IS in the message.
-      ok(Array.every(data, function(item) { return message_data.indexOf(item) >= 0 }), "option "+option);
+      ok(Array.every(data, function(item) { return message_data.indexOf(item) >= 0 }), "option " + option);
     } else {
-      is(message_data, data, "option "+option);
+      is(message_data, data, "option " + option);
     }
   }
 }

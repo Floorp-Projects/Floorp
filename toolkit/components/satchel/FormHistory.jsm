@@ -352,7 +352,7 @@ function generateGUID() {
   let uuid = uuidService.generateUUID().toString();
   let raw = ""; // A string with the low bytes set to random values
   let bytes = 0;
-  for (let i = 1; bytes < 12 ; i+= 2) {
+  for (let i = 1; bytes < 12 ; i += 2) {
     // Skip dashes
     if (uuid[i] == "-")
       i++;
@@ -1016,9 +1016,9 @@ this.FormHistory = {
                 "SELECT value, " +
                 "ROUND( " +
                     "timesUsed / MAX(1.0, (lastUsed - firstUsed) / :timeGroupingSize) * " +
-                    "MAX(1.0, :maxTimeGroupings - (:now - lastUsed) / :timeGroupingSize) * "+
+                    "MAX(1.0, :maxTimeGroupings - (:now - lastUsed) / :timeGroupingSize) * " +
                     "MAX(1.0, :agedWeight * (firstUsed < :expiryDate)) / " +
-                    ":bucketSize "+
+                    ":bucketSize " +
                 ", 3) AS frecency, " +
                 boundaryCalc + " AS boundaryBonuses " +
                 "FROM moz_formhistory " +

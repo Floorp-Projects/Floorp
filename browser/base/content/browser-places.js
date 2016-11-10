@@ -533,7 +533,7 @@ var PlacesCommandHook = {
    * @param [optional] aDescription
    *        The linked page description, if available
    */
-  bookmarkLink: Task.async(function* (aParentId, aURL, aTitle, aDescription="") {
+  bookmarkLink: Task.async(function* (aParentId, aURL, aTitle, aDescription = "") {
     let node = yield PlacesUIUtils.fetchNodeLike({ url: aURL });
     if (node) {
       PlacesUIUtils.showBookmarkDialog({ action: "edit"

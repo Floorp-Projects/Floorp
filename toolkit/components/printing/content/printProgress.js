@@ -20,14 +20,14 @@ var switchUI = true;
 
 function ellipseString(aStr, doFront)
 {
-  if (aStr.length > 3 && (aStr.substr(0, 3) == "..." || aStr.substr(aStr.length-4, 3) == "...")) {
+  if (aStr.length > 3 && (aStr.substr(0, 3) == "..." || aStr.substr(aStr.length - 4, 3) == "...")) {
     return aStr;
   }
 
   var fixedLen = 64;
   if (aStr.length > fixedLen) {
     if (doFront) {
-      var endStr = aStr.substr(aStr.length-fixedLen, fixedLen);
+      var endStr = aStr.substr(aStr.length - fixedLen, fixedLen);
       return "..." + endStr;
     }
     var frontStr = aStr.substr(0, fixedLen);
@@ -118,7 +118,7 @@ var progressListener = {
       var percent;
       if ( aMaxTotalProgress > 0 )
       {
-        percent = Math.round( (aCurTotalProgress*100)/aMaxTotalProgress );
+        percent = Math.round( (aCurTotalProgress * 100) / aMaxTotalProgress );
         if ( percent > 100 )
           percent = 100;
 
@@ -170,7 +170,7 @@ function getString( stringId ) {
    // Check if we've fetched this string already.
    if (!(stringId in dialog.strings)) {
       // Try to get it.
-      var elem = document.getElementById( "dialog.strings."+stringId );
+      var elem = document.getElementById( "dialog.strings." + stringId );
       try {
         if ( elem
            &&
@@ -195,7 +195,7 @@ function loadDialog()
 
 function replaceInsert( text, index, value ) {
    var result = text;
-   var regExp = new RegExp( "#"+index );
+   var regExp = new RegExp( "#" + index );
    result = result.replace( regExp, value );
    return result;
 }

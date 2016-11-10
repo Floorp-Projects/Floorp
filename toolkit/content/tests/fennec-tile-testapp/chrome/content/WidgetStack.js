@@ -79,8 +79,8 @@ wsBorder.prototype = {
 function wsRect(x, y, w, h) {
   this.left = x;
   this.top = y;
-  this.right = x+w;
-  this.bottom = y+h;
+  this.right = x + w;
+  this.bottom = y + h;
 }
 
 wsRect.prototype = {
@@ -105,8 +105,8 @@ wsRect.prototype = {
   setRect: function(x, y, w, h) {
     this.left = x;
     this.top = y;
-    this.right = x+w;
-    this.bottom = y+h;
+    this.right = x + w;
+    this.bottom = y + h;
 
     return this;
   },
@@ -175,7 +175,7 @@ wsRect.prototype = {
     let t = Math.min(this.top, rect.top);
     let b = Math.max(this.bottom, rect.bottom);
 
-    return new wsRect(l, t, r-l, b-t);
+    return new wsRect(l, t, r - l, b - t);
   },
 
   toString: function() {
@@ -276,7 +276,7 @@ wsRect.prototype = {
     let t = Math.min(this.top, rect.top);
     let b = Math.max(this.bottom, rect.bottom);
 
-    return this.setRect(l, t, r-l, b-t);
+    return this.setRect(l, t, r - l, b - t);
   },
 
   round: function round(scale) {
@@ -979,12 +979,12 @@ WidgetStack.prototype = {
 
         // 100 <= 100 && 100-(-5) > 100
 
-        if ((vr.left <= b.x && vr.left+dx > b.x) ||
-            (vr.left >= b.x && vr.left+dx < b.x))
+        if ((vr.left <= b.x && vr.left + dx > b.x) ||
+            (vr.left >= b.x && vr.left + dx < b.x))
         {
           dbx = b.x - vr.left;
-        } else if ((vr.right <= b.x && vr.right+dx > b.x) ||
-                   (vr.right >= b.x && vr.right+dx < b.x))
+        } else if ((vr.right <= b.x && vr.right + dx > b.x) ||
+                   (vr.right >= b.x && vr.right + dx < b.x))
         {
           dbx = b.x - vr.right;
         } else {
@@ -1033,12 +1033,12 @@ WidgetStack.prototype = {
 
         // 100 <= 100 && 100-(-5) > 100
 
-        if ((vr.top <= b.y && vr.top+dy > b.y) ||
-            (vr.top >= b.y && vr.top+dy < b.y))
+        if ((vr.top <= b.y && vr.top + dy > b.y) ||
+            (vr.top >= b.y && vr.top + dy < b.y))
         {
           dby = b.y - vr.top;
-        } else if ((vr.bottom <= b.y && vr.bottom+dy > b.y) ||
-                   (vr.bottom >= b.y && vr.bottom+dy < b.y))
+        } else if ((vr.bottom <= b.y && vr.bottom + dy > b.y) ||
+                   (vr.bottom >= b.y && vr.bottom + dy < b.y))
         {
           dby = b.y - vr.bottom;
         } else {

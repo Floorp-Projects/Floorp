@@ -111,7 +111,7 @@ add_task(function* test_quota_clearStoragesForPrincipal() {
 
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
     // Open our tab in the given user context.
-    tabs[userContextId] = yield* openTabInUserContext(TEST_URL+ "empty_file.html", userContextId);
+    tabs[userContextId] = yield* openTabInUserContext(TEST_URL + "empty_file.html", userContextId);
 
     // Setup an entry for the indexedDB.
     yield setupIndexedDB(tabs[userContextId].browser);
@@ -136,7 +136,7 @@ add_task(function* test_quota_clearStoragesForPrincipal() {
 
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
     // Open our tab in the given user context.
-    tabs[userContextId] = yield* openTabInUserContext(TEST_URL+ "empty_file.html", userContextId);
+    tabs[userContextId] = yield* openTabInUserContext(TEST_URL + "empty_file.html", userContextId);
 
     // Check whether indexed DB has been cleared.
     yield checkIndexedDB(tabs[userContextId].browser);

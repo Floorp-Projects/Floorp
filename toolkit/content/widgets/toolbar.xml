@@ -57,8 +57,8 @@
           if (this.toolbarset) {
             // Create each toolbar described by the toolbarset.
             var index = 0;
-            while (toolbarset.hasAttribute("toolbar"+(++index))) {
-              var toolbarInfo = toolbarset.getAttribute("toolbar"+index);
+            while (toolbarset.hasAttribute("toolbar" + (++index))) {
+              var toolbarInfo = toolbarset.getAttribute("toolbar" + index);
               var infoSplit = toolbarInfo.split(":");
               this.appendCustomToolbar(infoSplit[0], infoSplit[1]);
             }

@@ -384,7 +384,7 @@ FormAutoComplete.prototype = {
                     continue;
                 this._calculateScore(entry, searchString, searchTokens);
                 this.log("Reusing autocomplete entry '" + entry.text +
-                         "' (" + entry.frecency +" / " + entry.totalScore + ")");
+                         "' (" + entry.frecency + " / " + entry.totalScore + ")");
                 filteredEntries.push(entry);
             }
             filteredEntries.sort(sortBytotalScore);

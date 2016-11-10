@@ -414,7 +414,7 @@ var TelemetryReportingPolicyImpl = {
 
     const isFirstRun = Preferences.get(PREF_FIRST_RUN, true);
     const delay =
-      isFirstRun ? NOTIFICATION_DELAY_FIRST_RUN_MSEC: NOTIFICATION_DELAY_NEXT_RUNS_MSEC;
+      isFirstRun ? NOTIFICATION_DELAY_FIRST_RUN_MSEC : NOTIFICATION_DELAY_NEXT_RUNS_MSEC;
 
     this._startupNotificationTimerId = Policy.setShowInfobarTimeout(
         // Calling |canUpload| eventually shows the infobar, if needed.

@@ -60,13 +60,13 @@ add_test(function test_arm_delay_respected()
   new DeferredTask(function () {
     executed1 = true;
     do_check_false(executed2);
-  }, 1*T).arm();
+  }, 1 * T).arm();
 
   new DeferredTask(function () {
     executed2 = true;
     do_check_true(executed1);
     run_next_test();
-  }, 2*T).arm();
+  }, 2 * T).arm();
 });
 
 /**
@@ -77,14 +77,14 @@ add_test(function test_arm_delay_notrestarted()
   let executed = false;
 
   // Create a task that will run later.
-  let deferredTask = new DeferredTask(() => { executed = true; }, 4*T);
+  let deferredTask = new DeferredTask(() => { executed = true; }, 4 * T);
   deferredTask.arm();
 
   // Before the task starts, call "arm" again.
-  do_timeout(2*T, () => deferredTask.arm());
+  do_timeout(2 * T, () => deferredTask.arm());
 
   // The "arm" call should not have introduced further delays.
-  do_timeout(5*T, function () {
+  do_timeout(5 * T, function () {
     do_check_true(executed);
     run_next_test();
   });
@@ -155,19 +155,19 @@ add_test(function test_arm_async()
 
   // Create a task that will run later.
   let deferredTask = new DeferredTask(function* () {
-    yield promiseTimeout(4*T);
+    yield promiseTimeout(4 * T);
     if (!finishedExecution) {
       finishedExecution = true;
     } else if (!finishedExecutionAgain) {
       finishedExecutionAgain = true;
     }
-  }, 2*T);
+  }, 2 * T);
   deferredTask.arm();
 
   // While the task is running, call "arm" again.  This will result in a wait
   // of 2*T until the task finishes, then another 2*T for the normal task delay
   // specified on construction.
-  do_timeout(4*T, function () {
+  do_timeout(4 * T, function () {
     do_check_true(deferredTask.isRunning);
     do_check_false(finishedExecution);
     deferredTask.arm();
@@ -175,19 +175,19 @@ add_test(function test_arm_async()
 
   // This will fail in case the task was started without waiting 2*T after it
   // has finished.
-  do_timeout(7*T, function () {
+  do_timeout(7 * T, function () {
     do_check_false(deferredTask.isRunning);
     do_check_true(finishedExecution);
   });
 
   // This is in the middle of the second execution.
-  do_timeout(10*T, function () {
+  do_timeout(10 * T, function () {
     do_check_true(deferredTask.isRunning);
     do_check_false(finishedExecutionAgain);
   });
 
   // Wait enough time to verify that the task was executed as expected.
-  do_timeout(13*T, function () {
+  do_timeout(13 * T, function () {
     do_check_false(deferredTask.isRunning);
     do_check_true(finishedExecutionAgain);
     run_next_test();
@@ -202,14 +202,14 @@ add_test(function test_disarm()
   // Create a task that will run later.
   let deferredTask = new DeferredTask(function () {
     do_throw("This task should not run.");
-  }, 2*T);
+  }, 2 * T);
   deferredTask.arm();
 
   // Disable execution later, but before the task starts.
-  do_timeout(1*T, () => deferredTask.disarm());
+  do_timeout(1 * T, () => deferredTask.disarm());
 
   // Wait enough time to verify that the task did not run.
-  do_timeout(3*T, run_next_test);
+  do_timeout(3 * T, run_next_test);
 });
 
 /**
@@ -219,19 +219,19 @@ add_test(function test_disarm_delay_restarted()
 {
   let executed = false;
 
-  let deferredTask = new DeferredTask(() => { executed = true; }, 4*T);
+  let deferredTask = new DeferredTask(() => { executed = true; }, 4 * T);
   deferredTask.arm();
 
-  do_timeout(2*T, function () {
+  do_timeout(2 * T, function () {
     deferredTask.disarm();
     deferredTask.arm();
   });
 
-  do_timeout(5*T, function () {
+  do_timeout(5 * T, function () {
     do_check_false(executed);
   });
 
-  do_timeout(7*T, function () {
+  do_timeout(7 * T, function () {
     do_check_true(executed);
     run_next_test();
   });
@@ -247,19 +247,19 @@ add_test(function test_disarm_async()
 
   let deferredTask = new DeferredTask(function* () {
     deferredTask.arm();
-    yield promiseTimeout(2*T);
+    yield promiseTimeout(2 * T);
     finishedExecution = true;
-  }, 1*T);
+  }, 1 * T);
   deferredTask.arm();
 
-  do_timeout(2*T, function () {
+  do_timeout(2 * T, function () {
     do_check_true(deferredTask.isRunning);
     do_check_true(deferredTask.isArmed);
     do_check_false(finishedExecution);
     deferredTask.disarm();
   });
 
-  do_timeout(4*T, function () {
+  do_timeout(4 * T, function () {
     do_check_false(deferredTask.isRunning);
     do_check_false(deferredTask.isArmed);
     do_check_true(finishedExecution);
@@ -278,18 +278,18 @@ add_test(function test_disarm_immediate_async()
   let deferredTask = new DeferredTask(function* () {
     do_check_false(executed);
     executed = true;
-    yield promiseTimeout(2*T);
-  }, 1*T);
+    yield promiseTimeout(2 * T);
+  }, 1 * T);
   deferredTask.arm();
 
-  do_timeout(2*T, function () {
+  do_timeout(2 * T, function () {
     do_check_true(deferredTask.isRunning);
     do_check_false(deferredTask.isArmed);
     deferredTask.arm();
     deferredTask.disarm();
   });
 
-  do_timeout(4*T, function () {
+  do_timeout(4 * T, function () {
     do_check_true(executed);
     do_check_false(deferredTask.isRunning);
     do_check_false(deferredTask.isArmed);
@@ -329,10 +329,10 @@ add_test(function test_finalize()
   let deferredTask = new DeferredTask(function () {
     do_check_false(timePassed);
     executed = true;
-  }, 2*T);
+  }, 2 * T);
   deferredTask.arm();
 
-  do_timeout(1*T, () => { timePassed = true; });
+  do_timeout(1 * T, () => { timePassed = true; });
 
   // This should trigger the immediate execution of the task.
   deferredTask.finalize().then(function () {
@@ -372,10 +372,10 @@ add_test(function test_finalize_executes_entirely()
       // wait for the 2*T specified on construction as normal task delay.  The
       // second execution will finish after the timeout below has passed again,
       // for a total of 2*T of wait time.
-      do_timeout(3*T, () => { timePassed = true; });
+      do_timeout(3 * T, () => { timePassed = true; });
     }
 
-    yield promiseTimeout(1*T);
+    yield promiseTimeout(1 * T);
 
     // Just before finishing, indicate if we completed the second execution.
     if (executed) {
@@ -384,7 +384,7 @@ add_test(function test_finalize_executes_entirely()
     } else {
       executed = true;
     }
-  }, 2*T);
+  }, 2 * T);
 
   deferredTask.arm();
 });

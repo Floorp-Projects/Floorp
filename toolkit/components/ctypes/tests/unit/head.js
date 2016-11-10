@@ -95,7 +95,7 @@ function structural_check_eq_aux(a, b) {
     ak = Object.keys(a);
   } catch (x) {
     if (a != b) {
-      throw new Error("Distinct values "+a, b);
+      throw new Error("Distinct values " + a, b);
     }
     return;
   }

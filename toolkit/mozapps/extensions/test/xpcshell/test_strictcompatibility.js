@@ -83,7 +83,7 @@ var addon6 = {
 };
 
 // Dictionary - incompatible in strict compatibility mode
-var addon7= {
+var addon7 = {
   id: "addon7@tests.mozilla.org",
   version: "1.0",
   name: "Test 7",

@@ -329,7 +329,7 @@ TestProvider.prototype = {
   addObserver: function (observer) {
     this._observers.add(observer);
   },
-  notifyLinkChanged: function (link, index=-1, deleted=false) {
+  notifyLinkChanged: function (link, index = -1, deleted = false) {
     this._notifyObservers("onLinkChanged", link, index, deleted);
   },
   notifyManyLinksChanged: function () {
