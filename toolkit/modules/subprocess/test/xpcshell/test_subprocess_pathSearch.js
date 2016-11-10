@@ -1,8 +1,8 @@
 "use strict";
 
-let envService = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 
-const PYTHON = envService.get("PYTHON");
+const PYTHON = env.get("PYTHON");
 
 const PYTHON_BIN = OS.Path.basename(PYTHON);
 const PYTHON_DIR = OS.Path.dirname(PYTHON);

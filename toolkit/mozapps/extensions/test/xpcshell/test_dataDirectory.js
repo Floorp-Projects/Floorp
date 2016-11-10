@@ -11,11 +11,11 @@ var ADDON = {
   addon: "test_data_directory"
 };
 
-function run_test() {
-    var expectedDir = gProfD.clone();
-    expectedDir.append("extension-data");
-    expectedDir.append(ADDON.id);
+var expectedDir = gProfD.clone();
+expectedDir.append("extension-data");
+expectedDir.append(ADDON.id);
 
+function run_test() {
     do_test_pending();
     do_check_false(expectedDir.exists());
 

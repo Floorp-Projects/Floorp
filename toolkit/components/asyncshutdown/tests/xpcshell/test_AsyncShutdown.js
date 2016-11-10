@@ -100,15 +100,15 @@ add_task(function* test_phase_removeBlocker() {
     };
 
     lock.addBlocker("Wait forever", blocker);
-    let do_remove_blocker = function(aLock, aBlocker, aShouldRemove) {
-      do_print("Attempting to remove blocker " + aBlocker + ", expecting result " + aShouldRemove);
+    let do_remove_blocker = function(lock, blocker, shouldRemove) {
+      do_print("Attempting to remove blocker " + blocker + ", expecting result " + shouldRemove);
       if (kind == "xpcom-barrier") {
         // The xpcom variant always returns `undefined`, so we can't
         // check its result.
-        aLock.removeBlocker(aBlocker);
+        lock.removeBlocker(blocker);
         return;
       }
-      do_check_eq(aLock.removeBlocker(aBlocker), aShouldRemove);
+      do_check_eq(lock.removeBlocker(blocker), shouldRemove);
     };
     do_remove_blocker(lock, blocker, true);
     do_remove_blocker(lock, blocker, false);

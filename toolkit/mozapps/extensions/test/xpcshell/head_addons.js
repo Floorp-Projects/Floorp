@@ -268,9 +268,10 @@ this.BootstrapMonitor = {
       // NOTE: in some of the new tests, we need to received the real objects instead of
       // their JSON representations, but most of the current tests expect intallPath
       // and resourceURI to have been converted to strings.
+      const {installPath, resourceURI} = info.data;
       info.data = Object.assign({}, subject.wrappedJSObject.data, {
-        installPath: info.data.installPath,
-        resourceURI: info.data.resourceURI,
+        installPath,
+        resourceURI,
       });
     }
 

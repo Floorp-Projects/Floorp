@@ -381,13 +381,13 @@ add_task(function* test_match_url_filters() {
   // Run all the the testCases defined above.
   for (let currentTest of testCases) {
     let {
-      exceptionMessageContains,
-      url, filters,
+      shouldThrow, exceptionMessageContains,
+      shouldFail, url, filters,
     } = currentTest;
 
-    if (currentTest.shouldThrow) {
+    if (shouldThrow) {
       expectThrow({url, filters, exceptionMessageContains})
-    } else if (currentTest.shouldFail) {
+    } else if (shouldFail) {
       expectFail({url, filters});
     } else {
       expectPass({url, filters});

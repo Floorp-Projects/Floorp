@@ -54,7 +54,7 @@ let testParams = [
 for (let test of testParams) {
   let { updateFile, appId } = test;
 
-  add_test(function() {
+  add_test(function run_test() {
     writeInstallRDFForExtension({
       id: "addon1@tests.mozilla.org",
       version: "1.0",
@@ -145,14 +145,14 @@ for (let test of testParams) {
 
             // Verify that another update check returns the same AddonInstall
             a1.findUpdates({
-              onNoCompatibilityUpdateAvailable: function() {
+              onNoCompatibilityUpdateAvailable: function(addon) {
                 ok(false, "Should not have seen onNoCompatibilityUpdateAvailable notification");
               },
 
               onUpdateAvailable: function(newAddon, newInstall) {
-                AddonManager.getAllInstalls(function(aInstalls2) {
-                  do_check_eq(aInstalls2.length, 1);
-                  do_check_eq(aInstalls2[0], install);
+                AddonManager.getAllInstalls(function(aInstalls) {
+                  do_check_eq(aInstalls.length, 1);
+                  do_check_eq(aInstalls[0], install);
                   do_check_eq(newAddon, addon);
                   do_check_eq(newInstall, install);
 
@@ -164,7 +164,7 @@ for (let test of testParams) {
                 });
               },
 
-              onNoUpdateAvailable: function() {
+              onNoUpdateAvailable: function(addon) {
                 ok(false, "Should not have seen onNoUpdateAvailable notification");
               }
             }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
@@ -195,7 +195,7 @@ for (let test of testParams) {
         ok(false, "Should not have seen onNoCompatibilityUpdateAvailable notification");
       },
 
-      onUpdateAvailable: function() {
+      onUpdateAvailable: function(addon, install) {
         ok(false, "Should find no available update when one is already downloading");
       },
 
@@ -593,16 +593,16 @@ for (let test of testParams) {
                                    "addon4@tests.mozilla.org",
                                    "addon5@tests.mozilla.org",
                                    "addon6@tests.mozilla.org"],
-                                   function([a1_2, a2_2, a3_2, a4_2, a5_2, a6_2]) {
+                                   function([a1, a2, a3, a4, a5, a6]) {
         let count = 6;
 
         function next_test() {
-          a1_2.uninstall();
-          a2_2.uninstall();
-          a3_2.uninstall();
-          a4_2.uninstall();
-          a5_2.uninstall();
-          a6_2.uninstall();
+          a1.uninstall();
+          a2.uninstall();
+          a3.uninstall();
+          a4.uninstall();
+          a5.uninstall();
+          a6.uninstall();
 
           restartManager();
           run_next_test();
@@ -626,12 +626,12 @@ for (let test of testParams) {
           }
         };
 
-        a1_2.findUpdates(updateListener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
-        a2_2.findUpdates(compatListener, AddonManager.UPDATE_WHEN_ADDON_INSTALLED);
-        a3_2.findUpdates(updateListener, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
-        a4_2.findUpdates(updateListener, AddonManager.UPDATE_WHEN_NEW_APP_DETECTED, "2");
-        a5_2.findUpdates(compatListener, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
-        a6_2.findUpdates(updateListener, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
+        a1.findUpdates(updateListener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+        a2.findUpdates(compatListener, AddonManager.UPDATE_WHEN_ADDON_INSTALLED);
+        a3.findUpdates(updateListener, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+        a4.findUpdates(updateListener, AddonManager.UPDATE_WHEN_NEW_APP_DETECTED, "2");
+        a5.findUpdates(compatListener, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
+        a6.findUpdates(updateListener, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
       });
     }));
   });
@@ -975,9 +975,9 @@ for (let test of testParams) {
             do_check_neq(a1.syncGUID, null);
             let oldGUID = a1.syncGUID;
 
-            let url_2 = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
-            AddonManager.getInstallForURL(url_2, function(aInstall_2) {
-              aInstall_2.addListener({
+            let url = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
+            AddonManager.getInstallForURL(url, function(aInstall) {
+              aInstall.addListener({
                 onInstallEnded: function() {
                  do_execute_soon(function install_2_2_ended() {
                   restartManager();
@@ -992,7 +992,7 @@ for (let test of testParams) {
                  });
                 }
               });
-              aInstall_2.install();
+              aInstall.install();
             }, "application/x-xpinstall");
           });
          });
