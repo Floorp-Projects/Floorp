@@ -1098,10 +1098,7 @@ nsThread::GetIdleEvent(nsIRunnable** aEvent, MutexAutoLock& aProofOfLock)
   MOZ_ASSERT(aEvent);
 
   TimeStamp idleDeadline;
-  {
-    MutexAutoUnlock unlock(mLock);
-    mIdlePeriod->GetIdlePeriodHint(&idleDeadline);
-  }
+  mIdlePeriod->GetIdlePeriodHint(&idleDeadline);
 
   if (!idleDeadline || idleDeadline < TimeStamp::Now()) {
     aEvent = nullptr;
