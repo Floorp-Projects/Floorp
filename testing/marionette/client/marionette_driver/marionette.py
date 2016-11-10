@@ -1457,7 +1457,6 @@ class Marionette(object):
         """Close the current window, ending the session if it's the last
         window currently open.
 
-        On B2G this method is a noop and will return immediately.
         """
         self._send_message("close")
 
@@ -1465,7 +1464,6 @@ class Marionette(object):
         """Close the currently selected chrome window, ending the session
         if it's the last window open.
 
-        On B2G this method is a noop and will return immediately.
         """
         self._send_message("closeChromeWindow")
 
