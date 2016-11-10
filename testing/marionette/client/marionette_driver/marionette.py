@@ -811,7 +811,8 @@ class Marionette(object):
             if returncode is None:
                 message = ('Process killed because the connection to Marionette server is '
                            'lost. Check gecko.log for errors')
-                self.quit()
+                # This will force-close the application without sending any other message.
+                self.cleanup()
             else:
                 # If Firefox quit itself check if there was a crash
                 crash_count = self.check_for_crash()
