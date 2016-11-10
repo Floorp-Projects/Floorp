@@ -25,7 +25,7 @@ class SimpletestSanityTest(MarionetteTestCase):
             self.assertEqual(1, self.run_sync(sentPass1)["passed"])
             self.assertEqual(0, len(self.run_sync(sentPass2)["failures"]))
 
-            self.marionette.set_script_timeout(1000)
+            self.marionette.timeout.script = 1
             self.assertEqual(1, len(self.run_async(sentFail1)["failures"]))
             self.assertEqual(0, self.run_async(sentFail2)["passed"])
             self.assertEqual(1, self.run_async(sentPass1)["passed"])
@@ -48,7 +48,7 @@ class SimpletestSanityTest(MarionetteTestCase):
            self.assertEqual(0, len(self.run_sync(sentPass1)["failures"]));
            self.assertEqual(1, self.run_sync(sentPass2)["passed"]);
 
-           self.marionette.set_script_timeout(1000)
+           self.marionette.timeout.script = 1
            self.assertEqual(1, len(self.run_async(sentFail1)["failures"]));
            self.assertEqual(0, self.run_async(sentFail2)["passed"]);
            self.assertEqual(0, len(self.run_async(sentPass1)["failures"]));
@@ -71,7 +71,7 @@ class SimpletestSanityTest(MarionetteTestCase):
             self.assertEqual(0, len(self.run_sync(sentPass1)["failures"]));
             self.assertEqual(1, self.run_sync(sentPass2)["passed"]);
 
-            self.marionette.set_script_timeout(1000)
+            self.marionette.timeout.script = 1
             self.assertEqual(1, len(self.run_async(sentFail1)["failures"]));
             self.assertEqual(0, self.run_async(sentFail2)["passed"]);
             self.assertEqual(0, len(self.run_async(sentPass1)["failures"]));
@@ -94,7 +94,7 @@ class SimpletestSanityTest(MarionetteTestCase):
             self.assertEqual(0, len(self.run_sync(sentPass1)["unexpectedSuccesses"]));
             self.assertEqual(1, len(self.run_sync(sentPass2)["expectedFailures"]));
 
-            self.marionette.set_script_timeout(1000)
+            self.marionette.timeout.script = 1
             self.assertEqual(1, len(self.run_async(sentFail1)["unexpectedSuccesses"]));
             self.assertEqual(0, len(self.run_async(sentFail2)["expectedFailures"]));
             self.assertEqual(0, len(self.run_async(sentPass1)["unexpectedSuccesses"]));

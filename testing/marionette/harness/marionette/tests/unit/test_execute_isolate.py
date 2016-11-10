@@ -15,13 +15,13 @@ class TestExecuteIsolationContent(MarionetteTestCase):
         # Results from one execute call that has timed out should not
         # contaminate a future call.
         multiplier = "*3" if self.content else "*1"
-        self.marionette.set_script_timeout(500)
+        self.marionette.timeout.script = 0.5
         self.assertRaises(ScriptTimeoutException,
                           self.marionette.execute_async_script,
                           ("setTimeout(function() {{ marionetteScriptFinished(5{}); }}, 3000);"
                               .format(multiplier)))
 
-        self.marionette.set_script_timeout(6000)
+        self.marionette.timeout.script = 6
         result = self.marionette.execute_async_script("""
         setTimeout(function() {{ marionetteScriptFinished(10{}); }}, 5000);
         """.format(multiplier))

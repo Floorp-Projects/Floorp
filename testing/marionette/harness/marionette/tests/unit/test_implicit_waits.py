@@ -8,23 +8,18 @@ from marionette_driver.by import By
 
 
 class TestImplicitWaits(MarionetteTestCase):
-    def testShouldImplicitlyWaitForASingleElement(self):
+    def test_implicitly_wait_for_single_element(self):
         test_html = self.marionette.absolute_url("test_dynamic.html")
         self.marionette.navigate(test_html)
         add = self.marionette.find_element(By.ID, "adder")
-        self.marionette.set_search_timeout(30000)
+        self.marionette.timeout.implicit = 30
         add.click()
-        # All is well if this doesnt throw
+        # all is well if this does not throw
         self.marionette.find_element(By.ID, "box0")
 
-    def testShouldStillFailToFindAnElementWhenImplicitWaitsAreEnabled(self):
+    def test_implicit_wait_reaches_timeout(self):
         test_html = self.marionette.absolute_url("test_dynamic.html")
         self.marionette.navigate(test_html)
-        self.marionette.set_search_timeout(3000)
-        try:
+        self.marionette.timeout.implicit = 3
+        with self.assertRaises(NoSuchElementException):
             self.marionette.find_element(By.ID, "box0")
-            self.fail("Should have thrown a a NoSuchElementException")
-        except NoSuchElementException:
-            pass
-        except Exception:
-            self.fail("Should have thrown a NoSuchElementException")

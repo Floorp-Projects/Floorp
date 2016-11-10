@@ -47,7 +47,7 @@ link_xhtml = inline('<p><a href="#">foo bar</a></p>', doctype="xhtml")
 class TestFindElementHTML(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
-        self.marionette.set_search_timeout(0)
+        self.marionette.timeout.implicit = 0
 
     def test_id(self):
         self.marionette.navigate(id_html)
@@ -126,7 +126,7 @@ class TestFindElementHTML(MarionetteTestCase):
         self.assertEqual(el, found)
 
     def test_not_found(self):
-        self.marionette.set_search_timeout(0)
+        self.marionette.timeout.implicit = 0
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.CLASS_NAME, "cheese")
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.CSS_SELECTOR, "cheese")
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "cheese")
@@ -137,7 +137,7 @@ class TestFindElementHTML(MarionetteTestCase):
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.XPATH, "cheese")
 
     def test_not_found_implicit_wait(self):
-        self.marionette.set_search_timeout(50)
+        self.marionette.timeout.implicit = 0.5
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.CLASS_NAME, "cheese")
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.CSS_SELECTOR, "cheese")
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "cheese")
@@ -148,7 +148,7 @@ class TestFindElementHTML(MarionetteTestCase):
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.XPATH, "cheese")
 
     def test_not_found_from_element(self):
-        self.marionette.set_search_timeout(0)
+        self.marionette.timeout.implicit = 0
         self.marionette.navigate(id_html)
         el = self.marionette.find_element(By.ID, "foo")
         self.assertRaises(NoSuchElementException, el.find_element, By.CLASS_NAME, "cheese")
@@ -161,7 +161,7 @@ class TestFindElementHTML(MarionetteTestCase):
         self.assertRaises(NoSuchElementException, el.find_element, By.XPATH, "cheese")
 
     def test_not_found_implicit_wait_from_element(self):
-        self.marionette.set_search_timeout(50)
+        self.marionette.timeout.implicit = 0.5
         self.marionette.navigate(id_html)
         el = self.marionette.find_element(By.ID, "foo")
         self.assertRaises(NoSuchElementException, el.find_element, By.CLASS_NAME, "cheese")
@@ -215,7 +215,7 @@ class TestFindElementHTML(MarionetteTestCase):
 class TestFindElementXHTML(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
-        self.marionette.set_search_timeout(0)
+        self.marionette.timeout.implicit = 0
 
     def test_id(self):
         self.marionette.navigate(id_xhtml)
@@ -298,7 +298,7 @@ class TestFindElementXHTML(MarionetteTestCase):
 class TestFindElementsHTML(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
-        self.marionette.set_search_timeout(0)
+        self.marionette.timeout.implicit = 0
 
     def assertItemsIsInstance(self, items, typ):
         for item in items:
@@ -410,7 +410,7 @@ class TestFindElementsHTML(MarionetteTestCase):
 class TestFindElementsXHTML(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
-        self.marionette.set_search_timeout(0)
+        self.marionette.timeout.implicit = 0
 
     def assertItemsIsInstance(self, items, typ):
         for item in items:
