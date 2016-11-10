@@ -596,9 +596,8 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   class CreateDecryptorDone : public GetGMPDecryptorCallback
   {
   public:
-    CreateDecryptorDone(GMPStorageTest* aRunner, nsIRunnable* aContinuation)
-      : mRunner(aRunner),
-        mContinuation(aContinuation)
+    CreateDecryptorDone(GMPStorageTest* aRunner)
+      : mRunner(aRunner)
     {
     }
 
@@ -610,13 +609,10 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
       if (mRunner->mDecryptor) {
         mRunner->mDecryptor->Init(mRunner, false, true);
       }
-      nsCOMPtr<nsIThread> thread(GetGMPThread());
-      thread->Dispatch(mContinuation, NS_DISPATCH_NORMAL);
     }
 
   private:
     RefPtr<GMPStorageTest> mRunner;
-    nsCOMPtr<nsIRunnable> mContinuation;
   };
 
   void CreateDecryptor(const nsCString& aNodeId,
@@ -679,7 +675,13 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     tags.AppendElement(NS_LITERAL_CSTRING("fake"));
 
     UniquePtr<GetGMPDecryptorCallback> callback(
-      new CreateDecryptorDone(this, aContinuation));
+      new CreateDecryptorDone(this));
+
+    // Continue after the OnSetDecryptorId message, so that we don't
+    // get warnings in the async shutdown tests due to receiving the
+    // SetDecryptorId message after we've started shutdown.
+    mSetDecryptorIdContinuation = aContinuation;
+
     nsresult rv =
       service->GetGMPDecryptor(nullptr, &tags, mNodeId, Move(callback));
     EXPECT_TRUE(NS_SUCCEEDED(rv));
@@ -1373,6 +1375,16 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     }
   }
 
+  void SetDecryptorId(uint32_t aId) override
+  {
+    if (!mSetDecryptorIdContinuation) {
+      return;
+    }
+    nsCOMPtr<nsIThread> thread(GetGMPThread());
+    thread->Dispatch(mSetDecryptorIdContinuation, NS_DISPATCH_NORMAL);
+    mSetDecryptorIdContinuation = nullptr;
+  }
+
   void SetSessionId(uint32_t aCreateSessionToken,
                     const nsCString& aSessionId) override { }
   void ResolveLoadSessionPromise(uint32_t aPromiseId,
@@ -1415,6 +1427,8 @@ private:
   };
 
   nsTArray<ExpectedMessage> mExpected;
+
+  RefPtr<nsIRunnable> mSetDecryptorIdContinuation;
 
   GMPDecryptorProxy* mDecryptor;
   Monitor mMonitor;
