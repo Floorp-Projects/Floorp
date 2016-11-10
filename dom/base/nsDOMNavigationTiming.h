@@ -97,6 +97,9 @@ public:
   void NotifyDOMComplete(nsIURI* aURI);
   void NotifyDOMContentLoadedStart(nsIURI* aURI);
   void NotifyDOMContentLoadedEnd(nsIURI* aURI);
+
+  void NotifyNonBlankPaint();
+
   DOMTimeMilliSec TimeStampToDOM(mozilla::TimeStamp aStamp) const;
 
   inline DOMHighResTimeStamp TimeStampToDOMHighRes(mozilla::TimeStamp aStamp)
@@ -117,6 +120,7 @@ private:
   Type mNavigationType;
   DOMHighResTimeStamp mNavigationStartHighRes;
   mozilla::TimeStamp mNavigationStartTimeStamp;
+  mozilla::TimeStamp mNonBlankPaintTimeStamp;
   DOMTimeMilliSec DurationFromStart();
 
   DOMTimeMilliSec mBeforeUnloadStart;
