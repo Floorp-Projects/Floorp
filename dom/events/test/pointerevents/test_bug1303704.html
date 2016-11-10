@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1303704
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1303704</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1303704">Mozilla Bug 1303704</a>
+<p id="display"></p>
+<a id="link1" href="http://www.google.com">Link 1</a>
+<script type="text/javascript">
+
+/** Test for Bug 1303704 **/
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  let link1 = window.document.getElementById("link1");
+  let mouseEvents = ["mousedown", "mouseup", "mousemove"];
+
+  link1.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    is(e.defaultPrevented, true, "defaultPrevented should be true");
+  }, false);
+
+  mouseEvents.forEach((elm, index, arr) => {
+    link1.addEventListener(elm, () => {
+      ok(false, "Should not receive " + elm + " after preventDefault on pointerdown");
+    }, false);
+  });
+
+  link1.addEventListener("click", (e) => {
+    e.preventDefault();
+    SimpleTest.finish();
+  }, false);
+
+  synthesizeMouseAtCenter(link1, { type: "mousedown",
+                                   inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE });
+  synthesizeMouseAtCenter(link1, { type: "mousemove",
+                                   inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE });
+  synthesizeMouseAtCenter(link1, { type: "mouseup",
+                                   inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE });
+}
+
+SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true]]}, runTests);
+
+</script>
+</body>
+</html>
