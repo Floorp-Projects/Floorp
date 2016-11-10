@@ -71,8 +71,12 @@ class Wait(object):
         """
 
         self.marionette = marionette
-        self.timeout = timeout or (self.marionette.timeout and
-                                   self.marionette.timeout / 1000.0) or DEFAULT_TIMEOUT
+        self.timeout = timeout
+        if self.timeout is None:
+            if self.marionette.default_timeouts is not None:
+                self.timeout = self.marionette.default_timeouts.get("search")
+            else:
+                self.timeout = DEFAULT_TIMEOUT
         self.clock = clock or SystemClock()
         self.end = self.clock.now + self.timeout
         self.interval = interval
