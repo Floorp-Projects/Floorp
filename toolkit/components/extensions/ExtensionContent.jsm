@@ -45,20 +45,27 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
                                   "resource://gre/modules/WebNavigationFrames.jsm");
 
 Cu.import("resource://gre/modules/ExtensionChild.jsm");
-
+Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-var {
-  runSafeSyncWithoutClone,
-  defineLazyGetter,
-  BaseContext,
+
+const {
   LocaleData,
-  Messenger,
+  defineLazyGetter,
   flushJarCache,
   getInnerWindowID,
   promiseDocumentReady,
-  ChildAPIManager,
-  SchemaAPIManager,
+  runSafeSyncWithoutClone,
 } = ExtensionUtils;
+
+const {
+  BaseContext,
+  SchemaAPIManager,
+} = ExtensionCommon;
+
+const {
+  ChildAPIManager,
+  Messenger,
+} = ExtensionChild;
 
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
 
