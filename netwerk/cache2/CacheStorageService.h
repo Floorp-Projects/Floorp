@@ -111,6 +111,8 @@ public:
   // Invokes OnEntryInfo for the given aEntry, synchronously.
   static void GetCacheEntryInfo(CacheEntry* aEntry, EntryInfoCallback *aVisitor);
 
+  static uint32_t CacheQueueSize(bool highPriority);
+
   // Memory reporting
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;

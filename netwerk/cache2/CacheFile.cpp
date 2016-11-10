@@ -1231,6 +1231,17 @@ CacheFile::GetFetchCount(uint32_t *_retval)
 }
 
 nsresult
+CacheFile::GetDiskStorageSizeInKB(uint32_t *aDiskStorageSize)
+{
+  if (!mHandle) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aDiskStorageSize = mHandle->FileSizeInK();
+  return NS_OK;
+}
+
+nsresult
 CacheFile::OnFetched()
 {
   CacheFileAutoLock lock(this);
