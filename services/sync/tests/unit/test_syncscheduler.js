@@ -57,32 +57,25 @@ function sync_httpd_setup() {
   });
 }
 
-function setUp(server) {
-  let deferred = Promise.defer();
-  configureIdentity({username: "johndoe"}).then(() => {
-    Service.clusterURL = server.baseURI + "/";
+async function setUp(server) {
+  await configureIdentity({username: "johndoe"});
 
-    generateNewKeys(Service.collectionKeys);
-    let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
-    serverKeys.encrypt(Service.identity.syncKeyBundle);
-    let result = serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success;
-    deferred.resolve(result);
-  });
-  return deferred.promise;
+  Service.clusterURL = server.baseURI + "/";
+
+  generateNewKeys(Service.collectionKeys);
+  let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
+  serverKeys.encrypt(Service.identity.syncKeyBundle);
+  let result = serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success;
+  return result;
 }
 
-function cleanUpAndGo(server) {
-  let deferred = Promise.defer();
-  Utils.nextTick(function () {
-    clientsEngine._store.wipe();
-    Service.startOver();
-    if (server) {
-      server.stop(deferred.resolve);
-    } else {
-      deferred.resolve();
-    }
-  });
-  return deferred.promise;
+async function cleanUpAndGo(server) {
+  await promiseNextTick();
+  clientsEngine._store.wipe();
+  Service.startOver();
+  if (server) {
+    await promiseStopServer(server);
+  }
 }
 
 function run_test() {
@@ -174,7 +167,7 @@ add_test(function test_prefAttributes() {
   run_next_test();
 });
 
-add_identity_test(this, function* test_updateClientMode() {
+add_identity_test(this, async function test_updateClientMode() {
   _("Test updateClientMode adjusts scheduling attributes based on # of clients appropriately");
   do_check_eq(scheduler.syncThreshold, SINGLE_USER_THRESHOLD);
   do_check_eq(scheduler.syncInterval, scheduler.singleDeviceInterval);
@@ -201,10 +194,10 @@ add_identity_test(this, function* test_updateClientMode() {
   do_check_false(scheduler.numClients > 1);
   do_check_false(scheduler.idle);
 
-  yield cleanUpAndGo();
+  await cleanUpAndGo();
 });
 
-add_identity_test(this, function* test_masterpassword_locked_retry_interval() {
+add_identity_test(this, async function test_masterpassword_locked_retry_interval() {
   _("Test Status.login = MASTER_PASSWORD_LOCKED results in reschedule at MASTER_PASSWORD interval");
   let loginFailed = false;
   Svc.Obs.add("weave:service:login:error", function onLoginError() {
@@ -227,7 +220,7 @@ add_identity_test(this, function* test_masterpassword_locked_retry_interval() {
   };
 
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   Service.sync();
 
@@ -238,10 +231,10 @@ add_identity_test(this, function* test_masterpassword_locked_retry_interval() {
   Service.verifyLogin = oldVerifyLogin;
   SyncScheduler.prototype.scheduleAtInterval = oldScheduleAtInterval;
 
-  yield cleanUpAndGo(server);
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_calculateBackoff() {
+add_identity_test(this, async function test_calculateBackoff() {
   do_check_eq(Status.backoffInterval, 0);
 
   // Test no interval larger than the maximum backoff is used if
@@ -260,25 +253,22 @@ add_identity_test(this, function* test_calculateBackoff() {
 
   do_check_eq(backoffInterval, MAXIMUM_BACKOFF_INTERVAL + 10);
 
-  yield cleanUpAndGo();
+  await cleanUpAndGo();
 });
 
-add_identity_test(this, function* test_scheduleNextSync_nowOrPast() {
-  let deferred = Promise.defer();
-  Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
-    Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
-    cleanUpAndGo(server).then(deferred.resolve);
-  });
+add_identity_test(this, async function test_scheduleNextSync_nowOrPast() {
+  let promiseObserved = promiseOneObserver("weave:service:sync:finish");
 
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   // We're late for a sync...
   scheduler.scheduleNextSync(-1);
-  yield deferred.promise;
+  await promiseObserved;
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_scheduleNextSync_future_noBackoff() {
+add_identity_test(this, async function test_scheduleNextSync_future_noBackoff() {
   _("scheduleNextSync() uses the current syncInterval if no interval is provided.");
   // Test backoffInterval is 0 as expected.
   do_check_eq(Status.backoffInterval, 0);
@@ -324,10 +314,10 @@ add_identity_test(this, function* test_scheduleNextSync_future_noBackoff() {
   do_check_true(scheduler.nextSync <= Date.now() + 1);
   do_check_eq(scheduler.syncTimer.delay, 1);
 
-  yield cleanUpAndGo();
+  await cleanUpAndGo();
 });
 
-add_identity_test(this, function* test_scheduleNextSync_future_backoff() {
+add_identity_test(this, async function test_scheduleNextSync_future_backoff() {
  _("scheduleNextSync() will honour backoff in all scheduling requests.");
   // Let's take a backoff interval that's bigger than the default sync interval.
   const BACKOFF = 7337;
@@ -374,12 +364,12 @@ add_identity_test(this, function* test_scheduleNextSync_future_backoff() {
   do_check_true(scheduler.nextSync <= Date.now() + Status.backoffInterval);
   do_check_eq(scheduler.syncTimer.delay, Status.backoffInterval);
 
-  yield cleanUpAndGo();
+  await cleanUpAndGo();
 });
 
-add_identity_test(this, function* test_handleSyncError() {
+add_identity_test(this, async function test_handleSyncError() {
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   // Force sync to fail.
   Svc.Prefs.set("firstSync", "notReady");
@@ -433,19 +423,16 @@ add_identity_test(this, function* test_handleSyncError() {
   scheduler.syncTimer.clear();
 
   _("Arrange for a successful sync to reset the scheduler error count");
-  let deferred = Promise.defer();
-  Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
-    Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
-    cleanUpAndGo(server).then(deferred.resolve);
-  });
+  let promiseObserved = promiseOneObserver("weave:service:sync:finish");
   Svc.Prefs.set("firstSync", "wipeRemote");
   scheduler.scheduleNextSync(-1);
-  yield deferred.promise;
+  await promiseObserved;
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_client_sync_finish_updateClientMode() {
+add_identity_test(this, async function test_client_sync_finish_updateClientMode() {
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   // Confirm defaults.
   do_check_eq(scheduler.syncThreshold, SINGLE_USER_THRESHOLD);
@@ -474,27 +461,22 @@ add_identity_test(this, function* test_client_sync_finish_updateClientMode() {
   do_check_false(scheduler.numClients > 1);
   do_check_false(scheduler.idle);
 
-  yield cleanUpAndGo(server);
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_autoconnect_nextSync_past() {
-  let deferred = Promise.defer();
+add_identity_test(this, async function test_autoconnect_nextSync_past() {
+  let promiseObserved = promiseOneObserver("weave:service:sync:finish");
   // nextSync will be 0 by default, so it's way in the past.
 
-  Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
-    Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
-    cleanUpAndGo(server).then(deferred.resolve);
-  });
-
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   scheduler.delayedAutoConnect(0);
-  yield deferred.promise;
+  await promiseObserved;
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_autoconnect_nextSync_future() {
-  let deferred = Promise.defer();
+add_identity_test(this, async function test_autoconnect_nextSync_future() {
   let previousSync = Date.now() + scheduler.syncInterval / 2;
   scheduler.nextSync = previousSync;
   // nextSync rounds to the nearest second.
@@ -507,24 +489,22 @@ add_identity_test(this, function* test_autoconnect_nextSync_future() {
   }
   Svc.Obs.add("weave:service:login:start", onLoginStart);
 
-  waitForZeroTimer(function () {
-    do_check_eq(scheduler.nextSync, expectedSync);
-    do_check_true(scheduler.syncTimer.delay >= expectedInterval);
-
-    Svc.Obs.remove("weave:service:login:start", onLoginStart);
-    cleanUpAndGo().then(deferred.resolve);
-  });
-
-  yield configureIdentity({username: "johndoe"});
+  await configureIdentity({username: "johndoe"});
   scheduler.delayedAutoConnect(0);
-  yield deferred.promise;
+  await promiseZeroTimer();
+
+  do_check_eq(scheduler.nextSync, expectedSync);
+  do_check_true(scheduler.syncTimer.delay >= expectedInterval);
+
+  Svc.Obs.remove("weave:service:login:start", onLoginStart);
+  await cleanUpAndGo();
 });
 
 // XXX - this test can't be run with the browserid identity as it relies
 // on the syncKey getter behaving in a certain way...
-add_task(function* test_autoconnect_mp_locked() {
+add_task(async function test_autoconnect_mp_locked() {
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   // Pretend user did not unlock master password.
   let origLocked = Utils.mpLocked;
@@ -538,30 +518,28 @@ add_task(function* test_autoconnect_mp_locked() {
     throw "User canceled Master Password entry";
   });
 
-  let deferred = Promise.defer();
   // A locked master password will still trigger a sync, but then we'll hit
   // MASTER_PASSWORD_LOCKED and hence MASTER_PASSWORD_LOCKED_RETRY_INTERVAL.
-  Svc.Obs.add("weave:service:login:error", function onLoginError() {
-    Svc.Obs.remove("weave:service:login:error", onLoginError);
-    Utils.nextTick(function aLittleBitAfterLoginError() {
-      do_check_eq(Status.login, MASTER_PASSWORD_LOCKED);
-
-      Utils.mpLocked = origLocked;
-      delete Service.identity.syncKey;
-      Service.identity.__defineGetter__("syncKey", origGetter);
-      Service.identity.__defineSetter__("syncKey", origSetter);
-
-      cleanUpAndGo(server).then(deferred.resolve);
-    });
-  });
+  let promiseObserved = promiseOneObserver("weave:service:login:error");
 
   scheduler.delayedAutoConnect(0);
-  yield deferred.promise;
+  await promiseObserved;
+
+  await promiseNextTick();
+
+  do_check_eq(Status.login, MASTER_PASSWORD_LOCKED);
+
+  Utils.mpLocked = origLocked;
+  delete Service.identity.syncKey;
+  Service.identity.__defineGetter__("syncKey", origGetter);
+  Service.identity.__defineSetter__("syncKey", origSetter);
+
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_no_autoconnect_during_wizard() {
+add_identity_test(this, async function test_no_autoconnect_during_wizard() {
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   // Simulate the Sync setup wizard.
   Svc.Prefs.set("firstSync", "notReady");
@@ -572,17 +550,13 @@ add_identity_test(this, function* test_no_autoconnect_during_wizard() {
   }
   Svc.Obs.add("weave:service:login:start", onLoginStart);
 
-  let deferred = Promise.defer();
-  waitForZeroTimer(function () {
-    Svc.Obs.remove("weave:service:login:start", onLoginStart);
-    cleanUpAndGo(server).then(deferred.resolve);
-  });
-
   scheduler.delayedAutoConnect(0);
-  yield deferred.promise;
+  await promiseZeroTimer();
+  Svc.Obs.remove("weave:service:login:start", onLoginStart);
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_no_autoconnect_status_not_ok() {
+add_identity_test(this, async function test_no_autoconnect_status_not_ok() {
   let server = sync_httpd_setup();
 
   // Ensure we don't actually try to sync (or log in for that matter).
@@ -591,41 +565,34 @@ add_identity_test(this, function* test_no_autoconnect_status_not_ok() {
   }
   Svc.Obs.add("weave:service:login:start", onLoginStart);
 
-  let deferred = Promise.defer();
-  waitForZeroTimer(function () {
-    Svc.Obs.remove("weave:service:login:start", onLoginStart);
-
-    do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
-    do_check_eq(Status.login, LOGIN_FAILED_NO_USERNAME);
-
-    cleanUpAndGo(server).then(deferred.resolve);
-  });
-
   scheduler.delayedAutoConnect(0);
-  yield deferred.promise;
+  await promiseZeroTimer();
+  Svc.Obs.remove("weave:service:login:start", onLoginStart);
+
+  do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
+  do_check_eq(Status.login, LOGIN_FAILED_NO_USERNAME);
+
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_autoconnectDelay_pref() {
-  let deferred = Promise.defer();
-  Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
-    Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
-    cleanUpAndGo(server).then(deferred.resolve);
-  });
+add_identity_test(this, async function test_autoconnectDelay_pref() {
+  let promiseObserved = promiseOneObserver("weave:service:sync:finish");
 
   Svc.Prefs.set("autoconnectDelay", 1);
 
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   Svc.Obs.notify("weave:service:ready");
 
   // autoconnectDelay pref is multiplied by 1000.
   do_check_eq(scheduler._autoTimer.delay, 1000);
   do_check_eq(Status.service, STATUS_OK);
-  yield deferred.promise;
+  await promiseObserved;
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_idle_adjustSyncInterval() {
+add_identity_test(this, async function test_idle_adjustSyncInterval() {
   // Confirm defaults.
   do_check_eq(scheduler.idle, false);
 
@@ -642,10 +609,10 @@ add_identity_test(this, function* test_idle_adjustSyncInterval() {
   do_check_eq(scheduler.idle, true);
   do_check_eq(scheduler.syncInterval, scheduler.idleInterval);
 
-  yield cleanUpAndGo();
+  await cleanUpAndGo();
 });
 
-add_identity_test(this, function* test_back_triggersSync() {
+add_identity_test(this, async function test_back_triggersSync() {
   // Confirm defaults.
   do_check_false(scheduler.idle);
   do_check_eq(Status.backoffInterval, 0);
@@ -655,20 +622,17 @@ add_identity_test(this, function* test_back_triggersSync() {
   scheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
   do_check_true(scheduler.idle);
 
-  let deferred = Promise.defer();
   // We don't actually expect the sync (or the login, for that matter) to
   // succeed. We just want to ensure that it was attempted.
-  Svc.Obs.add("weave:service:login:error", function onLoginError() {
-    Svc.Obs.remove("weave:service:login:error", onLoginError);
-    cleanUpAndGo().then(deferred.resolve);
-  });
+  let promiseObserved = promiseOneObserver("weave:service:login:error");
 
   // Send an 'active' event to trigger sync soonish.
   scheduler.observe(null, "active", Svc.Prefs.get("scheduler.idleTime"));
-  yield deferred.promise;
+  await promiseObserved;
+  await cleanUpAndGo();
 });
 
-add_identity_test(this, function* test_active_triggersSync_observesBackoff() {
+add_identity_test(this, async function test_active_triggersSync_observesBackoff() {
   // Confirm defaults.
   do_check_false(scheduler.idle);
 
@@ -684,22 +648,20 @@ add_identity_test(this, function* test_active_triggersSync_observesBackoff() {
   }
   Svc.Obs.add("weave:service:login:start", onLoginStart);
 
-  let deferred = Promise.defer();
-  timer = Utils.namedTimer(function () {
-    Svc.Obs.remove("weave:service:login:start", onLoginStart);
-
-    do_check_true(scheduler.nextSync <= Date.now() + Status.backoffInterval);
-    do_check_eq(scheduler.syncTimer.delay, Status.backoffInterval);
-
-    cleanUpAndGo().then(deferred.resolve);
-  }, IDLE_OBSERVER_BACK_DELAY * 1.5, {}, "timer");
+  let promiseTimer = promiseNamedTimer(IDLE_OBSERVER_BACK_DELAY * 1.5, {}, "timer");
 
   // Send an 'active' event to try to trigger sync soonish.
   scheduler.observe(null, "active", Svc.Prefs.get("scheduler.idleTime"));
-  yield deferred.promise;
+  await promiseTimer;
+  Svc.Obs.remove("weave:service:login:start", onLoginStart);
+
+  do_check_true(scheduler.nextSync <= Date.now() + Status.backoffInterval);
+  do_check_eq(scheduler.syncTimer.delay, Status.backoffInterval);
+
+  await cleanUpAndGo();
 });
 
-add_identity_test(this, function* test_back_debouncing() {
+add_identity_test(this, async function test_back_debouncing() {
   _("Ensure spurious back-then-idle events, as observed on OS X, don't trigger a sync.");
 
   // Confirm defaults.
@@ -719,19 +681,16 @@ add_identity_test(this, function* test_back_debouncing() {
   scheduler.observe(null, "active", Svc.Prefs.get("scheduler.idleTime"));
   scheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
 
-  let deferred = Promise.defer();
-  timer = Utils.namedTimer(function () {
-    Svc.Obs.remove("weave:service:login:start", onLoginStart);
-    cleanUpAndGo().then(deferred.resolve);
-  }, IDLE_OBSERVER_BACK_DELAY * 1.5, {}, "timer");
-  yield deferred.promise;
+  await promiseNamedTimer(IDLE_OBSERVER_BACK_DELAY * 1.5, {}, "timer");
+  Svc.Obs.remove("weave:service:login:start", onLoginStart);
+  await cleanUpAndGo();
 });
 
-add_identity_test(this, function* test_no_sync_node() {
+add_identity_test(this, async function test_no_sync_node() {
   // Test when Status.sync == NO_SYNC_NODE_FOUND
   // it is not overwritten on sync:finish
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   Service.serverURL = server.baseURI + "/";
 
@@ -739,10 +698,10 @@ add_identity_test(this, function* test_no_sync_node() {
   do_check_eq(Status.sync, NO_SYNC_NODE_FOUND);
   do_check_eq(scheduler.syncTimer.delay, NO_SYNC_NODE_INTERVAL);
 
-  yield cleanUpAndGo(server);
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_sync_failed_partial_500s() {
+add_identity_test(this, async function test_sync_failed_partial_500s() {
   _("Test a 5xx status calls handleSyncError.");
   scheduler._syncErrors = MAX_ERROR_COUNT_BEFORE_BACKOFF;
   let server = sync_httpd_setup();
@@ -753,7 +712,7 @@ add_identity_test(this, function* test_sync_failed_partial_500s() {
 
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
 
-  do_check_true(yield setUp(server));
+  do_check_true(await setUp(server));
 
   Service.sync();
 
@@ -766,10 +725,10 @@ add_identity_test(this, function* test_sync_failed_partial_500s() {
   do_check_true(scheduler.nextSync <= (Date.now() + maxInterval));
   do_check_true(scheduler.syncTimer.delay <= maxInterval);
 
-  yield cleanUpAndGo(server);
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_sync_failed_partial_400s() {
+add_identity_test(this, async function test_sync_failed_partial_400s() {
   _("Test a non-5xx status doesn't call handleSyncError.");
   scheduler._syncErrors = MAX_ERROR_COUNT_BEFORE_BACKOFF;
   let server = sync_httpd_setup();
@@ -783,7 +742,7 @@ add_identity_test(this, function* test_sync_failed_partial_400s() {
 
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
 
-  do_check_true(yield setUp(server));
+  do_check_true(await setUp(server));
 
   Service.sync();
 
@@ -796,12 +755,12 @@ add_identity_test(this, function* test_sync_failed_partial_400s() {
   do_check_true(scheduler.nextSync <= (Date.now() + scheduler.activeInterval));
   do_check_true(scheduler.syncTimer.delay <= scheduler.activeInterval);
 
-  yield cleanUpAndGo(server);
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_sync_X_Weave_Backoff() {
+add_identity_test(this, async function test_sync_X_Weave_Backoff() {
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   // Use an odd value on purpose so that it doesn't happen to coincide with one
   // of the sync intervals.
@@ -851,12 +810,12 @@ add_identity_test(this, function* test_sync_X_Weave_Backoff() {
   do_check_true(scheduler.nextSync >= Date.now() + minimumExpectedDelay);
   do_check_true(scheduler.syncTimer.delay >= minimumExpectedDelay);
 
-  yield cleanUpAndGo(server);
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_sync_503_Retry_After() {
+add_identity_test(this, async function test_sync_503_Retry_After() {
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   // Use an odd value on purpose so that it doesn't happen to coincide with one
   // of the sync intervals.
@@ -910,33 +869,18 @@ add_identity_test(this, function* test_sync_503_Retry_After() {
   do_check_true(scheduler.nextSync >= Date.now() + minimumExpectedDelay);
   do_check_true(scheduler.syncTimer.delay >= minimumExpectedDelay);
 
-  yield cleanUpAndGo(server);
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_loginError_recoverable_reschedules() {
+add_identity_test(this, async function test_loginError_recoverable_reschedules() {
   _("Verify that a recoverable login error schedules a new sync.");
-  yield configureIdentity({username: "johndoe"});
+  await configureIdentity({username: "johndoe"});
   Service.serverURL = "http://localhost:1234/";
   Service.clusterURL = Service.serverURL;
   Service.persistLogin();
   Status.resetSync(); // reset Status.login
 
-  let deferred = Promise.defer();
-  Svc.Obs.add("weave:service:login:error", function onLoginError() {
-    Svc.Obs.remove("weave:service:login:error", onLoginError);
-    Utils.nextTick(function aLittleBitAfterLoginError() {
-      do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
-
-      let expectedNextSync = Date.now() + scheduler.syncInterval;
-      do_check_true(scheduler.nextSync > Date.now());
-      do_check_true(scheduler.nextSync <= expectedNextSync);
-      do_check_true(scheduler.syncTimer.delay > 0);
-      do_check_true(scheduler.syncTimer.delay <= scheduler.syncInterval);
-
-      Svc.Obs.remove("weave:service:sync:start", onSyncStart);
-      cleanUpAndGo().then(deferred.resolve);
-    });
-  });
+  let promiseObserved = promiseOneObserver("weave:service:login:error");
 
   // Let's set it up so that a sync is overdue, both in terms of previously
   // scheduled syncs and the global score. We still do not expect an immediate
@@ -954,12 +898,24 @@ add_identity_test(this, function* test_loginError_recoverable_reschedules() {
   do_check_eq(Status.login, LOGIN_SUCCEEDED);
 
   scheduler.scheduleNextSync(0);
-  yield deferred.promise;
+  await promiseObserved;
+  await promiseNextTick();
+
+  do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+
+  let expectedNextSync = Date.now() + scheduler.syncInterval;
+  do_check_true(scheduler.nextSync > Date.now());
+  do_check_true(scheduler.nextSync <= expectedNextSync);
+  do_check_true(scheduler.syncTimer.delay > 0);
+  do_check_true(scheduler.syncTimer.delay <= scheduler.syncInterval);
+
+  Svc.Obs.remove("weave:service:sync:start", onSyncStart);
+  await cleanUpAndGo()
 });
 
-add_identity_test(this, function* test_loginError_fatal_clearsTriggers() {
+add_identity_test(this, async function test_loginError_fatal_clearsTriggers() {
   _("Verify that a fatal login error clears sync triggers.");
-  yield configureIdentity({username: "johndoe"});
+  await configureIdentity({username: "johndoe"});
 
   let server = httpd_setup({
     "/1.1/johndoe/info/collections": httpd_handler(401, "Unauthorized")
@@ -970,29 +926,7 @@ add_identity_test(this, function* test_loginError_fatal_clearsTriggers() {
   Service.persistLogin();
   Status.resetSync(); // reset Status.login
 
-  let deferred = Promise.defer();
-  Svc.Obs.add("weave:service:login:error", function onLoginError() {
-    Svc.Obs.remove("weave:service:login:error", onLoginError);
-    Utils.nextTick(function aLittleBitAfterLoginError() {
-
-      if (isConfiguredWithLegacyIdentity()) {
-        // for the "legacy" identity, a 401 on info/collections means the
-        // password is wrong, so we enter a "login rejected" state.
-        do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
-
-        do_check_eq(scheduler.nextSync, 0);
-        do_check_eq(scheduler.syncTimer, null);
-      } else {
-        // For the FxA identity, a 401 on info/collections means a transient
-        // error, probably due to an inability to fetch a token.
-        do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
-        // syncs should still be scheduled.
-        do_check_true(scheduler.nextSync > Date.now());
-        do_check_true(scheduler.syncTimer.delay > 0);
-      }
-      cleanUpAndGo(server).then(deferred.resolve);
-    });
-  });
+  let promiseObserved = promiseOneObserver("weave:service:login:error");
 
   // Sanity check.
   do_check_eq(scheduler.nextSync, 0);
@@ -1001,10 +935,28 @@ add_identity_test(this, function* test_loginError_fatal_clearsTriggers() {
   do_check_eq(Status.login, LOGIN_SUCCEEDED);
 
   scheduler.scheduleNextSync(0);
-  yield deferred.promise;
+  await promiseObserved;
+  await promiseNextTick();
+
+  if (isConfiguredWithLegacyIdentity()) {
+    // for the "legacy" identity, a 401 on info/collections means the
+    // password is wrong, so we enter a "login rejected" state.
+    do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
+
+    do_check_eq(scheduler.nextSync, 0);
+    do_check_eq(scheduler.syncTimer, null);
+  } else {
+    // For the FxA identity, a 401 on info/collections means a transient
+    // error, probably due to an inability to fetch a token.
+    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+    // syncs should still be scheduled.
+    do_check_true(scheduler.nextSync > Date.now());
+    do_check_true(scheduler.syncTimer.delay > 0);
+  }
+  await cleanUpAndGo(server);
 });
 
-add_identity_test(this, function* test_proper_interval_on_only_failing() {
+add_identity_test(this, async function test_proper_interval_on_only_failing() {
   _("Ensure proper behavior when only failed records are applied.");
 
   // If an engine reports that no records succeeded, we shouldn't decrease the
@@ -1021,13 +973,8 @@ add_identity_test(this, function* test_proper_interval_on_only_failing() {
     reconciled: 0
   });
 
-  let deferred = Promise.defer();
-  Utils.nextTick(function() {
-    scheduler.adjustSyncInterval();
-    do_check_false(scheduler.hasIncomingItems);
-    do_check_eq(scheduler.syncInterval, scheduler.singleDeviceInterval);
-
-    deferred.resolve();
-  });
-  yield deferred.promise;
+  await promiseNextTick();
+  scheduler.adjustSyncInterval();
+  do_check_false(scheduler.hasIncomingItems);
+  do_check_eq(scheduler.syncInterval, scheduler.singleDeviceInterval);
 });

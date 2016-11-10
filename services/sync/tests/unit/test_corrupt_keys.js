@@ -12,9 +12,8 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
-Cu.import("resource://gre/modules/Promise.jsm");
 
-add_task(function* test_locally_changed_keys() {
+add_task(async function test_locally_changed_keys() {
   let passphrase = "abcdeabcdeabcdeabcdeabcdea";
 
   let hmacErrorCount = 0;
@@ -87,7 +86,7 @@ add_task(function* test_locally_changed_keys() {
     do_check_true(Service.isLoggedIn);
 
     // Sync should upload records.
-    yield sync_and_validate_telem();
+    await sync_and_validate_telem();
 
     // Tabs exist.
     _("Tabs modified: " + johndoe.modified("tabs"));
@@ -140,7 +139,7 @@ add_task(function* test_locally_changed_keys() {
 
     _("HMAC error count: " + hmacErrorCount);
     // Now syncing should succeed, after one HMAC error.
-    let ping = yield wait_for_ping(() => Service.sync(), true);
+    let ping = await wait_for_ping(() => Service.sync(), true);
     equal(ping.engines.find(e => e.name == "history").incoming.applied, 5);
 
     do_check_eq(hmacErrorCount, 1);
@@ -148,11 +147,11 @@ add_task(function* test_locally_changed_keys() {
 
     // And look! We downloaded history!
     let store = Service.engineManager.get("history")._store;
-    do_check_true(yield promiseIsURIVisited("http://foo/bar?record-no--0"));
-    do_check_true(yield promiseIsURIVisited("http://foo/bar?record-no--1"));
-    do_check_true(yield promiseIsURIVisited("http://foo/bar?record-no--2"));
-    do_check_true(yield promiseIsURIVisited("http://foo/bar?record-no--3"));
-    do_check_true(yield promiseIsURIVisited("http://foo/bar?record-no--4"));
+    do_check_true(await promiseIsURIVisited("http://foo/bar?record-no--0"));
+    do_check_true(await promiseIsURIVisited("http://foo/bar?record-no--1"));
+    do_check_true(await promiseIsURIVisited("http://foo/bar?record-no--2"));
+    do_check_true(await promiseIsURIVisited("http://foo/bar?record-no--3"));
+    do_check_true(await promiseIsURIVisited("http://foo/bar?record-no--4"));
     do_check_eq(hmacErrorCount, 1);
 
     _("Busting some new server values.");
@@ -186,23 +185,21 @@ add_task(function* test_locally_changed_keys() {
     Service.lastHMACEvent = 0;
 
     _("Syncing...");
-    ping = yield sync_and_validate_telem(true);
+    ping = await sync_and_validate_telem(true);
 
     do_check_eq(ping.engines.find(e => e.name == "history").incoming.failed, 5);
     _("Keys now: " + Service.collectionKeys.keyForCollection("history").keyPair);
     _("Server keys have been updated, and we skipped over 5 more HMAC errors without adjusting history.");
     do_check_true(johndoe.modified("crypto") > old_key_time);
     do_check_eq(hmacErrorCount, 6);
-    do_check_false(yield promiseIsURIVisited("http://foo/bar?record-no--5"));
-    do_check_false(yield promiseIsURIVisited("http://foo/bar?record-no--6"));
-    do_check_false(yield promiseIsURIVisited("http://foo/bar?record-no--7"));
-    do_check_false(yield promiseIsURIVisited("http://foo/bar?record-no--8"));
-    do_check_false(yield promiseIsURIVisited("http://foo/bar?record-no--9"));
+    do_check_false(await promiseIsURIVisited("http://foo/bar?record-no--5"));
+    do_check_false(await promiseIsURIVisited("http://foo/bar?record-no--6"));
+    do_check_false(await promiseIsURIVisited("http://foo/bar?record-no--7"));
+    do_check_false(await promiseIsURIVisited("http://foo/bar?record-no--8"));
+    do_check_false(await promiseIsURIVisited("http://foo/bar?record-no--9"));
   } finally {
     Svc.Prefs.resetBranch("");
-    let deferred = Promise.defer();
-    server.stop(deferred.resolve);
-    yield deferred.promise;
+    await promiseStopServer(server);
   }
 });
 
@@ -224,10 +221,9 @@ function run_test() {
  * @rejects JavaScript exception.
  */
 function promiseIsURIVisited(url) {
-  let deferred = Promise.defer();
-  PlacesUtils.asyncHistory.isURIVisited(Utils.makeURI(url), function(aURI, aIsVisited) {
-    deferred.resolve(aIsVisited);
+  return new Promise(resolve => {
+    PlacesUtils.asyncHistory.isURIVisited(Utils.makeURI(url), function(aURI, aIsVisited) {
+      resolve(aIsVisited);
+    });
   });
-
-  return deferred.promise;
 }
