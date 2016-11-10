@@ -30,7 +30,6 @@ GeckoSimplePrograms([
     'TestINIParser',
     'TestRacingServiceManager',
     'TestRegistrationOrder',
-    'TestThreadPoolListener',
     'TestUnicodeArguments',
 ])
 
