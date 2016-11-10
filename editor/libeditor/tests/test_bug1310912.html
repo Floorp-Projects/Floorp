@@ -24,11 +24,6 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   let elm = document.getElementById("editable1");
 
-  elm.addEventListener("input", () => {
-    let range = window.getSelection().getRangeAt(0);
-    range.insertNode(document.createTextNode(""));
-  });
-
   elm.focus();
   let sel = window.getSelection();
   sel.collapse(elm.childNodes[0], elm.textContent.length);
@@ -44,6 +39,7 @@ SimpleTest.waitForFocus(function() {
   });
   ok(elm.textContent == "ABCDEF", "composing text should be set");
 
+  window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
   synthesizeCompositionChange({
     composition: {
       string: "GHI",
@@ -55,6 +51,7 @@ SimpleTest.waitForFocus(function() {
   });
   ok(elm.textContent == "ABCGHI", "composing text should be replaced");
 
+  window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
   synthesizeCompositionChange({
     composition: {
       string: "JKL",
@@ -66,6 +63,7 @@ SimpleTest.waitForFocus(function() {
   });
   ok(elm.textContent == "ABCJKL", "composing text should be replaced");
 
+  window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
   synthesizeCompositionChange({
     composition: {
       string: "MNO",
@@ -77,11 +75,15 @@ SimpleTest.waitForFocus(function() {
   });
   ok(elm.textContent == "ABCMNO", "composing text should be replaced");
 
+  window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
   synthesizeComposition({ type: "compositioncommitasis" });
   ok(elm.textContent == "ABCMNO", "composing text should be committed");
 
   synthesizeKey("Z", { accelKey: true });
   ok(elm.textContent == "ABC", "text should be undoed");
+
+  synthesizeKey("Z", { accelKey: true, shiftKey: true });
+  ok(elm.textContent == "ABCMNO", "text should be redoed");
 
   SimpleTest.finish();
 });
