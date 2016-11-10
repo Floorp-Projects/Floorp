@@ -922,10 +922,6 @@ function resetPrefs() {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDMAXERRORS);
   }
 
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_REQUIREBUILTIN)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_REQUIREBUILTIN);
-  }
-
   try {
     Services.prefs.deleteBranch(PREFBRANCH_APP_UPDATE_NEVER);
   }
