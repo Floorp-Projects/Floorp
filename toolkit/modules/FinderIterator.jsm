@@ -567,14 +567,7 @@ this.FinderIterator = {
       let frame = window.frames[i];
       // Don't count matches in hidden frames.
       let frameEl = frame && frame.frameElement;
-      if (!frameEl)
-        continue;
-      // Construct a range around the frame element to check its visiblity.
-      let range = window.document.createRange();
-      range.setStart(frameEl, 0);
-      range.setEnd(frameEl, 0);
-      // Pass `true` to flush layout.
-      if (!finder._fastFind.isRangeVisible(range, true))
+      if (!frameEl || !frameEl.getClientRects().length)
         continue;
       // All conditions pass, so push the current frame and its children on the
       // stack.
