@@ -32,11 +32,10 @@ stubPreparedMessages.set("new Date(0)", new ConsoleMessage({
 		}
 	},
 	"repeat": 1,
-	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"result\",\"level\":\"log\",\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj30\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}},\"repeatId\":null,\"stacktrace\":null,\"frame\":null,\"groupId\":null,\"userProvidedStyles\":null}",
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"result\",\"level\":\"log\",\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj30\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}},\"repeatId\":null,\"stacktrace\":null,\"frame\":null,\"groupId\":null}",
 	"stacktrace": null,
 	"frame": null,
-	"groupId": null,
-	"userProvidedStyles": null
+	"groupId": null
 }));
 
 stubPreparedMessages.set("asdf()", new ConsoleMessage({
@@ -50,38 +49,11 @@ stubPreparedMessages.set("asdf()", new ConsoleMessage({
 		"type": "undefined"
 	},
 	"repeat": 1,
-	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"result\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":{\"type\":\"undefined\"},\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":1},\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\",\"userProvidedStyles\":null}",
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"result\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":{\"type\":\"undefined\"},\"repeatId\":null,\"stacktrace\":null,\"frame\":null,\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\"}",
 	"stacktrace": null,
-	"frame": {
-		"source": "debugger eval code",
-		"line": 1,
-		"column": 1
-	},
+	"frame": null,
 	"groupId": null,
-	"exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
-	"userProvidedStyles": null
-}));
-
-stubPreparedMessages.set("1 + @", new ConsoleMessage({
-	"id": "1",
-	"allowRepeating": true,
-	"source": "javascript",
-	"type": "result",
-	"level": "error",
-	"messageText": "SyntaxError: illegal character",
-	"parameters": {
-		"type": "undefined"
-	},
-	"repeat": 1,
-	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"result\",\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":{\"type\":\"undefined\"},\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"userProvidedStyles\":null}",
-	"stacktrace": null,
-	"frame": {
-		"source": "debugger eval code",
-		"line": 1,
-		"column": 4
-	},
-	"groupId": null,
-	"userProvidedStyles": null
+	"exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default"
 }));
 
 
@@ -102,7 +74,6 @@ stubPackets.set("new Date(0)", {
 	},
 	"timestamp": 1476573073424,
 	"exception": null,
-	"frame": null,
 	"helperResult": null
 });
 
@@ -133,45 +104,6 @@ stubPackets.set("asdf()", {
 	},
 	"exceptionMessage": "ReferenceError: asdf is not defined",
 	"exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
-	"frame": {
-		"source": "debugger eval code",
-		"line": 1,
-		"column": 1
-	},
-	"helperResult": null
-});
-
-stubPackets.set("1 + @", {
-	"from": "server1.conn0.child1/consoleActor2",
-	"input": "1 + @",
-	"result": {
-		"type": "undefined"
-	},
-	"timestamp": 1478755616654,
-	"exception": {
-		"type": "object",
-		"actor": "server1.conn0.child1/obj33",
-		"class": "Error",
-		"extensible": true,
-		"frozen": false,
-		"sealed": false,
-		"ownPropertyLength": 4,
-		"preview": {
-			"kind": "Error",
-			"name": "SyntaxError",
-			"message": "illegal character",
-			"stack": "",
-			"fileName": "debugger eval code",
-			"lineNumber": 1,
-			"columnNumber": 4
-		}
-	},
-	"exceptionMessage": "SyntaxError: illegal character",
-	"frame": {
-		"source": "debugger eval code",
-		"line": 1,
-		"column": 4
-	},
 	"helperResult": null
 });
 
