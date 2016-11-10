@@ -166,6 +166,9 @@ module.exports = {
     // No using with
     "no-with": "error",
 
+    // No spacing inside rest or spread expressions
+    "rest-spread-spacing": "error",
+
     // Always require semicolon at end of statement
     // "semi": ["error", "always"],
 
