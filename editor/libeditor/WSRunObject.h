@@ -296,7 +296,7 @@ protected:
     char16_t mChar;
 
     WSPoint()
-      : mTextNode(0)
+      : mTextNode(nullptr)
       , mOffset(0)
       , mChar(0)
     {}

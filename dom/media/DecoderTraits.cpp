@@ -13,7 +13,6 @@
 #include "mozilla/Telemetry.h"
 
 #include "OggDecoder.h"
-#include "OggReader.h"
 #include "OggDemuxer.h"
 
 #include "WebMDecoder.h"
@@ -39,7 +38,6 @@
 
 #include "WaveDecoder.h"
 #include "WaveDemuxer.h"
-#include "WaveReader.h"
 
 #include "ADTSDecoder.h"
 #include "ADTSDemuxer.h"
@@ -66,7 +64,7 @@ CodecListContains(char const *const * aCodecs, const String& aCodec)
 
 static bool
 IsOggSupportedType(const nsACString& aType,
-                    const nsAString& aCodecs = EmptyString())
+                   const nsAString& aCodecs = EmptyString())
 {
   return OggDecoder::CanHandleMediaType(aType, aCodecs);
 }
@@ -75,34 +73,6 @@ static bool
 IsOggTypeAndEnabled(const nsACString& aType)
 {
   return IsOggSupportedType(aType);
-}
-
-// See http://www.rfc-editor.org/rfc/rfc2361.txt for the definitions
-// of WAVE media types and codec types. However, the audio/vnd.wave
-// MIME type described there is not used.
-static const char* const gWaveTypes[5] = {
-  "audio/x-wav",
-  "audio/wav",
-  "audio/wave",
-  "audio/x-pn-wav",
-  nullptr
-};
-
-static char const *const gWaveCodecs[4] = {
-  "1", // Microsoft PCM Format
-  "6", // aLaw Encoding
-  "7", // uLaw Encoding
-  nullptr
-};
-
-static bool
-IsWaveType(const nsACString& aType)
-{
-  if (!MediaDecoder::IsWaveEnabled()) {
-    return false;
-  }
-
-  return CodecListContains(gWaveTypes, aType);
 }
 
 static bool
@@ -205,8 +175,8 @@ IsAACSupportedType(const nsACString& aType,
 }
 
 static bool
-IsWAVSupportedType(const nsACString& aType,
-                   const nsAString& aCodecs = EmptyString())
+IsWaveSupportedType(const nsACString& aType,
+                    const nsAString& aCodecs = EmptyString())
 {
   return WaveDecoder::CanHandleMediaType(aType, aCodecs);
 }
@@ -237,8 +207,14 @@ CanHandleCodecsType(const MediaContentType& aType,
       return CANPLAY_NO;
     }
   }
-  if (IsWaveType(aType.GetMIMEType())) {
-    codecList = gWaveCodecs;
+  if (IsWaveSupportedType(aType.GetMIMEType())) {
+    if (IsWaveSupportedType(aType.GetMIMEType(), aType.GetCodecs())) {
+      return CANPLAY_YES;
+    } else {
+      // We can only reach this position if a particular codec was requested,
+      // ogg is supported and working: the codec must be invalid.
+      return CANPLAY_NO;
+    }
   }
 #if !defined(MOZ_OMX_WEBM_DECODER)
   if (DecoderTraits::IsWebMTypeAndEnabled(aType.GetMIMEType())) {
@@ -324,7 +300,7 @@ CanHandleMediaType(const MediaContentType& aType,
   if (IsOggTypeAndEnabled(aType.GetMIMEType())) {
     return CANPLAY_MAYBE;
   }
-  if (IsWaveType(aType.GetMIMEType())) {
+  if (IsWaveSupportedType(aType.GetMIMEType())) {
     return CANPLAY_MAYBE;
   }
   if (DecoderTraits::IsMP4TypeAndEnabled(aType.GetMIMEType(), aDiagnostics)) {
@@ -374,7 +350,7 @@ DecoderTraits::CanHandleContentType(const MediaContentType& aContentType,
 bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType,
                                           DecoderDoctorDiagnostics* aDiagnostics)
 {
-  if (IsWaveType(nsDependentCString(aMIMEType))) {
+  if (IsWaveSupportedType(nsDependentCString(aMIMEType))) {
     // We should not return true for Wave types, since there are some
     // Wave codecs actually in use in the wild that we don't support, and
     // we should allow those to be handled by plugins or helper apps.
@@ -427,7 +403,7 @@ InstantiateDecoder(const nsACString& aType,
     decoder = new OggDecoder(aOwner);
     return decoder.forget();
   }
-  if (IsWaveType(aType)) {
+  if (IsWaveSupportedType(aType)) {
     decoder = new WaveDecoder(aOwner);
     return decoder.forget();
   }
@@ -495,19 +471,14 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   if (IsAACSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new ADTSDemuxer(aDecoder->GetResource()));
   } else
-  if (IsWAVSupportedType(aType)) {
+  if (IsWaveSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new WAVDemuxer(aDecoder->GetResource()));
   } else
   if (IsFlacSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new FlacDemuxer(aDecoder->GetResource()));
   } else
   if (IsOggSupportedType(aType)) {
-    decoderReader = MediaPrefs::OggFormatReader() ?
-      static_cast<MediaDecoderReader*>(new MediaFormatReader(aDecoder, new OggDemuxer(aDecoder->GetResource()))) :
-      new OggReader(aDecoder);
-  } else
-  if (IsWaveType(aType)) {
-    decoderReader = new WaveReader(aDecoder);
+    decoderReader = new MediaFormatReader(aDecoder, new OggDemuxer(aDecoder->GetResource()));
   } else
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled() &&

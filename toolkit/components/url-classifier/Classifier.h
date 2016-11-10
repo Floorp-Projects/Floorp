@@ -84,6 +84,11 @@ public:
                             const nsACString& aTableName,
                             uint32_t aCount,
                             PrefixArray* aNoiseEntries);
+
+#ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
+  nsresult DumpRawTableUpdates(const nsACString& aRawUpdates);
+#endif
+
   static void SplitTables(const nsACString& str, nsTArray<nsCString>& tables);
 
   // Given a root store directory, return a private store directory
@@ -112,6 +117,12 @@ private:
   nsresult BackupTables();
   nsresult RemoveBackupTables();
   nsresult RegenActiveTables();
+
+#ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
+  already_AddRefed<nsIFile> GetFailedUpdateDirectroy();
+  nsresult DumpFailedUpdate();
+#endif
+
   nsresult ScanStoreDir(nsTArray<nsCString>& aTables);
 
   nsresult UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,

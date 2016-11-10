@@ -30,6 +30,10 @@ public:
 
   nsresult Init(nsICryptoHash* aHasher);
 
+#ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
+  nsCString GetRawTableUpdates() const { return mPending; }
+#endif
+
   virtual void SetCurrentTable(const nsACString& aTable) = 0;
 
   void SetRequestedTables(const nsTArray<nsCString>& aRequestTables)

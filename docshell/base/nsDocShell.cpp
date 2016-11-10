@@ -14248,6 +14248,20 @@ nsDocShell::GetIsInMozBrowserOrApp(bool* aIsInMozBrowserOrApp)
 }
 
 /* [infallible] */ NS_IMETHODIMP
+nsDocShell::GetIsTopLevelContentDocShell(bool* aIsTopLevelContentDocShell)
+{
+  *aIsTopLevelContentDocShell = false;
+
+  if (mItemType == typeContent) {
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    GetSameTypeRootTreeItem(getter_AddRefs(root));
+    *aIsTopLevelContentDocShell = root.get() == static_cast<nsIDocShellTreeItem*>(this);
+  }
+
+  return NS_OK;
+}
+
+/* [infallible] */ NS_IMETHODIMP
 nsDocShell::GetAppId(uint32_t* aAppId)
 {
   if (mOriginAttributes.mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {

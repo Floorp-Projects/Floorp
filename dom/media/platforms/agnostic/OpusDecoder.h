@@ -6,13 +6,16 @@
 #if !defined(OpusDecoder_h_)
 #define OpusDecoder_h_
 
-#include "OpusParser.h"
 #include "PlatformDecoderModule.h"
 
 #include "mozilla/Maybe.h"
 #include "nsAutoPtr.h"
 
+struct OpusMSDecoder;
+
 namespace mozilla {
+
+class OpusParser;
 
 class OpusDataDecoder : public MediaDataDecoder
 {
