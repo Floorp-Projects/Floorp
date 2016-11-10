@@ -811,9 +811,54 @@ ComputeFilterSquareDistance(const nsCSSValueList* aList1,
     case eCSSKeyword_hue_rotate:
       // TODO
       break;
-    case eCSSKeyword_drop_shadow:
-      // TODO
+    case eCSSKeyword_drop_shadow: {
+      MOZ_ASSERT(!func1.GetListValue()->mNext && !func2.GetListValue()->mNext,
+                 "drop-shadow filter func doesn't support lists");
+      const nsCSSValue& shadow1 = func1.GetListValue()->mValue;
+      const nsCSSValue& shadow2 = func2.GetListValue()->mValue;
+
+      MOZ_ASSERT(shadow1.GetUnit() == eCSSUnit_Array, "wrong unit");
+      MOZ_ASSERT(shadow2.GetUnit() == eCSSUnit_Array, "wrong unit");
+      const nsCSSValue::Array* array1 = shadow1.GetArrayValue();
+      const nsCSSValue::Array* array2 = shadow2.GetArrayValue();
+      double squareDistance = 0.0;
+
+      // X, Y, Radius, Spread
+      for (size_t i = 0; i < 4; ++i) {
+        MOZ_ASSERT(array1->Item(i).GetUnit() == eCSSUnit_Pixel,
+                   "unexpected unit");
+        MOZ_ASSERT(array2->Item(i).GetUnit() == eCSSUnit_Pixel,
+                   "unexpected unit");
+        double diff = array1->Item(i).GetFloatValue() -
+                      array2->Item(i).GetFloatValue();
+        squareDistance += diff * diff;
+      }
+
+      // Color, Inset
+      const nsCSSValue& colorValue1 = array1->Item(4);
+      const nsCSSValue& colorValue2 = array2->Item(4);
+      const nsCSSValue& inset1 = array1->Item(5);
+      const nsCSSValue& inset2 = array2->Item(5);
+      if ((colorValue1.GetUnit() != colorValue2.GetUnit() &&
+            (!colorValue1.IsNumericColorUnit() ||
+             !colorValue2.IsNumericColorUnit())) ||
+          inset1.GetUnit() != inset2.GetUnit()) {
+        // We don't know how to animate between color and no-color, or
+        // between inset and not-inset.
+        // NOTE: In case when both colors' units are eCSSUnit_Null, that means
+        // neither color value was specified, so we can interpolate.
+        return false;
+      }
+
+      if (colorValue1.GetUnit() != eCSSUnit_Null) {
+        double diff =
+          StyleAnimationValue::ComputeColorDistance(ExtractColor(colorValue1),
+                                                    ExtractColor(colorValue2));
+        squareDistance += diff * diff;
+      }
+      aSquareDistance = squareDistance;
       break;
+    }
     default:
       MOZ_ASSERT_UNREACHABLE("unknown filter function");
       return false;
