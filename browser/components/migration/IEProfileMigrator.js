@@ -500,7 +500,7 @@ IEProfileMigrator.prototype.getLastUsedDate = function IE_getLastUsedDate() {
     try {
       typedURLs = MSMigrationUtils.getTypedURLs("Software\\Microsoft\\Internet Explorer");
     } catch (ex) {}
-    let dates = [0, ... typedURLs.values()];
+    let dates = [0, ...typedURLs.values()];
     resolve(Math.max.apply(Math, dates));
   }));
   return Promise.all(datePromises).then(dates => {
