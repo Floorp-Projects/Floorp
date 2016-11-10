@@ -825,12 +825,6 @@ void Channel::ChannelImpl::CloseDescriptors(uint32_t pending_fd_id)
 
 void Channel::ChannelImpl::OutputQueuePush(Message* msg)
 {
-#ifdef MOZ_TASK_TRACER
-  // Save the current TaskTracer info into the message header.
-  GetCurTraceInfo(&msg->header()->source_event_id,
-                  &msg->header()->parent_task_id,
-                  &msg->header()->source_event_type);
-#endif
   output_queue_.push(msg);
   output_queue_length_++;
 }
