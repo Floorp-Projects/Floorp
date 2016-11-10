@@ -540,12 +540,11 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
 
 let nextId = 1;
 
-// We create one instance of this class for every extension context
-// that needs to use remote APIs. It uses the message manager to
-// communicate with the ParentAPIManager singleton in
-// Extension.jsm. It handles asynchronous function calls as well as
-// event listeners.
-class ChildAPIManager {
+// We create one instance of this class for every extension context that
+// needs to use remote APIs. It uses the message manager to communicate
+// with the ParentAPIManager singleton in ExtensionParent.jsm. It
+// handles asynchronous function calls as well as event listeners.
+class ChildAPIManagerBase {
   constructor(context, messageManager, localApis, contextData) {
     this.context = context;
     this.messageManager = messageManager;
@@ -555,11 +554,7 @@ class ChildAPIManager {
     // delegated to the ParentAPIManager.
     this.localApis = localApis;
 
-    let id = String(context.extension.id) + "." + String(context.contextId);
-    this.id = id;
-
-    let data = {childId: id, extensionId: context.extension.id, principal: context.principal};
-    Object.assign(data, contextData);
+    this.id = `${context.extension.id}.${context.contextId}`;
 
     messageManager.addMessageListener("API:RunListener", this);
     messageManager.addMessageListener("API:CallResult", this);
@@ -570,12 +565,6 @@ class ChildAPIManager {
 
     // Map[callId -> Deferred]
     this.callPromises = new Map();
-
-    this.createProxyContextInConstructor(data);
-  }
-
-  createProxyContextInConstructor(data) {
-    this.messageManager.sendAsyncMessage("API:CreateProxyContext", data);
   }
 
   receiveMessage({name, data}) {
@@ -654,11 +643,11 @@ class ChildAPIManager {
    *   hasListener methods. See SchemaAPIInterface for documentation.
    */
   getParentEvent(path) {
-    let parsed = /^(.+)\.(on[A-Z][^.]+)$/.exec(path);
-    if (!parsed) {
-      throw new Error("getParentEvent: Invalid event name: " + path);
-    }
-    let [, namespace, name] = parsed;
+    path = path.split(".");
+
+    let name = path.pop();
+    let namespace = path.join(".");
+
     let impl = new ProxyAPIImplementation(namespace, name, this);
     return {
       addListener: (listener, ...args) => impl.addListener(listener, args),
@@ -692,17 +681,12 @@ class ChildAPIManager {
   }
 
   getImplementation(namespace, name) {
-    let pathObj = this.localApis;
-    if (pathObj) {
-      for (let part of namespace.split(".")) {
-        pathObj = pathObj[part];
-        if (!pathObj) {
-          break;
-        }
-      }
-      if (pathObj && name in pathObj) {
-        return new LocalAPIImplementation(pathObj, name, this.context);
-      }
+    let obj = namespace.split(".").reduce(
+      (object, prop) => object && object[prop],
+      this.localApis);
+
+    if (obj && name in obj) {
+      return new LocalAPIImplementation(obj, name, this.context);
     }
 
     return this.getFallbackImplementation(namespace, name);
@@ -718,58 +702,70 @@ class ChildAPIManager {
   }
 }
 
+class ChildAPIManager extends ChildAPIManagerBase {
+  constructor(context, messageManager, localApis, contextData) {
+    super(context, messageManager, localApis, contextData);
+
+    let params = {
+      childId: this.id,
+      extensionId: context.extension.id,
+      principal: context.principal,
+    };
+    Object.assign(params, contextData);
+
+    this.messageManager.sendAsyncMessage("API:CreateProxyContext", params);
+  }
+}
+
 
 // A class that behaves identical to a ChildAPIManager, except
 // 1) creation of the ProxyContext in the parent is synchronous, and
 // 2) APIs without a local implementation and marked as incompatible with the
 //    out-of-process model fall back to directly invoking the parent methods.
 // TODO(robwu): Remove this when all APIs have migrated.
-class PseudoChildAPIManager extends ChildAPIManager {
-  createProxyContextInConstructor(originalData) {
-    // Create a structured clone to simulate IPC.
-    let data = Object.assign({}, originalData, {principal: null});
-    data = Cu.cloneInto(data, {});
+class PseudoChildAPIManager extends ChildAPIManagerBase {
+  constructor(context, messageManager, localApis, contextData) {
+    super(context, messageManager, localApis, contextData);
+
+    let params = {
+      childId: this.id,
+      extensionId: context.extension.id,
+    };
+    Object.assign(params, contextData);
+
+    // Structured clone the parameters to simulate cross-process messaging.
+    params = Cu.cloneInto(params, {});
     // Principals can be structured cloned by message managers, but not
     // by cloneInto.
-    data.principal = originalData.principal;
+    params.principal = context.principal;
+    params.cloneScope = this.cloneScope;
 
-    this.url = data.url;
+    this.url = params.url;
 
-    let name = "API:CreateProxyContext";
-    // The <browser> that receives messages from `this.messageManager`.
-    let target = this.context.contentWindow
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDocShell)
-      .chromeEventHandler;
-    ParentAPIManager.receiveMessage({name, data, target});
-
-    let proxyContext = ParentAPIManager.proxyContexts.get(this.id);
-
-    // Use an identical cloneScope in the parent as the child to have identical
-    // behavior for proxied vs direct calls. If all APIs are proxied, then the
-    // parent cloneScope does not really matter (because when the message
-    // arrives locally, the object is cloned into the local clone scope).
-    // If all calls are direct, then the parent cloneScope does matter, because
-    // the objects are not cloned again.
-    Object.defineProperty(proxyContext, "cloneScope", {
-      get: () => this.cloneScope,
+    let browserElement = this.context.docShell.chromeEventHandler;
+    ParentAPIManager.receiveMessage({
+      name: "API:CreateProxyContext",
+      data: params,
+      target: browserElement,
     });
 
+    this.parentContext = ParentAPIManager.proxyContexts.get(this.id);
+
     // Synchronously unload the ProxyContext because we synchronously create it.
-    this.context.callOnClose(proxyContext);
+    this.context.callOnClose(this.parentContext);
   }
 
   getFallbackImplementation(namespace, name) {
     // This is gross and should be removed ASAP.
-    let shouldSynchronouslyUseParentAPI = false;
-    // Incompatible APIs are listed here.
-    if (namespace == "webNavigation" || // ChildAPIManager is oblivious to filters.
-        namespace == "webRequest") { // Incompatible by design (synchronous).
-      shouldSynchronouslyUseParentAPI = true;
-    }
-    if (shouldSynchronouslyUseParentAPI) {
-      let proxyContext = ParentAPIManager.proxyContexts.get(this.id);
-      let apiObj = findPathInObject(proxyContext.apiObj, namespace, false);
+    let useDirectParentAPI = (
+      // Incompatible APIs are listed here.
+      namespace == "webNavigation" || // ChildAPIManager is oblivious to filters.
+      namespace == "webRequest" // Incompatible by design (synchronous).
+    );
+
+    if (useDirectParentAPI) {
+      let apiObj = findPathInObject(this.parentContext.apiObj, namespace, false);
+
       if (apiObj && name in apiObj) {
         return new LocalAPIImplementation(apiObj, name, this.context);
       }
