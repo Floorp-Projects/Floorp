@@ -68,13 +68,6 @@ class TestTimeouts(MarionetteTestCase):
              setTimeout(function() { callback(true); }, 500);
              """))
 
-    def test_invalid_timeout_types(self):
-        for val in [3.14, True, [], {}, "foo"]:
-            print "testing %s" % type(val)
-            self.assertRaises(InvalidArgumentException, self.marionette.set_search_timeout, val)
-            self.assertRaises(InvalidArgumentException, self.marionette.set_script_timeout, val)
-            self.assertRaises(InvalidArgumentException, self.marionette.set_page_load_timeout, val)
-
     def test_compat_input_types(self):
         # When using the spec-incompatible input format which we have
         # for backwards compatibility, it should be possible to send ms
