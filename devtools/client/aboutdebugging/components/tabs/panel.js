@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { createClass, createFactory, DOM: dom } =
+const { createClass, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
 
@@ -14,11 +14,19 @@ const PanelHeader = createFactory(require("../panel-header"));
 const TargetList = createFactory(require("../target-list"));
 const TabTarget = createFactory(require("./target"));
 
+loader.lazyRequireGetter(this, "DebuggerClient",
+  "devtools/shared/client/main", true);
+
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
 module.exports = createClass({
   displayName: "TabsPanel",
+
+  propTypes: {
+    client: PropTypes.instanceOf(DebuggerClient).isRequired,
+    id: PropTypes.string.isRequired
+  },
 
   getInitialState() {
     return {

@@ -69,6 +69,8 @@
 
 'use strict';
 
+/* globals TESTS, runTest, finishTest */
+
 const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr,
         utils: Cu } = Components;
 
@@ -146,6 +148,7 @@ var gUseTestUpdater = false;
 var DEBUG_AUS_TEST = true;
 
 const DATA_URI_SPEC = "chrome://mochitests/content/chrome/toolkit/mozapps/update/tests/data/";
+/* import-globals-from ../data/shared.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
 
 /**

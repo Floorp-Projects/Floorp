@@ -1406,22 +1406,11 @@ NativeGetProperty(JSContext* cx, HandleNativeObject obj, HandleValue receiver, H
 extern bool
 NativeGetPropertyNoGC(JSContext* cx, NativeObject* obj, const Value& receiver, jsid id, Value* vp);
 
-extern bool
-NativeGetElement(JSContext* cx, HandleNativeObject obj, HandleValue receiver, uint32_t index,
-                 MutableHandleValue vp);
-
 inline bool
 NativeGetProperty(JSContext* cx, HandleNativeObject obj, HandleId id, MutableHandleValue vp)
 {
     RootedValue receiver(cx, ObjectValue(*obj));
     return NativeGetProperty(cx, obj, receiver, id, vp);
-}
-
-inline bool
-NativeGetElement(JSContext* cx, HandleNativeObject obj, uint32_t index, MutableHandleValue vp)
-{
-    RootedValue receiver(cx, ObjectValue(*obj));
-    return NativeGetElement(cx, obj, receiver, index, vp);
 }
 
 bool

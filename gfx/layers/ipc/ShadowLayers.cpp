@@ -373,7 +373,11 @@ void
 ShadowLayerForwarder::UseTiledLayerBuffer(CompositableClient* aCompositable,
                                           const SurfaceDescriptorTiles& aTileLayerDescriptor)
 {
-  MOZ_ASSERT(aCompositable && aCompositable->IsConnected());
+  MOZ_ASSERT(aCompositable);
+
+  if (!aCompositable->IsConnected()) {
+    return;
+  }
 
   mTxn->AddNoSwapPaint(CompositableOperation(nullptr, aCompositable->GetIPDLActor(),
                                              OpUseTiledLayerBuffer(aTileLayerDescriptor)));
@@ -385,8 +389,10 @@ ShadowLayerForwarder::UpdateTextureRegion(CompositableClient* aCompositable,
                                           const nsIntRegion& aUpdatedRegion)
 {
   MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aCompositable->IsConnected());
+
+  if (!aCompositable->IsConnected()) {
+    return;
+  }
 
   mTxn->AddPaint(
     CompositableOperation(
@@ -398,7 +404,11 @@ void
 ShadowLayerForwarder::UseTextures(CompositableClient* aCompositable,
                                   const nsTArray<TimedTextureClient>& aTextures)
 {
-  MOZ_ASSERT(aCompositable && aCompositable->IsConnected());
+  MOZ_ASSERT(aCompositable);
+
+  if (!aCompositable->IsConnected()) {
+    return;
+  }
 
   AutoTArray<TimedTexture,4> textures;
 
@@ -432,7 +442,11 @@ ShadowLayerForwarder::UseComponentAlphaTextures(CompositableClient* aCompositabl
                                                 TextureClient* aTextureOnWhite)
 {
   MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aCompositable->IsConnected());
+
+  if (!aCompositable->IsConnected()) {
+    return;
+  }
+
   MOZ_ASSERT(aTextureOnWhite);
   MOZ_ASSERT(aTextureOnBlack);
   MOZ_ASSERT(aCompositable->GetIPDLActor());
@@ -494,7 +508,6 @@ ShadowLayerForwarder::RemoveTextureFromCompositable(CompositableClient* aComposi
 {
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aTexture);
-  MOZ_ASSERT(aCompositable->IsConnected());
   MOZ_ASSERT(aTexture->GetIPDLActor());
   MOZ_RELEASE_ASSERT(aTexture->GetIPDLActor()->GetIPCChannel() == mShadowManager->GetIPCChannel());
   if (!aCompositable->IsConnected() || !aTexture->GetIPDLActor()) {

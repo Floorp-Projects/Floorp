@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { createClass, DOM: dom } =
+const { createClass, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
 
@@ -15,6 +15,15 @@ const Strings = Services.strings.createBundle(
 
 module.exports = createClass({
   displayName: "TabTarget",
+
+  propTypes: {
+    target: PropTypes.shape({
+      icon: PropTypes.string,
+      outerWindowID: PropTypes.number.isRequired,
+      title: PropTypes.string,
+      url: PropTypes.string.isRequired
+    }).isRequired
+  },
 
   debug() {
     let { target } = this.props;

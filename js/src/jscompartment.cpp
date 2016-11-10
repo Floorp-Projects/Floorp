@@ -1088,7 +1088,7 @@ JSCompartment::updateDebuggerObservesFlag(unsigned flag)
     MOZ_ASSERT(isDebuggee());
     MOZ_ASSERT(flag == DebuggerObservesAllExecution ||
                flag == DebuggerObservesCoverage ||
-               flag == DebuggerObservesWasm);
+               flag == DebuggerObservesAsmJS);
 
     GlobalObject* global = zone()->runtimeFromMainThread()->gc.isForegroundSweeping()
                            ? unsafeUnbarrieredMaybeGlobal()

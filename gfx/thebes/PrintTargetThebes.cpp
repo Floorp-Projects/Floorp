@@ -86,18 +86,27 @@ PrintTargetThebes::EndPrinting()
 nsresult
 PrintTargetThebes::AbortPrinting()
 {
+#ifdef DEBUG
+  mHasActivePage = false;
+#endif
   return mGfxSurface->AbortPrinting();
 }
 
 nsresult
 PrintTargetThebes::BeginPage()
 {
+#ifdef DEBUG
+  mHasActivePage = true;
+#endif
   return mGfxSurface->BeginPage();
 }
 
 nsresult
 PrintTargetThebes::EndPage()
 {
+#ifdef DEBUG
+  mHasActivePage = false;
+#endif
   return mGfxSurface->EndPage();
 }
 

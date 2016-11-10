@@ -554,7 +554,7 @@ js::gc::CheckHeapAfterGC(JSRuntime* rt)
 {
     AutoTraceSession session(rt, JS::HeapState::Tracing);
     CheckHeapTracer tracer(rt);
-    if (!tracer.init())
+    if (tracer.init())
         tracer.check(session.lock);
 }
 

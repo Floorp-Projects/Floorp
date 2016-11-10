@@ -196,6 +196,9 @@ DeadIfUnused(const MDefinition* def);
 bool
 IsDiscardable(const MDefinition* def);
 
+void
+DumpMIRExpressions(MIRGraph& graph);
+
 } // namespace jit
 } // namespace js
 
