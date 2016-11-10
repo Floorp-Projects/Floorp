@@ -24,6 +24,11 @@ function checkFooModule(m) {
   ok(i.exports.foo() === 42, "got 42");
 }
 
+function checkFooInstance(i) {
+  ok(i instanceof WebAssembly.Instance, "got a module");
+  ok(i.exports.foo() === 42, "got 42");
+}
+
 function propertiesExist() {
   if (!wasmIsSupported()) {
     ok(!this["WebAssembly"], "If the device doesn't support, there will be no WebAssembly object");
@@ -114,12 +119,41 @@ function terminateCompileInWorker() {
     }
 }
 
+function instantiateFail() {
+  WebAssembly.instantiate().then(
+    () => { ok(false, "should have failed"); runTest() }
+  ).catch(
+    err => { ok(err instanceof TypeError, "empty compile failed"); runTest() }
+  );
+}
+
+function instantiateSuccess() {
+  WebAssembly.instantiate(fooModuleCode).then(
+    r => { checkFooModule(r.module); checkFooInstance(r.instance); runTest() }
+  ).catch(
+    err => { ok(false, String(err)); runTest() }
+  );
+}
+
+function chainSuccess() {
+  WebAssembly.compile(fooModuleCode).then(
+    m => WebAssembly.instantiate(m)
+  ).then(
+    i => { checkFooInstance(i); runTest() }
+  ).catch(
+    err => { ok(false, String(err)); runTest() }
+  );
+}
+
 var tests = [ propertiesExist,
               compileFail,
               compileSuccess,
               compileManySuccess,
               compileInWorker,
-              terminateCompileInWorker
+              terminateCompileInWorker,
+              instantiateFail,
+              instantiateSuccess,
+              chainSuccess
             ];
 
 function runTest() {
