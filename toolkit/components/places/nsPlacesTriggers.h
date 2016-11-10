@@ -192,7 +192,8 @@
   "WHEN NEW.open_count = 0 " \
   "BEGIN " \
     "DELETE FROM moz_openpages_temp " \
-    "WHERE url = NEW.url;" \
+    "WHERE url = NEW.url " \
+      "AND userContextId = NEW.userContextId;" \
   "END" \
 )
 

@@ -11,9 +11,11 @@ add_task(function* test_tab_matches() {
   let uri2 = NetUtil.newURI("http://xyz.net/");
   let uri3 = NetUtil.newURI("about:mozilla");
   let uri4 = NetUtil.newURI("data:text/html,test");
+  let uri5 = NetUtil.newURI("http://foobar.org");
   yield PlacesTestUtils.addVisits([
     { uri: uri1, title: "ABC rocks" },
-    { uri: uri2, title: "xyz.net - we're better than ABC" }
+    { uri: uri2, title: "xyz.net - we're better than ABC" },
+    { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ" }
   ]);
   addOpenPages(uri1, 1);
   // Pages that cannot be registered in history.
@@ -35,7 +37,8 @@ add_task(function* test_tab_matches() {
     searchParam: "enable-actions",
     matches: [ makeSearchMatch("abc", { heuristic: true }),
                makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
-               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ]
+               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] },
+               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
   do_print("three results, both normal results are tab matches");
@@ -45,7 +48,39 @@ add_task(function* test_tab_matches() {
     searchParam: "enable-actions",
     matches: [ makeSearchMatch("abc", { heuristic: true }),
                makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
-               makeSwitchToTabMatch("http://xyz.net/", { title: "xyz.net - we're better than ABC" }) ]
+               makeSwitchToTabMatch("http://xyz.net/", { title: "xyz.net - we're better than ABC" }),
+               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
+  });
+
+  do_print("a container tab is not visible in 'switch to tab'");
+  addOpenPages(uri5, 1, /* userContextId: */ 3);
+  yield check_autocomplete({
+    search: "abc",
+    searchParam: "enable-actions",
+    matches: [ makeSearchMatch("abc", { heuristic: true }),
+               makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
+               makeSwitchToTabMatch("http://xyz.net/", { title: "xyz.net - we're better than ABC" }),
+               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
+  });
+
+  do_print("a container tab should not see 'switch to tab' for other container tabs");
+  yield check_autocomplete({
+    search: "abc",
+    searchParam: "enable-actions user-context-id:3",
+    matches: [ makeSearchMatch("abc", { heuristic: true }),
+               makeSwitchToTabMatch("http://foobar.org/", { title: "foobar.org - much better than ABC, definitely better than XYZ" }),
+               { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
+               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ]
+  });
+
+  do_print("a different container tab should not see any 'switch to tab'");
+  yield check_autocomplete({
+    search: "abc",
+    searchParam: "enable-actions user-context-id:2",
+    matches: [ makeSearchMatch("abc", { heuristic: true }),
+               { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
+               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] },
+               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
   do_print("three results, both normal results are tab matches, one has multiple tabs");
@@ -55,7 +90,8 @@ add_task(function* test_tab_matches() {
     searchParam: "enable-actions",
     matches: [ makeSearchMatch("abc", { heuristic: true }),
                makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
-               makeSwitchToTabMatch("http://xyz.net/", { title: "xyz.net - we're better than ABC" }) ]
+               makeSwitchToTabMatch("http://xyz.net/", { title: "xyz.net - we're better than ABC" }),
+               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
   do_print("three results, no tab matches (disable-private-actions)");
@@ -64,7 +100,8 @@ add_task(function* test_tab_matches() {
     searchParam: "enable-actions disable-private-actions",
     matches: [ makeSearchMatch("abc", { heuristic: true }),
                { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
-               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ]
+               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] },
+               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
   do_print("two results (actions disabled)");
@@ -72,7 +109,8 @@ add_task(function* test_tab_matches() {
     search: "abc",
     searchParam: "",
     matches: [ { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
-               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ]
+               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] },
+               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
   do_print("three results, no tab matches");
@@ -83,7 +121,8 @@ add_task(function* test_tab_matches() {
     searchParam: "enable-actions",
     matches: [ makeSearchMatch("abc", { heuristic: true }),
                { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
-               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ]
+               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] },
+               { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
   do_print("tab match search with restriction character");
