@@ -256,7 +256,7 @@ add_task(function* test_getExperiments() {
 
   experimentListData[0].active = true;
   experimentListData[0].endDate = now.getTime() + 10 * MS_IN_ONE_DAY;
-  for (let i=0; i<experimentListData.length; ++i) {
+  for (let i = 0; i < experimentListData.length; ++i) {
     let entry = experimentListData[i];
     for (let k of Object.keys(entry)) {
       Assert.equal(entry[k], list[i][k],
@@ -286,7 +286,7 @@ add_task(function* test_getExperiments() {
 
   experimentListData[0].active = false;
   experimentListData[0].endDate = now.getTime();
-  for (let i=0; i<experimentListData.length; ++i) {
+  for (let i = 0; i < experimentListData.length; ++i) {
     let entry = experimentListData[i];
     for (let k of Object.keys(entry)) {
       Assert.equal(entry[k], list[i][k],
@@ -743,7 +743,7 @@ add_task(function* test_installFailure() {
   list = yield experiments.getExperiments();
   Assert.equal(list.length, 2, "Experiment list should have 2 entries now.");
 
-  for (let i=0; i<experimentListData.length; ++i) {
+  for (let i = 0; i < experimentListData.length; ++i) {
     let entry = experimentListData[i];
     for (let k of Object.keys(entry)) {
       Assert.equal(entry[k], list[i][k],

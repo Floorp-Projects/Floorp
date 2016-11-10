@@ -781,7 +781,7 @@ Sanitizer.__defineGetter__("prefs", function()
 Sanitizer.showUI = function(aParentWindow)
 {
   let win = AppConstants.platform == "macosx" ?
-    null: // make this an app-modal window on Mac
+    null : // make this an app-modal window on Mac
     aParentWindow;
   Services.ww.openWindow(win,
                          "chrome://browser/content/sanitize.xul",

@@ -75,7 +75,7 @@ add_task(function* test_pending_dumps() {
   }
 
   for (let i = 0; i < COUNT; i++) {
-    Assert.equal(entries[i].id, ids[COUNT-i-1], "Entries sorted by mtime");
+    Assert.equal(entries[i].id, ids[COUNT - i - 1], "Entries sorted by mtime");
   }
 });
 
@@ -430,7 +430,7 @@ add_task(function* test_addCrash() {
   crash = map.get("gpu-crash");
   Assert.ok(!!crash);
   Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type, m.PROCESS_TYPE_GPU+ "-" + m.CRASH_TYPE_CRASH);
+  Assert.equal(crash.type, m.PROCESS_TYPE_GPU + "-" + m.CRASH_TYPE_CRASH);
   Assert.ok(crash.isOfType(m.PROCESS_TYPE_GPU, m.CRASH_TYPE_CRASH));
 
   crash = map.get("changing-item");

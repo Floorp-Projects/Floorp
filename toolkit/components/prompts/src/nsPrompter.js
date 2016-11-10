@@ -195,7 +195,7 @@ var PromptUtilsTemp = {
                 authInfo.username = username;
             } else {
                 authInfo.domain   =  username.substring(0, idx);
-                authInfo.username =  username.substring(idx+1);
+                authInfo.username =  username.substring(idx + 1);
             }
         } else {
             authInfo.username = username;

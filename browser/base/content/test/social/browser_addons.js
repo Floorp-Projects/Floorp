@@ -91,7 +91,7 @@ var tests = {
     is(SocialService.getOriginActivationType(installFrom), "foreign", "testing foriegn install");
     let data = {
       origin: installFrom,
-      url: installFrom+"/activate",
+      url: installFrom + "/activate",
       manifest: manifest,
       window: window
     }

@@ -93,8 +93,8 @@ function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection, aC
   }
 
   var rect = aElement.getBoundingClientRect();
-  var startingPoint = { x: (rect.right - rect.left)/2,
-                        y: (rect.bottom - rect.top)/2 };
+  var startingPoint = { x: (rect.right - rect.left) / 2,
+                        y: (rect.bottom - rect.top) / 2 };
 
   EventUtils.synthesizeMouse(aElement,
                              startingPoint.x,

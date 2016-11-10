@@ -136,7 +136,7 @@ function checkContextMenu(expectedItems) {
 
 function checkMenuItem(actualItem, actualEnabled, expectedItem, expectedEnabled, index) {
     is(actualItem, expectedItem,
-       "checking item #" + index/2 + " (" + expectedItem + ") name");
+       "checking item #" + index / 2 + " (" + expectedItem + ") name");
 
     if (typeof expectedEnabled == "object" && expectedEnabled != null ||
         typeof actualEnabled == "object" && actualEnabled != null) {
@@ -150,7 +150,7 @@ function checkMenuItem(actualItem, actualEnabled, expectedItem, expectedEnabled,
           return;
 
         is(actualEnabled.type, expectedEnabled.type,
-           "checking item #" + index/2 + " (" + expectedItem + ") type attr value");
+           "checking item #" + index / 2 + " (" + expectedItem + ") type attr value");
         var icon = actualEnabled.icon;
         if (icon) {
           var tmp = "";
@@ -161,14 +161,14 @@ function checkMenuItem(actualItem, actualEnabled, expectedItem, expectedEnabled,
           icon = tmp;
         }
         is(icon, expectedEnabled.icon,
-           "checking item #" + index/2 + " (" + expectedItem + ") icon attr value");
+           "checking item #" + index / 2 + " (" + expectedItem + ") icon attr value");
         is(actualEnabled.checked, expectedEnabled.checked,
-           "checking item #" + index/2 + " (" + expectedItem + ") has checked attr");
+           "checking item #" + index / 2 + " (" + expectedItem + ") has checked attr");
         is(actualEnabled.disabled, expectedEnabled.disabled,
-           "checking item #" + index/2 + " (" + expectedItem + ") has disabled attr");
+           "checking item #" + index / 2 + " (" + expectedItem + ") has disabled attr");
     } else if (expectedEnabled != null)
         is(actualEnabled, expectedEnabled,
-           "checking item #" + index/2 + " (" + expectedItem + ") enabled state");
+           "checking item #" + index / 2 + " (" + expectedItem + ") enabled state");
 }
 
 /*
@@ -187,7 +187,7 @@ function checkMenuItem(actualItem, actualEnabled, expectedItem, expectedEnabled,
 function checkMenu(menu, expectedItems, data) {
     var actualItems = getVisibleMenuItems(menu, data);
     // ok(false, "Items are: " + actualItems);
-    for (var i = 0; i < expectedItems.length; i+=2) {
+    for (var i = 0; i < expectedItems.length; i += 2) {
         var actualItem   = actualItems[i];
         var actualEnabled = actualItems[i + 1];
         var expectedItem = expectedItems[i];
@@ -205,7 +205,7 @@ function checkMenu(menu, expectedItems, data) {
             } else if (previousItem && previousItem.nodeName == "menugroup") {
               ok(expectedItem.length, "menugroup must not be empty");
               for (var j = 0; j < expectedItem.length / 2; j++) {
-                checkMenuItem(actualItems[i][j][0], actualItems[i][j][1], expectedItem[j*2], expectedItem[j*2+1], i+j*2);
+                checkMenuItem(actualItems[i][j][0], actualItems[i][j][1], expectedItem[j * 2], expectedItem[j * 2 + 1], i + j * 2);
               }
               i += j;
             } else {
@@ -247,7 +247,7 @@ let lastElementSelector = null;
  *        postCheckContextMenuFn: callback to run after opening menu
  * @return {Promise} resolved after the test finishes
  */
-function* test_contextmenu(selector, menuItems, options={}) {
+function* test_contextmenu(selector, menuItems, options = {}) {
   contextMenu = document.getElementById("contentAreaContextMenu");
   is(contextMenu.state, "closed", "checking if popup is closed");
 

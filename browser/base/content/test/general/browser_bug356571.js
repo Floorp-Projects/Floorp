@@ -86,7 +86,7 @@ function finishTest() {
   gBrowser.removeTabsProgressListener(gProgressListener);
 
   // Close opened tabs
-  for (var i = gBrowser.tabs.length-1; i > 0; i--)
+  for (var i = gBrowser.tabs.length - 1; i > 0; i--)
     gBrowser.removeTab(gBrowser.tabs[i]);
 
   finish();

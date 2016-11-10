@@ -76,7 +76,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     this._is(this._getTargetValue(), test.value,
              this._description + ", " + test.description + ": value");
     this._is(this._controller.searchString, test.searchString,
-             this._description + ", " + test.description +": searchString");
+             this._description + ", " + test.description + ": searchString");
     this._is(this._controller.input.popupOpen, test.popup,
              this._description + ", " + test.description + ": popupOpen");
     this._doTests();

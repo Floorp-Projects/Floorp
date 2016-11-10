@@ -12,13 +12,13 @@ function test() {
   goNext();
 }
 
-function checkCheckbox(checkbox, label, checked=false, hidden=false) {
+function checkCheckbox(checkbox, label, checked = false, hidden = false) {
   is(checkbox.label, label, "Checkbox should have the correct label");
   is(checkbox.hidden, hidden, "Checkbox should be shown");
   is(checkbox.checked, checked, "Checkbox should be checked by default");
 }
 
-function checkMainAction(notification, disabled=false) {
+function checkMainAction(notification, disabled = false) {
   let mainAction = notification.button;
   let warningLabel = document.getAnonymousElementByAttribute(notification, "class", "popup-notification-warning");
   is(warningLabel.hidden, !disabled, "Warning label should be shown");

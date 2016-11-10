@@ -81,7 +81,7 @@ add_task(function* test_execute()
   cc = root.childCount;
   // 2 * TOTAL_SITES because we count the TYPED and LINK, but not EMBED or FRAMED
   do_check_eq(cc, 2 * TOTAL_SITES);
-  for (let i=0; i < TOTAL_SITES; i++) {
+  for (let i = 0; i < TOTAL_SITES; i++) {
     let index = i * 2;
     let node = root.getChild(index);
     let site = "http://www.test-" + (TOTAL_SITES - 1 - i) + ".com/";
@@ -109,7 +109,7 @@ add_task(function* test_execute()
   root.containerOpen = true;
   cc = root.childCount;
   do_check_eq(cc, options.maxResults);
-  for (let i=0; i < cc; i++) {
+  for (let i = 0; i < cc; i++) {
     let node = root.getChild(i);
     let site = "http://www.test-" + (TOTAL_SITES - 1 - i) + ".com/";
     do_check_eq(node.uri, site);
@@ -132,7 +132,7 @@ add_task(function* test_execute()
   root.containerOpen = true;
   cc = root.childCount;
   do_check_eq(cc, TOTAL_SITES);
-  for (let i=0; i < 10; i++) {
+  for (let i = 0; i < 10; i++) {
     let node = root.getChild(i);
     let site = "http://www.test-" + (TOTAL_SITES - 1 - i) + ".com/";
     do_check_eq(node.uri, site);

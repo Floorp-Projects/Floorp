@@ -37,8 +37,8 @@ var Microformats; // jshint ignore:line
 
 
     // create objects incase the v1 map modules don't load
-    modules.maps = (modules.maps)? modules.maps : {};
-    modules.rels = (modules.rels)? modules.rels : {};
+    modules.maps = (modules.maps) ? modules.maps : {};
+    modules.rels = (modules.rels) ? modules.rels : {};
 
 
     modules.Parser.prototype = {
@@ -73,7 +73,7 @@ var Microformats; // jshint ignore:line
                 rels;
 
             this.init();
-            options = (options)? options : {};
+            options = (options) ? options : {};
             this.mergeOptions(options);
             this.getDOMContext( options );
 
@@ -128,7 +128,7 @@ var Microformats; // jshint ignore:line
          */
         getParent: function(node, options) {
             this.init();
-            options = (options)? options : {};
+            options = (options) ? options : {};
 
             if (node) {
                 return this.getParentTreeWalk(node, options);
@@ -152,7 +152,7 @@ var Microformats; // jshint ignore:line
                 i;
 
             this.init();
-            options = (options)? options : {};
+            options = (options) ? options : {};
             this.getDOMContext( options );
 
             // if we do not have any context create error
@@ -276,7 +276,7 @@ var Microformats; // jshint ignore:line
          * @return {Object}
          */
         getParentTreeWalk: function (node, options, recursive) {
-            options = (options)? options : {};
+            options = (options) ? options : {};
 
             // recursive calls
             if (recursive === undefined) {
@@ -1462,7 +1462,7 @@ var Microformats; // jshint ignore:line
          * @return {Object}
          */
          modules.Parser.prototype.impliedRules = function(node, uf, parentClasses) {
-            var typeVersion = (uf.typeVersion)? uf.typeVersion: 'v2';
+            var typeVersion = (uf.typeVersion) ? uf.typeVersion : 'v2';
 
             // TEMP: override to allow v1 implied properties while spec changes
             if (this.options.impliedPropertiesByVersion === false) {
@@ -1806,8 +1806,8 @@ var Microformats; // jshint ignore:line
                 // has no latitude or longitude property
                 if (uf.properties.latitude === undefined || uf.properties.longitude === undefined ) {
 
-                    geoPair = (uf.properties.name)? uf.properties.name[0] : null;
-                    geoPair = (!geoPair && uf.properties.value)? uf.properties.value : geoPair;
+                    geoPair = (uf.properties.name) ? uf.properties.name[0] : null;
+                    geoPair = (!geoPair && uf.properties.value) ? uf.properties.value : geoPair;
 
                     if (geoPair) {
                         // allow for the use of a ';' as in microformats and also ',' as in Geo URL
@@ -2262,7 +2262,7 @@ var Microformats; // jshint ignore:line
          */
         trim: function( text ) {
             if (text && this.isString(text)) {
-                return (text.trim())? text.trim() : text.replace(/^\s+|\s+$/g, '');
+                return (text.trim()) ? text.trim() : text.replace(/^\s+|\s+$/g, '');
             }
             return '';
         },
@@ -2278,7 +2278,7 @@ var Microformats; // jshint ignore:line
          */
         replaceCharAt: function( text, index, character ) {
             if (text && text.length > index) {
-               return text.substr(0, index) + character + text.substr(index+character.length);
+               return text.substr(0, index) + character + text.substr(index + character.length);
             }
             return text;
         },
@@ -2737,9 +2737,9 @@ var Microformats; // jshint ignore:line
                 }
             }
             if (onlyOfType === true) {
-                return (countOfType === 1)? out : null;
+                return (countOfType === 1) ? out : null;
             }
-            return (countAll === 1)? out : null;
+            return (countAll === 1) ? out : null;
         },
 
 
@@ -2862,7 +2862,7 @@ var Microformats; // jshint ignore:line
                 newNode = newDocument.importNode( document.documentElement, true );
                 newDocument.replaceChild(newNode, newDocument.querySelector('html'));
             }
-            return (newNode && newNode.nodeType && newNode.nodeType === 1)? newDocument : document;
+            return (newNode && newNode.nodeType && newNode.nodeType === 1) ? newDocument : document;
         },
 
 
@@ -3045,7 +3045,7 @@ var Microformats; // jshint ignore:line
     modules.ISODate = function ( dateString, format ) {
         this.clear();
 
-        this.format = (format)? format : 'auto'; // auto or W3C or RFC3339 or HTML5
+        this.format = (format) ? format : 'auto'; // auto or W3C or RFC3339 or HTML5
         this.setFormatSep();
 
         // optional should be full iso date/time string
@@ -3304,7 +3304,7 @@ var Microformats; // jshint ignore:line
             if (timeString.toLowerCase() === 'z') {
                 this.z = true;
                 // set case for z
-                this.autoProfile.tzZulu = (timeString === 'z')? 'z' : 'Z';
+                this.autoProfile.tzZulu = (timeString === 'z') ? 'z' : 'Z';
             } else {
 
                 // discover timezone separtor for auto profile // default is ':'
@@ -3764,7 +3764,7 @@ var Microformats; // jshint ignore:line
          */
         parse: function(doc, node, textFormat) {
             var out;
-            this.textFormat = (textFormat)? textFormat : this.textFormat;
+            this.textFormat = (textFormat) ? textFormat : this.textFormat;
             if (this.textFormat === 'normalised') {
                 out = this.walkTreeForText( node );
                 if (out !== undefined) {
@@ -3798,7 +3798,7 @@ var Microformats; // jshint ignore:line
          * @return {String}
          */
         formatText: function( doc, text, textFormat ) {
-           this.textFormat = (textFormat)? textFormat : this.textFormat;
+           this.textFormat = (textFormat) ? textFormat : this.textFormat;
            if (text) {
               var out = '',
                   regex = /(<([^>]+)>)/ig;
@@ -3864,7 +3864,7 @@ var Microformats; // jshint ignore:line
                 out += ' ';
             }
 
-            return (out === '')? undefined : out ;
+            return (out === '') ? undefined : out ;
         }
 
     };
@@ -3952,7 +3952,7 @@ var Microformats; // jshint ignore:line
                 }
             }
 
-            return (out === '')? undefined : out;
+            return (out === '') ? undefined : out;
         }
 
 

@@ -8,7 +8,7 @@ const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const SUGGESTION_ENGINE_NAME = "browser_UsageTelemetry usageTelemetrySearchSuggestions.xml";
 const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
 
-let searchInAwesomebar = Task.async(function* (inputText, win=window) {
+let searchInAwesomebar = Task.async(function* (inputText, win = window) {
   yield new Promise(r => waitForFocus(r, win));
   // Write the search query in the urlbar.
   win.gURLBar.focus();

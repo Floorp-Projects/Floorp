@@ -188,7 +188,7 @@ function saveImageURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
 // This is like saveDocument, but takes any browser/frame-like element
 // (nsIFrameLoaderOwner) and saves the current document inside it,
 // whether in-process or out-of-process.
-function saveBrowser(aBrowser, aSkipPrompt, aOuterWindowID=0)
+function saveBrowser(aBrowser, aSkipPrompt, aOuterWindowID = 0)
 {
   if (!aBrowser) {
     throw "Must have a browser when calling saveBrowser";
@@ -1134,7 +1134,7 @@ function validateFileName(aFileName)
 
     // If a large part of the filename has been sanitized, then we
     // will use a default filename instead
-    if (processed.replace(/_/g, "").length <= processed.length/2) {
+    if (processed.replace(/_/g, "").length <= processed.length / 2) {
       // We purposefully do not use a localized default filename,
       // which we could have done using
       // ContentAreaUtils.stringBundle.GetStringFromName("DefaultSaveFileName")

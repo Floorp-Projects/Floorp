@@ -293,7 +293,7 @@ ContentPrefService.prototype = {
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
 
     let group = this._parseGroupParam(aGroup);
-    let storage = aContext && aContext.usePrivateBrowsing ? this._privModeStorage: this._cache;
+    let storage = aContext && aContext.usePrivateBrowsing ? this._privModeStorage : this._cache;
     return storage.has(group, aName);
   },
 

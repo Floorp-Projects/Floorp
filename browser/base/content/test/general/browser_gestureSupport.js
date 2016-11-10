@@ -507,10 +507,10 @@ function test_swipeGestures()
   for (let i = 0; i < combos.length; i++) {
     resetCounts();
     test_utils.sendSimpleGestureEvent("MozSwipeGesture", 0, 0, combos[i], 0, 0);
-    ok(cmdUp.callCount == 0, "Step 5-"+i+": Up command was triggered");
-    ok(cmdDown.callCount == 0, "Step 5-"+i+": Down command was triggered");
-    ok(cmdLeft.callCount == 0, "Step 5-"+i+": Left command was triggered");
-    ok(cmdRight.callCount == 0, "Step 5-"+i+": Right command was triggered");
+    ok(cmdUp.callCount == 0, "Step 5-" + i + ": Up command was triggered");
+    ok(cmdDown.callCount == 0, "Step 5-" + i + ": Down command was triggered");
+    ok(cmdLeft.callCount == 0, "Step 5-" + i + ": Left command was triggered");
+    ok(cmdRight.callCount == 0, "Step 5-" + i + ": Right command was triggered");
   }
 
   // Remove the test commands.

@@ -16,13 +16,13 @@ function makeWatcher() {
   return watcher;
 }
 
-function promiseAddPath(watcher, resource, onChange=null, onError=null) {
+function promiseAddPath(watcher, resource, onChange = null, onError = null) {
   return new Promise(resolve =>
     watcher.addPath(resource, onChange, onError, resolve)
   );
 }
 
-function promiseRemovePath(watcher, resource, onChange=null, onError=null) {
+function promiseRemovePath(watcher, resource, onChange = null, onError = null) {
   return new Promise(resolve =>
     watcher.removePath(resource, onChange, onError, resolve)
   );

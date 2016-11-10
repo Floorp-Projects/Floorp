@@ -57,7 +57,7 @@ function dumpRect(desc, rect) {
 
 function dumpNodeCoord(desc, node) {
   let rect = node.getBoundingClientRect();
-  dump(desc + " " + node.tagName + " x:" + Math.round(rect.left + rect.width/2) +
+  dump(desc + " " + node.tagName + " x:" + Math.round(rect.left + rect.width / 2) +
        " y:" + Math.round(rect.top + rect.height / 2));
 }
 

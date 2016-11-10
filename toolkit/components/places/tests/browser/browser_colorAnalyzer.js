@@ -228,9 +228,9 @@ var maxPixels = 144; // see ColorAnalyzer MAXIMUM_PIXELS const
 
 // make sure that images larger than maxPixels*maxPixels fail
 add_task(function* test_imageTooLarge() {
-  yield canvasTest(1+maxPixels, 1+maxPixels, function(ctx) {
+  yield canvasTest(1 + maxPixels, 1 + maxPixels, function(ctx) {
     ctx.fillStyle = "red";
-    ctx.fillRect(0, 0, 1+maxPixels, 1+maxPixels);
+    ctx.fillRect(0, 0, 1 + maxPixels, 1 + maxPixels);
   }, null, "imageTooLarge analysis fails");
 });
 

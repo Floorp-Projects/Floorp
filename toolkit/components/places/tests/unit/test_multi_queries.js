@@ -16,7 +16,7 @@ function* add_visit(aURI, aDayOffset, aTransition) {
   yield PlacesTestUtils.addVisits({
     uri: aURI,
     transition: aTransition,
-    visitDate: (Date.now() + aDayOffset*86400000) * 1000
+    visitDate: (Date.now() + aDayOffset * 86400000) * 1000
   });
 }
 

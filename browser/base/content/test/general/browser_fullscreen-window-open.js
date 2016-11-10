@@ -217,7 +217,7 @@ function waitForTabOpen(aOptions) {
     runNextTest();
   };
 
-  const URI = "data:text/html;charset=utf-8,<!DOCTYPE html><html><head><title>"+
+  const URI = "data:text/html;charset=utf-8,<!DOCTYPE html><html><head><title>" +
               message.title +
               "<%2Ftitle><%2Fhead><body><%2Fbody><%2Fhtml>";
 
@@ -319,7 +319,7 @@ WindowListener.prototype = {
                     .getInterface(Ci.nsIDOMWindow);
     let onLoad = aEvent => {
       is(domwindow.document.location.href, this.test_url,
-        "Opened Window is expected: "+ this.test_title);
+        "Opened Window is expected: " + this.test_title);
       if (this.callback_onSuccess) {
         this.callback_onSuccess();
       }

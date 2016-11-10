@@ -107,7 +107,7 @@ add_task(function* testTruncation() {
 
   // Long values should be truncated
   XULStore.setValue(browserURI, "dos", "dos", dos);
-  dos =XULStore.getValue(browserURI, "dos", "dos");
+  dos = XULStore.getValue(browserURI, "dos", "dos");
   do_check_true(dos.length == 4096)
   XULStore.removeValue(browserURI, "dos", "dos")
 });

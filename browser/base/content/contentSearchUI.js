@@ -38,7 +38,7 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
  *        string.
  */
 function ContentSearchUIController(inputElement, tableParent, healthReportKey,
-                                   searchPurpose, idPrefix="") {
+                                   searchPurpose, idPrefix = "") {
   this.input = inputElement;
   this._idPrefix = idPrefix;
   this._healthReportKey = healthReportKey;
@@ -901,7 +901,7 @@ ContentSearchUIController.prototype = {
     this._oneOffsTable.hidden = false;
   },
 
-  _sendMsg: function (type, data=null) {
+  _sendMsg: function (type, data = null) {
     dispatchEvent(new CustomEvent("ContentSearchClient", {
       detail: {
         type: type,

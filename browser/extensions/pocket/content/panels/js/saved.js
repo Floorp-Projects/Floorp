@@ -145,7 +145,7 @@ var PKT_SAVED_OVERLAY = function (options)
 
         if ((inputleft + listleft + 20) > leftwidth)
         {
-            $('.token-input-list').css('left', Math.min(((inputleft + listleftnatural - leftwidth + 20)*-1), 0) + 'px');
+            $('.token-input-list').css('left', Math.min(((inputleft + listleftnatural - leftwidth + 20) * -1), 0) + 'px');
         }
         else
         {
@@ -596,8 +596,8 @@ $(function()
     // send an async message to get string data
     thePKT_SAVED.sendMessage("initL10N", {
             tos: [
-                'https://'+ pocketHost +'/tos?s=ffi&t=tos&tv=panel_tryit',
-                'https://'+ pocketHost +'/privacy?s=ffi&t=privacypolicy&tv=panel_tryit'
+                'https://' + pocketHost + '/tos?s=ffi&t=tos&tv=panel_tryit',
+                'https://' + pocketHost + '/privacy?s=ffi&t=privacypolicy&tv=panel_tryit'
             ]
         }, function(resp) {
         window.pocketStrings = resp.strings;

@@ -259,7 +259,7 @@ this.ContentSearch = {
     return;
   },
 
-  getSuggestions: Task.async(function* (engineName, searchString, browser, remoteTimeout=null) {
+  getSuggestions: Task.async(function* (engineName, searchString, browser, remoteTimeout = null) {
     let engine = Services.search.getEngineByName(engineName);
     if (!engine) {
       throw new Error("Unknown engine name: " + engineName);
@@ -299,7 +299,7 @@ this.ContentSearch = {
     return result;
   }),
 
-  addFormHistoryEntry: Task.async(function* (browser, entry="") {
+  addFormHistoryEntry: Task.async(function* (browser, entry = "") {
     let isPrivate = false;
     try {
       // isBrowserPrivate assumes that the passed-in browser has all the normal
@@ -326,7 +326,7 @@ this.ContentSearch = {
     return true;
   }),
 
-  currentStateObj: Task.async(function* (uriFlag=false) {
+  currentStateObj: Task.async(function* (uriFlag = false) {
     let state = {
       engines: [],
       currentEngine: yield this._currentEngineObj(),
@@ -474,7 +474,7 @@ this.ContentSearch = {
     }
   }),
 
-  _suggestionDataForBrowser: function (browser, create=false) {
+  _suggestionDataForBrowser: function (browser, create = false) {
     let data = this._suggestionMap.get(browser);
     if (!data && create) {
       // Since one SearchSuggestionController instance is meant to be used per

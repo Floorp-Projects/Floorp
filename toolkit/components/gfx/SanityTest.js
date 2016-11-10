@@ -13,35 +13,35 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const FRAME_SCRIPT_URL = "chrome://gfxsanity/content/gfxFrameScript.js";
 
-const PAGE_WIDTH=92;
-const PAGE_HEIGHT=166;
-const DRIVER_PREF="sanity-test.driver-version";
-const DEVICE_PREF="sanity-test.device-id";
-const VERSION_PREF="sanity-test.version";
-const DISABLE_VIDEO_PREF="media.hardware-video-decoding.failed";
-const RUNNING_PREF="sanity-test.running";
-const TIMEOUT_SEC=20;
+const PAGE_WIDTH = 92;
+const PAGE_HEIGHT = 166;
+const DRIVER_PREF = "sanity-test.driver-version";
+const DEVICE_PREF = "sanity-test.device-id";
+const VERSION_PREF = "sanity-test.version";
+const DISABLE_VIDEO_PREF = "media.hardware-video-decoding.failed";
+const RUNNING_PREF = "sanity-test.running";
+const TIMEOUT_SEC = 20;
 
 // GRAPHICS_SANITY_TEST histogram enumeration values
-const TEST_PASSED=0;
-const TEST_FAILED_RENDER=1;
-const TEST_FAILED_VIDEO=2;
-const TEST_CRASHED=3;
-const TEST_TIMEOUT=4;
+const TEST_PASSED = 0;
+const TEST_FAILED_RENDER = 1;
+const TEST_FAILED_VIDEO = 2;
+const TEST_CRASHED = 3;
+const TEST_TIMEOUT = 4;
 
 // GRAPHICS_SANITY_TEST_REASON enumeration values.
-const REASON_FIRST_RUN=0;
-const REASON_FIREFOX_CHANGED=1;
-const REASON_DEVICE_CHANGED=2;
-const REASON_DRIVER_CHANGED=3;
+const REASON_FIRST_RUN = 0;
+const REASON_FIREFOX_CHANGED = 1;
+const REASON_DEVICE_CHANGED = 2;
+const REASON_DRIVER_CHANGED = 3;
 
 // GRAPHICS_SANITY_TEST_OS_SNAPSHOT histogram enumeration values
-const SNAPSHOT_VIDEO_OK=0;
-const SNAPSHOT_VIDEO_FAIL=1;
-const SNAPSHOT_ERROR=2;
-const SNAPSHOT_TIMEOUT=3;
-const SNAPSHOT_LAYERS_OK=4;
-const SNAPSHOT_LAYERS_FAIL=5;
+const SNAPSHOT_VIDEO_OK = 0;
+const SNAPSHOT_VIDEO_FAIL = 1;
+const SNAPSHOT_ERROR = 2;
+const SNAPSHOT_TIMEOUT = 3;
+const SNAPSHOT_LAYERS_OK = 4;
+const SNAPSHOT_LAYERS_FAIL = 5;
 
 function testPixel(ctx, x, y, r, g, b, a, fuzz) {
   var data = ctx.getImageData(x, y, 1, 1);

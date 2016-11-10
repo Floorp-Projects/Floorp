@@ -766,7 +766,7 @@ function run_bool_tests(library) {
   d.value = 1;
   do_check_eq(d.value, 1);
   d.value = -0;
-  do_check_eq(1/d.value, 1/0);
+  do_check_eq(1 / d.value, 1 / 0);
   d.value = false;
   do_check_eq(d.value, 0);
   d.value = true;
@@ -849,7 +849,7 @@ function run_integer_tests(library, t, name, size, signed, limits) {
   d.value = 0;
   do_check_eq(d.value, 0);
   d.value = -0;
-  do_check_eq(1/d.value, 1/0);
+  do_check_eq(1 / d.value, 1 / 0);
   d.value = false;
   do_check_eq(d.value, 0);
   d.value = true;
@@ -920,10 +920,10 @@ function run_float_tests(library, t, name, size) {
 
     // allow values that can't be represented precisely as a float
     d.value = 0xffffffff;
-    let delta = 1 - d.value/0xffffffff;
+    let delta = 1 - d.value / 0xffffffff;
     do_check_true(delta != 0);
     do_check_true(delta > -0.01 && delta < 0.01);
-    d.value = 1 + 1/0x80000000;
+    d.value = 1 + 1 / 0x80000000;
     do_check_eq(d.value, 1);
   } else {
     d.value = 0xfffffffffffff000;
@@ -941,7 +941,7 @@ function run_float_tests(library, t, name, size) {
   d.value = 0;
   do_check_eq(d.value, 0);
   d.value = -0;
-  do_check_eq(1/d.value, 1/-0);
+  do_check_eq(1 / d.value, 1 / -0);
 
   // don't convert anything else
   let vals = [true, false, null, undefined, "", "0", {}, [], new Number(16),
@@ -957,7 +957,7 @@ function run_float_tests(library, t, name, size) {
     eval("var f2 = " + f1.toSource());
     do_check_eq(f1.value, f2.value);
   }
-  vals = [Infinity, -Infinity, -0, 0, 1, -1, 1/3, -1/3, 1/4, -1/4,
+  vals = [Infinity, -Infinity, -0, 0, 1, -1, 1 / 3, -1 / 3, 1 / 4, -1 / 4,
           1e-14, -1e-14, 0xfffffffffffff000, -0xfffffffffffff000];
   for (let i = 0; i < vals.length; i++)
     test_roundtrip(t, vals[i]);
@@ -1036,7 +1036,7 @@ function run_wrapped_integer_tests(library, t, name, size, signed, w, wname, lim
   d.value = 0;
   do_check_eq(d.value, 0);
   d.value = -0;
-  do_check_eq(1/d.value, 1/0);
+  do_check_eq(1 / d.value, 1 / 0);
   d.value = false;
   do_check_eq(d.value, 0);
   d.value = true;
@@ -1117,7 +1117,7 @@ function run_char_tests(library, t, name, size, signed, limits) {
   d.value = 0;
   do_check_eq(d.value, 0);
   d.value = -0;
-  do_check_eq(1/d.value, 1/0);
+  do_check_eq(1 / d.value, 1 / 0);
   d.value = false;
   do_check_eq(d.value, 0);
   d.value = true;
@@ -1206,7 +1206,7 @@ function run_char16_tests(library, t, name, limits) {
   d.value = 0;
   do_check_eq(toprimitive(d.value), 0);
   d.value = -0;
-  do_check_eq(1/toprimitive(d.value), 1/0);
+  do_check_eq(1 / toprimitive(d.value), 1 / 0);
   d.value = false;
   do_check_eq(toprimitive(d.value), 0);
   d.value = true;
@@ -1260,7 +1260,7 @@ function run_char16_tests(library, t, name, limits) {
 }
 
 // Test the class and prototype hierarchy for a given type constructor 'c'.
-function run_type_ctor_class_tests(c, t, t2, props=[], fns=[], instanceProps=[], instanceFns=[], specialProps=[])
+function run_type_ctor_class_tests(c, t, t2, props = [], fns = [], instanceProps = [], instanceFns = [], specialProps = [])
 {
   do_check_true(c.prototype.__proto__ === ctypes.CType.prototype);
   do_check_true(c.prototype instanceof ctypes.CType);
@@ -2223,7 +2223,7 @@ function run_string_tests(library) {
   do_check_eq(test_ansi_len("hello world"), 11);
 
   // don't convert anything else to a string
-  let vals = [true, 0, 1/3, undefined, {}, {toString: function () { return "bad"; }}, []];
+  let vals = [true, 0, 1 / 3, undefined, {}, {toString: function () { return "bad"; }}, []];
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { test_ansi_len(vals[i]); }, TypeError);
 

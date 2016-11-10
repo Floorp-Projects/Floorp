@@ -95,7 +95,7 @@ var PrintUtils = {
         PSSVC.savePrintSettingsToPrefs(printSettings, true, printSettings.kInitSaveNativeData);
       }
     } catch (e) {
-      dump("showPageSetup "+e+"\n");
+      dump("showPageSetup " + e + "\n");
       return false;
     }
     return true;
@@ -463,7 +463,7 @@ var PrintUtils = {
         printSettings = PSSVC.newPrintSettings;
       }
     } catch (e) {
-      dump("getPrintSettings: "+e+"\n");
+      dump("getPrintSettings: " + e + "\n");
     }
     return printSettings;
   },
@@ -671,7 +671,7 @@ var PrintUtils = {
     try {
       closeKey = document.getElementById("key_close")
                          .getAttribute("key");
-      closeKey = aEvent["DOM_VK_"+closeKey];
+      closeKey = aEvent["DOM_VK_" + closeKey];
     } catch (e) {}
     var isModif = aEvent.ctrlKey || aEvent.metaKey;
     // Ctrl-W exits the PP

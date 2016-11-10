@@ -216,7 +216,7 @@ var gLanguagesDialog = {
 
     // Get the item to select after the remove operation completes.
     var selection = this._activeLanguages.selectedItems;
-    var lastSelected = selection[selection.length-1];
+    var lastSelected = selection[selection.length - 1];
     var selectItem = lastSelected.nextSibling || lastSelected.previousSibling;
     selectItem = selectItem ? selectItem.id : null;
 

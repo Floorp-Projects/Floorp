@@ -119,8 +119,8 @@ Rect.prototype = {
   setRect: function(x, y, w, h) {
     this.left = x;
     this.top = y;
-    this.right = x+w;
-    this.bottom = y+h;
+    this.right = x + w;
+    this.bottom = y + h;
 
     return this;
   },
@@ -228,7 +228,7 @@ Rect.prototype = {
     let r = Math.max(this.right, other.right);
     let t = Math.min(this.top, other.top);
     let b = Math.max(this.bottom, other.bottom);
-    return this.setRect(l, t, r-l, b-t);
+    return this.setRect(l, t, r - l, b - t);
   },
 
   /**

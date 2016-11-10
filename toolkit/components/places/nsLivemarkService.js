@@ -176,7 +176,7 @@ LivemarkService.prototype = {
     // Must provide at least non-null parent guid/id, index and feedURI.
     if ((!hasParentId && !hasParentGuid) ||
         (hasParentId && aLivemarkInfo.parentId < 1) ||
-        (hasParentGuid &&!/^[a-zA-Z0-9\-_]{12}$/.test(aLivemarkInfo.parentGuid)) ||
+        (hasParentGuid && !/^[a-zA-Z0-9\-_]{12}$/.test(aLivemarkInfo.parentGuid)) ||
         (hasIndex && aLivemarkInfo.index < Ci.nsINavBookmarksService.DEFAULT_INDEX) ||
         !(aLivemarkInfo.feedURI instanceof Ci.nsIURI) ||
         (aLivemarkInfo.siteURI && !(aLivemarkInfo.siteURI instanceof Ci.nsIURI)) ||

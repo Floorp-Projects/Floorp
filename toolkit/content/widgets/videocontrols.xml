@@ -1102,7 +1102,7 @@
                     // shows the animation unless the video is too small
                     // to show 2/3 of the animation.
                     let animationScale = 2;
-                    if (this._overlayPlayButtonHeight * animationScale > (videoHeight - this._controlBarHeight)||
+                    if (this._overlayPlayButtonHeight * animationScale > (videoHeight - this._controlBarHeight) ||
                         this._overlayPlayButtonWidth * animationScale > videoWidth) {
                         this.clickToPlay.setAttribute("immediate", "true");
                         this.clickToPlay.hidden = true;

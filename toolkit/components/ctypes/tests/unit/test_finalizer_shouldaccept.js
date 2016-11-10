@@ -88,9 +88,9 @@ function test_to_source()
   do_check_eq(a.toSource(),
               "ctypes.CDataFinalizer("
               + ctypes.size_t(value).toSource()
-              +", "
-              +dispose.toSource()
-              +")");
+              + ", "
+              + dispose.toSource()
+              + ")");
   value = null;
 
   a.forget();
@@ -154,7 +154,7 @@ function test_to_pointer()
   let finalizable = ctypes.CDataFinalizer(ptr, dispose_ptr);
   let unwrapped = ctypes.int32_t.ptr(finalizable);
 
-  do_check_eq(""+ptr, ""+unwrapped);
+  do_check_eq("" + ptr, "" + unwrapped);
 
   finalizable.forget(); // Do not dispose: This is not a real pointer.
 }

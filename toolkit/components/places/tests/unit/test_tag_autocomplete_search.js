@@ -93,7 +93,7 @@ function ensure_tag_results(results, searchTerm)
                   Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
 
     do_check_eq(controller.matchCount, results.length);
-    for (var i=0; i<controller.matchCount; i++) {
+    for (var i = 0; i < controller.matchCount; i++) {
       do_check_eq(controller.getValueAt(i), results[i]);
     }
 
