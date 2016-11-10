@@ -361,7 +361,7 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 
     // release our reference to the original stream.  from this point forward,
     // we only reference the "stream" via mAsyncStream.
-    mStream = 0;
+    mStream = nullptr;
 
     // mStreamOffset now holds the number of bytes currently read.  we use this
     // to enforce the mStreamLength restriction.
@@ -703,8 +703,8 @@ nsInputStreamPump::OnStateStop()
     else if (mCloseWhenDone)
         mAsyncStream->Close();
 
-    mAsyncStream = 0;
-    mTargetThread = 0;
+    mAsyncStream = nullptr;
+    mTargetThread = nullptr;
     mIsPending = false;
     {
         // Note: Must exit monitor for call to OnStartRequest to avoid
@@ -714,8 +714,8 @@ nsInputStreamPump::OnStateStop()
         mListener->OnStopRequest(this, mListenerContext, mStatus);
         mMonitor.Enter();
     }
-    mListener = 0;
-    mListenerContext = 0;
+    mListener = nullptr;
+    mListenerContext = nullptr;
 
     if (mLoadGroup)
         mLoadGroup->RemoveRequest(this, nullptr, mStatus);

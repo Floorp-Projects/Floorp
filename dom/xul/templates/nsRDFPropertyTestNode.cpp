@@ -54,7 +54,7 @@ nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
                                              nsIAtom* aTargetVariable)
     : nsRDFTestNode(aParent),
       mProcessor(aProcessor),
-      mSourceVariable(0),
+      mSourceVariable(nullptr),
       mSource(aSource),
       mProperty(aProperty),
       mTargetVariable(aTargetVariable),
@@ -90,7 +90,7 @@ nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
       mSourceVariable(aSourceVariable),
       mSource(nullptr),
       mProperty(aProperty),
-      mTargetVariable(0),
+      mTargetVariable(nullptr),
       mTarget(aTarget)
 {
     if (MOZ_LOG_TEST(gXULTemplateLog, LogLevel::Debug)) {

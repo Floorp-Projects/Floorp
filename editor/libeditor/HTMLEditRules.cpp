@@ -500,7 +500,7 @@ HTMLEditRules::AfterEditInner(EditAction action,
     // if we created a new block, make sure selection lands in it
     if (mNewBlock) {
       rv = PinSelectionToNewBlock(selection);
-      mNewBlock = 0;
+      mNewBlock = nullptr;
     }
 
     // adjust selection for insert text, html paste, and delete actions
@@ -3079,7 +3079,7 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
       NS_ENSURE_STATE(mHTMLEditor);
       rv = mHTMLEditor->DeleteNode(curNode);
       NS_ENSURE_SUCCESS(rv, rv);
-      prevListItem = 0;
+      prevListItem = nullptr;
       continue;
     } else if (IsEmptyInline(curNode)) {
       // if curNode is an empty inline container, delete it
@@ -3112,7 +3112,7 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
         NS_ENSURE_SUCCESS(rv, rv);
         curList = newBlock;
       }
-      prevListItem = 0;
+      prevListItem = nullptr;
       continue;
     }
 
@@ -3206,7 +3206,7 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
       // remember our new block for postprocessing
       mNewBlock = curList;
       // curList is now the correct thing to put curNode in
-      prevListItem = 0;
+      prevListItem = nullptr;
     }
 
     // if curNode isn't a list item, we must wrap it in one
