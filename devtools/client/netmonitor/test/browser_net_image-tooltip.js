@@ -3,11 +3,14 @@
 
 "use strict";
 
+const IMAGE_TOOLTIP_URL = EXAMPLE_URL + "html_image-tooltip-test-page.html";
+const IMAGE_TOOLTIP_REQUESTS = 1;
+
 /**
  * Tests if image responses show a popup in the requests menu when hovered.
  */
 add_task(function* test() {
-  let { tab, monitor } = yield initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
+  let { tab, monitor } = yield initNetMonitor(IMAGE_TOOLTIP_URL);
   info("Starting test... ");
 
   let { $, EVENTS, ACTIVITY_TYPE, NetMonitorView, NetMonitorController } =
@@ -15,7 +18,7 @@ add_task(function* test() {
   let { RequestsMenu } = NetMonitorView;
   RequestsMenu.lazyUpdate = true;
 
-  let onEvents = waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
+  let onEvents = waitForNetworkEvents(monitor, IMAGE_TOOLTIP_REQUESTS);
   let onThumbnail = monitor.panelWin.once(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
 
   yield performRequests();
@@ -23,10 +26,15 @@ add_task(function* test() {
   yield onThumbnail;
 
   info("Checking the image thumbnail after a few requests were made...");
-  yield showTooltipAndVerify(RequestsMenu.tooltip, RequestsMenu.items[5]);
+  yield showTooltipAndVerify(RequestsMenu.tooltip, RequestsMenu.items[0]);
+
+  // Hide tooltip before next test, to avoid the situation that tooltip covers
+  // the icon for the request of the next test.
+  info("Checking the image thumbnail gets hidden...");
+  yield hideTooltipAndVerify(RequestsMenu.tooltip, RequestsMenu.items[0]);
 
   // +1 extra document reload
-  onEvents = waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS + 1);
+  onEvents = waitForNetworkEvents(monitor, IMAGE_TOOLTIP_REQUESTS + 1);
   onThumbnail = monitor.panelWin.once(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
 
   info("Reloading the debuggee and performing all requests again...");
@@ -36,7 +44,7 @@ add_task(function* test() {
   yield onThumbnail;
 
   info("Checking the image thumbnail after a reload.");
-  yield showTooltipAndVerify(RequestsMenu.tooltip, RequestsMenu.items[6]);
+  yield showTooltipAndVerify(RequestsMenu.tooltip, RequestsMenu.items[1]);
 
   info("Checking if the image thumbnail is hidden when mouse leaves the menu widget");
   let requestsMenuEl = $("#requests-menu-contents");
@@ -74,5 +82,20 @@ add_task(function* test() {
     let win = element.ownerDocument.defaultView;
     EventUtils.synthesizeMouseAtCenter(element, {type: "mousemove"}, win);
     return onShown;
+  }
+
+  /**
+   * Hide a tooltip on the {requestItem} and verify that it was closed.
+   */
+  function* hideTooltipAndVerify(tooltip, requestItem) {
+    // Hovering method hides tooltip.
+    let anchor = $(".requests-menu-method", requestItem.target);
+
+    let onHidden = tooltip.once("hidden");
+    let win = anchor.ownerDocument.defaultView;
+    EventUtils.synthesizeMouseAtCenter(anchor, {type: "mousemove"}, win);
+    yield onHidden;
+
+    info("Tooltip was successfully closed.");
   }
 });
