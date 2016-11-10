@@ -6,7 +6,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/fxa_utils.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-add_task(function* test_findCluster() {
+add_task(async function test_findCluster() {
   _("Test FxA _findCluster()");
 
   _("_findCluster() throws on 500 errors.");
@@ -16,8 +16,8 @@ add_task(function* test_findCluster() {
     body: "",
   });
 
-  yield Service.identity.initializeWithCurrentIdentity();
-  yield Assert.rejects(Service.identity.whenReadyToAuthenticate.promise,
+  await Service.identity.initializeWithCurrentIdentity();
+  await Assert.rejects(Service.identity.whenReadyToAuthenticate.promise,
                        "should reject due to 500");
 
   Assert.throws(function() {
@@ -31,8 +31,8 @@ add_task(function* test_findCluster() {
     body: "{}",
   });
 
-  yield Service.identity.initializeWithCurrentIdentity();
-  yield Assert.rejects(Service.identity.whenReadyToAuthenticate.promise,
+  await Service.identity.initializeWithCurrentIdentity();
+  await Assert.rejects(Service.identity.whenReadyToAuthenticate.promise,
                        "should reject due to 401");
 
   cluster = Service._clusterManager._findCluster();
@@ -53,8 +53,8 @@ add_task(function* test_findCluster() {
       })
   });
 
-  yield Service.identity.initializeWithCurrentIdentity();
-  yield Service.identity.whenReadyToAuthenticate.promise;
+  await Service.identity.initializeWithCurrentIdentity();
+  await Service.identity.whenReadyToAuthenticate.promise;
   cluster = Service._clusterManager._findCluster();
   // The cluster manager ensures a trailing "/"
   Assert.strictEqual(cluster, endpoint + "/");
