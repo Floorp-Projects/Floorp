@@ -95,16 +95,17 @@ TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
                           DispatchFailureHandling aFailureHandling,
                           DispatchReason aReason)
 {
+  mQueueMonitor.AssertCurrentThreadOwns();
+  if (mIsShutdown) {
+    return NS_ERROR_FAILURE;
+  }
+
   AbstractThread* currentThread;
   if (aReason != TailDispatch && (currentThread = GetCurrent()) && RequiresTailDispatch(currentThread)) {
     currentThread->TailDispatcher().AddTask(this, aRunnable.forget(), aFailureHandling);
     return NS_OK;
   }
 
-  mQueueMonitor.AssertCurrentThreadOwns();
-  if (mIsShutdown) {
-    return NS_ERROR_FAILURE;
-  }
   mTasks.push(aRunnable.forget());
   if (mIsRunning) {
     return NS_OK;
