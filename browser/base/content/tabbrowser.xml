@@ -796,8 +796,10 @@
                 }
 
                 let unifiedComplete = this.mTabBrowser._unifiedComplete;
+                let userContextId = this.mBrowser.getAttribute("usercontextid") || 0;
                 if (this.mBrowser.registeredOpenURI) {
-                  unifiedComplete.unregisterOpenPage(this.mBrowser.registeredOpenURI);
+                  unifiedComplete.unregisterOpenPage(this.mBrowser.registeredOpenURI,
+                                                     userContextId);
                   delete this.mBrowser.registeredOpenURI;
                 }
                 // Tabs in private windows aren't registered as "Open" so
@@ -805,7 +807,7 @@
                 if (!isBlankPageURL(aLocation.spec) &&
                     (!PrivateBrowsingUtils.isWindowPrivate(window) ||
                     PrivateBrowsingUtils.permanentPrivateBrowsing)) {
-                  unifiedComplete.registerOpenPage(aLocation);
+                  unifiedComplete.registerOpenPage(aLocation, userContextId);
                   this.mBrowser.registeredOpenURI = aLocation;
                 }
               }
@@ -2575,7 +2577,8 @@
             listener.destroy();
 
             if (browser.registeredOpenURI && !aAdoptedByTab) {
-              this._unifiedComplete.unregisterOpenPage(browser.registeredOpenURI);
+              this._unifiedComplete.unregisterOpenPage(browser.registeredOpenURI,
+                                                       browser.getAttribute("usercontextid") || 0);
               delete browser.registeredOpenURI;
             }
 
@@ -2947,7 +2950,8 @@
           <![CDATA[
             // If the current URI is registered as open remove it from the list.
             if (aOurBrowser.registeredOpenURI) {
-              this._unifiedComplete.unregisterOpenPage(aOurBrowser.registeredOpenURI);
+              this._unifiedComplete.unregisterOpenPage(aOurBrowser.registeredOpenURI,
+                                                       aOurBrowser.getAttribute("usercontextid") || 0);
               delete aOurBrowser.registeredOpenURI;
             }
 
@@ -4853,7 +4857,8 @@
           for (let tab of this.tabs) {
             let browser = tab.linkedBrowser;
             if (browser.registeredOpenURI) {
-              this._unifiedComplete.unregisterOpenPage(browser.registeredOpenURI);
+              this._unifiedComplete.unregisterOpenPage(browser.registeredOpenURI,
+                                                       browser.getAttribute("usercontextid") || 0);
               delete browser.registeredOpenURI;
             }
             let filter = this._tabFilters.get(tab);
