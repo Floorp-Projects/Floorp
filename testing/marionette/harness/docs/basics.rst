@@ -5,19 +5,18 @@ Marionette Python Client
 
 The Marionette python client library allows you to remotely control a
 Gecko-based browser or device which is running a Marionette_
-server. This includes desktop Firefox and FirefoxOS (support for
-Firefox for Android is planned, but not yet fully implemented).
+server. This includes Firefox Desktop and Firefox for Android.
 
 The Marionette server is built directly into Gecko and can be started by
 passing in a command line option to Gecko, or by using a Marionette-enabled
 build. The server listens for connections from various clients. Clients can
 then control Gecko by sending commands to the server.
 
-This is the official python client for Marionette. There also exists a
+This is the official Python client for Marionette. There also exists a
 `NodeJS client`_ maintained by the Firefox OS automation team.
 
 .. _Marionette: https://developer.mozilla.org/en-US/docs/Marionette
-.. _NodeJS client: https://github.com/mozilla-b2g/marionette-js-client
+.. _NodeJS client: https://github.com/mozilla-b2g/gaia/tree/master/tests/jsmarionette
 
 Getting the Client
 ------------------
@@ -59,9 +58,9 @@ with :func:`start_session() <Marionette.start_session>`:
    client.start_session()
 
 This returns a session id and an object listing the capabilities of the
-Marionette server. For example, a server running on a Firefox OS device will
-have the ability to rotate the window, while a server running from Firefox
-won't. It's also possible to access the capabilities using the
+Marionette server. For example, a server running on Firefox Desktop will
+have some features which a server running from Firefox Android won't.
+It's also possible to access the capabilities using the
 :attr:`~Marionette.session_capabilities` attribute. After finishing with a
 session, you can delete it with :func:`~Marionette.delete_session()`. Note that
 this will also happen automatically when the Marionette object is garbage
@@ -93,10 +92,9 @@ context of a new frame (e.g an <iframe> element):
    assert iframe == client.get_active_frame()
 
 Finally Marionette can switch between `chrome` and `content` scope. Chrome is a
-privileged scope where you can access things like the Firefox UI itself or the
-system app in Firefox OS. Content scope is where things like webpages or normal
-Firefox OS apps live. You can switch between `chrome` and `content` using the
-:func:`~Marionette.set_context` and :func:`~Marionette.using_context` functions:
+privileged scope where you can access things like the Firefox UI itself.
+Content scope is where things like webpages live. You can switch between
+`chrome` and `content` using the :func:`~Marionette.set_context` and :func:`~Marionette.using_context` functions:
 
 .. parsed-literal::
    client.set_context(client.CONTEXT_CONTENT)
