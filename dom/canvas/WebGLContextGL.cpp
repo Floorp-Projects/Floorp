@@ -170,9 +170,9 @@ WebGLContext::BindRenderbuffer(GLenum target, WebGLRenderbuffer* wrb)
     if (!ValidateObjectAllowDeletedOrNull("bindRenderbuffer", wrb))
         return;
 
-    // silently ignore a deleted buffer
-    if (wrb && wrb->IsDeleted())
-        return;
+    if (wrb && wrb->IsDeleted()) {
+        return ErrorInvalidOperation("BindRenderbuffer: bind a deleted buffer");
+    }
 
     // Usually, we would now call into glBindRenderbuffer. However, since we have to
     // potentially emulate packed-depth-stencil, there's not a specific renderbuffer that
