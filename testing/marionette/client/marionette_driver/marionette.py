@@ -1352,15 +1352,14 @@ class Marionette(object):
             script can run without causing an ScriptTimeoutException to
             be raised
 
+        .. note:: `set_script_timeout` is deprecated, please use
+            `timeout.script` setter.
+
         """
-        try:
-            self._send_message("setTimeouts", {"script": timeout})
-        except errors.MarionetteException as e:
-            # remove when 52.0a is stable
-            if "Not a Number" in e.message:
-                self._send_message("timeouts", {"type": "script", "ms": timeout})
-            else:
-                raise e
+        warnings.warn(
+            "set_script_timeout is deprecated, please use timeout.script setter",
+            DeprecationWarning)
+        self.timeout.script = timeout / 1000
 
     def set_search_timeout(self, timeout):
         """Sets a timeout for the find methods.
@@ -1375,15 +1374,14 @@ class Marionette(object):
 
         :param timeout: Timeout in milliseconds.
 
+        .. note:: `set_search_timeout` is deprecated, please use
+            `timeout.implicit` setter.
+
         """
-        try:
-            self._send_message("setTimeouts", {"implicit": timeout})
-        except errors.MarionetteException as e:
-            # remove when 52.0a is stable
-            if "Not a Number" in e.message:
-                self._send_message("timeouts", {"type": "implicit", "ms": timeout})
-            else:
-                raise e
+        warnings.warn(
+            "set_search_timeout is deprecated, please use timeout.implicit setter",
+            DeprecationWarning)
+        self.timeout.implicit = timeout / 1000
 
     def set_page_load_timeout(self, timeout):
         """Sets a timeout for loading pages.
@@ -1394,15 +1392,14 @@ class Marionette(object):
 
         :param timeout: Timeout in milliseconds.
 
+        .. note:: `set_page_load_timeout` is deprecated, please use
+            `timeout.page_load` setter.
+
         """
-        try:
-            self._send_message("setTimeouts", {"page load": timeout})
-        except errors.MarionetteException as e:
-            # remove when 52.0a is stable
-            if "Not a Number" in e.message:
-                self._send_message("timeouts", {"type": "page load", "ms": timeout})
-            else:
-                raise e
+        warnings.warn(
+            "set_page_load_timeout is deprecated, please use timeout.page_load setter",
+            DeprecationWarning)
+        self.timeout.page_load = timeout / 1000
 
     @property
     def current_window_handle(self):
