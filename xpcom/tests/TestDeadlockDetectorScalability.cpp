@@ -10,7 +10,7 @@
 #include "TestHarness.h"
 #include "nsIMemoryReporter.h"
 
-//#define OLD_API
+#include "mozilla/Mutex.h"
 
 #define PASS()                                  \
     do {                                        \
@@ -24,19 +24,6 @@
         return NS_ERROR_FAILURE;                \
     } while (0)
 
-#ifdef OLD_API
-#  include "nsAutoLock.h"
-   typedef PRLock* moz_lock_t;
-#  define NEWLOCK(n) nsAutoLock::NewLock(n)
-#  define DELETELOCK(v) nsAutoLock::DestroyLock(v)
-#  define AUTOLOCK(v, l) nsAutoLock v(l)
-#else
-#  include "mozilla/Mutex.h"
-   typedef mozilla::Mutex* moz_lock_t;
-#  define NEWLOCK(n) new mozilla::Mutex(n)
-#  define DELETELOCK(v) delete (v)
-#  define AUTOLOCK(v, l) mozilla::MutexAutoLock v(*l)
-#endif
 
 // def/undef these to run particular tests.
 #undef DD_TEST1
@@ -54,12 +41,12 @@ AllocLockRecurseUnlockFree(int i)
     if (0 == i)
         return;
 
-    moz_lock_t lock = NEWLOCK("deadlockDetector.scalability.t1");
+    mozilla::Mutex* lock = new mozilla::Mutex("deadlockDetector.scalability.t1");
     {
-        AUTOLOCK(_, lock);
+        mozilla::MutexAutoLock _(*lock);
         AllocLockRecurseUnlockFree(i - 1);
     }
-    DELETELOCK(lock);
+    delete lock;
 }
 
 // This test creates a resource dependency chain N elements long, then
@@ -82,30 +69,30 @@ LengthNDepChain(int N)
 static nsresult
 OneLockNDeps(const int N, const int K)
 {
-    moz_lock_t lock = NEWLOCK("deadlockDetector.scalability.t2.master");
-    moz_lock_t* locks = new moz_lock_t[N];
+    mozilla::Mutex* lock = new mozilla::Mutex("deadlockDetector.scalability.t2.master");
+    mozilla::Mutex** locks = new mozilla::Mutex*[N];
     if (!locks)
         NS_RUNTIMEABORT("couldn't allocate lock array");
 
     for (int i = 0; i < N; ++i)
         locks[i] =
-            NEWLOCK("deadlockDetector.scalability.t2.dep");
+            new mozilla::Mutex("deadlockDetector.scalability.t2.dep");
 
     // establish orders
-    {AUTOLOCK(m, lock);
+    {mozilla::MutexAutoLock m(*lock);
         for (int i = 0; i < N; ++i)
-            AUTOLOCK(s, locks[i]);
+            mozilla::MutexAutoLock s(*locks[i]);
     }
 
     // exercise order check
-    {AUTOLOCK(m, lock);
+    {mozilla::MutexAutoLock m(*lock);
         for (int i = 0; i < K; ++i)
             for (int j = 0; j < N; ++j)
-                AUTOLOCK(s, locks[i]);
+                mozilla::MutexAutoLock s(*locks[i]);
     }
 
     for (int i = 0; i < N; ++i)
-        DELETELOCK(locks[i]);
+        delete locks[i];
     delete[] locks;
 
     PASS();
@@ -127,29 +114,29 @@ OneLockNDeps(const int N, const int K)
 static nsresult
 MaxDepsNsq(const int N, const int K)
 {
-    moz_lock_t* locks = new moz_lock_t[N];
+    mozilla::Mutex** locks = new mozilla::Mutex*[N];
     if (!locks)
         NS_RUNTIMEABORT("couldn't allocate lock array");
 
     for (int i = 0; i < N; ++i)
-        locks[i] = NEWLOCK("deadlockDetector.scalability.t3");
+        locks[i] = new mozilla::Mutex("deadlockDetector.scalability.t3");
 
     for (int i = 0; i < N; ++i) {
-        AUTOLOCK(al1, locks[i]);
+        mozilla::MutexAutoLock al1(*locks[i]);
         for (int j = i+1; j < N; ++j)
-            AUTOLOCK(al2, locks[j]);
+            mozilla::MutexAutoLock al2(*locks[j]);
     }
 
     for (int i = 0; i < K; ++i) {
         for (int j = 0; j < N; ++j) {
-            AUTOLOCK(al1, locks[j]);
+            mozilla::MutexAutoLock al1(*locks[j]);
             for (int k = j+1; k < N; ++k)
-                AUTOLOCK(al2, locks[k]);
+                mozilla::MutexAutoLock al2(*locks[k]);
         }
     }
 
     for (int i = 0; i < N; ++i)
-        DELETELOCK(locks[i]);
+        delete locks[i];
     delete[] locks;
 
     PASS();
@@ -169,25 +156,25 @@ static nsresult
 OneLockNDepsUsedSeveralTimes(const size_t N, const size_t K)
 {
     // Create master lock.
-    moz_lock_t lock_1 = NEWLOCK("deadlockDetector.scalability.t4.master");
+    mozilla::Mutex* lock_1 = new mozilla::Mutex("deadlockDetector.scalability.t4.master");
     for (size_t n = 0; n < N; n++) {
         // Create child lock.
-        moz_lock_t lock_2 = NEWLOCK("deadlockDetector.scalability.t4.child");
+        mozilla::Mutex* lock_2 = new mozilla::Mutex("deadlockDetector.scalability.t4.child");
 
         // First lock the master.
-        AUTOLOCK(m, lock_1);
+        mozilla::MutexAutoLock m(*lock_1);
 
         // Now lock and unlock the child a few times.
         for (size_t k = 0; k < K; k++) {
-            AUTOLOCK(c, lock_2);
+            mozilla::MutexAutoLock c(*lock_2);
         }
 
         // Destroy the child lock.
-        DELETELOCK(lock_2);
+        delete lock_2;
     }
 
     // Cleanup the master lock.
-    DELETELOCK(lock_1);
+    delete lock_1;
 
     PASS();
 }
