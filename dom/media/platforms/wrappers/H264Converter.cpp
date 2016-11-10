@@ -86,11 +86,6 @@ H264Converter::Input(MediaRawData* aSample)
     }
   } else {
     rv = CheckForSPSChange(aSample);
-    if (rv == NS_ERROR_NOT_INITIALIZED) {
-      // Decoder has not yet initialized.
-      mCallback->InputExhausted();
-      return;
-    }
   }
   if (NS_FAILED(rv)) {
     mCallback->Error(
@@ -234,7 +229,7 @@ H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
              &H264Converter::OnDecoderInitDone,
              &H264Converter::OnDecoderInitFailed));
   }
-  return NS_ERROR_NOT_INITIALIZED;
+  return rv;
 }
 
 void
@@ -249,12 +244,6 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
         continue;
       }
       mNeedKeyframe = false;
-    }
-    if (!mNeedAVCC &&
-        !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(sample, mNeedKeyframe)) {
-      mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                                   RESULT_DETAIL("ConvertSampleToAnnexB")));
-      return;
     }
     mDecoder->Input(sample);
   }
