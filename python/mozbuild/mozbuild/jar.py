@@ -545,6 +545,7 @@ class JarMaker(object):
                 if e.errno != errno.ENOENT:
                     raise
             if sys.platform != 'win32':
+                src = os.path.relpath(src, os.path.dirname(out))
                 os.symlink(src, out)
             else:
                 # On Win32, use ctypes to create a hardlink
