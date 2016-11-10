@@ -107,9 +107,11 @@ this.GeckoDriver = function(appName, server) {
   // points to current browser
   this.curBrowser = null;
   this.context = Context.CONTENT;
+
   this.scriptTimeout = 30000;  // 30 seconds
   this.searchTimeout = 0;
   this.pageTimeout = 300000;  // five minutes
+
   this.timer = null;
   this.inactivityTimer = null;
   this.marionetteLog = new logging.ContentLogger();
@@ -127,7 +129,6 @@ this.GeckoDriver = function(appName, server) {
   this.oopFrameId = null;
   this.observing = null;
   this._browserIds = new WeakMap();
-  this.actions = new action.Chain();
 
   this.sessionCapabilities = {
     // mandated capabilities
@@ -168,6 +169,8 @@ this.GeckoDriver = function(appName, server) {
     this.dialog = new modal.Dialog(() => this.curBrowser, winr);
   };
   modal.addHandler(handleDialog);
+
+  this.actions = new action.Chain();
 };
 
 GeckoDriver.prototype.QueryInterface = XPCOMUtils.generateQI([
