@@ -1629,7 +1629,7 @@ NS_IMETHODIMP LayerScopeWebSocketManager::SocketListener::OnSocketAccepted(
 void
 LayerScope::Init()
 {
-    if (!gfxPrefs::LayerScopeEnabled()) {
+    if (!gfxPrefs::LayerScopeEnabled() || XRE_IsGPUProcess()) {
         return;
     }
 
