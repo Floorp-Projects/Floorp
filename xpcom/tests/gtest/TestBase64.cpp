@@ -3,14 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TestHarness.h"
-
 #include "mozilla/Attributes.h"
 #include "nsIScriptableBase64Encoder.h"
 #include "nsIInputStream.h"
-#include "nsAutoPtr.h"
-#include "nsStringAPI.h"
-#include <wchar.h>
+#include "nsString.h"
+
+#include "gtest/gtest.h"
 
 struct Chunk {
   Chunk(uint32_t l, const char* c)
@@ -161,8 +159,8 @@ public:
 
   void Reset();
   bool NextTest();
-  bool CheckTest(nsACString& aResult);
-  bool CheckTest(nsAString& aResult);
+  void CheckTest(nsACString& aResult);
+  void CheckTest(nsAString& aResult);
 private:
   uint32_t mTestNumber;
   const Test* mTest;
@@ -253,36 +251,25 @@ FakeInputStream::NextTest()
   return mTest->mChunks ? true : false;
 }
 
-bool
+void
 FakeInputStream::CheckTest(nsACString& aResult)
 {
-  return !strcmp(aResult.BeginReading(), mTest->mResult) ? true : false;
+  ASSERT_STREQ(aResult.BeginReading(), mTest->mResult);
 }
 
-#ifdef XP_WIN
-static inline int NS_tstrcmp(char16ptr_t x, char16ptr_t y) {
-    return wcscmp(x, y);
-}
-#else
-#define NS_tstrcmp strcmp
-#endif
-
-bool
+void
 FakeInputStream::CheckTest(nsAString& aResult)
 {
-  return !NS_tstrcmp(aResult.BeginReading(),
-                     NS_ConvertASCIItoUTF16(mTest->mResult).BeginReading())
-                     ? true : false;
+  ASSERT_TRUE(aResult.EqualsASCII(mTest->mResult)) <<
+    "Actual:   " << aResult.BeginReading() << std::endl <<
+    "Expected: " << mTest->mResult;
 }
 
-int main(int argc, char** argv)
+TEST(Base64, Test)
 {
-  ScopedXPCOM xpcom("Base64");
-  NS_ENSURE_FALSE(xpcom.failed(), 1);
-
   nsCOMPtr<nsIScriptableBase64Encoder> encoder =
     do_CreateInstance("@mozilla.org/scriptablebase64encoder;1");
-  NS_ENSURE_TRUE(encoder, 1);
+  ASSERT_TRUE(encoder);
 
   RefPtr<FakeInputStream> stream = new FakeInputStream();
   do {
@@ -291,17 +278,14 @@ int main(int argc, char** argv)
 
     nsresult rv;
     rv = encoder->EncodeToString(stream, 0, wideString);
-    NS_ENSURE_SUCCESS(rv, 1);
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
 
     stream->Reset();
 
     rv = encoder->EncodeToCString(stream, 0, string);
-    NS_ENSURE_SUCCESS(rv, 1);
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
 
-    if (!stream->CheckTest(wideString) || !stream->CheckTest(string))
-      fail("Failed to convert properly\n");
-
+    stream->CheckTest(wideString);
+    stream->CheckTest(string);
   } while (stream->NextTest());
-
-  return 0;
 }
