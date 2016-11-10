@@ -430,6 +430,13 @@ public:
     NSCAP_LOG_ASSIGNMENT(this, nullptr);
   }
 
+  MOZ_IMPLICIT nsCOMPtr(decltype(nullptr))
+    : NSCAP_CTOR_BASE(nullptr)
+  {
+    assert_validity();
+    NSCAP_LOG_ASSIGNMENT(this, nullptr);
+  }
+
   nsCOMPtr(const nsCOMPtr<T>& aSmartPtr)
     : NSCAP_CTOR_BASE(aSmartPtr.mRawPtr)
   {
@@ -585,6 +592,12 @@ public:
   {
     assign_with_AddRef(aRhs);
     NSCAP_ASSERT_NO_QUERY_NEEDED();
+    return *this;
+  }
+
+  nsCOMPtr<T>& operator=(decltype(nullptr))
+  {
+    assign_assuming_AddRef(nullptr);
     return *this;
   }
 
@@ -805,6 +818,12 @@ public:
     NSCAP_LOG_ASSIGNMENT(this, nullptr);
   }
 
+  MOZ_IMPLICIT nsCOMPtr(decltype(nullptr))
+    : nsCOMPtr_base(nullptr)
+  {
+    NSCAP_LOG_ASSIGNMENT(this, nullptr);
+  }
+
   nsCOMPtr(const nsCOMPtr<nsISupports>& aSmartPtr)
     : nsCOMPtr_base(aSmartPtr.mRawPtr)
   {
@@ -906,6 +925,12 @@ public:
   nsCOMPtr<nsISupports>& operator=(nsISupports* aRhs)
   {
     assign_with_AddRef(aRhs);
+    return *this;
+  }
+
+  nsCOMPtr<nsISupports>& operator=(decltype(nullptr))
+  {
+    assign_assuming_AddRef(nullptr);
     return *this;
   }
 
