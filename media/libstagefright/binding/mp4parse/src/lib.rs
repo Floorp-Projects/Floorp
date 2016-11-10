@@ -9,7 +9,7 @@
 extern crate afl;
 
 extern crate byteorder;
-use byteorder::ReadBytesExt;
+use byteorder::{ReadBytesExt, WriteBytesExt};
 use std::io::{Read, Take};
 use std::io::Cursor;
 use std::cmp;
@@ -294,6 +294,18 @@ pub struct MovieExtendsBox {
     pub fragment_duration: Option<MediaScaledTime>,
 }
 
+pub type ByteData = Vec<u8>;
+
+#[derive(Debug, Default)]
+pub struct ProtectionSystemSpecificHeaderBox {
+    pub system_id: ByteData,
+    pub kid: Vec<ByteData>,
+    pub data: ByteData,
+
+    // The entire pssh box (include header) required by Gecko.
+    pub box_content: ByteData,
+}
+
 /// Internal data structures.
 #[derive(Debug, Default)]
 pub struct MediaContext {
@@ -301,6 +313,7 @@ pub struct MediaContext {
     /// Tracks found in the file.
     pub tracks: Vec<Track>,
     pub mvex: Option<MovieExtendsBox>,
+    pub psshs: Vec<ProtectionSystemSpecificHeaderBox>
 }
 
 impl MediaContext {
@@ -601,11 +614,55 @@ fn read_moov<T: Read>(f: &mut BMFFBox<T>, context: &mut MediaContext) -> Result<
                 log!("{:?}", mvex);
                 context.mvex = Some(mvex);
             }
+            BoxType::ProtectionSystemSpecificHeaderBox => {
+                let pssh = try!(read_pssh(&mut b));
+                log!("{:?}", pssh);
+                context.psshs.push(pssh);
+            }
             _ => try!(skip_box_content(&mut b)),
         };
         check_parser_state!(b.content);
     }
     Ok(())
+}
+
+fn read_pssh<T: Read>(src: &mut BMFFBox<T>) -> Result<ProtectionSystemSpecificHeaderBox> {
+    let mut box_content = Vec::with_capacity(src.head.size as usize);
+    try!(src.read_to_end(&mut box_content));
+
+    let (system_id, kid, data) = {
+        let pssh = &mut Cursor::new(box_content.as_slice());
+
+        let (version, _) = try!(read_fullbox_extra(pssh));
+
+        let system_id = try!(read_buf(pssh, 16));
+
+        let mut kid: Vec<ByteData> = Vec::new();
+        if version > 0 {
+            let count = try!(be_i32(pssh));
+            for _ in 0..count {
+                let item = try!(read_buf(pssh, 16));
+                kid.push(item);
+            }
+        }
+
+        let data_size = try!(be_i32(pssh)) as usize;
+        let data = try!(read_buf(pssh, data_size));
+
+        (system_id, kid, data)
+    };
+
+    let mut pssh_box = Vec::new();
+    try!(write_be_u32(&mut pssh_box, src.head.size as u32));
+    pssh_box.append(&mut b"pssh".to_vec());
+    pssh_box.append(&mut box_content);
+
+    Ok(ProtectionSystemSpecificHeaderBox {
+        system_id: system_id,
+        kid: kid,
+        data: data,
+        box_content: pssh_box,
+    })
 }
 
 fn read_mvex<T: Read>(src: &mut BMFFBox<T>) -> Result<MovieExtendsBox> {
@@ -1701,4 +1758,8 @@ fn be_u32<T: ReadBytesExt>(src: &mut T) -> Result<u32> {
 
 fn be_u64<T: ReadBytesExt>(src: &mut T) -> Result<u64> {
     src.read_u64::<byteorder::BigEndian>().map_err(From::from)
+}
+
+fn write_be_u32<T: WriteBytesExt>(des: &mut T, num: u32) -> Result<()> {
+    des.write_u32::<byteorder::BigEndian>(num).map_err(From::from)
 }
