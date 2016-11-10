@@ -2752,6 +2752,17 @@ nsPresContext::IsRootContentDocument() const
   return (f && f->PresContext()->IsChrome());
 }
 
+void
+nsPresContext::NotifyNonBlankPaint()
+{
+  MOZ_ASSERT(!mHadNonBlankPaint);
+  mHadNonBlankPaint = true;
+  RefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
+  if (timing) {
+    timing->NotifyNonBlankPaint();
+  }
+}
+
 bool nsPresContext::GetPaintFlashing() const
 {
   if (!mPaintFlashingInitialized) {
