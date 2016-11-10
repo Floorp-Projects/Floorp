@@ -871,9 +871,9 @@ nsUnknownContentTypeDialog.prototype = {
   // See if the user changed things, and if so, update the
   // mimeTypes.rdf entry for this mime type.
   updateHelperAppPref: function() {
-    var ha = new this.mDialog.HelperApps();
-    ha.updateTypeInfo(this.mLauncher.MIMEInfo);
-    ha.destroy();
+    var handlerInfo = this.mLauncher.MIMEInfo;
+    var hs = Cc["@mozilla.org/uriloader/handler-service;1"].getService(Ci.nsIHandlerService);
+    hs.store(handlerInfo);
   },
 
   // onOK:

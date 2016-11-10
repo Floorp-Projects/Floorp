@@ -1,4 +1,3 @@
-// |jit-test| test-also-wasm-baseline
 load(libdir + "wasm.js");
 
 // This is fac-opt from fac.wast in the official testsuite, changed to use

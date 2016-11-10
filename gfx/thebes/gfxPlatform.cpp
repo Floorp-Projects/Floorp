@@ -977,7 +977,7 @@ gfxPlatform::~gfxPlatform()
 #endif
 }
 
-already_AddRefed<DrawTarget>
+/* static */ already_AddRefed<DrawTarget>
 gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface, const IntSize& aSize)
 {
   SurfaceFormat format = aSurface->GetSurfaceFormat();

@@ -523,7 +523,7 @@ CreatePathFromFile(nsIFile* file)
   if (NS_FAILED(rv)) {
     return nullptr;
   }
-  return new xpstring(path.get(), path.Length());
+  return new xpstring(static_cast<wchar_t*>(path.get()), path.Length());
 }
 #else
 static void

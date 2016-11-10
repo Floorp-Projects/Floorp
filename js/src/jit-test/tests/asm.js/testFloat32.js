@@ -1,4 +1,3 @@
-// |jit-test| test-also-noasmjs
 load(libdir + "asm.js");
 const TO_FLOAT32 = "var toF = glob.Math.fround;";
 const HEAP32 = "var f32 = new glob.Float32Array(heap);";

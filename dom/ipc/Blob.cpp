@@ -209,7 +209,11 @@ EventTargetIsOnCurrentThread(nsIEventTarget* aEventTarget)
   }
 
   bool current;
-  MOZ_ALWAYS_SUCCEEDS(aEventTarget->IsOnCurrentThread(&current));
+
+  // If this fails, we are probably shutting down.
+  if (NS_WARN_IF(NS_FAILED(aEventTarget->IsOnCurrentThread(&current)))) {
+    return true;
+  }
 
   return current;
 }

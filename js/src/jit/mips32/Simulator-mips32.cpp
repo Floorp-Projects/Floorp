@@ -1616,7 +1616,7 @@ Simulator::readW(uint32_t addr, SimInstruction* instr)
 {
     if (addr < 0x400) {
         // This has to be a NULL-dereference, drop into debugger.
-        printf("Memory read from bad address: 0x%08x, pc=0x%08x\n",
+        printf("Memory read from bad address: 0x%08x, pc=0x%08" PRIxPTR "\n",
                addr, reinterpret_cast<intptr_t>(instr));
         MOZ_CRASH();
     }
@@ -1624,7 +1624,7 @@ Simulator::readW(uint32_t addr, SimInstruction* instr)
         intptr_t* ptr = reinterpret_cast<intptr_t*>(addr);
         return *ptr;
     }
-    printf("Unaligned read at 0x%08x, pc=0x%08x\n",
+    printf("Unaligned read at 0x%08x, pc=0x%08" PRIxPTR "\n",
            addr,
            reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
@@ -1636,7 +1636,7 @@ Simulator::writeW(uint32_t addr, int value, SimInstruction* instr)
 {
     if (addr < 0x400) {
         // This has to be a NULL-dereference, drop into debugger.
-        printf("Memory write to bad address: 0x%08x, pc=0x%08x\n",
+        printf("Memory write to bad address: 0x%08x, pc=0x%08" PRIxPTR "\n",
                addr, reinterpret_cast<intptr_t>(instr));
         MOZ_CRASH();
     }
@@ -1645,7 +1645,7 @@ Simulator::writeW(uint32_t addr, int value, SimInstruction* instr)
         *ptr = value;
         return;
     }
-    printf("Unaligned write at 0x%08x, pc=0x%08x\n",
+    printf("Unaligned write at 0x%08x, pc=0x%08" PRIxPTR "\n",
            addr,
            reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
@@ -1658,7 +1658,7 @@ Simulator::readD(uint32_t addr, SimInstruction* instr)
         double* ptr = reinterpret_cast<double*>(addr);
         return *ptr;
     }
-    printf("Unaligned (double) read at 0x%08x, pc=0x%08x\n",
+    printf("Unaligned (double) read at 0x%08x, pc=0x%08" PRIxPTR "\n",
            addr,
            reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
@@ -1673,7 +1673,7 @@ Simulator::writeD(uint32_t addr, double value, SimInstruction* instr)
         *ptr = value;
         return;
     }
-    printf("Unaligned (double) write at 0x%08x, pc=0x%08x\n",
+    printf("Unaligned (double) write at 0x%08x, pc=0x%08" PRIxPTR "\n",
            addr,
            reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
@@ -1686,7 +1686,7 @@ Simulator::readHU(uint32_t addr, SimInstruction* instr)
         uint16_t* ptr = reinterpret_cast<uint16_t*>(addr);
         return *ptr;
     }
-    printf("Unaligned unsigned halfword read at 0x%08x, pc=0x%08x\n",
+    printf("Unaligned unsigned halfword read at 0x%08x, pc=0x%08" PRIxPTR "\n",
            addr,
            reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
@@ -1700,7 +1700,7 @@ Simulator::readH(uint32_t addr, SimInstruction* instr)
         int16_t* ptr = reinterpret_cast<int16_t*>(addr);
         return *ptr;
     }
-    printf("Unaligned signed halfword read at 0x%08x, pc=0x%08x\n",
+    printf("Unaligned signed halfword read at 0x%08x, pc=0x%08" PRIxPTR "\n",
            addr,
            reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
@@ -1715,7 +1715,7 @@ Simulator::writeH(uint32_t addr, uint16_t value, SimInstruction* instr)
         *ptr = value;
         return;
     }
-    printf("Unaligned unsigned halfword write at 0x%08x, pc=0x%08x\n",
+    printf("Unaligned unsigned halfword write at 0x%08x, pc=0x%08" PRIxPTR "\n",
            addr,
            reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
@@ -1729,7 +1729,7 @@ Simulator::writeH(uint32_t addr, int16_t value, SimInstruction* instr)
         *ptr = value;
         return;
     }
-    printf("Unaligned halfword write at 0x%08x, pc=0x%08x\n",
+    printf("Unaligned halfword write at 0x%08x, pc=0x%08" PRIxPTR "\n",
            addr,
            reinterpret_cast<intptr_t>(instr));
     MOZ_CRASH();
@@ -1794,7 +1794,7 @@ Simulator::overRecursedWithExtra(uint32_t extra) const
 void
 Simulator::format(SimInstruction* instr, const char* format)
 {
-    printf("Simulator found unsupported instruction:\n 0x%08x: %s\n",
+    printf("Simulator found unsupported instruction:\n 0x%08" PRIxPTR ": %s\n",
            reinterpret_cast<intptr_t>(instr), format);
     MOZ_CRASH();
 }

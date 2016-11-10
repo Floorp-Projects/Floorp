@@ -10394,11 +10394,15 @@ IonBuilder::setElemTryDense(bool* emitted, MDefinition* object,
     }
 
     // Emit dense setelem variant.
-    if (!jsop_setelem_dense(conversion, object, index, value, unboxedType, writeHole))
+    if (!jsop_setelem_dense(conversion, object, index, value, unboxedType, writeHole, emitted))
         return false;
 
+    if (!*emitted) {
+        trackOptimizationOutcome(TrackedOutcome::NonWritableProperty);
+        return true;
+    }
+
     trackOptimizationSuccess();
-    *emitted = true;
     return true;
 }
 
@@ -10480,8 +10484,10 @@ IonBuilder::setElemTryCache(bool* emitted, MDefinition* object,
 bool
 IonBuilder::jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
                                MDefinition* obj, MDefinition* id, MDefinition* value,
-                               JSValueType unboxedType, bool writeHole)
+                               JSValueType unboxedType, bool writeHole, bool* emitted)
 {
+    MOZ_ASSERT(*emitted == false);
+
     MIRType elementType = MIRType::None;
     if (unboxedType == JSVAL_TYPE_MAGIC)
         elementType = DenseNativeElementType(constraints(), obj);
@@ -10492,6 +10498,15 @@ IonBuilder::jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
     bool hasNoExtraIndexedProperty = !ElementAccessHasExtraIndexedProperty(this, obj);
 
     bool mayBeFrozen = ElementAccessMightBeFrozen(constraints(), obj);
+
+    if (mayBeFrozen && !hasNoExtraIndexedProperty) {
+        // FallibleStoreElement does not know how to deal with extra indexed
+        // properties on the prototype. This case should be rare so we fall back
+        // to an IC.
+        return true;
+    }
+
+    *emitted = true;
 
     // Ensure id is an integer.
     MInstruction* idInt32 = MToInt32::New(alloc(), id);
@@ -10540,7 +10555,7 @@ IonBuilder::jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
     // If an object may have been frozen, no previous expectation hold and we
     // fallback to MFallibleStoreElement.
     MInstruction* store;
-    MStoreElementCommon *common = nullptr;
+    MStoreElementCommon* common = nullptr;
     if (writeHole && hasNoExtraIndexedProperty && !mayBeFrozen) {
         MStoreElementHole* ins = MStoreElementHole::New(alloc(), obj, elements, id, newValue, unboxedType);
         store = ins;
@@ -10548,7 +10563,10 @@ IonBuilder::jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
 
         current->add(ins);
         current->push(value);
-    } else if (hasNoExtraIndexedProperty && mayBeFrozen) {
+    } else if (mayBeFrozen) {
+        MOZ_ASSERT(hasNoExtraIndexedProperty,
+                   "FallibleStoreElement codegen assumes no extra indexed properties");
+
         bool strict = IsStrictSetPC(pc);
         MFallibleStoreElement* ins = MFallibleStoreElement::New(alloc(), obj, elements, id,
                                                                 newValue, unboxedType, strict);

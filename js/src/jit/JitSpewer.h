@@ -64,6 +64,8 @@ namespace jit {
     _(OptimizationTracking)                 \
     /* Debug info about the I$ */           \
     _(CacheFlush)                           \
+    /* Output a list of MIR expressions */  \
+    _(MIRExpressions)                       \
                                             \
     /* BASELINE COMPILER SPEW */            \
                                             \

@@ -502,6 +502,40 @@ var Printing = {
     // resulting JS object into the DOM of current browser.
     let articlePromise = ReaderMode.parseDocument(contentWindow.document).catch(Cu.reportError);
     articlePromise.then(function (article) {
+      // We make use of a web progress listener in order to know when the content we inject
+      // into the DOM has finished rendering. If our layout engine is still painting, we
+      // will wait for MozAfterPaint event to be fired.
+      let webProgressListener = {
+        onStateChange: function (webProgress, req, flags, status) {
+          if (flags & Ci.nsIWebProgressListener.STATE_STOP) {
+            webProgress.removeProgressListener(webProgressListener);
+            let domUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIDOMWindowUtils);
+            // Here we tell the parent that we have parsed the document successfully
+            // using ReaderMode primitives and we are able to enter on preview mode.
+            if (domUtils.isMozAfterPaintPending) {
+              addEventListener("MozAfterPaint", function onPaint() {
+                removeEventListener("MozAfterPaint", onPaint);
+                sendAsyncMessage("Printing:Preview:ReaderModeReady");
+              });
+            } else {
+              sendAsyncMessage("Printing:Preview:ReaderModeReady");
+            }
+          }
+        },
+
+        QueryInterface: XPCOMUtils.generateQI([
+          Ci.nsIWebProgressListener,
+          Ci.nsISupportsWeakReference,
+          Ci.nsIObserver,
+        ]),
+      };
+
+      // Here we QI the docShell into a nsIWebProgress passing our web progress listener in.
+      let webProgress =  docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIWebProgress);
+      webProgress.addProgressListener(webProgressListener, Ci.nsIWebProgress.NOTIFY_STATE_REQUEST);
+
       content.document.head.innerHTML = "";
 
       // Set title of document
@@ -581,10 +615,6 @@ var Printing = {
 
       // Display reader content element
       readerContent.style.display = "block";
-
-      // Here we tell the parent that we have parsed the document successfully
-      // using ReaderMode primitives and we are able to enter on preview mode.
-      sendAsyncMessage("Printing:Preview:ReaderModeReady");
     });
   },
 

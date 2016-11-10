@@ -27,7 +27,7 @@ public:
   explicit nsNamedPipeDataObserver(HANDLE aPipe);
 
   int Read(void* aBuffer, uint32_t aSize);
-  int Write(void* aBuffer, uint32_t aSize);
+  int Write(const void* aBuffer, uint32_t aSize);
 
   uint32_t Transferred() const { return mBytesTransferred; }
 
@@ -92,7 +92,7 @@ nsNamedPipeDataObserver::Read(void* aBuffer, uint32_t aSize)
 }
 
 int
-nsNamedPipeDataObserver::Write(void* aBuffer, uint32_t aSize)
+nsNamedPipeDataObserver::Write(const void* aBuffer, uint32_t aSize)
 {
   DWORD bytesWritten = 0;
   if (!WriteFile(mPipe, aBuffer, aSize, &bytesWritten, &mOverlapped)) {

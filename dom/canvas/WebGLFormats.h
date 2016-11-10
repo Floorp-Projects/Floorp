@@ -158,7 +158,7 @@ enum class UnsizedFormat : uint8_t {
     A,
     D,
     S,
-    DS,
+    DEPTH_STENCIL, // `DS` is a macro on Solaris. (regset.h)
 };
 
 // GLES 3.0.4 p114 Table 3.4, p240

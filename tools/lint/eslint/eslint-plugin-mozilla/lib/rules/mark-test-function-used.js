@@ -23,12 +23,12 @@ module.exports = function(context) {
 
   return {
     Program: function() {
-      if (helpers.getIsBrowserMochitest(this)) {
+      if (helpers.getTestType(this) == "browser") {
         context.markVariableAsUsed("test");
         return;
       }
 
-      if (helpers.getIsXpcshellTest(this)) {
+      if (helpers.getTestType(this) == "xpcshell") {
         context.markVariableAsUsed("run_test");
         return;
       }

@@ -384,6 +384,7 @@ HandlerService.prototype = {
     this._storePreferredHandler(aHandlerInfo);
     this._storePossibleHandlers(aHandlerInfo);
     this._storeAlwaysAsk(aHandlerInfo);
+    this._storeExtensions(aHandlerInfo);
 
     // Write the changes to the database immediately so we don't lose them
     // if the application crashes.
@@ -818,7 +819,7 @@ HandlerService.prototype = {
       this._removeTarget(aHandlerAppID, NC_URI_TEMPLATE);
     }
     else {
-	throw "unknown handler type";
+      throw "unknown handler type";
     }
 	
   },
@@ -828,6 +829,19 @@ HandlerService.prototype = {
     this._setLiteral(infoID,
                      NC_ALWAYS_ASK,
                      aHandlerInfo.alwaysAskBeforeHandling ? "true" : "false");
+  },
+
+  _storeExtensions: function HS__storeExtensions(aHandlerInfo) {
+    if (aHandlerInfo instanceof Ci.nsIMIMEInfo) {
+      var typeID = this._getTypeID(this._getClass(aHandlerInfo), aHandlerInfo.type);
+      var extEnum = aHandlerInfo.getFileExtensions();
+      while (extEnum.hasMore()) {
+        let ext = extEnum.getNext().toLowerCase();
+        if (!this._hasLiteralAssertion(typeID, NC_FILE_EXTENSIONS, ext)) {
+          this._setLiteral(typeID, NC_FILE_EXTENSIONS, ext);
+        }
+      }
+    }
   },
 
 

@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PrintDataUtils.h"
-#include "nsIPrintOptions.h"
 #include "nsIPrintSettings.h"
 #include "nsIServiceManager.h"
 #include "nsIWebBrowserPrint.h"

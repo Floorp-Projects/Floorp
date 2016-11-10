@@ -5,10 +5,14 @@
 /* eslint-env browser */
 "use strict";
 
-const { createClass, DOM: dom } = require("devtools/client/shared/vendor/react");
+const { createClass, DOM: dom, PropTypes } = require("devtools/client/shared/vendor/react");
 
 module.exports = createClass({
   displayName: "AddonsInstallError",
+
+  propTypes: {
+    error: PropTypes.string
+  },
 
   render() {
     if (!this.props.error) {

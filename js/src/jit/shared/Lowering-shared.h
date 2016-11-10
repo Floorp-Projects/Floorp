@@ -188,10 +188,14 @@ class LIRGeneratorShared : public MDefinitionVisitor
     inline LInt64Allocation useInt64AtStart(MDefinition* mir);
     inline LInt64Allocation useInt64OrConstant(MDefinition* mir, bool useAtStart = false);
     inline LInt64Allocation useInt64Register(MDefinition* mir, bool useAtStart = false);
+    inline LInt64Allocation useInt64RegisterOrConstant(MDefinition* mir, bool useAtStart = false);
     inline LInt64Allocation useInt64Fixed(MDefinition* mir, Register64 regs, bool useAtStart = false);
 
     LInt64Allocation useInt64RegisterAtStart(MDefinition* mir) {
         return useInt64Register(mir, /* useAtStart = */ true);
+    }
+    LInt64Allocation useInt64RegisterOrConstantAtStart(MDefinition* mir) {
+        return useInt64RegisterOrConstant(mir, /* useAtStart = */ true);
     }
     LInt64Allocation useInt64OrConstantAtStart(MDefinition* mir) {
         return useInt64OrConstant(mir, /* useAtStart = */ true);

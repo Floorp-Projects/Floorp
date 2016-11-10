@@ -190,7 +190,6 @@ class LAllocation : public TempObject
     UniqueChars toString() const;
     bool aliases(const LAllocation& other) const;
     void dump() const;
-
 };
 
 class LUse : public LAllocation

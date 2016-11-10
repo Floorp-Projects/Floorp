@@ -105,8 +105,7 @@ nsUserInfo::GetDomain(char * *aDomain)
     struct utsname buf;
     char *domainname = nullptr;
 
-    // is this portable?  that is a POSIX compliant call, but I need to check
-    if (uname(&buf)) { 
+    if (uname(&buf) < 0) { 
         return rv;
     }
 

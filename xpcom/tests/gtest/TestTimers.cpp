@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TestHarness.h"
-
 #include "nsIThread.h"
 #include "nsITimer.h"
 
@@ -21,7 +19,8 @@
 
 #include <list>
 #include <vector>
-#include <stdio.h>
+
+#include "gtest/gtest.h"
 
 using namespace mozilla;
 
@@ -105,70 +104,64 @@ private:
 
 NS_IMPL_ISUPPORTS(TimerCallback, nsITimerCallback)
 
-nsresult
-TestTargetedTimers()
+TEST(Timers, TargetedTimers)
 {
   AutoCreateAndDestroyReentrantMonitor newMon;
-  NS_ENSURE_TRUE(newMon, NS_ERROR_OUT_OF_MEMORY);
+  ASSERT_TRUE(newMon);
 
   AutoTestThread testThread;
-  NS_ENSURE_TRUE(testThread, NS_ERROR_OUT_OF_MEMORY);
+  ASSERT_TRUE(testThread);
 
   nsresult rv;
   nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   nsIEventTarget* target = static_cast<nsIEventTarget*>(testThread);
 
   rv = timer->SetTarget(target);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   nsIThread* notifiedThread = nullptr;
 
   nsCOMPtr<nsITimerCallback> callback =
     new TimerCallback(&notifiedThread, newMon);
-  NS_ENSURE_TRUE(callback, NS_ERROR_OUT_OF_MEMORY);
+  ASSERT_TRUE(callback);
 
   rv = timer->InitWithCallback(callback, 2000, nsITimer::TYPE_ONE_SHOT);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   ReentrantMonitorAutoEnter mon(*newMon);
   while (!notifiedThread) {
     mon.Wait();
   }
-  NS_ENSURE_TRUE(notifiedThread == testThread, NS_ERROR_FAILURE);
-
-  return NS_OK;
+  ASSERT_EQ(notifiedThread, testThread);
 }
 
-nsresult
-TestTimerWithStoppedTarget()
+TEST(Timers, TimerWithStoppedTarget)
 {
   AutoTestThread testThread;
-  NS_ENSURE_TRUE(testThread, NS_ERROR_OUT_OF_MEMORY);
+  ASSERT_TRUE(testThread);
 
   nsresult rv;
   nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   nsIEventTarget* target = static_cast<nsIEventTarget*>(testThread);
 
   rv = timer->SetTarget(target);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   // If this is called, we'll assert
   nsCOMPtr<nsITimerCallback> callback =
     new TimerCallback(nullptr, nullptr);
-  NS_ENSURE_TRUE(callback, NS_ERROR_OUT_OF_MEMORY);
+  ASSERT_TRUE(callback);
 
   rv = timer->InitWithCallback(callback, 100, nsITimer::TYPE_ONE_SHOT);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   testThread->Shutdown();
 
   PR_Sleep(400);
-
-  return NS_OK;
 }
 
 #define FUZZ_MAX_TIMEOUT 9
@@ -415,8 +408,7 @@ class FuzzTestThreadState final : public nsITimerCallback {
 
 NS_IMPL_ISUPPORTS(FuzzTestThreadState, nsITimerCallback)
 
-nsresult
-FuzzTestTimers()
+TEST(Timers, FuzzTestTimers)
 {
   static const size_t kNumThreads(10);
   AutoTestThread threads[kNumThreads];
@@ -438,31 +430,8 @@ FuzzTestTimers()
   for (auto& threadState : threadStates) {
     while (threadState->HasTimersOutstanding()) {
       uint32_t elapsedMs = PR_IntervalToMilliseconds(PR_IntervalNow() - start);
-      MOZ_RELEASE_ASSERT(elapsedMs <= 10000,
-                         "Timed out waiting for all timers to pop");
+      ASSERT_LE(elapsedMs, uint32_t(10000)) << "Timed out waiting for all timers to pop";
       PR_Sleep(PR_MillisecondsToInterval(10));
     }
   }
-
-  return NS_OK;
-}
-
-int main(int argc, char** argv)
-{
-  ScopedXPCOM xpcom("TestTimers");
-  NS_ENSURE_FALSE(xpcom.failed(), 1);
-
-  static TestFuncPtr testsToRun[] = {
-    TestTargetedTimers,
-    TestTimerWithStoppedTarget,
-    FuzzTestTimers
-  };
-  static uint32_t testCount = sizeof(testsToRun) / sizeof(testsToRun[0]);
-
-  for (uint32_t i = 0; i < testCount; i++) {
-    nsresult rv = testsToRun[i]();
-    NS_ENSURE_SUCCESS(rv, 1);
-  }
-
-  return 0;
 }
