@@ -27,25 +27,16 @@ WaveDecoder::CreateStateMachine()
 
 /* static */
 bool
-WaveDecoder::IsEnabled()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<PDMFactory> platform = new PDMFactory();
-  return platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/x-wav"),
-                                    /* DecoderDoctorDiagnostics* */ nullptr);
-}
-
-/* static */
-bool
 WaveDecoder::CanHandleMediaType(const nsACString& aType,
                                 const nsAString& aCodecs)
 {
+  if (!IsWaveEnabled()) {
+    return false;
+  }
   if (aType.EqualsASCII("audio/wave") || aType.EqualsASCII("audio/x-wav") ||
       aType.EqualsASCII("audio/wav")  || aType.EqualsASCII("audio/x-pn-wav")) {
-    return IsEnabled() && (aCodecs.IsEmpty() ||
-                           aCodecs.EqualsASCII("1") ||
-                           aCodecs.EqualsASCII("6") ||
-                           aCodecs.EqualsASCII("7"));
+    return (aCodecs.IsEmpty() || aCodecs.EqualsASCII("1") ||
+            aCodecs.EqualsASCII("6") || aCodecs.EqualsASCII("7"));
   }
 
   return false;
