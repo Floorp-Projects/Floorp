@@ -1729,7 +1729,7 @@ var Impl = {
         addEnvironment: true,
       };
       p.push(TelemetryController.submitExternalPing(getPingType(payload), payload, options)
-                                .catch (e => this._log.error("saveShutdownPings - failed to submit saved-session ping", e)));
+                                .catch(e => this._log.error("saveShutdownPings - failed to submit saved-session ping", e)));
     }
 
     // Wait on pings to be saved.

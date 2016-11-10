@@ -129,7 +129,7 @@ Sntp.prototype = {
   _retry: function _retry() {
     this._retryCount++;
     if (this._retryCount > this._maxRetryCount) {
-      debug ("stop retrying SNTP");
+      debug("stop retrying SNTP");
       // Clear so we can start with clean status next time we have network.
       this._retryCount = 0;
       this._retryPeriodInMS = 0;
@@ -176,7 +176,7 @@ Sntp.prototype = {
 
       onStopRequest: function onStopRequest(request, context, status) {
         if (!Components.isSuccessCode(status)) {
-          debug ("Connection failed");
+          debug("Connection failed");
           this._requesting = false;
           this._retry();
         }
@@ -191,7 +191,7 @@ Sntp.prototype = {
             ((s - OFFSET_1900_TO_1970) * 1000) + ((f * 1000) / 0x100000000)
           );
         }
-        debug ("Data available: " + count + " bytes");
+        debug("Data available: " + count + " bytes");
 
         try {
           let binaryInputStream = Cc["@mozilla.org/binaryinputstream;1"]
@@ -213,7 +213,7 @@ Sntp.prototype = {
                            transmitTimeInMS, respondTimeInMS);
           this._requesting = false;
         } catch (e) {
-          debug ("SNTPListener Error: " + e.message);
+          debug("SNTPListener Error: " + e.message);
           this._requesting = false;
           this._retry();
         }
@@ -227,10 +227,10 @@ Sntp.prototype = {
         try {
           let data = GetRequest();
           let bytes_write = stream.write(data, data.length);
-          debug ("SNTP: sent " + bytes_write + " bytes");
+          debug("SNTP: sent " + bytes_write + " bytes");
           stream.close();
         } catch (e) {
-          debug ("SNTPRequester Error: " + e.message);
+          debug("SNTPRequester Error: " + e.message);
           this._requesting = false;
           this._retry();
         }
@@ -252,7 +252,7 @@ Sntp.prototype = {
       this._updateTimer.cancel();
     }
 
-    debug ("Making request");
+    debug("Making request");
     this._requesting = true;
 
     let currentThread = Cc["@mozilla.org/thread-manager;1"]

@@ -325,7 +325,7 @@ function GMPAddon(addon) {
   for (let name of Object.keys(addon)) {
     this[name] = addon[name];
   }
-  log.info ("Created new addon: " + this.toString());
+  log.info("Created new addon: " + this.toString());
 }
 
 GMPAddon.prototype = {

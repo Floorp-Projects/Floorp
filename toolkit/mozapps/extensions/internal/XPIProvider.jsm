@@ -4191,7 +4191,7 @@ this.XPIProvider = {
    *         A callback to pass the Addon to
    */
   getAddonByID: function(aId, aCallback) {
-    XPIDatabase.getVisibleAddonForID (aId, function(aAddon) {
+    XPIDatabase.getVisibleAddonForID(aId, function(aAddon) {
       aCallback(aAddon ? aAddon.wrapper : null);
     });
   },

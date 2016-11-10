@@ -34,7 +34,7 @@ function run_test() {
   runner.appendIterator(testGetProviderList(manifests, next));
   runner.appendIterator(testAddRemoveProvider(manifests, next));
   runner.appendIterator(testIsSameOrigin(manifests, next));
-  runner.appendIterator(testResolveUri  (manifests, next));
+  runner.appendIterator(testResolveUri(manifests, next));
   runner.appendIterator(testOrderedProviders(manifests, next));
   runner.appendIterator(testRemoveProviders(manifests, next));
   runner.next();

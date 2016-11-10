@@ -23,12 +23,12 @@ function check(aBrowser, aElementName, aBarred, aType) {
     }
 
     e.setAttribute('title', '');
-    ok (!tttp.getNodeText(e, {}, {}),
+    ok(!tttp.getNodeText(e, {}, {}),
         "No tooltip should be shown if the title attribute is set");
 
     e.removeAttribute('title');
     contentElement.setAttribute('novalidate', '');
-    ok (!tttp.getNodeText(e, {}, {}),
+    ok(!tttp.getNodeText(e, {}, {}),
         "No tooltip should be shown if the novalidate attribute is set on the form owner");
     contentElement.removeAttribute('novalidate');
 
