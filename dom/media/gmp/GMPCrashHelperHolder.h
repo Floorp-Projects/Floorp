@@ -53,12 +53,12 @@ namespace mozilla {
 class GMPCrashHelperHolder
 {
 public:
-  
+
   void SetCrashHelper(GMPCrashHelper* aHelper)
   {
     mCrashHelper = aHelper;
   }
-  
+
   GMPCrashHelper* GetCrashHelper()
   {
     return mCrashHelper;

@@ -72,6 +72,8 @@ private:
 
   // PGMPDecryptorParent
 
+  bool RecvSetDecryptorId(const uint32_t& aId) override;
+
   bool RecvSetSessionId(const uint32_t& aCreateSessionToken,
                         const nsCString& aSessionId) override;
 
