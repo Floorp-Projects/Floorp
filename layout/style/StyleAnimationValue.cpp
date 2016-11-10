@@ -747,6 +747,131 @@ StyleAnimationValue::ComputeColorDistance(const RGBAColorData& aStartColor,
   return sqrt(diffA * diffA + diffR * diffR + diffG * diffG + diffB * diffB);
 }
 
+enum class ColorAdditionType {
+  Clamped, // Clamp each color channel after adding.
+  Unclamped // Do not clamp color channels after adding.
+};
+
+static UniquePtr<nsCSSValueList>
+AddWeightedFilterFunction(double aCoeff1, const nsCSSValueList* aList1,
+                          double aCoeff2, const nsCSSValueList* aList2,
+                          ColorAdditionType aColorAdditionType);
+
+// Return false if we cannot compute the distance between these filter
+// functions.
+static bool
+ComputeFilterSquareDistance(const nsCSSValueList* aList1,
+                            const nsCSSValueList* aList2,
+                            double& aSquareDistance)
+{
+  MOZ_ASSERT(aList1, "expected filter list");
+  MOZ_ASSERT(aList2, "expected filter list");
+  MOZ_ASSERT(aList1->mValue.GetUnit() == eCSSUnit_Function,
+             "expected function");
+  MOZ_ASSERT(aList2->mValue.GetUnit() == eCSSUnit_Function,
+             "expected function");
+
+  RefPtr<nsCSSValue::Array> a1 = aList1->mValue.GetArrayValue();
+  RefPtr<nsCSSValue::Array> a2 = aList2->mValue.GetArrayValue();
+  nsCSSKeyword filterFunction = a1->Item(0).GetKeywordValue();
+  if (filterFunction != a2->Item(0).GetKeywordValue()) {
+    return false;
+  }
+
+  const nsCSSValue& func1 = a1->Item(1);
+  const nsCSSValue& func2 = a2->Item(1);
+  switch (filterFunction) {
+    case eCSSKeyword_blur: {
+      nsCSSValue diff;
+      // In AddWeightedFilterFunctionImpl, blur may have different units, so we
+      // use eCSSUnit_Calc for that case.
+      if (!AddCSSValuePixelPercentCalc(0,
+                                       func1.GetUnit() == func2.GetUnit()
+                                         ? func1.GetUnit()
+                                         : eCSSUnit_Calc,
+                                       1.0, func2,
+                                       -1.0, func1,
+                                       diff)) {
+        return false;
+      }
+      // ExtractCalcValue makes sure mHasPercent and mPercent are correct.
+      PixelCalcValue v = ExtractCalcValue(diff);
+      aSquareDistance = v.mLength * v.mLength + v.mPercent * v.mPercent;
+      break;
+    }
+    case eCSSKeyword_grayscale:
+    case eCSSKeyword_invert:
+    case eCSSKeyword_sepia:
+    case eCSSKeyword_brightness:
+    case eCSSKeyword_contrast:
+    case eCSSKeyword_opacity:
+    case eCSSKeyword_saturate:
+      // TODO
+      break;
+    case eCSSKeyword_hue_rotate:
+      // TODO
+      break;
+    case eCSSKeyword_drop_shadow:
+      // TODO
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown filter function");
+      return false;
+  }
+  return true;
+}
+
+static bool
+ComputeFilterListDistance(const nsCSSValueList* aList1,
+                          const nsCSSValueList* aList2,
+                          double& aDistance)
+{
+  double squareDistance = 0.0;
+  while (aList1 || aList2) {
+    // Return false if one of the lists is neither none nor a function.
+    if ((aList1 && aList1->mValue.GetUnit() != eCSSUnit_Function) ||
+        (aList2 && aList2->mValue.GetUnit() != eCSSUnit_Function)) {
+      return false;
+    }
+
+    MOZ_ASSERT(aList1 || aList2, "one function list item must not be null");
+
+    double currentSquareDistance = 0.0;
+    if (!aList1) {
+      // This is a tricky to get an equivalent none filter function by 0.0
+      // coefficients. Although we don't guarantee this function can get the
+      // correct default values, it can reuse the code from the interpolation.
+      UniquePtr<nsCSSValueList> none =
+        AddWeightedFilterFunction(0, aList2, 0, aList2,
+                                  ColorAdditionType::Clamped);
+      if (!ComputeFilterSquareDistance(none.get(), aList2,
+                                       currentSquareDistance)) {
+        return false;
+      }
+      aList2 = aList2->mNext;
+    } else if (!aList2) {
+      UniquePtr<nsCSSValueList> none =
+        AddWeightedFilterFunction(0, aList1, 0, aList1,
+                                  ColorAdditionType::Clamped);
+      if (!ComputeFilterSquareDistance(aList1, none.get(),
+                                       currentSquareDistance)) {
+        return false;
+      }
+      aList1 = aList1->mNext;
+    } else {
+      if (!ComputeFilterSquareDistance(aList1, aList2,
+                                       currentSquareDistance)) {
+        return false;
+      }
+      aList1 = aList1->mNext;
+      aList2 = aList2->mNext;
+    }
+    squareDistance += currentSquareDistance;
+  }
+  aDistance = sqrt(squareDistance);
+  return true;
+}
+
 enum class Restrictions {
   Enable,
   Disable
@@ -1524,8 +1649,11 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
       return true;
 
     case eUnit_Filter:
-      // Bug 1286151: Support paced animations for filter function
-      // interpolation.
+      ComputeFilterListDistance(aStartValue.GetCSSValueListValue(),
+                                aEndValue.GetCSSValueListValue(),
+                                aDistance);
+      // TODO: Remove the setting and return true in the later patch.
+      aDistance = 0.0;
       return false;
 
     case eUnit_Transform: {
@@ -1686,11 +1814,6 @@ AddCSSValuePercentNumber(const uint32_t aValueRestrictions,
   aResult.SetFloatValue(RestrictValue(aValueRestrictions, result + aInitialVal),
                         eCSSUnit_Number);
 }
-
-enum class ColorAdditionType {
-  Clamped, // Clamp each color channel after adding.
-  Unclamped // Do not clamp color channels after adding.
-};
 
 // Unclamped AddWeightedColors.
 static RGBAColorData
