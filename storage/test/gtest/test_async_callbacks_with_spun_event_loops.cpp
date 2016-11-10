@@ -98,8 +98,7 @@ bool UnownedCallback::sError = false;
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests
 
-void
-test_SpinEventsLoopInHandleResult()
+TEST(storage_async_callbacks_with_spun_event_loops, SpinEventsLoopInHandleResult)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -132,8 +131,7 @@ test_SpinEventsLoopInHandleResult()
   spin_events_loop_until_true(&UnownedCallback::sResult);
 }
 
-void
-test_SpinEventsLoopInHandleError()
+TEST(storage_async_callbacks_with_spun_event_loops, SpinEventsLoopInHandleError)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -162,13 +160,3 @@ test_SpinEventsLoopInHandleError()
 
   spin_events_loop_until_true(&UnownedCallback::sError);
 }
-
-void (*gTests[])(void) = {
-  test_SpinEventsLoopInHandleResult,
-  test_SpinEventsLoopInHandleError,
-};
-
-const char *file = __FILE__;
-#define TEST_NAME "test async callbacks with spun event loops"
-#define TEST_FILE file
-#include "storage_test_harness_tail.h"

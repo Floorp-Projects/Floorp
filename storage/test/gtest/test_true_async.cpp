@@ -9,11 +9,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests
 
-void
-test_TrueAsyncStatement()
+TEST(storage_true_async, TrueAsyncStatement)
 {
-  // (only the first test needs to call this)
-  hook_sqlite_mutex();
+  HookSqliteMutex hook;
 
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -73,9 +71,10 @@ test_TrueAsyncStatement()
  * Test that cancellation before a statement is run successfully stops the
  * statement from executing.
  */
-void
-test_AsyncCancellation()
+TEST(storage_true_async, AsyncCancellation)
 {
+  HookSqliteMutex hook;
+
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- wedge the thread
@@ -144,9 +143,9 @@ test_AsyncCancellation()
  *  finalization rather than trying to finalize it on the main thread
  *  (and thereby running afoul of our mutex use detector).
  */
-void test_AsyncDestructorFinalizesOnAsyncThread()
+TEST(storage_true_async, AsyncDestructorFinalizesOnAsyncThread)
 {
-  // test_TrueAsyncStatement called hook_sqlite_mutex() for us
+  HookSqliteMutex hook;
 
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   watch_for_mutex_use_on_this_thread();
@@ -173,14 +172,3 @@ void test_AsyncDestructorFinalizesOnAsyncThread()
   blocking_async_close(db);
 }
 
-void (*gTests[])(void) = {
-  // this test must be first because it hooks the mutex mechanics
-  test_TrueAsyncStatement,
-  test_AsyncCancellation,
-  test_AsyncDestructorFinalizesOnAsyncThread
-};
-
-const char *file = __FILE__;
-#define TEST_NAME "true async statement"
-#define TEST_FILE file
-#include "storage_test_harness_tail.h"

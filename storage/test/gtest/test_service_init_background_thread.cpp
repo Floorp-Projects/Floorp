@@ -9,8 +9,8 @@
 #include "nsThreadUtils.h"
 
 /**
- * This file tests that the storage service can be initialized off of the main
- * thread without issue.
+ * This file tests that the storage service cannot be initialized off the main
+ * thread.
  */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -32,8 +32,15 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Functions
 
-void
-test_service_initialization_on_background_thread()
+// HACK ALERT: this test fails if it runs after any of the other storage tests
+// because the storage service will have been initialized and the
+// do_GetService() call in ServiceInitializer::Run will succeed. So we need a
+// way to force it to run before all the other storage gtests. As it happens,
+// gtest has a concept of "death tests" that, among other things, run before
+// all non-death tests. By merely using a "DeathTest" suffix here this becomes
+// a death test -- even though it doesn't use any of the normal death test
+// features -- which ensures this is the first storage test to run.
+TEST(storage_service_init_background_thread_DeathTest, Test)
 {
   nsCOMPtr<nsIRunnable> event = new ServiceInitializer();
   do_check_true(event);
@@ -47,12 +54,3 @@ test_service_initialization_on_background_thread()
   // event queue is completed.  This will act as our thread synchronization.
   do_check_success(thread->Shutdown());
 }
-
-void (*gTests[])(void) = {
-  test_service_initialization_on_background_thread,
-};
-
-const char *file = __FILE__;
-#define TEST_NAME "Background Thread Initialization"
-#define TEST_FILE file
-#include "storage_test_harness_tail.h"

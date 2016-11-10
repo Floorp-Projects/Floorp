@@ -4,12 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TestHarness.h"
+#ifndef storage_test_harness_h__
+#define storage_test_harness_h__
 
-#include "nsMemory.h"
+#include "gtest/gtest.h"
+
 #include "prthread.h"
-#include "nsThreadUtils.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsMemory.h"
+#include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
 #include "mozilla/ReentrantMonitor.h"
 
 #include "mozIStorageService.h"
@@ -27,65 +33,26 @@
 
 #include "sqlite3.h"
 
-static int gTotalTests = 0;
-static int gPassedTests = 0;
-
 #define do_check_true(aCondition) \
-  PR_BEGIN_MACRO \
-    gTotalTests++; \
-    if (aCondition) { \
-      gPassedTests++; \
-    } else { \
-      fail("%s | Expected true, got false at line %d", __FILE__, __LINE__); \
-    } \
-  PR_END_MACRO
+  EXPECT_TRUE(aCondition)
 
 #define do_check_false(aCondition) \
-  PR_BEGIN_MACRO \
-    gTotalTests++; \
-    if (!aCondition) { \
-      gPassedTests++; \
-    } else { \
-      fail("%s | Expected false, got true at line %d", __FILE__, __LINE__); \
-    } \
-  PR_END_MACRO
+  EXPECT_FALSE(aCondition)
 
 #define do_check_success(aResult) \
   do_check_true(NS_SUCCEEDED(aResult))
 
-#ifdef LINUX
-// XXX Linux opt builds on tinderbox are orange due to linking with stdlib.
-// This is sad and annoying, but it's a workaround that works.
 #define do_check_eq(aExpected, aActual) \
   do_check_true(aExpected == aActual)
-#else
-#include <sstream>
-// Print nsresult as uint32_t
-std::ostream& operator<<(std::ostream& aStream, const nsresult aInput)
-{
-  return aStream << static_cast<uint32_t>(aInput);
-}
-#define do_check_eq(aExpected, aActual) \
-  PR_BEGIN_MACRO \
-    gTotalTests++; \
-    if (aExpected == aActual) { \
-      gPassedTests++; \
-    } else { \
-      std::ostringstream temp; \
-      temp << __FILE__ << " | Expected '" << aExpected << "', got '"; \
-      temp << aActual <<"' at line " << __LINE__; \
-      fail(temp.str().c_str()); \
-    } \
-  PR_END_MACRO
-#endif
 
-#define do_check_ok(aInvoc) do_check_true((aInvoc) == SQLITE_OK)
+#define do_check_ok(aInvoc) \
+  do_check_true((aInvoc) == SQLITE_OK)
 
 already_AddRefed<mozIStorageService>
 getService()
 {
   nsCOMPtr<mozIStorageService> ss =
-    do_GetService("@mozilla.org/storage/service;1");
+    do_CreateInstance("@mozilla.org/storage/service;1");
   do_check_true(ss);
   return ss.forget();
 }
@@ -281,18 +248,29 @@ extern "C" int wrapped_MutexTry(sqlite3_mutex *mutex)
   return orig_mutex_methods.xMutexTry(mutex);
 }
 
-void hook_sqlite_mutex()
+class HookSqliteMutex
 {
-  // We need to initialize and teardown SQLite to get it to set up the
-  // default mutex handlers for us so we can steal them and wrap them.
-  do_check_ok(sqlite3_initialize());
-  do_check_ok(sqlite3_shutdown());
-  do_check_ok(::sqlite3_config(SQLITE_CONFIG_GETMUTEX, &orig_mutex_methods));
-  do_check_ok(::sqlite3_config(SQLITE_CONFIG_GETMUTEX, &wrapped_mutex_methods));
-  wrapped_mutex_methods.xMutexEnter = wrapped_MutexEnter;
-  wrapped_mutex_methods.xMutexTry = wrapped_MutexTry;
-  do_check_ok(::sqlite3_config(SQLITE_CONFIG_MUTEX, &wrapped_mutex_methods));
-}
+public:
+  HookSqliteMutex()
+  {
+    // We need to initialize and teardown SQLite to get it to set up the
+    // default mutex handlers for us so we can steal them and wrap them.
+    do_check_ok(sqlite3_initialize());
+    do_check_ok(sqlite3_shutdown());
+    do_check_ok(::sqlite3_config(SQLITE_CONFIG_GETMUTEX, &orig_mutex_methods));
+    do_check_ok(::sqlite3_config(SQLITE_CONFIG_GETMUTEX, &wrapped_mutex_methods));
+    wrapped_mutex_methods.xMutexEnter = wrapped_MutexEnter;
+    wrapped_mutex_methods.xMutexTry = wrapped_MutexTry;
+    do_check_ok(::sqlite3_config(SQLITE_CONFIG_MUTEX, &wrapped_mutex_methods));
+  }
+
+  ~HookSqliteMutex()
+  {
+    do_check_ok(sqlite3_shutdown());
+    do_check_ok(::sqlite3_config(SQLITE_CONFIG_MUTEX, &orig_mutex_methods));
+    do_check_ok(sqlite3_initialize());
+  }
+};
 
 /**
  * Call to clear the watch state and to set the watching against this thread.
@@ -387,3 +365,6 @@ get_conn_async_thread(mozIStorageConnection *db)
   do_check_eq(allegedPRThread, last_non_watched_thread);
   return asyncThread.forget();
 }
+
+#endif // storage_test_harness_h__
+
