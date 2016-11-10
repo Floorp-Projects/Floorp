@@ -454,7 +454,7 @@ DecodeFunctionSection(Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
-DecodeTableSection(Decoder& d, ModuleGeneratorData* init, Uint32Vector* oldElems)
+DecodeTableSection(Decoder& d, ModuleGeneratorData* init)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(SectionId::Table, &sectionStart, &sectionSize, "table"))
@@ -768,7 +768,7 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
-DecodeElemSection(Decoder& d, Uint32Vector&& oldElems, ModuleGenerator& mg)
+DecodeElemSection(Decoder& d, ModuleGenerator& mg)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(SectionId::Elem, &sectionStart, &sectionSize, "elem"))
@@ -927,8 +927,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!::DecodeFunctionSection(d, init.get()))
         return nullptr;
 
-    Uint32Vector oldElems;
-    if (!DecodeTableSection(d, init.get(), &oldElems))
+    if (!DecodeTableSection(d, init.get()))
         return nullptr;
 
     if (!::DecodeMemorySection(d, init.get()))
@@ -947,7 +946,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!DecodeStartSection(d, mg))
         return nullptr;
 
-    if (!DecodeElemSection(d, Move(oldElems), mg))
+    if (!DecodeElemSection(d, mg))
         return nullptr;
 
     if (!DecodeCodeSection(d, mg))
