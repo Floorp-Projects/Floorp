@@ -124,10 +124,12 @@ class MarionetteProtocol(Protocol):
         self.load_runner("http")
 
     def set_timeout(self, timeout):
-        """Set the marionette script timeout
+        """Set the Marionette script timeout.
 
-        :param timeout: Script timeout in seconds"""
-        self.marionette.set_script_timeout(timeout * 1000)
+        :param timeout: Script timeout in seconds
+
+        """
+        self.marionette.timeout.script = timeout
         self.timeout = timeout
 
     def load_runner(self, protocol):
@@ -172,7 +174,7 @@ class MarionetteProtocol(Protocol):
     def wait(self):
         socket_timeout = self.marionette.client.sock.gettimeout()
         if socket_timeout:
-            self.marionette.set_script_timeout((socket_timeout / 2) * 1000)
+            self.marionette.timeout.script = socket_timeout / 2
 
         while True:
             try:
