@@ -184,6 +184,7 @@ function transformPacket(packet) {
       let {
         exceptionMessage: messageText,
         exceptionDocURL,
+        frame,
         result: parameters
       } = packet;
 
@@ -195,6 +196,7 @@ function transformPacket(packet) {
         messageText,
         parameters,
         exceptionDocURL,
+        frame,
       });
     }
   }
