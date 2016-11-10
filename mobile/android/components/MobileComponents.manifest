@@ -46,6 +46,10 @@ contract @mozilla.org/network/authprompt-adapter-factory;1 {80dae1e9-e0d2-4974-9
 component {388bd149-c919-4a43-b646-d7ec57877689} PresentationDevicePrompt.js
 contract @mozilla.org/presentation-device/prompt;1 {388bd149-c919-4a43-b646-d7ec57877689}
 
+# PresentationRequestUIGlue.js
+component {9c550ef7-3ff6-4bd1-9ad1-5a3735b90d21} PresentationRequestUIGlue.js
+contract @mozilla.org/presentation/requestuiglue;1 {9c550ef7-3ff6-4bd1-9ad1-5a3735b90d21}
+
 # ImageBlockingPolicy.js
 component {f55f77f9-d33d-4759-82fc-60db3ee0bb91} ImageBlockingPolicy.js
 contract @mozilla.org/browser/blockimages-policy;1 {f55f77f9-d33d-4759-82fc-60db3ee0bb91}

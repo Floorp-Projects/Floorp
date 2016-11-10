@@ -22,9 +22,12 @@ EXTRA_JS_MODULES.presentation += [
     'StateMachineHelper.jsm',
 ]
 
-# for TV 2.5 device backward capability
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     EXTRA_COMPONENTS += [
+        # For android presentation device
+        'AndroidCastDeviceProvider.js',
+        'AndroidCastDeviceProvider.manifest',
+        # for TV 2.5 device backward capability
         'LegacyPresentationControlService.js',
         'LegacyProviders.manifest',
     ]

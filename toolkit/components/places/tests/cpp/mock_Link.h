@@ -40,7 +40,7 @@ public:
     mHandler(aState);
 
     // Break the cycle so the object can be destroyed.
-    mDeathGrip = 0;
+    mDeathGrip = nullptr;
   }
 
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override

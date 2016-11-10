@@ -4,6 +4,7 @@ const TEST_ENGINE_NAME = "Foo";
 const TEST_ENGINE_BASENAME = "testEngine.xml";
 const SEARCHBAR_BASE_ID = "searchbar-engine-one-off-item-";
 const URLBAR_BASE_ID = "urlbar-engine-one-off-item-";
+const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
 
 const searchbar = document.getElementById("searchbar");
 const urlbar = document.getElementById("urlbar");
@@ -60,6 +61,11 @@ add_task(function* test_searchBarChangeEngine() {
 });
 
 add_task(function* test_urlBarChangeEngine() {
+  Services.prefs.setBoolPref(ONEOFF_URLBAR_PREF, true);
+  registerCleanupFunction(function* () {
+    Services.prefs.clearUserPref(ONEOFF_URLBAR_PREF);
+  });
+
   // Ensure the engine is reset.
   resetEngine();
 

@@ -23,6 +23,6 @@ module.exports = { // eslint-disable-line no-undef
   },
 
   "rules": {
-    "no-console": 0,
+    "no-console": "off",
   },
 };

@@ -15,6 +15,6 @@ module.exports = {
     "setTimeout": true
   },
   "rules": {
-    "no-unused-vars": [2, {"args": "none"}],
+    "no-unused-vars": ["error", {"args": "none"}],
   }
 };
