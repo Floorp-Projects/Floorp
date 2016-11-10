@@ -9,7 +9,6 @@
 
 #include "mozilla/embedding/PPrinting.h"
 #include "nsCOMPtr.h"
-#include "nsIPrintOptions.h"
 #include "nsIPrintSettingsService.h"
 #include "nsString.h"
 #include "nsFont.h"
@@ -19,12 +18,10 @@ class nsIPrintSettings;
 /**
  *   Class nsPrintOptions
  */
-class nsPrintOptions : public nsIPrintOptions,
-                       public nsIPrintSettingsService
+class nsPrintOptions : public nsIPrintSettingsService
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPRINTOPTIONS
   NS_DECL_NSIPRINTSETTINGSSERVICE
 
   /**

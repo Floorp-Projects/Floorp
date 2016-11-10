@@ -556,7 +556,7 @@ struct JSCompartment
     enum {
         IsDebuggee = 1 << 0,
         DebuggerObservesAllExecution = 1 << 1,
-        DebuggerObservesWasm = 1 << 2,
+        DebuggerObservesAsmJS = 1 << 2,
         DebuggerObservesCoverage = 1 << 3,
         DebuggerNeedsDelazification = 1 << 4
     };
@@ -567,7 +567,7 @@ struct JSCompartment
     static const unsigned DebuggerObservesMask = IsDebuggee |
                                                  DebuggerObservesAllExecution |
                                                  DebuggerObservesCoverage |
-                                                 DebuggerObservesWasm;
+                                                 DebuggerObservesAsmJS;
 
     void updateDebuggerObservesFlag(unsigned flag);
 
@@ -709,7 +709,7 @@ struct JSCompartment
     //    parsing are disabled.
     //
     //    Whether AOT wasm is disabled is togglable by the Debugger API. By
-    //    default it is disabled. See debuggerObservesWasm below.
+    //    default it is disabled. See debuggerObservesAsmJS below.
     //
     // 2. When a compartment's debuggerObservesAllExecution() == true, all of
     //    the compartment's scripts are considered debuggee scripts.
@@ -758,12 +758,12 @@ struct JSCompartment
     // Note that since AOT wasm functions cannot bail out, this flag really
     // means "observe wasm from this point forward". We cannot make
     // already-compiled wasm code observable to Debugger.
-    bool debuggerObservesWasm() const {
-        static const unsigned Mask = IsDebuggee | DebuggerObservesWasm;
+    bool debuggerObservesAsmJS() const {
+        static const unsigned Mask = IsDebuggee | DebuggerObservesAsmJS;
         return (debugModeBits & Mask) == Mask;
     }
-    void updateDebuggerObservesWasm() {
-        updateDebuggerObservesFlag(DebuggerObservesWasm);
+    void updateDebuggerObservesAsmJS() {
+        updateDebuggerObservesFlag(DebuggerObservesAsmJS);
     }
 
     // True if this compartment's global is a debuggee of some Debugger object

@@ -1567,10 +1567,17 @@ DrawTargetSkia::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
     // Otherwise, just fall back to a software draw target.
   }
 #endif
+
+#ifdef DEBUG
   // Check that our SkCanvas isn't backed by vector storage such as PDF.  If it
-  // is then we want similar storage to avoid losing fidelity.
-  MOZ_ASSERT(mCanvas->imageInfo().colorType() != kUnknown_SkColorType,
-             "Not backed by pixels - we need to handle PDF backed SkCanvas");
+  // is then we want similar storage to avoid losing fidelity (if and when this
+  // DrawTarget is Snapshot()'ed, drawning a raster back into this DrawTarget
+  // will lose fidelity).
+  if (mCanvas->imageInfo().colorType() != kUnknown_SkColorType) {
+    NS_WARNING("Not backed by pixels - we need to handle PDF backed SkCanvas");
+  }
+#endif
+
   if (!target->Init(aSize, aFormat)) {
     return nullptr;
   }

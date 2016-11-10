@@ -40,23 +40,9 @@ module.exports = function(context) {
 
   return {
     Program: function(node) {
-      if (!helpers.getIsTest(this)) {
-        return;
-      }
-
-      var currentFilePath = helpers.getAbsoluteFilePath(context);
-      var dirName = path.dirname(currentFilePath);
-      importHead(path.resolve(dirName, "head.js"), node);
-
-      if (!helpers.getIsXpcshellTest(this)) {
-        return;
-      }
-
-      let names = fs.readdirSync(dirName);
-      for (let name of names) {
-        if (name.startsWith("head_") && name.endsWith(".js")) {
-          importHead(path.resolve(dirName, name), node);
-        }
+      let heads = helpers.getTestHeadFiles(this);
+      for (let head of heads) {
+        importHead(head, node);
       }
     }
   };

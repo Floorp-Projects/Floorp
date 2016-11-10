@@ -1903,6 +1903,9 @@ class LazyScript : public gc::TenuredCell
 #endif
 
   private:
+    static const uint32_t NumClosedOverBindingsBits = 21;
+    static const uint32_t NumInnerFunctionsBits = 20;
+
     struct PackedView {
         // Assorted bits that should really be in ScriptSourceObject.
         uint32_t version : 8;
@@ -1910,10 +1913,8 @@ class LazyScript : public gc::TenuredCell
         uint32_t shouldDeclareArguments : 1;
         uint32_t hasThisBinding : 1;
         uint32_t isAsync : 1;
-        // The number of bits should match to NumClosedOverBindingsLimit.
-        uint32_t numClosedOverBindings : 21;
-        // The number of bits should match to NumInnerFunctionsLimit.
-        uint32_t numInnerFunctions : 20;
+        uint32_t numClosedOverBindings : NumClosedOverBindingsBits;
+        uint32_t numInnerFunctions : NumInnerFunctionsBits;
 
         uint32_t generatorKindBits : 2;
 
@@ -1953,8 +1954,8 @@ class LazyScript : public gc::TenuredCell
                                  uint32_t lineno, uint32_t column);
 
   public:
-    static const uint32_t NumClosedOverBindingsLimit = 1 << 21;
-    static const uint32_t NumInnerFunctionsLimit = 1 << 20;
+    static const uint32_t NumClosedOverBindingsLimit = 1 << NumClosedOverBindingsBits;
+    static const uint32_t NumInnerFunctionsLimit = 1 << NumInnerFunctionsBits;
 
     // Create a LazyScript and initialize closedOverBindings and innerFunctions
     // with the provided vectors.

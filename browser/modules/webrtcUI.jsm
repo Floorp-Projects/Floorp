@@ -363,17 +363,6 @@ function prompt(aBrowser, aRequest) {
 
       let chromeDoc = this.browser.ownerDocument;
 
-      if (aTopic == "shown") {
-        let popupId = "Devices";
-        if (requestTypes.length == 1 && (requestTypes[0] == "Microphone" ||
-                                         requestTypes[0] == "AudioCapture"))
-          popupId = "Microphone";
-        if (requestTypes.includes("Screen"))
-          popupId = "Screen";
-        chromeDoc.getElementById("webRTC-shareDevices-notification")
-                 .setAttribute("popupid", "webRTC-share" + popupId);
-      }
-
       // Clean-up video streams of screensharing previews.
       if ((aTopic == "dismissed" || aTopic == "removed") &&
           requestTypes.includes("Screen")) {
@@ -671,11 +660,19 @@ function prompt(aBrowser, aRequest) {
     }
   };
 
-  let anchorId = "webRTC-shareDevices-notification-icon";
-  if (requestTypes.length == 1 && requestTypes[0] == "Microphone")
-    anchorId = "webRTC-shareMicrophone-notification-icon";
+  let iconType = "Devices";
+  if (requestTypes.length == 1 && (requestTypes[0] == "Microphone" ||
+                                   requestTypes[0] == "AudioCapture"))
+    iconType = "Microphone";
   if (requestTypes.includes("Screen"))
-    anchorId = "webRTC-shareScreen-notification-icon";
+    iconType = "Screen";
+  let anchorId = "webRTC-share" + iconType + "-notification-icon";
+
+  let iconClass = iconType.toLowerCase();
+  if (iconClass == "devices")
+    iconClass = "camera";
+  options.popupIconClass = iconClass + "-icon";
+
   notification =
     chromeWin.PopupNotifications.show(aBrowser, "webRTC-shareDevices", message,
                                       anchorId, mainAction, secondaryActions,

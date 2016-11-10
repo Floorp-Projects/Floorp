@@ -8,19 +8,6 @@
 
 interface nsIStringEnumerator;
 
-/**
- * Print options interface
- *
- * Do not attempt to freeze this API - it still needs lots of work. Consult
- * John Keiser <jkeiser@netscape.com> and Roland Mainz
- * <roland.mainz@informatik.med.uni-giessen.de> for futher details.
- */
-[scriptable, uuid(2ac74034-700e-40fd-8059-81d33223af58)]
-
-interface nsIPrintOptions : nsISupports
-{
-};
-
 [scriptable, uuid(5e738fff-404c-4c94-9189-e8f2cce93e94)]
 
 interface nsIPrinterEnumerator : nsISupports

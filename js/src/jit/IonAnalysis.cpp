@@ -4677,3 +4677,35 @@ jit::CreateMIRRootList(IonBuilder& builder)
     builder.setRootList(*roots);
     return true;
 }
+
+static void
+DumpDefinition(GenericPrinter& out, MDefinition* def, size_t depth)
+{
+    MDefinition::PrintOpcodeName(out, def->op());
+
+    if (depth == 0)
+        return;
+
+    for (size_t i = 0; i < def->numOperands(); i++) {
+        out.printf(" (");
+        DumpDefinition(out, def->getOperand(i), depth - 1);
+        out.printf(")");
+    }
+}
+
+void
+jit::DumpMIRExpressions(MIRGraph& graph)
+{
+    if (!JitSpewEnabled(JitSpew_MIRExpressions))
+        return;
+
+    size_t depth = 2;
+
+    Fprinter& out = JitSpewPrinter();
+    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
+        for (MInstructionIterator iter(block->begin()), end(block->end()); iter != end; iter++) {
+            DumpDefinition(out, *iter, depth);
+            out.printf("\n");
+        }
+    }
+}

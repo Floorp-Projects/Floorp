@@ -23,6 +23,7 @@ import json
 import os
 import pwd
 import re
+import socket
 import stat
 import subprocess
 import sys
@@ -105,7 +106,7 @@ def vcs_checkout(source_repo, dest, store_path,
         except ValueError:
             print_line(b'vcs', 'invalid JSON in hg fingerprint secret')
             sys.exit(1)
-    except urllib2.URLError:
+    except (urllib2.URLError, socket.timeout):
         print_line(b'vcs', 'Unable to retrieve current hg.mozilla.org fingerprint'
                            'using the secret service, using fallback instead.')
         # XXX This fingerprint will not be accurate if running on an old

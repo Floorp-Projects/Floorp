@@ -8,7 +8,7 @@ loader.lazyImporter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 const { Ci } = require("chrome");
-const { createClass, createFactory, DOM: dom } =
+const { createClass, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const { getWorkerForms } = require("../../modules/worker");
 const Services = require("Services");
@@ -18,6 +18,12 @@ const TargetList = createFactory(require("../target-list"));
 const WorkerTarget = createFactory(require("./target"));
 const ServiceWorkerTarget = createFactory(require("./service-worker-target"));
 
+loader.lazyImporter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+
+loader.lazyRequireGetter(this, "DebuggerClient",
+  "devtools/shared/client/main", true);
+
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
@@ -26,6 +32,11 @@ const MORE_INFO_URL = "https://developer.mozilla.org/en-US/docs/Tools/about%3Ade
 
 module.exports = createClass({
   displayName: "WorkersPanel",
+
+  propTypes: {
+    client: PropTypes.instanceOf(DebuggerClient).isRequired,
+    id: PropTypes.string.isRequired
+  },
 
   getInitialState() {
     return {

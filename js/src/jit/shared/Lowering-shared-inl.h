@@ -839,6 +839,19 @@ LIRGeneratorShared::useInt64OrConstant(MDefinition* mir, bool useAtStart)
     return useInt64(mir, useAtStart);
 }
 
+LInt64Allocation
+LIRGeneratorShared::useInt64RegisterOrConstant(MDefinition* mir, bool useAtStart)
+{
+    if (mir->isConstant()) {
+#if defined(JS_NUNBOX32)
+        return LInt64Allocation(LAllocation(mir->toConstant()), LAllocation());
+#else
+        return LInt64Allocation(LAllocation(mir->toConstant()));
+#endif
+    }
+    return useInt64Register(mir, useAtStart);
+}
+
 } // namespace jit
 } // namespace js
 
