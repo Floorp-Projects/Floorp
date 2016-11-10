@@ -25,13 +25,18 @@ http://creativecommons.org/licenses/publicdomain/
 <script class="testbody" type="text/javascript">
 
   function debug(str) {
-  // console.log(str + "\n");
+    info("DEBUG>" + str + "\n");
   }
 
   function start() {
     return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: "."})
     .then((swr) => {
       registration = swr;
+      debug('registration');
+      var worker = registration.installing;
+      registration.installing.addEventListener('statechange', function(evt) {
+        debug("Worker is in state: " + worker.state);
+      });
       return waitForActive(registration);
     });
   }
@@ -45,6 +50,7 @@ http://creativecommons.org/licenses/publicdomain/
   }
 
   function hasPermission(swr) {
+    debug('hasPermission');
     var p = new Promise(function(res, rej) {
       swr.pushManager.permissionState().then(
         function(state) {
