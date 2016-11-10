@@ -80,4 +80,8 @@ class TestTimeouts(MarionetteTestCase):
         # for backwards compatibility, it should be possible to send ms
         # as a string type and have the server parseInt it to an integer.
         body = {"type": "script", "ms": "30000"}
+        self.marionette._send_message("setTimeouts", body)
+
+    def test_deprecated_set_timeouts_command(self):
+        body = {"implicit": 3000}
         self.marionette._send_message("timeouts", body)
