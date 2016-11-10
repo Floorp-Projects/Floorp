@@ -49,7 +49,7 @@ NS_IMPL_ISUPPORTS(nsTestService, nsITestService, nsISupportsWeakReference)
     {0xae, 0xd2, 0x1a, 0xb6, 0xdd, 0xba, 0xfe, 0x53}}
 static NS_DEFINE_CID(kTestServiceCID, NS_TEST_SERVICE_CID);
 
-int main()
+void JustTestingCompilation()
 {
     /*
      * NOTE:  This does NOT demonstrate how these functions are
@@ -101,6 +101,4 @@ int main()
     nsIInterfaceRequestor *myInterfaceRequestor =
         static_cast<nsIInterfaceRequestor*>(mySupportsPtr);
     CallGetInterface(myInterfaceRequestor, &myITestService);
-
-    return 0;
 }
