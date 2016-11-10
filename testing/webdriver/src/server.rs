@@ -119,6 +119,7 @@ impl <T: WebDriverHandler<U>,
                 match self.session {
                     Some(_) => {
                         match msg.command {
+                            WebDriverCommand::Status => Ok(()),
                             WebDriverCommand::NewSession(_) => {
                                 Err(WebDriverError::new(
                                     ErrorStatus::SessionNotCreated,
