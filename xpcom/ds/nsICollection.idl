@@ -7,7 +7,7 @@
 
 interface nsIEnumerator;
 
-[scriptable, uuid(83b6019c-cbc4-11d2-8cca-0060b0fc14a3)]
+[deprecated, scriptable, uuid(83b6019c-cbc4-11d2-8cca-0060b0fc14a3)]
 interface nsICollection : nsISerializable
 {
 

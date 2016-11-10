@@ -16,7 +16,7 @@
  *
  * DON'T MAKE ME COME OVER THERE.
  */
-[scriptable, uuid(ad385286-cbc4-11d2-8cca-0060b0fc14a3)]
+[deprecated, scriptable, uuid(ad385286-cbc4-11d2-8cca-0060b0fc14a3)]
 interface nsIEnumerator : nsISupports {
   /** First will reset the list. will return NS_FAILED if no items
    */
@@ -37,7 +37,7 @@ interface nsIEnumerator : nsISupports {
   void isDone();
 };
 
-[uuid(75f158a0-cadd-11d2-8cca-0060b0fc14a3)]
+[deprecated, uuid(75f158a0-cadd-11d2-8cca-0060b0fc14a3)]
 interface nsIBidirectionalEnumerator : nsIEnumerator {
 
   /** Last will reset the list to the end. will return NS_FAILED if no items
