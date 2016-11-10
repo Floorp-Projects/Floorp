@@ -1213,6 +1213,16 @@ protected:
   bool IsValidDate(const nsAString& aValue) const;
 
   /**
+   * Parse a datetime-local string of the form yyyy-mm-ddThh:mm[:ss.s] or
+   * yyyy-mm-dd hh:mm[:ss.s], where fractions of seconds can be 1 to 3 digits.
+   *
+   * @param the string to be parsed.
+   * @return whether the string is a valid datetime-local string.
+   * Note : this function does not consider the empty string as valid.
+   */
+  bool IsValidDateTimeLocal(const nsAString& aValue) const;
+
+  /**
    * Parse a year string of the form yyyy
    *
    * @param the string to be parsed.
@@ -1255,6 +1265,26 @@ protected:
                  uint32_t* aMonth,
                  uint32_t* aDay) const;
 
+  /**
+   * Parse a datetime-local string of the form yyyy-mm-ddThh:mm[:ss.s] or
+   * yyyy-mm-dd hh:mm[:ss.s], where fractions of seconds can be 1 to 3 digits.
+   *
+   * @param the string to be parsed.
+   * @return the date in aYear, aMonth, aDay and time expressed in milliseconds
+   *         in aTime.
+   * @return whether the parsing was successful.
+   */
+  bool ParseDateTimeLocal(const nsAString& aValue,
+                          uint32_t* aYear,
+                          uint32_t* aMonth,
+                          uint32_t* aDay,
+                          uint32_t* aTime) const;
+
+  /**
+   * Normalize the datetime-local string following the HTML specifications:
+   * https://html.spec.whatwg.org/multipage/infrastructure.html#valid-normalised-local-date-and-time-string
+   */
+  void NormalizeDateTimeLocal(nsAString& aValue) const;
   /**
    * This methods returns the number of days since epoch for a given year and
    * week.
