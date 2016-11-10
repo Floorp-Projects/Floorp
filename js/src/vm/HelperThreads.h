@@ -400,8 +400,10 @@ bool
 StartOffThreadWasmCompile(wasm::IonCompileTask* task);
 
 /*
- * Start executing the given PromiseTask on a helper thread, finishing back on
- * the originating JSContext's owner thread.
+ * If helper threads are available, start executing the given PromiseTask on a
+ * helper thread, finishing back on the originating JSContext's owner thread. If
+ * no helper threads are available, the PromiseTask is synchronously executed
+ * and finished.
  */
 bool
 StartPromiseTask(JSContext* cx, UniquePtr<PromiseTask> task);

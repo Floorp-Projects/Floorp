@@ -165,6 +165,10 @@ class PromiseTask : public JS::AsyncTask
     // the task will be enqueued for deletion at some future point without ever
     // calling finishPromise().
     virtual void execute() = 0;
+
+    // May be called in the absence of helper threads to synchronously execute
+    // and finish a PromiseTask.
+    bool executeAndFinish(JSContext* cx);
 };
 
 bool
