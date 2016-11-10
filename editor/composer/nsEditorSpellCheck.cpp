@@ -642,7 +642,7 @@ nsEditorSpellCheck::UninitSpellChecker()
   DeleteSuggestedWordList();
   mDictionaryList.Clear();
   mDictionaryIndex = 0;
-  mSpellChecker = 0;
+  mSpellChecker = nullptr;
   return NS_OK;
 }
 

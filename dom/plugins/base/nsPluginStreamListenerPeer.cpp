@@ -72,8 +72,8 @@ nsPluginByteRangeStreamListener::nsPluginByteRangeStreamListener(nsIWeakReferenc
 
 nsPluginByteRangeStreamListener::~nsPluginByteRangeStreamListener()
 {
-  mStreamConverter = 0;
-  mWeakPtrPluginStreamListenerPeer = 0;
+  mStreamConverter = nullptr;
+  mWeakPtrPluginStreamListenerPeer = nullptr;
 }
 
 /**
@@ -123,7 +123,7 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
         return rv;
     }
   }
-  mStreamConverter = 0;
+  mStreamConverter = nullptr;
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
   if (!httpChannel) {

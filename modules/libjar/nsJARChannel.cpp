@@ -1017,19 +1017,19 @@ nsJARChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
 
     if (mListener) {
         mListener->OnStopRequest(this, mListenerContext, status);
-        mListener = 0;
-        mListenerContext = 0;
+        mListener = nullptr;
+        mListenerContext = nullptr;
     }
 
     if (mLoadGroup)
         mLoadGroup->RemoveRequest(this, nullptr, status);
 
-    mPump = 0;
+    mPump = nullptr;
     mIsPending = false;
 
     // Drop notification callbacks to prevent cycles.
-    mCallbacks = 0;
-    mProgressSink = 0;
+    mCallbacks = nullptr;
+    mProgressSink = nullptr;
 
     #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
     #else

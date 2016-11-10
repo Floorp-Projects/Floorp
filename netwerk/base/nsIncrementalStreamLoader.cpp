@@ -104,9 +104,9 @@ nsIncrementalStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
     }
     // done.. cleanup
     ReleaseData();
-    mRequest = 0;
-    mObserver = 0;
-    mContext = 0;
+    mRequest = nullptr;
+    mObserver = nullptr;
+    mContext = nullptr;
   }
   return NS_OK;
 }
@@ -197,7 +197,7 @@ nsIncrementalStreamLoader::OnDataAvailable(nsIRequest* request, nsISupports *ctx
   }
   uint32_t countRead;
   nsresult rv = inStr->ReadSegments(WriteSegmentFun, this, count, &countRead);
-  mRequest = 0;
+  mRequest = nullptr;
   return rv;
 }
 

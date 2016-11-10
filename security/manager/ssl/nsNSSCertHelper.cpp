@@ -1884,7 +1884,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
 
   validityData->GetNotBefore(&notBefore);
   validityData->GetNotAfter(&notAfter);
-  validityData = 0;
+  validityData = nullptr;
   rv = ProcessTime(notBefore, text.get(), validitySequence);
   if (NS_FAILED(rv))
     return rv;

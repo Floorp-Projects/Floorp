@@ -572,13 +572,13 @@ nsWyciwygChannel::CloseCacheEntryInternal(nsresult reason)
 
   if (mCacheEntry) {
     LOG(("nsWyciwygChannel::CloseCacheEntryInternal [this=%p ]", this));
-    mCacheOutputStream = 0;
-    mCacheInputStream = 0;
+    mCacheOutputStream = nullptr;
+    mCacheInputStream = nullptr;
 
     if (NS_FAILED(reason))
       mCacheEntry->AsyncDoom(nullptr); // here we were calling Doom() ...
 
-    mCacheEntry = 0;
+    mCacheEntry = nullptr;
   }
   return NS_OK;
 }
@@ -756,19 +756,19 @@ nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx, nsresult 
     mStatus = status;
 
   mListener->OnStopRequest(this, mListenerContext, mStatus);
-  mListener = 0;
-  mListenerContext = 0;
+  mListener = nullptr;
+  mListenerContext = nullptr;
 
   if (mLoadGroup)
     mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 
   CloseCacheEntry(mStatus);
-  mPump = 0;
+  mPump = nullptr;
   mIsPending = false;
 
   // Drop notification callbacks to prevent cycles.
-  mCallbacks = 0;
-  mProgressSink = 0;
+  mCallbacks = nullptr;
+  mProgressSink = nullptr;
 
   return NS_OK;
 }
@@ -854,8 +854,8 @@ nsWyciwygChannel::NotifyListener()
   if (mListener) {
     mListener->OnStartRequest(this, mListenerContext);
     mListener->OnStopRequest(this, mListenerContext, mStatus);
-    mListener = 0;
-    mListenerContext = 0;
+    mListener = nullptr;
+    mListenerContext = nullptr;
   }
 
   mIsPending = false;
