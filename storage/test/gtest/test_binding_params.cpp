@@ -15,8 +15,7 @@ using namespace mozilla;
  * mozIStorageStatement API.
  */
 
-void
-test_ASCIIString()
+TEST(storage_binding_params, ASCIIString)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -58,8 +57,7 @@ test_ASCIIString()
   (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM test"));
 }
 
-void
-test_CString()
+TEST(storage_binding_params, CString)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -105,8 +103,7 @@ test_CString()
   (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM test"));
 }
 
-void
-test_UTFStrings()
+TEST(storage_binding_params, UTFStrings)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -203,13 +200,3 @@ test_UTFStrings()
   (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM test"));
 }
 
-void (*gTests[])(void) = {
-  test_ASCIIString,
-  test_CString,
-  test_UTFStrings,
-};
-
-const char *file = __FILE__;
-#define TEST_NAME "binding string params"
-#define TEST_FILE file
-#include "storage_test_harness_tail.h"

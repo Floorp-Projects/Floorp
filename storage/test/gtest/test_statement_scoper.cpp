@@ -12,8 +12,7 @@
  * This file test our statement scoper in mozStorageHelper.h.
  */
 
-void
-test_automatic_reset()
+TEST(storage_statement_scoper, automatic_reset)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -51,8 +50,7 @@ test_automatic_reset()
   do_check_true(state == mozIStorageStatement::MOZ_STORAGE_STATEMENT_READY);
 }
 
-void
-test_Abandon()
+TEST(storage_statement_scoper, Abandon)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -92,13 +90,3 @@ test_Abandon()
   (void)stmt->GetState(&state);
   do_check_true(state == mozIStorageStatement::MOZ_STORAGE_STATEMENT_EXECUTING);
 }
-
-void (*gTests[])(void) = {
-  test_automatic_reset,
-  test_Abandon,
-};
-
-const char *file = __FILE__;
-#define TEST_NAME "statement scoper"
-#define TEST_FILE file
-#include "storage_test_harness_tail.h"

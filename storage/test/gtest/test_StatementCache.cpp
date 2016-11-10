@@ -51,14 +51,19 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Functions
 
-template<typename StringType>
-void
-test_GetCachedStatement()
+// This is some gtest magic that allows us to parameterize tests by |const
+// char[]| and |StringWrapper|.
+template <typename T>
+class storage_StatementCache : public ::testing::Test {};
+typedef ::testing::Types<const char[], StringWrapper> TwoStringTypes;
+
+TYPED_TEST_CASE(storage_StatementCache, TwoStringTypes);
+TYPED_TEST(storage_StatementCache, GetCachedStatement)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   SyncCache cache(db);
 
-  StringType sql = "SELECT * FROM sqlite_master";
+  TypeParam sql = "SELECT * FROM sqlite_master";
 
   // Make sure we get a statement back with the right state.
   nsCOMPtr<mozIStorageStatement> stmt = cache.GetCachedStatement(sql);
@@ -73,14 +78,13 @@ test_GetCachedStatement()
   do_check_eq(stmt.get(), stmt2.get());
 }
 
-template <typename StringType>
-void
-test_FinalizeStatements()
+TYPED_TEST_CASE(storage_StatementCache, TwoStringTypes);
+TYPED_TEST(storage_StatementCache, FinalizeStatements)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   SyncCache cache(db);
 
-  StringType sql = "SELECT * FROM sqlite_master";
+  TypeParam sql = "SELECT * FROM sqlite_master";
 
   // Get a statement, and then tell the cache to finalize.
   nsCOMPtr<mozIStorageStatement> stmt = cache.GetCachedStatement(sql);
@@ -97,14 +101,13 @@ test_FinalizeStatements()
   do_check_success(db->Close());
 }
 
-template<typename StringType>
-void
-test_GetCachedAsyncStatement()
+TYPED_TEST_CASE(storage_StatementCache, TwoStringTypes);
+TYPED_TEST(storage_StatementCache, GetCachedAsyncStatement)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   AsyncCache cache(db);
 
-  StringType sql = "SELECT * FROM sqlite_master";
+  TypeParam sql = "SELECT * FROM sqlite_master";
 
   // Make sure we get a statement back with the right state.
   nsCOMPtr<mozIStorageAsyncStatement> stmt = cache.GetCachedStatement(sql);
@@ -119,14 +122,13 @@ test_GetCachedAsyncStatement()
   do_check_eq(stmt.get(), stmt2.get());
 }
 
-template <typename StringType>
-void
-test_FinalizeAsyncStatements()
+TYPED_TEST_CASE(storage_StatementCache, TwoStringTypes);
+TYPED_TEST(storage_StatementCache, FinalizeAsyncStatements)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
   AsyncCache cache(db);
 
-  StringType sql = "SELECT * FROM sqlite_master";
+  TypeParam sql = "SELECT * FROM sqlite_master";
 
   // Get a statement, and then tell the cache to finalize.
   nsCOMPtr<mozIStorageAsyncStatement> stmt = cache.GetCachedStatement(sql);
@@ -143,21 +145,3 @@ test_FinalizeAsyncStatements()
   do_check_success(db->AsyncClose(nullptr));
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//// Test Harness Stuff
-
-void (*gTests[])(void) = {
-  test_GetCachedStatement<const char []>,
-  test_GetCachedStatement<StringWrapper>,
-  test_FinalizeStatements<const char []>,
-  test_FinalizeStatements<StringWrapper>,
-  test_GetCachedAsyncStatement<const char []>,
-  test_GetCachedAsyncStatement<StringWrapper>,
-  test_FinalizeAsyncStatements<const char []>,
-  test_FinalizeAsyncStatements<StringWrapper>,
-};
-
-const char *file = __FILE__;
-#define TEST_NAME "StatementCache"
-#define TEST_FILE file
-#include "storage_test_harness_tail.h"

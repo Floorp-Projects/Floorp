@@ -13,8 +13,7 @@
  * we request they be
  */
 
-void
-test_file_perms()
+TEST(storage_file_perms, Test)
 {
   nsCOMPtr<mozIStorageConnection> db(getDatabase());
   nsCOMPtr<nsIFile> dbFile;
@@ -34,11 +33,3 @@ test_file_perms()
 #endif
 }
 
-void (*gTests[])(void) = {
-  test_file_perms,
-};
-
-const char *file = __FILE__;
-#define TEST_NAME "file perms"
-#define TEST_FILE file
-#include "storage_test_harness_tail.h"

@@ -253,14 +253,11 @@ test_drop_table_does_not_loop()
   tester->Shutdown();
 }
 
-void (*gTests[])(void) = {
-  setup,
-  test_step_locked_does_not_block_main_thread,
-  test_drop_index_does_not_loop,
-  test_drop_table_does_not_loop,
-};
-
-const char *file = __FILE__;
-#define TEST_NAME "sqlite3_unlock_notify"
-#define TEST_FILE file
-#include "storage_test_harness_tail.h"
+TEST(storage_unlock_notify, Test)
+{
+  // These must execute in order.
+  setup();
+  test_step_locked_does_not_block_main_thread();
+  test_drop_index_does_not_loop();
+  test_drop_table_does_not_loop();
+}

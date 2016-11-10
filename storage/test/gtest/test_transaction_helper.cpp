@@ -17,11 +17,10 @@ bool has_transaction(mozIStorageConnection* aDB) {
 }
 
 /**
- * This file test our Transaction helper in mozStorageHelper.h.
+ * This file tests our Transaction helper in mozStorageHelper.h.
  */
 
-void
-test_Commit()
+TEST(storage_transaction_helper, Commit)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -42,8 +41,7 @@ test_Commit()
   do_check_true(exists);
 }
 
-void
-test_Rollback()
+TEST(storage_transaction_helper, Rollback)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -64,8 +62,7 @@ test_Rollback()
   do_check_false(exists);
 }
 
-void
-test_AutoCommit()
+TEST(storage_transaction_helper, AutoCommit)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -85,8 +82,7 @@ test_AutoCommit()
   do_check_true(exists);
 }
 
-void
-test_AutoRollback()
+TEST(storage_transaction_helper, AutoRollback)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -107,8 +103,7 @@ test_AutoRollback()
   do_check_false(exists);
 }
 
-void
-test_null_database_connection()
+TEST(storage_transaction_helper, null_database_connection)
 {
   // We permit the use of the Transaction helper when passing a null database
   // in, so we need to make sure this still works without crashing.
@@ -117,11 +112,9 @@ test_null_database_connection()
   do_check_true(NS_SUCCEEDED(transaction.Rollback()));
 }
 
-void
-test_async_Commit()
+TEST(storage_transaction_helper, async_Commit)
 {
-  // note this will be active for any following test.
-  hook_sqlite_mutex();
+  HookSqliteMutex hook;
 
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -159,17 +152,3 @@ test_async_Commit()
 
   blocking_async_close(db);
 }
-
-void (*gTests[])(void) = {
-  test_Commit,
-  test_Rollback,
-  test_AutoCommit,
-  test_AutoRollback,
-  test_null_database_connection,
-  test_async_Commit,
-};
-
-const char *file = __FILE__;
-#define TEST_NAME "transaction helper"
-#define TEST_FILE file
-#include "storage_test_harness_tail.h"

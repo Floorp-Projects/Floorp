@@ -21,7 +21,7 @@ public:
   NS_DECL_ASYNCSTATEMENTSPINNER
   Spinner() {}
 protected:
-  virtual ~Spinner() {}
+  ~Spinner() {}
 };
 
 NS_IMPL_ISUPPORTS_INHERITED0(Spinner,
@@ -51,8 +51,7 @@ Spinner::HandleResult(mozIStorageResultSet *aResultSet)
   return NS_OK;
 }
 
-void
-test_NULLFallback()
+TEST(storage_AsXXX_helpers, NULLFallback)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -96,8 +95,7 @@ test_NULLFallback()
   do_check_eq(valueArray->IsNull(0), true);
 }
 
-void
-test_asyncNULLFallback()
+TEST(storage_AsXXX_helpers, asyncNULLFallback)
 {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
@@ -113,15 +111,5 @@ test_asyncNULLFallback()
   RefPtr<Spinner> asyncSpin(new Spinner());
   db->AsyncClose(asyncSpin);
   asyncSpin->SpinUntilCompleted();
-
 }
 
-void (*gTests[])(void) = {
-  test_NULLFallback
-, test_asyncNULLFallback
-};
-
-const char *file = __FILE__;
-#define TEST_NAME "AsXXX helpers"
-#define TEST_FILE file
-#include "storage_test_harness_tail.h"
