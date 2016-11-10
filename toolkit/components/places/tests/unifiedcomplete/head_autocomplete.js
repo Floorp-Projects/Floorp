@@ -285,19 +285,19 @@ var addBookmark = Task.async(function* (aBookmarkObj) {
   }
 });
 
-function addOpenPages(aUri, aCount=1) {
+function addOpenPages(aUri, aCount=1, aUserContextId=0) {
   let ac = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
              .getService(Ci.mozIPlacesAutoComplete);
   for (let i = 0; i < aCount; i++) {
-    ac.registerOpenPage(aUri);
+    ac.registerOpenPage(aUri, aUserContextId);
   }
 }
 
-function removeOpenPages(aUri, aCount=1) {
+function removeOpenPages(aUri, aCount=1, aUserContextId=0) {
   let ac = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
              .getService(Ci.mozIPlacesAutoComplete);
   for (let i = 0; i < aCount; i++) {
-    ac.unregisterOpenPage(aUri);
+    ac.unregisterOpenPage(aUri, aUserContextId);
   }
 }
 
