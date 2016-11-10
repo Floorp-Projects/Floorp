@@ -81,7 +81,12 @@ public:
     return mLoadEventEnd;
   }
 
-  void NotifyNavigationStart();
+  enum class DocShellState : uint8_t {
+    eActive,
+    eInactive
+  };
+
+  void NotifyNavigationStart(DocShellState aDocShellState);
   void NotifyFetchStart(nsIURI* aURI, Type aNavigationType);
   void NotifyBeforeUnload();
   void NotifyUnloadAccepted(nsIURI* aOldURI);
@@ -98,7 +103,8 @@ public:
   void NotifyDOMContentLoadedStart(nsIURI* aURI);
   void NotifyDOMContentLoadedEnd(nsIURI* aURI);
 
-  void NotifyNonBlankPaint();
+  void NotifyNonBlankPaintForRootContentDocument();
+  void NotifyDocShellStateChanged(DocShellState aDocShellState);
 
   DOMTimeMilliSec TimeStampToDOM(mozilla::TimeStamp aStamp) const;
 
@@ -145,6 +151,7 @@ private:
   bool mDOMContentLoadedEventStartSet : 1;
   bool mDOMContentLoadedEventEndSet : 1;
   bool mDOMCompleteSet : 1;
+  bool mDocShellHasBeenActiveSinceNavigationStart : 1;
 };
 
 #endif /* nsDOMNavigationTiming_h___ */
