@@ -9,6 +9,19 @@
 #include "nsPrintOptionsX.h"
 #include "nsPrintSettingsX.h"
 
+// The constants for paper orientation were renamed in 10.9. __MAC_10_9 is
+// defined on OS X 10.9 and later. Although 10.8 and earlier are not supported
+// at this time, this allows for building on those older OS versions. The
+// values are consistent across OS versions so the rename does not affect
+// runtime, just compilation.
+#ifdef __MAC_10_9
+#define NS_PAPER_ORIENTATION_PORTRAIT   (NSPaperOrientationPortrait)
+#define NS_PAPER_ORIENTATION_LANDSCAPE  (NSPaperOrientationLandscape)
+#else
+#define NS_PAPER_ORIENTATION_PORTRAIT   (NSPortraitOrientation)
+#define NS_PAPER_ORIENTATION_LANDSCAPE  (NSLandscapeOrientation)
+#endif
+
 using namespace mozilla::embedding;
 
 nsPrintOptionsX::nsPrintOptionsX()
@@ -90,6 +103,38 @@ nsPrintOptionsX::SerializeToPrintData(nsIPrintSettings* aSettings,
     nsCocoaUtils::GetStringForNSString(disposition, data->disposition());
   }
 
+  NSString* paperName = [dict objectForKey: NSPrintPaperName];
+  if (paperName) {
+    nsCocoaUtils::GetStringForNSString(paperName, data->paperName());
+  }
+
+  float scalingFactor = [[dict objectForKey: NSPrintScalingFactor] floatValue];
+  data->scalingFactor() = scalingFactor;
+
+  int32_t orientation;
+  if ([printInfo orientation] == NS_PAPER_ORIENTATION_PORTRAIT) {
+    orientation = nsIPrintSettings::kPortraitOrientation;
+  } else {
+    orientation = nsIPrintSettings::kLandscapeOrientation;
+  }
+  data->orientation() = orientation;
+
+  NSSize paperSize = [printInfo paperSize];
+  float widthScale, heightScale;
+  settingsX->GetInchesScale(&widthScale, &heightScale);
+  if (orientation == nsIPrintSettings::kLandscapeOrientation) {
+    // switch widths and heights
+    data->widthScale() = heightScale;
+    data->heightScale() = widthScale;
+    data->paperWidth() = paperSize.height / heightScale;
+    data->paperHeight() = paperSize.width / widthScale;
+  } else {
+    data->widthScale() = widthScale;
+    data->heightScale() = heightScale;
+    data->paperWidth() = paperSize.width / widthScale;
+    data->paperHeight() = paperSize.height / heightScale;
+  }
+
   data->numCopies() = [[dict objectForKey: NSPrintCopies] intValue];
   data->printAllPages() = [[dict objectForKey: NSPrintAllPages] boolValue];
   data->startPageRange() = [[dict objectForKey: NSPrintFirstPage] intValue];
@@ -167,6 +212,28 @@ nsPrintOptionsX::DeserializeToPrintSettings(const PrintData& data,
 
   [newPrintInfoDict setObject: nsCocoaUtils::ToNSString(data.disposition())
                     forKey: NSPrintJobDisposition];
+
+  [newPrintInfoDict setObject: nsCocoaUtils::ToNSString(data.paperName())
+                    forKey: NSPrintPaperName];
+
+  [newPrintInfoDict setObject: [NSNumber numberWithFloat: data.scalingFactor()]
+                    forKey: NSPrintScalingFactor];
+
+  CGFloat width = data.paperWidth() * data.widthScale();
+  CGFloat height = data.paperHeight() * data.heightScale();
+  [newPrintInfoDict setObject: [NSValue valueWithSize:NSMakeSize(width,height)]
+                    forKey: NSPrintPaperSize];
+
+  int paperOrientation;
+  if (data.orientation() == nsIPrintSettings::kPortraitOrientation) {
+    paperOrientation = NS_PAPER_ORIENTATION_PORTRAIT;
+    settings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
+  } else {
+    paperOrientation = NS_PAPER_ORIENTATION_LANDSCAPE;
+    settings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
+  }
+  [newPrintInfoDict setObject: [NSNumber numberWithInt:paperOrientation]
+                    forKey: NSPrintOrientation];
 
   [newPrintInfoDict setObject: [NSNumber numberWithShort: data.pagesAcross()]
                     forKey: NSPrintPagesAcross];
