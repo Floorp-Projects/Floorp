@@ -93,12 +93,19 @@ TimerManager.prototype = {
         minInterval = 500;
         minFirstInterval = 500;
       case "profile-after-change":
-        // Cancel the timer if it has already been initialized. This is primarily
-        // for tests.
         this._timerMinimumDelay = Math.max(1000 * getPref("getIntPref", PREF_APP_UPDATE_TIMERMINIMUMDELAY, 120),
                                            minInterval);
+        // Prevent the timer delay between notifications to other consumers from
+        // being greater than 5 minutes which is 300000 milliseconds.
+        this._timerMinimumDelay = Math.min(this._timerMinimumDelay, 300000);
+        // Prevent the first interval from being less than the value of minFirstInterval
         let firstInterval = Math.max(getPref("getIntPref", PREF_APP_UPDATE_TIMERFIRSTINTERVAL,
-                                             this._timerMinimumDelay), minFirstInterval);
+                                             30000), minFirstInterval);
+        // Prevent the first interval from being greater than 2 minutes which is
+        // 120000 milliseconds.
+        firstInterval = Math.min(firstInterval, 120000);
+        // Cancel the timer if it has already been initialized. This is primarily
+        // for tests.
         this._canEnsureTimer = true;
         this._ensureTimer(firstInterval);
         break;
@@ -171,7 +178,7 @@ TimerManager.prototype = {
     while (entries.hasMoreElements()) {
       let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
       let value = catMan.getCategoryEntry(CATEGORY_UPDATE_TIMER, entry);
-      let [cid, method, timerID, prefInterval, defaultInterval] = value.split(",");
+      let [cid, method, timerID, prefInterval, defaultInterval, maxInterval] = value.split(",");
 
       defaultInterval = parseInt(defaultInterval);
       // cid and method are validated below when calling notify.
@@ -183,6 +190,12 @@ TimerManager.prototype = {
       }
 
       let interval = getPref("getIntPref", prefInterval, defaultInterval);
+      // Allow the update-timer category to specify a maximum value to prevent
+      // values larger than desired.
+      maxInterval = parseInt(maxInterval);
+      if (maxInterval && !isNaN(maxInterval)) {
+        interval = Math.min(interval, maxInterval);
+      }
       let prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/,
                                                                       timerID);
       // Initialize the last update time to 0 when the preference isn't set so
