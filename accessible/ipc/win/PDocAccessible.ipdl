@@ -61,9 +61,12 @@ parent:
    */
   async BindChildDoc(PDocAccessible aChildDoc, uint64_t aID);
 
-child:
-  async ParentCOMProxy(IAccessibleHolder aParentCOMProxy);
+  // For now we'll add the command to send the proxy here. This might move to
+  // PDocAccessible constructor in PBrowser.
+  sync COMProxy(IAccessibleHolder aDocCOMProxy)
+    returns(IAccessibleHolder aParentCOMProxy);
 
+child:
   async __delete__();
 };
 
