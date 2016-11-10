@@ -59,7 +59,7 @@ define(function (require, exports, module) {
       }
 
       let json = JSON.stringify(object).toLowerCase();
-      return json.indexOf(this.props.searchFilter) >= 0;
+      return json.indexOf(this.props.searchFilter.toLowerCase()) >= 0;
     },
 
     getExpandedNodes: function (object, path = "", level = 0) {
