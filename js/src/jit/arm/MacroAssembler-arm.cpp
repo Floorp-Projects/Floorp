@@ -17,7 +17,6 @@
 #include "jit/JitFrames.h"
 #include "jit/MacroAssembler.h"
 #include "jit/MoveEmitter.h"
-#include "wasm/WasmBinary.h"
 
 #include "jit/MacroAssembler-inl.h"
 

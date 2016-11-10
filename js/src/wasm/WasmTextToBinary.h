@@ -19,9 +19,7 @@
 #ifndef wasm_text_to_binary_h
 #define wasm_text_to_binary_h
 
-#include "js/Utility.h"
-
-#include "wasm/WasmBinary.h"
+#include "wasm/WasmTypes.h"
 
 namespace js {
 namespace wasm {

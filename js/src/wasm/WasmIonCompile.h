@@ -20,7 +20,7 @@
 #define wasm_ion_compile_h
 
 #include "jit/MacroAssembler.h"
-#include "wasm/WasmBinary.h"
+#include "wasm/WasmTypes.h"
 
 namespace js {
 namespace wasm {
