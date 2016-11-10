@@ -567,7 +567,7 @@
       </method>
       <method name="getMigratedItems">
         <body><![CDATA[
-          return [... this._currentSetMigrated];
+          return [...this._currentSetMigrated];
         ]]></body>
       </method>
       <method name="_updateMigratedSet">

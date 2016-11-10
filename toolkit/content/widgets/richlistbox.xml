@@ -61,7 +61,7 @@
             var state = this.currentItem ? this.currentItem.id : "";
             if (this.selType == "multiple" && this.selectedCount) {
               let getId = function getId(aItem) { return aItem.id; }
-              state += " " + [... this.selectedItems].filter(getId).map(getId).join(" ");
+              state += " " + [...this.selectedItems].filter(getId).map(getId).join(" ");
             }
             if (state)
               this.setAttribute("last-selected", state);
