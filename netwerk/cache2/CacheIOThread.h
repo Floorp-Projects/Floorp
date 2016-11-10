@@ -67,6 +67,8 @@ public:
   nsresult DispatchAfterPendingOpens(nsIRunnable* aRunnable);
   bool IsCurrentThread();
 
+  uint32_t QueueSize(bool highPriority);
+
   /**
    * Callable only on this thread, checks if there is an event waiting in
    * the event queue with a higher execution priority.  If so, the result

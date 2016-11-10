@@ -174,6 +174,11 @@ interface nsICacheEntry : nsISupports
   void setValid();
 
   /**
+   * Returns the size in kilobytes used to store the cache entry on disk.
+   */
+   readonly attribute uint32_t diskStorageSizeInKB;
+
+  /**
    * Doom this entry and open a new, empty, entry for write.  Consumer has
    * to exchange the entry this method is called on for the newly created.
    * Used on 200 responses to conditional requests.

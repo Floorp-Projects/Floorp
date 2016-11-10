@@ -1547,6 +1547,15 @@ NS_IMETHODIMP CacheEntry::Close()
   return NS_OK;
 }
 
+NS_IMETHODIMP CacheEntry::GetDiskStorageSizeInKB(uint32_t *aDiskStorageSize)
+{
+  if (NS_FAILED(mFileStatus)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return mFile->GetDiskStorageSizeInKB(aDiskStorageSize);
+}
+
 // nsIRunnable
 
 NS_IMETHODIMP CacheEntry::Run()
