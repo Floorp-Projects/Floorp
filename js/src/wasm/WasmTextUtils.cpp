@@ -19,7 +19,7 @@
 #include "wasm/WasmTextUtils.h"
 
 #include "vm/StringBuffer.h"
-#include "wasm/WasmBinary.h"
+#include "wasm/WasmTypes.h"
 
 using namespace js;
 using namespace js::jit;
