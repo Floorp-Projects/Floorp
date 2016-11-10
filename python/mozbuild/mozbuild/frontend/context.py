@@ -1535,10 +1535,6 @@ VARIABLES = {
         """List of manifest files defining marionette-unit tests.
         """),
 
-    'MARIONETTE_UPDATE_MANIFESTS': (ManifestparserManifestList, list,
-        """List of manifest files defining marionette-update tests.
-        """),
-
     'MARIONETTE_WEBAPI_MANIFESTS': (ManifestparserManifestList, list,
         """List of manifest files defining marionette-webapi tests.
         """),
