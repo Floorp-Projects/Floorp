@@ -118,6 +118,10 @@ private:
   Atomic<uint32_t, Relaxed> mLowestLevelWaiting;
   uint32_t mCurrentlyExecutingLevel;
 
+  // Keeps the length of the each event queue, since LoopOneLevel moves all
+  // events into a local array.
+  Atomic<int32_t> mQueueLength[LAST_LEVEL];
+
   EventQueue mEventQueue[LAST_LEVEL];
   // Raised when nsIEventTarget.Dispatch() is called on this thread
   Atomic<bool, Relaxed> mHasXPCOMEvents;
