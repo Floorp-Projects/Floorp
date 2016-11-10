@@ -5,11 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMNavigationTiming.h"
+
+#include "GeckoProfiler.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "prtime.h"
 #include "nsIURI.h"
+#include "nsPrintfCString.h"
 #include "mozilla/dom/PerformanceNavigation.h"
 #include "mozilla/TimeStamp.h"
 
@@ -178,6 +181,30 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedEnd(nsIURI* aURI)
     mLoadedURI = aURI;
     mDOMContentLoadedEventEnd = DurationFromStart();
     mDOMContentLoadedEventEndSet = true;
+  }
+}
+
+void
+nsDOMNavigationTiming::NotifyNonBlankPaint()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mNavigationStartTimeStamp.IsNull());
+
+  if (!mNonBlankPaintTimeStamp.IsNull()) {
+    return;
+  }
+
+  mNonBlankPaintTimeStamp = TimeStamp::Now();
+  TimeDuration elapsed = mNonBlankPaintTimeStamp - mNavigationStartTimeStamp;
+
+  if (profiler_is_active()) {
+    nsAutoCString spec;
+    if (mLoadedURI) {
+      mLoadedURI->GetSpec(spec);
+    }
+    nsPrintfCString marker("Non-blank paint after %dms for URL %s",
+                           int(elapsed.ToMilliseconds()), spec.get());
+    PROFILER_MARKER(marker.get());
   }
 }
 
