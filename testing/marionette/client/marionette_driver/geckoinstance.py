@@ -273,29 +273,6 @@ class FennecInstance(GeckoInstance):
             )
 
 
-class B2GDesktopInstance(GeckoInstance):
-    def __init__(self, host, port, bin, **kwargs):
-        # Pass a profile and change the binary to -bin so that
-        # the built-in gaia profile doesn't get touched.
-        if kwargs.get('profile', None) is None:
-            # GeckoInstance.start will clone the profile.
-            kwargs['profile'] = os.path.join(os.path.dirname(bin),
-                                             'gaia',
-                                             'profile')
-        if '-bin' not in os.path.basename(bin):
-            if bin.endswith('.exe'):
-                newbin = bin[:-len('.exe')] + '-bin.exe'
-            else:
-                newbin = bin + '-bin'
-            if os.path.exists(newbin):
-                bin = newbin
-        super(B2GDesktopInstance, self).__init__(host, port, bin, **kwargs)
-        if not self.prefs:
-            self.prefs = {}
-        self.prefs["focusmanager.testmode"] = True
-        self.app_args += ['-chrome', 'chrome://b2g/content/shell.html']
-
-
 class DesktopInstance(GeckoInstance):
     desktop_prefs = {
         'app.update.auto': False,
@@ -341,8 +318,6 @@ class NullOutput(object):
 
 
 apps = {
-    'b2g': B2GDesktopInstance,
-    'b2gdesktop': B2GDesktopInstance,
     'fxdesktop': DesktopInstance,
     'fennec': FennecInstance,
 }
