@@ -16,6 +16,7 @@
 using namespace mozilla;
 
 #define MAC_OS_X_PAGE_SETUP_PREFNAME    "print.macosx.pagesetup-2"
+#define COCOA_PAPER_UNITS_PER_INCH      72.0
 
 NS_IMPL_ISUPPORTS_INHERITED(nsPrintSettingsX, nsPrintSettings, nsPrintSettingsX)
 
@@ -24,6 +25,8 @@ nsPrintSettingsX::nsPrintSettingsX()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mPrintInfo = [[NSPrintInfo sharedPrintInfo] copy];
+  mWidthScale = COCOA_PAPER_UNITS_PER_INCH;
+  mHeightScale = COCOA_PAPER_UNITS_PER_INCH;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -200,3 +203,16 @@ nsPrintSettingsX::SetPMPageFormat(PMPageFormat aPageFormat)
   [mPrintInfo updateFromPMPageFormat];
 }
 
+void
+nsPrintSettingsX::SetInchesScale(float aWidthScale, float aHeightScale)
+{
+  mWidthScale = aWidthScale;
+  mHeightScale = aHeightScale;
+}
+
+void
+nsPrintSettingsX::GetInchesScale(float *aWidthScale, float *aHeightScale)
+{
+  *aWidthScale = mWidthScale;
+  *aHeightScale = mHeightScale;
+}

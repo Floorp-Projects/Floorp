@@ -105,6 +105,19 @@ struct PrintData {
   nsString faxNumber;
   bool addHeaderAndFooter;
   bool fileNameExtensionHidden;
+  /*
+   * Holds the scaling factor from the Print dialog when shrink
+   * to fit is not used. This is needed by the child when it
+   * isn't using remote printing. When shrink to fit is enabled
+   * (default), print dialog code ensures this value is 1.0.
+   */
+  float scalingFactor;
+  /*
+   * Scaling factor for converting from OS X native paper size
+   * units to inches.
+   */
+  float widthScale;
+  float heightScale;
 };
 
 } // namespace embedding
