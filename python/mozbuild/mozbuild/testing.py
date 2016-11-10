@@ -287,7 +287,6 @@ TEST_MANIFESTS = dict(
     # TODO(ato): make packaging work as for other test suites
     MARIONETTE=('marionette', 'marionette', '.', False),
     MARIONETTE_UNIT=('marionette', 'marionette', '.', False),
-    MARIONETTE_UPDATE=('marionette', 'marionette', '.', False),
     MARIONETTE_WEBAPI=('marionette', 'marionette', '.', False),
 
     METRO_CHROME=('metro-chrome', 'testing/mochitest', 'metro', True),

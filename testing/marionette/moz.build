@@ -6,7 +6,6 @@ DIRS += ["components"]
 
 JAR_MANIFESTS += ["jar.mn"]
 MARIONETTE_UNIT_MANIFESTS += ["harness/marionette/tests/unit/unit-tests.ini"]
-MARIONETTE_UPDATE_MANIFESTS += ["harness/marionette/tests/update-tests.ini"]
 MARIONETTE_WEBAPI_MANIFESTS += ["harness/marionette/tests/webapi-tests.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["unit.ini"]
 
