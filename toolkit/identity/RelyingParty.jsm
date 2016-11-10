@@ -331,7 +331,7 @@ IdentityRelyingParty.prototype = {
     log("_generateAssertion: audience:", aAudience, "identity:", aIdentity);
 
     let id = this._store.fetchIdentity(aIdentity);
-    if (! (id && id.cert)) {
+    if (!(id && id.cert)) {
       let errStr = "Cannot generate an assertion without a certificate";
       log("ERROR: _generateAssertion:", errStr);
       aCallback(errStr);

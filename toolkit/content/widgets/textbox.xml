@@ -504,7 +504,7 @@
         <parameter name="visible"/>
         <body><![CDATA[
           document.getAnonymousElementByAttribute(this, "anonid", anonid).
-            hidden = ! visible;
+            hidden = !visible;
         ]]></body>
       </method>
 

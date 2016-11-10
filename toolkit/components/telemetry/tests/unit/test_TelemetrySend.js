@@ -46,7 +46,7 @@ function fakePingId(type, number) {
   const HEAD = "93bd0011-2c8f-4e1c-bee0-";
   const TAIL = "000000000000";
   const N = String(number);
-  const id = HEAD + type + TAIL.slice(type.length, - N.length) + N;
+  const id = HEAD + type + TAIL.slice(type.length, -N.length) + N;
   fakeGeneratePingId(() => id);
   return id;
 }
