@@ -440,34 +440,15 @@ DecodeImportSection(Decoder& d, ModuleGeneratorData* init, ImportVector* imports
 static bool
 DecodeFunctionSection(Decoder& d, ModuleGeneratorData* init)
 {
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Function, &sectionStart, &sectionSize, "function"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t numDefs;
-    if (!d.readVarU32(&numDefs))
-        return d.fail("expected number of function definitions");
-
-    uint32_t numFuncs = init->funcSigs.length() + numDefs;
-    if (numFuncs > MaxFuncs)
-        return d.fail("too many functions");
-
-    if (!init->funcSigs.reserve(numFuncs))
+    Uint32Vector funcSigIndexes;
+    if (!DecodeFunctionSection(d, init->sigs, init->funcSigs.length(), &funcSigIndexes))
         return false;
 
-    for (uint32_t i = 0; i < numDefs; i++) {
-        uint32_t sigIndex;
-        if (!DecodeSignatureIndex(d, init->sigs, &sigIndex))
-            return false;
-
-        const SigWithId* sig = &init->sigs[sigIndex];
-        init->funcSigs.infallibleAppend(sig);
-    }
-
-    if (!d.finishSection(sectionStart, sectionSize, "function"))
+    if (!init->funcSigs.reserve(init->funcSigs.length() + funcSigIndexes.length()))
         return false;
+
+    for (uint32_t sigIndex : funcSigIndexes)
+        init->funcSigs.infallibleAppend(&init->sigs[sigIndex]);
 
     return true;
 }
@@ -943,7 +924,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!::DecodeImportSection(d, init.get(), &imports))
         return nullptr;
 
-    if (!DecodeFunctionSection(d, init.get()))
+    if (!::DecodeFunctionSection(d, init.get()))
         return nullptr;
 
     Uint32Vector oldElems;

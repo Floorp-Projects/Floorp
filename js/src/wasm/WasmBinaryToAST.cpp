@@ -331,12 +331,12 @@ AstDecodeCall(AstDecodeContext& c)
 
     uint32_t sigIndex;
     AstRef funcRef;
-    if (funcIndex < c.module().funcImportNames().length()) {
+    if (funcIndex < c.module().numFuncImports()) {
         AstImport* import = c.module().imports()[funcIndex];
         sigIndex = import->funcSig().index();
         funcRef = AstRef(import->name());
     } else {
-        uint32_t funcDefIndex = funcIndex - c.module().funcImportNames().length();
+        uint32_t funcDefIndex = funcIndex - c.module().numFuncImports();
         if (funcDefIndex >= c.funcDefSigs().length())
             return c.iter().fail("callee index out of range");
 
@@ -1555,45 +1555,13 @@ AstDecodeImportSection(AstDecodeContext& c, const SigWithIdVector& sigs)
 }
 
 static bool
-AstDecodeSignatureIndex(AstDecodeContext& c, uint32_t* sigIndex)
+AstDecodeFunctionSection(AstDecodeContext& c, const SigWithIdVector& sigs)
 {
-    if (!c.d.readVarU32(sigIndex))
-        return c.d.fail("expected signature index");
-
-    if (*sigIndex >= c.module().sigs().length())
-        return c.d.fail("signature index out of range");
-
-    return true;
-}
-
-static bool
-AstDecodeFunctionSection(AstDecodeContext& c)
-{
-    uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(SectionId::Function, &sectionStart, &sectionSize, "function"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t numDecls;
-    if (!c.d.readVarU32(&numDecls))
-        return c.d.fail("expected number of declarations");
-
-    if (numDecls > MaxFuncs)
-        return c.d.fail("too many functions");
-
-    if (!c.funcDefSigs().resize(numDecls))
+    Uint32Vector funcSigIndexes;
+    if (!DecodeFunctionSection(c.d, sigs, c.module().numFuncImports(), &funcSigIndexes))
         return false;
 
-    for (uint32_t i = 0; i < numDecls; i++) {
-        if (!AstDecodeSignatureIndex(c, &c.funcDefSigs()[i]))
-            return false;
-    }
-
-    if (!c.d.finishSection(sectionStart, sectionSize, "function"))
-        return false;
-
-    return true;
+    return c.funcDefSigs().appendAll(funcSigIndexes);
 }
 
 static bool
@@ -1846,7 +1814,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcDefIndex, AstFunc** func
 
     AstName funcName;
     if (!AstDecodeGenerateName(c, AstName(u"func"),
-                               c.module().funcImportNames().length() + funcDefIndex,
+                               c.module().numFuncImports() + funcDefIndex,
                                &funcName))
         return false;
 
@@ -2076,7 +2044,7 @@ wasm::BinaryToAst(JSContext* cx, const uint8_t* bytes, uint32_t length,
     if (!DecodePreamble(d) ||
         !AstDecodeTypeSection(c, &sigs) ||
         !AstDecodeImportSection(c, sigs) ||
-        !AstDecodeFunctionSection(c) ||
+        !AstDecodeFunctionSection(c, sigs) ||
         !AstDecodeTableSection(c) ||
         !AstDecodeMemorySection(c) ||
         !AstDecodeGlobalSection(c) ||
