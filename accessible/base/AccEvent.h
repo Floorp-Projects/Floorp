@@ -211,7 +211,7 @@ class AccTreeMutationEvent : public AccEvent
 {
 public:
   AccTreeMutationEvent(uint32_t aEventType, Accessible* aTarget) :
-    AccEvent(aEventType, aTarget, eAutoDetect, eCoalesceReorder) {}
+    AccEvent(aEventType, aTarget, eAutoDetect, eCoalesceReorder), mGeneration(0) {}
 
   // Event
   static const EventGroup kEventGroup = eTreeMutationEvent;
@@ -225,9 +225,16 @@ public:
   AccTreeMutationEvent* NextEvent() const { return mNextEvent; }
   AccTreeMutationEvent* PrevEvent() const { return mPrevEvent; }
 
+  /**
+   * A sequence number to know when this event was fired.
+   */
+  uint32_t EventGeneration() const { return mGeneration; }
+  void SetEventGeneration(uint32_t aGeneration) { mGeneration = aGeneration; }
+
 private:
   RefPtr<AccTreeMutationEvent> mNextEvent;
   RefPtr<AccTreeMutationEvent> mPrevEvent;
+  uint32_t mGeneration;
 };
 
 /**
