@@ -1413,7 +1413,7 @@ nsOfflineCacheDevice::Shutdown()
   if (NS_FAILED(rv))
     NS_WARNING("Failed to clean up namespaces.");
 
-  mEvictionFunction = 0;
+  mEvictionFunction = nullptr;
 
   mStatement_CacheSize = nullptr;
   mStatement_ApplicationCacheSize = nullptr;

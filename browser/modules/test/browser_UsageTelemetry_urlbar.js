@@ -6,6 +6,7 @@ const SCALAR_URLBAR = "browser.engagement.navigation.urlbar";
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 // The name of the search engine used to generate suggestions.
 const SUGGESTION_ENGINE_NAME = "browser_UsageTelemetry usageTelemetrySearchSuggestions.xml";
+const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
 
 let searchInAwesomebar = Task.async(function* (inputText, win=window) {
   yield new Promise(r => waitForFocus(r, win));
@@ -55,11 +56,15 @@ add_task(function* setup() {
   // Enable search suggestions in the urlbar.
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
 
+  // Enable the urlbar one-off buttons.
+  Services.prefs.setBoolPref(ONEOFF_URLBAR_PREF, true);
+
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(function* () {
     Services.search.currentEngine = originalEngine;
     Services.search.removeEngine(engine);
     Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF, true);
+    Services.prefs.clearUserPref(ONEOFF_URLBAR_PREF);
   });
 });
 

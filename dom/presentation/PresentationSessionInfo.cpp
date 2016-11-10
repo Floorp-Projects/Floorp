@@ -1602,8 +1602,9 @@ PresentationPresentingInfo::ResolvedCallback(JSContext* aCx,
   }
 
   // Start to listen to document state change event |STATE_TRANSFERRING|.
-  HTMLIFrameElement* frame = nullptr;
-  nsresult rv = UNWRAP_OBJECT(HTMLIFrameElement, obj, frame);
+  // Use Element to support both HTMLIFrameElement and nsXULElement.
+  Element* frame = nullptr;
+  nsresult rv = UNWRAP_OBJECT(Element, obj, frame);
   if (NS_WARN_IF(!frame)) {
     ReplyError(NS_ERROR_DOM_OPERATION_ERR);
     return;

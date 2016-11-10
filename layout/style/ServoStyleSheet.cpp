@@ -82,6 +82,12 @@ ServoStyleSheet::ParseSheet(const nsAString& aInput,
 }
 
 void
+ServoStyleSheet::LoadFailed()
+{
+  mSheet = Servo_StyleSheet_Empty(mParsingMode).Consume();
+}
+
+void
 ServoStyleSheet::DropSheet()
 {
   mSheet = nullptr;

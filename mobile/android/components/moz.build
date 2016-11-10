@@ -27,6 +27,7 @@ EXTRA_COMPONENTS += [
     'NSSDialogService.js',
     'PersistentNotificationHandler.js',
     'PresentationDevicePrompt.js',
+    'PresentationRequestUIGlue.js',
     'PromptService.js',
     'SessionStore.js',
     'SiteSpecificUserAgent.js',

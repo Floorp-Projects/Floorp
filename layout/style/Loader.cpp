@@ -1815,6 +1815,10 @@ Loader::SheetComplete(SheetLoadData* aLoadData, nsresult aStatus)
 {
   LOG(("css::Loader::SheetComplete"));
 
+  if (aLoadData->mSheet->IsServo() && NS_FAILED(aStatus)) {
+    aLoadData->mSheet->AsServo()->LoadFailed();
+  }
+
   // 8 is probably big enough for all our common cases.  It's not likely that
   // imports will nest more than 8 deep, and multiple sheets with the same URI
   // are rare.
